@@ -109,10 +109,12 @@ public:
 
     virtual bool RecvMoveFocus(const bool& aForward);
     virtual bool RecvEvent(const RemoteDOMEvent& aEvent);
-    virtual bool RecvPRenderFrameConstructor(PRenderFrameParent* actor,
-                                             ScrollingBehavior* scrolling,
-                                             TextureFactoryIdentifier* identifier,
-                                             uint64_t* layersId);
+    virtual bool RecvPRenderFrameConstructor(PRenderFrameParent* aFrame);
+    virtual bool RecvInitRenderFrame(PRenderFrameParent* aFrame,
+                                     ScrollingBehavior* aScrolling,
+                                     TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                     uint64_t* aLayersId,
+                                     bool *aSuccess);
     virtual bool RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
                                             const nsString& aURL,
                                             const nsString& aName,
@@ -306,9 +308,7 @@ protected:
     bool ShouldDelayDialogs();
     bool AllowContentIME();
 
-    virtual PRenderFrameParent* AllocPRenderFrameParent(ScrollingBehavior* aScrolling,
-                                                        TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                                        uint64_t* aLayersId) MOZ_OVERRIDE;
+    virtual PRenderFrameParent* AllocPRenderFrameParent() MOZ_OVERRIDE;
     virtual bool DeallocPRenderFrameParent(PRenderFrameParent* aFrame) MOZ_OVERRIDE;
 
     // IME

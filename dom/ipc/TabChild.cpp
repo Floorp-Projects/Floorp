@@ -2173,9 +2173,7 @@ TabChild::RecvSetUpdateHitRegion(const bool& aEnabled)
 }
 
 PRenderFrameChild*
-TabChild::AllocPRenderFrameChild(ScrollingBehavior* aScrolling,
-                            TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                            uint64_t* aLayersId)
+TabChild::AllocPRenderFrameChild()
 {
     return new RenderFrameChild();
 }
@@ -2233,11 +2231,17 @@ TabChild::InitRenderingState()
     static_cast<PuppetWidget*>(mWidget.get())->InitIMEState();
 
     uint64_t id;
+    bool success;
     RenderFrameChild* remoteFrame =
-        static_cast<RenderFrameChild*>(SendPRenderFrameConstructor(
-                                         &mScrolling, &mTextureFactoryIdentifier, &id));
+        static_cast<RenderFrameChild*>(SendPRenderFrameConstructor());
     if (!remoteFrame) {
+        NS_WARNING("failed to construct RenderFrame");
+        return false;
+    }
+    SendInitRenderFrame(remoteFrame, &mScrolling, &mTextureFactoryIdentifier, &id, &success);
+    if (!success) {
       NS_WARNING("failed to construct RenderFrame");
+      PRenderFrameChild::Send__delete__(remoteFrame);
       return false;
     }
 

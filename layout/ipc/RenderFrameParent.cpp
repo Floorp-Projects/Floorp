@@ -618,15 +618,21 @@ private:
   CSSToScreenScale mMaxZoom;
 };
 
-RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
-                                     ScrollingBehavior aScrollingBehavior,
-                                     TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                     uint64_t* aId)
+RenderFrameParent::RenderFrameParent()
   : mLayersId(0)
-  , mFrameLoader(aFrameLoader)
   , mFrameLoaderDestroyed(false)
   , mBackgroundColor(gfxRGBA(1, 1, 1))
 {
+}
+
+void
+RenderFrameParent::Init(nsFrameLoader* aFrameLoader,
+                        ScrollingBehavior aScrollingBehavior,
+                        TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                        uint64_t* aId)
+{
+  mFrameLoader = aFrameLoader;
+
   mContentViews[FrameMetrics::ROOT_SCROLL_ID] =
     new nsContentView(aFrameLoader, FrameMetrics::ROOT_SCROLL_ID);
 
