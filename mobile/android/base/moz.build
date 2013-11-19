@@ -22,6 +22,7 @@ mgjar.sources += [
     'mozglue/NativeReference.java',
     'mozglue/NativeZip.java',
     'mozglue/RobocopTarget.java',
+    'mozglue/WebRTCJNITarget.java',
 ]
 mgjar.generated_sources += [
     'org/mozilla/gecko/mozglue/GeckoLoader.java',
