@@ -34,7 +34,4 @@ if CONFIG['MOZ_CRASHREPORTER']:
 
 LIBRARY_NAME = 'breakpad_linux_common_s'
 
-# need static lib
-FORCE_STATIC_LIB = True
-
 FINAL_LIBRARY = 'xulapp_s'

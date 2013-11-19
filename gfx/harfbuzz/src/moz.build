@@ -6,9 +6,7 @@
 
 MODULE = 'harfbuzz'
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    FORCE_STATIC_LIB = True
-else:
+if CONFIG['OS_ARCH'] != 'WINNT':
     LIBXUL_LIBRARY = True
 
 EXPORTS.harfbuzz += [

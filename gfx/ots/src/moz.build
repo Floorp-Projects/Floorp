@@ -6,9 +6,7 @@
 
 MODULE = 'ots'
 
-if CONFIG['OS_TARGET'] == 'WINNT':
-    FORCE_STATIC_LIB = True
-else:
+if CONFIG['OS_TARGET'] != 'WINNT':
     LIBXUL_LIBRARY = True
 
 EXPORTS += [
