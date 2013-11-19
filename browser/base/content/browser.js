@@ -2472,6 +2472,7 @@ function _checkDefaultAndSwitchToMetro() {
     let appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"].
     getService(Components.interfaces.nsIAppStartup);
 
+    Services.prefs.setBoolPref('browser.sessionstore.resume_session_once', true);
     appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
                     Components.interfaces.nsIAppStartup.eRestartTouchEnvironment);
     return true;
@@ -4692,7 +4693,8 @@ function fireSidebarFocusedEvent() {
 var gMetroPrefs = {
   prefDomain: ["app.update.auto", "app.update.enabled",
                "app.update.service.enabled",
-               "app.update.metro.enabled"],
+               "app.update.metro.enabled",
+               "browser.sessionstore.resume_session_once"],
   observe: function (aSubject, aTopic, aPrefName)
   {
     if (aTopic != "nsPref:changed")
