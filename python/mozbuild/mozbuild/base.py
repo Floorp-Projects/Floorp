@@ -276,10 +276,6 @@ class MozbuildObject(ProcessExecutionMixin):
         return os.path.join(self.topobjdir, 'dist', 'bin')
 
     @property
-    def includedir(self):
-        return os.path.join(self.topobjdir, 'dist', 'include')
-
-    @property
     def statedir(self):
         return os.path.join(self.topobjdir, '.mozbuild')
 

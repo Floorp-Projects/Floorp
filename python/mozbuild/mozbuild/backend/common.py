@@ -12,14 +12,8 @@ import mozpack.path as mozpath
 from .base import BuildBackend
 
 from ..frontend.data import (
-    GeneratedEventWebIDLFile,
-    GeneratedWebIDLFile,
-    PreprocessedTestWebIDLFile,
-    PreprocessedWebIDLFile,
     TestManifest,
-    TestWebIDLFile,
     XPIDLFile,
-    WebIDLFile,
 )
 
 from ..util import DefaultOnReadDict
@@ -57,80 +51,6 @@ class XPIDLManager(object):
         self.modules.setdefault(entry['module'], set()).add(entry['root'])
 
 
-class WebIDLCollection(object):
-    """Collects WebIDL info referenced during the build."""
-
-    def __init__(self):
-        self.sources = set()
-        self.generated_sources = set()
-        self.generated_events_sources = set()
-        self.preprocessed_sources = set()
-        self.test_sources = set()
-        self.preprocessed_test_sources = set()
-
-    def all_regular_sources(self):
-        return self.sources | self.generated_sources | \
-            self.generated_events_sources | self.preprocessed_sources
-
-    def all_regular_basenames(self):
-        return [os.path.basename(source) for source in self.all_regular_sources()]
-
-    def all_regular_stems(self):
-        return [os.path.splitext(b)[0] for b in self.all_regular_basenames()]
-
-    def all_regular_bindinggen_stems(self):
-        for stem in self.all_regular_stems():
-            yield '%sBinding' % stem
-
-        for source in self.generated_events_sources:
-            yield os.path.splitext(os.path.basename(source))[0]
-
-    def all_regular_cpp_basenames(self):
-        for stem in self.all_regular_bindinggen_stems():
-            yield '%s.cpp' % stem
-
-    def all_test_sources(self):
-        return self.test_sources | self.preprocessed_test_sources
-
-    def all_test_basenames(self):
-        return [os.path.basename(source) for source in self.all_test_sources()]
-
-    def all_test_stems(self):
-        return [os.path.splitext(b)[0] for b in self.all_test_basenames()]
-
-    def all_test_cpp_basenames(self):
-        return ['%sBinding.cpp' % s for s in self.all_test_stems()]
-
-    def all_static_sources(self):
-        return self.sources | self.generated_events_sources | \
-            self.test_sources
-
-    def all_non_static_sources(self):
-        return self.generated_sources | self.preprocessed_sources | \
-            self.preprocessed_test_sources
-
-    def all_non_static_basenames(self):
-        return [os.path.basename(s) for s in self.all_non_static_sources()]
-
-    def all_preprocessed_sources(self):
-        return self.preprocessed_sources | self.preprocessed_test_sources
-
-    def all_sources(self):
-        return set(self.all_regular_sources()) | set(self.all_test_sources())
-
-    def all_basenames(self):
-        return [os.path.basename(source) for source in self.all_sources()]
-
-    def all_stems(self):
-        return [os.path.splitext(b)[0] for b in self.all_basenames()]
-
-    def generated_events_basenames(self):
-        return [os.path.basename(s) for s in self.generated_events_sources]
-
-    def generated_events_stems(self):
-        return [os.path.splitext(b)[0] for b in self.generated_events_basenames()]
-
-
 class TestManager(object):
     """Helps hold state related to tests."""
 
@@ -165,7 +85,6 @@ class CommonBackend(BuildBackend):
     def _init(self):
         self._idl_manager = XPIDLManager(self.environment)
         self._test_manager = TestManager(self.environment)
-        self._webidls = WebIDLCollection()
 
     def consume_object(self, obj):
         if isinstance(obj, TestManifest):
@@ -173,43 +92,12 @@ class CommonBackend(BuildBackend):
                 self._test_manager.add(test, flavor=obj.flavor,
                     topsrcdir=obj.topsrcdir)
 
-        elif isinstance(obj, XPIDLFile):
+        if isinstance(obj, XPIDLFile):
             self._idl_manager.register_idl(obj.source_path, obj.module)
-
-        elif isinstance(obj, WebIDLFile):
-            self._webidls.sources.add(mozpath.join(obj.srcdir, obj.basename))
-            obj.ack()
-
-        elif isinstance(obj, GeneratedEventWebIDLFile):
-            self._webidls.generated_events_sources.add(mozpath.join(
-                obj.srcdir, obj.basename))
-            obj.ack()
-
-        elif isinstance(obj, TestWebIDLFile):
-            self._webidls.test_sources.add(mozpath.join(obj.srcdir,
-                obj.basename))
-            obj.ack()
-
-        elif isinstance(obj, PreprocessedTestWebIDLFile):
-            self._webidls.preprocessed_test_sources.add(mozpath.join(
-                obj.srcdir, obj.basename))
-            obj.ack()
-
-        elif isinstance(obj, GeneratedWebIDLFile):
-            self._webidls.generated_sources.add(mozpath.join(obj.srcdir,
-                obj.basename))
-            obj.ack()
-
-        elif isinstance(obj, PreprocessedWebIDLFile):
-            self._webidls.preprocessed_sources.add(mozpath.join(
-                obj.srcdir, obj.basename))
-            obj.ack()
 
     def consume_finished(self):
         if len(self._idl_manager.idls):
             self._handle_idl_manager(self._idl_manager)
-
-        self._handle_webidl_collection(self._webidls)
 
         # Write out a machine-readable file describing every test.
         path = os.path.join(self.environment.topobjdir, 'all-tests.json')
