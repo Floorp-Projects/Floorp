@@ -9,7 +9,7 @@ XPIDL_SOURCES += [
     'nsIScriptableRegion.idl',
 ]
 
-MODULE = 'gfx'
+XPIDL_MODULE = 'gfx'
 
 EXPORTS += [
     'gfxCore.h',

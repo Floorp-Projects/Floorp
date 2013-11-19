@@ -10,7 +10,7 @@ XPIDL_SOURCES += [
     'nsIIdentityCryptoService.idl',
 ]
 
-MODULE = 'identity'
+XPIDL_MODULE = 'identity'
 
 SOURCES += [
     'IdentityCryptoService.cpp',

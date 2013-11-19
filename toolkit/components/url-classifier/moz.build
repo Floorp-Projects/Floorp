@@ -15,7 +15,7 @@ XPIDL_SOURCES += [
     'nsIUrlListManager.idl',
 ]
 
-MODULE = 'url-classifier'
+XPIDL_MODULE = 'url-classifier'
 
 SOURCES += [
     'ChunkSet.cpp',

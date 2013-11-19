@@ -11,7 +11,7 @@ XPIDL_SOURCES += [
     'nsINavHistoryService.idl',
 ]
 
-MODULE = 'places'
+XPIDL_MODULE = 'places'
 
 if CONFIG['MOZ_PLACES']:
     LIBXUL_LIBRARY = True

@@ -15,7 +15,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'nsIWinAppHelper.idl',
     ]
 
-MODULE = 'xulapp'
+XPIDL_MODULE = 'xulapp'
 
 if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
     EXPORTS += ['EventTracer.h']

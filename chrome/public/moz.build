@@ -9,5 +9,5 @@ XPIDL_SOURCES += [
     'nsIToolkitChromeRegistry.idl',
 ]
 
-MODULE = 'chrome'
+XPIDL_MODULE = 'chrome'
 

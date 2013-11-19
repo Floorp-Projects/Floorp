@@ -16,7 +16,7 @@ XPIDL_SOURCES += [
     'nsIZipReader.idl',
 ]
 
-MODULE = 'jar'
+XPIDL_MODULE = 'jar'
 LIBRARY_NAME	= 'jar'
 
 EXPORTS += [
