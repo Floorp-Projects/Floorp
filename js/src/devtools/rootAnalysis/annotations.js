@@ -228,5 +228,6 @@ function isRootedPointerTypeName(name)
 function isSuppressConstructor(name)
 {
     return /::AutoSuppressGC/.test(name)
-        || /::AutoEnterAnalysis/.test(name);
+        || /::AutoEnterAnalysis/.test(name)
+        || /::AutoAssertNoGC/.test(name);
 }
