@@ -1691,6 +1691,10 @@ nsFtpState::Init(nsFtpChannel *channel)
     // initialize counter for network metering
     mCountRecv = 0;
 
+#ifdef MOZ_WIDGET_GONK
+    NS_GetActiveNetworkInterface(mActiveNetwork);
+#endif
+
     mKeepRunning = true;
     mSuppliedEntityID = channel->EntityID();
 
@@ -2199,22 +2203,6 @@ nsresult
 nsFtpState::SaveNetworkStats(bool enforce)
 {
 #ifdef MOZ_WIDGET_GONK
-    MOZ_ASSERT(NS_IsMainThread());
-
-    // Obtain active network
-    nsresult rv;
-    if (!mActiveNetwork) {
-        nsCOMPtr<nsINetworkManager> networkManager =
-            do_GetService("@mozilla.org/network/manager;1", &rv);
-
-        if (NS_FAILED(rv) || !networkManager) {
-            mActiveNetwork = nullptr;
-            return rv;
-        }
-
-        networkManager->GetActive(getter_AddRefs(mActiveNetwork));
-    }
-
     // Obtain app id
     uint32_t appId;
     bool isInBrowser;
@@ -2237,6 +2225,7 @@ nsFtpState::SaveNetworkStats(bool enforce)
         return NS_OK;
     }
 
+    nsresult rv;
     nsCOMPtr<nsINetworkStatsServiceProxy> networkStatsServiceProxy =
         do_GetService("@mozilla.org/networkstatsServiceProxy;1", &rv);
     if (NS_FAILED(rv)) {
