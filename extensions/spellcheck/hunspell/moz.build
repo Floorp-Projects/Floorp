@@ -6,7 +6,5 @@
 
 DIRS += ['src']
 
-MODULE = 'hunspell'
-
 if CONFIG['ENABLE_TESTS']:
     XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']

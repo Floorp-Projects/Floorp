@@ -12,8 +12,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_quota'
 
-MODULE = 'dom'
-
 EXPORTS += [
     'nsIOfflineStorage.h',
 ]

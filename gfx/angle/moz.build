@@ -8,8 +8,6 @@
 if CONFIG['MOZ_ANGLE_RENDERER']:
     DIRS += ['src/libGLESv2', 'src/libEGL']
 
-MODULE = 'angle'
-
 EXPORTS.angle += [
     'include/GLSLANG/ShaderLang.h',
     'include/KHR/khrplatform.h',

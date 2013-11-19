@@ -6,6 +6,4 @@
 
 TEST_TOOL_DIRS += ['mochitest', 'chrome']
 
-MODULE = 'test_libjar'
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

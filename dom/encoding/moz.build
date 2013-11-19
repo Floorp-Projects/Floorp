@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['test']
 
-MODULE = 'dom'
-
 EXPORTS.mozilla.dom += [
     'EncodingUtils.h',
     'FallbackEncoding.h',

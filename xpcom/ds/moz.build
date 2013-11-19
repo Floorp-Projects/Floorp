@@ -43,8 +43,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 XPIDL_MODULE = 'xpcom_ds'
 
-MODULE = 'xpcom'
-
 EXPORTS += [
     'nsArray.h',
     'nsAtomService.h',

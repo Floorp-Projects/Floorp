@@ -7,5 +7,3 @@
 DIRS += ['public', 'src']
 TEST_TOOL_DIRS += ['test']
 
-MODULE = 'pref'
-

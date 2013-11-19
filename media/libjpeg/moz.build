@@ -6,8 +6,6 @@
 
 DIRS += ['simd']
 
-MODULE = 'jpeg'
-
 EXPORTS += [
     'jconfig.h',
     'jerror.h',

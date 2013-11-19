@@ -18,8 +18,6 @@ if not CONFIG['JS_DISABLE_SHELL']:
 
 TEST_DIRS += ['jsapi-tests', 'tests', 'gdb']
 
-MODULE = 'js'
-
 mfbt_root = '../../mfbt'
 LOCAL_INCLUDES += ['%s/double-conversion' % mfbt_root]
 

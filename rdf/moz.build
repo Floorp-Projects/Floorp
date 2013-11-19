@@ -7,5 +7,3 @@
 DIRS += ['base', 'util', 'datasource', 'build']
 TEST_TOOL_DIRS += ['tests']
 
-MODULE = 'rdf'
-

@@ -13,8 +13,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_wifi'
 
-MODULE = 'dom'
-
 EXTRA_COMPONENTS += [
     'DOMWifiManager.js',
     'DOMWifiManager.manifest',

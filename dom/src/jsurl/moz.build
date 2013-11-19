@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['test']
 
-MODULE = 'jsurl'
-
 EXPORTS += [
     'nsJSProtocolHandler.h',
 ]

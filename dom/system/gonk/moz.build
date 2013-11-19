@@ -29,8 +29,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_system_gonk'
 
-MODULE = 'dom'
-
 EXPORTS += [
     'GonkGPSGeolocationProvider.h',
     'nsVolume.h',

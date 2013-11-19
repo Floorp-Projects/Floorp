@@ -6,8 +6,6 @@
 
 XPIDL_MODULE = 'necko_srtp'
 
-MODULE = 'necko'
-
 UNIFIED_SOURCES += [
     'crypto/cipher/aes.c',
     'crypto/cipher/aes_cbc.c',
