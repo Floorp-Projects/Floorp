@@ -290,6 +290,11 @@ AllocateProtoAndIfaceCache(JSObject* obj)
 
   js::SetReservedSlot(obj, DOM_PROTOTYPE_SLOT,
                       JS::PrivateValue(protoAndIfaceArray));
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+  NS_LogCtor((void*)protoAndIfaceArray, "ProtoAndIfaceArray",
+             sizeof(JS::Heap<JSObject*>) * kProtoAndIfaceCacheCount);
+#endif
 }
 
 inline void
@@ -313,6 +318,11 @@ DestroyProtoAndIfaceCache(JSObject* obj)
   MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
 
   JS::Heap<JSObject*>* protoAndIfaceArray = GetProtoAndIfaceArray(obj);
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+  NS_LogDtor((void*)protoAndIfaceArray, "ProtoAndIfaceArray",
+             sizeof(JS::Heap<JSObject*>) * kProtoAndIfaceCacheCount);
+#endif
 
   delete [] protoAndIfaceArray;
 }
@@ -2273,6 +2283,9 @@ ThreadsafeCheckIsChrome(JSContext* aCx, JSObject* aObj);
 
 void
 TraceGlobal(JSTracer* aTrc, JSObject* aObj);
+
+void
+FinalizeGlobal(JSFreeOp* aFop, JSObject* aObj);
 
 bool
 ResolveGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
