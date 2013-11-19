@@ -10,7 +10,7 @@ if CONFIG['MOZ_METRO'] and CONFIG['OS_ARCH'] == 'WINNT':
 LIBRARY_NAME = 'xul'
 
 SOURCES += [
-    'nsStaticXULComponents.cpp',
+    'StaticXULComponentsStart.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
