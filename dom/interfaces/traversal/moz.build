@@ -12,5 +12,3 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_traversal'
 
-MODULE = 'dom'
-

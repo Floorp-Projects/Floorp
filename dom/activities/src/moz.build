@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'dom'
-
 EXPORTS.mozilla.dom += [
     'Activity.h',
 ]
@@ -30,10 +28,8 @@ EXTRA_JS_MODULES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'dom_activities_s'
-
 LOCAL_INCLUDES += [
     '/dom/base',
 ]
+
+FINAL_LIBRARY = 'gklayout'

@@ -6,8 +6,6 @@
 
 XPIDL_MODULE = 'content_webrtc'
 
-MODULE = 'content'
-
 EXPORTS += [
     'MediaEngine.h',
     'MediaEngineDefault.h',
@@ -41,11 +39,8 @@ UNIFIED_SOURCES += [
     'MediaEngineDefault.cpp',
 ]
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'gkconwebrtc_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['NOMINMAX'] = True

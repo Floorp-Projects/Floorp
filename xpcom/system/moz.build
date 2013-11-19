@@ -24,5 +24,3 @@ if CONFIG['MOZ_CRASHREPORTER']:
 
 XPIDL_MODULE = 'xpcom_system'
 
-MODULE = 'xpcom'
-

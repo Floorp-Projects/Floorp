@@ -3,54 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SHARED_LIBRARY_LIBS = \
-  ../base/src/$(LIB_PREFIX)neckobase_s.$(LIB_SUFFIX) \
-  ../dns/$(LIB_PREFIX)neckodns_s.$(LIB_SUFFIX) \
-  ../socket/$(LIB_PREFIX)neckosocket_s.$(LIB_SUFFIX) \
-  ../streamconv/src/$(LIB_PREFIX)nkconv_s.$(LIB_SUFFIX) \
-  ../streamconv/converters/$(LIB_PREFIX)nkcnvts_s.$(LIB_SUFFIX) \
-  ../mime/$(LIB_PREFIX)nkmime_s.$(LIB_SUFFIX) \
-  ../cache/$(LIB_PREFIX)nkcache_s.$(LIB_SUFFIX) \
-  ../cache2/$(LIB_PREFIX)nkcache2_s.$(LIB_SUFFIX) \
-  ../protocol/about/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
-  $(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
-    ../protocol/$(d)/$(LIB_PREFIX)nk$(d)_s.$(LIB_SUFFIX)) \
-  ../ipc/$(LIB_PREFIX)neckoipc_s.$(LIB_SUFFIX) \
-  $(NULL)
-
-ifdef MOZ_SRTP
-SHARED_LIBRARY_LIBS += \
-  ../srtp/src/$(LIB_PREFIX)nksrtp_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-
-ifdef MOZ_SCTP
-SHARED_LIBRARY_LIBS += \
-  ../sctp/src/$(LIB_PREFIX)nksctp_s.$(LIB_SUFFIX) \
-  ../sctp/datachannel/$(LIB_PREFIX)nkdatachan_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-    SHARED_LIBRARY_LIBS += \
-        ../system/win32/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
-endif
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-    SHARED_LIBRARY_LIBS += \
-        ../system/mac/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
-endif
-
-ifdef MOZ_ENABLE_QTNETWORK
-    SHARED_LIBRARY_LIBS += \
-        ../system/qt/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
-endif
-
-ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-    SHARED_LIBRARY_LIBS += \
-        ../system/android/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
-endif
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/../base/src \
   -I$(srcdir)/../dns \
@@ -83,16 +35,10 @@ ifeq (android,$(MOZ_WIDGET_TOOLKIT))
 endif
 
 ifdef NECKO_COOKIES
-SHARED_LIBRARY_LIBS += \
-  ../cookie/$(LIB_PREFIX)neckocookie_s.$(LIB_SUFFIX) \
-  $(NULL)
 LOCAL_INCLUDES += -I$(srcdir)/../cookie
 endif
 
 ifdef NECKO_WIFI
-SHARED_LIBRARY_LIBS += \
-  ../wifi/$(LIB_PREFIX)neckowifi_s.$(LIB_SUFFIX) \
-  $(NULL)
 LOCAL_INCLUDES += -I$(srcdir)/../wifi
 
 endif

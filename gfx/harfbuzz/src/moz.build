@@ -4,13 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'harfbuzz'
-
-if CONFIG['OS_ARCH'] == 'WINNT':
-    FORCE_STATIC_LIB = True
-else:
-    LIBXUL_LIBRARY = True
-
 EXPORTS.harfbuzz += [
     'hb-blob.h',
     'hb-buffer.h',
@@ -57,7 +50,6 @@ SOURCES += [
     'hb-warning.cc',
 ]
 
-LIBRARY_NAME = 'mozharfbuzz'
-
 MSVC_ENABLE_PGO = True
 
+FINAL_LIBRARY = 'gkmedias'

@@ -11,13 +11,10 @@ XPIDL_SOURCES += [
     'nsINavHistoryService.idl',
 ]
 
-MODULE = 'places'
+XPIDL_MODULE = 'places'
 
 if CONFIG['MOZ_PLACES']:
-    LIBXUL_LIBRARY = True
-    EXPORT_LIBRARY = True
     MSVC_ENABLE_PGO = True
-    LIBRARY_NAME = 'places'
 
     XPIDL_SOURCES += [
         'mozIAsyncFavicons.idl',
@@ -89,5 +86,6 @@ if CONFIG['MOZ_PLACES']:
             'nsPlacesAutoComplete.js',
             'nsPlacesAutoComplete.manifest',
         ]
-include('/ipc/chromium/chromium-config.mozbuild')
+    FINAL_LIBRARY = 'xul'
 
+include('/ipc/chromium/chromium-config.mozbuild')

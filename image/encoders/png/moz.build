@@ -4,18 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'imgpnge'
-
 SOURCES += [
     'nsPNGEncoder.cpp',
 ]
 
-LIBRARY_NAME = 'imgpnge_s'
-
 FAIL_ON_WARNINGS = True
-
-LIBXUL_LIBRARY = True
 
 LOCAL_INCLUDES += [
     '/image/src',
 ]
+
+FINAL_LIBRARY = 'imglib2'

@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'opus'
-
 EXPORTS.opus += [
     'include/opus.h',
     'include/opus_defines.h',
@@ -13,8 +11,6 @@ EXPORTS.opus += [
     'include/opus_types.h',
 ]
 
-LIBRARY_NAME = 'opus'
-
 MSVC_ENABLE_PGO = True
 
-FORCE_STATIC_LIB = True
+FINAL_LIBRARY = 'gkmedias'
