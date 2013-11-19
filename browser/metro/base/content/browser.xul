@@ -239,6 +239,7 @@
                      autocompletepopup="urlbar-autocomplete"
                      completeselectedindex="true"
                      placeholder="&urlbar.emptytext;"
+                     tabscrolling="true"
                      onclick="SelectionHelperUI.urlbarClick();"/>
 
             <toolbarbutton id="go-button" class="urlbar-button"
