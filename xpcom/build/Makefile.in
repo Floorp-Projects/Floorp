@@ -7,26 +7,6 @@
 
 MOZILLA_INTERNAL_API = 1
 
-SHARED_LIBRARY_LIBS = \
-		$(DEPTH)/chrome/src/$(LIB_PREFIX)chrome_s.$(LIB_SUFFIX) \
-		../ds/$(LIB_PREFIX)xpcomds_s.$(LIB_SUFFIX) \
-		../io/$(LIB_PREFIX)xpcomio_s.$(LIB_SUFFIX) \
-		../components/$(LIB_PREFIX)xpcomcomponents_s.$(LIB_SUFFIX) \
-		../threads/$(LIB_PREFIX)xpcomthreads_s.$(LIB_SUFFIX) \
-		../base/$(LIB_PREFIX)xpcombase_s.$(LIB_SUFFIX) \
-		../reflect/xptcall/src/$(LIB_PREFIX)xptcall.$(LIB_SUFFIX) \
-		../reflect/xptcall/src/$(LIB_PREFIX)xptcmd.$(LIB_SUFFIX) \
-		../reflect/xptinfo/src/$(LIB_PREFIX)xptinfo.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX) \
-		../string/src/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
-		$(NULL)
-
-ifdef NS_TRACE_MALLOC
-SHARED_LIBRARY_LIBS += \
-		$(DEPTH)/tools/trace-malloc/lib/$(LIB_PREFIX)tracemalloc.$(LIB_SUFFIX) \
-		$(NULL)
-endif
-
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I.. \

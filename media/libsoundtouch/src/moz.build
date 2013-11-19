@@ -37,3 +37,5 @@ LIBRARY_NAME = 'soundtouch'
 
 MSVC_ENABLE_PGO = True
 NO_VISIBILITY_FLAGS = True
+
+FINAL_LIBRARY = 'gkmedias'

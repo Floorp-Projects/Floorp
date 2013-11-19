@@ -26,3 +26,5 @@ LOCAL_INCLUDES += [
     "/dom/base",
     "/netwerk/base/src",
 ]
+
+FINAL_LIBRARY = 'gklayout'

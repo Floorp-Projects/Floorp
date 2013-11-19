@@ -31,3 +31,5 @@ LIBRARY_NAME = 'domvoicemail_s'
 LOCAL_INCLUDES += [
     '../base',
 ]
+
+FINAL_LIBRARY = 'gklayout'

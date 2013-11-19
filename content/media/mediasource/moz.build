@@ -34,3 +34,4 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'gkconmediasource_s'
 
+FINAL_LIBRARY = 'gklayout'

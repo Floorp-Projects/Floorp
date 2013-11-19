@@ -30,3 +30,5 @@ LOCAL_INCLUDES += [
     '../xre',
     '/profile/dirserviceprovider/src',
 ]
+
+FINAL_LIBRARY = 'xulapp_s'

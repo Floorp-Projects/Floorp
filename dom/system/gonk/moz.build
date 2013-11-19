@@ -129,3 +129,4 @@ LOCAL_INCLUDES += [
     '/dom/wifi',
 ]
 
+FINAL_LIBRARY = 'gklayout'

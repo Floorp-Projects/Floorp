@@ -29,3 +29,5 @@ LOCAL_INCLUDES += [
     '../base',
     '../workers',
 ]
+
+FINAL_LIBRARY = 'gklayout'

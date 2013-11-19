@@ -31,3 +31,5 @@ EXTRA_PP_JS_MODULES += [
     'DownloadIntegration.jsm',
     'DownloadUIHelper.jsm',
 ]
+
+FINAL_LIBRARY = 'toolkitcomps'

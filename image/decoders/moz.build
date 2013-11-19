@@ -49,3 +49,5 @@ SOURCES += [
 LOCAL_INCLUDES += [
     '/image/src',
 ]
+
+FINAL_LIBRARY = 'imglib2'

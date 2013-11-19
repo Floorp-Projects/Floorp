@@ -44,3 +44,5 @@ LOCAL_INCLUDES += [
     '/layout/tables',
     '/layout/xul/base/src',
 ]
+
+FINAL_LIBRARY = 'gklayout'

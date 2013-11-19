@@ -43,3 +43,5 @@ EXTRA_PP_JS_MODULES += [
 ]
 
 FORCE_STATIC_LIB = True
+
+FINAL_LIBRARY = 'browsercomps'

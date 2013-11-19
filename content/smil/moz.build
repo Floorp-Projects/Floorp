@@ -72,3 +72,5 @@ LOCAL_INCLUDES += [
     '../events/src',
     '/layout/style',
 ]
+
+FINAL_LIBRARY = 'gklayout'

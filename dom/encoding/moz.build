@@ -28,6 +28,7 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domencoding_s'
 
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/intl/locale/src',
 ]

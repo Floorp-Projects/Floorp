@@ -27,3 +27,5 @@ LIBXUL_LIBRARY = True
 srcdir = '.'
 
 include('sources.mozbuild')
+
+FINAL_LIBRARY = 'xulapp_s'

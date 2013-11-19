@@ -24,3 +24,5 @@ LOCAL_INCLUDES += [
     "/content/events/src",
     "/dom/base",
 ]
+
+FINAL_LIBRARY = 'gklayout'

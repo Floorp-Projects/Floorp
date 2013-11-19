@@ -54,10 +54,9 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domsystem_s'
 
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 # We fire the nsDOMDeviceAcceleration
 LOCAL_INCLUDES += [
     '/content/events/src',

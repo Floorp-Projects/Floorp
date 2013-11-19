@@ -7,3 +7,5 @@
 LIBRARY_NAME = 'google_breakpad_standalone_s'
 
 FORCE_STATIC_LIB = True
+
+FINAL_LIBRARY = 'breakpadinjector'

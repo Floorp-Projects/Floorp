@@ -70,6 +70,7 @@ LIBRARY_NAME = 'dom_indexeddb_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/caps/include',
     '/content/base/src',

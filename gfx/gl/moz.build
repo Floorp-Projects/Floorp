@@ -118,7 +118,6 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gl'
 
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

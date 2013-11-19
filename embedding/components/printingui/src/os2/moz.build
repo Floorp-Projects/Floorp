@@ -16,3 +16,4 @@ LIBRARY_NAME = 'printingui_s'
 
 LIBXUL_LIBRARY = True
 
+FINAL_LIBRARY = 'embedcomponents'

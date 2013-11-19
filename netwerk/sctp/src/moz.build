@@ -51,3 +51,4 @@ LIBRARY_NAME = 'nksctp_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'necko'

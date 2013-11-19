@@ -14,5 +14,4 @@ LIBRARY_NAME = 'androidproxy'
 
 LIBXUL_LIBRARY = True
 
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

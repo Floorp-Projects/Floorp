@@ -19,5 +19,4 @@ if CONFIG['MOZ_ENABLE_GTK2']:
         'gtk2xtbin.c',
     ]
 
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

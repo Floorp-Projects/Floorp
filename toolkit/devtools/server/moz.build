@@ -20,5 +20,4 @@ LIBRARY_NAME = 'jsinspector'
 
 LIBXUL_LIBRARY = True
 
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

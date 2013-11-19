@@ -23,3 +23,5 @@ FAIL_ON_WARNINGS = True
 LIBRARY_NAME = 'dom_nfc_s'
 
 LIBXUL_LIBRARY = True
+
+FINAL_LIBRARY = 'gklayout'

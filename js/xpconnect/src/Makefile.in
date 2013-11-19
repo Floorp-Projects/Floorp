@@ -26,11 +26,6 @@ LOCAL_INCLUDES += \
     $(NULL)
 endif
 
-SHARED_LIBRARY_LIBS = \
-  ../loader/$(LIB_PREFIX)jsloader_s.$(LIB_SUFFIX) \
-  ../wrappers/$(LIB_PREFIX)xpcwrappers_s.$(LIB_SUFFIX) \
-  $(NULL)
-
 EXTRA_MDDEPEND_FILES = dom_qsgen.pp dictionary_helper_gen.pp event_impl_gen.pp
 
 INSTALL_TARGETS += extra_export_files

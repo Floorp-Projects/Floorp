@@ -14,10 +14,9 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domsystemmac_s'
 
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/dom/src/geolocation',
 ]

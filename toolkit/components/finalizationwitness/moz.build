@@ -26,3 +26,5 @@ LOCAL_INCLUDES += [
 
 LIBRARY_NAME = 'finalizationwitness_s'
 LIBXUL_LIBRARY = True
+
+FINAL_LIBRARY = 'toolkitcomps'

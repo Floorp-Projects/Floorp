@@ -41,8 +41,6 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'dombindings_s'
 
-EXPORT_LIBRARY = True
-
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/canvas/src',
@@ -82,3 +80,5 @@ if CONFIG['MOZ_AUDIO_CHANNEL_MANAGER']:
     LOCAL_INCLUDES += [
         '/dom/system/gonk',
     ]
+
+FINAL_LIBRARY = 'xul'
