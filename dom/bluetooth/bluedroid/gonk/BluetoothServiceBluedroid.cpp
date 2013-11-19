@@ -18,7 +18,6 @@
 
 #include "BluetoothServiceBluedroid.h"
 
-#include <hardware/bluetooth.h>
 #include <hardware/hardware.h>
 
 #include "BluetoothProfileController.h"
@@ -31,8 +30,6 @@
 using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
-
-typedef char bdstr_t[18];
 
 /**
  *  Classes only used in this file
@@ -159,39 +156,31 @@ ClassToIcon(uint32_t aClass, nsAString& aRetIcon)
   }
 }
 
-static void
-AdapterStateChangeCallback(bt_state_t aStatus)
+static bool
+IsReady()
 {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  BT_LOGD("%s, BT_STATE:%d", __FUNCTION__, aStatus);
-  nsAutoString signalName;
-  if (aStatus == BT_STATE_ON) {
-    sIsBtEnabled = true;
-    signalName = NS_LITERAL_STRING("AdapterAdded");
-    // by default bluetooth scan mode is NONE
-    bt_property_t prop;
-    prop.type = BT_PROPERTY_ADAPTER_SCAN_MODE;
-    bt_scan_mode_t mode = BT_SCAN_MODE_CONNECTABLE;
-    prop.val = (void*) &mode;
-    prop.len = sizeof(mode);
-    if (sBtInterface) {
-      int ret = sBtInterface->set_adapter_property(&prop);
-      if (ret != BT_STATUS_SUCCESS) {
-        BT_LOGR("Warning! Fail to set property to BT_SCAN_MODE_CONNECTABLE");
-      }
-    }
-  } else {
-    sIsBtEnabled = false;
-    signalName = NS_LITERAL_STRING("Disabled");
+  if (!sBtInterface || !sIsBtEnabled) {
+    BT_LOGR("Warning! Bluetooth Service is not ready");
+    return false;
   }
+  return true;
+}
 
-  BluetoothSignal signal(signalName, NS_LITERAL_STRING(KEY_MANAGER),
-                         BluetoothValue(true));
-  nsRefPtr<DistributeBluetoothSignalTask>
-    t = new DistributeBluetoothSignalTask(signal);
-  if (NS_FAILED(NS_DispatchToMainThread(t))) {
-    NS_WARNING("Failed to dispatch to main thread!");
+const bt_interface_t*
+GetBluetoothInterface()
+{
+  return (IsReady()) ? sBtInterface : nullptr;
+}
+
+void
+StringToBdAddressType(const nsAString& aBdAddress,
+                      bt_bdaddr_t *aRetBdAddressType)
+{
+  const char* str = NS_ConvertUTF16toUTF8(aBdAddress).get();
+
+  for (int i = 0; i < 6; i++) {
+    aRetBdAddressType->address[i] = (uint8_t) strtoul(str, (char **)&str, 16);
+    str++;
   }
 }
 
@@ -208,25 +197,47 @@ BdAddressTypeToString(bt_bdaddr_t* aBdAddressType, nsAString& aRetBdAddress)
   aRetBdAddress = NS_ConvertUTF8toUTF16((char*)bdstr);
 }
 
-static bool
-IsReady()
+static void
+Setup()
 {
-  if (!sBtInterface || !sIsBtEnabled) {
-    BT_LOGR("Warning! Bluetooth Service is not ready");
-    return false;
+  // Bluetooth scan mode is NONE by default
+  bt_scan_mode_t mode = BT_SCAN_MODE_CONNECTABLE;
+  bt_property_t prop;
+  prop.type = BT_PROPERTY_ADAPTER_SCAN_MODE;
+  prop.val = (void*)&mode;
+  prop.len = sizeof(mode);
+
+  NS_ENSURE_TRUE_VOID(sBtInterface);
+
+  int ret = sBtInterface->set_adapter_property(&prop);
+  if (ret != BT_STATUS_SUCCESS) {
+    BT_LOGR("%s: Fail to set: BT_SCAN_MODE_CONNECTABLE", __FUNCTION__);
   }
-  return true;
 }
 
 static void
-StringToBdAddressType(const nsAString& aBdAddress,
-                      bt_bdaddr_t *aRetBdAddressType)
+AdapterStateChangeCallback(bt_state_t aStatus)
 {
-  const char* str = NS_ConvertUTF16toUTF8(aBdAddress).get();
+  MOZ_ASSERT(!NS_IsMainThread());
 
-  for (int i = 0; i < 6; i++) {
-    aRetBdAddressType->address[i] = (uint8_t) strtoul(str, (char **)&str, 16);
-    str++;
+  BT_LOGR("%s, BT_STATE:%d", __FUNCTION__, aStatus);
+
+  nsAutoString signalName;
+  if (aStatus == BT_STATE_ON) {
+    Setup();
+    sIsBtEnabled = true;
+    signalName = NS_LITERAL_STRING("AdapterAdded");
+  } else {
+    sIsBtEnabled = false;
+    signalName = NS_LITERAL_STRING("Disabled");
+  }
+
+  BluetoothSignal signal(signalName, NS_LITERAL_STRING(KEY_MANAGER),
+                         BluetoothValue(true));
+  nsRefPtr<DistributeBluetoothSignalTask>
+    t = new DistributeBluetoothSignalTask(signal);
+  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+    NS_WARNING("Failed to dispatch to main thread!");
   }
 }
 
@@ -525,12 +536,13 @@ BondStateChangedCallback(bt_status_t aStatus, bt_bdaddr_t* aRemoteBdAddress,
 
   nsAutoString remoteAddress;
   BdAddressTypeToString(aRemoteBdAddress, remoteAddress);
-  bool bonded;
 
-  if (aState == BT_BOND_STATE_BONDING) {
-    // We don't need to handle bonding state
-    return;
-  } else if (aState == BT_BOND_STATE_NONE) {
+  // We don't need to handle bonding state
+  NS_ENSURE_TRUE_VOID(aState != BT_BOND_STATE_BONDING);
+  NS_ENSURE_FALSE_VOID(aState == BT_BOND_STATE_BONDED &&
+                       sAdapterBondedAddressArray.Contains(remoteAddress));
+  bool bonded;
+  if (aState == BT_BOND_STATE_NONE) {
     bonded = false;
     sAdapterBondedAddressArray.RemoveElement(remoteAddress);
   } else if (aState == BT_BOND_STATE_BONDED) {
@@ -731,8 +743,20 @@ BluetoothServiceBluedroid::GetDefaultAdapterPathInternal(
   nsRefPtr<BluetoothReplyRunnable> runnable(aRunnable);
 
   BluetoothValue v = InfallibleTArray<BluetoothNamedValue>();
+
+  v.get_ArrayOfBluetoothNamedValue().AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("Address"), sAdapterBdAddress));
+
   v.get_ArrayOfBluetoothNamedValue().AppendElement(
     BluetoothNamedValue(NS_LITERAL_STRING("Name"), sAdapterBdName));
+
+  v.get_ArrayOfBluetoothNamedValue().AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("Discoverable"),
+                        sAdapterDiscoverable));
+
+  v.get_ArrayOfBluetoothNamedValue().AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("DiscoverableTimeout"),
+                        sAdapterDiscoverableTimeout));
 
   v.get_ArrayOfBluetoothNamedValue().AppendElement(
     BluetoothNamedValue(NS_LITERAL_STRING("Devices"),
