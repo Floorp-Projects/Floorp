@@ -53,6 +53,7 @@ var gPropertyData = [
 
   // font-variant-ligatures
   // valid values
+  { prop: "font-variant-ligatures", value: "none", features: {"liga": 0, "dlig": 0, "clig": 0, "calt": 0, "hlig": 0} },
   { prop: "font-variant-ligatures", value: "normal", features: {"liga": 1, "dlig": 0} },
   { prop: "font-variant-ligatures", value: "common-ligatures", features: {"liga": 1, "clig": 1, "dlig": 0, "hlig": 0, "calt": 1} },
   { prop: "font-variant-ligatures", value: "no-common-ligatures", features: {"liga": 0, "clig": 0, "dlig": 0, "hlig": 0, "calt": 1} },
@@ -68,6 +69,8 @@ var gPropertyData = [
   { prop: "font-variant-ligatures", value: "common-ligatures no-discretionary-ligatures historical-ligatures no-contextual", features: {"clig": 1, "dlig": 0, "hlig": 1, "liga": 1, "calt": 0} },
 
   // invalid values
+  { prop: "font-variant-ligatures", value: "common-ligatures none", features: {"liga": 1, "clig": 1, "dlig": 0}, invalid: true },
+  { prop: "font-variant-ligatures", value: "none common-ligatures", features: {"liga": 1, "clig": 1, "dlig": 0}, invalid: true },
   { prop: "font-variant-ligatures", value: "common-ligatures normal", features: {"liga": 1, "clig": 1, "dlig": 0}, invalid: true },
   { prop: "font-variant-ligatures", value: "common-ligatures no-common-ligatures", features: {"liga": 1, "clig": 1, "dlig": 0}, invalid: true },
   { prop: "font-variant-ligatures", value: "common-ligatures common-ligatures", features: {"liga": 1, "clig": 1, "dlig": 0}, invalid: true },

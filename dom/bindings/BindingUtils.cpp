@@ -2167,6 +2167,13 @@ TraceGlobal(JSTracer* aTrc, JSObject* aObj)
   mozilla::dom::TraceProtoAndIfaceCache(aTrc, aObj);
 }
 
+void
+FinalizeGlobal(JSFreeOp* aFreeOp, JSObject* aObj)
+{
+  MOZ_ASSERT(js::GetObjectClass(aObj)->flags & JSCLASS_DOM_GLOBAL);
+  mozilla::dom::DestroyProtoAndIfaceCache(aObj);
+}
+
 bool
 ResolveGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
               JS::MutableHandle<jsid> aId, unsigned aFlags,

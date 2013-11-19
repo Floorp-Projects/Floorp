@@ -19,8 +19,6 @@
 #include "nsIRequest.h"
 #include "nsNetCID.h"
 
-#include <algorithm>
-
 #define ASYNC_TEST // undefine this if you want to test sycnronous conversion.
 
 /////////////////////////////////
@@ -99,12 +97,6 @@ NS_IMPL_ISUPPORTS2(EndListener,
 // EndListener END
 ////////////////////////////////////////////////////////////////////////
 
-static uint32_t 
-saturated(uint64_t aValue)
-{
-    return (uint32_t)std::min(aValue, (uint64_t)UINT32_MAX);
-}
- 
 nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIRequest* request) {
     nsresult rv;
 

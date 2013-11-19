@@ -939,7 +939,7 @@ Preferences::WritePrefFile(nsIFile* aFile)
   if (safeStream) {
     rv = safeStream->Finish();
     if (NS_FAILED(rv)) {
-      NS_WARNING("failed to save prefs file! possible dataloss");
+      NS_WARNING("failed to save prefs file! possible data loss");
       return rv;
     }
   }

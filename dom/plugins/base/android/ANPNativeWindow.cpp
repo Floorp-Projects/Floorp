@@ -26,6 +26,7 @@ static ANPNativeWindow anp_native_window_acquireNativeWindow(NPP instance) {
 static void anp_native_window_invertPluginContent(NPP instance, bool isContentInverted) {
   nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
   pinst->SetInverted(isContentInverted);
+  pinst->RedrawPlugin();
 }
 
 
