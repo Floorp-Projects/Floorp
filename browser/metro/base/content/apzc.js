@@ -39,30 +39,52 @@ var APZCObserver = {
   handleEvent: function APZC_handleEvent(aEvent) {
     switch (aEvent.type) {
       case 'pageshow':
-        if (aEvent.target != Browser.selectedBrowser.contentDocument)
-          break;
-        // fall through to TabSelect:
-      case 'TabSelect':
-        // ROOT_ID doesn't really identify the view we want. When we call
-        // this on a content document (tab),  findElementWithViewId will
-        // always return the root content document associated with the
-        // scrollable frame.
-        const ROOT_ID = 1;
-        let windowUtils = Browser.selectedBrowser.contentWindow.
-                          QueryInterface(Ci.nsIInterfaceRequestor).
-                          getInterface(Ci.nsIDOMWindowUtils);
-        // findElementWithViewId will throw if it can't find it
-        let element;
-        try {
-          element = windowUtils.findElementWithViewId(ROOT_ID);
-        } catch (e) {
-          // Not present; nothing to do here
+        if (aEvent.target != Browser.selectedBrowser.contentDocument) {
           break;
         }
-        windowUtils.setDisplayPortForElement(0, 0, ContentAreaObserver.width,
-                                             ContentAreaObserver.height,
-                                             element);
+      // intentional fall through
+      case 'TabSelect': {
+        // Start off with something reasonable. The apzc will handle these
+        // calculations once scrolling starts.
+        let doc = Browser.selectedBrowser.contentDocument.documentElement;
+        // While running tests, sometimes this can be null. If we don't have a
+        // root document, there's no point in setting a scrollable display port.
+        if (!doc) {
+          break;
+        }
+        let win = Browser.selectedBrowser.contentWindow;
+        let factor = 0.2;
+        let portX = 0;
+        let portY = 0;
+        let portWidth = ContentAreaObserver.width;
+        let portHeight = ContentAreaObserver.height;
+
+        if (portWidth < doc.scrollWidth) {
+          portWidth += ContentAreaObserver.width * factor;
+          if (portWidth > doc.scrollWidth) {
+            portWidth = doc.scrollWidth;
+          }
+        }
+        if (portHeight < doc.scrollHeight) {
+          portHeight += ContentAreaObserver.height * factor;
+          if (portHeight > doc.scrollHeight) {
+            portHeight = doc.scrollHeight;
+          }
+        }
+        if (win.scrollX > 0) {
+          portX -= ContentAreaObserver.width * factor;
+        }
+        if (win.scrollY > 0) {
+          portY -= ContentAreaObserver.height * factor;
+        }
+        let cwu = Browser.selectedBrowser.contentWindow
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+        cwu.setDisplayPortForElement(portX, portY,
+                                     portWidth, portHeight,
+                                     Browser.selectedBrowser.contentDocument.documentElement);
         break;
+      }
       case 'TabOpen': {
         let browser = aEvent.originalTarget.linkedBrowser;
         browser.addEventListener("pageshow", this, true);

@@ -14,7 +14,7 @@ import android.view.inputmethod.InputMethodManager;
 import java.util.Collection;
 import java.util.Locale;
 
-final class InputMethods {
+final public class InputMethods {
     public static final String METHOD_ANDROID_LATINIME = "com.android.inputmethod.latin/.LatinIME";
     public static final String METHOD_ATOK = "com.justsystems.atokmobile.service/.AtokInputMethodService";
     public static final String METHOD_GOOGLE_JAPANESE_INPUT = "com.google.android.inputmethod.japanese/.MozcService";

@@ -114,6 +114,7 @@ function getOverflowContentBoundingRect(aElement) {
  */
 let Content = {
   _debugEvents: false,
+  _isZoomedIn: false,
 
   get formAssistant() {
     delete this.formAssistant;
@@ -133,6 +134,7 @@ let Content = {
 
     addEventListener("touchstart", this, false);
     addEventListener("click", this, true);
+    addEventListener("dblclick", this, true);
     addEventListener("keydown", this);
     addEventListener("keyup", this);
 
@@ -178,6 +180,15 @@ let Content = {
           this.formAssistant.close();
         else
           this.formAssistant.open(aEvent.target, aEvent);
+        break;
+
+      case "dblclick":
+        // XXX Once gesture listners are used(Bug 933236), apzc will notify us
+        if (aEvent.mozInputSource == Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH) {
+          let selection = content.getSelection();
+          selection.removeAllRanges();
+          this._onZoomToTappedContent(aEvent.target);
+        }
         break;
 
       case "click":
@@ -360,6 +371,75 @@ let Content = {
                        Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
                        null, null, null);
       }
+    }
+  },
+
+  _onZoomToTappedContent: function (aElement) {
+    if (!aElement || this._isZoomedIn) {
+      this._zoomOut();
+      return;
+    }
+
+    while (aElement && !this._shouldZoomToElement(aElement)) {
+      aElement = aElement.parentNode;
+    }
+
+    if (!aElement) {
+      this._zoomOut();
+    } else {
+      this._zoomToElement(aElement);
+    }
+  },
+
+  /******************************************************
+   * Zoom utilities
+   */
+  _zoomOut: function() {
+    let rect = getBoundingContentRect(content.document.documentElement);
+
+    let utils = Util.getWindowUtils(content);
+    let viewId = utils.getViewId(content.document.documentElement);
+    let presShellId = {};
+    utils.getPresShellId(presShellId);
+    let zoomData = [rect.x,
+                    rect.y,
+                    rect.width,
+                    rect.height,
+                    presShellId.value,
+                    viewId].join(",");
+    Services.obs.notifyObservers(null, "Metro:ZoomToRect", zoomData);
+    this._isZoomedIn = false;
+  },
+
+  _zoomToElement: function(aElement) {
+    let rect = getBoundingContentRect(aElement);
+    let utils = Util.getWindowUtils(content);
+    let viewId = utils.getViewId(content.document.documentElement);
+    let presShellId = {};
+    utils.getPresShellId(presShellId);
+    let zoomData = [rect.x,
+                    rect.y,
+                    rect.width,
+                    rect.height,
+                    presShellId.value,
+                    viewId].join(",");
+    Services.obs.notifyObservers(null, "Metro:ZoomToRect", zoomData);
+    this._isZoomedIn = true;
+  },
+
+  _shouldZoomToElement: function(aElement) {
+    let win = aElement.ownerDocument.defaultView;
+    if (win.getComputedStyle(aElement, null).display == "inline") {
+      return false;
+    }
+    else if (aElement instanceof Ci.nsIDOMHTMLLIElement) {
+      return false;
+    }
+    else if (aElement instanceof Ci.nsIDOMHTMLQuoteElement) {
+      return false;
+    }
+    else {
+      return true;
     }
   },
 

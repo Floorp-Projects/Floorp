@@ -1144,6 +1144,7 @@ const int32_t nsCSSProps::kFontVariantEastAsianKTable[] = {
 };
 
 const int32_t nsCSSProps::kFontVariantLigaturesKTable[] = {
+  eCSSKeyword_none, NS_FONT_VARIANT_LIGATURES_NONE,
   eCSSKeyword_common_ligatures, NS_FONT_VARIANT_LIGATURES_COMMON,
   eCSSKeyword_no_common_ligatures, NS_FONT_VARIANT_LIGATURES_NO_COMMON,
   eCSSKeyword_discretionary_ligatures, NS_FONT_VARIANT_LIGATURES_DISCRETIONARY,

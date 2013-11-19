@@ -178,6 +178,7 @@ body {
   pointer-events: none;
 }
 
+body.dim > #header > #element-position,
 body.dim > #main > p,
 body.dim > #main > .tooltip {
   visibility: hidden;

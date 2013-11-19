@@ -205,7 +205,7 @@ NS_GetContentList(nsINode* aRootNode,
     return list.forget();
   }
 
-  static PLDHashTableOps hash_table_ops =
+  static const PLDHashTableOps hash_table_ops =
   {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
@@ -326,7 +326,7 @@ GetFuncStringContentList(nsINode* aRootNode,
 
   nsRefPtr<nsCacheableFuncStringContentList> list;
 
-  static PLDHashTableOps hash_table_ops =
+  static const PLDHashTableOps hash_table_ops =
   {
     PL_DHashAllocTable,
     PL_DHashFreeTable,

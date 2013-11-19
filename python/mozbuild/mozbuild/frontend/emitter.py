@@ -87,7 +87,7 @@ class TreeMetadataEmitter(LoggingMixin):
         for out in output:
             if isinstance(out, MozbuildSandbox):
                 # Keep all sandboxes around, we will need them later.
-                sandboxes[out['RELATIVEDIR']] = out
+                sandboxes[out['OBJDIR']] = out
 
                 for o in self.emit_from_sandbox(out):
                     yield o
@@ -101,22 +101,22 @@ class TreeMetadataEmitter(LoggingMixin):
             else:
                 raise Exception('Unhandled output type: %s' % out)
 
-        for reldir, libname, final_lib in self._final_libs:
+        for objdir, libname, final_lib in self._final_libs:
             if final_lib not in self._libs:
                 raise Exception('FINAL_LIBRARY in %s (%s) does not match any '
-                                'LIBRARY_NAME' % (reldir, final_lib))
+                                'LIBRARY_NAME' % (objdir, final_lib))
             libs = self._libs[final_lib]
             if len(libs) > 1:
                 raise Exception('FINAL_LIBRARY in %s (%s) matches a '
                                 'LIBRARY_NAME defined in multiple places (%s)' %
-                                (reldir, final_lib, ', '.join(libs.keys())))
-            libs.values()[0].link_static_lib(reldir, libname)
-            self._libs[libname][reldir].refcount += 1
+                                (objdir, final_lib, ', '.join(libs.keys())))
+            libs.values()[0].link_static_lib(objdir, libname)
+            self._libs[libname][objdir].refcount += 1
             # The refcount can't go above 1 right now. It might in the future,
             # but that will have to be specifically handled. At which point the
             # refcount might have to be a list of referencees, for better error
             # reporting.
-            assert self._libs[libname][reldir].refcount <= 1
+            assert self._libs[libname][objdir].refcount <= 1
 
         def recurse_libs(path, name):
             for p, n in self._libs[name][path].static_libraries:
@@ -310,13 +310,13 @@ class TreeMetadataEmitter(LoggingMixin):
             # If no LIBRARY_NAME is given, create one.
             libname = sandbox['RELATIVEDIR'].replace('/', '_')
         if libname:
-            self._libs.setdefault(libname, {})[sandbox['RELATIVEDIR']] = \
+            self._libs.setdefault(libname, {})[sandbox['OBJDIR']] = \
                 LibraryDefinition(sandbox, libname)
 
         if final_lib:
             if sandbox.get('FORCE_STATIC_LIB'):
                 raise SandboxValidationError('FINAL_LIBRARY implies FORCE_STATIC_LIB')
-            self._final_libs.append((sandbox['RELATIVEDIR'], libname, final_lib))
+            self._final_libs.append((sandbox['OBJDIR'], libname, final_lib))
             passthru.variables['FORCE_STATIC_LIB'] = True
 
         # While there are multiple test manifests, the behavior is very similar

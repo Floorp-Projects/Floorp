@@ -6,7 +6,7 @@
 
 LIBRARY_NAME = 'xpt'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'xpt_arena.c',
     'xpt_struct.c',
     'xpt_xdr.c',

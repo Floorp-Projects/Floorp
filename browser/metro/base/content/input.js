@@ -93,7 +93,6 @@ var TouchModule = {
 
     // capture phase events
     window.addEventListener("CancelTouchSequence", this, true);
-    window.addEventListener("dblclick", this, true);
     window.addEventListener("keydown", this, true);
     window.addEventListener("MozMouseHittest", this, true);
 
@@ -143,20 +142,6 @@ var TouchModule = {
             break;
           case "touchend":
             this._onTouchEnd(aEvent);
-            break;
-          case "dblclick":
-            // XXX This will get picked up somewhere below us for "double tap to zoom"
-            // once we get omtc and the apzc. Currently though dblclick is delivered to
-            // content and triggers selection of text, so fire up the SelectionHelperUI
-            // once selection is present.
-            if (!InputSourceHelper.isPrecise &&
-                !SelectionHelperUI.isActive &&
-                !FindHelperUI.isActive) {
-              setTimeout(function () {
-                SelectionHelperUI.attachEditSession(Browser.selectedTab.browser,
-                                                    aEvent.clientX, aEvent.clientY);
-              }, 50);
-            }
             break;
           case "keydown":
             this._handleKeyDown(aEvent);
