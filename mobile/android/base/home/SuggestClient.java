@@ -53,8 +53,12 @@ class SuggestClient {
         mCheckNetwork = true;
     }
 
+    /**
+     * This constructor is used exclusively by Robocop.
+     */
     public SuggestClient(Context context, String suggestTemplate, int timeout) {
         this(context, suggestTemplate, timeout, Integer.MAX_VALUE);
+        mCheckNetwork = false;
     }
 
     /**
