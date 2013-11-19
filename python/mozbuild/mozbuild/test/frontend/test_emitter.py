@@ -156,7 +156,6 @@ class TestEmitterBasic(unittest.TestCase):
             HOST_CSRCS=['fans.c', 'tans.c'],
             HOST_LIBRARY_NAME='host_fans',
             IS_COMPONENT=True,
-            LIBRARY_NAME='lib_name',
             LIBS=['fans.lib', 'tans.lib'],
             LIBXUL_LIBRARY=True,
             MSVC_ENABLE_PGO=True,

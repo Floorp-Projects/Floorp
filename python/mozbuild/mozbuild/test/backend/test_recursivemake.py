@@ -324,9 +324,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'HOST_LIBRARY_NAME': [
                 'HOST_LIBRARY_NAME := host_bar',
             ],
-            'LIBRARY_NAME': [
-                'LIBRARY_NAME := lib_name',
-            ],
             'LIBXUL_LIBRARY': [
                 'LIBXUL_LIBRARY := 1',
             ],
