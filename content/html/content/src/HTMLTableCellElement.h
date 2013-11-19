@@ -162,6 +162,10 @@ protected:
   HTMLTableElement* GetTable() const;
 
   HTMLTableRowElement* GetRow() const;
+
+private:
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    nsRuleData* aData);
 };
 
 } // namespace dom
