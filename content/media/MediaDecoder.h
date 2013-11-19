@@ -201,6 +201,8 @@ class TimeRanges;
 }
 }
 
+using namespace mozilla::dom;
+
 namespace mozilla {
 namespace layers {
 class Image;
@@ -230,6 +232,8 @@ class MediaDecoder : public nsIObserver,
                      public AbstractMediaDecoder
 {
 public:
+  typedef mozilla::layers::Image Image;
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
@@ -367,7 +371,7 @@ public:
     MediaDecoder* mDecoder;
     // The last video image sent to the stream. Useful if we need to replicate
     // the image.
-    nsRefPtr<layers::Image> mLastVideoImage;
+    nsRefPtr<Image> mLastVideoImage;
     gfxIntSize mLastVideoImageDisplaySize;
     // This is set to true when the stream is initialized (audio and
     // video tracks added).
@@ -519,7 +523,7 @@ public:
   virtual bool IsTransportSeekable();
 
   // Return the time ranges that can be seeked into.
-  virtual nsresult GetSeekable(dom::TimeRanges* aSeekable);
+  virtual nsresult GetSeekable(TimeRanges* aSeekable);
 
   // Set the end time of the media resource. When playback reaches
   // this point the media pauses. aTime is in seconds.
@@ -555,7 +559,7 @@ public:
   virtual void MoveLoadsToBackground();
 
   // Returns a weak reference to the media decoder owner.
-  MediaDecoderOwner* GetMediaOwner() const;
+  mozilla::MediaDecoderOwner* GetMediaOwner() const;
 
   // Returns the current size of the framebuffer used in
   // MozAudioAvailable events.
@@ -580,7 +584,7 @@ public:
 
   // Constructs the time ranges representing what segments of the media
   // are buffered and playable.
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered);
+  virtual nsresult GetBuffered(TimeRanges* aBuffered);
 
   // Returns the size, in bytes, of the heap memory used by the currently
   // queued decoded video and audio data.
@@ -591,7 +595,7 @@ public:
   {
     return mVideoFrameContainer;
   }
-  layers::ImageContainer* GetImageContainer() MOZ_OVERRIDE;
+  mozilla::layers::ImageContainer* GetImageContainer() MOZ_OVERRIDE;
 
   // Sets the length of the framebuffer used in MozAudioAvailable events.
   // The new size must be between 512 and 16384.
@@ -657,8 +661,8 @@ public:
   // held.
   void UpdatePlaybackPosition(int64_t aTime) MOZ_FINAL MOZ_OVERRIDE;
 
-  void SetAudioChannelType(dom::AudioChannelType aType) { mAudioChannelType = aType; }
-  dom::AudioChannelType GetAudioChannelType() { return mAudioChannelType; }
+  void SetAudioChannelType(AudioChannelType aType) { mAudioChannelType = aType; }
+  AudioChannelType GetAudioChannelType() { return mAudioChannelType; }
 
   // Send a new set of metadata to the state machine, to be dispatched to the
   // main thread to be presented when the |currentTime| of the media is greater
@@ -923,7 +927,6 @@ public:
     GetFrameStatistics().NotifyDecodedFrames(aParsed, aDecoded);
   }
 
-protected:
   /******
    * The following members should be accessed with the decoder lock held.
    ******/
@@ -1022,7 +1025,7 @@ private:
   // The |RestrictedAccessMonitor| member object.
   RestrictedAccessMonitor mReentrantMonitor;
 
-protected:
+public:
   // Data about MediaStreams that are being fed by this decoder.
   nsTArray<OutputStreamData> mOutputStreams;
   // The SourceMediaStream we are using to feed the mOutputStreams. This stream
@@ -1084,6 +1087,8 @@ protected:
   // PlaybackEnded when mDecodedStream->mStream finishes.
   bool mTriggerPlaybackEndedWhenSourceStreamFinishes;
 
+protected:
+
   // Start timer to update download progress information.
   nsresult StartProgress();
 
@@ -1143,7 +1148,7 @@ protected:
 
   // Be assigned from media element during the initialization and pass to
   // AudioStream Class.
-  dom::AudioChannelType mAudioChannelType;
+  AudioChannelType mAudioChannelType;
 };
 
 } // namespace mozilla
