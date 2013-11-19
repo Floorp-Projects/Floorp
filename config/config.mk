@@ -477,9 +477,9 @@ OS_INCLUDES += $(MOZ_JPEG_CFLAGS) $(MOZ_PNG_CFLAGS) $(MOZ_ZLIB_CFLAGS)
 # NSPR_CFLAGS and NSS_CFLAGS must appear ahead of OS_INCLUDES to avoid Linux
 # builds wrongly picking up system NSPR/NSS header files.
 INCLUDES = \
-  $(LOCAL_INCLUDES) \
   -I$(srcdir) \
   -I. \
+  $(LOCAL_INCLUDES) \
   -I$(DIST)/include \
   $(if $(LIBXUL_SDK),-I$(LIBXUL_SDK)/include) \
   $(NSPR_CFLAGS) $(NSS_CFLAGS) \
