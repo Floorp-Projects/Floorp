@@ -21,18 +21,14 @@ EXPORTS += [
 DIRS += ['libdisplay', 'nativewindow']
 
 # libui files
-SOURCES += ['libui/' + src for src in [
+UNIFIED_SOURCES += ['libui/' + src for src in [
     'EventHub.cpp',
     'Input.cpp',
     'InputApplication.cpp',
     'InputDevice.cpp',
-    'InputDispatcher.cpp',
     'InputListener.cpp',
-    'InputReader.cpp',
-    'InputTransport.cpp',
     'InputWindow.cpp',
     'Keyboard.cpp',
-    'KeyCharacterMap.cpp',
     'KeyLayoutMap.cpp',
     'PointerController.cpp',
     'SpriteController.cpp',
@@ -42,19 +38,36 @@ SOURCES += ['libui/' + src for src in [
     'VirtualKeyMap.cpp',
 ]]
 
-SOURCES += [
+# libui files that can't be UNIFIED_SOURCES because they define
+# a symbol that's already defined in some above file.
+# Could easily unify if it's OK to patch libui.
+SOURCES += ['libui/' + src for src in [
+    'InputDispatcher.cpp', # because of toString in EventHub.cpp
+    'InputReader.cpp',     # because of toString in EventHub.cpp
+    'InputTransport.cpp',  # because of NANOS_PER_MS in VelocityTracker.cpp
+    'KeyCharacterMap.cpp', # because of toString in EventHub.cpp
+]]
+
+UNIFIED_SOURCES += [
     'Framebuffer.cpp',
     'GfxInfo.cpp',
     'GonkMemoryPressureMonitoring.cpp',
     'HwcComposer2D.cpp',
     'HwcUtils.cpp',
-    'nsAppShell.cpp',
     'nsIdleServiceGonk.cpp',
     'nsLookAndFeel.cpp',
     'nsWidgetFactory.cpp',
-    'nsWindow.cpp',
     'OrientationObserver.cpp',
     'ProcessOrientation.cpp'
+]
+
+# These files couldn't be added to UNIFIED_SOURCES for now:
+SOURCES += [
+    # nsAppShell has a 'using namespace android' that is very unfriendly to UNIFIED_SOURCES.
+    # Can unify if we're OK to add a lot of android:: in that file.
+    'nsAppShell.cpp',
+    # nsWindow.cpp doesn't build in UNIFIED_SOURCES due to logging macros being redefined.
+    'nsWindow.cpp',
 ]
 
 LIBRARY_NAME = 'widget_gonk'
