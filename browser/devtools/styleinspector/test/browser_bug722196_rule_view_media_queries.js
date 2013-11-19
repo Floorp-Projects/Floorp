@@ -41,7 +41,7 @@ function checkSheets()
   let elementStyle = ruleView()._elementStyle;
 
   let _strings = Services.strings
-    .createBundle("chrome://browser/locale/devtools/styleinspector.properties");
+    .createBundle("chrome://global/locale/devtools/styleinspector.properties");
 
   let inline = _strings.GetStringFromName("rule.sourceInline");
 
