@@ -140,7 +140,13 @@ public:
                             const nsACString& aOrigin);
 
   static bool
-  DefineIndexedDB(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
+  DefineConstructors(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
+
+  static bool
+  DefineIndexedDBGetter(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
+
+  static bool
+  DefineIndexedDBLazyGetter(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
 private:
   IndexedDatabaseManager();
@@ -169,6 +175,10 @@ private:
   static bool sIsMainProcess;
   static mozilla::Atomic<int32_t> sLowDiskSpaceMode;
 };
+
+bool
+ResolveConstructors(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                    JS::Handle<jsid> aId, JS::MutableHandle<JSObject*> aObjp);
 
 END_INDEXEDDB_NAMESPACE
 
