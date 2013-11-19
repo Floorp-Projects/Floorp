@@ -33,8 +33,6 @@ SOURCES += [
     'nsPNGDecoder.cpp',
 ]
 
-LIBRARY_NAME = 'imgdecoders_s'
-
 FAIL_ON_WARNINGS = True
 
 SOURCES += [

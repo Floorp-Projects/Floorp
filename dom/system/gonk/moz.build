@@ -112,8 +112,6 @@ elif CONFIG['MOZ_B2G_BT_BLUEDROID']:
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'domsystemgonk_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [

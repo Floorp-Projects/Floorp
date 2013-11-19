@@ -18,11 +18,9 @@ elif CONFIG['MOZ_WIDGET_GTK']:
     ]
 
 if SOURCES:
-    LIBRARY_NAME = 'shellservice_s'
+    FINAL_LIBRARY = 'browsercomps'
 
 EXTRA_COMPONENTS += [
     'nsSetDefaultBrowser.js',
     'nsSetDefaultBrowser.manifest',
 ]
-
-FINAL_LIBRARY = 'browsercomps'

@@ -144,8 +144,6 @@ else: # No SIMD support?
         'jsimd_none.c',
     ]
 
-LIBRARY_NAME = 'mozjpeg'
-
 MSVC_ENABLE_PGO = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':

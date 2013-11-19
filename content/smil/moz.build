@@ -61,8 +61,6 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'gkconsmil_s'
-
 LOCAL_INCLUDES += [
     '../base/src',
     '../events/src',

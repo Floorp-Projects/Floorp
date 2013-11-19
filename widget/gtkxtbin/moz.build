@@ -8,8 +8,6 @@ EXPORTS += [
     'gtk2xtbin.h',
 ]
 
-LIBRARY_NAME = 'gtkxtbin'
-
 if CONFIG['MOZ_ENABLE_GTK2']:
     SOURCES += [
         'gtk2xtbin.c',

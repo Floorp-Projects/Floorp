@@ -9,8 +9,6 @@ EXPORTS += [
     'qcmstypes.h',
 ]
 
-LIBRARY_NAME = 'mozqcms'
-
 SOURCES += [
     'chain.c',
     'iccread.c',

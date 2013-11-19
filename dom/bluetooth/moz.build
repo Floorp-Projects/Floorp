@@ -7,7 +7,6 @@
 if CONFIG['MOZ_B2G_BT']:
     PARALLEL_DIRS += ['interfaces']
 
-    LIBRARY_NAME = 'dombluetooth_s'
 
     SOURCES += [
         'BluetoothA2dpManager.cpp',

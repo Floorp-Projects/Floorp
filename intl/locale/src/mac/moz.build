@@ -10,6 +10,4 @@ SOURCES += [
     'nsMacCharset.cpp',
 ]
 
-LIBRARY_NAME = 'platlocale_s'
-
 FINAL_LIBRARY = 'i18n'

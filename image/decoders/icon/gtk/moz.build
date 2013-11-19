@@ -8,8 +8,6 @@ SOURCES += [
     'nsIconChannel.cpp',
 ]
 
-LIBRARY_NAME = 'imgicongtk_s'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'imgicon'

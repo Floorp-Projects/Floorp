@@ -19,8 +19,6 @@ XPIDL_MODULE = 'necko_cookie'
 if CONFIG['NECKO_COOKIES']:
     MSVC_ENABLE_PGO = True
 
-    LIBRARY_NAME = 'neckocookie_s'
-
     EXPORTS.mozilla.net = [
         'CookieServiceChild.h',
         'CookieServiceParent.h',

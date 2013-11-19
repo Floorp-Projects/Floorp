@@ -10,8 +10,6 @@ SOURCES += [
     'nsHyphenator.cpp',
 ]
 
-LIBRARY_NAME = 'hyphenation_s'
-
 SOURCES += [
     'hyphen.c',
 ]

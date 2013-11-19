@@ -12,8 +12,6 @@ SOURCES += [
     'nsAppStartupNotifier.cpp',
 ]
 
-LIBRARY_NAME = 'appstartupnotifier_s'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'embedcomponents'

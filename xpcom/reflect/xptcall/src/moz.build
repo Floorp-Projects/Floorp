@@ -10,8 +10,6 @@ SOURCES += [
     'xptcall.cpp',
 ]
 
-LIBRARY_NAME = 'xptcall'
-
 MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [

@@ -15,8 +15,6 @@ UNIFIED_SOURCES += [
     'RawReader.cpp',
 ]
 
-LIBRARY_NAME = 'gkconraw_s'
-
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [

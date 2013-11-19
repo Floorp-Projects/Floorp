@@ -49,8 +49,6 @@ SOURCES += [
     'XPathEvaluator.cpp',
 ]
 
-LIBRARY_NAME = 'txxpath_s'
-
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [

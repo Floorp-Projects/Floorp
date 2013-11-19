@@ -11,8 +11,6 @@ SOURCES += [
     'nsDOMOfflineResourceList.cpp',
 ]
 
-LIBRARY_NAME = 'jsdomoffline_s'
-
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [

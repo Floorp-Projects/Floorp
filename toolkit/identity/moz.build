@@ -16,8 +16,6 @@ SOURCES += [
     'IdentityCryptoService.cpp',
 ]
 
-LIBRARY_NAME = 'identity'
-
 JS_MODULES_PATH = 'modules/identity'
 
 EXTRA_JS_MODULES += [

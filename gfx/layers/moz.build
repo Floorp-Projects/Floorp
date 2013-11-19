@@ -297,8 +297,6 @@ IPDL_SOURCES = [
 
 MSVC_ENABLE_PGO = True
 
-LIBRARY_NAME = 'layers'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'thebes'

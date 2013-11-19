@@ -45,8 +45,6 @@ if CONFIG['OS_TARGET'] == 'Android':
             'cubeb_audiotrack.c',
         ]
 
-LIBRARY_NAME = 'cubeb'
-
 MSVC_ENABLE_PGO = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':

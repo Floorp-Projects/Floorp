@@ -9,8 +9,6 @@ SOURCES += [
     'txXMLUtils.cpp',
 ]
 
-LIBRARY_NAME = 'txxml_s'
-
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [

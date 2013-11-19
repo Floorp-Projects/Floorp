@@ -40,8 +40,6 @@ EXTRA_PP_JS_MODULES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'dom_apps_s'
-
 FINAL_LIBRARY = 'gklayout'
 
 LOCAL_INCLUDES += [

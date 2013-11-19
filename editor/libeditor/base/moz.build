@@ -31,8 +31,6 @@ UNIFIED_SOURCES += [
     'SplitElementTxn.cpp',
 ]
 
-LIBRARY_NAME = 'editorbase_s'
-
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [

@@ -33,8 +33,6 @@ SOURCES += [
     'nsNativeComponentLoader.cpp',
 ]
 
-LIBRARY_NAME = 'xpcomcomponents_s'
-
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'xpcom_core'

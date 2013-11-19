@@ -50,6 +50,4 @@ if CONFIG['NECKO_WIFI_DBUS']:
         'nsWifiScannerDBus.cpp',
     ]
 
-LIBRARY_NAME = 'neckowifi_s'
-
 FINAL_LIBRARY = 'necko'

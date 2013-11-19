@@ -35,8 +35,6 @@ FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True
 
-LIBRARY_NAME = 'dombindings_s'
-
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/canvas/src',

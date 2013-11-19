@@ -112,8 +112,6 @@ IPDL_SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'domplugins_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

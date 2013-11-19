@@ -34,6 +34,4 @@ else:
             'xptcstubs.cpp',
         ]
 
-LIBRARY_NAME = 'xptcmd'
-
 FINAL_LIBRARY = 'xpcom_core'

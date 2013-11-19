@@ -22,8 +22,6 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'domvoicemail_s'
-
 LOCAL_INCLUDES += [
     '../base',
 ]

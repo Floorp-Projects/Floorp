@@ -16,8 +16,6 @@ SOURCES += [
     'RawDBusConnection.cpp',
 ]
 
-LIBRARY_NAME = 'mozdbus_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

@@ -8,8 +8,6 @@ SOURCES += [
     'AppProtocolHandler.cpp',
 ]
 
-LIBRARY_NAME = 'nkapp_s'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'necko'

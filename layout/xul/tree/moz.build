@@ -31,8 +31,6 @@ UNIFIED_SOURCES += [
     'nsTreeUtils.cpp',
 ]
 
-LIBRARY_NAME = 'gkxultree_s'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'gklayout'

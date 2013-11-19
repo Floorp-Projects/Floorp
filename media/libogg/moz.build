@@ -10,8 +10,6 @@ EXPORTS.ogg += [
     'include/ogg/os_types.h',
 ]
 
-LIBRARY_NAME = 'ogg'
-
 UNIFIED_SOURCES += [
     'src/ogg_bitwise.c',
     'src/ogg_framing.c',

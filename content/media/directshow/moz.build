@@ -34,8 +34,6 @@ if not CONFIG['MOZ_WEBRTC']:
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'gkcondirectshow_s'
-
 FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/media/webrtc/trunk/webrtc/modules/video_capture/windows',

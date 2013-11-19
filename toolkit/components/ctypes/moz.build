@@ -14,8 +14,6 @@ LOCAL_INCLUDES += [
     '/js/xpconnect/loader',
 ]
 
-LIBRARY_NAME = 'jsctypes'
-
 EXTRA_JS_MODULES += [
     'ctypes.jsm',
 ]

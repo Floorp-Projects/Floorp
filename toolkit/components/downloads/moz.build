@@ -42,6 +42,4 @@ if not CONFIG['MOZ_SUITE']:
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'download_s'
-
 FINAL_LIBRARY = 'toolkitcomps'

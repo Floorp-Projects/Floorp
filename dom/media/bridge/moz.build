@@ -25,6 +25,4 @@ LOCAL_INCLUDES += [
     '/media/webrtc/signaling/src/sipcc/include',
 ]
 
-LIBRARY_NAME = 'peerconnection'
-
 FINAL_LIBRARY = 'xul'

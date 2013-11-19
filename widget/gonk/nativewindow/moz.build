@@ -48,8 +48,6 @@ if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER']:
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'nativewindow'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

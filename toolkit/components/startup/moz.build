@@ -36,6 +36,4 @@ else:
         'nsUserInfoUnix.cpp',
     ]
 
-LIBRARY_NAME = 'appstartup_s'
-
 FINAL_LIBRARY = 'toolkitcomps'

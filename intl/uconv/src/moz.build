@@ -218,8 +218,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
         'nsUTF8ToUnicodeSSE2.cpp',
     ]
 
-LIBRARY_NAME = 'uconv'
-
 MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [

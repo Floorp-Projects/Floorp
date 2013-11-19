@@ -58,8 +58,6 @@ if a11y_log:
         'Logging.cpp',
     ]
 
-LIBRARY_NAME = 'accessibility_base_s'
-
 LOCAL_INCLUDES += [
     '../../../content/xbl/src',
     '../../../ipc/chromium/src',

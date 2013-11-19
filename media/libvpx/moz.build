@@ -36,8 +36,6 @@ if CONFIG['VPX_NEED_OBJ_INT_EXTRACT']:
 
     HOST_PROGRAM = 'host_obj_int_extract'
 
-LIBRARY_NAME = 'vpx'
-
 SOURCES += [
     'vp8/common/alloccommon.c',
     'vp8/common/blockd.c',

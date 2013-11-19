@@ -23,6 +23,4 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
         'nsQtRemoteService.cpp',
     ]
 
-LIBRARY_NAME = 'remoteservice'
-
 FINAL_LIBRARY = 'xul'

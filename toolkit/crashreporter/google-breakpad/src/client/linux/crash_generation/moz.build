@@ -9,6 +9,4 @@ SOURCES += [
     'crash_generation_server.cc',
 ]
 
-LIBRARY_NAME = 'crash_generation_s'
-
 FINAL_LIBRARY = 'xulapp_s'

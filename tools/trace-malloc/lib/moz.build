@@ -22,6 +22,4 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'nsWinTraceMalloc.cpp',
     ]
 
-LIBRARY_NAME = 'tracemalloc'
-
 FINAL_LIBRARY = 'xpcom_core'

@@ -97,8 +97,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
 
 MSVC_ENABLE_PGO = True
 
-LIBRARY_NAME = 'gkplugin'
-
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/dom/base',

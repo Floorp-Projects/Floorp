@@ -20,8 +20,6 @@ if CONFIG['MOZ_B2G_FM']:
         'FMRadioService.cpp',
     ]
 
-    LIBRARY_NAME = 'domfmradio_s'
-
     FINAL_LIBRARY = 'gklayout'
 
 IPDL_SOURCES += [

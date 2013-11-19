@@ -19,6 +19,4 @@ SOURCES += [
     'nsFastStartupQt.cpp',
 ]
 
-LIBRARY_NAME = 'faststartupqt'
-
 FINAL_LIBRARY = 'xul'

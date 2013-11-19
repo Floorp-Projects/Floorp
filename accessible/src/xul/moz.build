@@ -19,8 +19,6 @@ UNIFIED_SOURCES += [
     'XULTreeGridAccessible.cpp',
 ]
 
-LIBRARY_NAME = 'accessibility_xul_s'
-
 LOCAL_INCLUDES += [
     '../../../layout/generic',
     '../../../layout/xul/base/src',

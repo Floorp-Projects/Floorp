@@ -26,8 +26,6 @@ SOURCES += [
     'SharedDIB.cpp',
 ]
 
-LIBRARY_NAME = 'gfxipc_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

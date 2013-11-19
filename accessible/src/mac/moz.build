@@ -13,8 +13,6 @@ EXPORTS.mozilla.a11y += [
     'HyperTextAccessibleWrap.h',
 ]
 
-LIBRARY_NAME = 'accessibility_toolkit_s'
-
 UNIFIED_SOURCES += [
     'AccessibleWrap.mm',
     'DocAccessibleWrap.mm',
