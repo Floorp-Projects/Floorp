@@ -405,8 +405,8 @@ var MEM_STAT_UNSUPPORTED = 1;
 var MEM_STAT_SUPPORTED = 2;
 TestRunner._hasMemoryStatistics = {}
 TestRunner._hasMemoryStatistics.vsize = MEM_STAT_UNKNOWN;
-TestRunner._hasMemoryStatistics.vsizeMaxContiguous = MEM_STAT_UNKNOWN;
 TestRunner._hasMemoryStatistics.heapAllocated = MEM_STAT_UNKNOWN;
+TestRunner._hasMemoryStatistics.largestContiguousVMBlock = MEM_STAT_UNKNOWN;
 
 /**
  * This stub is called by SimpleTest when a test is finished.

@@ -371,8 +371,8 @@ static nsresult GetResidentFast(int64_t* aN)
     return GetResident(aN);
 }
 
-#define HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER 1
-static nsresult GetVsizeMaxContiguous(int64_t* aN)
+#define HAVE_LARGEST_CONTIGUOUS_BLOCK_REPORTERS 1
+static nsresult LargestContiguousVMBlock(int64_t* aN)
 {
     SIZE_T biggestRegion = 0;
     MEMORY_BASIC_INFORMATION vmemInfo = {0};
@@ -1286,17 +1286,6 @@ nsMemoryReporterManager::GetVsize(int64_t* aVsize)
 }
 
 NS_IMETHODIMP
-nsMemoryReporterManager::GetVsizeMaxContiguous(int64_t* aAmount)
-{
-#ifdef HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER
-    return ::GetVsizeMaxContiguous(aAmount);
-#else
-    *aAmount = 0;
-    return NS_ERROR_NOT_AVAILABLE;
-#endif
-}
-
-NS_IMETHODIMP
 nsMemoryReporterManager::GetResident(int64_t* aAmount)
 {
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
@@ -1416,6 +1405,17 @@ nsMemoryReporterManager::GetPageFaultsHard(int64_t* aAmount)
 {
 #ifdef HAVE_PAGE_FAULT_REPORTERS
     return PageFaultsHardDistinguishedAmount(aAmount);
+#else
+    *aAmount = 0;
+    return NS_ERROR_NOT_AVAILABLE;
+#endif
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetLargestContiguousVMBlock(int64_t* aAmount)
+{
+#ifdef HAVE_LARGEST_CONTIGUOUS_BLOCK_REPORTERS
+    return LargestContiguousVMBlock(aAmount);
 #else
     *aAmount = 0;
     return NS_ERROR_NOT_AVAILABLE;
