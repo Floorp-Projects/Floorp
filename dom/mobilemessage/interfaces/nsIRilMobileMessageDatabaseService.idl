@@ -38,6 +38,7 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    *   - If |type| == "sms", we also need:
    *     - |messageClass| DOMString: the message class of received message
    *     - |receiver| DOMString: the phone number of receiver
+   *     - |pid| Number: the TP-PID field of the SMS TPDU, default 0.
    *
    *   - If |type| == "mms", we also need:
    *     - |delivery| DOMString: the delivery state of received message
