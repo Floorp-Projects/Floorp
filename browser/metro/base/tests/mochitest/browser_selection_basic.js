@@ -63,21 +63,6 @@ gTests.push({
 });
 
 gTests.push({
-  desc: "double-tap to select",
-  setUp: setUpAndTearDown,
-  tearDown: setUpAndTearDown,
-  run: function test() {
-    sendDoubleTap(gWindow, 30, 20);
-
-    yield waitForCondition(function () {
-        return SelectionHelperUI.isSelectionUIVisible;
-      }, kCommonWaitMs, kCommonPollMs);
-
-    is(getTrimmedSelection(gWindow).toString(), "There", "selection test");
-  },
-});
-
-gTests.push({
   desc: "appbar interactions",
   setUp: setUpAndTearDown,
   tearDown: setUpAndTearDown,
