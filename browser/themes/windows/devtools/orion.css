@@ -1,0 +1,199 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.viewContainer {
+  background: hsl(0,0%,89%); /* This will be seen as the continuation of the ruler */
+  font-family: monospace;
+  font-size: inherit; /* inherit browser's default monospace font size */
+}
+
+.view {
+  color: black; /* Default text color */
+  background: white; /* Background of the editor */
+  padding-left: 4px;
+}
+
+.readonly > .view {
+  background: #fdfefd; /* super light green */
+}
+
+.ruler {
+  background: hsl(0,0%,89%);
+  color: hsl(0,0%,55%);
+}
+.ruler.annotations {
+  width: 16px;
+  padding-left: 4px;
+}
+.ruler.lines {
+  border-right: 1px solid #b4c4d3;
+  min-width: 1.4em;
+  padding-left: 4px;
+  padding-right: 4px;
+  text-align: end;
+}
+
+.ruler.linesWithAnnotations {
+  min-width: 0;
+  padding-left: 0;
+}
+
+.ruler.overview {
+  border-left: 1px solid #b4c4d3;
+  width: 14px;
+  text-align: start;
+}
+
+/* Styles for the annotation ruler (first line) */
+.annotationHTML {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  vertical-align: middle;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.annotation.task .annotationHTML {
+  background-image: url("chrome://browser/skin/devtools/orion-task.png");
+}
+.annotation.breakpoint .annotationHTML {
+  background-image: url("chrome://browser/skin/devtools/orion-breakpoint.png");
+}
+.annotation.debugLocation .annotationHTML {
+  background-image: url("chrome://browser/skin/devtools/orion-debug-location.png");
+}
+.annotation.breakpoint.debugLocation .annotationHTML,
+.annotation.task.debugLocation .annotationHTML {
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-size: 75%, 100%;
+}
+.annotation.breakpoint.debugLocation .annotationHTML {
+  background-image: url("chrome://browser/skin/devtools/orion-debug-location.png"),
+                    url("chrome://browser/skin/devtools/orion-breakpoint.png");
+}
+
+.annotation.task.debugLocation .annotationHTML {
+  background-image: url("chrome://browser/skin/devtools/orion-debug-location.png"),
+                    url("chrome://browser/skin/devtools/orion-task.png");
+}
+
+/* Styles for the overview ruler  */
+.annotationOverview {
+  cursor: pointer;
+  border-radius: 2px;
+  left: 2px;
+  width: 8px;
+}
+.annotationOverview.task {
+  background-color: lightgreen;
+  border: 1px solid green;
+}
+.annotationOverview.breakpoint {
+  background-color: lightblue;
+  border: 1px solid blue;
+}
+.annotationOverview.debugLocation {
+  background-color: white;
+  border: 1px solid green;
+}
+.annotationOverview.currentBracket {
+  background-color: lightgray;
+  border: 1px solid red;
+}
+.annotationOverview.matchingBracket {
+  background-color: lightgray;
+  border: 1px solid red;
+}
+
+/* Styles for text range */
+.annotationRange {
+  background-repeat: repeat-x;
+  background-position: left bottom;
+}
+.annotationRange.task {
+  outline: 1px dashed rgba(0, 255, 0, 0.5);
+}
+.annotationRange.matchingBracket {
+  outline: 1px solid grey;
+}
+
+.token_singleline_comment,
+.token_multiline_comment,
+.token_doc_comment  {
+  color: hsl(90,2%,50%); /* grey */
+}
+
+.token_doc_html_markup {
+  color: #dd0058; /* purple */
+}
+
+.token_doc_tag {
+  color: #dd0058; /* purple */
+}
+
+.token_task_tag { /* "TODO" */
+  color: black;
+  background: yellow;
+}
+
+.token_string {
+  color: hsl(72,100%,27%); /* green */
+  font-style: italic;
+}
+
+.token_keyword {
+  color: hsl(276,44%,45%); /* purple */
+}
+
+.token_space {
+  /* images/white_space.png */
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAIAAABv85FHAAAABnRSTlMA/wAAAACkwsAdAAAAIUlEQVR4nGP4z8CAC+GUIEXuABhgkTuABEiRw2cmae4EAH05X7xDolNRAAAAAElFTkSuQmCC");
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+.token_tab {
+  /* images/white_tab.png */
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAJCAIAAACJ2loDAAAABnRSTlMA/wD/AP83WBt9AAAAMklEQVR4nGP4TwRgoK6i52c3bz5w6zMSA6tJn28d2Lx589nnCAYu63AaSLxJRLoJPwAAeNk0aG4opfMAAAAASUVORK5CYII=");
+  background-repeat: no-repeat;
+  background-position: left center;
+}
+
+.line_caret,
+.annotationLine.currentLine { /* Current line */
+  background: hsl(208, 93%, 94%);
+}
+
+.readonly .line_caret,
+.readonly .annotationLine.currentLine {
+  background: hsl(208, 80%, 90%);
+}
+
+/* Styling for html syntax highlighting */
+.entity-name-tag {
+  color: hsl(208,48%,40%); /* blue */
+}
+
+.entity-other-attribute-name {
+  color: hsl(208,48%,40%); /* blue */
+}
+
+.punctuation-definition-comment {
+  color: hsl(90,2%,50%); /* grey */
+}
+
+.comment {
+  color: hsl(90,2%,50%); /* grey */
+}
+
+.string-quoted {
+  color: hsl(24,85%,39%); /* orange */
+}
+
+.invalid {
+  color: red;
+  font-weight: bold;
+}

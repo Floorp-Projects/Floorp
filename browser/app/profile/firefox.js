@@ -1227,6 +1227,14 @@ pref("devtools.hud.loglimit.console", 200);
 pref("devtools.editor.tabsize", 4);
 pref("devtools.editor.expandtab", true);
 
+// Tells which component you want to use for source editing in developer tools.
+//
+// Available components:
+//   "orion" - this is the Orion source code editor from the Eclipse project. It
+//   provides programmer-specific editor features such as syntax highlighting,
+//   indenting and bracket recognition.
+pref("devtools.editor.component", "orion");
+
 // Enable the Font Inspector
 pref("devtools.fontinspector.enabled", true);
 
