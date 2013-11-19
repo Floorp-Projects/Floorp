@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -34,6 +34,7 @@
 #include <Windows.ApplicationModel.h>
 #include <Windows.Applicationmodel.Activation.h>
 
+class nsNativeDragTarget;
 
 namespace mozilla {
 namespace widget {
@@ -94,6 +95,7 @@ public:
                        nsDeviceContext *aContext,
                        nsWidgetInitData *aInitData = nullptr);
   NS_IMETHOD    Destroy();
+  NS_IMETHOD    EnableDragDrop(bool aEnable);
   NS_IMETHOD    SetParent(nsIWidget *aNewParent);
   NS_IMETHOD    Show(bool bState);
   NS_IMETHOD    IsVisible(bool & aState);
@@ -260,4 +262,5 @@ protected:
   nsDeque mEventQueue;
   nsDeque mKeyEventQueue;
   nsRefPtr<APZController> mController;
+  nsRefPtr<nsNativeDragTarget> mNativeDragTarget;
 };
