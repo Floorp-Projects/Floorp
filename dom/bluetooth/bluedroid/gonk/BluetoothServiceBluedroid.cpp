@@ -160,39 +160,31 @@ ClassToIcon(uint32_t aClass, nsAString& aRetIcon)
 }
 
 static void
-AdapterStateChangeCallback(bt_state_t aStatus)
+Setup()
 {
-  MOZ_ASSERT(!NS_IsMainThread());
+  // Bluetooth scan mode is NONE by default
+  bt_scan_mode_t mode = BT_SCAN_MODE_CONNECTABLE;
+  bt_property_t prop;
+  prop.type = BT_PROPERTY_ADAPTER_SCAN_MODE;
+  prop.val = (void*)&mode;
+  prop.len = sizeof(mode);
 
-  BT_LOGD("%s, BT_STATE:%d", __FUNCTION__, aStatus);
-  nsAutoString signalName;
-  if (aStatus == BT_STATE_ON) {
-    sIsBtEnabled = true;
-    signalName = NS_LITERAL_STRING("AdapterAdded");
-    // by default bluetooth scan mode is NONE
-    bt_property_t prop;
-    prop.type = BT_PROPERTY_ADAPTER_SCAN_MODE;
-    bt_scan_mode_t mode = BT_SCAN_MODE_CONNECTABLE;
-    prop.val = (void*) &mode;
-    prop.len = sizeof(mode);
-    if (sBtInterface) {
-      int ret = sBtInterface->set_adapter_property(&prop);
-      if (ret != BT_STATUS_SUCCESS) {
-        BT_LOGR("Warning! Fail to set property to BT_SCAN_MODE_CONNECTABLE");
-      }
-    }
-  } else {
-    sIsBtEnabled = false;
-    signalName = NS_LITERAL_STRING("Disabled");
-  }
+  NS_ENSURE_TRUE_VOID(sBtInterface);
 
-  BluetoothSignal signal(signalName, NS_LITERAL_STRING(KEY_MANAGER),
-                         BluetoothValue(true));
-  nsRefPtr<DistributeBluetoothSignalTask>
-    t = new DistributeBluetoothSignalTask(signal);
-  if (NS_FAILED(NS_DispatchToMainThread(t))) {
-    NS_WARNING("Failed to dispatch to main thread!");
+  int ret = sBtInterface->set_adapter_property(&prop);
+  if (ret != BT_STATUS_SUCCESS) {
+    BT_LOGR("%s: Fail to set: BT_SCAN_MODE_CONNECTABLE", __FUNCTION__);
   }
+}
+
+static bool
+IsReady()
+{
+  if (!sBtInterface || !sIsBtEnabled) {
+    BT_LOGR("Warning! Bluetooth Service is not ready");
+    return false;
+  }
+  return true;
 }
 
 static void
@@ -208,16 +200,6 @@ BdAddressTypeToString(bt_bdaddr_t* aBdAddressType, nsAString& aRetBdAddress)
   aRetBdAddress = NS_ConvertUTF8toUTF16((char*)bdstr);
 }
 
-static bool
-IsReady()
-{
-  if (!sBtInterface || !sIsBtEnabled) {
-    BT_LOGR("Warning! Bluetooth Service is not ready");
-    return false;
-  }
-  return true;
-}
-
 static void
 StringToBdAddressType(const nsAString& aBdAddress,
                       bt_bdaddr_t *aRetBdAddressType)
@@ -230,6 +212,31 @@ StringToBdAddressType(const nsAString& aBdAddress,
   }
 }
 
+static void
+AdapterStateChangeCallback(bt_state_t aStatus)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  BT_LOGR("%s, BT_STATE:%d", __FUNCTION__, aStatus);
+
+  nsAutoString signalName;
+  if (aStatus == BT_STATE_ON) {
+    Setup();
+    sIsBtEnabled = true;
+    signalName = NS_LITERAL_STRING("AdapterAdded");
+  } else {
+    sIsBtEnabled = false;
+    signalName = NS_LITERAL_STRING("Disabled");
+  }
+
+  BluetoothSignal signal(signalName, NS_LITERAL_STRING(KEY_MANAGER),
+                         BluetoothValue(true));
+  nsRefPtr<DistributeBluetoothSignalTask>
+    t = new DistributeBluetoothSignalTask(signal);
+  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+    NS_WARNING("Failed to dispatch to main thread!");
+  }
+}
 /**
  * AdapterPropertiesChangeCallback will be called after enable() but before
  * AdapterStateChangeCallback sIsBtEnabled get updated.
@@ -731,8 +738,20 @@ BluetoothServiceBluedroid::GetDefaultAdapterPathInternal(
   nsRefPtr<BluetoothReplyRunnable> runnable(aRunnable);
 
   BluetoothValue v = InfallibleTArray<BluetoothNamedValue>();
+
+  v.get_ArrayOfBluetoothNamedValue().AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("Address"), sAdapterBdAddress));
+
   v.get_ArrayOfBluetoothNamedValue().AppendElement(
     BluetoothNamedValue(NS_LITERAL_STRING("Name"), sAdapterBdName));
+
+  v.get_ArrayOfBluetoothNamedValue().AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("Discoverable"),
+                        sAdapterDiscoverable));
+
+  v.get_ArrayOfBluetoothNamedValue().AppendElement(
+    BluetoothNamedValue(NS_LITERAL_STRING("DiscoverableTimeout"),
+                        sAdapterDiscoverableTimeout));
 
   v.get_ArrayOfBluetoothNamedValue().AppendElement(
     BluetoothNamedValue(NS_LITERAL_STRING("Devices"),
