@@ -7,8 +7,6 @@ var testGenerator = testSteps();
 
 function testSteps()
 {
-  const name = "Splendid Test";
-
   let ioService =
     Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
@@ -17,18 +15,6 @@ function testSteps()
     let uri = ioService.newFileURI(file);
     return uri.spec;
   }
-
-  // Test for IDBKeyRange and indexedDB availability in xpcshell.
-  let keyRange = IDBKeyRange.only(42);
-  ok(keyRange, "Got keyRange");
-
-  let request = indexedDB.open(name, 1);
-  request.onerror = errorHandler;
-  request.onsuccess = grabEventAndContinueHandler;
-  let event = yield undefined;
-
-  let db = event.target.result;
-  ok(db, "Got database");
 
   // Test for IDBKeyRange and indexedDB availability in JS modules.
   Cu.import(getSpec("GlobalObjectsModule.jsm"));
@@ -64,4 +50,11 @@ function testSteps()
 
   finishTest();
   yield undefined;
+}
+
+this.runTest = function() {
+  do_get_profile();
+
+  do_test_pending();
+  testGenerator.next();
 }

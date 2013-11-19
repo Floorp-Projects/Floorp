@@ -10,11 +10,9 @@
 #include "nsDOMClassInfo.h"
 #include "nsIPrincipal.h"
 
-#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "mozilla/dom/workers/Workers.h"
 
 using mozilla::dom::workers::ResolveWorkerClasses;
-namespace indexedDB = mozilla::dom::indexedDB;
 
 NS_INTERFACE_MAP_BEGIN(BackstagePass)
   NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
@@ -68,14 +66,6 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
     JS::RootedObject objp(cx, *objpArg);
 
     *_retval = ResolveWorkerClasses(cx, obj, id, flags, &objp);
-    NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
-
-    if (objp) {
-        *objpArg = objp;
-        return NS_OK;
-    }
-
-    *_retval = indexedDB::ResolveConstructors(cx, obj, id, &objp);
     NS_ENSURE_TRUE(*_retval, NS_ERROR_FAILURE);
 
     if (objp) {

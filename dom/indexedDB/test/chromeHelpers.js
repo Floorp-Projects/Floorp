@@ -7,11 +7,15 @@ const { 'classes': Cc, 'interfaces': Ci, 'utils': Cu } = Components;
 
 let testGenerator = testSteps();
 
-function runTest()
-{
-  SimpleTest.waitForExplicitFinish();
+if (!window.runTest) {
+  window.runTest = function()
+  {
+    Cu.importGlobalProperties(["indexedDB"]);
 
-  testGenerator.next();
+    SimpleTest.waitForExplicitFinish();
+
+    testGenerator.next();
+  }
 }
 
 function finishTest()
