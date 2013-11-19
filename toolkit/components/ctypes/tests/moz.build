@@ -15,3 +15,4 @@ SOURCES += [
 
 LIBRARY_NAME = 'jsctypes-test'
 
+FORCE_SHARED_LIB = True

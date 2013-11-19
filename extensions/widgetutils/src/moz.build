@@ -16,3 +16,5 @@ XPI_NAME = 'widgetutils'
 
 if CONFIG['TARGET_XPCOM_ABI']:
     FINAL_TARGET += '/platform/%(OS_TARGET)s_%(TARGET_XPCOM_ABI)s' % CONFIG
+
+FORCE_SHARED_LIB = True

@@ -15,3 +15,5 @@ GENERATED_SOURCES += [
     'ISimpleDOMText_i.c',
     'ISimpleDOMText_p.c',
 ]
+
+FORCE_SHARED_LIB = True

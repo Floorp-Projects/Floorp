@@ -21,4 +21,7 @@ SOURCES += [
     'Surface.cpp',
 ]
 
+# On Windows, we don't automatically get "lib" prepended, but we need it.
 LIBRARY_NAME = 'libEGL'
+
+FORCE_SHARED_LIB = True

@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FORCE_SHARED_LIB = 1
-
 SHARED_LIBRARY_LIBS = $(call EXPAND_LIBNAME_PATH,jemalloc,$(DEPTH)/memory/jemalloc)
 DEFINES += -DMOZ_JEMALLOC3 -DMOZ_REPLACE_JEMALLOC
 LOCAL_INCLUDES += -I../../jemalloc/src/include
