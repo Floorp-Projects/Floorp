@@ -278,4 +278,14 @@ function run_test() {
   } catch (e) {
     assert.equal(e.toString().split("\n")[0], "AssertionError: oh no")
   }
+
+  // Export Assert.jsm methods to become globally accessible.
+  export_assertions();
+
+  // Test XPCShell-test integration:
+  ok(true, "OK, this went well");
+  deepEqual(/a/g, /a/g, "deep equal should work on RegExp");
+  deepEqual(/a/igm, /a/igm, "deep equal should work on RegExp");
+  deepEqual({a: 4, b: "1"}, {b: "1", a: 4}, "deep equal should work on regular Object");
+  deepEqual(a1, a2, "deep equal should work on Array with Object properties");
 }
