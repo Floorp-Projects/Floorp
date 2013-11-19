@@ -207,6 +207,8 @@ protected:
 
   // copy of Latency logger's starting time for offset calculations
   TimeStamp mStartTime;
+  // Whether we are playing a low latency stream, or a normal stream.
+  LatencyRequest mLatencyRequest;
   // Where in the current mInserts[0] block cubeb has read to
   int64_t mReadPoint;
   // Keep track of each inserted block of samples and the time it was inserted

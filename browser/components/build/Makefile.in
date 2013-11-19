@@ -20,8 +20,7 @@ OS_LIBS += $(call EXPAND_LIBNAME,version)
 endif
 
 EXTRA_DSO_LDOPTS += \
-	$(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib) \
-	$(XPCOM_STATICRUNTIME_GLUE_LDOPTS) \
+	$(XPCOM_GLUE_LDOPTS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
 

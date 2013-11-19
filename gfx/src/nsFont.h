@@ -56,10 +56,10 @@ struct NS_GFX nsFont {
   // Variant subproperties
   // (currently -moz- versions, will replace variant above eventually)
   uint8_t variantCaps;
-  uint8_t variantLigatures;
   uint8_t variantNumeric;
   uint8_t variantPosition;
 
+  uint16_t variantLigatures;
   uint16_t variantEastAsian;
 
   // Some font-variant-alternates property values require

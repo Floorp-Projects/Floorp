@@ -90,7 +90,7 @@ EXPORTS.mozilla += [
     'Base64.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'Base64.cpp',
     'nsAnonymousTemporaryFile.cpp',
     'nsAppFileLocationProvider.cpp',
