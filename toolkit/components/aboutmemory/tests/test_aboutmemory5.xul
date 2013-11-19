@@ -104,7 +104,8 @@
         // If we have more than 1000 chars, we've probably successfully
         // copy+pasted.
         if (actual.length > 1000) {
-          let vsizes = actual.match(/vsize/g);
+          // Note: Match "vsize" but not "vsize-max-contiguous".
+          let vsizes = actual.match(/vsize[^-]/g);
           let endOfBrowsers  = actual.match(/End of Browser/g);
 
           if (vsizes.length == 4 && endOfBrowsers.length == 3) {
