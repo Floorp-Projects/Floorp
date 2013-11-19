@@ -335,12 +335,14 @@ class LibraryDefinition(SandboxDerived):
     __slots__ = (
         'basename',
         'static_libraries',
+        'refcount',
     )
 
     def __init__(self, sandbox, basename):
         SandboxDerived.__init__(self, sandbox)
 
         self.basename = basename
+        self.refcount = 0
         self.static_libraries = []
 
     def link_static_lib(self, reldir, basename):

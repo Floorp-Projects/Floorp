@@ -82,9 +82,13 @@ class TreeMetadataEmitter(LoggingMixin):
         """
         file_count = 0
         execution_time = 0.0
+        sandboxes = {}
 
         for out in output:
             if isinstance(out, MozbuildSandbox):
+                # Keep all sandboxes around, we will need them later.
+                sandboxes[out['RELATIVEDIR']] = out
+
                 for o in self.emit_from_sandbox(out):
                     yield o
                     if not o._ack:
@@ -107,9 +111,29 @@ class TreeMetadataEmitter(LoggingMixin):
                                 'LIBRARY_NAME defined in multiple places (%s)' %
                                 (reldir, final_lib, ', '.join(libs.keys())))
             libs.values()[0].link_static_lib(reldir, libname)
+            self._libs[libname][reldir].refcount += 1
+            # The refcount can't go above 1 right now. It might in the future,
+            # but that will have to be specifically handled. At which point the
+            # refcount might have to be a list of referencees, for better error
+            # reporting.
+            assert self._libs[libname][reldir].refcount <= 1
+
+        def recurse_libs(path, name):
+            for p, n in self._libs[name][path].static_libraries:
+                yield p
+                for q in recurse_libs(p, n):
+                    yield q
 
         for basename, libs in self._libs.items():
-            for libdef in libs.values():
+            for path, libdef in libs.items():
+                # For all root libraries (i.e. libraries that don't have a
+                # FINAL_LIBRARY), record, for each static library it links
+                # (recursively), that its FINAL_LIBRARY is that root library.
+                if not libdef.refcount:
+                    for p in recurse_libs(path, basename):
+                        passthru = VariablePassthru(sandboxes[p])
+                        passthru.variables['FINAL_LIBRARY'] = basename
+                        yield passthru
                 yield libdef
 
         yield ReaderSummary(file_count, execution_time)
