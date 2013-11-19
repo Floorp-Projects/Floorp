@@ -29,19 +29,22 @@ appbar {
 flyoutpanel {
   -moz-binding: url('chrome://browser/content/bindings/flyoutpanel.xml#flyoutpanelBinding');
 }
-
 cssthrobber {
   -moz-binding: url('chrome://browser/content/bindings/cssthrobber.xml#cssthrobberBinding');
+}
+label[linewrap] {
+  -moz-binding: url("chrome://browser/content/bindings/bindings.xml#line-wrap-label");
+}
+label[linewrap].text-link, label[onclick][linewrap] {
+  -moz-binding: url("chrome://browser/content/bindings/bindings.xml#line-wrap-text-link");
 }
 
 settings {
   -moz-binding: url("chrome://mozapps/content/extensions/setting.xml#settings");
 }
-
 setting {
   display: none;
 }
-
 autoscroller {
   -moz-binding: url('chrome://browser/content/bindings/popup.xml#element-popup');
 }
