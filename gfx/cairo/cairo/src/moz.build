@@ -114,14 +114,18 @@ if CONFIG['MOZ_ENABLE_CAIRO_FT']:
     ]
 
 SOURCES += [
+    'cairo-bentley-ottmann-rectangular.c', # redefinition of '_cairo_bo_trap'
+    'cairo-bentley-ottmann-rectilinear.c', # redefinition of '_cairo_bo_trap'
+    'cairo-bentley-ottmann.c', # redefinition of '_cairo_bo_trap'
+    'cairo-surface-wrapper.c', #  redefinition of '_copy_transformed_pattern'
+]
+
+UNIFIED_SOURCES += [
     'cairo-analysis-surface.c',
     'cairo-arc.c',
     'cairo-array.c',
     'cairo-atomic.c',
     'cairo-base64-stream.c',
-    'cairo-bentley-ottmann-rectangular.c',
-    'cairo-bentley-ottmann-rectilinear.c',
-    'cairo-bentley-ottmann.c',
     'cairo-botor-scan-converter.c',
     'cairo-boxes.c',
     'cairo-cache.c',
@@ -173,7 +177,6 @@ SOURCES += [
     'cairo-surface-offset.c',
     'cairo-surface-snapshot.c',
     'cairo-surface-subsurface.c',
-    'cairo-surface-wrapper.c',
     'cairo-surface.c',
     'cairo-tee-surface.c',
     'cairo-tor-scan-converter.c',
