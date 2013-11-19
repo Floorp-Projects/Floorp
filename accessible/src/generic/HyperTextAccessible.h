@@ -6,11 +6,9 @@
 #ifndef mozilla_a11y_HyperTextAccessible_h__
 #define mozilla_a11y_HyperTextAccessible_h__
 
-#include "nsIAccessibleText.h"
-#include "nsIAccessibleHyperText.h"
-#include "nsIAccessibleEditableText.h"
-
 #include "AccessibleWrap.h"
+#include "nsIAccessibleTypes.h"
+#include "xpcAccessibleHyperText.h"
 
 #include "nsFrameSelection.h"
 #include "nsISelectionController.h"
@@ -35,18 +33,13 @@ const PRUnichar kForcedNewLineChar = '\n';
   * Special Accessible that knows how contain both text and embedded objects
   */
 class HyperTextAccessible : public AccessibleWrap,
-                            public nsIAccessibleText,
-                            public nsIAccessibleHyperText,
-                            public nsIAccessibleEditableText
+                            public xpcAccessibleHyperText
 {
 public:
   HyperTextAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~HyperTextAccessible() { }
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLETEXT
-  NS_DECL_NSIACCESSIBLEHYPERTEXT
-  NS_DECL_NSIACCESSIBLEEDITABLETEXT
 
   // Accessible
   virtual int32_t GetLevelInternal();
@@ -59,13 +52,13 @@ public:
 
   // HyperTextAccessible (static helper method)
 
-  // Convert content offset to rendered text offset  
+  // Convert content offset to rendered text offset
   nsresult ContentToRenderedOffset(nsIFrame *aFrame, int32_t aContentOffset,
-                                   uint32_t *aRenderedOffset);
-  
+                                   uint32_t *aRenderedOffset) const;
+
   // Convert rendered text offset to content offset
   nsresult RenderedToContentOffset(nsIFrame *aFrame, uint32_t aRenderedOffset,
-                                   int32_t *aContentOffset);
+                                   int32_t *aContentOffset) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // HyperLinkAccessible
@@ -73,15 +66,13 @@ public:
   /**
    * Return link count within this hypertext accessible.
    */
-  uint32_t GetLinkCount()
-  {
-    return EmbeddedChildCount();
-  }
+  uint32_t LinkCount()
+    { return EmbeddedChildCount(); }
 
   /**
    * Return link accessible at the given index.
    */
-  Accessible* GetLinkAt(uint32_t aIndex)
+  Accessible* LinkAt(uint32_t aIndex)
   {
     return GetEmbeddedChildAt(aIndex);
   }
@@ -89,7 +80,7 @@ public:
   /**
    * Return index for the given link accessible.
    */
-  int32_t GetLinkIndex(Accessible* aLink)
+  int32_t LinkIndexOf(Accessible* aLink)
   {
     return GetIndexOfEmbeddedChild(aLink);
   }
@@ -97,10 +88,10 @@ public:
   /**
    * Return link accessible at the given text offset.
    */
-  int32_t GetLinkIndexAtOffset(uint32_t aOffset)
+  int32_t LinkIndexAtOffset(uint32_t aOffset)
   {
     Accessible* child = GetChildAtOffset(aOffset);
-    return child ? GetLinkIndex(child) : -1;
+    return child ? LinkIndexOf(child) : -1;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -134,7 +125,7 @@ public:
   Accessible* DOMPointToHypertextOffset(nsINode *aNode,
                                         int32_t aNodeOffset,
                                         int32_t* aHypertextOffset,
-                                        bool aIsEndOffset = false);
+                                        bool aIsEndOffset = false) const;
 
   /**
    * Turn a start and end hypertext offsets into DOM range.
@@ -209,6 +200,37 @@ public:
                  int32_t* aStartOffset = nullptr, int32_t* aEndOffset = nullptr);
 
   /**
+   * Return text between given offsets.
+   */
+  void TextSubstring(int32_t aStartOffset, int32_t aEndOffset, nsAString& aText);
+
+  /**
+   * Return text before/at/after the given offset corresponding to
+   * the boundary type.
+   */
+  void TextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                       int32_t* aStartOffset, int32_t* aEndOffset,
+                       nsAString& aText);
+  void TextAtOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                    int32_t* aStartOffset, int32_t* aEndOffset,
+                    nsAString& aText);
+  void TextAfterOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
+                       int32_t* aStartOffset, int32_t* aEndOffset,
+                       nsAString& aText);
+
+  /**
+   * Return text attributes for the given text range.
+   */
+  already_AddRefed<nsIPersistentProperties>
+    TextAttributes(bool aIncludeDefAttrs, int32_t aOffset,
+                   int32_t* aStartOffset, int32_t* aEndOffset);
+
+  /**
+   * Return text attributes applied to the accessible.
+   */
+  already_AddRefed<nsIPersistentProperties> DefaultTextAttributes();
+
+  /**
    * Return text offset of the given child accessible within hypertext
    * accessible.
    *
@@ -247,14 +269,34 @@ public:
   }
 
   /**
-   * Return the bounds of the text between given start and end offset.
+   * Return true if the given offset/range is valid.
    */
-  nsIntRect GetTextBounds(int32_t aStartOffset, int32_t aEndOffset)
-  {
-    nsIntRect bounds;
-    GetPosAndText(aStartOffset, aEndOffset, nullptr, nullptr, &bounds);
-    return bounds;
-  }
+  bool IsValidOffset(int32_t aOffset);
+  bool IsValidRange(int32_t aStartOffset, int32_t aEndOffset);
+
+  /**
+   * Return an offset at the given point.
+   */
+  int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);
+
+  /**
+   * Return a rect of the given text range relative given coordinate system.
+   */
+  nsIntRect TextBounds(int32_t aStartOffset, int32_t aEndOffset,
+                       uint32_t aCoordType = nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
+
+  /**
+   * Return a rect for character at given offset relative given coordinate
+   * system.
+   */
+  nsIntRect CharBounds(int32_t aOffset, uint32_t aCoordType)
+    { return TextBounds(aOffset, aOffset + 1, aCoordType); }
+
+  /**
+   * Get/set caret offset, if no caret then -1.
+   */
+  int32_t CaretOffset() const;
+  void SetCaretOffset(int32_t aOffset) { SetSelectionRange(aOffset, aOffset); }
 
   /**
    * Provide the line number for the caret.
@@ -271,8 +313,59 @@ public:
    */
   nsIntRect GetCaretRect(nsIWidget** aWidget);
 
+  /**
+   * Return selected regions count within the accessible.
+   */
+  int32_t SelectionCount();
+
+  /**
+   * Return the start and end offset of the specified selection.
+   */
+  bool SelectionBoundsAt(int32_t aSelectionNum,
+                         int32_t* aStartOffset, int32_t* aEndOffset);
+
+  /*
+   * Changes the start and end offset of the specified selection.
+   * @return true if succeeded
+   */
+  bool SetSelectionBoundsAt(int32_t aSelectionNum,
+                            int32_t aStartOffset, int32_t aEndOffset);
+
+  /**
+   * Adds a selection bounded by the specified offsets.
+   * @return true if succeeded
+   */
+  bool AddToSelection(int32_t aStartOffset, int32_t aEndOffset);
+
+  /*
+   * Removes the specified selection.
+   * @return true if succeeded
+   */
+  bool RemoveFromSelection(int32_t aSelectionNum);
+
+  /**
+   * Scroll the given text range into view.
+   */
+  void ScrollSubstringTo(int32_t aStartOffset, int32_t aEndOffset,
+                         uint32_t aScrollType);
+
+  /**
+   * Scroll the given text range to the given point.
+   */
+  void ScrollSubstringToPoint(int32_t aStartOffset,
+                              int32_t aEndOffset,
+                              uint32_t aCoordinateType,
+                              int32_t aX, int32_t aY);
+
   //////////////////////////////////////////////////////////////////////////////
   // EditableTextAccessible
+
+  void ReplaceText(const nsAString& aText);
+  void InsertText(const nsAString& aText, int32_t aPosition);
+  void CopyText(int32_t aStartPos, int32_t aEndPos);
+  void CutText(int32_t aStartPos, int32_t aEndPos);
+  void DeleteText(int32_t aStartPos, int32_t aEndPos);
+  void PasteText(int32_t aPosition);
 
   /**
    * Return the editor associated with the accessible.
@@ -289,39 +382,12 @@ protected:
   /**
    * Transform magic offset into text offset.
    */
-  int32_t ConvertMagicOffset(int32_t aOffset)
-  {
-    if (aOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT)
-      return CharacterCount();
-
-    if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
-      int32_t caretOffset = -1;
-      GetCaretOffset(&caretOffset);
-      return caretOffset;
-    }
-
-    return aOffset;
-  }
+  int32_t ConvertMagicOffset(int32_t aOffset);
 
   /**
    * Adjust an offset the caret stays at to get a text by line boundary.
    */
-  int32_t AdjustCaretOffset(int32_t aOffset)
-  {
-    // It is the same character offset when the caret is visually at the very
-    // end of a line or the start of a new line (soft line break). Getting text
-    // at the line should provide the line with the visual caret, otherwise
-    // screen readers will announce the wrong line as the user presses up or
-    // down arrow and land at the end of a line.
-    if (aOffset > 0) {
-      nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
-      if (frameSelection &&
-          frameSelection->GetHint() == nsFrameSelection::HINTLEFT) {
-        return aOffset - 1;
-      }
-    }
-    return aOffset;
-  }
+  int32_t AdjustCaretOffset(int32_t aOffset) const;
 
   /**
    * Return true if the given offset points to terminal empty line if any.
@@ -427,9 +493,10 @@ protected:
   // Selection helpers
 
   /**
-   * Return frame selection object for the accessible.
+   * Return frame/DOM selection object for the accessible.
    */
-  virtual already_AddRefed<nsFrameSelection> FrameSelection();
+  virtual already_AddRefed<nsFrameSelection> FrameSelection() const;
+  Selection* DOMSelection() const;
 
   /**
    * Return selection ranges within the accessible subtree.
@@ -443,7 +510,7 @@ protected:
                                     Accessible* aAccessible,
                                     mozilla::a11y::DOMPoint* aPoint);
 
-  
+
   /**
    * Return hyper text offset for the specified bound of the given DOM range.
    * If the bound is outside of the hyper text then offset value is either
@@ -466,7 +533,7 @@ protected:
    * Set 'misspelled' text attribute and return range offsets where the
    * attibute is stretched. If the text is not misspelled at the given offset
    * then we expose only range offsets where text is not misspelled. The method
-   * is used by GetTextAttributes() method.
+   * is used by TextAttributes() method.
    *
    * @param aIncludeDefAttrs  [in] points whether text attributes having default
    *                          values of attributes should be included

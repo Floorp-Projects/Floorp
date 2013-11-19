@@ -76,17 +76,22 @@ private:
   nsresult getValidEVOidTag(SECOidTag &resultOidTag, bool &validEV);
 };
 
-class nsNSSCertList: public nsIX509CertList
+class nsNSSCertList: public nsIX509CertList,
+                     public nsNSSShutDownObject
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIX509CERTLIST
 
-  nsNSSCertList(CERTCertList *certList = nullptr, bool adopt = false);
+  nsNSSCertList(CERTCertList *certList,
+                const nsNSSShutDownPreventionLock &proofOfLock);
 
-  static CERTCertList *DupCertList(CERTCertList *aCertList);
+  static CERTCertList *DupCertList(CERTCertList *aCertList,
+                                   const nsNSSShutDownPreventionLock &proofOfLock);
 private:
-   virtual ~nsNSSCertList() { }
+   virtual ~nsNSSCertList();
+   virtual void virtualDestroyNSSReference();
+   void destructorSafeDestroyNSSReference();
 
    mozilla::ScopedCERTCertList mCertList;
 
@@ -94,15 +99,19 @@ private:
    void operator=(const nsNSSCertList &) MOZ_DELETE;
 };
 
-class nsNSSCertListEnumerator: public nsISimpleEnumerator
+class nsNSSCertListEnumerator: public nsISimpleEnumerator,
+                               public nsNSSShutDownObject
 {
 public:
    NS_DECL_THREADSAFE_ISUPPORTS
    NS_DECL_NSISIMPLEENUMERATOR
 
-   nsNSSCertListEnumerator(CERTCertList *certList);
+   nsNSSCertListEnumerator(CERTCertList *certList,
+                           const nsNSSShutDownPreventionLock &proofOfLock);
 private:
-   virtual ~nsNSSCertListEnumerator() { }
+   virtual ~nsNSSCertListEnumerator();
+   virtual void virtualDestroyNSSReference();
+   void destructorSafeDestroyNSSReference();
 
    mozilla::ScopedCERTCertList mCertList;
 

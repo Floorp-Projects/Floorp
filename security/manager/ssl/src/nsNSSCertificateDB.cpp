@@ -1639,7 +1639,7 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
 
   // nsNSSCertList 1) adopts certList, and 2) handles the nullptr case fine.
   // (returns an empty list) 
-  nssCertList = new nsNSSCertList(certList, true);
+  nssCertList = new nsNSSCertList(certList, locker);
 
   *_retval = nssCertList;
   NS_ADDREF(*_retval);

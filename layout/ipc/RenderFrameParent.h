@@ -46,7 +46,7 @@ class RenderFrameParent : public PRenderFrameParent,
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::TargetConfig TargetConfig;
   typedef mozilla::layers::LayerTransactionParent LayerTransactionParent;
-  typedef mozilla::FrameLayerBuilder::ContainerParameters ContainerParameters;
+  typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::layers::TextureFactoryIdentifier TextureFactoryIdentifier;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
   typedef FrameMetrics::ViewID ViewID;
@@ -89,7 +89,7 @@ public:
                                      LayerManager* aManager,
                                      const nsIntRect& aVisibleRect,
                                      nsDisplayItem* aItem,
-                                     const ContainerParameters& aContainerParameters);
+                                     const ContainerLayerParameters& aContainerParameters);
 
   void OwnerContentChanged(nsIContent* aContent);
 
@@ -207,12 +207,12 @@ public:
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerParameters& aParameters) MOZ_OVERRIDE
+                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE
   { return mozilla::LAYER_ACTIVE_FORCE; }
 
   virtual already_AddRefed<Layer>
   BuildLayer(nsDisplayListBuilder* aBuilder, LayerManager* aManager,
-             const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
 
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) MOZ_OVERRIDE;

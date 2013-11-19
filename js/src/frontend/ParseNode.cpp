@@ -420,7 +420,6 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode *opn)
 
       case PN_UNARY:
         NULLCHECK(pn->pn_kid = cloneParseTree(opn->pn_kid));
-        pn->pn_hidden = opn->pn_hidden;
         break;
 
       case PN_NAME:

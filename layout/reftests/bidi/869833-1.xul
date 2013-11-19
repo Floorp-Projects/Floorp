@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/css" href="data:text/css,
+treechildren::-moz-tree-cell, label { unicode-bidi: -moz-plaintext; }
+tree { height: 100px; }
+"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <tree>
+    <treecols>
+      <treecol flex="1"/>
+    </treecols>
+    <treechildren>
+      <treeitem>
+        <treerow>
+          <treecell label="Hello!"/>
+	</treerow>
+      </treeitem>
+      <treeitem>
+	<treerow>
+          <treecell label="שלום!"/>
+	</treerow>
+      </treeitem>
+      <treeitem>
+	<treerow>
+          <treecell label="123 إفتح يا سمسم !"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+  <vbox>
+    <hbox>
+      <label value="Hello!"/>
+    </hbox>
+    <hbox>
+      <label value="שלום!"/>
+    </hbox>
+    <hbox>
+      <label value="123 إفتح يا سمسم !"/>
+    </hbox>
+  </vbox>
+</window>

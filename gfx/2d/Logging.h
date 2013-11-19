@@ -79,13 +79,22 @@ public:
   ~Log() { mMessage << '\n'; WriteLog(mMessage.str()); }
 
   Log &operator <<(const std::string &aLogText) { mMessage << aLogText; return *this; }
+  Log &operator <<(const char aStr[]) { mMessage << static_cast<const char*>(aStr); return *this; }
+  Log &operator <<(bool aBool) { mMessage << (aBool ? "true" : "false"); return *this; }
+  Log &operator <<(int aInt) { mMessage << aInt; return *this; }
   Log &operator <<(unsigned int aInt) { mMessage << aInt; return *this; }
+  Log &operator <<(Float aFloat) { mMessage << aFloat; return *this; }
+  Log &operator <<(double aDouble) { mMessage << aDouble; return *this; }
+  Log &operator <<(const Point &aPoint)
+    { mMessage << "Point(" << aPoint.x << "," << aPoint.y << ")"; return *this; }
   Log &operator <<(const Size &aSize)
-    { mMessage << "(" << aSize.width << "x" << aSize.height << ")"; return *this; }
+    { mMessage << "Size(" << aSize.width << "," << aSize.height << ")"; return *this; }
   Log &operator <<(const IntSize &aSize)
-    { mMessage << "(" << aSize.width << "x" << aSize.height << ")"; return *this; }
+    { mMessage << "IntSize(" << aSize.width << "," << aSize.height << ")"; return *this; }
+  Log &operator <<(const Rect &aRect)
+    { mMessage << "Rect(" << aRect.x << "," << aRect.y << "," << aRect.width << "," << aRect.height << ")"; return *this; }
   Log &operator<<(const Matrix& aMatrix)
-    { mMessage << "[ " << aMatrix._11 << " " << aMatrix._12 << " ; " << aMatrix._21 << " " << aMatrix._22 << " ; " << aMatrix._31 << " " << aMatrix._32 << " ]"; return *this; }
+    { mMessage << "Matrix(" << aMatrix._11 << " " << aMatrix._12 << " ; " << aMatrix._21 << " " << aMatrix._22 << " ; " << aMatrix._31 << " " << aMatrix._32 << ")"; return *this; }
 
 
 private:

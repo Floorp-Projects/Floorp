@@ -8733,13 +8733,6 @@ if test "$MOZ_X11"; then
 
 fi # MOZ_X11
 
-dnl Check for headers, etc. needed by WebGL.
-if test "$MOZ_GL_DEFAULT_PROVIDER" = "GLX"; then
-    MOZ_CHECK_HEADER(GL/glx.h)
-    if test "$ac_cv_header_GL_glx_h" != "yes"; then
-        AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa-devel (openSUSE))])
-    fi
-fi # MOZ_GL_DEFAULT_PROVIDER=GLX
 fi # COMPILE_ENVIRONMENT
 
 dnl Set various defines and substitutions

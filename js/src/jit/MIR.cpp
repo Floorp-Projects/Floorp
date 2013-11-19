@@ -713,7 +713,7 @@ MCompare::NewAsmJS(TempAllocator &alloc, MDefinition *left, MDefinition *right, 
 MTableSwitch *
 MTableSwitch::New(TempAllocator &alloc, MDefinition *ins, int32_t low, int32_t high)
 {
-    return new(alloc) MTableSwitch(ins, low, high);
+    return new(alloc) MTableSwitch(alloc, ins, low, high);
 }
 
 MGoto *

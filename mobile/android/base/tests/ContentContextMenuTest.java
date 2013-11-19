@@ -1,10 +1,11 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.*;
+import org.mozilla.gecko.util.Clipboard;
+
 import android.content.ContentResolver;
 import android.util.DisplayMetrics;
 
-import java.lang.reflect.Method;
 
 /**
  * This class covers interactions with the context menu opened from web content
@@ -53,18 +54,9 @@ abstract class ContentContextMenuTest extends PixelTest {
         boolean correctText = waitForTest(new BooleanTest() {
             @Override
             public boolean test() {
-                try {
-                    ContentResolver resolver = getActivity().getContentResolver();
-                    ClassLoader classLoader = getActivity().getClassLoader();
-                    Class Clipboard = classLoader.loadClass("org.mozilla.gecko.util.Clipboard");
-                    Method getText = Clipboard.getMethod("getText");
-                    String clipboardText = (String)getText.invoke(null);
-                    mAsserter.dumpLog("Clipboard text = " + clipboardText + " , expected text = " + copiedText);
-                    return clipboardText.contains(copiedText);
-                } catch (Exception e) {
-                    mAsserter.ok(false, "Exception getting the clipboard text ", e.toString()); // Fail before returning
-                    return false;
-                }
+                final String clipboardText = Clipboard.getText();
+                mAsserter.dumpLog("Clipboard text = " + clipboardText + " , expected text = " + copiedText);
+                return clipboardText.contains(copiedText);
             }
         }, MAX_TEST_TIMEOUT);
         mAsserter.ok(correctText, "Checking if the text is correctly copied", "The text was correctly copied");

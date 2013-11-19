@@ -19,6 +19,7 @@
 #include "nsIGfxInfoDebug.h"
 #include "mozilla/Mutex.h"
 #include "js/Value.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace widget {  

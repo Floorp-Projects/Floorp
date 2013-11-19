@@ -22,16 +22,39 @@
 #include <cstdio>
 #include <cstdlib>
 #include <unistd.h>
-#include <GL/gl.h>
-#include <GL/glx.h>
 #include <dlfcn.h>
 #include "nscore.h"
-
 #include <fcntl.h>
+#include "stdint.h"
 
 #ifdef __SUNPRO_CC
 #include <stdio.h>
 #endif
+
+#include "X11/Xlib.h"
+#include "X11/Xutil.h"
+
+// stuff from glx.h
+typedef struct __GLXcontextRec *GLXContext;
+typedef XID GLXPixmap;
+typedef XID GLXDrawable;
+/* GLX 1.3 and later */
+typedef struct __GLXFBConfigRec *GLXFBConfig;
+typedef XID GLXFBConfigID;
+typedef XID GLXContextID;
+typedef XID GLXWindow;
+typedef XID GLXPbuffer;
+#define GLX_RGBA        4
+#define GLX_RED_SIZE    8
+#define GLX_GREEN_SIZE  9
+#define GLX_BLUE_SIZE   10
+
+// stuff from gl.h
+typedef uint8_t GLubyte;
+typedef uint32_t GLenum;
+#define GL_VENDOR       0x1F00
+#define GL_RENDERER     0x1F01
+#define GL_VERSION      0x1F02
 
 namespace mozilla {
 namespace widget {

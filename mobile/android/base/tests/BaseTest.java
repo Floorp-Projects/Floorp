@@ -2,7 +2,9 @@ package org.mozilla.gecko.tests;
 
 import com.jayway.android.robotium.solo.Condition;
 import com.jayway.android.robotium.solo.Solo;
+
 import org.mozilla.gecko.*;
+import org.mozilla.gecko.GeckoThread.LaunchState;
 
 import android.app.Activity;
 import android.app.Instrumentation;
@@ -37,7 +39,6 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -79,13 +80,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected void blockForGeckoReady() {
         try {
             Actions.EventExpecter geckoReadyExpector = mActions.expectGeckoEvent("Gecko:Ready");
-            ClassLoader classLoader = getActivity().getClassLoader();
-            Class appsCls = classLoader.loadClass("org.mozilla.gecko.GeckoThread");
-            Class launchStateCls = classLoader.loadClass("org.mozilla.gecko.GeckoThread$LaunchState");
-            Method checkLaunchState =  appsCls.getMethod("checkLaunchState", launchStateCls);
-            Object states[] =  launchStateCls.getEnumConstants();
-            Boolean ret = (Boolean)checkLaunchState.invoke(null, states[3]);
-            if (!ret.booleanValue()) {
+            if (!GeckoThread.checkLaunchState(LaunchState.GeckoRunning)) {
                 geckoReadyExpector.blockForEvent();
             }
             geckoReadyExpector.unregisterListener();
@@ -256,12 +251,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      */
     protected final void loadUrl(final String url) {
         try {
-            ClassLoader classLoader = getActivity().getClassLoader();
-            Class tabsClass = classLoader.loadClass("org.mozilla.gecko.Tabs");
-            Method getInstance = tabsClass.getMethod("getInstance");
-            Method loadUrl = tabsClass.getMethod("loadUrl", String.class);
-            Object tabs = getInstance.invoke(null);
-            loadUrl.invoke(tabs, new Object[] { url });
+            Tabs.getInstance().loadUrl(url);
         } catch (Exception e) {
             mAsserter.dumpLog("Exception in loadUrl", e);
             throw new RuntimeException(e);
@@ -728,11 +718,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             // Determine device type
             type = "phone";
             try {
-                ClassLoader classLoader = getActivity().getClassLoader();
-                Class appsCls = classLoader.loadClass("org.mozilla.gecko.GeckoAppShell");
-                Method isTabletMethod = appsCls.getMethod("isTablet", (Class[]) null);
-                boolean isTablet = (Boolean)isTabletMethod.invoke(null);
-                if (isTablet) {
+                if (GeckoAppShell.isTablet()) {
                     type = "tablet";
                 }
             } catch (Exception e) {
