@@ -1695,6 +1695,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool useHelperThreadsForIonCompilation_;
     bool useHelperThreadsForParsing_;
 
+    // True iff this is a DOM Worker runtime.
+    bool isWorkerRuntime_;
+
   public:
 
     bool useHelperThreads() const {
@@ -1734,6 +1737,12 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
     bool useHelperThreadsForParsing() const {
         return useHelperThreadsForParsing_;
+    }
+    void setIsWorkerRuntime() {
+        isWorkerRuntime_ = true;
+    }
+    bool isWorkerRuntime() const {
+        return isWorkerRuntime_;
     }
 
 #ifdef DEBUG

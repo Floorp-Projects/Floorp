@@ -1740,9 +1740,14 @@ CheckScript(JSContext *cx, JSScript *script, bool osr)
 
 // Longer scripts can only be compiled off thread, as these compilations
 // can be expensive and stall the main thread for too long.
-static const uint32_t MAX_OFF_THREAD_SCRIPT_SIZE = 100000;
-static const uint32_t MAX_MAIN_THREAD_SCRIPT_SIZE = 2000;
+static const uint32_t MAX_OFF_THREAD_SCRIPT_SIZE = 100 * 1000;
+static const uint32_t MAX_MAIN_THREAD_SCRIPT_SIZE = 2 * 1000;
 static const uint32_t MAX_MAIN_THREAD_LOCALS_AND_ARGS = 256;
+
+// DOM Worker runtimes don't have off thread compilation, but can also compile
+// larger scripts since this doesn't stall the main thread.
+static const uint32_t MAX_DOM_WORKER_SCRIPT_SIZE = 16 * 1000;
+static const uint32_t MAX_DOM_WORKER_LOCALS_AND_ARGS = 2048;
 
 static MethodStatus
 CheckScriptSize(JSContext *cx, JSScript* script)
@@ -1757,6 +1762,21 @@ CheckScriptSize(JSContext *cx, JSScript* script)
     }
 
     uint32_t numLocalsAndArgs = analyze::TotalSlots(script);
+    if (cx->runtime()->isWorkerRuntime()) {
+        // DOM Workers don't have off thread compilation enabled. Since workers
+        // don't block the browser's event loop, allow them to compile larger
+        // scripts.
+        JS_ASSERT(!OffThreadIonCompilationEnabled(cx->runtime()));
+
+        if (script->length > MAX_DOM_WORKER_SCRIPT_SIZE ||
+            numLocalsAndArgs > MAX_DOM_WORKER_LOCALS_AND_ARGS)
+        {
+            return Method_CantCompile;
+        }
+
+        return Method_Compiled;
+    }
+
     if (script->length > MAX_MAIN_THREAD_SCRIPT_SIZE ||
         numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
     {
