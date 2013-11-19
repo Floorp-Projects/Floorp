@@ -1,0 +1,98 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Test</title>
+
+  <script type="text/javascript">
+  function report(result) {
+    var message = { source: "iframe" };
+    message.result = result;
+    window.parent.postMessage(message, "*");
+  }
+
+  function runIndexedDBTest() {
+    var db = null;
+
+    // Create the data-store
+    function createDatastore() {
+      try {
+        var request = indexedDB.open(window.location.pathname, 1);
+        request.onupgradeneeded = function(event) {
+          event.target.result.createObjectStore("foo");
+        }
+        request.onsuccess = function(event) {
+          db = event.target.result;
+          createAndStoreBlob();
+        }
+      }
+      catch (e) {
+dump("EXCEPTION IN CREATION: " + e + "\n " + e.stack + "\n");
+        report(false);
+      }
+    }
+
+    function createAndStoreBlob() {
+      const BLOB_DATA = ["fun ", "times ", "all ", "around!"];
+      var blob = new Blob(BLOB_DATA, { type: "text/plain" });
+      var objectStore = db.transaction("foo", "readwrite").objectStore("foo");
+      objectStore.add({ blob: blob }, 42).onsuccess = refetchBlob;
+    }
+
+    function refetchBlob() {
+      var foo = db.transaction("foo").objectStore("foo");
+      foo.get(42).onsuccess = fetchedBlobCreateWorkerAndSendBlob;
+    }
+
+    function fetchedBlobCreateWorkerAndSendBlob(event) {
+      var idbBlob = event.target.result.blob;
+      var compositeBlob = new Blob(['I like the following blob: ', idbBlob],
+                                   { type: "text/fancy" });
+
+      function workerScript() {
+        onmessage = function(event) {
+          // Save the Blob to the worker's global scope.
+          self.holdOntoBlob = event.data;
+          // Send any message so we can serialize and keep our runtime behaviour
+          // consistent.
+          postMessage('kung fu death grip established');
+        }
+      }
+
+      var url =
+        URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+
+      // Keep a reference to the worker on the window.
+      var worker = window.worker = new Worker(url);
+      worker.postMessage(compositeBlob);
+      worker.onmessage = workerLatchedBlobDeleteFromDB;
+    }
+
+    function workerLatchedBlobDeleteFromDB() {
+      // Delete the reference to the Blob from the database leaving the worker
+      // thread reference as the only live reference once a GC has cleaned
+      // out our references that we sent to the worker.  The page that owns
+      // us triggers a GC just for that reason.
+      var objectStore = db.transaction("foo", "readwrite").objectStore("foo");
+      objectStore.delete(42).onsuccess = closeDBTellOwningThread;
+    }
+
+    function closeDBTellOwningThread(event) {
+      // Now that worker has latched the blob, clean up the database.
+      db.close();
+      db = null;
+      report('ready');
+    }
+
+    createDatastore();
+  }
+  </script>
+
+</head>
+
+<body onload="runIndexedDBTest();">
+</body>
+
+</html>
