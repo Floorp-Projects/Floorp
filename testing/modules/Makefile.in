@@ -4,4 +4,5 @@
 
 TESTING_JS_MODULES := \
   AppInfo.jsm \
+  Assert.jsm \
   $(NULL)

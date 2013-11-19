@@ -174,6 +174,7 @@ static nsRefPtr<RawDBusConnection> gThreadConnection;
 static nsDataHashtable<nsStringHashKey, DBusMessage* >* sPairingReqTable;
 static nsTArray<uint32_t> sAuthorizedServiceClass;
 static nsString sAdapterPath;
+static bool sAdapterNameIsReady = false;
 static Atomic<int32_t> sIsPairing(0);
 static int sConnectedDeviceCount = 0;
 static StaticAutoPtr<Monitor> sStopBluetoothMonitor;
@@ -699,6 +700,20 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
     for (uint32_t i= 0; i < length; i++) {
       nsString& data = propertyValue.get_ArrayOfnsString()[i];
       data = GetAddressFromObjectPath(data);
+    }
+  } else if (!sAdapterNameIsReady &&
+             aPropertyTypes == sAdapterProperties &&
+             propertyName.EqualsLiteral("Name")) {
+    MOZ_ASSERT(propertyValue.type() == BluetoothValue::TnsString);
+
+    // Notify BluetoothManager whenever adapter name is ready.
+    if (!propertyValue.get_nsString().IsEmpty()) {
+      sAdapterNameIsReady = true;
+      BluetoothSignal signal(NS_LITERAL_STRING("AdapterAdded"),
+                             NS_LITERAL_STRING(KEY_MANAGER), sAdapterPath);
+      nsRefPtr<DistributeBluetoothSignalTask> task =
+        new DistributeBluetoothSignalTask(signal);
+      NS_DispatchToMainThread(task);
     }
   }
 
@@ -1534,6 +1549,13 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
     } else {
       v = NS_ConvertUTF8toUTF16(str);
       NS_DispatchToMainThread(new PrepareAdapterRunnable(v.get_nsString()));
+
+      /**
+       * The adapter name isn't ready for the time being. Wait for the upcoming
+       * signal PropertyChanged of adapter name, and then propagate signal
+       * AdapterAdded to BluetoothManager.
+       */
+      return DBUS_HANDLER_RESULT_HANDLED;
     }
   } else if (dbus_message_is_signal(aMsg, DBUS_MANAGER_IFACE,
                                     "PropertyChanged")) {
@@ -1772,6 +1794,8 @@ BluetoothDBusService::StopInternal()
 
   sAuthorizedServiceClass.Clear();
   sControllerArray.Clear();
+
+  sAdapterNameIsReady = false;
 
   StopDBus();
   return NS_OK;
