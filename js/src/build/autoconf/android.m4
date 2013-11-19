@@ -259,6 +259,8 @@ MOZ_ARG_WITH_STRING(android-sdk,
                           location where the Android SDK can be found (base directory, e.g. .../android/platforms/android-6)],
     android_sdk=$withval)
 
+android_sdk_root=$withval/../../
+
 case "$target" in
 *-android*|*-linuxandroid*)
     if test -z "$android_sdk" ; then
@@ -284,8 +286,8 @@ case "$target" in
         fi
     fi
 
-    android_tools="$android_sdk"/../../tools
-    android_platform_tools="$android_sdk"/../../platform-tools
+    android_tools="$android_sdk_root"/tools
+    android_platform_tools="$android_sdk_root"/platform-tools
     if test ! -d "$android_platform_tools" ; then
         android_platform_tools="$android_sdk"/tools # SDK Tools < r8
     fi
@@ -293,7 +295,7 @@ case "$target" in
     # SDK Tools r22.  Try to locate them.
     android_build_tools=""
     for suffix in android-4.3 19.0.0 18.1.0 18.0.1 18.0.0 17.0.0 android-4.2.2; do
-        tools_directory="$android_sdk/../../build-tools/$suffix"
+        tools_directory="$android_sdk_root/build-tools/$suffix"
         if test -d "$tools_directory" ; then
             android_build_tools="$tools_directory"
             break
@@ -303,14 +305,16 @@ case "$target" in
         android_build_tools="$android_platform_tools" # SDK Tools < r22
     fi
     ANDROID_SDK="${android_sdk}"
-    if test -e "${android_sdk}/../../extras/android/compatibility/v4/android-support-v4.jar" ; then
-        ANDROID_COMPAT_LIB="${android_sdk}/../../extras/android/compatibility/v4/android-support-v4.jar"
+    ANDROID_SDK_ROOT="${android_sdk_root}"
+    if test -e "${ANDROID_SDK_ROOT}/extras/android/compatibility/v4/android-support-v4.jar" ; then
+        ANDROID_COMPAT_LIB="${ANDROID_SDK_ROOT}/extras/android/compatibility/v4/android-support-v4.jar"
     else
-        ANDROID_COMPAT_LIB="${android_sdk}/../../extras/android/support/v4/android-support-v4.jar";
+        ANDROID_COMPAT_LIB="${ANDROID_SDK_ROOT}/extras/android/support/v4/android-support-v4.jar";
     fi
     ANDROID_TOOLS="${android_tools}"
     ANDROID_PLATFORM_TOOLS="${android_platform_tools}"
     ANDROID_BUILD_TOOLS="${android_build_tools}"
+    AC_SUBST(ANDROID_SDK_ROOT)
     AC_SUBST(ANDROID_SDK)
     AC_SUBST(ANDROID_COMPAT_LIB)
     if ! test -e $ANDROID_COMPAT_LIB ; then
