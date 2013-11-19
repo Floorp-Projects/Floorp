@@ -29,8 +29,6 @@ OS_LIBS = ['foo.so', '-l123', 'bar.a']
 
 SDK_LIBRARY = ['bar.sdk', 'foo.sdk']
 
-SHARED_LIBRARY_LIBS += ['bar.sll', 'foo.sll']
-
 SOURCES += ['bar.c', 'foo.c']
 
 SOURCES += ['bar.mm', 'foo.mm']
