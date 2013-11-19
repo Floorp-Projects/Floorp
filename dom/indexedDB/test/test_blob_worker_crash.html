@@ -1,0 +1,62 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Blob Worker Crash Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  /*
+   * This tests ensures that if the last live reference to a Blob is on the
+   * worker and the database has already been shutdown, that there is no crash
+   * when the owning page gets cleaned up which causes the termination of the
+   * worker which in turn garbage collects during its shutdown.
+   *
+   * We do the IndexedDB stuff in the iframe so we can kill it as part of our
+   * test.  Doing it out here is no good.
+   */
+
+  function testSteps()
+  {
+    info("Open iframe, wait for it to do its IndexedDB stuff.");
+
+    let iframe = document.getElementById("iframe1");
+    window.addEventListener("message", grabEventAndContinueHandler, false);
+    // Put it in a different origin to be safe
+    //allowUnlimitedQuota("http://example.org/");
+    iframe.src = //"http://example.org" +
+                 window.location.pathname.replace(
+                   "test_blob_worker_crash.html",
+                   "blob_worker_crash_iframe.html");
+
+    let event = yield unexpectedSuccessHandler;
+    is(event.data.result, "ready", "worker initialized correctly");
+
+    info("Trigger a GC to clean-up the iframe's main-thread IndexedDB");
+    scheduleGC();
+    yield undefined;
+
+    info("Kill the iframe, forget about it, trigger a GC.");
+    iframe.parentNode.removeChild(iframe);
+    iframe = null;
+    scheduleGC();
+    yield undefined;
+
+    info("If we are still alive, then we win!");
+    ok('Did not crash / trigger an assert!');
+
+    finishTest();
+    yield undefined;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+  <iframe id="iframe1"></iframe>
+</html>
