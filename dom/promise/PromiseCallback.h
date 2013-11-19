@@ -111,6 +111,25 @@ private:
   nsRefPtr<Promise> mPromise;
 };
 
+// NativePromiseCallback wraps a NativePromiseHandler.
+class NativePromiseCallback MOZ_FINAL : public PromiseCallback
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(NativePromiseCallback,
+                                           PromiseCallback)
+
+  void Call(JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
+
+  NativePromiseCallback(PromiseNativeHandler* aHandler,
+                        Promise::PromiseState aState);
+  ~NativePromiseCallback();
+
+private:
+  nsRefPtr<PromiseNativeHandler> mHandler;
+  Promise::PromiseState mState;
+};
+
 } // namespace dom
 } // namespace mozilla
 

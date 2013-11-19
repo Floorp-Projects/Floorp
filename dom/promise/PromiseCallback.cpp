@@ -6,6 +6,7 @@
 
 #include "PromiseCallback.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 
 namespace mozilla {
 namespace dom {
@@ -207,6 +208,47 @@ SimpleWrapperPromiseCallback::Call(JS::Handle<JS::Value> aValue)
 {
   ErrorResult rv;
   mCallback->Call(mPromise, aValue, rv);
+}
+
+// NativePromiseCallback
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(NativePromiseCallback,
+                                     PromiseCallback, mHandler)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(NativePromiseCallback)
+NS_INTERFACE_MAP_END_INHERITING(PromiseCallback)
+
+NS_IMPL_ADDREF_INHERITED(NativePromiseCallback, PromiseCallback)
+NS_IMPL_RELEASE_INHERITED(NativePromiseCallback, PromiseCallback)
+
+NativePromiseCallback::NativePromiseCallback(PromiseNativeHandler* aHandler,
+                                             Promise::PromiseState aState)
+  : mHandler(aHandler)
+  , mState(aState)
+{
+  MOZ_ASSERT(aHandler);
+  MOZ_COUNT_CTOR(NativePromiseCallback);
+}
+
+NativePromiseCallback::~NativePromiseCallback()
+{
+  MOZ_COUNT_DTOR(NativePromiseCallback);
+}
+
+void
+NativePromiseCallback::Call(JS::Handle<JS::Value> aValue)
+{
+  if (mState == Promise::Resolved) {
+    mHandler->ResolvedCallback(aValue);
+    return;
+  }
+
+  if (mState == Promise::Rejected) {
+    mHandler->RejectedCallback(aValue);
+    return;
+  }
+
+  NS_NOTREACHED("huh?");
 }
 
 /* static */ PromiseCallback*
