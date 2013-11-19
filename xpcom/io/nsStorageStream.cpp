@@ -45,6 +45,9 @@ GetStorageStreamLog()
     return sLog;
 }
 #endif
+#ifdef LOG
+#undef LOG
+#endif
 #define LOG(args) PR_LOG(GetStorageStreamLog(), PR_LOG_DEBUG, args)
 
 nsStorageStream::nsStorageStream()

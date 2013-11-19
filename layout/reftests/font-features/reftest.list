@@ -28,6 +28,7 @@ HTTP(..) == font-features-turkish.html font-features-noliga.html
 HTTP(..) == font-features-hlig-2.html font-features-hlig.html
 HTTP(..) == font-features-hlig-4.html font-features-hlig.html
 HTTP(..) != font-features-hlig-5.html font-features-hlig.html
+pref(layout.css.font-features.enabled,true) HTTP(..) == font-features-ligatures-none.html font-features-noliga.html
 
 # check that feature in style rule overrides @font-face
 skip-if(B2G) HTTP(..) == font-features-hlig-3.html font-features-noliga.html # bug 773482

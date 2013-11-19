@@ -20,7 +20,7 @@ EXPORTS.mozilla.dom += [
 if CONFIG['MOZ_WEBSPEECH']:
     EXPORTS.mozilla.dom += ['SpeechRecognitionError.h']
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'DOMWheelEvent.cpp',
     'EventTarget.cpp',
     'nsAsyncDOMEvent.cpp',
@@ -54,7 +54,6 @@ SOURCES += [
     'nsEventDispatcher.cpp',
     'nsEventListenerManager.cpp',
     'nsEventListenerService.cpp',
-    'nsEventStateManager.cpp',
     'nsIMEStateManager.cpp',
     'nsPaintRequest.cpp',
     'nsPrivateTextRange.cpp',
@@ -62,8 +61,13 @@ SOURCES += [
     'Touch.cpp',
 ]
 
+# nsEventStateManager.cpp should be built separately because of Mac OS X headers.
+SOURCES += [
+    'nsEventStateManager.cpp',
+]
+
 if CONFIG['MOZ_WEBSPEECH']:
-    SOURCES += ['SpeechRecognitionError.cpp']
+    UNIFIED_SOURCES += ['SpeechRecognitionError.cpp']
 
 FAIL_ON_WARNINGS = True
 

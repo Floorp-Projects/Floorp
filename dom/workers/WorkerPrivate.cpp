@@ -4240,6 +4240,11 @@ WorkerPrivate::TraceTimeouts(const TraceCallbacks& aCallbacks,
 
   for (uint32_t index = 0; index < mTimeouts.Length(); index++) {
     TimeoutInfo* info = mTimeouts[index];
+
+    if (info->mTimeoutCallable.isUndefined()) {
+      continue;
+    }
+
     aCallbacks.Trace(&info->mTimeoutCallable, "mTimeoutCallable", aClosure);
     for (uint32_t index2 = 0; index2 < info->mExtraArgVals.Length(); index2++) {
       aCallbacks.Trace(&info->mExtraArgVals[index2], "mExtraArgVals[i]", aClosure);
