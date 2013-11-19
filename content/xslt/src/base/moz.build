@@ -12,8 +12,6 @@ SOURCES += [
     'txURIUtils.cpp',
 ]
 
-LIBRARY_NAME = 'txbase_s'
-
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [

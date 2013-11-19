@@ -9,8 +9,6 @@ EXPORTS.vorbis += [
     'include/vorbis/vorbisenc.h',
 ]
 
-LIBRARY_NAME = 'vorbis'
-
 SOURCES += [
     'lib/vorbis_analysis.c',
     'lib/vorbis_bitrate.c',

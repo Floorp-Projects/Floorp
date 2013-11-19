@@ -15,8 +15,6 @@ UNIFIED_SOURCES += [
     'nsTextEditUtils.cpp',
 ]
 
-LIBRARY_NAME = 'texteditor_s'
-
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [

@@ -33,8 +33,6 @@ SOURCES += [
     'nsXULTreeBuilder.cpp',
 ]
 
-LIBRARY_NAME = 'gkconxultmpl_s'
-
 MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [

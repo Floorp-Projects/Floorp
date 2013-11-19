@@ -8,8 +8,6 @@ SOURCES += [
     'DownloadPlatform.cpp',
 ]
 
-LIBRARY_NAME = 'jsdownloads_s'
-
 EXTRA_COMPONENTS += [
     'DownloadLegacy.js',
     'Downloads.manifest',

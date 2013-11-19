@@ -11,8 +11,6 @@ SOURCES += [
     'minidump_generator.cc',
 ]
 
-LIBRARY_NAME = 'exception_handler_s'
-
 XPI_NAME = 'crashreporter'
 
 FINAL_LIBRARY = 'xulapp_s'

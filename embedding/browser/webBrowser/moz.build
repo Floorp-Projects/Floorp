@@ -44,8 +44,6 @@ SOURCES += [
     'nsWebBrowserContentPolicy.cpp',
 ]
 
-LIBRARY_NAME = 'nsWebBrowser_s'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'webbrwsr'

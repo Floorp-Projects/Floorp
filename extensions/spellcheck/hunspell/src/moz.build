@@ -24,6 +24,4 @@ if not CONFIG['MOZ_NATIVE_HUNSPELL']:
         'suggestmgr.cpp',
     ]
 
-LIBRARY_NAME = 'hunspell_s'
-
 FINAL_LIBRARY = 'spellchecker'

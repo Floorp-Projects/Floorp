@@ -47,8 +47,6 @@ SOURCES += [
     'TimerThread.cpp',
 ]
 
-LIBRARY_NAME = 'xpcomthreads_s'
-
 MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [

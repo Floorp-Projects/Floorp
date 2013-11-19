@@ -43,8 +43,6 @@ SOURCES += [
     'vorg.cc',
 ]
 
-LIBRARY_NAME = 'mozots'
-
 MSVC_ENABLE_PGO = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':

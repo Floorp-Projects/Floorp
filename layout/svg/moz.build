@@ -48,6 +48,4 @@ UNIFIED_SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'gksvgbase_s'
-
 FINAL_LIBRARY = 'gklayout'

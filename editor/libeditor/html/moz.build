@@ -26,8 +26,6 @@ UNIFIED_SOURCES += [
     'TypeInState.cpp',
 ]
 
-LIBRARY_NAME = 'htmleditor_s'
-
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [

@@ -16,8 +16,6 @@ SOURCES += [
     'nsSAXXMLReader.cpp',
 ]
 
-LIBRARY_NAME = 'saxp'
-
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'htmlpars'

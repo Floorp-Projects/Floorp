@@ -8,6 +8,4 @@ include('../objs.mozbuild')
 
 UNIFIED_SOURCES += intl_unicharutil_util_cppsrcs
 
-LIBRARY_NAME = 'unicharutil_s'
-
 FINAL_LIBRARY = 'xul'

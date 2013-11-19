@@ -150,8 +150,6 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
 
 MSVC_ENABLE_PGO = True
 
-LIBRARY_NAME = 'gkconmedia_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'gklayout'

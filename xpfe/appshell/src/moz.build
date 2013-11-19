@@ -21,8 +21,6 @@ LOCAL_INCLUDES += [
     '/dom/base',
 ]
 
-LIBRARY_NAME = 'nsappshell'
-
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'xul'

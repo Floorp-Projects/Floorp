@@ -13,6 +13,4 @@ else:
         'nsUnixSystemProxySettings.cpp',
     ]
 
-LIBRARY_NAME = 'unixproxy'
-
 FINAL_LIBRARY = 'xul'

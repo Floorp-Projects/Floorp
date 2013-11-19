@@ -18,6 +18,4 @@ EXTRA_PP_COMPONENTS += [
     'gtkqticonsconverter.js',
 ]
 
-LIBRARY_NAME = 'imgiconqt_s'
-
 FINAL_LIBRARY = 'imgicon'

@@ -18,8 +18,6 @@ UNIFIED_SOURCES += [
     'OggWriter.cpp',
 ]
 
-LIBRARY_NAME = 'gkconogg_s'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'gklayout'

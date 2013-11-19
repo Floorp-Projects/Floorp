@@ -14,8 +14,6 @@ SOURCES += [
     'Platform.cpp',
 ]
 
-LIBRARY_NAME = 'accessibility_toolkit_s'
-
 LOCAL_INCLUDES += [
     '../base',
     '../generic',

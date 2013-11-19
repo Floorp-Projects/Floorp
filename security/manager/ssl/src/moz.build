@@ -81,8 +81,6 @@ if CONFIG['MOZ_XUL']:
         'nsCertTree.cpp',
     ]
 
-LIBRARY_NAME = 'pipnss'
-
 SOURCES += [
     'md4.c',
 ]

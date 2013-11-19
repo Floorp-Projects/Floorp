@@ -10,8 +10,6 @@ SOURCES += [
     'nsStreamConverterService.cpp',
 ]
 
-LIBRARY_NAME = 'nkconv_s'
-
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'necko'

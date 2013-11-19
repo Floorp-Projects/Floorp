@@ -31,7 +31,6 @@ else:
     ]
 
 
-LIBRARY_NAME = 'lwbrk_s'
 
 MSVC_ENABLE_PGO = True
 

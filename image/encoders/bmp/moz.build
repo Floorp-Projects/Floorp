@@ -8,8 +8,6 @@ SOURCES += [
     'nsBMPEncoder.cpp',
 ]
 
-LIBRARY_NAME = 'imgbmpe_s'
-
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [

@@ -9,6 +9,4 @@ SOURCES += [
     'xptcstubs_gcc_x86_os2.cpp',
 ]
 
-LIBRARY_NAME = 'xptcmd'
-
 FINAL_LIBRARY = 'xpcom_core'

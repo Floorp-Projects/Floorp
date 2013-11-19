@@ -9,8 +9,6 @@ SOURCES += [
     'nsStringBundleTextOverride.cpp',
 ]
 
-LIBRARY_NAME = 'strres_s'
-
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'i18n'

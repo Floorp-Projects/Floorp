@@ -15,8 +15,6 @@ UNIFIED_SOURCES += [
     'HTMLTableAccessible.cpp',
 ]
 
-LIBRARY_NAME = 'accessibility_html_s'
-
 LOCAL_INCLUDES += [
     '../../../layout/generic',
     '../../../layout/tables',

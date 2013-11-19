@@ -10,8 +10,6 @@ SOURCES += [
     'minidump_writer.cc',
 ]
 
-LIBRARY_NAME = 'minidump_writer_s'
-
 XPI_NAME = 'crashreporter'
 
 FINAL_LIBRARY = 'xulapp_s'

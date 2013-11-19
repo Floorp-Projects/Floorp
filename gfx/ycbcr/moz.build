@@ -67,6 +67,4 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['HAVE_ARM_NEON']:
         'yuv_convert_arm.cpp',
     ]
 
-LIBRARY_NAME = 'ycbcr'
-
 FINAL_LIBRARY = 'xul'

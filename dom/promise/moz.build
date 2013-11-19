@@ -19,8 +19,6 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'dompromise_s'
-
 LOCAL_INCLUDES += [
     '../base',
     '../workers',

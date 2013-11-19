@@ -43,6 +43,4 @@ SOURCES += [
     'google/protobuf/wire_format_lite.cc',
 ]
 
-LIBRARY_NAME = 'protobuf_s'
-
 FINAL_LIBRARY = 'toolkitcomps'

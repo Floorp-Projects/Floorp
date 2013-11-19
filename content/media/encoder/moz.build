@@ -21,8 +21,6 @@ if CONFIG['MOZ_OPUS']:
     EXPORTS += ['OpusTrackEncoder.h']
     UNIFIED_SOURCES += ['OpusTrackEncoder.cpp']
 
-LIBRARY_NAME = 'gkconencoder_s'
-
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'gklayout'
