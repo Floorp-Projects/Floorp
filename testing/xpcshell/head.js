@@ -184,6 +184,15 @@ function _do_quit() {
 }
 
 function _format_exception_stack(stack) {
+  if (typeof stack == "object" && stack.caller) {
+    let frame = stack;
+    let strStack = "";
+    while (frame != null) {
+      strStack += frame + "\n";
+      frame = frame.caller;
+    }
+    stack = strStack;
+  }
   // frame is of the form "fname@file:line"
   let frame_regexp = new RegExp("(.*)@(.*):(\\d*)", "g");
   return stack.split("\n").reduce(function(stack_msg, frame) {
