@@ -222,7 +222,7 @@ TCPSocketChild::SendSend(const JS::Value& aData,
       return NS_ERROR_OUT_OF_MEMORY;
     }
     FallibleTArray<uint8_t> fallibleArr;
-    if (!fallibleArr.InsertElementsAt(0, data, nbytes)) {
+    if (!fallibleArr.InsertElementsAt(0, data + aByteOffset, nbytes)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     InfallibleTArray<uint8_t> arr;

@@ -889,3 +889,14 @@ html
 #document
 | <head>
 | <body>
+
+#data
+<head></head><script></script>
+#errors
+21: “script” element between “head” and “body”.
+#document-fragment
+html
+#document
+| <head>
+|   <script>
+| <body>

@@ -35,6 +35,13 @@
 #include "nsIPromptService.h"
 #include "nsIMemoryReporter.h"
 
+#ifdef MOZ_STORAGE_MEMORY
+#  include "mozmemory.h"
+#  ifdef MOZ_DMD
+#    include "DMD.h"
+#  endif
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Defines
 
@@ -349,7 +356,6 @@ Service::shutdown()
 sqlite3_vfs *ConstructTelemetryVFS();
 
 #ifdef MOZ_STORAGE_MEMORY
-#  include "mozmemory.h"
 
 namespace {
 
@@ -372,8 +378,6 @@ namespace {
 // a wrapper for moz_free.
 
 #ifdef MOZ_DMD
-
-#include "DMD.h"
 
 // sqlite does its own memory accounting, and we use its numbers in our memory
 // reporters.  But we don't want sqlite's heap blocks to show up in DMD's

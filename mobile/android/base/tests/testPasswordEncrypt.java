@@ -1,13 +1,14 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.*;
+import org.mozilla.gecko.db.BrowserContract;
+
 import android.content.ContentValues;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.content.Context;
 import android.net.Uri;
 import java.io.File;
-import java.lang.reflect.Method;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,101 +20,91 @@ public class testPasswordEncrypt extends BaseTest {
     }
 
     public void testPasswordEncrypt() {
-      Context context = (Context)getActivity();
-      ContentResolver cr = context.getContentResolver();
-      mAsserter.isnot(cr, null, "Found a content resolver");
-      ContentValues cvs = new ContentValues();
+        Context context = (Context)getActivity();
+        ContentResolver cr = context.getContentResolver();
+        mAsserter.isnot(cr, null, "Found a content resolver");
+        ContentValues cvs = new ContentValues();
 
-      blockForGeckoReady();
+        blockForGeckoReady();
 
-      File db = new File(mProfile, "signons.sqlite");
-      String dbPath = db.getPath();
+        File db = new File(mProfile, "signons.sqlite");
+        String dbPath = db.getPath();
 
-      Uri passwordUri;
-      try {
-          ClassLoader classLoader = getActivity().getClassLoader();
-          Class pwds = classLoader.loadClass("org.mozilla.gecko.db.BrowserContract$Passwords");
-          Class nss = classLoader.loadClass("org.mozilla.gecko.NSSBridge");
-          Class contextClass = classLoader.loadClass("android.content.Context");
-          Class stringClass = classLoader.loadClass("java.lang.String");
-          Class appshell = classLoader.loadClass("org.mozilla.gecko.GeckoAppShell");
+        Uri passwordUri;
+        cvs.put("hostname", "http://www.example.com");
+        cvs.put("encryptedUsername", "username");
+        cvs.put("encryptedPassword", "password");
 
-          Method decrypt = nss.getMethod("decrypt", contextClass, stringClass, stringClass);
-          Method encrypt = nss.getMethod("encrypt", contextClass, stringClass, stringClass);
-  
-          cvs.put("hostname", "http://www.example.com");
-          cvs.put("encryptedUsername", "username");
-          cvs.put("encryptedPassword", "password");
+        // Attempt to insert into the db
+        passwordUri = BrowserContract.Passwords.CONTENT_URI;
+        Uri.Builder builder = passwordUri.buildUpon();
+        passwordUri = builder.appendQueryParameter("profilePath", mProfile).build();
 
-          // Attempt to insert into the db
-          passwordUri = (Uri)pwds.getField("CONTENT_URI").get(null);
-          Uri.Builder builder = passwordUri.buildUpon();
-          passwordUri = builder.appendQueryParameter("profilePath", mProfile).build();
+        Uri uri = cr.insert(passwordUri, cvs);
+        Uri expectedUri = passwordUri.buildUpon().appendPath("1").build();
+        mAsserter.is(uri.toString(), expectedUri.toString(), "Insert returned correct uri");
 
-          Uri uri = cr.insert(passwordUri, cvs);
-          Uri expectedUri = passwordUri.buildUpon().appendPath("1").build();
-          mAsserter.is(uri.toString(), expectedUri.toString(), "Insert returned correct uri");
+        Cursor list = mActions.querySql(dbPath, "SELECT encryptedUsername FROM moz_logins");
+        list.moveToFirst();
+        String decryptedU = null;
+        try {
+            decryptedU = NSSBridge.decrypt(context, mProfile, list.getString(0));
+        } catch (Exception e) {
+            mAsserter.ok(false, "NSSBridge.decrypt through Exception " + e, ""); // TODO: What is diag?
+        }
+        mAsserter.is(decryptedU, "username", "Username was encrypted correctly when inserting");
 
-          Cursor list = mActions.querySql(dbPath, "SELECT encryptedUsername FROM moz_logins");
-          list.moveToFirst();
-          String decryptedU = (String)decrypt.invoke(null, context, mProfile, list.getString(0));
-          mAsserter.is(decryptedU, "username", "Username was encrypted correctly when inserting");
+        list = mActions.querySql(dbPath, "SELECT encryptedPassword, encType FROM moz_logins");
+        list.moveToFirst();
+        String decryptedP = null;
+        try {
+            decryptedP = NSSBridge.decrypt(context, mProfile, list.getString(0));
+        } catch (Exception e) {
+            mAsserter.ok(false, "NSSBridge.decrypt through Exception " + e, ""); // TODO: What is diag?
+        }
+        mAsserter.is(decryptedP, "password", "Password was encrypted correctly when inserting");
+        mAsserter.is(list.getInt(1), 1, "Password has correct encryption type");
 
-          list = mActions.querySql(dbPath, "SELECT encryptedPassword, encType FROM moz_logins");
-          list.moveToFirst();
-          String decryptedP = (String)decrypt.invoke(null, context, mProfile, list.getString(0));
-          mAsserter.is(decryptedP, "password", "Password was encrypted correctly when inserting");
-          mAsserter.is(list.getInt(1), 1, "Password has correct encryption type");
-  
-          cvs.put("encryptedUsername", "username2");
-          cvs.put("encryptedPassword", "password2");
-          cr.update(passwordUri, cvs, null, null);
+        cvs.put("encryptedUsername", "username2");
+        cvs.put("encryptedPassword", "password2");
+        cr.update(passwordUri, cvs, null, null);
 
-          list = mActions.querySql(dbPath, "SELECT encryptedUsername FROM moz_logins");
-          list.moveToFirst();
-          decryptedU = (String)decrypt.invoke(null, context, mProfile, list.getString(0));
-          mAsserter.is(decryptedU, "username2", "Username was encrypted when updating");
+        list = mActions.querySql(dbPath, "SELECT encryptedUsername FROM moz_logins");
+        list.moveToFirst();
+        try {
+            decryptedU = NSSBridge.decrypt(context, mProfile, list.getString(0));
+        } catch (Exception e) {
+            mAsserter.ok(false, "NSSBridge.decrypt through Exception " + e, ""); // TODO: What is diag?
+        }
+        mAsserter.is(decryptedU, "username2", "Username was encrypted when updating");
 
-          list = mActions.querySql(dbPath, "SELECT encryptedPassword FROM moz_logins");
-          list.moveToFirst();
-          decryptedP = (String)decrypt.invoke(null, context, mProfile, list.getString(0));
-          mAsserter.is(decryptedP, "password2", "Password was encrypted when updating");
+        list = mActions.querySql(dbPath, "SELECT encryptedPassword FROM moz_logins");
+        list.moveToFirst();
+        try {
+            decryptedP = NSSBridge.decrypt(context, mProfile, list.getString(0));
+        } catch (Exception e) {
+            mAsserter.ok(false, "NSSBridge.decrypt through Exception " + e, ""); // TODO: What is diag?
+        }
+        mAsserter.is(decryptedP, "password2", "Password was encrypted when updating");
 
-          // Trying to store a password while master password is enabled should throw,
-          // but because Android can't send Exceptions across processes
-          // it just results in a null uri/cursor being returned.
-          toggleMasterPassword("password");
-          try {
-              uri = cr.insert(passwordUri, cvs);
-              // TODO: restore this assertion -- see bug 764901
-              // mAsserter.is(uri, null, "Storing a password while MP was set should fail");
+        // Trying to store a password while master password is enabled should throw,
+        // but because Android can't send Exceptions across processes
+        // it just results in a null uri/cursor being returned.
+        toggleMasterPassword("password");
+        try {
+            uri = cr.insert(passwordUri, cvs);
+            // TODO: restore this assertion -- see bug 764901
+            // mAsserter.is(uri, null, "Storing a password while MP was set should fail");
 
-              Cursor c = cr.query(passwordUri, null, null, null, null);
-              // TODO: restore this assertion -- see bug 764901
-              // mAsserter.is(c, null, "Querying passwords while MP was set should fail");
-          } catch (Exception ex) {
-              // Password provider currently can not throw across process
-              // so we should not catch this exception here
-              mAsserter.ok(false, "Caught exception", ex.toString());
-          }
-          toggleMasterPassword("password");
-
-      } catch(ClassNotFoundException ex) {
-          mAsserter.ok(false, "Error getting class", ex.toString());
-          return;
-      } catch(NoSuchFieldException ex) {
-          mAsserter.ok(false, "Error getting field", ex.toString());
-          return;
-      } catch(IllegalAccessException ex) {
-          mAsserter.ok(false, "Error using field", ex.toString());
-          return;
-      } catch(java.lang.NoSuchMethodException ex) {
-          mAsserter.ok(false, "Error getting method", ex.toString());
-          return;
-      } catch(java.lang.reflect.InvocationTargetException ex) {
-          mAsserter.ok(false, "Error invoking method", ex.toString());
-          return;
-      }
+            Cursor c = cr.query(passwordUri, null, null, null, null);
+            // TODO: restore this assertion -- see bug 764901
+            // mAsserter.is(c, null, "Querying passwords while MP was set should fail");
+        } catch (Exception ex) {
+            // Password provider currently can not throw across process
+            // so we should not catch this exception here
+            mAsserter.ok(false, "Caught exception", ex.toString());
+        }
+        toggleMasterPassword("password");
     }
 
     private void toggleMasterPassword(String passwd) {

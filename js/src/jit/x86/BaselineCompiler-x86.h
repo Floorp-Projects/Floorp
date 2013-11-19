@@ -15,7 +15,7 @@ namespace jit {
 class BaselineCompilerX86 : public BaselineCompilerX86Shared
 {
   protected:
-    BaselineCompilerX86(JSContext *cx, HandleScript script);
+    BaselineCompilerX86(JSContext *cx, TempAllocator &alloc, HandleScript script);
 };
 
 typedef BaselineCompilerX86 BaselineCompilerSpecific;

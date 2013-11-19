@@ -26,12 +26,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=886230
 function runTest() {
   var svgText = document.getElementById("t");
 
-  // Recreate the frames for the <text> with the pref set.
-  svgText.style.display = "none";
-  svgText.getComputedTextLength();
-  svgText.style.display = "inline";
-  svgText.getComputedTextLength();
-
   // Dirty the frames.
   document.getElementById("display").style.width = "700px";
   svgText.removeChild(svgText.firstChild);
@@ -44,9 +38,7 @@ function runTest() {
   SimpleTest.finish();
 }
 
-window.addEventListener("load", function() {
-  SpecialPowers.pushPrefEnv({'set': [['svg.text.css-frames.enabled', true]]}, runTest);
-}, false);
+window.addEventListener("load", runTest, false);
 
 SimpleTest.waitForExplicitFinish();
 </script>

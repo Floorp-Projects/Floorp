@@ -336,6 +336,8 @@ static JS_ALWAYS_INLINE bool
 GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObject,
                           HandleValue rref, MutableHandleValue res)
 {
+    JS_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
+
     do {
         uint32_t index;
         if (IsDefinitelyIndex(rref, &index)) {

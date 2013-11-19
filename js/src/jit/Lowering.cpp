@@ -3545,7 +3545,7 @@ LIRGenerator::generate()
         if (gen->shouldCancel("Lowering (preparation loop)"))
             return false;
 
-        current = LBlock::New(*block);
+        current = LBlock::New(alloc(), *block);
         if (!current)
             return false;
         if (!lirGraph_.addBlock(current))

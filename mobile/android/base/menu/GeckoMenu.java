@@ -466,11 +466,13 @@ public class GeckoMenu extends ListView
     public static class DefaultActionItemBar extends LinearLayout
                                              implements ActionItemBarPresenter {
         public DefaultActionItemBar(Context context) {
-            super(context);
+            this(context, null);
         }
 
         public DefaultActionItemBar(Context context, AttributeSet attrs) {
             super(context, attrs);
+
+            setWeightSum(3.0f);
         }
 
         @Override

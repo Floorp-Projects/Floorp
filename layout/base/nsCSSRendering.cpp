@@ -1020,7 +1020,8 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
                                     nsRenderingContext& aRenderingContext,
                                     nsIFrame* aForFrame,
                                     const nsRect& aFrameArea,
-                                    const nsRect& aDirtyRect)
+                                    const nsRect& aDirtyRect,
+                                    float aOpacity)
 {
   const nsStyleBorder* styleBorder = aForFrame->StyleBorder();
   nsCSSShadowArray* shadows = styleBorder->mBoxShadow;
@@ -1132,8 +1133,11 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     else
       shadowColor = aForFrame->StyleColor()->mColor;
 
+    gfxRGBA gfxShadowColor(shadowColor);
+    gfxShadowColor.a *= aOpacity;
+
     renderContext->Save();
-    renderContext->SetColor(gfxRGBA(shadowColor));
+    renderContext->SetColor(gfxShadowColor);
 
     // Draw the shape of the frame so it can be blurred. Recall how nsContextBoxBlur
     // doesn't make any temporary surfaces if blur is 0 and it just returns the original

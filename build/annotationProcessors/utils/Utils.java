@@ -247,6 +247,7 @@ public class Utils {
         while (name.endsWith("[]")) {
             sb.append('[');
             name = name.substring(0, len - 2);
+            len = len - 2;
         }
 
         // Look in the hashmap for the remainder...

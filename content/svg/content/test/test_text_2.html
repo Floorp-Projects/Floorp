@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=655877
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=655877">Mozilla Bug 655877</a>
 <p id="display"></p>
-<div id="content" style="display: none">
+<div id="content">
   <svg width="400" height="200">
     <text x="100" y="100" style="font: 16px sans-serif">
       abc אבג 123 דהו defg
@@ -29,32 +29,28 @@ function close(x, y, message) {
 }
 
 function runTest() {
-  SpecialPowers.pushPrefEnv({'set': [['svg.text.css-frames.enabled', true]]}, function() {
-    document.getElementById("content").style.display = "block";
+  var text = document.querySelector("text");
 
-    var text = document.querySelector("text");
+  // there are only 20 addressable characters
+  is(text.getNumberOfChars(), 20, "getNumberOfChars");
 
-    // there are only 20 addressable characters
-    is(text.getNumberOfChars(), 20, "getNumberOfChars");
+  var sum, total = text.getComputedTextLength();
 
-    var sum, total = text.getComputedTextLength();
+  close(text.getSubStringLength(0, 20), total, "getSubStringLength all");
 
-    close(text.getSubStringLength(0, 20), total, "getSubStringLength all");
+  // add the advance of each glyph
+  sum = 0;
+  for (var i = 0; i < 20; i++) {
+    sum += text.getSubStringLength(i, 1);
+  }
+  close(total, sum, "sum getSubStringLength 1");
 
-    // add the advance of each glyph
-    sum = 0;
-    for (var i = 0; i < 20; i++) {
-      sum += text.getSubStringLength(i, 1);
-    }
-    close(total, sum, "sum getSubStringLength 1");
+  // split the text up into three chunks and add them together
+  close(total, text.getSubStringLength(0, 6) +
+               text.getSubStringLength(6, 8) +
+               text.getSubStringLength(14, 6), "sum getSubStringLength 2");
 
-    // split the text up into three chunks and add them together
-    close(total, text.getSubStringLength(0, 6) +
-                 text.getSubStringLength(6, 8) +
-                 text.getSubStringLength(14, 6), "sum getSubStringLength 2");
-
-    SimpleTest.finish();
-  });
+  SimpleTest.finish();
 }
 
 window.addEventListener("load", runTest, false);

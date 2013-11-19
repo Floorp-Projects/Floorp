@@ -30,7 +30,7 @@ devtoolsCommandlineHandler.prototype = {
     if (!window) {
       let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
       // Load the browser devtools main module as the loader's main module.
-      devtools.main("main");
+      Cu.import("resource:///modules/devtools/gDevTools.jsm");
       let hudservice = devtools.require("devtools/webconsole/hudservice");
       let console = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).console;
       hudservice.toggleBrowserConsole().then(null, console.error);

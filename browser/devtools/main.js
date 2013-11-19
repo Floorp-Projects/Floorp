@@ -130,7 +130,6 @@ Tools.jsdebugger = {
   accesskey: l10n("debuggerMenu.accesskey", debuggerStrings),
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   ordinal: 3,
-  visibilityswitch: "devtools.debugger.enabled",
   icon: "chrome://browser/skin/devtools/tool-debugger.png",
   highlightedicon: "chrome://browser/skin/devtools/tool-debugger-paused.png",
   url: "chrome://browser/content/devtools/debugger.xul",

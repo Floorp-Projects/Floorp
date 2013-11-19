@@ -6799,6 +6799,20 @@ var SearchEngines = {
       onSuccess: function() {
         // Display a toast confirming addition of new search engine.
         NativeWindow.toast.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [engine.title], 1), "long");
+      },
+
+      onError: function(aCode) {
+        let errorMessage;
+        if (aCode == 2) {
+          // Engine is a duplicate.
+          errorMessage = "alertSearchEngineDuplicateToast";
+
+        } else {
+          // Unknown failure. Display general error message.
+          errorMessage = "alertSearchEngineErrorToast";
+        }
+
+        NativeWindow.toast.show(Strings.browser.formatStringFromName(errorMessage, [engine.title], 1), "long");
       }
     });
   },

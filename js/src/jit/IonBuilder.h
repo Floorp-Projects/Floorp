@@ -822,9 +822,10 @@ class CallInfo
     bool setter_;
 
   public:
-    CallInfo(bool constructing)
+    CallInfo(TempAllocator &alloc, bool constructing)
       : fun_(nullptr),
         thisArg_(nullptr),
+        args_(alloc),
         constructing_(constructing),
         setter_(false)
     { }

@@ -112,8 +112,10 @@ extern "C" {
 #include "async_wait.h"
 #include "nr_socket.h"
 #include "nr_socket_local.h"
+#include "stun_hint.h"
 }
 #include "nr_socket_prsock.h"
+#include "simpletokenbucket.h"
 
 // Implement the nsISupports ref counting
 namespace mozilla {
@@ -487,6 +489,32 @@ int NrSocket::sendto(const void *msg, size_t len,
 
   if(fd_==nullptr)
     ABORT(R_EOD);
+
+  if (nr_is_stun_request_message((UCHAR*)msg, len)) {
+    // Global rate limiting for stun requests, to mitigate the ice hammer DoS
+    // (see http://tools.ietf.org/html/draft-thomson-mmusic-ice-webrtc)
+
+    // Tolerate rate of 8k/sec, for one second.
+    static SimpleTokenBucket burst(8192*1, 8192);
+    // Tolerate rate of 3.6k/sec over twenty seconds.
+    static SimpleTokenBucket sustained(3686*20, 3686);
+
+    // Check number of tokens in each bucket.
+    if (burst.getTokens(UINT32_MAX) < len ||
+        sustained.getTokens(UINT32_MAX) < len) {
+      r_log(LOG_GENERIC, LOG_ERR,
+                 "Global rate limit for STUN requests exceeded.");
+      MOZ_ASSERT("Global rate limit for STUN requests exceeded. Go bug "
+                 "bcampen@mozilla.com if you weren't intentionally spamming "
+                 "ICE candidates, or don't know what that means.");
+      ABORT(R_WOULDBLOCK);
+    }
+
+    // Take len tokens from both buckets.
+    // (not threadsafe, but no problem since this is only called from STS)
+    burst.getTokens(len);
+    sustained.getTokens(len);
+  }
 
   // TODO: Convert flags?
   status = PR_SendTo(fd_, msg, len, flags, &naddr, PR_INTERVAL_NO_WAIT);

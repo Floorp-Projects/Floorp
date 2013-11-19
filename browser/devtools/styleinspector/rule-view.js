@@ -1125,23 +1125,17 @@ CssRuleView.prototype = {
    * prepare some content for the tooltip
    */
   _buildTooltipContent: function(target) {
-    let isValueWithImage = target.classList.contains("ruleview-propertyvalue") &&
-      target.querySelector(".theme-link");
-
     let isImageHref = target.classList.contains("theme-link") &&
       target.parentNode.classList.contains("ruleview-propertyvalue");
-    if (isImageHref) {
-      target = target.parentNode;
-    }
 
     // If the inplace-editor is visible or if this is not a background image
     // don't show the tooltip
-    if (!isImageHref && !isValueWithImage) {
+    if (!isImageHref) {
       return false;
     }
 
     // Retrieve the TextProperty for the hovered element
-    let property = target.textProperty;
+    let property = target.parentNode.textProperty;
     let href = property.rule.domRule.href;
 
     // Fill some content

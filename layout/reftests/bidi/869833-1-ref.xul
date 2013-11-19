@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/css" href="data:text/css,
+label.ltr { direction: ltr; }
+label.rtl { direction: rtl; }
+tree { height: 100px; }
+"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <tree>
+    <treecols>
+      <treecol flex="1"/>
+    </treecols>
+    <treechildren>
+      <treeitem>
+        <treerow>
+          <treecell label="&#x202a;Hello!&#x202c;"/>
+	</treerow>
+      </treeitem>
+      <treeitem>
+	<treerow>
+          <treecell label="&#x202b;שלום!&#x202c;"/>
+	</treerow>
+      </treeitem>
+      <treeitem>
+	<treerow>
+          <treecell label="&#x202b;123 إفتح يا سمسم !&#x202c;"/>
+        </treerow>
+      </treeitem>
+    </treechildren>
+  </tree>
+  <vbox>
+    <hbox>
+      <label class="ltr" value="Hello!"/>
+    </hbox>
+    <hbox>
+      <label class="rtl" value="שלום!"/>
+    </hbox>
+    <hbox>
+      <label class="rtl" value="123 إفتح يا سمسم !"/>
+    </hbox>
+  </vbox>
+</window>
