@@ -225,6 +225,7 @@ MetroAppShell::Run(void)
         sinfo.fMask        = SEE_MASK_FLAG_LOG_USAGE;
         sinfo.lpFile       = L"http://-desktop";
         sinfo.lpVerb       = L"open";
+        sinfo.lpParameters = L"--desktop-restart";
         sinfo.nShow        = SW_SHOWNORMAL;
         ShellExecuteEx(&sinfo);
       }

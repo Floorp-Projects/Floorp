@@ -265,6 +265,14 @@ public:
     *aLaunchType = AHE_DESKTOP;
     mIsDesktopRequest = true;
 
+    if (!mIsRestartMetroRequest && IsProcessRunning(kFirefoxExe, false)) {
+      return S_OK;
+    } else if (!mIsRestartDesktopRequest && IsProcessRunning(kMetroFirefoxExe, true)) {
+      *aLaunchType = AHE_IMMERSIVE;
+      mIsDesktopRequest = false;
+      return S_OK;
+    }
+
     if (!mUnkSite) {
       Log(L"No mUnkSite.");
       return S_OK;
@@ -684,7 +692,7 @@ DelayedExecuteThread(LPVOID param)
 
   size_t currentWaitTime = 0;
   while(currentWaitTime < RESTART_WAIT_TIMEOUT) {
-    if (!IsImmersiveProcessRunning(kMetroFirefoxExe))
+    if (!IsProcessRunning(kMetroFirefoxExe, true))
       break;
     currentWaitTime += RESTART_WAIT_PER_RETRY;
     Sleep(RESTART_WAIT_PER_RETRY);
