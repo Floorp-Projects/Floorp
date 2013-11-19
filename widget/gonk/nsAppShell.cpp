@@ -225,8 +225,12 @@ sendKeyEventWithMsg(uint32_t keyCode,
                     bool isRepeat)
 {
     WidgetKeyboardEvent event(true, msg, nullptr);
-    event.keyCode = keyCode;
-    event.charCode = charCode;
+    if (msg == NS_KEY_PRESS && charCode >= ' ') {
+        event.charCode = charCode;
+    } else {
+        event.keyCode = keyCode;
+    }
+    event.isChar = !!event.charCode;
     event.mIsRepeat = isRepeat;
     event.mKeyNameIndex = keyNameIndex;
     event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
