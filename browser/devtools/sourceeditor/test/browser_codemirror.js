@@ -8,6 +8,7 @@ const HOST = 'mochi.test:8888';
 const URI  = "http://" + HOST + "/browser/browser/devtools/sourceeditor/test/codemirror.html";
 
 function test() {
+  requestLongerTimeout(2);
   waitForExplicitFinish();
 
   let tab = gBrowser.addTab();
