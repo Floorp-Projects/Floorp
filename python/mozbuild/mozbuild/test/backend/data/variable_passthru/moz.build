@@ -2,8 +2,6 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-MODULE = 'module_name'
-
 SOURCES += ['bar.s', 'foo.asm']
 
 EXTRA_COMPONENTS = ['bar.js', 'foo.js']
