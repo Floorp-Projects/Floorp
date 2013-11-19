@@ -21,6 +21,8 @@ import java.util.jar.JarFile;
  * classNames is kept sorted to ensure iteration order is consistent across program invocations.
  * Otherwise, we'd forever be reporting the outdatedness of the generated code as we permute its
  * contents.
+ * This classloader does not support inner classes. (You probably shouldn't be putting JNI entry
+ * points in inner classes anyway)
  */
 public class IterableJarLoadingURLClassLoader extends URLClassLoader {
     LinkedList<String> classNames = new LinkedList<String>();
@@ -33,7 +35,7 @@ public class IterableJarLoadingURLClassLoader extends URLClassLoader {
      * @param args A list of jar file names an iterator over the classes of which is desired.
      * @return An iterator over the top level classes in the jar files provided, in arbitrary order.
      */
-    public static Iterator<ClassWithOptions> getIteratorOverJars(String[] args) {
+    public static Iterator<Class<?>> getIteratorOverJars(String[] args) {
         URL[] urlArray = new URL[args.length];
         LinkedList<String> aClassNames = new LinkedList<String>();
 
@@ -49,7 +51,10 @@ public class IterableJarLoadingURLClassLoader extends URLClassLoader {
                         continue;
                     }
                     final String className = fName.substring(0, fName.length() - 6).replace('/', '.');
-
+                    // Inner classes are not supported.
+                    if (className.contains("$")) {
+                        continue;
+                    }
                     aClassNames.add(className);
                 }
             } catch (IOException e) {

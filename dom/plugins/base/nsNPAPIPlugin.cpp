@@ -2262,7 +2262,11 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     }  
 
     case kJavaContext_ANPGetValue: {
-      jobject ret = GeckoAppShell::GetContext();
+      AndroidBridge *bridge = AndroidBridge::Bridge();
+      if (!bridge)
+        return NPERR_GENERIC_ERROR;
+
+      jobject ret = bridge->GetContext();
       if (!ret)
         return NPERR_GENERIC_ERROR;
 

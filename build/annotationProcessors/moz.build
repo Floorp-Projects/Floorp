@@ -6,14 +6,12 @@
 
 jar = add_java_jar('annotationProcessors')
 jar.sources += [
-    'AnnotationInfo.java',
     'AnnotationProcessor.java',
-    'classloader/AnnotatableEntity.java',
-    'classloader/ClassWithOptions.java',
     'classloader/IterableJarLoadingURLClassLoader.java',
     'classloader/JarClassIterator.java',
     'CodeGenerator.java',
-    'utils/AlphabeticAnnotatableEntityComparator.java',
-    'utils/GeneratableElementIterator.java',
+    'MethodWithAnnotationInfo.java',
+    'utils/AlphabeticMethodComparator.java',
+    'utils/GeneratableEntryPointIterator.java',
     'utils/Utils.java',
 ]

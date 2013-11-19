@@ -14,6 +14,12 @@
 #include "nsThreadUtils.h"
 #include "AndroidBridge.h"
 
+#ifdef DEBUG
+#define ALOG_BRIDGE(args...) ALOG(args)
+#else
+#define ALOG_BRIDGE(args...)
+#endif
+
 extern "C" {
   jclass __jsjni_GetGlobalClassRef(const char *className);
 }
