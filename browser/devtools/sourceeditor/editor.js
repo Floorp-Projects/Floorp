@@ -78,6 +78,7 @@ const CM_MAPPING = [
   "clearHistory",
   "openDialog",
   "cursorCoords",
+  "markText",
   "refresh"
 ];
 
