@@ -1638,6 +1638,49 @@ var Prefs = {
   }
 }
 
+// Helper function to compare JSON saved version of the directory state
+// with the new state returned by getInstallLocationStates()
+// Structure is: ordered array of {'name':?, 'addons': {addonID: {'descriptor':?, 'mtime':?} ...}}
+function directoryStateDiffers(aState, aCache)
+{
+  // check equality of an object full of addons; fortunately we can destroy the 'aOld' object
+  function addonsMismatch(aNew, aOld) {
+    for (let [id, val] of aNew) {
+      if (!id in aOld)
+        return true;
+      if (val.descriptor != aOld[id].descriptor ||
+          val.mtime != aOld[id].mtime)
+        return true;
+      delete aOld[id];
+    }
+    // make sure aOld doesn't have any extra entries
+    for (let id in aOld)
+      return true;
+    return false;
+  }
+
+  if (!aCache)
+    return true;
+  try {
+    let old = JSON.parse(aCache);
+    if (aState.length != old.length)
+      return true;
+    for (let i = 0; i < aState.length; i++) {
+      // conveniently, any missing fields would require a 'true' return, which is
+      // handled by our catch wrapper
+      if (aState[i].name != old[i].name)
+        return true;
+      if (addonsMismatch(aState[i].addons, old[i].addons))
+        return true;
+    }
+  }
+  catch (e) {
+    return true;
+  }
+  return false;
+}
+
+
 var XPIProvider = {
   // An array of known install locations
   installLocations: null,
@@ -3372,8 +3415,15 @@ var XPIProvider = {
 
     // If the install directory state has changed then we must update the database
     let cache = Prefs.getCharPref(PREF_INSTALL_CACHE, null);
+    // For a little while, gather telemetry on whether the deep comparison
+    // makes a difference
     if (cache != JSON.stringify(state)) {
-      updateReasons.push("directoryState");
+      if (directoryStateDiffers(state, cache)) {
+        updateReasons.push("directoryState");
+      }
+      else {
+        AddonManagerPrivate.recordSimpleMeasure("XPIDB_startup_state_badCompare", 1);
+      }
     }
 
     // If the database doesn't exist and there are add-ons installed then we
