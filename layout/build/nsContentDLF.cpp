@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsCOMPtr.h"
 #include "nsContentDLF.h"
-#include "nsDocShell.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsIComponentManager.h"
@@ -136,7 +135,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
                              nsIChannel* aChannel,
                              nsILoadGroup* aLoadGroup,
                              const char* aContentType, 
-                             nsIDocShell* aContainer,
+                             nsISupports* aContainer,
                              nsISupports* aExtraInfo,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aDocViewer)
@@ -371,7 +370,7 @@ nsresult
 nsContentDLF::CreateDocument(const char* aCommand,
                              nsIChannel* aChannel,
                              nsILoadGroup* aLoadGroup,
-                             nsIDocShell* aContainer,
+                             nsISupports* aContainer,
                              const nsCID& aDocumentCID,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aContentViewer)
@@ -400,7 +399,7 @@ nsContentDLF::CreateDocument(const char* aCommand,
   rv = NS_NewContentViewer(getter_AddRefs(contentViewer));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  doc->SetContainer(static_cast<nsDocShell*>(aContainer));
+  doc->SetContainer(aContainer);
 
   // Initialize the document to begin loading the data.  An
   // nsIStreamListener connected to the parser is returned in
@@ -419,7 +418,7 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
                                 nsIChannel* aChannel,
                                 nsILoadGroup* aLoadGroup,
                                 const char* aContentType,
-                                nsIDocShell* aContainer,
+                                nsISupports* aContainer,
                                 nsISupports* aExtraInfo,
                                 nsIStreamListener** aDocListener,
                                 nsIContentViewer** aContentViewer)
@@ -443,7 +442,7 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
    * aDocListener.
    */
 
-  doc->SetContainer(static_cast<nsDocShell*>(aContainer));
+  doc->SetContainer(aContainer);
 
   rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener, true);
   if (NS_FAILED(rv)) return rv;

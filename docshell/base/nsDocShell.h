@@ -18,7 +18,6 @@
 #include "nsIContentViewerContainer.h"
 #include "nsIDOMStorageManager.h"
 #include "nsDocLoader.h"
-#include "mozilla/WeakPtr.h"
 
 // Helper Classes
 #include "nsCOMPtr.h"
@@ -138,8 +137,7 @@ class nsDocShell : public nsDocLoader,
                    public nsIWebShellServices,
                    public nsILinkHandler,
                    public nsIClipboardCommands,
-                   public nsIDOMStorageManager,
-                   public mozilla::SupportsWeakPtr<nsDocShell>
+                   public nsIDOMStorageManager
 {
     friend class nsDSURIContentListener;
 

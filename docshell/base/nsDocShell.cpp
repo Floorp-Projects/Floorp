@@ -7259,7 +7259,7 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
       // got Reset() with a channel.
       blankDoc->SetBaseURI(aBaseURI);
 
-      blankDoc->SetContainer(this);
+      blankDoc->SetContainer(static_cast<nsIDocShell *>(this));
 
       // Copy our sandbox flags to the document. These are immutable
       // after being set here.
@@ -7271,7 +7271,7 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
 
       // hook 'em up
       if (viewer) {
-        viewer->SetContainer(this);
+        viewer->SetContainer(static_cast<nsIContentViewerContainer *>(this));
         Embed(viewer, "", 0);
 
         SetCurrentURI(blankDoc->GetDocumentURI(), nullptr, true, 0);
@@ -7607,7 +7607,7 @@ nsDocShell::RestorePresentation(nsISHEntry *aSHEntry, bool *aRestoring)
     // different one.  We don't currently support restoring the presentation
     // in that case.
 
-    nsCOMPtr<nsIDocShell> container;
+    nsCOMPtr<nsISupports> container;
     viewer->GetContainer(getter_AddRefs(container));
     if (!::SameCOMIdentity(container, GetAsSupports(this))) {
 #ifdef DEBUG_PAGE_CACHE
@@ -8333,13 +8333,13 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
     nsresult rv = docLoaderFactory->CreateInstance("view",
                                                    aOpenedChannel,
                                                    aLoadGroup, aContentType,
-                                                   this,
+                                                   static_cast<nsIContentViewerContainer*>(this),
                                                    nullptr,
                                                    aContentHandler,
                                                    aViewer);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    (*aViewer)->SetContainer(this);
+    (*aViewer)->SetContainer(static_cast<nsIContentViewerContainer *>(this));
     return NS_OK;
 }
 
