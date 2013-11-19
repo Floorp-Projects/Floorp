@@ -148,6 +148,7 @@ function makeFailure(reason) {
 
 const {Cc, Ci, Cu} = SpecialPowers;
 Cu.import("resource://gre/modules/ContactDB.jsm", window);
+Cu.importGlobalProperties(["indexedDB"]);
 
 let cdb = new ContactDB();
 cdb.init();
