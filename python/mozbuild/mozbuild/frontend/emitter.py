@@ -30,6 +30,7 @@ from .data import (
     HostSimpleProgram,
     InstallationTarget,
     IPDLFile,
+    LibraryDefinition,
     LocalInclude,
     PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
@@ -70,6 +71,9 @@ class TreeMetadataEmitter(LoggingMixin):
         else:
             self.mozinfo = {}
 
+        self._libs = {}
+        self._final_libs = []
+
     def emit(self, output):
         """Convert the BuildReader output into data structures.
 
@@ -92,6 +96,21 @@ class TreeMetadataEmitter(LoggingMixin):
 
             else:
                 raise Exception('Unhandled output type: %s' % out)
+
+        for reldir, libname, final_lib in self._final_libs:
+            if final_lib not in self._libs:
+                raise Exception('FINAL_LIBRARY in %s (%s) does not match any '
+                                'LIBRARY_NAME' % (reldir, final_lib))
+            libs = self._libs[final_lib]
+            if len(libs) > 1:
+                raise Exception('FINAL_LIBRARY in %s (%s) matches a '
+                                'LIBRARY_NAME defined in multiple places (%s)' %
+                                (reldir, final_lib, ', '.join(libs.keys())))
+            libs.values()[0].link_static_lib(reldir, libname)
+
+        for basename, libs in self._libs.items():
+            for libdef in libs.values():
+                yield libdef
 
         yield ReaderSummary(file_count, execution_time)
 
@@ -160,7 +179,6 @@ class TreeMetadataEmitter(LoggingMixin):
             HOST_LIBRARY_NAME='HOST_LIBRARY_NAME',
             IS_COMPONENT='IS_COMPONENT',
             JS_MODULES_PATH='JS_MODULES_PATH',
-            LIBRARY_NAME='LIBRARY_NAME',
             LIBS='LIBS',
             LIBXUL_LIBRARY='LIBXUL_LIBRARY',
             MODULE='MODULE',
@@ -265,6 +283,18 @@ class TreeMetadataEmitter(LoggingMixin):
         if sandbox.get('FINAL_TARGET') or sandbox.get('XPI_NAME') or \
                 sandbox.get('DIST_SUBDIR'):
             yield InstallationTarget(sandbox)
+
+        libname = sandbox.get('LIBRARY_NAME')
+        if libname:
+            self._libs.setdefault(libname, {})[sandbox['RELATIVEDIR']] = \
+                LibraryDefinition(sandbox, libname)
+
+        final_lib = sandbox.get('FINAL_LIBRARY')
+        if final_lib:
+            if not libname:
+                # For now, this is true.
+                raise SandboxValidationError('FINAL_LIBRARY requires LIBRARY_NAME')
+            self._final_libs.append((sandbox['RELATIVEDIR'], libname, final_lib))
 
         # While there are multiple test manifests, the behavior is very similar
         # across them. We enforce this by having common handling of all

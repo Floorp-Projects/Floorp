@@ -179,6 +179,14 @@ VARIABLES = {
        files will be installed in the ``/components`` directory of the distribution.
         """, 'libs'),
 
+    'FINAL_LIBRARY': (unicode, unicode, "",
+        """Library in which the objects of the current directory will be linked.
+
+        This variable contains the name of a library, defined elsewhere with
+        ``LIBRARY_NAME``, in which the objects of the current directory will be
+        linked.
+        """, 'binaries'),
+
     'CPP_UNIT_TESTS': (StrictOrderingOnAppendList, list, [],
         """C++ source files for unit tests.
 
