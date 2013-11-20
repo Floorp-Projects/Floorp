@@ -107,12 +107,6 @@
                 onget="return this.contentWindow ? this.contentWindow.document : null"
                 readonly="true"/>
 
-      <field name="_syncHandler">null</field>
-
-      <property name="syncHandler"
-                onget="return this._syncHandler"
-                readonly="true"/>
-
       <field name="_imageDocument">null</field>
 
       <property name="imageDocument"
@@ -127,7 +121,6 @@
 
           this.messageManager.addMessageListener("DOMTitleChanged", this);
           this.messageManager.addMessageListener("ImageDocumentLoaded", this);
-          this.messageManager.addMessageListener("SetSyncHandler", this);
           this.messageManager.loadFrameScript("chrome://global/content/browser-child.js", true);
 
           if (this.hasAttribute("selectpopup")) {
@@ -164,10 +157,6 @@
                 width: data.width,
                 height: data.height
               };
-              break;
-
-            case "SetSyncHandler":
-              this._syncHandler = aMessage.objects.handler;
               break;
 
             case "Forms:ShowDropDown": {
