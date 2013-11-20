@@ -2159,8 +2159,7 @@ WorkerPrivateParent<Derived>::WrapObject(JSContext* aCx,
 
   AssertIsOnParentThread();
 
-  JS::Rooted<JSObject*> obj(aCx, WorkerBinding::Wrap(aCx, aScope,
-                                                     ParentAsWorkerPrivate()));
+  JSObject* obj = WorkerBinding::Wrap(aCx, aScope, ParentAsWorkerPrivate());
 
   if (mRooted) {
     PreserveWrapper(this);
