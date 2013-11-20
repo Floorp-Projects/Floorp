@@ -8,6 +8,7 @@
 
 %define glassActiveBorderColor rgb(37, 44, 51)
 %define glassInactiveBorderColor rgb(102, 102, 102)
+%define nested-buttons #zoom-out-button, #zoom-in-button, #cut-button, #copy-button, #paste-button
 
 %include downloads/indicator-aero.css
 
@@ -226,6 +227,10 @@
   #TabsToolbar > #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:not(:-moz-lwtheme),
   #toolbar-menubar > toolbarpaletteitem > #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:not(:-moz-lwtheme),
   #toolbar-menubar > #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:not(:-moz-lwtheme),
+  #toolbar-menubar > toolbarpaletteitem > toolbaritem > :-moz-any(@nested-buttons@):not(:-moz-lwtheme),
+  #toolbar-menubar > toolbaritem > :-moz-any(@nested-buttons@):not(:-moz-lwtheme),
+  #TabsToolbar > toolbarpaletteitem > toolbaritem > :-moz-any(@nested-buttons@):not(:-moz-lwtheme),
+  #TabsToolbar > toolbaritem > :-moz-any(@nested-buttons@):not(:-moz-lwtheme),
   #toolbar-menubar > toolbarpaletteitem > :-moz-any(@primaryToolbarButtons@):not(:-moz-lwtheme),
   #toolbar-menubar > :-moz-any(@primaryToolbarButtons@):not(:-moz-lwtheme),
   #TabsToolbar > toolbarpaletteitem > :-moz-any(@primaryToolbarButtons@):not(:-moz-lwtheme),
