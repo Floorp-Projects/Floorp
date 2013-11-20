@@ -915,6 +915,7 @@ class nsCycleCollector
     CycleCollectedJSRuntime *mJSRuntime;
 
     GCGraph mGraph;
+    nsAutoPtr<GCGraphBuilder> mBuilder;
     nsCOMPtr<nsICycleCollectorListener> mListener;
 
     nsIThread* mThread;
@@ -987,7 +988,7 @@ private:
     bool ShouldMergeZones(ccType aCCType);
 
     void BeginCollection(ccType aCCType, nsICycleCollectorListener *aManualListener);
-    void MarkRoots(GCGraphBuilder &aBuilder);
+    void MarkRoots();
     void ScanRoots();
     void ScanWeakMaps();
 
@@ -1586,7 +1587,7 @@ public:
                    CycleCollectedJSRuntime *aJSRuntime,
                    nsICycleCollectorListener *aListener,
                    bool aMergeZones);
-    ~GCGraphBuilder();
+    virtual ~GCGraphBuilder();
 
     bool WantAllTraces() const
     {
@@ -2147,28 +2148,30 @@ nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
 }
 
 MOZ_NEVER_INLINE void
-nsCycleCollector::MarkRoots(GCGraphBuilder &aBuilder)
+nsCycleCollector::MarkRoots()
 {
-    mGraph.mRootCount = aBuilder.Count();
+    mGraph.mRootCount = mBuilder->Count();
 
     // read the PtrInfo out of the graph that we are building
     NodePool::Enumerator queue(mGraph.mNodes);
     while (!queue.IsDone()) {
         PtrInfo *pi = queue.GetNext();
         CC_AbortIfNull(pi);
-        aBuilder.Traverse(pi);
+        mBuilder->Traverse(pi);
         if (queue.AtBlockEnd()) {
-            aBuilder.SetLastChild();
+            mBuilder->SetLastChild();
         }
     }
     if (mGraph.mRootCount > 0) {
-        aBuilder.SetLastChild();
+        mBuilder->SetLastChild();
     }
 
-    if (aBuilder.RanOutOfMemory()) {
+    if (mBuilder->RanOutOfMemory()) {
         MOZ_ASSERT(false, "Ran out of memory while building cycle collector graph");
         CC_TELEMETRY(_OOM, true);
     }
+
+    mBuilder = nullptr;
 }
 
 
@@ -2793,19 +2796,20 @@ nsCycleCollector::BeginCollection(ccType aCCType,
         mResults->mMergedZones = mergeZones;
     }
 
-    GCGraphBuilder builder(this, mGraph, mJSRuntime, mListener, mergeZones);
+    MOZ_ASSERT(!mBuilder, "Forgot to clear mBuilder");
+    mBuilder = new GCGraphBuilder(this, mGraph, mJSRuntime, mListener, mergeZones);
 
     if (mJSRuntime) {
-        mJSRuntime->BeginCycleCollection(builder);
+        mJSRuntime->BeginCycleCollection(*mBuilder);
         timeLog.Checkpoint("mJSRuntime->BeginCycleCollection()");
     }
 
     mScanInProgress = true;
-    mPurpleBuf.SelectPointers(builder);
+    mPurpleBuf.SelectPointers(*mBuilder);
     timeLog.Checkpoint("SelectPointers()");
 
     // The main Bacon & Rajan collection algorithm.
-    MarkRoots(builder);
+    MarkRoots();
     timeLog.Checkpoint("MarkRoots()");
 
     ScanRoots();
