@@ -26,8 +26,6 @@
 #include "BluetoothUuid.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/ipc/UnixSocket.h"
-#include "mozilla/StaticMutex.h"
-#include "mozilla/StaticPtr.h"
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -77,7 +75,6 @@ static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sGetPairedDeviceRunnableArray
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sSetPropertyRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sUnbondingRunnableArray;
 static nsTArray<int> sRequestedDeviceCountArray;
-static StaticAutoPtr<Monitor> sToggleBtMonitor;
 
 /**
  *  Static callback functions
@@ -216,16 +213,6 @@ Setup()
   if (ret != BT_STATUS_SUCCESS) {
     BT_LOGR("%s: Fail to set: BT_SCAN_MODE_CONNECTABLE", __FUNCTION__);
   }
-
-  // Event 'AdapterAdded' has to be fired after enabled to notify Gaia
-  // that BluetoothAdapter is ready.
-  BluetoothSignal signal(NS_LITERAL_STRING("AdapterAdded"),
-                         NS_LITERAL_STRING(KEY_MANAGER), true);
-  nsRefPtr<DistributeBluetoothSignalTask>
-    t = new DistributeBluetoothSignalTask(signal);
-  if (NS_FAILED(NS_DispatchToMainThread(t))) {
-    BT_WARNING("Failed to dispatch to main thread!");
-  }
 }
 
 static void
@@ -235,15 +222,22 @@ AdapterStateChangeCallback(bt_state_t aStatus)
 
   BT_LOGR("%s, BT_STATE:%d", __FUNCTION__, aStatus);
 
-  sIsBtEnabled = (aStatus == BT_STATE_ON);
-
-  {
-    MonitorAutoLock lock(*sToggleBtMonitor);
-    lock.Notify();
+  nsAutoString signalName;
+  if (aStatus == BT_STATE_ON) {
+    Setup();
+    sIsBtEnabled = true;
+    signalName = NS_LITERAL_STRING("AdapterAdded");
+  } else {
+    sIsBtEnabled = false;
+    signalName = NS_LITERAL_STRING("Disabled");
   }
 
-  if (sIsBtEnabled) {
-    Setup();
+  BluetoothSignal signal(signalName, NS_LITERAL_STRING(KEY_MANAGER),
+                         BluetoothValue(true));
+  nsRefPtr<DistributeBluetoothSignalTask>
+    t = new DistributeBluetoothSignalTask(signal);
+  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+    NS_WARNING("Failed to dispatch to main thread!");
   }
 }
 
@@ -327,7 +321,7 @@ AdapterPropertiesChangeCallback(bt_status_t aStatus, int aNumProperties,
     nsRefPtr<DistributeBluetoothSignalTask>
       t = new DistributeBluetoothSignalTask(signal);
     if (NS_FAILED(NS_DispatchToMainThread(t))) {
-      BT_WARNING("Failed to dispatch to main thread!");
+      NS_WARNING("Failed to dispatch to main thread!");
     }
 
     // bluedroid BTU task was stored in the task queue, see GKI_send_msg
@@ -453,7 +447,7 @@ DeviceFoundCallback(int aNumProperties, bt_property_t *aProperties)
   nsRefPtr<DistributeBluetoothSignalTask>
     t = new DistributeBluetoothSignalTask(signal);
   if (NS_FAILED(NS_DispatchToMainThread(t))) {
-    BT_WARNING("Failed to dispatch to main thread!");
+    NS_WARNING("Failed to dispatch to main thread!");
   }
 }
 
@@ -497,7 +491,7 @@ PinRequestCallback(bt_bdaddr_t* aRemoteBdAddress,
   nsRefPtr<DistributeBluetoothSignalTask>
     t = new DistributeBluetoothSignalTask(signal);
   if (NS_FAILED(NS_DispatchToMainThread(t))) {
-    BT_WARNING("Failed to dispatch to main thread!");
+    NS_WARNING("Failed to dispatch to main thread!");
   }
 }
 
@@ -530,7 +524,7 @@ SspRequestCallback(bt_bdaddr_t* aRemoteBdAddress, bt_bdname_t* aRemoteBdName,
   nsRefPtr<DistributeBluetoothSignalTask>
     t = new DistributeBluetoothSignalTask(signal);
   if (NS_FAILED(NS_DispatchToMainThread(t))) {
-    BT_WARNING("Failed to dispatch to main thread!");
+    NS_WARNING("Failed to dispatch to main thread!");
   }
 }
 
@@ -664,16 +658,9 @@ StartStopGonkBluetooth(bool aShouldEnable)
     }
     sIsBtInterfaceInitialized = true;
   }
-
-  MonitorAutoLock lock(*sToggleBtMonitor);
-
   int ret = aShouldEnable ? sBtInterface->enable() : sBtInterface->disable();
-  NS_ENSURE_TRUE(ret == BT_STATUS_SUCCESS, NS_ERROR_FAILURE);
 
-  MonitorAutoLock lock(*sToggleBtMonitor);
-  lock.Wait();
-
-  return NS_OK;
+  return (ret == BT_STATUS_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 static void
@@ -708,16 +695,6 @@ ReplyStatusError(BluetoothReplyRunnable* aBluetoothReplyRunnable,
 /**
  *  Member functions
  */
-BluetoothServiceBluedroid::BluetoothServiceBluedroid()
-{
-  sToggleBtMonitor = new Monitor("BluetoothService.sToggleBtMonitor");
-}
-
-BluetoothServiceBluedroid::~BluetoothServiceBluedroid()
-{
-  sToggleBtMonitor = nullptr;
-}
-
 nsresult
 BluetoothServiceBluedroid::StartInternal()
 {
