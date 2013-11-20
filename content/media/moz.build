@@ -35,6 +35,9 @@ if CONFIG['MOZ_MEDIA_PLUGINS']:
 if CONFIG['MOZ_WMF']:
     PARALLEL_DIRS += ['wmf']
 
+if CONFIG['MOZ_FMP4']:
+    PARALLEL_DIRS += ['fmp4']
+
 if CONFIG['MOZ_APPLEMEDIA']:
     PARALLEL_DIRS += ['apple']
 
