@@ -668,6 +668,8 @@ public:
 
   void MozSetFileNameArray(const Sequence< nsString >& aFileNames);
 
+  HTMLInputElement* GetOwnerNumberControl();
+
   bool MozIsTextField(bool aExcludePassword);
 
   nsIEditor* GetEditor();
