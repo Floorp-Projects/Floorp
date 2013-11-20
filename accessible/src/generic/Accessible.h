@@ -245,6 +245,16 @@ public:
   }
 
   /**
+   * Return if accessible is unavailable.
+   */
+  bool Unavailable() const
+  {
+    uint64_t state = NativelyUnavailable() ? states::UNAVAILABLE : 0;
+    ApplyARIAState(&state);
+    return state & states::UNAVAILABLE;
+  }
+
+  /**
    * Return the states of accessible, not taking into account ARIA states.
    * Use State() to get complete set of states.
    */
