@@ -3786,9 +3786,6 @@ GetObjectScope(JSObject *obj)
     return EnsureCompartmentPrivate(obj)->scope;
 }
 
-// This returns null if a scope doesn't already exist.
-XPCWrappedNativeScope* MaybeGetObjectScope(JSObject *obj);
-
 extern bool gDebugMode;
 extern bool gDesiredDebugMode;
 
