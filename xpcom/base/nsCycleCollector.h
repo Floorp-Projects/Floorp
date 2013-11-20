@@ -38,8 +38,9 @@ void nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes = false,
 void nsCycleCollector_dispatchDeferredDeletion(bool aContinuation = false);
 bool nsCycleCollector_doDeferredDeletion();
 
-void nsCycleCollector_collect(bool aManuallyTriggered,
-                              nsICycleCollectorListener *aManualListener);
+void nsCycleCollector_collect(nsICycleCollectorListener *aManualListener);
+void nsCycleCollector_scheduledCollect();
+
 uint32_t nsCycleCollector_suspectedCount();
 void nsCycleCollector_shutdown();
 

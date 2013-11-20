@@ -914,7 +914,7 @@ public:
     mWorkerPrivate->AssertIsOnWorkerThread();
 
     if (aStatus == JSGC_END) {
-      nsCycleCollector_collect(true, nullptr);
+      nsCycleCollector_collect(nullptr);
     }
   }
 
