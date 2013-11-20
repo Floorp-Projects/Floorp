@@ -1426,8 +1426,7 @@ nsContentUtils::OfflineAppAllowed(nsIPrincipal *aPrincipal)
 }
 
 bool
-nsContentUtils::MaybeAllowOfflineAppByDefault(nsIPrincipal *aPrincipal,
-                                              nsIDOMWindow *aWindow)
+nsContentUtils::MaybeAllowOfflineAppByDefault(nsIPrincipal *aPrincipal)
 {
   if (!Preferences::GetRootBranch())
     return false;
@@ -1443,14 +1442,19 @@ nsContentUtils::MaybeAllowOfflineAppByDefault(nsIPrincipal *aPrincipal,
   if (!allowedByDefault)
     return false;
 
-  nsCOMPtr<nsIOfflineCacheUpdateService> updateService =
-    do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID);
-  if (!updateService) {
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  if (!permissionManager)
     return false;
-  }
 
-  rv = updateService->AllowOfflineApp(aWindow, aPrincipal);
-  return NS_SUCCEEDED(rv);
+  rv = permissionManager->AddFromPrincipal(
+    aPrincipal, "offline-app", nsIPermissionManager::ALLOW_ACTION,
+    nsIPermissionManager::EXPIRE_NEVER, 0);
+  if (NS_FAILED(rv))
+    return false;
+
+  // We have added the permission
+  return true;
 }
 
 // static
