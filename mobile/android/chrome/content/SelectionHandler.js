@@ -322,9 +322,15 @@ var SelectionHandler = {
       return "";
 
     let selection = this._getSelection();
-    if (selection)
-      return selection.toString().trim();
-    return "";
+    if (!selection)
+      return "";
+
+    if (this._targetElement instanceof Ci.nsIDOMHTMLTextAreaElement) {
+      return selection.QueryInterface(Ci.nsISelectionPrivate).
+        toStringWithFormat("text/plain", Ci.nsIDocumentEncoder.OutputPreformatted | Ci.nsIDocumentEncoder.OutputRaw, 0);
+    }
+
+    return selection.toString().trim();
   },
 
   _getSelectionController: function sh_getSelectionController() {
