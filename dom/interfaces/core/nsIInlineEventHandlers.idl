@@ -7,7 +7,7 @@
 #include "jspubtd.h"
 %}
 
-[scriptable, uuid(22df6ed6-d094-4e45-97fc-a8eca11c390c)]
+[scriptable, uuid(6c1fcf3d-119b-4cf4-9437-b9357508976a)]
 interface nsIInlineEventHandlers : nsISupports
 {
   [implicit_jscontext] attribute jsval onabort;
@@ -70,6 +70,17 @@ interface nsIInlineEventHandlers : nsISupports
   [implicit_jscontext] attribute jsval onvolumechange;
   [implicit_jscontext] attribute jsval onwaiting;
   [implicit_jscontext] attribute jsval onwheel;
+
+  [implicit_jscontext] attribute jsval onpointerdown;
+  [implicit_jscontext] attribute jsval onpointermove;
+  [implicit_jscontext] attribute jsval onpointerout;
+  [implicit_jscontext] attribute jsval onpointerover;
+  [implicit_jscontext] attribute jsval onpointerup;
+  [implicit_jscontext] attribute jsval onpointerenter;
+  [implicit_jscontext] attribute jsval onpointerleave;
+  [implicit_jscontext] attribute jsval ongotpointercapture;
+  [implicit_jscontext] attribute jsval onlostpointercapture;
+  [implicit_jscontext] attribute jsval onpointercancel;
 
   /**
    * Non-HTML5 event attributes
