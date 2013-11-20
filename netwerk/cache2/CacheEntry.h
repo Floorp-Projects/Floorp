@@ -197,7 +197,6 @@ private:
   void OnLoaded();
 
   void RememberCallback(Callback const & aCallback);
-  bool PendingCallbacks();
   void InvokeCallbacksLock();
   void InvokeCallbacks();
   bool InvokeCallbacks(bool aReadOnly);
