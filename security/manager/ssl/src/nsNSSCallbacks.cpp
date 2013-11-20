@@ -20,6 +20,7 @@
 #include "ScopedNSSTypes.h"
 #include "nsContentUtils.h"
 #include "nsIHttpChannelInternal.h"
+#include "nsISupportsPriority.h"
 #include "nsNetUtil.h"
 #include "SharedSSLState.h"
 #include "ssl.h"
@@ -75,6 +76,13 @@ nsHTTPDownloadEvent::Run()
   nsCOMPtr<nsIChannel> chan;
   ios->NewChannel(mRequestSession->mURL, nullptr, nullptr, getter_AddRefs(chan));
   NS_ENSURE_STATE(chan);
+
+  // Security operations scheduled through normal HTTP channels are given
+  // high priority to accommodate real time OCSP transactions. Background CRL
+  // fetches happen through a different path (CRLDownloadEvent).
+  nsCOMPtr<nsISupportsPriority> priorityChannel = do_QueryInterface(chan);
+  if (priorityChannel)
+    priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_HIGHEST);
 
   chan->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS);
 
