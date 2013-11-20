@@ -1560,7 +1560,7 @@ ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
                 cx->asJSContext()->runtime()->gcHelperThread.waitBackgroundSweepEnd();
             }
         } else {
-#ifdef JS_THREADSAFE
+#ifdef JS_WORKER_THREADS
             /*
              * If we're off the main thread, we try to allocate once and return
              * whatever value we get. First, though, we need to ensure the main
@@ -4149,7 +4149,7 @@ AutoTraceSession::AutoTraceSession(JSRuntime *rt, js::HeapState heapState)
     if (rt->exclusiveThreadsPresent()) {
         // Lock the worker thread state when changing the heap state in the
         // presence of exclusive threads, to avoid racing with refillFreeList.
-#ifdef JS_THREADSAFE
+#ifdef JS_WORKER_THREADS
         AutoLockWorkerThreadState lock(*rt->workerThreadState);
         rt->heapState = heapState;
 #else
@@ -4165,7 +4165,7 @@ AutoTraceSession::~AutoTraceSession()
     JS_ASSERT(runtime->isHeapBusy());
 
     if (runtime->exclusiveThreadsPresent()) {
-#ifdef JS_THREADSAFE
+#ifdef JS_WORKER_THREADS
         AutoLockWorkerThreadState lock(*runtime->workerThreadState);
         runtime->heapState = prevState;
 
