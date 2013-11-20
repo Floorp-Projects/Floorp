@@ -915,6 +915,7 @@ class nsCycleCollector
     CycleCollectedJSRuntime *mJSRuntime;
 
     GCGraph mGraph;
+    nsCOMPtr<nsICycleCollectorListener> mListener;
 
     nsIThread* mThread;
 
@@ -987,7 +988,7 @@ private:
 
     void BeginCollection(ccType aCCType, nsICycleCollectorListener *aManualListener);
     void MarkRoots(GCGraphBuilder &aBuilder);
-    void ScanRoots(nsICycleCollectorListener *aListener);
+    void ScanRoots();
     void ScanWeakMaps();
 
     // returns whether anything was collected
@@ -2288,7 +2289,7 @@ nsCycleCollector::ScanWeakMaps()
 }
 
 void
-nsCycleCollector::ScanRoots(nsICycleCollectorListener *aListener)
+nsCycleCollector::ScanRoots()
 {
     mWhiteNodeCount = 0;
 
@@ -2305,8 +2306,8 @@ nsCycleCollector::ScanRoots(nsICycleCollectorListener *aListener)
 
     ScanWeakMaps();
 
-    if (aListener) {
-        aListener->BeginResults();
+    if (mListener) {
+        mListener->BeginResults();
 
         NodePool::Enumerator etor(mGraph.mNodes);
         while (!etor.IsDone()) {
@@ -2315,12 +2316,12 @@ nsCycleCollector::ScanRoots(nsICycleCollectorListener *aListener)
             case black:
                 if (pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
                     pi->mInternalRefs != pi->mRefCount) {
-                    aListener->DescribeRoot((uint64_t)pi->mPointer,
+                    mListener->DescribeRoot((uint64_t)pi->mPointer,
                                             pi->mInternalRefs);
                 }
                 break;
             case white:
-                aListener->DescribeGarbage((uint64_t)pi->mPointer);
+                mListener->DescribeGarbage((uint64_t)pi->mPointer);
                 break;
             case grey:
                 // With incremental CC, we can end up with a grey object after
@@ -2329,7 +2330,8 @@ nsCycleCollector::ScanRoots(nsICycleCollectorListener *aListener)
             }
         }
 
-        aListener->End();
+        mListener->End();
+        mListener = nullptr;
     }
 }
 
@@ -2758,30 +2760,31 @@ nsCycleCollector::BeginCollection(ccType aCCType,
 
     // Set up the listener for this CC.
     MOZ_ASSERT_IF(isShutdown, !aManualListener);
-    nsCOMPtr<nsICycleCollectorListener> listener(aManualListener);
+    MOZ_ASSERT(!mListener, "Forgot to clear a previous listener?");
+    mListener = aManualListener;
     aManualListener = nullptr;
-    if (!listener) {
+    if (!mListener) {
         if (mParams.mLogAll || (isShutdown && mParams.mLogShutdown)) {
             nsRefPtr<nsCycleCollectorLogger> logger = new nsCycleCollectorLogger();
             if (isShutdown && mParams.mAllTracesAtShutdown) {
                 logger->SetAllTraces();
             }
-            listener = logger.forget();
+            mListener = logger.forget();
         }
     }
 
     bool forceGC = isShutdown;
-    if (!forceGC && listener) {
+    if (!forceGC && mListener) {
         // On a WantAllTraces CC, force a synchronous global GC to prevent
         // hijinks from ForgetSkippable and compartmental GCs.
-        listener->GetWantAllTraces(&forceGC);
+        mListener->GetWantAllTraces(&forceGC);
     }
     FixGrayBits(forceGC);
 
     FreeSnowWhite(true);
 
-    if (listener && NS_FAILED(listener->Begin())) {
-        listener = nullptr;
+    if (mListener && NS_FAILED(mListener->Begin())) {
+        mListener = nullptr;
     }
 
     // Set up the data structures for building the graph.
@@ -2790,8 +2793,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
         mResults->mMergedZones = mergeZones;
     }
 
-    GCGraphBuilder builder(this, mGraph, mJSRuntime, listener,
-                           mergeZones);
+    GCGraphBuilder builder(this, mGraph, mJSRuntime, mListener, mergeZones);
 
     if (mJSRuntime) {
         mJSRuntime->BeginCycleCollection(builder);
@@ -2806,7 +2808,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     MarkRoots(builder);
     timeLog.Checkpoint("MarkRoots()");
 
-    ScanRoots(listener);
+    ScanRoots();
     timeLog.Checkpoint("ScanRoots()");
 
     mScanInProgress = false;
