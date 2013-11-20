@@ -408,7 +408,7 @@ LIRGenerator::visitCall(MCall *call)
     JSFunction *target = call->getSingleTarget();
 
     // Call DOM functions.
-    if (call->isDOMFunction()) {
+    if (call->isCallDOMNative()) {
         JS_ASSERT(target && target->isNative());
         Register cxReg, objReg, privReg, argsReg;
         GetTempRegForIntArg(0, 0, &cxReg);
