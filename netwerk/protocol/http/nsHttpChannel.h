@@ -314,6 +314,8 @@ private:
     static bool HasQueryString(nsHttpAtom method, nsIURI * uri);
     bool ResponseWouldVary(nsICacheEntry* entry) const;
     bool MustValidateBasedOnQueryUrl() const;
+    bool IsResumable(int64_t partialLen, int64_t contentLength,
+                     bool ignoreMissingPartialLen = false) const;
     nsresult MaybeSetupByteRangeRequest(int64_t partialLen, int64_t contentLength);
     nsresult SetupByteRangeRequest(int64_t partialLen);
     nsresult OpenCacheInputStream(nsICacheEntry* cacheEntry, bool startBuffering);
