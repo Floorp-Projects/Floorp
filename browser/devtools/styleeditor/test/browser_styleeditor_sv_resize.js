@@ -44,7 +44,7 @@ function runTests(aUI)
 
         executeSoon(function () {
           is(aEditor.sourceEditor, originalSourceEditor,
-             "the editor still references the same SourceEditor instance");
+             "the editor still references the same Editor instance");
           let editor = aEditor.sourceEditor;
           is(editor.getOffset(editor.getCursor()), 4,
              "the caret position has been preserved");

@@ -10,9 +10,6 @@ JS_MODULES_PATH = 'modules/devtools/sourceeditor'
 
 EXTRA_JS_MODULES += [
     'debugger.js',
-    'editor.js',
-    'source-editor-orion.jsm',
-    'source-editor-ui.jsm',
-    'source-editor.jsm',
+    'editor.js'
 ]
 

@@ -5,6 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['base', 'components', 'browser']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    DIRS += ['android/geckoview_example']
+
 TEST_DIRS += ['test']
 
 if CONFIG['ENABLE_TESTS']:
