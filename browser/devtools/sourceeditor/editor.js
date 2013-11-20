@@ -82,11 +82,6 @@ const CM_MAPPING = [
   "refresh"
 ];
 
-const CM_JUMP_DIALOG = [
-  L10N.GetStringFromName("gotoLineCmd.promptTitle")
-    + " <input class=jumptoline type=text style='width: 10em'/>"
-];
-
 const { cssProperties, cssValues, cssColors } = getCSSKeywords();
 
 const editors = new WeakMap();
@@ -140,7 +135,7 @@ function Editor(config) {
   };
 
   // Additional shortcuts.
-  this.config.extraKeys[Editor.keyFor("jumpToLine")] = (cm) => this.jumpToLine();
+  this.config.extraKeys[Editor.keyFor("jumpToLine")] = (cm) => this.jumpToLine(cm);
   this.config.extraKeys[Editor.keyFor("toggleComment")] = "toggleComment";
 
   // Disable ctrl-[ and ctrl-] because toolbox uses those shortcuts.
@@ -625,9 +620,20 @@ Editor.prototype = {
    * This method opens an in-editor dialog asking for a line to
    * jump to. Once given, it changes cursor to that line.
    */
-  jumpToLine: function () {
-    this.openDialog(CM_JUMP_DIALOG, (line) =>
-      this.setCursor({ line: line - 1, ch: 0 }));
+  jumpToLine: function (cm) {
+    let doc = cm.getWrapperElement().ownerDocument;
+    let div = doc.createElement("div");
+    let inp = doc.createElement("input");
+    let txt = doc.createTextNode(L10N.GetStringFromName("gotoLineCmd.promptTitle"));
+
+    inp.type = "text";
+    inp.style.width = "10em";
+    inp.style.MozMarginStart = "1em";
+
+    div.appendChild(txt);
+    div.appendChild(inp);
+
+    this.openDialog(div, (line) => this.setCursor({ line: line - 1, ch: 0 }));
   },
 
   /**
