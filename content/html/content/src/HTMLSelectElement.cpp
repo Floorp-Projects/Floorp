@@ -1426,9 +1426,9 @@ HTMLSelectElement::ParseAttribute(int32_t aNamespaceID,
                                               aResult);
 }
 
-static void
-MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                      nsRuleData* aData)
+void
+HTMLSelectElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                         nsRuleData* aData)
 {
   nsGenericHTMLFormElementWithState::MapImageAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aData);

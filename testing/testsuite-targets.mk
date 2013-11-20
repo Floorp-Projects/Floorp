@@ -535,6 +535,7 @@ stage-jittest:
 	cp -RL $(topsrcdir)/js/src/jsapi.h $(PKG_STAGE)/jit-test
 	cp -RL $(topsrcdir)/js/src/jit-test $(PKG_STAGE)/jit-test/jit-test
 	cp -RL $(topsrcdir)/js/src/tests/ecma_6 $(PKG_STAGE)/jit-test/tests/ecma_6
+	cp -RL $(topsrcdir)/js/src/tests/js1_8_5 $(PKG_STAGE)/jit-test/tests/js1_8_5
 	cp -RL $(topsrcdir)/js/src/tests/lib $(PKG_STAGE)/jit-test/tests/lib
 
 stage-steeplechase:

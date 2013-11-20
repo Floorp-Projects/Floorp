@@ -66,6 +66,7 @@ void AndroidBridge::InitStubs(JNIEnv *jEnv) {
     jLockScreenOrientation = getStaticMethod("lockScreenOrientation", "(I)V");
     jMarkURIVisited = getStaticMethod("markUriVisited", "(Ljava/lang/String;)V");
     jMoveTaskToBack = getStaticMethod("moveTaskToBack", "()V");
+    jNetworkLinkType = getStaticMethod("networkLinkType", "()I");
     jNotifyDefaultPrevented = getStaticMethod("notifyDefaultPrevented", "(Z)V");
     jNotifyIME = getStaticMethod("notifyIME", "(I)V");
     jNotifyIMEChange = getStaticMethod("notifyIMEChange", "(Ljava/lang/String;III)V");
@@ -1449,6 +1450,33 @@ void AndroidBridge::MoveTaskToBack() {
         return;
     }
     env->PopLocalFrame(NULL);
+}
+
+int32_t AndroidBridge::NetworkLinkType() {
+    JNIEnv *env = GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return 0;
+    }
+
+    int32_t temp = env->CallStaticIntMethod(mGeckoAppShellClass, jNetworkLinkType);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return 0;
+    }
+    env->PopLocalFrame(NULL);
+    return temp;
 }
 
 void AndroidBridge::NotifyDefaultPrevented(bool a0) {

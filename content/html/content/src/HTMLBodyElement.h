@@ -136,6 +136,10 @@ protected:
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   nsRefPtr<BodyRule> mContentStyleRule;
+
+private:
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    nsRuleData* aData);
 };
 
 } // namespace dom

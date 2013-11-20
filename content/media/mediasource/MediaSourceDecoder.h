@@ -36,14 +36,14 @@ class MediaSource;
 class MediaSourceDecoder : public MediaDecoder
 {
 public:
-  MediaSourceDecoder(HTMLMediaElement* aElement);
+  MediaSourceDecoder(dom::HTMLMediaElement* aElement);
 
   virtual MediaDecoder* Clone() MOZ_OVERRIDE;
   virtual MediaDecoderStateMachine* CreateStateMachine() MOZ_OVERRIDE;
   virtual nsresult Load(nsIStreamListener**, MediaDecoder*) MOZ_OVERRIDE;
-  virtual nsresult GetSeekable(TimeRanges* aSeekable) MOZ_OVERRIDE;
+  virtual nsresult GetSeekable(dom::TimeRanges* aSeekable) MOZ_OVERRIDE;
 
-  void AttachMediaSource(MediaSource* aMediaSource);
+  void AttachMediaSource(dom::MediaSource* aMediaSource);
   void DetachMediaSource();
 
   SubBufferDecoder* CreateSubDecoder(const nsACString& aType);
@@ -80,7 +80,7 @@ public:
   }
 
 private:
-  MediaSource* mMediaSource;
+  dom::MediaSource* mMediaSource;
 
   nsTArray<nsRefPtr<SubBufferDecoder> > mDecoders;
   nsTArray<MediaDecoderReader*> mReaders; // Readers owned by Decoders.

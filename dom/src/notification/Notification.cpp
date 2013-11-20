@@ -87,8 +87,7 @@ public:
   NS_IMETHOD Done(JSContext* aCx)
   {
     JSAutoCompartment ac(aCx, mGlobal);
-    Optional<JS::Handle<JS::Value>> result(aCx,
-                                           JS::ObjectValue(*mNotifications));
+    JS::Rooted<JS::Value> result(aCx, JS::ObjectValue(*mNotifications));
     mPromise->MaybeResolve(aCx, result);
     return NS_OK;
   }

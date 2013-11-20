@@ -1605,7 +1605,7 @@ void MediaDecoderStateMachine::NotifyDataArrived(const char* aBuffer,
   // faster than played, mEndTime won't reflect the end of playable data
   // since we haven't played the frame at the end of buffered data. So update
   // mEndTime here as new data is downloaded to prevent such a lag.
-  TimeRanges buffered;
+  dom::TimeRanges buffered;
   if (mDecoder->IsInfinite() &&
       NS_SUCCEEDED(mDecoder->GetBuffered(&buffered)))
   {
@@ -2704,7 +2704,7 @@ void MediaDecoderStateMachine::StartBuffering()
     stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)"));
 }
 
-nsresult MediaDecoderStateMachine::GetBuffered(TimeRanges* aBuffered) {
+nsresult MediaDecoderStateMachine::GetBuffered(dom::TimeRanges* aBuffered) {
   MediaResource* resource = mDecoder->GetResource();
   NS_ENSURE_TRUE(resource, NS_ERROR_FAILURE);
   resource->Pin();

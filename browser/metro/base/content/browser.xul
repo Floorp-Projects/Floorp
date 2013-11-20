@@ -239,6 +239,7 @@
                      autocompletepopup="urlbar-autocomplete"
                      completeselectedindex="true"
                      placeholder="&urlbar.emptytext;"
+                     tabscrolling="true"
                      onclick="SelectionHelperUI.urlbarClick();"/>
 
             <toolbarbutton id="go-button" class="urlbar-button"
@@ -371,12 +372,10 @@
                        oncommand="Appbar.dispatchContextualAction('clear')"/>
       </toolbar>
     </appbar>
-
     <autoscroller class="autoscroller" id="autoscrollerid"/>
-
     <flyoutpanel id="about-flyoutpanel" class="flyout-narrow" headertext="&aboutHeader.title;">
-      <label id="about-product-label" value="&aboutHeader.product.label;"/>
-      <label value="&aboutHeader.company.label;"/>
+      <label id="about-product-label" linewrap="true" value="&aboutHeader.product.label;"/>
+      <label value="&aboutHeader.company.label;" linewrap="true"/>
 #expand <label id="about-version-label">__MOZ_APP_VERSION__</label>
       <vbox id="updateBox">
 #ifdef MOZ_UPDATER
@@ -411,26 +410,24 @@
             <label>&update.otherInstanceHandlingUpdates;</label>
           </hbox>
           <hbox id="manualUpdate" align="center">
-            <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
+            <label>&update.manual.start;</label><label id="manualLink" linewrap="true" class="text-link"/><label>&update.manual.end;</label>
           </hbox>
         </deck>
 #endif
       </vbox>
-
 #if MOZ_UPDATE_CHANNEL != release
 #ifdef MOZ_UPDATER
-      <description class="text-blurb" id="currentChannelText">&channel.description.start;<label id="currentChannel"/>&channel.description.end;</description>
+      <description class="text-blurb" id="currentChannelText">&channel.description.start;<label id="currentChannel" linewrap="true"/>&channel.description.end;</description>
 #endif
 #endif
       <label id="about-policy-label"
+            linewrap="true"
             onclick="FlyoutPanelsUI.AboutFlyoutPanel.onPolicyClick(event);"
             class="text-link" value="&aboutHeader.policy.label;"/>
       <spacer class="flyoutpanel-hack"/>
     </flyoutpanel>
-
 #ifdef MOZ_SERVICES_SYNC
     <flyoutpanel id="sync-flyoutpanel" class="flyout-narrow" headertext="&sync.flyout.title;">
-
       <vbox id="sync-presetup-container" collapsed="true">
         <description>&sync.flyout.presetup.description1;</description>
         <separator />
@@ -440,11 +437,11 @@
           <image src="chrome://browser/skin/images/plus-34.png" />
           <separator />
           <label value="&sync.flyout.presetup.setup.label;"
+                 linewrap="true"
                  class="text-link" />
           <spacer flex="1" />
         </hbox>
       </vbox>
-
       <vbox id="sync-setup-container" collapsed="true">
         <description>&sync.flyout.setup.description1;</description>
         <description>&sync.flyout.setup.description2;</description>

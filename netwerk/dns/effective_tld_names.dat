@@ -244,9 +244,8 @@ tas.edu.au
 vic.edu.au
 wa.edu.au
 act.gov.au
-// Removed at request of Shae.Donelan@services.nsw.gov.au, 2010-03-04
-// nsw.gov.au
-nt.gov.au
+// nsw.gov.au  Bug 547985 - Removed at request of <Shae.Donelan@services.nsw.gov.au>
+// nt.gov.au  Bug 940478 - Removed at request of Greg Connors <Greg.Connors@nt.gov.au>
 qld.gov.au
 sa.gov.au
 tas.gov.au
