@@ -28,7 +28,7 @@ import time
 import traceback
 import urllib2
 
-from automationutils import environment, getDebuggerInfo, isURL, KeyValueParseError, parseKeyValue, processLeakLog, systemMemory, dumpScreen, ShutdownLeaks
+from automationutils import environment, getDebuggerInfo, isURL, KeyValueParseError, parseKeyValue, processLeakLog, systemMemory, dumpScreen
 from datetime import datetime
 from manifestparser import TestManifest
 from mochitest_options import MochitestOptions
@@ -750,8 +750,7 @@ class Mochitest(MochitestUtilsMixin):
              debuggerInfo=None,
              symbolsPath=None,
              timeout=-1,
-             onLaunch=None,
-             webapprtChrome=False):
+             onLaunch=None):
     """
     Run the app, log the duration it took to execute, return the status code.
     Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing for |timeout| seconds.
@@ -827,17 +826,11 @@ class Mochitest(MochitestUtilsMixin):
     if testUrl:
        args.append(testUrl)
 
-    if mozinfo.info["debug"] and not webapprtChrome:
-      shutdownLeaks = ShutdownLeaks(log.info)
-    else:
-      shutdownLeaks = None
-
     # create an instance to process the output
     outputHandler = self.OutputHandler(harness=self,
                                        utilityPath=utilityPath,
                                        symbolsPath=symbolsPath,
                                        dump_screen_on_timeout=not debuggerInfo,
-                                       shutdownLeaks=shutdownLeaks,
       )
 
     def timeoutHandler():
@@ -1013,8 +1006,7 @@ class Mochitest(MochitestUtilsMixin):
                            debuggerInfo=debuggerInfo,
                            symbolsPath=options.symbolsPath,
                            timeout=timeout,
-                           onLaunch=onLaunch,
-                           webapprtChrome=options.webapprtChrome
+                           onLaunch=onLaunch
                            )
     except KeyboardInterrupt:
       log.info("runtests.py | Received keyboard interrupt.\n");
@@ -1048,7 +1040,7 @@ class Mochitest(MochitestUtilsMixin):
 
   class OutputHandler(object):
     """line output handler for mozrunner"""
-    def __init__(self, harness, utilityPath, symbolsPath=None, dump_screen_on_timeout=True, shutdownLeaks=None):
+    def __init__(self, harness, utilityPath, symbolsPath=None, dump_screen_on_timeout=True):
       """
       harness -- harness instance
       dump_screen_on_timeout -- whether to dump the screen on timeout
@@ -1057,7 +1049,6 @@ class Mochitest(MochitestUtilsMixin):
       self.utilityPath = utilityPath
       self.symbolsPath = symbolsPath
       self.dump_screen_on_timeout = dump_screen_on_timeout
-      self.shutdownLeaks = shutdownLeaks
 
       # perl binary to use
       self.perl = which('perl')
@@ -1087,7 +1078,6 @@ class Mochitest(MochitestUtilsMixin):
               self.record_last_test,
               self.dumpScreenOnTimeout,
               self.metro_subprocess_id,
-              self.trackShutdownLeaks,
               self.log,
               ]
 
@@ -1136,9 +1126,6 @@ class Mochitest(MochitestUtilsMixin):
         if status and not didTimeout:
           log.info("TEST-UNEXPECTED-FAIL | runtests.py | Stack fixer process exited with code %d during test run", status)
 
-      if self.shutdownLeaks:
-        self.shutdownLeaks.process()
-
 
     # output line handlers:
     # these take a line and return a line
@@ -1170,11 +1157,6 @@ class Mochitest(MochitestUtilsMixin):
         if index != -1:
           self.browserProcessId = line[index+1:].rstrip()
           log.info("INFO | runtests.py | metro browser sub process id detected: %s", self.browserProcessId)
-      return line
-
-    def trackShutdownLeaks(self, line):
-      if self.shutdownLeaks:
-        self.shutdownLeaks.log(line)
       return line
 
     def log(self, line):
