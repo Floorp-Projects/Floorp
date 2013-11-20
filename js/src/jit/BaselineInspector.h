@@ -67,14 +67,14 @@ class BaselineInspector
   private:
 #ifdef DEBUG
     bool isValidPC(jsbytecode *pc) {
-        return (pc >= script->getCode()) && (pc < script->getCode() + script->getLength());
+        return (pc >= script->code) && (pc < script->code + script->length);
     }
 #endif
 
     ICEntry &icEntryFromPC(jsbytecode *pc) {
         JS_ASSERT(hasBaselineScript());
         JS_ASSERT(isValidPC(pc));
-        ICEntry &ent = baselineScript()->icEntryFromPCOffset(pc - script->getCode(), prevLookedUpEntry);
+        ICEntry &ent = baselineScript()->icEntryFromPCOffset(pc - script->code, prevLookedUpEntry);
         JS_ASSERT(ent.isForOp());
         prevLookedUpEntry = &ent;
         return ent;

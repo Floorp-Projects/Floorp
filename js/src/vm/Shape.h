@@ -1033,15 +1033,11 @@ class Shape : public gc::BarrieredCell<Shape>
 
         void popFront() {
             JS_ASSERT(!empty());
-            AutoUnprotectCell unprotect(cursor);
             cursor = cursor->parent;
         }
     };
 
-    const Class *getObjectClass() const {
-        AutoUnprotectCell unprotect(base());
-        return base()->clasp;
-    }
+    const Class *getObjectClass() const { return base()->clasp; }
     JSObject *getObjectParent() const { return base()->parent; }
     JSObject *getObjectMetadata() const { return base()->metadata; }
 
@@ -1098,15 +1094,12 @@ class Shape : public gc::BarrieredCell<Shape>
         PUBLIC_FLAGS    = HAS_SHORTID
     };
 
-    bool inDictionary() const {
-        AutoUnprotectCell unprotect(this);
-        return (flags & IN_DICTIONARY) != 0;
-    }
+    bool inDictionary() const   { return (flags & IN_DICTIONARY) != 0; }
     unsigned getFlags() const  { return flags & PUBLIC_FLAGS; }
     bool hasShortID() const { return (flags & HAS_SHORTID) != 0; }
 
     PropertyOp getter() const { return base()->rawGetter; }
-    bool hasDefaultGetter() const { return !base()->rawGetter; }
+    bool hasDefaultGetter() const  { return !base()->rawGetter; }
     PropertyOp getterOp() const { JS_ASSERT(!hasGetterValue()); return base()->rawGetter; }
     JSObject *getterObject() const { JS_ASSERT(hasGetterValue()); return base()->getterObj; }
 
@@ -1164,33 +1157,19 @@ class Shape : public gc::BarrieredCell<Shape>
 
     BaseShape *base() const { return base_.get(); }
 
-    bool hasSlot() const {
-        AutoUnprotectCell unprotect(this);
-        return (attrs & JSPROP_SHARED) == 0;
-    }
+    bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
     uint32_t slot() const { JS_ASSERT(hasSlot() && !hasMissingSlot()); return maybeSlot(); }
-    uint32_t maybeSlot() const {
-        // Note: Reading a shape's slot off thread can race against main thread
-        // updates to the number of linear searches on the shape, which is
-        // stored in the same slotInfo field. We tolerate this.
-        AutoUnprotectCell unprotect(this);
-        return slotInfo & SLOT_MASK;
-    }
+    uint32_t maybeSlot() const { return slotInfo & SLOT_MASK; }
 
     bool isEmptyShape() const {
-        AutoUnprotectCell unprotect(this);
         JS_ASSERT_IF(JSID_IS_EMPTY(propid_), hasMissingSlot());
         return JSID_IS_EMPTY(propid_);
     }
 
-    uint32_t slotSpan(const Class *clasp) const {
-        JS_ASSERT(!inDictionary());
-        uint32_t free = JSSLOT_FREE(clasp);
-        return hasMissingSlot() ? free : Max(free, maybeSlot() + 1);
-    }
-
     uint32_t slotSpan() const {
-        return slotSpan(getObjectClass());
+        JS_ASSERT(!inDictionary());
+        uint32_t free = JSSLOT_FREE(getObjectClass());
+        return hasMissingSlot() ? free : Max(free, maybeSlot() + 1);
     }
 
     void setSlot(uint32_t slot) {
@@ -1200,8 +1179,6 @@ class Shape : public gc::BarrieredCell<Shape>
     }
 
     uint32_t numFixedSlots() const {
-        // Note: The same race applies here as in maybeSlot().
-        AutoUnprotectCell unprotect(this);
         return (slotInfo >> FIXED_SLOTS_SHIFT);
     }
 
@@ -1223,17 +1200,11 @@ class Shape : public gc::BarrieredCell<Shape>
     }
 
     const EncapsulatedId &propid() const {
-        AutoUnprotectCell unprotect(this);
         JS_ASSERT(!isEmptyShape());
         JS_ASSERT(!JSID_IS_VOID(propid_));
         return propid_;
     }
     EncapsulatedId &propidRef() { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
-
-    jsid propidRaw() const {
-        AutoUnprotectCell unprotect(this);
-        return propid();
-    }
 
     int16_t shortid() const { JS_ASSERT(hasShortID()); return maybeShortid(); }
     int16_t maybeShortid() const { return shortid_; }
@@ -1249,7 +1220,6 @@ class Shape : public gc::BarrieredCell<Shape>
     bool enumerable() const { return (attrs & JSPROP_ENUMERATE) != 0; }
     bool writable() const {
         // JS_ASSERT(isDataDescriptor());
-        AutoUnprotectCell unprotect(this);
         return (attrs & JSPROP_READONLY) == 0;
     }
     bool hasGetterValue() const { return attrs & JSPROP_GETTER; }
@@ -1287,24 +1257,10 @@ class Shape : public gc::BarrieredCell<Shape>
         if (hasTable())
             return table().entryCount;
 
+        Shape *shape = this;
         uint32_t count = 0;
-        for (Shape::Range<NoGC> r(this); !r.empty(); r.popFront())
+        for (Shape::Range<NoGC> r(shape); !r.empty(); r.popFront())
             ++count;
-        return count;
-    }
-
-    uint32_t entryCountForCompilation() {
-        JS_ASSERT(!inDictionary());
-
-        uint32_t count = 0;
-
-        for (Shape *shape = this; shape; ) {
-            AutoUnprotectCell unprotect(shape);
-            if (!shape->isEmptyShape())
-                ++count;
-            shape = shape->parent;
-        }
-
         return count;
     }
 
@@ -1638,11 +1594,9 @@ Shape::searchLinear(jsid id)
      */
     JS_ASSERT(!inDictionary());
 
-    for (Shape *shape = this; shape; ) {
-        AutoUnprotectCell unprotect(shape);
+    for (Shape *shape = this; shape; shape = shape->parent) {
         if (shape->propidRef() == id)
             return shape;
-        shape = shape->parent;
     }
 
     return nullptr;
