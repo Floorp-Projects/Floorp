@@ -10,15 +10,12 @@
 #include "js/TypeDecls.h"
 
 namespace js {
-
-class ExclusiveContext;
-
 namespace frontend {
 
 class ParseNode;
 
 bool
-NameFunctions(ExclusiveContext *cx, ParseNode *pn);
+NameFunctions(JSContext *cx, ParseNode *pn);
 
 } /* namespace frontend */
 } /* namespace js */
