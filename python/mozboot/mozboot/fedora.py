@@ -22,6 +22,7 @@ class FedoraBootstrapper(BaseBootstrapper):
         self.yum_install(
             'alsa-lib-devel',
             'autoconf213',
+            'gcc-c++',
             'glibc-static',
             'gstreamer-devel',
             'gstreamer-plugins-base-devel',
