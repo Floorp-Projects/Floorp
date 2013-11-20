@@ -196,6 +196,9 @@ pref("media.windows-media-foundation.play-stand-alone", true);
 #ifdef MOZ_DIRECTSHOW
 pref("media.directshow.enabled", true);
 #endif
+#ifdef MOZ_FMP4
+pref("media.fragmented-mp4.enabled", true);
+#endif
 #ifdef MOZ_RAW
 pref("media.raw.enabled", true);
 #endif
