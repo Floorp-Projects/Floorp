@@ -1331,15 +1331,15 @@ AdoptNodeIntoOwnerDoc(nsINode *aParent, nsINode *aNode)
 static nsresult
 CheckForOutdatedParent(nsINode* aParent, nsINode* aNode)
 {
-  if (JSObject* existingObj = aNode->GetWrapper()) {
+  if (JSObject* existingObjUnrooted = aNode->GetWrapper()) {
+    AutoJSContext cx;
+    JS::Rooted<JSObject*> existingObj(cx, existingObjUnrooted);
     nsIGlobalObject* global = aParent->OwnerDoc()->GetScopeObject();
     MOZ_ASSERT(global);
 
     if (js::GetGlobalForObjectCrossCompartment(existingObj) !=
         global->GetGlobalJSObject()) {
-      AutoJSContext cx;
-      JS::Rooted<JSObject*> rooted(cx, existingObj);
-      nsresult rv = ReparentWrapper(cx, rooted);
+      nsresult rv = ReparentWrapper(cx, existingObj);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
