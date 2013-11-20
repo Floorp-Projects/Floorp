@@ -334,6 +334,11 @@ class IonBuilder : public MIRGenerator
     // generated code correspond to the observed types for the bytecode.
     bool pushTypeBarrier(MDefinition *def, types::TemporaryTypeSet *observed, bool needBarrier);
 
+    // As pushTypeBarrier, but will compute the needBarrier boolean itself based
+    // on observed and the JSFunction that we're planning to call. The
+    // JSFunction must be a DOM method or getter.
+    bool pushDOMTypeBarrier(MInstruction *ins, types::TemporaryTypeSet *observed, JSFunction* func);
+
     // If definiteType is not known or def already has the right type, just
     // returns def.  Otherwise, returns an MInstruction that has that definite
     // type, infallibly unboxing ins as needed.  The new instruction will be
