@@ -102,6 +102,7 @@ nsXULTemplateBuilder::nsXULTemplateBuilder(void)
       mTop(nullptr),
       mObservedDocument(nullptr)
 {
+    MOZ_COUNT_CTOR(nsXULTemplateBuilder);
 }
 
 static PLDHashOperator
@@ -128,6 +129,8 @@ nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
         NS_IF_RELEASE(gScriptSecurityManager);
         NS_IF_RELEASE(gObserverService);
     }
+
+    MOZ_COUNT_DTOR(nsXULTemplateBuilder);
 }
 
 
@@ -176,7 +179,6 @@ nsXULTemplateBuilder::StartObserving(nsIDocument* aDocument)
 {
     aDocument->AddObserver(this);
     mObservedDocument = aDocument;
-    gObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
     gObserverService->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC, false);
 }
 
@@ -186,7 +188,6 @@ nsXULTemplateBuilder::StopObserving()
     MOZ_ASSERT(mObservedDocument);
     mObservedDocument->RemoveObserver(this);
     mObservedDocument = nullptr;
-    gObserverService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     gObserverService->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
 }
 
@@ -1082,8 +1083,6 @@ nsXULTemplateBuilder::Observe(nsISupports* aSubject,
             if (doc && doc == mObservedDocument)
                 NodeWillBeDestroyed(doc);
         }
-    } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-        UninitTrue();
     }
     return NS_OK;
 }
