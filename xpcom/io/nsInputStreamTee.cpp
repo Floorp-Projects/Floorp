@@ -348,3 +348,5 @@ NS_NewInputStreamTee(nsIInputStream **result,
 {
     return NS_NewInputStreamTeeAsync(result, source, sink, nullptr);
 }
+
+#undef LOG
