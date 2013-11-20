@@ -153,6 +153,10 @@ public class GLController {
         return mServerSurfaceValid;
     }
 
+    public boolean isCompositorCreated() {
+        return mCompositorCreated;
+    }
+
     private void initEGL() {
         if (mEGL != null) {
             return;
