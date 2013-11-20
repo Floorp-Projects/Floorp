@@ -2536,8 +2536,7 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
 
     // Check to see if a new stub should be generated.
     if (stub->numOptimizedStubs() >= ICBinaryArith_Fallback::MAX_OPTIMIZED_STUBS) {
-        // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
-        // But for now we just bail.
+        stub->noteUnoptimizableOperands();
         return true;
     }
 
@@ -2584,8 +2583,10 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
     }
 
     // Handle only int32 or double.
-    if (!lhs.isNumber() || !rhs.isNumber())
+    if (!lhs.isNumber() || !rhs.isNumber()) {
+        stub->noteUnoptimizableOperands();
         return true;
+    }
 
     JS_ASSERT(ret.isNumber());
 
@@ -2652,6 +2653,7 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
         }
     }
 
+    stub->noteUnoptimizableOperands();
     return true;
 }
 #if defined(_MSC_VER)
