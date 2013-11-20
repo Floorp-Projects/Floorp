@@ -311,17 +311,15 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
       nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   }
  
-  nsCOMPtr<nsISupports> startingContainer = presContext->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(startingContainer));
-  NS_ASSERTION(treeItem, "Bug 175321 Crashes with Type Ahead Find [@ nsTypeAheadFind::FindItNow]");
-  if (!treeItem)
+  nsCOMPtr<nsIDocShell> startingDocShell(presContext->GetDocShell());
+  NS_ASSERTION(startingDocShell, "Bug 175321 Crashes with Type Ahead Find [@ nsTypeAheadFind::FindItNow]");
+  if (!startingDocShell)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocShellTreeItem> rootContentTreeItem;
   nsCOMPtr<nsIDocShell> currentDocShell;
-  nsCOMPtr<nsIDocShell> startingDocShell(do_QueryInterface(startingContainer));
 
-  treeItem->GetSameTypeRootTreeItem(getter_AddRefs(rootContentTreeItem));
+  startingDocShell->GetSameTypeRootTreeItem(getter_AddRefs(rootContentTreeItem));
   nsCOMPtr<nsIDocShell> rootContentDocShell =
     do_QueryInterface(rootContentTreeItem);
 
@@ -334,7 +332,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
                                              getter_AddRefs(docShellEnumerator));
 
   // Default: can start at the current document
-  nsCOMPtr<nsISupports> currentContainer = startingContainer =
+  nsCOMPtr<nsISupports> currentContainer =
     do_QueryInterface(rootContentDocShell);
 
   // Iterate up to current shell, if there's more than 1 that we're
@@ -1224,7 +1222,7 @@ nsTypeAheadFind::GetPresShell()
   nsCOMPtr<nsIPresShell> shell = do_QueryReferent(mPresShell);
   if (shell) {
     nsPresContext *pc = shell->GetPresContext();
-    if (!pc || !nsCOMPtr<nsISupports>(pc->GetContainer())) {
+    if (!pc || !pc->GetContainerWeak()) {
       return nullptr;
     }
   }
