@@ -91,6 +91,17 @@ GARBAGE += \
 
 GARBAGE_DIRS += classes db jars res sync services generated
 
+# Bug 567884 - Need a way to find appropriate icons during packaging
+ifeq ($(MOZ_APP_NAME),fennec)
+ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_48x48.png
+ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_72x72.png
+ICON_PATH_XHDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_96x96.png
+ICON_PATH_XXHDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_144x144.png
+else
+ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon48.png
+ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon64.png
+endif
+
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
 ALL_JARS = \
@@ -181,16 +192,34 @@ preprocessed_package_KEEP_PATH := 1
 
 PP_TARGETS += preprocessed_package
 
-# This uses the fact that Android resource directories list all
-# resource files one subdirectory below the parent resource directory.
-android_res_files := $(wildcard $(addsuffix /*,$(wildcard $(addsuffix /*,$(ANDROID_RES_DIRS)))))
+res/drawable-mdpi/icon.png: $(ICON_PATH)
+	$(NSINSTALL) -D res/drawable-mdpi
+	cp $(ICON_PATH) $@
 
-$(ANDROID_GENERATED_RESFILES): $(call mkdir_deps,$(sort $(dir $(ANDROID_GENERATED_RESFILES))))
+res/drawable-hdpi/icon.png: $(ICON_PATH_HDPI)
+	$(NSINSTALL) -D res/drawable-hdpi
+	cp $(ICON_PATH_HDPI) $@
 
-# We don't have correct dependencies for strings.xml at this point, so
-# we always recursively invoke the submake to check the dependencies.
-# Sigh.
-res/values/strings.xml: FORCE
+res/drawable-xhdpi/icon.png: $(ICON_PATH_XHDPI)
+	$(NSINSTALL) -D res/drawable-xhdpi
+	cp $(ICON_PATH_XHDPI) $@
+
+res/drawable-xxhdpi/icon.png: $(ICON_PATH_XXHDPI)
+	$(NSINSTALL) -D res/drawable-xxhdpi
+	cp $(ICON_PATH_XXHDPI) $@
+
+ANDROID_RESDIRS := $(subst resources/,res/,$(sort $(dir $(ANDROID_RESFILES))))
+
+$(call mkdir_deps,$(ANDROID_RESDIRS)): $(ANDROID_RESFILES) Makefile
+	$(RM) -r $(@D)
+	$(NSINSTALL) -D $(@D)
+	$(TOUCH) $@
+
+$(subst resources/,res/,$(ANDROID_RESFILES)): $(call mkdir_deps,$(ANDROID_RESDIRS)) $(ANDROID_RESFILES)
+	@echo "creating $@"
+	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
+
+res/values/strings.xml: $(call mkdir_deps,res/values)
 	$(MAKE) -C locales
 
 # With multilocale builds, there will be multiple strings.xml files. We need to
@@ -199,28 +228,28 @@ MULTILOCALE_STRINGS_XML_FILES := $(wildcard res/values-*/strings.xml)
 all_resources = \
   $(MULTILOCALE_STRINGS_XML_FILES) \
   AndroidManifest.xml \
-  $(android_res_files) \
+  $(subst resources/,res/,$(ANDROID_RESFILES)) \
   $(ANDROID_GENERATED_RESFILES) \
   $(NULL)
 
-$(gecko_package_dir)/R.txt: .aapt.deps
+# generated/org/mozilla/gecko/R.java and gecko.ap_ are both produced
+# by aapt; this saves an aapt invocation.
+
 $(gecko_package_dir)/R.java: .aapt.deps
 gecko.ap_: .aapt.deps
 
-# All of generated/org/mozilla/gecko/R.java, R.txt, and gecko.ap_ are
-# produced by aapt; this saves aapt invocations.
 .aapt.deps: $(all_resources)
-	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar \
-		--auto-add-overlay \
-		$(addprefix -S ,$(ANDROID_RES_DIRS)) \
-		--custom-package org.mozilla.gecko --non-constant-id \
-		--output-text-symbols $(gecko_package_dir) \
+	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res --custom-package org.mozilla.gecko --non-constant-id \
 		-J $(gecko_package_dir)/ \
 		-F gecko.ap_
 	@$(TOUCH) $@
 
 fennec_ids.txt: $(gecko_package_dir)/R.java fennec-ids-generator.py
 	$(PYTHON) $(topsrcdir)/mobile/android/base/fennec-ids-generator.py -i $< -o $@
+
+# We process ANDROID_RESFILES specially for now; the following flag
+# disables the default processing.
+IGNORE_ANDROID_RESFILES=1
 
 include $(topsrcdir)/config/rules.mk
 
