@@ -863,8 +863,6 @@
   /* raised when current pivot's position is needed but it's not in the tree */
   ERROR(NS_ERROR_NOT_IN_TREE,  FAILURE(38)),
 
-  /* see Accessible::GetAttrValue */
-  ERROR(NS_OK_NO_ARIA_VALUE,           SUCCESS(33)),
   /* see nsTextEquivUtils */
   ERROR(NS_OK_NO_NAME_CLAUSE_HANDLED,  SUCCESS(34))
 #undef MODULE

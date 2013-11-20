@@ -117,6 +117,7 @@ gTests.push({
       gEdit.openPopup();
       gEdit.closePopup();
     }
+    yield waitForCondition(() => gEdit.popup._searches.itemCount);
 
     let numSearches = gEdit.popup._searches.itemCount;
     function getEngineItem() {
@@ -124,11 +125,11 @@ gTests.push({
     }
 
     yield addMockSearchDefault();
-    ok(gEdit.popup._searches.itemCount == numSearches + 1, "added search engine count");
+    is(gEdit.popup._searches.itemCount, numSearches + 1, "added search engine count");
     ok(getEngineItem(), "added search engine item");
 
     yield removeMockSearchDefault();
-    ok(gEdit.popup._searches.itemCount == numSearches, "normal search engine count");
+    is(gEdit.popup._searches.itemCount, numSearches, "normal search engine count");
     ok(!getEngineItem(), "added search engine item");
   }
 });
@@ -337,6 +338,12 @@ gTests.push({
 
     EventUtils.synthesizeKey("VK_DOWN", {}, window);
     is(gEdit.popup._searches.selectedIndex, 0, "key select search: first search selected");
+
+    EventUtils.synthesizeKey("VK_TAB", {}, window);
+    is(gEdit.popup._searches.selectedIndex, 1, "tab key: second search selected");
+
+    EventUtils.synthesizeKey("VK_TAB", { shiftKey: true }, window);
+    is(gEdit.popup._searches.selectedIndex, 0, "shift-tab: first search selected");
   }
 });
 

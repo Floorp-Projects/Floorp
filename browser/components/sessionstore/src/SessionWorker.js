@@ -74,30 +74,6 @@ let Agent = {
   backupPath: OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.bak"),
 
   /**
-   * This method is only intended to be called by SessionFile.syncRead() and
-   * can be removed when we're not supporting synchronous SessionStore
-   * initialization anymore. When sessionstore.js is read from disk
-   * synchronously the state string must be supplied to the worker manually by
-   * calling this method.
-   */
-  setInitialState: function (aState) {
-    // SessionFile.syncRead() should not be called after startup has finished.
-    // Thus we also don't support any setInitialState() calls after we already
-    // wrote the loadState to disk.
-    if (this.hasWrittenLoadStateOnce) {
-      throw new Error("writeLoadStateOnceAfterStartup() must only be called once.");
-    }
-
-    // Initial state might have been filled by read() already but yet we might
-    // be called by SessionFile.syncRead() before SessionStore.jsm had a chance
-    // to call writeLoadStateOnceAfterStartup(). It's safe to ignore
-    // setInitialState() calls if this happens.
-    if (!this.initialState) {
-      this.initialState = aState;
-    }
-  },
-
-  /**
    * Read the session from disk.
    * In case sessionstore.js does not exist, attempt to read sessionstore.bak.
    */

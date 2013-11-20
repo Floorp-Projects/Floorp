@@ -21,7 +21,7 @@
       // progressmeter
       testValue("pm1", "50%", 50, 0, 100, 0);
       testValue("pm2", "50%", 500, 0, 1000, 0);
-      testValue("pm3", "0%", 0, 0, 100, 0);
+      testValue("pm3", "", 0, 0, 100, 0);
 
       // scale
       testValue("sc1", "500", 500, 0, 1000, 10);

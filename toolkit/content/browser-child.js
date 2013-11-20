@@ -10,6 +10,22 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import("resource://gre/modules/RemoteAddonsChild.jsm");
 
+let SyncHandler = {
+  init: function() {
+    sendAsyncMessage("SetSyncHandler", {}, {handler: this});
+  },
+
+  getFocusedElementAndWindow: function() {
+    let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+
+    let focusedWindow = {};
+    let elt = fm.getFocusedElementForWindow(content, true, focusedWindow);
+    return [elt, focusedWindow.value];
+  },
+};
+
+SyncHandler.init();
+
 let WebProgressListener = {
   init: function() {
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -33,10 +49,8 @@ let WebProgressListener = {
   },
 
   _setupObjects: function setupObjects(aWebProgress) {
-    let win = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindow);
     return {
-      contentWindow: win,
+      contentWindow: content,
       // DOMWindow is not necessarily the content-window with subframes.
       DOMWindow: aWebProgress.DOMWindow
     };

@@ -330,15 +330,12 @@ Shape::replaceLastProperty(ExclusiveContext *cx, const StackBaseShape &base,
                                            base.flags & BaseShape::OBJECT_FLAG_MASK);
     }
 
-    StackShape child(shape);
-    StackShape::AutoRooter childRoot(cx, &child);
-    {
-        UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
-        if (!nbase)
-            return nullptr;
+    UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
+    if (!nbase)
+        return nullptr;
 
-        child.base = nbase;
-    }
+    StackShape child(shape);
+    child.base = nbase;
 
     return cx->compartment()->propertyTree.getChild(cx, shape->parent,
                                                     shape->numFixedSlots(), child);

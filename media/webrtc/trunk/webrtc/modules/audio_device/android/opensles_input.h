@@ -101,7 +101,7 @@ class OpenSlesInput {
 
   // Stereo support
   int32_t StereoRecordingIsAvailable(bool& available);  // NOLINT
-  int32_t SetStereoRecording(bool enable) { return -1; }
+  int32_t SetStereoRecording(bool enable);
   int32_t StereoRecording(bool& enabled) const;  // NOLINT
 
   // Delay information and control
@@ -121,7 +121,7 @@ class OpenSlesInput {
     // Keep as few OpenSL buffers as possible to avoid wasting memory. 2 is
     // minimum for playout. Keep 2 for recording as well.
     kNumOpenSlBuffers = 2,
-    kNum10MsToBuffer = 3,
+    kNum10MsToBuffer = 4,
   };
 
   int InitSampleRate();
