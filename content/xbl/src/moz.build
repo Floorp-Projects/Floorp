@@ -14,7 +14,7 @@ EXPORTS.mozilla.dom += [
     'XBLChildrenElement.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsBindingManager.cpp',
     'nsXBLBinding.cpp',
     'nsXBLContentSink.cpp',
