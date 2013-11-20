@@ -12,6 +12,7 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.home.BookmarksListAdapter.FolderInfo;
 import org.mozilla.gecko.home.BookmarksListAdapter.OnRefreshFolderListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -28,7 +29,6 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,7 +54,7 @@ public class BookmarksPage extends HomeFragment {
     private BookmarksListAdapter mListAdapter;
 
     // Adapter's parent stack.
-    private List<Pair<Integer, String>> mSavedParentStack;
+    private List<FolderInfo> mSavedParentStack;
 
     // Callback for cursor loaders.
     private CursorLoaderCallbacks mLoaderCallbacks;
