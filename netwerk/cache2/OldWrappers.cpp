@@ -25,6 +25,8 @@
 static NS_DEFINE_CID(kStreamTransportServiceCID,
                      NS_STREAMTRANSPORTSERVICE_CID);
 
+static uint32_t const CHECK_MULTITHREADED = nsICacheStorage::CHECK_MULTITHREADED;
+
 namespace mozilla {
 namespace net {
 
@@ -511,8 +513,9 @@ _OldCacheLoad::_OldCacheLoad(nsCSubstring const& aScheme,
   , mLoadInfo(GetLoadContextInfo(aLoadInfo))
   , mFlags(aFlags)
   , mWriteToDisk(aWriteToDisk)
-  , mMainThreadOnly(true)
   , mNew(true)
+  , mOpening(true)
+  , mSync(false)
   , mStatus(NS_ERROR_UNEXPECTED)
   , mRunCount(0)
   , mAppCache(aAppCache)
@@ -529,18 +532,14 @@ _OldCacheLoad::~_OldCacheLoad()
 nsresult _OldCacheLoad::Start()
 {
   LOG(("_OldCacheLoad::Start [this=%p, key=%s]", this, mCacheKey.get()));
-  MOZ_ASSERT(NS_IsMainThread());
 
   mLoadStart = mozilla::TimeStamp::Now();
 
-  bool mainThreadOnly;
-  if (mCallback && (
-      NS_SUCCEEDED(mCallback->GetMainThreadOnly(&mainThreadOnly)) &&
-      !mainThreadOnly)) {
-    mMainThreadOnly = false;
-  }
-
   nsresult rv;
+
+  // Consumers that can invoke this code as first and off the main thread
+  // are responsible for initiating these two services on the main thread.
+  // Currently this is only nsWyciwygChannel.
 
   // XXX: Start the cache service; otherwise DispatchToCacheIOThread will
   // fail.
@@ -548,7 +547,7 @@ nsresult _OldCacheLoad::Start()
     do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
 
   // Ensure the stream transport service gets initialized on the main thread
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && NS_IsMainThread()) {
     nsCOMPtr<nsIStreamTransportService> sts =
       do_GetService(kStreamTransportServiceCID, &rv);
   }
@@ -558,7 +557,20 @@ nsresult _OldCacheLoad::Start()
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = mCacheThread->Dispatch(this, NS_DISPATCH_NORMAL);
+    bool onCacheTarget;
+    rv = mCacheThread->IsOnCurrentThread(&onCacheTarget);
+    if (NS_SUCCEEDED(rv) && onCacheTarget) {
+      mSync = true;
+    }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    if (mSync) {
+      rv = Run();
+    }
+    else {
+      rv = mCacheThread->Dispatch(this, NS_DISPATCH_NORMAL);
+    }
   }
 
   return rv;
@@ -571,7 +583,8 @@ _OldCacheLoad::Run()
 
   nsresult rv;
 
-  if (!NS_IsMainThread()) {
+  if (mOpening) {
+    mOpening = false;
     nsCOMPtr<nsICacheSession> session;
     rv = GetCacheSession(mScheme, mWriteToDisk, mLoadInfo, mAppCache,
                          getter_AddRefs(session));
@@ -590,8 +603,21 @@ _OldCacheLoad::Run()
       LOG(("  session->AsyncOpenCacheEntry with access=%d", cacheAccess));
 
       bool bypassBusy = mFlags & nsICacheStorage::OPEN_BYPASS_IF_BUSY;
-      rv = session->AsyncOpenCacheEntry(mCacheKey, cacheAccess, this, bypassBusy);
 
+      if (mSync && cacheAccess == nsICache::ACCESS_WRITE) {
+        nsCOMPtr<nsICacheEntryDescriptor> entry;
+        rv = session->OpenCacheEntry(mCacheKey, cacheAccess, bypassBusy,
+          getter_AddRefs(entry));
+
+        nsCacheAccessMode grantedAccess = 0;
+        if (NS_SUCCEEDED(rv)) {
+          entry->GetAccessGranted(&grantedAccess);
+        }
+
+        return OnCacheEntryAvailable(entry, grantedAccess, rv);
+      }
+
+      rv = session->AsyncOpenCacheEntry(mCacheKey, cacheAccess, this, bypassBusy);
       if (NS_SUCCEEDED(rv))
         return NS_OK;
     }
@@ -625,7 +651,7 @@ _OldCacheLoad::Run()
       }
     }
 
-    if (mMainThreadOnly)
+    if (!(mFlags & CHECK_MULTITHREADED))
       Check();
 
     // break cycles
@@ -666,8 +692,11 @@ _OldCacheLoad::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
   mStatus = status;
   mNew = access == nsICache::ACCESS_WRITE;
 
-  if (!mMainThreadOnly)
+  if (mFlags & CHECK_MULTITHREADED)
     Check();
+
+  if (mSync)
+    return Run();
 
   return NS_DispatchToMainThread(this);
 }

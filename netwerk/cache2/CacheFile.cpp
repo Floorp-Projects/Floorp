@@ -807,7 +807,7 @@ CacheFile::OpenInputStream(nsIInputStream **_retval)
 }
 
 nsresult
-CacheFile::OpenOutputStream(nsIOutputStream **_retval)
+CacheFile::OpenOutputStream(CacheOutputCloseListener *aCloseListener, nsIOutputStream **_retval)
 {
   CacheFileAutoLock lock(this);
 
@@ -827,7 +827,7 @@ CacheFile::OpenOutputStream(nsIOutputStream **_retval)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mOutput = new CacheFileOutputStream(this);
+  mOutput = new CacheFileOutputStream(this, aCloseListener);
 
   LOG(("CacheFile::OpenOutputStream() - Creating new output stream %p "
        "[this=%p]", mOutput, this));
@@ -1337,6 +1337,9 @@ CacheFile::RemoveOutput(CacheFileOutputStream *aOutput)
 
   if (!mMemoryOnly)
     WriteMetadataIfNeeded();
+
+  // Notify close listener as the last action
+  aOutput->NotifyCloseListener();
 
   return NS_OK;
 }
