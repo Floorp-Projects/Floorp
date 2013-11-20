@@ -1303,11 +1303,15 @@ var SettingsCharm = {
         label: Strings.browser.GetStringFromName("optionsCharm"),
         onselected: function() FlyoutPanelsUI.show('PrefsFlyoutPanel')
     });
+/*
+ * Temporarily disabled until we can have sync prefs together with the
+ * Desktop browser's sync prefs.
     // Sync
     this.addEntry({
         label: Strings.brand.GetStringFromName("syncBrandShortName"),
         onselected: function() FlyoutPanelsUI.show('SyncFlyoutPanel')
     });
+*/
     // About
     this.addEntry({
         label: Strings.browser.GetStringFromName("aboutCharm1"),
