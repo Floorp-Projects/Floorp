@@ -32,12 +32,23 @@ namespace mozilla {
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaStreamGraphLog;
+#define LOG(type, msg) PR_LOG(gMediaStreamGraphLog, type, msg)
+#else
+#define LOG(type, msg)
 #endif
 
 /**
  * The singleton graph instance.
  */
 static MediaStreamGraphImpl* gGraph;
+
+MediaStreamGraphImpl::~MediaStreamGraphImpl()
+{
+  NS_ASSERTION(IsEmpty(),
+               "All streams should have been destroyed by messages from the main thread");
+  LOG(PR_LOG_DEBUG, ("MediaStreamGraph %p destroyed", this));
+}
+
 
 StreamTime
 MediaStreamGraphImpl::GetDesiredBufferEnd(MediaStream* aStream)

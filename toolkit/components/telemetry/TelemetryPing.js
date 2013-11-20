@@ -452,6 +452,7 @@ TelemetryPing.prototype = {
     let p = (id, n) => h(id, Ci.nsIMemoryReporter.UNITS_PERCENTAGE, n);
 
     b("MEMORY_VSIZE", "vsize");
+    b("MEMORY_VSIZE_MAX_CONTIGUOUS", "vsizeMaxContiguous");
     b("MEMORY_RESIDENT", "residentFast");
     b("MEMORY_HEAP_ALLOCATED", "heapAllocated");
     p("MEMORY_HEAP_COMMITTED_UNUSED_RATIO", "heapOverheadRatio");

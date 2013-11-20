@@ -19,13 +19,6 @@ namespace mozilla {
 template <typename T>
 class LinkedList;
 
-#ifdef PR_LOGGING
-extern PRLogModuleInfo* gMediaStreamGraphLog;
-#define LOG(type, msg) PR_LOG(gMediaStreamGraphLog, type, msg)
-#else
-#define LOG(type, msg)
-#endif
-
 /**
  * Assume we can run an iteration of the MediaStreamGraph loop in this much time
  * or less.
@@ -120,12 +113,7 @@ public:
    * implement OfflineAudioContext.  They do not support MediaStream inputs.
    */
   explicit MediaStreamGraphImpl(bool aRealtime);
-  ~MediaStreamGraphImpl()
-  {
-    NS_ASSERTION(IsEmpty(),
-                 "All streams should have been destroyed by messages from the main thread");
-    LOG(PR_LOG_DEBUG, ("MediaStreamGraph %p destroyed", this));
-  }
+  virtual ~MediaStreamGraphImpl();
 
   // Main thread only.
   /**

@@ -16,6 +16,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/Promise.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Services
@@ -213,7 +215,8 @@ LivemarkService.prototype = {
     // The addition is done synchronously due to the fact importExport service
     // and JSON backups require that.  The notification is async though.
     // Once bookmarks are async, this may be properly fixed.
-    let result = Cr.NS_OK;
+    let deferred = Promise.defer();
+    let addLivemarkEx = null;
     let livemark = null;
     try {
       // Disallow adding a livemark inside another livemark.
@@ -246,18 +249,33 @@ LivemarkService.prototype = {
       this._guids[aLivemarkInfo.guid] = livemark.id;
     }
     catch (ex) {
-      result = ex.result;
+      addLivemarkEx = ex;
       livemark = null;
     }
     finally {
-      if (aLivemarkCallback) {
-        this._onCacheReady(function LS_addLivemark_ETAT() {
-          try {
-            aLivemarkCallback.onCompletion(result, livemark);
-          } catch(ex2) {}
-        }, true);
-      }
+      this._onCacheReady(() => {
+        if (addLivemarkEx) {
+          if (aLivemarkCallback) {
+            try {
+              aLivemarkCallback.onCompletion(addLivemarkEx.result, livemark);
+            }
+            catch(ex2) { }
+          }
+          deferred.reject(addLivemarkEx);
+        }
+        else {
+          if (aLivemarkCallback) {
+            try {
+              aLivemarkCallback.onCompletion(Cr.NS_OK, livemark);
+            }
+            catch(ex2) { }
+          }
+          deferred.resolve(livemark);
+        }
+      });
     }
+
+    return deferred.promise;
   },
 
   removeLivemark: function LS_removeLivemark(aLivemarkInfo, aLivemarkCallback)
@@ -278,7 +296,9 @@ LivemarkService.prototype = {
     if (id in this._guids) {
       id = this._guids[id];
     }
-    let result = Cr.NS_OK;
+
+    let deferred = Promise.defer();
+    let removeLivemarkEx = null;
     try {
       if (!(id in this._livemarks)) {
         throw new Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
@@ -286,18 +306,32 @@ LivemarkService.prototype = {
       this._livemarks[id].remove();
     }
     catch (ex) {
-      result = ex.result;
+      removeLivemarkEx = ex;
     }
     finally {
-      if (aLivemarkCallback) {
-        // Enqueue the notification, per interface definition.
-        this._onCacheReady(function LS_removeLivemark_ETAT() {
-          try {
-            aLivemarkCallback.onCompletion(result, null);
-          } catch(ex2) {}
-        });
-      }
+      this._onCacheReady( () => {
+        if (removeLivemarkEx) {
+          if (aLivemarkCallback) {
+            try {
+              aLivemarkCallback.onCompletion(removeLivemarkEx.result, null);
+            }
+            catch(ex2) { }
+          }
+          deferred.reject(removeLivemarkEx);
+        }
+        else {
+          if (aLivemarkCallback) {
+            try {
+              aLivemarkCallback.onCompletion(Cr.NS_OK, null);
+            }
+            catch(ex2) { }
+          }
+          deferred.resolve();
+        }
+      });
     }
+
+    return deferred.promise;
   },
 
   _reloaded: [],
@@ -326,13 +360,13 @@ LivemarkService.prototype = {
       return;
     } 
 
-    this._onCacheReady((function LS_reloadAllLivemarks_ETAT() {
+    this._onCacheReady( () => {
       this._forceUpdate = !!aForceUpdate;
       this._reloaded = [];
       // Livemarks reloads happen on a timer, and are delayed for performance
       // reasons.
       this._startReloadTimer();
-    }).bind(this));
+    });
   },
 
   getLivemark: function LS_getLivemark(aLivemarkInfo, aLivemarkCallback)
@@ -348,22 +382,31 @@ LivemarkService.prototype = {
       throw Cr.NS_ERROR_INVALID_ARG;
     }
 
-    this._onCacheReady((function LS_getLivemark_ETAT() {
+    let deferred = Promise.defer();
+    this._onCacheReady( () => {
       // Convert the guid to an id.
       if (id in this._guids) {
         id = this._guids[id];
       }
       if (id in this._livemarks) {
-        try {
-          aLivemarkCallback.onCompletion(Cr.NS_OK, this._livemarks[id]);
-        } catch (ex) {}
+        if (aLivemarkCallback) {
+          try {
+            aLivemarkCallback.onCompletion(Cr.NS_OK, this._livemarks[id]);
+          } catch (ex) {}
+        }
+        deferred.resolve(this._livemarks[id]);
       }
       else {
-        try {
-          aLivemarkCallback.onCompletion(Cr.NS_ERROR_INVALID_ARG, null);
-        } catch (ex) {}
+        if (aLivemarkCallback) {
+          try {
+            aLivemarkCallback.onCompletion(Cr.NS_ERROR_INVALID_ARG, null);
+          } catch (ex) { }
+        }
+        deferred.reject(Components.Exception("", Cr.NS_ERROR_INVALID_ARG));
       }
-    }).bind(this));
+    });
+
+    return deferred.promise;
   },
 
   //////////////////////////////////////////////////////////////////////////////
