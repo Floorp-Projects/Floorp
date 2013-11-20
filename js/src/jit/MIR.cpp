@@ -648,13 +648,62 @@ MParameter::congruentTo(MDefinition *ins) const
 
 MCall *
 MCall::New(TempAllocator &alloc, JSFunction *target, size_t maxArgc, size_t numActualArgs,
-           bool construct)
+           bool construct, bool isDOMCall)
 {
     JS_ASSERT(maxArgc >= numActualArgs);
-    MCall *ins = new(alloc) MCall(target, numActualArgs, construct);
+    MCall *ins;
+    if (isDOMCall) {
+        JS_ASSERT(!construct);
+        ins = new(alloc) MCallDOMNative(target, numActualArgs);
+    } else {
+        ins = new(alloc) MCall(target, numActualArgs, construct);
+    }
     if (!ins->init(alloc, maxArgc + NumNonArgumentOperands))
         return nullptr;
     return ins;
+}
+
+AliasSet
+MCallDOMNative::getAliasSet() const
+{
+    JS_ASSERT(getSingleTarget() && getSingleTarget()->isNative());
+
+    const JSJitInfo *jitInfo = getSingleTarget()->jitInfo();
+    JS_ASSERT(jitInfo);
+
+    JS_ASSERT(jitInfo->aliasSet != JSJitInfo::AliasNone);
+    // If we don't know anything about the types of our arguments, we have to
+    // assume that type-coercions can have side-effects, so we need to alias
+    // everything.
+    if (jitInfo->aliasSet != JSJitInfo::AliasDOMSets || !jitInfo->argTypes)
+        return AliasSet::Store(AliasSet::Any);
+
+    uint32_t argIndex = 0;
+    for (const JSJitInfo::ArgType *argType = jitInfo->argTypes;
+         *argType != JSJitInfo::ArgTypeListEnd;
+         ++argType, ++argIndex)
+    {
+        if (argIndex >= numActualArgs()) {
+            // Passing through undefined can't have side-effects
+            continue;
+        }
+        // getArg(0) is "this", so skip it
+        MDefinition *arg = getArg(argIndex+1);
+        MIRType actualType = arg->type();
+        // The only way to get side-effects is if we're passing in
+        // something that might be an object to an argument that
+        // expects a numeric, string, or boolean value.
+        if ((actualType == MIRType_Value || actualType == MIRType_Object) &&
+            (*argType &
+             (JSJitInfo::Boolean | JSJitInfo::String | JSJitInfo::Numeric)))
+         {
+             return AliasSet::Store(AliasSet::Any);
+         }
+    }
+
+    // We checked all the args, and they check out.  So we only
+    // alias DOM mutations.
+    return AliasSet::Load(AliasSet::DOMProperty);
 }
 
 MApplyArgs *
