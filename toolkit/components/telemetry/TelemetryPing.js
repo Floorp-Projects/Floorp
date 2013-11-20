@@ -374,10 +374,13 @@ TelemetryPing.prototype = {
     if (gfxInfo) {
       for each (let field in gfxfields) {
         try {
-          let value = "";
-          value = gfxInfo[field];
-          if (value != "")
+          let value = gfxInfo[field];
+          // bug 940806: We need to do a strict equality comparison here,
+          // otherwise a type conversion will occur and boolean false values
+          // will get filtered out
+          if (value !== "") {
             ret[field] = value;
+          }
         } catch (e) {
           continue
         }
