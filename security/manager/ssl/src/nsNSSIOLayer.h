@@ -56,8 +56,13 @@ public:
                 const nsNSSShutDownPreventionLock & proofOfLock);
   
   void SetNegotiatedNPN(const char *value, uint32_t length);
-  void SetHandshakeCompleted(bool aResumedSession);
+
+  void SetHandshakeCompleted();
   void NoteTimeUntilReady();
+
+
+  void SetFalseStartCallbackCalled() { mFalseStartCallbackCalled = true; }
+  void SetFalseStarted() { mFalseStarted = true; }
 
   // Note that this is only valid *during* a handshake; at the end of the handshake,
   // it gets reset back to false.
@@ -130,6 +135,8 @@ private:
 
   nsCString mNegotiatedNPN;
   bool      mNPNCompleted;
+  bool      mFalseStartCallbackCalled;
+  bool      mFalseStarted;
   bool      mIsFullHandshake;
   bool      mHandshakeCompleted;
   bool      mJoined;

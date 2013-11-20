@@ -1313,10 +1313,9 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
                              SSL_RENEGOTIATE_UNRESTRICTED :
                              SSL_RENEGOTIATE_REQUIRES_XTN);
 
-//    Bug 920248: temporarily disable false start
-//    bool falseStartEnabled = Preferences::GetBool("security.ssl.enable_false_start",
-//                                                  FALSE_START_ENABLED_DEFAULT);
-      SSL_OptionSetDefault(SSL_ENABLE_FALSE_START, false);
+      SSL_OptionSetDefault(SSL_ENABLE_FALSE_START,
+                           Preferences::GetBool("security.ssl.enable_false_start",
+                                                FALSE_START_ENABLED_DEFAULT));
 
       if (NS_FAILED(InitializeCipherSuite())) {
         PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to initialize cipher suite settings\n"));
@@ -1728,10 +1727,9 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
                              SSL_RENEGOTIATE_UNRESTRICTED :
                              SSL_RENEGOTIATE_REQUIRES_XTN);
     } else if (prefName.Equals("security.ssl.enable_false_start")) {
-//    Bug 920248: temporarily disable false start
-//    bool falseStartEnabled = Preferences::GetBool("security.ssl.enable_false_start",
-//                                                  FALSE_START_ENABLED_DEFAULT);
-      SSL_OptionSetDefault(SSL_ENABLE_FALSE_START, false);
+      SSL_OptionSetDefault(SSL_ENABLE_FALSE_START,
+                           Preferences::GetBool("security.ssl.enable_false_start",
+                                                FALSE_START_ENABLED_DEFAULT));
     } else if (prefName.Equals("security.OCSP.enabled")
                || prefName.Equals("security.CRL_download.enabled")
                || prefName.Equals("security.fresh_revocation_info.require")
