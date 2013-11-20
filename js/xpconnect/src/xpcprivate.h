@@ -3033,6 +3033,7 @@ public:
         return mStack.IsEmpty() ? nullptr : mStack[mStack.Length() - 1].cx;
     }
 
+    JSContext *InitSafeJSContext();
     JSContext *GetSafeJSContext();
     bool HasJSContext(JSContext *cx);
 

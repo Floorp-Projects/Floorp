@@ -379,6 +379,9 @@ nsContentUtils::Init()
     return NS_ERROR_FAILURE;
   NS_ADDREF(sSecurityManager);
 
+  // Getting the first context can trigger GC, so do this non-lazily.
+  sXPConnect->InitSafeJSContext();
+
   rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
   if (NS_FAILED(rv)) {
     // This makes life easier, but we can live without it.
@@ -388,7 +391,7 @@ nsContentUtils::Init()
 
   rv = CallGetService(NS_LBRK_CONTRACTID, &sLineBreaker);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   rv = CallGetService(NS_WBRK_CONTRACTID, &sWordBreaker);
   NS_ENSURE_SUCCESS(rv, rv);
 
