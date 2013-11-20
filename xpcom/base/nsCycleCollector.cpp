@@ -577,6 +577,35 @@ private:
 };
 
 
+// Declarations for mPtrToNodeMap.
+
+struct PtrToNodeEntry : public PLDHashEntryHdr
+{
+    // The key is mNode->mPointer
+    PtrInfo *mNode;
+};
+
+static bool
+PtrToNodeMatchEntry(PLDHashTable *table,
+                    const PLDHashEntryHdr *entry,
+                    const void *key)
+{
+    const PtrToNodeEntry *n = static_cast<const PtrToNodeEntry*>(entry);
+    return n->mNode->mPointer == key;
+}
+
+static PLDHashTableOps PtrNodeOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    PL_DHashVoidPtrKeyStub,
+    PtrToNodeMatchEntry,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
+    PL_DHashFinalizeStub,
+    nullptr
+};
+
+
 struct WeakMapping
 {
     // map and key will be null if the corresponding objects are GC marked
@@ -595,9 +624,29 @@ struct GCGraph
     nsTArray<WeakMapping> mWeakMaps;
     uint32_t mRootCount;
 
-    GCGraph() : mRootCount(0) {
+private:
+    PLDHashTable mPtrToNodeMap;
+
+public:
+    GCGraph() : mRootCount(0)
+    {
+        mPtrToNodeMap.ops = nullptr;
     }
-    ~GCGraph() {
+
+    ~GCGraph()
+    {
+        if (mPtrToNodeMap.ops) {
+            PL_DHashTableFinish(&mPtrToNodeMap);
+        }
+    }
+
+    void Init()
+    {
+        MOZ_ASSERT(!mPtrToNodeMap.ops, "Failed to clear mPtrToNodeMap");
+        if (!PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nullptr,
+                               sizeof(PtrToNodeEntry), 32768)) {
+            MOZ_CRASH();
+        }
     }
 
     void Clear()
@@ -606,6 +655,16 @@ struct GCGraph
         mEdges.Clear();
         mWeakMaps.Clear();
         mRootCount = 0;
+        PL_DHashTableFinish(&mPtrToNodeMap);
+        mPtrToNodeMap.ops = nullptr;
+    }
+
+    PtrInfo* FindNode(void *aPtr);
+    PtrToNodeEntry* AddNodeToMap(void *aPtr);
+
+    uint32_t MapCount() const
+    {
+        return mPtrToNodeMap.entryCount;
     }
 
     void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
@@ -619,6 +678,28 @@ struct GCGraph
         *aWeakMapsSize = mWeakMaps.SizeOfExcludingThis(aMallocSizeOf);
     }
 };
+
+PtrInfo*
+GCGraph::FindNode(void *aPtr)
+{
+    PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr, PL_DHASH_LOOKUP));
+    if (!PL_DHASH_ENTRY_IS_BUSY(e)) {
+        return nullptr;
+    }
+    return e->mNode;
+}
+
+PtrToNodeEntry*
+GCGraph::AddNodeToMap(void *aPtr)
+{
+    PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr, PL_DHASH_ADD));
+    if (!e) {
+        // Caller should track OOMs
+        return nullptr;
+    }
+    return e;
+}
+
 
 static nsISupports *
 CanonicalizeXPCOMParticipant(nsISupports *in)
@@ -1527,32 +1608,6 @@ nsCycleCollectorLoggerConstructor(nsISupports* aOuter,
 // Bacon & Rajan's |MarkRoots| routine.
 ////////////////////////////////////////////////////////////////////////
 
-struct PtrToNodeEntry : public PLDHashEntryHdr
-{
-    // The key is mNode->mPointer
-    PtrInfo *mNode;
-};
-
-static bool
-PtrToNodeMatchEntry(PLDHashTable *table,
-                    const PLDHashEntryHdr *entry,
-                    const void *key)
-{
-    const PtrToNodeEntry *n = static_cast<const PtrToNodeEntry*>(entry);
-    return n->mNode->mPointer == key;
-}
-
-static PLDHashTableOps PtrNodeOps = {
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
-    PL_DHashVoidPtrKeyStub,
-    PtrToNodeMatchEntry,
-    PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
-    nullptr
-};
-
 class GCGraphBuilder : public nsCycleCollectionTraversalCallback,
                        public nsCycleCollectionNoteRootCallback
 {
@@ -1561,7 +1616,6 @@ private:
     CycleCollectorResults &mResults;
     NodePool::Builder mNodeBuilder;
     EdgePool::Builder mEdgeBuilder;
-    PLDHashTable mPtrToNodeMap;
     PtrInfo *mCurrPi;
     nsCycleCollectionParticipant *mJSParticipant;
     nsCycleCollectionParticipant *mJSZoneParticipant;
@@ -1582,8 +1636,6 @@ public:
     {
         return nsCycleCollectionNoteRootCallback::WantAllTraces();
     }
-
-    uint32_t Count() const { return mPtrToNodeMap.entryCount; }
 
     PtrInfo* AddNode(void *aPtr, nsCycleCollectionParticipant *aParticipant);
     PtrInfo* AddWeakMapNode(void* node);
@@ -1669,11 +1721,6 @@ GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
       mMergeZones(aMergeZones),
       mRanOutOfMemory(false)
 {
-    if (!PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nullptr,
-                           sizeof(PtrToNodeEntry), 32768)) {
-        MOZ_CRASH();
-    }
-
     if (aJSRuntime) {
         mJSParticipant = aJSRuntime->GCThingParticipant();
         mJSZoneParticipant = aJSRuntime->ZoneParticipant();
@@ -1700,14 +1747,12 @@ GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
 
 GCGraphBuilder::~GCGraphBuilder()
 {
-    if (mPtrToNodeMap.ops)
-        PL_DHashTableFinish(&mPtrToNodeMap);
 }
 
 PtrInfo*
 GCGraphBuilder::AddNode(void *aPtr, nsCycleCollectionParticipant *aParticipant)
 {
-    PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, aPtr, PL_DHASH_ADD));
+    PtrToNodeEntry *e = mGraph.AddNodeToMap(aPtr);
     if (!e) {
         mRanOutOfMemory = true;
         return nullptr;
@@ -2143,8 +2188,6 @@ nsCycleCollector::MarkRoots()
     AutoRestore<bool> ar(mScanInProgress);
     MOZ_ASSERT(!mScanInProgress);
     mScanInProgress = true;
-
-    mGraph.mRootCount = mBuilder->Count();
 
     // read the PtrInfo out of the graph that we are building
     NodePool::Enumerator queue(mGraph.mNodes);
@@ -2754,6 +2797,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     }
 
     // Set up the data structures for building the graph.
+    mGraph.Init();
     mResults.Init();
     bool mergeZones = ShouldMergeZones(aCCType);
     mResults.mMergedZones = mergeZones;
@@ -2771,6 +2815,9 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     mScanInProgress = true;
     mPurpleBuf.SelectPointers(*mBuilder);
     timeLog.Checkpoint("SelectPointers()");
+
+    // We've finished adding roots, and everything in the graph is a root.
+    mGraph.mRootCount = mGraph.MapCount();
 }
 
 uint32_t
