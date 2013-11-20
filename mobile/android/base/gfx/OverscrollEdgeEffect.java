@@ -7,8 +7,10 @@ package org.mozilla.gecko.gfx;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.os.Build;
 import android.widget.EdgeEffect;
 import android.view.View;
+
 
 public class OverscrollEdgeEffect implements Overscroll {
     // Used to index particular edges in the edges array
@@ -54,6 +56,14 @@ public class OverscrollEdgeEffect implements Overscroll {
         }
     }
 
+    private void invalidate() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            mView.postInvalidateOnAnimation();
+        } else {
+            mView.postInvalidateDelayed(10);
+        }
+    }
+
     public void setVelocity(final float velocity, final Axis axis) {
         final EdgeEffect edge = getEdgeForAxisAndSide(axis, velocity);
 
@@ -65,7 +75,7 @@ public class OverscrollEdgeEffect implements Overscroll {
             edge.onAbsorb((int)velocity);
         }
 
-        mView.postInvalidateOnAnimation();
+        invalidate();
     }
 
     public void setDistance(final float distance, final Axis axis) {
@@ -76,7 +86,7 @@ public class OverscrollEdgeEffect implements Overscroll {
 
         final EdgeEffect edge = getEdgeForAxisAndSide(axis, (int)distance);
         edge.onPull(distance / (axis == Axis.X ? mView.getWidth() : mView.getHeight()));
-        mView.postInvalidateOnAnimation();
+        invalidate();
     }
 
     public void draw(final Canvas canvas, final ImmutableViewportMetrics metrics) {
@@ -104,7 +114,7 @@ public class OverscrollEdgeEffect implements Overscroll {
 
         // If the edge effect is animating off screen, invalidate.
         if (invalidate) {
-            mView.postInvalidateOnAnimation();
+            invalidate();
         }
     }
 
