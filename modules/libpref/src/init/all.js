@@ -198,6 +198,10 @@ pref("media.directshow.enabled", true);
 #endif
 #ifdef MOZ_FMP4
 pref("media.fragmented-mp4.enabled", true);
+// Denotes that the fragmented MP4 parser can be created by <video> elements.
+// This is for testing, since the parser can't yet handle non-fragmented MP4,
+// so it will fail to play most MP4 files.
+pref("media.fragmented-mp4.exposed", false);
 #endif
 #ifdef MOZ_RAW
 pref("media.raw.enabled", true);
