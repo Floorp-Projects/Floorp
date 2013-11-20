@@ -923,7 +923,6 @@ class nsCycleCollector
 
     nsCycleCollectorParams mParams;
 
-    nsTArray<PtrInfo*> *mWhiteNodes;
     uint32_t mWhiteNodeCount;
 
     // mVisitedRefCounted and mVisitedGCed are only used for telemetry
@@ -966,7 +965,6 @@ public:
     bool FreeSnowWhite(bool aUntilNoSWInPurpleBuffer);
 
     bool Collect(ccType aCCType,
-                 nsTArray<PtrInfo*> *aWhiteNodes,
                  nsCycleCollectorResults *aResults,
                  nsICycleCollectorListener *aManualListener);
     void Shutdown();
@@ -976,15 +974,13 @@ public:
                              size_t *aGraphNodesSize,
                              size_t *aGraphEdgesSize,
                              size_t *aWeakMapsSize,
-                             size_t *aWhiteNodeSize,
                              size_t *aPurpleBufferSize) const;
 
 private:
     void CheckThreadSafety();
     void ShutdownCollect();
 
-    void PrepareForCollection(nsCycleCollectorResults *aResults,
-                              nsTArray<PtrInfo*> *aWhiteNodes);
+    void PrepareForCollection(nsCycleCollectorResults *aResults);
     void FixGrayBits(bool aForceGC);
     bool ShouldMergeZones(ccType aCCType);
 
@@ -2373,11 +2369,9 @@ nsCycleCollector::CollectWhite()
     //   - Unroot(whites), which returns the whites to normal GC.
 
     TimeLog timeLog;
+    nsAutoTArray<PtrInfo*, 4000> whiteNodes;
 
-    MOZ_ASSERT(mWhiteNodes->IsEmpty(),
-               "CleanupAfterCollection wasn't called?");
-
-    mWhiteNodes->SetCapacity(mWhiteNodeCount);
+    whiteNodes.SetCapacity(mWhiteNodeCount);
     uint32_t numWhiteGCed = 0;
 
     NodePool::Enumerator etor(mGraph.mNodes);
@@ -2385,7 +2379,7 @@ nsCycleCollector::CollectWhite()
     {
         PtrInfo *pinfo = etor.GetNext();
         if (pinfo->mColor == white) {
-            mWhiteNodes->AppendElement(pinfo);
+            whiteNodes.AppendElement(pinfo);
             pinfo->mParticipant->Root(pinfo->mPointer);
             if (pinfo->mRefCount == 0) {
                 // only JS objects have a refcount of 0
@@ -2394,7 +2388,7 @@ nsCycleCollector::CollectWhite()
         }
     }
 
-    uint32_t count = mWhiteNodes->Length();
+    uint32_t count = whiteNodes.Length();
     MOZ_ASSERT(numWhiteGCed <= count,
                "More freed GCed nodes than total freed nodes.");
     if (mResults) {
@@ -2410,7 +2404,7 @@ nsCycleCollector::CollectWhite()
     }
 
     for (uint32_t i = 0; i < count; ++i) {
-        PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
+        PtrInfo *pinfo = whiteNodes.ElementAt(i);
         pinfo->mParticipant->Unlink(pinfo->mPointer);
 #ifdef DEBUG
         if (mJSRuntime) {
@@ -2421,7 +2415,7 @@ nsCycleCollector::CollectWhite()
     timeLog.Checkpoint("CollectWhite::Unlink");
 
     for (uint32_t i = 0; i < count; ++i) {
-        PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
+        PtrInfo *pinfo = whiteNodes.ElementAt(i);
         pinfo->mParticipant->Unroot(pinfo->mPointer);
     }
     timeLog.Checkpoint("CollectWhite::Unroot");
@@ -2448,12 +2442,11 @@ class CycleCollectorReporter MOZ_FINAL : public MemoryMultiReporter
                               nsISupports* aClosure)
     {
         size_t objectSize, graphNodesSize, graphEdgesSize, weakMapsSize,
-            whiteNodesSize, purpleBufferSize;
+            purpleBufferSize;
         mCollector->SizeOfIncludingThis(MallocSizeOf,
                                         &objectSize,
                                         &graphNodesSize, &graphEdgesSize,
                                         &weakMapsSize,
-                                        &whiteNodesSize,
                                         &purpleBufferSize);
 
     #define REPORT(_path, _amount, _desc)                                     \
@@ -2486,10 +2479,6 @@ class CycleCollectorReporter MOZ_FINAL : public MemoryMultiReporter
                "cycle collector's graph. "
                "This should be zero when the collector is idle.");
 
-        REPORT("explicit/cycle-collector/white-nodes", whiteNodesSize,
-               "Memory used for the cycle collector's white nodes array. "
-               "This should be zero when the collector is idle.");
-
         REPORT("explicit/cycle-collector/purple-buffer", purpleBufferSize,
                "Memory used for the cycle collector's purple buffer.");
 
@@ -2515,7 +2504,6 @@ nsCycleCollector::nsCycleCollector() :
     mResults(nullptr),
     mJSRuntime(nullptr),
     mThread(NS_GetCurrentThread()),
-    mWhiteNodes(nullptr),
     mWhiteNodeCount(0),
     mVisitedRefCounted(0),
     mVisitedGCed(0),
@@ -2638,8 +2626,7 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
 }
 
 void
-nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults,
-                                       nsTArray<PtrInfo*> *aWhiteNodes)
+nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults)
 {
     TimeLog timeLog;
 
@@ -2654,7 +2641,6 @@ nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults,
     }
 
     mResults = aResults;
-    mWhiteNodes = aWhiteNodes;
 
     timeLog.Checkpoint("PrepareForCollection()");
 }
@@ -2662,8 +2648,6 @@ nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults,
 void
 nsCycleCollector::CleanupAfterCollection()
 {
-    mWhiteNodes->Clear();
-    mWhiteNodes = nullptr;
     mGraph.Clear();
     mCollectionInProgress = false;
 
@@ -2701,11 +2685,9 @@ nsCycleCollector::CleanupAfterCollection()
 void
 nsCycleCollector::ShutdownCollect()
 {
-    nsAutoTArray<PtrInfo*, 4000> whiteNodes;
-
     for (uint32_t i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
         NS_ASSERTION(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
-        if (!Collect(ShutdownCC, &whiteNodes, nullptr, nullptr)) {
+        if (!Collect(ShutdownCC, nullptr, nullptr)) {
             break;
         }
     }
@@ -2713,7 +2695,6 @@ nsCycleCollector::ShutdownCollect()
 
 bool
 nsCycleCollector::Collect(ccType aCCType,
-                          nsTArray<PtrInfo*> *aWhiteNodes,
                           nsCycleCollectorResults *aResults,
                           nsICycleCollectorListener *aManualListener)
 {
@@ -2724,7 +2705,7 @@ nsCycleCollector::Collect(ccType aCCType,
         return false;
     }
 
-    PrepareForCollection(aResults, aWhiteNodes);
+    PrepareForCollection(aResults);
     BeginCollection(aCCType, aManualListener);
     MarkRoots();
     ScanRoots();
@@ -2859,19 +2840,12 @@ nsCycleCollector::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
                                       size_t *aGraphNodesSize,
                                       size_t *aGraphEdgesSize,
                                       size_t *aWeakMapsSize,
-                                      size_t *aWhiteNodeSize,
                                       size_t *aPurpleBufferSize) const
 {
     *aObjectSize = aMallocSizeOf(this);
 
     mGraph.SizeOfExcludingThis(aMallocSizeOf, aGraphNodesSize, aGraphEdgesSize,
                                aWeakMapsSize);
-
-    // No need to measure what the entries point to; the pointers are
-    // non-owning.
-    *aWhiteNodeSize = mWhiteNodes
-                    ? mWhiteNodes->SizeOfIncludingThis(aMallocSizeOf)
-                    : 0;
 
     *aPurpleBufferSize = mPurpleBuf.SizeOfExcludingThis(aMallocSizeOf);
 
@@ -3196,9 +3170,8 @@ nsCycleCollector_collect(bool aManuallyTriggered,
     PROFILER_LABEL("CC", "nsCycleCollector_collect");
 
     MOZ_ASSERT_IF(aManualListener, aManuallyTriggered);
-    nsAutoTArray<PtrInfo*, 4000> whiteNodes;
     data->mCollector->Collect(aManuallyTriggered ? ManualCC : ScheduledCC,
-                              &whiteNodes, aResults, aManualListener);
+                              aResults, aManualListener);
 }
 
 void
