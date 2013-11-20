@@ -288,10 +288,6 @@ class JSObject : public js::ObjectImpl
     }
 
     bool isBoundFunction() const {
-        // Note: This function can race when it is called during off thread compilation.
-        js::AutoUnprotectCell unprotect0(this);
-        js::AutoUnprotectCell unprotect1(lastProperty());
-        js::AutoUnprotectCell unprotect2(lastProperty()->base());
         return lastProperty()->hasObjectFlag(js::BaseShape::BOUND_FUNCTION);
     }
 
@@ -353,10 +349,6 @@ class JSObject : public js::ObjectImpl
         return lastProperty()->entryCount();
     }
 
-    uint32_t propertyCountForCompilation() const {
-        return lastProperty()->entryCountForCompilation();
-    }
-
     bool hasShapeTable() const {
         return lastProperty()->hasTable();
     }
@@ -373,13 +365,13 @@ class JSObject : public js::ObjectImpl
 
     /* Whether a slot is at a fixed offset from this object. */
     bool isFixedSlot(size_t slot) {
-        return slot < numFixedSlotsForCompilation();
+        return slot < numFixedSlots();
     }
 
     /* Index into the dynamic slots array to use for a dynamic slot. */
     size_t dynamicSlotIndex(size_t slot) {
-        JS_ASSERT(slot >= numFixedSlotsForCompilation());
-        return slot - numFixedSlotsForCompilation();
+        JS_ASSERT(slot >= numFixedSlots());
+        return slot - numFixedSlots();
     }
 
     /*
@@ -745,11 +737,6 @@ class JSObject : public js::ObjectImpl
 
     bool shouldConvertDoubleElements() {
         JS_ASSERT(isNative());
-        return getElementsHeader()->shouldConvertDoubleElements();
-    }
-
-    bool shouldConvertDoubleElementsForCompilation() {
-        // Note: isNative() generally can't be safely called off thread.
         return getElementsHeader()->shouldConvertDoubleElements();
     }
 

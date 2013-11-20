@@ -2092,11 +2092,11 @@ GSNCache::purge()
 jssrcnote *
 js::GetSrcNote(GSNCache &cache, JSScript *script, jsbytecode *pc)
 {
-    size_t target = pc - script->getCode();
-    if (target >= size_t(script->getLength()))
+    size_t target = pc - script->code;
+    if (target >= size_t(script->length))
         return nullptr;
 
-    if (cache.code == script->getCode()) {
+    if (cache.code == script->code) {
         JS_ASSERT(cache.map.initialized());
         GSNCache::Map::Ptr p = cache.map.lookup(pc);
         return p ? p->value : nullptr;
@@ -2116,7 +2116,7 @@ js::GetSrcNote(GSNCache &cache, JSScript *script, jsbytecode *pc)
         }
     }
 
-    if (cache.code != script->getCode() && script->getLength() >= GSN_CACHE_THRESHOLD) {
+    if (cache.code != script->code && script->length >= GSN_CACHE_THRESHOLD) {
         unsigned nsrcnotes = 0;
         for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn);
              sn = SN_NEXT(sn)) {
@@ -2129,14 +2129,14 @@ js::GetSrcNote(GSNCache &cache, JSScript *script, jsbytecode *pc)
             cache.code = nullptr;
         }
         if (cache.map.init(nsrcnotes)) {
-            pc = script->getCode();
+            pc = script->code;
             for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn);
                  sn = SN_NEXT(sn)) {
                 pc += SN_DELTA(sn);
                 if (SN_IS_GETTABLE(sn))
                     JS_ALWAYS_TRUE(cache.map.put(pc, sn));
             }
-            cache.code = script->getCode();
+            cache.code = script->code;
         }
     }
 
@@ -2202,7 +2202,7 @@ js::PCToLineNumber(JSScript *script, jsbytecode *pc, unsigned *columnp)
     if (!pc)
         return 0;
 
-    return PCToLineNumber(script->getLineno(), script->notes(), script->getCode(), pc, columnp);
+    return PCToLineNumber(script->lineno, script->notes(), script->code, pc, columnp);
 }
 
 /* The line number limit is the same as the jssrcnote offset limit. */
@@ -2956,14 +2956,12 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 bool
 JSScript::varIsAliased(unsigned varSlot)
 {
-    AutoUnprotectCell unprotect(this);
     return bindings.bindingIsAliased(bindings.numArgs() + varSlot);
 }
 
 bool
 JSScript::formalIsAliased(unsigned argSlot)
 {
-    AutoUnprotectCell unprotect(this);
     return bindings.bindingIsAliased(argSlot);
 }
 

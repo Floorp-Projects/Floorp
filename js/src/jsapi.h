@@ -1056,7 +1056,7 @@ ToNumberSlow(JSContext *cx, JS::Value v, double *dp);
  * DO NOT CALL THIS. Use JS::ToBoolean
  */
 extern JS_PUBLIC_API(bool)
-ToBooleanSlow(const JS::Value &v);
+ToBooleanSlow(JS::HandleValue v);
 
 /*
  * DO NOT CALL THIS. Use JS::ToString
@@ -1085,7 +1085,7 @@ ToNumber(JSContext *cx, Handle<Value> v, double *out)
 }
 
 JS_ALWAYS_INLINE bool
-ToBoolean(const Value &v)
+ToBoolean(HandleValue v)
 {
     if (v.isBoolean())
         return v.toBoolean();

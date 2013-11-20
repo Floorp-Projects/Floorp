@@ -65,19 +65,7 @@ class JSFunction : public JSObject
 
     uint16_t        nargs;        /* number of formal arguments
                                      (including defaults and the rest parameter unlike f.length) */
-
-    uint16_t getNargs() const {
-        js::AutoUnprotectCellUnderCompilationLock unprotect(this);
-        return nargs;
-    }
-
     uint16_t        flags;        /* bitfield composed of the above Flags enum */
-
-    uint16_t getFlags() const {
-        js::AutoUnprotectCellUnderCompilationLock unprotect(this);
-        return flags;
-    }
-
     union U {
         class Native {
             friend class JSFunction;
@@ -110,31 +98,31 @@ class JSFunction : public JSObject
             return false;
 
         // Note: this should be kept in sync with FunctionBox::isHeavyweight().
-        return nonLazyScript()->getHasAnyAliasedBindings() ||
-               nonLazyScript()->getFunHasExtensibleScope() ||
-               nonLazyScript()->getFunNeedsDeclEnvObject();
+        return nonLazyScript()->bindings.hasAnyAliasedBindings() ||
+               nonLazyScript()->funHasExtensibleScope ||
+               nonLazyScript()->funNeedsDeclEnvObject;
     }
 
     /* A function can be classified as either native (C++) or interpreted (JS): */
-    bool isInterpreted()            const { return getFlags() & (INTERPRETED | INTERPRETED_LAZY); }
+    bool isInterpreted()            const { return flags & (INTERPRETED | INTERPRETED_LAZY); }
     bool isNative()                 const { return !isInterpreted(); }
 
     /* Possible attributes of a native function: */
-    bool isNativeConstructor()      const { return getFlags() & NATIVE_CTOR; }
+    bool isNativeConstructor()      const { return flags & NATIVE_CTOR; }
 
     /* Possible attributes of an interpreted function: */
-    bool isFunctionPrototype()      const { return getFlags() & IS_FUN_PROTO; }
-    bool isInterpretedLazy()        const { return getFlags() & INTERPRETED_LAZY; }
-    bool hasScript()                const { return getFlags() & INTERPRETED; }
-    bool isExprClosure()            const { return getFlags() & EXPR_CLOSURE; }
-    bool hasGuessedAtom()           const { return getFlags() & HAS_GUESSED_ATOM; }
-    bool isLambda()                 const { return getFlags() & LAMBDA; }
-    bool isSelfHostedBuiltin()      const { return getFlags() & SELF_HOSTED; }
-    bool isSelfHostedConstructor()  const { return getFlags() & SELF_HOSTED_CTOR; }
-    bool hasRest()                  const { return getFlags() & HAS_REST; }
+    bool isFunctionPrototype()      const { return flags & IS_FUN_PROTO; }
+    bool isInterpretedLazy()        const { return flags & INTERPRETED_LAZY; }
+    bool hasScript()                const { return flags & INTERPRETED; }
+    bool isExprClosure()            const { return flags & EXPR_CLOSURE; }
+    bool hasGuessedAtom()           const { return flags & HAS_GUESSED_ATOM; }
+    bool isLambda()                 const { return flags & LAMBDA; }
+    bool isSelfHostedBuiltin()      const { return flags & SELF_HOSTED; }
+    bool isSelfHostedConstructor()  const { return flags & SELF_HOSTED_CTOR; }
+    bool hasRest()                  const { return flags & HAS_REST; }
     bool isWrappable()              const {
-        JS_ASSERT_IF(getFlags() & SH_WRAPPABLE, isSelfHostedBuiltin());
-        return getFlags() & SH_WRAPPABLE;
+        JS_ASSERT_IF(flags & SH_WRAPPABLE, isSelfHostedBuiltin());
+        return flags & SH_WRAPPABLE;
     }
 
     bool hasJITCode() const {
@@ -155,7 +143,7 @@ class JSFunction : public JSObject
     //
     // isArrow() is true for all three of these Function objects.
     // isBoundFunction() is true only for the last one.
-    bool isArrow()                  const { return getFlags() & ARROW; }
+    bool isArrow()                  const { return flags & ARROW; }
 
     /* Compound attributes: */
     bool isBuiltin() const {
@@ -168,7 +156,7 @@ class JSFunction : public JSObject
                (!isSelfHostedBuiltin() || isSelfHostedConstructor());
     }
     bool isNamedLambda() const {
-        return isLambda() && displayAtom() && !hasGuessedAtom();
+        return isLambda() && atom_ && !hasGuessedAtom();
     }
     bool hasParallelNative() const {
         return isNative() && jitInfo() && !!jitInfo()->parallelNative;
@@ -220,11 +208,7 @@ class JSFunction : public JSObject
     JSAtom *atom() const { return hasGuessedAtom() ? nullptr : atom_.get(); }
     js::PropertyName *name() const { return hasGuessedAtom() || !atom_ ? nullptr : atom_->asPropertyName(); }
     void initAtom(JSAtom *atom) { atom_.init(atom); }
-
-    JSAtom *displayAtom() const {
-        js::AutoUnprotectCell unprotect(this);
-        return atom_;
-    }
+    JSAtom *displayAtom() const { return atom_; }
 
     void setGuessedAtom(JSAtom *atom) {
         JS_ASSERT(atom_ == nullptr);
@@ -243,7 +227,6 @@ class JSFunction : public JSObject
      */
     JSObject *environment() const {
         JS_ASSERT(isInterpreted());
-        js::AutoUnprotectCell unprotect(this);
         return u.i.env_;
     }
 
@@ -316,7 +299,6 @@ class JSFunction : public JSObject
     }
 
     JSScript *nonLazyScript() const {
-        js::AutoUnprotectCellUnderCompilationLock unprotect(this);
         JS_ASSERT(hasScript());
         return u.i.s.script_;
     }
@@ -327,13 +309,11 @@ class JSFunction : public JSObject
     }
 
     js::LazyScript *lazyScript() const {
-        js::AutoUnprotectCellUnderCompilationLock unprotect(this);
         JS_ASSERT(isInterpretedLazy() && u.i.s.lazy_);
         return u.i.s.lazy_;
     }
 
     js::LazyScript *lazyScriptOrNull() const {
-        js::AutoUnprotectCellUnderCompilationLock unprotect(this);
         JS_ASSERT(isInterpretedLazy());
         return u.i.s.lazy_;
     }
@@ -374,7 +354,6 @@ class JSFunction : public JSObject
 
     JSNative native() const {
         JS_ASSERT(isNative());
-        js::AutoUnprotectCell unprotect(this);
         return u.n.native;
     }
 
@@ -399,7 +378,6 @@ class JSFunction : public JSObject
 
     const JSJitInfo *jitInfo() const {
         JS_ASSERT(isNative());
-        js::AutoUnprotectCell unprotect(this);
         return u.n.jitinfo;
     }
 

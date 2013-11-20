@@ -687,8 +687,6 @@ TypeScript::FreezeTypeSets(CompilerConstraintList *constraints, JSScript *script
                            TemporaryTypeSet **pArgTypes,
                            TemporaryTypeSet **pBytecodeTypes)
 {
-    AutoUnprotectCellUnderCompilationLock unprotect(script);
-
     LifoAlloc *alloc = IonAlloc();
     StackTypeSet *existing = script->types->typeArray();
 
@@ -704,7 +702,7 @@ TypeScript::FreezeTypeSets(CompilerConstraintList *constraints, JSScript *script
     }
 
     *pThisTypes = types + (ThisTypes(script) - existing);
-    *pArgTypes = (script->function() && script->function()->getNargs())
+    *pArgTypes = (script->function() && script->function()->nargs)
                  ? (types + (ArgTypes(script, 0) - existing))
                  : nullptr;
     *pBytecodeTypes = types;
@@ -786,26 +784,29 @@ CompilerConstraintInstance<T>::generateTypeConstraint(JSContext *cx, RecompileIn
 const Class *
 TypeObjectKey::clasp()
 {
-    return isTypeObject() ? asTypeObject()->getClass() : asSingleObject()->getClass();
+    return isTypeObject() ? asTypeObject()->clasp : asSingleObject()->getClass();
 }
 
 TaggedProto
 TypeObjectKey::proto()
 {
-    return isTypeObject() ? TaggedProto(asTypeObject()->getProto()) : asSingleObject()->getTaggedProto();
+    return isTypeObject() ? TaggedProto(asTypeObject()->proto) : asSingleObject()->getTaggedProto();
 }
 
 JSObject *
 TypeObjectKey::singleton()
 {
-    return isTypeObject() ? asTypeObject()->getSingleton() : asSingleObject();
+    return isTypeObject() ? asTypeObject()->singleton : asSingleObject();
 }
 
 TypeNewScript *
 TypeObjectKey::newScript()
 {
-    if (isTypeObject() && asTypeObject()->hasNewScript())
-        return asTypeObject()->newScript();
+    if (isTypeObject()) {
+        TypeObjectAddendum *addendum = asTypeObject()->addendum;
+        if (addendum && addendum->isNewScript())
+            return addendum->asNewScript();
+    }
     return nullptr;
 }
 
@@ -1629,11 +1630,14 @@ TemporaryTypeSet::getCommonPrototype()
     unsigned count = getObjectCount();
 
     for (unsigned i = 0; i < count; i++) {
-        TypeObjectKey *object = getObject(i);
-        if (!object)
+        TaggedProto nproto;
+        if (JSObject *object = getSingleObject(i))
+            nproto = object->getProto();
+        else if (TypeObject *object = getTypeObject(i))
+            nproto = object->proto.get();
+        else
             continue;
 
-        TaggedProto nproto = object->proto();
         if (proto) {
             if (nproto != proto)
                 return nullptr;
@@ -3375,7 +3379,7 @@ types::UseNewTypeForClone(JSFunction *fun)
     if (!fun->isInterpreted())
         return false;
 
-    if (fun->hasScript() && fun->nonLazyScript()->getShouldCloneAtCallsite())
+    if (fun->hasScript() && fun->nonLazyScript()->shouldCloneAtCallsite)
         return true;
 
     if (fun->isArrow())
@@ -3410,10 +3414,10 @@ types::UseNewTypeForClone(JSFunction *fun)
 
     uint32_t begin, end;
     if (fun->hasScript()) {
-        if (!fun->nonLazyScript()->getUsesArgumentsAndApply())
+        if (!fun->nonLazyScript()->usesArgumentsAndApply)
             return false;
-        begin = fun->nonLazyScript()->getSourceStart();
-        end = fun->nonLazyScript()->getSourceEnd();
+        begin = fun->nonLazyScript()->sourceStart;
+        end = fun->nonLazyScript()->sourceEnd;
     } else {
         if (!fun->lazyScript()->usesArgumentsAndApply())
             return false;

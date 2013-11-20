@@ -258,9 +258,9 @@ CompareStringsPar(ForkJoinSlice *slice, JSString *left, JSString *right, int32_t
     if (!leftInspector.ensureChars(slice) || !rightInspector.ensureChars(slice))
         return false;
 
-    *res = CompareChars(leftInspector.chars(), left->length(),
-                        rightInspector.chars(), right->length());
-    return true;
+    return CompareChars(leftInspector.chars(), left->length(),
+                        rightInspector.chars(), right->length(),
+                        res);
 }
 
 static bool
