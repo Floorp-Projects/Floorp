@@ -21,6 +21,7 @@ namespace net {
 
 class CacheFileInputStream;
 class CacheFileOutputStream;
+class CacheOutputCloseListener;
 class MetadataWriteTimer;
 
 #define CACHEFILELISTENER_IID \
@@ -77,7 +78,7 @@ public:
   NS_IMETHOD OnMetadataWritten(nsresult aResult);
 
   NS_IMETHOD OpenInputStream(nsIInputStream **_retval);
-  NS_IMETHOD OpenOutputStream(nsIOutputStream **_retval);
+  NS_IMETHOD OpenOutputStream(CacheOutputCloseListener *aCloseListener, nsIOutputStream **_retval);
   NS_IMETHOD SetMemoryOnly();
   NS_IMETHOD Doom(CacheFileListener *aCallback);
 
