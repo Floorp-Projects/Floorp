@@ -71,8 +71,10 @@ function Tester(aTests, aDumper, aCallback) {
   this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/SpecialPowersObserverAPI.js", simpleTestScope);
   this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/ChromePowers.js", simpleTestScope);
   this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/SimpleTest.js", simpleTestScope);
+  this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/MemoryStats.js", simpleTestScope);
   this._scriptLoader.loadSubScript("chrome://mochikit/content/chrome-harness.js", simpleTestScope);
   this.SimpleTest = simpleTestScope.SimpleTest;
+  this.MemoryStats = simpleTestScope.MemoryStats;
   this.Task = Components.utils.import("resource://gre/modules/Task.jsm", null).Task;
   this.Promise = Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", null).Promise;
 }
@@ -350,6 +352,14 @@ Tester.prototype = {
           // TEST-KNOWN-FAIL
           this.currentTest.addResult(new testResult(true, msg, "", true));
         }
+      }
+
+      // Dump memory stats for main thread.
+      if (Cc["@mozilla.org/xre/runtime;1"]
+          .getService(Ci.nsIXULRuntime)
+          .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
+      {
+        this.MemoryStats.dump((l) => { this.dumper.dump(l + "\n"); });
       }
 
       // Note the test run time
