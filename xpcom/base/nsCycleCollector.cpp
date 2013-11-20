@@ -973,8 +973,6 @@ private:
     void CheckThreadSafety();
     void ShutdownCollect();
 
-    void PrepareForCollection();
-
     void FixGrayBits(bool aForceGC);
     bool ShouldMergeZones(ccType aCCType);
 
@@ -2614,22 +2612,6 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
 }
 
 void
-nsCycleCollector::PrepareForCollection()
-{
-    TimeLog timeLog;
-
-    mCollectionStart = TimeStamp::Now();
-
-    mCollectionInProgress = true;
-
-    if (mJSRuntime) {
-        mJSRuntime->BeginCycleCollectionCallback();
-    }
-
-    timeLog.Checkpoint("PrepareForCollection()");
-}
-
-void
 nsCycleCollector::CleanupAfterCollection()
 {
     mGraph.Clear();
@@ -2682,7 +2664,6 @@ nsCycleCollector::Collect(ccType aCCType,
         return false;
     }
 
-    PrepareForCollection();
     BeginCollection(aCCType, aManualListener);
     MarkRoots();
     ScanRoots();
@@ -2731,6 +2712,16 @@ nsCycleCollector::BeginCollection(ccType aCCType,
                                   nsICycleCollectorListener *aManualListener)
 {
     TimeLog timeLog;
+
+    mCollectionStart = TimeStamp::Now();
+
+    mCollectionInProgress = true;
+
+    if (mJSRuntime) {
+        mJSRuntime->BeginCycleCollectionCallback();
+        timeLog.Checkpoint("BeginCycleCollectionCallback()");
+    }
+
     bool isShutdown = (aCCType == ShutdownCC);
 
     // Set up the listener for this CC.
