@@ -2086,8 +2086,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  CycleCollectorResults &ccResults = aResults; // temporary to reduce patch size
-  sCCollectedWaitingForGC += ccResults.mFreedRefCounted + ccResults.mFreedGCed;
+  sCCollectedWaitingForGC += aResults.mFreedRefCounted + aResults.mFreedGCed;
 
   // If we collected a substantial amount of cycles, poke the GC since more objects
   // might be unreachable now.
@@ -2122,12 +2121,12 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
 
   if (sPostGCEventsToConsole) {
     nsCString mergeMsg;
-    if (ccResults.mMergedZones) {
+    if (aResults.mMergedZones) {
       mergeMsg.AssignLiteral(" merged");
     }
 
     nsCString gcMsg;
-    if (ccResults.mForcedGC) {
+    if (aResults.mForcedGC) {
       gcMsg.AssignLiteral(", forced a GC");
     }
 
@@ -2137,8 +2136,8 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
     nsString msg;
     msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), double(delta) / PR_USEC_PER_SEC,
                                         ccNowDuration, gCCStats.mSuspected,
-                                        ccResults.mVisitedRefCounted, ccResults.mVisitedGCed, mergeMsg.get(),
-                                        ccResults.mFreedRefCounted, ccResults.mFreedGCed,
+                                        aResults.mVisitedRefCounted, aResults.mVisitedGCed, mergeMsg.get(),
+                                        aResults.mFreedRefCounted, aResults.mFreedGCed,
                                         sCCollectedWaitingForGC, sLikelyShortLivingObjectsNeedingGC,
                                         gcMsg.get(),
                                         sForgetSkippableBeforeCC,
@@ -2184,11 +2183,11 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
                                          ccNowDuration, gCCStats.mMaxGCDuration,
                                          gCCStats.mMaxSkippableDuration,
                                          gCCStats.mSuspected,
-                                         ccResults.mVisitedRefCounted, ccResults.mVisitedGCed,
-                                         ccResults.mFreedRefCounted, ccResults.mFreedGCed,
+                                         aResults.mVisitedRefCounted, aResults.mVisitedGCed,
+                                         aResults.mFreedRefCounted, aResults.mFreedGCed,
                                          sCCollectedWaitingForGC,
                                          sLikelyShortLivingObjectsNeedingGC,
-                                         ccResults.mForcedGC,
+                                         aResults.mForcedGC,
                                          sForgetSkippableBeforeCC,
                                          minForgetSkippableTime / PR_USEC_PER_MSEC,
                                          sMaxForgetSkippableTime / PR_USEC_PER_MSEC,
