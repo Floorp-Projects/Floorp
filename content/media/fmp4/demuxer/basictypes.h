@@ -7,6 +7,11 @@
 
 #include <iostream>
 #include <stdint.h>
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+PRLogModuleInfo* GetDemuxerLog();
+#endif
 
 namespace mp4_demuxer {
 
@@ -52,7 +57,11 @@ namespace mp4_demuxer {
 #define arraysize(f) (sizeof(f) / sizeof(*f))
 
 #ifdef LOG_DEMUXER
-#define DMX_LOG(...) printf(__VA_ARGS__)
+#ifdef PR_LOGGING
+#define DMX_LOG(...) PR_LOG(GetDemuxerLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#else
+#define DMX_LOG(...) 0
+#endif
 #else
 // define DMX_LOG as 0, so that if(condition){DMX_LOG(...)} branches don't elicit
 // a warning-as-error.

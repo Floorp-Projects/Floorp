@@ -5,6 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
+    'MP4Decoder.h',
+    'MP4Reader.h',
+    'PlatformDecoderModule.h',
 ]
 
 EXPORTS.mp4_demuxer += [
@@ -24,7 +27,7 @@ EXPORTS.mp4_demuxer += [
     'demuxer/Streams.h',
     'demuxer/track_run_iterator.h',
     'demuxer/video_decoder_config.h',
-    'demuxer/video_util.h'
+    'demuxer/video_util.h',
 ]
 
 SOURCES += [
@@ -41,7 +44,10 @@ SOURCES += [
     'demuxer/mp4_demuxer.cc',
     'demuxer/track_run_iterator.cc',
     'demuxer/video_decoder_config.cc',
-    'demuxer/video_util.cc'
+    'demuxer/video_util.cc',
+    'MP4Decoder.cpp',
+    'MP4Reader.cpp',
+    'PlatformDecoderModule.cpp',
 ]
 
 FINAL_LIBRARY = 'gklayout'
