@@ -1513,8 +1513,7 @@ nsBaseWidget::GetRootAccessible()
   // If container is null then the presshell is not active. This often happens
   // when a preshell is being held onto for fastback.
   nsPresContext* presContext = presShell->GetPresContext();
-  nsCOMPtr<nsISupports> container = presContext->GetContainer();
-  NS_ENSURE_TRUE(container, nullptr);
+  NS_ENSURE_TRUE(presContext->GetContainerWeak(), nullptr);
 
   // Accessible creation might be not safe so use IsSafeToRunScript to
   // make sure it's not created at unsafe times.
