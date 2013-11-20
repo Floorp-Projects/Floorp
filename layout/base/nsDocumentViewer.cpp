@@ -1094,7 +1094,7 @@ nsDocumentViewer::PermitUnload(bool aCallerClosesWindow, bool *aPermitUnload)
 
     // Never permit dialogs from the beforeunload handler
     nsCOMPtr<nsIDOMWindowUtils> utils = do_GetInterface(window);
-    bool dialogsWereEnabled;
+    bool dialogsWereEnabled = false;
     utils->AreDialogsEnabled(&dialogsWereEnabled);
     utils->DisableDialogs();
 
