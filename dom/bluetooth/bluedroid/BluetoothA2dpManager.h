@@ -60,9 +60,9 @@ public:
   void GetTitle(nsAString& aTitle);
 
 private:
+  class SinkPropertyChangedHandler;
   BluetoothA2dpManager();
   bool Init();
-
   void HandleShutdown();
   void NotifyConnectionStatusChanged();
 
