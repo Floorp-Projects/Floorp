@@ -6533,15 +6533,19 @@ IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *
         return true;
 
     switch (elemTypeReprs.kind()) {
-    case TypeRepresentation::Struct:
-    case TypeRepresentation::Array:
+      case TypeRepresentation::X4:
+        // FIXME (bug 894104): load into a MIRType_float32x4 etc
+        return true;
+
+      case TypeRepresentation::Struct:
+      case TypeRepresentation::Array:
         return getElemTryComplexElemOfTypedObject(emitted,
                                                   obj,
                                                   index,
                                                   objTypeReprs,
                                                   elemTypeReprs,
                                                   elemSize);
-    case TypeRepresentation::Scalar:
+      case TypeRepresentation::Scalar:
         return getElemTryScalarElemOfTypedObject(emitted,
                                                  obj,
                                                  index,
@@ -8208,6 +8212,10 @@ IonBuilder::getPropTryTypedObject(bool *emitted, PropertyName *name,
       case TypeRepresentation::Reference:
         return true;
 
+      case TypeRepresentation::X4:
+        // FIXME (bug 894104): load into a MIRType_float32x4 etc
+        return true;
+
       case TypeRepresentation::Struct:
       case TypeRepresentation::Array:
         return getPropTryComplexPropOfTypedObject(emitted,
@@ -8741,6 +8749,10 @@ IonBuilder::setPropTryTypedObject(bool *emitted, MDefinition *obj,
         return true;
 
     switch (fieldTypeReprs.kind()) {
+      case TypeRepresentation::X4:
+        // FIXME (bug 894104): store into a MIRType_float32x4 etc
+        return true;
+
       case TypeRepresentation::Reference:
       case TypeRepresentation::Struct:
       case TypeRepresentation::Array:

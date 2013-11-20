@@ -107,6 +107,7 @@ TypedObjectPointer.prototype.moveTo = function(propName) {
   switch (this.kind()) {
   case JS_TYPEREPR_SCALAR_KIND:
   case JS_TYPEREPR_REFERENCE_KIND:
+  case JS_TYPEREPR_X4_KIND:
     break;
 
   case JS_TYPEREPR_ARRAY_KIND:
@@ -188,13 +189,22 @@ TypedObjectPointer.prototype.moveToField = function(propName) {
 TypedObjectPointer.prototype.get = function() {
   assert(ObjectIsAttached(this.datum), "get() called with unattached datum");
 
-  if (REPR_KIND(this.typeRepr) == JS_TYPEREPR_SCALAR_KIND)
+  switch (REPR_KIND(this.typeRepr)) {
+  case JS_TYPEREPR_SCALAR_KIND:
     return this.getScalar();
 
-  if (REPR_KIND(this.typeRepr) == JS_TYPEREPR_REFERENCE_KIND)
+  case JS_TYPEREPR_REFERENCE_KIND:
     return this.getReference();
 
-  return NewDerivedTypedDatum(this.typeObj, this.datum, this.offset);
+  case JS_TYPEREPR_X4_KIND:
+    return this.getX4();
+
+  case JS_TYPEREPR_ARRAY_KIND:
+  case JS_TYPEREPR_STRUCT_KIND:
+    return NewDerivedTypedDatum(this.typeObj, this.datum, this.offset);
+  }
+
+  assert(false, "Unhandled kind: " + REPR_KIND(this.typeRepr));
 }
 
 TypedObjectPointer.prototype.getScalar = function() {
@@ -245,6 +255,27 @@ TypedObjectPointer.prototype.getReference = function() {
   assert(false, "Unhandled scalar type: " + type);
 }
 
+TypedObjectPointer.prototype.getX4 = function() {
+  var type = REPR_TYPE(this.typeRepr);
+  var T = StandardTypeObjectDescriptors();
+  switch (type) {
+  case JS_X4TYPEREPR_FLOAT32:
+    var x = Load_float32(this.datum, this.offset + 0);
+    var y = Load_float32(this.datum, this.offset + 4);
+    var z = Load_float32(this.datum, this.offset + 8);
+    var w = Load_float32(this.datum, this.offset + 12);
+    return T.float32x4(x, y, z, w);
+
+  case JS_X4TYPEREPR_INT32:
+    var x = Load_int32(this.datum, this.offset + 0);
+    var y = Load_int32(this.datum, this.offset + 4);
+    var z = Load_int32(this.datum, this.offset + 8);
+    var w = Load_int32(this.datum, this.offset + 12);
+    return T.int32x4(x, y, z, w);
+  }
+  assert(false, "Unhandled x4 type: " + type);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // Setting values
 //
@@ -279,6 +310,10 @@ TypedObjectPointer.prototype.set = function(fromValue) {
 
   case JS_TYPEREPR_REFERENCE_KIND:
     this.setReference(fromValue);
+    return;
+
+  case JS_TYPEREPR_X4_KIND:
+    this.setX4(fromValue);
     return;
 
   case JS_TYPEREPR_ARRAY_KIND:
@@ -380,6 +415,17 @@ TypedObjectPointer.prototype.setReference = function(fromValue) {
   }
 
   assert(false, "Unhandled scalar type: " + type);
+}
+
+// Sets `fromValue` to `this` assuming that `this` is a scalar type.
+TypedObjectPointer.prototype.setX4 = function(fromValue) {
+  // It is only permitted to set a float32x4/int32x4 value from another
+  // float32x4/int32x4; in that case, the "fast path" that uses memcopy will
+  // have already matched. So if we get to this point, we're supposed
+  // to "adapt" fromValue, but there are no legal adaptions.
+  ThrowError(JSMSG_CANT_CONVERT_TO,
+             typeof(fromValue),
+             this.typeRepr.toSource())
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -603,6 +649,65 @@ function HandleSet(handle, value) {
 // FIXME bug 929656 -- label algorithms with steps from the spec
 function HandleTest(obj) {
   return IsObject(obj) && ObjectIsTypedHandle(obj);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// X4
+
+function X4ProtoString(type) {
+  switch (type) {
+  case JS_X4TYPEREPR_INT32:
+    return "int32x4";
+  case JS_X4TYPEREPR_FLOAT32:
+    return "float32x4";
+  }
+  assert(false, "Unhandled type constant");
+}
+
+X4LaneStrings = ["x", "y", "z", "w"];
+
+// Generalized handler for the various properties for accessing a
+// single lane of an X4 vector value. Note that this is the slow path;
+// the fast path will be inlined into ion code.
+function X4GetLane(datum, type, lane) {
+  if (!IsObject(datum) || !ObjectIsTypedDatum(datum))
+    ThrowError(JSMSG_INCOMPATIBLE_PROTO, X4ProtoString(type),
+               X4LaneStrings[lane], typeof this);
+
+  var repr = DATUM_TYPE_REPR(datum);
+  if (REPR_KIND(repr) != JS_TYPEREPR_X4_KIND || REPR_TYPE(repr) != type)
+    ThrowError(JSMSG_INCOMPATIBLE_PROTO, X4ProtoString(type),
+               X4LaneStrings[lane], typeof this);
+
+  switch (type) {
+  case JS_X4TYPEREPR_INT32:
+    return Load_int32(datum, lane * 4);
+  case JS_X4TYPEREPR_FLOAT32:
+    return Load_float32(datum, lane * 4);
+  }
+  assert(false, "Unhandled type constant");
+}
+
+function Float32x4Lane0() { return X4GetLane(this, JS_X4TYPEREPR_FLOAT32, 0); }
+function Float32x4Lane1() { return X4GetLane(this, JS_X4TYPEREPR_FLOAT32, 1); }
+function Float32x4Lane2() { return X4GetLane(this, JS_X4TYPEREPR_FLOAT32, 2); }
+function Float32x4Lane3() { return X4GetLane(this, JS_X4TYPEREPR_FLOAT32, 3); }
+
+function Int32x4Lane0() { return X4GetLane(this, JS_X4TYPEREPR_INT32, 0); }
+function Int32x4Lane1() { return X4GetLane(this, JS_X4TYPEREPR_INT32, 1); }
+function Int32x4Lane2() { return X4GetLane(this, JS_X4TYPEREPR_INT32, 2); }
+function Int32x4Lane3() { return X4GetLane(this, JS_X4TYPEREPR_INT32, 3); }
+
+function X4ToSource() {
+  if (!IsObject(this) || !ObjectIsTypedDatum(this))
+    ThrowError(JSMSG_INCOMPATIBLE_PROTO, "X4", "toSource", typeof this);
+
+  var repr = DATUM_TYPE_REPR(this);
+  if (REPR_KIND(repr) != JS_TYPEREPR_X4_KIND)
+    ThrowError(JSMSG_INCOMPATIBLE_PROTO, "X4", "toSource", typeof this);
+
+  var type = REPR_TYPE(repr);
+  return X4ProtoString(type)+"("+this.x+", "+this.y+", "+this.z+", "+this.w+")";
 }
 
 ///////////////////////////////////////////////////////////////////////////
