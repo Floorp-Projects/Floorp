@@ -384,6 +384,20 @@ EnsureCompartmentPrivate(JSCompartment *c)
     return priv;
 }
 
+XPCWrappedNativeScope*
+MaybeGetObjectScope(JSObject *obj)
+{
+    MOZ_ASSERT(obj);
+    JSCompartment *compartment = js::GetObjectCompartment(obj);
+
+    MOZ_ASSERT(compartment);
+    CompartmentPrivate *priv = GetCompartmentPrivate(compartment);
+    if (!priv)
+        return nullptr;
+
+    return priv->scope;
+}
+
 static bool
 PrincipalImmuneToScriptPolicy(nsIPrincipal* aPrincipal)
 {
