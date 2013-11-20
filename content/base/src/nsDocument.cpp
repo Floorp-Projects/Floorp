@@ -10,6 +10,7 @@
 
 #include "nsDocument.h"
 
+#include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
@@ -8812,6 +8813,7 @@ nsIDocument::EnumerateFreezableElements(FreezableElementEnumerator aEnumerator,
 void
 nsIDocument::RegisterPendingLinkUpdate(Link* aLink)
 {
+  MOZ_ASSERT(!mIsLinkUpdateRegistrationsForbidden);
   mLinksToUpdate.PutEntry(aLink);
   mHasLinksToUpdate = true;
 }
@@ -8819,6 +8821,7 @@ nsIDocument::RegisterPendingLinkUpdate(Link* aLink)
 void
 nsIDocument::UnregisterPendingLinkUpdate(Link* aLink)
 {
+  MOZ_ASSERT(!mIsLinkUpdateRegistrationsForbidden);
   if (!mHasLinksToUpdate)
     return;
 
@@ -8835,10 +8838,14 @@ EnumeratePendingLinkUpdates(nsPtrHashKey<Link>* aEntry, void* aData)
 void
 nsIDocument::FlushPendingLinkUpdates()
 {
+  MOZ_ASSERT(!mIsLinkUpdateRegistrationsForbidden);
   if (!mHasLinksToUpdate)
     return;
 
-  nsAutoScriptBlocker scriptBlocker;
+#ifdef DEBUG
+  AutoRestore<bool> saved(mIsLinkUpdateRegistrationsForbidden);
+  mIsLinkUpdateRegistrationsForbidden = true;
+#endif
   mLinksToUpdate.EnumerateEntries(EnumeratePendingLinkUpdates, nullptr);
   mLinksToUpdate.Clear();
   mHasLinksToUpdate = false;
