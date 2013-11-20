@@ -33,7 +33,7 @@ nsDOMTimeEvent::nsDOMTimeEvent(mozilla::dom::EventTarget* aOwner,
   mEvent->mFlags.mCancelable = false;
 
   if (mPresContext) {
-    nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+    nsISupports* container = mPresContext->GetContainerWeak();
     if (container) {
       nsCOMPtr<nsIDOMWindow> window = do_GetInterface(container);
       if (window) {
