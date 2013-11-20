@@ -16,7 +16,7 @@ interface nsIGlobalObject;
 interface nsIInputStream;
 interface nsIDOMBlob;
 
-[scriptable, builtinclass, uuid(ac97e161-9f1d-4163-adc9-e9a59e18682c)]
+[scriptable, builtinclass, uuid(5ced7e7a-e2c3-4563-a57d-31b97ce64dc5)]
 interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   // event handler attributes
 };
