@@ -5264,7 +5264,7 @@ IonBuilder::makeCall(JSFunction *target, CallInfo &callInfo, bool cloneAtCallsit
         return false;
 
     current->push(call);
-    if (!resumeAfter(call))
+    if (call->isEffectful() && !resumeAfter(call))
         return false;
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
