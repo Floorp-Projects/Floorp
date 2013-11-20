@@ -3,9 +3,12 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 var supportedProps = [
+  "appCodeName",
   "appName",
   "appVersion",
   "platform",
+  "product",
+  "taintEnabled",
   "userAgent"
 ];
 
@@ -27,7 +30,7 @@ for (var index = 0; index < supportedProps.length; index++) {
 
   obj = {
     name:  prop,
-    value: navigator[prop]
+    value: prop === "taintEnabled" ? navigator[prop]() : navigator[prop]
   };
 
   postMessage(JSON.stringify(obj));
