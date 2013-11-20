@@ -66,8 +66,10 @@ var FindHelperUI = {
       case "FindAssist:Show":
         ContextUI.dismiss();
         this.status = json.result;
-        if (json.rect)
-          this._zoom(Rect.fromRect(json.rect));
+        // null rect implies nothing found
+        if (json.rect) {
+          this._zoom(Rect.fromRect(json.rect), json.contentHeight);
+        }
         break;
 
       case "FindAssist:Hide":
@@ -118,9 +120,7 @@ var FindHelperUI = {
 
     let findbar = this._container;
     setTimeout(() => {
-      Elements.browsers.setAttribute("findbar", true);
       findbar.show();
-
       this.search(this._textbox.value);
       this._textbox.select();
       this._textbox.focus();
@@ -136,6 +136,8 @@ var FindHelperUI = {
     if (!this._open)
       return;
 
+    ContentAreaObserver.shiftBrowserDeck(0);
+
     let onTransitionEnd = () => {
       this._container.removeEventListener("transitionend", onTransitionEnd, true);
       this._textbox.value = "";
@@ -149,7 +151,6 @@ var FindHelperUI = {
     this._textbox.blur();
     this._container.addEventListener("transitionend", onTransitionEnd, true);
     this._container.dismiss();
-    Elements.browsers.removeAttribute("findbar");
   },
 
   goToPrevious: function findHelperGoToPrevious() {
@@ -172,27 +173,33 @@ var FindHelperUI = {
     this._cmdNext.setAttribute("disabled", disabled);
   },
 
-  _zoom: function _findHelperZoom(aElementRect) {
-    let autozoomEnabled = Services.prefs.getBoolPref("findhelper.autozoom");
-    if (!aElementRect || !autozoomEnabled)
-      return;
+  _zoom: function _findHelperZoom(aElementRect, aContentHeight) {
+    // The rect we get here is the content rect including scroll offset
+    // in the page.
 
-    if (Browser.selectedTab.allowZoom) {
-      let zoomLevel = Browser._getZoomLevelForRect(aElementRect);
-
-      // Clamp the zoom level relatively to the default zoom level of the page
-      let defaultZoomLevel = Browser.selectedTab.getDefaultZoomLevel();
-      zoomLevel = Util.clamp(zoomLevel, (defaultZoomLevel * kBrowserFindZoomLevelMin),
-                                        (defaultZoomLevel * kBrowserFindZoomLevelMax));
-      zoomLevel = Browser.selectedTab.clampZoomLevel(zoomLevel);
-
-      let zoomRect = Browser._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, zoomLevel);
-      AnimatedZoom.animateTo(zoomRect);
-    } else {
-      // Even if zooming is disabled we could need to reposition the view in
-      // order to keep the element on-screen
-      let zoomRect = Browser._getZoomRectForPoint(aElementRect.center().x, aElementRect.y, getBrowser().scale);
-      AnimatedZoom.animateTo(zoomRect);
+    // If the text falls below the find bar and keyboard shift content up.
+    let browserShift = 0;
+    // aElementRect.y is the top left origin of the selection rect.
+    if ((aElementRect.y + aElementRect.height) >
+        (aContentHeight - this._container.boxObject.height)) {
+      browserShift += this._container.boxObject.height;
     }
+    browserShift += Services.metro.keyboardHeight;
+    ContentAreaObserver.shiftBrowserDeck(browserShift);
+
+    // Adjust for keyboad display and position the text selection rect in
+    // the middle of the viewable area.
+    let xPos = aElementRect.x;
+    let yPos = aElementRect.y;
+    let scrollAdjust = ((ContentAreaObserver.height - Services.metro.keyboardHeight) * .5) +
+      Services.metro.keyboardHeight;
+    yPos -= scrollAdjust;
+    if (yPos < 0) {
+      yPos = 0;
+    }
+
+    // TODO zoom via apzc, right now all we support is scroll
+    // positioning.
+    Browser.selectedBrowser.contentWindow.scrollTo(xPos, yPos);
   }
 };
