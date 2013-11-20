@@ -10,8 +10,7 @@ import re
 from datetime import datetime
 
 
-here = os.path.abspath(os.path.dirname(__file__))
-mozilla_dir = os.path.normpath(os.path.join(here, '..', '..'))
+mozilla_dir = os.environ['MOZILLA_DIR']
 
 import mdn_theme
 
@@ -25,10 +24,11 @@ extensions = [
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'
-project = u'Mozilla Build System'
+project = u'Mozilla Source Tree Docs'
 year = datetime.now().year
 
 # Grab the version from the source tree's milestone.
+# FUTURE Use Python API from bug 941299.
 with open(os.path.join(mozilla_dir, 'config', 'milestone.txt'), 'rt') as fh:
     for line in fh:
         line = line.strip()
@@ -48,4 +48,4 @@ html_theme_path = [mdn_theme.get_theme_dir()]
 html_theme = 'mdn'
 
 html_static_path = ['_static']
-htmlhelp_basename = 'MozillaBuildSystemdoc'
+htmlhelp_basename = 'MozillaTreeDocs'
