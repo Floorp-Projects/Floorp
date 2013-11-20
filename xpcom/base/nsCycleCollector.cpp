@@ -98,12 +98,13 @@
 
 #include "base/process_util.h"
 
+#include "mozilla/AutoRestore.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 /* This must occur *after* base/process_util.h to avoid typedefs conflicts. */
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 #include "mozilla/LinkedList.h"
 
-#include "mozilla/CycleCollectedJSRuntime.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsDeque.h"
@@ -2150,6 +2151,11 @@ nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
 MOZ_NEVER_INLINE void
 nsCycleCollector::MarkRoots()
 {
+    TimeLog timeLog;
+    AutoRestore<bool> ar(mScanInProgress);
+    MOZ_ASSERT(!mScanInProgress);
+    mScanInProgress = true;
+
     mGraph.mRootCount = mBuilder->Count();
 
     // read the PtrInfo out of the graph that we are building
@@ -2172,6 +2178,7 @@ nsCycleCollector::MarkRoots()
     }
 
     mBuilder = nullptr;
+    timeLog.Checkpoint("MarkRoots()");
 }
 
 
@@ -2294,6 +2301,10 @@ nsCycleCollector::ScanWeakMaps()
 void
 nsCycleCollector::ScanRoots()
 {
+    TimeLog timeLog;
+    AutoRestore<bool> ar(mScanInProgress);
+    MOZ_ASSERT(!mScanInProgress);
+    mScanInProgress = true;
     mWhiteNodeCount = 0;
 
     // On the assumption that most nodes will be black, it's
@@ -2336,6 +2347,7 @@ nsCycleCollector::ScanRoots()
         mListener->End();
         mListener = nullptr;
     }
+    timeLog.Checkpoint("ScanRoots()");
 }
 
 
@@ -2714,6 +2726,8 @@ nsCycleCollector::Collect(ccType aCCType,
 
     PrepareForCollection(aResults, aWhiteNodes);
     BeginCollection(aCCType, aManualListener);
+    MarkRoots();
+    ScanRoots();
     bool collectedAny = CollectWhite();
     CleanupAfterCollection();
     return collectedAny;
@@ -2804,18 +2818,11 @@ nsCycleCollector::BeginCollection(ccType aCCType,
         timeLog.Checkpoint("mJSRuntime->BeginCycleCollection()");
     }
 
+    AutoRestore<bool> ar(mScanInProgress);
+    MOZ_ASSERT(!mScanInProgress);
     mScanInProgress = true;
     mPurpleBuf.SelectPointers(*mBuilder);
     timeLog.Checkpoint("SelectPointers()");
-
-    // The main Bacon & Rajan collection algorithm.
-    MarkRoots();
-    timeLog.Checkpoint("MarkRoots()");
-
-    ScanRoots();
-    timeLog.Checkpoint("ScanRoots()");
-
-    mScanInProgress = false;
 }
 
 uint32_t
