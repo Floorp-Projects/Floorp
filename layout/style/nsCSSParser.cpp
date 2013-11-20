@@ -8525,6 +8525,16 @@ CSSParserImpl::ParseCounterData(nsCSSProperty aPropID)
 
     nsCSSValuePairList *cur = value.SetPairListValue();
     for (;;) {
+      // check for "none", "default" and the CSS-wide keywords,
+      // which can't be used as counter names
+      nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+      if (keyword == eCSSKeyword_inherit ||
+          keyword == eCSSKeyword_default ||
+          keyword == eCSSKeyword_none ||
+          keyword == eCSSKeyword_unset ||
+          keyword == eCSSKeyword_initial) {
+        return false;
+      }
       cur->mXValue.SetStringValue(mToken.mIdent, eCSSUnit_Ident);
       if (!GetToken(true)) {
         break;

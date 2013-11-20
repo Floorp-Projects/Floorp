@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=936720
+-->
+<head>
+  <title>Test for Bug 936720</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=936720">Mozilla Bug 936720</a>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 936720 **/
+
+// Because there is no event telling us when an animated image finishes
+// animating, tests for the operators used by animated GIFs and PNGs
+// require that we poll until we get the correct result. A fixed timeout
+// can easily result in intermittent failures on tests running in VMs.
+
+// (Note that we do _not_ poll the reference, so it must not be animated.)
+
+var gTests = [
+  // IMPORTANT NOTE: For these tests, the test and reference are not
+  // snapshotted in the same way.  The REFERENCE (second file) is
+  // assumed to be complete when loaded, but we poll the TEST
+  // (first file) until the test passes.
+
+  // Tests of the allowed disposal operators for both GIF and APNG: keep, clear,
+  // and restore previous.
+  "== green-background.html?clear.gif green.png",
+  "== green-background.html?clear.png green.png",
+  "== keep.gif green.png",
+  "== keep.png green.png",
+  "== restore-previous.gif green.png",
+  "== restore-previous.png green.png",
+
+  // Tests of the blending/compositing operators that only APNG supports.
+  "== over.png grey.png",
+  "!= source.png grey.png",
+  "== bug900200.png bug900200-ref.png",
+
+  // Test of subframe updates.
+  "== clear2.gif clear2-results.gif",
+];
+
+// Maintain a reference count of how many things we're waiting for until
+// we can say the tests are done.
+var gDelayCount = 0;
+function AddFinishDependency()
+  { ++gDelayCount; }
+function RemoveFinishDependency()
+  { if (--gDelayCount == 0) SimpleTest.finish(); }
+
+// We record the maximum number of times we had to look at a test before
+// it switched to the passing state (though we assume it's 10 to start
+// rather than 0 so that we have a reasonable default).  Then we make a
+// test "time out" if it takes more than gTimeoutFactor times that
+// amount of time.  This allows us to report a test failure rather than
+// making a test failure just show up as a timeout.
+var gMaxPassingTries = 10;
+var gTimeoutFactor = 10;
+
+function takeSnapshot(iframe_element)
+{
+  return snapshotWindow(iframe_element.contentWindow, false);
+}
+
+function passes(op, shot1, shot2)
+{
+  var [correct, s1, s2] = compareSnapshots(shot1, shot2, op == "==");
+  return correct;
+}
+
+function startTest(i)
+{
+  var testLine = gTests[i];
+  var splitData = testLine.split(" ");
+  var testData =
+    { op: splitData[0], test: splitData[1], reference: splitData[2] };
+  var tries = 0;
+
+  // Maintain state specific to this test in the closure exposed to all
+  // the functions nested inside this one.
+
+  function startIframe(url)
+  {
+    var element = document.createElement("iframe");
+    element.addEventListener("load", handleLoad, false);
+    // Smaller than normal reftests, but enough for these.
+    element.setAttribute("style", "width: 100px; height: 100px");
+    element.setAttribute("frameborder", "0");
+    element.setAttribute("scrolling", "no");
+    element.src = url;
+    document.body.appendChild(element);
+    function handleLoad(event)
+    {
+      iframe.loaded = true;
+      if (iframe == reference) {
+        reference.snapshot = takeSnapshot(element);
+      }
+      var other = (iframe == test) ? reference : test;
+      if (other.loaded) {
+        setTimeout(checkTest, 100);
+      }
+    }
+    function checkTest()
+    {
+      var test_snapshot = takeSnapshot(test.element);
+      if (passes(testData.op, test_snapshot, reference.snapshot)) {
+        if (tries > gMaxPassingTries) {
+          gMaxPassingTries = tries;
+        }
+        report(true);
+      } else {
+        ++tries;
+        if (tries > gMaxPassingTries * gTimeoutFactor) {
+          info("Giving up after " + tries + " tries, " +
+               "maxp=" + gMaxPassingTries +
+               "fact=" + gTimeoutFactor);
+          report(false);
+        } else {
+          // The animation might not have finished.  Try again in 100ms.
+          setTimeout(checkTest, 100);
+        }
+      }
+    }
+    function report(result)
+    {
+      ok(result, "(" + i + ") " +
+                 testData.op + " " + testData.test + " " + testData.reference);
+      RemoveFinishDependency();
+    }
+    var iframe = { element: element, loaded: false };
+
+    return iframe;
+  }
+
+  AddFinishDependency();
+  var test = startIframe(testData.test);
+  var reference = startIframe(testData.reference);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// Run the tests.
+for (var i = 0; i < gTests.length; ++i) {
+  startTest(i);
+}
+
+</script>
+</pre>
+</body>
+</html>

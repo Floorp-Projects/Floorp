@@ -74,6 +74,7 @@
 #include "nsEventStateManager.h"
 #include "nsFocusManager.h"
 #include "nsGenericHTMLElement.h"
+#include "nsGenericHTMLFrameElement.h"
 #include "nsGkAtoms.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsHtml5Module.h"
@@ -5896,6 +5897,30 @@ nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent)
   // means the current document is a zombie document.
   // Only navigate into the subdocument if it's not a zombie.
   return !zombieViewer;
+}
+
+bool
+nsContentUtils::IsUserFocusIgnored(nsINode* aNode)
+{
+  if (!nsGenericHTMLFrameElement::BrowserFramesEnabled()) {
+    return false;
+  }
+
+  // Check if our mozbrowser iframe ancestors has ignoreuserfocus attribute.
+  while (aNode) {
+    nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(aNode);
+    if (browserFrame &&
+        aNode->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::ignoreuserfocus) &&
+        browserFrame->GetReallyIsBrowserOrApp()) {
+      return true;
+    }
+    nsPIDOMWindow* win = aNode->OwnerDoc()->GetWindow();
+    if (win) {
+      aNode = win->GetFrameElementInternal();
+    }
+  }
+
+  return false;
 }
 
 void

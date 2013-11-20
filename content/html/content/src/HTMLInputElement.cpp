@@ -2061,7 +2061,7 @@ HTMLInputElement::ApplyStep(int32_t aStep)
 
   Decimal value = GetValueAsDecimal();
   if (value.isNaN()) {
-    return NS_OK;
+    value = 0;
   }
 
   Decimal minimum = GetMinimum();
@@ -2242,6 +2242,21 @@ HTMLInputElement::MozIsTextField(bool aExcludePassword)
   }
 
   return IsSingleLineTextControl(aExcludePassword);
+}
+
+HTMLInputElement*
+HTMLInputElement::GetOwnerNumberControl()
+{
+  if (IsInNativeAnonymousSubtree() &&
+      mType == NS_FORM_INPUT_TEXT &&
+      GetParent() && GetParent()->GetParent()) {
+    HTMLInputElement* grandparent =
+      HTMLInputElement::FromContentOrNull(GetParent()->GetParent());
+    if (grandparent && grandparent->mType == NS_FORM_INPUT_NUMBER) {
+      return grandparent;
+    }
+  }
+  return nullptr;
 }
 
 NS_IMETHODIMP
