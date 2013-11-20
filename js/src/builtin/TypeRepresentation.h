@@ -68,6 +68,7 @@ namespace js {
 class TypeRepresentation;
 class ScalarTypeRepresentation;
 class ReferenceTypeRepresentation;
+class X4TypeRepresentation;
 class ArrayTypeRepresentation;
 class StructTypeRepresentation;
 
@@ -83,6 +84,7 @@ struct TypeRepresentationHasher
   private:
     static HashNumber hashScalar(ScalarTypeRepresentation *key);
     static HashNumber hashReference(ReferenceTypeRepresentation *key);
+    static HashNumber hashX4(X4TypeRepresentation *key);
     static HashNumber hashStruct(StructTypeRepresentation *key);
     static HashNumber hashArray(ArrayTypeRepresentation *key);
 
@@ -90,6 +92,8 @@ struct TypeRepresentationHasher
                              ScalarTypeRepresentation *key2);
     static bool matchReferences(ReferenceTypeRepresentation *key1,
                                 ReferenceTypeRepresentation *key2);
+    static bool matchX4s(X4TypeRepresentation *key1,
+                         X4TypeRepresentation *key2);
     static bool matchStructs(StructTypeRepresentation *key1,
                              StructTypeRepresentation *key2);
     static bool matchArrays(ArrayTypeRepresentation *key1,
@@ -100,17 +104,23 @@ typedef js::HashSet<TypeRepresentation *,
                     TypeRepresentationHasher,
                     RuntimeAllocPolicy> TypeRepresentationHash;
 
+class TypeRepresentationHelper;
+
 class TypeRepresentation {
   public:
     enum Kind {
         Scalar = JS_TYPEREPR_SCALAR_KIND,
         Reference = JS_TYPEREPR_REFERENCE_KIND,
+        X4 = JS_TYPEREPR_X4_KIND,
         Struct = JS_TYPEREPR_STRUCT_KIND,
         Array = JS_TYPEREPR_ARRAY_KIND
     };
 
   protected:
     TypeRepresentation(Kind kind, size_t size, size_t align, bool opaque);
+
+    // in order to call addToTableOrFree()
+    friend class TypeRepresentationHelper;
 
     size_t size_;
     size_t alignment_;
@@ -167,6 +177,15 @@ class TypeRepresentation {
         return (ReferenceTypeRepresentation*) this;
     }
 
+    bool isX4() const {
+        return kind() == X4;
+    }
+
+    X4TypeRepresentation *asX4() {
+        JS_ASSERT(isX4());
+        return (X4TypeRepresentation*) this;
+    }
+
     bool isArray() const {
         return kind() == Array;
     }
@@ -213,7 +232,10 @@ class ScalarTypeRepresentation : public TypeRepresentation {
     // so TypeRepresentation can call appendStringScalar() etc
     friend class TypeRepresentation;
 
-    Type type_;
+    // in order to call constructor
+    friend class TypeRepresentationHelper;
+
+    const Type type_;
 
     explicit ScalarTypeRepresentation(Type type);
 
@@ -289,6 +311,40 @@ class ReferenceTypeRepresentation : public TypeRepresentation {
     macro_(ReferenceTypeRepresentation::TYPE_ANY,    HeapValue, Any)        \
     macro_(ReferenceTypeRepresentation::TYPE_OBJECT, HeapPtrObject, Object) \
     macro_(ReferenceTypeRepresentation::TYPE_STRING, HeapPtrString, string)
+
+class X4TypeRepresentation : public TypeRepresentation {
+  public:
+    enum Type {
+        TYPE_INT32 = JS_X4TYPEREPR_INT32,
+        TYPE_FLOAT32 = JS_X4TYPEREPR_FLOAT32,
+    };
+
+  private:
+    // so TypeRepresentation can call appendStringScalar() etc
+    friend class TypeRepresentation;
+
+    // in order to call constructor
+    friend class TypeRepresentationHelper;
+
+    const Type type_;
+
+    explicit X4TypeRepresentation(Type type);
+
+    // See TypeRepresentation::appendString()
+    bool appendStringX4(JSContext *cx, StringBuffer &buffer);
+
+  public:
+    Type type() const {
+        return type_;
+    }
+
+    static JSObject *Create(JSContext *cx, Type type);
+};
+
+// Must be in same order as the enum ScalarTypeRepresentation::Type:
+#define JS_FOR_EACH_X4_TYPE_REPR(macro_)                                      \
+    macro_(X4TypeRepresentation::TYPE_INT32, int32_t, int32)                  \
+    macro_(X4TypeRepresentation::TYPE_FLOAT32, float, float32)
 
 class ArrayTypeRepresentation : public TypeRepresentation {
   private:

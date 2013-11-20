@@ -131,6 +131,18 @@ class ReferenceType
 };
 
 /*
+ * Type descriptors `float32x4` and `int32x4`
+ */
+class X4Type : public JSObject
+{
+  private:
+  public:
+    static const Class class_;
+
+    static bool call(JSContext *cx, unsigned argc, Value *vp);
+};
+
+/*
  * Type descriptor created by `new ArrayType(...)`
  */
 class ArrayType : public JSObject
