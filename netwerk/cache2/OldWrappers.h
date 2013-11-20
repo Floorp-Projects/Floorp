@@ -77,15 +77,16 @@ private:
 
   nsCOMPtr<nsIEventTarget> mCacheThread;
 
-  nsCString mScheme;
-  nsCString mCacheKey;
+  nsCString const mScheme;
+  nsCString const mCacheKey;
   nsCOMPtr<nsICacheEntryOpenCallback> mCallback;
   nsCOMPtr<nsILoadContextInfo> mLoadInfo;
-  uint32_t mFlags;
+  uint32_t const mFlags;
 
   bool const mWriteToDisk : 1;
-  bool mMainThreadOnly : 1;
   bool mNew : 1;
+  bool mOpening : 1;
+  bool mSync : 1;
 
   nsCOMPtr<nsICacheEntry> mCacheEntry;
   nsresult mStatus;
