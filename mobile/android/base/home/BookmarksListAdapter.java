@@ -11,6 +11,8 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.view.View;
 
 import java.util.Collections;
@@ -27,7 +29,34 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
     private static final int[] VIEW_TYPES = new int[] { VIEW_TYPE_ITEM, VIEW_TYPE_FOLDER };
     private static final int[] LAYOUT_TYPES = new int[] { R.layout.bookmark_item_row, R.layout.bookmark_folder_row };
 
-    public class FolderInfo {
+    public enum RefreshType implements Parcelable {
+        PARENT,
+        CHILD;
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeInt(ordinal());
+        }
+
+        public static final Creator<RefreshType> CREATOR = new Creator<RefreshType>() {
+            @Override
+            public RefreshType createFromParcel(final Parcel source) {
+                return RefreshType.values()[source.readInt()];
+            }
+
+            @Override
+            public RefreshType[] newArray(final int size) {
+                return new RefreshType[size];
+            }
+        };
+    }
+
+    public static class FolderInfo implements Parcelable {
         public final int id;
         public final String title;
 
@@ -35,17 +64,42 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
             this(id, "");
         }
 
+        public FolderInfo(Parcel in) {
+            this(in.readInt(), in.readString());
+        }
+
         public FolderInfo(int id, String title) {
             this.id = id;
             this.title = title;
         }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeInt(id);
+            dest.writeString(title);
+        }
+
+        public static final Creator<FolderInfo> CREATOR = new Creator<FolderInfo>() {
+            public FolderInfo createFromParcel(Parcel in) {
+                return new FolderInfo(in);
+            }
+
+            public FolderInfo[] newArray(int size) {
+                return new FolderInfo[size];
+            }
+        };
     }
 
     // A listener that knows how to refresh the list for a given folder id.
     // This is usually implemented by the enclosing fragment/activity.
     public static interface OnRefreshFolderListener {
         // The folder id to refresh the list with.
-        public void onRefreshFolder(int folderId);
+        public void onRefreshFolder(FolderInfo folderInfo, RefreshType refreshType);
     }
 
     // mParentStack holds folder info instances (id + title) that allow
@@ -61,10 +115,6 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
 
         if (parentStack == null) {
             mParentStack = new LinkedList<FolderInfo>();
-
-            // Add the root folder to the stack
-            FolderInfo rootFolder = new FolderInfo(Bookmarks.FIXED_ROOT_ID);
-            mParentStack.addFirst(rootFolder);
         } else {
             mParentStack = new LinkedList<FolderInfo>(parentStack);
         }
@@ -72,13 +122,6 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
 
     public List<FolderInfo> getParentStack() {
         return Collections.unmodifiableList(mParentStack);
-    }
-
-    // Refresh the current folder by executing a new task.
-    private void refreshCurrentFolder() {
-        if (mListener != null) {
-            mListener.onRefreshFolder(mParentStack.peek().id);
-        }
     }
 
     /**
@@ -92,8 +135,12 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
             return false;
         }
 
-        mParentStack.removeFirst();
-        refreshCurrentFolder();
+        if (mListener != null) {
+            // We pick the second folder in the stack as it represents
+            // the parent folder.
+            mListener.onRefreshFolder(mParentStack.get(1), RefreshType.PARENT);
+        }
+
         return true;
     }
 
@@ -105,8 +152,10 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
      */
     public void moveToChildFolder(int folderId, String folderTitle) {
         FolderInfo folderInfo = new FolderInfo(folderId, folderTitle);
-        mParentStack.addFirst(folderInfo);
-        refreshCurrentFolder();
+
+        if (mListener != null) {
+            mListener.onRefreshFolder(folderInfo, RefreshType.CHILD);
+        }
     }
 
     /**
@@ -116,6 +165,23 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
      */
     public void setOnRefreshFolderListener(OnRefreshFolderListener listener) {
         mListener = listener;
+    }
+
+    public void swapCursor(Cursor c, FolderInfo folderInfo, RefreshType refreshType) {
+        switch(refreshType) {
+            case PARENT:
+                mParentStack.removeFirst();
+                break;
+
+            case CHILD:
+                mParentStack.addFirst(folderInfo);
+                break;
+
+            default:
+                // Do nothing;
+        }
+
+        swapCursor(c);
     }
 
     @Override
@@ -176,6 +242,10 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
      * @return true, if currently showing a child folder, false otherwise.
      */
     public boolean isShowingChildFolder() {
+        if (mParentStack.size() == 0) {
+            return false;
+        }
+
         return (mParentStack.peek().id != Bookmarks.FIXED_ROOT_ID);
     }
 
