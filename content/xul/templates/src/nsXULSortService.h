@@ -20,6 +20,9 @@
   This sort service is used to sort template built content or content by attribute.
  */
 
+#ifndef nsXULTemplateResultSetRDF_h
+#define nsXULTemplateResultSetRDF_h
+
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
@@ -179,3 +182,5 @@ public:
                                const nsAString& aRight,
                                uint32_t aSortHints);
 };
+
+#endif
