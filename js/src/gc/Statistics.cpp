@@ -281,7 +281,6 @@ static const PhaseInfo phases[] = {
     { PHASE_SWEEP, "Sweep", PHASE_NO_PARENT },
     { PHASE_SWEEP_MARK, "Mark During Sweeping", PHASE_SWEEP },
     { PHASE_SWEEP_MARK_TYPES, "Mark Types During Sweeping", PHASE_SWEEP_MARK },
-    { PHASE_SWEEP_MARK_DELAYED, "Mark Delayed During Sweeping", PHASE_SWEEP_MARK },
     { PHASE_SWEEP_MARK_INCOMING_BLACK, "Mark Incoming Black Pointers", PHASE_SWEEP_MARK },
     { PHASE_SWEEP_MARK_WEAK, "Mark Weak", PHASE_SWEEP_MARK },
     { PHASE_SWEEP_MARK_INCOMING_GRAY, "Mark Incoming Gray Pointers", PHASE_SWEEP_MARK },
