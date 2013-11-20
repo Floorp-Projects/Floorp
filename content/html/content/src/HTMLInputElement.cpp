@@ -2244,6 +2244,21 @@ HTMLInputElement::MozIsTextField(bool aExcludePassword)
   return IsSingleLineTextControl(aExcludePassword);
 }
 
+HTMLInputElement*
+HTMLInputElement::GetOwnerNumberControl()
+{
+  if (IsInNativeAnonymousSubtree() &&
+      mType == NS_FORM_INPUT_TEXT &&
+      GetParent() && GetParent()->GetParent()) {
+    HTMLInputElement* grandparent =
+      HTMLInputElement::FromContentOrNull(GetParent()->GetParent());
+    if (grandparent && grandparent->mType == NS_FORM_INPUT_NUMBER) {
+      return grandparent;
+    }
+  }
+  return nullptr;
+}
+
 NS_IMETHODIMP
 HTMLInputElement::MozIsTextField(bool aExcludePassword, bool* aResult)
 {
