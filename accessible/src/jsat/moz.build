@@ -3,3 +3,16 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+JS_MODULES_PATH = 'modules/accessibility'
+
+EXTRA_JS_MODULES += [
+    'AccessFu.jsm',
+    'Constants.jsm',
+    'EventManager.jsm',
+    'OutputGenerator.jsm',
+    'Presentation.jsm',
+    'TouchAdapter.jsm',
+    'TraversalRules.jsm',
+    'Utils.jsm'
+]

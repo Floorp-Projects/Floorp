@@ -8,7 +8,7 @@ EXPORTS.mozilla.dom += [
     'XPathEvaluator.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsXPathExpression.cpp',
     'nsXPathNSResolver.cpp',
     'nsXPathResult.cpp',

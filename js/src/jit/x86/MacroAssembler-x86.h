@@ -1072,7 +1072,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Save an exit frame (which must be aligned to the stack pointer) to
     // ThreadData::ionTop of the main thread.
     void linkExitFrame() {
-        movl(StackPointer, Operand(AbsoluteAddress(&GetIonContext()->runtime->mainThread.ionTop)));
+        movl(StackPointer, Operand(AbsoluteAddress(GetIonContext()->runtime->addressOfIonTop())));
     }
 
     void callWithExitFrame(IonCode *target, Register dynStack) {
