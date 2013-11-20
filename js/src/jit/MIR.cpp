@@ -661,7 +661,6 @@ MStringLength::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 {
     if ((type() == MIRType_Int32) && (string()->isConstant())) {
         Value value = string()->toConstant()->value();
-        AutoUnprotectCell unprotect(&value.toString()->asAtom());
         size_t length = JS_GetStringLength(value.toString());
 
         return MConstant::New(alloc, Int32Value(length));
@@ -2320,8 +2319,10 @@ MCompare::evaluateConstantOperands(bool *result)
     // Fold away some String equality comparisons.
     if (lhs.isString() && rhs.isString()) {
         int32_t comp = 0; // Default to equal.
-        if (left != right)
-            comp = CompareAtoms(&lhs.toString()->asAtom(), &rhs.toString()->asAtom());
+        if (left != right) {
+            if (!CompareStrings(GetIonContext()->cx, lhs.toString(), rhs.toString(), &comp))
+                return false;
+        }
         
         switch (jsop_) {
           case JSOP_LT:
@@ -2502,7 +2503,6 @@ MBeta::printOpcode(FILE *fp) const
 bool
 MNewObject::shouldUseVM() const
 {
-    AutoUnprotectCell unprotect(templateObject());
     return templateObject()->hasSingletonType() ||
            templateObject()->hasDynamicSlots();
 }
@@ -2928,7 +2928,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
         JSObject *obj = object->singleton() ? object->singleton() : object->proto().toObjectOrNull();
 
         while (obj) {
-            if (!obj->getClass()->isNative())
+            if (!obj->isNative())
                 break;
 
             types::TypeObjectKey *typeObj = types::TypeObjectKey::get(obj);

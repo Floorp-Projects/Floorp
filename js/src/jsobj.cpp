@@ -5554,8 +5554,6 @@ DumpProperty(JSObject *obj, Shape &shape)
 bool
 JSObject::uninlinedIsProxy() const
 {
-    AutoUnprotectCellUnderCompilationLock unprotect0(this);
-    AutoUnprotectCellUnderCompilationLock unprotect1(type_);
     return is<ProxyObject>();
 }
 

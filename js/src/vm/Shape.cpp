@@ -194,7 +194,7 @@ ShapeTable::search(jsid id, bool adding)
 
     /* Hit: return entry. */
     shape = SHAPE_CLEAR_COLLISION(stored);
-    if (shape && shape->propidRaw() == id)
+    if (shape && shape->propid() == id)
         return spp;
 
     /* Collision: double hash. */

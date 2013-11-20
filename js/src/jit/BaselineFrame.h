@@ -152,7 +152,7 @@ class BaselineFrame
 
     Value &unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
         JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
-        JS_ASSERT(i < script()->getNfixed());
+        JS_ASSERT(i < script()->nfixed);
         return *valueSlot(i);
     }
 
@@ -183,7 +183,7 @@ class BaselineFrame
                              offsetOfNumActualArgs());
     }
     unsigned numFormalArgs() const {
-        return script()->function()->getNargs();
+        return script()->function()->nargs;
     }
     Value &thisValue() const {
         return *(Value *)(reinterpret_cast<const uint8_t *>(this) +

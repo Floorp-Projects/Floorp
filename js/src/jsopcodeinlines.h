@@ -16,8 +16,8 @@ namespace js {
 static inline unsigned
 GetDefCount(JSScript *script, unsigned offset)
 {
-    JS_ASSERT(offset < script->getLength());
-    jsbytecode *pc = script->getCode() + offset;
+    JS_ASSERT(offset < script->length);
+    jsbytecode *pc = script->code + offset;
 
     /*
      * Add an extra pushed value for OR/AND opcodes, so that they are included
@@ -43,8 +43,8 @@ GetDefCount(JSScript *script, unsigned offset)
 static inline unsigned
 GetUseCount(JSScript *script, unsigned offset)
 {
-    JS_ASSERT(offset < script->getLength());
-    jsbytecode *pc = script->getCode() + offset;
+    JS_ASSERT(offset < script->length);
+    jsbytecode *pc = script->code + offset;
 
     if (JSOp(*pc) == JSOP_PICK)
         return (pc[1] + 1);

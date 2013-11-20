@@ -46,8 +46,6 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
-using mozilla::Maybe;
-
 using namespace js;
 using namespace js::jit;
 
@@ -1277,7 +1275,7 @@ OptimizeMIR(MIRGenerator *mir)
         // repeated bailouts. Disable it if this script is known to bailout
         // frequently.
         JSScript *script = mir->info().script();
-        if (!script || !script->getHadFrequentBailouts()) {
+        if (!script || !script->hadFrequentBailouts) {
             LICM licm(mir, graph);
             if (!licm.analyze())
                 return false;
@@ -1554,9 +1552,9 @@ OffThreadCompilationAvailable(JSContext *cx)
     // CodeGenerator::maybeCreateScriptCounts will not attach script profiles
     // when running off thread.
     //
-    // Skip off thread compilation if the SPS profiler is enabled, as it stores
-    // strings in the spsProfiler data structure, which is not protected by a
-    // lock.
+    // Also skip off thread compilation if the SPS profiler is enabled, as it
+    // stores strings in the spsProfiler data structure, which is not protected
+    // by a lock.
     return OffThreadIonCompilationEnabled(cx->runtime())
         && cx->runtime()->gcIncrementalState == gc::NO_INCREMENTAL
         && !cx->runtime()->profilingScripts
@@ -1659,15 +1657,6 @@ IonCompile(JSContext *cx, JSScript *script,
     RootedScript builderScript(cx, builder->script());
     IonSpewNewFunction(graph, builderScript);
 
-    Maybe<AutoProtectHeapForCompilation> protect;
-    if (js_IonOptions.checkThreadSafety &&
-        cx->runtime()->gcIncrementalState == gc::NO_INCREMENTAL &&
-        !cx->runtime()->profilingScripts &&
-        !cx->runtime()->spsProfiler.enabled())
-    {
-        protect.construct(cx->runtime());
-    }
-
     bool succeeded = builder->build();
     builder->clearForBackEnd();
 
@@ -1702,9 +1691,6 @@ IonCompile(JSContext *cx, JSScript *script,
         IonSpew(IonSpew_Abort, "Failed during back-end compilation.");
         return AbortReason_Disable;
     }
-
-    if (!protect.empty())
-        protect.destroy();
 
     bool success = codegen->link(cx, builder->constraints());
 

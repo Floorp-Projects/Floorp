@@ -132,8 +132,8 @@ Type::ObjectType(JSObject *obj)
 /* static */ inline Type
 Type::ObjectType(TypeObject *obj)
 {
-    if (obj->getSingleton())
-        return Type(uintptr_t(obj->getSingleton()) | 1);
+    if (obj->singleton)
+        return Type(uintptr_t(obj->singleton.get()) | 1);
     return Type(uintptr_t(obj));
 }
 
@@ -221,8 +221,7 @@ IdToTypeId(jsid id)
      * and overflowing integers.
      */
     if (JSID_IS_STRING(id)) {
-        JSAtom *str = JSID_TO_ATOM(id);
-        AutoUnprotectCell unprotect(str);
+        JSFlatString *str = JSID_TO_FLAT_STRING(id);
         JS::TwoByteChars cp = str->range();
         if (JS7_ISDEC(cp[0]) || cp[0] == '-') {
             for (size_t i = 1; i < cp.length(); ++i) {
@@ -610,7 +609,7 @@ TypeScript::ThisTypes(JSScript *script)
 /* static */ inline StackTypeSet *
 TypeScript::ArgTypes(JSScript *script, unsigned i)
 {
-    JS_ASSERT(i < script->function()->getNargs());
+    JS_ASSERT(i < script->function()->nargs);
     return script->types->typeArray() + script->nTypeSets + js::analyze::ArgSlot(i);
 }
 
@@ -625,11 +624,11 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc, uint32_t *hint, TYPE
     uint32_t *bytecodeMap = nullptr;
     MOZ_CRASH();
 #endif
-    uint32_t offset = pc - script->getCode();
-    JS_ASSERT(offset < script->getLength());
+    uint32_t offset = pc - script->code;
+    JS_ASSERT(offset < script->length);
 
     // See if this pc is the next typeset opcode after the last one looked up.
-    if (bytecodeMap[*hint + 1] == offset && (*hint + 1) < script->getNumTypeSets()) {
+    if (bytecodeMap[*hint + 1] == offset && (*hint + 1) < script->nTypeSets) {
         (*hint)++;
         return typeArray + *hint;
     }
@@ -640,7 +639,7 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc, uint32_t *hint, TYPE
 
     // Fall back to a binary search.
     size_t bottom = 0;
-    size_t top = script->getNumTypeSets() - 1;
+    size_t top = script->nTypeSets - 1;
     size_t mid = bottom + (top - bottom) / 2;
     while (mid < top) {
         if (bytecodeMap[mid] < offset)
@@ -1182,7 +1181,7 @@ TypeSet::addType(Type type, LifoAlloc *alloc, bool *padded)
 
     if (type.isTypeObject()) {
         TypeObject *nobject = type.typeObject();
-        JS_ASSERT(!nobject->getSingleton());
+        JS_ASSERT(!nobject->singleton);
         if (nobject->unknownProperties())
             goto unknownObject;
     }
@@ -1314,7 +1313,7 @@ TypeSet::getObjectClass(unsigned i) const
     if (JSObject *object = getSingleObject(i))
         return object->getClass();
     if (TypeObject *object = getTypeObject(i))
-        return object->getClass();
+        return object->clasp;
     return nullptr;
 }
 
@@ -1402,8 +1401,6 @@ TypeObject::maybeGetProperty(jsid id)
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
     JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
     JS_ASSERT(!unknownProperties());
-
-    AutoUnprotectCellUnderCompilationLock unprotect(this);
 
     Property *prop = HashSetLookup<jsid,Property,Property>
         (propertySet, basePropertyCount(), id);
