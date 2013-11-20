@@ -32,7 +32,7 @@ EXPORTS += [
     'nsSMILValue.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsDOMTimeEvent.cpp',
     'nsSMILAnimationController.cpp',
     'nsSMILAnimationFunction.cpp',
