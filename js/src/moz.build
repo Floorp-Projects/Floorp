@@ -229,6 +229,7 @@ if CONFIG['ENABLE_ION']:
         'jit/BytecodeAnalysis.cpp',
         'jit/C1Spewer.cpp',
         'jit/CodeGenerator.cpp',
+        'jit/CompileWrappers.cpp',
         'jit/EdgeCaseAnalysis.cpp',
         'jit/EffectiveAddressAnalysis.cpp',
         'jit/Ion.cpp',

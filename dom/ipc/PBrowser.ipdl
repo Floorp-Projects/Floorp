@@ -226,9 +226,12 @@ parent:
      * Create a layout frame (encapsulating a remote layer tree) for
      * the page that is currently loaded in the <browser>.
      */
-    sync PRenderFrame()
+    sync PRenderFrame();
+
+    sync InitRenderFrame(PRenderFrame aFrame)
         returns (ScrollingBehavior scrolling,
-                 TextureFactoryIdentifier textureFactoryIdentifier, uint64_t layersId);
+                 TextureFactoryIdentifier textureFactoryIdentifier, uint64_t layersId,
+                 bool success);
 
     /** 
      * Starts an offline application cache update.
@@ -293,7 +296,7 @@ parent:
      * The zoom controller code lives on the parent side and so this allows it to
      * have up-to-date zoom constraints.
      */
-    UpdateZoomConstraints(uint32_t aPresShellId, ViewID aViewId,
+    UpdateZoomConstraints(uint32_t aPresShellId, ViewID aViewId, bool aIsRoot,
                           bool aAllowZoom, CSSToScreenScale aMinZoom, CSSToScreenScale aMaxZoom);
 
     /**

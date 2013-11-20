@@ -490,3 +490,5 @@ HTMLMenuItemElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 
 } // namespace dom
 } // namespace mozilla
+
+#undef NS_ORIGINAL_CHECKED_VALUE
