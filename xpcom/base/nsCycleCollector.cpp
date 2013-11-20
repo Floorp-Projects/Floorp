@@ -1557,10 +1557,10 @@ class GCGraphBuilder : public nsCycleCollectionTraversalCallback,
                        public nsCycleCollectionNoteRootCallback
 {
 private:
+    GCGraph &mGraph;
     CycleCollectorResults &mResults;
     NodePool::Builder mNodeBuilder;
     EdgePool::Builder mEdgeBuilder;
-    nsTArray<WeakMapping> &mWeakMaps;
     PLDHashTable mPtrToNodeMap;
     PtrInfo *mCurrPi;
     nsCycleCollectionParticipant *mJSParticipant;
@@ -1659,10 +1659,10 @@ GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
                                CycleCollectedJSRuntime *aJSRuntime,
                                nsICycleCollectorListener *aListener,
                                bool aMergeZones)
-    : mResults(aResults),
+    : mGraph(aGraph),
+      mResults(aResults),
       mNodeBuilder(aGraph.mNodes),
       mEdgeBuilder(aGraph.mEdges),
-      mWeakMaps(aGraph.mWeakMaps),
       mJSParticipant(nullptr),
       mJSZoneParticipant(nullptr),
       mListener(aListener),
@@ -1891,7 +1891,7 @@ GCGraphBuilder::NoteWeakMapping(void *map, void *key, void *kdelegate, void *val
 {
     // Don't try to optimize away the entry here, as we've already attempted to
     // do that in TraceWeakMapping in nsXPConnect.
-    WeakMapping *mapping = mWeakMaps.AppendElement();
+    WeakMapping *mapping = mGraph.mWeakMaps.AppendElement();
     mapping->mMap = map ? AddWeakMapNode(map) : nullptr;
     mapping->mKey = key ? AddWeakMapNode(key) : nullptr;
     mapping->mKeyDelegate = kdelegate ? AddWeakMapNode(kdelegate) : mapping->mKey;
