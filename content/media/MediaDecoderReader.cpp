@@ -466,12 +466,14 @@ VideoData* MediaDecoderReader::FindStartTime(int64_t& aOutStartTime)
     videoData = DecodeToFirstVideoData();
     if (videoData) {
       videoStartTime = videoData->mTime;
+      LOG(PR_LOG_DEBUG, ("MediaDecoderReader::FindStartTime() video=%lld", videoStartTime));
     }
   }
   if (HasAudio()) {
     AudioData* audioData = DecodeToFirstAudioData();
     if (audioData) {
       audioStartTime = audioData->mTime;
+      LOG(PR_LOG_DEBUG, ("MediaDecoderReader::FindStartTime() audio=%lld", audioStartTime));
     }
   }
 
