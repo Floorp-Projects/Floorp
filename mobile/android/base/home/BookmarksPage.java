@@ -8,6 +8,7 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.home.BookmarksListAdapter.FolderInfo;
 import org.mozilla.gecko.home.BookmarksListAdapter.OnRefreshFolderListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
@@ -18,7 +19,6 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewStub;
@@ -47,7 +47,7 @@ public class BookmarksPage extends HomeFragment {
     private BookmarksListAdapter mListAdapter;
 
     // Adapter's parent stack.
-    private List<Pair<Integer, String>> mSavedParentStack;
+    private List<FolderInfo> mSavedParentStack;
 
     // Reference to the View to display when there are no results.
     private View mEmptyView;
