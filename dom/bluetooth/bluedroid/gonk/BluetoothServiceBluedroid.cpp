@@ -1186,13 +1186,6 @@ BluetoothServiceBluedroid::Connect(const nsAString& aDeviceAddress,
                                    uint16_t aServiceUuid,
                                    BluetoothReplyRunnable* aRunnable)
 {
-  // TODO: Remove this error reply once Connect() is done in profile managers
-  if (aRunnable) {
-    DispatchBluetoothReply(aRunnable, BluetoothValue(),
-                           NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
-    return;
-  }
-
   ConnectDisconnect(true, aDeviceAddress, aRunnable, aServiceUuid, aCod);
 }
 
@@ -1207,13 +1200,6 @@ BluetoothServiceBluedroid::Disconnect(
   const nsAString& aDeviceAddress, uint16_t aServiceUuid,
   BluetoothReplyRunnable* aRunnable)
 {
-  // TODO: Remove this error reply once Disconnect() is done in profile managers
-  if (aRunnable) {
-    DispatchBluetoothReply(aRunnable, BluetoothValue(),
-                           NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
-    return;
-  }
-
   ConnectDisconnect(false, aDeviceAddress, aRunnable, aServiceUuid);
 }
 
