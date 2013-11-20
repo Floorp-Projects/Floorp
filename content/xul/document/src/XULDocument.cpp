@@ -90,6 +90,7 @@
 #include "mozilla/Preferences.h"
 #include "nsTextNode.h"
 #include "nsJSUtils.h"
+#include "mozilla/dom/URL.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -100,14 +101,6 @@ using namespace mozilla::dom;
 //
 
 static NS_DEFINE_CID(kParserCID,                 NS_PARSER_CID);
-
-static bool IsChromeURI(nsIURI* aURI)
-{
-    bool isChrome = false;
-    if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome)
-        return true;
-    return false;
-}
 
 static bool IsOverlayAllowed(nsIURI* aURI)
 {
