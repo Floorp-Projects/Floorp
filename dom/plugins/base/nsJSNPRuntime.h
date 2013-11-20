@@ -25,29 +25,19 @@ public:
   {
   }
 
-  bool operator==(const nsJSObjWrapperKey& other) const {
-    return mJSObj == other.mJSObj && mNpp == other.mNpp;
-  }
-  bool operator!=(const nsJSObjWrapperKey& other) const {
-    return !(*this == other);
-  }
+  JSObject *mJSObj;
 
-  JSObject * mJSObj;
   const NPP mNpp;
 };
 
 extern const JSClass sNPObjectJSWrapperClass;
 
-class nsJSObjWrapper : public NPObject
+class nsJSObjWrapper : public NPObject,
+                       public nsJSObjWrapperKey
 {
 public:
-  JSObject *mJSObj;  /* Added as a GC root. */
-  const NPP mNpp;
-
   static NPObject *GetNewOrUsed(NPP npp, JSContext *cx,
                                 JS::Handle<JSObject*> obj);
-
-  void ClearJSObject();
 
 protected:
   nsJSObjWrapper(NPP npp);
