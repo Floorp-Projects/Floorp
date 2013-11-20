@@ -12,6 +12,7 @@
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/gfx/2D.h"
 #include "nsWrapperCache.h"
+#include "gfxGradientCache.h"
 
 namespace mozilla {
 namespace dom {
@@ -41,7 +42,10 @@ public:
       return mStops;
     }
 
-    mStops = aRT->CreateGradientStops(mRawStops.Elements(), mRawStops.Length());
+    mStops =
+      gfx::gfxGradientCache::GetOrCreateGradientStops(aRT,
+                                                      mRawStops,
+                                                      gfx::EXTEND_CLAMP);
 
     return mStops;
   }
