@@ -355,7 +355,9 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
         if (!FoldConstants(cx, &pn, &parser))
             return nullptr;
 
-        if (!NameFunctions(cx, pn))
+        // Inferring names for functions in compiled scripts is currently only
+        // supported while on the main thread. See bug 895395.
+        if (cx->isJSContext() && !NameFunctions(cx->asJSContext(), pn))
             return nullptr;
 
         if (!EmitTree(cx, &bce, pn))
