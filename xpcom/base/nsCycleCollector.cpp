@@ -3170,8 +3170,7 @@ nsCycleCollector_doDeferredDeletion()
 }
 
 void
-nsCycleCollector_collect(bool aManuallyTriggered,
-                         nsICycleCollectorListener *aManualListener)
+nsCycleCollector_collect(nsICycleCollectorListener *aManualListener)
 {
     CollectorData *data = sCollectorData.get();
 
@@ -3180,9 +3179,20 @@ nsCycleCollector_collect(bool aManuallyTriggered,
     MOZ_ASSERT(data->mCollector);
 
     PROFILER_LABEL("CC", "nsCycleCollector_collect");
+    data->mCollector->Collect(ManualCC, aManualListener);
+}
 
-    MOZ_ASSERT_IF(aManualListener, aManuallyTriggered);
-    data->mCollector->Collect(aManuallyTriggered ? ManualCC : ScheduledCC, aManualListener);
+void
+nsCycleCollector_scheduledCollect()
+{
+    CollectorData *data = sCollectorData.get();
+
+    // We should have started the cycle collector by now.
+    MOZ_ASSERT(data);
+    MOZ_ASSERT(data->mCollector);
+
+    PROFILER_LABEL("CC", "nsCycleCollector_scheduledCollect");
+    data->mCollector->Collect(ScheduledCC, nullptr);
 }
 
 void

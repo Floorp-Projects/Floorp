@@ -2016,18 +2016,10 @@ struct CycleCollectorStats
 
 CycleCollectorStats gCCStats;
 
-//static
-void
-nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
-                             int32_t aExtraForgetSkippableCalls,
-                             bool aManuallyTriggered)
+
+static void
+PrepareForCycleCollection(int32_t aExtraForgetSkippableCalls = 0)
 {
-  if (!NS_IsMainThread()) {
-    return;
-  }
-
-  PROFILER_LABEL("CC", "CycleCollectNow");
-
   gCCStats.mBeginSliceTime = PR_Now();
 
   // Before we begin the cycle collection, make sure there is no active GC.
@@ -2063,9 +2055,33 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
     }
 
   }
+}
 
-  nsCycleCollector_collect(aManuallyTriggered, aListener);
+//static
+void
+nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
+                             int32_t aExtraForgetSkippableCalls)
+{
+  if (!NS_IsMainThread()) {
+    return;
+  }
 
+  PROFILER_LABEL("CC", "CycleCollectNow");
+  PrepareForCycleCollection(aExtraForgetSkippableCalls);
+  nsCycleCollector_collect(aListener);
+}
+
+//static
+void
+nsJSContext::ScheduledCycleCollectNow()
+{
+  if (!NS_IsMainThread()) {
+    return;
+  }
+
+  PROFILER_LABEL("CC", "ScheduledCycleCollectNow");
+  PrepareForCycleCollection();
+  nsCycleCollector_scheduledCollect();
 }
 
 //static
@@ -2300,7 +2316,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
       // We are in the final timer fire and still meet the conditions for
       // triggering a CC. Let CycleCollectNow finish the current IGC, if any,
       // because that will allow us to include the GC time in the CC pause.
-      nsJSContext::CycleCollectNow(nullptr, 0, false);
+      nsJSContext::ScheduledCycleCollectNow();
     }
   } else if ((sPreviousSuspectedCount + 100) <= suspected) {
       // Only do a forget skippable if there are more than a few new objects.
