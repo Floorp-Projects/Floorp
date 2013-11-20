@@ -7,9 +7,7 @@
 if CONFIG['MOZ_B2G_BT']:
     PARALLEL_DIRS += ['interfaces']
 
-
     SOURCES += [
-        'BluetoothA2dpManager.cpp',
         'BluetoothAdapter.cpp',
         'BluetoothDevice.cpp',
         'BluetoothHidManager.cpp',
@@ -37,6 +35,7 @@ if CONFIG['MOZ_B2G_BT']:
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         if CONFIG['MOZ_B2G_BT_BLUEZ']:
             SOURCES += [
+                'bluez/BluetoothA2dpManager.cpp',
                 'bluez/BluetoothHfpManager.cpp',
                 'bluez/gonk/BluetoothGonkService.cpp',
                 'bluez/linux/BluetoothDBusService.cpp',
@@ -48,6 +47,7 @@ if CONFIG['MOZ_B2G_BT']:
             ]
         elif CONFIG['MOZ_B2G_BT_BLUEDROID']:
             SOURCES += [
+                'bluedroid/BluetoothA2dpManager.cpp',
                 'bluedroid/BluetoothHfpManager.cpp',
                 'bluedroid/gonk/BluetoothServiceBluedroid.cpp',
             ]
