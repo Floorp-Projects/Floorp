@@ -278,7 +278,7 @@ let RIL = {
     /**
      * Card state
      */
-    this.cardState = GECKO_CARDSTATE_UNKNOWN;
+    this.cardState = GECKO_CARDSTATE_UNDETECTED;
 
     /**
      * Strings
@@ -2954,51 +2954,36 @@ let RIL = {
   _processICCStatus: function _processICCStatus(iccStatus) {
     this.iccStatus = iccStatus;
     let newCardState;
-
-    if ((!iccStatus) || (iccStatus.cardState == CARD_STATE_ABSENT)) {
-      switch (this.radioState) {
-        case GECKO_RADIOSTATE_UNAVAILABLE:
-          newCardState = GECKO_CARDSTATE_UNKNOWN;
-          break;
-        case GECKO_RADIOSTATE_OFF:
-          newCardState = GECKO_CARDSTATE_NOT_READY;
-          break;
-        case GECKO_RADIOSTATE_READY:
-          if (DEBUG) {
-            debug("ICC absent");
-          }
-          newCardState = GECKO_CARDSTATE_ABSENT;
-          break;
-      }
-      if (newCardState == this.cardState) {
-        return;
-      }
-      this.iccInfo = {iccType: null};
-      ICCUtilsHelper.handleICCInfoChange();
-
-      this.cardState = newCardState;
-      this.sendChromeMessage({rilMessageType: "cardstatechange",
-                              cardState: this.cardState});
-      return;
-    }
-
     let index = this._isCdma ? iccStatus.cdmaSubscriptionAppIndex :
                                iccStatus.gsmUmtsSubscriptionAppIndex;
     let app = iccStatus.apps[index];
-    if (iccStatus.cardState == CARD_STATE_ERROR || !app) {
-      if (this.cardState == GECKO_CARDSTATE_UNKNOWN) {
+
+    // When |iccStatus.cardState| is not CARD_STATE_PRESENT or have incorrect
+    // app information, we can not get iccId. So treat ICC as undetected.
+    if (iccStatus.cardState !== CARD_STATE_PRESENT || !app) {
+      if (this.cardState !== GECKO_CARDSTATE_UNDETECTED) {
         this.operator = null;
-        return;
+        // We should send |cardstatechange| before |iccinfochange|, otherwise we
+        // may lost cardstatechange event when icc card becomes undetected.
+        this.cardState = GECKO_CARDSTATE_UNDETECTED;
+        this.sendChromeMessage({rilMessageType: "cardstatechange",
+                                cardState: this.cardState});
+
+        this.iccInfo = {iccType: null};
+        ICCUtilsHelper.handleICCInfoChange();
       }
-      this.operator = null;
-      this.cardState = GECKO_CARDSTATE_UNKNOWN;
-      this.sendChromeMessage({rilMessageType: "cardstatechange",
-                              cardState: this.cardState});
       return;
     }
+
     // fetchICCRecords will need to read aid, so read aid here.
     this.aid = app.aid;
     this.appType = app.app_type;
+    this.iccInfo.iccType = GECKO_CARD_TYPE[this.appType];
+    // Try to get iccId only when cardState left GECKO_CARDSTATE_UNDETECTED.
+    if (this.cardState === GECKO_CARDSTATE_UNDETECTED &&
+        iccStatus.cardState === CARD_STATE_PRESENT) {
+      ICCRecordHelper.readICCID();
+    }
 
     switch (app.app_state) {
       case CARD_APPSTATE_ILLEGAL:
@@ -3036,8 +3021,6 @@ let RIL = {
     // This was moved down from CARD_APPSTATE_READY
     this.requestNetworkInfo();
     if (newCardState == GECKO_CARDSTATE_READY) {
-      this.iccInfo.iccType = GECKO_CARD_TYPE[this.appType];
-
       // For type SIM, we need to check EF_phase first.
       // Other types of ICC we can send Terminal_Profile immediately.
       if (this.appType == CARD_APPTYPE_SIM) {
@@ -11205,7 +11188,6 @@ let ICCRecordHelper = {
    * Fetch ICC records.
    */
   fetchICCRecords: function fetchICCRecords() {
-    this.readICCID();
     RIL.getIMSI();
     this.readAD();
     this.readSST();
@@ -13181,7 +13163,6 @@ let ICCContactHelper = {
 
 let RuimRecordHelper = {
   fetchRuimRecords: function fetchRuimRecords() {
-    ICCRecordHelper.readICCID();
     this.getIMSI_M();
     this.readCST();
     this.readCDMAHome();
