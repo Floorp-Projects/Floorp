@@ -891,7 +891,12 @@ nsHttpChannel::CallOnStartRequest()
     // if this channel is for a download, close off access to the cache.
     if (mCacheEntry && mChannelIsForDownload) {
         mCacheEntry->AsyncDoom(nullptr);
-        CloseCacheEntry(false);
+
+        // We must keep the cache entry in case of partial request.
+        // Concurrent access is the same, we need the entry in
+        // OnStopRequest.
+        if (!mCachedContentIsPartial && !mConcurentCacheAccess)
+            CloseCacheEntry(false);
     }
 
     if (!mCanceled) {
