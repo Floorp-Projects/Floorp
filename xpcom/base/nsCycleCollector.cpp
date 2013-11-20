@@ -905,12 +905,10 @@ enum ccType {
 
 class nsCycleCollector
 {
-    friend class GCGraphBuilder;
-
     bool mCollectionInProgress;
     // mScanInProgress should be false when we're collecting white objects.
     bool mScanInProgress;
-    nsCycleCollectorResults *mResults;
+    CycleCollectorResults mResults;
     TimeStamp mCollectionStart;
 
     CycleCollectedJSRuntime *mJSRuntime;
@@ -924,10 +922,6 @@ class nsCycleCollector
     nsCycleCollectorParams mParams;
 
     uint32_t mWhiteNodeCount;
-
-    // mVisitedRefCounted and mVisitedGCed are only used for telemetry
-    uint32_t mVisitedRefCounted;
-    uint32_t mVisitedGCed;
 
     CC_BeforeUnlinkCallback mBeforeUnlinkCB;
     CC_ForgetSkippableCallback mForgetSkippableCB;
@@ -965,7 +959,6 @@ public:
     bool FreeSnowWhite(bool aUntilNoSWInPurpleBuffer);
 
     bool Collect(ccType aCCType,
-                 nsCycleCollectorResults *aResults,
                  nsICycleCollectorListener *aManualListener);
     void Shutdown();
 
@@ -980,7 +973,8 @@ private:
     void CheckThreadSafety();
     void ShutdownCollect();
 
-    void PrepareForCollection(nsCycleCollectorResults *aResults);
+    void PrepareForCollection();
+
     void FixGrayBits(bool aForceGC);
     bool ShouldMergeZones(ccType aCCType);
 
@@ -1565,7 +1559,7 @@ class GCGraphBuilder : public nsCycleCollectionTraversalCallback,
                        public nsCycleCollectionNoteRootCallback
 {
 private:
-    nsCycleCollector *mCollector;
+    CycleCollectorResults &mResults;
     NodePool::Builder mNodeBuilder;
     EdgePool::Builder mEdgeBuilder;
     nsTArray<WeakMapping> &mWeakMaps;
@@ -1579,8 +1573,8 @@ private:
     bool mRanOutOfMemory;
 
 public:
-    GCGraphBuilder(nsCycleCollector *aCollector,
-                   GCGraph &aGraph,
+    GCGraphBuilder(GCGraph &aGraph,
+                   CycleCollectorResults &aResults,
                    CycleCollectedJSRuntime *aJSRuntime,
                    nsICycleCollectorListener *aListener,
                    bool aMergeZones);
@@ -1662,12 +1656,12 @@ private:
     }
 };
 
-GCGraphBuilder::GCGraphBuilder(nsCycleCollector *aCollector,
-                               GCGraph &aGraph,
+GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
+                               CycleCollectorResults &aResults,
                                CycleCollectedJSRuntime *aJSRuntime,
                                nsICycleCollectorListener *aListener,
                                bool aMergeZones)
-    : mCollector(aCollector),
+    : mResults(aResults),
       mNodeBuilder(aGraph.mNodes),
       mEdgeBuilder(aGraph.mEdges),
       mWeakMaps(aGraph.mWeakMaps),
@@ -1790,7 +1784,7 @@ GCGraphBuilder::DescribeRefCountedNode(nsrefcnt refCount, const char *objName)
         Fault("zero refcount", mCurrPi);
     if (refCount == UINT32_MAX)
         Fault("overflowing refcount", mCurrPi);
-    mCollector->mVisitedRefCounted++;
+    mResults.mVisitedRefCounted++;
 
     if (mListener) {
         mListener->NoteRefCountedObject((uint64_t)mCurrPi->mPointer, refCount,
@@ -1805,7 +1799,7 @@ GCGraphBuilder::DescribeGCedNode(bool isMarked, const char *objName,
                                  uint64_t aCompartmentAddress)
 {
     uint32_t refCount = isMarked ? UINT32_MAX : 0;
-    mCollector->mVisitedGCed++;
+    mResults.mVisitedGCed++;
 
     if (mListener) {
         mListener->NoteGCedObject((uint64_t)mCurrPi->mPointer, isMarked,
@@ -2391,10 +2385,8 @@ nsCycleCollector::CollectWhite()
     uint32_t count = whiteNodes.Length();
     MOZ_ASSERT(numWhiteGCed <= count,
                "More freed GCed nodes than total freed nodes.");
-    if (mResults) {
-        mResults->mFreedRefCounted += count - numWhiteGCed;
-        mResults->mFreedGCed += numWhiteGCed;
-    }
+    mResults.mFreedRefCounted += count - numWhiteGCed;
+    mResults.mFreedGCed += numWhiteGCed;
 
     timeLog.Checkpoint("CollectWhite::Root");
 
@@ -2501,12 +2493,9 @@ class CycleCollectorReporter MOZ_FINAL : public MemoryMultiReporter
 nsCycleCollector::nsCycleCollector() :
     mCollectionInProgress(false),
     mScanInProgress(false),
-    mResults(nullptr),
     mJSRuntime(nullptr),
     mThread(NS_GetCurrentThread()),
     mWhiteNodeCount(0),
-    mVisitedRefCounted(0),
-    mVisitedGCed(0),
     mBeforeUnlinkCB(nullptr),
     mForgetSkippableCB(nullptr),
     mReporter(nullptr),
@@ -2616,8 +2605,7 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
         CC_TELEMETRY(_NEED_GC, needGC);
         if (!needGC)
             return;
-        if (mResults)
-            mResults->mForcedGC = true;
+        mResults.mForcedGC = true;
     }
 
     TimeLog timeLog;
@@ -2626,21 +2614,17 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
 }
 
 void
-nsCycleCollector::PrepareForCollection(nsCycleCollectorResults *aResults)
+nsCycleCollector::PrepareForCollection()
 {
     TimeLog timeLog;
 
     mCollectionStart = TimeStamp::Now();
-    mVisitedRefCounted = 0;
-    mVisitedGCed = 0;
 
     mCollectionInProgress = true;
 
     if (mJSRuntime) {
-        mJSRuntime->PrepareForCollection();
+        mJSRuntime->BeginCycleCollectionCallback();
     }
-
-    mResults = aResults;
 
     timeLog.Checkpoint("PrepareForCollection()");
 }
@@ -2661,25 +2645,19 @@ nsCycleCollector::CleanupAfterCollection()
     uint32_t interval = (uint32_t) ((TimeStamp::Now() - mCollectionStart).ToMilliseconds());
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: total cycle collector time was %ums\n", interval);
-    if (mResults) {
-        printf("cc: visited %u ref counted and %u GCed objects, freed %d ref counted and %d GCed objects.\n",
-               mVisitedRefCounted, mVisitedGCed,
-               mResults->mFreedRefCounted, mResults->mFreedGCed);
-    } else {
-        printf("cc: visited %u ref counted and %u GCed objects, freed %d.\n",
-               mVisitedRefCounted, mVisitedGCed, mWhiteNodeCount);
-    }
+    printf("cc: visited %u ref counted and %u GCed objects, freed %d ref counted and %d GCed objects.\n",
+           mResults.mVisitedRefCounted, mResults.mVisitedGCed,
+           mResults.mFreedRefCounted, mResults.mFreedGCed);
     printf("cc: \n");
 #endif
-    if (mResults) {
-        mResults->mVisitedRefCounted = mVisitedRefCounted;
-        mResults->mVisitedGCed = mVisitedGCed;
-        mResults = nullptr;
-    }
     CC_TELEMETRY( , interval);
-    CC_TELEMETRY(_VISITED_REF_COUNTED, mVisitedRefCounted);
-    CC_TELEMETRY(_VISITED_GCED, mVisitedGCed);
+    CC_TELEMETRY(_VISITED_REF_COUNTED, mResults.mVisitedRefCounted);
+    CC_TELEMETRY(_VISITED_GCED, mResults.mVisitedGCed);
     CC_TELEMETRY(_COLLECTED, mWhiteNodeCount);
+
+    if (mJSRuntime) {
+        mJSRuntime->EndCycleCollectionCallback(mResults);
+    }
 }
 
 void
@@ -2687,7 +2665,7 @@ nsCycleCollector::ShutdownCollect()
 {
     for (uint32_t i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
         NS_ASSERTION(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
-        if (!Collect(ShutdownCC, nullptr, nullptr)) {
+        if (!Collect(ShutdownCC, nullptr)) {
             break;
         }
     }
@@ -2695,7 +2673,6 @@ nsCycleCollector::ShutdownCollect()
 
 bool
 nsCycleCollector::Collect(ccType aCCType,
-                          nsCycleCollectorResults *aResults,
                           nsICycleCollectorListener *aManualListener)
 {
     CheckThreadSafety();
@@ -2705,7 +2682,7 @@ nsCycleCollector::Collect(ccType aCCType,
         return false;
     }
 
-    PrepareForCollection(aResults);
+    PrepareForCollection();
     BeginCollection(aCCType, aManualListener);
     MarkRoots();
     ScanRoots();
@@ -2786,13 +2763,12 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     }
 
     // Set up the data structures for building the graph.
+    mResults.Init();
     bool mergeZones = ShouldMergeZones(aCCType);
-    if (mResults) {
-        mResults->mMergedZones = mergeZones;
-    }
+    mResults.mMergedZones = mergeZones;
 
     MOZ_ASSERT(!mBuilder, "Forgot to clear mBuilder");
-    mBuilder = new GCGraphBuilder(this, mGraph, mJSRuntime, mListener, mergeZones);
+    mBuilder = new GCGraphBuilder(mGraph, mResults, mJSRuntime, mListener, mergeZones);
 
     if (mJSRuntime) {
         mJSRuntime->BeginCycleCollection(*mBuilder);
@@ -2850,7 +2826,6 @@ nsCycleCollector::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
     *aPurpleBufferSize = mPurpleBuf.SizeOfExcludingThis(aMallocSizeOf);
 
     // These fields are deliberately not measured:
-    // - mResults: because it's tiny and only contains scalars.
     // - mJSRuntime: because it's non-owning and measured by JS reporters.
     // - mParams: because it only contains scalars.
 }
@@ -3158,7 +3133,6 @@ nsCycleCollector_doDeferredDeletion()
 
 void
 nsCycleCollector_collect(bool aManuallyTriggered,
-                         nsCycleCollectorResults *aResults,
                          nsICycleCollectorListener *aManualListener)
 {
     CollectorData *data = sCollectorData.get();
@@ -3170,8 +3144,7 @@ nsCycleCollector_collect(bool aManuallyTriggered,
     PROFILER_LABEL("CC", "nsCycleCollector_collect");
 
     MOZ_ASSERT_IF(aManualListener, aManuallyTriggered);
-    data->mCollector->Collect(aManuallyTriggered ? ManualCC : ScheduledCC,
-                              aResults, aManualListener);
+    data->mCollector->Collect(aManuallyTriggered ? ManualCC : ScheduledCC, aManualListener);
 }
 
 void
