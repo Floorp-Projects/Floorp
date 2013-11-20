@@ -9237,15 +9237,19 @@ class CGBindingRoot(CGThing):
         # Add header includes.
         bindingHeaders = [header for (header, include) in
                           bindingHeaders.iteritems() if include]
+        declareIncludes = ['mozilla/dom/BindingDeclarations.h',
+                          'mozilla/ErrorResult.h',
+                          'jspubtd.h',
+                          'js/RootingAPI.h',
+                          ]
+        if jsImplemented:
+            declareIncludes.append('nsWeakReference.h')
+
         curr = CGHeaders(descriptors,
                          dictionaries,
                          mainCallbacks + workerCallbacks,
                          callbackDescriptors,
-                         ['mozilla/dom/BindingDeclarations.h',
-                          'mozilla/ErrorResult.h',
-                          'jspubtd.h',
-                          'js/RootingAPI.h',
-                          ],
+                         declareIncludes,
                          bindingHeaders,
                          prefix,
                          curr,
@@ -10059,7 +10063,7 @@ class CGJSImplClass(CGBindingImplClass):
                 { "ifaceName": self.descriptor.name,
                   "parentClass": parentClass })
         else:
-            baseClasses = [ClassBase("nsISupports"),
+            baseClasses = [ClassBase("nsSupportsWeakReference"),
                            ClassBase("nsWrapperCache")]
             isupportsDecl = "NS_DECL_CYCLE_COLLECTING_ISUPPORTS"
             ccDecl = ("NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)" %
@@ -10072,6 +10076,7 @@ class CGJSImplClass(CGBindingImplClass):
                 "NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${ifaceName})\n"
                 "  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY\n"
                 "  NS_INTERFACE_MAP_ENTRY(nsISupports)\n"
+                "  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)\n"
                 "NS_INTERFACE_MAP_END\n").substitute({ "ifaceName": self.descriptor.name })
 
         extradeclarations=(
