@@ -114,7 +114,7 @@ WMFReader::InitializeDXVA()
   MediaDecoderOwner* owner = mDecoder->GetOwner();
   NS_ENSURE_TRUE(owner, false);
 
-  HTMLMediaElement* element = owner->GetMediaElement();
+  dom::HTMLMediaElement* element = owner->GetMediaElement();
   NS_ENSURE_TRUE(element, false);
 
   nsRefPtr<LayerManager> layerManager =

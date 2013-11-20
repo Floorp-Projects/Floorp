@@ -384,12 +384,17 @@ class BuildMonitor(MozbuildObject):
         if not record_usage:
             return
 
-        usage = self.record_resource_usage()
-        if not usage:
-            return
+        try:
+            usage = self.record_resource_usage()
+            if not usage:
+                return
 
-        with open(self._get_state_filename('build_resources.json'), 'w') as fh:
-            json.dump(usage, fh, indent=2)
+            with open(self._get_state_filename('build_resources.json'), 'w') as fh:
+                json.dump(usage, fh, indent=2)
+        except Exception as e:
+            self.log(logging.WARNING, 'build_resources_error',
+                {'msg': str(e)},
+                'Exception when writing resource usage file: {msg}')
 
     def _get_finder_cpu_usage(self):
         """Obtain the CPU usage of the Finder app on OS X.

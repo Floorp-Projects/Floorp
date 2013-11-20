@@ -74,7 +74,10 @@
       </hbox>
 #endif
     </toolbar>
-    <deck id="toolbox-deck" flex="1">
-    </deck>
+    <vbox flex="1">
+      <deck id="toolbox-deck" flex="1" minheight="75" />
+      <splitter id="toolbox-console-splitter" class="devtools-horizontal-splitter" hidden="true" />
+      <box minheight="75" flex="1" id="toolbox-panel-webconsole" collapsed="true" />
+    </vbox>
   </notificationbox>
 </window>

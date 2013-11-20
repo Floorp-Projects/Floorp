@@ -220,7 +220,7 @@
 
 namespace mozilla {
 
-typedef mozilla::dom::Element Element;
+using mozilla::dom::Element;
 
 /**
  * Returns true if aElement is one of the elements whose text content should not

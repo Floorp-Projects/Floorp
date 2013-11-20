@@ -3902,7 +3902,7 @@ function ThreadSources(aThreadActor, aUseSourceMaps, aAllowPredicate,
  * Must be a class property because it needs to persist across reloads, same as
  * the breakpoint store.
  */
-ThreadSources._blackBoxedSources = new Set();
+ThreadSources._blackBoxedSources = new Set(["self-hosted"]);
 ThreadSources._prettyPrintedSources = new Map();
 
 ThreadSources.prototype = {
