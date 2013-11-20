@@ -189,6 +189,11 @@ div.cm-s-mozilla span.CodeMirror-matchingbracket { /* highlight brackets */
   color: white;
 }
 
+/* Highlight for evaluating current statement. */
+div.CodeMirror span.eval-text {
+  background-color: #556;
+}
+
 .cm-s-mozilla .CodeMirror-linenumber { /* line number text */
   color: #5f7387;
 }
