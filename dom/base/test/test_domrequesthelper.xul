@@ -16,12 +16,24 @@
 
   <script type="application/javascript">
   <![CDATA[
-    Components.utils.import("resource://gre/modules/DOMRequestHelper.jsm");
+    const Cc = Components.classes;
+    const Cu = Components.utils;
+    const Ci = Components.interfaces;
+    Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
+    let obs = Cc["@mozilla.org/observer-service;1"].
+              getService(Ci.nsIObserverService);
 
     function DummyHelperSubclass() {
+      this.onuninit = null;
     }
     DummyHelperSubclass.prototype = {
-      __proto__: DOMRequestIpcHelper.prototype
+      __proto__: DOMRequestIpcHelper.prototype,
+      uninit: function() {
+        if (typeof this.onuninit === "function") {
+          this.onuninit();
+        }
+        this.onuninit = null;
+      }
     };
 
     var dummy = new DummyHelperSubclass();
@@ -75,6 +87,78 @@
     function removeMessageListenersTest(aMessages, aExpectedListeners, aCount) {
       dummy.removeMessageListeners(aMessages);
       checkMessageListeners(aExpectedListeners, aCount);
+    }
+
+    /**
+     * Utility function to test window destruction behavior.  In general this
+     * function does the following:
+     *
+     *  1) Create a new iframe
+     *  2) Create a new DOMRequestHelper
+     *  3) initDOMRequestHelper(), optionally with weak or strong listeners
+     *  4) Optionally force a garbage collection to reap weak references
+     *  5) Destroy the iframe triggering an inner-window-destroyed event
+     *  6) Callback with a boolean indicating if DOMRequestHelper.uninit() was
+     *     called.
+     *
+     * Example usage:
+     *
+     *    checkWindowDestruction({ messages: ["foo"], gc: true },
+     *                           function(uninitCalled) {
+     *      // expect uninitCalled === false since GC with only weak refs
+     *    });
+     */
+    const TOPIC = "inner-window-destroyed";
+    function checkWindowDestruction(aOptions, aCallback) {
+      aOptions = aOptions || {};
+      aOptions.messages = aOptions.messages || [];
+      aOptions.gc = !!aOptions.gc;
+
+      if (typeof aCallback !== "function") {
+        aCallback = function() { };
+      }
+
+      let uninitCalled = false;
+
+      // Use a secondary observer so we know when to expect the uninit().  We
+      // can then reasonably expect uninitCalled to be set properly on the
+      // next tick.
+      let observer = {
+        observe: function(aSubject, aTopic, aData) {
+          if (aTopic !== TOPIC) {
+            return;
+          }
+          obs.removeObserver(observer, TOPIC);
+          setTimeout(function() {
+            aCallback(uninitCalled);
+          });
+        }
+      };
+
+      let frame = document.createElement("iframe");
+      frame.onload = function() {
+        obs.addObserver(observer, TOPIC, false);
+        // Create dummy DOMRequestHelper specific to checkWindowDestruction()
+        let cwdDummy = new DummyHelperSubclass();
+        cwdDummy.onuninit = function() {
+          uninitCalled = true;
+        };
+        cwdDummy.initDOMRequestHelper(frame.contentWindow, aOptions.messages);
+        // Make sure to clear our strong ref here so that we can test our
+        // weak reference listeners and observer.
+        cwdDummy = null;
+        if (aOptions.gc) {
+          Cu.schedulePreciseGC(function() {
+            SpecialPowers.DOMWindowUtils.cycleCollect();
+            SpecialPowers.DOMWindowUtils.garbageCollect();
+            SpecialPowers.DOMWindowUtils.garbageCollect();
+            document.documentElement.removeChild(frame);
+          });
+          return;
+        }
+        document.documentElement.removeChild(frame);
+      };
+      document.documentElement.appendChild(frame);
     }
 
     /**
@@ -332,6 +416,52 @@
 
           r = dummy.getPromiseResolver(id);
           ok(r === undefined, "takeResolver: get failed");
+          next();
+        });
+      },
+      function() {
+        ok(true, "== Test window destroyed without messages and without GC");
+        checkWindowDestruction({ gc: false }, function(uninitCalled) {
+          ok(uninitCalled, "uninit() should have been called");
+          next();
+        });
+      },
+      function() {
+        ok(true, "== Test window destroyed without messages and with GC");
+        checkWindowDestruction({ gc: true }, function(uninitCalled) {
+          ok(!uninitCalled, "uninit() should NOT have been called");
+          next();
+        });
+      },
+      function() {
+        ok(true, "== Test window destroyed with weak messages and without GC");
+        checkWindowDestruction({ messages: [{ name: "foo", strongRef: false }],
+                                 gc: false }, function(uninitCalled) {
+          ok(uninitCalled, "uninit() should have been called");
+          next();
+        });
+      },
+      function() {
+        ok(true, "== Test window destroyed with weak messages and with GC");
+        checkWindowDestruction({ messages: [{ name: "foo", strongRef: false }],
+                                 gc: true }, function(uninitCalled) {
+          ok(!uninitCalled, "uninit() should NOT have been called");
+          next();
+        });
+      },
+      function() {
+        ok(true, "== Test window destroyed with strong messages and without GC");
+        checkWindowDestruction({ messages: [{ name: "foo", strongRef: true }],
+                                 gc: false }, function(uninitCalled) {
+          ok(uninitCalled, "uninit() should have been called");
+          next();
+        });
+      },
+      function() {
+        ok(true, "== Test window destroyed with strong messages and with GC");
+        checkWindowDestruction({ messages: [{ name: "foo", strongRef: true }],
+                                 gc: true }, function(uninitCalled) {
+          ok(uninitCalled, "uninit() should have been called");
           next();
         });
       }
