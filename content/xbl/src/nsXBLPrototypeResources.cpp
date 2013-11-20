@@ -16,6 +16,9 @@
 #include "nsLayoutCID.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsStyleSet.h"
+#include "mozilla/dom/URL.h"
+
+using mozilla::dom::IsChromeURI;
 
 nsXBLPrototypeResources::nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding)
 {
@@ -55,14 +58,6 @@ nsXBLPrototypeResources::AddResourceListener(nsIContent* aBoundElement)
 {
   if (mLoader)
     mLoader->AddResourceListener(aBoundElement);
-}
-
-static bool IsChromeURI(nsIURI* aURI)
-{
-  bool isChrome=false;
-  if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome)
-    return true;
-  return false;
 }
 
 nsresult
