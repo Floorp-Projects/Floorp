@@ -35,6 +35,7 @@ EXPORTS.mp4_demuxer += [
 ]
 
 SOURCES += [
+    'BlankDecoderModule.cpp',
     'demuxer/aac.cc',
     'demuxer/audio_decoder_config.cc',
     'demuxer/avc.cc',

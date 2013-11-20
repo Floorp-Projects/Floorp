@@ -202,6 +202,10 @@ pref("media.fragmented-mp4.enabled", true);
 // This is for testing, since the parser can't yet handle non-fragmented MP4,
 // so it will fail to play most MP4 files.
 pref("media.fragmented-mp4.exposed", false);
+// Specifies whether the fragmented MP4 parser uses a test decoder that
+// just outputs blank frames/audio instead of actually decoding. The blank
+// decoder works on all platforms.
+pref("media.fragmented-mp4.use-blank-decoder", false);
 #endif
 #ifdef MOZ_RAW
 pref("media.raw.enabled", true);
