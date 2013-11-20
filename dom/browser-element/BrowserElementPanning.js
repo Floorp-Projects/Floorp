@@ -454,7 +454,7 @@ const ContentPanning = {
   },
 
   _resetActive: function cp_resetActive() {
-    let elt = this.target || this.pointerDownTarget;
+    let elt = this.pointerDownTarget || this.target;
     let root = elt.ownerDocument || elt.document;
     this._setActive(root.documentElement);
   },

@@ -13,7 +13,7 @@
 // Slots for type objects
 //
 // Some slots apply to all type objects and some are specific to
-// particular kinds of type objects.  Because all type objects, at
+// particular kinds of type objects. Because all type objects, at
 // least for now, have a distinct class, we can assign them distinct
 // numbers of slots depending on their kind.
 
@@ -22,6 +22,9 @@
 
 // Slots on scalars
 #define JS_TYPEOBJ_SCALAR_SLOTS            1  // Maximum number
+
+// Slots on references
+#define JS_TYPEOBJ_REFERENCE_SLOTS         1  // Maximum number
 
 // Slots on arrays
 #define JS_TYPEOBJ_SLOT_ARRAY_ELEM_TYPE    1
@@ -36,7 +39,7 @@
 // Slots for type representation objects
 //
 // Some slots apply to all type representations and some are specific
-// to particular kinds of type representations.  Because all type
+// to particular kinds of type representations. Because all type
 // representations share the same class, however, they always have the
 // same number of slots, though not all of them will be initialized or
 // used in the same way.
@@ -49,21 +52,22 @@
 // Slots on arrays:
 #define JS_TYPEREPR_SLOT_LENGTH    3 // Length of the array
 
-// Slots on scalars:
+// Slots on scalars and references:
 #define JS_TYPEREPR_SLOT_TYPE      3 // One of the constants below
 
 // Maximum number of slots for any type representation
 #define JS_TYPEREPR_SLOTS          4
 
-// These constants are for use exclusively in JS code.  In C++ code,
-// prefer TypeRepresentation::Scalar etc, since that allows you to
+// These constants are for use exclusively in JS code. In C++ code,
+// prefer TypeRepresentation::Scalar etc, which allows you to
 // write a switch which will receive a warning if you omit a case.
 #define JS_TYPEREPR_SCALAR_KIND 0
-#define JS_TYPEREPR_STRUCT_KIND 1
-#define JS_TYPEREPR_ARRAY_KIND  2
+#define JS_TYPEREPR_REFERENCE_KIND 1
+#define JS_TYPEREPR_STRUCT_KIND 2
+#define JS_TYPEREPR_ARRAY_KIND  3
 
-// These constants are for use exclusively in JS code.  In C++ code,
-// prefer ScalarTypeRepresentation::TYPE_INT8 etc, since that allows
+// These constants are for use exclusively in JS code. In C++ code,
+// prefer ScalarTypeRepresentation::TYPE_INT8 etc, which allows
 // you to write a switch which will receive a warning if you omit a
 // case.
 #define JS_SCALARTYPEREPR_INT8          0
@@ -75,6 +79,14 @@
 #define JS_SCALARTYPEREPR_FLOAT32       6
 #define JS_SCALARTYPEREPR_FLOAT64       7
 #define JS_SCALARTYPEREPR_UINT8_CLAMPED 8
+
+// These constants are for use exclusively in JS code. In C++ code,
+// prefer ReferenceTypeRepresentation::TYPE_ANY etc, which allows
+// you to write a switch which will receive a warning if you omit a
+// case.
+#define JS_REFERENCETYPEREPR_ANY        0
+#define JS_REFERENCETYPEREPR_OBJECT     1
+#define JS_REFERENCETYPEREPR_STRING     2
 
 ///////////////////////////////////////////////////////////////////////////
 // Slots for typed objects (actually, any TypedContents objects)

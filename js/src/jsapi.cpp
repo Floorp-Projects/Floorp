@@ -1174,7 +1174,7 @@ typedef struct JSStdName {
 static Handle<PropertyName*>
 StdNameToPropertyName(JSContext *cx, const JSStdName *stdn)
 {
-    return OFFSET_TO_NAME(cx->runtime(), stdn->atomOffset);
+    return AtomStateOffsetToName(cx->runtime()->atomState, stdn->atomOffset);
 }
 
 /*
@@ -1334,7 +1334,7 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
     stdnm = nullptr;
     for (i = 0; standard_class_atoms[i].init; i++) {
         JS_ASSERT(standard_class_atoms[i].clasp);
-        atom = OFFSET_TO_NAME(rt, standard_class_atoms[i].atomOffset);
+        atom = AtomStateOffsetToName(rt->atomState, standard_class_atoms[i].atomOffset);
         if (idstr == atom) {
             stdnm = &standard_class_atoms[i];
             break;

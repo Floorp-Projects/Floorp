@@ -368,7 +368,7 @@ nsNavBookmarks::AdjustIndices(int64_t aFolderId,
 
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
- 
+
   return NS_OK;
 }
 
@@ -438,7 +438,7 @@ nsNavBookmarks::InsertBookmarkInDB(int64_t aPlaceId,
        "dateAdded, lastModified, guid) "
     "VALUES (:item_id, :page_id, :item_type, :parent, :item_index, "
             ":item_title, :date_added, :last_modified, "
-            "GENERATE_GUID())"
+            "IFNULL(:item_guid, GENERATE_GUID()))"
   );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
@@ -479,6 +479,17 @@ nsNavBookmarks::InsertBookmarkInDB(int64_t aPlaceId,
   }
   else {
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("last_modified"), aDateAdded);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Could use IsEmpty because our callers check for GUID validity,
+  // but it doesn't hurt.
+  if (_guid.Length() == 12) {
+    MOZ_ASSERT(IsValidGUID(_guid));
+    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("item_guid"), _guid);
+  }
+  else {
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("item_guid"));
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -551,11 +562,15 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder,
                                nsIURI* aURI,
                                int32_t aIndex,
                                const nsACString& aTitle,
+                               const nsACString& aGUID,
                                int64_t* aNewBookmarkId)
 {
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(aNewBookmarkId);
   NS_ENSURE_ARG_MIN(aIndex, nsINavBookmarksService::DEFAULT_INDEX);
+
+  if (!aGUID.IsEmpty() && !IsValidGUID(aGUID))
+    return NS_ERROR_INVALID_ARG;
 
   mozStorageTransaction transaction(mDB->MainConn(), false);
 
@@ -585,7 +600,7 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder,
 
   *aNewBookmarkId = -1;
   PRTime dateAdded = PR_Now();
-  nsAutoCString guid;
+  nsAutoCString guid(aGUID);
   nsCString title;
   TruncateTitle(aTitle, title);
 
@@ -753,10 +768,14 @@ nsNavBookmarks::RemoveItem(int64_t aItemId)
 
 NS_IMETHODIMP
 nsNavBookmarks::CreateFolder(int64_t aParent, const nsACString& aName,
-                             int32_t aIndex, int64_t* aNewFolder)
+                             int32_t aIndex, const nsACString& aGUID,
+                             int64_t* aNewFolder)
 {
   // NOTE: aParent can be null for root creation, so not checked
   NS_ENSURE_ARG_POINTER(aNewFolder);
+
+  if (!aGUID.IsEmpty() && !IsValidGUID(aGUID))
+    return NS_ERROR_INVALID_ARG;
 
   // CreateContainerWithID returns the index of the new folder, but that's not
   // used here.  To avoid any risk of corrupting data should this function
@@ -764,7 +783,7 @@ nsNavBookmarks::CreateFolder(int64_t aParent, const nsACString& aName,
   // will cause notifications to be sent to bookmark observers.
   int32_t localIndex = aIndex;
   nsresult rv = CreateContainerWithID(-1, aParent, aName, true, &localIndex,
-                                      aNewFolder);
+                                      aGUID, aNewFolder);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
@@ -815,6 +834,7 @@ nsNavBookmarks::CreateContainerWithID(int64_t aItemId,
                                       const nsACString& aTitle,
                                       bool aIsBookmarkFolder,
                                       int32_t* aIndex,
+                                      const nsACString& aGUID,
                                       int64_t* aNewFolder)
 {
   NS_ENSURE_ARG_MIN(*aIndex, nsINavBookmarksService::DEFAULT_INDEX);
@@ -840,7 +860,7 @@ nsNavBookmarks::CreateContainerWithID(int64_t aItemId,
 
   *aNewFolder = aItemId;
   PRTime dateAdded = PR_Now();
-  nsAutoCString guid;
+  nsAutoCString guid(aGUID);
   nsCString title;
   TruncateTitle(aTitle, title);
 
@@ -865,11 +885,15 @@ nsNavBookmarks::CreateContainerWithID(int64_t aItemId,
 NS_IMETHODIMP
 nsNavBookmarks::InsertSeparator(int64_t aParent,
                                 int32_t aIndex,
+                                const nsACString& aGUID,
                                 int64_t* aNewItemId)
 {
   NS_ENSURE_ARG_MIN(aParent, 1);
   NS_ENSURE_ARG_MIN(aIndex, nsINavBookmarksService::DEFAULT_INDEX);
   NS_ENSURE_ARG_POINTER(aNewItemId);
+
+  if (!aGUID.IsEmpty() && !IsValidGUID(aGUID))
+    return NS_ERROR_INVALID_ARG;
 
   // Get the correct index for insertion.  This also ensures the parent exists.
   int32_t index, folderCount;
@@ -895,7 +919,7 @@ nsNavBookmarks::InsertSeparator(int64_t aParent,
   // Set a NULL title rather than an empty string.
   nsCString voidString;
   voidString.SetIsVoid(true);
-  nsAutoCString guid;
+  nsAutoCString guid(aGUID);
   PRTime dateAdded = PR_Now();
   rv = InsertBookmarkInDB(-1, SEPARATOR, aParent, index, voidString, dateAdded,
                           0, folderGuid, grandParentId, nullptr,
@@ -991,9 +1015,9 @@ nsNavBookmarks::GetRemoveFolderTransaction(int64_t aFolderId, nsITransaction** a
   NS_ENSURE_ARG_POINTER(aResult);
 
   // Create and initialize a RemoveFolderTransaction object that can be used to
-  // recreate the folder safely later. 
+  // recreate the folder safely later.
 
-  RemoveFolderTransaction* rft = 
+  RemoveFolderTransaction* rft =
     new RemoveFolderTransaction(aFolderId);
   if (!rft)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -2052,7 +2076,7 @@ nsNavBookmarks::GetBookmarkedURIFor(nsIURI* aURI, nsIURI** _retval)
       "UNION ALL "
       "SELECT COALESCE(grandparent.place_id, parent.place_id) AS r_place_id "
       "FROM moz_historyvisits dest "
-      "LEFT JOIN moz_historyvisits parent ON parent.id = dest.from_visit " 
+      "LEFT JOIN moz_historyvisits parent ON parent.id = dest.from_visit "
                                         "AND dest.visit_type IN (%d, %d) "
       "LEFT JOIN moz_historyvisits grandparent ON parent.from_visit = grandparent.id "
                                              "AND parent.visit_type IN (%d, %d) "
@@ -2836,7 +2860,7 @@ nsNavBookmarks::OnPageChanged(nsIURI* aURI,
     if (isPlaceURI) {
       nsNavHistory* history = nsNavHistory::GetHistoryService();
       NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  
+
       nsCOMArray<nsNavHistoryQuery> queries;
       nsCOMPtr<nsNavHistoryQueryOptions> options;
       rv = history->QueryStringToQueryArray(changeData.bookmark.url,
@@ -2846,7 +2870,7 @@ nsNavBookmarks::OnPageChanged(nsIURI* aURI,
       if (queries.Count() == 1 && queries[0]->Folders().Length() == 1) {
         // Fetch missing data.
         rv = FetchItemInfo(queries[0]->Folders()[0], changeData.bookmark);
-        NS_ENSURE_SUCCESS(rv, rv);        
+        NS_ENSURE_SUCCESS(rv, rv);
         NotifyItemChanged(changeData);
       }
     }

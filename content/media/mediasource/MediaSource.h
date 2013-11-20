@@ -35,7 +35,6 @@ namespace dom {
 class GlobalObject;
 class SourceBuffer;
 class SourceBufferList;
-class TimeRanges;
 template <typename T> class Optional;
 
 #define MOZILLA_DOM_MEDIASOURCE_IMPLEMENTATION_IID \
