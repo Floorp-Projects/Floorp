@@ -13,13 +13,12 @@ EXPORTS += [
     'xpcpublic.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsCxPusher.cpp',
     'nsScriptError.cpp',
     'nsXPConnect.cpp',
     'Sandbox.cpp',
     'XPCCallContext.cpp',
-    'XPCComponents.cpp',
     'XPCContext.cpp',
     'XPCConvert.cpp',
     'XPCDebug.cpp',
@@ -46,6 +45,11 @@ SOURCES += [
     'XPCWrappedNativeProto.cpp',
     'XPCWrappedNativeScope.cpp',
     'XPCWrapper.cpp',
+]
+
+# XPCComponents.cpp cannot be built in unified mode because it uses plarena.h.
+SOURCES += [
+    'XPCComponents.cpp',
 ]
 
 GENERATED_SOURCES += [
