@@ -2390,6 +2390,14 @@ protected:
   // caches.
   bool mDidDocumentOpen;
 
+#ifdef DEBUG
+  /**
+   * This is true while FlushPendingLinkUpdates executes.  Calls to
+   * [Un]RegisterPendingLinkUpdate will assert when this is true.
+   */
+  bool mIsLinkUpdateRegistrationsForbidden;
+#endif
+
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the
   // *inner* window object.
