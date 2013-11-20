@@ -13,6 +13,7 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIZipReader;
 interface nsIRecentBadCerts;
+interface nsIX509CertList;
 
 %{C++
 #define NS_X509CERTDB_CONTRACTID "@mozilla.org/security/x509certdb;1"
@@ -30,7 +31,7 @@ interface nsIOpenSignedJARFileCallback : nsISupports
  * This represents a service to access and manipulate 
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(ab0a1c52-f7fd-4fe7-9e65-7d3705a8580e)]
+[scriptable, uuid(3c2a5658-466a-11e3-a244-180373d97f23)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -298,4 +299,29 @@ interface nsIX509CertDB : nsISupports {
    * @param aName name of the cert for display purposes.
    */
   void addCert(in ACString certDER, in string aTrust, in string aName);
+
+  /** Warning: This interface is inteded to use only for testing only as:
+   *    1. It can create IO on the main thread.
+   *    2. It is in constant change, so in/out can change at any release.
+   *
+   *  Obtain the verification result for a cert given a particular usage.
+   *  On success, the call returns 0, the chain built during verification,
+   *  and whether the cert is good for EV usage.
+   *  On failure, the call returns the PRErrorCode for the verification failure
+   *
+   *  @param aCert Obtain the stored trust of this certificate
+   *  @param aUsage a integer representing the usage from NSS
+   *  @param aLocalOnly prevent network activity for revocation
+   *  @param verifedChain chain of verification up to the root if success
+   *  @param aHasEVPolicy bool that signified that the cert was an EV cert
+   *  @return 0 if success or the value or the error code for the verification
+   *          failure
+   */
+  int32_t /*PRErrorCode*/
+    verifyCertNow(in nsIX509Cert aCert,
+                  in int64_t /*SECCertificateUsage*/ aUsage,
+                  in bool aLocalOnly,
+                  out nsIX509CertList verifiedChain,
+                  out bool aHasEVPolicy);
+
 };

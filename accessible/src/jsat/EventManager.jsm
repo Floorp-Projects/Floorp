@@ -7,21 +7,6 @@
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const EVENT_VIRTUALCURSOR_CHANGED = Ci.nsIAccessibleEvent.EVENT_VIRTUALCURSOR_CHANGED;
-const EVENT_STATE_CHANGE = Ci.nsIAccessibleEvent.EVENT_STATE_CHANGE;
-const EVENT_SCROLLING_START = Ci.nsIAccessibleEvent.EVENT_SCROLLING_START;
-const EVENT_TEXT_CARET_MOVED = Ci.nsIAccessibleEvent.EVENT_TEXT_CARET_MOVED;
-const EVENT_TEXT_INSERTED = Ci.nsIAccessibleEvent.EVENT_TEXT_INSERTED;
-const EVENT_TEXT_REMOVED = Ci.nsIAccessibleEvent.EVENT_TEXT_REMOVED;
-const EVENT_FOCUS = Ci.nsIAccessibleEvent.EVENT_FOCUS;
-const EVENT_SHOW = Ci.nsIAccessibleEvent.EVENT_SHOW;
-const EVENT_HIDE = Ci.nsIAccessibleEvent.EVENT_HIDE;
-
-const ROLE_INTERNAL_FRAME = Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME;
-const ROLE_DOCUMENT = Ci.nsIAccessibleRole.ROLE_DOCUMENT;
-const ROLE_CHROME_WINDOW = Ci.nsIAccessibleRole.ROLE_CHROME_WINDOW;
-const ROLE_TEXT_LEAF = Ci.nsIAccessibleRole.ROLE_TEXT_LEAF;
-
 const TEXT_NODE = 3;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
@@ -35,6 +20,10 @@ XPCOMUtils.defineLazyModuleGetter(this, 'Presentation',
   'resource://gre/modules/accessibility/Presentation.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'TraversalRules',
   'resource://gre/modules/accessibility/TraversalRules.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Roles',
+  'resource://gre/modules/accessibility/Constants.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Events',
+  'resource://gre/modules/accessibility/Constants.jsm');
 
 this.EXPORTED_SYMBOLS = ['EventManager'];
 
@@ -57,7 +46,7 @@ this.EventManager.prototype = {
   start: function start() {
     try {
       if (!this._started) {
-        Logger.info('EventManager.start', Utils.MozBuildApp);
+        Logger.debug('EventManager.start');
 
         this._started = true;
 
@@ -84,7 +73,7 @@ this.EventManager.prototype = {
     if (!this._started) {
       return;
     }
-    Logger.info('EventManager.stop', Utils.MozBuildApp);
+    Logger.debug('EventManager.stop');
     AccessibilityEventObserver.removeListener(this);
     try {
       this.webProgress.removeProgressListener(this);
@@ -144,7 +133,7 @@ this.EventManager.prototype = {
 
     // Don't bother with non-content events in firefox.
     if (Utils.MozBuildApp == 'browser' &&
-        aEvent.eventType != EVENT_VIRTUALCURSOR_CHANGED &&
+        aEvent.eventType != Events.VIRTUALCURSOR_CHANGED &&
         // XXX Bug 442005 results in DocAccessible::getDocType returning
         // NS_ERROR_FAILURE. Checking for aEvent.accessibleDocument.docType ==
         // 'window' does not currently work.
@@ -154,12 +143,12 @@ this.EventManager.prototype = {
     }
 
     switch (aEvent.eventType) {
-      case EVENT_VIRTUALCURSOR_CHANGED:
+      case Events.VIRTUALCURSOR_CHANGED:
       {
         let pivot = aEvent.accessible.
           QueryInterface(Ci.nsIAccessibleDocument).virtualCursor;
         let position = pivot.position;
-        if (position && position.role == ROLE_INTERNAL_FRAME)
+        if (position && position.role == Roles.INTERNAL_FRAME)
           break;
         let event = aEvent.
           QueryInterface(Ci.nsIAccessibleVirtualCursorChangeEvent);
@@ -174,7 +163,7 @@ this.EventManager.prototype = {
 
         break;
       }
-      case EVENT_STATE_CHANGE:
+      case Events.STATE_CHANGE:
       {
         let event = aEvent.QueryInterface(Ci.nsIAccessibleStateChangeEvent);
         if (event.state == Ci.nsIAccessibleStates.STATE_CHECKED &&
@@ -191,13 +180,13 @@ this.EventManager.prototype = {
         }
         break;
       }
-      case EVENT_SCROLLING_START:
+      case Events.SCROLLING_START:
       {
         let vc = Utils.getVirtualCursor(aEvent.accessibleDocument);
         vc.moveNext(TraversalRules.Simple, aEvent.accessible, true);
         break;
       }
-      case EVENT_TEXT_CARET_MOVED:
+      case Events.TEXT_CARET_MOVED:
       {
         let acc = aEvent.accessible;
         let characterCount = acc.
@@ -233,7 +222,7 @@ this.EventManager.prototype = {
         this.editState = editState;
         break;
       }
-      case EVENT_SHOW:
+      case Events.SHOW:
       {
         let {liveRegion, isPolite} = this._handleLiveRegion(aEvent,
           ['additions', 'all']);
@@ -242,14 +231,14 @@ this.EventManager.prototype = {
           break;
         }
         // Show for text is handled by the EVENT_TEXT_INSERTED handler.
-        if (aEvent.accessible.role === ROLE_TEXT_LEAF) {
+        if (aEvent.accessible.role === Roles.TEXT_LEAF) {
           break;
         }
-        this._dequeueLiveEvent(EVENT_HIDE, liveRegion);
+        this._dequeueLiveEvent(Events.HIDE, liveRegion);
         this.present(Presentation.liveRegion(liveRegion, isPolite, false));
         break;
       }
-      case EVENT_HIDE:
+      case Events.HIDE:
       {
         let {liveRegion, isPolite} = this._handleLiveRegion(
           aEvent.QueryInterface(Ci.nsIAccessibleHideEvent),
@@ -259,14 +248,14 @@ this.EventManager.prototype = {
           break;
         }
         // Hide for text is handled by the EVENT_TEXT_REMOVED handler.
-        if (aEvent.accessible.role === ROLE_TEXT_LEAF) {
+        if (aEvent.accessible.role === Roles.TEXT_LEAF) {
           break;
         }
-        this._queueLiveEvent(EVENT_HIDE, liveRegion, isPolite);
+        this._queueLiveEvent(Events.HIDE, liveRegion, isPolite);
         break;
       }
-      case EVENT_TEXT_INSERTED:
-      case EVENT_TEXT_REMOVED:
+      case Events.TEXT_INSERTED:
+      case Events.TEXT_REMOVED:
       {
         let {liveRegion, isPolite} = this._handleLiveRegion(aEvent,
           ['text', 'all']);
@@ -277,12 +266,12 @@ this.EventManager.prototype = {
         }
         break;
       }
-      case EVENT_FOCUS:
+      case Events.FOCUS:
       {
         // Put vc where the focus is at
         let acc = aEvent.accessible;
         let doc = aEvent.accessibleDocument;
-        if (acc.role != ROLE_DOCUMENT && doc.role != ROLE_CHROME_WINDOW) {
+        if (acc.role != Roles.DOCUMENT && doc.role != Roles.CHROME_WINDOW) {
           let vc = Utils.getVirtualCursor(doc);
           vc.moveNext(TraversalRules.Simple, acc, true);
         }
@@ -314,11 +303,11 @@ this.EventManager.prototype = {
       return;
     }
     if (aLiveRegion) {
-      if (aEvent.eventType === EVENT_TEXT_REMOVED) {
-        this._queueLiveEvent(EVENT_TEXT_REMOVED, aLiveRegion, aIsPolite,
+      if (aEvent.eventType === Events.TEXT_REMOVED) {
+        this._queueLiveEvent(Events.TEXT_REMOVED, aLiveRegion, aIsPolite,
           modifiedText);
       } else {
-        this._dequeueLiveEvent(EVENT_TEXT_REMOVED, aLiveRegion);
+        this._dequeueLiveEvent(Events.TEXT_REMOVED, aLiveRegion);
         this.present(Presentation.liveRegion(aLiveRegion, aIsPolite, false,
           modifiedText));
       }

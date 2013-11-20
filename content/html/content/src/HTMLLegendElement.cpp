@@ -21,16 +21,6 @@ HTMLLegendElement::~HTMLLegendElement()
 
 NS_IMPL_ELEMENT_CLONE(HTMLLegendElement)
 
-// this contains center, because IE4 does
-static const nsAttrValue::EnumTable kAlignTable[] = {
-  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
-  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
-  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
-  { "bottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
-  { "top", NS_STYLE_VERTICAL_ALIGN_TOP },
-  { 0 }
-};
-
 nsIContent*
 HTMLLegendElement::GetFieldSet()
 {
@@ -49,6 +39,16 @@ HTMLLegendElement::ParseAttribute(int32_t aNamespaceID,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult)
 {
+  // this contains center, because IE4 does
+  static const nsAttrValue::EnumTable kAlignTable[] = {
+    { "left", NS_STYLE_TEXT_ALIGN_LEFT },
+    { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
+    { "center", NS_STYLE_TEXT_ALIGN_CENTER },
+    { "bottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
+    { "top", NS_STYLE_VERTICAL_ALIGN_TOP },
+    { 0 }
+  };
+
   if (aAttribute == nsGkAtoms::align && aNamespaceID == kNameSpaceID_None) {
     return aResult.ParseEnumValue(aValue, kAlignTable, false);
   }

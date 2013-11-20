@@ -647,6 +647,10 @@ protected:
    * The live list of selected options.
   */
   nsRefPtr<nsContentList> mSelectedOptions;
+
+private:
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    nsRuleData* aData);
 };
 
 } // namespace dom

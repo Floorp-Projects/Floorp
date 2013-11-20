@@ -24,7 +24,7 @@ public:
   PromiseCallback();
   virtual ~PromiseCallback();
 
-  virtual void Call(const Optional<JS::Handle<JS::Value> >& aValue) = 0;
+  virtual void Call(JS::Handle<JS::Value> aValue) = 0;
 
   enum Task {
     Resolve,
@@ -46,7 +46,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(WrapperPromiseCallback,
                                            PromiseCallback)
 
-  void Call(const Optional<JS::Handle<JS::Value> >& aValue) MOZ_OVERRIDE;
+  void Call(JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
 
   WrapperPromiseCallback(Promise* aNextPromise, AnyCallback* aCallback);
   ~WrapperPromiseCallback();
@@ -64,7 +64,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SimpleWrapperPromiseCallback,
                                            PromiseCallback)
 
-  void Call(const Optional<JS::Handle<JS::Value> >& aValue) MOZ_OVERRIDE;
+  void Call(JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
 
   SimpleWrapperPromiseCallback(Promise* aPromise,
                                AnyCallback* aCallback);
@@ -84,7 +84,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ResolvePromiseCallback,
                                            PromiseCallback)
 
-  void Call(const Optional<JS::Handle<JS::Value> >& aValue) MOZ_OVERRIDE;
+  void Call(JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
 
   ResolvePromiseCallback(Promise* aPromise);
   ~ResolvePromiseCallback();
@@ -102,13 +102,32 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RejectPromiseCallback,
                                            PromiseCallback)
 
-  void Call(const Optional<JS::Handle<JS::Value> >& aValue) MOZ_OVERRIDE;
+  void Call(JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
 
   RejectPromiseCallback(Promise* aPromise);
   ~RejectPromiseCallback();
 
 private:
   nsRefPtr<Promise> mPromise;
+};
+
+// NativePromiseCallback wraps a NativePromiseHandler.
+class NativePromiseCallback MOZ_FINAL : public PromiseCallback
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(NativePromiseCallback,
+                                           PromiseCallback)
+
+  void Call(JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
+
+  NativePromiseCallback(PromiseNativeHandler* aHandler,
+                        Promise::PromiseState aState);
+  ~NativePromiseCallback();
+
+private:
+  nsRefPtr<PromiseNativeHandler> mHandler;
+  Promise::PromiseState mState;
 };
 
 } // namespace dom
