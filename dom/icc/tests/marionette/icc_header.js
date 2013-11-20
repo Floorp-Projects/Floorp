@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-MARIONETTE_TIMEOUT = 30000;
-
 SpecialPowers.addPermission("mobileconnection", true, document);
 
 let iccManager = navigator.mozIccManager;
@@ -24,41 +22,46 @@ is(iccId, "89014103211118510720", "iccId is " + iccId);
 let icc = iccManager.getIccById(iccId);
 ok(icc instanceof MozIcc, "icc is instanceof " + icc.constructor);
 
-let pendingEmulatorCmdCount = 0;
-function sendStkPduToEmulator(command, func, expect) {
-  ++pendingEmulatorCmdCount;
-
-  runEmulatorCmd(command, function (result) {
-    --pendingEmulatorCmdCount;
-    is(result[0], "OK");
-  });
-
-  icc.onstkcommand = function (evt) {
-    if (expect) {
-      func(evt.command, expect);
-    } else {
-      func(evt.command);
-    }
-  }
-}
-
-function runNextTest() {
-  let test = tests.pop();
-  if (!test) {
-    cleanUp();
-    return;
-  }
-
-  let command = "stk pdu " + test.command;
-  sendStkPduToEmulator(command, test.func, test.expect);
-}
-
-function cleanUp() {
-  if (pendingEmulatorCmdCount) {
-    window.setTimeout(cleanUp, 100);
-    return;
-  }
-
+/* Remove permission and execute finish() */
+let cleanUp = function () {
   SpecialPowers.removePermission("mobileconnection", document);
   finish();
-}
+};
+
+/* Helper for tasks */
+let taskHelper = {
+  tasks: [],
+
+  push: function(task) {
+    this.tasks.push(task);
+  },
+
+  runNext: function() {
+    let task = this.tasks.shift();
+    if (!task) {
+      cleanUp();
+      return;
+    }
+
+    if (typeof task === "function") {
+      task();
+    }
+  },
+};
+
+/* Helper for emulator console command */
+let emulatorHelper = {
+  pendingCommandCount: 0,
+
+  sendCommand: function(cmd, callback) {
+    this.pendingCommandCount++;
+    runEmulatorCmd(cmd, function(result) {
+      this.pendingCommandCount--;
+      is(result[result.length - 1], "OK");
+
+      if (callback && typeof callback === "function") {
+        callback(result);
+      }
+    });
+  },
+};

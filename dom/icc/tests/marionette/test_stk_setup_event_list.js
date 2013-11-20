@@ -5,7 +5,7 @@ MARIONETTE_HEAD_JS = "stk_helper.js";
 
 function testSetupEventList(command, expect) {
   log("STK CMD " + JSON.stringify(command));
-  is(command.typeOfCommand, icc.STK_CMD_SET_UP_EVENT_LIST, expect.name);
+  is(command.typeOfCommand, iccManager.STK_CMD_SET_UP_EVENT_LIST, expect.name);
   is(command.commandQualifier, expect.commandQualifier, expect.name);
   for (let index in command.options.eventList) {
     is(command.options.eventList[index], expect.eventList[index], expect.name);
