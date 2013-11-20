@@ -662,6 +662,22 @@ CM_MAPPING.forEach(function (name) {
   };
 });
 
+// Static methods on the Editor object itself.
+
+/**
+ * Returns a string representation of a shortcut 'key' with
+ * a OS specific modifier. Cmd- for Macs, Ctrl- for other
+ * platforms. Useful with extraKeys configuration option.
+ *
+ * CodeMirror defines all keys with modifiers in the following
+ * order: Shift - Ctrl/Cmd - Alt - Key
+ */
+Editor.accel = function (key, modifiers={}) {
+  return (modifiers.shift ? "Shift-" : "") +
+         (Services.appinfo.OS == "Darwin" ? "Cmd-" : "Ctrl-") +
+         (modifiers.alt ? "Alt-" : "") + key;
+};
+
 // Since Gecko already provide complete and up to date list of CSS property
 // names, values and color names, we compute them so that they can replace
 // the ones used in CodeMirror while initiating an editor object. This is done
