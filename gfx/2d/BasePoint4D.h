@@ -6,6 +6,8 @@
 #ifndef MOZILLA_BASEPOINT4D_H_
 #define MOZILLA_BASEPOINT4D_H_
 
+#include "mozilla/Assertions.h"
+
 namespace mozilla {
 namespace gfx {
 
@@ -86,12 +88,12 @@ struct BasePoint4D {
   }
 
   T& operator[](int aIndex) {
-    NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 3, "Invalid array index");
+    MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid array index");
     return *((&x)+aIndex);
   }
 
   const T& operator[](int aIndex) const {
-    NS_ABORT_IF_FALSE(aIndex >= 0 && aIndex <= 3, "Invalid array index");
+    MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid array index");
     return *((&x)+aIndex);
   }
 
