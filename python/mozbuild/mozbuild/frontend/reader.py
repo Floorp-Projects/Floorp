@@ -40,6 +40,7 @@ from mozbuild.util import (
 
 from mozbuild.backend.configenvironment import ConfigEnvironment
 
+from mozpack.files import FileFinder
 import mozpack.path as mozpath
 
 from .data import (
@@ -514,7 +515,7 @@ class BuildReaderError(Exception):
 
     def _print_keyerror(self, inner, s):
         if inner.args[0] not in ('global_ns', 'local_ns'):
-            self._print_exception(unner, s)
+            self._print_exception(inner, s)
             return
 
         if inner.args[0] == 'global_ns':
@@ -597,23 +598,53 @@ class BuildReader(object):
     def __init__(self, config):
         self.config = config
         self.topsrcdir = config.topsrcdir
+        self.topobjdir = config.topobjdir
 
         self._log = logging.getLogger(__name__)
         self._read_files = set()
         self._execution_stack = []
 
     def read_topsrcdir(self):
-        """Read the tree of mozconfig files into a data structure.
+        """Read the tree of linked moz.build files.
 
-        This starts with the tree's top-most mozbuild file and descends into
-        all linked mozbuild files until all relevant files have been evaluated.
+        This starts with the tree's top-most moz.build file and descends into
+        all linked moz.build files until all relevant files have been evaluated.
 
-        This is a generator of Sandbox instances. As each mozbuild file is
-        read, a new Sandbox is created. Each created Sandbox is returned.
+        This is a generator of Sandbox instances. As each moz.build file is
+        read, a new Sandbox is created and emitted.
         """
         path = mozpath.join(self.topsrcdir, 'moz.build')
         return self.read_mozbuild(path, read_tiers=True,
             filesystem_absolute=True, metadata={'tier': None})
+
+    def walk_topsrcdir(self):
+        """Read all moz.build files in the source tree.
+
+        This is different from read_topsrcdir() in that this version performs a
+        filesystem walk to discover every moz.build file rather than relying on
+        data from executed moz.build files to drive traversal.
+
+        This is a generator of Sandbox instances.
+        """
+        # In the future, we may traverse moz.build files by looking
+        # for DIRS references in the AST, even if a directory is added behind
+        # a conditional. For now, just walk the filesystem.
+        ignore = {
+            # Ignore fake moz.build files used for testing moz.build.
+            'python/mozbuild/mozbuild/test',
+
+            # Ignore object directories.
+            'obj*',
+        }
+
+        finder = FileFinder(self.topsrcdir, find_executables=False,
+            ignore=ignore)
+
+        for path, f in finder.find('**/moz.build'):
+            path = os.path.join(self.topsrcdir, path)
+            for s in self.read_mozbuild(path, descend=False,
+                filesystem_absolute=True, read_tiers=True):
+                yield s
 
     def read_mozbuild(self, path, read_tiers=False, filesystem_absolute=False,
             descend=True, metadata={}):

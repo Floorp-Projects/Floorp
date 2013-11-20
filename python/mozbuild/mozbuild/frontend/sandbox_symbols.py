@@ -571,6 +571,18 @@ VARIABLES = {
         result is dist/xpi-stage/$(XPI_NAME). If DIST_SUBDIR is present, then
         the $(DIST_SUBDIR) directory of the otherwise default value is used.
         """, 'libs'),
+
+    'SPHINX_TREES': (dict, dict,
+        """Describes what the Sphinx documentation tree will look like.
+
+        Keys are relative directories inside the final Sphinx documentation
+        tree to install files into. Values are directories (relative to this
+        file) whose content to copy into the Sphinx documentation tree.
+        """, None),
+
+    'SPHINX_PYTHON_PACKAGE_DIRS': (StrictOrderingOnAppendList, list,
+        """Directories containing Python packages that Sphinx documents.
+        """, None),
 }
 
 # The set of functions exposed to the sandbox.

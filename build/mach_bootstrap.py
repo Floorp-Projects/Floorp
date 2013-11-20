@@ -75,6 +75,7 @@ MACH_MODULES = [
     'testing/xpcshell/mach_commands.py',
     'testing/talos/mach_commands.py',
     'testing/xpcshell/mach_commands.py',
+    'tools/docs/mach_commands.py',
     'tools/mercurial/mach_commands.py',
     'tools/mach_commands.py',
 ]
