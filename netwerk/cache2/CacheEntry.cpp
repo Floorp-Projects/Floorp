@@ -542,7 +542,7 @@ bool CacheEntry::InvokeCallback(Callback & aCallback)
           LOG(("  OnCacheEntryCheck: rv=0x%08x, result=%d", rv, checkResult));
 
           if (NS_FAILED(rv))
-            checkResult = ENTRY_WANTED;
+            checkResult = ENTRY_NOT_WANTED;
         }
 
         switch (checkResult) {
