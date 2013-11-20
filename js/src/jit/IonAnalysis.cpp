@@ -1576,7 +1576,7 @@ TryEliminateTypeBarrierFromTest(MTypeBarrier *barrier, bool filtersNull, bool fi
 
     // Disregard the possible unbox added before the Typebarrier for checking.
     MDefinition *input = barrier->input();
-    if (input->isUnbox() && input->toUnbox()->mode() == MUnbox::TypeBarrier)
+    if (input->isUnbox() && input->toUnbox()->mode() != MUnbox::Fallible)
         input = input->toUnbox()->input();
 
     if (test->getOperand(0) == input && direction == TRUE_BRANCH) {
@@ -1626,11 +1626,8 @@ TryEliminateTypeBarrier(MTypeBarrier *barrier, bool *eliminated)
     const types::TemporaryTypeSet *inputTypes = barrier->input()->resultTypeSet();
 
     // Disregard the possible unbox added before the Typebarrier.
-    if (barrier->input()->isUnbox() &&
-        barrier->input()->toUnbox()->mode() == MUnbox::TypeBarrier)
-    {
+    if (barrier->input()->isUnbox() && barrier->input()->toUnbox()->mode() != MUnbox::Fallible)
         inputTypes = barrier->input()->toUnbox()->input()->resultTypeSet();
-    }
 
     if (!barrierTypes || !inputTypes)
         return true;

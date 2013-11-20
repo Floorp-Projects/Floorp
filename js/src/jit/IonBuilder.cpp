@@ -5251,21 +5251,10 @@ IonBuilder::makeCall(JSFunction *target, CallInfo &callInfo, bool cloneAtCallsit
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
 
-    bool barrier = true;
-    MDefinition *replace = call;
-    if (call->isDOMFunction()) {
-        JSFunction* target = call->getSingleTarget();
-        JS_ASSERT(target && target->isNative() && target->jitInfo());
-        const JSJitInfo *jitinfo = target->jitInfo();
-        barrier = DOMCallNeedsBarrier(jitinfo, types);
-        replace = ensureDefiniteType(call, jitinfo->returnType);
-        if (replace != call) {
-            current->pop();
-            current->push(replace);
-        }
-    }
+    if (call->isDOMFunction())
+        return pushDOMTypeBarrier(call, types, call->getSingleTarget());
 
-    return pushTypeBarrier(replace, types, barrier);
+    return pushTypeBarrier(call, types, true);
 }
 
 bool
@@ -6145,6 +6134,38 @@ IonBuilder::pushTypeBarrier(MDefinition *def, types::TemporaryTypeSet *observed,
 
     current->push(barrier);
     return true;
+}
+
+bool
+IonBuilder::pushDOMTypeBarrier(MInstruction *ins, types::TemporaryTypeSet *observed, JSFunction* func)
+{
+    JS_ASSERT(func && func->isNative() && func->jitInfo());
+
+    const JSJitInfo *jitinfo = func->jitInfo();
+    bool barrier = DOMCallNeedsBarrier(jitinfo, observed);
+    // Need to be a bit careful: if jitinfo->returnType is JSVAL_TYPE_DOUBLE but
+    // types->getKnownTypeTag() is JSVAL_TYPE_INT32, then don't unconditionally
+    // unbox as a double.  Instead, go ahead and barrier on having an int type,
+    // since we know we need a barrier anyway due to the type mismatch.  This is
+    // the only situation in which TI actually has more information about the
+    // JSValueType than codegen can, short of jitinfo->returnType just being
+    // JSVAL_TYPE_UNKNOWN.
+    MDefinition* replace = ins;
+    if (jitinfo->returnType != JSVAL_TYPE_DOUBLE ||
+        observed->getKnownTypeTag() != JSVAL_TYPE_INT32) {
+        JS_ASSERT(jitinfo->returnType == JSVAL_TYPE_UNKNOWN ||
+                  observed->getKnownTypeTag() == JSVAL_TYPE_UNKNOWN ||
+                  jitinfo->returnType == observed->getKnownTypeTag());
+        replace = ensureDefiniteType(ins, jitinfo->returnType);
+        if (replace != ins) {
+            current->pop();
+            current->push(replace);
+        }
+    } else {
+        JS_ASSERT(barrier);
+    }
+
+    return pushTypeBarrier(replace, observed, barrier);
 }
 
 MDefinition *
@@ -8341,13 +8362,8 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, PropertyName *name,
 
         if (get->isEffectful() && !resumeAfter(get))
             return false;
-        bool barrier = DOMCallNeedsBarrier(jitinfo, types);
-        MDefinition *replace = ensureDefiniteType(get, jitinfo->returnType);
-        if (replace != get) {
-            current->pop();
-            current->push(replace);
-        }
-        if (!pushTypeBarrier(replace, types, barrier))
+
+        if (!pushDOMTypeBarrier(get, types, commonGetter))
             return false;
 
         *emitted = true;
