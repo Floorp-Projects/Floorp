@@ -352,7 +352,7 @@ HostDB_InitEntry(PLDHashTable *table,
     return true;
 }
 
-static PLDHashTableOps gHostDB_ops =
+static const PLDHashTableOps gHostDB_ops =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
