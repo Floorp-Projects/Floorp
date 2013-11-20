@@ -273,6 +273,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
 
 /***************************************************************************/
 
+
 %{ C++
 // For use with the service manager
 // {CB6593E0-F9B2-11d2-BDD6-000064657374}
@@ -281,7 +282,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(c4d0187c-6a78-4bdf-9cd9-d218644b715a)]
+[uuid(880be309-88a1-4e98-8621-7f7e42681b20)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -446,6 +447,7 @@ interface nsIXPConnect : nsISupports
 
 
     [noscript,notxpcom,nostdcall] JSContextPtr getCurrentJSContext();
+    [noscript,notxpcom,nostdcall] JSContextPtr initSafeJSContext();
     [noscript,notxpcom,nostdcall] JSContextPtr getSafeJSContext();
 
     readonly attribute nsIStackFrame                CurrentJSStack;
