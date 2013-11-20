@@ -2061,7 +2061,7 @@ HTMLInputElement::ApplyStep(int32_t aStep)
 
   Decimal value = GetValueAsDecimal();
   if (value.isNaN()) {
-    return NS_OK;
+    value = 0;
   }
 
   Decimal minimum = GetMinimum();
