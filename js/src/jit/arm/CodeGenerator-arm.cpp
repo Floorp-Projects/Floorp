@@ -1872,7 +1872,7 @@ CodeGeneratorARM::visitInterruptCheck(LInterruptCheck *lir)
     if (!ool)
         return false;
 
-    void *interrupt = (void*)&GetIonContext()->runtime->interrupt;
+    void *interrupt = (void*)GetIonContext()->runtime->addressOfInterrupt();
     masm.load32(AbsoluteAddress(interrupt), lr);
     masm.ma_cmp(lr, Imm32(0));
     masm.ma_b(ool->entry(), Assembler::NonZero);

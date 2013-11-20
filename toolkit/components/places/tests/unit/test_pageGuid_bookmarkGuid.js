@@ -22,13 +22,7 @@ add_task(function test_addBookmarksAndCheckGuids() {
   let s1 = bmsvc.insertSeparator(folder, bmsvc.DEFAULT_INDEX);
   let f1 = bmsvc.createFolder(folder, "test folder 2", bmsvc.DEFAULT_INDEX);
 
-  let options = histsvc.getNewQueryOptions();
-  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-  let query = histsvc.getNewQuery();
-  query.setFolders([folder], 1);
-  let result = histsvc.executeQuery(query, options);
-  let root = result.root;
-  root.containerOpen = true;
+  let root = PlacesUtils.getFolderContents(folder).root;
   do_check_eq(root.childCount, 5);
 
   // check bookmark guids
@@ -71,13 +65,7 @@ add_task(function test_updateBookmarksAndCheckGuids() {
                                 bmsvc.DEFAULT_INDEX, "1 title");
   let f1 = bmsvc.createFolder(folder, "test folder 2", bmsvc.DEFAULT_INDEX);
 
-  let options = histsvc.getNewQueryOptions();
-  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-  let query = histsvc.getNewQuery();
-  query.setFolders([folder], 1);
-  let result = histsvc.executeQuery(query, options);
-  let root = result.root;
-  root.containerOpen = true;
+  let root = PlacesUtils.getFolderContents(folder).root;
   do_check_eq(root.childCount, 2);
 
   // ensure the bookmark and page guids remain the same after modifing other property.
@@ -110,18 +98,83 @@ add_task(function test_addVisitAndCheckGuid() {
   let options = histsvc.getNewQueryOptions();
   let query = histsvc.getNewQuery();
   query.uri = sourceURI;
-  result = histsvc.executeQuery(query, options);
-  let root = result.root;
+  let root = histsvc.executeQuery(query, options).root;
   root.containerOpen = true;
   do_check_eq(root.childCount, 1);
 
-  pageGuidZero = root.getChild(0).pageGuid;
-  do_check_eq(pageGuidZero.length, 12);
-
+  do_check_valid_places_guid(root.getChild(0).pageGuid);
   do_check_eq(root.getChild(0).bookmarkGuid, "");
-
   root.containerOpen = false;
 
   yield promiseClearHistory();
 });
 
+add_task(function test_addItemsWithInvalidGUIDsFails() {
+  const INVALID_GUID = "XYZ";
+  try {
+    bmsvc.createFolder(bmsvc.placesRoot, "XYZ folder",
+                       bmsvc.DEFAULT_INDEX, INVALID_GUID);
+    do_throw("Adding a folder with an invalid guid should fail");
+  }
+  catch(ex) { }
+
+  let folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder",
+                                  bmsvc.DEFAULT_INDEX);
+  try {
+    bmsvc.insertBookmark(folder, uri("http://test.tld"), bmsvc.DEFAULT_INDEX,
+                         "title", INVALID_GUID);
+    do_throw("Adding a bookmark with an invalid guid should fail");
+  }
+  catch(ex) { }
+
+  try {
+    bmsvc.insertSeparator(folder, bmsvc.DEFAULT_INDEX, INVALID_GUID);
+    do_throw("Adding a separator with an invalid guid should fail");
+  }
+  catch(ex) { }
+
+  remove_all_bookmarks();
+});
+
+add_task(function test_addItemsWithGUIDs() {
+  const FOLDER_GUID     = "FOLDER--GUID";
+  const BOOKMARK_GUID   = "BM------GUID";
+  const SEPARATOR_GUID  = "SEP-----GUID";
+
+  let folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder",
+                                  bmsvc.DEFAULT_INDEX, FOLDER_GUID);
+  bmsvc.insertBookmark(folder, uri("http://test1.com/"), bmsvc.DEFAULT_INDEX,
+                       "1 title", BOOKMARK_GUID);
+  bmsvc.insertSeparator(folder, bmsvc.DEFAULT_INDEX, SEPARATOR_GUID);
+
+  let root = PlacesUtils.getFolderContents(folder).root;
+  do_check_eq(root.childCount, 2);
+  do_check_eq(root.bookmarkGuid, FOLDER_GUID);
+  do_check_eq(root.getChild(0).bookmarkGuid, BOOKMARK_GUID);
+  do_check_eq(root.getChild(1).bookmarkGuid, SEPARATOR_GUID);
+
+  root.containerOpen = false;
+  remove_all_bookmarks();
+});
+
+add_task(function test_emptyGUIDIgnored() {
+  let folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder",
+                                  bmsvc.DEFAULT_INDEX, "");
+  do_check_valid_places_guid(PlacesUtils.getFolderContents(folder)
+                                        .root.bookmarkGuid);
+  remove_all_bookmarks();
+});
+
+add_task(function test_usingSameGUIDFails() {
+  const GUID = "XYZXYZXYZXYZ";
+  bmsvc.createFolder(bmsvc.placesRoot, "test folder",
+                     bmsvc.DEFAULT_INDEX, GUID);
+  try {
+    bmsvc.createFolder(bmsvc.placesRoot, "test folder 2",
+                       bmsvc.DEFAULT_INDEX, GUID);
+    do_throw("Using the same guid twice should fail");
+  }
+  catch(ex) { }
+
+  remove_all_bookmarks();
+});

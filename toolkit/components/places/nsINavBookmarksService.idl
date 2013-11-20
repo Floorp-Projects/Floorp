@@ -100,7 +100,7 @@ interface nsINavBookmarkObserver : nsISupports
   /**
    * Notifies that an item's information has changed.  This will be called
    * whenever any attributes like "title" are changed.
-   * 
+   *
    * @param aItemId
    *        The id of the item that was changed.
    * @param aProperty
@@ -223,7 +223,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(2299598b-8d83-4b67-9b13-b6d4707dcf7b)]
+[scriptable, uuid(A78EA368-E28E-462E-897A-26606D4DDCE6)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -276,13 +276,19 @@ interface nsINavBookmarksService : nsISupports
    *         The index to insert at, or DEFAULT_INDEX to append
    *  @param aTitle
    *         The title for the new bookmark
+   *  @param [optional] aGUID
+   *         The GUID to be set for the new item.  If not set, a new GUID is
+   *         generated.  Unless you've a very sound reason, such as an undo
+   *         manager implementation, do not pass this argument.
    *  @return The ID of the newly-created bookmark.
    *
    *  @note aTitle will be truncated to TITLE_LENGTH_MAX and
    *        aURI will be truncated to URI_LENGTH_MAX.
+   *  @throws if aGUID is malformed.
    */
   long long insertBookmark(in long long aParentId, in nsIURI aURI,
-                           in long aIndex, in AUTF8String aTitle);
+                           in long aIndex, in AUTF8String aTitle,
+                           [optional] in ACString aGUID);
 
   /**
    * Removes a child item. Used to delete a bookmark or separator.
@@ -299,24 +305,30 @@ interface nsINavBookmarksService : nsISupports
    *         The name of the new folder
    *  @param aIndex
    *         The index to insert at, or DEFAULT_INDEX to append
+   *  @param [optional] aGUID
+   *         The GUID to be set for the new item.  If not set, a new GUID is
+   *         generated.  Unless you've a very sound reason, such as an undo
+   *         manager implementation, do not pass this argument.
    *  @return The ID of the newly-inserted folder.
+   *  @throws if aGUID is malformed.
    */
   long long createFolder(in long long aParentFolder, in AUTF8String name,
-                         in long index);
+                         in long index,
+                         [optional] in ACString aGUID);
 
   /**
    * Gets an undo-able transaction for removing a folder from the bookmarks
-   * tree. 
+   * tree.
    *  @param aItemId
    *         The id of the folder to remove.
-   *  @return An object implementing nsITransaction that can be used to undo 
-   *          or redo the action. 
+   *  @return An object implementing nsITransaction that can be used to undo
+   *          or redo the action.
    *
-   * This method exists because complex delete->undo operations rely on 
-   * recreated folders to have the same ID they had before they were deleted, 
-   * so that any other items deleted in different transactions can be 
-   * re-inserted correctly. This provides a safe encapsulation of this 
-   * functionality without exposing the ability to recreate folders with 
+   * This method exists because complex delete->undo operations rely on
+   * recreated folders to have the same ID they had before they were deleted,
+   * so that any other items deleted in different transactions can be
+   * re-inserted correctly. This provides a safe encapsulation of this
+   * functionality without exposing the ability to recreate folders with
    * specific IDs (potentially dangerous if abused by other code!) in the
    * public API.
    */
@@ -352,9 +364,15 @@ interface nsINavBookmarksService : nsISupports
    *         The id of the parent folder
    *  @param aIndex
    *         The separator's index under folder, or DEFAULT_INDEX to append
+   *  @param [optional] aGUID
+   *         The GUID to be set for the new item.  If not set, a new GUID is
+   *         generated.  Unless you've a very sound reason, such as an undo
+   *         manager implementation, do not pass this argument.
    *  @return The ID of the new separator.
+   *  @throws if aGUID is malformed.
    */
-  long long insertSeparator(in long long aParentId, in long aIndex);
+  long long insertSeparator(in long long aParentId, in long aIndex,
+                            [optional] in ACString aGUID);
 
   /**
    * Get the itemId given the containing folder and the index.
@@ -437,7 +455,7 @@ interface nsINavBookmarksService : nsISupports
    *
    *  @param aItemId    The id of the item to modify
    *  @param aNewIndex  The new index
-   * 
+   *
    *  @throws If aNewIndex is out of bounds.
    */
   void setItemIndex(in long long aItemId, in long aNewIndex);
@@ -554,7 +572,7 @@ interface nsINavBookmarksService : nsISupports
    * Runs the passed callback inside of a database transaction.
    * Use this when a lot of things are about to change, for example
    * adding or deleting a large number of bookmark items. Calls can
-   * be nested. Observers are notified when batches begin and end, via 
+   * be nested. Observers are notified when batches begin and end, via
    * nsINavBookmarkObserver.onBeginUpdateBatch/onEndUpdateBatch.
    *
    * @param aCallback
