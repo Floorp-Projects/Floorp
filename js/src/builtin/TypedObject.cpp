@@ -135,10 +135,24 @@ IsStructTypeObject(JSObject &type)
 }
 
 static inline bool
+IsX4TypeObject(JSObject &type)
+{
+    return type.hasClass(&X4Type::class_);
+}
+
+static inline bool
+IsComplexTypeObject(JSObject &type)
+{
+    return IsArrayTypeObject(type) || IsStructTypeObject(type);
+}
+
+static inline bool
 IsTypeObject(JSObject &type)
 {
-    return IsScalarTypeObject(type) || IsArrayTypeObject(type) ||
-           IsStructTypeObject(type) || IsReferenceTypeObject(type);
+    return IsScalarTypeObject(type) ||
+           IsReferenceTypeObject(type) ||
+           IsX4TypeObject(type) ||
+           IsComplexTypeObject(type);
 }
 
 static inline bool
@@ -1270,6 +1284,164 @@ DefineSimpleTypeObject(JSContext *cx,
     return true;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// X4
+
+const Class X4Type::class_ = {
+    "X4",
+    JSCLASS_HAS_RESERVED_SLOTS(JS_TYPEOBJ_X4_SLOTS),
+    JS_PropertyStub,
+    JS_DeletePropertyStub,
+    JS_PropertyStub,
+    JS_StrictPropertyStub,
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    nullptr,
+    nullptr,
+    call,
+    nullptr,
+    nullptr,
+    nullptr
+};
+
+// These classes just exist to group together various properties and so on.
+namespace js {
+class Int32x4Defn {
+  public:
+    static const X4TypeRepresentation::Type type = X4TypeRepresentation::TYPE_INT32;
+    static const JSPropertySpec TypedObjectProperties[];
+    static const JSFunctionSpec TypedObjectMethods[];
+};
+class Float32x4Defn {
+  public:
+    static const X4TypeRepresentation::Type type = X4TypeRepresentation::TYPE_FLOAT32;
+    static const JSPropertySpec TypedObjectProperties[];
+    static const JSFunctionSpec TypedObjectMethods[];
+};
+} // namespace js
+
+const JSPropertySpec js::Int32x4Defn::TypedObjectProperties[] = {
+    JS_SELF_HOSTED_GET("x", "Int32x4Lane0", JSPROP_PERMANENT),
+    JS_SELF_HOSTED_GET("y", "Int32x4Lane1", JSPROP_PERMANENT),
+    JS_SELF_HOSTED_GET("z", "Int32x4Lane2", JSPROP_PERMANENT),
+    JS_SELF_HOSTED_GET("w", "Int32x4Lane3", JSPROP_PERMANENT),
+    JS_PS_END
+};
+
+const JSFunctionSpec js::Int32x4Defn::TypedObjectMethods[] = {
+    JS_SELF_HOSTED_FN("toSource", "X4ToSource", 0, 0),
+    JS_FS_END
+};
+
+const JSPropertySpec js::Float32x4Defn::TypedObjectProperties[] = {
+    JS_SELF_HOSTED_GET("x", "Float32x4Lane0", JSPROP_PERMANENT),
+    JS_SELF_HOSTED_GET("y", "Float32x4Lane1", JSPROP_PERMANENT),
+    JS_SELF_HOSTED_GET("z", "Float32x4Lane2", JSPROP_PERMANENT),
+    JS_SELF_HOSTED_GET("w", "Float32x4Lane3", JSPROP_PERMANENT),
+    JS_PS_END
+};
+
+const JSFunctionSpec js::Float32x4Defn::TypedObjectMethods[] = {
+    JS_SELF_HOSTED_FN("toSource", "X4ToSource", 0, 0),
+    JS_FS_END
+};
+
+template<typename T>
+static JSObject *
+CreateX4Class(JSContext *cx, Handle<GlobalObject*> global)
+{
+    RootedObject funcProto(cx, global->getOrCreateFunctionPrototype(cx));
+    if (!funcProto)
+        return nullptr;
+
+    // Create type representation
+
+    RootedObject typeReprObj(cx);
+    typeReprObj = X4TypeRepresentation::Create(cx, T::type);
+    if (!typeReprObj)
+        return nullptr;
+
+    // Create prototype property, which inherits from Object.prototype
+
+    RootedObject objProto(cx, global->getOrCreateObjectPrototype(cx));
+    if (!objProto)
+        return nullptr;
+    RootedObject proto(cx);
+    proto = NewObjectWithGivenProto(cx, &JSObject::class_, objProto, global, SingletonObject);
+    if (!proto)
+        return nullptr;
+
+    // Create type constructor itself
+
+    RootedObject x4(cx);
+    x4 = NewObjectWithClassProto(cx, &X4Type::class_, funcProto, global);
+    if (!x4 ||
+        !InitializeCommonTypeDescriptorProperties(cx, x4, typeReprObj) ||
+        !DefinePropertiesAndBrand(cx, proto, nullptr, nullptr))
+    {
+        return nullptr;
+    }
+
+    // Link type constructor to the type representation
+
+    x4->initReservedSlot(JS_TYPEOBJ_SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
+
+    // Link constructor to prototype and install properties
+
+    if (!LinkConstructorAndPrototype(cx, x4, proto) ||
+        !DefinePropertiesAndBrand(cx, proto, T::TypedObjectProperties,
+                                  T::TypedObjectMethods))
+    {
+        return nullptr;
+    }
+
+    return x4;
+}
+
+bool
+X4Type::call(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    const uint32_t LANES = 4;
+
+    if (args.length() < LANES) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                             args.callee().getClass()->name, "3", "s");
+        return false;
+    }
+
+    double values[LANES];
+    for (uint32_t i = 0; i < LANES; i++) {
+        if (!ToNumber(cx, args[i], &values[i]))
+            return false;
+    }
+
+    RootedObject typeObj(cx, &args.callee());
+    RootedObject result(cx, TypedObject::createZeroed(cx, typeObj));
+    if (!result)
+        return false;
+
+    X4TypeRepresentation *typeRepr = typeRepresentation(*typeObj)->asX4();
+    switch (typeRepr->type()) {
+#define STORE_LANES(_constant, _type, _name)                                  \
+      case _constant:                                                         \
+      {                                                                       \
+        _type *mem = (_type*) TypedMem(*result);                              \
+        for (uint32_t i = 0; i < LANES; i++) {                                \
+            mem[i] = values[i];                                               \
+        }                                                                     \
+        break;                                                                \
+      }
+      JS_FOR_EACH_X4_TYPE_REPR(STORE_LANES)
+#undef STORE_LANES
+    }
+    args.rval().setObject(*result);
+    return true;
+}
+
+///////////////////////////////////////////////////////////////////////////
+
 template<typename T>
 static JSObject *
 DefineMetaTypeObject(JSContext *cx,
@@ -1376,6 +1548,38 @@ js_InitTypedObjectClass(JSContext *cx, HandleObject obj)
         return nullptr;
     JS_FOR_EACH_REFERENCE_TYPE_REPR(BINARYDATA_REFERENCE_DEFINE)
 #undef BINARYDATA_REFERENCE_DEFINE
+
+    // float32x4
+
+    RootedObject float32x4Object(cx);
+    float32x4Object = CreateX4Class<Float32x4Defn>(cx, global);
+    if (!float32x4Object)
+        return nullptr;
+
+    RootedValue float32x4Value(cx, ObjectValue(*float32x4Object));
+    if (!JSObject::defineProperty(cx, module, cx->names().float32x4,
+                                  float32x4Value,
+                                  nullptr, nullptr,
+                                  JSPROP_READONLY | JSPROP_PERMANENT))
+    {
+        return nullptr;
+    }
+
+    // int32x4
+
+    RootedObject int32x4Object(cx);
+    int32x4Object = CreateX4Class<Int32x4Defn>(cx, global);
+    if (!int32x4Object)
+        return nullptr;
+
+    RootedValue int32x4Value(cx, ObjectValue(*int32x4Object));
+    if (!JSObject::defineProperty(cx, module, cx->names().int32x4,
+                                  int32x4Value,
+                                  nullptr, nullptr,
+                                  JSPROP_READONLY | JSPROP_PERMANENT))
+    {
+        return nullptr;
+    }
 
     // ArrayType.
 
@@ -1617,7 +1821,7 @@ TypedDatum::obj_finalize(js::FreeOp *op, JSObject *obj)
 
 bool
 TypedDatum::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
-                                MutableHandleObject objp, MutableHandleShape propp)
+                              MutableHandleObject objp, MutableHandleShape propp)
 {
     JS_ASSERT(IsTypedDatum(*obj));
 
@@ -1627,6 +1831,7 @@ TypedDatum::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
     switch (typeRepr->kind()) {
       case TypeRepresentation::Scalar:
       case TypeRepresentation::Reference:
+      case TypeRepresentation::X4:
         break;
 
       case TypeRepresentation::Array:
@@ -1805,6 +2010,9 @@ TypedDatum::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receive
       case TypeRepresentation::Reference:
         break;
 
+      case TypeRepresentation::X4:
+        break;
+
       case TypeRepresentation::Array:
         if (JSID_IS_ATOM(id, cx->names().length)) {
             vp.setInt32(typeRepr->asArray()->length());
@@ -1862,6 +2070,7 @@ TypedDatum::obj_getElementIfPresent(JSContext *cx, HandleObject obj,
     switch (typeRepr->kind()) {
       case TypeRepresentation::Scalar:
       case TypeRepresentation::Reference:
+      case TypeRepresentation::X4:
       case TypeRepresentation::Struct:
         break;
 
@@ -1915,6 +2124,9 @@ TypedDatum::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
       case TypeRepresentation::Reference:
         break;
 
+      case ScalarTypeRepresentation::X4:
+        break;
+
       case ScalarTypeRepresentation::Array:
         if (JSID_IS_ATOM(id, cx->names().length)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage,
@@ -1958,6 +2170,7 @@ TypedDatum::obj_setElement(JSContext *cx, HandleObject obj, uint32_t index,
     switch (typeRepr->kind()) {
       case TypeRepresentation::Scalar:
       case TypeRepresentation::Reference:
+      case TypeRepresentation::X4:
       case TypeRepresentation::Struct:
         break;
 
@@ -1990,7 +2203,7 @@ TypedDatum::obj_setSpecial(JSContext *cx, HandleObject obj,
 
 bool
 TypedDatum::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
-                                       HandleId id, unsigned *attrsp)
+                                     HandleId id, unsigned *attrsp)
 {
     uint32_t index;
     RootedObject type(cx, GetType(*obj));
@@ -1999,6 +2212,9 @@ TypedDatum::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
     switch (typeRepr->kind()) {
       case TypeRepresentation::Scalar:
       case TypeRepresentation::Reference:
+        break;
+
+      case TypeRepresentation::X4:
         break;
 
       case TypeRepresentation::Array:
@@ -2039,6 +2255,7 @@ IsOwnId(JSContext *cx, HandleObject obj, HandleId id)
     switch (typeRepr->kind()) {
       case TypeRepresentation::Scalar:
       case TypeRepresentation::Reference:
+      case TypeRepresentation::X4:
         return false;
 
       case TypeRepresentation::Array:
@@ -2131,6 +2348,7 @@ TypedDatum::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
     switch (typeRepr->kind()) {
       case TypeRepresentation::Scalar:
       case TypeRepresentation::Reference:
+      case TypeRepresentation::X4:
         switch (enum_op) {
           case JSENUMERATE_INIT_ALL:
           case JSENUMERATE_INIT:
