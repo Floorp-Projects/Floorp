@@ -1800,10 +1800,9 @@ GCMarker::markDelayedChildren(ArenaHeader *aheader)
 bool
 GCMarker::markDelayedChildren(SliceBudget &budget)
 {
-    gcstats::Phase phase = runtime->gcIncrementalState == MARK
-                         ? gcstats::PHASE_MARK_DELAYED
-                         : gcstats::PHASE_SWEEP_MARK_DELAYED;
-    gcstats::AutoPhase ap(runtime->gcStats, phase);
+    gcstats::MaybeAutoPhase ap;
+    if (runtime->gcIncrementalState == MARK)
+        ap.construct(runtime->gcStats, gcstats::PHASE_MARK_DELAYED);
 
     JS_ASSERT(unmarkedArenaStackTop);
     do {
@@ -3177,10 +3176,14 @@ js::gc::MarkingValidator::nonIncrementalMark()
         MarkRuntime(gcmarker, true);
     }
 
-    SliceBudget budget;
-    runtime->gcIncrementalState = MARK;
-    runtime->gcMarker.drainMarkStack(budget);
+    {
+        gcstats::AutoPhase ap1(runtime->gcStats, gcstats::PHASE_MARK);
+        SliceBudget budget;
+        runtime->gcIncrementalState = MARK;
+        runtime->gcMarker.drainMarkStack(budget);
+    }
 
+    runtime->gcIncrementalState = SWEEP;
     {
         gcstats::AutoPhase ap(runtime->gcStats, gcstats::PHASE_SWEEP);
         MarkAllWeakReferences(runtime, gcstats::PHASE_SWEEP_MARK_WEAK);
