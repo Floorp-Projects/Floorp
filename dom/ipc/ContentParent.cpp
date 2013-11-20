@@ -1470,7 +1470,9 @@ ContentParent::ContentParent(mozIApplication* aApp,
     // which is otherwise a no-op, to sandbox it at an appropriate point
     // during startup.
     if (aOSPrivileges != base::PRIVILEGES_INHERIT) {
-        SendSetProcessPrivileges(base::PRIVILEGES_INHERIT);
+        if (!SendSetProcessPrivileges(base::PRIVILEGES_INHERIT)) {
+            KillHard();
+        }
     }
 #endif
 }
