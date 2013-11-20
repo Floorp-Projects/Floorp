@@ -32,19 +32,19 @@ NS_IMPL_STRING_ATTR(HTMLHRElement, Size, size)
 NS_IMPL_STRING_ATTR(HTMLHRElement, Width, width)
 NS_IMPL_STRING_ATTR(HTMLHRElement, Color, color)
 
-static const nsAttrValue::EnumTable kAlignTable[] = {
-  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
-  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
-  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
-  { 0 }
-};
-
 bool
 HTMLHRElement::ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
                               nsAttrValue& aResult)
 {
+  static const nsAttrValue::EnumTable kAlignTable[] = {
+    { "left", NS_STYLE_TEXT_ALIGN_LEFT },
+    { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
+    { "center", NS_STYLE_TEXT_ALIGN_CENTER },
+    { 0 }
+  };
+
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::width) {
       return aResult.ParseSpecialIntValue(aValue);
@@ -64,9 +64,9 @@ HTMLHRElement::ParseAttribute(int32_t aNamespaceID,
                                               aResult);
 }
 
-static void
-MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                      nsRuleData* aData)
+void
+HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                     nsRuleData* aData)
 {
   bool noshade = false;
 

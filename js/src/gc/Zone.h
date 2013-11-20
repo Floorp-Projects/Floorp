@@ -128,7 +128,7 @@ struct Zone : public JS::shadow::Zone,
 
     void setNeedsBarrier(bool needs, ShouldUpdateIon updateIon);
 
-    const bool *AddressOfNeedsBarrier() const {
+    const bool *addressOfNeedsBarrier() const {
         return &needsBarrier_;
     }
 

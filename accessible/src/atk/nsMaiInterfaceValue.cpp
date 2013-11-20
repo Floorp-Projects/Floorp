@@ -5,11 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "InterfaceInitFuncs.h"
-#include "mozilla/Likely.h"
 
 #include "AccessibleWrap.h"
 #include "nsMai.h"
 
+#include "mozilla/FloatingPoint.h"
+#include "mozilla/Likely.h"
+
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 extern "C" {
@@ -21,18 +24,13 @@ getCurrentValueCB(AtkValue *obj, GValue *value)
   if (!accWrap)
     return;
 
-    nsCOMPtr<nsIAccessibleValue> accValue;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleValue),
-                            getter_AddRefs(accValue));
-    if (!accValue)
-        return;
+  memset (value,  0, sizeof (GValue));
+  double accValue = accWrap->CurValue();
+  if (IsNaN(accValue))
+    return;
 
-    memset (value,  0, sizeof (GValue));
-    double accDouble;
-    if (NS_FAILED(accValue->GetCurrentValue(&accDouble)))
-        return;
-    g_value_init (value, G_TYPE_DOUBLE);
-    g_value_set_double (value, accDouble);
+  g_value_init (value, G_TYPE_DOUBLE);
+  g_value_set_double (value, accValue);
 }
 
 static void
@@ -42,18 +40,13 @@ getMaximumValueCB(AtkValue *obj, GValue *value)
   if (!accWrap)
     return;
 
-    nsCOMPtr<nsIAccessibleValue> accValue;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleValue),
-                            getter_AddRefs(accValue));
-    if (!accValue)
-        return;
+  memset(value,  0, sizeof (GValue));
+  double accValue = accWrap->MaxValue();
+  if (IsNaN(accValue))
+    return;
 
-    memset (value,  0, sizeof (GValue));
-    double accDouble;
-    if (NS_FAILED(accValue->GetMaximumValue(&accDouble)))
-        return;
-    g_value_init (value, G_TYPE_DOUBLE);
-    g_value_set_double (value, accDouble);
+  g_value_init(value, G_TYPE_DOUBLE);
+  g_value_set_double(value, accValue);
 }
 
 static void
@@ -63,18 +56,13 @@ getMinimumValueCB(AtkValue *obj, GValue *value)
   if (!accWrap)
     return;
 
-    nsCOMPtr<nsIAccessibleValue> accValue;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleValue),
-                            getter_AddRefs(accValue));
-    if (!accValue)
-        return;
+  memset(value,  0, sizeof (GValue));
+  double accValue = accWrap->MinValue();
+  if (IsNaN(accValue))
+    return;
 
-    memset (value,  0, sizeof (GValue));
-    double accDouble;
-    if (NS_FAILED(accValue->GetMinimumValue(&accDouble)))
-        return;
-    g_value_init (value, G_TYPE_DOUBLE);
-    g_value_set_double (value, accDouble);
+  g_value_init(value, G_TYPE_DOUBLE);
+  g_value_set_double(value, accValue);
 }
 
 static void
@@ -84,18 +72,13 @@ getMinimumIncrementCB(AtkValue *obj, GValue *minimumIncrement)
   if (!accWrap)
     return;
 
-    nsCOMPtr<nsIAccessibleValue> accValue;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleValue),
-                            getter_AddRefs(accValue));
-    if (!accValue)
-        return;
+  memset(minimumIncrement,  0, sizeof (GValue));
+  double accValue = accWrap->Step();
+  if (IsNaN(accValue))
+    accValue = 0; // zero if the minimum increment is undefined
 
-    memset (minimumIncrement,  0, sizeof (GValue));
-    double accDouble;
-    if (NS_FAILED(accValue->GetMinimumIncrement(&accDouble)))
-        return;
-    g_value_init (minimumIncrement, G_TYPE_DOUBLE);
-    g_value_set_double (minimumIncrement, accDouble);
+  g_value_init(minimumIncrement, G_TYPE_DOUBLE);
+  g_value_set_double(minimumIncrement, accValue);
 }
 
 static gboolean
@@ -105,13 +88,8 @@ setCurrentValueCB(AtkValue *obj, const GValue *value)
   if (!accWrap)
     return FALSE;
 
-    nsCOMPtr<nsIAccessibleValue> accValue;
-    accWrap->QueryInterface(NS_GET_IID(nsIAccessibleValue),
-                            getter_AddRefs(accValue));
-    NS_ENSURE_TRUE(accValue, FALSE);
-
-    double accDouble =g_value_get_double (value);
-    return !NS_FAILED(accValue->SetCurrentValue(accDouble));
+  double accValue =g_value_get_double(value);
+  return accWrap->SetCurValue(accValue);
 }
 }
 

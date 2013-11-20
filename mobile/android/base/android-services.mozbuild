@@ -4,29 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ANDROID_RESFILES += [
-    'resources/drawable-mdpi/sync_desktop.png',
-    'resources/drawable-mdpi/sync_mobile.png',
-    'resources/drawable/sync_pin_background.xml',
-    'resources/layout/sync_account.xml',
-    'resources/layout/sync_list_item.xml',
-    'resources/layout/sync_redirect_to_setup.xml',
-    'resources/layout/sync_send_tab.xml',
-    'resources/layout/sync_setup.xml',
-    'resources/layout/sync_setup_failure.xml',
-    'resources/layout/sync_setup_jpake_waiting.xml',
-    'resources/layout/sync_setup_nointernet.xml',
-    'resources/layout/sync_setup_pair.xml',
-    'resources/layout/sync_setup_success.xml',
-    'resources/layout/sync_setup_webview.xml',
-    'resources/values-large-v11/sync_styles.xml',
-    'resources/values-v11/sync_styles.xml',
-    'resources/values/sync_styles.xml',
-    'resources/xml/sync_authenticator.xml',
-    'resources/xml/sync_options.xml',
-    'resources/xml/sync_syncadapter.xml',
-]
-
 sync_thirdparty_java_files = [
     'ch/boye/httpclientandroidlib/androidextra/HttpClientAndroidLog.java',
     'ch/boye/httpclientandroidlib/annotation/GuardedBy.java',

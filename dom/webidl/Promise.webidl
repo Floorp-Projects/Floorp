@@ -11,7 +11,7 @@
 // have different types for "platform-provided function" and "user-provided
 // function"; for now, we just use "object".
 callback PromiseInit = void (object resolve, object reject);
-callback AnyCallback = any (optional any value);
+callback AnyCallback = any (any value);
 
 [Func="mozilla::dom::Promise::EnabledForScope", Constructor(PromiseInit init)]
 interface Promise {
