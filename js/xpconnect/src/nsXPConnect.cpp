@@ -1282,6 +1282,13 @@ nsXPConnect::GetCurrentJSContext()
 
 /* virtual */
 JSContext*
+nsXPConnect::InitSafeJSContext()
+{
+    return GetRuntime()->GetJSContextStack()->InitSafeJSContext();
+}
+
+/* virtual */
+JSContext*
 nsXPConnect::GetSafeJSContext()
 {
     return GetRuntime()->GetJSContextStack()->GetSafeJSContext();
