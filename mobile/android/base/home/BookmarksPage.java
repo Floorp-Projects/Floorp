@@ -14,6 +14,7 @@ import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.BookmarksListAdapter.FolderInfo;
 import org.mozilla.gecko.home.BookmarksListAdapter.OnRefreshFolderListener;
+import org.mozilla.gecko.home.BookmarksListAdapter.RefreshType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -44,8 +45,11 @@ public class BookmarksPage extends HomeFragment {
     // Cursor loader ID for list of bookmarks.
     private static final int LOADER_ID_BOOKMARKS_LIST = 0;
 
-    // Key for bookmarks folder id.
-    private static final String BOOKMARKS_FOLDER_KEY = "folder_id";
+    // Information about the target bookmarks folder.
+    private static final String BOOKMARKS_FOLDER_INFO = "folder_info";
+
+    // Refresh type for folder refreshing loader.
+    private static final String BOOKMARKS_REFRESH_TYPE = "refresh_type";
 
     // List of bookmarks.
     private BookmarksListView mList;
@@ -96,10 +100,11 @@ public class BookmarksPage extends HomeFragment {
         mListAdapter = new BookmarksListAdapter(activity, null, mSavedParentStack);
         mListAdapter.setOnRefreshFolderListener(new OnRefreshFolderListener() {
             @Override
-            public void onRefreshFolder(int folderId) {
+            public void onRefreshFolder(FolderInfo folderInfo, RefreshType refreshType) {
                 // Restart the loader with folder as the argument.
                 Bundle bundle = new Bundle();
-                bundle.putInt(BOOKMARKS_FOLDER_KEY, folderId);
+                bundle.putParcelable(BOOKMARKS_FOLDER_INFO, folderInfo);
+                bundle.putParcelable(BOOKMARKS_REFRESH_TYPE, refreshType);
                 getLoaderManager().restartLoader(LOADER_ID_BOOKMARKS_LIST, bundle, mLoaderCallbacks);
             }
         });
@@ -154,20 +159,30 @@ public class BookmarksPage extends HomeFragment {
      * Loader for the list for bookmarks.
      */
     private static class BookmarksLoader extends SimpleCursorLoader {
-        private final int mFolderId;
+        private final FolderInfo mFolderInfo;
+        private final RefreshType mRefreshType;
 
         public BookmarksLoader(Context context) {
-            this(context, Bookmarks.FIXED_ROOT_ID);
+            this(context, new FolderInfo(Bookmarks.FIXED_ROOT_ID), RefreshType.CHILD);
         }
 
-        public BookmarksLoader(Context context, int folderId) {
+        public BookmarksLoader(Context context, FolderInfo folderInfo, RefreshType refreshType) {
             super(context);
-            mFolderId = folderId;
+            mFolderInfo = folderInfo;
+            mRefreshType = refreshType;
         }
 
         @Override
         public Cursor loadCursor() {
-            return BrowserDB.getBookmarksInFolder(getContext().getContentResolver(), mFolderId);
+            return BrowserDB.getBookmarksInFolder(getContext().getContentResolver(), mFolderInfo.id);
+        }
+
+        public FolderInfo getFolderInfo() {
+            return mFolderInfo;
+        }
+
+        public RefreshType getRefreshType() {
+            return mRefreshType;
         }
     }
 
@@ -180,13 +195,16 @@ public class BookmarksPage extends HomeFragment {
             if (args == null) {
                 return new BookmarksLoader(getActivity());
             } else {
-                return new BookmarksLoader(getActivity(), args.getInt(BOOKMARKS_FOLDER_KEY));
+                FolderInfo folderInfo = (FolderInfo) args.getParcelable(BOOKMARKS_FOLDER_INFO);
+                RefreshType refreshType = (RefreshType) args.getParcelable(BOOKMARKS_REFRESH_TYPE);
+                return new BookmarksLoader(getActivity(), folderInfo, refreshType);
             }
         }
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
-            mListAdapter.swapCursor(c);
+            BookmarksLoader bl = (BookmarksLoader) loader;
+            mListAdapter.swapCursor(c, bl.getFolderInfo(), bl.getRefreshType());
         }
 
         @Override
