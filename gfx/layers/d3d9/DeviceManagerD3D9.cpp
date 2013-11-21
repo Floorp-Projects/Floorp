@@ -94,16 +94,17 @@ SwapChainD3D9::GetBackBuffer()
   return backBuffer.forget();
 }
 
-bool
+DeviceManagerState
 SwapChainD3D9::PrepareForRendering()
 {
   RECT r;
   if (!::GetClientRect(mWnd, &r)) {
-    return false;
+    return DeviceFail;
   }
 
-  if (!mDeviceManager->VerifyReadyForRendering()) {
-    return false;
+  DeviceManagerState deviceState = mDeviceManager->VerifyReadyForRendering();
+  if (deviceState != DeviceOK) {
+    return deviceState;
   }
 
   if (!mSwapChain) {
@@ -118,7 +119,7 @@ SwapChainD3D9::PrepareForRendering()
 
     if (desc.Width == r.right - r.left && desc.Height == r.bottom - r.top) {
       mDeviceManager->device()->SetRenderTarget(0, backBuffer);
-      return true;
+      return DeviceOK;
     }
 
     mSwapChain = nullptr;
@@ -126,15 +127,16 @@ SwapChainD3D9::PrepareForRendering()
     Init(mWnd);
     
     if (!mSwapChain) {
-      return false;
+      return DeviceFail;
     }
     
     backBuffer = GetBackBuffer();
     mDeviceManager->device()->SetRenderTarget(0, backBuffer);
     
-    return true;
+    return DeviceOK;
   }
-  return false;
+
+  return DeviceFail;
 }
 
 void
@@ -178,13 +180,7 @@ DeviceManagerD3D9::DeviceManagerD3D9()
 
 DeviceManagerD3D9::~DeviceManagerD3D9()
 {
-  // When we die, we release a ref on our device which will cause it to die.
-  // If not immediately, then soon. We MUST have released all our textures
-  // before we release the device, otherwise we crash.
-  ReleaseTextureResources();
-
-  LayerManagerD3D9::OnDeviceManagerDestroy(this);
-  gfxWindowsPlatform::GetPlatform()->OnDeviceManagerDestroy(this);
+  DestroyDevice();
 }
 
 bool
@@ -531,7 +527,7 @@ DeviceManagerD3D9::CreateSwapChain(HWND hWnd)
   // will be permanently unaccelerated. This should be a rare situation
   // though and the need for a low-risk fix for this bug outweighs the
   // downside.
-  if (!VerifyReadyForRendering()) {
+  if (VerifyReadyForRendering() != DeviceOK) {
     return nullptr;
   }
 
@@ -670,9 +666,24 @@ DeviceManagerD3D9::SetShaderMode(ShaderMode aMode, Layer* aMask, bool aIs2D)
   }
 }
 
-bool
+void
+DeviceManagerD3D9::DestroyDevice()
+{
+  mDeviceWasRemoved = true;
+  if (!IsD3D9Ex()) {
+    ReleaseTextureResources();
+  }
+  LayerManagerD3D9::OnDeviceManagerDestroy(this);
+  gfxWindowsPlatform::GetPlatform()->OnDeviceManagerDestroy(this);
+}
+
+DeviceManagerState
 DeviceManagerD3D9::VerifyReadyForRendering()
 {
+  if (mDeviceWasRemoved) {
+    return DeviceMustRecreate;
+  }
+
   HRESULT hr = mDevice->TestCooperativeLevel();
 
   if (SUCCEEDED(hr)) {
@@ -680,20 +691,20 @@ DeviceManagerD3D9::VerifyReadyForRendering()
       hr = mDeviceEx->CheckDeviceState(mFocusWnd);
 
       if (FAILED(hr)) {
-        mDeviceWasRemoved = true;
-        LayerManagerD3D9::OnDeviceManagerDestroy(this);
-        gfxWindowsPlatform::GetPlatform()->OnDeviceManagerDestroy(this);
+        DestroyDevice();
         ++mDeviceResetCount;
-        return false;
+        return DeviceMustRecreate;
       }
     }
-    return true;
+    return DeviceOK;
   }
 
-  for(unsigned int i = 0; i < mLayersWithResources.Length(); i++) {
+  // We need to release all texture resources and swap chains before resetting.
+  for (unsigned int i = 0; i < mLayersWithResources.Length(); i++) {
     mLayersWithResources[i]->CleanResources();
   }
-  for(unsigned int i = 0; i < mSwapChains.Length(); i++) {
+  ReleaseTextureResources();
+  for (unsigned int i = 0; i < mSwapChains.Length(); i++) {
     mSwapChains[i]->Reset();
   }
 
@@ -710,17 +721,26 @@ DeviceManagerD3D9::VerifyReadyForRendering()
   pp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
   pp.hDeviceWindow = mFocusWnd;
 
-  hr = mDevice->Reset(&pp);
-  ++mDeviceResetCount;
-
-  if (FAILED(hr) || !CreateVertexBuffer()) {
-    mDeviceWasRemoved = true;
-    LayerManagerD3D9::OnDeviceManagerDestroy(this);
-    gfxWindowsPlatform::GetPlatform()->OnDeviceManagerDestroy(this);
-    return false;
+  // if we got this far, we know !SUCCEEDEED(hr), that means hr is one of
+  // D3DERR_DEVICELOST, D3DERR_DEVICENOTRESET, D3DERR_DRIVERINTERNALERROR.
+  // It is only worth resetting if we get D3DERR_DEVICENOTRESET. If we get
+  // D3DERR_DEVICELOST we can wait and see if we get D3DERR_DEVICENOTRESET
+  // later, then reset.
+  if (hr == D3DERR_DEVICELOST) {
+    return DeviceRetry;
+  }
+  if (hr == D3DERR_DEVICENOTRESET) {
+    hr = mDevice->Reset(&pp);
+    ++mDeviceResetCount;
   }
 
-  return true;
+  if (FAILED(hr) || !CreateVertexBuffer()) {
+    DestroyDevice();
+    ++mDeviceResetCount;
+    return DeviceMustRecreate;
+  }
+
+  return DeviceOK;
 }
 
 bool
