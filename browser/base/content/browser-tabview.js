@@ -426,13 +426,16 @@ let TabView = {
 
     let toolbar = document.getElementById("TabsToolbar");
     let currentSet = toolbar.currentSet.split(",");
+
     let alltabsPos = currentSet.indexOf("alltabs-button");
     if (-1 == alltabsPos)
       return;
 
-    let allTabsBtn = document.getElementById("alltabs-button");
-    let nextItem = allTabsBtn.nextSibling;
-    toolbar.insertItem(buttonId, nextItem);
+    currentSet[alltabsPos] += "," + buttonId;
+    currentSet = currentSet.join(",");
+    toolbar.currentSet = currentSet;
+    toolbar.setAttribute("currentset", currentSet);
+    document.persist(toolbar.id, "currentset");
   },
 
   // ----------
