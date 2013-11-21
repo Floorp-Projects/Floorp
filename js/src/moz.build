@@ -384,3 +384,8 @@ if CONFIG['JS_SHARED_LIBRARY']:
     FORCE_SHARED_LIB = True
 
 FORCE_STATIC_LIB = True
+
+if CONFIG['MOZ_ETW']:
+    GENERATED_FILES = [
+        'ETWProvider.h',
+    ]

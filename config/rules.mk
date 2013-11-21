@@ -1712,3 +1712,7 @@ include $(topsrcdir)/config/makefiles/autotargets.mk
 ifneq ($(NULL),$(AUTO_DEPS))
   default all libs tools export:: $(AUTO_DEPS)
 endif
+
+export:: $(GENERATED_FILES)
+
+GARBAGE += $(GENERATED_FILES)

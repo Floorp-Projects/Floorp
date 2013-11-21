@@ -281,6 +281,9 @@ if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['OS_TEST'] == 'sparc64':
     ]
 
 if CONFIG['OS_ARCH'] == 'SunOS' and CONFIG['OS_TEST'].find('86') == -1:
+    GENERATED_FILES = [
+        'xptcstubsdef_asm.solx86',
+    ]
     if CONFIG['HAVE_64BIT_OS']:
         SOURCES += [
             'xptcinvoke_sparcv9_solaris.cpp',
