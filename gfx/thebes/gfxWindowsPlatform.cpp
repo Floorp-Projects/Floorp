@@ -1459,7 +1459,9 @@ gfxWindowsPlatform::SetupClearTypeParams()
 void
 gfxWindowsPlatform::OnDeviceManagerDestroy(DeviceManagerD3D9* aDeviceManager)
 {
-  mDeviceManager = nullptr;
+  if (aDeviceManager == mDeviceManager) {
+    mDeviceManager = nullptr;
+  }
 }
 
 IDirect3DDevice9*
