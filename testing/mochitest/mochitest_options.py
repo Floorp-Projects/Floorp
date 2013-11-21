@@ -357,6 +357,26 @@ class MochitestOptions(optparse.OptionParser):
            "dest": "dmdPath",
            "help": "Specifies the path to the directory containing the shared library for DMD.",
         }],
+        [["--dump-output-directory"],
+         { "action": "store",
+           "default": None,
+           "dest": "dumpOutputDirectory",
+           "help": "Specifies the directory in which to place dumped memory reports.",
+        }],
+        [["--dump-about-memory-after-test"],
+         { "action": "store_true",
+           "default": False,
+           "dest": "dumpAboutMemoryAfterTest",
+           "help": "Produce an about:memory dump after each test in the directory specified "
+                  "by --dump-output-directory."
+        }],
+        [["--dump-dmd-after-test"],
+         { "action": "store_true",
+           "default": False,
+           "dest": "dumpDMDAfterTest",
+           "help": "Produce a DMD dump after each test in the directory specified "
+                  "by --dump-output-directory."
+        }],
     ]
 
     def __init__(self, **kwargs):
@@ -504,6 +524,14 @@ class MochitestOptions(optparse.OptionParser):
         if options.runUntilFailure:
             if not options.repeat:
                 options.repeat = 29
+
+        if options.dumpOutputDirectory is None:
+            options.dumpOutputDirectory = tempfile.gettempdir()
+
+        if options.dumpAboutMemoryAfterTest or options.dumpDMDAfterTest:
+            if not os.path.isdir(options.dumpOutputDirectory):
+                self.error('--dump-output-directory not a directory: %s' %
+                           options.dumpOutputDirectory)
 
         return options
 
