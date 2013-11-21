@@ -346,7 +346,7 @@ struct WorkerStructuredCloneCallbacks
     // See if this is an ImageData object.
     {
       ImageData* imageData = nullptr;
-      if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageData, aCx, aObj, imageData))) {
+      if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageData, aObj, imageData))) {
         // Prepare the ImageData internals.
         uint32_t width = imageData->Width();
         uint32_t height = imageData->Height();
@@ -5407,7 +5407,7 @@ GetWorkerCrossThreadDispatcher(JSContext* aCx, JS::Value aWorker)
   }
 
   WorkerPrivate* w = nullptr;
-  UNWRAP_OBJECT(Worker, aCx, &aWorker.toObject(), w);
+  UNWRAP_OBJECT(Worker, &aWorker.toObject(), w);
   MOZ_ASSERT(w);
   return w->GetCrossThreadDispatcher();
 }
