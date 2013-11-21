@@ -5,7 +5,7 @@ MARIONETTE_HEAD_JS = "stk_helper.js";
 
 function testGetInKey(command, expect) {
   log("STK CMD " + JSON.stringify(command));
-  is(command.typeOfCommand, icc.STK_CMD_GET_INKEY, expect.name);
+  is(command.typeOfCommand, iccManager.STK_CMD_GET_INKEY, expect.name);
   is(command.commandQualifier, expect.commandQualifier, expect.name);
   is(command.options.text, expect.text, expect.name);
   is(command.options.isAlphabet, expect.isAlphabet, expect.name);
@@ -98,7 +98,7 @@ let tests = [
    expect: {name: "get_inkey_cmd_14",
             commandQualifier: 0x00,
             text: "Enter \"+\"",
-            duration: {timeUnit: icc.STK_TIME_UNIT_SECOND,
+            duration: {timeUnit: iccManager.STK_TIME_UNIT_SECOND,
                        timeInterval: 0x0A}}},
 ];
 

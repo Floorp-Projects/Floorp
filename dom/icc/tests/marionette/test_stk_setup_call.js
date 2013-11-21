@@ -5,7 +5,7 @@ MARIONETTE_HEAD_JS = "stk_helper.js";
 
 function testSetupCall(command, expect) {
   log("STK CMD " + JSON.stringify(command));
-  is(command.typeOfCommand, icc.STK_CMD_SET_UP_CALL, expect.name);
+  is(command.typeOfCommand, iccManager.STK_CMD_SET_UP_CALL, expect.name);
   is(command.commandQualifier, expect.commandQualifier, expect.name);
   is(command.options.confirmMessage, expect.confirmMessage, expect.name);
   is(command.options.address, expect.address, expect.name);
@@ -68,7 +68,7 @@ let tests = [
             commandQualifier: 0x01,
             confirmMessage: "Duration",
             address: "+012340123456,1,2",
-            duration: {timeUnit: icc.STK_TIME_UNIT_SECOND,
+            duration: {timeUnit: iccManager.STK_TIME_UNIT_SECOND,
                        timeInterval: 0x0A}}},
   {command: "d028810301100082028183850c434f4e4649524d4154494f4e8609911032042143651c2c850443414c4c",
    func: testSetupCall,
@@ -336,7 +336,7 @@ let tests = [
             commandQualifier: 0x00,
              confirmMessage: "Not busy",
              address: "+012340123456,1,2",
-            duration: {timeUnit: icc.STK_TIME_UNIT_SECOND,
+            duration: {timeUnit: iccManager.STK_TIME_UNIT_SECOND,
                        timeInterval: 0x0A}}},
 
 ];

@@ -132,18 +132,17 @@ OpusTrackEncoder::~OpusTrackEncoder()
 nsresult
 OpusTrackEncoder::Init(int aChannels, int aSamplingRate)
 {
-  // The track must have 1 or 2 channels.
-  if (aChannels <= 0 || aChannels > MAX_CHANNELS) {
-    LOG("[Opus] Fail to create the AudioTrackEncoder! The input has"
-        " %d channel(s), but expects no more than %d.", aChannels, MAX_CHANNELS);
-    return NS_ERROR_INVALID_ARG;
-  }
-
   // This monitor is used to wake up other methods that are waiting for encoder
   // to be completely initialized.
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  mChannels = aChannels;
+  // This version of encoder API only support 1 or 2 channels,
+  // So set the mChannels less or equal 2 and
+  // let InterleaveTrackData downmix pcm data.
+  mChannels = aChannels > 2 ? 2 : aChannels;
 
+  if (aChannels <= 0) {
+    return NS_ERROR_FAILURE;
+  }
   // The granule position is required to be incremented at a rate of 48KHz, and
   // it is simply calculated as |granulepos = samples * (48000/source_rate)|,
   // that is, the source sampling rate must divide 48000 evenly.
