@@ -14,10 +14,10 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    'ContactDB.jsm',
+    'fallback/ContactDB.jsm',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     EXTRA_JS_MODULES += [
-        'ContactService.jsm'
+        'fallback/ContactService.jsm'
     ]

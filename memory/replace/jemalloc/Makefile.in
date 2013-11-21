@@ -8,7 +8,5 @@ ifdef _MSC_VER
 LOCAL_INCLUDES += -I$(topsrcdir)/memory/jemalloc/src/include/msvc_compat
 endif
 
-VPATH += $(topsrcdir)/memory/build
-
 MOZ_GLUE_LDFLAGS = # Don't link against mozglue
 WRAP_LDFLAGS = # Never wrap malloc function calls with -Wl,--wrap
