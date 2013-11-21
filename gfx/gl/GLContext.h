@@ -2385,6 +2385,9 @@ public:
 #endif
 
     bool MakeCurrent(bool aForce = false) {
+        if (IsDestroyed()) {
+            return false;
+        }
 #ifdef DEBUG
     PR_SetThreadPrivate(sCurrentGLContextTLS, this);
 
