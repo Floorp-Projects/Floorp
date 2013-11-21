@@ -48,9 +48,9 @@ static const int64_t CAN_PLAY_THROUGH_MARGIN = 1;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaDecoderLog;
-#define LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
+#define DECODER_LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
 #else
-#define LOG(type, msg)
+#define DECODER_LOG(type, msg)
 #endif
 
 class MediaMemoryTracker
@@ -251,8 +251,8 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs)
 {
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
-  LOG(PR_LOG_DEBUG, ("MediaDecoder::RecreateDecodedStream this=%p aStartTimeUSecs=%lld!",
-                     this, (long long)aStartTimeUSecs));
+  DECODER_LOG(PR_LOG_DEBUG, ("MediaDecoder::RecreateDecodedStream this=%p aStartTimeUSecs=%lld!",
+                             this, (long long)aStartTimeUSecs));
 
   DestroyDecodedStream();
 
@@ -296,8 +296,8 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
                                    bool aFinishWhenEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  LOG(PR_LOG_DEBUG, ("MediaDecoder::AddOutputStream this=%p aStream=%p!",
-                     this, aStream));
+  DECODER_LOG(PR_LOG_DEBUG, ("MediaDecoder::AddOutputStream this=%p aStream=%p!",
+                             this, aStream));
 
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
@@ -459,7 +459,7 @@ nsresult MediaDecoder::OpenResource(nsIStreamListener** aStreamListener)
 
     nsresult rv = mResource->Open(aStreamListener);
     if (NS_FAILED(rv)) {
-      LOG(PR_LOG_DEBUG, ("%p Failed to open stream!", this));
+      DECODER_LOG(PR_LOG_DEBUG, ("%p Failed to open stream!", this));
       return rv;
     }
   }
@@ -476,7 +476,7 @@ nsresult MediaDecoder::Load(nsIStreamListener** aStreamListener,
 
   mDecoderStateMachine = CreateStateMachine();
   if (!mDecoderStateMachine) {
-    LOG(PR_LOG_DEBUG, ("%p Failed to create state machine!", this));
+    DECODER_LOG(PR_LOG_DEBUG, ("%p Failed to create state machine!", this));
     return NS_ERROR_FAILURE;
   }
 
@@ -491,7 +491,7 @@ nsresult MediaDecoder::InitializeStateMachine(MediaDecoder* aCloneDonor)
   MediaDecoder* cloneDonor = static_cast<MediaDecoder*>(aCloneDonor);
   if (NS_FAILED(mDecoderStateMachine->Init(cloneDonor ?
                                            cloneDonor->mDecoderStateMachine : nullptr))) {
-    LOG(PR_LOG_DEBUG, ("%p Failed to init state machine!", this));
+    DECODER_LOG(PR_LOG_DEBUG, ("%p Failed to init state machine!", this));
     return NS_ERROR_FAILURE;
   }
   {
@@ -1252,7 +1252,7 @@ void MediaDecoder::DurationChanged()
   UpdatePlaybackRate();
 
   if (mOwner && oldDuration != mDuration && !IsInfinite()) {
-    LOG(PR_LOG_DEBUG, ("%p duration changed to %lld", this, mDuration));
+    DECODER_LOG(PR_LOG_DEBUG, ("%p duration changed to %lld", this, mDuration));
     mOwner->DispatchEvent(NS_LITERAL_STRING("durationchange"));
   }
 }
