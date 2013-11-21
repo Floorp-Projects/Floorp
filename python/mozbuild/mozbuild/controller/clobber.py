@@ -180,6 +180,8 @@ def main(args, env, cwd, fh=sys.stderr):
     required, performed, message = clobber.maybe_do_clobber(cwd, auto, fh)
 
     if not required or performed:
+        if performed and env.get('TINDERBOX_OUTPUT'):
+            print('TinderboxPrint: auto clobber')
         return 0
 
     print(message, file=fh)
