@@ -1,1 +1,14 @@
-[]
+[
+{
+"size": 40, 
+"digest": "459b332864aece4742cd1a6886e56cf3f202e5c27bb481cfae6145ce3e2e52fb34d1448788c6618e58a26a64e415341895326d293e0d2968e56efc0ae990acd0",
+"algorithm": "sha512", 
+"filename": "setup.sh"
+}, 
+{
+"size": 79726288,
+"digest": "fbbb2f0d63d8681d834f7ae0dca88e3f1f22bca4d6cfb6596243c565904485430022161f93f418cb98dfec389c42b9d22b1268c908e72d09a52c34ecfc537311",
+"algorithm": "sha512", 
+"filename": "gcc.tar.xz"
+}
+]
