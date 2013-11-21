@@ -44,4 +44,8 @@ function test() {
 
     aDebuggee.performRequests(1, CONTENT_TYPE_SJS + "?fmt=html-long");
   });
+
+  // This test uses a lot of memory, so force a GC to help fragmentation.
+  info("Forcing GC after netmonitor test.");
+  Cu.forceGC();
 }
