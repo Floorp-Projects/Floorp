@@ -114,14 +114,7 @@ let gTests = [
     setup: startCustomizing,
     run: function() {
       otherWin = yield openAndLoadWindow(null, true);
-      // Open and close the panel to force its construction:
-      let shownPromise = promisePanelShown(otherWin);
-      otherWin.PanelUI.toggle({type: "command"});
-      yield shownPromise;
-      let hiddenPromise = promisePanelHidden(otherWin);
-      otherWin.PanelUI.toggle({type: "command"});
-      yield hiddenPromise;
-
+      yield otherWin.PanelUI.ensureReady();
       ok(CustomizableUI.inDefaultState, "Should start in default state");
 
       for (let widgetId of [kXULWidgetId, kAPIWidgetId]) {

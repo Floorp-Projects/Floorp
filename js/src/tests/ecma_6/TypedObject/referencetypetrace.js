@@ -4,6 +4,11 @@ var summary = 'TypedObjects reference type trace';
 var actual = '';
 var expect = '';
 
+/*
+ * Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/licenses/publicdomain/
+ */
+
 var ArrayType = TypedObject.ArrayType;
 var StructType = TypedObject.StructType;
 var Any = TypedObject.Any;

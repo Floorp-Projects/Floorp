@@ -7,6 +7,7 @@
 #define MOZILLA_GFX_SOURCESURFACERAWDATA_H_
 
 #include "2D.h"
+#include "Tools.h"
 
 namespace mozilla {
 namespace gfx {

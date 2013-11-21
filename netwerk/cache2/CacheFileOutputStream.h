@@ -16,6 +16,7 @@ namespace mozilla {
 namespace net {
 
 class CacheFile;
+class CacheOutputCloseListener;
 
 class CacheFileOutputStream : public nsIAsyncOutputStream
                             , public nsISeekableStream
@@ -27,13 +28,15 @@ class CacheFileOutputStream : public nsIAsyncOutputStream
   NS_DECL_NSISEEKABLESTREAM
 
 public:
-  CacheFileOutputStream(CacheFile *aFile);
+  CacheFileOutputStream(CacheFile *aFile, CacheOutputCloseListener *aCloseListener);
 
   NS_IMETHOD OnChunkRead(nsresult aResult, CacheFileChunk *aChunk);
   NS_IMETHOD OnChunkWritten(nsresult aResult, CacheFileChunk *aChunk);
   NS_IMETHOD OnChunkAvailable(nsresult aResult, uint32_t aChunkIdx,
                               CacheFileChunk *aChunk);
   NS_IMETHOD OnChunkUpdated(CacheFileChunk *aChunk);
+
+  void NotifyCloseListener();
 
 private:
   virtual ~CacheFileOutputStream();
@@ -45,6 +48,7 @@ private:
 
   nsRefPtr<CacheFile>      mFile;
   nsRefPtr<CacheFileChunk> mChunk;
+  nsRefPtr<CacheOutputCloseListener> mCloseListener;
   int64_t                  mPos;
   bool                     mClosed;
   nsresult                 mStatus;

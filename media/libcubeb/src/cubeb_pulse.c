@@ -452,7 +452,6 @@ pulse_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   cubeb_stream * stm;
   pa_operation * o;
   pa_buffer_attr battr;
-  pa_channel_map map;
   int r;
 
   assert(context);
@@ -479,9 +478,6 @@ pulse_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   ss.rate = stream_params.rate;
   ss.channels = stream_params.channels;
 
-  /* XXX check that this does the right thing for Vorbis and WaveEx */
-  WRAP(pa_channel_map_init_auto)(&map, ss.channels, PA_CHANNEL_MAP_DEFAULT);
-
   stm = calloc(1, sizeof(*stm));
   assert(stm);
 
@@ -500,7 +496,11 @@ pulse_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
   battr.fragsize = -1;
 
   WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
-  stm->stream = WRAP(pa_stream_new)(stm->context->context, stream_name, &ss, &map);
+  stm->stream = WRAP(pa_stream_new)(stm->context->context, stream_name, &ss, NULL);
+  if (!stm->stream) {
+    pulse_stream_destroy(stm);
+    return CUBEB_ERROR;
+  }
   WRAP(pa_stream_set_state_callback)(stm->stream, stream_state_callback, stm);
   WRAP(pa_stream_set_write_callback)(stm->stream, stream_request_callback, stm);
   WRAP(pa_stream_connect_playback)(stm->stream, NULL, &battr,

@@ -34,21 +34,24 @@ NS_IMPL_ISUPPORTS3(nsBinaryOutputStream, nsIObjectOutputStream, nsIBinaryOutputS
 NS_IMETHODIMP
 nsBinaryOutputStream::Flush() 
 { 
-    NS_ENSURE_STATE(mOutputStream);
+    if (NS_WARN_IF(!mOutputStream))
+        return NS_ERROR_UNEXPECTED;
     return mOutputStream->Flush(); 
 }
 
 NS_IMETHODIMP
 nsBinaryOutputStream::Close() 
 { 
-    NS_ENSURE_STATE(mOutputStream);
+    if (NS_WARN_IF(!mOutputStream))
+        return NS_ERROR_UNEXPECTED;
     return mOutputStream->Close(); 
 }
 
 NS_IMETHODIMP
 nsBinaryOutputStream::Write(const char *aBuf, uint32_t aCount, uint32_t *aActualBytes)
 {
-    NS_ENSURE_STATE(mOutputStream);
+    if (NS_WARN_IF(!mOutputStream))
+        return NS_ERROR_UNEXPECTED;
     return mOutputStream->Write(aBuf, aCount, aActualBytes);
 }
 
@@ -69,14 +72,16 @@ nsBinaryOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, uin
 NS_IMETHODIMP
 nsBinaryOutputStream::IsNonBlocking(bool *aNonBlocking)
 {
-    NS_ENSURE_STATE(mOutputStream);
+    if (NS_WARN_IF(!mOutputStream))
+        return NS_ERROR_UNEXPECTED;
     return mOutputStream->IsNonBlocking(aNonBlocking);
 }
 
 nsresult
 nsBinaryOutputStream::WriteFully(const char *aBuf, uint32_t aCount)
 {
-    NS_ENSURE_STATE(mOutputStream);
+    if (NS_WARN_IF(!mOutputStream))
+        return NS_ERROR_UNEXPECTED;
 
     nsresult rv;
     uint32_t bytesWritten;
@@ -91,7 +96,8 @@ nsBinaryOutputStream::WriteFully(const char *aBuf, uint32_t aCount)
 NS_IMETHODIMP
 nsBinaryOutputStream::SetOutputStream(nsIOutputStream *aOutputStream)
 {
-    NS_ENSURE_ARG_POINTER(aOutputStream);
+    if (NS_WARN_IF(!aOutputStream))
+        return NS_ERROR_INVALID_ARG;
     mOutputStream = aOutputStream;
     mBufferAccess = do_QueryInterface(aOutputStream);
     return NS_OK;
@@ -245,23 +251,25 @@ nsBinaryOutputStream::WriteCompoundObject(nsISupports* aObject,
                                           const nsIID& aIID,
                                           bool aIsStrongRef)
 {
-    // Can't deal with weak refs
-    NS_ENSURE_TRUE(aIsStrongRef, NS_ERROR_UNEXPECTED);
-    
     nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aObject);
-    NS_ENSURE_TRUE(classInfo, NS_ERROR_NOT_AVAILABLE);
-
     nsCOMPtr<nsISerializable> serializable = do_QueryInterface(aObject);
-    NS_ENSURE_TRUE(serializable, NS_ERROR_NOT_AVAILABLE);
+
+    // Can't deal with weak refs
+    if (NS_WARN_IF(!aIsStrongRef))
+        return NS_ERROR_UNEXPECTED;
+    if (NS_WARN_IF(!classInfo) || NS_WARN_IF(!serializable))
+        return NS_ERROR_NOT_AVAILABLE;
 
     nsCID cid;
     classInfo->GetClassIDNoAlloc(&cid);
 
     nsresult rv = WriteID(cid);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
+
     rv = WriteID(aIID);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     return serializable->Write(this);
 }
@@ -270,17 +278,21 @@ NS_IMETHODIMP
 nsBinaryOutputStream::WriteID(const nsIID& aIID)
 {
     nsresult rv = Write32(aIID.m0);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     rv = Write16(aIID.m1);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     rv = Write16(aIID.m2);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     for (int i = 0; i < 8; ++i) {
         rv = Write8(aIID.m3[i]);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv)))
+            return rv;
     }
 
     return NS_OK;
@@ -306,14 +318,16 @@ NS_IMPL_ISUPPORTS3(nsBinaryInputStream, nsIObjectInputStream, nsIBinaryInputStre
 NS_IMETHODIMP
 nsBinaryInputStream::Available(uint64_t* aResult)
 {
-    NS_ENSURE_STATE(mInputStream);
+    if (NS_WARN_IF(!mInputStream))
+        return NS_ERROR_UNEXPECTED;
     return mInputStream->Available(aResult);
 }
 
 NS_IMETHODIMP
 nsBinaryInputStream::Read(char* aBuffer, uint32_t aCount, uint32_t *aNumRead)
 {
-    NS_ENSURE_STATE(mInputStream);
+    if (NS_WARN_IF(!mInputStream))
+        return NS_ERROR_UNEXPECTED;
 
     // mInputStream might give us short reads, so deal with that.
     uint32_t totalRead = 0;
@@ -383,7 +397,8 @@ ReadSegmentForwardingThunk(nsIInputStream* aStream,
 NS_IMETHODIMP
 nsBinaryInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, uint32_t count, uint32_t *_retval)
 {
-    NS_ENSURE_STATE(mInputStream);
+    if (NS_WARN_IF(!mInputStream))
+        return NS_ERROR_UNEXPECTED;
 
     ReadSegmentsClosure thunkClosure = { this, closure, writer, NS_OK, 0 };
     
@@ -416,21 +431,24 @@ nsBinaryInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, uint
 NS_IMETHODIMP
 nsBinaryInputStream::IsNonBlocking(bool *aNonBlocking)
 {
-    NS_ENSURE_STATE(mInputStream);
+    if (NS_WARN_IF(!mInputStream))
+        return NS_ERROR_UNEXPECTED;
     return mInputStream->IsNonBlocking(aNonBlocking);
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::Close() 
-{ 
-    NS_ENSURE_STATE(mInputStream);
-    return mInputStream->Close(); 
+nsBinaryInputStream::Close()
+{
+    if (NS_WARN_IF(!mInputStream))
+        return NS_ERROR_UNEXPECTED;
+    return mInputStream->Close();
 }
 
 NS_IMETHODIMP
 nsBinaryInputStream::SetInputStream(nsIInputStream *aInputStream)
 {
-    NS_ENSURE_ARG_POINTER(aInputStream);
+    if (NS_WARN_IF(!aInputStream))
+        return NS_ERROR_INVALID_ARG;
     mInputStream = aInputStream;
     mBufferAccess = do_QueryInterface(aInputStream);
     return NS_OK;
@@ -729,7 +747,8 @@ nsBinaryInputStream::ReadArrayBuffer(uint32_t aLength, const JS::Value& aBuffer,
 
     uint32_t bytesRead;
     nsresult rv = Read(reinterpret_cast<char*>(data), aLength, &bytesRead);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
     if (bytesRead != aLength) {
         return NS_ERROR_FAILURE;
     }
@@ -742,10 +761,12 @@ nsBinaryInputStream::ReadObject(bool aIsStrongRef, nsISupports* *aObject)
     nsCID cid;
     nsIID iid;
     nsresult rv = ReadID(&cid);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     rv = ReadID(&iid);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     // HACK: Intercept old (pre-gecko6) nsIURI IID, and replace with
     // the updated IID, so that we're QI'ing to an actual interface.
@@ -774,13 +795,16 @@ nsBinaryInputStream::ReadObject(bool aIsStrongRef, nsISupports* *aObject)
     // END HACK
 
     nsCOMPtr<nsISupports> object = do_CreateInstance(cid, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     nsCOMPtr<nsISerializable> serializable = do_QueryInterface(object);
-    NS_ENSURE_TRUE(serializable, NS_ERROR_UNEXPECTED);
+    if (NS_WARN_IF(!serializable))
+        return NS_ERROR_UNEXPECTED;
 
     rv = serializable->Read(this);
-    NS_ENSURE_SUCCESS(rv, rv);    
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     return object->QueryInterface(iid, reinterpret_cast<void**>(aObject));
 }
@@ -789,17 +813,21 @@ NS_IMETHODIMP
 nsBinaryInputStream::ReadID(nsID *aResult)
 {
     nsresult rv = Read32(&aResult->m0);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     rv = Read16(&aResult->m1);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     rv = Read16(&aResult->m2);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     for (int i = 0; i < 8; ++i) {
         rv = Read8(&aResult->m3[i]);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv)))
+            return rv;
     }
 
     return NS_OK;

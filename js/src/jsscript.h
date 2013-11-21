@@ -297,6 +297,36 @@ typedef HashMap<JSScript *,
                 DefaultHasher<JSScript *>,
                 SystemAllocPolicy> DebugScriptMap;
 
+class ScriptSource;
+
+class SourceDataCache
+{
+    typedef HashMap<ScriptSource *,
+                    const jschar *,
+                    DefaultHasher<ScriptSource *>,
+                    SystemAllocPolicy> Map;
+    Map *map_;
+    size_t numSuppressPurges_;
+
+  public:
+    SourceDataCache() : map_(nullptr), numSuppressPurges_(0) {}
+
+    class AutoSuppressPurge
+    {
+        SourceDataCache &cache_;
+        mozilla::DebugOnly<size_t> oldValue_;
+      public:
+        explicit AutoSuppressPurge(JSContext *cx);
+        ~AutoSuppressPurge();
+        SourceDataCache &cache() const { return cache_; }
+    };
+
+    const jschar *lookup(ScriptSource *ss, const AutoSuppressPurge &asp);
+    bool put(ScriptSource *ss, const jschar *chars, const AutoSuppressPurge &asp);
+
+    void purge();
+};
+
 class ScriptSource
 {
     friend class SourceCompressionTask;
@@ -369,7 +399,7 @@ class ScriptSource
         JS_ASSERT(hasSourceData());
         return argumentsNotIncluded_;
     }
-    const jschar *chars(JSContext *cx);
+    const jschar *chars(JSContext *cx, const SourceDataCache::AutoSuppressPurge &asp);
     JSStableString *substring(JSContext *cx, uint32_t start, uint32_t stop);
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 

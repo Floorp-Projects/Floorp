@@ -148,7 +148,7 @@ MediaEncoder::CreateEncoder(const nsAString& aMIMEType)
  *       If this is the last packet of input stream
  *         Set mState to ENCODE_DONE
  *
- *   If mState is ENCODE_DONE or ENCODE_ERROR
+ *   If mState is ENCODE_DONE
  *     Stop the loop
  */
 void
@@ -164,23 +164,17 @@ MediaEncoder::GetEncodedData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
     switch (mState) {
     case ENCODE_METADDATA: {
       nsRefPtr<TrackMetadataBase> meta = mAudioEncoder->GetMetadata();
-      if (meta == nullptr) {
-        LOG("ERROR! AudioEncoder get null Metadata!");
-        mState = ENCODE_ERROR;
-        break;
-      }
+      MOZ_ASSERT(meta);
       nsresult rv = mWriter->SetMetadata(meta);
       if (NS_FAILED(rv)) {
-       LOG("ERROR! writer can't accept audio metadata!");
-       mState = ENCODE_ERROR;
+       mState = ENCODE_DONE;
        break;
       }
 
       rv = mWriter->GetContainerData(aOutputBufs,
                                      ContainerWriter::GET_HEADER);
       if (NS_FAILED(rv)) {
-       LOG("ERROR! writer fail to generate header!");
-       mState = ENCODE_ERROR;
+       mState = ENCODE_DONE;
        break;
       }
 
@@ -194,7 +188,7 @@ MediaEncoder::GetEncodedData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
       if (NS_FAILED(rv)) {
         // Encoding might be canceled.
         LOG("ERROR! Fail to get encoded data from encoder.");
-        mState = ENCODE_ERROR;
+        mState = ENCODE_DONE;
         break;
       }
       rv = mWriter->WriteEncodedTrack(encodedData,
@@ -202,7 +196,7 @@ MediaEncoder::GetEncodedData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
                                       ContainerWriter::END_OF_STREAM : 0);
       if (NS_FAILED(rv)) {
         LOG("ERROR! Fail to write encoded track to the media container.");
-        mState = ENCODE_ERROR;
+        mState = ENCODE_DONE;
         break;
       }
 
@@ -223,11 +217,7 @@ MediaEncoder::GetEncodedData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
       mShutdown = true;
       reloop = false;
       break;
-    case ENCODE_ERROR:
-      LOG("ERROR! MediaEncoder got error!");
-      mShutdown = true;
-      reloop = false;
-      break;
+
     default:
       MOZ_CRASH("Invalid encode state");
     }

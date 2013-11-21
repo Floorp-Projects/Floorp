@@ -32,18 +32,22 @@ Navigator implements NavigatorStorageUtils;
 
 [NoInterfaceObject]
 interface NavigatorID {
+  // WebKit/Blink/Trident/Presto support this (hardcoded "Mozilla").
+  [Constant]
+  readonly attribute DOMString appCodeName; // constant "Mozilla"
+  [Constant]
   readonly attribute DOMString appName;
-  [Throws]
+  [Constant]
   readonly attribute DOMString appVersion;
-  [Throws]
+  [Constant]
   readonly attribute DOMString platform;
-  [Throws]
+  [Constant]
   readonly attribute DOMString userAgent;
+  [Constant]
+  readonly attribute DOMString product; // constant "Gecko"
 
-  // Spec has this as a const, but that's wrong because it should not
-  // be on the interface object.
-  //const DOMString product = "Gecko"; // for historical reasons
-  readonly attribute DOMString product;
+  // Everyone but WebKit/Blink supports this.  See bug 679971.
+  boolean taintEnabled(); // constant false
 };
 
 [NoInterfaceObject]
@@ -136,9 +140,6 @@ callback interface MozIdleObserver {
 
 // nsIDOMNavigator
 partial interface Navigator {
-  // WebKit/Blink/Trident/Presto support this (hardcoded "Mozilla").
-  [Throws]
-  readonly attribute DOMString appCodeName;
   [Throws]
   readonly attribute DOMString oscpu;
   // WebKit/Blink support this; Trident/Presto do not.
@@ -157,8 +158,6 @@ partial interface Navigator {
   // WebKit/Blink/Trident/Presto support this.
   [Throws]
   boolean javaEnabled();
-  // Everyone but WebKit/Blink supports this.  See bug 679971.
-  boolean taintEnabled();
 
   /**
    * Navigator requests to add an idle observer to the existing window.

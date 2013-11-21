@@ -269,7 +269,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewSourceHandler)
 
 #ifdef NECKO_PROTOCOL_wyciwyg
 #include "nsWyciwygProtocolHandler.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWyciwygProtocolHandler, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 #endif
 
 #ifdef NECKO_PROTOCOL_websocket
