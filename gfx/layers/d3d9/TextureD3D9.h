@@ -200,7 +200,6 @@ public:
 protected:
   gfx::IntRect GetTileRect(uint32_t aID) const;
 
-  RefPtr<IDirect3DDevice9> mDevice;
   RefPtr<CompositorD3D9> mCompositor;
   bool mIsTiled;
   std::vector< RefPtr<IDirect3DTexture9> > mTileTextures;
@@ -234,11 +233,8 @@ class DeprecatedTextureHostYCbCrD3D9 : public DeprecatedTextureHost
                            , public TextureSourceD3D9
 {
 public:
-  DeprecatedTextureHostYCbCrD3D9()
-    : mDevice(nullptr)
-  {
-    mFormat = gfx::FORMAT_YUV;
-  }
+  DeprecatedTextureHostYCbCrD3D9();
+  virtual ~DeprecatedTextureHostYCbCrD3D9();
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
@@ -264,7 +260,7 @@ protected:
                           nsIntPoint* aOffset = nullptr) MOZ_OVERRIDE;
 
 private:
-  RefPtr<IDirect3DDevice9> mDevice;
+  RefPtr<CompositorD3D9> mCompositor;
 };
 
 class DeprecatedTextureHostDIB : public DeprecatedTextureHostD3D9

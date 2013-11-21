@@ -82,7 +82,7 @@ CompositorD3D9::CanUseCanvasLayerForSize(const IntSize &aSize)
 int32_t
 CompositorD3D9::GetMaxTextureSize() const
 {
-  return mDeviceManager->GetMaxTextureSize();
+  return mDeviceManager ? mDeviceManager->GetMaxTextureSize() : INT32_MAX;
 }
 
 TemporaryRef<CompositingRenderTarget>
@@ -212,20 +212,23 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
     return;
   }
 
+  IDirect3DDevice9* d3d9Device = device();
+  MOZ_ASSERT(d3d9Device, "We should be able to get a device now");
+
   MOZ_ASSERT(mCurrentRT, "No render target");
-  device()->SetVertexShaderConstantF(CBmLayerTransform, &aTransform._11, 4);
+  d3d9Device->SetVertexShaderConstantF(CBmLayerTransform, &aTransform._11, 4);
 
   IntPoint origin = mCurrentRT->GetOrigin();
   float renderTargetOffset[] = { origin.x, origin.y, 0, 0 };
-  device()->SetVertexShaderConstantF(CBvRenderTargetOffset,
-                                     renderTargetOffset,
-                                     1);
-  device()->SetVertexShaderConstantF(CBvLayerQuad,
-                                     ShaderConstantRect(aRect.x,
-                                                        aRect.y,
-                                                        aRect.width,
-                                                        aRect.height),
-                                     1);
+  d3d9Device->SetVertexShaderConstantF(CBvRenderTargetOffset,
+                                       renderTargetOffset,
+                                       1);
+  d3d9Device->SetVertexShaderConstantF(CBvLayerQuad,
+                                       ShaderConstantRect(aRect.x,
+                                                          aRect.y,
+                                                          aRect.width,
+                                                          aRect.height),
+                                       1);
   bool target = false;
 
   if (aEffectChain.mPrimaryEffect->mType != EFFECT_SOLID_COLOR) {
@@ -235,7 +238,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
      * first component since it's declared as a 'float'.
      */
     opacity[0] = aOpacity;
-    device()->SetPixelShaderConstantF(CBfLayerOpacity, opacity, 1);
+    d3d9Device->SetPixelShaderConstantF(CBfLayerOpacity, opacity, 1);
   }
 
   bool isPremultiplied = true;
@@ -255,7 +258,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
   scissor.right = aClipRect.XMost();
   scissor.top = aClipRect.y;
   scissor.bottom = aClipRect.YMost();
-  device()->SetScissorRect(&scissor);
+  d3d9Device->SetScissorRect(&scissor);
 
   uint32_t maskTexture = 0;
   switch (aEffectChain.mPrimaryEffect->mType) {
@@ -270,7 +273,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
       color[2] = layerColor.b * layerColor.a * aOpacity;
       color[3] = layerColor.a * aOpacity;
 
-      device()->SetPixelShaderConstantF(CBvColor, color, 1);
+      d3d9Device->SetPixelShaderConstantF(CBvColor, color, 1);
 
       maskTexture = mDeviceManager
         ->SetShaderMode(DeviceManagerD3D9::SOLIDCOLORLAYER, maskType);
@@ -284,18 +287,18 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
         static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
 
       Rect textureCoords = texturedEffect->mTextureCoords;
-      device()->SetVertexShaderConstantF(CBvTextureCoords,
-                                         ShaderConstantRect(
-                                           textureCoords.x,
-                                           textureCoords.y,
-                                           textureCoords.width,
-                                           textureCoords.height),
-                                         1);
+      d3d9Device->SetVertexShaderConstantF(CBvTextureCoords,
+                                           ShaderConstantRect(
+                                             textureCoords.x,
+                                             textureCoords.y,
+                                             textureCoords.width,
+                                             textureCoords.height),
+                                           1);
 
       SetSamplerForFilter(texturedEffect->mFilter);
 
       TextureSourceD3D9* source = texturedEffect->mTexture->AsSourceD3D9();
-      device()->SetTexture(0, source->GetD3D9Texture());
+      d3d9Device->SetTexture(0, source->GetD3D9Texture());
 
       maskTexture = mDeviceManager
         ->SetShaderMode(ShaderModeForEffectType(aEffectChain.mPrimaryEffect->mType),
@@ -312,13 +315,13 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
       SetSamplerForFilter(FILTER_LINEAR);
 
       Rect textureCoords = ycbcrEffect->mTextureCoords;
-      device()->SetVertexShaderConstantF(CBvTextureCoords,
-                                         ShaderConstantRect(
-                                           textureCoords.x,
-                                           textureCoords.y,
-                                           textureCoords.width,
-                                           textureCoords.height),
-                                         1);
+      d3d9Device->SetVertexShaderConstantF(CBvTextureCoords,
+                                           ShaderConstantRect(
+                                             textureCoords.x,
+                                             textureCoords.y,
+                                             textureCoords.width,
+                                             textureCoords.height),
+                                           1);
                                     
       TextureSourceD3D9* source = ycbcrEffect->mTexture->AsSourceD3D9();
       TextureSourceD3D9::YCbCrTextures textures = source->GetYCbCrTextures();
@@ -353,7 +356,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
           mDeviceManager->GetNv3DVUtils()->SendNv3DVControl(mode, true, FIREFOX_3DV_APP_HANDLE);
 
           nsRefPtr<IDirect3DSurface9> renderTarget;
-          device()->GetRenderTarget(0, getter_AddRefs(renderTarget));
+          d3d9Device->GetRenderTarget(0, getter_AddRefs(renderTarget));
           mDeviceManager->GetNv3DVUtils()->SendNv3DVMetaData((unsigned int)aRect.width,
                                                              (unsigned int)aRect.height,
                                                              (HANDLE)(textures.mY),
@@ -364,9 +367,9 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
       // Linear scaling is default here, adhering to mFilter is difficult since
       // presumably even with point filtering we'll still want chroma upsampling
       // to be linear. In the current approach we can't.
-      device()->SetTexture(0, textures.mY);
-      device()->SetTexture(1, textures.mCb);
-      device()->SetTexture(2, textures.mCr);
+      d3d9Device->SetTexture(0, textures.mY);
+      d3d9Device->SetTexture(1, textures.mCb);
+      d3d9Device->SetTexture(2, textures.mCr);
       maskTexture = mDeviceManager->SetShaderMode(DeviceManagerD3D9::YCBCRLAYER, maskType);
     }
     break;
@@ -379,33 +382,33 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
       TextureSourceD3D9* sourceOnBlack = effectComponentAlpha->mOnBlack->AsSourceD3D9();
 
       Rect textureCoords = effectComponentAlpha->mTextureCoords;
-      device()->SetVertexShaderConstantF(CBvTextureCoords,
-                                         ShaderConstantRect(
-                                           textureCoords.x,
-                                           textureCoords.y,
-                                           textureCoords.width,
-                                           textureCoords.height),
-                                          1);
+      d3d9Device->SetVertexShaderConstantF(CBvTextureCoords,
+                                           ShaderConstantRect(
+                                             textureCoords.x,
+                                             textureCoords.y,
+                                             textureCoords.width,
+                                             textureCoords.height),
+                                           1);
 
       SetSamplerForFilter(effectComponentAlpha->mFilter);
       SetMask(aEffectChain, maskTexture);
 
       maskTexture = mDeviceManager->SetShaderMode(DeviceManagerD3D9::COMPONENTLAYERPASS1, maskType);
-      device()->SetTexture(0, sourceOnBlack->GetD3D9Texture());
-      device()->SetTexture(1, sourceOnWhite->GetD3D9Texture());
-      device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ZERO);
-      device()->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCCOLOR);
-      device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+      d3d9Device->SetTexture(0, sourceOnBlack->GetD3D9Texture());
+      d3d9Device->SetTexture(1, sourceOnWhite->GetD3D9Texture());
+      d3d9Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ZERO);
+      d3d9Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCCOLOR);
+      d3d9Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 
       maskTexture = mDeviceManager->SetShaderMode(DeviceManagerD3D9::COMPONENTLAYERPASS2, maskType);
-      device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-      device()->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-      device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+      d3d9Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+      d3d9Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+      d3d9Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 
       // Restore defaults
-      device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-      device()->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-      device()->SetTexture(1, NULL);
+      d3d9Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+      d3d9Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+      d3d9Device->SetTexture(1, NULL);
     }
     return;
   default:
@@ -416,13 +419,13 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
   SetMask(aEffectChain, maskTexture);
 
   if (!isPremultiplied) {
-    device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    d3d9Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
   }
 
-  HRESULT hr = device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+  HRESULT hr = d3d9Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 
   if (!isPremultiplied) {
-    device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+    d3d9Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
   }
 }
 
