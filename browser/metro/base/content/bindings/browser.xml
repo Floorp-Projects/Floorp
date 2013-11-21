@@ -292,6 +292,19 @@
         </body>
       </method>
 
+      <property name="scale">
+        <getter><![CDATA[
+          let cwu = this.contentDocument
+                        .defaultView
+                        .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                        .getInterface(Components.interfaces.nsIDOMWindowUtils);
+          let resx = {}, resy = {};
+          cwu.getResolution(resx, resy);
+          // Resolution set by the apzc and is symmetric.
+          return resx.value;
+        ]]></getter>
+      </property>
+
       <field name="_messageListenerLocal"><![CDATA[
         ({
           self: this,
@@ -609,11 +622,6 @@
            take it into account. This is useless for non-remote browser -->
       <field name="_contentDocumentLeft">0</field>
 
-      <!-- The ratio of device pixels to CSS pixels -->
-      <property name="scale"
-                onget="return 1;"
-                onset="return 1;"/>
-
       <!-- These counters are used to update the cached viewport after they reach a certain
            threshold when scrolling -->
       <field name="_cacheRatioWidth">1</field>
@@ -760,24 +768,6 @@
           this.docShellIsActive = this._active;
         ]]></setter>
       </property>
-
-      <!-- Transform the viewport without updating the displayport. -->
-      <method name="fuzzyZoom">
-        <parameter name="scale"/>
-        <parameter name="x"/>
-        <parameter name="y"/>
-        <body><![CDATA[
-          this.getRootView().scrollTo(x, y);
-        ]]></body>
-      </method>
-
-      <!-- After fuzzy zoom, sync the displayport with the new viewport. -->
-      <method name="finishFuzzyZoom">
-        <body><![CDATA[
-          return;
-        ]]></body>
-      </method>
-
     </implementation>
   </binding>
 
@@ -1150,34 +1140,6 @@
         ]]>
       </field>
 
-      <!-- Transform the viewport without updating the displayport. -->
-      <method name="fuzzyZoom">
-        <parameter name="scale"/>
-        <parameter name="x"/>
-        <parameter name="y"/>
-        <body><![CDATA[
-          let rootView = this.getRootView();
-          rootView._setScale(scale);
-          if ("_contentView" in rootView)
-            rootView._contentView.scrollTo(x, y);
-        ]]></body>
-      </method>
-
-      <!-- After fuzzy zoom, sync the displayport with the new viewport. -->
-      <method name="finishFuzzyZoom">
-        <body><![CDATA[
-          let view = this.getRootView();
-
-          // ensure that we are scrolled within the page's viewable area
-          view.scrollBy(0,0);
-          view._updateCacheViewport();
-
-          let event = document.createEvent("Events");
-          event.initEvent("ZoomChanged", true, false);
-          this.dispatchEvent(event);
-        ]]></body>
-      </method>
-
       <!-- The ratio of CSS pixels to device pixels. -->
       <property name="scale">
         <getter><![CDATA[
@@ -1189,7 +1151,6 @@
 
           let rootView = this.getRootView();
           rootView._setScale(val);
-          this.finishFuzzyZoom();
 
           return val;
         ]]></setter>
