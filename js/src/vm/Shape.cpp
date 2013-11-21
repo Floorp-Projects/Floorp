@@ -1468,7 +1468,6 @@ BaseShape::getUnowned(ExclusiveContext *cx, const StackBaseShape &base)
     if (!table.initialized() && !table.init())
         return nullptr;
 
-    uint64_t originalGcNumber = cx->generationalGcNumber();
     BaseShapeSet::AddPtr p = table.lookupForAdd(&base);
 
     if (p)
@@ -1484,15 +1483,7 @@ BaseShape::getUnowned(ExclusiveContext *cx, const StackBaseShape &base)
 
     UnownedBaseShape *nbase = static_cast<UnownedBaseShape *>(nbase_);
 
-    /*
-     * If a generational collection has occurred then the hash we calculated may
-     * be invalid, as it is based on the objects inside StackBaseShape, which
-     * may have been moved.
-     */
-    bool gcHappened = cx->hasGenerationalGcHappened(originalGcNumber);
-    bool added = gcHappened ? table.putNew(&base, nbase)
-                            : table.relookupOrAdd(p, &base, nbase);
-    if (!added)
+    if (!table.relookupOrAdd(p, &base, nbase))
         return nullptr;
 
     return nbase;
@@ -1604,7 +1595,6 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProt
         return nullptr;
 
     typedef InitialShapeEntry::Lookup Lookup;
-    uint64_t originalGcNumber = cx->generationalGcNumber();
     InitialShapeSet::AddPtr p =
         table.lookupForAdd(Lookup(clasp, proto, parent, metadata, nfixed, objectFlags));
 
@@ -1626,17 +1616,11 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProt
         return nullptr;
     new (shape) EmptyShape(nbase, nfixed);
 
-    /*
-     * If a generational collection has occurred, then the hash we calculated
-     * may be invalid, as it is based on objects which may have been moved.
-     */
-    Lookup lookup(clasp, protoRoot, parentRoot, metadataRoot, nfixed, objectFlags);
-    InitialShapeEntry entry(shape, protoRoot);
-    bool gcHappened = cx->hasGenerationalGcHappened(originalGcNumber);
-    bool added = gcHappened ? table.putNew(lookup, entry)
-                            : table.relookupOrAdd(p, lookup, entry);
-    if (!added)
+    if (!table.relookupOrAdd(p, Lookup(clasp, protoRoot, parentRoot, metadataRoot, nfixed, objectFlags),
+                             InitialShapeEntry(shape, protoRoot)))
+    {
         return nullptr;
+    }
 
     return shape;
 }
