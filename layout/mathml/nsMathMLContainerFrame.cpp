@@ -29,7 +29,6 @@ NS_IMPL_FRAMEARENA_HELPERS(nsMathMLContainerFrame)
 
 NS_QUERYFRAME_HEAD(nsMathMLContainerFrame)
   NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
-  NS_QUERYFRAME_ENTRY(nsMathMLContainerFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 // =============================================================================
@@ -986,11 +985,7 @@ nsMathMLContainerFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
-  nsHTMLReflowMetrics desiredSize;
-  GetIntrinsicWidthMetrics(aRenderingContext, desiredSize);
-  nsBoundingMetrics bm = desiredSize.mBoundingMetrics;
-  // We include the overflow to compensate for FixInterFrameSpacing.
-  result = std::max(bm.width, bm.rightBearing) - std::min(0, bm.leftBearing);
+  result = GetIntrinsicWidth(aRenderingContext);
   return result;
 }
 
@@ -999,46 +994,29 @@ nsMathMLContainerFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
-  nsHTMLReflowMetrics desiredSize;
-  GetIntrinsicWidthMetrics(aRenderingContext, desiredSize);
-  nsBoundingMetrics bm = desiredSize.mBoundingMetrics;
-  // We include the overflow to compensate for FixInterFrameSpacing.
-  result = std::max(bm.width, bm.rightBearing) - std::min(0, bm.leftBearing);
+  result = GetIntrinsicWidth(aRenderingContext);
   return result;
 }
 
-/* virtual */ void
-nsMathMLContainerFrame::GetIntrinsicWidthMetrics(nsRenderingContext* aRenderingContext, nsHTMLReflowMetrics& aDesiredSize)
+/* virtual */ nscoord
+nsMathMLContainerFrame::GetIntrinsicWidth(nsRenderingContext* aRenderingContext)
 {
   // Get child widths
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
+    // XXX This includes margin while Reflow currently doesn't consider
+    // margin, so we may end up with too much space, but, with stretchy
+    // characters, this is an approximation anyway.
+    nscoord width =
+      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
+                                           nsLayoutUtils::PREF_WIDTH);
+
     nsHTMLReflowMetrics childDesiredSize;
-
-    nsMathMLContainerFrame* containerFrame = do_QueryFrame(childFrame);
-    if (containerFrame) {
-      containerFrame->GetIntrinsicWidthMetrics(aRenderingContext,
-                                               childDesiredSize);
-    } else {
-      // XXX This includes margin while Reflow currently doesn't consider
-      // margin, so we may end up with too much space, but, with stretchy
-      // characters, this is an approximation anyway.
-      nscoord width =
-        nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
-                                             nsLayoutUtils::PREF_WIDTH);
-
-      childDesiredSize.width = width;
-      childDesiredSize.mBoundingMetrics.width = width;
-      childDesiredSize.mBoundingMetrics.leftBearing = 0;
-      childDesiredSize.mBoundingMetrics.rightBearing = width;
-
-      nscoord x, xMost;
-      if (NS_SUCCEEDED(childFrame->GetPrefWidthTightBounds(aRenderingContext,
-                                                           x, xMost))) {
-        childDesiredSize.mBoundingMetrics.leftBearing = x;
-        childDesiredSize.mBoundingMetrics.rightBearing = xMost;
-      }
-    }
+    childDesiredSize.width = width;
+    childDesiredSize.mBoundingMetrics.width = width;
+    // TODO: we need nsIFrame::GetIntrinsicHBounds() for better values here.
+    childDesiredSize.mBoundingMetrics.leftBearing = 0;
+    childDesiredSize.mBoundingMetrics.rightBearing = width;
 
     SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                     childDesiredSize.mBoundingMetrics);
@@ -1047,12 +1025,15 @@ nsMathMLContainerFrame::GetIntrinsicWidthMetrics(nsRenderingContext* aRenderingC
   }
 
   // Measure
-  nsresult rv = MeasureForWidth(*aRenderingContext, aDesiredSize);
+  nsHTMLReflowMetrics desiredSize;
+  nsresult rv = MeasureForWidth(*aRenderingContext, desiredSize);
   if (NS_FAILED(rv)) {
-    ReflowError(*aRenderingContext, aDesiredSize);
+    ReflowError(*aRenderingContext, desiredSize);
   }
 
   ClearSavedChildMetrics();
+
+  return desiredSize.width;
 }
 
 /* virtual */ nsresult
