@@ -119,6 +119,7 @@ nsDOMUIEvent::GetMovementPoint()
        mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
        mEvent->eventStructType != NS_WHEEL_EVENT &&
        mEvent->eventStructType != NS_DRAG_EVENT &&
+       mEvent->eventStructType != NS_POINTER_EVENT &&
        mEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
        !mEvent->AsGUIEvent()->widget) {
     return nsIntPoint(0, 0);
@@ -300,6 +301,7 @@ nsDOMUIEvent::GetLayerPoint() const
       (mEvent->eventStructType != NS_MOUSE_EVENT &&
        mEvent->eventStructType != NS_MOUSE_SCROLL_EVENT &&
        mEvent->eventStructType != NS_WHEEL_EVENT &&
+       mEvent->eventStructType != NS_POINTER_EVENT &&
        mEvent->eventStructType != NS_TOUCH_EVENT &&
        mEvent->eventStructType != NS_DRAG_EVENT &&
        mEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||

@@ -4339,15 +4339,17 @@ CheckExpr(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
       case PNK_NAME:        return CheckVarRef(f, expr, def, type);
       case PNK_ELEM:        return CheckArrayLoad(f, expr, def, type);
       case PNK_ASSIGN:      return CheckAssign(f, expr, def, type);
-      case PNK_CALL:        return f.fail(expr, "non-expression-statement call must be coerced");
       case PNK_POS:         return CheckPos(f, expr, def, type);
       case PNK_NOT:         return CheckNot(f, expr, def, type);
       case PNK_NEG:         return CheckNeg(f, expr, def, type);
       case PNK_BITNOT:      return CheckBitNot(f, expr, def, type);
       case PNK_COMMA:       return CheckComma(f, expr, def, type);
       case PNK_CONDITIONAL: return CheckConditional(f, expr, def, type);
-
       case PNK_STAR:        return CheckMultiply(f, expr, def, type);
+
+      case PNK_CALL:        return f.fail(expr, "all function calls must either be ignored (via "
+                                                "f(); or comma-expression), coerced to signed "
+                                                "(via f()|0) or coerced to double (via +f())");
 
       case PNK_ADD:
       case PNK_SUB:         return CheckAddOrSub(f, expr, def, type);

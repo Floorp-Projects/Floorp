@@ -110,13 +110,19 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         mBackgroundColor = Color.WHITE;
 
         mTouchInterceptors = new ArrayList<TouchEventInterceptor>();
-        mOverscroll = new Overscroll(this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            mOverscroll = new OverscrollEdgeEffect(this);
+        } else {
+            mOverscroll = null;
+        }
         Tabs.registerOnTabsChangedListener(this);
     }
 
     public void initializeView(EventDispatcher eventDispatcher) {
         mLayerClient = new GeckoLayerClient(getContext(), this, eventDispatcher);
-        mLayerClient.setOverscrollHandler(mOverscroll);
+        if (mOverscroll != null) {
+            mLayerClient.setOverscrollHandler(mOverscroll);
+        }
 
         mPanZoomController = mLayerClient.getPanZoomController();
         mMarginsAnimator = mLayerClient.getLayerMarginsAnimator();
@@ -248,7 +254,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         super.dispatchDraw(canvas);
 
         // We must have a layer client to get valid viewport metrics
-        if (mLayerClient != null) {
+        if (mLayerClient != null && mOverscroll != null) {
             mOverscroll.draw(canvas, getViewportMetrics());
         }
     }
@@ -514,8 +520,13 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
      * TextureView instead of a SurfaceView, the first phase is skipped.
      */
     private void onSizeChanged(int width, int height) {
-        if (!mGLController.isServerSurfaceValid() || mSurfaceView == null) {
-            surfaceChanged(width, height);
+        if (!mGLController.isCompositorCreated()) {
+            return;
+        }
+
+        surfaceChanged(width, height);
+
+        if (mSurfaceView == null) {
             return;
         }
 
@@ -523,7 +534,9 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
             mListener.sizeChanged(width, height);
         }
 
-        mOverscroll.setSize(width, height);
+        if (mOverscroll != null) {
+            mOverscroll.setSize(width, height);
+        }
     }
 
     private void surfaceChanged(int width, int height) {
@@ -533,7 +546,9 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
             mListener.surfaceChanged(width, height);
         }
 
-        mOverscroll.setSize(width, height);
+        if (mOverscroll != null) {
+            mOverscroll.setSize(width, height);
+        }
     }
 
     private void onDestroyed() {

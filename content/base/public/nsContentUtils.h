@@ -1887,6 +1887,15 @@ public:
   static bool IsSubDocumentTabbable(nsIContent* aContent);
 
   /**
+   * Returns if aNode ignores user focus.
+   *
+   * @param aNode node to test
+   *
+   * @return Whether the node ignores user focus.
+   */
+  static bool IsUserFocusIgnored(nsINode* aNode);
+
+  /**
    * Flushes the layout tree (recursively)
    *
    * @param aWindow the window the flush should start at

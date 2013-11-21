@@ -196,6 +196,17 @@ pref("media.windows-media-foundation.play-stand-alone", true);
 #ifdef MOZ_DIRECTSHOW
 pref("media.directshow.enabled", true);
 #endif
+#ifdef MOZ_FMP4
+pref("media.fragmented-mp4.enabled", true);
+// Denotes that the fragmented MP4 parser can be created by <video> elements.
+// This is for testing, since the parser can't yet handle non-fragmented MP4,
+// so it will fail to play most MP4 files.
+pref("media.fragmented-mp4.exposed", false);
+// Specifies whether the fragmented MP4 parser uses a test decoder that
+// just outputs blank frames/audio instead of actually decoding. The blank
+// decoder works on all platforms.
+pref("media.fragmented-mp4.use-blank-decoder", false);
+#endif
 #ifdef MOZ_RAW
 pref("media.raw.enabled", true);
 #endif
@@ -3407,8 +3418,8 @@ pref("font.alias-list", "sans,sans-serif,serif,monospace");
 // ar
 
 pref("font.name.serif.el", "Droid Serif");
-pref("font.name.sans-serif.el", "Fira Sans OT");
-pref("font.name.monospace.el", "Fira Mono OT");
+pref("font.name.sans-serif.el", "Roboto"); // To be updated once the Greek letters in Fira are revised
+pref("font.name.monospace.el", "Droid Sans Mono");
 
 pref("font.name.serif.he", "Charis SIL Compact");
 pref("font.name.sans-serif.he", "Fira Sans OT");
@@ -4373,6 +4384,9 @@ pref("dom.mozPermissionSettings.enabled", false);
 #ifdef XP_WIN
 pref("dom.w3c_touch_events.enabled", 2);
 #endif
+
+// W3C draft pointer events
+pref("dom.w3c_pointer_events.enabled", false);
 
 // enable JS dump() function.
 pref("browser.dom.window.dump.enabled", false);

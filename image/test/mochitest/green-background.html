@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Background color wrapper for clear image tests</title>
+<style>
+img {
+  background-color: rgb(0, 255, 0);
+}
+</style>
+</head>
+<body>
+<img id="image1">
+<script>
+// Loads an externally specified image and displays it
+// with a green background. Intended for use with tests
+// involving clear images.
+
+// Use as "green-background.html?image.png".
+
+// Get the image URL.
+var imgURL = document.location.search.substr(1);
+
+// Load it.
+var img = document.images[0];
+img.src = imgURL;
+</script>
+</body>
+</html>

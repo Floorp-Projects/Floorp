@@ -3085,10 +3085,10 @@ DefineProperty(JSContext *cx, HandleObject obj, const char *name, const Value &v
     RootedValue value(cx, value_);
     AutoRooterGetterSetter gsRoot(cx, attrs, const_cast<JSPropertyOp *>(&getter.op),
                                   const_cast<JSStrictPropertyOp *>(&setter.op));
-    RootedId id(cx);
 
+    RootedId id(cx);
     if (attrs & JSPROP_INDEX) {
-        id = INT_TO_JSID(intptr_t(name));
+        id.set(INT_TO_JSID(intptr_t(name)));
         attrs &= ~JSPROP_INDEX;
     } else {
         JSAtom *atom = Atomize(cx, name, strlen(name));
@@ -3098,6 +3098,57 @@ DefineProperty(JSContext *cx, HandleObject obj, const char *name, const Value &v
     }
 
     return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, flags, tinyid);
+}
+
+
+static bool
+DefineSelfHostedProperty(JSContext *cx,
+                         HandleObject obj,
+                         const char *name,
+                         const char *getterName,
+                         const char *setterName,
+                         unsigned attrs,
+                         unsigned flags,
+                         int tinyid)
+{
+    RootedAtom nameAtom(cx, Atomize(cx, name, strlen(name)));
+    if (!nameAtom)
+        return false;
+
+    RootedAtom getterNameAtom(cx, Atomize(cx, getterName, strlen(getterName)));
+    if (!getterNameAtom)
+        return false;
+
+    RootedValue getterValue(cx);
+    if (!cx->global()->getSelfHostedFunction(cx, getterNameAtom, nameAtom,
+                                             0, &getterValue))
+    {
+        return false;
+    }
+    JS_ASSERT(getterValue.isObject() && getterValue.toObject().is<JSFunction>());
+    RootedFunction getterFunc(cx, &getterValue.toObject().as<JSFunction>());
+    JSPropertyOp getterOp = JS_DATA_TO_FUNC_PTR(PropertyOp, getterFunc.get());
+
+    RootedFunction setterFunc(cx);
+    if (setterName) {
+        RootedAtom setterNameAtom(cx, Atomize(cx, setterName, strlen(setterName)));
+        if (!setterNameAtom)
+            return false;
+
+        RootedValue setterValue(cx);
+        if (!cx->global()->getSelfHostedFunction(cx, setterNameAtom, nameAtom,
+                                                 0, &setterValue))
+        {
+            return false;
+        }
+        JS_ASSERT(setterValue.isObject() && setterValue.toObject().is<JSFunction>());
+        setterFunc = &getterValue.toObject().as<JSFunction>();
+    }
+    JSStrictPropertyOp setterOp = JS_DATA_TO_FUNC_PTR(StrictPropertyOp, setterFunc.get());
+
+    return DefineProperty(cx, obj, name, UndefinedValue(),
+                          GetterWrapper(getterOp), SetterWrapper(setterOp),
+                          attrs, flags, tinyid);
 }
 
 JS_PUBLIC_API(bool)
@@ -3224,8 +3275,25 @@ JS_DefineProperties(JSContext *cx, JSObject *objArg, const JSPropertySpec *ps)
     RootedObject obj(cx, objArg);
     bool ok;
     for (ok = true; ps->name; ps++) {
-        ok = DefineProperty(cx, obj, ps->name, UndefinedValue(), ps->getter, ps->setter,
-                            ps->flags, Shape::HAS_SHORTID, ps->tinyid);
+        if (ps->selfHostedGetter) {
+            // If you have self-hosted getter/setter, you can't have a
+            // native one.
+            JS_ASSERT(!ps->getter.op && !ps->setter.op);
+
+            ok = DefineSelfHostedProperty(cx, obj, ps->name,
+                                          ps->selfHostedGetter,
+                                          ps->selfHostedSetter,
+                                          ps->flags, Shape::HAS_SHORTID,
+                                          ps->tinyid);
+        } else {
+            // If you do not have a self-hosted getter, you should
+            // have a native getter; and you should not have a
+            // self-hosted setter.
+            JS_ASSERT(ps->getter.op && !ps->selfHostedSetter);
+
+            ok = DefineProperty(cx, obj, ps->name, UndefinedValue(), ps->getter, ps->setter,
+                                ps->flags, Shape::HAS_SHORTID, ps->tinyid);
+        }
         if (!ok)
             break;
     }

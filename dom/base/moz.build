@@ -63,7 +63,7 @@ EXPORTS.mozilla.dom += [
     'URL.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'BarProps.cpp',
     'CompositionStringSynthesizer.cpp',
     'Crypto.cpp',
@@ -72,7 +72,6 @@ SOURCES += [
     'DOMException.cpp',
     'DOMRequest.cpp',
     'MessageChannel.cpp',
-    'MessagePort.cpp',
     'MessagePortList.cpp',
     'Navigator.cpp',
     'nsContentPermissionHelper.cpp',
@@ -80,9 +79,7 @@ SOURCES += [
     'nsDOMNavigationTiming.cpp',
     'nsDOMScriptObjectFactory.cpp',
     'nsDOMWindowList.cpp',
-    'nsDOMWindowUtils.cpp',
     'nsFocusManager.cpp',
-    'nsGlobalWindow.cpp',
     'nsGlobalWindowCommands.cpp',
     'nsHistory.cpp',
     'nsJSEnvironment.cpp',
@@ -91,7 +88,6 @@ SOURCES += [
     'nsLocation.cpp',
     'nsMimeTypeArray.cpp',
     'nsPerformance.cpp',
-    'nsPluginArray.cpp',
     'nsQueryContentEventResult.cpp',
     'nsScreen.cpp',
     'nsScriptNameSpaceManager.cpp',
@@ -101,6 +97,18 @@ SOURCES += [
     'nsWrapperCache.cpp',
     'URL.cpp',
     'WindowNamedPropertiesHandler.cpp',
+]
+
+# these files couldn't be in UNIFIED_SOURCES for now for reasons given below:
+SOURCES += [
+    # this file doesn't like windows.h
+    'MessagePort.cpp',
+    # this file doesn't like windows.h
+    'nsDOMWindowUtils.cpp',
+    # This file has a #error "Never include windows.h in this file!"
+    'nsGlobalWindow.cpp',
+    # nsPluginArray.cpp includes npapi.h indirectly, and that includes a lot of system headers
+    'nsPluginArray.cpp',
 ]
 
 EXTRA_COMPONENTS += [

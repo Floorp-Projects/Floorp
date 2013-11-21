@@ -28,6 +28,9 @@
 #include "mozilla/dom/SVGAnimatedLength.h"
 #include "nsMimeTypes.h"
 
+// undef the GetCurrentTime macro defined in WinBase.h from the MS Platform SDK
+#undef GetCurrentTime
+
 using namespace mozilla::dom;
 
 namespace mozilla {
