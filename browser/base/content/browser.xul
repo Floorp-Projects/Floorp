@@ -423,11 +423,7 @@
 <vbox id="titlebar">
   <hbox id="titlebar-content">
     <spacer id="titlebar-spacer" flex="1"/>
-    <hbox id="titlebar-buttonbox-container" align="start"
-#ifdef XP_MACOSX
-          ordinal="0"
-#endif
-    >
+    <hbox id="titlebar-buttonbox-container">
       <hbox id="titlebar-buttonbox">
         <toolbarbutton class="titlebar-button" id="titlebar-min" oncommand="window.minimize();"/>
         <toolbarbutton class="titlebar-button" id="titlebar-max" oncommand="onTitlebarMaxClick();"/>
@@ -435,7 +431,7 @@
       </hbox>
     </hbox>
 #ifdef XP_MACOSX
-    <hbox id="titlebar-fullscreen-button" ordinal="1000"/>
+    <hbox id="titlebar-fullscreen-button"/>
 #endif
   </hbox>
 </vbox>

@@ -4643,7 +4643,7 @@
 
     <content context="tabContextMenu" closetabtext="&closeTab.label;">
       <xul:stack class="tab-stack" flex="1">
-        <xul:hbox xbl:inherits="pinned,selected,titlechanged"
+        <xul:hbox xbl:inherits="pinned,selected,titlechanged,fadein"
                   class="tab-background">
           <xul:hbox xbl:inherits="pinned,selected,titlechanged"
                     class="tab-background-start"/>

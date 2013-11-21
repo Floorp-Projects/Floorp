@@ -40,14 +40,14 @@ function setAttributes(aNode, aAttrs) {
 
 function updateCombinedWidgetStyle(aNode, aArea, aModifyAutoclose) {
   let inPanel = (aArea == CustomizableUI.AREA_PANEL);
-  let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
-  if (!aArea)
-    cls = null;
+  let cls = inPanel ? "panel-combined-button" : null;
   let attrs = {class: cls};
   if (aModifyAutoclose) {
     attrs.noautoclose = inPanel ? true : null;
   }
   for (let i = 0, l = aNode.childNodes.length; i < l; ++i) {
+    if (aNode.childNodes[i].localName == "separator")
+      continue;
     setAttributes(aNode.childNodes[i], attrs);
   }
 }
@@ -297,7 +297,7 @@ const CustomizableWidgets = [{
       const kPanelId = "PanelUI-popup";
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
       let noautoclose = inPanel ? "true" : null;
-      let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
+      let cls = inPanel ? "panel-combined-button" : null;
 
       if (!this.currentArea)
         cls = null;
@@ -333,7 +333,9 @@ const CustomizableWidgets = [{
       node.classList.add("toolbaritem-combined-buttons");
       node.classList.add(kWidePanelItemClass);
 
-      buttons.forEach(function(aButton) {
+      buttons.forEach(function(aButton, aIndex) {
+        if (aIndex != 0)
+          node.appendChild(aDocument.createElementNS(kNSXUL, "separator"));
         let btnNode = aDocument.createElementNS(kNSXUL, "toolbarbutton");
         setAttributes(btnNode, aButton);
         if (inPanel)
@@ -342,7 +344,7 @@ const CustomizableWidgets = [{
       });
 
       // The middle node is the 'Reset Zoom' button.
-      let zoomResetButton = node.childNodes[1];
+      let zoomResetButton = node.childNodes[2];
       let window = aDocument.defaultView;
       function updateZoomResetButton() {
         //XXXgijs in some tests we get called very early, and there's no docShell on the
@@ -439,7 +441,7 @@ const CustomizableWidgets = [{
     defaultArea: CustomizableUI.AREA_PANEL,
     onBuild: function(aDocument) {
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
-      let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
+      let cls = inPanel ? "panel-combined-button" : null;
 
       if (!this.currentArea)
         cls = null;
@@ -473,7 +475,9 @@ const CustomizableWidgets = [{
       node.classList.add("toolbaritem-combined-buttons");
       node.classList.add(kWidePanelItemClass);
 
-      buttons.forEach(function(aButton) {
+      buttons.forEach(function(aButton, aIndex) {
+        if (aIndex != 0)
+          node.appendChild(aDocument.createElementNS(kNSXUL, "separator"));
         let btnNode = aDocument.createElementNS(kNSXUL, "toolbarbutton");
         setAttributes(btnNode, aButton);
         if (inPanel)

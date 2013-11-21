@@ -29,6 +29,7 @@ function runTests()
     "sp-text-run": "run",
     "sp-text-inspect": "inspect",
     "sp-text-display": "display",
+    "sp-text-reloadAndRun" : "reloadAndRun",
     "sp-menu-content": "setContentContext",
     "sp-menu-browser": "setBrowserContext",
   };

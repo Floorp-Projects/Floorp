@@ -103,7 +103,8 @@ this.SystemMessagePermissionsTable = {
   },
   "nfc-powerlevel-change": {
     "settings": ["read", "write"]
-  }
+  },
+  "rtsp-open-video": {},
 };
 
 this.SystemMessagePermissionsChecker = {

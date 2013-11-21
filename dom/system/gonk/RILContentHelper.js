@@ -101,6 +101,8 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:SetRoamingPreference",
   "RIL:GetRoamingPreference",
   "RIL:ExitEmergencyCbMode",
+  "RIL:SetRadioEnabled",
+  "RIL:RadioStateChanged",
   "RIL:SetVoicePrivacyMode",
   "RIL:GetVoicePrivacyMode",
   "RIL:OtaStatusChanged"
@@ -459,6 +461,7 @@ function RILContentHelper() {
     this.rilContexts[clientId] = {
       cardState:            RIL.GECKO_CARDSTATE_UNKNOWN,
       networkSelectionMode: RIL.GECKO_NETWORK_SELECTION_UNKNOWN,
+      radioState:           null,
       iccInfo:              null,
       voiceConnectionInfo:  new MobileConnectionInfo(),
       dataConnectionInfo:   new MobileConnectionInfo()
@@ -611,6 +614,7 @@ RILContentHelper.prototype = {
       }
       this.rilContexts[cId].cardState = rilContext.cardState;
       this.rilContexts[cId].networkSelectionMode = rilContext.networkSelectionMode;
+      this.rilContexts[cId].radioState = rilContext.detailedRadioState;
       this.updateIccInfo(cId, rilContext.iccInfo);
       this.updateConnectionInfo(rilContext.voice, this.rilContexts[cId].voiceConnectionInfo);
       this.updateConnectionInfo(rilContext.data, this.rilContexts[cId].dataConnectionInfo);
@@ -655,6 +659,11 @@ RILContentHelper.prototype = {
   getNetworkSelectionMode: function getNetworkSelectionMode(clientId) {
     let context = this.getRilContext(clientId);
     return context && context.networkSelectionMode;
+  },
+
+  getRadioState: function getRadioState(clientId) {
+    let context = this.getRilContext(clientId);
+    return context && context.radioState;
   },
 
   /**
@@ -1362,6 +1371,25 @@ RILContentHelper.prototype = {
     return request;
   },
 
+  setRadioEnabled: function setRadioEnabled(clientId, window, enabled) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:SetRadioEnabled", {
+      clientId: clientId,
+      data: {
+        requestId: requestId,
+        enabled: enabled,
+      }
+    });
+
+    return request;
+  },
+
   _mobileConnectionListeners: null,
   _cellBroadcastListeners: null,
   _voicemailListeners: null,
@@ -1767,6 +1795,16 @@ RILContentHelper.prototype = {
                            "notifyEmergencyCbModeChanged",
                            [data.active, data.timeoutMs]);
         break;
+      case "RIL:SetRadioEnabled":
+        this.handleSimpleRequest(data.requestId, data.errorMsg, null);
+        break;
+      case "RIL:RadioStateChanged":
+        this.rilContexts[clientId].radioState = data;
+        this._deliverEvent(clientId,
+                           "_mobileConnectionListeners",
+                           "notifyRadioStateChanged",
+                           null);
+        break;
       case "RIL:SetVoicePrivacyMode":
         this.handleSimpleRequest(data.requestId, data.errorMsg, null);
         break;
@@ -2094,4 +2132,3 @@ RILContentHelper.prototype = {
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RILContentHelper,
                                                      DOMMMIError,
                                                      IccCardLockError]);
-
