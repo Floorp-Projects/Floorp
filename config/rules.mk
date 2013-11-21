@@ -457,20 +457,6 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 endif # IS_COMPONENT
 
 #
-# Enforce the requirement that MODULE_NAME must be set
-# for components in static builds
-#
-ifdef IS_COMPONENT
-ifdef EXPORT_LIBRARY
-ifndef FORCE_SHARED_LIB
-ifndef MODULE_NAME
-$(error MODULE_NAME is required for components which may be used in static builds)
-endif
-endif
-endif
-endif
-
-#
 # MacOS X specific stuff
 #
 

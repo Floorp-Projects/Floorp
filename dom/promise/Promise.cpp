@@ -233,7 +233,7 @@ Promise::JSCallback(JSContext *aCx, unsigned aArgc, JS::Value *aVp)
   MOZ_ASSERT(v.isObject());
 
   Promise* promise;
-  if (NS_FAILED(UNWRAP_OBJECT(Promise, aCx, &v.toObject(), promise))) {
+  if (NS_FAILED(UNWRAP_OBJECT(Promise, &v.toObject(), promise))) {
     return Throw(aCx, NS_ERROR_UNEXPECTED);
   }
 
@@ -501,7 +501,7 @@ Promise::ResolveInternal(JSContext* aCx,
   if (aValue.isObject()) {
     JS::Rooted<JSObject*> valueObj(aCx, &aValue.toObject());
     Promise* nextPromise;
-    nsresult rv = UNWRAP_OBJECT(Promise, aCx, valueObj, nextPromise);
+    nsresult rv = UNWRAP_OBJECT(Promise, valueObj, nextPromise);
 
     if (NS_SUCCEEDED(rv)) {
       nsRefPtr<PromiseCallback> resolveCb = new ResolvePromiseCallback(this);
