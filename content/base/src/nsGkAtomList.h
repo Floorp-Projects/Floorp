@@ -1758,18 +1758,6 @@ GK_ATOM(onMozEdgeUIStarted, "onMozEdgeUIStarted")
 GK_ATOM(onMozEdgeUICanceled, "onMozEdgeUICanceled")
 GK_ATOM(onMozEdgeUICompleted, "onMozEdgeUICompleted")
 
-// Pointer events
-GK_ATOM(onpointerdown, "onpointerdown")
-GK_ATOM(onpointermove, "onpointermove")
-GK_ATOM(onpointerup, "onpointerup")
-GK_ATOM(onpointercancel, "onpointercancel")
-GK_ATOM(onpointerover, "onpointerover")
-GK_ATOM(onpointerout, "onpointerout")
-GK_ATOM(onpointerenter, "onpointerenter")
-GK_ATOM(onpointerleave, "onpointerleave")
-GK_ATOM(ongotpointercapture, "ongotpointercapture")
-GK_ATOM(onlostpointercapture, "onlostpointercapture")
-
 // orientation support
 GK_ATOM(ondevicemotion, "ondevicemotion")
 GK_ATOM(ondeviceorientation, "ondeviceorientation")
