@@ -2379,10 +2379,9 @@ this.GECKO_RADIOSTATE_UNAVAILABLE   = null;
 this.GECKO_RADIOSTATE_OFF           = "off";
 this.GECKO_RADIOSTATE_READY         = "ready";
 
-this.GECKO_CARDSTATE_NOT_READY                     = null;
+this.GECKO_CARDSTATE_UNDETECTED                    = null;
 this.GECKO_CARDSTATE_ILLEGAL                       = "illegal";
 this.GECKO_CARDSTATE_UNKNOWN                       = "unknown";
-this.GECKO_CARDSTATE_ABSENT                        = "absent";
 this.GECKO_CARDSTATE_PIN_REQUIRED                  = "pinRequired";
 this.GECKO_CARDSTATE_PUK_REQUIRED                  = "pukRequired";
 this.GECKO_CARDSTATE_PERSONALIZATION_IN_PROGRESS   = "personalizationInProgress";

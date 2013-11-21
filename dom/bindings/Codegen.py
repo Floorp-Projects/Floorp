@@ -1889,7 +1889,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                                   post="\n}")
         else:
             prefCache = None
-            
+
         if UseHolderForUnforgeable(self.descriptor):
             createUnforgeableHolder = CGGeneric("""JS::Rooted<JSObject*> unforgeableHolder(aCx,
   JS_NewObjectWithGivenProto(aCx, nullptr, nullptr, nullptr));
@@ -2017,7 +2017,7 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
     CreateInterfaceObjects(aCx, aGlobal, protoAndIfaceArray, aDefineOnGlobal);
   }
 
-  /* 
+  /*
    * The object might _still_ be null, but that's OK.
    *
    * Calling fromMarkedLocation() is safe because protoAndIfaceArray is
@@ -3541,7 +3541,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 "  if (index < 0) {\n"
                 "    return true;\n"
                 "  }\n")
-            
+
         template = (
             "{\n"
             "  bool ok;\n"
@@ -4108,7 +4108,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     def wrapAndSetPtr(wrapCall, failureCode=None):
         """
         Returns the code to set the jsval by calling "wrapCall". "failureCode"
-        is the code to run if calling "wrapCall" fails 
+        is the code to run if calling "wrapCall" fails
         """
         if failureCode is None:
             failureCode = exceptionCode
@@ -5036,7 +5036,7 @@ class CGSwitch(CGList):
                         )
                     )
                 )
-                        
+
         self.append(CGGeneric("}"))
 
 class CGCase(CGList):
@@ -5085,7 +5085,7 @@ class CGMethodCall(CGThing):
                                       method,
                                       argConversionStartsAt=argConversionStartsAt,
                                       isConstructor=isConstructor)
-            
+
 
         signatures = method.signatures()
         if len(signatures) == 1:
@@ -6788,10 +6788,10 @@ class ClassUsingDeclaration(ClassItem):
 class ClassConstructor(ClassItem):
     """
     Used for adding a constructor to a CGClass.
-    
+
     args is a list of Argument objects that are the arguments taken by the
     constructor.
-    
+
     inline should be True if the constructor should be marked inline.
 
     bodyInHeader should be True if the body should be placed in the class
@@ -6835,7 +6835,7 @@ class ClassConstructor(ClassItem):
                 initialize = m.body
                 if initialize:
                     items.append(m.name + "(" + initialize + ")")
-            
+
         if len(items) > 0:
             return '\n  : ' + ',\n    '.join(items)
         return ''
@@ -7846,7 +7846,7 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
         self.descriptor = descriptor
     def getBody(self):
         if self.descriptor.supportsIndexedProperties():
-            indexed = ("int32_t index = GetArrayIndexFromId(cx, id);\n" + 
+            indexed = ("int32_t index = GetArrayIndexFromId(cx, id);\n" +
                        "if (IsArrayIndex(index)) {\n" +
                        CGIndenter(CGProxyIndexedPresenceChecker(self.descriptor)).define() + "\n" +
                        "  *bp = found;\n" +
@@ -8742,7 +8742,7 @@ if (""",
                 "}")
             conversionReplacements["convert"] = CGIndenter(
                 CGGeneric(conversionReplacements["convert"])).define()
-        
+
         return CGGeneric(
             string.Template(conversion).substitute(conversionReplacements)
             )
@@ -11349,4 +11349,3 @@ class CGEventRoot(CGThing):
 
     def define(self):
         return self.root.define()
-

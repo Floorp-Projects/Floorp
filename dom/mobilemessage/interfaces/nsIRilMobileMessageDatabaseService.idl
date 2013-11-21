@@ -25,7 +25,7 @@ interface nsIRilMobileMessageDatabaseRecordCallback : nsISupports
   void notify(in nsresult aRv, in jsval aMessageRecord, in nsISupports aDomMessage);
 };
 
-[scriptable, uuid(f6cd671e-f9af-11e2-b64b-1fb87e9c217c)]
+[scriptable, uuid(d5374151-7451-4590-a70e-40c49c1369ce)]
 interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
 {
   /**
@@ -38,6 +38,7 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    *   - If |type| == "sms", we also need:
    *     - |messageClass| DOMString: the message class of received message
    *     - |receiver| DOMString: the phone number of receiver
+   *     - |pid| Number: the TP-PID field of the SMS TPDU, default 0.
    *
    *   - If |type| == "mms", we also need:
    *     - |delivery| DOMString: the delivery state of received message
@@ -49,7 +50,7 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    * Note: |deliveryStatus| should only contain single string to specify
    *       the delivery status of MMS message for the phone owner self.
    */
-  long saveReceivedMessage(in jsval aMessage,
+  void saveReceivedMessage(in jsval aMessage,
                 [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
 
   /**
@@ -66,7 +67,7 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    *   - If |type| == "mms", we also need:
    *     - |receivers| DOMString Array: the phone numbers of receivers
    */
-  long saveSendingMessage(in jsval aMessage,
+  void saveSendingMessage(in jsval aMessage,
                [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
 
   /**

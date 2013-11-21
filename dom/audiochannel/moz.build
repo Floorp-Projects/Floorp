@@ -19,7 +19,7 @@ EXPORTS += [
     'AudioChannelServiceChild.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AudioChannelAgent.cpp',
     'AudioChannelService.cpp',
     'AudioChannelServiceChild.cpp',

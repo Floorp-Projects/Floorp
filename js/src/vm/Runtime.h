@@ -466,10 +466,15 @@ struct JSAtomState
 #undef PROPERTYNAME_FIELD
 };
 
-#define NAME_OFFSET(name)       offsetof(JSAtomState, name)
-#define OFFSET_TO_NAME(rt,off)  (*(js::FixedHeapPtr<js::PropertyName>*)((char*)&(rt)->atomState + (off)))
-
 namespace js {
+
+#define NAME_OFFSET(name)       offsetof(JSAtomState, name)
+
+inline HandlePropertyName
+AtomStateOffsetToName(const JSAtomState &atomState, size_t offset)
+{
+    return *(js::FixedHeapPtr<js::PropertyName>*)((char*)&atomState + offset);
+}
 
 /*
  * Encapsulates portions of the runtime/context that are tied to a
@@ -1690,6 +1695,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool useHelperThreadsForIonCompilation_;
     bool useHelperThreadsForParsing_;
 
+    // True iff this is a DOM Worker runtime.
+    bool isWorkerRuntime_;
+
   public:
 
     bool useHelperThreads() const {
@@ -1729,6 +1737,12 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
     bool useHelperThreadsForParsing() const {
         return useHelperThreadsForParsing_;
+    }
+    void setIsWorkerRuntime() {
+        isWorkerRuntime_ = true;
+    }
+    bool isWorkerRuntime() const {
+        return isWorkerRuntime_;
     }
 
 #ifdef DEBUG

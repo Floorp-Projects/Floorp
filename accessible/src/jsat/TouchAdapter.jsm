@@ -46,7 +46,7 @@ this.TouchAdapter = {
   SYNTH_ID: -1,
 
   start: function TouchAdapter_start() {
-    Logger.info('TouchAdapter.start');
+    Logger.debug('TouchAdapter.start');
 
     this._touchPoints = {};
     this._dwellTimeout = 0;
@@ -64,7 +64,7 @@ this.TouchAdapter = {
   },
 
   stop: function TouchAdapter_stop() {
-    Logger.info('TouchAdapter.stop');
+    Logger.debug('TouchAdapter.stop');
 
     let target = Utils.win;
 

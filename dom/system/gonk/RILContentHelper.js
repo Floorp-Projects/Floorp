@@ -491,7 +491,8 @@ RILContentHelper.prototype = {
                                          Ci.nsIVoicemailProvider,
                                          Ci.nsIIccProvider,
                                          Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+                                         Ci.nsISupportsWeakReference,
+                                         Ci.nsIObserver]),
   classID:   RILCONTENTHELPER_CID,
   classInfo: XPCOMUtils.generateCI({classID: RILCONTENTHELPER_CID,
                                     classDescription: "RILContentHelper",
@@ -556,7 +557,7 @@ RILContentHelper.prototype = {
     let rilContext = this.rilContexts[clientId];
 
     // Card is not detected, clear iccInfo to null.
-    if (!newInfo || !newInfo.iccType) {
+    if (!newInfo || !newInfo.iccType || !newInfo.iccid) {
       if (rilContext.iccInfo) {
         rilContext.iccInfo = null;
         this._deliverEvent(clientId,

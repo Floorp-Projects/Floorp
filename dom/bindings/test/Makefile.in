@@ -65,10 +65,6 @@ check::
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) $(srcdir)/../parser/runtests.py
 
-check-interactive:
-	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  $(PLY_INCLUDE) $(srcdir)/../parser/runtests.py -q
-
 # Since we define MOCHITEST_FILES, config/makefiles/mochitest.mk goes ahead and
 # sets up a rule with libs:: in itm which makes our .DEFAULT_TARGET be "libs".
 # Then ruls.mk does |.DEFAULT_TARGET ?= default| which leaves it as "libs".  So

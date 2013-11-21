@@ -7,7 +7,6 @@
 #define txLog_h__
 
 #include "prlog.h"
-#endif
 
 #ifdef PR_LOGGING
 class txLog
@@ -30,4 +29,5 @@ public:
 #define TX_LG_IMPL
 #define TX_LG_CREATE
 
+#endif
 #endif

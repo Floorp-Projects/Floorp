@@ -1719,8 +1719,11 @@ add_test(function test_personalization_state() {
   let worker = newUint8Worker();
   let ril = worker.RIL;
 
+  worker.ICCRecordHelper.readICCID = function fakeReadICCID() {};
+
   function testPersonalization(cardPersoState, geckoCardState) {
     let iccStatus = {
+      cardState: CARD_STATE_PRESENT,
       gsmUmtsSubscriptionAppIndex: 0,
       apps: [
         {
@@ -1758,8 +1761,11 @@ add_test(function test_card_app_state() {
   let worker = newUint8Worker();
   let ril = worker.RIL;
 
+  worker.ICCRecordHelper.readICCID = function fakeReadICCID() {};
+
   function testCardAppState(cardAppState, geckoCardState) {
     let iccStatus = {
+      cardState: CARD_STATE_PRESENT,
       gsmUmtsSubscriptionAppIndex: 0,
       apps: [
       {
@@ -1794,8 +1800,11 @@ add_test(function test_icc_permanent_blocked() {
   let worker = newUint8Worker();
   let ril = worker.RIL;
 
+  worker.ICCRecordHelper.readICCID = function fakeReadICCID() {};
+
   function testPermanentBlocked(pin1_replaced, universalPINState, pin1) {
     let iccStatus = {
+      cardState: CARD_STATE_PRESENT,
       gsmUmtsSubscriptionAppIndex: 0,
       universalPINState: universalPINState,
       apps: [

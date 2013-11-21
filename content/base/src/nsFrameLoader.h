@@ -103,7 +103,7 @@ public:
     float mYScale;
   };
 
-  nsContentView(nsFrameLoader* aFrameLoader, ViewID aScrollId,
+  nsContentView(nsFrameLoader* aFrameLoader, ViewID aScrollId, bool aIsRoot,
                 ViewConfig aConfig = ViewConfig())
     : mViewportSize(0, 0)
     , mContentSize(0, 0)
@@ -111,10 +111,14 @@ public:
     , mParentScaleY(1.0)
     , mFrameLoader(aFrameLoader)
     , mScrollId(aScrollId)
+    , mIsRoot(aIsRoot)
     , mConfig(aConfig)
   {}
 
-  bool IsRoot() const;
+  bool IsRoot() const
+  {
+    return mIsRoot;
+  }
 
   ViewID GetId() const
   {
@@ -137,6 +141,7 @@ private:
   nsresult Update(const ViewConfig& aConfig);
 
   ViewID mScrollId;
+  bool mIsRoot;
   ViewConfig mConfig;
 };
 

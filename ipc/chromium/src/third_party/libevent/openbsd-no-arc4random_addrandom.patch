@@ -1,0 +1,64 @@
+# HG changeset patch
+# User Landry Breuil <landry@openbsd.org>
+# Date 1384377262 -3600
+#      Wed Nov 13 22:14:22 2013 +0100
+# Node ID 026009b2c94dc564413d48df824fabec98e2c631
+# Parent  f2b602a5ee27b2e05abe84ea7cbd358dadd2ffb5
+Bug 931354: OpenBSD doesn't provide arc4random_addrandom anymore, fix libevent accordingly by #ifndef'ing out its caller evutil_secure_rng_add_bytes() (which isnt called anywhere) r=joshaas
+
+diff --git a/ipc/chromium/src/third_party/libevent/evutil_rand.c b/ipc/chromium/src/third_party/libevent/evutil_rand.c
+--- a/ipc/chromium/src/third_party/libevent/evutil_rand.c
++++ b/ipc/chromium/src/third_party/libevent/evutil_rand.c
+@@ -134,15 +134,16 @@ ev_arc4random_buf(void *buf, size_t n)
+ #endif /* } !_EVENT_HAVE_ARC4RANDOM */
+ 
+ void
+ evutil_secure_rng_get_bytes(void *buf, size_t n)
+ {
+ 	ev_arc4random_buf(buf, n);
+ }
+ 
++#ifndef __OpenBSD__
+ void
+ evutil_secure_rng_add_bytes(const char *buf, size_t n)
+ {
+ 	arc4random_addrandom((unsigned char*)buf,
+ 	    n>(size_t)INT_MAX ? INT_MAX : (int)n);
+ }
+-
++#endif
+diff --git a/ipc/chromium/src/third_party/libevent/include/event2/util.h b/ipc/chromium/src/third_party/libevent/include/event2/util.h
+--- a/ipc/chromium/src/third_party/libevent/include/event2/util.h
++++ b/ipc/chromium/src/third_party/libevent/include/event2/util.h
+@@ -667,29 +667,31 @@ void evutil_secure_rng_get_bytes(void *b
+  * numbers.  You only need to call it if (a) you want to double-check
+  * that one of the seeding methods did succeed, or (b) you plan to drop
+  * the capability to seed (by chrooting, or dropping capabilities, or
+  * whatever), and you want to make sure that seeding happens before your
+  * program loses the ability to do it.
+  */
+ int evutil_secure_rng_init(void);
+ 
++#ifndef __OpenBSD__
+ /** Seed the random number generator with extra random bytes.
+ 
+     You should almost never need to call this function; it should be
+     sufficient to invoke evutil_secure_rng_init(), or let Libevent take
+     care of calling evutil_secure_rng_init() on its own.
+ 
+     If you call this function as a _replacement_ for the regular
+     entropy sources, then you need to be sure that your input
+     contains a fairly large amount of strong entropy.  Doing so is
+     notoriously hard: most people who try get it wrong.  Watch out!
+ 
+     @param dat a buffer full of a strong source of random numbers
+     @param datlen the number of bytes to read from datlen
+  */
+ void evutil_secure_rng_add_bytes(const char *dat, size_t datlen);
++#endif
+ 
+ #ifdef __cplusplus
+ }
+ #endif
+ 
+ #endif /* _EVUTIL_H_ */

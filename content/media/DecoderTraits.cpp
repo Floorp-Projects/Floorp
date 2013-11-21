@@ -476,7 +476,7 @@ DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
     // AMR audio is enabled for MMS, but we are discouraging Web and App
     // developers from using AMR, thus we only allow AMR to be played on WebApps.
     if (aType.EqualsASCII("audio/amr")) {
-      HTMLMediaElement* element = aOwner->GetMediaElement();
+      dom::HTMLMediaElement* element = aOwner->GetMediaElement();
       if (!element) {
         return nullptr;
       }

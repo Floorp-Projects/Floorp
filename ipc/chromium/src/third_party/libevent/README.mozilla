@@ -12,3 +12,4 @@ These files are taken from libevent-2.0.21-stable built on the development envir
 
 3. Apply "add mac-arc4random-buf.patch", which removes some bad OS X compatibility code. This will allow libevent to compile on all supported versions of OS X.
 
+4. Apply "openbsd-no-arc4random_addrandom.patch", which fixes the build on OpenBSD (which doesnt provide arc4random_addrandom anymore, see #931354)

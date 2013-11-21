@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */ 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -816,10 +816,12 @@ nsLocalFile::CopyToNative(nsIFile *newParent, const nsACString &newName)
 #endif
         char buf[BUFSIZ];
         int32_t bytesRead;
-        
+
         // record PR_Write() error for better error message later.
-        nsresult saved_write_error = NS_OK;    
+        nsresult saved_write_error = NS_OK;
         nsresult saved_read_error = NS_OK;
+        nsresult saved_read_close_error = NS_OK;
+        nsresult saved_write_close_error = NS_OK;
 
         // DONE: Does PR_Read() return bytesRead < 0 for error?
         // Yes., The errors from PR_Read are not so common and
@@ -848,6 +850,10 @@ nsLocalFile::CopyToNative(nsIFile *newParent, const nsACString &newName)
 #endif
         }
 
+        // TODO/FIXME: If CIFS (and NFS?) may force read/write to return EINTR,
+        // we are better off to prepare for retrying. But we need confirmation if
+        // EINTR is returned.
+
         // Record error if PR_Read() failed.
         // Must be done before any other I/O which may reset errno.
         if ( (bytesRead < 0) && (saved_write_error == NS_OK)) {
@@ -859,15 +865,29 @@ nsLocalFile::CopyToNative(nsIFile *newParent, const nsACString &newName)
                  totalRead, totalWritten);
 #endif
 
-        // TODO/FIXME: better find out how to propagate errors of
-        // close.  Errors of close can occur.  Read man page of
-        // close(2); At least, we should tell the user that
-        // filesystem/disk is hosed so that users can take remedial
-        // action.
+        // DONE: Errors of close can occur.  Read man page of
+        // close(2);
+        // This is likely to happen if the file system is remote file
+        // system (NFS, CIFS, etc.) and network outage occurs.
+        // At least, we should tell the user that filesystem/disk is
+        // hosed (possibly due to network error, hard disk failure,
+        // etc.) so that users can take remedial action.
 
         // close the files
-        PR_Close(newFD);
-        PR_Close(oldFD);
+        if (PR_Close(newFD) < 0) {
+            saved_write_close_error = NSRESULT_FOR_ERRNO();
+#if DEBUG
+            // This error merits printing.
+            fprintf(stderr, "ERROR: PR_Close(newFD) returned error. errno = %d\n", errno);
+#endif
+        }
+
+        if (PR_Close(oldFD) < 0) {
+            saved_read_close_error = NSRESULT_FOR_ERRNO();
+#if DEBUG
+            fprintf(stderr, "ERROR: PR_Close(oldFD) returned error. errno = %d\n", errno);
+#endif
+        }
 
         // Let us report the failure to write and read.
         // check for write/read error after cleaning up
@@ -881,6 +901,11 @@ nsLocalFile::CopyToNative(nsIFile *newParent, const nsACString &newName)
                 MOZ_ASSERT(0);
 #endif
         }
+
+        if (saved_write_close_error != NS_OK)
+            return saved_write_close_error;
+        if (saved_read_close_error != NS_OK)
+            return saved_read_close_error;
     }
     return rv;
 }

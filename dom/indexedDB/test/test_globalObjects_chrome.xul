@@ -28,35 +28,6 @@
     let db = event.target.result;
     ok(db, "Got database");
 
-    // Test for IDBKeyRange and indexedDB availability in bootstrap files.
-    let test = Cc["@mozilla.org/dom/indexeddb/GlobalObjectsComponent;1"].
-               createInstance(Ci.nsISupports).wrappedJSObject;
-    test.ok = ok;
-    test.finishTest = continueToNextStep;
-    test.runTest();
-    yield undefined;
-
-    Cu.import("resource://gre/modules/AddonManager.jsm");
-    AddonManager.getAddonByID("indexedDB-test@mozilla.org",
-                              grabEventAndContinueHandler);
-    let addon = yield undefined;
-    addon.uninstall();
-
-    Cu.import("resource://gre/modules/Services.jsm");
-    for each (var stage in [ "install", "startup", "shutdown", "uninstall" ]) {
-      for each (var symbol in [ "IDBKeyRange", "indexedDB" ]) {
-        let pref;
-        try {
-          pref = Services.prefs.getBoolPref("indexeddbtest.bootstrap." + stage +
-                                            "." + symbol);
-        }
-        catch(ex) {
-          pref = false;
-        }
-        ok(pref, "Symbol '" + symbol + "' present during '" + stage + "'");
-      }
-    }
-
     finishTest();
     yield undefined;
   }

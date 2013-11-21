@@ -5,7 +5,7 @@ MARIONETTE_HEAD_JS = "stk_helper.js";
 
 function testSetupIdleModeText(command, expect) {
   log("STK CMD " + JSON.stringify(command));
-  is(command.typeOfCommand, icc.STK_CMD_SET_UP_IDLE_MODE_TEXT, expect.name);
+  is(command.typeOfCommand, iccManager.STK_CMD_SET_UP_IDLE_MODE_TEXT, expect.name);
   is(command.commandQualifier, expect.commandQualifier, expect.name);
   is(command.options.text, expect.text, expect.name);
 

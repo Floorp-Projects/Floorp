@@ -31,7 +31,7 @@ MACPORTS_CLANG_PACKAGE = 'clang-3.3'
 
 RE_CLANG_VERSION = re.compile('Apple (?:clang|LLVM) version (\d+\.\d+)')
 
-APPLE_CLANG_MINIMUM_VERSION = StrictVersion('4.0')
+APPLE_CLANG_MINIMUM_VERSION = StrictVersion('4.2')
 
 XCODE_REQUIRED = '''
 Xcode is required to build Firefox. Please complete the install of Xcode

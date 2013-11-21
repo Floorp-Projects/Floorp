@@ -471,7 +471,7 @@ class Automation(object):
     os.unlink(pwfilePath)
     return 0
 
-  def environment(self, env = None, xrePath = None, crashreporter = True):
+  def environment(self, env=None, xrePath=None, crashreporter=True, debugger=False):
     if xrePath == None:
       xrePath = self.DIST_BIN
     if env == None:
@@ -490,7 +490,7 @@ class Automation(object):
     elif self.IS_WIN32:
       env["PATH"] = env["PATH"] + ";" + str(ldLibraryPath)
 
-    if crashreporter:
+    if crashreporter and not debugger:
       env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
       env['MOZ_CRASHREPORTER'] = '1'
     else:

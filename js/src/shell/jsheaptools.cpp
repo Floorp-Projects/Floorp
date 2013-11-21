@@ -21,8 +21,7 @@
 
 using namespace js;
 
-using mozilla::OldMove;
-using mozilla::MoveRef;
+using mozilla::Move;
 
 #ifdef DEBUG
 
@@ -74,11 +73,12 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
          * incoming edge Vector in the hash table: Vectors support moves, but
          * not assignments or copy construction.
          */
-        Node(MoveRef<Node> rhs)
-          : kind(rhs->kind), incoming(OldMove(rhs->incoming)), marked(rhs->marked) { }
-        Node &operator=(MoveRef<Node> rhs) {
+        Node(Node &&rhs)
+          : kind(rhs.kind), incoming(Move(rhs.incoming)), marked(rhs.marked) { }
+        Node &operator=(Node &&rhs) {
+            MOZ_ASSERT(this != &rhs, "self-move assignment is prohibited");
             this->~Node();
-            new(this) Node(rhs);
+            new(this) Node(Move(rhs));
             return *this;
         }
 
@@ -116,12 +116,13 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
          * Vectors without needing to copy our name string when the vector is
          * resized.
          */
-        Edge(MoveRef<Edge> rhs) : name(rhs->name), origin(rhs->origin) {
-            rhs->name = nullptr;
+        Edge(Edge &&rhs) : name(rhs.name), origin(rhs.origin) {
+            rhs.name = nullptr;
         }
-        Edge &operator=(MoveRef<Edge> rhs) {
+        Edge &operator=(Edge &&rhs) {
+            MOZ_ASSERT(this != &rhs, "self-move assignment is prohibited");
             this->~Edge();
-            new(this) Edge(rhs);
+            new(this) Edge(Move(rhs));
             return *this;
         }
 
@@ -271,7 +272,7 @@ HeapReverser::traverseEdge(void *cell, JSGCTraceKind kind)
          */
         Node n(kind);
         uint32_t generation = map.generation();
-        if (!map.add(a, cell, OldMove(n)) ||
+        if (!map.add(a, cell, Move(n)) ||
             !work.append(Child(cell, kind)))
             return false;
         /* If the map has been resized, re-check the pointer. */
@@ -280,7 +281,7 @@ HeapReverser::traverseEdge(void *cell, JSGCTraceKind kind)
     }
 
     /* Add this edge to the reversed map. */
-    return a->value.incoming.append(OldMove(e));
+    return a->value.incoming.append(Move(e));
 }
 
 bool

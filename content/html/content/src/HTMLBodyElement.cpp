@@ -348,8 +348,9 @@ HTMLBodyElement::UnbindFromTree(bool aDeep, bool aNullParent)
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);  
 }
 
-static 
-void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
+void
+HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                       nsRuleData* aData)
 {
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
     // When display if first asked for, go ahead and get our colors set up.

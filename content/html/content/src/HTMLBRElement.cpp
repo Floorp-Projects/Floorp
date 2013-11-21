@@ -57,9 +57,9 @@ HTMLBRElement::ParseAttribute(int32_t aNamespaceID,
                                               aResult);
 }
 
-static void
-MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                      nsRuleData* aData)
+void
+HTMLBRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                     nsRuleData* aData)
 {
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
     nsCSSValue* clear = aData->ValueForClear();

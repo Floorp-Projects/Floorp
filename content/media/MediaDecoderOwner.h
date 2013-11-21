@@ -139,6 +139,10 @@ public:
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
   virtual VideoFrameContainer* GetVideoFrameContainer() = 0;
+
+  // Called by the media decoder object, on the main thread,
+  // when the connection between Rtsp server and client gets lost.
+  virtual void ResetConnectionState() = 0;
 };
 
 }

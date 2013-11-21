@@ -5,7 +5,7 @@ MARIONETTE_HEAD_JS = "stk_helper.js";
 
 function testSetupMenu(command, expect) {
   log("STK CMD " + JSON.stringify(command));
-  is(command.typeOfCommand, icc.STK_CMD_SET_UP_MENU, expect.name);
+  is(command.typeOfCommand, iccManager.STK_CMD_SET_UP_MENU, expect.name);
   is(command.commandQualifier, expect.commandQualifier, expect.name);
   is(command.options.title, expect.title, expect.name);
   for (let index in command.options.items) {
@@ -22,14 +22,14 @@ function isFirstMenuItemNull(command) {
 
 function testInitialSetupMenu(command) {
   log("STK CMD " + JSON.stringify(command));
-  is(command.typeOfCommand, icc.STK_CMD_SET_UP_MENU);
+  is(command.typeOfCommand, iccManager.STK_CMD_SET_UP_MENU);
   is(isFirstMenuItemNull(command), false);
 
   runNextTest();
 }
 function testRemoveSetupMenu(command) {
   log("STK CMD " + JSON.stringify(command));
-  is(command.typeOfCommand, icc.STK_CMD_SET_UP_MENU);
+  is(command.typeOfCommand, iccManager.STK_CMD_SET_UP_MENU);
   is(isFirstMenuItemNull(command), true);
 
   runNextTest();

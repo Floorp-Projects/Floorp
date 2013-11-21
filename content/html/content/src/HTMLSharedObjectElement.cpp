@@ -260,9 +260,9 @@ MapAttributesIntoRuleExceptHidden(const nsMappedAttributes *aAttributes,
   nsGenericHTMLElement::MapCommonAttributesIntoExceptHidden(aAttributes, aData);
 }
 
-static void
-MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
-                      nsRuleData *aData)
+void
+HTMLSharedObjectElement::MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
+                                               nsRuleData *aData)
 {
   MapAttributesIntoRuleBase(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);

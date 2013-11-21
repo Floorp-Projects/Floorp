@@ -103,10 +103,10 @@ jit::MaybeGetIonContext()
 }
 
 IonContext::IonContext(JSContext *cx, TempAllocator *temp)
-  : runtime(cx->runtime()),
-    cx(cx),
-    compartment(cx->compartment()),
+  : cx(cx),
     temp(temp),
+    runtime(CompileRuntime::get(cx->runtime())),
+    compartment(CompileCompartment::get(cx->compartment())),
     prev_(CurrentIonContext()),
     assemblerCount_(0)
 {
@@ -114,32 +114,32 @@ IonContext::IonContext(JSContext *cx, TempAllocator *temp)
 }
 
 IonContext::IonContext(ExclusiveContext *cx, TempAllocator *temp)
-  : runtime(cx->runtime_),
-    cx(nullptr),
-    compartment(nullptr),
+  : cx(nullptr),
     temp(temp),
+    runtime(CompileRuntime::get(cx->runtime_)),
+    compartment(nullptr),
     prev_(CurrentIonContext()),
     assemblerCount_(0)
 {
     SetIonContext(this);
 }
 
-IonContext::IonContext(JSRuntime *rt, JSCompartment *comp, TempAllocator *temp)
-  : runtime(rt),
-    cx(nullptr),
+IonContext::IonContext(CompileRuntime *rt, CompileCompartment *comp, TempAllocator *temp)
+  : cx(nullptr),
+    temp(temp),
+    runtime(rt),
     compartment(comp),
-    temp(temp),
     prev_(CurrentIonContext()),
     assemblerCount_(0)
 {
     SetIonContext(this);
 }
 
-IonContext::IonContext(JSRuntime *rt)
-  : runtime(rt),
-    cx(nullptr),
-    compartment(nullptr),
+IonContext::IonContext(CompileRuntime *rt)
+  : cx(nullptr),
     temp(nullptr),
+    runtime(rt),
+    compartment(nullptr),
     prev_(CurrentIonContext()),
     assemblerCount_(0)
 {
@@ -589,14 +589,14 @@ JitCompartment::sweep(FreeOp *fop)
 }
 
 IonCode *
-JitRuntime::getBailoutTable(const FrameSizeClass &frameClass)
+JitRuntime::getBailoutTable(const FrameSizeClass &frameClass) const
 {
     JS_ASSERT(frameClass != FrameSizeClass::None());
     return bailoutTables_[frameClass.classId()];
 }
 
 IonCode *
-JitRuntime::getVMWrapper(const VMFunction &f)
+JitRuntime::getVMWrapper(const VMFunction &f) const
 {
     JS_ASSERT(functionWrappers_);
     JS_ASSERT(functionWrappers_->initialized());
@@ -1077,7 +1077,7 @@ IonScript::purgeCaches(Zone *zone)
         return;
 
     JSRuntime *rt = zone->runtimeFromMainThread();
-    IonContext ictx(rt);
+    IonContext ictx(CompileRuntime::get(rt));
     AutoFlushCache afc("purgeCaches", rt->jitRuntime());
     for (size_t i = 0; i < numCaches(); i++)
         getCacheFromIndex(i).reset();
@@ -1134,7 +1134,7 @@ jit::ToggleBarriers(JS::Zone *zone, bool needs)
     if (!rt->hasJitRuntime())
         return;
 
-    IonContext ictx(rt);
+    IonContext ictx(CompileRuntime::get(rt));
     AutoFlushCache afc("ToggleBarriers", rt->jitRuntime());
     for (gc::CellIterUnderGC i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
@@ -1644,7 +1644,9 @@ IonCompile(JSContext *cx, JSScript *script,
     if (!constraints)
         return AbortReason_Alloc;
 
-    IonBuilder *builder = alloc->new_<IonBuilder>((JSContext *) nullptr, cx->compartment(), temp, graph, constraints,
+    IonBuilder *builder = alloc->new_<IonBuilder>((JSContext *) nullptr,
+                                                  CompileCompartment::get(cx->compartment()),
+                                                  temp, graph, constraints,
                                                   &inspector, info, baselineFrame);
     if (!builder)
         return AbortReason_Alloc;
@@ -1738,9 +1740,14 @@ CheckScript(JSContext *cx, JSScript *script, bool osr)
 
 // Longer scripts can only be compiled off thread, as these compilations
 // can be expensive and stall the main thread for too long.
-static const uint32_t MAX_OFF_THREAD_SCRIPT_SIZE = 100000;
-static const uint32_t MAX_MAIN_THREAD_SCRIPT_SIZE = 2000;
+static const uint32_t MAX_OFF_THREAD_SCRIPT_SIZE = 100 * 1000;
+static const uint32_t MAX_MAIN_THREAD_SCRIPT_SIZE = 2 * 1000;
 static const uint32_t MAX_MAIN_THREAD_LOCALS_AND_ARGS = 256;
+
+// DOM Worker runtimes don't have off thread compilation, but can also compile
+// larger scripts since this doesn't stall the main thread.
+static const uint32_t MAX_DOM_WORKER_SCRIPT_SIZE = 16 * 1000;
+static const uint32_t MAX_DOM_WORKER_LOCALS_AND_ARGS = 2048;
 
 static MethodStatus
 CheckScriptSize(JSContext *cx, JSScript* script)
@@ -1755,6 +1762,21 @@ CheckScriptSize(JSContext *cx, JSScript* script)
     }
 
     uint32_t numLocalsAndArgs = analyze::TotalSlots(script);
+    if (cx->runtime()->isWorkerRuntime()) {
+        // DOM Workers don't have off thread compilation enabled. Since workers
+        // don't block the browser's event loop, allow them to compile larger
+        // scripts.
+        JS_ASSERT(!OffThreadIonCompilationEnabled(cx->runtime()));
+
+        if (script->length > MAX_DOM_WORKER_SCRIPT_SIZE ||
+            numLocalsAndArgs > MAX_DOM_WORKER_LOCALS_AND_ARGS)
+        {
+            return Method_CantCompile;
+        }
+
+        return Method_Compiled;
+    }
+
     if (script->length > MAX_MAIN_THREAD_SCRIPT_SIZE ||
         numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
     {
@@ -2366,7 +2388,7 @@ jit::InvalidateAll(FreeOp *fop, Zone *zone)
 
     for (JitActivationIterator iter(fop->runtime()); !iter.done(); ++iter) {
         if (iter.activation()->compartment()->zone() == zone) {
-            IonContext ictx(fop->runtime());
+            IonContext ictx(CompileRuntime::get(fop->runtime()));
             AutoFlushCache afc("InvalidateAll", fop->runtime()->jitRuntime());
             IonSpew(IonSpew_Invalidate, "Invalidating all frames for GC");
             InvalidateActivation(fop, iter.jitTop(), true);
@@ -2612,7 +2634,7 @@ void
 AutoFlushCache::updateTop(uintptr_t p, size_t len)
 {
     IonContext *ictx = MaybeGetIonContext();
-    JitRuntime *jrt = (ictx != nullptr) ? ictx->runtime->jitRuntime() : nullptr;
+    JitRuntime *jrt = (ictx != nullptr) ? const_cast<JitRuntime *>(ictx->runtime->jitRuntime()) : nullptr;
     if (!jrt || !jrt->flusher())
         JSC::ExecutableAllocator::cacheFlush((void*)p, len);
     else

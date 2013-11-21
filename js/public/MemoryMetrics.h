@@ -273,8 +273,8 @@ struct NotableStringInfo : public StringInfo
     NotableStringInfo();
     NotableStringInfo(JSString *str, const StringInfo &info);
     NotableStringInfo(const NotableStringInfo& info);
-    NotableStringInfo(mozilla::MoveRef<NotableStringInfo> info);
-    NotableStringInfo &operator=(mozilla::MoveRef<NotableStringInfo> info);
+    NotableStringInfo(NotableStringInfo &&info);
+    NotableStringInfo &operator=(NotableStringInfo &&info);
 
     ~NotableStringInfo() {
         js_free(buffer);
@@ -326,10 +326,10 @@ struct ZoneStats : js::ZoneStatsPod
         strings.init();
     }
 
-    ZoneStats(mozilla::MoveRef<ZoneStats> other)
-        : ZoneStatsPod(other),
-          strings(mozilla::OldMove(other->strings)),
-          notableStrings(mozilla::OldMove(other->notableStrings))
+    ZoneStats(ZoneStats &&other)
+      : ZoneStatsPod(mozilla::Move(other)),
+        strings(mozilla::Move(other.strings)),
+        notableStrings(mozilla::Move(other.notableStrings))
     {}
 
     // Add other's numbers to this object's numbers.  Both objects'

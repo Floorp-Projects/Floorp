@@ -1182,24 +1182,6 @@ nsGenericHTMLElement::GetPresContext()
   return nullptr;
 }
 
-static const nsAttrValue::EnumTable kAlignTable[] = {
-  { "left",      NS_STYLE_TEXT_ALIGN_LEFT },
-  { "right",     NS_STYLE_TEXT_ALIGN_RIGHT },
-
-  { "top",       NS_STYLE_VERTICAL_ALIGN_TOP },
-  { "middle",    NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE },
-  { "bottom",    NS_STYLE_VERTICAL_ALIGN_BASELINE },
-
-  { "center",    NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE },
-  { "baseline",  NS_STYLE_VERTICAL_ALIGN_BASELINE },
-
-  { "texttop",   NS_STYLE_VERTICAL_ALIGN_TEXT_TOP },
-  { "absmiddle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
-  { "abscenter", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
-  { "absbottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
-  { 0 }
-};
-
 static const nsAttrValue::EnumTable kDivAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_MOZ_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
@@ -1240,6 +1222,24 @@ bool
 nsGenericHTMLElement::ParseAlignValue(const nsAString& aString,
                                       nsAttrValue& aResult)
 {
+  static const nsAttrValue::EnumTable kAlignTable[] = {
+    { "left",      NS_STYLE_TEXT_ALIGN_LEFT },
+    { "right",     NS_STYLE_TEXT_ALIGN_RIGHT },
+
+    { "top",       NS_STYLE_VERTICAL_ALIGN_TOP },
+    { "middle",    NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE },
+    { "bottom",    NS_STYLE_VERTICAL_ALIGN_BASELINE },
+
+    { "center",    NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE },
+    { "baseline",  NS_STYLE_VERTICAL_ALIGN_BASELINE },
+
+    { "texttop",   NS_STYLE_VERTICAL_ALIGN_TEXT_TOP },
+    { "absmiddle", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
+    { "abscenter", NS_STYLE_VERTICAL_ALIGN_MIDDLE },
+    { "absbottom", NS_STYLE_VERTICAL_ALIGN_BOTTOM },
+    { 0 }
+  };
+
   return aResult.ParseEnumValue(aString, kAlignTable, false);
 }
 

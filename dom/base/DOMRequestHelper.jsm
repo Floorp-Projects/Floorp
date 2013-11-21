@@ -141,6 +141,11 @@ DOMRequestIpcHelper.prototype = {
    *    will be added as a weak referred one by default.
    */
   initDOMRequestHelper: function(aWindow, aMessages) {
+    // Query our required interfaces to force a fast fail if they are not
+    // provided. These calls will throw if the interface is not available.
+    this.QueryInterface(Ci.nsISupportsWeakReference);
+    this.QueryInterface(Ci.nsIObserver);
+
     if (aMessages) {
       this.addMessageListeners(aMessages);
     }
@@ -157,7 +162,8 @@ DOMRequestIpcHelper.prototype = {
 
     this._destroyed = false;
 
-    Services.obs.addObserver(this, "inner-window-destroyed", false);
+    Services.obs.addObserver(this, "inner-window-destroyed",
+                             /* weak-ref */ true);
   },
 
   destroyDOMRequestHelper: function() {

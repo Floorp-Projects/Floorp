@@ -196,7 +196,7 @@ function getThreadById(aThreadId) {
   return getAllThreads()
     .then(function(aThreads) {
       for (let thread of aThreads) {
-        if (thread.id == aThreadId) {
+        if (thread.id === aThreadId) {
           return thread;
         }
       }
@@ -267,6 +267,70 @@ function deleteAllMessages() {
   return getAllMessages().then(deleteMessages);
 }
 
+let pendingEmulatorCmdCount = 0;
+
+/* Send emulator command with safe guard.
+ *
+ * We should only call |finish()| after all emulator command transactions
+ * end, so here comes with the pending counter.  Resolve when the emulator
+ * gives positive response, and reject otherwise.
+ *
+ * Forfill params:
+ *   result -- an array of emulator response lines.
+ *
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @return A deferred promise.
+ */
+function runEmulatorCmdSafe(aCommand) {
+  let deferred = Promise.defer();
+
+  ++pendingEmulatorCmdCount;
+  runEmulatorCmd(aCommand, function(aResult) {
+    --pendingEmulatorCmdCount;
+
+    ok(true, "Emulator response: " + JSON.stringify(aResult));
+    if (Array.isArray(aResult) && aResult[0] === "OK") {
+      deferred.resolve(aResult);
+    } else {
+      deferred.reject(aResult);
+    }
+  });
+
+  return deferred.promise;
+}
+
+/* Send simple text SMS to emulator.
+ *
+ * Forfill params:
+ *   result -- an array of emulator response lines.
+ *
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @return A deferred promise.
+ */
+function sendTextSmsToEmulator(aFrom, aText) {
+  let command = "sms send " + aFrom + " " + aText;
+  return runEmulatorCmdSafe(command);
+}
+
+/* Send raw SMS TPDU to emulator.
+ *
+ * Forfill params:
+ *   result -- an array of emulator response lines.
+ *
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @return A deferred promise.
+ */
+function sendRawSmsToEmulator(aPdu) {
+  let command = "sms pdu " + aPdu;
+  return runEmulatorCmdSafe(command);
+}
+
 /* Create a new array of id attribute of input messages.
  *
  * @param aMessages an array of {Sms,Mms}Message instances.
@@ -284,11 +348,15 @@ function messagesToIds(aMessages) {
 /* Flush permission settings and call |finish()|.
  */
 function cleanUp() {
-  SpecialPowers.flushPermissions(function() {
-    // Use ok here so that we have at least one test run.
-    ok(true, "permissions flushed");
+  waitFor(function() {
+    SpecialPowers.flushPermissions(function() {
+      // Use ok here so that we have at least one test run.
+      ok(true, "permissions flushed");
 
-    finish();
+      finish();
+    });
+  }, function() {
+    return pendingEmulatorCmdCount === 0;
   });
 }
 
@@ -297,5 +365,8 @@ function startTestCommon(aTestCaseMain) {
     .then(deleteAllMessages)
     .then(aTestCaseMain)
     .then(deleteAllMessages)
-    .then(cleanUp, cleanUp);
+    .then(cleanUp, function() {
+      ok(false, 'promise rejects during test.');
+      cleanUp();
+    });
 }
