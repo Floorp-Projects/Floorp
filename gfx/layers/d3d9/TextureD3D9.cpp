@@ -167,39 +167,26 @@ TextureSourceD3D9::InitTextures(DeviceManagerD3D9* aDeviceManager,
     return nullptr;
   }
   RefPtr<IDirect3DTexture9> result;
-  if (aDeviceManager->IsD3D9Ex()) {
-    // D3D9Ex doesn't support managed textures. We could use dynamic textures
-    // here but since Images are immutable that probably isn't such a great
-    // idea.
-    result = aDeviceManager->CreateTexture(aSize, aFormat, D3DPOOL_DEFAULT, this);
-    if (!result) {
-      return nullptr;
-    }
+  // D3D9Ex doesn't support managed textures and we don't want the hassle even
+  // if we don't have Ex. We could use dynamic textures
+  // here but since Images are immutable that probably isn't such a great
+  // idea.
+  result = aDeviceManager->CreateTexture(aSize, aFormat, D3DPOOL_DEFAULT, this);
+  if (!result) {
+    return nullptr;
+  }
 
-    RefPtr<IDirect3DTexture9> tmpTexture =
-      aDeviceManager->CreateTexture(aSize, aFormat, D3DPOOL_SYSTEMMEM, this);
-    if (!tmpTexture) {
-      return nullptr;
-    }
+  RefPtr<IDirect3DTexture9> tmpTexture =
+    aDeviceManager->CreateTexture(aSize, aFormat, D3DPOOL_SYSTEMMEM, this);
+  if (!tmpTexture) {
+    return nullptr;
+  }
 
-    tmpTexture->GetSurfaceLevel(0, byRef(aSurface));
-    aSurface->LockRect(&aLockedRect, NULL, 0);
-    if (!aLockedRect.pBits) {
-      NS_WARNING("Could not lock surface");
-      return nullptr;
-    }
-  } else {
-    result = aDeviceManager->CreateTexture(aSize, aFormat, D3DPOOL_MANAGED, this);
-    if (!result) {
-      return nullptr;
-    }
-
-    /* lock the entire texture */
-    result->LockRect(0, &aLockedRect, nullptr, 0);
-    if (!aLockedRect.pBits) {
-      NS_WARNING("Could not lock surface");
-      return nullptr;
-    }
+  tmpTexture->GetSurfaceLevel(0, byRef(aSurface));
+  aSurface->LockRect(&aLockedRect, NULL, 0);
+  if (!aLockedRect.pBits) {
+    NS_WARNING("Could not lock surface");
+    return nullptr;
   }
 
   return result;
@@ -216,14 +203,11 @@ FinishTextures(DeviceManagerD3D9* aDeviceManager,
   if (!aDeviceManager) {
     return;
   }
-  if (aDeviceManager->IsD3D9Ex()) {
-    aSurface->UnlockRect();
-    nsRefPtr<IDirect3DSurface9> dstSurface;
-    aTexture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
-    aDeviceManager->device()->UpdateSurface(aSurface, NULL, dstSurface, NULL);
-  } else {
-    aTexture->UnlockRect(0);
-  }
+
+  aSurface->UnlockRect();
+  nsRefPtr<IDirect3DSurface9> dstSurface;
+  aTexture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
+  aDeviceManager->device()->UpdateSurface(aSurface, NULL, dstSurface, NULL);
 }
 
 TemporaryRef<IDirect3DTexture9>
