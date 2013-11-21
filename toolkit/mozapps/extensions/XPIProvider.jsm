@@ -3308,7 +3308,7 @@ var XPIProvider = {
         locMigrateData = XPIDatabase.migrateData[installLocation.name];
       for (let id in addonStates) {
         changed = addMetadata(installLocation, id, addonStates[id],
-                              locMigrateData[id]) || changed;
+                              locMigrateData[id] || null) || changed;
       }
     }
 
@@ -6923,7 +6923,7 @@ DirectoryInstallLocation.prototype = {
       recursiveRemove(file);
     }
 
-    if (this.stagingDirLock > 0)
+    if (this._stagingDirLock > 0)
       return;
 
     let dirEntries = dir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
