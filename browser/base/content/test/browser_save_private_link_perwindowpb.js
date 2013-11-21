@@ -99,8 +99,6 @@ function test() {
                                            aWindow.gBrowser.contentWindow);
       });
     });
-
-    aWindow.gBrowser.selectedBrowser.loadURI(testURI);
   }
 
   function testOnWindow(aOptions, aCallback) {
