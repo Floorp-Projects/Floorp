@@ -185,6 +185,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     is(rangeChange, 1, "Change event shouldn't be dispatched on range input element during drag of thumb");
     synthesizeMouse(range, centerOfRangeX, centerOfRangeY, { type: "mouseup" });
     is(rangeChange, 2, "Change event should be dispatched on range input element at end of drag");
+    range.blur();
+    is(rangeChange, 2, "Change event shouldn't be dispatched on range input element when range loses focus after a drag");
+    synthesizeMouse(range, centerOfRangeX - 10, centerOfRangeY, {});
+    is(rangeChange, 3, "Change event should be dispatched on range input element for a click that gives the range focus");
 
     //Input type change test.
     input = document.getElementById("input_checkbox");
