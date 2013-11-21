@@ -11,7 +11,7 @@ EXPORTS += [
     'yuv_row.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'ycbcr_to_rgb565.cpp',
     'yuv_convert.cpp',
     'yuv_row_c.cpp',

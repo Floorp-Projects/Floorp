@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE_NAME = nsBrowserCompsModule
-
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32 shlwapi)
 endif

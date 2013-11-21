@@ -35,6 +35,10 @@ registerCleanupFunction(function() {
 
   // Properly shut down the server to avoid memory leaks.
   DebuggerServer.destroy();
+
+  // Debugger tests use a lot of memory, so force a GC to help fragmentation.
+  info("Forcing GC after debugger test.");
+  Cu.forceGC();
 });
 
 // Import the GCLI test helper

@@ -93,7 +93,7 @@ try {
     let (crashReporter =
           Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
           .getService(Components.interfaces.nsICrashReporter)) {
-      crashReporter.minidumpPath = do_get_tempdir();
+      crashReporter.minidumpPath = do_get_minidumpdir();
     }
   }
 }
@@ -1100,6 +1100,26 @@ function do_get_tempdir() {
 }
 
 /**
+ * Returns the directory for crashreporter minidumps.
+ *
+ * @return nsILocalFile of the minidump directory
+ */
+function do_get_minidumpdir() {
+  let env = Components.classes["@mozilla.org/process/environment;1"]
+                      .getService(Components.interfaces.nsIEnvironment);
+  // the python harness may set this in the environment for us
+  let path = env.get("XPCSHELL_MINIDUMP_DIR");
+  if (path) {
+    let file = Components.classes["@mozilla.org/file/local;1"]
+                         .createInstance(Components.interfaces.nsILocalFile);
+    file.initWithPath(path);
+    return file;
+  } else {
+    return do_get_tempdir();
+  }
+}
+
+/**
  * Registers a directory with the profile service,
  * and return the directory as an nsILocalFile.
  *
@@ -1237,6 +1257,48 @@ function run_test_in_child(testFile, optionalCallback)
               callback);
 }
 
+/**
+ * Execute a given function as soon as a particular cross-process message is received.
+ * Must be paired with do_send_remote_message or equivalent ProcessMessageManager calls.
+ */
+function do_await_remote_message(name, callback)
+{
+  var listener = {
+    receiveMessage: function(message) {
+      if (message.name == name) {
+        mm.removeMessageListener(name, listener);
+        callback();
+        do_test_finished();
+      }
+    }
+  };
+
+  var mm;
+  if (runningInParent) {
+    mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIMessageBroadcaster);
+  } else {
+    mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
+  }
+  do_test_pending();
+  mm.addMessageListener(name, listener);
+}
+
+/**
+ * Asynchronously send a message to all remote processes. Pairs with do_await_remote_message
+ * or equivalent ProcessMessageManager listeners.
+ */
+function do_send_remote_message(name) {
+  var mm;
+  var sender;
+  if (runningInParent) {
+    mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIMessageBroadcaster);
+    sender = 'broadcastAsyncMessage';
+  } else {
+    mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
+    sender = 'sendAsyncMessage';
+  }
+  mm[sender](name);
+}
 
 /**
  * Add a test function to the list of tests that are to be run asynchronously.
