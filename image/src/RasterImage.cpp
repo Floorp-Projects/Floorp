@@ -1589,10 +1589,11 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
   // write the data directly to the decoder. (If we haven't gotten the size,
   // we'll queue up the data and write it out when we do.)
   if (!StoringSourceData() && mHasSize) {
-    mDecoder->SetSynchronous(true);
-    rv = WriteToDecoder(aBuffer, aCount);
-    mDecoder->SetSynchronous(false);
-    CONTAINER_ENSURE_SUCCESS(rv);
+    {
+      AutoSetSyncDecode syncDecode(mDecoder);
+      rv = WriteToDecoder(aBuffer, aCount);
+      CONTAINER_ENSURE_SUCCESS(rv);
+    }
 
     // We're not storing source data, so this data is probably coming straight
     // from the network. In this case, we want to display data as soon as we
@@ -1961,7 +1962,7 @@ RasterImage::StoringSourceData() const {
 // Sets up a decoder for this image. It is an error to call this function
 // when decoding is already in process (ie - when mDecoder is non-null).
 nsresult
-RasterImage::InitDecoder(bool aDoSizeDecode, bool aIsSynchronous /* = false */)
+RasterImage::InitDecoder(bool aDoSizeDecode)
 {
   // Ensure that the decoder is not already initialized
   NS_ABORT_IF_FALSE(!mDecoder, "Calling InitDecoder() while already decoding!");
@@ -2026,7 +2027,6 @@ RasterImage::InitDecoder(bool aDoSizeDecode, bool aIsSynchronous /* = false */)
   mDecoder->SetObserver(mDecodeRequest->mStatusTracker->GetDecoderObserver());
   mDecoder->SetSizeDecode(aDoSizeDecode);
   mDecoder->SetDecodeFlags(mFrameDecodeFlags);
-  mDecoder->SetSynchronous(aIsSynchronous);
   if (!aDoSizeDecode) {
     // We already have the size; tell the decoder so it can preallocate a
     // frame.  By default, we create an ARGB frame with no offset. If decoders
@@ -2313,14 +2313,8 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   // to finish decoding.
   if (!mDecoded && !mInDecoder && mHasSourceData && aDecodeType == SYNCHRONOUS_NOTIFY_AND_SOME_DECODE) {
     PROFILER_LABEL_PRINTF("RasterImage", "DecodeABitOf", "%s", GetURIString().get());
-    mDecoder->SetSynchronous(true);
-
+    AutoSetSyncDecode syncDecode(mDecoder);
     DecodePool::Singleton()->DecodeABitOf(this);
-
-    // DecodeABitOf can destroy mDecoder.
-    if (mDecoder) {
-      mDecoder->SetSynchronous(false);
-    }
     return NS_OK;
   }
 
@@ -2398,15 +2392,17 @@ RasterImage::SyncDecode()
 
   // If we don't have a decoder, create one
   if (!mDecoder) {
-    rv = InitDecoder(/* aDoSizeDecode = */ false, /* aIsSynchronous = */ true);
+    rv = InitDecoder(/* aDoSizeDecode = */ false);
     CONTAINER_ENSURE_SUCCESS(rv);
-  } else {
-    mDecoder->SetSynchronous(true);
   }
 
-  // Write everything we have
-  rv = DecodeSomeData(mSourceData.Length() - mBytesDecoded);
-  CONTAINER_ENSURE_SUCCESS(rv);
+  {
+    AutoSetSyncDecode syncDecode(mDecoder);
+
+    // Write everything we have
+    rv = DecodeSomeData(mSourceData.Length() - mBytesDecoded);
+    CONTAINER_ENSURE_SUCCESS(rv);
+  }
 
   // When we're doing a sync decode, we want to get as much information from the
   // image as possible. We've send the decoder all of our data, so now's a good
@@ -2419,11 +2415,9 @@ RasterImage::SyncDecode()
 
   rv = FinishedSomeDecoding();
   CONTAINER_ENSURE_SUCCESS(rv);
-
+  
+  // If our decoder's still open, there's still work to be done.
   if (mDecoder) {
-    mDecoder->SetSynchronous(false);
-
-    // If our decoder's still open, there's still work to be done.
     DecodePool::Singleton()->RequestDecode(this);
   }
 
