@@ -13,6 +13,7 @@ from automationutils import replaceBackSlashes
 from mozdevice import devicemanagerADB, devicemanagerSUT, devicemanager
 from zipfile import ZipFile
 import shutil
+import mozfile
 import mozinfo
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -132,6 +133,17 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         self.device.killProcess(cmd[0])
         self.device.killProcess("xpcshell")
         return outputFile
+
+    def checkForCrashes(self,
+                        dump_directory,
+                        symbols_path,
+                        test_name=None):
+        with mozfile.TemporaryDirectory() as dumpDir:
+            self.device.getDirectory(self.remoteTmpDir, dumpDir)
+            crashed = xpcshell.XPCShellTestThread.checkForCrashes(self, dumpDir, symbols_path, test_name)
+            self.device.removeDir(self.remoteTmpDir)
+            self.device.mkDir(self.remoteTmpDir)
+        return crashed
 
     def communicate(self, proc):
         f = open(proc, "r")
