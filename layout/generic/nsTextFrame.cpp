@@ -3330,7 +3330,7 @@ PropertyProvider::SetupJustificationSpacing()
   if (mFrame->GetStateBits() & TEXT_HYPHEN_BREAK) {
     nsAutoPtr<gfxTextRun> hyphenTextRun(GetHyphenTextRun(mTextRun, nullptr, mFrame));
     if (hyphenTextRun.get()) {
-      naturalWidth +=
+      naturalWidth += mLetterSpacing +
         hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nullptr);
     }
   }
