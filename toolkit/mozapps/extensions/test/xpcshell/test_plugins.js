@@ -5,10 +5,24 @@
 // This verifies that plugins exist and can be enabled and disabled.
 var gID = null;
 
+function setTestPluginState(state) {
+  let tags = AM_Cc["@mozilla.org/plugin/host;1"].getService(AM_Ci.nsIPluginHost)
+    .getPluginTags();
+  for (let tag of tags) {
+    if (tag.name == "Test Plug-in") {
+      tag.enabledState = state;
+      return;
+    }
+  }
+  throw Error("No plugin tag found for the test plugin");
+}
+
 function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   Services.prefs.setBoolPref("plugins.click_to_play", true);
+
+  setTestPluginState(AM_Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
   startupManager();
   AddonManager.addAddonListener(AddonListener);
