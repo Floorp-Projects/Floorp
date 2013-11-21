@@ -209,7 +209,13 @@ LIRGeneratorX86Shared::visitAsmJSNeg(MAsmJSNeg *ins)
 bool
 LIRGeneratorX86Shared::lowerUDiv(MInstruction *div)
 {
-    LUDivOrMod *lir = new LUDivOrMod(useFixed(div->getOperand(0), eax),
+    // Optimize x/x. The comments in lowerDivI apply here as well.
+    if (div->getOperand(0) == div->getOperand(1)) {
+        LDivSelfI *lir = new LDivSelfI(useRegisterAtStart(div->getOperand(0)));
+        return define(lir, div);
+    }
+
+    LUDivOrMod *lir = new LUDivOrMod(useFixedAtStart(div->getOperand(0), eax),
                                      useRegister(div->getOperand(1)),
                                      tempFixed(edx));
     return defineFixed(lir, div, LAllocation(AnyRegister(eax)));
