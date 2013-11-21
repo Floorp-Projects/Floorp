@@ -71,6 +71,10 @@ GonkCameraHardware::OnNewFrame()
     return;
   }
   nsRefPtr<GraphicBufferLocked> buffer = mNativeWindow->getCurrentBuffer();
+  if (!buffer) {
+    DOM_CAMERA_LOGW("received null frame");
+    return;
+  }
   ReceiveFrame(mTarget, buffer);
 }
 
