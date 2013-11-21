@@ -359,12 +359,6 @@ let CustomizableUIInternal = {
 
     this.beginBatchUpdate();
 
-    // Restore nav-bar visibility since it may have been hidden
-    // through a migration path (bug 938980) or an add-on.
-    if (aArea == CustomizableUI.AREA_NAVBAR) {
-      aAreaNode.collapsed = false;
-    }
-
     let currentNode = container.firstChild;
     let placementsToRemove = new Set();
     for (let id of aPlacements) {
