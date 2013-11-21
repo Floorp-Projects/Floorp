@@ -34,6 +34,15 @@ const int CBvLayerQuad = 10;
 const int CBfLayerOpacity = 0;
 const int CBvColor = 0;
 
+// TODO lower case this
+enum DeviceManagerState {
+  DeviceOK,
+  DeviceFail,
+  DeviceMustRecreate,
+  DeviceRetry
+};
+
+
 /**
  * This structure is used to pass rectangles to our shader constant. We can use
  * this for passing rectangular areas to SetVertexShaderConstant. In the format
@@ -84,7 +93,7 @@ public:
    * in no case does this function guarantee the backbuffer to still have its
    * old content.
    */
-  bool PrepareForRendering();
+  DeviceManagerState PrepareForRendering();
 
   already_AddRefed<IDirect3DSurface9> GetBackBuffer();
 
@@ -205,7 +214,7 @@ public:
    * will test the cooperative level of the device and reset the device if
    * needed. If this returns false subsequent rendering calls may return errors.
    */
-  bool VerifyReadyForRendering();
+  DeviceManagerState VerifyReadyForRendering();
 
   static uint32_t sMaskQuadRegister;
 
@@ -213,6 +222,7 @@ private:
   friend class SwapChainD3D9;
 
   ~DeviceManagerD3D9();
+  void DestroyDevice();
 
   /**
    * This will fill our vertex buffer with the data of our quad, it may be
