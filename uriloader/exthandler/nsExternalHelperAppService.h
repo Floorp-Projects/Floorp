@@ -38,6 +38,7 @@
 #include "nsIPrompt.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
+#include "necko-config.h"
 
 class nsExternalAppHandler;
 class nsIMIMEInfo;
@@ -175,6 +176,15 @@ protected:
    * the private browsing mode)
    */
   void ExpungeTemporaryPrivateFiles();
+
+#ifdef NECKO_PROTOCOL_rtsp
+  /**
+   * Launch video app for rtsp protocol. This function is supported only on Gonk
+   * for now.
+   */
+  static void LaunchVideoAppForRtsp(nsIURI* aURI);
+#endif
+
   /**
    * Array for the files that should be deleted
    */
