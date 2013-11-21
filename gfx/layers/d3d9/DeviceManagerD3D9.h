@@ -11,6 +11,7 @@
 #include "d3d9.h"
 #include "nsTArray.h"
 #include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/RefPtr.h"
 
 struct nsIntRect;
 
@@ -21,6 +22,7 @@ class DeviceManagerD3D9;
 class LayerD3D9;
 class Nv3DVUtils;
 class Layer;
+class TextureSourceD3D9;
 
 // Shader Constant locations
 const int CBmLayerTransform = 0;
@@ -173,6 +175,24 @@ public:
 
   int32_t GetMaxTextureSize() { return mMaxTextureSize; }
 
+  // Removes aHost from our list of texture hosts if it is the head.
+  void RemoveTextureListHead(TextureSourceD3D9* aHost);
+
+  /**
+   * Creates a texture using our device.
+   * If needed, we keep a record of the new texture, so the texture can be
+   * released. In this case, aTextureHostIDirect3DTexture9 must be non-null.
+   */
+  TemporaryRef<IDirect3DTexture9> CreateTexture(const gfx::IntSize &aSize,
+                                                _D3DFORMAT aFormat,
+                                                D3DPOOL aPool,
+                                                TextureSourceD3D9* aTextureHostIDirect3DTexture9);
+#ifdef DEBUG
+  // Looks for aFind in the list of texture hosts.
+  // O(n) so only use for assertions.
+  bool DeviceManagerD3D9::IsInTextureHostList(TextureSourceD3D9* aFind);
+#endif
+
   static uint32_t sMaskQuadRegister;
 
 private:
@@ -192,6 +212,15 @@ private:
    * called when the vertex buffer is recreated.
    */
   bool CreateVertexBuffer();
+
+  /**
+   * Release all textures created by this device manager.
+   */
+  void ReleaseTextureResources();
+  /**
+   * Add aHost to our list of texture hosts.
+   */
+  void RegisterTextureHost(TextureSourceD3D9* aHost);
 
   /* Array used to store all swap chains for device resets */
   nsTArray<SwapChainD3D9*> mSwapChains;
@@ -245,6 +274,14 @@ private:
 
   /* Our vertex declaration */
   nsRefPtr<IDirect3DVertexDeclaration9> mVD;
+
+  /* We maintain a doubly linked list of all d3d9 texture hosts which host
+   * d3d9 textures created by this device manager.
+   * Texture hosts must remove themselves when they disappear (i.e., we
+   * expect all hosts in the list to be valid).
+   * The list is cleared when we release the textures.
+   */
+  TextureSourceD3D9* mTextureHostList;
 
   /* Our focus window - this is really a dummy window we can associate our
    * device with.

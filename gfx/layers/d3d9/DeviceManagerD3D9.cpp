@@ -13,6 +13,10 @@
 #include "plstr.h"
 #include <algorithm>
 #include "gfxPlatform.h"
+#include "TextureD3D9.h"
+#include "mozilla/gfx/Point.h"
+
+using mozilla::gfx::IntSize;
 
 namespace mozilla {
 namespace layers {
@@ -162,7 +166,8 @@ SwapChainD3D9::Reset()
 uint32_t DeviceManagerD3D9::sMaskQuadRegister = 11;
 
 DeviceManagerD3D9::DeviceManagerD3D9()
-  : mDeviceResetCount(0)
+  : mTextureHostList(nullptr)
+  , mDeviceResetCount(0)
   , mMaxTextureSize(0)
   , mTextureAddressingMode(D3DTADDRESS_CLAMP)
   , mHasDynamicTextures(false)
@@ -831,6 +836,99 @@ DeviceManagerD3D9::CreateVertexBuffer()
   mVB->Unlock();
 
   return true;
+}
+
+TemporaryRef<IDirect3DTexture9>
+DeviceManagerD3D9::CreateTexture(const IntSize &aSize,
+                                 _D3DFORMAT aFormat,
+                                 D3DPOOL aPool,
+                                 TextureSourceD3D9* aTextureHost)
+{
+  if (mDeviceWasRemoved) {
+    return nullptr;
+  }
+  RefPtr<IDirect3DTexture9> result;
+  if (FAILED(device()->CreateTexture(aSize.width, aSize.height,
+                                     1, 0, aFormat, aPool,
+                                     byRef(result), nullptr))) {
+    return nullptr;
+  }
+
+  if (aPool == D3DPOOL_DEFAULT) {
+    MOZ_ASSERT(aTextureHost, "We need a texture host to track so we can release the texture.");
+    RegisterTextureHost(aTextureHost);
+  }
+
+  return result;
+}
+
+#ifdef DEBUG
+bool
+DeviceManagerD3D9::IsInTextureHostList(TextureSourceD3D9* aFind)
+{
+  TextureSourceD3D9* cur = mTextureHostList;
+  while(cur) {
+    if (cur == aFind) {
+      return true;
+    }
+    cur = cur->mNextHost;
+  }
+
+  return false;
+}
+#endif
+
+void
+DeviceManagerD3D9::RegisterTextureHost(TextureSourceD3D9* aHost)
+{
+  if (!aHost) {
+    return;
+  }
+
+  // Don't add aHost to the list twice.
+  if (aHost->mPreviousHost ||
+      mTextureHostList == aHost) {
+    MOZ_ASSERT(IsInTextureHostList(aHost));
+    return;
+  }
+
+  MOZ_ASSERT(!aHost->mNextHost);
+  MOZ_ASSERT(!IsInTextureHostList(aHost));
+
+  if (mTextureHostList) {
+    MOZ_ASSERT(!mTextureHostList->mPreviousHost);
+    mTextureHostList->mPreviousHost = aHost;
+    aHost->mNextHost = mTextureHostList;
+  }
+  mTextureHostList = aHost;
+  MOZ_ASSERT(!aHost->mCreatingDeviceManager, "Already created texture?");
+  MOZ_ASSERT(IsInTextureHostList(aHost));
+  aHost->mCreatingDeviceManager = this;
+}
+
+void
+DeviceManagerD3D9::ReleaseTextureResources()
+{
+  TextureSourceD3D9* host = mTextureHostList;
+  while (host) {
+    host->ReleaseTextureResources();
+    TextureSourceD3D9* oldHost = host;
+    host = oldHost->mNextHost;
+    oldHost->mPreviousHost = nullptr;
+    oldHost->mNextHost = nullptr;
+    oldHost->mCreatingDeviceManager = nullptr;
+  }
+  mTextureHostList = nullptr;
+}
+
+void
+DeviceManagerD3D9::RemoveTextureListHead(TextureSourceD3D9* aHost)
+{
+  MOZ_ASSERT(!aHost->mCreatingDeviceManager || aHost->mCreatingDeviceManager == this,
+             "Wrong device manager");
+  MOZ_ASSERT(aHost && mTextureHostList == aHost,
+             "aHost is not the head of the texture host list");
+  mTextureHostList = aHost->mNextHost;
 }
 
 } /* namespace layers */
