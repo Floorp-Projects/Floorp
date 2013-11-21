@@ -9,8 +9,8 @@
 
 #include "jsapi-tests/tests.h"
 
-int called_test_fn;
-int called_test_prop_get;
+static int called_test_fn;
+static int called_test_prop_get;
 
 static bool test_prop_get( JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp )
 {

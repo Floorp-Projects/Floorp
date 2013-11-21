@@ -7,13 +7,6 @@
 
 #include "jsapi-tests/tests.h"
 
-static bool
-nativeGet(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
-{
-    vp.set(INT_TO_JSVAL(17));
-    return true;
-}
-
 BEGIN_TEST(testSetProperty_NativeGetterStubSetter)
 {
     JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
@@ -25,7 +18,7 @@ BEGIN_TEST(testSetProperty_NativeGetterStubSetter)
                             JSPROP_ENUMERATE));
 
     CHECK(JS_DefineProperty(cx, obj, "prop", JSVAL_VOID,
-                            nativeGet, JS_StrictPropertyStub,
+                            NativeGet, JS_StrictPropertyStub,
                             JSPROP_SHARED));
 
     EXEC("'use strict';                                     \n"
@@ -62,6 +55,12 @@ BEGIN_TEST(testSetProperty_NativeGetterStubSetter)
          "if (!passed)                                      \n"
          "  throw error;                                    \n");
 
+    return true;
+}
+static bool
+NativeGet(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+{
+    vp.set(INT_TO_JSVAL(17));
     return true;
 }
 END_TEST(testSetProperty_NativeGetterStubSetter)
