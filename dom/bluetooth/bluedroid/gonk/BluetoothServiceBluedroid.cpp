@@ -1192,12 +1192,14 @@ BluetoothServiceBluedroid::PrepareAdapterInternal()
 static void
 NextBluetoothProfileController()
 {
-  sControllerArray[0] = nullptr;
-  sControllerArray.RemoveElementAt(0);
+  MOZ_ASSERT(NS_IsMainThread());
 
-  if (!sControllerArray.IsEmpty()) {
-    sControllerArray[0]->Start();
-  }
+  // First, remove the task at the front which has been already done.
+  NS_ENSURE_FALSE_VOID(sControllerArray.IsEmpty());
+  sControllerArray.RemoveElementAt(0);
+  // Re-check if the task array is empty, if it's not, the next task will begin.
+  NS_ENSURE_FALSE_VOID(sControllerArray.IsEmpty());
+  sControllerArray[0]->Start();
 }
 
 static void
