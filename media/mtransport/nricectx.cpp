@@ -675,7 +675,7 @@ void NrIceCtx::SetState(State state) {
   if (state == state_)
     return;
 
-  MOZ_MTLOG(ML_DEBUG, "NrIceCtx(" << name_ << "): state " <<
+  MOZ_MTLOG(ML_INFO, "NrIceCtx(" << name_ << "): state " <<
             state_ << "->" << state);
   state_ = state;
 

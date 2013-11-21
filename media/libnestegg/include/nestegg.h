@@ -140,6 +140,8 @@ typedef struct {
   double rate;           /**< Sampling rate in Hz. */
   unsigned int channels; /**< Number of audio channels. */
   unsigned int depth;    /**< Bits per sample. */
+  uint64_t  codec_delay; /**< Nanoseconds that must be discarded from the start. */
+  uint64_t  seek_preroll;/**< Nanoseconds that must be discarded after a seek. */
 } nestegg_audio_params;
 
 /** Logging callback function pointer. */
@@ -320,6 +322,14 @@ int nestegg_packet_count(nestegg_packet * packet, unsigned int * count);
     @retval -1 Error. */
 int nestegg_packet_data(nestegg_packet * packet, unsigned int item,
                         unsigned char ** data, size_t * length);
+
+/** Returns discard_padding for given packet
+    @param packet  Packet initialized by #nestegg_read_packet.
+    @param discard_padding pointer to store discard padding in.
+    @retval  0 Success.
+    @retval -1 Error. */
+int nestegg_packet_discard_padding(nestegg_packet * packet,
+                                   int64_t * discard_padding);
 
 /** Query the presence of cues.
     @param context  Stream context initialized by #nestegg_init.

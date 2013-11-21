@@ -17,6 +17,7 @@
 
 #include "nsDirectoryViewer.h"
 #include "nsIDirIndex.h"
+#include "nsIDocShell.h"
 #include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -1265,7 +1266,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
                                          nsIChannel* aChannel,
                                          nsILoadGroup* aLoadGroup,
                                          const char* aContentType, 
-                                         nsISupports* aContainer,
+                                         nsIDocShell* aContainer,
                                          nsISupports* aExtraInfo,
                                          nsIStreamListener** aDocListenerResult,
                                          nsIContentViewer** aDocViewerResult)

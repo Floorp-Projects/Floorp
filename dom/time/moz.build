@@ -17,7 +17,7 @@ EXPORTS.mozilla.dom.time += [
     'TimeService.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'DateCacheCleaner.cpp',
     'TimeChangeObserver.cpp',
     'TimeManager.cpp',

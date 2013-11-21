@@ -1520,7 +1520,6 @@ template <> struct GCMethods<JS::Value>
 #endif
 };
 
-template <class Outer> class UnbarrieredMutableValueOperations;
 template <class Outer> class MutableValueOperations;
 
 /*
@@ -1532,7 +1531,6 @@ template <class Outer> class MutableValueOperations;
 template <class Outer>
 class ValueOperations
 {
-    friend class UnbarrieredMutableValueOperations<Outer>;
     friend class MutableValueOperations<Outer>;
 
     const JS::Value * value() const { return static_cast<const Outer*>(this)->extract(); }
@@ -1573,16 +1571,14 @@ class ValueOperations
 };
 
 /*
- * A class designed for CRTP use in implementing the mutating parts of the Value
- * interface in Value-like classes that don't need post barriers.  Outer must be
- * a class inheriting UnbarrieredMutableValueOperations<Outer> with visible
- * extractMutable() and extract() methods returning the const Value* and Value*
- * abstracted by Outer.
+ * A class designed for CRTP use in implementing all the mutating parts of the
+ * Value interface in Value-like classes.  Outer must be a class inheriting
+ * MutableValueOperations<Outer> with visible extractMutable() and extract()
+ * methods returning the const Value* and Value* abstracted by Outer.
  */
 template <class Outer>
-class UnbarrieredMutableValueOperations : public ValueOperations<Outer>
+class MutableValueOperations : public ValueOperations<Outer>
 {
-    friend class MutableValueOperations<Outer>;
     JS::Value * value() { return static_cast<Outer*>(this)->extractMutable(); }
 
   public:
@@ -1595,18 +1591,6 @@ class UnbarrieredMutableValueOperations : public ValueOperations<Outer>
     void setMagic(JSWhyMagic why) { value()->setMagic(why); }
     bool setNumber(uint32_t ui) { return value()->setNumber(ui); }
     bool setNumber(double d) { return value()->setNumber(d); }
-};
-
-/*
- * A class designed for CRTP use in implementing all the mutating parts of the
- * Value interface in Value-like classes.  Outer must be a class inheriting
- * MutableValueOperations<Outer> with visible extractMutable() and extract()
- * methods returning the const Value* and Value* abstracted by Outer.
- */
-template <class Outer>
-class MutableValueOperations : public UnbarrieredMutableValueOperations<Outer>
-{
-  public:
     void setString(JSString *str) { this->value()->setString(str); }
     void setString(const JS::Anchor<JSString *> &str) { this->value()->setString(str); }
     void setObject(JSObject &obj) { this->value()->setObject(obj); }
@@ -1696,7 +1680,6 @@ class MutableHandleBase<JS::Value> : public MutableValueOperations<JS::MutableHa
         return static_cast<const JS::MutableHandle<JS::Value>*>(this)->address();
     }
 
-    friend class UnbarrieredMutableValueOperations<JS::MutableHandle<JS::Value> >;
     friend class MutableValueOperations<JS::MutableHandle<JS::Value> >;
     JS::Value * extractMutable() {
         return static_cast<JS::MutableHandle<JS::Value>*>(this)->address();
@@ -1715,7 +1698,6 @@ class RootedBase<JS::Value> : public MutableValueOperations<JS::Rooted<JS::Value
         return static_cast<const JS::Rooted<JS::Value>*>(this)->address();
     }
 
-    friend class UnbarrieredMutableValueOperations<JS::Rooted<JS::Value> >;
     friend class MutableValueOperations<JS::Rooted<JS::Value> >;
     JS::Value * extractMutable() {
         return static_cast<JS::Rooted<JS::Value>*>(this)->address();

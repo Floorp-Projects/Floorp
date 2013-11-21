@@ -74,26 +74,14 @@ Dashboard::GetSockets()
     AutoSafeJSContext cx;
 
     mozilla::dom::SocketsDict dict;
-    dict.mHost.Construct();
-    dict.mPort.Construct();
-    dict.mActive.Construct();
-    dict.mTcp.Construct();
-    dict.mSocksent.Construct();
-    dict.mSockreceived.Construct();
+    dict.mSockets.Construct();
     dict.mSent = 0;
     dict.mReceived = 0;
 
-    Sequence<uint32_t> &ports = dict.mPort.Value();
-    Sequence<nsString> &hosts = dict.mHost.Value();
-    Sequence<bool> &active = dict.mActive.Value();
-    Sequence<uint32_t> &tcp = dict.mTcp.Value();
-    Sequence<double> &sent = dict.mSocksent.Value();
-    Sequence<double> &received = dict.mSockreceived.Value();
+    Sequence<mozilla::dom::SocketElement> &sockets = dict.mSockets.Value();
 
     uint32_t length = mSock.data.Length();
-    if (!ports.SetCapacity(length) || !hosts.SetCapacity(length) ||
-        !active.SetCapacity(length) || !tcp.SetCapacity(length) ||
-        !sent.SetCapacity(length) || !received.SetCapacity(length)) {
+    if (!sockets.SetCapacity(length)) {
             mSock.cb = nullptr;
             mSock.data.Clear();
             JS_ReportOutOfMemory(cx);
@@ -101,19 +89,19 @@ Dashboard::GetSockets()
     }
 
     for (uint32_t i = 0; i < mSock.data.Length(); i++) {
-        CopyASCIItoUTF16(mSock.data[i].host, *hosts.AppendElement());
-        *ports.AppendElement() = mSock.data[i].port;
-        *active.AppendElement() = mSock.data[i].active;
-        *tcp.AppendElement() = mSock.data[i].tcp;
-        *sent.AppendElement() = (double) mSock.data[i].sent;
-        *received.AppendElement() = (double) mSock.data[i].received;
+        mozilla::dom::SocketElement &socket = *sockets.AppendElement();
+        CopyASCIItoUTF16(mSock.data[i].host, socket.mHost);
+        socket.mPort = mSock.data[i].port;
+        socket.mActive = mSock.data[i].active;
+        socket.mTcp = mSock.data[i].tcp;
+        socket.mSent = (double) mSock.data[i].sent;
+        socket.mReceived = (double) mSock.data[i].received;
         dict.mSent += mSock.data[i].sent;
         dict.mReceived += mSock.data[i].received;
     }
 
     dict.mSent += mSock.totalSent;
     dict.mReceived += mSock.totalRecv;
-
     JS::RootedValue val(cx);
     if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
         mSock.cb = nullptr;
@@ -155,29 +143,15 @@ Dashboard::GetHttpConnections()
     AutoSafeJSContext cx;
 
     mozilla::dom::HttpConnDict dict;
-    dict.mActive.Construct();
-    dict.mHost.Construct();
-    dict.mIdle.Construct();
-    dict.mPort.Construct();
-    dict.mSpdy.Construct();
-    dict.mSsl.Construct();
-    dict.mHalfOpens.Construct();
+    dict.mConnections.Construct();
 
-    using mozilla::dom::HttpConnInfoDict;
     using mozilla::dom::HalfOpenInfoDict;
-    Sequence<HttpConnInfoDict> &active = dict.mActive.Value();
-    Sequence<nsString> &hosts = dict.mHost.Value();
-    Sequence<HttpConnInfoDict> &idle = dict.mIdle.Value();
-    Sequence<HalfOpenInfoDict> &halfOpens = dict.mHalfOpens.Value();
-    Sequence<uint32_t> &ports = dict.mPort.Value();
-    Sequence<bool> &spdy = dict.mSpdy.Value();
-    Sequence<bool> &ssl = dict.mSsl.Value();
+    using mozilla::dom::HttpConnectionElement;
+    using mozilla::dom::HttpConnInfo;
+    Sequence<HttpConnectionElement> &connections = dict.mConnections.Value();
 
     uint32_t length = mHttp.data.Length();
-    if (!active.SetCapacity(length) || !hosts.SetCapacity(length) ||
-        !idle.SetCapacity(length) || !ports.SetCapacity(length) ||
-        !spdy.SetCapacity(length) || !ssl.SetCapacity(length) ||
-        !halfOpens.SetCapacity(length)) {
+    if (!connections.SetCapacity(length)) {
             mHttp.cb = nullptr;
             mHttp.data.Clear();
             JS_ReportOutOfMemory(cx);
@@ -185,64 +159,47 @@ Dashboard::GetHttpConnections()
     }
 
     for (uint32_t i = 0; i < mHttp.data.Length(); i++) {
-        CopyASCIItoUTF16(mHttp.data[i].host,*hosts.AppendElement());
-        *ports.AppendElement() = mHttp.data[i].port;
-        *spdy.AppendElement() = mHttp.data[i].spdy;
-        *ssl.AppendElement() = mHttp.data[i].ssl;
-        HttpConnInfoDict &activeInfo = *active.AppendElement();
-        activeInfo.mRtt.Construct();
-        activeInfo.mTtl.Construct();
-        activeInfo.mProtocolVersion.Construct();
-        Sequence<uint32_t> &active_rtt = activeInfo.mRtt.Value();
-        Sequence<uint32_t> &active_ttl = activeInfo.mTtl.Value();
-        Sequence<nsString> &active_protocolVersion = activeInfo.mProtocolVersion.Value();
-        if (!active_rtt.SetCapacity(mHttp.data[i].active.Length()) ||
-            !active_ttl.SetCapacity(mHttp.data[i].active.Length()) ||
-            !active_protocolVersion.SetCapacity(mHttp.data[i].active.Length())) {
+        HttpConnectionElement &connection = *connections.AppendElement();
+
+        CopyASCIItoUTF16(mHttp.data[i].host, connection.mHost);
+        connection.mPort = mHttp.data[i].port;
+        connection.mSpdy = mHttp.data[i].spdy;
+        connection.mSsl = mHttp.data[i].ssl;
+
+        connection.mActive.Construct();
+        connection.mIdle.Construct();
+        connection.mHalfOpens.Construct();
+
+        Sequence<HttpConnInfo> &active = connection.mActive.Value();
+        Sequence<HttpConnInfo> &idle = connection.mIdle.Value();
+        Sequence<HalfOpenInfoDict> &halfOpens = connection.mHalfOpens.Value();
+
+        if (!active.SetCapacity(mHttp.data[i].active.Length()) ||
+            !idle.SetCapacity(mHttp.data[i].idle.Length()) ||
+            !halfOpens.SetCapacity(mHttp.data[i].halfOpens.Length())) {
                 mHttp.cb = nullptr;
                 mHttp.data.Clear();
                 JS_ReportOutOfMemory(cx);
                 return NS_ERROR_OUT_OF_MEMORY;
         }
+
         for (uint32_t j = 0; j < mHttp.data[i].active.Length(); j++) {
-            *active_rtt.AppendElement() = mHttp.data[i].active[j].rtt;
-            *active_ttl.AppendElement() = mHttp.data[i].active[j].ttl;
-            *active_protocolVersion.AppendElement() = mHttp.data[i].active[j].protocolVersion;
+            HttpConnInfo &info = *active.AppendElement();
+            info.mRtt = mHttp.data[i].active[j].rtt;
+            info.mTtl = mHttp.data[i].active[j].ttl;
+            info.mProtocolVersion = mHttp.data[i].active[j].protocolVersion;
         }
 
-        HttpConnInfoDict &idleInfo = *idle.AppendElement();
-        idleInfo.mRtt.Construct();
-        idleInfo.mTtl.Construct();
-        idleInfo.mProtocolVersion.Construct();
-        Sequence<uint32_t> &idle_rtt = idleInfo.mRtt.Value();
-        Sequence<uint32_t> &idle_ttl = idleInfo.mTtl.Value();
-        Sequence<nsString> &idle_protocolVersion = idleInfo.mProtocolVersion.Value();
-        if (!idle_rtt.SetCapacity(mHttp.data[i].idle.Length()) ||
-            !idle_ttl.SetCapacity(mHttp.data[i].idle.Length()) ||
-            !idle_protocolVersion.SetCapacity(mHttp.data[i].idle.Length())) {
-                mHttp.cb = nullptr;
-                mHttp.data.Clear();
-                JS_ReportOutOfMemory(cx);
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
         for (uint32_t j = 0; j < mHttp.data[i].idle.Length(); j++) {
-            *idle_rtt.AppendElement() = mHttp.data[i].idle[j].rtt;
-            *idle_ttl.AppendElement() = mHttp.data[i].idle[j].ttl;
-            *idle_protocolVersion.AppendElement() = mHttp.data[i].idle[j].protocolVersion;
+            HttpConnInfo &info = *idle.AppendElement();
+            info.mRtt = mHttp.data[i].idle[j].rtt;
+            info.mTtl = mHttp.data[i].idle[j].ttl;
+            info.mProtocolVersion = mHttp.data[i].idle[j].protocolVersion;
         }
 
-        HalfOpenInfoDict &allHalfOpens = *halfOpens.AppendElement();
-        allHalfOpens.mSpeculative.Construct();
-        Sequence<bool> allHalfOpens_speculative;
-        if(!allHalfOpens_speculative.SetCapacity(mHttp.data[i].halfOpens.Length())) {
-                mHttp.cb = nullptr;
-                mHttp.data.Clear();
-                JS_ReportOutOfMemory(cx);
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-        allHalfOpens_speculative = allHalfOpens.mSpeculative.Value();
-        for(uint32_t j = 0; j < mHttp.data[i].halfOpens.Length(); j++) {
-            *allHalfOpens_speculative.AppendElement() = mHttp.data[i].halfOpens[j].speculative;
+        for (uint32_t j = 0; j < mHttp.data[i].halfOpens.Length(); j++) {
+            HalfOpenInfoDict &info = *halfOpens.AppendElement();
+            info.mSpeculative = mHttp.data[i].halfOpens[j].speculative;
         }
     }
 
@@ -351,38 +308,26 @@ Dashboard::GetWebSocketConnections()
     AutoSafeJSContext cx;
 
     mozilla::dom::WebSocketDict dict;
-    dict.mEncrypted.Construct();
-    dict.mHostport.Construct();
-    dict.mMsgreceived.Construct();
-    dict.mMsgsent.Construct();
-    dict.mReceivedsize.Construct();
-    dict.mSentsize.Construct();
-
-    Sequence<bool> &encrypted = dict.mEncrypted.Value();
-    Sequence<nsString> &hostport = dict.mHostport.Value();
-    Sequence<uint32_t> &received = dict.mMsgreceived.Value();
-    Sequence<uint32_t> &sent = dict.mMsgsent.Value();
-    Sequence<double> &receivedSize = dict.mReceivedsize.Value();
-    Sequence<double> &sentSize = dict.mSentsize.Value();
-
-    uint32_t length = mWs.data.Length();
-    if (!encrypted.SetCapacity(length) || !hostport.SetCapacity(length) ||
-        !received.SetCapacity(length) || !sent.SetCapacity(length) ||
-        !receivedSize.SetCapacity(length) || !sentSize.SetCapacity(length)) {
-            mWs.cb = nullptr;
-            mWs.data.Clear();
-            JS_ReportOutOfMemory(cx);
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
+    dict.mWebsockets.Construct();
+    Sequence<mozilla::dom::WebSocketElement> &websockets = dict.mWebsockets.Value();
 
     mozilla::MutexAutoLock lock(mWs.lock);
+    uint32_t length = mWs.data.Length();
+    if (!websockets.SetCapacity(length)) {
+        mWs.cb = nullptr;
+        mWs.data.Clear();
+        JS_ReportOutOfMemory(cx);
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     for (uint32_t i = 0; i < mWs.data.Length(); i++) {
-        CopyASCIItoUTF16(mWs.data[i].mHost, *hostport.AppendElement());
-        *sent.AppendElement() = mWs.data[i].mMsgSent;
-        *received.AppendElement() = mWs.data[i].mMsgReceived;
-        *receivedSize.AppendElement() = mWs.data[i].mSizeSent;
-        *sentSize.AppendElement() = mWs.data[i].mSizeReceived;
-        *encrypted.AppendElement() = mWs.data[i].mEncrypted;
+        mozilla::dom::WebSocketElement &websocket = *websockets.AppendElement();
+        CopyASCIItoUTF16(mWs.data[i].mHost, websocket.mHostport);
+        websocket.mMsgsent = mWs.data[i].mMsgSent;
+        websocket.mMsgreceived = mWs.data[i].mMsgReceived;
+        websocket.mSentsize = mWs.data[i].mSizeSent;
+        websocket.mReceivedsize = mWs.data[i].mSizeReceived;
+        websocket.mEncrypted = mWs.data[i].mEncrypted;
     }
 
     JS::RootedValue val(cx);
@@ -433,44 +378,40 @@ Dashboard::GetDNSCacheEntries()
     AutoSafeJSContext cx;
 
     mozilla::dom::DNSCacheDict dict;
-    dict.mExpiration.Construct();
-    dict.mFamily.Construct();
-    dict.mHostaddr.Construct();
-    dict.mHostname.Construct();
-
-    Sequence<double> &expiration = dict.mExpiration.Value();
-    Sequence<nsString> &family = dict.mFamily.Value();
-    Sequence<Sequence<nsString> > &hostaddr = dict.mHostaddr.Value();
-    Sequence<nsString> &hostname = dict.mHostname.Value();
+    dict.mEntries.Construct();
+    Sequence<mozilla::dom::DnsCacheEntry> &entries = dict.mEntries.Value();
 
     uint32_t length = mDns.data.Length();
-    if (!expiration.SetCapacity(length) || !family.SetCapacity(length) ||
-        !hostaddr.SetCapacity(length) || !hostname.SetCapacity(length)) {
-            mDns.cb = nullptr;
-            mDns.data.Clear();
-            JS_ReportOutOfMemory(cx);
-            return NS_ERROR_OUT_OF_MEMORY;
+    if (!entries.SetCapacity(length)) {
+        mDns.cb = nullptr;
+        mDns.data.Clear();
+        JS_ReportOutOfMemory(cx);
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
     for (uint32_t i = 0; i < mDns.data.Length(); i++) {
-        CopyASCIItoUTF16(mDns.data[i].hostname, *hostname.AppendElement());
-        *expiration.AppendElement() = mDns.data[i].expiration;
+        mozilla::dom::DnsCacheEntry &entry = *entries.AppendElement();
+        entry.mHostaddr.Construct();
 
-        Sequence<nsString> &addrs = *hostaddr.AppendElement();
+        Sequence<nsString> &addrs = entry.mHostaddr.Value();
         if (!addrs.SetCapacity(mDns.data[i].hostaddr.Length())) {
             mDns.cb = nullptr;
             mDns.data.Clear();
             JS_ReportOutOfMemory(cx);
             return NS_ERROR_OUT_OF_MEMORY;
         }
+
+        CopyASCIItoUTF16(mDns.data[i].hostname, entry.mHostname);
+        entry.mExpiration = mDns.data[i].expiration;
+
         for (uint32_t j = 0; j < mDns.data[i].hostaddr.Length(); j++) {
             CopyASCIItoUTF16(mDns.data[i].hostaddr[j], *addrs.AppendElement());
         }
 
         if (mDns.data[i].family == PR_AF_INET6)
-            CopyASCIItoUTF16("ipv6", *family.AppendElement());
+            CopyASCIItoUTF16("ipv6", entry.mFamily);
         else
-            CopyASCIItoUTF16("ipv4", *family.AppendElement());
+            CopyASCIItoUTF16("ipv4", entry.mFamily);
     }
 
     JS::RootedValue val(cx);
@@ -518,15 +459,11 @@ Dashboard::OnLookupComplete(nsICancelable *aRequest, nsIDNSRecord *aRecord, nsre
 
     mozilla::dom::DNSLookupDict dict;
     dict.mAddress.Construct();
-    dict.mError.Construct();
-    dict.mAnswer.Construct();
 
     Sequence<nsString> &addresses = dict.mAddress.Value();
-    nsString &error = dict.mError.Value();
-    bool &answer = dict.mAnswer.Value();
 
     if (NS_SUCCEEDED(aStatus)) {
-        answer = true;
+        dict.mAnswer = true;
         bool hasMore;
         aRecord->HasMore(&hasMore);
         while(hasMore) {
@@ -536,8 +473,8 @@ Dashboard::OnLookupComplete(nsICancelable *aRequest, nsIDNSRecord *aRecord, nsre
            aRecord->HasMore(&hasMore);
         }
     } else {
-        answer = false;
-        CopyASCIItoUTF16(GetErrorString(aStatus), error);
+        dict.mAnswer = false;
+        CopyASCIItoUTF16(GetErrorString(aStatus), dict.mError);
     }
 
     JS::RootedValue val(cx);
@@ -608,9 +545,7 @@ Dashboard::GetConnectionStatus(ConnStatus aStatus)
     AutoSafeJSContext cx;
 
     mozilla::dom::ConnStatusDict dict;
-    dict.mStatus.Construct();
-    nsString &status = dict.mStatus.Value();
-    status = aStatus.creationSts;
+    dict.mStatus = aStatus.creationSts;
 
     JS::RootedValue val(cx);
     if (!dict.ToObject(cx, JS::NullPtr(), &val)) {

@@ -26,6 +26,9 @@
 // Slots on references
 #define JS_TYPEOBJ_REFERENCE_SLOTS         1  // Maximum number
 
+// Slots on x4s
+#define JS_TYPEOBJ_X4_SLOTS                1  // Maximum number
+
 // Slots on arrays
 #define JS_TYPEOBJ_SLOT_ARRAY_ELEM_TYPE    1
 #define JS_TYPEOBJ_ARRAY_SLOTS             2  // Maximum number
@@ -33,7 +36,6 @@
 // Slots on structs
 #define JS_TYPEOBJ_SLOT_STRUCT_FIELD_TYPES 1
 #define JS_TYPEOBJ_STRUCT_SLOTS            2  // Maximum number
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Slots for type representation objects
@@ -52,7 +54,7 @@
 // Slots on arrays:
 #define JS_TYPEREPR_SLOT_LENGTH    3 // Length of the array
 
-// Slots on scalars and references:
+// Slots on scalars, references, and X4s:
 #define JS_TYPEREPR_SLOT_TYPE      3 // One of the constants below
 
 // Maximum number of slots for any type representation
@@ -61,10 +63,11 @@
 // These constants are for use exclusively in JS code. In C++ code,
 // prefer TypeRepresentation::Scalar etc, which allows you to
 // write a switch which will receive a warning if you omit a case.
-#define JS_TYPEREPR_SCALAR_KIND 0
+#define JS_TYPEREPR_SCALAR_KIND    0
 #define JS_TYPEREPR_REFERENCE_KIND 1
-#define JS_TYPEREPR_STRUCT_KIND 2
-#define JS_TYPEREPR_ARRAY_KIND  3
+#define JS_TYPEREPR_X4_KIND        2
+#define JS_TYPEREPR_STRUCT_KIND    3
+#define JS_TYPEREPR_ARRAY_KIND     4
 
 // These constants are for use exclusively in JS code. In C++ code,
 // prefer ScalarTypeRepresentation::TYPE_INT8 etc, which allows
@@ -87,6 +90,13 @@
 #define JS_REFERENCETYPEREPR_ANY        0
 #define JS_REFERENCETYPEREPR_OBJECT     1
 #define JS_REFERENCETYPEREPR_STRING     2
+
+// These constants are for use exclusively in JS code.  In C++ code,
+// prefer X4TypeRepresentation::TYPE_INT32 etc, since that allows
+// you to write a switch which will receive a warning if you omit a
+// case.
+#define JS_X4TYPEREPR_INT32         0
+#define JS_X4TYPEREPR_FLOAT32       1
 
 ///////////////////////////////////////////////////////////////////////////
 // Slots for typed objects (actually, any TypedContents objects)

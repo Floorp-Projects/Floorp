@@ -585,7 +585,8 @@ nsSupportsArray::Clone(nsISupportsArray** aResult)
 {
   nsCOMPtr<nsISupportsArray> newArray;
   nsresult rv = NS_NewISupportsArray(getter_AddRefs(newArray));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv)))
+    return rv;
 
   uint32_t count = 0;
   Count(&count);

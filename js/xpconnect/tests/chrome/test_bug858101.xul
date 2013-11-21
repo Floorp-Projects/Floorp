@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=858101
+-->
+<window title="Mozilla Bug 858101"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=858101"
+     target="_blank">Mozilla Bug 858101</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for [[DefaultValue]] on XrayWrappers. **/
+  SimpleTest.waitForExplicitFinish();
+
+  function muckWithToString() {
+    function tricky() { return "hah"; };
+
+    window.toString = document.toString = document.body.toString = tricky;
+    window.valueOf = document.valueOf = document.body.valueOf = tricky;
+
+    Window.prototype.toString = Window.prototype.valueOf = tricky;
+    Document.prototype.toString = Document.prototype.valueOf = tricky;
+    HTMLBodyElement.toString = HTMLBodyElement.valueOf = tricky;
+  }
+
+  function go() {
+    var iwin = $('ifr').contentWindow;
+    iwin.wrappedJSObject.eval('(' + muckWithToString.toSource() + ')()');
+
+    // Check behavior with vanilla CCWs.
+    ok(!!/hah/.exec(iwin.wrappedJSObject + ""), "Waivers should get content-defined window stringification");
+    ok(!!/hah/.exec(iwin.document.wrappedJSObject + ""), "Waivers should get content-defined document stringification");
+    ok(!!/hah/.exec(iwin.document.body.wrappedJSObject + ""), "Waivers should get content-defined body stringification");
+
+    // Check Xray behavior.
+    ok(!/hah/.exec(iwin + ""), "Xrays should not get content-defined window stringification");
+    ok(!/hah/.exec(iwin.document + ""), "Xrays should not get content-defined document stringification");
+    ok(!/hah/.exec(iwin.document.body + ""), "Xrays should not get content-defined body stringification");
+
+    SimpleTest.finish();
+  }
+
+  ]]>
+  </script>
+  <iframe id="ifr" onload="go();" type="content" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</window>
