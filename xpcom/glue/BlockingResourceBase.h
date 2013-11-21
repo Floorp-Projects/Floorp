@@ -74,7 +74,7 @@ private:
                               BlockingResourceType aType) :
             mName(aName),
             mType(aType),
-            mAcquisitionContext(CallStack::NullCallStack())
+            mAcquisitionContext(CallStack::kNone)
         {
             NS_ABORT_IF_FALSE(mName, "Name must be nonnull");
         }
@@ -117,7 +117,7 @@ private:
         /**
          * mAcquisitionContext
          * The calling context from which this resource was acquired, or
-         * |CallStack::NullCallStack()| if it is currently free (or freed).
+         * |CallStack::kNone| if it is currently free (or freed).
          */
         CallStack mAcquisitionContext;
     };
@@ -239,7 +239,7 @@ protected:
     /**
      * GetAcquisitionContext
      * Return the calling context from which this resource was acquired,
-     * or CallStack::NullCallStack() if it's currently free.
+     * or CallStack::kNone if it's currently free.
      *
      * *NOT* thread safe.  Requires ownership of underlying resource.
      */

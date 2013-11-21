@@ -7,7 +7,6 @@
 #define mozilla_DeadlockDetector_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
 
 #include <stdlib.h>
 
@@ -16,13 +15,30 @@
 
 #include "nsTArray.h"
 
+#ifdef NS_TRACE_MALLOC
+#  include "nsTraceMalloc.h"
+#endif  // ifdef NS_TRACE_MALLOC
+
 namespace mozilla {
 
 
+// FIXME bug 456272: split this off into a convenience API on top of
+// nsStackWalk?
 class NS_COM_GLUE CallStack
 {
 private:
-    nsTArray<void*> mCallStack;
+#ifdef NS_TRACE_MALLOC
+    typedef nsTMStackTraceID callstack_id;
+    // needs to be a macro to avoid disturbing the backtrace
+#   define NS_GET_BACKTRACE() NS_TraceMallocGetStackTrace()
+#   define NS_DEADLOCK_DETECTOR_CONSTEXPR
+#else
+    typedef void* callstack_id;
+#   define NS_GET_BACKTRACE() 0
+#   define NS_DEADLOCK_DETECTOR_CONSTEXPR MOZ_CONSTEXPR
+#endif  // ifdef NS_TRACE_MALLOC
+
+    callstack_id mCallStack;
 
 public:
     /**
@@ -37,10 +53,12 @@ public:
      * constructor: it *will* construct a backtrace.  This can cause
      * unexpected performance issues.
      */
-    CallStack(const nsTArray<void*>& aCallStack = GetBacktrace()) :
-        mCallStack(mozilla::Move(aCallStack))
+    NS_DEADLOCK_DETECTOR_CONSTEXPR
+    CallStack(const callstack_id aCallStack = NS_GET_BACKTRACE()) :
+        mCallStack(aCallStack)
     {
     }
+    NS_DEADLOCK_DETECTOR_CONSTEXPR
     CallStack(const CallStack& aFrom) :
         mCallStack(aFrom.mCallStack)
     {
@@ -59,19 +77,22 @@ public:
         return mCallStack != aOther.mCallStack;
     }
 
-    bool IsEmpty() const
+    // FIXME bug 456272: if this is split off,
+    // NS_TraceMallocPrintStackTrace should be modified to print into
+    // an nsACString
+    void Print(FILE* f) const
     {
-      return mCallStack.IsEmpty();
+#ifdef NS_TRACE_MALLOC
+        if (this != &kNone && mCallStack) {
+            NS_TraceMallocPrintStackTrace(f, mCallStack);
+            return;
+        }
+#endif
+        fputs("  [stack trace unavailable]\n", f);
     }
 
-    void Print(FILE* f) const;
-
-    static nsTArray<void*> GetBacktrace();
-
-    static const CallStack NullCallStack()
-    {
-      return CallStack(nsTArray<void*>());
-    }
+    /** The "null" callstack. */
+    static const CallStack kNone;
 };
 
 
@@ -137,7 +158,7 @@ public:
 
         ResourceAcquisition(
             const T* aResource,
-            const CallStack aCallContext=CallStack::NullCallStack()) :
+            const CallStack aCallContext=CallStack::kNone) :
             mResource(aResource),
             mCallContext(aCallContext)
         {
@@ -174,7 +195,7 @@ private:
     struct OrderingEntry
     {
         OrderingEntry() :
-            mFirstSeen(CallStack::NullCallStack()),
+            mFirstSeen(CallStack::kNone),
             mOrderedLT()        // FIXME bug 456272: set to empirical
         {                       // dep size?
         }
@@ -386,7 +407,7 @@ public:
 
         PLHashEntry* second = *GetEntry(aProposed);
         OrderingEntry* e = static_cast<OrderingEntry*>(second->value);
-        if (e->mFirstSeen.IsEmpty())
+        if (CallStack::kNone == e->mFirstSeen)
             e->mFirstSeen = aCallContext;
 
         if (!aLast)
