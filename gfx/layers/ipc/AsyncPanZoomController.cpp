@@ -1199,9 +1199,11 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
       // will affect the final computed resolution.
       double sampledPosition = gComputedTimingFunction->GetValue(animPosition);
 
-      mFrameMetrics.mZoom = CSSToScreenScale(
-        mEndZoomToMetrics.mZoom.scale * sampledPosition +
-          mStartZoomToMetrics.mZoom.scale * (1 - sampledPosition));
+      // We scale the scrollOffset linearly with sampledPosition, so the zoom
+      // needs to scale inversely to match.
+      mFrameMetrics.mZoom = CSSToScreenScale(1 /
+        (sampledPosition / mEndZoomToMetrics.mZoom.scale +
+          (1 - sampledPosition) / mStartZoomToMetrics.mZoom.scale));
 
       mFrameMetrics.mScrollOffset = CSSPoint::FromUnknownPoint(gfx::Point(
         mEndZoomToMetrics.mScrollOffset.x * sampledPosition +
