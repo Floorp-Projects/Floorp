@@ -286,6 +286,9 @@ TryToSpecializeBinaryArithOp(ICStub **stubs,
 MIRType
 BaselineInspector::expectedBinaryArithSpecialization(jsbytecode *pc)
 {
+    if (!hasBaselineScript())
+        return MIRType_None;
+
     MIRType result;
     ICStub *stubs[2];
 
