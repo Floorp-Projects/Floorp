@@ -2254,7 +2254,7 @@ struct GlyphBufferAzure {
             std::reverse(begin, end);
         }
         
-        gfx::GlyphBuffer buf;
+        mozilla::gfx::GlyphBuffer buf;
         buf.mGlyphs = mGlyphBuffer;
         buf.mNumGlyphs = mNumGlyphs;
 
@@ -2336,7 +2336,7 @@ struct GlyphBufferAzure {
 private:
     void FlushStroke(DrawTarget *aDT, gfxTextContextPaint *aContextPaint,
                      ScaledFont *aFont, gfxContext *aThebesContext,
-                     gfx::GlyphBuffer& aBuf, gfxContext::AzureState& aState)
+                     mozilla::gfx::GlyphBuffer& aBuf, gfxContext::AzureState& aState)
     {
         RefPtr<Path> path = aFont->GetPathForGlyphs(aBuf, aDT);
         if (aContextPaint) {

@@ -779,7 +779,7 @@ HBUnicodeDecompose(hb_unicode_funcs_t *ufuncs,
 }
 
 static PLDHashOperator
-AddFeature(const uint32_t& aTag, uint32_t& aValue, void *aUserArg)
+AddHartBuzzFeature(const uint32_t& aTag, uint32_t& aValue, void *aUserArg)
 {
     nsTArray<hb_feature_t>* features = static_cast<nsTArray<hb_feature_t>*> (aUserArg);
 
@@ -932,7 +932,7 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
                           mergedFeatures))
     {
         // enumerate result and insert into hb_feature array
-        mergedFeatures.Enumerate(AddFeature, &features);
+        mergedFeatures.Enumerate(AddHartBuzzFeature, &features);
     }
 
     bool isRightToLeft = aShapedText->IsRightToLeft();
@@ -1240,3 +1240,6 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext      *aContext,
 
     return NS_OK;
 }
+
+#undef SMALL_GLYPH_RUN
+
