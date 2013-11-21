@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VPATH           = \
-  $(srcdir) \
-  $(srcdir)/libui \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += \
