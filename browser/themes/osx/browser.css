@@ -59,16 +59,6 @@
   }
 }
 
-/* Fullscreen and caption buttons don't move with RTL on OS X so override the automatic ordering. */
-.titlebar-placeholder[type="fullscreen-button"]:-moz-locale-dir(ltr),
-.titlebar-placeholder[type="caption-buttons"]:-moz-locale-dir(rtl) {
-  -moz-box-ordinal-group: 1000;
-}
-.titlebar-placeholder[type="caption-buttons"]:-moz-locale-dir(ltr),
-.titlebar-placeholder[type="fullscreen-button"]:-moz-locale-dir(rtl) {
-  -moz-box-ordinal-group: 0;
-}
-
 #main-window[chromehidden~="toolbar"] > #titlebar {
   padding-top: 22px;
 }
@@ -392,7 +382,7 @@ toolbarbutton.bookmark-item > menupopup {
 
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */
 
-.toolbarbutton-1:not([type="menu-button"]),
+toolbar .toolbarbutton-1:not([type="menu-button"]),
 .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 #restore-button {
@@ -1415,14 +1405,14 @@ toolbarbutton.bookmark-item > menupopup {
   border-bottom-left-radius: 0;
 }
 
-#zoom-controls[cui-areatype="toolbar"] > #zoom-reset-button {
+#zoom-controls[cui-areatype="toolbar"]:not(.overflowedItem) > #zoom-reset-button {
   min-width: 0;
   margin: 0;
 }
 
 #zoom-controls[cui-areatype="toolbar"] > #zoom-reset-button > .toolbarbutton-text {
-  margin-top: 0;
-  padding-top: 8px;
+  padding-top: 2px;
+  margin: 2px;
 }
 
 /* sync button */
@@ -3951,17 +3941,6 @@ window > chatbox {
 }
 
 /* End customization mode */
-
-panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="top"],
-panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="bottom"] {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-light-vertical.png");
-}
-@media (min-resolution: 2dppx) {
-  panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="top"],
-  panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="bottom"] {
-    list-style-image: url("chrome://global/skin/arrow/panelarrow-light-vertical@2x.png");
- }
-}
 
 #main-window[privatebrowsingmode=temporary] {
   background-image: url("chrome://browser/skin/privatebrowsing-mask.png");
