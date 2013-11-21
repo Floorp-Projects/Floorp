@@ -439,6 +439,11 @@ pref("dom.mozNetworkStats.enabled", true);
 pref("dom.webapps.firstRunWithSIM", true);
 #endif
 
+#ifdef MOZ_B2G_RIL
+// SingleVariant
+pref("dom.mozApps.single_variant_sourcedir", "/persist/svoperapps");
+#endif
+
 // WebSettings
 pref("dom.mozSettings.enabled", true);
 pref("dom.navigator-property.disable.mozSettings", false);
