@@ -838,6 +838,33 @@ nsIContent::AttrValueIs(int32_t aNameSpaceID,
     AsElement()->AttrValueIs(aNameSpaceID, aName, aValue, aCaseSensitive);
 }
 
+bool
+nsIContent::IsFocusable(int32_t* aTabIndex, bool aWithMouse)
+{
+  bool focusable = IsFocusableInternal(aTabIndex, aWithMouse);
+  // Ensure that the return value and aTabIndex are consistent in the case
+  // we're in userfocusignored context.
+  if (focusable || (aTabIndex && *aTabIndex != -1)) {
+    if (nsContentUtils::IsUserFocusIgnored(this)) {
+      if (aTabIndex) {
+        *aTabIndex = -1;
+      }
+      return false;
+    }
+    return focusable;
+  }
+  return false;
+}
+
+bool
+nsIContent::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse)
+{
+  if (aTabIndex) {
+    *aTabIndex = -1; // Default, not tabbable
+  }
+  return false;
+}
+
 const nsAttrValue*
 FragmentOrElement::DoGetClasses() const
 {

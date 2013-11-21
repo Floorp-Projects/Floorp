@@ -6,6 +6,7 @@
 #include "CacheFileOutputStream.h"
 
 #include "CacheFile.h"
+#include "CacheEntry.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/DebugOnly.h"
@@ -43,8 +44,10 @@ NS_INTERFACE_MAP_BEGIN(CacheFileOutputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIOutputStream)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-CacheFileOutputStream::CacheFileOutputStream(CacheFile *aFile)
+CacheFileOutputStream::CacheFileOutputStream(CacheFile *aFile,
+                                             CacheOutputCloseListener *aCloseListener)
   : mFile(aFile)
+  , mCloseListener(aCloseListener)
   , mPos(0)
   , mClosed(false)
   , mStatus(NS_OK)
@@ -292,6 +295,16 @@ CacheFileOutputStream::OnChunkUpdated(CacheFileChunk *aChunk)
   MOZ_CRASH(
     "CacheFileOutputStream::OnChunkUpdated should not be called!");
   return NS_ERROR_UNEXPECTED;
+}
+
+void CacheFileOutputStream::NotifyCloseListener()
+{
+  nsRefPtr<CacheOutputCloseListener> listener;
+  listener.swap(mCloseListener);
+  if (!listener)
+    return;
+
+  listener->OnOutputClosed();
 }
 
 void

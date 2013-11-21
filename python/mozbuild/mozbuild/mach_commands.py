@@ -760,7 +760,14 @@ class DebugProgram(MachCommandBase):
         help='Do not pass the -foreground argument by default on Mac')
     @CommandArgument('+gdbparams', default=None, metavar='params', type=str,
         help='Command-line arguments to pass to GDB itself; split as the Bourne shell would.')
-    def debug(self, params, remote, background, gdbparams):
+    # Bug 933807 introduced JS_DISABLE_SLOW_SCRIPT_SIGNALS to avoid clever
+    # segfaults induced by the slow-script-detecting logic for Ion/Odin JITted
+    # code.  If we don't pass this, the user will need to periodically type
+    # "continue" to (safely) resume execution.  There are ways to implement
+    # automatic resuming; see the bug.
+    @CommandArgument('+slowscript', action='store_true',
+        help='Do not set the JS_DISABLE_SLOW_SCRIPT_SIGNALS env variable; when not set, recoverable but misleading SIGSEGV instances may occur in Ion/Odin JIT code')
+    def debug(self, params, remote, background, gdbparams, slowscript):
         import which
         try:
             debugger = which.which('gdb')
@@ -769,6 +776,7 @@ class DebugProgram(MachCommandBase):
             print(e)
             return 1
         args = [debugger]
+        extra_env = {}
         if gdbparams:
             import pymake.process
             (argv, badchar) = pymake.process.clinetoargv(gdbparams, os.getcwd())
@@ -790,8 +798,10 @@ class DebugProgram(MachCommandBase):
             args.append('-foreground')
         if params:
             args.extend(params)
-        return self.run_process(args=args, ensure_exit_code=False,
-            pass_thru=True)
+        if not slowscript:
+            extra_env['JS_DISABLE_SLOW_SCRIPT_SIGNALS'] = '1'
+        return self.run_process(args=args, append_env=extra_env,
+            ensure_exit_code=False, pass_thru=True)
 
 @CommandProvider
 class Buildsymbols(MachCommandBase):

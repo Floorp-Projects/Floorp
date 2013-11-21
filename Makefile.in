@@ -253,13 +253,6 @@ endif
 ifdef BUILD_JS
 js/src/Makefile: subsrcdir := js/src
 
-ifdef ENABLE_TESTS
-# Incorporate static tier directories into tests. This should be incorporated
-# into moz.build files someday.
-check::
-	$(call SUBMAKE,$@,js/src)
-endif
-
 ifdef MOZ_PSEUDO_DERECURSE
 # Interdependencies for parallel export.
 js/xpconnect/src/export: dom/bindings/export xpcom/xpidl/export

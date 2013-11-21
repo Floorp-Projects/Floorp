@@ -27,8 +27,10 @@
 #include "nsIPresShell.h"
 #include "nsIScriptError.h"
 #include "nsIWindowMediator.h"
+#include "mozilla/dom/URL.h"
 
 nsChromeRegistry* nsChromeRegistry::gChromeRegistry;
+using mozilla::dom::IsChromeURI;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -369,14 +371,6 @@ nsChromeRegistry::FlushSkinCaches()
 
   obsSvc->NotifyObservers(static_cast<nsIChromeRegistry*>(this),
                           NS_CHROME_FLUSH_SKINS_TOPIC, nullptr);
-}
-
-static bool IsChromeURI(nsIURI* aURI)
-{
-    bool isChrome=false;
-    if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome)
-        return true;
-    return false;
 }
 
 // XXXbsmedberg: move this to windowmediator

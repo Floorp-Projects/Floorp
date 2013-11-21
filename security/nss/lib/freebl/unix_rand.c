@@ -974,10 +974,6 @@ size_t RNG_FileUpdate(const char *fileName, size_t limit)
     
     file = fopen(fileName, "r");
     if (file != NULL) {
-	/* Set buffering mode to unbuffered I/O to avoid reading more bytes
-	 * than we need from /dev/urandom. Moreover, we read into a buffer
-	 * of size BUFSIZ, so buffered I/O has no performance advantage. */
-	setvbuf(file, NULL, _IONBF, 0);
 	while (limit > fileBytes) {
 	    bytes = PR_MIN(sizeof buffer, limit - fileBytes);
 	    bytes = fread(buffer, 1, bytes, file);
@@ -1138,9 +1134,6 @@ size_t RNG_SystemRNG(void *dest, size_t maxLen)
     if (file == NULL) {
 	return rng_systemFromNoise(dest, maxLen);
     }
-    /* Set buffering mode to unbuffered I/O to avoid reading more bytes
-     * than we need from /dev/urandom. */
-    setvbuf(file, NULL, _IONBF, 0);
     while (maxLen > fileBytes) {
 	bytes = maxLen - fileBytes;
 	bytes = fread(buffer, 1, bytes, file);

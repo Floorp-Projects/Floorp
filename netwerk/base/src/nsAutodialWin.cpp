@@ -33,6 +33,8 @@
 static PRLogModuleInfo* gLog = nullptr;
 #endif
 
+#undef LOGD
+#undef LOGE
 #define LOGD(args) PR_LOG(gLog, PR_LOG_DEBUG, args)
 #define LOGE(args) PR_LOG(gLog, PR_LOG_ERROR, args)
 

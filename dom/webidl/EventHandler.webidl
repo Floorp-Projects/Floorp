@@ -88,6 +88,22 @@ interface GlobalEventHandlers {
            attribute EventHandler onvolumechange;
            attribute EventHandler onwaiting;
 
+           // Pointer events handlers
+           [Pref="dom.w3c_pointer_events.enabled"]
+           attribute EventHandler onpointerdown;
+           [Pref="dom.w3c_pointer_events.enabled"]
+           attribute EventHandler onpointerup;
+           [Pref="dom.w3c_pointer_events.enabled"]
+           attribute EventHandler onpointermove;
+           [Pref="dom.w3c_pointer_events.enabled"]
+           attribute EventHandler onpointerout;
+           [Pref="dom.w3c_pointer_events.enabled"]
+           attribute EventHandler onpointerover;
+           [Pref="dom.w3c_pointer_events.enabled"]
+           attribute EventHandler onpointerenter;
+           [Pref="dom.w3c_pointer_events.enabled"]
+           attribute EventHandler onpointerleave;
+
            // Mozilla-specific handlers
            attribute EventHandler onmozfullscreenchange;
            attribute EventHandler onmozfullscreenerror;

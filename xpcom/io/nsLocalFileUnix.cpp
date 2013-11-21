@@ -243,8 +243,10 @@ nsLocalFile::nsLocalFileConstructor(nsISupports *outer,
                                     const nsIID &aIID,
                                     void **aInstancePtr)
 {
-    NS_ENSURE_ARG_POINTER(aInstancePtr);
-    NS_ENSURE_NO_AGGREGATION(outer);
+    if (NS_WARN_IF(!aInstancePtr))
+        return NS_ERROR_INVALID_ARG;
+    if (NS_WARN_IF(outer))
+        return NS_ERROR_NO_AGGREGATION;
 
     *aInstancePtr = nullptr;
 
@@ -1005,7 +1007,8 @@ NS_IMETHODIMP
 nsLocalFile::GetLastModifiedTime(PRTime *aLastModTime)
 {
     CHECK_mPath();
-    NS_ENSURE_ARG(aLastModTime);
+    if (NS_WARN_IF(!aLastModTime))
+        return NS_ERROR_INVALID_ARG;
 
     PRFileInfo64 info;
     if (PR_GetFileInfo64(mPath.get(), &info) != PR_SUCCESS)
@@ -1043,7 +1046,8 @@ NS_IMETHODIMP
 nsLocalFile::GetLastModifiedTimeOfLink(PRTime *aLastModTimeOfLink)
 {
     CHECK_mPath();
-    NS_ENSURE_ARG(aLastModTimeOfLink);
+    if (NS_WARN_IF(!aLastModTimeOfLink))
+        return NS_ERROR_INVALID_ARG;
 
     struct STAT sbuf;
     if (LSTAT(mPath.get(), &sbuf) == -1)
@@ -1072,7 +1076,8 @@ nsLocalFile::SetLastModifiedTimeOfLink(PRTime aLastModTimeOfLink)
 NS_IMETHODIMP
 nsLocalFile::GetPermissions(uint32_t *aPermissions)
 {
-    NS_ENSURE_ARG(aPermissions);
+    if (NS_WARN_IF(!aPermissions))
+        return NS_ERROR_INVALID_ARG;
     ENSURE_STAT_CACHE();
     *aPermissions = NORMALIZE_PERMS(mCachedStat.st_mode);
     return NS_OK;
@@ -1082,7 +1087,8 @@ NS_IMETHODIMP
 nsLocalFile::GetPermissionsOfLink(uint32_t *aPermissionsOfLink)
 {
     CHECK_mPath();
-    NS_ENSURE_ARG(aPermissionsOfLink);
+    if (NS_WARN_IF(!aPermissionsOfLink))
+        return NS_ERROR_INVALID_ARG;
 
     struct STAT sbuf;
     if (LSTAT(mPath.get(), &sbuf) == -1)
@@ -1127,7 +1133,8 @@ nsLocalFile::SetPermissionsOfLink(uint32_t aPermissions)
 NS_IMETHODIMP
 nsLocalFile::GetFileSize(int64_t *aFileSize)
 {
-    NS_ENSURE_ARG_POINTER(aFileSize);
+    if (NS_WARN_IF(!aFileSize))
+        return NS_ERROR_INVALID_ARG;
     *aFileSize = 0;
     ENSURE_STAT_CACHE();
 
@@ -1176,7 +1183,8 @@ NS_IMETHODIMP
 nsLocalFile::GetFileSizeOfLink(int64_t *aFileSize)
 {
     CHECK_mPath();
-    NS_ENSURE_ARG(aFileSize);
+    if (NS_WARN_IF(!aFileSize))
+        return NS_ERROR_INVALID_ARG;
 
     struct STAT sbuf;
     if (LSTAT(mPath.get(), &sbuf) == -1)
@@ -1241,7 +1249,8 @@ GetDeviceName(int deviceMajor, int deviceMinor, nsACString &deviceName)
 NS_IMETHODIMP
 nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
 {
-    NS_ENSURE_ARG_POINTER(aDiskSpaceAvailable);
+    if (NS_WARN_IF(!aDiskSpaceAvailable))
+        return NS_ERROR_INVALID_ARG;
 
     // These systems have the operations necessary to check disk space.
 
@@ -1326,7 +1335,8 @@ NS_IMETHODIMP
 nsLocalFile::GetParent(nsIFile **aParent)
 {
     CHECK_mPath();
-    NS_ENSURE_ARG_POINTER(aParent);
+    if (NS_WARN_IF(!aParent))
+        return NS_ERROR_INVALID_ARG;
     *aParent = nullptr;
 
     // if '/' we are at the top of the volume, return null
@@ -1372,7 +1382,8 @@ NS_IMETHODIMP
 nsLocalFile::Exists(bool *_retval)
 {
     CHECK_mPath();
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
 
     *_retval = (access(mPath.get(), F_OK) == 0);
     return NS_OK;
@@ -1383,7 +1394,8 @@ NS_IMETHODIMP
 nsLocalFile::IsWritable(bool *_retval)
 {
     CHECK_mPath();
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
 
     *_retval = (access(mPath.get(), W_OK) == 0);
     if (*_retval || errno == EACCES)
@@ -1395,7 +1407,8 @@ NS_IMETHODIMP
 nsLocalFile::IsReadable(bool *_retval)
 {
     CHECK_mPath();
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
 
     *_retval = (access(mPath.get(), R_OK) == 0);
     if (*_retval || errno == EACCES)
@@ -1407,7 +1420,8 @@ NS_IMETHODIMP
 nsLocalFile::IsExecutable(bool *_retval)
 {
     CHECK_mPath();
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
 
     // Check extension (bug 663899). On certain platforms, the file
     // extension may cause the OS to treat it as executable regardless of
@@ -1496,7 +1510,8 @@ nsLocalFile::IsExecutable(bool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsDirectory(bool *_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
     *_retval = false;
     ENSURE_STAT_CACHE();
     *_retval = S_ISDIR(mCachedStat.st_mode);
@@ -1506,7 +1521,8 @@ nsLocalFile::IsDirectory(bool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsFile(bool *_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
     *_retval = false;
     ENSURE_STAT_CACHE();
     *_retval = S_ISREG(mCachedStat.st_mode);
@@ -1516,7 +1532,8 @@ nsLocalFile::IsFile(bool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsHidden(bool *_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
     nsACString::const_iterator begin, end;
     LocateNativeLeafName(begin, end);
     *_retval = (*begin == '.');
@@ -1526,7 +1543,8 @@ nsLocalFile::IsHidden(bool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsSymlink(bool *_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
     CHECK_mPath();
 
     struct STAT symStat;
@@ -1539,7 +1557,8 @@ nsLocalFile::IsSymlink(bool *_retval)
 NS_IMETHODIMP
 nsLocalFile::IsSpecial(bool *_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
     ENSURE_STAT_CACHE();
     *_retval = S_ISCHR(mCachedStat.st_mode)      ||
                  S_ISBLK(mCachedStat.st_mode)    ||
@@ -1554,8 +1573,10 @@ nsLocalFile::IsSpecial(bool *_retval)
 NS_IMETHODIMP
 nsLocalFile::Equals(nsIFile *inFile, bool *_retval)
 {
-    NS_ENSURE_ARG(inFile);
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!inFile))
+        return NS_ERROR_INVALID_ARG;
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
     *_retval = false;
 
     nsAutoCString inPath;
@@ -1573,8 +1594,10 @@ NS_IMETHODIMP
 nsLocalFile::Contains(nsIFile *inFile, bool recur, bool *_retval)
 {
     CHECK_mPath();
-    NS_ENSURE_ARG(inFile);
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!inFile))
+        return NS_ERROR_INVALID_ARG;
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
 
     nsAutoCString inPath;
     nsresult rv;
@@ -1710,7 +1733,8 @@ NS_IMETHODIMP
 nsLocalFile::Load(PRLibrary **_retval)
 {
     CHECK_mPath();
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     nsTraceRefcntImpl::SetActivityIsLegal(false);
@@ -2121,7 +2145,8 @@ nsLocalFile::InitWithCFURL(CFURLRef aCFURL)
 NS_IMETHODIMP
 nsLocalFile::InitWithFSRef(const FSRef *aFSRef)
 {
-  NS_ENSURE_ARG(aFSRef);
+  if (NS_WARN_IF(!aFSRef))
+      return NS_ERROR_INVALID_ARG;
 
   CFURLRef newURLRef = ::CFURLCreateFromFSRef(kCFAllocatorDefault, aFSRef);
   if (newURLRef) {
@@ -2151,7 +2176,8 @@ nsLocalFile::GetCFURL(CFURLRef *_retval)
 NS_IMETHODIMP
 nsLocalFile::GetFSRef(FSRef *_retval)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  if (NS_WARN_IF(!_retval))
+      return NS_ERROR_INVALID_ARG;
 
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -2169,7 +2195,8 @@ nsLocalFile::GetFSRef(FSRef *_retval)
 NS_IMETHODIMP
 nsLocalFile::GetFSSpec(FSSpec *_retval)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  if (NS_WARN_IF(!_retval))
+      return NS_ERROR_INVALID_ARG;
 
   FSRef fsRef;
   nsresult rv = GetFSRef(&fsRef);
@@ -2184,7 +2211,8 @@ nsLocalFile::GetFSSpec(FSSpec *_retval)
 NS_IMETHODIMP
 nsLocalFile::GetFileSizeWithResFork(int64_t *aFileSizeWithResFork)
 {
-  NS_ENSURE_ARG_POINTER(aFileSizeWithResFork);
+  if (NS_WARN_IF(!aFileSizeWithResFork))
+      return NS_ERROR_INVALID_ARG;
 
   FSRef fsRef;
   nsresult rv = GetFSRef(&fsRef);
@@ -2343,7 +2371,8 @@ nsLocalFile::OpenDocWithApp(nsIFile *aAppToOpenWith, bool aLaunchInBackground)
 NS_IMETHODIMP
 nsLocalFile::IsPackage(bool *_retval)
 {
-  NS_ENSURE_ARG(_retval);
+  if (NS_WARN_IF(!_retval))
+      return NS_ERROR_INVALID_ARG;
   *_retval = false;
 
   CFURLRef url;
@@ -2414,7 +2443,8 @@ NS_IMETHODIMP
 nsLocalFile::GetBundleContentsLastModifiedTime(int64_t *aLastModTime)
 {
   CHECK_mPath();
-  NS_ENSURE_ARG_POINTER(aLastModTime);
+  if (NS_WARN_IF(!aLastModTime))
+      return NS_ERROR_INVALID_ARG;
 
   bool isPackage = false;
   nsresult rv = IsPackage(&isPackage);
@@ -2440,7 +2470,8 @@ nsLocalFile::GetBundleContentsLastModifiedTime(int64_t *aLastModTime)
 
 NS_IMETHODIMP nsLocalFile::InitWithFile(nsIFile *aFile)
 {
-  NS_ENSURE_ARG(aFile);
+  if (NS_WARN_IF(!aFile))
+      return NS_ERROR_INVALID_ARG;
 
   nsAutoCString nativePath;
   nsresult rv = aFile->GetNativePath(nativePath);

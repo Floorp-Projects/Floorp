@@ -160,9 +160,14 @@ Assembler::finish()
 #ifdef DEBUG
         size_t oldSize = masm.size();
 #endif
-        masm.jmp_rip(0);
+        masm.jmp_rip(2);
+        JS_ASSERT(masm.size() - oldSize == 6);
+        // Following an indirect branch with ud2 hints to the hardware that
+        // there's no fall-through. This also aligns the 64-bit immediate.
+        masm.ud2();
+        JS_ASSERT(masm.size() - oldSize == 8);
         masm.immediate64(0);
-        masm.align(SizeOfJumpTableEntry);
+        JS_ASSERT(masm.size() - oldSize == SizeOfExtendedJump);
         JS_ASSERT(masm.size() - oldSize == SizeOfJumpTableEntry);
     }
 }
