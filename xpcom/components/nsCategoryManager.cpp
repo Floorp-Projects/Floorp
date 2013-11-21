@@ -299,7 +299,8 @@ CategoryNode::DeleteLeaf(const char* aEntryName)
 NS_METHOD 
 CategoryNode::Enumerate(nsISimpleEnumerator **_retval)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
 
   MutexAutoLock lock(mLock);
   EntryEnumerator* enumObj = EntryEnumerator::Create(mTable);
@@ -593,9 +594,10 @@ nsCategoryManager::GetCategoryEntry( const char *aCategoryName,
                                      const char *aEntryName,
                                      char **_retval )
 {
-  NS_ENSURE_ARG_POINTER(aCategoryName);
-  NS_ENSURE_ARG_POINTER(aEntryName);
-  NS_ENSURE_ARG_POINTER(_retval);
+  if (NS_WARN_IF(!aCategoryName) ||
+      NS_WARN_IF(!aEntryName) ||
+      NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;;
 
   nsresult status = NS_ERROR_NOT_AVAILABLE;
 
@@ -687,8 +689,9 @@ nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
                                         const char *aEntryName,
                                         bool aDontPersist)
 {
-  NS_ENSURE_ARG_POINTER(aCategoryName);
-  NS_ENSURE_ARG_POINTER(aEntryName);
+  if (NS_WARN_IF(!aCategoryName) ||
+      NS_WARN_IF(!aEntryName))
+    return NS_ERROR_INVALID_ARG;
 
   /*
     Note: no errors are reported since failure to delete
@@ -715,7 +718,8 @@ nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
 NS_IMETHODIMP
 nsCategoryManager::DeleteCategory( const char *aCategoryName )
 {
-  NS_ENSURE_ARG_POINTER(aCategoryName);
+  if (NS_WARN_IF(!aCategoryName))
+    return NS_ERROR_INVALID_ARG;
 
   // the categories are arena-allocated, so we don't
   // actually delete them. We just remove all of the
@@ -740,8 +744,9 @@ NS_IMETHODIMP
 nsCategoryManager::EnumerateCategory( const char *aCategoryName,
                                       nsISimpleEnumerator **_retval )
 {
-  NS_ENSURE_ARG_POINTER(aCategoryName);
-  NS_ENSURE_ARG_POINTER(_retval);
+  if (NS_WARN_IF(!aCategoryName) ||
+      NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
 
   CategoryNode* category;
   {
@@ -759,7 +764,8 @@ nsCategoryManager::EnumerateCategory( const char *aCategoryName,
 NS_IMETHODIMP 
 nsCategoryManager::EnumerateCategories(nsISimpleEnumerator **_retval)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  if (NS_WARN_IF(!_retval))
+    return NS_ERROR_INVALID_ARG;
 
   MutexAutoLock lock(mLock);
   CategoryEnumerator* enumObj = CategoryEnumerator::Create(mTable);

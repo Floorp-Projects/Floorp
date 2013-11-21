@@ -62,6 +62,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, bool aCanBubble, bool a
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
+    case NS_POINTER_EVENT:
     case NS_SIMPLE_GESTURE_EVENT: {
       WidgetMouseEventBase* mouseEventBase = mEvent->AsMouseEventBase();
       mouseEventBase->relatedTarget = aRelatedTarget;
@@ -115,6 +116,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString& aType,
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
+    case NS_POINTER_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
       mEvent->AsInputEvent()->modifiers = modifiers;
       return NS_OK;
@@ -145,6 +147,7 @@ nsDOMMouseEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
+    case NS_POINTER_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
       e->mEvent->AsMouseEventBase()->buttons = aParam.mButtons;
       break;
@@ -192,6 +195,7 @@ nsDOMMouseEvent::Button()
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
+    case NS_POINTER_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
       return mEvent->AsMouseEventBase()->button;
     default:
@@ -217,6 +221,7 @@ nsDOMMouseEvent::Buttons()
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
+    case NS_POINTER_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
       return mEvent->AsMouseEventBase()->buttons;
     default:
@@ -242,6 +247,7 @@ nsDOMMouseEvent::GetRelatedTarget()
     case NS_MOUSE_SCROLL_EVENT:
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
+    case NS_POINTER_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
       relatedTarget =
         do_QueryInterface(mEvent->AsMouseEventBase()->relatedTarget);

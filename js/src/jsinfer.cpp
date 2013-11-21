@@ -603,9 +603,11 @@ class types::CompilerConstraintList
 
   public:
     CompilerConstraintList(jit::TempAllocator &alloc)
-      : constraints(alloc),
-        frozenScripts(alloc),
-        failed_(false)
+      : failed_(false)
+#ifdef JS_ION
+      , constraints(alloc)
+      , frozenScripts(alloc)
+#endif
     {}
 
     void add(CompilerConstraint *constraint) {

@@ -36,16 +36,9 @@ using namespace mozilla;
 
 #include "prlog.h"
 #if defined(PR_LOGGING)
-static PRLogModuleInfo *
-GetProxyLog()
-{
-    static PRLogModuleInfo *sLog;
-    if (!sLog)
-        sLog = PR_NewLogModule("proxy");
-    return sLog;
-}
 #endif
-#define LOG(args) PR_LOG(GetProxyLog(), PR_LOG_DEBUG, args)
+#undef LOG
+#define LOG(args) PR_LOG(net::GetProxyLog(), PR_LOG_DEBUG, args)
 
 //----------------------------------------------------------------------------
 

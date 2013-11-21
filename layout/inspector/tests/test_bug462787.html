@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462787
 /** Test for Bug 462787 **/
 
 function do_test() {
-  const INVALID_POINTER = 0x80004003;
+  const INVALID_POINTER = SpecialPowers.Cr.NS_ERROR_INVALID_POINTER;
 
   var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
                              .getService(SpecialPowers.Ci.inIDOMUtils);

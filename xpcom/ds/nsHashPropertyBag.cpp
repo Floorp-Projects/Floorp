@@ -64,7 +64,8 @@ nsHashPropertyBag::GetProperty(const nsAString& name, nsIVariant* *_retval)
 NS_IMETHODIMP
 nsHashPropertyBag::SetProperty(const nsAString& name, nsIVariant *value)
 {
-    NS_ENSURE_ARG_POINTER(value);
+    if (NS_WARN_IF(!value))
+        return NS_ERROR_INVALID_ARG;
 
     mPropertyHash.Put(name, value);
 

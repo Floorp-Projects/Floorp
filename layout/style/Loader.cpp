@@ -48,6 +48,7 @@
 #include "nsIThreadInternal.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsINetworkSeer.h"
+#include "mozilla/dom/URL.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
@@ -941,16 +942,6 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
   NS_ASSERTION(completed || !mSyncLoad, "sync load did not complete");
   return result;
 }
-
-#ifdef MOZ_XUL
-static bool IsChromeURI(nsIURI* aURI)
-{
-  NS_ASSERTION(aURI, "Have to pass in a URI");
-  bool isChrome = false;
-  aURI->SchemeIs("chrome", &isChrome);
-  return isChrome;
-}
-#endif
 
 bool
 Loader::IsAlternate(const nsAString& aTitle, bool aHasAlternateRel)

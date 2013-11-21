@@ -1,0 +1,50 @@
+# HG changeset patch
+# Parent cb500491e8a524edb44213d1a787adb98c385ecd
+# User Richard Newman <rnewman@mozilla.com>
+
+Back out Bug 927230 for Android 2.3 startup crash. r=briansmith
+
+diff --git a/security/nss/lib/freebl/unix_rand.c b/security/nss/lib/freebl/unix_rand.c
+--- a/security/nss/lib/freebl/unix_rand.c
++++ b/security/nss/lib/freebl/unix_rand.c
+@@ -969,20 +969,16 @@ size_t RNG_FileUpdate(const char *fileNa
+     memset(&stat_buf, 0, sizeof(stat_buf));
+ 
+     if (stat((char *)fileName, &stat_buf) < 0)
+ 	return fileBytes;
+     RNG_RandomUpdate(&stat_buf, sizeof(stat_buf));
+     
+     file = fopen(fileName, "r");
+     if (file != NULL) {
+-	/* Set buffering mode to unbuffered I/O to avoid reading more bytes
+-	 * than we need from /dev/urandom. Moreover, we read into a buffer
+-	 * of size BUFSIZ, so buffered I/O has no performance advantage. */
+-	setvbuf(file, NULL, _IONBF, 0);
+ 	while (limit > fileBytes) {
+ 	    bytes = PR_MIN(sizeof buffer, limit - fileBytes);
+ 	    bytes = fread(buffer, 1, bytes, file);
+ 	    if (bytes == 0) 
+ 		break;
+ 	    RNG_RandomUpdate(buffer, bytes);
+ 	    fileBytes      += bytes;
+ 	    totalFileBytes += bytes;
+@@ -1133,19 +1129,16 @@ size_t RNG_SystemRNG(void *dest, size_t 
+     size_t bytes;
+     size_t fileBytes = 0;
+     unsigned char *buffer = dest;
+ 
+     file = fopen("/dev/urandom", "r");
+     if (file == NULL) {
+ 	return rng_systemFromNoise(dest, maxLen);
+     }
+-    /* Set buffering mode to unbuffered I/O to avoid reading more bytes
+-     * than we need from /dev/urandom. */
+-    setvbuf(file, NULL, _IONBF, 0);
+     while (maxLen > fileBytes) {
+ 	bytes = maxLen - fileBytes;
+ 	bytes = fread(buffer, 1, bytes, file);
+ 	if (bytes == 0) 
+ 	    break;
+ 	fileBytes += bytes;
+ 	buffer += bytes;
+     }

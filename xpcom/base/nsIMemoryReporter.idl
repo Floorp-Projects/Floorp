@@ -185,7 +185,7 @@ interface nsIFinishReportingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(2596fa26-495a-4827-a5f5-e34e7f4dd7b5)]
+[scriptable, builtinclass, uuid(41c667f4-16b3-424f-95d9-a6f903f72eb2)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -263,6 +263,9 @@ interface nsIMemoryReporterManager : nsISupports
    * |vsize| (UNITS_BYTES)  The virtual size, i.e. the amount of address space
    * taken up.
    *
+   * |vsizeMaxContiguous| (UNITS_BYTES)  The size of the largest contiguous
+   * block of virtual memory.
+   *
    * |resident| (UNITS_BYTES)  The resident size (a.k.a. RSS or physical memory
    * used).
    *
@@ -300,13 +303,10 @@ interface nsIMemoryReporterManager : nsISupports
    *
    * |pageFaultsHard| (UNITS_COUNT_CUMULATIVE)  The number of hard (a.k.a.
    * major) page faults that have occurred since the process started.
-   *
-   * |largestContiguousVMBlock| (UNITS_BYTES)  The size of the largest
-   * contiguous block of virtual memory.  Only available on Windows; on all
-   * other platforms, reading this value returns 0.
    */
   readonly attribute int64_t explicit;
   readonly attribute int64_t vsize;
+  readonly attribute int64_t vsizeMaxContiguous;
   readonly attribute int64_t resident;
   readonly attribute int64_t residentFast;
 
@@ -328,8 +328,6 @@ interface nsIMemoryReporterManager : nsISupports
   readonly attribute int64_t ghostWindows;
 
   readonly attribute int64_t pageFaultsHard;
-
-  readonly attribute int64_t largestContiguousVMBlock;
 
   /*
    * This attribute indicates if moz_malloc_usable_size() works.
@@ -537,7 +535,8 @@ public:
   {
     int64_t amount;
     nsresult rv = GetAmount(&amount);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+      return rv;
 
     return aCallback->Callback(EmptyCString(), mNameAndPath, mKind, mUnits,
                                amount, mDescription, aData);

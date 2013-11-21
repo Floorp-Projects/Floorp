@@ -19,17 +19,9 @@
 using namespace mozilla;
 using namespace mozilla::net;
 
-#include "prlog.h"
 #if defined(PR_LOGGING)
-static PRLogModuleInfo *
-GetProxyLog()
-{
-    static PRLogModuleInfo *sLog;
-    if (!sLog)
-        sLog = PR_NewLogModule("proxy");
-    return sLog;
-}
 #endif
+#undef LOG
 #define LOG(args) PR_LOG(GetProxyLog(), PR_LOG_DEBUG, args)
 
 // The PAC thread does evaluations of both PAC files and
@@ -698,4 +690,19 @@ nsPACMan::Init(nsISystemProxySettings *systemProxySettings)
   mPACThread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
 
   return NS_OK;
+}
+
+namespace mozilla {
+namespace net {
+
+PRLogModuleInfo*
+GetProxyLog()
+{
+    static PRLogModuleInfo *sLog;
+    if (!sLog)
+        sLog = PR_NewLogModule("proxy");
+    return sLog;
+}
+
+}
 }

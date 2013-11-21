@@ -195,15 +195,16 @@ class Assembler : public AssemblerX86Shared
     // The start of the relocation table contains the offset from the code
     // buffer to the start of the extended jump table.
     //
-    // Each entry in this table is a jmp [rip], where the next eight bytes
-    // contain an immediate address. This comes out to 14 bytes, which we pad
-    // to 16.
+    // Each entry in this table is a jmp [rip], followed by a ud2 to hint to the
+    // hardware branch predictor that there is no fallthrough, followed by the
+    // eight bytes containing an immediate address. This comes out to 16 bytes.
     //    +1 byte for opcode
     //    +1 byte for mod r/m
-    //    +4 bytes for rip-relative offset (0)
+    //    +4 bytes for rip-relative offset (2)
+    //    +2 bytes for ud2 instruction
     //    +8 bytes for 64-bit address
     //
-    static const uint32_t SizeOfExtendedJump = 1 + 1 + 4 + 8;
+    static const uint32_t SizeOfExtendedJump = 1 + 1 + 4 + 2 + 8;
     static const uint32_t SizeOfJumpTableEntry = 16;
 
     uint32_t extendedJumpTable_;

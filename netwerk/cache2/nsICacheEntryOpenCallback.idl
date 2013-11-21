@@ -7,13 +7,17 @@
 interface nsICacheEntry;
 interface nsIApplicationCache;
 
-[scriptable, uuid(cdd8b9be-71f0-4b0a-a7f4-626fbb3d2e9b)]
+[scriptable, uuid(1fc9fe11-c6ac-4748-94bd-8555a5a12b94)]
 interface nsICacheEntryOpenCallback : nsISupports
 {
   /**
    * State of the entry determined by onCacheEntryCheck.
    *
    * ENTRY_WANTED - the consumer is interested in the entry, we will pass it.
+   * RECHECK_AFTER_WRITE_FINISHED - the consumer cannot use the entry while data is
+   *    still being written and wants to check it again after the current write is
+   *    finished. This actually prevents concurrent read/write and is used with
+   *    non-resumable HTTP responses.
    * ENTRY_NEEDS_REVALIDATION - entry needs to be revalidated first with origin server,
    *    this means the loading channel will decide whether to use the entry content
    *    as is after it gets a positive response from the server about validity of the
@@ -23,12 +27,22 @@ interface nsICacheEntryOpenCallback : nsISupports
    * ENTRY_NOT_WANTED - the consumer is not interested in the entry, we will not pass it.
    */
   const unsigned long ENTRY_WANTED = 0;
-  const unsigned long ENTRY_NEEDS_REVALIDATION = 1;
-  const unsigned long ENTRY_NOT_WANTED = 2;
+  const unsigned long RECHECK_AFTER_WRITE_FINISHED = 1;
+  const unsigned long ENTRY_NEEDS_REVALIDATION = 2;
+  const unsigned long ENTRY_NOT_WANTED = 3;
 
   /**
    * Callback to perform any validity checks before the entry should be used.
-   * Called before onCacheEntryAvailable callback.
+   * Called before onCacheEntryAvailable callback, depending on the result it
+   * may be called more then one time.
+   *
+   * This callback is ensured to be called on the same thread on which asyncOpenURI
+   * has been called, unless nsICacheStorage.CHECK_MULTITHREADED flag has been specified.
+   * In that case this callback can be invoked on any thread, usually it is the cache I/O
+   * or cache management thread.
+   *
+   * IMPORTANT NOTE: 
+   * This callback may be invoked sooner then respective asyncOpenURI call exits.
    *
    * @param aEntry
    *    An entry to examine.  Consumer has a chance to decide whether the
@@ -37,15 +51,18 @@ interface nsICacheEntryOpenCallback : nsISupports
    *    Optional, application cache the entry has been found in, if any.
    * @return
    *    State of the entry, see the constants just above.
-   *
-   * NOTE: This callback is invoked on the cache background thread.
    */
   unsigned long onCacheEntryCheck(in nsICacheEntry aEntry,
                                   in nsIApplicationCache aApplicationCache);
 
   /**
-   * Callback implemented by consumers of nsICacheStorage fetching
-   * result of the cache async open request.
+   * Callback giving actual result of asyncOpenURI.  It may give consumer the cache 
+   * entry or a failure result when it's not possible to open it from some reason.
+   * This callback is ensured to be called on the same thread on which asyncOpenURI
+   * has been called.
+   *
+   * IMPORTANT NOTE: 
+   * This callback may be invoked sooner then respective asyncOpenURI call exits.
    *
    * @param aEntry
    *    The entry bound to the originally requested URI.  May be null when
@@ -60,24 +77,15 @@ interface nsICacheEntryOpenCallback : nsISupports
    *    given application cache.  It should be associated with the loading
    *    channel.
    * @param aResult
-   *    Result of request.  This may be a failure only when one of these
+   *    Result of the request.  This may be a failure only when one of these
    *    issues occur:
    *    - the cache storage service could not be started due to some unexpected
    *      faulure
    *    - there is not enough disk space to create new entries
    *    - cache entry was not found in a given application cache
-   *
-   * NOTE: In the current implementation this callback is invoked on the main thread
-   *       however, we would like to call this on a different thread in the future.
    */
   void onCacheEntryAvailable(in nsICacheEntry aEntry,
                              in boolean aNew,
                              in nsIApplicationCache aApplicationCache,
                              in nsresult aResult);
-
-  /**
-   * Whether this callback can be invoked on any thread, or just on the main thread
-   * when the consumer is e.g. a JS.
-   */
-  readonly attribute boolean mainThreadOnly;
 };

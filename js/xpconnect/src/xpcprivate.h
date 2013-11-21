@@ -676,7 +676,8 @@ public:
     void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& cb) MOZ_OVERRIDE;
     void UnmarkSkippableJSHolders();
     void PrepareForForgetSkippable() MOZ_OVERRIDE;
-    void PrepareForCollection() MOZ_OVERRIDE;
+    void BeginCycleCollectionCallback() MOZ_OVERRIDE;
+    void EndCycleCollectionCallback(mozilla::CycleCollectorResults &aResults) MOZ_OVERRIDE;
     void DispatchDeferredDeletion(bool continuation) MOZ_OVERRIDE;
 
     void CustomGCCallback(JSGCStatus status) MOZ_OVERRIDE;
@@ -3033,6 +3034,7 @@ public:
         return mStack.IsEmpty() ? nullptr : mStack[mStack.Length() - 1].cx;
     }
 
+    JSContext *InitSafeJSContext();
     JSContext *GetSafeJSContext();
     bool HasJSContext(JSContext *cx);
 
@@ -3785,6 +3787,9 @@ GetObjectScope(JSObject *obj)
 {
     return EnsureCompartmentPrivate(obj)->scope;
 }
+
+// This returns null if a scope doesn't already exist.
+XPCWrappedNativeScope* MaybeGetObjectScope(JSObject *obj);
 
 extern bool gDebugMode;
 extern bool gDesiredDebugMode;

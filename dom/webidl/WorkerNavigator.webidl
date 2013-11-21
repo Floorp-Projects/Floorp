@@ -3,12 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 interface WorkerNavigator {
-  [Constant]
-  readonly attribute DOMString appName;
-  [Constant]
-  readonly attribute DOMString appVersion;
-  [Constant]
-  readonly attribute DOMString platform;
-  [Constant]
-  readonly attribute DOMString userAgent;
 };
+
+WorkerNavigator implements NavigatorID;

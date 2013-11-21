@@ -320,7 +320,7 @@ Promise::Constructor(const GlobalObject& aGlobal,
 
 /* static */ already_AddRefed<Promise>
 Promise::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
-                 JS::Handle<JS::Value> aValue, ErrorResult& aRv)
+                 const Optional<JS::Handle<JS::Value>>& aValue, ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
@@ -330,13 +330,14 @@ Promise::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
 
   nsRefPtr<Promise> promise = new Promise(window);
 
-  promise->MaybeResolveInternal(aCx, aValue);
+  promise->MaybeResolveInternal(aCx,
+    aValue.WasPassed() ? aValue.Value() : JS::UndefinedHandleValue);
   return promise.forget();
 }
 
 /* static */ already_AddRefed<Promise>
 Promise::Reject(const GlobalObject& aGlobal, JSContext* aCx,
-                JS::Handle<JS::Value> aValue, ErrorResult& aRv)
+                const Optional<JS::Handle<JS::Value>>& aValue, ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
@@ -346,27 +347,28 @@ Promise::Reject(const GlobalObject& aGlobal, JSContext* aCx,
 
   nsRefPtr<Promise> promise = new Promise(window);
 
-  promise->MaybeRejectInternal(aCx, aValue);
+  promise->MaybeRejectInternal(aCx,
+    aValue.WasPassed() ? aValue.Value() : JS::UndefinedHandleValue);
   return promise.forget();
 }
 
 already_AddRefed<Promise>
-Promise::Then(const Optional<OwningNonNull<AnyCallback> >& aResolveCallback,
-              const Optional<OwningNonNull<AnyCallback> >& aRejectCallback)
+Promise::Then(const Optional<nsRefPtr<AnyCallback>>& aResolveCallback,
+              const Optional<nsRefPtr<AnyCallback>>& aRejectCallback)
 {
   nsRefPtr<Promise> promise = new Promise(GetParentObject());
 
   nsRefPtr<PromiseCallback> resolveCb =
     PromiseCallback::Factory(promise,
                              aResolveCallback.WasPassed()
-                               ? &aResolveCallback.Value()
+                               ? aResolveCallback.Value()
                                : nullptr,
                              PromiseCallback::Resolve);
 
   nsRefPtr<PromiseCallback> rejectCb =
     PromiseCallback::Factory(promise,
                              aRejectCallback.WasPassed()
-                               ? &aRejectCallback.Value()
+                               ? aRejectCallback.Value()
                                : nullptr,
                              PromiseCallback::Reject);
 
@@ -376,9 +378,9 @@ Promise::Then(const Optional<OwningNonNull<AnyCallback> >& aResolveCallback,
 }
 
 already_AddRefed<Promise>
-Promise::Catch(const Optional<OwningNonNull<AnyCallback> >& aRejectCallback)
+Promise::Catch(const Optional<nsRefPtr<AnyCallback>>& aRejectCallback)
 {
-  Optional<OwningNonNull<AnyCallback> > resolveCb;
+  Optional<nsRefPtr<AnyCallback>> resolveCb;
   return Then(resolveCb, aRejectCallback);
 }
 
