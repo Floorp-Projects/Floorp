@@ -1657,7 +1657,7 @@ abstract public class BrowserApp extends GeckoApp
     private void hideWebContent() {
         // The view is set to INVISIBLE, rather than GONE, to avoid
         // the additional requestLayout() call.
-        mLayerView.hide();
+        mLayerView.setVisibility(View.INVISIBLE);
     }
 
     /**
@@ -1684,7 +1684,7 @@ abstract public class BrowserApp extends GeckoApp
         mHideWebContentOnAnimationEnd = false;
 
         // Display the previously hidden web content (which prevented screen reader access).
-        mLayerView.show();
+        mLayerView.setVisibility(View.VISIBLE);
 
         if (mHomePager != null) {
             mHomePager.hide();
