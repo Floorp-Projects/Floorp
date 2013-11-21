@@ -412,6 +412,12 @@ public:
    */
   virtual bool Resume() { return true; }
 
+  /**
+   * Call before rendering begins to ensure the compositor is ready to
+   * composite. Returns false if rendering should be aborted.
+   */
+  virtual bool Ready() { return true; }
+
   // XXX I expect we will want to move mWidget into this class and implement
   // these methods properly.
   virtual nsIWidget* GetWidget() const { return nullptr; }
