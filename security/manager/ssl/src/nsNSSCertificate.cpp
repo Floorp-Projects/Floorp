@@ -854,7 +854,7 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
     }
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("pipnss: PKIX attempting chain(%d) for '%s'\n",usage, mCert->nickname));
     srv = certVerifier->VerifyCert(mCert,
-                                   certificateUsageSSLClient, PR_Now(),
+                                   usage, PR_Now(),
                                    nullptr, /*XXX fixme*/
                                    CertVerifier::FLAG_LOCAL_ONLY,
                                    &pkixNssChain);
