@@ -178,7 +178,10 @@ InitTextures(IDirect3DDevice9* aDevice,
 
     tmpTexture->GetSurfaceLevel(0, byRef(aSurface));
     aSurface->LockRect(&aLockedRect, NULL, 0);
-    NS_ASSERTION(aLockedRect.pBits, "Could not lock surface");
+    if (!aLockedRect.pBits) {
+      NS_WARNING("Could not lock surface");
+      return nullptr;
+    }
   } else {
     if (FAILED(aDevice->
                CreateTexture(aSize.width, aSize.height,
@@ -189,6 +192,10 @@ InitTextures(IDirect3DDevice9* aDevice,
 
     /* lock the entire texture */
     aTexture->LockRect(0, &aLockedRect, nullptr, 0);
+    if (!aLockedRect.pBits) {
+      NS_WARNING("Could not lock surface");
+      return nullptr;
+    }
   }
 
   return true;
@@ -653,7 +660,10 @@ DeprecatedTextureClientD3D9::LockSurface()
     return mSurface.get();
   }
 
-  MOZ_ASSERT(mTexture, "Cannot lock surface without a texture to lock");
+  if (!mTexture) {
+    NS_WARNING("No texture to lock");
+    return nullptr;
+  }
 
   if (!mD3D9Surface) {
     HRESULT hr = mTexture->GetSurfaceLevel(0, getter_AddRefs(mD3D9Surface));
