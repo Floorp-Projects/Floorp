@@ -441,6 +441,12 @@ protected:
   void RequestContentRepaint();
 
   /**
+   * Tell the paint throttler to request a content repaint with the given
+   * metrics.  (Helper function used by RequestContentRepaint.)
+   */
+  void ScheduleContentRepaint(FrameMetrics &aFrameMetrics);
+
+  /**
    * Advances a fling by an interpolated amount based on the passed in |aDelta|.
    * This should be called whenever sampling the content transform for this
    * frame. Returns true if the fling animation should be advanced by one frame,
