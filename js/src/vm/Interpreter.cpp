@@ -1404,52 +1404,55 @@ BEGIN_CASE(EnableInterruptsPseudoOpcode)
         moreInterrupts = true;
     }
 
-    JSInterruptHook hook = cx->runtime()->debugHooks.interruptHook;
-    if (hook || script->stepModeEnabled()) {
-        RootedValue rval(cx);
-        JSTrapStatus status = JSTRAP_CONTINUE;
-        if (hook)
-            status = hook(cx, script, regs.pc, rval.address(), cx->runtime()->debugHooks.interruptHookData);
-        if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
-            status = Debugger::onSingleStep(cx, &rval);
-        switch (status) {
-          case JSTRAP_ERROR:
-            goto error;
-          case JSTRAP_CONTINUE:
-            break;
-          case JSTRAP_RETURN:
-            regs.fp()->setReturnValue(rval);
-            interpReturnOK = true;
-            goto forced_return;
-          case JSTRAP_THROW:
-            cx->setPendingException(rval);
-            goto error;
-          default:;
+    if (cx->compartment()->debugMode()) {
+        JSInterruptHook hook = cx->runtime()->debugHooks.interruptHook;
+        if (hook || script->stepModeEnabled()) {
+            RootedValue rval(cx);
+            JSTrapStatus status = JSTRAP_CONTINUE;
+            if (hook)
+                status = hook(cx, script, regs.pc, rval.address(),
+                              cx->runtime()->debugHooks.interruptHookData);
+            if (status == JSTRAP_CONTINUE && script->stepModeEnabled())
+                status = Debugger::onSingleStep(cx, &rval);
+            switch (status) {
+              case JSTRAP_ERROR:
+                goto error;
+              case JSTRAP_CONTINUE:
+                break;
+              case JSTRAP_RETURN:
+                regs.fp()->setReturnValue(rval);
+                interpReturnOK = true;
+                goto forced_return;
+              case JSTRAP_THROW:
+                cx->setPendingException(rval);
+                goto error;
+              default:;
+            }
+            moreInterrupts = true;
         }
-        moreInterrupts = true;
-    }
 
-    if (script->hasAnyBreakpointsOrStepMode())
-        moreInterrupts = true;
+        if (script->hasAnyBreakpointsOrStepMode())
+            moreInterrupts = true;
 
-    if (script->hasBreakpointsAt(regs.pc)) {
-        RootedValue rval(cx);
-        JSTrapStatus status = Debugger::onTrap(cx, &rval);
-        switch (status) {
-          case JSTRAP_ERROR:
-            goto error;
-          case JSTRAP_RETURN:
-            regs.fp()->setReturnValue(rval);
-            interpReturnOK = true;
-            goto forced_return;
-          case JSTRAP_THROW:
-            cx->setPendingException(rval);
-            goto error;
-          default:
-            break;
+        if (script->hasBreakpointsAt(regs.pc)) {
+            RootedValue rval(cx);
+            JSTrapStatus status = Debugger::onTrap(cx, &rval);
+            switch (status) {
+              case JSTRAP_ERROR:
+                goto error;
+              case JSTRAP_RETURN:
+                regs.fp()->setReturnValue(rval);
+                interpReturnOK = true;
+                goto forced_return;
+              case JSTRAP_THROW:
+                cx->setPendingException(rval);
+                goto error;
+              default:
+                break;
+            }
+            JS_ASSERT(status == JSTRAP_CONTINUE);
+            JS_ASSERT(rval.isInt32() && rval.toInt32() == op);
         }
-        JS_ASSERT(status == JSTRAP_CONTINUE);
-        JS_ASSERT(rval.isInt32() && rval.toInt32() == op);
     }
 
     JS_ASSERT(switchMask == EnableInterruptsPseudoOpcode);
