@@ -13,14 +13,17 @@
 #include "nsWindowsHelpers.h"
 #include "Nv3DVUtils.h"
 #include "gfxFailure.h"
+#include "mozilla/layers/PCompositorParent.h"
+#include "mozilla/layers/LayerManagerComposite.h"
 
 using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
 
-CompositorD3D9::CompositorD3D9(nsIWidget *aWidget)
-  : mWidget(aWidget)
+CompositorD3D9::CompositorD3D9(PCompositorParent* aParent, nsIWidget *aWidget)
+  : Compositor(aParent)
+  , mWidget(aWidget)
 {
   sBackend = LAYERS_D3D9;
 }
@@ -86,6 +89,10 @@ TemporaryRef<CompositingRenderTarget>
 CompositorD3D9::CreateRenderTarget(const gfx::IntRect &aRect,
                                    SurfaceInitMode aInit)
 {
+  if (!mDeviceManager) {
+    return nullptr;
+  }
+
   RefPtr<IDirect3DTexture9> texture;
   HRESULT hr = device()->CreateTexture(aRect.width, aRect.height, 1,
                                        D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
@@ -108,6 +115,10 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
                                              const CompositingRenderTarget *aSource,
                                              const gfx::IntPoint &aSourcePoint)
 {
+  if (!mDeviceManager) {
+    return nullptr;
+  }
+
   RefPtr<IDirect3DTexture9> texture;
   HRESULT hr = device()->CreateTexture(aRect.width, aRect.height, 1,
                                        D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
@@ -165,7 +176,7 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
 void
 CompositorD3D9::SetRenderTarget(CompositingRenderTarget *aRenderTarget)
 {
-  MOZ_ASSERT(aRenderTarget);
+  MOZ_ASSERT(aRenderTarget && mDeviceManager);
   RefPtr<CompositingRenderTargetD3D9> oldRT = mCurrentRT;
   mCurrentRT = static_cast<CompositingRenderTargetD3D9*>(aRenderTarget);
   mCurrentRT->BindRenderTarget(device());
@@ -197,6 +208,10 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
                          gfx::Float aOpacity,
                          const gfx::Matrix4x4 &aTransform)
 {
+  if (!mDeviceManager) {
+    return;
+  }
+
   MOZ_ASSERT(mCurrentRT, "No render target");
   device()->SetVertexShaderConstantF(CBmLayerTransform, &aTransform._11, 4);
 
@@ -438,6 +453,14 @@ CompositorD3D9::SetMask(const EffectChain &aEffectChain, uint32_t aMaskTexture)
                                      1);
 }
 
+static void
+CancelCompositing(Rect* aRenderBoundsOut)
+{
+  if (aRenderBoundsOut) {
+    *aRenderBoundsOut = Rect(0, 0, 0, 0);
+  }
+}
+
 void
 CompositorD3D9::BeginFrame(const nsIntRegion& aInvalidRegion,
                            const Rect *aClipRectIn,
@@ -446,9 +469,41 @@ CompositorD3D9::BeginFrame(const nsIntRegion& aInvalidRegion,
                            Rect *aClipRectOut,
                            Rect *aRenderBoundsOut)
 {
-  if (!mSwapChain->PrepareForRendering()) {
+  if (!mDeviceManager) {
+    mDeviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
+    if (!mDeviceManager) {
+      mSwapChain = nullptr;
+      CancelCompositing(aRenderBoundsOut);
+      return;
+    }
+
+    // We have destroyed all our texture memory so we need to tell the client
+    // to redraw everything so we can put that in our new textures and use
+    // them for compositing.
+    mParent->SendInvalidateAll();
+  }
+
+  if (!mDeviceManager->VerifyReadyForRendering()) {
+    NS_ASSERTION(!mCurrentRT && !mDefaultRT,
+                 "Shouldn't have any render targets around, they must be released before our device");
+    mSwapChain = nullptr;
+    mDeviceManager = nullptr;
+
+    CancelCompositing(aRenderBoundsOut);
     return;
   }
+  MOZ_ASSERT(mDeviceManager);
+
+  if (!mSwapChain) {
+    mSwapChain = mDeviceManager->
+      CreateSwapChain((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW));
+  }
+  if (!mSwapChain ||
+      !mSwapChain->PrepareForRendering()) {
+    CancelCompositing(aRenderBoundsOut);
+    return;
+  }
+
   mDeviceManager->SetupRenderState();
 
   EnsureSize();
@@ -486,19 +541,22 @@ CompositorD3D9::BeginFrame(const nsIntRegion& aInvalidRegion,
 void
 CompositorD3D9::EndFrame()
 {
-  device()->EndScene();
+  if (mDeviceManager) {
+    device()->EndScene();
 
-  nsIntSize oldSize = mSize;
-  EnsureSize();
-  if (oldSize == mSize) {
-    if (mTarget) {
-      PaintToTarget();
-    } else {
-      mSwapChain->Present();
+    nsIntSize oldSize = mSize;
+    EnsureSize();
+    if (oldSize == mSize) {
+      if (mTarget) {
+        PaintToTarget();
+      } else {
+        mSwapChain->Present();
+      }
     }
   }
 
   mCurrentRT = nullptr;
+  mDefaultRT = nullptr;
 }
 
 void
@@ -554,6 +612,10 @@ CompositorD3D9::SetSamplerForFilter(Filter aFilter)
 void
 CompositorD3D9::PaintToTarget()
 {
+  if (!mDeviceManager) {
+    return;
+  }
+
   nsRefPtr<IDirect3DSurface9> backBuff;
   nsRefPtr<IDirect3DSurface9> destSurf;
   device()->GetRenderTarget(0, getter_AddRefs(backBuff));
