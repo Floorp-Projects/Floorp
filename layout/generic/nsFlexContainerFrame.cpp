@@ -2550,8 +2550,9 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   aDesiredSize.width = desiredContentBoxSize.width +
     containerBorderPadding.LeftRight();
+  // Does *NOT* include bottom border/padding yet (we add that a bit lower down)
   aDesiredSize.height = desiredContentBoxSize.height +
-    containerBorderPadding.TopBottom();
+    containerBorderPadding.top;
 
   if (flexContainerAscent == nscoord_MIN) {
     // Still don't have our baseline set -- this happens if we have no
@@ -2562,11 +2563,35 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
                      "Have flex items but didn't get an ascent - that's odd "
                      "(or there are just gigantic sizes involved)");
     // Per spec, just use the bottom of content-box.
-    flexContainerAscent = aDesiredSize.height -
-      aReflowState.mComputedBorderPadding.bottom;
+    flexContainerAscent = aDesiredSize.height;
   }
-
   aDesiredSize.ascent = flexContainerAscent;
+
+  // Now: If we're complete, add bottom border/padding to desired height
+  // (unless that pushes us over available height, in which case we become
+  // incomplete (unless we already weren't asking for any height, in which case
+  // we stay complete to avoid looping forever)).
+  // NOTE: If we're auto-height, we allow our bottom border/padding to push us
+  // over the available height without requesting a continuation, for
+  // consistency with the behavior of "display:block" elements.
+  if (NS_FRAME_IS_COMPLETE(aStatus)) {
+    // NOTE: We can't use containerBorderPadding.bottom for this, because if
+    // we're auto-height, ApplySkipSides will have zeroed it (because it
+    // assumed we might get a continuation). We have the correct value in
+    // aReflowState.mComputedBorderPadding.bottom, though, so we use that.
+    nscoord desiredHeightWithBottomBP =
+      aDesiredSize.height + aReflowState.mComputedBorderPadding.bottom;
+
+    if (aDesiredSize.height == 0 ||
+        desiredHeightWithBottomBP <= aReflowState.availableHeight ||
+        aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
+      // Update desired height to include bottom border/padding
+      aDesiredSize.height = desiredHeightWithBottomBP;
+    } else {
+      // We couldn't fit bottom border/padding, so we'll need a continuation.
+      NS_FRAME_SET_INCOMPLETE(aStatus);
+    }
+  }
 
   // Overflow area = union(my overflow area, kids' overflow areas)
   aDesiredSize.SetOverflowAreasToDesiredBounds();
