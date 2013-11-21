@@ -329,6 +329,12 @@
               key="sp-key-evalFunction"
               accesskey="&evalFunction.accesskey;"
               command="sp-cmd-evalFunction"/>
+    <menuseparator/>
+    <menuitem id="sp-text-reloadAndRun"
+              label="&reloadAndRun.label;"
+              key="sp-key-reloadAndRun"
+              accesskey="&reloadAndRun.accesskey;"
+              command="sp-cmd-reloadAndRun"/>
   </menupopup>
 </popupset>
 
