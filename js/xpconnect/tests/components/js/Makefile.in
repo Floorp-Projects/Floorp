@@ -3,8 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE_NAME = xpconnect_test
-
 JS_FILES = \
   xpctest_attributes.js \
   xpctest_bug809674.js \
