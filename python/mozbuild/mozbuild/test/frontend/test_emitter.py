@@ -249,34 +249,34 @@ class TestEmitterBasic(unittest.TestCase):
             'a11y.ini': {
                 'flavor': 'a11y',
                 'installs': {
-                    'a11y.ini': False,
-                    'test_a11y.js': True,
+                    'a11y.ini',
+                    'test_a11y.js',
                     # From ** wildcard.
-                    'a11y-support/foo': False,
-                    'a11y-support/dir1/bar': False,
+                    'a11y-support/foo',
+                    'a11y-support/dir1/bar',
                 },
             },
             'browser.ini': {
                 'flavor': 'browser-chrome',
                 'installs': {
-                    'browser.ini': False,
-                    'test_browser.js': True,
-                    'support1': False,
-                    'support2': False,
+                    'browser.ini',
+                    'test_browser.js',
+                    'support1',
+                    'support2',
                 },
             },
             'metro.ini': {
                 'flavor': 'metro-chrome',
                 'installs': {
-                    'metro.ini': False,
-                    'test_metro.js': True,
+                    'metro.ini',
+                    'test_metro.js',
                 },
             },
             'mochitest.ini': {
                 'flavor': 'mochitest',
                 'installs': {
-                    'mochitest.ini': False,
-                    'test_mochitest.js': True,
+                    'mochitest.ini',
+                    'test_mochitest.js',
                 },
                 'external': {
                     'external1',
@@ -286,20 +286,20 @@ class TestEmitterBasic(unittest.TestCase):
             'chrome.ini': {
                 'flavor': 'chrome',
                 'installs': {
-                    'chrome.ini': False,
-                    'test_chrome.js': True,
+                    'chrome.ini',
+                    'test_chrome.js',
                 },
             },
             'xpcshell.ini': {
                 'flavor': 'xpcshell',
                 'dupe': True,
                 'installs': {
-                    'xpcshell.ini': False,
-                    'test_xpcshell.js': True,
-                    'head1': False,
-                    'head2': False,
-                    'tail1': False,
-                    'tail2': False,
+                    'xpcshell.ini',
+                    'test_xpcshell.js',
+                    'head1',
+                    'head2',
+                    'tail1',
+                    'tail2',
                 },
             },
         }
@@ -318,10 +318,9 @@ class TestEmitterBasic(unittest.TestCase):
             self.assertEqual(len(o.installs), len(m['installs']))
             for path in o.installs.keys():
                 self.assertTrue(path.startswith(o.directory))
-                relpath = path[len(o.directory)+1:]
+                path = path[len(o.directory)+1:]
 
-                self.assertIn(relpath, m['installs'])
-                self.assertEqual(o.installs[path][1], m['installs'][relpath])
+                self.assertIn(path, m['installs'])
 
     def test_test_manifest_unmatched_generated(self):
         reader = self.reader('test-manifest-unmatched-generated')
@@ -346,22 +345,6 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(o.flavor, 'mochitest')
         basenames = set(os.path.basename(k) for k in o.installs.keys())
         self.assertEqual(basenames, {'mochitest.ini', 'test_active.html'})
-
-    def test_test_manifest_parent_support_files_dir(self):
-        """support-files referencing a file in a parent directory works."""
-        reader = self.reader('test-manifest-parent-support-files-dir')
-
-        objs = [o for o in self.read_topsrcdir(reader)
-                if isinstance(o, TestManifest)]
-
-        self.assertEqual(len(objs), 1)
-
-        o = objs[0]
-
-        expected = os.path.join(o.srcdir, 'support-file.txt')
-        self.assertIn(expected, o.installs)
-        self.assertEqual(o.installs[expected],
-            ('testing/mochitest/tests/support-file.txt', False))
 
     def test_ipdl_sources(self):
         reader = self.reader('ipdl_sources')

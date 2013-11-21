@@ -415,7 +415,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 obj.tests.append(test)
 
                 obj.installs[mozpath.normpath(test['path'])] = \
-                    (mozpath.join(out_dir, test['relpath']), True)
+                    mozpath.join(out_dir, test['relpath'])
 
                 for thing, seen in extras:
                     value = test.get(thing, '')
@@ -439,18 +439,21 @@ class TreeMetadataEmitter(LoggingMixin):
 
                             for f in paths:
                                 full = mozpath.normpath(mozpath.join(manifest_dir, f))
-                                obj.installs[full] = \
-                                    (mozpath.join(out_dir, f), False)
+                                obj.installs[full] = mozpath.join(out_dir, f)
 
                         else:
                             full = mozpath.normpath(mozpath.join(manifest_dir,
                                 pattern))
-                            obj.installs[full] = (mozpath.normpath(
-                                mozpath.join(out_dir, pattern)), False)
+                            # Only install paths in our directory. This
+                            # rule is somewhat arbitrary and could be lifted.
+                            if not full.startswith(manifest_dir):
+                                continue
+
+                            obj.installs[full] = mozpath.join(out_dir, pattern)
 
             # We also copy the manifest into the output directory.
             out_path = mozpath.join(out_dir, os.path.basename(manifest_path))
-            obj.installs[path] = (out_path, False)
+            obj.installs[path] = out_path
 
             # Some manifests reference files that are auto generated as
             # part of the build or shouldn't be installed for some
