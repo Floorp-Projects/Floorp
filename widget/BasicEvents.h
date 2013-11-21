@@ -41,6 +41,7 @@ enum nsEventStructType
   NS_DRAG_EVENT,                     // WidgetDragEvent
   NS_MOUSE_SCROLL_EVENT,             // WidgetMouseScrollEvent
   NS_WHEEL_EVENT,                    // WidgetWheelEvent
+  NS_POINTER_EVENT,                  // PointerEvent
 
   // TouchEvents.h
   NS_GESTURENOTIFY_EVENT,            // WidgetGestureNotifyEvent
@@ -134,6 +135,19 @@ enum nsEventStructType
 #define NS_MOUSE_MOZHITTEST             (NS_MOUSE_MESSAGE_START + 33)
 #define NS_MOUSEENTER                   (NS_MOUSE_MESSAGE_START + 34)
 #define NS_MOUSELEAVE                   (NS_MOUSE_MESSAGE_START + 35)
+
+// Pointer spec events
+#define NS_POINTER_EVENT_START          4400
+#define NS_POINTER_MOVE                 (NS_POINTER_EVENT_START)
+#define NS_POINTER_UP                   (NS_POINTER_EVENT_START + 1)
+#define NS_POINTER_DOWN                 (NS_POINTER_EVENT_START + 2)
+#define NS_POINTER_OVER                 (NS_POINTER_EVENT_START + 22)
+#define NS_POINTER_OUT                  (NS_POINTER_EVENT_START + 23)
+#define NS_POINTER_ENTER                (NS_POINTER_EVENT_START + 24)
+#define NS_POINTER_LEAVE                (NS_POINTER_EVENT_START + 25)
+#define NS_POINTER_CANCEL               (NS_POINTER_EVENT_START + 26)
+#define NS_POINTER_GOT_CAPTURE          (NS_POINTER_EVENT_START + 27)
+#define NS_POINTER_LOST_CAPTURE         (NS_POINTER_EVENT_START + 28)
 
 #define NS_CONTEXTMENU_MESSAGE_START    500
 #define NS_CONTEXTMENU                  (NS_CONTEXTMENU_MESSAGE_START)
