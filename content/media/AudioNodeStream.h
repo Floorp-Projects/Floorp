@@ -10,6 +10,12 @@
 #include "mozilla/dom/AudioNodeBinding.h"
 #include "AudioSegment.h"
 
+#ifdef PR_LOGGING
+#define LOG(type, msg) PR_LOG(gMediaStreamGraphLog, type, msg)
+#else
+#define LOG(type, msg)
+#endif
+
 namespace mozilla {
 
 namespace dom {

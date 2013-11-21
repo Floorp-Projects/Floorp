@@ -12,9 +12,9 @@
 namespace mozilla {
 
 #ifdef PR_LOGGING
-#define STREAM_LOG(type, msg) PR_LOG(gMediaStreamGraphLog, type, msg)
+#define LOG(type, msg) PR_LOG(gMediaStreamGraphLog, type, msg)
 #else
-#define STREAM_LOG(type, msg)
+#define LOG(type, msg)
 #endif
 
 /**
@@ -178,9 +178,9 @@ protected:
     segment->AppendNullData(outputStart);
     StreamBuffer::Track* track =
       &mBuffer.AddTrack(id, rate, outputStart, segment.forget());
-    STREAM_LOG(PR_LOG_DEBUG, ("TrackUnionStream %p adding track %d for input stream %p track %d, start ticks %lld",
-                              this, id, aPort->GetSource(), aTrack->GetID(),
-                              (long long)outputStart));
+    LOG(PR_LOG_DEBUG, ("TrackUnionStream %p adding track %d for input stream %p track %d, start ticks %lld",
+                       this, id, aPort->GetSource(), aTrack->GetID(),
+                       (long long)outputStart));
 
     TrackMapEntry* map = mTrackMap.AppendElement();
     map->mEndOfConsumedInputTicks = 0;
@@ -253,8 +253,8 @@ protected:
       if (interval.mInputIsBlocked) {
         // Maybe the input track ended?
         segment->AppendNullData(ticks);
-        STREAM_LOG(PR_LOG_DEBUG+1, ("TrackUnionStream %p appending %lld ticks of null data to track %d",
-                   this, (long long)ticks, outputTrack->GetID()));
+        LOG(PR_LOG_DEBUG+1, ("TrackUnionStream %p appending %lld ticks of null data to track %d",
+            this, (long long)ticks, outputTrack->GetID()));
       } else {
         // Figuring out which samples to use from the input stream is tricky
         // because its start time and our start time may differ by a fraction
@@ -322,9 +322,9 @@ protected:
                                std::min(inputTrackEndPoint, inputStartTicks),
                                std::min(inputTrackEndPoint, inputEndTicks));
         }
-        STREAM_LOG(PR_LOG_DEBUG+1, ("TrackUnionStream %p appending %lld ticks of input data to track %d",
-                   this, (long long)(std::min(inputTrackEndPoint, inputEndTicks) - std::min(inputTrackEndPoint, inputStartTicks)),
-                   outputTrack->GetID()));
+        LOG(PR_LOG_DEBUG+1, ("TrackUnionStream %p appending %lld ticks of input data to track %d",
+            this, (long long)(std::min(inputTrackEndPoint, inputEndTicks) - std::min(inputTrackEndPoint, inputStartTicks)),
+            outputTrack->GetID()));
       }
       ApplyTrackDisabling(outputTrack->GetID(), segment);
       for (uint32_t j = 0; j < mListeners.Length(); ++j) {
