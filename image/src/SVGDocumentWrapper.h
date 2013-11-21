@@ -25,6 +25,8 @@ struct nsIntSize;
 
 #define OBSERVER_SVC_CID "@mozilla.org/observer-service;1"
 
+// undef the GetCurrentTime macro defined in WinBase.h from the MS Platform SDK
+#undef GetCurrentTime
 
 namespace mozilla {
 namespace dom {

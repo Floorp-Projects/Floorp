@@ -10,6 +10,9 @@
 #include "mozilla/EventForwards.h"
 #include "nsCOMPtr.h"
 
+// Microsoft's API Name hackery sucks
+#undef CreateEvent
+
 class nsEventTargetChainItem;
 class nsIDOMEvent;
 class nsIScriptGlobalObject;

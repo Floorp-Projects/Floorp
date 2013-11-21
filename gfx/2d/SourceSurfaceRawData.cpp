@@ -5,7 +5,6 @@
 
 #include "SourceSurfaceRawData.h"
 #include "Logging.h"
-#include "Tools.h"
 
 namespace mozilla {
 namespace gfx {

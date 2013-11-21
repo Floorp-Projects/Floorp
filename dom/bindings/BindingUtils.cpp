@@ -214,16 +214,7 @@ ErrorResult::ReportJSExceptionFromJSImplementation(JSContext* aCx)
   nsString message;
   domError->GetMessage(message);
 
-  JSErrorReport errorReport;
-  memset(&errorReport, 0, sizeof(JSErrorReport));
-  errorReport.errorNumber = JSMSG_USER_DEFINED_ERROR;
-  errorReport.ucmessage = message.get();
-  errorReport.exnType = JSEXN_ERR;
-  JS::Rooted<JSScript*> script(aCx);
-  if (JS_DescribeScriptedCaller(aCx, &script, &errorReport.lineno)) {
-    errorReport.filename = JS_GetScriptFilename(aCx, script);
-  }
-  JS_ThrowReportedError(aCx, nullptr, &errorReport);
+  JS_ReportError(aCx, "%hs", message.get());
   JS_RemoveValueRoot(aCx, &mJSException);
   
   // We no longer have a useful exception but we do want to signal that an error
@@ -1117,7 +1108,7 @@ ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
   JS::Rooted<JSObject*> global(cx, js::GetGlobalForObjectCrossCompartment(obj));
   {
     JSAutoCompartment ac(cx, global);
-    JS::Heap<JSObject*>* protoAndIfaceArray = GetProtoAndIfaceArray(global);
+    ProtoAndIfaceArray& protoAndIfaceArray = *GetProtoAndIfaceArray(global);
     JSObject* protoOrIface = protoAndIfaceArray[protoAndIfaceArrayIndex];
     if (!protoOrIface) {
       return false;

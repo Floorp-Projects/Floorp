@@ -200,8 +200,7 @@ nsAccessibilityService::GetRootDocumentAccessible(nsIPresShell* aPresShell,
   nsIPresShell* ps = aPresShell;
   nsIDocument* documentNode = aPresShell->GetDocument();
   if (documentNode) {
-    nsCOMPtr<nsISupports> container = documentNode->GetContainer();
-    nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
+    nsCOMPtr<nsIDocShellTreeItem> treeItem(documentNode->GetDocShell());
     if (treeItem) {
       nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
       treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));

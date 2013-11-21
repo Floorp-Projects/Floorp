@@ -2373,6 +2373,11 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
         return AliasSet::None();
     }
     void printOpcode(FILE *fp) const;
+    void makeInfallible() {
+        // Should only be called if we're already Infallible or TypeBarrier
+        JS_ASSERT(mode() != Fallible);
+        mode_ = Infallible;
+    }
 };
 
 class MGuardObject : public MUnaryInstruction, public SingleObjectPolicy

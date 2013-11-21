@@ -5,7 +5,7 @@ MARIONETTE_HEAD_JS = "stk_helper.js";
 
 function testGetInput(command, expect) {
   log("STK CMD " + JSON.stringify(command));
-  is(command.typeOfCommand, icc.STK_CMD_GET_INPUT, expect.name);
+  is(command.typeOfCommand, iccManager.STK_CMD_GET_INPUT, expect.name);
   is(command.commandQualifier, expect.commandQualifier, expect.name);
   is(command.options.text, expect.text, expect.name);
   is(command.options.minLength, expect.minLength, expect.name);

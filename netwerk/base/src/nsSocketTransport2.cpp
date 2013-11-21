@@ -1637,8 +1637,9 @@ nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status, nsISupports *pa
 #endif
                 mCondition = ResolveHost();
 
-        } else
+        } else {
             SOCKET_LOG(("  ignoring redundant event\n"));
+        }
         break;
 
     case MSG_DNS_LOOKUP_COMPLETE:

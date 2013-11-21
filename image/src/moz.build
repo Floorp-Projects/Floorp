@@ -12,7 +12,7 @@ EXPORTS += [
     'Orientation.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'ClippedImage.cpp',
     'Decoder.cpp',
     'DiscardTracker.cpp',
@@ -26,17 +26,21 @@ SOURCES += [
     'ImageOps.cpp',
     'ImageWrapper.cpp',
     'imgFrame.cpp',
-    'imgLoader.cpp',
-    'imgRequest.cpp',
-    'imgRequestProxy.cpp',
-    'imgStatusTracker.cpp',
     'imgTools.cpp',
     'OrientedImage.cpp',
-    'RasterImage.cpp',
     'ScriptedNotificationObserver.cpp',
     'SurfaceCache.cpp',
     'SVGDocumentWrapper.cpp',
     'VectorImage.cpp',
+]
+
+# These files can't be unified because of ImageLogging.h #include order issues.
+SOURCES += [
+    'imgLoader.cpp',
+    'imgRequest.cpp',
+    'imgRequestProxy.cpp',
+    'imgStatusTracker.cpp',
+    'RasterImage.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

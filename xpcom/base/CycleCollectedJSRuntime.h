@@ -73,6 +73,27 @@ public:
 
 class IncrementalFinalizeRunnable;
 
+// Contains various stats about the cycle collection.
+struct CycleCollectorResults
+{
+  void Init()
+  {
+    mForcedGC = false;
+    mMergedZones = false;
+    mVisitedRefCounted = 0;
+    mVisitedGCed = 0;
+    mFreedRefCounted = 0;
+    mFreedGCed = 0;
+  }
+
+  bool mForcedGC;
+  bool mMergedZones;
+  uint32_t mVisitedRefCounted;
+  uint32_t mVisitedGCed;
+  uint32_t mFreedRefCounted;
+  uint32_t mFreedGCed;
+};
+
 class CycleCollectedJSRuntime
 {
   friend class JSGCThingParticipant;
@@ -183,16 +204,16 @@ public:
   bool NeedCollect() const;
   void Collect(uint32_t reason) const;
 
-  virtual void PrepareForForgetSkippable() {}
-  virtual void PrepareForCollection() {}
-
   void DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
                         DeferredFinalizeFunction aFunc,
                         void* aThing);
   void DeferredFinalize(nsISupports* aSupports);
 
   void DumpJSHeap(FILE* aFile);
-  
+
+  virtual void PrepareForForgetSkippable() = 0;
+  virtual void BeginCycleCollectionCallback() = 0;
+  virtual void EndCycleCollectionCallback(CycleCollectorResults &aResults) = 0;
   virtual void DispatchDeferredDeletion(bool aContinuation) = 0;
 
   JSRuntime* Runtime() const

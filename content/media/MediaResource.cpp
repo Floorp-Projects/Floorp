@@ -33,13 +33,13 @@
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaResourceLog;
-#define LOG(msg, ...) PR_LOG(gMediaResourceLog, PR_LOG_DEBUG, \
-                             (msg, ##__VA_ARGS__))
+#define RESOURCE_LOG(msg, ...) PR_LOG(gMediaResourceLog, PR_LOG_DEBUG, \
+                                      (msg, ##__VA_ARGS__))
 // Debug logging macro with object pointer and class name.
 #define CMLOG(msg, ...) \
-        LOG("%p [ChannelMediaResource]: " msg, this, ##__VA_ARGS__)
+        RESOURCE_LOG("%p [ChannelMediaResource]: " msg, this, ##__VA_ARGS__)
 #else
-#define LOG(msg, ...)
+#define RESOURCE_LOG(msg, ...)
 #define CMLOG(msg, ...)
 #endif
 
@@ -475,10 +475,10 @@ ChannelMediaResource::CopySegmentToCache(nsIInputStream *aInStream,
   closure->mResource->mDecoder->NotifyDataArrived(aFromSegment, aCount, closure->mResource->mOffset);
 
   // Keep track of where we're up to.
-  LOG("%p [ChannelMediaResource]: CopySegmentToCache at mOffset [%lld] add "
-      "[%d] bytes for decoder[%p]",
-      closure->mResource, closure->mResource->mOffset, aCount,
-      closure->mResource->mDecoder);
+  RESOURCE_LOG("%p [ChannelMediaResource]: CopySegmentToCache at mOffset [%lld] add "
+               "[%d] bytes for decoder[%p]",
+               closure->mResource, closure->mResource->mOffset, aCount,
+               closure->mResource->mDecoder);
   closure->mResource->mOffset += aCount;
 
   closure->mResource->mCacheStream.NotifyDataReceived(aCount, aFromSegment,

@@ -559,11 +559,12 @@ void RTSPSource::onDisconnected(const sp<AMessage> &msg) {
     }
     if (mListener) {
       // err is always set to UNKNOWN_ERROR from
-      // Android right now, rename err to NS_ERROR_NOT_CONNECTED.
-      mListener->OnDisconnected(0, NS_ERROR_NOT_CONNECTED);
+      // Android right now, rename err to NS_ERROR_NET_TIMEOUT.
+      mListener->OnDisconnected(0, NS_ERROR_NET_TIMEOUT);
     }
     mAudioTrack = NULL;
     mVideoTrack = NULL;
+    mTracks.clear();
 }
 
 void RTSPSource::finishDisconnectIfPossible() {

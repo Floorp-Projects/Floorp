@@ -143,15 +143,43 @@
         new stateChangeChecker(aState, aIsExtraState, true, getNode(aID))
       ];
 
-      this.invoke = function dupeStateChange_invoke()
+      this.invoke = function oppositeStateChange_invoke()
       {
         getNode(aID).setAttribute(aAttr, "false");
         getNode(aID).setAttribute(aAttr, "true");
       }
 
-      this.getID = function dupeStateChange_getID()
+      this.getID = function oppositeStateChange_getID()
       {
         return "opposite state change events";
+      }
+    }
+
+    /**
+     * Change concomitant ARIA and native attribute at once.
+     */
+    function echoingStateChange(aID, aARIAAttr, aAttr, aValue,
+                               aState, aIsExtraState, aIsEnabled)
+    {
+      this.eventSeq = [
+        new stateChangeChecker(aState, aIsExtraState, aIsEnabled, getNode(aID))
+      ];
+
+      this.invoke = function echoingStateChange_invoke()
+      {
+        if (aValue == null) {
+          getNode(aID).removeAttribute(aARIAAttr);
+          getNode(aID).removeAttribute(aAttr);
+
+        } else {
+          getNode(aID).setAttribute(aARIAAttr, aValue);
+          getNode(aID).setAttribute(aAttr, aValue);
+        }
+      }
+
+      this.getID = function echoingStateChange_getID()
+      {
+        return "enchoing ARIA and native attributes change";
       }
     }
 
@@ -193,6 +221,11 @@
       gQueue.push(new oppositeStateChange("div", "aria-busy",
                                           STATE_BUSY, false));
 
+      gQueue.push(new echoingStateChange("text1", "aria-disabled", "disabled", "true",
+                                         EXT_STATE_ENABLED, true, false));
+      gQueue.push(new echoingStateChange("text1", "aria-disabled", "disabled", null,
+                                         EXT_STATE_ENABLED, true, true));
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -223,6 +256,11 @@
      title="Fire statechange event whenever checked state is changed not depending on focused state">
     Bug 788389
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=926812"
+     title="State change event not fired when both disabled and aria-disabled are toggled">
+    Bug 926812
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -241,6 +279,8 @@
   <input id="file" type="file">
 
   <div id="div"></div>
+
+  <input id="text1">
 
   <div id="eventdump"></div>
 </body>

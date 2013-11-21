@@ -1069,11 +1069,9 @@ CanvasRenderingContext2D::GetImageBuffer(uint8_t** aImageBuffer,
   }
 
   RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
-  if (!data) {
+  if (!data || data->GetSize() != IntSize(mWidth, mHeight)) {
     return;
   }
-
-  MOZ_ASSERT(data->GetSize() == IntSize(mWidth, mHeight));
 
   *aImageBuffer = SurfaceToPackedBGRA(data);
   *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;

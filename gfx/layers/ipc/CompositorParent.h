@@ -230,7 +230,8 @@ protected:
                                  bool* aSuccess);
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers);
   virtual void ScheduleTask(CancelableTask*, int);
-  virtual void Composite();
+  void Composite();
+  void CompositeInTransaction();
   virtual void ComposeToTarget(gfx::DrawTarget* aTarget);
 
   void SetEGLSurfaceSize(int width, int height);
