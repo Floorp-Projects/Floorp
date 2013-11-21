@@ -10,6 +10,7 @@ import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
+import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.mozglue.generatorannotations.OptionalGeneratedParameter;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.prompts.PromptService;
@@ -859,6 +860,7 @@ public class GeckoAppShell
         });
     }
 
+    @JNITarget
     static public int getPreferredIconSize() {
         if (android.os.Build.VERSION.SDK_INT >= 11) {
             ActivityManager am = (ActivityManager)getContext().getSystemService(Context.ACTIVITY_SERVICE);
