@@ -2071,12 +2071,6 @@ this.CustomizableUI = {
   onWidgetDrag: function(aWidgetId, aArea) {
     CustomizableUIInternal.notifyListeners("onWidgetDrag", aWidgetId, aArea);
   },
-  notifyStartCustomizing: function(aWindow) {
-    CustomizableUIInternal.notifyListeners("onCustomizeStart", aWindow);
-  },
-  notifyEndCustomizing: function(aWindow) {
-    CustomizableUIInternal.notifyListeners("onCustomizeEnd", aWindow);
-  },
   isAreaOverflowable: function(aAreaId) {
     let area = gAreas.get(aAreaId);
     return area ? area.get("type") == this.TYPE_TOOLBAR && area.get("overflowable")
