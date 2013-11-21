@@ -124,7 +124,16 @@ status_t RtspMediaSource::read(MediaBuffer **out, const ReadOptions *options)
     rv = mRtspResource->ReadFrameFromTrack((uint8_t *)mBuffer->data(),
                                            mFrameMaxSize, mTrackIdx, readCount,
                                            time, actualFrameSize);
-    NS_ENSURE_SUCCESS(rv, ERROR_IO);
+    if (NS_FAILED(rv)) {
+      // Release mGroup and mBuffer.
+      stop();
+      // Since RtspMediaSource is an implementation of Android media source,
+      // it's held by OMXCodec and isn't released yet. So we have to re-construct
+      // mGroup and mBuffer.
+      start();
+      NS_WARNING("ReadFrameFromTrack failed; releasing buffers and returning.");
+      return ERROR_CONNECTION_LOST;
+    }
     if (actualFrameSize > mFrameMaxSize) {
       // release mGroup and mBuffer
       stop();

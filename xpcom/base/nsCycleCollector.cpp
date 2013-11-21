@@ -2816,11 +2816,6 @@ nsCycleCollector::Shutdown()
     // Always delete snow white objects.
     FreeSnowWhite(true);
 
-#ifdef MOZ_VALGRIND
-    char *e = PR_GetEnv("XPCOM_CC_RUN_DURING_SHUTDOWN");
-    fprintf(stderr, "XPCOM_CC_RUN_DURING_SHUTDOWN = %s\n", e);
-#endif
-
 #ifndef DEBUG
     if (PR_GetEnv("XPCOM_CC_RUN_DURING_SHUTDOWN"))
 #endif

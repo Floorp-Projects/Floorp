@@ -92,6 +92,7 @@ var AccessFuTest = {
   finish: function AccessFuTest_finish() {
     // Disable the console service logging.
     Logger.test = false;
+    Logger.logLevel = Logger.INFO;
     AccessFu.doneCallback = function doneCallback() {
       // This is being called once AccessFu has been shut down.
       // Detach AccessFu from everything it attached itself to.
@@ -136,6 +137,7 @@ var AccessFuTest = {
     AccessFu.readyCallback = function readyCallback() {
       // Enable logging to the console service.
       Logger.test = true;
+      Logger.logLevel = Logger.DEBUG;
       // This is being called once accessibility has been turned on.
 
       if (AccessFuTest._waitForExplicitFinish) {

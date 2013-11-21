@@ -1562,6 +1562,7 @@ RadioInterface.prototype = {
       }
       this._radioOffTimer.initWithCallback(this._fireRadioOffTimer.bind(this),
                                            RADIO_POWER_OFF_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+      this._radioOffAfterDataDisconnected = true;
       return;
     }
     this.setRadioEnabled(false);
@@ -1935,7 +1936,7 @@ RadioInterface.prototype = {
         // At this point we could send a message to content to notify the user
         // that storing an incoming SMS failed, most likely due to a full disk.
         if (DEBUG) {
-          this.debug("Could not store SMS " + message.id + ", error code " + rv);
+          this.debug("Could not store SMS, error code " + rv);
         }
         return;
       }
@@ -1945,8 +1946,8 @@ RadioInterface.prototype = {
     }.bind(this);
 
     if (message.messageClass != RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_0]) {
-      message.id = gMobileMessageDatabaseService.saveReceivedMessage(message,
-                                                                     notifyReceived);
+      gMobileMessageDatabaseService.saveReceivedMessage(message,
+                                                        notifyReceived);
     } else {
       message.id = -1;
       message.threadId = 0;
@@ -2004,7 +2005,7 @@ RadioInterface.prototype = {
     // Process pending radio power off request after all data calls
     // are disconnected.
     if (datacall.state == RIL.GECKO_NETWORK_STATE_UNKNOWN &&
-        this._changingRadioPower) {
+        this._radioOffAfterDataDisconnected) {
       let anyDataConnected = false;
       for each (let apnSetting in this.apnSettings.byApn) {
         for each (let type in apnSetting.types) {
@@ -2019,6 +2020,7 @@ RadioInterface.prototype = {
       }
       if (!anyDataConnected) {
         if (DEBUG) this.debug("All data connections are disconnected, set radio off.");
+        this._radioOffAfterDataDisconnected = false;
         this._cancelRadioOffTimer();
         this.setRadioEnabled(false);
       }
@@ -2281,6 +2283,10 @@ RadioInterface.prototype = {
   // Flag to ignore any radio power change requests during We're changing
   // the radio power.
   _changingRadioPower: false,
+
+  // Flag to determine if we need to set radio off when we are notified a data
+  // call has been disconnected.
+  _radioOffAfterDataDisconnected: false,
 
   // Data calls setting.
   dataCallSettings: null,
@@ -3146,8 +3152,8 @@ RadioInterface.prototype = {
       return;
     }
 
-    let id = gMobileMessageDatabaseService.saveSendingMessage(
-      sendingMessage, notifyResult);
+    gMobileMessageDatabaseService.saveSendingMessage(sendingMessage,
+                                                     notifyResult);
   },
 
   registerDataCallCallback: function registerDataCallCallback(callback) {

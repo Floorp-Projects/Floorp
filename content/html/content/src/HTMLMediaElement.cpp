@@ -2069,6 +2069,19 @@ void HTMLMediaElement::SetPlayedOrSeeked(bool aValue)
 }
 
 void
+HTMLMediaElement::ResetConnectionState()
+{
+  mBegun = false;
+  SetCurrentTime(0);
+  FireTimeUpdate(false);
+  DispatchAsyncEvent(NS_LITERAL_STRING("ended"));
+  mNetworkState = nsIDOMHTMLMediaElement::NETWORK_EMPTY;
+  AddRemoveSelfReference();
+  ChangeDelayLoadStatus(false);
+  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
+}
+
+void
 HTMLMediaElement::Play(ErrorResult& aRv)
 {
   StopSuspendingAfterFirstFrame();

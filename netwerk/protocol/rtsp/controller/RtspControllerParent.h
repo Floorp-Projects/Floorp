@@ -48,6 +48,7 @@ class RtspControllerParent : public PRtspControllerParent
   nsCOMPtr<nsIURI> mURI;
   // The nsIStreamingProtocolController implementation.
   nsCOMPtr<nsIStreamingProtocolController> mController;
+  uint32_t mTotalTracks;
 };
 
 } // namespace net

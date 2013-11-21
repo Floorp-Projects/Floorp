@@ -38,15 +38,19 @@ function run_test() {
   runTest();
 };
 
-function runTest()
-{
-  // XPCShell does not get a profile by default.
-  do_get_profile();
+if (!this.runTest) {
+  this.runTest = function()
+  {
+    // XPCShell does not get a profile by default.
+    do_get_profile();
 
-  enableExperimental();
+    enableExperimental();
 
-  do_test_pending();
-  testGenerator.next();
+    Cu.importGlobalProperties(["indexedDB"]);
+
+    do_test_pending();
+    testGenerator.next();
+  }
 }
 
 function finishTest()

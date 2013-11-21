@@ -106,6 +106,7 @@ TypedObjectPointer.prototype.kind = function() {
 TypedObjectPointer.prototype.moveTo = function(propName) {
   switch (this.kind()) {
   case JS_TYPEREPR_SCALAR_KIND:
+  case JS_TYPEREPR_REFERENCE_KIND:
     break;
 
   case JS_TYPEREPR_ARRAY_KIND:
@@ -136,7 +137,7 @@ TypedObjectPointer.prototype.moveToElem = function(index) {
   assert(TO_INT32(index) === index,
          "moveToElem invoked with non-integer index");
   assert(index >= 0 && index < REPR_LENGTH(this.typeRepr),
-         "moveToElem invoked with out-of-bounds index");
+         "moveToElem invoked with out-of-bounds index: " + index);
 
   var elementTypeObj = this.typeObj.elementType;
   var elementTypeRepr = TYPE_TYPE_REPR(elementTypeObj);
@@ -179,7 +180,6 @@ TypedObjectPointer.prototype.moveToField = function(propName) {
 // by `this` and produce JS values. This process is called *reification*
 // in the spec.
 
-
 // Reifies the value referenced by the pointer, meaning that it
 // returns a new object pointing at the value. If the value is
 // a scalar, it will return a JS number, but otherwise the reified
@@ -190,6 +190,9 @@ TypedObjectPointer.prototype.get = function() {
 
   if (REPR_KIND(this.typeRepr) == JS_TYPEREPR_SCALAR_KIND)
     return this.getScalar();
+
+  if (REPR_KIND(this.typeRepr) == JS_TYPEREPR_REFERENCE_KIND)
+    return this.getReference();
 
   return NewDerivedTypedDatum(this.typeObj, this.datum, this.offset);
 }
@@ -221,6 +224,22 @@ TypedObjectPointer.prototype.getScalar = function() {
 
   case JS_SCALARTYPEREPR_FLOAT64:
     return Load_float64(this.datum, this.offset);
+  }
+
+  assert(false, "Unhandled scalar type: " + type);
+}
+
+TypedObjectPointer.prototype.getReference = function() {
+  var type = REPR_TYPE(this.typeRepr);
+  switch (type) {
+  case JS_REFERENCETYPEREPR_ANY:
+    return Load_Any(this.datum, this.offset);
+
+  case JS_REFERENCETYPEREPR_OBJECT:
+    return Load_Object(this.datum, this.offset);
+
+  case JS_REFERENCETYPEREPR_STRING:
+    return Load_string(this.datum, this.offset);
   }
 
   assert(false, "Unhandled scalar type: " + type);
@@ -258,6 +277,10 @@ TypedObjectPointer.prototype.set = function(fromValue) {
     this.setScalar(fromValue);
     return;
 
+  case JS_TYPEREPR_REFERENCE_KIND:
+    this.setReference(fromValue);
+    return;
+
   case JS_TYPEREPR_ARRAY_KIND:
     if (!IsObject(fromValue))
       break;
@@ -268,11 +291,13 @@ TypedObjectPointer.prototype.set = function(fromValue) {
       break;
 
     // Adapt each element.
-    var tempPtr = this.copy().moveToElem(0);
-    var size = REPR_SIZE(tempPtr.typeRepr);
-    for (var i = 0; i < length; i++) {
-      tempPtr.set(fromValue[i]);
-      tempPtr.offset += size;
+    if (length > 0) {
+      var tempPtr = this.copy().moveToElem(0);
+      var size = REPR_SIZE(tempPtr.typeRepr);
+      for (var i = 0; i < length; i++) {
+        tempPtr.set(fromValue[i]);
+        tempPtr.offset += size;
+      }
     }
     return;
 
@@ -335,6 +360,23 @@ TypedObjectPointer.prototype.setScalar = function(fromValue) {
 
   case JS_SCALARTYPEREPR_FLOAT64:
     return Store_float64(this.datum, this.offset, +fromValue);
+  }
+
+  assert(false, "Unhandled scalar type: " + type);
+}
+
+TypedObjectPointer.prototype.setReference = function(fromValue) {
+  var type = REPR_TYPE(this.typeRepr);
+  switch (type) {
+  case JS_REFERENCETYPEREPR_ANY:
+    return Store_Any(this.datum, this.offset, fromValue);
+
+  case JS_REFERENCETYPEREPR_OBJECT:
+    var value = (fromValue === null ? fromValue : ToObject(fromValue));
+    return Store_Object(this.datum, this.offset, value);
+
+  case JS_REFERENCETYPEREPR_STRING:
+    return Store_string(this.datum, this.offset, ToString(fromValue));
   }
 
   assert(false, "Unhandled scalar type: " + type);
@@ -493,7 +535,7 @@ function TypedArrayRedimension(newArrayType) {
 //
 // FIXME bug 929656 -- label algorithms with steps from the spec
 function HandleCreate(obj, ...path) {
-  if (!ObjectIsTypeObject(this))
+  if (!IsObject(this) || !ObjectIsTypeObject(this))
     ThrowError(JSMSG_INCOMPATIBLE_PROTO, "Type", "handle", "value");
 
   var handle = NewTypedHandle(this);
@@ -507,14 +549,14 @@ function HandleCreate(obj, ...path) {
 // Handle.move: user exposed!
 // FIXME bug 929656 -- label algorithms with steps from the spec
 function HandleMove(handle, obj, ...path) {
-  if (!ObjectIsTypedHandle(handle))
+  if (!IsObject(handle) || !ObjectIsTypedHandle(handle))
     ThrowError(JSMSG_INCOMPATIBLE_PROTO, "Handle", "set", typeof value);
 
   HandleMoveInternal(handle, obj, path);
 }
 
 function HandleMoveInternal(handle, obj, path) {
-  assert(ObjectIsTypedHandle(handle),
+  assert(IsObject(handle) && ObjectIsTypedHandle(handle),
          "HandleMoveInternal: not typed handle");
 
   if (!IsObject(obj) || !ObjectIsTypedDatum(obj))
@@ -567,10 +609,12 @@ function HandleTest(obj) {
 // Miscellaneous
 
 function ObjectIsTypedDatum(obj) {
+  assert(IsObject(obj), "ObjectIsTypedDatum invoked with non-object")
   return ObjectIsTypedObject(obj) || ObjectIsTypedHandle(obj);
 }
 
 function ObjectIsAttached(obj) {
+  assert(IsObject(obj), "ObjectIsAttached invoked with non-object")
   assert(ObjectIsTypedDatum(obj),
          "ObjectIsAttached() invoked on invalid obj");
   return DATUM_OWNER(obj) != null;
