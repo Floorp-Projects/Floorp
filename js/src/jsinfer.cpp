@@ -804,11 +804,8 @@ TypeObjectKey::singleton()
 TypeNewScript *
 TypeObjectKey::newScript()
 {
-    if (isTypeObject()) {
-        TypeObjectAddendum *addendum = asTypeObject()->addendum;
-        if (addendum && addendum->isNewScript())
-            return addendum->asNewScript();
-    }
+    if (isTypeObject() && asTypeObject()->hasNewScript())
+        return asTypeObject()->newScript();
     return nullptr;
 }
 
@@ -1632,14 +1629,11 @@ TemporaryTypeSet::getCommonPrototype()
     unsigned count = getObjectCount();
 
     for (unsigned i = 0; i < count; i++) {
-        TaggedProto nproto;
-        if (JSObject *object = getSingleObject(i))
-            nproto = object->getProto();
-        else if (TypeObject *object = getTypeObject(i))
-            nproto = object->proto.get();
-        else
+        TypeObjectKey *object = getObject(i);
+        if (!object)
             continue;
 
+        TaggedProto nproto = object->proto();
         if (proto) {
             if (nproto != proto)
                 return nullptr;
