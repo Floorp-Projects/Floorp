@@ -190,8 +190,6 @@ ContentClientRemoteBuffer::BuildDeprecatedTextureClients(ContentType aType,
   NS_ABORT_IF_FALSE(!mIsNewBuffer,
                     "Bad! Did we create a buffer twice without painting?");
 
-  mIsNewBuffer = true;
-
   if (mDeprecatedTextureClient) {
     mOldTextures.AppendElement(mDeprecatedTextureClient);
     if (mDeprecatedTextureClientOnWhite) {
@@ -218,6 +216,7 @@ ContentClientRemoteBuffer::BuildDeprecatedTextureClients(ContentType aType,
   }
 
   CreateFrontBufferAndNotify(aRect);
+  mIsNewBuffer = true;
 }
 
 bool
@@ -497,6 +496,8 @@ private:
 void
 ContentClientDoubleBuffered::SyncFrontBufferToBackBuffer()
 {
+  mIsNewBuffer = false;
+
   if (!mFrontAndBackBufferDiffer) {
     return;
   }
@@ -555,7 +556,6 @@ ContentClientDoubleBuffered::SyncFrontBufferToBackBuffer()
     UpdateDestinationFrom(frontBuffer, updateRegion);
   }
 
-  mIsNewBuffer = false;
   mFrontAndBackBufferDiffer = false;
 }
 
@@ -565,6 +565,9 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
 {
   nsRefPtr<gfxContext> destCtx =
     GetContextForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_BLACK);
+  if (!destCtx) {
+    return;
+  }
   destCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
 
   bool isClippingCheap = IsClippingCheap(destCtx, aUpdateRegion);
@@ -621,14 +624,20 @@ ContentClientSingleBuffered::CreateFrontBufferAndNotify(const nsIntRect& aBuffer
 void
 ContentClientSingleBuffered::SyncFrontBufferToBackBuffer()
 {
+  mIsNewBuffer = false;
   if (!mFrontAndBackBufferDiffer) {
     return;
   }
+  mFrontAndBackBufferDiffer = false;
 
   if (SupportsAzureContent()) {
     DrawTarget* backBuffer = GetDTBuffer();
     if (!backBuffer && mDeprecatedTextureClient) {
       backBuffer = mDeprecatedTextureClient->LockDrawTarget();
+    }
+    if (!backBuffer) {
+      NS_WARNING("Could not lock texture client");
+      return;
     }
 
     RefPtr<DrawTarget> oldBuffer;
@@ -640,12 +649,20 @@ ContentClientSingleBuffered::SyncFrontBufferToBackBuffer()
     if (!backBuffer && mDeprecatedTextureClientOnWhite) {
       backBuffer = mDeprecatedTextureClientOnWhite->LockDrawTarget();
     }
+    if (!backBuffer) {
+      NS_WARNING("Could not lock texture client (on white)");
+      return;
+    }
 
     oldBuffer = SetDTBufferOnWhite(backBuffer);
   } else {
     gfxASurface* backBuffer = GetBuffer();
     if (!backBuffer && mDeprecatedTextureClient) {
       backBuffer = mDeprecatedTextureClient->LockSurface();
+    }
+    if (!backBuffer) {
+      NS_WARNING("Could not lock texture client");
+      return;
     }
 
     nsRefPtr<gfxASurface> oldBuffer;
@@ -657,12 +674,13 @@ ContentClientSingleBuffered::SyncFrontBufferToBackBuffer()
     if (!backBuffer && mDeprecatedTextureClientOnWhite) {
       backBuffer = mDeprecatedTextureClientOnWhite->LockSurface();
     }
+    if (!backBuffer) {
+      NS_WARNING("Could not lock texture client (on white)");
+      return;
+    }
 
     oldBuffer = SetBufferOnWhite(backBuffer);
   }
-
-  mIsNewBuffer = false;
-  mFrontAndBackBufferDiffer = false;
 }
 
 static void
