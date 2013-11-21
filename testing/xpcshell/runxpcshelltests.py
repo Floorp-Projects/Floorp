@@ -224,6 +224,16 @@ class XPCShellTestThread(Thread):
                     env=env, cwd=cwd)
         return proc
 
+    def checkForCrashes(self,
+                        dump_directory,
+                        symbols_path,
+                        test_name=None):
+        """
+          Simple wrapper to check for crashes.
+          On a remote system, this is more complex and we need to overload this function.
+        """
+        return mozcrash.check_for_crashes(dump_directory, symbols_path, test_name=test_name)
+
     def logCommand(self, name, completeCmd, testdir):
         self.log.info("TEST-INFO | %s | full command: %r" % (name, completeCmd))
         self.log.info("TEST-INFO | %s | current directory: %r" % (name, testdir))
@@ -658,7 +668,7 @@ class XPCShellTestThread(Thread):
                     self.todoCount = 1
                     self.xunit_result["todo"] = True
 
-            if mozcrash.check_for_crashes(self.tempDir, self.symbolsPath, test_name=name):
+            if self.checkForCrashes(self.tempDir, self.symbolsPath, test_name=name):
                 if self.retry:
                     self.clean_temp_dirs(name, stdout)
                     return
