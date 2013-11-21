@@ -154,6 +154,9 @@ WebGLContext::DepthMask(WebGLboolean b)
 void
 WebGLContext::DrawBuffers(const dom::Sequence<GLenum>& buffers)
 {
+    if (IsContextLost())
+        return;
+
     const size_t buffersLength = buffers.Length();
 
     if (buffersLength == 0) {
