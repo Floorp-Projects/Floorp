@@ -111,8 +111,15 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
    * as an existing entry, then please use the same oid_name.
    */
 #ifdef DEBUG
+  /* Debug EV certificates should all use the OID (repeating EV OID is OK):
+   * 1.3.6.1.4.1.13769.666.666.666.1.500.9.1.
+   * If you add or remove debug EV certs you must also modify IdentityInfoInit
+   * (there is another #ifdef DEBUG section there) so that the correct number of
+   * certs are skipped as these debug EV certs are NOT part of the default trust
+   * store.
+   */
   {
-    // This is the testing EV signature.
+    // This is the testing EV signature. (mochitest)
     // C=US, ST=CA, L=Mountain View, O=Mozilla - EV debug test CA, OU=Security Engineering, CN=EV Testing (untrustworthy) CA/name=ev-test-ca/emailAddress=charlatan@testing.example.com
     "1.3.6.1.4.1.13769.666.666.666.1.500.9.1",
     "DEBUGtesting EV OID",
@@ -124,6 +131,20 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     "dW50cnVzdHdvcnRoeSkgQ0ExEzARBgNVBCkTCmV2LXRlc3QtY2ExLDAqBgkqhkiG"
     "9w0BCQEWHWNoYXJsYXRhbkB0ZXN0aW5nLmV4YW1wbGUuY29t",
     "AK/FPSJmJkky",
+    nullptr
+  },
+  {
+    // This is the testing EV signature (xpcshell) (RSA)
+    // CN=XPCShell EV Testing (untrustworthy) CA,OU=Security Engineering,O=Mozilla - EV debug test CA,L=Mountain View,ST=CA,C=US"
+    "1.3.6.1.4.1.13769.666.666.666.1.500.9.1",
+    "DEBUGtesting EV OID",
+    SEC_OID_UNKNOWN,
+    "9C:62:EF:DB:AE:F9:EB:36:58:FB:3B:D3:47:64:93:9D:86:29:6A:E0",
+    "MIGnMQswCQYDVQQGEwJVUzELMAkGA1UECAwCQ0ExFjAUBgNVBAcMDU1vdW50YWlu"
+    "IFZpZXcxIzAhBgNVBAoMGk1vemlsbGEgLSBFViBkZWJ1ZyB0ZXN0IENBMR0wGwYD"
+    "VQQLDBRTZWN1cml0eSBFbmdpbmVlcmluZzEvMC0GA1UEAwwmWFBDU2hlbGwgRVYg"
+    "VGVzdGluZyAodW50cnVzdHdvcnRoeSkgQ0E=",
+    "At+3zdo=",
     nullptr
   },
 #endif
@@ -1111,8 +1132,8 @@ nsNSSComponent::IdentityInfoInit()
     entry.cert = CERT_FindCertByIssuerAndSN(nullptr, &ias);
 
 #ifdef DEBUG
-    // The debug CA info is at position 0, and is NOT on the NSS root db
-    if (iEV != 0) {
+    // The debug CA certs are at positions 0-1, and are NOT in the NSS root db.
+    if (iEV > 1) {
        NS_ASSERTION(entry.cert, "Could not find EV root in NSS storage");
     }
 #endif

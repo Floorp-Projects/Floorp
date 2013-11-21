@@ -15,6 +15,9 @@ let { ctypes } = Cu.import("resource://gre/modules/ctypes.jsm");
 
 let gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 
+const isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"]
+                       .getService(Ci.nsIDebug2).isDebugBuild;
+
 const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
 
 // Sort in numerical order
