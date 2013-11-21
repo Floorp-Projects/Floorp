@@ -5,10 +5,6 @@
 
 "use strict";
 
-let tempScope = {};
-Cu.import("resource:///modules/devtools/sourceeditor/source-editor.jsm", tempScope);
-let SourceEditor = tempScope.SourceEditor;
-
 function test()
 {
   waitForExplicitFinish();

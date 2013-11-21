@@ -20,14 +20,18 @@ GetBluetoothInterface();
 void
 StringToBdAddressType(const nsAString& aBdAddress,
                       bt_bdaddr_t *aRetBdAddressType);
-
-class DBusMessage;
+void
+BdAddressTypeToString(bt_bdaddr_t* aBdAddressType,
+                      nsAString& aRetBdAddress);
 
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothServiceBluedroid : public BluetoothService
 {
 public:
+  BluetoothServiceBluedroid();
+  ~BluetoothServiceBluedroid();
+
   virtual nsresult StartInternal();
   virtual nsresult StopInternal();
   virtual bool IsEnabledInternal();

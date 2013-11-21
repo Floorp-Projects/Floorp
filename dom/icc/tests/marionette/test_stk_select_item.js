@@ -5,7 +5,7 @@ MARIONETTE_HEAD_JS = "stk_helper.js";
 
 function testSelectItem(command, expect) {
   log("STK CMD " + JSON.stringify(command));
-  is(command.typeOfCommand, icc.STK_CMD_SELECT_ITEM, expect.name);
+  is(command.typeOfCommand, iccManager.STK_CMD_SELECT_ITEM, expect.name);
   is(command.commandQualifier, expect.commandQualifier, expect.name);
   is(command.options.title, expect.title, expect.name);
   for (let index in command.options.items) {

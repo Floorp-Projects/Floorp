@@ -60,55 +60,77 @@ function testEventListeners(aThreadClient) {
   let deferred = promise.defer();
 
   aThreadClient.eventListeners(aPacket => {
+    if (aPacket.error) {
+      let msg = "Error getting event listeners: " + aPacket.message;
+      ok(false, msg);
+      deferred.reject(msg);
+      return;
+    }
+
     is(aPacket.listeners.length, 3,
       "Found all event listeners.");
 
-    let types = [];
+    promise.all(aPacket.listeners.map(listener => {
+      const lDeferred = promise.defer();
+      aThreadClient.pauseGrip(listener.function).getDefinitionSite(aResponse => {
+        if (aResponse.error) {
+          const msg = "Error getting function definition site: " + aResponse.message;
+          ok(false, msg);
+          lDeferred.reject(msg);
+          return;
+        }
+        listener.function.url = aResponse.url;
+        lDeferred.resolve(listener);
+      });
+      return lDeferred.promise;
+    })).then(listeners => {
+      let types = [];
 
-    for (let l of aPacket.listeners) {
-      let node = l.node;
-      ok(node, "There is a node property.");
-      ok(node.object, "There is a node object property.");
-      ok(node.selector == "window" ||
-        content.document.querySelectorAll(node.selector).length == 1,
-        "The node property is a unique CSS selector.");
+      for (let l of listeners) {
+        let node = l.node;
+        ok(node, "There is a node property.");
+        ok(node.object, "There is a node object property.");
+        ok(node.selector == "window" ||
+          content.document.querySelectorAll(node.selector).length == 1,
+          "The node property is a unique CSS selector.");
 
-      let func = l.function;
-      ok(func, "There is a function property.");
-      is(func.type, "object", "The function form is of type 'object'.");
-      is(func.class, "Function", "The function form is of class 'Function'.");
-      is(func.url, TAB_URL, "The function url is correct.");
+        let func = l.function;
+        ok(func, "There is a function property.");
+        is(func.type, "object", "The function form is of type 'object'.");
+        is(func.class, "Function", "The function form is of class 'Function'.");
+        is(func.url, TAB_URL, "The function url is correct.");
 
-      is(l.allowsUntrusted, true,
-        "'allowsUntrusted' property has the right value.");
-      is(l.inSystemEventGroup, false,
-        "'inSystemEventGroup' property has the right value.");
+        is(l.allowsUntrusted, true,
+          "'allowsUntrusted' property has the right value.");
+        is(l.inSystemEventGroup, false,
+          "'inSystemEventGroup' property has the right value.");
 
-      types.push(l.type);
+        types.push(l.type);
 
-      if (l.type == "keyup") {
-        is(l.capturing, true,
-          "Capturing property has the right value.");
-        is(l.isEventHandler, false,
-          "'isEventHandler' property has the right value.");
-      } else if (l.type == "load") {
-        is(l.capturing, false,
-          "Capturing property has the right value.");
-        is(l.isEventHandler, false,
-          "'isEventHandler' property has the right value.");
-      } else {
-        is(l.capturing, false,
-          "Capturing property has the right value.");
-        is(l.isEventHandler, true,
-          "'isEventHandler' property has the right value.");
+        if (l.type == "keyup") {
+          is(l.capturing, true,
+            "Capturing property has the right value.");
+          is(l.isEventHandler, false,
+            "'isEventHandler' property has the right value.");
+        } else if (l.type == "load") {
+          is(l.capturing, false,
+            "Capturing property has the right value.");
+          is(l.isEventHandler, false,
+            "'isEventHandler' property has the right value.");
+        } else {
+          is(l.capturing, false,
+            "Capturing property has the right value.");
+          is(l.isEventHandler, true,
+            "'isEventHandler' property has the right value.");
+        }
       }
-    }
 
-    ok(types.indexOf("click") != -1, "Found the click handler.");
-    ok(types.indexOf("change") != -1, "Found the change handler.");
-    ok(types.indexOf("keyup") != -1, "Found the keyup handler.");
+      ok(types.indexOf("click") != -1, "Found the click handler.");
+      ok(types.indexOf("change") != -1, "Found the change handler.");
+      ok(types.indexOf("keyup") != -1, "Found the keyup handler.");
 
-    aThreadClient.resume(deferred.resolve);
+      aThreadClient.resume(deferred.resolve);
+    });
   });
 
   return deferred.promise;
