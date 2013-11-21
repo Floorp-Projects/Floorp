@@ -39,7 +39,7 @@ BlockingResourceBase::DeadlockDetectorEntry::Print(
     bool aPrintFirstSeenCx) const
 {
     CallStack lastAcquisition = mAcquisitionContext; // RACY, but benign
-    bool maybeCurrentlyAcquired = (CallStack::kNone != lastAcquisition);
+    bool maybeCurrentlyAcquired = !lastAcquisition.IsEmpty();
     CallStack printAcquisition =
         (aPrintFirstSeenCx || !maybeCurrentlyAcquired) ?
             aFirstSeen.mCallContext : lastAcquisition;
@@ -134,7 +134,7 @@ BlockingResourceBase::Acquire(const CallStack& aCallContext)
             "FIXME bug 456272: annots. to allow Acquire()ing condvars");
         return;
     }
-    NS_ASSERTION(mDDEntry->mAcquisitionContext == CallStack::kNone,
+    NS_ASSERTION(mDDEntry->mAcquisitionContext.IsEmpty(),
                  "reacquiring already acquired resource");
 
     ResourceChainAppend(ResourceChainFront());
@@ -152,8 +152,7 @@ BlockingResourceBase::Release()
     }
       
     BlockingResourceBase* chainFront = ResourceChainFront();
-    NS_ASSERTION(chainFront
-                 && CallStack::kNone != mDDEntry->mAcquisitionContext,
+    NS_ASSERTION(chainFront && !mDDEntry->mAcquisitionContext.IsEmpty(),
                  "Release()ing something that hasn't been Acquire()ed");
 
     if (chainFront == this) {
@@ -178,7 +177,7 @@ BlockingResourceBase::Release()
             curr->mChainPrev = prev->mChainPrev;
     }
 
-    mDDEntry->mAcquisitionContext = CallStack::kNone;
+    mDDEntry->mAcquisitionContext = CallStack::NullCallStack();
 }
 
 
@@ -301,7 +300,7 @@ ReentrantMonitor::Wait(PRIntervalTime interval)
     CallStack savedAcquisitionContext = GetAcquisitionContext();
     BlockingResourceBase* savedChainPrev = mChainPrev;
     mEntryCount = 0;
-    SetAcquisitionContext(CallStack::kNone);
+    SetAcquisitionContext(CallStack::NullCallStack());
     mChainPrev = 0;
 
     // give up the monitor until we're back from Wait()
@@ -328,7 +327,7 @@ CondVar::Wait(PRIntervalTime interval)
     // save mutex state and reset to empty
     CallStack savedAcquisitionContext = mLock->GetAcquisitionContext();
     BlockingResourceBase* savedChainPrev = mLock->mChainPrev;
-    mLock->SetAcquisitionContext(CallStack::kNone);
+    mLock->SetAcquisitionContext(CallStack::NullCallStack());
     mLock->mChainPrev = 0;
 
     // give up mutex until we're back from Wait()
