@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!-- Testcase for how we fragment an empty fixed-height flex container, with
+     various combinations of margin/border/padding helping it to be too tall,
+     and with the flex container having "flex-direction: row".
+-->
+<html>
+  <head>
+    <style>
+    .multicol {
+      height: 10px;
+      width: 100px;
+      -moz-column-width: 20px;
+      -moz-column-fill: auto;
+      border: 2px solid orange;
+    }
+    .flexContainer {
+      display: flex;
+      flex-direction: row;
+      background: teal;
+      /* border-width is 0 by default; some sub-testcases will increase it. */
+      border: 0 dashed black;
+    }
+    </style>
+  </head>
+  <body>
+    <!-- NO BORDERS/PADDING -->
+    <!-- ================== -->
+    <!-- content fits exactly into 1 column: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 10px"></div>
+    </div>
+
+    <!-- content fits, but margin-top pushes it to overflow: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 9px;
+                                        margin-top: 2px;"></div>
+    </div>
+
+    <!-- content is too tall, by 1px: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 11px"></div>
+    </div>
+
+    <!-- BORDERS/PADDING ON TOP -->
+    <!-- ====================== -->
+    <!-- content fits, but border-top makes us too tall: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 9px;
+                                        border-top-width: 2px"></div>
+    </div>
+
+    <!-- content fits, but padding-top makes us too tall: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 9px;
+                                        padding-top: 2px"></div>
+    </div>
+
+    <!-- content fits, but border/padding-top make us too tall: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 9px;
+                                        border-top-width: 1px;
+                                        padding-top: 1px"></div>
+    </div>
+
+    <!-- BORDERS/PADDING ON BOTTOM -->
+    <!-- ========================= -->
+    <!-- content fits, but border-bottom-width makes us too tall: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 9px;
+                                        border-bottom-width: 2px"></div>
+    </div>
+
+    <!-- content fits, but padding-bottom makes us too tall: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 9px;
+                                        padding-bottom: 2px"></div>
+    </div>
+
+    <!-- content fits, but border/padding-bottom make us too tall: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 9px;
+                                        border-bottom-width: 1px;
+                                        padding-bottom: 1px"></div>
+    </div>
+
+    <!-- BORDERS/PADDING ON TOP AND BOTTOM -->
+    <!-- ================================= -->
+    <!-- content fits, but border-top/bottom combined make us too tall: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 9px;
+                                        border-top-width: 1px;
+                                        border-bottom-width: 1px"></div>
+    </div>
+
+    <!-- content fits, but padding-top/bottom combined make us too tall: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 9px;
+                                        padding-top: 1px;
+                                        padding-bottom: 1px"></div>
+    </div>
+
+  </body>
+</html>
