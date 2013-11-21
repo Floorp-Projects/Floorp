@@ -28,14 +28,16 @@ static const char kPrefCookieBehavior[] = "network.cookie.cookieBehavior";
 static const char kPrefThirdPartySession[] =
   "network.cookie.thirdparty.sessionOnly";
 
+static CookieServiceChild *gCookieService;
+
 CookieServiceChild*
 CookieServiceChild::GetSingleton()
 {
-  if (!sCookieServiceChild)
-    sCookieServiceChild = new CookieServiceChild();
+  if (!gCookieService)
+    gCookieService = new CookieServiceChild();
 
-  NS_ADDREF(sCookieServiceChild);
-  return sCookieServiceChild;
+  NS_ADDREF(gCookieService);
+  return gCookieService;
 }
 
 NS_IMPL_ISUPPORTS3(CookieServiceChild,
@@ -69,7 +71,7 @@ CookieServiceChild::CookieServiceChild()
 
 CookieServiceChild::~CookieServiceChild()
 {
-  sCookieServiceChild = nullptr;
+  gCookieService = nullptr;
 }
 
 void
