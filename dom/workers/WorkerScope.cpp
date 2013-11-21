@@ -24,7 +24,7 @@
 
 #define UNWRAP_WORKER_OBJECT(Interface, cx, obj, value)                       \
   UnwrapObject<prototypes::id::Interface##_workers,                           \
-    mozilla::dom::Interface##Binding_workers::NativeType>(cx, obj, value)
+    mozilla::dom::Interface##Binding_workers::NativeType>(obj, value)
 
 using namespace mozilla::dom;
 USING_WORKERS_NAMESPACE

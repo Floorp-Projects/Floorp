@@ -1793,10 +1793,10 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
   nsresult rv = UNWRAP_OBJECT(HTMLObjectElement, aCx, aObj, htmlobject);
   if (NS_FAILED(rv)) {
     rv = UnwrapObject<prototypes::id::HTMLEmbedElement,
-                      HTMLSharedObjectElement>(aCx, aObj, htmlobject);
+                      HTMLSharedObjectElement>(aObj, htmlobject);
     if (NS_FAILED(rv)) {
       rv = UnwrapObject<prototypes::id::HTMLAppletElement,
-                        HTMLSharedObjectElement>(aCx, aObj, htmlobject);
+                        HTMLSharedObjectElement>(aObj, htmlobject);
       if (NS_FAILED(rv)) {
         htmlobject = nullptr;
       }
