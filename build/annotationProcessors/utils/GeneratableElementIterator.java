@@ -4,31 +4,57 @@
 
 package org.mozilla.gecko.annotationProcessors.utils;
 
-import org.mozilla.gecko.annotationProcessors.MethodWithAnnotationInfo;
+import org.mozilla.gecko.annotationProcessors.AnnotationInfo;
+import org.mozilla.gecko.annotationProcessors.classloader.AnnotatableEntity;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 
 /**
- * Iterator over the methods in a given method list which have the GeneratableAndroidBridgeTarget
+ * Iterator over the methods in a given method list which have the WrappedJNIMethod
  * annotation. Returns an object containing both the annotation (Which may contain interesting
  * parameters) and the argument.
  */
-public class GeneratableEntryPointIterator implements Iterator<MethodWithAnnotationInfo> {
-    private final Method[] mMethods;
-    private MethodWithAnnotationInfo mNextReturnValue;
-    private int mMethodIndex;
+public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
+    private final Member[] mObjects;
+    private AnnotatableEntity mNextReturnValue;
+    private int mElementIndex;
 
-    public GeneratableEntryPointIterator(Method[] aMethods) {
-        // Sort the methods into alphabetical order by name, to ensure we always iterate methods
-        // in the same order..
-        Arrays.sort(aMethods, new AlphabeticMethodComparator());
-        mMethods = aMethods;
+    private boolean mIterateEveryEntry;
+
+    public GeneratableElementIterator(Class<?> aClass) {
+        // Get all the elements of this class as AccessibleObjects.
+        Member[] aMethods = aClass.getDeclaredMethods();
+        Member[] aFields = aClass.getDeclaredFields();
+        Member[] aCtors = aClass.getConstructors();
+
+        // Shove them all into one buffer.
+        Member[] objs = new Member[aMethods.length + aFields.length + aCtors.length];
+
+        int offset = 0;
+        System.arraycopy(aMethods, 0, objs, 0, aMethods.length);
+        offset += aMethods.length;
+        System.arraycopy(aFields, 0, objs, offset, aFields.length);
+        offset += aFields.length;
+        System.arraycopy(aCtors, 0, objs, offset, aCtors.length);
+
+        // Sort the elements to ensure determinism.
+        Arrays.sort(objs, new AlphabeticAnnotatableEntityComparator());
+        mObjects = objs;
+
+        // Check for "Wrap ALL the things" flag.
+        for (Annotation annotation : aClass.getDeclaredAnnotations()) {
+            final String annotationTypeName = annotation.annotationType().getName();
+            if (annotationTypeName.equals("org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI")) {
+                mIterateEveryEntry = true;
+                break;
+            }
+        }
 
         findNextValue();
     }
@@ -38,14 +64,13 @@ public class GeneratableEntryPointIterator implements Iterator<MethodWithAnnotat
      * one exists. Otherwise cache null, so hasNext returns false.
      */
     private void findNextValue() {
-        while (mMethodIndex < mMethods.length) {
-            Method candidateMethod = mMethods[mMethodIndex];
-            mMethodIndex++;
-            for (Annotation annotation : candidateMethod.getDeclaredAnnotations()) {
-                // GeneratableAndroidBridgeTarget has a parameter. Use Reflection to obtain it.
+        while (mElementIndex < mObjects.length) {
+            Member candidateElement = mObjects[mElementIndex];
+            mElementIndex++;
+            for (Annotation annotation : ((AnnotatedElement) candidateElement).getDeclaredAnnotations()) {
+                // WrappedJNIMethod has parameters. Use Reflection to obtain them.
                 Class<? extends Annotation> annotationType = annotation.annotationType();
                 final String annotationTypeName = annotationType.getName();
-
                 if (annotationTypeName.equals("org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI")) {
                     String stubName = null;
                     boolean isStaticStub = false;
@@ -78,15 +103,25 @@ public class GeneratableEntryPointIterator implements Iterator<MethodWithAnnotat
                         e.printStackTrace(System.err);
                         System.exit(5);
                     }
+
                     // If the method name was not explicitly given in the annotation generate one...
                     if (stubName.isEmpty()) {
-                        String aMethodName = candidateMethod.getName();
+                        String aMethodName = candidateElement.getName();
                         stubName = aMethodName.substring(0, 1).toUpperCase() + aMethodName.substring(1);
                     }
 
-                    mNextReturnValue = new MethodWithAnnotationInfo(candidateMethod, stubName, isStaticStub, isMultithreadedStub);
+                    AnnotationInfo annotationInfo = new AnnotationInfo(stubName, isStaticStub, isMultithreadedStub);
+                    mNextReturnValue = new AnnotatableEntity(candidateElement, annotationInfo);
                     return;
                 }
+            }
+
+            // If no annotation found, we might be expected to generate anyway using default arguments,
+            // thanks to the "Generate everything" annotation.
+            if (mIterateEveryEntry) {
+                AnnotationInfo annotationInfo = new AnnotationInfo(candidateElement.getName(), false, false);
+                mNextReturnValue = new AnnotatableEntity(candidateElement, annotationInfo);
+                return;
             }
         }
         mNextReturnValue = null;
@@ -98,14 +133,14 @@ public class GeneratableEntryPointIterator implements Iterator<MethodWithAnnotat
     }
 
     @Override
-    public MethodWithAnnotationInfo next() {
-        MethodWithAnnotationInfo ret = mNextReturnValue;
+    public AnnotatableEntity next() {
+        AnnotatableEntity ret = mNextReturnValue;
         findNextValue();
         return ret;
     }
 
     @Override
     public void remove() {
-        throw new UnsupportedOperationException("Removal of methods from GeneratableEntryPointIterator not supported.");
+        throw new UnsupportedOperationException("Removal of methods from GeneratableElementIterator not supported.");
     }
 }
