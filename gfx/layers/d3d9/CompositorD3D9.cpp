@@ -24,6 +24,7 @@ namespace layers {
 CompositorD3D9::CompositorD3D9(PCompositorParent* aParent, nsIWidget *aWidget)
   : Compositor(aParent)
   , mWidget(aWidget)
+  , mDeviceResetCount(0)
 {
   sBackend = LAYERS_D3D9;
 }
@@ -456,6 +457,97 @@ CompositorD3D9::SetMask(const EffectChain &aEffectChain, uint32_t aMaskTexture)
                                      1);
 }
 
+/**
+ * In the next few methods we call |mParent->SendInvalidateAll()| - that has
+ * a few uses - if our device or swap chain is not ready, it causes us to try
+ * to render again, that means we keep trying to get a good device and swap
+ * chain and don't block the main thread (which we would if we kept trying in
+ * a busy loop because this is likely to happen in a sync transaction).
+ * If we had to recreate our device, then we have new textures and we
+ * need to reupload everything (not just what is currently invalid) from the
+ * client side. That means we need to invalidate everything on the client.
+ * If we just reset and didn't need to recreate, then we don't need to reupload
+ * our textures, but we do need to redraw the whole window, which means we still
+ * need to invalidate everything.
+ * Currently we probably do this complete invalidation too much. But it is better
+ * to do that than to miss an invalidation which would result in a black layer
+ * (or multiple layers) until the user moves the mouse. The unnecessary invalidtion
+ * only happens when the device is reset, so that should be pretty rare and when
+ * other things are happening so the user does not expect super performance.
+ */
+
+bool
+CompositorD3D9::EnsureSwapChain()
+{
+  MOZ_ASSERT(mDeviceManager, "Don't call EnsureSwapChain without a device manager");
+
+  if (!mSwapChain) {
+    mSwapChain = mDeviceManager->
+      CreateSwapChain((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW));
+    if (!mSwapChain) {
+      DeviceManagerState state = mDeviceManager->VerifyReadyForRendering();
+      if (state == DeviceMustRecreate) {
+        mDeviceManager = nullptr;
+        mParent->SendInvalidateAll();
+      } else if (state == DeviceRetry) {
+        mParent->SendInvalidateAll();
+      }
+      return false;
+    }
+  }
+
+  DeviceManagerState state = mSwapChain->PrepareForRendering();
+  if (state == DeviceOK) {
+    return true;
+  }
+  if (state == DeviceMustRecreate) {
+    mDeviceManager = nullptr;
+    mSwapChain = nullptr;
+    mParent->SendInvalidateAll();
+  } else if (state == DeviceRetry) {
+    mParent->SendInvalidateAll();
+  }
+  return false;
+}
+
+void
+CompositorD3D9::CheckResetCount()
+{
+  if (mDeviceResetCount != mDeviceManager->GetDeviceResetCount()) {
+    mParent->SendInvalidateAll();
+  }
+  mDeviceResetCount = mDeviceManager->GetDeviceResetCount();
+}
+
+bool
+CompositorD3D9::Ready()
+{
+  if (mDeviceManager) {
+    if (EnsureSwapChain()) {
+      // We don't need to call VerifyReadyForRendering because that is
+      // called by mSwapChain->PrepareForRendering() via EnsureSwapChain().
+      CheckResetCount();
+      return true;
+    }
+    return false;
+  }
+
+  NS_ASSERTION(!mCurrentRT && !mDefaultRT,
+                "Shouldn't have any render targets around, they must be released before our device");
+  mSwapChain = nullptr;
+
+  mDeviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
+  if (!mDeviceManager) {
+    mParent->SendInvalidateAll();
+    return false;
+  }
+  if (EnsureSwapChain()) {
+    CheckResetCount();
+    return true;
+  }
+  return false;
+}
+
 static void
 CancelCompositing(Rect* aRenderBoundsOut)
 {
@@ -472,42 +564,7 @@ CompositorD3D9::BeginFrame(const nsIntRegion& aInvalidRegion,
                            Rect *aClipRectOut,
                            Rect *aRenderBoundsOut)
 {
-  if (!mDeviceManager) {
-    mDeviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
-    if (!mDeviceManager) {
-      mSwapChain = nullptr;
-      CancelCompositing(aRenderBoundsOut);
-      return;
-    }
-
-    // We have destroyed all our texture memory so we need to tell the client
-    // to redraw everything so we can put that in our new textures and use
-    // them for compositing.
-    mParent->SendInvalidateAll();
-    CancelCompositing(aRenderBoundsOut);
-    return;
-  }
-
-  if (!mDeviceManager->VerifyReadyForRendering()) {
-    NS_ASSERTION(!mCurrentRT && !mDefaultRT,
-                 "Shouldn't have any render targets around, they must be released before our device");
-    mSwapChain = nullptr;
-    mDeviceManager = nullptr;
-
-    CancelCompositing(aRenderBoundsOut);
-    return;
-  }
-  MOZ_ASSERT(mDeviceManager);
-
-  if (!mSwapChain) {
-    mSwapChain = mDeviceManager->
-      CreateSwapChain((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW));
-  }
-  if (!mSwapChain ||
-      !mSwapChain->PrepareForRendering()) {
-    CancelCompositing(aRenderBoundsOut);
-    return;
-  }
+  MOZ_ASSERT(mDeviceManager && mSwapChain);
 
   mDeviceManager->SetupRenderState();
 
