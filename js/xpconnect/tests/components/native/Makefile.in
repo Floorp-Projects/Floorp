@@ -4,7 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MODULE_NAME = xpconnect_test
-FORCE_SHARED_LIB = 1
 
 componentdir = js/xpconnect/tests/components/native
 

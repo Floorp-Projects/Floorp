@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'xpcom'
-
 if CONFIG['TARGET_CPU'] == 'x86_64':
     if CONFIG['GNU_CXX']:
         SOURCES += [
@@ -36,7 +34,4 @@ else:
             'xptcstubs.cpp',
         ]
 
-LIBRARY_NAME = 'xptcmd'
-
-# we don't want the shared lib, but we want to force the creation of a static lib.
-FORCE_STATIC_LIB = True
+FINAL_LIBRARY = 'xpcom_core'

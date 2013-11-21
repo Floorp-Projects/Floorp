@@ -10,8 +10,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'widget_cocoa'
 
-MODULE = 'widget'
-
 EXPORTS += [
     'mozView.h',
     'nsChangeObserver.h',
@@ -20,8 +18,6 @@ EXPORTS += [
 ]
 
 LIBRARY_NAME = 'widget_mac'
-
-LIBXUL_LIBRARY = True
 
 UNIFIED_SOURCES += [
     'GfxInfo.mm',
@@ -69,5 +65,4 @@ if CONFIG['TARGET_CPU'] == 'x86_64':
         'ComplexTextInputPanel.mm',
     ]
 
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

@@ -15,7 +15,7 @@ XPIDL_SOURCES += [
     'nsILoginMetaInfo.idl',
 ]
 
-MODULE = 'loginmgr'
+XPIDL_MODULE = 'loginmgr'
 
 EXTRA_COMPONENTS += [
     'crypto-SDR.js',

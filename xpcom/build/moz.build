@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'xpcom'
-
 EXPORTS += [
     'nsXPCOM.h',
     'nsXPCOMCID.h',
@@ -46,10 +44,10 @@ else:
 
 include('../glue/objs.mozbuild')
 
-SOURCES += xpcom_gluens_src_cppsrcs
-SOURCES += xpcom_glue_src_cppsrcs
+UNIFIED_SOURCES += xpcom_gluens_src_cppsrcs
+UNIFIED_SOURCES += xpcom_glue_src_cppsrcs
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'FileLocation.cpp',
     'FrozenFunctions.cpp',
     'LateWriteChecks.cpp',
@@ -59,13 +57,10 @@ SOURCES += [
     'Services.cpp',
 ]
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'xpcom_core'
 
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

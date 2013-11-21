@@ -33,78 +33,8 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 DEFINES += -DANDROID_PACKAGE_NAME='"$(ANDROID_PACKAGE_NAME)"'
 endif
 
-SHARED_LIBRARY_LIBS += \
-  ../profile/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX) \
-  $(NULL)
-
-ifdef MOZ_UPDATER
-ifneq (android,$(MOZ_WIDGET_TOOLKIT))
-SHARED_LIBRARY_LIBS += \
-  ../mozapps/update/common/$(LIB_PREFIX)updatecommon.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-endif
-
 ifdef MOZ_ENABLE_XREMOTE
-SHARED_LIBRARY_LIBS += $(DEPTH)/widget/xremoteclient/$(LIB_PREFIX)xremote_client_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += -I$(topsrcdir)/widget/xremoteclient
-endif
-
-ifneq (,$(MOZ_CRASHREPORTER)$(MOZ_ENABLE_PROFILER_SPS))
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
-  $(NULL)
-
-ifeq ($(OS_ARCH),Darwin)
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX)
-  $(NULL)
-endif
-ifeq ($(OS_ARCH),Linux)
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-endif
-
-ifdef MOZ_ENABLE_PROFILER_SPS
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/processor/$(LIB_PREFIX)breakpad_sps_common_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-
-ifdef MOZ_CRASHREPORTER
-SHARED_LIBRARY_LIBS += $(DEPTH)/toolkit/crashreporter/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX)
-ifeq ($(OS_ARCH),WINNT)
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/toolkit/crashreporter/breakpad-windows-libxul/$(LIB_PREFIX)google_breakpad_libxul_s.$(LIB_SUFFIX)
-endif
-
-ifeq ($(OS_ARCH),Darwin)
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/mac/crash_generation/$(LIB_PREFIX)crash_generation_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/mac/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-
-ifeq ($(OS_ARCH),Linux)
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/linux/crash_generation/$(LIB_PREFIX)crash_generation_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/linux/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/linux/minidump_writer/$(LIB_PREFIX)minidump_writer_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-
-ifeq ($(OS_ARCH),SunOS)
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/solaris/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/solaris/$(LIB_PREFIX)breakpad_solaris_common_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk

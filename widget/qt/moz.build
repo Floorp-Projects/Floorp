@@ -6,8 +6,6 @@
 
 DIRS += ['faststartupqt']
 
-MODULE = 'widget'
-
 EXPORTS += [
     'nsQtKeyUtils.h',
 ]
@@ -58,11 +56,8 @@ if CONFIG[' MOZ_ENABLE_QTMOBILITY']:
         'moc_mozqorientationsensorfilter.cpp',
     ]
 
-LIBXUL_LIBRARY = True
-
 LIBRARY_NAME = 'widget_qt'
-
-EXPORT_LIBRARY = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

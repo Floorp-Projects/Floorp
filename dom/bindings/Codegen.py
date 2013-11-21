@@ -1084,6 +1084,8 @@ def finalizeHook(descriptor, hookName, context):
             finalize += "ClearWrapper(self, self);\n"
         if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
             finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
+        if descriptor.interface.getExtendedAttribute("Global"):
+            finalize += "mozilla::dom::FinalizeGlobal(fop, obj);\n"
         if descriptor.nativeOwnership == 'worker':
             finalize += "self->Release();"
         else:

@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'libglesv2'
-
 # Target: 'preprocessor'
 # src/compiler/preprocessor:
 SOURCES += ['../compiler/preprocessor/' + src for src in [
@@ -177,4 +175,7 @@ SOURCES += ['renderer/' + src for src in [
     'VertexDeclarationCache.cpp',
 ]]
 
+# On Windows, we don't automatically get "lib" prepended, but we need it.
 LIBRARY_NAME = 'libGLESv2'
+
+FORCE_SHARED_LIB = True

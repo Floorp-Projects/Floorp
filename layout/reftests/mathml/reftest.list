@@ -92,6 +92,9 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
 == mpadded-5.html mpadded-5-ref.html
 == mpadded-1-2.html mpadded-1-2-ref.html
 == mpadded-6.html mpadded-6-ref.html
+== mpadded-7.html mpadded-7-ref.html
+== mpadded-8.html mpadded-8-ref.html
+== mpadded-9.html mpadded-9-ref.html
 == math-display.html math-display-ref.html
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
 == munderover-align-accent-false.html munderover-align-accent-false-ref.html

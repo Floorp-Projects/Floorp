@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'thebes'
-
 EXPORTS += [
     'DrawMode.h',
     'gfx2DGlue.h',
@@ -274,13 +272,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'thebes'
 
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

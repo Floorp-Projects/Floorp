@@ -2554,6 +2554,9 @@ AC_CACHE_CHECK(
             #ifdef linux
             #define _BSD_SOURCE 1
             #endif
+            #include <sys/types.h>
+            #include <netinet/in.h>
+            #include <arpa/nameser.h>
             #include <resolv.h>
             ],
             [int foo = res_ninit(&_res);],

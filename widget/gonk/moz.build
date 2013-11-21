@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-MODULE = 'widget'
-
 EXPORTS += [
     'OrientationObserver.h',
 ]
@@ -59,11 +57,8 @@ SOURCES += [
     'ProcessOrientation.cpp'
 ]
 
-LIBXUL_LIBRARY = True
-
 LIBRARY_NAME = 'widget_gonk'
-
-EXPORT_LIBRARY = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

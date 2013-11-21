@@ -8,8 +8,6 @@ DEFINES += -DREGISTER_PROXY_DLL
 
 GARBAGE += $(MIDL_GENERATED_FILES) done_gen dlldata.c
 
-FORCE_SHARED_LIB = 1
-
 MIDL_GENERATED_FILES = \
 	ISimpleDOMNode.h \
 	ISimpleDOMNode_p.c \

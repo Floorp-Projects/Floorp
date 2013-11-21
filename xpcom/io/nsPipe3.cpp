@@ -21,6 +21,9 @@
 
 using namespace mozilla;
 
+#ifdef LOG
+#undef LOG
+#endif
 #if defined(PR_LOGGING)
 //
 // set NSPR_LOG_MODULES=nsPipe:5

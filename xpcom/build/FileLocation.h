@@ -9,7 +9,6 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIFile.h"
-#include "nsIURI.h"
 #include "FileUtils.h"
 
 class nsZipArchive;
