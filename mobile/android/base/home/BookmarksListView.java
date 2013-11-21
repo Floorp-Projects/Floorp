@@ -51,8 +51,10 @@ public class BookmarksListView extends HomeListView
         setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
+                final int action = event.getAction();
+
                 // If the user hit the BACK key, try to move to the parent folder.
-                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                if (action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
                     return getBookmarksListAdapter().moveToParentFolder();
                 }
                 return false;
