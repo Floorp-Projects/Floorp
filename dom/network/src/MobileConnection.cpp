@@ -78,6 +78,7 @@ NS_IMPL_EVENT_HANDLER(MobileConnection, cfstatechange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, emergencycbmodechange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, otastatuschange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, iccchange)
+NS_IMPL_EVENT_HANDLER(MobileConnection, radiostatechange)
 
 MobileConnection::MobileConnection(uint32_t aClientId)
 : mClientId(aClientId)
@@ -209,6 +210,17 @@ MobileConnection::GetNetworkSelectionMode(nsAString& aNetworkSelectionMode)
      return NS_OK;
   }
   return mProvider->GetNetworkSelectionMode(mClientId, aNetworkSelectionMode);
+}
+
+NS_IMETHODIMP
+MobileConnection::GetRadioState(nsAString& aRadioState)
+{
+  aRadioState.SetIsVoid(true);
+
+  if (!mProvider || !CheckPermission("mobileconnection")) {
+     return NS_OK;
+  }
+  return mProvider->GetRadioState(mClientId, aRadioState);
 }
 
 NS_IMETHODIMP
@@ -519,6 +531,23 @@ MobileConnection::ExitEmergencyCbMode(nsIDOMDOMRequest** aRequest)
   return mProvider->ExitEmergencyCbMode(mClientId, GetOwner(), aRequest);
 }
 
+NS_IMETHODIMP
+MobileConnection::SetRadioEnabled(bool aEnabled,
+                                  nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SetRadioEnabled(mClientId, GetOwner(), aEnabled, aRequest);
+}
+
 // nsIMobileConnectionListener
 
 NS_IMETHODIMP
@@ -653,4 +682,14 @@ MobileConnection::NotifyIccChanged()
   }
 
   return DispatchTrustedEvent(NS_LITERAL_STRING("iccchange"));
+}
+
+NS_IMETHODIMP
+MobileConnection::NotifyRadioStateChanged()
+{
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  return DispatchTrustedEvent(NS_LITERAL_STRING("radiostatechange"));
 }
