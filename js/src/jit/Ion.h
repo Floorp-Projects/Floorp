@@ -205,7 +205,7 @@ struct IonOptions
     uint32_t usesBeforeCompilePar;
 
     // The maximum bytecode length the caller may have,
-    // before we stop inlining any functions in that caller.
+    // before we stop inlining large functions in that caller.
     //
     // Default: 10000
     uint32_t inliningMaxCallerBytecodeLength;
