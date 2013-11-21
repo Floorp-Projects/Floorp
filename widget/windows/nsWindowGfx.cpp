@@ -45,6 +45,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "LayerManagerD3D10.h"
 #endif
 #include "mozilla/layers/CompositorParent.h"
+#include "ClientLayerManager.h"
 
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
@@ -213,23 +214,20 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     return true;
   }
 
-  // Do an early async composite so that we at least have something on screen
-  // in the right place, even if the content is out of date.
-  if (GetLayerManager()->GetBackendType() == LAYERS_CLIENT &&
-      mCompositorParent) {
+  ClientLayerManager *clientLayerManager =
+      (GetLayerManager()->GetBackendType() == LAYERS_CLIENT)
+      ? static_cast<ClientLayerManager*>(GetLayerManager())
+      : nullptr;
+
+  if (clientLayerManager && mCompositorParent &&
+      !mBounds.IsEqualEdges(mLastPaintBounds))
+  {
+    // Do an early async composite so that we at least have something on the
+    // screen in the right place, even if the content is out of date.
     mCompositorParent->ScheduleRenderOnCompositorThread();
   }
+  mLastPaintBounds = mBounds;
 
-  nsIWidgetListener* listener = GetPaintListener();
-  if (listener) {
-    listener->WillPaintWindow(this);
-  }
-  // Re-get the listener since the will paint notification may have killed it.
-  listener = GetPaintListener();
-  if (!listener)
-    return false;
-
-  bool result = true;
   PAINTSTRUCT ps;
 
 #ifdef MOZ_XUL
@@ -273,6 +271,30 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
   bool forceRepaint = nullptr != aDC;
 #endif
   nsIntRegion region = GetRegionToPaint(forceRepaint, ps, hDC);
+
+  if (clientLayerManager && mCompositorParent) {
+    // We need to paint to the screen even if nothing changed, since if we
+    // don't have a compositing window manager, our pixels could be stale.
+    clientLayerManager->SetNeedsComposite(true);
+    clientLayerManager->SendInvalidRegion(region);
+  }
+
+  nsIWidgetListener* listener = GetPaintListener();
+  if (listener) {
+    listener->WillPaintWindow(this);
+  }
+  // Re-get the listener since the will paint notification may have killed it.
+  listener = GetPaintListener();
+  if (!listener) {
+    return false;
+  }
+
+  if (clientLayerManager && mCompositorParent && clientLayerManager->NeedsComposite()) {
+    mCompositorParent->ScheduleRenderOnCompositorThread();
+    clientLayerManager->SetNeedsComposite(false);
+  }
+
+  bool result = true;
   if (!region.IsEmpty() && listener)
   {
     // Should probably pass in a real region here, using GetRandomRgn
