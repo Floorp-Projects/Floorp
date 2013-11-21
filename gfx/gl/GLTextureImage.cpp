@@ -72,8 +72,9 @@ BasicTextureImage::~BasicTextureImage()
     // if we don't have a context (either real or shared),
     // then they went away when the contex was deleted, because it
     // was the only one that had access to it.
-    if (ctx && ctx->MakeCurrent()) {
-        ctx->fDeleteTextures(1, &mTexture);
+    if (ctx && !ctx->IsDestroyed()) {
+        mGLContext->MakeCurrent();
+        mGLContext->fDeleteTextures(1, &mTexture);
     }
 }
 
@@ -697,9 +698,7 @@ CreateBasicTextureImage(GLContext* aGL,
                         TextureImage::ImageFormat aImageFormat)
 {
     bool useNearestFilter = aFlags & TextureImage::UseNearestFilter;
-    if (!aGL->MakeCurrent()) {
-      return nullptr;
-    }
+    aGL->MakeCurrent();
 
     GLuint texture = 0;
     aGL->fGenTextures(1, &texture);
