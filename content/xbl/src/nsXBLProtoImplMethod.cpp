@@ -217,7 +217,7 @@ nsXBLProtoImplMethod::CompileMember(const nsCString& aClassStr,
 void
 nsXBLProtoImplMethod::Trace(const TraceCallbacks& aCallbacks, void *aClosure)
 {
-  if (IsCompiled() && GetCompiledMethod()) {
+  if (IsCompiled() && GetCompiledMethodPreserveColor()) {
     aCallbacks.Trace(&mMethod.AsHeapObject(), "mMethod", aClosure);
   }
 }
@@ -246,7 +246,7 @@ nsXBLProtoImplMethod::Write(nsIObjectOutputStream* aStream)
 {
   AssertInCompilationScope();
   MOZ_ASSERT(IsCompiled());
-  if (GetCompiledMethod()) {
+  if (GetCompiledMethodPreserveColor()) {
     nsresult rv = aStream->Write8(XBLBinding_Serialize_Method);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -357,7 +357,7 @@ nsXBLProtoImplAnonymousMethod::Write(nsIObjectOutputStream* aStream,
 {
   AssertInCompilationScope();
   MOZ_ASSERT(IsCompiled());
-  if (GetCompiledMethod()) {
+  if (GetCompiledMethodPreserveColor()) {
     nsresult rv = aStream->Write8(aType);
     NS_ENSURE_SUCCESS(rv, rv);
 
