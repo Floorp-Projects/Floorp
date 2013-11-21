@@ -281,11 +281,6 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
         return false;
     }
 
-    if (target->getParent() != &script()->global()) {
-        IonSpew(IonSpew_Inlining, "Cannot inline due to scope mismatch");
-        return false;
-    }
-
     // Allow constructing lazy scripts when performing the definite properties
     // analysis, as baseline has not been used to warm the caller up yet.
     if (target->isInterpreted() && info().executionMode() == DefinitePropertiesAnalysis) {
@@ -4562,8 +4557,8 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
     // If the CallObject needs dynamic slots, allocate those now.
     MInstruction *slots;
     if (templateObj->hasDynamicSlots()) {
-        size_t nslots = JSObject::dynamicSlotsCount(templateObj->numFixedSlots(),
-                                                    templateObj->slotSpan());
+        size_t nslots = JSObject::dynamicSlotsCount(templateObj->numFixedSlotsForCompilation(),
+                                                    templateObj->lastProperty()->slotSpan(templateObj->getClass()));
         slots = MNewSlots::New(alloc(), nslots);
     } else {
         slots = MConstant::New(alloc(), NullValue());
@@ -4592,8 +4587,8 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
         unsigned slot = i.scopeSlot();
         unsigned formal = i.frameIndex();
         MDefinition *param = current->getSlot(info().argSlotUnchecked(formal));
-        if (slot >= templateObj->numFixedSlots())
-            current->add(MStoreSlot::New(alloc(), slots, slot - templateObj->numFixedSlots(), param));
+        if (slot >= templateObj->numFixedSlotsForCompilation())
+            current->add(MStoreSlot::New(alloc(), slots, slot - templateObj->numFixedSlotsForCompilation(), param));
         else
             current->add(MStoreFixedSlot::New(alloc(), callObj, slot, param));
     }
@@ -4658,15 +4653,14 @@ IonBuilder::createThisScriptedSingleton(JSFunction *target, MDefinition *callee)
     if (!proto)
         return nullptr;
 
-    if (!target->nonLazyScript()->types)
-        return nullptr;
-
     JSObject *templateObject = inspector->getTemplateObject(pc);
     if (!templateObject || !templateObject->is<JSObject>())
         return nullptr;
     if (templateObject->getProto() != proto)
         return nullptr;
 
+    if (!target->nonLazyScript()->types)
+        return nullptr;
     if (!types::TypeScript::ThisTypes(target->nonLazyScript())->hasType(types::Type::ObjectType(templateObject)))
         return nullptr;
 
@@ -5307,9 +5301,9 @@ IonBuilder::jsop_eval(uint32_t argc)
             string->getOperand(1)->isConstant() &&
             string->getOperand(1)->toConstant()->value().isString())
         {
-            JSString *str = string->getOperand(1)->toConstant()->value().toString();
+            JSAtom *atom = &string->getOperand(1)->toConstant()->value().toString()->asAtom();
 
-            if (str->isLinear() && StringEqualsAscii(&str->asLinear(), "()")) {
+            if (StringEqualsAscii(atom, "()")) {
                 MDefinition *name = string->getOperand(0);
                 MInstruction *dynamicName = MGetDynamicName::New(alloc(), scopeChain, name);
                 current->add(dynamicName);
@@ -5487,7 +5481,7 @@ IonBuilder::jsop_initprop(PropertyName *name)
 
     JSObject *templateObject = obj->toNewObject()->templateObject();
 
-    Shape *shape = templateObject->nativeLookupPure(name);
+    Shape *shape = templateObject->lastProperty()->searchLinear(NameToId(name));
 
     if (!shape) {
         // JSOP_NEWINIT becomes an MNewObject without preconfigured properties.
@@ -6327,9 +6321,6 @@ IonBuilder::setStaticName(JSObject *staticObject, PropertyName *name)
 
     MDefinition *value = current->peek(-1);
 
-    if (staticObject->watched())
-        return jsop_setprop(name);
-
     types::TypeObjectKey *staticType = types::TypeObjectKey::get(staticObject);
     if (staticType->unknownProperties())
         return jsop_setprop(name);
@@ -6734,7 +6725,7 @@ IonBuilder::getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *
         return true;
 
     TypedArrayObject *tarr = &tarrObj->as<TypedArrayObject>();
-    ArrayBufferView::ViewType viewType = JS_GetArrayBufferViewType(tarr);
+    ArrayBufferView::ViewType viewType = (ArrayBufferView::ViewType) tarr->type();
 
     // LoadTypedArrayElementStatic currently treats uint32 arrays as int32.
     if (viewType == ArrayBufferView::TYPE_UINT32)
@@ -7291,7 +7282,7 @@ IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
         return true;
 
     TypedArrayObject *tarr = &tarrObj->as<TypedArrayObject>();
-    ArrayBufferView::ViewType viewType = JS_GetArrayBufferViewType(tarr);
+    ArrayBufferView::ViewType viewType = (ArrayBufferView::ViewType) tarr->type();
 
     MDefinition *ptr = convertShiftToMaskForStaticTypedArray(index, viewType);
     if (!ptr)
@@ -8031,9 +8022,6 @@ bool
 IonBuilder::loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType,
                      bool barrier, types::TemporaryTypeSet *types)
 {
-    JS_ASSERT(shape->hasDefaultGetter());
-    JS_ASSERT(shape->hasSlot());
-
     return loadSlot(obj, shape->slot(), shape->numFixedSlots(), rvalType, barrier, types);
 }
 
@@ -8068,10 +8056,7 @@ bool
 IonBuilder::storeSlot(MDefinition *obj, Shape *shape, MDefinition *value, bool needsBarrier,
                       MIRType slotType /* = MIRType_None */)
 {
-    JS_ASSERT(shape->hasDefaultSetter());
     JS_ASSERT(shape->writable());
-    JS_ASSERT(shape->hasSlot());
-
     return storeSlot(obj, shape->slot(), shape->numFixedSlots(), value, needsBarrier, slotType);
 }
 
@@ -8935,11 +8920,6 @@ IonBuilder::jsop_delelem()
 bool
 IonBuilder::jsop_regexp(RegExpObject *reobj)
 {
-    JSObject *prototype = reobj->getProto();
-    JS_ASSERT(prototype == script()->global().maybeGetRegExpPrototype());
-
-    JS_ASSERT(&reobj->JSObject::global() == &script()->global());
-
     // JS semantics require regular expression literals to create different
     // objects every time they execute. We only need to do this cloning if the
     // script could actually observe the effect of such cloning, for instance
@@ -8961,6 +8941,8 @@ IonBuilder::jsop_regexp(RegExpObject *reobj)
         if (!reobj->global() && !reobj->sticky())
             mustClone = false;
     }
+
+    JSObject *prototype = reobj->getProto();
 
     MRegExp *regexp = MRegExp::New(alloc(), reobj, prototype, mustClone);
     current->add(regexp);
