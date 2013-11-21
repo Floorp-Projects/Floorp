@@ -512,6 +512,7 @@ BluetoothHfpManager::ProcessConnectionState(bthf_connection_state_t aState,
   mConnectionState = aState;
 
   if (aState == BTHF_CONNECTION_STATE_CONNECTED) {
+    BdAddressTypeToString(aBdAddress, mDeviceAddress);
     BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_CONN_STATE_CHANGED,
                         NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
   } else if (aState == BTHF_CONNECTION_STATE_DISCONNECTED) {
