@@ -344,6 +344,12 @@ class MochitestUtilsMixin(object):
         self.urlOpts.append("runSlower=true")
       if options.debugOnFailure:
         self.urlOpts.append("debugOnFailure=true")
+      if options.dumpOutputDirectory:
+        self.urlOpts.append("dumpOutputDirectory=%s" % encodeURIComponent(options.dumpOutputDirectory))
+      if options.dumpAboutMemoryAfterTest:
+        self.urlOpts.append("dumpAboutMemoryAfterTest=true")
+      if options.dumpDMDAfterTest:
+        self.urlOpts.append("dumpDMDAfterTest=true")
 
   def buildTestPath(self, options):
     """ Build the url path to the specific test harness and test file or directory
