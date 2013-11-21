@@ -840,6 +840,8 @@ DeviceManagerD3D9::CreateTexture(const IntSize &aSize,
     return nullptr;
   }
 
+  NS_ASSERTION(aPool != D3DPOOL_MANAGED,
+               "Should not be using MANAGED texture pool. We will get an error when we have to recreate the device");
   if (aPool == D3DPOOL_DEFAULT) {
     MOZ_ASSERT(aTextureHost, "We need a texture host to track so we can release the texture.");
     RegisterTextureHost(aTextureHost);
