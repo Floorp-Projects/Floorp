@@ -3,11 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# If this is Makefile builds a component, MODULE_NAME must match the module
-# name specified in NS_IMPL_NSGETMODULE
-MODULE_NAME	= nsSampleModule
-
-
 # EXTRA_DSO_LDOPTS specifies linker flags when building a shared library
 # from this Makefile. We link against the "dependent glue" and against the
 # frozen XPCOM shared library.

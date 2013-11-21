@@ -7572,7 +7572,7 @@ PostMessageWriteStructuredClone(JSContext* cx,
 
   if (MessageChannel::PrefEnabled()) {
     MessagePortBase* port = nullptr;
-    nsresult rv = UNWRAP_OBJECT(MessagePort, cx, obj, port);
+    nsresult rv = UNWRAP_OBJECT(MessagePort, obj, port);
     if (NS_SUCCEEDED(rv) && scInfo->subsumes) {
       nsRefPtr<MessagePortBase> newPort = port->Clone();
 
