@@ -84,7 +84,7 @@ RtspController::Play(void)
   }
 
   if (mState != CONNECTED) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_NOT_CONNECTED;
   }
 
   mRtspSource->play();
@@ -101,7 +101,7 @@ RtspController::Pause(void)
   }
 
   if (mState != CONNECTED) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_NOT_CONNECTED;
   }
 
   mRtspSource->pause();
@@ -118,7 +118,7 @@ RtspController::Resume(void)
   }
 
   if (mState != CONNECTED) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_NOT_CONNECTED;
   }
 
   mRtspSource->play();
@@ -135,7 +135,7 @@ RtspController::Suspend(void)
   }
 
   if (mState != CONNECTED) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_NOT_CONNECTED;
   }
 
   mRtspSource->pause();
@@ -152,7 +152,7 @@ RtspController::Seek(uint64_t seekTimeUs)
   }
 
   if (mState != CONNECTED) {
-    return NS_ERROR_UNEXPECTED;
+    return NS_ERROR_NOT_CONNECTED;
   }
 
   mRtspSource->seek(seekTimeUs);

@@ -1959,7 +1959,12 @@ var gA11yEventObserver =
         var type = eventTypeToString(event.eventType);
         var info = "Event type: " + type;
 
-        if (event instanceof nsIAccessibleTextChangeEvent) {
+        if (event instanceof nsIAccessibleStateChangeEvent) {
+          var stateStr = statesToString(event.isExtraState ? 0 : event.state,
+                                        event.isExtraState ? event.state : 0);
+          info += ", state: " + stateStr + ", is enabled: " + event.isEnabled;
+
+        } else if (event instanceof nsIAccessibleTextChangeEvent) {
           info += ", start: " + event.start + ", length: " + event.length +
             ", " + (event.isInserted ? "inserted" : "removed") +
             " text: " + event.modifiedText;

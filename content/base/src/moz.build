@@ -201,6 +201,7 @@ LOCAL_INCLUDES += [
     '/content/xslt/src/xpath',
     '/content/xul/content/src',
     '/content/xul/document/src',
+    '/docshell/base',
     '/dom/base',
     '/dom/ipc',
     '/dom/workers',

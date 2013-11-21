@@ -1083,12 +1083,9 @@ nsresult HTMLMediaElement::LoadResource()
   }
 
   // Check if media is allowed for the docshell.
-  nsCOMPtr<nsISupports> container = OwnerDoc()->GetContainer();
-  if (container) {
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-    if (docShell && !docShell->GetAllowMedia()) {
-      return NS_ERROR_FAILURE;
-    }
+  nsCOMPtr<nsIDocShell> docShell = OwnerDoc()->GetDocShell();
+  if (docShell && !docShell->GetAllowMedia()) {
+    return NS_ERROR_FAILURE;
   }
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
@@ -2066,6 +2063,19 @@ void HTMLMediaElement::SetPlayedOrSeeked(bool aValue)
   frame->PresContext()->PresShell()->FrameNeedsReflow(frame,
                                                       nsIPresShell::eTreeChange,
                                                       NS_FRAME_IS_DIRTY);
+}
+
+void
+HTMLMediaElement::ResetConnectionState()
+{
+  mBegun = false;
+  SetCurrentTime(0);
+  FireTimeUpdate(false);
+  DispatchAsyncEvent(NS_LITERAL_STRING("ended"));
+  mNetworkState = nsIDOMHTMLMediaElement::NETWORK_EMPTY;
+  AddRemoveSelfReference();
+  ChangeDelayLoadStatus(false);
+  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
 }
 
 void

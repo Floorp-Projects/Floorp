@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=940783
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 940783</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 940783 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function checkHistoryThrows(hist) {
+    checkThrows(function() { hist.length; });
+    checkThrows(function() { hist.state; });
+    checkThrows(function() { hist.go(); });
+    checkThrows(function() { hist.back(); });
+    checkThrows(function() { hist.forward(); });
+    checkThrows(function() { hist.pushState({}, "foo"); });
+    checkThrows(function() { hist.replaceState({}, "foo"); });
+
+  }
+
+  window.gLoads = 0;
+  function load() {
+    var iwin = $('ifr').contentWindow;
+    ++gLoads;
+    if (gLoads == 1) {
+      window.gHist = iwin.history;
+      iwin.location = "file_empty.html";
+    } else if (gLoads == 2) {
+      checkHistoryThrows(gHist);
+      window.gHist = iwin.history;
+      iwin.location = "http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html";
+    } else {
+      checkHistoryThrows(gHist);
+      $('ifr').setAttribute('onload', null);
+      SimpleTest.finish();
+    }
+  }
+
+  function checkThrows(fn) {
+    try { fn(); ok(false, "Should have thrown: " + fn.toSource()); }
+    catch (e) { ok(!!/denied|insecure/.exec(e), "Threw correctly: " + e); }
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=940783">Mozilla Bug 940783</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="ifr" onload="load();" src="file_empty.html"></iframe>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

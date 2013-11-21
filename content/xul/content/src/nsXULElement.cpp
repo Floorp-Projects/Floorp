@@ -511,7 +511,7 @@ static bool IsNonList(nsINodeInfo* aNodeInfo)
 }
 
 bool
-nsXULElement::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
+nsXULElement::IsFocusableInternal(int32_t *aTabIndex, bool aWithMouse)
 {
   /* 
    * Returns true if an element may be focused, and false otherwise. The inout

@@ -399,6 +399,15 @@ class TypedRegisterSet
 #error "Bad architecture"
 #endif
     }
+    ValueOperand takeValueOperand() {
+#if defined(JS_NUNBOX32)
+        return ValueOperand(takeAny(), takeAny());
+#elif defined(JS_PUNBOX64)
+        return ValueOperand(takeAny());
+#else
+#error "Bad architecture"
+#endif
+    }
     T getAny() const {
         // The choice of first or last here is mostly arbitrary, as they are
         // about the same speed on popular architectures. We choose first, as
@@ -406,6 +415,17 @@ class TypedRegisterSet
         // registers are sometimes more efficient (e.g. optimized encodings for
         // EAX on x86).
         return getFirst();
+    }
+    T getAnyExcluding(T preclude) {
+        JS_ASSERT(!empty());
+        if (!has(preclude))
+            return getAny();
+
+        take(preclude);
+        JS_ASSERT(!empty());
+        T result = getAny();
+        add(preclude);
+        return result;
     }
     T getFirst() const {
         JS_ASSERT(!empty());
@@ -423,13 +443,9 @@ class TypedRegisterSet
         return reg;
     }
     T takeAnyExcluding(T preclude) {
-        if (!has(preclude))
-            return takeAny();
-
-        take(preclude);
-        T result = takeAny();
-        add(preclude);
-        return result;
+        T reg = getAnyExcluding(preclude);
+        take(reg);
+        return reg;
     }
     ValueOperand takeAnyValue() {
 #if defined(JS_NUNBOX32)

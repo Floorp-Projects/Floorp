@@ -708,8 +708,7 @@ class MarionetteTestRunner(object):
                                                for results in results_list])))
         testsuite.setAttribute('errors', str(sum([len(results.errors)
                                              for results in results_list])))
-        if hasattr(results, 'skipped'):
-            testsuite.setAttribute('skips', str(sum([len(results.skipped) +
+        testsuite.setAttribute('skips', str(sum([len(results.skipped) +
                                                      len(results.expectedFailures)
                                                      for results in results_list])))
 

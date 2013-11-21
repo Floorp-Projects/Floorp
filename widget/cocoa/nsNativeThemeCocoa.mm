@@ -3255,6 +3255,10 @@ nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
     // performance, because we create layers for them.
     return eOpaque;
 
+  case NS_THEME_TOOLBAR:
+  case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
+    return eOpaque;
+
   default:
     return eUnknownTransparency;
   }

@@ -5251,21 +5251,10 @@ IonBuilder::makeCall(JSFunction *target, CallInfo &callInfo, bool cloneAtCallsit
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
 
-    bool barrier = true;
-    MDefinition *replace = call;
-    if (call->isDOMFunction()) {
-        JSFunction* target = call->getSingleTarget();
-        JS_ASSERT(target && target->isNative() && target->jitInfo());
-        const JSJitInfo *jitinfo = target->jitInfo();
-        barrier = DOMCallNeedsBarrier(jitinfo, types);
-        replace = ensureDefiniteType(call, jitinfo->returnType);
-        if (replace != call) {
-            current->pop();
-            current->push(replace);
-        }
-    }
+    if (call->isDOMFunction())
+        return pushDOMTypeBarrier(call, types, call->getSingleTarget());
 
-    return pushTypeBarrier(replace, types, barrier);
+    return pushTypeBarrier(call, types, true);
 }
 
 bool
@@ -6147,6 +6136,38 @@ IonBuilder::pushTypeBarrier(MDefinition *def, types::TemporaryTypeSet *observed,
     return true;
 }
 
+bool
+IonBuilder::pushDOMTypeBarrier(MInstruction *ins, types::TemporaryTypeSet *observed, JSFunction* func)
+{
+    JS_ASSERT(func && func->isNative() && func->jitInfo());
+
+    const JSJitInfo *jitinfo = func->jitInfo();
+    bool barrier = DOMCallNeedsBarrier(jitinfo, observed);
+    // Need to be a bit careful: if jitinfo->returnType is JSVAL_TYPE_DOUBLE but
+    // types->getKnownTypeTag() is JSVAL_TYPE_INT32, then don't unconditionally
+    // unbox as a double.  Instead, go ahead and barrier on having an int type,
+    // since we know we need a barrier anyway due to the type mismatch.  This is
+    // the only situation in which TI actually has more information about the
+    // JSValueType than codegen can, short of jitinfo->returnType just being
+    // JSVAL_TYPE_UNKNOWN.
+    MDefinition* replace = ins;
+    if (jitinfo->returnType != JSVAL_TYPE_DOUBLE ||
+        observed->getKnownTypeTag() != JSVAL_TYPE_INT32) {
+        JS_ASSERT(jitinfo->returnType == JSVAL_TYPE_UNKNOWN ||
+                  observed->getKnownTypeTag() == JSVAL_TYPE_UNKNOWN ||
+                  jitinfo->returnType == observed->getKnownTypeTag());
+        replace = ensureDefiniteType(ins, jitinfo->returnType);
+        if (replace != ins) {
+            current->pop();
+            current->push(replace);
+        }
+    } else {
+        JS_ASSERT(barrier);
+    }
+
+    return pushTypeBarrier(replace, observed, barrier);
+}
+
 MDefinition *
 IonBuilder::ensureDefiniteType(MDefinition *def, JSValueType definiteType)
 {
@@ -6512,15 +6533,19 @@ IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *
         return true;
 
     switch (elemTypeReprs.kind()) {
-    case TypeRepresentation::Struct:
-    case TypeRepresentation::Array:
+      case TypeRepresentation::X4:
+        // FIXME (bug 894104): load into a MIRType_float32x4 etc
+        return true;
+
+      case TypeRepresentation::Struct:
+      case TypeRepresentation::Array:
         return getElemTryComplexElemOfTypedObject(emitted,
                                                   obj,
                                                   index,
                                                   objTypeReprs,
                                                   elemTypeReprs,
                                                   elemSize);
-    case TypeRepresentation::Scalar:
+      case TypeRepresentation::Scalar:
         return getElemTryScalarElemOfTypedObject(emitted,
                                                  obj,
                                                  index,
@@ -8187,6 +8212,10 @@ IonBuilder::getPropTryTypedObject(bool *emitted, PropertyName *name,
       case TypeRepresentation::Reference:
         return true;
 
+      case TypeRepresentation::X4:
+        // FIXME (bug 894104): load into a MIRType_float32x4 etc
+        return true;
+
       case TypeRepresentation::Struct:
       case TypeRepresentation::Array:
         return getPropTryComplexPropOfTypedObject(emitted,
@@ -8341,13 +8370,8 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, PropertyName *name,
 
         if (get->isEffectful() && !resumeAfter(get))
             return false;
-        bool barrier = DOMCallNeedsBarrier(jitinfo, types);
-        MDefinition *replace = ensureDefiniteType(get, jitinfo->returnType);
-        if (replace != get) {
-            current->pop();
-            current->push(replace);
-        }
-        if (!pushTypeBarrier(replace, types, barrier))
+
+        if (!pushDOMTypeBarrier(get, types, commonGetter))
             return false;
 
         *emitted = true;
@@ -8725,6 +8749,10 @@ IonBuilder::setPropTryTypedObject(bool *emitted, MDefinition *obj,
         return true;
 
     switch (fieldTypeReprs.kind()) {
+      case TypeRepresentation::X4:
+        // FIXME (bug 894104): store into a MIRType_float32x4 etc
+        return true;
+
       case TypeRepresentation::Reference:
       case TypeRepresentation::Struct:
       case TypeRepresentation::Array:

@@ -207,6 +207,36 @@ struct ParamTraits<mozilla::WidgetMouseEvent>
 };
 
 template<>
+struct ParamTraits<mozilla::WidgetPointerEvent>
+{
+  typedef mozilla::WidgetPointerEvent paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<mozilla::WidgetMouseEvent>(aParam));
+    WriteParam(aMsg, aParam.pointerId);
+    WriteParam(aMsg, aParam.width);
+    WriteParam(aMsg, aParam.height);
+    WriteParam(aMsg, aParam.tiltX);
+    WriteParam(aMsg, aParam.tiltY);
+    WriteParam(aMsg, aParam.isPrimary);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    bool rv =
+      ReadParam(aMsg, aIter, static_cast<mozilla::WidgetMouseEvent*>(aResult)) &&
+      ReadParam(aMsg, aIter, &aResult->pointerId) &&
+      ReadParam(aMsg, aIter, &aResult->width) &&
+      ReadParam(aMsg, aIter, &aResult->height) &&
+      ReadParam(aMsg, aIter, &aResult->tiltX) &&
+      ReadParam(aMsg, aIter, &aResult->tiltY) &&
+      ReadParam(aMsg, aIter, &aResult->isPrimary);
+    return rv;
+  }
+};
+
+template<>
 struct ParamTraits<mozilla::WidgetTouchEvent>
 {
   typedef mozilla::WidgetTouchEvent paramType;

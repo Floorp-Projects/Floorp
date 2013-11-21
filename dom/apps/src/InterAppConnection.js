@@ -44,7 +44,8 @@ InterAppConnection.prototype = {
   contractID: "@mozilla.org/dom/inter-app-connection;1",
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer,
-                                         Ci.nsISupportsWeakReference]),
+                                         Ci.nsISupportsWeakReference,
+                                         Ci.nsIObserver]),
 
   __init: function(aKeyword, aPublisher, aSubscriber) {
     if (DEBUG) {
