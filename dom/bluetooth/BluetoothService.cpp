@@ -146,28 +146,22 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (!gBluetoothService) {
-      return NS_OK;
-    }
-
-    if (!gInShutdown) {
-      gBluetoothService->SetEnabled(mEnabled);
-
-      nsAutoString signalName, signalPath;
-      BluetoothValue v = true;
-      if (mEnabled) {
-        signalName = NS_LITERAL_STRING("Enabled");
-      } else {
-        signalName = NS_LITERAL_STRING("Disabled");
-      }
-      signalPath = NS_LITERAL_STRING(KEY_MANAGER);
-      BluetoothSignal signal(signalName, signalPath, v);
-      gBluetoothService->DistributeSignal(signal);
-    }
+    NS_ENSURE_TRUE(gBluetoothService, NS_OK);
 
     if (gInShutdown) {
       gBluetoothService = nullptr;
+      return NS_OK;
     }
+
+    // Update mEnabled of BluetoothService object since
+    // StartInternal/StopInternal have been already done.
+    gBluetoothService->SetEnabled(mEnabled);
+
+    nsAutoString signalName;
+    signalName = mEnabled ? NS_LITERAL_STRING("Enabled")
+                          : NS_LITERAL_STRING("Disabled");
+    BluetoothSignal signal(signalName, NS_LITERAL_STRING(KEY_MANAGER), true);
+    gBluetoothService->DistributeSignal(signal);
 
     return NS_OK;
   }

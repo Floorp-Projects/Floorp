@@ -133,14 +133,12 @@ public:
   // nsBaseWidget methods we override
   //
 
-  // Documents loaded in child processes are always subdocuments of
-  // other docs in an ancestor process.  To ensure that the
-  // backgrounds of those documents are painted like those of
-  // same-process subdocuments, we force the widget here to be
-  // transparent, which in turn will cause layout to use a transparent
-  // backstop background color.
+  // Force documents to be opaque so that we don't have to retain
+  // the content behind a remote frame. This is a large memory saving
+  // for HiDPI b2g devices. When we need apps to be transparent we
+  // will need to provide a way for them to opt into it.
   virtual nsTransparencyMode GetTransparencyMode() MOZ_OVERRIDE
-  { return eTransparencyTransparent; }
+  { return eTransparencyOpaque; }
 
   virtual LayerManager*
   GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,

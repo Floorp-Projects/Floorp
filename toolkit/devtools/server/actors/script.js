@@ -2883,12 +2883,6 @@ ObjectActor.prototype = {
         // with "permission denied" errors for some functions.
         dumpn(e);
       }
-
-      // Add source location information.
-      if (this.obj.script) {
-        g.url = this.obj.script.url;
-        g.line = this.obj.script.startLine;
-      }
     }
 
     return g;
@@ -2923,6 +2917,48 @@ ObjectActor.prototype = {
     }
 
     this._forcedMagicProps = true;
+  },
+
+  /**
+   * Handle a protocol request to provide the definition site of this function
+   * object.
+   *
+   * @param aRequest object
+   *        The protocol request object.
+   */
+  onDefinitionSite: function OA_onDefinitionSite(aRequest) {
+    if (this.obj.class != "Function") {
+      return {
+        from: this.actorID,
+        error: "objectNotFunction",
+        message: this.actorID + " is not a function."
+      };
+    }
+
+    if (!this.obj.script) {
+      return {
+        from: this.actorID,
+        error: "noScript",
+        message: this.actorID + " has no Debugger.Script"
+      };
+    }
+
+    const generatedLocation = {
+      url: this.obj.script.url,
+      line: this.obj.script.startLine,
+      // TODO bug 901138: use Debugger.Script.prototype.startColumn.
+      column: 0
+    };
+
+    return this.threadActor.sources.getOriginalLocation(generatedLocation)
+      .then(({ url, line, column }) => {
+        return {
+          from: this.actorID,
+          url: url,
+          line: line,
+          column: column
+        };
+      });
   },
 
   /**
@@ -3230,6 +3266,7 @@ ObjectActor.prototype = {
 };
 
 ObjectActor.prototype.requestTypes = {
+  "definitionSite": ObjectActor.prototype.onDefinitionSite,
   "parameterNames": ObjectActor.prototype.onParameterNames,
   "prototypeAndProperties": ObjectActor.prototype.onPrototypeAndProperties,
   "prototype": ObjectActor.prototype.onPrototype,

@@ -3990,6 +3990,26 @@ nsDocument::SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
                                "StyleSheetApplicableStateChanged",
                                aApplicable);
   }
+
+  if (!mSSApplicableStateNotificationPending) {
+    nsRefPtr<nsIRunnable> notification = NS_NewRunnableMethod(this,
+      &nsDocument::NotifyStyleSheetApplicableStateChanged);
+    mSSApplicableStateNotificationPending =
+      NS_SUCCEEDED(NS_DispatchToCurrentThread(notification));
+  }
+}
+
+void
+nsDocument::NotifyStyleSheetApplicableStateChanged()
+{
+  mSSApplicableStateNotificationPending = false;
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->NotifyObservers(static_cast<nsIDocument*>(this),
+                                     "style-sheet-applicable-state-changed",
+                                     nullptr);
+  }
 }
 
 // These three functions are a lot like the implementation of the
