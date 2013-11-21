@@ -587,7 +587,6 @@ var SelectionHelperUI = {
 
     Elements.browsers.addEventListener("URLChanged", this, true);
     Elements.browsers.addEventListener("SizeChanged", this, true);
-    Elements.browsers.addEventListener("ZoomChanged", this, true);
 
     Elements.navbar.addEventListener("transitionend", this, true);
     Elements.navbar.addEventListener("MozAppbarDismissing", this, true);
@@ -615,7 +614,6 @@ var SelectionHelperUI = {
 
     Elements.browsers.removeEventListener("URLChanged", this, true);
     Elements.browsers.removeEventListener("SizeChanged", this, true);
-    Elements.browsers.removeEventListener("ZoomChanged", this, true);
 
     Elements.navbar.removeEventListener("transitionend", this, true);
     Elements.navbar.removeEventListener("MozAppbarDismissing", this, true);
@@ -1080,7 +1078,6 @@ var SelectionHelperUI = {
         this._shutdown();
         break;
 
-      case "ZoomChanged":
       case "MozPrecisePointer":
         this.closeEditSession(true);
         break;
