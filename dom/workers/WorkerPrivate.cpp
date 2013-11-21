@@ -5260,7 +5260,7 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx, uint64_t aMessagePortSerial)
     return false;
   }
 
-  MessageEventInit init;
+  RootedDictionary<MessageEventInit> init(aCx);
   init.mBubbles = false;
   init.mCancelable = false;
   init.mSource = &jsPort.toObject();
