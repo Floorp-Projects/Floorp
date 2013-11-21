@@ -199,6 +199,7 @@ public:
 
 protected:
   gfx::IntRect GetTileRect(uint32_t aID) const;
+  void Reset();
 
   RefPtr<CompositorD3D9> mCompositor;
   bool mIsTiled;
