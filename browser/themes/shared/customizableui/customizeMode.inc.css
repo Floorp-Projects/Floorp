@@ -115,21 +115,6 @@ toolbarpaletteitem[mousedown] {
   opacity: 0.8;
 }
 
-.panel-customization-placeholder,
-toolbarpaletteitem[place="palette"],
-toolbarpaletteitem[place="panel"] {
-  transition: background-color, border-color, box-shadow, transform;
-  transition-duration: 10ms, 10ms, 10ms, 250ms;
-  transition-timing-function: linear, linear, linear, ease-in-out;
-}
-
-toolbarpaletteitem[notransition][place="palette"],
-toolbarpaletteitem[notransition][place="panel"] {
-  transition: background-color, border-color, box-shadow;
-  transition-duration: 10ms, 10ms, 10ms;
-  transition-timing-function: linear, linear, linear;
-}
-
 toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon {
   transition: transform 50ms ease-in-out;
 }

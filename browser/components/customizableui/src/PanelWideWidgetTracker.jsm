@@ -23,6 +23,13 @@ let gWideWidgets = new Set();
 // All the widgets we know of:
 let gSeenWidgets = new Set();
 
+// The class by which we recognize wide widgets:
+const kWidePanelItemClass = "panel-wide-item";
+
+// TODO(bug 885574): Merge this constant with the one in CustomizeMode.jsm,
+//                   maybe just use a pref for this.
+const kColumnsInMenuPanel = 3;
+
 let PanelWideWidgetTracker = {
   // Listeners used to validate panel contents whenever they change:
   onWidgetAdded: function(aWidgetId, aArea, aPosition) {
@@ -54,7 +61,7 @@ let PanelWideWidgetTracker = {
   // Furthermore, onWidgetCreated only fires for API-based widgets, not for XUL ones.
   onWidgetAfterDOMChange: function(aNode, aNextNode, aContainer) {
     if (!gSeenWidgets.has(aNode.id)) {
-      if (aNode.classList.contains(CustomizableUI.WIDE_PANEL_CLASS)) {
+      if (aNode.classList.contains(kWidePanelItemClass)) {
         gWideWidgets.add(aNode.id);
       }
       gSeenWidgets.add(aNode.id);
@@ -130,12 +137,12 @@ let PanelWideWidgetTracker = {
       }
     }
 
-    if (fixedPos !== null || prevSiblingCount % CustomizableUI.PANEL_COLUMN_COUNT) {
+    if (fixedPos !== null || prevSiblingCount % kColumnsInMenuPanel) {
       let desiredPos = (fixedPos !== null) ? fixedPos : gPanelPlacements.indexOf(aWidgetId);
-      let desiredChange = -(prevSiblingCount % CustomizableUI.PANEL_COLUMN_COUNT);
+      let desiredChange = -(prevSiblingCount % kColumnsInMenuPanel);
       if (aMoveForwards && fixedPos == null) {
         // +1 because otherwise we'd count ourselves:
-        desiredChange = CustomizableUI.PANEL_COLUMN_COUNT + desiredChange + 1;
+        desiredChange = kColumnsInMenuPanel + desiredChange + 1;
       }
       desiredPos += desiredChange;
       CustomizableUI.moveWidgetWithinArea(aWidgetId, desiredPos);
