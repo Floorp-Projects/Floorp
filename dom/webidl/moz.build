@@ -254,7 +254,6 @@ WEBIDL_FILES = [
     'PhoneNumberService.webidl',
     'Plugin.webidl',
     'PluginArray.webidl',
-    'PointerEvent.webidl',
     'Position.webidl',
     'PositionError.webidl',
     'ProcessingInstruction.webidl',
