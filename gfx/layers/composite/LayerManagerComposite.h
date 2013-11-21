@@ -284,6 +284,7 @@ private:
   gfxMatrix mWorldMatrix;
 
   bool mInTransaction;
+  bool mIsCompositorReady;
   nsIntRegion mInvalidRegion;
   nsAutoPtr<LayerProperties> mClonedLayerTreeProperties;
 };
