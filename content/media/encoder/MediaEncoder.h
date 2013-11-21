@@ -54,7 +54,6 @@ public :
     ENCODE_METADDATA,
     ENCODE_TRACK,
     ENCODE_DONE,
-    ENCODE_ERROR,
   };
 
   MediaEncoder(ContainerWriter* aWriter,
@@ -120,11 +119,6 @@ public :
     if (mAudioEncoder) {
       mAudioEncoder->NotifyCancel();
     }
-  }
-
-  bool HasError()
-  {
-    return mState == ENCODE_ERROR;
   }
 
 private:
