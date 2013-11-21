@@ -515,6 +515,21 @@ protected:
                       // in our constructor).
 };
 
+// Helper function to calculate the sum of our flex items'
+// margin-box main sizes.
+static nscoord
+SumFlexItemMarginBoxMainSizes(const FlexboxAxisTracker& aAxisTracker,
+                              const nsTArray<FlexItem>& aItems)
+{
+  nscoord sum = 0;
+  for (uint32_t i = 0; i < aItems.Length(); ++i) {
+    const FlexItem& item = aItems[i];
+    sum += item.GetMainSize() +
+      item.GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
+  }
+  return sum;
+}
+
 // Helper-function to find the first non-anonymous-box descendent of aFrame.
 static nsIFrame*
 GetFirstNonAnonBoxDescendant(nsIFrame* aFrame)
@@ -1987,7 +2002,9 @@ nscoord
 nsFlexContainerFrame::ComputeFlexContainerMainSize(
   const nsHTMLReflowState& aReflowState,
   const FlexboxAxisTracker& aAxisTracker,
-  const nsTArray<FlexItem>& aItems)
+  const nsTArray<FlexItem>& aItems,
+  nscoord aAvailableHeightForContent,
+  nsReflowStatus& aStatus)
 {
   if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
     // Horizontal case is easy -- our main size is our computed width
@@ -1995,22 +2012,41 @@ nsFlexContainerFrame::ComputeFlexContainerMainSize(
     return aReflowState.ComputedWidth();
   }
 
-  // Vertical case, with non-auto-height:
-  if (aReflowState.ComputedHeight() != NS_AUTOHEIGHT) {
-    return aReflowState.ComputedHeight();
+  nscoord effectiveComputedHeight = GetEffectiveComputedHeight(aReflowState);
+  if (effectiveComputedHeight != NS_INTRINSICSIZE) {
+    // Vertical case, with fixed height:
+    if (aAvailableHeightForContent == NS_UNCONSTRAINEDSIZE ||
+        effectiveComputedHeight < aAvailableHeightForContent) {
+      // Not in a fragmenting context, OR no need to fragment because we have
+      // more available height than we need. Either way, just use our fixed
+      // height.  (Note that the reflow state has already done the appropriate
+      // min/max-height clamping.)
+      return effectiveComputedHeight;
+    }
+
+    // Fragmenting *and* our fixed height is too tall for available height:
+    // Mark incomplete so we get a next-in-flow, and take up all of the
+    // available height (or the amount of height required by our children, if
+    // that's larger; but of course not more than our own computed height).
+    // XXXdholbert For now, we don't support pushing children to our next
+    // continuation or splitting children, so "amount of height required by
+    // our children" is just the sum of our children's heights.
+    NS_FRAME_SET_INCOMPLETE(aStatus);
+    nscoord sumOfChildHeights =
+      SumFlexItemMarginBoxMainSizes(aAxisTracker, aItems);
+    if (sumOfChildHeights <= aAvailableHeightForContent) {
+      return aAvailableHeightForContent;
+    }
+    return std::min(effectiveComputedHeight, sumOfChildHeights);
   }
 
   // Vertical case, with auto-height:
   // Resolve auto-height to the sum of our items' hypothetical outer main
   // sizes (their outer heights), clamped to our computed min/max main-size
   // properties (min-height & max-height).
-  nscoord sumOfChildHeights = 0;
-  for (uint32_t i = 0; i < aItems.Length(); ++i) {
-    sumOfChildHeights +=
-      aItems[i].GetMainSize() +
-      aItems[i].GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
-  }
-
+  // XXXdholbert Handle constrained-aAvailableHeightForContent case here.
+  nscoord sumOfChildHeights =
+    SumFlexItemMarginBoxMainSizes(aAxisTracker, aItems);
   return NS_CSS_MINMAX(sumOfChildHeights,
                        aReflowState.mComputedMinHeight,
                        aReflowState.mComputedMaxHeight);
@@ -2229,8 +2265,21 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
                                   axisTracker, items);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // If we're being fragmented into a constrained height, subtract off
+  // borderpadding-top from it, to get the available height for our
+  // content box. (Don't subtract if we're skipping top border/padding,
+  // though.)
+  nscoord availableHeightForContent = aReflowState.availableHeight;
+  if (availableHeightForContent != NS_UNCONSTRAINEDSIZE &&
+      !(GetSkipSides() & (1 << NS_SIDE_TOP))) {
+    availableHeightForContent -= aReflowState.mComputedBorderPadding.top;
+    // (Don't let that push availableHeightForContent below zero, though):
+    availableHeightForContent = std::max(availableHeightForContent, 0);
+  }
+
   const nscoord contentBoxMainSize =
-    ComputeFlexContainerMainSize(aReflowState, axisTracker, items);
+    ComputeFlexContainerMainSize(aReflowState, axisTracker, items,
+                                 availableHeightForContent, aStatus);
 
   ResolveFlexibleLengths(axisTracker, contentBoxMainSize, items);
 
