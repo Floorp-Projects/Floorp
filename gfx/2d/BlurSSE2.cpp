@@ -12,7 +12,7 @@ namespace mozilla {
 namespace gfx {
 
 MOZ_ALWAYS_INLINE
-uint32_t DivideAndPack(__m128i aValues, __m128i aDivisor)
+__m128i Divide(__m128i aValues, __m128i aDivisor)
 {
   const __m128i mask = _mm_setr_epi32(0x0, 0xffffffff, 0x0, 0xffffffff);
   static const union {
@@ -28,10 +28,16 @@ uint32_t DivideAndPack(__m128i aValues, __m128i aDivisor)
   __m128i p_3_1 = _mm_srli_epi64(_mm_add_epi64(multiplied31, roundingAddition.m), 32);
   __m128i p4_2_ = _mm_and_si128(_mm_add_epi64(multiplied42, roundingAddition.m), mask);
   __m128i p4321 = _mm_or_si128(p_3_1, p4_2_);
+  return p4321;
+}
 
-  __m128i final = _mm_packus_epi16(_mm_packs_epi32(p4321, _mm_setzero_si128()), _mm_setzero_si128());
-
-  return _mm_cvtsi128_si32(final);
+MOZ_ALWAYS_INLINE
+__m128i BlurFourPixels(const __m128i& aTopLeft, const __m128i& aTopRight,
+                       const __m128i& aBottomRight, const __m128i& aBottomLeft,
+                       const __m128i& aDivisor)
+{
+  __m128i values = _mm_add_epi32(_mm_sub_epi32(_mm_sub_epi32(aBottomRight, aTopRight), aBottomLeft), aTopLeft);
+  return Divide(values, aDivisor);
 }
 
 MOZ_ALWAYS_INLINE
@@ -237,7 +243,53 @@ AlphaBoxBlur::BoxBlur_SSE2(uint8_t* aData,
     uint32_t *bottomRightBase = innerIntegral + ((y + aBottomLobe) * ptrdiff_t(stride32bit) + aRightLobe);
     uint32_t *bottomLeftBase = innerIntegral + ((y + aBottomLobe) * ptrdiff_t(stride32bit) - aLeftLobe);
 
-    for (int32_t x = 0; x < size.width; x += 4) {
+    int32_t x = 0;
+    // Process 16 pixels at a time for as long as possible.
+    for (; x <= size.width - 16; x += 16) {
+      if (inSkipRectY && x > skipRect.x && x < skipRect.XMost()) {
+        x = skipRect.XMost() - 16;
+        // Trigger early jump on coming loop iterations, this will be reset
+        // next line anyway.
+        inSkipRectY = false;
+        continue;
+      }
+
+      __m128i topLeft;
+      __m128i topRight;
+      __m128i bottomRight;
+      __m128i bottomLeft;
+
+      topLeft = loadUnaligned128((__m128i*)(topLeftBase + x));
+      topRight = loadUnaligned128((__m128i*)(topRightBase + x));
+      bottomRight = loadUnaligned128((__m128i*)(bottomRightBase + x));
+      bottomLeft = loadUnaligned128((__m128i*)(bottomLeftBase + x));
+      __m128i result1 = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
+
+      topLeft = loadUnaligned128((__m128i*)(topLeftBase + x + 4));
+      topRight = loadUnaligned128((__m128i*)(topRightBase + x + 4));
+      bottomRight = loadUnaligned128((__m128i*)(bottomRightBase + x + 4));
+      bottomLeft = loadUnaligned128((__m128i*)(bottomLeftBase + x + 4));
+      __m128i result2 = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
+
+      topLeft = loadUnaligned128((__m128i*)(topLeftBase + x + 8));
+      topRight = loadUnaligned128((__m128i*)(topRightBase + x + 8));
+      bottomRight = loadUnaligned128((__m128i*)(bottomRightBase + x + 8));
+      bottomLeft = loadUnaligned128((__m128i*)(bottomLeftBase + x + 8));
+      __m128i result3 = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
+
+      topLeft = loadUnaligned128((__m128i*)(topLeftBase + x + 12));
+      topRight = loadUnaligned128((__m128i*)(topRightBase + x + 12));
+      bottomRight = loadUnaligned128((__m128i*)(bottomRightBase + x + 12));
+      bottomLeft = loadUnaligned128((__m128i*)(bottomLeftBase + x + 12));
+      __m128i result4 = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
+
+      __m128i final = _mm_packus_epi16(_mm_packs_epi32(result1, result2), _mm_packs_epi32(result3, result4));
+
+      _mm_storeu_si128((__m128i*)(data + stride * y + x), final);
+    }
+
+    // Process the remaining pixels 4 bytes at a time.
+    for (; x < size.width; x += 4) {
       if (inSkipRectY && x > skipRect.x && x < skipRect.XMost()) {
         x = skipRect.XMost() - 4;
         // Trigger early jump on coming loop iterations, this will be reset
@@ -250,9 +302,10 @@ AlphaBoxBlur::BoxBlur_SSE2(uint8_t* aData,
       __m128i bottomRight = loadUnaligned128((__m128i*)(bottomRightBase + x));
       __m128i bottomLeft = loadUnaligned128((__m128i*)(bottomLeftBase + x));
 
-      __m128i values = _mm_add_epi32(_mm_sub_epi32(_mm_sub_epi32(bottomRight, topRight), bottomLeft), topLeft);
+      __m128i result = BlurFourPixels(topLeft, topRight, bottomRight, bottomLeft, divisor);
+      __m128i final = _mm_packus_epi16(_mm_packs_epi32(result, _mm_setzero_si128()), _mm_setzero_si128());
 
-      *(uint32_t*)(data + stride * y + x) = DivideAndPack(values, divisor);
+      *(uint32_t*)(data + stride * y + x) = _mm_cvtsi128_si32(final);
     }
   }
 
