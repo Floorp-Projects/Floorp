@@ -33,6 +33,7 @@ class nsMathMLContainerFrame : public nsContainerFrame,
 public:
   nsMathMLContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
 
+  NS_DECL_QUERYFRAME_TARGET(nsMathMLContainerFrame)
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -92,16 +93,18 @@ public:
               nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   /**
-   * Both GetMinWidth and GetPrefWidth return whatever
-   * GetIntrinsicWidth returns.
+   * Both GetMinWidth and GetPrefWidth use the intrinsic width metrics
+   * returned by GetIntrinsicMetrics, including ink overflow.
    */
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
   /**
-   * Return the intrinsic width of the frame's content area.
+   * Return the intrinsic horizontal metrics of the frame's content area.
    */
-  virtual nscoord GetIntrinsicWidth(nsRenderingContext *aRenderingContext);
+  virtual void
+  GetIntrinsicWidthMetrics(nsRenderingContext* aRenderingContext,
+                           nsHTMLReflowMetrics& aDesiredSize);
 
   NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
