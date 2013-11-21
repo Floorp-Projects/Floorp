@@ -20,12 +20,16 @@
 
 #include <hardware/hardware.h>
 
+#include "bluedroid/BluetoothA2dpManager.h"
+#include "bluedroid/BluetoothHfpManager.h"
 #include "BluetoothProfileController.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothUtils.h"
 #include "BluetoothUuid.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/ipc/UnixSocket.h"
+#include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPtr.h"
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -75,6 +79,7 @@ static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sGetPairedDeviceRunnableArray
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sSetPropertyRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sUnbondingRunnableArray;
 static nsTArray<int> sRequestedDeviceCountArray;
+static StaticAutoPtr<Monitor> sToggleBtMonitor;
 
 /**
  *  Static callback functions
@@ -169,7 +174,7 @@ IsReady()
 const bt_interface_t*
 GetBluetoothInterface()
 {
-  return (IsReady()) ? sBtInterface : nullptr;
+  return sBtInterface;
 }
 
 void
@@ -184,7 +189,7 @@ StringToBdAddressType(const nsAString& aBdAddress,
   }
 }
 
-static void
+void
 BdAddressTypeToString(bt_bdaddr_t* aBdAddressType, nsAString& aRetBdAddress)
 {
   uint8_t* addr = aBdAddressType->address;
@@ -213,6 +218,16 @@ Setup()
   if (ret != BT_STATUS_SUCCESS) {
     BT_LOGR("%s: Fail to set: BT_SCAN_MODE_CONNECTABLE", __FUNCTION__);
   }
+
+  // Event 'AdapterAdded' has to be fired after enabled to notify Gaia
+  // that BluetoothAdapter is ready.
+  BluetoothSignal signal(NS_LITERAL_STRING("AdapterAdded"),
+                         NS_LITERAL_STRING(KEY_MANAGER), true);
+  nsRefPtr<DistributeBluetoothSignalTask>
+    t = new DistributeBluetoothSignalTask(signal);
+  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+    BT_WARNING("Failed to dispatch to main thread!");
+  }
 }
 
 static void
@@ -222,22 +237,15 @@ AdapterStateChangeCallback(bt_state_t aStatus)
 
   BT_LOGR("%s, BT_STATE:%d", __FUNCTION__, aStatus);
 
-  nsAutoString signalName;
-  if (aStatus == BT_STATE_ON) {
-    Setup();
-    sIsBtEnabled = true;
-    signalName = NS_LITERAL_STRING("AdapterAdded");
-  } else {
-    sIsBtEnabled = false;
-    signalName = NS_LITERAL_STRING("Disabled");
+  sIsBtEnabled = (aStatus == BT_STATE_ON);
+
+  {
+    MonitorAutoLock lock(*sToggleBtMonitor);
+    lock.Notify();
   }
 
-  BluetoothSignal signal(signalName, NS_LITERAL_STRING(KEY_MANAGER),
-                         BluetoothValue(true));
-  nsRefPtr<DistributeBluetoothSignalTask>
-    t = new DistributeBluetoothSignalTask(signal);
-  if (NS_FAILED(NS_DispatchToMainThread(t))) {
-    NS_WARNING("Failed to dispatch to main thread!");
+  if (sIsBtEnabled) {
+    Setup();
   }
 }
 
@@ -321,7 +329,7 @@ AdapterPropertiesChangeCallback(bt_status_t aStatus, int aNumProperties,
     nsRefPtr<DistributeBluetoothSignalTask>
       t = new DistributeBluetoothSignalTask(signal);
     if (NS_FAILED(NS_DispatchToMainThread(t))) {
-      NS_WARNING("Failed to dispatch to main thread!");
+      BT_WARNING("Failed to dispatch to main thread!");
     }
 
     // bluedroid BTU task was stored in the task queue, see GKI_send_msg
@@ -447,7 +455,7 @@ DeviceFoundCallback(int aNumProperties, bt_property_t *aProperties)
   nsRefPtr<DistributeBluetoothSignalTask>
     t = new DistributeBluetoothSignalTask(signal);
   if (NS_FAILED(NS_DispatchToMainThread(t))) {
-    NS_WARNING("Failed to dispatch to main thread!");
+    BT_WARNING("Failed to dispatch to main thread!");
   }
 }
 
@@ -491,7 +499,7 @@ PinRequestCallback(bt_bdaddr_t* aRemoteBdAddress,
   nsRefPtr<DistributeBluetoothSignalTask>
     t = new DistributeBluetoothSignalTask(signal);
   if (NS_FAILED(NS_DispatchToMainThread(t))) {
-    NS_WARNING("Failed to dispatch to main thread!");
+    BT_WARNING("Failed to dispatch to main thread!");
   }
 }
 
@@ -524,7 +532,7 @@ SspRequestCallback(bt_bdaddr_t* aRemoteBdAddress, bt_bdname_t* aRemoteBdName,
   nsRefPtr<DistributeBluetoothSignalTask>
     t = new DistributeBluetoothSignalTask(signal);
   if (NS_FAILED(NS_DispatchToMainThread(t))) {
-    NS_WARNING("Failed to dispatch to main thread!");
+    BT_WARNING("Failed to dispatch to main thread!");
   }
 }
 
@@ -629,7 +637,12 @@ EnsureBluetoothHalLoad()
   module->methods->open(module, BT_HARDWARE_MODULE_ID, &device);
   sBtDevice = (bluetooth_device_t *)device;
   sBtInterface = sBtDevice->get_bluetooth_interface();
-  BT_LOGD("Bluetooth HAL loaded");
+
+  int ret = sBtInterface->init(&sBluetoothCallbacks);
+  if (ret != BT_STATUS_SUCCESS) {
+    BT_LOGR("Error while setting the callbacks %s", __FUNCTION__);
+    sBtInterface = nullptr;
+  }
 
   return true;
 }
@@ -639,28 +652,16 @@ StartStopGonkBluetooth(bool aShouldEnable)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  static bool sIsBtInterfaceInitialized = false;
+  NS_ENSURE_TRUE(sBtInterface, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(sIsBtEnabled != aShouldEnable, NS_OK);
 
-  if (!EnsureBluetoothHalLoad()) {
-    BT_LOGR("Failed to load bluedroid library.\n");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (sIsBtEnabled == aShouldEnable)
-    return NS_OK;
-
-  if (sBtInterface && !sIsBtInterfaceInitialized) {
-    int ret = sBtInterface->init(&sBluetoothCallbacks);
-    if (ret != BT_STATUS_SUCCESS) {
-      BT_LOGR("Error while setting the callbacks %s", __FUNCTION__);
-      sBtInterface = nullptr;
-      return NS_ERROR_FAILURE;
-    }
-    sIsBtInterfaceInitialized = true;
-  }
   int ret = aShouldEnable ? sBtInterface->enable() : sBtInterface->disable();
+  NS_ENSURE_TRUE(ret == BT_STATUS_SUCCESS, NS_ERROR_FAILURE);
 
-  return (ret == BT_STATUS_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
+  MonitorAutoLock lock(*sToggleBtMonitor);
+  lock.Wait();
+
+  return NS_OK;
 }
 
 static void
@@ -695,6 +696,26 @@ ReplyStatusError(BluetoothReplyRunnable* aBluetoothReplyRunnable,
 /**
  *  Member functions
  */
+BluetoothServiceBluedroid::BluetoothServiceBluedroid()
+{
+  sToggleBtMonitor = new Monitor("BluetoothService.sToggleBtMonitor");
+
+  if (!EnsureBluetoothHalLoad()) {
+    BT_LOGR("Error! Failed to load bluedroid library.\n");
+    return;
+  }
+
+  // Register all the bluedroid callbacks before enable() get called
+  // It is required to register a2dp callbacks before a2dp media task starts up.
+  BluetoothHfpManager::Get();
+  BluetoothA2dpManager::Get();
+}
+
+BluetoothServiceBluedroid::~BluetoothServiceBluedroid()
+{
+  sToggleBtMonitor = nullptr;
+}
+
 nsresult
 BluetoothServiceBluedroid::StartInternal()
 {
@@ -725,11 +746,6 @@ bool
 BluetoothServiceBluedroid::IsEnabledInternal()
 {
   MOZ_ASSERT(!NS_IsMainThread());
-
-  if (!EnsureBluetoothHalLoad()) {
-    NS_ERROR("Failed to load bluedroid library.\n");
-    return false;
-  }
 
   return sIsBtEnabled;
 }
@@ -1170,13 +1186,6 @@ BluetoothServiceBluedroid::Connect(const nsAString& aDeviceAddress,
                                    uint16_t aServiceUuid,
                                    BluetoothReplyRunnable* aRunnable)
 {
-  // TODO: Remove this error reply once Connect() is done in profile managers
-  if (aRunnable) {
-    DispatchBluetoothReply(aRunnable, BluetoothValue(),
-                           NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
-    return;
-  }
-
   ConnectDisconnect(true, aDeviceAddress, aRunnable, aServiceUuid, aCod);
 }
 
@@ -1191,13 +1200,6 @@ BluetoothServiceBluedroid::Disconnect(
   const nsAString& aDeviceAddress, uint16_t aServiceUuid,
   BluetoothReplyRunnable* aRunnable)
 {
-  // TODO: Remove this error reply once Disconnect() is done in profile managers
-  if (aRunnable) {
-    DispatchBluetoothReply(aRunnable, BluetoothValue(),
-                           NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
-    return;
-  }
-
   ConnectDisconnect(false, aDeviceAddress, aRunnable, aServiceUuid);
 }
 

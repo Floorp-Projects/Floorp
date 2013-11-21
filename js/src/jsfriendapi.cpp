@@ -73,6 +73,12 @@ JS_GetAnonymousString(JSRuntime *rt)
     return rt->atomState.anonymous;
 }
 
+JS_FRIEND_API(void)
+JS_SetIsWorkerRuntime(JSRuntime *rt)
+{
+    rt->setIsWorkerRuntime();
+}
+
 JS_FRIEND_API(JSObject *)
 JS_FindCompilationScope(JSContext *cx, JSObject *objArg)
 {

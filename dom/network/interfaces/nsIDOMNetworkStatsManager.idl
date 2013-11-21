@@ -20,7 +20,7 @@ interface nsIDOMMozNetworkStatsInterface : nsISupports
   readonly attribute DOMString id;
 };
 
-[scriptable,  uuid(5fbdcae6-a2cd-47b3-929f-83ac75bd4881)]
+[scriptable, uuid(5f033d31-c9a2-4e2d-83aa-6a807f1e0c11)]
 interface nsIDOMMozNetworkStatsManager : nsISupports
 {
   /**
@@ -53,9 +53,9 @@ interface nsIDOMMozNetworkStatsManager : nsISupports
   nsIDOMDOMRequest clearAllStats();
 
   /**
-   * Return currently available networks.
+   * Return available networks that used to be saved in the database.
    */
-  readonly attribute jsval availableNetworks; // array of nsIDOMMozNetworkStatsInterface.
+  nsIDOMDOMRequest getAvailableNetworks(); // array of nsIDOMMozNetworkStatsInterface.
 
   /**
    * Minimum time in milliseconds between samples stored in the database.

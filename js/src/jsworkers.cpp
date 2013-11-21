@@ -636,7 +636,7 @@ WorkerThread::handleAsmJSWorkload(WorkerThreadState &state)
 
     state.unlock();
     do {
-        jit::IonContext icx(runtime, asmData->mir->compartment, &asmData->mir->alloc());
+        jit::IonContext icx(jit::CompileRuntime::get(runtime), asmData->mir->compartment, &asmData->mir->alloc());
 
         int64_t before = PRMJ_Now();
 
@@ -691,7 +691,9 @@ WorkerThread::handleIonWorkload(WorkerThreadState &state)
 
     state.unlock();
     {
-        jit::IonContext ictx(runtime, ionBuilder->script()->compartment(), &ionBuilder->alloc());
+        jit::IonContext ictx(jit::CompileRuntime::get(runtime),
+                             jit::CompileCompartment::get(ionBuilder->script()->compartment()),
+                             &ionBuilder->alloc());
         ionBuilder->setBackgroundCodegen(jit::CompileBackEnd(ionBuilder));
     }
     state.lock();

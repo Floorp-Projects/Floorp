@@ -67,7 +67,7 @@ EXPORTS.mozilla.dom += [
     'TreeWalker.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'Attr.cpp',
     'ChildIterator.cpp',
     'Comment.cpp',
@@ -94,12 +94,10 @@ SOURCES += [
     'nsContentList.cpp',
     'nsContentPolicy.cpp',
     'nsContentSink.cpp',
-    'nsContentUtils.cpp',
     'nsCopySupport.cpp',
     'nsCrossSiteListenerProxy.cpp',
     'nsCSPService.cpp',
     'nsDataDocumentContentPolicy.cpp',
-    'nsDocument.cpp',
     'nsDocumentEncoder.cpp',
     'nsDOMAttributeMap.cpp',
     'nsDOMBlobBuilder.cpp',
@@ -130,9 +128,7 @@ SOURCES += [
     'nsNameSpaceManager.cpp',
     'nsNoDataProtocolContentPolicy.cpp',
     'nsNodeInfo.cpp',
-    'nsNodeInfoManager.cpp',
     'nsNodeUtils.cpp',
-    'nsObjectLoadingContent.cpp',
     'nsPlainTextSerializer.cpp',
     'nsPropertyTable.cpp',
     'nsRange.cpp',
@@ -157,6 +153,18 @@ SOURCES += [
     'ThirdPartyUtil.cpp',
     'TreeWalker.cpp',
     'WebSocket.cpp',
+]
+
+# These files cannot be built in unified mode because they use FORCE_PR_LOG
+SOURCES += [
+    'nsDocument.cpp',
+    'nsNodeInfoManager.cpp',
+]
+
+# These files cannot be built in unified mode because of OS X headers.
+SOURCES += [
+    'nsContentUtils.cpp',
+    'nsObjectLoadingContent.cpp',
 ]
 
 EXTRA_COMPONENTS += [

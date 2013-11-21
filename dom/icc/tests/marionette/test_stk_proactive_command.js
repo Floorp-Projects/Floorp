@@ -5,47 +5,47 @@ MARIONETTE_HEAD_JS = "stk_helper.js";
 
 function testLocalInfoLocation(cmd) {
   log("STK CMD " + JSON.stringify(cmd));
-  is(cmd.typeOfCommand, icc.STK_CMD_PROVIDE_LOCAL_INFO);
+  is(cmd.typeOfCommand, iccManager.STK_CMD_PROVIDE_LOCAL_INFO);
   is(cmd.commandNumber, 0x01);
-  is(cmd.commandQualifier, icc.STK_LOCAL_INFO_LOCATION_INFO);
-  is(cmd.options.localInfoType, icc.STK_LOCAL_INFO_LOCATION_INFO);
+  is(cmd.commandQualifier, iccManager.STK_LOCAL_INFO_LOCATION_INFO);
+  is(cmd.options.localInfoType, iccManager.STK_LOCAL_INFO_LOCATION_INFO);
 
   runNextTest();
 }
 
 function testLocalInfoImei(cmd) {
   log("STK CMD " + JSON.stringify(cmd));
-  is(cmd.typeOfCommand, icc.STK_CMD_PROVIDE_LOCAL_INFO);
+  is(cmd.typeOfCommand, iccManager.STK_CMD_PROVIDE_LOCAL_INFO);
   is(cmd.commandNumber, 0x01);
-  is(cmd.commandQualifier, icc.STK_LOCAL_INFO_IMEI);
-  is(cmd.options.localInfoType, icc.STK_LOCAL_INFO_IMEI);
+  is(cmd.commandQualifier, iccManager.STK_LOCAL_INFO_IMEI);
+  is(cmd.options.localInfoType, iccManager.STK_LOCAL_INFO_IMEI);
 
   runNextTest();
 }
 
 function testLocalInfoDate(cmd) {
   log("STK CMD " + JSON.stringify(cmd));
-  is(cmd.typeOfCommand, icc.STK_CMD_PROVIDE_LOCAL_INFO);
+  is(cmd.typeOfCommand, iccManager.STK_CMD_PROVIDE_LOCAL_INFO);
   is(cmd.commandNumber, 0x01);
-  is(cmd.commandQualifier, icc.STK_LOCAL_INFO_DATE_TIME_ZONE);
-  is(cmd.options.localInfoType, icc.STK_LOCAL_INFO_DATE_TIME_ZONE);
+  is(cmd.commandQualifier, iccManager.STK_LOCAL_INFO_DATE_TIME_ZONE);
+  is(cmd.options.localInfoType, iccManager.STK_LOCAL_INFO_DATE_TIME_ZONE);
 
   runNextTest();
 }
 
 function testLocalInfoLanguage(cmd) {
   log("STK CMD " + JSON.stringify(cmd));
-  is(cmd.typeOfCommand, icc.STK_CMD_PROVIDE_LOCAL_INFO);
+  is(cmd.typeOfCommand, iccManager.STK_CMD_PROVIDE_LOCAL_INFO);
   is(cmd.commandNumber, 0x01);
-  is(cmd.commandQualifier, icc.STK_LOCAL_INFO_LANGUAGE);
-  is(cmd.options.localInfoType, icc.STK_LOCAL_INFO_LANGUAGE);
+  is(cmd.commandQualifier, iccManager.STK_LOCAL_INFO_LANGUAGE);
+  is(cmd.options.localInfoType, iccManager.STK_LOCAL_INFO_LANGUAGE);
 
   runNextTest();
 }
 
 function testRefresh(cmd) {
   log("STK CMD " + JSON.stringify(cmd));
-  is(cmd.typeOfCommand, icc.STK_CMD_REFRESH);
+  is(cmd.typeOfCommand, iccManager.STK_CMD_REFRESH);
   is(cmd.commandNumber, 0x01);
   is(cmd.commandQualifier, 0x01);
   is(cmd.options, null);
@@ -55,10 +55,10 @@ function testRefresh(cmd) {
 
 function testTimerManagementStart(cmd) {
   log("STK CMD " + JSON.stringify(cmd));
-  is(cmd.typeOfCommand, icc.STK_CMD_TIMER_MANAGEMENT);
+  is(cmd.typeOfCommand, iccManager.STK_CMD_TIMER_MANAGEMENT);
   is(cmd.commandNumber, 0x01);
-  is(cmd.commandQualifier, icc.STK_TIMER_START);
-  is(cmd.options.timerAction, icc.STK_TIMER_START);
+  is(cmd.commandQualifier, iccManager.STK_TIMER_START);
+  is(cmd.options.timerAction, iccManager.STK_TIMER_START);
   is(cmd.options.timerId, 0x01);
   is(cmd.options.timerValue, (0x01 * 60 * 60) + (0x02 * 60) + 0x03);
 
@@ -67,10 +67,10 @@ function testTimerManagementStart(cmd) {
 
 function testTimerManagementDeactivate(cmd) {
   log("STK CMD " + JSON.stringify(cmd));
-  is(cmd.typeOfCommand, icc.STK_CMD_TIMER_MANAGEMENT);
+  is(cmd.typeOfCommand, iccManager.STK_CMD_TIMER_MANAGEMENT);
   is(cmd.commandNumber, 0x01);
-  is(cmd.commandQualifier, icc.STK_TIMER_DEACTIVATE);
-  is(cmd.options.timerAction, icc.STK_TIMER_DEACTIVATE);
+  is(cmd.commandQualifier, iccManager.STK_TIMER_DEACTIVATE);
+  is(cmd.options.timerAction, iccManager.STK_TIMER_DEACTIVATE);
   is(cmd.options.timerId, 0x04);
 
   runNextTest();
@@ -78,10 +78,10 @@ function testTimerManagementDeactivate(cmd) {
 
 function testTimerManagementGetCurrentValue(cmd) {
   log("STK CMD " + JSON.stringify(cmd));
-  is(cmd.typeOfCommand, icc.STK_CMD_TIMER_MANAGEMENT);
+  is(cmd.typeOfCommand, iccManager.STK_CMD_TIMER_MANAGEMENT);
   is(cmd.commandNumber, 0x01);
-  is(cmd.commandQualifier, icc.STK_TIMER_GET_CURRENT_VALUE);
-  is(cmd.options.timerAction, icc.STK_TIMER_GET_CURRENT_VALUE);
+  is(cmd.commandQualifier, iccManager.STK_TIMER_GET_CURRENT_VALUE);
+  is(cmd.options.timerAction, iccManager.STK_TIMER_GET_CURRENT_VALUE);
   is(cmd.options.timerId, 0x08);
 
   runNextTest();

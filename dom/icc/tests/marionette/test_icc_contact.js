@@ -2,11 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
-
-SpecialPowers.addPermission("mobileconnection", true, document);
-
-let icc = navigator.mozIccManager;
-ok(icc instanceof MozIccManager, "icc is instanceof " + icc.constructor);
+MARIONETTE_HEAD_JS = "icc_header.js";
 
 function testReadContacts(type) {
   let request = icc.readContacts(type);
@@ -31,14 +27,14 @@ function testReadContacts(type) {
     is(contacts[3].tel[0].value, "15555218204");
     is(contacts[3].id, "890141032111185107204");
 
-    runNextTest();
+    taskHelper.runNext();
   };
 
   request.onerror = function onerror() {
     ok(false, "Cannot get " + type + " contacts");
-    runNextTest();
+    taskHelper.runNext();
   };
-};
+}
 
 function testAddContact(type, pin2) {
   let contact = new mozContact({
@@ -63,12 +59,12 @@ function testAddContact(type, pin2) {
       is(contacts[4].name[0], "add");
       is(contacts[4].tel[0].value, "0912345678");
 
-      runNextTest();
+      taskHelper.runNext();
     };
 
     getRequest.onerror = function onerror() {
       ok(false, "Cannot get " + type + " contacts: " + getRequest.error.name);
-      runNextTest();
+      taskHelper.runNext();
     };
   };
 
@@ -79,47 +75,34 @@ function testAddContact(type, pin2) {
     } else {
       ok(false, "Cannot add " + type + " contact: " + updateRequest.error.name);
     }
-    runNextTest();
+    taskHelper.runNext();
   };
-};
+}
 
-function testReadAdnContacts() {
+/* Test read adn contacts */
+taskHelper.push(function testReadAdnContacts() {
   testReadContacts("adn");
-}
+});
 
-function testAddAdnContact() {
+/* Test add adn contacts */
+taskHelper.push(function testAddAdnContact() {
   testAddContact("adn");
-}
+});
 
-function testReadFdnContacts() {
+/* Test read fdn contacts */
+taskHelper.push(function testReadAdnContacts() {
   testReadContacts("fdn");
-}
+});
 
-function testAddFdnContact() {
+/* Test add fdn contacts */
+taskHelper.push(function testReadAdnContacts() {
   testAddContact("fdn", "0000");
+});
+
+/* Test add fdn contacts without passing pin2 */
+taskHelper.push(function testReadAdnContacts() {
   testAddContact("fdn");
-}
+});
 
-let tests = [
-  testReadAdnContacts,
-  testAddAdnContact,
-  testReadFdnContacts,
-  testAddFdnContact
-];
-
-function runNextTest() {
-  let test = tests.pop();
-  if (!test) {
-    cleanUp();
-    return;
-  }
-
-  test();
-}
-
-function cleanUp() {
-  SpecialPowers.removePermission("mobileconnection", document);
-  finish();
-}
-
-runNextTest();
+// Start test
+taskHelper.runNext();

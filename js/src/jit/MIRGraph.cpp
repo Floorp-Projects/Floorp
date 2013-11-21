@@ -16,7 +16,7 @@
 using namespace js;
 using namespace js::jit;
 
-MIRGenerator::MIRGenerator(JSCompartment *compartment,
+MIRGenerator::MIRGenerator(CompileCompartment *compartment,
                            TempAllocator *alloc, MIRGraph *graph, CompileInfo *info)
   : compartment(compartment),
     info_(info),

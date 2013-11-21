@@ -26,14 +26,13 @@ function changeSetting(key, value, callback) {
 
 function setRadioEnabled(enabled, callback) {
   changeSetting("ril.radio.disabled", !enabled, function() {
-    icc.addEventListener("cardstatechange", function handler() {
-      // Wait until card state changes to "ready" after turning on radio.
-      // Wait until card state changes to "not-ready" after turning off radio.
-      if ((enabled && icc.cardState == "ready") ||
-          (!enabled && icc.cardState != "ready")) {
-        icc.removeEventListener("cardstatechange", handler);
-        callback();
-      }
+    // Wait for iccdetected event after turning on radio.
+    // Wait for iccundetected event after turning off radio.
+    let event = (enabled) ? "iccdetected" : "iccundetected";
+    icc.addEventListener(event, function handler(evt) {
+      log(event + ": " + evt.iccId);
+      icc.removeEventListener(event, handler);
+      callback();
     });
   });
 }

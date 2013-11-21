@@ -232,9 +232,9 @@ HTMLImageElement::ParseAttribute(int32_t aNamespaceID,
                                               aResult);
 }
 
-static void
-MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                      nsRuleData* aData)
+void
+HTMLImageElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                        nsRuleData* aData)
 {
   nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);

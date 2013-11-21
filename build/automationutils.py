@@ -402,7 +402,7 @@ def systemMemory():
   """
   return int(os.popen("free").readlines()[1].split()[1])
 
-def environment(xrePath, env=None, crashreporter=True):
+def environment(xrePath, env=None, crashreporter=True, debugger=False):
   """populate OS environment variables for mochitest"""
 
   env = os.environ.copy() if env is None else env
@@ -430,7 +430,7 @@ def environment(xrePath, env=None, crashreporter=True):
   env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
   env['NS_TRACE_MALLOC_DISABLE_STACKS'] = '1'
 
-  if crashreporter:
+  if crashreporter and not debugger:
     env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
     env['MOZ_CRASHREPORTER'] = '1'
   else:

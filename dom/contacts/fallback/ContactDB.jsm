@@ -18,6 +18,7 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
+Cu.importGlobalProperties(["indexedDB"]);
 
 const DB_NAME = "contacts";
 const DB_VERSION = 18;

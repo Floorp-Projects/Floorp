@@ -5,7 +5,7 @@ MARIONETTE_HEAD_JS = "stk_helper.js";
 
 function testDisplayText(command, expect) {
   log("STK CMD " + JSON.stringify(command));
-  is(command.typeOfCommand, icc.STK_CMD_DISPLAY_TEXT, expect.name);
+  is(command.typeOfCommand, iccManager.STK_CMD_DISPLAY_TEXT, expect.name);
   is(command.options.text, expect.text, expect.name);
   is(command.commandQualifier, expect.commandQualifier, expect.name);
   is(command.options.userClear, expect.userClear, expect.name);
@@ -87,7 +87,7 @@ let tests = [
             commandQualifier: 0x80,
             text: "10 Second",
             userClear: true,
-            duration: {timeUnit: icc.STK_TIME_UNIT_SECOND,
+            duration: {timeUnit: iccManager.STK_TIME_UNIT_SECOND,
                        timeInterval: 0x0A}}},
 ];
 

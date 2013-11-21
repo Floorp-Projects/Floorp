@@ -636,12 +636,10 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
 
     int thingSize = int(gc::Arena::thingSize(allocKind));
 
-    Zone *zone = GetIonContext()->compartment->zone();
-
 #ifdef JS_GC_ZEAL
     // Don't execute the inline path if gcZeal is active.
     branch32(Assembler::NotEqual,
-             AbsoluteAddress(&GetIonContext()->runtime->gcZeal_), Imm32(0),
+             AbsoluteAddress(GetIonContext()->runtime->addressOfGCZeal()), Imm32(0),
              fail);
 #endif
 
@@ -651,7 +649,7 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
         jump(fail);
 
 #ifdef JSGC_GENERATIONAL
-    Nursery &nursery = GetIonContext()->runtime->gcNursery;
+    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
     if (nursery.isEnabled() &&
         allocKind <= gc::FINALIZE_OBJECT_LAST &&
         initialHeap != gc::TenuredHeap)
@@ -668,17 +666,17 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
     }
 #endif // JSGC_GENERATIONAL
 
+    CompileZone *zone = GetIonContext()->compartment->zone();
+
     // Inline FreeSpan::allocate.
     // There is always exactly one FreeSpan per allocKind per JSCompartment.
     // If a FreeSpan is replaced, its members are updated in the freeLists table,
     // which the code below always re-reads.
-    gc::FreeSpan *list = const_cast<gc::FreeSpan *>
-                         (zone->allocator.arenas.getFreeList(allocKind));
-    loadPtr(AbsoluteAddress(&list->first), result);
-    branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(&list->last), result, fail);
+    loadPtr(AbsoluteAddress(zone->addressOfFreeListFirst(allocKind)), result);
+    branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(zone->addressOfFreeListLast(allocKind)), result, fail);
 
     addPtr(Imm32(thingSize), result);
-    storePtr(result, AbsoluteAddress(&list->first));
+    storePtr(result, AbsoluteAddress(zone->addressOfFreeListFirst(allocKind)));
     subPtr(Imm32(thingSize), result);
 }
 
@@ -870,7 +868,7 @@ void
 MacroAssembler::checkInterruptFlagsPar(const Register &tempReg,
                                             Label *fail)
 {
-    movePtr(ImmPtr(&GetIonContext()->runtime->interrupt), tempReg);
+    movePtr(ImmPtr(GetIonContext()->runtime->addressOfInterrupt()), tempReg);
     load32(Address(tempReg, 0), tempReg);
     branchTest32(Assembler::NonZero, tempReg, tempReg, fail);
 }

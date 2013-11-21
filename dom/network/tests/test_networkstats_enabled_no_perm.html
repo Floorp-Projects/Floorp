@@ -12,7 +12,7 @@
 <pre id="test">
 <script type="application/javascript">
 
-// Test to ensure NetworkStats is enabled but mozNetworkStats.availableNetworks
+// Test to ensure NetworkStats is enabled but mozNetworkStats.getAvailableNetworks
 // does not work in content.
 
 SpecialPowers.setBoolPref("dom.mozNetworkStats.enabled", true);
@@ -22,12 +22,12 @@ ok('mozNetworkStats' in navigator, "navigator.mozNetworkStats should be accessib
 
 var error;
 try {
-  navigator.mozNetworkStats.availableNetworks;
-  ok(false, "Accessing navigator.mozNetworkStats.availableNetworks should have thrown!");
+  navigator.mozNetworkStats.getAvailableNetworks;
+  ok(false, "Accessing navigator.mozNetworkStats.getAvailableNetworks should have thrown!");
 } catch (ex) {
   error = ex;
 }
-ok(error, "Got an exception accessing navigator.mozNetworkStats.availableNetworks");
+ok(error, "Got an exception accessing navigator.mozNetworkStats.getAvailableNetworks");
 
 </script>
 </pre>

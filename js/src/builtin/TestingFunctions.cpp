@@ -687,16 +687,9 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    jsval v;
-    int32_t traceKind;
-    JSString *str;
-    JSCountHeapTracer countTracer;
-    JSCountHeapNode *node;
-    size_t counter;
-
     RootedValue startValue(cx, UndefinedValue());
     if (args.length() > 0) {
-        v = args[0];
+        jsval v = args[0];
         if (JSVAL_IS_TRACEABLE(v)) {
             startValue = v;
         } else if (!JSVAL_IS_NULL(v)) {
@@ -707,28 +700,45 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    traceKind = -1;
+    RootedValue traceValue(cx);
+    int32_t traceKind = -1;
+    void *traceThing = NULL;
     if (args.length() > 1) {
-        str = ToString(cx, args[0]);
+        JSString *str = ToString(cx, args[1]);
         if (!str)
             return false;
         JSFlatString *flatStr = JS_FlattenString(cx, str);
         if (!flatStr)
             return false;
-        for (size_t i = 0; ;) {
-            if (JS_FlatStringEqualsAscii(flatStr, traceKindNames[i].name)) {
-                traceKind = traceKindNames[i].kind;
-                break;
-            }
-            if (++i == ArrayLength(traceKindNames)) {
-                JSAutoByteString bytes(cx, str);
-                if (!!bytes)
-                    JS_ReportError(cx, "trace kind name '%s' is unknown", bytes.ptr());
+        if (JS_FlatStringEqualsAscii(flatStr, "specific")) {
+            if (args.length() < 3) {
+                JS_ReportError(cx, "tracing of specific value requested "
+                               "but no value provided");
                 return false;
+            }
+            traceValue = args[2];
+            if (!JSVAL_IS_TRACEABLE(traceValue)){
+                JS_ReportError(cx, "cannot trace this kind of value");
+                return false;
+            }
+            traceThing = JSVAL_TO_TRACEABLE(traceValue);
+        } else {
+            for (size_t i = 0; ;) {
+                if (JS_FlatStringEqualsAscii(flatStr, traceKindNames[i].name)) {
+                    traceKind = traceKindNames[i].kind;
+                    break;
+                }
+                if (++i == ArrayLength(traceKindNames)) {
+                    JSAutoByteString bytes(cx, str);
+                    if (!!bytes)
+                        JS_ReportError(cx, "trace kind name '%s' is unknown", bytes.ptr());
+                    return false;
+                }
             }
         }
     }
 
+    JSCountHeapTracer countTracer;
     JS_TracerInit(&countTracer.base, JS_GetRuntime(cx), CountHeapNotify);
     if (!countTracer.visited.init()) {
         JS_ReportOutOfMemory(cx);
@@ -744,10 +754,18 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
         JS_CallValueTracer(&countTracer.base, startValue.address(), "root");
     }
 
-    counter = 0;
+    JSCountHeapNode *node;
+    size_t counter = 0;
     while ((node = countTracer.traceList) != nullptr) {
-        if (traceKind == -1 || node->kind == traceKind)
-            counter++;
+        if (traceThing == nullptr) {
+            // We are looking for all nodes with a specific kind
+            if (traceKind == -1 || node->kind == traceKind)
+                counter++;
+        } else {
+            // We are looking for some specific thing
+            if (node->thing == traceThing)
+                counter++;
+        }
         countTracer.traceList = node->next;
         node->next = countTracer.recycleList;
         countTracer.recycleList = node;
@@ -1359,11 +1377,13 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  was built with."),
 
     JS_FN_HELP("countHeap", CountHeap, 0, 0,
-"countHeap([start[, kind]])",
+"countHeap([start[, kind[, thing]]])",
 "  Count the number of live GC things in the heap or things reachable from\n"
 "  start when it is given and is not null. kind is either 'all' (default) to\n"
 "  count all things or one of 'object', 'double', 'string', 'function'\n"
-"  to count only things of that kind."),
+"  to count only things of that kind. If kind is the string 'specific',\n"
+"  then you can provide an extra argument with some specific traceable\n"
+"  thing to count.\n"),
 
 #ifdef DEBUG
     JS_FN_HELP("oomAfterAllocations", OOMAfterAllocations, 1, 0,

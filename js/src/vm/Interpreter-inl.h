@@ -459,14 +459,14 @@ static JS_ALWAYS_INLINE JSString *
 TypeOfOperation(const Value &v, JSRuntime *rt)
 {
     JSType type = js::TypeOfValue(v);
-    return TypeName(type, rt);
+    return TypeName(type, rt->atomState);
 }
 
 static inline JSString *
 TypeOfObjectOperation(JSObject *obj, JSRuntime *rt)
 {
     JSType type = js::TypeOfObject(obj);
-    return TypeName(type, rt);
+    return TypeName(type, rt->atomState);
 }
 
 static JS_ALWAYS_INLINE bool

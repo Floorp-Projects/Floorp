@@ -8,6 +8,7 @@
 #include "FormControlAccessible.h"
 #include "Role.h"
 
+#include "mozilla/FloatingPoint.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULControlElement.h"
@@ -82,14 +83,12 @@ ProgressMeterAccessible<Max>::Value(nsString& aValue)
   if (!aValue.IsEmpty())
     return;
 
-  double maxValue = 0;
-  nsresult rv = GetMaximumValue(&maxValue);
-  if (NS_FAILED(rv) || maxValue == 0)
+  double maxValue = MaxValue();
+  if (IsNaN(maxValue) || maxValue == 0)
     return;
 
-  double curValue = 0;
-  GetCurrentValue(&curValue);
-  if (NS_FAILED(rv))
+  double curValue = CurValue();
+  if (IsNaN(curValue))
     return;
 
   // Treat the current value bigger than maximum as 100%.
@@ -101,77 +100,62 @@ ProgressMeterAccessible<Max>::Value(nsString& aValue)
 }
 
 template<int Max>
-NS_IMETHODIMP
-ProgressMeterAccessible<Max>::GetMaximumValue(double* aMaximumValue)
+double
+ProgressMeterAccessible<Max>::MaxValue() const
 {
-  nsresult rv = LeafAccessible::GetMaximumValue(aMaximumValue);
-  if (rv != NS_OK_NO_ARIA_VALUE)
-    return rv;
+  double value = LeafAccessible::MaxValue();
+  if (!IsNaN(value))
+    return value;
 
-  nsAutoString value;
-  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::max, value)) {
+  nsAutoString strValue;
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::max, strValue)) {
     nsresult result = NS_OK;
-    *aMaximumValue = value.ToDouble(&result);
-    return result;
+    value = strValue.ToDouble(&result);
+    if (NS_SUCCEEDED(result))
+      return value;
   }
 
-  *aMaximumValue = Max;
-  return NS_OK;
+  return Max;
 }
 
 template<int Max>
-NS_IMETHODIMP
-ProgressMeterAccessible<Max>::GetMinimumValue(double* aMinimumValue)
+double
+ProgressMeterAccessible<Max>::MinValue() const
 {
-  nsresult rv = LeafAccessible::GetMinimumValue(aMinimumValue);
-  if (rv != NS_OK_NO_ARIA_VALUE)
-    return rv;
-
-  *aMinimumValue = 0;
-  return NS_OK;
+  double value = LeafAccessible::MinValue();
+  return IsNaN(value) ? 0 : value;
 }
 
 template<int Max>
-NS_IMETHODIMP
-ProgressMeterAccessible<Max>::GetMinimumIncrement(double* aMinimumIncrement)
+double
+ProgressMeterAccessible<Max>::Step() const
 {
-  nsresult rv = LeafAccessible::GetMinimumIncrement(aMinimumIncrement);
-  if (rv != NS_OK_NO_ARIA_VALUE)
-    return rv;
-
-  *aMinimumIncrement = 0;
-  return NS_OK;
+  double value = LeafAccessible::Step();
+  return IsNaN(value) ? 0 : value;
 }
 
 template<int Max>
-NS_IMETHODIMP
-ProgressMeterAccessible<Max>::GetCurrentValue(double* aCurrentValue)
+double
+ProgressMeterAccessible<Max>::CurValue() const
 {
-  nsresult rv = LeafAccessible::GetCurrentValue(aCurrentValue);
-  if (rv != NS_OK_NO_ARIA_VALUE)
-    return rv;
+  double value = LeafAccessible::CurValue();
+  if (!IsNaN(value))
+    return value;
 
   nsAutoString attrValue;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue);
-
-  // Return zero value if there is no attribute or its value is empty.
-  if (attrValue.IsEmpty())
-    return NS_OK;
+  if (!mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue))
+    return UnspecifiedNaN();
 
   nsresult error = NS_OK;
-  double value = attrValue.ToDouble(&error);
-  if (NS_FAILED(error))
-    return NS_OK; // Zero value because of wrong markup.
-
-  *aCurrentValue = value;
-  return NS_OK;
+  value = attrValue.ToDouble(&error);
+  return NS_FAILED(error) ? UnspecifiedNaN() : value;
 }
 
 template<int Max>
-NS_IMETHODIMP
-ProgressMeterAccessible<Max>::SetCurrentValue(double aValue)
+bool
+ProgressMeterAccessible<Max>::SetCurValue(double aValue)
 {
-  return NS_ERROR_FAILURE; // Progress meters are readonly.
+  return false; // progress meters are readonly.
 }
 
 ////////////////////////////////////////////////////////////////////////////////

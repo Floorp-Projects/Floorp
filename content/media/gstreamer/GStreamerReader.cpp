@@ -654,7 +654,7 @@ nsresult GStreamerReader::Seek(int64_t aTarget,
   return DecodeToTarget(aTarget);
 }
 
-nsresult GStreamerReader::GetBuffered(TimeRanges* aBuffered,
+nsresult GStreamerReader::GetBuffered(dom::TimeRanges* aBuffered,
                                       int64_t aStartTime)
 {
   if (!mInfo.HasValidMedia()) {

@@ -95,10 +95,9 @@ public:
 
   /**
    * Finds previously assigned or generates a unique ViewID for the given
-   * content element. If aRoot is true, the special ID
-   * FrameMetrics::ROOT_SCROLL_ID is used.
+   * content element.
    */
-  static ViewID FindOrCreateIDFor(nsIContent* aContent, bool aRoot = false);
+  static ViewID FindOrCreateIDFor(nsIContent* aContent);
 
   /**
    * Find content for given ID.

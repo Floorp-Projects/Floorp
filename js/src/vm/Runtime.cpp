@@ -286,7 +286,8 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     useHelperThreads_(useHelperThreads),
     requestedHelperThreadCount(-1),
     useHelperThreadsForIonCompilation_(true),
-    useHelperThreadsForParsing_(true)
+    useHelperThreadsForParsing_(true),
+    isWorkerRuntime_(false)
 #ifdef DEBUG
     , enteredPolicy(nullptr)
 #endif
