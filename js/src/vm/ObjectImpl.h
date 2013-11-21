@@ -1024,11 +1024,11 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
         return idx < getDenseInitializedLength() && !elements[idx].isMagic(JS_ELEMENTS_HOLE);
     }
     uint32_t getDenseInitializedLength() {
-        JS_ASSERT(isNative());
+        JS_ASSERT(getClass()->isNative());
         return getElementsHeader()->initializedLength;
     }
     uint32_t getDenseCapacity() {
-        JS_ASSERT(isNative());
+        JS_ASSERT(getClass()->isNative());
         return getElementsHeader()->capacity;
     }
 
@@ -1201,6 +1201,8 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
         return reinterpret_cast<const shadow::Object *>(this)->numFixedSlots();
     }
 
+    uint32_t numFixedSlotsForCompilation() const;
+
     /*
      * Whether this is the only object which has its specified type. This
      * object will have its type constructed lazily as needed by analysis.
@@ -1368,7 +1370,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
     }
 
     const Value &getFixedSlot(uint32_t slot) const {
-        MOZ_ASSERT(slot < numFixedSlots());
+        MOZ_ASSERT(slot < numFixedSlotsForCompilation());
         return fixedSlots()[slot];
     }
 
@@ -1465,7 +1467,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
          * Private pointers are stored immediately after the last fixed slot of
          * the object.
          */
-        MOZ_ASSERT(nfixed == numFixedSlots());
+        MOZ_ASSERT(nfixed == numFixedSlotsForCompilation());
         MOZ_ASSERT(hasPrivate());
         HeapSlot *end = &fixedSlots()[nfixed];
         return *reinterpret_cast<void**>(end);
