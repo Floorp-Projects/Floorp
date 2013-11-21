@@ -554,7 +554,14 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             ScriptSource *ss = cx->new_<ScriptSource>(xdr->originPrincipals());
             if (!ss)
                 return false;
-            sourceObject = ScriptSourceObject::create(cx, ss);
+            /*
+             * We use this CompileOptions only to initialize the
+             * ScriptSourceObject. Most CompileOptions fields aren't used by
+             * ScriptSourceObject, and those that are (element; elementProperty)
+             * aren't preserved by XDR. So this can be simple.
+             */
+            CompileOptions options(cx);
+            sourceObject = ScriptSourceObject::create(cx, ss, options);
             if (!sourceObject)
                 return false;
         } else {
@@ -957,6 +964,12 @@ ScriptSourceObject::setSource(ScriptSource *source)
     setReservedSlot(SOURCE_SLOT, PrivateValue(source));
 }
 
+JSObject *
+ScriptSourceObject::element() const
+{
+    return getReservedSlot(ELEMENT_SLOT).toObjectOrNull();
+}
+
 void
 ScriptSourceObject::finalize(FreeOp *fop, JSObject *obj)
 {
@@ -966,7 +979,7 @@ ScriptSourceObject::finalize(FreeOp *fop, JSObject *obj)
 
 const Class ScriptSourceObject::class_ = {
     "ScriptSource",
-    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_IS_ANONYMOUS,
+    JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,        /* addProperty */
     JS_DeletePropertyStub,  /* delProperty */
     JS_PropertyStub,        /* getProperty */
@@ -978,14 +991,16 @@ const Class ScriptSourceObject::class_ = {
 };
 
 ScriptSourceObject *
-ScriptSourceObject::create(ExclusiveContext *cx, ScriptSource *source)
+ScriptSourceObject::create(ExclusiveContext *cx, ScriptSource *source,
+                           const ReadOnlyCompileOptions &options)
 {
     RootedObject object(cx, NewObjectWithGivenProto(cx, &class_, nullptr, cx->global()));
     if (!object)
         return nullptr;
     RootedScriptSource sourceObject(cx, &object->as<ScriptSourceObject>());
-    sourceObject->setSlot(SOURCE_SLOT, PrivateValue(source));
     source->incref();
+    sourceObject->initSlot(SOURCE_SLOT, PrivateValue(source));
+    sourceObject->initSlot(ELEMENT_SLOT, ObjectOrNullValue(options.element()));
     return sourceObject;
 }
 

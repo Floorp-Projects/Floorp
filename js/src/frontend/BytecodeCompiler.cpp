@@ -198,7 +198,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     if (options.filename() && !ss->setFilename(cx, options.filename()))
         return nullptr;
 
-    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
+    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss, options));
     if (!sourceObject)
         return nullptr;
 
@@ -494,7 +494,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
         return false;
     if (options.filename() && !ss->setFilename(cx, options.filename()))
         return false;
-    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
+    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss, options));
     if (!sourceObject)
         return false;
     SourceCompressionTask sct(cx);
