@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource:///modules/CustomizableUI.jsm");
-
-
 function test() {
   let cw;
   let win;
@@ -34,7 +31,10 @@ function test() {
     let pos = currentSet.indexOf(buttonId);
 
     if (-1 < pos) {
-      CustomizableUI.removeWidgetFromArea("tabview-button");
+      currentSet.splice(pos, 1);
+      toolbar.setAttribute("currentset", currentSet.join(","));
+      toolbar.currentSet = currentSet.join(",");
+      win.document.persist(toolbar.id, "currentset");
     }
   }
 
