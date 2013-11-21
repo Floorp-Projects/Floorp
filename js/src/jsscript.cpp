@@ -970,6 +970,14 @@ ScriptSourceObject::element() const
     return getReservedSlot(ELEMENT_SLOT).toObjectOrNull();
 }
 
+const Value &
+ScriptSourceObject::elementProperty() const
+{
+    const Value &prop = getReservedSlot(ELEMENT_PROPERTY_SLOT);
+    JS_ASSERT(prop.isUndefined() || prop.isString());
+    return prop;
+}
+
 void
 ScriptSourceObject::finalize(FreeOp *fop, JSObject *obj)
 {
@@ -979,7 +987,8 @@ ScriptSourceObject::finalize(FreeOp *fop, JSObject *obj)
 
 const Class ScriptSourceObject::class_ = {
     "ScriptSource",
-    JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_IS_ANONYMOUS,
+    JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
+    JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,        /* addProperty */
     JS_DeletePropertyStub,  /* delProperty */
     JS_PropertyStub,        /* getProperty */
@@ -998,9 +1007,15 @@ ScriptSourceObject::create(ExclusiveContext *cx, ScriptSource *source,
     if (!object)
         return nullptr;
     RootedScriptSource sourceObject(cx, &object->as<ScriptSourceObject>());
+
     source->incref();
     sourceObject->initSlot(SOURCE_SLOT, PrivateValue(source));
     sourceObject->initSlot(ELEMENT_SLOT, ObjectOrNullValue(options.element()));
+    if (options.elementProperty())
+        sourceObject->initSlot(ELEMENT_PROPERTY_SLOT, StringValue(options.elementProperty()));
+    else
+        sourceObject->initSlot(ELEMENT_PROPERTY_SLOT, UndefinedValue());
+
     return sourceObject;
 }
 
