@@ -124,6 +124,13 @@ public:
   DeviceManagerD3D9();
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DeviceManagerD3D9)
 
+  /**
+   * Initialises the device manager, the underlying device, and everything else
+   * the manager needs.
+   * Returns true if initialisation succeeds, false otherwise.
+   * Note that if initisalisation fails, you cannot try again - you must throw
+   * away the DeviceManagerD3D9 and create a new one.
+   */
   bool Init();
 
   /**
@@ -193,19 +200,19 @@ public:
   bool DeviceManagerD3D9::IsInTextureHostList(TextureSourceD3D9* aFind);
 #endif
 
-  static uint32_t sMaskQuadRegister;
-
-private:
-  friend class SwapChainD3D9;
-
-  ~DeviceManagerD3D9();
-
   /**
    * This function verifies the device is ready for rendering, internally this
    * will test the cooperative level of the device and reset the device if
    * needed. If this returns false subsequent rendering calls may return errors.
    */
   bool VerifyReadyForRendering();
+
+  static uint32_t sMaskQuadRegister;
+
+private:
+  friend class SwapChainD3D9;
+
+  ~DeviceManagerD3D9();
 
   /**
    * This will fill our vertex buffer with the data of our quad, it may be
