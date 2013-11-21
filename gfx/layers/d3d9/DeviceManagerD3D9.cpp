@@ -727,6 +727,21 @@ DeviceManagerD3D9::VerifyReadyForRendering()
   // D3DERR_DEVICELOST we can wait and see if we get D3DERR_DEVICENOTRESET
   // later, then reset.
   if (hr == D3DERR_DEVICELOST) {
+    HMONITOR hMonitorWindow;
+    hMonitorWindow = MonitorFromWindow(mFocusWnd, MONITOR_DEFAULTTOPRIMARY);
+    if (hMonitorWindow != mDeviceMonitor) {
+      /* The monitor has changed. We have to assume that the
+       * DEVICENOTRESET will not be comming. */
+
+      /* jrmuizel: I'm not sure how to trigger this case. Usually, we get
+       * DEVICENOTRESET right away and Reset() succeeds without going through a
+       * set of DEVICELOSTs. This is presumeably because we don't call
+       * VerifyReadyForRendering when we don't have any reason to paint.
+       * Hopefully comparing HMONITORs is not overly aggressive.
+       * See bug 626678.
+       */
+      return DeviceMustRecreate;
+    }
     return DeviceRetry;
   }
   if (hr == D3DERR_DEVICENOTRESET) {
