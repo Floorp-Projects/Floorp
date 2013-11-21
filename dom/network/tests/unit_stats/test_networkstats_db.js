@@ -7,6 +7,12 @@ Cu.import("resource://gre/modules/NetworkStatsDB.jsm");
 
 const netStatsDb = new NetworkStatsDB();
 
+function clearWholeDB(callback) {
+  netStatsDb.dbNewTxn("readwrite", function(aTxn, aStore) {
+    aStore.delete();
+  }, callback);
+}
+
 function filterTimestamp(date) {
   var sampleRate = netStatsDb.sampleRate;
   var offset = date.getTimezoneOffset() * 60 * 1000;
@@ -574,5 +580,9 @@ add_test(function test_saveMultipleAppStats () {
 function run_test() {
   do_get_profile();
 
-  run_next_test();
+  // Clear whole database to avoid start tests with unknown state
+  // due to previous tests.
+  clearWholeDB(function(){
+    run_next_test();
+  });
 }

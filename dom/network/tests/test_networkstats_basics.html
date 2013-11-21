@@ -19,11 +19,6 @@ function test() {
   netStats = navigator.mozNetworkStats;
 
   // Test IDL attributes
-  ok('availableNetworks' in netStats,
-   "availableNetworks should be a NetworkStats attribute");
-  ok(Array.isArray(netStats.availableNetworks) && netStats.availableNetworks.length > 0,
-   "availableNetworks is an array not empty.");
-
   ok('sampleRate' in netStats,
    "sampleRate should be a NetworkStats attribute");
   ok(netStats.sampleRate > 0,
@@ -71,6 +66,19 @@ var netStats = null;
 
 var steps = [
   function () {
+    // Test getAvailableNetworks
+    req = netStats.getAvailableNetworks();
+    req.onsuccess = function () {
+      ok(true, "getAvailableNetworks request ok");
+      ok(Array.isArray(req.result) && req.result.length > 0,
+         "getAvailableNetworks returns an array not empty");
+      next();
+    };
+    req.onerror = function () {
+      ok(false, "getAvailableNetworks failure!");
+    }
+  },
+  function () {
     // Test clearAllStats
     req = netStats.clearAllStats();
     req.onsuccess = function () {
@@ -85,22 +93,29 @@ var steps = [
     // Check if getSamples launch exception when start is greather than end
 
     // Prepare get params
-    var network = netStats.availableNetworks[0];
-    // Get dates
-    var endDate = new Date();
-    var startDate = new Date(endDate.getTime() + 1000);
+    req = netStats.getAvailableNetworks();
+    req.onsuccess = function () {
+      var network = req.result[0];
 
-    try {
-      netStats.getSamples(network, startDate, endDate);
-    } catch(ex) {
-      ok(true, "getSamples launch exception when start is greater than end");
+      // Get dates
+      var endDate = new Date();
+      var startDate = new Date(endDate.getTime() + 1000);
+
+      try {
+        netStats.getSamples(network, startDate, endDate);
+      } catch(ex) {
+        ok(true, "getSamples launch exception when start is greater than end");
+        next();
+        return;
+      }
+
+      ok(false, "getSamples launch exception when start is greater than end");
       next();
       return;
+    };
+    req.onerror = function () {
+      ok(false, "Error getting networks!");
     }
-
-    ok(false, "getSamples launch exception when start is greater than end");
-    next();
-    return;
   },
   function () {
     // Test if call getSamples with network of type different than
@@ -127,119 +142,151 @@ var steps = [
     // Test if call getSamples with start parameter type different than Date launch an exception
 
     // Prepare get params
-    var network = netStats.availableNetworks[0];
-    var endDate = new Date();
-    var startDate = new Date(endDate.getTime() - 1000);
-    startDate = startDate.toString();
+    req = netStats.getAvailableNetworks();
+    req.onsuccess = function () {
+      var network = req.result[0];
 
-    try {
-      netStats.getSamples(network, startDate, endDate);
-    } catch(ex) {
-      ok(true, "getSamples launch exception when start param is not a Date");
-      next();
-      return;
-    }
+      var endDate = new Date();
+      var startDate = new Date(endDate.getTime() - 1000);
+      startDate = startDate.toString();
 
-    ok(false, "getSamples launch exception when start param is not a Date");
+      try {
+        netStats.getSamples(network, startDate, endDate);
+      } catch(ex) {
+        ok(true, "getSamples launch exception when start param is not a Date");
+        next();
+        return;
+      }
+
+      ok(false, "getSamples launch exception when start param is not a Date");
+    };
+    req.onerror = function () {
+      ok(false, "Error getting networks!");
+    };
   },
   function () {
     // Test if call getSamples with end parameter type different than Date launch an exception
 
     // Prepare get params
-    var network = netStats.availableNetworks[0];
-    var endDate = new Date();
-    var startDate = new Date(endDate.getTime() - 1000);
-    endDate = startDate.toString();
+    req = netStats.getAvailableNetworks();
+    req.onsuccess = function () {
+      var network = req.result[0];
 
-    try {
-      netStats.getSamples(network, startDate, endDate);
-    } catch(ex) {
-      ok(true, "getSamples launch exception when end param is not a Date");
-      next();
-      return;
-    }
+      var endDate = new Date();
+      var startDate = new Date(endDate.getTime() - 1000);
+      endDate = startDate.toString();
 
-    ok(false, "getSamples launch exception when end param is not a Date");
+      try {
+        netStats.getSamples(network, startDate, endDate);
+      } catch(ex) {
+        ok(true, "getSamples launch exception when end param is not a Date");
+        next();
+        return;
+      }
+
+      ok(false, "getSamples launch exception when end param is not a Date");
+    };
+    req.onerror = function () {
+      ok(false, "Error getting networks!");
+    };
   },
   function () {
     ok(true, "Get stats for a network and dates adapted to samplerate");
     // Prepare get params
-    var network = netStats.availableNetworks[0];
-    var diff = 2;
-    // Get samplerate in millis
-    var sampleRate = netStats.sampleRate;
-    // Get date with samplerate's precision
-    var offset = new Date().getTimezoneOffset() * 60 * 1000;
-    var endDate = new Date(Math.floor((new Date().getTime() - offset) / sampleRate)
-                           * sampleRate + offset);
-    var startDate = new Date(endDate.getTime() - (sampleRate * diff));
-    // Calculate the number of samples that should be returned based on the
-    // the samplerate and including final and initial samples.
-    var samples = (endDate.getTime() - startDate.getTime()) / sampleRate + 1;
-
-    // Launch request
-    req = netStats.getSamples(network, startDate, endDate);
+    req = netStats.getAvailableNetworks();
     req.onsuccess = function () {
-      ok(true, "Get system stats request ok");
-      ok(req.result.manifestURL == null, "manifestURL should be null");
-      ok(compareNetworks(req.result.network, network), "networks should be equals");
-      ok(req.result.start.getTime() == startDate.getTime(), "starts should be equals");
-      ok(req.result.end.getTime() == endDate.getTime(), "ends should be equals");
-      var data = req.result.data;
-      ok(Array.isArray(data) && data.length == samples,
-         "data is an array of length " + samples);
-      checkDataDates(data, startDate, endDate, sampleRate);
-      next();
+      var network = req.result[0];
+      var diff = 2;
+      // Get samplerate in millis
+      var sampleRate = netStats.sampleRate;
+      // Get date with samplerate's precision
+      var offset = new Date().getTimezoneOffset() * 60 * 1000;
+      var endDate = new Date(Math.floor((new Date().getTime() - offset) / sampleRate)
+                             * sampleRate + offset);
+      var startDate = new Date(endDate.getTime() - (sampleRate * diff));
+      // Calculate the number of samples that should be returned based on the
+      // the samplerate and including final and initial samples.
+      var samples = (endDate.getTime() - startDate.getTime()) / sampleRate + 1;
+
+      // Launch request
+      req = netStats.getSamples(network, startDate, endDate);
+      req.onsuccess = function () {
+        ok(true, "Get system stats request ok");
+        ok(req.result.manifestURL == null, "manifestURL should be null");
+        ok(compareNetworks(req.result.network, network), "networks should be equals");
+        ok(req.result.start.getTime() == startDate.getTime(), "starts should be equals");
+        ok(req.result.end.getTime() == endDate.getTime(), "ends should be equals");
+        var data = req.result.data;
+        ok(Array.isArray(data) && data.length == samples,
+           "data is an array of length " + samples);
+        checkDataDates(data, startDate, endDate, sampleRate);
+        next();
+      };
+      req.onerror = function () {
+        ok(false, "Get stats failure!");
+      }
     };
     req.onerror = function () {
-      ok(false, "Get stats failure!");
-    }
+      ok(false, "Error getting networks!");
+    };
   },
   function () {
     ok(true, "Get system stats for a network and dates not adapted to samplerate");
     // Prepare get params
-    var network = netStats.availableNetworks[0];
-    var diff = 2;
-    // Get samplerate in millis
-    var sampleRate = netStats.sampleRate;
-    var endDate = new Date();
-    var startDate = new Date(endDate.getTime() - (sampleRate * diff));
-    // Calculate the number of samples that should be returned based on the
-    // the samplerate, including final and initial samples and taking into
-    // account that these will be filtered according to precision.
-    var samples = (Math.floor(endDate.getTime() / (sampleRate)) * sampleRate -
-                   Math.floor(startDate.getTime() / (sampleRate)) * sampleRate) / sampleRate + 1;
-
-    // Launch request
-    req = netStats.getSamples(network, startDate, endDate);
+    req = netStats.getAvailableNetworks();
     req.onsuccess = function () {
-      ok(true, "Get stats request ok");
-      ok(req.result.manifestURL == null, "manifestURL should be null");
-      ok(compareNetworks(req.result.network, network), "networks should be equals");
-      ok(req.result.start.getTime() == startDate.getTime(), "starts should be equals");
-      ok(req.result.end.getTime() == endDate.getTime(), "ends should be equals");
-      var data = req.result.data;
-      ok(Array.isArray(data) && data.length == samples,
-         "data is an array of length " + samples);
-      checkDataDates(data, startDate, endDate, sampleRate);
-      next();
+      var network = req.result[0];
+      var diff = 2;
+      // Get samplerate in millis
+      var sampleRate = netStats.sampleRate;
+      var endDate = new Date();
+      var startDate = new Date(endDate.getTime() - (sampleRate * diff));
+      // Calculate the number of samples that should be returned based on the
+      // the samplerate, including final and initial samples and taking into
+      // account that these will be filtered according to precision.
+      var samples = (Math.floor(endDate.getTime() / (sampleRate)) * sampleRate -
+                     Math.floor(startDate.getTime() / (sampleRate)) * sampleRate) / sampleRate + 1;
+
+      // Launch request
+      req = netStats.getSamples(network, startDate, endDate);
+      req.onsuccess = function () {
+        ok(true, "Get stats request ok");
+        ok(req.result.manifestURL == null, "manifestURL should be null");
+        ok(compareNetworks(req.result.network, network), "networks should be equals");
+        ok(req.result.start.getTime() == startDate.getTime(), "starts should be equals");
+        ok(req.result.end.getTime() == endDate.getTime(), "ends should be equals");
+        var data = req.result.data;
+        ok(Array.isArray(data) && data.length == samples,
+           "data is an array of length " + samples);
+        checkDataDates(data, startDate, endDate, sampleRate);
+        next();
+      };
+      req.onerror = function () {
+        ok(false, "Get stats failure!");
+      }
     };
     req.onerror = function () {
-      ok(false, "Get stats failure!");
-    }
+      ok(false, "Error getting networks!");
+    };
   },
   function () {
     // Test clearStats
-    var network = netStats.availableNetworks[0];
-
-    req = netStats.clearStats(network);
+    req = netStats.getAvailableNetworks();
     req.onsuccess = function () {
-      ok(true, "clearStats deleted the database");
-      next();
+      var network = req.result[0];
+
+      req = netStats.clearStats(network);
+      req.onsuccess = function () {
+        ok(true, "clearStats deleted the database");
+        next();
+      };
+      req.onerror = function () {
+        ok(false, "clearStats deleted the database");
+      }
     };
     req.onerror = function () {
-      ok(false, "clearStats deleted the database");
-    }
+      ok(false, "Error getting networks!");
+    };
   },
   function () {
     ok(true, "all done!\n");
