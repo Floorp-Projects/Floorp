@@ -421,6 +421,7 @@ Debugger::fromChildJSObject(JSObject *obj)
 {
     JS_ASSERT(obj->getClass() == &DebuggerFrame_class ||
               obj->getClass() == &DebuggerScript_class ||
+              obj->getClass() == &DebuggerSource_class ||
               obj->getClass() == &DebuggerObject_class ||
               obj->getClass() == &DebuggerEnv_class);
     JSObject *dbgobj = &obj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER).toObject();
@@ -3769,9 +3770,26 @@ DebuggerSource_getDisplayURL(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static bool
+DebuggerSource_getElement(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get element)", args, obj, sourceObject);
+
+    if (sourceObject->element()) {
+        args.rval().setObjectOrNull(sourceObject->element());
+        if (!Debugger::fromChildJSObject(obj)->wrapDebuggeeValue(cx, args.rval()))
+            return false;
+    } else {
+        args.rval().setUndefined();
+    }
+    return true;
+}
+
+
 static const JSPropertySpec DebuggerSource_properties[] = {
     JS_PSG("text", DebuggerSource_getText, 0),
     JS_PSG("url", DebuggerSource_getUrl, 0),
+    JS_PSG("element", DebuggerSource_getElement, 0),
     JS_PSG("displayURL", DebuggerSource_getDisplayURL, 0),
     JS_PS_END
 };
