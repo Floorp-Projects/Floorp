@@ -140,8 +140,8 @@ NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
  *
  */
  
-  register vtable_func *vtable, func;
-  register int base_size = (paramCount > 1) ? paramCount : 2;
+  vtable_func *vtable, func;
+  int base_size = (paramCount > 1) ? paramCount : 2;
 
 /* !!! IMPORTANT !!!
  * On DEBUG builds, the NS_ASSERTION used in invoke_copy_to_stack needs to use
