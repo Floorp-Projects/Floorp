@@ -60,7 +60,7 @@ template<class T>
 static int
 _valid_subexp(const T *expr, T stop1, T stop2)
 {
-    register int x;
+    int x;
     int nsc = 0;     /* Number of special characters */
     int np;          /* Number of pipe characters in union */
     int tld = 0;     /* Number of tilde characters */
@@ -174,8 +174,8 @@ template<class T>
 static int
 _scan_and_copy(const T *expr, T stop1, T stop2, T *dest)
 {
-    register int sx;     /* source index */
-    register T cc;
+    int sx;     /* source index */
+    T cc;
 
     for (sx = 0; (cc = expr[sx]) && cc != stop1 && cc != stop2; sx++) {
         if (cc == '\\') {
@@ -212,7 +212,7 @@ static int
 _handle_union(const T *str, const T *expr, bool case_insensitive,
               unsigned int level)
 {
-    register int sx;     /* source index */
+    int sx;              /* source index */
     int cp;              /* source index of closing parenthesis */
     int count;
     int ret   = NOMATCH;
@@ -263,8 +263,8 @@ static int
 _shexp_match(const T *str, const T *expr, bool case_insensitive,
              unsigned int level)
 {
-    register int x;   /* input string index */
-    register int y;   /* expression index */
+    int x;   /* input string index */
+    int y;   /* expression index */
     int ret,neg;
 
     if (level > 20)      /* Don't let the stack get too deep. */

@@ -156,7 +156,7 @@ nsDOMMessageEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
 
     if (!event->mWindowSource) {
       MessagePortBase* port = nullptr;
-      nsresult rv = UNWRAP_OBJECT(MessagePort, aCx, aParam.mSource, port);
+      nsresult rv = UNWRAP_OBJECT(MessagePort, aParam.mSource, port);
       if (NS_FAILED(rv)) {
         aRv.Throw(NS_ERROR_INVALID_ARG);
         return nullptr;

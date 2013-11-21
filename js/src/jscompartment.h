@@ -110,7 +110,7 @@ struct TypeInferenceSizes;
 }
 
 namespace js {
-class AutoDebugModeGC;
+class AutoDebugModeInvalidation;
 class ArrayBufferObject;
 class DebugScopes;
 class WeakMapBase;
@@ -364,19 +364,20 @@ struct JSCompartment
 
   private:
     /* This is called only when debugMode() has just toggled. */
-    void updateForDebugMode(js::FreeOp *fop, js::AutoDebugModeGC &dmgc);
+    void updateForDebugMode(js::FreeOp *fop, js::AutoDebugModeInvalidation &invalidate);
 
   public:
     js::GlobalObjectSet &getDebuggees() { return debuggees; }
     bool addDebuggee(JSContext *cx, js::GlobalObject *global);
     bool addDebuggee(JSContext *cx, js::GlobalObject *global,
-                     js::AutoDebugModeGC &dmgc);
+                     js::AutoDebugModeInvalidation &invalidate);
     void removeDebuggee(js::FreeOp *fop, js::GlobalObject *global,
                         js::GlobalObjectSet::Enum *debuggeesEnum = nullptr);
     void removeDebuggee(js::FreeOp *fop, js::GlobalObject *global,
-                        js::AutoDebugModeGC &dmgc,
+                        js::AutoDebugModeInvalidation &invalidate,
                         js::GlobalObjectSet::Enum *debuggeesEnum = nullptr);
-    bool setDebugModeFromC(JSContext *cx, bool b, js::AutoDebugModeGC &dmgc);
+    bool setDebugModeFromC(JSContext *cx, bool b,
+                           js::AutoDebugModeInvalidation &invalidate);
 
     void clearBreakpointsIn(js::FreeOp *fop, js::Debugger *dbg, JSObject *handler);
     void clearTraps(js::FreeOp *fop);
@@ -422,29 +423,56 @@ JSRuntime::isAtomsZone(JS::Zone *zone)
 }
 
 // For use when changing the debug mode flag on one or more compartments.
-// Do not run scripts in any compartment that is scheduled for GC using this
-// object. See comment in updateForDebugMode.
+// Invalidate and discard JIT code since debug mode breaks JIT assumptions.
 //
-class js::AutoDebugModeGC
+// AutoDebugModeInvalidation has two modes: compartment or zone
+// invalidation. While it is correct to always use compartment invalidation,
+// if you know ahead of time you need to invalidate a whole zone, it is faster
+// to invalidate the zone.
+//
+// Compartment invalidation only invalidates scripts belonging to that
+// compartment.
+//
+// Zone invalidation invalidates all scripts belonging to non-special
+// (i.e. those with principals) compartments of the zone.
+//
+// FIXME: Remove entirely once bug 716647 lands.
+//
+class js::AutoDebugModeInvalidation
 {
-    JSRuntime *rt;
-    bool needGC;
-  public:
-    explicit AutoDebugModeGC(JSRuntime *rt) : rt(rt), needGC(false) {}
+    JSCompartment *comp_;
+    JS::Zone *zone_;
 
-    ~AutoDebugModeGC() {
-        // Under some circumstances (say, in the midst of an animation),
-        // the garbage collector may try to retain JIT code and analyses.
-        // The DEBUG_MODE_GC reason forces the collector to always throw
-        // everything away, as required for debug mode transitions.
-        if (needGC)
-            GC(rt, GC_NORMAL, JS::gcreason::DEBUG_MODE_GC);
+    enum {
+        NoNeed = 0,
+        ToggledOn = 1,
+        ToggledOff = 2
+    } needInvalidation_;
+
+  public:
+    explicit AutoDebugModeInvalidation(JSCompartment *comp)
+      : comp_(comp), zone_(nullptr), needInvalidation_(NoNeed)
+    { }
+
+    explicit AutoDebugModeInvalidation(JS::Zone *zone)
+      : comp_(nullptr), zone_(zone), needInvalidation_(NoNeed)
+    { }
+
+    ~AutoDebugModeInvalidation();
+
+    bool isFor(JSCompartment *comp) {
+        if (comp_)
+            return comp == comp_;
+        return comp->zone() == zone_;
     }
 
-    void scheduleGC(Zone *zone) {
-        JS_ASSERT(!rt->isHeapBusy());
-        PrepareZoneForGC(zone);
-        needGC = true;
+    void scheduleInvalidation(bool debugMode) {
+        // If we are scheduling invalidation for multiple compartments, they
+        // must all agree on the toggle. This is so we can decide if we need
+        // to invalidate on-stack scripts.
+        MOZ_ASSERT_IF(needInvalidation_ != NoNeed,
+                      needInvalidation_ == debugMode ? ToggledOn : ToggledOff);
+        needInvalidation_ = debugMode ? ToggledOn : ToggledOff;
     }
 };
 
