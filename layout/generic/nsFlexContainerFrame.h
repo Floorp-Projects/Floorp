@@ -110,6 +110,13 @@ protected:
                                        nscoord aAvailableHeightForContent,
                                        nsReflowStatus& aStatus);
 
+  nscoord ComputeFlexContainerCrossSize(const nsHTMLReflowState& aReflowState,
+                                        const FlexboxAxisTracker& aAxisTracker,
+                                        nscoord aLineCrossSize,
+                                        nscoord aAvailableHeightForContent,
+                                        bool* aIsDefinite,
+                                        nsReflowStatus& aStatus);
+
   void PositionItemInMainAxis(MainAxisPositionTracker& aMainAxisPosnTracker,
                               FlexItem& aItem);
 
