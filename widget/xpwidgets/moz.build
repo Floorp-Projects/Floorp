@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'widget'
-
 EXPORTS += [
     'APZCCallbackHelper.h',
     'GfxDriverInfo.h',
@@ -65,11 +63,15 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3', 'windows', 'cocoa'):
         'nsNativeTheme.cpp',
     ]
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'xpwidgets_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    FINAL_LIBRARY = 'widget_mac'
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gonk', 'android', 'qt', 'gtk2', 'gtk3'):
+    FINAL_LIBRARY = 'widget_%s' % CONFIG['MOZ_WIDGET_TOOLKIT']
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
+    FINAL_LIBRARY = 'wdgtos2'

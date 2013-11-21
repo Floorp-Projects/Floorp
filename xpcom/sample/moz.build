@@ -12,12 +12,12 @@ TEST_TOOL_DIRS += ['program']
 # on these files to generate C++ headers and .xpt typelib files.
 XPIDL_SOURCES += ['nsISample.idl']
 
-# MODULE specifies where header files from this Makefile are installed,
+# XPIDL_MODULE specifies where header files from this Makefile are installed,
 # i.e. dist/include/xpcomsample
-MODULE = 'xpcomsample'
+XPIDL_MODULE = 'xpcomsample'
 
 # CPP_SOURCES specifies C++ files to be built into a library.
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsSample.cpp',
     'nsSampleModule.cpp',
 ]

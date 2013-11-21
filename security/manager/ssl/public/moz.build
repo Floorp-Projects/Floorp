@@ -61,5 +61,5 @@ if CONFIG['MOZ_XUL']:
         'nsICertTree.idl',
     ]
 
-MODULE = 'pipnss'
+XPIDL_MODULE = 'pipnss'
 

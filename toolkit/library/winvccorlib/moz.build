@@ -4,10 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'dummyvccorlib'
-
+# When we're linking GTest we recurse into this directory but don't need
+# to generate this library
 if not CONFIG['LINK_GTEST']:
     LIBRARY_NAME = 'dummyvccorlib'
+
+    FORCE_SHARED_LIB = True
 
 SOURCES += [
     'dummyvccorlib.cpp',

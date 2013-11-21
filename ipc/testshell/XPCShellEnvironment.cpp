@@ -373,9 +373,10 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
 
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
-        script =
-            JS_CompileScriptForPrincipals(cx, obj, env->GetPrincipal(), buffer,
-                                          strlen(buffer), "typein", startline);
+        JS::CompileOptions options(cx);
+        options.setFileAndLine("typein", startline)
+               .setPrincipals(env->GetPrincipal());
+        script = JS_CompileScript(cx, obj, buffer, strlen(buffer), options);
         if (script) {
             JSErrorReporter older;
 
@@ -583,10 +584,11 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
   JS::Rooted<JSObject*> global(cx, GetGlobalObject());
   JSAutoCompartment ac(cx, global);
 
-  JSScript* script =
-      JS_CompileUCScriptForPrincipals(cx, global, GetPrincipal(),
-                                      aString.get(), aString.Length(),
-                                      "typein", 0);
+  JS::CompileOptions options(cx);
+  options.setFileAndLine("typein", 0)
+         .setPrincipals(GetPrincipal());
+  JSScript* script = JS_CompileUCScript(cx, global, aString.get(),
+                                        aString.Length(), options);
   if (!script) {
      return false;
   }

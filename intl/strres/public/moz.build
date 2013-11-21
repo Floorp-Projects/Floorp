@@ -9,5 +9,5 @@ XPIDL_SOURCES += [
     'nsIStringBundleOverride.idl',
 ]
 
-MODULE = 'intl'
+XPIDL_MODULE = 'intl'
 

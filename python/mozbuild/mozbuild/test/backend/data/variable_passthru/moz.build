@@ -2,8 +2,6 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-MODULE = 'module_name'
-
 SOURCES += ['bar.s', 'foo.asm']
 
 EXTRA_COMPONENTS = ['bar.js', 'foo.js']
@@ -23,14 +21,11 @@ HOST_SOURCES += ['bar.c', 'foo.c']
 
 HOST_LIBRARY_NAME = 'host_bar'
 
-LIBRARY_NAME = 'lib_name'
 LIBS = ['bar.lib', 'foo.lib']
 
 OS_LIBS = ['foo.so', '-l123', 'bar.a']
 
 SDK_LIBRARY = ['bar.sdk', 'foo.sdk']
-
-SHARED_LIBRARY_LIBS += ['bar.sll', 'foo.sll']
 
 SOURCES += ['bar.c', 'foo.c']
 

@@ -25,6 +25,9 @@ GetThreadPoolLog()
   return sLog;
 }
 #endif
+#ifdef LOG
+#undef LOG
+#endif
 #define LOG(args) PR_LOG(GetThreadPoolLog(), PR_LOG_DEBUG, args)
 
 // DESIGN:

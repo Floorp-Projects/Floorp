@@ -6,9 +6,6 @@
 
 TOOL_DIRS += ['app']
 
-MODULE = 'ipdlunittest'
-LIBRARY_NAME = 'ipdlunittest_s'
-
 EXPORTS.mozilla._ipdltest += [
     'IPDLUnitTestProcessChild.h',
     'IPDLUnitTests.h',
@@ -123,9 +120,6 @@ IPDL_SOURCES += [
     'PTestUrgency.ipdl',
 ]
 
-LIBXUL_LIBRARY = True
-
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

@@ -4,9 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'layout'
-
 LIBRARY_NAME = 'gkmedias'
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    FORCE_SHARED_LIB = True
 
 if CONFIG['MOZ_WEBRTC']:
     DIRS += ['webrtc']

@@ -9,8 +9,6 @@ XPIDL_SOURCES += [
   'nsIWebVTTParserWrapper.idl',
 ]
 
-MODULE = 'webvtt'
-
 XPIDL_MODULE = 'webvtt'
 
 EXTRA_COMPONENTS += [

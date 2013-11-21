@@ -4,13 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'accessibility'
-
 SOURCES += [
     'uiaRawElmProvider.cpp',
 ]
-
-LIBXUL_LIBRARY = True
 
 LOCAL_INCLUDES += [
     '../../base',
@@ -21,5 +17,4 @@ LOCAL_INCLUDES += [
     '../msaa',
 ]
 
-LIBRARY_NAME = 'accessibility_toolkit_uia_s'
-
+FINAL_LIBRARY = 'xul'

@@ -5,16 +5,10 @@
 
 DIST_INSTALL = 1
 
-# Build mozglue as a shared lib on Windows, OSX and Android.
-# If this is ever changed, update MOZ_SHARED_MOZGLUE in browser/installer/Makefile.in
-ifneq (,$(filter WINNT Darwin Android,$(OS_TARGET)))
-FORCE_SHARED_LIB = 1
-endif
+# For FORCE_SHARED_LIB
+include $(topsrcdir)/config/config.mk
 
-# Keep jemalloc separated when mozglue is statically linked
-ifeq (1_1,$(MOZ_MEMORY)_$(or $(MOZ_NATIVE_JEMALLOC),$(FORCE_SHARED_LIB)))
-SHARED_LIBRARY_LIBS = $(call EXPAND_LIBNAME_PATH,memory,$(DEPTH)/memory/build)
-else
+ifneq (1_1,$(MOZ_MEMORY)_$(or $(MOZ_NATIVE_JEMALLOC),$(FORCE_SHARED_LIB)))
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
@@ -81,29 +75,19 @@ EXTRA_DSO_LDOPTS += -Wl,-weak_library,$(DEPTH)/memory/replace/dummy/$(DLL_PREFIX
 endif
 endif
 
-ifeq (Android,$(OS_TARGET))
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,$(DEPTH)/other-licenses/android)
-endif
-
 ifeq (android, $(MOZ_WIDGET_TOOLKIT))
 # Add Android specific code
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,android,../android)
 # To properly wrap jemalloc's pthread_atfork call.
 EXTRA_DSO_LDOPTS += -Wl,--wrap=pthread_atfork
 endif
 
 ifdef MOZ_LINKER
-# Add custom dynamic linker
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,linker,../linker)
-
 ifeq (arm, $(TARGET_CPU))
 EXTRA_DSO_LDOPTS += -Wl,-version-script,$(srcdir)/arm-eabi-filter
 endif
 
 endif
-
-SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,mfbt,$(DEPTH)/mfbt)
 
 ifeq (Android, $(OS_TARGET))
 WRAP_LDFLAGS := $(filter -Wl%,$(WRAP_LDFLAGS))

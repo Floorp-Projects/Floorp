@@ -8,8 +8,6 @@
 if CONFIG['MOZ_ANGLE_RENDERER']:
     DIRS += ['src/libGLESv2', 'src/libEGL']
 
-MODULE = 'angle'
-
 EXPORTS.angle += [
     'include/GLSLANG/ShaderLang.h',
     'include/KHR/khrplatform.h',
@@ -119,10 +117,9 @@ UNIFIED_SOURCES += ['src/compiler/' + src for src in [
     'TranslatorGLSL.cpp',
     'VersionGLSL.cpp',
 ]]
-
-LIBRARY_NAME = 'angle'
-LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     NO_VISIBILITY_FLAGS = True
+
+FINAL_LIBRARY = 'gkmedias'

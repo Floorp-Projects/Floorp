@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'uconv'
-
 UNIFIED_SOURCES += [
     'nsCharsetConverterManager.cpp',
     'nsConverterInputStream.cpp',
@@ -220,15 +218,10 @@ if CONFIG['INTEL_ARCHITECTURE']:
         'nsUTF8ToUnicodeSSE2.cpp',
     ]
 
-LIBRARY_NAME = 'uconv'
-
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-EXPORT_LIBRARY = True
 
 LOCAL_INCLUDES += [
     '../util',
 ]
 
+FINAL_LIBRARY = 'xul'

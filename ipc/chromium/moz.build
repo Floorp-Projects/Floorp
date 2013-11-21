@@ -35,7 +35,7 @@ else:
     else:
         os_linux = 1
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'src/base/at_exit.cc',
     'src/base/base_paths.cc',
     'src/base/base_switches.cc',
@@ -179,7 +179,7 @@ if os_posix:
         ]
 
 if os_macosx:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'src/base/debug_util_mac.cc',
         'src/base/hmac_mac.cc',
         'src/base/idle_timer.cc',
@@ -204,7 +204,7 @@ if os_macosx:
         'src/chrome/common/mach_ipc_mac.mm',
     ]
     if not CONFIG['MOZ_NATIVE_LIBEVENT']:
-        SOURCES += [
+        UNIFIED_SOURCES += [
             'src/third_party/libevent/kqueue.c',
         ]
 
@@ -277,11 +277,6 @@ if ost.find('86') == -1 and ost.find('arm') == -1 and ost.find('mips') == -1:
         'src/base/atomicops_internals_mutex.cc',
     ]
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'chromium_s'
-
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

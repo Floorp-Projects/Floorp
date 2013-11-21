@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'libupdatecommon'
-
 EXPORTS += [
     'readstrings.h',
     'updatedefines.h',
@@ -22,8 +20,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 LIBRARY_NAME = 'updatecommon'
 
-LIBXUL_LIBRARY = True
-
 srcdir = '.'
 
 include('sources.mozbuild')
+
+FINAL_LIBRARY = 'xulapp_s'

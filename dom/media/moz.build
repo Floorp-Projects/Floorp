@@ -22,8 +22,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_media'
 
-MODULE = 'dom'
-
 EXPORTS.mozilla.dom += [
     'GetUserMediaRequest.h',
 ]
@@ -52,13 +50,11 @@ if CONFIG['MOZ_B2G']:
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'dom_media_s'
-
 LOCAL_INCLUDES += [
     '../base',
     '../camera',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'gklayout'

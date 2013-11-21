@@ -84,8 +84,14 @@ class ExpandArgsMore(ExpandArgs):
                     self.tmp.append(tmp)
                     if conf.AR == 'lib':
                         out = subprocess.check_output([conf.AR, '-NOLOGO', '-LIST', arg])
-                        for l in out.splitlines():
-                            subprocess.call([conf.AR, '-NOLOGO', '-EXTRACT:%s' % l, os.path.abspath(arg)], cwd=tmp)
+                        files = out.splitlines()
+                        # If lib -list returns a list full of dlls, it's an
+                        # import lib.
+                        if all(isDynamicLib(f) for f in files):
+                            newlist += [arg]
+                            continue
+                        for f in files:
+                            subprocess.call([conf.AR, '-NOLOGO', '-EXTRACT:%s' % f, os.path.abspath(arg)], cwd=tmp)
                     else:
                         subprocess.call(ar_extract + [os.path.abspath(arg)], cwd=tmp)
                     objs = []

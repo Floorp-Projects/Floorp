@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'content'
-
 EXPORTS += [
     'RawDecoder.h',
     'RawReader.h',
@@ -17,13 +15,11 @@ UNIFIED_SOURCES += [
     'RawReader.cpp',
 ]
 
-LIBRARY_NAME = 'gkconraw_s'
-
 FAIL_ON_WARNINGS = True
-
-LIBXUL_LIBRARY = True
 
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/html/content/src',
 ]
+
+FINAL_LIBRARY = 'gklayout'

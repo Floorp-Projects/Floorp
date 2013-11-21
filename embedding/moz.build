@@ -7,7 +7,5 @@
 DIRS += ['base', 'components', 'browser']
 TEST_DIRS += ['test']
 
-MODULE = 'embed'
-
 if CONFIG['ENABLE_TESTS']:
     XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']

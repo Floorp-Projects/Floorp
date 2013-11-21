@@ -6,8 +6,6 @@
 
 FAIL_ON_WARNINGS = True
 
-MODULE = 'sandbox'
-
 EXPORTS.mozilla += [
     'Sandbox.h',
 ]
@@ -16,11 +14,6 @@ SOURCES += [
     'Sandbox.cpp',
 ]
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'sandbox_s'
-
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

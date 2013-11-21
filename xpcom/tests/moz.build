@@ -52,8 +52,6 @@ SOURCES += [
     '%s.cpp' % s for s in sorted(SIMPLE_PROGRAMS)
 ]
 
-MODULE = 'xpcom'
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 CPP_UNIT_TESTS += [

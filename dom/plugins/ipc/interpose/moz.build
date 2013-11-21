@@ -11,3 +11,5 @@ SOURCES += [ "%s.mm" % (LIBRARY_NAME) ]
 SOURCES += [
     'plugin_child_quirks.mm',
 ]
+
+FORCE_SHARED_LIB = True

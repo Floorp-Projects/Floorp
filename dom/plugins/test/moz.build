@@ -9,6 +9,4 @@ DIRS += ['testplugin']
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'cocoa', 'windows'):
     TEST_DIRS += ['mochitest']
 
-MODULE = 'test_plugin'
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

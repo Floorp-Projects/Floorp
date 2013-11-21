@@ -1078,6 +1078,12 @@ public:
   nsresult QuerySelector(const nsAString& aSelector, nsIDOMElement **aReturn);
   nsresult QuerySelectorAll(const nsAString& aSelector, nsIDOMNodeList **aReturn);
 
+protected:
+  // nsIDocument overrides this with its own (faster) version.  This
+  // should really only be called for elements and document fragments.
+  mozilla::dom::Element* GetElementById(const nsAString& aId);
+
+public:
   /**
    * Associate an object aData to aKey on this node. If aData is null any
    * previously registered object and UserDataHandler associated to aKey on

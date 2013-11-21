@@ -17,7 +17,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     if CONFIG['MOZ_UPDATER']:
         DIRS += ['updater']
 
-MODULE = 'update'
+XPIDL_MODULE = 'update'
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit_timermanager/xpcshell.ini']
 

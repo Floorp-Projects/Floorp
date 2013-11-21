@@ -13,7 +13,7 @@ XPIDL_SOURCES += [
     'nsIInputListAutoComplete.idl',
 ]
 
-MODULE = 'satchel'
+XPIDL_MODULE = 'satchel'
 
 SOURCES += [
     'nsFormFillController.cpp',
@@ -34,8 +34,6 @@ EXTRA_PP_COMPONENTS += [
     'nsFormHistory.js',
 ]
 
-LIBRARY_NAME = 'satchel'
-
 EXTRA_JS_MODULES += [
     'nsFormAutoCompleteResult.jsm',
 ]
@@ -44,7 +42,4 @@ EXTRA_PP_JS_MODULES += [
     'FormHistory.jsm',
 ]
 
-LIBXUL_LIBRARY = True
-
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

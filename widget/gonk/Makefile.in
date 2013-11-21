@@ -17,8 +17,6 @@ VPATH           = \
   $(srcdir)/libui \
   $(NULL)
 
-SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DHAVE_OFF64_T -DSK_BUILD_FOR_ANDROID_NDK

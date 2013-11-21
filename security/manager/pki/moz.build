@@ -6,5 +6,3 @@
 
 DIRS += ['public', 'resources', 'src']
 
-MODULE = 'pippki'
-

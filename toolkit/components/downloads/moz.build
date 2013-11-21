@@ -14,7 +14,7 @@ XPIDL_SOURCES += [
     'nsIDownloadProgressListener.idl',
 ]
 
-MODULE = 'downloads'
+XPIDL_MODULE = 'downloads'
 
 SOURCES += [
     'nsDownloadManager.cpp',
@@ -42,7 +42,4 @@ if not CONFIG['MOZ_SUITE']:
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'download_s'
-
+FINAL_LIBRARY = 'toolkitcomps'

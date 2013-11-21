@@ -8,7 +8,7 @@ XPIDL_SOURCES += [
     'nsIShellService.idl',
 ]
 
-MODULE = 'browsercomps'
+XPIDL_MODULE = 'browsercomps'
 
 EXPORTS += [
     'nsBrowserComponents.h',
@@ -30,7 +30,4 @@ if CONFIG['MOZ_ANDROID_HISTORY']:
 
 LIBRARY_NAME = 'browsercomps'
 
-LIBXUL_LIBRARY = True
-
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

@@ -163,7 +163,10 @@ BEGIN_TEST(testXDR_bug506491)
         "var f = makeClosure('0;', 'status', 'ok');\n";
 
     // compile
-    JS::RootedScript script(cx, JS_CompileScript(cx, global, s, strlen(s), __FILE__, __LINE__));
+    JS::CompileOptions options(cx);
+    options.setFileAndLine(__FILE__, __LINE__);
+    JS::RootedScript script(cx, JS_CompileScript(cx, global, s, strlen(s),
+                                                 options));
     CHECK(script);
 
     script = FreezeThaw(cx, script);
@@ -187,7 +190,9 @@ END_TEST(testXDR_bug506491)
 BEGIN_TEST(testXDR_bug516827)
 {
     // compile an empty script
-    JS::RootedScript script(cx, JS_CompileScript(cx, global, "", 0, __FILE__, __LINE__));
+    JS::CompileOptions options(cx);
+    options.setFileAndLine(__FILE__, __LINE__);
+    JS::RootedScript script(cx, JS_CompileScript(cx, global, "", 0, options));
     CHECK(script);
 
     script = FreezeThaw(cx, script);
@@ -208,7 +213,10 @@ BEGIN_TEST(testXDR_source)
         nullptr
     };
     for (const char **s = samples; *s; s++) {
-        JS::RootedScript script(cx, JS_CompileScript(cx, global, *s, strlen(*s), __FILE__, __LINE__));
+        JS::CompileOptions options(cx);
+        options.setFileAndLine(__FILE__, __LINE__);
+        JS::RootedScript script(cx, JS_CompileScript(cx, global, *s, strlen(*s),
+                                                     options));
         CHECK(script);
         script = FreezeThaw(cx, script);
         CHECK(script);
@@ -231,7 +239,9 @@ BEGIN_TEST(testXDR_sourceMap)
     };
     JS::RootedScript script(cx);
     for (const char **sm = sourceMaps; *sm; sm++) {
-        script = JS_CompileScript(cx, global, "", 0, __FILE__, __LINE__);
+        JS::CompileOptions options(cx);
+        options.setFileAndLine(__FILE__, __LINE__);
+        script = JS_CompileScript(cx, global, "", 0, options);
         CHECK(script);
 
         size_t len = strlen(*sm);

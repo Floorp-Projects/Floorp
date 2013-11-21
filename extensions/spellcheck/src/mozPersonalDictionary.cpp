@@ -153,7 +153,7 @@ NS_IMETHODIMP mozPersonalDictionary::Save()
   if(NS_FAILED(res)) return res;
 
   nsCOMPtr<nsIOutputStream> outStream;
-  NS_NewLocalFileOutputStream(getter_AddRefs(outStream), theFile, PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE ,0664);
+  NS_NewSafeLocalFileOutputStream(getter_AddRefs(outStream), theFile, PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE ,0664);
 
   // get a buffered output stream 4096 bytes big, to optimize writes
   nsCOMPtr<nsIOutputStream> bufferedOutputStream;
@@ -170,6 +170,14 @@ NS_IMETHODIMP mozPersonalDictionary::Save()
 
     bufferedOutputStream->Write(utf8Key.get(), utf8Key.Length(), &bytesWritten);
     bufferedOutputStream->Write("\n", 1, &bytesWritten);
+  }
+  nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(bufferedOutputStream);
+  NS_ASSERTION(safeStream, "expected a safe output stream!");
+  if (safeStream) {
+    res = safeStream->Finish();
+    if (NS_FAILED(res)) {
+      NS_WARNING("failed to save personal dictionary file! possible data loss");
+    }
   }
   return res;
 }

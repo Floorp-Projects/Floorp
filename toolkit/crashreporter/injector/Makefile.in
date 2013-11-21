@@ -2,12 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FORCE_SHARED_LIB = 1
 USE_STATIC_LIBS = 1
 STL_FLAGS =
 MOZ_GLUE_LDFLAGS =
-
-SHARED_LIBRARY_LIBS += ../breakpad-windows-standalone/$(LIB_PREFIX)google_breakpad_standalone_s.$(LIB_SUFFIX)
 
 include $(topsrcdir)/config/rules.mk
 

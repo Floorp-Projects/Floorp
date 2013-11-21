@@ -11,7 +11,7 @@ XPIDL_SOURCES += [
     'nsITelemetryPing.idl',
 ]
 
-MODULE = 'telemetry'
+XPIDL_MODULE = 'telemetry'
 
 EXPORTS.mozilla += [
     'ProcessedStack.h',
@@ -38,13 +38,8 @@ EXTRA_JS_MODULES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-LIBRARY_NAME = 'telemetry'
-
-EXPORT_LIBRARY = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

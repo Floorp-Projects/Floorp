@@ -27,6 +27,4 @@ ifeq ($(OS_TARGET),Android)
 PLATFORM = android
 endif
 
-SHARED_LIBRARY_LIBS = $(PLATFORM)/$(LIB_PREFIX)imgicon$(PLATFORM)_s.$(LIB_SUFFIX)
-
 LOCAL_INCLUDES	= -I$(srcdir)/$(PLATFORM)

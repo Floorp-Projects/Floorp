@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'dom'
-
 EXPORTS.mozilla.dom.indexedDB += [
     'SerializationHelpers.h',
 ]
@@ -32,14 +30,11 @@ IPDL_SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'dom_indexeddb_ipc_s'
-
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/content/events/src',
     '/dom/indexedDB',

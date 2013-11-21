@@ -6,7 +6,6 @@
 # Copyright © 2013 Deutsche Telekom, Inc.
 
 if CONFIG['MOZ_NFC']:
-    MODULE = 'dom'
     EXPORTS.mozilla.dom += [
         'MozNdefRecord.h',
     ]
@@ -20,6 +19,4 @@ if CONFIG['MOZ_NFC']:
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'dom_nfc_s'
-
-LIBXUL_LIBRARY = True
+FINAL_LIBRARY = 'gklayout'

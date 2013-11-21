@@ -4313,14 +4313,15 @@ if (SpecialPowers.getBoolPref("layout.css.font-features.enabled")) {
 			inherited: true,
 			type: CSS_TYPE_LONGHAND,
 			initial_values: [ "normal" ],
-			other_values: [ "common-ligatures", "no-common-ligatures", "discretionary-ligatures", "no-discretionary-ligatures",
+			other_values: [ "none", "common-ligatures", "no-common-ligatures", "discretionary-ligatures", "no-discretionary-ligatures",
 			                "historical-ligatures", "no-historical-ligatures", "contextual", "no-contextual",
 			                "common-ligatures no-discretionary-ligatures", "contextual no-discretionary-ligatures",
 			                "historical-ligatures no-common-ligatures", "no-historical-ligatures discretionary-ligatures",
 			                "common-ligatures no-discretionary-ligatures historical-ligatures no-contextual" ],
 			invalid_values: [ "common-ligatures normal", "common-ligatures no-common-ligatures", "common-ligatures common-ligatures",
 			                  "no-historical-ligatures historical-ligatures", "no-discretionary-ligatures discretionary-ligatures",
-			                  "no-contextual contextual", "common-ligatures no-discretionary-ligatures no-common-ligatures" ]
+			                  "no-contextual contextual", "common-ligatures no-discretionary-ligatures no-common-ligatures",
+			                  "common-ligatures none", "no-discretionary-ligatures none", "none common-ligatures" ]
 		},
 		"font-variant-numeric": {
 			domProp: "fontVariantNumeric",

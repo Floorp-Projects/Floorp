@@ -1612,7 +1612,7 @@ nsComputedDOMStyle::DoGetFontVariantLigatures()
     nsAutoString valueStr;
 
     nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_font_variant_ligatures,
-      intValue, NS_FONT_VARIANT_LIGATURES_COMMON,
+      intValue, NS_FONT_VARIANT_LIGATURES_NONE,
       NS_FONT_VARIANT_LIGATURES_NO_CONTEXTUAL, valueStr);
     val->SetString(valueStr);
   }

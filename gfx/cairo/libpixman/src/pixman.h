@@ -69,7 +69,10 @@ SOFTWARE.
 #ifndef PIXMAN_H__
 #define PIXMAN_H__
 
-#include "cairo-platform.h"
+#ifdef MOZILLA_VERSION
+#include "cairo/pixman-rename.h"
+#endif
+
 
 #include <pixman-version.h>
 

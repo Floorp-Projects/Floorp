@@ -6,6 +6,4 @@
 
 TEST_TOOL_DIRS += ['mochitest']
 
-MODULE = 'test_url-classifier'
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

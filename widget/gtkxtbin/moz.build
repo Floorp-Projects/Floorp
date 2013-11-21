@@ -4,20 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'gtkxtbin'
-
 EXPORTS += [
     'gtk2xtbin.h',
 ]
-
-LIBRARY_NAME = 'gtkxtbin'
-
-LIBXUL_LIBRARY = True
 
 if CONFIG['MOZ_ENABLE_GTK2']:
     SOURCES += [
         'gtk2xtbin.c',
     ]
 
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

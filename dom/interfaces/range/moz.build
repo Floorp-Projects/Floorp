@@ -10,5 +10,3 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_range'
 
-MODULE = 'dom'
-

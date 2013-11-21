@@ -65,8 +65,6 @@ else:
 
 XPIDL_MODULE = 'xpcom_io'
 
-MODULE = 'xpcom'
-
 EXPORTS += [
     'nsAnonymousTemporaryFile.h',
     'nsAppDirectoryServiceDefs.h',
@@ -92,7 +90,7 @@ EXPORTS.mozilla += [
     'Base64.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'Base64.cpp',
     'nsAnonymousTemporaryFile.cpp',
     'nsAppFileLocationProvider.cpp',
@@ -122,11 +120,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'CocoaFileUtils.mm',
     ]
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-LIBRARY_NAME = 'xpcomio_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xpcom_core'

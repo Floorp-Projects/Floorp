@@ -179,3 +179,9 @@ loop:	SWAPINIT(a, es);
 }
 
 }
+
+#undef INLINE
+#undef swapcode
+#undef SWAPINIT
+#undef swap
+#undef vecswap

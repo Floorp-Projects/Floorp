@@ -13,8 +13,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_storage'
 
-MODULE = 'dom'
-
 EXPORTS += [
     'nsPIDOMStorage.h',
 ]

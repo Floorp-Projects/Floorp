@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'pipnss'
-
 EXPORTS += [
     'CryptoTask.h',
     'nsNSSShutDown.h',
@@ -83,13 +81,8 @@ if CONFIG['MOZ_XUL']:
         'nsCertTree.cpp',
     ]
 
-LIBRARY_NAME = 'pipnss'
-
 SOURCES += [
     'md4.c',
 ]
 
-LIBXUL_LIBRARY = True
-
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

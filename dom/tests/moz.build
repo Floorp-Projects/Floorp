@@ -6,6 +6,4 @@
 
 DIRS += ['mochitest', 'browser']
 
-MODULE = 'test_dom'
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

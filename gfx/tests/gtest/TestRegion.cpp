@@ -124,3 +124,50 @@ TEST(Gfx, RegionTestContainsSpecifiedOverflowingRect) {
   TestLargestRegion::TestContainsSpecifiedOverflowingRect();
 }
 
+TEST(Gfx, RegionScaleToInside) {
+  { // no rectangles
+    nsRegion r;
+
+    nsIntRegion scaled = r.ScaleToInsidePixels(1, 1, 60);
+    nsIntRegion result;
+
+    EXPECT_TRUE(result.IsEqual(scaled)) <<
+      "scaled result incorrect";
+  }
+
+  { // one rectangle
+    nsRegion r(nsRect(0,44760,19096,264));
+
+    nsIntRegion scaled = r.ScaleToInsidePixels(1, 1, 60);
+    nsIntRegion result(nsIntRect(0,746,318,4));
+
+    EXPECT_TRUE(result.IsEqual(scaled)) <<
+      "scaled result incorrect";
+  }
+
+
+  { // the first rectangle gets adjusted
+    nsRegion r(nsRect(0,44760,19096,264));
+    r.Or(r, nsRect(0,45024,19360,1056));
+
+    nsIntRegion scaled = r.ScaleToInsidePixels(1, 1, 60);
+    nsIntRegion result(nsIntRect(0,746,318,5));
+    result.Or(result, nsIntRect(0,751,322,17));
+
+    EXPECT_TRUE(result.IsEqual(scaled)) <<
+      "scaled result incorrect";
+  }
+
+  { // the second rectangle gets adjusted
+    nsRegion r(nsRect(0,44760,19360,264));
+    r.Or(r, nsRect(0,45024,19096,1056));
+
+    nsIntRegion scaled = r.ScaleToInsidePixels(1, 1, 60);
+    nsIntRegion result(nsIntRect(0,746,322,4));
+    result.Or(result, nsIntRect(0,750,318,18));
+
+    EXPECT_TRUE(result.IsEqual(scaled)) <<
+      "scaled result incorrect";
+  }
+
+}

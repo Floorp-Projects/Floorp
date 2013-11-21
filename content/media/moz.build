@@ -48,8 +48,6 @@ PARALLEL_DIRS += ['webspeech']
 
 TEST_DIRS += ['test']
 
-MODULE = 'content'
-
 EXPORTS += [
     'AbstractMediaDecoder.h',
     'AudioAvailableEventManager.h',
@@ -150,14 +148,11 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
         'AudioNodeEngineNEON.cpp',
     ]
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-LIBRARY_NAME = 'gkconmedia_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/layout/generic',

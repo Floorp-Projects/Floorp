@@ -460,13 +460,13 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
     // Close the key that was opened.
     ::RegCloseKey(theKey);
     if (REG_FAILED(res) ||
-        !valueData.Equals(currValue, CaseInsensitiveCompare)) {
+        _wcsicmp(valueData.get(), currValue)) {
       // Key wasn't set or was set to something other than our registry entry.
       NS_ConvertUTF8toUTF16 oldValueData(settings->oldValueData);
       offset = oldValueData.Find("%APPPATH%");
       oldValueData.Replace(offset, 9, appLongPath);
       // The current registry value doesn't match the current or the old format.
-      if (!oldValueData.Equals(currValue, CaseInsensitiveCompare)) {
+      if (_wcsicmp(oldValueData.get(), currValue)) {
         *aIsDefaultBrowser = false;
         return NS_OK;
       }
@@ -579,7 +579,7 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
     // Don't update the FTP protocol handler's shell open command when the
     // current registry value doesn't exist or matches the old format.
     if (REG_FAILED(res) ||
-        !oldValueOpen.Equals(currValue, CaseInsensitiveCompare)) {
+        _wcsicmp(oldValueOpen.get(), currValue)) {
       ::RegCloseKey(theKey);
       return NS_OK;
     }
