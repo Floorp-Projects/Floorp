@@ -513,6 +513,8 @@ CustomizeMode.prototype = {
     let toolbarItem = aWrapper.firstChild;
     if (!toolbarItem) {
       ERROR("no toolbarItem child for " + aWrapper.tagName + "#" + aWrapper.id);
+      aWrapper.remove();
+      return null;
     }
 
     if (aWrapper.hasAttribute("itemchecked")) {
