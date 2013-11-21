@@ -455,7 +455,8 @@ class ScriptSourceObject : public JSObject
     static const Class class_;
 
     static void finalize(FreeOp *fop, JSObject *obj);
-    static ScriptSourceObject *create(ExclusiveContext *cx, ScriptSource *source);
+    static ScriptSourceObject *create(ExclusiveContext *cx, ScriptSource *source,
+                                      const ReadOnlyCompileOptions &options);
 
     ScriptSource *source() {
         return static_cast<ScriptSource *>(getReservedSlot(SOURCE_SLOT).toPrivate());
@@ -463,8 +464,11 @@ class ScriptSourceObject : public JSObject
 
     void setSource(ScriptSource *source);
 
+    JSObject *element() const;
+
   private:
     static const uint32_t SOURCE_SLOT = 0;
+    static const uint32_t ELEMENT_SLOT = 1;
 };
 
 enum GeneratorKind { NotGenerator, LegacyGenerator, StarGenerator };
