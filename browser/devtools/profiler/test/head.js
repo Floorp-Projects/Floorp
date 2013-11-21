@@ -29,6 +29,11 @@ registerCleanupFunction(function () {
   Services.prefs.clearUserPref(REMOTE_ENABLED);
   Services.prefs.clearUserPref(SHOW_PLATFORM_DATA);
   DebuggerServer.destroy();
+
+  // These tests use a lot of memory due to GL contexts, so force a GC to help
+  // fragmentation.
+  info("Forcing GC after profiler test.");
+  Cu.forceGC();
 });
 
 function getProfileInternals(uid) {
