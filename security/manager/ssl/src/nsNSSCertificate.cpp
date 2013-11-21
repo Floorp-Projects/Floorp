@@ -785,15 +785,25 @@ nsNSSCertificate::GetIssuer(nsIX509Cert * *aIssuer)
 
   NS_ENSURE_ARG(aIssuer);
   *aIssuer = nullptr;
-  ScopedCERTCertificate issuer;
-  issuer = CERT_FindCertIssuer(mCert, PR_Now(), certUsageSSLClient);
-  if (issuer) {
-    nsCOMPtr<nsIX509Cert> cert = nsNSSCertificate::Create(issuer);
-    if (cert) {
-      *aIssuer = cert;
-      NS_ADDREF(*aIssuer);
-    }
+
+  nsCOMPtr<nsIArray> chain;
+  nsresult rv;
+  rv = GetChain(getter_AddRefs(chain));
+  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t length;
+  if (!chain || NS_FAILED(chain->GetLength(&length)) || length == 0) {
+    return NS_ERROR_UNEXPECTED;
   }
+  if (length == 1) { // No known issuer
+    return NS_OK;
+  }
+  nsCOMPtr<nsIX509Cert> cert;
+  chain->QueryElementAt(1, NS_GET_IID(nsIX509Cert), getter_AddRefs(cert));
+  if (!cert) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  *aIssuer = cert;
+  NS_ADDREF(*aIssuer);
   return NS_OK;
 }
 
