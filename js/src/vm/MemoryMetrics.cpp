@@ -94,14 +94,13 @@ InefficientNonFlatteningStringHashPolicy::match(const JSString *const &k, const 
 namespace JS {
 
 NotableStringInfo::NotableStringInfo()
-  : bufferSize(0),
-    buffer(0)
+  : buffer(0)
 {}
 
 NotableStringInfo::NotableStringInfo(JSString *str, const StringInfo &info)
   : StringInfo(info)
 {
-    bufferSize = Min(str->length() + 1, size_t(4096));
+    size_t bufferSize = Min(str->length() + 1, size_t(4096));
     buffer = js_pod_malloc<char>(bufferSize);
     if (!buffer) {
         MOZ_CRASH("oom");
@@ -121,17 +120,6 @@ NotableStringInfo::NotableStringInfo(JSString *str, const StringInfo &info)
     // |str| contains unicode chars.  Since this is just for a memory reporter,
     // we don't care.
     PutEscapedString(buffer, bufferSize, chars, str->length(), /* quote */ 0);
-}
-
-NotableStringInfo::NotableStringInfo(const NotableStringInfo& info)
-  : StringInfo(info),
-    bufferSize(info.bufferSize)
-{
-    buffer = js_pod_malloc<char>(bufferSize);
-    if (!buffer)
-        MOZ_CRASH("oom");
-
-    strcpy(buffer, info.buffer);
 }
 
 NotableStringInfo::NotableStringInfo(NotableStringInfo &&info)

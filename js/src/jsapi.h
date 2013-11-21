@@ -2406,6 +2406,8 @@ struct JSPropertySpec {
     uint8_t                     flags;
     JSPropertyOpWrapper         getter;
     JSStrictPropertyOpWrapper   setter;
+    const char                 *selfHostedGetter;
+    const char                 *selfHostedSetter;
 };
 
 namespace JS {
@@ -2436,13 +2438,23 @@ inline int CheckIsNative(JSNative native);
     {name, 0, \
      uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS), \
      JSOP_WRAPPER(JS_CAST_NATIVE_TO(getter, JSPropertyOp)), \
-     JSOP_NULLWRAPPER}
+     JSOP_NULLWRAPPER, nullptr, nullptr}
 #define JS_PSGS(name, getter, setter, flags) \
     {name, 0, \
      uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS), \
      JSOP_WRAPPER(JS_CAST_NATIVE_TO(getter, JSPropertyOp)), \
-     JSOP_WRAPPER(JS_CAST_NATIVE_TO(setter, JSStrictPropertyOp))}
-#define JS_PS_END {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}
+     JSOP_WRAPPER(JS_CAST_NATIVE_TO(setter, JSStrictPropertyOp)), \
+     nullptr, nullptr}
+#define JS_SELF_HOSTED_GET(name, getterName, flags) \
+    {name, 0, \
+     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_GETTER), \
+     JSOP_NULLWRAPPER, JSOP_NULLWRAPPER, getterName, nullptr}
+#define JS_SELF_HOSTED_GETSET(name, getterName, setterName, flags) \
+    {name, 0, \
+     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_GETTER | JSPROP_SETTER), \
+     JSOP_NULLWRAPPER, JSOP_NULLWRAPPER, getterName, setterName}
+#define JS_PS_END {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER, \
+                   nullptr, nullptr}
 
 /*
  * To define a native function, set call to a JSNativeWrapper. To define a

@@ -356,7 +356,8 @@ nsPipe::GetInputStream(nsIAsyncInputStream **aInputStream)
 NS_IMETHODIMP
 nsPipe::GetOutputStream(nsIAsyncOutputStream **aOutputStream)
 {
-    NS_ENSURE_TRUE(mInited, NS_ERROR_NOT_INITIALIZED);
+    if (NS_WARN_IF(!mInited))
+	return NS_ERROR_NOT_INITIALIZED;
     NS_ADDREF(*aOutputStream = &mOutput);
     return NS_OK;
 }

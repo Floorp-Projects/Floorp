@@ -72,6 +72,7 @@ public:
 
   void SwapFrameLoaders(nsXULElement& aOtherOwner, mozilla::ErrorResult& aError);
 
+  static bool BrowserFramesEnabled();
 protected:
   // This doesn't really ensure a frame loade in all cases, only when
   // it makes sense.

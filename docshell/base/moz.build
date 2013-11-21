@@ -47,7 +47,7 @@ EXPORTS.mozilla += [
     'LoadContext.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'LoadContext.cpp',
     'nsAboutRedirector.cpp',
     'nsDefaultURIFixup.cpp',

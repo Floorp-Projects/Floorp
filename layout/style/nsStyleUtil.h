@@ -57,6 +57,11 @@ public:
   static void AppendFontFeatureSettings(const nsCSSValue& src,
                                         nsAString& aResult);
 
+  static void AppendCSSNumber(float aNumber, nsAString& aResult)
+  {
+    aResult.AppendFloat(aNumber);
+  }
+
   // convert bitmask value to keyword name for a functional alternate
   static void GetFunctionalAlternatesName(int32_t aFeature,
                                           nsAString& aFeatureName);
