@@ -227,18 +227,6 @@ struct ThreadSafeContext : ContextFriendFields,
     }
 #endif
 
-    uint64_t generationalGcNumber() {
-#ifdef JSGC_GENERATIONAL
-        return hasNursery() ? runtime_->gcNumber : 0;
-#else
-        return 0;
-#endif
-    }
-
-    uint64_t hasGenerationalGcHappened(uint64_t originalGcNumber) {
-        return generationalGcNumber() != originalGcNumber;
-    }
-
     /*
      * Allocator used when allocating GCThings on this context. If we are a
      * JSContext, this is the Zone allocator of the JSContext's zone.
