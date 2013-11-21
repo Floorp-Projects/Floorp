@@ -261,10 +261,6 @@ public:
 
   virtual nsRect ComputeTightBounds(gfxContext* aContext) const MOZ_OVERRIDE;
   
-  virtual nsresult GetPrefWidthTightBounds(nsRenderingContext* aContext,
-                                           nscoord& aX,
-                                           nscoord& aXMost) MOZ_OVERRIDE;
-
   /**
    * Compute the final height of this frame.
    *

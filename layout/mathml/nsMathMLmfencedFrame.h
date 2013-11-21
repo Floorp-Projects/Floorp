@@ -42,9 +42,8 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  virtual void
-  GetIntrinsicWidthMetrics(nsRenderingContext* aRenderingContext,
-                           nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
+  virtual nscoord
+  GetIntrinsicWidth(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
 
   NS_IMETHOD
   AttributeChanged(int32_t         aNameSpaceID,
