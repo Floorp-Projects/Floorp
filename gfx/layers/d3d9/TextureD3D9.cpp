@@ -240,6 +240,15 @@ TextureSourceD3D9::DataToTexture(DeviceManagerD3D9* aDeviceManager,
 }
 
 void
+DeprecatedTextureHostD3D9::Reset()
+{
+  mSize.width = 0;
+  mSize.height = 0;
+  mTextures[0] = nullptr;
+  mIsTiled = false;
+}
+
+void
 DeprecatedTextureHostShmemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
                                  nsIntRegion *aRegion,
                                  nsIntPoint *aOffset)
@@ -288,6 +297,7 @@ DeprecatedTextureHostShmemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
                                  mSize, format, bpp);
     if (!mTextures[0]) {
       NS_WARNING("Could not upload texture");
+      Reset();
       return;
     }
     mIsTiled = false;
@@ -310,8 +320,7 @@ DeprecatedTextureHostShmemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
                                        bpp);
       if (!mTileTextures[i]) {
         NS_WARNING("Could not upload texture");
-        mSize = IntSize();
-        mIsTiled = false;
+        Reset();
         return;
       }
     }
@@ -426,15 +435,18 @@ DeprecatedTextureHostSystemMemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
     reinterpret_cast<IDirect3DTexture9*>(aImage.get_SurfaceDescriptorD3D9().texture());
 
   if (!texture) {
-    mSize.width = 0;
-    mSize.height = 0;
-    mTextures[0] = nullptr;
-    mIsTiled = false;
+    Reset();
     return;
   }
 
   D3DSURFACE_DESC desc;
   texture->GetLevelDesc(0, &desc);
+  HRESULT hr = texture->GetLevelDesc(0, &desc);
+  if (FAILED(hr)) {
+    Reset();
+    return;
+  }
+
   mSize.width = desc.Width;
   mSize.height = desc.Height;
 
@@ -465,8 +477,7 @@ DeprecatedTextureHostSystemMemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
                                     texture, mSize, format);
     if (!mTextures[0]) {
       NS_WARNING("Could not upload texture");
-      mSize.width = 0;
-      mSize.height = 0;
+      Reset();
       return;
     }
   } else {
@@ -494,9 +505,7 @@ DeprecatedTextureHostSystemMemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
       texture->UnlockRect(0);
       if (!mTileTextures[i]) {
         NS_WARNING("Could not upload texture");
-        mSize.width = 0;
-        mSize.height = 0;
-        mIsTiled = false;
+        Reset();
         return;
       }
     }
@@ -581,8 +590,7 @@ DeprecatedTextureHostDIB::UpdateImpl(const SurfaceDescriptor& aImage,
                                     surf, mSize, format);
     if (!mTextures[0]) {
       NS_WARNING("Could not upload texture");
-      mSize.width = 0;
-      mSize.height = 0;
+      Reset();
       return;
     }
     mIsTiled = false;
@@ -607,8 +615,7 @@ DeprecatedTextureHostDIB::UpdateImpl(const SurfaceDescriptor& aImage,
                                        bpp);
       if (!mTileTextures[i]) {
         NS_WARNING("Could not upload texture");
-        mSize = IntSize();
-        mIsTiled = false;
+        Reset();
         return;
       }
     }
