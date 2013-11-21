@@ -67,7 +67,8 @@ function HTMLEditor(htmlDocument)
   this.editorInner.addEventListener("click", stopPropagation, false);
   this.editor = new Editor(config);
 
-  this.editor.appendTo(this.editorInner).then(() => {
+  let iframe = this.editorInner.ownerDocument.createElement("iframe");
+  this.editor.appendTo(this.editorInner, iframe).then(() => {
     this.hide(false);
   }).then(null, (err) => console.log(err.message));
 }

@@ -138,7 +138,7 @@ APZCCallbackHelper::GetScrollIdentifiers(const nsIContent* aContent,
                                          uint32_t* aPresShellIdOut,
                                          FrameMetrics::ViewID* aViewIdOut)
 {
-    if (!nsLayoutUtils::FindIDFor(aContent, aViewIdOut)) {
+    if (!aContent || !nsLayoutUtils::FindIDFor(aContent, aViewIdOut)) {
         return false;
     }
     nsCOMPtr<nsIDOMWindowUtils> utils = GetDOMWindowUtils(aContent);

@@ -252,11 +252,6 @@ documenttab[selected] .documenttab-selection {
   transition-delay:    0s;
   transition-property: padding-bottom;
 }
-#browsers[findbar] browser {
-  /* delay setting padding-bottom until the findbar has transitioned in */
-  transition-delay:    @metro_animation_duration@;
-  padding-bottom: @findbar_height@;
-}
 /* Selection overlay and monocles */
 #page,
 .selection-overlay {
