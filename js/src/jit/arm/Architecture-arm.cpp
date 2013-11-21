@@ -13,7 +13,7 @@
 #include "jit/arm/Assembler-arm.h"
 
 #if !(defined(ANDROID) || defined(MOZ_B2G))
-#define HWCAP_ARMv7 (1 << 31)
+#define HWCAP_ARMv7 (1 << 29)
 #include <asm/hwcap.h>
 #else
 #define HWCAP_VFP      (1<<0)
