@@ -1166,10 +1166,14 @@ class Shape : public gc::BarrieredCell<Shape>
         return JSID_IS_EMPTY(propid_);
     }
 
-    uint32_t slotSpan() const {
+    uint32_t slotSpan(const Class *clasp) const {
         JS_ASSERT(!inDictionary());
-        uint32_t free = JSSLOT_FREE(getObjectClass());
+        uint32_t free = JSSLOT_FREE(clasp);
         return hasMissingSlot() ? free : Max(free, maybeSlot() + 1);
+    }
+
+    uint32_t slotSpan() const {
+        return slotSpan(getObjectClass());
     }
 
     void setSlot(uint32_t slot) {
@@ -1256,10 +1260,12 @@ class Shape : public gc::BarrieredCell<Shape>
     uint32_t entryCount() {
         if (hasTable())
             return table().entryCount;
+        return entryCountForCompilation();
+    }
 
-        Shape *shape = this;
+    uint32_t entryCountForCompilation() {
         uint32_t count = 0;
-        for (Shape::Range<NoGC> r(shape); !r.empty(); r.popFront())
+        for (Shape::Range<NoGC> r(this); !r.empty(); r.popFront())
             ++count;
         return count;
     }
