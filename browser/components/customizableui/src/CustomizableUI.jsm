@@ -1506,16 +1506,6 @@ let CustomizableUIInternal = {
     }
 
     gPalette.set(widget.id, widget);
-
-    // Clear our caches:
-    gGroupWrapperCache.delete(widget.id);
-    for (let [win, ] of gBuildWindows) {
-      let cache = gSingleWrapperCache.get(win);
-      if (cache) {
-        cache.delete(widget.id);
-      }
-    }
-
     this.notifyListeners("onWidgetCreated", widget.id);
 
     if (widget.defaultArea) {
