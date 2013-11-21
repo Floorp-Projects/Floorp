@@ -413,7 +413,11 @@ TestRunner.testFinished = function(tests) {
     TestRunner._lastTestFinished = TestRunner._currentTest;
     TestRunner._loopIsRestarting = false;
 
-    MemoryStats.dump(TestRunner.log);
+    MemoryStats.dump(TestRunner.log, TestRunner._currentTest,
+                     TestRunner.currentTestURL,
+                     TestRunner.dumpOutputDirectory,
+                     TestRunner.dumpAboutMemoryAfterTest,
+                     TestRunner.dumpDMDAfterTest);
 
     function cleanUpCrashDumpFiles() {
         if (!SpecialPowers.removeExpectedCrashDumpFiles(TestRunner._expectingProcessCrash)) {
