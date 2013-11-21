@@ -12,12 +12,24 @@ namespace mozilla {
 namespace gfx {
 
 MOZ_ALWAYS_INLINE
-uint32_t DivideAndPack(__m128i aValues, __m128i aDivisor, __m128i aMask)
+uint32_t DivideAndPack(__m128i aValues, __m128i aDivisor)
 {
-  __m128i multiplied = _mm_srli_epi64(_mm_mul_epu32(aValues, aDivisor), 32); // 00p300p1
-  multiplied = _mm_or_si128(multiplied, _mm_and_si128(_mm_mul_epu32(_mm_srli_epi64(aValues, 32), aDivisor),
-    aMask)); // p4p3p2p1
-  __m128i final = _mm_packus_epi16(_mm_packs_epi32(multiplied, _mm_setzero_si128()), _mm_setzero_si128());
+  const __m128i mask = _mm_setr_epi32(0x0, 0xffffffff, 0x0, 0xffffffff);
+  static const union {
+    int64_t i64[2];
+    __m128i m;
+  } roundingAddition = { { int64_t(1) << 31, int64_t(1) << 31 } };
+
+  __m128i multiplied31 = _mm_mul_epu32(aValues, aDivisor);
+  __m128i multiplied42 = _mm_mul_epu32(_mm_srli_epi64(aValues, 32), aDivisor);
+
+  // Add 1 << 31 before shifting or masking the lower 32 bits away, so that the
+  // result is rounded.
+  __m128i p_3_1 = _mm_srli_epi64(_mm_add_epi64(multiplied31, roundingAddition.m), 32);
+  __m128i p4_2_ = _mm_and_si128(_mm_add_epi64(multiplied42, roundingAddition.m), mask);
+  __m128i p4321 = _mm_or_si128(p_3_1, p4_2_);
+
+  __m128i final = _mm_packus_epi16(_mm_packs_epi32(p4321, _mm_setzero_si128()), _mm_setzero_si128());
 
   return _mm_cvtsi128_si32(final);
 }
@@ -175,7 +187,7 @@ GenerateIntegralImage_SSE2(int32_t aLeftInflation, int32_t aRightInflation,
  */
 void
 AlphaBoxBlur::BoxBlur_SSE2(uint8_t* aData,
-			   int32_t aLeftLobe,
+                           int32_t aLeftLobe,
                            int32_t aRightLobe,
                            int32_t aTopLobe,
                            int32_t aBottomLobe,
@@ -209,7 +221,6 @@ AlphaBoxBlur::BoxBlur_SSE2(uint8_t* aData,
                              mStride, size);
 
   __m128i divisor = _mm_set1_epi32(reciprocal);
-  __m128i mask = _mm_setr_epi32(0x0, 0xffffffff, 0x0, 0xffffffff);
 
   // This points to the start of the rectangle within the IntegralImage that overlaps
   // the surface being blurred.
@@ -241,7 +252,7 @@ AlphaBoxBlur::BoxBlur_SSE2(uint8_t* aData,
 
       __m128i values = _mm_add_epi32(_mm_sub_epi32(_mm_sub_epi32(bottomRight, topRight), bottomLeft), topLeft);
 
-      *(uint32_t*)(data + stride * y + x) = DivideAndPack(values, divisor, mask);
+      *(uint32_t*)(data + stride * y + x) = DivideAndPack(values, divisor);
     }
   }
 
