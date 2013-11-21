@@ -35,7 +35,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=702949
 
     var i = document.getElementsByTagName('input')[0];
 
-    var file = FileUtils.getFile("TmpD", ["testfile"]);
+    var file = FileUtils.getDir("TmpD", [], false);
+    file.append("testfile");
     file.createUnique(SpecialPowers.Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
 
     SpecialPowers.wrap(i).value = file.path;
