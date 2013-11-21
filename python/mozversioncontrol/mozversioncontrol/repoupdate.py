@@ -10,12 +10,21 @@ import subprocess
 
 # The logic here is far from robust. Improvements are welcome.
 
-def update_mercurial_repo(hg, repo, path, revision='default'):
+def update_mercurial_repo(hg, repo, path, revision='default',
+    hostfingerprints=None):
     """Ensure a HG repository exists at a path and is up to date."""
+    hostfingerprints = hostfingerprints or {}
+
+    args = [hg]
+
+    for host, fingerprint in sorted(hostfingerprints.items()):
+        args.extend(['--config', 'hostfingerprints.%s=%s' % (host,
+            fingerprint)])
+
     if os.path.exists(path):
-        subprocess.check_call([hg, 'pull', repo], cwd=path)
+        subprocess.check_call(args + ['pull', repo], cwd=path)
     else:
-        subprocess.check_call([hg, 'clone', repo, path])
+        subprocess.check_call(args + ['clone', repo, path])
 
     subprocess.check_call([hg, 'update', '-r', revision], cwd=path)
 
