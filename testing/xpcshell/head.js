@@ -93,7 +93,7 @@ try {
     let (crashReporter =
           Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
           .getService(Components.interfaces.nsICrashReporter)) {
-      crashReporter.minidumpPath = do_get_tempdir();
+      crashReporter.minidumpPath = do_get_minidumpdir();
     }
   }
 }
@@ -1097,6 +1097,26 @@ function do_get_tempdir() {
                        .createInstance(Components.interfaces.nsILocalFile);
   file.initWithPath(path);
   return file;
+}
+
+/**
+ * Returns the directory for crashreporter minidumps.
+ *
+ * @return nsILocalFile of the minidump directory
+ */
+function do_get_minidumpdir() {
+  let env = Components.classes["@mozilla.org/process/environment;1"]
+                      .getService(Components.interfaces.nsIEnvironment);
+  // the python harness may set this in the environment for us
+  let path = env.get("XPCSHELL_MINIDUMP_DIR");
+  if (path) {
+    let file = Components.classes["@mozilla.org/file/local;1"]
+                         .createInstance(Components.interfaces.nsILocalFile);
+    file.initWithPath(path);
+    return file;
+  } else {
+    return do_get_tempdir();
+  }
 }
 
 /**
