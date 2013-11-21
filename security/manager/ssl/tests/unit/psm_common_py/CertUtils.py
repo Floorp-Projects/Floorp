@@ -6,6 +6,7 @@
 
 import os
 import random
+import pexpect
 
 def init_dsa(db_dir):
     """
@@ -17,7 +18,7 @@ def init_dsa(db_dir):
       db_dir     -- location of the temporary params for the certificate
     """
     dsa_key_params = db_dir + "/dsa_param.pem"
-    os.system ("openssl dsaparam -out "+ dsa_key_params + " 2048")
+    os.system("openssl dsaparam -out " + dsa_key_params + " 2048")
 
 
 def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
@@ -136,4 +137,38 @@ def generate_int_and_ee(db_dir, dest_dir, ca_key, ca_cert, name, int_ext_text,
 
     return int_key, int_cert, ee_key, ee_cert
 
+def generate_pkcs12(db_dir, dest_dir, der_cert_filename, key_pem_filename,
+                    prefix):
+    """
+    Generate a pkcs12 file for a given certificate  name (in der format) and
+    a key filename (key in pem format). The output file will have an empty
+    password.
+
+    Arguments:
+    input:
+      db_dir     -- location of the temporary params for the certificate
+      dest_dir   -- location of the x509 cert
+      der_cert_filename -- the filename of the certificate to be included in the
+                           output file (DER format)
+      key_pem_filename  -- the filename of the private key of the certificate to
+                           (PEM format)
+      prefix     -- the name to be prepended to the output pkcs12 file.
+    output:
+      pk12_filename -- the filename of the outgoing pkcs12 output file
+    """
+    #make pem cert file  from der filename
+    pem_cert_filename = db_dir + "/" + prefix + ".pem"
+    pk12_filename = dest_dir + "/" + prefix + ".p12"
+    os.system("openssl x509 -inform der -in " + der_cert_filename + " -out " +
+                pem_cert_filename )
+    #now make pkcs12 file
+    child = pexpect.spawn("openssl pkcs12 -export -in " + pem_cert_filename +
+                          " -inkey " + key_pem_filename + " -out " +
+                          pk12_filename)
+    child.expect('Enter Export Password:')
+    child.sendline('')
+    child.expect('Verifying - Enter Export Password:')
+    child.sendline('')
+    child.expect(pexpect.EOF)
+    return pk12_filename
 

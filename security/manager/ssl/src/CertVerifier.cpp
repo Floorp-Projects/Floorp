@@ -269,6 +269,8 @@ CertVerifier::VerifyCert(CERTCertificate * cert,
              ("VerifyCert: successful CERT_PKIXVerifyCert(ev) \n"));
       goto pkix_done;
     }
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("VerifyCert: failed CERT_PKIXVerifyCert(ev)\n"));
 
     if (validationChain && *validationChain) {
       // There SHOULD not be a validation chain on failure, asserion here for
