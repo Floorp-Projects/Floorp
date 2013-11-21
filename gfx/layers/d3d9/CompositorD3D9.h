@@ -19,7 +19,7 @@ namespace layers {
 class CompositorD3D9 : public Compositor
 {
 public:
-  CompositorD3D9(nsIWidget *aWidget);
+  CompositorD3D9(PCompositorParent* aParent, nsIWidget *aWidget);
   ~CompositorD3D9();
 
   virtual bool Initialize() MOZ_OVERRIDE;
@@ -95,7 +95,12 @@ public:
     return mSize;
   }
 
-  IDirect3DDevice9* device() const { return mDeviceManager->device(); }
+  IDirect3DDevice9* device() const
+  {
+    return mDeviceManager
+           ? mDeviceManager->device()
+           : nullptr;
+  }
 
   /**
    * Declare an offset to use when rendering layers. This will be ignored when

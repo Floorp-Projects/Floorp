@@ -240,7 +240,6 @@ public:
   }
 
   bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
-  RefPtr<Compositor> mCompositor;
 
 private:
   /** Region we're clipping our current drawing to. */
@@ -272,6 +271,8 @@ private:
   void RenderDebugOverlay(const gfx::Rect& aBounds);
 
   void WorldTransformRect(nsIntRect& aRect);
+
+  RefPtr<Compositor> mCompositor;
 
   /** Our more efficient but less powerful alter ego, if one is available. */
   nsRefPtr<Composer2D> mComposer2D;

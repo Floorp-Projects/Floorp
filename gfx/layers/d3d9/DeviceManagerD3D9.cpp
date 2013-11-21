@@ -13,6 +13,7 @@
 #include "plstr.h"
 #include <algorithm>
 #include "gfxPlatform.h"
+#include "gfxWindowsPlatform.h"
 #include "TextureD3D9.h"
 #include "mozilla/gfx/Point.h"
 
@@ -177,7 +178,13 @@ DeviceManagerD3D9::DeviceManagerD3D9()
 
 DeviceManagerD3D9::~DeviceManagerD3D9()
 {
+  // When we die, we release a ref on our device which will cause it to die.
+  // If not immediately, then soon. We MUST have released all our textures
+  // before we release the device, otherwise we crash.
+  ReleaseTextureResources();
+
   LayerManagerD3D9::OnDeviceManagerDestroy(this);
+  gfxWindowsPlatform::GetPlatform()->OnDeviceManagerDestroy(this);
 }
 
 bool
@@ -675,6 +682,7 @@ DeviceManagerD3D9::VerifyReadyForRendering()
       if (FAILED(hr)) {
         mDeviceWasRemoved = true;
         LayerManagerD3D9::OnDeviceManagerDestroy(this);
+        gfxWindowsPlatform::GetPlatform()->OnDeviceManagerDestroy(this);
         ++mDeviceResetCount;
         return false;
       }
@@ -690,7 +698,7 @@ DeviceManagerD3D9::VerifyReadyForRendering()
   }
 
   mVB = nullptr;
-  
+
   D3DPRESENT_PARAMETERS pp;
   memset(&pp, 0, sizeof(D3DPRESENT_PARAMETERS));
 
@@ -705,32 +713,10 @@ DeviceManagerD3D9::VerifyReadyForRendering()
   hr = mDevice->Reset(&pp);
   ++mDeviceResetCount;
 
-  if (hr == D3DERR_DEVICELOST) {
-    /* It is not unusual for Reset to return DEVICELOST
-     * we're supposed to continue trying until we get
-     * DEVICENOTRESET and then Reset is supposed to succeed.
-     * Unfortunately, it seems like when we dock or undock
-     * DEVICELOST happens and we never get DEVICENOTRESET. */
-
-    HMONITOR hMonitorWindow;
-    hMonitorWindow = MonitorFromWindow(mFocusWnd, MONITOR_DEFAULTTOPRIMARY);
-    if (hMonitorWindow == mDeviceMonitor) {
-      /* The monitor has not changed. So, let's assume that the
-       * DEVICENOTRESET will be comming. */
-
-      /* jrmuizel: I'm not sure how to trigger this case. Usually, we get
-       * DEVICENOTRESET right away and Reset() succeeds without going through a
-       * set of DEVICELOSTs. This is presumeably because we don't call
-       * VerifyReadyForRendering when we don't have any reason to paint.
-       * Hopefully comparing HMONITORs is not overly aggressive. */
-      return false;
-    }
-    /* otherwise fall through and recreate the device */
-  }
-
   if (FAILED(hr) || !CreateVertexBuffer()) {
     mDeviceWasRemoved = true;
     LayerManagerD3D9::OnDeviceManagerDestroy(this);
+    gfxWindowsPlatform::GetPlatform()->OnDeviceManagerDestroy(this);
     return false;
   }
 
