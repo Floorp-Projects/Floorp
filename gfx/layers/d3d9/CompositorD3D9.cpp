@@ -484,6 +484,8 @@ CompositorD3D9::BeginFrame(const nsIntRegion& aInvalidRegion,
     // to redraw everything so we can put that in our new textures and use
     // them for compositing.
     mParent->SendInvalidateAll();
+    CancelCompositing(aRenderBoundsOut);
+    return;
   }
 
   if (!mDeviceManager->VerifyReadyForRendering()) {
