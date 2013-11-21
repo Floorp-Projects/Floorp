@@ -456,6 +456,67 @@ public:
   }
 };
 
+/******************************************************************************
+ * mozilla::WidgetPointerEvent
+ ******************************************************************************/
+
+class WidgetPointerEvent : public WidgetMouseEvent
+{
+  friend class mozilla::dom::PBrowserParent;
+  friend class mozilla::dom::PBrowserChild;
+
+  WidgetPointerEvent()
+  {
+  }
+
+public:
+  virtual WidgetPointerEvent* AsPointerEvent() MOZ_OVERRIDE { return this; }
+
+  WidgetPointerEvent(bool aIsTrusted, uint32_t aMsg, nsIWidget* w)
+    : WidgetMouseEvent(aIsTrusted, aMsg, w, NS_POINTER_EVENT, eReal)
+    , pointerId(0)
+    , width(0)
+    , height(0)
+    , tiltX(0)
+    , tiltY(0)
+    , isPrimary(true)
+  {
+  }
+
+  WidgetPointerEvent(const WidgetMouseEvent& aEvent)
+    : WidgetMouseEvent(aEvent)
+    , pointerId(0)
+    , width(0)
+    , height(0)
+    , tiltX(0)
+    , tiltY(0)
+    , isPrimary(true)
+  {
+    eventStructType = NS_POINTER_EVENT;
+  }
+
+  WidgetPointerEvent(bool aIsTrusted, uint32_t aMsg, nsIWidget* w,
+                     uint32_t aPointerId,
+                     uint32_t aWidth, uint32_t aHeight,
+                     uint32_t aTiltX, uint32_t aTiltY, bool aIsPrimary)
+    : WidgetMouseEvent(aIsTrusted, aMsg, w, NS_POINTER_EVENT, eReal)
+    , pointerId(aPointerId)
+    , width(aWidth)
+    , height(aHeight)
+    , tiltX(aTiltX)
+    , tiltY(aTiltY)
+    , isPrimary(aIsPrimary)
+  {
+  }
+
+  uint32_t pointerId;
+  uint32_t width;
+  uint32_t height;
+  uint32_t tiltX;
+  uint32_t tiltY;
+  bool isPrimary;
+};
+
 } // namespace mozilla
 
 #endif // mozilla_MouseEvents_h__

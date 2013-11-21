@@ -14,18 +14,18 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
         'malloc_decls.h',
         'replace_malloc.h',
     ]
-SOURCES += [
+UNIFIED_SOURCES += [
     'jemalloc_config.c',
     'mozmemory_wrap.c',
 ]
 
 if CONFIG['MOZ_JEMALLOC3']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'mozjemalloc_compat.c',
     ]
 
 if CONFIG['MOZ_REPLACE_MALLOC']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'replace_malloc.c',
     ]
 

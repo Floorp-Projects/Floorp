@@ -150,10 +150,13 @@ before the path to your package manager's binaries (%s).
 This means that the package manager's binaries likely won't be
 detected properly.
 
-Please modify your shell's configuration (e.g. ~/.bash_profile) to
-have %s appear in $PATH before %s. e.g.
+Modify your shell's configuration (e.g. ~/.profile or
+~/.bash_profile) to have %s appear in $PATH before %s. e.g.
 
     export PATH=%s:$PATH
+
+Once this is done, start a new shell (likely Command+T) and run
+this bootstrap again.
 '''
 
 

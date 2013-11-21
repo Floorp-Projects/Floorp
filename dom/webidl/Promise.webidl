@@ -23,14 +23,14 @@ interface Promise {
   // Promise object in this scope without having resolved the interface object
   // first.
   [NewObject, Throws, Func="mozilla::dom::Promise::EnabledForScope"]
-  static Promise resolve(any value); // same as any(value)
+  static Promise resolve(optional any value);
   [NewObject, Throws, Func="mozilla::dom::Promise::EnabledForScope"]
-  static Promise reject(any value);
+  static Promise reject(optional any value);
 
   [NewObject]
-  Promise then(optional AnyCallback fulfillCallback,
-               optional AnyCallback rejectCallback);
+  Promise then(optional AnyCallback? fulfillCallback,
+               optional AnyCallback? rejectCallback);
 
   [NewObject]
-  Promise catch(optional AnyCallback rejectCallback);
+  Promise catch(optional AnyCallback? rejectCallback);
 };

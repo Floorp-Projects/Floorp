@@ -33,7 +33,6 @@ enum Phase {
     PHASE_SWEEP,
     PHASE_SWEEP_MARK,
     PHASE_SWEEP_MARK_TYPES,
-    PHASE_SWEEP_MARK_DELAYED,
     PHASE_SWEEP_MARK_INCOMING_BLACK,
     PHASE_SWEEP_MARK_WEAK,
     PHASE_SWEEP_MARK_INCOMING_GRAY,
@@ -203,6 +202,30 @@ struct AutoPhase
     }
 
     Statistics &stats;
+    Phase phase;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+struct MaybeAutoPhase
+{
+    MaybeAutoPhase(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+      : stats(nullptr)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    void construct(Statistics &statsArg, Phase phaseArg)
+    {
+        JS_ASSERT(!stats);
+        stats = &statsArg;
+        phase = phaseArg;
+        stats->beginPhase(phase);
+    }
+    ~MaybeAutoPhase() {
+        if (stats)
+            stats->endPhase(phase);
+    }
+
+    Statistics *stats;
     Phase phase;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };

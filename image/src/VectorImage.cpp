@@ -26,6 +26,9 @@
 #include "nsIDOMEventListener.h"
 #include "SurfaceCache.h"
 
+// undef the GetCurrentTime macro defined in WinBase.h from the MS Platform SDK
+#undef GetCurrentTime
+
 namespace mozilla {
 
 using namespace dom;
@@ -488,20 +491,35 @@ VectorImage::RequestRefresh(const mozilla::TimeStamp& aTime)
   // TODO: Implement for b666446.
   EvaluateAnimation();
 
-  if (mHasPendingInvalidation && mStatusTracker) {
-    // This method is called under the Tick() of an observing document's
-    // refresh driver. We send out the following notifications here rather than
-    // under WillRefresh() (which would be called by our own refresh driver) so
-    // that we only send these notifications if we actually have a document
-    // that is observing us.
-    // XXX(seth): We may need to duplicate this code so that non-animated images
-    // get handled correctly. See bug 922899.
+  if (mHasPendingInvalidation) {
+    SendInvalidationNotifications();
+    mHasPendingInvalidation = false;
+  }
+}
+
+void
+VectorImage::SendInvalidationNotifications()
+{
+  // Animated images don't send out invalidation notifications as soon as
+  // they're generated. Instead, InvalidateObserversOnNextRefreshDriverTick
+  // records that there are pending invalidations and then returns immediately.
+  // The notifications are actually sent from RequestRefresh(). We send these
+  // notifications there to ensure that there is actually a document observing
+  // us. Otherwise, the notifications are just wasted effort.
+  //
+  // Non-animated images call this method directly from
+  // InvalidateObserversOnNextRefreshDriverTick, because RequestRefresh is never
+  // called for them. Ordinarily this isn't needed, since we send out
+  // invalidation notifications in OnSVGDocumentLoaded, but in rare cases the
+  // SVG document may not be 100% ready to render at that time. In those cases
+  // we would miss the subsequent invalidations if we didn't send out the
+  // notifications directly in |InvalidateObservers...|.
+
+  if (mStatusTracker) {
     SurfaceCache::Discard(this);
     mStatusTracker->FrameChanged(&nsIntRect::GetMaxSizedIntRect());
     mStatusTracker->OnStopFrame();
   }
-
-  mHasPendingInvalidation = false;
 }
 
 //******************************************************************************
@@ -1127,7 +1145,11 @@ VectorImage::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
 void
 VectorImage::InvalidateObserversOnNextRefreshDriverTick()
 {
-  mHasPendingInvalidation = true;
+  if (mHaveAnimations) {
+    mHasPendingInvalidation = true;
+  } else {
+    SendInvalidationNotifications();
+  }
 }
 
 } // namespace image

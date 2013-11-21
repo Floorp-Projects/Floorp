@@ -290,8 +290,8 @@ LIRGeneratorARM::lowerDivI(MDiv *div)
         return define(lir, div);
     }
 
-    LSoftDivI *lir = new LSoftDivI(useFixed(div->lhs(), r0), use(div->rhs(), r1),
-                                   tempFixed(r2), tempFixed(r3));
+    LSoftDivI *lir = new LSoftDivI(useFixedAtStart(div->lhs(), r0), useFixedAtStart(div->rhs(), r1),
+                                   tempFixed(r1), tempFixed(r2), tempFixed(r3));
     if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
         return false;
     return defineFixed(lir, div, LAllocation(AnyRegister(r0)));
@@ -335,8 +335,8 @@ LIRGeneratorARM::lowerModI(MMod *mod)
         return define(lir, mod);
     }
 
-    LSoftModI *lir = new LSoftModI(useFixed(mod->lhs(), r0), use(mod->rhs(), r1),
-                                   tempFixed(r2), tempFixed(r3), temp(LDefinition::GENERAL));
+    LSoftModI *lir = new LSoftModI(useFixedAtStart(mod->lhs(), r0), useFixedAtStart(mod->rhs(), r1),
+                                   tempFixed(r0), tempFixed(r2), tempFixed(r3), temp(LDefinition::GENERAL));
     if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
         return false;
     return defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
@@ -427,8 +427,8 @@ LIRGeneratorARM::lowerUDiv(MInstruction *div)
         lir->setOperand(1, useRegister(rhs));
         return define(lir, div);
     } else {
-        LSoftUDivOrMod *lir = new LSoftUDivOrMod(useFixed(lhs, r0), useFixed(rhs, r1),
-                                                 tempFixed(r2), tempFixed(r3));
+        LSoftUDivOrMod *lir = new LSoftUDivOrMod(useFixedAtStart(lhs, r0), useFixedAtStart(rhs, r1),
+                                                 tempFixed(r1), tempFixed(r2), tempFixed(r3));
         return defineFixed(lir, div, LAllocation(AnyRegister(r0)));
     }
 }
@@ -451,8 +451,8 @@ LIRGeneratorARM::lowerUMod(MInstruction *mod)
         lir->setOperand(1, useRegister(rhs));
         return define(lir, mod);
     } else {
-        LSoftUDivOrMod *lir = new LSoftUDivOrMod(useFixed(lhs, r0), useFixed(rhs, r1),
-                                                 tempFixed(r2), tempFixed(r3));
+        LSoftUDivOrMod *lir = new LSoftUDivOrMod(useFixedAtStart(lhs, r0), useFixedAtStart(rhs, r1),
+                                                 tempFixed(r0), tempFixed(r2), tempFixed(r3));
         return defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
     }
 }

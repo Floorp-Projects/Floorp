@@ -404,6 +404,13 @@ GetJunkScope();
 nsIGlobalObject *
 GetJunkScopeGlobal();
 
+/**
+ * If |aObj| has a window for a global, returns the associated nsGlobalWindow.
+ * Otherwise, returns null.
+ */
+nsGlobalWindow*
+WindowGlobalOrNull(JSObject *aObj);
+
 // Error reporter used when there is no associated DOM window on to which to
 // report errors and warnings.
 void

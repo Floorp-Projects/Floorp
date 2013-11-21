@@ -1,0 +1,64 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    'MP4Decoder.h',
+    'MP4Reader.h',
+    'PlatformDecoderModule.h',
+    'wmf/MFTDecoder.h',
+    'wmf/WMFAudioDecoder.h',
+    'wmf/WMFDecoderModule.h',
+    'wmf/WMFVideoDecoder.h',
+]
+
+EXPORTS.mp4_demuxer += [
+    'demuxer/aac.h',
+    'demuxer/audio_decoder_config.h',
+    'demuxer/avc.h',
+    'demuxer/basictypes.h',
+    'demuxer/bit_reader.h',
+    'demuxer/box_definitions.h',
+    'demuxer/box_reader.h',
+    'demuxer/cenc.h',
+    'demuxer/channel_layout.h',
+    'demuxer/decrypt_config.h',
+    'demuxer/es_descriptor.h',
+    'demuxer/fourccs.h',
+    'demuxer/mp4_demuxer.h',
+    'demuxer/Streams.h',
+    'demuxer/track_run_iterator.h',
+    'demuxer/video_decoder_config.h',
+    'demuxer/video_util.h',
+]
+
+SOURCES += [
+    'BlankDecoderModule.cpp',
+    'demuxer/aac.cc',
+    'demuxer/audio_decoder_config.cc',
+    'demuxer/avc.cc',
+    'demuxer/bit_reader.cc',
+    'demuxer/box_definitions.cc',
+    'demuxer/box_reader.cc',
+    'demuxer/cenc.cc',
+    'demuxer/channel_layout.cc',
+    'demuxer/decrypt_config.cc',
+    'demuxer/es_descriptor.cc',
+    'demuxer/mp4_demuxer.cc',
+    'demuxer/track_run_iterator.cc',
+    'demuxer/video_decoder_config.cc',
+    'demuxer/video_util.cc',
+    'MP4Decoder.cpp',
+    'MP4Reader.cpp',
+    'PlatformDecoderModule.cpp',
+    'wmf/MFTDecoder.cpp',
+    'wmf/WMFAudioDecoder.cpp',
+    'wmf/WMFDecoderModule.cpp',
+    'wmf/WMFVideoDecoder.cpp',
+]
+
+FINAL_LIBRARY = 'gklayout'
+
+FAIL_ON_WARNINGS = True

@@ -142,23 +142,6 @@ public:
   // Helper to initialize mMessagesManager.
   nsresult EnsureMessagesManager();
 
-  // WebIDL API
-  void GetAppName(nsString& aAppName)
-  {
-    NS_GetNavigatorAppName(aAppName);
-  }
-  void GetAppVersion(nsString& aAppVersion, ErrorResult& aRv)
-  {
-    aRv = GetAppVersion(aAppVersion);
-  }
-  void GetPlatform(nsString& aPlatform, ErrorResult& aRv)
-  {
-    aRv = GetPlatform(aPlatform);
-  }
-  void GetUserAgent(nsString& aUserAgent, ErrorResult& aRv)
-  {
-    aRv = GetUserAgent(aUserAgent);
-  }
   // The XPCOM GetProduct is OK
   // The XPCOM GetLanguage is OK
   bool OnLine();

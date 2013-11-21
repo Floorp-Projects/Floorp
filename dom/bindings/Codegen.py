@@ -1141,6 +1141,11 @@ class CGClassConstructor(CGAbstractStaticMethod):
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   JS::Rooted<JSObject*> obj(cx, &args.callee());
 """
+        if isChromeOnly(self._ctor):
+            preamble += """  if (!%s) {
+    return ThrowingConstructor(cx, argc, vp);
+  }
+""" % GetAccessCheck(self.descriptor, "cx", "obj")
         name = self._ctor.identifier.name
         nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
         callGenerator = CGMethodCall(nativeName, True, self.descriptor,
@@ -1800,7 +1805,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     def __init__(self, descriptor, properties):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'aGlobal'),
-                Argument('JS::Heap<JSObject*>*', 'aProtoAndIfaceArray'),
+                Argument('ProtoAndIfaceArray&', 'aProtoAndIfaceArray'),
                 Argument('bool', 'aDefineOnGlobal')]
         CGAbstractMethod.__init__(self, descriptor, 'CreateInterfaceObjects', 'void', args)
         self.properties = properties
@@ -1957,7 +1962,7 @@ if (!unforgeableHolder) {
         else:
             properties = "nullptr"
         if self.properties.hasChromeOnly():
-            accessCheck = GetAccessCheck(self.descriptor, "aGlobal")
+            accessCheck = GetAccessCheck(self.descriptor, "aCx", "aGlobal")
             chromeProperties = accessCheck + " ? &sChromeOnlyNativeProperties : nullptr"
         else:
             chromeProperties = "nullptr"
@@ -2012,7 +2017,7 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
     return JS::NullPtr();
   }
   /* Check to see whether the interface objects are already installed */
-  JS::Heap<JSObject*>* protoAndIfaceArray = GetProtoAndIfaceArray(aGlobal);
+  ProtoAndIfaceArray& protoAndIfaceArray = *GetProtoAndIfaceArray(aGlobal);
   if (!protoAndIfaceArray[%s]) {
     CreateInterfaceObjects(aCx, aGlobal, protoAndIfaceArray, aDefineOnGlobal);
   }
@@ -2143,7 +2148,7 @@ class CGConstructorEnabledChromeOnly(CGAbstractMethod):
                                    Argument("JS::Handle<JSObject*>", "aObj")])
 
     def definition_body(self):
-        return "  return %s;" % GetAccessCheck(self.descriptor, "aObj")
+        return "  return %s;" % GetAccessCheck(self.descriptor, "aCx", "aObj")
 
 class CGConstructorEnabledViaFunc(CGAbstractMethod):
     """
@@ -2211,13 +2216,14 @@ def CreateBindingJSObject(descriptor, properties, parent):
 """
     return create % parent
 
-def GetAccessCheck(descriptor, object):
+def GetAccessCheck(descriptor, context, object):
     """
+    context is the name of a JSContext*
     object is the name of a JSObject*
 
     returns a string
     """
-    return "ThreadsafeCheckIsChrome(aCx, %s)" % object
+    return "ThreadsafeCheckIsChrome(%s, %s)" % (context, object)
 
 def InitUnforgeablePropertiesOnObject(descriptor, obj, properties, failureReturnValue=""):
     """
@@ -2241,7 +2247,7 @@ def InitUnforgeablePropertiesOnObject(descriptor, obj, properties, failureReturn
         unforgeables.append(
             CGIfWrapper(CGGeneric(defineUnforgeables %
                                   unforgeableAttrs.variableName(True)),
-                        GetAccessCheck(descriptor, obj)))
+                        GetAccessCheck(descriptor, "aCx", obj)))
     return CGList(unforgeables, "\n")
 
 def InitUnforgeableProperties(descriptor, properties):
@@ -9068,6 +9074,7 @@ class CGForwardDeclarations(CGWrapper):
 
         # We just about always need NativePropertyHooks
         builder.addInMozillaDom("NativePropertyHooks")
+        builder.addInMozillaDom("ProtoAndIfaceArray")
 
         for callback in mainCallbacks:
             forwardDeclareForType(callback)
@@ -9230,15 +9237,19 @@ class CGBindingRoot(CGThing):
         # Add header includes.
         bindingHeaders = [header for (header, include) in
                           bindingHeaders.iteritems() if include]
+        declareIncludes = ['mozilla/dom/BindingDeclarations.h',
+                          'mozilla/ErrorResult.h',
+                          'jspubtd.h',
+                          'js/RootingAPI.h',
+                          ]
+        if jsImplemented:
+            declareIncludes.append('nsWeakReference.h')
+
         curr = CGHeaders(descriptors,
                          dictionaries,
                          mainCallbacks + workerCallbacks,
                          callbackDescriptors,
-                         ['mozilla/dom/BindingDeclarations.h',
-                          'mozilla/ErrorResult.h',
-                          'jspubtd.h',
-                          'js/RootingAPI.h',
-                          ],
+                         declareIncludes,
                          bindingHeaders,
                          prefix,
                          curr,
@@ -10052,7 +10063,7 @@ class CGJSImplClass(CGBindingImplClass):
                 { "ifaceName": self.descriptor.name,
                   "parentClass": parentClass })
         else:
-            baseClasses = [ClassBase("nsISupports"),
+            baseClasses = [ClassBase("nsSupportsWeakReference"),
                            ClassBase("nsWrapperCache")]
             isupportsDecl = "NS_DECL_CYCLE_COLLECTING_ISUPPORTS"
             ccDecl = ("NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)" %
@@ -10065,6 +10076,7 @@ class CGJSImplClass(CGBindingImplClass):
                 "NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${ifaceName})\n"
                 "  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY\n"
                 "  NS_INTERFACE_MAP_ENTRY(nsISupports)\n"
+                "  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)\n"
                 "NS_INTERFACE_MAP_END\n").substitute({ "ifaceName": self.descriptor.name })
 
         extradeclarations=(
