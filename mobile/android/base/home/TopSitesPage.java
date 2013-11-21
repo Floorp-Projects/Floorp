@@ -637,7 +637,9 @@ public class TopSitesPage extends HomeFragment {
 
         @Override
         public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
-            this.view.displayFavicon(favicon, faviconURL, this.loadId);
+            if (TextUtils.equals(this.view.getUrl(), url)) {
+                this.view.displayFavicon(favicon, faviconURL, this.loadId);
+            }
         }
     }
 
