@@ -794,17 +794,17 @@ WebGLContext::GetInputStream(const char* aMimeType,
     if (!gl)
         return NS_ERROR_FAILURE;
 
-    nsAutoArrayPtr<uint8_t> imageBuffer;
-    int32_t format = 0;
-    GetImageBuffer(getter_Transfers(imageBuffer), &format);
-    if (!imageBuffer) {
-        return NS_ERROR_FAILURE;
-    }
-
     nsCString enccid("@mozilla.org/image/encoder;2?type=");
     enccid += aMimeType;
     nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(enccid.get());
     if (!encoder) {
+        return NS_ERROR_FAILURE;
+    }
+
+    nsAutoArrayPtr<uint8_t> imageBuffer;
+    int32_t format = 0;
+    GetImageBuffer(getter_Transfers(imageBuffer), &format);
+    if (!imageBuffer) {
         return NS_ERROR_FAILURE;
     }
 
