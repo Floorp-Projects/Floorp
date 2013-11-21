@@ -1653,18 +1653,6 @@ public:
   nsTArray() {}
   explicit nsTArray(size_type capacity) : base_type(capacity) {}
   explicit nsTArray(const nsTArray& other) : base_type(other) {}
-  nsTArray(nsTArray&& other) {
-    this->SwapElements(other);
-  }
-
-  nsTArray& operator=(const nsTArray& other) {
-    base_type::operator=(other);
-    return *this;
-  }
-  nsTArray& operator=(nsTArray&& other) {
-    this->SwapElements(other);
-    return *this;
-  }
 
   template<class Allocator>
   explicit nsTArray(const nsTArray_Impl<E, Allocator>& other) : base_type(other) {}
