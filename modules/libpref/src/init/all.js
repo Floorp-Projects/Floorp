@@ -3984,8 +3984,6 @@ pref("ui.panel.default_level_parent", true);
 
 pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 
-pref("ui.key.menuAccessKeyFocuses", true);
-
 # XP_UNIX
 #endif
 #endif
