@@ -519,7 +519,6 @@ BluetoothHfpManager::ProcessConnectionState(bthf_connection_state_t aState,
     DisconnectSco();
     BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_CONN_STATE_CHANGED,
                         NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
-    Reset();
   }
 }
 
@@ -742,6 +741,8 @@ BluetoothHfpManager::NotifyConnectionStateChanged(const nsAString& aType)
     } else if (mConnectionState == BTHF_CONNECTION_STATE_DISCONNECTED) {
       mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
       OnDisconnect(EmptyString());
+
+      Reset();
     }
   }
 }
