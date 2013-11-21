@@ -21,3 +21,13 @@ assertThrowsInstanceOf(function () {
 assertThrowsInstanceOf(function () {
     Debugger.Source.prototype.element.call(Debugger.Source.prototype)
 }, TypeError);
+
+assertThrowsInstanceOf(function () {
+    Debugger.Source.prototype.elementProperty.call(42)
+}, TypeError);
+assertThrowsInstanceOf(function () {
+    Debugger.Source.prototype.elementProperty.call({})
+}, TypeError);
+assertThrowsInstanceOf(function () {
+    Debugger.Source.prototype.elementProperty.call(Debugger.Source.prototype)
+}, TypeError);

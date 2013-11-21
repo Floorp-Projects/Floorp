@@ -3785,12 +3785,20 @@ DebuggerSource_getElement(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static bool
+DebuggerSource_getElementProperty(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get elementProperty)", args, obj, sourceObject);
+    args.rval().set(sourceObject->elementProperty());
+    return Debugger::fromChildJSObject(obj)->wrapDebuggeeValue(cx, args.rval());
+}
 
 static const JSPropertySpec DebuggerSource_properties[] = {
     JS_PSG("text", DebuggerSource_getText, 0),
     JS_PSG("url", DebuggerSource_getUrl, 0),
     JS_PSG("element", DebuggerSource_getElement, 0),
     JS_PSG("displayURL", DebuggerSource_getDisplayURL, 0),
+    JS_PSG("elementProperty", DebuggerSource_getElementProperty, 0),
     JS_PS_END
 };
 

@@ -465,10 +465,13 @@ class ScriptSourceObject : public JSObject
     void setSource(ScriptSource *source);
 
     JSObject *element() const;
+    const Value &elementProperty() const;
 
   private:
     static const uint32_t SOURCE_SLOT = 0;
     static const uint32_t ELEMENT_SLOT = 1;
+    static const uint32_t ELEMENT_PROPERTY_SLOT = 2;
+    static const uint32_t RESERVED_SLOTS = 3;
 };
 
 enum GeneratorKind { NotGenerator, LegacyGenerator, StarGenerator };
