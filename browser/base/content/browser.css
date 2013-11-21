@@ -936,6 +936,10 @@ toolbarpaletteitem[dragover] {
   min-height: 3em;
 }
 
+#customization-toolbar-visibility-button > .box-inherit > .button-menu-dropmarker {
+  display: -moz-box;
+}
+
 toolbarpaletteitem[place="palette"] {
   width: 10em;
   height: calc(40px + 2em);

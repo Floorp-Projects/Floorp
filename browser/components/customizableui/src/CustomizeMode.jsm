@@ -15,6 +15,7 @@ const kAboutURI = "about:customizing";
 const kDragDataTypePrefix = "text/toolbarwrapper-id/";
 const kPlaceholderClass = "panel-customization-placeholder";
 const kSkipSourceNodePref = "browser.uiCustomization.skipSourceNodeCheck";
+const kToolbarVisibilityBtn = "customization-toolbar-visibility-button";
 const kMaxTransitionDurationMs = 2000;
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -111,6 +112,16 @@ CustomizeMode.prototype = {
         }.bind(this);
         Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished", false);
         yield delayedStartupDeferred.promise;
+      }
+
+      let toolbarVisibilityBtn = document.getElementById(kToolbarVisibilityBtn);
+      let togglableToolbars = window.getTogglableToolbars();
+      let bookmarksToolbar = document.getElementById("PersonalToolbar");
+      if (togglableToolbars.length == 0 ||
+          (togglableToolbars.length == 1 && togglableToolbars[0] == bookmarksToolbar)) {
+        toolbarVisibilityBtn.setAttribute("hidden", "true");
+      } else {
+        toolbarVisibilityBtn.removeAttribute("hidden");
       }
 
       // Disable lightweight themes while in customization mode since
