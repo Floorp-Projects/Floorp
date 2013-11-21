@@ -5,3 +5,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 LIBRARY_NAME = 'webrtc'
+FINAL_LIBRARY = 'xul'

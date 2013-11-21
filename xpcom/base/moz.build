@@ -38,8 +38,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 XPIDL_MODULE = 'xpcom_base'
 
-MODULE = 'xpcom'
-
 EXPORTS += [
     'ErrorList.h',
     'nsAgg.h',
@@ -88,7 +86,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'WindowsVersion.h',
     ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AvailableMemoryTracker.cpp',
     'ClearOnShutdown.cpp',
     'CycleCollectedJSRuntime.cpp',
@@ -122,16 +120,14 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'nsCrashOnException.cpp',
     ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsErrorAssertsC.c',
 ]
 
 
-LIBXUL_LIBRARY = True
 
 MSVC_ENABLE_PGO = True
 
-LIBRARY_NAME = 'xpcombase_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xpcom_core'

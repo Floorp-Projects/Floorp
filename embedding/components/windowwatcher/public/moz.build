@@ -14,7 +14,7 @@ XPIDL_SOURCES += [
     'nsPIWindowWatcher.idl',
 ]
 
-MODULE = 'windowwatcher'
+XPIDL_MODULE = 'windowwatcher'
 
 EXPORTS += [
     'nsPromptUtils.h',

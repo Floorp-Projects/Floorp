@@ -6,5 +6,3 @@
 
 # lib must be first, because cmd depends on its output
 DIRS += ['lib', 'cmd']
-
-MODULE = 'tlsserver'

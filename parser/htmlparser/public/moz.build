@@ -9,7 +9,7 @@ XPIDL_SOURCES += [
     'nsIExtendedExpatSink.idl',
 ]
 
-MODULE = 'htmlparser'
+XPIDL_MODULE = 'htmlparser'
 
 EXPORTS += [
     'nsHTMLTagList.h',

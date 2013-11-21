@@ -132,6 +132,20 @@ GetHostForPrincipal(nsIPrincipal* aPrincipal, nsACString& aHost)
     return NS_OK;
   }
 
+  // For the mailto scheme, we use the path of the URI. We have to chop off the
+  // query part if one exists, so we eliminate everything after a ?.
+  bool isMailTo = false;
+  if (NS_SUCCEEDED(uri->SchemeIs("mailto", &isMailTo)) && isMailTo) {
+    rv = uri->GetPath(aHost);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    int32_t spart = aHost.FindChar('?', 0);
+    if (spart >= 0) {
+      aHost.Cut(spart, aHost.Length() - spart);
+    }
+    return NS_OK;
+  }
+
   // Some entries like "file://" uses the origin.
   rv = aPrincipal->GetOrigin(getter_Copies(aHost));
   if (NS_SUCCEEDED(rv) && !aHost.IsEmpty()) {

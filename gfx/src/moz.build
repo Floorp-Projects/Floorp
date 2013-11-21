@@ -9,7 +9,7 @@ XPIDL_SOURCES += [
     'nsIScriptableRegion.idl',
 ]
 
-MODULE = 'gfx'
+XPIDL_MODULE = 'gfx'
 
 EXPORTS += [
     'gfxCore.h',
@@ -59,13 +59,8 @@ SOURCES += [
     'nsTransform2D.cpp',
 ]
 
-LIBRARY_NAME = 'gkgfx'
-
 FAIL_ON_WARNINGS = True
-
-LIBXUL_LIBRARY = True
 
 MSVC_ENABLE_PGO = True
 
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

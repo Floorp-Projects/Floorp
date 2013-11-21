@@ -92,7 +92,7 @@ InitObjectEntry(PLDHashTable* table, PLDHashEntryHdr* entry, const void* key)
   
 
 
-static PLDHashTableOps ObjectTableOps = {
+static const PLDHashTableOps ObjectTableOps = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,

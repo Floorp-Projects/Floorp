@@ -9,8 +9,6 @@ if CONFIG['MOZ_B2G_FM']:
         'ipc',
     ]
 
-    MODULE = 'dom'
-
     EXPORTS.mozilla.dom += [
         'FMRadio.h',
         'FMRadioCommon.h',
@@ -22,9 +20,7 @@ if CONFIG['MOZ_B2G_FM']:
         'FMRadioService.cpp',
     ]
 
-    LIBXUL_LIBRARY = True
-
-    LIBRARY_NAME = 'domfmradio_s'
+    FINAL_LIBRARY = 'gklayout'
 
 IPDL_SOURCES += [
     'ipc/PFMRadio.ipdl',

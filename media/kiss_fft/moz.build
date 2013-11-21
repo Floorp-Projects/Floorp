@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'kiss_fft'
-
 EXPORTS.kiss_fft += [
     'kiss_fft.h',
     'kiss_fftr.h',
@@ -16,7 +14,7 @@ SOURCES += [
     'kiss_fftr.c',
 ]
 
-LIBRARY_NAME = 'kiss_fft'
-
 if CONFIG['OS_TARGET'] == 'WINNT':
     NO_VISIBILITY_FLAGS = True
+
+FINAL_LIBRARY = 'xul'

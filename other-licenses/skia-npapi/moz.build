@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'skia_npapi'
-
 EXPORTS += [
     'SkANP.h',
 ]
@@ -18,9 +16,4 @@ SOURCES += [
     'SkANP.cpp',
 ]
 
-LIBRARY_NAME = 'skia_npapi'
-
-LIBXUL_LIBRARY = True
-
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

@@ -4,16 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'qcms'
-
 EXPORTS += [
     'qcms.h',
     'qcmstypes.h',
 ]
-
-LIBRARY_NAME = 'mozqcms'
-
-LIBXUL_LIBRARY = True
 
 SOURCES += [
     'chain.c',
@@ -25,3 +19,4 @@ SOURCES += [
 
 MSVC_ENABLE_PGO = True
 
+FINAL_LIBRARY = 'gkmedias'

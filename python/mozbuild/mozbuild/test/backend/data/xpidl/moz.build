@@ -2,5 +2,5 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-MODULE = 'my_module'
+XPIDL_MODULE = 'my_module'
 XPIDL_SOURCES = ['bar.idl', 'foo.idl']

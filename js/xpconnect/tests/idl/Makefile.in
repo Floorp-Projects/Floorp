@@ -6,6 +6,6 @@
 include $(topsrcdir)/config/rules.mk
 
 componentdir = js/xpconnect/tests/components
-libs:: $(DEPTH)/config/makefiles/xpidl/xpt/$(MODULE).xpt
+libs:: $(DEPTH)/config/makefiles/xpidl/xpt/$(XPT_NAME)
 	$(INSTALL) $^ $(testxpcobjdir)/$(componentdir)/native
 	$(INSTALL) $^ $(testxpcobjdir)/$(componentdir)/js

@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'breakpad_linux_common'
-
 SOURCES += [
     'elfutils.cc',
     'file_id.cc',
@@ -34,5 +32,4 @@ if CONFIG['MOZ_CRASHREPORTER']:
 
 LIBRARY_NAME = 'breakpad_linux_common_s'
 
-# need static lib
-FORCE_STATIC_LIB = True
+FINAL_LIBRARY = 'xulapp_s'

@@ -10,5 +10,3 @@ DIRS += [
     'build',
 ]
 
-MODULE = 'appcomps'
-

@@ -13,8 +13,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_indexeddb'
 
-MODULE = 'dom'
-
 EXPORTS.mozilla.dom.indexedDB += [
     'Client.h',
     'DatabaseInfo.h',
@@ -64,12 +62,9 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'dom_indexeddb_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/caps/include',
     '/content/base/src',

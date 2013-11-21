@@ -20,7 +20,6 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
 LIBRARY_NAME   = 'domfmradio_s'
 
 LOCAL_INCLUDES += [
@@ -28,6 +27,8 @@ LOCAL_INCLUDES += [
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'gklayout'
 
 LOCAL_INCLUDES += [
     '/dom/fmradio',

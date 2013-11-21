@@ -3,10 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SHORT_LIBNAME    = mozsqlt3
-ifndef MOZ_FOLD_LIBS
-FORCE_SHARED_LIB = 1
-endif
 LIB_IS_C_ONLY    = 1
 
 ifeq ($(OS_ARCH),WINNT)

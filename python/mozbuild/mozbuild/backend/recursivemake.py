@@ -34,6 +34,7 @@ from ..frontend.data import (
     InstallationTarget,
     IPDLFile,
     JavaJarData,
+    LibraryDefinition,
     LocalInclude,
     PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
@@ -448,6 +449,9 @@ class RecursiveMakeBackend(CommonBackend):
                 self._process_java_jar_data(obj.wrapped, backend_file)
             else:
                 return
+
+        elif isinstance(obj, LibraryDefinition):
+            self._process_library_definition(obj, backend_file)
 
         else:
             return
@@ -1062,6 +1066,20 @@ class RecursiveMakeBackend(CommonBackend):
         if jar.javac_flags:
             backend_file.write('%s_JAVAC_FLAGS := %s\n' %
                 (target, ' '.join(jar.javac_flags)))
+
+    def _process_library_definition(self, libdef, backend_file):
+        backend_file.write('LIBRARY_NAME = %s\n' % libdef.basename)
+        thisobjdir = libdef.objdir
+        topobjdir = libdef.topobjdir.replace(os.sep, '/')
+        for objdir, basename in libdef.static_libraries:
+            # If this is an external objdir (i.e., comm-central), use the other
+            # directory instead of $(DEPTH).
+            if objdir.startswith(topobjdir + '/'):
+                relpath = '$(DEPTH)/%s' % mozpath.relpath(objdir, topobjdir)
+            else:
+                relpath = mozpath.relpath(objdir, thisobjdir)
+            backend_file.write('SHARED_LIBRARY_LIBS += %s/$(LIB_PREFIX)%s.$(LIB_SUFFIX)\n'
+                               % (relpath, basename))
 
     def _write_manifests(self, dest, manifests):
         man_dir = os.path.join(self.environment.topobjdir, '_build_manifests',

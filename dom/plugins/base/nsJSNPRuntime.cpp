@@ -993,7 +993,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
   if (!sJSObjWrappers.ops) {
     // No hash yet (or any more), initialize it.
 
-    static PLDHashTableOps ops =
+    static const PLDHashTableOps ops =
       {
         PL_DHashAllocTable,
         PL_DHashFreeTable,

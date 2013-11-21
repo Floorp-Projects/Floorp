@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'thebes'
-
 EXPORTS += [
     'basic/BasicCanvasLayer.h',
     'basic/BasicImplData.h',
@@ -297,11 +295,8 @@ IPDL_SOURCES = [
     'ipc/PLayerTransaction.ipdl',
 ]
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-LIBRARY_NAME = 'layers'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'thebes'

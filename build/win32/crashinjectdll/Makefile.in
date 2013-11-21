@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DEFFILE = $(srcdir)/crashinjectdll.def
-FORCE_SHARED_LIB = 1
 USE_STATIC_LIBS = 1
 
 MOZ_GLUE_LDFLAGS =

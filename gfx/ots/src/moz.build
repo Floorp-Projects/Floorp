@@ -4,13 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'ots'
-
-if CONFIG['OS_TARGET'] == 'WINNT':
-    FORCE_STATIC_LIB = True
-else:
-    LIBXUL_LIBRARY = True
-
 EXPORTS += [
     '../include/opentype-sanitiser.h',
     '../include/ots-memory-stream.h',
@@ -50,9 +43,9 @@ SOURCES += [
     'vorg.cc',
 ]
 
-LIBRARY_NAME = 'mozots'
-
 MSVC_ENABLE_PGO = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     NO_VISIBILITY_FLAGS = True
+
+FINAL_LIBRARY = 'gkmedias'

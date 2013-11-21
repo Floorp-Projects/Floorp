@@ -9,5 +9,5 @@ XPIDL_SOURCES += [
     'nsIReadConfig.idl',
 ]
 
-MODULE = 'autoconfig'
+XPIDL_MODULE = 'autoconfig'
 

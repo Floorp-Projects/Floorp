@@ -144,6 +144,7 @@ AudioStream::AudioStream()
   mChannels(0),
   mWritten(0),
   mAudioClock(MOZ_THIS_IN_INITIALIZER_LIST()),
+  mLatencyRequest(HighLatency),
   mReadPoint(0)
 {}
 
@@ -364,6 +365,7 @@ private:
   // aTime is the time in ms the samples were inserted into MediaStreamGraph
   long GetUnprocessed(void* aBuffer, long aFrames, int64_t &aTime);
   long GetTimeStretched(void* aBuffer, long aFrames, int64_t &aTime);
+  long GetUnprocessedWithSilencePadding(void* aBuffer, long aFrames, int64_t &aTime);
 
   // Shared implementation of underflow adjusted position calculation.
   // Caller must own the monitor.
@@ -577,6 +579,7 @@ BufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
     ("%s  channels: %d, rate: %d", __FUNCTION__, aNumChannels, aRate));
   mInRate = mOutRate = aRate;
   mChannels = aNumChannels;
+  mLatencyRequest = aLatencyRequest;
 
   mDumpFile = OpenDumpFile(this);
 
@@ -633,6 +636,13 @@ BufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
   uint32_t bufferLimit = FramesToBytes(aRate);
   NS_ABORT_IF_FALSE(bufferLimit % mBytesPerFrame == 0, "Must buffer complete frames");
   mBuffer.SetCapacity(bufferLimit);
+
+  // Start the stream right away when low latency has been requested. This means
+  // that the DataCallback will feed silence to cubeb, until the first frames
+  // are writtent to this BufferedAudioStream.
+  if (mLatencyRequest == AudioStream::LowLatency) {
+    Start();
+  }
 
   return NS_OK;
 }
@@ -912,6 +922,32 @@ BufferedAudioStream::GetUnprocessed(void* aBuffer, long aFrames, int64_t &aTimeM
   return BytesToFrames(available) + flushedFrames;
 }
 
+// Get unprocessed samples, and pad the beginning of the buffer with silence if
+// there is not enough data.
+long
+BufferedAudioStream::GetUnprocessedWithSilencePadding(void* aBuffer, long aFrames, int64_t& aTimeMs)
+{
+  uint32_t toPopBytes = FramesToBytes(aFrames);
+  uint32_t available = std::min(toPopBytes, mBuffer.Length());
+  uint32_t silenceOffset = toPopBytes - available;
+
+  uint8_t* wpos = reinterpret_cast<uint8_t*>(aBuffer);
+
+  memset(wpos, 0, silenceOffset);
+  wpos += silenceOffset;
+
+  void* input[2];
+  uint32_t input_size[2];
+  mBuffer.PopElements(available, &input[0], &input_size[0], &input[1], &input_size[1]);
+  memcpy(wpos, input[0], input_size[0]);
+  wpos += input_size[0];
+  memcpy(wpos, input[1], input_size[1]);
+
+  GetBufferInsertTime(aTimeMs);
+
+  return aFrames;
+}
+
 long
 BufferedAudioStream::GetTimeStretched(void* aBuffer, long aFrames, int64_t &aTimeMs)
 {
@@ -965,8 +1001,16 @@ BufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
   int64_t insertTime;
 
   if (available) {
+    // When we are playing a low latency stream, and it is the first time we are
+    // getting data from the buffer, we prefer to add the silence for an
+    // underrun at the beginning of the buffer, so the first buffer is not cut
+    // in half by the silence inserted to compensate for the underrun.
     if (mInRate == mOutRate) {
-      servicedFrames = GetUnprocessed(output, aFrames, insertTime);
+      if (mLatencyRequest == AudioStream::LowLatency && !mWritten) {
+        servicedFrames = GetUnprocessedWithSilencePadding(output, aFrames, insertTime);
+      } else {
+        servicedFrames = GetUnprocessed(output, aFrames, insertTime);
+      }
     } else {
       servicedFrames = GetTimeStretched(output, aFrames, insertTime);
     }

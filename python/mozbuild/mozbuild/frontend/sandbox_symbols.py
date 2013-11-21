@@ -179,6 +179,14 @@ VARIABLES = {
        files will be installed in the ``/components`` directory of the distribution.
         """, 'libs'),
 
+    'FINAL_LIBRARY': (unicode, unicode, "",
+        """Library in which the objects of the current directory will be linked.
+
+        This variable contains the name of a library, defined elsewhere with
+        ``LIBRARY_NAME``, in which the objects of the current directory will be
+        linked.
+        """, 'binaries'),
+
     'CPP_UNIT_TESTS': (StrictOrderingOnAppendList, list, [],
         """C++ source files for unit tests.
 
@@ -299,13 +307,6 @@ VARIABLES = {
         (``$DIST/sdk/lib``).
         """, None),
 
-    'SHARED_LIBRARY_LIBS': (StrictOrderingOnAppendList, list, [],
-        """Libraries linked into a shared library.
-
-        A list of static library paths which should be linked into the
-        current shared library.
-        """, None),
-
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
         """Compile a list of executable names.
 
@@ -396,14 +397,6 @@ VARIABLES = {
         This is a substitute for ``AC_CONFIG_HEADER`` in autoconf. This is very
         similar to ``CONFIGURE_SUBST_FILES`` except the generation logic takes
         into account the values of ``AC_DEFINE`` instead of ``AC_SUBST``.
-        """, None),
-
-    'MODULE': (unicode, unicode, "",
-        """Module name.
-
-        Historically, this variable was used to describe where to install header
-        files, but that feature is now handled by ``EXPORTS_NAMESPACES``.
-        ``MODULE`` will likely be removed in the future.
         """, None),
 
     'EXPORTS': (HierarchicalStringList, list, HierarchicalStringList(),

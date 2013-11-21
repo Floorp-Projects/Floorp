@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'unicharutil'
-
 UNIFIED_SOURCES += [
     'nsCaseConversionImp2.cpp',
     'nsCategoryImp.cpp',
@@ -14,7 +12,4 @@ UNIFIED_SOURCES += [
     'nsUnicodeNormalizer.cpp',
 ]
 
-LIBRARY_NAME = 'ucharucomp_s'
-
-LIBXUL_LIBRARY = True
-
+FINAL_LIBRARY = 'i18n'

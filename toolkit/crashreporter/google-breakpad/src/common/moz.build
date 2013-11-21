@@ -7,8 +7,6 @@
 if CONFIG['OS_ARCH'] in ('Darwin', 'Linux'):
     DIRS += ['dwarf']
 
-MODULE = 'breakpad_common'
-
 SOURCES += [
     'convert_UTF.c',
 ]
@@ -84,5 +82,4 @@ LIBRARY_NAME = 'breakpad_common_s'
 
 MSVC_ENABLE_PGO = True
 
-# need static lib
-FORCE_STATIC_LIB = True
+FINAL_LIBRARY = 'xulapp_s'

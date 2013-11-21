@@ -194,7 +194,7 @@ typedef nsIAtom*
 (* RuleHashGetKey) (PLDHashTable *table, const PLDHashEntryHdr *entry);
 
 struct RuleHashTableOps {
-  PLDHashTableOps ops;
+  const PLDHashTableOps ops;
   // Extra callback to avoid duplicating the matchEntry callback for
   // each table.  (There used to be a getKey callback in
   // PLDHashTableOps.)
@@ -3097,7 +3097,7 @@ InitWeightEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
   return true;
 }
 
-static PLDHashTableOps gRulesByWeightOps = {
+static const PLDHashTableOps gRulesByWeightOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     HashIntKey,

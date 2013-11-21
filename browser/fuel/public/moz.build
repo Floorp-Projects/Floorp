@@ -8,5 +8,5 @@ XPIDL_SOURCES += [
     'fuelIApplication.idl',
 ]
 
-MODULE = 'fuel'
+XPIDL_MODULE = 'fuel'
 

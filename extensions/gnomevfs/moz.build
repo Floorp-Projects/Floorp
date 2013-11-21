@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'nkgnomevfs'
-
 SOURCES += [
     'nsGnomeVFSProtocolHandler.cpp',
 ]
@@ -14,3 +12,7 @@ LIBRARY_NAME = 'nkgnomevfs'
 
 IS_COMPONENT = True
 
+# make sure this component is never statically linked into the main
+# application.  this is necessary since we don't want to force users
+# to install gnome-vfs2 in order to use the rest of mozilla ;-)
+FORCE_SHARED_LIB = True

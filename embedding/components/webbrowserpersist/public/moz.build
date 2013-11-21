@@ -9,5 +9,5 @@ XPIDL_SOURCES += [
     'nsIWebBrowserPersist.idl',
 ]
 
-MODULE = 'webbrowserpersist'
+XPIDL_MODULE = 'webbrowserpersist'
 

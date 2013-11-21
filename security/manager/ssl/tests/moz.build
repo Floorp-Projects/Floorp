@@ -11,6 +11,4 @@ TEST_DIRS += [
 	'mochitest',
 ]
 
-MODULE = 'pipnss'
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

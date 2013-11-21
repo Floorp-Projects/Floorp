@@ -6,8 +6,6 @@
 
 XPIDL_MODULE = 'necko_srtp'
 
-MODULE = 'necko'
-
 UNIFIED_SOURCES += [
     'crypto/cipher/aes.c',
     'crypto/cipher/aes_cbc.c',
@@ -35,9 +33,8 @@ UNIFIED_SOURCES += [
     'srtp/srtp.c',
 ]
 
-LIBXUL_LIBRARY = True
-
 LIBRARY_NAME = 'nksrtp_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'necko'

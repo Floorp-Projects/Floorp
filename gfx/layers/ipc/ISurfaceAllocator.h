@@ -123,6 +123,10 @@ ISurfaceAllocator() {}
   {
     return nullptr;
   }
+
+  // Returns true if aSurface wraps a Shmem.
+  static bool IsShmem(SurfaceDescriptor* aSurface);
+
 protected:
   // this method is needed for a temporary fix, will be removed after
   // DeprecatedTextureClient/Host rework.

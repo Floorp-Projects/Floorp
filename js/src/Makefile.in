@@ -20,17 +20,6 @@ run_for_side_effects := $(shell echo "MAKE: $(MAKE)")
 STATIC_LIBRARY_NAME = js_static
 LIBS		= $(NSPR_LIBS)
 
-# JavaScript must be built shared, even for static builds, as it is used by
-# other modules which are always built shared. Failure to do so results in
-# the js code getting copied into xpinstall and jsd as well as mozilla-bin,
-# and then the static data cells used for locking no longer work.
-#
-# In fact, we now build both a static and a shared library, as the
-# JS shell would like to link to the static library.
-
-ifdef JS_SHARED_LIBRARY
-FORCE_SHARED_LIB = 1
-endif
 DIST_INSTALL = 1
 
 VPATH		+= \

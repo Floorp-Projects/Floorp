@@ -10,10 +10,6 @@ endif
 
 DIST_INSTALL 	= 1
 
-ifneq (gonk,$(MOZ_WIDGET_TOOLKIT))
-FORCE_SHARED_LIB= 1
-endif
-
 ifeq (,$(filter-out OS2,$(OS_ARCH)))
 # The strndup declaration in string.h is in an ifdef __USE_GNU section
 DEFINES		+= -D_GNU_SOURCE

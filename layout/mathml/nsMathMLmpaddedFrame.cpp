@@ -266,7 +266,7 @@ void
 nsMathMLmpaddedFrame::UpdateValue(int32_t                  aSign,
                                   int32_t                  aPseudoUnit,
                                   const nsCSSValue&        aCSSValue,
-                                  const nsBoundingMetrics& aBoundingMetrics,
+                                  const nsHTMLReflowMetrics& aDesiredSize,
                                   nscoord&                 aValueToUpdate) const
 {
   nsCSSUnit unit = aCSSValue.GetUnit();
@@ -276,15 +276,15 @@ nsMathMLmpaddedFrame::UpdateValue(int32_t                  aSign,
     if (eCSSUnit_Percent == unit || eCSSUnit_Number == unit) {
       switch(aPseudoUnit) {
         case NS_MATHML_PSEUDO_UNIT_WIDTH:
-             scaler = aBoundingMetrics.width;
+             scaler = aDesiredSize.width;
              break;
 
         case NS_MATHML_PSEUDO_UNIT_HEIGHT:
-             scaler = aBoundingMetrics.ascent;
+             scaler = aDesiredSize.ascent;
              break;
 
         case NS_MATHML_PSEUDO_UNIT_DEPTH:
-             scaler = aBoundingMetrics.descent;
+             scaler = aDesiredSize.height - aDesiredSize.ascent;
              break;
 
         default:
@@ -339,8 +339,8 @@ nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
     return rv;
   }
 
-  nscoord height = mBoundingMetrics.ascent;
-  nscoord depth  = mBoundingMetrics.descent;
+  nscoord height = aDesiredSize.ascent;
+  nscoord depth  = aDesiredSize.height - aDesiredSize.ascent;
   // The REC says:
   //
   // "The lspace attribute ('leading' space) specifies the horizontal location
@@ -366,7 +366,7 @@ nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
   // refer "to the horizontal distance between the positioning point of the
   // mpadded and the positioning point for the following content".  MathML2
   // doesn't make the distinction.
-  nscoord width  = mBoundingMetrics.width;
+  nscoord width  = aDesiredSize.width;
   nscoord voffset = 0;
 
   int32_t pseudoUnit;
@@ -376,35 +376,35 @@ nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
   pseudoUnit = (mWidthPseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_WIDTH : mWidthPseudoUnit;
   UpdateValue(mWidthSign, pseudoUnit, mWidth,
-              mBoundingMetrics, width);
+              aDesiredSize, width);
   width = std::max(0, width);
 
   // update "height" (this is the ascent in the terminology of the REC)
   pseudoUnit = (mHeightPseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_HEIGHT : mHeightPseudoUnit;
   UpdateValue(mHeightSign, pseudoUnit, mHeight,
-              mBoundingMetrics, height);
+              aDesiredSize, height);
   height = std::max(0, height);
 
   // update "depth" (this is the descent in the terminology of the REC)
   pseudoUnit = (mDepthPseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_DEPTH : mDepthPseudoUnit;
   UpdateValue(mDepthSign, pseudoUnit, mDepth,
-              mBoundingMetrics, depth);
+              aDesiredSize, depth);
   depth = std::max(0, depth);
 
   // update lspace
   if (mLeadingSpacePseudoUnit != NS_MATHML_PSEUDO_UNIT_ITSELF) {
     pseudoUnit = mLeadingSpacePseudoUnit;
     UpdateValue(mLeadingSpaceSign, pseudoUnit, mLeadingSpace,
-                mBoundingMetrics, lspace);
+                aDesiredSize, lspace);
   }
 
   // update voffset
   if (mVerticalOffsetPseudoUnit != NS_MATHML_PSEUDO_UNIT_ITSELF) {
     pseudoUnit = mVerticalOffsetPseudoUnit;
     UpdateValue(mVerticalOffsetSign, pseudoUnit, mVerticalOffset,
-                mBoundingMetrics, voffset);
+                aDesiredSize, voffset);
   }
   // do the padding now that we have everything
   // The idea here is to maintain the invariant that <mpadded>...</mpadded> (i.e.,
@@ -427,13 +427,12 @@ nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
     mBoundingMetrics.rightBearing = mBoundingMetrics.width;
   }
 
-  nscoord dy = height - mBoundingMetrics.ascent;
   nscoord dx = (StyleVisibility()->mDirection ?
                 width - initialWidth - lspace : lspace);
     
-  aDesiredSize.ascent += dy;
+  aDesiredSize.ascent = height;
   aDesiredSize.width = mBoundingMetrics.width;
-  aDesiredSize.height += dy + depth - mBoundingMetrics.descent;
+  aDesiredSize.height = depth + aDesiredSize.ascent;
   mBoundingMetrics.ascent = height;
   mBoundingMetrics.descent = depth;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;

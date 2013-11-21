@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'migration'
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'nsIEHistoryEnumerator.cpp',
@@ -36,10 +34,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'SafariProfileMigrator.js',
     ]
 
-LIBRARY_NAME = 'migration_s'
-
 EXTRA_PP_JS_MODULES += [
     'MigrationUtils.jsm',
 ]
 
-FORCE_STATIC_LIB = True
+FINAL_LIBRARY = 'browsercomps'

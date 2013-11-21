@@ -2,7 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-  
+
 /**
  * The nsIComponentManager interface.
  */
@@ -11,10 +11,11 @@
 
 interface nsIFile;
 interface nsIFactory;
+interface nsIArray;
 
-[scriptable, uuid(1d940426-5fe5-42c3-84ae-a300f2d9ebd5)]
+[scriptable, uuid(d604ffc3-1ba3-4f6c-b65f-1ed4199364c3)]
 interface nsIComponentManager : nsISupports
-{    
+{
     /**
      * getClassObject
      *
@@ -89,6 +90,12 @@ interface nsIComponentManager : nsISupports
      */
     void removeBootstrappedManifestLocation(in nsIFile aLocation);
 
+    /**
+     * getManifestLocations
+     *
+     * Get an array of nsIURIs of all registered and builtin manifest locations.
+     */
+    nsIArray getManifestLocations();
 };
 
 

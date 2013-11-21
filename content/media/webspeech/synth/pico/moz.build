@@ -4,16 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'synthpico'
-
 SOURCES += [
     'nsPicoService.cpp',
     'PicoModule.cpp'
 ]
-
-LIBRARY_NAME = 'synthpico'
-LIBXUL_LIBRARY = True
-EXPORT_LIBRARY = True
 FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'

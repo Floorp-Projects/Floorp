@@ -8,5 +8,5 @@ XPIDL_SOURCES += [
     'nsIBrowserProfileMigrator.idl',
 ]
 
-MODULE = 'migration'
+XPIDL_MODULE = 'migration'
 

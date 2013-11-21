@@ -246,7 +246,7 @@ public:
   already_AddRefed<SVGIRect> CreateSVGRect();
   already_AddRefed<SVGTransform> CreateSVGTransform();
   already_AddRefed<SVGTransform> CreateSVGTransformFromMatrix(SVGMatrix& matrix);
-  Element* GetElementById(const nsAString& elementId, ErrorResult& rv);
+  using nsINode::GetElementById; // This does what we want
   already_AddRefed<SVGAnimatedRect> ViewBox();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
   uint16_t ZoomAndPan();

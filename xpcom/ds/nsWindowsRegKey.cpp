@@ -287,8 +287,8 @@ nsWindowsRegKey::ReadStringValue(const nsAString &name, nsAString &result)
     return NS_OK;
   }
 
-  // |size| includes room for the terminating null character
-  DWORD resultLen = size / 2 - 1;
+  // |size| may or may not include the terminating null character.
+  DWORD resultLen = size / 2;
 
   result.SetLength(resultLen);
   nsAString::iterator begin;
@@ -298,6 +298,11 @@ nsWindowsRegKey::ReadStringValue(const nsAString &name, nsAString &result)
 
   rv = RegQueryValueExW(mKey, flatName.get(), 0, &type, (LPBYTE) begin.get(),
                         &size);
+
+  if (!result.CharAt(resultLen-1)) {
+    // The string passed to us had a null terminator in the final position.
+    result.Truncate(resultLen-1);
+  }
 
   // Expand the environment variables if needed
   if (type == REG_EXPAND_SZ) {

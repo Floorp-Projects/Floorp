@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'widget'
-
 if CONFIG['MOZ_ENABLE_GTK2']:
     LIBRARY_NAME = 'widget_gtk2'
 else:
@@ -65,8 +63,6 @@ SOURCES += [
     'mozcontainer.c',
 ]
 
-LIBXUL_LIBRARY = True
-
 if CONFIG['ACCESSIBILITY']:
     SOURCES += [
         'maiRedundantObjectFactory.c',
@@ -81,7 +77,6 @@ else:
         'gtk3drawing.c',
     ]
 
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

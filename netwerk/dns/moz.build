@@ -15,8 +15,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'necko_dns'
 
-MODULE = 'necko'
-
 EXPORTS.mozilla.net += [
     'DNS.h',
 ]
@@ -35,11 +33,8 @@ SOURCES += [
     'nsIDNService.cpp',
 ]
 
-LIBRARY_NAME = 'neckodns_s'
-
 FAIL_ON_WARNINGS = True
-
-LIBXUL_LIBRARY = True
 
 MSVC_ENABLE_PGO = True
 
+FINAL_LIBRARY = 'necko'

@@ -435,18 +435,6 @@ SVGSVGElement::CreateSVGTransformFromMatrix(SVGMatrix& matrix)
   return transform.forget();
 }
 
-Element*
-SVGSVGElement::GetElementById(const nsAString& elementId, ErrorResult& rv)
-{
-  nsAutoString selector(NS_LITERAL_STRING("#"));
-  nsStyleUtil::AppendEscapedCSSIdent(PromiseFlatString(elementId), selector);
-  nsIContent* element = QuerySelector(selector, rv);
-  if (!rv.Failed() && element) {
-    return element->AsElement();
-  }
-  return nullptr;
-}
-
 //----------------------------------------------------------------------
 
 already_AddRefed<SVGAnimatedRect>

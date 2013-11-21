@@ -251,8 +251,7 @@ public:
                          GLenum aTarget,
                          GLenum aWrapMode,
                          SharedTextureShareType aShareType,
-                         gfx::IntSize aSize,
-                         const gfx3DMatrix& aTexTransform);
+                         gfx::IntSize aSize);
 
   virtual TextureSourceOGL* AsSourceOGL() { return this; }
 
@@ -264,7 +263,7 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
 
-  virtual gfx3DMatrix GetTextureTransform() MOZ_OVERRIDE { return mTextureTransform; }
+  virtual gfx3DMatrix GetTextureTransform() MOZ_OVERRIDE;
 
   virtual GLenum GetTextureTarget() const { return mTextureTarget; }
 
@@ -282,7 +281,6 @@ public:
   gl::GLContext* gl() const;
 
 protected:
-  gfx3DMatrix mTextureTransform;
   gfx::IntSize mSize;
   CompositorOGL* mCompositor;
   gl::SharedTextureHandle mSharedHandle;

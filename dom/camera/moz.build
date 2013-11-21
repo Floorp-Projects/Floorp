@@ -13,8 +13,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
 
 XPIDL_MODULE = 'dom_camera'
 
-MODULE = 'dom'
-
 EXPORTS += [
     'CameraCommon.h',
     'CameraPreviewMediaStream.h',
@@ -49,12 +47,10 @@ else:
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'domcamera_s'
-
 LOCAL_INCLUDES += [
     '../base',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'gklayout'

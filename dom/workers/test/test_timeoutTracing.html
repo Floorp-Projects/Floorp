@@ -1,0 +1,47 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads
+-->
+<head>
+  <title>Test for DOM Worker Threads</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  var worker = new Worker("timeoutTracing_worker.js");
+
+  worker.onmessage = function(event) {
+    // begin
+    worker.onmessage = null;
+
+    // 1 second should be enough to crash.
+    window.setTimeout(function(event) {
+      ok(true, "Didn't crash!");
+      SimpleTest.finish();
+    }, 1000);
+
+    var os = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
+                          .getService(SpecialPowers.Ci.nsIObserverService);
+    os.notifyObservers(null, "memory-pressure", "heap-minimize");
+  }
+
+  worker.onerror = function(event) {
+    ok(false, "I was expecting a crash, not an error");
+    SimpleTest.finish();
+  };
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+

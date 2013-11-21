@@ -4,11 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'omxplugingb'
-
 SOURCES += [
     'OmxPlugin236.cpp',
 ]
 
 LIBRARY_NAME = 'omxplugingb'
 
+FORCE_SHARED_LIB = True

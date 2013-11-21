@@ -116,7 +116,7 @@ nsDocLoader::nsDocLoader()
   }
 #endif /* PR_LOGGING */
 
-  static PLDHashTableOps hash_table_ops =
+  static const PLDHashTableOps hash_table_ops =
   {
     PL_DHashAllocTable,
     PL_DHashFreeTable,

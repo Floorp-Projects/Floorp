@@ -42,7 +42,7 @@ LOCAL_INCLUDES += -I$(srcdir)/win
 endif
 
 ifdef MOZ_ENABLE_DBUS
-LOCAL_INCLUDES   += $(TK_CFLAGS) $(MOZ_DBUS_CFLAGS)
+OS_INCLUDES   += $(TK_CFLAGS) $(MOZ_DBUS_CFLAGS)
 endif
 
 include $(topsrcdir)/config/rules.mk

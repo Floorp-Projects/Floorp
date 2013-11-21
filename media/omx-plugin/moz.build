@@ -14,11 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-MODULE = 'omxplugin'
-
 SOURCES += [
     'OmxPlugin.cpp',
 ]
 
 LIBRARY_NAME = 'omxplugin'
 
+FORCE_SHARED_LIB = True

@@ -125,7 +125,7 @@ if CONFIG['MOZ_TOOLKIT_SEARCH']:
         'nsIBrowserSearchService.idl',
     ]
 
-MODULE = 'necko'
+XPIDL_MODULE = 'necko'
 
 EXPORTS += [
     'netCore.h',
