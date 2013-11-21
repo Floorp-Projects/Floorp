@@ -149,7 +149,6 @@ void
 DeprecatedTextureHostD3D9::SetCompositor(Compositor* aCompositor)
 {
   mCompositor = static_cast<CompositorD3D9*>(aCompositor);
-  mDevice = mCompositor ? mCompositor->device() : nullptr;
 }
 
 /**
@@ -265,6 +264,10 @@ DeprecatedTextureHostShmemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
              aImage.type() == SurfaceDescriptor::TMemoryImage);
   MOZ_ASSERT(mCompositor, "Must have compositor to update.");
 
+  if (!mCompositor->device()) {
+    return;
+  }
+
   AutoOpenSurface openSurf(OPEN_READ_ONLY, aImage);
 
   nsRefPtr<gfxImageSurface> surf = openSurf.GetAsImage();
@@ -299,7 +302,10 @@ DeprecatedTextureHostShmemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
     mTextures[0] = DataToTexture(gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager(),
                                  surf->Data(), surf->Stride(),
                                  mSize, format, bpp);
-    NS_ASSERTION(mTextures[0], "Could not upload texture");
+    if (!mTextures[0]) {
+      NS_WARNING("Could not upload texture");
+      return;
+    }
     mIsTiled = false;
   } else {
     mIsTiled = true;
@@ -318,6 +324,12 @@ DeprecatedTextureHostShmemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
                                        tileRect.Size(),
                                        format,
                                        bpp);
+      if (!mTileTextures[i]) {
+        NS_WARNING("Could not upload texture");
+        mSize = IntSize();
+        mIsTiled = false;
+        return;
+      }
     }
   }
 }
@@ -338,11 +350,19 @@ DeprecatedTextureHostD3D9::GetTileRect(uint32_t aID) const
                  verticalTile < (verticalTiles - 1) ? maxSize : mSize.height % maxSize);
 }
 
+DeprecatedTextureHostYCbCrD3D9::DeprecatedTextureHostYCbCrD3D9()
+{
+  mFormat = gfx::FORMAT_YUV;
+}
+
+DeprecatedTextureHostYCbCrD3D9::~DeprecatedTextureHostYCbCrD3D9()
+{
+}
+
 void
 DeprecatedTextureHostYCbCrD3D9::SetCompositor(Compositor* aCompositor)
 {
-  CompositorD3D9 *d3dCompositor = static_cast<CompositorD3D9*>(aCompositor);
-  mDevice = d3dCompositor ? d3dCompositor->device() : nullptr;
+  mCompositor = static_cast<CompositorD3D9*>(aCompositor);
 }
 
 IntSize
@@ -357,6 +377,10 @@ DeprecatedTextureHostYCbCrD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
                                  nsIntPoint *aOffset)
 {
   MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TYCbCrImage);
+
+  if (!mCompositor->device()) {
+    return;
+  }
 
   YCbCrImageDataDeserializer yuvDeserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
 
@@ -410,11 +434,18 @@ DeprecatedTextureHostSystemMemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
   MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TSurfaceDescriptorD3D9);
   MOZ_ASSERT(mCompositor, "Must have compositor to update.");
 
+  if (!mCompositor->device()) {
+    return;
+  }
+
   IDirect3DTexture9* texture =
     reinterpret_cast<IDirect3DTexture9*>(aImage.get_SurfaceDescriptorD3D9().texture());
 
   if (!texture) {
+    mSize.width = 0;
+    mSize.height = 0;
     mTextures[0] = nullptr;
+    mIsTiled = false;
     return;
   }
 
@@ -448,7 +479,12 @@ DeprecatedTextureHostSystemMemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
 
     mTextures[0] = TextureToTexture(gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager(),
                                     texture, mSize, format);
-    NS_ASSERTION(mTextures[0], "Could not upload texture");
+    if (!mTextures[0]) {
+      NS_WARNING("Could not upload texture");
+      mSize.width = 0;
+      mSize.height = 0;
+      return;
+    }
   } else {
     mIsTiled = true;
 
@@ -559,7 +595,12 @@ DeprecatedTextureHostDIB::UpdateImpl(const SurfaceDescriptor& aImage,
   if (mSize.width <= maxSize && mSize.height <= maxSize) {
     mTextures[0] = SurfaceToTexture(gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager(),
                                     surf, mSize, format);
-    NS_ASSERTION(mTextures[0], "Could not upload texture");
+    if (!mTextures[0]) {
+      NS_WARNING("Could not upload texture");
+      mSize.width = 0;
+      mSize.height = 0;
+      return;
+    }
     mIsTiled = false;
   } else {
     mIsTiled = true;
@@ -580,6 +621,12 @@ DeprecatedTextureHostDIB::UpdateImpl(const SurfaceDescriptor& aImage,
                                        tileRect.Size(),
                                        format,
                                        bpp);
+      if (!mTileTextures[i]) {
+        NS_WARNING("Could not upload texture");
+        mSize = IntSize();
+        mIsTiled = false;
+        return;
+      }
     }
   }
 }
@@ -652,6 +699,16 @@ DeprecatedTextureClientD3D9::EnsureAllocated(gfx::IntSize aSize,
 gfxASurface*
 DeprecatedTextureClientD3D9::LockSurface()
 {
+  if (!gfxWindowsPlatform::GetPlatform()->GetD3D9Device()) {
+    // If the device has failed then we should not lock the surface,
+    // even if we could.
+    Unlock();
+    mD3D9Surface = nullptr;
+    mTexture = nullptr;
+
+    return nullptr;
+  }
+
   if (mSurface) {
     return mSurface.get();
   }
