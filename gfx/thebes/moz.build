@@ -231,19 +231,30 @@ if CONFIG['INTEL_ARCHITECTURE']:
     ]
 
 SOURCES += [
+    # Includes mac system header conflicting with point/size,
+    # and includes glxXlibSurface.h which drags in Xrender.h
+    'gfxASurface.cpp', 
+    # on X11, gfxDrawable.cpp includes X headers for an old workaround which
+    # we could consider removing soon (affects Ubuntus older than 10.04 LTS)
+    # which currently prevent it from joining UNIFIED_SOURCES.
+    'gfxDrawable.cpp',
+    # Uses FORCE_PR_LOG
+    'gfxFontUtils.cpp',
+    # Includes mac system header conflicting with point/size
+    'gfxPlatform.cpp',
+]
+
+UNIFIED_SOURCES += [
     'gfx3DMatrix.cpp',
     'gfxAlphaRecovery.cpp',
-    'gfxASurface.cpp',
     'gfxBaseSharedMemorySurface.cpp',
     'gfxBlur.cpp',
     'gfxCachedTempSurface.cpp',
     'gfxContext.cpp',
-    'gfxDrawable.cpp',
     'gfxFont.cpp',
     'gfxFontFeatures.cpp',
     'gfxFontMissingGlyphs.cpp',
     'gfxFontTest.cpp',
-    'gfxFontUtils.cpp',
     'gfxGradientCache.cpp',
     'gfxGraphiteShaper.cpp',
     'gfxHarfBuzzShaper.cpp',
@@ -251,7 +262,6 @@ SOURCES += [
     'gfxMatrix.cpp',
     'gfxPath.cpp',
     'gfxPattern.cpp',
-    'gfxPlatform.cpp',
     'gfxPlatformFontList.cpp',
     'gfxRect.cpp',
     'gfxReusableImageSurfaceWrapper.cpp',
