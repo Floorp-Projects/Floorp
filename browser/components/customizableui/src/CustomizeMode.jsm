@@ -657,6 +657,9 @@ CustomizeMode.prototype = {
 
   reset: function() {
     this.resetting = true;
+    // Disable the reset button temporarily while resetting:
+    let btn = this.document.getElementById("customization-reset-button");
+    btn.disabled = true;
     return Task.spawn(function() {
       this._removePanelCustomizationPlaceholders();
       yield this.depopulatePalette();
