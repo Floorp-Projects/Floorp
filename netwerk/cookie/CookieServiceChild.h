@@ -31,9 +31,6 @@ public:
 
   static CookieServiceChild* GetSingleton();
 
-private:
-  static CookieServiceChild *sCookieServiceChild;
-
 protected:
   void SerializeURIs(nsIURI *aHostURI,
                      nsIChannel *aChannel,
