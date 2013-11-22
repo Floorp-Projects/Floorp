@@ -154,7 +154,12 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
         env->CallStaticObjectMethod(g_javaCmDevInfoClass,
                                     cid, (int) -1,
                                     javaContext);
-    if (!javaCameraDeviceInfoObjLocal) {
+    bool exceptionThrown = env->ExceptionCheck();
+    if (!javaCameraDeviceInfoObjLocal || exceptionThrown) {
+      if (exceptionThrown) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+      }
       EARLY_WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, -1,
                    "%s: could not create Java Capture Device info object",
                    __FUNCTION__);
@@ -329,7 +334,7 @@ int32_t VideoCaptureAndroid::Init(const int32_t id,
                                                      cid, (jint) id,
                                                      (jlong) this,
                                                      capureIdString);
-  if (!javaCameraObjLocal) {
+  if (!javaCameraObjLocal || jniFrame.CheckForException()) {
     WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, _id,
                  "%s: could not create Java Capture object", __FUNCTION__);
     return -1;
@@ -372,6 +377,7 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
                    "%s: Call DeleteVideoCaptureAndroid", __FUNCTION__);
       // Close the camera by calling the static destruct function.
       env->CallStaticVoidMethod(g_javaCmClass, cid, _javaCaptureObj);
+      jniFrame.CheckForException();
 
       // Delete global object ref to the camera.
       env->DeleteGlobalRef(_javaCaptureObj);
