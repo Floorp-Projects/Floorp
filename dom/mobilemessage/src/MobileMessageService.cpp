@@ -74,7 +74,7 @@ MobileMessageService::CreateMmsMessage(int32_t               aId,
                                        const nsAString&      aSmil,
                                        const JS::Value&      aAttachments,
                                        const JS::Value&      aExpiryDate,
-                                       bool                  aIsReadReportRequested,
+                                       bool                  aReadReportRequested,
                                        JSContext*            aCx,
                                        nsIDOMMozMmsMessage** aMessage)
 {
@@ -91,7 +91,7 @@ MobileMessageService::CreateMmsMessage(int32_t               aId,
                             aSmil,
                             aAttachments,
                             aExpiryDate,
-                            aIsReadReportRequested,
+                            aReadReportRequested,
                             aCx,
                             aMessage);
 }
