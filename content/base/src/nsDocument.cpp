@@ -2463,8 +2463,11 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsresult rv = InitCSP(aChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // If this is not a data document, set CSP.
+  if (!mLoadedAsData) {
+    nsresult rv = InitCSP(aChannel);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
