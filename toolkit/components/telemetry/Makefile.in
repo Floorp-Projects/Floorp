@@ -9,11 +9,6 @@ include $(topsrcdir)/config/makefiles/rcs.mk
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/threads
 
-EXTRA_DSO_LDOPTS += \
-  $(MOZ_COMPONENT_LIBS) \
-  $(MOZ_JS_LIBS) \
-  $(NULL)
-
 ifdef MOZILLA_OFFICIAL
 DEFINES += -DMOZILLA_OFFICIAL
 endif
