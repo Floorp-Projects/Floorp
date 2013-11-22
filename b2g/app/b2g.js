@@ -42,6 +42,12 @@ pref("network.protocol-handler.warn-external.tel", false);
 pref("network.protocol-handler.warn-external.mailto", false);
 pref("network.protocol-handler.warn-external.vnd.youtube", false);
 
+/* protocol expose prefs */
+// By default, all protocol handlers are exposed. This means that the browser
+// will response to openURL commands for all URL types. It will also try to open
+// link clicks inside the browser before failing over to the system handlers.
+pref("network.protocol-handler.expose.rtsp", false);
+
 /* http prefs */
 pref("network.http.pipelining", true);
 pref("network.http.pipelining.ssl", true);

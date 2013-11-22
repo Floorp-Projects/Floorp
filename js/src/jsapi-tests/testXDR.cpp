@@ -36,7 +36,7 @@ CompileScriptForPrincipalsVersionOrigin(JSContext *cx, JS::HandleObject obj,
     return script;
 }
 
-JSScript *
+static JSScript *
 FreezeThaw(JSContext *cx, JS::HandleScript script)
 {
     // freeze
@@ -58,7 +58,7 @@ GetScript(JSContext *cx, JS::HandleObject funobj)
     return JS_GetFunctionScript(cx, JS_GetObjectFunction(funobj));
 }
 
-JSObject *
+static JSObject *
 FreezeThaw(JSContext *cx, JS::HandleObject funobj)
 {
     // freeze

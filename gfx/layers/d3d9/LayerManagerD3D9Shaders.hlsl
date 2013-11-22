@@ -189,9 +189,9 @@ float4 YCbCrShader(const VS_OUTPUT aVertex) : COLOR
   float4 yuv;
   float4 color;
 
-  yuv.r = tex2D(s2DCr, aVertex.vTexCoords).r - 0.5;
-  yuv.g = tex2D(s2DY, aVertex.vTexCoords).r - 0.0625;
-  yuv.b = tex2D(s2DCb, aVertex.vTexCoords).r - 0.5;
+  yuv.r = tex2D(s2DCr, aVertex.vTexCoords).a - 0.5;
+  yuv.g = tex2D(s2DY, aVertex.vTexCoords).a - 0.0625;
+  yuv.b = tex2D(s2DCb, aVertex.vTexCoords).a - 0.5;
 
   color.r = yuv.g * 1.164 + yuv.r * 1.596;
   color.g = yuv.g * 1.164 - 0.813 * yuv.r - 0.391 * yuv.b;
@@ -255,9 +255,9 @@ float4 YCbCrShaderMask(const VS_OUTPUT_MASK aVertex) : COLOR
   float4 yuv;
   float4 color;
 
-  yuv.r = tex2D(s2DCr, aVertex.vTexCoords).r - 0.5;
-  yuv.g = tex2D(s2DY, aVertex.vTexCoords).r - 0.0625;
-  yuv.b = tex2D(s2DCb, aVertex.vTexCoords).r - 0.5;
+  yuv.r = tex2D(s2DCr, aVertex.vTexCoords).a - 0.5;
+  yuv.g = tex2D(s2DY, aVertex.vTexCoords).a - 0.0625;
+  yuv.b = tex2D(s2DCb, aVertex.vTexCoords).a - 0.5;
 
   color.r = yuv.g * 1.164 + yuv.r * 1.596;
   color.g = yuv.g * 1.164 - 0.813 * yuv.r - 0.391 * yuv.b;

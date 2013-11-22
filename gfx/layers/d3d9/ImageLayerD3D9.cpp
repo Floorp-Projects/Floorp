@@ -184,31 +184,31 @@ static void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage,
 
     HRESULT hr;
     hr = aDevice->CreateTexture(data->mYSize.width, data->mYSize.height,
-                                1, 0, D3DFMT_L8, D3DPOOL_DEFAULT,
+                                1, 0, D3DFMT_A8, D3DPOOL_DEFAULT,
                                 getter_AddRefs(backendData->mYTexture), nullptr);
     if (!FAILED(hr)) {
       hr = aDevice->CreateTexture(data->mCbCrSize.width, data->mCbCrSize.height,
-                                  1, 0, D3DFMT_L8, D3DPOOL_DEFAULT,
+                                  1, 0, D3DFMT_A8, D3DPOOL_DEFAULT,
                                   getter_AddRefs(backendData->mCbTexture), nullptr);
     }
     if (!FAILED(hr)) {
       hr = aDevice->CreateTexture(data->mCbCrSize.width, data->mCbCrSize.height,
-                                  1, 0, D3DFMT_L8, D3DPOOL_DEFAULT,
+                                  1, 0, D3DFMT_A8, D3DPOOL_DEFAULT,
                                   getter_AddRefs(backendData->mCrTexture), nullptr);
     }
     if (!FAILED(hr)) {
       hr = aDevice->CreateTexture(data->mYSize.width, data->mYSize.height,
-                                  1, 0, D3DFMT_L8, D3DPOOL_SYSTEMMEM,
+                                  1, 0, D3DFMT_A8, D3DPOOL_SYSTEMMEM,
                                   getter_AddRefs(tmpYTexture), nullptr);
     }
     if (!FAILED(hr)) {
       hr = aDevice->CreateTexture(data->mCbCrSize.width, data->mCbCrSize.height,
-                                  1, 0, D3DFMT_L8, D3DPOOL_SYSTEMMEM,
+                                  1, 0, D3DFMT_A8, D3DPOOL_SYSTEMMEM,
                                   getter_AddRefs(tmpCbTexture), nullptr);
     }
     if (!FAILED(hr)) {
       hr = aDevice->CreateTexture(data->mCbCrSize.width, data->mCbCrSize.height,
-                                  1, 0, D3DFMT_L8, D3DPOOL_SYSTEMMEM,
+                                  1, 0, D3DFMT_A8, D3DPOOL_SYSTEMMEM,
                                   getter_AddRefs(tmpCrTexture), nullptr);
     }
 
@@ -227,16 +227,16 @@ static void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage,
   } else {
     HRESULT hr;
     hr = aDevice->CreateTexture(data->mYSize.width, data->mYSize.height,
-                                1, 0, D3DFMT_L8, D3DPOOL_MANAGED,
+                                1, 0, D3DFMT_A8, D3DPOOL_MANAGED,
                                 getter_AddRefs(backendData->mYTexture), nullptr);
     if (!FAILED(hr)) {
       aDevice->CreateTexture(data->mCbCrSize.width, data->mCbCrSize.height,
-                             1, 0, D3DFMT_L8, D3DPOOL_MANAGED,
+                             1, 0, D3DFMT_A8, D3DPOOL_MANAGED,
                              getter_AddRefs(backendData->mCbTexture), nullptr);
     }
     if (!FAILED(hr)) {
       aDevice->CreateTexture(data->mCbCrSize.width, data->mCbCrSize.height,
-                             1, 0, D3DFMT_L8, D3DPOOL_MANAGED,
+                             1, 0, D3DFMT_A8, D3DPOOL_MANAGED,
                              getter_AddRefs(backendData->mCrTexture), nullptr);
     }
 

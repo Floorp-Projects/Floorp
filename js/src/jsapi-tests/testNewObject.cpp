@@ -7,9 +7,6 @@
 
 #include "jsapi-tests/tests.h"
 
-const size_t N = 1000;
-static jsval argv[N];
-
 static bool
 constructHook(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -56,6 +53,9 @@ constructHook(JSContext *cx, unsigned argc, jsval *vp)
 
 BEGIN_TEST(testNewObject_1)
 {
+    static const size_t N = 1000;
+    jsval argv[N];
+
     // Root the global argv test array. Only the first 2 entries really need to
     // be rooted, since we're only putting integers in the rest.
     CHECK(JS_AddNamedValueRoot(cx, &argv[0], "argv0"));

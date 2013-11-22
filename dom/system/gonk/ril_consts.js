@@ -2379,6 +2379,12 @@ this.GECKO_RADIOSTATE_UNAVAILABLE   = null;
 this.GECKO_RADIOSTATE_OFF           = "off";
 this.GECKO_RADIOSTATE_READY         = "ready";
 
+this.GECKO_DETAILED_RADIOSTATE_UNKNOWN    = null;
+this.GECKO_DETAILED_RADIOSTATE_ENABLING   = "enabling";
+this.GECKO_DETAILED_RADIOSTATE_ENABLED    = "enabled";
+this.GECKO_DETAILED_RADIOSTATE_DISABLING  = "disabling";
+this.GECKO_DETAILED_RADIOSTATE_DISABLED   = "disabled";
+
 this.GECKO_CARDSTATE_UNDETECTED                    = null;
 this.GECKO_CARDSTATE_ILLEGAL                       = "illegal";
 this.GECKO_CARDSTATE_UNKNOWN                       = "unknown";

@@ -61,6 +61,8 @@ public:
   virtual bool RecvUpdate(const EditArray& aEdits, EditReplyArray* aReply);
   virtual bool RecvUpdateNoSwap(const EditArray& aEdits);
 
+  virtual bool IsAsync() const MOZ_OVERRIDE { return true; }
+
   PCompositableParent* AllocPCompositableParent(const TextureInfo& aInfo,
                                                 uint64_t*) MOZ_OVERRIDE;
   bool DeallocPCompositableParent(PCompositableParent* aActor) MOZ_OVERRIDE;

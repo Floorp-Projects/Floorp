@@ -131,6 +131,12 @@ MobileConnectionListener::NotifyIccChanged()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+MobileConnectionListener::NotifyRadioStateChanged()
+{
+  return NS_OK;
+}
+
 /**
  *  TelephonyListener Implementation
  *

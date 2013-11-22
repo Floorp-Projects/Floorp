@@ -28,13 +28,6 @@ struct StringWrapperStruct
     bool     strOk;
 } sw;
 
-void
-FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartmentGC)
-{
-    if (status == JSFINALIZE_GROUP_START)
-        sw.strOk = js::gc::IsStringMarked(&sw.str);
-}
-
 BEGIN_TEST(testInternAcrossGC)
 {
     sw.str = JS_InternString(cx, "wrapped chars that another test shouldn't be using");
@@ -44,5 +37,12 @@ BEGIN_TEST(testInternAcrossGC)
     JS_GC(rt);
     CHECK(sw.strOk);
     return true;
+}
+
+static void
+FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartmentGC)
+{
+    if (status == JSFINALIZE_GROUP_START)
+        sw.strOk = js::gc::IsStringMarked(&sw.str);
 }
 END_TEST(testInternAcrossGC)

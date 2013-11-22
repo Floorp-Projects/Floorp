@@ -6,7 +6,7 @@
 
 PROGRAM = 'jsapi-tests'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'selfTest.cpp',
     'testAddPropertyPropcache.cpp',
     'testArgumentsObject.cpp',

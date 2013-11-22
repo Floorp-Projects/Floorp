@@ -1491,10 +1491,10 @@ CompareSubStringValues(JSContext *cx, const jschar *s1, size_t l1,
     if (!JS_CHECK_OPERATION_LIMIT(cx))
         return false;
 
-    int32_t result;
-    if (!s1 || !s2 || !CompareChars(s1, l1, s2, l2, &result))
+    if (!s1 || !s2)
         return false;
 
+    int32_t result = CompareChars(s1, l1, s2, l2);
     *lessOrEqualp = (result <= 0);
     return true;
 }
