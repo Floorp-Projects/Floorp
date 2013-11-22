@@ -79,3 +79,5 @@ endif
 
 PremultiplyTables.h: $(srcdir)/genTables.py
 	$(PYTHON) $(srcdir)/genTables.py
+
+gfxUtils.$(OBJ_SUFFIX): PremultiplyTables.h

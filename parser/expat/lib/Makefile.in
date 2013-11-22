@@ -4,4 +4,6 @@
 
 include $(topsrcdir)/config/rules.mk
 
+xmltok.$(OBJ_SUFFIX): moz_extensions.c
+
 DEFINES += -DHAVE_EXPAT_CONFIG_H
