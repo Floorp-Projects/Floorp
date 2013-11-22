@@ -162,6 +162,7 @@ RemoteWebProgressManager.prototype = {
 
     case "Content:LocationChange":
       let location = newURI(json.location);
+      let flags = json.flags;
 
       if (json.isTopLevel) {
         this._browser.webNavigation._currentURI = location;
@@ -172,7 +173,7 @@ RemoteWebProgressManager.prototype = {
         this._browser._imageDocument = null;
       }
 
-      this._callProgressListeners("onLocationChange", webProgress, request, location);
+      this._callProgressListeners("onLocationChange", webProgress, request, location, flags);
       break;
 
     case "Content:SecurityChange":
