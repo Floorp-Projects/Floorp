@@ -730,6 +730,7 @@ var gPluginHandler = {
                                       permission, expireType, expireTime);
 
       if (aNewState == "block") {
+        this._setPluginNotificationIcon(browser);
         return;
       }
     }
@@ -764,6 +765,8 @@ var gPluginHandler = {
     if (!pluginFound) {
       browser.reload();
     }
+
+    this._setPluginNotificationIcon(browser);
   },
 
   _showClickToPlayNotification: function PH_showClickToPlayNotification(aBrowser, aPlugin, aShowNow) {
