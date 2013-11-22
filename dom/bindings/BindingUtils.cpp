@@ -2147,7 +2147,7 @@ ThreadsafeCheckIsChrome(JSContext* aCx, JSObject* aObj)
 {
   using mozilla::dom::workers::GetWorkerPrivateFromContext;
   return NS_IsMainThread() ? xpc::AccessCheck::isChrome(aObj):
-                             GetWorkerPrivateFromContext(aCx)->IsChromeWorker();
+                             GetWorkerPrivateFromContext(aCx)->UsesSystemPrincipal();
 }
 
 void
