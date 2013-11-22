@@ -1116,7 +1116,6 @@ let SessionStoreInternal = {
       Array.forEach(aWindow.gBrowser.tabs, function(aTab) {
         TabStateCache.delete(aTab);
         delete aTab.linkedBrowser.__SS_data;
-        delete aTab.linkedBrowser.__SS_tabStillLoading;
         if (aTab.linkedBrowser.__SS_restoreState)
           this._resetTabRestoringState(aTab);
       }, this);
@@ -1268,7 +1267,6 @@ let SessionStoreInternal = {
     MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
 
     delete browser.__SS_data;
-    delete browser.__SS_tabStillLoading;
 
     // If this tab was in the middle of restoring or still needs to be restored,
     // we need to reset that state. If the tab was restoring, we will attempt to
@@ -1349,7 +1347,6 @@ let SessionStoreInternal = {
     TabStateCache.delete(aBrowser);
 
     delete aBrowser.__SS_data;
-    delete aBrowser.__SS_tabStillLoading;
     this.saveStateDelayed(aWindow);
 
     // attempt to update the current URL we send in a crash report
@@ -2627,8 +2624,6 @@ let SessionStoreInternal = {
       // be ignored and don't override any tab data set by restoreHistory().
       TabState.flush(tab.linkedBrowser);
 
-      browser.__SS_tabStillLoading = true;
-
       // keep the data around to prevent dataloss in case
       // a tab gets closed before it's been properly restored
       browser.__SS_data = tabData;
@@ -3433,7 +3428,7 @@ let SessionStoreInternal = {
    */
   _canRestoreTabHistory: function ssi_canRestoreTabHistory(aTab) {
     return aTab.parentNode && aTab.linkedBrowser &&
-           aTab.linkedBrowser.__SS_tabStillLoading;
+           aTab.linkedBrowser.__SS_data;
   },
 
   /**

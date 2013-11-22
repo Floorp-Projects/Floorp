@@ -359,8 +359,7 @@ let TabStateInternal = {
    * restored.
    */
   _tabIsRestoring: function (tab) {
-    let browser = tab.linkedBrowser;
-    return (browser.__SS_data && browser.__SS_tabStillLoading);
+    return !!tab.linkedBrowser.__SS_data;
   },
 
   /**
@@ -424,7 +423,7 @@ let TabStateInternal = {
       // can happen when calling this function right after .addTab()
       return tabData;
     }
-    if (browser.__SS_data && browser.__SS_tabStillLoading) {
+    if (browser.__SS_data) {
       // Use the data to be restored when the tab hasn't been
       // completely loaded. We clone the data, since we're updating it
       // here and the caller may update it further.
