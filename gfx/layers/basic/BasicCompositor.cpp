@@ -418,9 +418,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                           gfx::Float aOpacity,
                           const gfx::Matrix4x4 &aTransform)
 {
-  RefPtr<DrawTarget> buffer = mRenderTarget
-                              ? mRenderTarget->mDrawTarget
-                              : mDrawTarget;
+  RefPtr<DrawTarget> buffer = mRenderTarget->mDrawTarget;
 
   // For 2D drawing, |dest| and |buffer| are the same surface. For 3D drawing,
   // |dest| is a temporary surface.
@@ -551,7 +549,8 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
 }
 
 void
-BasicCompositor::BeginFrame(const gfx::Rect *aClipRectIn,
+BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
+                            const gfx::Rect *aClipRectIn,
                             const gfxMatrix& aTransform,
                             const gfx::Rect& aRenderBounds,
                             gfx::Rect *aClipRectOut /* = nullptr */,
@@ -562,6 +561,18 @@ BasicCompositor::BeginFrame(const gfx::Rect *aClipRectIn,
   Rect rect = Rect(0, 0, intRect.width, intRect.height);
   mWidgetSize = intRect.Size();
 
+  nsIntRect invalidRect = aInvalidRegion.GetBounds();
+  mInvalidRect = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
+  mInvalidRegion = aInvalidRegion;
+
+  if (aRenderBoundsOut) {
+    *aRenderBoundsOut = Rect();
+  }
+
+  if (mInvalidRect.width <= 0 || mInvalidRect.height <= 0) {
+    return;
+  }
+
   if (mCopyTarget) {
     // If we have a copy target, then we don't have a widget-provided mDrawTarget (currently). Create a dummy
     // placeholder so that CreateRenderTarget() works.
@@ -570,16 +581,21 @@ BasicCompositor::BeginFrame(const gfx::Rect *aClipRectIn,
     mDrawTarget = mWidget->StartRemoteDrawing();
   }
   if (!mDrawTarget) {
-    if (aRenderBoundsOut) {
-      *aRenderBoundsOut = Rect();
-    }
     return;
   }
 
   // Setup an intermediate render target to buffer all compositing. We will
   // copy this into mDrawTarget (the widget), and/or mCopyTarget in EndFrame()
-  RefPtr<CompositingRenderTarget> target = CreateRenderTarget(IntRect(0, 0, intRect.width, intRect.height), INIT_MODE_CLEAR);
+  RefPtr<CompositingRenderTarget> target = CreateRenderTarget(mInvalidRect, INIT_MODE_CLEAR);
   SetRenderTarget(target);
+
+  // We only allocate a surface sized to the invalidated region, so we need to
+  // translate future coordinates.
+  Matrix transform;
+  transform.Translate(-invalidRect.x, -invalidRect.y);
+  mRenderTarget->mDrawTarget->SetTransform(transform);
+
+  gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget, aInvalidRegion);
 
   if (aRenderBoundsOut) {
     *aRenderBoundsOut = rect;
@@ -599,20 +615,26 @@ void
 BasicCompositor::EndFrame()
 {
   mRenderTarget->mDrawTarget->PopClip();
+  mRenderTarget->mDrawTarget->PopClip();
 
+  // Note: Most platforms require us to buffer drawing to the widget surface.
+  // That's why we don't draw to mDrawTarget directly.
   RefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();
-  if (mCopyTarget) {
-    mCopyTarget->CopySurface(source,
-                             IntRect(0, 0, mWidgetSize.width, mWidgetSize.height),
-                             IntPoint(0, 0));
-  } else {
-    // Most platforms require us to buffer drawing to the widget surface.
-    // That's why we don't draw to mDrawTarget directly.
-    mDrawTarget->CopySurface(source,
-	                           IntRect(0, 0, mWidgetSize.width, mWidgetSize.height),
-			                       IntPoint(0, 0));
+  RefPtr<DrawTarget> dest(mCopyTarget ? mCopyTarget : mDrawTarget);
+  
+  // The source DrawTarget is clipped to the invalidation region, so we have
+  // to copy the individual rectangles in the region or else we'll draw blank
+  // pixels.
+  nsIntRegionRectIterator iter(mInvalidRegion);
+  for (const nsIntRect *r = iter.Next(); r; r = iter.Next()) {
+    dest->CopySurface(source,
+                      IntRect(r->x - mInvalidRect.x, r->y - mInvalidRect.y, r->width, r->height),
+                      IntPoint(r->x, r->y));
+  }
+  if (!mCopyTarget) {
     mWidget->EndRemoteDrawing();
   }
+
   mDrawTarget = nullptr;
   mRenderTarget = nullptr;
 }
@@ -620,6 +642,7 @@ BasicCompositor::EndFrame()
 void
 BasicCompositor::AbortFrame()
 {
+  mRenderTarget->mDrawTarget->PopClip();
   mRenderTarget->mDrawTarget->PopClip();
   mDrawTarget = nullptr;
   mRenderTarget = nullptr;

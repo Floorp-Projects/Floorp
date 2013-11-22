@@ -439,7 +439,8 @@ CompositorD3D9::SetMask(const EffectChain &aEffectChain, uint32_t aMaskTexture)
 }
 
 void
-CompositorD3D9::BeginFrame(const Rect *aClipRectIn,
+CompositorD3D9::BeginFrame(const nsIntRegion& aInvalidRegion,
+                           const Rect *aClipRectIn,
                            const gfxMatrix& aTransform,
                            const Rect& aRenderBounds,
                            Rect *aClipRectOut,
