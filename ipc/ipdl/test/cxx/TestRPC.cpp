@@ -1,8 +1,9 @@
 #include "TestRPC.h"
 
 #include "IPDLUnitTests.h"      // fail etc.
+#if defined(OS_POSIX)
 #include <unistd.h>
-#if !defined(OS_POSIX)
+#else
 #include <windows.h>
 #endif
 
