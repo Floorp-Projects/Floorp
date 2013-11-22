@@ -3638,6 +3638,23 @@ PRStatus _MD_CloseFileMap(PRFileMap *fmap)
     return PR_SUCCESS;
 }
 
+PRStatus _MD_SyncMemMap(
+    PRFileDesc *fd,
+    void *addr,
+    PRUint32 len)
+{
+    if (msync(addr, len, MS_SYNC) == 0) {
+        return PR_SUCCESS;
+    } else {
+        if (errno == EINVAL) {
+            PR_SetError(PR_INVALID_ARGUMENT_ERROR, errno);
+        } else {
+            PR_SetError(PR_UNKNOWN_ERROR, errno);
+        }
+        return PR_FAILURE;
+    }
+}
+
 #if defined(_PR_NEED_FAKE_POLL)
 
 /*
