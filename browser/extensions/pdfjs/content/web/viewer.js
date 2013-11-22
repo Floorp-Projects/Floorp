@@ -3223,10 +3223,13 @@ var PageView = function pageView(container, id, scale,
         viewport: viewport
       };
 
+      // HACK to avoid crash on Mac, see bug 880140
+      PDFJS.noCachedCanvases = /Mac OS X/.test(navigator.userAgent);
       pdfPage.render(renderContext).then(function() {
         // Tell the printEngine that rendering this canvas/page has finished.
         obj.done();
         self.pdfPage.destroy();
+        delete PDFJS.noCachedCanvases;
       }, function(error) {
         console.error(error);
         // Tell the printEngine that rendering this canvas/page has failed.
@@ -3236,6 +3239,7 @@ var PageView = function pageView(container, id, scale,
         else
           obj.done();
         self.pdfPage.destroy();
+        delete PDFJS.noCachedCanvases;
       });
     };
   };
