@@ -13,6 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MathAlgorithms.h"
 
 #include "base/histogram.h"
 #include "base/pickle.h"
@@ -2438,6 +2439,41 @@ WriteFailedProfileLock(nsIFile* aProfileDir)
   } while (bytesLeft > 0);
   seekStream->SetEOF();
 }
+
+
+void
+TimeHistogram::Add(PRIntervalTime aTime)
+{
+  uint32_t timeMs = PR_IntervalToMilliseconds(aTime);
+  size_t index = mozilla::FloorLog2(timeMs);
+  operator[](index)++;
+}
+
+uint32_t
+HangHistogram::GetHash(const Stack& aStack)
+{
+  uint32_t hash = 0;
+  for (const char* const* label = aStack.begin();
+       label != aStack.end(); label++) {
+    /* We only need to hash the pointer instead of the text content
+       because we are assuming constant pointers */
+    hash = AddToHash(hash, *label);
+  }
+  return hash;
+}
+
+bool
+HangHistogram::operator==(const HangHistogram& aOther) const
+{
+  if (mHash != aOther.mHash) {
+    return false;
+  }
+  if (mStack.length() != aOther.mStack.length()) {
+    return false;
+  }
+  return PodEqual(mStack.begin(), aOther.mStack.begin(), mStack.length());
+}
+
 
 } // namespace Telemetry
 } // namespace mozilla
