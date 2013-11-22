@@ -600,6 +600,7 @@ pref("javascript.options.mem.gc_decommit_threshold_mb", 1);
 
 // Show/Hide scrollbars when active/inactive
 pref("ui.showHideScrollbars", 1);
+pref("ui.useOverlayScrollbars", 1);
 
 // Enable the ProcessPriorityManager, and give processes with no visible
 // documents a 1s grace period before they're eligible to be marked as
