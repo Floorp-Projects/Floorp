@@ -627,10 +627,6 @@ void MediaDecoderStateMachine::SendStreamData()
   if (mState == DECODER_STATE_DECODING_METADATA)
     return;
 
-  if (!mDecoder->IsSameOriginMedia()) {
-    return;
-  }
-
   // If there's still an audio thread alive, then we can't send any stream
   // data yet since both SendStreamData and the audio thread want to be in
   // charge of popping the audio queue. We're waiting for the audio thread
@@ -639,97 +635,99 @@ void MediaDecoderStateMachine::SendStreamData()
     return;
 
   int64_t minLastAudioPacketTime = INT64_MAX;
-  SourceMediaStream* mediaStream = stream->mStream;
-  StreamTime endPosition = 0;
-
-  if (!stream->mStreamInitialized) {
-    if (mInfo.HasAudio()) {
-      AudioSegment* audio = new AudioSegment();
-      mediaStream->AddTrack(TRACK_AUDIO, mInfo.mAudio.mRate, 0, audio);
-    }
-    if (mInfo.HasVideo()) {
-      VideoSegment* video = new VideoSegment();
-      mediaStream->AddTrack(TRACK_VIDEO, RATE_VIDEO, 0, video);
-    }
-    stream->mStreamInitialized = true;
-  }
-
-  if (mInfo.HasAudio()) {
-    nsAutoTArray<AudioData*,10> audio;
-    // It's OK to hold references to the AudioData because while audio
-    // is captured, only the decoder thread pops from the queue (see below).
-    mReader->AudioQueue().GetElementsAfter(stream->mLastAudioPacketTime, &audio);
-    AudioSegment output;
-    for (uint32_t i = 0; i < audio.Length(); ++i) {
-      SendStreamAudio(audio[i], stream, &output);
-    }
-    if (output.GetDuration() > 0) {
-      mediaStream->AppendToTrack(TRACK_AUDIO, &output);
-    }
-    if (mReader->AudioQueue().IsFinished() && !stream->mHaveSentFinishAudio) {
-      mediaStream->EndTrack(TRACK_AUDIO);
-      stream->mHaveSentFinishAudio = true;
-    }
-    minLastAudioPacketTime = std::min(minLastAudioPacketTime, stream->mLastAudioPacketTime);
-    endPosition = std::max(endPosition,
-        TicksToTimeRoundDown(mInfo.mAudio.mRate, stream->mAudioFramesWritten));
-  }
-
-  if (mInfo.HasVideo()) {
-    nsAutoTArray<VideoData*,10> video;
-    // It's OK to hold references to the VideoData only the decoder thread
-    // pops from the queue.
-    mReader->VideoQueue().GetElementsAfter(stream->mNextVideoTime + mStartTime, &video);
-    VideoSegment output;
-    for (uint32_t i = 0; i < video.Length(); ++i) {
-      VideoData* v = video[i];
-      if (stream->mNextVideoTime + mStartTime < v->mTime) {
-        DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder writing last video to MediaStream %p for %lld ms",
-                                   mDecoder.get(), mediaStream,
-                                   v->mTime - (stream->mNextVideoTime + mStartTime)));
-        // Write last video frame to catch up. mLastVideoImage can be null here
-        // which is fine, it just means there's no video.
-        WriteVideoToMediaStream(stream->mLastVideoImage,
-          v->mTime - (stream->mNextVideoTime + mStartTime), stream->mLastVideoImageDisplaySize,
-            &output);
-        stream->mNextVideoTime = v->mTime - mStartTime;
-      }
-      if (stream->mNextVideoTime + mStartTime < v->GetEndTime()) {
-        DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder writing video frame %lld to MediaStream %p for %lld ms",
-                                   mDecoder.get(), v->mTime, mediaStream,
-                                   v->GetEndTime() - (stream->mNextVideoTime + mStartTime)));
-        WriteVideoToMediaStream(v->mImage,
-            v->GetEndTime() - (stream->mNextVideoTime + mStartTime), v->mDisplay,
-            &output);
-        stream->mNextVideoTime = v->GetEndTime() - mStartTime;
-        stream->mLastVideoImage = v->mImage;
-        stream->mLastVideoImageDisplaySize = v->mDisplay;
-      } else {
-        DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder skipping writing video frame %lld to MediaStream",
-                                   mDecoder.get(), v->mTime));
-      }
-    }
-    if (output.GetDuration() > 0) {
-      mediaStream->AppendToTrack(TRACK_VIDEO, &output);
-    }
-    if (mReader->VideoQueue().IsFinished() && !stream->mHaveSentFinishVideo) {
-      mediaStream->EndTrack(TRACK_VIDEO);
-      stream->mHaveSentFinishVideo = true;
-    }
-    endPosition = std::max(endPosition,
-        TicksToTimeRoundDown(RATE_VIDEO, stream->mNextVideoTime - stream->mInitialTime));
-  }
-
-  if (!stream->mHaveSentFinish) {
-    stream->mStream->AdvanceKnownTracksTime(endPosition);
-  }
-
   bool finished =
       (!mInfo.HasAudio() || mReader->AudioQueue().IsFinished()) &&
       (!mInfo.HasVideo() || mReader->VideoQueue().IsFinished());
-  if (finished && !stream->mHaveSentFinish) {
-    stream->mHaveSentFinish = true;
-    stream->mStream->Finish();
+  if (mDecoder->IsSameOriginMedia()) {
+    SourceMediaStream* mediaStream = stream->mStream;
+    StreamTime endPosition = 0;
+
+    if (!stream->mStreamInitialized) {
+      if (mInfo.HasAudio()) {
+        AudioSegment* audio = new AudioSegment();
+        mediaStream->AddTrack(TRACK_AUDIO, mInfo.mAudio.mRate, 0, audio);
+      }
+      if (mInfo.HasVideo()) {
+        VideoSegment* video = new VideoSegment();
+        mediaStream->AddTrack(TRACK_VIDEO, RATE_VIDEO, 0, video);
+      }
+      stream->mStreamInitialized = true;
+    }
+
+    if (mInfo.HasAudio()) {
+      nsAutoTArray<AudioData*,10> audio;
+      // It's OK to hold references to the AudioData because while audio
+      // is captured, only the decoder thread pops from the queue (see below).
+      mReader->AudioQueue().GetElementsAfter(stream->mLastAudioPacketTime, &audio);
+      AudioSegment output;
+      for (uint32_t i = 0; i < audio.Length(); ++i) {
+        SendStreamAudio(audio[i], stream, &output);
+      }
+      if (output.GetDuration() > 0) {
+        mediaStream->AppendToTrack(TRACK_AUDIO, &output);
+      }
+      if (mReader->AudioQueue().IsFinished() && !stream->mHaveSentFinishAudio) {
+        mediaStream->EndTrack(TRACK_AUDIO);
+        stream->mHaveSentFinishAudio = true;
+      }
+      minLastAudioPacketTime = std::min(minLastAudioPacketTime, stream->mLastAudioPacketTime);
+      endPosition = std::max(endPosition,
+          TicksToTimeRoundDown(mInfo.mAudio.mRate, stream->mAudioFramesWritten));
+    }
+
+    if (mInfo.HasVideo()) {
+      nsAutoTArray<VideoData*,10> video;
+      // It's OK to hold references to the VideoData only the decoder thread
+      // pops from the queue.
+      mReader->VideoQueue().GetElementsAfter(stream->mNextVideoTime + mStartTime, &video);
+      VideoSegment output;
+      for (uint32_t i = 0; i < video.Length(); ++i) {
+        VideoData* v = video[i];
+        if (stream->mNextVideoTime + mStartTime < v->mTime) {
+          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder writing last video to MediaStream %p for %lld ms",
+                                     mDecoder.get(), mediaStream,
+                                     v->mTime - (stream->mNextVideoTime + mStartTime)));
+          // Write last video frame to catch up. mLastVideoImage can be null here
+          // which is fine, it just means there's no video.
+          WriteVideoToMediaStream(stream->mLastVideoImage,
+            v->mTime - (stream->mNextVideoTime + mStartTime), stream->mLastVideoImageDisplaySize,
+              &output);
+          stream->mNextVideoTime = v->mTime - mStartTime;
+        }
+        if (stream->mNextVideoTime + mStartTime < v->GetEndTime()) {
+          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder writing video frame %lld to MediaStream %p for %lld ms",
+                                     mDecoder.get(), v->mTime, mediaStream,
+                                     v->GetEndTime() - (stream->mNextVideoTime + mStartTime)));
+          WriteVideoToMediaStream(v->mImage,
+              v->GetEndTime() - (stream->mNextVideoTime + mStartTime), v->mDisplay,
+              &output);
+          stream->mNextVideoTime = v->GetEndTime() - mStartTime;
+          stream->mLastVideoImage = v->mImage;
+          stream->mLastVideoImageDisplaySize = v->mDisplay;
+        } else {
+          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder skipping writing video frame %lld to MediaStream",
+                                     mDecoder.get(), v->mTime));
+        }
+      }
+      if (output.GetDuration() > 0) {
+        mediaStream->AppendToTrack(TRACK_VIDEO, &output);
+      }
+      if (mReader->VideoQueue().IsFinished() && !stream->mHaveSentFinishVideo) {
+        mediaStream->EndTrack(TRACK_VIDEO);
+        stream->mHaveSentFinishVideo = true;
+      }
+      endPosition = std::max(endPosition,
+          TicksToTimeRoundDown(RATE_VIDEO, stream->mNextVideoTime - stream->mInitialTime));
+    }
+
+    if (!stream->mHaveSentFinish) {
+      stream->mStream->AdvanceKnownTracksTime(endPosition);
+    }
+
+    if (finished && !stream->mHaveSentFinish) {
+      stream->mHaveSentFinish = true;
+      stream->mStream->Finish();
+    }
   }
 
   if (mAudioCaptured) {
@@ -748,6 +746,7 @@ void MediaDecoderStateMachine::SendStreamData()
         mReader->AudioQueue().PushFront(a.forget());
         break;
       }
+      mAudioEndTime = std::max(mAudioEndTime, a->GetEndTime());
     }
 
     if (finished) {
