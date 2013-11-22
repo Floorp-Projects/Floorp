@@ -49,6 +49,8 @@ const kReferenceDpi = 240; // standard "pixel" size used in some preferences
 
 const kStateActive = 0x00000001; // :active pseudoclass for elements
 
+const kZoomToElementMargin = 16; // in px
+
 /*
  * getBoundingContentRect
  *
@@ -402,8 +404,16 @@ let Content = {
 
   _zoomToElement: function(aElement) {
     let rect = getBoundingContentRect(aElement);
+    this._inflateRect(rect, kZoomToElementMargin);
     this._zoomToRect(rect);
     this._isZoomedIn = true;
+  },
+
+  _inflateRect: function(aRect, aMargin) {
+    aRect.left -= aMargin;
+    aRect.top -= aMargin;
+    aRect.bottom += aMargin;
+    aRect.right += aMargin;
   },
 
   _zoomToRect: function (aRect) {
