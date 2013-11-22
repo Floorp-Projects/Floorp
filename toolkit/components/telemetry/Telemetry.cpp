@@ -46,6 +46,7 @@
 #include "nsNetUtil.h"
 #include "plstr.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/ThreadHangStats.h"
 #include "mozilla/ProcessedStack.h"
 #include "mozilla/Mutex.h"
@@ -1711,6 +1712,180 @@ ReadStack(const char *aFileName, Telemetry::ProcessedStack &aStack)
   }
 
   aStack = stack;
+}
+
+static JSObject*
+CreateJSTimeHistogram(JSContext* cx, const Telemetry::TimeHistogram& time)
+{
+  /* Create JS representation of TimeHistogram,
+     in the format of Chromium-style histograms. */
+  JS::RootedObject ret(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+  if (!ret) {
+    return nullptr;
+  }
+
+  if (!JS_DefineProperty(cx, ret, "min",
+                         UINT_TO_JSVAL(time.GetBucketMin(0)),
+                         nullptr, nullptr, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(cx, ret, "max",
+                         UINT_TO_JSVAL(time.GetBucketMax(
+                           ArrayLength(time) - 1)),
+                         nullptr, nullptr, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(cx, ret, "histogram_type",
+                         INT_TO_JSVAL(nsITelemetry::HISTOGRAM_EXPONENTIAL),
+                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+    return nullptr;
+  }
+  // TODO: calculate "sum", "log_sum", and "log_sum_squares"
+  if (!JS_DefineProperty(cx, ret, "sum", INT_TO_JSVAL(0),
+                         nullptr, nullptr, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(cx, ret, "log_sum", DOUBLE_TO_JSVAL(0.0),
+                         nullptr, nullptr, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(cx, ret, "log_sum_squares", DOUBLE_TO_JSVAL(0.0),
+                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+    return nullptr;
+  }
+
+  JS::RootedObject ranges(
+    cx, JS_NewArrayObject(cx, ArrayLength(time) + 1, nullptr));
+  JS::RootedObject counts(
+    cx, JS_NewArrayObject(cx, ArrayLength(time) + 1, nullptr));
+  if (!ranges || !counts) {
+    return nullptr;
+  }
+  /* In a Chromium-style histogram, the first bucket is an "under" bucket
+     that represents all values below the histogram's range. */
+  JS::RootedValue underRange(cx, INT_TO_JSVAL(time.GetBucketMin(0)));
+  JS::RootedValue underCount(cx, INT_TO_JSVAL(0));
+  if (!JS_SetElement(cx, ranges, 0, &underRange) ||
+      !JS_SetElement(cx, counts, 0, &underCount)) {
+    return nullptr;
+  }
+  for (size_t i = 0; i < ArrayLength(time); i++) {
+    JS::RootedValue range(cx, UINT_TO_JSVAL(time.GetBucketMax(i)));
+    JS::RootedValue count(cx, UINT_TO_JSVAL(time[i]));
+    if (!JS_SetElement(cx, ranges, i + 1, &range) ||
+        !JS_SetElement(cx, counts, i + 1, &count)) {
+      return nullptr;
+    }
+  }
+  if (!JS_DefineProperty(cx, ret, "ranges", OBJECT_TO_JSVAL(ranges),
+                         nullptr, nullptr, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(cx, ret, "counts", OBJECT_TO_JSVAL(counts),
+                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+    return nullptr;
+  }
+  return ret;
+}
+
+static JSObject*
+CreateJSHangHistogram(JSContext* cx, const Telemetry::HangHistogram& hang)
+{
+  JS::RootedObject ret(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+  if (!ret) {
+    return nullptr;
+  }
+
+  const Telemetry::HangHistogram::Stack& hangStack = hang.GetStack();
+  JS::RootedObject stack(cx,
+    JS_NewArrayObject(cx, hangStack.length(), nullptr));
+  if (!ret) {
+    return nullptr;
+  }
+  for (size_t i = 0; i < hangStack.length(); i++) {
+    JS::RootedString string(cx, JS_NewStringCopyZ(cx, hangStack[i]));
+    JS::RootedValue frame(cx, STRING_TO_JSVAL(string));
+    if (!JS_SetElement(cx, stack, i, &frame)) {
+      return nullptr;
+    }
+  }
+
+  JS::RootedObject time(cx, CreateJSTimeHistogram(cx, hang));
+  if (!time ||
+      !JS_DefineProperty(cx, ret, "stack", OBJECT_TO_JSVAL(stack),
+                         nullptr, nullptr, JSPROP_ENUMERATE) ||
+      !JS_DefineProperty(cx, ret, "histogram", OBJECT_TO_JSVAL(time),
+                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+    return nullptr;
+  }
+  return ret;
+}
+
+static JSObject*
+CreateJSThreadHangStats(JSContext* cx, const Telemetry::ThreadHangStats& thread)
+{
+  JS::RootedObject ret(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+  if (!ret) {
+    return nullptr;
+  }
+  JS::RootedString name(cx, JS_NewStringCopyZ(cx, thread.GetName()));
+  if (!name ||
+      !JS_DefineProperty(cx, ret, "name", STRING_TO_JSVAL(name),
+                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+    return nullptr;
+  }
+
+  JS::RootedObject activity(cx, CreateJSTimeHistogram(cx, thread.mActivity));
+  if (!activity ||
+      !JS_DefineProperty(cx, ret, "activity", OBJECT_TO_JSVAL(activity),
+                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+    return nullptr;
+  }
+
+  JS::RootedObject hangs(cx, JS_NewArrayObject(cx, 0, nullptr));
+  if (!hangs) {
+    return nullptr;
+  }
+  for (size_t i = 0; i < thread.mHangs.length(); i++) {
+    JS::RootedObject obj(cx, CreateJSHangHistogram(cx, thread.mHangs[i]));
+    JS::RootedValue hang(cx, OBJECT_TO_JSVAL(obj));
+    if (!JS_SetElement(cx, hangs, i, &hang)) {
+      return nullptr;
+    }
+  }
+  if (!JS_DefineProperty(cx, ret, "hangs", OBJECT_TO_JSVAL(hangs),
+                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+    return nullptr;
+  }
+  return ret;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::GetThreadHangStats(JSContext* cx, JS::Value* ret)
+{
+  JS::RootedObject retObj(cx, JS_NewArrayObject(cx, 0, nullptr));
+  if (!retObj) {
+    return NS_ERROR_FAILURE;
+  }
+  size_t threadIndex = 0;
+
+  /* First add active threads; we need to hold |iter| (and its lock)
+     throughout this method to avoid a race condition where a thread can
+     be recorded twice if the thread is destroyed while this method is
+     running */
+  BackgroundHangMonitor::ThreadHangStatsIterator iter;
+  for (Telemetry::ThreadHangStats* histogram = iter.GetNext();
+       histogram; histogram = iter.GetNext()) {
+    JS::RootedObject obj(cx,
+      CreateJSThreadHangStats(cx, *histogram));
+    JS::RootedValue thread(cx, OBJECT_TO_JSVAL(obj));
+    if (!JS_SetElement(cx, retObj, threadIndex++, &thread)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // Add saved threads next
+  MutexAutoLock autoLock(mThreadHangStatsMutex);
+  for (size_t i = 0; i < mThreadHangStats.length(); i++) {
+    JS::RootedObject obj(cx,
+      CreateJSThreadHangStats(cx, mThreadHangStats[i]));
+    JS::RootedValue thread(cx, OBJECT_TO_JSVAL(obj));
+    if (!JS_SetElement(cx, retObj, threadIndex++, &thread)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  *ret = OBJECT_TO_JSVAL(retObj);
+  return NS_OK;
 }
 
 void
