@@ -155,6 +155,11 @@ function run_test() {
 };
 '''
 
+# A test for failure to load a test due to a syntax error
+LOAD_ERROR_SYNTAX_ERROR = '''
+function run_test(
+'''
+
 class XPCShellTestsTests(unittest.TestCase):
     """
     Yes, these are unit tests for a unit test harness.
@@ -655,6 +660,22 @@ tail =
         self.assertInLog("test_error.js")
         self.assertInLog("obj.noSuchFunction is not a function")
         self.assertInLog("run_test@")
+        self.assertNotInLog("TEST-PASS")
+
+    def testDoReportSyntaxError(self):
+        """
+        Check that attempting to load a test file containing a syntax error
+        generates details of the error in the log
+        """
+        self.writeFile("test_error.js", LOAD_ERROR_SYNTAX_ERROR)
+        self.writeManifest(["test_error.js"])
+
+        self.assertTestResult(False)
+        self.assertInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog("test_error.js")
+        self.assertInLog("test_error.js contains SyntaxError")
+        self.assertInLog("Diagnostic: SyntaxError: missing formal parameter at")
+        self.assertInLog("test_error.js:3")
         self.assertNotInLog("TEST-PASS")
 
 if __name__ == "__main__":
