@@ -89,6 +89,7 @@ public class GLController {
     private EGLDisplay mEGLDisplay;
     private EGLConfig mEGLConfig;
     private EGLPreloadingThread mEGLPreloadingThread;
+    private EGLSurface mEGLSurfaceForCompositor;
 
     private static final int LOCAL_EGL_OPENGL_ES2_BIT = 4;
 
@@ -128,6 +129,11 @@ public class GLController {
         Log.w(LOGTAG, "GLController::serverSurfaceDestroyed() with mCompositorCreated=" + mCompositorCreated);
 
         mServerSurfaceValid = false;
+
+        if (mEGLSurfaceForCompositor != null) {
+          mEGL.eglDestroySurface(mEGLDisplay, mEGLSurfaceForCompositor);
+          mEGLSurfaceForCompositor = null;
+        }
 
         // We need to coordinate with Gecko when pausing composition, to ensure
         // that Gecko never executes a draw event while the compositor is paused.
@@ -174,6 +180,10 @@ public class GLController {
             // we can handle that gracefully (i.e. the compositor will remain paused).
             resumeCompositor(mWidth, mHeight);
             Log.w(LOGTAG, "done GLController::updateCompositor with compositor resume");
+            return;
+        }
+
+        if (!AttemptPreallocateEGLSurfaceForCompositor()) {
             return;
         }
 
@@ -286,10 +296,24 @@ public class GLController {
         throw new GLControllerException("No suitable EGL configuration found");
     }
 
+    private synchronized boolean AttemptPreallocateEGLSurfaceForCompositor() {
+        if (mEGLSurfaceForCompositor == null) {
+            initEGL();
+            try {
+                mEGLSurfaceForCompositor = mEGL.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, mView.getNativeWindow(), null);
+            } catch (Exception e) {
+                Log.e(LOGTAG, "eglCreateWindowSurface threw", e);
+            }
+        }
+        return mEGLSurfaceForCompositor != null;
+    }
+
     @WrapElementForJNI(allowMultithread = true, stubName = "CreateEGLSurfaceForCompositorWrapper")
-    private EGLSurface createEGLSurfaceForCompositor() {
-        initEGL();
-        return mEGL.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, mView.getNativeWindow(), null);
+    private synchronized EGLSurface createEGLSurfaceForCompositor() {
+        AttemptPreallocateEGLSurfaceForCompositor();
+        EGLSurface result = mEGLSurfaceForCompositor;
+        mEGLSurfaceForCompositor = null;
+        return result;
     }
 
     private String getEGLError() {
