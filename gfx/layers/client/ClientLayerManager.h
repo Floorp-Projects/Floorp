@@ -79,6 +79,7 @@ public:
   }
 
   virtual void FlushRendering() MOZ_OVERRIDE;
+  void SendInvalidRegion(const nsIntRegion& aRegion);
 
   virtual bool NeedsWidgetInvalidation() MOZ_OVERRIDE { return false; }
 
