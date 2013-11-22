@@ -319,11 +319,15 @@ panelview toolbarbutton,
 #BMB_bookmarksPopup > menuitem {
   -moz-appearance: none;
   padding: 2px 6px;
-  background-color: hsla(210,4%,10%,0);
+  background-color: hsla(210,32%,93%,0);
+  background-clip: padding-box;
   border-radius: 2px;
   border: 1px solid;
-  border-color: hsla(210,4%,10%,0);
-  transition-property: background-color, border-color;
+  border-color: hsla(210,54%,20%,0) hsla(210,54%,20%,0) hsla(210,54%,20%,0);
+  box-shadow: 0 1px hsla(0,0%,100%,0) inset,
+              0 1px hsla(210,54%,20%,0),
+              0 0 2px hsla(210,54%,20%,0);
+  transition-property: background-color, border-color, box-shadow;
   transition-duration: 150ms;
 }
 
@@ -334,18 +338,27 @@ panelview toolbarbutton@buttonStateHover@,
 .customizationmode-button,
 #BMB_bookmarksPopup > menu@buttonStateHover@,
 #BMB_bookmarksPopup > menuitem@buttonStateHover@ {
-  background-color: hsla(210,4%,10%,.08);
-  border-color: hsla(210,4%,10%,.1);
+  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
+  box-shadow: 0 1px hsla(0,0%,100%,.3) inset,
+              0 1px hsla(210,54%,20%,.03),
+              0 0 2px hsla(210,54%,20%,.1);
 }
 
 panelview toolbarbutton@buttonStateActive@,
-.customizationmode-button@buttonStateActive@,
+.customizationmode-button:not([disabled]):hover:active,
 #widget-overflow-list > toolbarbutton@buttonStateActive@,
 #BMB_bookmarksPopup > menu@buttonStateActive@,
 #BMB_bookmarksPopup > menuitem@buttonStateActive@ {
-  background-color: hsla(210,4%,10%,.15);
-  border-color: hsla(210,4%,10%,.15);
-  box-shadow: 0 1px 0 0 hsla(210,4%,10%,.05) inset;
+  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
+  background-color: hsla(210,54%,20%,.15);
+  border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
+  box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
+              0 0 1px hsla(210,54%,20%,.2) inset,
+              0 1px 0 hsla(210,54%,20%,0),
+              0 0 2px hsla(210,54%,20%,0);
+  text-shadow: none;
+  transition: none;
 }
 
 #BMB_bookmarksPopup > menu,

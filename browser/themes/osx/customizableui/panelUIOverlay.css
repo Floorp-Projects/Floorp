@@ -4,10 +4,6 @@
 
 %include ../../shared/customizableui/panelUIOverlay.inc.css
 
-.panel-subviews {
-  background-color: #f5f5f5;
-}
-
 @media (min-resolution: 2dppx) {
   #customization-palette toolbarbutton > .toolbarbutton-icon,
   #PanelUI-contents toolbarbutton > .toolbarbutton-icon {
