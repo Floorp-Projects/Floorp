@@ -34,16 +34,6 @@ static const char STRICT_THREE[] =
 static const char * const CALL_CODES[] =
     { "f()", "f(0)", "f(0, 1)", "f(0, 1, 2)", "f(0, 1, 2, 3)", "f(0, 1, 2, 3, 4)" };
 
-static const size_t MAX_ELEMS = 6;
-
-static void
-ClearElements(Value elems[MAX_ELEMS])
-{
-    for (size_t i = 0; i < MAX_ELEMS - 1; i++)
-        elems[i] = NullValue();
-    elems[MAX_ELEMS - 1] = Int32Value(42);
-}
-
 BEGIN_TEST(testArgumentsObject)
 {
     return ExhaustiveTest<0>(NORMAL_ZERO) &&
@@ -84,6 +74,8 @@ BEGIN_TEST(testArgumentsObject)
            ExhaustiveTest<5>(STRICT_THREE);
 }
 
+static const size_t MAX_ELEMS = 6;
+
 template<size_t ArgCount> bool
 ExhaustiveTest(const char funcode[])
 {
@@ -108,5 +100,13 @@ ExhaustiveTest(const char funcode[])
     }
 
     return true;
+}
+
+static void
+ClearElements(Value elems[MAX_ELEMS])
+{
+    for (size_t i = 0; i < MAX_ELEMS - 1; i++)
+        elems[i] = NullValue();
+    elems[MAX_ELEMS - 1] = Int32Value(42);
 }
 END_TEST(testArgumentsObject)

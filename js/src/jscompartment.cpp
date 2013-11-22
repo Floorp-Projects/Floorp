@@ -727,7 +727,7 @@ CreateLazyScriptsForCompartment(JSContext *cx)
 }
 
 bool
-JSCompartment::setDebugModeFromC(JSContext *cx, bool b, AutoDebugModeGC &dmgc)
+JSCompartment::setDebugModeFromC(JSContext *cx, bool b, AutoDebugModeInvalidation &invalidate)
 {
     bool enabledBefore = debugMode();
     bool enabledAfter = (debugModeBits & ~unsigned(DebugFromC)) || b;
@@ -756,7 +756,7 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b, AutoDebugModeGC &dmgc)
     debugModeBits = (debugModeBits & ~unsigned(DebugFromC)) | (b ? DebugFromC : 0);
     JS_ASSERT(debugMode() == enabledAfter);
     if (enabledBefore != enabledAfter) {
-        updateForDebugMode(cx->runtime()->defaultFreeOp(), dmgc);
+        updateForDebugMode(cx->runtime()->defaultFreeOp(), invalidate);
         if (!enabledAfter)
             DebugScopes::onCompartmentLeaveDebugMode(this);
     }
@@ -764,7 +764,7 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b, AutoDebugModeGC &dmgc)
 }
 
 void
-JSCompartment::updateForDebugMode(FreeOp *fop, AutoDebugModeGC &dmgc)
+JSCompartment::updateForDebugMode(FreeOp *fop, AutoDebugModeInvalidation &invalidate)
 {
     JSRuntime *rt = runtimeFromMainThread();
 
@@ -774,38 +774,31 @@ JSCompartment::updateForDebugMode(FreeOp *fop, AutoDebugModeGC &dmgc)
     }
 
 #ifdef JS_ION
+    MOZ_ASSERT(invalidate.isFor(this));
     JS_ASSERT_IF(debugMode(), !hasScriptsOnStack());
 
-    // When we change a compartment's debug mode, whether we're turning it
-    // on or off, we must always throw away all analyses: debug mode
-    // affects various aspects of the analysis, which then get baked into
-    // SSA results, which affects code generation in complicated ways. We
-    // must also throw away all JIT code, as its soundness depends on the
-    // analyses.
+    // Invalidate all JIT code since debug mode invalidates assumptions made
+    // by the JIT.
     //
-    // It suffices to do a garbage collection cycle or to finish the
-    // ongoing GC cycle. The necessary cleanup happens in
-    // JSCompartment::sweep.
-    //
-    // dmgc makes sure we can't forget to GC, but it is also important not
-    // to run any scripts in this compartment until the dmgc is destroyed.
-    // That is the caller's responsibility.
-    if (!rt->isHeapBusy())
-        dmgc.scheduleGC(zone());
+    // The AutoDebugModeInvalidation argument makes sure we can't forget to
+    // invalidate, but it is also important not to run any scripts in this
+    // compartment until the invalidate is destroyed.  That is the caller's
+    // responsibility.
+    invalidate.scheduleInvalidation(debugMode());
 #endif
 }
 
 bool
 JSCompartment::addDebuggee(JSContext *cx, js::GlobalObject *global)
 {
-    AutoDebugModeGC dmgc(cx->runtime());
-    return addDebuggee(cx, global, dmgc);
+    AutoDebugModeInvalidation invalidate(this);
+    return addDebuggee(cx, global, invalidate);
 }
 
 bool
 JSCompartment::addDebuggee(JSContext *cx,
                            GlobalObject *globalArg,
-                           AutoDebugModeGC &dmgc)
+                           AutoDebugModeInvalidation &invalidate)
 {
     Rooted<GlobalObject*> global(cx, globalArg);
 
@@ -817,9 +810,8 @@ JSCompartment::addDebuggee(JSContext *cx,
         return false;
     }
     debugModeBits |= DebugFromJS;
-    if (!wasEnabled) {
-        updateForDebugMode(cx->runtime()->defaultFreeOp(), dmgc);
-    }
+    if (!wasEnabled)
+        updateForDebugMode(cx->runtime()->defaultFreeOp(), invalidate);
     return true;
 }
 
@@ -828,14 +820,14 @@ JSCompartment::removeDebuggee(FreeOp *fop,
                               js::GlobalObject *global,
                               js::GlobalObjectSet::Enum *debuggeesEnum)
 {
-    AutoDebugModeGC dmgc(fop->runtime());
-    return removeDebuggee(fop, global, dmgc, debuggeesEnum);
+    AutoDebugModeInvalidation invalidate(this);
+    return removeDebuggee(fop, global, invalidate, debuggeesEnum);
 }
 
 void
 JSCompartment::removeDebuggee(FreeOp *fop,
                               js::GlobalObject *global,
-                              AutoDebugModeGC &dmgc,
+                              AutoDebugModeInvalidation &invalidate,
                               js::GlobalObjectSet::Enum *debuggeesEnum)
 {
     bool wasEnabled = debugMode();
@@ -849,7 +841,7 @@ JSCompartment::removeDebuggee(FreeOp *fop,
         debugModeBits &= ~DebugFromJS;
         if (wasEnabled && !debugMode()) {
             DebugScopes::onCompartmentLeaveDebugMode(this);
-            updateForDebugMode(fop, dmgc);
+            updateForDebugMode(fop, invalidate);
         }
     }
 }

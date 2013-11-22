@@ -154,7 +154,7 @@ class GlobalObject : public JSObject
   public:
     Value getConstructor(JSProtoKey key) const {
         JS_ASSERT(key <= JSProto_LIMIT);
-        return getSlot(APPLICATION_SLOTS + key);
+        return getSlotRefForCompilation(APPLICATION_SLOTS + key);
     }
 
     void setConstructor(JSProtoKey key, const Value &v) {
@@ -164,7 +164,7 @@ class GlobalObject : public JSObject
 
     Value getPrototype(JSProtoKey key) const {
         JS_ASSERT(key <= JSProto_LIMIT);
-        return getSlot(APPLICATION_SLOTS + JSProto_LIMIT + key);
+        return getSlotRefForCompilation(APPLICATION_SLOTS + JSProto_LIMIT + key);
     }
 
     void setPrototype(JSProtoKey key, const Value &value) {
@@ -469,6 +469,18 @@ class GlobalObject : public JSObject
         return &self->getSlot(slot).toObject();
     }
 
+    const HeapSlot &getSlotRefForCompilation(uint32_t slot) const {
+        // This method should only be used for slots that are either eagerly
+        // initialized on creation of the global or only change under the
+        // compilation lock. Note that the dynamic slots pointer for global
+        // objects can only change under the compilation lock.
+        JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(getClass()));
+        uint32_t fixed = numFixedSlotsForCompilation();
+        if (slot < fixed)
+            return fixedSlots()[slot];
+        return slots[slot - fixed];
+    }
+
   public:
     JSObject *getOrCreateIteratorPrototype(JSContext *cx) {
         return getOrCreateObject(cx, APPLICATION_SLOTS + JSProto_LIMIT + JSProto_Iterator,
@@ -519,8 +531,8 @@ class GlobalObject : public JSObject
     }
 
     JSObject *intrinsicsHolder() {
-        JS_ASSERT(!getSlotRef(INTRINSICS).isUndefined());
-        return &getSlotRef(INTRINSICS).toObject();
+        JS_ASSERT(!getSlotRefForCompilation(INTRINSICS).isUndefined());
+        return &getSlotRefForCompilation(INTRINSICS).toObject();
     }
 
     bool maybeGetIntrinsicValue(PropertyName *name, Value *vp) {
@@ -557,8 +569,8 @@ class GlobalObject : public JSObject
                                unsigned nargs, MutableHandleValue funVal);
 
     RegExpStatics *getRegExpStatics() const {
-        JSObject &resObj = getSlot(REGEXP_STATICS).toObject();
-        return static_cast<RegExpStatics *>(resObj.getPrivate());
+        JSObject &resObj = getSlotRefForCompilation(REGEXP_STATICS).toObject();
+        return static_cast<RegExpStatics *>(resObj.getPrivate(/* nfixed = */ 1));
     }
 
     JSObject *getThrowTypeError() const {
@@ -585,9 +597,9 @@ class GlobalObject : public JSObject
     // in which |obj| was created, if no prior warning was given.
     static bool warnOnceAboutWatch(JSContext *cx, HandleObject obj);
 
-    const Value &getOriginalEval() const {
-        JS_ASSERT(getSlot(EVAL).isObject());
-        return getSlot(EVAL);
+    Value getOriginalEval() const {
+        JS_ASSERT(getSlotRefForCompilation(EVAL).isObject());
+        return getSlotRefForCompilation(EVAL);
     }
 
     // Implemented in jsiter.cpp.
@@ -772,7 +784,7 @@ template<>
 inline bool
 JSObject::is<js::GlobalObject>() const
 {
-    return !!(js::GetObjectClass(const_cast<JSObject*>(this))->flags & JSCLASS_IS_GLOBAL);
+    return !!(getClass()->flags & JSCLASS_IS_GLOBAL);
 }
 
 #endif /* vm_GlobalObject_h */

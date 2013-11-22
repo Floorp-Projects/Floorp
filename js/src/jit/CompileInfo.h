@@ -15,7 +15,7 @@ namespace js {
 namespace jit {
 
 inline unsigned
-StartArgSlot(JSScript *script, JSFunction *fun)
+StartArgSlot(JSScript *script)
 {
     // Reserved slots:
     // Slot 0: Scope chain.
@@ -37,7 +37,7 @@ CountArgSlots(JSScript *script, JSFunction *fun)
     // Slot x + n: Argument n.
 
     // Note: when updating this, please also update the assert in SnapshotWriter::startFrame
-    return StartArgSlot(script, fun) + (fun ? fun->nargs + 1 : 0);
+    return StartArgSlot(script) + (fun ? fun->nargs + 1 : 0);
 }
 
 // Contains information about the compilation source for IR being generated.
@@ -58,7 +58,7 @@ class CompileInfo
             JS_ASSERT(fun_->isTenured());
         }
 
-        nimplicit_ = StartArgSlot(script, fun)              /* scope chain and argument obj */
+        nimplicit_ = StartArgSlot(script)                   /* scope chain and argument obj */
                    + (fun ? 1 : 0);                         /* this */
         nargs_ = fun ? fun->nargs : 0;
         nlocals_ = script->nfixed;
@@ -209,7 +209,7 @@ class CompileInfo
 
     uint32_t startArgSlot() const {
         JS_ASSERT(script());
-        return StartArgSlot(script(), fun());
+        return StartArgSlot(script());
     }
     uint32_t endArgSlot() const {
         JS_ASSERT(script());

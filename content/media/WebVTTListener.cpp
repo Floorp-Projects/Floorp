@@ -162,7 +162,7 @@ WebVTTListener::OnCue(const JS::Value &aCue, JSContext* aCx)
   }
 
   TextTrackCue* cue;
-  nsresult rv = UNWRAP_OBJECT(VTTCue, aCx, &aCue.toObject(), cue);
+  nsresult rv = UNWRAP_OBJECT(VTTCue, &aCue.toObject(), cue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   cue->SetTrackElement(mElement);
@@ -180,8 +180,7 @@ WebVTTListener::OnRegion(const JS::Value &aRegion, JSContext* aCx)
   }
 
   TextTrackRegion* region;
-  nsresult rv = UNWRAP_OBJECT(VTTRegion, aCx, &aRegion.toObject(),
-                              region);
+  nsresult rv = UNWRAP_OBJECT(VTTRegion, &aRegion.toObject(), region);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mElement->mTrack->AddRegion(*region);

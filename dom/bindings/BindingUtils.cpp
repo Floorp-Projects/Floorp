@@ -199,8 +199,7 @@ ErrorResult::ReportJSExceptionFromJSImplementation(JSContext* aCx)
              "Why didn't you tell us you planned to handle JS exceptions?");
 
   dom::DOMError* domError;
-  nsresult rv = UNWRAP_OBJECT(DOMError, aCx, &mJSException.toObject(),
-                              domError);
+  nsresult rv = UNWRAP_OBJECT(DOMError, &mJSException.toObject(), domError);
   if (NS_FAILED(rv)) {
     // Unwrapping really shouldn't fail here, if mExceptionHandling is set to
     // eRethrowContentExceptions then the CallSetup destructor only stores an
@@ -1790,13 +1789,13 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
   }
 
   nsObjectLoadingContent* htmlobject;
-  nsresult rv = UNWRAP_OBJECT(HTMLObjectElement, aCx, aObj, htmlobject);
+  nsresult rv = UNWRAP_OBJECT(HTMLObjectElement, aObj, htmlobject);
   if (NS_FAILED(rv)) {
     rv = UnwrapObject<prototypes::id::HTMLEmbedElement,
-                      HTMLSharedObjectElement>(aCx, aObj, htmlobject);
+                      HTMLSharedObjectElement>(aObj, htmlobject);
     if (NS_FAILED(rv)) {
       rv = UnwrapObject<prototypes::id::HTMLAppletElement,
-                        HTMLSharedObjectElement>(aCx, aObj, htmlobject);
+                        HTMLSharedObjectElement>(aObj, htmlobject);
       if (NS_FAILED(rv)) {
         htmlobject = nullptr;
       }

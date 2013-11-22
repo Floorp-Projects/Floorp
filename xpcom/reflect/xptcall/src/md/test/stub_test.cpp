@@ -168,8 +168,8 @@ PrepareAndDispatch(baz* self, uint32_t methodIndex, uint32_t* args)
 #define STUB_ENTRY(n) \
 nsresult baz::callme##n() \
 { \
-  register void* method = PrepareAndDispatch; \
-  register nsresult result; \
+  void* method = PrepareAndDispatch; \
+  nsresult result; \
   __asm__ __volatile__( \
     "leal   0x0c(%%ebp), %%ecx\n\t"    /* args */ \
     "pushl  %%ecx\n\t" \

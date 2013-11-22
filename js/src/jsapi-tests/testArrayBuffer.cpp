@@ -6,12 +6,12 @@
 
 #include "jsapi-tests/tests.h"
 
-#define NUM_TEST_BUFFERS 2
-#define MAGIC_VALUE_1 3
-#define MAGIC_VALUE_2 17
-
 BEGIN_TEST(testArrayBuffer_bug720949_steal)
 {
+    static const unsigned NUM_TEST_BUFFERS  = 2;
+    static const unsigned MAGIC_VALUE_1 = 3;
+    static const unsigned MAGIC_VALUE_2 = 17;
+
     JS::RootedObject buf_len1(cx), buf_len200(cx);
     JS::RootedObject tarray_len1(cx), tarray_len200(cx);
 
@@ -92,12 +92,6 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
 }
 END_TEST(testArrayBuffer_bug720949_steal)
 
-static void GC(JSContext *cx)
-{
-    JS_GC(JS_GetRuntime(cx));
-    JS_GC(JS_GetRuntime(cx)); // Trigger another to wait for background finalization to end
-}
-
 // Varying number of views of a buffer, to test the neutering weak pointers
 BEGIN_TEST(testArrayBuffer_bug720949_viewList)
 {
@@ -160,6 +154,12 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
     }
 
     return true;
+}
+
+static void GC(JSContext *cx)
+{
+    JS_GC(JS_GetRuntime(cx));
+    JS_GC(JS_GetRuntime(cx)); // Trigger another to wait for background finalization to end
 }
 
 bool isNeutered(JS::HandleObject obj) {

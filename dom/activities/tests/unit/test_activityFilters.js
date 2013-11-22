@@ -150,4 +150,8 @@ function run_test() {
                                                {a: { required: true, pattern: 'foobar'}}));
   do_check_true(ActivitiesServiceFilter.match({a: 'FoOBaR'},
                                               {a: { required: true, pattern: 'foobar', patternFlags: 'i'}}));
+
+  // Bug 923274
+  do_check_true(ActivitiesServiceFilter.match({a:[]}, {a:'a'}));
+  do_check_false(ActivitiesServiceFilter.match({a:[]}, {a: { required: true, value: 'a'}}));
 }

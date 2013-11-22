@@ -457,11 +457,8 @@ IonBuilder::inlineArrayConcat(CallInfo &callInfo)
     if (!baseThisType)
         return InliningStatus_NotInlined;
     types::TypeObjectKey *thisType = types::TypeObjectKey::get(baseThisType);
-    if (thisType->unknownProperties() ||
-        &thisType->proto().toObject()->global() != &script()->global())
-    {
+    if (thisType->unknownProperties())
         return InliningStatus_NotInlined;
-    }
 
     // Don't inline if 'this' is packed and the argument may not be packed
     // (the result array will reuse the 'this' type).

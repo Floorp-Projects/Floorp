@@ -224,6 +224,16 @@ class XPCShellTestThread(Thread):
                     env=env, cwd=cwd)
         return proc
 
+    def checkForCrashes(self,
+                        dump_directory,
+                        symbols_path,
+                        test_name=None):
+        """
+          Simple wrapper to check for crashes.
+          On a remote system, this is more complex and we need to overload this function.
+        """
+        return mozcrash.check_for_crashes(dump_directory, symbols_path, test_name=test_name)
+
     def logCommand(self, name, completeCmd, testdir):
         self.log.info("TEST-INFO | %s | full command: %r" % (name, completeCmd))
         self.log.info("TEST-INFO | %s | current directory: %r" % (name, testdir))
@@ -658,7 +668,7 @@ class XPCShellTestThread(Thread):
                     self.todoCount = 1
                     self.xunit_result["todo"] = True
 
-            if mozcrash.check_for_crashes(self.tempDir, self.symbolsPath, test_name=name):
+            if self.checkForCrashes(self.tempDir, self.symbolsPath, test_name=name):
                 if self.retry:
                     self.clean_temp_dirs(name, stdout)
                     return
@@ -855,6 +865,15 @@ class XPCShellTests(object):
                 self.env["LD_LIBRARY_PATH"] = self.xrePath
             else:
                 self.env["LD_LIBRARY_PATH"] = ":".join([self.xrePath, self.env["LD_LIBRARY_PATH"]])
+
+        if "asan" in self.mozInfo and self.mozInfo["asan"]:
+            # ASan symbolizer support
+            llvmsym = os.path.join(self.xrePath, "llvm-symbolizer")
+            if os.path.isfile(llvmsym):
+                self.env["ASAN_SYMBOLIZER_PATH"] = llvmsym
+                self.log.info("INFO | runxpcshelltests.py | ASan using symbolizer at %s", llvmsym)
+            else:
+                self.log.info("INFO | runxpcshelltests.py | ASan symbolizer binary not found: %s", llvmsym)
 
         return self.env
 
@@ -1241,7 +1260,6 @@ class XPCShellTests(object):
 
         self.setAbsPath()
         self.buildXpcsRunArgs()
-        self.buildEnvironment()
 
         self.event = Event()
 
@@ -1253,6 +1271,9 @@ class XPCShellTests(object):
                 return False
             self.mozInfo = parse_json(open(mozInfoFile).read())
         mozinfo.update(self.mozInfo)
+
+        # buildEnvironment() needs mozInfo, so we call it after mozInfo is initialized.
+        self.buildEnvironment()
 
         # The appDirKey is a optional entry in either the default or individual test
         # sections that defines a relative application directory for test runs. If

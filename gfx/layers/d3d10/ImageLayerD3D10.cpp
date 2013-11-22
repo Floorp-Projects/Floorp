@@ -357,10 +357,10 @@ void ImageLayerD3D10::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
   D3D10_SUBRESOURCE_DATA dataY;
   D3D10_SUBRESOURCE_DATA dataCb;
   D3D10_SUBRESOURCE_DATA dataCr;
-  CD3D10_TEXTURE2D_DESC descY(DXGI_FORMAT_R8_UNORM,
+  CD3D10_TEXTURE2D_DESC descY(DXGI_FORMAT_A8_UNORM,
                               data->mYSize.width,
                               data->mYSize.height, 1, 1);
-  CD3D10_TEXTURE2D_DESC descCbCr(DXGI_FORMAT_R8_UNORM,
+  CD3D10_TEXTURE2D_DESC descCbCr(DXGI_FORMAT_A8_UNORM,
                                  data->mCbCrSize.width,
                                  data->mCbCrSize.height, 1, 1);
 
