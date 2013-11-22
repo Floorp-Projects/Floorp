@@ -16,7 +16,7 @@ interface nsINetworkStatsServiceProxyCallback : nsISupports
   void notify(in boolean aResult, in jsval aMessage);
 };
 
-[scriptable, uuid(facef032-3fd9-4509-a396-83d94c1a11ae)]
+[scriptable, uuid(705c01d6-8574-464c-8ec9-ac1522a45546)]
 interface nsINetworkStatsServiceProxy : nsISupports
 {
   /*
@@ -26,6 +26,7 @@ interface nsINetworkStatsServiceProxy : nsISupports
    * @param aTimeStamp time stamp
    * @param aRxBytes received data amount
    * @param aTxBytes transmitted data amount
+   * @param aIsAccumulative is stats accumulative
    * @param aCallback an optional callback
    */
   void saveAppStats(in unsigned long aAppId,
@@ -33,5 +34,24 @@ interface nsINetworkStatsServiceProxy : nsISupports
                     in unsigned long long aTimeStamp,
                     in unsigned long long aRxBytes,
                     in unsigned long long aTxBytes,
+                    in boolean aIsAccumulative,
          [optional] in nsINetworkStatsServiceProxyCallback aCallback);
+
+  /*
+   * An interface used to record per-system service traffic data.
+   * @param aServiceType system service type
+   * @param aNetworkInterface network
+   * @param aTimeStamp time stamp
+   * @param aRxBytes received data amount
+   * @param aTxBytes transmitted data amount
+   * @param aIsAccumulative is stats accumulative
+   * @param aCallback an optional callback
+   */
+  void saveServiceStats(in string aServiceType,
+                        in nsINetworkInterface aNetwork,
+                        in unsigned long long aTimeStamp,
+                        in unsigned long long aRxBytes,
+                        in unsigned long long aTxBytes,
+                        in boolean aIsAccumulative,
+             [optional] in nsINetworkStatsServiceProxyCallback aCallback);
 };
