@@ -37,6 +37,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsNumberControlFrame::nsNumberControlFrame(nsStyleContext* aContext)
   : nsContainerFrame(aContext)
+  , mHandlingInputEvent(false)
 {
 }
 
@@ -286,6 +287,18 @@ nsNumberControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
 void
 nsNumberControlFrame::UpdateForValueChange(const nsAString& aValue)
 {
+  if (mHandlingInputEvent) {
+    // We have been called while our HTMLInputElement is processing a DOM
+    // 'input' event targeted at our anonymous text control. Our
+    // HTMLInputElement has taken the value of our anon text control and
+    // called SetValueInternal on itself to keep its own value in sync. As a
+    // result SetValueInternal has called us. In this one case we do not want
+    // to update our anon text control, especially since aValue will be the
+    // sanitized value, and only the internal value should be sanitized (not
+    // the value shown to the user, and certainly we shouldn't change it as
+    // they type).
+    return;
+  }
   // We need to update the value of our anonymous text control here. Note that
   // this must be its value, and not its 'value' attribute (the default value),
   // since the default value is ignored once a user types into the text

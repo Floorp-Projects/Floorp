@@ -71,6 +71,15 @@ public:
    */
   void UpdateForValueChange(const nsAString& aValue);
 
+  /**
+   * Called to notify this frame that its HTMLInputElement is currently
+   * processing a DOM 'input' event.
+   */
+  void HandlingInputEvent(bool aHandlingEvent)
+  {
+    mHandlingInputEvent = aHandlingEvent;
+  }
+
   HTMLInputElement* GetAnonTextControl();
 
 private:
@@ -95,6 +104,7 @@ private:
   nsCOMPtr<nsIContent> mSpinBox;
   nsCOMPtr<nsIContent> mSpinUp;
   nsCOMPtr<nsIContent> mSpinDown;
+  bool mHandlingInputEvent;
 };
 
 #endif // nsNumberControlFrame_h__

@@ -3274,7 +3274,45 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
-  return nsGenericHTMLFormElementWithState::PreHandleEvent(aVisitor);
+  nsresult rv = nsGenericHTMLFormElementWithState::PreHandleEvent(aVisitor);
+
+  // We do this after calling the base class' PreHandleEvent so that
+  // nsIContent::PreHandleEvent doesn't reset any change we make to mCanHandle.
+  if (mType == NS_FORM_INPUT_NUMBER &&
+      aVisitor.mEvent->mFlags.mIsTrusted  &&
+      aVisitor.mEvent->originalTarget != this) {
+    // <input type=number> has an anonymous <input type=text> descendant. If
+    // 'input' or 'change' events are fired at that text control then we need
+    // to do some special handling here.
+    HTMLInputElement* textControl = nullptr;
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      textControl = numberControlFrame->GetAnonTextControl();
+    }
+    if (textControl && aVisitor.mEvent->originalTarget == textControl) {
+      if (aVisitor.mEvent->message == NS_FORM_INPUT) {
+        // Propogate the anon text control's new value to our HTMLInputElement:
+        numberControlFrame->HandlingInputEvent(true);
+        nsAutoString value;
+        textControl->GetValue(value);
+        SetValueInternal(value, false, true);
+        numberControlFrame->HandlingInputEvent(false);
+      }
+      else if (aVisitor.mEvent->message == NS_FORM_CHANGE) {
+        // We cancel the DOM 'change' event that is fired for any change to our
+        // anonymous text control since we fire our own 'change' events and
+        // content shouldn't be seeing two 'change' events. Besides that we
+        // (as a number) control have tighter restrictions on when our internal
+        // value changes than our anon text control does, so in some cases
+        // (if our text control's value doesn't parse as a number) we don't
+        // want to fire a 'change' event at all.
+        aVisitor.mCanHandle = false;
+      }
+    }
+  }
+
+  return rv;
 }
 
 void
