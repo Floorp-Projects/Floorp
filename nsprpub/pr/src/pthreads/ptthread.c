@@ -52,7 +52,6 @@ static struct _PT_Bookeeping
     PRInt32 system, user;       /* a count of the two different types */
     PRUintn this_many;          /* number of threads allowed for exit */
     pthread_key_t key;          /* thread private data key */
-    PRBool keyCreated;          /* whether 'key' should be deleted */
     PRThread *first, *last;     /* list of threads we know about */
 #if defined(_PR_DCETHREADS) || defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
     PRInt32 minPrio, maxPrio;   /* range of scheduling priorities */
@@ -980,10 +979,9 @@ void _PR_InitThreads(
      * nothing.
      */
     rv = _PT_PTHREAD_KEY_CREATE(&pt_book.key, _pt_thread_death);
-    if (0 != rv) PR_Abort();
-    pt_book.keyCreated = PR_TRUE;
+    PR_ASSERT(0 == rv);
     rv = pthread_setspecific(pt_book.key, thred);
-    if (0 != rv) PR_Abort();
+    PR_ASSERT(0 == rv);    
 }  /* _PR_InitThreads */
 
 #ifdef __GNUC__
@@ -1043,16 +1041,7 @@ void _PR_Fini(void)
     void *thred;
     int rv;
 
-    if (!_pr_initialized) {
-        /* Either NSPR was never successfully initialized or 
-         * PR_Cleanup has been called already. */
-        if (pt_book.keyCreated)
-        {
-            pthread_key_delete(pt_book.key);
-            pt_book.keyCreated = PR_FALSE;
-        }
-        return;
-    }
+    if (!_pr_initialized) return;
 
     _PT_PTHREAD_GETSPECIFIC(pt_book.key, thred);
     if (NULL != thred)
