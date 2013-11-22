@@ -846,9 +846,7 @@ jit::MergeTypes(MIRType *ptype, types::TemporaryTypeSet **ptypeSet,
     if (newTypeSet && newTypeSet->empty())
         return;
     if (newType != *ptype) {
-        if (IsFloatType(newType) && IsFloatType(*ptype)) {
-            *ptype = MIRType_Float32;
-        } else if (IsNumberType(newType) && IsNumberType(*ptype)) {
+        if (IsNumberType(newType) && IsNumberType(*ptype)) {
             *ptype = MIRType_Double;
         } else if (*ptype != MIRType_Value) {
             if (!*ptypeSet)
