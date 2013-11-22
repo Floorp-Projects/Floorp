@@ -1,0 +1,7 @@
+# .lldbinit file for debugging Mozilla
+
+# Mozilla's use of UNIFIED_SOURCES to include multiple source files into a
+# single compiled file breaks lldb breakpoint setting. This works around that.
+# See http://lldb.llvm.org/troubleshooting.html for more info.
+settings set target.inline-breakpoint-strategy always
+

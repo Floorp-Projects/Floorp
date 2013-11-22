@@ -50,10 +50,10 @@ GetStack(uint64_t *stack, uint64_t *stack_len, CrashRegisters *regs, char *buffe
     /* ASM version for win2k that doesn't support RtlCaptureContext */
     uint32_t vip, vsp, vbp;
     __asm {
-    Label:
+    MyLabel:
         mov [vbp], ebp;
         mov [vsp], esp;
-        mov eax, [Label];
+        mov eax, [MyLabel];
         mov [vip], eax;
     }
     regs->ip = vip;

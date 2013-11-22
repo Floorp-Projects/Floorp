@@ -125,6 +125,11 @@ protected:
     return mMethod.GetJSFunction();
   }
 
+  JSObject* GetCompiledMethodPreserveColor() const
+  {
+    return mMethod.GetJSFunctionPreserveColor();
+  }
+
   JS::Heap<nsXBLMaybeCompiled<nsXBLUncompiledMethod> > mMethod;
 };
 

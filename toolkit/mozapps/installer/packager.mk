@@ -558,6 +558,7 @@ NO_PKG_FILES += \
 	certutil* \
 	pk12util* \
 	OCSPStaplingServer* \
+	GenerateOCSPResponse* \
 	winEmbed.exe \
 	chrome/chrome.rdf \
 	chrome/app-chrome.manifest \

@@ -574,20 +574,23 @@ AudioManager::SetFmRadioAudioEnabled(bool aFmRadioAudioEnabled)
 
 NS_IMETHODIMP
 AudioManager::SetAudioChannelVolume(int32_t aChannel, int32_t aIndex) {
-  status_t status;
+  nsresult status;
 
   switch (aChannel) {
     case AUDIO_CHANNEL_CONTENT:
-      status = SetStreamVolumeIndex(AUDIO_STREAM_MUSIC, aIndex);
-      status += SetStreamVolumeIndex(AUDIO_STREAM_SYSTEM, aIndex);
       // sync FMRadio's volume with content channel.
       if (IsDeviceOn(AUDIO_DEVICE_OUT_FM)) {
-        status += SetStreamVolumeIndex(AUDIO_STREAM_FM, aIndex);
+        status = SetStreamVolumeIndex(AUDIO_STREAM_FM, aIndex);
+        NS_ENSURE_SUCCESS(status, status);
       }
+      status = SetStreamVolumeIndex(AUDIO_STREAM_MUSIC, aIndex);
+      NS_ENSURE_SUCCESS(status, status);
+      status = SetStreamVolumeIndex(AUDIO_STREAM_SYSTEM, aIndex);
       break;
     case AUDIO_CHANNEL_NOTIFICATION:
       status = SetStreamVolumeIndex(AUDIO_STREAM_NOTIFICATION, aIndex);
-      status += SetStreamVolumeIndex(AUDIO_STREAM_RING, aIndex);
+      NS_ENSURE_SUCCESS(status, status);
+      status = SetStreamVolumeIndex(AUDIO_STREAM_RING, aIndex);
       break;
     case AUDIO_CHANNEL_ALARM:
       status = SetStreamVolumeIndex(AUDIO_STREAM_ALARM, aIndex);
@@ -599,7 +602,7 @@ AudioManager::SetAudioChannelVolume(int32_t aChannel, int32_t aIndex) {
       return NS_ERROR_INVALID_ARG;
   }
 
-  return status ? NS_ERROR_FAILURE : NS_OK;
+  return status;
 }
 
 NS_IMETHODIMP
@@ -664,17 +667,19 @@ AudioManager::GetMaxAudioChannelVolume(int32_t aChannel, int32_t* aMaxIndex) {
    return NS_OK;
 }
 
-status_t
+nsresult
 AudioManager::SetStreamVolumeIndex(int32_t aStream, int32_t aIndex) {
   if (aIndex < 0 || aIndex > sMaxStreamVolumeTbl[aStream]) {
-    return BAD_VALUE;
+    return NS_ERROR_INVALID_ARG;
   }
 
   mCurrentStreamVolumeTbl[aStream] = aIndex;
+  status_t status;
 #if ANDROID_VERSION < 17
-  return AudioSystem::setStreamVolumeIndex(
-           static_cast<audio_stream_type_t>(aStream),
-           aIndex);
+   status = AudioSystem::setStreamVolumeIndex(
+              static_cast<audio_stream_type_t>(aStream),
+              aIndex);
+   return status ? NS_ERROR_FAILURE : NS_OK;
 #else
   int device = 0;
 
@@ -685,16 +690,21 @@ AudioManager::SetStreamVolumeIndex(int32_t aStream, int32_t aIndex) {
   }
 
   if (device != 0) {
-    return AudioSystem::setStreamVolumeIndex(
-             static_cast<audio_stream_type_t>(aStream),
-             aIndex,
-             device);
+    status = AudioSystem::setStreamVolumeIndex(
+               static_cast<audio_stream_type_t>(aStream),
+               aIndex,
+               device);
+    return status ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  status_t status = AudioSystem::setStreamVolumeIndex(
-                      static_cast<audio_stream_type_t>(aStream),
-                      aIndex,
-                      AUDIO_DEVICE_OUT_SPEAKER);
+  status = AudioSystem::setStreamVolumeIndex(
+             static_cast<audio_stream_type_t>(aStream),
+             aIndex,
+             AUDIO_DEVICE_OUT_BLUETOOTH_A2DP);
+  status += AudioSystem::setStreamVolumeIndex(
+              static_cast<audio_stream_type_t>(aStream),
+              aIndex,
+              AUDIO_DEVICE_OUT_SPEAKER);
   status += AudioSystem::setStreamVolumeIndex(
               static_cast<audio_stream_type_t>(aStream),
               aIndex,
@@ -707,21 +717,21 @@ AudioManager::SetStreamVolumeIndex(int32_t aStream, int32_t aIndex) {
               static_cast<audio_stream_type_t>(aStream),
               aIndex,
               AUDIO_DEVICE_OUT_EARPIECE);
-  return status;
+  return status ? NS_ERROR_FAILURE : NS_OK;
 #endif
 }
 
-status_t
+nsresult
 AudioManager::GetStreamVolumeIndex(int32_t aStream, int32_t *aIndex) {
   if (!aIndex) {
-    return BAD_VALUE;
+    return NS_ERROR_INVALID_ARG;
   }
 
   if (aStream <= AUDIO_STREAM_DEFAULT || aStream >= AUDIO_STREAM_MAX) {
-    return BAD_VALUE;
+    return NS_ERROR_INVALID_ARG;
   }
 
   *aIndex = mCurrentStreamVolumeTbl[aStream];
 
-  return NO_ERROR;
+  return NS_OK;
 }

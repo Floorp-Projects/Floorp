@@ -1017,7 +1017,7 @@ js_InvokeOperationCallback(JSContext *cx)
 
 #ifdef JSGC_GENERATIONAL
     if (rt->gcStoreBuffer.isAboutToOverflow())
-        MinorGC(rt, JS::gcreason::FULL_STORE_BUFFER);
+        MinorGC(cx, JS::gcreason::FULL_STORE_BUFFER);
 #endif
 
 #ifdef JS_ION
