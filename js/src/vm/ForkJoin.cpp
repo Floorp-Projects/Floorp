@@ -1961,11 +1961,11 @@ class ParallelSpewer
         }
     }
 
-    bool isActive(SpewChannel channel) {
+    bool isActive(js::parallel::SpewChannel channel) {
         return active[channel];
     }
 
-    void spewVA(SpewChannel channel, const char *fmt, va_list ap) {
+    void spewVA(js::parallel::SpewChannel channel, const char *fmt, va_list ap) {
         if (!active[channel])
             return;
 
@@ -1989,7 +1989,7 @@ class ParallelSpewer
         fprintf(stderr, "%s", buf);
     }
 
-    void spew(SpewChannel channel, const char *fmt, ...) {
+    void spew(js::parallel::SpewChannel channel, const char *fmt, ...) {
         va_list ap;
         va_start(ap, fmt);
         spewVA(channel, fmt, ap);
