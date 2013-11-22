@@ -59,3 +59,11 @@ PR_IMPLEMENT(PRStatus) PR_CloseFileMap(PRFileMap *fmap)
 {
     return _PR_MD_CLOSE_FILE_MAP(fmap);
 }
+
+PR_IMPLEMENT(PRStatus) PR_SyncMemMap(
+    PRFileDesc *fd,
+    void *addr,
+    PRUint32 len)
+{
+  return _PR_MD_SYNC_MEM_MAP(fd, addr, len);
+}
