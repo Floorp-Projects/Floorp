@@ -13,13 +13,13 @@
 
 #include <algorithm>
 #include "jsfriendapi.h"
-#include "mozilla/Endian.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/FileHandleBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/quota/FileStreams.h"
+#include "mozilla/Endian.h"
 #include "mozilla/storage.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
@@ -57,6 +57,7 @@ using namespace mozilla::dom::indexedDB::ipc;
 using mozilla::dom::quota::FileOutputStream;
 using mozilla::ErrorResult;
 using mozilla::fallible_t;
+using mozilla::LittleEndian;
 using mozilla::NativeEndian;
 
 BEGIN_INDEXEDDB_NAMESPACE
@@ -1580,10 +1581,12 @@ IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
     }
 
     NS_ConvertUTF16toUTF8 convType(fileHandle->Type());
-    uint32_t convTypeLength = NativeEndian::swapToLittleEndian(convType.Length());
+    uint32_t convTypeLength =
+      NativeEndian::swapToLittleEndian(convType.Length());
 
     NS_ConvertUTF16toUTF8 convName(fileHandle->Name());
-    uint32_t convNameLength = NativeEndian::swapToLittleEndian(convName.Length());
+    uint32_t convNameLength =
+      NativeEndian::swapToLittleEndian(convName.Length());
 
     if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_FILEHANDLE,
                             cloneWriteInfo->mFiles.Length()) ||
@@ -1646,7 +1649,8 @@ IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
         return false;
       }
       NS_ConvertUTF16toUTF8 convType(type);
-      uint32_t convTypeLength = NativeEndian::swapToLittleEndian(convType.Length());
+      uint32_t convTypeLength =
+        NativeEndian::swapToLittleEndian(convType.Length());
 
       nsCOMPtr<nsIDOMFile> file = do_QueryInterface(blob);
 
@@ -1673,7 +1677,8 @@ IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
           return false;
         }
         NS_ConvertUTF16toUTF8 convName(name);
-        uint32_t convNameLength = NativeEndian::swapToLittleEndian(convName.Length());
+        uint32_t convNameLength =
+          NativeEndian::swapToLittleEndian(convName.Length());
 
         if (!JS_WriteBytes(aWriter, &lastModifiedDate, sizeof(lastModifiedDate)) || 
             !JS_WriteBytes(aWriter, &convNameLength, sizeof(convNameLength)) ||
@@ -3112,6 +3117,18 @@ NoRequestObjectStoreHelper::OnError()
   mTransaction->Abort(GetResultCode());
 }
 
+// This is a duplicate of the js engine's byte munging in StructuredClone.cpp
+uint64_t
+ReinterpretDoubleAsUInt64(double d)
+{
+  union {
+    double d;
+    uint64_t u;
+  } pun;
+  pun.d = d;
+  return pun.u;
+}
+
 nsresult
 AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
@@ -3158,9 +3175,14 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   if (mObjectStore->IsAutoIncrement()) {
     if (keyUnset) {
       autoIncrementNum = mObjectStore->Info()->nextAutoIncrementId;
+
+      MOZ_ASSERT(autoIncrementNum > 0,
+                 "Generated key must always be a positive integer");
+
       if (autoIncrementNum > (1LL << 53)) {
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
+
       mKey.SetFromInteger(autoIncrementNum);
     }
     else if (mKey.IsFloat() &&
@@ -3173,21 +3195,10 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       // objectStore with no key in its keyPath set. We needed to figure out
       // which row id we would get above before we could set that properly.
 
-      // This is a duplicate of the js engine's byte munging here
-      union {
-        double d;
-        uint64_t u;
-      } pun;
-    
-      NS_ASSERTION(autoIncrementNum > 0,
-                   "Generated key must always a positive integer");
-      pun.d = static_cast<double>(autoIncrementNum);
-      pun.u = NativeEndian::swapToLittleEndian(pun.u);
-
-      JSAutoStructuredCloneBuffer& buffer = mCloneWriteInfo.mCloneBuffer;
-      uint64_t offsetToKeyProp = mCloneWriteInfo.mOffsetToKeyProp;
-
-      memcpy((char*)buffer.data() + offsetToKeyProp, &pun.u, sizeof(uint64_t));
+      LittleEndian::writeUint64((char*)mCloneWriteInfo.mCloneBuffer.data() +
+                                mCloneWriteInfo.mOffsetToKeyProp,
+                                ReinterpretDoubleAsUInt64(static_cast<double>(
+                                                          autoIncrementNum)));
     }
   }
 
