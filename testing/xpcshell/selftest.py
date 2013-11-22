@@ -160,6 +160,14 @@ LOAD_ERROR_SYNTAX_ERROR = '''
 function run_test(
 '''
 
+# A test for failure to load a test due to an error other than a syntax error
+LOAD_ERROR_OTHER_ERROR = '''
+function run_test() {
+    yield "foo";
+    return "foo"; // can't use return in a generator!
+};
+'''
+
 class XPCShellTestsTests(unittest.TestCase):
     """
     Yes, these are unit tests for a unit test harness.
@@ -676,6 +684,20 @@ tail =
         self.assertInLog("test_error.js contains SyntaxError")
         self.assertInLog("Diagnostic: SyntaxError: missing formal parameter at")
         self.assertInLog("test_error.js:3")
+        self.assertNotInLog("TEST-PASS")
+
+    def testDoReportNonSyntaxError(self):
+        """
+        Check that attempting to load a test file containing an error other
+        than a syntax error generates details of the error in the log
+        """
+        self.writeFile("test_error.js", LOAD_ERROR_OTHER_ERROR)
+        self.writeManifest(["test_error.js"])
+
+        self.assertTestResult(False)
+        self.assertInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog("Diagnostic: TypeError: generator function run_test returns a value at")
+        self.assertInLog("test_error.js:4")
         self.assertNotInLog("TEST-PASS")
 
 if __name__ == "__main__":
