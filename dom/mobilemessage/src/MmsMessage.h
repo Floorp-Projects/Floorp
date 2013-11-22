@@ -40,7 +40,7 @@ public:
              const nsAString&                      aSmil,
              const nsTArray<idl::MmsAttachment>&   aAttachments,
              uint64_t                              aExpiryDate,
-             bool                                  aIsReadReportRequested);
+             bool                                  aReadReportRequested);
 
   MmsMessage(const mobilemessage::MmsMessageData& aData);
 
@@ -57,7 +57,7 @@ public:
                          const nsAString&      aSmil,
                          const JS::Value&      aAttachments,
                          const JS::Value&      aExpiryDate,
-                         bool                  aIsReadReportRequested,
+                         bool                  aReadReportRequested,
                          JSContext*            aCx,
                          nsIDOMMozMmsMessage** aMessage);
 
@@ -79,7 +79,7 @@ private:
   nsString                       mSmil;
   nsTArray<idl::MmsAttachment>   mAttachments;
   uint64_t                       mExpiryDate;
-  bool                           mIsReadReportRequested;
+  bool                           mReadReportRequested;
 };
 
 } // namespace dom
