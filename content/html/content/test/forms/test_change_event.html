@@ -29,6 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 <input type="reset" id="input_reset" onchange="++NonTextInputChange[3];"></input>
 <input type="radio" id="input_radio" onchange="++NonTextInputChange[4];"></input>
 <input type="checkbox" id="input_checkbox" onchange="++NonTextInputChange[5];"></input>
+<input type="number" id="input_number" onchange="++numberChange;"></input>
 <input type="range" id="input_range" onchange="++rangeChange;"></input>
  
 </div>
@@ -45,6 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
   var NonTextInputTypes = ["button", "submit", "image", "reset", "radio", "checkbox"];
   var NonTextInputChange = [0, 0, 0, 0, 0, 0];
 
+  var numberChange = 0;
   var rangeChange = 0;
 
   var blurTestCalled = false; //Sentinel to prevent infinite loop.
@@ -163,6 +165,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
         is(NonTextInputChange[i], 1, "Change event shouldn't be dispatched on " + NonTextInputTypes[i] + " input element");
       }
     }
+
+    // Special case type=number
+    var number = document.getElementById("input_number");
+    number.focus();
+    synthesizeKey("a", {});
+    number.blur();
+    is(numberChange, 0, "Change event shouldn't be dispatched on number input element for key changes that don't change its value");
+    number.value = "";
+    number.focus();
+    synthesizeKey("1", {});
+    is(numberChange, 0, "Change event shouldn't be dispatched on number input element for keyboard input until it is looses focus");
+    number.blur();
+    is(numberChange, 1, "Change event should be dispatched on number input element on blur");
 
     // Special case type=range
     var range = document.getElementById("input_range");
