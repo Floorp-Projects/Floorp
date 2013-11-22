@@ -7,6 +7,8 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.DisplayPortMetrics;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
+import org.mozilla.gecko.mozglue.generatorannotations.GeneratorOptions;
+import org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI;
 
 import android.content.res.Resources;
 import android.graphics.Point;
@@ -83,6 +85,8 @@ public class GeckoEvent {
      * The DomKeyLocation enum encapsulates the DOM KeyboardEvent's constants.
      * @see https://developer.mozilla.org/en-US/docs/DOM/KeyboardEvent#Key_location_constants
      */
+    @GeneratorOptions(generatedClassName = "JavaDomKeyLocation")
+    @WrapEntireClassForJNI
     public enum DomKeyLocation {
         DOM_KEY_LOCATION_STANDARD(0),
         DOM_KEY_LOCATION_LEFT(1),
