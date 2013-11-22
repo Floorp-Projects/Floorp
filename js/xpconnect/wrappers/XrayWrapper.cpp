@@ -815,7 +815,7 @@ XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
         found = !!desc.object();
     }
 
-    // Next, check for ES standard classes.
+    // Next, check for ES builtins.
     if (!found && JS_IsGlobalObject(target)) {
         JSProtoKey key = JS_IdToProtoKey(cx, id);
         JSAutoCompartment ac(cx, target);
@@ -826,6 +826,12 @@ XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
                 return false;
             MOZ_ASSERT(constructor);
             desc.value().set(ObjectValue(*constructor));
+            found = true;
+        } else if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_EVAL)) {
+            RootedObject eval(cx);
+            if (!js::GetOriginalEval(cx, target, &eval))
+                return false;
+            desc.value().set(ObjectValue(*eval));
             found = true;
         }
     }
