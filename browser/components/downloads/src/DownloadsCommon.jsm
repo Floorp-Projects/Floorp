@@ -59,6 +59,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
                                   "resource://gre/modules/DownloadUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm")
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
@@ -664,6 +666,27 @@ DownloadsDataCtor.prototype = {
       for (let view of this._views) {
         try {
           view.getViewItem(aDataItem).onStateChange(oldState);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+      }
+
+      // This state transition code should actually be located in a Downloads
+      // API module (bug 941009).  Moreover, the fact that state is stored as
+      // annotations should be ideally hidden behind methods of
+      // nsIDownloadHistory (bug 830415).
+      if (!this._isPrivate && !aDataItem.inProgress) {
+        try {
+          let downloadMetaData = { state: aDataItem.state,
+                                   endTime: aDataItem.endTime };
+          if (aDataItem.done) {
+            downloadMetaData.fileSize = aDataItem.maxBytes;
+          }
+
+          PlacesUtils.annotations.setPageAnnotation(
+                        NetUtil.newURI(aDataItem.uri), "downloads/metaData",
+                        JSON.stringify(downloadMetaData), 0,
+                        PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
         } catch (ex) {
           Cu.reportError(ex);
         }
