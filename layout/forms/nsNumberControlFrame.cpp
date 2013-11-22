@@ -147,6 +147,29 @@ nsNumberControlFrame::
                            xoffset, yoffset, 0);
 }
 
+NS_IMETHODIMP
+nsNumberControlFrame::AttributeChanged(int32_t  aNameSpaceID,
+                                       nsIAtom* aAttribute,
+                                       int32_t  aModType)
+{
+  if (aNameSpaceID == kNameSpaceID_None) {
+    if (aAttribute == nsGkAtoms::placeholder) {
+      if (aModType == nsIDOMMutationEvent::REMOVAL) {
+        mTextField->UnsetAttr(aNameSpaceID, aAttribute, true);
+      } else {
+        MOZ_ASSERT(aModType == nsIDOMMutationEvent::ADDITION ||
+                   aModType == nsIDOMMutationEvent::MODIFICATION);
+        nsAutoString value;
+        mContent->GetAttr(aNameSpaceID, aAttribute, value);
+        mTextField->SetAttr(aNameSpaceID, aAttribute, value, true);
+      }
+    }
+  }
+
+  return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
+                                            aModType);
+}
+
 nsresult
 nsNumberControlFrame::MakeAnonymousElement(nsIContent** aResult,
                                            nsTArray<ContentInfo>& aElements,
@@ -228,6 +251,12 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsAutoString value;
   HTMLInputElement::FromContent(mContent)->GetValue(value);
   mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::value, value, false);
+
+  // Initialize the text field's placeholder, if ours is set:
+  nsAutoString placeholder;
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, placeholder)) {
+    mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, placeholder, false);
+  }
 
   if (mContent->AsElement()->State().HasState(NS_EVENT_STATE_FOCUS)) {
     // We don't want to focus the frame but the text field.

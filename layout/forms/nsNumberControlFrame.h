@@ -46,6 +46,10 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
+  NS_IMETHOD AttributeChanged(int32_t  aNameSpaceID,
+                              nsIAtom* aAttribute,
+                              int32_t  aModType) MOZ_OVERRIDE;
+
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) MOZ_OVERRIDE;
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
