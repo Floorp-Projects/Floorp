@@ -10,7 +10,7 @@
 }
 
 .devtools-monospace {
-  font-family: monospace;
+  font-family: Consolas, monospace;
 }
 
 /* Toolbar and Toolbar items */
