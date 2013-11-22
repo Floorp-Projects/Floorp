@@ -198,7 +198,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     if (options.filename() && !ss->setFilename(cx, options.filename()))
         return nullptr;
 
-    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
+    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss, options));
     if (!sourceObject)
         return nullptr;
 
@@ -494,7 +494,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
         return false;
     if (options.filename() && !ss->setFilename(cx, options.filename()))
         return false;
-    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
+    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss, options));
     if (!sourceObject)
         return false;
     SourceCompressionTask sct(cx);
@@ -567,7 +567,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
     if (fn->pn_funbox->function()->isInterpreted()) {
         JS_ASSERT(fun == fn->pn_funbox->function());
 
-        Rooted<JSScript*> script(cx, JSScript::Create(cx, NullPtr(), false, options,
+        Rooted<JSScript*> script(cx, JSScript::Create(cx, js::NullPtr(), false, options,
                                                       /* staticLevel = */ 0, sourceObject,
                                                       /* sourceStart = */ 0, length));
         if (!script)
@@ -583,7 +583,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
          * instead is cloned immediately onto the right scope chain.
          */
         BytecodeEmitter funbce(/* parent = */ nullptr, &parser, fn->pn_funbox, script,
-                               /* insideEval = */ false, /* evalCaller = */ NullPtr(),
+                               /* insideEval = */ false, /* evalCaller = */ js::NullPtr(),
                                fun->environment() && fun->environment()->is<GlobalObject>(),
                                options.lineno);
         if (!funbce.init())

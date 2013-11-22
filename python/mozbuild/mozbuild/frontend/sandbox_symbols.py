@@ -85,6 +85,11 @@ VARIABLES = {
         compile. Accepts assembler, C, C++, Objective C/C++.
         """, 'compile'),
 
+    'FILES_PER_UNIFIED_FILE': (int, int, None,
+        """The number of source files to compile into each unified source file.
+
+        """, 'None'),
+
     'UNIFIED_SOURCES': (StrictOrderingOnAppendList, list, [],
         """Source code files that can be compiled together.
 

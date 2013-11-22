@@ -28,6 +28,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/WindowsVersion.h"
 #include <io.h>
 #include <propvarutil.h>
 #include <propkey.h>
@@ -330,7 +331,7 @@ WinTaskbar::GetDefaultGroupId(nsAString & aDefaultGroupId) {
 // (static) Called from AppShell
 bool
 WinTaskbar::RegisterAppUserModelID() {
-  if (WinUtils::GetWindowsVersion() < WinUtils::WIN7_VERSION)
+  if (!IsWin7OrLater())
     return false;
 
   if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
@@ -365,9 +366,7 @@ WinTaskbar::RegisterAppUserModelID() {
 
 NS_IMETHODIMP
 WinTaskbar::GetAvailable(bool *aAvailable) {
-  *aAvailable = 
-    WinUtils::GetWindowsVersion() < WinUtils::WIN7_VERSION ?
-    false : true;
+  *aAvailable = IsWin7OrLater();
 
   return NS_OK;
 }

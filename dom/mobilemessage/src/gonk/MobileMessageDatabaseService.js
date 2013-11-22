@@ -1290,7 +1290,7 @@ MobileMessageDatabaseService.prototype = {
       if (headers["x-mms-expiry"] != undefined) {
         expiryDate = aMessageRecord.timestamp + headers["x-mms-expiry"] * 1000;
       }
-      let isReadReportRequested = headers["x-mms-read-report"] || false;
+      let readReportRequested = headers["x-mms-read-report"] || false;
       return gMobileMessageService.createMmsMessage(aMessageRecord.id,
                                                     aMessageRecord.threadId,
                                                     aMessageRecord.iccId,
@@ -1304,7 +1304,7 @@ MobileMessageDatabaseService.prototype = {
                                                     smil,
                                                     attachments,
                                                     expiryDate,
-                                                    isReadReportRequested);
+                                                    readReportRequested);
     }
   },
 
