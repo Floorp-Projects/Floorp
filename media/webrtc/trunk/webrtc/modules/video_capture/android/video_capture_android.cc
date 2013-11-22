@@ -308,8 +308,6 @@ int32_t VideoCaptureAndroid::Init(const int32_t id,
   jclass javaCmDevInfoClass = jniFrame.GetCmDevInfoClass();
   jobject javaCmDevInfoObject = jniFrame.GetCmDevInfoObject();
 
-  int32_t rotation = 0;
-
   WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, _id,
                "get method id");
   // get the method ID for the Android Java
@@ -393,7 +391,6 @@ int32_t VideoCaptureAndroid::StartCapture(
                "%s: ", __FUNCTION__);
 
   int32_t result = 0;
-  int32_t rotation = 0;
 
   AutoLocalJNIFrame jniFrame;
   JNIEnv* env = jniFrame.GetEnv();
