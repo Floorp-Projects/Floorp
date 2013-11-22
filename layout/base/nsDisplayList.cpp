@@ -48,6 +48,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "ActiveLayerTracker.h"
+#include "nsContentUtils.h"
 
 #include <stdint.h>
 #include <algorithm>
@@ -712,6 +713,13 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   }
 
   metrics.mPresShellId = presShell->GetPresShellId();
+
+  // If the scroll frame's content is marked 'scrollgrab', record this
+  // in the FrameMetrics so APZ knows to provide the scroll grabbing
+  // behaviour.
+  if (aScrollFrame && nsContentUtils::HasScrollgrab(aScrollFrame->GetContent())) {
+    metrics.mHasScrollgrab = true;
+  }
 
   aRoot->SetFrameMetrics(metrics);
 }

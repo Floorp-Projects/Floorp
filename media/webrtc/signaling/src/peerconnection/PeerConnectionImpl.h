@@ -510,20 +510,9 @@ private:
   mozilla::dom::PCImplIceState mIceState;
 
   nsCOMPtr<nsIThread> mThread;
-  // WeakConcretePtr to PeerConnectionObserver. TODO: Remove after bug 928535
-  //
-  // This is only safe to use on the main thread
   // TODO: Remove if we ever properly wire PeerConnection for cycle-collection.
-  class WeakConcretePtr
-  {
-  public:
-    WeakConcretePtr() : mObserver(nullptr) {}
-    void Set(PeerConnectionObserver *aObserver);
-    PeerConnectionObserver *MayGet();
-  private:
-    PeerConnectionObserver *mObserver;
-    nsWeakPtr mWeakPtr;
-  } mPCObserver;
+  nsWeakPtr mPCObserver;
+
   nsCOMPtr<nsPIDOMWindow> mWindow;
 
   // The SDP sent in from JS - here for debugging.

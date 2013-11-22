@@ -1030,7 +1030,7 @@ SocialToolbar = {
       if (!toolbarButton) {
         toolbarButton = document.createElement("toolbarbutton");
         toolbarButton.setAttribute("type", "badged");
-        toolbarButton.classList.add("toolbarbutton-1");
+        toolbarButton.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
         toolbarButton.setAttribute("id", toolbarButtonId);
         toolbarButton.setAttribute("notificationFrameId", notificationFrameId);
         toolbarButton.addEventListener("mousedown", function (event) {
@@ -1479,7 +1479,7 @@ SocialStatus = {
       return null;
     let palette = document.getElementById("navigator-toolbox").palette;
     let button = document.createElement("toolbarbutton");
-    button.setAttribute("class", "toolbarbutton-1 social-status-button");
+    button.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional social-status-button");
     button.setAttribute("type", "badged");
     button.setAttribute("removable", "true");
     button.setAttribute("image", provider.iconURL);
@@ -1763,7 +1763,7 @@ SocialMarks = {
     let palette = document.getElementById("navigator-toolbox").palette;
     let button = document.createElement("toolbarbutton");
     button.setAttribute("type", "socialmark");
-    button.setAttribute("class", "toolbarbutton-1 social-mark-button");
+    button.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional social-mark-button");
     button.style.listStyleImage = "url(" + provider.iconURL + ")";
     button.setAttribute("origin", provider.origin);
     button.setAttribute("id", this._toolbarHelper.idFromOrgin(provider.origin));

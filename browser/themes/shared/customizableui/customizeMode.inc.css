@@ -3,18 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Customization mode */
-
-#tab-view-deck {
-  transition-property: padding;
-  transition-duration: 150ms;
-  transition-timing-function: ease-out;
-}
-
-#tab-view-deck[fastcustomizeanimation] {
-  transition-duration: 1ms;
-  transition-timing-function: linear;
-}
-
 #nav-bar[customize-entered] > #nav-bar-customization-target {
   margin: 1px 3px;
 }
@@ -32,35 +20,6 @@
 #PanelUI-contents > .panel-customization-placeholder {
   cursor: auto;
   outline-offset: -5px;
-}
-
-#PanelUI-contents > .panel-customization-placeholder > .panel-customization-placeholder-child {
-  list-style-image: none;
-}
-
-#customization-panelHolder {
-  overflow-y: hidden;
-}
-
-#customization-panelWrapper,
-#customization-panelWrapper > .panel-arrowcontent {
-  -moz-box-flex: 1;
-}
-
-#customization-panelHolder > #PanelUI-mainView {
-  display: flex;
-  flex-direction: column;
-  /* Hack alert - by manually setting the preferred height to 0, we convince
-     #PanelUI-mainView to shrink when the window gets smaller in customization
-     mode. Not sure why that is - might have to do with our intermingling of
-     XUL flex, and CSS3 Flexbox. */
-  height: 0;
-}
-
-#customization-panelHolder > #PanelUI-mainView > #PanelUI-contents-scroller {
-  display: flex;
-  flex: auto;
-  flex-direction: column;
 }
 
 #main-window[customize-entered] .customization-target {
@@ -96,11 +55,6 @@
   background-repeat: no-repeat, no-repeat, repeat, repeat, no-repeat;
   background-size: auto 12px, 12px 100%, auto, auto, auto;
   background-attachment: scroll, scroll, fixed, fixed, scroll;
-  overflow-y: auto;
-}
-
-#customization-panelWrapper > .panel-arrowcontent {
-  padding: 0 !important;
 }
 
 toolbarpaletteitem {
@@ -146,39 +100,13 @@ toolbarpaletteitem[place="toolbar"] {
   margin-left: 0;
 }
 
-toolbarpaletteitem[dragover] {
-  border-left-color: transparent;
-  border-right-color: transparent;
-}
-
 #customization-palette:not([hidden]) {
-  display: block;
-  overflow: auto;
-  min-height: 3em;
   margin-bottom: 25px;
-}
-
-toolbarpaletteitem[place="palette"] {
-  width: 110px;
-  height: 94px;
-  overflow: hidden;
-  display: inline-block;
-}
-
-toolbarpaletteitem[place="palette"][hidden] {
-  display: none;
 }
 
 #customization-palette > #wrapper-edit-controls,
 #customization-palette > #wrapper-zoom-controls {
   width: 225px;
-}
-
-#customization-palette .toolbarpaletteitem-box {
-  -moz-box-pack: center;
-  -moz-box-flex: 1;
-  width: 110px;
-  max-width: 110px;
 }
 
 #wrapper-edit-controls[place="palette"] > .toolbarpaletteitem-box,
