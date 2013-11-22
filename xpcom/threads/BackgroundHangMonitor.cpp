@@ -7,6 +7,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/ThreadHangStats.h"
 #include "mozilla/ThreadLocal.h"
 
@@ -325,6 +326,9 @@ BackgroundHangThread::~BackgroundHangThread()
   if (sTlsKey.initialized()) {
     sTlsKey.set(nullptr);
   }
+
+  // Move our copy of ThreadHangStats to Telemetry storage
+  Telemetry::RecordThreadHangStats(mStats);
 }
 
 void

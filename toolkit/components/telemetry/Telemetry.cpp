@@ -46,6 +46,7 @@
 #include "nsNetUtil.h"
 #include "plstr.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "mozilla/ThreadHangStats.h"
 #include "mozilla/ProcessedStack.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/FileUtils.h"
@@ -248,6 +249,7 @@ public:
   static void RecordChromeHang(uint32_t duration,
                                Telemetry::ProcessedStack &aStack);
 #endif
+  static void RecordThreadHangStats(Telemetry::ThreadHangStats& aStats);
   static nsresult GetHistogramEnumId(const char *name, Telemetry::ID *id);
   static int64_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
   struct Stat {
@@ -320,6 +322,9 @@ private:
   Mutex mHashMutex;
   HangReports mHangReports;
   Mutex mHangReportsMutex;
+  // mThreadHangStats stores recorded, inactive thread hang stats
+  Vector<Telemetry::ThreadHangStats> mThreadHangStats;
+  Mutex mThreadHangStatsMutex;
   nsCOMPtr<nsIMemoryReporter> mReporter;
 
   CombinedStacks mLateWritesStacks; // This is collected out of the main thread.
@@ -343,6 +348,7 @@ TelemetryImpl::SizeOfIncludingThisHelper(mozilla::MallocSizeOf aMallocSizeOf)
   n += mSanitizedSQL.SizeOfExcludingThis(nullptr, aMallocSizeOf);
   n += mTrackedDBs.SizeOfExcludingThis(nullptr, aMallocSizeOf);
   n += mHangReports.SizeOfExcludingThis();
+  n += mThreadHangStats.sizeOfExcludingThis(aMallocSizeOf);
   return n;
 }
 
@@ -941,6 +947,7 @@ mHistogramMap(Telemetry::HistogramCount),
 mCanRecord(XRE_GetProcessType() == GeckoProcessType_Default),
 mHashMutex("Telemetry::mHashMutex"),
 mHangReportsMutex("Telemetry::mHangReportsMutex"),
+mThreadHangStatsMutex("Telemetry::mThreadHangStatsMutex"),
 mCachedTelemetryData(false),
 mLastShutdownTime(0),
 mFailedLockCount(0)
@@ -2059,6 +2066,17 @@ TelemetryImpl::RecordChromeHang(uint32_t duration,
 }
 #endif
 
+void
+TelemetryImpl::RecordThreadHangStats(Telemetry::ThreadHangStats& aStats)
+{
+  if (!sTelemetry || !sTelemetry->mCanRecord)
+    return;
+
+  MutexAutoLock autoLock(sTelemetry->mThreadHangStatsMutex);
+
+  sTelemetry->mThreadHangStats.append(Move(aStats));
+}
+
 NS_IMPL_ISUPPORTS1(TelemetryImpl, nsITelemetry)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelemetry, TelemetryImpl::CreateTelemetryInstance)
 
@@ -2223,6 +2241,11 @@ void RecordChromeHang(uint32_t duration,
   TelemetryImpl::RecordChromeHang(duration, aStack);
 }
 #endif
+
+void RecordThreadHangStats(ThreadHangStats& aStats)
+{
+  TelemetryImpl::RecordThreadHangStats(aStats);
+}
 
 ProcessedStack::ProcessedStack()
 {
