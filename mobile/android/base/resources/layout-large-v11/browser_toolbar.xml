@@ -6,11 +6,6 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-    <org.mozilla.gecko.toolbar.BrowserToolbarBackground android:id="@+id/url_bar_bg"
-                                                        android:layout_width="fill_parent"
-                                                        android:layout_height="fill_parent"
-                                                        android:background="@drawable/url_bar_bg"/>
-
     <org.mozilla.gecko.toolbar.ShapedButton android:id="@+id/tabs"
                                             style="@style/UrlBar.ImageButton"
                                             android:layout_width="84dip"
