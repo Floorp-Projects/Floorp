@@ -1409,6 +1409,23 @@ JS_IdentifyClassPrototype(JSContext *cx, JSObject *obj)
     return js_IdentifyClassPrototype(obj);
 }
 
+extern JS_PUBLIC_API(JSProtoKey)
+JS_IdToProtoKey(JSContext *cx, JS::HandleId id)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
+    if (!JSID_IS_ATOM(id))
+        return JSProto_Null;
+    RootedString idstr(cx, JSID_TO_STRING(id));
+    const JSStdName *stdnm = LookupStdName(cx->runtime(), idstr, standard_class_names);
+    if (!stdnm)
+        return JSProto_Null;
+
+    MOZ_ASSERT(MOZ_ARRAY_LENGTH(standard_class_names) == JSProto_LIMIT + 1);
+    return static_cast<JSProtoKey>(stdnm - standard_class_names);
+}
+
 JS_PUBLIC_API(JSObject *)
 JS_GetObjectPrototype(JSContext *cx, JSObject *forObj)
 {
