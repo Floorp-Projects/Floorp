@@ -100,6 +100,23 @@ interface nsITelemetry : nsISupports
   readonly attribute jsval chromeHangs;
 
   /*
+   * An array of thread hang stats,
+   *   [<thread>, <thread>, ...]
+   * <thread> represents a single thread,
+   *   {"name": "<name>",
+   *    "activity": <time>,
+   *    "hangs": [<hang>, <hang>, ...]}
+   * <time> represents a histogram of time intervals in milliseconds,
+   *   with the same format as histogramSnapshots
+   * <hang> represents a particular hang,
+   *   {"stack": <stack>, "histogram": <time>}
+   * <stack> represents the hang's stack,
+   *   ["<frame_0>", "<frame_1>", ...]
+   */
+  [implicit_jscontext]
+  readonly attribute jsval threadHangStats;
+
+  /*
    * An object with two fields: memoryMap and stacks.
    * * memoryMap is a list of loaded libraries.
    * * stacks is a list of stacks. Each stack is a list of pairs of the form
