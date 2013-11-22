@@ -18,6 +18,7 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "mozilla/Vector.h"             // for mozilla::Vector
 
 class gfx3DMatrix;
 template <class E> class nsTArray;
@@ -213,15 +214,21 @@ public:
 
   /**
    * This is a callback for AsyncPanZoomController to call when a touch-move
-   * event causes overscroll. The overscroll will be passed on to the parent
-   * APZC. |aStartPoint| and |aEndPoint| are in |aAPZC|'s transformed screen
+   * event causes overscroll. The overscroll will be passed on to the next
+   * APZC in the overscroll handoff chain, which was determined in the
+   * GetTargetAPZC() call for the first touch event of the touch block (usually
+   * the handoff chain is child -> parent, but scroll grabbing can change this).
+   * |aStartPoint| and |aEndPoint| are in |aAPZC|'s transformed screen
    * coordinates (i.e. the same coordinates in which touch points are given to
    * APZCs). The amount of the overscroll is represented by two points rather
    * than a displacement because with certain 3D transforms, the same
    * displacement between different points in transformed coordinates can
    * represent different displacements in untransformed coordinates.
+   * |aOverscrollHandoffChainIndex| is |aAPZC|'s current position in the
+   * overscroll handoff chain.
    */
-  void HandleOverscroll(AsyncPanZoomController* aAPZC, ScreenPoint aStartPoint, ScreenPoint aEndPoint);
+  void HandleOverscroll(AsyncPanZoomController* aAPZC, ScreenPoint aStartPoint, ScreenPoint aEndPoint,
+                        int aOverscrollHandoffChainIndex);
 
 protected:
   /**
@@ -239,6 +246,10 @@ public:
   */
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScrollableLayerGuid& aGuid);
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint);
+  /*
+   * Adjust the target APZC of an input event to account for scroll grabbing.
+   */
+  already_AddRefed<AsyncPanZoomController> AdjustForScrollGrab(const nsRefPtr<AsyncPanZoomController>& aInitialTarget);
   void GetRootAPZCsFor(const uint64_t& aLayersId,
                        nsTArray< nsRefPtr<AsyncPanZoomController> >* aOutRootApzcs);
   void GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& aTransformToApzcOut,
@@ -295,10 +306,16 @@ private:
    * screen coordinates, as returned through the 'aTransformToApzcOut' parameter
    * of GetInputTransform(), at the start of the input block. This is cached
    * because this transform can change over the course of the input block,
-   * but for some operations we need to use the initial tranform.
+   * but for some operations we need to use the initial transform.
    * Meaningless if mApzcForInputBlock is nullptr.
    */
   gfx3DMatrix mCachedTransformToApzcForInputBlock;
+  /* The chain of APZCs that will handle pans for the current touch input
+   * block, in the order in which they will be scrolled. When one APZC has
+   * been scrolled as far as it can, any overscroll will be handed off to
+   * the next APZC in the chain.
+   */
+  Vector< nsRefPtr<AsyncPanZoomController> > mOverscrollHandoffChain;
 
   static float sDPI;
 };
