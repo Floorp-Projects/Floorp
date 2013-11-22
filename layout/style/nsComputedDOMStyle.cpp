@@ -3700,6 +3700,28 @@ nsComputedDOMStyle::DoGetClip()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetWillChange()
+{
+  const nsTArray<nsString>& willChange = StyleDisplay()->mWillChange;
+
+  if (willChange.IsEmpty()) {
+    nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
+    val->SetIdent(eCSSKeyword_auto);
+    return val;
+  }
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(true);
+  for (size_t i = 0; i < willChange.Length(); i++) {
+    const nsString& willChangeIdentifier = willChange[i];
+    nsROCSSPrimitiveValue* property = new nsROCSSPrimitiveValue;
+    valueList->AppendCSSValue(property);
+    property->SetString(willChangeIdentifier);
+  }
+
+  return valueList;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetOverflow()
 {
   const nsStyleDisplay* display = StyleDisplay();

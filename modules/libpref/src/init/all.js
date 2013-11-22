@@ -1763,6 +1763,9 @@ pref("layout.css.sticky.enabled", false);
 pref("layout.css.sticky.enabled", true);
 #endif
 
+// Is support for CSS "will-change" enabled?
+pref("layout.css.will-change.enabled", false);
+
 // Is support for CSS "text-align: true X" enabled?
 pref("layout.css.text-align-true-value.enabled", false);
 
