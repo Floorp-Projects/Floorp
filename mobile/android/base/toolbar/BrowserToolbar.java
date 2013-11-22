@@ -648,7 +648,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
     public boolean onTouchEvent(MotionEvent event) {
         // If the motion event has occured below the toolbar (due to the scroll
         // offset), let it pass through to the page.
-        if (event != null && event.getY() > getHeight() - getScrollY()) {
+        if (event != null && event.getY() > getHeight() + ViewHelper.getTranslationY(this)) {
             return false;
         }
 
@@ -824,7 +824,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
     }
 
     public boolean isVisible() {
-        return getScrollY() == 0;
+        return ViewHelper.getTranslationY(this) == 0;
     }
 
     public void setNextFocusDownId(int nextId) {
