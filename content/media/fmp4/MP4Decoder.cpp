@@ -10,8 +10,7 @@
 #include "mozilla/Preferences.h"
 
 #ifdef XP_WIN
-#include "WinUtils.h"
-using namespace mozilla::widget;
+#include "mozilla/WindowsVersion.h"
 #endif
 
 namespace mozilla {
@@ -72,7 +71,7 @@ HavePlatformMPEGDecoders()
     Preferences::GetBool("media.fragmented-mp4.use-blank-decoder") ||
 #ifdef XP_WIN
     // We have H.264/AAC platform decoders on Windows Vista and up.
-    WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION ||
+    IsVistaOrLater() ||
 #endif
     // TODO: Other platforms...
     false;
