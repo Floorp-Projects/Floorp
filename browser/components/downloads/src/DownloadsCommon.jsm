@@ -59,6 +59,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
                                   "resource://gre/modules/DownloadUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm")
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
@@ -668,6 +670,27 @@ DownloadsDataCtor.prototype = {
           Cu.reportError(ex);
         }
       }
+
+      // This state transition code should actually be located in a Downloads
+      // API module (bug 941009).  Moreover, the fact that state is stored as
+      // annotations should be ideally hidden behind methods of
+      // nsIDownloadHistory (bug 830415).
+      if (!this._isPrivate && !aDataItem.inProgress) {
+        try {
+          let downloadMetaData = { state: aDataItem.state,
+                                   endTime: aDataItem.endTime };
+          if (aDataItem.done) {
+            downloadMetaData.fileSize = aDataItem.maxBytes;
+          }
+
+          PlacesUtils.annotations.setPageAnnotation(
+                        NetUtil.newURI(aDataItem.uri), "downloads/metaData",
+                        JSON.stringify(downloadMetaData), 0,
+                        PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+      }
     }
 
     if (!aDataItem.newDownloadNotified) {
@@ -858,10 +881,26 @@ DownloadsDataItem.prototype = {
     this.referrer = this._download.source.referrer;
     this.startTime = this._download.startTime;
     this.currBytes = this._download.currentBytes;
-    this.maxBytes = this._download.totalBytes;
     this.resumable = this._download.hasPartialData;
     this.speed = this._download.speed;
-    this.percentComplete = this._download.progress;
+
+    if (this._download.succeeded) {
+      // If the download succeeded, show the final size if available, otherwise
+      // use the last known number of bytes transferred.  The final size on disk
+      // will be available when bug 941063 is resolved.
+      this.maxBytes = this._download.hasProgress ?
+                             this._download.totalBytes :
+                             this._download.currentBytes;
+      this.percentComplete = 100;
+    } else if (this._download.hasProgress) {
+      // If the final size and progress are known, use them.
+      this.maxBytes = this._download.totalBytes;
+      this.percentComplete = this._download.progress;
+    } else {
+      // The download final size and progress percentage is unknown.
+      this.maxBytes = -1;
+      this.percentComplete = -1;
+    }
   },
 
   /**
