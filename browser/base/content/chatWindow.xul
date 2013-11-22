@@ -57,7 +57,7 @@ var gChatWindow = {
                          'key_selectTab7', 'key_selectTab8', 'key_selectLastTab',
                          'viewHistorySidebar', 'viewBookmarksSidebar',
                          'Browser:AddBookmarkAs', 'Browser:BookmarkAllTabs',
-                         'Browser:ToggleTabView', 'Browser:ToggleAddonBar'];
+                         'Browser:ToggleTabView'];
 
     for (let disabledItem of disabledItems) {
       document.getElementById(disabledItem).setAttribute("disabled", "true");
