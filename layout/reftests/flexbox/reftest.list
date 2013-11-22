@@ -9,6 +9,9 @@
 # tests over to the w3c-css directory, so that they can become part of the
 # W3C's test suite.
 
+# SUBDIRECTORY: Reftests for paginated flex containers
+include pagination/reftest.list
+
 # Tests for cross-axis alignment (align-self / align-items properties)
 fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-horiz-2-ref.xhtml # bug 793456, and possibly others
 # This one fails on windows R (but not Ru, strangely). On Windows R, the
