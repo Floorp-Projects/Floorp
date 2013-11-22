@@ -618,7 +618,8 @@ public class Tab {
 
     void handleLocationChange(JSONObject message) throws JSONException {
         final String uri = message.getString("uri");
-        mEnteringReaderMode = ReaderModeUtils.isEnteringReaderMode(mUrl, uri);
+        final String oldUrl = getURL();
+        mEnteringReaderMode = ReaderModeUtils.isEnteringReaderMode(oldUrl, uri);
         updateURL(uri);
         updateUserSearch(message.getString("userSearch"));
 
@@ -626,7 +627,7 @@ public class Tab {
         if (message.getBoolean("sameDocument")) {
             // We can get a location change event for the same document with an anchor tag
             // Notify listeners so that buttons like back or forward will update themselves
-            Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, uri);
+            Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, oldUrl);
             return;
         }
 
@@ -646,7 +647,7 @@ public class Tab {
             setAboutHomePage(HomePager.Page.valueOf(homePage));
         }
 
-        Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, uri);
+        Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, oldUrl);
     }
 
     private static boolean shouldShowProgress(final String url) {
