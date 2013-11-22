@@ -3242,6 +3242,15 @@ JS_DefineProperties(JSContext *cx, JSObject *objArg, const JSPropertySpec *ps)
             // If you have self-hosted getter/setter, you can't have a
             // native one.
             JS_ASSERT(!ps->getter.op && !ps->setter.op);
+            /*
+             * During creation of the self-hosting global, we ignore all
+             * self-hosted properties, as that means we're currently setting up
+             * the global object that the self-hosted code is then compiled
+             * in. That means that Self-hosted properties can't be used in the
+             * self-hosting global itself, right now.
+             */
+            if (cx->runtime()->isSelfHostingGlobal(cx->global()))
+                continue;
 
             ok = DefineSelfHostedProperty(cx, obj, ps->name,
                                           ps->selfHostedGetter,
@@ -4146,6 +4155,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, const JSFunctionSpec *fs)
          * call paths then call InitializeLazyFunctionScript if !hasScript.
          */
         if (fs->selfHostedName) {
+            JS_ASSERT(!fs->call.op);
+            JS_ASSERT(!fs->call.info);
             /*
              * During creation of the self-hosting global, we ignore all
              * self-hosted functions, as that means we're currently setting up
@@ -4153,8 +4164,6 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, const JSFunctionSpec *fs)
              * in. Self-hosted functions can access each other via their names,
              * but not via the builtin classes they get installed into.
              */
-            JS_ASSERT(!fs->call.op);
-            JS_ASSERT(!fs->call.info);
             if (cx->runtime()->isSelfHostingGlobal(cx->global()))
                 continue;
 
