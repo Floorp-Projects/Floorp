@@ -1368,6 +1368,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
             mStartEditingListener.onStartEditing();
         }
 
+        if (mUrlBarRightEdge != null) {
+            mUrlBarRightEdge.setVisibility(View.VISIBLE);
+        }
+
         final int entryTranslation = getUrlBarEntryTranslation();
         final int curveTranslation = getUrlBarCurveTranslation();
 
@@ -1545,6 +1549,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
             @Override
             public void onPropertyAnimationEnd() {
+                if (mUrlBarRightEdge != null) {
+                    mUrlBarRightEdge.setVisibility(View.INVISIBLE);
+                }
+
                 PropertyAnimator buttonsAnimator = new PropertyAnimator(300);
 
                 // Fade toolbar buttons (page actions, stop) after the entry
