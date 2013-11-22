@@ -22,7 +22,7 @@
         <label value="&options.selectAdditionalTools.label;"/>
         <vbox id="additional-tools-box" class="options-groupbox"/>
         <label id="tools-not-supported-label"
-               class="options-citation-label"
+               class="options-citation-label theme-comment"
                value="&options.toolNotSupported.label;"/>
       </vbox>
       <vbox class="options-vertical-pane" flex="1">
@@ -74,7 +74,7 @@
             <checkbox id="devtools-disable-javascript"
                       label="&options.disableJavaScript.label2;"
                       tooltiptext="&options.disableJavaScript.tooltip;"/>
-            <label class="options-citation-label"
+            <label class="options-citation-label theme-comment"
                    value="(&options.context.triggersPageRefresh2;)"/>
           </hbox>
           <hbox class="hidden-labels-box">
