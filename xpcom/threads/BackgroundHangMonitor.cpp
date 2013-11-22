@@ -7,6 +7,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/ThreadHangStats.h"
 #include "mozilla/ThreadLocal.h"
 
 #include "prinrval.h"
@@ -103,8 +104,6 @@ public:
     if (!sTlsKey.init()) {}
   }
 
-  // Name of the thread
-  const nsAutoCString mThreadName;
   // Hang timeout in ticks
   const PRIntervalTime mTimeout;
   // PermaHang timeout in ticks
@@ -117,6 +116,8 @@ public:
   bool mHanging;
   // Is the thread in a waiting state
   bool mWaiting;
+  // Statistics for telemetry
+  Telemetry::ThreadHangStats mStats;
 
   BackgroundHangThread(const char* aName,
                        uint32_t aTimeoutMs,
@@ -292,13 +293,13 @@ BackgroundHangThread::BackgroundHangThread(const char* aName,
                                            uint32_t aMaxTimeoutMs)
   : mManager(BackgroundHangManager::sInstance)
   , mThreadID(PR_GetCurrentThread())
-  , mThreadName(aName)
   , mTimeout(PR_MillisecondsToInterval(aTimeoutMs))
   , mMaxTimeout(PR_MillisecondsToInterval(aMaxTimeoutMs))
   , mInterval(mManager->mIntervalNow)
   , mHangStart(mInterval)
   , mHanging(false)
   , mWaiting(true)
+  , mStats(aName)
 {
   if (sTlsKey.initialized()) {
     sTlsKey.set(this);
@@ -438,6 +439,27 @@ void
 BackgroundHangMonitor::NotifyWait()
 {
   mThread->NotifyWait();
+}
+
+
+/* Because we are iterating through the BackgroundHangThread linked list,
+   we need to take a lock. Using MonitorAutoLock as a base class makes
+   sure all of that is taken care of for us. */
+BackgroundHangMonitor::ThreadHangStatsIterator::ThreadHangStatsIterator()
+  : MonitorAutoLock(BackgroundHangManager::sInstance->mLock)
+  , mThread(BackgroundHangManager::sInstance->mHangThreads.getFirst())
+{
+}
+
+Telemetry::ThreadHangStats*
+BackgroundHangMonitor::ThreadHangStatsIterator::GetNext()
+{
+  if (!mThread) {
+    return nullptr;
+  }
+  Telemetry::ThreadHangStats* stats = &mThread->mStats;
+  mThread = mThread->getNext();
+  return stats;
 }
 
 } // namespace mozilla

@@ -7,10 +7,15 @@
 #define mozilla_BackgroundHangMonitor_h
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/Monitor.h"
 
 #include <stdint.h>
 
 namespace mozilla {
+
+namespace Telemetry {
+class ThreadHangStats;
+};
 
 class BackgroundHangThread;
 
@@ -101,6 +106,44 @@ private:
   RefPtr<BackgroundHangThread> mThread;
 
 public:
+  /**
+   * ThreadHangStatsIterator is used to iterate through the ThreadHangStats
+   * associated with each active monitored thread. Because of an internal
+   * lock while this object is alive, a thread must use only one instance
+   * of this class at a time and must iterate through the list as fast as
+   * possible. The following example shows using the iterator:
+   *
+   * {
+   *   // Scope the iter variable so it's destroyed as soon as we're done
+   *   BackgroundHangMonitor::ThreadHangStatsIterator iter;
+   *   for (ThreadHangStats* histogram = iter.GetNext();
+   *        histogram; histogram = iter.GetNext()) {
+   *     // Process histogram
+   *   }
+   * }
+   */
+  class ThreadHangStatsIterator : public MonitorAutoLock
+  {
+  private:
+    BackgroundHangThread* mThread;
+
+    ThreadHangStatsIterator(const ThreadHangStatsIterator&);
+    ThreadHangStatsIterator& operator=(const ThreadHangStatsIterator&);
+
+  public:
+    /**
+     * Create an ThreadHangStatsIterator instance and take the internal lock.
+     * Internal lock is released on destruction.
+     */
+    ThreadHangStatsIterator();
+
+    /**
+     * Get the next item in the list; the first call returns the first item.
+     * Returns nullptr at the end of the list.
+     */
+    Telemetry::ThreadHangStats* GetNext();
+  };
+
   /**
    * Enable hang monitoring.
    * Must return before using BackgroundHangMonitor.
