@@ -5,9 +5,8 @@
 
 package org.mozilla.gecko.toolbar;
 
+import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.CustomEditText;
-import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
@@ -17,18 +16,14 @@ import org.mozilla.gecko.SiteIdentityPopup;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.PropertyAnimator.PropertyAnimationListener;
 import org.mozilla.gecko.animation.ViewHelper;
-import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
-import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.MenuPopup;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.Clipboard;
-import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.UiAsyncTask;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.GeckoImageButton;
@@ -41,22 +36,15 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.Rect;
-import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
 import android.os.SystemClock;
 import android.text.style.ForegroundColorSpan;
-import android.text.Editable;
-import android.text.InputType;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -67,33 +55,24 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
-import android.view.Window;
-import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Interpolator;
 import android.view.animation.TranslateAnimation;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
-import android.widget.RelativeLayout.LayoutParams;
-import android.widget.ViewSwitcher;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class BrowserToolbar extends GeckoRelativeLayout
-                            implements TextWatcher,
-                                       AutocompleteHandler,
-                                       Tabs.OnTabsChangedListener,
+                            implements Tabs.OnTabsChangedListener,
                                        GeckoMenu.ActionItemBarPresenter,
                                        Animation.AnimationListener,
                                        GeckoEventListener {
@@ -126,11 +105,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
     }
 
     private View mUrlDisplayContainer;
-    private View mUrlEditContainer;
-    private CustomEditText mUrlEditText;
+    private ToolbarEditLayout mUrlEditLayout;
     private View mUrlBarEntry;
     private ImageView mUrlBarRightEdge;
-    private BrowserToolbarBackground mUrlBarBackground;
     private GeckoTextView mTitle;
     private int mTitlePadding;
     private boolean mSiteSecurityVisible;
@@ -141,7 +118,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private ImageButton mFavicon;
     private ImageButton mStop;
     private ImageButton mSiteSecurity;
-    private ImageButton mGo;
     private PageActionLayout mPageActionLayout;
     private Animation mProgressSpinner;
     private TabCounter mTabsCounter;
@@ -163,12 +139,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     private boolean mShowSiteSecurity;
     private boolean mSpinnerVisible;
-
-    private boolean mDelayRestartInput;
-    // The previous autocomplete result returned to us
-    private String mAutoCompleteResult = "";
-    // The user typed part of the autocomplete result
-    private String mAutoCompletePrefix = null;
 
     private boolean mIsEditing;
     private boolean mAnimatingEntry;
@@ -195,6 +165,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private final ForegroundColorSpan mDomainColor;
     private final ForegroundColorSpan mPrivateDomainColor;
 
+    private final LightweightTheme mTheme;
+
     private boolean mShowUrl;
     private boolean mTrimURLs;
 
@@ -206,6 +178,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     public BrowserToolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
+        mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
         // BrowserToolbar is attached to BrowserApp only.
         mActivity = (BrowserApp) context;
@@ -216,7 +189,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
         Tabs.registerOnTabsChangedListener(this);
         mSwitchingTabs = true;
 
-        mIsEditing = false;
         mAnimatingEntry = false;
         mShowUrl = false;
         mTrimURLs = true;
@@ -282,14 +254,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         mAnimatingEntry = false;
 
-        mUrlBarBackground = (BrowserToolbarBackground) findViewById(R.id.url_bar_bg);
         mUrlBarViewOffset = res.getDimensionPixelSize(R.dimen.url_bar_offset_left);
         mDefaultForwardMargin = res.getDimensionPixelSize(R.dimen.forward_default_offset);
         mUrlDisplayContainer = findViewById(R.id.url_display_container);
         mUrlBarEntry = findViewById(R.id.url_bar_entry);
-
-        mUrlEditContainer = findViewById(R.id.url_edit_container);
-        mUrlEditText = (CustomEditText) findViewById(R.id.url_edit_text);
+        mUrlEditLayout = (ToolbarEditLayout) findViewById(R.id.edit_layout);
 
         // This will clip the right edge's image at 60% of its width
         mUrlBarRightEdge = (ImageView) findViewById(R.id.url_bar_right_edge);
@@ -338,6 +307,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
             mFocusOrder = Arrays.asList(this, mSiteSecurity, mPageActionLayout, mStop,
                     mTabs, mMenu);
         }
+
+        setIsEditing(false);
     }
 
     @Override
@@ -397,94 +368,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
             }
         });
 
-        mUrlEditText.addTextChangedListener(this);
-
-        mUrlEditText.setOnKeyPreImeListener(new CustomEditText.OnKeyPreImeListener() {
-            @Override
-            public boolean onKeyPreIme(View v, int keyCode, KeyEvent event) {
-                // We only want to process one event per tap
-                if (event.getAction() != KeyEvent.ACTION_DOWN)
-                    return false;
-
-                if (keyCode == KeyEvent.KEYCODE_ENTER) {
-                    // If the edit text has a composition string, don't submit the text yet.
-                    // ENTER is needed to commit the composition string.
-                    Editable content = mUrlEditText.getText();
-                    if (!hasCompositionString(content)) {
-                        if (mCommitListener != null) {
-                            mCommitListener.onCommit();
-                        }
-                        return true;
-                    }
-                }
-
-                if (keyCode == KeyEvent.KEYCODE_BACK) {
-                    // Drop the virtual keyboard.
-                    clearFocus();
-                    return true;
-                }
-
-                return false;
-            }
-        });
-
-        mUrlEditText.setOnKeyListener(new View.OnKeyListener() {
-            @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (keyCode == KeyEvent.KEYCODE_ENTER || GamepadUtils.isActionKey(event)) {
-                    if (event.getAction() != KeyEvent.ACTION_DOWN)
-                        return true;
-
-                    if (mCommitListener != null) {
-                        mCommitListener.onCommit();
-                    }
-                    return true;
-                } else if (GamepadUtils.isBackKey(event)) {
-                    if (mDismissListener != null) {
-                        mDismissListener.onDismiss();
-                    }
-                    return true;
-                }
-
-                return false;
-            }
-        });
-
-        mUrlEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+        mUrlEditLayout.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                if (v == null) {
-                    return;
-                }
-
                 setSelected(hasFocus);
-                if (hasFocus) {
-                    return;
-                }
-
-                InputMethodManager imm = (InputMethodManager) mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
-                try {
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                } catch (NullPointerException e) {
-                    Log.e(LOGTAG, "InputMethodManagerService, why are you throwing"
-                                  + " a NullPointerException? See bug 782096", e);
-                }
-            }
-        });
-
-        mUrlEditText.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                if (Build.VERSION.SDK_INT >= 11) {
-                    CustomEditText text = (CustomEditText) v;
-
-                    if (text.getSelectionStart() == text.getSelectionEnd())
-                        return false;
-
-                    return false;
-                }
-
-                return false;
             }
         });
 
@@ -552,16 +439,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
             }
         });
 
-        mGo = (ImageButton) findViewById(R.id.go);
-        mGo.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mCommitListener != null) {
-                    mCommitListener.onCommit();
-                }
-            }
-        });
-
         float slideWidth = getResources().getDimension(R.dimen.browser_toolbar_lock_width);
 
         LinearLayout.LayoutParams siteSecParams = (LinearLayout.LayoutParams) mSiteSecurity.getLayoutParams();
@@ -620,24 +497,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
             return false;
         } else if (isEditing()) {
-            final int prevSelStart = mUrlEditText.getSelectionStart();
-            final int prevSelEnd = mUrlEditText.getSelectionEnd();
-
-            // Manually dispatch the key event to the edit text. If selection changed as
-            // a result of the key event, then give focus back to mUrlEditText
-            mUrlEditText.dispatchKeyEvent(event);
-
-            final int curSelStart = mUrlEditText.getSelectionStart();
-            final int curSelEnd = mUrlEditText.getSelectionEnd();
-
-            if (prevSelStart != curSelStart || prevSelEnd != curSelEnd) {
-                mUrlEditText.requestFocusFromTouch();
-
-                // Restore the selection, which gets lost due to the focus switch
-                mUrlEditText.setSelection(curSelStart, curSelEnd);
-            }
-
-            return true;
+            return mUrlEditLayout.onKey(keyCode, event);
         }
 
         return false;
@@ -647,7 +507,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
     public boolean onTouchEvent(MotionEvent event) {
         // If the motion event has occured below the toolbar (due to the scroll
         // offset), let it pass through to the page.
-        if (event != null && event.getY() > getHeight() - getScrollY()) {
+        if (event != null && event.getY() > getHeight() + ViewHelper.getTranslationY(this)) {
             return false;
         }
 
@@ -742,88 +602,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
     }
 
-    // Return early if we're backspacing through the string, or
-    // have no autocomplete results
-    @Override
-    public void onAutocomplete(final String result) {
-        if (!isEditing()) {
-            return;
-        }
-
-        final String text = mUrlEditText.getText().toString();
-
-        if (result == null) {
-            mAutoCompleteResult = "";
-            return;
-        }
-
-        if (!result.startsWith(text) || text.equals(result)) {
-            return;
-        }
-
-        mAutoCompleteResult = result;
-        mUrlEditText.getText().append(result.substring(text.length()));
-        mUrlEditText.setSelection(text.length(), result.length());
-    }
-
-    @Override
-    public void afterTextChanged(final Editable s) {
-        if (!isEditing()) {
-            return;
-        }
-
-        final String text = s.toString();
-        boolean useHandler = false;
-        boolean reuseAutocomplete = false;
-        if (!hasCompositionString(s) && !StringUtils.isSearchQuery(text, false)) {
-            useHandler = true;
-
-            // If you're hitting backspace (the string is getting smaller
-            // or is unchanged), don't autocomplete.
-            if (mAutoCompletePrefix != null && (mAutoCompletePrefix.length() >= text.length())) {
-                useHandler = false;
-            } else if (mAutoCompleteResult != null && mAutoCompleteResult.startsWith(text)) {
-                // If this text already matches our autocomplete text, autocomplete likely
-                // won't change. Just reuse the old autocomplete value.
-                useHandler = false;
-                reuseAutocomplete = true;
-            }
-        }
-
-        // If this is the autocomplete text being set, don't run the filter.
-        if (TextUtils.isEmpty(mAutoCompleteResult) || !mAutoCompleteResult.equals(text)) {
-            if (isEditing() && mFilterListener != null) {
-                mFilterListener.onFilter(text, useHandler ? this : null);
-            }
-            mAutoCompletePrefix = text;
-
-            if (reuseAutocomplete) {
-                onAutocomplete(mAutoCompleteResult);
-            }
-        }
-
-        // If the edit text has a composition string, don't call updateGoButton().
-        // That method resets IME and composition state will be broken.
-        if (!hasCompositionString(s) ||
-            InputMethods.isGestureKeyboard(mUrlEditText.getContext())) {
-            updateGoButton(text);
-        }
-    }
-
-    @Override
-    public void beforeTextChanged(CharSequence s, int start, int count,
-                                  int after) {
-        // do nothing
-    }
-
-    @Override
-    public void onTextChanged(CharSequence s, int start, int before,
-                              int count) {
-        // do nothing
-    }
-
     public boolean isVisible() {
-        return getScrollY() == 0;
+        return ViewHelper.getTranslationY(this) == 0;
     }
 
     public void setNextFocusDownId(int nextId) {
@@ -872,19 +652,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     private int getUrlBarCurveTranslation() {
         return getWidth() - mTabs.getLeft();
-    }
-
-    private static boolean hasCompositionString(Editable content) {
-        Object[] spans = content.getSpans(0, content.length(), Object.class);
-        if (spans != null) {
-            for (Object span : spans) {
-                if ((content.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
-                    // Found composition string.
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     private boolean canDoBack(Tab tab) {
@@ -1081,11 +848,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             return;
         }
 
-        mUrlEditText.setText(suggestion);
-        mUrlEditText.setSelection(mUrlEditText.getText().length());
-        mUrlEditText.requestFocus();
-
-        showSoftInput();
+        mUrlEditLayout.onEditSuggestion(suggestion);
     }
 
     public void setTitle(CharSequence title) {
@@ -1104,11 +867,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
         String url = tab.getURL();
 
         if (!isEditing()) {
-            mUrlEditText.setText(url);
+            mUrlEditLayout.setText(url);
         }
 
         // Setting a null title will ensure we just see the "Enter Search or Address" placeholder text.
-        if ("about:home".equals(url) || "about:privatebrowsing".equals(url)) {
+        if (AboutPages.isTitlelessAboutPage(url)) {
             setTitle(null);
             return;
         }
@@ -1220,14 +983,17 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     public void setOnCommitListener(OnCommitListener listener) {
         mCommitListener = listener;
+        mUrlEditLayout.setOnCommitListener(listener);
     }
 
     public void setOnDismissListener(OnDismissListener listener) {
         mDismissListener = listener;
+        mUrlEditLayout.setOnDismissListener(listener);
     }
 
     public void setOnFilterListener(OnFilterListener listener) {
         mFilterListener = listener;
+        mUrlEditLayout.setOnFilterListener(listener);
     }
 
     public void setOnStartEditingListener(OnStartEditingListener listener) {
@@ -1238,41 +1004,33 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mStopEditingListener = listener;
     }
 
-    private void showSoftInput() {
-        InputMethodManager imm =
-               (InputMethodManager) mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.showSoftInput(mUrlEditText, InputMethodManager.SHOW_IMPLICIT);
+    private void showUrlEditLayout() {
+        setUrlEditLayoutVisibility(true, null);
     }
 
-    private void showUrlEditContainer() {
-        setUrlEditContainerVisibility(true, null);
+    private void showUrlEditLayout(PropertyAnimator animator) {
+        setUrlEditLayoutVisibility(true, animator);
     }
 
-    private void showUrlEditContainer(PropertyAnimator animator) {
-        setUrlEditContainerVisibility(true, animator);
+    private void hideUrlEditLayout() {
+        setUrlEditLayoutVisibility(false, null);
     }
 
-    private void hideUrlEditContainer() {
-        setUrlEditContainerVisibility(false, null);
+    private void hideUrlEditLayout(PropertyAnimator animator) {
+        setUrlEditLayoutVisibility(false, animator);
     }
 
-    private void hideUrlEditContainer(PropertyAnimator animator) {
-        setUrlEditContainerVisibility(false, animator);
-    }
+    private void setUrlEditLayoutVisibility(final boolean showEditLayout, PropertyAnimator animator) {
+        final View viewToShow = (showEditLayout ? mUrlEditLayout : mUrlDisplayContainer);
+        final View viewToHide = (showEditLayout ? mUrlDisplayContainer : mUrlEditLayout);
 
-    private void setUrlEditContainerVisibility(final boolean showEditContainer, PropertyAnimator animator) {
-        final View viewToShow = (showEditContainer ? mUrlEditContainer : mUrlDisplayContainer);
-        final View viewToHide = (showEditContainer ? mUrlDisplayContainer : mUrlEditContainer);
+        if (showEditLayout) {
+            mUrlEditLayout.prepareShowAnimation(animator);
+        }
 
         if (animator == null) {
             viewToHide.setVisibility(View.GONE);
             viewToShow.setVisibility(View.VISIBLE);
-
-            if (showEditContainer) {
-                mUrlEditText.requestFocus();
-                showSoftInput();
-            }
-
             return;
         }
 
@@ -1285,26 +1043,16 @@ public class BrowserToolbar extends GeckoRelativeLayout
                         PropertyAnimator.Property.ALPHA,
                         0.0f);
 
-        animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+        animator.addPropertyAnimationListener(new PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() {
                 viewToShow.setVisibility(View.VISIBLE);
-
-                if (showEditContainer) {
-                    ViewHelper.setAlpha(mGo, 0.0f);
-                    mUrlEditText.requestFocus();
-                }
             }
 
             @Override
             public void onPropertyAnimationEnd() {
                 viewToHide.setVisibility(View.GONE);
                 ViewHelper.setAlpha(viewToHide, 1.0f);
-
-                if (showEditContainer) {
-                    ViewHelper.setAlpha(mGo, 1.0f);
-                    showSoftInput();
-                }
             }
         });
     }
@@ -1344,6 +1092,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
     }
 
+    public void setIsEditing(boolean isEditing) {
+        mIsEditing = isEditing;
+        mUrlEditLayout.setEnabled(isEditing);
+    }
+
     /**
      * Returns whether or not the URL bar is in editing mode (url bar is expanded, hiding the new
      * tab button). Note that selection state is independent of editing mode.
@@ -1357,13 +1110,17 @@ public class BrowserToolbar extends GeckoRelativeLayout
             return;
         }
 
-        mUrlEditText.setText(url != null ? url : "");
-        mIsEditing = true;
+        mUrlEditLayout.setText(url != null ? url : "");
 
+        setIsEditing(true);
         updateChildrenForEditing();
 
         if (mStartEditingListener != null) {
             mStartEditingListener.onStartEditing();
+        }
+
+        if (mUrlBarRightEdge != null) {
+            mUrlBarRightEdge.setVisibility(View.VISIBLE);
         }
 
         final int entryTranslation = getUrlBarEntryTranslation();
@@ -1371,7 +1128,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         // This animation doesn't make much sense in a sidebar UI
         if (HardwareUtils.isTablet() || Build.VERSION.SDK_INT < 11) {
-            showUrlEditContainer();
+            showUrlEditLayout();
 
             if (!HardwareUtils.isTablet()) {
                 if (mUrlBarRightEdge != null) {
@@ -1429,7 +1186,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                             curveTranslation);
         }
 
-        showUrlEditContainer(animator);
+        showUrlEditLayout(animator);
 
         animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
@@ -1468,11 +1225,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
     }
 
     private String stopEditing() {
-        final String url = mUrlEditText.getText().toString();
+        final String url = mUrlEditLayout.getText();
         if (!isEditing()) {
             return url;
         }
-        mIsEditing = false;
+        setIsEditing(false);
 
         updateChildrenForEditing();
 
@@ -1481,7 +1238,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
 
         if (HardwareUtils.isTablet() || Build.VERSION.SDK_INT < 11) {
-            hideUrlEditContainer();
+            hideUrlEditLayout();
 
             if (!HardwareUtils.isTablet()) {
                 updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
@@ -1534,7 +1291,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                                    0);
         }
 
-        hideUrlEditContainer(contentAnimator);
+        hideUrlEditLayout(contentAnimator);
 
         contentAnimator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
@@ -1543,6 +1300,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
             @Override
             public void onPropertyAnimationEnd() {
+                if (mUrlBarRightEdge != null) {
+                    mUrlBarRightEdge.setVisibility(View.INVISIBLE);
+                }
+
                 PropertyAnimator buttonsAnimator = new PropertyAnimator(300);
 
                 // Fade toolbar buttons (page actions, stop) after the entry
@@ -1568,73 +1329,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
         contentAnimator.start();
 
         return url;
-    }
-
-    private void updateGoButton(String text) {
-        if (text.length() == 0) {
-            mGo.setVisibility(View.GONE);
-            return;
-        }
-
-        mGo.setVisibility(View.VISIBLE);
-
-        if (InputMethods.shouldDisableUrlBarUpdate(mUrlEditText.getContext())) {
-            return;
-        }
-
-        int imageResource = R.drawable.ic_url_bar_go;
-        String contentDescription = mActivity.getString(R.string.go);
-        int imeAction = EditorInfo.IME_ACTION_GO;
-
-        int actionBits = mUrlEditText.getImeOptions() & EditorInfo.IME_MASK_ACTION;
-        if (StringUtils.isSearchQuery(text, actionBits == EditorInfo.IME_ACTION_SEARCH)) {
-            imageResource = R.drawable.ic_url_bar_search;
-            contentDescription = mActivity.getString(R.string.search);
-            imeAction = EditorInfo.IME_ACTION_SEARCH;
-        }
-
-        InputMethodManager imm = InputMethods.getInputMethodManager(mUrlEditText.getContext());
-        if (imm == null) {
-            return;
-        }
-        boolean restartInput = false;
-        if (actionBits != imeAction) {
-            int optionBits = mUrlEditText.getImeOptions() & ~EditorInfo.IME_MASK_ACTION;
-            mUrlEditText.setImeOptions(optionBits | imeAction);
-
-            mDelayRestartInput = (imeAction == EditorInfo.IME_ACTION_GO) &&
-                                 (InputMethods.shouldDelayUrlBarUpdate(mUrlEditText.getContext()));
-            if (!mDelayRestartInput) {
-                restartInput = true;
-            }
-        } else if (mDelayRestartInput) {
-            // Only call delayed restartInput when actionBits == imeAction
-            // so if there are two restarts in a row, the first restarts will
-            // be discarded and the second restart will be properly delayed
-            mDelayRestartInput = false;
-            restartInput = true;
-        }
-        if (restartInput) {
-            updateKeyboardInputType();
-            imm.restartInput(mUrlEditText);
-            mGo.setImageResource(imageResource);
-            mGo.setContentDescription(contentDescription);
-        }
-    }
-
-    private void updateKeyboardInputType() {
-        // If the user enters a space, then we know they are entering search terms, not a URL.
-        // We can then switch to text mode so,
-        // 1) the IME auto-inserts spaces between words
-        // 2) the IME doesn't reset input keyboard to Latin keyboard.
-        String text = mUrlEditText.getText().toString();
-        int currentInputType = mUrlEditText.getInputType();
-        int newInputType = StringUtils.isSearchQuery(text, false)
-                           ? (currentInputType & ~InputType.TYPE_TEXT_VARIATION_URI) // Text mode
-                           : (currentInputType | InputType.TYPE_TEXT_VARIATION_URI); // URL mode
-        if (newInputType != currentInputType) {
-            mUrlEditText.setRawInputType(newInputType);
-        }
     }
 
     public void setButtonEnabled(ImageButton button, boolean enabled) {
@@ -1678,7 +1372,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     layoutParams.leftMargin = 0;
 
                     // Do the same on the URL edit container
-                    layoutParams = (ViewGroup.MarginLayoutParams)mUrlEditContainer.getLayoutParams();
+                    layoutParams = (ViewGroup.MarginLayoutParams) mUrlEditLayout.getLayoutParams();
                     layoutParams.leftMargin = 0;
 
                     requestLayout();
@@ -1695,7 +1389,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                         (ViewGroup.MarginLayoutParams)mUrlDisplayContainer.getLayoutParams();
                     layoutParams.leftMargin = mUrlBarViewOffset;
 
-                    layoutParams = (ViewGroup.MarginLayoutParams)mUrlEditContainer.getLayoutParams();
+                    layoutParams = (ViewGroup.MarginLayoutParams) mUrlEditLayout.getLayoutParams();
                     layoutParams.leftMargin = mUrlBarViewOffset;
 
                     ViewHelper.setTranslationX(mTitle, 0);
@@ -1790,13 +1484,12 @@ public class BrowserToolbar extends GeckoRelativeLayout
             updateForwardButton(canDoForward(tab));
 
             final boolean isPrivate = tab.isPrivate();
-            mUrlBarBackground.setPrivateMode(isPrivate);
             setPrivateMode(isPrivate);
             mTabs.setPrivateMode(isPrivate);
             mTitle.setPrivateMode(isPrivate);
             mMenu.setPrivateMode(isPrivate);
             mMenuIcon.setPrivateMode(isPrivate);
-            mUrlEditText.setPrivateMode(isPrivate);
+            mUrlEditLayout.setPrivateMode(isPrivate);
 
             if (mBack instanceof BackButton)
                 ((BackButton) mBack).setPrivateMode(isPrivate);
@@ -1877,5 +1570,23 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 tab.addToReadingList();
             }
         }
+    }
+
+    @Override
+    public void onLightweightThemeChanged() {
+        Drawable drawable = mTheme.getDrawable(this);
+        if (drawable == null)
+            return;
+
+        StateListDrawable stateList = new StateListDrawable();
+        stateList.addState(PRIVATE_STATE_SET, getColorDrawable(R.color.background_private));
+        stateList.addState(EMPTY_STATE_SET, drawable);
+
+        setBackgroundDrawable(stateList);
+    }
+
+    @Override
+    public void onLightweightThemeReset() {
+        setBackgroundResource(R.drawable.url_bar_bg);
     }
 }
