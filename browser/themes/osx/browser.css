@@ -382,7 +382,7 @@ toolbarbutton.bookmark-item > menupopup {
 
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */
 
-toolbar .toolbarbutton-1:not([type="menu-button"]),
+.toolbarbutton-1:not([type="menu-button"]),
 .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 #restore-button {
@@ -3941,6 +3941,17 @@ window > chatbox {
 }
 
 /* End customization mode */
+
+panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="top"],
+panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="bottom"] {
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-light-vertical.png");
+}
+@media (min-resolution: 2dppx) {
+  panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="top"],
+  panel[type="arrow"][popupid="click-to-play-plugins"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="bottom"] {
+    list-style-image: url("chrome://global/skin/arrow/panelarrow-light-vertical@2x.png");
+ }
+}
 
 #main-window[privatebrowsingmode=temporary] {
   background-image: url("chrome://browser/skin/privatebrowsing-mask.png");
