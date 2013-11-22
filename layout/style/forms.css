@@ -901,6 +901,13 @@ input[type=number]::-moz-number-text {
   -moz-appearance: none;
   /* work around autofocus bug 939248 on initial load */
   -moz-user-modify: read-write;
+  /* This pseudo-element is also an 'input' element (nested inside and
+   * distinct from the <input type=number> element) so we need to prevent the
+   * explicit setting of 'text-align' by the general CSS rule for 'input'
+   * above. We want to inherit its value from its <input type=number>
+   * ancestor, not have that general CSS rule reset it.
+   */
+  text-align: inherit;
   flex: 1;
   padding: 0;
   border: 0;
