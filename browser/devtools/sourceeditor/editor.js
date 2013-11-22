@@ -689,9 +689,14 @@ CM_MAPPING.forEach(function (name) {
  * Returns a string representation of a shortcut 'key' with
  * a OS specific modifier. Cmd- for Macs, Ctrl- for other
  * platforms. Useful with extraKeys configuration option.
+ *
+ * CodeMirror defines all keys with modifiers in the following
+ * order: Shift - Ctrl/Cmd - Alt - Key
  */
-Editor.accel = function (key) {
-  return (Services.appinfo.OS == "Darwin" ? "Cmd-" : "Ctrl-") + key;
+Editor.accel = function (key, modifiers={}) {
+  return (modifiers.shift ? "Shift-" : "") +
+         (Services.appinfo.OS == "Darwin" ? "Cmd-" : "Ctrl-") +
+         (modifiers.alt ? "Alt-" : "") + key;
 };
 
 /**
