@@ -94,7 +94,7 @@
                   android:visibility="gone"
                   android:orientation="horizontal">
 
-        <org.mozilla.gecko.CustomEditText
+        <org.mozilla.gecko.toolbar.ToolbarEditText
               android:id="@+id/url_edit_text"
               style="@style/UrlBar.Button"
               android:layout_width="fill_parent"
