@@ -15,7 +15,7 @@ dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=10
-MOD_PATCH_VERSION=2
+MOD_PATCH_VERSION=3
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -1006,6 +1006,8 @@ dnl = ARM toolchain tweaks
 dnl ========================================================
 
 dnl Defaults
+MOZ_ALIGN=toolchain-default
+
 case "$target" in
 arm*-android*|arm*-linuxandroid*)
     MOZ_THUMB=yes
@@ -1013,6 +1015,7 @@ arm*-android*|arm*-linuxandroid*)
     MOZ_FPU=vfp
     MOZ_FLOAT_ABI=softfp
     MOZ_SOFT_FLOAT=yes
+    MOZ_ALIGN=no
     ;;
 arm*-*)
     if test -n "$MOZ_PLATFORM_MAEMO"; then
@@ -1148,8 +1151,31 @@ no)
     ;;
 esac
 
+case "$MOZ_ALIGN" in
+toolchain-default|"")
+    align_flag=""
+    ;;
+no)
+    align_flag="-mno-unaligned-access"
+    ;;
+yes)
+    align_flag="-munaligned-access"
+    ;;
+*)
+    align_flag=""
+    ;;
+esac
+
+if test -n "$align_flag"; then
+  _SAVE_CFLAGS="$CFLAGS"
+  CFLAGS="$CFLAGS $align_flag"
+  AC_MSG_CHECKING(whether alignment flag ($align_flag) is supported)
+  AC_TRY_COMPILE([],[],,align_flag="")
+  CFLAGS="$_SAVE_CFLAGS"
+fi
+
 dnl Use echo to avoid accumulating space characters
-all_flags=`echo $arch_flag $thumb_flag $thumb_interwork_flag $fpu_flag $float_abi_flag $soft_float_flag`
+all_flags=`echo $arch_flag $thumb_flag $thumb_interwork_flag $fpu_flag $float_abi_flag $soft_float_flag $align_flag`
 if test -n "$all_flags"; then
     _SAVE_CFLAGS="$CFLAGS"
     CFLAGS="$all_flags"

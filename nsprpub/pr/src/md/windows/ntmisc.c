@@ -995,6 +995,23 @@ PRStatus _MD_CloseFileMap(PRFileMap *fmap)
     return PR_SUCCESS;
 }
 
+PRStatus _MD_SyncMemMap(
+    PRFileDesc *fd,
+    void *addr,
+    PRUint32 len)
+{
+    PROsfd osfd;
+
+    osfd = ( fd == (PRFileDesc*)-1 )?  -1 : fd->secret->md.osfd;
+
+    if (FlushViewOfFile(addr, len) && FlushFileBuffers((HANDLE) osfd)) {
+        return PR_SUCCESS;
+    } else {
+        PR_SetError(PR_UNKNOWN_ERROR, GetLastError());
+        return PR_FAILURE;
+    }
+}
+
 /*
  ***********************************************************************
  *
