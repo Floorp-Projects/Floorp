@@ -474,22 +474,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
             }
         });
 
-        mUrlEditText.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                if (Build.VERSION.SDK_INT >= 11) {
-                    CustomEditText text = (CustomEditText) v;
-
-                    if (text.getSelectionStart() == text.getSelectionEnd())
-                        return false;
-
-                    return false;
-                }
-
-                return false;
-            }
-        });
-
         mTabs.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
