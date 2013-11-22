@@ -118,7 +118,7 @@ ValueToIdentifier(JSContext *cx, HandleValue v, MutableHandleId id)
     if (!JSID_IS_ATOM(id) || !IsIdentifier(JSID_TO_ATOM(id))) {
         RootedValue val(cx, v);
         js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                                 JSDVG_SEARCH_STACK, val, NullPtr(), "not an identifier",
+                                 JSDVG_SEARCH_STACK, val, js::NullPtr(), "not an identifier",
                                  nullptr);
         return false;
     }
@@ -4119,8 +4119,8 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
         RootedValue undefinedValue(cx, UndefinedValue());
         for (unsigned i = 0; i < fargc; i++) {
             RootedFunction getobj(cx);
-            getobj = NewFunction(cx, NullPtr(), DebuggerArguments_getArg, 0,
-                                 JSFunction::NATIVE_FUN, global, NullPtr(),
+            getobj = NewFunction(cx, js::NullPtr(), DebuggerArguments_getArg, 0,
+                                 JSFunction::NATIVE_FUN, global, js::NullPtr(),
                                  JSFunction::ExtendedFinalizeKind);
             if (!getobj)
                 return false;
@@ -4451,7 +4451,7 @@ DebuggerFrame_eval(JSContext *cx, unsigned argc, Value *vp)
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.eval",
                                args[0], EvalWithDefaultBindings, JS::UndefinedHandleValue,
-                               args.get(1), args.rval(), dbg, NullPtr(), &iter);
+                               args.get(1), args.rval(), dbg, js::NullPtr(), &iter);
 }
 
 static bool
@@ -4462,7 +4462,7 @@ DebuggerFrame_evalWithBindings(JSContext *cx, unsigned argc, Value *vp)
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.evalWithBindings",
                                args[0], EvalHasExtraBindings, args[1], args.get(2),
-                               args.rval(), dbg, NullPtr(), &iter);
+                               args.rval(), dbg, js::NullPtr(), &iter);
 }
 
 static bool
@@ -5244,11 +5244,11 @@ RequireGlobalObject(JSContext *cx, HandleValue dbgobj, HandleObject referent)
 
         if (obj->is<GlobalObject>()) {
             js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
-                                     JSDVG_SEARCH_STACK, dbgobj, NullPtr(),
+                                     JSDVG_SEARCH_STACK, dbgobj, js::NullPtr(),
                                      isWrapper, isWindowProxy);
         } else {
             js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
-                                     JSDVG_SEARCH_STACK, dbgobj, NullPtr(),
+                                     JSDVG_SEARCH_STACK, dbgobj, js::NullPtr(),
                                      "a global object", nullptr);
         }
         return false;
