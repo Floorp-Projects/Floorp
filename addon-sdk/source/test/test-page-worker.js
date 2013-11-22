@@ -245,14 +245,15 @@ exports.testMultipleOnMessageCallbacks = function(assert, done) {
   let page = Page({
     contentScript: "self.postMessage('')",
     contentScriptWhen: "end",
-    onMessage: () => count += 1
+    onMessage: function() count += 1
   });
-  page.on('message', () => count += 2);
-  page.on('message', () => count *= 3);
-  page.on('message', () =>
+  page.on('message', function() count += 2);
+  page.on('message', function() count *= 3);
+  page.on('message', function()
     assert.equal(count, 9, "All callbacks were called, in order."));
-  page.on('message', done);
-};
+  page.on('message', function() done());
+
+}
 
 exports.testLoadContentPage = function(assert, done) {
   let page = Page({
