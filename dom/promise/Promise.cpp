@@ -184,7 +184,7 @@ Promise::EnabledForScope(JSContext* aCx, JSObject* /* unused */)
   // Note that we have no concept of a certified app in workers.
   // XXXbz well, why not?
   if (!NS_IsMainThread()) {
-    return workers::GetWorkerPrivateFromContext(aCx)->IsChromeWorker();
+    return workers::GetWorkerPrivateFromContext(aCx)->UsesSystemPrincipal();
   }
 
   nsIPrincipal* prin = nsContentUtils::GetSubjectPrincipal();
