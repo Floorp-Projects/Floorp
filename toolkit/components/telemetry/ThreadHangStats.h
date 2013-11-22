@@ -7,6 +7,7 @@
 #define mozilla_BackgroundHangTelemetry_h
 
 #include "mozilla/Array.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Move.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/PodOperations.h"
@@ -29,6 +30,16 @@ public:
   TimeHistogram()
   {
     mozilla::PodArrayZero(*this);
+  }
+  // Get minimum (inclusive) range of bucket in milliseconds
+  uint32_t GetBucketMin(size_t aBucket) const {
+    MOZ_ASSERT(aBucket < ArrayLength(*this));
+    return (1u << aBucket) & ~1u; // Bucket 0 starts at 0, not 1
+  }
+  // Get maximum (inclusive) range of bucket in milliseconds
+  uint32_t GetBucketMax(size_t aBucket) const {
+    MOZ_ASSERT(aBucket < ArrayLength(*this));
+    return (1u << (aBucket + 1u)) - 1u;
   }
   void Add(PRIntervalTime aTime);
 };
