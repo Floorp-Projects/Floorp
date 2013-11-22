@@ -8,10 +8,6 @@ EXPORTS += [
     'MP4Decoder.h',
     'MP4Reader.h',
     'PlatformDecoderModule.h',
-    'wmf/MFTDecoder.h',
-    'wmf/WMFAudioDecoder.h',
-    'wmf/WMFDecoderModule.h',
-    'wmf/WMFVideoDecoder.h',
 ]
 
 EXPORTS.mp4_demuxer += [
@@ -53,11 +49,21 @@ SOURCES += [
     'MP4Decoder.cpp',
     'MP4Reader.cpp',
     'PlatformDecoderModule.cpp',
-    'wmf/MFTDecoder.cpp',
-    'wmf/WMFAudioDecoder.cpp',
-    'wmf/WMFDecoderModule.cpp',
-    'wmf/WMFVideoDecoder.cpp',
 ]
+
+if CONFIG['MOZ_WMF']:
+  EXPORTS += [
+      'wmf/MFTDecoder.h',
+      'wmf/WMFAudioDecoder.h',
+      'wmf/WMFDecoderModule.h',
+      'wmf/WMFVideoDecoder.h',
+  ]
+  SOURCES += [
+      'wmf/MFTDecoder.cpp',
+      'wmf/WMFAudioDecoder.cpp',
+      'wmf/WMFDecoderModule.cpp',
+      'wmf/WMFVideoDecoder.cpp',
+  ]
 
 FINAL_LIBRARY = 'gklayout'
 

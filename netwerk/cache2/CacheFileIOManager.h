@@ -83,9 +83,9 @@ private:
                                  PLDHashEntryHdr *to);
   static void          ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry);
 
-  static PLDHashTableOps mOps;
-  PLDHashTable           mTable;
-  bool                   mInitialized;
+  static const PLDHashTableOps mOps;
+  PLDHashTable                 mTable;
+  bool                         mInitialized;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
