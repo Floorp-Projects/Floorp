@@ -673,6 +673,7 @@ protected:
                                         size_t aNumProperties);
   bool ParseTransition();
   bool ParseAnimation();
+  bool ParseWillChange();
 
   bool ParsePaint(nsCSSProperty aPropID);
   bool ParseDasharray();
@@ -7829,6 +7830,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseSize();
   case eCSSProperty_text_decoration:
     return ParseTextDecoration();
+  case eCSSProperty_will_change:
+    return ParseWillChange();
   case eCSSProperty_transform:
     return ParseTransform(false);
   case eCSSProperty__moz_transform:
@@ -11450,6 +11453,61 @@ static bool GetFunctionParseInformation(nsCSSKeyword aToken,
   // Convert the index into a mask.
   aVariantMask = kVariantMasks[variantIndex];
 
+  return true;
+}
+
+bool CSSParserImpl::ParseWillChange()
+{
+  nsCSSValue listValue;
+  nsCSSValueList* currentListValue = listValue.SetListValue();
+  bool first = true;
+  for (;;) {
+    const uint32_t variantMask = VARIANT_IDENTIFIER |
+                                 VARIANT_INHERIT |
+                                 VARIANT_NONE |
+                                 VARIANT_ALL |
+                                 VARIANT_AUTO;
+    nsCSSValue value;
+    if (!ParseVariant(value, variantMask, nullptr)) {
+      return false;
+    }
+
+    if (value.GetUnit() == eCSSUnit_None ||
+        value.GetUnit() == eCSSUnit_All)
+    {
+      return false;
+    }
+
+    if (value.GetUnit() != eCSSUnit_Ident) {
+      if (first) {
+        AppendValue(eCSSProperty_will_change, value);
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    nsString str;
+    value.GetStringValue(str);
+    if (str.LowerCaseEqualsLiteral("default")) {
+      return false;
+    }
+
+    currentListValue->mValue = value;
+
+    if (CheckEndProperty()) {
+      break;
+    }
+    if (!ExpectSymbol(',', true)) {
+      REPORT_UNEXPECTED_TOKEN(PEExpectedComma);
+      return false;
+    }
+    currentListValue->mNext = new nsCSSValueList;
+    currentListValue = currentListValue->mNext;
+    first = false;
+  }
+
+  AppendValue(eCSSProperty_will_change, listValue);
   return true;
 }
 
