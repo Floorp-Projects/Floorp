@@ -590,6 +590,9 @@ class types::CompilerConstraintList
 
   private:
 
+    // OOM during generation of some constraint.
+    bool failed_;
+
 #ifdef JS_ION
     // Constraints generated on heap properties.
     Vector<CompilerConstraint *, 0, jit::IonAllocPolicy> constraints;
@@ -597,9 +600,6 @@ class types::CompilerConstraintList
     // Scripts whose stack type sets were frozen for the compilation.
     Vector<FrozenScript, 1, jit::IonAllocPolicy> frozenScripts;
 #endif
-
-    // OOM during generation of some constraint.
-    bool failed_;
 
   public:
     CompilerConstraintList(jit::TempAllocator &alloc)
