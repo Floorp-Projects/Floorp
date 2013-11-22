@@ -37,6 +37,7 @@
                android:duplicateParentState="true"
                android:clickable="false"
                android:focusable="false"
+               android:visibility="invisible"
                android:src="@drawable/url_bar_right_edge"
                android:scaleType="fitXY"/>
 
