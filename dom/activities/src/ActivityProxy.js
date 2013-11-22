@@ -77,10 +77,12 @@ ActivityProxy.prototype = {
         debug("FireSuccess");
         Services.DOMRequest.fireSuccess(this.activity,
                                         ObjectWrapper.wrap(msg.result, this.window));
+        Services.obs.notifyObservers(null, "Activity:Success", null);
         break;
       case "Activity:FireError":
         debug("FireError");
         Services.DOMRequest.fireError(this.activity, msg.error);
+        Services.obs.notifyObservers(null, "Activity:Error", null);
         break;
     }
     // We can only get one FireSuccess / FireError message, so cleanup as soon as possible.

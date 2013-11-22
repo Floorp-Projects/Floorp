@@ -298,6 +298,10 @@ const kEventConstructors = {
                                                          return new PageTransitionEvent(aName, aProps);
                                                        },
                                              },
+  PointerEvent:                              { create: function (aName, aProps) {
+                                                         return new PointerEvent(aName, aProps);
+                                                       },
+                                             },
   PopStateEvent:                             { create: function (aName, aProps) {
                                                          return new PopStateEvent(aName, aProps);
                                                        },

@@ -860,7 +860,7 @@ function test26() {
       getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_ENABLED;
       prepareTest(test27, gTestRoot + "plugin_small.html");
     },
-    "Test 26, expected the plugin notification icon to be highlighted");
+    "Test 26, expected to have a plugin notification bar");
 }
 
 function test27() {
@@ -871,5 +871,5 @@ function test27() {
 
   waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") === null,
     finishTest,
-    "Test 27, expected the plugin notification icon to not be highlighted");
+    "Test 27, expected to not have a plugin notification bar");
 }
