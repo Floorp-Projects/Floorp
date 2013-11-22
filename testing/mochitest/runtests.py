@@ -621,7 +621,8 @@ class Mochitest(MochitestUtilsMixin):
 
   def buildBrowserEnv(self, options, debugger=False):
     """build the environment variables for the specific test and operating system"""
-    browserEnv = self.environment(xrePath=options.xrePath, debugger=debugger)
+    browserEnv = self.environment(xrePath=options.xrePath, debugger=debugger,
+                                  dmdPath=options.dmdPath)
 
     # These variables are necessary for correct application startup; change
     # via the commandline at your own risk.

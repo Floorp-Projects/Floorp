@@ -284,6 +284,10 @@ textarea:active {
   background-color: rgba(141, 184, 216, 0.5);
 }
 
+input[type=number]::-moz-number-spin-box {
+  display: none;
+}
+
 %ifdef MOZ_WIDGET_GONK
 /* This binding only provide key shortcuts that we can't use on devices */
 input,

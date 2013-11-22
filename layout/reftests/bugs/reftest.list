@@ -1759,7 +1759,7 @@ skip-if(B2G) == 818276-1.html 818276-1-ref.html
 == 846144-1.html 846144-1-ref.html
 == 847850-1.html 847850-1-ref.html
 == 848421-1.html 848421-1-ref.html
-== 849407-1.html 849407-1-ref.html
+random-if(B2G) == 849407-1.html 849407-1-ref.html
 == 849996-1.html 849996-1-ref.html
 == 858803-1.html 858803-1-ref.html
 == 860242-1.html 860242-1-ref.html

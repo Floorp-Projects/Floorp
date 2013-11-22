@@ -18,4 +18,5 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-More Windows WebIDL changes. 
+Bug 942184 - Landing and subsequent backout of bug 941450 increased the
+             possibility of random build bustage.

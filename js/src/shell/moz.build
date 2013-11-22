@@ -6,7 +6,7 @@
 
 PROGRAM = CONFIG['JS_SHELL_NAME']
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'js.cpp',
     'jsheaptools.cpp',
     'jsoptparse.cpp',

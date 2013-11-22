@@ -4536,6 +4536,9 @@ nsHttpChannel::BeginConnect()
     // if this somehow fails we can go on without it
     gHttpHandler->AddConnectionHeader(&mRequestHead.Headers(), mCaps);
 
+    if (mLoadFlags & VALIDATE_ALWAYS || BYPASS_LOCAL_CACHE(mLoadFlags))
+        mCaps |= NS_HTTP_REFRESH_DNS;
+
     if (!mConnectionInfo->UsingHttpProxy()) {
         // Start a DNS lookup very early in case the real open is queued the DNS can
         // happen in parallel. Do not do so in the presence of an HTTP proxy as
@@ -4548,8 +4551,10 @@ nsHttpChannel::BeginConnect()
         // be correct, and even when it isn't, the timing still represents _a_
         // valid DNS lookup timing for the site, even if it is not _the_
         // timing we used.
+        LOG(("nsHttpChannel::BeginConnect [this=%p] prefetching%s\n",
+             this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : ""));
         mDNSPrefetch = new nsDNSPrefetch(mURI, mTimingEnabled);
-        mDNSPrefetch->PrefetchHigh();
+        mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
     }
 
     // Adjust mCaps according to our request headers:
@@ -4557,10 +4562,6 @@ nsHttpChannel::BeginConnect()
     //    trying to establish a keep-alive connection.
     if (mRequestHead.HasHeaderValue(nsHttp::Connection, "close"))
         mCaps &= ~(NS_HTTP_ALLOW_KEEPALIVE | NS_HTTP_ALLOW_PIPELINING);
-
-    if ((mLoadFlags & VALIDATE_ALWAYS) ||
-        (BYPASS_LOCAL_CACHE(mLoadFlags)))
-        mCaps |= NS_HTTP_REFRESH_DNS;
 
     if (gHttpHandler->CriticalRequestPrioritization()) {
         if (mLoadAsBlocking)

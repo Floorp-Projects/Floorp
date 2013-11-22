@@ -4398,7 +4398,8 @@ JS::ReadOnlyCompileOptions::originPrincipals() const
 JS::OwningCompileOptions::OwningCompileOptions(JSContext *cx)
     : ReadOnlyCompileOptions(),
       runtime(GetRuntime(cx)),
-      elementRoot(cx)
+      elementRoot(cx),
+      elementPropertyRoot(cx)
 {
 }
 
@@ -4463,7 +4464,7 @@ JS::OwningCompileOptions::setSourceMapURL(JSContext *cx, const jschar *s)
 }
 
 JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
-    : ReadOnlyCompileOptions(), elementRoot(cx)
+    : ReadOnlyCompileOptions(), elementRoot(cx), elementPropertyRoot(cx)
 {
     this->version = (version != JSVERSION_UNKNOWN) ? version : cx->findVersion();
 

@@ -672,7 +672,7 @@ CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackend
         new LayerManagerComposite(new CompositorD3D11(mWidget));
     } else if (aBackendHints[i] == LAYERS_D3D9) {
       layerManager =
-        new LayerManagerComposite(new CompositorD3D9(mWidget));
+        new LayerManagerComposite(new CompositorD3D9(this, mWidget));
 #endif
     }
 

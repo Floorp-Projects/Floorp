@@ -1714,6 +1714,21 @@ ElementForStyleContext(nsIContent* aParentContent,
     return grandparentFrame->GetContent()->AsElement();
   }
 
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberText ||
+      aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberWrapper ||
+      aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberSpinBox ||
+      aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberSpinUp ||
+      aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberSpinDown) {
+    // Get content for nearest nsNumberControlFrame:
+    nsIFrame* f = aFrame->GetParent();
+    MOZ_ASSERT(f);
+    while (f->GetType() != nsGkAtoms::numberControlFrame) {
+      f = f->GetParent();
+      MOZ_ASSERT(f);
+    }
+    return f->GetContent()->AsElement();
+  }
+
   nsIContent* content = aParentContent ? aParentContent : aFrame->GetContent();
   return content->AsElement();
 }
