@@ -4113,6 +4113,10 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
     FinishMarkingValidation(rt);
 
     rt->gcLastGCTime = PRMJ_Now();
+
+#ifdef JS_WORKER_THREADS
+    EnqueuePendingParseTasksAfterGC(rt);
+#endif
 }
 
 namespace {
