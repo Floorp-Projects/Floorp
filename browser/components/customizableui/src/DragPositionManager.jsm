@@ -39,9 +39,6 @@ AreaPositionManager.prototype = {
     let last = null;
     let singleItemHeight;
     for (let child of aContainer.children) {
-      if (child.hidden) {
-        continue;
-      }
       let isNodeWide = this._checkIfWide(child);
       if (isNodeWide) {
         this._wideCache.add(child.id);
