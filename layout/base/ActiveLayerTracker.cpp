@@ -208,6 +208,16 @@ ActiveLayerTracker::NotifyInlineStyleRuleModified(nsIFrame* aFrame,
 /* static */ bool
 ActiveLayerTracker::IsStyleAnimated(nsIFrame* aFrame, nsCSSProperty aProperty)
 {
+  // TODO: Add some abuse restrictions
+  if ((aFrame->StyleDisplay()->mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM) &&
+      aProperty == eCSSProperty_transform) {
+    return true;
+  }
+  if ((aFrame->StyleDisplay()->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) &&
+      aProperty == eCSSProperty_opacity) {
+    return true;
+  }
+
   LayerActivity* layerActivity = GetLayerActivity(aFrame);
   if (layerActivity) {
     if (layerActivity->RestyleCountForProperty(aProperty) >= 2) {
