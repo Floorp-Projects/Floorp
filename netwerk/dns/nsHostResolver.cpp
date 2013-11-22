@@ -976,7 +976,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, AddrInfo *r
             rec->usingAnyThread = false;
         }
 
-        if (rec->addr_info && !mShutdown) {
+        if (!mShutdown) {
             // add to mEvictionQ
             PR_APPEND_LINK(rec, &mEvictionQ);
             NS_ADDREF(rec);
