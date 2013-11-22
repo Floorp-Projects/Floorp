@@ -7770,6 +7770,20 @@ AC_SUBST(JS_SHARED_LIBRARY)
 AC_SUBST(LIBXUL_LIBS)
 XPCOM_LIBS="$LIBXUL_LIBS"
 
+if test "$OS_ARCH" = "WINNT"; then
+  GKMEDIAS_SHARED_LIBRARY=1
+fi
+AC_SUBST(GKMEDIAS_SHARED_LIBRARY)
+
+if test -z "$MOZ_NATIVE_ZLIB"; then
+if test -n "$JS_SHARED_LIBRARY" -o "$GKMEDIAS_SHARED_LIBRARY"; then
+  ZLIB_IN_MOZGLUE=1
+  AC_DEFINE(ZLIB_IN_MOZGLUE)
+fi
+fi
+
+AC_SUBST(ZLIB_IN_MOZGLUE)
+
 dnl ========================================================
 dnl =
 dnl = Standalone module options
@@ -9217,7 +9231,7 @@ fi
 if test -n "$MOZ_GLUE_PROGRAM_LDFLAGS"; then
    export MOZ_GLUE_PROGRAM_LDFLAGS
 fi
-if test "$MOZ_NATIVE_ZLIB" != 1 -a "$OS_ARCH" = "WINNT"; then
+if test -n "$ZLIB_IN_MOZGLUE"; then
    MOZ_ZLIB_LIBS=
 fi
 export MOZ_NATIVE_ZLIB
@@ -9232,6 +9246,7 @@ export STLPORT_LDFLAGS
 export STLPORT_LIBS
 export JS_STANDALONE=no
 export MOZ_LINKER
+export ZLIB_IN_MOZGLUE
 
 if ! test -e js; then
     mkdir js
