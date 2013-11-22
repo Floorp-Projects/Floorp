@@ -32,6 +32,7 @@
 #include "nsTraceRefcntImpl.h"
 
 #include "nsIFile.h"
+#include "mozilla/WindowsDllBlocklist.h"
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -60,8 +61,6 @@ GetNativeModuleLoaderLog()
         sLog = PR_NewLogModule("nsNativeModuleLoader");
     return sLog;
 }
-
-bool gInXPCOMLoadOnMainThread = false;
 
 #define LOG(level, args) PR_LOG(GetNativeModuleLoaderLog(), level, args)
 
@@ -140,10 +139,12 @@ nsNativeModuleLoader::LoadModule(FileLocation &aFile)
     }
 
     // We haven't loaded this module before
-
-    gInXPCOMLoadOnMainThread = true;
-    rv = file->Load(&data.library);
-    gInXPCOMLoadOnMainThread = false;
+    {
+#ifdef HAS_DLL_BLOCKLIST
+      AutoSetXPCOMLoadOnMainThread guard;
+#endif
+      rv = file->Load(&data.library);
+    }
 
     if (NS_FAILED(rv)) {
         char errorMsg[1024] = "<unknown; can't get error from NSPR>";
