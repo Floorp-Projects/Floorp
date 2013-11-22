@@ -315,6 +315,7 @@ protected:
 
     bool ShouldDelayDialogs();
     bool AllowContentIME();
+    nsIntPoint GetChildProcessOffset();
 
     virtual PRenderFrameParent* AllocPRenderFrameParent() MOZ_OVERRIDE;
     virtual bool DeallocPRenderFrameParent(PRenderFrameParent* aFrame) MOZ_OVERRIDE;
@@ -331,6 +332,9 @@ protected:
     nsAutoString mIMECompositionText;
     uint32_t mIMECompositionStart;
     uint32_t mIMESeqno;
+
+    uint32_t mIMECompositionRectOffset;
+    nsIntRect mIMECompositionRect;
 
     // The number of event series we're currently capturing.
     int32_t mEventCaptureDepth;
