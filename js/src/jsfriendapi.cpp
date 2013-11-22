@@ -560,6 +560,16 @@ js::GetObjectProto(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<J
     return true;
 }
 
+JS_FRIEND_API(bool)
+js::GetOriginalEval(JSContext *cx, HandleObject scope, MutableHandleObject eval)
+{
+    assertSameCompartment(cx, scope);
+    if (!scope->global().getOrCreateObjectPrototype(cx))
+        return false;
+    eval.set(&scope->global().getOriginalEval().toObject());
+    return true;
+}
+
 JS_FRIEND_API(void)
 js::SetReservedSlotWithBarrier(JSObject *obj, size_t slot, const js::Value &value)
 {
