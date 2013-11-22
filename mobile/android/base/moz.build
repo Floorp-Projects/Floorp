@@ -79,6 +79,7 @@ if CONFIG['MOZ_WEBRTC']:
 
 gbjar = add_java_jar('gecko-browser')
 gbjar.sources += [
+    'AboutPages.java',
     'ANRReporter.java',
     'ActivityHandlerHelper.java',
     'AlertNotification.java',
