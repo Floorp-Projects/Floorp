@@ -778,14 +778,11 @@ CustomizeMode.prototype = {
     __dumpDragData(aEvent);
     let item = aEvent.target;
     while (item && item.localName != "toolbarpaletteitem") {
-      if (item.localName == "toolbar") {
+      if (item.localName == "toolbar" ||
+          item.classList.contains(kPlaceholderClass)) {
         return;
       }
       item = item.parentNode;
-    }
-
-    if (item.classList.contains(kPlaceholderClass)) {
-      return;
     }
 
     let dt = aEvent.dataTransfer;
