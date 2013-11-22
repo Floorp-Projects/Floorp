@@ -677,7 +677,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   MOZ_ASSERT(aThread);
   mThread = do_QueryInterface(aThread);
 
-  mPCObserver.Set(&aObserver);
+  mPCObserver = do_GetWeakReference(&aObserver);
 
   // Find the STS thread
 
@@ -978,6 +978,28 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
   return NS_OK;
 }
 
+// do_QueryObjectReferent() - Helps get PeerConnectionObserver from nsWeakPtr.
+//
+// nsWeakPtr deals in XPCOM interfaces, while webidl bindings are concrete objs.
+// TODO: Turn this into a central (template) function somewhere (Bug 939178)
+//
+// Without it, each weak-ref call in this file would look like this:
+//
+//  nsCOMPtr<nsISupportsWeakReference> tmp = do_QueryReferent(mPCObserver);
+//  nsRefPtr<nsSupportsWeakReference> tmp2 = do_QueryObject(tmp);
+//  nsRefPtr<PeerConnectionObserver> pco = static_cast<PeerConnectionObserver*>(&*tmp2);
+//  if (!pco) {
+//    return;
+//  }
+
+static already_AddRefed<PeerConnectionObserver>
+do_QueryObjectReferent(nsIWeakReference* aRawPtr) {
+  nsCOMPtr<nsISupportsWeakReference> tmp = do_QueryReferent(aRawPtr);
+  nsRefPtr<nsSupportsWeakReference> tmp2 = do_QueryObject(tmp);
+  nsRefPtr<PeerConnectionObserver> tmp3 = static_cast<PeerConnectionObserver*>(&*tmp2);
+  return tmp3.forget();
+}
+
 void
 PeerConnectionImpl::NotifyConnection()
 {
@@ -986,7 +1008,7 @@ PeerConnectionImpl::NotifyConnection()
   CSFLogDebug(logTag, "%s", __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
-  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
     return;
   }
@@ -1007,7 +1029,7 @@ PeerConnectionImpl::NotifyClosedConnection()
   CSFLogDebug(logTag, "%s", __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
-  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
     return;
   }
@@ -1047,7 +1069,7 @@ PeerConnectionImpl::NotifyDataChannel(already_AddRefed<DataChannel> aChannel)
                                      getter_AddRefs(domchannel));
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
     return;
   }
@@ -1513,7 +1535,7 @@ PeerConnectionImpl::onCallEvent(const OnCallEventArgs& args)
       break;
   }
 
-  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
     return;
   }
@@ -1536,7 +1558,7 @@ PeerConnectionImpl::ChangeReadyState(PCImplReadyState aReadyState)
   mReadyState = aReadyState;
 
   // Note that we are passing an nsRefPtr which keeps the observer live.
-  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
     return;
   }
@@ -1558,7 +1580,7 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState)
   }
 
   mSignalingState = aSignalingState;
-  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
     return;
   }
@@ -1657,7 +1679,7 @@ PeerConnectionImpl::IceStateChange_m(PCImplIceState aState)
       break;
   }
 
-  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
     return NS_OK;
   }
@@ -1760,7 +1782,7 @@ void PeerConnectionImpl::OnStatsReport_m(
     uint32_t trackId,
     nsresult result,
     nsAutoPtr<RTCStatsReportInternal> report) {
-  PeerConnectionObserver* pco = mPCObserver.MayGet();
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (pco) {
     JSErrorResult rv;
     if (NS_SUCCEEDED(result)) {
@@ -1851,32 +1873,6 @@ PeerConnectionImpl::GetRemoteStreams(nsTArray<nsRefPtr<DOMMediaStream > >& resul
 #else
   return NS_ERROR_FAILURE;
 #endif
-}
-
-// WeakConcretePtr gets around WeakPtr not working on concrete types by using
-// the attribute getWeakReferent, a member that supports weak refs, as a guard.
-
-void
-PeerConnectionImpl::WeakConcretePtr::Set(PeerConnectionObserver *aObserver) {
-  mObserver = aObserver;
-#ifdef MOZILLA_INTERNAL_API
-  MOZ_ASSERT(NS_IsMainThread());
-  JSErrorResult rv;
-  nsCOMPtr<nsISupports> tmp = aObserver->GetWeakReferent(rv);
-  MOZ_ASSERT(!rv.Failed());
-  mWeakPtr = do_GetWeakReference(tmp);
-#else
-  mWeakPtr = do_GetWeakReference(aObserver);
-#endif
-}
-
-PeerConnectionObserver *
-PeerConnectionImpl::WeakConcretePtr::MayGet() {
-#ifdef MOZILLA_INTERNAL_API
-  MOZ_ASSERT(NS_IsMainThread());
-#endif
-  nsCOMPtr<nsISupports> guard = do_QueryReferent(mWeakPtr);
-  return (!guard) ? nullptr : mObserver;
 }
 
 }  // end sipcc namespace
