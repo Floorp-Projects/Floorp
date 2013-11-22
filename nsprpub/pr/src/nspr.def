@@ -229,6 +229,7 @@ EXPORTS ;-
 		PR_Malloc;
 		PR_MemMap;
 		PR_MemUnmap;
+		PR_SyncMemMap;
 		PR_MicrosecondsToInterval;
 		PR_MillisecondsToInterval;
 		PR_LockOrderedLock;
