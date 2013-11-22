@@ -202,15 +202,8 @@ const WorkerSandbox = EventEmitter.compose({
           clearInterval: 'r'
         }
       },
-      sandbox: {
-        evaluate: evaluate,
-        __exposedProps__: {
-          evaluate: 'r',
-        }
-      },
       __exposedProps__: {
-        timers: 'r',
-        sandbox: 'r',
+        timers: 'r'
       }
     };
     let onEvent = this._onContentEvent.bind(this);
@@ -238,19 +231,6 @@ const WorkerSandbox = EventEmitter.compose({
       // destroyed?
       if (self._addonWorker)
         self._addonWorker._onContentScriptEvent.apply(self._addonWorker, arguments);
-    });
-
-    // unwrap, recreate and propagate async Errors thrown from content-script
-    this.on("error", function onError({instanceOfError, value}) {
-      if (self._addonWorker) {
-        let error = value;
-        if (instanceOfError) {
-          error = new Error(value.message, value.fileName, value.lineNumber);
-          error.stack = value.stack;
-          error.name = value.name;
-        }
-        self._addonWorker._emit('error', error);
-      }
     });
 
     // Inject `addon` global into target document if document is trusted,
