@@ -12,11 +12,6 @@
     <ImageButton android:id="@+id/forward"
                  style="@style/UrlBar.ImageButton.Unused"/>
 
-    <org.mozilla.gecko.toolbar.BrowserToolbarBackground android:id="@+id/url_bar_bg"
-                                                        android:layout_width="fill_parent"
-                                                        android:layout_height="fill_parent"
-                                                        android:background="@drawable/url_bar_bg"/>
-
     <ImageView android:id="@+id/url_bar_entry"
                style="@style/UrlBar.Button"
                android:layout_marginLeft="4dp"
