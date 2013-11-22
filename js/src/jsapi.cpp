@@ -4501,17 +4501,7 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
 JS_PUBLIC_API(bool)
 JS::CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options)
 {
-    if (!cx->runtime()->canUseParallelParsing())
-        return false;
-
-    // Off thread compilation can't occur during incremental collections on the
-    // atoms compartment, to avoid triggering barriers. Outside the atoms
-    // compartment, the compilation will use a new zone which doesn't require
-    // barriers itself.
-    if (cx->runtime()->activeGCInAtomsZone())
-        return false;
-
-    return true;
+    return cx->runtime()->canUseParallelParsing();
 }
 
 JS_PUBLIC_API(bool)
