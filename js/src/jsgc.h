@@ -732,6 +732,9 @@ PrepareForDebugGC(JSRuntime *rt);
 extern void
 MinorGC(JSRuntime *rt, JS::gcreason::Reason reason);
 
+extern void
+MinorGC(JSContext *cx, JS::gcreason::Reason reason);
+
 #ifdef JS_GC_ZEAL
 extern void
 SetGCZeal(JSRuntime *rt, uint8_t zeal, uint32_t frequency);

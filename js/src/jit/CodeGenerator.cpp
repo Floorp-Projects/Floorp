@@ -800,7 +800,7 @@ CodeGenerator::visitLambda(LLambda *lir)
 
     JS_ASSERT(!info.singletonType);
 
-    masm.newGCThing(output, info.fun, ool->entry());
+    masm.newGCThing(output, info.fun, ool->entry(), gc::DefaultHeap);
     masm.initGCThing(output, info.fun);
 
     emitLambdaInit(output, scopeChain, info);
@@ -3079,7 +3079,7 @@ CodeGenerator::visitNewParallelArray(LNewParallelArray *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    masm.newGCThing(objReg, templateObject, ool->entry());
+    masm.newGCThing(objReg, templateObject, ool->entry(), gc::DefaultHeap);
     masm.initGCThing(objReg, templateObject);
 
     masm.bind(ool->rejoin());
@@ -3112,7 +3112,7 @@ CodeGenerator::visitNewArray(LNewArray *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    masm.newGCThing(objReg, templateObject, ool->entry());
+    masm.newGCThing(objReg, templateObject, ool->entry(), lir->mir()->initialHeap());
     masm.initGCThing(objReg, templateObject);
 
     masm.bind(ool->rejoin());
@@ -3198,7 +3198,7 @@ CodeGenerator::visitNewObject(LNewObject *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    masm.newGCThing(objReg, templateObject, ool->entry());
+    masm.newGCThing(objReg, templateObject, ool->entry(), lir->mir()->initialHeap());
     masm.initGCThing(objReg, templateObject);
 
     masm.bind(ool->rejoin());
@@ -3232,7 +3232,7 @@ CodeGenerator::visitNewDeclEnvObject(LNewDeclEnvObject *lir)
     if (!ool)
         return false;
 
-    masm.newGCThing(obj, templateObj, ool->entry());
+    masm.newGCThing(obj, templateObj, ool->entry(), gc::DefaultHeap);
     masm.initGCThing(obj, templateObj);
     masm.bind(ool->rejoin());
     return true;
@@ -3274,7 +3274,7 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
         // Objects can only be given singleton types in VM calls.
         masm.jump(ool->entry());
     } else {
-        masm.newGCThing(obj, templateObj, ool->entry());
+        masm.newGCThing(obj, templateObj, ool->entry(), gc::DefaultHeap);
         masm.initGCThing(obj, templateObj);
 
         if (lir->slots()->isRegister())
@@ -3364,7 +3364,7 @@ CodeGenerator::visitNewStringObject(LNewStringObject *lir)
     if (!ool)
         return false;
 
-    masm.newGCThing(output, templateObj, ool->entry());
+    masm.newGCThing(output, templateObj, ool->entry(), gc::DefaultHeap);
     masm.initGCThing(output, templateObj);
 
     masm.loadStringLength(input, temp);
@@ -3586,7 +3586,7 @@ CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
     JSObject *templateObject = lir->mir()->templateObject();
     gc::AllocKind allocKind = templateObject->tenuredGetAllocKind();
     int thingSize = (int)gc::Arena::thingSize(allocKind);
-    gc::InitialHeap initialHeap = templateObject->type()->initialHeapForJITAlloc();
+    gc::InitialHeap initialHeap = lir->mir()->initialHeap();
     Register objReg = ToRegister(lir->output());
 
     OutOfLineCode *ool = oolCallVM(NewGCThingInfo, lir,
@@ -3596,7 +3596,7 @@ CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
         return false;
 
     // Allocate. If the FreeList is empty, call to VM, which may GC.
-    masm.newGCThing(objReg, templateObject, ool->entry());
+    masm.newGCThing(objReg, templateObject, ool->entry(), lir->mir()->initialHeap());
 
     // Initialize based on the templateObject.
     masm.bind(ool->rejoin());
@@ -5295,7 +5295,7 @@ CodeGenerator::visitArrayConcat(LArrayConcat *lir)
 
     // Try to allocate an object.
     JSObject *templateObj = lir->mir()->templateObj();
-    masm.newGCThing(temp1, templateObj, &fail);
+    masm.newGCThing(temp1, templateObj, &fail, lir->mir()->initialHeap());
     masm.initGCThing(temp1, templateObj);
     masm.jump(&call);
     {
@@ -5667,7 +5667,7 @@ CodeGenerator::visitRest(LRest *lir)
     JSObject *templateObject = lir->mir()->templateObject();
 
     Label joinAlloc, failAlloc;
-    masm.newGCThing(temp2, templateObject, &failAlloc);
+    masm.newGCThing(temp2, templateObject, &failAlloc, gc::DefaultHeap);
     masm.initGCThing(temp2, templateObject);
     masm.jump(&joinAlloc);
     {
