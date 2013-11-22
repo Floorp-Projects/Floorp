@@ -388,9 +388,8 @@ typedef uint32_t TypeFlags;
 
 /* Flags and other state stored in TypeObject::flags */
 enum {
-    /*
-     * UNUSED FLAG                    = 0x1,
-     */
+    /* Whether this type object is associated with some allocation site. */
+    OBJECT_FLAG_FROM_ALLOCATION_SITE  = 0x1,
 
     /* If set, addendum information should not be installed on this object. */
     OBJECT_FLAG_ADDENDUM_CLEARED      = 0x2,
@@ -426,40 +425,32 @@ enum {
      */
     OBJECT_FLAG_LENGTH_OVERFLOW       = 0x00040000,
 
-    /*
-     * UNUSED FLAG                    = 0x00080000,
-     */
-
     /* Whether any objects have been iterated over. */
-    OBJECT_FLAG_ITERATED              = 0x00100000,
+    OBJECT_FLAG_ITERATED              = 0x00080000,
 
     /* For a global object, whether flags were set on the RegExpStatics. */
-    OBJECT_FLAG_REGEXP_FLAGS_SET      = 0x00200000,
-
-    /*
-     * UNUSED FLAG                    = 0x00400000,
-     */
+    OBJECT_FLAG_REGEXP_FLAGS_SET      = 0x00100000,
 
     /*
      * For the function on a run-once script, whether the function has actually
      * run multiple times.
      */
-    OBJECT_FLAG_RUNONCE_INVALIDATED   = 0x00800000,
+    OBJECT_FLAG_RUNONCE_INVALIDATED   = 0x00200000,
+
+    /*
+     * Whether objects with this type should be allocated directly in the
+     * tenured heap.
+     */
+    OBJECT_FLAG_PRE_TENURE            = 0x00400000,
 
     /* Flags which indicate dynamic properties of represented objects. */
-    OBJECT_FLAG_DYNAMIC_MASK          = 0x00ff0000,
-
-    /* Mask/shift for tenuring count. */
-    OBJECT_FLAG_TENURE_COUNT_MASK     = 0x7f000000,
-    OBJECT_FLAG_TENURE_COUNT_SHIFT    = 24,
-    OBJECT_FLAG_TENURE_COUNT_LIMIT    =
-        OBJECT_FLAG_TENURE_COUNT_MASK >> OBJECT_FLAG_TENURE_COUNT_SHIFT,
+    OBJECT_FLAG_DYNAMIC_MASK          = 0x007f0000,
 
     /*
      * Whether all properties of this object are considered unknown.
      * If set, all flags in DYNAMIC_MASK will also be set.
      */
-    OBJECT_FLAG_UNKNOWN_PROPERTIES    = 0x80000000,
+    OBJECT_FLAG_UNKNOWN_PROPERTIES    = 0x00800000,
 
     /* Mask for objects created with unknown properties. */
     OBJECT_FLAG_UNKNOWN_MASK =
@@ -991,6 +982,27 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
         return !!(flags & OBJECT_FLAG_UNKNOWN_PROPERTIES);
     }
 
+    bool shouldPreTenure() {
+        return hasAnyFlags(OBJECT_FLAG_PRE_TENURE) && !unknownProperties();
+    }
+
+    gc::InitialHeap initialHeap(CompilerConstraintList *constraints);
+
+    bool canPreTenure() {
+        // Only types associated with particular allocation sites or 'new'
+        // scripts can be marked as needing pretenuring. Other types can be
+        // used for different purposes across the compartment and can't use
+        // this bit reliably.
+        if (unknownProperties())
+            return false;
+        return (flags & OBJECT_FLAG_FROM_ALLOCATION_SITE) || hasNewScript();
+    }
+
+    void setShouldPreTenure(ExclusiveContext *cx) {
+        JS_ASSERT(canPreTenure());
+        setFlags(cx, OBJECT_FLAG_PRE_TENURE);
+    }
+
     /*
      * Get or create a property of this object. Only call this for properties which
      * a script accesses explicitly.
@@ -1002,39 +1014,6 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
 
     inline unsigned getPropertyCount();
     inline Property *getProperty(unsigned i);
-
-    /* Tenure counter management. */
-
-    /*
-     * When an object allocation site generates objects that are long lived
-     * enough to frequently be tenured during minor collections, we mark the
-     * site as long lived and allocate directly into the tenured generation.
-     */
-    const static uint32_t MaxJITAllocTenures = OBJECT_FLAG_TENURE_COUNT_LIMIT - 2;
-
-    /*
-     * NewObjectCache is used when we take a stub for allocation. It is used
-     * more rarely, but still in hot paths, so pre-tenure with fewer uses.
-     */
-    const static uint32_t MaxCachedAllocTenures = 64;
-
-    /* Returns true if the allocating script should be recompiled. */
-    bool incrementTenureCount();
-    uint32_t tenureCount() const {
-        return (flags & OBJECT_FLAG_TENURE_COUNT_MASK) >> OBJECT_FLAG_TENURE_COUNT_SHIFT;
-    }
-
-    bool isLongLivedForCachedAlloc() const {
-        return tenureCount() >= MaxCachedAllocTenures;
-    }
-
-    bool isLongLivedForJITAlloc() const {
-        return tenureCount() >= MaxJITAllocTenures;
-    }
-
-    gc::InitialHeap initialHeapForJITAlloc() const {
-        return isLongLivedForJITAlloc() ? gc::TenuredHeap : gc::DefaultHeap;
-    }
 
     /* Helpers */
 

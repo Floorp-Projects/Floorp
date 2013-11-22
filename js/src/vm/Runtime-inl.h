@@ -47,7 +47,7 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::Initi
     Entry *entry = &entries[entry_];
 
     JSObject *templateObj = reinterpret_cast<JSObject *>(&entry->templateObject);
-    if (templateObj->type()->isLongLivedForCachedAlloc())
+    if (templateObj->type()->shouldPreTenure())
         heap = gc::TenuredHeap;
 
     JSObject *obj = js_NewGCObject<NoGC>(cx, entry->kind, heap);
