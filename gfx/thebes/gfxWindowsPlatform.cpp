@@ -14,6 +14,7 @@
 #include "nsUnicharUtils.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/WindowsVersion.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 
@@ -236,7 +237,6 @@ public:
     CollectReports(nsIMemoryReporterCallback* aCb,
                    nsISupports* aClosure)
     {
-        int32_t winVers, buildNum;
         HANDLE ProcessHandle = GetCurrentProcess();
 
         int64_t dedicatedBytesUsed = 0;
@@ -247,10 +247,8 @@ public:
         HMODULE gdi32Handle;
         PFND3DKMTQS queryD3DKMTStatistics;
 
-        winVers = gfxWindowsPlatform::WindowsOSVersion(&buildNum);
-
         // GPU memory reporting is not available before Windows 7
-        if (winVers < gfxWindowsPlatform::kWindows7)
+        if (!IsWin7OrLater()) 
             return NS_OK;
 
         if (gdi32Handle = LoadLibrary(TEXT("gdi32.dll")))
@@ -290,7 +288,7 @@ public:
                         bool aperture;
 
                         // SegmentInformation has a different definition in Win7 than later versions
-                        if (winVers < gfxWindowsPlatform::kWindows8)
+                        if (!IsWin8OrLater())
                             aperture = queryStatistics.QueryResult.SegmentInfoWin7.Aperture;
                         else
                             aperture = queryStatistics.QueryResult.SegmentInfoWin8.Aperture;
@@ -415,10 +413,7 @@ gfxWindowsPlatform::UpdateRenderMode()
  */
     mRenderMode = RENDER_GDI;
 
-    OSVERSIONINFOA versionInfo;
-    versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
-    ::GetVersionExA(&versionInfo);
-    bool isVistaOrHigher = versionInfo.dwMajorVersion >= 6;
+    bool isVistaOrHigher = IsVistaOrLater();
 
     bool safeMode = false;
     nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
@@ -621,36 +616,13 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
 #endif
 }
 
-// bug 630201 - older pre-RTM versions of Direct2D/DirectWrite cause odd
-// crashers so blacklist them altogether
-
-#ifdef CAIRO_HAS_DWRITE_FONT
-#define WINDOWS7_RTM_BUILD 7600
-
-static bool
-AllowDirectWrite()
-{
-    int32_t winVers, buildNum;
-
-    winVers = gfxWindowsPlatform::WindowsOSVersion(&buildNum);
-    if (winVers == gfxWindowsPlatform::kWindows7 &&
-        buildNum < WINDOWS7_RTM_BUILD)
-    {
-        // don't use Direct2D/DirectWrite on older versions of Windows 7
-        return false;
-    }
-
-    return true;
-}
-#endif
-
 gfxPlatformFontList*
 gfxWindowsPlatform::CreatePlatformFontList()
 {
     mUsingGDIFonts = false;
     gfxPlatformFontList *pfl;
 #ifdef CAIRO_HAS_DWRITE_FONT
-    if (AllowDirectWrite() && GetDWriteFactory()) {
+    if (GetDWriteFactory()) {
         pfl = new gfxDWriteFontList();
         if (NS_SUCCEEDED(pfl->InitFontList())) {
             return pfl;
@@ -1149,32 +1121,6 @@ gfxWindowsPlatform::UseClearTypeAlways()
     return mUseClearTypeAlways;
 }
 
-int32_t
-gfxWindowsPlatform::WindowsOSVersion(int32_t *aBuildNum)
-{
-    static int32_t winVersion = UNINITIALIZED_VALUE;
-    static int32_t buildNum = UNINITIALIZED_VALUE;
-
-    OSVERSIONINFO vinfo;
-
-    if (winVersion == UNINITIALIZED_VALUE) {
-        vinfo.dwOSVersionInfoSize = sizeof (vinfo);
-        if (!GetVersionEx(&vinfo)) {
-            winVersion = kWindowsUnknown;
-            buildNum = 0;
-        } else {
-            winVersion = int32_t(vinfo.dwMajorVersion << 16) + vinfo.dwMinorVersion;
-            buildNum = int32_t(vinfo.dwBuildNumber);
-        }
-    }
-
-    if (aBuildNum) {
-        *aBuildNum = buildNum;
-    }
-
-    return winVersion;
-}
-
 void 
 gfxWindowsPlatform::GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion)
 {
@@ -1507,7 +1453,7 @@ gfxWindowsPlatform::GetD3D11Device()
   }
 
   nsTArray<D3D_FEATURE_LEVEL> featureLevels;
-  if (gfxWindowsPlatform::WindowsOSVersion() >= gfxWindowsPlatform::kWindows8) {
+  if (IsWin8OrLater()) {
     featureLevels.AppendElement(D3D_FEATURE_LEVEL_11_1);
   }
   featureLevels.AppendElement(D3D_FEATURE_LEVEL_11_0);
