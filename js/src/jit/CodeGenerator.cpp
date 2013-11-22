@@ -3965,7 +3965,7 @@ CodeGenerator::visitMathFunctionF(LMathFunctionF *ins)
       case MMathFunction::Exp:   funptr = JS_FUNC_TO_DATA_PTR(void *, expf);   break;
       case MMathFunction::Tan:   funptr = JS_FUNC_TO_DATA_PTR(void *, tanf);   break;
       case MMathFunction::ATan:  funptr = JS_FUNC_TO_DATA_PTR(void *, atanf);  break;
-      case MMathFunction::ASin:  funptr = JS_FUNC_TO_DATA_PTR(void *, sinf);   break;
+      case MMathFunction::ASin:  funptr = JS_FUNC_TO_DATA_PTR(void *, asinf);  break;
       case MMathFunction::ACos:  funptr = JS_FUNC_TO_DATA_PTR(void *, acosf);  break;
       case MMathFunction::Floor: funptr = JS_FUNC_TO_DATA_PTR(void *, floorf); break;
       default:
