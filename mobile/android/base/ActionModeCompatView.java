@@ -57,10 +57,7 @@ class ActionModeCompatView extends LinearLayout implements GeckoMenu.ActionItemB
 
     public void init(Context context) {
         LayoutInflater.from(context).inflate(R.layout.actionbar, this);
-    }
 
-    @Override
-    public void onFinishInflate() {
         mTitleView = (Button) findViewById(R.id.actionmode_title);
         mMenuButton = (ImageButton) findViewById(R.id.actionbar_menu);
         mActionButtonBar = (ViewGroup) findViewById(R.id.actionbar_buttons);

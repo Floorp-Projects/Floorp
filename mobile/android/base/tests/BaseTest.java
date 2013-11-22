@@ -853,7 +853,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         @Override
         public boolean isSatisfied() {
             mView = findViewWithContentDescription(mCls, mDescr);
-            return mView != null;
+            return (mView != null);
         }
     }
 
