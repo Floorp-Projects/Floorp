@@ -90,8 +90,6 @@ abstract public class BrowserApp extends GeckoApp
 
     private static final String PREF_CHROME_DYNAMICTOOLBAR = "browser.chrome.dynamictoolbar";
 
-    private static final String ABOUT_HOME = "about:home";
-
     private static final int TABS_ANIMATION_DURATION = 450;
 
     private static final int READER_ADD_SUCCESS = 0;
@@ -664,8 +662,8 @@ abstract public class BrowserApp extends GeckoApp
         return mDynamicToolbarEnabled && !mAccessibilityEnabled;
     }
 
-    private boolean isAboutHome(Tab tab) {
-        return TextUtils.equals(ABOUT_HOME, tab.getURL());
+    private static boolean isAboutHome(final Tab tab) {
+        return AboutPages.isAboutHome(tab.getURL());
     }
 
     @Override
@@ -840,15 +838,18 @@ abstract public class BrowserApp extends GeckoApp
 
     private void shareCurrentUrl() {
         Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab == null)
-          return;
+        if (tab == null) {
+            return;
+        }
 
         String url = tab.getURL();
-        if (url == null)
+        if (url == null) {
             return;
+        }
 
-        if (ReaderModeUtils.isAboutReader(url))
+        if (AboutPages.isAboutReader(url)) {
             url = ReaderModeUtils.getUrlFromAboutReader(url);
+        }
 
         GeckoAppShell.openUriExternal(url, "text/plain", "", "",
                                       Intent.ACTION_SEND, tab.getDisplayTitle());
@@ -1180,12 +1181,12 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void addTab() {
-        Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB);
+        Tabs.getInstance().loadUrl(AboutPages.HOME, Tabs.LOADURL_NEW_TAB);
     }
 
     @Override
     public void addPrivateTab() {
-        Tabs.getInstance().loadUrl("about:privatebrowsing", Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
+        Tabs.getInstance().loadUrl(AboutPages.PRIVATEBROWSING, Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
     }
 
     @Override
@@ -1356,7 +1357,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void openReadingList() {
-        Tabs.getInstance().loadUrl(ABOUT_HOME, Tabs.LOADURL_READING_LIST);
+        Tabs.getInstance().loadUrl(AboutPages.HOME, Tabs.LOADURL_READING_LIST);
     }
 
     /* Favicon stuff. */
@@ -1634,7 +1635,7 @@ abstract public class BrowserApp extends GeckoApp
      * if a new page is not being loaded.
      */
     private void hideHomePager(final String url) {
-        if (!isHomePagerVisible() || TextUtils.equals(url, ABOUT_HOME)) {
+        if (!isHomePagerVisible() || AboutPages.isAboutHome(url)) {
             return;
         }
 
@@ -1980,7 +1981,7 @@ abstract public class BrowserApp extends GeckoApp
             return true;
         }
 
-        bookmark.setEnabled(!tab.getURL().startsWith("about:reader"));
+        bookmark.setEnabled(!AboutPages.isAboutReader(tab.getURL()));
         bookmark.setCheckable(true);
         bookmark.setChecked(tab.isBookmark());
         bookmark.setIcon(tab.isBookmark() ? R.drawable.ic_menu_bookmark_remove : R.drawable.ic_menu_bookmark_add);
@@ -1990,10 +1991,11 @@ abstract public class BrowserApp extends GeckoApp
         desktopMode.setIcon(tab.getDesktopMode() ? R.drawable.ic_menu_desktop_mode_on : R.drawable.ic_menu_desktop_mode_off);
 
         String url = tab.getURL();
-        if (ReaderModeUtils.isAboutReader(url)) {
+        if (AboutPages.isAboutReader(url)) {
             String urlFromReader = ReaderModeUtils.getUrlFromAboutReader(url);
-            if (urlFromReader != null)
+            if (urlFromReader != null) {
                 url = urlFromReader;
+            }
         }
 
         // Disable share menuitem for about:, chrome:, file:, and resource: URIs
@@ -2049,11 +2051,11 @@ abstract public class BrowserApp extends GeckoApp
             }
         }
 
-        // Disable save as PDF for about:home and xul pages
-        saveAsPDF.setEnabled(!(tab.getURL().equals("about:home") ||
+        // Disable save as PDF for about:home and xul pages.
+        saveAsPDF.setEnabled(!(isAboutHome(tab) ||
                                tab.getContentType().equals("application/vnd.mozilla.xul+xml")));
 
-        // Disable find in page for about:home, since it won't work on Java content
+        // Disable find in page for about:home, since it won't work on Java content.
         findInPage.setEnabled(!isAboutHome(tab));
 
         charEncoding.setVisible(GeckoPreferences.getCharEncodingState());
@@ -2132,17 +2134,17 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         if (itemId == R.id.addons) {
-            Tabs.getInstance().loadUrlInTab("about:addons");
-            return true;
-        }
-
-        if (itemId == R.id.downloads) {
-            Tabs.getInstance().loadUrlInTab("about:downloads");
+            Tabs.getInstance().loadUrlInTab(AboutPages.ADDONS);
             return true;
         }
 
         if (itemId == R.id.apps) {
-            Tabs.getInstance().loadUrlInTab("about:apps");
+            Tabs.getInstance().loadUrlInTab(AboutPages.APPS);
+            return true;
+        }
+
+        if (itemId == R.id.downloads) {
+            Tabs.getInstance().loadUrlInTab(AboutPages.DOWNLOADS);
             return true;
         }
 
@@ -2412,7 +2414,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         if (AppConstants.MOZ_UPDATER) {
-            Tabs.getInstance().loadUrlInTab("about:");
+            Tabs.getInstance().loadUrlInTab(AboutPages.UPDATER);
             return true;
         }
 

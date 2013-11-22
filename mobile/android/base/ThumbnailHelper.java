@@ -59,7 +59,7 @@ public final class ThumbnailHelper {
     }
 
     public void getAndProcessThumbnailFor(Tab tab) {
-        if ("about:home".equals(tab.getURL())) {
+        if (AboutPages.isAboutHome(tab.getURL())) {
             tab.updateThumbnail(null);
             return;
         }
