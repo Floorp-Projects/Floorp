@@ -467,7 +467,7 @@ public class Tab {
     }
 
     public void toggleReaderMode() {
-        if (ReaderModeUtils.isAboutReader(mUrl)) {
+        if (AboutPages.isAboutReader(mUrl)) {
             Tabs.getInstance().loadUrl(ReaderModeUtils.getUrlFromAboutReader(mUrl));
         } else if (mReaderEnabled) {
             mEnteringReaderMode = true;
@@ -640,8 +640,9 @@ public class Tab {
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, oldUrl);
     }
 
-    private boolean shouldShowProgress(String url) {
-        return "about:home".equals(url) || ReaderModeUtils.isAboutReader(url);
+    private static boolean shouldShowProgress(final String url) {
+        return AboutPages.isAboutHome(url) ||
+               AboutPages.isAboutReader(url);
     }
 
     void handleDocumentStart(boolean showProgress, String url) {
