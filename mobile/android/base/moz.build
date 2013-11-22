@@ -289,7 +289,6 @@ gbjar.sources += [
     'toolbar/AutocompleteHandler.java',
     'toolbar/BackButton.java',
     'toolbar/BrowserToolbar.java',
-    'toolbar/BrowserToolbarBackground.java',
     'toolbar/CanvasDelegate.java',
     'toolbar/ForwardButton.java',
     'toolbar/PageActionLayout.java',
