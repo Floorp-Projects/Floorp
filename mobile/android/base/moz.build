@@ -294,6 +294,7 @@ gbjar.sources += [
     'toolbar/PageActionLayout.java',
     'toolbar/ShapedButton.java',
     'toolbar/TabCounter.java',
+    'toolbar/ToolbarEditText.java',
     'TouchEventInterceptor.java',
     'updater/UpdateService.java',
     'updater/UpdateServiceHelper.java',
