@@ -4147,6 +4147,43 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
       menuItem.addEventListener("command", onViewToolbarCommand, false);
     }
   }
+
+  // The explicitOriginalTarget can be a nested child element of a toolbaritem.
+  let toolbarItem = aEvent.explicitOriginalTarget;
+
+  if (toolbarItem && toolbarItem.localName == "toolbarpaletteitem") {
+    toolbarItem = toolbarItem.firstChild;
+  } else {
+    while (toolbarItem && toolbarItem.parentNode) {
+      let parent = toolbarItem.parentNode;
+      if ((parent.classList && parent.classList.contains("customization-target")) ||
+          parent.localName == "toolbarpaletteitem" ||
+          parent.localName == "toolbar")
+        break;
+      toolbarItem = parent;
+    }
+  }
+
+  // Right-clicking on an empty part of the tabstrip will exit
+  // the above loop with toolbarItem being the xul:document.
+  if (!toolbarItem.parentNode) {
+    return;
+  }
+
+  let addToPanel = popup.querySelector(".customize-context-addToPanel");
+  let removeFromToolbar = popup.querySelector(".customize-context-removeFromToolbar");
+  // View -> Toolbars menu doesn't have the addToPanel or removeFromToolbar items.
+  if (!addToPanel || !removeFromToolbar) {
+    return;
+  }
+  let movable = toolbarItem && CustomizableUI.isWidgetRemovable(toolbarItem);
+  if (movable) {
+    addToPanel.removeAttribute("disabled");
+    removeFromToolbar.removeAttribute("disabled");
+  } else {
+    addToPanel.setAttribute("disabled", true);
+    removeFromToolbar.setAttribute("disabled", true);
+  }
 }
 
 function onViewToolbarCommand(aEvent) {
