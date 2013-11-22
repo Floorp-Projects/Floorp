@@ -16,6 +16,7 @@ import org.mozilla.gecko.SiteIdentityPopup;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.PropertyAnimator.PropertyAnimationListener;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.MenuPopup;
@@ -25,8 +26,6 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.StringUtils;
-import org.mozilla.gecko.toolbar.ToolbarEditText.OnTextTypeChangeListener;
-import org.mozilla.gecko.toolbar.ToolbarEditText.TextType;
 import org.mozilla.gecko.widget.GeckoImageButton;
 import org.mozilla.gecko.widget.GeckoImageView;
 import org.mozilla.gecko.widget.GeckoRelativeLayout;
@@ -106,8 +105,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
     }
 
     private View mUrlDisplayContainer;
-    private View mUrlEditContainer;
-    private ToolbarEditText mUrlEditText;
+    private ToolbarEditLayout mUrlEditLayout;
     private View mUrlBarEntry;
     private ImageView mUrlBarRightEdge;
     private GeckoTextView mTitle;
@@ -120,7 +118,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private ImageButton mFavicon;
     private ImageButton mStop;
     private ImageButton mSiteSecurity;
-    private ImageButton mGo;
     private PageActionLayout mPageActionLayout;
     private Animation mProgressSpinner;
     private TabCounter mTabsCounter;
@@ -261,9 +258,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mDefaultForwardMargin = res.getDimensionPixelSize(R.dimen.forward_default_offset);
         mUrlDisplayContainer = findViewById(R.id.url_display_container);
         mUrlBarEntry = findViewById(R.id.url_bar_entry);
-
-        mUrlEditContainer = findViewById(R.id.url_edit_container);
-        mUrlEditText = (ToolbarEditText) findViewById(R.id.url_edit_text);
+        mUrlEditLayout = (ToolbarEditLayout) findViewById(R.id.edit_layout);
 
         // This will clip the right edge's image at 60% of its width
         mUrlBarRightEdge = (ImageView) findViewById(R.id.url_bar_right_edge);
@@ -373,32 +368,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
             }
         });
 
-        mUrlEditText.setOnTextTypeChangeListener(new OnTextTypeChangeListener() {
-            @Override
-            public void onTextTypeChange(ToolbarEditText editText, TextType textType) {
-                updateGoButton(textType);
-            }
-        });
-
-        mUrlEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+        mUrlEditLayout.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                if (v == null) {
-                    return;
-                }
-
                 setSelected(hasFocus);
-                if (hasFocus) {
-                    return;
-                }
-
-                InputMethodManager imm = (InputMethodManager) mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
-                try {
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                } catch (NullPointerException e) {
-                    Log.e(LOGTAG, "InputMethodManagerService, why are you throwing"
-                                  + " a NullPointerException? See bug 782096", e);
-                }
             }
         });
 
@@ -466,16 +439,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
             }
         });
 
-        mGo = (ImageButton) findViewById(R.id.go);
-        mGo.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mCommitListener != null) {
-                    mCommitListener.onCommit();
-                }
-            }
-        });
-
         float slideWidth = getResources().getDimension(R.dimen.browser_toolbar_lock_width);
 
         LinearLayout.LayoutParams siteSecParams = (LinearLayout.LayoutParams) mSiteSecurity.getLayoutParams();
@@ -534,24 +497,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
             return false;
         } else if (isEditing()) {
-            final int prevSelStart = mUrlEditText.getSelectionStart();
-            final int prevSelEnd = mUrlEditText.getSelectionEnd();
-
-            // Manually dispatch the key event to the edit text. If selection changed as
-            // a result of the key event, then give focus back to mUrlEditText
-            mUrlEditText.dispatchKeyEvent(event);
-
-            final int curSelStart = mUrlEditText.getSelectionStart();
-            final int curSelEnd = mUrlEditText.getSelectionEnd();
-
-            if (prevSelStart != curSelStart || prevSelEnd != curSelEnd) {
-                mUrlEditText.requestFocusFromTouch();
-
-                // Restore the selection, which gets lost due to the focus switch
-                mUrlEditText.setSelection(curSelStart, curSelEnd);
-            }
-
-            return true;
+            return mUrlEditLayout.onKey(keyCode, event);
         }
 
         return false;
@@ -902,11 +848,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             return;
         }
 
-        mUrlEditText.setText(suggestion);
-        mUrlEditText.setSelection(mUrlEditText.getText().length());
-        mUrlEditText.requestFocus();
-
-        showSoftInput();
+        mUrlEditLayout.onEditSuggestion(suggestion);
     }
 
     public void setTitle(CharSequence title) {
@@ -925,7 +867,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         String url = tab.getURL();
 
         if (!isEditing()) {
-            mUrlEditText.setText(url);
+            mUrlEditLayout.setText(url);
         }
 
         // Setting a null title will ensure we just see the "Enter Search or Address" placeholder text.
@@ -1041,17 +983,17 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     public void setOnCommitListener(OnCommitListener listener) {
         mCommitListener = listener;
-        mUrlEditText.setOnCommitListener(listener);
+        mUrlEditLayout.setOnCommitListener(listener);
     }
 
     public void setOnDismissListener(OnDismissListener listener) {
         mDismissListener = listener;
-        mUrlEditText.setOnDismissListener(listener);
+        mUrlEditLayout.setOnDismissListener(listener);
     }
 
     public void setOnFilterListener(OnFilterListener listener) {
         mFilterListener = listener;
-        mUrlEditText.setOnFilterListener(listener);
+        mUrlEditLayout.setOnFilterListener(listener);
     }
 
     public void setOnStartEditingListener(OnStartEditingListener listener) {
@@ -1062,41 +1004,33 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mStopEditingListener = listener;
     }
 
-    private void showSoftInput() {
-        InputMethodManager imm =
-               (InputMethodManager) mActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.showSoftInput(mUrlEditText, InputMethodManager.SHOW_IMPLICIT);
+    private void showUrlEditLayout() {
+        setUrlEditLayoutVisibility(true, null);
     }
 
-    private void showUrlEditContainer() {
-        setUrlEditContainerVisibility(true, null);
+    private void showUrlEditLayout(PropertyAnimator animator) {
+        setUrlEditLayoutVisibility(true, animator);
     }
 
-    private void showUrlEditContainer(PropertyAnimator animator) {
-        setUrlEditContainerVisibility(true, animator);
+    private void hideUrlEditLayout() {
+        setUrlEditLayoutVisibility(false, null);
     }
 
-    private void hideUrlEditContainer() {
-        setUrlEditContainerVisibility(false, null);
+    private void hideUrlEditLayout(PropertyAnimator animator) {
+        setUrlEditLayoutVisibility(false, animator);
     }
 
-    private void hideUrlEditContainer(PropertyAnimator animator) {
-        setUrlEditContainerVisibility(false, animator);
-    }
+    private void setUrlEditLayoutVisibility(final boolean showEditLayout, PropertyAnimator animator) {
+        final View viewToShow = (showEditLayout ? mUrlEditLayout : mUrlDisplayContainer);
+        final View viewToHide = (showEditLayout ? mUrlDisplayContainer : mUrlEditLayout);
 
-    private void setUrlEditContainerVisibility(final boolean showEditContainer, PropertyAnimator animator) {
-        final View viewToShow = (showEditContainer ? mUrlEditContainer : mUrlDisplayContainer);
-        final View viewToHide = (showEditContainer ? mUrlDisplayContainer : mUrlEditContainer);
+        if (showEditLayout) {
+            mUrlEditLayout.prepareShowAnimation(animator);
+        }
 
         if (animator == null) {
             viewToHide.setVisibility(View.GONE);
             viewToShow.setVisibility(View.VISIBLE);
-
-            if (showEditContainer) {
-                mUrlEditText.requestFocus();
-                showSoftInput();
-            }
-
             return;
         }
 
@@ -1109,26 +1043,16 @@ public class BrowserToolbar extends GeckoRelativeLayout
                         PropertyAnimator.Property.ALPHA,
                         0.0f);
 
-        animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+        animator.addPropertyAnimationListener(new PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() {
                 viewToShow.setVisibility(View.VISIBLE);
-
-                if (showEditContainer) {
-                    ViewHelper.setAlpha(mGo, 0.0f);
-                    mUrlEditText.requestFocus();
-                }
             }
 
             @Override
             public void onPropertyAnimationEnd() {
                 viewToHide.setVisibility(View.GONE);
                 ViewHelper.setAlpha(viewToHide, 1.0f);
-
-                if (showEditContainer) {
-                    ViewHelper.setAlpha(mGo, 1.0f);
-                    showSoftInput();
-                }
             }
         });
     }
@@ -1170,7 +1094,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     public void setIsEditing(boolean isEditing) {
         mIsEditing = isEditing;
-        mUrlEditText.setEnabled(isEditing);
+        mUrlEditLayout.setEnabled(isEditing);
     }
 
     /**
@@ -1186,9 +1110,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
             return;
         }
 
-        mUrlEditText.setText(url != null ? url : "");
-        setIsEditing(true);
+        mUrlEditLayout.setText(url != null ? url : "");
 
+        setIsEditing(true);
         updateChildrenForEditing();
 
         if (mStartEditingListener != null) {
@@ -1204,7 +1128,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         // This animation doesn't make much sense in a sidebar UI
         if (HardwareUtils.isTablet() || Build.VERSION.SDK_INT < 11) {
-            showUrlEditContainer();
+            showUrlEditLayout();
 
             if (!HardwareUtils.isTablet()) {
                 if (mUrlBarRightEdge != null) {
@@ -1262,7 +1186,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                             curveTranslation);
         }
 
-        showUrlEditContainer(animator);
+        showUrlEditLayout(animator);
 
         animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
@@ -1301,7 +1225,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
     }
 
     private String stopEditing() {
-        final String url = mUrlEditText.getText().toString();
+        final String url = mUrlEditLayout.getText();
         if (!isEditing()) {
             return url;
         }
@@ -1314,7 +1238,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
 
         if (HardwareUtils.isTablet() || Build.VERSION.SDK_INT < 11) {
-            hideUrlEditContainer();
+            hideUrlEditLayout();
 
             if (!HardwareUtils.isTablet()) {
                 updateTabCountAndAnimate(Tabs.getInstance().getDisplayCount());
@@ -1367,7 +1291,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                                    0);
         }
 
-        hideUrlEditContainer(contentAnimator);
+        hideUrlEditLayout(contentAnimator);
 
         contentAnimator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
@@ -1405,29 +1329,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
         contentAnimator.start();
 
         return url;
-    }
-
-    private void updateGoButton(TextType textType) {
-        if (textType == TextType.EMPTY) {
-            mGo.setVisibility(View.GONE);
-            return;
-        }
-
-        mGo.setVisibility(View.VISIBLE);
-
-        final int imageResource;
-        final String contentDescription;
-
-        if (textType == TextType.SEARCH_QUERY) {
-            imageResource = R.drawable.ic_url_bar_search;
-            contentDescription = mActivity.getString(R.string.search);
-        } else {
-            imageResource = R.drawable.ic_url_bar_go;
-            contentDescription = mActivity.getString(R.string.go);
-        }
-
-        mGo.setImageResource(imageResource);
-        mGo.setContentDescription(contentDescription);
     }
 
     public void setButtonEnabled(ImageButton button, boolean enabled) {
@@ -1471,7 +1372,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     layoutParams.leftMargin = 0;
 
                     // Do the same on the URL edit container
-                    layoutParams = (ViewGroup.MarginLayoutParams)mUrlEditContainer.getLayoutParams();
+                    layoutParams = (ViewGroup.MarginLayoutParams) mUrlEditLayout.getLayoutParams();
                     layoutParams.leftMargin = 0;
 
                     requestLayout();
@@ -1488,7 +1389,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                         (ViewGroup.MarginLayoutParams)mUrlDisplayContainer.getLayoutParams();
                     layoutParams.leftMargin = mUrlBarViewOffset;
 
-                    layoutParams = (ViewGroup.MarginLayoutParams)mUrlEditContainer.getLayoutParams();
+                    layoutParams = (ViewGroup.MarginLayoutParams) mUrlEditLayout.getLayoutParams();
                     layoutParams.leftMargin = mUrlBarViewOffset;
 
                     ViewHelper.setTranslationX(mTitle, 0);
@@ -1588,7 +1489,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             mTitle.setPrivateMode(isPrivate);
             mMenu.setPrivateMode(isPrivate);
             mMenuIcon.setPrivateMode(isPrivate);
-            mUrlEditText.setPrivateMode(isPrivate);
+            mUrlEditLayout.setPrivateMode(isPrivate);
 
             if (mBack instanceof BackButton)
                 ((BackButton) mBack).setPrivateMode(isPrivate);
