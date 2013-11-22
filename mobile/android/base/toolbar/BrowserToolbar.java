@@ -219,7 +219,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         Tabs.registerOnTabsChangedListener(this);
         mSwitchingTabs = true;
 
-        mIsEditing = false;
+        setIsEditing(false);
         mAnimatingEntry = false;
         mShowUrl = false;
         mTrimURLs = true;
@@ -1346,6 +1346,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
     }
 
+    public void setIsEditing(boolean isEditing) {
+        mIsEditing = isEditing;
+    }
+
     /**
      * Returns whether or not the URL bar is in editing mode (url bar is expanded, hiding the new
      * tab button). Note that selection state is independent of editing mode.
@@ -1360,7 +1364,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
 
         mUrlEditText.setText(url != null ? url : "");
-        mIsEditing = true;
+        setIsEditing(true);
 
         updateChildrenForEditing();
 
@@ -1478,7 +1482,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         if (!isEditing()) {
             return url;
         }
-        mIsEditing = false;
+        setIsEditing(false);
 
         updateChildrenForEditing();
 
