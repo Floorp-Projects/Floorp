@@ -10,14 +10,12 @@
 #include "WMFUtils.h"
 #include "MediaDecoderStateMachine.h"
 #include "mozilla/Preferences.h"
-#include "WinUtils.h"
+#include "mozilla/WindowsVersion.h"
 #include "nsCharSeparatedTokenizer.h"
 
 #ifdef MOZ_DIRECTSHOW
 #include "DirectShowDecoder.h"
 #endif
-
-using namespace mozilla::widget;
 
 namespace mozilla {
 
@@ -38,21 +36,15 @@ WMFDecoder::IsMP3Supported()
     return false;
   }
 #endif
- if (!MediaDecoder::IsWMFEnabled()) {
+  if (!MediaDecoder::IsWMFEnabled()) {
     return false;
   }
-  if (WinUtils::GetWindowsVersion() != WinUtils::WIN7_VERSION) {
+  if (!IsWin7OrLater()) {
     return true;
   }
-  // We're on Windows 7. MP3 support is disabled if no service pack
+  // MP3 support is disabled if we're on Windows 7 and no service pack
   // is installed, as it's crashy on Win7 SP0.
-  UINT spMajorVer = 0, spMinorVer = 0;
-  if (!WinUtils::GetWindowsServicePackVersion(spMajorVer, spMinorVer)) {
-    // Um... We can't determine the service pack version... Just block
-    // MP3 as a precaution...
-    return false;
-  }
-  return spMajorVer != 0;
+  return IsWin7SP1OrLater();
 }
 
 static bool
@@ -163,7 +155,7 @@ bool
 WMFDecoder::IsEnabled()
 {
   // We only use WMF on Windows Vista and up
-  return WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
+  return IsVistaOrLater() &&
          Preferences::GetBool("media.windows-media-foundation.enabled");
 }
 
