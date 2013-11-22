@@ -145,11 +145,10 @@
         <body><![CDATA[
         // we always set the src on click if it has not been set for this tab,
         // but we only want to open the panel if it was previously annotated.
-        let openPanel = this.isMarked || aOpenPanel;
+        let openPanel = this.isMarked || aOpenPanel || !this.provider.haveLoggedInUser();
         let src = this.getAttribute("src");
         if (!src || src == "about:blank") {
           this.loadPanel();
-          this.isMarked = true;
         }
         if (openPanel)
           this.panel.openPopup(this, "bottomcenter topright", 0, 0, false, false);
@@ -170,7 +169,6 @@
         // previous url when it is closed.
         this.setAttribute("src", "about:blank");
         this.loadPanel({ url: aUrl });
-        this.isMarked = true;
         this.panel.openPopup(this, "bottomcenter topright", 0, 0, false, false);
         this.panel.addEventListener("popuphidden", function _hidden() {
           this.panel.removeEventListener("popuphidden", _hidden);
