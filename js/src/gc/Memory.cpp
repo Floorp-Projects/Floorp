@@ -53,9 +53,9 @@ gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
     void *p = nullptr;
     while (!p) {
         /*
-         * Over-allocate in order to map a memory region that is
-         * definitely large enough then deallocate and allocate again the
-         * correct sizee, within the over-sized mapping.
+         * Over-allocate in order to map a memory region that is definitely
+         * large enough, then deallocate and allocate again the correct size,
+         * within the over-sized mapping.
          *
          * Since we're going to unmap the whole thing anyway, the first
          * mapping doesn't have to commit pages.
@@ -63,7 +63,7 @@ gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
         p = VirtualAlloc(nullptr, size * 2, MEM_RESERVE, PAGE_READWRITE);
         if (!p)
             return nullptr;
-        void *chunkStart = (void *)(uintptr_t(p) + (alignment - (uintptr_t(p) % alignment)));
+        void *chunkStart = (void *)AlignBytes(uintptr_t(p), alignment);
         UnmapPages(rt, p, size * 2);
         p = VirtualAlloc(chunkStart, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
@@ -329,7 +329,7 @@ MapMemory(size_t length, int prot, int flags, int fd, off_t offset)
     void *region = mmap((void*)0x0000070000000000, length, prot, flags, fd, offset);
     if (region == MAP_FAILED)
         return MAP_FAILED;
-    /* 
+    /*
      * If the allocated memory doesn't have its upper 17 bits clear, consider it
      * as out of memory.
      */
@@ -372,7 +372,7 @@ gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
     uintptr_t offset = uintptr_t(region) % alignment;
     JS_ASSERT(offset < reqSize - size);
 
-    void *front = (void *)(uintptr_t(region) + (alignment - offset));
+    void *front = (void *)AlignBytes(uintptr_t(region), alignment);
     void *end = (void *)(uintptr_t(front) + size);
     if (front != region)
         JS_ALWAYS_TRUE(0 == munmap(region, alignment - offset));
