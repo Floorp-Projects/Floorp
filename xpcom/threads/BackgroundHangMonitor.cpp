@@ -27,9 +27,12 @@ private:
   static void MonitorThread(void* aData)
   {
     PR_SetCurrentThreadName("BgHangManager");
-    // Keep a strong reference throughout thread lifetime
-    RefPtr<BackgroundHangManager>(
-      static_cast<BackgroundHangManager*>(aData))->RunMonitorThread();
+    /* We do not hold a reference to BackgroundHangManager here
+       because the monitor thread only exists as long as the
+       BackgroundHangManager instance exists. We stop the monitor
+       thread in the BackgroundHangManager destructor, and we can
+       only get to the destructor if we don't hold a reference here. */
+    static_cast<BackgroundHangManager*>(aData)->RunMonitorThread();
   }
 
   // Hang monitor thread
@@ -60,8 +63,11 @@ public:
 
   void Wakeup()
   {
-    // Use PR_Interrupt to avoid potentially taking a lock
-    PR_Interrupt(mHangMonitorThread);
+    // PR_CreateThread could have failed earlier
+    if (mHangMonitorThread) {
+      // Use PR_Interrupt to avoid potentially taking a lock
+      PR_Interrupt(mHangMonitorThread);
+    }
   }
 
   BackgroundHangManager();
@@ -146,7 +152,10 @@ BackgroundHangManager::BackgroundHangManager()
   MonitorAutoLock autoLock(mLock);
   mHangMonitorThread = PR_CreateThread(
     PR_USER_THREAD, MonitorThread, this,
-    PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+    PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+
+  MOZ_ASSERT(mHangMonitorThread,
+    "Failed to create monitor thread");
 }
 
 BackgroundHangManager::~BackgroundHangManager()
@@ -155,6 +164,14 @@ BackgroundHangManager::~BackgroundHangManager()
     "Destruction without Shutdown call");
   MOZ_ASSERT(mHangThreads.isEmpty(),
     "Destruction with outstanding monitors");
+  MOZ_ASSERT(mHangMonitorThread,
+    "No monitor thread");
+
+  // PR_CreateThread could have failed above due to resource limitation
+  if (mHangMonitorThread) {
+    // The monitor thread can only live as long as the instance lives
+    PR_JoinThread(mHangMonitorThread);
+  }
 }
 
 void
