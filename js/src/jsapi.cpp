@@ -1200,17 +1200,16 @@ LookupStdName(JSRuntime *rt, HandleString name, const JSStdName *table)
  */
 #define STD_NAME_ENTRY(name, code, init, clasp) { init, EAGER_CLASS_ATOM(name), clasp },
 #define STD_DUMMY_ENTRY(name, code, init, dummy) { DummyInit, 0, nullptr },
-static const JSStdName standard_class_atoms[] = {
+static const JSStdName standard_class_names[] = {
   JS_FOR_PROTOTYPES(STD_NAME_ENTRY, STD_DUMMY_ENTRY)
   { nullptr, 0, nullptr }
 };
 
 /*
- * Table of top-level function and constant names and their init functions.
- * If you add a "standard" global function or property, remember to update
- * this table.
+ * Table of top-level function and constant names and the init function of the
+ * corresponding standard class that sets them up.
  */
-static const JSStdName standard_class_names[] = {
+static const JSStdName builtin_property_names[] = {
     {js_InitObjectClass,        EAGER_ATOM(eval), &JSObject::class_},
 
     /* Global properties and functions defined by the Number class. */
@@ -1297,11 +1296,11 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
     }
 
     /* Try for class constructors/prototypes named by well-known atoms. */
-    stdnm = LookupStdName(rt, idstr, standard_class_atoms);
+    stdnm = LookupStdName(rt, idstr, standard_class_names);
 
     /* Try less frequently used top-level functions and constants. */
     if (!stdnm)
-        stdnm = LookupStdName(rt, idstr, standard_class_names);
+        stdnm = LookupStdName(rt, idstr, builtin_property_names);
 
     /*
      * Try even less frequently used names delegated from the global
@@ -1355,9 +1354,16 @@ JS_EnumerateStandardClasses(JSContext *cx, HandleObject obj)
         return false;
     }
 
-    /* Initialize any classes that have not been initialized yet. */
-    for (unsigned i = 0; standard_class_atoms[i].init; i++) {
-        const JSStdName &stdnm = standard_class_atoms[i];
+    /*
+     * Initialize any classes that have not been initialized yet. Note that
+     * resolving everything in standard_class_names has the effect of resolving
+     * everything in builtin_property_names, so we don't need to iterate over
+     * that separately. Moreover, we'll resolve the Object constructor as well,
+     * so we can also skip object_prototype_names.
+     */
+    for (unsigned i = 0; standard_class_names[i].init; i++) {
+        const JSStdName &stdnm = standard_class_names[i];
+        // Watch out for dummy entries.
         if (!stdnm.isDummy() && !obj->as<GlobalObject>().isStandardClassResolved(stdnm.clasp)) {
             if (!stdnm.init(cx, obj))
                 return false;
