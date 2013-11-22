@@ -867,27 +867,24 @@ let CustomizableUIInternal = {
     if (node) {
       let parent = node.parentNode;
       while (parent && !(parent.customizationTarget ||
-                         parent == aWindow.gNavToolbox.palette)) {
+                         parent.localName == "toolbarpaletteitem")) {
         parent = parent.parentNode;
       }
 
-      if (parent) {
-        let nodeInArea = node.parentNode.localName == "toolbarpaletteitem" ?
-                         node.parentNode : node;
-        // Check if we're in a customization target, or in the palette:
-        if ((parent.customizationTarget == nodeInArea.parentNode &&
-             gBuildWindows.get(aWindow).has(parent.toolbox)) ||
-            aWindow.gNavToolbox.palette == nodeInArea.parentNode) {
-          // Normalize the removable attribute. For backwards compat, if
-          // the widget is not located in a toolbox palette then absence
-          // of the "removable" attribute means it is not removable.
-          if (!node.hasAttribute("removable")) {
-            // If we first see this in customization mode, it may be in the
-            // customization palette instead of the toolbox palette.
-            node.setAttribute("removable", !parent.customizationTarget);
-          }
-          return node;
+      if (parent && ((parent.customizationTarget == node.parentNode &&
+                      gBuildWindows.get(aWindow).has(parent.toolbox)) ||
+                     parent.localName == "toolbarpaletteitem")) {
+        // Normalize the removable attribute. For backwards compat, if
+        // the widget is not defined in a toolbox palette then absence
+        // of the "removable" attribute means it is not removable.
+        if (!node.hasAttribute("removable")) {
+          parent = parent.localName == "toolbarpaletteitem" ? parent.parentNode : parent;
+          // If we first see this in customization mode, it may be in the
+          // customization palette instead of the toolbox palette.
+          node.setAttribute("removable", !parent.customizationTarget);
         }
+
+        return node;
       }
     }
 
@@ -899,8 +896,8 @@ let CustomizableUIInternal = {
         let node = toolbox.palette.querySelector(idToSelector(aId));
         if (node) {
           // Normalize the removable attribute. For backwards compat, this
-          // is optional if the widget is located in the toolbox palette,
-          // and defaults to *true*, unlike if it was located elsewhere.
+          // is optional if the widget is defined in the toolbox palette,
+          // and defaults to *true*, unlike if it was defined elsewhere.
           if (!node.hasAttribute("removable")) {
             node.setAttribute("removable", true);
           }
