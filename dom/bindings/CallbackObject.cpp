@@ -157,7 +157,7 @@ CallbackObject::CallSetup::ShouldRethrowException(JS::Handle<JS::Value> aExcepti
   }
 
   DOMError* domError;
-  return NS_SUCCEEDED(UNWRAP_OBJECT(DOMError, mCx, obj, domError));
+  return NS_SUCCEEDED(UNWRAP_OBJECT(DOMError, obj, domError));
 }
 
 CallbackObject::CallSetup::~CallSetup()

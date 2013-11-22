@@ -392,22 +392,18 @@ template<class EntryType>
 void
 nsTHashtable<EntryType>::Init(uint32_t aInitSize)
 {
-  static PLDHashTableOps sOps = 
+  static const PLDHashTableOps sOps =
   {
     ::PL_DHashAllocTable,
     ::PL_DHashFreeTable,
     s_HashKey,
     s_MatchEntry,
-    ::PL_DHashMoveEntryStub,
+    EntryType::ALLOW_MEMMOVE ? ::PL_DHashMoveEntryStub : s_CopyEntry,
     s_ClearEntry,
     ::PL_DHashFinalizeStub,
     s_InitEntry
   };
 
-  if (!EntryType::ALLOW_MEMMOVE) {
-    sOps.moveEntry = s_CopyEntry;
-  }
-  
   if (!PL_DHashTableInit(&mTable, &sOps, nullptr, sizeof(EntryType), aInitSize)) {
     NS_RUNTIMEABORT("OOM");
   }

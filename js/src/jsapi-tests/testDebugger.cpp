@@ -10,13 +10,13 @@
 #include "js/OldDebugAPI.h"
 #include "jsapi-tests/tests.h"
 
-static int callCount[2] = {0, 0};
+static int callCounts[2] = {0, 0};
 
 static void *
 callCountHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, bool before,
               bool *ok, void *closure)
 {
-    callCount[before]++;
+    callCounts[before]++;
 
     JS::RootedValue thisv(cx);
     frame.getThisValue(cx, &thisv); // assert if fp is incomplete
@@ -32,8 +32,8 @@ BEGIN_TEST(testDebugger_bug519719)
          "function f(g) { for (var i = 0; i < 9; i++) call(g); }\n"
          "f(Math.sin);\n"    // record loop, starting in f
          "f(Math.cos);\n");  // side exit in f -> call
-    CHECK_EQUAL(callCount[0], 20);
-    CHECK_EQUAL(callCount[1], 20);
+    CHECK_EQUAL(callCounts[0], 20);
+    CHECK_EQUAL(callCounts[1], 20);
     return true;
 }
 END_TEST(testDebugger_bug519719)
@@ -112,13 +112,13 @@ BEGIN_TEST(testDebugger_getThisStrict)
 }
 END_TEST(testDebugger_getThisStrict)
 
-bool called = false;
+static bool calledThrowHook = false;
 
 static JSTrapStatus
 ThrowHook(JSContext *cx, JSScript *, jsbytecode *, jsval *rval, void *closure)
 {
     JS_ASSERT(!closure);
-    called = true;
+    calledThrowHook = true;
 
     JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
 
@@ -140,7 +140,7 @@ BEGIN_TEST(testDebugger_throwHook)
          "    foo(); \n"
          "  } catch(e) {}\n"
          "}\n");
-    CHECK(called);
+    CHECK(calledThrowHook);
     CHECK(JS_SetThrowHook(rt, nullptr, nullptr));
     return true;
 }

@@ -226,13 +226,8 @@ Zone::discardJitCode(FreeOp *fop)
             script->resetUseCount();
         }
 
-        for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next()) {
-            /* Free optimized baseline stubs. */
-            if (comp->jitCompartment())
-                comp->jitCompartment()->optimizedStubSpace()->free();
-
-            comp->types.clearCompilerOutputs(fop);
-        }
+        for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next())
+            jit::FinishDiscardJitCode(fop, comp);
     }
 #endif
 }

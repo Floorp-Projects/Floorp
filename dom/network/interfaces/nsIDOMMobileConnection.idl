@@ -11,7 +11,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(052550e3-7466-4941-80d7-405c169652f9)]
+[scriptable, builtinclass, uuid(4c8331f9-45f3-479d-ac3f-acb60fcc0583)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -81,6 +81,14 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * Possible values: null (unknown), 'automatic', 'manual'
    */
   readonly attribute DOMString networkSelectionMode;
+
+  /**
+   * The current radio state.
+   *
+   * Possible values: null (unknown), 'enabling', 'enabled', 'disabling',
+   * 'disabled'
+   */
+  readonly attribute DOMString radioState;
 
   /**
    * Search for available networks.
@@ -349,6 +357,24 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   nsIDOMDOMRequest exitEmergencyCbMode();
 
   /**
+   * Set radio enabled/disabled.
+   *
+   * @param enabled
+   *        True to enable the radio.
+   *
+   * If successful, the request's onsuccess will be called.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'InvalidStateError', 'RadioNotAvailable', or
+   * 'GenericFailure'.
+   *
+   * Note: Request is not available when radioState is null, 'enabling', or
+   *       'disabling'. Calling the function in above conditions will receive
+   *       'InvalidStateError' error.
+   */
+  nsIDOMDOMRequest setRadioEnabled(in boolean enabled);
+
+  /**
    * The 'voicechange' event is notified whenever the voice connection object
    * changes.
    */
@@ -395,6 +421,12 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * changes.
    */
   [implicit_jscontext] attribute jsval oniccchange;
+
+  /**
+   * The 'onradiostatechange' event is notified whenever the radio state
+   * changes.
+   */
+  [implicit_jscontext] attribute jsval onradiostatechange;
 };
 
 [scriptable, uuid(49706beb-a160-40b7-b745-50f62e389a2c)]

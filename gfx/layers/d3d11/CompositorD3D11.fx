@@ -185,9 +185,9 @@ float4 CalculateYCbCrColor(const float2 aTexCoords)
   float4 yuv;
   float4 color;
 
-  yuv.r = tCr.Sample(sSampler, aTexCoords).r - 0.5;
-  yuv.g = tY.Sample(sSampler, aTexCoords).r - 0.0625;
-  yuv.b = tCb.Sample(sSampler, aTexCoords).r - 0.5;
+  yuv.r = tCr.Sample(sSampler, aTexCoords).a - 0.5;
+  yuv.g = tY.Sample(sSampler, aTexCoords).a - 0.0625;
+  yuv.b = tCb.Sample(sSampler, aTexCoords).a - 0.5;
 
   color.r = yuv.g * 1.164 + yuv.r * 1.596;
   color.g = yuv.g * 1.164 - 0.813 * yuv.r - 0.391 * yuv.b;

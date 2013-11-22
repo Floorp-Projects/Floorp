@@ -193,9 +193,9 @@ IsDOMObject(JSObject* obj)
   return IsDOMClass(clasp) || IsDOMProxy(obj, clasp);
 }
 
-#define UNWRAP_OBJECT(Interface, cx, obj, value)                             \
+#define UNWRAP_OBJECT(Interface, obj, value)                                 \
   mozilla::dom::UnwrapObject<mozilla::dom::prototypes::id::Interface,        \
-    mozilla::dom::Interface##Binding::NativeType>(cx, obj, value)
+    mozilla::dom::Interface##Binding::NativeType>(obj, value)
 
 // Some callers don't want to set an exception when unwrapping fails
 // (for example, overload resolution uses unwrapping to tell what sort
@@ -203,7 +203,7 @@ IsDOMObject(JSObject* obj)
 // U must be something that a T* can be assigned to (e.g. T* or an nsRefPtr<T>).
 template <prototypes::ID PrototypeID, class T, typename U>
 MOZ_ALWAYS_INLINE nsresult
-UnwrapObject(JSContext* cx, JSObject* obj, U& value)
+UnwrapObject(JSObject* obj, U& value)
 {
   /* First check to see whether we have a DOM object */
   const DOMClass* domClass = GetDOMClass(obj);

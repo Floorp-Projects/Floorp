@@ -126,7 +126,7 @@ NumBlockSlots(JSScript *script, jsbytecode *pc)
     JS_STATIC_ASSERT(JSOP_ENTERBLOCK_LENGTH == JSOP_ENTERLET1_LENGTH);
     JS_STATIC_ASSERT(JSOP_ENTERBLOCK_LENGTH == JSOP_ENTERLET2_LENGTH);
 
-    return script->getObject(GET_UINT32_INDEX(pc))->as<StaticBlockObject>().slotCount();
+    return script->getObject(GET_UINT32_INDEX(pc))->as<StaticBlockObject>().propertyCountForCompilation();
 }
 
 unsigned

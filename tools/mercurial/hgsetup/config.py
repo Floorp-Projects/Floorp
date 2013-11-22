@@ -10,7 +10,7 @@ import os
 
 
 BUGZILLA_FINGERPRINT = '47:13:a2:14:0c:46:45:53:12:0d:e5:36:16:a5:60:26:3e:da:3a:60'
-HG_FINGERPRINT = '10:78:e8:57:2d:95:de:7c:de:90:bd:22:e1:38:17:67:c5:a7:9c:14'
+HG_FINGERPRINT = 'AF:27:B9:34:47:4E:E5:98:01:F6:83:2B:51:C9:AA:D8:DF:FB:1A:27'
 
 
 class MercurialConfig(object):

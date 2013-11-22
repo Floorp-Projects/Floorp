@@ -38,6 +38,11 @@ registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setBoolPref("devtools.shadereditor.enabled", gToolEnabled);
+
+  // These tests use a lot of memory due to GL contexts, so force a GC to help
+  // fragmentation.
+  info("Forcing GC after shadereditor test.");
+  Cu.forceGC();
 });
 
 function addTab(aUrl, aWindow) {

@@ -415,7 +415,7 @@ IndexedDBDatabaseParent::HandleRequestEvent(nsIDOMEvent* aEvent,
   MOZ_ASSERT(!JSVAL_IS_PRIMITIVE(result));
 
   IDBDatabase *database;
-  rv = UNWRAP_OBJECT(IDBDatabase, cx, &result.toObject(), database);
+  rv = UNWRAP_OBJECT(IDBDatabase, &result.toObject(), database);
   if (NS_FAILED(rv)) {
     NS_WARNING("Didn't get the object we expected!");
     return rv;

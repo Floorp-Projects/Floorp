@@ -349,6 +349,10 @@ class JSObject : public js::ObjectImpl
         return lastProperty()->entryCount();
     }
 
+    uint32_t propertyCountForCompilation() const {
+        return lastProperty()->entryCountForCompilation();
+    }
+
     bool hasShapeTable() const {
         return lastProperty()->hasTable();
     }
@@ -365,13 +369,13 @@ class JSObject : public js::ObjectImpl
 
     /* Whether a slot is at a fixed offset from this object. */
     bool isFixedSlot(size_t slot) {
-        return slot < numFixedSlots();
+        return slot < numFixedSlotsForCompilation();
     }
 
     /* Index into the dynamic slots array to use for a dynamic slot. */
     size_t dynamicSlotIndex(size_t slot) {
-        JS_ASSERT(slot >= numFixedSlots());
-        return slot - numFixedSlots();
+        JS_ASSERT(slot >= numFixedSlotsForCompilation());
+        return slot - numFixedSlotsForCompilation();
     }
 
     /*
@@ -736,7 +740,7 @@ class JSObject : public js::ObjectImpl
     }
 
     bool shouldConvertDoubleElements() {
-        JS_ASSERT(isNative());
+        JS_ASSERT(getClass()->isNative());
         return getElementsHeader()->shouldConvertDoubleElements();
     }
 

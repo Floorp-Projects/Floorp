@@ -35,12 +35,6 @@ class AutoInflatedString {
     size_t length() const { return length_; }
 };
 
-template<size_t N> JSFlatString *
-NewString(JSContext *cx, const jschar (&chars)[N])
-{
-    return js_NewStringCopyN<CanGC>(cx, chars, N);
-}
-
 BEGIN_TEST(testParseJSON_success)
 {
     // Primitives
@@ -139,6 +133,12 @@ BEGIN_TEST(testParseJSON_success)
     CHECK_SAME(v2, INT_TO_JSVAL(17));
 
     return true;
+}
+
+template<size_t N> static JSFlatString *
+NewString(JSContext *cx, const jschar (&chars)[N])
+{
+    return js_NewStringCopyN<CanGC>(cx, chars, N);
 }
 
 template<size_t N> inline bool

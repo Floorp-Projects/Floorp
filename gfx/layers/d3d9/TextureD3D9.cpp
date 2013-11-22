@@ -358,17 +358,17 @@ DeprecatedTextureHostYCbCrD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
                                yuvDeserializer.GetYData(),
                                yuvDeserializer.GetYStride(),
                                size,
-                               D3DFMT_L8, 1);
+                               D3DFMT_A8, 1);
   mTextures[1] = DataToTexture(mDevice,
                                yuvDeserializer.GetCbData(),
                                yuvDeserializer.GetCbCrStride(),
                                gfxCbCrSize,
-                               D3DFMT_L8, 1);
+                               D3DFMT_A8, 1);
   mTextures[2] = DataToTexture(mDevice,
                                yuvDeserializer.GetCrData(),
                                yuvDeserializer.GetCbCrStride(),
                                gfxCbCrSize,
-                               D3DFMT_L8, 1);
+                               D3DFMT_A8, 1);
 }
 
 // aTexture should be in SYSTEMMEM, returns a texture in the default

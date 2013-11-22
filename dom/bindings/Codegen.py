@@ -2536,7 +2536,7 @@ class CastableObjectUnwrapper():
         codeOnFailure = self.substitution["codeOnFailure"] % {'securityError': 'rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO'}
         return string.Template(
 """{
-  nsresult rv = UnwrapObject<${protoID}, ${type}>(cx, ${source}, ${target});
+  nsresult rv = UnwrapObject<${protoID}, ${type}>(${source}, ${target});
   if (NS_FAILED(rv)) {
 ${codeOnFailure}
   }

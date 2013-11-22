@@ -213,7 +213,9 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
   }
 
   uint64_t childLayersId = (aLayer->AsRefLayer() ? aLayer->AsRefLayer()->GetReferentId() : aLayersId);
-  AsyncPanZoomController* next = nullptr;
+  // If there's no APZC at this level, any APZCs for our child layers will
+  // have our siblings as siblings.
+  AsyncPanZoomController* next = apzc ? nullptr : aNextSibling;
   for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
     next = UpdatePanZoomControllerTree(aCompositor, child, childLayersId, aTransform, aParent, next,
                                        aIsFirstPaint, aFirstPaintLayersId, aApzcsToDestroy);
