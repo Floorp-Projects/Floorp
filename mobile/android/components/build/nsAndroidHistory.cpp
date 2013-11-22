@@ -50,10 +50,7 @@ nsAndroidHistory::RegisterVisitedCallback(nsIURI *aURI, Link *aContent)
   }
   list->AppendElement(aContent);
 
-  AndroidBridge *bridge = AndroidBridge::Bridge();
-  if (bridge) {
-    bridge->CheckURIVisited(uriString);
-  }
+ GeckoAppShell::CheckURIVisited(uriString);
 
   return NS_OK;
 }
@@ -96,27 +93,23 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlag
   if (aFlags & VisitFlags::UNRECOVERABLE_ERROR)
     return NS_OK;
 
-  AndroidBridge *bridge = AndroidBridge::Bridge();
-  if (bridge) {
-    nsAutoCString uri;
-    nsresult rv = aURI->GetSpec(uri);
-    if (NS_FAILED(rv)) return rv;
-    NS_ConvertUTF8toUTF16 uriString(uri);
-    bridge->MarkURIVisited(uriString);
-  }
+  nsAutoCString uri;
+  nsresult rv = aURI->GetSpec(uri);
+  if (NS_FAILED(rv)) return rv;
+  NS_ConvertUTF8toUTF16 uriString(uri);
+  GeckoAppShell::MarkURIVisited(uriString);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAndroidHistory::SetURITitle(nsIURI *aURI, const nsAString& aTitle)
 {
-  AndroidBridge *bridge = AndroidBridge::Bridge();
-  if (bridge) {
+  if (AndroidBridge::Bridge()) {
     nsAutoCString uri;
     nsresult rv = aURI->GetSpec(uri);
     if (NS_FAILED(rv)) return rv;
     NS_ConvertUTF8toUTF16 uriString(uri);
-    bridge->SetURITitle(uriString, aTitle);
+    GeckoAppShell::SetURITitle(uriString, aTitle);
   }
   return NS_OK;
 }
