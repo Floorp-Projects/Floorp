@@ -153,7 +153,8 @@ nsNumberControlFrame::AttributeChanged(int32_t  aNameSpaceID,
                                        int32_t  aModType)
 {
   if (aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::placeholder) {
+    if (aAttribute == nsGkAtoms::placeholder ||
+        aAttribute == nsGkAtoms::readonly) {
       if (aModType == nsIDOMMutationEvent::REMOVAL) {
         mTextField->UnsetAttr(aNameSpaceID, aAttribute, true);
       } else {
@@ -251,6 +252,12 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsAutoString value;
   HTMLInputElement::FromContent(mContent)->GetValue(value);
   mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::value, value, false);
+
+  // If we're readonly, make sure our anonymous text control is too:
+  nsAutoString readonly;
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::readonly, readonly)) {
+    mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::readonly, readonly, false);
+  }
 
   // Initialize the text field's placeholder, if ours is set:
   nsAutoString placeholder;
