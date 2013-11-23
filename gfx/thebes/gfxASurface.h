@@ -6,10 +6,6 @@
 #ifndef GFX_ASURFACE_H
 #define GFX_ASURFACE_H
 
-#ifdef MOZ_DUMP_PAINTING
- #define MOZ_DUMP_IMAGES
-#endif
-
 #include "mozilla/MemoryReporting.h"
 #include "gfxTypes.h"
 #include "mozilla/Scoped.h"
