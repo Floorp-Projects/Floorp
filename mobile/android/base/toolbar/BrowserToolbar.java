@@ -532,7 +532,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
-        switch(msg) {
+        switch (msg) {
             case TITLE:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     updateTitle();
@@ -558,24 +558,26 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     updateTitle();
                 }
                 break;
-            case LOADED:
-                if (Tabs.getInstance().isSelectedTab(tab)) {
-                    updateTitle();
-                }
-                break;
+
             case RESTORED:
                 // TabCount fixup after OOM
             case SELECTED:
                 updateTabCount(Tabs.getInstance().getDisplayCount());
                 mSwitchingTabs = true;
-                // fall through
-            case LOCATION_CHANGE:
+                // Fall through.
+
+            // A successful location change will cause Tab to notify
+            // us of a title change, so only LOAD_ERROR does this.
             case LOAD_ERROR:
+                updateTitle();
+                // Fall through.
+            case LOCATION_CHANGE:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     refresh();
                 }
                 mSwitchingTabs = false;
                 break;
+
             case CLOSED:
             case ADDED:
                 updateTabCount(Tabs.getInstance().getDisplayCount());
@@ -1473,10 +1475,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
         setVisibility(View.GONE);
     }
 
-    public void refresh() {
+    private void refresh() {
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {
-            updateTitle();
             setFavicon(tab.getFavicon());
             setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
             setSecurityMode(tab.getSecurityMode());
