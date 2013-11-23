@@ -18,5 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 942184 - Landing and subsequent backout of bug 941450 increased the
-             possibility of random build bustage.
+Bug 941844 - Because Android resource builds are flaky.
