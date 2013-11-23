@@ -135,9 +135,8 @@
 .theme-toolbar,
 .devtools-toolbar { /* General toolbar styling */
   color: hsl(210,30%,85%);
-  background-image: url(background-noise-toolbar.png), linear-gradient(#3e4750, #3e4750);
+  background-color: #343c45;
   border-color: #060a0d;
-  box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset, -1px 0 0 hsla(204,45%,98%,.05) inset, 0 -1px 0 hsla(204,45%,98%,.05) inset;
 }
 
 .theme-fg-contrast { /* To be used for text on theme-bg-contrast */

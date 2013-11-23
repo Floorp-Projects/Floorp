@@ -2185,12 +2185,12 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
         return rv;
       }
       
-      // As with -profile, assume that the given path will be used for both the
-      // main profile directory and the temp profile directory.
-      rv = aProfileSvc->CreateProfile(lf, lf, nsDependentCSubstring(arg, delim),
+      // As with -profile, assume that the given path will be used for the
+      // main profile directory.
+      rv = aProfileSvc->CreateProfile(lf, nsDependentCSubstring(arg, delim),
                                      getter_AddRefs(profile));
     } else {
-      rv = aProfileSvc->CreateProfile(nullptr, nullptr, nsDependentCString(arg),
+      rv = aProfileSvc->CreateProfile(nullptr, nsDependentCString(arg),
                                      getter_AddRefs(profile));
     }
     // Some pathological arguments can make it this far
@@ -2275,7 +2275,6 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
     // create a default profile
     nsCOMPtr<nsIToolkitProfile> profile;
     nsresult rv = aProfileSvc->CreateProfile(nullptr, // choose a default dir for us
-                                             nullptr, // choose a default dir for us
                                              NS_LITERAL_CSTRING("default"),
                                              getter_AddRefs(profile));
     if (NS_SUCCEEDED(rv)) {
