@@ -122,7 +122,7 @@ nsDiskCacheBinding::EnsureStreamIO()
  *
  *****************************************************************************/
 
-PLDHashTableOps nsDiskCacheBindery::ops =
+const PLDHashTableOps nsDiskCacheBindery::ops =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,

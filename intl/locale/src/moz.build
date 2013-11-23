@@ -34,7 +34,3 @@ EXTRA_JS_MODULES += [
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'i18n'
-
-GENERATED_FILES = [
-    'charsetalias.properties.h',
-]

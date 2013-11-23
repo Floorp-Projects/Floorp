@@ -6,7 +6,7 @@
 
 PROGRAM = 'gdb-tests'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'gdb-tests.cpp',
     'tests/test-jsid.cpp',
     'tests/test-JSObject.cpp',

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: when switching to another type, the input element should look
+             like that type (not like an input number element) -->
+  <script type="text/javascript">
+    function setToCheckbox()
+    {
+      document.getElementById('i').type='checkbox';
+      document.documentElement.className = '';
+    }
+    document.addEventListener("MozReftestInvalidate", setToCheckbox);
+  </script>
+  <body>
+    <input type='number' id='i' style="-moz-appearance:none;">
+  </body>
+</html>

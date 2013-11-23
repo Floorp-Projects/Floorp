@@ -606,6 +606,8 @@ ifdef MOZ_ETW
 ETWProvider.h ETWProvider.rc ETWProvider.mof: ETWProvider.man
 	$(MC) -um -mof $^
 
+Probes.$(OBJ_SUFFIX): ETWProvider.h
+
 ETWProvider.res: ETWProvider.rc
 	$(RC) -r -i "$(SDKDIR)Include" $^
 

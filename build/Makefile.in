@@ -76,6 +76,15 @@ GDBINIT_FILES := $(topsrcdir)/.gdbinit
 GDBINIT_DEST = $(FINAL_TARGET)
 INSTALL_TARGETS += GDBINIT
 
+# Put a useful .lldbinit in the bin directory, to be picked up automatically
+# by LLDB when we debug executables using that directory as the current working
+# directory.
+# NOTE: Keep .lldbinit in the topsrcdir for people who run LLDB from the
+# topsrcdir rather than the bin directory.
+LLDBINIT_FILES := $(topsrcdir)/.lldbinit
+LLDBINIT_DEST = $(FINAL_TARGET)
+INSTALL_TARGETS += LLDBINIT
+
 include $(topsrcdir)/config/rules.mk
 
 # we install to _leaktest/

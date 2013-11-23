@@ -881,6 +881,84 @@ input[type=range]::-moz-range-thumb {
   -moz-user-select: none ! important;
 }
 
+input[type="number"] {
+  /* Has to revert some properties applied by the generic input rule. */
+  -moz-binding: none;
+  width: 149px; /* to match type=text */
+}
+
+input[type=number]::-moz-number-wrapper {
+  /* Prevent styling that would change the type of frame we construct. */
+  display: flex;
+  float: none !important;
+  position: static !important;
+  -moz-box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+}
+
+input[type=number]::-moz-number-text {
+  -moz-appearance: none;
+  /* work around autofocus bug 939248 on initial load */
+  -moz-user-modify: read-write;
+  /* This pseudo-element is also an 'input' element (nested inside and
+   * distinct from the <input type=number> element) so we need to prevent the
+   * explicit setting of 'text-align' by the general CSS rule for 'input'
+   * above. We want to inherit its value from its <input type=number>
+   * ancestor, not have that general CSS rule reset it.
+   */
+  text-align: inherit;
+  flex: 1;
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+
+input[type=number]::-moz-number-spin-box {
+  display: flex;
+  flex-direction: column;
+  flex: 0 8px;
+  cursor: default;
+  padding: 1px;
+}
+
+input[type=number]::-moz-number-spin-up {
+  /* We should be "display:block" so that we don't get wrapped in an anonymous
+   * flex item that will prevent the setting of the "flex" property below from
+   * working.
+   */
+  display: block;
+  flex: 1;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="5"><path d="M1,4 L3,0 5,4" fill="dimgrey"/></svg>');
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  border: 1px solid darkgray;
+  border-bottom: none;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+input[type=number]::-moz-number-spin-down {
+  /* We should be "display:block" so that we don't get wrapped in an anonymous
+   * flex item that will prevent the setting of the "flex" property below from
+   * working.
+   */
+  display: block;
+  flex: 1;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="5"><path d="M1,1 L3,5 5,1" fill="dimgrey"/></svg>');
+  background-repeat: no-repeat;
+  background-position: center top;
+  border: 1px solid darkgray;
+  border-top: none;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+input[type="number"] > div > div > div:hover {
+  /* give some indication of hover state for the up/down buttons */
+  background-color: lightblue;
+}
+
 %ifdef XP_OS2
 input {
   font: medium serif; font-family: inherit

@@ -108,14 +108,6 @@ VARIABLES = {
         and reduce the debug info size.
         """, 'compile'),
 
-    'GENERATED_FILES': (StrictOrderingOnAppendList, list, [],
-        """Generic generated files.
-
-        This variable contains a list of generate files for the build system
-        to generate at export time. The rules for those files still live in
-        Makefile.in.
-        """, 'export'),
-
     'DEFINES': (OrderedDict, dict, OrderedDict(),
         """Dictionary of compiler defines to declare.
 

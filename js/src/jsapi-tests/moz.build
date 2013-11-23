@@ -34,6 +34,7 @@ UNIFIED_SOURCES += [
     'testGCExactRooting.cpp',
     'testGCFinalizeCallback.cpp',
     'testGCOutOfMemory.cpp',
+    'testGCStoreBufferRemoval.cpp',
     'testHashTable.cpp',
     'testHashTableInit.cpp',
     'testIndexToString.cpp',

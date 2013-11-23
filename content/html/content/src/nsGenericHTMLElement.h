@@ -158,7 +158,7 @@ public:
     SetHTMLIntAttr(nsGkAtoms::tabindex, aTabIndex, aError);
   }
   virtual void Focus(mozilla::ErrorResult& aError);
-  void Blur(mozilla::ErrorResult& aError);
+  virtual void Blur(mozilla::ErrorResult& aError);
   void GetAccessKey(nsString& aAccessKey)
   {
     GetHTMLAttr(nsGkAtoms::accesskey, aAccessKey);

@@ -19,6 +19,7 @@
 #include "nsIControllers.h"
 #include "nsIStringBundle.h"
 #include "nsFocusManager.h"
+#include "nsNumberControlFrame.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
@@ -2143,6 +2144,14 @@ HTMLInputElement::StepUp(int32_t n, uint8_t optional_argc)
 }
 
 void
+HTMLInputElement::FlushFrames()
+{
+  if (GetCurrentDoc()) {
+    GetCurrentDoc()->FlushPendingNotifications(Flush_Frames);
+  }
+}
+
+void
 HTMLInputElement::MozGetFileNameArray(nsTArray< nsString >& aArray)
 {
   for (uint32_t i = 0; i < mFiles.Length(); i++) {
@@ -2233,7 +2242,7 @@ HTMLInputElement::MozSetFileNameArray(const PRUnichar** aFileNames, uint32_t aLe
 bool
 HTMLInputElement::MozIsTextField(bool aExcludePassword)
 {
-  // TODO: temporary until bug 635240 and 773205 are fixed.
+  // TODO: temporary until bug 773205 is fixed.
   if (IsExperimentalMobileType(mType)) {
     return false;
   }
@@ -2687,6 +2696,14 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
           SetValueChanged(true);
         }
         OnValueChanged(!mParserCreating);
+
+        if (mType == NS_FORM_INPUT_NUMBER) {
+          nsNumberControlFrame* numberControlFrame =
+            do_QueryFrame(GetPrimaryFrame());
+          if (numberControlFrame) {
+            numberControlFrame->UpdateForValueChange(value);
+          }
+        }
       }
 
       // Call parent's SetAttr for color input so its control frame is notified
@@ -2953,8 +2970,40 @@ HTMLInputElement::SetCheckedInternal(bool aChecked, bool aNotify)
 }
 
 void
+HTMLInputElement::Blur(ErrorResult& aError)
+{
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    // Blur our anonymous text control, if we have one. (DOM 'change' event
+    // firing and other things depend on this.)
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      HTMLInputElement* textControl = numberControlFrame->GetAnonTextControl();
+      if (textControl) {
+        textControl->Blur(aError);
+        return;
+      }
+    }
+  }
+  nsGenericHTMLElement::Blur(aError);
+}
+
+void
 HTMLInputElement::Focus(ErrorResult& aError)
 {
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    // Focus our anonymous text control, if we have one.
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      HTMLInputElement* textControl = numberControlFrame->GetAnonTextControl();
+      if (textControl) {
+        textControl->Focus(aError);
+        return;
+      }
+    }
+  }
+
   if (mType != NS_FORM_INPUT_FILE) {
     nsGenericHTMLElement::Focus(aError);
     return;
@@ -3225,7 +3274,45 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
-  return nsGenericHTMLFormElementWithState::PreHandleEvent(aVisitor);
+  nsresult rv = nsGenericHTMLFormElementWithState::PreHandleEvent(aVisitor);
+
+  // We do this after calling the base class' PreHandleEvent so that
+  // nsIContent::PreHandleEvent doesn't reset any change we make to mCanHandle.
+  if (mType == NS_FORM_INPUT_NUMBER &&
+      aVisitor.mEvent->mFlags.mIsTrusted  &&
+      aVisitor.mEvent->originalTarget != this) {
+    // <input type=number> has an anonymous <input type=text> descendant. If
+    // 'input' or 'change' events are fired at that text control then we need
+    // to do some special handling here.
+    HTMLInputElement* textControl = nullptr;
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      textControl = numberControlFrame->GetAnonTextControl();
+    }
+    if (textControl && aVisitor.mEvent->originalTarget == textControl) {
+      if (aVisitor.mEvent->message == NS_FORM_INPUT) {
+        // Propogate the anon text control's new value to our HTMLInputElement:
+        numberControlFrame->HandlingInputEvent(true);
+        nsAutoString value;
+        textControl->GetValue(value);
+        SetValueInternal(value, false, true);
+        numberControlFrame->HandlingInputEvent(false);
+      }
+      else if (aVisitor.mEvent->message == NS_FORM_CHANGE) {
+        // We cancel the DOM 'change' event that is fired for any change to our
+        // anonymous text control since we fire our own 'change' events and
+        // content shouldn't be seeing two 'change' events. Besides that we
+        // (as a number) control have tighter restrictions on when our internal
+        // value changes than our anon text control does, so in some cases
+        // (if our text control's value doesn't parse as a number) we don't
+        // want to fire a 'change' event at all.
+        aVisitor.mCanHandle = false;
+      }
+    }
+  }
+
+  return rv;
 }
 
 void
@@ -3421,7 +3508,8 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   // the click event handling, and allow cancellation of DOMActivate to cancel
   // the click.
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault &&
-      !IsSingleLineTextControl(true)) {
+      !IsSingleLineTextControl(true) &&
+      mType != NS_FORM_INPUT_NUMBER) {
     WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
     if (mouseEvent && mouseEvent->IsLeftClickEvent() &&
         !ShouldPreventDOMActivateDispatch(aVisitor.mEvent->originalTarget)) {
@@ -5516,7 +5604,8 @@ HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable, int32_t* 
   }
 
   if (IsSingleLineTextControl(false) ||
-      mType == NS_FORM_INPUT_RANGE) {
+      mType == NS_FORM_INPUT_RANGE ||
+      mType == NS_FORM_INPUT_NUMBER) {
     *aIsFocusable = true;
     return false;
   }
@@ -5727,7 +5816,7 @@ HTMLInputElement::PlaceholderApplies() const
 bool
 HTMLInputElement::DoesPatternApply() const
 {
-  // TODO: temporary until bug 635240 and bug 773205 are fixed.
+  // TODO: temporary until bug 773205 is fixed.
   if (IsExperimentalMobileType(mType)) {
     return false;
   }

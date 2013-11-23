@@ -4,5 +4,5 @@
 == fieldset-percentage-padding-1.html fieldset-percentage-padding-1-ref.html
 == fieldset-scroll-1.html fieldset-scroll-1-ref.html
 == fieldset-scrolled-1.html fieldset-scrolled-1-ref.html
-== fieldset-overflow-auto-1.html fieldset-overflow-auto-1-ref.html
+random-if(B2G) == fieldset-overflow-auto-1.html fieldset-overflow-auto-1-ref.html
 == positioned-container-1.html positioned-container-1-ref.html

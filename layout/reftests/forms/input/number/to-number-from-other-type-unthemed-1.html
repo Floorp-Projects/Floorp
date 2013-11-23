@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: input element changed to number state doesn't look like checkbox state -->
+  <script type="text/javascript">
+    function setToNumber()
+    {
+      document.getElementById('i').type='number';
+      document.documentElement.className = '';
+    }
+    document.addEventListener("MozReftestInvalidate", setToNumber);
+  </script>
+  <body>
+    <input type='checkbox' id='i' style="-moz-appearance:none;">
+  </body>
+</html>

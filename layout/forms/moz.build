@@ -29,6 +29,7 @@ UNIFIED_SOURCES += [
     'nsLegendFrame.cpp',
     'nsListControlFrame.cpp',
     'nsMeterFrame.cpp',
+    'nsNumberControlFrame.cpp',
     'nsProgressFrame.cpp',
     'nsRangeFrame.cpp',
     'nsSelectsAreaFrame.cpp',

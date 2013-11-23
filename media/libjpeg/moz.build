@@ -150,7 +150,3 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     NO_VISIBILITY_FLAGS = True
 
 FINAL_LIBRARY = 'gkmedias'
-
-GENERATED_FILES = [
-    'jpeg_nbits_table.h',
-]
