@@ -2834,8 +2834,8 @@ let SessionStoreInternal = {
     // channel (via the progress listener), so reset the tab ourselves. We will
     // also send SSTabRestored since this tab has technically been restored.
     if (!didStartLoad) {
-      this._sendTabRestoredNotification(aTab);
       this._resetTabRestoringState(aTab);
+      this._sendTabRestoredNotification(aTab);
     }
 
     return didStartLoad;
@@ -2919,12 +2919,20 @@ let SessionStoreInternal = {
     PageStyle.restore(aBrowser.docShell, frameList, aBrowser.__SS_restore_pageStyle);
     TextAndScrollData.restore(frameList);
 
-    // notify the tabbrowser that this document has been completely restored
-    this._sendTabRestoredNotification(aBrowser.__SS_restore_tab);
+    let tab = aBrowser.__SS_restore_tab;
 
+    // Drop all the state associated with restoring the tab. We're
+    // done with that now.
+    delete aBrowser.__SS_data;
+    delete aBrowser.__SS_tabStillLoading;
     delete aBrowser.__SS_restore_data;
     delete aBrowser.__SS_restore_pageStyle;
     delete aBrowser.__SS_restore_tab;
+
+    // Notify the tabbrowser that this document has been completely
+    // restored. Do so after restoration is completely finished and
+    // all state for it has been dropped.
+    this._sendTabRestoredNotification(tab);
   },
 
   /**
