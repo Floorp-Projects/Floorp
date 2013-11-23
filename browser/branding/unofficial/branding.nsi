@@ -13,7 +13,7 @@
 !define URLInfoAbout          "http://www.mozilla.org"
 !define URLUpdateInfo         "http://www.mozilla.org/projects/firefox"
 
-!define URLStubDownload "http://download.mozilla.org/?product=firefox-latest&os=win&lang=${AB_CD}"
+!define URLStubDownload "http://download.mozilla.org/?os=win&lang=${AB_CD}&product=firefox-latest"
 !define URLManualDownload "https://www.mozilla.org/${AB_CD}/firefox/installer-help/?channel=release&installer_lang=${AB_CD}"
 !define Channel "unofficial"
 

@@ -571,6 +571,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/PromptService.js
 @BINPATH@/components/SessionStore.js
 @BINPATH@/components/Sidebar.js
+@BINPATH@/components/Snippets.js
 
 @BINPATH@/components/Payment.js
 @BINPATH@/components/PaymentFlowInfo.js

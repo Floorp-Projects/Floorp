@@ -788,3 +788,17 @@ pref("browser.ui.linkify.phone", false);
 
 // Enables/disables Spatial Navigation
 pref("snav.enabled", true);
+
+// This url, if changed, MUST continue to point to an https url. Pulling arbitrary content to inject into
+// this page over http opens us up to a man-in-the-middle attack that we'd rather not face. If you are a downstream
+// repackager of this code using an alternate snippet url, please keep your users safe
+pref("browser.snippets.updateUrl", "https://snippets.mozilla.com/json/%SNIPPETS_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/");
+
+// How frequently we check for new snippets, in seconds (1 day)
+pref("browser.snippets.updateInterval", 86400);
+
+// URL used to check for user's country code
+pref("browser.snippets.geoUrl", "https://geo.mozilla.org/country.json");
+
+// This pref requires a restart to take effect.
+pref("browser.snippets.enabled", false);
