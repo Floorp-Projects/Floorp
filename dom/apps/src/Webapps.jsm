@@ -962,24 +962,24 @@ this.DOMApplicationRegistry = {
           mm: aMm,
           refCount: 1
         });
+      }
 
-        // If it wasn't registered before, let's update its state
-        if ((aMsgName === 'Webapps:FireEvent') ||
-            (aMsgName === 'Webapps:UpdateState')) {
-          if (man) {
-            let app = this.getAppByManifestURL(aApp.manifestURL);
-            if (app && ((aApp.installState !== app.installState) ||
-                        (aApp.downloading !== app.downloading))) {
-              debug("Got a registration from an outdated app: " +
-                    aApp.manifestURL);
-              let aEvent ={
-                type: app.installState,
-                app: app,
-                manifestURL: app.manifestURL,
-                manifest: app.manifest
-              };
-              aMm.sendAsyncMessage(aMsgName, aEvent);
-            }
+      // If the state reported by the registration is outdated, update it now.
+      if ((aMsgName === 'Webapps:FireEvent') ||
+          (aMsgName === 'Webapps:UpdateState')) {
+        if (man) {
+          let app = this.getAppByManifestURL(aApp.manifestURL);
+          if (app && ((aApp.installState !== app.installState) ||
+                      (aApp.downloading !== app.downloading))) {
+            debug("Got a registration from an outdated app: " +
+                  aApp.manifestURL);
+            let aEvent ={
+              type: app.installState,
+              app: app,
+              manifestURL: app.manifestURL,
+              manifest: app.manifest
+            };
+            aMm.sendAsyncMessage(aMsgName, aEvent);
           }
         }
       }

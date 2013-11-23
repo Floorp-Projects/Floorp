@@ -92,7 +92,7 @@ public:
      */
     static already_AddRefed<ContentParent> PreallocateAppProcess();
 
-    static void RunNuwaProcess();
+    static already_AddRefed<ContentParent> RunNuwaProcess();
 
     /**
      * Get or create a content process for the given TabContext.  aFrameElement
@@ -208,8 +208,6 @@ public:
     RecvPJavaScriptConstructor(PJavaScriptParent* aActor) MOZ_OVERRIDE {
         return PContentParent::RecvPJavaScriptConstructor(aActor);
     }
-
-    virtual bool SendNuwaFork();
 
 protected:
     void OnChannelConnected(int32_t pid) MOZ_OVERRIDE;

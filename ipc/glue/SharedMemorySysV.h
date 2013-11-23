@@ -84,8 +84,8 @@ public:
     void* mem = shmat(mHandle, nullptr, 0);
     if (mem == (void*) -1) {
       char warning[256];
-      snprintf(warning, sizeof(warning)-1,
-               "shmat(): %s (%d)\n", strerror(errno), errno);
+      ::snprintf(warning, sizeof(warning)-1,
+                 "shmat(): %s (%d)\n", strerror(errno), errno);
 
       NS_WARNING(warning);
 

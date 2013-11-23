@@ -97,7 +97,6 @@ protected:
 
 private:
     ICreateDevEnum* _dsDevEnum;
-    IEnumMoniker* _dsMonikerDevEnum;
     bool _CoUninitializeIsRequired;
 
 };

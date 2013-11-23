@@ -71,7 +71,7 @@ DeviceInfoDS* DeviceInfoDS::Create(const int32_t id)
 }
 
 DeviceInfoDS::DeviceInfoDS(const int32_t id)
-    : DeviceInfoImpl(id), _dsDevEnum(NULL), _dsMonikerDevEnum(NULL),
+    : DeviceInfoImpl(id), _dsDevEnum(NULL),
       _CoUninitializeIsRequired(true)
 {
     // 1) Initialize the COM library (make Windows load the DLLs).
@@ -116,7 +116,6 @@ DeviceInfoDS::DeviceInfoDS(const int32_t id)
 
 DeviceInfoDS::~DeviceInfoDS()
 {
-    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
     RELEASE_AND_CLEAR(_dsDevEnum);
     if (_CoUninitializeIsRequired)
     {
@@ -173,7 +172,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(
 {
 
     // enumerate all video capture devices
-    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
+    IEnumMoniker* _dsMonikerDevEnum = NULL;
     HRESULT hr =
         _dsDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory,
                                           &_dsMonikerDevEnum, 0);
@@ -182,6 +181,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                      "Failed to enumerate CLSID_SystemDeviceEnum, error 0x%x."
                      " No webcam exist?", hr);
+        RELEASE_AND_CLEAR(_dsMonikerDevEnum);
         return 0;
     }
 
@@ -227,6 +227,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(
                                              webrtc::kTraceVideoCapture, _id,
                                              "Failed to convert device name to UTF8. %d",
                                              GetLastError());
+                                RELEASE_AND_CLEAR(_dsMonikerDevEnum);
                                 return -1;
                             }
                         }
@@ -258,6 +259,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(
                                                  webrtc::kTraceVideoCapture, _id,
                                                  "Failed to convert device name to UTF8. %d",
                                                  GetLastError());
+                                    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
                                     return -1;
                                 }
                                 if (productUniqueIdUTF8
@@ -285,6 +287,7 @@ int32_t DeviceInfoDS::GetDeviceInfo(
         WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, _id, "%s %s",
                      __FUNCTION__, deviceNameUTF8);
     }
+    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
     return index;
 }
 
@@ -303,8 +306,8 @@ IBaseFilter * DeviceInfoDS::GetDeviceFilter(
         return NULL;
     }
 
+    IEnumMoniker* _dsMonikerDevEnum = NULL;
     // enumerate all video capture devices
-    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
     HRESULT hr = _dsDevEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory,
                                                    &_dsMonikerDevEnum, 0);
     if (hr != NOERROR)
@@ -312,6 +315,7 @@ IBaseFilter * DeviceInfoDS::GetDeviceFilter(
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
                      "Failed to enumerate CLSID_SystemDeviceEnum, error 0x%x."
                      " No webcam exist?", hr);
+        RELEASE_AND_CLEAR(_dsMonikerDevEnum);
         return 0;
     }
     _dsMonikerDevEnum->Reset();
@@ -379,6 +383,7 @@ IBaseFilter * DeviceInfoDS::GetDeviceFilter(
             pM->Release();
         }
     }
+    RELEASE_AND_CLEAR(_dsMonikerDevEnum);
     return captureFilter;
 }
 

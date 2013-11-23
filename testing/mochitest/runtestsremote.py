@@ -212,6 +212,9 @@ class RemoteOptions(MochitestOptions):
         tempPort = options.httpPort
         tempSSL = options.sslPort
         tempIP = options.webServer
+        # We are going to override this option later anyway, just pretend
+        # like it's not set for verification purposes.
+        options.dumpOutputDirectory = None
         options = MochitestOptions.verifyOptions(self, options, mochitest)
         options.webServer = tempIP
         options.app = temp
@@ -587,6 +590,8 @@ def main():
         dm.removeFile(dmdPathOnDevice)
         dm.pushFile(os.path.join(options.dmdPath, dmdLibrary), dmdPathOnDevice)
         options.dmdPath = deviceRoot
+
+    options.dumpOutputDirectory = deviceRoot
 
     procName = options.app.split('/')[-1]
     if (dm.processExist(procName)):

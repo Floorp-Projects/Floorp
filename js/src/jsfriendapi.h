@@ -544,6 +544,10 @@ SetFunctionNativeReserved(JSObject *fun, size_t which, const JS::Value &val);
 JS_FRIEND_API(bool)
 GetObjectProto(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> proto);
 
+JS_FRIEND_API(bool)
+GetOriginalEval(JSContext *cx, JS::HandleObject scope,
+                JS::MutableHandleObject eval);
+
 inline void *
 GetObjectPrivate(JSObject *obj)
 {

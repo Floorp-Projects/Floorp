@@ -54,7 +54,7 @@ const char * const js::TypeStrings[] = {
     js_null_str,
 };
 
-#define DEFINE_PROTO_STRING(name,code,init) const char js_##name##_str[] = #name;
+#define DEFINE_PROTO_STRING(name,code,init,clasp) const char js_##name##_str[] = #name;
 JS_FOR_EACH_PROTOTYPE(DEFINE_PROTO_STRING)
 #undef DEFINE_PROTO_STRING
 
@@ -149,7 +149,7 @@ js::InitCommonNames(JSContext *cx)
 #define COMMON_NAME_INFO(idpart, id, text) { js_##idpart##_str, sizeof(text) - 1 },
         FOR_EACH_COMMON_PROPERTYNAME(COMMON_NAME_INFO)
 #undef COMMON_NAME_INFO
-#define COMMON_NAME_INFO(name, code, init) { js_##name##_str, sizeof(#name) - 1 },
+#define COMMON_NAME_INFO(name, code, init, clasp) { js_##name##_str, sizeof(#name) - 1 },
         JS_FOR_EACH_PROTOTYPE(COMMON_NAME_INFO)
 #undef COMMON_NAME_INFO
     };
