@@ -37,7 +37,6 @@ using namespace mozilla::gfx;
 
 typedef FrameMetrics::ViewID ViewID;
 const ViewID FrameMetrics::NULL_SCROLL_ID = 0;
-const ViewID FrameMetrics::START_SCROLL_ID = 1;
 
 uint8_t gLayerManagerLayerBuilder;
 

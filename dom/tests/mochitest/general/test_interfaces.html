@@ -36,7 +36,10 @@ var ecmaGlobals =
     "Float32Array",
     "Float64Array",
     "Function",
-    "Infinity",
+    // NB: We haven't bothered to resolve constants like Infinity and NaN on
+    // Xrayed windows (which are seen from the XBL scope). We could support
+    // this if needed with some refactoring.
+    {name: "Infinity", xbl: false},
     "Int16Array",
     "Int32Array",
     "Int8Array",
@@ -46,7 +49,7 @@ var ecmaGlobals =
     "JSON",
     "Map",
     "Math",
-    "NaN",
+    {name: "NaN", xbl: false},
     "Number",
     "Object",
     {name: "ParallelArray", nightly: true},
@@ -657,9 +660,7 @@ function createInterfaceMap(isXBLScope) {
     }
   }
 
-  // Standard ECMAScript global objects are not defined on the XBL scope, but
-  // everything else exists everywhere.
-  addInterfaces(ecmaGlobals, !isXBLScope);
+  addInterfaces(ecmaGlobals, true);
   addInterfaces(interfaceNamesInGlobalScope, true);
 
   return interfaceMap;

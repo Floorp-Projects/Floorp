@@ -62,7 +62,7 @@ namespace mozilla {
 namespace dom {
 
 // The default value for kKindTable is "subtitles"
-static const char* kKindTableDefaultString = kKindTable->tag;
+static MOZ_CONSTEXPR const char* kKindTableDefaultString = kKindTable->tag;
 
 /** HTMLTrackElement */
 HTMLTrackElement::HTMLTrackElement(already_AddRefed<nsINodeInfo> aNodeInfo)

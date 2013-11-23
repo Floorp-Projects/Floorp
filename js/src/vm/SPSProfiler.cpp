@@ -269,7 +269,7 @@ SPSEntryMarker::~SPSEntryMarker()
 }
 
 JS_FRIEND_API(jsbytecode*)
-ProfileEntry::pc() volatile
+ProfileEntry::pc() const volatile
 {
     JS_ASSERT_IF(idx != NullPCIndex, idx >= 0 && uint32_t(idx) < script()->length);
     return idx == NullPCIndex ? nullptr : script()->code + idx;

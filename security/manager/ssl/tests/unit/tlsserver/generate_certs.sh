@@ -27,7 +27,8 @@ RUN_MOZILLA="$OBJDIR/dist/bin/run-mozilla.sh"
 CERTUTIL="$OBJDIR/dist/bin/certutil"
 
 NOISE_FILE=`mktemp`
-dd if=/dev/urandom of="$NOISE_FILE" bs=1024 count=1
+# Make a good effort at putting something unique in the noise file.
+date +%s%N  > "$NOISE_FILE"
 PASSWORD_FILE=`mktemp`
 
 function cleanup {
@@ -35,8 +36,8 @@ function cleanup {
 }
 
 if [ ! -f "$RUN_MOZILLA" ]; then
-  echo "Could not find run-mozilla.sh at \'$RUN_MOZILLA\'"
-  exit $E_BADARGS
+  echo "Could not find run-mozilla.sh at \'$RUN_MOZILLA\' - I'll try without it"
+  RUN_MOZILLA=""
 fi
 
 if [ ! -f "$CERTUTIL" ]; then
