@@ -368,6 +368,10 @@ class LiveInterval
         return uses_.end();
     }
 
+    bool usesEmpty() const {
+        return uses_.empty();
+    }
+
     UsePosition *usesBack() {
         return uses_.back();
     }
