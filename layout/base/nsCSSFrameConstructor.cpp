@@ -5964,10 +5964,12 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
       // siblings.
       return false;
     }
-
-    return true;
+    // Fall through; it's possible that the display type was overridden and
+    // a different sort of frame was constructed, so we may need to return false
+    // below.
   }
-  else if (IsFrameForFieldSet(parentFrame, parentType)) {
+
+  if (IsFrameForFieldSet(parentFrame, parentType)) {
     // Legends can be sibling of legends but not of other content in the fieldset
     nsIAtom* sibType = aSibling->GetContentInsertionFrame()->GetType();
     bool legendContent = aContent->IsHTML(nsGkAtoms::legend);
