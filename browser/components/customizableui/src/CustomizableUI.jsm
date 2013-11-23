@@ -1917,7 +1917,6 @@ let CustomizableUIInternal = {
 
       let currentPlacements = gPlacements.get(areaId);
       // We're excluding all of the placement IDs for items that do not exist,
-      // and items that have removable="false",
       // because we don't want to consider them when determining if we're
       // in the default state. This way, if an add-on introduces a widget
       // and is then uninstalled, the leftover placement doesn't cause us to
@@ -1925,24 +1924,20 @@ let CustomizableUIInternal = {
       let buildAreaNodes = gBuildAreas.get(areaId);
       if (buildAreaNodes && buildAreaNodes.size) {
         let container = [...buildAreaNodes][0];
-        let removableOrDefault = (itemNodeOrItem) => {
-          let item = (itemNodeOrItem && itemNodeOrItem.id) || itemNodeOrItem;
-          let isRemovable = this.isWidgetRemovable(itemNodeOrItem);
-          let isInDefault = defaultPlacements.indexOf(item) != -1;
-          return isRemovable || isInDefault;
-        };
         // Toolbars have a currentSet property which also deals correctly with overflown
         // widgets (if any) - use that instead:
         if (props.get("type") == CustomizableUI.TYPE_TOOLBAR) {
           currentPlacements = container.currentSet.split(',');
-          currentPlacements = currentPlacements.filter(removableOrDefault);
         } else {
           // Clone the array so we don't modify the actual placements...
           currentPlacements = [...currentPlacements];
-          currentPlacements = currentPlacements.filter((item) => {
-            let itemNode = container.querySelector(idToSelector(item));
-            return itemNode && removableOrDefault(itemNode || item);
-          });
+          // Loop backwards through the placements so we can easily remove items:
+          let itemIndex = currentPlacements.length;
+          while (itemIndex--) {
+            if (!container.querySelector(idToSelector(currentPlacements[itemIndex]))) {
+              currentPlacements.splice(itemIndex, 1);
+            }
+          }
         }
       }
       LOG("Checking default state for " + areaId + ":\n" + currentPlacements.join(",") +
