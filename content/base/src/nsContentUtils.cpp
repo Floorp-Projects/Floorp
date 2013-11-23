@@ -5919,6 +5919,13 @@ nsContentUtils::IsUserFocusIgnored(nsINode* aNode)
   return false;
 }
 
+bool
+nsContentUtils::HasScrollgrab(nsIContent* aContent)
+{
+  nsGenericHTMLElement* element = nsGenericHTMLElement::FromContentOrNull(aContent);
+  return element && element->Scrollgrab();
+}
+
 void
 nsContentUtils::FlushLayoutForTree(nsIDOMWindow* aWindow)
 {

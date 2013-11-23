@@ -200,27 +200,20 @@ class GlobalObject : public JSObject
     /*
      * Lazy standard classes need a way to indicate they have been initialized.
      * Otherwise, when we delete them, we might accidentally recreate them via
-     * a lazy initialization. We use the presence of a ctor or proto in the
-     * global object's slot to indicate that they've been constructed, but this
-     * only works for classes which have a proto and ctor. Classes which don't
-     * have one can call markStandardClassInitializedNoProto(), and we can
-     * always check whether a class is initialized by calling
-     * isStandardClassResolved().
+     * a lazy initialization. We use the presence of an object in the
+     * getConstructor(key) reserved slot to indicate that they've been
+     * initialized.
+     *
+     * Note: A few builtin objects, like JSON and Math, are not constructors,
+     * so getConstructor is a bit of a misnomer.
      */
     bool isStandardClassResolved(const js::Class *clasp) const {
         JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
 
         // If the constructor is undefined, then it hasn't been initialized.
+        MOZ_ASSERT(getConstructor(key).isUndefined() ||
+                   getConstructor(key).isObject());
         return !getConstructor(key).isUndefined();
-    }
-
-    void markStandardClassInitializedNoProto(const js::Class *clasp) {
-        JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
-
-        // We use true so that it's obvious what we're doing (instead of, say,
-        // null, which might be miscontrued as an error in setting Undefined).
-        if (getConstructor(key).isUndefined())
-            setConstructor(key, BooleanValue(true));
     }
 
   private:

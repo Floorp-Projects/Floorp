@@ -2907,13 +2907,13 @@ js_InitNullClass(JSContext *cx, HandleObject obj)
     return nullptr;
 }
 
-#define DECLARE_PROTOTYPE_CLASS_INIT(name,code,init) \
+#define DECLARE_PROTOTYPE_CLASS_INIT(name,code,init,clasp) \
     extern JSObject *init(JSContext *cx, Handle<JSObject*> obj);
 JS_FOR_EACH_PROTOTYPE(DECLARE_PROTOTYPE_CLASS_INIT)
 #undef DECLARE_PROTOTYPE_CLASS_INIT
 
 static const ClassInitializerOp lazy_prototype_init[JSProto_LIMIT] = {
-#define LAZY_PROTOTYPE_INIT(name,code,init) init,
+#define LAZY_PROTOTYPE_INIT(name,code,init,clasp) init,
     JS_FOR_EACH_PROTOTYPE(LAZY_PROTOTYPE_INIT)
 #undef LAZY_PROTOTYPE_INIT
 };
@@ -5391,7 +5391,7 @@ js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
     if (!shape) {
         const char *slotname = nullptr;
         if (obj->is<GlobalObject>()) {
-#define TEST_SLOT_MATCHES_PROTOTYPE(name,code,init)                           \
+#define TEST_SLOT_MATCHES_PROTOTYPE(name,code,init,clasp)                     \
             if ((code) == slot) { slotname = js_##name##_str; goto found; }
             JS_FOR_EACH_PROTOTYPE(TEST_SLOT_MATCHES_PROTOTYPE)
 #undef TEST_SLOT_MATCHES_PROTOTYPE

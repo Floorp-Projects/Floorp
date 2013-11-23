@@ -5260,23 +5260,16 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx, uint64_t aMessagePortSerial)
     return false;
   }
 
-  nsRefPtr<nsDOMMessageEvent> event;
-  {
-    // Bug 940779 - MessageEventInit contains unrooted JS objects, and
-    // ~nsRefPtr can GC, so make sure 'init' is no longer live before ~nsRefPtr
-    // runs (or the nsRefPtr is even created) to avoid a rooting hazard. Note
-    // that 'init' is live until its destructor runs, not just until its final
-    // use.
-    MessageEventInit init;
-    init.mBubbles = false;
-    init.mCancelable = false;
-    init.mSource = &jsPort.toObject();
+  RootedDictionary<MessageEventInit> init(aCx);
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mSource = &jsPort.toObject();
 
-    ErrorResult rv;
-    event = nsDOMMessageEvent::Constructor(globalObject, aCx,
-                                           NS_LITERAL_STRING("connect"),
-                                           init, rv);
-  }
+  ErrorResult rv;
+
+  nsRefPtr<nsDOMMessageEvent> event =
+    nsDOMMessageEvent::Constructor(globalObject, aCx,
+                                   NS_LITERAL_STRING("connect"), init, rv);
 
   event->SetTrusted(true);
 

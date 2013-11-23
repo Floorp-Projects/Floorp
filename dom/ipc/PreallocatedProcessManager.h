@@ -78,6 +78,12 @@ public:
    */
   static already_AddRefed<ContentParent> Take();
 
+#ifdef MOZ_NUWA_PROCESS
+  static void PublishSpareProcess(ContentParent* aContent);
+  static void MaybeForgetSpare(ContentParent* aContent);
+  static void OnNuwaReady();
+#endif
+
 private:
   PreallocatedProcessManager();
   DISALLOW_EVIL_CONSTRUCTORS(PreallocatedProcessManager);

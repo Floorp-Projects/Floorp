@@ -68,7 +68,7 @@ struct MmsMessageData
   nsString              smil;
   MmsAttachmentData[]   attachments;
   uint64_t              expiryDate;
-  bool                  isReadReportRequested;
+  bool                  readReportRequested;
 };
 
 union MobileMessageData

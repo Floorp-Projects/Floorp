@@ -50,15 +50,15 @@ class ProfileEntry
     // instances are volatile. These methods would not be available unless they
     // were marked as volatile as well.
 
-    bool js() volatile {
+    bool js() const volatile {
         JS_ASSERT_IF(sp == nullptr, script_ != nullptr);
         return sp == nullptr;
     }
 
-    uint32_t line() volatile { JS_ASSERT(!js()); return idx; }
-    JSScript *script() volatile { JS_ASSERT(js()); return script_; }
-    void *stackAddress() volatile { return sp; }
-    const char *label() volatile { return string; }
+    uint32_t line() const volatile { JS_ASSERT(!js()); return idx; }
+    JSScript *script() const volatile { JS_ASSERT(js()); return script_; }
+    void *stackAddress() const volatile { return sp; }
+    const char *label() const volatile { return string; }
 
     void setLine(uint32_t aLine) volatile { JS_ASSERT(!js()); idx = aLine; }
     void setLabel(const char *aString) volatile { string = aString; }
@@ -66,7 +66,7 @@ class ProfileEntry
     void setScript(JSScript *aScript) volatile { script_ = aScript; }
 
     // We can't know the layout of JSScript, so look in vm/SPSProfiler.cpp.
-    JS_FRIEND_API(jsbytecode *) pc() volatile;
+    JS_FRIEND_API(jsbytecode *) pc() const volatile;
     JS_FRIEND_API(void) setPC(jsbytecode *pc) volatile;
 
     static size_t offsetOfString() { return offsetof(ProfileEntry, string); }

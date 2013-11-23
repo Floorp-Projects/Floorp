@@ -311,6 +311,16 @@ TelemetryPing.prototype = {
     return ret;
   },
 
+  getThreadHangStats: function getThreadHangStats(stats) {
+    stats.forEach((thread) => {
+      thread.activity = this.packHistogram(thread.activity);
+      thread.hangs.forEach((hang) => {
+        hang.histogram = this.packHistogram(hang.histogram);
+      });
+    });
+    return stats;
+  },
+
   /**
    * Descriptive metadata
    *
@@ -548,6 +558,7 @@ TelemetryPing.prototype = {
       histograms: this.getHistograms(Telemetry.histogramSnapshots),
       slowSQL: Telemetry.slowSQL,
       chromeHangs: Telemetry.chromeHangs,
+      threadHangStats: this.getThreadHangStats(Telemetry.threadHangStats),
       lateWrites: Telemetry.lateWrites,
       addonHistograms: this.getAddonHistograms(),
       addonDetails: AddonManagerPrivate.getTelemetryDetails(),

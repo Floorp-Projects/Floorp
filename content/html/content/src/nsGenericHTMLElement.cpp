@@ -48,6 +48,7 @@
 #include "nsError.h"
 #include "nsScriptLoader.h"
 #include "nsRuleData.h"
+#include "nsIPrincipal.h"
 
 #include "nsPresState.h"
 #include "nsILayoutHistoryState.h"
@@ -1813,6 +1814,15 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsIURI** aU
                                             attr->GetStringValue(),
                                             OwnerDoc(), baseURI);
   return true;
+}
+
+/* static */ bool
+nsGenericHTMLElement::IsScrollGrabAllowed(JSContext*, JSObject*)
+{
+  // Only allow scroll grabbing in chrome and certified apps.
+  nsIPrincipal* prin = nsContentUtils::GetSubjectPrincipal();
+  return nsContentUtils::IsSystemPrincipal(prin) ||
+    prin->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED;
 }
 
 nsresult

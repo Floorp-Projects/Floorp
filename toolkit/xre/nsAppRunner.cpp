@@ -587,7 +587,7 @@ class nsXULAppInfo : public nsIXULAppInfo,
 
 {
 public:
-  nsXULAppInfo() {}
+  MOZ_CONSTEXPR nsXULAppInfo() {}
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXULAPPINFO
   NS_DECL_NSIXULRUNTIME

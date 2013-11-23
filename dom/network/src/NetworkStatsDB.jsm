@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.importGlobalProperties(["indexedDB"]);
 
 const DB_NAME = "net_stats";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const STORE_NAME = "net_stats";
 
 // Constant defining the maximum values allowed per interface. If more, older
@@ -91,6 +91,34 @@ NetworkStatsDB.prototype = {
 
         if (DEBUG) {
           debug("Created object stores and indexes for version 3");
+        }
+      } else if (currVersion == 3) {
+        // Delete redundent indexes (leave "network" only).
+        objectStore = aTransaction.objectStore(STORE_NAME);
+        if (objectStore.indexNames.contains("appId")) {
+          objectStore.deleteIndex("appId");
+        }
+        if (objectStore.indexNames.contains("networkType")) {
+          objectStore.deleteIndex("networkType");
+        }
+        if (objectStore.indexNames.contains("timestamp")) {
+          objectStore.deleteIndex("timestamp");
+        }
+        if (objectStore.indexNames.contains("rxBytes")) {
+          objectStore.deleteIndex("rxBytes");
+        }
+        if (objectStore.indexNames.contains("txBytes")) {
+          objectStore.deleteIndex("txBytes");
+        }
+        if (objectStore.indexNames.contains("rxTotalBytes")) {
+          objectStore.deleteIndex("rxTotalBytes");
+        }
+        if (objectStore.indexNames.contains("txTotalBytes")) {
+          objectStore.deleteIndex("txTotalBytes");
+        }
+
+        if (DEBUG) {
+          debug("Deleted redundent indexes for version 4");
         }
       }
     }

@@ -11,6 +11,9 @@
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
 
+// Undo the damage done by mozzconf.h
+#undef compress
+
 using namespace mozilla;
 using namespace std;
 

@@ -2690,6 +2690,7 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_NON_DISAPPEARING:
     case NS_THEME_SCALE_HORIZONTAL:
     case NS_THEME_SCALE_VERTICAL:
     case NS_THEME_SCALE_THUMB_HORIZONTAL:
@@ -2866,6 +2867,12 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsRenderingContext* aContext, nsIF
 
         //      (*aResult).height = ::GetSystemMetrics(SM_CYVTHUMB) << 1;
       break;
+    case NS_THEME_SCROLLBAR_NON_DISAPPEARING:
+    {
+      aResult->SizeTo(::GetSystemMetrics(SM_CXHSCROLL),
+                      ::GetSystemMetrics(SM_CYVSCROLL));
+      break;
+    }
     case NS_THEME_RANGE_THUMB: {
       if (IsRangeHorizontal(aFrame)) {
         (*aResult).width = 12;

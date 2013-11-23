@@ -1276,17 +1276,19 @@ MediaManager::GetUserMedia(JSContext* aCx, bool aPrivileged,
 
   if (!unknownConstraintFound.IsEmpty()) {
     // An unsupported mandatory constraint was found.
-    // Things are set up enough here that we can fire Error callback.
+    //
+    // We continue to ignore these for now, because we implement just
+    // facingMode, which means all existing uses of mandatory width/height would
+    // fail on Firefox only otherwise, which is undesirable.
+    //
+    // There's also basis for always ignoring them in a new proposal.
+    // TODO(jib): This is a super-low-risk fix for backport. Clean up later.
 
     LOG(("Unsupported mandatory constraint: %s\n",
           NS_ConvertUTF16toUTF8(unknownConstraintFound).get()));
 
-    nsString errormsg(NS_LITERAL_STRING("NOT_SUPPORTED_ERR: "));
-    errormsg.Append(unknownConstraintFound);
-    NS_DispatchToMainThread(new ErrorCallbackRunnable(onSuccess.forget(),
-                                                      onError.forget(),
-                                                      errormsg, windowID));
-    return NS_OK;
+    // unknown constraints existed in aRawConstraints only, which is unused
+    // from here, so continuing here effectively ignores them, as is desired.
   }
 
   // Ensure there's a thread for gum to proxy to off main thread

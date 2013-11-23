@@ -22,7 +22,7 @@ namespace mozilla {
 namespace dom {
 
 // Map html attribute string values to TextTrackKind enums.
-static const nsAttrValue::EnumTable kKindTable[] = {
+static MOZ_CONSTEXPR nsAttrValue::EnumTable kKindTable[] = {
   { "subtitles", static_cast<int16_t>(TextTrackKind::Subtitles) },
   { "captions", static_cast<int16_t>(TextTrackKind::Captions) },
   { "descriptions", static_cast<int16_t>(TextTrackKind::Descriptions) },

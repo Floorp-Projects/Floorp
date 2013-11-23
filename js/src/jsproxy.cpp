@@ -3367,6 +3367,6 @@ js_InitProxyClass(JSContext *cx, HandleObject obj)
         return nullptr;
     }
 
-    global->markStandardClassInitializedNoProto(&ProxyObject::uncallableClass_);
+    global->setConstructor(JSProto_Proxy, ObjectValue(*ctor));
     return ctor;
 }

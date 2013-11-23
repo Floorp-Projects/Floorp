@@ -13,7 +13,7 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'cookie'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsCookieModule.cpp',
     'nsCookiePermission.cpp',
     'nsCookiePromptService.cpp',
