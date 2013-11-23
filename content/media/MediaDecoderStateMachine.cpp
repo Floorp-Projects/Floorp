@@ -1316,6 +1316,7 @@ void MediaDecoderStateMachine::StopPlayback()
   // so it can pause audio playback.
   mDecoder->GetReentrantMonitor().NotifyAll();
   NS_ASSERTION(!IsPlaying(), "Should report not playing at end of StopPlayback()");
+  mDecoder->UpdateStreamBlockingForStateMachinePlaying();
 }
 
 void MediaDecoderStateMachine::StartPlayback()
@@ -1333,6 +1334,7 @@ void MediaDecoderStateMachine::StartPlayback()
     NS_WARNING("Failed to create audio thread");
   }
   mDecoder->GetReentrantMonitor().NotifyAll();
+  mDecoder->UpdateStreamBlockingForStateMachinePlaying();
 }
 
 void MediaDecoderStateMachine::UpdatePlaybackPositionInternal(int64_t aTime)

@@ -384,6 +384,9 @@ public:
     // True when we've explicitly blocked this stream because we're
     // not in PLAY_STATE_PLAYING. Used on the main thread only.
     bool mHaveBlockedForPlayState;
+    // We also have an explicit blocker on the stream when
+    // mDecoderStateMachine is non-null and MediaDecoderStateMachine is false.
+    bool mHaveBlockedForStateMachineNotPlaying;
 
     virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
   };
@@ -411,8 +414,14 @@ public:
    * Recreates mDecodedStream. Call this to create mDecodedStream at first,
    * and when seeking, to ensure a new stream is set up with fresh buffers.
    * aStartTimeUSecs is relative to the state machine's mStartTime.
+   * Decoder monitor must be held.
    */
   void RecreateDecodedStream(int64_t aStartTimeUSecs);
+  /**
+   * Call this when mDecoderStateMachine or mDecoderStateMachine->IsPlaying() changes.
+   * Decoder monitor must be held.
+   */
+  void UpdateStreamBlockingForStateMachinePlaying();
   /**
    * Called when the state of mDecodedStream as visible on the main thread
    * has changed. In particular we want to know when the stream has finished
