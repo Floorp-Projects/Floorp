@@ -314,9 +314,16 @@ public class Tab {
     }
 
     public synchronized void updateTitle(String title) {
-        // Keep the title unchanged while entering reader mode
-        if (mEnteringReaderMode)
+        // Keep the title unchanged while entering reader mode.
+        if (mEnteringReaderMode) {
             return;
+        }
+
+        // If there was a title, but it hasn't changed, do nothing.
+        if (mTitle != null &&
+            TextUtils.equals(mTitle, title)) {
+            return;
+        }
 
         mTitle = (title == null ? "" : title);
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.TITLE);
