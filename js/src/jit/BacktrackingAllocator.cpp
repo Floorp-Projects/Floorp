@@ -1689,31 +1689,45 @@ BacktrackingAllocator::splitAtAllRegisterUses(LiveInterval *interval)
     return split(interval, newIntervals) && requeueIntervals(newIntervals);
 }
 
-bool
-BacktrackingAllocator::splitAcrossCalls(LiveInterval *interval)
+// Find the next split position after the current position.
+static size_t NextSplitPosition(size_t activeSplitPosition,
+                                const SplitPositionVector &splitPositions,
+                                CodePosition currentPos)
 {
-    // Split the interval to separate register uses and non-register uses and
-    // allow the vreg to be spilled across its range. Unlike splitAtAllRegisterUses,
-    // consolidate any register uses which have no intervening calls into the
+    while (activeSplitPosition < splitPositions.length() &&
+           splitPositions[activeSplitPosition] <= currentPos)
+    {
+        ++activeSplitPosition;
+    }
+    return activeSplitPosition;
+}
+
+// Test whether the current position has just crossed a split point.
+static bool SplitHere(size_t activeSplitPosition,
+                      const SplitPositionVector &splitPositions,
+                      CodePosition currentPos)
+{
+    return activeSplitPosition < splitPositions.length() &&
+           currentPos >= splitPositions[activeSplitPosition];
+}
+
+bool
+BacktrackingAllocator::splitAt(LiveInterval *interval,
+                               const SplitPositionVector &splitPositions)
+{
+    // Split the interval at the given split points. Unlike splitAtAllRegisterUses,
+    // consolidate any register uses which have no intervening split points into the
     // same resulting interval.
+
+    // splitPositions should be non-empty and sorted.
+    JS_ASSERT(!splitPositions.empty());
+    for (size_t i = 1; i < splitPositions.length(); ++i)
+        JS_ASSERT(splitPositions[i-1] < splitPositions[i]);
 
     // Don't spill the interval until after the end of its definition.
     CodePosition spillStart = interval->start();
     if (isRegisterDefinition(interval))
         spillStart = minimalDefEnd(insData[interval->start()].ins()).next();
-
-    // Find the locations of all calls in the interval's range. Fixed intervals
-    // are introduced by buildLivenessInfo only for calls when allocating for
-    // the backtracking allocator.
-    Vector<CodePosition, 4, SystemAllocPolicy> callPositions;
-    for (size_t i = 0; i < fixedIntervalsUnion->numRanges(); i++) {
-        const LiveInterval::Range *range = fixedIntervalsUnion->getRange(i);
-        if (interval->covers(range->from) && spillStart < range->from) {
-            if (!callPositions.append(range->from))
-                return false;
-        }
-    }
-    JS_ASSERT(callPositions.length());
 
     uint32_t vreg = interval->vreg();
 
@@ -1745,29 +1759,23 @@ BacktrackingAllocator::splitAcrossCalls(LiveInterval *interval)
         lastRegisterUse = interval->start();
     }
 
-    int activeCallPosition = callPositions.length() - 1;
+    size_t activeSplitPosition = NextSplitPosition(0, splitPositions, interval->start());
     for (UsePositionIterator iter(interval->usesBegin()); iter != interval->usesEnd(); iter++) {
         LInstruction *ins = insData[iter->pos].ins();
         if (iter->pos < spillStart) {
             newIntervals.back()->addUse(new(alloc()) UsePosition(iter->use, iter->pos));
+            activeSplitPosition = NextSplitPosition(activeSplitPosition, splitPositions, iter->pos);
         } else if (isRegisterUse(iter->use, ins)) {
             bool useNewInterval = false;
             if (lastRegisterUse.pos() == 0) {
                 useNewInterval = true;
             } else {
                 // Place this register use into a different interval from the
-                // last one if there are any calls between the two uses or if
+                // last one if there are any split points between the two uses or if
                 // the register uses are in different subranges of the original
                 // interval.
-                for (; activeCallPosition >= 0; activeCallPosition--) {
-                    CodePosition pos = callPositions[activeCallPosition];
-                    if (iter->pos < pos)
-                        break;
-                    if (lastRegisterUse < pos) {
-                        useNewInterval = true;
-                        break;
-                    }
-                }
+                if (SplitHere(activeSplitPosition, splitPositions, iter->pos))
+                    useNewInterval = true;
                 if (!useNewInterval) {
                     for (size_t i = 0; i < interval->numRanges(); i++) {
                         const LiveInterval::Range *range = interval->getRange(i);
@@ -1786,6 +1794,7 @@ BacktrackingAllocator::splitAcrossCalls(LiveInterval *interval)
             }
             newIntervals.back()->addUse(new(alloc()) UsePosition(iter->use, iter->pos));
             lastRegisterUse = iter->pos;
+            activeSplitPosition = NextSplitPosition(activeSplitPosition, splitPositions, iter->pos);
         } else {
             JS_ASSERT(spillIntervalIsNew);
             spillInterval->addUse(new(alloc()) UsePosition(iter->use, iter->pos));
@@ -1812,6 +1821,29 @@ BacktrackingAllocator::splitAcrossCalls(LiveInterval *interval)
         return false;
 
     return split(interval, newIntervals) && requeueIntervals(newIntervals);
+}
+
+bool
+BacktrackingAllocator::splitAcrossCalls(LiveInterval *interval)
+{
+    // Split the interval to separate register uses and non-register uses and
+    // allow the vreg to be spilled across its range.
+
+    // Find the locations of all calls in the interval's range. Fixed intervals
+    // are introduced by buildLivenessInfo only for calls when allocating for
+    // the backtracking allocator. fixedIntervalsUnion is sorted backwards, so
+    // iterate through it backwards.
+    SplitPositionVector callPositions;
+    for (size_t i = fixedIntervalsUnion->numRanges(); i > 0; i--) {
+        const LiveInterval::Range *range = fixedIntervalsUnion->getRange(i - 1);
+        if (interval->covers(range->from) && interval->covers(range->from.previous())) {
+            if (!callPositions.append(range->from))
+                return false;
+        }
+    }
+    JS_ASSERT(callPositions.length());
+
+    return splitAt(interval, callPositions);
 }
 
 bool
