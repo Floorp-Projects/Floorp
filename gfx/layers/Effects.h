@@ -229,7 +229,8 @@ CreateTexturedEffect(gfx::SurfaceFormat aFormat,
     result = new EffectYCbCr(aSource, aFilter);
     break;
   default:
-    MOZ_CRASH("unhandled program type");
+    NS_WARNING("unhandled program type");
+    break;
   }
 
   return result;

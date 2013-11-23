@@ -46,15 +46,16 @@ protected:
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
 
-  // mMimeTypes contains all mime types handled by plugins followed by
-  // any other mime types that we handle internally and have been
-  // looked up before.
+  // mMimeTypes contains MIME types handled by non-hidden plugins, those
+  // popular plugins that must be exposed in navigator.plugins enumeration to
+  // avoid breaking web content. Likewise, mMimeTypes are exposed in
+  // navigator.mimeTypes enumeration.
   nsTArray<nsRefPtr<nsMimeType> > mMimeTypes;
 
-  // mPluginMimeTypeCount is the number of plugin mime types that we
-  // have in mMimeTypes. The plugin mime types are always at the
-  // beginning of the list.
-  uint32_t mPluginMimeTypeCount;
+  // mHiddenMimeTypes contains MIME types handled by plugins hidden from
+  // navigator.plugins enumeration or by an OS PreferredApplicationHandler.
+  // mHiddenMimeTypes are hidden from navigator.mimeTypes enumeration.
+  nsTArray<nsRefPtr<nsMimeType> > mHiddenMimeTypes;
 };
 
 class nsMimeType MOZ_FINAL : public nsWrapperCache

@@ -590,6 +590,9 @@ class types::CompilerConstraintList
 
   private:
 
+    // OOM during generation of some constraint.
+    bool failed_;
+
 #ifdef JS_ION
     // Constraints generated on heap properties.
     Vector<CompilerConstraint *, 0, jit::IonAllocPolicy> constraints;
@@ -597,9 +600,6 @@ class types::CompilerConstraintList
     // Scripts whose stack type sets were frozen for the compilation.
     Vector<FrozenScript, 1, jit::IonAllocPolicy> frozenScripts;
 #endif
-
-    // OOM during generation of some constraint.
-    bool failed_;
 
   public:
     CompilerConstraintList(jit::TempAllocator &alloc)
@@ -1238,6 +1238,25 @@ TemporaryTypeSet::hasObjectFlags(CompilerConstraintList *constraints, TypeObject
     return false;
 }
 
+gc::InitialHeap
+TypeObject::initialHeap(CompilerConstraintList *constraints)
+{
+    // If this object is not required to be pretenured but could be in the
+    // future, add a constraint to trigger recompilation if the requirement
+    // changes.
+
+    if (shouldPreTenure())
+        return gc::TenuredHeap;
+
+    if (!canPreTenure())
+        return gc::DefaultHeap;
+
+    HeapTypeSetKey objectProperty = TypeObjectKey::get(this)->property(JSID_EMPTY);
+    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectFlags> >(objectProperty, ConstraintDataFreezeObjectFlags(OBJECT_FLAG_PRE_TENURE)));
+
+    return gc::DefaultHeap;
+}
+
 namespace {
 
 // Constraint which triggers recompilation on any type change in an inlined
@@ -1427,21 +1446,6 @@ HeapTypeSetKey::configured(CompilerConstraintList *constraints, TypeObjectKey *t
 
     constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeConfiguredProperty> >(*this, ConstraintDataFreezeConfiguredProperty(type)));
     return false;
-}
-
-bool
-TypeObject::incrementTenureCount()
-{
-    uint32_t count = tenureCount();
-    JS_ASSERT(count <= OBJECT_FLAG_TENURE_COUNT_LIMIT);
-
-    if (count >= OBJECT_FLAG_TENURE_COUNT_LIMIT)
-        return false;
-
-    flags = (flags & ~OBJECT_FLAG_TENURE_COUNT_MASK)
-          | ((count + 1) << OBJECT_FLAG_TENURE_COUNT_SHIFT);
-
-    return count >= MaxJITAllocTenures;
 }
 
 bool
@@ -1831,6 +1835,7 @@ TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
             cx->compartment()->types.setPendingNukeTypes(cx);
             return nullptr;
         }
+        res->flags |= OBJECT_FLAG_FROM_ALLOCATION_SITE;
         key.script = keyScript;
     }
 

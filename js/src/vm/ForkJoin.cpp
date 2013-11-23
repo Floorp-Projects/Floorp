@@ -1473,6 +1473,11 @@ ForkJoinShared::executePortion(PerThreadData *perThread,
     // WARNING: This code runs ON THE PARALLEL WORKER THREAD.
     // Therefore, it should NOT access `cx_` in any way!
 
+    // ForkJoinSlice already contains an AutoAssertNoGC; however, the analysis
+    // does not propagate this type information. We duplicate the assertion
+    // here for maximum clarity.
+    JS::AutoAssertNoGC nogc(runtime());
+
     Allocator *allocator = allocators_[threadId];
     ForkJoinSlice slice(perThread, threadId, numSlices_, allocator,
                         this, &records_[threadId]);
@@ -1956,11 +1961,11 @@ class ParallelSpewer
         }
     }
 
-    bool isActive(SpewChannel channel) {
+    bool isActive(js::parallel::SpewChannel channel) {
         return active[channel];
     }
 
-    void spewVA(SpewChannel channel, const char *fmt, va_list ap) {
+    void spewVA(js::parallel::SpewChannel channel, const char *fmt, va_list ap) {
         if (!active[channel])
             return;
 
@@ -1984,7 +1989,7 @@ class ParallelSpewer
         fprintf(stderr, "%s", buf);
     }
 
-    void spew(SpewChannel channel, const char *fmt, ...) {
+    void spew(js::parallel::SpewChannel channel, const char *fmt, ...) {
         va_list ap;
         va_start(ap, fmt);
         spewVA(channel, fmt, ap);

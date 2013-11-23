@@ -240,7 +240,6 @@ public:
   }
 
   bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
-  RefPtr<Compositor> mCompositor;
 
 private:
   /** Region we're clipping our current drawing to. */
@@ -273,6 +272,8 @@ private:
 
   void WorldTransformRect(nsIntRect& aRect);
 
+  RefPtr<Compositor> mCompositor;
+
   /** Our more efficient but less powerful alter ego, if one is available. */
   nsRefPtr<Composer2D> mComposer2D;
 
@@ -283,6 +284,7 @@ private:
   gfxMatrix mWorldMatrix;
 
   bool mInTransaction;
+  bool mIsCompositorReady;
   nsIntRegion mInvalidRegion;
   nsAutoPtr<LayerProperties> mClonedLayerTreeProperties;
 };

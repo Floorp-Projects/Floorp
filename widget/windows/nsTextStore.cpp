@@ -20,6 +20,7 @@
 #include "WinUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/WindowsVersion.h"
 
 #define INPUTSCOPE_INIT_GUID
 #include "nsTextStore.h"
@@ -3602,7 +3603,7 @@ nsTextStore::CurrentKeyboardLayoutHasIME()
     // On Windows Vista or later, ImmIsIME() API always returns true.
     // If we failed to obtain the profile manager, we cannot know if current
     // keyboard layout has IME.
-    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
+    if (IsVistaOrLater()) {
       PR_LOG(sTextStoreLog, PR_LOG_ERROR,
         ("TSF: nsTextStore::CurrentKeyboardLayoutHasIME() FAILED to query "
          "ITfInputProcessorProfileMgr"));

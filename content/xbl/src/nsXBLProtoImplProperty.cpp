@@ -132,16 +132,16 @@ nsXBLProtoImplProperty::InstallMember(JSContext *aCx,
   MOZ_ASSERT(xpc::IsInXBLScope(globalObject) ||
              globalObject == xpc::GetXBLScope(aCx, globalObject));
 
-  if (mGetter.GetJSFunction() || mSetter.GetJSFunction()) {
-    JS::Rooted<JSObject*> getter(aCx, nullptr);
-    if (mGetter.GetJSFunction()) {
-      if (!(getter = ::JS_CloneFunctionObject(aCx, mGetter.GetJSFunction(), globalObject)))
+  JS::Rooted<JSObject*> getter(aCx, mGetter.GetJSFunction());
+  JS::Rooted<JSObject*> setter(aCx, mSetter.GetJSFunction());
+  if (getter || setter) {
+    if (getter) {
+      if (!(getter = ::JS_CloneFunctionObject(aCx, getter, globalObject)))
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    JS::Rooted<JSObject*> setter(aCx, nullptr);
-    if (mSetter.GetJSFunction()) {
-      if (!(setter = ::JS_CloneFunctionObject(aCx, mSetter.GetJSFunction(), globalObject)))
+    if (setter) {
+      if (!(setter = ::JS_CloneFunctionObject(aCx, setter, globalObject)))
         return NS_ERROR_OUT_OF_MEMORY;
     }
 

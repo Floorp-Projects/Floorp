@@ -31,6 +31,10 @@ intr protocol PCompositor
   // A Compositor manages a single Layer Manager (PLayerTransaction)
   manages PLayerTransaction;
 
+child:
+  // The child should invalidate everything so that the whole window is redrawn.
+  async InvalidateAll();
+
 parent:
 
   // The child is about to be destroyed, so perform any necessary cleanup.

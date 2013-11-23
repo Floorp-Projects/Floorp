@@ -91,6 +91,9 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
 
   RefPtr<TexturedEffect> effect =
     CreateTexturedEffect(mDeprecatedTextureHost, mDeprecatedTextureHostOnWhite, aFilter);
+  if (!effect) {
+    return;
+  }
 
   aEffectChain.mPrimaryEffect = effect;
 

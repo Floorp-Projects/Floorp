@@ -838,7 +838,7 @@ ReturnedValueMustNotBePrimitive(JSContext *cx, HandleObject proxy, JSAtom *atom,
         if (AtomToPrintableString(cx, atom, &bytes)) {
             RootedValue val(cx, ObjectOrNullValue(proxy));
             js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                                 JSDVG_SEARCH_STACK, val, NullPtr(), bytes.ptr());
+                                 JSDVG_SEARCH_STACK, val, js::NullPtr(), bytes.ptr());
         }
         return false;
     }
@@ -1550,7 +1550,7 @@ ReportInvalidTrapResult(JSContext *cx, JSObject *proxy, JSAtom *atom)
     if (!AtomToPrintableString(cx, atom, &bytes))
         return;
     js_ReportValueError2(cx, JSMSG_INVALID_TRAP_RESULT, JSDVG_IGNORE_STACK, v,
-                         NullPtr(), bytes.ptr());
+                         js::NullPtr(), bytes.ptr());
 }
 
 // This function is shared between getOwnPropertyNames, enumerate, and keys
@@ -1841,7 +1841,7 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId 
             return false;
         if (sealed) {
             RootedValue v(cx, IdToValue(id));
-            js_ReportValueError(cx, JSMSG_CANT_DELETE, JSDVG_IGNORE_STACK, v, NullPtr());
+            js_ReportValueError(cx, JSMSG_CANT_DELETE, JSDVG_IGNORE_STACK, v, js::NullPtr());
             return false;
         }
 
@@ -1889,7 +1889,7 @@ ScriptedDirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy, AutoIdV
             return false;
         RootedValue v(cx, ObjectOrNullValue(proxy));
         js_ReportValueError2(cx, JSMSG_INVALID_TRAP_RESULT, JSDVG_SEARCH_STACK,
-                             v, NullPtr(), bytes.ptr());
+                             v, js::NullPtr(), bytes.ptr());
         return false;
     }
 
@@ -2200,7 +2200,7 @@ ScriptedDirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector
             return false;
         RootedValue v(cx, ObjectOrNullValue(proxy));
         js_ReportValueError2(cx, JSMSG_INVALID_TRAP_RESULT, JSDVG_IGNORE_STACK,
-                             v, NullPtr(), bytes.ptr());
+                             v, js::NullPtr(), bytes.ptr());
         return false;
     }
 
@@ -3345,15 +3345,15 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static const JSFunctionSpec static_methods[] = {
-    JS_FN("create",         proxy_create,          2, 0),
-    JS_FN("createFunction", proxy_createFunction,  3, 0),
-    JS_FS_END
-};
-
 JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, HandleObject obj)
 {
+    static const JSFunctionSpec static_methods[] = {
+        JS_FN("create",         proxy_create,          2, 0),
+        JS_FN("createFunction", proxy_createFunction,  3, 0),
+        JS_FS_END
+    };
+
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, proxy, cx->names().Proxy, 2);

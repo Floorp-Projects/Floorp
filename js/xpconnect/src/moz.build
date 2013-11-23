@@ -13,13 +13,12 @@ EXPORTS += [
     'xpcpublic.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsCxPusher.cpp',
     'nsScriptError.cpp',
     'nsXPConnect.cpp',
     'Sandbox.cpp',
     'XPCCallContext.cpp',
-    'XPCComponents.cpp',
     'XPCContext.cpp',
     'XPCConvert.cpp',
     'XPCDebug.cpp',
@@ -48,6 +47,11 @@ SOURCES += [
     'XPCWrapper.cpp',
 ]
 
+# XPCComponents.cpp cannot be built in unified mode because it uses plarena.h.
+SOURCES += [
+    'XPCComponents.cpp',
+]
+
 GENERATED_SOURCES += [
     'DictionaryHelpers.cpp',
     'dom_quickstubs.cpp',
@@ -63,3 +67,10 @@ LIBRARY_NAME = 'xpconnect_s'
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'gklayout'
+
+GENERATED_FILES = [
+    'DictionaryHelpers.h',
+    'dom_quickstubs.h',
+    'GeneratedEventClasses.h',
+    'GeneratedEvents.h',
+]

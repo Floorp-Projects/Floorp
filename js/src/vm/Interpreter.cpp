@@ -1761,7 +1761,7 @@ CASE(JSOP_IN)
 {
     HandleValue rref = REGS.stackHandleAt(-1);
     if (!rref.isObject()) {
-        js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, NullPtr());
+        js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, js::NullPtr());
         goto error;
     }
     RootedObject &obj = rootObject0;
@@ -3183,7 +3183,7 @@ CASE(JSOP_INSTANCEOF)
     RootedValue &rref = rootValue0;
     rref = REGS.sp[-1];
     if (rref.isPrimitive()) {
-        js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rref, NullPtr());
+        js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rref, js::NullPtr());
         goto error;
     }
     RootedObject &obj = rootObject0;
@@ -3289,7 +3289,7 @@ CASE(JSOP_YIELD)
     if (cx->innermostGenerator()->state == JSGEN_CLOSING) {
         RootedValue &val = rootValue0;
         val.setObject(REGS.fp()->callee());
-        js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_SEARCH_STACK, val, NullPtr());
+        js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_SEARCH_STACK, val, js::NullPtr());
         goto error;
     }
     REGS.fp()->setReturnValue(REGS.sp[-1]);

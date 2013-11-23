@@ -18,7 +18,9 @@ EXPORTS.mozilla.net += [
     'WebSocketChannelParent.h',
 ]
 
-UNIFIED_SOURCES += [
+# These files cannot be built in unified mode because they want to force NSPR
+# logging.
+SOURCES += [
     'BaseWebSocketChannel.cpp',
     'WebSocketChannel.cpp',
     'WebSocketChannelChild.cpp',

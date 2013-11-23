@@ -15,7 +15,9 @@ EXPORTS.mozilla.net += [
     'WyciwygChannelParent.h',
 ]
 
-UNIFIED_SOURCES += [
+# These files cannot be built in unified mode because they want to force NSPR
+# logging.
+SOURCES += [
     'nsWyciwyg.cpp',
     'nsWyciwygChannel.cpp',
     'nsWyciwygProtocolHandler.cpp',

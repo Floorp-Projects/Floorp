@@ -3999,8 +3999,13 @@ gfxGlyphExtents::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle, gfxUserFontSet *aUserFontSet)
-    : mFamilies(aFamilies), mStyle(*aStyle), mUnderlineOffset(UNDERLINE_OFFSET_NOT_SET)
+gfxFontGroup::gfxFontGroup(const nsAString& aFamilies,
+                           const gfxFontStyle *aStyle,
+                           gfxUserFontSet *aUserFontSet)
+    : mFamilies(aFamilies)
+    , mStyle(*aStyle)
+    , mUnderlineOffset(UNDERLINE_OFFSET_NOT_SET)
+    , mHyphenWidth(-1)
 {
     mUserFontSet = nullptr;
     SetUserFontSet(aUserFontSet);
@@ -4434,6 +4439,36 @@ gfxFontGroup::MakeBlankTextRun(uint32_t aLength,
 
     textRun->AddGlyphRun(GetFontAt(0), gfxTextRange::kFontGroup, 0, false);
     return textRun;
+}
+
+gfxTextRun *
+gfxFontGroup::MakeHyphenTextRun(gfxContext *aCtx, uint32_t aAppUnitsPerDevUnit)
+{
+    // only use U+2010 if it is supported by the first font in the group;
+    // it's better to use ASCII '-' from the primary font than to fall back to
+    // U+2010 from some other, possibly poorly-matching face
+    static const PRUnichar hyphen = 0x2010;
+    gfxFont *font = GetFontAt(0);
+    if (font && font->HasCharacter(hyphen)) {
+        return MakeTextRun(&hyphen, 1, aCtx, aAppUnitsPerDevUnit,
+                           gfxFontGroup::TEXT_IS_PERSISTENT);
+    }
+
+    static const uint8_t dash = '-';
+    return MakeTextRun(&dash, 1, aCtx, aAppUnitsPerDevUnit,
+                       gfxFontGroup::TEXT_IS_PERSISTENT);
+}
+
+gfxFloat
+gfxFontGroup::GetHyphenWidth(gfxContext *aCtx, uint32_t aAppUnitsPerDevUnit)
+{
+    if (mHyphenWidth < 0) {
+        nsAutoPtr<gfxTextRun> hyphRun(MakeHyphenTextRun(aCtx,
+                                                        aAppUnitsPerDevUnit));
+        mHyphenWidth = hyphRun.get() ?
+            hyphRun->GetAdvanceWidth(0, hyphRun->GetLength(), nullptr) : 0;
+    }
+    return mHyphenWidth;
 }
 
 gfxTextRun *

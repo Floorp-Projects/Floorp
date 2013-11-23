@@ -13,6 +13,11 @@
 #include "plstr.h"
 #include <algorithm>
 #include "gfxPlatform.h"
+#include "gfxWindowsPlatform.h"
+#include "TextureD3D9.h"
+#include "mozilla/gfx/Point.h"
+
+using mozilla::gfx::IntSize;
 
 namespace mozilla {
 namespace layers {
@@ -89,16 +94,17 @@ SwapChainD3D9::GetBackBuffer()
   return backBuffer.forget();
 }
 
-bool
+DeviceManagerState
 SwapChainD3D9::PrepareForRendering()
 {
   RECT r;
   if (!::GetClientRect(mWnd, &r)) {
-    return false;
+    return DeviceFail;
   }
 
-  if (!mDeviceManager->VerifyReadyForRendering()) {
-    return false;
+  DeviceManagerState deviceState = mDeviceManager->VerifyReadyForRendering();
+  if (deviceState != DeviceOK) {
+    return deviceState;
   }
 
   if (!mSwapChain) {
@@ -113,7 +119,7 @@ SwapChainD3D9::PrepareForRendering()
 
     if (desc.Width == r.right - r.left && desc.Height == r.bottom - r.top) {
       mDeviceManager->device()->SetRenderTarget(0, backBuffer);
-      return true;
+      return DeviceOK;
     }
 
     mSwapChain = nullptr;
@@ -121,15 +127,16 @@ SwapChainD3D9::PrepareForRendering()
     Init(mWnd);
     
     if (!mSwapChain) {
-      return false;
+      return DeviceFail;
     }
     
     backBuffer = GetBackBuffer();
     mDeviceManager->device()->SetRenderTarget(0, backBuffer);
     
-    return true;
+    return DeviceOK;
   }
-  return false;
+
+  return DeviceFail;
 }
 
 void
@@ -162,7 +169,8 @@ SwapChainD3D9::Reset()
 uint32_t DeviceManagerD3D9::sMaskQuadRegister = 11;
 
 DeviceManagerD3D9::DeviceManagerD3D9()
-  : mDeviceResetCount(0)
+  : mTextureHostList(nullptr)
+  , mDeviceResetCount(0)
   , mMaxTextureSize(0)
   , mTextureAddressingMode(D3DTADDRESS_CLAMP)
   , mHasDynamicTextures(false)
@@ -172,7 +180,7 @@ DeviceManagerD3D9::DeviceManagerD3D9()
 
 DeviceManagerD3D9::~DeviceManagerD3D9()
 {
-  LayerManagerD3D9::OnDeviceManagerDestroy(this);
+  DestroyDevice();
 }
 
 bool
@@ -519,7 +527,7 @@ DeviceManagerD3D9::CreateSwapChain(HWND hWnd)
   // will be permanently unaccelerated. This should be a rare situation
   // though and the need for a low-risk fix for this bug outweighs the
   // downside.
-  if (!VerifyReadyForRendering()) {
+  if (VerifyReadyForRendering() != DeviceOK) {
     return nullptr;
   }
 
@@ -658,9 +666,24 @@ DeviceManagerD3D9::SetShaderMode(ShaderMode aMode, Layer* aMask, bool aIs2D)
   }
 }
 
-bool
+void
+DeviceManagerD3D9::DestroyDevice()
+{
+  mDeviceWasRemoved = true;
+  if (!IsD3D9Ex()) {
+    ReleaseTextureResources();
+  }
+  LayerManagerD3D9::OnDeviceManagerDestroy(this);
+  gfxWindowsPlatform::GetPlatform()->OnDeviceManagerDestroy(this);
+}
+
+DeviceManagerState
 DeviceManagerD3D9::VerifyReadyForRendering()
 {
+  if (mDeviceWasRemoved) {
+    return DeviceMustRecreate;
+  }
+
   HRESULT hr = mDevice->TestCooperativeLevel();
 
   if (SUCCEEDED(hr)) {
@@ -668,24 +691,25 @@ DeviceManagerD3D9::VerifyReadyForRendering()
       hr = mDeviceEx->CheckDeviceState(mFocusWnd);
 
       if (FAILED(hr)) {
-        mDeviceWasRemoved = true;
-        LayerManagerD3D9::OnDeviceManagerDestroy(this);
+        DestroyDevice();
         ++mDeviceResetCount;
-        return false;
+        return DeviceMustRecreate;
       }
     }
-    return true;
+    return DeviceOK;
   }
 
-  for(unsigned int i = 0; i < mLayersWithResources.Length(); i++) {
+  // We need to release all texture resources and swap chains before resetting.
+  for (unsigned int i = 0; i < mLayersWithResources.Length(); i++) {
     mLayersWithResources[i]->CleanResources();
   }
-  for(unsigned int i = 0; i < mSwapChains.Length(); i++) {
+  ReleaseTextureResources();
+  for (unsigned int i = 0; i < mSwapChains.Length(); i++) {
     mSwapChains[i]->Reset();
   }
 
   mVB = nullptr;
-  
+
   D3DPRESENT_PARAMETERS pp;
   memset(&pp, 0, sizeof(D3DPRESENT_PARAMETERS));
 
@@ -697,39 +721,41 @@ DeviceManagerD3D9::VerifyReadyForRendering()
   pp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
   pp.hDeviceWindow = mFocusWnd;
 
-  hr = mDevice->Reset(&pp);
-  ++mDeviceResetCount;
-
+  // if we got this far, we know !SUCCEEDEED(hr), that means hr is one of
+  // D3DERR_DEVICELOST, D3DERR_DEVICENOTRESET, D3DERR_DRIVERINTERNALERROR.
+  // It is only worth resetting if we get D3DERR_DEVICENOTRESET. If we get
+  // D3DERR_DEVICELOST we can wait and see if we get D3DERR_DEVICENOTRESET
+  // later, then reset.
   if (hr == D3DERR_DEVICELOST) {
-    /* It is not unusual for Reset to return DEVICELOST
-     * we're supposed to continue trying until we get
-     * DEVICENOTRESET and then Reset is supposed to succeed.
-     * Unfortunately, it seems like when we dock or undock
-     * DEVICELOST happens and we never get DEVICENOTRESET. */
-
     HMONITOR hMonitorWindow;
     hMonitorWindow = MonitorFromWindow(mFocusWnd, MONITOR_DEFAULTTOPRIMARY);
-    if (hMonitorWindow == mDeviceMonitor) {
-      /* The monitor has not changed. So, let's assume that the
-       * DEVICENOTRESET will be comming. */
+    if (hMonitorWindow != mDeviceMonitor) {
+      /* The monitor has changed. We have to assume that the
+       * DEVICENOTRESET will not be comming. */
 
       /* jrmuizel: I'm not sure how to trigger this case. Usually, we get
        * DEVICENOTRESET right away and Reset() succeeds without going through a
        * set of DEVICELOSTs. This is presumeably because we don't call
        * VerifyReadyForRendering when we don't have any reason to paint.
-       * Hopefully comparing HMONITORs is not overly aggressive. */
-      return false;
+       * Hopefully comparing HMONITORs is not overly aggressive.
+       * See bug 626678.
+       */
+      return DeviceMustRecreate;
     }
-    /* otherwise fall through and recreate the device */
+    return DeviceRetry;
+  }
+  if (hr == D3DERR_DEVICENOTRESET) {
+    hr = mDevice->Reset(&pp);
+    ++mDeviceResetCount;
   }
 
   if (FAILED(hr) || !CreateVertexBuffer()) {
-    mDeviceWasRemoved = true;
-    LayerManagerD3D9::OnDeviceManagerDestroy(this);
-    return false;
+    DestroyDevice();
+    ++mDeviceResetCount;
+    return DeviceMustRecreate;
   }
 
-  return true;
+  return DeviceOK;
 }
 
 bool
@@ -831,6 +857,101 @@ DeviceManagerD3D9::CreateVertexBuffer()
   mVB->Unlock();
 
   return true;
+}
+
+TemporaryRef<IDirect3DTexture9>
+DeviceManagerD3D9::CreateTexture(const IntSize &aSize,
+                                 _D3DFORMAT aFormat,
+                                 D3DPOOL aPool,
+                                 TextureSourceD3D9* aTextureHost)
+{
+  if (mDeviceWasRemoved) {
+    return nullptr;
+  }
+  RefPtr<IDirect3DTexture9> result;
+  if (FAILED(device()->CreateTexture(aSize.width, aSize.height,
+                                     1, 0, aFormat, aPool,
+                                     byRef(result), nullptr))) {
+    return nullptr;
+  }
+
+  NS_ASSERTION(aPool != D3DPOOL_MANAGED,
+               "Should not be using MANAGED texture pool. We will get an error when we have to recreate the device");
+  if (aPool == D3DPOOL_DEFAULT) {
+    MOZ_ASSERT(aTextureHost, "We need a texture host to track so we can release the texture.");
+    RegisterTextureHost(aTextureHost);
+  }
+
+  return result;
+}
+
+#ifdef DEBUG
+bool
+DeviceManagerD3D9::IsInTextureHostList(TextureSourceD3D9* aFind)
+{
+  TextureSourceD3D9* cur = mTextureHostList;
+  while(cur) {
+    if (cur == aFind) {
+      return true;
+    }
+    cur = cur->mNextHost;
+  }
+
+  return false;
+}
+#endif
+
+void
+DeviceManagerD3D9::RegisterTextureHost(TextureSourceD3D9* aHost)
+{
+  if (!aHost) {
+    return;
+  }
+
+  // Don't add aHost to the list twice.
+  if (aHost->mPreviousHost ||
+      mTextureHostList == aHost) {
+    MOZ_ASSERT(IsInTextureHostList(aHost));
+    return;
+  }
+
+  MOZ_ASSERT(!aHost->mNextHost);
+  MOZ_ASSERT(!IsInTextureHostList(aHost));
+
+  if (mTextureHostList) {
+    MOZ_ASSERT(!mTextureHostList->mPreviousHost);
+    mTextureHostList->mPreviousHost = aHost;
+    aHost->mNextHost = mTextureHostList;
+  }
+  mTextureHostList = aHost;
+  MOZ_ASSERT(!aHost->mCreatingDeviceManager, "Already created texture?");
+  MOZ_ASSERT(IsInTextureHostList(aHost));
+  aHost->mCreatingDeviceManager = this;
+}
+
+void
+DeviceManagerD3D9::ReleaseTextureResources()
+{
+  TextureSourceD3D9* host = mTextureHostList;
+  while (host) {
+    host->ReleaseTextureResources();
+    TextureSourceD3D9* oldHost = host;
+    host = oldHost->mNextHost;
+    oldHost->mPreviousHost = nullptr;
+    oldHost->mNextHost = nullptr;
+    oldHost->mCreatingDeviceManager = nullptr;
+  }
+  mTextureHostList = nullptr;
+}
+
+void
+DeviceManagerD3D9::RemoveTextureListHead(TextureSourceD3D9* aHost)
+{
+  MOZ_ASSERT(!aHost->mCreatingDeviceManager || aHost->mCreatingDeviceManager == this,
+             "Wrong device manager");
+  MOZ_ASSERT(aHost && mTextureHostList == aHost,
+             "aHost is not the head of the texture host list");
+  mTextureHostList = aHost->mNextHost;
 }
 
 } /* namespace layers */

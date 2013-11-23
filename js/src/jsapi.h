@@ -3449,6 +3449,7 @@ class JS_PUBLIC_API(ReadOnlyCompileOptions)
     const char *filename() const { return filename_; }
     const jschar *sourceMapURL() const { return sourceMapURL_; }
     virtual JSObject *element() const = 0;
+    virtual JSString *elementProperty() const = 0;
 
     // POD options.
     JSVersion version;
@@ -3493,6 +3494,7 @@ class JS_PUBLIC_API(OwningCompileOptions) : public ReadOnlyCompileOptions
 {
     JSRuntime *runtime;
     PersistentRootedObject elementRoot;
+    PersistentRootedString elementPropertyRoot;
 
   public:
     // A minimal constructor, for use with OwningCompileOptions::copy. This
@@ -3503,6 +3505,7 @@ class JS_PUBLIC_API(OwningCompileOptions) : public ReadOnlyCompileOptions
     ~OwningCompileOptions();
 
     JSObject *element() const MOZ_OVERRIDE { return elementRoot; }
+    JSString *elementProperty() const MOZ_OVERRIDE { return elementPropertyRoot; }
 
     // Set this to a copy of |rhs|. Return false on OOM.
     bool copy(JSContext *cx, const ReadOnlyCompileOptions &rhs);
@@ -3512,7 +3515,8 @@ class JS_PUBLIC_API(OwningCompileOptions) : public ReadOnlyCompileOptions
     bool setSourceMapURL(JSContext *cx, const jschar *s);
 
     /* These setters are infallible, and can be chained. */
-    OwningCompileOptions &setElement(JSObject *e) { elementRoot = e; return *this; }
+    OwningCompileOptions &setElement(JSObject *e)         { elementRoot = e;         return *this; }
+    OwningCompileOptions &setElementProperty(JSString *p) { elementPropertyRoot = p; return *this; }
     OwningCompileOptions &setPrincipals(JSPrincipals *p) {
         if (p) JS_HoldPrincipals(p);
         if (principals_) JS_DropPrincipals(runtime, principals_);
@@ -3550,11 +3554,12 @@ class JS_PUBLIC_API(OwningCompileOptions) : public ReadOnlyCompileOptions
 class MOZ_STACK_CLASS JS_PUBLIC_API(CompileOptions) : public ReadOnlyCompileOptions
 {
     RootedObject elementRoot;
+    RootedString elementPropertyRoot;
 
   public:
     explicit CompileOptions(JSContext *cx, JSVersion version = JSVERSION_UNKNOWN);
     CompileOptions(js::ContextFriendFields *cx, const ReadOnlyCompileOptions &rhs)
-      : ReadOnlyCompileOptions(), elementRoot(cx)
+      : ReadOnlyCompileOptions(), elementRoot(cx), elementPropertyRoot(cx)
     {
         copyPODOptions(rhs);
 
@@ -3563,17 +3568,19 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(CompileOptions) : public ReadOnlyCompileOpti
         filename_ = rhs.filename();
         sourceMapURL_ = rhs.sourceMapURL();
         elementRoot = rhs.element();
+        elementPropertyRoot = rhs.elementProperty();
     }
 
     JSObject *element() const MOZ_OVERRIDE { return elementRoot; }
+    JSString *elementProperty() const MOZ_OVERRIDE { return elementPropertyRoot; }
 
     CompileOptions &setFileAndLine(const char *f, unsigned l) {
         filename_ = f; lineno = l; return *this;
     }
-    CompileOptions &setSourceMapURL(const jschar *s) { sourceMapURL_ = s; return *this; }
-    CompileOptions &setElement(JSObject *e) { elementRoot = e; return *this; }
-
-    CompileOptions &setPrincipals(JSPrincipals *p) { principals_ = p; return *this; }
+    CompileOptions &setSourceMapURL(const jschar *s) { sourceMapURL_ = s;       return *this; }
+    CompileOptions &setElement(JSObject *e)          { elementRoot = e;         return *this; }
+    CompileOptions &setElementProperty(JSString *p)  { elementPropertyRoot = p; return *this; }
+    CompileOptions &setPrincipals(JSPrincipals *p)   { principals_ = p;         return *this; }
     CompileOptions &setOriginPrincipals(JSPrincipals *p) {
         originPrincipals_ = p;
         return *this;

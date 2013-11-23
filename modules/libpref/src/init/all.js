@@ -2032,6 +2032,15 @@ pref("hangmonitor.timeout", 0);
 pref("plugins.load_appdir_plugins", false);
 // If true, plugins will be click to play
 pref("plugins.click_to_play", false);
+
+// A comma-delimited list of plugin name prefixes matching plugins that will be
+// exposed when enumerating navigator.plugins[]. For example, prefix "Shockwave"
+// matches both Adobe Flash Player ("Shockwave Flash") and Adobe Shockwave
+// Player ("Shockwave for Director"). To hide all plugins from enumeration, use
+// the empty string "" to match no plugin names. To allow all plugins to be
+// enumerated, use the string "*" to match all plugin names.
+pref("plugins.enumerable_names", "Java,QuickTime,Shockwave");
+
 // The default value for nsIPluginTag.enabledState (STATE_ENABLED = 2)
 pref("plugin.default.state", 2);
 

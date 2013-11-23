@@ -147,7 +147,14 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
     }
     if (parentBackend == LAYERS_D3D9 &&
         !GetForwarder()->ForwardsToDifferentProcess()) {
-      if (aContentType == GFX_CONTENT_COLOR_ALPHA) {
+      // We can't use a d3d9 texture for an RGBA surface because we cannot get a DC for
+      // for a gfxWindowsSurface.
+      // We have to wait for the compositor thread to create a d3d9 device before we
+      // can create d3d9 textures on the main thread (because we need to reset on the
+      // compositor thread, and the d3d9 device must be reset on the same thread it was
+      // created on).
+      if (aContentType == GFX_CONTENT_COLOR_ALPHA ||
+          !gfxWindowsPlatform::GetPlatform()->GetD3D9Device()) {
         result = new DeprecatedTextureClientDIB(GetForwarder(), GetTextureInfo());
       } else {
         result = new DeprecatedTextureClientD3D9(GetForwarder(), GetTextureInfo());

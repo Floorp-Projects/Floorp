@@ -118,7 +118,7 @@ ValueToIdentifier(JSContext *cx, HandleValue v, MutableHandleId id)
     if (!JSID_IS_ATOM(id) || !IsIdentifier(JSID_TO_ATOM(id))) {
         RootedValue val(cx, v);
         js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                                 JSDVG_SEARCH_STACK, val, NullPtr(), "not an identifier",
+                                 JSDVG_SEARCH_STACK, val, js::NullPtr(), "not an identifier",
                                  nullptr);
         return false;
     }
@@ -421,6 +421,7 @@ Debugger::fromChildJSObject(JSObject *obj)
 {
     JS_ASSERT(obj->getClass() == &DebuggerFrame_class ||
               obj->getClass() == &DebuggerScript_class ||
+              obj->getClass() == &DebuggerSource_class ||
               obj->getClass() == &DebuggerObject_class ||
               obj->getClass() == &DebuggerEnv_class);
     JSObject *dbgobj = &obj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER).toObject();
@@ -2861,7 +2862,7 @@ DebuggerScript_getSource(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get source)", args, obj, script);
     Debugger *dbg = Debugger::fromChildJSObject(obj);
 
-    RootedScriptSource source(cx, script->sourceObject());
+    RootedScriptSource source(cx, &UncheckedUnwrap(script->sourceObject())->as<ScriptSourceObject>());
     RootedObject sourceObject(cx, dbg->wrapSource(cx, source));
     if (!sourceObject)
         return false;
@@ -3769,10 +3770,35 @@ DebuggerSource_getDisplayURL(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static bool
+DebuggerSource_getElement(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get element)", args, obj, sourceObject);
+
+    if (sourceObject->element()) {
+        args.rval().setObjectOrNull(sourceObject->element());
+        if (!Debugger::fromChildJSObject(obj)->wrapDebuggeeValue(cx, args.rval()))
+            return false;
+    } else {
+        args.rval().setUndefined();
+    }
+    return true;
+}
+
+static bool
+DebuggerSource_getElementProperty(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get elementProperty)", args, obj, sourceObject);
+    args.rval().set(sourceObject->elementProperty());
+    return Debugger::fromChildJSObject(obj)->wrapDebuggeeValue(cx, args.rval());
+}
+
 static const JSPropertySpec DebuggerSource_properties[] = {
     JS_PSG("text", DebuggerSource_getText, 0),
     JS_PSG("url", DebuggerSource_getUrl, 0),
+    JS_PSG("element", DebuggerSource_getElement, 0),
     JS_PSG("displayURL", DebuggerSource_getDisplayURL, 0),
+    JS_PSG("elementProperty", DebuggerSource_getElementProperty, 0),
     JS_PS_END
 };
 
@@ -4093,8 +4119,8 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
         RootedValue undefinedValue(cx, UndefinedValue());
         for (unsigned i = 0; i < fargc; i++) {
             RootedFunction getobj(cx);
-            getobj = NewFunction(cx, NullPtr(), DebuggerArguments_getArg, 0,
-                                 JSFunction::NATIVE_FUN, global, NullPtr(),
+            getobj = NewFunction(cx, js::NullPtr(), DebuggerArguments_getArg, 0,
+                                 JSFunction::NATIVE_FUN, global, js::NullPtr(),
                                  JSFunction::ExtendedFinalizeKind);
             if (!getobj)
                 return false;
@@ -4425,7 +4451,7 @@ DebuggerFrame_eval(JSContext *cx, unsigned argc, Value *vp)
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.eval",
                                args[0], EvalWithDefaultBindings, JS::UndefinedHandleValue,
-                               args.get(1), args.rval(), dbg, NullPtr(), &iter);
+                               args.get(1), args.rval(), dbg, js::NullPtr(), &iter);
 }
 
 static bool
@@ -4436,7 +4462,7 @@ DebuggerFrame_evalWithBindings(JSContext *cx, unsigned argc, Value *vp)
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.evalWithBindings",
                                args[0], EvalHasExtraBindings, args[1], args.get(2),
-                               args.rval(), dbg, NullPtr(), &iter);
+                               args.rval(), dbg, js::NullPtr(), &iter);
 }
 
 static bool
@@ -5218,11 +5244,11 @@ RequireGlobalObject(JSContext *cx, HandleValue dbgobj, HandleObject referent)
 
         if (obj->is<GlobalObject>()) {
             js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
-                                     JSDVG_SEARCH_STACK, dbgobj, NullPtr(),
+                                     JSDVG_SEARCH_STACK, dbgobj, js::NullPtr(),
                                      isWrapper, isWindowProxy);
         } else {
             js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
-                                     JSDVG_SEARCH_STACK, dbgobj, NullPtr(),
+                                     JSDVG_SEARCH_STACK, dbgobj, js::NullPtr(),
                                      "a global object", nullptr);
         }
         return false;

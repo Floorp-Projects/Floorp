@@ -436,6 +436,8 @@ class XPCShellTestThread(Thread):
         # the test was run.
         if '_message' in line:
             msg.append(line['_message'])
+            if 'diagnostic' in line:
+                msg.append('\nDiagnostic: %s' % line['diagnostic'])
         else:
             msg.append('%s | %s | %s' % (ACTION_STRINGS[line['action']],
                                          line.get('source_file', 'undefined'),

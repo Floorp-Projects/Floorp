@@ -353,8 +353,14 @@ class RecursiveMakeBackend(CommonBackend):
                 UNIFIED_CMMSRCS='mm',
                 UNIFIED_CPPSRCS='cpp',
             )
+
+            files_per_unification = 16
+            if 'FILES_PER_UNIFIED_FILE' in obj.variables.keys():
+                files_per_unification = obj.variables['FILES_PER_UNIFIED_FILE']
+
             do_unify = not self.environment.substs.get(
-                'MOZ_DISABLE_UNIFIED_COMPILATION')
+                'MOZ_DISABLE_UNIFIED_COMPILATION') and files_per_unification > 1
+
             # Sorted so output is consistent and we don't bump mtimes.
             for k, v in sorted(obj.variables.items()):
                 if k in unified_suffixes:
@@ -366,7 +372,8 @@ class RecursiveMakeBackend(CommonBackend):
                                 backend_file.relobjdir.replace('/', '_')),
                             unified_suffix=unified_suffixes[k],
                             unified_files_makefile_variable=k,
-                            include_curdir_build_rules=False)
+                            include_curdir_build_rules=False,
+                            files_per_unified_file=files_per_unification)
                         backend_file.write('%s += $(%s)\n' % (k[len('UNIFIED_'):], k))
                     else:
                         backend_file.write('%s += %s\n' % (
@@ -591,8 +598,8 @@ class RecursiveMakeBackend(CommonBackend):
                                  extra_dependencies=[],
                                  unified_files_makefile_variable='unified_files',
                                  include_curdir_build_rules=True,
-                                 poison_windows_h=False):
-        files_per_unified_file = 16
+                                 poison_windows_h=False,
+                                 files_per_unified_file=16):
 
         explanation = "\n" \
             "# We build files in 'unified' mode by including several files\n" \
@@ -637,6 +644,7 @@ class RecursiveMakeBackend(CommonBackend):
             # handle source files being added/removed/renamed.  Therefore, we
             # generate them here also to make sure everything's up-to-date.
             with self._write_file(os.path.join(output_directory, unified_file)) as f:
+                f.write('#define MOZ_UNIFIED_BUILD\n')
                 includeTemplate = '#include "%(cppfile)s"'
                 if poison_windows_h:
                     includeTemplate += (
