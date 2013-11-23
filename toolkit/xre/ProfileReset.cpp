@@ -40,7 +40,6 @@ CreateResetProfile(nsIToolkitProfileService* aProfileSvc, nsIToolkitProfile* *aN
   nsAutoCString newProfileName("default-");
   newProfileName.Append(nsPrintfCString("%lld", PR_Now() / 1000));
   nsresult rv = aProfileSvc->CreateProfile(nullptr, // choose a default dir for us
-                                           nullptr, // choose a default dir for us
                                            newProfileName,
                                            getter_AddRefs(newProfile));
   if (NS_FAILED(rv)) return rv;

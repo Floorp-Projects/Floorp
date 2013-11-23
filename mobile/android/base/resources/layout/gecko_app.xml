@@ -73,7 +73,8 @@
                 android:layout_width="fill_parent"
                 android:layout_height="@dimen/browser_toolbar_height"
                 android:clickable="true"
-                android:focusable="true"/>
+                android:focusable="true"
+                android:background="@drawable/url_bar_bg"/>
 
     </view>
 

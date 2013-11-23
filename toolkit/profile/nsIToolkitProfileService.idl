@@ -10,7 +10,7 @@ interface nsIFile;
 interface nsIToolkitProfile;
 interface nsIProfileLock;
 
-[scriptable, uuid(b619f83d-8317-473c-b342-67905993fdc7)]
+[scriptable, uuid(b81c33a6-1ce8-4695-856b-02b7f15cc114)]
 interface nsIToolkitProfileService : nsISupports
 {
     attribute boolean startWithLastProfile;
@@ -37,19 +37,17 @@ interface nsIToolkitProfileService : nsISupports
 
     /**
      * Create a new profile.
+     *
+     * The profile temporary directory will be chosen based on where the
+     * profile directory is located.
      * 
      * @param aRootDir
      *        The profile directory. May be null, in which case a suitable
      *        default will be chosen based on the profile name.
-     * @param aTempDir
-     *        The profile temporary directory. May be null, in which case a
-     *        suitable default will be chosen based either on the profile name
-     *        if aRootDir is null or aRootDir itself.
      * @param aName
      *        The profile name.
      */
     nsIToolkitProfile createProfile(in nsIFile aRootDir,
-                                    in nsIFile aTempDir,
                                     in AUTF8String aName);
 
     /**

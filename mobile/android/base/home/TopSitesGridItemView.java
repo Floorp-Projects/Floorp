@@ -48,6 +48,9 @@ public class TopSitesGridItemView extends RelativeLayout {
     // Pinned state.
     private boolean mIsPinned = false;
 
+    // Dirty state.
+    private boolean mIsDirty = false;
+
     // Empty state.
     private boolean mIsEmpty = true;
     private int mLoadId = Favicons.NOT_LOADING;
@@ -146,6 +149,10 @@ public class TopSitesGridItemView extends RelativeLayout {
         displayThumbnail(R.drawable.top_site_add);
     }
 
+    public void markAsDirty() {
+        mIsDirty = true;
+    }
+
     /**
      * Updates the title, URL, and pinned state of this view.
      *
@@ -183,6 +190,12 @@ public class TopSitesGridItemView extends RelativeLayout {
             mTitleView.setCompoundDrawablesWithIntrinsicBounds(pinned ? R.drawable.pin : 0, 0, 0, 0);
             changed = true;
         }
+
+        // The dirty state forces the state update to return true
+        // so that the adapter loads favicons once the thumbnails
+        // are loaded in TopSitesPage/TopSitesGridAdapter.
+        changed = (changed || mIsDirty);
+        mIsDirty = false;
 
         return changed;
     }

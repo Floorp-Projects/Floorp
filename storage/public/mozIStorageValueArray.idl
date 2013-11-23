@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+%{C++
+#include "mozilla/DebugOnly.h"
+%}
 
 [ptr] native octetPtr(uint8_t);
 
@@ -78,10 +81,7 @@ interface mozIStorageValueArray : nsISupports {
 
   inline int32_t AsInt32(uint32_t idx) {
     int32_t v = 0;
-#ifdef DEBUG
-    nsresult rv =
-#endif
-      GetInt32(idx, &v);
+    mozilla::DebugOnly<nsresult> rv = GetInt32(idx, &v);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
                       "Getting value failed, wrong column index?");
     return v;
@@ -89,10 +89,7 @@ interface mozIStorageValueArray : nsISupports {
 
   inline int64_t AsInt64(uint32_t idx) {
     int64_t v = 0;
-#ifdef DEBUG
-    nsresult rv =
-#endif
-      GetInt64(idx, &v);
+    mozilla::DebugOnly<nsresult> rv = GetInt64(idx, &v);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
                       "Getting value failed, wrong column index?");
     return v;
@@ -100,10 +97,7 @@ interface mozIStorageValueArray : nsISupports {
 
   inline double AsDouble(uint32_t idx) {
     double v = 0.0;
-#ifdef DEBUG
-    nsresult rv =
-#endif
-      GetDouble(idx, &v);
+    mozilla::DebugOnly<nsresult> rv = GetDouble(idx, &v);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
                       "Getting value failed, wrong column index?");
     return v;
@@ -112,10 +106,7 @@ interface mozIStorageValueArray : nsISupports {
   inline const char* AsSharedUTF8String(uint32_t idx, uint32_t *len) {
     const char *str = nullptr;
     *len = 0;
-#ifdef DEBUG
-    nsresult rv =
-#endif
-      GetSharedUTF8String(idx, len, &str);
+    mozilla::DebugOnly<nsresult> rv = GetSharedUTF8String(idx, len, &str);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
                       "Getting value failed, wrong column index?");
     return str;
@@ -124,10 +115,7 @@ interface mozIStorageValueArray : nsISupports {
   inline const PRUnichar* AsSharedWString(uint32_t idx, uint32_t *len) {
     const PRUnichar *str = nullptr;
     *len = 0;
-#ifdef DEBUG
-    nsresult rv =
-#endif
-      GetSharedString(idx, len, &str);
+    mozilla::DebugOnly<nsresult> rv = GetSharedString(idx, len, &str);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
                       "Getting value failed, wrong column index?");
     return str;
@@ -136,10 +124,7 @@ interface mozIStorageValueArray : nsISupports {
   inline const uint8_t* AsSharedBlob(uint32_t idx, uint32_t *len) {
     const uint8_t *blob = nullptr;
     *len = 0;
-#ifdef DEBUG
-    nsresult rv =
-#endif
-      GetSharedBlob(idx, len, &blob);
+    mozilla::DebugOnly<nsresult> rv = GetSharedBlob(idx, len, &blob);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),
                       "Getting value failed, wrong column index?");
     return blob;
@@ -147,10 +132,7 @@ interface mozIStorageValueArray : nsISupports {
 
   inline bool IsNull(uint32_t idx) {
     bool b = false;
-#ifdef DEBUG
-    nsresult rv =
-#endif
-      GetIsNull(idx, &b);
+    mozilla::DebugOnly<nsresult> rv = GetIsNull(idx, &b);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv),
                       "Getting value failed, wrong column index?");
     return b;
