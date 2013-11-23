@@ -2609,6 +2609,14 @@ let SessionStoreInternal = {
         delete tab.__SS_extdata;
       }
 
+      // Ensure the index is in bounds.
+      let activeIndex = (tabData.index || tabData.entries.length) - 1;
+      activeIndex = Math.min(activeIndex, tabData.entries.length - 1);
+      activeIndex = Math.max(activeIndex, 0);
+
+      // Save the index in case we updated it above.
+      tabData.index = activeIndex + 1;
+
       browser.__SS_tabStillLoading = true;
 
       // keep the data around to prevent dataloss in case
@@ -2631,7 +2639,6 @@ let SessionStoreInternal = {
 
       // wall-paper fix for bug 439675: make sure that the URL to be loaded
       // is always visible in the address bar
-      let activeIndex = (tabData.index || tabData.entries.length) - 1;
       let activePageData = tabData.entries[activeIndex] || null;
       let uri = activePageData ? activePageData.url || null : null;
       browser.userTypedValue = uri;
@@ -2780,9 +2787,7 @@ let SessionStoreInternal = {
     // Remove the history listener, since we no longer need it once we start restoring
     this._removeSHistoryListener(aTab);
 
-    let activeIndex = (tabData.index || tabData.entries.length) - 1;
-    if (activeIndex >= tabData.entries.length)
-      activeIndex = tabData.entries.length - 1;
+    let activeIndex = tabData.index - 1;
     // Reset currentURI.  This creates a new session history entry with a new
     // doc identifier, so we need to explicitly save and restore the old doc
     // identifier (corresponding to the SHEntry at activeIndex) below.
