@@ -285,6 +285,13 @@ LiveInterval::addUse(UsePosition *use)
         uses_.pushFront(use);
 }
 
+void
+LiveInterval::addUseAtEnd(UsePosition *use)
+{
+    JS_ASSERT(uses_.empty() || use->pos >= uses_.back()->pos);
+    uses_.pushBack(use);
+}
+
 UsePosition *
 LiveInterval::nextUseAfter(CodePosition after)
 {
