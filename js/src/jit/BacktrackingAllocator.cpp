@@ -1511,50 +1511,11 @@ BacktrackingAllocator::trySplitAcrossHotcode(LiveInterval *interval, bool *succe
     if (!coldCode)
         return true;
 
-    LiveInterval *hotInterval = LiveInterval::New(alloc(), interval->vreg(), 0);
-    LiveInterval *preInterval = nullptr, *postInterval = nullptr;
-
-    // Accumulate the ranges of hot and cold code in the interval. Note that
-    // we are only comparing with the single hot range found, so the cold code
-    // may contain separate hot ranges.
-    Vector<LiveInterval::Range, 1, SystemAllocPolicy> hotList, coldList;
-    for (size_t i = 0; i < interval->numRanges(); i++) {
-        LiveInterval::Range hot, coldPre, coldPost;
-        interval->getRange(i)->intersect(hotRange, &coldPre, &hot, &coldPost);
-
-        if (!hot.empty() && !hotInterval->addRange(hot.from, hot.to))
-            return false;
-
-        if (!coldPre.empty()) {
-            if (!preInterval)
-                preInterval = LiveInterval::New(alloc(), interval->vreg(), 0);
-            if (!preInterval->addRange(coldPre.from, coldPre.to))
-                return false;
-        }
-
-        if (!coldPost.empty()) {
-            if (!postInterval)
-                postInterval = LiveInterval::New(alloc(), interval->vreg(), 0);
-            if (!postInterval->addRange(coldPost.from, coldPost.to))
-                return false;
-        }
-    }
-
-    JS_ASSERT(preInterval || postInterval);
-    JS_ASSERT(hotInterval->numRanges());
-
-    LiveIntervalVector newIntervals;
-    if (!newIntervals.append(hotInterval))
+    SplitPositionVector splitPositions;
+    if (!splitPositions.append(hotRange->from) || !splitPositions.append(hotRange->to))
         return false;
-    if (preInterval && !newIntervals.append(preInterval))
-        return false;
-    if (postInterval && !newIntervals.append(postInterval))
-        return false;
-
-    distributeUses(interval, newIntervals);
-
     *success = true;
-    return split(interval, newIntervals) && requeueIntervals(newIntervals);
+    return splitAt(interval, splitPositions);
 }
 
 bool
