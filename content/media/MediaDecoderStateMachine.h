@@ -345,6 +345,10 @@ public:
 
   void QueueMetadata(int64_t aPublishTime, int aChannels, int aRate, bool aHasAudio, bool aHasVideo, MetadataTags* aTags);
 
+  // Returns true if we're currently playing. The decoder monitor must
+  // be held.
+  bool IsPlaying();
+
 protected:
   virtual uint32_t GetAmpleVideoFrames() { return mAmpleVideoFrames; }
 
@@ -518,10 +522,6 @@ private:
   void StartWaitForResources();
 
   void StartDecodeMetadata();
-
-  // Returns true if we're currently playing. The decoder monitor must
-  // be held.
-  bool IsPlaying();
 
   // Returns the "media time". This is the absolute time which the media
   // playback has reached. i.e. this returns values in the range
