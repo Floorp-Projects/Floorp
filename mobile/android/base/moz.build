@@ -47,6 +47,7 @@ gujar.sources += [
     'util/INIParser.java',
     'util/INISection.java',
     'util/JSONUtils.java',
+    'util/NonEvictingLruCache.java',
     'util/StringUtils.java',
     'util/ThreadUtils.java',
     'util/UiAsyncTask.java',
