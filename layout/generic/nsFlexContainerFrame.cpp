@@ -1094,8 +1094,7 @@ public:
 // single flex line.
 class MOZ_STACK_CLASS SingleLineCrossAxisPositionTracker : public PositionTracker {
 public:
-  SingleLineCrossAxisPositionTracker(nsFlexContainerFrame* aFlexContainerFrame,
-                                     const FlexboxAxisTracker& aAxisTracker);
+  SingleLineCrossAxisPositionTracker(const FlexboxAxisTracker& aAxisTracker);
 
   void ComputeLineCrossSize(const nsTArray<FlexItem>& aItems);
   inline nscoord GetLineCrossSize() const { return mLineCrossSize; }
@@ -1680,8 +1679,7 @@ MainAxisPositionTracker::TraversePackingSpace()
 }
 
 SingleLineCrossAxisPositionTracker::
-  SingleLineCrossAxisPositionTracker(nsFlexContainerFrame* aFlexContainerFrame,
-                                     const FlexboxAxisTracker& aAxisTracker)
+  SingleLineCrossAxisPositionTracker(const FlexboxAxisTracker& aAxisTracker)
   : PositionTracker(aAxisTracker.GetCrossAxis()),
     mLineCrossSize(0),
     mCrossStartToFurthestBaseline(nscoord_MIN) // Starts at -infinity, and then
@@ -2369,8 +2367,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   // Set up state for cross-axis-positioning of children _within_ a single
   // flex line.
-  SingleLineCrossAxisPositionTracker
-    lineCrossAxisPosnTracker(this, axisTracker);
+  SingleLineCrossAxisPositionTracker lineCrossAxisPosnTracker(axisTracker);
 
   lineCrossAxisPosnTracker.ComputeLineCrossSize(items);
   // XXXdholbert Once we've got multi-line flexbox support: here, after we've
