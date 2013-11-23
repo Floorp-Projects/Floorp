@@ -351,6 +351,12 @@ class MochitestOptions(optparse.OptionParser):
           "dest": "e10s",
           "help": "Run tests with electrolysis preferences and test filtering enabled.",
         }],
+        [["--dmd-path"],
+         { "action": "store",
+           "default": None,
+           "dest": "dmdPath",
+           "help": "Specifies the path to the directory containing the shared library for DMD.",
+        }],
     ]
 
     def __init__(self, **kwargs):
@@ -392,6 +398,8 @@ class MochitestOptions(optparse.OptionParser):
         options.xrePath = mochitest.getFullPath(options.xrePath)
         options.profilePath = mochitest.getFullPath(options.profilePath)
         options.app = mochitest.getFullPath(options.app)
+        if options.dmdPath is not None:
+            options.dmdPath = mochitest.getFullPath(options.dmdPath)
 
         if not os.path.exists(options.app):
             msg = """\

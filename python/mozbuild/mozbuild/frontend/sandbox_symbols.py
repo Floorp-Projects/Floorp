@@ -85,6 +85,11 @@ VARIABLES = {
         compile. Accepts assembler, C, C++, Objective C/C++.
         """, 'compile'),
 
+    'FILES_PER_UNIFIED_FILE': (int, int, None,
+        """The number of source files to compile into each unified source file.
+
+        """, 'None'),
+
     'UNIFIED_SOURCES': (StrictOrderingOnAppendList, list, [],
         """Source code files that can be compiled together.
 
@@ -102,6 +107,14 @@ VARIABLES = {
         and built as a single source file. This can help make the build faster
         and reduce the debug info size.
         """, 'compile'),
+
+    'GENERATED_FILES': (StrictOrderingOnAppendList, list, [],
+        """Generic generated files.
+
+        This variable contains a list of generate files for the build system
+        to generate at export time. The rules for those files still live in
+        Makefile.in.
+        """, 'export'),
 
     'DEFINES': (OrderedDict, dict, OrderedDict(),
         """Dictionary of compiler defines to declare.

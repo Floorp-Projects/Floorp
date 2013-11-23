@@ -13,10 +13,5 @@ include $(topsrcdir)/config/rules.mk
 
 # Generate the include file containing compact, static definitions
 # for effective TLD data.
-nsEffectiveTLDService.$(OBJ_SUFFIX): etld_data.inc
-nsEffectiveTLDService.h: etld_data.inc
-
 etld_data.inc: $(srcdir)/prepare_tlds.py $(srcdir)/effective_tld_names.dat
 	$(PYTHON) $(srcdir)/prepare_tlds.py $(srcdir)/effective_tld_names.dat > etld_data.inc
-
-GARBAGE += etld_data.inc

@@ -247,6 +247,13 @@ if test "$GNU_CC" -a -n "$MOZ_FORCE_GOLD"; then
         fi
     fi
 fi
+if test "$GNU_CC"; then
+    if $CC $LDFLAGS -Wl,--version 2>&1 | grep -q "GNU ld"; then
+        LD_IS_BFD=1
+    fi
+fi
+
+AC_SUBST([LD_IS_BFD])
 
 if test "$GNU_CC"; then
     if test -z "$DEVELOPER_OPTIONS"; then

@@ -455,7 +455,8 @@ class ScriptSourceObject : public JSObject
     static const Class class_;
 
     static void finalize(FreeOp *fop, JSObject *obj);
-    static ScriptSourceObject *create(ExclusiveContext *cx, ScriptSource *source);
+    static ScriptSourceObject *create(ExclusiveContext *cx, ScriptSource *source,
+                                      const ReadOnlyCompileOptions &options);
 
     ScriptSource *source() {
         return static_cast<ScriptSource *>(getReservedSlot(SOURCE_SLOT).toPrivate());
@@ -463,8 +464,14 @@ class ScriptSourceObject : public JSObject
 
     void setSource(ScriptSource *source);
 
+    JSObject *element() const;
+    const Value &elementProperty() const;
+
   private:
     static const uint32_t SOURCE_SLOT = 0;
+    static const uint32_t ELEMENT_SLOT = 1;
+    static const uint32_t ELEMENT_PROPERTY_SLOT = 2;
+    static const uint32_t RESERVED_SLOTS = 3;
 };
 
 enum GeneratorKind { NotGenerator, LegacyGenerator, StarGenerator };
@@ -514,7 +521,12 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     js::types::TypeScript *types;
 
   private:
-    js::HeapPtrObject sourceObject_; /* source code object */
+    // This script's ScriptSourceObject, or a CCW thereof.
+    //
+    // (When we clone a JSScript into a new compartment, we don't clone its
+    // source object. Instead, the clone refers to a wrapper.)
+    js::HeapPtrObject sourceObject_;
+
     js::HeapPtrFunction function_;
 
     // For callsite clones, which cannot have enclosing scopes, the original
@@ -683,7 +695,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     static JSScript *Create(js::ExclusiveContext *cx,
                             js::HandleObject enclosingScope, bool savedCallerFun,
                             const JS::ReadOnlyCompileOptions &options, unsigned staticLevel,
-                            js::HandleScriptSource sourceObject, uint32_t sourceStart,
+                            js::HandleObject sourceObject, uint32_t sourceStart,
                             uint32_t sourceEnd);
 
     void initCompartment(js::ExclusiveContext *cx);
@@ -857,9 +869,9 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
 
     static bool loadSource(JSContext *cx, js::ScriptSource *ss, bool *worked);
 
-    void setSourceObject(js::ScriptSourceObject *object);
-    js::ScriptSourceObject *sourceObject() const;
-    js::ScriptSource *scriptSource() const { return sourceObject()->source(); }
+    void setSourceObject(JSObject *object);
+    JSObject *sourceObject() const { return sourceObject_; }
+    js::ScriptSource *scriptSource() const;
     JSPrincipals *originPrincipals() const { return scriptSource()->originPrincipals(); }
     const char *filename() const { return scriptSource()->filename(); }
 
@@ -1216,8 +1228,9 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
     // Function or block chain in which the script is nested, or nullptr.
     HeapPtrObject enclosingScope_;
 
-    // Source code object, or nullptr if the script in which this is nested
-    // has not been compiled yet.
+    // ScriptSourceObject, or nullptr if the script in which this is nested
+    // has not been compiled yet. This is never a CCW; we don't clone
+    // LazyScripts into other compartments.
     HeapPtrObject sourceObject_;
 
     // Heap allocated table with any free variables or inner functions.

@@ -499,7 +499,7 @@ fun_hasInstance(JSContext *cx, HandleObject objArg, MutableHandleValue v, bool *
          * has a non-object as its .prototype value.
          */
         RootedValue val(cx, ObjectValue(*obj));
-        js_ReportValueError(cx, JSMSG_BAD_PROTOTYPE, -1, val, NullPtr());
+        js_ReportValueError(cx, JSMSG_BAD_PROTOTYPE, -1, val, js::NullPtr());
         return false;
     }
 
@@ -1341,7 +1341,7 @@ js_fun_bind(JSContext *cx, HandleObject target, HandleValue thisArg,
     /* Step 4-6, 10-11. */
     RootedAtom name(cx, target->is<JSFunction>() ? target->as<JSFunction>().atom() : nullptr);
 
-    RootedObject funobj(cx, NewFunction(cx, NullPtr(), CallOrConstructBoundFunction, length,
+    RootedObject funobj(cx, NewFunction(cx, js::NullPtr(), CallOrConstructBoundFunction, length,
                                         JSFunction::NATIVE_CTOR, target, name));
     if (!funobj)
         return nullptr;
@@ -1586,7 +1586,7 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
         if (!proto)
             return false;
     }
-    RootedFunction fun(cx, NewFunctionWithProto(cx, NullPtr(), nullptr, 0,
+    RootedFunction fun(cx, NewFunctionWithProto(cx, js::NullPtr(), nullptr, 0,
                                                 JSFunction::INTERPRETED_LAMBDA, global,
                                                 anonymousAtom, proto,
                                                 JSFunction::FinalizeKind, TenuredObject));

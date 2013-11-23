@@ -236,14 +236,13 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
             js_free(source);
             return nullptr;
         }
-        RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
-        if (!sourceObject)
-            return nullptr;
         ss->setSource(source, sourceLen);
-
         CompileOptions options(cx);
         options.setNoScriptRval(true)
                .setVersion(JSVERSION_DEFAULT);
+        RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss, options));
+        if (!sourceObject)
+            return nullptr;
 
         RootedScript script(cx, JSScript::Create(cx,
                                                  /* enclosingScope = */ NullPtr(),

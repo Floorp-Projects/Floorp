@@ -20,3 +20,7 @@ else:
     ]
 
 FINAL_LIBRARY = 'i18n'
+
+GENERATED_FILES = [
+    'unixcharset.properties.h',
+]
