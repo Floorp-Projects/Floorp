@@ -15,16 +15,17 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
   "resource:///modules/sessionstore/PrivacyLevel.jsm");
 
-this.SessionStorage = {
+this.SessionStorage = Object.freeze({
   /**
    * Updates all sessionStorage "super cookies"
    * @param aDocShell
    *        That tab's docshell (containing the sessionStorage)
-   * @param aFullData
-   *        always return privacy sensitive data (use with care)
+   * @return Returns a nested object that will have hosts as keys and per-host
+   *         session storage data as values. For example:
+   *         {"example.com": {"key": "value", "my_number": 123}}
    */
-  serialize: function ssto_serialize(aDocShell, aFullData) {
-    return DomStorage.read(aDocShell, aFullData);
+  collect: function (aDocShell) {
+    return SessionStorageInternal.collect(aDocShell);
   },
 
   /**
@@ -32,50 +33,50 @@ this.SessionStorage = {
    * @param aDocShell
    *        A tab's docshell (containing the sessionStorage)
    * @param aStorageData
-   *        Storage data to be restored
+   *        A nested object with storage data to be restored that has hosts as
+   *        keys and per-host session storage data as values. For example:
+   *        {"example.com": {"key": "value", "my_number": 123}}
    */
-  deserialize: function ssto_deserialize(aDocShell, aStorageData) {
-    DomStorage.write(aDocShell, aStorageData);
+  restore: function (aDocShell, aStorageData) {
+    SessionStorageInternal.restore(aDocShell, aStorageData);
   }
-};
+});
 
-Object.freeze(SessionStorage);
-
-let DomStorage = {
+let SessionStorageInternal = {
   /**
    * Reads all session storage data from the given docShell.
    * @param aDocShell
    *        A tab's docshell (containing the sessionStorage)
-   * @param aFullData
-   *        Always return privacy sensitive data (use with care)
+   * @return Returns a nested object that will have hosts as keys and per-host
+   *         session storage data as values. For example:
+   *         {"example.com": {"key": "value", "my_number": 123}}
    */
-  read: function DomStorage_read(aDocShell, aFullData) {
+  collect: function (aDocShell) {
     let data = {};
-    let isPinned = aDocShell.isAppTab;
     let webNavigation = aDocShell.QueryInterface(Ci.nsIWebNavigation);
     let shistory = webNavigation.sessionHistory;
 
     for (let i = 0; shistory && i < shistory.count; i++) {
       let principal = History.getPrincipalForEntry(shistory, i, aDocShell);
-      if (!principal)
+      if (!principal) {
         continue;
+      }
 
-      // Check if we're allowed to store sessionStorage data.
-      let isHttps = principal.URI && principal.URI.schemeIs("https");
-      if (aFullData || PrivacyLevel.canSave({isHttps: isHttps, isPinned: isPinned})) {
-        let origin = principal.jarPrefix + principal.origin;
-
+      // Get the root domain of the current history entry
+      // and use that as a key for the per-host storage data.
+      let origin = principal.jarPrefix + principal.origin;
+      if (data.hasOwnProperty(origin)) {
         // Don't read a host twice.
-        if (!(origin in data)) {
-          let originData = this._readEntry(principal, aDocShell);
-          if (Object.keys(originData).length) {
-            data[origin] = originData;
-          }
-        }
+        continue;
+      }
+
+      let originData = this._readEntry(principal, aDocShell);
+      if (Object.keys(originData).length) {
+        data[origin] = originData;
       }
     }
 
-    return data;
+    return Object.keys(data).length ? data : null;
   },
 
   /**
@@ -83,9 +84,11 @@ let DomStorage = {
    * @param aDocShell
    *        A tab's docshell (containing the sessionStorage)
    * @param aStorageData
-   *        Storage data to be restored
+   *        A nested object with storage data to be restored that has hosts as
+   *        keys and per-host session storage data as values. For example:
+   *        {"example.com": {"key": "value", "my_number": 123}}
    */
-  write: function DomStorage_write(aDocShell, aStorageData) {
+  restore: function (aDocShell, aStorageData) {
     for (let [host, data] in Iterator(aStorageData)) {
       let uri = Services.io.newURI(host, null, null);
       let principal = Services.scriptSecurityManager.getDocShellCodebasePrincipal(uri, aDocShell);
@@ -114,7 +117,7 @@ let DomStorage = {
    * @param aDocShell
    *        A tab's docshell (containing the sessionStorage)
    */
-  _readEntry: function DomStorage_readEntry(aPrincipal, aDocShell) {
+  _readEntry: function (aPrincipal, aDocShell) {
     let hostData = {};
     let storage;
 

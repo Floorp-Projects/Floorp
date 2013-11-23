@@ -280,16 +280,20 @@ APZController::UpdateScrollOffset(const mozilla::layers::ScrollableLayerGuid& aS
   sAPZC->UpdateScrollOffset(aScrollLayerId, aScrollOffset);
 }
 
-// Gesture event handlers from the APZC. Currently not in use.
-
 void
 APZController::HandleDoubleTap(const CSSIntPoint& aPoint)
 {
+  NS_ConvertASCIItoUTF16 data(nsPrintfCString("{ \"x\": %d, \"y\": %d }",
+                              (int32_t)aPoint.x, (int32_t)aPoint.y));
+  MetroUtils::FireObserver("Gesture:DoubleTap", data.get());
 }
 
 void
 APZController::HandleSingleTap(const CSSIntPoint& aPoint)
 {
+  NS_ConvertASCIItoUTF16 data(nsPrintfCString("{ \"x\": %d, \"y\": %d }",
+                              (int32_t)aPoint.x, (int32_t)aPoint.y));
+  MetroUtils::FireObserver("Gesture:SingleTap", data.get());
 }
 
 void

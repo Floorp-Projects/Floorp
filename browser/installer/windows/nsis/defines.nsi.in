@@ -3,19 +3,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Defining FunnelcakeVersion will append the value of FunnelcakeVersion to the
-# stub data URL version using StubURLVersionAppend and an additional parameter
-# to both URLStubDownload and URLManualDownload using URLParamAppend. The value
-# should not be defined when it is not used and when it is defined its value
-# should never be empty.
-# !define FunnelcakeVersion     "999"
+# Defining FunnelcakeVersion will append the value of StubURLVersionAppend to
+# StubURLVersion, append the value of URLManualDownloadAppend to
+# URLManualDownload, and append the value of URLStubDownloadAppend to
+# URLStubDownload. The value of FunnelcakeVersion should not be defined when it
+# is not used and when it is defined its value should never be empty.
+# !define FunnelcakeVersion        "999"
 
 !ifdef FunnelcakeVersion
-!define URLParamAppend        "&f=${FunnelcakeVersion}"
-!define StubURLVersionAppend  "-${FunnelcakeVersion}"
+!define URLManualDownloadAppend  "&f=${FunnelcakeVersion}"
+!define URLStubDownloadAppend    "-f${FunnelcakeVersion}"
+!define StubURLVersionAppend     "-${FunnelcakeVersion}"
 !else
-!define URLParamAppend        ""
-!define StubURLVersionAppend  ""
+!define URLManualDownloadAppend  ""
+!define URLStubDownloadAppend    ""
+!define StubURLVersionAppend     ""
 !endif
 
 # These defines should match application.ini settings

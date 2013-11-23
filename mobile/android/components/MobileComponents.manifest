@@ -99,3 +99,9 @@ contract @mozilla.org/payment/ui-glue;1 {3c6c9575-f57e-427b-a8aa-57bc3cbff48f}
 # FilePicker.js
 component {18a4e042-7c7c-424b-a583-354e68553a7f} FilePicker.js
 contract @mozilla.org/filepicker;1 {18a4e042-7c7c-424b-a583-354e68553a7f}
+
+# Snippets.js
+component {a78d7e59-b558-4321-a3d6-dffe2f1e76dd} Snippets.js
+contract @mozilla.org/snippets;1 {a78d7e59-b558-4321-a3d6-dffe2f1e76dd}
+category profile-after-change Snippets @mozilla.org/snippets;1
+category update-timer Snippets @mozilla.org/snippets;1,getService,snippets-update-timer,browser.snippets.updateInterval,86400

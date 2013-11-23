@@ -8,7 +8,10 @@ this.EXPORTED_SYMBOLS = ["TabStateCache"];
 
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+  "resource:///modules/sessionstore/Utils.jsm");
 
 /**
  * A cache for tabs data.
@@ -104,8 +107,34 @@ this.TabStateCache = Object.freeze({
    * @param {xul:browser} otherBrowser
    *        The second of the two browsers that swapped docShells.
    */
-  onSwapDocShells: function(browser, otherBrowser) {
-    TabStateCacheInternal.onSwapDocShells(browser, otherBrowser);
+  onBrowserContentsSwapped: function(browser, otherBrowser) {
+    TabStateCacheInternal.onBrowserContentsSwapped(browser, otherBrowser);
+  },
+
+  /**
+   * Retrieves persistently cached data for a given |browser|.
+   *
+   * @param browser (xul:browser)
+   *        The browser to retrieve cached data for.
+   * @return (object)
+   *         The persistently cached data stored for the given |browser|.
+   */
+  getPersistent: function (browser) {
+    return TabStateCacheInternal.getPersistent(browser);
+  },
+
+  /**
+   * Updates persistently cached data for a given |browser|. This data is
+   * persistently in the sense that we never clear it, it will always be
+   * overwritten.
+   *
+   * @param browser (xul:browser)
+   *        The browser belonging to the given tab data.
+   * @param newData (object)
+   *        The new data to be stored for the given |browser|.
+   */
+  updatePersistent: function (browser, newData) {
+    TabStateCacheInternal.updatePersistent(browser, newData);
   },
 
   /**
@@ -132,6 +161,7 @@ this.TabStateCache = Object.freeze({
 
 let TabStateCacheInternal = {
   _data: new WeakMap(),
+  _persistentData: new WeakMap(),
 
   /**
    * Tells whether an entry is in the cache.
@@ -233,27 +263,51 @@ let TabStateCacheInternal = {
    * @param {xul:browser} otherBrowser
    *        The second of the two browsers that swapped docShells.
    */
-  onSwapDocShells: function(browser, otherBrowser) {
-    // Make sure that one or the other of these has cached data,
-    // and let it be |browser|.
-    if (!this._data.has(browser)) {
-      [browser, otherBrowser] = [otherBrowser, browser];
-      if (!this._data.has(browser)) {
-        return;
+  onBrowserContentsSwapped: function(browser, otherBrowser) {
+    // Swap data stored per-browser.
+    [this._data, this._persistentData]
+      .forEach(map => Utils.swapMapEntries(map, browser, otherBrowser));
+  },
+
+  /**
+   * Retrieves persistently cached data for a given |browser|.
+   *
+   * @param browser (xul:browser)
+   *        The browser to retrieve cached data for.
+   * @return (object)
+   *         The persistently cached data stored for the given |browser|.
+   */
+  getPersistent: function (browser) {
+    return this._persistentData.get(browser);
+  },
+
+  /**
+   * Updates persistently cached data for a given |browser|. This data is
+   * persistent in the sense that we never clear it, it will always be
+   * overwritten.
+   *
+   * @param browser (xul:browser)
+   *        The browser belonging to the given tab data.
+   * @param newData (object)
+   *        The new data to be stored for the given |browser|.
+   */
+  updatePersistent: function (browser, newData) {
+    let data = this._persistentData.get(browser) || {};
+
+    for (let key of Object.keys(newData)) {
+      let value = newData[key];
+      if (value === null) {
+        // Remove the field if the value is null.
+        this.removeField(browser, key);
+        delete data[key];
+      } else {
+        // Update the field otherwise.
+        this.updateField(browser, key, value);
+        data[key] = value;
       }
     }
 
-    // At this point, |browser| is guaranteed to have cached data,
-    // although |otherBrowser| may not. Perform the swap.
-    let data = this._data.get(browser);
-    if (this._data.has(otherBrowser)) {
-      let otherData = this._data.get(otherBrowser);
-      this._data.set(browser, otherData);
-      this._data.set(otherBrowser, data);
-    } else {
-      this._data.set(otherBrowser, data);
-      this._data.delete(browser);
-    }
+    this._persistentData.set(browser, data);
   },
 
   _normalizeToBrowser: function(aKey) {
