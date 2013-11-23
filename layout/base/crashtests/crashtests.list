@@ -419,3 +419,5 @@ load 866588.html
 load 897852.html
 asserts(4-6) load 898913.html # bug 847368
 load 931464.html
+load 931460-1.html
+load 935765-1.html
