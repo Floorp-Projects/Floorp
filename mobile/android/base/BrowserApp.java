@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
@@ -667,7 +668,7 @@ abstract public class BrowserApp extends GeckoApp
             }
             mHomePagerContainer.setPadding(0, 0, 0, 0);
             if (mBrowserToolbar != null) {
-                mBrowserToolbar.scrollTo(0, 0);
+                ViewHelper.setTranslationY(mBrowserToolbar, 0);
             }
         }
 
@@ -928,7 +929,8 @@ abstract public class BrowserApp extends GeckoApp
         final int marginTop = Math.round(aMetrics.marginTop);
         ThreadUtils.postToUiThread(new Runnable() {
             public void run() {
-                toolbarLayout.scrollTo(0, toolbarLayout.getHeight() - marginTop);
+                ViewHelper.setTranslationY(toolbarLayout, marginTop - toolbarLayout.getHeight());
+
                 if (mDoorHangerPopup.isShowing()) {
                     mDoorHangerPopup.updatePopup();
                 }

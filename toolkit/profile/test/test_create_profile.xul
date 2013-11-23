@@ -29,14 +29,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=543854
   const ASCIIName = "myprofile";
   const UnicodeName = "\u09A0\u09BE\u0995\u09C1\u09B0"; // A Bengali name
 
+  var gDirService;
   var gIOService;
   var gProfileService;
+
+  var gDefaultLocalProfileParent;
+
+  gDirService = Cc["@mozilla.org/file/directory_service;1"].
+    getService(Ci.nsIProperties);
 
   gIOService = Cc["@mozilla.org/network/io-service;1"].
     getService(Ci.nsIIOService);
 
   gProfileService = Cc["@mozilla.org/toolkit/profile-service;1"].
     getService(Ci.nsIToolkitProfileService);
+
+  gDefaultLocalProfileParent = gDirService.get("DefProfLRt", Ci.nsIFile);
 
   createProfile(ASCIIName);
   createProfile(UnicodeName);
@@ -76,7 +84,7 @@ function createProfile(profileName) {
   // Filesystem precision is lower than Date precision.
   let lowerBound = Date.now() - 1000;
 
-  let profile = gProfileService.createProfile(null, null, profileName);
+  let profile = gProfileService.createProfile(null, profileName);
 
   // check that the directory was created
   isnot(profile, null, "Profile " + profileName + " created");
@@ -106,6 +114,16 @@ function createProfile(profileName) {
 
   // Check against real clock time.
   checkBounds(lowerBound, created, upperBound);
+
+  // Clean up the profile before local profile test.
+  profile.remove(true);
+
+  // Create with non-null aRootDir
+  let profile = gProfileService.createProfile(profileDir, profileName);
+
+  let localProfileDir = profile.localDir;
+  ok(gDefaultLocalProfileParent.contains(localProfileDir, false),
+    "Local profile dir created in DefProfLRt");
 
   // Clean up the profile.
   profile.remove(true);
