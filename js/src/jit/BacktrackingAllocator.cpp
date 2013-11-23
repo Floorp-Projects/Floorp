@@ -1766,35 +1766,21 @@ BacktrackingAllocator::splitAt(LiveInterval *interval,
             newIntervals.back()->addUse(new(alloc()) UsePosition(iter->use, iter->pos));
             activeSplitPosition = NextSplitPosition(activeSplitPosition, splitPositions, iter->pos);
         } else if (isRegisterUse(iter->use, ins)) {
-            bool useNewInterval = false;
-            if (lastRegisterUse.pos() == 0) {
-                useNewInterval = true;
-            } else {
+            if (lastRegisterUse.pos() == 0 ||
+                SplitHere(activeSplitPosition, splitPositions, iter->pos))
+            {
                 // Place this register use into a different interval from the
-                // last one if there are any split points between the two uses or if
-                // the register uses are in different subranges of the original
-                // interval.
-                if (SplitHere(activeSplitPosition, splitPositions, iter->pos))
-                    useNewInterval = true;
-                if (!useNewInterval) {
-                    for (size_t i = 0; i < interval->numRanges(); i++) {
-                        const LiveInterval::Range *range = interval->getRange(i);
-                        if (range->from <= lastRegisterUse && range->to <= iter->pos) {
-                            useNewInterval = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            if (useNewInterval) {
+                // last one if there are any split points between the two uses.
                 LiveInterval *newInterval = LiveInterval::New(alloc(), vreg, 0);
                 newInterval->setSpillInterval(spillInterval);
                 if (!newIntervals.append(newInterval))
                     return false;
+                activeSplitPosition = NextSplitPosition(activeSplitPosition,
+                                                        splitPositions,
+                                                        iter->pos);
             }
             newIntervals.back()->addUse(new(alloc()) UsePosition(iter->use, iter->pos));
             lastRegisterUse = iter->pos;
-            activeSplitPosition = NextSplitPosition(activeSplitPosition, splitPositions, iter->pos);
         } else {
             JS_ASSERT(spillIntervalIsNew);
             spillInterval->addUse(new(alloc()) UsePosition(iter->use, iter->pos));
@@ -1802,19 +1788,32 @@ BacktrackingAllocator::splitAt(LiveInterval *interval,
     }
 
     // Compute ranges for each new interval that cover all its uses.
+    size_t activeRange = interval->numRanges();
     for (size_t i = 0; i < newIntervals.length(); i++) {
         LiveInterval *newInterval = newIntervals[i];
         CodePosition start, end;
         if (i == 0 && spillStart != interval->start()) {
             start = interval->start();
-            end = spillStart;
+            if (newInterval->usesEmpty())
+                end = spillStart;
+            else
+                end = newInterval->usesBack()->pos.next();
         } else {
             start = inputOf(insData[newInterval->usesBegin()->pos].ins());
-        }
-        if (newInterval->usesBegin() != newInterval->usesEnd())
             end = newInterval->usesBack()->pos.next();
-        if (!newInterval->addRange(start, end))
-            return false;
+        }
+        for (; activeRange > 0; --activeRange) {
+            const LiveInterval::Range *range = interval->getRange(activeRange - 1);
+            if (range->to <= start)
+                continue;
+            if (range->from >= end)
+                break;
+            if (!newInterval->addRange(Max(range->from, start),
+                                       Min(range->to, end)))
+                return false;
+            if (range->to >= end)
+                break;
+        }
     }
 
     if (spillIntervalIsNew && !newIntervals.append(spillInterval))
