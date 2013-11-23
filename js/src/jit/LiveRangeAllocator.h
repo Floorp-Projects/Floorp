@@ -356,6 +356,7 @@ class LiveInterval
     bool splitFrom(CodePosition pos, LiveInterval *after);
 
     void addUse(UsePosition *use);
+    void addUseAtEnd(UsePosition *use);
     UsePosition *nextUseAfter(CodePosition pos);
     CodePosition nextUsePosAfter(CodePosition pos);
     CodePosition firstIncompatibleUse(LAllocation alloc);

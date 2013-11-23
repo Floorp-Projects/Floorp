@@ -784,7 +784,7 @@ BacktrackingAllocator::distributeUses(LiveInterval *interval,
                     addInterval = newInterval;
             }
         }
-        addInterval->addUse(new(alloc()) UsePosition(iter->use, iter->pos));
+        addInterval->addUseAtEnd(new(alloc()) UsePosition(iter->use, iter->pos));
     }
 }
 
@@ -1622,7 +1622,7 @@ BacktrackingAllocator::splitAtAllRegisterUses(LiveInterval *interval)
     {
         LInstruction *ins = insData[iter->pos].ins();
         if (iter->pos < spillStart) {
-            newIntervals.back()->addUse(new(alloc()) UsePosition(iter->use, iter->pos));
+            newIntervals.back()->addUseAtEnd(new(alloc()) UsePosition(iter->use, iter->pos));
         } else if (isRegisterUse(iter->use, ins)) {
             // For register uses which are not useRegisterAtStart, pick an
             // interval that covers both the instruction's input and output, so
@@ -1637,10 +1637,10 @@ BacktrackingAllocator::splitAtAllRegisterUses(LiveInterval *interval)
                     return false;
             }
 
-            newIntervals.back()->addUse(new(alloc()) UsePosition(iter->use, iter->pos));
+            newIntervals.back()->addUseAtEnd(new(alloc()) UsePosition(iter->use, iter->pos));
         } else {
             JS_ASSERT(spillIntervalIsNew);
-            spillInterval->addUse(new(alloc()) UsePosition(iter->use, iter->pos));
+            spillInterval->addUseAtEnd(new(alloc()) UsePosition(iter->use, iter->pos));
         }
     }
 
@@ -1724,7 +1724,7 @@ BacktrackingAllocator::splitAt(LiveInterval *interval,
     for (UsePositionIterator iter(interval->usesBegin()); iter != interval->usesEnd(); iter++) {
         LInstruction *ins = insData[iter->pos].ins();
         if (iter->pos < spillStart) {
-            newIntervals.back()->addUse(new(alloc()) UsePosition(iter->use, iter->pos));
+            newIntervals.back()->addUseAtEnd(new(alloc()) UsePosition(iter->use, iter->pos));
             activeSplitPosition = NextSplitPosition(activeSplitPosition, splitPositions, iter->pos);
         } else if (isRegisterUse(iter->use, ins)) {
             if (lastRegisterUse.pos() == 0 ||
@@ -1740,11 +1740,11 @@ BacktrackingAllocator::splitAt(LiveInterval *interval,
                                                         splitPositions,
                                                         iter->pos);
             }
-            newIntervals.back()->addUse(new(alloc()) UsePosition(iter->use, iter->pos));
+            newIntervals.back()->addUseAtEnd(new(alloc()) UsePosition(iter->use, iter->pos));
             lastRegisterUse = iter->pos;
         } else {
             JS_ASSERT(spillIntervalIsNew);
-            spillInterval->addUse(new(alloc()) UsePosition(iter->use, iter->pos));
+            spillInterval->addUseAtEnd(new(alloc()) UsePosition(iter->use, iter->pos));
         }
     }
 
