@@ -52,7 +52,7 @@ function runTests() {
 
   // Let the pending tab load.
   gBrowser.selectedTab = tab;
-  yield whenBrowserLoaded(tab.linkedBrowser);
+  yield whenTabRestored(tab);
 
   // Ensure no 'image' or 'pending' attributes are stored.
   let {attributes} = JSON.parse(ss.getTabState(tab));
