@@ -3492,8 +3492,10 @@ LIRGenerator::visitBlock(MBasicBlock *block)
     if (!definePhis())
         return false;
 
-    if (!add(new LLabel()))
-        return false;
+    if (js_IonOptions.registerAllocator == RegisterAllocator_LSRA) {
+        if (!add(new LLabel()))
+            return false;
+    }
 
     for (MInstructionIterator iter = block->begin(); *iter != block->lastIns(); iter++) {
         if (!visitInstruction(*iter))

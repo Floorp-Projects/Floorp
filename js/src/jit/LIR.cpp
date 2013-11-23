@@ -84,8 +84,10 @@ LBlock::getEntryMoveGroup(TempAllocator &alloc)
     if (entryMoveGroup_)
         return entryMoveGroup_;
     entryMoveGroup_ = new LMoveGroup(alloc);
-    JS_ASSERT(begin()->isLabel());
-    insertAfter(*begin(), entryMoveGroup_);
+    if (begin()->isLabel())
+        insertAfter(*begin(), entryMoveGroup_);
+    else
+        insertBefore(*begin(), entryMoveGroup_);
     return entryMoveGroup_;
 }
 
