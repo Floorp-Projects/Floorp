@@ -679,11 +679,15 @@
             return false;
 
           let elt = document.commandDispatcher.focusedElement;
+          let win = document.commandDispatcher.focusedWindow;
 
           // Temporary fix for e10s.
-          if (elt instanceof XULElement && elt.tagName == "xul:browser" &&
+          const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          if (elt instanceof XULElement &&
+              elt.localName == "browser" &&
+              elt.namespaceURI == XUL_NS &&
               elt.getAttribute("remote")) {
-            elt = elt.contentDocument.activeElement;
+            [elt, win] = elt.syncHandler.getFocusedElementAndWindow();
           }
 
           if (elt) {
@@ -697,7 +701,6 @@
               return false;
           }
 
-          let win = document.commandDispatcher.focusedWindow;
           if (win && !this._mimeTypeIsTextBased(win.document.contentType))
               return false;
 

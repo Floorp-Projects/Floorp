@@ -346,7 +346,7 @@ js::ObjectImpl::numFixedSlotsForCompilation() const
 #ifdef JSGC_GENERATIONAL
     // The compiler does not have access to nursery things, so if this object
     // is in the nursery we can fall back to numFixedSlots().
-    if (!isTenured())
+    if (IsInsideNursery(GetGCThingRuntime(this), this))
         return numFixedSlots();
 #endif
     gc::AllocKind kind = tenuredGetAllocKind();

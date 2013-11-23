@@ -46,6 +46,12 @@ if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER']:
             'GonkNativeWindowICS.cpp',
         ]
 
+if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER']:
+    if CONFIG['ANDROID_VERSION'] >= '18':
+        SOURCES += [
+            'FakeSurfaceComposer.cpp',
+        ]
+
 FAIL_ON_WARNINGS = True
 
 include('/ipc/chromium/chromium-config.mozbuild')

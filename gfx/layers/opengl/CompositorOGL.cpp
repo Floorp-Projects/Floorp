@@ -755,8 +755,11 @@ CalculatePOTSize(const IntSize& aSize, GLContext* gl)
 }
 
 void
-CompositorOGL::BeginFrame(const Rect *aClipRectIn, const gfxMatrix& aTransform,
-                          const Rect& aRenderBounds, Rect *aClipRectOut,
+CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
+                          const Rect *aClipRectIn,
+                          const gfxMatrix& aTransform,
+                          const Rect& aRenderBounds,
+                          Rect *aClipRectOut,
                           Rect *aRenderBoundsOut)
 {
   PROFILER_LABEL("CompositorOGL", "BeginFrame");

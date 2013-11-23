@@ -106,7 +106,16 @@ protected:
 
   nscoord ComputeFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
                                        const FlexboxAxisTracker& aAxisTracker,
-                                       const nsTArray<FlexItem>& aFlexItems);
+                                       const nsTArray<FlexItem>& aFlexItems,
+                                       nscoord aAvailableHeightForContent,
+                                       nsReflowStatus& aStatus);
+
+  nscoord ComputeFlexContainerCrossSize(const nsHTMLReflowState& aReflowState,
+                                        const FlexboxAxisTracker& aAxisTracker,
+                                        nscoord aLineCrossSize,
+                                        nscoord aAvailableHeightForContent,
+                                        bool* aIsDefinite,
+                                        nsReflowStatus& aStatus);
 
   void PositionItemInMainAxis(MainAxisPositionTracker& aMainAxisPosnTracker,
                               FlexItem& aItem);

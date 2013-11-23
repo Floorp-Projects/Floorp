@@ -16,41 +16,8 @@
 
 namespace android {
 
-int waitBeforeAdding(const android::String16& serviceName)
-{
-  android::sp<android::IServiceManager> sm = android::defaultServiceManager();
-  for ( int i = 0 ; i < 5; i++ ) {
-    if ( sm->checkService ( serviceName ) != NULL ) {
-      sleep(1);
-    }
-    else {
-      //good to go;
-      return 0;
-    }
-  }
-  // time out failure
- return -1;
-}
-
-// Wait until service manager is started
-void
-waitServiceManager()
-{
-  android::sp<android::IServiceManager> sm;
-  do {
-    sm = android::defaultServiceManager();
-    if (sm.get()) {
-      break;
-    }
-    usleep(50000); // 0.05 s
-  } while(true);
-}
-
 /* static */
 void MediaResourceManagerService::instantiate() {
-  waitServiceManager();
-  waitBeforeAdding( android::String16("media.resource_manager") );
-
   defaultServiceManager()->addService(
             String16("media.resource_manager"), new MediaResourceManagerService());
 }

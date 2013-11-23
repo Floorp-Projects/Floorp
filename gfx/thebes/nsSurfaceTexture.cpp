@@ -210,7 +210,7 @@ nsSurfaceTexture::~nsSurfaceTexture()
     return;
 
   if (mSurfaceTexture && env) {
-    AndroidBridge::Bridge()->UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
+    GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
 
     env->DeleteGlobalRef(mSurfaceTexture);
     mSurfaceTexture = nullptr;
@@ -239,9 +239,9 @@ void
 nsSurfaceTexture::SetFrameAvailableCallback(nsIRunnable* aRunnable)
 {
   if (aRunnable)
-    AndroidBridge::Bridge()->RegisterSurfaceTextureFrameListener(mSurfaceTexture, mID);
+    GeckoAppShell::RegisterSurfaceTextureFrameListener(mSurfaceTexture, mID);
   else
-    AndroidBridge::Bridge()->UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
+    GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
 
   mFrameAvailableCallback = aRunnable;
 }
