@@ -67,6 +67,7 @@
 #include "nsStyleStructInlines.h"
 #include "nsPageContentFrame.h"
 #include "RestyleManager.h"
+#include "StickyScrollContainer.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
@@ -3097,6 +3098,10 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
       childItems.RemoveFrame(child);
       // Make sure to reparent the legend so it has the fieldset as the parent.
       fieldsetKids.InsertFrame(fieldsetFrame, nullptr, child);
+      if (scrollFrame) {
+        StickyScrollContainer::NotifyReparentedFrameAcrossScrollFrameBoundary(
+            child, blockFrame);
+      }
       break;
     }
   }
