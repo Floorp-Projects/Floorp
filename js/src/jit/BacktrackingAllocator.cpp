@@ -1123,7 +1123,7 @@ BacktrackingAllocator::populateSafepoints()
 
             // Stop processing safepoints if we know we're out of this virtual
             // register's range.
-            if (end < inputOf(ins))
+            if (end < outputOf(ins))
                 break;
 
             // Include temps but not instruction outputs. Also make sure MUST_REUSE_INPUT
@@ -1140,7 +1140,7 @@ BacktrackingAllocator::populateSafepoints()
 
             for (size_t k = 0; k < reg->numIntervals(); k++) {
                 LiveInterval *interval = reg->getInterval(k);
-                if (!interval->covers(outputOf(ins)))
+                if (!interval->covers(inputOf(ins)))
                     continue;
 
                 LAllocation *a = interval->getAllocation();
