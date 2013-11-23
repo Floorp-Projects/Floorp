@@ -279,7 +279,3 @@ LIBRARY_NAME = 'thebes'
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
-
-GENERATED_FILES = [
-    'PremultiplyTables.h',
-]

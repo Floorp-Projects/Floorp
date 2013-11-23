@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+
+/* None of these selectors should match from content */
+input[type=number]::-moz-number-wrapper,
+input[type=number]::-moz-number-text,
+input[type=number]::-moz-number-spin-box,
+input[type=number]::-moz-number-spin-up,
+input[type=number]::-moz-number-spin-down {
+  background-color: red;
+}
+
+    </style>
+  </head>
+  <body>
+    <input type="number" style="-moz-appearance:none;">
+  </body>
+</html>

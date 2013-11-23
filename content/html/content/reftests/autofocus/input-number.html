@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- In this case we're using reftest-wait to make sure the test doesn't
+       get snapshotted before it's been focused. We're not testing
+       invalidation so we don't need to listen for MozReftestInvalidate.
+  -->
+  <head>
+    <meta charset="utf-8">
+    <script>
+
+function focusHandler() {
+  setTimeout(function() {
+    document.documentElement.removeAttribute('class');
+  }, 0);
+}
+
+    </script>
+  </head>
+  <body>
+    <input type="number" autofocus onfocus="focusHandler();"
+           style="-moz-appearance: none;">
+    <!-- div to cover spin box area for type=number to type=text comparison -->
+    <div style="display:block; position:absolute; background-color:black; width:200px; height:100px; top:0px; left:100px;">
+  </body>
+</html>
+

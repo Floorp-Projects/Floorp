@@ -49,4 +49,6 @@ $(histogram_enum_file): $(histograms_file) $(enum_python_deps)
 $(histogram_data_file): $(histograms_file) $(data_python_deps)
 	$(PYTHON) $(srcdir)/gen-histogram-data.py $< > $@
 
-GARBAGE += $(histogram_enum_file)
+Telemetry.$(OBJ_SUFFIX): $(histogram_data_file)
+
+GARBAGE += $(histogram_data_file) $(histogram_enum_file)

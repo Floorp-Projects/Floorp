@@ -767,6 +767,8 @@ var gPluginHandler = {
     if (aNewState != "block" && !pluginFound) {
       browser.reload();
     }
+
+    this._setPluginNotificationIcon(browser);
   },
 
   _showClickToPlayNotification: function PH_showClickToPlayNotification(aBrowser, aPlugin, aShowNow) {

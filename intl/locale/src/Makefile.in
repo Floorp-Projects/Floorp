@@ -19,8 +19,14 @@ LOCAL_INCLUDES = \
 
 include $(topsrcdir)/config/rules.mk
 
+nsCharsetAlias.$(OBJ_SUFFIX): charsetalias.properties.h
+
 charsetalias.properties.h: props2arrays.py charsetalias.properties
 	$(PYTHON) $^ $@
+
+GARBAGE += \
+	charsetalias.properties.h \
+	$(NULL)
 
 libs::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res

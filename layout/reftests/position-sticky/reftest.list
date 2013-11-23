@@ -23,7 +23,7 @@ fuzzy-if(Android,2,4) == right-3.html right-3-ref.html
 == margin-1.html margin-1-ref.html
 == padding-1.html padding-1-ref.html
 == padding-2.html padding-2-ref.html
-== padding-3.html padding-3-ref.html
+random-if(B2G) == padding-3.html padding-3-ref.html
 == overcontain-1.html overcontain-1-ref.html
 == initial-1.html initial-1-ref.html
 == initial-scroll-1.html initial-scroll-1-ref.html

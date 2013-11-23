@@ -30,7 +30,3 @@ LOCAL_INCLUDES += [
     '/intl/locale/src',
 ]
 
-GENERATED_FILES += [
-    'labelsencodings.properties.h',
-    'localesfallbacks.properties.h',
-]

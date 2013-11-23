@@ -927,7 +927,7 @@ abstract public class GeckoApp
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                mLayerView.show();
+                mLayerView.showSurface();
             }
         });
 
@@ -2660,7 +2660,7 @@ abstract public class GeckoApp
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mLayerView.hide();
+                    mLayerView.hideSurface();
                 }
             });
         }

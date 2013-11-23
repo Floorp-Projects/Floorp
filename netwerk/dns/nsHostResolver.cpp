@@ -31,6 +31,7 @@
 #include "nsURLHelper.h"
 #include "nsThreadUtils.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
@@ -308,7 +309,7 @@ HostDB_ClearEntry(PLDHashTable *table,
     nsHostDBEnt *he = static_cast<nsHostDBEnt*>(entry);
     MOZ_ASSERT(he, "nsHostDBEnt is null!");
 
-    nsHostRecord *hr = he->rec;
+    DebugOnly<nsHostRecord*> hr = he->rec;
     MOZ_ASSERT(hr, "nsHostDBEnt has null host record!");
 
     LOG(("Clearing cache db entry for host [%s].\n", hr->host));
@@ -352,7 +353,7 @@ HostDB_InitEntry(PLDHashTable *table,
     return true;
 }
 
-static PLDHashTableOps gHostDB_ops =
+static const PLDHashTableOps gHostDB_ops =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
