@@ -19,7 +19,6 @@ import android.util.SparseArray;
 import java.util.List;
 
 public class BrowserDB {
-    public static String ABOUT_PAGES_URL_FILTER = "about:%";
     private static boolean sAreContentProvidersEnabled = true;
 
     public static interface URLColumns {
