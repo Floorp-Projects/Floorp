@@ -7572,7 +7572,7 @@
           IntOp $R0 $R0 + 20
           System::Call '*(i, i, i R0, i r7) i .r6'
           System::Call 'user32::DrawTextW(i r4, t $\"$2$\", i r5, i r6, \
-                                          i $R2|${DT_WORDBREAK}|${DT_NOFULLWIDTHCHARBREAK}) i .R1'
+                                          i $R2|${DT_WORDBREAK}) i .R1'
           System::Call '*$6(i, i, i .r8, i .r9)'
           System::Free $6
         ${LoopUntil} $7 >= $R1
