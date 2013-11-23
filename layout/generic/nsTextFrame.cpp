@@ -1819,22 +1819,8 @@ GetHyphenTextRun(gfxTextRun* aTextRun, gfxContext* aContext, nsTextFrame* aTextF
   if (!ctx)
     return nullptr;
 
-  gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
-  uint32_t flags = gfxFontGroup::TEXT_IS_PERSISTENT;
-
-  // only use U+2010 if it is supported by the first font in the group;
-  // it's better to use ASCII '-' from the primary font than to fall back to U+2010
-  // from some other, possibly poorly-matching face
-  static const PRUnichar unicodeHyphen = 0x2010;
-  gfxFont *font = fontGroup->GetFontAt(0);
-  if (font && font->HasCharacter(unicodeHyphen)) {
-    return fontGroup->MakeTextRun(&unicodeHyphen, 1, ctx,
-                                  aTextRun->GetAppUnitsPerDevUnit(), flags);
-  }
-
-  static const uint8_t dash = '-';
-  return fontGroup->MakeTextRun(&dash, 1, ctx,
-                                aTextRun->GetAppUnitsPerDevUnit(), flags);
+  return aTextRun->GetFontGroup()->
+    MakeHyphenTextRun(ctx, aTextRun->GetAppUnitsPerDevUnit());
 }
 
 static gfxFont::Metrics
@@ -3186,10 +3172,13 @@ gfxFloat
 PropertyProvider::GetHyphenWidth()
 {
   if (mHyphenWidth < 0) {
-    nsAutoPtr<gfxTextRun> hyphenTextRun(GetHyphenTextRun(mTextRun, nullptr, mFrame));
     mHyphenWidth = mLetterSpacing;
-    if (hyphenTextRun.get()) {
-      mHyphenWidth += hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nullptr);
+    nsRefPtr<gfxContext> context(GetReferenceRenderingContext(GetFrame(),
+                                                              nullptr));
+    if (context) {
+      mHyphenWidth +=
+        GetFontGroup()->GetHyphenWidth(context,
+                                       mTextRun->GetAppUnitsPerDevUnit());
     }
   }
   return mHyphenWidth;
@@ -3328,11 +3317,7 @@ PropertyProvider::SetupJustificationSpacing()
     mTextRun->GetAdvanceWidth(mStart.GetSkippedOffset(),
                               GetSkippedDistance(mStart, realEnd), this);
   if (mFrame->GetStateBits() & TEXT_HYPHEN_BREAK) {
-    nsAutoPtr<gfxTextRun> hyphenTextRun(GetHyphenTextRun(mTextRun, nullptr, mFrame));
-    if (hyphenTextRun.get()) {
-      naturalWidth +=
-        hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nullptr);
-    }
+    naturalWidth += GetHyphenWidth();
   }
   gfxFloat totalJustificationSpace = mFrame->GetSize().width - naturalWidth;
   if (totalJustificationSpace <= 0) {

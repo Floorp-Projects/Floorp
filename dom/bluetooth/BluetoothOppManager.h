@@ -107,6 +107,17 @@ private:
   void ConnectInternal(const nsAString& aDeviceAddress);
 
   /**
+   * Usually we won't get a full PUT packet in one operation, which means that
+   * a packet may be devided into several parts and BluetoothOppManager should
+   * be in charge of assembling.
+   *
+   * @return true if a packet has been fully received.
+   *         false if the received length exceeds/not reaches the expected
+   *         length.
+   */
+  bool ComposePacket(uint8_t aOpCode, UnixSocketRawData* aMessage);
+
+  /**
    * OBEX session status.
    * Set when OBEX session is established.
    */
@@ -128,9 +139,9 @@ private:
    */
   int mLastCommand;
 
-  int mPacketLeftLength;
+  int mPacketLength;
+  int mPacketReceivedLength;
   int mBodySegmentLength;
-  int mReceivedDataBufferOffset;
   int mUpdateProgressCounter;
 
   /**

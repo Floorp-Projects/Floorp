@@ -13,6 +13,7 @@
 #include "gfxWindowsPlatform.h"
 #include "d3d9.h"
 #include <vector>
+#include "DeviceManagerD3D9.h"
 
 namespace mozilla {
 namespace layers {
@@ -21,7 +22,16 @@ class CompositorD3D9;
 
 class TextureSourceD3D9
 {
+  friend class DeviceManagerD3D9;
+
 public:
+  TextureSourceD3D9()
+    : mPreviousHost(nullptr)
+    , mNextHost(nullptr)
+    , mCreatingDeviceManager(nullptr)
+  {}
+  virtual ~TextureSourceD3D9();
+
   virtual IDirect3DTexture9* GetD3D9Texture() { return mTextures[0]; }
   virtual bool IsYCbCrSource() const { return false; }
 
@@ -41,11 +51,56 @@ public:
     return textures;
   }
 
+  // Release all texture memory resources held by the texture host.
+  virtual void ReleaseTextureResources()
+  {
+    for (size_t i = 0; i < 3; ++i) {
+      mTextures[i] = nullptr;
+    }
+  }
+
 protected:
   virtual gfx::IntSize GetSize() const { return mSize; }
   void SetSize(const gfx::IntSize& aSize) { mSize = aSize; }
 
+  // Helper methods for creating and copying textures.
+  TemporaryRef<IDirect3DTexture9> InitTextures(
+    DeviceManagerD3D9* aDeviceManager,
+    const gfx::IntSize &aSize,
+    _D3DFORMAT aFormat,
+    RefPtr<IDirect3DSurface9>& aSurface,
+    D3DLOCKED_RECT& aLockedRect);
+
+  TemporaryRef<IDirect3DTexture9> DataToTexture(
+    DeviceManagerD3D9* aDeviceManager,
+    unsigned char *aData,
+    int aStride,
+    const gfx::IntSize &aSize,
+    _D3DFORMAT aFormat,
+    uint32_t aBPP);
+
+  // aTexture should be in SYSTEMMEM, returns a texture in the default
+  // pool (that is, in video memory).
+  TemporaryRef<IDirect3DTexture9> TextureToTexture(
+    DeviceManagerD3D9* aDeviceManager,
+    IDirect3DTexture9* aTexture,
+    const gfx::IntSize& aSize,
+    _D3DFORMAT aFormat);
+
+  TemporaryRef<IDirect3DTexture9> SurfaceToTexture(
+    DeviceManagerD3D9* aDeviceManager,
+    gfxWindowsSurface* aSurface,
+    const gfx::IntSize& aSize,
+    _D3DFORMAT aFormat);
+
   gfx::IntSize mSize;
+
+  // Linked list of all objects holding d3d9 textures.
+  TextureSourceD3D9* mPreviousHost;
+  TextureSourceD3D9* mNextHost;
+  // The device manager that created our textures.
+  DeviceManagerD3D9* mCreatingDeviceManager;
+
   StereoMode mStereoMode;
   RefPtr<IDirect3DTexture9> mTextures[3];
 };
@@ -61,7 +116,7 @@ public:
   CompositingRenderTargetD3D9(IDirect3DSurface9* aSurface,
                               SurfaceInitMode aInit,
                               const gfx::IntRect& aRect);
-  ~CompositingRenderTargetD3D9();
+  virtual ~CompositingRenderTargetD3D9();
 
   virtual TextureSourceD3D9* AsSourceD3D9() MOZ_OVERRIDE
   {
@@ -134,10 +189,18 @@ public:
     return mIsTiled ? this : nullptr;
   }
 
+  virtual void ReleaseTextureResources() MOZ_OVERRIDE
+  {
+    TextureSourceD3D9::ReleaseTextureResources();
+    if (mIsTiled) {
+      mTileTextures.clear();
+    }
+  }
+
 protected:
   gfx::IntRect GetTileRect(uint32_t aID) const;
+  void Reset();
 
-  RefPtr<IDirect3DDevice9> mDevice;
   RefPtr<CompositorD3D9> mCompositor;
   bool mIsTiled;
   std::vector< RefPtr<IDirect3DTexture9> > mTileTextures;
@@ -171,11 +234,8 @@ class DeprecatedTextureHostYCbCrD3D9 : public DeprecatedTextureHost
                            , public TextureSourceD3D9
 {
 public:
-  DeprecatedTextureHostYCbCrD3D9()
-    : mDevice(nullptr)
-  {
-    mFormat = gfx::FORMAT_YUV;
-  }
+  DeprecatedTextureHostYCbCrD3D9();
+  virtual ~DeprecatedTextureHostYCbCrD3D9();
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
@@ -201,7 +261,7 @@ protected:
                           nsIntPoint* aOffset = nullptr) MOZ_OVERRIDE;
 
 private:
-  RefPtr<IDirect3DDevice9> mDevice;
+  RefPtr<CompositorD3D9> mCompositor;
 };
 
 class DeprecatedTextureHostDIB : public DeprecatedTextureHostD3D9
@@ -276,7 +336,7 @@ public:
   }
 
 private:
-  nsRefPtr<IDirect3DTexture9> mTexture;
+  RefPtr<IDirect3DTexture9> mTexture;
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<IDirect3DSurface9> mD3D9Surface;
   RefPtr<gfx::DrawTarget> mDrawTarget;

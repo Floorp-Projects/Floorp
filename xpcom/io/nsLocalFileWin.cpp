@@ -5,6 +5,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
+#include "mozilla/WindowsVersion.h"
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -1834,10 +1835,8 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
     // Copying a 1KB file without COPY_FILE_NO_BUFFERING takes < 1ms.
     // So we only use COPY_FILE_NO_BUFFERING when we have a remote drive.
     int copyOK;
-    DWORD dwVersion = GetVersion();
-    DWORD dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
     DWORD dwCopyFlags = COPY_FILE_ALLOW_DECRYPTED_DESTINATION;
-    if (dwMajorVersion > 5) {
+    if (IsVistaOrLater()) {
         bool path1Remote, path2Remote;
         if (!IsRemoteFilePath(filePath.get(), path1Remote) || 
             !IsRemoteFilePath(destPath.get(), path2Remote) ||

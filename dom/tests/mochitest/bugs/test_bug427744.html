@@ -19,14 +19,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=427744
 
 /** Test for Bug 427744 **/
 
-var found = false;
-for (var i = 0; i < navigator.plugins.length; i++) {
-  if (navigator.plugins[i].name == "Test Plug-in") {
-    found = true;
-    is(navigator.plugins[i].version, "1.0.0.0", "Should have seen the right version");
-  }
-}
-ok(found, "Should have seen the test plugin");
+var firstPlugin = navigator.plugins["Test Plug-in"];
+ok(firstPlugin, "Should have seen the test plugin");
+is(firstPlugin.version, "1.0.0.0", "Should have seen the right test plugin version");
+
+var secondPlugin = navigator.plugins["Second Test Plug-in"];
+ok(secondPlugin, "Should have seen the second test plugin");
+is(secondPlugin.version, "1.0.0.0", "Should have seen the right second test plugin version");
 
 </script>
 </pre>

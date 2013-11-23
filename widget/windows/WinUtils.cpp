@@ -10,6 +10,7 @@
 #include "KeyboardLayout.h"
 #include "nsIDOMMouseEvent.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/WindowsVersion.h"
 
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG /* Allow logging in the release build */
@@ -89,7 +90,7 @@ WinUtils::Initialize()
     gWindowsLog = PR_NewLogModule("Widget");
   }
 #endif
-  if (!sDwmDll && WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
+  if (!sDwmDll && IsVistaOrLater()) {
     sDwmDll = ::LoadLibraryW(kDwmLibraryName);
 
     if (sDwmDll) {
@@ -104,42 +105,6 @@ WinUtils::Initialize()
       dwmGetCompositionTimingInfoPtr = (DwmGetCompositionTimingInfoProc)::GetProcAddress(sDwmDll, "DwmGetCompositionTimingInfo");
     }
   }
-}
-
-/* static */ 
-WinUtils::WinVersion
-WinUtils::GetWindowsVersion()
-{
-  static int32_t version = 0;
-
-  if (version) {
-    return static_cast<WinVersion>(version);
-  }
-
-  OSVERSIONINFOEX osInfo;
-  osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-  // This cast is safe and supposed to be here, don't worry
-  ::GetVersionEx((OSVERSIONINFO*)&osInfo);
-  version =
-    (osInfo.dwMajorVersion & 0xff) << 8 | (osInfo.dwMinorVersion & 0xff);
-  return static_cast<WinVersion>(version);
-}
-
-/* static */
-bool
-WinUtils::GetWindowsServicePackVersion(UINT& aOutMajor, UINT& aOutMinor)
-{
-  OSVERSIONINFOEX osInfo;
-  osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-  // This cast is safe and supposed to be here, don't worry
-  if (!::GetVersionEx((OSVERSIONINFO*)&osInfo)) {
-    return false;
-  }
-  
-  aOutMajor = osInfo.wServicePackMajor;
-  aOutMinor = osInfo.wServicePackMinor;
-
-  return true;
 }
 
 // static

@@ -355,37 +355,45 @@ js::Nursery::forwardBufferPointer(HeapSlot **pSlotsElems)
     JS_ASSERT(!isInside(*pSlotsElems));
 }
 
-static void
-MaybeInvalidateScriptUsedWithNew(JSRuntime *rt, types::TypeObject *type)
-{
-    types::TypeNewScript *newScript = type->newScript();
-    if (!newScript)
-        return;
+namespace {
 
-    JSScript *script = newScript->fun->nonLazyScript();
-    if (script && script->hasIonScript()) {
-        for (ContextIter cx(rt); !cx.done(); cx.next())
-            jit::Invalidate(cx, script);
+// Structure for counting how many times objects of a particular type have been
+// tenured during a minor collection.
+struct TenureCount
+{
+    types::TypeObject *type;
+    int count;
+};
+
+} // anonymous namespace
+
+// Keep rough track of how many times we tenure objects of particular types
+// during minor collections, using a fixed size hash for efficiency at the cost
+// of potential collisions.
+struct Nursery::TenureCountCache
+{
+    TenureCount entries[16];
+
+    TenureCountCache() { PodZero(this); }
+
+    TenureCount &findEntry(types::TypeObject *type) {
+        return entries[PointerHasher<types::TypeObject *, 3>::hash(type) % ArrayLength(entries)];
     }
-}
+};
 
 void
-js::Nursery::collectToFixedPoint(MinorCollectionTracer *trc)
+js::Nursery::collectToFixedPoint(MinorCollectionTracer *trc, TenureCountCache &tenureCounts)
 {
     for (RelocationOverlay *p = trc->head; p; p = p->next()) {
         JSObject *obj = static_cast<JSObject*>(p->forwardingAddress());
         traceObject(trc, obj);
 
-        /*
-         * Increment tenure count and recompile the script for pre-tenuring if
-         * long-lived. Attempt to distinguish between tenuring because the
-         * object is long lived and tenuring while the nursery is still
-         * smaller than the working set size.
-         */
-        if (isFullyGrown() && !obj->hasLazyType() && obj->type()->hasNewScript() &&
-            obj->type()->incrementTenureCount())
-        {
-            MaybeInvalidateScriptUsedWithNew(trc->runtime, obj->type());
+        TenureCount &entry = tenureCounts.findEntry(obj->type());
+        if (entry.type == obj->type()) {
+            entry.count++;
+        } else if (!entry.type) {
+            entry.type = obj->type();
+            entry.count = 1;
         }
     }
 }
@@ -580,7 +588,7 @@ js::Nursery::MinorGCCallback(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 }
 
 void
-js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
+js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList *pretenureTypes)
 {
     JS_AbortIfWrongThread(rt);
 
@@ -614,7 +622,8 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
      * to the nursery, then those nursery objects get moved as well, until no
      * objects are left to move. That is, we iterate to a fixed point.
      */
-    collectToFixedPoint(&trc);
+    TenureCountCache tenureCounts;
+    collectToFixedPoint(&trc, tenureCounts);
 
     /* Resize the nursery. */
     double promotionRate = trc.tenuredSize / double(allocationEnd() - start());
@@ -622,6 +631,18 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
         growAllocableSpace();
     else if (promotionRate < 0.01)
         shrinkAllocableSpace();
+
+    // If we are promoting the nursery, or exhausted the store buffer with
+    // pointers to nursery things, which will force a collection well before
+    // the nursery is full, look for object types that are getting promoted
+    // excessively and try to pretenure them.
+    if (pretenureTypes && (promotionRate > 0.8 || reason == JS::gcreason::FULL_STORE_BUFFER)) {
+        for (size_t i = 0; i < ArrayLength(tenureCounts.entries); i++) {
+            const TenureCount &entry = tenureCounts.entries[i];
+            if (entry.count >= 3000)
+                pretenureTypes->append(entry.type); // ignore alloc failure
+        }
+    }
 
     /* Sweep. */
     sweep(rt);

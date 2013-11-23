@@ -952,7 +952,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   mCompositorParent = NewCompositorParent(aWidth, aHeight);
   MessageChannel *parentChannel = mCompositorParent->GetIPCChannel();
-  LayerManager* lm = new ClientLayerManager(this);
+  ClientLayerManager* lm = new ClientLayerManager(this);
   MessageLoop *childMessageLoop = CompositorParent::CompositorLoop();
   mCompositorChild = new CompositorChild(lm);
   mCompositorChild->Open(parentChannel, childMessageLoop, ipc::ChildSide);

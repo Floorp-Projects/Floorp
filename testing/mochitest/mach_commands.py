@@ -97,6 +97,7 @@ class MochitestRunner(MozbuildObject):
 
         self.tests_dir = os.path.join(self.topobjdir, '_tests')
         self.mochitest_dir = os.path.join(self.tests_dir, 'testing', 'mochitest')
+        self.lib_dir = os.path.join(self.topobjdir, 'dist', 'lib')
 
     def run_b2g_test(self, test_file=None, b2g_home=None, xre_path=None, **kwargs):
         """Runs a b2g mochitest.
@@ -188,7 +189,8 @@ class MochitestRunner(MozbuildObject):
         debugger_args=None, shuffle=False, keep_open=False, rerun_failures=False,
         no_autorun=False, repeat=0, run_until_failure=False, slow=False,
         chunk_by_dir=0, total_chunks=None, this_chunk=None, jsdebugger=False,
-        debug_on_failure=False, start_at=None, end_at=None, e10s=False):
+        debug_on_failure=False, start_at=None, end_at=None, e10s=False,
+        dmd=False):
         """Runs a mochitest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -274,6 +276,9 @@ class MochitestRunner(MozbuildObject):
             options.browserArgs.append("-test-mode")
         else:
             raise Exception('None or unrecognized mochitest suite type.')
+
+        if dmd:
+            options.dmdPath = self.lib_dir
 
         options.autorun = not no_autorun
         options.closeWhenDone = not keep_open
@@ -433,6 +438,10 @@ def MochitestCommand(func):
     this_chunk = CommandArgument('--e10s', action='store_true',
         help='Run tests with electrolysis preferences and test filtering enabled.')
     func = this_chunk(func)
+
+    dmd = CommandArgument('--dmd', action='store_true',
+        help='Run tests with DMD active.')
+    func = dmd(func)
 
     path = CommandArgument('test_file', default=None, nargs='?',
         metavar='TEST',

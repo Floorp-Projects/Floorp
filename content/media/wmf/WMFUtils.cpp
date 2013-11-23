@@ -7,14 +7,12 @@
 #include "WMFUtils.h"
 #include <stdint.h>
 #include "mozilla/RefPtr.h"
+#include "mozilla/WindowsVersion.h"
 #include "prlog.h"
 #include "nsThreadUtils.h"
-#include "WinUtils.h"
 #include "nsWindowsHelpers.h"
 #include "mozilla/CheckedInt.h"
 #include "VideoUtils.h"
-
-using namespace mozilla::widget;
 
 #ifdef WMF_MUST_DEFINE_AAC_MFT_CLSID
 // Some SDK versions don't define the AAC decoder CLSID.
@@ -510,7 +508,7 @@ MFStartup()
 
   DECL_FUNCTION_PTR(MFStartup, ULONG, DWORD);
   ENSURE_FUNCTION_PTR(MFStartup, Mfplat.dll)
-  if (WinUtils::GetWindowsVersion() == WinUtils::VISTA_VERSION)
+  if (!IsWin7OrLater())
     return MFStartupPtr(MF_VISTA_VERSION, MFSTARTUP_FULL);
   else
     return MFStartupPtr(MF_WIN7_VERSION, MFSTARTUP_FULL);

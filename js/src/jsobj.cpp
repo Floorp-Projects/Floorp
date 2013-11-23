@@ -4263,7 +4263,7 @@ GetPropertyHelperInline(JSContext *cx,
             /* Ok, bad undefined property reference: whine about it. */
             RootedValue val(cx, IdToValue(id));
             if (!js_ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP,
-                                          JSDVG_IGNORE_STACK, val, NullPtr(),
+                                          JSDVG_IGNORE_STACK, val, js::NullPtr(),
                                           nullptr, nullptr))
             {
                 return false;
@@ -4573,7 +4573,7 @@ JSObject::reportReadOnly(ThreadSafeContext *cxArg, jsid id, unsigned report)
     JSContext *cx = cxArg->asJSContext();
     RootedValue val(cx, IdToValue(id));
     return js_ReportValueErrorFlags(cx, report, JSMSG_READ_ONLY,
-                                    JSDVG_IGNORE_STACK, val, NullPtr(),
+                                    JSDVG_IGNORE_STACK, val, js::NullPtr(),
                                     nullptr, nullptr);
 }
 
@@ -4589,7 +4589,7 @@ JSObject::reportNotConfigurable(ThreadSafeContext *cxArg, jsid id, unsigned repo
     JSContext *cx = cxArg->asJSContext();
     RootedValue val(cx, IdToValue(id));
     return js_ReportValueErrorFlags(cx, report, JSMSG_CANT_DELETE,
-                                    JSDVG_IGNORE_STACK, val, NullPtr(),
+                                    JSDVG_IGNORE_STACK, val, js::NullPtr(),
                                     nullptr, nullptr);
 }
 
@@ -4605,7 +4605,7 @@ JSObject::reportNotExtensible(ThreadSafeContext *cxArg, unsigned report)
     JSContext *cx = cxArg->asJSContext();
     RootedValue val(cx, ObjectValue(*this));
     return js_ReportValueErrorFlags(cx, report, JSMSG_OBJECT_NOT_EXTENSIBLE,
-                                    JSDVG_IGNORE_STACK, val, NullPtr(),
+                                    JSDVG_IGNORE_STACK, val, js::NullPtr(),
                                     nullptr, nullptr);
 }
 

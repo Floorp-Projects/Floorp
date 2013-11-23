@@ -11,7 +11,6 @@
 #include "VideoUtils.h"
 #include "DXVA2Manager.h"
 #include "nsThreadUtils.h"
-#include "WinUtils.h"
 #include "Layers.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "prlog.h"
@@ -35,7 +34,6 @@ WMFVideoDecoder::WMFVideoDecoder(bool aDXVAEnabled)
     mVideoHeight(0),
     mLastStreamOffset(0),
     mDXVAEnabled(aDXVAEnabled),
-    mIsRunningOnVista(widget::WinUtils::GetWindowsVersion() == widget::WinUtils::WIN7_VERSION),
     mUseHwAccel(false)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Must be on main thread.");

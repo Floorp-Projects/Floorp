@@ -74,6 +74,7 @@ let WebProgressListener = {
     let objects = this._setupObjects(aWebProgress);
 
     json.location = aLocationURI ? aLocationURI.spec : "";
+    json.flags = aFlags;
 
     if (json.isTopLevel) {
       json.canGoBack = docShell.canGoBack;

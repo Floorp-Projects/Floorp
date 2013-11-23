@@ -174,9 +174,9 @@ BluetoothOppManager::BluetoothOppManager() : mConnected(false)
                                            , mRemoteConnectionFlags(0)
                                            , mRemoteMaxPacketLength(0)
                                            , mLastCommand(0)
-                                           , mPacketLeftLength(0)
+                                           , mPacketLength(0)
+                                           , mPacketReceivedLength(0)
                                            , mBodySegmentLength(0)
-                                           , mReceivedDataBufferOffset(0)
                                            , mAbortFlag(false)
                                            , mNewFileFlag(false)
                                            , mPutFinalFlag(false)
@@ -477,7 +477,7 @@ BluetoothOppManager::ConfirmReceivingFile(bool aConfirm)
   NS_ENSURE_TRUE(mConnected, false);
   NS_ENSURE_TRUE(mWaitingForConfirmationFlag, false);
 
-  MOZ_ASSERT(mPacketLeftLength == 0);
+  MOZ_ASSERT(mPacketReceivedLength == 0);
 
   mWaitingForConfirmationFlag = false;
 
@@ -505,7 +505,7 @@ BluetoothOppManager::AfterFirstPut()
 {
   mUpdateProgressCounter = 1;
   mPutFinalFlag = false;
-  mReceivedDataBufferOffset = 0;
+  mPacketReceivedLength = 0;
   mSentFileLength = 0;
   mWaitingToSendPutFinal = false;
   mSuccessFlag = false;
@@ -541,7 +541,7 @@ BluetoothOppManager::AfterOppDisconnected()
 
   mConnected = false;
   mLastCommand = 0;
-  mPacketLeftLength = 0;
+  mPacketReceivedLength = 0;
   mDsFile = nullptr;
 
   // We can't reset mSuccessFlag here since this function may be called
@@ -586,7 +586,7 @@ BluetoothOppManager::DeleteReceivedFile()
 bool
 BluetoothOppManager::CreateFile()
 {
-  MOZ_ASSERT(mPacketLeftLength == 0);
+  MOZ_ASSERT(mPacketReceivedLength == mPacketLength);
 
   nsString path;
   path.AssignLiteral(TARGET_SUBDIR);
@@ -759,21 +759,66 @@ BluetoothOppManager::ValidateFileName()
   }
 }
 
+bool
+BluetoothOppManager::ComposePacket(uint8_t aOpCode, UnixSocketRawData* aMessage)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aMessage);
+
+  int frameHeaderLength = 0;
+
+  // See if this is the first part of each Put packet
+  if (mPacketReceivedLength == 0) {
+    // Section 3.3.3 "Put", IrOBEX 1.2
+    // [opcode:1][length:2][Headers:var]
+    frameHeaderLength = 3;
+
+    mPacketLength = ((((int)aMessage->mData[1]) << 8) | aMessage->mData[2]) -
+                      frameHeaderLength;
+    /**
+     * A PUT request from remote devices may be divided into multiple parts.
+     * In other words, one request may need to be received multiple times,
+     * so here we keep a variable mPacketLeftLength to indicate if current
+     * PUT request is done.
+     */
+    mReceivedDataBuffer = new uint8_t[mPacketLength];
+    mPutFinalFlag = (aOpCode == ObexRequestCode::PutFinal);
+  }
+
+  int dataLength = aMessage->mSize - frameHeaderLength;
+
+  // Check length before memcpy to prevent from memory pollution
+  if (dataLength < 0 ||
+      mPacketReceivedLength + dataLength > mPacketLength) {
+    BT_LOGR("%s: Received packet size is unreasonable", __FUNCTION__);
+
+    ReplyToPut(mPutFinalFlag, false);
+    DeleteReceivedFile();
+    FileTransferComplete();
+
+    return false;
+  }
+
+  memcpy(mReceivedDataBuffer.get() + mPacketReceivedLength,
+         &aMessage->mData[frameHeaderLength], dataLength);
+
+  mPacketReceivedLength += dataLength;
+
+  return (mPacketReceivedLength == mPacketLength);
+}
+
 void
 BluetoothOppManager::ServerDataHandler(UnixSocketRawData* aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   uint8_t opCode;
-  int packetLength;
   int receivedLength = aMessage->mSize;
 
-  if (mPacketLeftLength > 0) {
+  if (mPacketReceivedLength > 0) {
     opCode = mPutFinalFlag ? ObexRequestCode::PutFinal : ObexRequestCode::Put;
-    packetLength = mPacketLeftLength;
   } else {
     opCode = aMessage->mData[0];
-    packetLength = (((int)aMessage->mData[1]) << 8) | aMessage->mData[2];
 
     // When there's a Put packet right after a PutFinal packet,
     // which means it's the start point of a new file.
@@ -814,45 +859,16 @@ BluetoothOppManager::ServerDataHandler(UnixSocketRawData* aMessage)
     FileTransferComplete();
   } else if (opCode == ObexRequestCode::Put ||
              opCode == ObexRequestCode::PutFinal) {
-    int headerStartIndex = 0;
-
-    // The first part of each Put packet
-    if (mReceivedDataBufferOffset == 0) {
-      // Section 3.3.3 "Put", IrOBEX 1.2
-      // [opcode:1][length:2][Headers:var]
-      headerStartIndex = 3;
-      // The largest buffer size is 65535 because packetLength is a
-      // 2-byte value (0 ~ 0xFFFF).
-      mReceivedDataBuffer = new uint8_t[packetLength];
-      mPacketLeftLength = packetLength;
-
-      /*
-       * A PUT request from remote devices may be divided into multiple parts.
-       * In other words, one request may need to be received multiple times,
-       * so here we keep a variable mPacketLeftLength to indicate if current
-       * PUT request is done.
-       */
-      mPutFinalFlag = (opCode == ObexRequestCode::PutFinal);
-    }
-
-    memcpy(mReceivedDataBuffer.get() + mReceivedDataBufferOffset,
-           &aMessage->mData[headerStartIndex],
-           receivedLength - headerStartIndex);
-
-    mPacketLeftLength -= receivedLength;
-    mReceivedDataBufferOffset += receivedLength - headerStartIndex;
-    if (mPacketLeftLength) {
+    if (!ComposePacket(opCode, aMessage)) {
       return;
     }
 
     // A Put packet is received completely
-    ParseHeaders(mReceivedDataBuffer.get(),
-                 mReceivedDataBufferOffset,
-                 &pktHeaders);
+    ParseHeaders(mReceivedDataBuffer.get(), mPacketReceivedLength, &pktHeaders);
     ExtractPacketHeaders(pktHeaders);
     ValidateFileName();
 
-    mReceivedDataBufferOffset = 0;
+    mPacketReceivedLength = 0;
 
     // When we cancel the transfer, delete the file and notify completion
     if (mAbortFlag) {
@@ -917,16 +933,7 @@ BluetoothOppManager::ClientDataHandler(UnixSocketRawData* aMessage)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  uint8_t opCode;
-  int packetLength;
-
-  if (mPacketLeftLength > 0) {
-    opCode = mPutFinalFlag ? ObexRequestCode::PutFinal : ObexRequestCode::Put;
-    packetLength = mPacketLeftLength;
-  } else {
-    opCode = aMessage->mData[0];
-    packetLength = (((int)aMessage->mData[1]) << 8) | aMessage->mData[2];
-  }
+  uint8_t opCode = aMessage->mData[0];
 
   // Check response code and send out system message as finished if the response
   // code is somehow incorrect.

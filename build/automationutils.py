@@ -400,7 +400,7 @@ def systemMemory():
   """
   return int(os.popen("free").readlines()[1].split()[1])
 
-def environment(xrePath, env=None, crashreporter=True, debugger=False):
+def environment(xrePath, env=None, crashreporter=True, debugger=False, dmdPath=None):
   """populate OS environment variables for mochitest"""
 
   env = os.environ.copy() if env is None else env
@@ -410,18 +410,30 @@ def environment(xrePath, env=None, crashreporter=True, debugger=False):
   ldLibraryPath = xrePath
 
   envVar = None
+  dmdLibrary = None
+  preloadEnvVar = None
   if mozinfo.isUnix:
     envVar = "LD_LIBRARY_PATH"
     env['MOZILLA_FIVE_HOME'] = xrePath
+    dmdLibrary = "libdmd.so"
+    preloadEnvVar = "LD_PRELOAD"
   elif mozinfo.isMac:
     envVar = "DYLD_LIBRARY_PATH"
+    dmdLibrary = "libdmd.dylib"
+    preloadEnvVar = "DYLD_INSERT_LIBRARIES"
   elif mozinfo.isWin:
     envVar = "PATH"
+    dmdLibrary = "dmd.dll"
+    preloadEnvVar = "MOZ_REPLACE_MALLOC_LIB"
   if envVar:
     envValue = ((env.get(envVar), str(ldLibraryPath))
                 if mozinfo.isWin
-                else (ldLibraryPath, env.get(envVar)))
+                else (ldLibraryPath, dmdPath, env.get(envVar)))
     env[envVar] = os.path.pathsep.join([path for path in envValue if path])
+
+  if dmdPath and dmdLibrary and preloadEnvVar:
+    env['DMD'] = '1'
+    env[preloadEnvVar] = os.path.join(dmdPath, dmdLibrary)
 
   # crashreporter
   env['GNOME_DISABLE_CRASH_DIALOG'] = '1'

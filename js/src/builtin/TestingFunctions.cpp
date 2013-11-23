@@ -251,7 +251,7 @@ MinorGC(JSContext *cx, unsigned argc, jsval *vp)
     if (args.get(0) == BooleanValue(true))
         cx->runtime()->gcStoreBuffer.setAboutToOverflow();
 
-    MinorGC(cx->runtime(), gcreason::API);
+    MinorGC(cx, gcreason::API);
 #endif
     return true;
 }

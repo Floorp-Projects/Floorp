@@ -25,10 +25,15 @@ elif toolkit == 'android':
 
 UNIFIED_SOURCES += [
     'EXIF.cpp',
-    'nsBMPDecoder.cpp',
     'nsGIFDecoder2.cpp',
     'nsICODecoder.cpp',
     'nsIconDecoder.cpp',
+]
+
+# These files cannot be built in unified mode because they want to force NSPR
+# logging.
+SOURCES += [
+    'nsBMPDecoder.cpp',
     'nsJPEGDecoder.cpp',
     'nsPNGDecoder.cpp',
 ]

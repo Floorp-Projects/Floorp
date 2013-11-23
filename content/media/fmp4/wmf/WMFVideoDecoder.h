@@ -68,7 +68,6 @@ private:
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
 
   const bool mDXVAEnabled;
-  const bool mIsRunningOnVista;
   bool mUseHwAccel;
 };
 
