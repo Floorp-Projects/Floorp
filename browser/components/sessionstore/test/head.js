@@ -183,7 +183,7 @@ function waitForTabState(aTab, aState, aCallback) {
 /**
  * Wait for a content -> chrome message.
  */
-function promiseContentMessage(browser, name, timeout = 1000) {
+function promiseContentMessage(browser, name) {
   let deferred = Promise.defer();
   let mm = browser.messageManager;
 
@@ -191,23 +191,13 @@ function promiseContentMessage(browser, name, timeout = 1000) {
     mm.removeMessageListener(name, listener);
   }
 
-  let timeoutID = setTimeout(function () {
-    removeListener();
-    deferred.resolve(false);
-  }, timeout);
-
   function listener(msg) {
     removeListener();
-    clearTimeout(timeoutID);
     deferred.resolve(msg);
   }
 
-  registerCleanupFunction(function() {
-    removeListener();
-    clearTimeout(timeoutID);
-  });
-
   mm.addMessageListener(name, listener);
+  registerCleanupFunction(removeListener);
   return deferred.promise;
 }
 
