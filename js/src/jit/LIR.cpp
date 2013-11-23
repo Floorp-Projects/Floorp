@@ -55,12 +55,6 @@ LIRGraph::removeBlock(size_t i)
     blocks_.erase(blocks_.begin() + i);
 }
 
-Label *
-LBlock::label()
-{
-    return begin()->toLabel()->label();
-}
-
 uint32_t
 LBlock::firstId()
 {
