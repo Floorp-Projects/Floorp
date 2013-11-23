@@ -63,7 +63,6 @@ CustomizeMode.prototype = {
   _dragOverItem: null,
   _customizing: false,
   _skipSourceNodeCheck: null,
-  _mainViewContext: null,
 
   get panelUIContents() {
     return this.document.getElementById("PanelUI-contents");
@@ -131,8 +130,7 @@ CustomizeMode.prototype = {
       // Move the mainView in the panel to the holder so that we can see it
       // while customizing.
       let panelHolder = document.getElementById("customization-panelHolder");
-      let mainView = window.PanelUI.mainView;
-      panelHolder.appendChild(mainView);
+      panelHolder.appendChild(window.PanelUI.mainView);
 
       this._transitioning = true;
 
@@ -152,17 +150,13 @@ CustomizeMode.prototype = {
       // endBatchUpdate.
       yield window.PanelUI.ensureReady(true);
 
-      this._mainViewContext = mainView.getAttribute("context");
-      if (this._mainViewContext) {
-        mainView.removeAttribute("context");
-      }
-
       this._showPanelCustomizationPlaceholders();
       CustomizableUI.addListener(this);
 
       yield this._wrapToolbarItems();
       yield this.populatePalette();
 
+      window.PanelUI.mainView.addEventListener("contextmenu", this, true);
       this.visiblePalette.addEventListener("dragstart", this, true);
       this.visiblePalette.addEventListener("dragover", this, true);
       this.visiblePalette.addEventListener("dragexit", this, true);
@@ -224,6 +218,7 @@ CustomizeMode.prototype = {
       window.gNavToolbox.removeEventListener("toolbarvisibilitychange", this);
 
       DragPositionManager.stop();
+      window.PanelUI.mainView.removeEventListener("contextmenu", this, true);
       this.visiblePalette.removeEventListener("dragstart", this, true);
       this.visiblePalette.removeEventListener("dragover", this, true);
       this.visiblePalette.removeEventListener("dragexit", this, true);
@@ -260,11 +255,6 @@ CustomizeMode.prototype = {
       // or the TabSelect event handler will think that we are exiting
       // customization mode for a second time.
       this._customizing = false;
-
-      let mainView = window.PanelUI.mainView;
-      if (this._mainViewContext) {
-        mainView.setAttribute("context", this._mainViewContext);
-      }
 
       if (this.browser.selectedBrowser.currentURI.spec == kAboutURI) {
         let custBrowser = this.browser.selectedBrowser;
@@ -360,23 +350,10 @@ CustomizeMode.prototype = {
   },
 
   addToToolbar: function(aNode) {
-    if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
-      aNode = aNode.firstChild;
-    }
     CustomizableUI.addWidgetToArea(aNode.id, CustomizableUI.AREA_NAVBAR);
   },
 
-  addToPanel: function(aNode) {
-    if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
-      aNode = aNode.firstChild;
-    }
-    CustomizableUI.addWidgetToArea(aNode.id, CustomizableUI.AREA_PANEL);
-  },
-
-  removeFromArea: function(aNode) {
-    if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
-      aNode = aNode.firstChild;
-    }
+  removeFromPanel: function(aNode) {
     CustomizableUI.removeWidgetFromArea(aNode.id);
   },
 
@@ -512,24 +489,6 @@ CustomizeMode.prototype = {
       wrapper.setAttribute("flex", aNode.getAttribute("flex"));
     }
 
-
-    const kPanelItemContextMenu = "customizationPanelItemContextMenu";
-    const kPaletteItemContextMenu = "customizationPaletteItemContextMenu";
-    let contextMenuAttrName = aNode.getAttribute("context") ? "context" :
-                                aNode.getAttribute("contextmenu") ? "contextmenu" : "";
-    let currentContextMenu = aNode.getAttribute(contextMenuAttrName);
-    let contextMenuForPlace = aPlace == "panel" ?
-                                kPanelItemContextMenu :
-                                kPaletteItemContextMenu;
-    if (aPlace != "toolbar") {
-      wrapper.setAttribute("context", contextMenuForPlace);
-    }
-    if (currentContextMenu) {
-      aNode.setAttribute("wrapped-context", currentContextMenu);
-      aNode.setAttribute("wrapped-contextAttrName", contextMenuAttrName)
-      aNode.removeAttribute(contextMenuAttrName);
-    }
-
     wrapper.addEventListener("mousedown", this);
     wrapper.addEventListener("mouseup", this);
 
@@ -573,14 +532,6 @@ CustomizeMode.prototype = {
       }
     }
 
-    let wrappedContext = toolbarItem.getAttribute("wrapped-context");
-    if (wrappedContext) {
-      let contextAttrName = toolbarItem.getAttribute("wrapped-contextAttrName");
-      toolbarItem.setAttribute(contextAttrName, wrappedContext);
-      toolbarItem.removeAttribute("wrapped-contextAttrName");
-      toolbarItem.removeAttribute("wrapped-context");
-    }
-
     if (aWrapper.parentNode) {
       aWrapper.parentNode.replaceChild(toolbarItem, aWrapper);
     }
@@ -601,7 +552,7 @@ CustomizeMode.prototype = {
         target.addEventListener("dragend", this, true);
         for (let child of target.children) {
           if (this.isCustomizableItem(child)) {
-            yield this.deferredWrapToolbarItem(child, CustomizableUI.getPlaceForItem(child));
+            yield this.deferredWrapToolbarItem(child, getPlaceForItem(child));
           }
         }
         this.areas.push(target);
@@ -612,7 +563,7 @@ CustomizeMode.prototype = {
   _wrapItemsInArea: function(target) {
     for (let child of target.children) {
       if (this.isCustomizableItem(child)) {
-        this.wrapToolbarItem(child, CustomizableUI.getPlaceForItem(child));
+        this.wrapToolbarItem(child, getPlaceForItem(child));
       }
     }
   },
@@ -719,7 +670,7 @@ CustomizeMode.prototype = {
     }
     // If the node is still attached to the container, wrap it again:
     if (aNodeToChange.parentNode) {
-      let place = CustomizableUI.getPlaceForItem(aNodeToChange);
+      let place = getPlaceForItem(aNodeToChange);
       this.wrapToolbarItem(aNodeToChange, place);
       if (aSecondaryNode) {
         this.wrapToolbarItem(aSecondaryNode, place);
@@ -783,6 +734,10 @@ CustomizeMode.prototype = {
     switch(aEvent.type) {
       case "toolbarvisibilitychange":
         this._onToolbarVisibilityChange(aEvent);
+        break;
+      case "contextmenu":
+        aEvent.preventDefault();
+        aEvent.stopPropagation();
         break;
       case "dragstart":
         this._onDragStart(aEvent);
@@ -1348,9 +1303,6 @@ CustomizeMode.prototype = {
 
   _onMouseDown: function(aEvent) {
     LOG("_onMouseDown");
-    if (aEvent.button != 0) {
-      return;
-    }
     let doc = aEvent.target.ownerDocument;
     doc.documentElement.setAttribute("customizing-movingItem", true);
     let item = this._getWrapper(aEvent.target);
@@ -1361,9 +1313,6 @@ CustomizeMode.prototype = {
 
   _onMouseUp: function(aEvent) {
     LOG("_onMouseUp");
-    if (aEvent.button != 0) {
-      return;
-    }
     let doc = aEvent.target.ownerDocument;
     doc.documentElement.removeAttribute("customizing-movingItem");
     let item = this._getWrapper(aEvent.target);
@@ -1424,6 +1373,22 @@ CustomizeMode.prototype = {
     }
   }
 };
+
+function getPlaceForItem(aElement) {
+  let place;
+  let node = aElement;
+  while (node && !place) {
+    if (node.localName == "toolbar")
+      place = "toolbar";
+    else if (node.id == CustomizableUI.AREA_PANEL)
+      place = "panel";
+    else if (node.id == kPaletteId)
+      place = "palette";
+
+    node = node.parentNode;
+  }
+  return place;
+}
 
 function __dumpDragData(aEvent, caller) {
   if (!gDebug) {
