@@ -885,7 +885,7 @@ js_InitJSONClass(JSContext *cx, HandleObject obj)
     if (!JS_DefineFunctions(cx, JSON, json_static_methods))
         return nullptr;
 
-    global->markStandardClassInitializedNoProto(&JSONClass);
+    global->setConstructor(JSProto_JSON, ObjectValue(*JSON));
 
     return JSON;
 }
