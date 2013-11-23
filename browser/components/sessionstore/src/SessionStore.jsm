@@ -2626,15 +2626,6 @@ let SessionStoreInternal = {
       browser.setAttribute("pending", "true");
       tab.setAttribute("pending", "true");
 
-      if (tabData.entries.length == 0) {
-        // make sure to blank out this tab's content
-        // (just purging the tab's history won't be enough)
-        browser.loadURIWithFlags("about:blank",
-                                 Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
-                                 null, null, null);
-        continue;
-      }
-
       browser.stop(); // in case about:blank isn't done yet
 
       // wall-paper fix for bug 439675: make sure that the URL to be loaded
@@ -2793,7 +2784,7 @@ let SessionStoreInternal = {
     // identifier (corresponding to the SHEntry at activeIndex) below.
     browser.webNavigation.setCurrentURI(Utils.makeURI("about:blank"));
     // Attach data that will be restored on "load" event, after tab is restored.
-    if (activeIndex > -1) {
+    if (tabData.entries.length) {
       // restore those aspects of the currently active documents which are not
       // preserved in the plain history entries (mainly scroll state and text data)
       browser.__SS_restore_data = tabData.entries[activeIndex] || {};
@@ -2811,6 +2802,14 @@ let SessionStoreInternal = {
         // ignore page load errors
         didStartLoad = false;
       }
+    } else {
+      browser.__SS_restore_data = {};
+      browser.__SS_restore_pageStyle = "";
+      browser.__SS_restore_tab = aTab;
+      browser.loadURIWithFlags("about:blank",
+                               Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
+                               null, null, null);
+      didStartLoad = true;
     }
 
     // Handle userTypedValue. Setting userTypedValue seems to update gURLbar
