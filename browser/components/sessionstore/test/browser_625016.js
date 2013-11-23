@@ -40,16 +40,20 @@ function setup() {
 }
 
 function onSaveState() {
+  try {
+    ss.getWindowValue(newWin, "foobar");
+  } catch (e) {
+    // The window is untracked which means that the saveState() call isn't the
+    // one we're waiting for. It's most likely been triggered by an async
+    // collection running in the background.
+    waitForSaveState(onSaveState);
+    return;
+  }
+
   // Double check that we have no closed windows
   is(ss.getClosedWindowCount(), 0, "no closed windows on first save");
 
   Services.obs.addObserver(observe1, "sessionstore-state-write", false);
-
-  try {
-    ss.getWindowValue(newWin, "foobar");
-  } catch (e) {
-    ok(false, "window is untracked!");
-  }
 
   // Now close the new window, which should trigger another save event
   newWin.close();

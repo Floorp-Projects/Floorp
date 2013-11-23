@@ -110,6 +110,7 @@ struct LayerPropertiesBase : public LayerProperties
     : mLayer(aLayer)
     , mMaskLayer(nullptr)
     , mVisibleRegion(aLayer->GetVisibleRegion())
+    , mInvalidRegion(aLayer->GetInvalidRegion())
     , mTransform(aLayer->GetTransform())
     , mOpacity(aLayer->GetOpacity())
     , mUseClipRect(!!aLayer->GetClipRect())
@@ -201,6 +202,7 @@ struct LayerPropertiesBase : public LayerProperties
   nsRefPtr<Layer> mLayer;
   nsAutoPtr<LayerPropertiesBase> mMaskLayer;
   nsIntRegion mVisibleRegion;
+  nsIntRegion mInvalidRegion;
   gfx3DMatrix mTransform;
   float mOpacity;
   nsIntRect mClipRect;
@@ -320,7 +322,6 @@ struct ImageLayerProperties : public LayerPropertiesBase
 {
   ImageLayerProperties(ImageLayer* aImage)
     : LayerPropertiesBase(aImage)
-    , mVisibleRegion(aImage->GetVisibleRegion())
     , mContainer(aImage->GetContainer())
     , mFilter(aImage->GetFilter())
     , mScaleToSize(aImage->GetScaleToSize())
@@ -348,7 +349,6 @@ struct ImageLayerProperties : public LayerPropertiesBase
     return nsIntRect();
   }
 
-  nsIntRegion mVisibleRegion;
   nsRefPtr<ImageContainer> mContainer;
   GraphicsFilter mFilter;
   gfxIntSize mScaleToSize;

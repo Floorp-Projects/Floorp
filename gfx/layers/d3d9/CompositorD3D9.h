@@ -61,7 +61,8 @@ public:
                         gfx::Float aOpacity,
                         const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE;
 
-  virtual void BeginFrame(const gfx::Rect *aClipRectIn,
+  virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
+                          const gfx::Rect *aClipRectIn,
                           const gfxMatrix& aTransform,
                           const gfx::Rect& aRenderBounds,
                           gfx::Rect *aClipRectOut = nullptr,

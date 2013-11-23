@@ -88,6 +88,8 @@ public:
                                 SurfaceDescriptor* aOutSnapshot);
   virtual bool RecvFlushRendering() MOZ_OVERRIDE;
 
+  virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) MOZ_OVERRIDE;
+
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,

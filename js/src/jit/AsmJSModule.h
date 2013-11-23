@@ -346,7 +346,7 @@ class AsmJSModule
             JS_ASSERT(name->isTenured());
         }
 
-        ProfiledBlocksFunction(const ProfiledBlocksFunction &copy)
+        ProfiledBlocksFunction(ProfiledBlocksFunction &&copy)
           : ProfiledFunction(copy.name, copy.startCodeOffset, copy.endCodeOffset),
             endInlineCodeOffset(copy.endInlineCodeOffset), blocks(mozilla::Move(copy.blocks))
         { }
@@ -566,7 +566,7 @@ class AsmJSModule
     bool trackPerfProfiledBlocks(JSAtom *name, unsigned startCodeOffset, unsigned endInlineCodeOffset,
                                  unsigned endCodeOffset, jit::BasicBlocksVector &basicBlocks) {
         ProfiledBlocksFunction func(name, startCodeOffset, endInlineCodeOffset, endCodeOffset, basicBlocks);
-        return perfProfiledBlocksFunctions_.append(func);
+        return perfProfiledBlocksFunctions_.append(mozilla::Move(func));
     }
     unsigned numPerfBlocksFunctions() const {
         return perfProfiledBlocksFunctions_.length();

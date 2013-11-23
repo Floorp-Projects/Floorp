@@ -40,6 +40,9 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Services.h"
 #include "mozilla/TextEvents.h"
+#if ANDROID_VERSION >= 18
+#include "nativewindow/FakeSurfaceComposer.h"
+#endif
 #include "nsAppShell.h"
 #include "mozilla/dom/Touch.h"
 #include "nsGkAtoms.h"
@@ -748,11 +751,15 @@ nsAppShell::Init()
 
     InitGonkMemoryPressureMonitoring();
 
-#ifdef MOZ_OMX_DECODER
     if (XRE_GetProcessType() == GeckoProcessType_Default) {
-      android::MediaResourceManagerService::instantiate();
-    }
+#ifdef MOZ_OMX_DECODER
+        android::MediaResourceManagerService::instantiate();
 #endif
+#if ANDROID_VERSION >= 18
+        android::FakeSurfaceComposer::instantiate();
+#endif
+    }
+
     nsCOMPtr<nsIObserverService> obsServ = GetObserverService();
     if (obsServ) {
         obsServ->AddObserver(this, "browser-ui-startup-complete", false);

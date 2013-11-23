@@ -15,6 +15,7 @@
 #include "mozilla/layers/CompositorTypes.h"  // for DiagnosticTypes, etc
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "nsRegion.h"
 
 /**
  * Different elements of a web pages are rendered into separate "layers" before
@@ -291,16 +292,24 @@ public:
 
   /**
    * Start a new frame.
+   *
+   * aInvalidRect is the invalid region of the screen; it can be ignored for
+   * compositors where the performance for compositing the entire window is
+   * sufficient.
+   *
    * aClipRectIn is the clip rect for the window in window space (optional).
    * aTransform is the transform from user space to window space.
    * aRenderBounds bounding rect for rendering, in user space.
+   *
    * If aClipRectIn is null, this method sets *aClipRectOut to the clip rect
    * actually used for rendering (if aClipRectIn is non-null, we will use that
    * for the clip rect).
+   *
    * If aRenderBoundsOut is non-null, it will be set to the render bounds
    * actually used by the compositor in window space.
    */
-  virtual void BeginFrame(const gfx::Rect* aClipRectIn,
+  virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
+                          const gfx::Rect* aClipRectIn,
                           const gfxMatrix& aTransform,
                           const gfx::Rect& aRenderBounds,
                           gfx::Rect* aClipRectOut = nullptr,

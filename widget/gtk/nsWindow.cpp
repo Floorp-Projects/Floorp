@@ -1959,6 +1959,71 @@ gdk_window_flash(GdkWindow *    aGdkWindow,
 #endif // DEBUG
 #endif
 
+struct ExposeRegion
+{
+    nsIntRegion mRegion;
+
+#if (MOZ_WIDGET_GTK == 2)
+    GdkRectangle *mRects;
+    GdkRectangle *mRectsEnd;
+
+    ExposeRegion() : mRects(nullptr)
+    {
+    }
+    ~ExposeRegion()
+    {
+        g_free(mRects);
+    }
+    bool Init(GdkEventExpose *aEvent)
+    {
+        gint nrects;
+        gdk_region_get_rectangles(aEvent->region, &mRects, &nrects);
+
+        if (nrects > MAX_RECTS_IN_REGION) {
+            // Just use the bounding box
+            mRects[0] = aEvent->area;
+            nrects = 1;
+        }
+
+        mRectsEnd = mRects + nrects;
+
+        for (GdkRectangle *r = mRects; r < mRectsEnd; r++) {
+            mRegion.Or(mRegion, nsIntRect(r->x, r->y, r->width, r->height));
+            LOGDRAW(("\t%d %d %d %d\n", r->x, r->y, r->width, r->height));
+        }
+        return true;
+    }
+
+#else
+# ifdef cairo_copy_clip_rectangle_list
+#  error "Looks like we're including Mozilla's cairo instead of system cairo"
+# endif
+    cairo_rectangle_list_t *mRects;
+
+    ExposeRegion() : mRects(nullptr)
+    {
+    }
+    ~ExposeRegion()
+    {
+        cairo_rectangle_list_destroy(mRects);
+    }
+    bool Init(cairo_t* cr)
+    {
+        if (mRects->status != CAIRO_STATUS_SUCCESS) {
+            NS_WARNING("Failed to obtain cairo rectangle list.");
+            return false;
+        }
+
+        for (int i = 0; i < mRects->num_rectangles; i++)  {
+            const cairo_rectangle_t& r = mRects->rectangles[i];
+            mRegion.Or(mRegion, nsIntRect(r.x, r.y, r.width, r.height));
+            LOGDRAW(("\t%d %d %d %d\n", r.x, r.y, r.width, r.height));
+        }
+        return true;
+    }
+#endif
+};
+
 #if (MOZ_WIDGET_GTK == 2)
 gboolean
 nsWindow::OnExposeEvent(GdkEventExpose *aEvent)
@@ -1980,6 +2045,17 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     if (!listener)
         return FALSE;
 
+    ExposeRegion exposeRegion;
+#if (MOZ_WIDGET_GTK == 2)
+    if (!exposeRegion.Init(aEvent)) {
+#else
+    if (!exposeRegion.Init(cr)) {
+#endif
+        return FALSE;
+    }
+
+    nsIntRegion &region = exposeRegion.mRegion;
+
     ClientLayerManager *clientLayers =
         (GetLayerManager()->GetBackendType() == LAYERS_CLIENT)
         ? static_cast<ClientLayerManager*>(GetLayerManager())
@@ -1991,6 +2067,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         // We need to paint to the screen even if nothing changed, since if we
         // don't have a compositing window manager, our pixels could be stale.
         clientLayers->SetNeedsComposite(true);
+        clientLayers->SendInvalidRegion(region);
     }
 
     // Dispatch WillPaintWindow notification to allow scripts etc. to run
@@ -2016,51 +2093,9 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         clientLayers->SetNeedsComposite(false);
     }
 
-#if (MOZ_WIDGET_GTK == 2)
-    GdkRectangle *rects;
-    gint nrects;
-    gdk_region_get_rectangles(aEvent->region, &rects, &nrects);
-    if (MOZ_UNLIKELY(!rects)) // OOM
-        return FALSE;
-#else
-#ifdef cairo_copy_clip_rectangle_list
-#error "Looks like we're including Mozilla's cairo instead of system cairo"
-#else
-    cairo_rectangle_list_t *rects;
-    rects = cairo_copy_clip_rectangle_list(cr);  
-    if (MOZ_UNLIKELY(rects->status != CAIRO_STATUS_SUCCESS)) {
-       NS_WARNING("Failed to obtain cairo rectangle list.");
-       return FALSE;
-    }
-#endif
-#endif
-
-// GTK3 TODO?
-#if (MOZ_WIDGET_GTK == 2)
-    if (nrects > MAX_RECTS_IN_REGION) {
-        // Just use the bounding box
-        rects[0] = aEvent->area;
-        nrects = 1;
-    }
-#endif
-
     LOGDRAW(("sending expose event [%p] %p 0x%lx (rects follow):\n",
              (void *)this, (void *)mGdkWindow,
              gdk_x11_window_get_xid(mGdkWindow)));
-
-    nsIntRegion region;
-  
-#if (MOZ_WIDGET_GTK == 2)
-    GdkRectangle *r = rects;
-    GdkRectangle *r_end = rects + nrects;
-#else
-    cairo_rectangle_t *r = rects->rectangles;
-    cairo_rectangle_t *r_end = r + rects->num_rectangles;
-#endif
-    for (; r < r_end; ++r) {
-        region.Or(region, nsIntRect(r->x, r->y, r->width, r->height));
-        LOGDRAW(("\t%d %d %d %d\n", r->x, r->y, r->width, r->height));
-    }
 
     // Our bounds may have changed after calling WillPaintWindow.  Clip
     // to the new bounds here.  The region is relative to this
@@ -2103,19 +2138,13 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     }
 
     if (region.IsEmpty()) {
-#if (MOZ_WIDGET_GTK == 2)
-        g_free(rects);
-#else
-        cairo_rectangle_list_destroy(rects);
-#endif
         return TRUE;
     }
+
     // If this widget uses OMTC...
     if (GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
         listener->PaintWindow(this, region);
         listener->DidPaintWindow();
-
-        g_free(rects);
         return TRUE;
     } else if (GetLayerManager()->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {
         LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
@@ -2123,8 +2152,6 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
         listener->PaintWindow(this, region);
         listener->DidPaintWindow();
-
-        g_free(rects);
         return TRUE;
     }
 
@@ -2227,19 +2254,13 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 #  ifdef MOZ_HAVE_SHMIMAGE
     if (nsShmImage::UseShm() && MOZ_LIKELY(!mIsDestroyed)) {
 #if (MOZ_WIDGET_GTK == 2)
-        mShmImage->Put(mGdkWindow, rects, r_end);
+        mShmImage->Put(mGdkWindow, exposeRegion.mRects, exposeRegion.mRectsEnd);
 #else
-        mShmImage->Put(mGdkWindow, rects);
+        mShmImage->Put(mGdkWindow, exposeRegion.mRects);
 #endif
     }
 #  endif  // MOZ_HAVE_SHMIMAGE
 #endif // MOZ_X11
-
-#if (MOZ_WIDGET_GTK == 2)
-    g_free(rects);
-#else
-    cairo_rectangle_list_destroy(rects);
-#endif
 
     listener->DidPaintWindow();
 
@@ -5971,7 +5992,6 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
 }
 #endif
 
-#if (MOZ_WIDGET_GTK == 2)
 TemporaryRef<DrawTarget>
 nsWindow::StartRemoteDrawing()
 {
@@ -5987,7 +6007,6 @@ nsWindow::StartRemoteDrawing()
 
   return gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf, size);
 }
-#endif
 
 // return the gfxASurface for rendering to this widget
 gfxASurface*

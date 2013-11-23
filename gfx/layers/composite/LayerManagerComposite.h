@@ -28,6 +28,7 @@
 #include "nsRect.h"                     // for nsIntRect
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nscore.h"                     // for nsAString, etc
+#include "LayerTreeInvalidation.h"
 
 class gfxASurface;
 class gfxContext;
@@ -228,6 +229,11 @@ public:
 
   void SetCompositorID(uint32_t aID);
 
+  void AddInvalidRegion(const nsIntRegion& aRegion)
+  {
+    mInvalidRegion.Or(mInvalidRegion, aRegion);
+  }
+
   Compositor* GetCompositor() const
   {
     return mCompositor;
@@ -275,7 +281,10 @@ private:
   DrawThebesLayerCallback mThebesLayerCallback;
   void *mThebesLayerCallbackData;
   gfxMatrix mWorldMatrix;
+
   bool mInTransaction;
+  nsIntRegion mInvalidRegion;
+  nsAutoPtr<LayerProperties> mClonedLayerTreeProperties;
 };
 
 /**

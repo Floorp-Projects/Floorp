@@ -284,6 +284,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         layer->SetMaskLayer(nullptr);
       }
       layer->SetAnimations(common.animations());
+      layer->SetInvalidRegion(common.invalidRegion());
 
       typedef SpecificLayerAttributes Specific;
       const SpecificLayerAttributes& specific = attrs.specific();

@@ -25,6 +25,17 @@
 #include "nsStaticAtom.h"
 #include "nsCOMPtr.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
+#ifdef XP_WIN
+#include <windows.h>
+#include <process.h>
+#define getpid() _getpid()
+#define pthread_self() GetCurrentThreadId()
+#else
+#include <pthread.h>
+#include <unistd.h>
+#endif
+
 using mozilla::Atomic;
 
 // ---------------------------------------------------------------------------
@@ -66,6 +77,8 @@ class nsStringStats
             printf("  --  LEAKED %d !!!\n", mAdoptCount - mAdoptFreeCount);
           else
             printf("\n");
+          printf(" => Process ID: %" PRIuPTR ", Thread ID: %" PRIuPTR "\n",
+                 uintptr_t(getpid()), uintptr_t(pthread_self()));
         }
 
       Atomic<int32_t> mAllocCount;

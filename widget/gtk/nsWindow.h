@@ -197,9 +197,7 @@ public:
                                                guint            aTime,
                                                gpointer         aData);
 
-#if (MOZ_WIDGET_GTK == 2)
   mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() MOZ_OVERRIDE;
-#endif
 
 private:
     void               UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect);

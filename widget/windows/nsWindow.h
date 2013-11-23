@@ -528,6 +528,8 @@ protected:
   HDC                   mPaintDC; // only set during painting
   HDC                   mCompositeDC; // only set during StartRemoteDrawing
 
+  nsIntRect             mLastPaintBounds;
+
 #ifdef CAIRO_HAS_D2D_SURFACE
   nsRefPtr<gfxD2DSurface>    mD2DWindowSurface; // Surface for this window.
 #endif

@@ -545,10 +545,11 @@ nsWindow::GetDefaultScaleInternal()
     if (dpi < 200.0) {
         return 1.0; // mdpi devices.
     }
-    if (dpi < 280.0) {
+    if (dpi < 300.0) {
         return 1.5; // hdpi devices.
     }
-    return 2.0; // xhdpi devices.
+    // xhdpi devices and beyond.
+    return floor(dpi / 150.0);
 }
 
 LayerManager *
