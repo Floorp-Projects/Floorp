@@ -191,20 +191,20 @@ function promiseContentMessage(browser, name, timeout = 1000) {
     mm.removeMessageListener(name, listener);
   }
 
-  let timeout = setTimeout(function () {
+  let timeoutID = setTimeout(function () {
     removeListener();
     deferred.resolve(false);
   }, timeout);
 
   function listener(msg) {
     removeListener();
-    clearTimeout(timeout);
+    clearTimeout(timeoutID);
     deferred.resolve(msg);
   }
 
   registerCleanupFunction(function() {
     removeListener();
-    clearTimeout(timeout);
+    clearTimeout(timeoutID);
   });
 
   mm.addMessageListener(name, listener);
