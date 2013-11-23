@@ -12,8 +12,7 @@ function test() {
   let testUrl = rootDir + "browser_408470_sample.html";
   let tab = gBrowser.addTab(testUrl);
 
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+  whenBrowserLoaded(tab.linkedBrowser, function() {
     // enable all stylesheets and verify that they're correctly persisted
     Array.forEach(tab.linkedBrowser.contentDocument.styleSheets, function(aSS, aIx) {
       pendingCount++;
@@ -21,8 +20,7 @@ function test() {
       gPageStyleMenu.switchStyleSheet(ssTitle, tab.linkedBrowser.contentWindow);
 
       let newTab = gBrowser.duplicateTab(tab);
-      newTab.linkedBrowser.addEventListener("load", function(aEvent) {
-        newTab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+      whenTabRestored(newTab, function() {
         let states = Array.map(newTab.linkedBrowser.contentDocument.styleSheets,
                                function(aSS) !aSS.disabled);
         let correct = states.indexOf(true) == aIx && states.indexOf(true, aIx + 1) == -1;
@@ -35,22 +33,21 @@ function test() {
         gBrowser.removeTab(newTab);
         if (--pendingCount == 0)
           finish();
-      }, true);
+      });
     });
 
     // disable all styles and verify that this is correctly persisted
     tab.linkedBrowser.markupDocumentViewer.authorStyleDisabled = true;
     let newTab = gBrowser.duplicateTab(tab);
-    newTab.linkedBrowser.addEventListener("load", function(aEvent) {
-      newTab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+    whenTabRestored(newTab, function() {
       is(newTab.linkedBrowser.markupDocumentViewer.authorStyleDisabled, true,
          "disabled all stylesheets");
 
       gBrowser.removeTab(newTab);
       if (--pendingCount == 0)
         finish();
-    }, true);
+    });
 
     gBrowser.removeTab(tab);
-  }, true);
+  });
 }
