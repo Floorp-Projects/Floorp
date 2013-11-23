@@ -4,19 +4,15 @@
 
 package org.mozilla.gecko.annotationProcessors;
 
-import java.lang.reflect.Method;
-
 /**
- * Object holding method and annotation. Used by GeneratableEntryPointIterator.
+ * Object holding annotation data. Used by GeneratableElementIterator.
  */
-public class MethodWithAnnotationInfo {
-    public final Method method;
+public class AnnotationInfo {
     public final String wrapperName;
     public final boolean isStatic;
     public final boolean isMultithreaded;
 
-    public MethodWithAnnotationInfo(Method aMethod, String aWrapperName, boolean aIsStatic, boolean aIsMultithreaded) {
-        method = aMethod;
+    public AnnotationInfo(String aWrapperName, boolean aIsStatic, boolean aIsMultithreaded) {
         wrapperName = aWrapperName;
         isStatic = aIsStatic;
         isMultithreaded = aIsMultithreaded;

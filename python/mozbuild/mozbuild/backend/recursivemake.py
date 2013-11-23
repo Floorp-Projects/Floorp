@@ -353,18 +353,24 @@ class RecursiveMakeBackend(CommonBackend):
                 UNIFIED_CMMSRCS='mm',
                 UNIFIED_CPPSRCS='cpp',
             )
+            do_unify = not self.environment.substs.get(
+                'MOZ_DISABLE_UNIFIED_COMPILATION')
             # Sorted so output is consistent and we don't bump mtimes.
             for k, v in sorted(obj.variables.items()):
-                if k in unified_suffixes.keys():
-                    self._add_unified_build_rules(backend_file, v,
-                                      backend_file.objdir,
-                                      unified_prefix='Unified_%s_%s' %
-                                      (unified_suffixes[k],
-                                      backend_file.relobjdir.replace('/', '_')),
-                                      unified_suffix=unified_suffixes[k],
-                                      unified_files_makefile_variable=k,
-                                      include_curdir_build_rules=False)
-                    backend_file.write('%s += $(%s)\n' % (k[len('UNIFIED_'):], k))
+                if k in unified_suffixes:
+                    if do_unify:
+                        self._add_unified_build_rules(backend_file, v,
+                            backend_file.objdir,
+                            unified_prefix='Unified_%s_%s' % (
+                                unified_suffixes[k],
+                                backend_file.relobjdir.replace('/', '_')),
+                            unified_suffix=unified_suffixes[k],
+                            unified_files_makefile_variable=k,
+                            include_curdir_build_rules=False)
+                        backend_file.write('%s += $(%s)\n' % (k[len('UNIFIED_'):], k))
+                    else:
+                        backend_file.write('%s += %s\n' % (
+                            k[len('UNIFIED_'):], ' '.join(sorted(v))))
                 elif isinstance(v, list):
                     for item in v:
                         backend_file.write('%s += %s\n' % (k, item))
