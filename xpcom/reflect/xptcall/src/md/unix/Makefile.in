@@ -164,6 +164,10 @@ xptcstubsdef_asm.solx86: $(DIST)/include/xptcstubsdef.inc
 	$(DIST)/include/xptcstubsdef.inc > $@
 ifeq (x86_64,$(OS_TEST))
 ASFLAGS += -xarch=amd64
+
+xptcstubs_asm_x86_64_solaris_SUNW.$(OBJ_SUFFIX): xptcstubsdef_asm.solx86
+else
+xptcstubs_asm_x86_solaris_SUNW.$(OBJ_SUFFIX): xptcstubsdef_asm.solx86
 endif
 
 endif

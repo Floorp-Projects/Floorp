@@ -5789,7 +5789,7 @@ class MArrayPopShift
 // Array.prototype.push on a dense array. Returns the new array length.
 class MArrayPush
   : public MBinaryInstruction,
-    public SingleObjectPolicy
+    public MixPolicy<SingleObjectPolicy, NoFloatPolicy<1> >
 {
     MArrayPush(MDefinition *object, MDefinition *value)
       : MBinaryInstruction(object, value)

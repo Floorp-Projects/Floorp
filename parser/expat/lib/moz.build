@@ -18,7 +18,3 @@ SOURCES += [
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gkmedias'
-
-GENERATED_FILES = [
-    'moz_extensions.c',
-]

@@ -434,7 +434,7 @@ class RelocatablePtr : public BarrieredPtr<T>
 
     ~RelocatablePtr() {
         if (this->value)
-            relocate(this->value->runtimeFromAnyThread());
+            relocate();
     }
 
     RelocatablePtr<T> &operator=(T *v) {
@@ -444,9 +444,8 @@ class RelocatablePtr : public BarrieredPtr<T>
             this->value = v;
             post();
         } else if (this->value) {
-            JSRuntime *rt = this->value->runtimeFromAnyThread();
+            relocate();
             this->value = v;
-            relocate(rt);
         }
         return *this;
     }
@@ -458,9 +457,8 @@ class RelocatablePtr : public BarrieredPtr<T>
             this->value = v.value;
             post();
         } else if (this->value) {
-            JSRuntime *rt = this->value->runtimeFromAnyThread();
+            relocate();
             this->value = v;
-            relocate(rt);
         }
         return *this;
     }
@@ -473,8 +471,9 @@ class RelocatablePtr : public BarrieredPtr<T>
 #endif
     }
 
-    void relocate(JSRuntime *rt) {
+    void relocate() {
 #ifdef JSGC_GENERATIONAL
+        JS_ASSERT(this->value);
         T::writeBarrierPostRemove(this->value, &this->value);
 #endif
     }

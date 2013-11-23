@@ -82,6 +82,10 @@ using namespace mozilla;
 
 PRLogModuleInfo* nsComponentManagerLog = nullptr;
 
+// defined in nsStaticXULComponents.cpp to contain all the components in
+// libxul.
+extern mozilla::Module const *const *const kPStaticModules[];
+
 #if 0 || defined (DEBUG_timeless)
  #define SHOW_DENIED_ON_SHUTDOWN
  #define SHOW_CI_ON_EXISTING_SERVICE
@@ -321,15 +325,6 @@ nsComponentManagerImpl::nsComponentManagerImpl()
 
 nsTArray<const mozilla::Module*>* nsComponentManagerImpl::sStaticModules;
 
-NSMODULE_DEFN(start_kPStaticModules);
-NSMODULE_DEFN(end_kPStaticModules);
-
-/* The content between start_kPStaticModules and end_kPStaticModules is gathered
- * by the linker from various objects containing symbols in a specific section.
- * ASAN considers (rightfully) the use of this content as a global buffer
- * overflow. But this is a deliberate and well-considered choice, with no proper
- * way to make ASAN happy. */
-MOZ_ASAN_BLACKLIST
 /* static */ void
 nsComponentManagerImpl::InitializeStaticModules()
 {
@@ -337,10 +332,9 @@ nsComponentManagerImpl::InitializeStaticModules()
         return;
 
     sStaticModules = new nsTArray<const mozilla::Module*>;
-    for (const mozilla::Module *const *staticModules = &NSMODULE_NAME(start_kPStaticModules) + 1;
-         staticModules < &NSMODULE_NAME(end_kPStaticModules); ++staticModules)
-        if (*staticModules) // ASAN adds padding
-            sStaticModules->AppendElement(*staticModules);
+    for (const mozilla::Module *const *const *staticModules = kPStaticModules;
+         *staticModules; ++staticModules)
+        sStaticModules->AppendElement(**staticModules);
 }
 
 nsTArray<nsComponentManagerImpl::ComponentLocation>*
