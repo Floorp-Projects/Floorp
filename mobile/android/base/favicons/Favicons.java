@@ -5,8 +5,7 @@
 
 package org.mozilla.gecko.favicons;
 
-import android.graphics.BitmapFactory;
-import android.text.TextUtils;
+import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -17,7 +16,9 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.v4.util.LruCache;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.net.URI;
@@ -350,7 +351,7 @@ public class Favicons {
         // is bundled in the database, keyed only by page URL, hence the need to return the page URL
         // here. If the database ever migrates to stop being silly in this way, this can plausibly
         // be removed.
-        if (pageURL.startsWith("about:") || pageURL.startsWith("jar:")) {
+        if (AboutPages.isAboutPage(pageURL) || pageURL.startsWith("jar:")) {
             return pageURL;
         }
 

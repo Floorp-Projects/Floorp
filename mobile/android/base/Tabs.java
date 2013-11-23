@@ -307,8 +307,9 @@ public class Tabs implements GeckoEventListener {
         int tabId = tab.getId();
         removeTab(tabId);
 
-        if (nextTab == null)
-            nextTab = loadUrl("about:home", LOADURL_NEW_TAB);
+        if (nextTab == null) {
+            nextTab = loadUrl(AboutPages.HOME, LOADURL_NEW_TAB);
+        }
 
         selectTab(nextTab.getId());
 
@@ -634,7 +635,7 @@ public class Tabs implements GeckoEventListener {
     public int getTabIdForUrl(String url, boolean isPrivate) {
         for (Tab tab : mOrder) {
             String tabUrl = tab.getURL();
-            if (ReaderModeUtils.isAboutReader(tabUrl)) {
+            if (AboutPages.isAboutReader(tabUrl)) {
                 tabUrl = ReaderModeUtils.getUrlFromAboutReader(tabUrl);
             }
             if (TextUtils.equals(tabUrl, url) && isPrivate == tab.isPrivate()) {

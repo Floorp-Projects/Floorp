@@ -21,6 +21,7 @@
 #include <wrl/wrappers/corewrappers.h>
 #include <windows.ui.applicationsettings.h>
 #include <windows.graphics.display.h>
+#include "DisplayInfo_sdk81.h"
 
 using namespace ABI::Windows::UI::ApplicationSettings;
 
@@ -35,6 +36,18 @@ using namespace ABI::Windows::Graphics::Display;
 // File-scoped statics (unnamed namespace)
 namespace {
   FLOAT LogToPhysFactor() {
+    ComPtr<IDisplayInformationStatics> dispInfoStatics;
+    if (SUCCEEDED(GetActivationFactory(HStringReference(RuntimeClass_Windows_Graphics_Display_DisplayInformation).Get(),
+                                       dispInfoStatics.GetAddressOf()))) {
+      ComPtr<IDisplayInformation> dispInfo;
+      if (SUCCEEDED(dispInfoStatics->GetForCurrentView(&dispInfo))) {
+        FLOAT dpi;
+        if (SUCCEEDED(dispInfo->get_LogicalDpi(&dpi))) {
+          return dpi / 96.0f;
+        }
+      }
+    }
+
     ComPtr<IDisplayPropertiesStatics> dispProps;
     if (SUCCEEDED(GetActivationFactory(HStringReference(RuntimeClass_Windows_Graphics_Display_DisplayProperties).Get(),
                                        dispProps.GetAddressOf()))) {
@@ -43,19 +56,12 @@ namespace {
         return dpi / 96.0f;
       }
     }
+
     return 1.0f;
   }
 
   FLOAT PhysToLogFactor() {
-    ComPtr<IDisplayPropertiesStatics> dispProps;
-    if (SUCCEEDED(GetActivationFactory(HStringReference(RuntimeClass_Windows_Graphics_Display_DisplayProperties).Get(),
-                                       dispProps.GetAddressOf()))) {
-      FLOAT dpi;
-      if (SUCCEEDED(dispProps->get_LogicalDpi(&dpi))) {
-        return 96.0f / dpi;
-      }
-    }
-    return 1.0f;
+    return 1.0f / LogToPhysFactor();
   }
 };
 

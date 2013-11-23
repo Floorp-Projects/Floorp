@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.db;
 
+import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
@@ -250,7 +251,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                                              Combined.HISTORY_ID },
                               "",
                               limit,
-                              BrowserDB.ABOUT_PAGES_URL_FILTER,
+                              AboutPages.URL_FILTER,
                               selection,
                               selectionArgs);
     }
