@@ -13,11 +13,11 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.cache.FaviconCache;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.NonEvictingLruCache;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.support.v4.util.LruCache;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -36,7 +36,7 @@ public class Favicons {
     public static final int FAVICON_CACHE_SIZE_BYTES = 512 * 1024;
 
     // Number of URL mappings from page URL to Favicon URL to cache in memory.
-    public static final int PAGE_URL_MAPPINGS_TO_STORE = 128;
+    public static final int NUM_PAGE_URL_MAPPINGS_TO_STORE = 128;
 
     public static final int NOT_LOADING  = 0;
     public static final int LOADED       = 1;
@@ -55,7 +55,7 @@ public class Favicons {
 
     // Cache to hold mappings between page URLs and Favicon URLs. Used to avoid going to the DB when
     // doing so is not necessary.
-    private static final LruCache<String, String> sPageURLMappings = new LruCache<String, String>(PAGE_URL_MAPPINGS_TO_STORE);
+    private static final NonEvictingLruCache<String, String> sPageURLMappings = new NonEvictingLruCache<String, String>(NUM_PAGE_URL_MAPPINGS_TO_STORE);
 
     public static String getFaviconURLForPageURLFromCache(String pageURL) {
         return sPageURLMappings.get(pageURL);
