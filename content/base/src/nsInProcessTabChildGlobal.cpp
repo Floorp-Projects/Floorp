@@ -337,7 +337,7 @@ class nsAsyncScriptLoad : public nsRunnable
 public:
     nsAsyncScriptLoad(nsInProcessTabChildGlobal* aTabChild, const nsAString& aURL,
                       bool aRunInGlobalScope)
-    : mTabChild(aTabChild), mURL(aURL), mRunInGlobalScope(aRunInGlobalScope) {}
+      : mTabChild(aTabChild), mURL(aURL), mRunInGlobalScope(aRunInGlobalScope) {}
 
   NS_IMETHOD Run()
   {
