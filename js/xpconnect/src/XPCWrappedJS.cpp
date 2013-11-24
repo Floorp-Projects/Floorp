@@ -415,7 +415,7 @@ nsXPCWrappedJS::Unlink()
     NS_IF_RELEASE(mClass);
     if (mOuter) {
         XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-        if (rt->GetThreadRunningGC()) {
+        if (rt->GCIsRunning()) {
             nsContentUtils::DeferredFinalize(mOuter);
             mOuter = nullptr;
         } else {
