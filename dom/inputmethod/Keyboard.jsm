@@ -85,7 +85,7 @@ this.Keyboard = {
     // won't happen from dom/ipc/preload.js
     try {
       if (Services.prefs.getBoolPref("dom.ipc.tabs.disabled") === true) {
-        mm.loadFrameScript(kFormsFrameScript, true, true);
+        mm.loadFrameScript(kFormsFrameScript, true);
       }
     } catch (e) {
       dump('Error loading ' + kFormsFrameScript + ' as frame script: ' + e + '\n');
