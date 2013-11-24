@@ -1645,3 +1645,7 @@ SpecialPowersAPI.prototype = {
     this._sendSyncMessage('SPObserverService', msg);
   },
 };
+
+this.SpecialPowersAPI = SpecialPowersAPI;
+this.bindDOMWindowUtils = bindDOMWindowUtils;
+this.getRawComponents = getRawComponents;
