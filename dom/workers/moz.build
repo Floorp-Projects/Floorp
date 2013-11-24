@@ -8,7 +8,6 @@ TEST_DIRS += ['test']
 
 # Public stuff.
 EXPORTS.mozilla.dom += [
-    'RuntimeService.h',
     'WorkerPrivate.h',
     'WorkerScope.h',
 ]

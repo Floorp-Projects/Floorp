@@ -20,8 +20,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsJSEnvironment.h"
 
-#include "mozilla/dom/RuntimeService.h"
-
 namespace mozilla {
 namespace dom {
 
@@ -256,23 +254,14 @@ Promise::EnabledForScope(JSContext* aCx, JSObject* /* unused */)
       return true;
     }
   } else {
-    RuntimeService* service = RuntimeService::GetService();
-    MOZ_ASSERT(service);
-    // Can't just do return ... since the chrome worker/certified app checks
-    // below should also run.
-    if (service->PromiseEnabled()) {
-      return true;
-    }
+    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+    return workerPrivate->PromiseEnabled() || workerPrivate->UsesSystemPrincipal();
   }
   // Enable if the pref is enabled or if we're chrome or if we're a
   // certified app.
   // Note that we have no concept of a certified app in workers.
   // XXXbz well, why not?
   // FIXME(nsm): Remove these checks once promises are enabled by default.
-  if (!NS_IsMainThread()) {
-    return workers::GetWorkerPrivateFromContext(aCx)->UsesSystemPrincipal();
-  }
-
   nsIPrincipal* prin = nsContentUtils::GetSubjectPrincipal();
   return nsContentUtils::IsSystemPrincipal(prin) ||
     prin->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED;
