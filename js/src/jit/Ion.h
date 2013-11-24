@@ -188,12 +188,6 @@ struct IonOptions
     // Default: 1000
     uint32_t inlineMaxTotalBytecodeLength;
 
-    // Minimal ratio between the use counts of the caller and the callee to
-    // enable inlining of functions.
-    //
-    // Default: 128
-    uint32_t inlineUseCountRatio;
-
     // Whether functions are compiled immediately.
     //
     // Default: false
@@ -246,7 +240,6 @@ struct IonOptions
         smallFunctionMaxBytecodeLength(100),
         polyInlineMax(4),
         inlineMaxTotalBytecodeLength(1000),
-        inlineUseCountRatio(128),
         eagerCompilation(false),
         usesBeforeCompilePar(1),
         inliningMaxCallerBytecodeLength(10000)
