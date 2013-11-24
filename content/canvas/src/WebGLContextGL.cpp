@@ -2639,11 +2639,14 @@ nsresult
 WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromElementResult& res,
                                                      gfxImageSurface **imageOut, WebGLTexelFormat *format)
 {
+   *imageOut = nullptr;
+   *format = WebGLTexelFormat::None;
+
     if (!res.mSurface)
-        return NS_ERROR_FAILURE;
+        return NS_OK;
     if (res.mSurface->GetType() != gfxSurfaceTypeImage) {
         // SurfaceFromElement lied!
-        return NS_ERROR_FAILURE;
+        return NS_OK;
     }
 
     // We disallow loading cross-domain images and videos that have not been validated
