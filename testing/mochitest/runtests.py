@@ -360,9 +360,12 @@ class MochitestUtilsMixin(object):
       manifest.read(options.manifestFile)
       # Bug 883858 - return all tests including disabled tests
       tests = manifest.active_tests(disabled=True, **mozinfo.info)
+      # We need to ensure we match on a complete directory name matching the
+      # test root, and not a substring somewhere else in the path.
+      test_root = os.path.sep + self.getTestRoot(options) + os.path.sep
       paths = []
       for test in tests:
-        tp = test['path'].split(self.getTestRoot(options), 1)[1].strip('/')
+        tp = test['path'].split(test_root, 1)[1].replace('\\', '/').strip('/')
 
         # Filter out tests if we are using --test-path
         if options.testPath and not tp.startswith(options.testPath):
