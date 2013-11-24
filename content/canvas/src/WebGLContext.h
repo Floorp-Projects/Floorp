@@ -425,7 +425,7 @@ public:
         nsLayoutUtils::SurfaceFromElementResult res = SurfaceFromElement(elt);
         rv = SurfaceFromElementResultToImageSurface(res, getter_AddRefs(isurf),
                                                     &srcFormat);
-        if (rv.Failed())
+        if (rv.Failed() || !isurf)
             return;
 
         uint32_t byteLength = isurf->Stride() * isurf->Height();
@@ -464,7 +464,7 @@ public:
         nsLayoutUtils::SurfaceFromElementResult res = SurfaceFromElement(elt);
         rv = SurfaceFromElementResultToImageSurface(res, getter_AddRefs(isurf),
                                                     &srcFormat);
-        if (rv.Failed())
+        if (rv.Failed() || !isurf)
             return;
 
         uint32_t byteLength = isurf->Stride() * isurf->Height();
