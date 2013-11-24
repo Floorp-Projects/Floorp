@@ -63,7 +63,7 @@ XPCTraceableVariant::~XPCTraceableVariant()
         nsVariant::Cleanup(&mData);
 
     if (!JSVAL_IS_NULL(val))
-        RemoveFromRootSet(nsXPConnect::GetRuntimeInstance()->GetMapLock());
+        RemoveFromRootSet();
 }
 
 void XPCTraceableVariant::TraceJS(JSTracer* trc)
@@ -103,7 +103,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPCVariant)
 
     if (val.isMarkable()) {
         XPCTraceableVariant *v = static_cast<XPCTraceableVariant*>(tmp);
-        v->RemoveFromRootSet(nsXPConnect::GetRuntimeInstance()->GetMapLock());
+        v->RemoveFromRootSet();
     }
     tmp->mJSVal = JS::NullValue();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
