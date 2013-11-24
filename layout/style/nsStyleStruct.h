@@ -2387,6 +2387,22 @@ struct nsStyleSVG {
   bool HasMarker() const {
     return mMarkerStart || mMarkerMid || mMarkerEnd;
   }
+
+  /**
+   * Returns true if the stroke is not "none" and the stroke-opacity is greater
+   * than zero. This ignores stroke-widths as that depends on the context.
+   */
+  bool HasStroke() const {
+    return mStroke.mType != eStyleSVGPaintType_None && mStrokeOpacity > 0;
+  }
+
+  /**
+   * Returns true if the fill is not "none" and the fill-opacity is greater
+   * than zero.
+   */
+  bool HasFill() const {
+    return mFill.mType != eStyleSVGPaintType_None && mFillOpacity > 0;
+  }
 };
 
 struct nsStyleFilter {
