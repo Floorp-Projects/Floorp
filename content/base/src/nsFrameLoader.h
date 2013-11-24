@@ -185,7 +185,8 @@ public:
   /**
    * MessageManagerCallback methods that we override.
    */
-  virtual bool DoLoadFrameScript(const nsAString& aURL) MOZ_OVERRIDE;
+  virtual bool DoLoadFrameScript(const nsAString& aURL,
+                                 bool aRunInGlobalScope) MOZ_OVERRIDE;
   virtual bool DoSendAsyncMessage(JSContext* aCx,
                                   const nsAString& aMessage,
                                   const mozilla::dom::StructuredCloneData& aData,
