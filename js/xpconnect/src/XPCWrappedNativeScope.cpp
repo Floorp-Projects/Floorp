@@ -68,7 +68,6 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
                                              JS::HandleObject aGlobal)
       : mWrappedNativeMap(Native2WrappedNativeMap::newMap(XPC_NATIVE_MAP_SIZE)),
         mWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_SIZE)),
-        mMainThreadWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_SIZE)),
         mComponents(nullptr),
         mNext(nullptr),
         mGlobalJSObject(aGlobal),
@@ -258,11 +257,6 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
         delete mWrappedNativeProtoMap;
     }
 
-    if (mMainThreadWrappedNativeProtoMap) {
-        MOZ_ASSERT(0 == mMainThreadWrappedNativeProtoMap->Count(), "scope has non-empty map");
-        delete mMainThreadWrappedNativeProtoMap;
-    }
-
     if (mContext)
         mContext->RemoveScope(this);
 
@@ -411,7 +405,6 @@ XPCWrappedNativeScope::MarkAllWrappedNativesAndProtos()
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         cur->mWrappedNativeMap->Enumerate(WrappedNativeMarker, nullptr);
         cur->mWrappedNativeProtoMap->Enumerate(WrappedNativeProtoMarker, nullptr);
-        cur->mMainThreadWrappedNativeProtoMap->Enumerate(WrappedNativeProtoMarker, nullptr);
     }
 }
 
@@ -439,7 +432,6 @@ XPCWrappedNativeScope::ASSERT_NoInterfaceSetsAreMarked()
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         cur->mWrappedNativeMap->Enumerate(ASSERT_WrappedNativeSetNotMarked, nullptr);
         cur->mWrappedNativeProtoMap->Enumerate(ASSERT_WrappedNativeProtoSetNotMarked, nullptr);
-        cur->mMainThreadWrappedNativeProtoMap->Enumerate(ASSERT_WrappedNativeProtoSetNotMarked, nullptr);
     }
 }
 #endif
@@ -542,8 +534,6 @@ XPCWrappedNativeScope::SystemIsBeingShutDown()
         // proto pointers in the proto map.
         cur->mWrappedNativeProtoMap->
                 Enumerate(WrappedNativeProtoShutdownEnumerator,  &data);
-        cur->mMainThreadWrappedNativeProtoMap->
-                Enumerate(WrappedNativeProtoShutdownEnumerator,  &data);
         cur->mWrappedNativeMap->
                 Enumerate(WrappedNativeShutdownEnumerator,  &data);
     }
@@ -571,7 +561,6 @@ XPCWrappedNativeScope::ClearAllWrappedNativeSecurityPolicies()
 {
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         cur->mWrappedNativeProtoMap->Enumerate(WNProtoSecPolicyClearer, nullptr);
-        cur->mMainThreadWrappedNativeProtoMap->Enumerate(WNProtoSecPolicyClearer, nullptr);
     }
 
     return NS_OK;
@@ -596,8 +585,6 @@ XPCWrappedNativeScope::RemoveWrappedNativeProtos()
 {
     mWrappedNativeProtoMap->Enumerate(WNProtoRemover,
                                       GetRuntime()->GetDetachedWrappedNativeProtoMap());
-    mMainThreadWrappedNativeProtoMap->Enumerate(WNProtoRemover,
-                                                GetRuntime()->GetDetachedWrappedNativeProtoMap());
 }
 
 /***************************************************************************/
@@ -672,16 +659,6 @@ XPCWrappedNativeScope::DebugDump(int16_t depth)
             mWrappedNativeProtoMap->Enumerate(WrappedNativeProtoMapDumpEnumerator, &depth);
             XPC_LOG_OUTDENT();
         }
-
-        XPC_LOG_ALWAYS(("mMainThreadWrappedNativeProtoMap @ %x with %d protos(s)", \
-                        mMainThreadWrappedNativeProtoMap,                     \
-                        mMainThreadWrappedNativeProtoMap ? mMainThreadWrappedNativeProtoMap->Count() : 0));
-        // iterate contexts...
-        if (depth && mMainThreadWrappedNativeProtoMap && mMainThreadWrappedNativeProtoMap->Count()) {
-            XPC_LOG_INDENT();
-            mMainThreadWrappedNativeProtoMap->Enumerate(WrappedNativeProtoMapDumpEnumerator, &depth);
-            XPC_LOG_OUTDENT();
-        }
     XPC_LOG_OUTDENT();
 #endif
 }
@@ -703,7 +680,6 @@ XPCWrappedNativeScope::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
     n += mallocSizeOf(this);
     n += mWrappedNativeMap->SizeOfIncludingThis(mallocSizeOf);
     n += mWrappedNativeProtoMap->SizeOfIncludingThis(mallocSizeOf);
-    n += mMainThreadWrappedNativeProtoMap->SizeOfIncludingThis(mallocSizeOf);
 
     // There are other XPCWrappedNativeScope members that could be measured;
     // the above ones have been seen by DMD to be worth measuring.  More stuff
