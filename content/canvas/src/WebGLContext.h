@@ -371,7 +371,7 @@ public:
         return GetTexParameter(target, pname);
     }
     JS::Value GetUniform(JSContext* cx, WebGLProgram *prog,
-                         WebGLUniformLocation *location, ErrorResult& rv);
+                         WebGLUniformLocation *location);
     already_AddRefed<WebGLUniformLocation>
       GetUniformLocation(WebGLProgram *prog, const nsAString& name);
     void Hint(GLenum target, GLenum mode);
