@@ -332,7 +332,7 @@ HiddenBrowser.prototype = {
     // Load all default frame scripts attached to the target window.
     let mm = aTab.linkedBrowser.messageManager;
     let scripts = win.messageManager.getDelayedFrameScripts();
-    Array.forEach(scripts, script => mm.loadFrameScript(script, true));
+    Array.forEach(scripts, ([script, runGlobal]) => mm.loadFrameScript(script, true, runGlobal));
 
     // Remove the browser, it will be recreated by a timer.
     this._removeBrowser();
