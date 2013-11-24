@@ -143,7 +143,7 @@ PaymentUI.prototype = {
                              .frameLoader;
       let mm = frameLoader.messageManager;
       try {
-        mm.loadFrameScript(kPaymentShimFile, true);
+        mm.loadFrameScript(kPaymentShimFile, true, true);
         mm.sendAsyncMessage("Payment:LoadShim", { requestId: aRequestId });
       } catch (e) {
         if (this._debug) {
