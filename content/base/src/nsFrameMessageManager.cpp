@@ -394,18 +394,15 @@ nsFrameMessageManager::RemoveWeakMessageListener(const nsAString& aMessage,
 
 NS_IMETHODIMP
 nsFrameMessageManager::LoadFrameScript(const nsAString& aURL,
-                                       bool aAllowDelayedLoad,
-                                       bool aRunInGlobalScope)
+                                       bool aAllowDelayedLoad)
 {
   if (aAllowDelayedLoad) {
     if (IsGlobal() || IsWindowLevel()) {
       // Cache for future windows or frames
       mPendingScripts.AppendElement(aURL);
-      mPendingScriptsGlobalStates.AppendElement(aRunInGlobalScope);
     } else if (!mCallback) {
       // We're frame message manager, which isn't connected yet.
       mPendingScripts.AppendElement(aURL);
-      mPendingScriptsGlobalStates.AppendElement(aRunInGlobalScope);
       return NS_OK;
     }
   }
@@ -414,8 +411,7 @@ nsFrameMessageManager::LoadFrameScript(const nsAString& aURL,
 #ifdef DEBUG_smaug
     printf("Will load %s \n", NS_ConvertUTF16toUTF8(aURL).get());
 #endif
-    NS_ENSURE_TRUE(mCallback->DoLoadFrameScript(aURL, aRunInGlobalScope),
-                   NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(mCallback->DoLoadFrameScript(aURL), NS_ERROR_FAILURE);
   }
 
   for (int32_t i = 0; i < mChildManagers.Count(); ++i) {
@@ -424,7 +420,7 @@ nsFrameMessageManager::LoadFrameScript(const nsAString& aURL,
     if (mm) {
       // Use false here, so that child managers don't cache the script, which
       // is already cached in the parent.
-      mm->LoadFrameScript(aURL, false, aRunInGlobalScope);
+      mm->LoadFrameScript(aURL, false);
     }
   }
   return NS_OK;
@@ -433,18 +429,12 @@ nsFrameMessageManager::LoadFrameScript(const nsAString& aURL,
 NS_IMETHODIMP
 nsFrameMessageManager::RemoveDelayedFrameScript(const nsAString& aURL)
 {
-  for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
-    if (mPendingScripts[i] == aURL) {
-      mPendingScripts.RemoveElementAt(i);
-      mPendingScriptsGlobalStates.RemoveElementAt(i);
-      break;
-    }
-  }
+  mPendingScripts.RemoveElement(aURL);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFrameMessageManager::GetDelayedFrameScripts(JSContext* aCx, JS::Value* aList)
+nsFrameMessageManager::GetDelayedFrameScripts(nsIDOMDOMStringList** aList)
 {
   // Frame message managers may return an incomplete list because scripts
   // that were loaded after it was connected are not added to the list.
@@ -454,28 +444,13 @@ nsFrameMessageManager::GetDelayedFrameScripts(JSContext* aCx, JS::Value* aList)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, mPendingScripts.Length(), nullptr));
-  NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
+  nsRefPtr<nsDOMStringList> scripts = new nsDOMStringList();
 
-  JS::Rooted<JSString*> url(aCx);
-  JS::Rooted<JSObject*> pair(aCx);
-  JS::Rooted<JS::Value> pairVal(aCx);
   for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
-    url = JS_NewUCStringCopyN(aCx, mPendingScripts[i].get(), mPendingScripts[i].Length());
-    NS_ENSURE_TRUE(url, NS_ERROR_OUT_OF_MEMORY);
-
-    JS::Value pairElts[] = { JS::StringValue(url),
-                             JS::BooleanValue(mPendingScriptsGlobalStates[i]) };
-
-    pair = JS_NewArrayObject(aCx, 2, pairElts);
-    NS_ENSURE_TRUE(pair, NS_ERROR_OUT_OF_MEMORY);
-
-    pairVal = JS::ObjectValue(*pair);
-    NS_ENSURE_TRUE(JS_SetElement(aCx, array, i, &pairVal),
-                   NS_ERROR_OUT_OF_MEMORY);
+    scripts->Add(mPendingScripts[i]);
   }
 
-  *aList = JS::ObjectValue(*array);
+  scripts.forget(aList);
 
   return NS_OK;
 }
@@ -1074,13 +1049,11 @@ nsFrameMessageManager::AddChildManager(nsFrameMessageManager* aManager,
     if (mParentManager) {
       nsRefPtr<nsFrameMessageManager> globalMM = mParentManager;
       for (uint32_t i = 0; i < globalMM->mPendingScripts.Length(); ++i) {
-        aManager->LoadFrameScript(globalMM->mPendingScripts[i], false,
-                                  globalMM->mPendingScriptsGlobalStates[i]);
+        aManager->LoadFrameScript(globalMM->mPendingScripts[i], false);
       }
     }
     for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
-      aManager->LoadFrameScript(mPendingScripts[i], false,
-                                mPendingScriptsGlobalStates[i]);
+      aManager->LoadFrameScript(mPendingScripts[i], false);
     }
   }
 }
@@ -1101,7 +1074,7 @@ nsFrameMessageManager::SetCallback(MessageManagerCallback* aCallback, bool aLoad
     }
     if (aLoadScripts) {
       for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
-        LoadFrameScript(mPendingScripts[i], false, mPendingScriptsGlobalStates[i]);
+        LoadFrameScript(mPendingScripts[i], false);
       }
     }
   }
@@ -1331,7 +1304,7 @@ NS_NewGlobalMessageManager(nsIMessageBroadcaster** aResult)
   return CallQueryInterface(mm, aResult);
 }
 
-nsDataHashtable<nsStringHashKey, nsFrameScriptObjectExecutorHolder*>*
+nsDataHashtable<nsStringHashKey, nsFrameJSScriptExecutorHolder*>*
   nsFrameScriptExecutor::sCachedScripts = nullptr;
 nsScriptCacheCleaner* nsFrameScriptExecutor::sScriptCacheCleaner = nullptr;
 
@@ -1341,7 +1314,7 @@ nsFrameScriptExecutor::DidCreateGlobal()
   NS_ASSERTION(mGlobal, "Should have mGlobal!");
   if (!sCachedScripts) {
     sCachedScripts =
-      new nsDataHashtable<nsStringHashKey, nsFrameScriptObjectExecutorHolder*>;
+      new nsDataHashtable<nsStringHashKey, nsFrameJSScriptExecutorHolder*>;
 
     nsRefPtr<nsScriptCacheCleaner> scriptCacheCleaner =
       new nsScriptCacheCleaner();
@@ -1351,16 +1324,11 @@ nsFrameScriptExecutor::DidCreateGlobal()
 
 static PLDHashOperator
 CachedScriptUnrooter(const nsAString& aKey,
-                     nsFrameScriptObjectExecutorHolder*& aData,
-                     void* aUserArg)
+                       nsFrameJSScriptExecutorHolder*& aData,
+                       void* aUserArg)
 {
   JSContext* cx = static_cast<JSContext*>(aUserArg);
-  if (aData->mScript) {
-    JS_RemoveScriptRoot(cx, &aData->mScript);
-  }
-  if (aData->mFunction) {
-    JS_RemoveObjectRoot(cx, &aData->mFunction);
-  }
+  JS_RemoveScriptRoot(cx, &(aData->mScript));
   delete aData;
   return PL_DHASH_REMOVE;
 }
@@ -1383,53 +1351,31 @@ nsFrameScriptExecutor::Shutdown()
 }
 
 void
-nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL,
-                                               bool aRunInGlobalScope)
+nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
 {
   if (!mGlobal || !sCachedScripts) {
     return;
   }
 
-  AutoSafeJSContext cx;
-  JS::Rooted<JSScript*> script(cx);
-  JS::Rooted<JSObject*> funobj(cx);
-
-  nsFrameScriptObjectExecutorHolder* holder = sCachedScripts->Get(aURL);
-  if (holder && holder->WillRunInGlobalScope() == aRunInGlobalScope) {
-    script = holder->mScript;
-    funobj = holder->mFunction;
-  } else {
-    // Don't put anything in the cache if we already have an entry
-    // with a different WillRunInGlobalScope() value.
-    bool shouldCache = !holder;
-    TryCacheLoadAndCompileScript(aURL, aRunInGlobalScope,
-                                 shouldCache, &script, &funobj);
+  nsFrameJSScriptExecutorHolder* holder = sCachedScripts->Get(aURL);
+  if (!holder) {
+    TryCacheLoadAndCompileScript(aURL, EXECUTE_IF_CANT_CACHE);
+    holder = sCachedScripts->Get(aURL);
   }
 
-  JS::Rooted<JSObject*> global(cx, mGlobal->GetJSObject());
-  if (global) {
-    JSAutoCompartment ac(cx, global);
-    if (funobj) {
-      JS::Rooted<JSObject*> method(cx, JS_CloneFunctionObject(cx, funobj, global));
-      if (!method) {
-        return;
-      }
-      JS::Rooted<JS::Value> rval(cx);
-      JS::Rooted<JS::Value> methodVal(cx, JS::ObjectValue(*method));
-      (void) JS_CallFunctionValue(cx, global, methodVal,
-                                  0, nullptr, rval.address());
-    } else if (script) {
-      (void) JS_ExecuteScript(cx, global, script, nullptr);
+  if (holder) {
+    AutoSafeJSContext cx;
+    JS::Rooted<JSObject*> global(cx, mGlobal->GetJSObject());
+    if (global) {
+      JSAutoCompartment ac(cx, global);
+      (void) JS_ExecuteScript(cx, global, holder->mScript, nullptr);
     }
   }
 }
 
 void
 nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
-                                                    bool aRunInGlobalScope,
-                                                    bool aShouldCache,
-                                                    JS::MutableHandle<JSScript*> aScriptp,
-                                                    JS::MutableHandle<JSObject*> aFunp)
+                                                    CacheFailedBehavior aBehavior)
 {
   nsCString url = NS_ConvertUTF16toUTF8(aURL);
   nsCOMPtr<nsIURI> uri;
@@ -1476,63 +1422,30 @@ nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
     if (global) {
       JSAutoCompartment ac(cx, global);
       JS::CompileOptions options(cx);
-      options.setFileAndLine(url.get(), 1)
+      options.setNoScriptRval(true)
+             .setFileAndLine(url.get(), 1)
              .setPrincipals(nsJSPrincipals::get(mPrincipal));
-      JS::Rooted<JSScript*> script(cx);
-      JS::Rooted<JSObject*> funobj(cx);
-      if (aRunInGlobalScope) {
-        options.setNoScriptRval(true);
-        script = JS::Compile(cx, JS::NullPtr(), options, dataString.get(),
-                             dataString.Length());
-      } else {
-        JS::Rooted<JSFunction *> fun(cx);
-        fun = JS::CompileFunction(cx, JS::NullPtr(), options,
-                                  nullptr, 0, nullptr, /* name, nargs, args */
-                                  dataString.get(),
-                                  dataString.Length());
-        if (!fun) {
-          return;
-        }
-        funobj = JS_GetFunctionObject(fun);
-      }
+      JS::Rooted<JSScript*> script(cx,
+        JS::Compile(cx, JS::NullPtr(), options, dataString.get(),
+                    dataString.Length()));
 
-      if (!script && !funobj) {
-        return;
-      }
-
-      aScriptp.set(script);
-      aFunp.set(funobj);
-
-      nsAutoCString scheme;
-      uri->GetScheme(scheme);
-      // We don't cache data: scripts!
-      if (aShouldCache && !scheme.EqualsLiteral("data")) {
-        nsFrameScriptObjectExecutorHolder* holder;
-
-        // Root the object also for caching.
-        if (script) {
-          holder = new nsFrameScriptObjectExecutorHolder(script);
-          JS_AddNamedScriptRoot(cx, &holder->mScript,
+      if (script) {
+        nsAutoCString scheme;
+        uri->GetScheme(scheme);
+        // We don't cache data: scripts!
+        if (!scheme.EqualsLiteral("data")) {
+          nsFrameJSScriptExecutorHolder* holder =
+            new nsFrameJSScriptExecutorHolder(script);
+          // Root the object also for caching.
+          JS_AddNamedScriptRoot(cx, &(holder->mScript),
                                 "Cached message manager script");
-        } else {
-          holder = new nsFrameScriptObjectExecutorHolder(funobj);
-          JS_AddNamedObjectRoot(cx, &holder->mFunction,
-                                "Cached message manager function");
+          sCachedScripts->Put(aURL, holder);
+        } else if (aBehavior == EXECUTE_IF_CANT_CACHE) {
+          (void) JS_ExecuteScript(cx, global, script, nullptr);
         }
-        sCachedScripts->Put(aURL, holder);
       }
     }
   }
-}
-
-void
-nsFrameScriptExecutor::TryCacheLoadAndCompileScript(const nsAString& aURL,
-                                                    bool aRunInGlobalScope)
-{
-  AutoSafeJSContext cx;
-  JS::Rooted<JSScript*> script(cx);
-  JS::Rooted<JSObject*> funobj(cx);
-  TryCacheLoadAndCompileScript(aURL, aRunInGlobalScope, true, &script, &funobj);
 }
 
 bool
