@@ -244,6 +244,9 @@ public:
   bool
   WorkersDumpEnabled();
 
+  bool
+  PromiseEnabled();
+
 private:
   RuntimeService();
   ~RuntimeService();
