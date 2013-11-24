@@ -44,7 +44,7 @@ function amManager() {
 
   messageManager.addMessageListener(MSG_INSTALL_ENABLED, this);
   messageManager.addMessageListener(MSG_INSTALL_ADDONS, this);
-  messageManager.loadFrameScript(CHILD_SCRIPT, true);
+  messageManager.loadFrameScript(CHILD_SCRIPT, true, true);
 }
 
 amManager.prototype = {

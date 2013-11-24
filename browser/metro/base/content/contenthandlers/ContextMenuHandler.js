@@ -2,10 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let Ci = Components.interfaces;
-let Cc = Components.classes;
-
-this.kXLinkNamespace = "http://www.w3.org/1999/xlink";
+const kXLinkNamespace = "http://www.w3.org/1999/xlink";
 
 dump("### ContextMenuHandler.js loaded\n");
 
@@ -386,6 +383,5 @@ var ContextMenuHandler = {
     this._types = this._types.filter(function(type) type.name != aName);
   }
 };
-this.ContextMenuHandler = ContextMenuHandler;
 
 ContextMenuHandler.init();
