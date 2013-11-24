@@ -2240,7 +2240,7 @@ RuntimeService::WorkerPrefChanged(const char* aPrefName, void* aClosure)
   AssertIsOnMainThread();
 
   uintptr_t tmp = reinterpret_cast<uintptr_t>(aClosure);
-  MOZ_ASSERT(tmp >= 0 && tmp < WORKERPREF_COUNT);
+  MOZ_ASSERT(tmp < WORKERPREF_COUNT);
   WorkerPreference key = static_cast<WorkerPreference>(tmp);
 
   if (key == WORKERPREF_PROMISE) {
