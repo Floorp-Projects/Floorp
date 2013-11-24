@@ -71,9 +71,6 @@ class WorkerThreadState
     /* Shared worklist for parsing/emitting scripts on worker threads. */
     Vector<ParseTask*, 0, SystemAllocPolicy> parseWorklist, parseFinishedList;
 
-    /* Main-thread-only list of parse tasks waiting for an atoms-zone GC to complete. */
-    Vector<ParseTask*, 0, SystemAllocPolicy> parseWaitingOnGC;
-
     /* Worklist for source compression worker threads. */
     Vector<SourceCompressionTask *, 0, SystemAllocPolicy> compressionWorklist;
 
@@ -244,13 +241,6 @@ bool
 StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &options,
                           const jschar *chars, size_t length, HandleObject scopeChain,
                           JS::OffThreadCompileCallback callback, void *callbackData);
-
-/*
- * Called at the end of GC to enqueue any Parse tasks that were waiting on an
- * atoms-zone GC to finish.
- */
-void
-EnqueuePendingParseTasksAfterGC(JSRuntime *rt);
 
 /* Block until in progress and pending off thread parse jobs have finished. */
 void
