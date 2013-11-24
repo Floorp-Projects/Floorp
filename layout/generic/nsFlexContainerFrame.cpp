@@ -1393,8 +1393,8 @@ nsFlexContainerFrame::ResolveFlexibleLengths(
     PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" available free space = %d\n", availableFreeSpace));
 
-    // If sign of free space matches flexType, give each flexible
-    // item a portion of availableFreeSpace.
+    // If sign of free space matches the type of flexing that we're doing, give
+    // each flexible item a portion of availableFreeSpace.
     if ((availableFreeSpace > 0 && havePositiveFreeSpace) ||
         (availableFreeSpace < 0 && !havePositiveFreeSpace)) {
 
