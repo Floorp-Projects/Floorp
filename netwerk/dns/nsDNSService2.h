@@ -16,6 +16,8 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Attributes.h"
 
+class nsIMemoryReporter;
+
 class nsDNSService MOZ_FINAL : public nsPIDNSService
                              , public nsIObserver
 {
@@ -27,6 +29,8 @@ public:
 
     nsDNSService();
     ~nsDNSService();
+
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 private:
     uint16_t GetAFForLookup(const nsACString &host, uint32_t flags);
@@ -46,6 +50,8 @@ private:
     bool                      mFirstTime;
     bool                      mOffline;
     nsTHashtable<nsCStringHashKey> mLocalDomains;
+
+    nsCOMPtr<nsIMemoryReporter> mReporter;
 };
 
 #endif //nsDNSService2_h__
