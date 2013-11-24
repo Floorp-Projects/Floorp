@@ -134,8 +134,7 @@ XPCWrappedNativeProto::JSProtoObjectFinalized(js::FreeOp *fop, JSObject *obj)
     MOZ_ASSERT(obj == mJSProtoObject, "huh?");
 
     // Only remove this proto from the map if it is the one in the map.
-    ClassInfo2WrappedNativeProtoMap* map =
-        GetScope()->GetWrappedNativeProtoMap(ClassIsMainThreadOnly());
+    ClassInfo2WrappedNativeProtoMap* map = GetScope()->GetWrappedNativeProtoMap();
     if (map->Find(mClassInfo) == this)
         map->Remove(mClassInfo);
 
@@ -176,8 +175,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
     if (NS_FAILED(classInfo->GetFlags(&ciFlags)))
         ciFlags = 0;
 
-    bool mainThreadOnly = !!(ciFlags & nsIClassInfo::MAIN_THREAD_ONLY);
-    map = scope->GetWrappedNativeProtoMap(mainThreadOnly);
+    map = scope->GetWrappedNativeProtoMap();
     proto = map->Find(classInfo);
     if (proto)
         return proto;
