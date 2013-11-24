@@ -1135,6 +1135,10 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool
 bool
 WebGLContext::PresentScreenBuffer()
 {
+    if (IsContextLost()) {
+        return false;
+    }
+
     if (!mShouldPresent) {
         return false;
     }
