@@ -79,9 +79,6 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
         MOZ_ASSERT(aGlobal);
         MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & (JSCLASS_PRIVATE_IS_NSISUPPORTS |
                                                          JSCLASS_HAS_PRIVATE)); 
-        // scoped lock
-        XPCAutoLock lock(XPCJSRuntime::Get()->GetMapLock());
-
 #ifdef DEBUG
         for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext)
             MOZ_ASSERT(aGlobal != cur->GetGlobalJSObjectPreserveColor(), "dup object");
@@ -298,10 +295,6 @@ WrappedNativeJSGCThingTracer(PLDHashTable *table, PLDHashEntryHdr *hdr,
 void
 XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSRuntime* rt)
 {
-    // FIXME The lock may not be necessary during tracing as that serializes
-    // access to JS runtime. See bug 380139.
-    XPCAutoLock lock(rt->GetMapLock());
-
     // Do JS_CallTracer for all wrapped natives with external references, as
     // well as any DOM expando objects.
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
@@ -341,8 +334,6 @@ void
 XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt,
                                           nsCycleCollectionNoteRootCallback& cb)
 {
-    XPCAutoLock lock(rt->GetMapLock());
-
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         cur->mWrappedNativeMap->Enumerate(WrappedNativeSuspecter, &cb);
         if (cur->mDOMExpandoSet) {
@@ -356,10 +347,6 @@ XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt,
 void
 XPCWrappedNativeScope::StartFinalizationPhaseOfGC(JSFreeOp *fop, XPCJSRuntime* rt)
 {
-    // FIXME The lock may not be necessary since we are inside JSGC_MARK_END
-    // callback and GX serializes access to JS runtime. See bug 380139.
-    XPCAutoLock lock(rt->GetMapLock());
-
     // We are in JSGC_MARK_END and JSGC_FINALIZE_END must always follow it
     // calling FinishedFinalizationPhaseOfGC and clearing gDyingScopes in
     // KillDyingScopes.
@@ -396,12 +383,6 @@ XPCWrappedNativeScope::StartFinalizationPhaseOfGC(JSFreeOp *fop, XPCJSRuntime* r
 void
 XPCWrappedNativeScope::FinishedFinalizationPhaseOfGC()
 {
-    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-
-    // FIXME The lock may not be necessary since we are inside
-    // JSGC_FINALIZE_END callback and at this point GC still serializes access
-    // to JS runtime. See bug 380139.
-    XPCAutoLock lock(rt->GetMapLock());
     KillDyingScopes();
 }
 
@@ -483,7 +464,6 @@ XPCWrappedNativeScope::SweepAllWrappedNativeTearOffs()
 void
 XPCWrappedNativeScope::KillDyingScopes()
 {
-    // always called inside the lock!
     XPCWrappedNativeScope* cur = gDyingScopes;
     while (cur) {
         XPCWrappedNativeScope* next = cur->mNext;
@@ -589,9 +569,6 @@ WNProtoSecPolicyClearer(PLDHashTable *table, PLDHashEntryHdr *hdr,
 nsresult
 XPCWrappedNativeScope::ClearAllWrappedNativeSecurityPolicies()
 {
-    // Hold the lock throughout.
-    XPCAutoLock lock(XPCJSRuntime::Get()->GetMapLock());
-
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         cur->mWrappedNativeProtoMap->Enumerate(WNProtoSecPolicyClearer, nullptr);
         cur->mMainThreadWrappedNativeProtoMap->Enumerate(WNProtoSecPolicyClearer, nullptr);
@@ -617,8 +594,6 @@ WNProtoRemover(PLDHashTable *table, PLDHashEntryHdr *hdr,
 void
 XPCWrappedNativeScope::RemoveWrappedNativeProtos()
 {
-    XPCAutoLock al(XPCJSRuntime::Get()->GetMapLock());
-
     mWrappedNativeProtoMap->Enumerate(WNProtoRemover,
                                       GetRuntime()->GetDetachedWrappedNativeProtoMap());
     mMainThreadWrappedNativeProtoMap->Enumerate(WNProtoRemover,
@@ -714,9 +689,6 @@ XPCWrappedNativeScope::DebugDump(int16_t depth)
 size_t
 XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(MallocSizeOf mallocSizeOf)
 {
-    XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
-    XPCAutoLock lock(rt->GetMapLock());
-
     size_t n = 0;
     for (XPCWrappedNativeScope *cur = gScopes; cur; cur = cur->mNext) {
         n += cur->SizeOfIncludingThis(mallocSizeOf);
