@@ -359,7 +359,7 @@ interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
   [notxpcom] nsIContent getOwnerContent();
 };
 
-[scriptable, builtinclass, uuid(6fb78110-45ae-11e3-8f96-0800200c9a66)]
+[scriptable, builtinclass, uuid(ecebfb8c-ff51-11e2-9d65-7af553959281)]
 interface nsIFrameScriptLoader : nsISupports
 {
   /**
@@ -369,8 +369,7 @@ interface nsIFrameScriptLoader : nsISupports
    * remote frame becomes available. Otherwise the script will be loaded
    * only if the frame is already available.
    */
-  void loadFrameScript(in AString aURL, in boolean aAllowDelayedLoad,
-                       [optional] in boolean aRunInGlobalScope);
+  void loadFrameScript(in AString aURL, in boolean aAllowDelayedLoad);
 
   /**
    * Removes aURL from the list of scripts which support delayed load.
@@ -378,12 +377,10 @@ interface nsIFrameScriptLoader : nsISupports
   void removeDelayedFrameScript(in AString aURL);
 
   /**
-   * Returns all delayed scripts that will be loaded once a (remote)
-   * frame becomes available. The return value is a list of pairs
-   * [<URL>, <WasLoadedInGlobalScope>].
+   * Returns a list of all delayed scripts that will be loaded once
+   * a (remote) frame becomes available.
    */
-  [implicit_jscontext]
-  jsval getDelayedFrameScripts();
+  nsIDOMDOMStringList getDelayedFrameScripts();
 };
 
 [scriptable, builtinclass, uuid(b37821ff-df79-44d4-821c-6d6ec4dfe1e9)]
