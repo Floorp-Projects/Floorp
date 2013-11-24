@@ -581,7 +581,7 @@ public:
 
     void SystemIsBeingShutDown();
 
-    PRThread* GetThreadRunningGC() const {return mThreadRunningGC;}
+    bool GCIsRunning() const {return mGCIsRunning;}
 
     ~XPCJSRuntime();
 
@@ -633,7 +633,7 @@ private:
     XPCNativeScriptableSharedMap* mNativeScriptableSharedMap;
     XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
     XPCWrappedNativeProtoMap* mDetachedWrappedNativeProtoMap;
-    PRThread* mThreadRunningGC;
+    bool mGCIsRunning;
     nsTArray<nsXPCWrappedJS*> mWrappedJSToReleaseArray;
     nsTArray<nsISupports*> mNativesToReleaseArray;
     bool mDoingFinalization;
