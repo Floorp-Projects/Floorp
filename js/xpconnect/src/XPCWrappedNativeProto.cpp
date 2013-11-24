@@ -133,8 +133,6 @@ XPCWrappedNativeProto::JSProtoObjectFinalized(js::FreeOp *fop, JSObject *obj)
 {
     MOZ_ASSERT(obj == mJSProtoObject, "huh?");
 
-    // Map locking is not necessary since we are running gc.
-
     // Only remove this proto from the map if it is the one in the map.
     ClassInfo2WrappedNativeProtoMap* map =
         GetScope()->GetWrappedNativeProtoMap(ClassIsMainThreadOnly());
@@ -173,7 +171,6 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
 
     AutoMarkingWrappedNativeProtoPtr proto(cx);
     ClassInfo2WrappedNativeProtoMap* map = nullptr;
-    XPCLock* lock = nullptr;
 
     uint32_t ciFlags;
     if (NS_FAILED(classInfo->GetFlags(&ciFlags)))
@@ -181,13 +178,9 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
 
     bool mainThreadOnly = !!(ciFlags & nsIClassInfo::MAIN_THREAD_ONLY);
     map = scope->GetWrappedNativeProtoMap(mainThreadOnly);
-    lock = mainThreadOnly ? nullptr : scope->GetRuntime()->GetMapLock();
-    {   // scoped lock
-        XPCAutoLock al(lock);
-        proto = map->Find(classInfo);
-        if (proto)
-            return proto;
-    }
+    proto = map->Find(classInfo);
+    if (proto)
+        return proto;
 
     AutoMarkingNativeSetPtr set(cx);
     set = XPCNativeSet::GetNewOrUsed(classInfo);
@@ -201,10 +194,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
         return nullptr;
     }
 
-    {   // scoped lock
-        XPCAutoLock al(lock);
-        map->Add(classInfo, proto);
-    }
+    map->Add(classInfo, proto);
 
     return proto;
 }

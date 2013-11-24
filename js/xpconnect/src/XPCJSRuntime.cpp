@@ -629,15 +629,11 @@ void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc)
             roots->TraceJSAll(trc);
     }
 
-    {
-        XPCAutoLock lock(mMapLock);
-
-        // XPCJSObjectHolders don't participate in cycle collection, so always
-        // trace them here.
-        XPCRootSetElem *e;
-        for (e = mObjectHolderRoots; e; e = e->GetNextRoot())
-            static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
-    }
+    // XPCJSObjectHolders don't participate in cycle collection, so always
+    // trace them here.
+    XPCRootSetElem *e;
+    for (e = mObjectHolderRoots; e; e = e->GetNextRoot())
+        static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
 
     dom::TraceBlackJS(trc, JS_GetGCParameter(Runtime(), JSGC_NUMBER),
                       nsXPConnect::XPConnect()->IsShuttingDown());
@@ -645,8 +641,6 @@ void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc)
 
 void XPCJSRuntime::TraceAdditionalNativeGrayRoots(JSTracer *trc)
 {
-    XPCAutoLock lock(mMapLock);
-
     XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(trc, this);
 
     for (XPCRootSetElem *e = mVariantRoots; e ; e = e->GetNextRoot())
@@ -706,8 +700,6 @@ CanSkipWrappedJS(nsXPCWrappedJS *wrappedJS)
 void
 XPCJSRuntime::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback &cb)
 {
-    XPCAutoLock lock(mMapLock);
-
     XPCWrappedNativeScope::SuspectAllWrappers(this, cb);
 
     for (XPCRootSetElem *e = mVariantRoots; e ; e = e->GetNextRoot()) {
@@ -735,7 +727,6 @@ XPCJSRuntime::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback &c
 void
 XPCJSRuntime::UnmarkSkippableJSHolders()
 {
-    XPCAutoLock lock(mMapLock);
     CycleCollectedJSRuntime::UnmarkSkippableJSHolders();
 }
 
@@ -840,11 +831,8 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCo
             MOZ_ASSERT(!self->mDoingFinalization, "bad state");
 
             // mThreadRunningGC indicates that GC is running
-            { // scoped lock
-                XPCAutoLock lock(self->GetMapLock());
-                MOZ_ASSERT(!self->mThreadRunningGC, "bad state");
-                self->mThreadRunningGC = PR_GetCurrentThread();
-            }
+            MOZ_ASSERT(!self->mThreadRunningGC, "bad state");
+            self->mThreadRunningGC = PR_GetCurrentThread();
 
             nsTArray<nsXPCWrappedJS*>* dyingWrappedJSArray =
                 &self->mWrappedJSToReleaseArray;
@@ -877,23 +865,16 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCo
 
             // mThreadRunningGC indicates that GC is running.
             // Clear it and notify waiters.
-            { // scoped lock
-                XPCAutoLock lock(self->GetMapLock());
-                MOZ_ASSERT(self->mThreadRunningGC == PR_GetCurrentThread(), "bad state");
-                self->mThreadRunningGC = nullptr;
-                xpc_NotifyAll(self->GetMapLock());
-            }
+            MOZ_ASSERT(self->mThreadRunningGC == PR_GetCurrentThread(), "bad state");
+            self->mThreadRunningGC = nullptr;
 
             break;
         }
         case JSFINALIZE_COLLECTION_END:
         {
             // mThreadRunningGC indicates that GC is running
-            { // scoped lock
-                XPCAutoLock lock(self->GetMapLock());
-                MOZ_ASSERT(!self->mThreadRunningGC, "bad state");
-                self->mThreadRunningGC = PR_GetCurrentThread();
-            }
+            MOZ_ASSERT(!self->mThreadRunningGC, "bad state");
+            self->mThreadRunningGC = PR_GetCurrentThread();
 
             // We use this occasion to mark and sweep NativeInterfaces,
             // NativeSets, and the WrappedNativeJSClasses...
@@ -1032,12 +1013,8 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCo
 
             // mThreadRunningGC indicates that GC is running.
             // Clear it and notify waiters.
-            { // scoped lock
-                XPCAutoLock lock(self->GetMapLock());
-                MOZ_ASSERT(self->mThreadRunningGC == PR_GetCurrentThread(), "bad state");
-                self->mThreadRunningGC = nullptr;
-                xpc_NotifyAll(self->GetMapLock());
-            }
+            MOZ_ASSERT(self->mThreadRunningGC == PR_GetCurrentThread(), "bad state");
+            self->mThreadRunningGC = nullptr;
 
             break;
         }
@@ -1589,9 +1566,6 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if (mNativeSetMap)
         delete mNativeSetMap;
-
-    if (mMapLock)
-        XPCAutoLock::DestroyLock(mMapLock);
 
     if (mThisTranslatorMap)
         delete mThisTranslatorMap;
@@ -2956,7 +2930,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mNativeScriptableSharedMap(XPCNativeScriptableSharedMap::newMap(XPC_NATIVE_JSCLASS_MAP_SIZE)),
    mDyingWrappedNativeProtoMap(XPCWrappedNativeProtoMap::newMap(XPC_DYING_NATIVE_PROTO_MAP_SIZE)),
    mDetachedWrappedNativeProtoMap(XPCWrappedNativeProtoMap::newMap(XPC_DETACHED_NATIVE_PROTO_MAP_SIZE)),
-   mMapLock(XPCAutoLock::NewLock("XPCJSRuntime::mMapLock")),
    mThreadRunningGC(nullptr),
    mWrappedJSToReleaseArray(),
    mNativesToReleaseArray(),
@@ -3145,7 +3118,6 @@ XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect)
         self->GetThisTranslatorMap()            &&
         self->GetNativeScriptableSharedMap()    &&
         self->GetDyingWrappedNativeProtoMap()   &&
-        self->GetMapLock()                      &&
         self->mWatchdogManager) {
         return self;
     }
@@ -3261,7 +3233,6 @@ XPCJSRuntime::DebugDump(int16_t depth)
     XPC_LOG_ALWAYS(("XPCJSRuntime @ %x", this));
         XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("mJSRuntime @ %x", Runtime()));
-        XPC_LOG_ALWAYS(("mMapLock @ %x", mMapLock));
 
         XPC_LOG_ALWAYS(("mWrappedJSToReleaseArray @ %x with %d wrappers(s)", \
                         &mWrappedJSToReleaseArray,
@@ -3330,11 +3301,9 @@ XPCJSRuntime::DebugDump(int16_t depth)
 /***************************************************************************/
 
 void
-XPCRootSetElem::AddToRootSet(XPCLock *lock, XPCRootSetElem **listHead)
+XPCRootSetElem::AddToRootSet(XPCRootSetElem **listHead)
 {
     MOZ_ASSERT(!mSelfp, "Must be not linked");
-
-    XPCAutoLock autoLock(lock);
 
     mSelfp = listHead;
     mNext = *listHead;
@@ -3346,14 +3315,12 @@ XPCRootSetElem::AddToRootSet(XPCLock *lock, XPCRootSetElem **listHead)
 }
 
 void
-XPCRootSetElem::RemoveFromRootSet(XPCLock *lock)
+XPCRootSetElem::RemoveFromRootSet()
 {
     nsXPConnect *xpc = nsXPConnect::XPConnect();
     JS::PokeGC(xpc->GetRuntime()->Runtime());
 
     MOZ_ASSERT(mSelfp, "Must be linked");
-
-    XPCAutoLock autoLock(lock);
 
     MOZ_ASSERT(*mSelfp == this, "Link invariant");
     *mSelfp = mNext;
