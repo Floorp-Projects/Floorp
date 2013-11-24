@@ -457,18 +457,20 @@ nsFrameMessageManager::GetDelayedFrameScripts(JSContext* aCx, JS::Value* aList)
   JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, mPendingScripts.Length(), nullptr));
   NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
 
+  JS::Rooted<JSString*> url(aCx);
+  JS::Rooted<JSObject*> pair(aCx);
+  JS::Rooted<JS::Value> pairVal(aCx);
   for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
-    JS::Rooted<JSString*> url(aCx);
     url = JS_NewUCStringCopyN(aCx, mPendingScripts[i].get(), mPendingScripts[i].Length());
     NS_ENSURE_TRUE(url, NS_ERROR_OUT_OF_MEMORY);
 
     JS::Value pairElts[] = { JS::StringValue(url),
                              JS::BooleanValue(mPendingScriptsGlobalStates[i]) };
 
-    JS::Rooted<JSObject*> pair(aCx, JS_NewArrayObject(aCx, 2, pairElts));
+    pair = JS_NewArrayObject(aCx, 2, pairElts);
     NS_ENSURE_TRUE(pair, NS_ERROR_OUT_OF_MEMORY);
 
-    JS::Rooted<JS::Value> pairVal(aCx, JS::ObjectValue(*pair));
+    pairVal = JS::ObjectValue(*pair);
     NS_ENSURE_TRUE(JS_SetElement(aCx, array, i, &pairVal),
                    NS_ERROR_OUT_OF_MEMORY);
   }
