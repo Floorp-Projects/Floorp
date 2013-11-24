@@ -195,6 +195,24 @@ DumpPrefChanged(const char* aPrefName, void* aClosure)
 }
 #endif
 
+#define PREF_PROMISE_ENABLED "dom.promise.enabled"
+
+// Protected by RuntimeService::mMutex.
+bool gPromiseEnabled;
+
+static int
+PromiseEnableChanged(const char* aPrefName, void* aClosure)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  bool enabled = Preferences::GetBool(PREF_PROMISE_ENABLED, false);
+
+  Mutex* mutex = static_cast<Mutex*>(aClosure);
+  MutexAutoLock lock(*mutex);
+  gPromiseEnabled = enabled;
+  return 0;
+}
+
 class LiteralRebindingCString : public nsDependentCString
 {
 public:
@@ -1628,6 +1646,10 @@ RuntimeService::Init()
                                               PREF_DOM_WINDOW_DUMP_ENABLED,
                                               &mMutex)) ||
 #endif
+      NS_FAILED(Preferences::RegisterCallbackAndCall(
+                                              PromiseEnableChanged,
+                                              PREF_PROMISE_ENABLED,
+                                              &mMutex)) ||
       NS_FAILED(Preferences::RegisterCallback(LoadJSContextOptions,
                                               PREF_JS_OPTIONS_PREFIX,
                                               nullptr)) ||
@@ -1790,6 +1812,9 @@ RuntimeService::Cleanup()
         NS_FAILED(Preferences::UnregisterCallback(LoadJSContextOptions,
                                                   PREF_WORKERS_OPTIONS_PREFIX,
                                                   nullptr)) ||
+        NS_FAILED(Preferences::UnregisterCallback(PromiseEnableChanged,
+                                                  PREF_PROMISE_ENABLED,
+                                                  &mMutex)) ||
 #if DUMP_CONTROLLED_BY_PREF
         NS_FAILED(Preferences::UnregisterCallback(DumpPrefChanged,
                                                   PREF_DOM_WINDOW_DUMP_ENABLED,
@@ -2242,4 +2267,10 @@ RuntimeService::WorkersDumpEnabled()
 #else
   return true;
 #endif
+}
+
+bool
+RuntimeService::PromiseEnabled()
+{
+  return gPromiseEnabled;
 }
