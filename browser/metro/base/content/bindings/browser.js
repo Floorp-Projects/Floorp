@@ -664,6 +664,7 @@ let ContentScroll =  {
         isRoot: isRoot });
   }
 };
+this.ContentScroll = ContentScroll;
 
 ContentScroll.init();
 
