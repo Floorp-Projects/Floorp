@@ -663,7 +663,10 @@ MetroInput::HitTestChrome(const LayoutDeviceIntPoint& pt)
   return (status == nsEventStatus_eConsumeNoDefault);
 }
 
-void
+/**
+ * Returns true if the position is in chrome, false otherwise.
+ */
+bool
 MetroInput::TransformRefPoint(const Foundation::Point& aPosition, LayoutDeviceIntPoint& aRefPointOut)
 {
   // If this event is destined for content we need to transform our ref point through
@@ -675,10 +678,14 @@ MetroInput::TransformRefPoint(const Foundation::Point& aPosition, LayoutDeviceIn
   // This is currently a general contained rect hit test, it may produce a false positive for
   // overlay chrome elements.
   bool apzIntersect = mWidget->ApzHitTest(spt);
-  if (apzIntersect && HitTestChrome(aRefPointOut)) {
-    return;
+  if (!apzIntersect) {
+    return true;
+  }
+  if (HitTestChrome(aRefPointOut)) {
+    return true;
   }
   mWidget->ApzTransformGeckoCoordinate(spt, &aRefPointOut);
+  return false;
 }
 
 void
@@ -940,9 +947,13 @@ MetroInput::HandleTap(const Foundation::Point& aPoint, unsigned int aTapCount)
 #ifdef DEBUG_INPUT
   LogFunction();
 #endif
-  
+
   LayoutDeviceIntPoint refPoint;
-  TransformRefPoint(aPoint, refPoint);
+  bool hitTestChrome = TransformRefPoint(aPoint, refPoint);
+  if (!hitTestChrome) {
+    // Let APZC handle tap/doubletap detection for content.
+    return;
+  }
 
   // send mousemove
   WidgetMouseEvent* mouseEvent =
@@ -1130,7 +1141,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
   // Test for chrome vs. content target. To do this we only use the first touch
   // point since that will be the input batch target. Cache this for touch events
   // since HitTestChrome has to send a dom event.
-  if (mCancelable && event->message == NS_TOUCH_START) {
+  if (mCancelable && event->message == NS_TOUCH_START && mTouches.Count() == 1) {
     nsRefPtr<Touch> touch = event->touches[0];
     LayoutDeviceIntPoint pt = LayoutDeviceIntPoint::FromUntyped(touch->mRefPoint);
     bool apzIntersect = mWidget->ApzHitTest(mozilla::ScreenIntPoint(pt.x, pt.y));
@@ -1139,7 +1150,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
 
   // If this event is destined for chrome, deliver it directly there bypassing
   // the apz.
-  if (!mCancelable && mChromeHitTestCacheForTouch) {
+  if (mChromeHitTestCacheForTouch) {
     DUMP_TOUCH_IDS("DOM(1)", event);
     mWidget->DispatchEvent(event, status);
     return;
@@ -1153,7 +1164,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
     DUMP_TOUCH_IDS("APZC(1)", event);
     mWidget->ApzReceiveInputEvent(event, &mTargetAPZCGuid, &transformedEvent);
     DUMP_TOUCH_IDS("DOM(2)", event);
-    mWidget->DispatchEvent(mChromeHitTestCacheForTouch ? event : &transformedEvent, status);
+    mWidget->DispatchEvent(&transformedEvent, status);
     if (event->message == NS_TOUCH_START) {
       mContentConsumingTouch = (nsEventStatus_eConsumeNoDefault == status);
       // If we know content wants touch here, we can bail early on mCancelable
@@ -1196,9 +1207,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
   if (mContentConsumingTouch) {
     // Only translate if we're dealing with web content that's transformed
     // by the apzc.
-    if (!mChromeHitTestCacheForTouch) {
-      TransformTouchEvent(event);
-    }
+    TransformTouchEvent(event);
     DUMP_TOUCH_IDS("DOM(3)", event);
     mWidget->DispatchEvent(event, status);
     return;
@@ -1214,9 +1223,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
       DispatchTouchCancel(event);
       return;
     }
-    if (!mChromeHitTestCacheForTouch) {
-      TransformTouchEvent(event);
-    }
+    TransformTouchEvent(event);
     DUMP_TOUCH_IDS("DOM(4)", event);
     mWidget->DispatchEvent(event, status);
   }

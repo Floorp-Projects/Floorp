@@ -146,10 +146,10 @@ pref("app.update.certs.1.commonName", "aus4.mozilla.org");
 pref("app.update.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
 pref("app.update.certs.2.commonName", "aus4.mozilla.org");
 #else
-pref("app.update.certs.1.issuerName", "OU=Equifax Secure Certificate Authority,O=Equifax,C=US");
+pref("app.update.certs.1.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
 pref("app.update.certs.1.commonName", "aus3.mozilla.org");
 
-pref("app.update.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
+pref("app.update.certs.2.issuerName", "CN=DigiCert Secure Server CA,O=DigiCert Inc,C=US");
 pref("app.update.certs.2.commonName", "aus3.mozilla.org");
 #endif
 #endif

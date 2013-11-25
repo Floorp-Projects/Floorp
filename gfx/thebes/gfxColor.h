@@ -125,7 +125,7 @@ struct gfxRGBA {
      * Intialize this color using explicit red, green, blue and alpha
      * values.
      */
-    gfxRGBA(gfxFloat _r, gfxFloat _g, gfxFloat _b, gfxFloat _a=1.0) : r(_r), g(_g), b(_b), a(_a) {}
+    MOZ_CONSTEXPR gfxRGBA(gfxFloat _r, gfxFloat _g, gfxFloat _b, gfxFloat _a=1.0) : r(_r), g(_g), b(_b), a(_a) {}
 
     /**
      * Initialize this color from a packed 32-bit color.

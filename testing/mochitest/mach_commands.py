@@ -190,7 +190,8 @@ class MochitestRunner(MozbuildObject):
         no_autorun=False, repeat=0, run_until_failure=False, slow=False,
         chunk_by_dir=0, total_chunks=None, this_chunk=None, jsdebugger=False,
         debug_on_failure=False, start_at=None, end_at=None, e10s=False,
-        dmd=False):
+        dmd=False, dump_output_directory=None, dump_about_memory_after_test=False,
+        dump_dmd_after_test=False):
         """Runs a mochitest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -298,6 +299,9 @@ class MochitestRunner(MozbuildObject):
         options.startAt = start_at
         options.endAt = end_at
         options.e10s = e10s
+        options.dumpAboutMemoryAfterTest = dump_about_memory_after_test
+        options.dumpDMDAfterTest = dump_dmd_after_test
+        options.dumpOutputDirectory = dump_output_directory
         mozinfo.update({"e10s": e10s}) # for test manifest parsing.
 
         options.failureFile = failure_file_path
@@ -310,7 +314,15 @@ class MochitestRunner(MozbuildObject):
                 print('You may need to run |mach build| to build the test files.')
                 return 1
 
-            options.testPath = test_path
+            # Handle test_path pointing at a manifest file so conditions in
+            # the manifest are processed.  This is a temporary solution
+            # pending bug 938019.
+            # The manifest basename is the same as |suite|, except for plain
+            manifest_base = 'mochitest' if suite == 'plain' else suite
+            if os.path.basename(test_root_file) == manifest_base + '.ini':
+                options.manifestFile = test_root_file
+            else:
+                options.testPath = test_path
 
         if rerun_failures:
             options.testManifest = failure_file_path
@@ -442,6 +454,18 @@ def MochitestCommand(func):
     dmd = CommandArgument('--dmd', action='store_true',
         help='Run tests with DMD active.')
     func = dmd(func)
+
+    dumpAboutMemory = CommandArgument('--dump-about-memory-after-test', action='store_true',
+        help='Dump an about:memory log after every test.')
+    func = dumpAboutMemory(func)
+
+    dumpDMD = CommandArgument('--dump-dmd-after-test', action='store_true',
+        help='Dump a DMD log after every test.')
+    func = dumpDMD(func)
+
+    dumpOutputDirectory = CommandArgument('--dump-output-directory', action='store',
+        help='Specifies the directory in which to place dumped memory reports.')
+    func = dumpOutputDirectory(func)
 
     path = CommandArgument('test_file', default=None, nargs='?',
         metavar='TEST',

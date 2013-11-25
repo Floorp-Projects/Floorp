@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+let tmp;
+Cu.import("resource:///modules/sessionstore/TabStateCache.jsm", tmp);
+let {TabStateCache} = tmp;
+
 const URL = "http://mochi.test:8888/browser/" +
             "browser/components/sessionstore/test/browser_916390_sample.html";
 
@@ -24,11 +28,9 @@ function runTests() {
   let {formdata} = state.windows[0].tabs[1].entries[0];
   is(formdata.id.txt, "m", "txt's value is correct");
 
-  // Change the number of session history entries and modify
-  // DOMSessionStorage data to invalidate the TabStateCache.
+  // Change the number of session history entries to invalidate the cache.
   browser.loadURI(URL + "#");
-  browser.contentWindow.sessionStorage.foo = "bar";
-  yield waitForStorageChange();
+  TabStateCache.delete(browser);
 
   // Check that we'll save the form data state correctly.
   let state = JSON.parse(ss.getBrowserState());
