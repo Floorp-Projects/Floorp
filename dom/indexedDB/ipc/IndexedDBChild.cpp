@@ -6,7 +6,6 @@
 
 #include "IndexedDBChild.h"
 
-#include "nsIAtom.h"
 #include "nsIInputStream.h"
 
 #include "mozilla/Assertions.h"
@@ -284,15 +283,15 @@ IndexedDBDatabaseChild::EnsureDatabase(
                            const DatabaseInfoGuts& aDBInfo,
                            const InfallibleTArray<ObjectStoreInfoGuts>& aOSInfo)
 {
-  nsCOMPtr<nsIAtom> databaseId;
+  nsCString databaseId;
   if (mDatabase) {
     databaseId = mDatabase->Id();
   }
   else {
-    databaseId = QuotaManager::GetStorageId(aDBInfo.persistenceType,
-                                            aDBInfo.origin, aDBInfo.name);
+    QuotaManager::GetStorageId(aDBInfo.persistenceType,
+                               aDBInfo.origin, aDBInfo.name, databaseId);
   }
-  NS_ENSURE_TRUE(databaseId, false);
+  MOZ_ASSERT(!databaseId.IsEmpty());
 
   nsRefPtr<DatabaseInfo> dbInfo;
   if (DatabaseInfo::Get(databaseId, getter_AddRefs(dbInfo))) {
@@ -1232,13 +1231,13 @@ IndexedDBCursorRequestChild::Recv__delete__(const ResponseValue& aResponse)
 IndexedDBDeleteDatabaseRequestChild::IndexedDBDeleteDatabaseRequestChild(
                                                  IDBFactory* aFactory,
                                                  IDBOpenDBRequest* aOpenRequest,
-                                                 nsIAtom* aDatabaseId)
+                                                 const nsACString& aDatabaseId)
 : mFactory(aFactory), mOpenRequest(aOpenRequest), mDatabaseId(aDatabaseId)
 {
   MOZ_COUNT_CTOR(IndexedDBDeleteDatabaseRequestChild);
   MOZ_ASSERT(aFactory);
   MOZ_ASSERT(aOpenRequest);
-  MOZ_ASSERT(aDatabaseId);
+  MOZ_ASSERT(!aDatabaseId.IsEmpty());
 }
 
 IndexedDBDeleteDatabaseRequestChild::~IndexedDBDeleteDatabaseRequestChild()

@@ -962,7 +962,7 @@ const JSClass IDBObjectStore::sDummyPropJSClass = {
 already_AddRefed<IDBObjectStore>
 IDBObjectStore::Create(IDBTransaction* aTransaction,
                        ObjectStoreInfo* aStoreInfo,
-                       nsIAtom* aDatabaseId,
+                       const nsACString& aDatabaseId,
                        bool aCreating)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
