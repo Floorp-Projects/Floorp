@@ -855,6 +855,8 @@ js::UnwindScope(JSContext *cx, AbstractFramePtr frame, uint32_t stackDepth)
           case ScopeIter::Block:
             if (si.staticBlock().stackDepth() < stackDepth)
                 return;
+            if (cx->compartment()->debugMode())
+                DebugScopes::onPopBlock(cx, frame);
             frame.popBlock(cx);
             break;
           case ScopeIter::With:
@@ -1533,7 +1535,6 @@ CASE(JSOP_UNUSED191)
 CASE(JSOP_UNUSED192)
 CASE(JSOP_UNUSED194)
 CASE(JSOP_UNUSED196)
-CASE(JSOP_UNUSED200)
 CASE(JSOP_UNUSED201)
 CASE(JSOP_GETFUNNS)
 CASE(JSOP_UNUSED208)
@@ -3267,6 +3268,18 @@ CASE(JSOP_LEAVEBLOCKEXPR)
     }
 }
 END_CASE(JSOP_LEAVEBLOCK)
+
+CASE(JSOP_DEBUGLEAVEBLOCK)
+{
+    JS_ASSERT(REGS.fp()->hasBlockChain());
+
+    // FIXME: This opcode should not be necessary.  The debugger shouldn't need
+    // help from bytecode to do its job.  See bug 927782.
+
+    if (JS_UNLIKELY(cx->compartment()->debugMode()))
+        DebugScopes::onPopBlock(cx, REGS.fp());
+}
+END_CASE(JSOP_DEBUGLEAVEBLOCK)
 
 CASE(JSOP_GENERATOR)
 {

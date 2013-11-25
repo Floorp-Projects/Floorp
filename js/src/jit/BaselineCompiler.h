@@ -152,6 +152,7 @@ namespace jit {
     _(JSOP_LEAVEBLOCK)         \
     _(JSOP_LEAVEBLOCKEXPR)     \
     _(JSOP_LEAVEFORLETIN)      \
+    _(JSOP_DEBUGLEAVEBLOCK)    \
     _(JSOP_EXCEPTION)          \
     _(JSOP_DEBUGGER)           \
     _(JSOP_ARGUMENTS)          \
