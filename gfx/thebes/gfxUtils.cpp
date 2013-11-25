@@ -525,7 +525,7 @@ ClipToRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion,
 }
 
 static TemporaryRef<Path>
-PathFromRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion,
+PathFromRegionInternal(gfx::DrawTarget* aTarget, const nsIntRegion& aRegion,
                        bool aSnap)
 {
   Matrix mat = aTarget->GetTransform();
@@ -567,7 +567,7 @@ PathFromRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion,
 }
 
 static void
-ClipToRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion,
+ClipToRegionInternal(gfx::DrawTarget* aTarget, const nsIntRegion& aRegion,
                      bool aSnap)
 {
   RefPtr<Path> path = PathFromRegionInternal(aTarget, aRegion, aSnap);
@@ -690,8 +690,8 @@ gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrData& aData,
                                          gfxImageFormat& aSuggestedFormat,
                                          gfxIntSize& aSuggestedSize)
 {
-  YUVType yuvtype =
-    TypeFromSize(aData.mYSize.width,
+  gfx::YUVType yuvtype =
+    gfx::TypeFromSize(aData.mYSize.width,
                       aData.mYSize.height,
                       aData.mCbCrSize.width,
                       aData.mCbCrSize.height);
@@ -704,15 +704,15 @@ gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrData& aData,
   if (aSuggestedFormat == gfxImageFormatRGB16_565) {
 #if defined(HAVE_YCBCR_TO_RGB565)
     if (prescale &&
-        !IsScaleYCbCrToRGB565Fast(aData.mPicX,
+        !gfx::IsScaleYCbCrToRGB565Fast(aData.mPicX,
                                        aData.mPicY,
                                        aData.mPicSize.width,
                                        aData.mPicSize.height,
                                        aSuggestedSize.width,
                                        aSuggestedSize.height,
                                        yuvtype,
-                                       FILTER_BILINEAR) &&
-        IsConvertYCbCrToRGB565Fast(aData.mPicX,
+                                       gfx::FILTER_BILINEAR) &&
+        gfx::IsConvertYCbCrToRGB565Fast(aData.mPicX,
                                         aData.mPicY,
                                         aData.mPicSize.width,
                                         aData.mPicSize.height,
@@ -731,7 +731,7 @@ gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrData& aData,
   if (aSuggestedFormat == gfxImageFormatRGB24) {
     /* ScaleYCbCrToRGB32 does not support a picture offset, nor 4:4:4 data.
        See bugs 639415 and 640073. */
-    if (aData.mPicX != 0 || aData.mPicY != 0 || yuvtype == YV24)
+    if (aData.mPicX != 0 || aData.mPicY != 0 || yuvtype == gfx::YV24)
       prescale = false;
   }
   if (!prescale) {
@@ -752,8 +752,8 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
               aData.mCbCrSize.width == (aData.mYSize.width + 1) >> 1) &&
              (aData.mCbCrSize.height == aData.mYSize.height ||
               aData.mCbCrSize.height == (aData.mYSize.height + 1) >> 1));
-  YUVType yuvtype =
-    TypeFromSize(aData.mYSize.width,
+  gfx::YUVType yuvtype =
+    gfx::TypeFromSize(aData.mYSize.width,
                       aData.mYSize.height,
                       aData.mCbCrSize.width,
                       aData.mCbCrSize.height);
@@ -762,7 +762,7 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
   if (aDestSize != aData.mPicSize) {
 #if defined(HAVE_YCBCR_TO_RGB565)
     if (aDestFormat == gfxImageFormatRGB16_565) {
-      ScaleYCbCrToRGB565(aData.mYChannel,
+      gfx::ScaleYCbCrToRGB565(aData.mYChannel,
                               aData.mCbChannel,
                               aData.mCrChannel,
                               aDestBuffer,
@@ -776,10 +776,10 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
                               aData.mCbCrStride,
                               aStride,
                               yuvtype,
-                              FILTER_BILINEAR);
+                              gfx::FILTER_BILINEAR);
     } else
 #endif
-      ScaleYCbCrToRGB32(aData.mYChannel,
+      gfx::ScaleYCbCrToRGB32(aData.mYChannel,
                              aData.mCbChannel,
                              aData.mCrChannel,
                              aDestBuffer,
@@ -791,12 +791,12 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
                              aData.mCbCrStride,
                              aStride,
                              yuvtype,
-                             ROTATE_0,
-                             FILTER_BILINEAR);
+                             gfx::ROTATE_0,
+                             gfx::FILTER_BILINEAR);
   } else { // no prescale
 #if defined(HAVE_YCBCR_TO_RGB565)
     if (aDestFormat == gfxImageFormatRGB16_565) {
-      ConvertYCbCrToRGB565(aData.mYChannel,
+      gfx::ConvertYCbCrToRGB565(aData.mYChannel,
                                 aData.mCbChannel,
                                 aData.mCrChannel,
                                 aDestBuffer,
@@ -810,7 +810,7 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
                                 yuvtype);
     } else // aDestFormat != gfxImageFormatRGB16_565
 #endif
-      ConvertYCbCrToRGB32(aData.mYChannel,
+      gfx::ConvertYCbCrToRGB32(aData.mYChannel,
                                aData.mCbChannel,
                                aData.mCrChannel,
                                aDestBuffer,
