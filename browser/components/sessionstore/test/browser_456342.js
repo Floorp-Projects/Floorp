@@ -13,13 +13,11 @@ function test() {
   let rootDir = getRootDirectory(gTestPath);
   let testURL = rootDir + "browser_456342_sample.xhtml";
   let tab = gBrowser.addTab(testURL);
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    this.removeEventListener("load", arguments.callee, true);
-
+  whenBrowserLoaded(tab.linkedBrowser, function() {
     let expectedValue = "try to save me";
     // Since bug 537289 we only save non-default values, so we need to set each
     // form field's value after load.
-    let formEls = aEvent.originalTarget.forms[0].elements;
+    let formEls = tab.linkedBrowser.contentDocument.forms[0].elements;
     for (let i = 0; i < formEls.length; i++)
       formEls[i].value = expectedValue;
 
@@ -49,5 +47,5 @@ function test() {
     if (gPrefService.prefHasUserValue("browser.sessionstore.privacy_level"))
       gPrefService.clearUserPref("browser.sessionstore.privacy_level");
     finish();
-  }, true);
+  });
 }

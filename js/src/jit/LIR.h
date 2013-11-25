@@ -735,6 +735,7 @@ class LBlock : public TempObject
     InlineList<LInstruction> instructions_;
     LMoveGroup *entryMoveGroup_;
     LMoveGroup *exitMoveGroup_;
+    Label label_;
 
     LBlock(TempAllocator &alloc, MBasicBlock *block)
       : block_(block),
@@ -798,7 +799,9 @@ class LBlock : public TempObject
     }
     uint32_t firstId();
     uint32_t lastId();
-    Label *label();
+    Label *label() {
+        return &label_;
+    }
     LMoveGroup *getEntryMoveGroup(TempAllocator &alloc);
     LMoveGroup *getExitMoveGroup(TempAllocator &alloc);
 };

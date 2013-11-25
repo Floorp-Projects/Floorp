@@ -63,10 +63,6 @@ ifdef MOZ_JSDEBUGGER
 DEFINES += -DMOZ_JSDEBUGGER
 endif
 
-nsXPConnect.$(OBJ_SUFFIX): dom_quickstubs.h
-
-XPCJSRuntime.$(OBJ_SUFFIX): dom_quickstubs.h
-
 dom_quickstubs.h: dom_quickstubs.cpp
 
 dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
@@ -83,8 +79,6 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
 	  --makedepend-output $(MDDEPDIR)/dom_qsgen.pp \
 	  $(ENABLE_TRACEABLE_FLAGS) \
 	  $(srcdir)/dom_quickstubs.qsconf
-
-DictionaryHelpers.$(OBJ_SUFFIX): DictionaryHelpers.cpp
 
 DictionaryHelpers.h: DictionaryHelpers.cpp
 
@@ -103,9 +97,6 @@ DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
 	  --makedepend-output $(MDDEPDIR)/dictionary_helper_gen.pp \
 	  $(srcdir)/dictionary_helper_gen.conf \
 	  event_impl_gen.conf
-
-GeneratedEvents.$(OBJ_SUFFIX): GeneratedEvents.h \
-                               GeneratedEvents.cpp
 
 event_impl_gen.conf : $(srcdir)/event_impl_gen.conf.in
 	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $^ -o event_impl_gen.conf)
@@ -154,13 +145,6 @@ GeneratedEvents-webidl: event_impl_gen.conf
 	  event_impl_gen.conf
 
 GARBAGE += \
-		dom_quickstubs.h \
-		dom_quickstubs.cpp \
-		DictionaryHelpers.h \
-		DictionaryHelpers.cpp \
-		GeneratedEvents.h \
-		GeneratedEvents.cpp \
-		GeneratedEventClasses.h \
 		event_impl_gen.conf \
 		xpidl_debug \
 		$(MDDEPDIR)/dom_qsgen.pp \

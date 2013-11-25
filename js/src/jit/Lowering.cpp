@@ -397,7 +397,11 @@ LIRGenerator::visitComputeThis(MComputeThis *ins)
     JS_ASSERT(ins->input()->type() == MIRType_Value);
 
     LComputeThis *lir = new LComputeThis();
-    if (!useBoxAtStart(lir, LComputeThis::ValueIndex, ins->input()))
+
+    // Don't use useBoxAtStart because ComputeThis has a safepoint and needs to
+    // have its inputs in different registers than its return value so that
+    // they aren't clobbered.
+    if (!useBox(lir, LComputeThis::ValueIndex, ins->input()))
         return false;
 
     return define(lir, ins) && assignSafepoint(lir, ins);
@@ -3488,8 +3492,10 @@ LIRGenerator::visitBlock(MBasicBlock *block)
     if (!definePhis())
         return false;
 
-    if (!add(new LLabel()))
-        return false;
+    if (js_IonOptions.registerAllocator == RegisterAllocator_LSRA) {
+        if (!add(new LLabel()))
+            return false;
+    }
 
     for (MInstructionIterator iter = block->begin(); *iter != block->lastIns(); iter++) {
         if (!visitInstruction(*iter))

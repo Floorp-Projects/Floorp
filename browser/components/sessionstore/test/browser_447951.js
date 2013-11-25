@@ -10,17 +10,14 @@ function test() {
     "browser/components/sessionstore/test/browser_447951_sample.html#";
 
   let tab = gBrowser.addTab();
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-
+  whenBrowserLoaded(tab.linkedBrowser, function() {
     let tabState = { entries: [] };
     let max_entries = gPrefService.getIntPref("browser.sessionhistory.max_entries");
     for (let i = 0; i < max_entries; i++)
       tabState.entries.push({ url: baseURL + i });
 
     ss.setTabState(tab, JSON.stringify(tabState));
-    tab.addEventListener("SSTabRestored", function(aEvent) {
-      tab.removeEventListener("SSTabRestored", arguments.callee, false);
+    whenTabRestored(tab, function() {
       tabState = JSON.parse(ss.getTabState(tab));
       is(tabState.entries.length, max_entries, "session history filled to the limit");
       is(tabState.entries[0].url, baseURL + 0, "... but not more");
@@ -32,8 +29,15 @@ function test() {
                            0, 0, 0, 0, false, false, false, false, 0, null);
       doc.querySelector("a").dispatchEvent(event);
 
-      executeSoon(function() {
+      function check() {
         tabState = JSON.parse(ss.getTabState(tab));
+        if (tabState.entries[tabState.entries.length - 1].url != baseURL + "end") {
+          // It may take a few passes through the event loop before we
+          // get the right URL.
+          executeSoon(check);
+          return;
+        }
+
         is(tab.linkedBrowser.currentURI.spec, baseURL + "end",
            "the new anchor was loaded");
         is(tabState.entries[tabState.entries.length - 1].url, baseURL + "end",
@@ -44,7 +48,9 @@ function test() {
         // clean up
         gBrowser.removeTab(tab);
         finish();
-      });
-    }, false);
-  }, true);
+      }
+
+      check();
+    });
+  });
 }

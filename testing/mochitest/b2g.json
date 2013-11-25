@@ -209,10 +209,12 @@
     "content/base/test/csp/test_CSP_frameancestors.html":"observer not working",
     "content/base/test/csp/test_CSP.html":"observer not working",
     "content/base/test/csp/test_bug836922_npolicies.html":"observer not working",
+    "content/base/test/csp/test_bug886164.html":"observer not working",
     "content/base/test/csp/test_CSP_bug916446.html":"observer not working",
     "content/base/test/csp/test_CSP_bug909029.html":"observer not working",
     "content/base/test/csp/test_policyuri_regression_from_multipolicy.html":"observer not working",
     "content/base/test/csp/test_nonce_source.html":"observer not working",
+    "content/base/test/csp/test_CSP_bug941404.html":"observer not working",
 
     "content/base/test/test_CrossSiteXHR_origin.html":"https not working, bug 907770",
     "content/base/test/test_plugin_freezing.html":"",

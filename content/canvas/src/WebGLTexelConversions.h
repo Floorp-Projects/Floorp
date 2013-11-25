@@ -46,14 +46,7 @@ MOZ_END_ENUM_CLASS(WebGLTexelPremultiplicationOp)
 
 namespace WebGLTexelConversions {
 
-// remove this as soon as B2G and Windows use newer compilers
-#ifdef MOZ_HAVE_CXX11_STRONG_ENUMS
-#define MOZ_ENUM_CLASS_INTEGER_TYPE(X) X
-#else
-#define MOZ_ENUM_CLASS_INTEGER_TYPE(X) X::Enum
-#endif
-
-template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format>
+template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format>
 struct IsFloatFormat
 {
     static const bool Value =
@@ -64,7 +57,7 @@ struct IsFloatFormat
         Format == WebGLTexelFormat::A32F;
 };
 
-template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format>
+template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format>
 struct Is16bppFormat
 {
     static const bool Value =
@@ -73,7 +66,7 @@ struct Is16bppFormat
         Format == WebGLTexelFormat::RGB565;
 };
 
-template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format,
+template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format,
          bool IsFloat = IsFloatFormat<Format>::Value,
          bool Is16bpp = Is16bppFormat<Format>::Value>
 struct DataTypeForFormat
@@ -81,22 +74,22 @@ struct DataTypeForFormat
     typedef uint8_t Type;
 };
 
-template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format>
+template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format>
 struct DataTypeForFormat<Format, true, false>
 {
     typedef float Type;
 };
 
-template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format>
+template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format>
 struct DataTypeForFormat<Format, false, true>
 {
     typedef uint16_t Type;
 };
 
-template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format>
+template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format>
 struct IntermediateFormat
 {
-    static const MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Value
+    static const MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Value
         = IsFloatFormat<Format>::Value
           ? WebGLTexelFormat::RGBA32F
           : WebGLTexelFormat::RGBA8;
@@ -172,7 +165,7 @@ MOZ_ALWAYS_INLINE bool HasColor(WebGLTexelFormat format) {
 //----------------------------------------------------------------------
 // Pixel unpacking routines.
 
-template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format, typename SrcType, typename DstType>
+template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format, typename SrcType, typename DstType>
 MOZ_ALWAYS_INLINE void
 unpack(const SrcType* __restrict src,
        DstType* __restrict dst)
@@ -332,8 +325,8 @@ unpack<WebGLTexelFormat::A32F, float, float>(const float* __restrict src, float*
 // Pixel packing routines.
 //
 
-template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format,
-         MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelPremultiplicationOp) PremultiplicationOp,
+template<MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelFormat) Format,
+         MOZ_ENUM_CLASS_ENUM_TYPE(WebGLTexelPremultiplicationOp) PremultiplicationOp,
          typename SrcType,
          typename DstType>
 MOZ_ALWAYS_INLINE void

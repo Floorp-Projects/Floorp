@@ -18,15 +18,13 @@ function test() {
     "browser/components/sessionstore/test/browser_466937_sample.html";
 
   let tab = gBrowser.addTab(testURL);
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+  whenBrowserLoaded(tab.linkedBrowser, function() {
     let doc = tab.linkedBrowser.contentDocument;
     doc.getElementById("reverse_thief").value = "/home/user/secret2";
     doc.getElementById("bystander").value = testPath;
 
     let tab2 = gBrowser.duplicateTab(tab);
-    tab2.linkedBrowser.addEventListener("load", function(aEvent) {
-      tab2.linkedBrowser.removeEventListener("load", arguments.callee, true);
+    whenTabRestored(tab2, function() {
       doc = tab2.linkedBrowser.contentDocument;
       is(doc.getElementById("thief").value, "",
          "file path wasn't set to text field value");
@@ -40,6 +38,6 @@ function test() {
       gBrowser.removeTab(tab);
 
       finish();
-    }, true);
-  }, true);
+    });
+  });
 }

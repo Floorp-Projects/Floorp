@@ -22,10 +22,6 @@ EXTRA_DSO_LDOPTS += \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
 
-ifdef JS_SHARED_LIBRARY
-EXTRA_DSO_LDOPTS += $(MOZ_JS_LIBS)
-endif
-
 LOCAL_INCLUDES += -I$(srcdir)/../migration/src
 
 # Mac: Need to link with CoreFoundation for Mac Migrators (PList reading code)

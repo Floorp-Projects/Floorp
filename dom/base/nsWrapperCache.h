@@ -156,6 +156,8 @@ public:
    */
   bool IsBlackAndDoesNotNeedTracing(nsISupports* aThis);
 
+  bool HasNothingToTrace(nsISupports* aThis);
+
   // Only meant to be called by code that preserves a wrapper.
   void SetPreservingWrapper(bool aPreserve)
   {

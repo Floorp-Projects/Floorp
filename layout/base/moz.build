@@ -79,7 +79,6 @@ UNIFIED_SOURCES += [
     'nsCSSRenderingBorders.cpp',
     'nsDisplayList.cpp',
     'nsDisplayListInvalidation.cpp',
-    'nsDocumentViewer.cpp',
     'nsFrameManager.cpp',
     'nsFrameTraversal.cpp',
     'nsGenConList.cpp',
@@ -87,7 +86,6 @@ UNIFIED_SOURCES += [
     'nsLayoutHistoryState.cpp',
     'nsLayoutUtils.cpp',
     'nsPresContext.cpp',
-    'nsPresShell.cpp',
     'nsQuoteList.cpp',
     'nsStyleChangeList.cpp',
     'nsStyleSheetService.cpp',
@@ -98,10 +96,14 @@ UNIFIED_SOURCES += [
     'StackArena.cpp',
 ]
 
+# nsDocumentViewer.cpp and nsPresShell.cpp need to be built separately
+# because they force NSPR logging.
 # nsPresArena.cpp needs to be built separately because it uses plarena.h.
 # nsRefreshDriver.cpp needs to be built separately because of name clashes in the OS X headers
 SOURCES += [
+    'nsDocumentViewer.cpp',
     'nsPresArena.cpp',
+    'nsPresShell.cpp',
     'nsRefreshDriver.cpp',
 ]
 

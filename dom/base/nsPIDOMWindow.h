@@ -60,8 +60,8 @@ enum UIStateChangeType
 };
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x4f4eadf9, 0xe795, 0x48e5, \
-  { 0x89, 0x4b, 0x04, 0x40, 0xb2, 0x5d, 0xa6, 0xfa } }
+{ 0xf26953de, 0xa799, 0x4a92, \
+  { 0x87, 0x49, 0x7c, 0x37, 0xe5, 0x90, 0x3f, 0x37 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -653,6 +653,15 @@ public:
   // WebIDL-ish APIs
   nsPerformance* GetPerformance();
 
+  void MarkUncollectableForCCGeneration(uint32_t aGeneration)
+  {
+    mMarkedCCGeneration = aGeneration;
+  }
+
+  uint32_t GetMarkedCCGeneration()
+  {
+    return mMarkedCCGeneration;
+  }
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
   // be null if and only if the created window itself is an outer
@@ -736,6 +745,8 @@ protected:
   // This is only used by the inner window. Set to true once we've sent
   // the (chrome|content)-document-global-created notification.
   bool mHasNotifiedGlobalCreated;
+
+  uint32_t mMarkedCCGeneration;
 };
 
 

@@ -37,7 +37,7 @@ public:
 };
 
 // WrapperPromiseCallback execs a JS Callback with a value, and then the return
-// value is sent to the aNextPromise->resolveFunction() or to
+// value is sent to the aNextPromise->ResolveFunction() or to
 // aNextPromise->RejectFunction() if the JS Callback throws.
 class WrapperPromiseCallback MOZ_FINAL : public PromiseCallback
 {

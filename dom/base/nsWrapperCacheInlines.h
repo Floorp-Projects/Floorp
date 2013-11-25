@@ -37,16 +37,19 @@ SearchGray(void* aGCThing, const char* aName, void* aClosure)
 }
 
 inline bool
+nsWrapperCache::HasNothingToTrace(nsISupports* aThis)
+{
+  nsXPCOMCycleCollectionParticipant* participant = nullptr;
+  CallQueryInterface(aThis, &participant);
+  bool hasGrayObjects = false;
+  participant->Trace(aThis, TraceCallbackFunc(SearchGray), &hasGrayObjects);
+  return !hasGrayObjects;
+}
+
+inline bool
 nsWrapperCache::IsBlackAndDoesNotNeedTracing(nsISupports* aThis)
 {
-  if (IsBlack()) {
-    nsXPCOMCycleCollectionParticipant* participant = nullptr;
-    CallQueryInterface(aThis, &participant);
-    bool hasGrayObjects = false;
-    participant->Trace(aThis, TraceCallbackFunc(SearchGray), &hasGrayObjects);
-    return !hasGrayObjects;
-  }
-  return false;
+  return IsBlack() && HasNothingToTrace(aThis);
 }
 
 inline void

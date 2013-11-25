@@ -96,6 +96,8 @@ MOZ_END_ENUM_CLASS(WebGLImageDataStatus)
  *    textures from DOM elements. See gfxImageSurface::Format().
  */
 MOZ_BEGIN_ENUM_CLASS(WebGLTexelFormat, int)
+    // returned by SurfaceFromElementResultToImageSurface to indicate absence of image data
+    None,
     // dummy error code returned by GetWebGLTexelFormat in error cases,
     // after assertion failure (so this never happens in debug builds)
     BadFormat,

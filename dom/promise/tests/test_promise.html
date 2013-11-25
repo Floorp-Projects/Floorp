@@ -63,6 +63,15 @@ function promiseReject() {
   });
 }
 
+function promiseRejectNoHandler() {
+  // This test only checks that the code that reports unhandled errors in the
+  // Promises implementation does not crash or leak.
+  var promise = new Promise(function(res, rej) {
+    noSuchMethod();
+  });
+  runTest();
+}
+
 function promiseRejectNoArg() {
   var promise = new Promise(function(resolve, reject) {
     reject();
@@ -474,7 +483,8 @@ var tests = [ promiseResolve, promiseReject,
               promiseThenNoArg,
               promiseThenUndefinedResolveFunction,
               promiseThenNullResolveFunction,
-              promiseCatchNoArg
+              promiseCatchNoArg,
+              promiseRejectNoHandler,
             ];
 
 function runTest() {
