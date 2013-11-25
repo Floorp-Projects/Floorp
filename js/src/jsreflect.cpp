@@ -3313,7 +3313,10 @@ JS_InitReflect(JSContext *cx, JSObject *objArg)
     };
 
     RootedObject obj(cx, objArg);
-    RootedObject Reflect(cx, NewObjectWithClassProto(cx, &JSObject::class_, nullptr,
+    RootedObject proto(cx, obj->as<GlobalObject>().getOrCreateObjectPrototype(cx));
+    if (!proto)
+        return nullptr;
+    RootedObject Reflect(cx, NewObjectWithGivenProto(cx, &JSObject::class_, proto,
                                                      obj, SingletonObject));
     if (!Reflect)
         return nullptr;

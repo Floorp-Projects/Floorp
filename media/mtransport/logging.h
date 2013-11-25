@@ -10,7 +10,7 @@
 #define logging_h__
 
 #if defined(PR_LOG)
-#error "Must #include logging.h before before any IPDL-generated files or other files that #include prlog.h."
+#error "Must #include logging.h before any IPDL-generated files or other files that #include prlog.h."
 #endif
 
 // Enforce logging under production builds for MOZ_MTLOG friends.

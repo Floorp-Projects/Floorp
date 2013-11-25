@@ -39,6 +39,7 @@ skip-if(B2G) == quotes-1.xhtml quotes-1-ref.xhtml
 != stretchy-underbar-1.xhtml stretchy-underbar-1-ref.xhtml 
 == table-width-1.xhtml table-width-1-ref.xhtml
 == table-width-2.html table-width-2-ref.html
+fails-if(OSX||/^Windows\x20NT\x206\.[12]/.test(http.oscpu)||Android) == table-width-3.html table-width-3-ref.html
 == underbar-width-1.xhtml underbar-width-1-ref.xhtml
 == mathml-type-supported.xhtml mathml-type-supported-ref.xml
 == mtable-align-negative-rownumber.html mtable-align-negative-rownumber-ref.html
