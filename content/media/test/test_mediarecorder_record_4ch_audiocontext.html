@@ -1,0 +1,74 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Record AudioContext with four channels</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+
+function startTest() {
+  var context = new AudioContext();
+  var buffer = context.createBuffer(4, 80920, context.sampleRate);
+  for (var i = 0; i < 80920; ++i) {
+    for(var j = 0; j < 4; ++j) {
+      buffer.getChannelData(j)[i] = Math.sin(1000 * 2 * Math.PI * i / context.sampleRate);
+    }
+  }
+
+  var source = context.createBufferSource();
+  source.buffer = buffer;
+  var dest = context.createMediaStreamDestination();
+  var stopTriggered = false;
+  var onstopTriggered = false;
+  dest.channelCount = 4;
+  var expectedMimeType = 'audio/ogg';
+  source.channelCountMode = 'explicit';
+  source.connect(dest);
+  var elem = document.createElement('audio');
+  elem.mozSrcObject = dest.stream;
+  mMediaStream = dest.stream;
+  source.start(0);
+  elem.play();
+  mMediaRecorder = new MediaRecorder(dest.stream);
+  mMediaRecorder.onwarning = function() {
+    ok(false, 'onwarning unexpectedly fired');
+  };
+
+  mMediaRecorder.onerror = function() {
+    ok(false, 'onerror unexpectedly fired');
+  };
+
+  mMediaRecorder.onstop = function() {
+    ok(true, 'onstop fired successfully');
+    is(mMediaRecorder.state, 'inactive', 'check recording status is inactive');
+    onstopTriggered = true;
+    SimpleTest.finish();
+  };
+  mMediaRecorder.ondataavailable = function (e) {
+    ok(e.data.size > 0, 'check blob has data');
+    is(mMediaRecorder.mimeType, expectedMimeType, 'blob should has mimetype, return ' + mMediaRecorder.mimeType);
+    if (!stopTriggered) {
+      mMediaRecorder.stop();
+      stopTriggered = true;
+    } else if (onstopTriggered) {
+      ok(false, 'ondataavailable should come before onstop event');
+    }
+  };
+  try {
+    mMediaRecorder.start(1000);
+    is('recording', mMediaRecorder.state, "check record state recording");
+  } catch (e) {
+    ok(false, 'Can t record audio context');
+  }
+}
+
+startTest();
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

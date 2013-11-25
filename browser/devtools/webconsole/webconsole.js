@@ -3980,30 +3980,6 @@ JSTerm.prototype = {
 
     if (aEvent.ctrlKey) {
       switch (aEvent.charCode) {
-        case 97:
-          // control-a
-          this.clearCompletion();
-
-          if (Services.appinfo.OS == "WINNT") {
-            // Allow Select All on Windows.
-            break;
-          }
-
-          let lineBeginPos = 0;
-          if (this.hasMultilineInput()) {
-            // find index of closest newline <= to cursor
-            for (let i = inputNode.selectionStart-1; i >= 0; i--) {
-              if (inputNode.value.charAt(i) == "\r" ||
-                  inputNode.value.charAt(i) == "\n") {
-                lineBeginPos = i+1;
-                break;
-              }
-            }
-          }
-          inputNode.setSelectionRange(lineBeginPos, lineBeginPos);
-          aEvent.preventDefault();
-          break;
-
         case 101:
           // control-e
           if (Services.appinfo.OS == "WINNT") {

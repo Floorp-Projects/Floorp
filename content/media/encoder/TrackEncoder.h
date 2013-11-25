@@ -141,8 +141,10 @@ protected:
                            uint32_t aOutputChannels, AudioDataValue* aOutput);
 
   /**
-   * The number of channels in the first valid audio chunk, and is being used
-   * to initialize the audio encoder.
+   * The number of channels are used for processing PCM data in the audio encoder.
+   * This value comes from the first valid audio chunk. If encoder can't support
+   * the channels in the chunk, downmix PCM stream can be performed.
+   * This value also be used to initialize the audio encoder.
    */
   int mChannels;
   int mSamplingRate;
