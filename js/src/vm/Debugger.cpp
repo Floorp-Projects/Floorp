@@ -8,7 +8,6 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jshashutil.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jswrapper.h"
@@ -653,7 +652,7 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, MutableHandleValue rv
     JS_ASSERT(!env->is<ScopeObject>());
 
     JSObject *envobj;
-    DependentAddPtr<ObjectWeakMap> p(cx, environments, env);
+    ObjectWeakMap::AddPtr p = environments.lookupForAdd(env);
     if (p) {
         envobj = p->value;
     } else {
@@ -664,7 +663,7 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, MutableHandleValue rv
             return false;
         envobj->setPrivateGCThing(env);
         envobj->setReservedSlot(JSSLOT_DEBUGENV_OWNER, ObjectValue(*object));
-        if (!p.add(environments, env, envobj)) {
+        if (!environments.relookupOrAdd(p, env, envobj)) {
             js_ReportOutOfMemory(cx);
             return false;
         }
@@ -688,7 +687,7 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
     if (vp.isObject()) {
         RootedObject obj(cx, &vp.toObject());
 
-        DependentAddPtr<ObjectWeakMap> p(cx, objects, obj);
+        ObjectWeakMap::AddPtr p = objects.lookupForAdd(obj);
         if (p) {
             vp.setObject(*p->value);
         } else {
@@ -700,8 +699,7 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
                 return false;
             dobj->setPrivateGCThing(obj);
             dobj->setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*object));
-
-            if (!p.add(objects, obj, dobj)) {
+            if (!objects.relookupOrAdd(p, obj, dobj)) {
                 js_ReportOutOfMemory(cx);
                 return false;
             }
@@ -2759,13 +2757,14 @@ Debugger::wrapScript(JSContext *cx, HandleScript script)
 {
     assertSameCompartment(cx, object.get());
     JS_ASSERT(cx->compartment() != script->compartment());
-    DependentAddPtr<ScriptWeakMap> p(cx, scripts, script);
+    ScriptWeakMap::AddPtr p = scripts.lookupForAdd(script);
     if (!p) {
         JSObject *scriptobj = newDebuggerScript(cx, script);
         if (!scriptobj)
             return nullptr;
 
-        if (!p.add(scripts, script, scriptobj)) {
+        /* The allocation may have caused a GC, which can remove table entries. */
+        if (!scripts.relookupOrAdd(p, script, scriptobj)) {
             js_ReportOutOfMemory(cx);
             return nullptr;
         }
@@ -3650,13 +3649,14 @@ Debugger::wrapSource(JSContext *cx, HandleScriptSource source)
 {
     assertSameCompartment(cx, object.get());
     JS_ASSERT(cx->compartment() != source->compartment());
-    DependentAddPtr<SourceWeakMap> p(cx, sources, source);
+    SourceWeakMap::AddPtr p = sources.lookupForAdd(source);
     if (!p) {
         JSObject *sourceobj = newDebuggerSource(cx, source);
         if (!sourceobj)
             return nullptr;
 
-        if (!p.add(sources, source, sourceobj)) {
+        /* The allocation may have caused a GC, which can remove table entries. */
+        if (!sources.relookupOrAdd(p, source, sourceobj)) {
             js_ReportOutOfMemory(cx);
             return nullptr;
         }
