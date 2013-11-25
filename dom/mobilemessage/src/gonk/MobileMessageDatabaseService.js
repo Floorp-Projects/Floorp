@@ -1940,31 +1940,21 @@ MobileMessageDatabaseService.prototype = {
 
   saveReceivedMessage: function saveReceivedMessage(aMessage, aCallback) {
     if ((aMessage.type != "sms" && aMessage.type != "mms") ||
-        (aMessage.type == "sms" && (aMessage.messageClass == undefined ||
-                                    aMessage.sender == undefined)) ||
+        (aMessage.type == "sms" && aMessage.messageClass == undefined) ||
         (aMessage.type == "mms" && (aMessage.delivery == undefined ||
                                     aMessage.transactionId == undefined ||
                                     !Array.isArray(aMessage.deliveryInfo) ||
                                     !Array.isArray(aMessage.receivers))) ||
+        aMessage.sender == undefined ||
         aMessage.timestamp == undefined) {
       if (aCallback) {
         aCallback.notify(Cr.NS_ERROR_FAILURE, null);
       }
       return;
     }
-
-    let threadParticipants;
+    let threadParticipants = [aMessage.sender];
     if (aMessage.type == "mms") {
-      if (aMessage.headers.from) {
-        aMessage.sender = aMessage.headers.from.address;
-      } else {
-        aMessage.sender = "anonymous";
-      }
-
-      threadParticipants = [aMessage.sender];
       this.fillReceivedMmsThreadParticipants(aMessage, threadParticipants);
-    } else { // SMS
-      threadParticipants = [aMessage.sender];
     }
 
     let timestamp = aMessage.timestamp;

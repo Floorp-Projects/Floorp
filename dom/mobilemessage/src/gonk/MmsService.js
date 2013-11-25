@@ -1456,7 +1456,13 @@ MmsService.prototype = {
     }
 
     intermediate.timestamp = Date.now();
+    intermediate.sender = null;
     intermediate.transactionId = intermediate.headers["x-mms-transaction-id"];
+    if (intermediate.headers.from) {
+      intermediate.sender = intermediate.headers.from.address;
+    } else {
+      intermediate.sender = "anonymous";
+    }
     intermediate.receivers = [];
     intermediate.phoneNumber = mmsConnection.getPhoneNumber();
     intermediate.iccId = mmsConnection.getIccId();
@@ -1479,6 +1485,11 @@ MmsService.prototype = {
                                                                   intermediate,
                                                                   savable) {
     savable.timestamp = Date.now();
+    if (intermediate.headers.from) {
+      savable.sender = intermediate.headers.from.address;
+    } else {
+      savable.sender = "anonymous";
+    }
     savable.receivers = [];
     // We don't have Bcc in recevied MMS message.
     for each (let type in ["cc", "to"]) {
