@@ -110,7 +110,6 @@ StartupCache::GetSingleton()
 void
 StartupCache::DeleteSingleton()
 {
-  delete StartupCache::gStartupCache;
   StartupCache::gStartupCache = nullptr;
 }
 
@@ -122,16 +121,17 @@ StartupCache::InitSingleton()
 
   rv = StartupCache::gStartupCache->Init();
   if (NS_FAILED(rv)) {
-    delete StartupCache::gStartupCache;
     StartupCache::gStartupCache = nullptr;
   }
   return rv;
 }
 
-StartupCache* StartupCache::gStartupCache;
+StaticRefPtr<StartupCache> StartupCache::gStartupCache;
 bool StartupCache::gShutdownInitiated;
 bool StartupCache::gIgnoreDiskCache;
 enum StartupCache::TelemetrifyAge StartupCache::gPostFlushAgeAction = StartupCache::IGNORE_AGE;
+
+NS_IMPL_ISUPPORTS1(StartupCache, nsISupports)
 
 StartupCache::StartupCache()
   : mArchive(nullptr), mStartupWriteInitiated(false), mWriteThread(nullptr)
@@ -156,7 +156,6 @@ StartupCache::~StartupCache()
     WriteToDisk();
   }
 
-  gStartupCache = nullptr;
   NS_UnregisterMemoryReporter(mMappingReporter);
   NS_UnregisterMemoryReporter(mDataReporter);
 }
@@ -543,7 +542,7 @@ StartupCache::WaitOnWriteThread()
   mWriteThread = nullptr;
 }
 
-void 
+void
 StartupCache::ThreadedWrite(void *aClosure)
 {
   PR_SetCurrentThreadName("StartupCache");
