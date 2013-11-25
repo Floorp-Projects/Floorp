@@ -24,15 +24,12 @@ UNIFIED_SOURCES += [
     'NativeKeyBindings.mm',
     'nsAppShell.mm',
     'nsBidiKeyboard.mm',
-    'nsChildView.mm',
-    'nsClipboard.mm',
     'nsCocoaFeatures.mm',
     'nsCocoaUtils.mm',
     'nsCocoaWindow.mm',
     'nsColorPicker.mm',
     'nsCursorManager.mm',
     'nsDeviceContextSpecX.mm',
-    'nsDragService.mm',
     'nsFilePicker.mm',
     'nsIdleServiceX.mm',
     'nsLookAndFeel.mm',
@@ -56,8 +53,15 @@ UNIFIED_SOURCES += [
     'nsToolkit.mm',
     'nsWidgetFactory.mm',
     'nsWindowMap.mm',
-    'TextInputHandler.mm',
     'WidgetTraceEvent.mm',
+]
+
+# These files cannot be built in unified mode because they force NSPR logging.
+SOURCES += [
+    'nsChildView.mm',
+    'nsClipboard.mm',
+    'nsDragService.mm',
+    'TextInputHandler.mm',
 ]
 
 if CONFIG['TARGET_CPU'] == 'x86_64':
