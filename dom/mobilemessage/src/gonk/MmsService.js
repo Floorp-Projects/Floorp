@@ -1838,11 +1838,8 @@ MmsService.prototype = {
 
     if (DEBUG) debug("Updating the delivery status to: " + deliveryStatus);
     gMobileMessageDatabaseService
-      .setMessageDeliveryByEnvelopeId(envelopeId,
-                                      address,
-                                      null,
-                                      deliveryStatus,
-                                      (function notifySetDeliveryResult(aRv, aDomMessage) {
+      .setMessageDeliveryStatusByEnvelopeId(envelopeId, address, deliveryStatus,
+                                            (function(aRv, aDomMessage) {
       if (DEBUG) debug("Marking the delivery status is done.");
       // TODO bug 832140 handle !Components.isSuccessCode(aRv)
 
