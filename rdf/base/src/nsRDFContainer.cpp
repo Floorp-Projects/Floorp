@@ -686,10 +686,9 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
         }
     }
 
-    static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
-    char buf[sizeof(kRDFNameSpaceURI) + 16];
+    char buf[sizeof(RDF_NAMESPACE_URI) + 16];
     nsFixedCString nextValStr(buf, sizeof(buf), 0);
-    nextValStr = kRDFNameSpaceURI;
+    nextValStr = RDF_NAMESPACE_URI;
     nextValStr.Append("_");
     nextValStr.AppendInt(nextVal, 10);
 

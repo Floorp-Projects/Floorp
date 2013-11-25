@@ -323,8 +323,7 @@ RDFContainerUtilsImpl::RDFContainerUtilsImpl()
     if (gRefCnt++ == 0) {
         nsresult rv;
 
-        NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-        rv = CallGetService(kRDFServiceCID, &gRDFService);
+        rv = CallGetService(NS_RDFSERVICE_CID, &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_SUCCEEDED(rv)) {
