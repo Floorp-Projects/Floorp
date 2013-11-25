@@ -118,6 +118,11 @@ this.MMS_MAX_TOTAL_RECIPIENTS              = 20;
 this.MMS_MAX_LENGTH_NAME_CONTENT_TYPE      = 40;
 this.MMS_MAX_LENGTH_MAILBOX_PORTION        = 256;
 
+this.DOM_READ_STATUS_NOT_APPLICABLE = "not-applicable";
+this.DOM_READ_STATUS_SUCCESS        = "success";
+this.DOM_READ_STATUS_PENDING        = "pending";
+this.DOM_READ_STATUS_ERROR          = "error";
+
 this.ALL_CONST_SYMBOLS = undefined; // We want ALL_CONST_SYMBOLS to be exported.
 this.ALL_CONST_SYMBOLS = Object.keys(this);
 
