@@ -167,14 +167,23 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
         mListener = listener;
     }
 
+    private boolean isCurrentFolder(FolderInfo folderInfo) {
+        return (mParentStack.size() > 0 &&
+                mParentStack.peek().id == folderInfo.id);
+    }
+
     public void swapCursor(Cursor c, FolderInfo folderInfo, RefreshType refreshType) {
         switch(refreshType) {
             case PARENT:
-                mParentStack.removeFirst();
+                if (!isCurrentFolder(folderInfo)) {
+                    mParentStack.removeFirst();
+                }
                 break;
 
             case CHILD:
-                mParentStack.addFirst(folderInfo);
+                if (!isCurrentFolder(folderInfo)) {
+                    mParentStack.addFirst(folderInfo);
+                }
                 break;
 
             default:
