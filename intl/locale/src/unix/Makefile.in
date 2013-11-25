@@ -16,11 +16,5 @@ endif
 
 DEFINES += -DOSTYPE=\"$(OS_CONFIG)\"
 
-nsUNIXCharset.$(OBJ_SUFFIX): unixcharset.properties.h
-
 unixcharset.properties.h: $(srcdir)/../props2arrays.py unixcharset.properties
 	$(PYTHON) $^ $@
-
-GARBAGE += \
-	unixcharset.properties.h \
-	$(NULL)

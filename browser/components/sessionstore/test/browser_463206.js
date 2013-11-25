@@ -31,14 +31,8 @@ function test() {
     typeText(doc.getElementsByName("1|#out2")[0], Math.random());
     typeText(doc.defaultView.frames[0].frames[1].document.getElementById("in1"), new Date());
 
-    frameCount = 0;
     let tab2 = gBrowser.duplicateTab(tab);
-    tab2.linkedBrowser.addEventListener("load", function(aEvent) {
-      // wait for all frames to load completely
-      if (frameCount++ < 5)
-        return;
-      tab2.linkedBrowser.removeEventListener("load", arguments.callee, true);
-
+    whenTabRestored(tab2, function() {
       let doc = tab2.linkedBrowser.contentDocument;
       let win = tab2.linkedBrowser.contentWindow;
       isnot(doc.getElementById("out1").value,
@@ -59,6 +53,6 @@ function test() {
       gBrowser.removeTab(tab);
 
       finish();
-    }, true);
+    });
   }, true);
 }
