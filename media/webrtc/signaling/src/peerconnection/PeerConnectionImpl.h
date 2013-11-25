@@ -5,6 +5,7 @@
 #ifndef _PEER_CONNECTION_IMPL_H_
 #define _PEER_CONNECTION_IMPL_H_
 
+#include <deque>
 #include <string>
 #include <vector>
 #include <map>
@@ -307,6 +308,12 @@ public:
     rv = GetStats(aSelector, internalStats);
   }
 
+  NS_IMETHODIMP_TO_ERRORRESULT(GetLogging, ErrorResult &rv,
+                               const nsAString& pattern)
+  {
+    rv = GetLogging(pattern);
+  }
+
   NS_IMETHODIMP AddIceCandidate(const char* aCandidate, const char* aMid,
                                 unsigned short aLevel);
   void AddIceCandidate(const nsAString& aCandidate, const nsAString& aMid,
@@ -494,6 +501,13 @@ private:
   void OnStatsReport_m(uint32_t trackId,
                        nsresult result,
                        nsAutoPtr<mozilla::dom::RTCStatsReportInternal> report);
+
+  // Fetches logs matching pattern from RLogRingBuffer. Must be run on STS.
+  void GetLogging_s(const std::string& pattern);
+
+  // Sends logging to JS. Must run on main thread.
+  void OnGetLogging_m(const std::string& pattern,
+                      const std::deque<std::string>& logging);
 #endif
 
   // Timecard used to measure processing time. This should be the first class
