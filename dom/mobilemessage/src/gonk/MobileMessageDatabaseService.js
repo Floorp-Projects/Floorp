@@ -1226,6 +1226,17 @@ MobileMessageDatabaseService.prototype = {
         }
       }
 
+      // For all sent and received MMS messages, we have to add their
+      // |readStatus| and |readTimestamp| attributes in |deliveryInfo| array.
+      let readReportRequested =
+        messageRecord.headers["x-mms-read-report"] || false;
+      for (let element of messageRecord.deliveryInfo) {
+        element.readStatus = readReportRequested
+                           ? MMS.DOM_READ_STATUS_PENDING
+                           : MMS.DOM_READ_STATUS_NOT_APPLICABLE;
+        element.readTimestamp = 0;
+      }
+
       cursor.update(messageRecord);
       cursor.continue();
     };
@@ -2047,6 +2058,8 @@ MobileMessageDatabaseService.prototype = {
         receiver: aMessage.phoneNumber,
         deliveryStatus: aMessage.deliveryStatus,
         deliveryTimestamp: 0,
+        readStatus: MMS.DOM_READ_STATUS_NOT_APPLICABLE,
+        readTimestamp: 0,
       }];
 
       delete aMessage.deliveryStatus;
@@ -2100,12 +2113,18 @@ MobileMessageDatabaseService.prototype = {
         }
         return;
       }
+      let readStatus = aMessage.headers["x-mms-read-report"]
+                     ? MMS.DOM_READ_STATUS_PENDING
+                     : MMS.DOM_READ_STATUS_NOT_APPLICABLE;
       aMessage.deliveryInfo = [];
       for (let i = 0; i < receivers.length; i++) {
         aMessage.deliveryInfo.push({
           receiver: receivers[i],
           deliveryStatus: deliveryStatus,
-          deliveryTimestamp: 0 });
+          deliveryTimestamp: 0,
+          readStatus: readStatus,
+          readTimestamp: 0,
+        });
       }
     }
 
@@ -2141,6 +2160,57 @@ MobileMessageDatabaseService.prototype = {
                                                   aDeliveryStatus, aCallback) {
     this.updateMessageDeliveryById(aEnvelopeId, "envelopeId", aReceiver, null,
                                    aDeliveryStatus, null, aCallback);
+  },
+
+  setMessageReadStatusByEnvelopeId:
+    function setMessageReadStatusByEnvelopeId(aEnvelopeId, aReceiver,
+                                              aReadStatus, aCallback) {
+    if (DEBUG) {
+      debug("Setting message's read status by envelopeId = " + aEnvelopeId +
+            ", receiver: " + aReceiver + ", readStatus: " + aReadStatus);
+    }
+
+    let self = this;
+    this.newTxnWithCallback(aCallback, function(aCapture, aMessageStore) {
+      let getRequest = aMessageStore.index("envelopeId").get(aEnvelopeId);
+      getRequest.onsuccess = function onsuccess(event) {
+        let messageRecord = event.target.result;
+        if (!messageRecord) {
+          if (DEBUG) debug("envelopeId '" + aEnvelopeId + "' not found");
+          throw Cr.NS_ERROR_FAILURE;
+        }
+
+        aCapture.messageRecord = messageRecord;
+
+        let isRecordUpdated = false;
+        self.forEachMatchedMmsDeliveryInfo(messageRecord.deliveryInfo,
+                                           aReceiver, function(aEntry) {
+          if (aEntry.readStatus == aReadStatus) {
+            return;
+          }
+
+          aEntry.readStatus = aReadStatus;
+          if (aReadStatus == MMS.DOM_READ_STATUS_SUCCESS) {
+            aEntry.readTimestamp = Date.now();
+          } else {
+            aEntry.readTimestamp = 0;
+          }
+          isRecordUpdated = true;
+        });
+
+        if (!isRecordUpdated) {
+          if (DEBUG) {
+            debug("The values of readStatus don't need to be updated.");
+          }
+          return;
+        }
+
+        if (DEBUG) {
+          debug("The readStatus is updated.");
+        }
+        aMessageStore.put(messageRecord);
+      };
+    });
   },
 
   getMessageRecordByTransactionId: function getMessageRecordByTransactionId(aTransactionId, aCallback) {
