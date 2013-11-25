@@ -47,6 +47,7 @@
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
+static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
 
 #define RDF_SEQ_LIST_LIMIT   8
 
@@ -687,9 +688,9 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
         }
     }
 
-    char buf[sizeof(RDF_NAMESPACE_URI) + 16];
+    char buf[sizeof(kRDFNameSpaceURI) + 16];
     nsFixedCString nextValStr(buf, sizeof(buf), 0);
-    nextValStr = RDF_NAMESPACE_URI;
+    nextValStr = kRDFNameSpaceURI;
     nextValStr.Append("_");
     nextValStr.AppendInt(nextVal, 10);
 

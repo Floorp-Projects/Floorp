@@ -36,6 +36,11 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
+
+////////////////////////////////////////////////////////////////////////
+
 class ContainerEnumeratorImpl : public nsISimpleEnumerator {
 private:
     // pseudo-constants
@@ -79,7 +84,7 @@ ContainerEnumeratorImpl::Init()
 {
     if (gRefCnt++ == 0) {
         nsresult rv;
-        nsCOMPtr<nsIRDFService> rdf = do_GetService(NS_RDFSERVICE_CID);
+        nsCOMPtr<nsIRDFService> rdf = do_GetService(kRDFServiceCID);
         NS_ASSERTION(rdf != nullptr, "unable to acquire resource manager");
         if (! rdf)
             return NS_ERROR_FAILURE;
@@ -88,7 +93,7 @@ ContainerEnumeratorImpl::Init()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
         if (NS_FAILED(rv)) return rv;
 
-        rv = CallGetService(NS_RDFCONTAINERUTILS_CID, &gRDFC);
+        rv = CallGetService(kRDFContainerUtilsCID, &gRDFC);
         if (NS_FAILED(rv)) return rv;
     }
 
