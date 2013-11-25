@@ -350,4 +350,8 @@
 
   <string name="exit_guest_session_title">&exit_guest_session_title;</string>
   <string name="exit_guest_session_text">&exit_guest_session_text;</string>
+
+  <string name="actionbar_menu">&actionbar_menu;</string>
+  <string name="actionbar_done">&actionbar_done;</string>
+
 </resources>

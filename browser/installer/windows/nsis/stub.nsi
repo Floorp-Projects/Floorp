@@ -217,7 +217,7 @@ Var ControlRightPX
 !ifdef OFFICIAL
 !ifdef BETA_UPDATE_CHANNEL
 !undef URLStubDownload
-!define URLStubDownload "http://download.mozilla.org/?product=firefox-beta-latest&os=win&lang=${AB_CD}"
+!define URLStubDownload "http://download.mozilla.org/?os=win&lang=${AB_CD}&product=firefox-beta-latest"
 !undef URLManualDownload
 !define URLManualDownload "https://www.mozilla.org/${AB_CD}/firefox/installer-help/?channel=beta&installer_lang=${AB_CD}"
 !undef Channel
@@ -1219,7 +1219,7 @@ FunctionEnd
 
 Function StartDownload
   ${NSD_KillTimer} StartDownload
-  InetBgDL::Get "${URLStubDownload}${URLParamAppend}" "$PLUGINSDIR\download.exe" \
+  InetBgDL::Get "${URLStubDownload}${URLStubDownloadAppend}" "$PLUGINSDIR\download.exe" \
                 /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
   StrCpy $4 ""
   ${NSD_CreateTimer} OnDownload ${DownloadIntervalMS}
@@ -1870,7 +1870,7 @@ Function DisplayDownloadError
 FunctionEnd
 
 Function OpenManualDownloadURL
-  ExecShell "open" "${URLManualDownload}${URLParamAppend}"
+  ExecShell "open" "${URLManualDownload}${URLManualDownloadAppend}"
 FunctionEnd
 
 Section

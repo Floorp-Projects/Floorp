@@ -16,6 +16,7 @@ XPIDL_MODULE = 'telemetry'
 EXPORTS.mozilla += [
     'ProcessedStack.h',
     'Telemetry.h',
+    'ThreadHangStats.h',
 ]
 
 SOURCES += [
@@ -43,3 +44,7 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+GENERATED_FILES = [
+    'TelemetryHistogramData.inc',
+]

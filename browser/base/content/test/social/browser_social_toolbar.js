@@ -19,17 +19,9 @@ function test() {
 
   // required to test status button in combination with the toolbaritem
   Services.prefs.setBoolPref("social.allowMultipleWorkers", true);
-
-  // Preset the currentSet so the statusbutton is in the toolbar on addition. We
-  // bypass the SocialStatus class here since it requires the manifest already
-  // be installed.
-  let tbh = SocialStatus._toolbarHelper;
-  tbh.setPersistentPosition(tbh.idFromOrgin(manifests[1].origin));
-
   runSocialTestWithProvider(manifests, function (finishcb) {
     runSocialTests(tests, undefined, undefined, function() {
       Services.prefs.clearUserPref("social.allowMultipleWorkers");
-      SocialStatus.removePosition(manifests[1].origin);
       finishcb();
     });
   });

@@ -344,6 +344,12 @@ class MochitestUtilsMixin(object):
         self.urlOpts.append("runSlower=true")
       if options.debugOnFailure:
         self.urlOpts.append("debugOnFailure=true")
+      if options.dumpOutputDirectory:
+        self.urlOpts.append("dumpOutputDirectory=%s" % encodeURIComponent(options.dumpOutputDirectory))
+      if options.dumpAboutMemoryAfterTest:
+        self.urlOpts.append("dumpAboutMemoryAfterTest=true")
+      if options.dumpDMDAfterTest:
+        self.urlOpts.append("dumpDMDAfterTest=true")
 
   def buildTestPath(self, options):
     """ Build the url path to the specific test harness and test file or directory
@@ -354,9 +360,12 @@ class MochitestUtilsMixin(object):
       manifest.read(options.manifestFile)
       # Bug 883858 - return all tests including disabled tests
       tests = manifest.active_tests(disabled=True, **mozinfo.info)
+      # We need to ensure we match on a complete directory name matching the
+      # test root, and not a substring somewhere else in the path.
+      test_root = os.path.sep + self.getTestRoot(options) + os.path.sep
       paths = []
       for test in tests:
-        tp = test['path'].split(self.getTestRoot(options), 1)[1].strip('/')
+        tp = test['path'].split(test_root, 1)[1].replace('\\', '/').strip('/')
 
         # Filter out tests if we are using --test-path
         if options.testPath and not tp.startswith(options.testPath):
