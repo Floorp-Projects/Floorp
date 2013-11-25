@@ -2104,7 +2104,7 @@ MmsService.prototype = {
 
       if (errorCode !== Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR) {
         if (DEBUG) debug("Error! The params for sending MMS are invalid.");
-        sendTransactionCb(aDomMessage, errorCode, null);
+        sendTransactionCb(aDomMessage, errorCode);
         return;
       }
 
@@ -2117,7 +2117,7 @@ MmsService.prototype = {
       } catch (e) {
         if (DEBUG) debug("Exception: fail to create a SendTransaction instance.");
         sendTransactionCb(aDomMessage,
-                          Ci.nsIMobileMessageCallback.INTERNAL_ERROR, null);
+                          Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
       }
       sendTransaction.run(function callback(aMmsStatus, aMsg) {
@@ -2134,8 +2134,10 @@ MmsService.prototype = {
         } else {
           errorCode = Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR;
         }
-        let envelopeId =
-          aMsg && aMsg.headers && aMsg.headers["message-id"] || null;
+        let envelopeId = null;
+        if (aMsg) {
+          envelopeId = aMsg.headers ? aMsg.headers["message-id"] : null;
+        }
         sendTransactionCb(aDomMessage, errorCode, envelopeId);
       });
     });
