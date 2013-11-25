@@ -38,9 +38,6 @@ class BaselineFrame
         // The frame has a valid return value. See also StackFrame::HAS_RVAL.
         HAS_RVAL         = 1 << 0,
 
-        // Frame has blockChain_ set.
-        HAS_BLOCKCHAIN   = 1 << 1,
-
         // A call object has been pushed on the scope chain.
         HAS_CALL_OBJ     = 1 << 2,
 
@@ -72,7 +69,7 @@ class BaselineFrame
     uint32_t hiReturnValue_;
     uint32_t frameSize_;
     JSObject *scopeChain_;          // Scope chain (always initialized).
-    StaticBlockObject *blockChain_; // If HAS_BLOCKCHAIN, the static block chain.
+    StaticBlockObject *blockChain_; // The static block chain.
     JSScript *evalScript_;          // If isEvalFrame(), the current eval script.
     ArgumentsObject *argsObj_;      // If HAS_ARGS_OBJ, the arguments object.
     void *hookData_;                // If HAS_HOOK_DATA, debugger call hook data.
@@ -213,7 +210,7 @@ class BaselineFrame
     }
 
     bool hasBlockChain() const {
-        return (flags_ & HAS_BLOCKCHAIN) && blockChain_;
+        return blockChain_;
     }
     StaticBlockObject &blockChain() const {
         JS_ASSERT(hasBlockChain());
@@ -223,11 +220,9 @@ class BaselineFrame
         return hasBlockChain() ? blockChain_ : nullptr;
     }
     void setBlockChain(StaticBlockObject &block) {
-        flags_ |= HAS_BLOCKCHAIN;
         blockChain_ = &block;
     }
     void setBlockChainNull() {
-        JS_ASSERT(!hasBlockChain());
         blockChain_ = nullptr;
     }
     StaticBlockObject **addressOfBlockChain() {

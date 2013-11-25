@@ -289,6 +289,8 @@ BaselineCompiler::emitPrologue()
     else
         masm.storePtr(R1.scratchReg(), frame.addressOfScopeChain());
 
+    masm.storePtr(ImmPtr(nullptr), frame.addressOfBlockChain());
+
     // Functions with a large number of locals require two stack checks.
     // The VMCall for a fallible stack check can only occur after the
     // scope chain has been initialized, as that is required for proper
