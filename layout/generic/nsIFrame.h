@@ -1833,6 +1833,26 @@ public:
   virtual nsRect ComputeTightBounds(gfxContext* aContext) const;
 
   /**
+   * This function is similar to GetPrefWidth and ComputeTightBounds: it
+   * computes the left and right coordinates of a preferred tight bounding
+   * rectangle for the frame. This is a rectangle that would enclose the pixels
+   * that are drawn if we lay out the element without taking any optional line
+   * breaks. The rectangle is in appunits and relative to the origin of this
+   * frame. Currently, this function is only implemented for nsBlockFrame and
+   * nsTextFrame and is used to determine intrinsic widths of MathML token
+   * elements.
+
+   * @param aContext a rendering context that can be used if we need
+   * to do measurement
+   * @param aX      computed left coordinate of the tight bounding rectangle
+   * @param aXMost  computed intrinsic width of the tight bounding rectangle
+   *
+   */
+  virtual nsresult GetPrefWidthTightBounds(nsRenderingContext* aContext,
+                                           nscoord* aX,
+                                           nscoord* aXMost);
+
+  /**
    * Pre-reflow hook. Before a frame is reflowed this method will be called.
    * This call will always be invoked at least once before a subsequent Reflow
    * and DidReflow call. It may be called more than once, In general you will
