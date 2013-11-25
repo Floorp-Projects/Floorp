@@ -112,3 +112,35 @@ gfxIntSize gfxAlphaBoxBlur::CalculateBlurRadius(const gfxPoint& aStd)
     IntSize size = AlphaBoxBlur::CalculateBlurRadius(std);
     return gfxIntSize(size.width, size.height);
 }
+
+/* static */ void
+gfxAlphaBoxBlur::BlurRectangle(gfxContext *aDestinationCtx,
+                               const gfxRect& aRect,
+                               gfxCornerSizes* aCornerRadii,
+                               const gfxIntSize& aBlurRadius,
+                               const gfxRGBA& aShadowColor,
+                               const gfxRect& aDirtyRect,
+                               const gfxRect& aSkipRect)
+{
+  // Create the temporary surface for blurring
+  gfxAlphaBoxBlur blur;
+  gfxContext *dest = blur.Init(aRect, gfxIntSize(), aBlurRadius, &aDirtyRect, &aSkipRect);
+
+  if (!dest) {
+    return;
+  }
+
+  gfxRect shadowGfxRect = aRect;
+  shadowGfxRect.Round();
+
+  dest->NewPath();
+  if (aCornerRadii) {
+    dest->RoundedRectangle(shadowGfxRect, *aCornerRadii);
+  } else {
+    dest->Rectangle(shadowGfxRect);
+  }
+  dest->Fill();
+
+  aDestinationCtx->SetColor(aShadowColor);
+  blur.Paint(aDestinationCtx);
+}
