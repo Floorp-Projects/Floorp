@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 #include <cerrno>
+#include <deque>
 
 #include "base/histogram.h"
 #include "vcm.h"
@@ -64,6 +65,7 @@
 #include "MediaStreamTrack.h"
 #include "nsIScriptGlobalObject.h"
 #include "DOMMediaStream.h"
+#include "rlogringbuffer.h"
 #endif
 
 #ifndef USE_FAKE_MEDIA_STREAMS
@@ -1201,6 +1203,23 @@ PeerConnectionImpl::GetStats(MediaStreamTrack *aSelector,
 }
 
 NS_IMETHODIMP
+PeerConnectionImpl::GetLogging(const nsAString& aPattern) {
+  PC_AUTO_ENTER_API_CALL(true);
+
+#ifdef MOZILLA_INTERNAL_API
+  std::string pattern(NS_ConvertUTF16toUTF8(aPattern).get());
+  nsRefPtr<PeerConnectionImpl> pc(this);
+  RUN_ON_THREAD(mSTSThread,
+                WrapRunnable(pc,
+                             &PeerConnectionImpl::GetLogging_s,
+                             pattern),
+                NS_DISPATCH_NORMAL);
+
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, unsigned short aLevel) {
   PC_AUTO_ENTER_API_CALL(true);
 
@@ -1704,6 +1723,8 @@ void PeerConnectionImpl::GetStats_s(
   if (!report) {
     result = NS_ERROR_FAILURE;
   }
+
+  report->mPcid.Construct(NS_ConvertASCIItoUTF16(mHandle.c_str()));
   if (mMedia) {
     RefPtr<NrIceMediaStream> mediaStream(
         mMedia->ice_media_stream(trackId));
@@ -1715,10 +1736,8 @@ void PeerConnectionImpl::GetStats_s(
       NS_ConvertASCIItoUTF16 componentId(mediaStream->name().c_str());
       for (auto p = candPairs.begin(); p != candPairs.end(); ++p) {
         NS_ConvertASCIItoUTF16 codeword(p->codeword.c_str());
-        const nsString localCodeword(
-            NS_ConvertASCIItoUTF16("local_") + codeword);
-        const nsString remoteCodeword(
-            NS_ConvertASCIItoUTF16("remote_") + codeword);
+        NS_ConvertASCIItoUTF16 localCodeword(p->local.codeword.c_str());
+        NS_ConvertASCIItoUTF16 remoteCodeword(p->remote.codeword.c_str());
         // Only expose candidate-pair statistics to chrome, until we've thought
         // through the implications of exposing it to content.
 
@@ -1798,6 +1817,45 @@ void PeerConnectionImpl::OnStatsReport_m(
     }
   }
 }
+
+void PeerConnectionImpl::GetLogging_s(const std::string& pattern) {
+  RLogRingBuffer* logs = RLogRingBuffer::GetInstance();
+  std::deque<std::string> result;
+  logs->Filter(pattern, 0, &result);
+  nsRefPtr<PeerConnectionImpl> pc(this);
+  RUN_ON_THREAD(mThread,
+                WrapRunnable(pc,
+                             &PeerConnectionImpl::OnGetLogging_m,
+                             pattern,
+                             result),
+                NS_DISPATCH_NORMAL);
+}
+
+void PeerConnectionImpl::OnGetLogging_m(const std::string& pattern,
+                                        const std::deque<std::string>& logging) {
+  nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
+  if (!pco) {
+    return;
+  }
+
+  JSErrorResult rv;
+  if (!logging.empty()) {
+    Sequence<nsString> nsLogs;
+    for (auto l = logging.begin(); l != logging.end(); ++l) {
+      nsLogs.AppendElement(ObString(l->c_str()));
+    }
+    pco->OnGetLoggingSuccess(nsLogs, rv);
+  } else {
+    pco->OnGetLoggingError(kInternalError,
+        ObString(("No logging matching pattern " + pattern).c_str()), rv);
+  }
+
+  if (rv.Failed()) {
+    CSFLogError(logTag, "Error firing stats observer callback");
+  }
+}
+
+
 #endif
 
 void
