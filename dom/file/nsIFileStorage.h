@@ -13,14 +13,12 @@
   {0x6278f453, 0xd557, 0x4a55, \
   { 0x99, 0x3e, 0xf4, 0x69, 0xe2, 0xa5, 0xe1, 0xd0 } }
 
-class nsIAtom;
-
 class nsIFileStorage : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_FILESTORAGE_IID)
 
-  NS_IMETHOD_(nsIAtom*)
+  NS_IMETHOD_(const nsACString&)
   Id() = 0;
 
   // Whether or not the storage has been invalidated. If it has then no further
@@ -41,7 +39,7 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFileStorage, NS_FILESTORAGE_IID)
 
 #define NS_DECL_NSIFILESTORAGE                                                 \
-  NS_IMETHOD_(nsIAtom*)                                                        \
+  NS_IMETHOD_(const nsACString&)                                               \
   Id() MOZ_OVERRIDE;                                                           \
                                                                                \
   NS_IMETHOD_(bool)                                                            \
