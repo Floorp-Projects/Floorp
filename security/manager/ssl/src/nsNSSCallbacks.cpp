@@ -1308,7 +1308,6 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
             ? Telemetry::SSL_SYMMETRIC_CIPHER_FULL
             : Telemetry::SSL_SYMMETRIC_CIPHER_RESUMED,
           cipherInfo.symCipher);
-      infoObject->SetSymmetricCipherUsed(cipherInfo.symCipher);
     }
   }
 

@@ -133,8 +133,6 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags)
     mNotedTimeUntilReady(false),
     mKEAUsed(nsISSLSocketControl::KEY_EXCHANGE_UNKNOWN),
     mKEAExpected(nsISSLSocketControl::KEY_EXCHANGE_UNKNOWN),
-    mSymmetricCipherUsed(nsISSLSocketControl::SYMMETRIC_CIPHER_UNKNOWN),
-    mSymmetricCipherExpected(nsISSLSocketControl::SYMMETRIC_CIPHER_UNKNOWN),
     mProviderFlags(providerFlags),
     mSocketCreationTimestamp(TimeStamp::Now()),
     mPlaintextBytesRead(0)
@@ -172,27 +170,6 @@ NS_IMETHODIMP
 nsNSSSocketInfo::SetKEAExpected(int16_t aKea)
 {
   mKEAExpected = aKea;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::GetSymmetricCipherUsed(int16_t *aSymmetricCipher)
-{
-  *aSymmetricCipher = mSymmetricCipherUsed;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::GetSymmetricCipherExpected(int16_t *aSymmetricCipher)
-{
-  *aSymmetricCipher = mSymmetricCipherExpected;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::SetSymmetricCipherExpected(int16_t aSymmetricCipher)
-{
-  mSymmetricCipherExpected = aSymmetricCipher;
   return NS_OK;
 }
 
