@@ -1357,7 +1357,7 @@ function ReadRecTransaction(mmsConnection, messageID, toAddress) {
             type: type}
   headers["to"] = to;
   headers["from"] = null;
-  headers["x-mms-read-status"] = true;
+  headers["x-mms-read-status"] = MMS.MMS_PDU_READ_STATUS_READ;
 
   this.istream = MMS.PduHelper.compose(null, {headers: headers});
   if (!this.istream) {
