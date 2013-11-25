@@ -10,6 +10,11 @@
  * or pointers to it across thread boundaries.
  */
 
+// This must be the first include in the file in order for the
+// PL_ARENA_CONST_ALIGN_MASK macro to be effective.
+#define PL_ARENA_CONST_ALIGN_MASK  (sizeof(void*)-1)
+#include "plarena.h"
+
 #define READTYPE  int32_t
 #include "zlib.h"
 #include "nsISupportsUtils.h"
