@@ -130,7 +130,7 @@ class nsTSubstring_CharT
       char_iterator BeginWriting()
         {
           if (!EnsureMutable())
-            NS_RUNTIMEABORT("OOM");
+            NS_ABORT_OOM(mLength);
 
           return mData;
         }
@@ -143,7 +143,7 @@ class nsTSubstring_CharT
       char_iterator EndWriting()
         {
           if (!EnsureMutable())
-            NS_RUNTIMEABORT("OOM");
+            NS_ABORT_OOM(mLength);
 
           return mData + mLength;
         }
@@ -517,7 +517,7 @@ class nsTSubstring_CharT
           *data = mData;
           return mLength;
         }
-        
+
         /**
          * Get a pointer to the string's internal buffer, optionally resizing
          * the buffer first.  If size_type(-1) is passed for newLen, then the
@@ -531,7 +531,7 @@ class nsTSubstring_CharT
       size_type GetMutableData( char_type** data, size_type newLen = size_type(-1) )
         {
           if (!EnsureMutable(newLen))
-            NS_RUNTIMEABORT("OOM");
+            NS_ABORT_OOM(newLen == size_type(-1) ? mLength : newLen);
 
           *data = mData;
           return mLength;
