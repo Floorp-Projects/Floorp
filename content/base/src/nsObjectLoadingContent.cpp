@@ -251,7 +251,7 @@ private:
 NS_IMETHODIMP
 nsSimplePluginEvent::Run()
 {
-  if (mDocument->IsActive()) {
+  if (mDocument && mDocument->IsActive()) {
     LOG(("OBJLC [%p]: nsSimplePluginEvent firing event \"%s\"", mTarget.get(),
          NS_ConvertUTF16toUTF8(mEvent).get()));
     nsContentUtils::DispatchTrustedEvent(mDocument, mTarget,
