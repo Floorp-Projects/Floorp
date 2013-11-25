@@ -727,8 +727,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCo
             // Find dying scopes.
             XPCWrappedNativeScope::StartFinalizationPhaseOfGC(fop, self);
 
-            XPCStringConvert::ClearCache();
-
             self->mDoingFinalization = true;
             break;
         }
