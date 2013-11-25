@@ -21,7 +21,10 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, uint32_t aLength,
     return;
   }
 
-  CFStringTokenizerRef st = ::CFStringTokenizerCreate(kCFAllocatorDefault, str, ::CFRangeMake(0, aLength), kCFStringTokenizerUnitLineBreak, NULL);
+  CFStringTokenizerRef st = ::CFStringTokenizerCreate(kCFAllocatorDefault, str,
+                                                      ::CFRangeMake(0, aLength),
+                                                      kCFStringTokenizerUnitLineBreak,
+                                                      nullptr);
   if (!st) {
     ::CFRelease(str);
     return;
