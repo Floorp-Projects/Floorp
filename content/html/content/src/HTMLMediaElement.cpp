@@ -2707,7 +2707,8 @@ public:
       NS_NewRunnableMethod(this, &StreamListener::DoNotifyHaveCurrentData);
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
   }
-  virtual void NotifyOutput(MediaStreamGraph* aGraph) MOZ_OVERRIDE
+  virtual void NotifyOutput(MediaStreamGraph* aGraph,
+                            GraphTime aCurrentTime) MOZ_OVERRIDE
   {
     MutexAutoLock lock(mMutex);
     if (mPendingNotifyOutput)
