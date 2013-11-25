@@ -1700,11 +1700,6 @@ function TraceClient(aClient, aActor) {
   this._activeTraces = new Set();
   this._waitingPackets = new Map();
   this._expectedPacket = 0;
-
-  this.onPacket = this.onPacket.bind(this);
-  this._client.addListener(UnsolicitedNotifications.enteredFrame, this.onPacket);
-  this._client.addListener(UnsolicitedNotifications.exitedFrame, this.onPacket);
-
   this.request = this._client.request;
 }
 
@@ -1777,31 +1772,8 @@ TraceClient.prototype = {
       return aResponse;
     },
     telemetry: "STOPTRACE"
-  }),
-
-  /**
-   * Called when the trace actor notifies that a frame has been
-   * entered or exited.
-   *
-   * @param aEvent string
-   *        The type of the unsolicited packet (enteredFrame|exitedFrame).
-   *
-   * @param aPacket object
-   *        Packet received over the RDP from the trace actor.
-   */
-  onPacket: function JSTC_onPacket(aEvent, aPacket) {
-    this._waitingPackets.set(aPacket.sequence, aPacket);
-
-    while (this._waitingPackets.has(this._expectedPacket)) {
-      let packet = this._waitingPackets.get(this._expectedPacket);
-      this._waitingPackets.delete(this._expectedPacket);
-      this.notify(packet.type, packet);
-      this._expectedPacket++;
-    }
-  }
+  })
 };
-
-eventSource(TraceClient.prototype);
 
 /**
  * Grip clients are used to retrieve information about the relevant object.
