@@ -878,11 +878,105 @@ PresShell::Init(nsIDocument* aDocument,
   SetupFontInflation();
 }
 
+#ifdef PR_LOGGING
+enum TextPerfLogType {
+  eLog_reflow,
+  eLog_loaddone,
+  eLog_totals
+};
+
+static void
+LogTextPerfStats(gfxTextPerfMetrics* aTextPerf,
+                 PresShell* aPresShell,
+                 const gfxTextPerfMetrics::TextCounts& aCounts,
+                 float aTime, TextPerfLogType aLogType, const char* aURL)
+{
+  char prefix[256];
+
+  switch (aLogType) {
+    case eLog_reflow:
+      sprintf(prefix, "(textperf-reflow) %p time-ms: %7.0f", aPresShell, aTime);
+      break;
+    case eLog_loaddone:
+      sprintf(prefix, "(textperf-loaddone) %p time-ms: %7.0f", aPresShell, aTime);
+      break;
+    default:
+      MOZ_ASSERT(aLogType == eLog_totals, "unknown textperf log type");
+      sprintf(prefix, "(textperf-totals) %p", aPresShell);
+  }
+
+  PRLogModuleInfo* tpLog = gfxPlatform::GetLog(eGfxLog_textperf);
+
+  // ignore XUL contexts unless at debug level
+  PRLogModuleLevel logLevel = PR_LOG_WARNING;
+  if (aCounts.numContentTextRuns == 0) {
+    logLevel = PR_LOG_DEBUG;
+  }
+
+  double hitRatio = 0.0;
+  uint32_t lookups = aCounts.wordCacheHit + aCounts.wordCacheMiss;
+  if (lookups) {
+    hitRatio = double(aCounts.wordCacheHit) / double(lookups);
+  }
+
+  if (aLogType == eLog_loaddone) {
+    PR_LOG(tpLog, logLevel,
+           ("%s reflow: %d chars: %d "
+            "[%s] "
+            "content-textruns: %d chrome-textruns: %d "
+            "max-textrun-len: %d "
+            "word-cache-lookups: %d word-cache-hit-ratio: %4.3f "
+            "word-cache-space: %d word-cache-long: %d "
+            "pref-fallbacks: %d system-fallbacks: %d "
+            "textruns-const: %d textruns-destr: %d "
+            "cumulative-textruns-destr: %d\n",
+            prefix, aTextPerf->reflowCount, aCounts.numChars,
+            (aURL ? aURL : ""),
+            aCounts.numContentTextRuns, aCounts.numChromeTextRuns,
+            aCounts.maxTextRunLen,
+            lookups, hitRatio,
+            aCounts.wordCacheSpaceRules, aCounts.wordCacheLong,
+            aCounts.fallbackPrefs, aCounts.fallbackSystem,
+            aCounts.textrunConst, aCounts.textrunDestr,
+            aTextPerf->cumulative.textrunDestr));
+  } else {
+    PR_LOG(tpLog, logLevel,
+           ("%s reflow: %d chars: %d "
+            "content-textruns: %d chrome-textruns: %d "
+            "max-textrun-len: %d "
+            "word-cache-lookups: %d word-cache-hit-ratio: %4.3f "
+            "word-cache-space: %d word-cache-long: %d "
+            "pref-fallbacks: %d system-fallbacks: %d "
+            "textruns-const: %d textruns-destr: %d "
+            "cumulative-textruns-destr: %d\n",
+            prefix, aTextPerf->reflowCount, aCounts.numChars,
+            aCounts.numContentTextRuns, aCounts.numChromeTextRuns,
+            aCounts.maxTextRunLen,
+            lookups, hitRatio,
+            aCounts.wordCacheSpaceRules, aCounts.wordCacheLong,
+            aCounts.fallbackPrefs, aCounts.fallbackSystem,
+            aCounts.textrunConst, aCounts.textrunDestr,
+            aTextPerf->cumulative.textrunDestr));
+  }
+}
+#endif
+
 void
 PresShell::Destroy()
 {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
     "destroy called on presshell while scripts not blocked");
+
+  // dump out cumulative text perf metrics
+#ifdef PR_LOGGING
+  gfxTextPerfMetrics* tp;
+  if (mPresContext && (tp = mPresContext->GetTextPerfMetrics())) {
+    tp->Accumulate();
+    if (tp->cumulative.numChars > 0) {
+      LogTextPerfStats(tp, this, tp->cumulative, 0.0, eLog_totals, nullptr);
+    }
+  }
+#endif
 
 #ifdef MOZ_REFLOW_PERF
   DumpReflows();
@@ -2399,15 +2493,24 @@ PresShell::BeginLoad(nsIDocument *aDocument)
   mDocumentLoading = true;
 
 #ifdef PR_LOGGING
-  if (gLog && PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+  gfxTextPerfMetrics *tp = nullptr;
+  if (mPresContext) {
+    tp = mPresContext->GetTextPerfMetrics();
+  }
+
+  bool shouldLog = gLog && PR_LOG_TEST(gLog, PR_LOG_DEBUG);
+  if (shouldLog || tp) {
     mLoadBegin = TimeStamp::Now();
+  }
+
+  if (shouldLog) {
     nsIURI* uri = mDocument->GetDocumentURI();
     nsAutoCString spec;
     if (uri) {
       uri->GetSpec(spec);
     }
     PR_LOG(gLog, PR_LOG_DEBUG,
-           ("(presshell) %p begin load [%s]\n",
+           ("(presshell) %p load begin [%s]\n",
             this, spec.get()));
   }
 #endif
@@ -2421,19 +2524,38 @@ PresShell::EndLoad(nsIDocument *aDocument)
   RestoreRootScrollPosition();
   
   mDocumentLoading = false;
+}
 
+void
+PresShell::LoadComplete()
+{
 #ifdef PR_LOGGING
+  gfxTextPerfMetrics *tp = nullptr;
+  if (mPresContext) {
+    tp = mPresContext->GetTextPerfMetrics();
+  }
+
   // log load
-  if (gLog && PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+  bool shouldLog = gLog && PR_LOG_TEST(gLog, PR_LOG_DEBUG);
+  if (shouldLog || tp) {
     TimeDuration loadTime = TimeStamp::Now() - mLoadBegin;
     nsIURI* uri = mDocument->GetDocumentURI();
     nsAutoCString spec;
     if (uri) {
       uri->GetSpec(spec);
     }
-    PR_LOG(gLog, PR_LOG_DEBUG,
-           ("(presshell) %p end load time-ms: %9.2f [%s]\n",
-            this, loadTime.ToMilliseconds(), spec.get()));
+    if (shouldLog) {
+      PR_LOG(gLog, PR_LOG_DEBUG,
+             ("(presshell) %p load done time-ms: %9.2f [%s]\n",
+              this, loadTime.ToMilliseconds(), spec.get()));
+    }
+    if (tp) {
+      tp->Accumulate();
+      if (tp->cumulative.numChars > 0) {
+        LogTextPerfStats(tp, this, tp->cumulative, loadTime.ToMilliseconds(),
+                         eLog_loaddone, spec.get());
+      }
+    }
   }
 #endif
 }
@@ -7877,6 +7999,14 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
     return true;
   }
 
+  gfxTextPerfMetrics* tp = mPresContext->GetTextPerfMetrics();
+  TimeStamp timeStart;
+  if (tp) {
+    tp->Accumulate();
+    tp->reflowCount++;
+    timeStart = TimeStamp::Now();
+  }
+
   target->SchedulePaint();
   nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(target);
   while (parent) {
@@ -8031,6 +8161,18 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
     mSuppressInterruptibleReflows = true;
     MaybeScheduleReflow();
   }
+
+#ifdef PR_LOGGING
+  // dump text perf metrics for reflows with significant text processing
+  if (tp) {
+    if (tp->current.numChars > 100) {
+      TimeDuration reflowTime = TimeStamp::Now() - timeStart;
+      LogTextPerfStats(tp, this, tp->current,
+                       reflowTime.ToMilliseconds(), eLog_reflow, nullptr);
+    }
+    tp->Accumulate();
+  }
+#endif
 
   return !interrupted;
 }
@@ -9141,7 +9283,9 @@ void ReflowCountMgr::PaintCount(const char*     aName,
         // We have one frame, therefore we must have a root...
         aPresContext->GetPresShell()->GetRootFrame()->
           StyleFont()->mLanguage,
-        aPresContext->GetUserFontSet(), *getter_AddRefs(fm));
+        aPresContext->GetUserFontSet(),
+        aPresContext->GetTextPerfMetrics(),
+        *getter_AddRefs(fm));
 
       aRenderingContext->SetFont(fm);
       char buf[16];

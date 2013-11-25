@@ -20,6 +20,7 @@
 #include "mozilla/AppUnits.h"           // for AppUnits
 
 class gfxASurface;
+class gfxTextPerfMetrics;
 class gfxUserFontSet;
 class nsFont;
 class nsFontCache;
@@ -119,6 +120,7 @@ public:
      */
     nsresult GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
                            gfxUserFontSet* aUserFontSet,
+                           gfxTextPerfMetrics* aTextPerf,
                            nsFontMetrics*& aMetrics);
 
     /**

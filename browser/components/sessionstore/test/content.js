@@ -17,8 +17,8 @@ addMessageListener("ss-test:modifySessionStorage", function (msg) {
   }
 });
 
-addMessageListener("ss-test:notifyObservers", function (msg) {
-  Services.obs.notifyObservers(null, msg.data, "");
+addMessageListener("ss-test:notifyObservers", function ({data: {topic, data}}) {
+  Services.obs.notifyObservers(null, topic, data || "");
 });
 
 addMessageListener("ss-test:getStyleSheets", function (msg) {

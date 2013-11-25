@@ -318,6 +318,8 @@ public:
       IsLayoutFlushObserver(this);
   }
 
+  virtual void LoadComplete() MOZ_OVERRIDE;
+
   void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                               nsArenaMemoryStats *aArenaObjectsSize,
                               size_t *aPresShellSize,
