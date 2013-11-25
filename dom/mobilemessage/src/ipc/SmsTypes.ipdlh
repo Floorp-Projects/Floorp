@@ -9,7 +9,6 @@ include protocol PBlob;
 using DeliveryState from "mozilla/dom/mobilemessage/Types.h";
 using DeliveryStatus from "mozilla/dom/mobilemessage/Types.h";
 using MessageClass from "mozilla/dom/mobilemessage/Types.h";
-using ReadStatus from "mozilla/dom/mobilemessage/Types.h";
 using ReadState from "mozilla/dom/mobilemessage/Types.h";
 using MessageType from "mozilla/dom/mobilemessage/Types.h";
 
@@ -52,8 +51,6 @@ struct MmsDeliveryInfoData
   nsString        receiver;
   DeliveryStatus  deliveryStatus;
   uint64_t        deliveryTimestamp;
-  ReadStatus      readStatus;
-  uint64_t        readTimestamp;
 };
 
 struct MmsMessageData
