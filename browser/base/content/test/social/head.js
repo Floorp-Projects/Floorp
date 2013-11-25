@@ -244,7 +244,7 @@ function checkSocialUI(win) {
 
   isbool(!doc.getElementById("social-toolbar-item").hidden, active, "toolbar items visible?");
   if (active) {
-    if (!enabled) {
+    if (!enabled || (Social.defaultProvider.statusURL && Social.allowMultipleWorkers)) {
       _ok(!win.SocialToolbar.button.style.listStyleImage, "toolbar button is default icon");
     } else {
       _is(win.SocialToolbar.button.style.listStyleImage, 'url("' + Social.defaultProvider.iconURL + '")', "toolbar button has provider icon");
@@ -576,4 +576,3 @@ function closeAllChats() {
   let chatbar = window.SocialChatBar.chatbar;
   chatbar.removeAll();
 }
-
