@@ -46,4 +46,11 @@ trusted implementation.  bltest will generate a key and store it in
     bltest -E -m rsa -i plaintext0 -o ciphertext0 -e 65537 -g 32 -a
     mv tmp.key key0
 
+RSA-OAEP/RSA-PSS:
+RSA-OAEP and RSA-PSS have a number of additional parameters to feed in.
+- "seedN": The seed or salt to use when encrypting/signing
+- "hashN" / "maskhashN" - The base digest algorithm and the digest algorithm
+   to use with MGF1, respectively. This should be an ASCII string specifying
+   one of the hash algorithms recognized by bltest (eg: "sha1", "sha256")
+
 [note: specifying a keysize (-g) when using RSA is important!]

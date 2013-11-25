@@ -36,8 +36,8 @@ Options:
      --threads X      set thread number to X (max. 10, default 10)
      --out DIR        set DIR as output directory (default '/out')
      --mail ADDRESS   send mail with test result to ADDRESS
-     --nss DIR        set NSS directory to DIR (default '~/cvs/nss')
-     --nss-hack DIR   set hacked NSS directory to DIR (default '~/cvs/nss_hack')
+     --nss DIR        set NSS directory to DIR (default '~/niscc-hg/nss')
+     --nss-hack DIR   set hacked NSS directory to DIR (default '~/niscc-hg/nss_hack')
      --log-store      store all the logs (only summary by default)
      --no-build-test  don't pull and build tested NSS
      --no-build-hack  don't pull and build hacked NSS
@@ -169,13 +169,13 @@ create_environment()
     export NISCC_HOME=${NISCC_HOME:-/niscc}
 
     # Base location of NSS
-    export CVS=${CVS:-"$HOME/cvs"}
+    export HG=${HG:-"$HOME/niscc-hg"}
 
     # NSS being tested
-    export LOCALDIST=${LOCALDIST:-"${CVS}/nss"}
+    export LOCALDIST=${LOCALDIST:-"${HG}/nss"}
 
     # Hacked NSS - built with "NISCC_TEST=1"
-    export NSS_HACK=${NSS_HACK:-"${CVS}/nss_hack"}
+    export NSS_HACK=${NSS_HACK:-"${HG}/nss_hack"}
 
     # Hostname of the testmachine
     export HOST=${HOST:-127.0.0.1}
@@ -237,30 +237,34 @@ create_environment()
 }
 
 ################################################################################
-# Do a cvs pull of NSS
+# Do a HG pull of NSS
 ################################################################################
-cvs_pull()
+hg_pull()
 {
-    # Tested NSS - by default using current CVS HEAD
+    # Tested NSS - by default using HG default tip
     if [ "$NO_BUILD_TEST" = "false" ]; then
-        echo "cloning NSS sources to be tested from CVS"
+        echo "cloning NSS sources to be tested from HG"
         [ ! -d "$LOCALDIST" ] && mkdir -p "$LOCALDIST"
         cd "$LOCALDIST"
-        cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co -r HEAD NSPR &>> $TEST_OUTPUT/nisccBuildLog
-        cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co -r HEAD NSS &>> $TEST_OUTPUT/nisccBuildLog
+        [ ! -d "$LOCALDIST/nspr" ] && hg clone --noupdate https://hg.mozilla.org/projects/nspr
+        cd nspr; hg pull; hg update -C -r default; cd ..
+        [ ! -d "$LOCALDIST/nss" ] && hg clone --noupdate https://hg.mozilla.org/projects/nss
+        cd nss; hg pull; hg update -C -r default; cd ..
         #find . -exec touch {} \;
     fi
 
     # Hacked NSS - by default using some RTM version.
     # Do not use HEAD for hacked NSS - it needs to be stable and bug-free
     if [ "$NO_BUILD_HACK" = "false" ]; then
-        echo "cloning NSS sources for a hacked build from CVS"
+        echo "cloning NSS sources for a hacked build from HG"
         [ ! -d "$NSS_HACK" ] && mkdir -p "$NSS_HACK"
         cd "$NSS_HACK"
-        NSPR_TAG=`curl http://hg.mozilla.org/releases/mozilla-aurora/raw-file/default/nsprpub/TAG-INFO | head -1 | awk '{print $1}'`
-        NSS_TAG=`curl http://hg.mozilla.org/releases/mozilla-aurora/raw-file/default/security/nss/TAG-INFO | head -1 | awk '{print $1}'`
-        cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co -r $NSPR_TAG NSPR &>> $TEST_OUTPUT/nisccBuildLogHack
-        cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co -r $NSS_TAG NSS &>> $TEST_OUTPUT/nisccBuildLogHack
+        NSPR_TAG=`curl --silent http://hg.mozilla.org/releases/mozilla-aurora/raw-file/default/nsprpub/TAG-INFO | head -1 | sed --regexp-extended 's/[[:space:]]//g' | awk '{print $1}'`
+        NSS_TAG=`curl --silent http://hg.mozilla.org/releases/mozilla-aurora/raw-file/default/security/nss/TAG-INFO | head -1 | sed --regexp-extended 's/[[:space:]]//g' | awk '{print $1}'`
+        [ ! -d "$NSS_HACK/nspr" ] && hg clone --noupdate https://hg.mozilla.org/projects/nspr
+        cd nspr; hg pull; hg update -C -r "$NSPR_TAG"; cd ..
+        [ ! -d "$NSS_HACK/nss" ] && hg clone --noupdate https://hg.mozilla.org/projects/nss
+        cd nss; hg pull; hg update -C -r "$NSS_TAG"; cd ..
         #find . -exec touch {} \;
     fi
 }
@@ -275,7 +279,7 @@ build_NSS()
         echo "building NSS to be tested"
         cd "$LOCALDIST"
         unset NISCC_TEST
-        cd mozilla/security/nss
+        cd nss
         gmake nss_clean_all &>> $TEST_OUTPUT/nisccBuildLog
         gmake nss_build_all &>> $TEST_OUTPUT/nisccBuildLog
     fi
@@ -285,7 +289,7 @@ build_NSS()
         echo "building hacked NSS"
         cd "$NSS_HACK"
         export NISCC_TEST=1
-        cd mozilla/security/nss
+        cd nss
         gmake nss_clean_all &>> $TEST_OUTPUT/nisccBuildLogHack
         gmake nss_build_all &>> $TEST_OUTPUT/nisccBuildLogHack
     fi
@@ -308,17 +312,17 @@ init()
     echo "PATH $PATH" >> "$TEST_OUTPUT/nisccLog00"
 
     # Find out hacked NSS version
-    DISTTYPE=`cd "$NSS_HACK/mozilla/security/nss/tests/common"; gmake objdir_name`
+    DISTTYPE=`cd "$NSS_HACK/nss/tests/common"; gmake objdir_name`
     echo "NSS_HACK DISTTYPE $DISTTYPE" >> "$TEST_OUTPUT/nisccLog00"
-    export HACKBIN="$NSS_HACK/mozilla/dist/$DISTTYPE/bin"
-    export HACKLIB="$NSS_HACK/mozilla/dist/$DISTTYPE/lib"
+    export HACKBIN="$NSS_HACK/dist/$DISTTYPE/bin"
+    export HACKLIB="$NSS_HACK/dist/$DISTTYPE/lib"
 
     if [ "$TEST_SYSTEM" = "false" ]; then
         # Find out nss version
-        DISTTYPE=`cd "$LOCALDIST/mozilla/security/nss/tests/common"; gmake objdir_name`
+        DISTTYPE=`cd "$LOCALDIST/nss/tests/common"; gmake objdir_name`
         echo "NSS DISTTYPE $DISTTYPE" >> "$TEST_OUTPUT/nisccLog00"
-        export TESTBIN="$LOCALDIST/mozilla/dist/$DISTTYPE/bin"
-        export TESTLIB="$LOCALDIST/mozilla/dist/$DISTTYPE/lib"
+        export TESTBIN="$LOCALDIST/dist/$DISTTYPE/bin"
+        export TESTLIB="$LOCALDIST/dist/$DISTTYPE/lib"
         export TESTTOOLS="$TESTBIN"
     else
         # Using system installed NSS
@@ -951,7 +955,7 @@ move_files()
 ################################################################################
 process_args $*
 create_environment
-cvs_pull
+hg_pull
 build_NSS
 init
 niscc_smime

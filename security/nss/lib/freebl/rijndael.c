@@ -27,7 +27,6 @@ static int has_intel_aes = 0;
 static int has_intel_avx = 0;
 static int has_intel_clmul = 0;
 static PRBool use_hw_aes = PR_FALSE;
-static PRBool use_hw_avx = PR_FALSE;
 static PRBool use_hw_gcm = PR_FALSE;
 #endif
 
@@ -967,6 +966,25 @@ AESContext * AES_AllocateContext(void)
 }
 
 
+#if USE_HW_AES
+/*
+ * Adapted from the example code in "How to detect New Instruction support in
+ * the 4th generation Intel Core processor family" by Max Locktyukhin.
+ */
+static PRBool
+check_xcr0_ymm()
+{
+    PRUint32 xcr0;
+#if defined(_MSC_VER)
+    xcr0 = (PRUint32)_xgetbv(0);  /* Requires VS2010 SP1 or later. */
+#else
+    __asm__ ("xgetbv" : "=a" (xcr0) : "c" (0) : "%edx");
+#endif
+    /* Check if xmm and ymm state are enabled in XCR0. */
+    return (xcr0 & 6) == 6;
+}
+#endif
+
 /*
 ** Initialize a new AES context suitable for AES encryption/decryption in
 ** the ECB or CBC mode.
@@ -1013,7 +1031,12 @@ aes_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
 	    freebl_cpuid(1, &eax, &ebx, &ecx, &edx);
 	    has_intel_aes = (ecx & (1 << 25)) != 0 ? 1 : -1;
 	    has_intel_clmul = (ecx & (1 << 1)) != 0 ? 1 : -1;
-	    has_intel_avx = (ecx & (1 << 28)) != 0 ? 1 : -1;
+	    if ((ecx & (1 << 27)) != 0 && (ecx & (1 << 28)) != 0 &&
+		check_xcr0_ymm()) {
+		has_intel_avx = 1;
+	    } else {
+		has_intel_avx = -1;
+	    }
 	} else {
 	    has_intel_aes = -1;
 	    has_intel_avx = -1;

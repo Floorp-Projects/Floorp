@@ -8,21 +8,6 @@
 #ifndef _SOFTOKNT_H_
 #define _SOFTOKNT_H_
 
-/*
- * RSA block types
- *
- * The actual values are important -- they are fixed, *not* arbitrary.
- * The explicit value assignments are not needed (because C would give
- * us those same values anyway) but are included as a reminder...
- */
-typedef enum {
-    RSA_BlockPrivate0 = 0,	/* unused, really */
-    RSA_BlockPrivate = 1,	/* pad for a private-key operation */
-    RSA_BlockPublic = 2,	/* pad for a public-key operation */
-    RSA_BlockRaw = 4,		/* simply justify the block appropriately */
-    RSA_BlockTotal
-} RSA_BlockType;
-
 #define NSS_SOFTOKEN_DEFAULT_CHUNKSIZE   2048
 
 /*

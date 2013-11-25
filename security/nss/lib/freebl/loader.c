@@ -1906,3 +1906,188 @@ HMAC_ConstantTime(
       header, headerLen,
       body, bodyLen, bodyTotalLen);
 }
+
+SECStatus RSA_SignRaw(RSAPrivateKey *key,
+                      unsigned char *output,
+                      unsigned int *outputLen,
+                      unsigned int maxOutputLen,
+                      const unsigned char *input,
+                      unsigned int inputLen) {
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_SignRaw)(key, output, outputLen, maxOutputLen, input,
+                                 inputLen);
+}
+
+SECStatus RSA_CheckSignRaw(RSAPublicKey *key,
+                           const unsigned char *sig,
+                           unsigned int sigLen,
+                           const unsigned char *hash,
+                           unsigned int hashLen) {
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_CheckSignRaw)(key, sig, sigLen, hash, hashLen);
+}
+
+SECStatus RSA_CheckSignRecoverRaw(RSAPublicKey *key,
+                                  unsigned char *data,
+                                  unsigned int *dataLen,
+                                  unsigned int maxDataLen,
+                                  const unsigned char *sig,
+                                  unsigned int sigLen) {
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_CheckSignRecoverRaw)(key, data, dataLen, maxDataLen,
+                                             sig, sigLen);
+}
+
+SECStatus RSA_EncryptRaw(RSAPublicKey *key,
+                         unsigned char *output,
+                         unsigned int *outputLen,
+                         unsigned int maxOutputLen,
+                         const unsigned char *input,
+                         unsigned int inputLen) {
+   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+   return (vector->p_RSA_EncryptRaw)(key, output, outputLen, maxOutputLen,
+                                     input, inputLen);
+}
+
+SECStatus RSA_DecryptRaw(RSAPrivateKey *key,
+                         unsigned char *output,
+                         unsigned int *outputLen,
+                         unsigned int maxOutputLen,
+                         const unsigned char *input,
+                         unsigned int inputLen) {
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_DecryptRaw)(key, output, outputLen, maxOutputLen,
+                                    input, inputLen);
+
+}
+
+SECStatus RSA_EncryptOAEP(RSAPublicKey *key,
+                          HASH_HashType hashAlg,
+                          HASH_HashType maskHashAlg,
+                          const unsigned char *label,
+                          unsigned int labelLen,
+                          const unsigned char *seed,
+                          unsigned int seedLen,
+                          unsigned char *output,
+                          unsigned int *outputLen,
+                          unsigned int maxOutputLen,
+                          const unsigned char *input,
+                          unsigned int inputLen) {
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_EncryptOAEP)(key, hashAlg, maskHashAlg, label,
+                                     labelLen, seed, seedLen, output,
+                                     outputLen, maxOutputLen, input, inputLen);
+}
+
+SECStatus RSA_DecryptOAEP(RSAPrivateKey *key,
+                          HASH_HashType hashAlg,
+                          HASH_HashType maskHashAlg,
+                          const unsigned char *label,
+                          unsigned int labelLen,
+                          unsigned char *output,
+                          unsigned int *outputLen,
+                          unsigned int maxOutputLen,
+                          const unsigned char *input,
+                          unsigned int inputLen) {
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_DecryptOAEP)(key, hashAlg, maskHashAlg, label,
+                                     labelLen, output, outputLen,
+                                     maxOutputLen, input, inputLen);
+}
+
+SECStatus RSA_EncryptBlock(RSAPublicKey *key,
+                           unsigned char *output,
+                           unsigned int *outputLen,
+                           unsigned int maxOutputLen,
+                           const unsigned char *input,
+                           unsigned int inputLen) {
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_EncryptBlock)(key, output, outputLen, maxOutputLen,
+                                      input, inputLen);
+}
+
+SECStatus RSA_DecryptBlock(RSAPrivateKey *key,
+                           unsigned char *output,
+                           unsigned int *outputLen,
+                           unsigned int maxOutputLen,
+                           const unsigned char *input,
+                           unsigned int inputLen) {
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_DecryptBlock)(key, output, outputLen, maxOutputLen,
+                                      input, inputLen);
+}
+
+SECStatus RSA_SignPSS(RSAPrivateKey *key,
+                      HASH_HashType hashAlg,
+                      HASH_HashType maskHashAlg,
+                      const unsigned char *salt,
+                      unsigned int saltLen,
+                      unsigned char *output,
+                      unsigned int *outputLen,
+                      unsigned int maxOutputLen,
+                      const unsigned char *input,
+                      unsigned int inputLen) {
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_SignPSS)(key, hashAlg, maskHashAlg, salt, saltLen,
+                                 output, outputLen, maxOutputLen, input,
+                                 inputLen);
+}
+
+SECStatus RSA_CheckSignPSS(RSAPublicKey *key,
+                           HASH_HashType hashAlg,
+                           HASH_HashType maskHashAlg,
+                           unsigned int saltLen,
+                           const unsigned char *sig,
+                           unsigned int sigLen,
+                           const unsigned char *hash,
+                           unsigned int hashLen) {
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_CheckSignPSS)(key, hashAlg, maskHashAlg, saltLen,
+                                      sig, sigLen, hash, hashLen);
+}
+
+SECStatus RSA_Sign(RSAPrivateKey *key,
+                   unsigned char *output,
+                   unsigned int *outputLen,
+                   unsigned int maxOutputLen,
+                   const unsigned char *input,
+                   unsigned int inputLen) {
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_Sign)(key, output, outputLen, maxOutputLen, input,
+                              inputLen);
+}
+
+SECStatus RSA_CheckSign(RSAPublicKey *key,
+                        const unsigned char *sig,
+                        unsigned int sigLen,
+                        const unsigned char *data,
+                        unsigned int dataLen) {
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_CheckSign)(key, sig, sigLen, data, dataLen);
+
+}
+
+SECStatus RSA_CheckSignRecover(RSAPublicKey *key,
+                               unsigned char *output,
+                               unsigned int *outputLen,
+                               unsigned int maxOutputLen,
+                               const unsigned char *sig,
+                               unsigned int sigLen) {
+  if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+      return SECFailure;
+  return (vector->p_RSA_CheckSignRecover)(key, output, outputLen, maxOutputLen,
+                                          sig, sigLen);
+}
