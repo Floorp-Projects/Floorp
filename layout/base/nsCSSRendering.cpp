@@ -4680,17 +4680,29 @@ nsImageRenderer::GetContainer(LayerManager* aManager)
 #define MAX_BLUR_RADIUS 300
 #define MAX_SPREAD_RADIUS 50
 
-static inline gfxIntSize
-ComputeBlurRadius(nscoord aBlurRadius, int32_t aAppUnitsPerDevPixel, gfxFloat aScaleX = 1.0, gfxFloat aScaleY = 1.0)
+static inline gfxPoint ComputeBlurStdDev(nscoord aBlurRadius,
+                                         int32_t aAppUnitsPerDevPixel,
+                                         gfxFloat aScaleX,
+                                         gfxFloat aScaleY)
 {
   // http://dev.w3.org/csswg/css3-background/#box-shadow says that the
   // standard deviation of the blur should be half the given blur value.
   gfxFloat blurStdDev = gfxFloat(aBlurRadius) / gfxFloat(aAppUnitsPerDevPixel);
 
-  gfxPoint scaledBlurStdDev = gfxPoint(std::min((blurStdDev * aScaleX),
-                                              gfxFloat(MAX_BLUR_RADIUS)) / 2.0,
-                                       std::min((blurStdDev * aScaleY),
-                                              gfxFloat(MAX_BLUR_RADIUS)) / 2.0);
+  return gfxPoint(std::min((blurStdDev * aScaleX),
+                           gfxFloat(MAX_BLUR_RADIUS)) / 2.0,
+                  std::min((blurStdDev * aScaleY),
+                           gfxFloat(MAX_BLUR_RADIUS)) / 2.0);
+}
+
+static inline gfxIntSize
+ComputeBlurRadius(nscoord aBlurRadius,
+                  int32_t aAppUnitsPerDevPixel,
+                  gfxFloat aScaleX = 1.0,
+                  gfxFloat aScaleY = 1.0)
+{
+  gfxPoint scaledBlurStdDev = ComputeBlurStdDev(aBlurRadius, aAppUnitsPerDevPixel,
+                                                aScaleX, aScaleY);
   return
     gfxAlphaBoxBlur::CalculateBlurRadius(scaledBlurStdDev);
 }
@@ -4852,7 +4864,7 @@ nsContextBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
     aDestinationCtx->IdentityMatrix();
   }
 
-  gfxIntSize blurRadius = ComputeBlurRadius(aBlurRadius, aAppUnitsPerDevPixel, scaleX, scaleY);
+  gfxPoint blurStdDev = ComputeBlurStdDev(aBlurRadius, aAppUnitsPerDevPixel, scaleX, scaleY);
 
   gfxRect dirtyRect =
     nsLayoutUtils::RectToGfxRect(aDirtyRect, aAppUnitsPerDevPixel);
@@ -4869,7 +4881,7 @@ nsContextBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
   gfxAlphaBoxBlur::BlurRectangle(aDestinationCtx,
                                  shadowGfxRect,
                                  aCornerRadii,
-                                 blurRadius,
+                                 blurStdDev,
                                  aShadowColor,
                                  dirtyRect,
                                  skipRect);
