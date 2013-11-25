@@ -28,18 +28,12 @@ class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps>
     }
 };
 
-// Used for jumps from other blocks. Also simplifies register allocation since
-// the first instruction of a block is guaranteed to have no uses.
+// Simplifies register allocation since the first instruction of a block is
+// guaranteed to have no uses.
 class LLabel : public LInstructionHelper<0, 0, 0>
 {
-    Label label_;
-
   public:
     LIR_HEADER(Label)
-
-    Label *label() {
-        return &label_;
-    }
 };
 
 class LNop : public LInstructionHelper<0, 0, 0>

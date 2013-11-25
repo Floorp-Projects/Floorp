@@ -162,6 +162,13 @@ struct JSSettings
   }
 };
 
+enum WorkerPreference
+{
+  WORKERPREF_DUMP = 0, // browser.dom.window.dump.enabled
+  WORKERPREF_PROMISE,  // dom.promise.enabled
+  WORKERPREF_COUNT
+};
+
 // All of these are implemented in RuntimeService.cpp
 bool
 ResolveWorkerClasses(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,

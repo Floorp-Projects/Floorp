@@ -55,12 +55,6 @@ LIRGraph::removeBlock(size_t i)
     blocks_.erase(blocks_.begin() + i);
 }
 
-Label *
-LBlock::label()
-{
-    return begin()->toLabel()->label();
-}
-
 uint32_t
 LBlock::firstId()
 {
@@ -90,8 +84,10 @@ LBlock::getEntryMoveGroup(TempAllocator &alloc)
     if (entryMoveGroup_)
         return entryMoveGroup_;
     entryMoveGroup_ = new LMoveGroup(alloc);
-    JS_ASSERT(begin()->isLabel());
-    insertAfter(*begin(), entryMoveGroup_);
+    if (begin()->isLabel())
+        insertAfter(*begin(), entryMoveGroup_);
+    else
+        insertBefore(*begin(), entryMoveGroup_);
     return entryMoveGroup_;
 }
 

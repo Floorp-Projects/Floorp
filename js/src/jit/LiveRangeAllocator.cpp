@@ -285,6 +285,13 @@ LiveInterval::addUse(UsePosition *use)
         uses_.pushFront(use);
 }
 
+void
+LiveInterval::addUseAtEnd(UsePosition *use)
+{
+    JS_ASSERT(uses_.empty() || use->pos >= uses_.back()->pos);
+    uses_.pushBack(use);
+}
+
 UsePosition *
 LiveInterval::nextUseAfter(CodePosition after)
 {
@@ -664,7 +671,7 @@ LiveRangeAllocator<VREG>::buildLivenessInfo()
                     LUse *use = inputAlloc->toUse();
 
                     // The first instruction, LLabel, has no uses.
-                    JS_ASSERT(inputOf(*ins) > outputOf(block->firstId()));
+                    JS_ASSERT_IF(forLSRA, inputOf(*ins) > outputOf(block->firstId()));
 
                     // Call uses should always be at-start or fixed, since the fixed intervals
                     // use all registers.

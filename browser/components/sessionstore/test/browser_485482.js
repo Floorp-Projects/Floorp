@@ -12,15 +12,13 @@ function test() {
   let rootDir = getRootDirectory(gTestPath);
   let testURL = rootDir + "browser_485482_sample.html";
   let tab = gBrowser.addTab(testURL);
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+  whenBrowserLoaded(tab.linkedBrowser, function() {
     let doc = tab.linkedBrowser.contentDocument;
     doc.querySelector("input[type=text]").value = uniqueValue;
     doc.querySelector("input[type=checkbox]").checked = true;
 
     let tab2 = gBrowser.duplicateTab(tab);
-    tab2.linkedBrowser.addEventListener("load", function(aEvent) {
-      tab2.linkedBrowser.removeEventListener("load", arguments.callee, true);
+    whenTabRestored(tab2, function() {
       doc = tab2.linkedBrowser.contentDocument;
       is(doc.querySelector("input[type=text]").value, uniqueValue,
          "generated XPath expression was valid");
@@ -31,6 +29,6 @@ function test() {
       gBrowser.removeTab(tab2);
       gBrowser.removeTab(tab);
       finish();
-    }, true);
-  }, true);
+    });
+  });
 }

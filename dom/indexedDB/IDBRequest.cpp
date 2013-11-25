@@ -278,7 +278,7 @@ IDBRequest::CaptureCaller()
   const char* filename = nullptr;
   uint32_t lineNo = 0;
   if (!nsJSUtils::GetCallingLocation(cx, &filename, &lineNo)) {
-    MOZ_CRASH("Failed to get caller.");
+    NS_WARNING("Failed to get caller.");
     return;
   }
 

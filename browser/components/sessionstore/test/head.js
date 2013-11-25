@@ -311,6 +311,15 @@ function whenWindowLoaded(aWindow, aCallback = next) {
   }, false);
 }
 
+function whenTabRestored(aTab, aCallback = next) {
+  aTab.addEventListener("SSTabRestored", function onRestored(aEvent) {
+    aTab.removeEventListener("SSTabRestored", onRestored, true);
+    executeSoon(function executeWhenTabRestored() {
+      aCallback();
+    });
+  }, true);
+}
+
 var gUniqueCounter = 0;
 function r() {
   return Date.now() + "-" + (++gUniqueCounter);
@@ -349,7 +358,7 @@ let gProgressListener = {
   function gProgressListener_onStateChange(aBrowser, aWebProgress, aRequest,
                                            aStateFlags, aStatus) {
     if ((!this._checkRestoreState ||
-         aBrowser.__SS_restoreState == TAB_STATE_RESTORING) &&
+         (aBrowser.__SS_restoreState && aBrowser.__SS_restoreState == TAB_STATE_RESTORING)) &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
@@ -364,12 +373,12 @@ let gProgressListener = {
     for (let win in BrowserWindowIterator()) {
       for (let i = 0; i < win.gBrowser.tabs.length; i++) {
         let browser = win.gBrowser.tabs[i].linkedBrowser;
-        if (browser.__SS_restoreState == TAB_STATE_RESTORING)
+        if (!browser.__SS_restoreState)
+          wasRestored++;
+        else if (browser.__SS_restoreState == TAB_STATE_RESTORING)
           isRestoring++;
         else if (browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE)
           needsRestore++;
-        else
-          wasRestored++;
       }
     }
     return [needsRestore, isRestoring, wasRestored];

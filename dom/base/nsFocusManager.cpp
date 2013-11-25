@@ -3436,6 +3436,43 @@ nsFocusManager::SetFocusedWindowInternal(nsPIDOMWindow* aWindow)
   mFocusedWindow = aWindow;
 }
 
+void
+nsFocusManager::MarkUncollectableForCCGeneration(uint32_t aGeneration)
+{
+  if (!sInstance) {
+    return;
+  }
+
+  if (sInstance->mActiveWindow) {
+    sInstance->mActiveWindow->
+      MarkUncollectableForCCGeneration(aGeneration);
+  }
+  if (sInstance->mFocusedWindow) {
+    sInstance->mFocusedWindow->
+      MarkUncollectableForCCGeneration(aGeneration);
+  }
+  if (sInstance->mWindowBeingLowered) {
+    sInstance->mWindowBeingLowered->
+      MarkUncollectableForCCGeneration(aGeneration);
+  }
+  if (sInstance->mFocusedContent) {
+    sInstance->mFocusedContent->OwnerDoc()->
+      MarkUncollectableForCCGeneration(aGeneration);
+  }
+  if (sInstance->mFirstBlurEvent) {
+    sInstance->mFirstBlurEvent->OwnerDoc()->
+      MarkUncollectableForCCGeneration(aGeneration);
+  }
+  if (sInstance->mFirstFocusEvent) {
+    sInstance->mFirstFocusEvent->OwnerDoc()->
+      MarkUncollectableForCCGeneration(aGeneration);
+  }
+  if (sInstance->mMouseDownEventHandlingDocument) {
+    sInstance->mMouseDownEventHandlingDocument->
+      MarkUncollectableForCCGeneration(aGeneration);
+  }
+}
+
 nsresult
 NS_NewFocusManager(nsIFocusManager** aResult)
 {

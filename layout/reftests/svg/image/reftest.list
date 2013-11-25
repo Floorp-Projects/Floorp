@@ -38,3 +38,4 @@ skip-if(B2G) == image-preserveAspectRatio-02-raster.svg image-preserveAspectRati
 skip-if(B2G) == image-preserveAspectRatio-02-svg.svg    image-preserveAspectRatio-02-ref.svg # bug 773482
 skip-if(B2G) == image-preserveAspectRatio-03.svg        image-preserveAspectRatio-03-ref.svg # bug 773482
 skip-if(B2G) == image-preserveAspectRatio-04.svg        image-preserveAspectRatio-04-ref.svg # bug 773482
+== image-preserveAspectRatio-05.svg ../pass.svg

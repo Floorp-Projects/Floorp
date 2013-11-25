@@ -123,6 +123,14 @@
 #  define MOZ_END_NESTED_ENUM_CLASS(Name) \
      };
 #  define MOZ_FINISH_NESTED_ENUM_CLASS(Name) /* nothing */
+
+  /*
+   * MOZ_ENUM_CLASS_ENUM_TYPE allows using enum classes
+   * as template parameter types. For that, we need integer types.
+   * In the present case where the compiler supports strong enums,
+   * these are already integer types so there is nothing more to do.
+   */
+#  define MOZ_ENUM_CLASS_ENUM_TYPE(Name) Name
 #else
    /**
     * We need Name to both name a type, and scope the provided enumerator
@@ -238,6 +246,13 @@
      inline int& operator^=(int&, const Name::Enum&) MOZ_DELETE; \
      inline int& operator<<=(int&, const Name::Enum&) MOZ_DELETE; \
      inline int& operator>>=(int&, const Name::Enum&) MOZ_DELETE;
+
+  /*
+   * MOZ_ENUM_CLASS_ENUM_TYPE allows using enum classes
+   * as template parameter types. For that, we need integer types.
+   * In the present case, the integer type is the Enum nested type.
+   */
+#  define MOZ_ENUM_CLASS_ENUM_TYPE(Name) Name::Enum
 #endif
 
    /*

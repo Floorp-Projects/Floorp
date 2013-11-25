@@ -6,7 +6,7 @@
 
 NO_DIST_INSTALL = True
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'xpctest_attributes.cpp',
     'xpctest_module.cpp',
     'xpctest_params.cpp',

@@ -160,6 +160,26 @@ ClassToIcon(uint32_t aClass, nsAString& aRetIcon)
       break;
   }
 }
+static ControlPlayStatus
+PlayStatusStringToControlPlayStatus(const nsAString& aPlayStatus)
+{
+  ControlPlayStatus playStatus = ControlPlayStatus::PLAYSTATUS_UNKNOWN;
+  if (aPlayStatus.EqualsLiteral("STOPPED")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_STOPPED;
+  } else if (aPlayStatus.EqualsLiteral("PLAYING")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_PLAYING;
+  } else if (aPlayStatus.EqualsLiteral("PAUSED")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_PAUSED;
+  } else if (aPlayStatus.EqualsLiteral("FWD_SEEK")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_FWD_SEEK;
+  } else if (aPlayStatus.EqualsLiteral("REV_SEEK")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_REV_SEEK;
+  } else if (aPlayStatus.EqualsLiteral("ERROR")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_ERROR;
+  }
+
+  return playStatus;
+}
 
 static bool
 IsReady()
@@ -1300,7 +1320,12 @@ BluetoothServiceBluedroid::SendMetaData(const nsAString& aTitle,
                                         int64_t aDuration,
                                         BluetoothReplyRunnable* aRunnable)
 {
-
+  BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
+  if (a2dp) {
+    a2dp->UpdateMetaData(aTitle, aArtist, aAlbum, aMediaNumber,
+                         aTotalMediaCount, aDuration);
+  }
+  DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
 }
 
 void
@@ -1309,14 +1334,23 @@ BluetoothServiceBluedroid::SendPlayStatus(
   const nsAString& aPlayStatus,
   BluetoothReplyRunnable* aRunnable)
 {
-
+  BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
+  if (a2dp) {
+    ControlPlayStatus playStatus =
+      PlayStatusStringToControlPlayStatus(aPlayStatus);
+    a2dp->UpdatePlayStatus(aDuration, aPosition, playStatus);
+  }
+  DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
 }
 
 void
 BluetoothServiceBluedroid::UpdatePlayStatus(
   uint32_t aDuration, uint32_t aPosition, ControlPlayStatus aPlayStatus)
 {
-
+  // We don't need this function for bluedroid.
+  // In bluez, it only calls dbus api
+  // But it does not update BluetoothA2dpManager member fields
+  MOZ_ASSERT(false);
 }
 
 nsresult

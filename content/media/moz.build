@@ -117,7 +117,6 @@ UNIFIED_SOURCES += [
     'DOMMediaStream.cpp',
     'EncodedBufferCache.cpp',
     'FileBlockCache.cpp',
-    'Latency.cpp',
     'MediaCache.cpp',
     'MediaDecoder.cpp',
     'MediaDecoderReader.cpp',
@@ -144,8 +143,10 @@ UNIFIED_SOURCES += [
 ]
 
 # DecoderTraits.cpp needs to be built separately because of Mac OS X headers.
+# Latency.cpp needs to be built separately because it forces NSPR logging.
 SOURCES += [
     'DecoderTraits.cpp',
+    'Latency.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

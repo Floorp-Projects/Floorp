@@ -944,8 +944,21 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
   }
 
   if (mFill != aOther.mFill ||
-      mStroke != aOther.mStroke) {
+      mStroke != aOther.mStroke ||
+      mFillOpacity != aOther.mFillOpacity ||
+      mStrokeOpacity != aOther.mStrokeOpacity) {
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+    if (HasStroke() != aOther.HasStroke() ||
+        (!HasStroke() && HasFill() != aOther.HasFill())) {
+      // Frame bounds and overflow rects depend on whether we "have" fill or
+      // stroke. Whether we have stroke or not just changed, or else we have no
+      // stroke (in which case whether we have fill or not is significant to frame
+      // bounds) and whether we have fill or not just changed. In either case we
+      // need to reflow so the frame rect is updated.
+      // XXXperf this is a waste on non nsSVGPathGeometryFrames.
+      NS_UpdateHint(hint, nsChangeHint_NeedReflow);
+      NS_UpdateHint(hint, nsChangeHint_NeedDirtyReflow); // XXX remove me: bug 876085
+    }
     if (PaintURIChanged(mFill, aOther.mFill) ||
         PaintURIChanged(mStroke, aOther.mStroke)) {
       NS_UpdateHint(hint, nsChangeHint_UpdateEffects);
@@ -975,8 +988,6 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
   }
 
   if ( mStrokeDashoffset      != aOther.mStrokeDashoffset      ||
-       mFillOpacity           != aOther.mFillOpacity           ||
-       mStrokeOpacity         != aOther.mStrokeOpacity         ||
        mClipRule              != aOther.mClipRule              ||
        mColorInterpolation    != aOther.mColorInterpolation    ||
        mColorInterpolationFilters != aOther.mColorInterpolationFilters ||

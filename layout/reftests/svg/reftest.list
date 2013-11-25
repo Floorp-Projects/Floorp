@@ -102,6 +102,9 @@ skip-if(B2G) == dynamic-pattern-contents-02.svg pass.svg
 == dynamic-reflow-01.svg dynamic-reflow-01-ref.svg
 == dynamic-small-object-scaled-up-01.svg pass.svg
 == dynamic-small-object-scaled-up-02.svg pass.svg
+== dynamic-stroke-01.svg pass.svg
+== dynamic-stroke-opacity-01.svg pass.svg
+== dynamic-stroke-width-01.svg pass.svg
 == dynamic-switch-01.svg pass.svg
 == dynamic-text-01.svg dynamic-text-01-ref.svg
 fuzzy-if(d2d&&layersGPUAccelerated,2,12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7

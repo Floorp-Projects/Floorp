@@ -1780,7 +1780,8 @@ fuzzy(1,10000) fuzzy-if(Android&&AndroidVersion>=15,5,10000) == 902330-1.html 90
 fuzzy-if(Android,8,400) == 906199-1.html 906199-1-ref.html
 == 921716-1.html 921716-1-ref.html
 fuzzy-if(cocoaWidget,1,40) == 928607-1.html 928607-1-ref.html
-== 936670-1.svg 936670-1-ref.svg
+== 931464-1.html 931464-1-ref.html
 == 931853.html 931853-ref.html
 == 931853-quirks.html 931853-quirks-ref.html
-== 931464-1.html 931464-1-ref.html
+== 936670-1.svg 936670-1-ref.svg
+== 941940-1.html 941940-1-ref.html

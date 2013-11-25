@@ -72,16 +72,12 @@ function test() {
   // http://example.com.  We need to load the blank window first, otherwise the
   // docshell gets confused and doesn't have a current history entry.
   let tab = gBrowser.addTab("about:blank");
-  let tabBrowser = tab.linkedBrowser;
+  let browser = tab.linkedBrowser;
 
-  tabBrowser.addEventListener("load", function(aEvent) {
-    tabBrowser.removeEventListener("load", arguments.callee, true);
+  whenBrowserLoaded(browser, function() {
+    browser.loadURI("http://example.com", null, null);
 
-    tabBrowser.loadURI("http://example.com", null, null);
-
-    tabBrowser.addEventListener("load", function(aEvent) {
-      tabBrowser.removeEventListener("load", arguments.callee, true);
-
+    whenBrowserLoaded(browser, function() {
       // After these push/replaceState calls, the window should have three
       // history entries:
       //   testURL        (state object: null)          <-- oldest
@@ -102,13 +98,12 @@ function test() {
       ss.setTabState(tab2, state, true);
 
       // Run checkState() once the tab finishes loading its restored state.
-      tab2.linkedBrowser.addEventListener("load", function() {
-        tab2.linkedBrowser.removeEventListener("load", arguments.callee, true);
+      whenTabRestored(tab2, function() {
         SimpleTest.executeSoon(function() {
           checkState(tab2);
         });
-      }, true);
+      });
 
-    }, true);
-  }, true);
+    });
+  });
 }

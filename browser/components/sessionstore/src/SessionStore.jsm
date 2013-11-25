@@ -2624,6 +2624,14 @@ let SessionStoreInternal = {
       // be ignored and don't override any tab data set by restoreHistory().
       TabState.flush(tab.linkedBrowser);
 
+      // Ensure the index is in bounds.
+      let activeIndex = (tabData.index || tabData.entries.length) - 1;
+      activeIndex = Math.min(activeIndex, tabData.entries.length - 1);
+      activeIndex = Math.max(activeIndex, 0);
+
+      // Save the index in case we updated it above.
+      tabData.index = activeIndex + 1;
+
       // keep the data around to prevent dataloss in case
       // a tab gets closed before it's been properly restored
       browser.__SS_data = tabData;
@@ -2638,20 +2646,10 @@ let SessionStoreInternal = {
         pageStyle: tabData.pageStyle || null
       });
 
-      if (tabData.entries.length == 0) {
-        // make sure to blank out this tab's content
-        // (just purging the tab's history won't be enough)
-        browser.loadURIWithFlags("about:blank",
-                                 Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
-                                 null, null, null);
-        continue;
-      }
-
       browser.stop(); // in case about:blank isn't done yet
 
       // wall-paper fix for bug 439675: make sure that the URL to be loaded
       // is always visible in the address bar
-      let activeIndex = (tabData.index || tabData.entries.length) - 1;
       let activePageData = tabData.entries[activeIndex] || null;
       let uri = activePageData ? activePageData.url || null : null;
       browser.userTypedValue = uri;
@@ -2800,15 +2798,13 @@ let SessionStoreInternal = {
     // Remove the history listener, since we no longer need it once we start restoring
     this._removeSHistoryListener(aTab);
 
-    let activeIndex = (tabData.index || tabData.entries.length) - 1;
-    if (activeIndex >= tabData.entries.length)
-      activeIndex = tabData.entries.length - 1;
+    let activeIndex = tabData.index - 1;
     // Reset currentURI.  This creates a new session history entry with a new
     // doc identifier, so we need to explicitly save and restore the old doc
     // identifier (corresponding to the SHEntry at activeIndex) below.
     browser.webNavigation.setCurrentURI(Utils.makeURI("about:blank"));
     // Attach data that will be restored on "load" event, after tab is restored.
-    if (activeIndex > -1) {
+    if (tabData.entries.length) {
       // restore those aspects of the currently active documents which are not
       // preserved in the plain history entries (mainly scroll state and text data)
       browser.__SS_restore_data = tabData.entries[activeIndex] || {};
@@ -2826,6 +2822,14 @@ let SessionStoreInternal = {
         // ignore page load errors
         didStartLoad = false;
       }
+    } else {
+      browser.__SS_restore_data = {};
+      browser.__SS_restore_pageStyle = "";
+      browser.__SS_restore_tab = aTab;
+      browser.loadURIWithFlags("about:blank",
+                               Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
+                               null, null, null);
+      didStartLoad = true;
     }
 
     // Handle userTypedValue. Setting userTypedValue seems to update gURLbar
@@ -2850,8 +2854,8 @@ let SessionStoreInternal = {
     // channel (via the progress listener), so reset the tab ourselves. We will
     // also send SSTabRestored since this tab has technically been restored.
     if (!didStartLoad) {
-      this._sendTabRestoredNotification(aTab);
       this._resetTabRestoringState(aTab);
+      this._sendTabRestoredNotification(aTab);
     }
 
     return didStartLoad;
@@ -2935,12 +2939,19 @@ let SessionStoreInternal = {
     PageStyle.restore(aBrowser.docShell, frameList, aBrowser.__SS_restore_pageStyle);
     TextAndScrollData.restore(frameList);
 
-    // notify the tabbrowser that this document has been completely restored
-    this._sendTabRestoredNotification(aBrowser.__SS_restore_tab);
+    let tab = aBrowser.__SS_restore_tab;
 
+    // Drop all the state associated with restoring the tab. We're
+    // done with that now.
+    delete aBrowser.__SS_data;
     delete aBrowser.__SS_restore_data;
     delete aBrowser.__SS_restore_pageStyle;
     delete aBrowser.__SS_restore_tab;
+
+    // Notify the tabbrowser that this document has been completely
+    // restored. Do so after restoration is completely finished and
+    // all state for it has been dropped.
+    this._sendTabRestoredNotification(tab);
   },
 
   /**

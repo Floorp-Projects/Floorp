@@ -28,8 +28,7 @@ function test() {
 
   function testOpenCloseWindow(aIsPrivate, aTest, aCallback) {
     whenNewWindowLoaded({ private: aIsPrivate }, function(win) {
-      win.gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-        win.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
+      whenBrowserLoaded(win.gBrowser.selectedBrowser, function() {
         executeSoon(function() {
           // Mark the window with some unique data to be restored later on.
           ss.setWindowValue(win, aTest.key, aTest.value);
@@ -37,7 +36,7 @@ function test() {
           win.close();
           aCallback();
         });
-      }, true);
+      });
       win.gBrowser.selectedBrowser.loadURI(aTest.url);
     });
   }

@@ -195,8 +195,11 @@ nsSVGImageFrame::AttributeChanged(int32_t         aNameSpaceID,
       return NS_OK;
     }
     else if (aAttribute == nsGkAtoms::preserveAspectRatio) {
-      // Don't invalidate (the layers code does that).
-      SchedulePaint();
+      // We don't paint the content of the image using display lists, therefore
+      // we have to invalidate for this children-only transform changes since
+      // there is no layer tree to notice that the transform changed and
+      // recomposite.
+      InvalidateFrame();
       return NS_OK;
     }
   }

@@ -29,10 +29,13 @@ class Promise MOZ_FINAL : public nsISupports,
                           public nsWrapperCache
 {
   friend class NativePromiseCallback;
-  friend class PromiseTask;
+  friend class PromiseResolverMixin;
   friend class PromiseResolverTask;
-  friend class ResolvePromiseCallback;
+  friend class PromiseTask;
   friend class RejectPromiseCallback;
+  friend class ResolvePromiseCallback;
+  friend class WorkerPromiseResolverTask;
+  friend class WorkerPromiseTask;
   friend class WrapperPromiseCallback;
 
 public:
@@ -42,7 +45,6 @@ public:
   Promise(nsPIDOMWindow* aWindow);
   ~Promise();
 
-  static bool PrefEnabled();
   static bool EnabledForScope(JSContext* aCx, JSObject* /* unused */);
 
   void MaybeResolve(JSContext* aCx,

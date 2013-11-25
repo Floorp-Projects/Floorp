@@ -1245,9 +1245,7 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
   if (style->HasMarker()) {
     return false;
   }
-  if (style->mFill.mType == eStyleSVGPaintType_None ||
-      style->mFillOpacity <= 0 ||
-      !HasStroke(aFrame)) {
+  if (!style->HasFill() || !HasStroke(aFrame)) {
     return true;
   }
   return false;
@@ -1559,9 +1557,7 @@ bool
 nsSVGUtils::HasStroke(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
-  return style->mStroke.mType != eStyleSVGPaintType_None &&
-         style->mStrokeOpacity > 0 &&
-         GetStrokeWidth(aFrame, aContextPaint) > 0;
+  return style->HasStroke() && GetStrokeWidth(aFrame, aContextPaint) > 0;
 }
 
 float
