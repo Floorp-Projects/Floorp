@@ -275,9 +275,9 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
  *              "we already set [[PrimitiveThis]] for this String object");
  *
  * MOZ_ASSERT has no effect in non-debug builds.  It is designed to catch bugs
- * *only* during debugging, not "in the field".
+ * *only* during debugging, not "in the field". If you want the latter, use
+ * MOZ_RELEASE_ASSERT, which applies to non-debug builds as well.
  */
-#ifdef DEBUG
    /* First the single-argument form. */
 #  define MOZ_ASSERT_HELPER1(expr) \
      do { \
@@ -313,11 +313,13 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
 #  define MOZ_ASSERT_CHOOSE_HELPER2(count) MOZ_ASSERT_HELPER##count
 #  define MOZ_ASSERT_CHOOSE_HELPER1(count) MOZ_ASSERT_CHOOSE_HELPER2(count)
 #  define MOZ_ASSERT_CHOOSE_HELPER(count) MOZ_ASSERT_CHOOSE_HELPER1(count)
-   /* The actual macro. */
+   /* The actual macros. */
 #  define MOZ_ASSERT_GLUE(x, y) x y
-#  define MOZ_ASSERT(...) \
+#  define MOZ_RELEASE_ASSERT(...) \
      MOZ_ASSERT_GLUE(MOZ_ASSERT_CHOOSE_HELPER(MOZ_COUNT_ASSERT_ARGS(__VA_ARGS__)), \
                      (__VA_ARGS__))
+#ifdef DEBUG
+#  define MOZ_ASSERT(...) MOZ_RELEASE_ASSERT(__VA_ARGS__)
 #else
 #  define MOZ_ASSERT(...) do { } while(0)
 #endif /* DEBUG */
