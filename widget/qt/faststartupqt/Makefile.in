@@ -5,12 +5,6 @@
 DIST_INSTALL = 1
 STL_FLAGS=
 
-EXTRA_DSO_LDOPTS = \
-	$(XPCOM_GLUE_LDOPTS) \
-	$(XPCOM_FROZEN_LDOPTS) \
-	$(MOZ_QT_LIBS) \
-	$(NULL)
-
 LOCAL_INCLUDES += \
 	-I$(topsrcdir)/xpcom/build \
 	-I$(topsrcdir)/widget/qt \
