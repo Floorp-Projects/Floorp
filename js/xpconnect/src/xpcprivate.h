@@ -652,6 +652,7 @@ public:
         IDX_PROTO                   ,
         IDX_ITERATOR                ,
         IDX_EXPOSEDPROPS            ,
+        IDX_EVAL                    ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 

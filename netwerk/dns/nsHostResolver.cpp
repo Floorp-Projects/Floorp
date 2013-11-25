@@ -31,7 +31,6 @@
 #include "nsURLHelper.h"
 #include "nsThreadUtils.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
@@ -309,7 +308,7 @@ HostDB_ClearEntry(PLDHashTable *table,
     nsHostDBEnt *he = static_cast<nsHostDBEnt*>(entry);
     MOZ_ASSERT(he, "nsHostDBEnt is null!");
 
-    DebugOnly<nsHostRecord*> hr = he->rec;
+    nsHostRecord *hr = he->rec;
     MOZ_ASSERT(hr, "nsHostDBEnt has null host record!");
 
     LOG(("Clearing cache db entry for host [%s].\n", hr->host));
@@ -635,27 +634,35 @@ nsHostResolver::ResolveHost(const char            *host,
                         unspecHe->rec->HasUsableResult(flags) &&
                         TimeStamp::NowLoRes() <= (he->rec->expiration +
                             TimeDuration::FromSeconds(mGracePeriod * 60))) {
+
+                        MOZ_ASSERT(unspecHe->rec->addr_info || unspecHe->rec->negative,
+                                   "Entry should be resolved or negative.");
+
                         LOG(("  Trying AF_UNSPEC entry for [%s] af: %s.\n",
                             host, (af == PR_AF_INET) ? "AF_INET" : "AF_INET6"));
 
-                        // Search for any valid address in the AF_UNSPEC entry
-                        // in the cache (not blacklisted and from the right
-                        // family).
-                        NetAddrElement *addrIter =
-                            unspecHe->rec->addr_info->mAddresses.getFirst();
                         he->rec->addr_info = nullptr;
-                        while (addrIter) {
-                            if ((af == addrIter->mAddress.inet.family) &&
-                                 !unspecHe->rec->Blacklisted(&addrIter->mAddress)) {
-                                if (!he->rec->addr_info) {
-                                    he->rec->addr_info = new AddrInfo(
-                                        unspecHe->rec->addr_info->mHostName,
-                                        unspecHe->rec->addr_info->mCanonicalName);
+                        if (unspecHe->rec->negative) {
+                            he->rec->negative = unspecHe->rec->negative;
+                        } else if (he->rec->addr_info) {
+                            // Search for any valid address in the AF_UNSPEC entry
+                            // in the cache (not blacklisted and from the right
+                            // family).
+                            NetAddrElement *addrIter =
+                                unspecHe->rec->addr_info->mAddresses.getFirst();
+                            while (addrIter) {
+                                if ((af == addrIter->mAddress.inet.family) &&
+                                     !unspecHe->rec->Blacklisted(&addrIter->mAddress)) {
+                                    if (!he->rec->addr_info) {
+                                        he->rec->addr_info = new AddrInfo(
+                                            unspecHe->rec->addr_info->mHostName,
+                                            unspecHe->rec->addr_info->mCanonicalName);
+                                    }
+                                    he->rec->addr_info->AddAddress(
+                                        new NetAddrElement(*addrIter));
                                 }
-                                he->rec->addr_info->AddAddress(
-                                    new NetAddrElement(*addrIter));
+                                addrIter = addrIter->getNext();
                             }
-                            addrIter = addrIter->getNext();
                         }
                         if (he->rec->HasUsableResult(flags)) {
                             result = he->rec;
@@ -976,7 +983,7 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, AddrInfo *r
             rec->usingAnyThread = false;
         }
 
-        if (rec->addr_info && !mShutdown) {
+        if (!mShutdown) {
             // add to mEvictionQ
             PR_APPEND_LINK(rec, &mEvictionQ);
             NS_ADDREF(rec);
@@ -1170,7 +1177,8 @@ CacheEntryEnumerator(PLDHashTable *table, PLDHashEntryHdr *entry,
     // We don't pay attention to address literals, only resolved domains.
     // Also require a host.
     nsHostRecord *rec = static_cast<nsHostDBEnt*>(entry)->rec;
-    if (!rec->addr_info || !rec->host) {
+    MOZ_ASSERT(rec, "rec should never be null here!");
+    if (!rec || !rec->addr_info || !rec->host) {
         return PL_DHASH_NEXT;
     }
 

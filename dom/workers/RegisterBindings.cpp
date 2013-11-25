@@ -6,6 +6,7 @@
 #include "WorkerPrivate.h"
 #include "ChromeWorkerScope.h"
 #include "File.h"
+#include "RuntimeService.h"
 
 #include "jsapi.h"
 #include "js/OldDebugAPI.h"
@@ -19,6 +20,7 @@
 #include "mozilla/dom/ImageDataBinding.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MessagePortBinding.h"
+#include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
@@ -61,6 +63,8 @@ WorkerPrivate::RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
       !ImageDataBinding::GetConstructorObject(aCx, aGlobal) ||
       !MessageEventBinding::GetConstructorObject(aCx, aGlobal) ||
       !MessagePortBinding::GetConstructorObject(aCx, aGlobal) ||
+      (PromiseEnabled() &&
+        !PromiseBinding::GetConstructorObject(aCx, aGlobal)) ||
       !TextDecoderBinding::GetConstructorObject(aCx, aGlobal) ||
       !TextEncoderBinding::GetConstructorObject(aCx, aGlobal) ||
       !XMLHttpRequestBinding_workers::GetConstructorObject(aCx, aGlobal) ||

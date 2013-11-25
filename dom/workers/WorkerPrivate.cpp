@@ -1465,6 +1465,29 @@ public:
   }
 };
 
+class UpdatePreferenceRunnable : public WorkerControlRunnable
+{
+  WorkerPreference mPref;
+  bool mValue;
+
+public:
+  UpdatePreferenceRunnable(WorkerPrivate* aWorkerPrivate,
+                           WorkerPreference aPref,
+                           bool aValue)
+    : WorkerControlRunnable(aWorkerPrivate, WorkerThread, UnchangedBusyCount),
+      mPref(aPref),
+      mValue(aValue)
+  {
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    aWorkerPrivate->UpdatePreferenceInternal(aCx, mPref, mValue);
+    return true;
+  }
+};
+
 class UpdateJSWorkerMemoryParameterRunnable : public WorkerControlRunnable
 {
   uint32_t mValue;
@@ -2780,6 +2803,21 @@ WorkerPrivateParent<Derived>::UpdateJSContextOptions(JSContext* aCx,
 
 template <class Derived>
 void
+WorkerPrivateParent<Derived>::UpdatePreference(JSContext* aCx, WorkerPreference aPref, bool aValue)
+{
+  AssertIsOnParentThread();
+  MOZ_ASSERT(aPref >= 0 && aPref < WORKERPREF_COUNT);
+
+  nsRefPtr<UpdatePreferenceRunnable> runnable =
+    new UpdatePreferenceRunnable(ParentAsWorkerPrivate(), aPref, aValue);
+  if (!runnable->Dispatch(aCx)) {
+    NS_WARNING("Failed to update worker preferences!");
+    JS_ClearPendingException(aCx);
+  }
+}
+
+template <class Derived>
+void
 WorkerPrivateParent<Derived>::UpdateJSWorkerMemoryParameter(JSContext* aCx,
                                                             JSGCParamKey aKey,
                                                             uint32_t aValue)
@@ -3284,6 +3322,15 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
 {
   MOZ_ASSERT_IF(IsSharedWorker(), !aSharedWorkerName.IsVoid());
   MOZ_ASSERT_IF(!IsSharedWorker(), aSharedWorkerName.IsEmpty());
+
+  if (aParent) {
+    aParent->AssertIsOnWorkerThread();
+    aParent->GetAllPreferences(mPreferences);
+  }
+  else {
+    AssertIsOnMainThread();
+    RuntimeService::GetDefaultPreferences(mPreferences);
+  }
 }
 
 WorkerPrivate::~WorkerPrivate()
@@ -5084,6 +5131,19 @@ WorkerPrivate::UpdateJSContextOptionsInternal(JSContext* aCx,
 }
 
 void
+WorkerPrivate::UpdatePreferenceInternal(JSContext* aCx, WorkerPreference aPref, bool aValue)
+{
+  AssertIsOnWorkerThread();
+  MOZ_ASSERT(aPref >= 0 && aPref < WORKERPREF_COUNT);
+
+  mPreferences[aPref] = aValue;
+
+  for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
+    mChildWorkers[index]->UpdatePreference(aCx, aPref, aValue);
+  }
+}
+
+void
 WorkerPrivate::UpdateJSWorkerMemoryParameterInternal(JSContext* aCx,
                                                      JSGCParamKey aKey,
                                                      uint32_t aValue)
@@ -5260,23 +5320,16 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx, uint64_t aMessagePortSerial)
     return false;
   }
 
-  nsRefPtr<nsDOMMessageEvent> event;
-  {
-    // Bug 940779 - MessageEventInit contains unrooted JS objects, and
-    // ~nsRefPtr can GC, so make sure 'init' is no longer live before ~nsRefPtr
-    // runs (or the nsRefPtr is even created) to avoid a rooting hazard. Note
-    // that 'init' is live until its destructor runs, not just until its final
-    // use.
-    MessageEventInit init;
-    init.mBubbles = false;
-    init.mCancelable = false;
-    init.mSource = &jsPort.toObject();
+  RootedDictionary<MessageEventInit> init(aCx);
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mSource = &jsPort.toObject();
 
-    ErrorResult rv;
-    event = nsDOMMessageEvent::Constructor(globalObject, aCx,
-                                           NS_LITERAL_STRING("connect"),
-                                           init, rv);
-  }
+  ErrorResult rv;
+
+  nsRefPtr<nsDOMMessageEvent> event =
+    nsDOMMessageEvent::Constructor(globalObject, aCx,
+                                   NS_LITERAL_STRING("connect"), init, rv);
 
   event->SetTrusted(true);
 

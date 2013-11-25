@@ -1094,8 +1094,7 @@ public:
 // single flex line.
 class MOZ_STACK_CLASS SingleLineCrossAxisPositionTracker : public PositionTracker {
 public:
-  SingleLineCrossAxisPositionTracker(nsFlexContainerFrame* aFlexContainerFrame,
-                                     const FlexboxAxisTracker& aAxisTracker);
+  SingleLineCrossAxisPositionTracker(const FlexboxAxisTracker& aAxisTracker);
 
   void ComputeLineCrossSize(const nsTArray<FlexItem>& aItems);
   inline nscoord GetLineCrossSize() const { return mLineCrossSize; }
@@ -1394,8 +1393,8 @@ nsFlexContainerFrame::ResolveFlexibleLengths(
     PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" available free space = %d\n", availableFreeSpace));
 
-    // If sign of free space matches flexType, give each flexible
-    // item a portion of availableFreeSpace.
+    // If sign of free space matches the type of flexing that we're doing, give
+    // each flexible item a portion of availableFreeSpace.
     if ((availableFreeSpace > 0 && havePositiveFreeSpace) ||
         (availableFreeSpace < 0 && !havePositiveFreeSpace)) {
 
@@ -1680,8 +1679,7 @@ MainAxisPositionTracker::TraversePackingSpace()
 }
 
 SingleLineCrossAxisPositionTracker::
-  SingleLineCrossAxisPositionTracker(nsFlexContainerFrame* aFlexContainerFrame,
-                                     const FlexboxAxisTracker& aAxisTracker)
+  SingleLineCrossAxisPositionTracker(const FlexboxAxisTracker& aAxisTracker)
   : PositionTracker(aAxisTracker.GetCrossAxis()),
     mLineCrossSize(0),
     mCrossStartToFurthestBaseline(nscoord_MIN) // Starts at -infinity, and then
@@ -2369,8 +2367,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   // Set up state for cross-axis-positioning of children _within_ a single
   // flex line.
-  SingleLineCrossAxisPositionTracker
-    lineCrossAxisPosnTracker(this, axisTracker);
+  SingleLineCrossAxisPositionTracker lineCrossAxisPosnTracker(axisTracker);
 
   lineCrossAxisPosnTracker.ComputeLineCrossSize(items);
   // XXXdholbert Once we've got multi-line flexbox support: here, after we've
