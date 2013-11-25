@@ -43,12 +43,9 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    *
    *   - If |type| == "mms", we also need:
    *     - |delivery| DOMString: the delivery state of received message
-   *     - |deliveryStatus| DOMString Array: the delivery status of received message
+   *     - |deliveryStatus| DOMString: the delivery status of received message
    *     - |receivers| DOMString Array: the phone numbers of receivers
    *     - |phoneNumber| DOMString: [optional] my own phone number.
-   *
-   * Note: |deliveryStatus| should only contain single string to specify
-   *       the delivery status of MMS message for the phone owner self.
    */
   void saveReceivedMessage(in jsval aMessage,
                 [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
