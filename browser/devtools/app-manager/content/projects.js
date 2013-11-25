@@ -177,7 +177,7 @@ let UI = {
   update: function(button, location) {
     button.disabled = true;
     let project = AppProjects.get(location);
-    this.manifestEditor.save()
+    this.saveManifest()
         .then(() => {
           return this.validate(project);
         })
@@ -198,6 +198,13 @@ let UI = {
            alert(message);
            this.connection.log(message);
          });
+  },
+
+  saveManifest: function() {
+    if (Services.prefs.getBoolPref(MANIFEST_EDITOR_ENABLED)) {
+      return this.manifestEditor.save();
+    }
+    return promise.resolve();
   },
 
   remove: function(location, event) {
