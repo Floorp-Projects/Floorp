@@ -161,7 +161,7 @@ MediaConduitErrorCode WebrtcAudioConduit::Init(WebrtcAudioConduit *other)
       }
 #endif
 
-    //Per WebRTC APIs below function calls return NULL on failure
+    // Per WebRTC APIs below function calls return nullptr on failure
     if(!(mVoiceEngine = webrtc::VoiceEngine::Create()))
     {
       CSFLogError(logTag, "%s Unable to create voice engine", __FUNCTION__);
