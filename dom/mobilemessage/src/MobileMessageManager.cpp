@@ -38,6 +38,8 @@
 #define FAILED_EVENT_NAME           NS_LITERAL_STRING("failed")
 #define DELIVERY_SUCCESS_EVENT_NAME NS_LITERAL_STRING("deliverysuccess")
 #define DELIVERY_ERROR_EVENT_NAME   NS_LITERAL_STRING("deliveryerror")
+#define READ_SUCCESS_EVENT_NAME     NS_LITERAL_STRING("readsuccess")
+#define READ_ERROR_EVENT_NAME       NS_LITERAL_STRING("readerror")
 
 using namespace mozilla::dom::mobilemessage;
 
@@ -62,6 +64,8 @@ NS_IMPL_EVENT_HANDLER(MobileMessageManager, sent)
 NS_IMPL_EVENT_HANDLER(MobileMessageManager, failed)
 NS_IMPL_EVENT_HANDLER(MobileMessageManager, deliverysuccess)
 NS_IMPL_EVENT_HANDLER(MobileMessageManager, deliveryerror)
+NS_IMPL_EVENT_HANDLER(MobileMessageManager, readsuccess)
+NS_IMPL_EVENT_HANDLER(MobileMessageManager, readerror)
 
 void
 MobileMessageManager::Init(nsPIDOMWindow *aWindow)
@@ -81,6 +85,8 @@ MobileMessageManager::Init(nsPIDOMWindow *aWindow)
   obs->AddObserver(this, kSmsFailedObserverTopic, false);
   obs->AddObserver(this, kSmsDeliverySuccessObserverTopic, false);
   obs->AddObserver(this, kSmsDeliveryErrorObserverTopic, false);
+  obs->AddObserver(this, kSmsReadSuccessObserverTopic, false);
+  obs->AddObserver(this, kSmsReadErrorObserverTopic, false);
 }
 
 void
@@ -99,6 +105,8 @@ MobileMessageManager::Shutdown()
   obs->RemoveObserver(this, kSmsFailedObserverTopic);
   obs->RemoveObserver(this, kSmsDeliverySuccessObserverTopic);
   obs->RemoveObserver(this, kSmsDeliveryErrorObserverTopic);
+  obs->RemoveObserver(this, kSmsReadSuccessObserverTopic);
+  obs->RemoveObserver(this, kSmsReadErrorObserverTopic);
 }
 
 NS_IMETHODIMP
@@ -534,6 +542,14 @@ MobileMessageManager::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!strcmp(aTopic, kSmsDeliveryErrorObserverTopic)) {
     return DispatchTrustedSmsEventToSelf(aTopic, DELIVERY_ERROR_EVENT_NAME, aSubject);
+  }
+
+  if (!strcmp(aTopic, kSmsReadSuccessObserverTopic)) {
+    return DispatchTrustedSmsEventToSelf(aTopic, READ_SUCCESS_EVENT_NAME, aSubject);
+  }
+
+  if (!strcmp(aTopic, kSmsReadErrorObserverTopic)) {
+    return DispatchTrustedSmsEventToSelf(aTopic, READ_ERROR_EVENT_NAME, aSubject);
   }
 
   return NS_OK;
