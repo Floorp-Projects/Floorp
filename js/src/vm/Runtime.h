@@ -948,6 +948,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Zone destroy callback. */
     JSZoneCallback destroyZoneCallback;
 
+    /* Zone sweep callback. */
+    JSZoneCallback sweepZoneCallback;
+
     /* Call this to get the name of a compartment. */
     JSCompartmentNameCallback compartmentNameCallback;
 
