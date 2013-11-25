@@ -21,6 +21,9 @@ dictionary MmsDeliveryInfo
   DOMString? deliveryStatus;
   jsval      deliveryTimestamp; // Date object; null if not available (e.g.,
                                 // |delivery| = "received" or not yet delivered).
+  DOMString? readStatus;
+  jsval      readTimestamp; // Date object. null if not available (e.g.,
+                            // |delivery| = "received" or not yet read).
 };
 
 [scriptable, builtinclass, uuid(82ca2465-f967-4107-a4da-65b7a15d5dba)]
