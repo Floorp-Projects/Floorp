@@ -621,6 +621,31 @@ DrawTargetSkia::Mask(const Pattern &aSource,
   mCanvas->drawPath(path, paint.mPaint);
 }
 
+void
+DrawTargetSkia::MaskSurface(const Pattern &aSource,
+                            SourceSurface *aMask,
+                            Point aOffset,
+                            const DrawOptions &aOptions)
+{
+  MarkChanged();
+  AutoPaintSetup paint(mCanvas.get(), aOptions, aSource);
+
+  SkPaint maskPaint;
+  SetPaintPattern(maskPaint, SurfacePattern(aMask, EXTEND_CLAMP));
+
+  SkMatrix transform = maskPaint.getShader()->getLocalMatrix();
+  transform.postTranslate(SkFloatToScalar(aOffset.x), SkFloatToScalar(aOffset.y));
+  maskPaint.getShader()->setLocalMatrix(transform);
+
+  SkLayerRasterizer *raster = new SkLayerRasterizer();
+  raster->addLayer(maskPaint);
+  SkSafeUnref(paint.mPaint.setRasterizer(raster));
+
+  IntSize size = aMask->GetSize();
+  Rect rect = Rect(aOffset.x, aOffset.y, size.width, size.height);
+  mCanvas->drawRect(RectToSkRect(rect), paint.mPaint);
+}
+
 TemporaryRef<SourceSurface>
 DrawTargetSkia::CreateSourceSurfaceFromData(unsigned char *aData,
                                             const IntSize &aSize,
