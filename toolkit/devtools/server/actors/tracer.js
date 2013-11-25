@@ -644,18 +644,15 @@ function objectGrip(aObject) {
 function objectDescriptor(aObject) {
   let desc = objectGrip(aObject);
   let ownProperties = Object.create(null);
-  let names;
-  try {
-    names = aObject.getOwnPropertyNames();
-  } catch(ex) {
-    // The above can throw if aObject points to a dead object.
-    // TODO: we should use Cu.isDeadWrapper() - see bug 885800.
+
+  if (Cu.isDeadWrapper(aObject)) {
     desc.prototype = createValueGrip(null);
     desc.ownProperties = ownProperties;
     desc.safeGetterValues = Object.create(null);
     return desc;
   }
 
+  const names = aObject.getOwnPropertyNames();
   let i = 0;
   for (let name of names) {
     if (i++ > MAX_PROPERTIES) {
