@@ -74,9 +74,6 @@ this.SystemMessagePermissionsTable = {
   "sms-delivery-success": {
     "sms": []
   },
-  "sms-read-success": {
-    "sms": []
-  },
   "sms-received": {
     "sms": []
   },
