@@ -906,31 +906,22 @@ nsresult
 nsSMILTimedElement::SetSimpleDuration(const nsAString& aDurSpec)
 {
   nsSMILTimeValue duration;
-  bool isMedia;
-  nsresult rv;
 
-  rv = nsSMILParserUtils::ParseClockValue(aDurSpec, &duration,
-          nsSMILParserUtils::kClockValueAllowIndefinite, &isMedia);
+  const nsAString& dur = nsSMILParserUtils::TrimWhitespace(aDurSpec);
 
-  if (NS_FAILED(rv)) {
-    mSimpleDur.SetIndefinite();
-    return NS_ERROR_FAILURE;
-  }
-
-  if (duration.IsDefinite() && duration.GetMillis() == 0L) {
-    mSimpleDur.SetIndefinite();
-    return NS_ERROR_FAILURE;
-  }
-
-  //
   // SVG-specific: "For SVG's animation elements, if "media" is specified, the
   // attribute will be ignored." (SVG 1.1, section 19.2.6)
-  //
-  if (isMedia)
+  if (dur.EqualsLiteral("media") || dur.EqualsLiteral("indefinite")) {
     duration.SetIndefinite();
-
+  } else {
+    if (!nsSMILParserUtils::ParseClockValue(dur, &duration) ||
+        duration.GetMillis() == 0L) {
+      mSimpleDur.SetIndefinite();
+      return NS_ERROR_FAILURE;
+    }
+  }
   // mSimpleDur should never be unresolved. ParseClockValue will either set
-  // duration to resolved/indefinite/media or will return a failure code.
+  // duration to resolved or will return false.
   NS_ABORT_IF_FALSE(duration.IsResolved(),
     "Setting unresolved simple duration");
 
@@ -951,24 +942,19 @@ nsresult
 nsSMILTimedElement::SetMin(const nsAString& aMinSpec)
 {
   nsSMILTimeValue duration;
-  bool isMedia;
-  nsresult rv;
 
-  rv = nsSMILParserUtils::ParseClockValue(aMinSpec, &duration, 0, &isMedia);
+  const nsAString& min = nsSMILParserUtils::TrimWhitespace(aMinSpec);
 
-  if (isMedia) {
+  if (min.EqualsLiteral("media")) {
     duration.SetMillis(0L);
+  } else {
+    if (!nsSMILParserUtils::ParseClockValue(min, &duration)) {
+      mMin.SetMillis(0L);
+      return NS_ERROR_FAILURE;
+    }
   }
 
-  if (NS_FAILED(rv) || !duration.IsDefinite()) {
-    mMin.SetMillis(0L);
-    return NS_ERROR_FAILURE;
-  }
-
-  if (duration.GetMillis() < 0L) {
-    mMin.SetMillis(0L);
-    return NS_ERROR_FAILURE;
-  }
+  NS_ABORT_IF_FALSE(duration.GetMillis() >= 0L, "Invalid duration");
 
   mMin = duration;
   UpdateCurrentInterval();
@@ -987,23 +973,18 @@ nsresult
 nsSMILTimedElement::SetMax(const nsAString& aMaxSpec)
 {
   nsSMILTimeValue duration;
-  bool isMedia;
-  nsresult rv;
 
-  rv = nsSMILParserUtils::ParseClockValue(aMaxSpec, &duration,
-          nsSMILParserUtils::kClockValueAllowIndefinite, &isMedia);
+  const nsAString& max = nsSMILParserUtils::TrimWhitespace(aMaxSpec);
 
-  if (isMedia)
+  if (max.EqualsLiteral("media") || max.EqualsLiteral("indefinite")) {
     duration.SetIndefinite();
-
-  if (NS_FAILED(rv) || !duration.IsResolved()) {
-    mMax.SetIndefinite();
-    return NS_ERROR_FAILURE;
-  }
-
-  if (duration.IsDefinite() && duration.GetMillis() <= 0L) {
-    mMax.SetIndefinite();
-    return NS_ERROR_FAILURE;
+  } else {
+    if (!nsSMILParserUtils::ParseClockValue(max, &duration) ||
+        duration.GetMillis() == 0L) {
+      mMax.SetIndefinite();
+      return NS_ERROR_FAILURE;
+    }
+    NS_ABORT_IF_FALSE(duration.GetMillis() > 0L, "Invalid duration");
   }
 
   mMax = duration;
@@ -1043,18 +1024,15 @@ nsresult
 nsSMILTimedElement::SetRepeatCount(const nsAString& aRepeatCountSpec)
 {
   nsSMILRepeatCount newRepeatCount;
-  nsresult rv =
-    nsSMILParserUtils::ParseRepeatCount(aRepeatCountSpec, newRepeatCount);
 
-  if (NS_SUCCEEDED(rv)) {
+  if (nsSMILParserUtils::ParseRepeatCount(aRepeatCountSpec, newRepeatCount)) {
     mRepeatCount = newRepeatCount;
-  } else {
-    mRepeatCount.Unset();
+    UpdateCurrentInterval();
+    return NS_OK;
   }
-
+  mRepeatCount.Unset();
   UpdateCurrentInterval();
-
-  return rv;
+  return NS_ERROR_FAILURE;
 }
 
 void
@@ -1067,15 +1045,18 @@ nsSMILTimedElement::UnsetRepeatCount()
 nsresult
 nsSMILTimedElement::SetRepeatDur(const nsAString& aRepeatDurSpec)
 {
-  nsresult rv;
   nsSMILTimeValue duration;
 
-  rv = nsSMILParserUtils::ParseClockValue(aRepeatDurSpec, &duration,
-          nsSMILParserUtils::kClockValueAllowIndefinite);
+  const nsAString& repeatDur =
+    nsSMILParserUtils::TrimWhitespace(aRepeatDurSpec);
 
-  if (NS_FAILED(rv) || !duration.IsResolved()) {
-    mRepeatDur.SetUnresolved();
-    return NS_ERROR_FAILURE;
+  if (repeatDur.EqualsLiteral("indefinite")) {
+    duration.SetIndefinite();
+  } else {
+    if (!nsSMILParserUtils::ParseClockValue(repeatDur, &duration)) {
+      mRepeatDur.SetUnresolved();
+      return NS_ERROR_FAILURE;
+    }
   }
 
   mRepeatDur = duration;
