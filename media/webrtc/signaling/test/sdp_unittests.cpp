@@ -769,7 +769,7 @@ TEST_F(SdpTest, addFmtpMaxFsFr) {
 
 int main(int argc, char **argv) {
   test_utils = new MtransportTestUtils();
-  NSS_NoDB_Init(NULL);
+  NSS_NoDB_Init(nullptr);
   NSS_SetDomesticPolicy();
 
   ::testing::InitGoogleTest(&argc, argv);

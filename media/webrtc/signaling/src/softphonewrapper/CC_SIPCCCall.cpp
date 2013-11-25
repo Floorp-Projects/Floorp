@@ -30,7 +30,7 @@ CSF_IMPLEMENT_WRAP(CC_SIPCCCall, cc_call_handle_t);
 
 CC_SIPCCCall::CC_SIPCCCall (cc_call_handle_t aCallHandle) :
             callHandle(aCallHandle),
-            pMediaData(new CC_SIPCCCallMediaData(NULL,false,false,-1)),
+            pMediaData(new CC_SIPCCCallMediaData(nullptr, false, false, -1)),
             m_lock("CC_SIPCCCall")
 {
     CSFLogInfo( logTag, "Creating  CC_SIPCCCall %u", callHandle );
@@ -423,7 +423,7 @@ void CC_SIPCCCall::addStream(int streamId, bool isVideo)
         VideoTermination * pVideo = VcmSIPCCBinding::getVideoTermination();
 
         // if there is a window for this call apply it to the stream
-        if ( pMediaData->remoteWindow != NULL)
+        if ( pMediaData->remoteWindow != nullptr)
         {
             pVideo->setRemoteWindow(streamId,  pMediaData->remoteWindow);
         }
@@ -432,7 +432,7 @@ void CC_SIPCCCall::addStream(int streamId, bool isVideo)
             CSFLogInfo( logTag, "addStream: remoteWindow is NULL");
         }
 
-		if(pMediaData->extRenderer != NULL)
+		if(pMediaData->extRenderer != nullptr)
 		{
 			pVideo->setExternalRenderer(streamId, pMediaData->videoFormat, pMediaData->extRenderer);
 		}

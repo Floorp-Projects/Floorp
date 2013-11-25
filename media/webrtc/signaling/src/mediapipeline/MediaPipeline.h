@@ -94,7 +94,7 @@ class MediaPipeline : public sigslot::has_slots<> {
         rtcp_packets_received_(0),
         pc_(pc),
         description_() {
-      // To indicate rtcp-mux rtcp_transport should be NULL.
+      // To indicate rtcp-mux rtcp_transport should be nullptr.
       // Therefore it's an error to send in the same flow for
       // both rtp and rtcp.
       MOZ_ASSERT(rtp_transport_ != rtcp_transport_);
@@ -149,7 +149,7 @@ class MediaPipeline : public sigslot::has_slots<> {
         : pipeline_(pipeline),
           sts_thread_(pipeline->sts_thread_) {}
 
-    void Detach() { pipeline_ = NULL; }
+    void Detach() { pipeline_ = nullptr; }
     MediaPipeline *pipeline() const { return pipeline_; }
 
     virtual nsresult SendRtpPacket(const void* data, int len);
@@ -302,7 +302,7 @@ private:
 // and transmitting to the network.
 class MediaPipelineTransmit : public MediaPipeline {
  public:
-  // Set rtcp_transport to NULL to use rtcp-mux
+  // Set rtcp_transport to nullptr to use rtcp-mux
   MediaPipelineTransmit(const std::string& pc,
                         nsCOMPtr<nsIEventTarget> main_thread,
                         nsCOMPtr<nsIEventTarget> sts_thread,
@@ -418,7 +418,7 @@ class MediaPipelineTransmit : public MediaPipeline {
 // rendering video.
 class MediaPipelineReceive : public MediaPipeline {
  public:
-  // Set rtcp_transport to NULL to use rtcp-mux
+  // Set rtcp_transport to nullptr to use rtcp-mux
   MediaPipelineReceive(const std::string& pc,
                        nsCOMPtr<nsIEventTarget> main_thread,
                        nsCOMPtr<nsIEventTarget> sts_thread,
@@ -545,7 +545,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
     PipelineRenderer(MediaPipelineReceiveVideo *pipeline) :
       pipeline_(pipeline) {}
 
-    void Detach() { pipeline_ = NULL; }
+    void Detach() { pipeline_ = nullptr; }
 
     // Implement VideoRenderer
     virtual void FrameSizeChange(unsigned int width,
