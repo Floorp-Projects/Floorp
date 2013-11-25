@@ -246,8 +246,14 @@ SideMenuWidget.prototype = {
 
     // Ensure the element is visible but not scrolled horizontally.
     let boxObject = this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-    boxObject.ensureElementIsVisible(aElement);
-    boxObject.scrollBy(-aElement.clientWidth, 0);
+
+    // Sometimes the boxObject doesn't have some methods, because the node
+    // is accessed while it's not visible or has been removed from the DOM.
+    // Avoid outputing an exception to the console in those cases.
+    if (boxObject.ensureElementIsVisible && boxObject.scrollBy) {
+      boxObject.ensureElementIsVisible(aElement);
+      boxObject.scrollBy(-aElement.clientWidth, 0);
+    }
   },
 
   /**
