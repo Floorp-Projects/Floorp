@@ -25,7 +25,7 @@ interface nsIRilMobileMessageDatabaseRecordCallback : nsISupports
   void notify(in nsresult aRv, in jsval aMessageRecord, in nsISupports aDomMessage);
 };
 
-[scriptable, uuid(d5374151-7451-4590-a70e-40c49c1369ce)]
+[scriptable, uuid(a92eba51-e619-4f70-98c5-175a33590582)]
 interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
 {
   /**
@@ -88,15 +88,24 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
   /**
    * |aEnvelopeId| DOMString: the "message-id" specified in the MMS PDU headers.
    * |aReceiver| DOMString: the phone number of receiver (for MMS; can be null).
-   * |aDelivery| DOMString: the new delivery value to update (can be null).
-   * |aDeliveryStatus| DOMString: the new delivery status to update (can be null).
+   * |aDeliveryStatus| DOMString: the new delivery status to be updated (can be null).
    * |aCallback| nsIRilMobileMessageDatabaseCallback: an optional callback.
    */
-  void setMessageDeliveryByEnvelopeId(in DOMString aEnvelopeId,
-                                      in DOMString aReceiver,
-                                      in DOMString aDelivery,
-                                      in DOMString aDeliveryStatus,
-                           [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+  void setMessageDeliveryStatusByEnvelopeId(in DOMString aEnvelopeId,
+                                            in DOMString aReceiver,
+                                            in DOMString aDeliveryStatus,
+                                 [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
+
+  /**
+   * |aEnvelopeId| DOMString: the "message-id" specified in the MMS PDU headers.
+   * |aReceiver| DOMString: the phone number of receiver (for MMS; can be null).
+   * |aReadStatus| DOMString: the new read status to be updated.
+   * |aCallback| nsIRilMobileMessageDatabaseCallback: an optional callback.
+   */
+  void setMessageReadStatusByEnvelopeId(in DOMString aEnvelopeId,
+                                        in DOMString aReceiver,
+                                        in DOMString aReadStatus,
+                             [optional] in nsIRilMobileMessageDatabaseCallback aCallback);
 
   /**
    * |aMessageId| Number: the message's DB record ID.
