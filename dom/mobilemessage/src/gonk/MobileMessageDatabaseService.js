@@ -1976,7 +1976,7 @@ MobileMessageDatabaseService.prototype = {
         (aMessage.type == "sms" && (aMessage.messageClass == undefined ||
                                     aMessage.sender == undefined)) ||
         (aMessage.type == "mms" && (aMessage.delivery == undefined ||
-                                    aMessage.deliveryStatus == undefined ||
+                                    !Array.isArray(aMessage.deliveryInfo) ||
                                     !Array.isArray(aMessage.receivers))) ||
         aMessage.timestamp == undefined) {
       if (aCallback) {
@@ -2010,25 +2010,26 @@ MobileMessageDatabaseService.prototype = {
       aMessage.transactionIdIndex = aMessage.headers["x-mms-transaction-id"];
       aMessage.isReadReportSent = false;
 
-      // As a receiver, we don't need to care about the delivery status of
-      // others, so we put a single element with self's phone number in the
-      // |deliveryInfo| array.
-      aMessage.deliveryInfo = [{
-        receiver: aMessage.phoneNumber,
-        deliveryStatus: aMessage.deliveryStatus,
-        deliveryTimestamp: 0,
-      }];
-
-      delete aMessage.deliveryStatus;
+      // If |deliveryTimestamp| is not specified, use 0 as default.
+      let deliveryInfo = aMessage.deliveryInfo;
+      for (let i = 0; i < deliveryInfo.length; i++) {
+        if (deliveryInfo[i].deliveryTimestamp == undefined) {
+          deliveryInfo[i].deliveryTimestamp = 0;
+        }
+      }
     }
 
     if (aMessage.type == "sms") {
       aMessage.delivery = DELIVERY_RECEIVED;
       aMessage.deliveryStatus = DELIVERY_STATUS_SUCCESS;
-      aMessage.deliveryTimestamp = 0;
 
       if (aMessage.pid == undefined) {
         aMessage.pid = RIL.PDU_PID_DEFAULT;
+      }
+
+      // If |deliveryTimestamp| is not specified, use 0 as default.
+      if (aMessage.deliveryTimestamp == undefined) {
+        aMessage.deliveryTimestamp = 0;
       }
     }
     aMessage.deliveryIndex = [aMessage.delivery, timestamp];
