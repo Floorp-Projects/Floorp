@@ -89,7 +89,7 @@ public:
      * @param aDestinationCtx The graphics context on which to apply the
      *  blurred mask.
      */
-    void Paint(gfxContext* aDestinationCtx, const gfxPoint& offset = gfxPoint(0.0, 0.0));
+    void Paint(gfxContext* aDestinationCtx);
 
     /**
      * Calculates a blur radius that, when used with box blur, approximates
