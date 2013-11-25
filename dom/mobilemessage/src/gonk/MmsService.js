@@ -18,6 +18,9 @@ const RIL_MMSSERVICE_CONTRACTID = "@mozilla.org/mms/rilmmsservice;1";
 const RIL_MMSSERVICE_CID = Components.ID("{217ddd76-75db-4210-955d-8806cd8d87f9}");
 
 let DEBUG = false;
+function debug(s) {
+  dump("-@- MmsService: " + s + "\n");
+};
 
 // Read debug setting from pref.
 try {
@@ -2384,12 +2387,3 @@ MmsService.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MmsService]);
-
-let debug;
-if (DEBUG) {
-  debug = function (s) {
-    dump("-@- MmsService: " + s + "\n");
-  };
-} else {
-  debug = function (s) {};
-}
