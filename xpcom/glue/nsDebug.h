@@ -398,6 +398,13 @@ extern "C" {
 NS_COM_GLUE void
 printf_stderr(const char *fmt, ...);
 
+NS_COM_GLUE void
+vprintf_stderr(const char *fmt, va_list args);
+
+// fprintf with special handling for stderr to print to the console
+NS_COM_GLUE void
+fprintf_stderr(FILE* aFile, const char *fmt, ...);
+
 #ifdef __cplusplus
 }
 #endif

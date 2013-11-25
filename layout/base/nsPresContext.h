@@ -56,6 +56,7 @@ struct nsStyleBackground;
 struct nsStyleBorder;
 class nsIRunnable;
 class gfxUserFontSet;
+class gfxTextPerfMetrics;
 class nsUserFontSet;
 struct nsFontFaceRuleContainer;
 class nsObjectFrame;
@@ -788,6 +789,8 @@ public:
    */
   const nscoord* GetBorderWidthTable() { return mBorderWidthTable; }
 
+  gfxTextPerfMetrics *GetTextPerfMetrics() { return mTextPerf; }
+
   bool IsDynamic() { return (mType == eContext_PageLayout || mType == eContext_Galley); }
   bool IsScreen() { return (mMedium == nsGkAtoms::screen ||
                               mType == eContext_PageLayout ||
@@ -1193,6 +1196,9 @@ protected:
 
   // container for per-context fonts (downloadable, SVG, etc.)
   nsUserFontSet*        mUserFontSet;
+
+  // text performance metrics
+  nsAutoPtr<gfxTextPerfMetrics>   mTextPerf;
 
   nsRect                mVisibleArea;
   nsSize                mPageSize;

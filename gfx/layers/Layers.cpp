@@ -1139,7 +1139,7 @@ void WriteSnapshotLinkToDumpFile(T* aObj, FILE* aFile)
   nsCString string(aObj->Name());
   string.Append("-");
   string.AppendInt((uint64_t)aObj);
-  fprintf(aFile, "href=\"javascript:ViewImage('%s')\"", string.BeginReading());
+  fprintf_stderr(aFile, "href=\"javascript:ViewImage('%s')\"", string.BeginReading());
 }
 
 template <typename T>
@@ -1148,11 +1148,13 @@ void WriteSnapshotToDumpFile_internal(T* aObj, gfxASurface* aSurf)
   nsCString string(aObj->Name());
   string.Append("-");
   string.AppendInt((uint64_t)aObj);
-  if (gfxUtils::sDumpPaintFile)
-    fprintf(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());
+  if (gfxUtils::sDumpPaintFile) {
+    fprintf_stderr(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());
+  }
   aSurf->DumpAsDataURL(gfxUtils::sDumpPaintFile);
-  if (gfxUtils::sDumpPaintFile)
-    fprintf(gfxUtils::sDumpPaintFile, "\";");
+  if (gfxUtils::sDumpPaintFile) {
+    fprintf_stderr(gfxUtils::sDumpPaintFile, "\";");
+  }
 }
 
 void WriteSnapshotToDumpFile(Layer* aLayer, gfxASurface* aSurf)
@@ -1176,13 +1178,13 @@ void
 Layer::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
 {
   if (aDumpHtml) {
-    fprintf(aFile, "<li><a id=\"%p\" ", this);
+    fprintf_stderr(aFile, "<li><a id=\"%p\" ", this);
 #ifdef MOZ_DUMP_PAINTING
     if (GetType() == TYPE_CONTAINER || GetType() == TYPE_THEBES) {
       WriteSnapshotLinkToDumpFile(this, aFile);
     }
 #endif
-    fprintf(aFile, ">");
+    fprintf_stderr(aFile, ">");
   }
   DumpSelf(aFile, aPrefix);
 
@@ -1193,7 +1195,7 @@ Layer::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
 #endif
 
   if (aDumpHtml) {
-    fprintf(aFile, "</a>");
+    fprintf_stderr(aFile, "</a>");
   }
 
   if (Layer* mask = GetMaskLayer()) {
@@ -1206,16 +1208,16 @@ Layer::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
     if (aDumpHtml) {
-      fprintf(aFile, "<ul>");
+      fprintf_stderr(aFile, "<ul>");
     }
     kid->Dump(aFile, pfx.get(), aDumpHtml);
     if (aDumpHtml) {
-      fprintf(aFile, "</ul>");
+      fprintf_stderr(aFile, "</ul>");
     }
   }
 
   if (aDumpHtml) {
-    fprintf(aFile, "</li>");
+    fprintf_stderr(aFile, "</li>");
   }
   if (Layer* next = GetNextSibling())
     next->Dump(aFile, aPrefix, aDumpHtml);
@@ -1226,11 +1228,7 @@ Layer::DumpSelf(FILE* aFile, const char* aPrefix)
 {
   nsAutoCString str;
   PrintInfo(str, aPrefix);
-  if (!aFile || aFile == stderr) {
-    printf_stderr("%s\n", str.get());
-  } else {
-    fprintf(aFile, "%s\n", str.get());
-  }
+  fprintf_stderr(aFile, "%s\n", str.get());
 }
 
 void
@@ -1407,34 +1405,34 @@ LayerManager::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
 
 #ifdef MOZ_DUMP_PAINTING
   if (aDumpHtml) {
-    fprintf(file, "<ul><li><a ");
+    fprintf_stderr(file, "<ul><li><a ");
     WriteSnapshotLinkToDumpFile(this, file);
-    fprintf(file, ">");
+    fprintf_stderr(file, ">");
   }
 #endif
   DumpSelf(file, aPrefix);
 #ifdef MOZ_DUMP_PAINTING
   if (aDumpHtml) {
-    fprintf(file, "</a>");
+    fprintf_stderr(file, "</a>");
   }
 #endif
 
   nsAutoCString pfx(aPrefix);
   pfx += "  ";
   if (!GetRoot()) {
-    fprintf(file, "%s(null)", pfx.get());
+    fprintf_stderr(file, "%s(null)", pfx.get());
     if (aDumpHtml) {
-      fprintf(file, "</li></ul>");
+      fprintf_stderr(file, "</li></ul>");
     }
     return;
   }
 
   if (aDumpHtml) {
-    fprintf(file, "<ul>");
+    fprintf_stderr(file, "<ul>");
   }
   GetRoot()->Dump(file, pfx.get(), aDumpHtml);
   if (aDumpHtml) {
-    fprintf(file, "</ul></li></ul>");
+    fprintf_stderr(file, "</ul></li></ul>");
   }
   fputc('\n', file);
 }
@@ -1444,7 +1442,7 @@ LayerManager::DumpSelf(FILE* aFile, const char* aPrefix)
 {
   nsAutoCString str;
   PrintInfo(str, aPrefix);
-  fprintf(FILEOrDefault(aFile), "%s\n", str.get());
+  fprintf_stderr(FILEOrDefault(aFile), "%s\n", str.get());
 }
 
 void

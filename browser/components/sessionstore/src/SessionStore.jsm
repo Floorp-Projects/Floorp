@@ -2036,7 +2036,7 @@ let SessionStoreInternal = {
       }
 
       for (let tab of win.gBrowser.tabs) {
-        if (!TabStateCache.has(tab)) {
+        if (!tab.closing && !TabStateCache.has(tab)) {
           countdown++;
           TabState.collect(tab).then(done, fail);
         }

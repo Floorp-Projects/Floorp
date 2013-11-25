@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const videoWidth = 320;
+const videoHeight = 240;
+
+function getMediaElement(aWindow) {
+  return aWindow.document.getElementsByTagName("video")[0];
+}
+
+var popup = window.open("seek_with_sound.ogg");
+popup.addEventListener("load", function onLoad() {
+  popup.removeEventListener("load", onLoad);
+  var video = getMediaElement(popup);
+  if (video.readyState >= video.HAVE_METADATA)
+    runTestVideo(video);
+  else {
+    video.addEventListener("loadedmetadata", function onLoadedMetaData() {
+      video.removeEventListener("loadedmetadata", onLoadedMetaData);
+      runTestVideo(video);
+    });
+  }
+});
+
+function runTestVideo(aVideo) {
+  var boundingRect = aVideo.getBoundingClientRect();
+  is(boundingRect.width, videoWidth, "Width of the video should match expectation");
+  is(boundingRect.height, videoHeight, "Height of video should match expectation");
+  popup.close();
+  runTestAudioPre();
+}
+
+function runTestAudioPre() {
+  popup = window.open("audio.ogg");
+  popup.addEventListener("load", function onLoad() {
+    popup.removeEventListener("load", onLoad);
+    var audio = getMediaElement(popup);
+    if (audio.readyState >= audio.HAVE_METADATA)
+      runTestAudio(audio);
+    else {
+      audio.addEventListener("loadedmetadata", function onLoadedMetaData() {
+        audio.removeEventListener("loadedmetadata", onLoadedMetaData);
+        runTestAudio(audio);
+      })
+    }
+  })
+}
+
+function runTestAudio(aAudio) {
+  var boundingRect = aAudio.getBoundingClientRect();
+  var isAndroid = (navigator.userAgent.indexOf("Android") !== -1);
+  var expectedHeight = isAndroid ? 123 : 28;
+  is(boundingRect.height, expectedHeight,
+     "Height of audio element should be " + expectedHeight + ", which is equal to the controls bar.");
+  popup.close();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

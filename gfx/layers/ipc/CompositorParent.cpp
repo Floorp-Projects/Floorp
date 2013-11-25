@@ -554,8 +554,8 @@ CompositorParent::CompositeInTransaction()
 #ifdef MOZ_DUMP_PAINTING
   static bool gDumpCompositorTree = false;
   if (gDumpCompositorTree) {
-    fprintf(stdout, "Painting --- compositing layer tree:\n");
-    mLayerManager->Dump(stdout, "", false);
+    printf_stderr("Painting --- compositing layer tree:\n");
+    mLayerManager->Dump();
   }
 #endif
   mLayerManager->EndEmptyTransaction();

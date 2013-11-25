@@ -2086,7 +2086,7 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
 
 #ifdef MOZ_DUMP_PAINTING
   if (gDumpEventList) {
-    fprintf(stdout, "Event handling --- (%d,%d):\n", aRect.x, aRect.y);
+    fprintf_stderr(stderr, "Event handling --- (%d,%d):\n", aRect.x, aRect.y);
     nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
@@ -2277,16 +2277,16 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
       string.Append(".html");
       gfxUtils::sDumpPaintFile = fopen(string.BeginReading(), "w");
     } else {
-      gfxUtils::sDumpPaintFile = stdout;
+      gfxUtils::sDumpPaintFile = stderr;
     }
     if (gfxUtils::sDumpPaintingToFile) {
-      fprintf(gfxUtils::sDumpPaintFile, "<html><head><script>var array = {}; function ViewImage(index) { window.location = array[index]; }</script></head><body>");
+      fprintf_stderr(gfxUtils::sDumpPaintFile, "<html><head><script>var array = {}; function ViewImage(index) { window.location = array[index]; }</script></head><body>");
     }
-    fprintf(gfxUtils::sDumpPaintFile, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
+    fprintf_stderr(gfxUtils::sDumpPaintFile, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
             dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
     nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile, gfxUtils::sDumpPaintingToFile);
     if (gfxUtils::sDumpPaintingToFile) {
-      fprintf(gfxUtils::sDumpPaintFile, "<script>");
+      fprintf_stderr(gfxUtils::sDumpPaintFile, "<script>");
     }
   }
 #endif
@@ -2327,12 +2327,12 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPaintList || gfxUtils::sDumpPainting) {
     if (gfxUtils::sDumpPaintingToFile) {
-      fprintf(gfxUtils::sDumpPaintFile, "</script>");
+      fprintf_stderr(gfxUtils::sDumpPaintFile, "</script>");
     }
-    fprintf(gfxUtils::sDumpPaintFile, "Painting --- after optimization:\n");
+    fprintf_stderr(gfxUtils::sDumpPaintFile, "Painting --- after optimization:\n");
     nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile, gfxUtils::sDumpPaintingToFile);
 
-    fprintf(gfxUtils::sDumpPaintFile, "Painting --- retained layer tree:\n");
+    fprintf_stderr(gfxUtils::sDumpPaintFile, "Painting --- retained layer tree:\n");
     nsIWidget* widget = aFrame->GetNearestWidget();
     if (widget) {
       nsRefPtr<LayerManager> layerManager = widget->GetLayerManager();
@@ -2599,7 +2599,9 @@ nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
                                              float aInflation)
 {
   // pass the user font set object into the device context to pass along to CreateFontGroup
-  gfxUserFontSet* fs = aStyleContext->PresContext()->GetUserFontSet();
+  nsPresContext* pc = aStyleContext->PresContext();
+  gfxUserFontSet* fs = pc->GetUserFontSet();
+  gfxTextPerfMetrics* tp = pc->GetTextPerfMetrics();
 
   nsFont font = aStyleContext->StyleFont()->mFont;
   // We need to not run font.size through floats when it's large since
@@ -2608,9 +2610,9 @@ nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
   if (aInflation != 1.0f) {
     font.size = NSToCoordRound(font.size * aInflation);
   }
-  return aStyleContext->PresContext()->DeviceContext()->GetMetricsFor(
+  return pc->DeviceContext()->GetMetricsFor(
                   font, aStyleContext->StyleFont()->mLanguage,
-                  fs, *aFontMetrics);
+                  fs, tp, *aFontMetrics);
 }
 
 nsIFrame*
@@ -2947,9 +2949,9 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
   NS_PRECONDITION(aType == MIN_WIDTH || aType == PREF_WIDTH, "bad type");
 
 #ifdef DEBUG_INTRINSIC_WIDTH
-  nsFrame::IndentBy(stdout, gNoiseIndent);
-  static_cast<nsFrame*>(aFrame)->ListTag(stdout);
-  printf(" %s intrinsic width for container:\n",
+  nsFrame::IndentBy(stderr, gNoiseIndent);
+  static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+  printf_stderr(" %s intrinsic width for container:\n",
          aType == MIN_WIDTH ? "min" : "pref");
 #endif
 
@@ -3007,9 +3009,9 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
       result = aFrame->GetPrefWidth(aRenderingContext);
 #ifdef DEBUG_INTRINSIC_WIDTH
     --gNoiseIndent;
-    nsFrame::IndentBy(stdout, gNoiseIndent);
-    static_cast<nsFrame*>(aFrame)->ListTag(stdout);
-    printf(" %s intrinsic width from frame is %d.\n",
+    nsFrame::IndentBy(stderr, gNoiseIndent);
+    static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+    printf_stderr(" %s intrinsic width from frame is %d.\n",
            aType == MIN_WIDTH ? "min" : "pref", result);
 #endif
 
@@ -3196,9 +3198,9 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
   }
 
 #ifdef DEBUG_INTRINSIC_WIDTH
-  nsFrame::IndentBy(stdout, gNoiseIndent);
-  static_cast<nsFrame*>(aFrame)->ListTag(stdout);
-  printf(" %s intrinsic width for container is %d twips.\n",
+  nsFrame::IndentBy(stderr, gNoiseIndent);
+  static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+  printf_stderr(" %s intrinsic width for container is %d twips.\n",
          aType == MIN_WIDTH ? "min" : "pref", result);
 #endif
 
