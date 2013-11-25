@@ -188,7 +188,7 @@ var tests = {
             port.close();
             waitForCondition(function() { return btn.getAttribute("badge"); },
                        function() {
-                         is(btn.style.listStyleImage, "url(\"" + icon.iconURL + "\")", "notification icon updated");
+                         is(btn.getAttribute("image"), icon.iconURL, "notification icon updated");
                          next();
                        }, "button updated by notification");
           }
