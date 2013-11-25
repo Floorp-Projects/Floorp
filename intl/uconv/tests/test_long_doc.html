@@ -34,7 +34,10 @@ while (decoderList.hasMore()) {
 
     // Skip UTF-16 variants. (Other non-ASCII compatible encodings will be
     // ignored anyway because of bug 601429
-    if (decoder.substring(0, 6)  == "UTF-16")
+    if (decoder.substring(0, 6)  == "UTF-16" || 
+        decoder == "replacement" ||
+        decoder == "ISO-2022-KR" ||
+        decoder == "ISO-2022-CN")
 	continue;
 
     data = encodeURI(testContent);
