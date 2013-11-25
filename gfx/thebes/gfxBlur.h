@@ -14,6 +14,9 @@
 class gfxContext;
 class gfxImageSurface;
 struct gfxRect;
+struct gfxRGBA;
+class gfxCornerSizes;
+class gfxMatrix;
 
 namespace mozilla {
   namespace gfx {
@@ -98,6 +101,16 @@ public:
      * above.
      */
     static gfxIntSize CalculateBlurRadius(const gfxPoint& aStandardDeviation);
+
+    static void BlurRectangle(gfxContext *aDestinationCtx,
+                              const gfxRect& aRect,
+                              gfxCornerSizes* aCornerRadii,
+                              const gfxIntSize& aBlurRadius,
+                              const gfxRGBA& aShadowColor,
+                              const gfxRect& aDirtyRect,
+                              const gfxRect& aSkipRect);
+
+
 
 protected:
     /**
