@@ -27,8 +27,8 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
-{ 0xa6c0bfae, 0x8be4, 0x4747, \
-  { 0xaf, 0x1a, 0xe3, 0xf0, 0x3f, 0xb6, 0x0e, 0xb8 } }
+{ 0x30c64680, 0x909a, 0x4435, \
+  { 0x90, 0x3b, 0x29, 0x3e, 0xb5, 0x5d, 0xc7, 0xa0 } }
 
 /**
  * The global object which keeps a script context for each supported script
@@ -80,7 +80,7 @@ public:
     return NS_OK;
   }
 
-  virtual bool IsBlackForCC() { return false; }
+  virtual bool IsBlackForCC(bool aTracingNeeded = true) { return false; }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptGlobalObject,

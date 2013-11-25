@@ -219,22 +219,6 @@
    ...
 }
 {
-   Bug 812421 (all 32-bit systems)
-   Memcheck:Leak
-   fun:malloc
-   fun:_ZN3JSC19ExecutableAllocator10createPoolEj
-   fun:_ZN3JSC19ExecutableAllocator11poolForSizeEj
-   ...
-}
-{
-   Bug 812421 (all 64-bit systems)
-   Memcheck:Leak
-   fun:malloc
-   fun:_ZN3JSC19ExecutableAllocator10createPoolEm
-   fun:_ZN3JSC19ExecutableAllocator11poolForSizeEm
-   ...
-}
-{
    Bug 812422
    Memcheck:Leak
    fun:malloc

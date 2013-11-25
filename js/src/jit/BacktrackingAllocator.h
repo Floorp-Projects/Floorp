@@ -104,6 +104,10 @@ class BacktrackingVirtualRegister : public VirtualRegister
     }
 };
 
+// A sequence of code positions, for tellings BacktrackingAllocator::splitAt
+// where to split.
+typedef js::Vector<CodePosition, 4, SystemAllocPolicy> SplitPositionVector;
+
 class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegister>
 {
     // Priority queue element: either an interval or group of intervals and the
@@ -230,6 +234,9 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
     size_t computeSpillWeight(const VirtualRegisterGroup *group);
 
     bool chooseIntervalSplit(LiveInterval *interval);
+
+    bool splitAt(LiveInterval *interval,
+                 const SplitPositionVector &splitPositions);
     bool trySplitAcrossHotcode(LiveInterval *interval, bool *success);
     bool trySplitAfterLastRegisterUse(LiveInterval *interval, bool *success);
     bool splitAtAllRegisterUses(LiveInterval *interval);

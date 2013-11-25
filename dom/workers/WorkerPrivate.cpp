@@ -1465,6 +1465,29 @@ public:
   }
 };
 
+class UpdatePreferenceRunnable : public WorkerControlRunnable
+{
+  WorkerPreference mPref;
+  bool mValue;
+
+public:
+  UpdatePreferenceRunnable(WorkerPrivate* aWorkerPrivate,
+                           WorkerPreference aPref,
+                           bool aValue)
+    : WorkerControlRunnable(aWorkerPrivate, WorkerThread, UnchangedBusyCount),
+      mPref(aPref),
+      mValue(aValue)
+  {
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    aWorkerPrivate->UpdatePreferenceInternal(aCx, mPref, mValue);
+    return true;
+  }
+};
+
 class UpdateJSWorkerMemoryParameterRunnable : public WorkerControlRunnable
 {
   uint32_t mValue;
@@ -2780,6 +2803,21 @@ WorkerPrivateParent<Derived>::UpdateJSContextOptions(JSContext* aCx,
 
 template <class Derived>
 void
+WorkerPrivateParent<Derived>::UpdatePreference(JSContext* aCx, WorkerPreference aPref, bool aValue)
+{
+  AssertIsOnParentThread();
+  MOZ_ASSERT(aPref >= 0 && aPref < WORKERPREF_COUNT);
+
+  nsRefPtr<UpdatePreferenceRunnable> runnable =
+    new UpdatePreferenceRunnable(ParentAsWorkerPrivate(), aPref, aValue);
+  if (!runnable->Dispatch(aCx)) {
+    NS_WARNING("Failed to update worker preferences!");
+    JS_ClearPendingException(aCx);
+  }
+}
+
+template <class Derived>
+void
 WorkerPrivateParent<Derived>::UpdateJSWorkerMemoryParameter(JSContext* aCx,
                                                             JSGCParamKey aKey,
                                                             uint32_t aValue)
@@ -3284,6 +3322,15 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
 {
   MOZ_ASSERT_IF(IsSharedWorker(), !aSharedWorkerName.IsVoid());
   MOZ_ASSERT_IF(!IsSharedWorker(), aSharedWorkerName.IsEmpty());
+
+  if (aParent) {
+    aParent->AssertIsOnWorkerThread();
+    aParent->GetAllPreferences(mPreferences);
+  }
+  else {
+    AssertIsOnMainThread();
+    RuntimeService::GetDefaultPreferences(mPreferences);
+  }
 }
 
 WorkerPrivate::~WorkerPrivate()
@@ -5080,6 +5127,19 @@ WorkerPrivate::UpdateJSContextOptionsInternal(JSContext* aCx,
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
     mChildWorkers[index]->UpdateJSContextOptions(aCx, aContentOptions,
                                                  aChromeOptions);
+  }
+}
+
+void
+WorkerPrivate::UpdatePreferenceInternal(JSContext* aCx, WorkerPreference aPref, bool aValue)
+{
+  AssertIsOnWorkerThread();
+  MOZ_ASSERT(aPref >= 0 && aPref < WORKERPREF_COUNT);
+
+  mPreferences[aPref] = aValue;
+
+  for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
+    mChildWorkers[index]->UpdatePreference(aCx, aPref, aValue);
   }
 }
 

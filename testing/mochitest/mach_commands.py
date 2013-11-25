@@ -314,7 +314,15 @@ class MochitestRunner(MozbuildObject):
                 print('You may need to run |mach build| to build the test files.')
                 return 1
 
-            options.testPath = test_path
+            # Handle test_path pointing at a manifest file so conditions in
+            # the manifest are processed.  This is a temporary solution
+            # pending bug 938019.
+            # The manifest basename is the same as |suite|, except for plain
+            manifest_base = 'mochitest' if suite == 'plain' else suite
+            if os.path.basename(test_root_file) == manifest_base + '.ini':
+                options.manifestFile = test_root_file
+            else:
+                options.testPath = test_path
 
         if rerun_failures:
             options.testManifest = failure_file_path

@@ -82,7 +82,6 @@ UNIFIED_SOURCES += [
     'nsFocusManager.cpp',
     'nsGlobalWindowCommands.cpp',
     'nsHistory.cpp',
-    'nsJSEnvironment.cpp',
     'nsJSTimeoutHandler.cpp',
     'nsJSUtils.cpp',
     'nsLocation.cpp',
@@ -107,6 +106,8 @@ SOURCES += [
     'nsDOMWindowUtils.cpp',
     # This file has a #error "Never include windows.h in this file!"
     'nsGlobalWindow.cpp',
+    # This file forces NSPR logging.
+    'nsJSEnvironment.cpp',
     # nsPluginArray.cpp includes npapi.h indirectly, and that includes a lot of system headers
     'nsPluginArray.cpp',
 ]
