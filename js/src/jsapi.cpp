@@ -1068,6 +1068,18 @@ JS_GetCompartmentPrivate(JSCompartment *compartment)
     return compartment->data;
 }
 
+JS_PUBLIC_API(void)
+JS_SetZoneUserData(JS::Zone *zone, void *data)
+{
+    zone->data = data;
+}
+
+JS_PUBLIC_API(void *)
+JS_GetZoneUserData(JS::Zone *zone)
+{
+    return zone->data;
+}
+
 JS_PUBLIC_API(bool)
 JS_WrapObject(JSContext *cx, JSObject **objp)
 {
