@@ -9141,7 +9141,9 @@ void ReflowCountMgr::PaintCount(const char*     aName,
         // We have one frame, therefore we must have a root...
         aPresContext->GetPresShell()->GetRootFrame()->
           StyleFont()->mLanguage,
-        aPresContext->GetUserFontSet(), *getter_AddRefs(fm));
+        aPresContext->GetUserFontSet(),
+        aPresContext->GetTextPerfMetrics(),
+        *getter_AddRefs(fm));
 
       aRenderingContext->SetFont(fm);
       char buf[16];
