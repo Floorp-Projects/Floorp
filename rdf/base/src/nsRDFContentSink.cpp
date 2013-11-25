@@ -74,12 +74,8 @@ using namespace mozilla;
 static NS_DEFINE_IID(kIContentSinkIID,         NS_ICONTENT_SINK_IID); // XXX grr...
 static NS_DEFINE_IID(kIExpatSinkIID,           NS_IEXPATSINK_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,          NS_IRDFSERVICE_IID);
-static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXMLContentSinkIID,      NS_IXMLCONTENT_SINK_IID);
 static NS_DEFINE_IID(kIRDFContentSinkIID,      NS_IRDFCONTENTSINK_IID);
-
-static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -282,7 +278,7 @@ RDFContentSinkImpl::RDFContentSinkImpl()
       mDocumentURL(nullptr)
 {
     if (gRefCnt++ == 0) {
-        nsresult rv = CallGetService(kRDFServiceCID, &gRDFService);
+        nsresult rv = CallGetService(NS_RDFSERVICE_CID, &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_SUCCEEDED(rv)) {
@@ -301,7 +297,7 @@ RDFContentSinkImpl::RDFContentSinkImpl()
         }
 
 
-        rv = CallGetService(kRDFContainerUtilsCID, &gRDFContainerUtils);
+        rv = CallGetService(NS_RDFCONTAINERUTILS_CID, &gRDFContainerUtils);
 
         NS_RegisterStaticAtoms(rdf_atoms);
     }
@@ -385,7 +381,7 @@ RDFContentSinkImpl::QueryInterface(REFNSIID iid, void** result)
     if (iid.Equals(kIRDFContentSinkIID) ||
         iid.Equals(kIXMLContentSinkIID) ||
         iid.Equals(kIContentSinkIID) ||
-        iid.Equals(kISupportsIID)) {
+        iid.Equals(NS_GET_IID(nsISupports))) {
         *result = static_cast<nsIXMLContentSink*>(this);
         AddRef();
         return NS_OK;
