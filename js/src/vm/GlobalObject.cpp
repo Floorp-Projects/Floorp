@@ -387,7 +387,11 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     if (cx->runtime()->isSelfHostingGlobal(self)) {
         intrinsicsHolder = self;
     } else {
-        intrinsicsHolder = NewObjectWithClassProto(cx, &JSObject::class_, nullptr, self, TenuredObject);
+        RootedObject proto(cx, self->getOrCreateObjectPrototype(cx));
+        if (!proto)
+            return nullptr;
+        intrinsicsHolder = NewObjectWithGivenProto(cx, &JSObject::class_, proto, self,
+                                                   TenuredObject);
         if (!intrinsicsHolder)
             return nullptr;
     }
