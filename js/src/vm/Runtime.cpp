@@ -138,6 +138,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     cxCallback(NULL),
     destroyCompartmentCallback(NULL),
     destroyZoneCallback(NULL),
+    sweepZoneCallback(NULL),
     compartmentNameCallback(NULL),
     activityCallback(NULL),
     activityCallbackArg(NULL),

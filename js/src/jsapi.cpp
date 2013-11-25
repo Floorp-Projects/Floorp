@@ -995,6 +995,12 @@ JS_SetDestroyZoneCallback(JSRuntime *rt, JSZoneCallback callback)
 }
 
 JS_PUBLIC_API(void)
+JS_SetSweepZoneCallback(JSRuntime *rt, JSZoneCallback callback)
+{
+    rt->sweepZoneCallback = callback;
+}
+
+JS_PUBLIC_API(void)
 JS_SetCompartmentNameCallback(JSRuntime *rt, JSCompartmentNameCallback callback)
 {
     rt->compartmentNameCallback = callback;
