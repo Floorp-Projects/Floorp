@@ -14,7 +14,6 @@
 #include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jsgc.h"
-#include "jshashutil.h"
 #include "jsobj.h"
 #include "jsprf.h"
 #include "jsscript.h"
@@ -2271,11 +2270,7 @@ struct types::ArrayTableKey : public DefaultHasher<types::ArrayTableKey>
     JSObject *proto;
 
     ArrayTableKey()
-      : type(Type::UndefinedType()), proto(nullptr)
-    {}
-
-    ArrayTableKey(Type type, JSObject *proto)
-      : type(type), proto(proto)
+        : type(Type::UndefinedType()), proto(nullptr)
     {}
 
     static inline uint32_t hash(const ArrayTableKey &v) {
@@ -2300,8 +2295,11 @@ TypeCompartment::setTypeToHomogenousArray(ExclusiveContext *cx,
         }
     }
 
-    ArrayTableKey key(elementType, obj->getProto());
-    DependentAddPtr<ArrayTypeTable> p(cx, *arrayTypeTable, key);
+    ArrayTableKey key;
+    key.type = elementType;
+    key.proto = obj->getProto();
+    ArrayTypeTable::AddPtr p = arrayTypeTable->lookupForAdd(key);
+
     if (p) {
         obj->setType(p->value);
     } else {
@@ -2317,8 +2315,7 @@ TypeCompartment::setTypeToHomogenousArray(ExclusiveContext *cx,
         if (!objType->unknownProperties())
             objType->addPropertyType(cx, JSID_VOID, elementType);
 
-        key.proto = objProto;
-        if (!p.add(*arrayTypeTable, key, objType)) {
+        if (!arrayTypeTable->relookupOrAdd(p, key, objType)) {
             cx->compartment()->types.setPendingNukeTypes(cx);
             return;
         }
@@ -3750,9 +3747,9 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto_, JSFunction 
     if (!newTypeObjects.initialized() && !newTypeObjects.init())
         return nullptr;
 
-    DependentAddPtr<TypeObjectSet> p(this, newTypeObjects,
-                                     TypeObjectSet::Lookup(clasp, proto_));
+    TypeObjectSet::AddPtr p = newTypeObjects.lookupForAdd(TypeObjectSet::Lookup(clasp, proto_));
     SkipRoot skipHash(this, &p); /* Prevent the hash from being poisoned. */
+    uint64_t originalGcNumber = zone()->gcNumber();
     if (p) {
         TypeObject *type = *p;
         JS_ASSERT(type->clasp == clasp);
@@ -3790,7 +3787,15 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto_, JSFunction 
     if (!type)
         return nullptr;
 
-    if (!p.add(newTypeObjects, TypeObjectSet::Lookup(clasp, proto), type.get()))
+    /*
+     * If a GC has occured, then the hash we calculated may be invalid, as it
+     * is based on proto, which may have been moved.
+     */
+    bool gcHappened = zone()->gcNumber() != originalGcNumber;
+    bool added =
+        gcHappened ? newTypeObjects.putNew(TypeObjectSet::Lookup(clasp, proto), type.get())
+                   : newTypeObjects.relookupOrAdd(p, TypeObjectSet::Lookup(clasp, proto), type.get());
+    if (!added)
         return nullptr;
 
 #ifdef JSGC_GENERATIONAL
@@ -3857,7 +3862,7 @@ ExclusiveContext::getLazyType(const Class *clasp, TaggedProto proto)
     if (!table.initialized() && !table.init())
         return nullptr;
 
-    DependentAddPtr<TypeObjectSet> p(this, table, TypeObjectSet::Lookup(clasp, proto));
+    TypeObjectSet::AddPtr p = table.lookupForAdd(TypeObjectSet::Lookup(clasp, proto));
     if (p) {
         TypeObject *type = *p;
         JS_ASSERT(type->lazy());
@@ -3870,7 +3875,7 @@ ExclusiveContext::getLazyType(const Class *clasp, TaggedProto proto)
     if (!type)
         return nullptr;
 
-    if (!p.add(table, TypeObjectSet::Lookup(clasp, protoRoot), type))
+    if (!table.relookupOrAdd(p, TypeObjectSet::Lookup(clasp, protoRoot), type))
         return nullptr;
 
     type->singleton = (JSObject *) TypeObject::LAZY_SINGLETON;
