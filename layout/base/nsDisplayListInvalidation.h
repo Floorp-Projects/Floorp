@@ -116,4 +116,17 @@ public:
   nsRect mPaddingRect;
 };
 
+class nsDisplaySolidColorGeometry : public nsDisplayItemBoundsGeometry
+{
+public:
+  nsDisplaySolidColorGeometry(nsDisplayItem* aItem,
+                              nsDisplayListBuilder* aBuilder,
+                              nscolor aColor)
+    : nsDisplayItemBoundsGeometry(aItem, aBuilder)
+    , mColor(aColor)
+  { }
+
+  nscolor mColor;
+};
+
 #endif /*NSDISPLAYLISTINVALIDATION_H_*/
