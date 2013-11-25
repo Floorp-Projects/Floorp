@@ -125,6 +125,8 @@ private:
 
   void MarkChanged();
 
+  SkRect SkRectCoveringWholeSurface() const;
+
 #ifdef USE_SKIA_GPU
   /*
    * These members have inter-dependencies, but do not keep each other alive, so
