@@ -1504,13 +1504,6 @@ const MMS_PDU_TYPES = (function () {
                                          "to",
                                          "from",
                                          "x-mms-read-status"]);
-  add(MMS_PDU_TYPE_READ_ORIG_IND, false, ["x-mms-message-type",
-                                          "x-mms-mms-version",
-                                          "message-id",
-                                          "to",
-                                          "from",
-                                          "date",
-                                          "x-mms-read-status"]);
 
   return pdus;
 })();
