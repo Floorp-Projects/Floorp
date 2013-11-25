@@ -17,9 +17,10 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'url-classifier'
 
-UNIFIED_SOURCES += [
+SOURCES += [
     'ChunkSet.cpp',
     'Classifier.cpp',
+    'HashStore.cpp',
     'LookupCache.cpp',
     'nsCheckSummedOutputStream.cpp',
     'nsUrlClassifierDBService.cpp',
@@ -28,11 +29,6 @@ UNIFIED_SOURCES += [
     'nsUrlClassifierStreamUpdater.cpp',
     'nsUrlClassifierUtils.cpp',
     'ProtocolParser.cpp',
-]
-
-# contains variables that conflict with LookupCache.cpp
-SOURCES += [
-    'HashStore.cpp',
 ]
 
 EXTRA_COMPONENTS += [
