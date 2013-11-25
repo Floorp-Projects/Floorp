@@ -2136,12 +2136,11 @@ MobileMessageDatabaseService.prototype = {
 
   },
 
-  setMessageDeliveryByEnvelopeId: function setMessageDeliveryByEnvelopeId(
-      envelopeId, receiver, delivery, deliveryStatus, callback) {
-    this.updateMessageDeliveryById(envelopeId, "envelopeId",
-                                   receiver, delivery, deliveryStatus,
-                                   null, callback);
-
+  setMessageDeliveryStatusByEnvelopeId:
+    function setMessageDeliveryStatusByEnvelopeId(aEnvelopeId, aReceiver,
+                                                  aDeliveryStatus, aCallback) {
+    this.updateMessageDeliveryById(aEnvelopeId, "envelopeId", aReceiver, null,
+                                   aDeliveryStatus, null, aCallback);
   },
 
   getMessageRecordByTransactionId: function getMessageRecordByTransactionId(aTransactionId, aCallback) {
