@@ -207,7 +207,16 @@ void RTSPSource::performPlay(int64_t playTimeUs) {
     if (mState == PAUSING) {
       playTimeUs = mLatestPausedUnit;
     }
-    LOGI("performPlay : %lld", playTimeUs);
+
+    int64_t duration = 0;
+    getDuration(&duration);
+    MOZ_ASSERT(playTimeUs < duration,
+               "Should never receive an out of bounds play time!");
+    if (playTimeUs >= duration) {
+      return;
+    }
+
+    LOGI("performPlay : duration=%lld playTimeUs=%lld", duration, playTimeUs);
     mState = PLAYING;
     mHandler->play(playTimeUs);
 }
@@ -238,13 +247,22 @@ void RTSPSource::performSeek(int64_t seekTimeUs) {
     if (mState != PLAYING && mState != PAUSING) {
         return;
     }
-    LOGI("performSeek: %llu", seekTimeUs);
+
+    int64_t duration = 0;
+    getDuration(&duration);
+    MOZ_ASSERT(seekTimeUs < duration,
+               "Should never receive an out of bounds seek time!");
+    if (seekTimeUs >= duration) {
+      return;
+    }
+
     for (size_t i = 0; i < mTracks.size(); ++i) {
       TrackInfo *info = &mTracks.editItemAt(i);
       info->mLatestPausedUnit = 0;
       mLatestPausedUnit = 0;
     }
 
+    LOGI("performSeek: %llu", seekTimeUs);
     mState = SEEKING;
     mHandler->seek(seekTimeUs);
 }
