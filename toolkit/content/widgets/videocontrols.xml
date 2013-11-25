@@ -344,8 +344,13 @@
                     this._isAudioOnly = val;
                     if (!this.isTopLevelSyntheticDocument)
                         return;
-                    this.video.style.height = this._controlBarHeight + "px";
-                    this.video.style.width = "66%";
+                    if (this._isAudioOnly) {
+                        this.video.style.height = this._controlBarHeight + "px";
+                        this.video.style.width = "66%";
+                    } else {
+                        this.video.style.removeProperty("height");
+                        this.video.style.removeProperty("width");
+                    }
                 },
                 suppressError : false,
 
