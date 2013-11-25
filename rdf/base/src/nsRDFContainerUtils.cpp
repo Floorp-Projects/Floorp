@@ -23,7 +23,6 @@
 #include "rdf.h"
 #include "rdfutil.h"
 
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
 
 class RDFContainerUtilsImpl : public nsIRDFContainerUtils
@@ -325,7 +324,7 @@ RDFContainerUtilsImpl::RDFContainerUtilsImpl()
     if (gRefCnt++ == 0) {
         nsresult rv;
 
-        rv = CallGetService(kRDFServiceCID, &gRDFService);
+        rv = CallGetService(NS_RDFSERVICE_CID, &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_SUCCEEDED(rv)) {
