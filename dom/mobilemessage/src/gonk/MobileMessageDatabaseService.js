@@ -1517,54 +1517,20 @@ MobileMessageDatabaseService.prototype = {
     });
   },
 
-  newTxnWithCallback: function newTxnWithCallback(aCallback, aFunc, aStoreNames) {
-    let self = this;
-    this.newTxn(READ_WRITE, function(aError, aTransaction, aStores) {
-      let notifyResult = function(aRv, aMessageRecord) {
-        if (!aCallback) {
-          return;
-        }
-        let domMessage =
-          aMessageRecord && self.createDomMessageFromRecord(aMessageRecord);
-        aCallback.notify(aRv, domMessage);
-      };
-
-      if (aError) {
-        // TODO bug 832140 check event.target.errorCode
-        notifyResult(Cr.NS_ERROR_FAILURE, null);
-        return;
-      }
-
-      let capture = {};
-      aTransaction.oncomplete = function(event) {
-        notifyResult(Cr.NS_OK, capture.messageRecord);
-      };
-      aTransaction.onabort = function(event) {
-        // TODO bug 832140 check event.target.errorCode
-        notifyResult(Cr.NS_ERROR_FAILURE, null);
-      };
-
-      aFunc(capture, aStores);
-    }, aStoreNames);
-  },
-
   saveRecord: function saveRecord(aMessageRecord, aAddresses, aCallback) {
     if (DEBUG) debug("Going to store " + JSON.stringify(aMessageRecord));
 
     let self = this;
     this.newTxn(READ_WRITE, function(error, txn, stores) {
-      let notifyResult = function(aRv, aMessageRecord) {
-        if (!aCallback) {
-          return;
+      let notifyResult = function(rv) {
+        if (aCallback) {
+          aCallback.notify(rv, self.createDomMessageFromRecord(aMessageRecord));
         }
-        let domMessage =
-          aMessageRecord && self.createDomMessageFromRecord(aMessageRecord);
-        aCallback.notify(aRv, domMessage);
       };
 
       if (error) {
         // TODO bug 832140 check event.target.errorCode
-        notifyResult(Cr.NS_ERROR_FAILURE, null);
+        notifyResult(Cr.NS_ERROR_FAILURE);
         return;
       }
 
@@ -1572,11 +1538,11 @@ MobileMessageDatabaseService.prototype = {
         if (aMessageRecord.id > self.lastMessageId) {
           self.lastMessageId = aMessageRecord.id;
         }
-        notifyResult(Cr.NS_OK, aMessageRecord);
+        notifyResult(Cr.NS_OK);
       };
       txn.onabort = function onabort(event) {
         // TODO bug 832140 check event.target.errorCode
-        notifyResult(Cr.NS_ERROR_FAILURE, null);
+        notifyResult(Cr.NS_ERROR_FAILURE);
       };
 
       let messageStore = stores[0];
@@ -1801,19 +1767,41 @@ MobileMessageDatabaseService.prototype = {
     }
 
     let self = this;
-    this.newTxnWithCallback(callback, function(aCapture, aMessageStore) {
+    let messageRecord;
+    function notifyResult(rv) {
+      if (!callback) {
+        return;
+      }
+      let domMessage = self.createDomMessageFromRecord(messageRecord);
+      callback.notify(rv, domMessage);
+    }
+
+    this.newTxn(READ_WRITE, function (error, txn, messageStore) {
+      if (error) {
+        // TODO bug 832140 check event.target.errorCode
+        notifyResult(Cr.NS_ERROR_FAILURE);
+        return;
+      }
+      txn.oncomplete = function oncomplete(event) {
+        notifyResult(Cr.NS_OK);
+      };
+      txn.onabort = function onabort(event) {
+        // TODO bug 832140 check event.target.errorCode
+        notifyResult(Cr.NS_ERROR_FAILURE);
+      };
+
       let getRequest;
       if (type === "messageId") {
-        getRequest = aMessageStore.get(id);
+        getRequest = messageStore.get(id);
       } else if (type === "envelopeId") {
-        getRequest = aMessageStore.index("envelopeId").get(id);
+        getRequest = messageStore.index("envelopeId").get(id);
       }
 
       getRequest.onsuccess = function onsuccess(event) {
-        let messageRecord = event.target.result;
+        messageRecord = event.target.result;
         if (!messageRecord) {
           if (DEBUG) debug("type = " + id + " is not found");
-          throw Cr.NS_ERROR_FAILURE;
+          return;
         }
 
         let isRecordUpdated = false;
@@ -1868,7 +1856,6 @@ MobileMessageDatabaseService.prototype = {
           }
         }
 
-        aCapture.messageRecord = messageRecord;
         if (!isRecordUpdated) {
           if (DEBUG) {
             debug("The values of delivery, deliveryStatus and envelopeId " +
@@ -1880,7 +1867,7 @@ MobileMessageDatabaseService.prototype = {
         if (DEBUG) {
           debug("The delivery, deliveryStatus or envelopeId are updated.");
         }
-        aMessageStore.put(messageRecord);
+        messageStore.put(messageRecord);
       };
     });
   },
