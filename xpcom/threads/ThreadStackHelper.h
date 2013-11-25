@@ -40,7 +40,9 @@ public:
   typedef Telemetry::HangHistogram::Stack Stack;
 
 private:
+#ifdef MOZ_ENABLE_PROFILER_SPS
   const PseudoStack* const mPseudoStack;
+#endif
   Stack mStackBuffer;
   size_t mMaxStackSize;
 
