@@ -24,6 +24,15 @@ function getCandPairLogs(id) {
   }
 }
 
+function getAllLogs() {
+  try {
+    var wg = new WebrtcGlobalInformation();
+    wg.getLogs('', displayLogs, console.log);
+  } catch(e) {
+    console.log("Exception while creating WebrtcGlobalInformation" + e.toString());
+  }
+}
+
 function displayLogs(logs) {
   var logsDiv = document.getElementById('logs');
   while (logsDiv.lastChild) {
@@ -34,7 +43,7 @@ function displayLogs(logs) {
   logs.forEach(function(logLine){
     logsDiv.appendChild(document.createElement('div'))
            .appendChild(document.createTextNode(logLine));
-      });
+  });
 }
 
 function buildCandPairTableRow(candPair, stats) {
@@ -214,6 +223,7 @@ var statsDisplay = setInterval(refreshStats, 1000);
   <body id="body" onload="refreshStats()">
     <div id="stats">
     </div>
+    <button onclick="getAllLogs()">Show/refresh logging</button>
     <div id="logs">
     </div>
   </body>

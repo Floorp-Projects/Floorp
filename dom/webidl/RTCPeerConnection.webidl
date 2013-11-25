@@ -150,6 +150,9 @@ interface WebrtcGlobalInformation {
     void getCandPairLogs(DOMString candPairId,
                          RTCLogCallback callback,
                          RTCPeerConnectionErrorCallback errorCallback);
+    void getLogs(DOMString pattern,
+                 RTCLogCallback callback,
+                 RTCPeerConnectionErrorCallback errorCallback);
 };
 
 
