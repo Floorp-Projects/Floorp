@@ -93,7 +93,7 @@ public:
   void
   NoteDyingActor()
   {
-    mActor = NULL;
+    mActor = nullptr;
   }
 
   NS_IMETHOD
