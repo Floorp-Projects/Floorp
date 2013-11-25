@@ -807,6 +807,27 @@ public:
   static nsMargin GetBlurRadiusMargin(nscoord aBlurRadius,
                                       int32_t aAppUnitsPerDevPixel);
 
+  /**
+   * Blurs a coloured rectangle onto aDestinationCtx. This is equivalent
+   * to calling Init(), drawing a rectangle onto the returned surface
+   * and then calling DoPaint, but may let us optimize better in the
+   * backend.
+   *
+   * @param aDestinationCtx      The destination to blur to.
+   * @param aRect                The rectangle to blur in app units.
+   * @param aAppUnitsPerDevPixel The number of app units in a device pixel,
+   *                             for conversion.  Most of the time you'll
+   *                             pass this from the current PresContext if
+   *                             available.
+   * @param aCornerRadii         Corner radii for aRect, if it is a rounded
+   *                             rectangle.
+   * @param aBlurRadius          The blur radius in app units.
+   * @param aShadowColor         The color to draw the blurred shadow.
+   * @param aDirtyRect           The absolute dirty rect in app units. Used to
+   *                             optimize the temporary surface size and speed up blur.
+   * @param aSkipRect            An area in device pixels (NOT app units!) to avoid
+   *                             blurring over, to prevent unnecessary work.
+   */
   static void BlurRectangle(gfxContext* aDestinationCtx,
                             const nsRect& aRect,
                             int32_t aAppUnitsPerDevPixel,
