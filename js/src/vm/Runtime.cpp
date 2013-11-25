@@ -137,6 +137,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     nativeStackBase(0),
     cxCallback(NULL),
     destroyCompartmentCallback(NULL),
+    destroyZoneCallback(NULL),
     compartmentNameCallback(NULL),
     activityCallback(NULL),
     activityCallbackArg(NULL),
