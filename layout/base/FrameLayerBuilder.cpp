@@ -180,7 +180,7 @@ public:
  
 #ifdef DEBUG_DISPLAY_ITEM_DATA
   void Dump(const char *aPrefix = "") {
-    printf("%sLayerManagerData %p\n", aPrefix, this);
+    printf_stderr("%sLayerManagerData %p\n", aPrefix, this);
     nsAutoCString prefix;
     prefix += aPrefix;
     prefix += "  ";
@@ -899,7 +899,7 @@ InvalidatePostTransformRegion(ThebesLayer* aLayer, const nsIntRegion& aRegion,
   if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
     nsAutoCString str;
     AppendToString(str, rgn);
-    printf("Invalidating layer %p: %s\n", aLayer, str.get());
+    printf_stderr("Invalidating layer %p: %s\n", aLayer, str.get());
   }
 #endif
 }
@@ -967,7 +967,7 @@ FrameLayerBuilder::RemoveFrameFromLayerManager(nsIFrame* aFrame,
     while (rootData->mParent) {
       rootData = rootData->mParent;
     }
-    printf("Removing frame %p - dumping display data\n", aFrame);
+    printf_stderr("Removing frame %p - dumping display data\n", aFrame);
     rootData->Dump();
   }
 #endif
@@ -1057,7 +1057,7 @@ FrameLayerBuilder::ProcessRemovedDisplayItems(nsRefPtrHashKey<DisplayItemData>* 
     if (t) {
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        printf("Invalidating unused display item (%i) belonging to frame %p from layer %p\n", data->mDisplayItemKey, data->mFrameList[0], t);
+        printf_stderr("Invalidating unused display item (%i) belonging to frame %p from layer %p\n", data->mDisplayItemKey, data->mFrameList[0], t);
       }
 #endif
       InvalidatePostTransformRegion(t,
@@ -1116,11 +1116,11 @@ FrameLayerBuilder::DumpDisplayItemDataForFrame(nsRefPtrHashKey<DisplayItemData>*
   }
   str += "\n";
 
-  printf("%s", str.get());
+  printf_stderr("%s", str.get());
     
   if (data->mInactiveManager) {
     prefix += "  ";
-    printf("%sDumping inactive layer info:\n", prefix.get());
+    printf_stderr("%sDumping inactive layer info:\n", prefix.get());
     LayerManagerData* lmd = static_cast<LayerManagerData*>
       (data->mInactiveManager->GetUserData(&gLayerManagerUserData));
     lmd->Dump(prefix.get());
@@ -1352,7 +1352,7 @@ InvalidateEntireThebesLayer(ThebesLayer* aLayer, const nsIFrame* aAnimatedGeomet
 {
 #ifdef MOZ_DUMP_PAINTING
   if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-    printf("Invalidating entire layer %p\n", aLayer);
+    printf_stderr("Invalidating entire layer %p\n", aLayer);
   }
 #endif
   nsIntRect invalidate = aLayer->GetValidRegion().GetBounds();
@@ -1402,7 +1402,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aAnimatedGeometryRoot
     if (!data->mRegionToInvalidate.IsEmpty()) {
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        printf("Invalidating deleted frame content from layer %p\n", layer.get());
+        printf_stderr("Invalidating deleted frame content from layer %p\n", layer.get());
       }
 #endif
       layer->InvalidateRegion(data->mRegionToInvalidate);
@@ -1410,7 +1410,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aAnimatedGeometryRoot
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
         nsAutoCString str;
         AppendToString(str, data->mRegionToInvalidate);
-        printf("Invalidating layer %p: %s\n", layer.get(), str.get());
+        printf_stderr("Invalidating layer %p: %s\n", layer.get(), str.get());
       }
 #endif
       data->mRegionToInvalidate.SetEmpty();
@@ -2053,9 +2053,9 @@ DumpPaintedImage(nsDisplayItem* aItem, gfxASurface* aSurf)
   nsCString string(aItem->Name());
   string.Append("-");
   string.AppendInt((uint64_t)aItem);
-  fprintf(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());
+  fprintf_stderr(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());
   aSurf->DumpAsDataURL(gfxUtils::sDumpPaintFile);
-  fprintf(gfxUtils::sDumpPaintFile, "\";");
+  fprintf_stderr(gfxUtils::sDumpPaintFile, "\";");
 }
 #endif
 
@@ -2396,7 +2396,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
       // or a new scale here
 #ifdef MOZ_DUMP_PAINTING
       if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        printf("Display item type %s(%p) changed layers %p to %p!\n", aItem->Name(), aItem->Frame(), t, aNewLayer);
+        printf_stderr("Display item type %s(%p) changed layers %p to %p!\n", aItem->Name(), aItem->Frame(), t, aNewLayer);
       }
 #endif
       InvalidatePostTransformRegion(t,
@@ -2439,7 +2439,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
     combined = aClip.ApplyNonRoundedIntersection(aGeometry->ComputeInvalidationRegion());
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-      printf("Display item type %s(%p) added to layer %p!\n", aItem->Name(), aItem->Frame(), aNewLayer);
+      printf_stderr("Display item type %s(%p) added to layer %p!\n", aItem->Name(), aItem->Frame(), aNewLayer);
     }
 #endif
   } else if (isInvalid || (aItem->IsInvalid(invalid) && invalid.IsEmpty())) {
@@ -2449,7 +2449,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
     combined.Or(combined, aClip.ApplyNonRoundedIntersection(aGeometry->ComputeInvalidationRegion()));
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-      printf("Display item type %s(%p) (in layer %p) belongs to an invalidated frame!\n", aItem->Name(), aItem->Frame(), aNewLayer);
+      printf_stderr("Display item type %s(%p) (in layer %p) belongs to an invalidated frame!\n", aItem->Name(), aItem->Frame(), aNewLayer);
     }
 #endif
   } else {
@@ -2476,7 +2476,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
       if (!combined.IsEmpty()) {
-        printf("Display item type %s(%p) (in layer %p) changed geometry!\n", aItem->Name(), aItem->Frame(), aNewLayer);
+        printf_stderr("Display item type %s(%p) (in layer %p) changed geometry!\n", aItem->Name(), aItem->Frame(), aNewLayer);
       }
     }
 #endif
@@ -2583,7 +2583,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
       if (!invalid.IsEmpty()) {
 #ifdef MOZ_DUMP_PAINTING
         if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-          printf("Inactive LayerManager(%p) for display item %s(%p) has an invalid region - invalidating layer %p\n", tempManager.get(), aItem->Name(), aItem->Frame(), aLayer);
+          printf_stderr("Inactive LayerManager(%p) for display item %s(%p) has an invalid region - invalidating layer %p\n", tempManager.get(), aItem->Name(), aItem->Frame(), aLayer);
         }
 #endif
         if (hasClip) {
