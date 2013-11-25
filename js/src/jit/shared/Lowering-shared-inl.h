@@ -73,7 +73,15 @@ LIRGeneratorShared::defineFixed(LInstructionHelper<1, X, Y> *lir, MDefinition *m
 
     // Add an LNop to avoid regalloc problems if the next op uses this value
     // with a fixed or at-start policy.
-    return define(lir, mir, def) && add(new LNop);
+    if (!define(lir, mir, def))
+        return false;
+
+    if (js_IonOptions.registerAllocator == RegisterAllocator_LSRA) {
+        if (!add(new LNop))
+            return false;
+    }
+
+    return true;
 }
 
 template <size_t Ops, size_t Temps> bool
@@ -152,7 +160,15 @@ LIRGeneratorShared::defineReturn(LInstruction *lir, MDefinition *mir)
     }
 
     mir->setVirtualRegister(vreg);
-    return add(lir) && add(new LNop);
+    if (!add(lir))
+        return false;
+
+    if (js_IonOptions.registerAllocator == RegisterAllocator_LSRA) {
+        if (!add(new LNop))
+            return false;
+    }
+
+    return true;
 }
 
 // In LIR, we treat booleans and integers as the same low-level type (INTEGER).
