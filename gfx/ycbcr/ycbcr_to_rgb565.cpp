@@ -343,8 +343,9 @@ NS_GFX_(void) ScaleYCbCrToRGB565(const uint8_t *y_buf,
      that would require the mis-alignment to be the same for the U and V
      planes.*/
   NS_ASSERTION((y_pitch&15) == 0 && (uv_pitch&15) == 0 &&
-   ((y_buf-(uint8_t *)NULL)&15) == 0 &&
-   ((u_buf-(uint8_t *)NULL)&15) == 0 && ((v_buf-(uint8_t *)NULL)&15) == 0,
+   ((y_buf-(uint8_t *)nullptr)&15) == 0 &&
+   ((u_buf-(uint8_t *)nullptr)&15) == 0 &&
+   ((v_buf-(uint8_t *)nullptr)&15) == 0,
    "ScaleYCbCrToRGB565 source image unaligned");
   /*We take an area-based approach to pixel coverage to avoid shifting by small
      amounts (or not so small, when up-scaling or down-scaling by a large
