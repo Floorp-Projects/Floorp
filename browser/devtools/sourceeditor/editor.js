@@ -122,16 +122,17 @@ function Editor(config) {
 
   this.version = null;
   this.config = {
-    value:           "",
-    mode:            Editor.modes.text,
-    indentUnit:      tabSize,
-    tabSize:         tabSize,
-    contextMenu:     null,
-    matchBrackets:   true,
-    extraKeys:       {},
-    indentWithTabs:  useTabs,
-    styleActiveLine: true,
-    theme: "mozilla"
+    value:             "",
+    mode:              Editor.modes.text,
+    indentUnit:        tabSize,
+    tabSize:           tabSize,
+    contextMenu:       null,
+    matchBrackets:     true,
+    extraKeys:         {},
+    indentWithTabs:    useTabs,
+    styleActiveLine:   true,
+    autoCloseBrackets: true,
+    theme:             "mozilla"
   };
 
   // Additional shortcuts.
