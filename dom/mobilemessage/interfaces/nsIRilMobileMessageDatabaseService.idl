@@ -46,6 +46,7 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    *     - |deliveryStatus| DOMString Array: the delivery status of received message
    *     - |receivers| DOMString Array: the phone numbers of receivers
    *     - |phoneNumber| DOMString: [optional] my own phone number.
+   *     - |transactionId| DOMString: the transaction ID from MMS PDU header.
    *
    * Note: |deliveryStatus| should only contain single string to specify
    *       the delivery status of MMS message for the phone owner self.

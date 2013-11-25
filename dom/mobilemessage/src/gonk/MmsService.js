@@ -1456,6 +1456,7 @@ MmsService.prototype = {
     }
 
     intermediate.timestamp = Date.now();
+    intermediate.transactionId = intermediate.headers["x-mms-transaction-id"];
     intermediate.receivers = [];
     intermediate.phoneNumber = mmsConnection.getPhoneNumber();
     intermediate.iccId = mmsConnection.getIccId();
@@ -1603,8 +1604,6 @@ MmsService.prototype = {
                                                             retrievedMessage) {
     if (DEBUG) debug("retrievedMessage = " + JSON.stringify(retrievedMessage));
 
-    let transactionId = savableMessage.headers["x-mms-transaction-id"];
-
     // The absence of the field does not indicate any default
     // value. So we go check the same field in the retrieved
     // message instead.
@@ -1644,6 +1643,8 @@ MmsService.prototype = {
     savableMessage = this.mergeRetrievalConfirmation(mmsConnection,
                                                      retrievedMessage,
                                                      savableMessage);
+    let transactionId = savableMessage.headers["x-mms-transaction-id"];
+
     gMobileMessageDatabaseService.saveReceivedMessage(savableMessage,
         (function (rv, domMessage) {
       let success = Components.isSuccessCode(rv);
