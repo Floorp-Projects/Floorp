@@ -113,10 +113,7 @@ BaselineFrame::initForOsr(StackFrame *fp, uint32_t numStackValues)
     if (fp->hasCallObjUnchecked())
         flags_ |= BaselineFrame::HAS_CALL_OBJ;
 
-    if (fp->hasBlockChain()) {
-        flags_ |= BaselineFrame::HAS_BLOCKCHAIN;
-        blockChain_ = &fp->blockChain();
-    }
+    blockChain_ = fp->maybeBlockChain();
 
     if (fp->isEvalFrame()) {
         flags_ |= BaselineFrame::EVAL;
