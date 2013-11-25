@@ -336,8 +336,6 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxContext      *aContext,
     return NS_OK;
 }
 
-#undef SMALL_GLYPH_RUN
-
 // for language tag validation - include list of tags from the IANA registry
 #include "gfxLanguageTagList.cpp"
 

@@ -35,8 +35,8 @@ gfxUserFontSet::GetUserFontsLog()
 }
 #endif /* PR_LOGGING */
 
-#define FONTSET_LOG(args) PR_LOG(GetUserFontsLog(), PR_LOG_DEBUG, args)
-#define FONTSET_LOG_ENABLED() PR_LOG_TEST(GetUserFontsLog(), PR_LOG_DEBUG)
+#define LOG(args) PR_LOG(GetUserFontsLog(), PR_LOG_DEBUG, args)
+#define LOG_ENABLED() PR_LOG_TEST(GetUserFontsLog(), PR_LOG_DEBUG)
 
 static uint64_t sFontSetGeneration = 0;
 
@@ -177,8 +177,8 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
                               aUnicodeRanges);
     family->AddFontEntry(proxyEntry);
 #ifdef PR_LOGGING
-    if (FONTSET_LOG_ENABLED()) {
-        FONTSET_LOG(("userfonts (%p) added (%s) with style: %s weight: %d stretch: %d",
+    if (LOG_ENABLED()) {
+        LOG(("userfonts (%p) added (%s) with style: %s weight: %d stretch: %d",
              this, NS_ConvertUTF16toUTF8(aFamilyName).get(),
              (aItalicStyle & NS_FONT_STYLE_ITALIC ? "italic" :
                  (aItalicStyle & NS_FONT_STYLE_OBLIQUE ? "oblique" : "normal")),
@@ -531,7 +531,7 @@ gfxUserFontSet::LoadNext(gfxMixedFontFamily *aFamily,
                 gfxPlatform::GetPlatform()->LookupLocalFont(aProxyEntry,
                                                             currSrc.mLocalName);
             if (fe) {
-                FONTSET_LOG(("userfonts (%p) [src %d] loaded local: (%s) for (%s) gen: %8.8x\n",
+                LOG(("userfonts (%p) [src %d] loaded local: (%s) for (%s) gen: %8.8x\n",
                      this, aProxyEntry->mSrcIndex,
                      NS_ConvertUTF16toUTF8(currSrc.mLocalName).get(),
                      NS_ConvertUTF16toUTF8(aFamily->Name()).get(),
@@ -545,7 +545,7 @@ gfxUserFontSet::LoadNext(gfxMixedFontFamily *aFamily,
                 ReplaceFontEntry(aFamily, aProxyEntry, fe);
                 return STATUS_LOADED;
             } else {
-                FONTSET_LOG(("userfonts (%p) [src %d] failed local: (%s) for (%s)\n",
+                LOG(("userfonts (%p) [src %d] failed local: (%s) for (%s)\n",
                      this, aProxyEntry->mSrcIndex,
                      NS_ConvertUTF16toUTF8(currSrc.mLocalName).get(),
                      NS_ConvertUTF16toUTF8(aFamily->Name()).get()));
@@ -603,10 +603,10 @@ gfxUserFontSet::LoadNext(gfxMixedFontFamily *aFamily,
                         rv = StartLoad(aFamily, aProxyEntry, &currSrc);
                         if (NS_SUCCEEDED(rv)) {
 #ifdef PR_LOGGING
-                            if (FONTSET_LOG_ENABLED()) {
+                            if (LOG_ENABLED()) {
                                 nsAutoCString fontURI;
                                 currSrc.mURI->GetSpec(fontURI);
-                                FONTSET_LOG(("userfonts (%p) [src %d] loading uri: (%s) for (%s)\n",
+                                LOG(("userfonts (%p) [src %d] loading uri: (%s) for (%s)\n",
                                      this, aProxyEntry->mSrcIndex, fontURI.get(),
                                      NS_ConvertUTF16toUTF8(aFamily->Name()).get()));
                             }
@@ -638,7 +638,7 @@ gfxUserFontSet::LoadNext(gfxMixedFontFamily *aFamily,
     }
 
     // all src's failed; mark this entry as unusable (so fallback will occur)
-    FONTSET_LOG(("userfonts (%p) failed all src for (%s)\n",
+    LOG(("userfonts (%p) failed all src for (%s)\n",
         this, NS_ConvertUTF16toUTF8(aFamily->Name()).get()));
     aProxyEntry->mLoadingState = gfxProxyFontEntry::LOADING_FAILED;
 
@@ -717,10 +717,10 @@ gfxUserFontSet::LoadFont(gfxMixedFontFamily *aFamily,
         StoreUserFontData(fe, aProxy, GetPrivateBrowsing(),
                           originalFullName, &metadata, metaOrigLen);
 #ifdef PR_LOGGING
-        if (FONTSET_LOG_ENABLED()) {
+        if (LOG_ENABLED()) {
             nsAutoCString fontURI;
             aProxy->mSrcList[aProxy->mSrcIndex].mURI->GetSpec(fontURI);
-            FONTSET_LOG(("userfonts (%p) [src %d] loaded uri: (%s) for (%s) gen: %8.8x\n",
+            LOG(("userfonts (%p) [src %d] loaded uri: (%s) for (%s) gen: %8.8x\n",
                  this, aProxy->mSrcIndex, fontURI.get(),
                  NS_ConvertUTF16toUTF8(aFamily->Name()).get(),
                  uint32_t(mGeneration)));
@@ -730,10 +730,10 @@ gfxUserFontSet::LoadFont(gfxMixedFontFamily *aFamily,
         UserFontCache::CacheFont(fe);
     } else {
 #ifdef PR_LOGGING
-        if (FONTSET_LOG_ENABLED()) {
+        if (LOG_ENABLED()) {
             nsAutoCString fontURI;
             aProxy->mSrcList[aProxy->mSrcIndex].mURI->GetSpec(fontURI);
-            FONTSET_LOG(("userfonts (%p) [src %d] failed uri: (%s) for (%s)"
+            LOG(("userfonts (%p) [src %d] failed uri: (%s) for (%s)"
                  " error making platform font\n",
                  this, aProxy->mSrcIndex, fontURI.get(),
                  NS_ConvertUTF16toUTF8(aFamily->Name()).get()));

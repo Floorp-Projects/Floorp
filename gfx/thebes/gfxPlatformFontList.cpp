@@ -393,12 +393,14 @@ gfxPlatformFontList::SystemFindFontForChar(const uint32_t aCh,
     TimeStamp start = TimeStamp::Now();
 
     // search commonly available fonts
+    bool common = true;
     gfxFontFamily *fallbackFamily = nullptr;
     fontEntry = CommonFontFallback(aCh, aRunScript, aStyle, &fallbackFamily);
  
     // if didn't find a font, do system-wide fallback (except for specials)
     uint32_t cmapCount = 0;
     if (!fontEntry) {
+        common = false;
         fontEntry = GlobalFontFallback(aCh, aRunScript, aStyle, cmapCount,
                                        &fallbackFamily);
     }
@@ -414,7 +416,7 @@ gfxPlatformFontList::SystemFindFontForChar(const uint32_t aCh,
                ("(textrun-systemfallback-%s) char: u+%6.6x "
                  "unicode-range: %d script: %d match: [%s]"
                 " time: %dus cmaps: %d\n",
-                (fontEntry ? "common" : "global"), aCh,
+                (common ? "common" : "global"), aCh,
                  unicodeRange, script,
                 (fontEntry ? NS_ConvertUTF16toUTF8(fontEntry->Name()).get() :
                     "<none>"),
