@@ -37,7 +37,7 @@ StackFrame::initExecuteFrame(JSContext *cx, JSScript *script, AbstractFramePtr e
      * script in the context of another frame and the frame type is determined
      * by the context.
      */
-    flags_ = type | HAS_SCOPECHAIN | HAS_BLOCKCHAIN;
+    flags_ = type | HAS_SCOPECHAIN;
 
     JSObject *callee = nullptr;
     if (!(flags_ & (GLOBAL))) {
@@ -366,7 +366,6 @@ StackFrame::pushBlock(JSContext *cx, StaticBlockObject &block)
         blockChain_ = &block;
     }
 
-    flags_ |= HAS_BLOCKCHAIN;
     return true;
 }
 
