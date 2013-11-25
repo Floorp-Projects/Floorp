@@ -134,7 +134,7 @@ char* strtok2(char* string, const char* delims, char* *newStr)
   }
   *newStr = str;
   
-  return str == result ? NULL : result;
+  return str == result ? nullptr : result;
 }
 
 
@@ -218,9 +218,9 @@ string nssconfigdir;
 vector<server_info_t> servers;
 PRNetAddr remote_addr;
 PRNetAddr websocket_server;
-PRThreadPool* threads = NULL;
-PRLock* shutdown_lock = NULL;
-PRCondVar* shutdown_condvar = NULL;
+PRThreadPool* threads = nullptr;
+PRLock* shutdown_lock = nullptr;
+PRCondVar* shutdown_condvar = nullptr;
 // Not really used, unless something fails to start
 bool shutdown_server = false;
 bool do_http_proxy = false;
@@ -322,19 +322,19 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si, string &cer
   const char* certnick = certificate.empty() ?
       si->cert_nickname.c_str() : certificate.c_str();
 
-  ScopedCERTCertificate cert(PK11_FindCertFromNickname(certnick, NULL));
+  ScopedCERTCertificate cert(PK11_FindCertFromNickname(certnick, nullptr));
   if (!cert) {
     LOG_ERROR(("Failed to find cert %s\n", certnick));
     return false;
   }
 
-  ScopedSECKEYPrivateKey privKey(PK11_FindKeyByAnyCert(cert, NULL));
+  ScopedSECKEYPrivateKey privKey(PK11_FindKeyByAnyCert(cert, nullptr));
   if (!privKey) {
     LOG_ERROR(("Failed to find private key\n"));
     return false;
   }
 
-  PRFileDesc* ssl_socket = SSL_ImportFD(NULL, socket);
+  PRFileDesc* ssl_socket = SSL_ImportFD(nullptr, socket);
   if (!ssl_socket) {
     LOG_ERROR(("Error importing SSL socket\n"));
     return false;
@@ -934,7 +934,7 @@ void StartServer(void* data)
 char* password_func(PK11SlotInfo* slot, PRBool retry, void* arg)
 {
   if (retry)
-    return NULL;
+    return nullptr;
 
   return PL_strdup("");
 }
@@ -948,7 +948,7 @@ server_info_t* findServerInfo(int portnumber)
       return &(*it);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 int processConfigLine(char* configLine)
@@ -1009,7 +1009,7 @@ int processConfigLine(char* configLine)
   if (!strcmp(keyword, "listen"))
   {
     char* hostname = strtok2(_caret, ":", &_caret);
-    char* hostportstring = NULL;
+    char* hostportstring = nullptr;
     if (strcmp(hostname, "*"))
     {
       any_host_spec_config = true;
@@ -1046,19 +1046,22 @@ int processConfigLine(char* configLine)
       server_info_t server;
       server.cert_nickname = certnick;
       server.listen_port = port;
-      server.host_cert_table = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, PL_CompareStrings, NULL, NULL);
+      server.host_cert_table = PL_NewHashTable(0, PL_HashString, PL_CompareStrings,
+                                               PL_CompareStrings, nullptr, nullptr);
       if (!server.host_cert_table)
       {
         LOG_ERROR(("Internal, could not create hash table\n"));
         return 1;
       }
-      server.host_clientauth_table = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, ClientAuthValueComparator, NULL, NULL);
+      server.host_clientauth_table = PL_NewHashTable(0, PL_HashString, PL_CompareStrings,
+                                                     ClientAuthValueComparator, nullptr, nullptr);
       if (!server.host_clientauth_table)
       {
         LOG_ERROR(("Internal, could not create hash table\n"));
         return 1;
       }
-      server.host_redir_table = PL_NewHashTable(0, PL_HashString, PL_CompareStrings, PL_CompareStrings, NULL, NULL);
+      server.host_redir_table = PL_NewHashTable(0, PL_HashString, PL_CompareStrings,
+                                                PL_CompareStrings, nullptr, nullptr);
       if (!server.host_redir_table)
       {
         LOG_ERROR(("Internal, could not create hash table\n"));
@@ -1345,7 +1348,7 @@ int main(int argc, char** argv)
   }
 
   // these values should make NSS use the defaults
-  if (SSL_ConfigServerSessionIDCache(0, 0, 0, NULL) != SECSuccess) {
+  if (SSL_ConfigServerSessionIDCache(0, 0, 0, nullptr) != SECSuccess) {
     LOG_ERROR(("SSL_ConfigServerSessionIDCache failed\n"));
     PR_ShutdownThreadPool(threads);
     PR_DestroyCondVar(shutdown_condvar);
@@ -1378,9 +1381,9 @@ int main(int argc, char** argv)
   for (vector<server_info_t>::iterator it = servers.begin();
        it != servers.end(); it++) 
   {
-    PL_HashTableEnumerateEntries(it->host_cert_table, freeHostCertHashItems, NULL);
-    PL_HashTableEnumerateEntries(it->host_clientauth_table, freeClientAuthHashItems, NULL);
-    PL_HashTableEnumerateEntries(it->host_redir_table, freeHostRedirHashItems, NULL);
+    PL_HashTableEnumerateEntries(it->host_cert_table, freeHostCertHashItems, nullptr);
+    PL_HashTableEnumerateEntries(it->host_clientauth_table, freeClientAuthHashItems, nullptr);
+    PL_HashTableEnumerateEntries(it->host_redir_table, freeHostRedirHashItems, nullptr);
     PL_HashTableDestroy(it->host_cert_table);
     PL_HashTableDestroy(it->host_clientauth_table);
     PL_HashTableDestroy(it->host_redir_table);
