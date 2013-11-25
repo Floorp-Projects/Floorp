@@ -2599,6 +2599,21 @@ BaselineCompiler::emit_JSOP_ENTERLET2()
     return emitEnterBlock();
 }
 
+typedef bool (*DebugLeaveBlockFn)(JSContext *, BaselineFrame *);
+static const VMFunction DebugLeaveBlockInfo = FunctionInfo<DebugLeaveBlockFn>(jit::DebugLeaveBlock);
+
+bool
+BaselineCompiler::emit_JSOP_DEBUGLEAVEBLOCK()
+{
+    // Call a stub to pop the block from the block chain.
+    prepareVMCall();
+
+    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    pushArg(R0.scratchReg());
+
+    return callVM(DebugLeaveBlockInfo);
+}
+
 typedef bool (*LeaveBlockFn)(JSContext *, BaselineFrame *);
 static const VMFunction LeaveBlockInfo = FunctionInfo<LeaveBlockFn>(jit::LeaveBlock);
 

@@ -372,11 +372,6 @@ StackFrame::pushBlock(JSContext *cx, StaticBlockObject &block)
 void
 StackFrame::popBlock(JSContext *cx)
 {
-    JS_ASSERT(hasBlockChain());
-
-    if (JS_UNLIKELY(cx->compartment()->debugMode()))
-        DebugScopes::onPopBlock(cx, this);
-
     if (blockChain_->needsClone()) {
         JS_ASSERT(scopeChain_->as<ClonedBlockObject>().staticBlock() == *blockChain_);
         popOffScopeChain();

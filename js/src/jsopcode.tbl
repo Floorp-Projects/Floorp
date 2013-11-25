@@ -440,9 +440,8 @@ OPDEF(JSOP_TYPEOFEXPR,    197,"typeofexpr",  NULL,    1,  1,  1, JOF_BYTE|JOF_DE
  */
 OPDEF(JSOP_ENTERBLOCK,    198,"enterblock",  NULL,    5,  0, -1,  JOF_OBJECT)
 OPDEF(JSOP_LEAVEBLOCK,    199,"leaveblock",  NULL,    3, -1,  0,  JOF_UINT16)
+OPDEF(JSOP_DEBUGLEAVEBLOCK, 200,"debugleaveblock", NULL, 1,  0,  0,  JOF_BYTE)
 
-
-OPDEF(JSOP_UNUSED200,     200,"unused200",  NULL,     1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED201,     201,"unused201",  NULL,     1,  0,  0,  JOF_BYTE)
 
 /*

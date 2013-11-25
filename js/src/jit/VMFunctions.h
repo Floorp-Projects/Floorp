@@ -654,6 +654,7 @@ bool OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bo
 
 bool EnterBlock(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block);
 bool LeaveBlock(JSContext *cx, BaselineFrame *frame);
+bool DebugLeaveBlock(JSContext *cx, BaselineFrame *frame);
 
 bool InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame,
                              uint32_t numStackValues);
