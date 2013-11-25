@@ -664,7 +664,7 @@ function X4ProtoString(type) {
   assert(false, "Unhandled type constant");
 }
 
-X4LaneStrings = ["x", "y", "z", "w"];
+var X4LaneStrings = ["x", "y", "z", "w"];
 
 // Generalized handler for the various properties for accessing a
 // single lane of an X4 vector value. Note that this is the slow path;
