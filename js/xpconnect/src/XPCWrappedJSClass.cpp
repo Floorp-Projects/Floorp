@@ -105,9 +105,12 @@ nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID,
     nsXPCWrappedJSClass* clazz = nullptr;
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
 
-    IID2WrappedJSClassMap* map = rt->GetWrappedJSClassMap();
-    clazz = map->Find(aIID);
-    NS_IF_ADDREF(clazz);
+    {   // scoped lock
+        XPCAutoLock lock(rt->GetMapLock());
+        IID2WrappedJSClassMap* map = rt->GetWrappedJSClassMap();
+        clazz = map->Find(aIID);
+        NS_IF_ADDREF(clazz);
+    }
 
     if (!clazz) {
         nsCOMPtr<nsIInterfaceInfo> info;
@@ -138,7 +141,10 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(JSContext* cx, REFNSIID aIID,
     NS_ADDREF(mInfo);
     NS_ADDREF_THIS();
 
-    mRuntime->GetWrappedJSClassMap()->Add(this);
+    {   // scoped lock
+        XPCAutoLock lock(mRuntime->GetMapLock());
+        mRuntime->GetWrappedJSClassMap()->Add(this);
+    }
 
     uint16_t methodCount;
     if (NS_SUCCEEDED(mInfo->GetMethodCount(&methodCount))) {
@@ -172,8 +178,10 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
     if (mDescriptors && mDescriptors != &zero_methods_descriptor)
         delete [] mDescriptors;
     if (mRuntime)
+    {   // scoped lock
+        XPCAutoLock lock(mRuntime->GetMapLock());
         mRuntime->GetWrappedJSClassMap()->Remove(this);
-
+    }
     if (mName)
         nsMemory::Free(mName);
     NS_IF_RELEASE(mInfo);
@@ -1207,7 +1215,10 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                         IID2ThisTranslatorMap* map =
                             mRuntime->GetThisTranslatorMap();
 
-                        translator = map->Find(mIID);
+                        {
+                            XPCAutoLock lock(mRuntime->GetMapLock()); // scoped lock
+                            translator = map->Find(mIID);
+                        }
 
                         if (translator) {
                             nsCOMPtr<nsISupports> newThis;

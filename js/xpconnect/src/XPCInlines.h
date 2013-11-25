@@ -17,19 +17,19 @@
 inline void
 XPCJSRuntime::AddVariantRoot(XPCTraceableVariant* variant)
 {
-    variant->AddToRootSet(&mVariantRoots);
+    variant->AddToRootSet(GetMapLock(), &mVariantRoots);
 }
 
 inline void
 XPCJSRuntime::AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS)
 {
-    wrappedJS->AddToRootSet(&mWrappedJSRoots);
+    wrappedJS->AddToRootSet(GetMapLock(), &mWrappedJSRoots);
 }
 
 inline void
 XPCJSRuntime::AddObjectHolderRoot(XPCJSObjectHolder* holder)
 {
-    holder->AddToRootSet(&mObjectHolderRoots);
+    holder->AddToRootSet(GetMapLock(), &mObjectHolderRoots);
 }
 
 /***************************************************************************/
