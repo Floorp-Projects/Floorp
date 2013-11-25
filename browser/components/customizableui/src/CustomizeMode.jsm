@@ -359,7 +359,17 @@ CustomizeMode.prototype = {
     let result = this.window.gNavToolbox.dispatchEvent(evt);
   },
 
+  _getCustomizableChildForNode: function(aNode) {
+    let area = this._getCustomizableParent(aNode);
+    area = area.customizationTarget || area;
+    while (aNode && aNode.parentNode != area) {
+      aNode = aNode.parentNode;
+    }
+    return aNode;
+  },
+
   addToToolbar: function(aNode) {
+    aNode = this._getCustomizableChildForNode(aNode);
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
       aNode = aNode.firstChild;
     }
@@ -367,6 +377,7 @@ CustomizeMode.prototype = {
   },
 
   addToPanel: function(aNode) {
+    aNode = this._getCustomizableChildForNode(aNode);
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
       aNode = aNode.firstChild;
     }
@@ -374,6 +385,7 @@ CustomizeMode.prototype = {
   },
 
   removeFromArea: function(aNode) {
+    aNode = this._getCustomizableChildForNode(aNode);
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
       aNode = aNode.firstChild;
     }
