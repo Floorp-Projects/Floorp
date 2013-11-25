@@ -251,7 +251,7 @@ public:
 
 protected:
   // Typedefs
-  typedef nsTArray<nsSMILValue> nsSMILValueArray;
+  typedef FallibleTArray<nsSMILValue> nsSMILValueArray;
 
   // Types
   enum nsSMILCalcMode
@@ -398,8 +398,8 @@ protected:
   static nsAttrValue::EnumTable sCalcModeTable[];
   static nsAttrValue::EnumTable sAccumulateTable[];
 
-  nsTArray<double>              mKeyTimes;
-  nsTArray<nsSMILKeySpline>     mKeySplines;
+  FallibleTArray<double>          mKeyTimes;
+  FallibleTArray<nsSMILKeySpline> mKeySplines;
 
   // These are the parameters provided by the previous sample. Currently we
   // perform lazy calculation. That is, we only calculate the result if and when
