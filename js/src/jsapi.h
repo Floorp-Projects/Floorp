@@ -1682,6 +1682,12 @@ JS_SetCompartmentPrivate(JSCompartment *compartment, void *data);
 extern JS_PUBLIC_API(void *)
 JS_GetCompartmentPrivate(JSCompartment *compartment);
 
+extern JS_PUBLIC_API(void)
+JS_SetZoneUserData(JS::Zone *zone, void *data);
+
+extern JS_PUBLIC_API(void *)
+JS_GetZoneUserData(JS::Zone *zone);
+
 extern JS_PUBLIC_API(bool)
 JS_WrapObject(JSContext *cx, JS::MutableHandleObject objp);
 
