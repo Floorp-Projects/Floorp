@@ -7,6 +7,7 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
+#include "jshashutil.h"
 #include "jsobj.h"
 #include "selfhosted.out.h"
 
@@ -865,7 +866,7 @@ GetObjectAllocKindForClone(JSRuntime *rt, JSObject *obj)
 static JSObject *
 CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
 {
-    CloneMemory::AddPtr p = clonedObjects.lookupForAdd(srcObj.get());
+    DependentAddPtr<CloneMemory> p(cx, clonedObjects, srcObj.get());
     if (p)
         return p->value;
     RootedObject clone(cx);
@@ -904,9 +905,12 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
                                         GetObjectAllocKindForClone(cx->runtime(), srcObj),
                                         SingletonObject);
     }
-    if (!clone || !clonedObjects.relookupOrAdd(p, srcObj.get(), clone.get()) ||
-        !CloneProperties(cx, srcObj, clone, clonedObjects))
-    {
+    if (!clone)
+        return nullptr;
+    if (!p.add(clonedObjects, srcObj, clone))
+        return nullptr;
+    if (!CloneProperties(cx, srcObj, clone, clonedObjects)) {
+        clonedObjects.remove(srcObj);
         return nullptr;
     }
     return clone;
