@@ -779,6 +779,11 @@ JSRuntime::initSelfHosting(JSContext *cx)
     options.setCanLazilyParse(false);
     options.setSourcePolicy(CompileOptions::NO_SOURCE);
     options.setVersion(JSVERSION_LATEST);
+    options.werrorOption = true;
+
+#ifdef DEBUG
+    options.strictOption = true;
+#endif
 
     /*
      * Set a temporary error reporter printing to stderr because it is too
