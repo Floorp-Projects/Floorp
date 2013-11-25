@@ -588,6 +588,8 @@ EmitNonLocalJumpFixup(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *t
                 stmt = stmt->down;
                 if (stmt == toStmt)
                     break;
+                if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
+                    return false;
                 if (Emit1(cx, bce, JSOP_LEAVEFORLETIN) < 0)
                     return false;
                 if (stmt->type == STMT_FOR_OF_LOOP) {
@@ -600,6 +602,8 @@ EmitNonLocalJumpFixup(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *t
                 EMIT_UINT16_IMM_OP(JSOP_POPN, popCount);
             } else {
                 /* There is a Block object with locals on the stack to pop. */
+                if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
+                    return false;
                 EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, blockObjCount);
             }
         }
@@ -2622,8 +2626,11 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!PopStatementBCE(cx, bce))
         return false;
 
-    if (pn->pn_right->isKind(PNK_LEXICALSCOPE))
+    if (pn->pn_right->isKind(PNK_LEXICALSCOPE)) {
+        if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
+            return false;
         EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, blockObjCount);
+    }
 
     return true;
 }
@@ -3941,6 +3948,8 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                  */
                 if (Emit1(cx, bce, JSOP_THROWING) < 0)
                     return false;
+                if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
+                    return false;
                 EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, count);
                 JS_ASSERT(bce->stackDepth == depth);
             }
@@ -4200,6 +4209,8 @@ EmitLet(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
     if (!EmitTree(cx, bce, letBody->pn_expr))
         return false;
 
+    if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
+        return false;
     JSOp leaveOp = letBody->getOp();
     JS_ASSERT(leaveOp == JSOP_LEAVEBLOCK || leaveOp == JSOP_LEAVEBLOCKEXPR);
     EMIT_UINT16_IMM_OP(leaveOp, blockObj->slotCount());
@@ -4233,6 +4244,8 @@ EmitLexicalScope(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!EmitTree(cx, bce, pn->pn_expr))
         return false;
 
+    if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
+        return false;
     EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, slots);
 
     return PopStatementBCE(cx, bce);
@@ -4410,6 +4423,8 @@ EmitForOf(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
     if (letDecl) {
         if (!PopStatementBCE(cx, bce))
             return false;
+        if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
+            return false;
         if (Emit1(cx, bce, JSOP_LEAVEFORLETIN) < 0)
             return false;
     }
@@ -4568,6 +4583,8 @@ EmitForIn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
 
     if (letDecl) {
         if (!PopStatementBCE(cx, bce))
+            return false;
+        if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
             return false;
         if (Emit1(cx, bce, JSOP_LEAVEFORLETIN) < 0)
             return false;
