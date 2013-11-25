@@ -100,6 +100,7 @@
 //----------------------------------------------------------------------
 
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
@@ -413,7 +414,7 @@ RDFXMLDataSourceImpl::Init()
     if (NS_FAILED(rv)) return rv;
 
     if (gRefCnt++ == 0) {
-        rv = CallGetService(NS_RDFSERVICE_CID, &gRDFService);
+        rv = CallGetService(kRDFServiceCID, &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_FAILED(rv)) return rv;
