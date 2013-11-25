@@ -80,7 +80,7 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
 }
 
 void
-gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx, const gfxPoint& offset)
+gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx)
 {
     if (!mContext)
         return;
@@ -95,14 +95,14 @@ gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx, const gfxPoint& offset)
         aDestinationCtx->Save();
         aDestinationCtx->NewPath();
         gfxRect dirty(dirtyrect->x, dirtyrect->y, dirtyrect->width, dirtyrect->height);
-        gfxRect imageRect(offset - mImageSurface->GetDeviceOffset(), mImageSurface->GetSize());
+        gfxRect imageRect(-mImageSurface->GetDeviceOffset(), mImageSurface->GetSize());
         dirty.IntersectRect(dirty, imageRect);
         aDestinationCtx->Rectangle(dirty);
         aDestinationCtx->Clip();
-        aDestinationCtx->Mask(mImageSurface, offset);
+        aDestinationCtx->Mask(mImageSurface, gfxPoint());
         aDestinationCtx->Restore();
     } else {
-        aDestinationCtx->Mask(mImageSurface, offset);
+        aDestinationCtx->Mask(mImageSurface, gfxPoint());
     }
 }
 
