@@ -1209,6 +1209,12 @@ MobileMessageDatabaseService.prototype = {
         delete messageRecord.transactionId;
       }
 
+      // xpconnect gives "undefined" for an unassigned argument of an interface
+      // method.
+      if (messageRecord.envelopeIdIndex === "undefined") {
+        delete messageRecord.envelopeIdIndex;
+      }
+
       cursor.update(messageRecord);
       cursor.continue();
     };
