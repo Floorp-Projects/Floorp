@@ -354,6 +354,15 @@
     }
 #endif
 
+#ifdef MOZILLA_INTERNAL_API
+void NS_ABORT_OOM(size_t size);
+#else
+inline void NS_ABORT_OOM(size_t)
+{
+  MOZ_CRASH();
+}
+#endif
+
 /* When compiling the XPCOM Glue on Windows, we pretend that it's going to
  * be linked with a static CRT (-MT) even when it's not. This means that we
  * cannot link to data exports from the CRT, only function exports. So,
