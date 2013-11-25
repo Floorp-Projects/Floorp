@@ -442,8 +442,9 @@ class MDefinition : public MNode
     // dynamically with the use of bailout checks. If all the bailout checks
     // pass, the value will have this type.
     //
-    // Unless this is an MUrsh, which, as a special case, may return a value
-    // in (INT32_MAX,UINT32_MAX] even when its type() is MIRType_Int32.
+    // Unless this is an MUrsh that has bailouts disabled, which, as a special
+    // case, may return a value in (INT32_MAX,UINT32_MAX] even when its type()
+    // is MIRType_Int32.
     MIRType type() const {
         return resultType_;
     }
