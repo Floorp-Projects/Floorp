@@ -895,7 +895,14 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert,
                                                stapledOCSPResponse,
                                                infoObject);
     if (rv != SECSuccess) {
-      return rv;
+      // Due to buggy servers that will staple expired OCSP responses
+      // (see for example http://trac.nginx.org/nginx/ticket/425),
+      // don't terminate the connection if the stapled response is expired.
+      // We will fall back to fetching revocation information.
+      PRErrorCode ocspErrorCode = PR_GetError();
+      if (ocspErrorCode != SEC_ERROR_OCSP_OLD_RESPONSE) {
+        return rv;
+      }
     }
   }
 
