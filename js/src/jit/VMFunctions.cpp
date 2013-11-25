@@ -895,6 +895,17 @@ LeaveBlock(JSContext *cx, BaselineFrame *frame)
 }
 
 bool
+DebugLeaveBlock(JSContext *cx, BaselineFrame *frame)
+{
+    JS_ASSERT(frame->hasBlockChain());
+
+    if (JS_UNLIKELY(cx->compartment()->debugMode()))
+        DebugScopes::onPopBlock(cx, frame);
+
+    return true;
+}
+
+bool
 InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame, uint32_t numStackValues)
 {
     return frame->initForOsr(interpFrame, numStackValues);
