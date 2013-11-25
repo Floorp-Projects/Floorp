@@ -785,13 +785,6 @@ public:
                    uint32_t aFlags = 0);
 
   /**
-   * Does the actual blurring/spreading. Users of this object *must*
-   * have called Init() first, then have drawn whatever they want to be
-   * blurred onto the internal gfxContext before calling this.
-   */
-  void DoEffects();
-  
-  /**
    * Does the actual blurring and mask applying. Users of this object *must*
    * have called Init() first, then have drawn whatever they want to be
    * blurred onto the internal gfxContext before calling this.
@@ -813,6 +806,15 @@ public:
    */
   static nsMargin GetBlurRadiusMargin(nscoord aBlurRadius,
                                       int32_t aAppUnitsPerDevPixel);
+
+  static void BlurRectangle(gfxContext* aDestinationCtx,
+                            const nsRect& aRect,
+                            int32_t aAppUnitsPerDevPixel,
+                            gfxCornerSizes* aCornerRadii,
+                            nscoord aBlurRadius,
+                            const gfxRGBA& aShadowColor,
+                            const nsRect& aDirtyRect,
+                            const gfxRect& aSkipRect);
 
 protected:
   gfxAlphaBoxBlur blur;
