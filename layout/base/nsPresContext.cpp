@@ -235,6 +235,12 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   mUserFontSet = nullptr;
   mUserFontSetDirty = true;
 
+  // if text perf logging enabled, init stats struct
+  PRLogModuleInfo *log = gfxPlatform::GetLog(eGfxLog_textperf);
+  if (log && PR_LOG_TEST(log, PR_LOG_WARNING)) {
+    mTextPerf = new gfxTextPerfMetrics();
+  }
+
   PR_INIT_CLIST(&mDOMMediaQueryLists);
 }
 

@@ -5,8 +5,7 @@
 
 let tmp = {};
 Cu.import("resource://gre/modules/Promise.jsm", tmp);
-Cu.import("resource://gre/modules/ForgetAboutSite.jsm", tmp);
-let {Promise, ForgetAboutSite} = tmp;
+let {Promise} = tmp;
 
 const INITIAL_VALUE = "initial-value-" + Date.now();
 
@@ -75,8 +74,10 @@ add_task(function purge_domain() {
   let tab = yield createTabWithStorageData(["http://example.com", "http://mochi.test:8888"]);
   let browser = tab.linkedBrowser;
 
-  ForgetAboutSite.removeDataFromDomain("mochi.test");
-  yield waitForUpdateMessage(browser);
+  yield notifyObservers(browser, "browser:purge-domain-data", "mochi.test");
+
+  // Flush to make sure chrome received all data.
+  SyncHandlers.get(browser).flush();
 
   let {storage} = JSON.parse(ss.getTabState(tab));
   ok(!storage["http://mochi.test:8888"],
@@ -96,6 +97,9 @@ add_task(function purge_shistory() {
   let browser = tab.linkedBrowser;
 
   yield notifyObservers(browser, "browser:purge-session-history");
+
+  // Flush to make sure chrome received all data.
+  SyncHandlers.get(browser).flush();
 
   let {storage} = JSON.parse(ss.getTabState(tab));
   ok(!storage["http://example.com"],
@@ -188,7 +192,8 @@ function modifySessionStorage(browser, data) {
   return waitForStorageEvent(browser);
 }
 
-function notifyObservers(browser, topic) {
-  browser.messageManager.sendAsyncMessage("ss-test:notifyObservers", topic);
+function notifyObservers(browser, topic, data) {
+  let msg = {topic: topic, data: data};
+  browser.messageManager.sendAsyncMessage("ss-test:notifyObservers", msg);
   return waitForUpdateMessage(browser);
 }

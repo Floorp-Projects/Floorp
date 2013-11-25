@@ -181,11 +181,11 @@ ImageHost::Dump(FILE* aFile,
     aFile = stderr;
   }
   if (mFrontBuffer) {
-    fprintf(aFile, "%s", aPrefix);
-    fprintf(aFile, aDumpHtml ? "<ul><li>TextureHost: "
+    fprintf_stderr(aFile, "%s", aPrefix);
+    fprintf_stderr(aFile, aDumpHtml ? "<ul><li>TextureHost: "
                              : "TextureHost: ");
     DumpTextureHost(aFile, mFrontBuffer);
-    fprintf(aFile, aDumpHtml ? " </li></ul> " : " ");
+    fprintf_stderr(aFile, aDumpHtml ? " </li></ul> " : " ");
   }
 }
 #endif
@@ -391,11 +391,11 @@ DeprecatedImageHostSingle::Dump(FILE* aFile,
     aFile = stderr;
   }
   if (mDeprecatedTextureHost) {
-    fprintf(aFile, "%s", aPrefix);
-    fprintf(aFile, aDumpHtml ? "<ul><li>DeprecatedTextureHost: "
+    fprintf_stderr(aFile, "%s", aPrefix);
+    fprintf_stderr(aFile, aDumpHtml ? "<ul><li>DeprecatedTextureHost: "
                              : "DeprecatedTextureHost: ");
     DumpDeprecatedTextureHost(aFile, mDeprecatedTextureHost);
-    fprintf(aFile, aDumpHtml ? " </li></ul> " : " ");
+    fprintf_stderr(aFile, aDumpHtml ? " </li></ul> " : " ");
   }
 }
 
