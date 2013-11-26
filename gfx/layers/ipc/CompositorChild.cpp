@@ -87,15 +87,13 @@ CompositorChild::AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBac
                                              TextureFactoryIdentifier*,
                                              bool*)
 {
-  LayerTransactionChild* c = new LayerTransactionChild();
-  c->AddIPDLReference();
-  return c;
+  return new LayerTransactionChild();
 }
 
 bool
 CompositorChild::DeallocPLayerTransactionChild(PLayerTransactionChild* actor)
 {
-  static_cast<LayerTransactionChild*>(actor)->ReleaseIPDLReference();
+  delete actor;
   return true;
 }
 

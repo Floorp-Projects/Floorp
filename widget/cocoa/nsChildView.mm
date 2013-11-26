@@ -3694,7 +3694,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
       if (mGeckoChild->GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
         ClientLayerManager *manager = static_cast<ClientLayerManager*>(mGeckoChild->GetLayerManager());
-        manager->AsShadowForwarder()->WindowOverlayChanged();
+        manager->WindowOverlayChanged();
       }
     }
 
