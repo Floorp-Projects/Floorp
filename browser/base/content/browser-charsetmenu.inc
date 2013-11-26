@@ -9,8 +9,7 @@
     accesskey="&charsetMenu.accesskey;"
     oncommand="MultiplexHandler(event)"
     onpopupshowing="CharsetMenu.build(event);"
-    onpopupshown="UpdateMenus(event);"
-    observes="isImage">
+    onpopupshown="UpdateMenus(event);">
   <menupopup>
     <menu label="&charsetMenuAutodet.label;"
           accesskey="&charsetMenuAutodet.accesskey;">
