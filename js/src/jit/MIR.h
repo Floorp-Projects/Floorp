@@ -1907,6 +1907,40 @@ class MCall
         return this;
     }
     AliasSet getAliasSet() const {
+        if (isDOMFunction()) {
+            JS_ASSERT(getSingleTarget() && getSingleTarget()->isNative());
+
+            const JSJitInfo* jitInfo = getSingleTarget()->jitInfo();
+            JS_ASSERT(jitInfo);
+
+            if (jitInfo->isPure && jitInfo->argTypes) {
+                uint32_t argIndex = 0;
+                for (const JSJitInfo::ArgType* argType = jitInfo->argTypes;
+                     *argType != JSJitInfo::ArgTypeListEnd;
+                     ++argType, ++argIndex)
+                {
+                    if (argIndex >= numActualArgs()) {
+                        // Passing through undefined can't have side-effects
+                        continue;
+                    }
+                    // getArg(0) is "this", so skip it
+                    MDefinition *arg = getArg(argIndex+1);
+                    MIRType actualType = arg->type();
+                    // The only way to get side-effects is if we're passing in
+                    // something that might be an object to an argument that
+                    // expects a numeric, string, or boolean value.
+                    if ((actualType == MIRType_Value || actualType == MIRType_Object) &&
+                        (*argType &
+                         (JSJitInfo::Boolean | JSJitInfo::String | JSJitInfo::Numeric)))
+                    {
+                        return AliasSet::Store(AliasSet::Any);
+                    }
+                }
+                // We checked all the args, and they check out.  So we only
+                // alias DOM mutations.
+                return AliasSet::Load(AliasSet::DOMProperty);
+            }
+        }
         return AliasSet::Store(AliasSet::Any);
     }
 
