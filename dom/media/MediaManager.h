@@ -401,6 +401,11 @@ public:
     return Get()->mMediaThread;
   }
 
+  static nsresult NotifyRecordingStatusChange(nsPIDOMWindow* aWindow,
+                                              const nsString& aMsg,
+                                              const bool& aIsAudio,
+                                              const bool& aIsVideo);
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMEDIAMANAGERSERVICE
