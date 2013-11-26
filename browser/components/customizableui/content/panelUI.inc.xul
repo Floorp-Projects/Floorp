@@ -106,8 +106,6 @@
 
     <panelview id="PanelUI-characterEncodingView" flex="1">
       <label value="&charsetMenu.label;"/>
-      <toolbarbutton label="&charsetCustomize.label;"
-                     oncommand="PanelUI.onCharsetCustomizeCommand();"/>
 
       <vbox id="PanelUI-characterEncodingView-customlist"
             class="PanelUI-characterEncodingView-list"/>
