@@ -72,32 +72,6 @@ let gTests = [
     teardown: null
   },
   {
-    desc: "Right-click on the searchbar and moving it to the menu and back should move the search-container instead.",
-    run: function() {
-      let searchbar = document.getElementById("searchbar");
-      gCustomizeMode.addToPanel(searchbar);
-      let placement = CustomizableUI.getPlacementOfWidget("search-container");
-      is(placement.area, CustomizableUI.AREA_PANEL, "Should be in panel");
-
-      let shownPanelPromise = promisePanelShown(window);
-      PanelUI.toggle({type: "command"});
-      yield shownPanelPromise;
-      let hiddenPanelPromise = promisePanelHidden(window);
-      PanelUI.toggle({type: "command"});
-      yield hiddenPanelPromise;
-
-      gCustomizeMode.addToToolbar(searchbar);
-      placement = CustomizableUI.getPlacementOfWidget("search-container");
-      is(placement.area, CustomizableUI.AREA_NAVBAR, "Should be in navbar");
-      gCustomizeMode.removeFromArea(searchbar);
-      placement = CustomizableUI.getPlacementOfWidget("search-container");
-      is(placement, null, "Should be in palette");
-      CustomizableUI.reset();
-      placement = CustomizableUI.getPlacementOfWidget("search-container");
-      is(placement.area, CustomizableUI.AREA_NAVBAR, "Should be in navbar");
-    }
-  },
-  {
     desc: "Right-click on an item within the menu panel should show a context menu with options to move it.",
     setup: null,
     run: function() {
