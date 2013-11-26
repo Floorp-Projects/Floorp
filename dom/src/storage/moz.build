@@ -8,7 +8,7 @@ EXPORTS.mozilla.dom += [
     'DOMStorageIPC.h',
 ]
 
-UNIFIED_SOURCES += [
+SOURCES += [
     'DOMStorage.cpp',
     'DOMStorageCache.cpp',
     'DOMStorageDBThread.cpp',

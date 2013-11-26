@@ -18,6 +18,8 @@ using namespace mozilla::plugins::parent;
 
 namespace {
 
+typedef PluginIdentifierParent::StackIdentifier StackIdentifier;
+
 inline void
 ReleaseVariant(NPVariant& aVariant,
                PluginInstanceParent* aInstance)
@@ -106,7 +108,7 @@ PluginScriptableObjectParent::ScriptableHasMethod(NPObject* aObject,
     return false;
   }
 
-  PluginIdentifierParent::StackIdentifier identifier(aObject, aName);
+  StackIdentifier identifier(aObject, aName);
   if (!identifier) {
     return false;
   }
@@ -146,7 +148,7 @@ PluginScriptableObjectParent::ScriptableInvoke(NPObject* aObject,
     return false;
   }
 
-  PluginIdentifierParent::StackIdentifier identifier(aObject, aName);
+  StackIdentifier identifier(aObject, aName);
   if (!identifier) {
     return false;
   }
@@ -248,7 +250,7 @@ PluginScriptableObjectParent::ScriptableHasProperty(NPObject* aObject,
     return false;
   }
 
-  PluginIdentifierParent::StackIdentifier identifier(aObject, aName);
+  StackIdentifier identifier(aObject, aName);
   if (!identifier) {
     return false;
   }
@@ -297,7 +299,7 @@ PluginScriptableObjectParent::ScriptableSetProperty(NPObject* aObject,
     return false;
   }
 
-  PluginIdentifierParent::StackIdentifier identifier(aObject, aName);
+  StackIdentifier identifier(aObject, aName);
   if (!identifier) {
     return false;
   }
@@ -340,7 +342,7 @@ PluginScriptableObjectParent::ScriptableRemoveProperty(NPObject* aObject,
     return false;
   }
 
-  PluginIdentifierParent::StackIdentifier identifier(aObject, aName);
+  StackIdentifier identifier(aObject, aName);
   if (!identifier) {
     return false;
   }
@@ -1224,7 +1226,7 @@ PluginScriptableObjectParent::GetPropertyHelper(NPIdentifier aName,
     return false;
   }
 
-  PluginIdentifierParent::StackIdentifier identifier(GetInstance(), aName);
+  StackIdentifier identifier(GetInstance(), aName);
   if (!identifier) {
     return false;
   }

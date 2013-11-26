@@ -30,7 +30,7 @@ EXPORTS.mozilla += [
     'MediaManager.h',
 ]
 
-UNIFIED_SOURCES += [
+SOURCES += [
     'GetUserMediaRequest.cpp',
     'MediaManager.cpp',
 ]

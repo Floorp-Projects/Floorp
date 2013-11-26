@@ -33,7 +33,7 @@ EXPORTS.mozilla += [
     'OSFileConstants.h',
 ]
 
-UNIFIED_SOURCES += [
+SOURCES += [
     'nsDeviceSensors.cpp',
     'OSFileConstants.cpp',
 ]

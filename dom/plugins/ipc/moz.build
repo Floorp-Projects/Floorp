@@ -46,7 +46,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla.plugins += [
         'PluginSurfaceParent.h',
     ]
-    UNIFIED_SOURCES += [
+    SOURCES += [
         'COMMessageFilter.cpp',
         'MiniShmParent.cpp',
         'PluginHangUIParent.cpp',
@@ -67,11 +67,10 @@ if CONFIG['MOZ_ENABLE_QT']:
     GENERATED_SOURCES += [
         'moc_NestedLoopTimer.cpp',
     ]
-    UNIFIED_SOURCES += [
+    SOURCES += [
         'NestedLoopTimer.cpp',
     ]
 
-# These files cannot be built in unified mode because they force NSPR logging.
 SOURCES += [
     'BrowserStreamChild.cpp',
     'BrowserStreamParent.cpp',
@@ -94,7 +93,6 @@ SOURCES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    # These files cannot be built in unified mode because they force NSPR logging.
     SOURCES += [
         'PluginInterposeOSX.mm',
         'PluginUtilsOSX.mm',

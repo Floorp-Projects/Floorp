@@ -6,9 +6,9 @@
 
 LIBRARY_NAME = 'plugin_child_interpose'
 
-UNIFIED_SOURCES += [ "%s.mm" % (LIBRARY_NAME) ]
+SOURCES += [ "%s.mm" % (LIBRARY_NAME) ]
 
-UNIFIED_SOURCES += [
+SOURCES += [
     'plugin_child_quirks.mm',
 ]
 
