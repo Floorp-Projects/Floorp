@@ -174,6 +174,19 @@ public:
     return static_cast<nsSVGElement*>(e.get());
   }
 
+  /**
+   * Returns true if this object is an "identity" value, from the perspective
+   * of SMIL. In other words, returns true until the initial value set up in
+   * SVGPointListSMILType::Init() has been changed with a SetInfo() call.
+   */
+  bool IsIdentity() const {
+    if (!mElement) {
+      NS_ABORT_IF_FALSE(IsEmpty(), "target element propagation failure");
+      return true;
+    } 
+    return false;
+  }
+
   nsresult CopyFrom(const SVGPointListAndInfo& rhs) {
     mElement = rhs.mElement;
     return SVGPointList::CopyFrom(rhs);
