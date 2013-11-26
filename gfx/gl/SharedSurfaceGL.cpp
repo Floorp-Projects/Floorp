@@ -6,6 +6,7 @@
 #include "SharedSurfaceGL.h"
 #include "GLContext.h"
 #include "GLBlitHelper.h"
+#include "ScopedGLHelpers.h"
 #include "gfxImageSurface.h"
 
 using namespace mozilla::gfx;
