@@ -60,6 +60,17 @@ toolbarpaletteitem[place="palette"] > #social-share-button {
   -moz-image-region: rect(0px, 448px, 32px, 416px);
 }
 
+#email-link-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #email-link-button {
+  -moz-image-region: rect(0, 448px, 32px, 416px);
+}
+
+/* This is temporary until we have an email-link icon (Bug 932235) */
+#email-link-button[cui-areatype="menu-panel"] > image,
+toolbarpaletteitem[place="palette"] > #email-link-button > image {
+  transform: scale(-1, -1);
+}
+
 #characterencoding-button[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #characterencoding-button {
   -moz-image-region: rect(0px, 480px, 32px, 448px);
