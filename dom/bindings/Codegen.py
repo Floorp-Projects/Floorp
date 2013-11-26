@@ -6061,7 +6061,12 @@ class CGMemberJITInfo(CGThing):
         return ""
 
     def defineJitInfo(self, infoName, opName, opType, infallible, constant,
-                      pure, hasSlot, slotIndex, returnTypes):
+                      pure, hasSlot, slotIndex, returnTypes, args):
+        """
+        args is None if we don't want to output argTypes for some
+        reason (e.g. we have overloads or we're not a method) and
+        otherwise an iterable of the arguments for this method.
+        """
         assert(not constant or pure) # constants are always pure
         assert(not hasSlot or pure) # Things with slots had better be pure
         protoID = "prototypes::id::%s" % self.descriptor.name
@@ -6072,7 +6077,18 @@ class CGMemberJITInfo(CGThing):
         slotStr = toStringBool(hasSlot)
         returnType = reduce(CGMemberJITInfo.getSingleReturnType, returnTypes,
                             "")
+        if args is not None:
+            argTypes = "%s_argTypes" % infoName
+            args = [CGMemberJITInfo.getJSArgType(arg.type) for arg in args]
+            args.append("JSJitInfo::ArgTypeListEnd")
+            argTypesDecl = (
+                "static const JSJitInfo::ArgType %s[] = { %s };\n" %
+                (argTypes, ", ".join(args)))
+        else:
+            argTypes = "nullptr"
+            argTypesDecl = ""
         return ("\n"
+                "%s"
                 "static const JSJitInfo %s = {\n"
                 "  { %s },\n"
                 "  %s,\n"
@@ -6080,13 +6096,15 @@ class CGMemberJITInfo(CGThing):
                 "  JSJitInfo::%s,\n"
                 "  %s,  /* isInfallible. False in setters. */\n"
                 "  %s,  /* isConstant. Only relevant for getters. */\n"
-                "  %s,  /* isPure.  Only relevant for getters. */\n"
+                "  %s,  /* isPure.  Not relevant for setters. */\n"
                 "  %s,  /* hasSlot.  Only relevant for getters. */\n"
                 "  %d,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
-                "  %s   /* returnType.  Only relevant for getters/methods. */\n"
-                "};\n" % (infoName, opName, protoID, depth, opType, failstr,
-                          conststr, purestr, slotStr, slotIndex,
-                          returnType))
+                "  %s,  /* returnType.  Not relevant for setters. */\n"
+                "  %s,  /* argTypes.  Only relevant for methods */\n"
+                "  nullptr /* parallelNative */\n"
+                "};\n" % (argTypesDecl, infoName, opName, protoID, depth,
+                          opType, failstr, conststr, purestr, slotStr,
+                          slotIndex, returnType, argTypes))
 
     def define(self):
         if self.member.isAttr():
@@ -6113,7 +6131,7 @@ class CGMemberJITInfo(CGThing):
             result = self.defineJitInfo(getterinfo, getter, "Getter",
                                         getterinfal, getterconst, getterpure,
                                         isInSlot, slotIndex,
-                                        [self.member.type])
+                                        [self.member.type], None)
             if (not self.member.readonly or
                 self.member.getExtendedAttribute("PutForwards") is not None or
                 self.member.getExtendedAttribute("Replaceable") is not None):
@@ -6124,13 +6142,15 @@ class CGMemberJITInfo(CGThing):
                 # Setters are always fallible, since they have to do a typed unwrap.
                 result += self.defineJitInfo(setterinfo, setter, "Setter",
                                              False, False, False, False, 0,
-                                             [BuiltinTypes[IDLBuiltinType.Types.void]])
+                                             [BuiltinTypes[IDLBuiltinType.Types.void]],
+                                             None)
             return result
         if self.member.isMethod():
             methodinfo = ("%s_methodinfo" % self.member.identifier.name)
             name = CppKeywords.checkMethodName(self.member.identifier.name)
             # Actually a JSJitMethodOp, but JSJitGetterOp is first in the union.
             method = ("(JSJitGetterOp)%s" % name)
+            methodPure = self.member.getExtendedAttribute("Pure")
 
             # Methods are infallible if they are infallible, have no arguments
             # to unwrap, and have a return type that's infallible to wrap up for
@@ -6140,18 +6160,26 @@ class CGMemberJITInfo(CGThing):
                 # Don't handle overloading.  If there's more than one signature,
                 # one of them must take arguments.
                 methodInfal = False
+                args = None
             else:
                 sig = sigs[0]
+                # XXXbz can we move the smarts about fallibility due to arg
+                # conversions into the JIT, using our new args stuff?
                 if (len(sig[1]) != 0 or
                     not infallibleForMember(self.member, sig[0], self.descriptor)):
                     # We have arguments or our return-value boxing can fail
                     methodInfal = False
                 else:
                     methodInfal = "infallible" in self.descriptor.getExtendedAttributes(self.member)
+                # For now, only bother to output args if we're pure
+                if methodPure:
+                    args = sig[1]
+                else:
+                    args = None
 
             result = self.defineJitInfo(methodinfo, method, "Method",
-                                        methodInfal, False, False, False, 0,
-                                        [s[0] for s in sigs])
+                                        methodInfal, False, methodPure, False, 0,
+                                        [s[0] for s in sigs], args)
             return result
         raise TypeError("Illegal member type to CGPropertyJITInfo")
 
@@ -6232,6 +6260,74 @@ class CGMemberJITInfo(CGThing):
             return "JSVAL_TYPE_DOUBLE"
         # Different types
         return "JSVAL_TYPE_UNKNOWN"
+
+    @staticmethod
+    def getJSArgType(t):
+        assert not t.isVoid()
+        if t.nullable():
+            # Sometimes it might return null, sometimes not
+            return "JSJitInfo::ArgType(JSJitInfo::Null | %s)" % CGMemberJITInfo.getJSArgType(t.inner)
+        if t.isArray():
+            # No idea yet
+            assert False
+        if t.isSequence():
+            return "JSJitInfo::Object"
+        if t.isGeckoInterface():
+            return "JSJitInfo::Object"
+        if t.isString():
+            return "JSJitInfo::String"
+        if t.isEnum():
+            return "JSJitInfo::String"
+        if t.isCallback():
+            return "JSJitInfo::Object"
+        if t.isAny():
+            # The whole point is to return various stuff
+            return "JSJitInfo::Any"
+        if t.isObject():
+            return "JSJitInfo::Object"
+        if t.isSpiderMonkeyInterface():
+            return "JSJitInfo::Object"
+        if t.isUnion():
+            u = t.unroll();
+            type = "JSJitInfo::Null" if u.hasNullableType else ""
+            return ("JSJitInfo::ArgType(%s)" %
+                    reduce(CGMemberJITInfo.getSingleArgType,
+                           u.flatMemberTypes, type))
+        if t.isDictionary():
+            return "JSJitInfo::Object"
+        if t.isDate():
+            return "JSJitInfo::Object"
+        if not t.isPrimitive():
+            raise TypeError("No idea what type " + str(t) + " is.")
+        tag = t.tag()
+        if tag == IDLType.Tags.bool:
+            return "JSJitInfo::Boolean"
+        if tag in [IDLType.Tags.int8, IDLType.Tags.uint8,
+                   IDLType.Tags.int16, IDLType.Tags.uint16,
+                   IDLType.Tags.int32]:
+            return "JSJitInfo::Integer"
+        if tag in [IDLType.Tags.int64, IDLType.Tags.uint64,
+                   IDLType.Tags.unrestricted_float, IDLType.Tags.float,
+                   IDLType.Tags.unrestricted_double, IDLType.Tags.double]:
+            # These all use JS_NumberValue, which can return int or double.
+            # But TI treats "double" as meaning "int or double", so we're
+            # good to return JSVAL_TYPE_DOUBLE here.
+            return "JSJitInfo::Double"
+        if tag != IDLType.Tags.uint32:
+            raise TypeError("No idea what type " + str(t) + " is.")
+        # uint32 is sometimes int and sometimes double.
+        return "JSJitInfo::Double"
+
+    @staticmethod
+    def getSingleArgType(existingType, t):
+        type = CGMemberJITInfo.getJSArgType(t)
+        if existingType == "":
+            # First element of the list; just return its type
+            return type
+
+        if type == existingType:
+            return existingType
+        return "%s | %s" % (existingType, type)
 
 def getEnumValueName(value):
     # Some enum values can be empty strings.  Others might have weird
