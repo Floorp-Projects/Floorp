@@ -6,7 +6,7 @@
  * "arguments", and "return" trace types.
  */
 
-let {defer} = devtools.require("sdk/core/promise");
+let { defer } = devtools.require("sdk/core/promise");
 
 var gDebuggee;
 var gClient;
@@ -28,106 +28,90 @@ function run_test()
   do_test_pending();
 }
 
-function check_number(value, name)
+function check_number(value)
 {
-  do_check_eq(typeof value, "number", name + ' should be a number');
-  do_check_true(!isNaN(value), name + ' should be a number');
+  do_check_eq(typeof value, "number");
+  do_check_true(!isNaN(value));
 }
 
-function check_location(actual, expected, name)
+function check_location(actual, expected)
 {
-  do_check_eq(typeof actual, "object",
-              name + ' missing expected source location');
+  do_check_eq(typeof actual, "object");
 
-  check_number(actual.line, name + ' line');
-  check_number(actual.column, name + ' column');
+  check_number(actual.line);
+  check_number(actual.column);
 
-  do_check_eq(actual.url, expected.url,
-              name + ' location should have url ' + expected.url);
-  do_check_eq(actual.line, expected.line,
-              name + ' location should have source line of ' + expected.line);
-  do_check_eq(actual.column, expected.column,
-              name + ' location should have source column of ' + expected.line);
+  do_check_eq(actual.url, expected.url);
+  do_check_eq(actual.line, expected.line);
+  do_check_eq(actual.column, expected.column);
 
 }
 
 function test_enter_exit_frame()
 {
-  let packets = [];
+  let traces = [];
+  let traceStopped = defer();
 
-  gTraceClient.addListener("enteredFrame", function(aEvent, aPacket) {
-    do_check_eq(aPacket.type, "enteredFrame",
-                'enteredFrame response should have type "enteredFrame"');
-    do_check_eq(typeof aPacket.name, "string",
-                'enteredFrame response should have function name');
-    do_check_eq(typeof aPacket.location, "object",
-                'enteredFrame response should have source location');
+  gClient.addListener("traces", function(aEvent, aPacket) {
+    for (let t of aPacket.traces) {
+      if (t.type == "enteredFrame") {
+        do_check_eq(typeof t.name, "string");
+        do_check_eq(typeof t.location, "object");
 
-    check_number(aPacket.sequence, 'enteredFrame sequence');
-    check_number(aPacket.time, 'enteredFrame time');
-    check_number(aPacket.location.line, 'enteredFrame source line');
-    check_number(aPacket.location.column, 'enteredFrame source column');
-    if (aPacket.callsite) {
-      check_number(aPacket.callsite.line, 'enteredFrame callsite line');
-      check_number(aPacket.callsite.column, 'enteredFrame callsite column');
+        check_number(t.sequence);
+        check_number(t.time);
+        check_number(t.location.line);
+        check_number(t.location.column);
+        if (t.callsite) {
+          check_number(t.callsite.line);
+          check_number(t.callsite.column);
+        }
+      } else {
+        check_number(t.sequence);
+        check_number(t.time);
+      }
+
+      traces[t.sequence] = t;
+      if (traces.length === 4) {
+        traceStopped.resolve();
+      }
     }
-
-    packets[aPacket.sequence] = aPacket;
-  });
-
-  gTraceClient.addListener("exitedFrame", function(aEvent, aPacket) {
-    do_check_eq(aPacket.type, "exitedFrame",
-                'exitedFrame response should have type "exitedFrame"');
-
-    check_number(aPacket.sequence, 'exitedFrame sequence');
-    check_number(aPacket.time, 'exitedFrame time');
-
-    packets[aPacket.sequence] = aPacket;
   });
 
   start_trace()
     .then(eval_code)
+    .then(() => traceStopped.promise)
     .then(stop_trace)
     .then(function() {
       let url = getFileUrl("tracerlocations.js");
 
-      check_location(packets[0].location, { url: url, line: 1, column: 0 },
-                    'global entry packet');
+      check_location(traces[0].location, { url: url, line: 1, column: 0 });
 
-      do_check_eq(packets[1].name, "foo",
-                  'Second packet in sequence should be entry to "foo" frame');
+      do_check_eq(traces[1].name, "foo");
 
       // foo's definition is at tracerlocations.js:3:0, but
       // Debugger.Script does not provide complete definition
       // locations (bug 901138). tracerlocations.js:4:2 is the first
       // statement in the function (used as an approximation).
-      check_location(packets[1].location, { url: url, line: 4, column: 2 },
-                     'foo source');
-      check_location(packets[1].callsite, { url: url, line: 8, column: 0 },
-                     'foo callsite');
+      check_location(traces[1].location, { url: url, line: 4, column: 2 });
+      check_location(traces[1].callsite, { url: url, line: 8, column: 0 });
 
-      do_check_eq(typeof packets[1].parameterNames, "object",
-                  'foo entry packet should have parameterNames');
-      do_check_eq(packets[1].parameterNames.length, 1,
-                  'foo should have only one formal parameter');
-      do_check_eq(packets[1].parameterNames[0], "x",
-                  'foo should have formal parameter "x"');
+      do_check_eq(typeof traces[1].parameterNames, "object");
+      do_check_eq(traces[1].parameterNames.length, 1);
+      do_check_eq(traces[1].parameterNames[0], "x");
 
-      do_check_eq(typeof packets[1].arguments, "object",
-                  'foo entry packet should have arguments');
-      do_check_true(Array.isArray(packets[1].arguments),
-                    'foo entry packet arguments should be an array');
-      do_check_eq(packets[1].arguments.length, 1,
-                  'foo should have only one actual parameter');
-      do_check_eq(packets[1].arguments[0], 42,
-                  'foo should have actual parameter 42');
+      do_check_eq(typeof traces[1].arguments, "object");
+      do_check_true(Array.isArray(traces[1].arguments));
+      do_check_eq(traces[1].arguments.length, 1);
+      do_check_eq(traces[1].arguments[0], 42);
 
-      do_check_eq(typeof packets[2].return, "string",
-                  'Fourth packet in sequence should be exit from "foo" frame');
-      do_check_eq(packets[2].return, "bar",
-                  'foo should return "bar"');
+      do_check_eq(typeof traces[2].return, "string");
+      do_check_eq(traces[2].return, "bar");
 
       finishClient(gClient);
+    }, error => {
+      DevToolsUtils.reportException("test_trace_actor-05.js", error);
+      do_check_true(false);
     });
 }
 

@@ -11,4 +11,6 @@
 #define NS_RILCONTENTHELPER_CID \
     { 0x472816e1, 0x1fd6, 0x4405, \
       { 0x99, 0x6c, 0x80, 0x6f, 0x9e, 0xa6, 0x81, 0x74 } }
+
+#define NS_RADIOINTERFACELAYER_CONTRACTID "@mozilla.org/ril;1"
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"

@@ -122,20 +122,23 @@ function Editor(config) {
 
   this.version = null;
   this.config = {
-    value:           "",
-    mode:            Editor.modes.text,
-    indentUnit:      tabSize,
-    tabSize:         tabSize,
-    contextMenu:     null,
-    matchBrackets:   true,
-    extraKeys:       {},
-    indentWithTabs:  useTabs,
-    styleActiveLine: true,
-    theme: "mozilla"
+    value:             "",
+    mode:              Editor.modes.text,
+    indentUnit:        tabSize,
+    tabSize:           tabSize,
+    contextMenu:       null,
+    matchBrackets:     true,
+    extraKeys:         {},
+    indentWithTabs:    useTabs,
+    styleActiveLine:   true,
+    autoCloseBrackets: true,
+    theme:             "mozilla"
   };
 
   // Additional shortcuts.
   this.config.extraKeys[Editor.keyFor("jumpToLine")] = (cm) => this.jumpToLine(cm);
+  this.config.extraKeys[Editor.keyFor("moveLineUp")] = (cm) => this.moveLineUp();
+  this.config.extraKeys[Editor.keyFor("moveLineDown")] = (cm) => this.moveLineDown();
   this.config.extraKeys[Editor.keyFor("toggleComment")] = "toggleComment";
 
   // Disable ctrl-[ and ctrl-] because toolbox uses those shortcuts.
@@ -634,6 +637,65 @@ Editor.prototype = {
     div.appendChild(inp);
 
     this.openDialog(div, (line) => this.setCursor({ line: line - 1, ch: 0 }));
+  },
+
+  /**
+   * Moves the content of the current line or the lines selected up a line.
+   */
+  moveLineUp: function () {
+    let cm = editors.get(this);
+    let start = cm.getCursor("start");
+    let end = cm.getCursor("end");
+
+    if (start.line === 0)
+      return;
+
+    // Get the text in the lines selected or the current line of the cursor
+    // and append the text of the previous line.
+    let value;
+    if (start.line !== end.line) {
+      value = cm.getRange({ line: start.line, ch: 0 },
+        { line: end.line, ch: cm.getLine(end.line).length }) + "\n";
+    } else {
+      value = cm.getLine(start.line) + "\n";
+    }
+    value += cm.getLine(start.line - 1);
+
+    // Replace the previous line and the currently selected lines with the new
+    // value and maintain the selection of the text.
+    cm.replaceRange(value, { line: start.line - 1, ch: 0 },
+      { line: end.line, ch: cm.getLine(end.line).length });
+    cm.setSelection({ line: start.line - 1, ch: start.ch },
+      { line: end.line - 1, ch: end.ch });
+  },
+
+  /**
+   * Moves the content of the current line or the lines selected down a line.
+   */
+  moveLineDown: function () {
+    let cm = editors.get(this);
+    let start = cm.getCursor("start");
+    let end = cm.getCursor("end");
+
+    if (end.line + 1 === cm.lineCount())
+      return;
+
+    // Get the text of next line and append the text in the lines selected
+    // or the current line of the cursor.
+    let value = cm.getLine(end.line + 1) + "\n";
+    if (start.line !== end.line) {
+      value += cm.getRange({ line: start.line, ch: 0 },
+        { line: end.line, ch: cm.getLine(end.line).length });
+    } else {
+      value += cm.getLine(start.line);
+    }
+
+    // Replace the currently selected lines and the next line with the new
+    // value and maintain the selection of the text.
+    cm.replaceRange(value, { line: start.line, ch: 0 },
+      { line: end.line + 1, ch: cm.getLine(end.line + 1).length});
+    cm.setSelection({ line: start.line + 1, ch: start.ch },
+      { line: end.line + 1, ch: end.ch });
   },
 
   /**

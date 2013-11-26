@@ -31,43 +31,50 @@ function run_test()
 
 function test_enter_exit_frame()
 {
-  let packetsSeen = 0;
-  let packetNames = [];
+  let tracesSeen = 0;
+  let traceNames = [];
+  let traceStopped = defer();
 
-  gTraceClient.addListener("enteredFrame", function(aEvent, aPacket) {
-    packetsSeen++;
-    do_check_eq(aPacket.type, "enteredFrame",
-                'enteredFrame response should have type "enteredFrame"');
-    do_check_eq(typeof aPacket.sequence, "number",
-                'enteredFrame response should have sequence number');
-    do_check_true(!isNaN(aPacket.sequence),
-                  'enteredFrame sequence should be a number');
-    do_check_eq(typeof aPacket.name, "string",
-                'enteredFrame response should have function name');
-    packetNames[aPacket.sequence] = aPacket.name;
-  });
+  gClient.addListener("traces", function onTraces(aEvent, { traces }) {
+    for (let t of traces) {
+      tracesSeen++;
 
-  gTraceClient.addListener("exitedFrame", function(aEvent, aPacket) {
-    packetsSeen++;
-    do_check_eq(aPacket.type, "exitedFrame",
-                'exitedFrame response should have type "exitedFrame"');
-    do_check_eq(typeof aPacket.sequence, "number",
-                'exitedFrame response should have sequence number');
-    do_check_true(!isNaN(aPacket.sequence),
-                  'exitedFrame sequence should be a number');
+      if (t.type == "enteredFrame") {
+        do_check_eq(t.type, "enteredFrame",
+                    'enteredFrame response should have type "enteredFrame"');
+        do_check_eq(typeof t.sequence, "number",
+                    'enteredFrame response should have sequence number');
+        do_check_true(!isNaN(t.sequence),
+                      'enteredFrame sequence should be a number');
+        do_check_eq(typeof t.name, "string",
+                    'enteredFrame response should have function name');
+        traceNames[t.sequence] = t.name;
+      } else {
+        do_check_eq(t.type, "exitedFrame",
+                    'exitedFrame response should have type "exitedFrame"');
+        do_check_eq(typeof t.sequence, "number",
+                    'exitedFrame response should have sequence number');
+        do_check_true(!isNaN(t.sequence),
+                      'exitedFrame sequence should be a number');
+      }
+
+      if (tracesSeen == 10) {
+        gClient.removeListener("traces", onTraces);
+        traceStopped.resolve();
+      }
+    }
   });
 
   start_trace()
     .then(eval_code)
+    .then(() => traceStopped.promise)
     .then(stop_trace)
     .then(function() {
-      do_check_eq(packetsSeen, 10,
-                  'Should have seen two packets for each of 5 stack frames');
-      do_check_eq(packetNames[2], "baz",
+      do_check_eq(traceNames[2], "baz",
                   'Should have entered "baz" frame in third packet');
-      do_check_eq(packetNames[3], "bar",
+      do_check_eq(traceNames[3], "bar",
                   'Should have entered "bar" frame in fourth packet');
-      do_check_eq(packetNames[4], "foo",
+      do_check_eq(traceNames[4], "foo",
                   'Should have entered "foo" frame in fifth packet');
       finishClient(gClient);
     });
