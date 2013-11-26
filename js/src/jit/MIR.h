@@ -3435,6 +3435,7 @@ class MUrsh : public MShiftInstruction
     bool fallible() const;
 
     void computeRange();
+    void collectRangeInfoPreTrunc();
 };
 
 class MBinaryArithInstruction
