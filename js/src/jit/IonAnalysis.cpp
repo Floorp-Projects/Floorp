@@ -1377,7 +1377,7 @@ FindDominatingBoundsCheck(BoundsCheckMap &checks, MBoundsCheck *check, size_t in
     // See the comment in ValueNumberer::findDominatingDef.
     HashNumber hash = BoundsCheckHashIgnoreOffset(check);
     BoundsCheckMap::Ptr p = checks.lookup(hash);
-    if (!p || index > p->value.validUntil) {
+    if (!p || index > p->value().validUntil) {
         // We didn't find a dominating bounds check.
         BoundsCheckInfo info;
         info.check = check;
@@ -1389,7 +1389,7 @@ FindDominatingBoundsCheck(BoundsCheckMap &checks, MBoundsCheck *check, size_t in
         return check;
     }
 
-    return p->value.check;
+    return p->value().check;
 }
 
 // Extract a linear sum from ins, if possible (otherwise giving the sum 'ins + 0').
