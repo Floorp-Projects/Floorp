@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GFX_LAYERMANAGEROGLPROGRAM_H
-#define GFX_LAYERMANAGEROGLPROGRAM_H
+#ifndef GFX_OGLSHADERPROGRAM_H
+#define GFX_OGLSHADERPROGRAM_H
 
 #include "GLDefs.h"                     // for GLint, GLenum, GLuint, etc
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
@@ -406,4 +406,4 @@ protected:
 } /* layers */
 } /* mozilla */
 
-#endif /* GFX_LAYERMANAGEROGLPROGRAM_H */
+#endif /* GFX_OGLSHADERPROGRAM_H */
