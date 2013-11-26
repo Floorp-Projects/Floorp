@@ -59,7 +59,7 @@ class LinearScanVirtualRegister : public VirtualRegister
     }
 };
 
-class LinearScanAllocator : public LiveRangeAllocator<LinearScanVirtualRegister>
+class LinearScanAllocator : private LiveRangeAllocator<LinearScanVirtualRegister>
 {
     friend class C1Spewer;
     friend class JSONSpewer;
