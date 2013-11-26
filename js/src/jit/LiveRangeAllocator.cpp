@@ -5,11 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/LiveRangeAllocator.h"
+
 #include "mozilla/DebugOnly.h"
+
+#include "jsprf.h"
+
 #include "jit/BacktrackingAllocator.h"
 #include "jit/BitSet.h"
 #include "jit/LinearScan.h"
-#include "jsprf.h"
 
 using namespace js;
 using namespace js::jit;
