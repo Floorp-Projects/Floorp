@@ -806,11 +806,29 @@ var SelectionHelperUI = {
 
   _showMonocles: function _showMonocles(aSelection) {
     if (!aSelection) {
-      this.caretMark.show();
+      if (this._checkMonocleVisibility(this.caretMark.xPos, this.caretMark.yPos)) {
+        this.caretMark.show();
+      }
     } else {
-      this.endMark.show();
-      this.startMark.show();
+      if (this._checkMonocleVisibility(this.endMark.xPos, this.endMark.yPos)) {
+        this.endMark.show();
+      }
+      if (this._checkMonocleVisibility(this.startMark.xPos, this.startMark.yPos)) {
+        this.startMark.show();
+      }
     }
+  },
+
+  _checkMonocleVisibility: function(aX, aY) {
+    let viewport = Browser.selectedBrowser.contentViewportBounds;
+    aX = this._msgTarget.ctobx(aX);
+    aY = this._msgTarget.ctoby(aY);
+    if (aX < viewport.x || aY < viewport.y ||
+        aX > (viewport.x + viewport.width) ||
+        aY > (viewport.y + viewport.height)) {
+      return false;
+    }
+    return true;
   },
 
   /*
@@ -914,16 +932,6 @@ var SelectionHelperUI = {
     this._shutdown();
   },
 
-  _checkMonocleVisibility: function(aX, aY) {
-    if (aX < 0 || aY < 0 ||
-        aX > ContentAreaObserver.viewableWidth ||
-        aY > ContentAreaObserver.viewableHeight) {
-      this.closeEditSession(true);
-      return false;
-    }
-    return true;
-  },
-
   /*
    * Message handlers
    */
@@ -938,33 +946,25 @@ var SelectionHelperUI = {
     if (json.updateStart) {
       let x = this._msgTarget.btocx(json.start.xPos, true);
       let y = this._msgTarget.btocx(json.start.yPos, true);
-      if (!this._checkMonocleVisibility(x, y)) {
-        return;
-      }
       this.startMark.position(x, y);
     }
+
     if (json.updateEnd) {
       let x = this._msgTarget.btocx(json.end.xPos, true);
       let y = this._msgTarget.btocx(json.end.yPos, true);
-      if (!this._checkMonocleVisibility(x, y)) {
-        return;
-      }
       this.endMark.position(x, y);
     }
 
     if (json.updateCaret) {
       let x = this._msgTarget.btocx(json.caret.xPos, true);
       let y = this._msgTarget.btocx(json.caret.yPos, true);
-      if (!this._checkMonocleVisibility(x, y)) {
-        return;
-      }
       // If selectionRangeFound is set SelectionHelper found a range we can
       // attach to. If not, there's no text in the control, and hence no caret
       // position information we can use.
       haveSelectionRect = json.selectionRangeFound;
       if (json.selectionRangeFound) {
         this.caretMark.position(x, y);
-        this.caretMark.show();
+        this._showMonocles(false);
       }
     }
 
@@ -980,7 +980,7 @@ var SelectionHelperUI = {
     this._targetElementRect =
       this._msgTarget.rectBrowserToClient(json.element, true);
 
-    // Ifd this is the end of a selection move show the appropriate
+    // If this is the end of a selection move show the appropriate
     // monocle images. src=(start, update, end, caret)
     if (json.src == "start" || json.src == "end") {
       this._showMonocles(true);
