@@ -3552,7 +3552,7 @@ IonBuilder::processReturn(JSOp op)
     MReturn *ret = MReturn::New(alloc(), def);
     current->end(ret);
 
-    if (!graph().addExit(current))
+    if (!graph().addReturn(current))
         return ControlStatus_Error;
 
     // Make sure no one tries to use this block now.
@@ -3563,10 +3563,6 @@ IonBuilder::processReturn(JSOp op)
 IonBuilder::ControlStatus
 IonBuilder::processThrow()
 {
-    // JSOP_THROW can't be compiled within inlined frames.
-    if (isInlineBuilder())
-        return ControlStatus_Abort;
-
     MDefinition *def = current->pop();
 
     if (graph().hasTryBlock()) {
@@ -3600,9 +3596,6 @@ IonBuilder::processThrow()
 
     MThrow *ins = MThrow::New(alloc(), def);
     current->end(ins);
-
-    if (!graph().addExit(current))
-        return ControlStatus_Error;
 
     // Make sure no one tries to use this block now.
     setCurrent(nullptr);
@@ -3788,20 +3781,20 @@ IonBuilder::jsop_notearg()
     return true;
 }
 
-class AutoAccumulateExits
+class AutoAccumulateReturns
 {
     MIRGraph &graph_;
-    MIRGraphExits *prev_;
+    MIRGraphReturns *prev_;
 
   public:
-    AutoAccumulateExits(MIRGraph &graph, MIRGraphExits &exits)
+    AutoAccumulateReturns(MIRGraph &graph, MIRGraphReturns &returns)
       : graph_(graph)
     {
-        prev_ = graph_.exitAccumulator();
-        graph_.setExitAccumulator(&exits);
+        prev_ = graph_.returnAccumulator();
+        graph_.setReturnAccumulator(&returns);
     }
-    ~AutoAccumulateExits() {
-        graph_.setExitAccumulator(prev_);
+    ~AutoAccumulateReturns() {
+        graph_.setReturnAccumulator(prev_);
     }
 };
 
@@ -3867,8 +3860,8 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     if (!info)
         return false;
 
-    MIRGraphExits saveExits(alloc());
-    AutoAccumulateExits aae(graph(), saveExits);
+    MIRGraphReturns returns(alloc());
+    AutoAccumulateReturns aar(graph(), returns);
 
     // Build the graph.
     JS_ASSERT_IF(analysisContext, !analysisContext->isExceptionPending());
@@ -3910,14 +3903,13 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     returnBlock->pop();
 
     // Accumulate return values.
-    MIRGraphExits &exits = *inlineBuilder.graph().exitAccumulator();
-    if (exits.length() == 0) {
+    if (returns.length() == 0) {
         // Inlining of functions that have no exit is not supported.
         calleeScript->uninlineable = true;
         abortReason_ = AbortReason_Inlining;
         return false;
     }
-    MDefinition *retvalDefn = patchInlinedReturns(callInfo, exits, returnBlock);
+    MDefinition *retvalDefn = patchInlinedReturns(callInfo, returns, returnBlock);
     if (!retvalDefn)
         return false;
     returnBlock->push(retvalDefn);
@@ -3962,22 +3954,22 @@ IonBuilder::patchInlinedReturn(CallInfo &callInfo, MBasicBlock *exit, MBasicBloc
 }
 
 MDefinition *
-IonBuilder::patchInlinedReturns(CallInfo &callInfo, MIRGraphExits &exits, MBasicBlock *bottom)
+IonBuilder::patchInlinedReturns(CallInfo &callInfo, MIRGraphReturns &returns, MBasicBlock *bottom)
 {
     // Replaces MReturns with MGotos, returning the MDefinition
     // representing the return value, or nullptr.
-    JS_ASSERT(exits.length() > 0);
+    JS_ASSERT(returns.length() > 0);
 
-    if (exits.length() == 1)
-        return patchInlinedReturn(callInfo, exits[0], bottom);
+    if (returns.length() == 1)
+        return patchInlinedReturn(callInfo, returns[0], bottom);
 
     // Accumulate multiple returns with a phi.
     MPhi *phi = MPhi::New(alloc(), bottom->stackDepth());
-    if (!phi->reserveLength(exits.length()))
+    if (!phi->reserveLength(returns.length()))
         return nullptr;
 
-    for (size_t i = 0; i < exits.length(); i++) {
-        MDefinition *rdef = patchInlinedReturn(callInfo, exits[i], bottom);
+    for (size_t i = 0; i < returns.length(); i++) {
+        MDefinition *rdef = patchInlinedReturn(callInfo, returns[i], bottom);
         if (!rdef)
             return nullptr;
         phi->addInput(rdef);
