@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 941844 - Because Android resource builds are flaky.
+Bug 921918 - need clobber for Windows.

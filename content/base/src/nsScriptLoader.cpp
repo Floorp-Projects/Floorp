@@ -48,6 +48,7 @@
 #include "nsSandboxFlags.h"
 #include "nsContentTypeParser.h"
 #include "nsINetworkSeer.h"
+#include "mozilla/dom/EncodingUtils.h"
 
 #include "mozilla/CORSMode.h"
 #include "mozilla/Attributes.h"
@@ -1197,15 +1198,15 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
   if (!unicodeDecoder &&
       aChannel &&
       NS_SUCCEEDED(aChannel->GetContentCharset(charset)) &&
-      !charset.IsEmpty()) {
-    charsetConv->GetUnicodeDecoder(charset.get(),
-                                   getter_AddRefs(unicodeDecoder));
+      EncodingUtils::FindEncodingForLabel(charset, charset)) {
+    charsetConv->GetUnicodeDecoderRaw(charset.get(),
+                                      getter_AddRefs(unicodeDecoder));
   }
 
-  if (!unicodeDecoder && !aHintCharset.IsEmpty()) {
-    CopyUTF16toUTF8(aHintCharset, charset);
-    charsetConv->GetUnicodeDecoder(charset.get(),
-                                   getter_AddRefs(unicodeDecoder));
+  if (!unicodeDecoder &&
+      EncodingUtils::FindEncodingForLabel(aHintCharset, charset)) {
+    charsetConv->GetUnicodeDecoderRaw(charset.get(),
+                                      getter_AddRefs(unicodeDecoder));
   }
 
   if (!unicodeDecoder && aDocument) {

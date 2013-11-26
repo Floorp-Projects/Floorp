@@ -873,8 +873,8 @@ js_InitJSONClass(JSContext *cx, HandleObject obj)
     if (!global->getOrCreateBooleanPrototype(cx))
         return nullptr;
 
-    RootedObject JSON(cx, NewObjectWithClassProto(cx, &JSONClass, nullptr,
-                                                  global, SingletonObject));
+    RootedObject proto(cx, obj->as<GlobalObject>().getOrCreateObjectPrototype(cx));
+    RootedObject JSON(cx, NewObjectWithClassProto(cx, &JSONClass, proto, global, SingletonObject));
     if (!JSON)
         return nullptr;
 
