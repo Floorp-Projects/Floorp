@@ -3002,17 +3002,21 @@
     "n_buckets": 10,
     "description": "XUL reflows in background windows (ms)"
   },
-  "HTML_FOREGROUND_REFLOW_MS": {
+  "HTML_FOREGROUND_REFLOW_MS_2": {
     "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
+    "high": "10000",
+    "n_buckets": 20,
     "description": "HTML reflows in foreground windows (ms)"
   },
-  "HTML_BACKGROUND_REFLOW_MS": {
+  "HTML_BACKGROUND_REFLOW_MS_2": {
     "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
+    "high": "10000",
+    "n_buckets": 20,
     "description": "HTML reflows in background windows (ms)"
+  },
+  "LONG_REFLOW_INTERRUPTIBLE": {
+    "kind": "boolean",
+    "description": "Long running reflow, interruptible or not"
   },
   "XUL_INITIAL_FRAME_CONSTRUCTION": {
     "kind": "exponential",
