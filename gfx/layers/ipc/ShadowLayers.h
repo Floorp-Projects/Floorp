@@ -394,6 +394,8 @@ public:
                           mozilla::ipc::Shmem* aShmem) MOZ_OVERRIDE;
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) MOZ_OVERRIDE;
 
+  virtual bool IPCOpen() const MOZ_OVERRIDE;
+
   /**
    * Construct a shadow of |aLayer| on the "other side", at the
    * LayerManagerComposite.
