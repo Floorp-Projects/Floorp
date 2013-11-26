@@ -113,6 +113,12 @@ PerThreadData::removeFromThreadList()
     removeFrom(runtime_->threadList);
 }
 
+static const JSWrapObjectCallbacks DefaultWrapObjectCallbacks = {
+    TransparentObjectWrapper,
+    nullptr,
+    nullptr
+};
+
 JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
   : JS::shadow::Runtime(
 #ifdef JSGC_GENERATIONAL
@@ -274,9 +280,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     trustedPrincipals_(nullptr),
     atomsCompartment_(nullptr),
     beingDestroyed_(false),
-    wrapObjectCallback(TransparentObjectWrapper),
-    sameCompartmentWrapObjectCallback(nullptr),
-    preWrapObjectCallback(nullptr),
+    wrapObjectCallbacks(&DefaultWrapObjectCallbacks),
     preserveWrapperCallback(nullptr),
 #ifdef DEBUG
     noGCOrAllocationCheck(0),
