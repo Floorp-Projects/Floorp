@@ -37,6 +37,8 @@
 #include "nsIContentSecurityPolicy.h"
 #include "xpcpublic.h"
 #include "nsSandboxFlags.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -789,24 +791,28 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
   AutoPushJSContext cx(context->GetNativeContext());
   JS::Rooted<JSObject*> handler(cx);
 
+  JS::Rooted<JSObject*> scope(cx, listener->GetEventScope());
+
+  nsIAtom* attrName = aListenerStruct->mTypeAtom;
+
   if (aListenerStruct->mHandlerIsString) {
     // OK, we didn't find an existing compiled event handler.  Flag us
     // as not a string so we don't keep trying to compile strings
     // which can't be compiled
     aListenerStruct->mHandlerIsString = false;
 
-    // mTarget may not be an nsIContent if it's a window and we're
+    // mTarget may not be an Element if it's a window and we're
     // getting an inline event listener forwarded from <html:body> or
     // <html:frameset> or <xul:window> or the like.
     // XXX I don't like that we have to reference content from
     // here. The alternative is to store the event handler string on
     // the nsIJSEventListener itself, and that still doesn't address
     // the arg names issue.
-    nsCOMPtr<nsIContent> content = do_QueryInterface(mTarget);
+    nsCOMPtr<Element> element = do_QueryInterface(mTarget);
+    MOZ_ASSERT(element || aBody, "Where will we get our body?");
     nsAutoString handlerBody;
     const nsAString* body = aBody;
-    if (content && !aBody) {
-      nsIAtom* attrName = aListenerStruct->mTypeAtom;
+    if (!aBody) {
       if (aListenerStruct->mTypeAtom == nsGkAtoms::onSVGLoad)
         attrName = nsGkAtoms::onload;
       else if (aListenerStruct->mTypeAtom == nsGkAtoms::onSVGUnload)
@@ -828,29 +834,24 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
       else if (aListenerStruct->mTypeAtom == nsGkAtoms::onendEvent)
         attrName = nsGkAtoms::onend;
 
-      content->GetAttr(kNameSpaceID_None, attrName, handlerBody);
+      element->GetAttr(kNameSpaceID_None, attrName, handlerBody);
       body = &handlerBody;
+      aElement = element;
     }
 
     uint32_t lineNo = 0;
     nsAutoCString url (NS_LITERAL_CSTRING("-moz-evil:lying-event-listener"));
-    if (doc) {
-      nsIURI *uri = doc->GetDocumentURI();
-      if (uri) {
-        uri->GetSpec(url);
-        lineNo = 1;
-      }
+    MOZ_ASSERT(body);
+    MOZ_ASSERT(aElement);
+    nsIURI *uri = aElement->OwnerDoc()->GetDocumentURI();
+    if (uri) {
+      uri->GetSpec(url);
+      lineNo = 1;
     }
 
     uint32_t argCount;
     const char **argNames;
-    // If no content, then just use kNameSpaceID_None for the
-    // namespace ID.  In practice, it doesn't matter since SVG is
-    // the only thing with weird arg names and SVG doesn't map event
-    // listeners to the window.
-    nsContentUtils::GetEventArgNames(content ?
-                                       content->GetNameSpaceID() :
-                                       kNameSpaceID_None,
+    nsContentUtils::GetEventArgNames(aElement->GetNameSpaceID(),
                                      aListenerStruct->mTypeAtom,
                                      &argCount, &argNames);
 
@@ -858,6 +859,25 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     JS::CompileOptions options(cx);
     options.setFileAndLine(url.get(), lineNo)
            .setVersion(SCRIPTVERSION_DEFAULT);
+
+    JS::Rooted<JS::Value> targetVal(cx);
+    // Go ahead and wrap into the current compartment of cx directly.
+    JS::Rooted<JSObject*> wrapScope(cx, JS::CurrentGlobalOrNull(cx));
+    if (WrapNewBindingObject(cx, wrapScope, aElement, &targetVal)) {
+      MOZ_ASSERT(targetVal.isObject());
+
+      nsDependentAtomString str(attrName);
+      // Most of our names are short enough that we don't even have to malloc
+      // the JS string stuff, so don't worry about playing games with
+      // refcounting XPCOM stringbuffers.
+      JS::Rooted<JSString*> jsStr(cx, JS_NewUCStringCopyN(cx,
+                                                          str.BeginReading(),
+                                                          str.Length()));
+      NS_ENSURE_TRUE(jsStr, NS_ERROR_OUT_OF_MEMORY);
+
+      options.setElement(&targetVal.toObject())
+             .setElementAttributeName(jsStr);
+    }
 
     JS::Rooted<JSObject*> handlerFun(cx);
     result = nsJSUtils::CompileFunction(cx, JS::NullPtr(), options,
@@ -872,7 +892,6 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mTarget);
     // Bind it
     JS::Rooted<JSObject*> boundHandler(cx);
-    JS::Rooted<JSObject*> scope(cx, listener->GetEventScope());
     context->BindCompiledEventHandler(mTarget, scope, handler, &boundHandler);
     aListenerStruct = nullptr;
     // Note - We pass null for aIncumbentGlobal below. We could also pass the
