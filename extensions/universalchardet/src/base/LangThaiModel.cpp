@@ -185,5 +185,5 @@ const SequenceModel TIS620ThaiModel =
   ThaiLangModel,
   (float)0.926386,
   false,
-  "TIS-620"
+  "windows-874"
 };

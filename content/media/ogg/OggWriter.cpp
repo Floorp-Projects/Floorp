@@ -169,6 +169,7 @@ OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
 nsresult
 OggWriter::SetMetadata(TrackMetadataBase* aMetadata)
 {
+  MOZ_ASSERT(aMetadata);
   if (aMetadata->GetKind() != TrackMetadataBase::METADATA_OPUS) {
     LOG("wrong meta data type!");
     return NS_ERROR_FAILURE;

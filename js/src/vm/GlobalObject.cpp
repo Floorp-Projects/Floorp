@@ -387,7 +387,11 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     if (cx->runtime()->isSelfHostingGlobal(self)) {
         intrinsicsHolder = self;
     } else {
-        intrinsicsHolder = NewObjectWithClassProto(cx, &JSObject::class_, nullptr, self, TenuredObject);
+        RootedObject proto(cx, self->getOrCreateObjectPrototype(cx));
+        if (!proto)
+            return nullptr;
+        intrinsicsHolder = NewObjectWithGivenProto(cx, &JSObject::class_, proto, self,
+                                                   TenuredObject);
         if (!intrinsicsHolder)
             return nullptr;
     }
@@ -483,6 +487,9 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
            GlobalObject::initSetIteratorProto(cx, global) &&
 #if EXPOSE_INTL_API
            js_InitIntlClass(cx, global) &&
+#endif
+#if ENABLE_PARALLEL_JS
+           js_InitParallelArrayClass(cx, global) &&
 #endif
            true;
 }

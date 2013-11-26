@@ -268,7 +268,8 @@ EventSource::Init(nsISupports* aOwner,
     do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = convManager->GetUnicodeDecoder("UTF-8", getter_AddRefs(mUnicodeDecoder));
+  rv = convManager->GetUnicodeDecoderRaw("UTF-8",
+                                         getter_AddRefs(mUnicodeDecoder));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // the constructor should throw a SYNTAX_ERROR only if it fails resolving the

@@ -3,10 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 private:
-  nsCOMPtr<nsIUnicodeDecoder>  mUnicodeDecoder;
   nsCString mCharset;
   inline int32_t read() {
     return readable->read();
   }
 public:
-  void sniff(nsHtml5ByteReadable* bytes, nsIUnicodeDecoder** decoder, nsACString& charset);
+  void sniff(nsHtml5ByteReadable* bytes, nsACString& charset);

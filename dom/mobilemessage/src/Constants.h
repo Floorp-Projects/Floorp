@@ -19,6 +19,8 @@ extern const char* kSmsFailedObserverTopic;
 extern const char* kSmsDeliverySuccessObserverTopic;
 extern const char* kSmsDeliveryErrorObserverTopic;
 extern const char* kSilentSmsReceivedObserverTopic;
+extern const char* kSmsReadSuccessObserverTopic;
+extern const char* kSmsReadErrorObserverTopic;
 
 #define DELIVERY_RECEIVED       NS_LITERAL_STRING("received")
 #define DELIVERY_SENDING        NS_LITERAL_STRING("sending")
@@ -32,6 +34,11 @@ extern const char* kSilentSmsReceivedObserverTopic;
 #define DELIVERY_STATUS_ERROR          NS_LITERAL_STRING("error")
 #define DELIVERY_STATUS_REJECTED       NS_LITERAL_STRING("rejected")
 #define DELIVERY_STATUS_MANUAL         NS_LITERAL_STRING("manual")
+
+#define READ_STATUS_NOT_APPLICABLE NS_LITERAL_STRING("not-applicable")
+#define READ_STATUS_SUCCESS        NS_LITERAL_STRING("success")
+#define READ_STATUS_PENDING        NS_LITERAL_STRING("pending")
+#define READ_STATUS_ERROR          NS_LITERAL_STRING("error")
 
 #define MESSAGE_CLASS_NORMAL  NS_LITERAL_STRING("normal")
 #define MESSAGE_CLASS_CLASS_0 NS_LITERAL_STRING("class-0")

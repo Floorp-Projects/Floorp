@@ -118,6 +118,10 @@ child:
 
   NotifyReceivedSilentMessage(MobileMessageData aMessageData);
 
+  NotifyReadSuccessMessage(MobileMessageData aMessageData);
+
+  NotifyReadErrorMessage(MobileMessageData aMessageData);
+
 parent:
   /**
    * Sent when the child no longer needs to use sms.

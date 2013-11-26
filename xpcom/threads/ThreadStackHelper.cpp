@@ -50,8 +50,11 @@ ThreadStackHelper::Shutdown()
 }
 
 ThreadStackHelper::ThreadStackHelper()
-  : mPseudoStack(mozilla_get_pseudo_stack())
-  , mStackBuffer()
+  :
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    mPseudoStack(mozilla_get_pseudo_stack()),
+#endif
+    mStackBuffer()
   , mMaxStackSize(mStackBuffer.capacity())
 {
 #if defined(XP_LINUX)
@@ -147,15 +150,20 @@ ThreadStackHelper::SigAction(int aSignal, siginfo_t* aInfo, void* aContext)
 bool
 ThreadStackHelper::PrepareStackBuffer(Stack& aStack) {
   aStack.clear();
+#ifdef MOZ_ENABLE_PROFILER_SPS
   if (!mPseudoStack) {
     return false;
   }
   mStackBuffer.clear();
   return mStackBuffer.reserve(mMaxStackSize);
+#else
+  return false;
+#endif
 }
 
 void
 ThreadStackHelper::FillStackBuffer() {
+#ifdef MOZ_ENABLE_PROFILER_SPS
   size_t reservedSize = mMaxStackSize;
 
   // Go from front to back
@@ -170,6 +178,7 @@ ThreadStackHelper::FillStackBuffer() {
   }
   // If we exited early due to buffer size, expand the buffer for next time
   mMaxStackSize += (end - entry);
+#endif
 }
 
 } // namespace mozilla

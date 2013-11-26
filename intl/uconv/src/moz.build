@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
     'nsCP1252ToUnicode.cpp',
     'nsISO88591ToUnicode.cpp',
     'nsMacRomanToUnicode.cpp',
+    'nsReplacementToUnicode.cpp',
     'nsScriptableUConv.cpp',
     'nsTextToSubURI.cpp',
     'nsUConvModule.cpp',

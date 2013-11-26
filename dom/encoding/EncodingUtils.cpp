@@ -38,6 +38,8 @@ EncodingUtils::IsAsciiCompatible(const nsACString& aPreferredName)
   return !(aPreferredName.LowerCaseEqualsLiteral("utf-16") ||
            aPreferredName.LowerCaseEqualsLiteral("utf-16be") ||
            aPreferredName.LowerCaseEqualsLiteral("utf-16le") ||
+           aPreferredName.LowerCaseEqualsLiteral("replacement") ||
+           aPreferredName.LowerCaseEqualsLiteral("hz-gb-2312") ||
            aPreferredName.LowerCaseEqualsLiteral("utf-7") ||
            aPreferredName.LowerCaseEqualsLiteral("x-imap4-modified-utf7"));
 }

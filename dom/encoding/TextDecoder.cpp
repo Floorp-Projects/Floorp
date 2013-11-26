@@ -21,8 +21,9 @@ TextDecoder::Init(const nsAString& aEncoding, const bool aFatal,
   EncodingUtils::TrimSpaceCharacters(label);
 
   // Let encoding be the result of getting an encoding from label.
-  // If encoding is failure, throw a TypeError.
-  if (!EncodingUtils::FindEncodingForLabel(label, mEncoding)) {
+  // If encoding is failure or replacement, throw a TypeError.
+  if (!EncodingUtils::FindEncodingForLabel(label, mEncoding) ||
+      mEncoding.EqualsLiteral("replacement")) {
     aRv.ThrowTypeError(MSG_ENCODING_NOT_SUPPORTED, &label);
     return;
   }

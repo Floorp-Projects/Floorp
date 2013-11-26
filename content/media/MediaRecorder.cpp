@@ -79,11 +79,13 @@ class MediaRecorder::Session: public nsIObserver
       MOZ_ASSERT(NS_IsMainThread());
 
       MediaRecorder *recorder = mSession->mRecorder;
+      if (mSession->IsEncoderError()) {
+        recorder->NotifyError(NS_ERROR_UNEXPECTED);
+      }
       nsresult rv = recorder->CreateAndDispatchBlobEvent(mSession);
       if (NS_FAILED(rv)) {
         recorder->NotifyError(rv);
       }
-
       return NS_OK;
     }
 
@@ -225,6 +227,13 @@ public:
     return mEncodedBufferCache->ExtractBlob(mimeType);
   }
 
+  bool IsEncoderError()
+  {
+    if (mEncoder && mEncoder->HasError()) {
+      return true;
+    }
+    return false;
+  }
 private:
 
   // Pull encoded meida data from MediaEncoder and put into EncodedBufferCache.

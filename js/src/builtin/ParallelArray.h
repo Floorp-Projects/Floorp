@@ -15,6 +15,7 @@ class ParallelArrayObject : public JSObject
 {
     static const Class protoClass;
     static const JSFunctionSpec methods[];
+    static const JSPropertySpec properties[];
     static const uint32_t NumFixedSlots = 4;
     static const uint32_t NumCtors = 4;
     static FixedHeapPtr<PropertyName> ctorNames[NumCtors];

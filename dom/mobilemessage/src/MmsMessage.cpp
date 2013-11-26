@@ -145,6 +145,40 @@ MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
       }
     }
 
+    // Prepare |info.readStatus|.
+    nsString statusReadString;
+    switch(infoData.readStatus()) {
+      case eReadStatus_NotApplicable:
+        statusReadString = READ_STATUS_NOT_APPLICABLE;
+        break;
+      case eReadStatus_Success:
+        statusReadString = READ_STATUS_SUCCESS;
+        break;
+      case eReadStatus_Pending:
+        statusReadString = READ_STATUS_PENDING;
+        break;
+      case eReadStatus_Error:
+        statusReadString = READ_STATUS_ERROR;
+        break;
+      case eReadStatus_EndGuard:
+      default:
+        MOZ_CRASH("We shouldn't get any other read status!");
+    }
+    info.readStatus = statusReadString;
+
+    // Prepare |info.readTimestamp|.
+    info.readTimestamp = JSVAL_NULL;
+    if (infoData.readTimestamp() != 0) {
+      AutoJSContext cx;
+      JS::Rooted<JSObject*>
+        dateObj(cx, JS_NewDateObjectMsec(cx, infoData.readTimestamp()));
+      if (!dateObj) {
+        NS_WARNING("MmsMessage: Unable to create Data for readTimestamp.");
+      } else {
+        info.readTimestamp = OBJECT_TO_JSVAL(dateObj);
+      }
+    }
+
     mDeliveryInfo.AppendElement(info);
   }
 }
@@ -376,6 +410,29 @@ MmsMessage::GetData(ContentParent* aParent,
       convertTimeToInt(cx, info.deliveryTimestamp, infoData.deliveryTimestamp());
     }
 
+    // Prepare |infoData.readStatus|.
+    ReadStatus readStatus;
+    if (info.readStatus.Equals(READ_STATUS_NOT_APPLICABLE)) {
+      readStatus = eReadStatus_NotApplicable;
+    } else if (info.readStatus.Equals(READ_STATUS_SUCCESS)) {
+      readStatus = eReadStatus_Success;
+    } else if (info.readStatus.Equals(READ_STATUS_PENDING)) {
+      readStatus = eReadStatus_Pending;
+    } else if (info.readStatus.Equals(READ_STATUS_ERROR)) {
+      readStatus = eReadStatus_Error;
+    } else {
+      return false;
+    }
+    infoData.readStatus() = readStatus;
+
+    // Prepare |infoData.readTimestamp|.
+    if (info.readTimestamp == JSVAL_NULL) {
+      infoData.readTimestamp() = 0;
+    } else {
+      AutoJSContext cx;
+      convertTimeToInt(cx, info.readTimestamp, infoData.readTimestamp());
+    }
+
     aData.deliveryInfo().AppendElement(infoData);
   }
 
@@ -518,6 +575,24 @@ MmsMessage::GetDeliveryInfo(JSContext* aCx, JS::Value* aDeliveryInfo)
     if (!JS_DefineProperty(aCx, infoJsObj,
                            "deliveryTimestamp", info.deliveryTimestamp,
                            nullptr, nullptr, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Get |info.readStatus|.
+    tmpJsStr = JS_NewUCStringCopyN(aCx,
+                                   info.readStatus.get(),
+                                   info.readStatus.Length());
+    NS_ENSURE_TRUE(tmpJsStr, NS_ERROR_OUT_OF_MEMORY);
+
+    tmpJsVal.setString(tmpJsStr);
+    if (!JS_DefineProperty(aCx, infoJsObj, "readStatus", tmpJsVal,
+                           NULL, NULL, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Get |info.readTimestamp|.
+    if (!JS_DefineProperty(aCx, infoJsObj, "readTimestamp", info.readTimestamp,
+                           NULL, NULL, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
 

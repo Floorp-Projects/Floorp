@@ -2916,13 +2916,24 @@ MOZ_ARG_WITH_STRING(nspr-libs,
 AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(NSPR_LIBS)
 
+JS_THREADSAFE=1
+MOZ_ARG_DISABLE_BOOL(threadsafe,
+[  --disable-threadsafe    Disable support for multiple threads.],
+    JS_THREADSAFE= ,
+    JS_THREADSAFE=1 )
+if test -n "$JS_THREADSAFE"; then
+    AC_DEFINE(JS_THREADSAFE)
+fi
+
 if test "$_USE_SYSTEM_NSPR" || (test "$NSPR_CFLAGS" -o "$NSPR_LIBS"); then
   _HAS_NSPR=1
 fi
 
 case "$target" in
   *linux*|*darwin*|*dragonfly*|*freebsd*|*netbsd*|*openbsd*)
-    if test -z "$_HAS_NSPR"; then JS_POSIX_NSPR_DEFAULT=1; fi
+    if test -z "$_HAS_NSPR" && test "$JS_THREADSAFE"; then
+      JS_POSIX_NSPR_DEFAULT=1
+    fi
     ;;
 esac
 
@@ -2935,6 +2946,8 @@ MOZ_ARG_ENABLE_BOOL(posix-nspr-emulation,
 if test -n "$JS_POSIX_NSPR"; then
     AC_DEFINE(JS_POSIX_NSPR)
 fi
+
+AC_SUBST(JS_POSIX_NSPR)
 
 dnl Pass either --with-system-nspr or (--with-nspr-cflags and
 dnl --with-nspr-libs), but not both.
@@ -4106,15 +4119,6 @@ if test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(XP_UNIX)
 elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2"; then
   AC_DEFINE(XP_UNIX)
-fi
-
-JS_THREADSAFE=1
-MOZ_ARG_DISABLE_BOOL(threadsafe,
-[  --disable-threadsafe    Disable support for multiple threads.],
-    JS_THREADSAFE= ,
-    JS_THREADSAFE=1 )
-if test -n "$JS_THREADSAFE"; then
-    AC_DEFINE(JS_THREADSAFE)
 fi
 
 if test "$MOZ_DEBUG"; then
