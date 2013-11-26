@@ -3965,7 +3965,7 @@ CodeGenerator::visitMathFunctionF(LMathFunctionF *ins)
       case MMathFunction::Exp:   funptr = JS_FUNC_TO_DATA_PTR(void *, expf);   break;
       case MMathFunction::Tan:   funptr = JS_FUNC_TO_DATA_PTR(void *, tanf);   break;
       case MMathFunction::ATan:  funptr = JS_FUNC_TO_DATA_PTR(void *, atanf);  break;
-      case MMathFunction::ASin:  funptr = JS_FUNC_TO_DATA_PTR(void *, sinf);   break;
+      case MMathFunction::ASin:  funptr = JS_FUNC_TO_DATA_PTR(void *, asinf);  break;
       case MMathFunction::ACos:  funptr = JS_FUNC_TO_DATA_PTR(void *, acosf);  break;
       case MMathFunction::Floor: funptr = JS_FUNC_TO_DATA_PTR(void *, floorf); break;
       default:
@@ -7364,6 +7364,22 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
     masm.adjustStack(IonDOMExitFrameLayout::Size());
 
     JS_ASSERT(masm.framePushed() == initialStack);
+    return true;
+}
+
+bool
+CodeGenerator::visitGetDOMMember(LGetDOMMember *ins)
+{
+    // It's simple to duplicate visitLoadFixedSlotV here than it is to try to
+    // use an LLoadFixedSlotV or some subclass of it for this case: that would
+    // require us to have MGetDOMMember inherit from MLoadFixedSlot, and then
+    // we'd have to duplicate a bunch of stuff we now get for free from
+    // MGetDOMProperty.
+    Register object = ToRegister(ins->object());
+    size_t slot = ins->mir()->domMemberSlotIndex();
+    ValueOperand result = GetValueOutput(ins);
+
+    masm.loadValue(Address(object, JSObject::getFixedSlotOffset(slot)), result);
     return true;
 }
 

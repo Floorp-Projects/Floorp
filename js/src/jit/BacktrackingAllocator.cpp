@@ -1548,33 +1548,11 @@ BacktrackingAllocator::trySplitAfterLastRegisterUse(LiveInterval *interval, bool
         return true;
     }
 
-    LiveInterval *preInterval = LiveInterval::New(alloc(), interval->vreg(), 0);
-    LiveInterval *postInterval = LiveInterval::New(alloc(), interval->vreg(), 0);
-
-    for (size_t i = 0; i < interval->numRanges(); i++) {
-        const LiveInterval::Range *range = interval->getRange(i);
-
-        if (range->from < lastRegisterTo) {
-            CodePosition to = (range->to <= lastRegisterTo) ? range->to : lastRegisterTo;
-            if (!preInterval->addRange(range->from, to))
-                return false;
-        }
-
-        if (lastRegisterFrom < range->to) {
-            CodePosition from = (lastRegisterFrom <= range->from) ? range->from : lastRegisterFrom;
-            if (!postInterval->addRange(from, range->to))
-                return false;
-        }
-    }
-
-    LiveIntervalVector newIntervals;
-    if (!newIntervals.append(preInterval) || !newIntervals.append(postInterval))
+    SplitPositionVector splitPositions;
+    if (!splitPositions.append(lastRegisterTo))
         return false;
-
-    distributeUses(interval, newIntervals);
-
     *success = true;
-    return split(interval, newIntervals) && requeueIntervals(newIntervals);
+    return splitAt(interval, splitPositions);
 }
 
 bool

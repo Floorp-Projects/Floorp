@@ -230,14 +230,20 @@ pref("media.apple.mp3.enabled", true);
 #endif
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
+pref("media.navigator.load_adapt", false);
 pref("media.navigator.video.default_width",640);
 pref("media.navigator.video.default_height",480);
 pref("media.navigator.video.default_fps",30);
 pref("media.navigator.video.default_minfps",10);
+#ifdef MOZ_WIDGET_GONK
+pref("media.peerconnection.enabled", false);
+pref("media.navigator.video.max_fs", 1200); // 640x480 == 1200mb
+pref("media.navigator.video.max_fr", 30);
+#else
+pref("media.peerconnection.enabled", true);
 pref("media.navigator.video.max_fs", 0); // unrestricted
 pref("media.navigator.video.max_fr", 0); // unrestricted
-pref("media.navigator.load_adapt", false);
-pref("media.peerconnection.enabled", true);
+#endif
 pref("media.navigator.permission.disabled", false);
 pref("media.peerconnection.default_iceservers", "[{\"url\": \"stun:stun.services.mozilla.com\"}]");
 pref("media.peerconnection.trickle_ice", true);
@@ -2039,7 +2045,7 @@ pref("plugins.click_to_play", false);
 // Player ("Shockwave for Director"). To hide all plugins from enumeration, use
 // the empty string "" to match no plugin names. To allow all plugins to be
 // enumerated, use the string "*" to match all plugin names.
-pref("plugins.enumerable_names", "Java,QuickTime,Shockwave");
+pref("plugins.enumerable_names", "Java,Nexus Personal,QuickTime,Shockwave");
 
 // The default value for nsIPluginTag.enabledState (STATE_ENABLED = 2)
 pref("plugin.default.state", 2);

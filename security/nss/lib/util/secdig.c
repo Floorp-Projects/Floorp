@@ -29,7 +29,8 @@ SGN_EncodeDigestInfo(PLArenaPool *poolp, SECItem *dest, SGNDigestInfo *diginfo)
 }
 
 SGNDigestInfo *
-SGN_CreateDigestInfo(SECOidTag algorithm, unsigned char *sig, unsigned len)
+SGN_CreateDigestInfo(SECOidTag algorithm, const unsigned char *sig,
+                     unsigned len)
 {
     SGNDigestInfo *di;
     SECStatus rv;

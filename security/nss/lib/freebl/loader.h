@@ -10,7 +10,7 @@
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x030F
+#define FREEBL_VERSION 0x0310
 
 struct FREEBLVectorStr {
 
@@ -596,6 +596,110 @@ struct FREEBLVectorStr {
      unsigned int bodyTotalLen);
 
   /* Version 3.015 came to here */
+
+ SECStatus (* p_RSA_SignRaw)(RSAPrivateKey *key,
+                             unsigned char *output,
+                             unsigned int *outputLen,
+                             unsigned int maxOutputLen,
+                             const unsigned char *input,
+                             unsigned int inputLen);
+ SECStatus (* p_RSA_CheckSignRaw)(RSAPublicKey *key,
+                                  const unsigned char *sig,
+                                  unsigned int sigLen,
+                                  const unsigned char *hash,
+                                  unsigned int hashLen);
+ SECStatus (* p_RSA_CheckSignRecoverRaw)(RSAPublicKey *key,
+                                         unsigned char *data,
+                                         unsigned int *dataLen,
+                                         unsigned int maxDataLen,
+                                         const unsigned char *sig,
+                                         unsigned int sigLen);
+ SECStatus (* p_RSA_EncryptRaw)(RSAPublicKey *key,
+                                unsigned char *output,
+                                unsigned int *outputLen,
+                                unsigned int maxOutputLen,
+                                const unsigned char *input,
+                                unsigned int inputLen);
+ SECStatus (* p_RSA_DecryptRaw)(RSAPrivateKey *key,
+                                unsigned char *output,
+                                unsigned int *outputLen,
+                                unsigned int maxOutputLen,
+                                const unsigned char *input,
+                                unsigned int inputLen);
+ SECStatus (* p_RSA_EncryptOAEP)(RSAPublicKey *key,
+                                 HASH_HashType hashAlg,
+                                 HASH_HashType maskHashAlg,
+                                 const unsigned char *label,
+                                 unsigned int labelLen,
+                                 const unsigned char *seed,
+                                 unsigned int seedLen,
+                                 unsigned char *output,
+                                 unsigned int *outputLen,
+                                 unsigned int maxOutputLen,
+                                 const unsigned char *input,
+                                 unsigned int inputLen);
+ SECStatus (* p_RSA_DecryptOAEP)(RSAPrivateKey *key,
+                                 HASH_HashType hashAlg,
+                                 HASH_HashType maskHashAlg,
+                                 const unsigned char *label,
+                                 unsigned int labelLen,
+                                 unsigned char *output,
+                                 unsigned int *outputLen,
+                                 unsigned int maxOutputLen,
+                                 const unsigned char *input,
+                                 unsigned int inputLen);
+ SECStatus (* p_RSA_EncryptBlock)(RSAPublicKey *key,
+                                  unsigned char *output,
+                                  unsigned int *outputLen,
+                                  unsigned int maxOutputLen,
+                                  const unsigned char *input,
+                                  unsigned int inputLen);
+ SECStatus (* p_RSA_DecryptBlock)(RSAPrivateKey *key,
+                                  unsigned char *output,
+                                  unsigned int *outputLen,
+                                  unsigned int maxOutputLen,
+                                  const unsigned char *input,
+                                  unsigned int inputLen);
+ SECStatus (* p_RSA_SignPSS)(RSAPrivateKey *key,
+                             HASH_HashType hashAlg,
+                             HASH_HashType maskHashAlg,
+                             const unsigned char *salt,
+                             unsigned int saltLen,
+                             unsigned char *output,
+                             unsigned int *outputLen,
+                             unsigned int maxOutputLen,
+                             const unsigned char *input,
+                             unsigned int inputLen);
+ SECStatus (* p_RSA_CheckSignPSS)(RSAPublicKey *key,
+                                  HASH_HashType hashAlg,
+                                  HASH_HashType maskHashAlg,
+                                  unsigned int saltLen,
+                                  const unsigned char *sig,
+                                  unsigned int sigLen,
+                                  const unsigned char *hash,
+                                  unsigned int hashLen);
+ SECStatus (* p_RSA_Sign)(RSAPrivateKey *key,
+                          unsigned char *output,
+                          unsigned int *outputLen,
+                          unsigned int maxOutputLen,
+                          const unsigned char *input,
+                          unsigned int inputLen);
+ SECStatus (* p_RSA_CheckSign)(RSAPublicKey *key,
+                               const unsigned char *sig,
+                               unsigned int sigLen,
+                               const unsigned char *data,
+                               unsigned int dataLen);
+ SECStatus (* p_RSA_CheckSignRecover)(RSAPublicKey *key,
+                                      unsigned char *output,
+                                      unsigned int *outputLen,
+                                      unsigned int maxOutputLen,
+                                      const unsigned char *sig,
+                                      unsigned int sigLen);
+
+  /* Version 3.016 came to here */
+
+  /* Add new function pointers at the end of this struct and bump
+   * FREEBL_VERSION at the beginning of this file. */
  };
 
 typedef struct FREEBLVectorStr FREEBLVector;

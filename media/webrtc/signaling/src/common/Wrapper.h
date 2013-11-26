@@ -49,7 +49,7 @@
 
 class LockNSPR {
 public:
-  LockNSPR() : lock_(NULL) {
+  LockNSPR() : lock_(nullptr) {
     lock_ = PR_NewLock();
     MOZ_ASSERT(lock_);
   }
