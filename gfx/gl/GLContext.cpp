@@ -22,6 +22,7 @@
 #include "nsThreadUtils.h"
 #include "prenv.h"
 #include "prlink.h"
+#include "ScopedGLHelpers.h"
 #include "SurfaceStream.h"
 #include "GfxTexturesReporter.h"
 #include "TextureGarbageBin.h"
