@@ -401,7 +401,7 @@ class VirtualRegister
     VirtualRegister(const VirtualRegister &) MOZ_DELETE;
 
   protected:
-    VirtualRegister(TempAllocator &alloc)
+    explicit VirtualRegister(TempAllocator &alloc)
       : intervals_(alloc)
     {}
 
@@ -554,7 +554,7 @@ typedef InlineList<LiveInterval>::iterator IntervalIterator;
 typedef InlineList<LiveInterval>::reverse_iterator IntervalReverseIterator;
 
 template <typename VREG>
-class LiveRangeAllocator : public RegisterAllocator
+class LiveRangeAllocator : protected RegisterAllocator
 {
   protected:
     // Computed inforamtion
