@@ -20,7 +20,7 @@
 #include "mozilla/layers/LayersMessages.h"  // for EditReply, etc
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/PLayerChild.h"  // for PLayerChild
-#include "mozilla/layers/PLayerTransactionChild.h"
+#include "mozilla/layers/LayerTransactionChild.h"
 #include "nsAString.h"
 #include "nsIWidget.h"                  // for nsIWidget
 #include "nsTArray.h"                   // for AutoInfallibleTArray
@@ -44,6 +44,7 @@ ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   , mTransactionIncomplete(false)
   , mCompositorMightResample(false)
   , mNeedsComposite(false)
+  , mForwarder(new ShadowLayerForwarder)
 {
   MOZ_COUNT_CTOR(ClientLayerManager);
 }
@@ -58,7 +59,7 @@ ClientLayerManager::~ClientLayerManager()
 int32_t
 ClientLayerManager::GetMaxTextureSize() const
 {
-  return ShadowLayerForwarder::GetMaxTextureSize();
+  return mForwarder->GetMaxTextureSize();
 }
 
 void
@@ -82,7 +83,7 @@ ClientLayerManager::SetRoot(Layer* aLayer)
     if (mRoot) {
       Hold(mRoot);
     }
-    ShadowLayerForwarder::SetRoot(Hold(aLayer));
+    mForwarder->SetRoot(Hold(aLayer));
     NS_ASSERTION(aLayer, "Root can't be null");
     NS_ASSERTION(aLayer->Manager() == this, "Wrong manager");
     NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
@@ -96,7 +97,7 @@ ClientLayerManager::Mutated(Layer* aLayer)
   LayerManager::Mutated(aLayer);
 
   NS_ASSERTION(InConstruction() || InDrawing(), "wrong phase");
-  ShadowLayerForwarder::Mutated(Hold(aLayer));
+  mForwarder->Mutated(Hold(aLayer));
 }
 
 void
@@ -129,7 +130,7 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   nsIntRect clientBounds;
   mWidget->GetClientBounds(clientBounds);
   clientBounds.x = clientBounds.y = 0;
-  ShadowLayerForwarder::BeginTransaction(mTargetBounds, mTargetRotation, clientBounds, orientation);
+  mForwarder->BeginTransaction(mTargetBounds, mTargetRotation, clientBounds, orientation);
 
   // If we're drawing on behalf of a context with async pan/zoom
   // enabled, then the entire buffer of thebes layers might be
@@ -264,9 +265,9 @@ ClientLayerManager::MakeSnapshotIfRequired()
       nsIntRect bounds;
       mWidget->GetBounds(bounds);
       SurfaceDescriptor inSnapshot, snapshot;
-      if (AllocSurfaceDescriptor(bounds.Size(),
-                                 GFX_CONTENT_COLOR_ALPHA,
-                                 &inSnapshot) &&
+      if (mForwarder->AllocSurfaceDescriptor(bounds.Size(),
+                                             GFX_CONTENT_COLOR_ALPHA,
+                                             &inSnapshot) &&
           // The compositor will usually reuse |snapshot| and return
           // it through |outSnapshot|, but if it doesn't, it's
           // responsible for freeing |snapshot|.
@@ -277,7 +278,7 @@ ClientLayerManager::MakeSnapshotIfRequired()
         mShadowTarget->DrawSurface(source, source->GetSize());
       }
       if (IsSurfaceDescriptorValid(snapshot)) {
-        ShadowLayerForwarder::DestroySharedSurface(&snapshot);
+        mForwarder->DestroySharedSurface(&snapshot);
       }
     }
   }
@@ -312,7 +313,7 @@ ClientLayerManager::ForwardTransaction()
   // forward this transaction's changeset to our LayerManagerComposite
   bool sent;
   AutoInfallibleTArray<EditReply, 10> replies;
-  if (HasShadowManager() && ShadowLayerForwarder::EndTransaction(&replies, &sent)) {
+  if (HasShadowManager() && mForwarder->EndTransaction(&replies, &sent)) {
     for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
       const EditReply& reply = replies[i];
 
@@ -393,21 +394,21 @@ bool
 ClientLayerManager::IsCompositingCheap()
 {
   // Whether compositing is cheap depends on the parent backend.
-  return mShadowManager &&
-         LayerManager::IsCompositingCheap(GetCompositorBackendType());
+  return mForwarder->mShadowManager &&
+         LayerManager::IsCompositingCheap(mForwarder->GetCompositorBackendType());
 }
 
 void
 ClientLayerManager::SetIsFirstPaint()
 {
-  ShadowLayerForwarder::SetIsFirstPaint();
+  mForwarder->SetIsFirstPaint();
 }
 
 void
 ClientLayerManager::ClearCachedResources(Layer* aSubtree)
 {
   MOZ_ASSERT(!HasShadowManager() || !aSubtree);
-  if (PLayerTransactionChild* manager = GetShadowManager()) {
+  if (LayerTransactionChild* manager = mForwarder->GetShadowManager()) {
     manager->SendClearCachedResources();
   }
   if (aSubtree) {
@@ -430,7 +431,7 @@ ClientLayerManager::ClearLayer(Layer* aLayer)
 void
 ClientLayerManager::GetBackendName(nsAString& aName)
 {
-  switch (GetCompositorBackendType()) {
+  switch (mForwarder->GetCompositorBackendType()) {
     case LAYERS_BASIC: aName.AssignLiteral("Basic"); return;
     case LAYERS_OPENGL: aName.AssignLiteral("OpenGL"); return;
     case LAYERS_D3D9: aName.AssignLiteral("Direct3D 9"); return;
