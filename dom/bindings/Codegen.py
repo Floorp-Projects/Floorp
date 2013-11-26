@@ -25,6 +25,7 @@ HASINSTANCE_HOOK_NAME = '_hasInstance'
 NEWRESOLVE_HOOK_NAME = '_newResolve'
 ENUMERATE_HOOK_NAME= '_enumerate'
 ENUM_ENTRY_VARIABLE_NAME = 'strings'
+INSTANCE_RESERVED_SLOTS = 3
 
 def replaceFileIfChanged(filename, newContents):
     """
@@ -192,12 +193,13 @@ class CGDOMJSClass(CGThing):
     def define(self):
         traceHook = TRACE_HOOK_NAME if self.descriptor.customTrace else 'nullptr'
         callHook = LEGACYCALLER_HOOK_NAME if self.descriptor.operations["LegacyCaller"] else 'nullptr'
+        slotCount = INSTANCE_RESERVED_SLOTS
         classFlags = "JSCLASS_IS_DOMJSCLASS | "
         if self.descriptor.interface.getExtendedAttribute("Global"):
             classFlags += "JSCLASS_DOM_GLOBAL | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS) | JSCLASS_IMPLEMENTS_BARRIERS"
             traceHook = "mozilla::dom::TraceGlobal"
         else:
-            classFlags += "JSCLASS_HAS_RESERVED_SLOTS(3)"
+            classFlags += "JSCLASS_HAS_RESERVED_SLOTS(%d)" % slotCount
         if self.descriptor.interface.getExtendedAttribute("NeedNewResolve"):
             newResolveHook = "(JSResolveOp)" + NEWRESOLVE_HOOK_NAME
             classFlags += " | JSCLASS_NEW_RESOLVE"
@@ -6001,13 +6003,15 @@ class CGMemberJITInfo(CGThing):
         return ""
 
     def defineJitInfo(self, infoName, opName, opType, infallible, constant,
-                      pure, returnTypes):
+                      pure, hasSlot, slotIndex, returnTypes):
         assert(not constant or pure) # constants are always pure
+        assert(not hasSlot or pure) # Things with slots had better be pure
         protoID = "prototypes::id::%s" % self.descriptor.name
         depth = "PrototypeTraits<%s>::Depth" % protoID
         failstr = toStringBool(infallible)
         conststr = toStringBool(constant)
         purestr = toStringBool(pure)
+        slotStr = toStringBool(hasSlot)
         returnType = reduce(CGMemberJITInfo.getSingleReturnType, returnTypes,
                             "")
         return ("\n"
@@ -6019,9 +6023,12 @@ class CGMemberJITInfo(CGThing):
                 "  %s,  /* isInfallible. False in setters. */\n"
                 "  %s,  /* isConstant. Only relevant for getters. */\n"
                 "  %s,  /* isPure.  Only relevant for getters. */\n"
+                "  %s,  /* hasSlot.  Only relevant for getters. */\n"
+                "  %d,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
                 "  %s   /* returnType.  Only relevant for getters/methods. */\n"
                 "};\n" % (infoName, opName, protoID, depth, opType, failstr,
-                          conststr, purestr, returnType))
+                          conststr, purestr, slotStr, slotIndex,
+                          returnType))
 
     def define(self):
         if self.member.isAttr():
@@ -6036,8 +6043,15 @@ class CGMemberJITInfo(CGThing):
             assert (getterinfal or (not getterconst and not getterpure))
 
             getterinfal = getterinfal and infallibleForMember(self.member, self.member.type, self.descriptor)
+            isInSlot = self.member.getExtendedAttribute("StoreInSlot")
+            if isInSlot:
+                slotIndex = INSTANCE_RESERVED_SLOTS + self.member.slotIndex;
+            else:
+                slotIndex = 0
+
             result = self.defineJitInfo(getterinfo, getter, "Getter",
                                         getterinfal, getterconst, getterpure,
+                                        isInSlot, slotIndex,
                                         [self.member.type])
             if (not self.member.readonly or
                 self.member.getExtendedAttribute("PutForwards") is not None or
@@ -6048,7 +6062,7 @@ class CGMemberJITInfo(CGThing):
                 setter = ("(JSJitGetterOp)set_%s" % self.member.identifier.name)
                 # Setters are always fallible, since they have to do a typed unwrap.
                 result += self.defineJitInfo(setterinfo, setter, "Setter",
-                                             False, False, False,
+                                             False, False, False, False, 0,
                                              [BuiltinTypes[IDLBuiltinType.Types.void]])
             return result
         if self.member.isMethod():
@@ -6075,7 +6089,7 @@ class CGMemberJITInfo(CGThing):
                     methodInfal = "infallible" in self.descriptor.getExtendedAttributes(self.member)
 
             result = self.defineJitInfo(methodinfo, method, "Method",
-                                        methodInfal, False, False,
+                                        methodInfal, False, False, False, 0,
                                         [s[0] for s in sigs])
             return result
         raise TypeError("Illegal member type to CGPropertyJITInfo")

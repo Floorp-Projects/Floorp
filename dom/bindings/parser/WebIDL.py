@@ -2603,6 +2603,7 @@ class IDLAttribute(IDLInterfaceMember):
         self.stringifier = stringifier
         self.enforceRange = False
         self.clamp = False
+        self.slotIndex = 0
 
         if static and identifier.name == "prototype":
             raise WebIDLError("The identifier of a static attribute must not be 'prototype'",
