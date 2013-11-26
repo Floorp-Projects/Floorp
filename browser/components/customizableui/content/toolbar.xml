@@ -410,8 +410,17 @@
           }
 
           // pass the current set of children for comparison with placements:
-          let children = [node.id for (node of this.childNodes)
-                          if (node.getAttribute("skipintoolbarset") != "true" && node.id)];
+          let children = [];
+          for (node of this.childNodes) {
+            if (node.getAttribute("skipintoolbarset") != "true" && node.id) {
+              // Force everything to be removable so that buildArea can chuck stuff
+              // out if the user has customized things / we've been here before:
+              if (!this._whiteListed.has(node.id)) {
+                node.setAttribute("removable", "true");
+              }
+              children.push(node);
+            }
+          }
           CustomizableUI.registerToolbarNode(this, children);
           this.evictNodes();
           // We can't easily use |this| or strong bindings for the observer fn here
