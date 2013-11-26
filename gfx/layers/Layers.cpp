@@ -1434,7 +1434,7 @@ LayerManager::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
   if (aDumpHtml) {
     fprintf_stderr(file, "</ul></li></ul>");
   }
-  fputc('\n', file);
+  fprintf_stderr(file, "\n");
 }
 
 void
