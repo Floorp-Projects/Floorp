@@ -550,6 +550,9 @@ public:
     return mBaselineOffsetFromCrossStart;
   }
 
+  void PositionItemsInCrossAxis(nscoord aLineStartPosition,
+                                const FlexboxAxisTracker& aAxisTracker);
+
   nsTArray<FlexItem> mItems; // Array of the flex items in this flex line.
 
 private:
@@ -2265,30 +2268,32 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
 }
 
 void
-nsFlexContainerFrame::PositionItemInCrossAxis(
-  nscoord aLineStartPosition,
-  SingleLineCrossAxisPositionTracker& aLineCrossAxisPosnTracker,
-  FlexLine& aLine,
-  FlexItem& aItem)
+FlexLine::PositionItemsInCrossAxis(nscoord aLineStartPosition,
+                                   const FlexboxAxisTracker& aAxisTracker)
 {
-  MOZ_ASSERT(aLineCrossAxisPosnTracker.GetPosition() == 0,
-             "per-line cross-axis position tracker wasn't correctly reset");
+  SingleLineCrossAxisPositionTracker lineCrossAxisPosnTracker(aAxisTracker);
 
-  aLineCrossAxisPosnTracker.ResolveAutoMarginsInCrossAxis(aLine, aItem);
+  for (uint32_t i = 0; i < mItems.Length(); ++i) {
+    FlexItem& item = mItems[i];
+    // First, stretch the item's cross size (if appropriate), and resolve any
+    // auto margins in this axis.
+    item.ResolveStretchedCrossSize(mLineCrossSize, aAxisTracker);
+    lineCrossAxisPosnTracker.ResolveAutoMarginsInCrossAxis(*this, item);
 
-  // Compute the cross-axis position of this item
-  nscoord itemCrossBorderBoxSize =
-    aItem.GetCrossSize() +
-    aItem.GetBorderPaddingSizeInAxis(aLineCrossAxisPosnTracker.GetAxis());
-  aLineCrossAxisPosnTracker.EnterAlignPackingSpace(aLine, aItem);
-  aLineCrossAxisPosnTracker.EnterMargin(aItem.GetMargin());
-  aLineCrossAxisPosnTracker.EnterChildFrame(itemCrossBorderBoxSize);
+    // Compute the cross-axis position of this item
+    nscoord itemCrossBorderBoxSize =
+      item.GetCrossSize() +
+      item.GetBorderPaddingSizeInAxis(aAxisTracker.GetCrossAxis());
+    lineCrossAxisPosnTracker.EnterAlignPackingSpace(*this, item);
+    lineCrossAxisPosnTracker.EnterMargin(item.GetMargin());
+    lineCrossAxisPosnTracker.EnterChildFrame(itemCrossBorderBoxSize);
 
-  aItem.SetCrossPosition(aLineStartPosition +
-                         aLineCrossAxisPosnTracker.GetPosition());
+    item.SetCrossPosition(aLineStartPosition +
+                          lineCrossAxisPosnTracker.GetPosition());
 
-  // Back out to cross-axis edge of the line.
-  aLineCrossAxisPosnTracker.ResetPosition();
+    // Back out to cross-axis edge of the line.
+    lineCrossAxisPosnTracker.ResetPosition();
+  }
 }
 
 NS_IMETHODIMP
@@ -2446,20 +2451,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   // Cross-Axis Alignment - Flexbox spec section 9.6
   // ===============================================
-  // Set up state for cross-axis-positioning of children _within_ a single
-  // flex line.
-  SingleLineCrossAxisPositionTracker lineCrossAxisPosnTracker(axisTracker);
-  for (uint32_t i = 0; i < line.mItems.Length(); ++i) {
-    // Resolve stretched cross-size, if appropriate
-    nscoord lineCrossSize = line.GetLineCrossSize();
-    line.mItems[i].ResolveStretchedCrossSize(lineCrossSize, axisTracker);
-
-    // ...and position.
-    PositionItemInCrossAxis(crossAxisPosnTracker.GetPosition(),
-                            lineCrossAxisPosnTracker,
-                            line,
-                            line.mItems[i]);
-  }
+  line.PositionItemsInCrossAxis(crossAxisPosnTracker.GetPosition(),
+                                axisTracker);
 
   // Before giving each child a final reflow, calculate the origin of the
   // flex container's content box (with respect to its border-box), so that
