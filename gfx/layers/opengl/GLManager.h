@@ -7,7 +7,7 @@
 #define MOZILLA_GFX_GLMANAGER_H
 
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
-#include "LayerManagerOGLProgram.h"
+#include "OGLShaderProgram.h"
 
 namespace mozilla {
 namespace gl {
