@@ -779,11 +779,4 @@ const CustomizableWidgets = [{
       };
       CustomizableUI.addListener(listener);
     }
-  }, {
-    id: "email-link-button",
-    removable: true,
-    onCommand: function(aEvent) {
-      let win = aEvent.view;
-      win.MailIntegration.sendLinkForWindow(win.content);
-    }
   }];
