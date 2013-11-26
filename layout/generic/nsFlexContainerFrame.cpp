@@ -550,6 +550,10 @@ public:
     return mBaselineOffsetFromCrossStart;
   }
 
+  void PositionItemsInMainAxis(uint8_t aJustifyContent,
+                               nscoord aContentBoxMainSize,
+                               const FlexboxAxisTracker& aAxisTracker);
+
   void PositionItemsInCrossAxis(nscoord aLineStartPosition,
                                 const FlexboxAxisTracker& aAxisTracker);
 
@@ -1121,10 +1125,9 @@ protected:
 // content-box.
 class MOZ_STACK_CLASS MainAxisPositionTracker : public PositionTracker {
 public:
-  MainAxisPositionTracker(nsFlexContainerFrame* aFlexContainerFrame,
-                          const FlexboxAxisTracker& aAxisTracker,
-                          const nsHTMLReflowState& aReflowState,
+  MainAxisPositionTracker(const FlexboxAxisTracker& aAxisTracker,
                           const nsTArray<FlexItem>& aItems,
+                          uint8_t aJustifyContent,
                           nscoord aContentBoxMainSize);
 
   ~MainAxisPositionTracker() {
@@ -1583,19 +1586,16 @@ nsFlexContainerFrame::ResolveFlexibleLengths(
 }
 
 MainAxisPositionTracker::
-  MainAxisPositionTracker(nsFlexContainerFrame* aFlexContainerFrame,
-                          const FlexboxAxisTracker& aAxisTracker,
-                          const nsHTMLReflowState& aReflowState,
+  MainAxisPositionTracker(const FlexboxAxisTracker& aAxisTracker,
                           const nsTArray<FlexItem>& aItems,
+                          uint8_t aJustifyContent,
                           nscoord aContentBoxMainSize)
   : PositionTracker(aAxisTracker.GetMainAxis()),
     mPackingSpaceRemaining(aContentBoxMainSize), // we chip away at this below
     mNumAutoMarginsInMainAxis(0),
-    mNumPackingSpacesRemaining(0)
+    mNumPackingSpacesRemaining(0),
+    mJustifyContent(aJustifyContent)
 {
-  MOZ_ASSERT(aReflowState.frame == aFlexContainerFrame,
-             "Expecting the reflow state for the flex container frame");
-
   // mPackingSpaceRemaining is initialized to the container's main size.  Now
   // we'll subtract out the main sizes of our flex items, so that it ends up
   // with the *actual* amount of packing space.
@@ -1613,7 +1613,6 @@ MainAxisPositionTracker::
     mNumAutoMarginsInMainAxis = 0;
   }
 
-  mJustifyContent = aFlexContainerFrame->StylePosition()->mJustifyContent;
   // If packing space is negative, 'space-between' behaves like 'flex-start',
   // and 'space-around' behaves like 'center'. In those cases, it's simplest to
   // just pretend we have a different 'justify-content' value and share code.
@@ -2140,27 +2139,34 @@ nsFlexContainerFrame::ComputeFlexContainerCrossSize(
 }
 
 void
-nsFlexContainerFrame::PositionItemInMainAxis(
-  MainAxisPositionTracker& aMainAxisPosnTracker,
-  FlexItem& aItem)
+FlexLine::PositionItemsInMainAxis(uint8_t aJustifyContent,
+                                  nscoord aContentBoxMainSize,
+                                  const FlexboxAxisTracker& aAxisTracker)
 {
-  nscoord itemMainBorderBoxSize =
-    aItem.GetMainSize() +
-    aItem.GetBorderPaddingSizeInAxis(aMainAxisPosnTracker.GetAxis());
+  MainAxisPositionTracker mainAxisPosnTracker(aAxisTracker, mItems,
+                                              aJustifyContent,
+                                              aContentBoxMainSize);
+  for (uint32_t i = 0; i < mItems.Length(); ++i) {
+    FlexItem& item = mItems[i];
 
-  // Resolve any main-axis 'auto' margins on aChild to an actual value.
-  aMainAxisPosnTracker.ResolveAutoMarginsInMainAxis(aItem);
+    nscoord itemMainBorderBoxSize =
+      item.GetMainSize() +
+      item.GetBorderPaddingSizeInAxis(mainAxisPosnTracker.GetAxis());
 
-  // Advance our position tracker to child's upper-left content-box corner,
-  // and use that as its position in the main axis.
-  aMainAxisPosnTracker.EnterMargin(aItem.GetMargin());
-  aMainAxisPosnTracker.EnterChildFrame(itemMainBorderBoxSize);
+    // Resolve any main-axis 'auto' margins on aChild to an actual value.
+    mainAxisPosnTracker.ResolveAutoMarginsInMainAxis(item);
 
-  aItem.SetMainPosition(aMainAxisPosnTracker.GetPosition());
+    // Advance our position tracker to child's upper-left content-box corner,
+    // and use that as its position in the main axis.
+    mainAxisPosnTracker.EnterMargin(item.GetMargin());
+    mainAxisPosnTracker.EnterChildFrame(itemMainBorderBoxSize);
 
-  aMainAxisPosnTracker.ExitChildFrame(itemMainBorderBoxSize);
-  aMainAxisPosnTracker.ExitMargin(aItem.GetMargin());
-  aMainAxisPosnTracker.TraversePackingSpace();
+    item.SetMainPosition(mainAxisPosnTracker.GetPosition());
+
+    mainAxisPosnTracker.ExitChildFrame(itemMainBorderBoxSize);
+    mainAxisPosnTracker.ExitMargin(item.GetMargin());
+    mainAxisPosnTracker.TraversePackingSpace();
+  }
 }
 
 // Helper method to take care of children who ASK_FOR_BASELINE, when
@@ -2442,12 +2448,9 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   // Main-Axis Alignment - Flexbox spec section 9.5
   // ==============================================
-  MainAxisPositionTracker mainAxisPosnTracker(this, axisTracker,
-                                              aReflowState, line.mItems,
-                                              contentBoxMainSize);
-  for (uint32_t i = 0; i < line.mItems.Length(); ++i) {
-    PositionItemInMainAxis(mainAxisPosnTracker, line.mItems[i]);
-  }
+  line.PositionItemsInMainAxis(aReflowState.mStylePosition->mJustifyContent,
+                               contentBoxMainSize,
+                               axisTracker);
 
   // Cross-Axis Alignment - Flexbox spec section 9.6
   // ===============================================
