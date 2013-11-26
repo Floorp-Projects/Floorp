@@ -3008,7 +3008,7 @@ ProxyObject::trace(JSTracer *trc, JSObject *obj)
              */
             Value key = ObjectValue(*referent);
             WrapperMap::Ptr p = proxy->compartment()->lookupWrapper(key);
-            JS_ASSERT(*p->value.unsafeGet() == ObjectValue(*proxy));
+            JS_ASSERT(*p->value().unsafeGet() == ObjectValue(*proxy));
         }
     }
 #endif
