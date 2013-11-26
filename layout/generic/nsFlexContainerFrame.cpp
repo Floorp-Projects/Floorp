@@ -312,16 +312,17 @@ public:
   uint8_t GetAlignSelf() const     { return mAlignSelf; }
 
   // Returns the flex weight that we should use in the "resolving flexible
-  // lengths" algorithm.  If we've got a positive amount of free space, we use
-  // the flex-grow weight; otherwise, we use the "scaled flex shrink weight"
-  // (scaled by our flex base size)
-  float GetFlexWeightToUse(bool aHavePositiveFreeSpace)
+  // lengths" algorithm.  If we're using flex grow, we just return that;
+  // otherwise, we use the "scaled flex shrink weight" (scaled by our flex
+  // base size, so that when both large and small items are shrinking,
+  // the large items shrink more).
+  float GetFlexWeightToUse(bool aIsUsingFlexGrow)
   {
     if (IsFrozen()) {
       return 0.0f;
     }
 
-    return aHavePositiveFreeSpace ?
+    return aIsUsingFlexGrow ?
       mFlexGrow :
       mFlexShrink * mFlexBaseSize;
   }
@@ -568,8 +569,7 @@ public:
 
   // Runs the "resolve the flexible lengths" algorithm, distributing
   // |aFlexContainerMainSize| among the |aItems| and freezing them.
-  void ResolveFlexibleLengths(const FlexboxAxisTracker& aAxisTracker,
-                              nscoord aFlexContainerMainSize);
+  void ResolveFlexibleLengths(nscoord aFlexContainerMainSize);
 
   void PositionItemsInMainAxis(uint8_t aJustifyContent,
                                nscoord aContentBoxMainSize,
@@ -1380,27 +1380,6 @@ FreezeOrRestoreEachFlexibleSize(
   }
 }
 
-// Implementation of flexbox spec's "Determine sign of flexibility" step.
-// NOTE: aTotalFreeSpace should already have the flex items' margin, border,
-// & padding values subtracted out.
-static bool
-ShouldUseFlexGrow(nscoord aTotalFreeSpace,
-                  nsTArray<FlexItem>& aItems)
-{
-  // NOTE: The FlexItem constructor sets its main-size to the
-  // *hypothetical main size*, which is the flex base size, clamped
-  // to the min/max range.  That's what we want here. Good.
-  for (uint32_t i = 0; i < aItems.Length(); i++) {
-    aTotalFreeSpace -= aItems[i].GetMainSize();
-    if (aTotalFreeSpace <= 0) {
-      return false;
-    }
-  }
-  MOZ_ASSERT(aTotalFreeSpace > 0,
-             "if we used up all the space, should've already returned");
-  return true;
-}
-
 // Implementation of flexbox spec's "resolve the flexible lengths" algorithm.
 // NOTE: aTotalFreeSpace should already have the flex items' margin, border,
 // & padding values subtracted out, so that all we need to do is distribute the
@@ -1408,9 +1387,7 @@ ShouldUseFlexGrow(nscoord aTotalFreeSpace,
 // margin-box sizes, but we can have fewer values in play & a simpler algorithm
 // if we subtract margin/border/padding up front.)
 void
-FlexLine::ResolveFlexibleLengths(
-  const FlexboxAxisTracker& aAxisTracker,
-  nscoord aFlexContainerMainSize)
+FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
 {
   PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG, ("ResolveFlexibleLengths\n"));
   if (mItems.IsEmpty()) {
@@ -1420,15 +1397,15 @@ FlexLine::ResolveFlexibleLengths(
   // Subtract space occupied by our items' margins/borders/padding, so we can
   // just be dealing with the space available for our flex items' content
   // boxes.
-  nscoord spaceAvailableForFlexItemsContentBoxes = aFlexContainerMainSize;
-  for (uint32_t i = 0; i < mItems.Length(); i++) {
-    spaceAvailableForFlexItemsContentBoxes -=
-      mItems[i].GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
-  }
+  nscoord spaceReservedForMarginBorderPadding =
+    mTotalOuterHypotheticalMainSize - mTotalInnerHypotheticalMainSize;
+
+  nscoord spaceAvailableForFlexItemsContentBoxes =
+    aFlexContainerMainSize - spaceReservedForMarginBorderPadding;
 
   // Determine whether we're going to be growing or shrinking items.
-  bool havePositiveFreeSpace =
-    ShouldUseFlexGrow(spaceAvailableForFlexItemsContentBoxes, mItems);
+  const bool isUsingFlexGrow =
+    (mTotalOuterHypotheticalMainSize < aFlexContainerMainSize);
 
   // NOTE: I claim that this chunk of the algorithm (the looping part) needs to
   // run the loop at MOST aItems.Length() times.  This claim should hold up
@@ -1456,8 +1433,8 @@ FlexLine::ResolveFlexibleLengths(
 
     // If sign of free space matches the type of flexing that we're doing, give
     // each flexible item a portion of availableFreeSpace.
-    if ((availableFreeSpace > 0 && havePositiveFreeSpace) ||
-        (availableFreeSpace < 0 && !havePositiveFreeSpace)) {
+    if ((availableFreeSpace > 0 && isUsingFlexGrow) ||
+        (availableFreeSpace < 0 && !isUsingFlexGrow)) {
 
       // STRATEGY: On each item, we compute & store its "share" of the total
       // flex weight that we've seen so far:
@@ -1478,7 +1455,7 @@ FlexLine::ResolveFlexibleLengths(
       uint32_t numItemsWithLargestFlexWeight = 0;
       for (uint32_t i = 0; i < mItems.Length(); i++) {
         FlexItem& item = mItems[i];
-        float curFlexWeight = item.GetFlexWeightToUse(havePositiveFreeSpace);
+        float curFlexWeight = item.GetFlexWeightToUse(isUsingFlexGrow);
         MOZ_ASSERT(curFlexWeight >= 0.0f, "weights are non-negative");
 
         runningFlexWeightSum += curFlexWeight;
@@ -1529,7 +1506,7 @@ FlexLine::ResolveFlexibleLengths(
                 sizeDelta = NSToCoordRound(availableFreeSpace *
                                            myShareOfRemainingSpace);
               }
-            } else if (item.GetFlexWeightToUse(havePositiveFreeSpace) ==
+            } else if (item.GetFlexWeightToUse(isUsingFlexGrow) ==
                        largestFlexWeight) {
               // Total flexibility is infinite, so we're just distributing
               // the available space equally among the items that are tied for
@@ -2392,7 +2369,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     ComputeFlexContainerMainSize(aReflowState, axisTracker, line,
                                  availableHeightForContent, aStatus);
 
-  line.ResolveFlexibleLengths(axisTracker, contentBoxMainSize);
+  line.ResolveFlexibleLengths(contentBoxMainSize);
 
   // Cross Size Determination - Flexbox spec section 9.4
   // ===================================================
