@@ -7368,6 +7368,22 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
 }
 
 bool
+CodeGenerator::visitGetDOMMember(LGetDOMMember *ins)
+{
+    // It's simple to duplicate visitLoadFixedSlotV here than it is to try to
+    // use an LLoadFixedSlotV or some subclass of it for this case: that would
+    // require us to have MGetDOMMember inherit from MLoadFixedSlot, and then
+    // we'd have to duplicate a bunch of stuff we now get for free from
+    // MGetDOMProperty.
+    Register object = ToRegister(ins->object());
+    size_t slot = ins->mir()->domMemberSlotIndex();
+    ValueOperand result = GetValueOutput(ins);
+
+    masm.loadValue(Address(object, JSObject::getFixedSlotOffset(slot)), result);
+    return true;
+}
+
+bool
 CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
 {
     const Register JSContextReg = ToRegister(ins->getJSContextReg());

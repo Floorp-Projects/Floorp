@@ -7783,6 +7783,7 @@ class MGetDOMProperty
 {
     const JSJitInfo *info_;
 
+  protected:
     MGetDOMProperty(const JSJitInfo *jitinfo, MDefinition *obj, MDefinition *guard)
       : info_(jitinfo)
     {
@@ -7801,7 +7802,6 @@ class MGetDOMProperty
         setResultType(MIRType_Value);
     }
 
-  protected:
     const JSJitInfo *info() const {
         return info_;
     }
@@ -7826,6 +7826,10 @@ class MGetDOMProperty
     }
     bool isDomPure() const {
         return info_->isPure;
+    }
+    size_t domMemberSlotIndex() const {
+        MOZ_ASSERT(info_->isInSlot);
+        return info_->slotIndex;
     }
     MDefinition *object() {
         return getOperand(0);
@@ -7863,6 +7867,28 @@ class MGetDOMProperty
 
     bool possiblyCalls() const {
         return true;
+    }
+};
+
+class MGetDOMMember : public MGetDOMProperty
+{
+    // We inherit everything from MGetDOMProperty except our possiblyCalls value
+    MGetDOMMember(const JSJitInfo *jitinfo, MDefinition *obj, MDefinition *guard)
+        : MGetDOMProperty(jitinfo, obj, guard)
+    {
+    }
+
+  public:
+    INSTRUCTION_HEADER(GetDOMMember)
+
+    static MGetDOMMember *New(TempAllocator &alloc, const JSJitInfo *info, MDefinition *obj,
+                              MDefinition *guard)
+    {
+        return new(alloc) MGetDOMMember(info, obj, guard);
+    }
+
+    bool possiblyCalls() const {
+        return false;
     }
 };
 

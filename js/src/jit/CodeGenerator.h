@@ -266,6 +266,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallInstanceOf(LCallInstanceOf *ins);
     bool visitFunctionBoundary(LFunctionBoundary *lir);
     bool visitGetDOMProperty(LGetDOMProperty *lir);
+    bool visitGetDOMMember(LGetDOMMember *lir);
     bool visitSetDOMProperty(LSetDOMProperty *lir);
     bool visitCallDOMNative(LCallDOMNative *lir);
     bool visitCallGetIntrinsicValue(LCallGetIntrinsicValue *lir);
