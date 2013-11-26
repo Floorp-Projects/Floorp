@@ -513,6 +513,10 @@ class MDefinition : public MNode
     // (only counting MDefinitions, ignoring MResumePoints)
     bool hasOneDefUse() const;
 
+    // Test whether this MDefinition has at least one use.
+    // (only counting MDefinitions, ignoring MResumePoints)
+    bool hasDefUses() const;
+
     bool hasUses() const {
         return !uses_.empty();
     }
@@ -530,11 +534,6 @@ class MDefinition : public MNode
     // returning false if the replacement should not be performed. For use when
     // GVN eliminates instructions which are not equivalent to one another.
     virtual bool updateForReplacement(MDefinition *ins) {
-        return true;
-    }
-
-    // Same thing, but for folding
-    virtual bool updateForFolding(MDefinition *ins) {
         return true;
     }
 
