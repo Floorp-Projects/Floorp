@@ -342,10 +342,14 @@ class MediaPipelineTransmit : public MediaPipeline {
       : conduit_(conduit),
         active_(false),
         direct_connect_(false),
-        last_img_(-1),
         samples_10ms_buffer_(nullptr),
         buffer_current_(0),
-        samplenum_10ms_(0) {}
+        samplenum_10ms_(0)
+#ifdef MOZILLA_INTERNAL_API
+        , last_img_(-1)
+#endif // MOZILLA_INTERNAL_API
+    {
+    }
 
     ~PipelineListener()
     {
@@ -396,8 +400,6 @@ class MediaPipelineTransmit : public MediaPipeline {
     volatile bool active_;
     bool direct_connect_;
 
-    int32_t last_img_; // serial number of last Image
-
     // These vars handle breaking audio samples into exact 10ms chunks:
     // The buffer of 10ms audio samples that we will send once full
     // (can be carried over from one call to another).
@@ -406,6 +408,10 @@ class MediaPipelineTransmit : public MediaPipeline {
     int64_t buffer_current_;
     // The number of samples in a 10ms audio chunk.
     int64_t samplenum_10ms_;
+
+#ifdef MOZILLA_INTERNAL_API
+    int32_t last_img_; // serial number of last Image
+#endif // MOZILLA_INTERNAL_API
   };
 
  private:
