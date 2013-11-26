@@ -66,7 +66,7 @@ PaymentUI.prototype = {
     // Once the user confirm the payment request and makes his choice, we get
     // back to the DOM part to get the appropriate payment flow information
     // based on the selected payment provider.
-    content.addEventListener("mozContentEvent", function handleSelection(evt) {
+    this._handleSelection = (function _handleSelection(evt) {
       let msg = evt.detail;
       if (msg.id != id) {
         return;
@@ -78,8 +78,10 @@ PaymentUI.prototype = {
         _error(msg.errorMsg);
       }
 
-      content.removeEventListener("mozContentEvent", handleSelection);
-    });
+      content.removeEventListener("mozContentEvent", this._handleSelection);
+      this._handleSelection = null;
+    }).bind(this);
+    content.addEventListener("mozContentEvent", this._handleSelection);
 
     browser.shell.sendChromeEvent(detail);
   },
@@ -114,21 +116,31 @@ PaymentUI.prototype = {
     // At some point the UI would send the created iframe back so the
     // callbacks for firing DOMRequest events can be loaded on its
     // content.
-    content.addEventListener("mozContentEvent", (function loadPaymentShim(evt) {
-      if (evt.detail.id != id) {
-        content.removeEventListener("mozContentEvent", loadPaymentShim);
+    this._loadPaymentShim = (function _loadPaymentShim(evt) {
+      let msg = evt.detail;
+      if (msg.id != id) {
+        return;
+      }
+
+      if (msg.errorMsg) {
+        content.removeEventListener("mozContentEvent", this._loadPaymentShim);
+        this._loadPaymentShim = null;
+        _error("ERROR_LOADING_PAYMENT_SHIM: " + msg.errorMsg);
+        return;
+      }
+
+      if (!msg.frame) {
+        content.removeEventListener("mozContentEvent", this._loadPaymentShim);
+        this._loadPaymentShim = null;
+        _error("ERROR_LOADING_PAYMENT_SHIM");
         return;
       }
 
       // Try to load the payment shim file containing the payment callbacks
       // in the content script.
-      if (!evt.detail.frame && !evt.detail.errorMsg) {
-        _error("ERROR_LOADING_PAYMENT_SHIM");
-        return;
-      }
-      let frame = evt.detail.frame;
+      let frame = msg.frame;
       let frameLoader = frame.QueryInterface(Ci.nsIFrameLoaderOwner)
-                        .frameLoader;
+                             .frameLoader;
       let mm = frameLoader.messageManager;
       try {
         mm.loadFrameScript(kPaymentShimFile, true);
@@ -140,25 +152,33 @@ PaymentUI.prototype = {
         }
         _error("ERROR_LOADING_PAYMENT_SHIM");
       } finally {
-        content.removeEventListener("mozContentEvent", loadPaymentShim);
+        content.removeEventListener("mozContentEvent", this._loadPaymentShim);
+        this._loadPaymentShim = null;
       }
-    }).bind(this));
+    }).bind(this);
+    content.addEventListener("mozContentEvent", this._loadPaymentShim);
 
     // We also listen for UI notifications about a closed payment flow. The UI
     // should provide the reason of the closure within the 'errorMsg' parameter
-    this._notifyPayFlowClosed = function _notifyPayFlowClosed (evt) {
-      if (evt.detail.id != id) {
+    this._notifyPayFlowClosed = (function _notifyPayFlowClosed(evt) {
+      let msg = evt.detail;
+      if (msg.id != id) {
         return;
       }
-      if (evt.detail.errorMsg) {
-        _error(evt.detail.errorMsg);
-        content.removeEventListener("mozContentEvent",
-                                    this._notifyPayFlowClosed);
+
+      if (msg.type != 'cancel') {
         return;
       }
-    };
+
+      if (msg.errorMsg) {
+        _error(msg.errorMsg);
+      }
+      content.removeEventListener("mozContentEvent",
+                                  this._notifyPayFlowClosed);
+      this._notifyPayFlowClosed = null;
+    }).bind(this);
     content.addEventListener("mozContentEvent",
-                             this._notifyPayFlowClosed.bind(this));
+                             this._notifyPayFlowClosed);
 
     browser.shell.sendChromeEvent(detail);
   },
@@ -169,7 +189,21 @@ PaymentUI.prototype = {
     if (!content) {
       return;
     }
-    content.removeEventListener("mozContentEvent", this._notifyPayFlowClosed);
+
+    if (this._handleSelection) {
+      content.removeEventListener("mozContentEvent", this._handleSelection);
+      this._handleSelection = null;
+    }
+
+    if (this._notifyPayFlowClosed) {
+      content.removeEventListener("mozContentEvent", this._notifyPayFlowClosed);
+      this._notifyPayFlowClosed = null;
+    }
+
+    if (this._loadPaymentShim) {
+      content.removeEventListener("mozContentEvent", this._loadPaymentShim);
+      this._loadPaymentShim = null;
+    }
   },
 
   getRandomId: function getRandomId() {
