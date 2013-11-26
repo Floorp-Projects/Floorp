@@ -540,7 +540,8 @@ nsDOMFileReader::ConvertStream(const char *aFileData,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
-  rv = charsetConverter->GetUnicodeDecoder(aCharset, getter_AddRefs(unicodeDecoder));
+  rv = charsetConverter->GetUnicodeDecoderRaw(aCharset,
+                                              getter_AddRefs(unicodeDecoder));
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t destLength;

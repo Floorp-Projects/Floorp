@@ -95,6 +95,21 @@ this.MMS_PDU_STATUS_INDETERMINATE = 133;
 this.MMS_PDU_STATUS_FORWARDED     = 134;
 this.MMS_PDU_STATUS_UNREACHABLE   = 135;
 
+// X-Mms-Cancel-Status values
+// @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.7
+this.MMS_PDU_CANCEL_STATUS_RECEIVED  = 128;
+this.MMS_PDU_CANCEL_STATUS_CORRUPTED = 129;
+
+// X-Mms-Sender-Visibility
+// @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.52
+this.MMS_PDU_SENDER_VISIBILITY_HIDE = 128;
+this.MMS_PDU_SENDER_VISIBILITY_SHOW = 129;
+
+// X-Mms-Read-Status
+// @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.38
+this.MMS_PDU_READ_STATUS_READ           = 128;
+this.MMS_PDU_READ_STATUS_DELETED_UNREAD = 129;
+
 // Maximum Values of MMS Parameters
 // @see OMA-TS-MMS_CONF-V1_3-20110511-C 10.2.5
 this.MMS_MAX_LENGTH_SUBJECT                = 40;
@@ -102,6 +117,11 @@ this.MMS_MAX_LENGTH_RECIPIENT              = 312;
 this.MMS_MAX_TOTAL_RECIPIENTS              = 20;
 this.MMS_MAX_LENGTH_NAME_CONTENT_TYPE      = 40;
 this.MMS_MAX_LENGTH_MAILBOX_PORTION        = 256;
+
+this.DOM_READ_STATUS_NOT_APPLICABLE = "not-applicable";
+this.DOM_READ_STATUS_SUCCESS        = "success";
+this.DOM_READ_STATUS_PENDING        = "pending";
+this.DOM_READ_STATUS_ERROR          = "error";
 
 this.ALL_CONST_SYMBOLS = undefined; // We want ALL_CONST_SYMBOLS to be exported.
 this.ALL_CONST_SYMBOLS = Object.keys(this);

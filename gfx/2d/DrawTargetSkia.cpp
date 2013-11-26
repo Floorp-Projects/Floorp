@@ -606,19 +606,32 @@ DrawTargetSkia::Mask(const Pattern &aSource,
   raster->addLayer(maskPaint);
   SkSafeUnref(paint.mPaint.setRasterizer(raster));
 
-  // Skia only uses the mask rasterizer when we are drawing a path/rect.
-  // Take our destination bounds and convert them into user space to use
-  // as the path to draw.
-  SkPath path;
-  path.addRect(SkRect::MakeWH(SkScalar(mSize.width), SkScalar(mSize.height)));
- 
-  Matrix temp = mTransform;
-  temp.Invert();
-  SkMatrix mat;
-  GfxMatrixToSkiaMatrix(temp, mat);
-  path.transform(mat);
+  mCanvas->drawRect(SkRectCoveringWholeSurface(), paint.mPaint);
+}
 
-  mCanvas->drawPath(path, paint.mPaint);
+void
+DrawTargetSkia::MaskSurface(const Pattern &aSource,
+                            SourceSurface *aMask,
+                            Point aOffset,
+                            const DrawOptions &aOptions)
+{
+  MarkChanged();
+  AutoPaintSetup paint(mCanvas.get(), aOptions, aSource);
+
+  SkPaint maskPaint;
+  SetPaintPattern(maskPaint, SurfacePattern(aMask, EXTEND_CLAMP));
+
+  SkMatrix transform = maskPaint.getShader()->getLocalMatrix();
+  transform.postTranslate(SkFloatToScalar(aOffset.x), SkFloatToScalar(aOffset.y));
+  maskPaint.getShader()->setLocalMatrix(transform);
+
+  SkLayerRasterizer *raster = new SkLayerRasterizer();
+  raster->addLayer(maskPaint);
+  SkSafeUnref(paint.mPaint.setRasterizer(raster));
+
+  IntSize size = aMask->GetSize();
+  Rect rect = Rect(aOffset.x, aOffset.y, size.width, size.height);
+  mCanvas->drawRect(RectToSkRect(rect), paint.mPaint);
 }
 
 TemporaryRef<SourceSurface>
@@ -867,6 +880,14 @@ DrawTargetSkia::MarkChanged()
     mSnapshot->DrawTargetWillChange();
     mSnapshot = nullptr;
   }
+}
+
+// Return a rect (in user space) that covers the entire surface by applying
+// the inverse of GetTransform() to (0, 0, mSize.width, mSize.height).
+SkRect
+DrawTargetSkia::SkRectCoveringWholeSurface() const
+{
+  return RectToSkRect(mTransform.TransformBounds(Rect(0, 0, mSize.width, mSize.height)));
 }
 
 void

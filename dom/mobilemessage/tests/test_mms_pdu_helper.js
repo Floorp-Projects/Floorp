@@ -178,6 +178,38 @@ add_test(function test_MmsHeader_encode() {
 });
 
 //
+// Test target: CancelStatusValue
+//
+
+//// CancelStatusValue.decode ////
+
+add_test(function test_CancelStatusValue_decode() {
+  for (let i = 0; i < 256; i++) {
+    if ((i >= 128) && (i <= 129)) {
+      wsp_decode_test(MMS.CancelStatusValue, [i], i);
+    } else {
+      wsp_decode_test(MMS.CancelStatusValue, [i], null, "CodeError");
+    }
+  }
+
+  run_next_test();
+});
+
+//// CancelStatusValue.encode ////
+
+add_test(function test_CancelStatusValue_encode() {
+  for (let i = 0; i < 256; i++) {
+    if ((i >= 128) && (i <= 129)) {
+      wsp_encode_test(MMS.CancelStatusValue, i, [i]);
+    } else {
+      wsp_encode_test(MMS.CancelStatusValue, i, null, "CodeError");
+    }
+  }
+
+  run_next_test();
+});
+
+//
 // Test target: ContentClassValue
 //
 
@@ -658,6 +690,38 @@ add_test(function test_PriorityValue_encode() {
 });
 
 //
+// Test target: ReadStatusValue
+//
+
+//// ReadStatusValue.decode ////
+
+add_test(function test_ReadStatusValue_decode() {
+  for (let i = 0; i < 256; i++) {
+    if ((i >= 128) && (i <= 129)) {
+      wsp_decode_test(MMS.ReadStatusValue, [i], i);
+    } else {
+      wsp_decode_test(MMS.ReadStatusValue, [i], null, "CodeError");
+    }
+  }
+
+  run_next_test();
+});
+
+//// ReadStatusValue.encode ////
+
+add_test(function test_ReadStatusValue_encode() {
+  for (let i = 0; i < 256; i++) {
+    if ((i >= 128) && (i <= 129)) {
+      wsp_encode_test(MMS.ReadStatusValue, i, [i]);
+    } else {
+      wsp_encode_test(MMS.ReadStatusValue, i, null, "CodeError");
+    }
+  }
+
+  run_next_test();
+});
+
+//
 // Test target: RecommendedRetrievalModeValue
 //
 
@@ -759,6 +823,38 @@ add_test(function test_RetrieveStatusValue_decode() {
     } else {
       wsp_decode_test(MMS.RetrieveStatusValue, [i],
                       MMS_PDU_ERROR_PERMANENT_FAILURE);
+    }
+  }
+
+  run_next_test();
+});
+
+//
+// Test target: SenderVisibilityValue
+//
+
+//// SenderVisibilityValue.decode ////
+
+add_test(function test_SenderVisibilityValue_decode() {
+  for (let i = 0; i < 256; i++) {
+    if ((i >= 128) && (i <= 129)) {
+      wsp_decode_test(MMS.SenderVisibilityValue, [i], i);
+    } else {
+      wsp_decode_test(MMS.SenderVisibilityValue, [i], null, "CodeError");
+    }
+  }
+
+  run_next_test();
+});
+
+//// SenderVisibilityValue.encode ////
+
+add_test(function test_SenderVisibilityValue_encode() {
+  for (let i = 0; i < 256; i++) {
+    if ((i >= 128) && (i <= 129)) {
+      wsp_encode_test(MMS.SenderVisibilityValue, i, [i]);
+    } else {
+      wsp_encode_test(MMS.SenderVisibilityValue, i, null, "CodeError");
     }
   }
 

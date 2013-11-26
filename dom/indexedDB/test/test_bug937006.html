@@ -15,17 +15,9 @@
   <script type="text/javascript;version=1.7">
 
   function runTest() {
-    if (!SpecialPowers.isMainProcess()) {
-      window.runTest = function() {
-        todo(false, "Figure out this test for child processes!");
-        SimpleTest.finish();
-        return;
-      }
-    }
-
     // doing this IDBRequest should not be able to retrieve the filename and
     // line number.
-    //setTimeout(indexedDB.deleteDatabase.bind(indexedDB), 0, 'x');
+    setTimeout(indexedDB.deleteDatabase.bind(indexedDB), 0, 'x');
     setTimeout(function() {
       ok(true, "Still alive");
       SimpleTest.finish();

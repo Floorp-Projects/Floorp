@@ -343,3 +343,6 @@ skip-if(B2G) include box-sizing/reftest.list
 
 # invalidation - only run on B2G
 skip-if(!B2G) include invalidation/reftest.list
+
+# encodings
+include ../../dom/encoding/test/reftest/reftest.list

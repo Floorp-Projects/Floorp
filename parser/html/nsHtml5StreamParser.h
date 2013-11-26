@@ -323,21 +323,6 @@ class nsHtml5StreamParser : public nsIStreamListener,
                                                                   uint32_t* aWriteCount);
 
     /**
-     * Write the sniffing buffer into the Unicode decoder followed by the
-     * current network buffer.
-     *
-     * @param aFromSegment The current network buffer or null if the sniffing
-     *                     buffer is being flushed due to network stream ending.
-     * @param aCount       The number of bytes in aFromSegment (ignored if
-     *                     aFromSegment is null)
-     * @param aWriteCount  Return value for how many bytes got read from the
-     *                     buffer.
-     */
-    nsresult WriteSniffingBufferAndCurrentSegment(const uint8_t* aFromSegment,
-                                                  uint32_t aCount,
-                                                  uint32_t* aWriteCount);
-
-    /**
      * Initialize the Unicode decoder, mark the BOM as the source and
      * drop the sniffer.
      *
