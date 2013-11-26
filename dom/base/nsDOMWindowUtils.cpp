@@ -1481,8 +1481,9 @@ nsDOMWindowUtils::SuppressEventHandling(bool aSuppress)
   return NS_OK;
 }
 
-static nsresult
-getScrollXYAppUnits(nsWeakPtr mWindow, bool aFlushLayout, nsPoint& aScrollPos) {
+NS_IMETHODIMP
+nsDOMWindowUtils::GetScrollXY(bool aFlushLayout, int32_t* aScrollX, int32_t* aScrollY)
+{
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
@@ -1497,22 +1498,15 @@ getScrollXYAppUnits(nsWeakPtr mWindow, bool aFlushLayout, nsPoint& aScrollPos) {
     doc->FlushPendingNotifications(Flush_Layout);
   }
 
+  nsPoint scrollPos(0,0);
   nsIPresShell *presShell = doc->GetShell();
   if (presShell) {
     nsIScrollableFrame* sf = presShell->GetRootScrollFrameAsScrollable();
     if (sf) {
-      aScrollPos = sf->GetScrollPosition();
+      scrollPos = sf->GetScrollPosition();
     }
   }
-  return NS_OK;
-}
 
-NS_IMETHODIMP
-nsDOMWindowUtils::GetScrollXY(bool aFlushLayout, int32_t* aScrollX, int32_t* aScrollY)
-{
-  nsPoint scrollPos(0,0);
-  nsresult rv = getScrollXYAppUnits(mWindow, aFlushLayout, scrollPos);
-  NS_ENSURE_SUCCESS(rv, rv);
   *aScrollX = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.x);
   *aScrollY = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.y);
 
@@ -1532,18 +1526,6 @@ nsDOMWindowUtils::ScrollToCSSPixelsApproximate(float aX, float aY, bool* aRetVal
   if (aRetVal) {
     *aRetVal = (sf != nullptr);
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::GetScrollXYFloat(bool aFlushLayout, float* aScrollX, float* aScrollY)
-{
-  nsPoint scrollPos(0,0);
-  nsresult rv = getScrollXYAppUnits(mWindow, aFlushLayout, scrollPos);
-  NS_ENSURE_SUCCESS(rv, rv);
-  *aScrollX = nsPresContext::AppUnitsToFloatCSSPixels(scrollPos.x);
-  *aScrollY = nsPresContext::AppUnitsToFloatCSSPixels(scrollPos.y);
 
   return NS_OK;
 }
