@@ -284,9 +284,6 @@ class FrameInfo
     Address addressOfScopeChain() const {
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfScopeChain());
     }
-    Address addressOfBlockChain() const {
-        return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfBlockChain());
-    }
     Address addressOfFlags() const {
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags());
     }
