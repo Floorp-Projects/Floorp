@@ -19,9 +19,9 @@ function ifWebGLSupported() {
   yield checkShaderSource("The shader sources are correct before highlighting.");
   ok(true, "The corner pixel colors are correct before highlighting.");
 
-  yield programActor.highlight([0, 0, 1, 1]);
-  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 255, a: 255 }, true);
-  yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 0, b: 255, a: 255 }, true);
+  yield programActor.highlight([0, 1, 0, 1]);
+  yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+  yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
   yield checkShaderSource("The shader sources are preserved after highlighting.");
   ok(true, "The corner pixel colors are correct after highlighting.");
 
