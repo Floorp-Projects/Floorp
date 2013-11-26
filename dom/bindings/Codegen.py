@@ -647,13 +647,16 @@ class CGHeaders(CGWrapper):
             dictionary, if passed, to decide what to do with interface types.
             """
             assert not descriptor or not dictionary
+            # Dictionaries have members that need to be actually
+            # declared, not just forward-declared.
+            if dictionary:
+                headerSet = declareIncludes
+            else:
+                headerSet = bindingHeaders
             if t.nullable():
-                if dictionary:
-                    # Need to make sure that Nullable as a dictionary
-                    # member works.
-                    declareIncludes.add("mozilla/dom/Nullable.h")
-                else:
-                    bindingHeaders.add("mozilla/dom/Nullable.h")
+                # Need to make sure that Nullable as a dictionary
+                # member works.
+                headerSet.add("mozilla/dom/Nullable.h")
             unrolled = t.unroll()
             if unrolled.isUnion():
                 # UnionConversions.h includes UnionTypes.h
@@ -664,17 +667,12 @@ class CGHeaders(CGWrapper):
                     declareIncludes.add("mozilla/dom/UnionTypes.h")
             elif unrolled.isDate():
                 if dictionary or jsImplementedDescriptors:
-                    headerSet = declareIncludes
+                    declareIncludes.add("mozilla/dom/Date.h")
                 else:
-                    headerSet = bindingHeaders
-                headerSet.add("mozilla/dom/Date.h")
+                    bindingHeaders.add("mozilla/dom/Date.h")
             elif unrolled.isInterface():
                 if unrolled.isSpiderMonkeyInterface():
                     bindingHeaders.add("jsfriendapi.h")
-                    if dictionary:
-                        headerSet = declareIncludes
-                    else:
-                        headerSet = bindingHeaders
                     headerSet.add("mozilla/dom/TypedArray.h")
                 else:
                     providers = getRelevantProviders(descriptor, config)
@@ -683,40 +681,37 @@ class CGHeaders(CGWrapper):
                             typeDesc = p.getDescriptor(unrolled.inner.identifier.name)
                         except NoSuchDescriptorError:
                             continue
-                        if dictionary:
-                            # Dictionaries with interface members rely on the
-                            # actual class definition of that interface member
-                            # being visible in the binding header, because they
-                            # store them in nsRefPtr and have inline
-                            # constructors/destructors.
-                            #
-                            # XXXbz maybe dictionaries with interface members
-                            # should just have out-of-line constructors and
-                            # destructors?
-                            declareIncludes.add(typeDesc.headerFile)
-                        else:
-                            implementationIncludes.add(typeDesc.headerFile)
+                        # Dictionaries with interface members rely on the
+                        # actual class definition of that interface member
+                        # being visible in the binding header, because they
+                        # store them in nsRefPtr and have inline
+                        # constructors/destructors.
+                        #
+                        # XXXbz maybe dictionaries with interface members
+                        # should just have out-of-line constructors and
+                        # destructors?
+                        headerSet.add(typeDesc.headerFile)
             elif unrolled.isDictionary():
-                bindingHeaders.add(self.getDeclarationFilename(unrolled.inner))
+                headerSet.add(self.getDeclarationFilename(unrolled.inner))
             elif unrolled.isCallback():
                 # Callbacks are both a type and an object
-                bindingHeaders.add(self.getDeclarationFilename(t.unroll()))
+                headerSet.add(self.getDeclarationFilename(t.unroll()))
             elif unrolled.isFloat() and not unrolled.isUnrestricted():
                 # Restricted floats are tested for finiteness
                 bindingHeaders.add("mozilla/FloatingPoint.h")
                 bindingHeaders.add("mozilla/dom/PrimitiveConversions.h")
             elif unrolled.isEnum():
                 filename = self.getDeclarationFilename(unrolled.inner)
-                # Do nothing if the enum is defined in the same webidl file
-                # (the binding header doesn't need to include itself).
-                if filename != prefix + ".h":
-                    declareIncludes.add(filename)
+                declareIncludes.add(filename)
             elif unrolled.isPrimitive():
                 bindingHeaders.add("mozilla/dom/PrimitiveConversions.h")
 
         map(addHeadersForType,
             getAllTypes(descriptors + callbackDescriptors, dictionaries,
                         callbacks))
+
+        # Now make sure we're not trying to include the header from inside itself
+        declareIncludes.discard(prefix + ".h");
 
         # Now for non-callback descriptors make sure we include any
         # headers needed by Func declarations.
@@ -9867,7 +9862,8 @@ class CGExampleRoot(CGThing):
                                 "mozilla/Attributes.h",
                                 "mozilla/ErrorResult.h" ],
                               [ "%s.h" % interfaceName,
-                                "mozilla/dom/%sBinding.h" % interfaceName,
+                                ("mozilla/dom/%s" %
+                                 CGHeaders.getDeclarationFilename(descriptor.interface)),
                                 "nsContentUtils.h" ], "", self.root);
 
         # And now some include guards
