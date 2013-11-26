@@ -631,18 +631,35 @@ class LiveRangeAllocator : public RegisterAllocator
 #endif
 
     bool addMove(LMoveGroup *moves, LiveInterval *from, LiveInterval *to) {
-        if (*from->getAllocation() == *to->getAllocation())
-            return true;
+        JS_ASSERT(*from->getAllocation() != *to->getAllocation());
         return moves->add(from->getAllocation(), to->getAllocation());
     }
 
     bool moveInput(CodePosition pos, LiveInterval *from, LiveInterval *to) {
+        if (*from->getAllocation() == *to->getAllocation())
+            return true;
         LMoveGroup *moves = getInputMoveGroup(pos);
         return addMove(moves, from, to);
     }
 
     bool moveAfter(CodePosition pos, LiveInterval *from, LiveInterval *to) {
+        if (*from->getAllocation() == *to->getAllocation())
+            return true;
         LMoveGroup *moves = getMoveGroupAfter(pos);
+        return addMove(moves, from, to);
+    }
+
+    bool moveAtExit(LBlock *block, LiveInterval *from, LiveInterval *to) {
+        if (*from->getAllocation() == *to->getAllocation())
+            return true;
+        LMoveGroup *moves = block->getExitMoveGroup(alloc());
+        return addMove(moves, from, to);
+    }
+
+    bool moveAtEntry(LBlock *block, LiveInterval *from, LiveInterval *to) {
+        if (*from->getAllocation() == *to->getAllocation())
+            return true;
+        LMoveGroup *moves = block->getEntryMoveGroup(alloc());
         return addMove(moves, from, to);
     }
 
