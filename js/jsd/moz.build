@@ -13,7 +13,7 @@ EXPORTS += [
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'jsd_atom.cpp',
     'jsd_high.cpp',
     'jsd_hook.cpp',
