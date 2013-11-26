@@ -107,7 +107,7 @@ protected:
 
   nscoord ComputeFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
                                        const FlexboxAxisTracker& aAxisTracker,
-                                       const nsTArray<FlexItem>& aFlexItems,
+                                       const FlexLine& aLine,
                                        nscoord aAvailableHeightForContent,
                                        nsReflowStatus& aStatus);
 
