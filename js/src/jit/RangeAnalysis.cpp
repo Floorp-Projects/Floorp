@@ -1244,6 +1244,33 @@ MMod::computeRange()
     if (rhs.lower() <= 0 && rhs.upper() >= 0)
         return;
 
+    // For unsigned mod, we have to convert both operands to unsigned.
+    // Note that we handled the case of a zero rhs immediately above.
+    if (unsigned_) {
+        // The result of an unsigned mod will never be unsigned-greater than
+        // either operand.
+        uint32_t lhsBound = Max<uint32_t>(lhs.lower(), lhs.upper());
+        uint32_t rhsBound = Max<uint32_t>(rhs.lower(), rhs.upper());
+
+        // If either range crosses through -1 as a signed value, it could be
+        // the maximum unsigned value when interpreted as unsigned. If the range
+        // doesn't include -1, then the simple max value we computed above is
+        // correct.
+        if (lhs.lower() <= -1 && lhs.upper() >= -1)
+            lhsBound = UINT32_MAX;
+        if (rhs.lower() <= -1 && rhs.upper() >= -1)
+            rhsBound = UINT32_MAX;
+
+        // The result will never be equal to the rhs, and we shouldn't have
+        // any rounding to worry about.
+        JS_ASSERT(!lhs.canHaveFractionalPart() && !rhs.canHaveFractionalPart());
+        --rhsBound;
+
+        // This gives us two upper bounds, so we can take the best one.
+        setRange(Range::NewUInt32Range(0, Min(lhsBound, rhsBound)));
+        return;
+    }
+
     // Math.abs(lhs % rhs) == Math.abs(lhs) % Math.abs(rhs).
     // First, the absolute value of the result will always be less than the
     // absolute value of rhs. (And if rhs is zero, the result is NaN).
@@ -1291,8 +1318,15 @@ MDiv::computeRange()
 
     // Something simple for now: When dividing by a positive rhs, the result
     // won't be further from zero than lhs.
-    if (rhs.lower() > 0 && lhs.lower() >= 0)
+    if (lhs.lower() >= 0 && rhs.lower() >= 1) {
         setRange(new Range(0, lhs.upper(), true, lhs.exponent()));
+    } else if (unsigned_ && rhs.lower() >= 1) {
+        // We shouldn't set the unsigned flag if the inputs can have
+        // fractional parts.
+        JS_ASSERT(!lhs.canHaveFractionalPart() && !rhs.canHaveFractionalPart());
+        // Unsigned division by a non-zero rhs will return a uint32 value.
+        setRange(Range::NewUInt32Range(0, UINT32_MAX));
+    }
 }
 
 void
