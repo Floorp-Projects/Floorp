@@ -329,6 +329,17 @@ MDefinition::hasOneDefUse() const
     return hasOneDefUse;
 }
 
+bool
+MDefinition::hasDefUses() const
+{
+    for (MUseIterator i(uses_.begin()); i != uses_.end(); i++) {
+        if ((*i)->consumer()->isDefinition())
+            return true;
+    }
+
+    return false;
+}
+
 MUseIterator
 MDefinition::removeUse(MUseIterator use)
 {
