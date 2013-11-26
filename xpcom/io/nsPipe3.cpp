@@ -299,8 +299,8 @@ protected:
 //-----------------------------------------------------------------------------
 
 nsPipe::nsPipe()
-    : mInput(this)
-    , mOutput(this)
+    : mInput(MOZ_THIS_IN_INITIALIZER_LIST())
+    , mOutput(MOZ_THIS_IN_INITIALIZER_LIST())
     , mReentrantMonitor("nsPipe.mReentrantMonitor")
     , mReadCursor(nullptr)
     , mReadLimit(nullptr)
