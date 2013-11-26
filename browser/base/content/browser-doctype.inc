@@ -5,7 +5,7 @@
 %browserDTD;
 <!ENTITY % baseMenuDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd" >
 %baseMenuDTD;
-<!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charsetOverlay.dtd" >
+<!ENTITY % charsetDTD SYSTEM "chrome://browser/locale/charsetMenu.dtd" >
 %charsetDTD;
 <!ENTITY % textcontextDTD SYSTEM "chrome://global/locale/textcontext.dtd" >
 %textcontextDTD;

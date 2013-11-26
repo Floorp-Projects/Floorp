@@ -83,19 +83,19 @@ protected:
   void     RebuildPathAndVerticesFromBasicAttrs(const nsIContent* aContextElem);
   bool     GenerateValuesForPathAndPoints(Path* aPath,
                                           bool aIsKeyPoints,
-                                          nsTArray<double>& aPointDistances,
-                                          nsTArray<nsSMILValue>& aResult);
+                                          FallibleTArray<double>& aPointDistances,
+                                          nsSMILValueArray& aResult);
 
   // Members
   // -------
-  nsTArray<double>           mKeyPoints; // parsed from "keyPoints" attribute.
+  FallibleTArray<double>     mKeyPoints; // parsed from "keyPoints" attribute.
 
   RotateType                 mRotateType;  // auto, auto-reverse, or explicit.
   float                      mRotateAngle; // the angle value, if explicit.
 
   PathSourceType             mPathSourceType; // source of our Path.
   RefPtr<Path>               mPath;           // representation of motion path.
-  nsTArray<double>           mPathVertices; // distances of vertices along path.
+  FallibleTArray<double>     mPathVertices; // distances of vertices along path.
 
   bool                       mIsPathStale;
 };

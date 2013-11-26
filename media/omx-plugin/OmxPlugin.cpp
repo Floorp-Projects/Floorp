@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include <stagefright/ColorConverter.h>
 #include <stagefright/DataSource.h>
 #include <stagefright/MediaExtractor.h>
@@ -117,11 +118,11 @@ public:
   }
 
   bool HasVideo() {
-    return mVideoSource != NULL;
+    return mVideoSource != nullptr;
   }
 
   bool HasAudio() {
-    return mAudioSource != NULL;
+    return mAudioSource != nullptr;
   }
 
   bool ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs, BufferCallback *aBufferCallback);
@@ -142,9 +143,9 @@ OmxDecoder::OmxDecoder(PluginHost *aPluginHost, Decoder *aDecoder) :
   mAudioChannels(-1),
   mAudioSampleRate(-1),
   mDurationUs(-1),
-  mVideoBuffer(NULL),
-  mAudioBuffer(NULL),
-  mColorConverter(NULL),
+  mVideoBuffer(nullptr),
+  mAudioBuffer(nullptr),
+  mColorConverter(nullptr),
   mAudioMetadataRead(false)
 {
 }
@@ -184,9 +185,9 @@ public:
 };
 
 #ifdef MOZ_WIDGET_GONK
-static sp<IOMX> sOMX = NULL;
+static sp<IOMX> sOMX = nullptr;
 static sp<IOMX> GetOMX() {
-  if(sOMX.get() == NULL) {
+  if(sOMX.get() == nullptr) {
     sOMX = reinterpret_cast<IOMX*>(new OMX);
   }
   return sOMX;
@@ -233,9 +234,9 @@ static sp<MediaSource> CreateVideoSource(PluginHost* aPluginHost,
   if (flags == DEFAULT_STAGEFRIGHT_FLAGS) {
     // Let Stagefright choose hardware or software decoder.
     sp<MediaSource> videoSource = OMXCodec::Create(aOmx, aVideoTrack->getFormat(),
-                                                   false, aVideoTrack, NULL, flags);
-    if (videoSource == NULL)
-      return NULL;
+                                                   false, aVideoTrack, nullptr, flags);
+    if (videoSource == nullptr)
+      return nullptr;
 
     // Now that OMXCodec has parsed the video's AVCDecoderConfigurationRecord,
     // check whether we know how to decode this video.
@@ -281,7 +282,7 @@ static sp<MediaSource> CreateVideoSource(PluginHost* aPluginHost,
 
   MOZ_ASSERT(flags != DEFAULT_STAGEFRIGHT_FLAGS);
   return OMXCodec::Create(aOmx, aVideoTrack->getFormat(), false, aVideoTrack,
-                          NULL, flags);
+                          nullptr, flags);
 }
 
 bool OmxDecoder::Init() {
@@ -295,14 +296,14 @@ bool OmxDecoder::Init() {
   }
 
   sp<MediaExtractor> extractor = MediaExtractor::Create(dataSource);
-  if (extractor == NULL) {
+  if (extractor == nullptr) {
     return false;
   }
 
   ssize_t audioTrackIndex = -1;
   ssize_t videoTrackIndex = -1;
-  const char *audioMime = NULL;
-  const char *videoMime = NULL;
+  const char *audioMime = nullptr;
+  const char *videoMime = nullptr;
 
   for (size_t i = 0; i < extractor->countTracks(); ++i) {
     sp<MetaData> meta = extractor->getTrackMetaData(i);
@@ -341,14 +342,14 @@ bool OmxDecoder::Init() {
 
   sp<MediaSource> videoTrack;
   sp<MediaSource> videoSource;
-  if (videoTrackIndex != -1 && (videoTrack = extractor->getTrack(videoTrackIndex)) != NULL) {
+  if (videoTrackIndex != -1 && (videoTrack = extractor->getTrack(videoTrackIndex)) != nullptr) {
 #if defined(MOZ_ANDROID_FROYO)
     // Allow up to 720P video.
     sp<MetaData> meta = extractor->getTrackMetaData(videoTrackIndex);
     meta->setInt32(kKeyMaxInputSize, (1280 * 720 * 3) / 2);
 #endif
     videoSource = CreateVideoSource(mPluginHost, omx, videoTrack);
-    if (videoSource == NULL) {
+    if (videoSource == nullptr) {
       LOG("OMXCodec failed to initialize video decoder for \"%s\"", videoMime);
       return false;
     }
@@ -368,7 +369,7 @@ bool OmxDecoder::Init() {
 
   sp<MediaSource> audioTrack;
   sp<MediaSource> audioSource;
-  if (audioTrackIndex != -1 && (audioTrack = extractor->getTrack(audioTrackIndex)) != NULL)
+  if (audioTrackIndex != -1 && (audioTrack = extractor->getTrack(audioTrackIndex)) != nullptr)
   {
     if (!strcasecmp(audioMime, "audio/raw")) {
       audioSource = audioTrack;
@@ -379,7 +380,7 @@ bool OmxDecoder::Init() {
                                      audioTrack);
     }
 
-    if (audioSource == NULL) {
+    if (audioSource == nullptr) {
       LOG("OMXCodec failed to initialize audio decoder for \"%s\"", audioMime);
       return false;
     }
@@ -544,14 +545,14 @@ bool OmxDecoder::SetAudioFormat() {
 void OmxDecoder::ReleaseVideoBuffer() {
   if (mVideoBuffer) {
     mVideoBuffer->release();
-    mVideoBuffer = NULL;
+    mVideoBuffer = nullptr;
   }
 }
 
 void OmxDecoder::ReleaseAudioBuffer() {
   if (mAudioBuffer) {
     mAudioBuffer->release();
-    mAudioBuffer = NULL;
+    mAudioBuffer = nullptr;
   }
 }
 
@@ -899,7 +900,7 @@ static const char* const gCodecs[] = {
   "avc1.4D401E",  // H.264 Main Profile Level 3.0
   "avc1.4D401F",  // H.264 Main Profile Level 3.1
   "mp4a.40.2",    // AAC-LC
-  NULL
+  nullptr
 };
 
 static bool CanDecode(const char *aMimeChars, size_t aMimeLen, const char* const**aCodecs)

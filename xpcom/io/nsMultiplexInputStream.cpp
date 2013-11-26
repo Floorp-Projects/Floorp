@@ -117,7 +117,7 @@ NS_IMETHODIMP
 nsMultiplexInputStream::InsertStream(nsIInputStream *aStream, uint32_t aIndex)
 {
     NS_ASSERTION(SeekableStreamAtBeginning(aStream), "Inserted stream not at beginning.");
-    bool result = mStreams.InsertElementAt(aIndex, aStream);
+    mStreams.InsertElementAt(aIndex, aStream);
     if (mCurrentStream > aIndex ||
         (mCurrentStream == aIndex && mStartedReadingCurrent))
         ++mCurrentStream;

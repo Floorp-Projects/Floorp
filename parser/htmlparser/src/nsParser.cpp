@@ -14,7 +14,6 @@
 #include "nsIChannel.h"
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIInputStream.h"
 #include "CNavDTD.h"
 #include "prenv.h"
@@ -127,36 +126,6 @@ public:
 };
 
 //-------------- End ParseContinue Event Definition ------------------------
-
-nsICharsetConverterManager* nsParser::sCharsetConverterManager = nullptr;
-
-/**
- *  This gets called when the htmlparser module is initialized.
- */
-// static
-nsresult
-nsParser::Init()
-{
-  nsresult rv;
-
-  nsCOMPtr<nsICharsetConverterManager> charsetConverter =
-    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  charsetConverter.swap(sCharsetConverterManager);
-
-  return NS_OK;
-}
-
-
-/**
- *  This gets called when the htmlparser module is shutdown.
- */
-// static
-void nsParser::Shutdown()
-{
-  NS_IF_RELEASE(sCharsetConverterManager);
-}
 
 /**
  *  default constructor

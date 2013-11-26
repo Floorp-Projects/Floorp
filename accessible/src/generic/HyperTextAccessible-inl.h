@@ -39,16 +39,6 @@ HyperTextAccessible::IsValidRange(int32_t aStartOffset, int32_t aEndOffset)
   return endOffset <= static_cast<int32_t>(CharacterCount());
 }
 
-inline nsIntRect
-HyperTextAccessible::TextBounds(int32_t aStartOffset, int32_t aEndOffset,
-                                uint32_t aCoordType)
-{
-  nsIntRect bounds;
-  GetPosAndText(aStartOffset, aEndOffset, nullptr, nullptr, &bounds);
-  nsAccUtils::ConvertScreenCoordsTo(&bounds.x, &bounds.y, aCoordType, this);
-  return bounds;
-}
-
 inline bool
 HyperTextAccessible::AddToSelection(int32_t aStartOffset, int32_t aEndOffset)
 {

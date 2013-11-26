@@ -1199,8 +1199,9 @@ Layer::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
   }
 
   if (Layer* mask = GetMaskLayer()) {
+    fprintf_stderr(aFile, "%s  Mask layer:\n", aPrefix);
     nsAutoCString pfx(aPrefix);
-    pfx += "  Mask layer: ";
+    pfx += "    ";
     mask->Dump(aFile, pfx.get(), aDumpHtml);
   }
 
@@ -1434,7 +1435,7 @@ LayerManager::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
   if (aDumpHtml) {
     fprintf_stderr(file, "</ul></li></ul>");
   }
-  fputc('\n', file);
+  fprintf_stderr(file, "\n");
 }
 
 void

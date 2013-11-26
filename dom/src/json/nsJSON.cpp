@@ -6,14 +6,15 @@
 
 #include "jsapi.h"
 #include "js/OldDebugAPI.h"
-#include "nsIServiceManager.h"
 #include "nsJSON.h"
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
 #include "nsStreamUtils.h"
 #include "nsIInputStream.h"
 #include "nsStringStream.h"
-#include "nsICharsetConverterManager.h"
+#include "mozilla/dom/EncodingUtils.h"
+#include "nsIUnicodeEncoder.h"
+#include "nsIUnicodeDecoder.h"
 #include "nsXPCOMStrings.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"
@@ -23,6 +24,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/Maybe.h"
 #include <algorithm>
+
+using mozilla::dom::EncodingUtils;
 
 #define JSON_STREAM_BUFSIZE 4096
 
@@ -275,11 +278,7 @@ nsJSONWriter::SetCharset(const char* aCharset)
 {
   nsresult rv = NS_OK;
   if (mStream) {
-    nsCOMPtr<nsICharsetConverterManager> ccm =
-      do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = ccm->GetUnicodeEncoder(aCharset, getter_AddRefs(mEncoder));
-    NS_ENSURE_SUCCESS(rv, rv);
+    mEncoder = EncodingUtils::EncoderForEncoding(aCharset);
     rv = mEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Signal,
                                           nullptr, '\0');
     NS_ENSURE_SUCCESS(rv, rv);
@@ -601,11 +600,7 @@ nsJSONListener::ProcessBytes(const char* aBuffer, uint32_t aByteLength)
     // We should have a unicode charset by now
     rv = CheckCharset(charset.get());
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsICharsetConverterManager> ccm =
-        do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = ccm->GetUnicodeDecoderRaw(charset.get(), getter_AddRefs(mDecoder));
-    NS_ENSURE_SUCCESS(rv, rv);
+    mDecoder = EncodingUtils::DecoderForEncoding(charset);
 
     // consume the sniffed bytes
     rv = ConsumeConverted(mSniffBuffer.get(), mSniffBuffer.Length());

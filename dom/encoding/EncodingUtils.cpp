@@ -6,6 +6,9 @@
 
 #include "mozilla/Util.h" // ArrayLength
 #include "nsUConvPropertySearch.h"
+#include "nsIUnicodeDecoder.h"
+#include "nsIUnicodeEncoder.h"
+#include "nsComponentManagerUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -42,6 +45,28 @@ EncodingUtils::IsAsciiCompatible(const nsACString& aPreferredName)
            aPreferredName.LowerCaseEqualsLiteral("hz-gb-2312") ||
            aPreferredName.LowerCaseEqualsLiteral("utf-7") ||
            aPreferredName.LowerCaseEqualsLiteral("x-imap4-modified-utf7"));
+}
+
+already_AddRefed<nsIUnicodeDecoder>
+EncodingUtils::DecoderForEncoding(const nsACString& aEncoding)
+{
+  nsAutoCString contractId(NS_UNICODEDECODER_CONTRACTID_BASE);
+  contractId.Append(aEncoding);
+
+  nsCOMPtr<nsIUnicodeDecoder> decoder = do_CreateInstance(contractId.get());
+  MOZ_ASSERT(decoder, "Tried to create decoder for unknown encoding.");
+  return decoder.forget();
+}
+
+already_AddRefed<nsIUnicodeEncoder>
+EncodingUtils::EncoderForEncoding(const nsACString& aEncoding)
+{
+  nsAutoCString contractId(NS_UNICODEENCODER_CONTRACTID_BASE);
+  contractId.Append(aEncoding);
+
+  nsCOMPtr<nsIUnicodeEncoder> encoder = do_CreateInstance(contractId.get());
+  MOZ_ASSERT(encoder, "Tried to create encoder for unknown encoding.");
+  return encoder.forget();
 }
 
 } // namespace dom

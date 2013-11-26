@@ -136,7 +136,7 @@ PeerConnectionImpl* PeerConnectionImpl::CreatePeerConnection()
 PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl *parent)
     : mParent(parent),
       mLocalSourceStreamsLock("PeerConnectionMedia.mLocalSourceStreamsLock"),
-      mIceCtx(NULL),
+      mIceCtx(nullptr),
       mDNSResolver(new mozilla::NrIceResolver()),
       mMainThread(mParent->GetMainThread()),
       mSTSThread(mParent->GetSTSThread()) {}
@@ -361,7 +361,7 @@ PeerConnectionMedia::ShutdownMediaTransport_s()
   disconnect_all();
   mTransportFlows.clear();
   mIceStreams.clear();
-  mIceCtx = NULL;
+  mIceCtx = nullptr;
 
   mMainThread->Dispatch(WrapRunnable(this, &PeerConnectionMedia::SelfDestruct_m),
                         NS_DISPATCH_NORMAL);
@@ -371,7 +371,7 @@ LocalSourceStreamInfo*
 PeerConnectionMedia::GetLocalStream(int aIndex)
 {
   if(aIndex < 0 || aIndex >= (int) mLocalSourceStreams.Length()) {
-    return NULL;
+    return nullptr;
   }
 
   MOZ_ASSERT(mLocalSourceStreams[aIndex]);
@@ -382,7 +382,7 @@ RemoteSourceStreamInfo*
 PeerConnectionMedia::GetRemoteStream(int aIndex)
 {
   if(aIndex < 0 || aIndex >= (int) mRemoteSourceStreams.Length()) {
-    return NULL;
+    return nullptr;
   }
 
   MOZ_ASSERT(mRemoteSourceStreams[aIndex]);
@@ -454,14 +454,14 @@ PeerConnectionMedia::IceStreamReady(NrIceMediaStream *aStream)
 
 // This method exists for the unittests.
 // It allows visibility into the pipelines and flows.
-// It returns NULL if no pipeline exists for this track number.
+// It returns nullptr if no pipeline exists for this track number.
 mozilla::RefPtr<mozilla::MediaPipeline>
 SourceStreamInfo::GetPipeline(int aTrack) {
   std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> >::iterator it =
     mPipelines.find(aTrack);
 
   if (it == mPipelines.end()) {
-    return NULL;
+    return nullptr;
   }
 
   return it->second;

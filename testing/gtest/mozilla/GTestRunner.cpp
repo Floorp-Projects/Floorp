@@ -111,7 +111,7 @@ int RunGTestFunc()
 }
 
 // We use a static var 'RunGTest' defined in nsAppRunner.cpp.
-// RunGTest is initialized to NULL but if GTest (this file)
+// RunGTest is initialized to nullptr but if GTest (this file)
 // is linked in then RunGTest will be set here indicating
 // GTest is supported.
 class _InitRunGTest {

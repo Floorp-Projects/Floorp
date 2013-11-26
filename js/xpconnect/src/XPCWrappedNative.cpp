@@ -292,7 +292,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
 
     nsresult rv;
 
-    MOZ_ASSERT(!Scope->GetRuntime()->GetThreadRunningGC(),
+    MOZ_ASSERT(!Scope->GetRuntime()->GCIsRunning(),
                "XPCWrappedNative::GetNewOrUsed called during GC");
 
     nsISupports *identity = helper.GetCanonical();
@@ -302,18 +302,13 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
         return NS_ERROR_FAILURE;
     }
 
-    XPCLock* mapLock = Scope->GetRuntime()->GetMapLock();
-
     nsRefPtr<XPCWrappedNative> wrapper;
 
     Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
     // Some things are nsWrapperCache subclasses but never use the cache, so go
     // ahead and check our map even if we have a cache and it has no existing
     // wrapper: we might have an XPCWrappedNative anyway.
-    {   // scoped lock
-        XPCAutoLock lock(mapLock);
-        wrapper = map->Find(identity);
-    }
+    wrapper = map->Find(identity);
 
     if (wrapper) {
         if (!wrapper->FindTearOff(Interface, false, &rv)) {
@@ -404,8 +399,6 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
             if (cached)
                 wrapper = XPCWrappedNative::Get(cached);
         } else {
-            // scoped lock
-            XPCAutoLock lock(mapLock);
             wrapper = map->Find(identity);
         }
 
@@ -494,21 +487,16 @@ FinishCreate(XPCWrappedNativeScope* Scope,
     AutoJSContext cx;
     MOZ_ASSERT(inWrapper);
 
-    XPCLock* mapLock = Scope->GetRuntime()->GetMapLock();
     Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
 
     nsRefPtr<XPCWrappedNative> wrapper;
-    {   // scoped lock
-
-        // Deal with the case where the wrapper got created as a side effect
-        // of one of our calls out of this code (or on another thread). Add()
-        // returns the (possibly pre-existing) wrapper that ultimately ends up
-        // in the map, which is what we want.
-        XPCAutoLock lock(mapLock);
-        wrapper = map->Add(inWrapper);
-        if (!wrapper)
-            return NS_ERROR_FAILURE;
-    }
+    // Deal with the case where the wrapper got created as a side effect
+    // of one of our calls out of this code. Add() returns the (possibly
+    // pre-existing) wrapper that ultimately ends up in the map, which is
+    // what we want.
+    wrapper = map->Add(inWrapper);
+    if (!wrapper)
+        return NS_ERROR_FAILURE;
 
     if (wrapper == inWrapper) {
         JSObject *flat = wrapper->GetFlatJSObject();
@@ -539,10 +527,7 @@ FinishCreate(XPCWrappedNativeScope* Scope,
                          "cause a crash in combination with a JS GC. Fix the "
                          "failing PostCreate ASAP!");
 
-                {   // scoped lock
-                    XPCAutoLock lock(mapLock);
-                    map->Remove(wrapper);
-                }
+                map->Remove(wrapper);
 
                 // This would be a good place to tell the wrapper not to remove
                 // itself from the map when it dies... See bug 429442.
@@ -591,13 +576,10 @@ XPCWrappedNative::GetUsedOnly(nsISupports* Object,
 
         Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
 
-        {   // scoped lock
-            XPCAutoLock lock(Scope->GetRuntime()->GetMapLock());
-            wrapper = map->Find(identity);
-            if (!wrapper) {
-                *resultWrapper = nullptr;
-                return NS_OK;
-            }
+        wrapper = map->Find(identity);
+        if (!wrapper) {
+            *resultWrapper = nullptr;
+            return NS_OK;
         }
     }
 
@@ -661,9 +643,6 @@ XPCWrappedNative::Destroy()
     XPCWrappedNativeScope *scope = GetScope();
     if (scope) {
         Native2WrappedNativeMap* map = scope->GetWrappedNativeMap();
-
-        // scoped lock
-        XPCAutoLock lock(GetRuntime()->GetMapLock());
 
         // Post-1.9 we should not remove this wrapper from the map if it is
         // uninitialized.
@@ -1254,42 +1233,39 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
 
         // Update scope maps. This section modifies global state, so from
         // here on out we crash if anything fails.
-        {   // scoped lock
-            Native2WrappedNativeMap* oldMap = aOldScope->GetWrappedNativeMap();
-            Native2WrappedNativeMap* newMap = aNewScope->GetWrappedNativeMap();
-            XPCAutoLock lock(aOldScope->GetRuntime()->GetMapLock());
+        Native2WrappedNativeMap* oldMap = aOldScope->GetWrappedNativeMap();
+        Native2WrappedNativeMap* newMap = aNewScope->GetWrappedNativeMap();
 
-            oldMap->Remove(wrapper);
+        oldMap->Remove(wrapper);
 
-            if (wrapper->HasProto())
-                wrapper->SetProto(newProto);
+        if (wrapper->HasProto())
+            wrapper->SetProto(newProto);
 
-            // If the wrapper has no scriptable or it has a non-shared
-            // scriptable, then we don't need to mess with it.
-            // Otherwise...
+        // If the wrapper has no scriptable or it has a non-shared
+        // scriptable, then we don't need to mess with it.
+        // Otherwise...
 
-            if (wrapper->mScriptableInfo &&
-                wrapper->mScriptableInfo == oldProto->GetScriptableInfo()) {
-                // The new proto had better have the same JSClass stuff as
-                // the old one! We maintain a runtime wide unique map of
-                // this stuff. So, if these don't match then the caller is
-                // doing something bad here.
+        if (wrapper->mScriptableInfo &&
+            wrapper->mScriptableInfo == oldProto->GetScriptableInfo()) {
+            // The new proto had better have the same JSClass stuff as
+            // the old one! We maintain a runtime wide unique map of
+            // this stuff. So, if these don't match then the caller is
+            // doing something bad here.
 
-                MOZ_ASSERT(oldProto->GetScriptableInfo()->GetScriptableShared() ==
-                           newProto->GetScriptableInfo()->GetScriptableShared(),
-                           "Changing proto is also changing JSObject Classname or "
-                           "helper's nsIXPScriptable flags. This is not allowed!");
+            MOZ_ASSERT(oldProto->GetScriptableInfo()->GetScriptableShared() ==
+                       newProto->GetScriptableInfo()->GetScriptableShared(),
+                       "Changing proto is also changing JSObject Classname or "
+                       "helper's nsIXPScriptable flags. This is not allowed!");
 
-                wrapper->UpdateScriptableInfo(newProto->GetScriptableInfo());
-            }
-
-            // Crash if the wrapper is already in the new scope.
-            if (newMap->Find(wrapper->GetIdentityObject()))
-                MOZ_CRASH();
-
-            if (!newMap->Add(wrapper))
-                MOZ_CRASH();
+            wrapper->UpdateScriptableInfo(newProto->GetScriptableInfo());
         }
+
+        // Crash if the wrapper is already in the new scope.
+        if (newMap->Find(wrapper->GetIdentityObject()))
+            MOZ_CRASH();
+
+        if (!newMap->Add(wrapper))
+            MOZ_CRASH();
 
         RootedObject ww(cx, wrapper->GetWrapper());
         if (ww) {
@@ -1440,7 +1416,6 @@ bool
 XPCWrappedNative::ExtendSet(XPCNativeInterface* aInterface)
 {
     AutoJSContext cx;
-    // This is only called while locked (during XPCWrappedNative::FindTearOff).
 
     if (!mSet->HasInterface(aInterface)) {
         AutoMarkingNativeSetPtr newSet(cx);
@@ -1457,8 +1432,6 @@ XPCWrappedNative::ExtendSet(XPCNativeInterface* aInterface)
 XPCWrappedNativeTearOff*
 XPCWrappedNative::LocateTearOff(XPCNativeInterface* aInterface)
 {
-    XPCAutoLock al(GetLock()); // hold the lock throughout
-
     for (XPCWrappedNativeTearOffChunk* chunk = &mFirstChunk;
          chunk != nullptr;
          chunk = chunk->mNextChunk) {
@@ -1482,8 +1455,6 @@ XPCWrappedNative::FindTearOff(XPCNativeInterface* aInterface,
                               nsresult* pError /* = nullptr */)
 {
     AutoJSContext cx;
-    XPCAutoLock al(GetLock()); // hold the lock throughout
-
     nsresult rv = NS_OK;
     XPCWrappedNativeTearOff* to;
     XPCWrappedNativeTearOff* firstAvailable = nullptr;
@@ -1559,8 +1530,6 @@ XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
 {
     AutoJSContext cx;
 
-    // This is only called while locked (during XPCWrappedNative::FindTearOff).
-
     // Determine if the object really does this interface...
 
     const nsIID* iid = aInterface->GetIID();
@@ -1576,103 +1545,98 @@ XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
         return NS_ERROR_NO_INTERFACE;
     }
 
-    // We are about to call out to unlock and other code.
+    // We are about to call out to other code.
     // So protect our intended tearoff.
 
     aTearOff->SetReserved();
 
-    {   // scoped *un*lock
-        XPCAutoUnlock unlock(GetLock());
+    if (NS_FAILED(identity->QueryInterface(*iid, (void**)&obj)) || !obj) {
+        aTearOff->SetInterface(nullptr);
+        return NS_ERROR_NO_INTERFACE;
+    }
 
-        if (NS_FAILED(identity->QueryInterface(*iid, (void**)&obj)) || !obj) {
+    // Guard against trying to build a tearoff for a shared nsIClassInfo.
+    if (iid->Equals(NS_GET_IID(nsIClassInfo))) {
+        nsCOMPtr<nsISupports> alternate_identity(do_QueryInterface(obj));
+        if (alternate_identity.get() != identity) {
+            NS_RELEASE(obj);
             aTearOff->SetInterface(nullptr);
             return NS_ERROR_NO_INTERFACE;
         }
+    }
 
-        // Guard against trying to build a tearoff for a shared nsIClassInfo.
-        if (iid->Equals(NS_GET_IID(nsIClassInfo))) {
-            nsCOMPtr<nsISupports> alternate_identity(do_QueryInterface(obj));
-            if (alternate_identity.get() != identity) {
+    // Guard against trying to build a tearoff for an interface that is
+    // aggregated and is implemented as a nsIXPConnectWrappedJS using this
+    // self-same JSObject. The XBL system does this. If we mutate the set
+    // of this wrapper then we will shadow the method that XBL has added to
+    // the JSObject that it has inserted in the JS proto chain between our
+    // JSObject and our XPCWrappedNativeProto's JSObject. If we let this
+    // set mutation happen then the interface's methods will be added to
+    // our JSObject, but calls on those methods will get routed up to
+    // native code and into the wrappedJS - which will do a method lookup
+    // on *our* JSObject and find the same method and make another call
+    // into an infinite loop.
+    // see: http://bugzilla.mozilla.org/show_bug.cgi?id=96725
+
+    // The code in this block also does a check for the double wrapped
+    // nsIPropertyBag case.
+
+    nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS(do_QueryInterface(obj));
+    if (wrappedJS) {
+        RootedObject jso(cx, wrappedJS->GetJSObject());
+        if (jso == mFlatJSObject) {
+            // The implementing JSObject is the same as ours! Just say OK
+            // without actually extending the set.
+            //
+            // XXX It is a little cheesy to have FindTearOff return an
+            // 'empty' tearoff. But this is the centralized place to do the
+            // QI activities on the underlying object. *And* most caller to
+            // FindTearOff only look for a non-null result and ignore the
+            // actual tearoff returned. The only callers that do use the
+            // returned tearoff make sure to check for either a non-null
+            // JSObject or a matching Interface before proceeding.
+            // I think we can get away with this bit of ugliness.
+
+            NS_RELEASE(obj);
+            aTearOff->SetInterface(nullptr);
+            return NS_OK;
+        }
+
+        // Decide whether or not to expose nsIPropertyBag to calling
+        // JS code in the double wrapped case.
+        //
+        // Our rule here is that when JSObjects are double wrapped and
+        // exposed to other JSObjects then the nsIPropertyBag interface
+        // is only exposed on an 'opt-in' basis; i.e. if the underlying
+        // JSObject wants other JSObjects to be able to see this interface
+        // then it must implement QueryInterface and not throw an exception
+        // when asked for nsIPropertyBag. It need not actually *implement*
+        // nsIPropertyBag - xpconnect will do that work.
+
+        nsXPCWrappedJSClass* clazz;
+        if (iid->Equals(NS_GET_IID(nsIPropertyBag)) && jso &&
+            NS_SUCCEEDED(nsXPCWrappedJSClass::GetNewOrUsed(cx,*iid,&clazz))&&
+            clazz) {
+            RootedObject answer(cx,
+                                clazz->CallQueryInterfaceOnJSObject(cx, jso, *iid));
+            NS_RELEASE(clazz);
+            if (!answer) {
                 NS_RELEASE(obj);
                 aTearOff->SetInterface(nullptr);
                 return NS_ERROR_NO_INTERFACE;
             }
         }
-
-        // Guard against trying to build a tearoff for an interface that is
-        // aggregated and is implemented as a nsIXPConnectWrappedJS using this
-        // self-same JSObject. The XBL system does this. If we mutate the set
-        // of this wrapper then we will shadow the method that XBL has added to
-        // the JSObject that it has inserted in the JS proto chain between our
-        // JSObject and our XPCWrappedNativeProto's JSObject. If we let this
-        // set mutation happen then the interface's methods will be added to
-        // our JSObject, but calls on those methods will get routed up to
-        // native code and into the wrappedJS - which will do a method lookup
-        // on *our* JSObject and find the same method and make another call
-        // into an infinite loop.
-        // see: http://bugzilla.mozilla.org/show_bug.cgi?id=96725
-
-        // The code in this block also does a check for the double wrapped
-        // nsIPropertyBag case.
-
-        nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS(do_QueryInterface(obj));
-        if (wrappedJS) {
-            RootedObject jso(cx, wrappedJS->GetJSObject());
-            if (jso == mFlatJSObject) {
-                // The implementing JSObject is the same as ours! Just say OK
-                // without actually extending the set.
-                //
-                // XXX It is a little cheesy to have FindTearOff return an
-                // 'empty' tearoff. But this is the centralized place to do the
-                // QI activities on the underlying object. *And* most caller to
-                // FindTearOff only look for a non-null result and ignore the
-                // actual tearoff returned. The only callers that do use the
-                // returned tearoff make sure to check for either a non-null
-                // JSObject or a matching Interface before proceeding.
-                // I think we can get away with this bit of ugliness.
-
-                NS_RELEASE(obj);
-                aTearOff->SetInterface(nullptr);
-                return NS_OK;
-            }
-
-            // Decide whether or not to expose nsIPropertyBag to calling
-            // JS code in the double wrapped case.
-            //
-            // Our rule here is that when JSObjects are double wrapped and
-            // exposed to other JSObjects then the nsIPropertyBag interface
-            // is only exposed on an 'opt-in' basis; i.e. if the underlying
-            // JSObject wants other JSObjects to be able to see this interface
-            // then it must implement QueryInterface and not throw an exception
-            // when asked for nsIPropertyBag. It need not actually *implement*
-            // nsIPropertyBag - xpconnect will do that work.
-
-            nsXPCWrappedJSClass* clazz;
-            if (iid->Equals(NS_GET_IID(nsIPropertyBag)) && jso &&
-                NS_SUCCEEDED(nsXPCWrappedJSClass::GetNewOrUsed(cx,*iid,&clazz))&&
-                clazz) {
-                RootedObject answer(cx,
-                    clazz->CallQueryInterfaceOnJSObject(cx, jso, *iid));
-                NS_RELEASE(clazz);
-                if (!answer) {
-                    NS_RELEASE(obj);
-                    aTearOff->SetInterface(nullptr);
-                    return NS_ERROR_NO_INTERFACE;
-                }
-            }
-        }
-
-        nsIXPCSecurityManager* sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
-        if (sm && NS_FAILED(sm->
-                            CanCreateWrapper(cx, *iid, identity,
-                                             GetClassInfo(), GetSecurityInfoAddr()))) {
-            // the security manager vetoed. It should have set an exception.
-            NS_RELEASE(obj);
-            aTearOff->SetInterface(nullptr);
-            return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
-        }
     }
-    // We are relocked from here on...
+
+    nsIXPCSecurityManager* sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
+    if (sm && NS_FAILED(sm->
+                        CanCreateWrapper(cx, *iid, identity,
+                                         GetClassInfo(), GetSecurityInfoAddr()))) {
+        // the security manager vetoed. It should have set an exception.
+        NS_RELEASE(obj);
+        aTearOff->SetInterface(nullptr);
+        return NS_ERROR_XPC_SECURITY_MANAGER_VETO;
+    }
 
     // If this is not already in our set we need to extend our set.
     // Note: we do not cache the result of the previous call to HasInterface()
@@ -1697,8 +1661,6 @@ bool
 XPCWrappedNative::InitTearOffJSObject(XPCWrappedNativeTearOff* to)
 {
     AutoJSContext cx;
-
-    // This is only called while locked (during XPCWrappedNative::FindTearOff).
 
     JSObject* obj = JS_NewObject(cx, Jsvalify(&XPC_WN_Tearoff_JSClass),
                                  JS_GetObjectPrototype(cx, mFlatJSObject),
@@ -2881,7 +2843,7 @@ XPCJSObjectHolder::XPCJSObjectHolder(JSObject* obj)
 
 XPCJSObjectHolder::~XPCJSObjectHolder()
 {
-    RemoveFromRootSet(nsXPConnect::GetRuntimeInstance()->GetMapLock());
+    RemoveFromRootSet();
 }
 
 void

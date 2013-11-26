@@ -94,7 +94,7 @@ class MediaPipeline : public sigslot::has_slots<> {
         rtcp_packets_received_(0),
         pc_(pc),
         description_() {
-      // To indicate rtcp-mux rtcp_transport should be NULL.
+      // To indicate rtcp-mux rtcp_transport should be nullptr.
       // Therefore it's an error to send in the same flow for
       // both rtp and rtcp.
       MOZ_ASSERT(rtp_transport_ != rtcp_transport_);
@@ -149,7 +149,7 @@ class MediaPipeline : public sigslot::has_slots<> {
         : pipeline_(pipeline),
           sts_thread_(pipeline->sts_thread_) {}
 
-    void Detach() { pipeline_ = NULL; }
+    void Detach() { pipeline_ = nullptr; }
     MediaPipeline *pipeline() const { return pipeline_; }
 
     virtual nsresult SendRtpPacket(const void* data, int len);
@@ -302,7 +302,7 @@ private:
 // and transmitting to the network.
 class MediaPipelineTransmit : public MediaPipeline {
  public:
-  // Set rtcp_transport to NULL to use rtcp-mux
+  // Set rtcp_transport to nullptr to use rtcp-mux
   MediaPipelineTransmit(const std::string& pc,
                         nsCOMPtr<nsIEventTarget> main_thread,
                         nsCOMPtr<nsIEventTarget> sts_thread,
@@ -342,10 +342,14 @@ class MediaPipelineTransmit : public MediaPipeline {
       : conduit_(conduit),
         active_(false),
         direct_connect_(false),
-        last_img_(-1),
         samples_10ms_buffer_(nullptr),
         buffer_current_(0),
-        samplenum_10ms_(0) {}
+        samplenum_10ms_(0)
+#ifdef MOZILLA_INTERNAL_API
+        , last_img_(-1)
+#endif // MOZILLA_INTERNAL_API
+    {
+    }
 
     ~PipelineListener()
     {
@@ -396,8 +400,6 @@ class MediaPipelineTransmit : public MediaPipeline {
     volatile bool active_;
     bool direct_connect_;
 
-    int32_t last_img_; // serial number of last Image
-
     // These vars handle breaking audio samples into exact 10ms chunks:
     // The buffer of 10ms audio samples that we will send once full
     // (can be carried over from one call to another).
@@ -406,6 +408,10 @@ class MediaPipelineTransmit : public MediaPipeline {
     int64_t buffer_current_;
     // The number of samples in a 10ms audio chunk.
     int64_t samplenum_10ms_;
+
+#ifdef MOZILLA_INTERNAL_API
+    int32_t last_img_; // serial number of last Image
+#endif // MOZILLA_INTERNAL_API
   };
 
  private:
@@ -418,7 +424,7 @@ class MediaPipelineTransmit : public MediaPipeline {
 // rendering video.
 class MediaPipelineReceive : public MediaPipeline {
  public:
-  // Set rtcp_transport to NULL to use rtcp-mux
+  // Set rtcp_transport to nullptr to use rtcp-mux
   MediaPipelineReceive(const std::string& pc,
                        nsCOMPtr<nsIEventTarget> main_thread,
                        nsCOMPtr<nsIEventTarget> sts_thread,
@@ -545,7 +551,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
     PipelineRenderer(MediaPipelineReceiveVideo *pipeline) :
       pipeline_(pipeline) {}
 
-    void Detach() { pipeline_ = NULL; }
+    void Detach() { pipeline_ = nullptr; }
 
     // Implement VideoRenderer
     virtual void FrameSizeChange(unsigned int width,

@@ -210,8 +210,8 @@ bool
 LIRGeneratorARM::lowerForBitAndAndBranch(LBitAndAndBranch *baab, MInstruction *mir,
                                          MDefinition *lhs, MDefinition *rhs)
 {
-    baab->setOperand(0, useRegister(lhs));
-    baab->setOperand(1, useRegisterOrConstant(rhs));
+    baab->setOperand(0, useRegisterAtStart(lhs));
+    baab->setOperand(1, useRegisterOrConstantAtStart(rhs));
     return add(baab, mir);
 }
 

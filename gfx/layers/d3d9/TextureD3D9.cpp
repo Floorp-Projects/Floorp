@@ -406,6 +406,10 @@ TextureSourceD3D9::TextureToTexture(DeviceManagerD3D9* aDeviceManager,
                                     const IntSize& aSize,
                                     _D3DFORMAT aFormat)
 {
+  if (!aDeviceManager) {
+    return nullptr;
+  }
+
   RefPtr<IDirect3DTexture9> texture =
     aDeviceManager->CreateTexture(aSize, aFormat, D3DPOOL_DEFAULT, this);
   if (!texture) {

@@ -138,7 +138,7 @@ bool IsValidWrite(int fd, const void *wbuf, size_t count)
     }
   }
 
-  // For writev we pass NULL in wbuf. We should only get here from
+  // For writev we pass a nullptr wbuf. We should only get here from
   // dbm, and it uses write, so assert that we have wbuf.
   if (!wbuf) {
     return true;

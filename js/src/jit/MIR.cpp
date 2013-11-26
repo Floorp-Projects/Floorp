@@ -1361,7 +1361,7 @@ MDiv::analyzeEdgeCasesBackward()
 }
 
 bool
-MDiv::fallible()
+MDiv::fallible() const
 {
     return !isTruncated();
 }
@@ -1401,7 +1401,7 @@ MMod::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 }
 
 bool
-MMod::fallible()
+MMod::fallible() const
 {
     return !isTruncated();
 }
@@ -1420,7 +1420,7 @@ MMathFunction::trySpecializeFloat32(TempAllocator &alloc)
 }
 
 bool
-MAdd::fallible()
+MAdd::fallible() const
 {
     // the add is fallible if range analysis does not say that it is finite, AND
     // either the truncation analysis shows that there are non-truncated uses.
@@ -1432,7 +1432,7 @@ MAdd::fallible()
 }
 
 bool
-MSub::fallible()
+MSub::fallible() const
 {
     // see comment in MAdd::fallible()
     if (isTruncated())
@@ -1501,7 +1501,7 @@ MMul::updateForReplacement(MDefinition *ins_)
 }
 
 bool
-MMul::canOverflow()
+MMul::canOverflow() const
 {
     if (isTruncated())
         return false;
@@ -1509,7 +1509,7 @@ MMul::canOverflow()
 }
 
 bool
-MUrsh::fallible()
+MUrsh::fallible() const
 {
     if (bailoutsDisabled())
         return false;
@@ -1731,7 +1731,8 @@ MustBeUInt32(MDefinition *def, MDefinition **pwrapped)
     if (def->isUrsh()) {
         *pwrapped = def->toUrsh()->getOperand(0);
         MDefinition *rhs = def->toUrsh()->getOperand(1);
-        return rhs->isConstant()
+        return !def->toUrsh()->bailoutsDisabled()
+            && rhs->isConstant()
             && rhs->toConstant()->value().isInt32()
             && rhs->toConstant()->value().toInt32() == 0;
     }

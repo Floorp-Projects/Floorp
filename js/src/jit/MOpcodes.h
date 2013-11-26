@@ -181,6 +181,7 @@ namespace jit {
     _(InterruptCheck)                                                       \
     _(FunctionBoundary)                                                     \
     _(GetDOMProperty)                                                       \
+    _(GetDOMMember)                                                         \
     _(SetDOMProperty)                                                       \
     _(IsCallable)                                                           \
     _(HaveSameClass)                                                        \

@@ -1718,46 +1718,33 @@ JSObject::deleteByValue(JSContext *cx, HandleObject obj, const Value &property, 
     return deleteProperty(cx, obj, propname, succeeded);
 }
 
-static bool
-CopyProperty(JSContext *cx, HandleObject target, HandleObject obj,
-             HandleShape shape)
-{
-    // |shape| and |obj| are generally not same-compartment with |target| and
-    // |cx| here.
-    assertSameCompartment(cx, target);
-
-    unsigned attrs = shape->attributes();
-    PropertyOp getter = shape->getter();
-    StrictPropertyOp setter = shape->setter();
-    AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
-    if ((attrs & JSPROP_GETTER) && !cx->compartment()->wrap(cx, &getter))
-        return false;
-    if ((attrs & JSPROP_SETTER) && !cx->compartment()->wrap(cx, &setter))
-        return false;
-    RootedValue v(cx, shape->hasSlot() ? obj->getSlot(shape->slot())
-                                       : UndefinedValue());
-    if (!cx->compartment()->wrap(cx, &v))
-        return false;
-    RootedId id(cx, shape->propid());
-    return JSObject::defineGeneric(cx, target, id, v, getter,
-                                   setter, attrs);
-}
-
 JS_FRIEND_API(bool)
 JS_CopyPropertyFrom(JSContext *cx, HandleId id, HandleObject target,
                     HandleObject obj)
 {
-    assertSameCompartment(cx, target);
-    MOZ_ASSERT(obj->isNative());
-    RootedObject obj2(cx);
-    RootedShape shape(cx);
-    {
-        AutoCompartment ac(cx, obj);
-        if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &shape))
-            return false;
-    }
-    MOZ_ASSERT(shape && obj == obj2);
-    return CopyProperty(cx, target, obj, shape);
+    // |obj| and |cx| are generally not same-compartment with |target| here.
+    assertSameCompartment(cx, obj, id);
+    Rooted<JSPropertyDescriptor> desc(cx);
+
+    if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
+        return false;
+    MOZ_ASSERT(desc.object());
+
+    // Silently skip JSPropertyOp-implemented accessors.
+    if (desc.getter() && !desc.hasGetterObject())
+        return true;
+    if (desc.setter() && !desc.hasSetterObject())
+        return true;
+
+    JSAutoCompartment ac(cx, target);
+    RootedId wrappedId(cx, id);
+    if (!cx->compartment()->wrap(cx, &desc))
+        return false;
+    if (!cx->compartment()->wrapId(cx, wrappedId.address()))
+        return false;
+
+    bool ignored;
+    return DefineOwnProperty(cx, target, wrappedId, desc, &ignored);
 }
 
 JS_FRIEND_API(bool)
@@ -1765,26 +1752,17 @@ JS_CopyPropertiesFrom(JSContext *cx, JSObject *targetArg, JSObject *objArg)
 {
     RootedObject target(cx, targetArg);
     RootedObject obj(cx, objArg);
-    assertSameCompartment(cx, target);
+    JSAutoCompartment ac(cx, obj);
 
-    // If we're not native, then we cannot copy properties.
-    JS_ASSERT(target->isNative() == obj->isNative());
-    if (!target->isNative())
-        return true;
+    AutoIdVector props(cx);
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &props))
+        return false;
 
-    AutoShapeVector shapes(cx);
-    for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
-        if (!shapes.append(&r.front()))
+    for (size_t i = 0; i < props.length(); ++i) {
+        if (!JS_CopyPropertyFrom(cx, props.handleAt(i), target, obj))
             return false;
     }
 
-    size_t n = shapes.length();
-    RootedShape shape(cx);
-    while (n > 0) {
-        shape = shapes[--n];
-        if (!CopyProperty(cx, target, obj, shape))
-            return false;
-    }
     return true;
 }
 

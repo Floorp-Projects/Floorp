@@ -259,6 +259,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitAsmJSCheckOverRecursed(MAsmJSCheckOverRecursed *ins);
     bool visitSetDOMProperty(MSetDOMProperty *ins);
     bool visitGetDOMProperty(MGetDOMProperty *ins);
+    bool visitGetDOMMember(MGetDOMMember *ins);
 };
 
 } // namespace jit

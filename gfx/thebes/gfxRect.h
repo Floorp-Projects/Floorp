@@ -171,6 +171,12 @@ struct gfxCornerSizes {
         return sizes[index];
     }
 
+    void Scale(gfxFloat aXScale, gfxFloat aYScale)
+    {
+        for (int i = 0; i < NS_NUM_CORNERS; i++)
+            sizes[i].Scale(aXScale, aYScale);
+    }
+
     const gfxSize TopLeft() const { return sizes[NS_CORNER_TOP_LEFT]; }
     gfxSize& TopLeft() { return sizes[NS_CORNER_TOP_LEFT]; }
 

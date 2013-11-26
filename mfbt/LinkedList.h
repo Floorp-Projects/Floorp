@@ -58,6 +58,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/NullPtr.h"
 
@@ -377,6 +378,26 @@ class LinkedList
     void clear() {
       while (popFirst())
         continue;
+    }
+
+    /*
+     * Measures the memory consumption of the list excluding |this|.  Note that
+     * it only measures the list elements themselves.  If the list elements
+     * contain pointers to other memory blocks, those blocks must be measured
+     * separately during a subsequent iteration over the list.
+     */
+    size_t sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+      size_t n = 0;
+      for (const T* t = getFirst(); t; t = t->getNext())
+        n += mallocSizeOf(t);
+      return n;
+    }
+
+    /*
+     * Like sizeOfExcludingThis(), but measures |this| as well.
+     */
+    size_t sizeOfIncludingThis(MallocSizeOf mallocSizeOf) const {
+      return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
     }
 
     /*

@@ -59,7 +59,7 @@ SOURCES += [
 
 LIBRARY_NAME = 'gtest'
 
-GTEST_SOURCES += [
+SOURCES += [
     'mozilla/SanityTest.cpp',
 ]
 

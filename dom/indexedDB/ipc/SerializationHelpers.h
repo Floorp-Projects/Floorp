@@ -244,7 +244,7 @@ struct ParamTraits<mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo>
         return false;
       }
     } else {
-      aResult->data = NULL;
+      aResult->data = nullptr;
     }
 
     return true;
@@ -283,7 +283,7 @@ struct ParamTraits<mozilla::dom::indexedDB::SerializedStructuredCloneWriteInfo>
         return false;
       }
     } else {
-      aResult->data = NULL;
+      aResult->data = nullptr;
     }
 
     if (!ReadParam(aMsg, aIter, &aResult->offsetToKeyProp)) {

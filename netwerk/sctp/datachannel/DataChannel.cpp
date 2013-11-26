@@ -645,7 +645,7 @@ DataChannelConnection::SctpDtlsInput(TransportFlow *flow,
   if (PR_LOG_TEST(GetSCTPLog(), PR_LOG_DEBUG)) {
     char *buf;
 
-    if ((buf = usrsctp_dumppacket((void *)data, len, SCTP_DUMP_INBOUND)) != NULL) {
+    if ((buf = usrsctp_dumppacket((void *)data, len, SCTP_DUMP_INBOUND)) != nullptr) {
       PR_LogPrint("%s", buf);
       usrsctp_freedumpbuffer(buf);
     }
@@ -677,7 +677,7 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
   if (PR_LOG_TEST(GetSCTPLog(), PR_LOG_DEBUG)) {
     char *buf;
 
-    if ((buf = usrsctp_dumppacket(buffer, length, SCTP_DUMP_OUTBOUND)) != NULL) {
+    if ((buf = usrsctp_dumppacket(buffer, length, SCTP_DUMP_OUTBOUND)) != nullptr) {
       PR_LogPrint("%s", buf);
       usrsctp_freedumpbuffer(buf);
     }

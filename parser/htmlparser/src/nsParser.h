@@ -53,7 +53,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWeakReference.h"
 
-class nsICharsetConverterManager;
 class nsIDTD;
 class nsScanner;
 class nsIRunnable;
@@ -300,10 +299,6 @@ class nsParser : public nsIParser,
      */
     void HandleParserContinueEvent(class nsParserContinueEvent *);
 
-    static nsICharsetConverterManager* GetCharsetConverterManager() {
-      return sCharsetConverterManager;
-    }
-
     virtual void Reset() {
       Cleanup();
       Initialize();
@@ -398,8 +393,6 @@ protected:
 
     bool                mProcessingNetworkData;
     bool                mIsAboutBlank;
-
-    static nsICharsetConverterManager* sCharsetConverterManager;
 };
 
 #endif 
