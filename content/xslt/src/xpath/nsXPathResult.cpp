@@ -258,6 +258,8 @@ nsresult
 nsXPathResult::SetExprResult(txAExprResult* aExprResult, uint16_t aResultType,
                              nsINode* aContextNode)
 {
+    MOZ_ASSERT(aExprResult);
+
     if ((isSnapshot(aResultType) || isIterator(aResultType) ||
          isNode(aResultType)) &&
         aExprResult->getResultType() != txAExprResult::NODESET) {
@@ -279,11 +281,29 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, uint16_t aResultType,
 
     // XXX This will keep the recycler alive, should we clear it?
     mResult = aExprResult;
-    mBooleanResult = mResult->booleanValue();
-    mNumberResult = mResult->numberValue();
-    mResult->stringValue(mStringResult);
+    switch (mResultType) {
+        case BOOLEAN_TYPE:
+        {
+            mBooleanResult = mResult->booleanValue();
+            break;
+        }
+        case NUMBER_TYPE:
+        {
+            mNumberResult = mResult->numberValue();
+            break;
+        }
+        case STRING_TYPE:
+        {
+            mResult->stringValue(mStringResult);
+            break;
+        }
+        default:
+        {
+            MOZ_ASSERT(isNode() || isIterator() || isSnapshot());
+        }
+    }
 
-    if (aExprResult && aExprResult->getResultType() == txAExprResult::NODESET) {
+    if (aExprResult->getResultType() == txAExprResult::NODESET) {
         txNodeSet *nodeSet = static_cast<txNodeSet*>(aExprResult);
         nsCOMPtr<nsIDOMNode> node;
         int32_t i, count = nodeSet->size();
