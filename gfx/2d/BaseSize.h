@@ -69,6 +69,10 @@ struct BaseSize {
   Sub operator/(T aScale) const {
     return Sub(width / aScale, height / aScale);
   }
+  void Scale(T aXScale, T aYScale) {
+    width *= aXScale;
+    height *= aYScale;
+  }
 
   Sub operator*(const Sub& aSize) const {
     return Sub(width * aSize.width, height * aSize.height);

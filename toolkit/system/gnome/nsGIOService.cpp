@@ -405,7 +405,7 @@ nsGIOService::OrgFreedesktopFileManager1ShowItems(const nsACString& aPath)
   }
 
   char *uri = g_filename_to_uri(PromiseFlatCString(aPath).get(), nullptr, nullptr);
-  if (uri == NULL) {
+  if (uri == nullptr) {
     return NS_ERROR_FAILURE;
   }
 

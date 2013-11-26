@@ -490,16 +490,16 @@ class TransportConduitTest : public ::testing::Test
   {
     //get pointer to AudioSessionConduit
     int err=0;
-    mAudioSession = mozilla::AudioSessionConduit::Create(NULL);
+    mAudioSession = mozilla::AudioSessionConduit::Create(nullptr);
     if( !mAudioSession )
-      ASSERT_NE(mAudioSession, (void*)NULL);
+      ASSERT_NE(mAudioSession, (void*)nullptr);
 
-    mAudioSession2 = mozilla::AudioSessionConduit::Create(NULL);
+    mAudioSession2 = mozilla::AudioSessionConduit::Create(nullptr);
     if( !mAudioSession2 )
-      ASSERT_NE(mAudioSession2, (void*)NULL);
+      ASSERT_NE(mAudioSession2, (void*)nullptr);
 
     FakeMediaTransport* xport = new FakeMediaTransport();
-    ASSERT_NE(xport, (void*)NULL);
+    ASSERT_NE(xport, (void*)nullptr);
     xport->SetAudioSession(mAudioSession, mAudioSession2);
     mAudioTransport = xport;
 
@@ -548,20 +548,20 @@ class TransportConduitTest : public ::testing::Test
   {
     int err = 0;
     //get pointer to VideoSessionConduit
-    mVideoSession = mozilla::VideoSessionConduit::Create(NULL);
+    mVideoSession = mozilla::VideoSessionConduit::Create(nullptr);
     if( !mVideoSession )
-      ASSERT_NE(mVideoSession, (void*)NULL);
+      ASSERT_NE(mVideoSession, (void*)nullptr);
 
    // This session is for other one
-    mVideoSession2 = mozilla::VideoSessionConduit::Create(NULL);
+    mVideoSession2 = mozilla::VideoSessionConduit::Create(nullptr);
     if( !mVideoSession2 )
-      ASSERT_NE(mVideoSession2,(void*)NULL);
+      ASSERT_NE(mVideoSession2,(void*)nullptr);
 
     mVideoRenderer = new DummyVideoTarget();
-    ASSERT_NE(mVideoRenderer, (void*)NULL);
+    ASSERT_NE(mVideoRenderer, (void*)nullptr);
 
     FakeMediaTransport* xport = new FakeMediaTransport();
-    ASSERT_NE(xport, (void*)NULL);
+    ASSERT_NE(xport, (void*)nullptr);
     xport->SetVideoSession(mVideoSession,mVideoSession2);
     mVideoTransport = xport;
 
@@ -622,9 +622,9 @@ class TransportConduitTest : public ::testing::Test
     int err = 0;
     mozilla::RefPtr<mozilla::VideoSessionConduit> mVideoSession;
     //get pointer to VideoSessionConduit
-    mVideoSession = mozilla::VideoSessionConduit::Create(NULL);
+    mVideoSession = mozilla::VideoSessionConduit::Create(nullptr);
     if( !mVideoSession )
-      ASSERT_NE(mVideoSession, (void*)NULL);
+      ASSERT_NE(mVideoSession, (void*)nullptr);
 
     //Test Configure Recv Codec APIS
     cerr << "   *************************************************" << endl;
@@ -705,7 +705,7 @@ class TransportConduitTest : public ::testing::Test
     cerr << "    3. Null Codec Parameter  " << endl;
     cerr << "   *************************************************" << endl;
 
-    err = mVideoSession->ConfigureSendMediaCodec(NULL);
+    err = mVideoSession->ConfigureSendMediaCodec(nullptr);
     EXPECT_TRUE(err != mozilla::kMediaConduitNoError);
 
   }
@@ -726,9 +726,9 @@ class TransportConduitTest : public ::testing::Test
     int err = 0;
 
     // Get pointer to VideoSessionConduit.
-    mVideoSession = mozilla::VideoSessionConduit::Create(NULL);
+    mVideoSession = mozilla::VideoSessionConduit::Create(nullptr);
     if( !mVideoSession )
-      ASSERT_NE(mVideoSession, (void*)NULL);
+      ASSERT_NE(mVideoSession, (void*)nullptr);
 
     // Configure send codecs on the conduit.
     mozilla::VideoCodecConfig cinst1(120, "VP8", 0, max_fs, 0);

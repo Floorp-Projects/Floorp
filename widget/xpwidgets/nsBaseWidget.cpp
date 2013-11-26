@@ -851,7 +851,7 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
 #endif
 
   // we should use AddBoolPrefVarCache
-  bool disableAcceleration = IsSmallPopup() || gfxPlatform::GetPrefLayersAccelerationDisabled();
+  bool disableAcceleration = gfxPlatform::GetPrefLayersAccelerationDisabled();
   mForceLayersAcceleration = gfxPlatform::GetPrefLayersAccelerationForceEnabled();
 
   const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
@@ -992,15 +992,9 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   // deallocated it when being freed.
 }
 
-bool nsBaseWidget::IsSmallPopup()
-{
-  return mWindowType == eWindowType_popup &&
-         mPopupType != ePopupTypePanel;
-}
-
 bool nsBaseWidget::ShouldUseOffMainThreadCompositing()
 {
-  return CompositorParent::CompositorLoop() && !IsSmallPopup();
+  return CompositorParent::CompositorLoop();
 }
 
 LayerManager* nsBaseWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,

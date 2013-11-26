@@ -232,7 +232,7 @@ ia2AccessibleText::get_textBeforeOffset(long aOffset,
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  if (textAcc->IsValidOffset(aOffset))
+  if (!textAcc->IsValidOffset(aOffset))
     return E_INVALIDARG;
 
   nsAutoString text;
@@ -281,7 +281,7 @@ ia2AccessibleText::get_textAfterOffset(long aOffset,
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  if (textAcc->IsValidOffset(aOffset))
+  if (!textAcc->IsValidOffset(aOffset))
     return E_INVALIDARG;
 
   nsAutoString text;
@@ -328,7 +328,7 @@ ia2AccessibleText::get_textAtOffset(long aOffset,
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  if (textAcc->IsValidOffset(aOffset))
+  if (!textAcc->IsValidOffset(aOffset))
     return E_INVALIDARG;
 
   nsAutoString text;
