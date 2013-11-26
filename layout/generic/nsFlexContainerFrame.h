@@ -129,6 +129,7 @@ protected:
   void PositionItemInCrossAxis(
     nscoord aLineStartPosition,
     SingleLineCrossAxisPositionTracker& aLineCrossAxisPosnTracker,
+    FlexLine& aLine,
     FlexItem& aItem);
 
   bool mChildrenHaveBeenReordered; // Have we ever had to reorder our kids

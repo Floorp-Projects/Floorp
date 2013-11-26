@@ -524,9 +524,37 @@ protected:
 // Manages an array of the FlexItems that are in the line.
 class FlexLine {
 public:
-  FlexLine() {}
+  FlexLine()
+  : mLineCrossSize(0),
+    mBaselineOffsetFromCrossStart(nscoord_MIN)
+  {}
+
+  // Computes the cross-size and baseline position of this FlexLine, based on
+  // its FlexItems.
+  void ComputeCrossSizeAndBaseline(const FlexboxAxisTracker& aAxisTracker);
+
+  // Returns the cross-size of this line.
+  nscoord GetLineCrossSize() const { return mLineCrossSize; }
+
+  // Setter for line cross-size -- needed for cases where the flex container
+  // imposes a cross-size on the line. (e.g. for single-line flexbox, or for
+  // multi-line flexbox with 'align-content: stretch')
+  void SetLineCrossSize(nscoord aLineCrossSize) {
+    mLineCrossSize = aLineCrossSize;
+  }
+
+  // Returns the distance from the cross-start edge of this FlexLine
+  // to its baseline (derived from its baseline-aligned FlexItems).
+  // If there are no baseline-aligned FlexItems, returns nscoord_MIN.
+  nscoord GetBaselineOffsetFromCrossStart() const {
+    return mBaselineOffsetFromCrossStart;
+  }
 
   nsTArray<FlexItem> mItems; // Array of the flex items in this flex line.
+
+private:
+  nscoord mLineCrossSize;
+  nscoord mBaselineOffsetFromCrossStart;
 };
 
 // Helper function to calculate the sum of our flex items'
@@ -1141,35 +1169,14 @@ class MOZ_STACK_CLASS SingleLineCrossAxisPositionTracker : public PositionTracke
 public:
   SingleLineCrossAxisPositionTracker(const FlexboxAxisTracker& aAxisTracker);
 
-  void ComputeLineCrossSize(const FlexLine& aLine);
-  inline nscoord GetLineCrossSize() const { return mLineCrossSize; }
+  void ResolveAutoMarginsInCrossAxis(const FlexLine& aLine,
+                                     FlexItem& aItem);
 
-  // Used to override the flex line's size, for cases when the flex container is
-  // single-line and has a fixed size, and also in cases where
-  // "align-self: stretch" triggers some space-distribution between lines
-  // (when we support that property).
-  inline void SetLineCrossSize(nscoord aNewLineCrossSize) {
-    mLineCrossSize = aNewLineCrossSize;
-  }
-
-  void ResolveAutoMarginsInCrossAxis(FlexItem& aItem);
-
-  void EnterAlignPackingSpace(const FlexItem& aItem);
+  void EnterAlignPackingSpace(const FlexLine& aLine,
+                              const FlexItem& aItem);
 
   // Resets our position to the cross-start edge of this line.
   inline void ResetPosition() { mPosition = 0; }
-
-  // Returns the ascent of the line.
-  nscoord GetCrossStartToFurthestBaseline() { return mCrossStartToFurthestBaseline; }
-
-private:
-  nscoord mLineCrossSize;
-
-  // Largest distance from a baseline-aligned item's cross-start margin-box
-  // edge to its baseline.  Computed in ComputeLineCrossSize, and used for
-  // alignment of any "align-self: baseline" items in this line (and possibly
-  // used for computing the baseline of the flex container, as well).
-  nscoord mCrossStartToFurthestBaseline;
 };
 
 //----------------------------------------------------------------------
@@ -1721,37 +1728,28 @@ MainAxisPositionTracker::TraversePackingSpace()
 
 SingleLineCrossAxisPositionTracker::
   SingleLineCrossAxisPositionTracker(const FlexboxAxisTracker& aAxisTracker)
-  : PositionTracker(aAxisTracker.GetCrossAxis()),
-    mLineCrossSize(0),
-    mCrossStartToFurthestBaseline(nscoord_MIN) // Starts at -infinity, and then
-                                               // we progressively increase it.
+  : PositionTracker(aAxisTracker.GetCrossAxis())
 {
 }
 
 void
-SingleLineCrossAxisPositionTracker::
-  ComputeLineCrossSize(const FlexLine& aLine)
+FlexLine::ComputeCrossSizeAndBaseline(const FlexboxAxisTracker& aAxisTracker)
 {
-  // NOTE: mCrossStartToFurthestBaseline is a member var rather than a local
-  // var, because we'll need it for baseline-alignment and for computing the
-  // container's baseline later on.
-  MOZ_ASSERT(mCrossStartToFurthestBaseline == nscoord_MIN,
-             "Computing largest baseline offset more than once");
-
+  nscoord crossStartToFurthestBaseline= nscoord_MIN;
   nscoord crossEndToFurthestBaseline = nscoord_MIN;
   nscoord largestOuterCrossSize = 0;
-  for (uint32_t i = 0; i < aLine.mItems.Length(); ++i) {
-    const FlexItem& curItem = aLine.mItems[i];
+  for (uint32_t i = 0; i < mItems.Length(); ++i) {
+    const FlexItem& curItem = mItems[i];
     nscoord curOuterCrossSize = curItem.GetCrossSize() +
-      curItem.GetMarginBorderPaddingSizeInAxis(mAxis);
+      curItem.GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetCrossAxis());
 
     if (curItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_BASELINE &&
-        curItem.GetNumAutoMarginsInAxis(mAxis) == 0) {
+        curItem.GetNumAutoMarginsInAxis(aAxisTracker.GetCrossAxis()) == 0) {
       // FIXME: Once we support multi-line flexbox with "wrap-reverse", that'll
       // give us bottom-to-top cross axes. (But for now, we assume eAxis_TB.)
       // FIXME: Once we support "writing-mode", we'll have to do baseline
       // alignment in vertical flex containers here (w/ horizontal cross-axes).
-      MOZ_ASSERT(mAxis == eAxis_TB,
+      MOZ_ASSERT(aAxisTracker.GetCrossAxis() == eAxis_TB,
                  "Only expecting to do baseline-alignment in horizontal "
                  "flex containers, with top-to-bottom cross axis");
 
@@ -1782,14 +1780,14 @@ SingleLineCrossAxisPositionTracker::
       //   crossEndToBaseline.
 
       nscoord crossStartToBaseline =
-        curItem.GetBaselineOffsetFromOuterCrossStart(mAxis);
+        curItem.GetBaselineOffsetFromOuterCrossStart(aAxisTracker.GetCrossAxis());
       nscoord crossEndToBaseline = curOuterCrossSize - crossStartToBaseline;
 
       // Now, update our "largest" values for these (across all the flex items
-      // in this flex line), so we can use them in computing mLineCrossSize
-      // below:
-      mCrossStartToFurthestBaseline = std::max(mCrossStartToFurthestBaseline,
-                                               crossStartToBaseline);
+      // in this flex line), so we can use them in computing the line's cross
+      // size below:
+      crossStartToFurthestBaseline = std::max(crossStartToFurthestBaseline,
+                                              crossStartToBaseline);
       crossEndToFurthestBaseline = std::max(crossEndToFurthestBaseline,
                                             crossEndToBaseline);
     } else {
@@ -1797,12 +1795,17 @@ SingleLineCrossAxisPositionTracker::
     }
   }
 
+  // The line's baseline is the distance from the cross-start edge to the
+  // furthest baseline. (The item(s) with that baseline will be exactly
+  // aligned with the line's cross-start edge.)
+  mBaselineOffsetFromCrossStart = crossStartToFurthestBaseline;
+
   // The line's cross-size is the larger of:
   //  (a) [largest cross-start-to-baseline + largest baseline-to-cross-end] of
   //      all baseline-aligned items with no cross-axis auto margins...
   // and
   //  (b) largest cross-size of all other children.
-  mLineCrossSize = std::max(mCrossStartToFurthestBaseline +
+  mLineCrossSize = std::max(crossStartToFurthestBaseline +
                             crossEndToFurthestBaseline,
                             largestOuterCrossSize);
 }
@@ -1842,11 +1845,12 @@ FlexItem::ResolveStretchedCrossSize(nscoord aLineCrossSize,
 
 void
 SingleLineCrossAxisPositionTracker::
-  ResolveAutoMarginsInCrossAxis(FlexItem& aItem)
+  ResolveAutoMarginsInCrossAxis(const FlexLine& aLine,
+                                FlexItem& aItem)
 {
   // Subtract the space that our item is already occupying, to see how much
   // space (if any) is available for its auto margins.
-  nscoord spaceForAutoMargins = mLineCrossSize -
+  nscoord spaceForAutoMargins = aLine.GetLineCrossSize() -
     (aItem.GetCrossSize() + aItem.GetMarginBorderPaddingSizeInAxis(mAxis));
 
   if (spaceForAutoMargins <= 0) {
@@ -1880,7 +1884,8 @@ SingleLineCrossAxisPositionTracker::
 
 void
 SingleLineCrossAxisPositionTracker::
-  EnterAlignPackingSpace(const FlexItem& aItem)
+  EnterAlignPackingSpace(const FlexLine& aLine,
+                         const FlexItem& aItem)
 {
   // We don't do align-self alignment on items that have auto margins
   // in the cross axis.
@@ -1897,30 +1902,29 @@ SingleLineCrossAxisPositionTracker::
       break;
     case NS_STYLE_ALIGN_ITEMS_FLEX_END:
       mPosition +=
-        mLineCrossSize -
+        aLine.GetLineCrossSize() -
         (aItem.GetCrossSize() +
          aItem.GetMarginBorderPaddingSizeInAxis(mAxis));
       break;
     case NS_STYLE_ALIGN_ITEMS_CENTER:
       // Note: If cross-size is odd, the "after" space will get the extra unit.
       mPosition +=
-        (mLineCrossSize -
+        (aLine.GetLineCrossSize() -
          (aItem.GetCrossSize() +
           aItem.GetMarginBorderPaddingSizeInAxis(mAxis))) / 2;
       break;
-    case NS_STYLE_ALIGN_ITEMS_BASELINE:
-      NS_WARN_IF_FALSE(mCrossStartToFurthestBaseline != nscoord_MIN,
-                       "using uninitialized baseline offset (or working with "
-                       "content that has bogus huge values)");
-      MOZ_ASSERT(mCrossStartToFurthestBaseline >=
-                 aItem.GetBaselineOffsetFromOuterCrossStart(mAxis),
-                 "failed at finding largest ascent");
+    case NS_STYLE_ALIGN_ITEMS_BASELINE: {
+      nscoord lineBaselineOffset =
+        aLine.GetBaselineOffsetFromCrossStart();
+      nscoord itemBaselineOffset =
+        aItem.GetBaselineOffsetFromOuterCrossStart(mAxis);
+      MOZ_ASSERT(lineBaselineOffset >= itemBaselineOffset,
+                 "failed at finding largest baseline offset");
 
-      // Advance so that aItem's baseline is aligned with
-      // largest baseline offset.
-      mPosition += (mCrossStartToFurthestBaseline -
-                    aItem.GetBaselineOffsetFromOuterCrossStart(mAxis));
+      // Advance so that aItem's baseline is aligned with the line's baseline.
+      mPosition += (lineBaselineOffset - itemBaselineOffset);
       break;
+    }
     default:
       NS_NOTREACHED("Unexpected align-self value");
       break;
@@ -2264,18 +2268,19 @@ void
 nsFlexContainerFrame::PositionItemInCrossAxis(
   nscoord aLineStartPosition,
   SingleLineCrossAxisPositionTracker& aLineCrossAxisPosnTracker,
+  FlexLine& aLine,
   FlexItem& aItem)
 {
   MOZ_ASSERT(aLineCrossAxisPosnTracker.GetPosition() == 0,
              "per-line cross-axis position tracker wasn't correctly reset");
 
-  aLineCrossAxisPosnTracker.ResolveAutoMarginsInCrossAxis(aItem);
+  aLineCrossAxisPosnTracker.ResolveAutoMarginsInCrossAxis(aLine, aItem);
 
   // Compute the cross-axis position of this item
   nscoord itemCrossBorderBoxSize =
     aItem.GetCrossSize() +
     aItem.GetBorderPaddingSizeInAxis(aLineCrossAxisPosnTracker.GetAxis());
-  aLineCrossAxisPosnTracker.EnterAlignPackingSpace(aItem);
+  aLineCrossAxisPosnTracker.EnterAlignPackingSpace(aLine, aItem);
   aLineCrossAxisPosnTracker.EnterMargin(aItem.GetMargin());
   aLineCrossAxisPosnTracker.EnterChildFrame(itemCrossBorderBoxSize);
 
@@ -2389,17 +2394,15 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     }
   }
 
-  // Calculate the cross size of our (single) flex line:
+  // Calculate the cross size and (if necessary) baseline-alignment position
+  // for our (single) flex line:
+  line.ComputeCrossSizeAndBaseline(axisTracker);
+
   // Set up state for cross-axis alignment, at a high level (outside the
   // scope of a particular flex line)
   CrossAxisPositionTracker
     crossAxisPosnTracker(this, axisTracker, aReflowState);
 
-  // Set up state for cross-axis-positioning of children _within_ a single
-  // flex line.
-  SingleLineCrossAxisPositionTracker lineCrossAxisPosnTracker(axisTracker);
-
-  lineCrossAxisPosnTracker.ComputeLineCrossSize(line);
   // XXXdholbert Once we've got multi-line flexbox support: here, after we've
   // computed the cross size of all lines, we need to check if if
   // 'align-content' is 'stretch' -- if it is, we need to give each line an
@@ -2408,7 +2411,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   bool isCrossSizeDefinite;
   const nscoord contentBoxCrossSize =
     ComputeFlexContainerCrossSize(aReflowState, axisTracker,
-                                  lineCrossAxisPosnTracker.GetLineCrossSize(),
+                                  line.GetLineCrossSize(), // XXXdholbert this should take |lines|
                                   availableHeightForContent,
                                   &isCrossSizeDefinite, aStatus);
 
@@ -2419,14 +2422,14 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     // "If the flex container has only a single line (even if it's a multi-line
     // flex container) and has a definite cross size, the cross size of the
     // flex line is the flex container's inner cross size."
-    lineCrossAxisPosnTracker.SetLineCrossSize(contentBoxCrossSize);
+    line.SetLineCrossSize(contentBoxCrossSize);
   }
 
   // Set the flex container's baseline, from its baseline-aligned items.
   // (This might give us nscoord_MIN if we don't have any baseline-aligned
   // flex items.  That's OK, we'll update it below.)
   nscoord flexContainerAscent =
-    lineCrossAxisPosnTracker.GetCrossStartToFurthestBaseline();
+    line.GetBaselineOffsetFromCrossStart();
   if (flexContainerAscent != nscoord_MIN) {
     // Add top borderpadding, so our ascent is w.r.t. border-box
     flexContainerAscent += aReflowState.mComputedBorderPadding.top;
@@ -2443,14 +2446,19 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   // Cross-Axis Alignment - Flexbox spec section 9.6
   // ===============================================
+  // Set up state for cross-axis-positioning of children _within_ a single
+  // flex line.
+  SingleLineCrossAxisPositionTracker lineCrossAxisPosnTracker(axisTracker);
   for (uint32_t i = 0; i < line.mItems.Length(); ++i) {
     // Resolve stretched cross-size, if appropriate
-    nscoord lineCrossSize = lineCrossAxisPosnTracker.GetLineCrossSize();
+    nscoord lineCrossSize = line.GetLineCrossSize();
     line.mItems[i].ResolveStretchedCrossSize(lineCrossSize, axisTracker);
 
     // ...and position.
     PositionItemInCrossAxis(crossAxisPosnTracker.GetPosition(),
-                            lineCrossAxisPosnTracker, line.mItems[i]);
+                            lineCrossAxisPosnTracker,
+                            line,
+                            line.mItems[i]);
   }
 
   // Before giving each child a final reflow, calculate the origin of the
