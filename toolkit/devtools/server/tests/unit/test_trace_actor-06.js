@@ -6,7 +6,7 @@
  * and exitedFrame packets.
  */
 
-let {defer} = devtools.require("sdk/core/promise");
+let { defer } = devtools.require("sdk/core/promise");
 
 var gDebuggee;
 var gClient;
@@ -30,11 +30,20 @@ function run_test()
 
 function test_enter_exit_frame()
 {
-  gTraceClient.addListener("enteredFrame", check_packet);
-  gTraceClient.addListener("exitedFrame", check_packet);
+  const traceStopped = defer();
+
+  gClient.addListener("traces", (aEvent, { traces }) => {
+    for (let t of traces) {
+      check_trace(t);
+      if (t.sequence === 27) {
+        traceStopped.resolve();
+      }
+    }
+  });
 
   start_trace()
     .then(eval_code)
+    .then(() => traceStopped.promise)
     .then(stop_trace)
     .then(function() {
       finishClient(gClient);
@@ -58,17 +67,23 @@ function eval_code()
     let circular = {};
     circular.self = circular;
 
+    // Make sure there is only 5 properties per object because that is the value
+    // of MAX_PROPERTIES in the server.
     let obj = {
       num: 0,
       str: "foo",
       bool: false,
       undef: undefined,
-      nil: null,
+      nil: null
+    };
+    let obj2 = {
       inf: Infinity,
       ninf: -Infinity,
       nan: NaN,
       nzero: -0,
-      obj: circular,
+      obj: circular
+    };
+    let obj3 = {
       arr: [1,2,3,4,5]
     };
 
@@ -83,6 +98,8 @@ function eval_code()
     identity(NaN);
     identity(-0);
     identity(obj);
+    identity(obj2);
+    identity(obj3);
   } + ")()");
 }
 
@@ -93,17 +110,15 @@ function stop_trace()
   return deferred.promise;
 }
 
-function check_packet(aEvent, aPacket)
+function check_trace(aTrace)
 {
-  let value = (aPacket.type === "enteredFrame" && aPacket.arguments)
-        ? aPacket.arguments[0]
-        : aPacket.return;
-  switch(aPacket.sequence) {
+  let value = (aTrace.type === "enteredFrame" && aTrace.arguments)
+        ? aTrace.arguments[0]
+        : aTrace.return;
+  switch(aTrace.sequence) {
   case 2:
-    do_check_eq(typeof aPacket.arguments, "object",
-                "zero-argument function call should send arguments list");
-    do_check_eq(aPacket.arguments.length, 0,
-                "zero-argument function call should send zero-length arguments list");
+    do_check_eq(typeof aTrace.arguments, "object");
+    do_check_eq(aTrace.arguments.length, 0);
     break;
   case 3:
     check_value(value, "object", "undefined");
@@ -146,8 +161,15 @@ function check_packet(aEvent, aPacket)
     break;
   case 22:
   case 23:
-    check_object(aPacket.type, value);
+    check_obj(aTrace.type, value);
     break;
+  case 24:
+  case 25:
+    check_obj2(aTrace.type, value);
+    break;
+  case 26:
+  case 27:
+    check_obj3(aTrace.type, value);
   }
 }
 
@@ -157,67 +179,50 @@ function check_value(aActual, aExpectedType, aExpectedValue)
   do_check_eq(aExpectedType === "object" ? aActual.type : aActual, aExpectedValue);
 }
 
-function check_object(aType, aObj) {
-  do_check_eq(typeof aObj, "object",
-              'serialized object should be present in packet');
-  do_check_eq(typeof aObj.prototype, "object",
-              'serialized object should have prototype');
-  do_check_eq(typeof aObj.ownProperties, "object",
-              'serialized object should have ownProperties list');
-  do_check_eq(typeof aObj.safeGetterValues, "object",
-              'serialized object should have safeGetterValues');
+function check_obj(aType, aObj) {
+  do_check_eq(typeof aObj, "object");
+  do_check_eq(typeof aObj.ownProperties, "object");
 
-  do_check_eq(typeof aObj.ownProperties.num, "object",
-              'serialized object should have property "num"');
-  do_check_eq(typeof aObj.ownProperties.str, "object",
-              'serialized object should have property "str"');
-  do_check_eq(typeof aObj.ownProperties.bool, "object",
-              'serialized object should have property "bool"');
-  do_check_eq(typeof aObj.ownProperties.undef, "object",
-              'serialized object should have property "undef"');
-  do_check_eq(typeof aObj.ownProperties.undef.value, "object",
-              'serialized object property "undef" should be a grip');
-  do_check_eq(typeof aObj.ownProperties.nil, "object",
-              'serialized object should have property "nil"');
-  do_check_eq(typeof aObj.ownProperties.nil.value, "object",
-              'serialized object property "nil" should be a grip');
-  do_check_eq(typeof aObj.ownProperties.obj, "object",
-              'serialized object should have property "aObj"');
-  do_check_eq(typeof aObj.ownProperties.obj.value, "object",
-              'serialized object property "aObj" should be a grip');
-  do_check_eq(typeof aObj.ownProperties.arr, "object",
-              'serialized object should have property "arr"');
-  do_check_eq(typeof aObj.ownProperties.arr.value, "object",
-              'serialized object property "arr" should be a grip');
-  do_check_eq(typeof aObj.ownProperties.inf, "object",
-              'serialized object should have property "inf"');
-  do_check_eq(typeof aObj.ownProperties.inf.value, "object",
-              'serialized object property "inf" should be a grip');
-  do_check_eq(typeof aObj.ownProperties.ninf, "object",
-              'serialized object should have property "ninf"');
-  do_check_eq(typeof aObj.ownProperties.ninf.value, "object",
-              'serialized object property "ninf" should be a grip');
-  do_check_eq(typeof aObj.ownProperties.nan, "object",
-              'serialized object should have property "nan"');
-  do_check_eq(typeof aObj.ownProperties.nan.value, "object",
-              'serialized object property "nan" should be a grip');
-  do_check_eq(typeof aObj.ownProperties.nzero, "object",
-              'serialized object should have property "nzero"');
-  do_check_eq(typeof aObj.ownProperties.nzero.value, "object",
-              'serialized object property "nzero" should be a grip');
-
-  do_check_eq(aObj.prototype.type, "object");
+  do_check_eq(typeof aObj.ownProperties.num, "object");
   do_check_eq(aObj.ownProperties.num.value, 0);
+
+  do_check_eq(typeof aObj.ownProperties.str, "object");
   do_check_eq(aObj.ownProperties.str.value, "foo");
+
+  do_check_eq(typeof aObj.ownProperties.bool, "object");
   do_check_eq(aObj.ownProperties.bool.value, false);
+
+  do_check_eq(typeof aObj.ownProperties.undef, "object");
+  do_check_eq(typeof aObj.ownProperties.undef.value, "object");
   do_check_eq(aObj.ownProperties.undef.value.type, "undefined");
+
+  do_check_eq(typeof aObj.ownProperties.nil, "object");
+  do_check_eq(typeof aObj.ownProperties.nil.value, "object");
   do_check_eq(aObj.ownProperties.nil.value.type, "null");
-  do_check_eq(aObj.ownProperties.obj.value.type, "object");
-  do_check_eq(aObj.ownProperties.obj.value.class, "Object");
-  do_check_eq(aObj.ownProperties.arr.value.type, "object");
-  do_check_eq(aObj.ownProperties.arr.value.class, "Array");
+}
+
+function check_obj2(aType, aObj) {
+  do_check_eq(typeof aObj.ownProperties.inf, "object");
+  do_check_eq(typeof aObj.ownProperties.inf.value, "object");
   do_check_eq(aObj.ownProperties.inf.value.type, "Infinity");
+
+  do_check_eq(typeof aObj.ownProperties.ninf, "object");
+  do_check_eq(typeof aObj.ownProperties.ninf.value, "object");
   do_check_eq(aObj.ownProperties.ninf.value.type, "-Infinity");
+
+  do_check_eq(typeof aObj.ownProperties.nan, "object");
+  do_check_eq(typeof aObj.ownProperties.nan.value, "object");
   do_check_eq(aObj.ownProperties.nan.value.type, "NaN");
+
+  do_check_eq(typeof aObj.ownProperties.nzero, "object");
+  do_check_eq(typeof aObj.ownProperties.nzero.value, "object");
   do_check_eq(aObj.ownProperties.nzero.value.type, "-0");
+
+  // Sub-objects aren't added.
+  do_check_eq(typeof aObj.ownProperties.obj, "undefined");
+}
+
+function check_obj3(aType, aObj) {
+  // Sub-objects aren't added.
+  do_check_eq(typeof aObj.ownProperties.arr, "undefined");
 }
