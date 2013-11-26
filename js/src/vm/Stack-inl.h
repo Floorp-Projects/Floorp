@@ -85,8 +85,6 @@ StackFrame::initCallFrame(JSContext *cx, StackFrame *prev, jsbytecode *prevpc, V
     prev_ = prev;
     prevpc_ = prevpc;
     prevsp_ = prevsp;
-    blockChain_= nullptr;
-    JS_ASSERT(!hasBlockChain());
     JS_ASSERT(!hasHookData());
 
     initVarsToUndefined();
@@ -516,17 +514,6 @@ AbstractFramePtr::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing)
 #endif
 }
 
-inline StaticBlockObject *
-AbstractFramePtr::maybeBlockChain() const
-{
-    if (isStackFrame())
-        return asStackFrame()->maybeBlockChain();
-#ifdef JS_ION
-    return asBaselineFrame()->maybeBlockChain();
-#else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
-#endif
-}
 inline bool
 AbstractFramePtr::hasCallObj() const
 {
