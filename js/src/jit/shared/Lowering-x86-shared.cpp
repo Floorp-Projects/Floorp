@@ -211,6 +211,9 @@ LIRGeneratorX86Shared::lowerUDiv(MDiv *div)
 {
     // Optimize x/x. The comments in lowerDivI apply here as well.
     if (div->getOperand(0) == div->getOperand(1)) {
+        if (!div->canBeDivideByZero())
+            return define(new LInteger(1), div);
+
         LDivSelfI *lir = new LDivSelfI(useRegisterAtStart(div->getOperand(0)));
         if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
             return false;
