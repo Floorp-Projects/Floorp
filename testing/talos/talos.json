@@ -89,7 +89,8 @@
         "remote-tcanvasmark": {
             "tests": ["tcanvasmark"],
             "talos_options": [
-                "--noChrome"
+                "--noChrome",
+                "--tppagecycles", "10"
             ]
         },
         "remote-trobopan": {
