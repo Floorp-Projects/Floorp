@@ -496,6 +496,8 @@ class IDLInterface(IDLObjectWithScope):
         # Tracking of the number of reserved slots we need for our
         # members and those of ancestor interfaces.
         self.totalMembersInSlots = 0
+        # Tracking of the number of own own members we have in slots
+        self._ownMembersInSlots = 0
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
 
@@ -662,6 +664,7 @@ class IDLInterface(IDLObjectWithScope):
             if member.isAttr() and member.getExtendedAttribute("StoreInSlot"):
                 member.slotIndex = self.totalMembersInSlots
                 self.totalMembersInSlots += 1
+                self._ownMembersInSlots += 1
 
         if self.parent:
             # Make sure we don't shadow any of the [Unforgeable] attributes on
@@ -1083,6 +1086,9 @@ class IDLInterface(IDLObjectWithScope):
         if self.parent:
             deps.add(self.parent)
         return deps
+
+    def hasMembersInSlots(self):
+        return self._ownMembersInSlots != 0
 
 class IDLDictionary(IDLObjectWithScope):
     def __init__(self, location, parentScope, name, parent, members):

@@ -193,7 +193,7 @@ class CGDOMJSClass(CGThing):
     def define(self):
         traceHook = TRACE_HOOK_NAME if self.descriptor.customTrace else 'nullptr'
         callHook = LEGACYCALLER_HOOK_NAME if self.descriptor.operations["LegacyCaller"] else 'nullptr'
-        slotCount = INSTANCE_RESERVED_SLOTS
+        slotCount = INSTANCE_RESERVED_SLOTS + self.descriptor.interface.totalMembersInSlots
         classFlags = "JSCLASS_IS_DOMJSCLASS | "
         if self.descriptor.interface.getExtendedAttribute("Global"):
             classFlags += "JSCLASS_DOM_GLOBAL | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS) | JSCLASS_IMPLEMENTS_BARRIERS"
@@ -2166,9 +2166,12 @@ class CGConstructorEnabledViaFunc(CGAbstractMethod):
 def CreateBindingJSObject(descriptor, properties, parent):
     # When we have unforgeable properties, we're going to define them
     # on our object, so we have to root it when we create it, so it
-    # won't suddenly die while defining the unforgeables.
+    # won't suddenly die while defining the unforgeables.  Similarly,
+    # if we have members in slots we'll have to call the getters which
+    # could also GC.
     needRoot = (properties.unforgeableAttrs.hasNonChromeOnly() or
-                properties.unforgeableAttrs.hasChromeOnly())
+                properties.unforgeableAttrs.hasChromeOnly() or
+                descriptor.interface.hasMembersInSlots())
     if needRoot:
         objDecl = "  JS::Rooted<JSObject*> obj(aCx);\n"
     else:
@@ -2283,6 +2286,27 @@ def AssertInheritanceChain(descriptor):
         "  MOZ_ASSERT(ToSupportsIsCorrect(aObject));\n")
     return asserts
 
+def InitMemberSlots(descriptor, wrapperCache):
+    """
+    Initialize member slots on our JS object if we're supposed to have some.
+
+    Note that this is called after the SetWrapper() call in the
+    wrapperCache case, since that can affect how our getters behave
+    and we plan to invoke them here.  So if we fail, we need to
+    ClearWrapper.
+    """
+    if not descriptor.interface.hasMembersInSlots():
+        return ""
+    if wrapperCache:
+        clearWrapper = "  aCache->ClearWrapper();\n"
+    else:
+        clearWrapper = ""
+    return CGIndenter(CGGeneric(
+            ("if (!UpdateMemberSlots(aCx, obj, aObject)) {\n"
+             "%s"
+             "  return nullptr;\n"
+             "}" % clearWrapper))).define()
+
 class CGWrapWithCacheMethod(CGAbstractMethod):
     """
     Create a wrapper JSObject for a given native that implements nsWrapperCache.
@@ -2300,6 +2324,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
     def definition_body(self):
         if self.descriptor.nativeOwnership == 'worker':
+            assert not self.descriptor.interface.hasMembersInSlots()
             return """  return aObject->GetJSObject();"""
 
         assertISupportsInheritance = (
@@ -2334,12 +2359,13 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 %s
 %s
   aCache->SetWrapper(obj);
-
+%s
   return obj;""" % (AssertInheritanceChain(self.descriptor),
                     assertISupportsInheritance,
                     CreateBindingJSObject(self.descriptor, self.properties,
                                           "parent"),
-                    InitUnforgeableProperties(self.descriptor, self.properties))
+                    InitUnforgeableProperties(self.descriptor, self.properties),
+                    InitMemberSlots(self.descriptor, True))
 
 class CGWrapMethod(CGAbstractMethod):
     def __init__(self, descriptor):
@@ -2381,10 +2407,12 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
 
 %s
 %s
+%s
   return obj;""" % (AssertInheritanceChain(self.descriptor),
                     CreateBindingJSObject(self.descriptor, self.properties,
                                           "global"),
-                    InitUnforgeableProperties(self.descriptor, self.properties))
+                    InitUnforgeableProperties(self.descriptor, self.properties),
+                    InitMemberSlots(self.descriptor, False))
 
 class CGWrapGlobalMethod(CGAbstractMethod):
     """
@@ -2426,6 +2454,31 @@ class CGWrapGlobalMethod(CGAbstractMethod):
   return obj;""" % (AssertInheritanceChain(self.descriptor),
                     self.descriptor.nativeType,
                     InitUnforgeableProperties(self.descriptor, self.properties))
+
+class CGUpdateMemberSlotsMethod(CGAbstractMethod):
+    def __init__(self, descriptor):
+        args = [Argument('JSContext*', 'aCx'),
+                Argument('JS::Handle<JSObject*>', 'aWrapper'),
+                Argument(descriptor.nativeType + '*' , 'aObject')]
+        CGAbstractMethod.__init__(self, descriptor, 'UpdateMemberSlots', 'bool', args)
+
+    def definition_body(self):
+        slotMembers = (m for m in self.descriptor.interface.members if
+                       m.isAttr() and m.getExtendedAttribute("StoreInSlot"))
+        storeSlots = (
+            CGGeneric(
+                "if (!get_%s(aCx, aWrapper, aObject, args)) {\n"
+                "  return false;\n"
+                "}\n"
+                "js::SetReservedSlot(aWrapper, %d, args.rval());" %
+                (m.identifier.name, m.slotIndex + INSTANCE_RESERVED_SLOTS))
+            for m in slotMembers)
+        body = CGList(storeSlots, "\n\n")
+        body.prepend(CGGeneric("JS::Rooted<JS::Value> temp(aCx);\n"
+                               "JSJitGetterCallArgs args(&temp);"))
+        body.append(CGGeneric("return true;"))
+
+        return CGIndenter(body).define()
 
 builtinNames = {
     IDLType.Tags.bool: 'bool',
@@ -8309,6 +8362,10 @@ class CGDescriptor(CGThing):
 
         if descriptor.concrete:
             if descriptor.proxy:
+                if descriptor.interface.totalMembersInSlots != 0:
+                    raise TypeError("We can't have extra reserved slots for "
+                                    "proxy interface %s" %
+                                    descriptor.interface.identifier.name)
                 cgThings.append(CGGeneric("""static_assert(IsBaseOf<nsISupports, %s >::value,
                   "We don't support non-nsISupports native classes for "
                   "proxy-based bindings yet");
@@ -8326,6 +8383,12 @@ class CGDescriptor(CGThing):
             else:
                 cgThings.append(CGDOMJSClass(descriptor))
                 cgThings.append(CGGetJSClassMethod(descriptor))
+                if descriptor.interface.hasMembersInSlots():
+                    if descriptor.interface.hasChildInterfaces():
+                        raise TypeError("We don't support members in slots on "
+                                        "non-leaf interfaces like %s" %
+                                        descriptor.interface.identifier.name)
+                    cgThings.append(CGUpdateMemberSlotsMethod(descriptor))
 
             if descriptor.interface.getExtendedAttribute("Global"):
                 assert descriptor.wrapperCache
