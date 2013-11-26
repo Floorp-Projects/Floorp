@@ -1619,9 +1619,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Tables of strings that are pre-allocated in the atomsCompartment. */
     js::StaticStrings   staticStrings;
 
-    JSWrapObjectCallback                   wrapObjectCallback;
-    JSSameCompartmentWrapObjectCallback    sameCompartmentWrapObjectCallback;
-    JSPreWrapCallback                      preWrapObjectCallback;
+    const JSWrapObjectCallbacks            *wrapObjectCallbacks;
     js::PreserveWrapperCallback            preserveWrapperCallback;
 
     // Table of bytecode and other data that may be shared across scripts
