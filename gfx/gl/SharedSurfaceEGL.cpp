@@ -7,6 +7,7 @@
 
 #include "GLContext.h"
 #include "GLBlitHelper.h"
+#include "ScopedGLHelpers.h"
 #include "SharedSurfaceGL.h"
 #include "SurfaceFactory.h"
 #include "GLLibraryEGL.h"
