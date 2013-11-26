@@ -1148,10 +1148,10 @@ MUrsh::computeRange()
     // the same result. Since we lack support for full uint32 ranges, we use
     // the second interpretation, though it does cause us to be conservative.
     left.wrapAroundToInt32();
+    right.wrapAroundToShiftCount();
 
     MDefinition *rhs = getOperand(1);
     if (!rhs->isConstant()) {
-        right.wrapAroundToShiftCount();
         setRange(Range::ursh(&left, &right));
     } else {
         int32_t c = rhs->toConstant()->value().toInt32();
@@ -1244,8 +1244,16 @@ MMod::computeRange()
     if (rhs.lower() <= 0 && rhs.upper() >= 0)
         return;
 
+    // If both operands are non-negative integers, we can optimize this to an
+    // unsigned mod.
+    if (specialization() == MIRType_Int32 && lhs.lower() >= 0 && rhs.lower() > 0 &&
+        !lhs.canHaveFractionalPart() && !rhs.canHaveFractionalPart())
+    {
+        unsigned_ = true;
+    }
+
     // For unsigned mod, we have to convert both operands to unsigned.
-    // Note that we handled the case of a zero rhs immediately above.
+    // Note that we handled the case of a zero rhs above.
     if (unsigned_) {
         // The result of an unsigned mod will never be unsigned-greater than
         // either operand.
@@ -1320,6 +1328,13 @@ MDiv::computeRange()
     // won't be further from zero than lhs.
     if (lhs.lower() >= 0 && rhs.lower() >= 1) {
         setRange(new Range(0, lhs.upper(), true, lhs.exponent()));
+
+        // Also, we can optimize by converting this to an unsigned div.
+        if (specialization() == MIRType_Int32 &&
+            !lhs.canHaveFractionalPart() && !rhs.canHaveFractionalPart())
+        {
+            unsigned_ = true;
+        }
     } else if (unsigned_ && rhs.lower() >= 1) {
         // We shouldn't set the unsigned flag if the inputs can have
         // fractional parts.
@@ -2521,4 +2536,19 @@ MPowHalf::collectRangeInfoPreTrunc()
         operandIsNeverNegativeZero_ = true;
     if (!inputRange.canBeNaN())
         operandIsNeverNaN_ = true;
+}
+
+void
+MUrsh::collectRangeInfoPreTrunc()
+{
+    Range lhsRange(lhs()), rhsRange(rhs());
+
+    // As in MUrsh::computeRange(), convert the inputs.
+    lhsRange.wrapAroundToInt32();
+    rhsRange.wrapAroundToShiftCount();
+
+    // If the most significant bit of our result is always going to be zero,
+    // we can optimize by disabling bailout checks for enforcing an int32 range.
+    if (lhsRange.lower() >= 0 || rhsRange.lower() >= 1)
+        bailoutsDisabled_ = true;
 }
