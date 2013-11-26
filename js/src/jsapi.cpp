@@ -912,17 +912,10 @@ JS_SetCompartmentNameCallback(JSRuntime *rt, JSCompartmentNameCallback callback)
     rt->compartmentNameCallback = callback;
 }
 
-JS_PUBLIC_API(JSWrapObjectCallback)
-JS_SetWrapObjectCallbacks(JSRuntime *rt,
-                          JSWrapObjectCallback callback,
-                          JSSameCompartmentWrapObjectCallback sccallback,
-                          JSPreWrapCallback precallback)
+JS_PUBLIC_API(void)
+JS_SetWrapObjectCallbacks(JSRuntime *rt, const JSWrapObjectCallbacks *callbacks)
 {
-    JSWrapObjectCallback old = rt->wrapObjectCallback;
-    rt->wrapObjectCallback = callback;
-    rt->sameCompartmentWrapObjectCallback = sccallback;
-    rt->preWrapObjectCallback = precallback;
-    return old;
+    rt->wrapObjectCallbacks = callbacks;
 }
 
 JS_PUBLIC_API(JSCompartment *)
