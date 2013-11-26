@@ -363,8 +363,8 @@ class MDefinition : public MNode
     // Warning: Range analysis is removing the bit-operations such as '| 0' at
     // the end of the transformations. Using this function to analyse any
     // operands after the truncate phase of the range analysis will lead to
-    // errors. Instead, one should define the collectRangeInfo() to set the
-    // right set of flags which are dependent on the range of the inputs.
+    // errors. Instead, one should define the collectRangeInfoPreTrunc() to set
+    // the right set of flags which are dependent on the range of the inputs.
     Range *range() const {
         JS_ASSERT(type() != MIRType_None);
         return range_;
@@ -392,8 +392,8 @@ class MDefinition : public MNode
     virtual void computeRange() {
     }
 
-    // Collect information from the truncated ranges.
-    virtual void collectRangeInfo() {
+    // Collect information from the pre-truncated ranges.
+    virtual void collectRangeInfoPreTrunc() {
     }
 
     MNode::Kind kind() const {
@@ -2283,7 +2283,7 @@ class MCompare
     }
 
     void printOpcode(FILE *fp) const;
-    void collectRangeInfo();
+    void collectRangeInfoPreTrunc();
 
     void trySpecializeFloat32(TempAllocator &alloc);
     bool isFloat32Commutative() const { return true; }
@@ -3802,7 +3802,7 @@ class MPowHalf
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    void collectRangeInfo();
+    void collectRangeInfoPreTrunc();
 };
 
 // Inline implementation of Math.random().
@@ -4193,7 +4193,7 @@ class MMod : public MBinaryArithInstruction
 
     void computeRange();
     bool truncate();
-    void collectRangeInfo();
+    void collectRangeInfoPreTrunc();
 };
 
 class MConcat
@@ -5424,7 +5424,7 @@ class MNot
     TypePolicy *typePolicy() {
         return this;
     }
-    void collectRangeInfo();
+    void collectRangeInfoPreTrunc();
 
     void trySpecializeFloat32(TempAllocator &alloc);
     bool isFloat32Commutative() const { return true; }
@@ -5532,7 +5532,7 @@ class MBoundsCheckLower
     bool fallible() const {
         return fallible_;
     }
-    void collectRangeInfo();
+    void collectRangeInfoPreTrunc();
 };
 
 // Load a value from a dense array's element vector and does a hole check if the
@@ -5637,7 +5637,7 @@ class MLoadElementHole
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::Element);
     }
-    void collectRangeInfo();
+    void collectRangeInfoPreTrunc();
 };
 
 class MStoreElementCommon
@@ -8202,7 +8202,7 @@ class MInArray
     bool needsNegativeIntCheck() const {
         return needsNegativeIntCheck_;
     }
-    void collectRangeInfo();
+    void collectRangeInfoPreTrunc();
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::Element);
     }
