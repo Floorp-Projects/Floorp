@@ -260,6 +260,7 @@
     _(InterruptCheckImplicit)       \
     _(FunctionBoundary)             \
     _(GetDOMProperty)               \
+    _(GetDOMMember)                 \
     _(SetDOMProperty)               \
     _(CallDOMNative)                \
     _(IsCallable)                   \

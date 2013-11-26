@@ -1979,7 +1979,7 @@ AndroidBridge::RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrame
 }
 
 void
-AndroidBridge::HandleDoubleTap(const CSSIntPoint& aPoint)
+AndroidBridge::HandleDoubleTap(const CSSIntPoint& aPoint, int32_t aModifiers)
 {
     nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", aPoint.x, aPoint.y);
     nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
@@ -1987,15 +1987,16 @@ AndroidBridge::HandleDoubleTap(const CSSIntPoint& aPoint)
 }
 
 void
-AndroidBridge::HandleSingleTap(const CSSIntPoint& aPoint)
+AndroidBridge::HandleSingleTap(const CSSIntPoint& aPoint, int32_t aModifiers)
 {
+    // TODO Send the modifier data to Gecko for use in mouse events.
     nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", aPoint.x, aPoint.y);
     nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
             NS_LITERAL_CSTRING("Gesture:SingleTap"), data));
 }
 
 void
-AndroidBridge::HandleLongTap(const CSSIntPoint& aPoint)
+AndroidBridge::HandleLongTap(const CSSIntPoint& aPoint, int32_t aModifiers)
 {
     nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", aPoint.x, aPoint.y);
     nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(

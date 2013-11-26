@@ -124,7 +124,7 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
   if (mOtherDirection)
   {
     // mOtherDirection owns these now!
-    mOtherDirection->mOtherDirection = NULL;
+    mOtherDirection->mOtherDirection = nullptr;
     // let other side we terminated the channel
     mOtherDirection->mShutDown = true;
     mVideoEngine = nullptr;
@@ -166,7 +166,7 @@ MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
     }
 #endif
 
-    //Per WebRTC APIs below function calls return NULL on failure
+    // Per WebRTC APIs below function calls return nullptr on failure
     if( !(mVideoEngine = webrtc::VideoEngine::Create()) )
     {
       CSFLogError(logTag, "%s Unable to create video engine ", __FUNCTION__);

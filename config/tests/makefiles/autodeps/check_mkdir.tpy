@@ -98,8 +98,8 @@ def checkMkdir(work, debug=False):
 
     logging.debug("Testing: checkMkdir")
 
-    # On Windows + Pymake, don't convert paths to POSIX
-    skipposix = sys.platform == "win32" and os.environ.get(".PYMAKE") == "1"
+    # On Windows, don't convert paths to POSIX
+    skipposix = sys.platform == "win32"
     if skipposix:
         path = os.path.abspath(__file__)
         dirname_fun = os.path.dirname

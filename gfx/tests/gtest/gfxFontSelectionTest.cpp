@@ -122,7 +122,7 @@ struct TestEntry {
         isRTL = true;
     }
 
-    // empty/NULL fontName means ignore font name
+    // Empty/nullptr fontName means ignore font name
     void Expect (const char *platform,
                  const char *fontName,
                  const LiteralArray& glyphs)

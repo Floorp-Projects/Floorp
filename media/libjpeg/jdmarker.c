@@ -472,7 +472,7 @@ get_dht (j_decompress_ptr cinfo)
     for (i = 0; i < count; i++)
       INPUT_BYTE(cinfo, huffval[i], return FALSE);
 
-    MEMZERO(&huffval[count], (256-count)*SIZEOF(UINT8));
+    MEMZERO(&huffval[count], (256 - count) * SIZEOF(UINT8));
 
     length -= count;
 

@@ -122,8 +122,8 @@ void MediaPipeline::ShutdownTransport_s() {
 
   disconnect_all();
   transport_->Detach();
-  rtp_transport_ = NULL;
-  rtcp_transport_ = NULL;
+  rtp_transport_ = nullptr;
+  rtcp_transport_ = nullptr;
 }
 
 void MediaPipeline::StateChange(TransportFlow *flow, TransportLayer::State state) {

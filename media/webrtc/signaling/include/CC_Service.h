@@ -68,8 +68,8 @@ namespace CSF
         virtual std::vector<CC_DevicePtr> getDevices() = 0;
 
         /**
-         * Global settings for audio and video control.  Return NULL if Media control is not
-         * available in this implementation.  Return NULL in any case if media is not yet
+         * Global settings for audio and video control.  Return nullptr if Media control is not
+         * available in this implementation.  Return nullptr in any case if media is not yet
          * initialized.
          * TODO: Assuming for now that media init aligns with init/destroy.
          */

@@ -703,7 +703,7 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
 
     RootedValue traceValue(cx);
     int32_t traceKind = -1;
-    void *traceThing = NULL;
+    void *traceThing = nullptr;
     if (args.length() > 1) {
         JSString *str = ToString(cx, args[1]);
         if (!str)

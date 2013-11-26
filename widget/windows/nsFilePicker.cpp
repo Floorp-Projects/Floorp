@@ -16,8 +16,6 @@
 #include "nsWindow.h"
 #include "nsILoadContext.h"
 #include "nsIServiceManager.h"
-#include "nsIPlatformCharset.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
 #include "nsEnumeratorUtils.h"

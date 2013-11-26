@@ -265,6 +265,42 @@ nsHostRecord::HasUsableResult(uint16_t queryFlags) const
     return addr_info || addr || negative;
 }
 
+static size_t
+SizeOfResolveHostCallbackListExcludingHead(const PRCList *head,
+                                           MallocSizeOf mallocSizeOf)
+{
+    size_t n = 0;
+    PRCList *curr = head->next;
+    while (curr != head) {
+        nsResolveHostCallback *callback =
+            static_cast<nsResolveHostCallback*>(curr);
+        n += callback->SizeOfIncludingThis(mallocSizeOf);
+        curr = curr->next;
+    }
+    return n;
+}
+
+size_t
+nsHostRecord::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
+{
+    size_t n = mallocSizeOf(this);
+
+    // The |host| field (inherited from nsHostKey) actually points to extra
+    // memory that is allocated beyond the end of the nsHostRecord (see
+    // nsHostRecord::Create()).  So it will be included in the
+    // |mallocSizeOf(this)| call above.
+
+    n += SizeOfResolveHostCallbackListExcludingHead(&callbacks, mallocSizeOf);
+    n += addr_info ? addr_info->SizeOfIncludingThis(mallocSizeOf) : 0;
+    n += mallocSizeOf(addr);
+
+    n += mBlacklistedItems.SizeOfExcludingThis(mallocSizeOf);
+    for (size_t i = 0; i < mBlacklistedItems.Length(); i++) {
+        n += mBlacklistedItems[i].SizeOfIncludingThisMustBeUnshared(mallocSizeOf);
+    }
+    return n;
+}
+
 //----------------------------------------------------------------------------
 
 struct nsHostDBEnt : PLDHashEntryHdr
@@ -644,7 +680,7 @@ nsHostResolver::ResolveHost(const char            *host,
                         he->rec->addr_info = nullptr;
                         if (unspecHe->rec->negative) {
                             he->rec->negative = unspecHe->rec->negative;
-                        } else if (he->rec->addr_info) {
+                        } else if (unspecHe->rec->addr_info) {
                             // Search for any valid address in the AF_UNSPEC entry
                             // in the cache (not blacklisted and from the right
                             // family).
@@ -1068,6 +1104,31 @@ nsHostResolver::CancelAsyncRequest(const char            *host,
             }
         }
     }
+}
+
+static size_t
+SizeOfHostDBEntExcludingThis(PLDHashEntryHdr* hdr, MallocSizeOf mallocSizeOf,
+                             void*)
+{
+    nsHostDBEnt* ent = static_cast<nsHostDBEnt*>(hdr);
+    return ent->rec->SizeOfIncludingThis(mallocSizeOf);
+}
+
+size_t
+nsHostResolver::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
+{
+    MutexAutoLock lock(mLock);
+
+    size_t n = mallocSizeOf(this);
+    n += PL_DHashTableSizeOfExcludingThis(&mDB, SizeOfHostDBEntExcludingThis,
+                                          mallocSizeOf);
+
+    // The following fields aren't measured.
+    // - mHighQ, mMediumQ, mLowQ, mEvictionQ, because they just point to
+    //   nsHostRecords that also pointed to by entries |mDB|, and measured when
+    //   |mDB| is measured.
+
+    return n;
 }
 
 void

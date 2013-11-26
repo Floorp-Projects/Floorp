@@ -275,5 +275,15 @@ AddrInfo::AddAddress(NetAddrElement *address)
   mAddresses.insertBack(address);
 }
 
+size_t
+AddrInfo::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
+{
+  size_t n = mallocSizeOf(this);
+  n += mallocSizeOf(mHostName);
+  n += mallocSizeOf(mCanonicalName);
+  n += mAddresses.sizeOfExcludingThis(mallocSizeOf);
+  return n;
+}
+
 } // namespace dns
 } // namespace mozilla

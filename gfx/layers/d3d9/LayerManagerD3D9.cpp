@@ -59,9 +59,7 @@ LayerManagerD3D9::Initialize(bool force)
 
   if (!mDefaultDeviceManager) {
     mDeviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
-
-    if (!mDeviceManager->Init()) {
-      mDeviceManager = nullptr;
+    if (!mDeviceManager) {
       return false;
     }
 

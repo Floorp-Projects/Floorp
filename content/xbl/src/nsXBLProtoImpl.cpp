@@ -113,9 +113,6 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
        curr = curr->GetNext())
     curr->InstallMember(cx, propertyHolder);
 
-  // From here on out, work in the scope of the bound element.
-  JSAutoCompartment ac2(cx, targetClassObject);
-
   // Now, if we're using a separate XBL scope, enter the compartment of the
   // bound node and copy exposable properties to the prototype there. This
   // rewraps them appropriately, which should result in cross-compartment
@@ -134,6 +131,9 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
       }
     }
   }
+
+  // From here on out, work in the scope of the bound element.
+  JSAutoCompartment ac2(cx, targetClassObject);
 
   // Install all of our field accessors.
   for (nsXBLProtoImplField* curr = mFields;

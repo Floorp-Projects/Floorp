@@ -186,7 +186,7 @@ private:
   MaybeFireCallback(StoragesCompleteCallback& aCallback);
 
   nsCOMPtr<nsIEventTarget> mStreamTransportTarget;
-  nsClassHashtable<nsISupportsHashKey, FileStorageInfo> mFileStorageInfos;
+  nsClassHashtable<nsCStringHashKey, FileStorageInfo> mFileStorageInfos;
   nsTArray<StoragesCompleteCallback> mCompleteCallbacks;
 };
 

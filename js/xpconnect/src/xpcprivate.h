@@ -81,8 +81,6 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Util.h"
 
 #include <math.h>
@@ -251,119 +249,10 @@ inline JSObject* GetWNExpandoChain(JSObject *obj)
     return JS_GetReservedSlot(obj, WN_XRAYEXPANDOCHAIN_SLOT).toObjectOrNull();
 }
 
-/***************************************************************************/
-// Auto locking support class...
-
 // We PROMISE to never screw this up.
 #ifdef _MSC_VER
 #pragma warning(disable : 4355) // OK to pass "this" in member initializer
 #endif
-
-typedef mozilla::ReentrantMonitor XPCLock;
-
-static inline void xpc_Wait(XPCLock* lock)
-    {
-        MOZ_ASSERT(lock, "xpc_Wait called with null lock!");
-        lock->Wait();
-    }
-
-static inline void xpc_NotifyAll(XPCLock* lock)
-    {
-        MOZ_ASSERT(lock, "xpc_NotifyAll called with null lock!");
-        lock->NotifyAll();
-    }
-
-// This is a cloned subset of nsAutoMonitor. We want the use of a monitor -
-// mostly because we need reenterability - but we also want to support passing
-// a null monitor in without things blowing up. This is used for wrappers that
-// are guaranteed to be used only on one thread. We avoid lock overhead by
-// using a null monitor. By changing this class we can avoid having multiplte
-// code paths or (conditional) manual calls to PR_{Enter,Exit}Monitor.
-//
-// Note that xpconnect only makes *one* monitor and *mostly* holds it locked
-// only through very small critical sections.
-
-class MOZ_STACK_CLASS XPCAutoLock {
-public:
-
-    static XPCLock* NewLock(const char* name)
-                        {return new mozilla::ReentrantMonitor(name);}
-    static void     DestroyLock(XPCLock* lock)
-                        {delete lock;}
-
-    XPCAutoLock(XPCLock* lock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mLock(lock)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        if (mLock)
-            mLock->Enter();
-    }
-
-    ~XPCAutoLock()
-    {
-        if (mLock) {
-            mLock->Exit();
-        }
-    }
-
-private:
-    XPCLock*  mLock;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-    // Not meant to be implemented. This makes it a compiler error to
-    // construct or assign an XPCAutoLock object incorrectly.
-    XPCAutoLock(void) {}
-    XPCAutoLock(XPCAutoLock& /*aMon*/) {}
-    XPCAutoLock& operator =(XPCAutoLock& /*aMon*/) {
-        return *this;
-    }
-
-    // Not meant to be implemented. This makes it a compiler error to
-    // attempt to create an XPCAutoLock object on the heap.
-    static void* operator new(size_t /*size*/) CPP_THROW_NEW {
-        return nullptr;
-    }
-    static void operator delete(void* /*memory*/) {}
-};
-
-/************************************************/
-
-class MOZ_STACK_CLASS XPCAutoUnlock {
-public:
-    XPCAutoUnlock(XPCLock* lock MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mLock(lock)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        if (mLock) {
-            mLock->Exit();
-        }
-    }
-
-    ~XPCAutoUnlock()
-    {
-        if (mLock)
-            mLock->Enter();
-    }
-
-private:
-    XPCLock*  mLock;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-    // Not meant to be implemented. This makes it a compiler error to
-    // construct or assign an XPCAutoUnlock object incorrectly.
-    XPCAutoUnlock(void) {}
-    XPCAutoUnlock(XPCAutoUnlock& /*aMon*/) {}
-    XPCAutoUnlock& operator =(XPCAutoUnlock& /*aMon*/) {
-        return *this;
-    }
-
-    // Not meant to be implemented. This makes it a compiler error to
-    // attempt to create an XPCAutoUnlock object on the heap.
-    static void* operator new(size_t /*size*/) CPP_THROW_NEW {
-        return nullptr;
-    }
-    static void operator delete(void* /*memory*/) {}
-};
 
 /***************************************************************************
 ****************************************************************************
@@ -507,8 +396,8 @@ public:
     }
 
     inline XPCRootSetElem* GetNextRoot() { return mNext; }
-    void AddToRootSet(XPCLock *lock, XPCRootSetElem **listHead);
-    void RemoveFromRootSet(XPCLock *lock);
+    void AddToRootSet(XPCRootSetElem **listHead);
+    void RemoveFromRootSet();
 
 private:
     XPCRootSetElem *mNext;
@@ -610,8 +499,6 @@ public:
     XPCWrappedNativeProtoMap* GetDetachedWrappedNativeProtoMap() const
         {return mDetachedWrappedNativeProtoMap;}
 
-    XPCLock* GetMapLock() const {return mMapLock;}
-
     bool OnJSContextNew(JSContext* cx);
 
     virtual bool
@@ -699,7 +586,7 @@ public:
 
     void SystemIsBeingShutDown();
 
-    PRThread* GetThreadRunningGC() const {return mThreadRunningGC;}
+    bool GCIsRunning() const {return mGCIsRunning;}
 
     ~XPCJSRuntime();
 
@@ -751,8 +638,7 @@ private:
     XPCNativeScriptableSharedMap* mNativeScriptableSharedMap;
     XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
     XPCWrappedNativeProtoMap* mDetachedWrappedNativeProtoMap;
-    XPCLock* mMapLock;
-    PRThread* mThreadRunningGC;
+    bool mGCIsRunning;
     nsTArray<nsXPCWrappedJS*> mWrappedJSToReleaseArray;
     nsTArray<nsISupports*> mNativesToReleaseArray;
     bool mDoingFinalization;
@@ -1189,10 +1075,7 @@ public:
     GetWrappedNativeMap() const {return mWrappedNativeMap;}
 
     ClassInfo2WrappedNativeProtoMap*
-    GetWrappedNativeProtoMap(bool aMainThreadOnly) const
-        {return aMainThreadOnly ?
-                mMainThreadWrappedNativeProtoMap :
-                mWrappedNativeProtoMap;}
+    GetWrappedNativeProtoMap() const {return mWrappedNativeProtoMap;}
 
     nsXPCComponents*
     GetComponents() const {return mComponents;}
@@ -1322,7 +1205,6 @@ private:
     XPCJSRuntime*                    mRuntime;
     Native2WrappedNativeMap*         mWrappedNativeMap;
     ClassInfo2WrappedNativeProtoMap* mWrappedNativeProtoMap;
-    ClassInfo2WrappedNativeProtoMap* mMainThreadWrappedNativeProtoMap;
     nsRefPtr<nsXPCComponents>        mComponents;
     XPCWrappedNativeScope*           mNext;
     // The JS global object for this scope.  If non-null, this will be the
@@ -1960,15 +1842,11 @@ public:
 #define GET_IT(f_) const {return !!(mClassInfoFlags & nsIClassInfo:: f_ );}
 
     bool ClassIsSingleton()           GET_IT(SINGLETON)
-    bool ClassIsThreadSafe()          GET_IT(THREADSAFE)
     bool ClassIsMainThreadOnly()      GET_IT(MAIN_THREAD_ONLY)
     bool ClassIsDOMObject()           GET_IT(DOM_OBJECT)
     bool ClassIsPluginObject()        GET_IT(PLUGIN_OBJECT)
 
 #undef GET_IT
-
-    XPCLock* GetLock() const
-        {return ClassIsThreadSafe() ? GetRuntime()->GetMapLock() : nullptr;}
 
     void SetScriptableInfo(XPCNativeScriptableInfo* si)
         {MOZ_ASSERT(!mScriptableInfo, "leak here!"); mScriptableInfo = si;}
@@ -2222,15 +2100,11 @@ public:
     JSObject*
     GetFlatJSObjectPreserveColor() const {return mFlatJSObject;}
 
-    XPCLock*
-    GetLock() const {return IsValid() && HasProto() ?
-                                GetProto()->GetLock() : nullptr;}
-
     XPCNativeSet*
-    GetSet() const {XPCAutoLock al(GetLock()); return mSet;}
+    GetSet() const {return mSet;}
 
     void
-    SetSet(XPCNativeSet* set) {XPCAutoLock al(GetLock()); mSet = set;}
+    SetSet(XPCNativeSet* set) {mSet = set;}
 
     static XPCWrappedNative* Get(JSObject *obj) {
         MOZ_ASSERT(IS_WN_REFLECTOR(obj));

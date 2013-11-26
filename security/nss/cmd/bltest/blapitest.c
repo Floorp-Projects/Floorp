@@ -29,12 +29,6 @@ SECStatus EC_CopyParams(PLArenaPool *arena, ECParams *dstParams,
 	      const ECParams *srcParams);
 #endif
 
-/* Temporary - add debugging output on windows for RSA to track QA failure */
-#ifdef _WIN32
-#define TRACK_BLTEST_BUG
-    char __bltDBG[] = "BLTEST DEBUG";
-#endif
-
 char *progName;
 char *testdir = NULL;
 
@@ -629,6 +623,9 @@ typedef SECStatus (* bltestHashCipherFn)(unsigned char *dest,
 					 const unsigned char *src,
 					 PRUint32 src_length);
 
+/* Note: Algorithms are grouped in order to support is_symmkeyCipher /
+ * is_pubkeyCipher / is_hashCipher / is_sigCipher
+ */
 typedef enum {
     bltestINVALID = -1,
     bltestDES_ECB,	  /* Symmetric Key Ciphers */
@@ -651,11 +648,13 @@ typedef enum {
     bltestCAMELLIA_CBC,   /* .                     */
     bltestSEED_ECB,       /* SEED algorithm	   */
     bltestSEED_CBC,       /* SEED algorithm	   */
-    bltestRSA,		  /* Public Key Ciphers	   */
+    bltestRSA,            /* Public Key Ciphers    */
+    bltestRSA_OAEP,       /* . (Public Key Enc.)   */
+    bltestRSA_PSS,        /* . (Public Key Sig.)   */
 #ifdef NSS_ENABLE_ECC
-    bltestECDSA,	  /* . (Public Key Sig.)   */
+    bltestECDSA,          /* . (Public Key Sig.)   */
 #endif
-    bltestDSA,		  /* .                     */
+    bltestDSA,            /* . (Public Key Sig.)   */
     bltestMD2,		  /* Hash algorithms	   */
     bltestMD5,		  /* .			   */
     bltestSHA1,           /* .			   */
@@ -689,6 +688,8 @@ static char *mode_strings[] =
     "seed_ecb",
     "seed_cbc",
     "rsa",
+    "rsa_oaep",
+    "rsa_pss",
 #ifdef NSS_ENABLE_ECC
     "ecdsa",
 #endif
@@ -726,32 +727,47 @@ typedef struct
 typedef struct
 {
     bltestIO key;
-    int	     keysizeInBits;
-    RSAPrivateKey *rsakey;
+    int keysizeInBits;
+
+    /* OAEP & PSS */
+    HASH_HashType hashAlg;
+    HASH_HashType maskHashAlg;
+    bltestIO      seed; /* salt if PSS */
 } bltestRSAParams;
 
 typedef struct
 {
-    bltestIO   key;
     bltestIO   pqgdata;
     unsigned int keysize;
     bltestIO   keyseed;
     bltestIO   sigseed;
-    bltestIO   sig; /* if doing verify, have additional input */
     PQGParams *pqg;
-    DSAPrivateKey *dsakey;
 } bltestDSAParams;
 
 #ifdef NSS_ENABLE_ECC
 typedef struct
 {
-    bltestIO   key;
     char      *curveName;
     bltestIO   sigseed;
-    bltestIO   sig; /* if doing verify, have additional input */
-    ECPrivateKey *eckey;
 } bltestECDSAParams;
 #endif
+
+typedef struct
+{
+    bltestIO key;
+    void *   privKey;
+    void *   pubKey;
+    bltestIO sig; /* if doing verify, the signature (which may come
+                   * from sigfile. */
+
+    union {
+        bltestRSAParams rsa;
+        bltestDSAParams dsa;
+#ifdef NSS_ENABLE_ECC
+        bltestECDSAParams ecdsa;
+#endif
+    } cipherParams;
+} bltestAsymKeyParams;
 
 typedef struct
 {
@@ -765,11 +781,7 @@ typedef union
     bltestSymmKeyParams sk;
     bltestAuthSymmKeyParams ask;
     bltestRC5Params	rc5;
-    bltestRSAParams	rsa;
-    bltestDSAParams	dsa;
-#ifdef NSS_ENABLE_ECC
-    bltestECDSAParams	ecdsa;
-#endif
+    bltestAsymKeyParams	asymk;
     bltestHashParams	hash;
 } bltestParams;
 
@@ -859,12 +871,8 @@ PRBool
 is_sigCipher(bltestCipherMode mode)
 {
     /* change as needed! */
-#ifdef NSS_ENABLE_ECC
-    if (mode >= bltestECDSA && mode <= bltestDSA)
-#else
-    if (mode >= bltestDSA && mode <= bltestDSA)
-#endif
-	return PR_TRUE;
+    if (mode >= bltestRSA_PSS && mode <= bltestDSA)
+       return PR_TRUE;
     return PR_FALSE;
 }
 
@@ -1159,40 +1167,125 @@ seed_Decrypt(void *cx, unsigned char *output, unsigned int *outputLen,
 }
 
 SECStatus
-rsa_PublicKeyOp(void *key, SECItem *output, const SECItem *input)
+rsa_PublicKeyOp(void *cx, SECItem *output, const SECItem *input)
 {
-    return RSA_PublicKeyOp((RSAPublicKey *)key, output->data, input->data);
+    bltestAsymKeyParams *params = (bltestAsymKeyParams *)cx;
+    RSAPublicKey *pubKey = (RSAPublicKey *)params->pubKey;
+    SECStatus rv = RSA_PublicKeyOp(pubKey, output->data, input->data);
+    if (rv == SECSuccess) {
+        output->len = pubKey->modulus.data[0] ? pubKey->modulus.len :
+                                                pubKey->modulus.len - 1;
+    }
+    return rv;
 }
 
 SECStatus
-rsa_PrivateKeyOp(void *key, SECItem *output, const SECItem *input)
+rsa_PrivateKeyOp(void *cx, SECItem *output, const SECItem *input)
 {
-    return RSA_PrivateKeyOp((RSAPrivateKey *)key, output->data, input->data);
+    bltestAsymKeyParams *params = (bltestAsymKeyParams *)cx;
+    RSAPrivateKey *privKey = (RSAPrivateKey *)params->privKey;
+    SECStatus rv = RSA_PrivateKeyOp(privKey, output->data, input->data);
+    if (rv == SECSuccess) {
+        output->len = privKey->modulus.data[0] ? privKey->modulus.len :
+                                                 privKey->modulus.len - 1;
+    }
+    return rv;
 }
 
 SECStatus
-dsa_signDigest(void *key, SECItem *output, const SECItem *input)
+rsa_signDigestPSS(void *cx, SECItem *output, const SECItem *input)
 {
-    return DSA_SignDigest((DSAPrivateKey *)key, output, input);
+    bltestAsymKeyParams *params = (bltestAsymKeyParams *)cx;
+    bltestRSAParams *rsaParams = &params->cipherParams.rsa;
+    return RSA_SignPSS((RSAPrivateKey *)params->privKey,
+                       rsaParams->hashAlg,
+                       rsaParams->maskHashAlg,
+                       rsaParams->seed.buf.data,
+                       rsaParams->seed.buf.len,
+                       output->data, &output->len, output->len,
+                       input->data, input->len);
 }
 
 SECStatus
-dsa_verifyDigest(void *key, SECItem *output, const SECItem *input)
+rsa_verifyDigestPSS(void *cx, SECItem *output, const SECItem *input)
 {
-    return DSA_VerifyDigest((DSAPublicKey *)key, output, input);
+    bltestAsymKeyParams *params = (bltestAsymKeyParams *)cx;
+    bltestRSAParams *rsaParams = &params->cipherParams.rsa;
+    return RSA_CheckSignPSS((RSAPublicKey *)params->pubKey,
+                            rsaParams->hashAlg,
+                            rsaParams->maskHashAlg,
+                            rsaParams->seed.buf.len,
+                            output->data, output->len,
+                            input->data, input->len);
+}
+
+SECStatus
+rsa_encryptOAEP(void *cx, SECItem *output, const SECItem *input)
+{
+    bltestAsymKeyParams *params = (bltestAsymKeyParams *)cx;
+    bltestRSAParams *rsaParams = &params->cipherParams.rsa;
+    return RSA_EncryptOAEP((RSAPublicKey *)params->pubKey,
+                           rsaParams->hashAlg,
+                           rsaParams->maskHashAlg,
+                           NULL, 0,
+                           rsaParams->seed.buf.data,
+                           rsaParams->seed.buf.len,
+                           output->data, &output->len, output->len,
+                           input->data, input->len);
+}
+
+SECStatus
+rsa_decryptOAEP(void *cx, SECItem *output, const SECItem *input)
+{
+    bltestAsymKeyParams *params = (bltestAsymKeyParams *)cx;
+    bltestRSAParams *rsaParams = &params->cipherParams.rsa;
+    return RSA_DecryptOAEP((RSAPrivateKey *)params->privKey,
+                           rsaParams->hashAlg,
+                           rsaParams->maskHashAlg,
+                           NULL, 0,
+                           output->data, &output->len, output->len,
+                           input->data, input->len);
+}
+
+SECStatus
+dsa_signDigest(void *cx, SECItem *output, const SECItem *input)
+{
+    bltestAsymKeyParams *params = (bltestAsymKeyParams *)cx;
+    if (params->cipherParams.dsa.sigseed.buf.len > 0) {
+        return DSA_SignDigestWithSeed((DSAPrivateKey *)params->privKey,
+                                      output, input,
+                                      params->cipherParams.dsa.sigseed.buf.data);
+    }
+    return DSA_SignDigest((DSAPrivateKey *)params->privKey, output, input);
+}
+
+SECStatus
+dsa_verifyDigest(void *cx, SECItem *output, const SECItem *input)
+{
+    bltestAsymKeyParams *params = (bltestAsymKeyParams *)cx;
+    return DSA_VerifyDigest((DSAPublicKey *)params->pubKey, output, input);
 }
 
 #ifdef NSS_ENABLE_ECC
 SECStatus
-ecdsa_signDigest(void *key, SECItem *output, const SECItem *input)
+ecdsa_signDigest(void *cx, SECItem *output, const SECItem *input)
 {
-    return ECDSA_SignDigest((ECPrivateKey *)key, output, input);
+    bltestAsymKeyParams *params = (bltestAsymKeyParams *)cx;
+    if (params->cipherParams.ecdsa.sigseed.buf.len > 0) {
+        return ECDSA_SignDigestWithSeed(
+                        (ECPrivateKey *)params->privKey,
+                        output, input,
+                        params->cipherParams.ecdsa.sigseed.buf.data,
+                        params->cipherParams.ecdsa.sigseed.buf.len);
+    }
+    return ECDSA_SignDigest((ECPrivateKey *)params->privKey, output, input);
 }
 
 SECStatus
-ecdsa_verifyDigest(void *key, SECItem *output, const SECItem *input)
+ecdsa_verifyDigest(void *cx, SECItem *output, const SECItem *input)
 {
-    return ECDSA_VerifyDigest((ECPublicKey *)key, output, input);
+    bltestAsymKeyParams *params = (bltestAsymKeyParams *)cx;
+    return ECDSA_VerifyDigest((ECPublicKey *)params->pubKey, output, input);
 }
 #endif
 
@@ -1489,10 +1582,17 @@ bltest_rsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 {
     int i;
     RSAPrivateKey **dummyKey;
+    RSAPrivateKey *privKey;
+    RSAPublicKey *pubKey;
     PRIntervalTime time1, time2;
-    bltestRSAParams *rsap = &cipherInfo->params.rsa;
+
+    bltestAsymKeyParams *asymk = &cipherInfo->params.asymk;
+    bltestRSAParams *rsap = &asymk->cipherParams.rsa;
+
     /* RSA key gen was done during parameter setup */
-    cipherInfo->cx = cipherInfo->params.rsa.rsakey;
+    cipherInfo->cx = asymk;
+    privKey = (RSAPrivateKey *)asymk->privKey;
+
     /* For performance testing */
     if (cipherInfo->cxreps > 0) {
 	/* Create space for n private key objects */
@@ -1502,28 +1602,39 @@ bltest_rsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	TIMESTART();
 	for (i=0; i<cipherInfo->cxreps; i++)
 	    dummyKey[i] = RSA_NewKey(rsap->keysizeInBits, 
-	                             &rsap->rsakey->publicExponent);
+	                             &privKey->publicExponent);
 	TIMEFINISH(cipherInfo->cxtime, cipherInfo->cxreps);
 	/* Free the n key objects */
 	for (i=0; i<cipherInfo->cxreps; i++)
 	    PORT_FreeArena(dummyKey[i]->arena, PR_TRUE);
 	PORT_Free(dummyKey);
     }
-    if (encrypt) {
+
+    if ((encrypt && !is_sigCipher(cipherInfo->mode)) ||
+        (!encrypt && is_sigCipher(cipherInfo->mode))) {
 	/* Have to convert private key to public key.  Memory
 	 * is freed with private key's arena  */
-	RSAPublicKey *pubkey;
-	RSAPrivateKey *key = (RSAPrivateKey *)cipherInfo->cx;
-	pubkey = (RSAPublicKey *)PORT_ArenaAlloc(key->arena,
+	pubKey = (RSAPublicKey *)PORT_ArenaAlloc(privKey->arena,
 						 sizeof(RSAPublicKey));
-	pubkey->modulus.len = key->modulus.len;
-	pubkey->modulus.data = key->modulus.data;
-	pubkey->publicExponent.len = key->publicExponent.len;
-	pubkey->publicExponent.data = key->publicExponent.data;
-	cipherInfo->cx = (void *)pubkey;
-	cipherInfo->cipher.pubkeyCipher = rsa_PublicKeyOp;
-    } else {
-	cipherInfo->cipher.pubkeyCipher = rsa_PrivateKeyOp;
+	pubKey->modulus.len = privKey->modulus.len;
+	pubKey->modulus.data = privKey->modulus.data;
+	pubKey->publicExponent.len = privKey->publicExponent.len;
+	pubKey->publicExponent.data = privKey->publicExponent.data;
+	asymk->pubKey = (void *)pubKey;
+    }
+    switch (cipherInfo->mode) {
+        case bltestRSA:
+            cipherInfo->cipher.pubkeyCipher = encrypt ? rsa_PublicKeyOp
+                                                      : rsa_PrivateKeyOp;
+            break;
+        case bltestRSA_PSS:
+            cipherInfo->cipher.pubkeyCipher = encrypt ? rsa_signDigestPSS
+                                                      : rsa_verifyDigestPSS;
+            break;
+        case bltestRSA_OAEP:
+            cipherInfo->cipher.pubkeyCipher = encrypt ? rsa_encryptOAEP
+                                                      : rsa_decryptOAEP;
+            break;
     }
     return SECSuccess;
 }
@@ -1558,10 +1669,10 @@ bltest_dsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     DSAPrivateKey **dummyKey;
     PQGParams *dummypqg;
     PRIntervalTime time1, time2;
-    bltestDSAParams *dsap = &cipherInfo->params.dsa;
+    bltestAsymKeyParams *asymk = &cipherInfo->params.asymk;
+    bltestDSAParams *dsap = &asymk->cipherParams.dsa;
     PQGVerify *ignore = NULL;
-    /* DSA key gen was done during parameter setup */
-    cipherInfo->cx = cipherInfo->params.dsa.dsakey;
+    cipherInfo->cx = asymk;
     /* For performance testing */
     if (cipherInfo->cxreps > 0) {
 	/* Create space for n private key objects */
@@ -1583,8 +1694,8 @@ bltest_dsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     if (!dsap->pqg && dsap->pqgdata.buf.len > 0) {
 	dsap->pqg = pqg_from_filedata(&dsap->pqgdata.buf);
     }
-    if (!cipherInfo->cx && dsap->key.buf.len > 0) {
-	cipherInfo->cx = dsakey_from_filedata(&dsap->key.buf);
+    if (!asymk->privKey && asymk->key.buf.len > 0) {
+	asymk->privKey = dsakey_from_filedata(&asymk->key.buf);
     }
     if (encrypt) {
 	cipherInfo->cipher.pubkeyCipher = dsa_signDigest;
@@ -1592,7 +1703,7 @@ bltest_dsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	/* Have to convert private key to public key.  Memory
 	 * is freed with private key's arena  */
 	DSAPublicKey *pubkey;
-	DSAPrivateKey *key = (DSAPrivateKey *)cipherInfo->cx;
+	DSAPrivateKey *key = (DSAPrivateKey *)asymk->privKey;
 	pubkey = (DSAPublicKey *)PORT_ArenaZAlloc(key->params.arena,
 						  sizeof(DSAPublicKey));
 	pubkey->params.prime.len = key->params.prime.len;
@@ -1603,6 +1714,7 @@ bltest_dsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	pubkey->params.base.data = key->params.base.data;
 	pubkey->publicValue.len = key->publicValue.len;
 	pubkey->publicValue.data = key->publicValue.data;
+	asymk->pubKey = pubkey;
 	cipherInfo->cipher.pubkeyCipher = dsa_verifyDigest;
     }
     return SECSuccess;
@@ -1615,9 +1727,8 @@ bltest_ecdsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     int i;
     ECPrivateKey **dummyKey;
     PRIntervalTime time1, time2;
-    bltestECDSAParams *ecdsap = &cipherInfo->params.ecdsa;
-    /* ECDSA key gen was done during parameter setup */
-    cipherInfo->cx = cipherInfo->params.ecdsa.eckey;
+    bltestAsymKeyParams *asymk = &cipherInfo->params.asymk;
+    cipherInfo->cx = asymk;
     /* For performance testing */
     if (cipherInfo->cxreps > 0) {
 	/* Create space for n private key objects */
@@ -1626,7 +1737,7 @@ bltest_ecdsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	/* Time n keygens, storing in the array */
 	TIMESTART();
 	for (i=0; i<cipherInfo->cxreps; i++) {
-	    EC_NewKey(&ecdsap->eckey->ecParams, &dummyKey[i]);
+	    EC_NewKey(&((ECPrivateKey *)asymk->privKey)->ecParams, &dummyKey[i]);
 	}
 	TIMEFINISH(cipherInfo->cxtime, cipherInfo->cxreps);
 	/* Free the n key objects */
@@ -1634,8 +1745,8 @@ bltest_ecdsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	    PORT_FreeArena(dummyKey[i]->ecParams.arena, PR_TRUE);
 	PORT_Free(dummyKey);
     }
-    if (!cipherInfo->cx && ecdsap->key.buf.len > 0) {
-	cipherInfo->cx = eckey_from_filedata(&ecdsap->key.buf);
+    if (!asymk->privKey && asymk->key.buf.len > 0) {
+        asymk->privKey = eckey_from_filedata(&asymk->key.buf);
     }
     if (encrypt) {
 	cipherInfo->cipher.pubkeyCipher = ecdsa_signDigest;
@@ -1643,7 +1754,7 @@ bltest_ecdsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	/* Have to convert private key to public key.  Memory
 	 * is freed with private key's arena  */
 	ECPublicKey *pubkey;
-	ECPrivateKey *key = (ECPrivateKey *)cipherInfo->cx;
+	ECPrivateKey *key = (ECPrivateKey *)asymk->privKey;
 	pubkey = (ECPublicKey *)PORT_ArenaZAlloc(key->ecParams.arena,
 						  sizeof(ECPublicKey));
 	pubkey->ecParams.type = key->ecParams.type;
@@ -1670,6 +1781,7 @@ bltest_ecdsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	pubkey->ecParams.name= key->ecParams.name;
 	pubkey->publicValue.len = key->publicValue.len;
 	pubkey->publicValue.data = key->publicValue.data;
+	asymk->pubKey = pubkey;
 	cipherInfo->cipher.pubkeyCipher = ecdsa_verifyDigest;
     }
     return SECSuccess;
@@ -1973,74 +2085,81 @@ pubkeyInitKey(bltestCipherInfo *cipherInfo, PRFileDesc *file,
 {
     int i;
     SECStatus rv = SECSuccess;
+    bltestAsymKeyParams *asymk = &cipherInfo->params.asymk;
     bltestRSAParams *rsap;
+    RSAPrivateKey **rsaKey = NULL;
     bltestDSAParams *dsap;
+    DSAPrivateKey **dsaKey = NULL;
 #ifdef NSS_ENABLE_ECC
-    bltestECDSAParams *ecdsap;
     SECItem *tmpECParamsDER;
     ECParams *tmpECParams = NULL;
     SECItem ecSerialize[3];
+    ECPrivateKey **ecKey = NULL;
 #endif
     switch (cipherInfo->mode) {
     case bltestRSA:
-	rsap = &cipherInfo->params.rsa;
+    case bltestRSA_PSS:
+    case bltestRSA_OAEP:
+	rsap = &asymk->cipherParams.rsa;
+        rsaKey = (RSAPrivateKey **)&asymk->privKey;
 	if (keysize > 0) {
 	    SECItem expitem = { 0, 0, 0 };
 	    SECITEM_AllocItem(cipherInfo->arena, &expitem, sizeof(int));
 	    for (i = 1; i <= sizeof(int); i++)
 		expitem.data[i-1] = exponent >> (8*(sizeof(int) - i));
-	    rsap->rsakey = RSA_NewKey(keysize * 8, &expitem);
-	    serialize_key(&rsap->rsakey->version, 9, file);
+	    *rsaKey = RSA_NewKey(keysize * 8, &expitem);
+	    serialize_key(&(*rsaKey)->version, 9, file);
 	    rsap->keysizeInBits = keysize * 8;
 	} else {
-	    setupIO(cipherInfo->arena, &cipherInfo->params.key, file, NULL, 0);
-	    rsap->rsakey = rsakey_from_filedata(&cipherInfo->params.key.buf);
-	    rsap->keysizeInBits = rsap->rsakey->modulus.len * 8;
+	    setupIO(cipherInfo->arena, &asymk->key, file, NULL, 0);
+	    *rsaKey = rsakey_from_filedata(&asymk->key.buf);
+	    rsap->keysizeInBits = (*rsaKey)->modulus.len * 8;
 	}
 	break;
     case bltestDSA:
-	dsap = &cipherInfo->params.dsa;
+	dsap = &asymk->cipherParams.dsa;
+	dsaKey = (DSAPrivateKey **)&asymk->privKey;
 	if (keysize > 0) {
 	    dsap->keysize = keysize*8;
 	    if (!dsap->pqg)
 		bltest_pqg_init(dsap);
-	    rv = DSA_NewKey(dsap->pqg, &dsap->dsakey);
+	    rv = DSA_NewKey(dsap->pqg, dsaKey);
 	    CHECKERROR(rv, __LINE__);
-	    serialize_key(&dsap->dsakey->params.prime, 5, file);
+	    serialize_key(&(*dsaKey)->params.prime, 5, file);
 	} else {
-	    setupIO(cipherInfo->arena, &cipherInfo->params.key, file, NULL, 0);
-	    dsap->dsakey = dsakey_from_filedata(&cipherInfo->params.key.buf);
-	    dsap->keysize = dsap->dsakey->params.prime.len*8;
+	    setupIO(cipherInfo->arena, &asymk->key, file, NULL, 0);
+	    *dsaKey = dsakey_from_filedata(&asymk->key.buf);
+	    dsap->keysize = (*dsaKey)->params.prime.len*8;
 	}
 	break;
 #ifdef NSS_ENABLE_ECC
     case bltestECDSA:
-	ecdsap = &cipherInfo->params.ecdsa;
+	ecKey = (ECPrivateKey **)&asymk->privKey;
 	if (curveName != NULL) {
 	    tmpECParamsDER = getECParams(curveName);
 	    rv = SECOID_Init();
 	    CHECKERROR(rv, __LINE__);
 	    rv = EC_DecodeParams(tmpECParamsDER, &tmpECParams) == SECFailure;
 	    CHECKERROR(rv, __LINE__);
-	    rv = EC_NewKey(tmpECParams, &ecdsap->eckey);
+	    rv = EC_NewKey(tmpECParams, ecKey);
 	    CHECKERROR(rv, __LINE__);
 	    ecSerialize[0].type = tmpECParamsDER->type;
 	    ecSerialize[0].data = tmpECParamsDER->data;
 	    ecSerialize[0].len  = tmpECParamsDER->len;
-	    ecSerialize[1].type = ecdsap->eckey->publicValue.type;
-	    ecSerialize[1].data = ecdsap->eckey->publicValue.data;
-	    ecSerialize[1].len  = ecdsap->eckey->publicValue.len;
-	    ecSerialize[2].type = ecdsap->eckey->privateValue.type;
-	    ecSerialize[2].data = ecdsap->eckey->privateValue.data;
-	    ecSerialize[2].len  = ecdsap->eckey->privateValue.len;
+	    ecSerialize[1].type = (*ecKey)->publicValue.type;
+	    ecSerialize[1].data = (*ecKey)->publicValue.data;
+	    ecSerialize[1].len  = (*ecKey)->publicValue.len;
+	    ecSerialize[2].type = (*ecKey)->privateValue.type;
+	    ecSerialize[2].data = (*ecKey)->privateValue.data;
+	    ecSerialize[2].len  = (*ecKey)->privateValue.len;
 	    serialize_key(&(ecSerialize[0]), 3, file);
 	    SECITEM_FreeItem(tmpECParamsDER, PR_TRUE);
 	    PORT_FreeArena(tmpECParams->arena, PR_TRUE);
 	    rv = SECOID_Shutdown();
 	    CHECKERROR(rv, __LINE__);
 	} else {
-	    setupIO(cipherInfo->arena, &cipherInfo->params.key, file, NULL, 0);
-	    ecdsap->eckey = eckey_from_filedata(&cipherInfo->params.key.buf);
+	    setupIO(cipherInfo->arena, &asymk->key, file, NULL, 0);
+	    *ecKey = eckey_from_filedata(&asymk->key.buf);
 	}
 	break;
 #endif
@@ -2108,19 +2227,29 @@ cipherInit(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	return bltest_seed_init(cipherInfo, encrypt);
 	break;
     case bltestRSA:
-	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
-			  cipherInfo->input.pBuf.len);
+    case bltestRSA_OAEP:
+    case bltestRSA_PSS:
+	if (encrypt || cipherInfo->mode != bltestRSA_PSS) {
+		/* Don't allocate a buffer for PSS in verify mode, as no actual
+		 * output is produced. */
+		SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
+		                  RSA_MAX_MODULUS_BITS / 8);
+	}
 	return bltest_rsa_init(cipherInfo, encrypt);
 	break;
     case bltestDSA:
-	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
-			  DSA_MAX_SIGNATURE_LEN);
+	if (encrypt) {
+		SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
+		                  DSA_MAX_SIGNATURE_LEN);
+	}
 	return bltest_dsa_init(cipherInfo, encrypt);
 	break;
 #ifdef NSS_ENABLE_ECC
     case bltestECDSA:
-	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
-			  2 * MAX_ECKEY_LEN);
+	if (encrypt) {
+		SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
+		                  2 * MAX_ECKEY_LEN);
+	}
 	return bltest_ecdsa_init(cipherInfo, encrypt);
 	break;
 #endif
@@ -2184,248 +2313,6 @@ cipherInit(bltestCipherInfo *cipherInfo, PRBool encrypt)
 }
 
 SECStatus
-dsaOp(bltestCipherInfo *cipherInfo)
-{
-    PRIntervalTime time1, time2;
-    SECStatus rv = SECSuccess;
-    int i;
-    int maxLen = cipherInfo->output.pBuf.len;
-    SECItem dummyOut = { 0, 0, 0 };
-    SECITEM_AllocItem(NULL, &dummyOut, maxLen);
-    if (cipherInfo->cipher.pubkeyCipher == dsa_signDigest) {
-	if (cipherInfo->params.dsa.sigseed.buf.len > 0) {
-            bltestDSAParams *dsa = &cipherInfo->params.dsa;
-            DSAPrivateKey *key = (DSAPrivateKey *)cipherInfo->cx;
-
-            TIMESTART();
-            rv = DSA_SignDigestWithSeed(key,
-                                        &cipherInfo->output.pBuf,
-                                        &cipherInfo->input.pBuf,
-                                        dsa->sigseed.buf.data);
-            TIMEFINISH(cipherInfo->optime, 1.0);
-            CHECKERROR(rv, __LINE__);
-            cipherInfo->repetitions = 0;
-            if (cipherInfo->repetitionsToPerfom != 0) {
-                TIMESTART();
-                for (i=0; i<cipherInfo->repetitionsToPerfom;
-                     i++, cipherInfo->repetitions++) {
-                    rv = DSA_SignDigestWithSeed(key, &dummyOut,
-                                                &cipherInfo->input.pBuf,
-                                                dsa->sigseed.buf.data);
-                    CHECKERROR(rv, __LINE__);
-                }
-            } else {
-                int opsBetweenChecks = 0;
-                TIMEMARK(cipherInfo->seconds);
-                while (! (TIMETOFINISH())) {
-                    int j = 0;
-                    for (;j < opsBetweenChecks;j++) {
-                        rv = DSA_SignDigestWithSeed(key, &dummyOut,
-                                                    &cipherInfo->input.pBuf,
-                                                    dsa->sigseed.buf.data);
-                        CHECKERROR(rv, __LINE__);
-                    }
-                    cipherInfo->repetitions += j;
-                }
-            }
-            TIMEFINISH(cipherInfo->optime, 1.0);
-        } else {
-            TIMESTART();
-            rv = DSA_SignDigest((DSAPrivateKey *)cipherInfo->cx,
-                                &cipherInfo->output.pBuf,
-                                &cipherInfo->input.pBuf);
-            TIMEFINISH(cipherInfo->optime, 1.0);
-            CHECKERROR(rv, __LINE__);
-            cipherInfo->repetitions = 0;
-            if (cipherInfo->repetitionsToPerfom != 0) {
-                TIMESTART();
-                for (i=0; i<cipherInfo->repetitionsToPerfom;
-                     i++, cipherInfo->repetitions++) {
-                    rv = DSA_SignDigest((DSAPrivateKey *)cipherInfo->cx,
-                                        &dummyOut,
-                                        &cipherInfo->input.pBuf);
-                    CHECKERROR(rv, __LINE__);
-                }
-            } else {
-                int opsBetweenChecks = 0;
-                TIMEMARK(cipherInfo->seconds);
-                while (! (TIMETOFINISH())) {
-                    int j = 0;
-                    for (;j < opsBetweenChecks;j++) {
-                        rv = DSA_SignDigest((DSAPrivateKey *)cipherInfo->cx,
-                                            &dummyOut,
-                                            &cipherInfo->input.pBuf);
-                        CHECKERROR(rv, __LINE__);
-                    }
-                    cipherInfo->repetitions += j;
-                }
-            }
-            TIMEFINISH(cipherInfo->optime, 1.0);
-        }
-	cipherInfo->output.buf.len = cipherInfo->output.pBuf.len;
-        bltestCopyIO(cipherInfo->arena, &cipherInfo->params.dsa.sig, 
-                     &cipherInfo->output);
-    } else {
-        TIMESTART();
-        rv = DSA_VerifyDigest((DSAPublicKey *)cipherInfo->cx,
-                              &cipherInfo->params.dsa.sig.buf,
-                              &cipherInfo->input.pBuf);
-        TIMEFINISH(cipherInfo->optime, 1.0);
-        CHECKERROR(rv, __LINE__);
-        cipherInfo->repetitions = 0;
-        if (cipherInfo->repetitionsToPerfom != 0) {
-            TIMESTART();
-            for (i=0; i<cipherInfo->repetitionsToPerfom;
-                 i++, cipherInfo->repetitions++) {
-                rv = DSA_VerifyDigest((DSAPublicKey *)cipherInfo->cx,
-                                      &cipherInfo->params.dsa.sig.buf,
-                                      &cipherInfo->input.pBuf);
-                CHECKERROR(rv, __LINE__);
-            }
-        } else {
-            int opsBetweenChecks = 0;
-            TIMEMARK(cipherInfo->seconds);
-            while (! (TIMETOFINISH())) {
-                int j = 0;
-                for (;j < opsBetweenChecks;j++) {
-                    rv = DSA_VerifyDigest((DSAPublicKey *)cipherInfo->cx,
-                                          &cipherInfo->params.dsa.sig.buf,
-                                          &cipherInfo->input.pBuf);
-                    CHECKERROR(rv, __LINE__);
-                }
-                cipherInfo->repetitions += j;
-            }
-        }
-        TIMEFINISH(cipherInfo->optime, 1.0);
-    }
-    SECITEM_FreeItem(&dummyOut, PR_FALSE);
-    return rv;
-}
-
-#ifdef NSS_ENABLE_ECC
-SECStatus
-ecdsaOp(bltestCipherInfo *cipherInfo)
-{
-    PRIntervalTime time1, time2;
-    SECStatus rv = SECSuccess;
-    int i;
-    int maxLen = cipherInfo->output.pBuf.len;
-    SECItem dummyOut = { 0, 0, 0 };
-    SECITEM_AllocItem(NULL, &dummyOut, maxLen);
-    if (cipherInfo->cipher.pubkeyCipher == ecdsa_signDigest) {
-        if (cipherInfo->params.ecdsa.sigseed.buf.len > 0) {
-            ECPrivateKey *key = (ECPrivateKey *)cipherInfo->cx;
-            bltestECDSAParams *ecdsa = &cipherInfo->params.ecdsa;
-
-            TIMESTART();
-            rv = ECDSA_SignDigestWithSeed(key,
-                                          &cipherInfo->output.pBuf,
-                                          &cipherInfo->input.pBuf,
-                                          ecdsa->sigseed.buf.data,
-                                          ecdsa->sigseed.buf.len);
-            TIMEFINISH(cipherInfo->optime, 1.0);
-            CHECKERROR(rv, __LINE__);
-            cipherInfo->repetitions = 0;
-            if (cipherInfo->repetitionsToPerfom != 0) {
-                TIMESTART();
-                for (i=0; i<cipherInfo->repetitionsToPerfom;
-                     i++, cipherInfo->repetitions++) {
-                    rv = ECDSA_SignDigestWithSeed(key, &dummyOut,
-                                                  &cipherInfo->input.pBuf,
-                                                  ecdsa->sigseed.buf.data,
-                                                  ecdsa->sigseed.buf.len);
-                    CHECKERROR(rv, __LINE__);
-                }
-            } else {
-                int opsBetweenChecks = 0;
-                TIMEMARK(cipherInfo->seconds);
-                while (! (TIMETOFINISH())) {
-                    int j = 0;
-                    for (;j < opsBetweenChecks;j++) {
-                        rv = ECDSA_SignDigestWithSeed(key, &dummyOut,
-                                                      &cipherInfo->input.pBuf,
-                                                      ecdsa->sigseed.buf.data,
-                                                      ecdsa->sigseed.buf.len);
-                        CHECKERROR(rv, __LINE__);
-                    }
-                    cipherInfo->repetitions += j;
-                }
-            }
-            TIMEFINISH(cipherInfo->optime, 1.0);
-        } else {
-            TIMESTART();
-            rv = ECDSA_SignDigest((ECPrivateKey *)cipherInfo->cx,
-                                  &cipherInfo->output.pBuf,
-                                  &cipherInfo->input.pBuf);
-            TIMEFINISH(cipherInfo->optime, 1.0);
-            CHECKERROR(rv, __LINE__);
-            cipherInfo->repetitions = 0;
-            if (cipherInfo->repetitionsToPerfom != 0) {
-                TIMESTART();
-                for (i=0; i<cipherInfo->repetitionsToPerfom;
-                     i++, cipherInfo->repetitions++) {
-                    rv = ECDSA_SignDigest((ECPrivateKey *)cipherInfo->cx,
-                                          &dummyOut,
-                                          &cipherInfo->input.pBuf);
-                    CHECKERROR(rv, __LINE__);
-                }
-            } else {
-                int opsBetweenChecks = 0;
-                TIMEMARK(cipherInfo->seconds);
-                while (! (TIMETOFINISH())) {
-                    int j = 0;
-                    for (;j < opsBetweenChecks;j++) {
-                        rv = ECDSA_SignDigest((ECPrivateKey *)cipherInfo->cx,
-                                              &dummyOut,
-                                              &cipherInfo->input.pBuf);
-                        CHECKERROR(rv, __LINE__);
-                    }
-                    cipherInfo->repetitions += j;
-                }
-            }
-            TIMEFINISH(cipherInfo->optime, 1.0);
-        }
-        bltestCopyIO(cipherInfo->arena, &cipherInfo->params.ecdsa.sig, 
-                     &cipherInfo->output);
-    } else {
-        TIMESTART();
-        rv = ECDSA_VerifyDigest((ECPublicKey *)cipherInfo->cx,
-                                &cipherInfo->params.ecdsa.sig.buf,
-                                &cipherInfo->input.pBuf);
-        TIMEFINISH(cipherInfo->optime, 1.0);
-        CHECKERROR(rv, __LINE__);
-        cipherInfo->repetitions = 0;
-        if (cipherInfo->repetitionsToPerfom != 0) {
-            TIMESTART();
-            for (i=0; i<cipherInfo->repetitionsToPerfom;
-                 i++, cipherInfo->repetitions++) {
-                rv = ECDSA_VerifyDigest((ECPublicKey *)cipherInfo->cx,
-                                        &cipherInfo->params.ecdsa.sig.buf,
-                                        &cipherInfo->input.pBuf);
-                CHECKERROR(rv, __LINE__);
-            }
-        } else {
-            int opsBetweenChecks = 0;
-            TIMEMARK(cipherInfo->seconds);
-            while (! (TIMETOFINISH())) {
-                int j = 0;
-                for (;j < opsBetweenChecks;j++) {
-                    rv = ECDSA_VerifyDigest((ECPublicKey *)cipherInfo->cx,
-                                            &cipherInfo->params.ecdsa.sig.buf,
-                                            &cipherInfo->input.pBuf);
-                    CHECKERROR(rv, __LINE__);
-                }
-                cipherInfo->repetitions += j;
-            }
-        }
-        TIMEFINISH(cipherInfo->optime, 1.0);
-    }
-    SECITEM_FreeItem(&dummyOut, PR_FALSE);
-    return rv;
-}
-#endif
-
-SECStatus
 cipherDoOp(bltestCipherInfo *cipherInfo)
 {
     PRIntervalTime time1, time2;
@@ -2434,12 +2321,6 @@ cipherDoOp(bltestCipherInfo *cipherInfo)
     unsigned int len;
     unsigned int maxLen = cipherInfo->output.pBuf.len;
     unsigned char *dummyOut;
-    if (cipherInfo->mode == bltestDSA)
-	return dsaOp(cipherInfo);
-#ifdef NSS_ENABLE_ECC
-    else if (cipherInfo->mode == bltestECDSA)
-	return ecdsaOp(cipherInfo);
-#endif
     dummyOut = PORT_Alloc(maxLen);
     if (is_symmkeyCipher(cipherInfo->mode)) {
         const unsigned char *input = cipherInfo->input.pBuf.data;
@@ -2609,8 +2490,10 @@ cipherFinish(bltestCipherInfo *cipherInfo)
 	RC5_DestroyContext((RC5Context *)cipherInfo->cx, PR_TRUE);
 	break;
 #endif
-    case bltestRSA: /* keys are alloc'ed within cipherInfo's arena, */
-    case bltestDSA: /* will be freed with it. */
+    case bltestRSA:      /* keys are alloc'ed within cipherInfo's arena, */
+    case bltestRSA_PSS:  /* will be freed with it. */
+    case bltestRSA_OAEP:
+    case bltestDSA:
 #ifdef NSS_ENABLE_ECC
     case bltestECDSA:
 #endif
@@ -2772,30 +2655,36 @@ print_td:
           break;
 #endif
       case bltestRSA:
+      case bltestRSA_PSS:
+      case bltestRSA_OAEP:
           if (td) {
               fprintf(stdout, "%8s", "rsa_mod");
               fprintf(stdout, "%12s", "rsa_pe");
           } else {
-              fprintf(stdout, "%8d", info->params.rsa.keysizeInBits);
-              print_exponent(&info->params.rsa.rsakey->publicExponent);
+              bltestAsymKeyParams *asymk = &info->params.asymk;
+              fprintf(stdout, "%8d", asymk->cipherParams.rsa.keysizeInBits);
+              print_exponent(
+                  &((RSAPrivateKey *)asymk->privKey)->publicExponent);
           }
           break;
       case bltestDSA:
-          if (td)
+          if (td) {
               fprintf(stdout, "%8s", "pqg_mod");
-          else
-              fprintf(stdout, "%8d", info->params.dsa.keysize);
+          } else {
+              fprintf(stdout, "%8d", info->params.asymk.cipherParams.dsa.keysize);
+          }
           break;
 #ifdef NSS_ENABLE_ECC
       case bltestECDSA:
-          if (td)
+          if (td) {
               fprintf(stdout, "%12s", "ec_curve");
-          else {
-	      ECCurveName curveName = info->params.ecdsa.eckey->ecParams.name;
+          } else {
+              ECPrivateKey *key = (ECPrivateKey*)info->params.asymk.privKey;
+              ECCurveName curveName = key->ecParams.name;
               fprintf(stdout, "%12s",
                       ecCurve_map[curveName]? ecCurve_map[curveName]->text:
-					      "Unsupported curve");
-	  }
+                      "Unsupported curve");
+          }
           break;
 #endif
       case bltestMD2:
@@ -2880,12 +2769,40 @@ load_file_data(PLArenaPool *arena, bltestIO *data,
     }
 }
 
+HASH_HashType
+mode_str_to_hash_alg(const SECItem *modeStr)
+{
+    bltestCipherMode mode;
+    char* tempModeStr = NULL;
+    if (!modeStr || modeStr->len == 0)
+        return HASH_AlgNULL;
+    tempModeStr = PORT_Alloc(modeStr->len + 1);
+    if (!tempModeStr)
+        return HASH_AlgNULL;
+    memcpy(tempModeStr, modeStr->data, modeStr->len);
+    tempModeStr[modeStr->len] = '\0';
+    mode = get_mode(tempModeStr);
+    PORT_Free(tempModeStr);
+    switch (mode) {
+        case bltestMD2:    return HASH_AlgMD2;
+        case bltestMD5:    return HASH_AlgMD5;
+        case bltestSHA1:   return HASH_AlgSHA1;
+        case bltestSHA224: return HASH_AlgSHA224;
+        case bltestSHA256: return HASH_AlgSHA256;
+        case bltestSHA384: return HASH_AlgSHA384;
+        case bltestSHA512: return HASH_AlgSHA512;
+    }
+    return HASH_AlgNULL;
+}
+
 void
 get_params(PLArenaPool *arena, bltestParams *params,
 	   bltestCipherMode mode, int j)
 {
     char filename[256];
     char *modestr = mode_strings[mode];
+    bltestIO tempIO;
+
 #ifdef NSS_SOFTOKEN_DOES_RC5
     FILE *file;
     char *mark, *param, *val;
@@ -2944,38 +2861,62 @@ get_params(PLArenaPool *arena, bltestParams *params,
 	}
 	break;
 #endif
+    case bltestRSA_PSS:
+	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "ciphertext", j);
+	load_file_data(arena, &params->asymk.sig, filename, bltestBase64Encoded);
+	/* fall through */
+    case bltestRSA_OAEP:
+	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "seed", j);
+	load_file_data(arena, &params->asymk.cipherParams.rsa.seed,
+	               filename, bltestBase64Encoded);
+
+	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "hash", j);
+	load_file_data(arena, &tempIO, filename, bltestBinary);
+	params->asymk.cipherParams.rsa.hashAlg =
+	    mode_str_to_hash_alg(&tempIO.buf);
+
+	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "maskhash", j);
+	load_file_data(arena, &tempIO, filename, bltestBinary);
+	params->asymk.cipherParams.rsa.maskHashAlg =
+	    mode_str_to_hash_alg(&tempIO.buf);
+	/* fall through */
     case bltestRSA:
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
-	load_file_data(arena, &params->rsa.key, filename, bltestBase64Encoded);
-	params->rsa.rsakey = rsakey_from_filedata(&params->key.buf);
+	load_file_data(arena, &params->asymk.key, filename,
+	               bltestBase64Encoded);
+	params->asymk.privKey =
+	    (void *)rsakey_from_filedata(&params->asymk.key.buf);
 	break;
     case bltestDSA:
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
-	load_file_data(arena, &params->dsa.key, filename, bltestBase64Encoded);
-	params->dsa.dsakey = dsakey_from_filedata(&params->key.buf);
+	load_file_data(arena, &params->asymk.key, filename, bltestBase64Encoded);
+	params->asymk.privKey =
+	     (void *)dsakey_from_filedata(&params->asymk.key.buf);
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "pqg", j);
-	load_file_data(arena, &params->dsa.pqgdata, filename,
-		       bltestBase64Encoded);
-	params->dsa.pqg = pqg_from_filedata(&params->dsa.pqgdata.buf);
+	load_file_data(arena, &params->asymk.cipherParams.dsa.pqgdata, filename,
+	               bltestBase64Encoded);
+	params->asymk.cipherParams.dsa.pqg =
+	      pqg_from_filedata(&params->asymk.cipherParams.dsa.pqgdata.buf);
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "keyseed", j);
-	load_file_data(arena, &params->dsa.keyseed, filename, 
+	load_file_data(arena, &params->asymk.cipherParams.dsa.keyseed, filename,
 	               bltestBase64Encoded);
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "sigseed", j);
-	load_file_data(arena, &params->dsa.sigseed, filename, 
+	load_file_data(arena, &params->asymk.cipherParams.dsa.sigseed, filename,
 	               bltestBase64Encoded);
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "ciphertext",j);
-	load_file_data(arena, &params->dsa.sig, filename, bltestBase64Encoded);
+	load_file_data(arena, &params->asymk.sig, filename, bltestBase64Encoded);
 	break;
 #ifdef NSS_ENABLE_ECC
     case bltestECDSA:
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
-	load_file_data(arena, &params->ecdsa.key, filename, bltestBase64Encoded);
-	params->ecdsa.eckey = eckey_from_filedata(&params->key.buf);
+	load_file_data(arena, &params->asymk.key, filename, bltestBase64Encoded);
+	params->asymk.privKey =
+	      (void *)eckey_from_filedata(&params->asymk.key.buf);
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "sigseed", j);
-	load_file_data(arena, &params->ecdsa.sigseed, filename, 
-	               bltestBase64Encoded);
+	load_file_data(arena, &params->asymk.cipherParams.ecdsa.sigseed,
+	               filename, bltestBase64Encoded);
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "ciphertext",j);
-	load_file_data(arena, &params->ecdsa.sig, filename, bltestBase64Encoded);
+	load_file_data(arena, &params->asymk.sig, filename, bltestBase64Encoded);
 	break;
 #endif
     case bltestMD2:
@@ -3074,11 +3015,6 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	modestr = mode_strings[mode];
 	cipherInfo.mode = mode;
 	params = &cipherInfo.params;
-#ifdef TRACK_BLTEST_BUG
-	if (mode == bltestRSA) {
-	    fprintf(stderr, "[%s] Self-Testing RSA\n", __bltDBG);
-	}
-#endif
 	/* get the number of tests in the directory */
 	sprintf(filename, "%s/tests/%s/%s", testdir, modestr, "numtests");
 	file = PR_Open(filename, PR_RDONLY, 00660);
@@ -3087,11 +3023,6 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    return SECFailure;
 	}
 	rv = SECU_FileToItem(&item, file);
-#ifdef TRACK_BLTEST_BUG
-	if (mode == bltestRSA) {
-	    fprintf(stderr, "[%s] Loaded data from %s\n", __bltDBG, filename);
-	}
-#endif
 	PR_Close(file);
 	/* loop over the tests in the directory */
 	numtests = 0;
@@ -3103,35 +3034,16 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    numtests += (int) (item.data[j] - '0');
 	}
 	for (j=0; j<numtests; j++) {
-#ifdef TRACK_BLTEST_BUG
-	    if (mode == bltestRSA) {
-		fprintf(stderr, "[%s] Executing self-test #%d\n", __bltDBG, j);
-	    }
-#endif
 	    sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr,
-			      "plaintext", j);
-	    load_file_data(arena, &pt, filename, 
-#ifdef NSS_ENABLE_ECC
-	                   ((mode == bltestDSA) || (mode == bltestECDSA))
-#else
-	                   (mode == bltestDSA)
-#endif
-	                   ? bltestBase64Encoded : bltestBinary);
+	            "plaintext", j);
+	    load_file_data(arena, &pt, filename,
+	                   is_sigCipher(mode) ? bltestBase64Encoded
+	                                      : bltestBinary);
 	    sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr,
-			      "ciphertext", j);
+	            "ciphertext", j);
 	    load_file_data(arena, &ct, filename, bltestBase64Encoded);
 
-#ifdef TRACK_BLTEST_BUG
-	    if (mode == bltestRSA) {
-		fprintf(stderr, "[%s] Loaded data for  self-test #%d\n", __bltDBG, j);
-	    }
-#endif
 	    get_params(arena, params, mode, j);
-#ifdef TRACK_BLTEST_BUG
-	    if (mode == bltestRSA) {
-		fprintf(stderr, "[%s] Got parameters for #%d\n", __bltDBG, j);
-	    }
-#endif
 	    /* Forward Operation (Encrypt/Sign/Hash)
 	    ** Align the input buffer (plaintext) according to request
 	    ** then perform operation and compare to ciphertext
@@ -3144,34 +3056,26 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 		memset(&cipherInfo.output.buf, 0, sizeof cipherInfo.output.buf);
 		rv |= cipherInit(&cipherInfo, PR_TRUE);
 		misalignBuffer(arena, &cipherInfo.output, outoff);
-#ifdef TRACK_BLTEST_BUG
-		if (mode == bltestRSA) {
-		    fprintf(stderr, "[%s] Inited cipher context and buffers for #%d\n", __bltDBG, j);
-		}
-#endif
 		rv |= cipherDoOp(&cipherInfo);
-#ifdef TRACK_BLTEST_BUG
-		if (mode == bltestRSA) {
-		    fprintf(stderr, "[%s] Performed encrypt for #%d\n", __bltDBG, j);
-		}
-#endif
 		rv |= cipherFinish(&cipherInfo);
-#ifdef TRACK_BLTEST_BUG
-		if (mode == bltestRSA) {
-		    fprintf(stderr, "[%s] Finished encrypt for #%d\n", __bltDBG, j);
-		}
-#endif
 		rv |= verify_self_test(&cipherInfo.output, 
 		                       &ct, mode, PR_TRUE, 0);
-#ifdef TRACK_BLTEST_BUG
-		if (mode == bltestRSA) {
-		    fprintf(stderr, "[%s] Verified self-test for #%d\n", __bltDBG, j);
-		}
-#endif
 		/* If testing hash, only one op to test */
 		if (is_hashCipher(mode))
 		    continue;
 		/*if (rv) return rv;*/
+		if (is_sigCipher(mode)) {
+		    /* Verify operations support detached signature files. For
+		    ** consistency between tests that run Sign/Verify back to
+		    ** back (eg: self-tests) and tests that are only running
+		    ** verify operations, copy the output into the sig buf,
+		    ** and then copy the sig buf back out when verifying. For
+		    ** self-tests, this is unnecessary copying, but for
+		    ** verify-only operations, this ensures that the output
+		    ** buffer is properly configured
+		    */
+		    bltestCopyIO(arena, &params->asymk.sig, &cipherInfo.output);
+		}
 	    }
 	    if (!decrypt)
 		continue;
@@ -3181,43 +3085,21 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 	    ** Align the input buffer (ciphertext) according to request
 	    ** then perform operation and compare to plaintext
 	    */
-#ifdef NSS_ENABLE_ECC
-	    if ((mode != bltestDSA) && (mode != bltestECDSA))
-#else
-	    if (mode != bltestDSA)
-#endif
-		bltestCopyIO(arena, &cipherInfo.input, &ct);
-	    else
+	    if (is_sigCipher(mode)) {
 		bltestCopyIO(arena, &cipherInfo.input, &pt);
+		bltestCopyIO(arena, &cipherInfo.output, &params->asymk.sig);
+	    } else {
+		bltestCopyIO(arena, &cipherInfo.input, &ct);
+		memset(&cipherInfo.output.buf, 0, sizeof cipherInfo.output.buf);
+	    }
 	    misalignBuffer(arena, &cipherInfo.input, inoff);
-	    memset(&cipherInfo.output.buf, 0, sizeof cipherInfo.output.buf);
 	    rv |= cipherInit(&cipherInfo, PR_FALSE);
 	    misalignBuffer(arena, &cipherInfo.output, outoff);
-#ifdef TRACK_BLTEST_BUG
-	    if (mode == bltestRSA) {
-		fprintf(stderr, "[%s] Inited cipher context and buffers for #%d\n", __bltDBG, j);
-	    }
-#endif
 	    srv = SECSuccess;
 	    srv |= cipherDoOp(&cipherInfo);
-#ifdef TRACK_BLTEST_BUG
-	    if (mode == bltestRSA) {
-		fprintf(stderr, "[%s] Performed decrypt for #%d\n", __bltDBG, j);
-	    }
-#endif
 	    rv |= cipherFinish(&cipherInfo);
-#ifdef TRACK_BLTEST_BUG
-	    if (mode == bltestRSA) {
-		fprintf(stderr, "[%s] Finished decrypt for #%d\n", __bltDBG, j);
-	    }
-#endif
 	    rv |= verify_self_test(&cipherInfo.output, 
 	                           &pt, mode, PR_FALSE, srv);
-#ifdef TRACK_BLTEST_BUG
-	    if (mode == bltestRSA) {
-		fprintf(stderr, "[%s] Verified self-test for #%d\n", __bltDBG, j);
-	    }
-#endif
 	    /*if (rv) return rv;*/
 	}
     }
@@ -3230,7 +3112,7 @@ dump_file(bltestCipherMode mode, char *filename)
     bltestIO keydata;
     PLArenaPool *arena = NULL;
     arena = PORT_NewArena(BLTEST_DEFAULT_CHUNKSIZE);
-    if (mode == bltestRSA) {
+    if (mode == bltestRSA || mode == bltestRSA_PSS || mode == bltestRSA_OAEP) {
 	RSAPrivateKey *key;
 	load_file_data(arena, &keydata, filename, bltestBase64Encoded);
 	key = rsakey_from_filedata(&keydata.buf);
@@ -3721,9 +3603,9 @@ int main(int argc, char **argv)
 	    !bltest.commands[cmd_Decrypt].activated)
 	    decrypt = PR_FALSE;
 	rv = blapi_selftest(modesToTest, numModesToTest, inoff, outoff,
-                            encrypt, decrypt);
-        PORT_Free(cipherInfo);
-        return rv;
+	                    encrypt, decrypt);
+	PORT_Free(cipherInfo);
+	return rv;
     }
 
     /* Do FIPS self-test */
@@ -3965,18 +3847,10 @@ int main(int argc, char **argv)
         
         if (bltest.commands[cmd_Verify].activated) {
             file = PR_Open(bltest.options[opt_SigFile].arg, PR_RDONLY, 00660);
-            if (cipherInfo->mode == bltestDSA) {
-                memset(&cipherInfo->params.dsa.sig, 0, sizeof(bltestIO));
-                cipherInfo->params.dsa.sig.mode = ioMode;
-                setupIO(cipherInfo->arena, &cipherInfo->params.dsa.sig,
-                        file, NULL, 0);
-#ifdef NSS_ENABLE_ECC
-            } else if (cipherInfo->mode == bltestECDSA) {
-                memset(&cipherInfo->params.ecdsa.sig, 0, sizeof(bltestIO));
-                cipherInfo->params.ecdsa.sig.mode = ioMode;
-                setupIO(cipherInfo->arena, &cipherInfo->params.ecdsa.sig,
-                        file, NULL, 0);
-#endif
+            if (is_sigCipher(cipherInfo->mode)) {
+                memset(&params->asymk.sig, 0, sizeof(bltestIO));
+                params->asymk.sig.mode = ioMode;
+                setupIO(cipherInfo->arena, &params->asymk.sig, file, NULL, 0);
             }
             if (file) {
                 PR_Close(file);
@@ -3985,8 +3859,9 @@ int main(int argc, char **argv)
         
         if (bltest.options[opt_PQGFile].activated) {
             file = PR_Open(bltest.options[opt_PQGFile].arg, PR_RDONLY, 00660);
-            params->dsa.pqgdata.mode = bltestBase64Encoded;
-            setupIO(cipherInfo->arena, &params->dsa.pqgdata, file, NULL, 0);
+            params->asymk.cipherParams.dsa.pqgdata.mode = bltestBase64Encoded;
+            setupIO(cipherInfo->arena, &params->asymk.cipherParams.dsa.pqgdata,
+                    file, NULL, 0);
             if (file) {
                 PR_Close(file);
             }

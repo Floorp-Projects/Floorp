@@ -62,12 +62,12 @@ struct DatabaseInfo : public DatabaseInfoGuts
 
   ~DatabaseInfo();
 
-  static bool Get(nsIAtom* aId,
+  static bool Get(const nsACString& aId,
                   DatabaseInfo** aInfo);
 
   static bool Put(DatabaseInfo* aInfo);
 
-  static void Remove(nsIAtom* aId);
+  static void Remove(const nsACString& aId);
 
   bool GetObjectStoreNames(nsTArray<nsString>& aNames);
   bool ContainsStoreName(const nsAString& aName);
@@ -80,7 +80,7 @@ struct DatabaseInfo : public DatabaseInfoGuts
 
   already_AddRefed<DatabaseInfo> Clone();
 
-  nsCOMPtr<nsIAtom> id;
+  nsCString id;
   nsString filePath;
   bool cloned;
 

@@ -10,7 +10,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 #include "nsDOMBlobBuilder.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsIJARChannel.h"
@@ -58,6 +57,7 @@
 #include "jsfriendapi.h"
 #include "GeckoProfiler.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "nsIUnicodeDecoder.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/Attributes.h"
 #include "nsIPermissionManager.h"
@@ -633,13 +633,9 @@ nsXMLHttpRequest::DetectCharset()
     mResponseCharset.AssignLiteral("UTF-8");
   }
 
-  nsresult rv;
-  nsCOMPtr<nsICharsetConverterManager> ccm =
-    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mDecoder = EncodingUtils::DecoderForEncoding(mResponseCharset);
 
-  return ccm->GetUnicodeDecoderRaw(mResponseCharset.get(),
-                                   getter_AddRefs(mDecoder));
+  return NS_OK;
 }
 
 nsresult
@@ -724,20 +720,7 @@ nsXMLHttpRequest::GetResponseText(nsString& aResponseText, ErrorResult& aRv)
     mResponseCharset = mResponseXML->GetDocumentCharacterSet();
     mResponseText.Truncate();
     mResponseBodyDecodedPos = 0;
-
-    nsresult rv;
-    nsCOMPtr<nsICharsetConverterManager> ccm =
-      do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-      return;
-    }
-
-    aRv = ccm->GetUnicodeDecoderRaw(mResponseCharset.get(),
-                                    getter_AddRefs(mDecoder));
-    if (aRv.Failed()) {
-      return;
-    }
+    mDecoder = EncodingUtils::DecoderForEncoding(mResponseCharset);
   }
 
   NS_ASSERTION(mResponseBodyDecodedPos < mResponseBody.Length(),

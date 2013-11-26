@@ -84,7 +84,7 @@ Initialize()
   nsHTMLTags::TestTagTable();
 #endif
 
-  return nsParser::Init();
+  return rv;
 }
 
 static void
@@ -92,7 +92,6 @@ Shutdown()
 {
   nsHTMLTags::ReleaseTable();
   nsHTMLEntities::ReleaseTable();
-  nsParser::Shutdown();
 }
 
 static mozilla::Module kParserModule = {

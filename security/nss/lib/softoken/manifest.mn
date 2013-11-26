@@ -44,7 +44,6 @@ CSRCS = \
 	pkcs11.c   \
 	pkcs11c.c  \
 	pkcs11u.c  \
-	rsawrapr.c  \
 	sdb.c  \
 	sftkdb.c  \
 	sftkhmac.c  \

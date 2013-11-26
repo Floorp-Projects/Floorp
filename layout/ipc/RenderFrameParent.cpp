@@ -514,7 +514,8 @@ public:
                         aFrameMetrics));
   }
 
-  virtual void HandleDoubleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE
+  virtual void HandleDoubleTap(const CSSIntPoint& aPoint,
+                               int32_t aModifiers) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -522,16 +523,17 @@ public:
       mUILoop->PostTask(
         FROM_HERE,
         NewRunnableMethod(this, &RemoteContentController::HandleDoubleTap,
-                          aPoint));
+                          aPoint, aModifiers));
       return;
     }
     if (mRenderFrame) {
       TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
-      browser->HandleDoubleTap(aPoint);
+      browser->HandleDoubleTap(aPoint, aModifiers);
     }
   }
 
-  virtual void HandleSingleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE
+  virtual void HandleSingleTap(const CSSIntPoint& aPoint,
+                               int32_t aModifiers) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -539,16 +541,17 @@ public:
       mUILoop->PostTask(
         FROM_HERE,
         NewRunnableMethod(this, &RemoteContentController::HandleSingleTap,
-                          aPoint));
+                          aPoint, aModifiers));
       return;
     }
     if (mRenderFrame) {
       TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
-      browser->HandleSingleTap(aPoint);
+      browser->HandleSingleTap(aPoint, aModifiers);
     }
   }
 
-  virtual void HandleLongTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE
+  virtual void HandleLongTap(const CSSIntPoint& aPoint,
+                             int32_t aModifiers) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -556,12 +559,12 @@ public:
       mUILoop->PostTask(
         FROM_HERE,
         NewRunnableMethod(this, &RemoteContentController::HandleLongTap,
-                          aPoint));
+                          aPoint, aModifiers));
       return;
     }
     if (mRenderFrame) {
       TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
-      browser->HandleLongTap(aPoint);
+      browser->HandleLongTap(aPoint, aModifiers);
     }
   }
 

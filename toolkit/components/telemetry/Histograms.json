@@ -1048,10 +1048,15 @@
     "extended_statistics_ok": true,
     "description": "ms elapsed time of OCSP etc.. that failed"
   },
-  "SSL_KEY_EXCHANGE_ALGORITHM": {
+  "SSL_KEY_EXCHANGE_ALGORITHM_FULL": {
     "kind": "enumerated",
     "n_values": 16,
-    "description": "SSL Handshake Key Exchange Algorithm (null=0, rsa=1, dh=2, fortezza=3, ecdh=4)"
+    "description": "SSL Handshake Key Exchange Algorithm for full handshake (null=0, rsa=1, dh=2, fortezza=3, ecdh=4)"
+  },
+  "SSL_KEY_EXCHANGE_ALGORITHM_RESUMED": {
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "SSL Handshake Key Exchange Algorithm for resumed handshake (null=0, rsa=1, dh=2, fortezza=3, ecdh=4)"
   },
   "WEBSOCKETS_HANDSHAKE_TYPE": {
     "kind": "enumerated",
@@ -2997,17 +3002,21 @@
     "n_buckets": 10,
     "description": "XUL reflows in background windows (ms)"
   },
-  "HTML_FOREGROUND_REFLOW_MS": {
+  "HTML_FOREGROUND_REFLOW_MS_2": {
     "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
+    "high": "10000",
+    "n_buckets": 20,
     "description": "HTML reflows in foreground windows (ms)"
   },
-  "HTML_BACKGROUND_REFLOW_MS": {
+  "HTML_BACKGROUND_REFLOW_MS_2": {
     "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
+    "high": "10000",
+    "n_buckets": 20,
     "description": "HTML reflows in background windows (ms)"
+  },
+  "LONG_REFLOW_INTERRUPTIBLE": {
+    "kind": "boolean",
+    "description": "Long running reflow, interruptible or not"
   },
   "XUL_INITIAL_FRAME_CONSTRUCTION": {
     "kind": "exponential",
@@ -4549,49 +4558,59 @@
     "n_values": 64,
     "description": "detected symptom of SSL 3.0 intolerance, after considering historical info"
   },
-  "SSL_CIPHER_SUITE": {
+  "SSL_CIPHER_SUITE_FULL": {
     "kind": "enumerated",
     "n_values": 128,
-    "description": "Negotiated cipher suite (see key in HandshakeCallback in nsNSSCallbacks.cpp)"
+    "description": "Negotiated cipher suite in full handshake (see key in HandshakeCallback in nsNSSCallbacks.cpp)"
   },
-  "SSL_KEA_RSA_KEY_SIZE": {
+  "SSL_CIPHER_SUITE_RESUMED": {
+    "kind": "enumerated",
+    "n_values": 128,
+    "description": "Negotiated cipher suite in resumed handshake (see key in HandshakeCallback in nsNSSCallbacks.cpp)"
+  },
+  "SSL_KEA_RSA_KEY_SIZE_FULL": {
     "kind": "enumerated",
     "n_values": 24,
-    "description": "RSA KEA (TLS_RSA_*) key size"
+    "description": "RSA KEA (TLS_RSA_*) key size in full handshake"
   },
-  "SSL_KEA_DHE_KEY_SIZE": {
+  "SSL_KEA_DHE_KEY_SIZE_FULL": {
     "kind": "enumerated",
     "n_values": 24,
-    "description": "DHE KEA (TLS_DHE_*) key size"
+    "description": "DHE KEA (TLS_DHE_*) key size in full handshake"
   },
-  "SSL_KEA_ECDHE_CURVE": {
+  "SSL_KEA_ECDHE_CURVE_FULL": {
     "kind": "enumerated",
     "n_values": "36",
-    "description": "ECDHE KEA (TLS_ECDHE_*) curve (1=P-256, 2=P-384, 3=P-521)"
+    "description": "ECDHE KEA (TLS_ECDHE_*) curve (1=P-256, 2=P-384, 3=P-521) in full handshake"
   },
-  "SSL_AUTH_ALGORITHM": {
+  "SSL_AUTH_ALGORITHM_FULL": {
     "kind": "enumerated",
     "n_values": 16,
-    "description": "SSL Authentication Algorithm (null=0, rsa=1, dsa=2, ecdsa=4)"
+    "description": "SSL Authentication Algorithm (null=0, rsa=1, dsa=2, ecdsa=4) in full handshake"
   },
-  "SSL_AUTH_RSA_KEY_SIZE": {
+  "SSL_AUTH_RSA_KEY_SIZE_FULL": {
     "kind": "enumerated",
     "n_values": 24,
-    "description": "RSA signature key size for TLS_*_RSA_*"
+    "description": "RSA signature key size for TLS_*_RSA_* in full handshake"
   },
-  "SSL_AUTH_DSA_KEY_SIZE": {
+  "SSL_AUTH_DSA_KEY_SIZE_FULL": {
     "kind": "enumerated",
     "n_values": 24,
-    "description": "DSA signature key size for TLS_*_DSS_*"
+    "description": "DSA signature key size for TLS_*_DSS_* in full handshake"
   },
-  "SSL_AUTH_ECDSA_CURVE": {
+  "SSL_AUTH_ECDSA_CURVE_FULL": {
     "kind": "enumerated",
     "n_values": "36",
-    "description": "ECDSA signature curve for TLS_*_ECDSA_* (1=P-256, 2=P-384, 3=P-521)"
+    "description": "ECDSA signature curve for TLS_*_ECDSA_* in full handshake (1=P-256, 2=P-384, 3=P-521)"
   },
-  "SSL_SYMMETRIC_CIPHER": {
+  "SSL_SYMMETRIC_CIPHER_FULL": {
     "kind": "enumerated",
     "n_values": 32,
-    "description": "Symmetric cipher used (null=0, rc4=1, 3des=4, aes-cbc=7, camellia=8, seed=9, aes-gcm=10)"
+    "description": "Symmetric cipher used in full handshake (null=0, rc4=1, 3des=4, aes-cbc=7, camellia=8, seed=9, aes-gcm=10)"
+  },
+  "SSL_SYMMETRIC_CIPHER_RESUMED": {
+    "kind": "enumerated",
+    "n_values": 32,
+    "description": "Symmetric cipher used in resumed handshake (null=0, rc4=1, 3des=4, aes-cbc=7, camellia=8, seed=9, aes-gcm=10)"
   }
 }

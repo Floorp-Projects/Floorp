@@ -899,6 +899,7 @@ class Shape : public gc::BarrieredCell<Shape>
     JS_ENUM_HEADER(SlotInfo, uint32_t)
     {
         /* Number of fixed slots in objects with this shape. */
+        // FIXED_SLOTS_MAX is the biggest count of fixed slots a Shape can store
         FIXED_SLOTS_MAX        = 0x1f,
         FIXED_SLOTS_SHIFT      = 27,
         FIXED_SLOTS_MASK       = uint32_t(FIXED_SLOTS_MAX << FIXED_SLOTS_SHIFT),
@@ -1311,6 +1312,8 @@ class Shape : public gc::BarrieredCell<Shape>
         JS_STATIC_ASSERT(offsetof(Shape, base_) == offsetof(js::shadow::Shape, base));
         JS_STATIC_ASSERT(offsetof(Shape, slotInfo) == offsetof(js::shadow::Shape, slotInfo));
         JS_STATIC_ASSERT(FIXED_SLOTS_SHIFT == js::shadow::Shape::FIXED_SLOTS_SHIFT);
+        static_assert(js::shadow::Object::MAX_FIXED_SLOTS <= FIXED_SLOTS_MAX,
+                      "verify numFixedSlots() bitfield is big enough");
     }
 };
 

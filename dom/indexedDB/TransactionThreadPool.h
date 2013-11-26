@@ -171,7 +171,7 @@ protected:
 
   nsCOMPtr<nsIThreadPool> mThreadPool;
 
-  nsClassHashtable<nsISupportsHashKey, DatabaseTransactionInfo>
+  nsClassHashtable<nsCStringHashKey, DatabaseTransactionInfo>
     mTransactionsInProgress;
 
   nsTArray<DatabasesCompleteCallback> mCompleteCallbacks;
