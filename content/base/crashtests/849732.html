@@ -1,0 +1,18 @@
+<url id=test1></url>><listing id=test2>
+A[]@q
+<root id=test3><bdi dir=ltr id=test4><script>
+var docElement = document.body ? document.body : document.documentElement;
+function initCF() {
+try { test5 = document.createElementNS("http://www.w3.org/2000/svg", "symbol"); } catch(e) {}
+setTimeout("CFcrash()", 231);
+}
+document.addEventListener("DOMContentLoaded", initCF, false);
+function CFcrash() {
+try { if (test1 != docElement) { test1.parentNode.removeChild(test1); test1 = test4; }} catch(e) {}
+try { if (test1 != docElement) { test1.parentNode.removeChild(test1); }} catch(e) {}
+try { test4.appendChild(test3); } catch(e) {}
+try { test3.appendChild(test2); } catch(e) {}
+try { test4.setAttribute("dir", "invalid"); } catch(e) {}
+setTimeout('try { test5.appendChild(test4); } catch(e) {}', 343);
+try { test2.innerHTML = "W?bj; ![#`A`#Mn$1r+cn	OwS56 =@jQZU	Ua.[d	4g07!6pZzjN	~4P	1C0_# E#Ak/OYXQ46F%7)^KI m-9:`u2^yx R	,yv04!`L)x3V A5K*&NK!Z	qnXt!`I	4i|i=eE?VI=^&lx:F hI2=t+AH)A`	| 3wWxDv0eU"; } catch(e) {}
+}</script>>
