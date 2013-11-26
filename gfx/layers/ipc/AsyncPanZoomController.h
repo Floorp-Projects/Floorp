@@ -277,7 +277,7 @@ public:
    * overscroll.
    */
   void AttemptScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
-                     int aOverscrollHandoffChainIndex = 0);
+                     uint32_t aOverscrollHandoffChainIndex = 0);
 
   /**
    * Returns whether this APZC is for an element marked with the 'scrollgrab'
