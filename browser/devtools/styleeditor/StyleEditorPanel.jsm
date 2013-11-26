@@ -100,7 +100,7 @@ StyleEditorPanel.prototype = {
       return;
     }
     let stylesheet = this._debuggee.styleSheetFromHref(href);
-    this.UI.selectStyleSheet(href, line - 1, col - 1);
+    this.UI.selectStyleSheet(href, line - 1, col ? col - 1 : 0);
   },
 
   /**
