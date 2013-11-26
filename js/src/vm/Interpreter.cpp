@@ -854,8 +854,8 @@ js::UnwindScope(JSContext *cx, ScopeIter &si, uint32_t stackDepth)
                 return;
             if (cx->compartment()->debugMode())
                 DebugScopes::onPopBlock(cx, si);
-            JS_ASSERT(&si.staticBlock() == si.frame().maybeBlockChain());
-            si.frame().popBlock(cx);
+            if (si.staticBlock().needsClone())
+                si.frame().popBlock(cx);
             break;
           case ScopeIter::With:
             if (si.scope().as<WithObject>().stackDepth() < stackDepth)
@@ -1589,7 +1589,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
-CASE(JSOP_UNUSED44)
 CASE(JSOP_UNUSED45)
 CASE(JSOP_UNUSED46)
 CASE(JSOP_UNUSED47)
@@ -1602,6 +1601,7 @@ CASE(JSOP_UNUSED101)
 CASE(JSOP_UNUSED102)
 CASE(JSOP_UNUSED103)
 CASE(JSOP_UNUSED104)
+CASE(JSOP_UNUSED105)
 CASE(JSOP_UNUSED107)
 CASE(JSOP_UNUSED125)
 CASE(JSOP_UNUSED126)
@@ -1641,6 +1641,9 @@ CASE(JSOP_UNUSED180)
 CASE(JSOP_UNUSED181)
 CASE(JSOP_UNUSED182)
 CASE(JSOP_UNUSED183)
+CASE(JSOP_UNUSED185)
+CASE(JSOP_UNUSED186)
+CASE(JSOP_UNUSED187)
 CASE(JSOP_UNUSED189)
 CASE(JSOP_UNUSED190)
 CASE(JSOP_UNUSED191)
@@ -1649,6 +1652,7 @@ CASE(JSOP_UNUSED194)
 CASE(JSOP_UNUSED196)
 CASE(JSOP_UNUSED201)
 CASE(JSOP_GETFUNNS)
+CASE(JSOP_UNUSED207)
 CASE(JSOP_UNUSED208)
 CASE(JSOP_UNUSED209)
 CASE(JSOP_UNUSED210)
@@ -1714,10 +1718,23 @@ CASE(JSOP_POPN)
     JS_ASSERT(GET_UINT16(REGS.pc) <= REGS.stackDepth());
     REGS.sp -= GET_UINT16(REGS.pc);
 #ifdef DEBUG
-    if (StaticBlockObject *block = REGS.fp()->maybeBlockChain())
+    if (StaticBlockObject *block = script->getBlockScope(REGS.pc + JSOP_POPN_LENGTH))
         JS_ASSERT(REGS.stackDepth() >= block->stackDepth() + block->slotCount());
 #endif
 END_CASE(JSOP_POPN)
+
+CASE(JSOP_POPNV)
+{
+    JS_ASSERT(GET_UINT16(REGS.pc) < REGS.stackDepth());
+    Value val = REGS.sp[-1];
+    REGS.sp -= GET_UINT16(REGS.pc);
+    REGS.sp[-1] = val;
+#ifdef DEBUG
+    if (StaticBlockObject *block = script->getBlockScope(REGS.pc + JSOP_POPNV_LENGTH))
+        JS_ASSERT(REGS.stackDepth() >= block->stackDepth() + block->slotCount());
+#endif
+}
+END_CASE(JSOP_POPNV)
 
 CASE(JSOP_SETRVAL)
     POP_RETURN_VALUE();
@@ -3336,52 +3353,37 @@ CASE(JSOP_DEBUGGER)
 }
 END_CASE(JSOP_DEBUGGER)
 
-CASE(JSOP_ENTERBLOCK)
-CASE(JSOP_ENTERLET0)
-CASE(JSOP_ENTERLET1)
-CASE(JSOP_ENTERLET2)
+CASE(JSOP_PUSHBLOCKSCOPE)
 {
     StaticBlockObject &blockObj = script->getObject(REGS.pc)->as<StaticBlockObject>();
 
-    if (*REGS.pc == JSOP_ENTERBLOCK) {
-        JS_ASSERT(REGS.stackDepth() == blockObj.stackDepth());
-        JS_ASSERT(REGS.stackDepth() + blockObj.slotCount() <= script->nslots);
-        Value *vp = REGS.sp + blockObj.slotCount();
-        SetValueRangeToUndefined(REGS.sp, vp);
-        REGS.sp = vp;
-    }
+    JS_ASSERT(blockObj.needsClone());
 
-    /* Clone block iff there are any closed-over variables. */
+    // FIXME: "Aliased" slots don't need to be on the stack.
+    JS_ASSERT(REGS.stackDepth() >= blockObj.stackDepth() + blockObj.slotCount());
+
+    // Clone block and push on scope chain.
     if (!REGS.fp()->pushBlock(cx, blockObj))
         goto error;
 }
-END_CASE(JSOP_ENTERBLOCK)
+END_CASE(JSOP_PUSHBLOCKSCOPE)
 
-CASE(JSOP_LEAVEBLOCK)
-CASE(JSOP_LEAVEFORLETIN)
-CASE(JSOP_LEAVEBLOCKEXPR)
+CASE(JSOP_POPBLOCKSCOPE)
 {
-    blockDepth = REGS.fp()->blockChain().stackDepth();
+#ifdef DEBUG
+    // Pop block from scope chain.
+    JS_ASSERT(*(REGS.pc - JSOP_DEBUGLEAVEBLOCK_LENGTH) == JSOP_DEBUGLEAVEBLOCK);
+    StaticBlockObject *blockObj = script->getBlockScope(REGS.pc - JSOP_DEBUGLEAVEBLOCK_LENGTH);
+    JS_ASSERT(blockObj && blockObj->needsClone());
+
+    // FIXME: "Aliased" slots don't need to be on the stack.
+    JS_ASSERT(REGS.stackDepth() >= blockObj->stackDepth() + blockObj->slotCount());
+#endif
 
     // Pop block from scope chain.
     REGS.fp()->popBlock(cx);
-
-    if (*REGS.pc == JSOP_LEAVEBLOCK) {
-        /* Pop the block's slots. */
-        REGS.sp -= GET_UINT16(REGS.pc);
-        JS_ASSERT(REGS.stackDepth() == blockDepth);
-    } else if (*REGS.pc == JSOP_LEAVEBLOCKEXPR) {
-        /* Pop the block's slots maintaining the topmost expr. */
-        Value *vp = &REGS.sp[-1];
-        REGS.sp -= GET_UINT16(REGS.pc);
-        JS_ASSERT(REGS.stackDepth() == blockDepth + 1);
-        REGS.sp[-1] = *vp;
-    } else {
-        /* Another op will pop; nothing to do here. */
-        ADVANCE_AND_DISPATCH(JSOP_LEAVEFORLETIN_LENGTH);
-    }
 }
-END_CASE(JSOP_LEAVEBLOCK)
+END_CASE(JSOP_POPBLOCKSCOPE)
 
 CASE(JSOP_DEBUGLEAVEBLOCK)
 {
