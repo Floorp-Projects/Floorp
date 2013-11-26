@@ -458,7 +458,11 @@ class js::AutoDebugModeInvalidation
       : comp_(nullptr), zone_(zone), needInvalidation_(NoNeed)
     { }
 
+#ifdef JS_ION
     ~AutoDebugModeInvalidation();
+#else
+    ~AutoDebugModeInvalidation() { }
+#endif
 
     bool isFor(JSCompartment *comp) {
         if (comp_)
