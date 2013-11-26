@@ -474,6 +474,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void dumpStack(FILE *fp);
 
     void dump(FILE *fp);
+    void dump();
 
     // Track bailouts by storing the current pc in MIR instruction added at this
     // cycle. This is also used for tracking calls when profiling.
@@ -683,6 +684,7 @@ class MIRGraph
     MDefinition *forkJoinSlice();
 
     void dump(FILE *fp);
+    void dump();
 };
 
 class MDefinitionIterator

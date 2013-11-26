@@ -281,6 +281,12 @@ MDefinition::dump(FILE *fp) const
     fprintf(fp, "\n");
 }
 
+void
+MDefinition::dump() const
+{
+    dump(stderr);
+}
+
 size_t
 MDefinition::useCount() const
 {

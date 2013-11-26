@@ -1921,6 +1921,12 @@ LinearSum::dump(FILE *fp) const
     fprintf(fp, "%s\n", sp.string());
 }
 
+void
+LinearSum::dump() const
+{
+    dump(stderr);
+}
+
 static bool
 AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
                   MDefinition *thisValue, MInstruction *ins, bool definitelyExecuted,
