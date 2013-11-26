@@ -14,14 +14,17 @@
 #include "WebGLUniformLocation.h"
 #include "WebGLTexture.h"
 #include "WebGLRenderbuffer.h"
+#include "mozilla/StaticPtr.h"
 
 namespace mozilla {
 
-class WebGLMemoryReporterWrapper
+class WebGLMemoryReporterWrapper : public nsISupports
 {
+    NS_DECL_ISUPPORTS
+
     WebGLMemoryReporterWrapper();
-    ~WebGLMemoryReporterWrapper();
-    static WebGLMemoryReporterWrapper* sUniqueInstance;
+    virtual ~WebGLMemoryReporterWrapper();
+    static StaticRefPtr<WebGLMemoryReporterWrapper> sUniqueInstance;
 
     // here we store plain pointers, not RefPtrs: we don't want the
     // WebGLMemoryReporterWrapper unique instance to keep alive all
@@ -47,7 +50,6 @@ class WebGLMemoryReporterWrapper
         ContextsArrayType & contexts = Contexts();
         contexts.RemoveElement(c);
         if (contexts.IsEmpty()) {
-            delete sUniqueInstance; 
             sUniqueInstance = nullptr;
         }
     }
