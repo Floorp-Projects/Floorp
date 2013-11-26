@@ -46,6 +46,7 @@ struct CGObjectList {
     unsigned add(ObjectBox *objbox);
     unsigned indexOf(JSObject *obj);
     void finish(ObjectArray *array);
+    ObjectBox* find(uint32_t index);
 };
 
 struct CGTryNoteList {

@@ -3791,8 +3791,6 @@ class EmitLevelManager
 static bool
 EmitCatch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    ptrdiff_t guardJump;
-
     /*
      * Morph STMT_BLOCK to STMT_CATCH, note the block entry code offset,
      * and save the block object atom.
@@ -3841,18 +3839,51 @@ EmitCatch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         JS_ASSERT(0);
     }
 
-    /* Emit the guard expression, if there is one. */
+    // If there is a guard expression, emit it and arrange to jump to the next
+    // catch block if the guard expression is false.
     if (pn->pn_kid2) {
         if (!EmitTree(cx, bce, pn->pn_kid2))
             return false;
 
-        /* ifeq <next block> */
-        guardJump = EmitJump(cx, bce, JSOP_IFEQ, 0);
+        // If the guard expression is false, fall through, pop the block scope,
+        // and jump to the next catch block.  Otherwise jump over that code and
+        // pop the dupped exception.
+        ptrdiff_t guardCheck = EmitJump(cx, bce, JSOP_IFNE, 0);
+        if (guardCheck < 0)
+            return false;
+
+#ifdef DEBUG
+        uint32_t blockScopeIndex = bce->topStmt->blockScopeIndex;
+        uint32_t blockObjIndex = bce->blockScopeList.list[blockScopeIndex].index;
+        ObjectBox *blockObjBox = bce->objectList.find(blockObjIndex);
+        StaticBlockObject *blockObj = &blockObjBox->object->as<StaticBlockObject>();
+        JS_ASSERT(blockObj == bce->blockChain);
+#endif
+
+        // Save stack depth before popping the block scope.
+        int savedDepth = bce->stackDepth;
+
+        // Move exception back to cx->exception to prepare for
+        // the next catch.
+        if (Emit1(cx, bce, JSOP_THROWING) < 0)
+            return false;
+
+        // Leave the scope for this catch block
+        if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
+            return false;
+        EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, bce->blockChain->slotCount());
+
+        // Jump to the next handler.  The jump target is backpatched by EmitTry.
+        ptrdiff_t guardJump = EmitJump(cx, bce, JSOP_GOTO, 0);
         if (guardJump < 0)
             return false;
         stmt->guardJump() = guardJump;
 
-        /* Pop duplicated exception object as we no longer need it. */
+        // Back to normal control flow. restore stack depth after nonlocal exit.
+        bce->stackDepth = savedDepth;
+        SetJumpOffsetAt(bce, guardCheck);
+
+        // Pop duplicated exception object as we no longer need it.
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
     }
@@ -3861,38 +3892,35 @@ EmitCatch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return EmitTree(cx, bce, pn->pn_kid3);
 }
 
-/*
- * Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See
- * the comment on EmitSwitch.
- */
+// Using MOZ_NEVER_INLINE in here is a workaround for llvm.org/pr14047. See the
+// comment on EmitSwitch.
+//
 MOZ_NEVER_INLINE static bool
 EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     StmtInfoBCE stmtInfo(cx);
 
-    /*
-     * Push stmtInfo to track jumps-over-catches and gosubs-to-finally
-     * for later fixup.
-     *
-     * When a finally block is active (STMT_FINALLY in our parse context),
-     * non-local jumps (including jumps-over-catches) result in a GOSUB
-     * being written into the bytecode stream and fixed-up later (c.f.
-     * EmitBackPatchOp and BackPatch).
-     */
+    // Push stmtInfo to track jumps-over-catches and gosubs-to-finally
+    // for later fixup.
+    //
+    // When a finally block is active (STMT_FINALLY in our parse context),
+    // non-local jumps (including jumps-over-catches) result in a GOSUB
+    // being written into the bytecode stream and fixed-up later (c.f.
+    // EmitBackPatchOp and BackPatch).
+    //
     PushStatementBCE(bce, &stmtInfo, pn->pn_kid3 ? STMT_FINALLY : STMT_TRY, bce->offset());
 
-    /*
-     * Since an exception can be thrown at any place inside the try block,
-     * we need to restore the stack and the scope chain before we transfer
-     * the control to the exception handler.
-     *
-     * For that we store in a try note associated with the catch or
-     * finally block the stack depth upon the try entry. The interpreter
-     * uses this depth to properly unwind the stack and the scope chain.
-     */
+    // Since an exception can be thrown at any place inside the try block,
+    // we need to restore the stack and the scope chain before we transfer
+    // the control to the exception handler.
+    //
+    // For that we store in a try note associated with the catch or
+    // finally block the stack depth upon the try entry. The interpreter
+    // uses this depth to properly unwind the stack and the scope chain.
+    //
     int depth = bce->stackDepth;
 
-    /* Mark try location for decompilation, then emit try block. */
+    // Record the try location, then emit the try block.
     ptrdiff_t noteIndex = NewSrcNote(cx, bce, SRC_TRY);
     if (noteIndex < 0 || Emit1(cx, bce, JSOP_TRY) < 0)
         return false;
@@ -3901,146 +3929,101 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
     JS_ASSERT(depth == bce->stackDepth);
 
-    /* GOSUB to finally, if present. */
+    // GOSUB to finally, if present.
     if (pn->pn_kid3) {
         if (EmitBackPatchOp(cx, bce, &stmtInfo.gosubs()) < 0)
             return false;
     }
 
-    /* Source note points to the jump at the end of the try block. */
+    // Source note points to the jump at the end of the try block.
     if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, bce->offset() - tryStart + JSOP_TRY_LENGTH))
         return false;
 
-    /* Emit (hidden) jump over catch and/or finally. */
+    // Emit jump over catch and/or finally.
     ptrdiff_t catchJump = -1;
     if (EmitBackPatchOp(cx, bce, &catchJump) < 0)
         return false;
 
     ptrdiff_t tryEnd = bce->offset();
 
-    /* If this try has a catch block, emit it. */
-    ParseNode *lastCatch = nullptr;
+    // If this try has a catch block, emit it.
     if (ParseNode *pn2 = pn->pn_kid2) {
-        unsigned count = 0;    /* previous catch block's population */
-
-        /*
-         * The emitted code for a catch block looks like:
-         *
-         * [throwing]                          only if 2nd+ catch block
-         * [leaveblock]                        only if 2nd+ catch block
-         * enterblock
-         * exception
-         * [dup]                               only if catchguard
-         * setlocalpop <slot>                  or destructuring code
-         * [< catchguard code >]               if there's a catchguard
-         * [ifeq <offset to next catch block>]         " "
-         * [pop]                               only if catchguard
-         * < catch block contents >
-         * leaveblock
-         * goto <end of catch blocks>          non-local; finally applies
-         *
-         * If there's no catch block without a catchguard, the last
-         * <offset to next catch block> points to rethrow code.  This
-         * code will [gosub] to the finally code if appropriate, and is
-         * also used for the catch-all trynote for capturing exceptions
-         * thrown from catch{} blocks.
-         */
+        // The emitted code for a catch block looks like:
+        //
+        // enterblock
+        // exception
+        // if there is a catchguard:
+        //   dup
+        // setlocal 0; pop              assign or possibly destructure exception
+        // if there is a catchguard:
+        //   < catchguard code >
+        //   ifne POST
+        //   throwing                   pop exception to cx->exception
+        //   debugleaveblock
+        //   leaveblock
+        //   goto <next catch block>
+        //   POST: pop
+        // < catch block contents >
+        // debugleaveblock
+        // leaveblock
+        // goto <end of catch blocks>   non-local; finally applies
+        //
+        // If there's no catch block without a catchguard, the last <next catch
+        // block> points to rethrow code.  This code will [gosub] to the finally
+        // code if appropriate, and is also used for the catch-all trynote for
+        // capturing exceptions thrown from catch{} blocks.
+        //
         for (ParseNode *pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
-            ptrdiff_t guardJump;
-
             JS_ASSERT(bce->stackDepth == depth);
-            guardJump = stmtInfo.guardJump();
-            if (guardJump != -1) {
-                /* Fix up and clean up previous catch block. */
-                SetJumpOffsetAt(bce, guardJump);
 
-                /*
-                 * Account for JSOP_ENTERBLOCK (whose block object count
-                 * is saved below) and pushed exception object that we
-                 * still have after the jumping from the previous guard.
-                 */
-                bce->stackDepth = depth + count + 1;
-
-                /*
-                 * Move exception back to cx->exception to prepare for
-                 * the next catch.
-                 */
-                if (Emit1(cx, bce, JSOP_THROWING) < 0)
-                    return false;
-                if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
-                    return false;
-                EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, count);
-                JS_ASSERT(bce->stackDepth == depth);
-            }
-
-            /*
-             * Emit the lexical scope and catch body.  Save the catch's
-             * block object population via count, for use when targeting
-             * guardJump at the next catch (the guard mismatch case).
-             */
+            // Emit the lexical scope and catch body.
             JS_ASSERT(pn3->isKind(PNK_LEXICALSCOPE));
-            count = pn3->pn_objbox->object->as<StaticBlockObject>().slotCount();
             if (!EmitTree(cx, bce, pn3))
                 return false;
 
-            /* gosub <finally>, if required */
+            // gosub <finally>, if required.
             if (pn->pn_kid3) {
                 if (EmitBackPatchOp(cx, bce, &stmtInfo.gosubs()) < 0)
                     return false;
                 JS_ASSERT(bce->stackDepth == depth);
             }
 
-            /*
-             * Jump over the remaining catch blocks.  This will get fixed
-             * up to jump to after catch/finally.
-             */
+            // Jump over the remaining catch blocks.  This will get fixed
+            // up to jump to after catch/finally.
             if (EmitBackPatchOp(cx, bce, &catchJump) < 0)
                 return false;
 
-            /*
-             * Save a pointer to the last catch node to handle try-finally
-             * and try-catch(guard)-finally special cases.
-             */
-            lastCatch = pn3->expr();
+            // If this catch block had a guard clause, patch the guard jump to
+            // come here.
+            if (stmtInfo.guardJump() != -1) {
+                SetJumpOffsetAt(bce, stmtInfo.guardJump());
+                stmtInfo.guardJump() = -1;
+
+                // If this catch block is the last one, rethrow, delegating
+                // execution of any finally block to the exception handler.
+                if (!pn3->pn_next) {
+                    if (Emit1(cx, bce, JSOP_EXCEPTION) < 0)
+                        return false;
+                    if (Emit1(cx, bce, JSOP_THROW) < 0)
+                        return false;
+                }
+            }
         }
-    }
-
-    /*
-     * Last catch guard jumps to the rethrow code sequence if none of the
-     * guards match. Target guardJump at the beginning of the rethrow
-     * sequence, just in case a guard expression throws and leaves the
-     * stack unbalanced.
-     */
-    if (lastCatch && lastCatch->pn_kid2) {
-        SetJumpOffsetAt(bce, stmtInfo.guardJump());
-
-        /* Sync the stack to take into account pushed exception. */
-        JS_ASSERT(bce->stackDepth == depth);
-        bce->stackDepth = depth + 1;
-
-        /*
-         * Rethrow the exception, delegating executing of finally if any
-         * to the exception handler.
-         */
-        if (Emit1(cx, bce, JSOP_THROW) < 0)
-            return false;
     }
 
     JS_ASSERT(bce->stackDepth == depth);
 
-    /* Emit finally handler if any. */
-    ptrdiff_t finallyStart = 0;   /* to quell GCC uninitialized warnings */
+    // Emit the finally handler, if there is one.
+    ptrdiff_t finallyStart = 0;
     if (pn->pn_kid3) {
-        /*
-         * Fix up the gosubs that might have been emitted before non-local
-         * jumps to the finally code.
-         */
+        // Fix up the gosubs that might have been emitted before non-local
+        // jumps to the finally code.
         if (!BackPatch(cx, bce, stmtInfo.gosubs(), bce->code().end(), JSOP_GOSUB))
             return false;
 
         finallyStart = bce->offset();
 
-        /* Indicate that we're emitting a subroutine body. */
+        // Indicate that we're emitting a subroutine body.
         stmtInfo.type = STMT_SUBROUTINE;
         if (!UpdateSourceCoordNotes(cx, bce, pn->pn_kid3->pn_pos.begin))
             return false;
@@ -4055,26 +4038,22 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!PopStatementBCE(cx, bce))
         return false;
 
-    /* ReconstructPCStack needs a NOP here to mark the end of the last catch block. */
+    // ReconstructPCStack needs a NOP here to mark the end of the last catch block.
     if (Emit1(cx, bce, JSOP_NOP) < 0)
         return false;
 
-    /* Fix up the end-of-try/catch jumps to come here. */
+    // Fix up the end-of-try/catch jumps to come here.
     if (!BackPatch(cx, bce, catchJump, bce->code().end(), JSOP_GOTO))
         return false;
 
-    /*
-     * Add the try note last, to let post-order give us the right ordering
-     * (first to last for a given nesting level, inner to outer by level).
-     */
+    // Add the try note last, to let post-order give us the right ordering
+    // (first to last for a given nesting level, inner to outer by level).
     if (pn->pn_kid2 && !bce->tryNoteList.append(JSTRY_CATCH, depth, tryStart, tryEnd))
         return false;
 
-    /*
-     * If we've got a finally, mark try+catch region with additional
-     * trynote to catch exceptions (re)thrown from a catch block or
-     * for the try{}finally{} case.
-     */
+    // If we've got a finally, mark try+catch region with additional
+    // trynote to catch exceptions (re)thrown from a catch block or
+    // for the try{}finally{} case.
     if (pn->pn_kid3 && !bce->tryNoteList.append(JSTRY_FINALLY, depth, tryStart, finallyStart))
         return false;
 
@@ -6888,6 +6867,16 @@ CGObjectList::finish(ObjectArray *array)
         *cursor = objbox->object;
     } while ((objbox = objbox->emitLink) != nullptr);
     JS_ASSERT(cursor == array->vector);
+}
+
+ObjectBox*
+CGObjectList::find(uint32_t index)
+{
+    JS_ASSERT(index < length);
+    ObjectBox *box = lastbox;
+    for (unsigned n = length - 1; n > index; n--)
+        box = box->emitLink;
+    return box;
 }
 
 bool
