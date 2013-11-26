@@ -69,6 +69,12 @@
   -moz-image-region: rect(0px, 306px, 18px, 288px);
 }
 
+#email-link-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 306px, 18px, 288px);
+  /* This is temporary until we have an email-link icon (Bug 932235) */
+  transform: scale(-1, -1);
+}
+
 #characterencoding-button[cui-areatype="toolbar"]{
   -moz-image-region: rect(0, 324px, 18px, 306px);
 }

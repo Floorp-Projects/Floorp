@@ -588,6 +588,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(36px, 612px, 54px, 594px);
   }
 
+  #email-link-button@toolbarButtonPressed@ {
+    -moz-image-region: rect(18px, 306px, 36px, 288px);
+  }
+
   /**
    * OSX has a unique set of icons when fullscreen is in the checked state.
    */
@@ -734,6 +738,14 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   }
 
   #social-share-button[cui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
+    -moz-image-region: rect(36px, 612px, 72px, 576px);
+  }
+
+  #email-link-button[cui-areatype="toolbar"] {
+    -moz-image-region: rect(0, 612px, 36px, 576px);
+  }
+
+  #email-link-button[cui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 612px, 72px, 576px);
   }
 
@@ -1007,6 +1019,16 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   #preferences-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #preferences-button {
     -moz-image-region: rect(0px, 1536px, 64px, 1472px);
+  }
+
+  #email-link-button[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > #email-link-button {
+    -moz-image-region: rect(0px, 896px, 64px, 832px);
+  }
+
+  /* This is temporary until we have an email-link icon (Bug 932235) */
+  #email-link-button > image {
+    transform: scale(-1, -1);
   }
 
   /* Footer and wide panel control icons */
