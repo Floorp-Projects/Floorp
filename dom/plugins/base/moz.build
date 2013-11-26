@@ -42,55 +42,50 @@ EXPORTS.mozilla += [
     'PluginPRLibrary.h',
 ]
 
-UNIFIED_SOURCES += [
-    'nsJSNPRuntime.cpp',
-    'nsPluginInstanceOwner.cpp',
-    'nsPluginModule.cpp',
-    'nsPluginPlayPreviewInfo.cpp',
-    'PluginPRLibrary.cpp',
-]
-
-# These files cannot be built in unified mode because they force NSPR logging.
 SOURCES += [
+    'nsJSNPRuntime.cpp',
     'nsNPAPIPlugin.cpp',
     'nsNPAPIPluginInstance.cpp',
     'nsNPAPIPluginStreamListener.cpp',
     'nsPluginHost.cpp',
+    'nsPluginInstanceOwner.cpp',
+    'nsPluginModule.cpp',
+    'nsPluginPlayPreviewInfo.cpp',
     'nsPluginStreamListenerPeer.cpp',
     'nsPluginTags.cpp',
+    'PluginPRLibrary.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    UNIFIED_SOURCES += [
+    SOURCES += [
         'nsPluginDirServiceProvider.cpp',
         'nsPluginNativeWindowWin.cpp',
         'nsPluginsDirWin.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
-    UNIFIED_SOURCES += [
+    SOURCES += [
         'nsPluginNativeWindowOS2.cpp',
         'nsPluginsDirOS2.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    UNIFIED_SOURCES += [
+    SOURCES += [
         'nsPluginNativeWindow.cpp',
         'nsPluginsDirDarwin.cpp',
     ]
 else:
-    UNIFIED_SOURCES += [
+    SOURCES += [
         'nsPluginsDirUnix.cpp',
     ]
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
-        # This file cannot be built in unified mode because of name clashes in X11 headers.
         SOURCES += [
             'nsPluginNativeWindowGtk2.cpp',
         ]
     elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-        UNIFIED_SOURCES += [
+        SOURCES += [
             'nsPluginNativeWindowQt.cpp',
         ]
     else:
-        UNIFIED_SOURCES += [
+        SOURCES += [
             'nsPluginNativeWindow.cpp',
         ]
 

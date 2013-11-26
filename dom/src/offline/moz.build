@@ -7,7 +7,7 @@
 EXPORTS += [
     'nsDOMOfflineResourceList.h',
 ]
-UNIFIED_SOURCES += [
+SOURCES += [
     'nsDOMOfflineResourceList.cpp',
 ]
 
