@@ -106,7 +106,6 @@ extern "C" {
 #include "gfxImageSurface.h"
 #include "gfxUtils.h"
 #include "Layers.h"
-#include "LayerManagerOGL.h"
 #include "GLContextProvider.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -127,7 +126,6 @@ using namespace mozilla::gfx;
 using namespace mozilla::widget;
 using namespace mozilla::layers;
 using mozilla::gl::GLContext;
-using mozilla::layers::LayerManagerOGL;
 
 // Don't put more than this many rects in the dirty region, just fluff
 // out to the bounding-box if there are more
@@ -602,17 +600,7 @@ nsWindow::Destroy(void)
 
     /** Need to clean our LayerManager up while still alive */
     if (mLayerManager) {
-        nsRefPtr<GLContext> gl = nullptr;
-        if (mLayerManager->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {
-            LayerManagerOGL *ogllm = static_cast<LayerManagerOGL*>(mLayerManager.get());
-            gl = ogllm->gl();
-        }
-
         mLayerManager->Destroy();
-
-        if (gl) {
-            gl->MarkDestroyed();
-        }
     }
     mLayerManager = nullptr;
 
@@ -2143,13 +2131,6 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
     // If this widget uses OMTC...
     if (GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
-        listener->PaintWindow(this, region);
-        listener->DidPaintWindow();
-        return TRUE;
-    } else if (GetLayerManager()->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {
-        LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
-        manager->SetClippingRegion(region);
-
         listener->PaintWindow(this, region);
         listener->DidPaintWindow();
         return TRUE;
