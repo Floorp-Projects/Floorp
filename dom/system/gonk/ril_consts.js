@@ -2761,9 +2761,10 @@ this.PDU_CDMA_MSG_TYPE_BROADCAST = 0x01;  // Broadcast
 this.PDU_CDMA_MSG_TYPE_ACK = 0x02;        // Acknowledge
 
 // SMS Teleservice Identitifier, as defined in 3GPP2 N.S0005, Table 175
-this.PDU_CDMA_MSG_TELESERIVCIE_ID_SMS = 0x1002;   // SMS
-this.PDU_CDMA_MSG_TELESERIVCIE_ID_WEMT = 0x1005;  // Wireless Enhanced Messaging Teleservice
-                                                  // required for fragmented SMS
+this.PDU_CDMA_MSG_TELESERIVCIE_ID_SMS  = 0x1002;   // SMS
+this.PDU_CDMA_MSG_TELESERIVCIE_ID_WAP  = 0x1004;   // WAP
+this.PDU_CDMA_MSG_TELESERIVCIE_ID_WEMT = 0x1005;   // Wireless Enhanced Messaging Teleservice
+                                                   // required for fragmented SMS
 
 // SMS Service Category, as defined in 3GPP2 C.R1001-D, Table 9.3.1-1
 this.PDU_CDMA_MSG_CATEGORY_UNSPEC = 0x00; // Unknown/Unspecified
