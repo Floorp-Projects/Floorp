@@ -525,9 +525,25 @@ protected:
 class FlexLine {
 public:
   FlexLine()
-  : mLineCrossSize(0),
+  : mTotalInnerHypotheticalMainSize(0),
+    mTotalOuterHypotheticalMainSize(0),
+    mLineCrossSize(0),
     mBaselineOffsetFromCrossStart(nscoord_MIN)
   {}
+
+  // Returns the sum of our FlexItems' outer hypothetical main sizes.
+  // ("outer" = margin-box, and "hypothetical" = before flexing)
+  nscoord GetTotalOuterHypotheticalMainSize() const {
+    return mTotalOuterHypotheticalMainSize;
+  }
+
+  // Adds a new FlexItem's hypothetical main sizes to our totals.
+  // (Should only be called when a FlexItem is being appended to this line.)
+  void AddToMainSizeTotals(nscoord aItemInnerHypotheticalMainSize,
+                           nscoord aItemOuterHypotheticalMainSize) {
+    mTotalInnerHypotheticalMainSize += aItemInnerHypotheticalMainSize;
+    mTotalOuterHypotheticalMainSize += aItemOuterHypotheticalMainSize;
+  }
 
   // Computes the cross-size and baseline position of this FlexLine, based on
   // its FlexItems.
@@ -565,24 +581,11 @@ public:
   nsTArray<FlexItem> mItems; // Array of the flex items in this flex line.
 
 private:
+  nscoord mTotalInnerHypotheticalMainSize;
+  nscoord mTotalOuterHypotheticalMainSize;
   nscoord mLineCrossSize;
   nscoord mBaselineOffsetFromCrossStart;
 };
-
-// Helper function to calculate the sum of our flex items'
-// margin-box main sizes.
-static nscoord
-SumFlexItemMarginBoxMainSizes(const FlexboxAxisTracker& aAxisTracker,
-                              const nsTArray<FlexItem>& aItems)
-{
-  nscoord sum = 0;
-  for (uint32_t i = 0; i < aItems.Length(); ++i) {
-    const FlexItem& item = aItems[i];
-    sum += item.GetMainSize() +
-      item.GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
-  }
-  return sum;
-}
 
 // Helper-function to find the first non-anonymous-box descendent of aFrame.
 static nsIFrame*
@@ -2028,6 +2031,16 @@ nsFlexContainerFrame::GenerateFlexItems(
     nsresult rv = ResolveFlexItemMaxContentSizing(aPresContext, *item,
                                                   aReflowState, aAxisTracker);
     NS_ENSURE_SUCCESS(rv,rv);
+    nscoord itemInnerHypotheticalMainSize = item->GetMainSize();
+    nscoord itemOuterHypotheticalMainSize = item->GetMainSize() +
+      item->GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
+
+    // XXXdholbert When we support multi-line, we'll check here if this item's
+    // outerHypotheticalMainSize takes us past the end of our line's available
+    // space. If so, we'll create a new FlexLine and shift the item there.
+
+    aFlexLine.AddToMainSizeTotals(itemInnerHypotheticalMainSize,
+                                  itemOuterHypotheticalMainSize);
   }
 
   return NS_OK;
@@ -2068,8 +2081,7 @@ nsFlexContainerFrame::ComputeFlexContainerMainSize(
     // continuation or splitting children, so "amount of height required by
     // our children" is just the sum of our children's heights.
     NS_FRAME_SET_INCOMPLETE(aStatus);
-    nscoord sumOfChildHeights =
-      SumFlexItemMarginBoxMainSizes(aAxisTracker, aLine.mItems);
+    nscoord sumOfChildHeights = aLine.GetTotalOuterHypotheticalMainSize();
     if (sumOfChildHeights <= aAvailableHeightForContent) {
       return aAvailableHeightForContent;
     }
@@ -2081,8 +2093,7 @@ nsFlexContainerFrame::ComputeFlexContainerMainSize(
   // sizes (their outer heights), clamped to our computed min/max main-size
   // properties (min-height & max-height).
   // XXXdholbert Handle constrained-aAvailableHeightForContent case here.
-  nscoord sumOfChildHeights =
-    SumFlexItemMarginBoxMainSizes(aAxisTracker, aLine.mItems);
+  nscoord sumOfChildHeights = aLine.GetTotalOuterHypotheticalMainSize();
   return NS_CSS_MINMAX(sumOfChildHeights,
                        aReflowState.mComputedMinHeight,
                        aReflowState.mComputedMaxHeight);
