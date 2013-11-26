@@ -8,6 +8,9 @@
 #include "nsDataHashtable.h"
 #include "nsString.h"
 
+class nsIUnicodeDecoder;
+class nsIUnicodeEncoder;
+
 namespace mozilla {
 namespace dom {
 
@@ -61,6 +64,50 @@ public:
    * @return whether the encoding is ASCII-compatible
    */
   static bool IsAsciiCompatible(const nsACString& aPreferredName);
+
+  /**
+   * Instantiates a decoder for an encoding. The input must be a
+   * Gecko-canonical encoding name.
+   * @param aEncoding a Gecko-canonical encoding name
+   * @return a decoder
+   */
+  static already_AddRefed<nsIUnicodeDecoder>
+  DecoderForEncoding(const char* aEncoding)
+  {
+    nsDependentCString encoding(aEncoding);
+    return DecoderForEncoding(encoding);
+  }
+
+  /**
+   * Instantiates a decoder for an encoding. The input must be a
+   * Gecko-canonical encoding name
+   * @param aEncoding a Gecko-canonical encoding name
+   * @return a decoder
+   */
+  static already_AddRefed<nsIUnicodeDecoder>
+  DecoderForEncoding(const nsACString& aEncoding);
+
+  /**
+   * Instantiates an encoder for an encoding. The input must be a
+   * Gecko-canonical encoding name.
+   * @param aEncoding a Gecko-canonical encoding name
+   * @return an encoder
+   */
+  static already_AddRefed<nsIUnicodeEncoder>
+  EncoderForEncoding(const char* aEncoding)
+  {
+    nsDependentCString encoding(aEncoding);
+    return EncoderForEncoding(encoding);
+  }
+
+  /**
+   * Instantiates an encoder for an encoding. The input must be a
+   * Gecko-canonical encoding name.
+   * @param aEncoding a Gecko-canonical encoding name
+   * @return an encoder
+   */
+  static already_AddRefed<nsIUnicodeEncoder>
+  EncoderForEncoding(const nsACString& aEncoding);
 
 private:
   EncodingUtils() MOZ_DELETE;
