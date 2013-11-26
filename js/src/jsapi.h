@@ -839,6 +839,13 @@ typedef JSObject *
 typedef JSObject *
 (* JSSameCompartmentWrapObjectCallback)(JSContext *cx, JS::Handle<JSObject*> obj);
 
+struct JSWrapObjectCallbacks
+{
+    JSWrapObjectCallback wrap;
+    JSSameCompartmentWrapObjectCallback sameCompartmentWrap;
+    JSPreWrapCallback preWrap;
+};
+
 typedef void
 (* JSDestroyCompartmentCallback)(JSFreeOp *fop, JSCompartment *compartment);
 
@@ -1635,11 +1642,8 @@ JS_SetSweepZoneCallback(JSRuntime *rt, JSZoneCallback callback);
 extern JS_PUBLIC_API(void)
 JS_SetCompartmentNameCallback(JSRuntime *rt, JSCompartmentNameCallback callback);
 
-extern JS_PUBLIC_API(JSWrapObjectCallback)
-JS_SetWrapObjectCallbacks(JSRuntime *rt,
-                          JSWrapObjectCallback callback,
-                          JSSameCompartmentWrapObjectCallback sccallback,
-                          JSPreWrapCallback precallback);
+extern JS_PUBLIC_API(void)
+JS_SetWrapObjectCallbacks(JSRuntime *rt, const JSWrapObjectCallbacks *callbacks);
 
 extern JS_PUBLIC_API(void)
 JS_SetCompartmentPrivate(JSCompartment *compartment, void *data);
