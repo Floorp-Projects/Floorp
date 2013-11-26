@@ -1444,11 +1444,33 @@ struct JSJitInfo {
         OpType_None
     };
 
+    enum ArgType {
+        // Basic types
+        String = (1 << 0),
+        Integer = (1 << 1), // Only 32-bit or less
+        Double = (1 << 2), // Maybe we want to add Float sometime too
+        Boolean = (1 << 3),
+        Object = (1 << 4),
+        Null = (1 << 5),
+
+        // And derived types
+        Numeric = Integer | Double,
+        // Should "Primitive" use the WebIDL definition, which
+        // excludes string and null, or the typical JS one that includes them?
+        Primitive = Numeric | Boolean | Null | String,
+        ObjectOrNull = Object | Null,
+        Any = ObjectOrNull | Primitive,
+
+        // Our sentinel value.
+        ArgTypeListEnd = (1 << 31)
+    };
+
     union {
         JSJitGetterOp getter;
         JSJitSetterOp setter;
         JSJitMethodOp method;
     };
+
     uint32_t protoID;
     uint32_t depth;
     OpType type;
@@ -1465,12 +1487,30 @@ struct JSJitInfo {
                                the value from.  Otherwise 0. */
     JSValueType returnType; /* The return type tag.  Might be JSVAL_TYPE_UNKNOWN */
 
+    const ArgType* const argTypes; /* For a method, a list of sets of types that
+                                      the function expects.  This can be used,
+                                      for example, to figure out when argument
+                                      coercions can have side-effects. nullptr
+                                      if we have no type information for
+                                      arguments. */
+
     /* An alternative native that's safe to call in parallel mode. */
     JSParallelNative parallelNative;
+
+private:
+    static void staticAsserts()
+    {
+        JS_STATIC_ASSERT(Any & String);
+        JS_STATIC_ASSERT(Any & Integer);
+        JS_STATIC_ASSERT(Any & Double);
+        JS_STATIC_ASSERT(Any & Boolean);
+        JS_STATIC_ASSERT(Any & Object);
+        JS_STATIC_ASSERT(Any & Null);
+    }
 };
 
 #define JS_JITINFO_NATIVE_PARALLEL(op)                                         \
-    {{nullptr},0,0,JSJitInfo::OpType_None,false,false,false,false,0,JSVAL_TYPE_MISSING,op}
+    {{nullptr},0,0,JSJitInfo::OpType_None,false,false,false,false,0,JSVAL_TYPE_MISSING,nullptr,op}
 
 static JS_ALWAYS_INLINE const JSJitInfo *
 FUNCTION_VALUE_TO_JITINFO(const JS::Value& v)

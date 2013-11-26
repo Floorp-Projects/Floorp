@@ -4797,6 +4797,7 @@ static const JSJitInfo dom_x_getterinfo = {
     false,    /* isInSlot */
     0,        /* slotIndex */
     JSVAL_TYPE_UNKNOWN, /* returnType */
+    nullptr,  /* argTypes */
     nullptr   /* parallelNative */
 };
 
@@ -4811,6 +4812,7 @@ static const JSJitInfo dom_x_setterinfo = {
     false,    /* isInSlot */
     0,        /* slotIndex */
     JSVAL_TYPE_UNKNOWN, /* returnType */
+    nullptr,  /* argTypes */
     nullptr   /* parallelNative */
 };
 
@@ -4825,6 +4827,7 @@ static const JSJitInfo doFoo_methodinfo = {
     false,    /* isInSlot */
     0,        /* slotIndex */
     JSVAL_TYPE_UNKNOWN, /* returnType */
+    nullptr,  /* argTypes */
     nullptr   /* parallelNative */
 };
 
