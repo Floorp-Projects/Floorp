@@ -232,10 +232,10 @@ protected:
  * sync, so we can safely expose any protected base class methods required by
  * the SMIL code.
  */
-class SVGPathDataAndOwner : public SVGPathData
+class SVGPathDataAndInfo : public SVGPathData
 {
 public:
-  SVGPathDataAndOwner(nsSVGElement *aElement = nullptr)
+  SVGPathDataAndInfo(nsSVGElement *aElement = nullptr)
     : mElement(do_GetWeakReference(static_cast<nsINode*>(aElement)))
   {}
 
@@ -248,7 +248,7 @@ public:
     return static_cast<nsSVGElement*>(e.get());
   }
 
-  nsresult CopyFrom(const SVGPathDataAndOwner& rhs) {
+  nsresult CopyFrom(const SVGPathDataAndInfo& rhs) {
     mElement = rhs.mElement;
     return SVGPathData::CopyFrom(rhs);
   }
@@ -268,7 +268,7 @@ public:
 
   /**
    * Exposed so that SVGPathData baseVals can be copied to
-   * SVGPathDataAndOwner objects. Note that callers should also call
+   * SVGPathDataAndInfo objects. Note that callers should also call
    * SetElement() when using this method!
    */
   using SVGPathData::CopyFrom;
