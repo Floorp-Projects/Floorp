@@ -2034,7 +2034,7 @@ nscoord
 nsFlexContainerFrame::ComputeFlexContainerMainSize(
   const nsHTMLReflowState& aReflowState,
   const FlexboxAxisTracker& aAxisTracker,
-  const nsTArray<FlexItem>& aItems,
+  const FlexLine& aLine,
   nscoord aAvailableHeightForContent,
   nsReflowStatus& aStatus)
 {
@@ -2065,7 +2065,7 @@ nsFlexContainerFrame::ComputeFlexContainerMainSize(
     // our children" is just the sum of our children's heights.
     NS_FRAME_SET_INCOMPLETE(aStatus);
     nscoord sumOfChildHeights =
-      SumFlexItemMarginBoxMainSizes(aAxisTracker, aItems);
+      SumFlexItemMarginBoxMainSizes(aAxisTracker, aLine.mItems);
     if (sumOfChildHeights <= aAvailableHeightForContent) {
       return aAvailableHeightForContent;
     }
@@ -2078,7 +2078,7 @@ nsFlexContainerFrame::ComputeFlexContainerMainSize(
   // properties (min-height & max-height).
   // XXXdholbert Handle constrained-aAvailableHeightForContent case here.
   nscoord sumOfChildHeights =
-    SumFlexItemMarginBoxMainSizes(aAxisTracker, aItems);
+    SumFlexItemMarginBoxMainSizes(aAxisTracker, aLine.mItems);
   return NS_CSS_MINMAX(sumOfChildHeights,
                        aReflowState.mComputedMinHeight,
                        aReflowState.mComputedMaxHeight);
@@ -2374,7 +2374,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   const nscoord contentBoxMainSize =
-    ComputeFlexContainerMainSize(aReflowState, axisTracker, line.mItems,
+    ComputeFlexContainerMainSize(aReflowState, axisTracker, line,
                                  availableHeightForContent, aStatus);
 
   ResolveFlexibleLengths(axisTracker, contentBoxMainSize, line.mItems);
