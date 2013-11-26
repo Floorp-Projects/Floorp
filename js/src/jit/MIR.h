@@ -4101,9 +4101,10 @@ class MDiv : public MBinaryArithInstruction
         return new(alloc) MDiv(left, right, type);
     }
     static MDiv *NewAsmJS(TempAllocator &alloc, MDefinition *left, MDefinition *right,
-                          MIRType type)
+                          MIRType type, bool unsignd)
     {
         MDiv *div = new(alloc) MDiv(left, right, type);
+        div->unsigned_ = unsignd;
         if (type == MIRType_Int32)
             div->setTruncated(true);
         return div;
@@ -4164,9 +4165,10 @@ class MMod : public MBinaryArithInstruction
         return new(alloc) MMod(left, right, MIRType_Value);
     }
     static MMod *NewAsmJS(TempAllocator &alloc, MDefinition *left, MDefinition *right,
-                          MIRType type)
+                          MIRType type, bool unsignd)
     {
         MMod *mod = new(alloc) MMod(left, right, type);
+        mod->unsigned_ = unsignd;
         if (type == MIRType_Int32)
             mod->setTruncated(true);
         return mod;
@@ -9089,38 +9091,6 @@ class MAsmJSNeg : public MUnaryInstruction
     INSTRUCTION_HEADER(AsmJSNeg);
     static MAsmJSNeg *NewAsmJS(TempAllocator &alloc, MDefinition *op, MIRType type) {
         return new(alloc) MAsmJSNeg(op, type);
-    }
-};
-
-class MAsmJSUDiv : public MBinaryInstruction
-{
-    MAsmJSUDiv(MDefinition *left, MDefinition *right)
-      : MBinaryInstruction(left, right)
-    {
-        setResultType(MIRType_Int32);
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(AsmJSUDiv);
-    static MAsmJSUDiv *New(TempAllocator &alloc, MDefinition *left, MDefinition *right) {
-        return new(alloc) MAsmJSUDiv(left, right);
-    }
-};
-
-class MAsmJSUMod : public MBinaryInstruction
-{
-    MAsmJSUMod(MDefinition *left, MDefinition *right)
-       : MBinaryInstruction(left, right)
-    {
-        setResultType(MIRType_Int32);
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(AsmJSUMod);
-    static MAsmJSUMod *New(TempAllocator &alloc, MDefinition *left, MDefinition *right) {
-        return new(alloc) MAsmJSUMod(left, right);
     }
 };
 

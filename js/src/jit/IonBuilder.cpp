@@ -9712,7 +9712,8 @@ IonBuilder::loadTypedObjectElements(MDefinition *typedObj,
 
     // Scale to a different unit for compat with typed array MIRs.
     if (unit != 1) {
-        MDiv *scaledOffset = MDiv::NewAsmJS(alloc(), ownerOffset, constantInt(unit), MIRType_Int32);
+        MDiv *scaledOffset = MDiv::NewAsmJS(alloc(), ownerOffset, constantInt(unit), MIRType_Int32,
+                                            /* unsignd = */ false);
         current->add(scaledOffset);
         *ownerScaledOffset = scaledOffset;
     } else {
