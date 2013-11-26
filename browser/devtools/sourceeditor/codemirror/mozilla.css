@@ -39,6 +39,14 @@
   background: rgba(255,0,0,0.2);
 }
 
+.CodeMirror {
+  cursor: text;
+}
+
+.CodeMirror-gutters {
+  cursor: default;
+}
+
 /* This is to avoid the fake horizontal scrollbar div of codemirror to go 0
 height when floating scrollbars are active. Make sure that this value is equal
 to the maximum of `min-height` specific to the `scrollbar[orient="horizontal"]`
