@@ -242,6 +242,11 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
         return false;
     }
 
+    if (js::IsScriptedProxy(targetScope)) {
+        JS_ReportError(cx, "Defining property on proxy object is not allowed");
+        return false;
+    }
+
     if (JS_GetStringLength(funName) == 0) {
         JS_ReportError(cx, "3rd argument should be a non-empty string");
         return false;
