@@ -118,9 +118,6 @@ protected:
                                         bool* aIsDefinite,
                                         nsReflowStatus& aStatus);
 
-  void PositionItemInMainAxis(MainAxisPositionTracker& aMainAxisPosnTracker,
-                              FlexItem& aItem);
-
   nsresult SizeItemInCrossAxis(nsPresContext* aPresContext,
                                const FlexboxAxisTracker& aAxisTracker,
                                nsHTMLReflowState& aChildReflowState,
