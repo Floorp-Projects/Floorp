@@ -891,7 +891,7 @@ void
 jit::JitCompartment::toggleBaselineStubBarriers(bool enabled)
 {
     for (ICStubCodeMap::Enum e(*stubCodes_); !e.empty(); e.popFront()) {
-        IonCode *code = *e.front().value.unsafeGet();
+        IonCode *code = *e.front().value().unsafeGet();
         code->togglePreBarriers(enabled);
     }
 }

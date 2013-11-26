@@ -61,15 +61,15 @@ MapsAreEqual(IntMap &am, IntMap &bm)
         fprintf(stderr, "A.count() == %u and B.count() == %u\n", am.count(), bm.count());
     }
     for (IntMap::Range r = am.all(); !r.empty(); r.popFront()) {
-        if (!bm.has(r.front().key)) {
+        if (!bm.has(r.front().key())) {
             equal = false;
-            fprintf(stderr, "B does not have %x which is in A\n", r.front().key);
+            fprintf(stderr, "B does not have %x which is in A\n", r.front().key());
         }
     }
     for (IntMap::Range r = bm.all(); !r.empty(); r.popFront()) {
-        if (!am.has(r.front().key)) {
+        if (!am.has(r.front().key())) {
             equal = false;
-            fprintf(stderr, "A does not have %x which is in B\n", r.front().key);
+            fprintf(stderr, "A does not have %x which is in B\n", r.front().key());
         }
     }
     return equal;
@@ -141,17 +141,17 @@ SlowRekey(IntMap *m) {
     tmp.init();
 
     for (IntMap::Range r = m->all(); !r.empty(); r.popFront()) {
-        if (NewKeyFunction::shouldBeRemoved(r.front().key))
+        if (NewKeyFunction::shouldBeRemoved(r.front().key()))
             continue;
-        uint32_t hi = NewKeyFunction::rekey(r.front().key);
+        uint32_t hi = NewKeyFunction::rekey(r.front().key());
         if (tmp.has(hi))
             return false;
-        tmp.putNew(hi, r.front().value);
+        tmp.putNew(hi, r.front().value());
     }
 
     m->clear();
     for (IntMap::Range r = tmp.all(); !r.empty(); r.popFront()) {
-        m->putNew(r.front().key, r.front().value);
+        m->putNew(r.front().key(), r.front().value());
     }
 
     return true;
@@ -193,8 +193,8 @@ BEGIN_TEST(testHashRekeyManual)
         CHECK(MapsAreEqual(am, bm));
 
         for (IntMap::Enum e(am); !e.empty(); e.popFront()) {
-            uint32_t tmp = LowToHigh::rekey(e.front().key);
-            if (tmp != e.front().key)
+            uint32_t tmp = LowToHigh::rekey(e.front().key());
+            if (tmp != e.front().key())
                 e.rekeyFront(tmp);
         }
         CHECK(SlowRekey<LowToHigh>(&bm));
@@ -243,11 +243,11 @@ BEGIN_TEST(testHashRekeyManualRemoval)
         CHECK(MapsAreEqual(am, bm));
 
         for (IntMap::Enum e(am); !e.empty(); e.popFront()) {
-            if (LowToHighWithRemoval::shouldBeRemoved(e.front().key)) {
+            if (LowToHighWithRemoval::shouldBeRemoved(e.front().key())) {
                 e.removeFront();
             } else {
-                uint32_t tmp = LowToHighWithRemoval::rekey(e.front().key);
-                if (tmp != e.front().key)
+                uint32_t tmp = LowToHighWithRemoval::rekey(e.front().key());
+                if (tmp != e.front().key())
                     e.rekeyFront(tmp);
             }
         }

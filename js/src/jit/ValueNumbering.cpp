@@ -35,14 +35,14 @@ ValueNumberer::lookupValue(MDefinition *ins)
 
     if (p) {
         // make sure this is in the correct group
-        setClass(ins, p->key);
+        setClass(ins, p->key());
     } else {
         if (!values.add(p, ins, ins->id()))
             return 0;
         breakClass(ins);
     }
 
-    return p->value;
+    return p->value();
 }
 
 MDefinition *
@@ -309,7 +309,7 @@ ValueNumberer::findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t 
     JS_ASSERT(ins->valueNumber() != 0);
     InstructionMap::Ptr p = defs.lookup(ins->valueNumber());
     MDefinition *dom;
-    if (!p || index > p->value.validUntil) {
+    if (!p || index > p->value().validUntil) {
         DominatingValue value;
         value.def = ins;
         // Since we are traversing the dominator tree in pre-order, when we
@@ -326,7 +326,7 @@ ValueNumberer::findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t 
 
         dom = ins;
     } else {
-        dom = p->value.def;
+        dom = p->value().def;
     }
 
     return dom;

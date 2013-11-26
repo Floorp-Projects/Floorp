@@ -721,7 +721,7 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoK
     AllocationSiteTable::Ptr p = cx->compartment()->types.allocationSiteTable->lookup(key);
 
     if (p)
-        return p->value;
+        return p->value();
     return cx->compartment()->types.addAllocationSiteTypeObject(cx, key);
 }
 
