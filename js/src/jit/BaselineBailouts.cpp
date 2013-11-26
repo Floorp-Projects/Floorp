@@ -611,10 +611,6 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     if (argsObj)
         blFrame->initArgsObjUnchecked(*argsObj);
 
-    // Ion doesn't compile code with try/catch, so the block object will always be
-    // null.
-    blFrame->setBlockChainNull();
-
     if (fun) {
         // The unpacked thisv and arguments should overwrite the pushed args present
         // in the calling frame.
