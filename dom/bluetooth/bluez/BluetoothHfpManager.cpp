@@ -382,6 +382,8 @@ BluetoothHfpManager::Reset()
 #endif
   mCMEE = false;
   mCMER = false;
+  mConnectScoRequest = false;
+  mSlcConnected = false;
   mReceiveVgsFlag = false;
 
 #ifdef MOZ_B2G_RIL
@@ -744,6 +746,14 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
     }
 
     mCMER = atCommandValues[3].EqualsLiteral("1");
+    mSlcConnected = mCMER;
+
+    // If we get internal request for SCO connection,
+    // setup SCO after Service Level Connection established.
+    if(mConnectScoRequest) {
+      mConnectScoRequest = false;
+      ConnectSco();
+    }
   } else if (msg.Find("AT+CMEE=") != -1) {
     ParseAtCommand(msg, 8, atCommandValues);
 
@@ -1426,6 +1436,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
           // Incoming call, no break
           sStopSendingRingFlag = true;
           ConnectSco();
+          // NO BREAK HERE. continue to next statement
         case nsITelephonyProvider::CALL_STATE_DIALING:
         case nsITelephonyProvider::CALL_STATE_ALERTING:
           // Outgoing call
@@ -1793,6 +1804,14 @@ BluetoothHfpManager::ConnectSco(BluetoothReplyRunnable* aRunnable)
     return false;
   }
 
+  // Make sure Service Level Connection established before we start to
+  // set up SCO (synchronous connection).
+  if (!mSlcConnected) {
+    mConnectScoRequest = true;
+    BT_WARNING("ConnectSco called before Service Level Connection established");
+    return false;
+  }
+
   mScoSocket->Disconnect();
 
   mScoRunnable = aRunnable;
@@ -1801,7 +1820,7 @@ BluetoothHfpManager::ConnectSco(BluetoothReplyRunnable* aRunnable)
   NS_ENSURE_TRUE(bs, false);
   nsresult rv = bs->GetScoSocket(mDeviceAddress, true, false, mScoSocket);
 
-  mScoSocketStatus = mSocket->GetConnectionStatus();
+  mScoSocketStatus = mScoSocket->GetConnectionStatus();
   return NS_SUCCEEDED(rv);
 }
 
