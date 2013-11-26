@@ -515,6 +515,15 @@ protected:
                       // in our constructor).
 };
 
+// Represents a single flex line in a flex container.
+// Manages an array of the FlexItems that are in the line.
+class FlexLine {
+public:
+  FlexLine() {}
+
+  nsTArray<FlexItem> mItems; // Array of the flex items in this flex line.
+};
+
 // Helper function to calculate the sum of our flex items'
 // margin-box main sizes.
 static nscoord
@@ -1975,13 +1984,14 @@ nsFlexContainerFrame::GenerateFlexItems(
   nsPresContext* aPresContext,
   const nsHTMLReflowState& aReflowState,
   const FlexboxAxisTracker& aAxisTracker,
-  nsTArray<FlexItem>& aFlexItems)
+  FlexLine& aFlexLine)
 {
-  MOZ_ASSERT(aFlexItems.IsEmpty(), "Expecting outparam to start out empty");
+  MOZ_ASSERT(aFlexLine.mItems.IsEmpty(),
+             "Expecting outparam to start out empty");
 
-  aFlexItems.SetCapacity(mFrames.GetLength());
+  aFlexLine.mItems.SetCapacity(mFrames.GetLength());
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    FlexItem* item = aFlexItems.AppendElement(
+    FlexItem* item = aFlexLine.mItems.AppendElement(
                        GenerateFlexItemForChild(aPresContext, e.get(),
                                                 aReflowState, aAxisTracker));
 
@@ -2309,10 +2319,10 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   const FlexboxAxisTracker axisTracker(this);
 
-  // Generate a list of our flex items (already sorted).
-  nsTArray<FlexItem> items;
+  // Generate an array of our flex items (already sorted), in a FlexLine.
+  FlexLine line;
   nsresult rv = GenerateFlexItems(aPresContext, aReflowState,
-                                  axisTracker, items);
+                                  axisTracker, line);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If we're being fragmented into a constrained height, subtract off
@@ -2328,16 +2338,16 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   const nscoord contentBoxMainSize =
-    ComputeFlexContainerMainSize(aReflowState, axisTracker, items,
+    ComputeFlexContainerMainSize(aReflowState, axisTracker, line.mItems,
                                  availableHeightForContent, aStatus);
 
-  ResolveFlexibleLengths(axisTracker, contentBoxMainSize, items);
+  ResolveFlexibleLengths(axisTracker, contentBoxMainSize, line.mItems);
 
   // Cross Size Determination - Flexbox spec section 9.4
   // ===================================================
   // Calculate the hypothetical cross size of each item:
-  for (uint32_t i = 0; i < items.Length(); ++i) {
-    FlexItem& curItem = items[i];
+  for (uint32_t i = 0; i < line.mItems.Length(); ++i) {
+    FlexItem& curItem = line.mItems[i];
 
     // (If the item's already been stretched, then it already knows its
     // cross size.  Don't bother trying to recalculate it.)
@@ -2369,7 +2379,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   // flex line.
   SingleLineCrossAxisPositionTracker lineCrossAxisPosnTracker(axisTracker);
 
-  lineCrossAxisPosnTracker.ComputeLineCrossSize(items);
+  lineCrossAxisPosnTracker.ComputeLineCrossSize(line.mItems);
   // XXXdholbert Once we've got multi-line flexbox support: here, after we've
   // computed the cross size of all lines, we need to check if if
   // 'align-content' is 'stretch' -- if it is, we need to give each line an
@@ -2405,22 +2415,22 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   // Main-Axis Alignment - Flexbox spec section 9.5
   // ==============================================
   MainAxisPositionTracker mainAxisPosnTracker(this, axisTracker,
-                                              aReflowState, items,
+                                              aReflowState, line.mItems,
                                               contentBoxMainSize);
-  for (uint32_t i = 0; i < items.Length(); ++i) {
-    PositionItemInMainAxis(mainAxisPosnTracker, items[i]);
+  for (uint32_t i = 0; i < line.mItems.Length(); ++i) {
+    PositionItemInMainAxis(mainAxisPosnTracker, line.mItems[i]);
   }
 
   // Cross-Axis Alignment - Flexbox spec section 9.6
   // ===============================================
-  for (uint32_t i = 0; i < items.Length(); ++i) {
+  for (uint32_t i = 0; i < line.mItems.Length(); ++i) {
     // Resolve stretched cross-size, if appropriate
     nscoord lineCrossSize = lineCrossAxisPosnTracker.GetLineCrossSize();
-    items[i].ResolveStretchedCrossSize(lineCrossSize, axisTracker);
+    line.mItems[i].ResolveStretchedCrossSize(lineCrossSize, axisTracker);
 
     // ...and position.
     PositionItemInCrossAxis(crossAxisPosnTracker.GetPosition(),
-                            lineCrossAxisPosnTracker, items[i]);
+                            lineCrossAxisPosnTracker, line.mItems[i]);
   }
 
   // Before giving each child a final reflow, calculate the origin of the
@@ -2433,8 +2443,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   // FINAL REFLOW: Give each child frame another chance to reflow, now that
   // we know its final size and position.
-  for (uint32_t i = 0; i < items.Length(); ++i) {
-    FlexItem& curItem = items[i];
+  for (uint32_t i = 0; i < line.mItems.Length(); ++i) {
+    FlexItem& curItem = line.mItems[i];
 
     nsPoint physicalPosn = axisTracker.PhysicalPositionFromLogicalPosition(
                              curItem.GetMainPosition(),
@@ -2554,7 +2564,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     // children (or if our children are huge enough that they have nscoord_MIN
     // as their baseline... in which case, we'll use the wrong baseline, but no
     // big deal)
-    NS_WARN_IF_FALSE(items.IsEmpty(),
+    NS_WARN_IF_FALSE(line.mItems.IsEmpty(),
                      "Have flex items but didn't get an ascent - that's odd "
                      "(or there are just gigantic sizes involved)");
     // Per spec, just use the bottom of content-box.
