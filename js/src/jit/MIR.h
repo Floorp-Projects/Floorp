@@ -337,6 +337,7 @@ class MDefinition : public MNode
     static void PrintOpcodeName(FILE *fp, Opcode op);
     virtual void printOpcode(FILE *fp) const;
     void dump(FILE *fp) const;
+    void dump() const;
 
     // For LICM.
     virtual bool neverHoist() const { return false; }

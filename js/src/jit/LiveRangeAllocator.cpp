@@ -9,6 +9,7 @@
 #include "jit/BacktrackingAllocator.h"
 #include "jit/BitSet.h"
 #include "jit/LinearScan.h"
+#include "jsprf.h"
 
 using namespace js;
 using namespace js::jit;
@@ -859,3 +860,37 @@ LiveInterval::validateRanges()
 }
 
 #endif // DEBUG
+
+const char *
+LiveInterval::rangesToString() const
+{
+#ifdef DEBUG
+    if (!numRanges())
+        return " empty";
+
+    // Not reentrant!
+    static char buf[1000];
+
+    char *cursor = buf;
+    char *end = cursor + sizeof(buf);
+
+    for (size_t i = 0; i < numRanges(); i++) {
+        const LiveInterval::Range *range = getRange(i);
+        int n = JS_snprintf(cursor, end - cursor, " [%u,%u>", range->from.pos(), range->to.pos());
+        if (n < 0)
+            return " ???";
+        cursor += n;
+    }
+
+    return buf;
+#else
+    return " ???";
+#endif
+}
+
+void
+LiveInterval::dump()
+{
+    fprintf(stderr, "v%u: index=%u allocation=%s %s\n",
+            vreg(), index(), getAllocation()->toString(), rangesToString());
+}
