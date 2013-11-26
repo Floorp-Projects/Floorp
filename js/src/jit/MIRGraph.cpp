@@ -1203,6 +1203,12 @@ MIRGraph::dump(FILE *fp)
 }
 
 void
+MIRGraph::dump()
+{
+    dump(stderr);
+}
+
+void
 MBasicBlock::dump(FILE *fp)
 {
 #ifdef DEBUG
@@ -1213,4 +1219,10 @@ MBasicBlock::dump(FILE *fp)
         iter->dump(fp);
     }
 #endif
+}
+
+void
+MBasicBlock::dump()
+{
+    dump(stderr);
 }
