@@ -107,7 +107,9 @@ WebGLMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
     return NS_OK;
 }
 
-WebGLMemoryReporterWrapper* WebGLMemoryReporterWrapper::sUniqueInstance = nullptr;
+NS_IMPL_ISUPPORTS1(WebGLMemoryReporterWrapper, nsISupports)
+
+StaticRefPtr<WebGLMemoryReporterWrapper> WebGLMemoryReporterWrapper::sUniqueInstance;
 
 WebGLMemoryReporterWrapper* WebGLMemoryReporterWrapper::UniqueInstance()
 {
