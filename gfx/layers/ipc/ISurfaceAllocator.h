@@ -124,6 +124,8 @@ ISurfaceAllocator() {}
     return nullptr;
   }
 
+  virtual bool IPCOpen() const { return true; }
+
   // Returns true if aSurface wraps a Shmem.
   static bool IsShmem(SurfaceDescriptor* aSurface);
 

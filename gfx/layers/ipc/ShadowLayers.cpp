@@ -617,6 +617,12 @@ ShadowLayerForwarder::DeallocShmem(ipc::Shmem& aShmem)
   mShadowManager->DeallocShmem(aShmem);
 }
 
+bool
+ShadowLayerForwarder::IPCOpen() const
+{
+  return mShadowManager->IPCOpen();
+}
+
 /*static*/ already_AddRefed<gfxASurface>
 ShadowLayerForwarder::OpenDescriptor(OpenMode aMode,
                                      const SurfaceDescriptor& aSurface)
