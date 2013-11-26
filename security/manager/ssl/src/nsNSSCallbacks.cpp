@@ -29,8 +29,6 @@
 using namespace mozilla;
 using namespace mozilla::psm;
 
-static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
@@ -776,6 +774,8 @@ private:
 
 void PK11PasswordPromptRunnable::RunOnTargetThread()
 {
+  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
   PRUnichar *password = nullptr;
