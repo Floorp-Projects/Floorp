@@ -137,8 +137,10 @@ public:
 
         // Return the actual scroll value so we can use it to filter
         // out scroll messages triggered by setting the display port.
+        CSSIntPoint actualScrollOffset;
+        utils->GetScrollXY(false, &actualScrollOffset.x, &actualScrollOffset.y);
         if (mLastOffsetOut) {
-          *mLastOffsetOut = mFrameMetrics.mScrollOffset;
+          *mLastOffsetOut = actualScrollOffset;
         }
         if (mLastScrollIdOut) {
           mLastScrollIdOut->mScrollId = mFrameMetrics.mScrollId;
