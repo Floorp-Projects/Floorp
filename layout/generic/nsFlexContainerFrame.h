@@ -94,12 +94,6 @@ protected:
                                            const nsHTMLReflowState& aParentReflowState,
                                            const FlexboxAxisTracker& aAxisTracker);
 
-  // Runs the "resolve the flexible lengths" algorithm, distributing
-  // |aFlexContainerMainSize| among the |aItems| and freezing them.
-  void ResolveFlexibleLengths(const FlexboxAxisTracker& aAxisTracker,
-                              nscoord aFlexContainerMainSize,
-                              nsTArray<FlexItem>& aItems);
-
   nsresult GenerateFlexItems(nsPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              const FlexboxAxisTracker& aAxisTracker,
