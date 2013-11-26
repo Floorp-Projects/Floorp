@@ -27,6 +27,7 @@ namespace jit {
     _(JSOP_NOTEARG)            \
     _(JSOP_POP)                \
     _(JSOP_POPN)               \
+    _(JSOP_POPNV)              \
     _(JSOP_DUP)                \
     _(JSOP_DUP2)               \
     _(JSOP_SWAP)               \
@@ -145,13 +146,8 @@ namespace jit {
     _(JSOP_FINALLY)            \
     _(JSOP_GOSUB)              \
     _(JSOP_RETSUB)             \
-    _(JSOP_ENTERBLOCK)         \
-    _(JSOP_ENTERLET0)          \
-    _(JSOP_ENTERLET1)          \
-    _(JSOP_ENTERLET2)          \
-    _(JSOP_LEAVEBLOCK)         \
-    _(JSOP_LEAVEBLOCKEXPR)     \
-    _(JSOP_LEAVEFORLETIN)      \
+    _(JSOP_PUSHBLOCKSCOPE)     \
+    _(JSOP_POPBLOCKSCOPE)      \
     _(JSOP_DEBUGLEAVEBLOCK)    \
     _(JSOP_EXCEPTION)          \
     _(JSOP_DEBUGGER)           \
@@ -254,9 +250,6 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitInitElemGetterSetter();
 
     bool emitFormalArgAccess(uint32_t arg, bool get);
-
-    bool emitEnterBlock();
-    bool emitLeaveBlock();
 
     bool addPCMappingEntry(bool addIndexEntry);
 

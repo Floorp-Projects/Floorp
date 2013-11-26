@@ -75,8 +75,7 @@ enum MaybeCheckAliasing { CHECK_ALIASING = true, DONT_CHECK_ALIASING = false };
 
 #ifdef DEBUG
 extern void
-CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script,
-                    StaticBlockObject *maybeBlock, unsigned i);
+CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script, unsigned i);
 #endif
 
 namespace jit {
@@ -591,14 +590,8 @@ class StackFrame
     inline void popOffScopeChain();
 
     /*
-     * Block chain
-     *
-     * Entering/leaving a let (or exception) block may do 1 or 2 things: First,
-     * a static block object (created at compiled time and stored in the
-     * script) is pushed on StackFrame::blockChain. Second, if the static block
-     * may be cloned to hold the dynamic values if this is needed for dynamic
-     * scope access. A clone is created for a static block iff
-     * StaticBlockObject::needsClone.
+     * For blocks with aliased locals, these interfaces push and pop entries on
+     * the scope chain.
      */
 
     bool hasBlockChain() const {

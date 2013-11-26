@@ -1252,6 +1252,7 @@ IonBuilder::traverseBytecode()
             switch (op) {
               case JSOP_POP:
               case JSOP_POPN:
+              case JSOP_POPNV:
               case JSOP_DUP:
               case JSOP_DUP2:
               case JSOP_PICK:
@@ -1503,6 +1504,15 @@ IonBuilder::inspectOpcode(JSOp op)
         for (uint32_t i = 0, n = GET_UINT16(pc); i < n; i++)
             current->pop();
         return true;
+
+      case JSOP_POPNV:
+      {
+        MDefinition *mins = current->pop();
+        for (uint32_t i = 0, n = GET_UINT16(pc); i < n; i++)
+            current->pop();
+        current->push(mins);
+        return true;
+      }
 
       case JSOP_NEWINIT:
         if (GET_UINT8(pc) == JSProto_Array)
