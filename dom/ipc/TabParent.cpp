@@ -131,6 +131,8 @@ private:
         nsRefPtr<TabParent> tabParent;
         mTabParent.swap(tabParent);
 
+        using mozilla::ipc::FileDescriptor;
+
         FileDescriptor::PlatformHandleType handle =
             FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(mFD));
 
