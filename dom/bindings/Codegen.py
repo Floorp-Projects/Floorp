@@ -2465,13 +2465,18 @@ class CGUpdateMemberSlotsMethod(CGAbstractMethod):
     def definition_body(self):
         slotMembers = (m for m in self.descriptor.interface.members if
                        m.isAttr() and m.getExtendedAttribute("StoreInSlot"))
+        def slotIndex(member):
+            return member.slotIndex + INSTANCE_RESERVED_SLOTS
         storeSlots = (
             CGGeneric(
+                'static_assert(%d < js::shadow::Object::MAX_FIXED_SLOTS,\n'
+                '              "Not enough fixed slots to fit \'%s.%s\'");\n'
                 "if (!get_%s(aCx, aWrapper, aObject, args)) {\n"
                 "  return false;\n"
                 "}\n"
                 "js::SetReservedSlot(aWrapper, %d, args.rval());" %
-                (m.identifier.name, m.slotIndex + INSTANCE_RESERVED_SLOTS))
+                (slotIndex(m), self.descriptor.interface.identifier.name,
+                 m.identifier.name, m.identifier.name, slotIndex(m)))
             for m in slotMembers)
         body = CGList(storeSlots, "\n\n")
         body.prepend(CGGeneric("JS::Rooted<JS::Value> temp(aCx);\n"
