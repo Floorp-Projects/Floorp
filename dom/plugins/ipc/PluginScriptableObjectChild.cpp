@@ -10,10 +10,6 @@
 
 using namespace mozilla::plugins;
 
-namespace {
-typedef PluginIdentifierChild::StackIdentifier StackIdentifier;
-}
-
 // static
 NPObject*
 PluginScriptableObjectChild::ScriptableAllocate(NPP aInstance,
@@ -632,7 +628,7 @@ PluginScriptableObjectChild::AnswerHasMethod(PPluginIdentifierChild* aId,
     return true;
   }
 
-  StackIdentifier id(aId);
+  PluginIdentifierChild::StackIdentifier id(aId);
   *aHasMethod = mObject->_class->hasMethod(mObject, id->ToNPIdentifier());
   return true;
 }
@@ -676,7 +672,7 @@ PluginScriptableObjectChild::AnswerInvoke(PPluginIdentifierChild* aId,
 
   NPVariant result;
   VOID_TO_NPVARIANT(result);
-  StackIdentifier id(aId);
+  PluginIdentifierChild::StackIdentifier id(aId);
   bool success = mObject->_class->invoke(mObject, id->ToNPIdentifier(),
                                          convertedArgs.Elements(), argCount,
                                          &result);
@@ -797,7 +793,7 @@ PluginScriptableObjectChild::AnswerHasProperty(PPluginIdentifierChild* aId,
     return true;
   }
 
-  StackIdentifier id(aId);
+  PluginIdentifierChild::StackIdentifier id(aId);
   *aHasProperty = mObject->_class->hasProperty(mObject, id->ToNPIdentifier());
   return true;
 }
@@ -827,7 +823,7 @@ PluginScriptableObjectChild::AnswerGetChildProperty(PPluginIdentifierChild* aId,
     return true;
   }
 
-  StackIdentifier stackID(aId);
+  PluginIdentifierChild::StackIdentifier stackID(aId);
   NPIdentifier id = stackID->ToNPIdentifier();
 
   *aHasProperty = mObject->_class->hasProperty(mObject, id);
@@ -874,7 +870,7 @@ PluginScriptableObjectChild::AnswerSetProperty(PPluginIdentifierChild* aId,
     return true;
   }
 
-  StackIdentifier stackID(aId);
+  PluginIdentifierChild::StackIdentifier stackID(aId);
   NPIdentifier id = stackID->ToNPIdentifier();
 
   if (!mObject->_class->hasProperty(mObject, id)) {
@@ -912,7 +908,7 @@ PluginScriptableObjectChild::AnswerRemoveProperty(PPluginIdentifierChild* aId,
     return true;
   }
 
-  StackIdentifier stackID(aId);
+  PluginIdentifierChild::StackIdentifier stackID(aId);
   NPIdentifier id = stackID->ToNPIdentifier();
   *aSuccess = mObject->_class->hasProperty(mObject, id) ?
               mObject->_class->removeProperty(mObject, id) :
