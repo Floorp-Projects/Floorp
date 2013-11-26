@@ -160,9 +160,7 @@ function eventSource(aProto) {
         listener.apply(null, arguments);
       } catch (e) {
         // Prevent a bad listener from interfering with the others.
-        let msg = e + ": " + e.stack;
-        Cu.reportError(msg);
-        dumpn(msg);
+        DevToolsUtils.reportException("notify event '" + name + "'", e);
       }
     }
   }
@@ -322,10 +320,7 @@ DebuggerClient.requester = function DC_requester(aPacketSkeleton, { telemetry,
         try {
           thisCallback(aResponse);
         } catch (e) {
-          let msg = "Error executing callback passed to debugger client: "
-            + e + "\n" + e.stack;
-          dumpn(msg);
-          Cu.reportError(msg);
+          DevToolsUtils.reportException("DebuggerClient.requester callback", e);
         }
       }
 
@@ -650,10 +645,10 @@ DebuggerClient.prototype = {
 
     resolve(packet).then(aPacket => {
       if (!aPacket.from) {
-        let msg = "Server did not specify an actor, dropping packet: " +
-                  JSON.stringify(aPacket);
-        Cu.reportError(msg);
-        dumpn(msg);
+        DevToolsUtils.reportException(
+          "onPacket",
+          new Error("Server did not specify an actor, dropping packet: " +
+                    JSON.stringify(aPacket)));
         return;
       }
 
@@ -703,8 +698,7 @@ DebuggerClient.prototype = {
 
       this._sendRequests();
     }, function (ex) {
-      dumpn("Error handling response: " + ex + " - stack:\n" + ex.stack);
-      Cu.reportError(ex.message + "\n" + ex.stack);
+      DevToolsUtils.reportException("onPacket handler", ex);
     });
   },
 
@@ -830,14 +824,13 @@ ProtocolCompatibility.prototype = {
           this.rejectFeature(feature.name);
           break;
         default:
-          Cu.reportError(new Error(
-            "Bad return value from `onPacketTest` for feature '"
-              + feature.name + "'"));
+          DevToolsUtils.reportException(
+            "PC__detectFeatures",
+            new Error("Bad return value from `onPacketTest` for feature '"
+                      + feature.name + "'"));
         }
       } catch (ex) {
-        Cu.reportError("Error detecting support for feature '"
-                       + feature.name + "':" + ex.message + "\n"
-                       + ex.stack);
+        DevToolsUtils.reportException("PC__detectFeatures", ex);
       }
     }
   },
@@ -1700,11 +1693,6 @@ function TraceClient(aClient, aActor) {
   this._activeTraces = new Set();
   this._waitingPackets = new Map();
   this._expectedPacket = 0;
-
-  this.onPacket = this.onPacket.bind(this);
-  this._client.addListener(UnsolicitedNotifications.enteredFrame, this.onPacket);
-  this._client.addListener(UnsolicitedNotifications.exitedFrame, this.onPacket);
-
   this.request = this._client.request;
 }
 
@@ -1777,31 +1765,8 @@ TraceClient.prototype = {
       return aResponse;
     },
     telemetry: "STOPTRACE"
-  }),
-
-  /**
-   * Called when the trace actor notifies that a frame has been
-   * entered or exited.
-   *
-   * @param aEvent string
-   *        The type of the unsolicited packet (enteredFrame|exitedFrame).
-   *
-   * @param aPacket object
-   *        Packet received over the RDP from the trace actor.
-   */
-  onPacket: function JSTC_onPacket(aEvent, aPacket) {
-    this._waitingPackets.set(aPacket.sequence, aPacket);
-
-    while (this._waitingPackets.has(this._expectedPacket)) {
-      let packet = this._waitingPackets.get(this._expectedPacket);
-      this._waitingPackets.delete(this._expectedPacket);
-      this.notify(packet.type, packet);
-      this._expectedPacket++;
-    }
-  }
+  })
 };
-
-eventSource(TraceClient.prototype);
 
 /**
  * Grip clients are used to retrieve information about the relevant object.
@@ -2224,9 +2189,7 @@ this.debuggerSocketConnect = function debuggerSocketConnect(aHost, aPort)
     transport = new DebuggerTransport(s.openInputStream(0, 0, 0),
                                       s.openOutputStream(0, 0, 0));
   } catch(e) {
-    let msg = e + ": " + e.stack;
-    Cu.reportError(msg);
-    dumpn(msg);
+    DevToolsUtils.reportException("debuggerSocketConnect", e);
     throw e;
   }
   return transport;
