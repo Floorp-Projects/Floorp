@@ -27,7 +27,6 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsLinebreakConverter.h"
-#include "nsICharsetConverterManager.h"
 #include "nsEscape.h"
 #include "nsUnicharUtils.h"
 #include "nsIMultiplexInputStream.h"

@@ -754,11 +754,11 @@ nsSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
     nsAutoString attValue;
     GetAttr(nsGkAtoms::values, attValue);
     bool preventCachingOfSandwich = false;
-    nsresult rv = nsSMILParserUtils::ParseValues(attValue, mAnimationElement,
-                                                 aSMILAttr, result,
-                                                 preventCachingOfSandwich);
-    if (NS_FAILED(rv))
-      return rv;
+    if (!nsSMILParserUtils::ParseValues(attValue, mAnimationElement,
+                                        aSMILAttr, result,
+                                        preventCachingOfSandwich)) {
+      return NS_ERROR_FAILURE;
+    }
 
     if (preventCachingOfSandwich) {
       mValueNeedsReparsingEverySample = true;
@@ -1014,29 +1014,14 @@ nsSMILAnimationFunction::SetKeySplines(const nsAString& aKeySplines,
   mKeySplines.Clear();
   aResult.SetTo(aKeySplines);
 
-  nsTArray<double> keySplines;
-  nsresult rv = nsSMILParserUtils::ParseKeySplines(aKeySplines, keySplines);
-
-  if (keySplines.Length() < 1 || keySplines.Length() % 4)
-    rv = NS_ERROR_FAILURE;
-
-  if (NS_SUCCEEDED(rv))
-  {
-    mKeySplines.SetCapacity(keySplines.Length() % 4);
-    for (uint32_t i = 0; i < keySplines.Length() && NS_SUCCEEDED(rv); i += 4)
-    {
-      if (!mKeySplines.AppendElement(nsSMILKeySpline(keySplines[i],
-                                                     keySplines[i+1],
-                                                     keySplines[i+2],
-                                                     keySplines[i+3]))) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-  }
-
   mHasChanged = true;
 
-  return rv;
+  if (!nsSMILParserUtils::ParseKeySplines(aKeySplines, mKeySplines)) {
+    mKeySplines.Clear();
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 void
@@ -1054,17 +1039,13 @@ nsSMILAnimationFunction::SetKeyTimes(const nsAString& aKeyTimes,
   mKeyTimes.Clear();
   aResult.SetTo(aKeyTimes);
 
-  nsresult rv =
-    nsSMILParserUtils::ParseSemicolonDelimitedProgressList(aKeyTimes, true,
-                                                           mKeyTimes);
-
-  if (NS_SUCCEEDED(rv) && mKeyTimes.Length() < 1)
-    rv = NS_ERROR_FAILURE;
-
-  if (NS_FAILED(rv))
-    mKeyTimes.Clear();
-
   mHasChanged = true;
+
+  if (!nsSMILParserUtils::ParseSemicolonDelimitedProgressList(aKeyTimes, true,
+                                                              mKeyTimes)) {
+    mKeyTimes.Clear();
+    return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }

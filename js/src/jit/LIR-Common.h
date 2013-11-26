@@ -1205,6 +1205,23 @@ class LGetDOMProperty : public LDOMPropertyInstructionHelper<BOX_PIECES, 0>
     }
 };
 
+class LGetDOMMember : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(GetDOMMember);
+    LGetDOMMember(const LAllocation &object) {
+        setOperand(0, object);
+    }
+
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+
+    MGetDOMMember *mir() const {
+        return mir_->toGetDOMMember();
+    }
+};
+
 class LSetDOMProperty : public LDOMPropertyInstructionHelper<0, BOX_PIECES>
 {
   public:

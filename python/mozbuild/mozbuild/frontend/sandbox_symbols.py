@@ -224,13 +224,6 @@ VARIABLES = {
         files by the compiler.
         """, None),
 
-    'GTEST_SOURCES': (StrictOrderingOnAppendList, list, [],
-        """Source code files for GTest unit tests.
-
-        This variable contains a list of GTEST unit test source files to
-        compile.
-        """, 'compile'),
-
     'HOST_SOURCES': (StrictOrderingOnAppendList, list, [],
         """Source code files to compile with the host compiler.
 

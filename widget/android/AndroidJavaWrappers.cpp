@@ -8,6 +8,7 @@
 #include "AndroidBridgeUtilities.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIWidget.h"
+#include "mozilla/BasicEvents.h"
 #include "mozilla/TouchEvents.h"
 
 using namespace mozilla;
@@ -706,7 +707,19 @@ AndroidGeckoEvent::MakeMultiTouchInput(nsIWidget* widget)
         }
     }
 
-    MultiTouchInput event(type, Time());
+    MultiTouchInput event(type, Time(), 0);
+    if (IsCtrlPressed()) {
+      event.modifiers |= MODIFIER_CONTROL;
+    }
+    if (IsAltPressed()) {
+      event.modifiers |= MODIFIER_ALT;
+    }
+    if (IsShiftPressed()) {
+      event.modifiers |= MODIFIER_SHIFT;
+    }
+    if (IsMetaPressed()) {
+      event.modifiers |= MODIFIER_META;
+    }
 
     if (type < 0) {
         // An event we don't know about

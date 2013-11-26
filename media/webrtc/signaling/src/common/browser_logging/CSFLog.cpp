@@ -24,22 +24,22 @@
 #include <sys/prctl.h>
 #endif
 
-static PRLogModuleInfo *gLogModuleInfo = NULL;
+static PRLogModuleInfo *gLogModuleInfo = nullptr;
 
 PRLogModuleInfo *GetSignalingLogInfo()
 {
-  if (gLogModuleInfo == NULL)
+  if (gLogModuleInfo == nullptr)
     gLogModuleInfo = PR_NewLogModule("signaling");
 
   return gLogModuleInfo;
 }
 
-static PRLogModuleInfo *gWebRTCLogModuleInfo = NULL;
+static PRLogModuleInfo *gWebRTCLogModuleInfo = nullptr;
 int gWebrtcTraceLoggingOn = 0;
 
 PRLogModuleInfo *GetWebRTCLogInfo()
 {
-  if (gWebRTCLogModuleInfo == NULL)
+  if (gWebRTCLogModuleInfo == nullptr)
     gWebRTCLogModuleInfo = PR_NewLogModule("webrtc_trace");
 
   return gWebRTCLogModuleInfo;

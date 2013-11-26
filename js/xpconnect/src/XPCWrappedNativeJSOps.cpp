@@ -1129,11 +1129,8 @@ XPCNativeScriptableInfo::Construct(const XPCNativeScriptableCreateInfo* sci)
 
     XPCJSRuntime* rt = XPCJSRuntime::Get();
     XPCNativeScriptableSharedMap* map = rt->GetNativeScriptableSharedMap();
-    {   // scoped lock
-        XPCAutoLock lock(rt->GetMapLock());
-        success = map->GetNewOrUsed(sci->GetFlags(), name,
-                                    sci->GetInterfacesBitmap(), newObj);
-    }
+    success = map->GetNewOrUsed(sci->GetFlags(), name,
+                                sci->GetInterfacesBitmap(), newObj);
 
     if (!success) {
         delete newObj;

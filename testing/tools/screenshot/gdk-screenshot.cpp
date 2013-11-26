@@ -77,7 +77,7 @@ int main(int argc, char** argv)
     XScreenSaverQueryInfo(GDK_DISPLAY(), GDK_ROOT_WINDOW(), info);
 
     const char* state;
-    const char* til_or_since = NULL;
+    const char* til_or_since = nullptr;
     switch (info->state) {
     case ScreenSaverOff:
       state = "Off";
@@ -127,10 +127,10 @@ int main(int argc, char** argv)
 #endif
 
   GdkWindow* window = gdk_get_default_root_window();
-  GdkPixbuf* screenshot = NULL;
+  GdkPixbuf* screenshot = nullptr;
 // TODO GTK3
 #if (MOZ_WIDGET_GTK == 2)
-  screenshot = gdk_pixbuf_get_from_drawable(NULL, window, NULL,
+  screenshot = gdk_pixbuf_get_from_drawable(nullptr, window, nullptr,
                                             0, 0, 0, 0,
                                             gdk_screen_width(),
                                             gdk_screen_height());
@@ -140,12 +140,12 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  GError* error = NULL;
+  GError* error = nullptr;
   if (argc > 1) {
-    gdk_pixbuf_save(screenshot, argv[1], "png", &error, NULL);
+    gdk_pixbuf_save(screenshot, argv[1], "png", &error, nullptr);
   } else {
-    gdk_pixbuf_save_to_callback(screenshot, save_to_stdout, NULL,
-                                "png", &error, NULL);
+    gdk_pixbuf_save_to_callback(screenshot, save_to_stdout, nullptr,
+                                "png", &error, nullptr);
   }
   if (error) {
     fprintf(stderr, "%s: failed to write screenshot as png: %s\n",

@@ -117,19 +117,18 @@ HyperTextAccessible::NativeState()
   return states;
 }
 
-// Substring must be entirely within the same text node
 nsIntRect
-HyperTextAccessible::GetBoundsForString(nsIFrame* aFrame, uint32_t aStartRenderedOffset,
-                                        uint32_t aEndRenderedOffset)
+HyperTextAccessible::GetBoundsInFrame(nsIFrame* aFrame,
+                                      uint32_t aStartRenderedOffset,
+                                      uint32_t aEndRenderedOffset)
 {
   nsPresContext* presContext = mDoc->PresContext();
   if (aFrame->GetType() != nsGkAtoms::textFrame) {
-    // XXX fallback for non-text frames, happens for bullets right now
-    // but in the future bullets will have proper text frames
     return aFrame->GetScreenRectInAppUnits().
       ToNearestPixels(presContext->AppUnitsPerDevPixel());
   }
 
+  // Substring must be entirely within the same text node.
   int32_t startContentOffset, endContentOffset;
   nsresult rv = RenderedToContentOffset(aFrame, aStartRenderedOffset, &startContentOffset);
   NS_ENSURE_SUCCESS(rv, nsIntRect());
@@ -189,7 +188,6 @@ HyperTextAccessible::GetBoundsForString(nsIFrame* aFrame, uint32_t aStartRendere
 nsIFrame*
 HyperTextAccessible::GetPosAndText(int32_t& aStartOffset, int32_t& aEndOffset,
                                    nsAString* aText, nsIFrame** aEndFrame,
-                                   nsIntRect* aBoundsRect,
                                    Accessible** aStartAcc,
                                    Accessible** aEndAcc)
 {
@@ -218,9 +216,6 @@ HyperTextAccessible::GetPosAndText(int32_t& aStartOffset, int32_t& aEndOffset,
   if (aEndFrame) {
     *aEndFrame = nullptr;
   }
-  if (aBoundsRect) {
-    aBoundsRect->SetEmpty();
-  }
   if (aStartAcc)
     *aStartAcc = nullptr;
   if (aEndAcc)
@@ -243,7 +238,6 @@ HyperTextAccessible::GetPosAndText(int32_t& aStartOffset, int32_t& aEndOffset,
     if (!frame) {
       continue;
     }
-    nsIFrame *primaryFrame = frame;
     endFrame = frame;
     if (!nsAccUtils::IsEmbeddedObject(childAcc)) {
       // We only need info up to rendered offset -- that is what we're
@@ -304,11 +298,6 @@ HyperTextAccessible::GetPosAndText(int32_t& aStartOffset, int32_t& aEndOffset,
                                    substringEndOffset - startOffset);
           }
         }
-        if (aBoundsRect) {    // Caller wants the bounds of the text
-          aBoundsRect->UnionRect(*aBoundsRect,
-                                 GetBoundsForString(primaryFrame, startOffset,
-                                                    substringEndOffset));
-        }
         if (!startFrame) {
           startFrame = frame;
           aStartOffset = startOffset;
@@ -346,11 +335,6 @@ HyperTextAccessible::GetPosAndText(int32_t& aStartOffset, int32_t& aEndOffset,
             } else {
               *aText += kEmbeddedObjectChar;
             }
-          }
-          if (aBoundsRect) {
-            nsIntRect frameScreenRect = frame->GetScreenRectInAppUnits().
-              ToNearestPixels(frame->PresContext()->AppUnitsPerDevPixel());
-            aBoundsRect->UnionRect(*aBoundsRect, frameScreenRect);
           }
         }
         if (!startFrame) {
@@ -595,7 +579,7 @@ HyperTextAccessible::HypertextOffsetsToDOMRange(int32_t aStartHTOffset,
   int32_t startOffset = aStartHTOffset, endOffset = aEndHTOffset;
   nsIFrame *startFrame = nullptr, *endFrame = nullptr;
 
-  startFrame = GetPosAndText(startOffset, endOffset, nullptr, &endFrame, nullptr,
+  startFrame = GetPosAndText(startOffset, endOffset, nullptr, &endFrame,
                              getter_AddRefs(startAcc), getter_AddRefs(endAcc));
   if (!startAcc || !endAcc)
     return NS_ERROR_FAILURE;
@@ -697,7 +681,7 @@ HyperTextAccessible::FindOffset(int32_t aOffset, nsDirection aDirection,
   nsRefPtr<Accessible> accAtOffset;
   nsIFrame* frameAtOffset =
     GetPosAndText(offsetInFrame, notUsedOffset, nullptr, nullptr,
-                  nullptr, getter_AddRefs(accAtOffset));
+                  getter_AddRefs(accAtOffset));
   if (!frameAtOffset) {
     if (aOffset == CharacterCount()) {
       // Asking for start of line, while on last character.
@@ -1217,6 +1201,44 @@ HyperTextAccessible::OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType)
   }
 
   return -1; // Not found
+}
+
+nsIntRect
+HyperTextAccessible::TextBounds(int32_t aStartOffset, int32_t aEndOffset,
+                                uint32_t aCoordType)
+{
+  int32_t startOffset = ConvertMagicOffset(aStartOffset);
+  int32_t endOffset = ConvertMagicOffset(aEndOffset);
+  NS_ASSERTION(startOffset < endOffset, "Wrong bad in!");
+
+  int32_t childIdx = GetChildIndexAtOffset(startOffset);
+  if (childIdx == -1)
+    return nsIntRect();
+
+  nsIntRect bounds;
+  int32_t prevOffset = GetChildOffset(childIdx);
+  int32_t offset1 = startOffset - prevOffset;
+
+  while (childIdx < ChildCount()) {
+    nsIFrame* frame = GetChildAt(childIdx)->GetFrame();
+
+    childIdx++;
+    int32_t nextOffset = GetChildOffset(childIdx);
+    if (nextOffset >= endOffset) {
+      bounds.UnionRect(bounds, GetBoundsInFrame(frame, offset1,
+                                                endOffset - prevOffset));
+      break;
+    }
+
+    bounds.UnionRect(bounds, GetBoundsInFrame(frame, offset1,
+                                              nextOffset - prevOffset));
+
+    prevOffset = nextOffset;
+    offset1 = 0;
+  }
+
+  nsAccUtils::ConvertScreenCoordsTo(&bounds.x, &bounds.y, aCoordType, this);
+  return bounds;
 }
 
 already_AddRefed<nsIEditor>

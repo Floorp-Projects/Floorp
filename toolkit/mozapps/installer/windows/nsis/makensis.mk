@@ -8,7 +8,7 @@ endif
 
 include $(MOZILLA_DIR)/toolkit/mozapps/installer/signing.mk
 
-ABS_CONFIG_DIR := $(shell pwd)/$(CONFIG_DIR)
+ABS_CONFIG_DIR := $(abspath $(CONFIG_DIR))
 
 SFX_MODULE ?= $(error SFX_MODULE is not defined)
 

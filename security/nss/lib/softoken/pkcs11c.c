@@ -274,7 +274,33 @@ NSC_DestroyObject(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject)
 /*
  ************** Crypto Functions:     Utilities ************************
  */
-
+/*
+ * Utility function for converting PSS/OAEP parameter types into
+ * HASH_HashTypes. Note: Only SHA family functions are defined in RFC 3447.
+ */
+static HASH_HashType
+GetHashTypeFromMechanism(CK_MECHANISM_TYPE mech)
+{
+    switch (mech) {
+        case CKM_SHA_1:
+        case CKG_MGF1_SHA1:
+            return HASH_AlgSHA1;
+        case CKM_SHA224:
+        case CKG_MGF1_SHA224:
+            return HASH_AlgSHA224;
+        case CKM_SHA256:
+        case CKG_MGF1_SHA256:
+            return HASH_AlgSHA256;
+        case CKM_SHA384:
+        case CKG_MGF1_SHA384:
+            return HASH_AlgSHA384;
+        case CKM_SHA512:
+        case CKG_MGF1_SHA512:
+            return HASH_AlgSHA512;
+        default:
+            return HASH_AlgNULL;
+    }
+}
 
 /* 
  * return a context based on the SFTKContext type.
@@ -458,21 +484,152 @@ sftk_aes_mode(CK_MECHANISM_TYPE mechanism)
 }
 
 static SECStatus
-sftk_EncryptOAEP(SFTKOAEPEncryptInfo *info, unsigned char *output,
-                 unsigned int *outputLen, unsigned int maxLen,
-                 unsigned char *input, unsigned int inputLen)
+sftk_RSAEncryptRaw(NSSLOWKEYPublicKey *key, unsigned char *output,
+                   unsigned int *outputLen, unsigned int maxLen,
+                   const unsigned char *input, unsigned int inputLen)
 {
-    return RSA_EncryptOAEP(info->params, info->key, output, outputLen,
-                           maxLen, input, inputLen);
+    SECStatus rv = SECFailure;
+
+    PORT_Assert(key->keyType == NSSLOWKEYRSAKey);
+    if (key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    rv = RSA_EncryptRaw(&key->u.rsa, output, outputLen, maxLen, input,
+                        inputLen);
+    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+        sftk_fatalError = PR_TRUE;
+    }
+
+    return rv;
 }
 
 static SECStatus
-sftk_DecryptOAEP(SFTKOAEPDecryptInfo *info, unsigned char *output,
-                 unsigned int *outputLen, unsigned int maxLen,
-                 unsigned char *input, unsigned int inputLen)
+sftk_RSADecryptRaw(NSSLOWKEYPrivateKey *key, unsigned char *output,
+                   unsigned int *outputLen, unsigned int maxLen,
+                   const unsigned char *input, unsigned int inputLen)
 {
-    return RSA_DecryptOAEP(info->params, info->key, output, outputLen,
-                           maxLen, input, inputLen);
+    SECStatus rv = SECFailure;
+
+    PORT_Assert(key->keyType == NSSLOWKEYRSAKey);
+    if (key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    rv = RSA_DecryptRaw(&key->u.rsa, output, outputLen, maxLen, input,
+                        inputLen);
+    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+        sftk_fatalError = PR_TRUE;
+    }
+
+    return rv;
+}
+
+static SECStatus
+sftk_RSAEncrypt(NSSLOWKEYPublicKey *key, unsigned char *output,
+                unsigned int *outputLen, unsigned int maxLen,
+                const unsigned char *input, unsigned int inputLen)
+{
+    SECStatus rv = SECFailure;
+
+    PORT_Assert(key->keyType == NSSLOWKEYRSAKey);
+    if (key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    rv = RSA_EncryptBlock(&key->u.rsa, output, outputLen, maxLen, input,
+                          inputLen);
+    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+        sftk_fatalError = PR_TRUE;
+    }
+
+    return rv;
+}
+
+static SECStatus
+sftk_RSADecrypt(NSSLOWKEYPrivateKey *key, unsigned char *output,
+                unsigned int *outputLen, unsigned int maxLen,
+                const unsigned char *input, unsigned int inputLen)
+{
+    SECStatus rv = SECFailure;
+
+    PORT_Assert(key->keyType == NSSLOWKEYRSAKey);
+    if (key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    rv = RSA_DecryptBlock(&key->u.rsa, output, outputLen, maxLen, input,
+                          inputLen);
+    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+        sftk_fatalError = PR_TRUE;
+    }
+
+    return rv;
+}
+
+static SECStatus
+sftk_RSAEncryptOAEP(SFTKOAEPEncryptInfo *info, unsigned char *output,
+                    unsigned int *outputLen, unsigned int maxLen,
+                    const unsigned char *input, unsigned int inputLen)
+{
+    HASH_HashType hashAlg;
+    HASH_HashType maskHashAlg;
+
+    PORT_Assert(info->key->keyType == NSSLOWKEYRSAKey);
+    if (info->key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    hashAlg = GetHashTypeFromMechanism(info->params->hashAlg);
+    maskHashAlg = GetHashTypeFromMechanism(info->params->mgf);
+
+    if (info->params->source != CKZ_DATA_SPECIFIED) {
+        PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+        return SECFailure;
+    }
+
+    return RSA_EncryptOAEP(&info->key->u.rsa, hashAlg, maskHashAlg,
+                           (const unsigned char*)info->params->pSourceData,
+                           info->params->ulSourceDataLen, NULL, 0,
+                           output, outputLen, maxLen, input, inputLen);
+}
+
+static SECStatus
+sftk_RSADecryptOAEP(SFTKOAEPDecryptInfo *info, unsigned char *output,
+                    unsigned int *outputLen, unsigned int maxLen,
+                    const unsigned char *input, unsigned int inputLen)
+{
+    SECStatus rv = SECFailure;
+    HASH_HashType hashAlg;
+    HASH_HashType maskHashAlg;
+
+    PORT_Assert(info->key->keyType == NSSLOWKEYRSAKey);
+    if (info->key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    hashAlg = GetHashTypeFromMechanism(info->params->hashAlg);
+    maskHashAlg = GetHashTypeFromMechanism(info->params->mgf);
+
+    if (info->params->source != CKZ_DATA_SPECIFIED) {
+        PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+        return SECFailure;
+    }
+
+    rv = RSA_DecryptOAEP(&info->key->u.rsa, hashAlg, maskHashAlg,
+                         (const unsigned char*)info->params->pSourceData,
+                         info->params->ulSourceDataLen,
+                         output, outputLen, maxLen, input, inputLen);
+     if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+        sftk_fatalError = PR_TRUE;
+    }
+    return rv;
 }
 
 /** NSC_CryptInit initializes an encryption/Decryption operation.
@@ -538,7 +695,7 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	    context->cipherInfo =  (void *)pubKey;
 	    context->update = (SFTKCipher) 
 		(pMechanism->mechanism == CKM_RSA_X_509
-					? RSA_EncryptRaw : RSA_EncryptBlock);
+					? sftk_RSAEncryptRaw : sftk_RSAEncrypt);
 	} else {
 	    NSSLOWKEYPrivateKey *privKey = sftk_GetPrivKey(key,CKK_RSA,&crv);
 	    if (privKey == NULL) {
@@ -549,7 +706,7 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	    context->cipherInfo =  (void *)privKey;
 	    context->update = (SFTKCipher) 
 		(pMechanism->mechanism == CKM_RSA_X_509
-					? RSA_DecryptRaw : RSA_DecryptBlock);
+					? sftk_RSADecryptRaw : sftk_RSADecrypt);
 	}
 	context->destroy = sftk_Null;
 	break;
@@ -579,7 +736,7 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	        crv = CKR_KEY_HANDLE_INVALID;
 	        break;
 	    }
-	    context->update = (SFTKCipher) sftk_EncryptOAEP;
+	    context->update = (SFTKCipher) sftk_RSAEncryptOAEP;
 	    context->maxLen = nsslowkey_PublicModulusLen(info->key);
 	    context->cipherInfo = info;
 	} else {
@@ -595,7 +752,7 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	        crv = CKR_KEY_HANDLE_INVALID;
 	        break;
 	    }
-	    context->update = (SFTKCipher) sftk_DecryptOAEP;
+	    context->update = (SFTKCipher) sftk_RSADecryptOAEP;
 	    context->maxLen = nsslowkey_PrivateModulusLen(info->key);
 	    context->cipherInfo = info;
 	}
@@ -1890,11 +2047,18 @@ sftk_InitCBCMac(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
  * encode RSA PKCS #1 Signature data before signing... 
  */
 static SECStatus
-sftk_HashSign(SFTKHashSignInfo *info,unsigned char *sig,unsigned int *sigLen,
-		unsigned int maxLen,unsigned char *hash, unsigned int hashLen)
+sftk_RSAHashSign(SFTKHashSignInfo *info, unsigned char *sig,
+                 unsigned int *sigLen, unsigned int maxLen,
+                 const unsigned char *hash, unsigned int hashLen)
 {
-    return RSA_HashSign(info->hashOid,info->key,sig,sigLen,maxLen,
-							hash,hashLen);
+    PORT_Assert(info->key->keyType == NSSLOWKEYRSAKey);
+    if (info->key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    return RSA_HashSign(info->hashOid, info->key, sig, sigLen, maxLen,
+                        hash, hashLen);
 }
 
 /* XXX Old template; want to expunge it eventually. */
@@ -1923,12 +2087,14 @@ static DERTemplate SGNDigestInfoTemplate[] = {
     { 0, }
 };
 
+/*
+ * encode RSA PKCS #1 Signature data before signing... 
+ */
 SECStatus
 RSA_HashSign(SECOidTag hashOid, NSSLOWKEYPrivateKey *key,
-		unsigned char *sig, unsigned int *sigLen, unsigned int maxLen,
-		unsigned char *hash, unsigned int hashLen)
+             unsigned char *sig, unsigned int *sigLen, unsigned int maxLen,
+             const unsigned char *hash, unsigned int hashLen)
 {
-    
     SECStatus rv = SECFailure;
     SECItem digder;
     PLArenaPool *arena = NULL;
@@ -1937,38 +2103,108 @@ RSA_HashSign(SECOidTag hashOid, NSSLOWKEYPrivateKey *key,
     digder.data = NULL;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( !arena ) { goto loser; }
-    
+    if (!arena) {
+        goto loser;
+    }
+
     /* Construct digest info */
     di = SGN_CreateDigestInfo(hashOid, hash, hashLen);
-    if (!di) { goto loser; }
+    if (!di) {
+        goto loser;
+    }
 
     /* Der encode the digest as a DigestInfo */
     rv = DER_Encode(arena, &digder, SGNDigestInfoTemplate, di);
     if (rv != SECSuccess) {
-	goto loser;
+        goto loser;
     }
 
     /*
     ** Encrypt signature after constructing appropriate PKCS#1 signature
     ** block
     */
-    rv = RSA_Sign(key,sig,sigLen,maxLen,digder.data,digder.len);
+    rv = RSA_Sign(&key->u.rsa, sig, sigLen, maxLen, digder.data,
+                  digder.len);
+    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+        sftk_fatalError = PR_TRUE;
+    }
 
   loser:
     SGN_DestroyDigestInfo(di);
     if (arena != NULL) {
-	PORT_FreeArena(arena, PR_FALSE);
+        PORT_FreeArena(arena, PR_FALSE);
     }
     return rv;
 }
 
 static SECStatus
-sftk_SignPSS(SFTKHashSignInfo *info,unsigned char *sig,unsigned int *sigLen,
-		unsigned int maxLen,unsigned char *hash, unsigned int hashLen)
+sftk_RSASign(NSSLOWKEYPrivateKey *key, unsigned char *output,
+             unsigned int *outputLen, unsigned int maxOutputLen,
+             const unsigned char *input, unsigned int inputLen)
 {
-    return RSA_SignPSS(info->params,info->key,sig,sigLen,maxLen,
-							hash,hashLen);
+    SECStatus rv = SECFailure;
+
+    PORT_Assert(key->keyType == NSSLOWKEYRSAKey);
+    if (key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    rv = RSA_Sign(&key->u.rsa, output, outputLen, maxOutputLen, input,
+                  inputLen);
+    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+        sftk_fatalError = PR_TRUE;
+    }
+    return rv;
+}
+
+static SECStatus
+sftk_RSASignRaw(NSSLOWKEYPrivateKey *key, unsigned char *output,
+                unsigned int *outputLen, unsigned int maxOutputLen,
+                const unsigned char *input, unsigned int inputLen)
+{
+    SECStatus rv = SECFailure;
+
+    PORT_Assert(key->keyType == NSSLOWKEYRSAKey);
+    if (key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    rv = RSA_SignRaw(&key->u.rsa, output, outputLen, maxOutputLen, input,
+                     inputLen);
+    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+        sftk_fatalError = PR_TRUE;
+    }
+    return rv;
+    
+}
+
+static SECStatus
+sftk_RSASignPSS(SFTKHashSignInfo *info, unsigned char *sig,
+                unsigned int *sigLen, unsigned int maxLen,
+                const unsigned char *hash, unsigned int hashLen)
+{
+    SECStatus rv = SECFailure;
+    HASH_HashType hashAlg;
+    HASH_HashType maskHashAlg;
+    CK_RSA_PKCS_PSS_PARAMS *params = (CK_RSA_PKCS_PSS_PARAMS *)info->params;
+
+    PORT_Assert(info->key->keyType == NSSLOWKEYRSAKey);
+    if (info->key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    hashAlg = GetHashTypeFromMechanism(params->hashAlg);
+    maskHashAlg = GetHashTypeFromMechanism(params->mgf);
+
+    rv = RSA_SignPSS(&info->key->u.rsa, hashAlg, maskHashAlg, NULL,
+                     params->sLen, sig, sigLen, maxLen, hash, hashLen);
+    if (rv != SECSuccess && PORT_GetError() == SEC_ERROR_LIBRARY_FAILURE) {
+        sftk_fatalError = PR_TRUE;
+    }
+    return rv;
 }
 
 static SECStatus
@@ -2099,7 +2335,7 @@ CK_RV NSC_SignInit(CK_SESSION_HANDLE hSession,
         context->multi = PR_TRUE; \
 	crv = sftk_doSub ## mmm (context); \
 	if (crv != CKR_OK) break; \
-	context->update = (SFTKCipher) sftk_HashSign; \
+	context->update = (SFTKCipher) sftk_RSAHashSign; \
 	info = PORT_New(SFTKHashSignInfo); \
 	if (info == NULL) { crv = CKR_HOST_MEMORY; break; } \
 	info->hashOid = SEC_OID_ ## mmm ; \
@@ -2115,10 +2351,10 @@ CK_RV NSC_SignInit(CK_SESSION_HANDLE hSession,
     INIT_RSA_SIGN_MECH(SHA512)
 
     case CKM_RSA_PKCS:
-	context->update = (SFTKCipher) RSA_Sign;
+	context->update = (SFTKCipher) sftk_RSASign;
 	goto finish_rsa;
     case CKM_RSA_X_509:
-	context->update = (SFTKCipher)  RSA_SignRaw;
+	context->update = (SFTKCipher) sftk_RSASignRaw;
 finish_rsa:
 	if (key_type != CKK_RSA) {
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
@@ -2167,7 +2403,7 @@ finish_rsa:
 	}
 	context->cipherInfo = info;
 	context->destroy = (SFTKDestroy) sftk_Space;
-	context->update = (SFTKCipher) sftk_SignPSS;
+	context->update = (SFTKCipher) sftk_RSASignPSS;
 	context->maxLen = nsslowkey_PrivateModulusLen(info->key);
 	break;	
 
@@ -2279,7 +2515,7 @@ finish_rsa:
 	context->hashUpdate    = sftk_HMACConstantTime_Update;
 	context->hashdestroy   = sftk_MACConstantTime_DestroyContext;
 	context->end           = sftk_MACConstantTime_EndHash;
-	context->update        = sftk_SignCopy;
+	context->update        = (SFTKCipher) sftk_SignCopy;
 	context->destroy       = sftk_Space;
 	context->maxLen        = 64;
 	context->multi         = PR_TRUE;
@@ -2308,7 +2544,7 @@ finish_rsa:
 	context->hashUpdate    = sftk_SSLv3MACConstantTime_Update;
 	context->hashdestroy   = sftk_MACConstantTime_DestroyContext;
 	context->end           = sftk_MACConstantTime_EndHash;
-	context->update        = sftk_SignCopy;
+	context->update        = (SFTKCipher) sftk_SignCopy;
 	context->destroy       = sftk_Space;
 	context->maxLen        = 64;
 	context->multi         = PR_TRUE;
@@ -2576,52 +2812,66 @@ CK_RV NSC_SignRecover(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData,
 
 /* Handle RSA Signature formatting */
 static SECStatus
-sftk_hashCheckSign(SFTKHashVerifyInfo *info, unsigned char *sig, 
-	unsigned int sigLen, unsigned char *digest, unsigned int digestLen)
+sftk_hashCheckSign(SFTKHashVerifyInfo *info, const unsigned char *sig, 
+                   unsigned int sigLen, const unsigned char *digest,
+                   unsigned int digestLen)
 {
-    return RSA_HashCheckSign(info->hashOid, info->key, sig, sigLen,
-						digest, digestLen);
+    PORT_Assert(info->key->keyType == NSSLOWKEYRSAKey);
+    if (info->key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    return RSA_HashCheckSign(info->hashOid, info->key, sig, sigLen, digest,
+                             digestLen);
 }
 
 SECStatus
 RSA_HashCheckSign(SECOidTag hashOid, NSSLOWKEYPublicKey *key,
-	unsigned char *sig, unsigned int sigLen,
-	unsigned char *digest, unsigned int digestLen)
+                  const unsigned char *sig, unsigned int sigLen,
+                  const unsigned char *hash, unsigned int hashLen)
 {
-
     SECItem it;
     SGNDigestInfo *di = NULL;
     SECStatus rv = SECSuccess;
-    
+
     it.data = NULL;
+    it.len = nsslowkey_PublicModulusLen(key);
+    if (!it.len) {
+        goto loser;
+    }
 
-    if (key == NULL) goto loser;
-
-    it.len = nsslowkey_PublicModulusLen(key); 
-    if (!it.len) goto loser;
-
-    it.data = (unsigned char *) PORT_Alloc(it.len);
-    if (it.data == NULL) goto loser;
+    it.data = (unsigned char *)PORT_Alloc(it.len);
+    if (it.data == NULL) {
+        goto loser;
+    }
 
     /* decrypt the block */
-    rv = RSA_CheckSignRecover(key, it.data, &it.len, it.len, sig, sigLen);
-    if (rv != SECSuccess) goto loser;
+    rv = RSA_CheckSignRecover(&key->u.rsa, it.data, &it.len, it.len, sig,
+                              sigLen);
+    if (rv != SECSuccess) {
+        goto loser;
+    }
 
     di = SGN_DecodeDigestInfo(&it);
-    if (di == NULL) goto loser;
-    if (di->digest.len != digestLen)  goto loser; 
+    if (di == NULL) {
+        goto loser;
+    }
+    if (di->digest.len != hashLen) {
+        goto loser; 
+    }
 
     /* make sure the tag is OK */
     if (SECOID_GetAlgorithmTag(&di->digestAlgorithm) != hashOid) {
-	goto loser;
+        goto loser;
     }
     /* make sure the "parameters" are not too bogus. */
     if (di->digestAlgorithm.parameters.len > 2) {
-	goto loser;
+        goto loser;
     }
     /* Now check the signature */
-    if (PORT_Memcmp(digest, di->digest.data, di->digest.len) == 0) {
-	goto done;
+    if (PORT_Memcmp(hash, di->digest.data, di->digest.len) == 0) {
+        goto done;
     }
 
   loser:
@@ -2629,18 +2879,64 @@ RSA_HashCheckSign(SECOidTag hashOid, NSSLOWKEYPublicKey *key,
     rv = SECFailure;
 
   done:
-    if (it.data != NULL) PORT_Free(it.data);
-    if (di != NULL) SGN_DestroyDigestInfo(di);
-    
+    if (it.data != NULL) {
+        PORT_Free(it.data);
+    }
+    if (di != NULL) {
+        SGN_DestroyDigestInfo(di);
+    }
+
     return rv;
 }
 
 static SECStatus
-sftk_CheckSignPSS(SFTKHashVerifyInfo *info, unsigned char *sig,
-	unsigned int sigLen, unsigned char *digest, unsigned int digestLen)
+sftk_RSACheckSign(NSSLOWKEYPublicKey *key, const unsigned char *sig,
+                  unsigned int sigLen, const unsigned char *digest,
+                  unsigned int digestLen)
 {
-    return RSA_CheckSignPSS(info->params, info->key, sig, sigLen,
-						digest, digestLen);
+    PORT_Assert(key->keyType == NSSLOWKEYRSAKey);
+    if (key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    return RSA_CheckSign(&key->u.rsa, sig, sigLen, digest, digestLen);
+}
+
+static SECStatus
+sftk_RSACheckSignRaw(NSSLOWKEYPublicKey *key, const unsigned char *sig,
+                     unsigned int sigLen, const unsigned char *digest,
+                     unsigned int digestLen)
+{
+    PORT_Assert(key->keyType == NSSLOWKEYRSAKey);
+    if (key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    return RSA_CheckSignRaw(&key->u.rsa, sig, sigLen, digest, digestLen);
+}
+
+static SECStatus
+sftk_RSACheckSignPSS(SFTKHashVerifyInfo *info, const unsigned char *sig,
+                     unsigned int sigLen, const unsigned char *digest,
+                     unsigned int digestLen)
+{
+    HASH_HashType hashAlg;
+    HASH_HashType maskHashAlg;
+    CK_RSA_PKCS_PSS_PARAMS *params = (CK_RSA_PKCS_PSS_PARAMS *)info->params;
+
+    PORT_Assert(info->key->keyType == NSSLOWKEYRSAKey);
+    if (info->key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    hashAlg = GetHashTypeFromMechanism(params->hashAlg);
+    maskHashAlg = GetHashTypeFromMechanism(params->mgf);
+
+    return RSA_CheckSignPSS(&info->key->u.rsa, hashAlg, maskHashAlg,
+                            params->sLen, sig, sigLen, digest, digestLen);
 }
 
 /* NSC_VerifyInit initializes a verification operation, 
@@ -2695,10 +2991,10 @@ CK_RV NSC_VerifyInit(CK_SESSION_HANDLE hSession,
     INIT_RSA_VFY_MECH(SHA512) 
 
     case CKM_RSA_PKCS:
-	context->verify = (SFTKVerify) RSA_CheckSign;
+	context->verify = (SFTKVerify) sftk_RSACheckSign;
 	goto finish_rsa;
     case CKM_RSA_X_509:
-	context->verify = (SFTKVerify) RSA_CheckSignRaw;
+	context->verify = (SFTKVerify) sftk_RSACheckSignRaw;
 finish_rsa:
 	if (key_type != CKK_RSA) {
 	    if (info) PORT_Free(info);
@@ -2744,7 +3040,7 @@ finish_rsa:
 	}
 	context->cipherInfo = info;
 	context->destroy = (SFTKDestroy) sftk_Space;
-	context->verify = (SFTKVerify) sftk_CheckSignPSS;
+	context->verify = (SFTKVerify) sftk_RSACheckSignPSS;
 	break;
     case CKM_DSA_SHA1:
         context->multi = PR_TRUE;
@@ -2924,6 +3220,35 @@ CK_RV NSC_VerifyFinal(CK_SESSION_HANDLE hSession,
 /*
  ************** Crypto Functions:     Verify  Recover ************************
  */
+static SECStatus
+sftk_RSACheckSignRecover(NSSLOWKEYPublicKey *key, unsigned char *data,
+                         unsigned int *dataLen, unsigned int maxDataLen,
+                         const unsigned char *sig, unsigned int sigLen)
+{
+    PORT_Assert(key->keyType == NSSLOWKEYRSAKey);
+    if (key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    return RSA_CheckSignRecover(&key->u.rsa, data, dataLen, maxDataLen,
+                                sig, sigLen);
+}
+
+static SECStatus
+sftk_RSACheckSignRecoverRaw(NSSLOWKEYPublicKey *key, unsigned char *data,
+                            unsigned int *dataLen, unsigned int maxDataLen,
+                            const unsigned char *sig, unsigned int sigLen)
+{
+    PORT_Assert(key->keyType == NSSLOWKEYRSAKey);
+    if (key->keyType != NSSLOWKEYRSAKey) {
+        PORT_SetError(SEC_ERROR_INVALID_KEY);
+        return SECFailure;
+    }
+
+    return RSA_CheckSignRecoverRaw(&key->u.rsa, data, dataLen, maxDataLen,
+                                   sig, sigLen);
+}
 
 /* NSC_VerifyRecoverInit initializes a signature verification operation, 
  * where the data is recovered from the signature. 
@@ -2966,7 +3291,7 @@ CK_RV NSC_VerifyRecoverInit(CK_SESSION_HANDLE hSession,
 	}
 	context->cipherInfo = pubKey;
 	context->update = (SFTKCipher) (pMechanism->mechanism == CKM_RSA_X_509
-			? RSA_CheckSignRecoverRaw : RSA_CheckSignRecover);
+			? sftk_RSACheckSignRecoverRaw : sftk_RSACheckSignRecover);
 	context->destroy = sftk_Null;
 	break;
     default:

@@ -7,9 +7,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "nsHtml5StreamParser.h"
-#include "nsICharsetConverterManager.h"
-#include "nsServiceManagerUtils.h"
-#include "nsEncoderDecoderUtils.h"
 #include "nsContentUtils.h"
 #include "nsHtml5Tokenizer.h"
 #include "nsIHttpChannel.h"
@@ -304,17 +301,7 @@ nsHtml5StreamParser::SetupDecodingAndWriteSniffingBufferAndCurrentSegment(const 
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
   nsresult rv = NS_OK;
-  nsCOMPtr<nsICharsetConverterManager> convManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = convManager->GetUnicodeDecoderRaw(mCharset.get(),
-                                         getter_AddRefs(mUnicodeDecoder));
-  if (rv == NS_ERROR_UCONV_NOCONV) {
-    mCharset.AssignLiteral("windows-1252"); // lower case is the raw form
-    mCharsetSource = kCharsetFromFallback;
-    rv = convManager->GetUnicodeDecoderRaw(mCharset.get(), getter_AddRefs(mUnicodeDecoder));
-    mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
+  mUnicodeDecoder = EncodingUtils::DecoderForEncoding(mCharset);
   if (mSniffingBuffer) {
     uint32_t writeCount;
     rv = WriteStreamBytes(mSniffingBuffer, mSniffingLength, &writeCount);
@@ -332,19 +319,15 @@ nsresult
 nsHtml5StreamParser::SetupDecodingFromBom(const char* aDecoderCharsetName)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsICharsetConverterManager> convManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = convManager->GetUnicodeDecoderRaw(aDecoderCharsetName, getter_AddRefs(mUnicodeDecoder));
-  NS_ENSURE_SUCCESS(rv, rv);
   mCharset.Assign(aDecoderCharsetName);
+  mUnicodeDecoder = EncodingUtils::DecoderForEncoding(mCharset);
   mCharsetSource = kCharsetFromByteOrderMark;
   mFeedChardet = false;
   mTreeBuilder->SetDocumentCharset(mCharset, mCharsetSource);
   mSniffingBuffer = nullptr;
   mMetaScanner = nullptr;
   mBomState = BOM_SNIFFING_OVER;
-  return rv;
+  return NS_OK;
 }
 
 void
@@ -987,16 +970,7 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   mFeedChardet = false;
 
   // Instantiate the converter here to avoid BOM sniffing.
-  nsCOMPtr<nsICharsetConverterManager> convManager =
-    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = convManager->GetUnicodeDecoderRaw(mCharset.get(),
-                                         getter_AddRefs(mUnicodeDecoder));
-  // if we failed to get a decoder, there will be fallback, so don't propagate
-  //  the error.
-  if (NS_FAILED(rv)) {
-    mCharsetSource = kCharsetFromFallback;
-  }
+  mUnicodeDecoder = EncodingUtils::DecoderForEncoding(mCharset);
   return NS_OK;
 }
 

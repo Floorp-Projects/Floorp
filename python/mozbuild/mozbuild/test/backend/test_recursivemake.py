@@ -301,18 +301,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'FAIL_ON_WARNINGS': [
                 'FAIL_ON_WARNINGS := 1',
             ],
-            'GTEST_CMMSRCS': [
-                'GTEST_CMMSRCS += test1.mm',
-                'GTEST_CMMSRCS += test2.mm',
-            ],
-            'GTEST_CPPSRCS': [
-                'GTEST_CPPSRCS += test1.cpp',
-                'GTEST_CPPSRCS += test2.cpp',
-            ],
-            'GTEST_CSRCS': [
-                'GTEST_CSRCS += test1.c',
-                'GTEST_CSRCS += test2.c',
-            ],
             'HOST_CPPSRCS': [
                 'HOST_CPPSRCS += bar.cpp',
                 'HOST_CPPSRCS += foo.cpp',

@@ -532,7 +532,7 @@ class Marionette(object):
             # flagging the error.
             sys.exit()
 
-    def wait_for_port(self, timeout=30):
+    def wait_for_port(self, timeout=60):
         starttime = datetime.datetime.now()
         while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
             try:

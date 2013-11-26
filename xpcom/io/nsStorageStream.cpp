@@ -342,7 +342,7 @@ protected:
 
 private:
     nsStorageStream* mStorageStream;
-    uint32_t         mReadCursor;    // Next memory location to read byte, or NULL
+    uint32_t         mReadCursor;    // Next memory location to read byte, or 0
     uint32_t         mSegmentEnd;    // One byte past end of current buffer segment
     uint32_t         mSegmentNum;    // Segment number containing read cursor
     uint32_t         mSegmentSize;   // All segments, except the last, are of this size

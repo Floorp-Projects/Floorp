@@ -64,6 +64,7 @@ FAIL_ON_WARNINGS = True
 LOCAL_INCLUDES += [
     '../base/src',
     '../events/src',
+    '../svg/content/src',
     '/layout/style',
 ]
 

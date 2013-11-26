@@ -7,6 +7,7 @@
 #ifndef js_RootingAPI_h
 #define js_RootingAPI_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/NullPtr.h"
@@ -437,10 +438,9 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T>
      *     for the lifetime of the handle, as its users may not expect its value
      *     to change underneath them.
      */
-    static Handle fromMarkedLocation(const T *p) {
-        Handle h;
-        h.ptr = p;
-        return h;
+    static MOZ_CONSTEXPR Handle fromMarkedLocation(const T *p) {
+        return Handle(p, DeliberatelyChoosingThisOverload,
+                      ImUsingThisOnlyInFromFromMarkedLocation);
     }
 
     /*
@@ -481,6 +481,10 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T>
 
   private:
     Handle() {}
+
+    enum Disambiguator { DeliberatelyChoosingThisOverload = 42 };
+    enum CallerIdentity { ImUsingThisOnlyInFromFromMarkedLocation = 17 };
+    MOZ_CONSTEXPR Handle(const T *p, Disambiguator, CallerIdentity) : ptr(p) {}
 
     const T *ptr;
 

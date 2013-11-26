@@ -12,7 +12,6 @@
 #include "nsDOMClassInfoID.h"
 #include "nsError.h"
 #include "nsICharsetDetector.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIClassInfo.h"
 #include "nsIConverterInputStream.h"
 #include "nsIDocument.h"

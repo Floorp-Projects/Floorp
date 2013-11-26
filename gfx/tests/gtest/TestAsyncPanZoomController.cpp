@@ -25,9 +25,9 @@ using ::testing::_;
 class MockContentController : public GeckoContentController {
 public:
   MOCK_METHOD1(RequestContentRepaint, void(const FrameMetrics&));
-  MOCK_METHOD1(HandleDoubleTap, void(const CSSIntPoint&));
-  MOCK_METHOD1(HandleSingleTap, void(const CSSIntPoint&));
-  MOCK_METHOD1(HandleLongTap, void(const CSSIntPoint&));
+  MOCK_METHOD2(HandleDoubleTap, void(const CSSIntPoint&, int32_t));
+  MOCK_METHOD2(HandleSingleTap, void(const CSSIntPoint&, int32_t));
+  MOCK_METHOD2(HandleLongTap, void(const CSSIntPoint&, int32_t));
   MOCK_METHOD3(SendAsyncScrollDOMEvent, void(bool aIsRoot, const CSSRect &aContentRect, const CSSSize &aScrollableSize));
   MOCK_METHOD2(PostDelayedTask, void(Task* aTask, int aDelayMs));
 };
@@ -86,7 +86,7 @@ void ApzcPan(AsyncPanZoomController* apzc, int& aTime, int aTouchStartY, int aTo
   MultiTouchInput mti;
   nsEventStatus status;
 
-  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, aTime);
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, aTime, 0);
   aTime += TIME_BETWEEN_TOUCH_EVENT;
   // Make sure the move is large enough to not be handled as a tap
   mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, aTouchStartY+OVERCOME_TOUCH_TOLERANCE), ScreenSize(0, 0), 0, 0));
@@ -94,20 +94,20 @@ void ApzcPan(AsyncPanZoomController* apzc, int& aTime, int aTouchStartY, int aTo
   EXPECT_EQ(status, nsEventStatus_eConsumeNoDefault);
   // APZC should be in TOUCHING state
 
-  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, aTime);
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, aTime, 0);
   aTime += TIME_BETWEEN_TOUCH_EVENT;
   mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, aTouchStartY), ScreenSize(0, 0), 0, 0));
   status = apzc->HandleInputEvent(mti);
   EXPECT_EQ(status, nsEventStatus_eConsumeNoDefault);
   // APZC should be in PANNING, otherwise status != ConsumeNoDefault
 
-  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, aTime);
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, aTime, 0);
   aTime += TIME_BETWEEN_TOUCH_EVENT;
   mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, aTouchEndY), ScreenSize(0, 0), 0, 0));
   status = apzc->HandleInputEvent(mti);
   EXPECT_EQ(status, nsEventStatus_eConsumeNoDefault);
 
-  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, aTime);
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, aTime, 0);
   aTime += TIME_BETWEEN_TOUCH_EVENT;
   mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, aTouchEndY), ScreenSize(0, 0), 0, 0));
   status = apzc->HandleInputEvent(mti);
@@ -119,19 +119,22 @@ ApzcPinch(AsyncPanZoomController* aApzc, int aFocusX, int aFocusY, float aScale)
                                             0,
                                             ScreenPoint(aFocusX, aFocusY),
                                             10.0,
-                                            10.0));
+                                            10.0,
+                                            0));
   aApzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
                                             0,
                                             ScreenPoint(aFocusX, aFocusY),
                                             10.0 * aScale,
-                                            10.0));
+                                            10.0,
+                                            0));
   aApzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_END,
                                             0,
                                             ScreenPoint(aFocusX, aFocusY),
                                             // note: negative values here tell APZC
                                             //       not to turn the pinch into a pan
                                             -1.0,
-                                            -1.0));
+                                            -1.0,
+                                            0));
 }
 
 TEST(AsyncPanZoomController, Constructor) {

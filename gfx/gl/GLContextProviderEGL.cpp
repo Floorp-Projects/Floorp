@@ -1126,6 +1126,7 @@ already_AddRefed<GLContext>
 GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 {
     if (!sEGLLibrary.EnsureInitialized()) {
+        MOZ_CRASH("Failed to load EGL library!\n");
         return nullptr;
     }
 
@@ -1133,14 +1134,14 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
 
     EGLConfig config;
     if (!CreateConfig(&config)) {
-        printf_stderr("Failed to create EGLConfig!\n");
+        MOZ_CRASH("Failed to create EGLConfig!\n");
         return nullptr;
     }
 
     EGLSurface surface = mozilla::gl::CreateSurfaceForWindow(aWidget, config);
 
     if (surface == EGL_NO_SURFACE) {
-        printf_stderr("Failed to create EGLSurface!\n");
+        MOZ_CRASH("Failed to create EGLSurface!\n");
         return nullptr;
     }
 
@@ -1151,7 +1152,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
                                       config, surface);
 
     if (!glContext) {
-        printf_stderr("Failed to create EGLContext!\n");
+        MOZ_CRASH("Failed to create EGLContext!\n");
         DestroySurface(surface);
         return nullptr;
     }

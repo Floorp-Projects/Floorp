@@ -274,6 +274,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(AbortPar)
     UNSAFE_OP(ArrayConcat)
     UNSAFE_OP(GetDOMProperty)
+    UNSAFE_OP(GetDOMMember)
     UNSAFE_OP(SetDOMProperty)
     UNSAFE_OP(NewStringObject)
     UNSAFE_OP(Random)
