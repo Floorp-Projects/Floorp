@@ -382,6 +382,8 @@ BluetoothHfpManager::Reset()
 #endif
   mCMEE = false;
   mCMER = false;
+  mConnectScoRequest = false;
+  mSlcConnected = false;
   mReceiveVgsFlag = false;
 
 #ifdef MOZ_B2G_RIL
@@ -414,7 +416,7 @@ BluetoothHfpManager::Init()
 
 #ifdef MOZ_B2G_RIL
   mListener = new BluetoothRilListener();
-  if (!mListener->StartListening()) {
+  if (!mListener->Listen(true)) {
     BT_WARNING("Failed to start listening RIL");
     return false;
   }
@@ -446,7 +448,7 @@ BluetoothHfpManager::Init()
 BluetoothHfpManager::~BluetoothHfpManager()
 {
 #ifdef MOZ_B2G_RIL
-  if (!mListener->StopListening()) {
+  if (!mListener->Listen(false)) {
     BT_WARNING("Failed to stop listening RIL");
   }
   mListener = nullptr;
@@ -585,15 +587,14 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
 
 #ifdef MOZ_B2G_RIL
 void
-BluetoothHfpManager::HandleVoiceConnectionChanged()
+BluetoothHfpManager::HandleVoiceConnectionChanged(uint32_t aClientId)
 {
   nsCOMPtr<nsIMobileConnectionProvider> connection =
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE_VOID(connection);
 
   nsCOMPtr<nsIDOMMozMobileConnectionInfo> voiceInfo;
-  // TODO: Bug 921991 - B2G BT: support multiple sim cards
-  connection->GetVoiceConnectionInfo(0, getter_AddRefs(voiceInfo));
+  connection->GetVoiceConnectionInfo(aClientId, getter_AddRefs(voiceInfo));
   NS_ENSURE_TRUE_VOID(voiceInfo);
 
   nsString type;
@@ -604,11 +605,12 @@ BluetoothHfpManager::HandleVoiceConnectionChanged()
   voiceInfo->GetRoaming(&roaming);
   UpdateCIND(CINDType::ROAM, roaming);
 
-  bool service = false;
   nsString regState;
   voiceInfo->GetState(regState);
-  if (regState.EqualsLiteral("registered")) {
-    service = true;
+  bool service = regState.EqualsLiteral("registered");
+  if (service != sCINDItems[CINDType::SERVICE].value) {
+    // Notify BluetoothRilListener of service change
+    mListener->ServiceChanged(aClientId, service);
   }
   UpdateCIND(CINDType::SERVICE, service);
 
@@ -629,8 +631,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged()
    * - manual: set mNetworkSelectionMode to 1 (manual)
    */
   nsString mode;
-  // TODO: Bug 921991 - B2G BT: support multiple sim cards
-  connection->GetNetworkSelectionMode(0, mode);
+  connection->GetNetworkSelectionMode(aClientId, mode);
   if (mode.EqualsLiteral("manual")) {
     mNetworkSelectionMode = 1;
   } else {
@@ -657,15 +658,14 @@ BluetoothHfpManager::HandleVoiceConnectionChanged()
 }
 
 void
-BluetoothHfpManager::HandleIccInfoChanged()
+BluetoothHfpManager::HandleIccInfoChanged(uint32_t aClientId)
 {
   nsCOMPtr<nsIIccProvider> icc =
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE_VOID(icc);
 
   nsCOMPtr<nsIDOMMozIccInfo> iccInfo;
-  // TODO: Bug 921991 - B2G BT: support multiple sim cards
-  icc->GetIccInfo(0, getter_AddRefs(iccInfo));
+  icc->GetIccInfo(aClientId, getter_AddRefs(iccInfo));
   NS_ENSURE_TRUE_VOID(iccInfo);
 
   nsCOMPtr<nsIDOMMozGsmIccInfo> gsmIccInfo = do_QueryInterface(iccInfo);
@@ -744,6 +744,14 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
     }
 
     mCMER = atCommandValues[3].EqualsLiteral("1");
+    mSlcConnected = mCMER;
+
+    // If we get internal request for SCO connection,
+    // setup SCO after Service Level Connection established.
+    if(mConnectScoRequest) {
+      mConnectScoRequest = false;
+      ConnectSco();
+    }
   } else if (msg.Find("AT+CMEE=") != -1) {
     ParseAtCommand(msg, 8, atCommandValues);
 
@@ -1426,6 +1434,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
           // Incoming call, no break
           sStopSendingRingFlag = true;
           ConnectSco();
+          // NO BREAK HERE. continue to next statement
         case nsITelephonyProvider::CALL_STATE_DIALING:
         case nsITelephonyProvider::CALL_STATE_ALERTING:
           // Outgoing call
@@ -1793,6 +1802,14 @@ BluetoothHfpManager::ConnectSco(BluetoothReplyRunnable* aRunnable)
     return false;
   }
 
+  // Make sure Service Level Connection established before we start to
+  // set up SCO (synchronous connection).
+  if (!mSlcConnected) {
+    mConnectScoRequest = true;
+    BT_WARNING("ConnectSco called before Service Level Connection established");
+    return false;
+  }
+
   mScoSocket->Disconnect();
 
   mScoRunnable = aRunnable;
@@ -1801,7 +1818,7 @@ BluetoothHfpManager::ConnectSco(BluetoothReplyRunnable* aRunnable)
   NS_ENSURE_TRUE(bs, false);
   nsresult rv = bs->GetScoSocket(mDeviceAddress, true, false, mScoSocket);
 
-  mScoSocketStatus = mSocket->GetConnectionStatus();
+  mScoSocketStatus = mScoSocket->GetConnectionStatus();
   return NS_SUCCEEDED(rv);
 }
 

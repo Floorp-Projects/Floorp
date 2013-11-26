@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <script type="text/javascript">
+function start() {
+  if (!mozPaymentProvider)
+    window.close();
+
+  // We don't have a way to mock these values yet. This check just makes sure the world
+  // doesn't crash if we ask for them.
+  var mcc = mozPaymentProvider.mcc;
+  var mnc = mozPaymentProvider.mnc;
+
+  // We use the jwt passed in here to test calling paymentFailed/Success
+  if (window.location.hash == "#pass")
+    mozPaymentProvider.paymentSuccess("PAID CORRECTLY");
+  else if (window.location.hash == "#fail")
+    mozPaymentProvider.paymentFailed("FAILED CORRECTLY");
+  else
+    mozPaymentProvider.paymentFailed("invalid hash " + window.location.hash);
+}
+
+document.addEventListener("DOMContentLoaded", start);
+    </script>
+  </head>
+</html>

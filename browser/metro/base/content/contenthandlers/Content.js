@@ -432,7 +432,7 @@ let Content = {
                     aRect.height,
                     presShellId.value,
                     viewId].join(",");
-    Services.obs.notifyObservers(null, "Metro:ZoomToRect", zoomData);
+    Services.obs.notifyObservers(null, "apzc-zoom-to-rect", zoomData);
   },
 
   _shouldZoomToElement: function(aElement) {

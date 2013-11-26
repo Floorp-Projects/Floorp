@@ -95,6 +95,11 @@ public class GeckoNetworkManager extends BroadcastReceiver {
         NETWORK_UNKNOWN
     }
 
+    private enum InfoType {
+        MCC,
+        MNC
+    }
+
     private Context mApplicationContext;
     private NetworkType  mNetworkType = NetworkType.NETWORK_NONE;
     private IntentFilter mNetworkFilter = new IntentFilter();
@@ -321,5 +326,33 @@ public class GeckoNetworkManager extends BroadcastReceiver {
             Log.e(LOGTAG, "Got an unexpected network type!");
             return false;
         }
+    }
+
+    private static int getNetworkOperator(InfoType type) {
+        TelephonyManager tel = (TelephonyManager)sInstance.mApplicationContext.getSystemService(Context.TELEPHONY_SERVICE);
+        if (tel == null) {
+            Log.e(LOGTAG, "Telephony service does not exist");
+            return -1;
+        }
+
+        String networkOperator = tel.getNetworkOperator();
+        if (networkOperator == null || networkOperator.length() <= 3) {
+            return -1;
+        }
+        if (type == InfoType.MNC) {
+            return Integer.parseInt(networkOperator.substring(3));
+        } else if (type == InfoType.MCC) {
+            return Integer.parseInt(networkOperator.substring(0, 3));
+        }
+
+        return -1;
+    }
+
+    public static int getMCC() {
+        return getNetworkOperator(InfoType.MCC);
+    }
+
+    public static int getMNC() {
+        return getNetworkOperator(InfoType.MNC);
     }
 }
