@@ -2669,14 +2669,16 @@ class IDLAttribute(IDLInterfaceMember):
                               [self.location])
         elif (((identifier == "Throws" or identifier == "GetterThrows") and
                (self.getExtendedAttribute("Pure") or
+                self.getExtendedAttribute("StoreInSlot") or
                 self.getExtendedAttribute("SameObject") or
                 self.getExtendedAttribute("Constant"))) or
               ((identifier == "Pure" or identifier == "SameObject" or
-                identifier == "Constant") and
+                identifier == "Constant" or identifier == "StoreInSlot") and
                (self.getExtendedAttribute("Throws") or
                 self.getExtendedAttribute("GetterThrows")))):
             raise WebIDLError("Throwing things can't be [Pure] or [Constant] "
-                              "or [SameObject]", [attr.location])
+                              "or [SameObject] or [StoreInSlot]",
+                              [attr.location])
         elif identifier == "LenientThis":
             if not attr.noArguments():
                 raise WebIDLError("[LenientThis] must take no arguments",
@@ -2745,6 +2747,7 @@ class IDLAttribute(IDLInterfaceMember):
               identifier == "SameObject" or
               identifier == "Constant" or
               identifier == "Func" or
+              identifier == "StoreInSlot" or
               identifier == "NewObject"):
             # Known attributes that we don't need to do anything with here
             pass
