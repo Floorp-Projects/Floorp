@@ -76,7 +76,9 @@ this.ThirdPartyCookieProbe.prototype = {
         return;
       }
       // Add host to this._thirdPartyCookies
-      let firstParty = normalizeHost(referrer);
+      // Note: nsCookieService passes "?" if the issuer is unknown.  Avoid
+      //       normalizing in this case since its not a valid URI.
+      let firstParty = (referrer === "?") ? referrer : normalizeHost(referrer);
       let thirdParty = normalizeHost(docURI.QueryInterface(Ci.nsIURI).host);
       let data = this._thirdPartyCookies.get(thirdParty);
       if (!data) {
