@@ -117,18 +117,6 @@ js_GetVariableBytecodeLength(jsbytecode *pc)
     }
 }
 
-static uint32_t
-NumBlockSlots(JSScript *script, jsbytecode *pc)
-{
-    JS_ASSERT(*pc == JSOP_ENTERBLOCK ||
-              *pc == JSOP_ENTERLET0 || *pc == JSOP_ENTERLET1 || *pc == JSOP_ENTERLET2);
-    JS_STATIC_ASSERT(JSOP_ENTERBLOCK_LENGTH == JSOP_ENTERLET0_LENGTH);
-    JS_STATIC_ASSERT(JSOP_ENTERBLOCK_LENGTH == JSOP_ENTERLET1_LENGTH);
-    JS_STATIC_ASSERT(JSOP_ENTERBLOCK_LENGTH == JSOP_ENTERLET2_LENGTH);
-
-    return script->getObject(GET_UINT32_INDEX(pc))->as<StaticBlockObject>().propertyCountForCompilation();
-}
-
 unsigned
 js::StackUses(JSScript *script, jsbytecode *pc)
 {
@@ -141,16 +129,8 @@ js::StackUses(JSScript *script, jsbytecode *pc)
     switch (op) {
       case JSOP_POPN:
         return GET_UINT16(pc);
-      case JSOP_LEAVEBLOCK:
-        return GET_UINT16(pc);
-      case JSOP_LEAVEBLOCKEXPR:
+      case JSOP_POPNV:
         return GET_UINT16(pc) + 1;
-      case JSOP_ENTERLET0:
-        return NumBlockSlots(script, pc);
-      case JSOP_ENTERLET1:
-        return NumBlockSlots(script, pc) + 1;
-      case JSOP_ENTERLET2:
-        return NumBlockSlots(script, pc) + 2;
       default:
         /* stack: fun, this, [argc arguments] */
         JS_ASSERT(op == JSOP_NEW || op == JSOP_CALL || op == JSOP_EVAL ||
@@ -164,15 +144,8 @@ js::StackDefs(JSScript *script, jsbytecode *pc)
 {
     JSOp op = (JSOp) *pc;
     const JSCodeSpec &cs = js_CodeSpec[op];
-    if (cs.ndefs >= 0)
-        return cs.ndefs;
-
-    uint32_t n = NumBlockSlots(script, pc);
-    if (op == JSOP_ENTERLET1)
-        return n + 1;
-    if (op == JSOP_ENTERLET2)
-        return n + 2;
-    return n;
+    JS_ASSERT (cs.ndefs >= 0);
+    return cs.ndefs;
 }
 
 static const char * const countBaseNames[] = {
