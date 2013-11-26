@@ -883,13 +883,13 @@ OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *m
 }
 
 bool
-EnterBlock(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block)
+PushBlockScope(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block)
 {
     return frame->pushBlock(cx, block);
 }
 
 bool
-LeaveBlock(JSContext *cx, BaselineFrame *frame)
+PopBlockScope(JSContext *cx, BaselineFrame *frame)
 {
     frame->popBlock(cx);
     return true;
