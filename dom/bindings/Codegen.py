@@ -6046,6 +6046,9 @@ class CGMemberJITInfo(CGThing):
             isInSlot = self.member.getExtendedAttribute("StoreInSlot")
             if isInSlot:
                 slotIndex = INSTANCE_RESERVED_SLOTS + self.member.slotIndex;
+                if slotIndex >= 16 : # JS engine currently allows 16 fixed slots
+                    raise TypeError("Make sure we can actually have this many "
+                                    "fixed slots, please!")
             else:
                 slotIndex = 0
 

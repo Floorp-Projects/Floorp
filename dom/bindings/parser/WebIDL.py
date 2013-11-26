@@ -493,6 +493,9 @@ class IDLInterface(IDLObjectWithScope):
         self.interfacesImplementingSelf = set()
         self._hasChildInterfaces = False
         self._isOnGlobalProtoChain = False
+        # Tracking of the number of reserved slots we need for our
+        # members and those of ancestor interfaces.
+        self.totalMembersInSlots = 0
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
 
@@ -555,6 +558,8 @@ class IDLInterface(IDLObjectWithScope):
             self.parent.finish(scope)
 
             self.parent._hasChildInterfaces = True
+
+            self.totalMembersInSlots = self.parent.totalMembersInSlots
 
             # Interfaces with [Global] must not have anything inherit from them
             if self.parent.getExtendedAttribute("Global"):
@@ -650,6 +655,13 @@ class IDLInterface(IDLObjectWithScope):
             if (member.isAttr() and member.isUnforgeable() and
                 not hasattr(member, "originatingInterface")):
                 member.originatingInterface = self
+
+        # Compute slot indices for our members before we pull in
+        # unforgeable members from our parent.
+        for member in self.members:
+            if member.isAttr() and member.getExtendedAttribute("StoreInSlot"):
+                member.slotIndex = self.totalMembersInSlots
+                self.totalMembersInSlots += 1
 
         if self.parent:
             # Make sure we don't shadow any of the [Unforgeable] attributes on
