@@ -4583,9 +4583,13 @@ def needCx(returnType, arguments, extendedAttributes, considerTypes):
             'implicitJSContext' in extendedAttributes)
 
 def needScopeObject(returnType, arguments, extendedAttributes,
-                    isWrapperCached, considerTypes):
+                    isWrapperCached, considerTypes, isMember):
+    """
+    isMember should be true if we're dealing with an attribute
+    annotated as [StoreInSlot].
+    """
     return (considerTypes and not isWrapperCached and
-            (typeNeedsScopeObject(returnType, True) or
+            ((not isMember and typeNeedsScopeObject(returnType, True)) or
              any(typeNeedsScopeObject(a.type) for a in arguments)))
 
 class CGCallGenerator(CGThing):
@@ -4886,7 +4890,8 @@ if (global.Failed()) {
             needsUnwrappedVar = True
             argsPost.append("js::GetObjectCompartment(unwrappedObj.empty() ? obj : unwrappedObj.ref())")
         elif needScopeObject(returnType, arguments, self.extendedAttributes,
-                             descriptor.wrapperCache, True):
+                             descriptor.wrapperCache, True,
+                             idlNode.getExtendedAttribute("StoreInSlot")):
             needsUnwrap = True
             needsUnwrappedVar = True
             argsPre.append("unwrappedObj.empty() ? obj : unwrappedObj.ref()")
@@ -9448,8 +9453,9 @@ class CGNativeMember(ClassMethod):
                   self.passJSBitsAsNeeded):
             args.insert(0, Argument("JSContext*", "cx"))
             if needScopeObject(returnType, argList, self.extendedAttrs,
-                               self.descriptorProvider,
-                               self.passJSBitsAsNeeded):
+                               self.descriptorProvider.wrapperCache,
+                               self.passJSBitsAsNeeded,
+                               self.member.getExtendedAttribute("StoreInSlot")):
                 args.insert(1, Argument("JS::Handle<JSObject*>", "obj"))
         # And if we're static, a global
         if self.member.isStatic():
