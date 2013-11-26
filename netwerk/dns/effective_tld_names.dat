@@ -3595,8 +3595,13 @@ gov.mr
 // ms : http://en.wikipedia.org/wiki/.ms
 ms
 
-// mt : https://www.nic.org.mt/dotmt/
-*.mt
+// mt : https://www.nic.org.mt/go/policy
+// Submitted by registry <help@nic.org.mt> 2013-11-19
+mt
+com.mt
+edu.mt
+net.mt
+org.mt
 
 // mu : http://en.wikipedia.org/wiki/.mu
 mu
