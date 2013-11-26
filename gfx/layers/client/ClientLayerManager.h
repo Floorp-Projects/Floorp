@@ -34,7 +34,8 @@ class CompositorChild;
 class ImageLayer;
 class PLayerChild;
 
-class ClientLayerManager : public LayerManager
+class ClientLayerManager : public LayerManager,
+                           public ShadowLayerForwarder
 {
   typedef nsTArray<nsRefPtr<Layer> > LayerRefArray;
 
@@ -44,7 +45,7 @@ public:
 
   virtual ShadowLayerForwarder* AsShadowForwarder()
   {
-    return mForwarder;
+    return this;
   }
 
   virtual int32_t GetMaxTextureSize() const;
@@ -74,7 +75,7 @@ public:
 
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() MOZ_OVERRIDE
   {
-    return mForwarder->GetTextureFactoryIdentifier();
+    return mTextureFactoryIdentifier;
   }
 
   virtual void FlushRendering() MOZ_OVERRIDE;
@@ -84,7 +85,7 @@ public:
 
   ShadowableLayer* Hold(Layer* aLayer);
 
-  bool HasShadowManager() const { return mForwarder->HasShadowManager(); }
+  bool HasShadowManager() const { return ShadowLayerForwarder::HasShadowManager(); }
 
   virtual bool IsCompositingCheap();
   virtual bool HasShadowManagerInternal() const { return HasShadowManager(); }
@@ -205,8 +206,6 @@ private:
   bool mTransactionIncomplete;
   bool mCompositorMightResample;
   bool mNeedsComposite;
-
-  RefPtr<ShadowLayerForwarder> mForwarder;
 };
 
 class ClientLayer : public ShadowableLayer
@@ -256,12 +255,12 @@ CreateShadowFor(ClientLayer* aLayer,
                 ClientLayerManager* aMgr,
                 CreatedMethod aMethod)
 {
-  PLayerChild* shadow = aMgr->AsShadowForwarder()->ConstructShadowFor(aLayer);
+  PLayerChild* shadow = aMgr->ConstructShadowFor(aLayer);
   // XXX error handling
   NS_ABORT_IF_FALSE(shadow, "failed to create shadow");
 
   aLayer->SetShadow(shadow);
-  (aMgr->AsShadowForwarder()->*aMethod)(aLayer);
+  (aMgr->*aMethod)(aLayer);
   aMgr->Hold(aLayer->AsLayer());
 }
 

@@ -143,7 +143,7 @@ ClientImageLayer::RenderLayer()
       flags |= TEXTURE_DISALLOW_BIGIMAGE;
     }
     mImageClient = ImageClient::CreateImageClient(type,
-                                                  ClientManager()->AsShadowForwarder(),
+                                                  ClientManager(),
                                                   flags);
     if (type == BUFFER_BRIDGE) {
       static_cast<ImageClientBridge*>(mImageClient.get())->SetLayer(this);
@@ -154,7 +154,7 @@ ClientImageLayer::RenderLayer()
     }
     if (HasShadow() && !mContainer->IsAsync()) {
       mImageClient->Connect();
-      ClientManager()->AsShadowForwarder()->Attach(mImageClient, this);
+      ClientManager()->Attach(mImageClient, this);
     }
     if (!mImageClient->UpdateImage(mContainer, GetContentFlags())) {
       return;
