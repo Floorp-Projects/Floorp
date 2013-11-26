@@ -6322,7 +6322,7 @@ lib.vt.us
 lib.va.us
 lib.wa.us
 lib.wi.us
-lib.wv.us
+// lib.wv.us  Bug 941670 - Removed at request of Larry W Arnold <arnold@wvlc.lib.wv.us>
 lib.wy.us
 
 // k12.ma.us contains school districts in Massachusetts. The 4LDs are
