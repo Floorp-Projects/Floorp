@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "LayerManagerOGLProgram.h"
+#include "OGLShaderProgram.h"
 #include <stdint.h>                     // for uint32_t
 #include "gfxMatrix.h"                  // for gfxMatrix
 #include "gfxPoint.h"                   // for gfxIntSize, gfxPoint, etc
@@ -12,7 +12,7 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsString.h"                   // for nsAutoCString
 #include "prenv.h"                      // for PR_GetEnv
-#include "LayerManagerOGLShaders.h"
+#include "OGLShaders.h"
 #include "Layers.h"
 #include "GLContext.h"
 
