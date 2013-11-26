@@ -6,7 +6,7 @@
 
 LIBRARY_NAME = 'gfxtest'
 
-GTEST_SOURCES += [
+SOURCES += [
     'gfxSurfaceRefCountTest.cpp',
     'gfxWordCacheTest.cpp',
     'TestAsyncPanZoomController.cpp',
@@ -25,13 +25,13 @@ GTEST_SOURCES += [
 # Because of gkmedia on windows we wont find these
 # symbols in xul.dll.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
-    GTEST_SOURCES += [ '%s/gfx/2d/unittest/%s' % (TOPSRCDIR, p) for p in [
+    SOURCES += [ '%s/gfx/2d/unittest/%s' % (TOPSRCDIR, p) for p in [
         'TestBase.cpp',
         'TestBugs.cpp',
         'TestPoint.cpp',
         'TestScaling.cpp',
     ]]
-    GTEST_SOURCES += [
+    SOURCES += [
         'TestMoz2D.cpp',
         'TestRect.cpp',
     ]
