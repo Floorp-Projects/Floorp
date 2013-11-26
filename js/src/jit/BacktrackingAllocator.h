@@ -108,7 +108,8 @@ class BacktrackingVirtualRegister : public VirtualRegister
 // where to split.
 typedef js::Vector<CodePosition, 4, SystemAllocPolicy> SplitPositionVector;
 
-class BacktrackingAllocator : private LiveRangeAllocator<BacktrackingVirtualRegister>
+class BacktrackingAllocator
+  : private LiveRangeAllocator<BacktrackingVirtualRegister, /* forLSRA = */ false>
 {
     // Priority queue element: either an interval or group of intervals and the
     // associated priority.
@@ -177,7 +178,7 @@ class BacktrackingAllocator : private LiveRangeAllocator<BacktrackingVirtualRegi
 
   public:
     BacktrackingAllocator(MIRGenerator *mir, LIRGenerator *lir, LIRGraph &graph)
-      : LiveRangeAllocator<BacktrackingVirtualRegister>(mir, lir, graph, /* forLSRA = */ false)
+      : LiveRangeAllocator<BacktrackingVirtualRegister, /* forLSRA = */ false>(mir, lir, graph)
     { }
 
     bool go();

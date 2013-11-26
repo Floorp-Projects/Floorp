@@ -553,7 +553,12 @@ IsTraceable(VirtualRegister *reg)
 typedef InlineList<LiveInterval>::iterator IntervalIterator;
 typedef InlineList<LiveInterval>::reverse_iterator IntervalReverseIterator;
 
-template <typename VREG>
+// The forLSRA parameter indicates whether the underlying allocator is LSRA.
+// This changes the generated live ranges in various ways: inserting additional
+// fixed uses of registers, and shifting the boundaries of live ranges by small
+// amounts. This exists because different allocators handle live ranges
+// differently; ideally, they would all treat live ranges in the same way.
+template <typename VREG, bool forLSRA>
 class LiveRangeAllocator : protected RegisterAllocator
 {
   protected:
@@ -566,21 +571,13 @@ class LiveRangeAllocator : protected RegisterAllocator
     // whether an interval intersects with a fixed register.
     LiveInterval *fixedIntervalsUnion;
 
-    // Whether the underlying allocator is LSRA. This changes the generated
-    // live ranges in various ways: inserting additional fixed uses of
-    // registers, and shifting the boundaries of live ranges by small amounts.
-    // This exists because different allocators handle live ranges differently;
-    // ideally, they would all treat live ranges in the same way.
-    bool forLSRA;
-
     // Allocation state
     StackSlotAllocator stackSlotAllocator;
 
-    LiveRangeAllocator(MIRGenerator *mir, LIRGenerator *lir, LIRGraph &graph, bool forLSRA)
+    LiveRangeAllocator(MIRGenerator *mir, LIRGenerator *lir, LIRGraph &graph)
       : RegisterAllocator(mir, lir, graph),
         liveIn(nullptr),
-        fixedIntervalsUnion(nullptr),
-        forLSRA(forLSRA)
+        fixedIntervalsUnion(nullptr)
     {
     }
 
