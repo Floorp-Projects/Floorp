@@ -83,14 +83,14 @@
         "remote-tsvgx": {
             "tests": ["tsvgx"],
             "talos_options": [
-                "--noChrome"
+                "--noChrome",
+                "--tppagecycles", "10"
             ]
         },
         "remote-tcanvasmark": {
             "tests": ["tcanvasmark"],
             "talos_options": [
-                "--noChrome",
-                "--tppagecycles", "10"
+                "--noChrome"
             ]
         },
         "remote-trobopan": {
