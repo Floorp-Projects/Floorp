@@ -550,6 +550,11 @@ public:
     return mBaselineOffsetFromCrossStart;
   }
 
+  // Runs the "resolve the flexible lengths" algorithm, distributing
+  // |aFlexContainerMainSize| among the |aItems| and freezing them.
+  void ResolveFlexibleLengths(const FlexboxAxisTracker& aAxisTracker,
+                              nscoord aFlexContainerMainSize);
+
   void PositionItemsInMainAxis(uint8_t aJustifyContent,
                                nscoord aContentBoxMainSize,
                                const FlexboxAxisTracker& aAxisTracker);
@@ -1400,13 +1405,12 @@ ShouldUseFlexGrow(nscoord aTotalFreeSpace,
 // margin-box sizes, but we can have fewer values in play & a simpler algorithm
 // if we subtract margin/border/padding up front.)
 void
-nsFlexContainerFrame::ResolveFlexibleLengths(
+FlexLine::ResolveFlexibleLengths(
   const FlexboxAxisTracker& aAxisTracker,
-  nscoord aFlexContainerMainSize,
-  nsTArray<FlexItem>& aItems)
+  nscoord aFlexContainerMainSize)
 {
   PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG, ("ResolveFlexibleLengths\n"));
-  if (aItems.IsEmpty()) {
+  if (mItems.IsEmpty()) {
     return;
   }
 
@@ -1414,14 +1418,14 @@ nsFlexContainerFrame::ResolveFlexibleLengths(
   // just be dealing with the space available for our flex items' content
   // boxes.
   nscoord spaceAvailableForFlexItemsContentBoxes = aFlexContainerMainSize;
-  for (uint32_t i = 0; i < aItems.Length(); i++) {
+  for (uint32_t i = 0; i < mItems.Length(); i++) {
     spaceAvailableForFlexItemsContentBoxes -=
-      aItems[i].GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
+      mItems[i].GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
   }
 
   // Determine whether we're going to be growing or shrinking items.
   bool havePositiveFreeSpace =
-    ShouldUseFlexGrow(spaceAvailableForFlexItemsContentBoxes, aItems);
+    ShouldUseFlexGrow(spaceAvailableForFlexItemsContentBoxes, mItems);
 
   // NOTE: I claim that this chunk of the algorithm (the looping part) needs to
   // run the loop at MOST aItems.Length() times.  This claim should hold up
@@ -1430,14 +1434,14 @@ nsFlexContainerFrame::ResolveFlexibleLengths(
   // in most cases, we'll break out of this loop long before we hit that many
   // iterations.
   for (uint32_t iterationCounter = 0;
-       iterationCounter < aItems.Length(); iterationCounter++) {
+       iterationCounter < mItems.Length(); iterationCounter++) {
     // Set every not-yet-frozen item's used main size to its
     // flex base size, and subtract all the used main sizes from our
     // total amount of space to determine the 'available free space'
     // (positive or negative) to be distributed among our flexible items.
     nscoord availableFreeSpace = spaceAvailableForFlexItemsContentBoxes;
-    for (uint32_t i = 0; i < aItems.Length(); i++) {
-      FlexItem& item = aItems[i];
+    for (uint32_t i = 0; i < mItems.Length(); i++) {
+      FlexItem& item = mItems[i];
       if (!item.IsFrozen()) {
         item.SetMainSize(item.GetFlexBaseSize());
       }
@@ -1469,8 +1473,8 @@ nsFlexContainerFrame::ResolveFlexibleLengths(
       float runningFlexWeightSum = 0.0f;
       float largestFlexWeight = 0.0f;
       uint32_t numItemsWithLargestFlexWeight = 0;
-      for (uint32_t i = 0; i < aItems.Length(); i++) {
-        FlexItem& item = aItems[i];
+      for (uint32_t i = 0; i < mItems.Length(); i++) {
+        FlexItem& item = mItems[i];
         float curFlexWeight = item.GetFlexWeightToUse(havePositiveFreeSpace);
         MOZ_ASSERT(curFlexWeight >= 0.0f, "weights are non-negative");
 
@@ -1499,8 +1503,8 @@ nsFlexContainerFrame::ResolveFlexibleLengths(
       if (runningFlexWeightSum != 0.0f) { // no distribution if no flexibility
         PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
                (" Distributing available space:"));
-        for (uint32_t i = aItems.Length() - 1; i < aItems.Length(); --i) {
-          FlexItem& item = aItems[i];
+        for (uint32_t i = mItems.Length() - 1; i < mItems.Length(); --i) {
+          FlexItem& item = mItems[i];
 
           if (!item.IsFrozen()) {
             // To avoid rounding issues, we compute the change in size for this
@@ -1549,8 +1553,8 @@ nsFlexContainerFrame::ResolveFlexibleLengths(
     PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" Checking for violations:"));
 
-    for (uint32_t i = 0; i < aItems.Length(); i++) {
-      FlexItem& item = aItems[i];
+    for (uint32_t i = 0; i < mItems.Length(); i++) {
+      FlexItem& item = mItems[i];
       if (!item.IsFrozen()) {
         if (item.GetMainSize() < item.GetMainMinSize()) {
           // min violation
@@ -1566,7 +1570,7 @@ nsFlexContainerFrame::ResolveFlexibleLengths(
       }
     }
 
-    FreezeOrRestoreEachFlexibleSize(totalViolation, aItems);
+    FreezeOrRestoreEachFlexibleSize(totalViolation, mItems);
 
     PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" Total violation: %d\n", totalViolation));
@@ -1578,8 +1582,8 @@ nsFlexContainerFrame::ResolveFlexibleLengths(
 
   // Post-condition: all lengths should've been frozen.
 #ifdef DEBUG
-  for (uint32_t i = 0; i < aItems.Length(); ++i) {
-    MOZ_ASSERT(aItems[i].IsFrozen(),
+  for (uint32_t i = 0; i < mItems.Length(); ++i) {
+    MOZ_ASSERT(mItems[i].IsFrozen(),
                "All flexible lengths should've been resolved");
   }
 #endif // DEBUG
@@ -2377,7 +2381,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     ComputeFlexContainerMainSize(aReflowState, axisTracker, line,
                                  availableHeightForContent, aStatus);
 
-  ResolveFlexibleLengths(axisTracker, contentBoxMainSize, line.mItems);
+  line.ResolveFlexibleLengths(axisTracker, contentBoxMainSize);
 
   // Cross Size Determination - Flexbox spec section 9.4
   // ===================================================
