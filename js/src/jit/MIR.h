@@ -8325,7 +8325,8 @@ class MGetFrameArgument
 
 // This MIR instruction is used to set an argument value in the frame.
 class MSetFrameArgument
-  : public MUnaryInstruction
+  : public MUnaryInstruction,
+    public NoFloatPolicy<0>
 {
     uint32_t argno_;
 
@@ -8356,6 +8357,9 @@ class MSetFrameArgument
     }
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::FrameArgument);
+    }
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 
