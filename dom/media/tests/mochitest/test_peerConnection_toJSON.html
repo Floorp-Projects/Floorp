@@ -6,41 +6,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=872377
 <head>
   <meta charset="utf-8">
   <title>Test for Bug 872377 and Bug 928304</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript">
-
-  /** Test for Bug 872377 **/
-
-  var rtcSession = new mozRTCSessionDescription({ sdp: "Picklechips!",
-                                                  type: "offer" });
-  var jsonCopy = JSON.parse(JSON.stringify(rtcSession));
-  for (key in rtcSession) {
-    if (typeof(rtcSession[key]) == "function") continue;
-    is(rtcSession[key], jsonCopy[key], "key " + key + " should match.");
-  }
-
-  /** Test for Bug 928304 **/
-
-  var rtcIceCandidate = new mozRTCIceCandidate({ candidate: "dummy",
-                                                 sdpMid: "test",
-                                                 sdpMLineIndex: 3 });
-  jsonCopy = JSON.parse(JSON.stringify(rtcIceCandidate));
-  for (key in rtcIceCandidate) {
-    if (typeof(rtcIceCandidate[key]) == "function") continue;
-    is(rtcIceCandidate[key], jsonCopy[key], "key " + key + " should match.");
-  }
-
-  </script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=872377">Mozilla Bug 872377</a>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=928304">Mozilla Bug 928304</a>
-<p id="display"></p>
-<div id="content" style="display: none">
-
-</div>
 <pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "928304",
+    title: "test toJSON() on mozRTCSessionDescription and mozRTCIceCandidate"
+  });
+
+  runTest(function () {
+    /** Test for Bug 872377 **/
+
+    var rtcSession = new mozRTCSessionDescription({ sdp: "Picklechips!",
+                                                    type: "offer" });
+    var jsonCopy = JSON.parse(JSON.stringify(rtcSession));
+    for (key in rtcSession) {
+      if (typeof(rtcSession[key]) == "function") continue;
+      is(rtcSession[key], jsonCopy[key], "key " + key + " should match.");
+    }
+  
+    /** Test for Bug 928304 **/
+  
+    var rtcIceCandidate = new mozRTCIceCandidate({ candidate: "dummy",
+                                                   sdpMid: "test",
+                                                   sdpMLineIndex: 3 });
+    jsonCopy = JSON.parse(JSON.stringify(rtcIceCandidate));
+    for (key in rtcIceCandidate) {
+      if (typeof(rtcIceCandidate[key]) == "function") continue;
+      is(rtcIceCandidate[key], jsonCopy[key], "key " + key + " should match.");
+    }
+    SimpleTest.finish();
+  });
+</script>
 </pre>
 </body>
 </html>

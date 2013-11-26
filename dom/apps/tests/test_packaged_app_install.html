@@ -37,7 +37,7 @@ function checkAppInstallError(aMiniManifestURL, aExpectedError) {
       ok(true, "Got expected " + aExpectedError);
       PackagedTestHelper.next();
     } else {
-      ok(false, "Got unexpected " + aError);
+      ok(false, "Got unexpected " + error);
       PackagedTestHelper.finish();
     }
   };
