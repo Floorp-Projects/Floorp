@@ -275,49 +275,52 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
  *              "we already set [[PrimitiveThis]] for this String object");
  *
  * MOZ_ASSERT has no effect in non-debug builds.  It is designed to catch bugs
- * *only* during debugging, not "in the field".
+ * *only* during debugging, not "in the field". If you want the latter, use
+ * MOZ_RELEASE_ASSERT, which applies to non-debug builds as well.
  */
+
+/* First the single-argument form. */
+#define MOZ_ASSERT_HELPER1(expr) \
+   do { \
+     if (MOZ_UNLIKELY(!(expr))) { \
+       MOZ_ReportAssertionFailure(#expr, __FILE__, __LINE__); \
+       MOZ_REALLY_CRASH(); \
+     } \
+   } while (0)
+/* Now the two-argument form. */
+#define MOZ_ASSERT_HELPER2(expr, explain) \
+   do { \
+     if (MOZ_UNLIKELY(!(expr))) { \
+       MOZ_ReportAssertionFailure(#expr " (" explain ")", __FILE__, __LINE__); \
+       MOZ_REALLY_CRASH(); \
+     } \
+   } while (0)
+/* And now, helper macrology up the wazoo. */
+/*
+ * Count the number of arguments passed to MOZ_ASSERT, very carefully
+ * tiptoeing around an MSVC bug where it improperly expands __VA_ARGS__ as a
+ * single token in argument lists.  See these URLs for details:
+ *
+ *   http://connect.microsoft.com/VisualStudio/feedback/details/380090/variadic-macro-replacement
+ *   http://cplusplus.co.il/2010/07/17/variadic-macro-to-count-number-of-arguments/#comment-644
+ */
+#define MOZ_COUNT_ASSERT_ARGS_IMPL2(_1, _2, count, ...) \
+   count
+#define MOZ_COUNT_ASSERT_ARGS_IMPL(args) \
+       MOZ_COUNT_ASSERT_ARGS_IMPL2 args
+#define MOZ_COUNT_ASSERT_ARGS(...) \
+   MOZ_COUNT_ASSERT_ARGS_IMPL((__VA_ARGS__, 2, 1, 0))
+/* Pick the right helper macro to invoke. */
+#define MOZ_ASSERT_CHOOSE_HELPER2(count) MOZ_ASSERT_HELPER##count
+#define MOZ_ASSERT_CHOOSE_HELPER1(count) MOZ_ASSERT_CHOOSE_HELPER2(count)
+#define MOZ_ASSERT_CHOOSE_HELPER(count) MOZ_ASSERT_CHOOSE_HELPER1(count)
+/* The actual macros. */
+#define MOZ_ASSERT_GLUE(x, y) x y
+#define MOZ_RELEASE_ASSERT(...) \
+   MOZ_ASSERT_GLUE(MOZ_ASSERT_CHOOSE_HELPER(MOZ_COUNT_ASSERT_ARGS(__VA_ARGS__)), \
+                   (__VA_ARGS__))
 #ifdef DEBUG
-   /* First the single-argument form. */
-#  define MOZ_ASSERT_HELPER1(expr) \
-     do { \
-       if (MOZ_UNLIKELY(!(expr))) { \
-         MOZ_ReportAssertionFailure(#expr, __FILE__, __LINE__); \
-         MOZ_REALLY_CRASH(); \
-       } \
-     } while (0)
-   /* Now the two-argument form. */
-#  define MOZ_ASSERT_HELPER2(expr, explain) \
-     do { \
-       if (MOZ_UNLIKELY(!(expr))) { \
-         MOZ_ReportAssertionFailure(#expr " (" explain ")", __FILE__, __LINE__); \
-         MOZ_REALLY_CRASH(); \
-       } \
-     } while (0)
-   /* And now, helper macrology up the wazoo. */
-   /*
-    * Count the number of arguments passed to MOZ_ASSERT, very carefully
-    * tiptoeing around an MSVC bug where it improperly expands __VA_ARGS__ as a
-    * single token in argument lists.  See these URLs for details:
-    *
-    *   http://connect.microsoft.com/VisualStudio/feedback/details/380090/variadic-macro-replacement
-    *   http://cplusplus.co.il/2010/07/17/variadic-macro-to-count-number-of-arguments/#comment-644
-    */
-#  define MOZ_COUNT_ASSERT_ARGS_IMPL2(_1, _2, count, ...) \
-     count
-#  define MOZ_COUNT_ASSERT_ARGS_IMPL(args) \
-	 MOZ_COUNT_ASSERT_ARGS_IMPL2 args
-#  define MOZ_COUNT_ASSERT_ARGS(...) \
-     MOZ_COUNT_ASSERT_ARGS_IMPL((__VA_ARGS__, 2, 1, 0))
-   /* Pick the right helper macro to invoke. */
-#  define MOZ_ASSERT_CHOOSE_HELPER2(count) MOZ_ASSERT_HELPER##count
-#  define MOZ_ASSERT_CHOOSE_HELPER1(count) MOZ_ASSERT_CHOOSE_HELPER2(count)
-#  define MOZ_ASSERT_CHOOSE_HELPER(count) MOZ_ASSERT_CHOOSE_HELPER1(count)
-   /* The actual macro. */
-#  define MOZ_ASSERT_GLUE(x, y) x y
-#  define MOZ_ASSERT(...) \
-     MOZ_ASSERT_GLUE(MOZ_ASSERT_CHOOSE_HELPER(MOZ_COUNT_ASSERT_ARGS(__VA_ARGS__)), \
-                     (__VA_ARGS__))
+#  define MOZ_ASSERT(...) MOZ_RELEASE_ASSERT(__VA_ARGS__)
 #else
 #  define MOZ_ASSERT(...) do { } while(0)
 #endif /* DEBUG */

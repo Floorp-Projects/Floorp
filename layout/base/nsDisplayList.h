@@ -1954,9 +1954,9 @@ public:
 #ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(FILE *aOutput) MOZ_OVERRIDE
   {
-    fprintf(aOutput, "(rgba %d,%d,%d,%d)",
-            NS_GET_R(mColor), NS_GET_G(mColor),
-            NS_GET_B(mColor), NS_GET_A(mColor));
+    fprintf_stderr(aOutput, "(rgba %d,%d,%d,%d)",
+                   NS_GET_R(mColor), NS_GET_G(mColor),
+                   NS_GET_B(mColor), NS_GET_A(mColor));
   }
 #endif
 

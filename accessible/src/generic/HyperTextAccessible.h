@@ -473,8 +473,6 @@ protected:
     * @param  aText         [out, optional] return the substring's text
     * @param  aEndFrame     [out, optional] return the end frame for this
     *                       substring
-    * @param  aBoundsRect   [out, optional] return the bounds rectangle for this
-    *                       substring
     * @param  aStartAcc     [out, optional] return the start accessible for this
     *                       substring
     * @param  aEndAcc       [out, optional] return the end accessible for this
@@ -484,11 +482,16 @@ protected:
   nsIFrame* GetPosAndText(int32_t& aStartOffset, int32_t& aEndOffset,
                           nsAString *aText = nullptr,
                           nsIFrame **aEndFrame = nullptr,
-                          nsIntRect *aBoundsRect = nullptr,
                           Accessible** aStartAcc = nullptr,
                           Accessible** aEndAcc = nullptr);
 
-  nsIntRect GetBoundsForString(nsIFrame *aFrame, uint32_t aStartRenderedOffset, uint32_t aEndRenderedOffset);
+  /**
+   * Return the boundaries of the substring in case of textual frame or
+   * frame boundaries in case of non textual frame, offsets are ignored.
+   */
+  nsIntRect GetBoundsInFrame(nsIFrame* aFrame,
+                             uint32_t aStartRenderedOffset,
+                             uint32_t aEndRenderedOffset);
 
   // Selection helpers
 

@@ -1988,7 +1988,6 @@ nsChildView::NotifyDirtyRegion(const nsIntRegion& aDirtyRegion)
   if ([(ChildView*)mView isCoveringTitlebar]) {
     // We store the dirty region so that we know what to repaint in the titlebar.
     mDirtyTitlebarRegion.Or(mDirtyTitlebarRegion, aDirtyRegion);
-    mDirtyTitlebarRegion.And(mDirtyTitlebarRegion, RectContainingTitlebarControls());
   }
 }
 
@@ -2180,7 +2179,8 @@ DrawTitlebarHighlight(NSSize aWindowSize, CGFloat aRadius, CGFloat aDevicePixelW
 void
 nsChildView::UpdateTitlebarImageBuffer()
 {
-  nsIntRegion dirtyTitlebarRegion = mDirtyTitlebarRegion;
+  nsIntRegion dirtyTitlebarRegion;
+  dirtyTitlebarRegion.And(mDirtyTitlebarRegion, mTitlebarRect);
   mDirtyTitlebarRegion.SetEmpty();
 
   nsIntSize texSize = RectTextureImage::TextureSizeForSize(mTitlebarRect.Size());
