@@ -577,35 +577,11 @@ EmitNonLocalJumpFixup(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *t
 
         if (stmt->isBlockScope) {
             FLUSH_POPS();
-            unsigned blockObjCount = stmt->blockObj->slotCount();
-            if (stmt->isForLetBlock) {
-                /*
-                 * For a for-let-in/of statement, pushing/popping the block is
-                 * interleaved with JSOP_(END)ITER. Just handle both together
-                 * here and skip over the enclosing STMT_FOR_IN_LOOP.
-                 */
-                unsigned popCount = blockObjCount;
-                stmt = stmt->down;
-                if (stmt == toStmt)
-                    break;
-                if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
-                    return false;
-                if (Emit1(cx, bce, JSOP_LEAVEFORLETIN) < 0)
-                    return false;
-                if (stmt->type == STMT_FOR_OF_LOOP) {
-                    popCount += 2;
-                } else {
-                    JS_ASSERT(stmt->type == STMT_FOR_IN_LOOP);
-                    if (!PopIterator(cx, bce))
-                        return false;
-                }
-                EMIT_UINT16_IMM_OP(JSOP_POPN, popCount);
-            } else {
-                /* There is a Block object with locals on the stack to pop. */
-                if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
-                    return false;
-                EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, blockObjCount);
-            }
+            JS_ASSERT(stmt->blockObj);
+            StaticBlockObject &blockObj = *stmt->blockObj;
+            if (Emit1(cx, bce, JSOP_DEBUGLEAVEBLOCK) < 0)
+                return false;
+            EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, blockObj.slotCount());
         }
     }
 
@@ -4267,9 +4243,6 @@ EmitWith(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 static bool
 EmitForOf(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 {
-    StmtInfoBCE stmtInfo(cx);
-    PushStatementBCE(bce, &stmtInfo, STMT_FOR_OF_LOOP, top);
-
     ParseNode *forHead = pn->pn_left;
     ParseNode *forBody = pn->pn_right;
 
@@ -4326,10 +4299,12 @@ EmitForOf(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
     if (letDecl) {
         if (!PushBlockScopeBCE(bce, &letStmt, pn1->pn_objbox, bce->offset()))
             return false;
-        letStmt.isForLetBlock = true;
         if (!EmitEnterBlock(cx, bce, pn1, JSOP_ENTERLET2))
             return false;
     }
+
+    StmtInfoBCE stmtInfo(cx);
+    PushStatementBCE(bce, &stmtInfo, STMT_FOR_OF_LOOP, top);
 
     // Jump down to the loop condition to minimize overhead assuming at least
     // one iteration, as the other loop forms do.  Annotate so IonMonkey can
@@ -4434,9 +4409,6 @@ EmitForOf(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
 static bool
 EmitForIn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 {
-    StmtInfoBCE stmtInfo(cx);
-    PushStatementBCE(bce, &stmtInfo, STMT_FOR_IN_LOOP, top);
-
     ParseNode *forHead = pn->pn_left;
     ParseNode *forBody = pn->pn_right;
 
@@ -4505,10 +4477,12 @@ EmitForIn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
     if (letDecl) {
         if (!PushBlockScopeBCE(bce, &letStmt, pn1->pn_objbox, bce->offset()))
             return false;
-        letStmt.isForLetBlock = true;
         if (!EmitEnterBlock(cx, bce, pn1, JSOP_ENTERLET1))
             return false;
     }
+
+    StmtInfoBCE stmtInfo(cx);
+    PushStatementBCE(bce, &stmtInfo, STMT_FOR_IN_LOOP, top);
 
     /* Annotate so IonMonkey can find the loop-closing jump. */
     int noteIndex = NewSrcNote(cx, bce, SRC_FOR_IN);
