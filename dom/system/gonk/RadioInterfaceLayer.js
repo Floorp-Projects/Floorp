@@ -1613,12 +1613,6 @@ RadioInterface.prototype = {
                                                 this.clientId, status);
   },
 
-  _isRadioChanging: function _isRadioChanging() {
-    let state = this.rilContext.detailedRadioState;
-    return state == RIL.GECKO_DETAILED_RADIOSTATE_ENABLING ||
-      state == RIL.GECKO_DETAILED_RADIOSTATE_DISABLING;
-  },
-
   _convertRadioState: function _converRadioState(state) {
     switch (state) {
       case RIL.GECKO_RADIOSTATE_OFF:
@@ -1858,7 +1852,11 @@ RadioInterface.prototype = {
       if (DEBUG) this.debug("Don't connect data call when Wifi is connected.");
       return;
     }
-    if (this._isRadioChanging()) {
+
+    let detailedRadioState = this.rilContext.detailedRadioState;
+    if (gRadioEnabledController.isDeactivatingDataCalls() ||
+        detailedRadioState == RIL.GECKO_DETAILED_RADIOSTATE_ENABLING ||
+        detailedRadioState == RIL.GECKO_DETAILED_RADIOSTATE_DISABLING) {
       // We're changing the radio power currently, ignore any changes.
       return;
     }
@@ -2638,18 +2636,15 @@ RadioInterface.prototype = {
   },
 
   isValidStateForSetRadioEnabled: function() {
-    let state = this.rilContext.radioState;
-
-    return !this._isRadioChanging() &&
-        (state == RIL.GECKO_RADIOSTATE_READY ||
-         state == RIL.GECKO_RADIOSTATE_OFF);
+    let state = this.rilContext.detailedRadioState;
+    return state == RIL.GECKO_DETAILED_RADIOSTATE_ENABLED ||
+      state == RIL.GECKO_DETAILED_RADIOSTATE_DISABLED;
   },
 
   isDummyForSetRadioEnabled: function(message) {
-    let state = this.rilContext.radioState;
-
-    return (state == RIL.GECKO_RADIOSTATE_READY && message.enabled) ||
-        (state == RIL.GECKO_RADIOSTATE_OFF && !message.enabled);
+    let state = this.rilContext.detailedRadioState;
+    return (state == RIL.GECKO_DETAILED_RADIOSTATE_ENABLED && message.enabled) ||
+      (state == RIL.GECKO_DETAILED_RADIOSTATE_DISABLED && !message.enabled);
   },
 
   setRadioEnabledResponse: function(target, message, errorMsg) {
