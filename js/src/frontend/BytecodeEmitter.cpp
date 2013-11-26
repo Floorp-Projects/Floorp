@@ -141,15 +141,6 @@ EmitCheck(ExclusiveContext *cx, BytecodeEmitter *bce, ptrdiff_t delta)
     return offset;
 }
 
-static StaticBlockObject &
-LastBlockAdded(BytecodeEmitter *bce, jsbytecode *pc)
-{
-    DebugOnly<uint32_t> index = GET_UINT32_INDEX(pc);
-    JS_ASSERT(index < bce->objectList.length);
-    JS_ASSERT(index == bce->objectList.length - 1);
-    return bce->objectList.lastbox->object->as<StaticBlockObject>();
-}
-
 static void
 UpdateDepth(ExclusiveContext *cx, BytecodeEmitter *bce, ptrdiff_t target)
 {
@@ -168,26 +159,8 @@ UpdateDepth(ExclusiveContext *cx, BytecodeEmitter *bce, ptrdiff_t target)
             bce->maxStackDepth = depth;
     }
 
-    /*
-     * Specially handle any case in which StackUses or StackDefs would call
-     * NumBlockSlots, since that requires a well-formed script. This allows us
-     * to safely pass nullptr as the 'script' parameter to StackUses and
-     * StackDefs.
-     */
-    int nuses, ndefs;
-    if (op == JSOP_ENTERBLOCK) {
-        nuses = 0;
-        ndefs = LastBlockAdded(bce, pc).slotCount();
-    } else if (op == JSOP_ENTERLET0) {
-        nuses = ndefs = LastBlockAdded(bce, pc).slotCount();
-    } else if (op == JSOP_ENTERLET1) {
-        nuses = ndefs = LastBlockAdded(bce, pc).slotCount() + 1;
-    } else if (op == JSOP_ENTERLET2) {
-        nuses = ndefs = LastBlockAdded(bce, pc).slotCount() + 2;
-    } else {
-        nuses = StackUses(nullptr, pc);
-        ndefs = StackDefs(nullptr, pc);
-    }
+    int nuses = StackUses(nullptr, pc);
+    int ndefs = StackDefs(nullptr, pc);
 
     bce->stackDepth -= nuses;
     JS_ASSERT(bce->stackDepth >= 0);
@@ -568,7 +541,10 @@ class NonLocalExitScope {
             return false;
         if (!bce->blockScopeList.append(scopeObjectIndex, bce->offset(), parent))
             return false;
-        EMIT_UINT16_IMM_OP(JSOP_LEAVEBLOCK, blockObj.slotCount());
+        if (blockObj.needsClone()) {
+            if (Emit1(cx, bce, JSOP_POPBLOCKSCOPE) < 0)
+                return false;
+        }
         openScopeIndex = bce->blockScopeList.length() - 1;
         return true;
     }
@@ -623,11 +599,11 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE *toStmt)
         }
 
         if (stmt->isBlockScope) {
-            FLUSH_POPS();
             JS_ASSERT(stmt->blockObj);
             StaticBlockObject &blockObj = *stmt->blockObj;
             if (!popScopeForNonLocalExit(blockObj, stmt->blockScopeIndex))
                 return false;
+            npops += blockObj.slotCount();
         }
     }
 
@@ -773,6 +749,55 @@ ComputeAliasedSlots(ExclusiveContext *cx, BytecodeEmitter *bce, StaticBlockObjec
 static bool
 EmitInternedObjectOp(ExclusiveContext *cx, uint32_t index, JSOp op, BytecodeEmitter *bce);
 
+// ~ Block Scopes ~
+//
+// A block scope is a region of a script with an additional set of named
+// variables.  Those variables may be local and thus accessible directly from
+// the stack, or "aliased" and only accessible through the scope chain.
+//
+// A block scope may or may not have a corresponding link on the scope chain.
+// If no variable declared in the scope is "aliased", then no scope chain node
+// is allocated.
+//
+// To help debuggers, the bytecode emitter arranges to record the PC ranges
+// comprehended by a block scope, and ultimately attach them to the JSScript.
+// An element in the "block scope array" specifies the PC range, and links to a
+// StaticBlockObject in the object list of the script.  That block is linked to
+// the previous block in the scope, if any.  The static block chain at any
+// pre-retire PC can be retrieved using JSScript::getBlockScope(jsbytecode *pc).
+//
+// When PUSHBLOCKSCOPE is executed, it assumes that the block's locals are
+// already on the stack.  Initial values of "aliased" locals are copied from the
+// stack to the ClonedBlockObject, and no further access is made to the stack
+// slot.
+//
+// Likewise after leaving a POPBLOCKSCOPE, we will need to emit code to pop the
+// stack values.
+//
+// Finally, to assist the debugger, we also emit a DEBUGLEAVEBLOCK opcode before
+// POPBLOCKSCOPE in all cases -- even if the block has no aliased locals.  This
+// allows DebugScopes to invalidate any association between a debugger scope
+// object, which can proxy access to unaliased stack locals, and the actual live
+// frame.  In normal, non-debug mode, this opcode does not cause any baseline
+// code to be emitted.
+//
+// In this function "extraSlots" indicates the number of slots that are
+// "floating" on the stack above the scope's slots.  This will only be nonzero
+// in the case of for-let-in and for-let-of loops, where loop iterator state
+// floats above the block scopes.  It would be nice to fix this eventually so
+// that loop iterator state gets assigned to block-scoped fp-addressable
+// temporaries, instead of being addressable only via the sp.  This would also
+// make generators more efficient, as the loop state could be heap-allocated, so
+// that the value stack would likely be empty at yield points inside for-of /
+// for-in loops.
+//
+// Summary: Enter block scopes with EnterBlockScope.  It will emit
+// PUSHBLOCKSCOPE if needed.  Leave them with LeaveBlockScope, which will emit
+// DEBUGLEAVEBLOCK and may emit POPBLOCKSCOPE.  Pass EnterBlockScope a fresh
+// StmtInfoBCE object, and pass that same object to the corresponding
+// LeaveBlockScope.  Push locals before entering a scope, and pop them
+// afterwards.  Brush your teeth, and clean behind your ears!
+//
 static bool
 EnterBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *stmt, ObjectBox *objbox,
                 unsigned extraSlots)
@@ -792,19 +817,13 @@ EnterBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *stmt, O
     JS_ASSERT(depth >= 0);
     blockObj.setStackDepth(depth);
 
-    JSOp op;
-    switch (extraSlots) {
-      case 0: op = JSOP_ENTERLET0; break;
-      case 1: op = JSOP_ENTERLET1; break;
-      case 2: op = JSOP_ENTERLET2; break;
-      default: MOZ_ASSUME_UNREACHABLE("unexpected extraSlots");
-    }
-
     if (!ComputeAliasedSlots(cx, bce, blockObj))
         return false;
 
-    if (!EmitInternedObjectOp(cx, scopeObjectIndex, op, bce))
-        return false;
+    if (blockObj.needsClone()) {
+        if (!EmitInternedObjectOp(cx, scopeObjectIndex, JSOP_PUSHBLOCKSCOPE, bce))
+            return false;
+    }
 
     stmt->blockScopeIndex = bce->blockScopeList.length();
     if (!bce->blockScopeList.append(scopeObjectIndex, bce->offset(), parent))
@@ -837,7 +856,7 @@ PopStatementBCE(ExclusiveContext *cx, BytecodeEmitter *bce)
 }
 
 static bool
-LeaveBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)
+LeaveBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce)
 {
     StmtInfoBCE *stmt = bce->topStmt;
     JS_ASSERT(stmt->isBlockScope);
@@ -852,7 +871,7 @@ LeaveBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)
     JS_ASSERT(blockObj == bce->blockChain);
 #endif
 
-    uint32_t slotCount = bce->blockChain->slotCount();
+    bool blockOnChain = bce->blockChain->needsClone();
 
     if (!PopStatementBCE(cx, bce))
         return false;
@@ -862,8 +881,10 @@ LeaveBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)
 
     bce->blockScopeList.recordEnd(blockScopeIndex, bce->offset());
 
-    JS_ASSERT(op == JSOP_LEAVEBLOCK || op == JSOP_LEAVEBLOCKEXPR);
-    EMIT_UINT16_IMM_OP(op, slotCount);
+    if (blockOnChain) {
+        if (Emit1(cx, bce, JSOP_POPBLOCKSCOPE) < 0)
+            return false;
+    }
 
     return true;
 }
@@ -2684,10 +2705,10 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         }
     }
 
-
     if (pn->pn_right->isKind(PNK_LEXICALSCOPE)) {
-        if (!LeaveBlockScope(cx, bce, JSOP_LEAVEBLOCK))
+        if (!LeaveBlockScope(cx, bce))
             return false;
+        EMIT_UINT16_IMM_OP(JSOP_POPN, blockObj->slotCount());
     } else {
         if (!PopStatementBCE(cx, bce))
             return false;
@@ -3983,7 +4004,8 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (ParseNode *pn2 = pn->pn_kid2) {
         // The emitted code for a catch block looks like:
         //
-        // enterblock
+        // undefined...                 as many as there are locals in the catch block
+        // [pushblockscope]             only if any local aliased
         // exception
         // if there is a catchguard:
         //   dup
@@ -3991,14 +4013,16 @@ EmitTry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         // if there is a catchguard:
         //   < catchguard code >
         //   ifne POST
-        //   throwing                   pop exception to cx->exception
         //   debugleaveblock
-        //   leaveblock
+        //   [popblockscope]            only if any local aliased
+        //   popnv <num block locals>   leave exception on top
+        //   throwing                   pop exception to cx->exception
         //   goto <next catch block>
         //   POST: pop
         // < catch block contents >
         // debugleaveblock
-        // leaveblock
+        // [popblockscope]              only if any local aliased
+        // popn <num block locals>
         // goto <end of catch blocks>   non-local; finally applies
         //
         // If there's no catch block without a catchguard, the last <next catch
@@ -4194,11 +4218,13 @@ EmitIf(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
  *  destructure z
  *  pick 1
  *  pop               -1
- *  enterlet0
+ *  pushblockscope (if needed)
  *  evaluate e        +1
- *  leaveblockexpr    -3
+ *  debugleaveblock
+ *  popblockscope (if needed)
+ *  popnv 3           -3
  *
- * Note that, since enterlet0 simply changes fp->blockChain and does not
+ * Note that, since pushblockscope simply changes fp->scopeChain and does not
  * otherwise touch the stack, evaluation of the let-var initializers must leave
  * the initial value in the let-var's future slot.
  */
@@ -4236,8 +4262,12 @@ EmitLet(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pnLet)
     if (!EmitTree(cx, bce, letBody->pn_expr))
         return false;
 
-    if (!LeaveBlockScope(cx, bce, letBody->getOp()))
+    if (!LeaveBlockScope(cx, bce))
         return false;
+
+    JSOp leaveOp = letBody->getOp();
+    JS_ASSERT(leaveOp == JSOP_POPN || leaveOp == JSOP_POPNV);
+    EMIT_UINT16_IMM_OP(leaveOp, blockObj->slotCount());
 
     return true;
 }
@@ -4250,7 +4280,7 @@ MOZ_NEVER_INLINE static bool
 EmitLexicalScope(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JS_ASSERT(pn->isKind(PNK_LEXICALSCOPE));
-    JS_ASSERT(pn->getOp() == JSOP_LEAVEBLOCK);
+    JS_ASSERT(pn->getOp() == JSOP_POPN);
 
     StmtInfoBCE stmtInfo(cx);
     ObjectBox *objbox = pn->pn_objbox;
@@ -4268,8 +4298,10 @@ EmitLexicalScope(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!EmitTree(cx, bce, pn->pn_expr))
         return false;
 
-    if (!LeaveBlockScope(cx, bce, JSOP_LEAVEBLOCK))
+    if (!LeaveBlockScope(cx, bce))
         return false;
+
+    EMIT_UINT16_IMM_OP(JSOP_POPN, slots);
 
     return true;
 }
@@ -4440,13 +4472,13 @@ EmitForOf(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
     if (!PopStatementBCE(cx, bce))
         return false;
 
-    // Pop result and iter.
-    EMIT_UINT16_IMM_OP(JSOP_POPN, 2);
-
     if (letDecl) {
-        if (!LeaveBlockScope(cx, bce, JSOP_LEAVEBLOCK))
+        if (!LeaveBlockScope(cx, bce))
             return false;
     }
+
+    // Pop result, iter, and slots from the lexical block (if any).
+    EMIT_UINT16_IMM_OP(JSOP_POPN, blockObjCount + 2);
 
     return true;
 }
@@ -4468,20 +4500,24 @@ EmitForIn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
     if (letDecl) {
         /*
          * The let's slot(s) will be under the iterator, but the block must not
-         * be entered (i.e. fp->blockChain set) until after evaluating the rhs.
-         * Thus, push to reserve space and enterblock after. The same argument
-         * applies when leaving the loop. Thus, a for-let-in loop looks like:
+         * be entered until after evaluating the rhs.  So, we reserve space for
+         * the block scope now, and only push the block onto the scope chain
+         * later.  Thus, a for-let-in loop looks like:
          *
          *   push x N
          *   eval rhs
          *   iter
-         *   enterlet1
+         *   pushblockscope (if needed)
          *   goto
          *     ... loop body
          *   ifne
-         *   leaveforinlet
+         *   debugleaveblock
+         *   popblockscope (if needed)
          *   enditer
          *   popn(N)
+         *
+         * Note that pushblockscope and popblockscope only get emitted if some
+         * of the variables in the block are captured.
          */
         for (uint32_t i = 0; i < blockObjCount; ++i) {
             if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
@@ -4600,8 +4636,9 @@ EmitForIn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
         return false;
 
     if (letDecl) {
-        if (!LeaveBlockScope(cx, bce, JSOP_LEAVEBLOCK))
+        if (!LeaveBlockScope(cx, bce))
             return false;
+        EMIT_UINT16_IMM_OP(JSOP_POPN, blockObjCount);
     }
 
     return true;

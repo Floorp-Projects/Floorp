@@ -603,9 +603,9 @@ FullParseHandler::addCatchBlock(ParseNode *catchList, ParseNode *letBlock,
 inline void
 FullParseHandler::setLeaveBlockResult(ParseNode *block, ParseNode *kid, bool leaveBlockExpr)
 {
-    JS_ASSERT(block->isOp(JSOP_LEAVEBLOCK));
+    JS_ASSERT(block->isOp(JSOP_POPN));
     if (leaveBlockExpr)
-        block->setOp(JSOP_LEAVEBLOCKEXPR);
+        block->setOp(JSOP_POPNV);
     block->pn_expr = kid;
 }
 
@@ -637,7 +637,7 @@ FullParseHandler::newLexicalScope(ObjectBox *blockbox)
     if (!pn)
         return nullptr;
 
-    pn->setOp(JSOP_LEAVEBLOCK);
+    pn->setOp(JSOP_POPN);
     pn->pn_objbox = blockbox;
     pn->pn_cookie.makeFree();
     pn->pn_dflags = 0;

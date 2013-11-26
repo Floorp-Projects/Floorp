@@ -327,20 +327,14 @@ StackFrame::epilogue(JSContext *cx)
 bool
 StackFrame::pushBlock(JSContext *cx, StaticBlockObject &block)
 {
-    JS_ASSERT_IF(hasBlockChain(), blockChain_ == block.enclosingBlock());
+    JS_ASSERT (block.needsClone());
 
-    if (block.needsClone()) {
-        Rooted<StaticBlockObject *> blockHandle(cx, &block);
-        ClonedBlockObject *clone = ClonedBlockObject::create(cx, blockHandle, this);
-        if (!clone)
-            return false;
+    Rooted<StaticBlockObject *> blockHandle(cx, &block);
+    ClonedBlockObject *clone = ClonedBlockObject::create(cx, blockHandle, this);
+    if (!clone)
+        return false;
 
-        pushOnScopeChain(*clone);
-
-        blockChain_ = blockHandle;
-    } else {
-        blockChain_ = &block;
-    }
+    pushOnScopeChain(*clone);
 
     return true;
 }
@@ -348,12 +342,8 @@ StackFrame::pushBlock(JSContext *cx, StaticBlockObject &block)
 void
 StackFrame::popBlock(JSContext *cx)
 {
-    if (blockChain_->needsClone()) {
-        JS_ASSERT(scopeChain_->as<ClonedBlockObject>().staticBlock() == *blockChain_);
-        popOffScopeChain();
-    }
-
-    blockChain_ = blockChain_->enclosingBlock();
+    JS_ASSERT(scopeChain_->is<ClonedBlockObject>());
+    popOffScopeChain();
 }
 
 void
@@ -1254,8 +1244,7 @@ AbstractFramePtr::hasPushedSPSFrame() const
 
 #ifdef DEBUG
 void
-js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script,
-                        StaticBlockObject *maybeBlock, unsigned i)
+js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script, unsigned i)
 {
     if (!checkAliasing)
         return;
@@ -1264,13 +1253,8 @@ js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script,
     if (i < script->nfixed()) {
         JS_ASSERT(!script->varIsAliased(i));
     } else {
-        unsigned depth = i - script->nfixed();
-        for (StaticBlockObject *b = maybeBlock; b; b = b->enclosingBlock()) {
-            if (b->containsVarAtDepth(depth)) {
-                JS_ASSERT(!b->isAliased(depth - b->stackDepth()));
-                break;
-            }
-        }
+        // FIXME: The callers of this function do not easily have the PC of the
+        // current frame, and so they do not know the block scope.
     }
 }
 #endif

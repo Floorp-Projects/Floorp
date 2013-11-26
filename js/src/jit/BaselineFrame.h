@@ -169,7 +169,7 @@ class BaselineFrame
 
     Value &unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
 #ifdef DEBUG
-        CheckLocalUnaliased(checkAliasing, script(), maybeBlockChain(), i);
+        CheckLocalUnaliased(checkAliasing, script(), i);
 #endif
         return *valueSlot(i);
     }
