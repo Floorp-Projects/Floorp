@@ -1747,9 +1747,6 @@ FindLeadingGoto(LBlock *bb)
         // Ignore labels.
         if (ins->isLabel())
             continue;
-        // Ignore empty move groups.
-        if (ins->isMoveGroup() && ins->toMoveGroup()->numMoves() == 0)
-            continue;
         // If we have a goto, we're good to go.
         if (ins->isGoto())
             return ins->toGoto();
