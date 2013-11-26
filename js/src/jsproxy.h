@@ -174,6 +174,7 @@ class JS_FRIEND_API(BaseProxyHandler)
 
     /* See comment for weakmapKeyDelegateOp in js/Class.h. */
     virtual JSObject *weakmapKeyDelegate(JSObject *proxy);
+    virtual bool isScripted() { return false; }
 };
 
 /*
@@ -307,6 +308,17 @@ inline bool IsProxyClass(const Class *clasp)
 inline bool IsProxy(JSObject *obj)
 {
     return IsProxyClass(GetObjectClass(obj));
+}
+
+BaseProxyHandler *
+GetProxyHandler(JSObject *obj);
+
+inline bool IsScriptedProxy(JSObject *obj)
+{
+    if (!IsProxy(obj))
+        return false;
+
+    return GetProxyHandler(obj)->isScripted();
 }
 
 /*

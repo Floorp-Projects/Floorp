@@ -3028,6 +3028,13 @@ xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &opti
         return false;
     }
 
+    bool define = !JSID_IS_VOID(options.defineAs);
+
+    if (define && js::IsScriptedProxy(scope)) {
+        JS_ReportError(cx, "Defining property on proxy object is not allowed");
+        return false;
+    }
+
     RootedObject obj(cx);
     {
         JSAutoCompartment ac(cx, scope);
@@ -3035,11 +3042,12 @@ xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &opti
         if (!obj)
             return false;
 
-        if (!JSID_IS_VOID(options.defineAs) &&
-            !JS_DefinePropertyById(cx, scope, options.defineAs, ObjectValue(*obj),
-                                   JS_PropertyStub, JS_StrictPropertyStub,
-                                   JSPROP_ENUMERATE))
-            return false;
+        if (define) {
+            if (!JS_DefinePropertyById(cx, scope, options.defineAs, ObjectValue(*obj),
+                                       JS_PropertyStub, JS_StrictPropertyStub,
+                                       JSPROP_ENUMERATE))
+                return false;
+        }
     }
 
     rval.setObject(*obj);
