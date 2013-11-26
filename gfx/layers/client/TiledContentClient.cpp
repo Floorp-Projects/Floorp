@@ -316,7 +316,7 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
 {
   if (aTile.IsPlaceholderTile()) {
     RefPtr<DeprecatedTextureClient> textureClient =
-      new DeprecatedTextureClientTile(mManager->AsShadowForwarder(), TextureInfo(BUFFER_TILED));
+      new DeprecatedTextureClientTile(mManager, TextureInfo(BUFFER_TILED));
     aTile.mDeprecatedTextureClient = static_cast<DeprecatedTextureClientTile*>(textureClient.get());
   }
   aTile.mDeprecatedTextureClient->EnsureAllocated(gfx::IntSize(GetTileLength(), GetTileLength()), GetContentType());

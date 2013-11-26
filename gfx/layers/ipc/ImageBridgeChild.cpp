@@ -199,7 +199,7 @@ ImageBridgeChild::UpdatePictureRect(CompositableClient* aCompositable,
 }
 
 // Singleton
-static StaticRefPtr<ImageBridgeChild> sImageBridgeChildSingleton;
+static ImageBridgeChild *sImageBridgeChildSingleton = nullptr;
 static StaticRefPtr<ImageBridgeParent> sImageBridgeParentSingleton;
 static Thread *sImageBridgeChildThread = nullptr;
 
@@ -225,6 +225,7 @@ static void DeleteImageBridgeSync(ReentrantMonitor *aBarrier, bool *aDone)
 
   NS_ABORT_IF_FALSE(InImageBridgeChildThread(),
                     "Should be in ImageBridgeChild thread.");
+  delete sImageBridgeChildSingleton;
   sImageBridgeChildSingleton = nullptr;
   sImageBridgeParentSingleton = nullptr;
   *aDone = true;

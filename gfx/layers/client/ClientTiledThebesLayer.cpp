@@ -134,7 +134,7 @@ ClientTiledThebesLayer::RenderLayer()
     mContentClient = new TiledContentClient(this, ClientManager());
 
     mContentClient->Connect();
-    ClientManager()->AsShadowForwarder()->Attach(mContentClient, this);
+    ClientManager()->Attach(mContentClient, this);
     MOZ_ASSERT(mContentClient->GetForwarder());
   }
 

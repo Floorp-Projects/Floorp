@@ -46,7 +46,6 @@ class OptionalThebesBuffer;
 class PLayerChild;
 class PLayerTransactionChild;
 class PLayerTransactionParent;
-class LayerTransactionChild;
 class RefLayerComposite;
 class ShadowableLayer;
 class Shmem;
@@ -138,7 +137,6 @@ class ShadowLayerForwarder : public CompositableForwarder
   friend class AutoOpenSurface;
   friend class DeprecatedTextureClientShmem;
   friend class ContentClientIncremental;
-  friend class ClientLayerManager;
 
 public:
   virtual ~ShadowLayerForwarder();
@@ -341,13 +339,16 @@ public:
   /**
    * Set an actor through which layer updates will be pushed.
    */
-  void SetShadowManager(PLayerTransactionChild* aShadowManager);
+  void SetShadowManager(PLayerTransactionChild* aShadowManager)
+  {
+    mShadowManager = aShadowManager;
+  }
 
   /**
    * True if this is forwarding to a LayerManagerComposite.
    */
   bool HasShadowManager() const { return !!mShadowManager; }
-  LayerTransactionChild* GetShadowManager() const { return mShadowManager.get(); }
+  PLayerTransactionChild* GetShadowManager() const { return mShadowManager; }
 
   virtual void WindowOverlayChanged() { mWindowOverlayChanged = true; }
 
@@ -393,8 +394,6 @@ public:
                           mozilla::ipc::Shmem* aShmem) MOZ_OVERRIDE;
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) MOZ_OVERRIDE;
 
-  virtual bool IPCOpen() const MOZ_OVERRIDE;
-
   /**
    * Construct a shadow of |aLayer| on the "other side", at the
    * LayerManagerComposite.
@@ -420,7 +419,7 @@ protected:
   void CheckSurfaceDescriptor(const SurfaceDescriptor* aDescriptor) const {}
 #endif
 
-  RefPtr<LayerTransactionChild> mShadowManager;
+  PLayerTransactionChild* mShadowManager;
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   // from ISurfaceAllocator

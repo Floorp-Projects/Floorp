@@ -35,15 +35,13 @@ RenderFrameChild::Destroy()
 PLayerTransactionChild*
 RenderFrameChild::AllocPLayerTransactionChild()
 {
-  LayerTransactionChild* c = new LayerTransactionChild();
-  c->AddIPDLReference();
-  return c;
+  return new LayerTransactionChild();
 }
 
 bool
 RenderFrameChild::DeallocPLayerTransactionChild(PLayerTransactionChild* aLayers)
 {
-  static_cast<LayerTransactionChild*>(aLayers)->ReleaseIPDLReference();
+  delete aLayers;
   return true;
 }
 
