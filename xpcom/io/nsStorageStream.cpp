@@ -539,3 +539,7 @@ NS_NewStorageStream(uint32_t segmentSize, uint32_t maxSize, nsIStorageStream **r
     *result = storageStream;
     return NS_OK;
 }
+
+// Undefine LOG, so that other .cpp files (or their includes) won't complain
+// about it already being defined, when we build in unified mode.
+#undef LOG
