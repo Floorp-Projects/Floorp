@@ -1895,6 +1895,9 @@ NS_IMETHODIMP
 nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
                                   nsIInterfaceRequestor *aCallbacks)
 {
+    if (!mHandlerActive)
+        return NS_OK;
+
     nsISiteSecurityService* sss = gHttpHandler->GetSSService();
     bool isStsHost = false;
     if (!sss)
