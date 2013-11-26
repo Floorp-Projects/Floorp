@@ -286,7 +286,12 @@ public:
   nscoord GetCrossSize() const     { return mCrossSize;  }
   nscoord GetCrossPosition() const { return mCrossPosn; }
 
-  nscoord GetAscent() const        { return mAscent; }
+  // Returns the distance between this FlexItem's baseline and the cross-start
+  // edge of its margin-box. Used in baseline alignment.
+  // (This function needs to be told what the cross axis is so that it can
+  // look up the appropriate component from mMargin.)
+  nscoord GetBaselineOffsetFromOuterCrossStart(
+            AxisOrientationType aCrossAxis) const;
 
   float GetShareOfFlexWeightSoFar() const { return mShareOfFlexWeightSoFar; }
 
@@ -963,6 +968,37 @@ FlexItem::FlexItem(nsIFrame* aChildFrame,
   }
 }
 
+nscoord
+FlexItem::GetBaselineOffsetFromOuterCrossStart(
+  AxisOrientationType aCrossAxis) const
+{
+  // NOTE: Currently, 'mAscent' (taken from reflow) is an inherently vertical
+  // measurement -- it's the distance from the border-top edge of this FlexItem
+  // to its baseline. So, we can really only do baseline alignment when the
+  // cross axis is vertical. (The FlexItem constructor enforces this when
+  // resolving the item's "mAlignSelf" value).
+  MOZ_ASSERT(!IsAxisHorizontal(aCrossAxis),
+             "Only expecting to be doing baseline computations when the "
+             "cross axis is vertical");
+ 
+  nscoord marginTopToBaseline = mAscent + mMargin.top;
+
+  if (aCrossAxis == eAxis_TB) {
+    // Top-to-bottom (normal case): the distance from the cross-start margin-box
+    // edge (i.e. the margin-top edge) to the baseline is ascent + margin-top.
+    return marginTopToBaseline;
+  }
+
+  // Bottom-to-top: The distance from the cross-start margin-box edge (i.e. the
+  // margin-bottom edge) to the baseline is just the margin-box cross size
+  // (i.e. outer cross size), minus the distance from margin-top to baseline
+  // (already computed above).
+  nscoord outerCrossSize = mCrossSize +
+    GetMarginBorderPaddingSizeInAxis(aCrossAxis);
+
+  return outerCrossSize - marginTopToBaseline;
+}
+
 uint32_t
 FlexItem::GetNumAutoMarginsInAxis(AxisOrientationType aAxis) const
 {
@@ -1127,10 +1163,6 @@ public:
   nscoord GetCrossStartToFurthestBaseline() { return mCrossStartToFurthestBaseline; }
 
 private:
-  // Returns the distance from the cross-start side of the given flex item's
-  // margin-box to its baseline. (Used in baseline alignment.)
-  nscoord GetBaselineOffsetFromCrossStart(const FlexItem& aItem) const;
-
   nscoord mLineCrossSize;
 
   // Largest distance from a baseline-aligned item's cross-start margin-box
@@ -1749,7 +1781,8 @@ SingleLineCrossAxisPositionTracker::
       // * If we subtract that from the curOuterCrossSize, we get
       //   crossEndToBaseline.
 
-      nscoord crossStartToBaseline = GetBaselineOffsetFromCrossStart(curItem);
+      nscoord crossStartToBaseline =
+        curItem.GetBaselineOffsetFromOuterCrossStart(mAxis);
       nscoord crossEndToBaseline = curOuterCrossSize - crossStartToBaseline;
 
       // Now, update our "largest" values for these (across all the flex items
@@ -1772,19 +1805,6 @@ SingleLineCrossAxisPositionTracker::
   mLineCrossSize = std::max(mCrossStartToFurthestBaseline +
                             crossEndToFurthestBaseline,
                             largestOuterCrossSize);
-}
-
-nscoord
-SingleLineCrossAxisPositionTracker::
-  GetBaselineOffsetFromCrossStart(const FlexItem& aItem) const
-{
-  Side crossStartSide = kAxisOrientationToSidesMap[mAxis][eAxisEdge_Start];
-
-  // XXXdholbert This assumes cross axis is Top-To-Bottom.
-  // For bottom-to-top support, probably want to make this depend on
-  //   AxisGrowsInPositiveDirection(mAxis)
-  return NSCoordSaturatingAdd(aItem.GetAscent(),
-                              aItem.GetMarginComponentForSide(crossStartSide));
 }
 
 void
@@ -1893,13 +1913,13 @@ SingleLineCrossAxisPositionTracker::
                        "using uninitialized baseline offset (or working with "
                        "content that has bogus huge values)");
       MOZ_ASSERT(mCrossStartToFurthestBaseline >=
-                 GetBaselineOffsetFromCrossStart(aItem),
+                 aItem.GetBaselineOffsetFromOuterCrossStart(mAxis),
                  "failed at finding largest ascent");
 
       // Advance so that aItem's baseline is aligned with
       // largest baseline offset.
       mPosition += (mCrossStartToFurthestBaseline -
-                    GetBaselineOffsetFromCrossStart(aItem));
+                    aItem.GetBaselineOffsetFromOuterCrossStart(mAxis));
       break;
     default:
       NS_NOTREACHED("Unexpected align-self value");
