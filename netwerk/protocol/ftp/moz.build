@@ -20,12 +20,16 @@ EXPORTS.mozilla.net += [
 ]
 
 UNIFIED_SOURCES += [
-    'FTPChannelChild.cpp',
     'FTPChannelParent.cpp',
     'nsFTPChannel.cpp',
     'nsFtpConnectionThread.cpp',
     'nsFtpControlConnection.cpp',
     'nsFtpProtocolHandler.cpp',
+]
+
+# FTPChannelChild.cpp cannot be built in unified mode because it forces NSPR logging on Windows.
+SOURCES += [
+    'FTPChannelChild.cpp',
 ]
 
 IPDL_SOURCES += [
