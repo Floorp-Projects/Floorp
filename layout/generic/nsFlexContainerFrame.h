@@ -18,6 +18,7 @@ nsIFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
 typedef nsContainerFrame nsFlexContainerFrameSuper;
 
 class FlexItem;
+class FlexLine;
 class FlexboxAxisTracker;
 class MainAxisPositionTracker;
 class SingleLineCrossAxisPositionTracker;
@@ -102,7 +103,7 @@ protected:
   nsresult GenerateFlexItems(nsPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              const FlexboxAxisTracker& aAxisTracker,
-                             nsTArray<FlexItem>& aItems);
+                             FlexLine& aLine);
 
   nscoord ComputeFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
                                        const FlexboxAxisTracker& aAxisTracker,
