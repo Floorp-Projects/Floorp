@@ -627,7 +627,8 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
                                         const nsAString& aBody,
                                         uint32_t aLanguage,
                                         bool aDeferCompilation,
-                                        bool aPermitUntrustedEvents)
+                                        bool aPermitUntrustedEvents,
+                                        Element* aElement)
 {
   NS_PRECONDITION(aLanguage != nsIProgrammingLanguage::UNKNOWN,
                   "Must know the language for the script event listener");
@@ -733,7 +734,7 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
                                                  aPermitUntrustedEvents);
 
   if (!aDeferCompilation) {
-    return CompileEventHandlerInternal(ls, &aBody);
+    return CompileEventHandlerInternal(ls, &aBody, aElement);
   }
 
   return NS_OK;
@@ -762,7 +763,8 @@ nsEventListenerManager::RemoveEventHandler(nsIAtom* aName,
 
 nsresult
 nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerStruct,
-                                                    const nsAString* aBody)
+                                                    const nsAString* aBody,
+                                                    Element* aElement)
 {
   NS_PRECONDITION(aListenerStruct->GetJSListener(),
                   "Why do we not have a JS listener?");
@@ -909,7 +911,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
   // compiled the event handler itself
   if ((aListenerStruct->mListenerType == eJSEventListener) &&
       aListenerStruct->mHandlerIsString) {
-    result = CompileEventHandlerInternal(aListenerStruct, nullptr);
+    result = CompileEventHandlerInternal(aListenerStruct, nullptr, nullptr);
     aListenerStruct = nullptr;
   }
 
@@ -1142,7 +1144,8 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
     // If this is a script handler and we haven't yet
     // compiled the event handler itself go ahead and compile it
     if ((ls.mListenerType == eJSEventListener) && ls.mHandlerIsString) {
-      CompileEventHandlerInternal(const_cast<nsListenerStruct*>(&ls), nullptr);
+      CompileEventHandlerInternal(const_cast<nsListenerStruct*>(&ls), nullptr,
+                                  nullptr);
     }
     nsAutoString eventType;
     if (ls.mAllEvents) {
@@ -1251,7 +1254,7 @@ nsEventListenerManager::GetEventHandlerInternal(nsIAtom *aEventName,
   nsIJSEventListener *listener = ls->GetJSListener();
     
   if (ls->mHandlerIsString) {
-    CompileEventHandlerInternal(ls, nullptr);
+    CompileEventHandlerInternal(ls, nullptr, nullptr);
   }
 
   const nsEventHandler& handler = listener->GetHandler();
