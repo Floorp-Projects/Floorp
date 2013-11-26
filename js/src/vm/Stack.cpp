@@ -81,7 +81,6 @@ StackFrame::initExecuteFrame(JSContext *cx, JSScript *script, AbstractFramePtr e
     prev_ = nullptr;
     prevpc_ = nullptr;
     prevsp_ = nullptr;
-    blockChain_ = nullptr;
 
     JS_ASSERT_IF(evalInFramePrev, isDebuggerFrame());
     evalInFramePrev_ = evalInFramePrev;
@@ -273,7 +272,6 @@ void
 StackFrame::epilogue(JSContext *cx)
 {
     JS_ASSERT(!isYielding());
-    JS_ASSERT(!hasBlockChain());
 
     RootedScript script(cx, this->script());
     probes::ExitScript(cx, script, script->function(), hasPushedSPSFrame());
