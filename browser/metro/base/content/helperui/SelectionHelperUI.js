@@ -358,13 +358,13 @@ var SelectionHelperUI = {
                                event.clientX, event.clientY);
         break;
 
-      case "apzc-handle-pan-begin":
+      case "apzc-transform-begin":
         if (this.isActive && this.layerMode == kContentLayer) {
           this._hideMonocles();
         }
         break;
 
-      case "apzc-handle-pan-end":
+      case "apzc-transform-end":
         // The selection range callback will check to see if the new
         // position is off the screen, in which case it shuts down and
         // clears the selection.
@@ -549,8 +549,8 @@ var SelectionHelperUI = {
   init: function () {
     let os = Services.obs;
     os.addObserver(this, "attach_edit_session_to_content", false);
-    os.addObserver(this, "apzc-handle-pan-begin", false);
-    os.addObserver(this, "apzc-handle-pan-end", false);
+    os.addObserver(this, "apzc-transform-begin", false);
+    os.addObserver(this, "apzc-transform-end", false);
   },
 
   _init: function _init(aMsgTarget) {
