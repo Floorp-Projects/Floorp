@@ -3286,10 +3286,10 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         elif identifier == "Constant":
             raise WebIDLError("Methods must not be flagged as [Constant]",
                               [attr.location, self.location]);
-        elif identifier == "Pure":
-            raise WebIDLError("Methods must not be flagged as [Pure] and if "
-                              "that changes, don't forget to check for [Throws]",
-                              [attr.location, self.location]);
+        elif ((identifier == "Pure" and self.getExtendedAttribute("Throws")) or
+              (identifier == "Throws" and self.getExtendedAttribute("Pure"))):
+            raise WebIDLError("Throwing methods can't be [Pure]",
+                              [attr.location]);
         elif identifier == "PutForwards":
             raise WebIDLError("Only attributes support [PutForwards]",
                               [attr.location, self.location])
@@ -3309,6 +3309,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "ChromeOnly" or
               identifier == "Pref" or
               identifier == "Func" or
+              identifier == "Pure" or
               identifier == "WebGLHandlesContextLoss"):
             # Known attributes that we don't need to do anything with here
             pass
