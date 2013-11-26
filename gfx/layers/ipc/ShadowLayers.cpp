@@ -179,8 +179,7 @@ CompositableForwarder::IdentifyTextureHost(const TextureFactoryIdentifier& aIden
 }
 
 ShadowLayerForwarder::ShadowLayerForwarder()
- : mShadowManager(nullptr)
- , mDiagnosticTypes(DIAGNOSTIC_NONE)
+ : mDiagnosticTypes(DIAGNOSTIC_NONE)
  , mIsFirstPaint(false)
  , mWindowOverlayChanged(false)
 {
