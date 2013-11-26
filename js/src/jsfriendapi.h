@@ -411,6 +411,10 @@ struct Object {
             return fixedSlots()[slot];
         return slots[slot - nfixed];
     }
+
+    // Reserved slots with index < MAX_FIXED_SLOTS are guaranteed to
+    // be fixed slots.
+    static const uint32_t MAX_FIXED_SLOTS = 16;
 };
 
 struct Function {
