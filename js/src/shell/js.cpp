@@ -4792,7 +4792,12 @@ static const JSJitInfo dom_x_getterinfo = {
     0,        /* depth */
     JSJitInfo::Getter,
     true,     /* isInfallible. False in setters. */
-    true      /* isConstant. Only relevant for getters. */
+    true,     /* isConstant. Only relevant for getters. */
+    true,     /* isPure */
+    false,    /* isInSlot */
+    0,        /* slotIndex */
+    JSVAL_TYPE_UNKNOWN, /* returnType */
+    nullptr   /* parallelNative */
 };
 
 static const JSJitInfo dom_x_setterinfo = {
@@ -4801,7 +4806,12 @@ static const JSJitInfo dom_x_setterinfo = {
     0,        /* depth */
     JSJitInfo::Setter,
     false,    /* isInfallible. False in setters. */
-    false     /* isConstant. Only relevant for getters. */
+    false,    /* isConstant. Only relevant for getters. */
+    false,    /* isPure */
+    false,    /* isInSlot */
+    0,        /* slotIndex */
+    JSVAL_TYPE_UNKNOWN, /* returnType */
+    nullptr   /* parallelNative */
 };
 
 static const JSJitInfo doFoo_methodinfo = {
@@ -4810,7 +4820,12 @@ static const JSJitInfo doFoo_methodinfo = {
     0,        /* depth */
     JSJitInfo::Method,
     false,    /* isInfallible. False in setters. */
-    false     /* isConstant. Only relevant for getters. */
+    false,    /* isConstant. Only relevant for getters. */
+    false,    /* isPure */
+    false,    /* isInSlot */
+    0,        /* slotIndex */
+    JSVAL_TYPE_UNKNOWN, /* returnType */
+    nullptr   /* parallelNative */
 };
 
 static const JSPropertySpec dom_props[] = {
