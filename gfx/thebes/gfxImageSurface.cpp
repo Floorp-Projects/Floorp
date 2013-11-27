@@ -294,6 +294,29 @@ gfxImageSurface::CopyFrom(gfxImageSurface *other)
     return true;
 }
 
+bool
+gfxImageSurface::CopyTo(SourceSurface *aSurface) {
+    mozilla::RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+
+    if (!data) {
+        return false;
+    }
+
+    gfxIntSize size(data->GetSize().width, data->GetSize().height);
+    if (size != mSize) {
+        return false;
+    }
+
+    if (!FormatsAreCompatible(SurfaceFormatToImageFormat(aSurface->GetFormat()),
+                              mFormat)) {
+        return false;
+    }
+
+    CopyForStride(data->GetData(), mData, size, data->Stride(), mStride);
+
+    return true;
+}
+
 already_AddRefed<gfxSubimageSurface>
 gfxImageSurface::GetSubimage(const gfxRect& aRect)
 {
