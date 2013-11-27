@@ -36,8 +36,8 @@ static int sRadioFD;
 static bool sRadioEnabled;
 static pthread_t sRadioThread;
 static hal::FMRadioSettings sRadioSettings;
-static int sTavaruaVersion;
-static bool sTavaruaMode;
+static int sMsmFMVersion;
+static bool sMsmFMMode;
 
 static int
 setControl(uint32_t id, int32_t value)
@@ -69,12 +69,12 @@ public:
 
 /* Runs on the radio thread */
 static void
-initTavaruaRadio(hal::FMRadioSettings &aInfo)
+initMsmFMRadio(hal::FMRadioSettings &aInfo)
 {
   mozilla::ScopedClose fd(sRadioFD);
   char version[64];
   int rc;
-  snprintf(version, sizeof(version), "%d", sTavaruaVersion);
+  snprintf(version, sizeof(version), "%d", sMsmFMVersion);
   property_set("hw.fm.version", version);
 
   /* Set the mode for soc downloader */
@@ -199,9 +199,9 @@ initTavaruaRadio(hal::FMRadioSettings &aInfo)
 
 /* Runs on the radio thread */
 static void *
-runTavaruaRadio(void *)
+runMsmFMRadio(void *)
 {
-  initTavaruaRadio(sRadioSettings);
+  initMsmFMRadio(sRadioSettings);
   if (!sRadioEnabled) {
     NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_ENABLE,
                                             hal::FM_RADIO_OPERATION_STATUS_FAIL));
@@ -275,7 +275,8 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
     return;
   }
 
-  sTavaruaMode = !strcmp((char *)cap.driver, "radio-tavarua");
+  sMsmFMMode = !strcmp((char *)cap.driver, "radio-tavarua") ||
+      !strcmp((char *)cap.driver, "radio-iris");
   HAL_LOG(("Radio: %s (%s)\n", cap.driver, cap.card));
 
   if (!(cap.capabilities & V4L2_CAP_RADIO)) {
@@ -289,10 +290,10 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
   }
   sRadioSettings = aInfo;
 
-  if (sTavaruaMode) {
+  if (sMsmFMMode) {
     sRadioFD = fd.forget();
-    sTavaruaVersion = cap.version;
-    pthread_create(&sRadioThread, nullptr, runTavaruaRadio, nullptr);
+    sMsmFMVersion = cap.version;
+    pthread_create(&sRadioThread, nullptr, runMsmFMRadio, nullptr);
     return;
   }
 
@@ -323,7 +324,7 @@ DisableFMRadio()
 
   sRadioEnabled = false;
 
-  if (sTavaruaMode) {
+  if (sMsmFMMode) {
     int rc = setControl(V4L2_CID_PRIVATE_TAVARUA_STATE, FM_OFF);
     if (rc < 0) {
       HAL_LOG(("Unable to turn off radio"));
@@ -355,7 +356,7 @@ FMRadioSeek(const hal::FMRadioSeekDirection& aDirection)
 #endif
 
   int rc = ioctl(sRadioFD, VIDIOC_S_HW_FREQ_SEEK, &seek);
-  if (sTavaruaMode && rc >= 0)
+  if (sMsmFMMode && rc >= 0)
     return;
 
   hal::FMRadioOperationInformation info;
@@ -403,7 +404,7 @@ SetFMRadioFrequency(const uint32_t frequency)
   if (rc < 0)
     HAL_LOG(("Could not set radio frequency"));
 
-  if (sTavaruaMode && rc >= 0)
+  if (sMsmFMMode && rc >= 0)
     return;
 
   hal::FMRadioOperationInformation info;

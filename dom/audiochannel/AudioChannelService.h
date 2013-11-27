@@ -18,7 +18,9 @@
 
 namespace mozilla {
 namespace dom {
-
+#ifdef MOZ_WIDGET_GONK
+class SpeakerManagerService;
+#endif
 class AudioChannelService
 : public nsIObserver
 , public nsITimerCallback
@@ -81,6 +83,21 @@ public:
   virtual void SetDefaultVolumeControlChannel(AudioChannelType aType,
                                               bool aHidden);
 
+  bool AnyAudioChannelIsActive();
+
+#ifdef MOZ_WIDGET_GONK
+  void RegisterSpeakerManager(SpeakerManagerService* aSpeakerManager)
+  {
+    if (!mSpeakerManager.Contains(aSpeakerManager)) {
+      mSpeakerManager.AppendElement(aSpeakerManager);
+    }
+  }
+
+  void UnregisterSpeakerManager(SpeakerManagerService* aSpeakerManager)
+  {
+    mSpeakerManager.RemoveElement(aSpeakerManager);
+  }
+#endif
 protected:
   void Notify();
 
@@ -163,7 +180,9 @@ protected:
                    AudioChannelAgentData* aData, void *aUnused);
 
   nsClassHashtable< nsPtrHashKey<AudioChannelAgent>, AudioChannelAgentData > mAgents;
-
+#ifdef MOZ_WIDGET_GONK
+  nsTArray<SpeakerManagerService*>  mSpeakerManager;
+#endif
   nsTArray<uint64_t> mChannelCounters[AUDIO_CHANNEL_INT_LAST];
 
   AudioChannelType mCurrentHigherChannel;

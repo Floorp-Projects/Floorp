@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(12368474-b448-4ac6-ba2c-db1966a7a697)]
+[scriptable, uuid(ef621cac-c818-464a-9fb1-9a35731a7f32)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -306,6 +306,15 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     jsval getGlobalForObject(in jsval obj);
+
+    /*
+     * To be called from JS only.
+     *
+     * Returns the true if the object is a (scripted) proxy.
+     * NOTE: Security wrappers are unwrapped first before the check.
+     */
+    [implicit_jscontext]
+    boolean isProxy(in jsval vobject);
 
     /*
      * Similar to evalInSandbox except this one is used to eval a script in the

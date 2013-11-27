@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="utf-8">
+ </head>
+ <body>
+  <div>
+   <textarea id="right-to-left1" dir="auto" class="testElement">جناع</textarea>
+   <input type="text" id="right-to-left2" dir="auto" value="שלום">
+  </div>
+  <script type="text/javascript">
+   var test1=document.getElementById("right-to-left1");
+   var test2=document.getElementById("right-to-left2");
+   test2.appendChild(document.createTextNode("hello"));
+   setInterval(function() {
+     test1.appendChild(test2);
+     test2.parentNode.removeChild;
+     test1.innerHTML="goodbye";
+   }, 4);
+  </script>
+ </body>
+</html>

@@ -37,13 +37,11 @@ EXPORTS.mozilla += [
     'ProcessPriorityManager.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AppProcessChecker.cpp',
-    'Blob.cpp',
     'ContentChild.cpp',
     'ContentParent.cpp',
     'ContentProcess.cpp',
-    'CrashReporterChild.cpp',
     'CrashReporterParent.cpp',
     'PermissionMessageUtils.cpp',
     'PreallocatedProcessManager.cpp',
@@ -53,6 +51,14 @@ SOURCES += [
     'TabContext.cpp',
     'TabMessageUtils.cpp',
     'TabParent.cpp',
+]
+
+# Blob.cpp cannot be compiled in unified mode because it triggers a fatal gcc warning.
+# CrashReporterChild.cpp cannot be compiled in unified mode because of name clashes
+# in OS X headers.
+SOURCES += [
+    'Blob.cpp',
+    'CrashReporterChild.cpp',
 ]
 
 IPDL_SOURCES += [

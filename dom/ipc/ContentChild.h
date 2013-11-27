@@ -178,6 +178,8 @@ public:
 
     virtual bool RecvSetOffline(const bool& offline);
 
+    virtual bool RecvSpeakerManagerNotify();
+
     virtual bool RecvNotifyVisited(const URIParams& aURI);
     // auto remove when alertfinished is received.
     nsresult AddRemoteAlertObserver(const nsString& aData, nsIObserver* aObserver);

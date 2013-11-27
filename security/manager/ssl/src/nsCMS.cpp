@@ -27,8 +27,6 @@ extern PRLogModuleInfo* gPIPNSSLog;
 
 using namespace mozilla;
 
-static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
 NS_IMPL_ISUPPORTS2(nsCMSMessage, nsICMSMessage, nsICMSMessage2)
 
 nsCMSMessage::nsCMSMessage()

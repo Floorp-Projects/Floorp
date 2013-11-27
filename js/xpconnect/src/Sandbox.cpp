@@ -219,6 +219,27 @@ CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static bool
+IsProxy(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() < 1) {
+        JS_ReportError(cx, "Function requires at least 1 argument");
+        return false;
+    }
+    if (!args[0].isObject()) {
+        args.rval().setBoolean(false);
+        return true;
+    }
+
+    RootedObject obj(cx, &args[0].toObject());
+    obj = js::CheckedUnwrap(obj);
+    NS_ENSURE_TRUE(obj, false);
+
+    args.rval().setBoolean(js::IsScriptedProxy(obj));
+    return true;
+}
+
 namespace xpc {
 
 bool
@@ -239,6 +260,11 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
     targetScope = CheckedUnwrap(targetScope);
     if (!targetScope) {
         JS_ReportError(cx, "Permission denied to export function into scope");
+        return false;
+    }
+
+    if (js::IsScriptedProxy(targetScope)) {
+        JS_ReportError(cx, "Defining property on proxy object is not allowed");
         return false;
     }
 
@@ -1085,7 +1111,8 @@ xpc::CreateSandboxObject(JSContext *cx, MutableHandleValue vp, nsISupports *prin
         if (options.wantExportHelpers &&
             (!JS_DefineFunction(cx, sandbox, "exportFunction", ExportFunction, 3, 0) ||
              !JS_DefineFunction(cx, sandbox, "evalInWindow", EvalInWindow, 2, 0) ||
-             !JS_DefineFunction(cx, sandbox, "createObjectIn", CreateObjectIn, 2, 0)))
+             !JS_DefineFunction(cx, sandbox, "createObjectIn", CreateObjectIn, 2, 0) ||
+             !JS_DefineFunction(cx, sandbox, "isProxy", IsProxy, 1, 0)))
             return NS_ERROR_XPC_UNEXPECTED;
 
         if (!options.globalProperties.Define(cx, sandbox))

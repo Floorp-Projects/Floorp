@@ -474,6 +474,10 @@ private:
 
     virtual bool RecvBroadcastVolume(const nsString& aVolumeName);
 
+    virtual bool RecvSpeakerManagerGetSpeakerStatus(bool* aValue);
+
+    virtual bool RecvSpeakerManagerForceSpeaker(const bool& aEnable);
+
     virtual bool RecvSystemMessageHandled() MOZ_OVERRIDE;
 
     virtual bool RecvNuwaReady() MOZ_OVERRIDE;

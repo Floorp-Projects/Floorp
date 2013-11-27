@@ -162,14 +162,14 @@ public:
   {
     EntryType* e = PutEntry(aKey, fallible_t());
     if (!e)
-      NS_RUNTIMEABORT("OOM");
+      NS_ABORT_OOM(mTable.entrySize * mTable.entryCount);
     return e;
   }
 
   EntryType* PutEntry(KeyType aKey, const fallible_t&) NS_WARN_UNUSED_RESULT
   {
     NS_ASSERTION(mTable.entrySize, "nsTHashtable was not initialized properly.");
-    
+
     return static_cast<EntryType*>
                       (PL_DHashTableOperate(
                             &mTable,
@@ -405,7 +405,7 @@ nsTHashtable<EntryType>::Init(uint32_t aInitSize)
   };
 
   if (!PL_DHashTableInit(&mTable, &sOps, nullptr, sizeof(EntryType), aInitSize)) {
-    NS_RUNTIMEABORT("OOM");
+    NS_ABORT_OOM(sizeof(EntryType) * aInitSize);
   }
 }
 
