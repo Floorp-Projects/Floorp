@@ -128,10 +128,10 @@ ContentClientRemoteBuffer::BeginPaint()
   // XXX: So we might not have a DeprecatedTextureClient yet.. because it will
   // only be created by CreateBuffer.. which will deliver a locked surface!.
   if (mTextureClient) {
-    SetNewBufferProvider(mTextureClient);
+    SetBufferProvider(mTextureClient);
   }
   if (mTextureClientOnWhite) {
-    SetNewBufferProviderOnWhite(mTextureClientOnWhite);
+    SetBufferProviderOnWhite(mTextureClientOnWhite);
   }
 }
 
@@ -140,8 +140,8 @@ ContentClientRemoteBuffer::EndPaint()
 {
   // XXX: We might still not have a texture client if PaintThebes
   // decided we didn't need one yet because the region to draw was empty.
-  SetNewBufferProvider(nullptr);
-  SetNewBufferProviderOnWhite(nullptr);
+  SetBufferProvider(nullptr);
+  SetBufferProviderOnWhite(nullptr);
   for (size_t i = 0; i < mOldTextures.Length(); ++i) {
     RemoveTextureClient(mOldTextures[i]);
   }
@@ -326,10 +326,10 @@ DeprecatedContentClientRemoteBuffer::BeginPaint()
   // XXX: So we might not have a DeprecatedTextureClient yet.. because it will
   // only be created by CreateBuffer.. which will deliver a locked surface!.
   if (mDeprecatedTextureClient) {
-    SetBufferProvider(mDeprecatedTextureClient);
+    SetDeprecatedBufferProvider(mDeprecatedTextureClient);
   }
   if (mDeprecatedTextureClientOnWhite) {
-    SetBufferProviderOnWhite(mDeprecatedTextureClientOnWhite);
+    SetDeprecatedBufferProviderOnWhite(mDeprecatedTextureClientOnWhite);
   }
 }
 
@@ -338,8 +338,8 @@ DeprecatedContentClientRemoteBuffer::EndPaint()
 {
   // XXX: We might still not have a texture client if PaintThebes
   // decided we didn't need one yet because the region to draw was empty.
-  SetBufferProvider(nullptr);
-  SetBufferProviderOnWhite(nullptr);
+  SetDeprecatedBufferProvider(nullptr);
+  SetDeprecatedBufferProviderOnWhite(nullptr);
   mOldTextures.Clear();
 
   if (mDeprecatedTextureClient) {
