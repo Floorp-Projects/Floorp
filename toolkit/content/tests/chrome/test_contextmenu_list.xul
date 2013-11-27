@@ -100,19 +100,14 @@ function startTest()
 
 function menuTests()
 {
-  // context menus shouldn't open when a menu is open on Mac
-  var ismac = (navigator.platform.indexOf("Mac") >= 0);
-
   gSelectionStep = 0;
   var element = $("menu");
   synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
-  is(gContextMenuFired, !ismac, "context menu fired when menu open");
+  is(gContextMenuFired, true, "context menu fired when menu open");
 
-  if (!ismac) {
-    gSelectionStep = 1;
-    $("menu").boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject).activeChild = $("menu2");
-    synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
-  }
+  gSelectionStep = 1;
+  $("menu").boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject).activeChild = $("menu2");
+  synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
 
   $("menu").open = false;
 }
