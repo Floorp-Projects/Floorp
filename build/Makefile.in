@@ -24,9 +24,8 @@ endif
 APP_BUILDID := $(shell cat $(DEPTH)/config/buildid)
 APP_INI_DEPS += $(DEPTH)/config/buildid
 
-DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DAPP_BUILDID=$(APP_BUILDID)
+DEFINES += -DAPP_BUILDID=$(APP_BUILDID)
 
-DEFINES += -DMOZ_APP_VERSION="$(MOZ_APP_VERSION)"
 APP_INI_DEPS += $(DEPTH)/config/autoconf.mk
 
 MOZ_SOURCE_STAMP := $(firstword $(shell cd $(topsrcdir)/$(MOZ_BUILD_APP)/.. && hg parent --template="{node|short}\n" 2>/dev/null))
@@ -37,34 +36,6 @@ endif
 source_repo ?= $(call getSourceRepo,$(topsrcdir)/$(MOZ_BUILD_APP)/..)
 ifneq (,$(source_repo))
   DEFINES += -DMOZ_SOURCE_REPO="$(source_repo)"
-endif
-
-DEFINES += \
-  -DMOZ_APP_BASENAME="$(MOZ_APP_BASENAME)" \
-  -DMOZ_APP_VENDOR="$(MOZ_APP_VENDOR)" \
-  -DMOZ_APP_ID="$(MOZ_APP_ID)" \
-  -DMAR_CHANNEL_ID="$(MAR_CHANNEL_ID)" \
-  -DACCEPTED_MAR_CHANNEL_IDS="$(ACCEPTED_MAR_CHANNEL_IDS)" \
-  $(NULL)
-
-ifeq ($(MOZ_BUILD_APP),browser)
-DEFINES += -DMOZ_BUILD_APP_IS_BROWSER
-endif
-
-ifdef MOZ_APP_PROFILE
-DEFINES += -DMOZ_APP_PROFILE="$(MOZ_APP_PROFILE)"
-endif
-
-ifdef MOZ_CRASHREPORTER
-DEFINES += -DMOZ_CRASHREPORTER
-endif
-
-ifdef MOZ_PROFILE_MIGRATOR
-DEFINES += -DMOZ_PROFILE_MIGRATOR
-endif
-
-ifdef MOZ_EXTENSION_MANAGER
-DEFINES += -DMOZ_EXTENSION_MANAGER
 endif
 
 endif
@@ -123,8 +94,6 @@ ifdef MOZ_APP_BASENAME
 $(FINAL_TARGET)/application.ini: $(APP_INI_DEPS)
 
 ifdef MOZ_APP_STATIC_INI
-DEFINES += -DMOZ_APP_STATIC_INI
-
 application.ini.h: appini_header.py $(FINAL_TARGET)/application.ini
 	$(PYTHON) $^ > $@
 export:: application.ini.h

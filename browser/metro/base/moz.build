@@ -8,3 +8,7 @@ METRO_CHROME_MANIFESTS += ['tests/mochiperf/metro.ini', 'tests/mochitest/metro.i
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 DIST_SUBDIR = 'metro'
+
+DEFINES['AB_CD'] = CONFIG['MOZ_UI_LOCALE']
+DEFINES['PACKAGE'] = 'browser'
+DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']

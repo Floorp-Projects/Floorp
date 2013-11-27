@@ -26,12 +26,6 @@ vpath %.mm \
   $(srcdir)/src/chrome/common \
   $(NULL)
 
-ifneq ($(OS_ARCH),WINNT) # (if OS_POSIX) {
-ifeq ($(OS_TARGET),Android)
-DEFINES += -DANDROID -D_POSIX_MONOTONIC_CLOCK=0
-endif # Android
-endif # } Not WINNT (OS_POSIX)
-
 # libevent
 
 ifndef MOZ_NATIVE_LIBEVENT # {
@@ -40,7 +34,6 @@ ifneq ($(OS_ARCH),WINNT) # (if OS_POSIX) {
 
 LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent
 LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/include
-DEFINES += -DHAVE_CONFIG_H
 
 ifeq ($(OS_ARCH),Darwin) # (OS_MACOSX) {
 LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/mac
@@ -56,9 +49,6 @@ endif # }
 
 else # } else (OS_BSD)  {
 
-ifneq (,$(filter DragonFly FreeBSD,$(OS_ARCH))) # (not OS_DRAGONFLY and not OS_FREEBSD) {
-DEFINES += -D_EVENT_HAVE_SENDFILE
-endif # }
 LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent/bsd
 
 endif # }
