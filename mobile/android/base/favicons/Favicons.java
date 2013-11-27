@@ -289,8 +289,8 @@ public class Favicons {
         sFaviconsCache.putSingleFavicon(pageUrl, image);
     }
 
-    public static void putFaviconsInMemCache(String pageUrl, Iterator<Bitmap> images) {
-        sFaviconsCache.putFavicons(pageUrl, images);
+    public static void putFaviconsInMemCache(String pageUrl, Iterator<Bitmap> images, boolean permanently) {
+        sFaviconsCache.putFavicons(pageUrl, images, permanently);
     }
 
     public static void clearMemCache() {
@@ -377,7 +377,7 @@ public class Favicons {
         ArrayList<Bitmap> toInsert = new ArrayList<Bitmap>(2);
         toInsert.add(loadBrandingBitmap(context, "favicon64.png"));
         toInsert.add(loadBrandingBitmap(context, "favicon32.png"));
-        putFaviconsInMemCache(BUILT_IN_FAVICON_URL, toInsert.iterator());
+        putFaviconsInMemCache(BUILT_IN_FAVICON_URL, toInsert.iterator(), true);
     }
 
     /**

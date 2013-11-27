@@ -23,6 +23,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * The collection of FaviconsForURL objects currently in the cache is stored in mBackingMap, keyed
  * by favicon URL.
  *
+ * A second map exists for permanent cache entries -- ones that are never expired. These entries
+ * are assumed to be disjoint from those in the normal cache, and this map is checked first.
+ *
  * FaviconsForURL provides a method for obtaining the smallest icon larger than a given size - the
  * most appropriate icon for a particular size.
  * It also distinguishes between "primary" favicons (Ones that have merely been extracted from a
@@ -106,6 +109,9 @@ public class FaviconCache {
     // for the least larger payload currently present.
     private final ConcurrentHashMap<String, FaviconsForURL> mBackingMap = new ConcurrentHashMap<String, FaviconsForURL>();
 
+    // And the same, but never evicted.
+    private final ConcurrentHashMap<String, FaviconsForURL> mPermanentBackingMap = new ConcurrentHashMap<String, FaviconsForURL>();
+
     // A linked list used to implement a queue, defining the LRU properties of the cache. Elements
     // contained within the various FaviconsForURL objects are held here, the least recently used
     // of which at the end of the list. When space needs to be reclaimed, the appropriate bitmap is
@@ -117,7 +123,7 @@ public class FaviconCache {
     // the primary bitmap most suited to the requested size (in cases where multiple primary bitmaps
     // are provided by the underlying file format).
 
-    // Current size, in bytes, of the bitmap data present in the cache.
+    // Current size, in bytes, of the bitmap data present in the LRU cache.
     private final AtomicInteger mCurrentSize = new AtomicInteger(0);
 
     // The maximum quantity, in bytes, of bitmap data which may be stored in the cache.
@@ -216,6 +222,8 @@ public class FaviconCache {
 
         try {
             // If we don't have it in the cache, it certainly isn't a known failure.
+            // Non-evictable favicons are never failed, so we don't need to
+            // check mPermanentBackingMap.
             if (!mBackingMap.containsKey(faviconURL)) {
                 return false;
             }
@@ -304,17 +312,23 @@ public class FaviconCache {
         boolean doingWrites = false;
         boolean shouldComputeColour = false;
         boolean isAborting = false;
+        boolean wasPermanent = false;
+        FaviconsForURL container;
         final Bitmap newBitmap;
-        final FaviconsForURL container;
 
         startRead();
 
         try {
-            if (!mBackingMap.containsKey(faviconURL)) {
-                return null;
+            container = mPermanentBackingMap.get(faviconURL);
+            if (container == null) {
+                container = mBackingMap.get(faviconURL);
+                if (container == null) {
+                    // We don't have it!
+                    return null;
+                }
+            } else {
+                wasPermanent = true;
             }
-
-            container = mBackingMap.get(faviconURL);
 
             FaviconCacheElement cacheElement;
 
@@ -412,9 +426,10 @@ public class FaviconCache {
             // This way, subsequent requests hit straight away.
             FaviconCacheElement newElement = container.addSecondary(newBitmap, targetSize);
 
-            setMostRecentlyUsed(newElement);
-
-            mCurrentSize.addAndGet(newElement.sizeOf());
+            if (!wasPermanent) {
+                setMostRecentlyUsed(newElement);
+                mCurrentSize.addAndGet(newElement.sizeOf());
+            }
         } finally {
             finishWrite();
         }
@@ -432,14 +447,18 @@ public class FaviconCache {
         startRead();
 
         try {
-            if (!mBackingMap.containsKey(key)) {
+            FaviconsForURL element = mPermanentBackingMap.get(key);
+            if (element == null) {
+                element = mBackingMap.get(key);
+            }
+
+            if (element == null) {
                 Log.w(LOGTAG, "Cannot compute dominant color of non-cached favicon. Cache fullness " +
                               mCurrentSize.get() + '/' + mMaxSizeBytes);
                 finishRead();
                 return 0xFFFFFF;
             }
 
-            FaviconsForURL element = mBackingMap.get(key);
 
             return element.ensureDominantColor();
         } finally {
@@ -543,8 +562,9 @@ public class FaviconCache {
      *
      * @param faviconURL The URL from which the favicons originate.
      * @param favicons A List of favicons decoded from this URL.
+     * @param permanently If true, the added favicons are never subject to eviction.
      */
-    public void putFavicons(String faviconURL, Iterator<Bitmap> favicons) {
+    public void putFavicons(String faviconURL, Iterator<Bitmap> favicons, boolean permanently) {
         // We don't know how many icons we'll have - let's just take a guess.
         FaviconsForURL toInsert = new FaviconsForURL(5 * NUM_FAVICON_SIZES);
         int sizeGained = 0;
@@ -567,8 +587,10 @@ public class FaviconCache {
         // without taking the write lock, via the magic of the reordering semaphore.
         mReorderingSemaphore.acquireUninterruptibly();
         try {
-            for (FaviconCacheElement newElement : toInsert.mFavicons) {
-                mOrdering.offer(newElement);
+            if (!permanently) {
+                for (FaviconCacheElement newElement : toInsert.mFavicons) {
+                    mOrdering.offer(newElement);
+                }
             }
         } catch (Exception e) {
             abortingRead = true;
@@ -585,10 +607,14 @@ public class FaviconCache {
         }
 
         try {
-            mCurrentSize.addAndGet(sizeGained);
+            if (permanently) {
+                mPermanentBackingMap.put(faviconURL, toInsert);
+            } else {
+                mCurrentSize.addAndGet(sizeGained);
 
-            // Update the value in the LruCache...
-            recordRemoved(mBackingMap.put(faviconURL, toInsert));
+                // Update the value in the LruCache...
+                recordRemoved(mBackingMap.put(faviconURL, toInsert));
+            }
         } finally {
             finishWrite();
         }
@@ -631,10 +657,12 @@ public class FaviconCache {
     public void evictAll() {
         startWrite();
 
+        // Note that we neither clear, nor track the size of, the permanent map.
         try {
             mCurrentSize.set(0);
             mBackingMap.clear();
             mOrdering.clear();
+
         } finally {
             finishWrite();
         }
