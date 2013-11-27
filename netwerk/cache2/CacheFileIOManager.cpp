@@ -1004,7 +1004,7 @@ CacheFileIOManager::OpenFile(const nsACString &aKey,
        PromiseFlatCString(aKey).get(), aFlags, aCallback));
 
   nsresult rv;
-  CacheFileIOManager *ioMan = gInstance;
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (!ioMan)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1103,7 +1103,7 @@ CacheFileIOManager::CloseHandle(CacheFileHandle *aHandle)
   LOG(("CacheFileIOManager::CloseHandle() [handle=%p]", aHandle));
 
   nsresult rv;
-  CacheFileIOManager *ioMan = gInstance;
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1156,7 +1156,7 @@ CacheFileIOManager::Read(CacheFileHandle *aHandle, int64_t aOffset,
        "listener=%p]", aHandle, aOffset, aCount, aCallback));
 
   nsresult rv;
-  CacheFileIOManager *ioMan = gInstance;
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1217,7 +1217,7 @@ CacheFileIOManager::Write(CacheFileHandle *aHandle, int64_t aOffset,
        aCallback));
 
   nsresult rv;
-  CacheFileIOManager *ioMan = gInstance;
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1285,7 +1285,7 @@ CacheFileIOManager::DoomFile(CacheFileHandle *aHandle,
        aHandle, aCallback));
 
   nsresult rv;
-  CacheFileIOManager *ioMan = gInstance;
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1349,7 +1349,7 @@ CacheFileIOManager::DoomFileByKey(const nsACString &aKey,
        PromiseFlatCString(aKey).get(), aCallback));
 
   nsresult rv;
-  CacheFileIOManager *ioMan = gInstance;
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (!ioMan)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1410,7 +1410,7 @@ CacheFileIOManager::ReleaseNSPRHandle(CacheFileHandle *aHandle)
   LOG(("CacheFileIOManager::ReleaseNSPRHandle() [handle=%p]", aHandle));
 
   nsresult rv;
-  CacheFileIOManager *ioMan = gInstance;
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1446,7 +1446,7 @@ CacheFileIOManager::TruncateSeekSetEOF(CacheFileHandle *aHandle,
        "EOFPos=%lld, listener=%p]", aHandle, aTruncatePos, aEOFPos, aCallback));
 
   nsresult rv;
-  CacheFileIOManager *ioMan = gInstance;
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (aHandle->IsClosed() || !ioMan)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1467,7 +1467,7 @@ CacheFileIOManager::EnumerateEntryFiles(EEnumerateMode aMode,
   LOG(("CacheFileIOManager::EnumerateEntryFiles(%d)", aMode));
 
   nsresult rv;
-  CacheFileIOManager *ioMan = gInstance;
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
 
   if (!ioMan)
     return NS_ERROR_NOT_INITIALIZED;
