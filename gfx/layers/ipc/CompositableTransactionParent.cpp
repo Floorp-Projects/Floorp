@@ -98,7 +98,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       MOZ_LAYERS_LOG(("[ParentSide] Created double buffer"));
       const OpDestroyThebesBuffer& op = aEdit.get_OpDestroyThebesBuffer();
       CompositableParent* compositableParent = static_cast<CompositableParent*>(op.compositableParent());
-      ContentHostBase* content = static_cast<ContentHostBase*>(compositableParent->GetCompositableHost());
+      DeprecatedContentHostBase* content = static_cast<DeprecatedContentHostBase*>(compositableParent->GetCompositableHost());
       content->DestroyTextures();
 
       break;
