@@ -23,6 +23,17 @@ enum FilterBackend {
   FILTER_BACKEND_DIRECT2D1_1
 };
 
+enum TransformFilterAtts
+{
+  ATT_TRANSFORM_MATRIX = 0,                 // Matrix
+  ATT_TRANSFORM_FILTER                      // Filter
+};
+
+enum TransformFilterInputs
+{
+  IN_TRANSFORM_IN = 0
+};
+
 enum BlendFilterAtts
 {
   ATT_BLEND_BLENDMODE = 0                   // uint32_t
@@ -212,16 +223,6 @@ enum ConvolveMatrixEdgeMode
 enum ConvolveMatrixInputs
 {
   IN_CONVOLVE_MATRIX_IN = 0
-};
-
-enum OffsetAtts
-{
-  ATT_OFFSET_OFFSET = 0                     // IntPoint
-};
-
-enum OffsetInputs
-{
-  IN_OFFSET_IN = 0
 };
 
 enum DisplacementMapAtts
@@ -480,6 +481,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, const Rect &) { MOZ_CRASH(); }
   virtual void SetAttribute(uint32_t aIndex, const IntRect &) { MOZ_CRASH(); }
   virtual void SetAttribute(uint32_t aIndex, const Point &) { MOZ_CRASH(); }
+  virtual void SetAttribute(uint32_t aIndex, const Matrix &) { MOZ_CRASH(); }
   virtual void SetAttribute(uint32_t aIndex, const Matrix5x4 &) { MOZ_CRASH(); }
   virtual void SetAttribute(uint32_t aIndex, const Point3D &) { MOZ_CRASH(); }
   virtual void SetAttribute(uint32_t aIndex, const Color &) { MOZ_CRASH(); }

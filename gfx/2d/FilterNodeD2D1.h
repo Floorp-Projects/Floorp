@@ -23,7 +23,9 @@ public:
     : mDT(aDT)
     , mEffect(aEffect)
     , mType(aType)
-  {}
+  {
+    InitUnmappedProperties();
+  }
 
   virtual FilterBackend GetBackendType() { return FILTER_BACKEND_DIRECT2D1_1; }
 
@@ -43,6 +45,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, bool aValue);
   virtual void SetAttribute(uint32_t aIndex, const Float *aValues, uint32_t aSize);
   virtual void SetAttribute(uint32_t aIndex, const IntPoint &aValue);
+  virtual void SetAttribute(uint32_t aIndex, const Matrix &aValue);
 
 protected:
   friend class DrawTargetD2D1;
@@ -51,6 +54,8 @@ protected:
 
   virtual ID2D1Effect* InputEffect() { return mEffect.get(); }
   virtual ID2D1Effect* OutputEffect() { return mEffect.get(); }
+
+  void InitUnmappedProperties();
 
   RefPtr<DrawTarget> mDT;
   RefPtr<ID2D1Effect> mEffect;
