@@ -2725,22 +2725,21 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
         begin = end;
 
     Rooted<ArrayObject*> narr(cx);
-
-    if (obj->is<ArrayObject>() && end <= obj->getDenseInitializedLength() &&
-        !ObjectMayHaveExtraIndexedProperties(obj))
-    {
-        narr = NewDenseCopiedArray(cx, end - begin, obj, begin);
-        if (!narr)
-            return false;
-        TryReuseArrayType(obj, narr);
-        args.rval().setObject(*narr);
-        return true;
-    }
-
     narr = NewDenseAllocatedArray(cx, end - begin);
     if (!narr)
         return false;
     TryReuseArrayType(obj, narr);
+
+    if (obj->is<ArrayObject>() && !ObjectMayHaveExtraIndexedProperties(obj)) {
+        if (obj->getDenseInitializedLength() > begin) {
+            uint32_t numSourceElements = obj->getDenseInitializedLength() - begin;
+            uint32_t initLength = Min(numSourceElements, end - begin);
+            narr->setDenseInitializedLength(initLength);
+            narr->initDenseElements(0, &obj->getDenseElement(begin), initLength);
+        }
+        args.rval().setObject(*narr);
+        return true;
+    }
 
     RootedValue value(cx);
     for (slot = begin; slot < end; slot++) {
