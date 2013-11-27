@@ -31,7 +31,6 @@
 #include "nsIXPConnect.h"
 #include "mozilla/unused.h"
 #include "nsContentUtils.h" // for nsAutoScriptBlocker
-#include "nsIMemoryReporter.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsPrintfCString.h"
 #include "nsTHashtable.h"
@@ -1908,23 +1907,6 @@ StoreAndNotifyEmbedVisit(VisitData& aPlace,
   (void)NS_DispatchToMainThread(event);
 }
 
-class HistoryLinksHashtableReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-  HistoryLinksHashtableReporter()
-    : MemoryUniReporter("explicit/history-links-hashtable",
-                         KIND_HEAP, UNITS_BYTES,
-"Memory used by the hashtable that records changes to the visited state of "
-"links.")
-    {}
-private:
-  int64_t Amount() MOZ_OVERRIDE
-  {
-    History* history = History::GetService();
-    return history ? history->SizeOfIncludingThis(MallocSizeOf) : 0;
-  }
-};
-
 } // anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1933,7 +1915,11 @@ private:
 History* History::gService = nullptr;
 
 History::History()
-  : mShuttingDown(false)
+  : MemoryUniReporter("explicit/history-links-hashtable",
+                      KIND_HEAP, UNITS_BYTES,
+"Memory used by the hashtable that records changes to the visited state of "
+"links.")
+  , mShuttingDown(false)
   , mShutdownMutex("History::mShutdownMutex")
   , mObservers(VISIT_OBSERVERS_INITIAL_CACHE_SIZE)
   , mRecentlyVisitedURIsNextIndex(0)
@@ -1946,19 +1932,22 @@ History::History()
   if (os) {
     (void)os->AddObserver(this, TOPIC_PLACES_SHUTDOWN, false);
   }
-
-  mReporter = new HistoryLinksHashtableReporter();
-  NS_RegisterMemoryReporter(mReporter);
 }
 
 History::~History()
 {
-  NS_UnregisterMemoryReporter(mReporter);
+  UnregisterWeakMemoryReporter(this);
 
   gService = nullptr;
 
   NS_ASSERTION(mObservers.Count() == 0,
                "Not all Links were removed before we disappear!");
+}
+
+void
+History::InitMemoryReporter()
+{
+  RegisterWeakMemoryReporter(this);
 }
 
 NS_IMETHODIMP
@@ -2232,6 +2221,12 @@ History::SizeOfEntryExcludingThis(KeyClass* aEntry, mozilla::MallocSizeOf aMallo
   return aEntry->array.SizeOfExcludingThis(aMallocSizeOf);
 }
 
+int64_t
+History::Amount()
+{
+  return SizeOfIncludingThis(MallocSizeOf);
+}
+
 size_t
 History::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOfThis)
 {
@@ -2261,6 +2256,7 @@ History::GetSingleton()
   if (!gService) {
     gService = new History();
     NS_ENSURE_TRUE(gService, nullptr);
+    gService->InitMemoryReporter();
   }
 
   NS_ADDREF(gService);
@@ -2918,8 +2914,9 @@ History::Observe(nsISupports* aSubject, const char* aTopic,
 ////////////////////////////////////////////////////////////////////////////////
 //// nsISupports
 
-NS_IMPL_ISUPPORTS4(
+NS_IMPL_ISUPPORTS_INHERITED4(
   History
+, MemoryUniReporter
 , IHistory
 , nsIDownloadHistory
 , mozIAsyncHistory

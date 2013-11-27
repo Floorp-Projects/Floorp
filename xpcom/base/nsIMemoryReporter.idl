@@ -147,16 +147,9 @@ interface nsIMemoryReporterCallback : nsISupports
  * - All other reports are unconstrained except that they must have a
  *   description that is a sentence.
  */
-[scriptable, uuid(53248304-124b-43cd-99dc-6e5797b91618)]
+[scriptable, uuid(0884cd0f-5829-4381-979b-0f53904030ed)]
 interface nsIMemoryReporter : nsISupports
 {
-  /*
-   * The name of the reporter.  Useful when only one reporter needs to be run.
-   * Must be unique;  if reporters share names it's likely the wrong one will
-   * be called in certain circumstances.
-   */
-  readonly attribute ACString name;
-
   /*
    * Run the reporter.
    */
@@ -185,7 +178,7 @@ interface nsIFinishReportingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(41c667f4-16b3-424f-95d9-a6f903f72eb2)]
+[scriptable, builtinclass, uuid(9245d89e-6523-45f9-bc15-a69789e33cbb)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -196,21 +189,30 @@ interface nsIMemoryReporterManager : nsISupports
   /*
    * Register the given nsIMemoryReporter.  After a reporter is registered,
    * it will be available via enumerateReporters().  The Manager service
-   * will hold a strong reference to the given reporter.
+   * will hold a strong reference to the given reporter, and will be
+   * responsible for freeing the reporter at shutdown.
    */
-  void registerReporter(in nsIMemoryReporter reporter);
+  void registerStrongReporter(in nsIMemoryReporter reporter);
 
   /*
-   * Unregister the given memory reporter.
+   * Like registerReporter, but the Manager service will hold a weak reference
+   * to the given reporter.  The reporter should be unregistered before
+   * shutdown.
    */
-  void unregisterReporter(in nsIMemoryReporter reporter);
+  void registerWeakReporter(in nsIMemoryReporter reporter);
+
+  /*
+   * Unregister the given memory reporter, which must have been registered with
+   * registerWeakReporter().
+   */
+  void unregisterWeakReporter(in nsIMemoryReporter reporter);
 
   /*
    * These functions should only be used for testing purposes.
    */
-  void blockRegistration();
-  void unblockRegistration();
-  void registerReporterEvenIfBlocked(in nsIMemoryReporter aReporter);
+  void blockRegistrationAndHideExistingReporters();
+  void unblockRegistrationAndRestoreOriginalReporters();
+  void registerStrongReporterEvenIfBlocked(in nsIMemoryReporter aReporter);
 
   /*
    * Return an enumerator of nsIMemoryReporters that are currently registered
@@ -371,14 +373,18 @@ class nsPIDOMWindow;
 // around for backwards compatibility.
 typedef nsIMemoryReporterCallback nsIHandleReportCallback;
 
-// Note that the memory reporters are held in an nsCOMArray, which means
-// that individual reporters should be referenced with |nsIMemoryReporter *|
-// instead of nsCOMPtr<nsIMemoryReporter>.
-
-XPCOM_API(nsresult) NS_RegisterMemoryReporter(nsIMemoryReporter* aReporter);
-XPCOM_API(nsresult) NS_UnregisterMemoryReporter(nsIMemoryReporter* aReporter);
-
 namespace mozilla {
+
+// Register a memory reporter.  The manager service will hold a strong
+// reference to this reporter.
+XPCOM_API(nsresult) RegisterStrongMemoryReporter(nsIMemoryReporter* aReporter);
+
+// Register a memory reporter.  The manager service will hold a weak reference
+// to this reporter.
+XPCOM_API(nsresult) RegisterWeakMemoryReporter(nsIMemoryReporter* aReporter);
+
+// Unregister a weak memory reporter.
+XPCOM_API(nsresult) UnregisterWeakMemoryReporter(nsIMemoryReporter* aReporter);
 
 // The memory reporter manager provides access to several distinguished
 // amounts via attributes.  Some of these amounts are provided by Gecko
@@ -588,12 +594,6 @@ public:
   virtual ~MemoryMultiReporter() {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
-
-  NS_IMETHOD GetName(nsACString& aName)
-  {
-    aName.Assign(mName);
-    return NS_OK;
-  }
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
                             nsISupports* aClosure) = 0;
