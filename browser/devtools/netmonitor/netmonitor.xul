@@ -210,6 +210,11 @@
                class="plain requests-menu-footer-label"
                flex="1"
                crop="end"/>
+        <button id="requests-menu-clear-button"
+               class="requests-menu-footer-button"
+               onclick="NetMonitorView.RequestsMenu.clear()"
+               label="&netmonitorUI.footer.clear;">
+        </button>
       </hbox>
     </vbox>
 
