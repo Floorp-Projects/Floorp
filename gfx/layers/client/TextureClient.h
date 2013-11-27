@@ -60,17 +60,6 @@ public:
 };
 
 /**
- * Interface for TextureClients that can be updated using a DrawTarget.
- */
-class TextureClientDrawTarget
-{
-public:
-  virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() = 0;
-  virtual gfx::SurfaceFormat GetFormat() const = 0;
-  virtual bool AllocateForSurface(gfx::IntSize aSize) = 0;
-};
-
-/**
  * Interface for TextureClients that can be updated using YCbCr data.
  */
 class TextureClientYCbCr
@@ -135,7 +124,6 @@ public:
   virtual ~TextureClient();
 
   virtual TextureClientSurface* AsTextureClientSurface() { return nullptr; }
-  virtual TextureClientDrawTarget* AsTextureClientDrawTarget() { return nullptr; }
   virtual TextureClientYCbCr* AsTextureClientYCbCr() { return nullptr; }
 
   /**
@@ -252,8 +240,7 @@ protected:
  */
 class BufferTextureClient : public TextureClient
                           , public TextureClientSurface
-                          , public TextureClientYCbCr
-                          , public TextureClientDrawTarget
+                          , TextureClientYCbCr
 {
 public:
   BufferTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat,
@@ -279,12 +266,6 @@ public:
 
   virtual bool AllocateForSurface(gfx::IntSize aSize) MOZ_OVERRIDE;
 
-  // TextureClientDrawTarget
-
-  virtual TextureClientDrawTarget* AsTextureClientDrawTarget() MOZ_OVERRIDE { return this; }
-
-  virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
-
   // TextureClientYCbCr
 
   virtual TextureClientYCbCr* AsTextureClientYCbCr() MOZ_OVERRIDE { return this; }
@@ -295,7 +276,7 @@ public:
                                 gfx::IntSize aCbCrSize,
                                 StereoMode aStereoMode) MOZ_OVERRIDE;
 
-  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
+  gfx::SurfaceFormat GetFormat() const { return mFormat; }
 
   // XXX - Bug 908196 - Make Allocate(uint32_t) and GetBufferSize() protected.
   // these two methods should only be called by methods of BufferTextureClient

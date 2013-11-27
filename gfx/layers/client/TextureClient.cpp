@@ -321,19 +321,6 @@ BufferTextureClient::AllocateForSurface(gfx::IntSize aSize)
   return true;
 }
 
-TemporaryRef<gfx::DrawTarget>
-BufferTextureClient::GetAsDrawTarget()
-{
-  MOZ_ASSERT(IsValid());
-
-  ImageDataSerializer serializer(GetBuffer());
-  if (!serializer.IsValid()) {
-    return nullptr;
-  }
-
-  return serializer.GetAsDrawTarget();
-}
-
 bool
 BufferTextureClient::UpdateYCbCr(const PlanarYCbCrData& aData)
 {
