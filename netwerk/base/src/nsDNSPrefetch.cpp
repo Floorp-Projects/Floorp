@@ -6,7 +6,6 @@
 #include "nsDNSPrefetch.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsThreadUtils.h"
 
 #include "nsIDNSListener.h"
 #include "nsIDNSService.h"
@@ -31,11 +30,8 @@ nsDNSPrefetch::Shutdown()
     return NS_OK;
 }
 
-nsDNSPrefetch::nsDNSPrefetch(nsIURI *aURI,
-                             nsIDNSListener *aListener,
-                             bool storeTiming)
+nsDNSPrefetch::nsDNSPrefetch(nsIURI *aURI, bool storeTiming)
     : mStoreTiming(storeTiming)
-    , mListener(do_GetWeakReference(aListener))
 {
     aURI->GetAsciiHost(mHostname);
 }
@@ -57,11 +53,8 @@ nsDNSPrefetch::Prefetch(uint16_t flags)
     // then our timing will be useless. However, in such a case,
     // mEndTimestamp will be a null timestamp and callers should check
     // TimingsValid() before using the timing.
-    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
-    return sDNSService->AsyncResolve(mHostname,
-                                     flags | nsIDNSService::RESOLVE_SPECULATE,
-                                     this, mainThread,
-                                     getter_AddRefs(tmpOutstanding));
+    return sDNSService->AsyncResolve(mHostname, flags | nsIDNSService::RESOLVE_SPECULATE,
+                                     this, nullptr, getter_AddRefs(tmpOutstanding));
 }
 
 nsresult
@@ -93,14 +86,7 @@ nsDNSPrefetch::OnLookupComplete(nsICancelable *request,
                                 nsIDNSRecord  *rec,
                                 nsresult       status)
 {
-    MOZ_ASSERT(NS_IsMainThread(), "Expecting DNS callback on main thread.");
-
-    if (mStoreTiming) {
+    if (mStoreTiming)
         mEndTimestamp = mozilla::TimeStamp::Now();
-    }
-    nsCOMPtr<nsIDNSListener> listener = do_QueryReferent(mListener);
-    if (listener) {
-      listener->OnLookupComplete(request, rec, status);
-    }
     return NS_OK;
 }
