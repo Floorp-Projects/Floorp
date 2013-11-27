@@ -278,7 +278,13 @@ struct JSCompartment
     js::WeakMapBase              *gcWeakMapList;
 
   private:
-    enum { DebugFromC = 1, DebugFromJS = 2 };
+    enum {
+        DebugFromC = 1 << 0,
+        DebugFromJS = 1 << 1,
+        DebugNeedDelazification = 1 << 2
+    };
+
+    static const unsigned DebugModeFromMask = DebugFromC | DebugFromJS;
 
     unsigned                     debugModeBits;  // see debugMode() below
 
@@ -356,13 +362,34 @@ struct JSCompartment
      * by Debugger objects. Therefore debugModeBits has the DebugFromC bit set
      * if the C API wants debug mode and the DebugFromJS bit set if debuggees
      * is non-empty.
+     *
+     * When toggling on, DebugNeedDelazification is set to signal that
+     * Debugger methods which depend on seeing all scripts (like findScripts)
+     * need to delazify the scripts in the compartment first.
      */
-    bool debugMode() const { return !!debugModeBits; }
+    bool debugMode() const {
+        return !!(debugModeBits & DebugModeFromMask);
+    }
 
     /* True if any scripts from this compartment are on the JS stack. */
     bool hasScriptsOnStack();
 
+    /*
+     * Schedule the compartment to be delazified. Called from
+     * LazyScript::Create.
+     */
+    void scheduleDelazificationForDebugMode() {
+        debugModeBits |= DebugNeedDelazification;
+    }
+
+    /*
+     * If we scheduled delazification for turning on debug mode, delazify all
+     * scripts.
+     */
+    bool ensureDelazifyScriptsForDebugMode(JSContext *cx);
+
   private:
+
     /* This is called only when debugMode() has just toggled. */
     void updateForDebugMode(js::FreeOp *fop, js::AutoDebugModeInvalidation &invalidate);
 
