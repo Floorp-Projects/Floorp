@@ -292,6 +292,20 @@ ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 }
 
 void
+ContentClientRemoteBuffer::OnActorDestroy()
+{
+  if (mTextureClient) {
+    mTextureClient->OnActorDestroy();
+  }
+  if (mTextureClientOnWhite) {
+    mTextureClientOnWhite->OnActorDestroy();
+  }
+  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
+    mOldTextures[i]->OnActorDestroy();
+  }
+}
+
+void
 DeprecatedContentClientRemoteBuffer::DestroyBuffers()
 {
   if (!mDeprecatedTextureClient) {
@@ -642,6 +656,26 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
     }
 
     aSource.DrawBufferWithRotation(destCtx->GetDrawTarget(), BUFFER_WHITE, 1.0, OP_SOURCE);
+  }
+}
+
+void
+ContentClientDoubleBuffered::OnActorDestroy()
+{
+  if (mTextureClient) {
+    mTextureClient->OnActorDestroy();
+  }
+  if (mTextureClientOnWhite) {
+    mTextureClientOnWhite->OnActorDestroy();
+  }
+  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
+    mOldTextures[i]->OnActorDestroy();
+  }
+  if (mFrontClient) {
+    mFrontClient->OnActorDestroy();
+  }
+  if (mFrontClientOnWhite) {
+    mFrontClientOnWhite->OnActorDestroy();
   }
 }
 
