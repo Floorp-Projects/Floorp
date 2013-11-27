@@ -42,11 +42,12 @@ using namespace mozilla::dom;
 /*
  * nsJSEventListener implementation
  */
-nsJSEventListener::nsJSEventListener(JSObject* aScopeObject,
+nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
+                                     JSObject* aScopeObject,
                                      nsISupports *aTarget,
                                      nsIAtom* aType,
                                      const nsEventHandler& aHandler)
-  : nsIJSEventListener(aScopeObject, aTarget, aType, aHandler)
+  : nsIJSEventListener(aContext, aScopeObject, aTarget, aType, aHandler)
 {
   if (mScopeObject) {
     mozilla::HoldJSObjects(this);
@@ -80,6 +81,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
   if (tmp->mScopeObject) {
     tmp->mScopeObject = nullptr;
     mozilla::DropJSObjects(tmp);
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
   }
   tmp->mHandler.ForgetHandler();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -93,6 +95,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSEventListener)
   } else {
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsJSEventListener, tmp->mRefCnt.get())
   }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mHandler.Ptr())
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -145,7 +148,13 @@ nsJSEventListener::IsBlackForCC()
   if ((!mScopeObject || !xpc_IsGrayGCThing(mScopeObject)) &&
       (!mHandler.HasEventHandler() ||
        !mHandler.Ptr()->HasGrayCallable())) {
-    return true;
+    if (!mContext) {
+      // Well, we certainly won't be marking it, so move on!
+      return true;
+    }
+    nsIScriptGlobalObject* sgo =
+      static_cast<nsJSContext*>(mContext.get())->GetCachedGlobalObject();
+    return sgo && sgo->IsBlackForCC();
   }
   return false;
 }
@@ -255,14 +264,17 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
  */
 
 nsresult
-NS_NewJSEventListener(JSObject* aScopeObject,
+NS_NewJSEventListener(nsIScriptContext* aContext, JSObject* aScopeObject,
                       nsISupports*aTarget, nsIAtom* aEventType,
                       const nsEventHandler& aHandler,
                       nsIJSEventListener** aReturn)
 {
+  MOZ_ASSERT(aContext || aHandler.HasEventHandler(),
+             "Must have a handler if we don't have an nsIScriptContext");
   NS_ENSURE_ARG(aEventType || !NS_IsMainThread());
   nsJSEventListener* it =
-    new nsJSEventListener(aScopeObject, aTarget, aEventType, aHandler);
+    new nsJSEventListener(aContext, aScopeObject, aTarget, aEventType,
+                          aHandler);
   NS_ADDREF(*aReturn = it);
 
   return NS_OK;

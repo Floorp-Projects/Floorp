@@ -427,7 +427,7 @@ protected:
    * will look for it on mTarget.
    */
   nsresult CompileEventHandlerInternal(nsListenerStruct *aListenerStruct,
-                                       nsCxPusher& aPusher,
+                                       bool aNeedsCxPush,
                                        const nsAString* aBody);
 
   /**
@@ -444,7 +444,8 @@ protected:
    * allowed to be null.  The nsListenerStruct that results, if any, is returned
    * in aListenerStruct.
    */
-  nsListenerStruct* SetEventHandlerInternal(JS::Handle<JSObject*> aScopeGlobal,
+  nsListenerStruct* SetEventHandlerInternal(nsIScriptContext *aContext,
+                                            JS::Handle<JSObject*> aScopeGlobal,
                                             nsIAtom* aName,
                                             const nsAString& aTypeString,
                                             const nsEventHandler& aHandler,
@@ -536,9 +537,6 @@ protected:
   already_AddRefed<nsPIDOMWindow> GetTargetAsInnerWindow() const;
 
   bool ListenerCanHandle(nsListenerStruct* aLs, mozilla::WidgetEvent* aEvent);
-
-  already_AddRefed<nsIScriptGlobalObject>
-  GetScriptGlobalAndDocument(nsIDocument** aDoc);
 
   uint32_t mMayHavePaintEventListener : 1;
   uint32_t mMayHaveMutationListeners : 1;
