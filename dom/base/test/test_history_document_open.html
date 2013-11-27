@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=943418
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 943418</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 943418 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function continueTest(f) {
+    // Make sure we're the entry script so errors get reported here
+    setTimeout(finishTest, 0, f);
+  }
+
+  function finishTest(f) {
+    f();
+    ok(true, "Got here");
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=943418">Mozilla Bug 943418</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe src="data:text/html,<script>function f() { history.length; } window.onload = function() { var f = window.f; document.open(); document.close(); parent.continueTest(f); }</script>" </script>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

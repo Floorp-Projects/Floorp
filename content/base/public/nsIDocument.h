@@ -907,7 +907,7 @@ public:
    * this document. If you're not absolutely sure you need this, use
    * GetWindow().
    */
-  nsPIDOMWindow* GetInnerWindow()
+  nsPIDOMWindow* GetInnerWindow() const
   {
     return mRemovedFromDocShell ? nullptr : mWindow;
   }
@@ -1613,7 +1613,10 @@ public:
 
   /**
    * Return true when this document is active, i.e., the active document
-   * in a content viewer.
+   * in a content viewer.  Note that this will return true for bfcached
+   * documents, so this does NOT match the "active document" concept in
+   * the WHATWG spec.  That would correspond to GetInnerWindow() &&
+   * GetInnerWindow()->IsCurrentInnerWindow().
    */
   bool IsActive() const { return mDocumentContainer && !mRemovedFromDocShell; }
 
