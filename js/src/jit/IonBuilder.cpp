@@ -6051,10 +6051,6 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, Pr
     *testString = false;
 
     types::TemporaryTypeSet *types = obj->resultTypeSet();
-
-    if (!types && obj->type() != MIRType_String)
-        return false;
-
     if (types && types->unknownObject())
         return false;
 
@@ -6079,6 +6075,9 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, Pr
 
       case MIRType_Object:
       case MIRType_Value: {
+        if (!types)
+            return false;
+
         if (types->hasType(types::Type::StringType())) {
             key = JSProto_String;
             *testString = true;
