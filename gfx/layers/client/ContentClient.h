@@ -242,6 +242,8 @@ public:
     return mTextureInfo;
   }
 
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
+
 protected:
   void DestroyBuffers();
 
@@ -404,6 +406,8 @@ public:
 
   virtual void SyncFrontBufferToBackBuffer() MOZ_OVERRIDE;
 
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
+
 protected:
   virtual void CreateFrontBuffer(const nsIntRect& aBufferRect) MOZ_OVERRIDE;
   virtual void DestroyFrontBuffer() MOZ_OVERRIDE;
@@ -441,12 +445,12 @@ public:
 
   virtual void SyncFrontBufferToBackBuffer() MOZ_OVERRIDE;
 
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
+
 protected:
   virtual void CreateFrontBufferAndNotify(const nsIntRect& aBufferRect) MOZ_OVERRIDE;
   virtual void DestroyFrontBuffer() MOZ_OVERRIDE;
   virtual void LockFrontBuffer() MOZ_OVERRIDE;
-
-  virtual void OnActorDestroy() MOZ_OVERRIDE;
 
 private:
   void UpdateDestinationFrom(const RotatedBuffer& aSource,
