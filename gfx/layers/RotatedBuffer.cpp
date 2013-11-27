@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ThebesLayerBuffer.h"
+#include "RotatedBuffer.h"
 #include <sys/types.h>                  // for int32_t
 #include <algorithm>                    // for max
 #include "BasicImplData.h"              // for BasicImplData
@@ -178,7 +178,7 @@ RotatedBuffer::DrawBufferWithRotation(gfx::DrawTarget *aTarget, ContextSource aS
 }
 
 /* static */ bool
-ThebesLayerBuffer::IsClippingCheap(gfxContext* aTarget, const nsIntRegion& aRegion)
+RotatedContentBuffer::IsClippingCheap(gfxContext* aTarget, const nsIntRegion& aRegion)
 {
   // Assume clipping is cheap if the context just has an integer
   // translation, and the visible region is simple.
@@ -187,11 +187,11 @@ ThebesLayerBuffer::IsClippingCheap(gfxContext* aTarget, const nsIntRegion& aRegi
 }
 
 void
-ThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
-                          gfxContext* aTarget,
-                          float aOpacity,
-                          gfxASurface* aMask,
-                          const gfxMatrix* aMaskTransform)
+RotatedContentBuffer::DrawTo(ThebesLayer* aLayer,
+                             gfxContext* aTarget,
+                             float aOpacity,
+                             gfxASurface* aMask,
+                             const gfxMatrix* aMaskTransform)
 {
   if (!EnsureBuffer()) {
     return;
@@ -236,7 +236,9 @@ ThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
 }
 
 already_AddRefed<gfxContext>
-ThebesLayerBuffer::GetContextForQuadrantUpdate(const nsIntRect& aBounds, ContextSource aSource, nsIntPoint *aTopLeft)
+RotatedContentBuffer::GetContextForQuadrantUpdate(const nsIntRect& aBounds,
+                                                  ContextSource aSource,
+                                                  nsIntPoint *aTopLeft)
 {
   if (!EnsureBuffer()) {
     return nullptr;
@@ -277,7 +279,7 @@ ThebesLayerBuffer::GetContextForQuadrantUpdate(const nsIntRect& aBounds, Context
 }
 
 gfxContentType
-ThebesLayerBuffer::BufferContentType()
+RotatedContentBuffer::BufferContentType()
 {
   if (mBufferProvider) {
     return mBufferProvider->GetContentType();
@@ -297,7 +299,7 @@ ThebesLayerBuffer::BufferContentType()
 }
 
 bool
-ThebesLayerBuffer::BufferSizeOkFor(const nsIntSize& aSize)
+RotatedContentBuffer::BufferSizeOkFor(const nsIntSize& aSize)
 {
   return (aSize == mBufferRect.Size() ||
           (SizedToVisibleBounds != mBufferSizePolicy &&
@@ -305,7 +307,7 @@ ThebesLayerBuffer::BufferSizeOkFor(const nsIntSize& aSize)
 }
 
 bool
-ThebesLayerBuffer::EnsureBuffer()
+RotatedContentBuffer::EnsureBuffer()
 {
   if (!mDTBuffer && mBufferProvider) {
     mDTBuffer = mBufferProvider->LockDrawTarget();
@@ -316,7 +318,7 @@ ThebesLayerBuffer::EnsureBuffer()
 }
 
 bool
-ThebesLayerBuffer::EnsureBufferOnWhite()
+RotatedContentBuffer::EnsureBufferOnWhite()
 {
   if (!mDTBufferOnWhite && mBufferProviderOnWhite) {
     mDTBufferOnWhite = mBufferProviderOnWhite->LockDrawTarget();
@@ -327,13 +329,13 @@ ThebesLayerBuffer::EnsureBufferOnWhite()
 }
 
 bool
-ThebesLayerBuffer::HaveBuffer() const
+RotatedContentBuffer::HaveBuffer() const
 {
   return mDTBuffer || mBufferProvider;
 }
 
 bool
-ThebesLayerBuffer::HaveBufferOnWhite() const
+RotatedContentBuffer::HaveBufferOnWhite() const
 {
   return mDTBufferOnWhite || mBufferProviderOnWhite;
 }
@@ -375,9 +377,9 @@ ComputeBufferRect(const nsIntRect& aRequestedRect)
   return rect;
 }
 
-ThebesLayerBuffer::PaintState
-ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
-                              uint32_t aFlags)
+RotatedContentBuffer::PaintState
+RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
+                                 uint32_t aFlags)
 {
   PaintState result;
   // We need to disable rotation if we're going to be resampled when
@@ -458,7 +460,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
       validRegion.SetEmpty();
       Clear();
       // Restart decision process with the cleared buffer. We can only go
-      // around the loop one more iteration, since mBuffer is null now.
+      // around the loop one more iteration, since mDTBuffer is null now.
       continue;
     }
 
@@ -485,7 +487,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
     }
     nsIntRect keepArea;
     if (keepArea.IntersectRect(destBufferRect, mBufferRect)) {
-      // Set mBufferRotation so that the pixels currently in mBuffer
+      // Set mBufferRotation so that the pixels currently in mDTBuffer
       // will still be rendered in the right place when mBufferRect
       // changes to destBufferRect.
       nsIntPoint newRotation = mBufferRotation +

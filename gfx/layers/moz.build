@@ -261,7 +261,7 @@ UNIFIED_SOURCES += [
     'opengl/TexturePoolOGL.cpp',
     'ReadbackProcessor.cpp',
     'RenderTrace.cpp',
-    'ThebesLayerBuffer.cpp',
+    'RotatedBuffer.cpp',
     'YCbCrImageDataSerializer.cpp',
 ]
 
