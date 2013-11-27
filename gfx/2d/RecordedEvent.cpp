@@ -64,6 +64,69 @@ RecordedEvent::LoadEventFromStream(std::istream &aStream, EventType aType)
   }
 }
 
+string
+RecordedEvent::GetEventName(EventType aType)
+{
+  switch (aType) {
+  case DRAWTARGETCREATION:
+    return "DrawTarget Creation";
+  case DRAWTARGETDESTRUCTION:
+    return "DrawTarget Destruction";
+  case FILLRECT:
+    return "FillRect";
+  case STROKERECT:
+    return "StrokeRect";
+  case STROKELINE:
+    return "StrokeLine";
+  case CLEARRECT:
+    return "ClearRect";
+  case COPYSURFACE:
+    return "CopySurface";
+  case SETTRANSFORM:
+    return "SetTransform";
+  case PUSHCLIP:
+    return "PushClip";
+  case PUSHCLIPRECT:
+    return "PushClipRect";
+  case POPCLIP:
+    return "PopClip";
+  case FILL:
+    return "Fill";
+  case FILLGLYPHS:
+    return "FillGlyphs";
+  case MASK:
+    return "Mask";
+  case STROKE:
+    return "Stroke";
+  case DRAWSURFACE:
+    return "DrawSurface";
+  case DRAWSURFACEWITHSHADOW:
+    return "DrawSurfaceWithShadow";
+  case PATHCREATION:
+    return "PathCreation";
+  case PATHDESTRUCTION:
+    return "PathDestruction";
+  case SOURCESURFACECREATION:
+    return "SourceSurfaceCreation";
+  case SOURCESURFACEDESTRUCTION:
+    return "SourceSurfaceDestruction";
+  case GRADIENTSTOPSCREATION:
+    return "GradientStopsCreation";
+  case GRADIENTSTOPSDESTRUCTION:
+    return "GradientStopsDestruction";
+  case SNAPSHOT:
+    return "Snapshot";
+  case SCALEDFONTCREATION:
+    return "ScaledFontCreation";
+  case SCALEDFONTDESTRUCTION:
+    return "ScaledFontDestruction";
+  case MASKSURFACE:
+    return "MaskSurface";
+  default:
+    return "Unknown";
+  }
+}
+
 void
 RecordedEvent::RecordPatternData(std::ostream &aStream, const PatternStorage &aPattern) const
 {
