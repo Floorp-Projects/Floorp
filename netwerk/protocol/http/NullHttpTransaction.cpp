@@ -22,7 +22,6 @@ NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo *ci,
                                          uint32_t caps)
   : mStatus(NS_OK)
   , mCaps(caps | NS_HTTP_ALLOW_KEEPALIVE)
-  , mCapsToClear(0)
   , mCallbacks(callbacks)
   , mConnectionInfo(ci)
   , mRequestHead(nullptr)
@@ -77,14 +76,7 @@ NullHttpTransaction::Status()
 uint32_t
 NullHttpTransaction::Caps()
 {
-  return mCaps & ~mCapsToClear;
-}
-
-void
-NullHttpTransaction::SetDNSWasRefreshed()
-{
-  MOZ_ASSERT(NS_IsMainThread(), "SetDNSWasRefreshed on main thread only!");
-  mCapsToClear |= NS_HTTP_REFRESH_DNS;
+  return mCaps;
 }
 
 uint64_t
