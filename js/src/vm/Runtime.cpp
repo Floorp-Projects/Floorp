@@ -52,7 +52,11 @@ using JS::DoubleNaNValue;
 
 /* static */ ThreadLocal<PerThreadData*> js::TlsPerThreadData;
 
+#ifdef JS_THREADSAFE
 /* static */ Atomic<size_t> JSRuntime::liveRuntimesCount;
+#else
+/* static */ size_t JSRuntime::liveRuntimesCount;
+#endif
 
 const JSSecurityCallbacks js::NullSecurityCallbacks = { };
 
