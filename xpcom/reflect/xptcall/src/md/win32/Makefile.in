@@ -17,6 +17,4 @@ endif #!x86_64
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DIMPL_LIBXUL
-
 LOCAL_INCLUDES	+= -I$(srcdir)/../..
