@@ -21,8 +21,9 @@
 class nsJSEventListener : public nsIJSEventListener
 {
 public:
-  nsJSEventListener(JSObject* aScopeObject, nsISupports* aTarget,
-                    nsIAtom* aType, const nsEventHandler& aHandler);
+  nsJSEventListener(nsIScriptContext* aContext, JSObject* aScopeObject,
+                    nsISupports* aTarget, nsIAtom* aType,
+                    const nsEventHandler& aHandler);
   virtual ~nsJSEventListener();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
