@@ -124,6 +124,7 @@ callback RTCStatsReportCallback = void (RTCStatsReport obj);
 // to be received from c++
 
 dictionary RTCStatsReportInternal {
+  DOMString                           pcid;
   sequence<RTCRTPStreamStats>         rtpStreamStats;
   sequence<RTCInboundRTPStreamStats>  inboundRTPStreamStats;
   sequence<RTCOutboundRTPStreamStats> outboundRTPStreamStats;
@@ -141,6 +142,8 @@ dictionary RTCStatsReportInternal {
 // MapClass(DOMString, object)
  JSImplementation="@mozilla.org/dom/rtcstatsreport;1"]
 interface RTCStatsReport {
+  [ChromeOnly]
+  readonly attribute DOMString mozPcid;
   void forEach(RTCStatsReportCallback callbackFn, optional any thisArg);
   object get(DOMString key);
   boolean has(DOMString key);

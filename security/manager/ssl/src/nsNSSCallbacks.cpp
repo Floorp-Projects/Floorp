@@ -36,6 +36,21 @@ extern PRLogModuleInfo* gPIPNSSLog;
 static void AccumulateCipherSuite(Telemetry::ID probe,
                                   const SSLChannelInfo& channelInfo);
 
+namespace {
+
+// Bits in bit mask for SSL_REASONS_FOR_NOT_FALSE_STARTING telemetry probe
+// These bits are numbered so that the least subtle issues have higher values.
+// This should make it easier for us to interpret the results.
+const uint32_t NPN_NOT_NEGOTIATED = 64;
+const uint32_t KEA_NOT_FORWARD_SECRET = 32;
+const uint32_t KEA_NOT_SAME_AS_EXPECTED = 16;
+const uint32_t KEA_NOT_ALLOWED = 8;
+const uint32_t POSSIBLE_VERSION_DOWNGRADE = 4;
+const uint32_t POSSIBLE_CIPHER_SUITE_DOWNGRADE = 2;
+const uint32_t KEA_NOT_SUPPORTED = 1;
+
+}
+
 class nsHTTPDownloadEvent : public nsRunnable {
 public:
   nsHTTPDownloadEvent();
@@ -898,6 +913,8 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
     return SECFailure;
   }
 
+  infoObject->SetFalseStartCallbackCalled();
+
   if (infoObject->isAlreadyShutDown()) {
     MOZ_CRASH("SSL socket used after NSS shut down");
     PR_SetError(PR_INVALID_STATE_ERROR, 0);
@@ -905,6 +922,8 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
   }
 
   PreliminaryHandshakeDone(fd);
+
+  uint32_t reasonsForNotFalseStarting = 0;
 
   SSLChannelInfo channelInfo;
   if (SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo)) != SECSuccess) {
@@ -920,11 +939,17 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
     return SECSuccess;
   }
 
+  nsSSLIOLayerHelpers& helpers = infoObject->SharedState().IOLayerHelpers();
+
+  // Prevent version downgrade attacks from TLS 1.x to SSL 3.0.
+  // TODO(bug 861310): If we negotiate less than our highest-supported version,
+  // then check that a previously-completed handshake negotiated that version;
+  // eventually, require that the highest-supported version of TLS is used.
   if (channelInfo.protocolVersion < SSL_LIBRARY_VERSION_TLS_1_0) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
                                       "SSL Version must be >= TLS1 %x\n", fd,
                                       static_cast<int32_t>(channelInfo.protocolVersion)));
-    return SECSuccess;
+    reasonsForNotFalseStarting |= POSSIBLE_VERSION_DOWNGRADE;
   }
 
   // never do false start without one of these key exchange algorithms
@@ -934,19 +959,51 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
                                       "unsupported KEA %d\n", fd,
                                       static_cast<int32_t>(cipherInfo.keaType)));
-    return SECSuccess;
+    reasonsForNotFalseStarting |= KEA_NOT_SUPPORTED;
   }
 
-  // never do false start without at least 80 bits of key material. This should
-  // be redundant to an NSS precondition
-  if (cipherInfo.effectiveKeyBits < 80) {
-    MOZ_CRASH("NSS is not enforcing the precondition that the effective "
-              "key size must be >= 80 bits for false start");
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
-                                      "key too small %d\n", fd,
-                                      static_cast<int32_t>(cipherInfo.effectiveKeyBits)));
-    PR_SetError(PR_INVALID_STATE_ERROR, 0);
-    return SECFailure;
+  // XXX: This assumes that all TLS_DH_* and TLS_ECDH_* cipher suites
+  // are disabled.
+  if (cipherInfo.keaType != ssl_kea_ecdh &&
+      cipherInfo.keaType != ssl_kea_dh) {
+    if (helpers.mFalseStartRequireForwardSecrecy) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+             ("CanFalseStartCallback [%p] failed - KEA used is %d, but "
+              "require-forward-secrecy configured.\n", fd,
+              static_cast<int32_t>(cipherInfo.keaType)));
+      reasonsForNotFalseStarting |= KEA_NOT_FORWARD_SECRET;
+    } else if (cipherInfo.keaType == ssl_kea_rsa) {
+      // Make sure we've seen the same kea from this host in the past, to limit
+      // the potential for downgrade attacks.
+      int16_t expected = infoObject->GetKEAExpected();
+      if (cipherInfo.keaType != expected) {
+        PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+               ("CanFalseStartCallback [%p] failed - "
+                "KEA used is %d, expected %d\n", fd,
+                static_cast<int32_t>(cipherInfo.keaType),
+                static_cast<int32_t>(expected)));
+        reasonsForNotFalseStarting |= KEA_NOT_SAME_AS_EXPECTED;
+      }
+    } else {
+      reasonsForNotFalseStarting |= KEA_NOT_ALLOWED;
+    }
+  }
+
+  // Prevent downgrade attacks on the symmetric cipher. We accept downgrades
+  // from 256-bit keys to 128-bit keys and we treat AES and Camellia as being
+  // equally secure. We consider every message authentication mechanism that we
+  // support *for these ciphers* to be equally-secure. We assume that for CBC
+  // mode, that the server has implemented all the same mitigations for
+  // published attacks that we have, or that those attacks are not relevant in
+  // the decision to false start.
+  if (cipherInfo.symCipher != ssl_calg_aes_gcm && 
+      cipherInfo.symCipher != ssl_calg_aes &&
+      cipherInfo.symCipher != ssl_calg_camellia) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("CanFalseStartCallback [%p] failed - Symmetric cipher used, %d, "
+            "is not supported with False Start.\n", fd,
+            static_cast<int32_t>(cipherInfo.symCipher)));
+    reasonsForNotFalseStarting |= POSSIBLE_CIPHER_SUITE_DOWNGRADE;
   }
 
   // XXX: An attacker can choose which protocols are advertised in the
@@ -957,78 +1014,26 @@ CanFalseStartCallback(PRFileDesc* fd, void* client_data, PRBool *canFalseStart)
 
   // Enforce NPN to do false start if policy requires it. Do this as an
   // indicator if server compatibility.
-  nsSSLIOLayerHelpers& helpers = infoObject->SharedState().IOLayerHelpers();
   if (helpers.mFalseStartRequireNPN) {
     nsAutoCString negotiatedNPN;
     if (NS_FAILED(infoObject->GetNegotiatedNPN(negotiatedNPN)) ||
         !negotiatedNPN.Length()) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
                                         "NPN cannot be verified\n", fd));
-      return SECSuccess;
+      reasonsForNotFalseStarting |= NPN_NOT_NEGOTIATED;
     }
   }
 
-  // If we're not using eliptical curve kea then make sure we've seen the
-  // same kea from this host in the past, to limit the potential for downgrade
-  // attacks.
-  if (cipherInfo.keaType != ssl_kea_ecdh) {
+  Telemetry::Accumulate(Telemetry::SSL_REASONS_FOR_NOT_FALSE_STARTING,
+                        reasonsForNotFalseStarting);
 
-    if (helpers.mFalseStartRequireForwardSecrecy) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
-                                        "KEA used is %d, but "
-                                        "require-forward-secrecy configured.\n",
-                                        fd, static_cast<int32_t>(cipherInfo.keaType)));
-      return SECSuccess;
-    }
-
-    int16_t expected = infoObject->GetKEAExpected();
-    if (cipherInfo.keaType != expected) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
-                                        "KEA used is %d, expected %d\n", fd,
-                                        static_cast<int32_t>(cipherInfo.keaType),
-                                        static_cast<int32_t>(expected)));
-      return SECSuccess;
-    }
-
-    // whitelist the expected key exchange algorithms that are
-    // acceptable for false start when seen before.
-    if (expected != ssl_kea_rsa && expected != ssl_kea_dh &&
-        expected != ssl_kea_ecdh) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
-                                        "KEA used, %d, "
-                                        "is not supported with False Start.\n",
-                                        fd, static_cast<int32_t>(expected)));
-      return SECSuccess;
-    }
+  if (reasonsForNotFalseStarting == 0) {
+    *canFalseStart = PR_TRUE;
+    infoObject->SetFalseStarted();
+    infoObject->NoteTimeUntilReady();
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] ok\n", fd));
   }
 
-  // If we're not using AES then verify that this is the historically expected
-  // symmetrical cipher for this host, to limit potential for downgrade attacks.
-  if (cipherInfo.symCipher != ssl_calg_aes) {
-    int16_t expected = infoObject->GetSymmetricCipherExpected();
-    if (cipherInfo.symCipher != expected) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
-                                        "Symmetric cipher used is %d, expected %d\n",
-                                        fd, static_cast<int32_t>(cipherInfo.symCipher),
-                                        static_cast<int32_t>(expected)));
-      return SECSuccess;
-    }
-
-    // whitelist the expected ciphers that are
-    // acceptable for false start when seen before.
-    if ((expected != ssl_calg_rc4) && (expected != ssl_calg_3des) &&
-        (expected != ssl_calg_aes)) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] failed - "
-                                        "Symmetric cipher used, %d, "
-                                        "is not supported with False Start.\n",
-                                        fd, static_cast<int32_t>(expected)));
-      return SECSuccess;
-    }
-  }
-
-  infoObject->NoteTimeUntilReady();
-  *canFalseStart = true;
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CanFalseStartCallback [%p] ok\n", fd));
   return SECSuccess;
 }
 
@@ -1303,10 +1308,9 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
             ? Telemetry::SSL_SYMMETRIC_CIPHER_FULL
             : Telemetry::SSL_SYMMETRIC_CIPHER_RESUMED,
           cipherInfo.symCipher);
-      infoObject->SetSymmetricCipherUsed(cipherInfo.symCipher);
     }
   }
 
   infoObject->NoteTimeUntilReady();
-  infoObject->SetHandshakeCompleted(isResumedSession);
+  infoObject->SetHandshakeCompleted();
 }

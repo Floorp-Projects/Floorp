@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "LayerManagerOGLProgram.h"
+#include "OGLShaderProgram.h"
 #include <stdint.h>                     // for uint32_t
 #include "gfxMatrix.h"                  // for gfxMatrix
 #include "gfxPoint.h"                   // for gfxIntSize, gfxPoint, etc
@@ -12,8 +12,7 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsString.h"                   // for nsAutoCString
 #include "prenv.h"                      // for PR_GetEnv
-#include "LayerManagerOGL.h"
-#include "LayerManagerOGLShaders.h"
+#include "OGLShaders.h"
 #include "Layers.h"
 #include "GLContext.h"
 
@@ -436,40 +435,6 @@ ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
   }
 
   mProgram = result;
-  return true;
-}
-
-bool
-ShaderProgramOGL::LoadMask(Layer* aMaskLayer)
-{
-  if (!aMaskLayer) {
-    return false;
-  }
-
-  gfxIntSize size;
-  if (!static_cast<LayerOGL*>(aMaskLayer->ImplData())
-        ->LoadAsTexture(LOCAL_GL_TEXTURE0 + mProfile.mTextureCount - 1, &size)){
-    return false;
-  }
-
-  SetUniform(mProfile.LookupUniformLocation("uMaskTexture"),
-              (GLint)(mProfile.mTextureCount - 1));
-
-  gfxMatrix maskTransform;
-  mozilla::DebugOnly<bool> isMask2D =
-    aMaskLayer->GetEffectiveTransform().CanDraw2D(&maskTransform);
-  NS_ASSERTION(isMask2D, "How did we end up with a 3D transform here?!");
-  gfxRect bounds = gfxRect(gfxPoint(), size);
-  bounds = maskTransform.TransformBounds(bounds);
-
-  gfx3DMatrix m;
-  m._11 = 1.0f/bounds.width;
-  m._22 = 1.0f/bounds.height;
-  m._41 = float(-bounds.x)/bounds.width;
-  m._42 = float(-bounds.y)/bounds.height;
-
-  SetMatrixUniform(mProfile.LookupUniformLocation("uMaskQuadTransform"), m);
-
   return true;
 }
 

@@ -42,7 +42,6 @@ using mozilla::unused;
 #include "gfxContext.h"
 
 #include "Layers.h"
-#include "LayerManagerOGL.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/APZCTreeManager.h"
@@ -998,15 +997,6 @@ nsWindow::DrawTo(gfxASurface *targetSurface, const nsIntRect &invalidRect)
             }
 
             case mozilla::layers::LAYERS_CLIENT: {
-                mWidgetListener->PaintWindow(this, region);
-                break;
-            }
-
-            case mozilla::layers::LAYERS_OPENGL: {
-
-                static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager(nullptr))->
-                    SetClippingRegion(nsIntRegion(boundsRect));
-
                 mWidgetListener->PaintWindow(this, region);
                 break;
             }

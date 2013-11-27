@@ -399,6 +399,7 @@ class ExclusiveContext : public ThreadSafeContext
 
     // Methods specific to any WorkerThread for the context.
     frontend::CompileError &addPendingCompileError();
+    void addPendingOverRecursed();
 };
 
 inline void

@@ -130,6 +130,21 @@ class LUDivOrMod : public LBinaryMath<1>
     const LDefinition *remainder() {
         return getTemp(0);
     }
+
+    const char *extraName() const {
+        return mir()->isTruncated() ? "Truncated" : nullptr;
+    }
+
+    MBinaryArithInstruction *mir() const {
+        JS_ASSERT(mir_->isDiv() || mir_->isMod());
+        return static_cast<MBinaryArithInstruction *>(mir_);
+    }
+
+    bool canBeDivideByZero() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeDivideByZero();
+        return mir_->toDiv()->canBeDivideByZero();
+    }
 };
 
 class LModPowTwoI : public LInstructionHelper<1,1,0>

@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PAsmJSCacheEntry;
 include protocol PBlob;
 include protocol PBluetooth;
 include protocol PBrowser;
@@ -40,6 +41,7 @@ using struct IPC::Permission from "mozilla/net/NeckoMessageUtils.h";
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+using mozilla::dom::asmjscache::OpenMode from "mozilla/dom/asmjscache/AsmJSCache.h";
 using mozilla::dom::AudioChannelType from "AudioChannelCommon.h";
 using mozilla::dom::AudioChannelState from "AudioChannelCommon.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
@@ -175,6 +177,7 @@ intr protocol PContent
     parent opens PCompositor;
     parent opens PImageBridge;
 
+    manages PAsmJSCacheEntry;
     manages PBlob;
     manages PBluetooth;
     manages PBrowser;
@@ -356,6 +359,9 @@ parent:
     PBluetooth();
 
     PFMRadio();
+
+    PAsmJSCacheEntry(OpenMode openMode, int64_t sizeToWrite,
+                     Principal principal);
 
     // Services remoting
 

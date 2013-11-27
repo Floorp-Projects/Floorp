@@ -66,7 +66,6 @@ namespace mozilla {
 
     namespace layers {
         class ColorTextureLayerProgram;
-        class LayerManagerOGL;
     }
 }
 

@@ -3408,7 +3408,7 @@ SearchService.prototype = {
           addedEngine = new Engine(file, SEARCH_DATA_XML, !isWritable);
           yield checkForSyncCompletion(addedEngine._asyncInitFromFile());
         } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
-          LOG("_asyncLoadEnginesFromDir: Failed to load " + file.path + "!\n" + ex);
+          LOG("_asyncLoadEnginesFromDir: Failed to load " + osfile.path + "!\n" + ex);
           continue;
         }
         engines.push(addedEngine);

@@ -2,6 +2,7 @@ load(libdir + "asm.js");
 
 // constants
 var buf = new ArrayBuffer(4096);
+setIonAssertGraphCoherency(false);
 
 // An unshifted literal constant byte index in the range 0 to 2^31-1 inclusive should give a link failure.
 assertAsmLinkFail(asmCompile('glob', 'imp', 'b', USE_ASM + 'var arr=new glob.Int8Array(b);  function f() {return arr[0x7fffffff]|0 } return f'), this, null, buf);

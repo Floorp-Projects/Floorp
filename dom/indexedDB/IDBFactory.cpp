@@ -648,8 +648,8 @@ IDBFactory::OpenInternal(const nsAString& aName,
   }
   else if (aDeleting) {
     nsCString databaseId;
-    QuotaManager::GetStorageId(aPersistenceType, aASCIIOrigin, aName,
-                               databaseId);
+    QuotaManager::GetStorageId(aPersistenceType, aASCIIOrigin, Client::IDB,
+                               aName, databaseId);
     MOZ_ASSERT(!databaseId.IsEmpty());
 
     IndexedDBDeleteDatabaseRequestChild* actor =
