@@ -5950,6 +5950,9 @@ nsHttpChannel::OnLookupComplete(nsICancelable *request,
     // Unset DNS cache refresh if it was requested,
     if (mCaps & NS_HTTP_REFRESH_DNS) {
         mCaps &= ~NS_HTTP_REFRESH_DNS;
+        if (mTransaction) {
+            mTransaction->SetDNSWasRefreshed();
+        }
     }
 
     return NS_OK;

@@ -225,6 +225,11 @@ SpdyPush31TransactionBuffer::Caps()
   return 0;
 }
 
+void
+SpdyPush31TransactionBuffer::SetDNSWasRefreshed()
+{
+}
+
 uint64_t
 SpdyPush31TransactionBuffer::Available()
 {
