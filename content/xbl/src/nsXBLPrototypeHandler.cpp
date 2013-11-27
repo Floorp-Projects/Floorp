@@ -328,7 +328,7 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
 
   // Execute it.
   nsCOMPtr<nsIJSEventListener> eventListener;
-  rv = NS_NewJSEventListener(globalObject,
+  rv = NS_NewJSEventListener(nullptr, globalObject,
                              scriptTarget, onEventAtom,
                              eventHandler,
                              getter_AddRefs(eventListener));
