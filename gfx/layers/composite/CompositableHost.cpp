@@ -59,19 +59,20 @@ CompositableHost::AddTextureHost(TextureHost* aTexture)
 }
 
 void
-CompositableHost::RemoveTextureHost(TextureHost* aTexture)
+CompositableHost::RemoveTextureHost(uint64_t aTextureID)
 {
-  uint64_t textureID = aTexture->GetID();
-  if (mFirstTexture && mFirstTexture->GetID() == textureID) {
+  if (mFirstTexture && mFirstTexture->GetID() == aTextureID) {
+    RefPtr<TextureHost> toRemove = mFirstTexture;
     mFirstTexture = mFirstTexture->GetNextSibling();
-    aTexture->SetNextSibling(nullptr);
+    toRemove->SetNextSibling(nullptr);
   }
   RefPtr<TextureHost> it = mFirstTexture;
   while (it) {
     if (it->GetNextSibling() &&
-        it->GetNextSibling()->GetID() == textureID) {
+        it->GetNextSibling()->GetID() == aTextureID) {
+      RefPtr<TextureHost> toRemove = it->GetNextSibling();
       it->SetNextSibling(it->GetNextSibling()->GetNextSibling());
-      aTexture->SetNextSibling(nullptr);
+      toRemove->SetNextSibling(nullptr);
     }
     it = it->GetNextSibling();
   }
@@ -93,15 +94,6 @@ CompositableHost::GetTextureHost(uint64_t aTextureID)
   return nullptr;
 }
 
-void
-CompositableHost::OnActorDestroy()
-{
-  TextureHost* it = mFirstTexture;
-  while (it) {
-    it->OnActorDestroy();
-    it = it->GetNextSibling();
-  }
-}
 
 void
 CompositableHost::SetCompositor(Compositor* aCompositor)
@@ -140,7 +132,7 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
     oldHost->Lock();
     source = oldHost;
   } else {
-    RefPtr<TextureHost> host = GetAsTextureHost();
+    RefPtr<TextureHost> host = GetTextureHost();
     if (host) {
       host->Lock();
       source = host->GetTextureSources();
@@ -167,7 +159,7 @@ CompositableHost::RemoveMaskEffect()
   if (oldHost) {
     oldHost->Unlock();
   } else {
-    RefPtr<TextureHost> host = GetAsTextureHost();
+    RefPtr<TextureHost> host = GetTextureHost();
     if (host) {
       host->Unlock();
     }
@@ -182,35 +174,26 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
 {
   RefPtr<CompositableHost> result;
   switch (aTextureInfo.mCompositableType) {
-  case BUFFER_IMAGE_SINGLE:
-    result = new DeprecatedImageHostSingle(aTextureInfo);
+  case COMPOSITABLE_IMAGE:
+    result = new ImageHost(aTextureInfo);
     break;
   case BUFFER_IMAGE_BUFFERED:
     result = new DeprecatedImageHostBuffered(aTextureInfo);
     break;
-  case BUFFER_BRIDGE:
-    MOZ_CRASH("Cannot create an image bridge compositable this way");
-    break;
-  case BUFFER_CONTENT:
-    result = new DeprecatedContentHostSingleBuffered(aTextureInfo);
-    break;
-  case BUFFER_CONTENT_DIRECT:
-    result = new DeprecatedContentHostDoubleBuffered(aTextureInfo);
-    break;
-  case BUFFER_CONTENT_INC:
-    result = new ContentHostIncremental(aTextureInfo);
+  case BUFFER_IMAGE_SINGLE:
+    result = new DeprecatedImageHostSingle(aTextureInfo);
     break;
   case BUFFER_TILED:
     result = new TiledContentHost(aTextureInfo);
     break;
-  case COMPOSITABLE_IMAGE:
-    result = new ImageHost(aTextureInfo);
-    break;
-  case COMPOSITABLE_CONTENT_SINGLE:
+  case BUFFER_CONTENT:
     result = new ContentHostSingleBuffered(aTextureInfo);
     break;
-  case COMPOSITABLE_CONTENT_DOUBLE:
+  case BUFFER_CONTENT_DIRECT:
     result = new ContentHostDoubleBuffered(aTextureInfo);
+    break;
+  case BUFFER_CONTENT_INC:
+    result = new ContentHostIncremental(aTextureInfo);
     break;
   default:
     MOZ_CRASH("Unknown CompositableType");
