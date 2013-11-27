@@ -69,3 +69,9 @@ LIBRARY_NAME = 'xpcom_core'
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+DEFINES['_IMPL_NS_STRINGAPI'] = True
+DEFINES['OMNIJAR_NAME'] = CONFIG['OMNIJAR_NAME']
+
+if CONFIG['TARGET_XPCOM_ABI']:
+    DEFINES['TARGET_XPCOM_ABI'] = '"%s"' % CONFIG['TARGET_XPCOM_ABI']

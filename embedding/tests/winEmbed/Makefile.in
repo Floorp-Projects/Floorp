@@ -34,7 +34,6 @@ LIBS = \
 	$(XPCOM_STANDALONE_GLUE_LDOPTS) \
 	$(NULL)
 
-DEFINES += -DXPCOM_GLUE
 STL_FLAGS=
 
 OS_LIBS		+= $(call EXPAND_LIBNAME,ole32 comdlg32 shell32 version)
