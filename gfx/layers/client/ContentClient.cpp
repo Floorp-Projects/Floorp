@@ -75,7 +75,9 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 
 ContentClientBasic::ContentClientBasic(CompositableForwarder* aForwarder,
                                        BasicLayerManager* aManager)
-: ContentClient(aForwarder), ThebesLayerBuffer(ContainsVisibleBounds), mManager(aManager)
+  : ContentClient(aForwarder)
+  , RotatedContentBuffer(ContainsVisibleBounds)
+  , mManager(aManager)
 {}
 
 void
@@ -603,16 +605,16 @@ FillSurface(gfxASurface* aSurface, const nsIntRegion& aRegion,
   ctx->Paint();
 }
 
-ThebesLayerBuffer::PaintState
+RotatedContentBuffer::PaintState
 ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
-                                           ThebesLayerBuffer::ContentType aContentType,
+                                           RotatedContentBuffer::ContentType aContentType,
                                            uint32_t aFlags)
 {
   mTextureInfo.mDeprecatedTextureHostFlags = 0;
   PaintState result;
   // We need to disable rotation if we're going to be resampled when
   // drawing, because we might sample across the rotation boundary.
-  bool canHaveRotation =  !(aFlags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE);
+  bool canHaveRotation =  !(aFlags & RotatedContentBuffer::PAINT_WILL_RESAMPLE);
 
   nsIntRegion validRegion = aLayer->GetValidRegion();
 
@@ -629,7 +631,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
     // If we're going to resample, we need a buffer that's in clamp mode.
     canReuseBuffer = neededRegion.GetBounds().Size() <= mBufferRect.Size() &&
       mHasBuffer &&
-      (!(aFlags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE) ||
+      (!(aFlags & RotatedContentBuffer::PAINT_WILL_RESAMPLE) ||
        !(mTextureInfo.mTextureFlags & TEXTURE_ALLOW_REPEAT));
 
     if (canReuseBuffer) {
@@ -655,7 +657,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
       }
     }
 
-    if ((aFlags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE) &&
+    if ((aFlags & RotatedContentBuffer::PAINT_WILL_RESAMPLE) &&
         (!neededRegion.GetBounds().IsEqualInterior(destBufferRect) ||
          neededRegion.GetNumRects() > 1)) {
       // The area we add to neededRegion might not be painted opaquely
@@ -758,7 +760,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
     // The buffer's not big enough, so allocate a new one
     createdBuffer = true;
   }
-  NS_ASSERTION(!(aFlags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE) ||
+  NS_ASSERTION(!(aFlags & RotatedContentBuffer::PAINT_WILL_RESAMPLE) ||
                destBufferRect == neededRegion.GetBounds(),
                "If we're resampling, we need to validate the entire buffer");
 
