@@ -123,19 +123,19 @@ public:
 
   /**
    * Called for each iteration of a progressive tile update. Fills
-   * aViewport, aScaleX and aScaleY with the current scale and viewport
+   * aCompositionBounds and aZoom with the current scale and composition bounds
    * being used to composite the layers in this manager, to determine what area
-   * intersects with the target render rectangle. aDrawingCritical will be
-   * true if the current drawing operation is using the critical displayport.
+   * intersects with the target composition bounds.
+   * aDrawingCritical will be true if the current drawing operation is using
+   * the critical displayport.
    * Returns true if the update should continue, or false if it should be
    * cancelled.
    * This is only called if gfxPlatform::UseProgressiveTilePainting() returns
    * true.
    */
   bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
-                                 gfx::Rect& aViewport,
-                                 float& aScaleX,
-                                 float& aScaleY,
+                                 ScreenRect& aCompositionBounds,
+                                 CSSToScreenScale& aZoom,
                                  bool aDrawingCritical);
 
 #ifdef DEBUG
