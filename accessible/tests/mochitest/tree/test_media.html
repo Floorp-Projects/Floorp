@@ -49,7 +49,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
             role: ROLE_PUSHBUTTON,
             name: "Mute",
             children: []
-          }
+          },
+          { // slider of volume bar
+            role: ROLE_SLIDER,
+            children: []
+          },
         ]
       };
       testAccessibleTree("audio", accTree);

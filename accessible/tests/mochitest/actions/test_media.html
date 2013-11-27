@@ -65,7 +65,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=483573
       var audioElm = getAccessible("audio");
       var playBtn = audioElm.firstChild;
       var scrubber = playBtn.nextSibling.nextSibling.nextSibling;
-      var muteBtn = audioElm.lastChild;
+      var muteBtn = audioElm.lastChild.previousSibling;
 
       var actions = [
         {
