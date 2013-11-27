@@ -489,6 +489,8 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
     return NS_OK;
 }
 
+#undef SMALL_GLYPH_RUN
+
 // Construct the font attribute descriptor that we'll apply by default when creating a CTFontRef.
 // This will turn off line-edge swashes by default, because we don't know the actual line breaks
 // when doing glyph shaping.
