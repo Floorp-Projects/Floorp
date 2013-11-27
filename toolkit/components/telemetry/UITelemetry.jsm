@@ -99,5 +99,9 @@ this.UITelemetry =  {
 
   _logEvent: function sendEvent(aEvent) {
     this.measurements.push(aEvent);
+  },
+
+  getUIMeasurements: function getUIMeasurements() {
+    return this.measurements.slice();
   }
 };
