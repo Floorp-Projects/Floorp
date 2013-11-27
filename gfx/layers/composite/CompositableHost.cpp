@@ -93,6 +93,15 @@ CompositableHost::GetTextureHost(uint64_t aTextureID)
   return nullptr;
 }
 
+void
+CompositableHost::OnActorDestroy()
+{
+  TextureHost* it = mFirstTexture;
+  while (it) {
+    it->OnActorDestroy();
+    it = it->GetNextSibling();
+  }
+}
 
 void
 CompositableHost::SetCompositor(Compositor* aCompositor)
