@@ -5,19 +5,31 @@
 ####################
 
 {
-   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793534 and see bug 793549.)
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793534.)
    Memcheck:Leak
    ...
    fun:_ZL9SaveToEnvPKc
    ...
 }
 {
-   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793534 and see bug 793549.)
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793549.)
    Memcheck:Leak
    ...
    fun:_ZL13SaveWordToEnvPKcRK19nsACString_internal
    ...
 }
+{
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 944133.)
+   Memcheck:Leak
+   ...
+   fun:_ZN13CrashReporter14SetRestartArgsEiPPc
+   ...
+}
+
+####################################
+#  Leaks in third party libraries  #
+####################################
+
 {
    See bug 793535
    Memcheck:Leak
