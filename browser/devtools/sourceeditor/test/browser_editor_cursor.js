@@ -31,6 +31,13 @@ function test() {
     ed.dropSelection();
     is(ed.getSelection(), "", "dropSelection");
 
+    // Check that shift-click on a gutter selects the whole line (bug 919707)
+    let iframe = win.document.querySelector("iframe");
+    let gutter = iframe.contentWindow.document.querySelector(".CodeMirror-gutters");
+
+    EventUtils.sendMouseEvent({ type: "mousedown", shiftKey: true }, gutter, iframe.contentWindow);
+    is(ed.getSelection(), "Hello.", "shift-click");
+
     teardown(ed, win);
   });
 }

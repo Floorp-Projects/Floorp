@@ -27,13 +27,6 @@ const kMaxVelocity = 6;
  * prefs
  */
 
-// A debug pref that when set makes us treat all precise pointer input
-// as imprecise touch input. For debugging purposes only. Note there are
-// subtle event sequencing differences in this feature when running on
-// the desktop using the win32 widget backend and the winrt widget backend
-// in metro. Fixing something in this mode does not insure the bug is
-// in metro.
-const kDebugMouseInputPref = "metro.debug.treatmouseastouch";
 // Display rects around selection ranges. Useful in debugging
 // selection problems.
 const kDebugSelectionDisplayPref = "metro.debug.selection.displayRanges";
@@ -104,17 +97,7 @@ var TouchModule = {
 
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
     Services.obs.addObserver(this, "Gesture:DoubleTap", false);
-
-    try {
-      this._treatMouseAsTouch = Services.prefs.getBoolPref(kDebugMouseInputPref);
-    } catch (e) {}
   },
-
-  /*
-   * Mouse input source tracking
-   */
-
-  _treatMouseAsTouch: false,
 
   /*
    * Events
@@ -228,15 +211,6 @@ var TouchModule = {
   },
 
   _onContextMenu: function _onContextMenu(aEvent) {
-    // Special case when running on the desktop, fire off
-    // a edge ui event when we get the contextmenu event.
-    if (this._treatMouseAsTouch) {
-      let event = document.createEvent("Events");
-      event.initEvent("MozEdgeUICompleted", true, false);
-      window.dispatchEvent(event);
-      return;
-    }
-
     // bug 598965 - chrome UI should stop to be pannable once the
     // context menu has appeared.
     if (ContextMenuUI.popupState) {

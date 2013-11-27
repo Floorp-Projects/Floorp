@@ -97,6 +97,8 @@ ScaledFontBase::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *a
       glyphs[i].y = aBuffer.mGlyphs[i].mPosition.y;
     }
 
+    cairo_new_path(ctx);
+
     cairo_glyph_path(ctx, &glyphs[0], aBuffer.mNumGlyphs);
 
     RefPtr<PathCairo> newPath = new PathCairo(ctx);

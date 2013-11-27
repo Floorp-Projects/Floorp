@@ -9,6 +9,7 @@
 #ifdef JS_WORKER_THREADS
 #include "mozilla/DebugOnly.h"
 
+#include "jsnativestack.h"
 #include "prmjtime.h"
 
 #include "frontend/BytecodeCompiler.h"
@@ -22,6 +23,7 @@
 
 using namespace js;
 
+using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 
 bool
@@ -179,7 +181,8 @@ ParseTask::ParseTask(ExclusiveContext *cx, JSContext *initCx,
                      JS::OffThreadCompileCallback callback, void *callbackData)
   : cx(cx), options(initCx), chars(chars), length(length),
     alloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE), scopeChain(scopeChain),
-    callback(callback), callbackData(callbackData), script(nullptr), errors(cx)
+    callback(callback), callbackData(callbackData), script(nullptr),
+    errors(cx), overRecursed(false)
 {
     JSRuntime *rt = scopeChain->runtimeFromMainThread();
 
@@ -308,6 +311,9 @@ js::WaitForOffThreadParsingToFinish(JSRuntime *rt)
     }
 }
 
+static const uint32_t WORKER_STACK_SIZE = 512 * 1024;
+static const uint32_t WORKER_STACK_QUOTA = 450 * 1024;
+
 bool
 WorkerThreadState::init()
 {
@@ -343,7 +349,7 @@ WorkerThreadState::init()
         helper.threadData.ref().addToThreadList();
         helper.thread = PR_CreateThread(PR_USER_THREAD,
                                         WorkerThread::ThreadMain, &helper,
-                                        PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+                                        PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, WORKER_STACK_SIZE);
         if (!helper.thread || !helper.threadData.ref().init()) {
             for (size_t j = 0; j < numThreads; j++)
                 threads[j].destroy();
@@ -576,6 +582,8 @@ WorkerThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void *toke
         AutoCompartment ac(maybecx, parseTask->scopeChain);
         for (size_t i = 0; i < parseTask->errors.length(); i++)
             parseTask->errors[i]->throwError(maybecx);
+        if (parseTask->overRecursed)
+            js_ReportOverRecursed(maybecx);
 
         if (script) {
             // The Debugger only needs to be told about the topmost script that was compiled.
@@ -727,6 +735,13 @@ ExclusiveContext::addPendingCompileError()
     if (!workerThread()->parseTask->errors.append(error))
         MOZ_CRASH();
     return *error;
+}
+
+void
+ExclusiveContext::addPendingOverRecursed()
+{
+    if (workerThread()->parseTask)
+        workerThread()->parseTask->overRecursed = true;
 }
 
 void
@@ -891,6 +906,16 @@ WorkerThread::threadLoop()
 
     js::TlsPerThreadData.set(threadData.addr());
 
+    // Compute the thread's stack limit, for over-recursed checks.
+    uintptr_t stackLimit = GetNativeStackBase();
+#if JS_STACK_GROWTH_DIRECTION > 0
+    stackLimit += WORKER_STACK_QUOTA;
+#else
+    stackLimit -= WORKER_STACK_QUOTA;
+#endif
+    for (size_t i = 0; i < ArrayLength(threadData.ref().nativeStackLimit); i++)
+        threadData.ref().nativeStackLimit[i] = stackLimit;
+
     while (true) {
         JS_ASSERT(!ionBuilder && !asmData);
 
@@ -978,6 +1003,12 @@ ScriptSource::getOffThreadCompressionChars(ExclusiveContext *cx)
 
 frontend::CompileError &
 ExclusiveContext::addPendingCompileError()
+{
+    MOZ_ASSUME_UNREACHABLE("Off thread compilation not available.");
+}
+
+void
+ExclusiveContext::addPendingOverRecursed()
 {
     MOZ_ASSUME_UNREACHABLE("Off thread compilation not available.");
 }

@@ -334,9 +334,10 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   }
 
   // ICE state signals
-  sigslot::signal1<mozilla::NrIceCtx *> SignalIceGatheringCompleted;  // Done gathering
-  sigslot::signal1<mozilla::NrIceCtx *> SignalIceCompleted;  // Done handshaking
-  sigslot::signal1<mozilla::NrIceCtx *> SignalIceFailed;  // Self explanatory
+  sigslot::signal2<mozilla::NrIceCtx*, mozilla::NrIceCtx::GatheringState>
+      SignalIceGatheringStateChange;
+  sigslot::signal2<mozilla::NrIceCtx*, mozilla::NrIceCtx::ConnectionState>
+      SignalIceConnectionStateChange;
 
  private:
   // Shutdown media transport. Must be called on STS thread.
@@ -347,9 +348,10 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void SelfDestruct_m();
 
   // ICE events
-  void IceGatheringCompleted(mozilla::NrIceCtx *aCtx);
-  void IceCompleted(mozilla::NrIceCtx *aCtx);
-  void IceFailed(mozilla::NrIceCtx *aCtx);
+  void IceGatheringStateChange(mozilla::NrIceCtx* ctx,
+                               mozilla::NrIceCtx::GatheringState state);
+  void IceConnectionStateChange(mozilla::NrIceCtx* ctx,
+                                mozilla::NrIceCtx::ConnectionState state);
   void IceStreamReady(mozilla::NrIceMediaStream *aStream);
 
   // The parent PC

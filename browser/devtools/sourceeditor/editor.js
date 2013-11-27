@@ -238,8 +238,18 @@ Editor.prototype = {
 
       cm.on("focus", () => this.emit("focus"));
       cm.on("change", () => this.emit("change"));
-      cm.on("gutterClick", (cm, line) => this.emit("gutterClick", line));
       cm.on("cursorActivity", (cm) => this.emit("cursorActivity"));
+
+      cm.on("gutterClick", (cm, line, gutter, ev) => {
+        let head = { line: line, ch: 0 };
+        let tail = { line: line, ch: this.getText(line).length };
+
+        // Shift-click on a gutter selects the whole line.
+        if (ev.shiftKey)
+          return void cm.setSelection(head, tail);
+
+        this.emit("gutterClick", line);
+      });
 
       win.CodeMirror.defineExtension("l10n", (name) => {
         return L10N.GetStringFromName(name);

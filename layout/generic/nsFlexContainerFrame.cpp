@@ -2603,7 +2603,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     nscoord desiredHeightWithBottomBP =
       aDesiredSize.height + aReflowState.mComputedBorderPadding.bottom;
 
-    if (aDesiredSize.height == 0 ||
+    if (aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE ||
+        aDesiredSize.height == 0 ||
         desiredHeightWithBottomBP <= aReflowState.availableHeight ||
         aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
       // Update desired height to include bottom border/padding

@@ -298,8 +298,6 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(AsmJSUnsignedToDouble)
     UNSAFE_OP(AsmJSUnsignedToFloat32)
     UNSAFE_OP(AsmJSNeg)
-    UNSAFE_OP(AsmJSUDiv)
-    UNSAFE_OP(AsmJSUMod)
     UNSAFE_OP(AsmJSLoadHeap)
     UNSAFE_OP(AsmJSStoreHeap)
     UNSAFE_OP(AsmJSLoadGlobalVar)

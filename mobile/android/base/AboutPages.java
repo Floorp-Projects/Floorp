@@ -39,5 +39,38 @@ public class AboutPages {
         }
         return url.startsWith(READER);
     }
+
+    private static final String[] DEFAULT_ICON_PAGES = new String[] {
+        HOME,
+
+        ADDONS,
+        CONFIG,
+        DOWNLOADS,
+        FIREFOX,
+        HEALTHREPORT,
+        UPDATER
+    };
+
+    /**
+     * Callers must not modify the returned array.
+     */
+    public static String[] getDefaultIconPages() {
+        return DEFAULT_ICON_PAGES;
+    }
+
+    public static boolean isDefaultIconPage(final String url) {
+        if (url == null ||
+            !url.startsWith("about:")) {
+            return false;
+        }
+
+        // TODO: it'd be quicker to not compare the "about:" part every time.
+        for (int i = 0; i < DEFAULT_ICON_PAGES.length; ++i) {
+            if (DEFAULT_ICON_PAGES[i].equals(url)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 

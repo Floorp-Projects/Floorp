@@ -186,8 +186,6 @@ namespace jit {
     _(IsCallable)                                                           \
     _(HaveSameClass)                                                        \
     _(AsmJSNeg)                                                             \
-    _(AsmJSUDiv)                                                            \
-    _(AsmJSUMod)                                                            \
     _(AsmJSUnsignedToDouble)                                                \
     _(AsmJSUnsignedToFloat32)                                               \
     _(AsmJSLoadHeap)                                                        \

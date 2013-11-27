@@ -353,6 +353,7 @@ struct ParseTask
     // Any errors or warnings produced during compilation. These are reported
     // when finishing the script.
     Vector<frontend::CompileError *> errors;
+    bool overRecursed;
 
     ParseTask(ExclusiveContext *cx, JSContext *initCx,
               const jschar *chars, size_t length, JSObject *scopeChain,

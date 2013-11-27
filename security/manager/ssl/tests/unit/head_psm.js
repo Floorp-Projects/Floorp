@@ -66,9 +66,9 @@ function getXPCOMStatusFromNSS(statusNSS) {
   return nssErrorsService.getXPCOMFromNSSError(statusNSS);
 }
 
-function clearOCSPCache() {
+function _getLibraryFunctionWithNoArguments(functionName, libraryName) {
   // Open the NSS library. copied from services/crypto/modules/WeaveCrypto.js
-  let path = ctypes.libraryName("nss3");
+  let path = ctypes.libraryName(libraryName);
 
   // XXX really want to be able to pass specific dlopen flags here.
   let nsslib;
@@ -77,21 +77,38 @@ function clearOCSPCache() {
   } catch(e) {
     // In case opening the library without a full path fails,
     // try again with a full path.
-    let directoryService = Cc["@mozilla.org/file/directory_service;1"]
-                             .getService(Ci.nsIProperties);
-    let greDir = directoryService.get("GreD", Ci.nsILocalFile);
+    let file = Services.dirsvc.get("GreD", Ci.nsILocalFile);
     file.append(path);
     nsslib = ctypes.open(file.path);
   }
 
   let SECStatus = ctypes.int;
-  let CERT_ClearOCSPCache = nsslib.declare("CERT_ClearOCSPCache",
-                                           ctypes.default_abi, SECStatus);
+  let func = nsslib.declare(functionName, ctypes.default_abi, SECStatus);
+  return func;
+}
+
+function clearOCSPCache() {
+  let CERT_ClearOCSPCache =
+    _getLibraryFunctionWithNoArguments("CERT_ClearOCSPCache", "nss3");
   if (CERT_ClearOCSPCache() != 0) {
     throw "Failed to clear OCSP cache";
   }
 }
 
+function clearSessionCache() {
+  let SSL_ClearSessionCache = null;
+  try {
+    SSL_ClearSessionCache =
+      _getLibraryFunctionWithNoArguments("SSL_ClearSessionCache", "ssl3");
+  } catch (e) {
+    // On Windows, this is actually in the nss3 library.
+    SSL_ClearSessionCache =
+      _getLibraryFunctionWithNoArguments("SSL_ClearSessionCache", "nss3");
+  }
+  if (!SSL_ClearSessionCache || SSL_ClearSessionCache() != 0) {
+    throw "Failed to clear SSL session cache";
+  }
+}
 
 // Set up a TLS testing environment that has a TLS server running and
 // ready to accept connections. This async function starts the server and

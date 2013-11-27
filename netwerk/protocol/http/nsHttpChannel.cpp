@@ -412,7 +412,7 @@ nsHttpChannel::SpeculativeConnect()
 
     gHttpHandler->SpeculativeConnect(
         mConnectionInfo, callbacks,
-        mCaps & (NS_HTTP_ALLOW_RSA_FALSESTART | NS_HTTP_ALLOW_RC4_FALSESTART | NS_HTTP_DISALLOW_SPDY));
+        mCaps & (NS_HTTP_ALLOW_RSA_FALSESTART | NS_HTTP_DISALLOW_SPDY));
 }
 
 void
@@ -599,12 +599,6 @@ nsHttpChannel::RetrieveSSLOptions()
         LOG(("nsHttpChannel::RetrieveSSLOptions [this=%p] "
              "falsestart-rsa permission found\n", this));
         mCaps |= NS_HTTP_ALLOW_RSA_FALSESTART;
-    }
-    rv = permMgr->TestPermissionFromPrincipal(principal, "falsestart-rc4", &perm);
-    if (NS_SUCCEEDED(rv) && perm == nsIPermissionManager::ALLOW_ACTION) {
-        LOG(("nsHttpChannel::RetrieveSSLOptions [this=%p] "
-             "falsestart-rc4 permission found\n", this));
-        mCaps |= NS_HTTP_ALLOW_RC4_FALSESTART;
     }
 }
 
@@ -1101,7 +1095,6 @@ nsHttpChannel::ProcessSSLInformation()
     // If this is HTTPS, record any use of RSA so that Key Exchange Algorithm
     // can be whitelisted for TLS False Start in future sessions. We could
     // do the same for DH but its rarity doesn't justify the lookup.
-    // Also do the same for RC4 symmetric ciphers.
 
     if (mCanceled || NS_FAILED(mStatus) || !mSecurityInfo ||
         !IsHTTPS() || mPrivateBrowsing)
@@ -1128,7 +1121,6 @@ nsHttpChannel::ProcessSSLInformation()
         return;
 
     int16_t kea = ssl->GetKEAUsed();
-    int16_t symcipher = ssl->GetSymmetricCipherUsed();
 
     nsIPrincipal *principal = GetPrincipal();
     if (!principal)
@@ -1155,17 +1147,6 @@ nsHttpChannel::ProcessSSLInformation()
              "falsestart-rsa permission granted for this host\n", this));
     } else {
         permMgr->RemoveFromPrincipal(principal, "falsestart-rsa");
-    }
-
-    if (symcipher == ssl_calg_rc4) {
-        permMgr->AddFromPrincipal(principal, "falsestart-rc4",
-                                  nsIPermissionManager::ALLOW_ACTION,
-                                  nsIPermissionManager::EXPIRE_TIME,
-                                  expireTime);
-        LOG(("nsHttpChannel::ProcessSSLInformation [this=%p] "
-             "falsestart-rc4 permission granted for this host\n", this));
-    } else {
-        permMgr->RemoveFromPrincipal(principal, "falsestart-rc4");
     }
 }
 

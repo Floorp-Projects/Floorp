@@ -16,6 +16,7 @@
 #include "mozilla/dom/mobilemessage/SmsTypes.h"
 #include "nsDOMFile.h"
 #include "nsCxPusher.h"
+#include "MessageUtils.h"
 
 using namespace mozilla::idl;
 using namespace mozilla::dom::mobilemessage;
@@ -181,39 +182,6 @@ MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
 
     mDeliveryInfo.AppendElement(info);
   }
-}
-
-/**
- * A helper function to convert the JS value to an integer value for time.
- *
- * @params aCx
- *         The JS context.
- * @params aTime
- *         Can be an object or a number.
- * @params aReturn
- *         The integer value to return.
- * @return NS_OK if the convertion succeeds.
- */
-static nsresult
-convertTimeToInt(JSContext* aCx, const JS::Value& aTime, uint64_t& aReturn)
-{
-  if (aTime.isObject()) {
-    JS::Rooted<JSObject*> timestampObj(aCx, &aTime.toObject());
-    if (!JS_ObjectIsDate(aCx, timestampObj)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    aReturn = js_DateGetMsecSinceEpoch(timestampObj);
-  } else {
-    if (!aTime.isNumber()) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    double number = aTime.toNumber();
-    if (static_cast<uint64_t>(number) != number) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    aReturn = static_cast<uint64_t>(number);
-  }
-  return NS_OK;
 }
 
 /* static */ nsresult

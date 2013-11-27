@@ -31,11 +31,20 @@ enum PCImplSipccState {
   "Started"
 };
 
-// TODO(ekr@rtfm.com): make this conform to the specifications
-enum PCImplIceState {
-  "IceGathering",
-  "IceWaiting",
-  "IceChecking",
-  "IceConnected",
-  "IceFailed"
+enum PCImplIceConnectionState {
+    "new",
+    "checking",
+    "connected",
+    "completed",
+    "failed",
+    "disconnected",
+    "closed"
 };
+
+// Deliberately identical to the values specified in webrtc
+enum PCImplIceGatheringState {
+  "new",
+  "gathering",
+  "complete"
+};
+

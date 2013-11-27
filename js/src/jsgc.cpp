@@ -1668,7 +1668,7 @@ ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
                  cx->asJSContext()->runtime()->gcIncrementalState != NO_INCREMENTAL &&
                  zone->gcBytes > zone->gcTriggerBytes;
 
-#ifdef JS_THREADSAFE
+#ifdef JS_WORKER_THREADS
     JS_ASSERT_IF(cx->isJSContext() && allowGC,
                  !cx->asJSContext()->runtime()->currentThreadHasExclusiveAccess());
 #endif
@@ -2824,6 +2824,7 @@ PurgeRuntime(JSRuntime *rt)
     rt->interpreterStack().purge(rt);
 
     rt->gsnCache.purge();
+    rt->scopeCoordinateNameCache.purge();
     rt->newObjectCache.purge();
     rt->nativeIterCache.purge();
     rt->sourceDataCache.purge();

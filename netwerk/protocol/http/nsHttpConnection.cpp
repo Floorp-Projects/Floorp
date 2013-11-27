@@ -391,12 +391,6 @@ nsHttpConnection::SetupSSL(uint32_t caps)
         ssl->SetKEAExpected(ssl_kea_rsa);
     }
 
-    if (caps & NS_HTTP_ALLOW_RC4_FALSESTART) {
-        LOG(("nsHttpConnection::SetupSSL %p "
-             ">= RC4 Key Exchange Expected\n", this));
-        ssl->SetSymmetricCipherExpected(ssl_calg_rc4);
-    }
-
     nsTArray<nsCString> protocolArray;
 
     // The first protocol is used as the fallback if none of the

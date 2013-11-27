@@ -244,6 +244,9 @@
           } else if (argString.slice(0, 1) == '-' || argString.slice(0, 2) == '--') {
             argument = nonPositionalArgumentMap[argString];
             true;
+            if (!argument) {
+              continue;
+            }
             if (argument.type !== 'boolean') {
               value = args.shift();
               true;
@@ -325,6 +328,44 @@ function assert(cond, msg, context) {
   if (!cond)
     fail(msg, context);
 }
+function scriptProperties(namespace, props) {
+  return props.reduce(function (o, p) {
+    o[p] = namespace + ' ' + p;
+    return o;
+  }, {});
+}
+function cloneObject(obj) {
+  var clone = Object.create(null);
+  for (var prop in obj)
+    clone[prop] = obj[prop];
+  return clone;
+}
+function sortByDepth(a, b) {
+  var levelA = a._level;
+  var levelB = b._level;
+  if (a._parent !== b._parent && a._index > -1 && b._index > -1) {
+    while (a._level > levelB) {
+      a = a._parent;
+    }
+    while (b._level > levelA) {
+      b = b._parent;
+    }
+    while (a._level > 1) {
+      if (a._parent === b._parent) {
+        break;
+      }
+      a = a._parent;
+      b = b._parent;
+    }
+  }
+  if (a === b) {
+    return levelA - levelB;
+  }
+  return a._index - b._index;
+}
+function sortNumeric(a, b) {
+  return a - b;
+}
 function rgbaObjToStr(color) {
   return 'rgba(' + color.red + ',' + color.green + ',' + color.blue + ',' + color.alpha / 255 + ')';
 }
@@ -364,14 +405,301 @@ function argbUintToStr(argb) {
   });
 }());
 var randomStyleCache;
+var nextStyle = 0;
 function randomStyle() {
   if (!randomStyleCache) {
-    randomStyleCache = [];
-    for (var i = 0; i < 50; i++) {
-      randomStyleCache.push('#' + ('00000' + (Math.random() * (1 << 24) | 0).toString(16)).slice(-6));
+    randomStyleCache = [
+      '#ff5e3a',
+      '#ff9500',
+      '#ffdb4c',
+      '#87fc70',
+      '#52edc7',
+      '#1ad6fd',
+      '#c644fc',
+      '#ef4db6',
+      '#4a4a4a',
+      '#dbddde',
+      '#ff3b30',
+      '#ff9500',
+      '#ffcc00',
+      '#4cd964',
+      '#34aadc',
+      '#007aff',
+      '#5856d6',
+      '#ff2d55',
+      '#8e8e93',
+      '#c7c7cc',
+      '#5ad427',
+      '#c86edf',
+      '#d1eefc',
+      '#e0f8d8',
+      '#fb2b69',
+      '#f7f7f7',
+      '#1d77ef',
+      '#d6cec3',
+      '#55efcb',
+      '#ff4981',
+      '#ffd3e0',
+      '#f7f7f7',
+      '#ff1300',
+      '#1f1f21',
+      '#bdbec2',
+      '#ff3a2d'
+    ];
+  }
+  return randomStyleCache[nextStyle++ % randomStyleCache.length];
+}
+var Promise = function PromiseClosure() {
+    function isPromise(obj) {
+      return typeof obj === 'object' && obj !== null && typeof obj.then === 'function';
+    }
+    function defaultOnFulfilled(value) {
+      return value;
+    }
+    function defaultOnRejected(reason) {
+      throw reason;
+    }
+    function propagateFulfilled(subject, value) {
+      subject.subpromisesValue = value;
+      var subpromises = subject.subpromises;
+      if (!subpromises) {
+        return;
+      }
+      for (var i = 0; i < subpromises.length; i++) {
+        subpromises[i].fulfill(value);
+      }
+      delete subject.subpromises;
+    }
+    function propagateRejected(subject, reason) {
+      subject.subpromisesReason = reason;
+      var subpromises = subject.subpromises;
+      if (!subpromises) {
+        if (!true) {
+          console.warn(reason);
+        }
+        return;
+      }
+      for (var i = 0; i < subpromises.length; i++) {
+        subpromises[i].reject(reason);
+      }
+      delete subject.subpromises;
+    }
+    function performCall(callback, arg, subject) {
+      try {
+        var value = callback(arg);
+        if (isPromise(value)) {
+          value.then(function Promise_queueCall_onFulfilled(value) {
+            propagateFulfilled(subject, value);
+          }, function Promise_queueCall_onRejected(reason) {
+            propagateRejected(subject, reason);
+          });
+          return;
+        }
+        propagateFulfilled(subject, value);
+      } catch (ex) {
+        propagateRejected(subject, ex);
+      }
+    }
+    var queue = [];
+    function processQueue() {
+      while (queue.length > 0) {
+        var task = queue[0];
+        if (task.directCallback) {
+          task.callback.call(task.subject, task.arg);
+        } else {
+          performCall(task.callback, task.arg, task.subject);
+        }
+        queue.shift();
+      }
+    }
+    function queueCall(callback, arg, subject, directCallback) {
+      if (queue.length === 0) {
+        setTimeout(processQueue, 0);
+      }
+      queue.push({
+        callback: callback,
+        arg: arg,
+        subject: subject,
+        directCallback: directCallback
+      });
+    }
+    function Promise(onFulfilled, onRejected) {
+      this.state = 'pending';
+      this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : defaultOnFulfilled;
+      this.onRejected = typeof onRejected === 'function' ? onRejected : defaultOnRejected;
+    }
+    Promise.prototype = {
+      fulfill: function Promise_resolve(value) {
+        if (this.state !== 'pending') {
+          return;
+        }
+        this.state = 'fulfilled';
+        this.value = value;
+        queueCall(this.onFulfilled, value, this, false);
+      },
+      reject: function Promise_reject(reason) {
+        if (this.state !== 'pending') {
+          return;
+        }
+        this.state = 'rejected';
+        this.reason = reason;
+        queueCall(this.onRejected, reason, this, false);
+      },
+      then: function Promise_then(onFulfilled, onRejected) {
+        var promise = new Promise(onFulfilled, onRejected);
+        if ('subpromisesValue' in this) {
+          queueCall(promise.fulfill, this.subpromisesValue, promise, true);
+        } else if ('subpromisesReason' in this) {
+          queueCall(promise.reject, this.subpromisesReason, promise, true);
+        } else {
+          var subpromises = this.subpromises || (this.subpromises = []);
+          subpromises.push(promise);
+        }
+        return promise;
+      },
+      get resolved() {
+        return this.state === 'fulfilled';
+      },
+      resolve: function (value) {
+        this.fulfill(value);
+      }
+    };
+    Promise.when = function Promise_when() {
+      var promise = new Promise();
+      if (arguments.length === 0) {
+        promise.resolve();
+        return promise;
+      }
+      var promises = slice.call(arguments, 0);
+      var result = [];
+      var i = 1;
+      function fulfill(value) {
+        result.push(value);
+        if (i < promises.length) {
+          promises[i++].then(fulfill, reject);
+        } else {
+          promise.resolve(result);
+        }
+        return value;
+      }
+      function reject(reason) {
+        promise.reject(reason);
+      }
+      promises[0].then(fulfill, reject);
+      return promise;
+    };
+    return Promise;
+  }();
+var QuadTree = function (x, y, width, height, level) {
+  this.x = x | 0;
+  this.y = y | 0;
+  this.width = width | 0;
+  this.height = height | 0;
+  this.level = level | 0;
+  this.stuckObjects = [];
+  this.objects = [];
+  this.nodes = [];
+};
+QuadTree.prototype._findIndex = function (xMin, yMin, xMax, yMax) {
+  var midX = this.x + (this.width / 2 | 0);
+  var midY = this.y + (this.height / 2 | 0);
+  var top = yMin < midY && yMax < midY;
+  var bottom = yMin > midY;
+  if (xMin < midX && xMax < midX) {
+    if (top) {
+      return 1;
+    } else if (bottom) {
+      return 2;
+    }
+  } else if (xMin > midX) {
+    if (top) {
+      return 0;
+    } else if (bottom) {
+      return 3;
     }
   }
-  return randomStyleCache[Math.random() * randomStyleCache.length | 0];
+  return -1;
+};
+QuadTree.prototype.insert = function (obj) {
+  var nodes = this.nodes;
+  if (nodes.length) {
+    var index = this._findIndex(obj.xMin, obj.yMin, obj.xMax, obj.yMax);
+    if (index > -1) {
+      nodes[index].insert(obj);
+    } else {
+      this.stuckObjects.push(obj);
+      obj._qtree = this;
+    }
+    return;
+  }
+  var objects = this.objects;
+  objects.push(obj);
+  if (objects.length > 4 && this.level < 10) {
+    this._subdivide();
+    while (objects.length) {
+      this.insert(objects.shift());
+    }
+    return;
+  }
+  obj._qtree = this;
+};
+QuadTree.prototype.delete = function (obj) {
+  if (obj._qtree !== this) {
+    return;
+  }
+  var index = this.objects.indexOf(obj);
+  if (index > -1) {
+    this.objects.splice(index, 1);
+  } else {
+    index = this.stuckObjects.indexOf(obj);
+    this.stuckObjects.splice(index, 1);
+  }
+  obj._qtree = null;
+};
+QuadTree.prototype._stack = [];
+QuadTree.prototype._out = [];
+QuadTree.prototype.retrieve = function (xMin, yMin, xMax, yMax) {
+  var stack = this._stack;
+  var out = this._out;
+  out.length = 0;
+  var node = this;
+  do {
+    if (node.nodes.length) {
+      var index = node._findIndex(xMin, yMin, xMax, yMax);
+      if (index > -1) {
+        stack.push(node.nodes[index]);
+      } else {
+        stack.push.apply(stack, node.nodes);
+      }
+    }
+    out.push.apply(out, node.stuckObjects);
+    out.push.apply(out, node.objects);
+    node = stack.pop();
+  } while (node);
+  return out;
+};
+QuadTree.prototype._subdivide = function () {
+  var halfWidth = this.width / 2 | 0;
+  var halfHeight = this.height / 2 | 0;
+  var midX = this.x + halfWidth;
+  var midY = this.y + halfHeight;
+  var level = this.level + 1;
+  this.nodes[0] = new QuadTree(midX, this.y, halfWidth, halfHeight, level);
+  this.nodes[1] = new QuadTree(this.x, this.y, halfWidth, halfHeight, level);
+  this.nodes[2] = new QuadTree(this.x, midY, halfWidth, halfHeight, level);
+  this.nodes[3] = new QuadTree(midX, midY, halfWidth, halfHeight, level);
+};
+var EXTERNAL_INTERFACE_FEATURE = 1;
+var CLIPBOARD_FEATURE = 2;
+var SHAREDOBJECT_FEATURE = 3;
+var VIDEO_FEATURE = 4;
+var SOUND_FEATURE = 5;
+var NETCONNECTION_FEATURE = 6;
+if (!this.performance) {
+  this.performance = {};
+}
+if (!this.performance.now) {
+  this.performance.now = Date.now;
 }
 var SWF_TAG_CODE_CSM_TEXT_SETTINGS = 74;
 var SWF_TAG_CODE_DEFINE_BINARY_DATA = 87;
@@ -1517,7 +1845,7 @@ function applySegmentToStyles(segment, styles, linePaths, fillPaths, isMorph) {
     path.addSegment(commands, data, morphData);
   }
 }
-function convertRecordsToStyledPaths(records, fillPaths, linePaths, dictionary, dependencies, recordsMorph) {
+function convertRecordsToStyledPaths(records, fillPaths, linePaths, dictionary, dependencies, recordsMorph, transferables) {
   var isMorph = recordsMorph !== null;
   var styles = {
       fill0: 0,
@@ -1525,8 +1853,8 @@ function convertRecordsToStyledPaths(records, fillPaths, linePaths, dictionary, 
       line: 0
     };
   var segment = null;
-  var allFillPaths = fillPaths;
-  var allLinePaths = linePaths;
+  var allPaths;
+  var defaultPath;
   var numRecords = records.length - 1;
   var x = 0;
   var y = 0;
@@ -1544,10 +1872,17 @@ function convertRecordsToStyledPaths(records, fillPaths, linePaths, dictionary, 
         applySegmentToStyles(segment, styles, linePaths, fillPaths, isMorph);
       }
       if (record.hasNewStyles) {
+        if (!allPaths) {
+          allPaths = [];
+        }
+        push.apply(allPaths, fillPaths);
         fillPaths = createPathsList(record.fillStyles, false, dictionary, dependencies);
-        push.apply(allFillPaths, fillPaths);
+        push.apply(allPaths, linePaths);
         linePaths = createPathsList(record.lineStyles, true, dictionary, dependencies);
-        push.apply(allLinePaths, linePaths);
+        if (defaultPath) {
+          allPaths.push(defaultPath);
+          defaultPath = null;
+        }
         styles = {
           fill0: 0,
           fill1: 0,
@@ -1591,7 +1926,33 @@ function convertRecordsToStyledPaths(records, fillPaths, linePaths, dictionary, 
         }
       }
     } else {
+      if (!segment) {
+        if (!defaultPath) {
+          var style = {
+              color: {
+                red: 0,
+                green: 0,
+                blue: 0,
+                alpha: 255
+              },
+              width: 20
+            };
+          defaultPath = new SegmentedPath(null, processStyle(style, true));
+        }
+        segment = defaultPath.addSegment([], [], isMorph ? [] : null);
+        segment.commands.push(SHAPE_MOVE_TO);
+        segment.data.push(x, y);
+        if (isMorph) {
+          segment.morphData.push(morphX, morphY);
+        }
+      }
       if (isMorph) {
+        while (morphRecord && morphRecord.type === 0) {
+          morphRecord = recordsMorph[j++];
+        }
+        if (!morphRecord) {
+          morphRecord = record;
+        }
       }
       if (record.isStraight && (!isMorph || morphRecord.isStraight)) {
         x += record.deltaX | 0;
@@ -1641,20 +2002,28 @@ function convertRecordsToStyledPaths(records, fillPaths, linePaths, dictionary, 
     }
   }
   applySegmentToStyles(segment, styles, linePaths, fillPaths, isMorph);
-  push.apply(allFillPaths, allLinePaths);
+  if (allPaths) {
+    push.apply(allPaths, fillPaths);
+  } else {
+    allPaths = fillPaths;
+  }
+  push.apply(allPaths, linePaths);
+  if (defaultPath) {
+    allPaths.push(defaultPath);
+  }
   var removeCount = 0;
-  for (i = 0; i < allFillPaths.length; i++) {
-    path = allFillPaths[i];
+  for (i = 0; i < allPaths.length; i++) {
+    path = allPaths[i];
     if (!path.head()) {
       removeCount++;
       continue;
     }
-    allFillPaths[i - removeCount] = segmentedPathToShapePath(path, isMorph);
+    allPaths[i - removeCount] = segmentedPathToShapePath(path, isMorph, transferables);
   }
-  allFillPaths.length -= removeCount;
-  return allFillPaths;
+  allPaths.length -= removeCount;
+  return allPaths;
 }
-function segmentedPathToShapePath(path, isMorph) {
+function segmentedPathToShapePath(path, isMorph, transferables) {
   var start = path.head();
   var end = start;
   var finalRoot = null;
@@ -1709,7 +2078,7 @@ function segmentedPathToShapePath(path, isMorph) {
     totalDataLength += current.data.length;
     current = current.next;
   }
-  var shape = new ShapePath(path.fillStyle, path.lineStyle, totalCommandsLength, totalDataLength, isMorph);
+  var shape = new ShapePath(path.fillStyle, path.lineStyle, totalCommandsLength, totalDataLength, isMorph, transferables);
   var allCommands = shape.commands;
   var allData = shape.data;
   var allMorphData = shape.morphData;
@@ -1717,13 +2086,10 @@ function segmentedPathToShapePath(path, isMorph) {
   var dataIndex = 0;
   current = finalRoot;
   while (current) {
-    var offset = 0;
     var commands = current.commands;
     var data = current.data;
     var morphData = current.morphData;
-    if (data[0] === allData[dataIndex - 2] && data[1] === allData[dataIndex - 1]) {
-      offset = 1;
-    }
+    var offset = +(data[0] === allData[dataIndex - 2] && data[1] === allData[dataIndex - 1]);
     for (var i = offset; i < commands.length; i++, commandsIndex++) {
       allCommands[commandsIndex] = commands[i];
     }
@@ -1751,7 +2117,7 @@ function processStyle(style, isLineStyle, dictionary, dependencies) {
   if (isLineStyle) {
     style.lineCap = CAPS_STYLE_TYPES[style.endCapStyle | 0];
     style.lineJoin = JOIN_STYLE_TYPES[style.joinStyle | 0];
-    style.miterLimit = style.miterLimitFactor * 2;
+    style.miterLimit = (style.miterLimitFactor || 1.5) * 2;
     if (!style.color && style.hasFill) {
       var fillStyle = processStyle(style.fillStyle, false, dictionary, dependencies);
       style.style = fillStyle.style;
@@ -1820,9 +2186,10 @@ function createPathsList(styles, isLineStyle, dictionary, dependencies) {
 }
 function defineShape(tag, dictionary) {
   var dependencies = [];
+  var transferables = [];
   var fillPaths = createPathsList(tag.fillStyles, false, dictionary, dependencies);
   var linePaths = createPathsList(tag.lineStyles, true, dictionary, dependencies);
-  var paths = convertRecordsToStyledPaths(tag.records, fillPaths, linePaths, dictionary, dependencies, tag.recordsMorph || null);
+  var paths = convertRecordsToStyledPaths(tag.records, fillPaths, linePaths, dictionary, dependencies, tag.recordsMorph || null, transferables);
   if (tag.bboxMorph) {
     var mbox = tag.bboxMorph;
     extendBoundsByPoint(tag.bbox, mbox.xMin, mbox.yMin);
@@ -1842,8 +2209,15 @@ function defineShape(tag, dictionary) {
     bboxMorph: tag.bboxMorph,
     isMorph: tag.isMorph,
     paths: paths,
-    require: dependencies.length ? dependencies : null
+    require: dependencies.length ? dependencies : null,
+    transferables: transferables
   };
+}
+function logShape(paths, bbox) {
+  var output = '{"bounds":' + JSON.stringify(bbox) + ',"paths":[' + paths.map(function (path) {
+      return path.serialize();
+    }).join() + ']}';
+  console.log(output);
 }
 function SegmentedPath(fillStyle, lineStyle) {
   this.fillStyle = fillStyle;
@@ -1898,7 +2272,7 @@ var SHAPE_WIDE_LINE_TO = 5;
 var SHAPE_CUBIC_CURVE_TO = 6;
 var SHAPE_CIRCLE = 7;
 var SHAPE_ELLIPSE = 8;
-function ShapePath(fillStyle, lineStyle, commandsCount, dataLength, isMorph) {
+function ShapePath(fillStyle, lineStyle, commandsCount, dataLength, isMorph, transferables) {
   this.fillStyle = fillStyle;
   this.lineStyle = lineStyle;
   if (commandsCount) {
@@ -1911,8 +2285,21 @@ function ShapePath(fillStyle, lineStyle, commandsCount, dataLength, isMorph) {
   }
   this.bounds = null;
   this.strokeBounds = null;
-  this.isMorph = isMorph;
+  this.isMorph = !(!isMorph);
   this.fullyInitialized = false;
+  if (inWorker) {
+    this.buffers = [
+      this.commands.buffer,
+      this.data.buffer
+    ];
+    transferables.push(this.commands.buffer, this.data.buffer);
+    if (isMorph) {
+      this.buffers.push(this.morphData.buffer);
+      transferables.push(this.morphData.buffer);
+    }
+  } else {
+    this.buffers = null;
+  }
 }
 ShapePath.prototype = {
   moveTo: function (x, y) {
@@ -1961,8 +2348,8 @@ ShapePath.prototype = {
     var formOpen = false;
     var formOpenX = 0;
     var formOpenY = 0;
-    for (var j = 0, k = 0; j < commands.length; j++) {
-      if (!this.isMorph) {
+    if (!this.isMorph) {
+      for (var j = 0, k = 0; j < commands.length; j++) {
         switch (commands[j]) {
         case SHAPE_MOVE_TO:
           formOpen = true;
@@ -2027,9 +2414,14 @@ ShapePath.prototype = {
           }
           break;
         default:
+          if (commands[j] === 0 && j === commands.length - 1) {
+            break;
+          }
           console.warn('Unknown drawing command encountered: ' + commands[j]);
         }
-      } else {
+      }
+    } else {
+      for (var j = 0, k = 0; j < commands.length; j++) {
         switch (commands[j]) {
         case SHAPE_MOVE_TO:
           ctx.moveTo(morph(data[k] / 20, morphData[k++] / 20, ratio), morph(data[k] / 20, morphData[k++] / 20, ratio));
@@ -2512,7 +2904,28 @@ ShapePath.prototype = {
       this.strokeBounds = bounds;
     }
     return bounds;
+  },
+  serialize: function () {
+    var output = '{';
+    if (this.fillStyle) {
+      output += '"fill":' + JSON.stringify(this.fillStyle) + ',';
+    }
+    if (this.lineStyle) {
+      output += '"stroke":' + JSON.stringify(this.lineStyle) + ',';
+    }
+    output += '"commands":[' + Array.apply([], this.commands).join() + '],';
+    output += '"data":[' + Array.apply([], this.data).join() + ']';
+    return output + '}';
   }
+};
+ShapePath.fromPlainObject = function (obj) {
+  var path = new ShapePath(obj.fill || null, obj.stroke || null);
+  path.commands = new Uint8Array(obj.commands);
+  path.data = new Int32Array(obj.data);
+  if (!inWorker) {
+    finishShapePath(path);
+  }
+  return path;
 };
 function distanceSq(x1, y1, x2, y2) {
   var dX = x2 - x1;
@@ -2731,23 +3144,24 @@ function extendBoundsByY(bounds, y) {
 function morph(start, end, ratio) {
   return start + (end - start) * ratio;
 }
-function finishShapePaths(paths, dictionary) {
-  for (var i = 0; i < paths.length; i++) {
-    var path = paths[i];
-    if (path.fullyInitialized) {
-      continue;
-    }
-    if (!(path instanceof ShapePath)) {
-      var untypedPath = path;
-      path = paths[i] = new ShapePath(path.fillStyle, path.lineStyle, 0, 0, path.isMorph);
-      path.commands = untypedPath.commands;
-      path.data = untypedPath.data;
-      path.morphData = untypedPath.morphData;
-    }
-    path.fillStyle && initStyle(path.fillStyle, dictionary);
-    path.lineStyle && initStyle(path.lineStyle, dictionary);
-    path.fullyInitialized = true;
+function finishShapePath(path, dictionary) {
+  if (path.fullyInitialized) {
+    return path;
   }
+  if (!(path instanceof ShapePath)) {
+    var untypedPath = path;
+    path = new ShapePath(path.fillStyle, path.lineStyle, 0, 0, path.isMorph);
+    path.commands = new Uint8Array(untypedPath.buffers[0]);
+    path.data = new Int32Array(untypedPath.buffers[1]);
+    if (untypedPath.isMorph) {
+      path.morphData = new Int32Array(untypedPath.buffers[2]);
+    }
+    path.buffers = null;
+  }
+  path.fillStyle && initStyle(path.fillStyle, dictionary);
+  path.lineStyle && initStyle(path.lineStyle, dictionary);
+  path.fullyInitialized = true;
+  return path;
 }
 var inWorker = typeof window === 'undefined';
 var factoryCtx = !inWorker ? document.createElement('canvas').getContext('2d') : null;
@@ -2763,7 +3177,7 @@ function buildLinearGradientFactory(colorStops) {
     }
     return gradient;
   };
-  fn.defaultGradient = defaultGradient;
+  fn.defaultFillStyle = defaultGradient;
   return fn;
 }
 function buildRadialGradientFactory(focalPoint, colorStops) {
@@ -2778,7 +3192,31 @@ function buildRadialGradientFactory(focalPoint, colorStops) {
     }
     return gradient;
   };
-  fn.defaultGradient = defaultGradient;
+  fn.defaultFillStyle = defaultGradient;
+  return fn;
+}
+function buildBitmapPatternFactory(img, repeat) {
+  var defaultPattern = factoryCtx.createPattern(img, repeat);
+  var cachedTransform, cachedTransformKey;
+  var fn = function createBitmapPattern(ctx, colorTransform) {
+    if (!colorTransform.mode) {
+      return defaultPattern;
+    }
+    var key = colorTransform.getTransformFingerprint();
+    if (key === cachedTransformKey) {
+      return cachedTransform;
+    }
+    var canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    var ctx = canvas.getContext('2d');
+    colorTransform.setAlpha(ctx, true);
+    ctx.drawImage(img, 0, 0);
+    cachedTransform = ctx.createPattern(canvas, repeat);
+    cachedTransformKey = key;
+    return cachedTransform;
+  };
+  fn.defaultFillStyle = defaultPattern;
   return fn;
 }
 function initStyle(style, dictionary) {
@@ -2815,7 +3253,7 @@ function initStyle(style, dictionary) {
   case GRAPHICS_FILL_NONSMOOTHED_CLIPPED_BITMAP:
     var bitmap = dictionary[style.bitmapId];
     var repeat = style.type === GRAPHICS_FILL_REPEATING_BITMAP || style.type === GRAPHICS_FILL_NONSMOOTHED_REPEATING_BITMAP;
-    style.style = factoryCtx.createPattern(bitmap.value.props.img, repeat ? 'repeat' : 'no-repeat');
+    style.style = buildBitmapPatternFactory(bitmap.value.props.img, repeat ? 'repeat' : 'no-repeat');
     break;
   default:
     fail('invalid fill style', 'shape');
@@ -3462,47 +3900,46 @@ SWF.embed = function (file, doc, container, options) {
   var canvas = doc.createElement('canvas');
   var ctx = canvas.getContext('2d');
   var loader = new flash.display.Loader();
-  var loaderInfo = loader.contentLoaderInfo;
+  var loaderInfo = loader._contentLoaderInfo;
   var stage = new flash.display.Stage();
+  var pixelRatio = 1;
+  var forceHidpiSetting = forceHidpi.value;
   stage._loader = loader;
   loaderInfo._parameters = options.movieParams;
   loaderInfo._url = options.url || (typeof file === 'string' ? file : null);
   loaderInfo._loaderURL = options.loaderURL || loaderInfo._url;
-  var pixelRatio = 'devicePixelRatio' in window ? window.devicePixelRatio : 1;
-  var canvasHolder = null;
-  canvas._pixelRatio = pixelRatio;
-  if (pixelRatio > 1) {
-    var cssScale = 'scale(' + 1 / pixelRatio + ', ' + 1 / pixelRatio + ')';
-    canvas.setAttribute('style', '-moz-transform: ' + cssScale + ';' + '-webkit-transform: ' + cssScale + ';' + 'transform: ' + cssScale + ';' + '-moz-transform-origin: 0% 0%;' + '-webkit-transform-origin: 0% 0%;' + 'transform-origin: 0% 0%;');
-    canvasHolder = doc.createElement('div');
-    canvasHolder.setAttribute('style', 'display: inline-block; overflow: hidden;');
-    canvasHolder.appendChild(canvas);
-  }
-  stage._contentsScaleFactor = pixelRatio;
   loader._parent = stage;
   loader._stage = stage;
-  function fitCanvas(container, canvas) {
-    if (canvasHolder) {
-      canvasHolder.style.width = container.clientWidth + 'px';
-      canvasHolder.style.height = container.clientHeight + 'px';
+  function setCanvasSize(width, height) {
+    if (pixelRatio === 1) {
+      canvas.width = width | 0;
+      canvas.height = height | 0;
+      return;
     }
-    canvas.width = container.clientWidth * pixelRatio;
-    canvas.height = container.clientHeight * pixelRatio;
+    var canvasWidth = Math.floor(width * pixelRatio);
+    var canvasHeight = Math.floor(height * pixelRatio);
+    canvas.style.width = canvasWidth / pixelRatio + 'px';
+    canvas.style.height = canvasHeight / pixelRatio + 'px';
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+  }
+  function fitCanvas(container) {
+    setCanvasSize(container.clientWidth, container.clientHeight);
     stage._invalid = true;
   }
   loaderInfo._addEventListener('init', function () {
+    if (forceHidpiSetting || loaderInfo._swfVersion >= 18) {
+      pixelRatio = 'devicePixelRatio' in window ? window.devicePixelRatio : 1;
+    }
+    canvas._pixelRatio = pixelRatio;
+    stage._contentsScaleFactor = pixelRatio;
     if (container.clientHeight) {
-      fitCanvas(container, canvas);
+      fitCanvas(container);
       window.addEventListener('resize', function () {
-        fitCanvas(container, canvas);
+        fitCanvas(container);
       });
     } else {
-      if (canvasHolder) {
-        canvasHolder.style.width = stage._stageWidth / 20 + 'px';
-        canvasHolder.style.height = stage._stageHeight / 20 + 'px';
-      }
-      canvas.width = stage._stageWidth * pixelRatio / 20;
-      canvas.height = stage._stageHeight * pixelRatio / 20;
+      setCanvasSize(stage._stageWidth / 20, stage._stageHeight / 20);
     }
     container.setAttribute('style', 'position: relative');
     canvas.addEventListener('click', function () {
@@ -3515,10 +3952,7 @@ SWF.embed = function (file, doc, container, options) {
       }
     });
     canvas.addEventListener('mousedown', function () {
-      if (stage._mouseTarget._buttonMode) {
-        stage._mouseTarget._gotoButtonState('down');
-      }
-      stage._mouseTarget._dispatchEvent('mouseDown');
+      stage._mouseEvents.push('mousedown');
     });
     canvas.addEventListener('mousemove', function (domEvt) {
       var node = this;
@@ -3531,8 +3965,8 @@ SWF.embed = function (file, doc, container, options) {
         } while (node = node.offsetParent);
       }
       var m = stage._concatenatedTransform;
-      var mouseX = ((domEvt.pageX - left) * pixelRatio - m.tx) / m.a;
-      var mouseY = ((domEvt.pageY - top) * pixelRatio - m.ty) / m.d;
+      var mouseX = ((domEvt.pageX - left) * pixelRatio - m.tx / 20) / m.a;
+      var mouseY = ((domEvt.pageY - top) * pixelRatio - m.ty / 20) / m.d;
       if (mouseX !== stage._mouseX || mouseY !== stage._mouseY) {
         stage._mouseMoved = true;
         stage._mouseX = mouseX * 20;
@@ -3540,10 +3974,7 @@ SWF.embed = function (file, doc, container, options) {
       }
     });
     canvas.addEventListener('mouseup', function () {
-      if (stage._mouseTarget._buttonMode) {
-        stage._mouseTarget._gotoButtonState('over');
-      }
-      stage._mouseTarget._dispatchEvent('mouseUp');
+      stage._mouseEvents.push('mouseup');
     });
     canvas.addEventListener('mouseover', function () {
       stage._mouseMoved = true;
@@ -3553,6 +3984,36 @@ SWF.embed = function (file, doc, container, options) {
       stage._mouseMoved = true;
       stage._mouseOver = false;
     });
+    window.addEventListener('message', function (evt) {
+      var data = evt.data;
+      if (typeof data !== 'object' || data === null) {
+        return;
+      }
+      var type = data.type;
+      switch (type) {
+      case 'mousemove':
+      case 'mouseup':
+      case 'mousedown':
+        var isMouseMove = type === 'mousemove';
+        stage._mouseMoved = true;
+        stage._mouseOver = true;
+        stage._mouseX = data.x * 20;
+        stage._mouseY = data.y * 20;
+        if (!isMouseMove) {
+          stage._mouseEvents.push(type);
+        }
+        break;
+      case 'mouseover':
+      case 'mouseout':
+        stage._mouseMoved = true;
+        stage._mouseOver = type === 'mouseover';
+        break;
+      case 'keyup':
+      case 'keydown':
+        stage._dispatchEvent(new flash.events.KeyboardEvent(type === 'keyup' ? 'keyUp' : 'keyDown', true, false, data.charCode, data.keyCode, data.keyLocation, data.ctrlKey || false, data.altKey || false, data.shiftKey || false));
+        break;
+      }
+    }, false);
     var bgcolor = loaderInfo._backgroundColor;
     if (options.objectParams) {
       var m;
@@ -3578,10 +4039,9 @@ SWF.embed = function (file, doc, container, options) {
     ctx.fillStyle = rgbaObjToStr(bgcolor);
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     var root = loader._content;
-    stage._children[0] = root;
-    root._dispatchEvent('added');
+    root._dispatchEvent('added', undefined, true);
     root._dispatchEvent('addedToStage');
-    container.appendChild(canvasHolder || canvas);
+    container.appendChild(canvas);
     if (options.onStageInitialized) {
       options.onStageInitialized(stage);
     }
@@ -3604,9 +4064,17 @@ var showRedrawRegions = rendererOptions.register(new Option('rr', 'showRedrawReg
 var renderAsWireframe = rendererOptions.register(new Option('raw', 'renderAsWireframe', 'boolean', false, 'render as wireframe'));
 var showQuadTree = rendererOptions.register(new Option('qt', 'showQuadTree', 'boolean', false, 'show quad tree'));
 var turboMode = rendererOptions.register(new Option('', 'turbo', 'boolean', false, 'turbo mode'));
+var forceHidpi = rendererOptions.register(new Option('', 'forceHidpi', 'boolean', false, 'force hidpi'));
+var enableConstructChildren = rendererOptions.register(new Option('', 'constructChildren', 'boolean', true, 'Construct Children'));
+var enableEnterFrame = rendererOptions.register(new Option('', 'enterFrame', 'boolean', true, 'Enter Frame'));
+var enableAdvanceFrame = rendererOptions.register(new Option('', 'advanceFrame', 'boolean', true, 'Advance Frame'));
 if (typeof FirefoxCom !== 'undefined') {
   turboMode.value = FirefoxCom.requestSync('getBoolPref', {
     pref: 'shumway.turboMode',
+    def: false
+  });
+  forceHidpi.value = FirefoxCom.requestSync('getBoolPref', {
+    pref: 'shumway.force_hidpi',
     def: false
   });
 }
@@ -3648,8 +4116,7 @@ function visitContainer(container, visitor, context) {
       continue;
     }
     if (visitor.ignoreVisibleAttribute || child._visible && !child._maskedObject) {
-      var isContainer = flash.display.DisplayObjectContainer.class.isInstanceOf(child) || flash.display.SimpleButton.class.isInstanceOf(child);
-      visitor.visit(child, isContainer, visitContainer, context);
+      visitor.visit(child, visitContainer, context);
     }
   }
   visitor.childrenEnd(container);
@@ -3681,9 +4148,21 @@ RenderVisitor.prototype = {
   start: function () {
     visitContainer(this.root, this, new RenderingContext(this.refreshStage, this.invalidPath));
   },
-  startFragment: function () {
-    var isContainer = flash.display.DisplayObjectContainer.class.isInstanceOf(this.root) || flash.display.SimpleButton.class.isInstanceOf(this.root);
-    var t = this.root._currentTransform;
+  startFragment: function (matrix) {
+    var root = this.root;
+    var currentTransform = root._currentTransform;
+    var t = currentTransform;
+    if (matrix) {
+      t = root._currentTransform = {
+        a: matrix.a,
+        b: matrix.b,
+        c: matrix.c,
+        d: matrix.d,
+        tx: matrix.tx * 20 | 0,
+        ty: matrix.ty * 20 | 0
+      };
+      root._invalidateTransform();
+    }
     var inverse;
     if (t) {
       inverse = new flash.geom.Matrix(t.a, t.b, t.c, t.d, t.tx / 20, t.ty / 20);
@@ -3691,9 +4170,13 @@ RenderVisitor.prototype = {
       this.ctx.save();
       this.ctx.transform(inverse.a, inverse.b, inverse.c, inverse.d, inverse.tx, inverse.ty);
     }
-    this.visit(this.root, isContainer, visitContainer, new RenderingContext(this.refreshStage, this.invalidPath));
+    this.visit(root, visitContainer, new RenderingContext(this.refreshStage, this.invalidPath));
     if (t) {
       this.ctx.restore();
+    }
+    if (matrix) {
+      root._currentTransform = currentTransform;
+      root._invalidateTransform();
     }
   },
   childrenStart: function (parent) {
@@ -3733,8 +4216,9 @@ RenderVisitor.prototype = {
   childrenEnd: function (parent) {
     if (this.clipDepth) {
       while (this.clipDepth.length > 0) {
-        this.clipDepth.pop();
-        this.ctx.restore();
+        var clipDepthInfo = this.clipDepth.pop();
+        this.clipEnd(clipDepthInfo);
+        this.ctx = clipDepthInfo.ctx;
       }
       this.clipDepth = null;
     }
@@ -3748,7 +4232,7 @@ RenderVisitor.prototype = {
       this.invalidPath = null;
     }
   },
-  visit: function (child, isContainer, visitContainer, context) {
+  visit: function (child, visitContainer, context) {
     var ctx = this.ctx;
     var parentHasClippingMask = context.isClippingMask;
     var parentColorTransform = context.colorTransform;
@@ -3757,20 +4241,29 @@ RenderVisitor.prototype = {
       context.colorTransform = parentColorTransform.applyCXForm(child._cxform);
     }
     if (!clippingMask) {
-      while (this.clipDepth && this.clipDepth.length > 0 && child._depth > this.clipDepth[0]) {
-        this.clipDepth.shift();
-        ctx.restore();
+      while (this.clipDepth && this.clipDepth.length > 0 && child._depth > this.clipDepth[0].clipDepth) {
+        var clipDepthInfo = this.clipDepth.shift();
+        this.clipEnd(clipDepthInfo);
+        ctx = this.ctx = clipDepthInfo.ctx;
       }
       if (child._clipDepth) {
-        if (!this.clipDepth) {
-          this.clipDepth = [];
-        }
         context.isClippingMask = clippingMask = true;
-        this.clipDepth.unshift(child._clipDepth);
-        ctx.save();
+        var clipDepthInfo = this.clipStart(child);
+        if (!this.clipDepth) {
+          this.clipDepth = [
+            clipDepthInfo
+          ];
+        } else {
+          this.clipDepth.unshift(clipDepthInfo);
+        }
+        ctx = this.ctx = clipDepthInfo.mask.ctx;
+      } else {
+        if (this.clipDepth && this.clipDepth.length > 0 && child._depth <= this.clipDepth[0].clipDepth) {
+          ctx = this.ctx = this.clipDepth[0].maskee.ctx;
+        }
       }
     }
-    if (clippingMask && isContainer) {
+    if (clippingMask && child._isContainer) {
       ctx.save();
       renderDisplayObject(child, ctx, context);
       for (var i = 0, n = child._children.length; i < n; i++) {
@@ -3779,12 +4272,11 @@ RenderVisitor.prototype = {
           continue;
         }
         if (this.ignoreVisibleAttribute || child1._visible && !child1._maskedObject) {
-          var isContainer = flash.display.DisplayObjectContainer.class.isInstanceOf(child1) || flash.display.SimpleButton.class.isInstanceOf(child1);
-          this.visit(child1, isContainer, visitContainer, context);
+          this.visit(child1, visitContainer, context);
         }
       }
       ctx.restore();
-      ctx.clip();
+      ctx.fill();
       context.isClippingMask = parentHasClippingMask;
       context.colorTransform = parentColorTransform;
       return;
@@ -3792,45 +4284,64 @@ RenderVisitor.prototype = {
     ctx.save();
     ctx.globalCompositeOperation = getBlendModeName(child._blendMode);
     if (child._mask) {
-      var m = child._parent._getConcatenatedTransform(true);
-      var tempCanvas, tempCtx, maskCanvas, maskCtx;
-      maskCanvas = CanvasCache.getCanvas(ctx.canvas);
-      maskCtx = maskCanvas.ctx;
-      maskCtx.setTransform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-      var isMaskContainer = flash.display.DisplayObjectContainer.class.isInstanceOf(child._mask) || flash.display.SimpleButton.class.isInstanceOf(child._mask);
-      this.ctx = maskCtx;
-      this.visit(child._mask, isMaskContainer, visitContainer, new RenderingContext(this.refreshStage));
+      var clipInfo = this.clipStart(child);
+      var mask = clipInfo.mask;
+      var maskee = clipInfo.maskee;
+      var savedClipDepth = this.clipDepth;
+      this.clipDepth = null;
+      this.ctx = mask.ctx;
+      this.visit(child._mask, visitContainer, new RenderingContext(this.refreshStage));
       this.ctx = ctx;
-      tempCanvas = CanvasCache.getCanvas(ctx.canvas);
-      tempCtx = tempCanvas.ctx;
-      tempCtx.setTransform(m.a, m.b, m.c, m.d, m.tx, m.ty);
-      renderDisplayObject(child, tempCtx, context);
-      if (isContainer) {
-        this.ctx = tempCtx;
+      this.clipDepth = savedClipDepth;
+      renderDisplayObject(child, maskee.ctx, context);
+      if (child._isContainer) {
+        this.ctx = maskee.ctx;
         visitContainer(child, this, context);
         this.ctx = ctx;
       }
-      tempCtx.globalCompositeOperation = 'destination-in';
-      tempCtx.setTransform(1, 0, 0, 1, 0, 0);
-      tempCtx.drawImage(maskCanvas.canvas, 0, 0);
-      ctx.save();
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.drawImage(tempCanvas.canvas, 0, 0);
-      ctx.restore();
-      CanvasCache.releaseCanvas(tempCanvas);
-      CanvasCache.releaseCanvas(maskCanvas);
+      this.clipEnd(clipInfo);
     } else {
       renderDisplayObject(child, ctx, context);
-      if (isContainer) {
+      if (child._isContainer) {
         visitContainer(child, this, context);
       }
     }
     ctx.restore();
     if (clippingMask) {
-      ctx.clip();
+      ctx.fill();
     }
     context.isClippingMask = parentHasClippingMask;
     context.colorTransform = parentColorTransform;
+  },
+  clipStart: function (child) {
+    var m = child._parent._getConcatenatedTransform(true);
+    var tx = m.tx / 20;
+    var ty = m.ty / 20;
+    var mask = CanvasCache.getCanvas(this.ctx.canvas);
+    mask.ctx.setTransform(m.a, m.b, m.c, m.d, tx, ty);
+    var maskee = CanvasCache.getCanvas(this.ctx.canvas);
+    maskee.ctx.setTransform(m.a, m.b, m.c, m.d, tx, ty);
+    var clipInfo = {
+        ctx: this.ctx,
+        mask: mask,
+        maskee: maskee,
+        clipDepth: child._clipDepth
+      };
+    return clipInfo;
+  },
+  clipEnd: function (clipInfo) {
+    var ctx = clipInfo.ctx;
+    var mask = clipInfo.mask;
+    var maskee = clipInfo.maskee;
+    maskee.ctx.globalCompositeOperation = 'destination-in';
+    maskee.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    maskee.ctx.drawImage(mask.canvas, 0, 0);
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(maskee.canvas, 0, 0);
+    ctx.restore();
+    CanvasCache.releaseCanvas(mask);
+    CanvasCache.releaseCanvas(maskee);
   }
 };
 function RenderingColorTransform() {
@@ -3877,7 +4388,7 @@ RenderingColorTransform.prototype = {
     } else if (typeof style === 'number') {
       style = this.convertNumericColor(style);
     } else if (typeof style === 'function') {
-      style = style.defaultGradient;
+      style = style.defaultFillStyle;
     }
     ctx.fillStyle = style;
   },
@@ -3887,7 +4398,7 @@ RenderingColorTransform.prototype = {
     } else if (typeof style === 'number') {
       style = this.convertNumericColor(style);
     } else if (typeof style === 'function') {
-      style = style.defaultGradient;
+      style = style.defaultFillStyle;
     }
     ctx.strokeStyle = style;
   },
@@ -3944,6 +4455,9 @@ RenderingColorTransform.prototype = {
     var b = Math.min(255, Math.max(0, m[3] * t[2] + t[6])) | 0;
     var a = Math.min(1, Math.max(0, m[4] * t[3] + t[7] / 256));
     return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+  },
+  getTransformFingerprint: function () {
+    return this.transform.join('|');
   }
 };
 function RenderingContext(refreshStage, invalidPath) {
@@ -4013,7 +4527,6 @@ function renderQuadTree(ctx, qtree) {
     renderQuadTree(ctx, nodes[i]);
   }
 }
-var fps;
 var renderingTerminated = false;
 var samplesLeftPlusOne = 0;
 function triggerSampling(count) {
@@ -4039,6 +4552,18 @@ function sampleEnd() {
   if (samplesLeftPlusOne === 1) {
     console.profileEnd('Sample');
   }
+}
+var timeline;
+function timelineEnter(name) {
+  timeline && timeline.enter(name);
+}
+function timelineLeave(name) {
+  timeline && timeline.leave(name);
+}
+function timelineWrapBroadcastMessage(domain, message) {
+  timelineEnter(message);
+  domain.broadcastMessage(message);
+  timelineLeave(message);
 }
 function renderStage(stage, ctx, events) {
   var frameWidth, frameHeight;
@@ -4090,8 +4615,8 @@ function renderStage(stage, ctx, events) {
     var m = stage._concatenatedTransform;
     m.a = scaleX;
     m.d = scaleY;
-    m.tx = offsetX;
-    m.ty = offsetY;
+    m.tx = offsetX * 20;
+    m.ty = offsetY * 20;
   }
   updateRenderTransform();
   var frameTime = 0;
@@ -4180,6 +4705,8 @@ function renderStage(stage, ctx, events) {
     if (stage._mouseMoved) {
       stage._mouseMoved = false;
       mouseMoved = stage._mouseOver;
+    } else {
+      stage._handleMouseButtons();
     }
     if (renderFrame || refreshStage || mouseMoved) {
       FrameCounter.clear();
@@ -4194,18 +4721,18 @@ function renderStage(stage, ctx, events) {
             nextRenderAt += maxDelay;
           }
         }
-        fps && fps.enter('EVENTS');
+        timelineEnter('EVENTS');
         if (firstRun) {
           firstRun = false;
         } else {
-          domain.broadcastMessage('advanceFrame');
-          domain.broadcastMessage('enterFrame');
-          domain.broadcastMessage('constructChildren');
+          enableAdvanceFrame.value && timelineWrapBroadcastMessage(domain, 'advanceFrame');
+          enableEnterFrame.value && timelineWrapBroadcastMessage(domain, 'enterFrame');
+          enableConstructChildren.value && timelineWrapBroadcastMessage(domain, 'constructChildren');
         }
-        domain.broadcastMessage('frameConstructed');
-        domain.broadcastMessage('executeFrame');
-        domain.broadcastMessage('exitFrame');
-        fps && fps.leave('EVENTS');
+        timelineWrapBroadcastMessage(domain, 'frameConstructed');
+        timelineWrapBroadcastMessage(domain, 'executeFrame');
+        timelineWrapBroadcastMessage(domain, 'exitFrame');
+        timelineLeave('EVENTS');
       }
       if (stage._deferRenderEvent) {
         stage._deferRenderEvent = false;
@@ -4215,19 +4742,19 @@ function renderStage(stage, ctx, events) {
         var invalidPath = null;
         if (!disablePreVisitor.value) {
           traceRenderer.value && frameWriter.enter('> Pre Visitor');
-          fps && fps.enter('PRE');
+          timelineEnter('PRE');
           invalidPath = stage._processInvalidRegions(true);
-          fps && fps.leave('PRE');
+          timelineLeave('PRE');
           traceRenderer.value && frameWriter.leave('< Pre Visitor');
         } else {
           stage._processInvalidRegions(false);
         }
         if (!disableRenderVisitor.value) {
-          fps && fps.enter('RENDER');
+          timelineEnter('RENDER');
           traceRenderer.value && frameWriter.enter('> Render Visitor');
           new RenderVisitor(stage, ctx, invalidPath, refreshStage).start();
           traceRenderer.value && frameWriter.leave('< Render Visitor');
-          fps && fps.leave('RENDER');
+          timelineLeave('RENDER');
         }
         if (showQuadTree.value) {
           ctx.strokeStyle = 'green';
@@ -4240,20 +4767,22 @@ function renderStage(stage, ctx, events) {
         }
       }
       if (mouseMoved && !disableMouseVisitor.value) {
-        fps && renderFrame && fps.enter('MOUSE');
+        renderFrame && timelineEnter('MOUSE');
         traceRenderer.value && frameWriter.enter('> Mouse Visitor');
         stage._handleMouse();
         traceRenderer.value && frameWriter.leave('< Mouse Visitor');
-        fps && renderFrame && fps.leave('MOUSE');
+        renderFrame && timelineLeave('MOUSE');
         ctx.canvas.style.cursor = stage._cursor;
       }
       if (renderFrame && events.onAfterFrame) {
         events.onAfterFrame();
       }
       if (traceRenderer.value) {
+        frameWriter.enter('> Frame Counters');
         for (var name in FrameCounter.counts) {
-          appendToFrameTerminal(name + ': ' + FrameCounter.counts[name], 'gray');
+          frameWriter.writeLn(name + ': ' + FrameCounter.counts[name]);
         }
+        frameWriter.leave('< Frame Counters');
         var frameElapsedTime = performance.now() - frameStartTime;
         var frameFPS = 1000 / frameElapsedTime;
         frameFPSAverage.push(frameFPS);
@@ -4822,6 +5351,19 @@ var tagHandler = function (global) {
         $.name = '';
       }
       $.data = readBinary($bytes, $stream, 0);
+      return $;
+    }
+    function exportAssets($bytes, $stream, $, swfVersion, tagCode) {
+      $ || ($ = {});
+      var exportsCount = readUi16($bytes, $stream);
+      var $0 = $.exports = [];
+      var $1 = exportsCount;
+      while ($1--) {
+        var $2 = {};
+        $2.symbolId = readUi16($bytes, $stream);
+        $2.className = readString($bytes, $stream, 0);
+        $0.push($2);
+      }
       return $;
     }
     function symbolClass($bytes, $stream, $, swfVersion, tagCode) {
@@ -5639,7 +6181,7 @@ var tagHandler = function (global) {
       45: soundStreamHead,
       46: defineShape,
       48: defineFont2,
-      56: undefined,
+      56: exportAssets,
       57: undefined,
       58: undefined,
       59: doAction,
@@ -5689,58 +6231,79 @@ var readHeader = function readHeader($bytes, $stream, $, swfVersion, tagCode) {
   $.frameCount = readUi16($bytes, $stream);
   return $;
 };
-function readTags(context, stream, swfVersion, onprogress) {
+function readTags(context, stream, swfVersion, final, onprogress) {
   var tags = context.tags;
   var bytes = stream.bytes;
   var lastSuccessfulPosition;
+  var tag = null;
+  if (context._readTag) {
+    tag = context._readTag;
+    delete context._readTag;
+  }
   try {
-    do {
+    while (stream.pos < stream.end) {
       lastSuccessfulPosition = stream.pos;
       stream.ensure(2);
       var tagCodeAndLength = readUi16(bytes, stream);
+      if (!tagCodeAndLength) {
+        final = true;
+        break;
+      }
       var tagCode = tagCodeAndLength >> 6;
       var length = tagCodeAndLength & 63;
       if (length === 63) {
         stream.ensure(4);
         length = readUi32(bytes, stream);
       }
-      stream.ensure(length);
-      if (tagCode === 0) {
-        break;
+      if (tag) {
+        if (tagCode === 1 && tag.code === 1) {
+          tag.repeat++;
+          stream.pos += length;
+          continue;
+        }
+        tags.push(tag);
+        if (onprogress && tag.id !== undefined) {
+          onprogress(context);
+        }
+        tag = null;
       }
+      stream.ensure(length);
       var substream = stream.substream(stream.pos, stream.pos += length);
       var subbytes = substream.bytes;
-      var tag = {
+      var nextTag = {
           code: tagCode
         };
       if (tagCode === 39) {
-        tag.type = 'sprite';
-        tag.id = readUi16(subbytes, substream);
-        tag.frameCount = readUi16(subbytes, substream);
-        tag.tags = [];
-        readTags(tag, substream, swfVersion);
+        nextTag.type = 'sprite';
+        nextTag.id = readUi16(subbytes, substream);
+        nextTag.frameCount = readUi16(subbytes, substream);
+        nextTag.tags = [];
+        readTags(nextTag, substream, swfVersion, true);
+      } else if (tagCode === 1) {
+        nextTag.repeat = 1;
       } else {
         var handler = tagHandler[tagCode];
         if (handler) {
-          handler(subbytes, substream, tag, swfVersion, tagCode);
+          handler(subbytes, substream, nextTag, swfVersion, tagCode);
         }
       }
+      tag = nextTag;
+    }
+    if (tag && final) {
+      tag.finalTag = true;
       tags.push(tag);
-      if (tagCode === 1) {
-        while (stream.pos + 2 <= stream.end && stream.getUint16(stream.pos, true) >> 6 === 1) {
-          tags.push(tag);
-          stream.pos += 2;
-        }
-        if (onprogress)
-          onprogress(context);
-      } else if (onprogress && tag.id !== undefined) {
+      if (onprogress) {
         onprogress(context);
       }
-    } while (stream.pos < stream.end);
+    } else {
+      context._readTag = tag;
+    }
   } catch (e) {
-    if (e !== StreamNoDataError)
+    if (e !== StreamNoDataError) {
       throw e;
+    }
     stream.pos = lastSuccessfulPosition;
+    context._readTag = tag;
   }
 }
 function HeadTailBuffer(defaultSize) {
@@ -5889,12 +6452,14 @@ BodyParser.prototype = {
       buffer.push(data);
       stream = buffer.createStream();
     }
+    var finalBlock = false;
     if (progressInfo) {
       swf.bytesLoaded = progressInfo.bytesLoaded;
       swf.bytesTotal = progressInfo.bytesTotal;
+      finalBlock = progressInfo.bytesLoaded >= progressInfo.bytesTotal;
     }
     var readStartTime = performance.now();
-    readTags(swf, stream, swfVersion, options.onprogress);
+    readTags(swf, stream, swfVersion, finalBlock, options.onprogress);
     swf.parseTime += performance.now() - readStartTime;
     var read = stream.pos;
     buffer.removeHead(read);
@@ -6007,6 +6572,408 @@ SWF.parse = function (buffer, options) {
     };
   pipe.push(bytes, progressInfo);
 };
+var $RELEASE = false;
+var isWorker = typeof window === 'undefined';
+if (isWorker && !true) {
+  importScripts.apply(null, [
+    '../../lib/DataView.js/DataView.js',
+    '../flash/util.js',
+    'config.js',
+    'swf.js',
+    'types.js',
+    'structs.js',
+    'tags.js',
+    'inflate.js',
+    'stream.js',
+    'templates.js',
+    'generator.js',
+    'handlers.js',
+    'parser.js',
+    'bitmap.js',
+    'button.js',
+    'font.js',
+    'image.js',
+    'label.js',
+    'shape.js',
+    'sound.js',
+    'text.js'
+  ]);
+}
+function defineSymbol(swfTag, symbols) {
+  var symbol;
+  switch (swfTag.code) {
+  case SWF_TAG_CODE_DEFINE_BITS:
+  case SWF_TAG_CODE_DEFINE_BITS_JPEG2:
+  case SWF_TAG_CODE_DEFINE_BITS_JPEG3:
+  case SWF_TAG_CODE_DEFINE_BITS_JPEG4:
+  case SWF_TAG_CODE_JPEG_TABLES:
+    symbol = defineImage(swfTag, symbols);
+    break;
+  case SWF_TAG_CODE_DEFINE_BITS_LOSSLESS:
+  case SWF_TAG_CODE_DEFINE_BITS_LOSSLESS2:
+    symbol = defineBitmap(swfTag);
+    break;
+  case SWF_TAG_CODE_DEFINE_BUTTON:
+  case SWF_TAG_CODE_DEFINE_BUTTON2:
+    symbol = defineButton(swfTag, symbols);
+    break;
+  case SWF_TAG_CODE_DEFINE_EDIT_TEXT:
+    symbol = defineText(swfTag, symbols);
+    break;
+  case SWF_TAG_CODE_DEFINE_FONT:
+  case SWF_TAG_CODE_DEFINE_FONT2:
+  case SWF_TAG_CODE_DEFINE_FONT3:
+  case SWF_TAG_CODE_DEFINE_FONT4:
+    symbol = defineFont(swfTag, symbols);
+    break;
+  case SWF_TAG_CODE_DEFINE_MORPH_SHAPE:
+  case SWF_TAG_CODE_DEFINE_MORPH_SHAPE2:
+  case SWF_TAG_CODE_DEFINE_SHAPE:
+  case SWF_TAG_CODE_DEFINE_SHAPE2:
+  case SWF_TAG_CODE_DEFINE_SHAPE3:
+  case SWF_TAG_CODE_DEFINE_SHAPE4:
+    symbol = defineShape(swfTag, symbols);
+    break;
+  case SWF_TAG_CODE_DEFINE_SOUND:
+    symbol = defineSound(swfTag, symbols);
+    break;
+  case SWF_TAG_CODE_DEFINE_BINARY_DATA:
+    symbol = {
+      type: 'binary',
+      id: swfTag.id,
+      data: swfTag.data
+    };
+    break;
+  case SWF_TAG_CODE_DEFINE_SPRITE:
+    var depths = {};
+    var frame = {
+        type: 'frame'
+      };
+    var frames = [];
+    var tags = swfTag.tags;
+    var frameScripts = null;
+    var frameIndex = 0;
+    var soundStream = null;
+    for (var i = 0, n = tags.length; i < n; i++) {
+      var tag = tags[i];
+      switch (tag.code) {
+      case SWF_TAG_CODE_DO_ACTION:
+        if (!frameScripts)
+          frameScripts = [];
+        frameScripts.push(frameIndex);
+        frameScripts.push(tag.actionsData);
+        break;
+      case SWF_TAG_CODE_START_SOUND:
+        var startSounds = frame.startSounds || (frame.startSounds = []);
+        startSounds.push(tag);
+        break;
+      case SWF_TAG_CODE_SOUND_STREAM_HEAD:
+        try {
+          soundStream = createSoundStream(tag);
+          frame.soundStream = soundStream.info;
+        } catch (e) {
+        }
+        break;
+      case SWF_TAG_CODE_SOUND_STREAM_BLOCK:
+        if (soundStream) {
+          frame.soundStreamBlock = soundStream.decode(tag.data);
+        }
+        break;
+      case SWF_TAG_CODE_FRAME_LABEL:
+        frame.labelName = tag.name;
+        break;
+      case SWF_TAG_CODE_PLACE_OBJECT:
+      case SWF_TAG_CODE_PLACE_OBJECT2:
+      case SWF_TAG_CODE_PLACE_OBJECT3:
+        depths[tag.depth] = tag;
+        break;
+      case SWF_TAG_CODE_REMOVE_OBJECT:
+      case SWF_TAG_CODE_REMOVE_OBJECT2:
+        depths[tag.depth] = null;
+        break;
+      case SWF_TAG_CODE_SHOW_FRAME:
+        frameIndex += tag.repeat;
+        frame.repeat = tag.repeat;
+        frame.depths = depths;
+        frames.push(frame);
+        depths = {};
+        frame = {
+          type: 'frame'
+        };
+        break;
+      }
+    }
+    symbol = {
+      type: 'sprite',
+      id: swfTag.id,
+      frameCount: swfTag.frameCount,
+      frames: frames,
+      frameScripts: frameScripts
+    };
+    break;
+  case SWF_TAG_CODE_DEFINE_TEXT:
+  case SWF_TAG_CODE_DEFINE_TEXT2:
+    symbol = defineLabel(swfTag, symbols);
+    break;
+  }
+  if (!symbol) {
+    return {
+      command: 'error',
+      message: 'unknown symbol type: ' + swfTag.code
+    };
+  }
+  symbol.isSymbol = true;
+  symbols[swfTag.id] = symbol;
+  return symbol;
+}
+function createParsingContext(commitData) {
+  var depths = {};
+  var symbols = {};
+  var frame = {
+      type: 'frame'
+    };
+  var tagsProcessed = 0;
+  var soundStream = null;
+  var lastProgressSent = 0;
+  return {
+    onstart: function (result) {
+      commitData({
+        command: 'init',
+        result: result
+      });
+    },
+    onprogress: function (result) {
+      if (Date.now() - lastProgressSent > 1000 / 24 || result.bytesLoaded === result.bytesTotal) {
+        commitData({
+          command: 'progress',
+          result: {
+            bytesLoaded: result.bytesLoaded,
+            bytesTotal: result.bytesTotal
+          }
+        });
+        lastProgressSent = Date.now();
+      }
+      var tags = result.tags;
+      for (var n = tags.length; tagsProcessed < n; tagsProcessed++) {
+        var tag = tags[tagsProcessed];
+        if ('id' in tag) {
+          var symbol = defineSymbol(tag, symbols);
+          commitData(symbol, symbol.transferables);
+          continue;
+        }
+        switch (tag.code) {
+        case SWF_TAG_CODE_DEFINE_SCENE_AND_FRAME_LABEL_DATA:
+          frame.sceneData = tag;
+          break;
+        case SWF_TAG_CODE_DEFINE_SCALING_GRID:
+          var symbolUpdate = {
+              isSymbol: true,
+              id: tag.symbolId,
+              updates: {
+                scale9Grid: tag.splitter
+              }
+            };
+          commitData(symbolUpdate);
+          break;
+        case SWF_TAG_CODE_DO_ABC:
+        case SWF_TAG_CODE_DO_ABC_:
+          var abcBlocks = frame.abcBlocks;
+          if (abcBlocks)
+            abcBlocks.push({
+              data: tag.data,
+              flags: tag.flags
+            });
+          else
+            frame.abcBlocks = [
+              {
+                data: tag.data,
+                flags: tag.flags
+              }
+            ];
+          break;
+        case SWF_TAG_CODE_DO_ACTION:
+          var actionBlocks = frame.actionBlocks;
+          if (actionBlocks)
+            actionBlocks.push(tag.actionsData);
+          else
+            frame.actionBlocks = [
+              tag.actionsData
+            ];
+          break;
+        case SWF_TAG_CODE_DO_INIT_ACTION:
+          var initActionBlocks = frame.initActionBlocks || (frame.initActionBlocks = []);
+          initActionBlocks.push({
+            spriteId: tag.spriteId,
+            actionsData: tag.actionsData
+          });
+          break;
+        case SWF_TAG_CODE_START_SOUND:
+          var startSounds = frame.startSounds;
+          if (!startSounds)
+            frame.startSounds = startSounds = [];
+          startSounds.push(tag);
+          break;
+        case SWF_TAG_CODE_SOUND_STREAM_HEAD:
+          try {
+            soundStream = createSoundStream(tag);
+            frame.soundStream = soundStream.info;
+          } catch (e) {
+          }
+          break;
+        case SWF_TAG_CODE_SOUND_STREAM_BLOCK:
+          if (soundStream) {
+            frame.soundStreamBlock = soundStream.decode(tag.data);
+          }
+          break;
+        case SWF_TAG_CODE_EXPORT_ASSETS:
+          var exports = frame.exports;
+          if (exports)
+            frame.exports = exports.concat(tag.exports);
+          else
+            frame.exports = tag.exports.slice(0);
+          break;
+        case SWF_TAG_CODE_SYMBOL_CLASS:
+          var symbolClasses = frame.symbolClasses;
+          if (symbolClasses)
+            frame.symbolClasses = symbolClasses.concat(tag.exports);
+          else
+            frame.symbolClasses = tag.exports.slice(0);
+          break;
+        case SWF_TAG_CODE_FRAME_LABEL:
+          frame.labelName = tag.name;
+          break;
+        case SWF_TAG_CODE_PLACE_OBJECT:
+        case SWF_TAG_CODE_PLACE_OBJECT2:
+        case SWF_TAG_CODE_PLACE_OBJECT3:
+          depths[tag.depth] = tag;
+          break;
+        case SWF_TAG_CODE_REMOVE_OBJECT:
+        case SWF_TAG_CODE_REMOVE_OBJECT2:
+          depths[tag.depth] = null;
+          break;
+        case SWF_TAG_CODE_SET_BACKGROUND_COLOR:
+          frame.bgcolor = tag.color;
+          break;
+        case SWF_TAG_CODE_SHOW_FRAME:
+          frame.repeat = tag.repeat;
+          frame.depths = depths;
+          frame.complete = !(!tag.finalTag);
+          commitData(frame);
+          depths = {};
+          frame = {
+            type: 'frame'
+          };
+          break;
+        }
+      }
+    },
+    oncomplete: function (result) {
+      commitData(result);
+      var stats;
+      if (typeof result.swfVersion === 'number') {
+        var bbox = result.bbox;
+        stats = {
+          topic: 'parseInfo',
+          parseTime: result.parseTime,
+          bytesTotal: result.bytesTotal,
+          swfVersion: result.swfVersion,
+          frameRate: result.frameRate,
+          width: (bbox.xMax - bbox.xMin) / 20,
+          height: (bbox.yMax - bbox.yMin) / 20,
+          isAvm2: !(!result.fileAttributes.doAbc)
+        };
+      }
+      commitData({
+        command: 'complete',
+        stats: stats
+      });
+    }
+  };
+}
+function parseBytes(bytes, commitData) {
+  SWF.parse(bytes, createParsingContext(commitData));
+}
+function ResourceLoader(scope) {
+  this.subscription = null;
+  var self = this;
+  if (!isWorker) {
+    this.messenger = {
+      postMessage: function (data) {
+        self.onmessage({
+          data: data
+        });
+      }
+    };
+  } else {
+    this.messenger = scope;
+    scope.onmessage = function (event) {
+      self.listener(event.data);
+    };
+  }
+}
+ResourceLoader.prototype = {
+  terminate: function () {
+    this.messenger = null;
+    this.listener = null;
+  },
+  onmessage: function (event) {
+    this.listener(event.data);
+  },
+  postMessage: function (data) {
+    this.listener && this.listener(data);
+  },
+  listener: function (data) {
+    if (this.subscription) {
+      this.subscription.callback(data.data, data.progress);
+    } else if (data === 'pipe:') {
+      this.subscription = {
+        subscribe: function (callback) {
+          this.callback = callback;
+        }
+      };
+      this.parseLoadedData(this.messenger, this.subscription);
+    } else {
+      this.parseLoadedData(this.messenger, data);
+    }
+  },
+  parseLoadedData: function (loader, request, context) {
+    function commitData(data, transferables) {
+      try {
+        loader.postMessage(data, transferables);
+      } catch (ex) {
+        if (ex != 'DataCloneError') {
+          throw ex;
+        }
+        loader.postMessage(data);
+      }
+    }
+    if (request instanceof ArrayBuffer) {
+      parseBytes(request, commitData);
+    } else if ('subscribe' in request) {
+      var pipe = SWF.parseAsync(createParsingContext(commitData));
+      request.subscribe(function (data, progress) {
+        if (data) {
+          pipe.push(data, progress);
+        } else {
+          pipe.close();
+        }
+      });
+    } else if (typeof FileReaderSync !== 'undefined') {
+      var reader = new FileReaderSync();
+      var buffer = reader.readAsArrayBuffer(request);
+      parseBytes(buffer, commitData);
+    } else {
+      var reader = new FileReader();
+      reader.onload = function () {
+        parseBytes(this.result, commitData);
+      };
+      reader.readAsArrayBuffer(request);
+    }
+  }
+};
+if (isWorker) {
+  var loader = new ResourceLoader(this);
+}
 function ActionsDataStream(array, swfVersion) {
   this.array = array;
   this.position = 0;
@@ -6162,12 +7129,8 @@ function AS2Context(swfVersion) {
 }
 AS2Context.instance = null;
 AS2Context.prototype = {
-  addAssets: function (assets) {
-    for (var i = 0; i < assets.length; i++) {
-      if (assets[i].className) {
-        this.assets[assets[i].className] = assets[i];
-      }
-    }
+  addAsset: function (className, symbolProps) {
+    this.assets[className] = symbolProps;
   },
   resolveTarget: function (target) {
     if (!target) {
@@ -6257,10 +7220,6 @@ function as2ToNumber(value) {
   case 'undefined':
   case 'null':
     return AS2Context.instance.swfVersion >= 7 ? NaN : 0;
-  default:
-    return AS2Context.instance.swfVersion >= 5 ? NaN : 0;
-  case 'null':
-    return NaN;
   case 'boolean':
     return value ? 1 : +0;
   case 'number':
@@ -6270,6 +7229,8 @@ function as2ToNumber(value) {
       return 0;
     }
     return +value;
+  default:
+    return AS2Context.instance.swfVersion >= 5 ? NaN : 0;
   }
 }
 function as2ToInteger(value) {
@@ -6298,8 +7259,6 @@ function as2ToString(value) {
     return value.toString();
   case 'string':
     return value;
-  case 'undefined':
-    return 'undefined';
   case 'movieclip':
     return value.$targetPath;
   case 'object':
@@ -6396,7 +7355,7 @@ function as2CreatePrototypeProxy(obj) {
     }
   });
 }
-function executeActions(actionsData, context, scope, assets) {
+function executeActions(actionsData, context, scope) {
   var actionTracer = ActionTracerFactory.get();
   var scopeContainer = context.initialScope.create(scope);
   var savedContext = AS2Context.instance;
@@ -6404,9 +7363,6 @@ function executeActions(actionsData, context, scope, assets) {
     AS2Context.instance = context;
     context.defaultTarget = scope;
     context.globals.asSetPublicProperty('this', scope);
-    if (assets) {
-      context.addAssets(assets);
-    }
     actionTracer.message('ActionScript Execution Starts');
     actionTracer.indent();
     interpretActions(actionsData, scopeContainer, null, []);
@@ -7645,10 +8601,9 @@ if (typeof GLOBAL !== 'undefined') {
   GLOBAL.executeActions = executeActions;
   GLOBAL.AS2Context = AS2Context;
 }
-var debug = true;
 var $DEBUG;
-var release = false;
-var compatibility = true;
+var release = true;
+var checkArguments = true;
 var useSurrogates = true;
 var useAsAdd = true;
 var sealConstTraits = false;
@@ -7656,21 +8611,11 @@ var c4CoerceNonPrimitiveParameters = false;
 var c4CoerceNonPrimitive = false;
 var c4AsTypeLate = true;
 var inBrowser = typeof console != 'undefined';
-if (!inBrowser) {
-  console = {
-    info: print,
-    warn: function (x) {
-      if (traceWarnings.value) {
-        print(x);
-      }
-    }
-  };
-}
 if (!this.performance) {
   this.performance = {};
 }
 if (!this.performance.now) {
-  this.performance.now = Date.now;
+  this.performance.now = dateNow;
 }
 function backtrace() {
   try {
@@ -7681,7 +8626,7 @@ function backtrace() {
 }
 function error(message) {
   if (!inBrowser) {
-    console.info(backtrace());
+    console.warn(backtrace());
   }
   throw new Error(message);
 }
@@ -7695,17 +8640,15 @@ function assert(condition) {
     error(message.join(''));
   }
 }
-function assertFalse(condition, message) {
-  if (condition) {
-    error(message);
-  }
-}
 function assertNotImplemented(condition, message) {
   if (!condition) {
     error('NotImplemented: ' + message);
   }
 }
 function warning(message) {
+  true;
+}
+function notUsed(message) {
   true;
 }
 function notImplemented(message) {
@@ -7896,23 +8839,26 @@ function isNumeric(x) {
   if (typeof x === 'number') {
     return x === (x | 0);
   }
-  if (typeof x === 'string' && x.length) {
-    if (x === '0') {
-      return true;
-    }
-    if (x[0] >= '1' && x[0] <= '9') {
-      for (var i = 1; i < x.length; i++) {
-        if (!(x[i] >= '1' && x[i] <= '9')) {
-          return false;
-        }
+  if (typeof x !== 'string' || x.length === 0) {
+    return false;
+  }
+  if (x === '0') {
+    return true;
+  }
+  var c = x.charCodeAt(0);
+  if (c >= 49 && c <= 57) {
+    for (var i = 1, j = x.length; i < j; i++) {
+      c = x.charCodeAt(i);
+      if (!(c >= 48 && c <= 57)) {
+        return false;
       }
-      return true;
     }
+    return true;
   }
   return false;
 }
 function boxValue(value) {
-  if (isNullOrUndefined(value)) {
+  if (isNullOrUndefined(value) || isObject(value)) {
     return value;
   }
   return Object(value);
@@ -8178,6 +9124,9 @@ function bitCount(i) {
 function escapeString(str) {
   if (str !== undefined) {
     str = str.replace(/[^\w$]/gi, '$');
+    if (/^\d/.test(str)) {
+      str = '$' + str;
+    }
   }
   return str;
 }
@@ -8847,23 +9796,6 @@ var Callback = function () {
     };
     return callback;
   }();
-function dumpBytes(buffer, start, length) {
-  var s = '';
-  bytes = new Uint8Array(buffer, start, length);
-  var end = length;
-  for (var i = 0; i < end; i++) {
-    if (i % 16 === 0) {
-      s += '\n' + (start + i) + ': ';
-    }
-    s += bytes[i] + ' ';
-  }
-  return s;
-}
-function addProfileMarker(marker) {
-  if (typeof FirefoxCom !== 'undefined') {
-    FirefoxCom.requestSync('addProfilerMarker', marker);
-  }
-}
 var CircularBuffer = function () {
     var mask = 4095, size = 4096;
     function circularBuffer(Type) {
@@ -8901,12 +9833,25 @@ var CircularBuffer = function () {
     };
     return circularBuffer;
   }();
+function lazyClass(holder, name, initialize) {
+  Object.defineProperty(holder, name, {
+    get: function () {
+      var start = performance.now();
+      var value = initialize();
+      print('Initialized Class: ' + name + ' ' + (performance.now() - start).toFixed(4));
+      Object.defineProperty(holder, name, {
+        value: value,
+        writable: true
+      });
+      return value;
+    },
+    configurable: true
+  });
+}
+function createNewCompartment() {
+  return newGlobal('new-compartment');
+}
 (function (exports) {
-  if (!performance) {
-    performance = {
-      now: Date.now
-    };
-  }
   var Timer = function () {
       var base = new timer(null, 'Total'), top = base;
       var flat = new timer(null, 'Flat'), flatStack = [];
@@ -8965,7 +9910,7 @@ var CircularBuffer = function () {
           }));
           return;
         }
-        writer.enter(this.name + ': ' + this.total + ' ms' + ', count: ' + this.count + ', average: ' + (this.total / this.count).toFixed(2) + ' ms');
+        writer.enter(this.name + ': ' + this.total.toFixed(2) + ' ms' + ', count: ' + this.count + ', average: ' + (this.total / this.count).toFixed(2) + ' ms');
         for (var name in this.timers) {
           this.timers[name].trace(writer);
         }
@@ -9314,41 +10259,9 @@ var SORT_UNIQUESORT = 4;
 var SORT_RETURNINDEXEDARRAY = 8;
 var SORT_NUMERIC = 16;
 var Errors = {
-    OutOfMemoryError: {
-      code: 1000,
-      message: 'The system is out of memory.'
-    },
-    NotImplementedError: {
-      code: 1001,
-      message: 'The method %1 is not implemented.'
-    },
-    InvalidPrecisionError: {
-      code: 1002,
-      message: 'Number.toPrecision has a range of 1 to 21. Number.toFixed and Number.toExponential have a range of 0 to 20. Specified value is not within expected range.'
-    },
-    InvalidRadixError: {
-      code: 1003,
-      message: 'The radix argument must be between 2 and 36; got %1.'
-    },
-    InvokeOnIncompatibleObjectError: {
-      code: 1004,
-      message: 'Method %1 was invoked on an incompatible object.'
-    },
-    ArrayIndexNotIntegerError: {
-      code: 1005,
-      message: 'Array index is not a positive integer (%1).'
-    },
     CallOfNonFunctionError: {
       code: 1006,
       message: '%1 is not a function.'
-    },
-    ConstructOfNonFunctionError: {
-      code: 1007,
-      message: 'Instantiation attempted on a non-constructor.'
-    },
-    AmbiguousBindingError: {
-      code: 1008,
-      message: '%1 is ambiguous; Found more than one matching binding.'
     },
     ConvertNullToObjectError: {
       code: 1009,
@@ -9358,433 +10271,21 @@ var Errors = {
       code: 1010,
       message: 'A term is undefined and has no properties.'
     },
-    IllegalOpcodeError: {
-      code: 1011,
-      message: 'Method %1 contained illegal opcode %2 at offset %3.'
-    },
-    LastInstExceedsCodeSizeError: {
-      code: 1012,
-      message: 'The last instruction exceeded code size.'
-    },
-    FindVarWithNoScopeError: {
-      code: 1013,
-      message: 'Cannot call OP_findproperty when scopeDepth is 0.'
-    },
     ClassNotFoundError: {
       code: 1014,
       message: 'Class %1 could not be found.'
-    },
-    IllegalSetDxns: {
-      code: 1015,
-      message: 'Method %1 cannot set default xml namespace'
-    },
-    DescendentsError: {
-      code: 1016,
-      message: 'Descendants operator (..) not supported on type %1.'
-    },
-    ScopeStackOverflowError: {
-      code: 1017,
-      message: 'Scope stack overflow occurred.'
-    },
-    ScopeStackUnderflowError: {
-      code: 1018,
-      message: 'Scope stack underflow occurred.'
-    },
-    GetScopeObjectBoundsError: {
-      code: 1019,
-      message: 'Getscopeobject %1 is out of bounds.'
-    },
-    CannotFallOffMethodError: {
-      code: 1020,
-      message: 'Code cannot fall off the end of a method.'
-    },
-    InvalidBranchTargetError: {
-      code: 1021,
-      message: 'At least one branch target was not on a valid instruction in the method.'
-    },
-    IllegalVoidError: {
-      code: 1022,
-      message: 'Type void may only be used as a function return type.'
-    },
-    StackOverflowError: {
-      code: 1023,
-      message: 'Stack overflow occurred.'
-    },
-    StackUnderflowError: {
-      code: 1024,
-      message: 'Stack underflow occurred.'
-    },
-    InvalidRegisterError: {
-      code: 1025,
-      message: 'An invalid register %1 was accessed.'
-    },
-    SlotExceedsCountError: {
-      code: 1026,
-      message: 'Slot %1 exceeds slotCount=%2 of %3.'
-    },
-    MethodInfoExceedsCountError: {
-      code: 1027,
-      message: 'Method_info %1 exceeds method_count=%2.'
-    },
-    DispIdExceedsCountError: {
-      code: 1028,
-      message: 'Disp_id %1 exceeds max_disp_id=%2 of %3.'
-    },
-    DispIdUndefinedError: {
-      code: 1029,
-      message: 'Disp_id %1 is undefined on %2.'
-    },
-    StackDepthUnbalancedError: {
-      code: 1030,
-      message: 'Stack depth is unbalanced. %1 != %2.'
-    },
-    ScopeDepthUnbalancedError: {
-      code: 1031,
-      message: 'Scope depth is unbalanced. %1 != %2.'
-    },
-    CpoolIndexRangeError: {
-      code: 1032,
-      message: 'Cpool index %1 is out of range %2.'
-    },
-    CpoolEntryWrongTypeError: {
-      code: 1033,
-      message: 'Cpool entry %1 is wrong type.'
     },
     CheckTypeFailedError: {
       code: 1034,
       message: 'Type Coercion failed: cannot convert %1 to %2.'
     },
-    IllegalSuperCallError: {
-      code: 1035,
-      message: 'Illegal super expression found in method %1.'
-    },
-    CannotAssignToMethodError: {
-      code: 1037,
-      message: 'Cannot assign to a method %1 on %2.'
-    },
-    RedefinedError: {
-      code: 1038,
-      message: '%1 is already defined.'
-    },
-    CannotVerifyUntilReferencedError: {
-      code: 1039,
-      message: 'Cannot verify method until it is referenced.'
-    },
-    CantUseInstanceofOnNonObjectError: {
-      code: 1040,
-      message: 'The right-hand side of instanceof must be a class or function.'
-    },
-    IsTypeMustBeClassError: {
-      code: 1041,
-      message: 'The right-hand side of operator must be a class.'
-    },
-    InvalidMagicError: {
-      code: 1042,
-      message: 'Not an ABC file.  major_version=%1 minor_version=%2.'
-    },
-    InvalidCodeLengthError: {
-      code: 1043,
-      message: 'Invalid code_length=%1.'
-    },
-    InvalidMethodInfoFlagsError: {
-      code: 1044,
-      message: 'MethodInfo-%1 unsupported flags=%2.'
-    },
-    UnsupportedTraitsKindError: {
-      code: 1045,
-      message: 'Unsupported traits kind=%1.'
-    },
-    MethodInfoOrderError: {
-      code: 1046,
-      message: 'MethodInfo-%1 referenced before definition.'
-    },
-    MissingEntryPointError: {
-      code: 1047,
-      message: 'No entry point was found.'
-    },
-    PrototypeTypeError: {
-      code: 1049,
-      message: 'Prototype objects must be vanilla Objects.'
-    },
-    ConvertToPrimitiveError: {
-      code: 1050,
-      message: 'Cannot convert %1 to primitive.'
-    },
-    IllegalEarlyBindingError: {
-      code: 1051,
-      message: 'Illegal early binding access to %1.'
-    },
-    InvalidURIError: {
-      code: 1052,
-      message: 'Invalid URI passed to %1 function.'
-    },
-    IllegalOverrideError: {
-      code: 1053,
-      message: 'Illegal override of %1 in %2.'
-    },
-    IllegalExceptionHandlerError: {
-      code: 1054,
-      message: 'Illegal range or target offsets in exception handler.'
-    },
-    WriteSealedError: {
-      code: 1056,
-      message: 'Cannot create property %1 on %2.'
-    },
-    IllegalSlotError: {
-      code: 1057,
-      message: '%1 can only contain methods.'
-    },
-    IllegalOperandTypeError: {
-      code: 1058,
-      message: 'Illegal operand type: %1 must be %2.'
-    },
-    ClassInfoOrderError: {
-      code: 1059,
-      message: 'ClassInfo-%1 is referenced before definition.'
-    },
-    ClassInfoExceedsCountError: {
-      code: 1060,
-      message: 'ClassInfo %1 exceeds class_count=%2.'
-    },
-    NumberOutOfRangeError: {
-      code: 1061,
-      message: 'The value %1 cannot be converted to %2 without losing precision.'
-    },
     WrongArgumentCountError: {
       code: 1063,
       message: 'Argument count mismatch on %1. Expected %2, got %3.'
     },
-    CannotCallMethodAsConstructor: {
-      code: 1064,
-      message: 'Cannot call method %1 as constructor.'
-    },
-    UndefinedVarError: {
-      code: 1065,
-      message: 'Variable %1 is not defined.'
-    },
-    FunctionConstructorError: {
-      code: 1066,
-      message: 'The form function(\'function body\') is not supported.'
-    },
-    IllegalNativeMethodBodyError: {
-      code: 1067,
-      message: 'Native method %1 has illegal method body.'
-    },
-    CannotMergeTypesError: {
-      code: 1068,
-      message: '%1 and %2 cannot be reconciled.'
-    },
-    ReadSealedError: {
-      code: 1069,
-      message: 'Property %1 not found on %2 and there is no default value.'
-    },
-    CallNotFoundError: {
-      code: 1070,
-      message: 'Method %1 not found on %2'
-    },
-    AlreadyBoundError: {
-      code: 1071,
-      message: 'Function %1 has already been bound to %2.'
-    },
-    ZeroDispIdError: {
-      code: 1072,
-      message: 'Disp_id 0 is illegal.'
-    },
-    DuplicateDispIdError: {
-      code: 1073,
-      message: 'Non-override method %1 replaced because of duplicate disp_id %2.'
-    },
-    ConstWriteError: {
-      code: 1074,
-      message: 'Illegal write to read-only property %1 on %2.'
-    },
-    MathNotFunctionError: {
-      code: 1075,
-      message: 'Math is not a function.'
-    },
-    MathNotConstructorError: {
-      code: 1076,
-      message: 'Math is not a constructor.'
-    },
-    WriteOnlyError: {
-      code: 1077,
-      message: 'Illegal read of write-only property %1 on %2.'
-    },
-    IllegalOpMultinameError: {
-      code: 1078,
-      message: 'Illegal opcode/multiname combination: %1<%2>.'
-    },
-    IllegalNativeMethodError: {
-      code: 1079,
-      message: 'Native methods are not allowed in loaded code.'
-    },
-    IllegalNamespaceError: {
-      code: 1080,
-      message: 'Illegal value for namespace.'
-    },
-    ReadSealedErrorNs: {
-      code: 1081,
-      message: 'Property %1 not found on %2 and there is no default value.'
-    },
-    NoDefaultNamespaceError: {
-      code: 1082,
-      message: 'No default namespace has been set.'
-    },
-    XMLPrefixNotBound: {
-      code: 1083,
-      message: 'The prefix "%1" for element "%2" is not bound.'
-    },
-    XMLBadQName: {
-      code: 1084,
-      message: 'Element or attribute ("%1") does not match QName production: QName::=(NCName\':\')?NCName.'
-    },
-    XMLUnterminatedElementTag: {
-      code: 1085,
-      message: 'The element type "%1" must be terminated by the matching end-tag "</%2>".'
-    },
-    XMLOnlyWorksWithOneItemLists: {
-      code: 1086,
-      message: 'The %1 method only works on lists containing one item.'
-    },
-    XMLAssignmentToIndexedXMLNotAllowed: {
-      code: 1087,
-      message: 'Assignment to indexed XML is not allowed.'
-    },
     XMLMarkupMustBeWellFormed: {
       code: 1088,
       message: 'The markup in the document following the root element must be well-formed.'
-    },
-    XMLAssigmentOneItemLists: {
-      code: 1089,
-      message: 'Assignment to lists with more than one item is not supported.'
-    },
-    XMLMalformedElement: {
-      code: 1090,
-      message: 'XML parser failure: element is malformed.'
-    },
-    XMLUnterminatedCData: {
-      code: 1091,
-      message: 'XML parser failure: Unterminated CDATA section.'
-    },
-    XMLUnterminatedXMLDecl: {
-      code: 1092,
-      message: 'XML parser failure: Unterminated XML declaration.'
-    },
-    XMLUnterminatedDocTypeDecl: {
-      code: 1093,
-      message: 'XML parser failure: Unterminated DOCTYPE declaration.'
-    },
-    XMLUnterminatedComment: {
-      code: 1094,
-      message: 'XML parser failure: Unterminated comment.'
-    },
-    XMLUnterminatedAttribute: {
-      code: 1095,
-      message: 'XML parser failure: Unterminated attribute.'
-    },
-    XMLUnterminatedElement: {
-      code: 1096,
-      message: 'XML parser failure: Unterminated element.'
-    },
-    XMLUnterminatedProcessingInstruction: {
-      code: 1097,
-      message: 'XML parser failure: Unterminated processing instruction.'
-    },
-    XMLNamespaceWithPrefixAndNoURI: {
-      code: 1098,
-      message: 'Illegal prefix %1 for no namespace.'
-    },
-    RegExpFlagsArgumentError: {
-      code: 1100,
-      message: 'Cannot supply flags when constructing one RegExp from another.'
-    },
-    NoScopeError: {
-      code: 1101,
-      message: 'Cannot verify method %1 with unknown scope.'
-    },
-    IllegalDefaultValue: {
-      code: 1102,
-      message: 'Illegal default value for type %1.'
-    },
-    CannotExtendFinalClass: {
-      code: 1103,
-      message: 'Class %1 cannot extend final base class.'
-    },
-    XMLDuplicateAttribute: {
-      code: 1104,
-      message: 'Attribute "%1" was already specified for element "%2".'
-    },
-    CorruptABCError: {
-      code: 1107,
-      message: 'The ABC data is corrupt, attempt to read out of bounds.'
-    },
-    InvalidBaseClassError: {
-      code: 1108,
-      message: 'The OP_newclass opcode was used with the incorrect base class.'
-    },
-    DanglingFunctionError: {
-      code: 1109,
-      message: 'Attempt to directly call unbound function %1 from method %2.'
-    },
-    CannotExtendError: {
-      code: 1110,
-      message: '%1 cannot extend %2.'
-    },
-    CannotImplementError: {
-      code: 1111,
-      message: '%1 cannot implement %2.'
-    },
-    CoerceArgumentCountError: {
-      code: 1112,
-      message: 'Argument count mismatch on class coercion.  Expected 1, got %1.'
-    },
-    InvalidNewActivationError: {
-      code: 1113,
-      message: 'OP_newactivation used in method without NEED_ACTIVATION flag.'
-    },
-    NoGlobalScopeError: {
-      code: 1114,
-      message: 'OP_getglobalslot or OP_setglobalslot used with no global scope.'
-    },
-    NotConstructorError: {
-      code: 1115,
-      message: '%1 is not a constructor.'
-    },
-    ApplyError: {
-      code: 1116,
-      message: 'second argument to Function.prototype.apply must be an array.'
-    },
-    XMLInvalidName: {
-      code: 1117,
-      message: 'Invalid XML name: %1.'
-    },
-    XMLIllegalCyclicalLoop: {
-      code: 1118,
-      message: 'Illegal cyclical loop between nodes.'
-    },
-    DeleteTypeError: {
-      code: 1119,
-      message: 'Delete operator is not supported with operand of type %1.'
-    },
-    DeleteSealedError: {
-      code: 1120,
-      message: 'Cannot delete property %1 on %2.'
-    },
-    DuplicateMethodBodyError: {
-      code: 1121,
-      message: 'Method %1 has a duplicate method body.'
-    },
-    IllegalInterfaceMethodBodyError: {
-      code: 1122,
-      message: 'Interface method %1 has illegal method body.'
-    },
-    FilterError: {
-      code: 1123,
-      message: 'Filter operator not supported on type %1.'
-    },
-    InvalidHasNextError: {
-      code: 1124,
-      message: 'OP_hasnext2 requires object and index to be distinct registers.'
     },
     OutOfRangeError: {
       code: 1125,
@@ -9793,66 +10294,6 @@ var Errors = {
     VectorFixedError: {
       code: 1126,
       message: 'Cannot change the length of a fixed Vector.'
-    },
-    TypeAppOfNonParamType: {
-      code: 1127,
-      message: 'Type application attempted on a non-parameterized type.'
-    },
-    WrongTypeArgCountError: {
-      code: 1128,
-      message: 'Incorrect number of type parameters for %1. Expected %2, got %3.'
-    },
-    JSONCyclicStructure: {
-      code: 1129,
-      message: 'Cyclic structure cannot be converted to JSON string.'
-    },
-    JSONInvalidReplacer: {
-      code: 1131,
-      message: 'Replacer argument to JSON stringifier must be an array or a two parameter function.'
-    },
-    JSONInvalidParseInput: {
-      code: 1132,
-      message: 'Invalid JSON parse input.'
-    },
-    FileOpenError: {
-      code: 1500,
-      message: 'Error occurred opening file %1.'
-    },
-    FileWriteError: {
-      code: 1501,
-      message: 'Error occurred writing to file %1.'
-    },
-    ScriptTimeoutError: {
-      code: 1502,
-      message: 'A script has executed for longer than the default timeout period of 15 seconds.'
-    },
-    ScriptTerminatedError: {
-      code: 1503,
-      message: 'A script failed to exit after 30 seconds and was terminated.'
-    },
-    EndOfFileError: {
-      code: 1504,
-      message: 'End of file.'
-    },
-    StringIndexOutOfBoundsError: {
-      code: 1505,
-      message: 'The string index %1 is out of bounds; must be in range %2 to %3.'
-    },
-    InvalidRangeError: {
-      code: 1506,
-      message: 'The specified range is invalid.'
-    },
-    NullArgumentError: {
-      code: 1507,
-      message: 'Argument %1 cannot be null.'
-    },
-    InvalidArgumentError: {
-      code: 1508,
-      message: 'The value specified for argument %1 is invalid.'
-    },
-    ArrayFilterNonNullObjectError: {
-      code: 1510,
-      message: 'When the callback argument is a method of a class, the optional this argument must be null.'
     },
     InvalidParamError: {
       code: 2004,
@@ -9870,141 +10311,9 @@ var Errors = {
       code: 2008,
       message: 'Parameter %1 must be one of the accepted values.'
     },
-    CantInstantiateError: {
-      code: 2012,
-      message: '%1 class cannot be instantiated.'
-    },
     ArgumentError: {
       code: 2015,
       message: 'Invalid BitmapData.'
-    },
-    EOFError: {
-      code: 2030,
-      message: 'End of file was encountered.'
-    },
-    CompressedDataError: {
-      code: 2058,
-      message: 'There was an error decompressing the data.'
-    },
-    EmptyStringError: {
-      code: 2085,
-      message: 'Parameter %1 must be non-empty string.'
-    },
-    ProxyGetPropertyError: {
-      code: 2088,
-      message: 'The Proxy class does not implement getProperty. It must be overridden by a subclass.'
-    },
-    ProxySetPropertyError: {
-      code: 2089,
-      message: 'The Proxy class does not implement setProperty. It must be overridden by a subclass.'
-    },
-    ProxyCallPropertyError: {
-      code: 2090,
-      message: 'The Proxy class does not implement callProperty. It must be overridden by a subclass.'
-    },
-    ProxyHasPropertyError: {
-      code: 2091,
-      message: 'The Proxy class does not implement hasProperty. It must be overridden by a subclass.'
-    },
-    ProxyDeletePropertyError: {
-      code: 2092,
-      message: 'The Proxy class does not implement deleteProperty. It must be overridden by a subclass.'
-    },
-    ProxyGetDescendantsError: {
-      code: 2093,
-      message: 'The Proxy class does not implement getDescendants. It must be overridden by a subclass.'
-    },
-    ProxyNextNameIndexError: {
-      code: 2105,
-      message: 'The Proxy class does not implement nextNameIndex. It must be overridden by a subclass.'
-    },
-    ProxyNextNameError: {
-      code: 2106,
-      message: 'The Proxy class does not implement nextName. It must be overridden by a subclass.'
-    },
-    ProxyNextValueError: {
-      code: 2107,
-      message: 'The Proxy class does not implement nextValue. It must be overridden by a subclass.'
-    },
-    InvalidArrayLengthError: {
-      code: 2108,
-      message: 'The value %1 is not a valid Array length.'
-    },
-    ReadExternalNotImplementedError: {
-      code: 2173,
-      message: 'Unable to read object in stream.  The class %1 does not implement flash.utils.IExternalizable but is aliased to an externalizable class.'
-    },
-    NoSecurityContextError: {
-      code: 2000,
-      message: 'No active security context.'
-    },
-    TooFewArgumentsError: {
-      code: 2001,
-      message: 'Too few arguments were specified; got %1, %2 expected.'
-    },
-    InvalidSocketError: {
-      code: 2002,
-      message: 'Operation attempted on invalid socket.'
-    },
-    InvalidSocketPortError: {
-      code: 2003,
-      message: 'Invalid socket port number specified.'
-    },
-    ParamTypeError: {
-      code: 2005,
-      message: 'Parameter %1 is of the incorrect type. Should be type %2.'
-    },
-    HasStyleSheetError: {
-      code: 2009,
-      message: 'This method cannot be used on a text field with a style sheet.'
-    },
-    SocketLocalFileSecurityError: {
-      code: 2010,
-      message: 'Local-with-filesystem SWF files are not permitted to use sockets.'
-    },
-    SocketConnectError: {
-      code: 2011,
-      message: 'Socket connection failed to %1:%2.'
-    },
-    AuthoringOnlyFeatureError: {
-      code: 2013,
-      message: 'Feature can only be used in Flash Authoring.'
-    },
-    FeatureNotAvailableError: {
-      code: 2014,
-      message: 'Feature is not available at this time.'
-    },
-    InvalidBitmapDataError: {
-      code: 2015,
-      message: 'Invalid BitmapData.'
-    },
-    SystemExitSecurityError: {
-      code: 2017,
-      message: 'Only trusted local files may cause the Flash Player to exit.'
-    },
-    SystemExitUnsupportedError: {
-      code: 2018,
-      message: 'System.exit is only available in the standalone Flash Player.'
-    },
-    InvalidDepthError: {
-      code: 2019,
-      message: 'Depth specified is invalid.'
-    },
-    MovieClipSwapError: {
-      code: 2020,
-      message: 'MovieClips objects with different parents cannot be swapped.'
-    },
-    ObjectCreationError: {
-      code: 2021,
-      message: 'Object creation failed.'
-    },
-    NotDisplayObjectError: {
-      code: 2022,
-      message: 'Class %1 must inherit from DisplayObject to link to a symbol.'
-    },
-    NotSpriteError: {
-      code: 2023,
-      message: 'Class %1 must inherit from Sprite to link to the root.'
     },
     CantAddSelfError: {
       code: 2024,
@@ -10013,1678 +10322,6 @@ var Errors = {
     NotAChildError: {
       code: 2025,
       message: 'The supplied DisplayObject must be a child of the caller.'
-    },
-    NavigateURLError: {
-      code: 2026,
-      message: 'An error occurred navigating to the URL %1.'
-    },
-    MustBeNonNegativeError: {
-      code: 2027,
-      message: 'Parameter %1 must be a non-negative number; got %2.'
-    },
-    LocalSecurityError: {
-      code: 2028,
-      message: 'Local-with-filesystem SWF file %1 cannot access Internet URL %2.'
-    },
-    InvalidStreamError: {
-      code: 2029,
-      message: 'This URLStream object does not have a stream opened.'
-    },
-    SocketError: {
-      code: 2031,
-      message: 'Socket Error.'
-    },
-    StreamError: {
-      code: 2032,
-      message: 'Stream Error.'
-    },
-    KeyGenerationError: {
-      code: 2033,
-      message: 'Key Generation Failed.'
-    },
-    InvalidKeyError: {
-      code: 2034,
-      message: 'An invalid digest was supplied.'
-    },
-    URLNotFoundError: {
-      code: 2035,
-      message: 'URL Not Found.'
-    },
-    LoadNeverCompletedError: {
-      code: 2036,
-      message: 'Load Never Completed.'
-    },
-    InvalidCallError: {
-      code: 2037,
-      message: 'Functions called in incorrect sequence, or earlier call was unsuccessful.'
-    },
-    FileIOError: {
-      code: 2038,
-      message: 'File I/O Error.'
-    },
-    RemoteURLError: {
-      code: 2039,
-      message: 'Invalid remote URL protocol. The remote URL protocol must be HTTP or HTTPS.'
-    },
-    BrowseInProgressError: {
-      code: 2041,
-      message: 'Only one file browsing session may be performed at a time.'
-    },
-    DigestNotSupportedError: {
-      code: 2042,
-      message: 'The digest property is not supported by this load operation.'
-    },
-    UnhandledError: {
-      code: 2044,
-      message: 'Unhandled %1:.'
-    },
-    FileVerificationError: {
-      code: 2046,
-      message: 'The loaded file did not have a valid signature.'
-    },
-    DisplayListSecurityError: {
-      code: 2047,
-      message: 'Security sandbox violation: %1: %2 cannot access %3.'
-    },
-    DownloadSecurityError: {
-      code: 2048,
-      message: 'Security sandbox violation: %1 cannot load data from %2.'
-    },
-    UploadSecurityError: {
-      code: 2049,
-      message: 'Security sandbox violation: %1 cannot upload data to %2.'
-    },
-    OutboundScriptingSecurityError: {
-      code: 2051,
-      message: 'Security sandbox violation: %1 cannot evaluate scripting URLs within %2 (allowScriptAccess is %3). Attempted URL was %4.'
-    },
-    AllowDomainArgumentError: {
-      code: 2052,
-      message: 'Only String arguments are permitted for allowDomain and allowInsecureDomain.'
-    },
-    IntervalSecurityError: {
-      code: 2053,
-      message: 'Security sandbox violation: %1 cannot clear an interval timer set by %2.'
-    },
-    ExactSettingsError: {
-      code: 2054,
-      message: 'The value of Security.exactSettings cannot be changed after it has been used.'
-    },
-    PrintJobStartError: {
-      code: 2055,
-      message: 'The print job could not be started.'
-    },
-    PrintJobSendError: {
-      code: 2056,
-      message: 'The print job could not be sent to the printer.'
-    },
-    PrintJobAddPageError: {
-      code: 2057,
-      message: 'The page could not be added to the print job.'
-    },
-    ExternalCallbackSecurityError: {
-      code: 2059,
-      message: 'Security sandbox violation: %1 cannot overwrite an ExternalInterface callback added by %2.'
-    },
-    ExternalInterfaceSecurityError: {
-      code: 2060,
-      message: 'Security sandbox violation: ExternalInterface caller %1 cannot access %2.'
-    },
-    ExternalInterfaceNoCallbackError: {
-      code: 2061,
-      message: 'No ExternalInterface callback %1 registered.'
-    },
-    NoCloneMethodError: {
-      code: 2062,
-      message: 'Children of Event must override clone() {return new MyEventClass (...);}.'
-    },
-    IMEError: {
-      code: 2063,
-      message: 'Error attempting to execute IME command.'
-    },
-    FocusNotSetError: {
-      code: 2065,
-      message: 'The focus cannot be set for this target.'
-    },
-    DelayRangeError: {
-      code: 2066,
-      message: 'The Timer delay specified is out of range.'
-    },
-    ExternalInterfaceNotAvailableError: {
-      code: 2067,
-      message: 'The ExternalInterface is not available in this container. ExternalInterface requires Internet Explorer ActiveX, Firefox, Mozilla 1.7.5 and greater, or other browsers that support NPRuntime.'
-    },
-    InvalidSoundError: {
-      code: 2068,
-      message: 'Invalid sound.'
-    },
-    InvalidLoaderMethodError: {
-      code: 2069,
-      message: 'The Loader class does not implement this method.'
-    },
-    StageOwnerSecurityError: {
-      code: 2070,
-      message: 'Security sandbox violation: caller %1 cannot access Stage owned by %2.'
-    },
-    InvalidStageMethodError: {
-      code: 2071,
-      message: 'The Stage class does not implement this property or method.'
-    },
-    ProductManagerDiskError: {
-      code: 2073,
-      message: 'There was a problem saving the application to disk.'
-    },
-    ProductManagerStageError: {
-      code: 2074,
-      message: 'The stage is too small to fit the download ui.'
-    },
-    ProductManagerVerifyError: {
-      code: 2075,
-      message: 'The downloaded file is invalid.'
-    },
-    FilterFailedError: {
-      code: 2077,
-      message: 'This filter operation cannot be performed with the specified input parameters.'
-    },
-    TimelineObjectNameSealedError: {
-      code: 2078,
-      message: 'The name property of a Timeline-placed object cannot be modified.'
-    },
-    BitmapNotAssociatedWithBitsCharError: {
-      code: 2079,
-      message: 'Classes derived from Bitmap can only be associated with defineBits characters (bitmaps).'
-    },
-    AlreadyConnectedError: {
-      code: 2082,
-      message: 'Connect failed because the object is already connected.'
-    },
-    CloseNotConnectedError: {
-      code: 2083,
-      message: 'Close failed because the object is not connected.'
-    },
-    ArgumentSizeError: {
-      code: 2084,
-      message: 'The AMF encoding of the arguments cannot exceed 40K.'
-    },
-    FileReferenceProhibitedError: {
-      code: 2086,
-      message: 'A setting in the mms.cfg file prohibits this FileReference request.'
-    },
-    DownloadFileNameProhibitedError: {
-      code: 2087,
-      message: 'The FileReference.download() file name contains prohibited characters.'
-    },
-    EventDispatchRecursionError: {
-      code: 2094,
-      message: 'Event dispatch recursion overflow.'
-    },
-    AsyncError: {
-      code: 2095,
-      message: '%1 was unable to invoke callback %2.'
-    },
-    DisallowedHTTPHeaderError: {
-      code: 2096,
-      message: 'The HTTP request header %1 cannot be set via ActionScript.'
-    },
-    FileFilterError: {
-      code: 2097,
-      message: 'The FileFilter Array is not in the correct format.'
-    },
-    LoadingObjectNotSWFError: {
-      code: 2098,
-      message: 'The loading object is not a .swf file, you cannot request SWF properties from it.'
-    },
-    LoadingObjectNotInitializedError: {
-      code: 2099,
-      message: 'The loading object is not sufficiently loaded to provide this information.'
-    },
-    EmptyByteArrayError: {
-      code: 2100,
-      message: 'The ByteArray parameter in Loader.loadBytes() must have length greater than 0.'
-    },
-    DecodeParamError: {
-      code: 2101,
-      message: 'The String passed to URLVariables.decode() must be a URL-encoded query string containing name/value pairs.'
-    },
-    NotAnXMLChildError: {
-      code: 2102,
-      message: 'The before XMLNode parameter must be a child of the caller.'
-    },
-    XMLRecursionError: {
-      code: 2103,
-      message: 'XML recursion failure: new child would create infinite loop.'
-    },
-    SceneNotFoundError: {
-      code: 2108,
-      message: 'Scene %1 was not found.'
-    },
-    FrameLabelNotFoundError: {
-      code: 2109,
-      message: 'Frame label %1 not found in scene %2.'
-    },
-    DisableAVM1LoadingError: {
-      code: 2110,
-      message: 'The value of Security.disableAVM1Loading cannot be set unless the caller can access the stage and is in an ActionScript 3.0 SWF file.'
-    },
-    AVM1LoadingError: {
-      code: 2111,
-      message: 'Security.disableAVM1Loading is true so the current load of the ActionScript 1.0/2.0 SWF file has been blocked.'
-    },
-    ApplicationDomainSecurityError: {
-      code: 2112,
-      message: 'Provided parameter LoaderContext.ApplicationDomain is from a disallowed domain.'
-    },
-    SecurityDomainSecurityError: {
-      code: 2113,
-      message: 'Provided parameter LoaderContext.SecurityDomain is from a disallowed domain.'
-    },
-    NonNullPointerError: {
-      code: 2114,
-      message: 'Parameter %1 must be null.'
-    },
-    TrueParamError: {
-      code: 2115,
-      message: 'Parameter %1 must be false.'
-    },
-    FalseParamError: {
-      code: 2116,
-      message: 'Parameter %1 must be true.'
-    },
-    InvalidLoaderInfoMethodError: {
-      code: 2118,
-      message: 'The LoaderInfo class does not implement this method.'
-    },
-    LoaderInfoAppDomainSecurityError: {
-      code: 2119,
-      message: 'Security sandbox violation: caller %1 cannot access LoaderInfo.applicationDomain owned by %2.'
-    },
-    SecuritySwfNotAllowedError: {
-      code: 2121,
-      message: 'Security sandbox violation: %1: %2 cannot access %3. This may be worked around by calling Security.allowDomain.'
-    },
-    SecurityNonSwfIncompletePolicyFilesError: {
-      code: 2122,
-      message: 'Security sandbox violation: %1: %2 cannot access %3. A policy file is required, but the checkPolicyFile flag was not set when this media was loaded.'
-    },
-    SecurityNonSwfNotAllowedError: {
-      code: 2123,
-      message: 'Security sandbox violation: %1: %2 cannot access %3. No policy files granted access.'
-    },
-    UnknownFileTypeError: {
-      code: 2124,
-      message: 'Loaded file is an unknown type.'
-    },
-    SecurityCrossVMNotAllowedError: {
-      code: 2125,
-      message: 'Security sandbox violation: %1 cannot use Runtime Shared Library %2 because crossing the boundary between ActionScript 3.0 and ActionScript 1.0/2.0 objects is not allowed.'
-    },
-    NotConnectedError: {
-      code: 2126,
-      message: 'NetConnection object must be connected.'
-    },
-    FileRefBadPostDataTypeError: {
-      code: 2127,
-      message: 'FileReference POST data cannot be type ByteArray.'
-    },
-    NetConnectionConnectError: {
-      code: 2129,
-      message: 'Connection to %1 failed.'
-    },
-    SharedObjectFlushFailedError: {
-      code: 2130,
-      message: 'Unable to flush SharedObject.'
-    },
-    DefinitionNotFoundError: {
-      code: 2131,
-      message: 'Definition %1 cannot be found.'
-    },
-    NetConnectionInvalidConnectFromNetStatusEventError: {
-      code: 2132,
-      message: 'NetConnection.connect cannot be called from a netStatus event handler.'
-    },
-    CallbackNotRegisteredError: {
-      code: 2133,
-      message: 'Callback %1 is not registered.'
-    },
-    SharedObjectCreateError: {
-      code: 2134,
-      message: 'Cannot create SharedObject.'
-    },
-    InvalidSWFError: {
-      code: 2136,
-      message: 'The SWF file %1 contains invalid data.'
-    },
-    NavigationSecurityError: {
-      code: 2137,
-      message: 'Security sandbox violation: %1 cannot navigate window %2 within %3 (allowScriptAccess is %4). Attempted URL was %5.'
-    },
-    NonParsableRichTextXMLError: {
-      code: 2138,
-      message: 'Rich text XML could not be parsed.'
-    },
-    SharedObjectConnectError: {
-      code: 2139,
-      message: 'SharedObject could not connect.'
-    },
-    LocalSecurityLoadingError: {
-      code: 2140,
-      message: 'Security sandbox violation: %1 cannot load %2. Local-with-filesystem and local-with-networking SWF files cannot load each other.'
-    },
-    MultiplePrintJobsError: {
-      code: 2141,
-      message: 'Only one PrintJob may be in use at a time.'
-    },
-    LocalImportSecurityError: {
-      code: 2142,
-      message: 'Security sandbox violation: local SWF files cannot use the LoaderContext.securityDomain property. %1 was attempting to load %2.'
-    },
-    AccOverrideRole: {
-      code: 2143,
-      message: 'AccessibilityImplementation.get_accRole() must be overridden from its default.'
-    },
-    AccOverrideState: {
-      code: 2144,
-      message: 'AccessibilityImplementation.get_accState() must be overridden from its default.'
-    },
-    URLRequestHeaderInvalidLengthError: {
-      code: 2145,
-      message: 'Cumulative length of requestHeaders must be less than 8192 characters.'
-    },
-    AllowNetworkingSecurityError: {
-      code: 2146,
-      message: 'Security sandbox violation: %1 cannot call %2 because the HTML/container parameter allowNetworking has the value %3.'
-    },
-    ForbiddenProtocolError: {
-      code: 2147,
-      message: 'Forbidden protocol in URL %1.'
-    },
-    RemoteToLocalSecurityError: {
-      code: 2148,
-      message: 'SWF file %1 cannot access local resource %2. Only local-with-filesystem and trusted local SWF files may access local resources.'
-    },
-    FsCommandSecurityError: {
-      code: 2149,
-      message: 'Security sandbox violation: %1 cannot make fscommand calls to %2 (allowScriptAccess is %3).'
-    },
-    CantAddParentError: {
-      code: 2150,
-      message: 'An object cannot be added as a child to one of it\'s children (or children\'s children, etc.).'
-    },
-    FullScreenSecurityError: {
-      code: 2151,
-      message: 'You cannot enter full screen mode when the settings dialog is visible.'
-    },
-    FullScreenNotAllowedError: {
-      code: 2152,
-      message: 'Full screen mode is not allowed.'
-    },
-    URLRequestInvalidHeader: {
-      code: 2153,
-      message: 'The URLRequest.requestHeaders array must contain only non-NULL URLRequestHeader objects.'
-    },
-    InvalidNetStreamObject: {
-      code: 2154,
-      message: 'The NetStream Object is invalid.  This may be due to a failed NetConnection.'
-    },
-    InvalidFunctionName: {
-      code: 2155,
-      message: 'The ExternalInterface.call functionName parameter is invalid.  Only alphanumeric characters are supported.'
-    },
-    ForbiddenPortForProtocolError: {
-      code: 2156,
-      message: 'Port %1 may not be accessed using protocol %2. Calling SWF was %3.'
-    },
-    NoAsfunctionErrror: {
-      code: 2157,
-      message: 'Rejecting URL %1 because the \'asfunction:\' protocol may only be used for link targets, not for networking APIs.'
-    },
-    InvalidNetConnectionObject: {
-      code: 2158,
-      message: 'The NetConnection Object is invalid.  This may be due to a dropped NetConnection.'
-    },
-    InvalidSharedObject: {
-      code: 2159,
-      message: 'The SharedObject Object is invalid.'
-    },
-    InvalidTextLineError: {
-      code: 2160,
-      message: 'The TextLine is INVALID and cannot be used to access the current state of the TextBlock.'
-    },
-    TextLayoutError: {
-      code: 2161,
-      message: 'An internal error occured while laying out the text.'
-    },
-    FragmentOutputType: {
-      code: 2162,
-      message: 'The Shader output type is not compatible for this operation.'
-    },
-    FragmentInputType: {
-      code: 2163,
-      message: 'The Shader input type %1 is not compatible for this operation.'
-    },
-    FragmentInputMissing: {
-      code: 2164,
-      message: 'The Shader input %1 is missing or an unsupported type.'
-    },
-    FragmentInputTooSmall: {
-      code: 2165,
-      message: 'The Shader input %1 does not have enough data.'
-    },
-    FragmentInputNoDimension: {
-      code: 2166,
-      message: 'The Shader input %1 lacks valid dimensions.'
-    },
-    FragmentNotEnoughInput: {
-      code: 2167,
-      message: 'The Shader does not have the required number of inputs for this operation.'
-    },
-    StaticTextLineError: {
-      code: 2168,
-      message: 'Static text lines have no atoms and no reference to a text block.'
-    },
-    SecurityQuestionableBrowserScriptingError: {
-      code: 2169,
-      message: 'The method %1 may not be used for browser scripting.  The URL %2 requested by %3 is being ignored.  If you intend to call browser script, use navigateToURL instead.'
-    },
-    HeaderSecurityError: {
-      code: 2170,
-      message: 'Security sandbox violation: %1 cannot send HTTP headers to %2.'
-    },
-    FragmentMissing: {
-      code: 2171,
-      message: 'The Shader object contains no byte code to execute.'
-    },
-    FragmentAlreadyRunning: {
-      code: 2172,
-      message: 'The ShaderJob is already running or finished.'
-    },
-    FileReferenceBusyError: {
-      code: 2174,
-      message: 'Only one download, upload, load or save operation can be active at a time on each FileReference.'
-    },
-    UnformattedElementError: {
-      code: 2175,
-      message: 'One or more elements of the content of the TextBlock has a null ElementFormat.'
-    },
-    UserActionRequiredError: {
-      code: 2176,
-      message: 'Certain actions, such as those that display a pop-up window, may only be invoked upon user interaction, for example by a mouse click or button press.'
-    },
-    FragmentInputTooLarge: {
-      code: 2177,
-      message: 'The Shader input %1 is too large.'
-    },
-    ClipboardConstNotAllowed: {
-      code: 2178,
-      message: 'The Clipboard.generalClipboard object must be used instead of creating a new Clipboard.'
-    },
-    ClipboardDisallowedRead: {
-      code: 2179,
-      message: 'The Clipboard.generalClipboard object may only be read while processing a flash.events.Event.PASTE event.'
-    },
-    CantMoveAVM1ContentLoadedIntoAVM2: {
-      code: 2180,
-      message: 'It is illegal to move AVM1 content (AS1 or AS2) to a different part of the displayList when it has been loaded into AVM2 (AS3) content.'
-    },
-    InvalidTextLineMethodError: {
-      code: 2181,
-      message: 'The TextLine class does not implement this property or method.'
-    },
-    PerspectiveFieldOfViewValueInvalid: {
-      code: 2182,
-      message: 'Invalid fieldOfView value.  The value must be greater than 0 and less than 180.'
-    },
-    Invalid3DScale: {
-      code: 2183,
-      message: 'Scale values must not be zero.'
-    },
-    LockedElementFormatError: {
-      code: 2184,
-      message: 'The ElementFormat object is locked and cannot be modified.'
-    },
-    LockedFontDescriptionError: {
-      code: 2185,
-      message: 'The FontDescription object is locked and cannot be modified.'
-    },
-    PerspectiveFocalLengthInvalid: {
-      code: 2186,
-      message: 'Invalid focalLength %1.'
-    },
-    Matrix3DDecomposeTypeInvalid: {
-      code: 2187,
-      message: 'Invalid orientation style %1.  Value must be one of \'Orientation3D.EULER_ANGLES\', \'Orientation3D.AXIS_ANGLE\', or \'Orientation3D.QUATERNION\'.'
-    },
-    MatrixNonInvertibleError: {
-      code: 2188,
-      message: 'Invalid raw matrix. Matrix must be invertible.'
-    },
-    Matrix3DRefCannontBeShared: {
-      code: 2189,
-      message: 'A Matrix3D can not be assigned to more than one DisplayObject.'
-    },
-    ForceDownloadSecurityError: {
-      code: 2190,
-      message: 'The attempted load of %1 failed as it had a Content-Disposition of attachment set.'
-    },
-    ClipboardDisallowedWrite: {
-      code: 2191,
-      message: 'The Clipboard.generalClipboard object may only be written to as the result of user interaction, for example by a mouse click or button press.'
-    },
-    MalformedUnicodeError: {
-      code: 2192,
-      message: 'An unpaired Unicode surrogate was encountered in the input.'
-    },
-    SecurityContentAccessDeniedError: {
-      code: 2193,
-      message: 'Security sandbox violation: %1: %2 cannot access %3.'
-    },
-    LoaderParamError: {
-      code: 2194,
-      message: 'Parameter %1 cannot be a Loader.'
-    },
-    LoaderAsyncError: {
-      code: 2195,
-      message: 'Error thrown as Loader called %1.'
-    },
-    ObjectWithStringsParamError: {
-      code: 2196,
-      message: 'Parameter %1 must be an Object with only String values.'
-    },
-    SystemUpdaterPlayerNotSupportedError: {
-      code: 2200,
-      message: 'The SystemUpdater class is not supported by this player.'
-    },
-    SystemUpdaterOSNotSupportedError: {
-      code: 2201,
-      message: 'The requested update type is not supported on this operating system.'
-    },
-    SystemUpdaterBusy: {
-      code: 2202,
-      message: 'Only one SystemUpdater action is allowed at a time.'
-    },
-    SystemUpdaterFailed: {
-      code: 2203,
-      message: 'The requested SystemUpdater action cannot be completed.'
-    },
-    SystemUpdaterCannotCancel: {
-      code: 2204,
-      message: 'This operation cannot be canceled because it is waiting for user interaction.'
-    },
-    SystemUpdaterUnknownTarget: {
-      code: 2205,
-      message: 'Invalid update type %1.'
-    },
-    SignedSWfLoadingError: {
-      code: 2500,
-      message: 'An error occurred decrypting the signed swf file. The swf will not be loaded.'
-    },
-    NotScreenSharingError: {
-      code: 2501,
-      message: 'This property can only be accessed during screen sharing.'
-    },
-    NotSharingMonitorError: {
-      code: 2502,
-      message: 'This property can only be accessed if sharing the entire screen.'
-    },
-    FileBadPathName: {
-      code: 3000,
-      message: 'Illegal path name.'
-    },
-    FileAccessDenied: {
-      code: 3001,
-      message: 'File or directory access denied.'
-    },
-    FileExists: {
-      code: 3002,
-      message: 'File or directory exists.'
-    },
-    FileDoesNotExist: {
-      code: 3003,
-      message: 'File or directory does not exist.'
-    },
-    FileInsufficientSpace: {
-      code: 3004,
-      message: 'Insufficient file space.'
-    },
-    FileSystemResources: {
-      code: 3005,
-      message: 'Insufficient system resources.'
-    },
-    FileNotAFile: {
-      code: 3006,
-      message: 'Not a file.'
-    },
-    FileNotADir: {
-      code: 3007,
-      message: 'Not a directory.'
-    },
-    FileReadOnlyFileSys: {
-      code: 3008,
-      message: 'Read-only or write-protected media.'
-    },
-    FileNotSameDevice: {
-      code: 3009,
-      message: 'Cannot move file or directory to a different device.'
-    },
-    DirNotEmpty: {
-      code: 3010,
-      message: 'Directory is not empty.'
-    },
-    FileDestinationExists: {
-      code: 3011,
-      message: 'Move or copy destination already exists.'
-    },
-    FileCantDelete: {
-      code: 3012,
-      message: 'Cannot delete file or directory.'
-    },
-    FileInUse: {
-      code: 3013,
-      message: 'File or directory is in use.'
-    },
-    FileCopyMoveAncestor: {
-      code: 3014,
-      message: 'Cannot copy or move a file or directory to overwrite a containing directory.'
-    },
-    LoadBytesCodeExecutionSecurityError: {
-      code: 3015,
-      message: 'Loader.loadBytes() is not permitted to load content with executable code.'
-    },
-    FileApplicationNotFound: {
-      code: 3016,
-      message: 'No application was found that can open this file.'
-    },
-    SQLConnectionCannotClose: {
-      code: 3100,
-      message: 'A SQLConnection cannot be closed while statements are still executing.'
-    },
-    SQLConnectionAlreadyOpen: {
-      code: 3101,
-      message: 'Database connection is already open.'
-    },
-    SQLConnectionInvalidName: {
-      code: 3102,
-      message: 'Name argument specified was invalid. It must not be null or empty.'
-    },
-    SQLConnectionInTransaction: {
-      code: 3103,
-      message: 'Operation cannot be performed while there is an open transaction on this connection.'
-    },
-    SQLConnectionNotOpen: {
-      code: 3104,
-      message: 'A SQLConnection must be open to perform this operation.'
-    },
-    SQLConnectionNoOpenTransaction: {
-      code: 3105,
-      message: 'Operation is only allowed if a connection has an open transaction.'
-    },
-    SQLStatementIsExecutingProperty: {
-      code: 3106,
-      message: 'Property cannot be changed while SQLStatement.executing is true.'
-    },
-    SQLStatementIvalidCall: {
-      code: 3107,
-      message: '%1 may not be called unless SQLResult.complete is false.'
-    },
-    SQLStatementInvalidText: {
-      code: 3108,
-      message: 'Operation is not permitted when the SQLStatement.text property is not set.'
-    },
-    SQLStatementInvalidConnection: {
-      code: 3109,
-      message: 'Operation is not permitted when the SQLStatement.sqlConnection property is not set.'
-    },
-    SQLStatementIsExecutingCall: {
-      code: 3110,
-      message: 'Operation cannot be performed while SQLStatement.executing is true.'
-    },
-    SQLStatementInvalidSchemaType: {
-      code: 3111,
-      message: 'An invalid schema type was specified.'
-    },
-    SQLConnectionInvalidLockType: {
-      code: 3112,
-      message: 'An invalid transaction lock type was specified.'
-    },
-    SQLConnectionNotFileReference: {
-      code: 3113,
-      message: 'Reference specified is not of type File.'
-    },
-    SQLConnectionInvalidModeSpecified: {
-      code: 3114,
-      message: 'An invalid open mode was specified.'
-    },
-    SQLGeneralEngineError: {
-      code: 3115,
-      message: 'SQL Error.'
-    },
-    SQLInternalEngineError: {
-      code: 3116,
-      message: 'An internal logic error occurred.'
-    },
-    SQLPermissionError: {
-      code: 3117,
-      message: 'Access permission denied.'
-    },
-    SQLOperationAbortedError: {
-      code: 3118,
-      message: 'Operation aborted.'
-    },
-    SQLDatabaseLockedError: {
-      code: 3119,
-      message: 'Database file is currently locked.'
-    },
-    SQLTableLockedError: {
-      code: 3120,
-      message: 'Table is locked.'
-    },
-    SQLOutOfMemoryError: {
-      code: 3121,
-      message: 'Out of memory.'
-    },
-    SQLDatabaseIsReadonlyError: {
-      code: 3122,
-      message: 'Attempt to write a readonly database.'
-    },
-    SQLDatabaseCorruptError: {
-      code: 3123,
-      message: 'Database disk image is malformed.'
-    },
-    SQLDatabaseFullError: {
-      code: 3124,
-      message: 'Insertion failed because database is full.'
-    },
-    SQLCannotOpenDatabaseError: {
-      code: 3125,
-      message: 'Unable to open the database file.'
-    },
-    SQLLockingProtocolError: {
-      code: 3126,
-      message: 'Database lock protocol error.'
-    },
-    SQLDatabaseEmptyError: {
-      code: 3127,
-      message: 'Database is empty.'
-    },
-    SQLDiskIOError: {
-      code: 3128,
-      message: 'Disk I/O error occurred.'
-    },
-    SQLSchemaChangedError: {
-      code: 3129,
-      message: 'The database schema changed.'
-    },
-    SQLTooMuchDataError: {
-      code: 3130,
-      message: 'Too much data for one row of a table.'
-    },
-    SQLConstraintError: {
-      code: 3131,
-      message: 'Abort due to constraint violation.'
-    },
-    SQLDataTypeMismatchError: {
-      code: 3132,
-      message: 'Data type mismatch.'
-    },
-    SQLConcurrencyError: {
-      code: 3133,
-      message: 'An internal error occurred.'
-    },
-    SQLNotSupportedOnOSError: {
-      code: 3134,
-      message: 'Feature not supported on this operating system.'
-    },
-    SQLAuthorizationDeniedError: {
-      code: 3135,
-      message: 'Authorization denied.'
-    },
-    SQLAuxDatabaseFormatError: {
-      code: 3136,
-      message: 'Auxiliary database format error.'
-    },
-    SQLBindingRangeError: {
-      code: 3137,
-      message: 'An index specified for a parameter was out of range.'
-    },
-    SQLInvalidDatabaseFileError: {
-      code: 3138,
-      message: 'File opened is not a database file.'
-    },
-    SQLInvalidPageSizeError: {
-      code: 3139,
-      message: 'The page size specified was not valid for this operation.'
-    },
-    SQLInvalidKeySizeError: {
-      code: 3140,
-      message: 'The encryption key size specified was not valid for this operation. Keys must be exactly 16 bytes in length'
-    },
-    SQLInvalidConfigurationError: {
-      code: 3141,
-      message: 'The requested database configuration is not supported.'
-    },
-    SQLCannotRekeyNonKeyedDatabase: {
-      code: 3143,
-      message: 'Unencrypted databases may not be reencrypted.'
-    },
-    NativeWindowClosedError: {
-      code: 3200,
-      message: 'Cannot perform operation on closed window.'
-    },
-    PDFNoReaderInstalled: {
-      code: 3201,
-      message: 'Adobe Reader cannot be found.'
-    },
-    PDFOldReaderInstalled: {
-      code: 3202,
-      message: 'Adobe Reader 8.1 or later cannot be found.'
-    },
-    PDFOldDefaultText: {
-      code: 3203,
-      message: 'Default Adobe Reader must be version 8.1 or later.'
-    },
-    PDFCannotLoadReader: {
-      code: 3204,
-      message: 'An error ocurred trying to load Adobe Reader.'
-    },
-    ApplicationFeatureSecurityError: {
-      code: 3205,
-      message: 'Only application-sandbox content can access this feature.'
-    },
-    LoaderInfoDoorSecurityError: {
-      code: 3206,
-      message: 'Caller %1 cannot set LoaderInfo property %2.'
-    },
-    ApplicationNonFeatureSecurityError: {
-      code: 3207,
-      message: 'Application-sandbox content cannot access this feature.'
-    },
-    InvalidClipboardAccess: {
-      code: 3208,
-      message: 'Attempt to access invalid clipboard.'
-    },
-    DeadClipboardAccess: {
-      code: 3209,
-      message: 'Attempt to access dead clipboard.'
-    },
-    DeadJavaScriptObjectAccess: {
-      code: 3210,
-      message: 'The application attempted to reference a JavaScript object in a HTML page that is no longer loaded.'
-    },
-    FilePromiseIOError: {
-      code: 3211,
-      message: 'Drag and Drop File Promise error: %1'
-    },
-    NativeProcessNotRunning: {
-      code: 3212,
-      message: 'Cannot perform operation on a NativeProcess that is not running.'
-    },
-    NativeProcessAlreadyRunning: {
-      code: 3213,
-      message: 'Cannot perform operation on a NativeProcess that is already running.'
-    },
-    NativeProcessBadExecutable: {
-      code: 3214,
-      message: 'NativeProcessStartupInfo.executable does not specify a valid executable file.'
-    },
-    NativeProcessBadWorkingDirectory: {
-      code: 3215,
-      message: 'NativeProcessStartupInfo.workingDirectory does not specify a valid directory.'
-    },
-    NativeProcessStdOutReadError: {
-      code: 3216,
-      message: 'Error while reading data from NativeProcess.standardOutput.'
-    },
-    NativeProcessStdErrReadError: {
-      code: 3217,
-      message: 'Error while reading data from NativeProcess.standardError.'
-    },
-    NativeProcessStdInWriteError: {
-      code: 3218,
-      message: 'Error while writing data to NativeProcess.standardInput.'
-    },
-    NativeProcessNotStarted: {
-      code: 3219,
-      message: 'The NativeProcess could not be started. \'%1\''
-    },
-    ActionNotAllowedSecurityError: {
-      code: 3220,
-      message: 'Action \'%1\' not allowed in current security context \'%2\'.'
-    },
-    SWFNoPlayerInstalled: {
-      code: 3221,
-      message: 'Adobe Flash Player cannot be found.'
-    },
-    SWFOldPlayerInstalled: {
-      code: 3222,
-      message: 'The installed version of Adobe Flash Player is too old.'
-    },
-    DNSResolverLookupError: {
-      code: 3223,
-      message: 'DNS lookup error: platform error %1'
-    },
-    SocketMessageTooLongError: {
-      code: 3224,
-      message: 'Socket message too long'
-    },
-    SocketCannotSendDataToAddressAfterConnect: {
-      code: 3225,
-      message: 'Cannot send data to a location when connected.'
-    },
-    AllowCodeImportError: {
-      code: 3226,
-      message: 'Cannot import a SWF file when LoaderContext.allowCodeImport is false.'
-    },
-    BackgroundLaunchError: {
-      code: 3227,
-      message: 'Cannot launch another application from background.'
-    },
-    StageWebViewLoadError: {
-      code: 3228,
-      message: 'StageWebView encountered an error during the load operation.'
-    },
-    StageWebViewProtocolNotSupported: {
-      code: 3229,
-      message: 'The protocol is not supported.:'
-    },
-    BrowseOperationUnsupported: {
-      code: 3230,
-      message: 'The browse operation is unsupported.'
-    },
-    InvalidVoucher: {
-      code: 3300,
-      message: 'Voucher is invalid.'
-    },
-    AuthenticationFailed: {
-      code: 3301,
-      message: 'User authentication failed.'
-    },
-    RequireSSLError: {
-      code: 3302,
-      message: 'Flash Access server does not support SSL.'
-    },
-    ContentExpiredError: {
-      code: 3303,
-      message: 'Content expired.'
-    },
-    AuthorizationFailed: {
-      code: 3304,
-      message: 'User authorization failed (for example, the user has not purchased the content).'
-    },
-    ServerConnectionFailed: {
-      code: 3305,
-      message: 'Can\'t connect to the server.'
-    },
-    ClientUpdateRequired: {
-      code: 3306,
-      message: 'Client update required (Flash Access server requires new client).'
-    },
-    InternalError: {
-      code: 3307,
-      message: 'Generic internal Flash Access failure.'
-    },
-    WrongVoucherKey: {
-      code: 3308,
-      message: 'Wrong voucher key.'
-    },
-    CorruptedFLV: {
-      code: 3309,
-      message: 'Video content is corrupted.'
-    },
-    AppIDMismatch: {
-      code: 3310,
-      message: 'The AIR application or Flash Player SWF does not match the one specified in the DRM policy.'
-    },
-    AppVersionMismatch: {
-      code: 3311,
-      message: 'The version of the application does not match the one specified in the DRM policy.'
-    },
-    VoucherIntegrityError: {
-      code: 3312,
-      message: 'Verification of voucher failed.'
-    },
-    WriteFileSystemFailed: {
-      code: 3313,
-      message: 'Write to the file system failed.'
-    },
-    FLVHeaderIntegrityFailed: {
-      code: 3314,
-      message: 'Verification of FLV/F4V header file failed.'
-    },
-    PermissionDenied: {
-      code: 3315,
-      message: 'The current security context does not allow this operation.'
-    },
-    LocalConnectionUserScopedLocked: {
-      code: 3316,
-      message: 'The value of LocalConnection.isPerUser cannot be changed because it has already been locked by a call to LocalConnection.connect, .send, or .close.'
-    },
-    LoadAdobeCPFailed: {
-      code: 3317,
-      message: 'Failed to load Flash Access module.'
-    },
-    IncompatibleAdobeCPVersion: {
-      code: 3318,
-      message: 'Incompatible version of Flash Access module found.'
-    },
-    MissingAdobeCPEntryPoint: {
-      code: 3319,
-      message: 'Missing Flash Access module API entry point.'
-    },
-    InternalErrorHA: {
-      code: 3320,
-      message: 'Generic internal Flash Access failure.'
-    },
-    IndividualizationFailed: {
-      code: 3321,
-      message: 'Individualization failed.'
-    },
-    DeviceBindingFailed: {
-      code: 3322,
-      message: 'Device binding failed.'
-    },
-    CorruptStore: {
-      code: 3323,
-      message: 'The internal stores are corrupted.'
-    },
-    MachineTokenInvalid: {
-      code: 3324,
-      message: 'Reset license files and the client will fetch a new machine token.'
-    },
-    CorruptServerStateStore: {
-      code: 3325,
-      message: 'Internal stores are corrupt.'
-    },
-    TamperingDetected: {
-      code: 3326,
-      message: 'Call customer support.'
-    },
-    ClockTamperingDetected: {
-      code: 3327,
-      message: 'Clock tampering detected.'
-    },
-    ServerErrorTryAgain: {
-      code: 3328,
-      message: 'Server error; retry the request.'
-    },
-    ApplicationSpecificError: {
-      code: 3329,
-      message: 'Error in application-specific namespace.'
-    },
-    NeedAuthentication: {
-      code: 3330,
-      message: 'Need to authenticate the user and reacquire the voucher.'
-    },
-    ContentNotYetValid: {
-      code: 3331,
-      message: 'Content is not yet valid.'
-    },
-    CachedVoucherExpired: {
-      code: 3332,
-      message: 'Cached voucher has expired. Reacquire the voucher from the server.'
-    },
-    PlaybackWindowExpired: {
-      code: 3333,
-      message: 'The playback window for this policy has expired.'
-    },
-    InvalidDRMPlatform: {
-      code: 3334,
-      message: 'This platform is not allowed to play this content.'
-    },
-    InvalidDRMVersion: {
-      code: 3335,
-      message: 'Invalid version of Flash Access module. Upgrade AIR or Flash Access module for the Flash Player.'
-    },
-    InvalidRuntimePlatform: {
-      code: 3336,
-      message: 'This platform is not allowed to play this content.'
-    },
-    InvalidRuntimeVersion: {
-      code: 3337,
-      message: 'Upgrade Flash Player or AIR  and retry playback.'
-    },
-    UnknownConnectionType: {
-      code: 3338,
-      message: 'Unknown connection type.'
-    },
-    NoAnalogPlaybackAllowed: {
-      code: 3339,
-      message: 'Can\'t play back on analog device. Connect to a digital device.'
-    },
-    NoAnalogProtectionAvail: {
-      code: 3340,
-      message: 'Can\'t play back because connected analog device doesn\'t have the correct capabilities.'
-    },
-    NoDigitalPlaybackAllowed: {
-      code: 3341,
-      message: 'Can\'t play back on digital device.'
-    },
-    NoDigitalProtectionAvail: {
-      code: 3342,
-      message: 'The connected digital device doesn\'t have the correct capabilities.'
-    },
-    InternalErrorIV: {
-      code: 3343,
-      message: 'Internal Error.'
-    },
-    MissingAdobeCPModule: {
-      code: 3344,
-      message: 'Missing Flash Access module.'
-    },
-    DRMNoAccessError: {
-      code: 3345,
-      message: 'This operation is not permitted with content protected using Flash Access.'
-    },
-    DRMDataMigrationFailed: {
-      code: 3346,
-      message: 'Failed migrating local DRM data, all locally cached DRM vouchers are lost.'
-    },
-    DRMInsufficientDeviceCapabilites: {
-      code: 3347,
-      message: 'The device does not meet the Flash Access server\'s playback device constraints.'
-    },
-    DRMHardStopIntervalExpired: {
-      code: 3348,
-      message: 'This protected content is expired.'
-    },
-    DRMServerVersionTooHigh: {
-      code: 3349,
-      message: 'The Flash Access server is running at a version that\'s higher than the max supported by this runtime.'
-    },
-    DRMServerVersionTooLow: {
-      code: 3350,
-      message: 'The Flash Access server is running at a version that\'s lower than the min supported by this runtime.'
-    },
-    DRMDeviceGroupTokenInvalid: {
-      code: 3351,
-      message: 'Device Group registration token is corrupted, please refresh the token by registering again to the DRMDeviceGroup.'
-    },
-    DRMDeviceGroupTokenTooOld: {
-      code: 3352,
-      message: 'The server is using a newer version of the registration token for this Device Group. Please refresh the token by registering again to the DRMDeviceGroup.'
-    },
-    DRMDeviceGroupTokenTooNew: {
-      code: 3353,
-      message: 'the server is using an older version of the registration token for this Device Group.'
-    },
-    DRMDeviceGroupTokenExpired: {
-      code: 3354,
-      message: 'Device Group registration is expired, please refresh the token by registering again to the DRMDeviceGroup.'
-    },
-    JoinDRMDeviceGroupFailed: {
-      code: 3355,
-      message: 'The server denied this Device Group registration request.'
-    },
-    DRMVoucherHasNoCorrespondingRoot: {
-      code: 3356,
-      message: 'The root voucher for this content\'s DRMVoucher was not found.'
-    },
-    NoValidEmbeddedDRMVoucher: {
-      code: 3357,
-      message: 'The DRMContentData provides no valid embedded voucher and no Flash Access server url to acquire the voucher from.'
-    },
-    NoACPProtectionAvailable: {
-      code: 3358,
-      message: 'ACP protection is not available on the device but required to playback the content.'
-    },
-    NoCGMSAProtectionAvailable: {
-      code: 3359,
-      message: 'CGMSA protection is not available on the device but required to playback the content.'
-    },
-    DRMDeviceGroupRegistrationRequired: {
-      code: 3360,
-      message: 'Device Group registration is required before doing this operation.'
-    },
-    DeviceIsNotRegisteredToDRMDeviceGroup: {
-      code: 3361,
-      message: 'The device is not registered to this Device Group.'
-    },
-    ScriptBridgeError: {
-      code: 3400,
-      message: 'An error occured while executing JavaScript code.'
-    },
-    ScriptBridgeNameAccessSecurityError: {
-      code: 3401,
-      message: 'Security sandbox violation: An object with this name has already been registered from another security domain.'
-    },
-    ScriptBridgeBrowserAccessSecurityError: {
-      code: 3402,
-      message: 'Security sandbox violation: Bridge caller %1 cannot access %2.'
-    },
-    ExtensionContextNoSuchMethod: {
-      code: 3500,
-      message: 'The extension context does not have a method with the name %1.'
-    },
-    ExtensionContextAlreadyDisposed: {
-      code: 3501,
-      message: 'The extension context has already been disposed.'
-    },
-    ExtensionContextInvalidReturnValue: {
-      code: 3502,
-      message: 'The extension returned an invalid value.'
-    },
-    ExtensionContextInvalidState: {
-      code: 3503,
-      message: 'The extension was left in an invalid state.'
-    },
-    NoValidProgramSet: {
-      code: 3600,
-      message: 'No valid program set.'
-    },
-    NoValidIndexBufferSet: {
-      code: 3601,
-      message: 'No valid index buffer set.'
-    },
-    SanityCheckOnParametersFailed: {
-      code: 3602,
-      message: 'Sanity check on parameters failed, %1 triangles and %2 index offset.'
-    },
-    NotEnoughIndicesInThisBuffer: {
-      code: 3603,
-      message: 'Not enough indices in this buffer. %1 triangles at offset %2, but there are only %3 indices in buffer.'
-    },
-    SampleBindsTextureAlsoBoundToRender: {
-      code: 3604,
-      message: 'Sampler %1 binds a texture that is also bound for render to texture.'
-    },
-    SampleBindsInvalidTexture: {
-      code: 3605,
-      message: 'Sampler %1 binds an invalid texture.'
-    },
-    SamplerFormatDoesNotMatchTextureFormat: {
-      code: 3606,
-      message: 'Sampler %1 format does not match texture format.'
-    },
-    StreamIsNotUsed: {
-      code: 3607,
-      message: 'Stream %1 is set but not used by the current vertex program.'
-    },
-    StreamIsInvalid: {
-      code: 3608,
-      message: 'Stream %1 is invalid.'
-    },
-    StreamDoesNotHaveEnoughVertices: {
-      code: 3609,
-      message: 'Stream %1 does not have enough vertices.'
-    },
-    StreamVertexOffsetOutOfBounds: {
-      code: 3610,
-      message: 'Stream %1 vertex offset is out of bounds'
-    },
-    StreamReadButNotSet: {
-      code: 3611,
-      message: 'Stream %1 is read by the current vertex program but not set.'
-    },
-    ProgramMustBeLittleEndian: {
-      code: 3612,
-      message: 'Programs must be in little endian format.'
-    },
-    NativeShaderCompilationFailed: {
-      code: 3613,
-      message: 'The native shader compilation failed.'
-    },
-    NativeShaderCompilationFailedOpenGL: {
-      code: 3614,
-      message: 'The native shader compilation failed.enGL specific: %1'
-    },
-    AgalProgramTooSmall: {
-      code: 3615,
-      message: 'AGAL validation failed: Program size below minimum length for %1 program.'
-    },
-    NotAnAgalProgram: {
-      code: 3616,
-      message: 'AGAL validation failed: Not an AGAL program. Wrong magic byte for %1 program.'
-    },
-    BadAgalVersion: {
-      code: 3617,
-      message: 'AGAL validation failed: Bad AGAL version for %1 program. Current version is %2.'
-    },
-    BadAgalProgramType: {
-      code: 3618,
-      message: 'AGAL validation failed: Bad AGAL program type identifier for %1 program.'
-    },
-    BadAgalShadertype: {
-      code: 3619,
-      message: 'AGAL validation failed: Shader type must be either fragment or vertex for %1 program.'
-    },
-    InvalidAgalOpcodeOutOfRange: {
-      code: 3620,
-      message: 'AGAL validation failed: Invalid opcode, value out of range: %2 at token %3 of %1 program.'
-    },
-    InvalidAgalOpcodeNotImplemented: {
-      code: 3621,
-      message: 'AGAL validation failed: Invalid opcode, %2 is not implemented in this version at token %3 of %1 program.'
-    },
-    AgalOpcodeOnlyAllowedInFragmentProgram: {
-      code: 3622,
-      message: 'AGAL validation failed: Opcode %2 only allowed in fragment programs at token %3 of %1 program.'
-    },
-    OpenConditionNesting: {
-      code: 3623,
-      message: 'AGAL validation failed: Open condition nesting (close without open) at token %2 of %1 program.'
-    },
-    ConditionNestingTooDeep: {
-      code: 3624,
-      message: 'AGAL validation failed: Condition nesting (%2) too deep at token %3 of %1 program.'
-    },
-    BadAgalSourceOperands: {
-      code: 3625,
-      message: 'AGAL validation failed: Bad AGAL source operands. Both are constants (this must be precomputed) at token %2 of %1 program.'
-    },
-    BothOperandsAreIndirectReads: {
-      code: 3626,
-      message: 'AGAL validation failed: Opcode %2, both operands are indirect reads at token %3 of %1 program.'
-    },
-    OpcodeDestinationMustBeAllZero: {
-      code: 3627,
-      message: 'AGAL validation failed: Opcode %2 destination operand must be all zero at token %3 of %1 program.'
-    },
-    OpcodeDestinationMustUseMask: {
-      code: 3628,
-      message: 'AGAL validation failed: The destination operand for the %2 instruction must mask w (use .xyz or less) at token %3 of %1 program.'
-    },
-    TooManyTokens: {
-      code: 3629,
-      message: 'AGAL validation failed: Too many tokens (%2) for %1 program.'
-    },
-    FragmentShaderType: {
-      code: 3630,
-      message: 'Fragment shader type is not fragment.'
-    },
-    VertexShaderType: {
-      code: 3631,
-      message: 'Vertex shader type is not vertex.'
-    },
-    VaryingReadButNotWrittenTo: {
-      code: 3632,
-      message: 'AGAL linkage: Varying %1 is read in the fragment shader but not written to by the vertex shader.'
-    },
-    VaryingPartialWrite: {
-      code: 3633,
-      message: 'AGAL linkage: Varying %1 is only partially written to. Must write all four components.'
-    },
-    FragmentWriteAllComponents: {
-      code: 3634,
-      message: 'AGAL linkage: Fragment output needs to write to all components.'
-    },
-    VertexWriteAllComponents: {
-      code: 3635,
-      message: 'AGAL linkage: Vertex output needs to write to all components.'
-    },
-    UnusedOperand: {
-      code: 3636,
-      message: 'AGAL validation failed: Unused operand is not set to zero for %2 at token %3 of %1 program.'
-    },
-    SamplerRegisterOnlyInFragment: {
-      code: 3637,
-      message: 'AGAL validation failed: Sampler registers only allowed in fragment programs for %2 at token %3 of %1 program.'
-    },
-    SamplerRegisterSecondOperand: {
-      code: 3638,
-      message: 'AGAL validation failed: Sampler register only allowed as second operand in texture instructions for %2 at token %3 of %1 program.'
-    },
-    IndirectOnlyAllowedInVertex: {
-      code: 3639,
-      message: 'AGAL validation failed: Indirect addressing only allowed in vertex programs for %2 at token %3 of %1 program.'
-    },
-    IndirectOnlyIntoConstantRegisters: {
-      code: 3640,
-      message: 'AGAL validation failed: Indirect addressing only allowed into constant registers for %2 at token %3 of %1 program.'
-    },
-    IndirectNotAllowed: {
-      code: 3641,
-      message: 'AGAL validation failed: Indirect addressing not allowed for this operand in this instruction for %2 at token %3 of %1 program.'
-    },
-    IndirectSourceType: {
-      code: 3642,
-      message: 'AGAL validation failed: Indirect source type must be attribute, constant or temporary for %2 at token %3 of %1 program.'
-    },
-    IndirectAddressingFieldsMustBeZero: {
-      code: 3643,
-      message: 'AGAL validation failed: Indirect addressing fields must be zero for direct adressing for %2 at token %3 of %1 program.'
-    },
-    VaryingRegistersOnlyReadInFragment: {
-      code: 3644,
-      message: 'AGAL validation failed: Varying registers can only be read in fragment programs for %2 at token %3 of %1 program.'
-    },
-    AttributeRegistersOnlyReadInVertex: {
-      code: 3645,
-      message: 'AGAL validation failed: Attribute registers can only be read in vertex programs for %2 at token %3 of %1 program.'
-    },
-    CanNotReadOutputRegister: {
-      code: 3646,
-      message: 'AGAL validation failed: Can not read from output register for %2 at token %3 of %1 program.'
-    },
-    TempRegisterReadWithoutWrite: {
-      code: 3647,
-      message: 'AGAL validation failed: Temporary register read without being written to for %2 at token %3 of %1 program.'
-    },
-    TempRegisterComponentReadWithoutWrite: {
-      code: 3648,
-      message: 'AGAL validation failed: Temporary register component read without being written to for %2 at token %3 of %1 program.'
-    },
-    SamplerRegisterCannotBeWrittenTo: {
-      code: 3649,
-      message: 'AGAL validation failed: Sampler registers can not be written to for %2 at token %3 of %1 program.'
-    },
-    VaryingRegistersWrite: {
-      code: 3650,
-      message: 'AGAL validation failed: Varying registers can only be written in vertex programs for %2 at token %3 of %1 program.'
-    },
-    AttributeRegisterCannotBeWrittenTo: {
-      code: 3651,
-      message: 'AGAL validation failed: Attribute registers can not be written to for %2 at token %3 of %1 program.'
-    },
-    ConstantRegisterCannotBeWrittenTo: {
-      code: 3652,
-      message: 'AGAL validation failed: Constant registers can not be written to for %2 at token %3 of %1 program.'
-    },
-    DestinationWritemaskIsZero: {
-      code: 3653,
-      message: 'AGAL validation failed: Destination writemask is zero for %2 at token %3 of %1 program.'
-    },
-    AGALReservedBitsShouldBeZero: {
-      code: 3654,
-      message: 'AGAL validation failed: Reserve bits should be zero for %2 at token %3 of %1 program.'
-    },
-    UnknownRegisterType: {
-      code: 3655,
-      message: 'AGAL validation failed: Unknown register type for %2 at token %3 of %1 program.'
-    },
-    SamplerRegisterOutOfBounds: {
-      code: 3656,
-      message: 'AGAL validation failed: Sampler register index out of bounds for %2 at token %3 of %1 program.'
-    },
-    VaryingRegisterOutOfBounds: {
-      code: 3657,
-      message: 'AGAL validation failed: Varying register index out of bounds for %2 at token %3 of %1 program.'
-    },
-    AttributeRegisterOutOfBounds: {
-      code: 3658,
-      message: 'AGAL validation failed: Attribute register index out of bounds for %2 at token %3 of %1 program.'
-    },
-    ConstantRegisterOutOfBounds: {
-      code: 3659,
-      message: 'AGAL validation failed: Constant register index out of bounds for %2 at token %3 of %1 program.'
-    },
-    OutputRegisterOutOfBounds: {
-      code: 3660,
-      message: 'AGAL validation failed: Output register index out of bounds for %2 at token %3 of %1 program.'
-    },
-    TemporaryRegisterOutOfBounds: {
-      code: 3661,
-      message: 'AGAL validation failed: Temporary register index out of bounds for %2 at token %3 of %1 program.'
-    },
-    CubeMapSamplerMustUseClamp: {
-      code: 3662,
-      message: 'AGAL validation failed: Cube map samplers must set wrapping to clamp mode for %2 at token %3 of %1 program.'
-    },
-    SampleBindsUndefinedTexture: {
-      code: 3663,
-      message: 'Sampler %1 binds an undefined texture.'
-    },
-    UnknownSamplerDimension: {
-      code: 3664,
-      message: 'AGAL validation failed: Unknown sampler dimension %4 for %2 at token %3 of %1 program.'
-    },
-    UnknownFilterMode: {
-      code: 3665,
-      message: 'AGAL validation failed: Unknown filter mode in sampler: %4 for %2 at token %3 of %1 program.'
-    },
-    UnknownMipmapMode: {
-      code: 3666,
-      message: 'AGAL validation failed: Unknown mipmap mode in sampler: %4 for %2 at token %3 of %1 program.'
-    },
-    UnknownWrappingMode: {
-      code: 3667,
-      message: 'AGAL validation failed: Unknown wrapping mode in sampler: %4 for %2 at token %3 of %1 program.'
-    },
-    UnknownSpecialFlag: {
-      code: 3668,
-      message: 'AGAL validation failed: Unknown special flag used in sampler: %4 for %2 at token %3 of %1 program.'
-    },
-    BadInputSize: {
-      code: 3669,
-      message: 'Bad input size.'
-    },
-    BufferTooBig: {
-      code: 3670,
-      message: 'Buffer too big.'
-    },
-    BufferHasZeroSize: {
-      code: 3671,
-      message: 'Buffer has zero size.'
-    },
-    BufferCreationFailed: {
-      code: 3672,
-      message: 'Buffer creation failed. Internal error.'
-    },
-    InvalidCubeSide: {
-      code: 3673,
-      message: 'Cube side must be [0..5].'
-    },
-    MiplevelTooLarge: {
-      code: 3674,
-      message: 'Miplevel too large.'
-    },
-    TextureFormatMismatch: {
-      code: 3675,
-      message: 'Texture format mismatch.'
-    },
-    PlatformDoesNotSupportTextureFormat: {
-      code: 3676,
-      message: 'Platform does not support desired texture format.'
-    },
-    TextureDecodingFailed: {
-      code: 3677,
-      message: 'Texture decoding failed. Internal error.'
-    },
-    TextureNeedsToBeSquare: {
-      code: 3678,
-      message: 'Texture needs to be square.'
-    },
-    TextureSizeDoesNotMatch: {
-      code: 3679,
-      message: 'Texture size does not match.'
-    },
-    DepthTextureNotImplemented: {
-      code: 3680,
-      message: 'Depth texture not implemented yet.'
-    },
-    TextureSizeIsZero: {
-      code: 3681,
-      message: 'Texture size is zero.'
-    },
-    TextureNotPowerOfTwo: {
-      code: 3682,
-      message: 'Texture size not a power of two.'
-    },
-    TextureTooBig: {
-      code: 3683,
-      message: 'Texture too big (max is 2048x2048).'
-    },
-    TextureCreationFailed: {
-      code: 3684,
-      message: 'Texture creation failed. Internal error.'
-    },
-    CouldNotCreateRenderer: {
-      code: 3685,
-      message: 'Could not create renderer.'
-    },
-    DisabledFormatNeedsNullVertexBuffer: {
-      code: 3686,
-      message: '\'disabled\' format only valid with a null vertex buffer.'
-    },
-    NullVertexBufferNeedsDisabledFormat: {
-      code: 3687,
-      message: 'Null vertex buffers require the \'disabled\' format.'
-    },
-    NeedListenerToRequestContext: {
-      code: 3688,
-      message: 'You must add an event listener for the context3DCreate event before requesting a new Context3D.'
-    },
-    CantSwizzle2ndSource: {
-      code: 3689,
-      message: 'You can not swizzle second operand for %2 at token %3 of %1 program.'
-    },
-    TooManyDrawCalls: {
-      code: 3690,
-      message: 'Too many draw calls before calling present.'
-    },
-    ResourceLimitExceeded: {
-      code: 3691,
-      message: 'Resource limit for this resource type exceeded.'
-    },
-    NeedToClearBeforeDraw: {
-      code: 3692,
-      message: 'All buffers need to be cleared every frame before drawing.'
-    },
-    SecondOperandMustBeSamplerRegister: {
-      code: 3693,
-      message: 'AGAL validation failed: Sampler register must be used for second operand in texture instructions for %2 at token %3 of %1 program.'
-    },
-    ObjectDisposed: {
-      code: 3694,
-      message: 'The object was disposed by an earlier call of dispose() on it.'
-    },
-    SameTextureNeedsSameSamplerParams: {
-      code: 3695,
-      message: 'A texture can only be bound to multiple samplers if the samplers also have the exact same properties. Mismatch at samplers %1 and %2.'
-    },
-    SecondUseOfSamplerMustHaveSameParams: {
-      code: 3696,
-      message: 'AGAL validation failed: Second use of sampler register needs to specify the exact same properties. At token %3 of %1 program.'
-    },
-    TextureBoundButNotUsed: {
-      code: 3697,
-      message: 'A texture is bound on sampler %1 but not used by the fragment program.'
-    },
-    BackBufferNotConfigured: {
-      code: 3698,
-      message: 'The back buffer is not configured.'
-    },
-    OperationFailed: {
-      code: 3699,
-      message: 'Requested Operation failed to complete'
-    },
-    TextureMipchainIsNotComplete: {
-      code: 3700,
-      message: 'A texture sampler binds an incomplete texture. Make sure to upload(). All miplevels are required when mipmapping is enabled.'
-    },
-    OutputColorNotMaskable: {
-      code: 3701,
-      message: 'The output color register can not use a write mask. All components must be written.'
-    },
-    Context3DNotAvailable: {
-      code: 3702,
-      message: 'Context3D not available.'
-    },
-    SwizzleMustBeScalar: {
-      code: 3703,
-      message: 'AGAL validation failed: Source swizzle must be scalar (one of: xxxx, yyyy, zzzz, wwww) for %2 at token %3 of %1 program.'
-    },
-    CubeMapSamplerMustUseMipmap: {
-      code: 3704,
-      message: 'AGAL validation failed: Cube map samplers must enable mipmapping for %2 at token %3 of %1 program.'
     }
   };
 function getErrorMessage(index) {
@@ -12874,22 +11511,22 @@ var opcodeTable = [
     null
   ];
 (function processOpcodeTable() {
-  function splitter(value) {
-    var list = value.split(':');
-    return {
-      name: list[0],
-      size: list[1].substring(0, 3),
-      type: list[1].substring(3)
-    };
-  }
   for (var i = 0; i < opcodeTable.length; i++) {
     var entry = opcodeTable[i];
     if (entry && entry.operands !== null) {
-      if (entry.operands === '') {
-        entry.operands = [];
-      } else {
-        entry.operands = entry.operands.split(',').map(splitter);
+      var result = [];
+      if (entry.operands !== '') {
+        var operands = entry.operands.split(',');
+        for (var j = 0; j < operands.length; j++) {
+          var list = operands[j].split(':');
+          result.push({
+            name: list[0],
+            size: list[1].substring(0, 3),
+            type: list[1].substring(3)
+          });
+        }
       }
+      entry.operands = result;
     }
   }
 }());
@@ -13355,7 +11992,7 @@ var Multiname = function () {
     multiname.parse = function parse(constantPool, stream, multinames, patchFactoryTypes) {
       var index = 0;
       var kind = stream.readU8();
-      var name, namespaces = [], flags = 0, typeParameter;
+      var name, namespaces = [], flags = 0;
       switch (kind) {
       case CONSTANT_QName:
       case CONSTANT_QNameA:
@@ -13424,7 +12061,6 @@ var Multiname = function () {
           });
         }
         return mn;
-        break;
       default:
         unexpected();
         break;
@@ -13708,6 +12344,7 @@ var ConstantPool = function constantPool() {
       for (i = 1; i < n; ++i) {
         doubles.push(stream.readDouble());
       }
+      Timer.start('Parse Strings');
       var strings = [
           ''
         ];
@@ -13716,10 +12353,12 @@ var ConstantPool = function constantPool() {
         strings.push(stream.readUTFString(stream.readU30()));
       }
       this.positionAfterUTFStrings = stream.pos;
+      Timer.stop();
       this.ints = ints;
       this.uints = uints;
       this.doubles = doubles;
       this.strings = strings;
+      Timer.start('Parse Namespaces');
       var namespaces = [
           undefined
         ];
@@ -13729,6 +12368,8 @@ var ConstantPool = function constantPool() {
         namespace.parse(this, stream);
         namespaces.push(namespace);
       }
+      Timer.stop();
+      Timer.start('Parse Namespace Sets');
       var namespaceSets = [
           undefined
         ];
@@ -13742,8 +12383,10 @@ var ConstantPool = function constantPool() {
         }
         namespaceSets.push(set);
       }
+      Timer.stop();
       this.namespaces = namespaces;
       this.namespaceSets = namespaceSets;
+      Timer.start('Parse Multinames');
       var multinames = [
           undefined
         ];
@@ -13752,12 +12395,7 @@ var ConstantPool = function constantPool() {
       for (i = 1; i < n; ++i) {
         multinames.push(Multiname.parse(this, stream, multinames, patchFactoryTypes));
       }
-      patchFactoryTypes.forEach(function (patch) {
-        var multiname = multinames[patch.index];
-        true;
-        patch.multiname.name = multiname.name;
-        patch.multiname.namespaces = multiname.namespaces;
-      });
+      Timer.stop();
       this.multinames = multinames;
     }
     constantPool.prototype.getValue = function getValue(kind, index) {
@@ -14053,41 +12691,55 @@ var ScriptInfo = function scriptInfo() {
   }();
 var AbcFile = function () {
     function abcFile(bytes, name) {
-      console.time('Parse ABC: ' + name);
+      Timer.start('Parse ABC');
       this.name = name;
       var n, i;
       var stream = new AbcStream(bytes);
       checkMagic(stream);
+      Timer.start('Parse constantPool');
       this.constantPool = new ConstantPool(stream, name);
+      Timer.stop();
+      Timer.start('Parse Method Infos');
       this.methods = [];
       n = stream.readU30();
       for (i = 0; i < n; ++i) {
         this.methods.push(new MethodInfo(this, stream));
       }
+      Timer.stop();
+      Timer.start('Parse MetaData Infos');
       this.metadata = [];
       n = stream.readU30();
       for (i = 0; i < n; ++i) {
         this.metadata.push(new MetaDataInfo(this, stream));
       }
+      Timer.stop();
+      Timer.start('Parse Instance Infos');
       this.instances = [];
       n = stream.readU30();
       for (i = 0; i < n; ++i) {
         this.instances.push(new InstanceInfo(this, stream));
       }
+      Timer.stop();
+      Timer.start('Parse Class Infos');
       this.classes = [];
       for (i = 0; i < n; ++i) {
         this.classes.push(new ClassInfo(this, this.instances[i], stream));
       }
+      Timer.stop();
+      Timer.start('Parse Script Infos');
       this.scripts = [];
       n = stream.readU30();
       for (i = 0; i < n; ++i) {
         this.scripts.push(new ScriptInfo(this, i, stream));
       }
+      Timer.stop();
+      Timer.start('Parse Method Body Info');
       n = stream.readU30();
       for (i = 0; i < n; ++i) {
         MethodInfo.parseBody(this, stream);
       }
-      console.timeEnd('Parse ABC: ' + name);
+      Timer.stop();
+      Timer.stop();
     }
     function checkMagic(stream) {
       var magic = stream.readWord();
@@ -17386,6 +16038,9 @@ var TraitsType = function () {
       if (mn instanceof MultinameType) {
         return null;
       }
+      if (mn.isAttribute()) {
+        return null;
+      }
       if (followSuperType && (this.isInstanceInfo() || this.isClassInfo())) {
         var that = this;
         do {
@@ -17614,7 +16269,7 @@ var Verifier = function () {
         function verification(methodInfo, scope) {
           this.scope = scope;
           this.methodInfo = methodInfo;
-          this.domain = methodInfo.abc.domain;
+          this.domain = methodInfo.abc.applicationDomain;
           this.writer = new IndentingWriter();
           this.returnType = Type.Undefined;
         }
@@ -17702,7 +16357,7 @@ var Verifier = function () {
           var scope = state.scope;
           var writer = verifierTraceLevel.value ? this.writer : null;
           var bytecodes = this.methodInfo.analysis.bytecodes;
-          var domain = this.methodInfo.abc.domain;
+          var domain = this.methodInfo.abc.applicationDomain;
           var multinames = this.methodInfo.abc.constantPool.multinames;
           var mi = this.methodInfo;
           var bc, obj, fn, mn, l, r, val, type, returnType;
@@ -17754,7 +16409,9 @@ var Verifier = function () {
               }
               var trait = classType.getTrait(mn, false, true);
               if (trait) {
-                ti().object = LazyInitializer.create(classType.object);
+                if (!mi.isInstanceInitializer) {
+                  ti().object = LazyInitializer.create(classType.object);
+                }
                 return classType;
               }
             }
@@ -17876,6 +16533,7 @@ var Verifier = function () {
               mn = popMultiname();
               obj = pop();
               true;
+              ti().baseClass = LazyInitializer.create(this.thisType.super().classType().object);
               push(getProperty(obj.super(), mn));
               break;
             case 5:
@@ -17883,6 +16541,7 @@ var Verifier = function () {
               mn = popMultiname();
               obj = pop();
               true;
+              ti().baseClass = LazyInitializer.create(this.thisType.super().classType().object);
               setProperty(obj.super(), mn, val);
               break;
             case 6:
@@ -18032,20 +16691,19 @@ var Verifier = function () {
               notImplemented(bc);
               break;
             case 69:
-              stack.popMany(bc.argCount);
-              mn = popMultiname();
-              obj = pop();
-              getProperty(obj, mn);
-              push(Type.Any);
-              break;
+            case 78:
             case 79:
             case 70:
             case 76:
               stack.popMany(bc.argCount);
               mn = popMultiname();
               obj = pop();
+              if (op === OP_callsuper || op === OP_callsupervoid) {
+                obj = this.thisType.super();
+                ti().baseClass = LazyInitializer.create(this.thisType.super().classType().object);
+              }
               type = getProperty(obj, mn);
-              if (op === OP_callpropvoid) {
+              if (op === OP_callpropvoid || op === OP_callsupervoid) {
                 break;
               }
               if (type instanceof MethodType) {
@@ -18090,11 +16748,6 @@ var Verifier = function () {
               break;
             case 77:
               notImplemented(bc);
-              break;
-            case 78:
-              stack.popMany(bc.argCount);
-              popMultiname();
-              pop();
               break;
             case 80:
             case 81:
@@ -18156,11 +16809,7 @@ var Verifier = function () {
               local[bc.index] = pop();
               break;
             case 100:
-              if (savedScope.object) {
-                push(Type.from(savedScope.global.object));
-              } else {
-                push(Type.Any);
-              }
+              push(Type.from(savedScope.global.object));
               break;
             case 101:
               push(scope[bc.index]);
@@ -18514,6 +17163,11 @@ var Verifier = function () {
                 assert: '',
                 internal: true
               }
+            },
+            ASCallSuper: {
+              scope: {
+                assert: ''
+              }
             }
           },
           New: {
@@ -18541,7 +17195,12 @@ var Verifier = function () {
             },
             ASGetDescendants: {},
             ASHasProperty: {},
-            ASGetSlot: {}
+            ASGetSlot: {},
+            ASGetSuper: {
+              scope: {
+                assert: ''
+              }
+            }
           },
           SetProperty: {
             object: {
@@ -18558,7 +17217,12 @@ var Verifier = function () {
                 internal: true
               }
             },
-            ASSetSlot: {}
+            ASSetSlot: {},
+            ASSetSuper: {
+              scope: {
+                assert: ''
+              }
+            }
           },
           DeleteProperty: {
             object: {
@@ -18799,7 +17463,7 @@ var Verifier = function () {
       writer.writeLn('this.id = nextID[nextID.length - 1] += 1;');
       writer.leave('}');
       if (path.length > 1) {
-        writer.writeLn(prototypeName + ' = ' + 'extend(' + path[path.length - 2]._name + ', "' + node._name + '")');
+        writer.writeLn(prototypeName + ' = ' + 'extend(' + path[path.length - 2]._name + ', "' + node._name + '");');
       }
       writer.writeLn(prototypeName + '.nodeName = "' + node._name + '";');
       writer.enter(prototypeName + '.visitInputs = function (visitor) {');
@@ -19096,6 +17760,39 @@ var Verifier = function () {
       };
       return asCallPropertyNode;
     }();
+  var ASCallSuper = function () {
+      function asCallSuperNode(control, store, object, name, args, flags, scope) {
+        true;
+        true;
+        true;
+        true;
+        true;
+        true;
+        true;
+        true;
+        this.control = control;
+        this.store = store;
+        this.loads = undefined;
+        this.object = object;
+        this.name = name;
+        this.args = args;
+        this.flags = flags;
+        this.scope = scope;
+        this.id = nextID[nextID.length - 1] += 1;
+      }
+      asCallSuperNode.prototype = extend(CallProperty, 'ASCallSuper');
+      asCallSuperNode.prototype.nodeName = 'ASCallSuper';
+      asCallSuperNode.prototype.visitInputs = function (visitor) {
+        this.control && visitor(this.control);
+        this.store && visitor(this.store);
+        this.loads && visitArrayInputs(this.loads, visitor);
+        visitor(this.object);
+        visitor(this.name);
+        visitArrayInputs(this.args, visitor);
+        visitor(this.scope);
+      };
+      return asCallSuperNode;
+    }();
   var New = function () {
       function newNode(control, store, callee, args) {
         true;
@@ -19273,6 +17970,34 @@ var Verifier = function () {
       };
       return asGetSlotNode;
     }();
+  var ASGetSuper = function () {
+      function asGetSuperNode(control, store, object, name, scope) {
+        true;
+        true;
+        true;
+        true;
+        true;
+        true;
+        this.control = control;
+        this.store = store;
+        this.loads = undefined;
+        this.object = object;
+        this.name = name;
+        this.scope = scope;
+        this.id = nextID[nextID.length - 1] += 1;
+      }
+      asGetSuperNode.prototype = extend(GetProperty, 'ASGetSuper');
+      asGetSuperNode.prototype.nodeName = 'ASGetSuper';
+      asGetSuperNode.prototype.visitInputs = function (visitor) {
+        this.control && visitor(this.control);
+        this.store && visitor(this.store);
+        this.loads && visitArrayInputs(this.loads, visitor);
+        visitor(this.object);
+        visitor(this.name);
+        visitor(this.scope);
+      };
+      return asGetSuperNode;
+    }();
   var SetProperty = function () {
       function setPropertyNode(control, store, object, name, value) {
         true;
@@ -19357,6 +18082,37 @@ var Verifier = function () {
         visitor(this.value);
       };
       return asSetSlotNode;
+    }();
+  var ASSetSuper = function () {
+      function asSetSuperNode(control, store, object, name, value, scope) {
+        true;
+        true;
+        true;
+        true;
+        true;
+        true;
+        true;
+        this.control = control;
+        this.store = store;
+        this.loads = undefined;
+        this.object = object;
+        this.name = name;
+        this.value = value;
+        this.scope = scope;
+        this.id = nextID[nextID.length - 1] += 1;
+      }
+      asSetSuperNode.prototype = extend(SetProperty, 'ASSetSuper');
+      asSetSuperNode.prototype.nodeName = 'ASSetSuper';
+      asSetSuperNode.prototype.visitInputs = function (visitor) {
+        this.control && visitor(this.control);
+        this.store && visitor(this.store);
+        this.loads && visitArrayInputs(this.loads, visitor);
+        visitor(this.object);
+        visitor(this.name);
+        visitor(this.value);
+        visitor(this.scope);
+      };
+      return asSetSuperNode;
     }();
   var DeleteProperty = function () {
       function deletePropertyNode(control, store, object, name) {
@@ -21051,11 +19807,14 @@ var Verifier = function () {
   exports.SetProperty = SetProperty;
   exports.CallProperty = CallProperty;
   exports.ASCallProperty = ASCallProperty;
+  exports.ASCallSuper = ASCallSuper;
   exports.ASGetProperty = ASGetProperty;
+  exports.ASGetSuper = ASGetSuper;
   exports.ASHasProperty = ASHasProperty;
   exports.ASDeleteProperty = ASDeleteProperty;
   exports.ASGetDescendants = ASGetDescendants;
   exports.ASSetProperty = ASSetProperty;
+  exports.ASSetSuper = ASSetSuper;
   exports.ASGetSlot = ASGetSlot;
   exports.ASSetSlot = ASSetSlot;
   exports.Call = Call;
@@ -21260,8 +20019,8 @@ var createName = function createName(namespaces, name) {
     node.mustFloat = true;
     return node;
   }
-  function warn(message) {
-    console.warn(message);
+  function info(message) {
+    console.info(message);
   }
   function unary(operator, argument) {
     var node = new Unary(operator, argument);
@@ -21403,7 +20162,7 @@ var createName = function createName(namespaces, name) {
               local = coercer(local);
             } else if (c4CoerceNonPrimitiveParameters) {
               local = new Call(start, state.store, globalProperty('asCoerceByMultiname'), null, [
-                constant(this.abc.domain),
+                constant(this.abc.applicationDomain),
                 constant(parameter.type),
                 local
               ], true);
@@ -21425,7 +20184,7 @@ var createName = function createName(namespaces, name) {
         var methods = this.abc.methods;
         var classes = this.abc.classes;
         var multinames = this.abc.constantPool.multinames;
-        var domain = new Constant(this.abc.domain);
+        var domain = new Constant(this.abc.applicationDomain);
         var traceBuilder = c4TraceLevel.value > 2;
         var stopPoints = [];
         for (var i = 0; i < blocks.length; i++) {
@@ -21566,7 +20325,7 @@ var createName = function createName(namespaces, name) {
             if (ti) {
               if (ti.object) {
                 if (ti.object instanceof Global && !ti.object.isExecuting()) {
-                  warn('Can\'t optimize findProperty ' + multiname + ', global object is not yet executed or executing.');
+                  info('Can\'t optimize findProperty ' + multiname + ', global object is not yet executed or executing.');
                   return slowPath;
                 }
                 return constant(ti.object);
@@ -21574,7 +20333,7 @@ var createName = function createName(namespaces, name) {
                 return getScopeObject(topScope(ti.scopeDepth));
               }
             }
-            warn('Can\'t optimize findProperty ' + multiname);
+            info('Can\'t optimize findProperty ' + multiname);
             return slowPath;
           }
           function getJSProperty(object, path) {
@@ -21630,6 +20389,32 @@ var createName = function createName(namespaces, name) {
             }
             return GlobalMultinameResolver.resolveMultiname(new Multiname(namespaces.value, name.value, multiname.flags));
           }
+          function callSuper(scope, object, multiname, args, ti) {
+            if (ti && ti.trait && ti.trait.isMethod() && ti.baseClass) {
+              var qn = VM_OPEN_METHOD_PREFIX + Multiname.getQualifiedName(ti.trait.name);
+              var callee = getJSProperty(constant(ti.baseClass), 'traitsPrototype.' + qn);
+              return call(callee, object, args);
+            }
+            return store(new IR.ASCallSuper(region, state.store, object, multiname, args, IR.Flags.PRISTINE, scope));
+          }
+          function getSuper(scope, object, multiname, ti) {
+            if (ti && ti.trait && ti.trait.isGetter() && ti.baseClass) {
+              var qn = VM_OPEN_GET_METHOD_PREFIX + Multiname.getQualifiedName(ti.trait.name);
+              var callee = getJSProperty(constant(ti.baseClass), 'traitsPrototype.' + qn);
+              return call(callee, object, []);
+            }
+            return store(new IR.ASGetSuper(region, state.store, object, multiname, scope));
+          }
+          function setSuper(scope, object, multiname, value, ti) {
+            if (ti && ti.trait && ti.trait.isSetter() && ti.baseClass) {
+              var qn = VM_OPEN_SET_METHOD_PREFIX + Multiname.getQualifiedName(ti.trait.name);
+              var callee = getJSProperty(constant(ti.baseClass), 'traitsPrototype.' + qn);
+              return call(callee, object, [
+                value
+              ]);
+            }
+            return store(new IR.ASSetSuper(region, state.store, object, multiname, value, scope));
+          }
           function callProperty(object, multiname, args, isLex, ti) {
             if (ti && ti.trait) {
               if (ti.trait.isMethod()) {
@@ -21677,7 +20462,7 @@ var createName = function createName(namespaces, name) {
                 return store(new IR.ASGetProperty(region, state.store, object, multiname, IR.Flags.INDEXED | (getOpenMethod ? IR.Flagas.IS_METHOD : 0)));
               }
             }
-            warn('Can\'t optimize getProperty ' + multiname);
+            info('Can\'t optimize getProperty ' + multiname);
             var qn = resolveMultinameGlobally(multiname);
             if (qn) {
               return store(new IR.ASGetProperty(region, state.store, object, constant(Multiname.getQualifiedName(qn)), IR.Flags.RESOLVED | (getOpenMethod ? IR.Flagas.IS_METHOD : 0)));
@@ -21689,6 +20474,10 @@ var createName = function createName(namespaces, name) {
             true;
             if (ti) {
               if (ti.trait) {
+                var coercer = ti.trait.typeName ? getCoercerForType(ti.trait.typeName) : null;
+                if (coercer) {
+                  value = coercer(value);
+                }
                 store(new IR.SetProperty(region, state.store, object, qualifiedNameConstant(ti.trait.name), value));
                 return;
               }
@@ -21700,7 +20489,7 @@ var createName = function createName(namespaces, name) {
                 return store(new IR.ASSetProperty(region, state.store, object, multiname, value, IR.Flags.INDEXED));
               }
             }
-            warn('Can\'t optimize setProperty ' + multiname);
+            info('Can\'t optimize setProperty ' + multiname);
             var qn = resolveMultinameGlobally(multiname);
             if (qn) {
             }
@@ -21721,6 +20510,7 @@ var createName = function createName(namespaces, name) {
                 return store(new IR.GetProperty(region, state.store, object, constant(slotQn)));
               }
             }
+            info('Can\'t optimize getSlot ' + index);
             return store(new IR.ASGetSlot(null, state.store, object, index));
           }
           function setSlot(object, index, value, ti) {
@@ -21732,6 +20522,7 @@ var createName = function createName(namespaces, name) {
                 return;
               }
             }
+            info('Can\'t optimize setSlot ' + index);
             store(new IR.ASSetSlot(region, state.store, object, index, value));
           }
           function call(callee, object, args) {
@@ -21895,7 +20686,7 @@ var createName = function createName(namespaces, name) {
               scope.pop();
               break;
             case 100:
-              push(new IR.ASGlobal(null, topScope()));
+              push(new IR.ASGlobal(null, savedScope()));
               break;
             case 101:
               push(getScopeObject(state.scope[bc.index]));
@@ -21944,22 +20735,13 @@ var createName = function createName(namespaces, name) {
             case 4:
               multiname = buildMultiname(bc.index);
               object = pop();
-              push(call(globalProperty('getSuper'), null, [
-                savedScope(),
-                object,
-                multiname
-              ]));
+              push(getSuper(savedScope(), object, multiname, bc.ti));
               break;
             case 5:
               value = pop();
               multiname = buildMultiname(bc.index);
               object = pop();
-              store(call(globalProperty('setSuper'), null, [
-                savedScope(),
-                object,
-                multiname,
-                value
-              ]));
+              push(setSuper(savedScope(), object, multiname, value, bc.ti));
               break;
             case 241:
             case 240:
@@ -21993,12 +20775,7 @@ var createName = function createName(namespaces, name) {
               multiname = buildMultiname(bc.index);
               args = popMany(bc.argCount);
               object = pop();
-              callee = call(globalProperty('getSuper'), null, [
-                savedScope(),
-                object,
-                multiname
-              ]);
-              value = call(callee, object, args);
+              value = callSuper(savedScope(), object, multiname, args, bc.ti);
               if (op !== OP_callsupervoid) {
                 push(value);
               }
@@ -23795,27 +22572,19 @@ var Compiler = new (function () {
   var VariableDeclarator = T.VariableDeclarator;
   var MemberExpression = T.MemberExpression;
   var BinaryExpression = T.BinaryExpression;
-  var SequenceExpression = T.SequenceExpression;
   var CallExpression = T.CallExpression;
   var AssignmentExpression = T.AssignmentExpression;
   var ExpressionStatement = T.ExpressionStatement;
   var ReturnStatement = T.ReturnStatement;
-  var Program = T.Program;
-  var Statement = T.Statement;
   var FunctionDeclaration = T.FunctionDeclaration;
-  var FunctionExpression = T.FunctionExpression;
   var ConditionalExpression = T.ConditionalExpression;
   var ObjectExpression = T.ObjectExpression;
   var ArrayExpression = T.ArrayExpression;
   var UnaryExpression = T.UnaryExpression;
   var NewExpression = T.NewExpression;
   var Property = T.Property;
-  var UpdateExpression = T.UpdateExpression;
-  var ForStatement = T.ForStatement;
   var BlockStatement = T.BlockStatement;
   var ThisExpression = T.ThisExpression;
-  var TypeAliasDirective = T.TypeAliasDirective;
-  var CastExpression = T.CastExpression;
   var ThrowStatement = T.ThrowStatement;
   var IfStatement = T.IfStatement;
   var WhileStatement = T.WhileStatement;
@@ -23823,12 +22592,8 @@ var Compiler = new (function () {
   var ContinueStatement = T.ContinueStatement;
   var SwitchStatement = T.SwitchStatement;
   var SwitchCase = T.SwitchCase;
-  var TryStatement = T.TryStatement;
-  var CatchClause = T.CatchClause;
   var Block = IR.Block;
   var Operator = IR.Operator;
-  var If = IR.If;
-  var Jump = IR.Jump;
   var Projection = IR.Projection;
   var Start = IR.Start;
   var Control = Looper.Control;
@@ -24183,6 +22948,14 @@ var Compiler = new (function () {
     var isMethod = new Literal(this.flags & IR.Flags.IS_METHOD);
     return call(property(object, 'asGetProperty'), name.concat(isMethod));
   };
+  IR.ASGetSuper.prototype.compile = function (cx) {
+    var scope = compileValue(this.scope, cx);
+    var object = compileValue(this.object, cx);
+    var name = compileMultiname(this.name, cx);
+    return call(property(object, 'asGetSuper'), [
+      scope
+    ].concat(name));
+  };
   IR.Latch.prototype.compile = function (cx) {
     return new ConditionalExpression(compileValue(this.condition, cx), compileValue(this.left, cx), compileValue(this.right, cx));
   };
@@ -24234,6 +23007,17 @@ var Compiler = new (function () {
       new ArrayExpression(args)
     ]));
   };
+  IR.ASCallSuper.prototype.compile = function (cx) {
+    var scope = compileValue(this.scope, cx);
+    var object = compileValue(this.object, cx);
+    var args = this.args.map(function (arg) {
+        return compileValue(arg, cx);
+      });
+    var name = compileMultiname(this.name, cx);
+    return call(property(object, 'asCallSuper'), [
+      scope
+    ].concat(name).concat(new ArrayExpression(args)));
+  };
   IR.Call.prototype.compile = function (cx) {
     var args = this.args.map(function (arg) {
         return compileValue(arg, cx);
@@ -24284,6 +23068,17 @@ var Compiler = new (function () {
     }
     var name = compileMultiname(this.name, cx);
     return call(property(object, 'asSetProperty'), name.concat(value));
+  };
+  IR.ASSetSuper.prototype.compile = function (cx) {
+    var scope = compileValue(this.scope, cx);
+    var object = compileValue(this.object, cx);
+    var name = compileMultiname(this.name, cx);
+    var value = compileValue(this.value, cx);
+    return call(property(object, 'asSetSuper'), [
+      scope
+    ].concat(name).concat([
+      value
+    ]));
   };
   IR.ASDeleteProperty.prototype.compile = function (cx) {
     var object = compileValue(this.object, cx);
@@ -24429,7 +23224,7 @@ var Compiler = new (function () {
   }
   Backend.generate = generate;
 }(typeof exports === 'undefined' ? Backend = {} : exports));
-var domainOptions = systemOptions.register(new OptionSet('Domain Options'));
+var domainOptions = systemOptions.register(new OptionSet('ApplicationDomain Options'));
 var traceClasses = domainOptions.register(new Option('tc', 'traceClasses', 'boolean', false, 'trace class creation'));
 var traceDomain = domainOptions.register(new Option('td', 'traceDomain', 'boolean', false, 'trace domain property access'));
 var EXECUTION_MODE = {
@@ -24438,15 +23233,9 @@ var EXECUTION_MODE = {
   };
 function executeScript(script) {
   var abc = script.abc;
-  if (disassemble.value) {
-    abc.trace(new IndentingWriter());
-  }
-  if (traceExecution.value) {
-    print('Executing: ' + abc.name + ' ' + script);
-  }
   true;
   var global = new Global(script);
-  if (abc.domain.allowNatives) {
+  if (abc.applicationDomain.allowNatives) {
     global[Multiname.getPublicQualifiedName('unsafeJSNative')] = getNative;
   }
   script.executing = true;
@@ -24466,8 +23255,10 @@ var Glue = createEmptyObject();
 Glue.PUBLIC_PROPERTIES = 1;
 Glue.PUBLIC_METHODS = 2;
 Glue.ALL = Glue.PUBLIC_PROPERTIES | Glue.PUBLIC_METHODS;
-var Domain = function () {
-    function Domain(vm, base, mode, allowNatives) {
+var ApplicationDomain = function () {
+    function applicationDomain(vm, base, mode, allowNatives) {
+      true;
+      true;
       this.vm = vm;
       this.abcs = [];
       this.loadedAbcs = {};
@@ -24485,7 +23276,7 @@ var Domain = function () {
         this.system = this;
       }
     }
-    Domain.passthroughCallable = function passthroughCallable(f) {
+    applicationDomain.passthroughCallable = function passthroughCallable(f) {
       return {
         call: function ($this) {
           Array.prototype.shift.call(arguments);
@@ -24496,7 +23287,7 @@ var Domain = function () {
         }
       };
     };
-    Domain.coerceCallable = function coerceCallable(type) {
+    applicationDomain.coerceCallable = function coerceCallable(type) {
       return {
         call: function ($this, value) {
           return asCoerce(type, value);
@@ -24506,7 +23297,7 @@ var Domain = function () {
         }
       };
     };
-    Domain.constructingCallable = function constructingCallable(instanceConstructor) {
+    applicationDomain.constructingCallable = function constructingCallable(instanceConstructor) {
       return {
         call: function ($this) {
           return new Function.bind.apply(instanceConstructor, arguments);
@@ -24518,7 +23309,7 @@ var Domain = function () {
         }
       };
     };
-    Domain.prototype = {
+    applicationDomain.prototype = {
       getType: function getType(multiname) {
         return this.getProperty(multiname, true, true);
       },
@@ -24552,7 +23343,7 @@ var Domain = function () {
       },
       findDomainProperty: function findDomainProperty(multiname, strict, execute) {
         if (traceDomain.value) {
-          print('Domain.findDomainProperty: ' + multiname);
+          print('ApplicationDomain.findDomainProperty: ' + multiname);
         }
         var resolved = this.findDefiningScript(multiname, execute);
         if (resolved) {
@@ -24638,7 +23429,7 @@ var Domain = function () {
             return resolved;
           }
         }
-        Counter.count('Domain: findDefiningScript');
+        Counter.count('ApplicationDomain: findDefiningScript');
         var abcs = this.abcs;
         for (var i = 0; i < abcs.length; i++) {
           var abc = abcs[i];
@@ -24675,7 +23466,6 @@ var Domain = function () {
         return undefined;
       },
       compileAbc: function compileAbc(abc) {
-        console.time('Compile ABC: ' + abc.name);
         this.loadAbc(abc);
         var writer = new IndentingWriter();
         writer.enter('var classes = {');
@@ -24683,19 +23473,16 @@ var Domain = function () {
           compileScript(abc.scripts[i], writer);
         }
         writer.leave('}');
-        console.timeEnd('Compile ABC: ' + abc.name);
       },
       executeAbc: function executeAbc(abc) {
-        console.time('Execute ABC: ' + abc.name);
         this.loadAbc(abc);
         executeScript(abc.lastScript);
-        console.timeEnd('Execute ABC: ' + abc.name);
       },
       loadAbc: function loadAbc(abc) {
         if (traceExecution.value) {
           print('Loading: ' + abc.name);
         }
-        abc.domain = this;
+        abc.applicationDomain = this;
         GlobalMultinameResolver.loadAbc(abc);
         this.abcs.push(abc);
         if (!this.base) {
@@ -24729,7 +23516,25 @@ var Domain = function () {
         lastOnly || writer.leave('');
       }
     };
-    return Domain;
+    return applicationDomain;
+  }();
+var SecurityDomain = function () {
+    function securityDomain() {
+      this.compartment = createNewCompartment();
+      this.compartment.environment = environment;
+      this.compartment.homePath = homePath;
+      this.compartment.eval(snarf('compartment.js'));
+      this.compartment.release = true;
+    }
+    securityDomain.prototype.initializeShell = function (sysMode, appMode) {
+      var compartment = this.compartment;
+      compartment.avm2 = new compartment.AVM2(sysMode, appMode);
+      compartment.avm2.systemDomain.executeAbc(compartment.grabAbc(homePath + 'src/avm2/generated/builtin/builtin.abc'));
+      compartment.avm2.systemDomain.executeAbc(compartment.grabAbc(homePath + 'src/avm2/generated/shell/shell.abc'));
+      this.systemDomain = compartment.avm2.systemDomain;
+      this.applicationDomain = compartment.avm2.applicationDomain;
+    };
+    return securityDomain;
   }();
 var traitsWriter = null;
 var Binding = function () {
@@ -24786,6 +23591,10 @@ var Bindings = function () {
       this.isConst = isConst;
       this.type = type;
       this.trait = trait;
+    }
+    function SlotInfoMap() {
+      this.byID = [];
+      this.byQN = createEmptyObject();
     }
     function patch(patchTargets, value) {
       true;
@@ -24897,17 +23706,27 @@ var Bindings = function () {
             return fn;
           }, 0, String(trait.name));
         if (trait.isGetter()) {
+          defineNonEnumerableProperty(object, VM_OPEN_GET_METHOD_PREFIX + qn, trampoline);
           trampoline.patchTargets = [
             {
               object: object,
               get: qn
+            },
+            {
+              object: object,
+              name: VM_OPEN_GET_METHOD_PREFIX + qn
             }
           ];
         } else {
+          defineNonEnumerableProperty(object, VM_OPEN_SET_METHOD_PREFIX + qn, trampoline);
           trampoline.patchTargets = [
             {
               object: object,
               set: qn
+            },
+            {
+              object: object,
+              name: VM_OPEN_SET_METHOD_PREFIX + qn
             }
           ];
         }
@@ -24918,7 +23737,7 @@ var Bindings = function () {
       true;
       true;
       true;
-      defineNonEnumerableProperty(object, VM_SLOTS, []);
+      defineNonEnumerableProperty(object, VM_SLOTS, new SlotInfoMap());
       defineNonEnumerableProperty(object, VM_BINDINGS, []);
       defineNonEnumerableProperty(object, VM_OPEN_METHODS, createEmptyObject());
       defineNonEnumerableProperty(object, 'bindings', this);
@@ -24945,7 +23764,9 @@ var Bindings = function () {
             traitsWriter && traitsWriter.greenLn('Applying Trait ' + trait.kindName() + ': ' + trait);
             defineNonEnumerableProperty(object, qn, defaultValue);
             object[VM_BINDINGS].pushUnique(qn);
-            object[VM_SLOTS][trait.slotId] = new SlotInfo(qn, trait.isConst(), trait.typeName ? domain.getProperty(trait.typeName, false, false) : null, trait);
+            var slotInfo = new SlotInfo(qn, trait.isConst(), trait.typeName ? domain.getProperty(trait.typeName, false, false) : null, trait);
+            object[VM_SLOTS].byID[trait.slotId] = slotInfo;
+            object[VM_SLOTS].byQN[qn] = slotInfo;
           }
         } else if (trait.isMethod() || trait.isGetter() || trait.isSetter()) {
           if (trait.isGetter() || trait.isSetter()) {
@@ -25121,10 +23942,11 @@ var InstanceBindings = function () {
           binding.natives = this.natives;
         }
       }
-      var domain = ii.abc.domain;
+      var domain = ii.abc.applicationDomain;
       var interfaces = ii.interfaces;
       for (var i = 0; i < interfaces.length; i++) {
         var interface = domain.getProperty(interfaces[i], true, true);
+        true;
         copyProperties(this.implementedInterfaces, interface.interfaceBindings.implementedInterfaces);
         this.implementedInterfaces[Multiname.getQualifiedName(interface.name)] = interface;
       }
@@ -25214,9 +24036,9 @@ var Class = function () {
         this.instanceConstructor.class = this;
       }
       if (!callable) {
-        callable = Domain.coerceCallable(this);
-      } else if (callable === Domain.coerceCallable) {
-        callable = Domain.coerceCallable(this);
+        callable = ApplicationDomain.coerceCallable(this);
+      } else if (callable === ApplicationDomain.coerceCallable) {
+        callable = ApplicationDomain.coerceCallable(this);
       }
       defineNonEnumerableProperty(this, 'call', callable.call);
       defineNonEnumerableProperty(this, 'apply', callable.apply);
@@ -25224,12 +24046,12 @@ var Class = function () {
     Class.createClass = function createClass(classInfo, baseClass, scope) {
       var ci = classInfo;
       var ii = ci.instanceInfo;
-      var domain = ci.abc.domain;
+      var domain = ci.abc.applicationDomain;
       var className = Multiname.getName(ii.name);
       var isNativeClass = ci.native;
       if (isNativeClass) {
-        var classBuilder = getNative(ci.native.cls);
-        if (!classBuilder) {
+        var buildClass = getNative(ci.native.cls);
+        if (!buildClass) {
           unexpected('No native for ' + ci.native.cls);
         }
         if (!baseClass) {
@@ -25240,7 +24062,7 @@ var Class = function () {
       var instanceConstructor = createFunction(ii.init, classScope);
       var cls;
       if (isNativeClass) {
-        cls = classBuilder(domain, classScope, instanceConstructor, baseClass);
+        cls = buildClass(domain, classScope, instanceConstructor, baseClass);
       } else {
         cls = new Class(className, instanceConstructor);
       }
@@ -25293,7 +24115,7 @@ var Class = function () {
         while (s = initializes.pop()) {
           s.call(obj);
         }
-        Counter.count('Initialize Instance');
+        Counter.count('Initialize Instance ' + obj.class);
       },
       createInstance: function createInstance(args) {
         var o = Object.create(this.instanceConstructor.prototype);
@@ -25483,7 +24305,7 @@ var Class = function () {
         writer.enter('traitsPrototype: ');
         if (traitsPrototype) {
           writer.enter('VM_SLOTS: ');
-          writer.writeArray(traitsPrototype[VM_SLOTS].map(function (slot) {
+          writer.writeArray(traitsPrototype[VM_SLOTS].byID.map(function (slot) {
             return slot.trait;
           }));
           writer.outdent();
@@ -25525,7 +24347,7 @@ var Class = function () {
         return '[class ' + this.classInfo.instanceInfo.name.name + ']';
       }
     };
-    var callable = Domain.coerceCallable(Class);
+    var callable = ApplicationDomain.coerceCallable(Class);
     defineNonEnumerableProperty(Class, 'call', callable.call);
     defineNonEnumerableProperty(Class, 'apply', callable.apply);
     Class.instanceConstructor = Class;
@@ -26178,16 +25000,9 @@ var VM_BINDINGS = 'vm bindings';
 var VM_NATIVE_PROTOTYPE_FLAG = 'vm native prototype';
 var VM_OPEN_METHODS = 'vm open methods';
 var VM_IS_CLASS = 'vm is class';
-var VM_OPEN_METHOD_PREFIX = 'open_';
-var VM_NATIVE_BUILTINS = [
-    Object,
-    Number,
-    Boolean,
-    String,
-    Array,
-    Date,
-    RegExp
-  ];
+var VM_OPEN_METHOD_PREFIX = 'method_';
+var VM_OPEN_SET_METHOD_PREFIX = 'set_';
+var VM_OPEN_GET_METHOD_PREFIX = 'get_';
 var VM_NATIVE_BUILTIN_SURROGATES = [
     {
       object: Object,
@@ -26308,7 +25123,7 @@ var LazyInitializer = function () {
       } else if (this.target instanceof ClassInfo) {
         this.name = Multiname.getQualifiedName(target.instanceInfo.name);
         initialize = function () {
-          return target.abc.domain.getProperty(target.instanceInfo.name);
+          return target.abc.applicationDomain.getProperty(target.instanceInfo.name);
         };
       } else {
         notImplemented(target);
@@ -26420,6 +25235,16 @@ function asSetProperty(namespaces, name, flags, value) {
   if (this.asSetNumericProperty && Multiname.isNumeric(resolved)) {
     return this.asSetNumericProperty(resolved, value);
   }
+  var slotInfo = this[VM_SLOTS].byQN[resolved];
+  if (slotInfo) {
+    if (slotInfo.const) {
+      return;
+    }
+    var type = slotInfo.type;
+    if (type && type.coerce) {
+      value = type.coerce(value);
+    }
+  }
   this[resolved] = value;
 }
 function asSetPropertyLikelyNumeric(namespaces, name, flags, value) {
@@ -26467,6 +25292,40 @@ function asCallProperty(namespaces, name, flags, isLex, args) {
     }
     result = method.apply(receiver, args);
   }
+  traceCallExecution.value > 0 && callWriter.leave('return ' + toSafeString(result));
+  return result;
+}
+function asCallSuper(scope, namespaces, name, flags, args) {
+  if (traceCallExecution.value) {
+    var receiver = this.class ? this.class.className + ' ' : '';
+    callWriter.enter('call super ' + receiver + name + '(' + toSafeArrayString(args) + ') #' + callCounter.count(name));
+  }
+  var baseClass = scope.object.baseClass;
+  var resolved = baseClass.traitsPrototype.resolveMultinameProperty(namespaces, name, flags);
+  var openMethods = baseClass.traitsPrototype[VM_OPEN_METHODS];
+  var method = openMethods[resolved];
+  var result = method.apply(this, args);
+  traceCallExecution.value > 0 && callWriter.leave('return ' + toSafeString(result));
+  return result;
+}
+function asSetSuper(scope, namespaces, name, flags, value) {
+  if (traceCallExecution.value) {
+    var receiver = this.class ? this.class.className + ' ' : '';
+    callWriter.enter('set super ' + receiver + name + '(' + toSafeArrayString(args) + ') #' + callCounter.count(name));
+  }
+  var baseClass = scope.object.baseClass;
+  var resolved = baseClass.traitsPrototype.resolveMultinameProperty(namespaces, name, flags);
+  baseClass.traitsPrototype[VM_OPEN_SET_METHOD_PREFIX + resolved].call(this, value);
+  traceCallExecution.value > 0 && callWriter.leave('');
+}
+function asGetSuper(scope, namespaces, name, flags) {
+  if (traceCallExecution.value) {
+    var receiver = this.class ? this.class.className + ' ' : '';
+    callWriter.enter('get super ' + receiver + name + ' #' + callCounter.count(name));
+  }
+  var baseClass = scope.object.baseClass;
+  var resolved = baseClass.traitsPrototype.resolveMultinameProperty(namespaces, name, flags);
+  var result = baseClass.traitsPrototype[VM_OPEN_GET_METHOD_PREFIX + resolved].call(this);
   traceCallExecution.value > 0 && callWriter.leave('return ' + toSafeString(result));
   return result;
 }
@@ -26579,8 +25438,16 @@ function initializeGlobalObject(global) {
       }
     });
   });
-  VM_NATIVE_BUILTINS.forEach(function (o) {
-    defineReadOnlyProperty(o.prototype, VM_NATIVE_PROTOTYPE_FLAG, true);
+  [
+    'Object',
+    'Number',
+    'Boolean',
+    'String',
+    'Array',
+    'Date',
+    'RegExp'
+  ].forEach(function (name) {
+    defineReadOnlyProperty(global[name].prototype, VM_NATIVE_PROTOTYPE_FLAG, true);
   });
   defineNonEnumerableProperty(global.Object.prototype, 'getNamespaceResolutionMap', getNamespaceResolutionMap);
   defineNonEnumerableProperty(global.Object.prototype, 'resolveMultinameProperty', resolveMultinameProperty);
@@ -26592,6 +25459,9 @@ function initializeGlobalObject(global) {
   defineNonEnumerableProperty(global.Object.prototype, 'asDefineProperty', asDefineProperty);
   defineNonEnumerableProperty(global.Object.prototype, 'asDefinePublicProperty', asDefinePublicProperty);
   defineNonEnumerableProperty(global.Object.prototype, 'asCallProperty', asCallProperty);
+  defineNonEnumerableProperty(global.Object.prototype, 'asCallSuper', asCallSuper);
+  defineNonEnumerableProperty(global.Object.prototype, 'asGetSuper', asGetSuper);
+  defineNonEnumerableProperty(global.Object.prototype, 'asSetSuper', asSetSuper);
   defineNonEnumerableProperty(global.Object.prototype, 'asCallPublicProperty', asCallPublicProperty);
   defineNonEnumerableProperty(global.Object.prototype, 'asCallResolvedStringProperty', asCallResolvedStringProperty);
   defineNonEnumerableProperty(global.Object.prototype, 'asConstructProperty', asConstructProperty);
@@ -26622,13 +25492,13 @@ function initializeGlobalObject(global) {
     defineNonEnumerableProperty(global[name].prototype, 'asGetProperty', asGetPropertyLikelyNumeric);
     defineNonEnumerableProperty(global[name].prototype, 'asSetProperty', asSetPropertyLikelyNumeric);
   });
-  Array.prototype.asGetProperty = function (namespaces, name, flags) {
+  global.Array.prototype.asGetProperty = function (namespaces, name, flags) {
     if (typeof name === 'number') {
       return this[name];
     }
     return asGetProperty.call(this, namespaces, name, flags);
   };
-  Array.prototype.asSetProperty = function (namespaces, name, flags, value) {
+  global.Array.prototype.asSetProperty = function (namespaces, name, flags, value) {
     if (typeof name === 'number') {
       this[name] = value;
       return;
@@ -26666,15 +25536,15 @@ function publicizeProperties(object) {
   }
 }
 function asGetSlot(object, index) {
-  return object[object[VM_SLOTS][index].name];
+  return object[object[VM_SLOTS].byID[index].name];
 }
 function asSetSlot(object, index, value) {
-  var binding = object[VM_SLOTS][index];
-  if (binding.const) {
+  var slotInfo = object[VM_SLOTS].byID[index];
+  if (slotInfo.const) {
     return;
   }
-  var name = binding.name;
-  var type = binding.type;
+  var name = slotInfo.name;
+  var type = slotInfo.type;
   if (type && type.coerce) {
     object[name] = type.coerce(value);
   } else {
@@ -26771,9 +25641,9 @@ var ScopeStack = function () {
   }();
 var Scope = function () {
     function scope(parent, object, isWith) {
-      true;
       this.parent = parent;
-      this.object = object;
+      this.object = boxValue(object);
+      true;
       this.global = parent ? parent.global : this;
       this.isWith = isWith;
       this.cache = createEmptyObject();
@@ -26926,87 +25796,8 @@ function resolveMultiname(object, mn, traitsOnly) {
 function sliceArguments(args, offset) {
   return Array.prototype.slice.call(args, offset);
 }
-function hasProperty(object, name) {
-  object = boxValue(object);
-  if (object.hasProperty) {
-    return object.hasProperty(name);
-  }
-  return resolveName(object, name) in object;
-}
 function nonProxyingHasProperty(object, name) {
   return name in object;
-}
-function getSuper(scope, object, mn) {
-  true;
-  true;
-  true;
-  var superClass = scope.object.baseClass;
-  true;
-  var superTraitsPrototype = superClass.instanceConstructor.prototype;
-  var resolved = mn.isQName() ? mn : resolveMultiname(superTraitsPrototype, mn);
-  var value = undefined;
-  if (resolved) {
-    if (Multiname.isNumeric(resolved) && superTraitsPrototype.asGetNumericProperty) {
-      value = superTraitsPrototype.asGetNumericProperty(Multiname.getQualifiedName(resolved), value);
-    } else {
-      var qn = Multiname.getQualifiedName(resolved);
-      var openMethod = superTraitsPrototype[VM_OPEN_METHODS][qn];
-      var superName = superClass.classInfo.instanceInfo.name;
-      if (openMethod) {
-        value = object[superName + ' ' + qn];
-        if (!value) {
-          value = object[superName + ' ' + qn] = bindSafely(openMethod, object);
-        }
-      } else {
-        var descriptor = Object.getOwnPropertyDescriptor(superTraitsPrototype, qn);
-        true;
-        value = descriptor.get ? descriptor.get.call(object) : object[qn];
-      }
-    }
-  }
-  return value;
-}
-function resolveName(object, name) {
-  if (name instanceof Multiname) {
-    if (name.namespaces.length > 1) {
-      var resolved = resolveMultiname(object, name);
-      if (resolved !== undefined) {
-        return Multiname.getQualifiedName(resolved);
-      } else {
-        return Multiname.getPublicQualifiedName(name.name);
-      }
-    } else {
-      return Multiname.getQualifiedName(name);
-    }
-  } else if (typeof name === 'object') {
-    return Multiname.getPublicQualifiedName(String(name));
-  } else {
-    return name;
-  }
-}
-function setSuper(scope, object, mn, value) {
-  true;
-  true;
-  var superClass = scope.object.baseClass;
-  true;
-  var superTraitsPrototype = superClass.instanceConstructor.prototype;
-  var resolved = Multiname.isQName(mn) ? mn : resolveMultiname(superTraitsPrototype, mn);
-  if (resolved !== undefined) {
-    if (Multiname.isNumeric(resolved) && superTraitsPrototype.asSetNumericProperty) {
-      superTraitsPrototype.asSetNumericProperty(Multiname.getQualifiedName(resolved), value);
-    } else {
-      var qn = Multiname.getQualifiedName(resolved);
-      var descriptor = Object.getOwnPropertyDescriptor(superTraitsPrototype, qn);
-      true;
-      if (descriptor.set) {
-        descriptor.set.call(object, value);
-      } else {
-        object[qn] = value;
-      }
-    }
-  } else {
-    throw new ReferenceError('Cannot create property ' + mn.name + ' on ' + superClass.debugName);
-  }
 }
 function forEachPublicProperty(object, fn, self) {
   if (!object[VM_BINDINGS]) {
@@ -27062,29 +25853,29 @@ function CatchScopeObject(domain, trait) {
   }
 }
 var Global = function () {
-    function Global(script) {
+    function global(script) {
       this.scriptInfo = script;
       script.global = this;
       script.scriptBindings = new ScriptBindings(script, new Scope(null, this));
-      script.scriptBindings.applyTo(script.abc.domain, this);
+      script.scriptBindings.applyTo(script.abc.applicationDomain, this);
       script.loaded = true;
     }
-    Global.prototype.toString = function () {
+    global.prototype.toString = function () {
       return '[object global]';
     };
-    Global.prototype.isExecuted = function () {
+    global.prototype.isExecuted = function () {
       return this.scriptInfo.executed;
     };
-    Global.prototype.isExecuting = function () {
+    global.prototype.isExecuting = function () {
       return this.scriptInfo.executing;
     };
-    Global.prototype.ensureExecuted = function () {
+    global.prototype.ensureExecuted = function () {
       ensureScriptIsExecuted(this.scriptInfo);
     };
-    defineNonEnumerableProperty(Global.prototype, Multiname.getPublicQualifiedName('toString'), function () {
+    defineNonEnumerableProperty(global.prototype, Multiname.getPublicQualifiedName('toString'), function () {
       return this.toString();
     });
-    return Global;
+    return global;
   }();
 function canCompile(mi) {
   if (!mi.hasBody) {
@@ -27172,24 +25963,8 @@ function debugName(value) {
   }
   return value;
 }
-function createCompiledFunctionTrampoline(methodInfo, scope, hasDynamicScope, breakpoint) {
-  var mi = methodInfo;
-  return function trampolineContext() {
-    var fn;
-    return function () {
-      if (!fn) {
-        fn = mi.freeMethod = createCompiledFunction(mi, scope, hasDynamicScope, breakpoint);
-        mi.freeMethod.methodInfo = mi;
-      }
-      return fn.apply(this, arguments);
-    };
-  }();
-}
 function createCompiledFunction(methodInfo, scope, hasDynamicScope, breakpoint, deferCompilation) {
   var mi = methodInfo;
-  if (false && deferCompilation) {
-    return createCompiledFunctionTrampoline(methodInfo, scope, hasDynamicScope, breakpoint);
-  }
   $M.push(mi);
   var result = Compiler.compileMethod(mi, scope, hasDynamicScope);
   var parameters = result.parameters;
@@ -27217,11 +25992,9 @@ function createCompiledFunction(methodInfo, scope, hasDynamicScope, breakpoint, 
   if (traceLevel.value > 1) {
     mi.trace(new IndentingWriter(), mi.abc);
   }
-  mi.debugTrace = function (abc) {
-    return function () {
-      mi.trace(new IndentingWriter(), abc);
-    };
-  }(this.abc);
+  mi.debugTrace = function () {
+    mi.trace(new IndentingWriter(), mi.abc);
+  };
   if (traceLevel.value > 0) {
     print(fnSource);
   }
@@ -27229,16 +26002,20 @@ function createCompiledFunction(methodInfo, scope, hasDynamicScope, breakpoint, 
   fn.debugName = 'Compiled Function #' + vmNextCompiledFunctionId++;
   return fn;
 }
+function getMethodOverrideKey(methodInfo) {
+  var key;
+  if (methodInfo.holder instanceof ClassInfo) {
+    key = 'static ' + methodInfo.holder.instanceInfo.name.getOriginalName() + '::' + methodInfo.name.getOriginalName();
+  } else if (methodInfo.holder instanceof InstanceInfo) {
+    key = methodInfo.holder.name.getOriginalName() + '::' + methodInfo.name.getOriginalName();
+  } else {
+    key = methodInfo.name.getOriginalName();
+  }
+  return key;
+}
 function checkMethodOverrides(methodInfo) {
   if (methodInfo.name) {
-    var key;
-    if (methodInfo.holder instanceof ClassInfo) {
-      key = 'static ' + methodInfo.holder.instanceInfo.name.getOriginalName() + '::' + methodInfo.name.getOriginalName();
-    } else if (methodInfo.holder instanceof InstanceInfo) {
-      key = methodInfo.holder.name.getOriginalName() + '::' + methodInfo.name.getOriginalName();
-    } else {
-      key = methodInfo.name.getOriginalName();
-    }
+    var key = getMethodOverrideKey(methodInfo);
     if (key in VM_METHOD_OVERRIDES) {
       warning('Overriding Method: ' + key);
       return VM_METHOD_OVERRIDES[key];
@@ -27332,7 +26109,7 @@ function createFunction(mi, scope, hasDynamicScope, breakpoint) {
   ensureFunctionIsInitialized(mi);
   totalFunctionCount++;
   var useInterpreter = false;
-  if ((mi.abc.domain.mode === EXECUTION_MODE.INTERPRET || !shouldCompile(mi)) && !forceCompile(mi)) {
+  if ((mi.abc.applicationDomain.mode === EXECUTION_MODE.INTERPRET || !shouldCompile(mi)) && !forceCompile(mi)) {
     useInterpreter = true;
   }
   if (compileOnly.value >= 0) {
@@ -27373,7 +26150,7 @@ function ensureFunctionIsInitialized(methodInfo) {
     mi.analysis = new Analysis(mi);
     if (mi.needsActivation()) {
       mi.activationPrototype = new Activation(mi);
-      new ActivationBindings(mi).applyTo(mi.abc.domain, mi.activationPrototype);
+      new ActivationBindings(mi).applyTo(mi.abc.applicationDomain, mi.activationPrototype);
     }
     var exceptions = mi.exceptions;
     for (var i = 0, j = exceptions.length; i < j; i++) {
@@ -27384,7 +26161,7 @@ function ensureFunctionIsInitialized(methodInfo) {
         varTrait.name = handler.varName;
         varTrait.typeName = handler.typeName;
         varTrait.holder = mi;
-        handler.scopeObject = new CatchScopeObject(mi.abc.domain, varTrait);
+        handler.scopeObject = new CatchScopeObject(mi.abc.applicationDomain, varTrait);
       } else {
         handler.scopeObject = new CatchScopeObject();
       }
@@ -27445,7 +26222,7 @@ function createClass(classInfo, baseClass, scope) {
   true;
   var ci = classInfo;
   var ii = ci.instanceInfo;
-  var domain = ci.abc.domain;
+  var domain = ci.abc.applicationDomain;
   var className = Multiname.getName(ii.name);
   if (traceExecution.value) {
     print('Creating ' + (ii.isInterface() ? 'Interface' : 'Class') + ': ' + className + (ci.native ? ' replaced with native ' + ci.native.cls : ''));
@@ -27519,8 +26296,22 @@ function applyType(domain, factory, types) {
     return notImplemented(factoryClassName);
   }
 }
+function checkArgumentCount(name, expected, got) {
+  if (got !== expected) {
+    throwError('ArgumentError', Errors.WrongArgumentCountError, name, expected, got);
+  }
+}
+function throwError(name, error) {
+  if (true) {
+    var message = formatErrorMessage.apply(null, Array.prototype.slice.call(arguments, 1));
+    throwErrorFromVM(AVM2.currentDomain(), name, message, error.code);
+  } else {
+    throwErrorFromVM(AVM2.currentDomain(), name, getErrorMessage(error.code), error.code);
+  }
+}
 function throwErrorFromVM(domain, errorClass, message, id) {
-  throw new (domain.getClass(errorClass)).instanceConstructor(message, id);
+  var error = new (domain.getClass(errorClass)).instanceConstructor(message, id);
+  throw error;
 }
 function translateError(domain, error) {
   if (error instanceof Error) {
@@ -27607,10 +26398,13 @@ function asDefaultCompareFunction(a, b) {
 function asCompare(a, b, options, compareFunction) {
   true;
   true;
-  true;
   var result = 0;
   if (!compareFunction) {
     compareFunction = asDefaultCompareFunction;
+  }
+  if (options & SORT_CASEINSENSITIVE) {
+    a = String(a).toLowerCase();
+    b = String(b).toLowerCase();
   }
   if (options & SORT_NUMERIC) {
     a = toNumber(a);
@@ -27691,16 +26485,29 @@ VM_METHOD_OVERRIDES['com.midasplayer.debug.DebugLog::trace'] = function (msg) {
 VM_METHOD_OVERRIDES['com.midasplayer.engine.comm.DebugGameComm::getGameData'] = function () {
   return '<gamedata randomseed="554884453" version="1">\n<musicOn>true</musicOn>\n<soundOn>true</soundOn>\n<isShortGame>false</isShortGame>\n<booster_1>0</booster_1>\n<booster_2>0</booster_2>\n<booster_3>0</booster_3>\n<booster_4>0</booster_4>\n<booster_5>0</booster_5>\n<bestScore>0</bestScore>\n<bestChain>0</bestChain>\n<bestLevel>0</bestLevel>\n<bestCrushed>0</bestCrushed>\n<bestMixed>0</bestMixed>\n<text id="outro.crushed">Candy crushed</text>\n<text id="outro.bestever">best ever</text>\n<text id="outro.trophy.two">scored {0} in one game</text>\n<text id="outro.combo_color_color">All Clear Created</text>\n<text id="outro.trophy.one">crushed {0} candy in one game</text>\n<text id="outro.score">Score</text>\n<text id="outro.opengame">Please register to play the full game</text>\n<text id="outro.chain">Longest chain</text>\n<text id="outro.time">Game ends in {0} seconds</text>\n<text id="outro.combo_color_line">Super Stripes Created</text>\n<text id="game.nomoves">No more moves!</text>\n<text id="outro.combo_wrapper_line">Mega-Candy Created</text>\n<text id="intro.time">Game starts in {0} seconds</text>\n<text id="outro.now">now</text>\n<text id="outro.level">Level reached</text>\n<text id="outro.title">Game Over</text>\n<text id="intro.info1">Match 3 Candy of the same colour to crush them. Matching 4 or 5 in different formations generates special sweets that are extra tasty.</text>\n<text id="intro.info2">You can also combine the special sweets for additional effects by switching them with each other. Try these combinations for a taste you will not forget: </text>\n<text id="outro.combo_color_wrapper">Double Colour Bombs Created</text>\n<text id="outro.trophy.three">made {0} combined candy in one game</text>\n<text id="intro.title">Play like this:</text>\n</gamedata>';
 };
+VM_METHOD_OVERRIDES['com.antkarlov.Preloader::com.antkarlov:Preloader.isUrl'] = function () {
+  return true;
+};
+function asCheckVectorSetNumericProperty(i, length, fixed) {
+  if (i < 0 || i > length || i === length && fixed || !isNumeric(i)) {
+    throwError('RangeError', Errors.OutOfRangeError, i, length);
+  }
+}
+function asCheckVectorGetNumericProperty(i, length) {
+  if (i < 0 || i >= length || !isNumeric(i)) {
+    throwError('RangeError', Errors.OutOfRangeError, i, length);
+  }
+}
 var TypedArrayVector = function () {
     var EXTRA_CAPACITY = 4;
     var INITIAL_CAPACITY = 10;
+    var DEFAULT_VALUE = 0;
     function vector(length, fixed) {
       length = length | 0;
-      this.fixed = !(!fixed);
-      this.buffer = new Int32Array(Math.max(INITIAL_CAPACITY, length + EXTRA_CAPACITY));
-      this.offset = 0;
+      this._fixed = !(!fixed);
+      this._buffer = new Int32Array(Math.max(INITIAL_CAPACITY, length + EXTRA_CAPACITY));
+      this._offset = 0;
       this._length = length;
-      this.defaultValue = 0;
     }
     vector.callable = function (object) {
       if (object instanceof vector) {
@@ -27718,29 +26525,29 @@ var TypedArrayVector = function () {
     };
     vector.prototype.internalToString = function () {
       var str = '';
-      var start = this.offset;
+      var start = this._offset;
       var end = start + this._length;
-      for (var i = 0; i < this.buffer.length; i++) {
+      for (var i = 0; i < this._buffer.length; i++) {
         if (i === start) {
           str += '[';
         }
         if (i === end) {
           str += ']';
         }
-        str += this.buffer[i];
-        if (i < this.buffer.length - 1) {
+        str += this._buffer[i];
+        if (i < this._buffer.length - 1) {
           str += ',';
         }
       }
-      if (this.offset + this._length === this.buffer.length) {
+      if (this._offset + this._length === this._buffer.length) {
         str += ']';
       }
-      return str + ': offset: ' + this.offset + ', length: ' + this._length + ', capacity: ' + this.buffer.length;
+      return str + ': offset: ' + this._offset + ', length: ' + this._length + ', capacity: ' + this._buffer.length;
     };
     vector.prototype.toString = function () {
       var str = '';
       for (var i = 0; i < this._length; i++) {
-        str += this.buffer[this.offset + i];
+        str += this._buffer[this._offset + i];
         if (i < this._length - 1) {
           str += ',';
         }
@@ -27748,27 +26555,27 @@ var TypedArrayVector = function () {
       return str;
     };
     vector.prototype._view = function () {
-      return this.buffer.subarray(this.offset, this.offset + this._length);
+      return this._buffer.subarray(this._offset, this._offset + this._length);
     };
     vector.prototype._ensureCapacity = function (length) {
-      var minCapacity = this.offset + length;
-      if (minCapacity < this.buffer.length) {
+      var minCapacity = this._offset + length;
+      if (minCapacity < this._buffer.length) {
         return;
       }
-      if (length <= this.buffer.length) {
-        var offset = this.buffer.length - length >> 2;
-        this.buffer.set(this._view(), offset);
-        this.offset = offset;
+      if (length <= this._buffer.length) {
+        var offset = this._buffer.length - length >> 2;
+        this._buffer.set(this._view(), offset);
+        this._offset = offset;
         return;
       }
-      var oldCapacity = this.buffer.length;
+      var oldCapacity = this._buffer.length;
       var newCapacity = oldCapacity * 3 >> 2;
       if (newCapacity < minCapacity) {
         newCapacity = minCapacity;
       }
       var buffer = new Int32Array(newCapacity);
-      buffer.set(this.buffer, 0);
-      this.buffer = buffer;
+      buffer.set(this._buffer, 0);
+      this._buffer = buffer;
     };
     vector.prototype.concat = function () {
       notImplemented('TypedArrayVector.concat');
@@ -27790,6 +26597,19 @@ var TypedArrayVector = function () {
       }
       return v;
     };
+    vector.prototype.some = function (callback, thisObject) {
+      if (arguments.length !== 2) {
+        throwError('ArgumentError', Errors.WrongArgumentCountError);
+      } else if (!isFunction(callback)) {
+        throwError('ArgumentError', Errors.CheckTypeFailedError);
+      }
+      for (var i = 0; i < this._length; i++) {
+        if (callback.call(thisObject, this.asGetNumericProperty(i), i, this)) {
+          return true;
+        }
+      }
+      return false;
+    };
     vector.prototype.forEach = function (callback, thisObject) {
       for (var i = 0; i < this._length; i++) {
         callback.call(thisObject, this.asGetNumericProperty(i), i, this);
@@ -27805,26 +26625,34 @@ var TypedArrayVector = function () {
       notImplemented('TypedArrayVector.lastIndexOf');
     };
     vector.prototype.map = function (callback, thisObject) {
-      notImplemented('TypedArrayVector.map');
+      if (!isFunction(callback)) {
+        throwError('ArgumentError', Errors.CheckTypeFailedError);
+      }
+      var v = new vector();
+      for (var i = 0; i < this._length; i++) {
+        v.push(callback.call(thisObject, this.asGetNumericProperty(i), i, this));
+      }
+      return v;
     };
     vector.prototype.push = function () {
+      this._checkFixed();
       this._ensureCapacity(this._length + arguments.length);
       for (var i = 0; i < arguments.length; i++) {
-        this.buffer[this.offset + this._length++] = arguments[i];
+        this._buffer[this._offset + this._length++] = arguments[i];
       }
     };
     vector.prototype.pop = function () {
       this._checkFixed();
       if (this._length === 0) {
-        return this.defaultValue;
+        return DEFAULT_VALUE;
       }
       this._length--;
-      return this.buffer[this.offset + this._length];
+      return this._buffer[this._offset + this._length];
     };
     vector.prototype.reverse = function () {
-      var l = this.offset;
-      var r = this.offset + this._length - 1;
-      var b = this.buffer;
+      var l = this._offset;
+      var r = this._offset + this._length - 1;
+      var b = this._buffer;
       while (l < r) {
         var t = b[l];
         b[l] = b[r];
@@ -27961,40 +26789,45 @@ var TypedArrayVector = function () {
       });
     };
     vector.prototype.asGetNumericProperty = function (i) {
-      return this.buffer[this.offset + i];
+      checkArguments && asCheckVectorGetNumericProperty(i, this._length);
+      return this._buffer[this._offset + i];
     };
     vector.prototype.asSetNumericProperty = function (i, v) {
+      checkArguments && asCheckVectorSetNumericProperty(i, this._length, this._fixed);
       if (i === this._length) {
         this._ensureCapacity(this._length + 1);
         this._length++;
       }
-      this.buffer[this.offset + i] = v;
+      this._buffer[this._offset + i] = v;
     };
     vector.prototype.shift = function () {
       this._checkFixed();
       if (this._length === 0) {
-        return undefined;
+        return 0;
       }
       this._length--;
-      return this.buffer[this.offset++];
+      return this._buffer[this._offset++];
     };
     vector.prototype._checkFixed = function () {
-      if (this.fixed) {
-        var error = Errors.VectorFixedError;
-        throwErrorFromVM(AVM2.currentDomain(), 'RangeError', getErrorMessage(error.code), error.code);
+      if (this._fixed) {
+        throwError('RangeError', Errors.VectorFixedError);
       }
     };
     vector.prototype._slide = function (distance) {
-      this.buffer.set(this._view(), this.offset + distance);
-      this.offset += distance;
+      this._buffer.set(this._view(), this._offset + distance);
+      this._offset += distance;
     };
     vector.prototype.unshift = function () {
       this._checkFixed();
+      if (!arguments.length) {
+        return;
+      }
+      this._ensureCapacity(this._length + arguments.length);
       this._slide(arguments.length);
-      this.offset -= arguments.length;
-      this.length += arguments.length;
+      this._offset -= arguments.length;
+      this._length += arguments.length;
       for (var i = 0; i < arguments.length; i++) {
-        this.buffer[this.offset + i] = arguments[i];
+        this._buffer[this._offset + i] = arguments[i];
       }
     };
     vector.prototype.asGetEnumerableKeys = function () {
@@ -28002,7 +26835,7 @@ var TypedArrayVector = function () {
         return Object.prototype.asGetEnumerableKeys.call(this);
       }
       var keys = [];
-      for (var i = 0; i < this.length; i++) {
+      for (var i = 0; i < this._length; i++) {
         keys.push(i);
       }
       return keys;
@@ -28022,8 +26855,8 @@ var TypedArrayVector = function () {
         length = length >>> 0;
         if (length > this._length) {
           this._ensureCapacity(length);
-          for (var i = this.offset + this._length, j = this.offset + length; i < j; i++) {
-            this.buffer[i] = this.defaultValue;
+          for (var i = this._offset + this._length, j = this._offset + length; i < j; i++) {
+            this._buffer[i] = DEFAULT_VALUE;
           }
         }
         this._length = length;
@@ -28033,12 +26866,12 @@ var TypedArrayVector = function () {
       insertCount = clamp(insertCount, 0, args.length - offset);
       deleteCount = clamp(deleteCount, 0, this._length - index);
       this._ensureCapacity(this._length - deleteCount + insertCount);
-      var right = this.offset + index + deleteCount;
-      var slice = this.buffer.subarray(right, right + this._length - index - deleteCount);
-      this.buffer.set(slice, this.offset + index + insertCount);
+      var right = this._offset + index + deleteCount;
+      var slice = this._buffer.subarray(right, right + this._length - index - deleteCount);
+      this._buffer.set(slice, this._offset + index + insertCount);
       this._length += insertCount - deleteCount;
       for (var i = 0; i < insertCount; i++) {
-        this.buffer[this.offset + index + i] = args.asGetNumericProperty(offset + i);
+        this._buffer[this._offset + index + i] = args.asGetNumericProperty(offset + i);
       }
     };
     vector.prototype.asGetEnumerableKeys = function () {
@@ -28053,224 +26886,11 @@ var TypedArrayVector = function () {
     };
     return vector;
   }();
-var typedArrayVectorTemplate = 'var EXTRA_CAPACITY=4,INITIAL_CAPACITY=10;function vector(a,b){a|=0;this.fixed=!!b;this.buffer=new Int32Array(Math.max(INITIAL_CAPACITY,a+EXTRA_CAPACITY));this.offset=0;this._length=a;this.defaultValue=0}vector.callable=function(a){if(a instanceof vector)return a;var b=a.asGetProperty(void 0,"length");if(void 0!==b){for(var c=new vector(b,!1),d=0;d<b;d++)c.asSetNumericProperty(d,a.asGetPublicProperty(d));return c}unexpected()}; vector.prototype.internalToString=function(){for(var a="",b=this.offset,c=b+this._length,d=0;d<this.buffer.length;d++)d===b&&(a+="["),d===c&&(a+="]"),a+=this.buffer[d],d<this.buffer.length-1&&(a+=",");this.offset+this._length===this.buffer.length&&(a+="]");return a+": offset: "+this.offset+", length: "+this._length+", capacity: "+this.buffer.length};vector.prototype.toString=function(){for(var a="",b=0;b<this._length;b++)a+=this.buffer[this.offset+b],b<this._length-1&&(a+=",");return a}; vector.prototype._view=function(){return this.buffer.subarray(this.offset,this.offset+this._length)};vector.prototype._ensureCapacity=function(a){var b=this.offset+a;b<this.buffer.length||(a<=this.buffer.length?(b=this.buffer.length-a>>2,this.buffer.set(this._view(),b),this.offset=b):(a=3*this.buffer.length>>2,a<b&&(a=b),b=new Int32Array(a),b.set(this.buffer,0),this.buffer=b))};vector.prototype.concat=function(){notImplemented("TypedArrayVector.concat")}; vector.prototype.every=function(a,b){for(var c=0;c<this._length;c++)if(!a.call(b,this.asGetNumericProperty(c),c,this))return!1;return!0};vector.prototype.filter=function(a,b){for(var c=new vector,d=0;d<this._length;d++)a.call(b,this.asGetNumericProperty(d),d,this)&&c.push(this.asGetNumericProperty(d));return c};vector.prototype.forEach=function(a,b){for(var c=0;c<this._length;c++)a.call(b,this.asGetNumericProperty(c),c,this)};vector.prototype.join=function(a){notImplemented("TypedArrayVector.join")}; vector.prototype.indexOf=function(a,b){notImplemented("TypedArrayVector.indexOf")};vector.prototype.lastIndexOf=function(a,b){notImplemented("TypedArrayVector.lastIndexOf")};vector.prototype.map=function(a,b){notImplemented("TypedArrayVector.map")};vector.prototype.push=function(){this._ensureCapacity(this._length+arguments.length);for(var a=0;a<arguments.length;a++)this.buffer[this.offset+this._length++]=arguments[a]}; vector.prototype.pop=function(){this._checkFixed();if(0===this._length)return this.defaultValue;this._length--;return this.buffer[this.offset+this._length]};vector.prototype.reverse=function(){for(var a=this.offset,b=this.offset+this._length-1,c=this.buffer;a<b;){var d=c[a];c[a]=c[b];c[b]=d;a++;b--}};vector.CASEINSENSITIVE=1;vector.DESCENDING=2;vector.UNIQUESORT=4;vector.RETURNINDEXEDARRAY=8;vector.NUMERIC=16;function defaultCompareFunction(a,b){return String(a).localeCompare(String(b))} function compare(a,b,c,d){assertNotImplemented(!(c&vector.CASEINSENSITIVE),"CASEINSENSITIVE");assertNotImplemented(!(c&vector.UNIQUESORT),"UNIQUESORT");assertNotImplemented(!(c&vector.RETURNINDEXEDARRAY),"RETURNINDEXEDARRAY");var f=0;d||(d=defaultCompareFunction);c&vector.NUMERIC?(a=toNumber(a),b=toNumber(b),f=a<b?-1:a>b?1:0):f=d(a,b);c&vector.DESCENDING&&(f*=-1);return f} function _sort(a){for(var b=[],c=-1,d=0,f=a.length-1,e,g,h,k;;)if(100>=f-d){for(g=d+1;g<=f;g++){h=a[g];for(e=g-1;e>=d&&a[e]>h;)a[e+1]=a[e--];a[e+1]=h}if(-1==c)break;f=b[c--];d=b[c--]}else{k=d+f>>1;e=d+1;g=f;h=a[k];a[k]=a[e];a[e]=h;a[d]>a[f]&&(h=a[d],a[d]=a[f],a[f]=h);a[e]>a[f]&&(h=a[e],a[e]=a[f],a[f]=h);a[d]>a[e]&&(h=a[d],a[d]=a[e],a[e]=h);for(k=a[e];;){do e++;while(a[e]<k);do g--;while(a[g]>k);if(g<e)break;h=a[e];a[e]=a[g];a[g]=h}a[d+1]=a[g];a[g]=k;f-e+1>=g-d?(b[++c]=e,b[++c]=f,f=g-1):(b[++c]=d, b[++c]=g-1,d=e)}return a}vector.prototype._sortNumeric=function(a){_sort(this._view());a&&this.reverse()};vector.prototype.sort=function(){if(0===arguments.length)return Array.prototype.sort.call(this._view());var a,b=0;arguments[0]instanceof Function?a=arguments[0]:isNumber(arguments[0])&&(b=arguments[0]);isNumber(arguments[1])&&(b=arguments[1]);if(b&TypedArrayVector.NUMERIC)return this._sortNumeric(b&vector.DESCENDING);Array.prototype.sort.call(this._view(),function(c,d){return compare(c,d,b,a)})}; vector.prototype.asGetNumericProperty=function(a){return this.buffer[this.offset+a]};vector.prototype.asSetNumericProperty=function(a,b){a===this._length&&(this._ensureCapacity(this._length+1),this._length++);this.buffer[this.offset+a]=b};vector.prototype.shift=function(){this._checkFixed();if(0!==this._length)return this._length--,this.buffer[this.offset++]}; vector.prototype._checkFixed=function(){if(this.fixed){var a=Errors.VectorFixedError;throwErrorFromVM(AVM2.currentDomain(),"RangeError",getErrorMessage(a.code),a.code)}};vector.prototype._slide=function(a){this.buffer.set(this._view(),this.offset+a);this.offset+=a};vector.prototype.unshift=function(){this._checkFixed();this._slide(arguments.length);this.offset-=arguments.length;this.length+=arguments.length;for(var a=0;a<arguments.length;a++)this.buffer[this.offset+a]=arguments[a]}; vector.prototype.asGetEnumerableKeys=function(){if(vector.prototype===this)return Object.prototype.asGetEnumerableKeys.call(this);for(var a=[],b=0;b<this.length;b++)a.push(b);return a};vector.prototype.asHasProperty=function(a,b,c){if(vector.prototype===this||!isNumeric(b))return Object.prototype.asHasProperty.call(this,a,b,c);a=toNumber(b);return 0<=a&&a<this._length}; Object.defineProperty(vector.prototype,"length",{get:function(){return this._length},set:function(a){a>>>=0;if(a>this._length){this._ensureCapacity(a);for(var b=this.offset+this._length,c=this.offset+a;b<c;b++)this.buffer[b]=this.defaultValue}this._length=a}}); vector.prototype._spliceHelper=function(a,b,c,d,f){b=clamp(b,0,d.length-f);c=clamp(c,0,this._length-a);this._ensureCapacity(this._length-c+b);var e=this.offset+a+c,e=this.buffer.subarray(e,e+this._length-a-c);this.buffer.set(e,this.offset+a+b);this._length+=b-c;for(c=0;c<b;c++)this.buffer[this.offset+a+c]=d.asGetNumericProperty(f+c)}; vector.prototype.asGetEnumerableKeys=function(){if(vector.prototype===this)return Object.prototype.asGetEnumerableKeys.call(this);for(var a=[],b=0;b<this._length;b++)a.push(b);return a};';
+var typedArrayVectorTemplate = 'var EXTRA_CAPACITY=4,INITIAL_CAPACITY=10,DEFAULT_VALUE=0;function vector(a,b){a|=0;this._fixed=!!b;this._buffer=new Int32Array(Math.max(INITIAL_CAPACITY,a+EXTRA_CAPACITY));this._offset=0;this._length=a}vector.callable=function(a){if(a instanceof vector)return a;var b=a.asGetProperty(void 0,"length");if(void 0!==b){for(var c=new vector(b,!1),d=0;d<b;d++)c.asSetNumericProperty(d,a.asGetPublicProperty(d));return c}unexpected()}; vector.prototype.internalToString=function(){for(var a="",b=this._offset,c=b+this._length,d=0;d<this._buffer.length;d++)d===b&&(a+="["),d===c&&(a+="]"),a+=this._buffer[d],d<this._buffer.length-1&&(a+=",");this._offset+this._length===this._buffer.length&&(a+="]");return a+": offset: "+this._offset+", length: "+this._length+", capacity: "+this._buffer.length};vector.prototype.toString=function(){for(var a="",b=0;b<this._length;b++)a+=this._buffer[this._offset+b],b<this._length-1&&(a+=",");return a}; vector.prototype._view=function(){return this._buffer.subarray(this._offset,this._offset+this._length)};vector.prototype._ensureCapacity=function(a){var b=this._offset+a;b<this._buffer.length||(a<=this._buffer.length?(b=this._buffer.length-a>>2,this._buffer.set(this._view(),b),this._offset=b):(a=3*this._buffer.length>>2,a<b&&(a=b),b=new Int32Array(a),b.set(this._buffer,0),this._buffer=b))}; vector.prototype.every=function(a,b){for(var c=0;c<this._length;c++)if(!a.call(b,this.asGetNumericProperty(c),c,this))return!1;return!0};vector.prototype.filter=function(a,b){for(var c=new vector,d=0;d<this._length;d++)a.call(b,this.asGetNumericProperty(d),d,this)&&c.push(this.asGetNumericProperty(d));return c}; vector.prototype.some=function(a,b){2!==arguments.length?throwError("ArgumentError",Errors.WrongArgumentCountError):isFunction(a)||throwError("ArgumentError",Errors.CheckTypeFailedError);for(var c=0;c<this._length;c++)if(a.call(b,this.asGetNumericProperty(c),c,this))return!0;return!1};vector.prototype.forEach=function(a,b){for(var c=0;c<this._length;c++)a.call(b,this.asGetNumericProperty(c),c,this)};vector.prototype.join=function(a){notImplemented("TypedArrayVector.join")}; vector.prototype.indexOf=function(a,b){notImplemented("TypedArrayVector.indexOf")};vector.prototype.lastIndexOf=function(a,b){notImplemented("TypedArrayVector.lastIndexOf")};vector.prototype.map=function(a,b){isFunction(a)||throwError("ArgumentError",Errors.CheckTypeFailedError);for(var c=new vector,d=0;d<this._length;d++)c.push(a.call(b,this.asGetNumericProperty(d),d,this));return c}; vector.prototype.push=function(){this._checkFixed();this._ensureCapacity(this._length+arguments.length);for(var a=0;a<arguments.length;a++)this._buffer[this._offset+this._length++]=arguments[a]};vector.prototype.pop=function(){this._checkFixed();if(0===this._length)return DEFAULT_VALUE;this._length--;return this._buffer[this._offset+this._length]};vector.prototype.reverse=function(){for(var a=this._offset,b=this._offset+this._length-1,c=this._buffer;a<b;){var d=c[a];c[a]=c[b];c[b]=d;a++;b--}}; vector.CASEINSENSITIVE=1;vector.DESCENDING=2;vector.UNIQUESORT=4;vector.RETURNINDEXEDARRAY=8;vector.NUMERIC=16;function defaultCompareFunction(a,b){return String(a).localeCompare(String(b))} function compare(a,b,c,d){assertNotImplemented(!(c&vector.CASEINSENSITIVE),"CASEINSENSITIVE");assertNotImplemented(!(c&vector.UNIQUESORT),"UNIQUESORT");assertNotImplemented(!(c&vector.RETURNINDEXEDARRAY),"RETURNINDEXEDARRAY");var f=0;d||(d=defaultCompareFunction);c&vector.NUMERIC?(a=toNumber(a),b=toNumber(b),f=a<b?-1:a>b?1:0):f=d(a,b);c&vector.DESCENDING&&(f*=-1);return f} function _sort(a){for(var b=[],c=-1,d=0,f=a.length-1,e,g,h,k;;)if(100>=f-d){for(g=d+1;g<=f;g++){h=a[g];for(e=g-1;e>=d&&a[e]>h;)a[e+1]=a[e--];a[e+1]=h}if(-1==c)break;f=b[c--];d=b[c--]}else{k=d+f>>1;e=d+1;g=f;h=a[k];a[k]=a[e];a[e]=h;a[d]>a[f]&&(h=a[d],a[d]=a[f],a[f]=h);a[e]>a[f]&&(h=a[e],a[e]=a[f],a[f]=h);a[d]>a[e]&&(h=a[d],a[d]=a[e],a[e]=h);for(k=a[e];;){do e++;while(a[e]<k);do g--;while(a[g]>k);if(g<e)break;h=a[e];a[e]=a[g];a[g]=h}a[d+1]=a[g];a[g]=k;f-e+1>=g-d?(b[++c]=e,b[++c]=f,f=g-1):(b[++c]=d, b[++c]=g-1,d=e)}return a}vector.prototype._sortNumeric=function(a){_sort(this._view());a&&this.reverse()};vector.prototype.sort=function(){if(0===arguments.length)return Array.prototype.sort.call(this._view());var a,b=0;arguments[0]instanceof Function?a=arguments[0]:isNumber(arguments[0])&&(b=arguments[0]);isNumber(arguments[1])&&(b=arguments[1]);if(b&TypedArrayVector.NUMERIC)return this._sortNumeric(b&vector.DESCENDING);Array.prototype.sort.call(this._view(),function(c,d){return compare(c,d,b,a)})}; vector.prototype.asGetNumericProperty=function(a){checkArguments&&asCheckVectorGetNumericProperty(a,this._length);return this._buffer[this._offset+a]};vector.prototype.asSetNumericProperty=function(a,b){checkArguments&&asCheckVectorSetNumericProperty(a,this._length,this._fixed);a===this._length&&(this._ensureCapacity(this._length+1),this._length++);this._buffer[this._offset+a]=b};vector.prototype.shift=function(){this._checkFixed();if(0===this._length)return 0;this._length--;return this._buffer[this._offset++]}; vector.prototype._checkFixed=function(){this._fixed&&throwError("RangeError",Errors.VectorFixedError)};vector.prototype._slide=function(a){this._buffer.set(this._view(),this._offset+a);this._offset+=a};vector.prototype.unshift=function(){this._checkFixed();if(arguments.length){this._ensureCapacity(this._length+arguments.length);this._slide(arguments.length);this._offset-=arguments.length;this._length+=arguments.length;for(var a=0;a<arguments.length;a++)this._buffer[this._offset+a]=arguments[a]}}; vector.prototype.asGetEnumerableKeys=function(){if(vector.prototype===this)return Object.prototype.asGetEnumerableKeys.call(this);for(var a=[],b=0;b<this._length;b++)a.push(b);return a};vector.prototype.asHasProperty=function(a,b,c){if(vector.prototype===this||!isNumeric(b))return Object.prototype.asHasProperty.call(this,a,b,c);a=toNumber(b);return 0<=a&&a<this._length}; Object.defineProperty(vector.prototype,"length",{get:function(){return this._length},set:function(a){a>>>=0;if(a>this._length){this._ensureCapacity(a);for(var b=this._offset+this._length,c=this._offset+a;b<c;b++)this._buffer[b]=DEFAULT_VALUE}this._length=a}}); vector.prototype._spliceHelper=function(a,b,c,d,f){debugger;b=clamp(b,0,d.length-f);c=clamp(c,0,this._length-a);this._ensureCapacity(this._length-c+b);var e=this._offset+a+c,e=this._buffer.subarray(e,e+this._length-a-c);this._buffer.set(e,this._offset+a+b);this._length+=b-c;for(c=0;c<b;c++)this._buffer[this._offset+a+c]=d.asGetNumericProperty(f+c)}; vector.prototype.asGetEnumerableKeys=function(){if(vector.prototype===this)return Object.prototype.asGetEnumerableKeys.call(this);for(var a=[],b=0;b<this._length;b++)a.push(b);return a};';
 var Int32Vector = new Function(typedArrayVectorTemplate.replace(/Int32Array/g, 'Int32Array') + ' return vector;')();
 var Uint32Vector = new Function(typedArrayVectorTemplate.replace(/Int32Array/g, 'Uint32Array') + ' return vector;')();
 var Float64Vector = new Function(typedArrayVectorTemplate.replace(/Int32Array/g, 'Float64Array') + ' return vector;')();
-var GenericVector = function () {
-    function vector(length, fixed, type) {
-      length = length | 0;
-      this.fixed = !(!fixed);
-      this.buffer = new Array(length);
-      this.type = type;
-      this.defaultValue = type ? type.defaultValue : null;
-      this._fill(0, length, this.defaultValue);
-    }
-    vector.applyType = function applyType(type) {
-      function parameterizedVector(length, fixed) {
-        vector.call(this, length, fixed, type);
-      }
-      parameterizedVector.prototype = Object.create(vector.prototype);
-      parameterizedVector.callable = vector.callable;
-      return parameterizedVector;
-    };
-    vector.callable = function (object) {
-      if (object instanceof vector) {
-        return object;
-      }
-      var length = object.asGetProperty(undefined, 'length');
-      if (length !== undefined) {
-        var v = new vector(length, false);
-        for (var i = 0; i < length; i++) {
-          v.asSetNumericProperty(i, object.asGetPublicProperty(i));
-        }
-        return v;
-      }
-      unexpected();
-    };
-    vector.prototype._fill = function (index, length, value) {
-      for (var i = 0; i < length; i++) {
-        this.buffer[index + i] = value;
-      }
-    };
-    vector.prototype.toString = function () {
-      var str = '';
-      for (var i = 0; i < this.buffer.length; i++) {
-        str += this.buffer[i];
-        if (i < this.buffer.length - 1) {
-          str += ',';
-        }
-      }
-      return str;
-    };
-    vector.prototype.every = function (callback, thisObject) {
-      for (var i = 0; i < this.buffer.length; i++) {
-        if (!callback.call(thisObject, this.asGetNumericProperty(i), i, this)) {
-          return false;
-        }
-      }
-      return true;
-    };
-    vector.prototype.filter = function (callback, thisObject) {
-      var v = new vector();
-      for (var i = 0; i < this.buffer.length; i++) {
-        if (callback.call(thisObject, this.asGetNumericProperty(i), i, this)) {
-          v.push(this.asGetNumericProperty(i));
-        }
-      }
-      return v;
-    };
-    vector.prototype.forEach = function (callback, thisObject) {
-      for (var i = 0; i < this.buffer.length; i++) {
-        callback.call(thisObject, this.asGetNumericProperty(i), i, this);
-      }
-    };
-    vector.prototype.push = function () {
-      this._checkFixed();
-      for (var i = 0; i < arguments.length; i++) {
-        this.buffer.push(this._coerce(arguments[i]));
-      }
-    };
-    vector.prototype.pop = function () {
-      this._checkFixed();
-      if (this.buffer.length === 0) {
-        return undefined;
-      }
-      return this.buffer.pop();
-    };
-    vector.prototype.reverse = function () {
-      this.buffer.reverse();
-    };
-    vector.CASEINSENSITIVE = 1;
-    vector.DESCENDING = 2;
-    vector.UNIQUESORT = 4;
-    vector.RETURNINDEXEDARRAY = 8;
-    vector.NUMERIC = 16;
-    function defaultCompareFunction(a, b) {
-      return String(a).localeCompare(String(b));
-    }
-    function compare(a, b, options, compareFunction) {
-      assertNotImplemented(!(options & CASEINSENSITIVE), 'CASEINSENSITIVE');
-      assertNotImplemented(!(options & UNIQUESORT), 'UNIQUESORT');
-      assertNotImplemented(!(options & RETURNINDEXEDARRAY), 'RETURNINDEXEDARRAY');
-      var result = 0;
-      if (!compareFunction) {
-        compareFunction = defaultCompareFunction;
-      }
-      if (options & NUMERIC) {
-        a = toNumber(a);
-        b = toNumber(b);
-        result = a < b ? -1 : a > b ? 1 : 0;
-      } else {
-        result = compareFunction(a, b);
-      }
-      if (options & DESCENDING) {
-        result *= -1;
-      }
-      return result;
-    }
-    vector.prototype.sort = function () {
-      if (arguments.length === 0) {
-        return this.buffer.sort();
-      }
-      var compareFunction, options = 0;
-      if (arguments[0] instanceof Function) {
-        compareFunction = arguments[0];
-      } else if (isNumber(arguments[0])) {
-        options = arguments[0];
-      }
-      if (isNumber(arguments[1])) {
-        options = arguments[1];
-      }
-      if (options & TypedArrayVector.NUMERIC) {
-        return this._sortNumeric(options & vector.DESCENDING);
-      }
-      Array.prototype.sort.call(this.buffer, function (a, b) {
-        return compare(a, b, options, compareFunction);
-      });
-    };
-    vector.prototype.asGetNumericProperty = function (i) {
-      return this.buffer[i];
-    };
-    vector.prototype._coerce = function (v) {
-      if (this.type) {
-        return this.type.coerce(v);
-      } else if (v === undefined) {
-        return null;
-      }
-      return v;
-    };
-    vector.prototype.asSetNumericProperty = function (i, v) {
-      this.buffer[i] = this._coerce(v);
-    };
-    vector.prototype.shift = function () {
-      this._checkFixed();
-      if (this.buffer.length === 0) {
-        return undefined;
-      }
-      return this.buffer.shift();
-    };
-    vector.prototype._checkFixed = function () {
-      if (this.fixed) {
-        var error = Errors.VectorFixedError;
-        throwErrorFromVM(AVM2.currentDomain(), 'RangeError', getErrorMessage(error.code), error.code);
-      }
-    };
-    vector.prototype.unshift = function () {
-      this._checkFixed();
-      var items = [];
-      for (var i = 0; i < arguments.length; i++) {
-        items.push(this._coerce(arguments[i]));
-      }
-      this.buffer.unshift.apply(this.buffer, items);
-    };
-    Object.defineProperty(vector.prototype, 'length', {
-      get: function () {
-        return this.buffer.length;
-      },
-      set: function (length) {
-        length = length >>> 0;
-        if (length > this.buffer.length) {
-          for (var i = this.buffer.length; i < length; i++) {
-            this.buffer[i] = this.defaultValue;
-          }
-        } else {
-          this.buffer.length = length;
-        }
-        true;
-      }
-    });
-    vector.prototype._spliceHelper = function (index, insertCount, deleteCount, args, offset) {
-      insertCount = clamp(insertCount, 0, args.length - offset);
-      deleteCount = clamp(deleteCount, 0, this.buffer.length - index);
-      var items = [];
-      for (var i = 0; i < insertCount; i++) {
-        items.push(this._coerce(args.asGetNumericProperty(offset + i)));
-      }
-      this.buffer.splice.apply(this.buffer, [
-        index,
-        deleteCount
-      ].concat(items));
-    };
-    vector.prototype.asGetEnumerableKeys = function () {
-      if (vector.prototype === this) {
-        return Object.prototype.asGetEnumerableKeys.call(this);
-      }
-      var keys = [];
-      for (var i = 0; i < this.buffer.length; i++) {
-        keys.push(i);
-      }
-      return keys;
-    };
-    vector.prototype.asHasProperty = function (namespaces, name, flags) {
-      if (vector.prototype === this || !isNumeric(name)) {
-        return Object.prototype.asHasProperty.call(this, namespaces, name, flags);
-      }
-      var index = toNumber(name);
-      return index >= 0 && index < this.buffer.length;
-    };
-    return vector;
-  }();
+Int32Vector = TypedArrayVector;
 Int32Vector.prototype.asGetProperty = function (namespaces, name, flags) {
   if (typeof name === 'number') {
     return this.asGetNumericProperty(name);
@@ -28310,6 +26930,233 @@ Float64Vector.prototype.asSetProperty = function (namespaces, name, flags, value
   }
   return asSetProperty.call(this, namespaces, name, flags, value);
 };
+var GenericVector = function () {
+    function vector(length, fixed, type) {
+      length = length | 0;
+      this._fixed = !(!fixed);
+      this._buffer = new Array(length);
+      this._type = type;
+      this._defaultValue = type ? type.defaultValue : null;
+      this._fill(0, length, this._defaultValue);
+    }
+    vector.applyType = function applyType(type) {
+      function parameterizedVector(length, fixed) {
+        vector.call(this, length, fixed, type);
+      }
+      parameterizedVector.prototype = Object.create(vector.prototype);
+      parameterizedVector.callable = vector.callable;
+      return parameterizedVector;
+    };
+    vector.callable = function (object) {
+      if (object instanceof vector) {
+        return object;
+      }
+      var length = object.asGetProperty(undefined, 'length');
+      if (length !== undefined) {
+        var v = new vector(length, false);
+        for (var i = 0; i < length; i++) {
+          v.asSetNumericProperty(i, object.asGetPublicProperty(i));
+        }
+        return v;
+      }
+      unexpected();
+    };
+    vector.prototype._fill = function (index, length, value) {
+      for (var i = 0; i < length; i++) {
+        this._buffer[index + i] = value;
+      }
+    };
+    vector.prototype.toString = function () {
+      var str = '';
+      for (var i = 0; i < this._buffer.length; i++) {
+        str += this._buffer[i];
+        if (i < this._buffer.length - 1) {
+          str += ',';
+        }
+      }
+      return str;
+    };
+    vector.prototype.every = function (callback, thisObject) {
+      for (var i = 0; i < this._buffer.length; i++) {
+        if (!callback.call(thisObject, this.asGetNumericProperty(i), i, this)) {
+          return false;
+        }
+      }
+      return true;
+    };
+    vector.prototype.filter = function (callback, thisObject) {
+      var v = new vector();
+      for (var i = 0; i < this._buffer.length; i++) {
+        if (callback.call(thisObject, this.asGetNumericProperty(i), i, this)) {
+          v.push(this.asGetNumericProperty(i));
+        }
+      }
+      return v;
+    };
+    vector.prototype.some = function (callback, thisObject) {
+      if (arguments.length !== 2) {
+        throwError('ArgumentError', Errors.WrongArgumentCountError);
+      } else if (!isFunction(callback)) {
+        throwError('ArgumentError', Errors.CheckTypeFailedError);
+      }
+      for (var i = 0; i < this._buffer.length; i++) {
+        if (callback.call(thisObject, this.asGetNumericProperty(i), i, this)) {
+          return true;
+        }
+      }
+      return false;
+    };
+    vector.prototype.forEach = function (callback, thisObject) {
+      if (!isFunction(callback)) {
+        throwError('ArgumentError', Errors.CheckTypeFailedError);
+      }
+      for (var i = 0; i < this._buffer.length; i++) {
+        callback.call(thisObject, this.asGetNumericProperty(i), i, this);
+      }
+    };
+    vector.prototype.map = function (callback, thisObject) {
+      if (!isFunction(callback)) {
+        throwError('ArgumentError', Errors.CheckTypeFailedError);
+      }
+      var v = new vector();
+      for (var i = 0; i < this._buffer.length; i++) {
+        v.push(callback.call(thisObject, this.asGetNumericProperty(i), i, this));
+      }
+      return v;
+    };
+    vector.prototype.push = function () {
+      this._checkFixed();
+      for (var i = 0; i < arguments.length; i++) {
+        this._buffer.push(this._coerce(arguments[i]));
+      }
+    };
+    vector.prototype.pop = function () {
+      this._checkFixed();
+      if (this._buffer.length === 0) {
+        return undefined;
+      }
+      return this._buffer.pop();
+    };
+    vector.prototype.reverse = function () {
+      this._buffer.reverse();
+    };
+    vector.CASEINSENSITIVE = 1;
+    vector.DESCENDING = 2;
+    vector.UNIQUESORT = 4;
+    vector.RETURNINDEXEDARRAY = 8;
+    vector.NUMERIC = 16;
+    function defaultCompareFunction(a, b) {
+      return String(a).localeCompare(String(b));
+    }
+    function compare(a, b, options, compareFunction) {
+      assertNotImplemented(!(options & CASEINSENSITIVE), 'CASEINSENSITIVE');
+      assertNotImplemented(!(options & UNIQUESORT), 'UNIQUESORT');
+      assertNotImplemented(!(options & RETURNINDEXEDARRAY), 'RETURNINDEXEDARRAY');
+      var result = 0;
+      if (!compareFunction) {
+        compareFunction = defaultCompareFunction;
+      }
+      if (options & NUMERIC) {
+        a = toNumber(a);
+        b = toNumber(b);
+        result = a < b ? -1 : a > b ? 1 : 0;
+      } else {
+        result = compareFunction(a, b);
+      }
+      if (options & DESCENDING) {
+        result *= -1;
+      }
+      return result;
+    }
+    vector.prototype.sort = function (comparator) {
+      return this._buffer.sort(comparator);
+    };
+    vector.prototype.asGetNumericProperty = function (i) {
+      checkArguments && asCheckVectorGetNumericProperty(i, this._buffer.length);
+      return this._buffer[i];
+    };
+    vector.prototype._coerce = function (v) {
+      if (this._type) {
+        return this._type.coerce(v);
+      } else if (v === undefined) {
+        return null;
+      }
+      return v;
+    };
+    vector.prototype.asSetNumericProperty = function (i, v) {
+      checkArguments && asCheckVectorSetNumericProperty(i, this._buffer.length, this._fixed);
+      this._buffer[i] = this._coerce(v);
+    };
+    vector.prototype.shift = function () {
+      this._checkFixed();
+      if (this._buffer.length === 0) {
+        return undefined;
+      }
+      return this._buffer.shift();
+    };
+    vector.prototype._checkFixed = function () {
+      if (this._fixed) {
+        throwError('RangeError', Errors.VectorFixedError);
+      }
+    };
+    vector.prototype.unshift = function () {
+      if (!arguments.length) {
+        return;
+      }
+      this._checkFixed();
+      var items = [];
+      for (var i = 0; i < arguments.length; i++) {
+        items.push(this._coerce(arguments[i]));
+      }
+      this._buffer.unshift.apply(this._buffer, items);
+    };
+    Object.defineProperty(vector.prototype, 'length', {
+      get: function () {
+        return this._buffer.length;
+      },
+      set: function (length) {
+        length = length >>> 0;
+        if (length > this._buffer.length) {
+          for (var i = this._buffer.length; i < length; i++) {
+            this._buffer[i] = this._defaultValue;
+          }
+        } else {
+          this._buffer.length = length;
+        }
+        true;
+      }
+    });
+    vector.prototype._spliceHelper = function (index, insertCount, deleteCount, args, offset) {
+      insertCount = clamp(insertCount, 0, args.length - offset);
+      deleteCount = clamp(deleteCount, 0, this._buffer.length - index);
+      var items = [];
+      for (var i = 0; i < insertCount; i++) {
+        items.push(this._coerce(args.asGetNumericProperty(offset + i)));
+      }
+      this._buffer.splice.apply(this._buffer, [
+        index,
+        deleteCount
+      ].concat(items));
+    };
+    vector.prototype.asGetEnumerableKeys = function () {
+      if (vector.prototype === this) {
+        return Object.prototype.asGetEnumerableKeys.call(this);
+      }
+      var keys = [];
+      for (var i = 0; i < this._buffer.length; i++) {
+        keys.push(i);
+      }
+      return keys;
+    };
+    vector.prototype.asHasProperty = function (namespaces, name, flags) {
+      if (vector.prototype === this || !isNumeric(name)) {
+        return Object.prototype.asHasProperty.call(this, namespaces, name, flags);
+      }
+      var index = toNumber(name);
+      return index >= 0 && index < this._buffer.length;
+    };
+    return vector;
+  }();
 GenericVector.prototype.asGetProperty = function (namespaces, name, flags) {
   if (typeof name === 'number') {
     return this.asGetNumericProperty(name);
@@ -28323,6 +27170,158 @@ GenericVector.prototype.asSetProperty = function (namespaces, name, flags, value
   }
   return asSetProperty.call(this, namespaces, name, flags, value);
 };
+function arraySort(o, args) {
+  if (args.length === 0) {
+    return o.sort();
+  }
+  var compareFunction, options = 0;
+  if (args[0] instanceof Function) {
+    compareFunction = args[0];
+  } else if (isNumber(args[0])) {
+    options = args[0];
+  }
+  if (isNumber(args[1])) {
+    options = args[1];
+  }
+  o.sort(function (a, b) {
+    return asCompare(a, b, options, compareFunction);
+  });
+  return o;
+}
+function ArrayClass(domain, scope, instanceConstructor, baseClass) {
+  var c = new Class('Array', Array, ApplicationDomain.passthroughCallable(Array));
+  c.extendBuiltin(baseClass);
+  var CACHE_NUMERIC_COMPARATORS = true;
+  var numericComparatorCache = createEmptyObject();
+  c.native = {
+    static: {
+      _pop: function _pop(o) {
+        return o.pop();
+      },
+      _reverse: function _reverse(o) {
+        return o.reverse();
+      },
+      _concat: function _concat(o, args) {
+        return o.concat.apply(o, args);
+      },
+      _shift: function _shift(o) {
+        return o.shift();
+      },
+      _slice: function _slice(o, A, B) {
+        return o.slice(A, B);
+      },
+      _unshift: function _unshift(o, args) {
+        return o.unshift.apply(o, args);
+      },
+      _splice: function _splice(o, args) {
+        return o.splice.apply(o, args);
+      },
+      _sort: function _sort(o, args) {
+        if (args.length === 0) {
+          return o.sort();
+        }
+        var compareFunction, options = 0;
+        if (args[0] instanceof Function) {
+          compareFunction = args[0];
+        } else if (isNumber(args[0])) {
+          options = args[0];
+        }
+        if (isNumber(args[1])) {
+          options = args[1];
+        }
+        o.sort(function (a, b) {
+          return asCompare(a, b, options, compareFunction);
+        });
+        return o;
+      },
+      _sortOn: function _sortOn(o, names, options) {
+        if (isString(names)) {
+          names = [
+            names
+          ];
+        }
+        if (isNumber(options)) {
+          options = [
+            options
+          ];
+        }
+        for (var i = names.length - 1; i >= 0; i--) {
+          var key = Multiname.getPublicQualifiedName(names[i]);
+          if (CACHE_NUMERIC_COMPARATORS && options[i] & SORT_NUMERIC) {
+            var str = 'var x = toNumber(a.' + key + '), y = toNumber(b.' + key + ');';
+            if (options[i] & SORT_DESCENDING) {
+              str += 'return x < y ? 1 : (x > y ? -1 : 0);';
+            } else {
+              str += 'return x < y ? -1 : (x > y ? 1 : 0);';
+            }
+            var numericComparator = numericComparatorCache[str];
+            if (!numericComparator) {
+              numericComparator = numericComparatorCache[str] = new Function('a', 'b', str);
+            }
+            o.sort(numericComparator);
+          } else {
+            o.sort(function (a, b) {
+              return asCompare(a[key], b[key], options[i] | 0);
+            });
+          }
+        }
+        return o;
+      },
+      _indexOf: function _indexOf(o, searchElement, fromIndex) {
+        return o.indexOf(searchElement, fromIndex);
+      },
+      _lastIndexOf: function _lastIndexOf(o, searchElement, fromIndex) {
+        return o.lastIndexOf(searchElement, fromIndex);
+      },
+      _every: function _every(o, callback, thisObject) {
+        for (var i = 0; i < o.length; i++) {
+          if (callback.call(thisObject, o[i], i, o) !== true) {
+            return false;
+          }
+        }
+        return false;
+      },
+      _filter: function _filter(o, callback, thisObject) {
+        var result = [];
+        for (var i = 0; i < o.length; i++) {
+          if (callback.call(thisObject, o[i], i, o) === true) {
+            result.push(o[i]);
+          }
+        }
+        return result;
+      },
+      _forEach: function _forEach(o, callback, thisObject) {
+        return o.forEach(callback, thisObject);
+      },
+      _map: function _map(o, callback, thisObject) {
+        return o.map(callback, thisObject);
+      },
+      _some: function _some(o, callback, thisObject) {
+        return o.some(callback, thisObject);
+      }
+    },
+    instance: {
+      pop: Array.prototype.pop,
+      push: Array.prototype.push,
+      unshift: Array.prototype.unshift,
+      length: {
+        get: function length() {
+          return this.length;
+        },
+        set: function length(newLength) {
+          this.length = newLength;
+        }
+      }
+    }
+  };
+  c.coerce = function (value) {
+    return value;
+  };
+  c.isInstanceOf = function (value) {
+    return true;
+  };
+  return c;
+}
 var XMLClass, XMLListClass, QNameClass, ASXML, XML, ASXMLList, XMLList;
 var isXMLType, isXMLName, XMLParser;
 (function () {
@@ -28393,7 +27392,6 @@ var isXMLType, isXMLName, XMLParser;
           if (n.children.length) {
             s += '>';
             for (var i = 0; i < n.children.length; i++) {
-              s += '\n';
               s += visit(n.children[i], this);
             }
             s += '</' + prefix + n.name.mn.name + '>';
@@ -28938,7 +27936,7 @@ var isXMLType, isXMLName, XMLParser;
       }
       this.init(kind, uri, name, prefix);
     };
-    var c = new Class('XML', ASXML, Domain.passthroughCallable(ASXML));
+    var c = new Class('XML', ASXML, ApplicationDomain.passthroughCallable(ASXML));
     c.flags = FLAG_IGNORE_COMMENTS | FLAG_IGNORE_PROCESSING_INSTRUCTIONS | FLAG_IGNORE_WHITESPACE | FLAG_PRETTY_PRINTING;
     c.prettyIndent = 2;
     c.extend(baseClass);
@@ -29148,11 +28146,15 @@ var isXMLType, isXMLName, XMLParser;
           });
         }
       } else {
-        return this.children.some(function (v, i) {
-          if ((anyName || v.kind === 'element' && v.name.localName === name.localName) && (anyNamespace || v.kind === 'element' && v.name.uri === name.uri)) {
-            return true;
-          }
-        });
+        if (this.children.some(function (v, i) {
+            if ((anyName || v.kind === 'element' && v.name.localName === name.localName) && (anyNamespace || v.kind === 'element' && v.name.uri === name.uri)) {
+              return true;
+            }
+          })) {
+          return true;
+        }
+        var resolved = Multiname.isQName(mn) ? mn : resolveMultiname(this, mn);
+        return !(!this[Multiname.getQualifiedName(resolved)]);
       }
     };
     Xp.delete = function (key, isMethod) {
@@ -29385,7 +28387,8 @@ var isXMLType, isXMLName, XMLParser;
           return toString(this);
         },
         hasOwnProperty: function hasOwnProperty(P) {
-          notImplemented('XML.hasOwnProperty');
+          somewhatImplemented('XML.hasOwnProperty');
+          return this.hasProperty(P);
         },
         propertyIsEnumerable: function propertyIsEnumerable(P) {
           notImplemented('XML.propertyIsEnumerable');
@@ -29581,7 +28584,7 @@ var isXMLType, isXMLName, XMLParser;
       this.targetProperty = targetProperty ? targetProperty : null;
       this.children = [];
     };
-    var c = new Class('XMLList', ASXMLList, Domain.passthroughCallable(ASXMLList));
+    var c = new Class('XMLList', ASXMLList, ApplicationDomain.passthroughCallable(ASXMLList));
     c.extend(baseClass);
     var XLp = XMLList.prototype = ASXMLList.prototype;
     XLp.canHandleProperties = true;
@@ -29875,7 +28878,8 @@ var isXMLType, isXMLName, XMLParser;
           return toString(this);
         },
         hasOwnProperty: function hasOwnProperty(P) {
-          notImplemented('XMLList.hasOwnProperty');
+          somewhatImplemented('XMLList.hasOwnProperty');
+          return this.hasProperty(P);
         },
         propertyIsEnumerable: function propertyIsEnumerable(P) {
           notImplemented('XMLList.propertyIsEnumerable');
@@ -30089,7 +29093,7 @@ var isXMLType, isXMLName, XMLParser;
       this.isAnyNamespace = mn.isAnyNamespace();
       this.isAttr = mn.isAttribute();
     };
-    var c = new Class('QName', QName, Domain.passthroughCallable(QName));
+    var c = new Class('QName', QName, ApplicationDomain.passthroughCallable(QName));
     c.extend(baseClass);
     QNp = QName.prototype;
     defineNonEnumerableGetter(QNp, 'localName', function () {
@@ -30733,7 +29737,7 @@ function ProxyClass(runtime, scope, instanceConstructor, baseClass) {
   function ProxyConstructor() {
     somewhatImplemented('Proxy');
   }
-  var c = new Class('Proxy', ProxyConstructor, Domain.coerceCallable(ProxyConstructor));
+  var c = new Class('Proxy', ProxyConstructor, ApplicationDomain.coerceCallable(ProxyConstructor));
   c.extendBuiltin(baseClass);
   return c;
 }
@@ -30888,7 +29892,7 @@ function DictionaryClass(domain, scope, instanceConstructor, baseClass) {
     }
     this.primitiveMap = createEmptyObject();
   }
-  var c = new Class('Dictionary', ASDictionary, Domain.passthroughCallable(ASDictionary));
+  var c = new Class('Dictionary', ASDictionary, ApplicationDomain.passthroughCallable(ASDictionary));
   c.extendNative(baseClass, ASDictionary);
   function makePrimitiveKey(key) {
     if (typeof key === 'string' || typeof key === 'number') {
@@ -30946,6 +29950,9 @@ function DictionaryClass(domain, scope, instanceConstructor, baseClass) {
     for (var k in this.primitiveMap) {
       primitiveMapKeys.push(k);
     }
+    if (this.weakKeys) {
+      return primitiveMapKeys;
+    }
     return primitiveMapKeys.concat(this.keys);
   });
   c.native = {
@@ -30962,9 +29969,9 @@ function debugBreak(message) {
 }
 var ASNamespace;
 var natives = function () {
-    var C = Domain.passthroughCallable;
-    var CC = Domain.constructingCallable;
-    function ObjectClass(runtime, scope, instanceConstructor, baseClass) {
+    var C = ApplicationDomain.passthroughCallable;
+    var CC = ApplicationDomain.constructingCallable;
+    function ObjectClass(applicationDomain, scope, instanceConstructor, baseClass) {
       var c = new Class('Object', Object, C(Object));
       c.native = {
         instance: {
@@ -31119,9 +30126,19 @@ var natives = function () {
           concat: Sp.concat,
           localeCompare: Sp.localeCompare,
           match: function (re) {
-            if (re === void 0) {
+            if (re === void 0 || re === null) {
               return null;
             } else {
+              if (re instanceof RegExp && re.global) {
+                var matches = [], m;
+                while (m = re.exec(this)) {
+                  matches.push(m[0]);
+                }
+                return matches;
+              }
+              if (!(re instanceof RegExp) && !(typeof re === 'string')) {
+                re = String(re);
+              }
               return this.match(re);
             }
           },
@@ -31168,101 +30185,6 @@ var natives = function () {
       };
       c.isInstance = function (value) {
         return Object(value) instanceof String;
-      };
-      return c;
-    }
-    function ArrayClass(runtime, scope, instanceConstructor, baseClass) {
-      var c = new Class('Array', Array, C(Array));
-      c.extendBuiltin(baseClass);
-      var Ap = Array.prototype;
-      var CACHE_NUMERIC_COMPARATORS = true;
-      var numericComparatorCache = createEmptyObject();
-      c.native = {
-        instance: {
-          length: {
-            get: function () {
-              return this.length;
-            },
-            set: function (l) {
-              this.length = l;
-            }
-          },
-          join: Ap.join,
-          pop: Ap.pop,
-          push: Ap.push,
-          reverse: Ap.reverse,
-          concat: Ap.concat,
-          shift: Ap.shift,
-          slice: Ap.slice,
-          unshift: Ap.unshift,
-          splice: Ap.splice,
-          indexOf: Ap.indexOf,
-          lastIndexOf: Ap.lastIndexOf,
-          every: Ap.every,
-          filter: Ap.filter,
-          forEach: Ap.forEach,
-          map: Ap.map,
-          some: Ap.some
-        },
-        static: {
-          _sortOn: function (o, names, options) {
-            if (isString(names)) {
-              names = [
-                names
-              ];
-            }
-            if (isNumber(options)) {
-              options = [
-                options
-              ];
-            }
-            for (var i = names.length - 1; i >= 0; i--) {
-              var key = Multiname.getPublicQualifiedName(names[i]);
-              if (CACHE_NUMERIC_COMPARATORS && options[i] & SORT_NUMERIC) {
-                var str = 'var x = toNumber(a.' + key + '), y = toNumber(b.' + key + ');';
-                if (options[i] & SORT_DESCENDING) {
-                  str += 'return x < y ? 1 : (x > y ? -1 : 0);';
-                } else {
-                  str += 'return x < y ? -1 : (x > y ? 1 : 0);';
-                }
-                var numericComparator = numericComparatorCache[str];
-                if (!numericComparator) {
-                  numericComparator = numericComparatorCache[str] = new Function('a', 'b', str);
-                }
-                o.sort(numericComparator);
-              } else {
-                o.sort(function (a, b) {
-                  return asCompare(a[key], b[key], options[i] | 0);
-                });
-              }
-            }
-            return o;
-          },
-          _sort: function (o, args) {
-            if (args.length === 0) {
-              return o.sort();
-            }
-            var compareFunction, options = 0;
-            if (args[0] instanceof Function) {
-              compareFunction = args[0];
-            } else if (isNumber(args[0])) {
-              options = args[0];
-            }
-            if (isNumber(args[1])) {
-              options = args[1];
-            }
-            o.sort(function (a, b) {
-              return asCompare(a, b, options, compareFunction);
-            });
-            return o;
-          }
-        }
-      };
-      c.coerce = function (value) {
-        return value;
-      };
-      c.isInstanceOf = function (value) {
-        return true;
       };
       return c;
     }
@@ -31317,10 +30239,10 @@ var natives = function () {
         instance: {
           fixed: {
             get: function () {
-              return this.fixed;
+              return this._fixed;
             },
             set: function (v) {
-              this.fixed = v;
+              this._fixed = v;
             }
           },
           length: {
@@ -31336,12 +30258,8 @@ var natives = function () {
           shift: Vp.shift,
           unshift: Vp.unshift,
           _reverse: Vp.reverse,
-          _every: Vp.every,
           _filter: Vp.filter,
-          _forEach: Vp.forEach,
           _map: Vp.map,
-          _some: Vp.some,
-          _sort: Vp.sort,
           newThisType: function newThisType() {
             return new cls.instanceConstructor();
           },
@@ -31350,12 +30268,16 @@ var natives = function () {
           }
         },
         static: {
+          _some: function (o, callback, thisObject) {
+            return o.some(callback, thisObject);
+          },
           _every: function (o, callback, thisObject) {
             return o.every(callback, thisObject);
           },
           _forEach: function (o, callback, thisObject) {
             return o.forEach(callback, thisObject);
-          }
+          },
+          _sort: arraySort
         }
       };
       cls.vectorType = type;
@@ -31743,6 +30665,9 @@ var natives = function () {
       var INITIAL_SIZE = 128;
       var defaultObjectEncoding = 3;
       function ByteArray(bytes) {
+        if (bytes instanceof ByteArray) {
+          return bytes;
+        }
         var initData = bytes || this.symbol && this.symbol.data;
         if (initData) {
           this.a = new ArrayBuffer(initData.length);
@@ -32069,7 +30994,7 @@ var natives = function () {
         instance: {
           init: function (base) {
             this.base = base;
-            this.nativeObject = new Domain(avm2, base ? base.nativeObject : null);
+            this.nativeObject = new ApplicationDomain(avm2, base ? base.nativeObject : null);
           },
           loadBytes: function (byteArray, swfVersion) {
             this.nativeObject.executeAbc(new AbcFile(byteArray.readRawBytes()));
@@ -32090,10 +31015,43 @@ var natives = function () {
       };
       return c;
     }
+    function SystemClass(runtime, scope, instanceConstructor, baseClass) {
+      var c = new Class('System', instanceConstructor, C(instanceConstructor));
+      c.extend(baseClass);
+      c.native = {
+        static: {
+          swfVersion: {
+            get: function () {
+              return 19;
+            }
+          },
+          apiVersion: {
+            get: function () {
+              return 26;
+            }
+          },
+          getArgv: function () {
+            return [];
+          },
+          getRunmode: function () {
+            return 'mixed';
+          }
+        }
+      };
+      return c;
+    }
+    function bugzilla(n) {
+      switch (n) {
+      case 574600:
+        return true;
+      }
+      return false;
+    }
     return {
       print: constant(print),
       notImplemented: constant(notImplemented),
       debugBreak: constant(debugBreak),
+      bugzilla: constant(bugzilla),
       decodeURI: constant(decodeURI),
       decodeURIComponent: constant(decodeURIComponent),
       encodeURI: constant(encodeURI),
@@ -32158,6 +31116,7 @@ var natives = function () {
       CapabilitiesClass: CapabilitiesClass,
       FileClass: FileClass,
       DomainClass: DomainClass,
+      SystemClass: SystemClass,
       getQualifiedClassName: constant(function (value) {
         if (value === null) {
           return 'null';
@@ -32229,7 +31188,7 @@ var natives = function () {
         return notImplemented(value + ' (superOf ' + typeof value + ')');
       }),
       getDefinitionByName: constant(function (name) {
-        var simpleName = name.replace('::', '.');
+        var simpleName = String(name).replace('::', '.');
         return AVM2.currentDomain().getClass(simpleName);
       }),
       describeTypeJSON: constant(describeTypeJSON),
@@ -32743,7 +31702,6 @@ var SourceTracer = function () {
               }
               var getSet = trait.isGetter() ? 'get ' : trait.isSetter() ? 'set ' : '';
               if (!mi.isNative()) {
-                print('XXX: ' + prefix + getSet + trait.name.getName() + ' ()');
               }
             }
             if (mi.isNative()) {
@@ -32779,7 +31737,7 @@ var SourceTracer = function () {
         writer.writeLn('Cut and paste the following into `native.js\' and edit accordingly');
         writer.writeLn('8< --------------------------------------------------------------');
         writer.enter('natives.' + native.cls + ' = function ' + native.cls + '(runtime, scope, instanceConstructor, baseClass) {');
-        writer.writeLn('var c = new Class("' + name + '", instanceConstructor, Domain.passthroughCallable(instanceConstructor));');
+        writer.writeLn('var c = new Class("' + name + '", instanceConstructor, ApplicationDomain.passthroughCallable(instanceConstructor));');
         writer.writeLn('c.extend(baseClass);\n');
         function traceTraits(traits, isStatic) {
           var nativeMethodTraits = [];
@@ -32923,12 +31881,7 @@ var SourceTracer = function () {
         writer.leave('}');
         writer.leave('},');
         writer.enter('script: {');
-        writer.enter('static: {');
-        writer.writeLn('// ...');
-        writer.leave('},');
-        writer.enter('instance: {');
-        writeTraits(ii.traits, false);
-        writer.leave('}');
+        writer.writeLn('instance: Glue.ALL');
         writer.leave('}');
         writer.leave('}');
         writer.leave('};');
@@ -33142,27 +32095,6 @@ function traceStatistics(writer, abc) {
 var Interpreter = new (function () {
     function Interpreter() {
     }
-    function popName(stack, mn) {
-      if (Multiname.isRuntime(mn)) {
-        var namespaces = mn.namespaces, name = mn.name;
-        var flags = mn.flags & Multiname.ATTRIBUTE;
-        if (Multiname.isRuntimeName(mn)) {
-          name = stack.pop();
-        }
-        if (isNumeric(name) || isObject(name)) {
-          true;
-          return name;
-        }
-        if (Multiname.isRuntimeNamespace(mn)) {
-          namespaces = [
-            stack.pop()
-          ];
-        }
-        mn = new Multiname(namespaces, name, flags);
-      }
-      true;
-      return mn;
-    }
     function popNameInto(stack, mn, out) {
       out.flags = mn.flags;
       if (mn.isRuntimeName()) {
@@ -33189,7 +32121,7 @@ var Interpreter = new (function () {
         var strings = abc.constantPool.strings;
         var methods = abc.methods;
         var multinames = abc.constantPool.multinames;
-        var domain = abc.domain;
+        var domain = abc.applicationDomain;
         var exceptions = method.exceptions;
         var locals = [
             $this
@@ -33215,9 +32147,8 @@ var Interpreter = new (function () {
         } else if (method.needsArguments()) {
           locals.push(sliceArguments(methodArgs, 0));
         }
-        var obj, index, multiname, res, a, b, args = [], name;
-        var tmpMultiname = Multiname.TEMPORARY;
         var bytecodes = method.analysis.bytecodes;
+        var object, index, multiname, result, a, b, args = [], mn = Multiname.TEMPORARY;
         interpret:
           for (var pc = 0, end = bytecodes.length; pc < end;) {
             try {
@@ -33227,13 +32158,13 @@ var Interpreter = new (function () {
               case 3:
                 throw stack.pop();
               case 4:
-                name = popName(stack, multinames[bc.index]);
-                stack[stack.length - 1] = getSuper(savedScope, stack[stack.length - 1], name);
+                popNameInto(stack, multinames[bc.index], mn);
+                stack.push(stack.pop().asGetSuper(savedScope, mn.namespaces, mn.name, mn.flags));
                 break;
               case 5:
                 value = stack.pop();
-                name = popName(stack, multinames[bc.index]);
-                setSuper(savedScope, stack.pop(), name, value);
+                popNameInto(stack, multinames[bc.index], mn);
+                stack.pop().asSetSuper(savedScope, mn.namespaces, mn.name, mn.flags, value);
                 break;
               case 8:
                 locals[bc.index] = undefined;
@@ -33329,10 +32260,10 @@ var Interpreter = new (function () {
                 stack[stack.length - 1] = boxValue(stack[stack.length - 1]).asNextValue(index);
                 break;
               case 50:
-                res = asHasNext2(locals[bc.object], locals[bc.index]);
-                locals[bc.object] = res.object;
-                locals[bc.index] = res.index;
-                stack.push(!(!res.index));
+                result = asHasNext2(locals[bc.object], locals[bc.index]);
+                locals[bc.object] = result.object;
+                locals[bc.index] = result.index;
+                stack.push(!(!result.index));
                 break;
               case 32:
                 stack.push(null);
@@ -33372,9 +32303,9 @@ var Interpreter = new (function () {
                 stack.push(stack[stack.length - 1]);
                 break;
               case 43:
-                obj = stack[stack.length - 1];
+                object = stack[stack.length - 1];
                 stack[stack.length - 1] = stack[stack.length - 2];
-                stack[stack.length - 2] = obj;
+                stack[stack.length - 2] = object;
                 break;
               case 48:
                 scopeStack.push(boxValue(stack.pop()));
@@ -33384,18 +32315,12 @@ var Interpreter = new (function () {
                 break;
               case 65:
                 popManyInto(stack, bc.argCount, args);
-                obj = stack.pop();
-                stack[stack.length - 1] = stack[stack.length - 1].apply(obj, args);
+                object = stack.pop();
+                stack[stack.length - 1] = stack[stack.length - 1].apply(object, args);
                 break;
               case 66:
                 popManyInto(stack, bc.argCount, args);
                 stack[stack.length - 1] = construct(stack[stack.length - 1], args);
-                break;
-              case 69:
-                popManyInto(stack, bc.argCount, args);
-                name = popName(stack, multinames[bc.index]);
-                obj = stack[stack.length - 1];
-                stack[stack.length - 1] = getSuper(savedScope, obj, name).apply(obj, args);
                 break;
               case 71:
                 return;
@@ -33406,15 +32331,15 @@ var Interpreter = new (function () {
                 return stack.pop();
               case 73:
                 popManyInto(stack, bc.argCount, args);
-                obj = stack.pop();
-                savedScope.object.baseClass.instanceConstructorNoInitialize.apply(obj, args);
+                object = stack.pop();
+                savedScope.object.baseClass.instanceConstructorNoInitialize.apply(object, args);
                 break;
               case 74:
                 popManyInto(stack, bc.argCount, args);
-                popNameInto(stack, multinames[bc.index], tmpMultiname);
-                obj = boxValue(stack[stack.length - 1]);
-                obj = obj.asConstructProperty(tmpMultiname.namespaces, tmpMultiname.name, tmpMultiname.flags, args);
-                stack[stack.length - 1] = obj;
+                popNameInto(stack, multinames[bc.index], mn);
+                object = boxValue(stack[stack.length - 1]);
+                object = object.asConstructProperty(mn.namespaces, mn.name, mn.flags, args);
+                stack[stack.length - 1] = object;
                 break;
               case 75:
                 notImplemented();
@@ -33423,35 +32348,38 @@ var Interpreter = new (function () {
               case 70:
               case 79:
                 popManyInto(stack, bc.argCount, args);
-                popNameInto(stack, multinames[bc.index], tmpMultiname);
-                res = boxValue(stack.pop()).asCallProperty(tmpMultiname.namespaces, tmpMultiname.name, tmpMultiname.flags, op === OP_callproplex, args);
+                popNameInto(stack, multinames[bc.index], mn);
+                result = boxValue(stack.pop()).asCallProperty(mn.namespaces, mn.name, mn.flags, op === OP_callproplex, args);
                 if (op !== OP_callpropvoid) {
-                  stack.push(res);
+                  stack.push(result);
                 }
                 break;
+              case 69:
               case 78:
                 popManyInto(stack, bc.argCount, args);
-                name = popName(stack, multinames[bc.index]);
-                obj = stack.pop();
-                getSuper(savedScope, obj, name).apply(obj, args);
+                popNameInto(stack, multinames[bc.index], mn);
+                result = stack.pop().asCallSuper(savedScope, mn.namespaces, mn.name, mn.flags, args);
+                if (op !== OP_callsupervoid) {
+                  stack.push(result);
+                }
                 break;
               case 83:
                 popManyInto(stack, bc.argCount, args);
                 stack[stack.length - 1] = applyType(domain, stack[stack.length - 1], args);
                 break;
               case 85:
-                obj = {};
+                object = {};
                 for (var i = 0; i < bc.argCount; i++) {
                   value = stack.pop();
-                  obj[Multiname.getPublicQualifiedName(stack.pop())] = value;
+                  object[Multiname.getPublicQualifiedName(stack.pop())] = value;
                 }
-                stack.push(obj);
+                stack.push(object);
                 break;
               case 86:
-                obj = [];
+                object = [];
                 popManyInto(stack, bc.argCount, args);
-                obj.push.apply(obj, args);
-                stack.push(obj);
+                object.push.apply(object, args);
+                stack.push(object);
                 break;
               case 87:
                 true;
@@ -33461,8 +32389,8 @@ var Interpreter = new (function () {
                 stack[stack.length - 1] = createClass(abc.classes[bc.index], stack[stack.length - 1], scopeStack.topScope());
                 break;
               case 89:
-                name = popName(stack, multinames[bc.index]);
-                stack.push(getDescendants(stack.pop(), name));
+                popNameInto(stack, multinames[bc.index], mn);
+                stack.push(getDescendants(stack.pop(), mn));
                 break;
               case 90:
                 true;
@@ -33470,18 +32398,19 @@ var Interpreter = new (function () {
                 break;
               case 94:
               case 93:
-                popNameInto(stack, multinames[bc.index], tmpMultiname);
-                stack.push(scopeStack.topScope().findScopeProperty(tmpMultiname.namespaces, tmpMultiname.name, tmpMultiname.flags, domain, op === OP_findpropstrict));
+                popNameInto(stack, multinames[bc.index], mn);
+                stack.push(scopeStack.topScope().findScopeProperty(mn.namespaces, mn.name, mn.flags, domain, op === OP_findpropstrict));
                 break;
               case 96:
                 multiname = multinames[bc.index];
-                stack.push(scopeStack.topScope().findScopeProperty(multiname.namespaces, multiname.name, multiname.flags, domain, true).asGetProperty(multiname.namespaces, multiname.name, multiname.flags));
+                object = scopeStack.topScope().findScopeProperty(multiname.namespaces, multiname.name, multiname.flags, domain, true);
+                stack.push(object.asGetProperty(multiname.namespaces, multiname.name, multiname.flags));
                 break;
               case 104:
               case 97:
                 value = stack.pop();
-                popNameInto(stack, multinames[bc.index], tmpMultiname);
-                boxValue(stack.pop()).asSetProperty(tmpMultiname.namespaces, tmpMultiname.name, tmpMultiname.flags, value);
+                popNameInto(stack, multinames[bc.index], mn);
+                boxValue(stack.pop()).asSetProperty(mn.namespaces, mn.name, mn.flags, value);
                 break;
               case 98:
                 stack.push(locals[bc.index]);
@@ -33496,20 +32425,20 @@ var Interpreter = new (function () {
                 stack.push(scopeStack.get(bc.index));
                 break;
               case 102:
-                popNameInto(stack, multinames[bc.index], tmpMultiname);
-                stack[stack.length - 1] = boxValue(stack[stack.length - 1]).asGetProperty(tmpMultiname.namespaces, tmpMultiname.name, tmpMultiname.flags);
+                popNameInto(stack, multinames[bc.index], mn);
+                stack[stack.length - 1] = boxValue(stack[stack.length - 1]).asGetProperty(mn.namespaces, mn.name, mn.flags);
                 break;
               case 106:
-                popNameInto(stack, multinames[bc.index], tmpMultiname);
-                stack[stack.length - 1] = boxValue(stack[stack.length - 1]).asDeleteProperty(tmpMultiname.namespaces, tmpMultiname.name, tmpMultiname.flags);
+                popNameInto(stack, multinames[bc.index], mn);
+                stack[stack.length - 1] = boxValue(stack[stack.length - 1]).asDeleteProperty(mn.namespaces, mn.name, mn.flags);
                 break;
               case 108:
                 stack[stack.length - 1] = asGetSlot(stack[stack.length - 1], bc.index);
                 break;
               case 109:
                 value = stack.pop();
-                obj = stack.pop();
-                asSetSlot(obj, bc.index, value);
+                object = stack.pop();
+                asSetSlot(object, bc.index, value);
                 break;
               case 112:
                 stack[stack.length - 1] = stack[stack.length - 1] + '';
@@ -33545,8 +32474,8 @@ var Interpreter = new (function () {
                 stack[stack.length - 2] = asAsType(stack.pop(), stack[stack.length - 1]);
                 break;
               case 137:
-                obj = stack[stack.length - 1];
-                stack[stack.length - 1] = obj == undefined ? null : obj;
+                object = stack[stack.length - 1];
+                stack[stack.length - 1] = object == undefined ? null : object;
                 break;
               case 144:
                 stack[stack.length - 1] = -stack[stack.length - 1];
@@ -33703,8 +32632,8 @@ var Interpreter = new (function () {
   }())();
 var AVM2 = function () {
     function avm2(sysMode, appMode, findDefiningAbc, loadAVM1) {
-      this.systemDomain = new Domain(this, null, sysMode, true);
-      this.applicationDomain = new Domain(this, this.systemDomain, appMode, false);
+      this.systemDomain = new ApplicationDomain(this, null, sysMode, true);
+      this.applicationDomain = new ApplicationDomain(this, this.systemDomain, appMode, false);
       this.findDefiningAbc = findDefiningAbc;
       this.loadAVM1 = loadAVM1;
       this.isAVM1Loaded = false;
@@ -33719,7 +32648,7 @@ var AVM2 = function () {
       for (var i = 0; i < maxDepth && caller; i++) {
         var mi = caller.methodInfo;
         if (mi) {
-          domain = mi.abc.domain;
+          domain = mi.abc.applicationDomain;
           break;
         }
         caller = caller.caller;
@@ -37196,305 +36125,12 @@ function createAVM2(builtinPath, libraryPath, avm1Path, sysMode, appMode, next) 
     avm2.builtinsLoaded = true;
     console.info(JSON.stringify(Counter.toJSON()));
     console.timeEnd('Load AVM2');
-    addProfileMarker('End Load AVM2');
     next(avm2);
   }
 }
-function scriptProperties(namespace, props) {
-  return props.reduce(function (o, p) {
-    o[p] = namespace + ' ' + p;
-    return o;
-  }, {});
-}
-function cloneObject(obj) {
-  var clone = Object.create(null);
-  for (var prop in obj)
-    clone[prop] = obj[prop];
-  return clone;
-}
-function throwError(name, error) {
-  var message = formatErrorMessage.apply(null, slice.call(arguments, 1));
-  throwErrorFromVM(AVM2.currentDomain(), name, message, error.code);
-}
-function sortByDepth(a, b) {
-  var levelA = a._level;
-  var levelB = b._level;
-  if (a._parent !== b._parent && a._index > -1 && b._index > -1) {
-    while (a._level > levelB) {
-      a = a._parent;
-    }
-    while (b._level > levelA) {
-      b = b._parent;
-    }
-    while (a._level > 1) {
-      if (a._parent === b._parent) {
-        break;
-      }
-      a = a._parent;
-      b = b._parent;
-    }
-  }
-  if (a === b) {
-    return levelA - levelB;
-  }
-  return a._index - b._index;
-}
-function sortNumeric(a, b) {
-  return a - b;
-}
-var Promise = function PromiseClosure() {
-    function isPromise(obj) {
-      return typeof obj === 'object' && obj !== null && typeof obj.then === 'function';
-    }
-    function defaultOnFulfilled(value) {
-      return value;
-    }
-    function defaultOnRejected(reason) {
-      throw reason;
-    }
-    function propagateFulfilled(subject, value) {
-      subject.subpromisesValue = value;
-      var subpromises = subject.subpromises;
-      if (!subpromises) {
-        return;
-      }
-      for (var i = 0; i < subpromises.length; i++) {
-        subpromises[i].fulfill(value);
-      }
-      delete subject.subpromises;
-    }
-    function propagateRejected(subject, reason) {
-      subject.subpromisesReason = reason;
-      var subpromises = subject.subpromises;
-      if (!subpromises) {
-        if (!true) {
-          console.warn(reason);
-        }
-        return;
-      }
-      for (var i = 0; i < subpromises.length; i++) {
-        subpromises[i].reject(reason);
-      }
-      delete subject.subpromises;
-    }
-    function performCall(callback, arg, subject) {
-      try {
-        var value = callback(arg);
-        if (isPromise(value)) {
-          value.then(function Promise_queueCall_onFulfilled(value) {
-            propagateFulfilled(subject, value);
-          }, function Promise_queueCall_onRejected(reason) {
-            propagateRejected(subject, reason);
-          });
-          return;
-        }
-        propagateFulfilled(subject, value);
-      } catch (ex) {
-        propagateRejected(subject, ex);
-      }
-    }
-    var queue = [];
-    function processQueue() {
-      while (queue.length > 0) {
-        var task = queue[0];
-        if (task.directCallback) {
-          task.callback.call(task.subject, task.arg);
-        } else {
-          performCall(task.callback, task.arg, task.subject);
-        }
-        queue.shift();
-      }
-    }
-    function queueCall(callback, arg, subject, directCallback) {
-      if (queue.length === 0) {
-        setTimeout(processQueue, 0);
-      }
-      queue.push({
-        callback: callback,
-        arg: arg,
-        subject: subject,
-        directCallback: directCallback
-      });
-    }
-    function Promise(onFulfilled, onRejected) {
-      this.state = 'pending';
-      this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : defaultOnFulfilled;
-      this.onRejected = typeof onRejected === 'function' ? onRejected : defaultOnRejected;
-    }
-    Promise.prototype = {
-      fulfill: function Promise_resolve(value) {
-        if (this.state !== 'pending') {
-          return;
-        }
-        this.state = 'fulfilled';
-        this.value = value;
-        queueCall(this.onFulfilled, value, this, false);
-      },
-      reject: function Promise_reject(reason) {
-        if (this.state !== 'pending') {
-          return;
-        }
-        this.state = 'rejected';
-        this.reason = reason;
-        queueCall(this.onRejected, reason, this, false);
-      },
-      then: function Promise_then(onFulfilled, onRejected) {
-        var promise = new Promise(onFulfilled, onRejected);
-        if ('subpromisesValue' in this) {
-          queueCall(promise.fulfill, this.subpromisesValue, promise, true);
-        } else if ('subpromisesReason' in this) {
-          queueCall(promise.reject, this.subpromisesReason, promise, true);
-        } else {
-          var subpromises = this.subpromises || (this.subpromises = []);
-          subpromises.push(promise);
-        }
-        return promise;
-      },
-      get resolved() {
-        return this.state === 'fulfilled';
-      },
-      resolve: function (value) {
-        this.fulfill(value);
-      }
-    };
-    Promise.when = function Promise_when() {
-      var promise = new Promise();
-      if (arguments.length === 0) {
-        promise.resolve();
-        return promise;
-      }
-      var promises = slice.call(arguments, 0);
-      var result = [];
-      var i = 1;
-      function fulfill(value) {
-        result.push(value);
-        if (i < promises.length) {
-          promises[i++].then(fulfill, reject);
-        } else {
-          promise.resolve(result);
-        }
-        return value;
-      }
-      function reject(reason) {
-        promise.reject(reason);
-      }
-      promises[0].then(fulfill, reject);
-      return promise;
-    };
-    return Promise;
-  }();
-var QuadTree = function (x, y, width, height, level) {
-  this.x = x | 0;
-  this.y = y | 0;
-  this.width = width | 0;
-  this.height = height | 0;
-  this.level = level | 0;
-  this.stuckObjects = [];
-  this.objects = [];
-  this.nodes = [];
-};
-QuadTree.prototype._findIndex = function (xMin, yMin, xMax, yMax) {
-  var midX = this.x + (this.width / 2 | 0);
-  var midY = this.y + (this.height / 2 | 0);
-  var top = yMin < midY && yMax < midY;
-  var bottom = yMin > midY;
-  if (xMin < midX && xMax < midX) {
-    if (top) {
-      return 1;
-    } else if (bottom) {
-      return 2;
-    }
-  } else if (xMin > midX) {
-    if (top) {
-      return 0;
-    } else if (bottom) {
-      return 3;
-    }
-  }
-  return -1;
-};
-QuadTree.prototype.insert = function (obj) {
-  var nodes = this.nodes;
-  if (nodes.length) {
-    var index = this._findIndex(obj.xMin, obj.yMin, obj.xMax, obj.yMax);
-    if (index > -1) {
-      nodes[index].insert(obj);
-    } else {
-      this.stuckObjects.push(obj);
-      obj._qtree = this;
-    }
-    return;
-  }
-  var objects = this.objects;
-  objects.push(obj);
-  if (objects.length > 4 && this.level < 10) {
-    this._subdivide();
-    while (objects.length) {
-      this.insert(objects.shift());
-    }
-    return;
-  }
-  obj._qtree = this;
-};
-QuadTree.prototype.delete = function (obj) {
-  if (obj._qtree !== this) {
-    return;
-  }
-  var index = this.objects.indexOf(obj);
-  if (index > -1) {
-    this.objects.splice(index, 1);
-  } else {
-    index = this.stuckObjects.indexOf(obj);
-    this.stuckObjects.splice(index, 1);
-  }
-  obj._qtree = null;
-};
-QuadTree.prototype._stack = [];
-QuadTree.prototype._out = [];
-QuadTree.prototype.retrieve = function (xMin, yMin, xMax, yMax) {
-  var stack = this._stack;
-  var out = this._out;
-  out.length = 0;
-  var node = this;
-  do {
-    if (node.nodes.length) {
-      var index = node._findIndex(xMin, yMin, xMax, yMax);
-      if (index > -1) {
-        stack.push(node.nodes[index]);
-      } else {
-        stack.push.apply(stack, node.nodes);
-      }
-    }
-    out.push.apply(out, node.stuckObjects);
-    out.push.apply(out, node.objects);
-    node = stack.pop();
-  } while (node);
-  return out;
-};
-QuadTree.prototype._subdivide = function () {
-  var halfWidth = this.width / 2 | 0;
-  var halfHeight = this.height / 2 | 0;
-  var midX = this.x + halfWidth;
-  var midY = this.y + halfHeight;
-  var level = this.level + 1;
-  this.nodes[0] = new QuadTree(midX, this.y, halfWidth, halfHeight, level);
-  this.nodes[1] = new QuadTree(this.x, this.y, halfWidth, halfHeight, level);
-  this.nodes[2] = new QuadTree(this.x, midY, halfWidth, halfHeight, level);
-  this.nodes[3] = new QuadTree(midX, midY, halfWidth, halfHeight, level);
-};
-var EXTERNAL_INTERFACE_FEATURE = 1;
-var CLIPBOARD_FEATURE = 2;
-var SHAREDOBJECT_FEATURE = 3;
-var VIDEO_FEATURE = 4;
-var SOUND_FEATURE = 5;
-var NETCONNECTION_FEATURE = 6;
-if (!this.performance) {
-  this.performance = {};
-}
-if (!this.performance.now) {
-  this.performance.now = Date.now;
-}
 {
+  var MAX_SNAP_DRAW_SCALE_TO_CACHE = 8;
+  var CACHE_SNAP_DRAW_AFTER = 3;
   var BitmapDefinition = function () {
       function setBitmapData(value) {
         if (this._bitmapData) {
@@ -37520,7 +36156,9 @@ if (!this.performance.now) {
             yMax: 0
           };
         }
-        this._invalidate();
+        this._drawableChanged();
+        this._invalidateBounds();
+        this._invalidateTransform();
       }
       return {
         __class__: 'flash.display.Bitmap',
@@ -37528,21 +36166,85 @@ if (!this.performance.now) {
           if (!this._bitmapData) {
             return;
           }
+          var scaledImage;
           ctx.save();
           if (this._pixelSnapping === 'auto' || this._pixelSnapping === 'always') {
             var transform = this._getConcatenatedTransform(true);
             var EPSILON = 0.001;
-            if (Math.abs(Math.abs(transform.a) - 1) <= EPSILON && Math.abs(Math.abs(transform.d) - 1) <= EPSILON && Math.abs(transform.b) <= EPSILON && Math.abs(transform.c) <= EPSILON) {
+            var aInt = Math.abs(Math.round(transform.a));
+            var dInt = Math.abs(Math.round(transform.d));
+            var snapPixels;
+            if (aInt >= 1 && aInt <= MAX_SNAP_DRAW_SCALE_TO_CACHE && dInt >= 1 && dInt <= MAX_SNAP_DRAW_SCALE_TO_CACHE && Math.abs(Math.abs(transform.a) / aInt - 1) <= EPSILON && Math.abs(Math.abs(transform.d) / dInt - 1) <= EPSILON && Math.abs(transform.b) <= EPSILON && Math.abs(transform.c) <= EPSILON) {
+              if (aInt === 1 && dInt === 1) {
+                snapPixels = true;
+              } else {
+                var sizeKey = aInt + 'x' + dInt;
+                if (this._snapImageCache.size !== sizeKey) {
+                  this._snapImageCache.size = sizeKey;
+                  this._snapImageCache.hits = 0;
+                  this._snapImageCache.image = null;
+                }
+                if (++this._snapImageCache.hits === CACHE_SNAP_DRAW_AFTER) {
+                  this._cacheSnapImage(sizeKey, aInt, dInt);
+                }
+                scaledImage = this._snapImageCache.image;
+                snapPixels = !(!scaledImage);
+              }
+            } else {
+              snapPixels = false;
+            }
+            if (snapPixels) {
               ctx.setTransform(transform.a < 0 ? -1 : 1, 0, 0, transform.d < 0 ? -1 : 1, transform.tx / 20 | 0, transform.ty / 20 | 0);
             }
           }
           colorTransform.setAlpha(ctx, true);
           ctx.imageSmoothingEnabled = ctx.mozImageSmoothingEnabled = this._smoothing;
-          ctx.drawImage(this._bitmapData._drawable, 0, 0);
+          ctx.drawImage(scaledImage || this._bitmapData._getDrawable(), 0, 0);
           ctx.imageSmoothingEnabled = ctx.mozImageSmoothingEnabled = false;
           ctx.restore();
           traceRenderer.value && frameWriter.writeLn('Bitmap.draw() snapping: ' + this._pixelSnapping + ', dimensions: ' + this._bitmapData._drawable.width + ' x ' + this._bitmapData._drawable.height);
-          FrameCounter.count('Bitmap.draw()');
+        },
+        _drawableChanged: function () {
+          this._invalidate();
+          this._snapImageCache.image = null;
+          this._snapImageCache.hints = 0;
+        },
+        _cacheSnapImage: function (sizeKey, xScale, yScale) {
+          Counter.count('Cache scaled image');
+          var original = this._bitmapData._getDrawable();
+          var canvas = document.createElement('canvas');
+          canvas.width = xScale * original.width;
+          canvas.height = yScale * original.height;
+          var ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = ctx.mozImageSmoothingEnabled = this._smoothing;
+          ctx.drawImage(original, 0, 0, original.width, original.height, 0, 0, canvas.width, canvas.height);
+          var cache = this._snapImageCache;
+          var image = document.createElement('img');
+          cache._tmp = [
+            canvas,
+            image
+          ];
+          if ('toBlob' in canvas) {
+            canvas.toBlob(function (blob) {
+              if (cache.size !== sizeKey) {
+                return;
+              }
+              image.onload = function () {
+                URL.revokeObjectURL(blob);
+                if (cache.size === sizeKey) {
+                  cache.image = image;
+                }
+              };
+              image.src = URL.createObjectURL(blob);
+            });
+          } else {
+            image.onload = function () {
+              if (cache.size === sizeKey) {
+                cache.image = image;
+              }
+            };
+            image.src = canvas.toDataURL();
+          }
         },
         initialize: function () {
         },
@@ -37557,9 +36259,14 @@ if (!this.performance.now) {
                   this._pixelSnapping = 'auto';
                 }
                 this._smoothing = !(!smoothing);
+                this._snapImageCache = {
+                  hits: 0,
+                  size: '',
+                  image: null
+                };
                 if (!bitmapData && this.symbol) {
                   var symbol = this.symbol;
-                  bitmapData = new flash.display.BitmapData(symbol.width, symbol.height);
+                  bitmapData = new flash.display.BitmapData(symbol.width, symbol.height, true, 0);
                   bitmapData._ctx.imageSmoothingEnabled = this._smoothing;
                   bitmapData._ctx.mozImageSmoothingEnabled = this._smoothing;
                   bitmapData._ctx.drawImage(symbol.img, 0, 0);
@@ -37596,6 +36303,7 @@ if (!this.performance.now) {
       };
     }.call(this);
 }
+var CACHE_DRAWABLE_AFTER = 10;
 var BitmapDataDefinition = function () {
     function replaceRect(ctx, x, y, w, h, alpha) {
       if (alpha < 255) {
@@ -37610,6 +36318,8 @@ var BitmapDataDefinition = function () {
         initialize: function () {
           this._changeNotificationTarget = null;
           this._locked = false;
+          this._requested = 0;
+          this._cache = null;
           if (this.symbol) {
             this._img = this.symbol.img;
             this._skipCopyToCanvas = this.symbol.skipCopyToCanvas;
@@ -37670,7 +36380,7 @@ var BitmapDataDefinition = function () {
           if (flash.display.BitmapData.class.isInstanceOf(source)) {
             ctx.drawImage(source._drawable, 0, 0);
           } else {
-            new RenderVisitor(source, ctx, null, true).startFragment();
+            new RenderVisitor(source, ctx, null, true).startFragment(matrix);
           }
           ctx.imageSmoothingEnabled = ctx.mozImageSmoothingEnabled = false;
           ctx.restore();
@@ -37704,8 +36414,37 @@ var BitmapDataDefinition = function () {
             return;
           }
           if (this._changeNotificationTarget) {
-            this._changeNotificationTarget._invalidate();
+            this._changeNotificationTarget._drawableChanged();
           }
+          this._requested = 0;
+          this._cache = null;
+        },
+        _getDrawable: function () {
+          if (this._img === this._drawable) {
+            return this._drawable;
+          }
+          this._requested++;
+          if (this._requested >= CACHE_DRAWABLE_AFTER) {
+            if (!this._cache) {
+              Counter.count('Cache drawable');
+              var img = document.createElement('img');
+              if ('toBlob' in this._drawable) {
+                this._drawable.toBlob(function (blob) {
+                  img.src = URL.createObjectURL(blob);
+                  img.onload = function () {
+                    URL.revokeObjectURL(blob);
+                  };
+                });
+              } else {
+                img.src = this._drawable.toDataURL();
+              }
+              this._cache = img;
+            }
+            if (this._cache.width > 0) {
+              return this._cache;
+            }
+          }
+          return this._drawable;
         },
         setPixel: function (x, y, color) {
           this.fillRect({
@@ -37831,19 +36570,23 @@ var DisplayObjectDefinition = function () {
         exitFrame: true,
         render: true
       };
-    var p1 = {
+    var topLeft = {
         x: 0,
         y: 0
       };
-    var p2 = {
+    var topRight = {
         x: 0,
         y: 0
       };
-    var p3 = {
+    var bottomRight = {
         x: 0,
         y: 0
       };
-    var p4 = {
+    var bottomLeft = {
+        x: 0,
+        y: 0
+      };
+    var point = {
         x: 0,
         y: 0
       };
@@ -37866,7 +36609,14 @@ var DisplayObjectDefinition = function () {
           this._cacheAsBitmap = false;
           this._children = [];
           this._clipDepth = null;
-          this._currentTransform = null;
+          this._currentTransform = {
+            a: 1,
+            b: 0,
+            c: 0,
+            d: 1,
+            tx: 0,
+            ty: 0
+          };
           this._concatenatedTransform = {
             a: 1,
             b: 0,
@@ -37890,11 +36640,12 @@ var DisplayObjectDefinition = function () {
           this._owned = false;
           this._parent = null;
           this._rotation = 0;
+          this._rotationCos = 1;
+          this._rotationSin = 0;
           this._scale9Grid = null;
           this._scaleX = 1;
           this._scaleY = 1;
           this._stage = null;
-          this._transform = null;
           this._visible = true;
           this._hidden = false;
           this._wasCachedAsBitmap = false;
@@ -37906,6 +36657,7 @@ var DisplayObjectDefinition = function () {
           this._level = -1;
           this._index = -1;
           this._depth = -1;
+          this._isContainer = false;
           blendModes = [
             blendModeClass.NORMAL,
             blendModeClass.NORMAL,
@@ -37947,34 +36699,8 @@ var DisplayObjectDefinition = function () {
             }
             var matrix = s.currentTransform;
             if (matrix) {
-              var a = matrix.a;
-              var b = matrix.b;
-              var c = matrix.c;
-              var d = matrix.d;
-              this._rotation = a !== 0 ? Math.atan(b / a) * 180 / Math.PI : b > 0 ? 90 : -90;
-              var sx = Math.sqrt(a * a + b * b);
-              this._scaleX = a > 0 ? sx : -sx;
-              var sy = Math.sqrt(d * d + c * c);
-              this._scaleY = d > 0 ? sy : -sy;
-              this._currentTransform = {
-                a: a,
-                b: b,
-                c: c,
-                d: d,
-                tx: matrix.tx,
-                ty: matrix.ty
-              };
+              this._setTransformMatrix(matrix, false);
             }
-          }
-          if (!this._currentTransform) {
-            this._currentTransform = {
-              a: 1,
-              b: 0,
-              c: 0,
-              d: 1,
-              tx: 0,
-              ty: 0
-            };
           }
           this._accessibilityProperties = null;
           var self = this;
@@ -38013,8 +36739,16 @@ var DisplayObjectDefinition = function () {
           if (this === this._stage) {
             return toDeviceSpace ? this._concatenatedTransform : this._currentTransform;
           }
+          var invalidNode = null;
           var m, m2;
-          if (this._concatenatedTransform.invalid) {
+          var currentNode = this;
+          while (currentNode !== stage) {
+            if (currentNode._concatenatedTransform.invalid) {
+              invalidNode = currentNode;
+            }
+            currentNode = currentNode._parent;
+          }
+          if (invalidNode) {
             if (this._parent === stage) {
               m = this._concatenatedTransform;
               m2 = this._currentTransform;
@@ -38025,23 +36759,20 @@ var DisplayObjectDefinition = function () {
               m.tx = m2.tx;
               m.ty = m2.ty;
             } else {
-              var stack = [
-                  this
-                ];
-              var currentNode = this._parent;
-              while (currentNode !== stage) {
-                if (currentNode._concatenatedTransform.invalid) {
-                  stack.push(currentNode);
-                }
+              var stack = [];
+              var currentNode = this;
+              while (currentNode !== invalidNode) {
+                stack.push(currentNode);
                 currentNode = currentNode._parent;
               }
-              while (stack.length) {
-                var node = stack.pop();
+              var node = invalidNode;
+              do {
+                var parent = node._parent;
                 m = node._concatenatedTransform;
                 m2 = node._currentTransform;
-                if (node._parent) {
-                  if (node._parent !== this._stage) {
-                    var m3 = node._parent._concatenatedTransform;
+                if (parent) {
+                  if (parent !== stage) {
+                    var m3 = parent._concatenatedTransform;
                     m.a = m2.a * m3.a + m2.b * m3.c;
                     m.b = m2.a * m3.b + m2.b * m3.d;
                     m.c = m2.c * m3.a + m2.d * m3.c;
@@ -38058,7 +36789,16 @@ var DisplayObjectDefinition = function () {
                   m.ty = m2.ty;
                 }
                 m.invalid = false;
-              }
+                var nextNode = stack.pop();
+                var children = node._children;
+                for (var i = 0; i < children.length; i++) {
+                  var child = children[i];
+                  if (child !== nextNode) {
+                    child._concatenatedTransform.invalid = true;
+                  }
+                }
+                node = nextNode;
+              } while (node);
             }
           } else {
             m = this._concatenatedTransform;
@@ -38076,45 +36816,81 @@ var DisplayObjectDefinition = function () {
           }
           return m;
         },
-        _applyCurrentTransform: function (targetCoordSpace, point1, pointN) {
-          var m;
-          if (targetCoordSpace && targetCoordSpace !== this._parent) {
-            m = this._getConcatenatedTransform();
-          } else {
+        _applyCurrentTransform: function (targetCoordSpace, pt1, ptN) {
+          if (!targetCoordSpace || targetCoordSpace === this) {
+            return;
+          }
+          var m, a, b, c, d, tx, ty;
+          if (targetCoordSpace === this._parent) {
             m = this._currentTransform;
+            a = m.a;
+            b = m.b;
+            c = m.c;
+            d = m.d;
+            tx = m.tx;
+            ty = m.ty;
+          } else {
+            m = this._getConcatenatedTransform();
+            if (targetCoordSpace === this._stage) {
+              a = m.a;
+              b = m.b;
+              c = m.c;
+              d = m.d;
+              tx = m.tx;
+              ty = m.ty;
+            } else {
+              var m2 = targetCoordSpace._getConcatenatedTransform();
+              var a2, b2, c2, d2, tx2, ty2;
+              if (m2.b || m2.c) {
+                var det = 1 / (m2.a * m2.d - m2.b * m2.c);
+                a2 = m2.d * det;
+                b2 = -m2.b * det;
+                c2 = -m2.c * det;
+                d2 = m2.a * det;
+                tx2 = -(a2 * m2.tx + c2 * m2.ty);
+                ty2 = -(b2 * m2.tx + d2 * m2.ty);
+              } else {
+                a2 = 1 / m2.a;
+                b2 = 0;
+                c2 = 0;
+                d2 = 1 / m2.d;
+                tx2 = m2.tx * -a2;
+                ty2 = m2.ty * -d2;
+              }
+              a = a2 * m.a + c2 * m.b;
+              b = b2 * m.a + d2 * m.b;
+              c = a2 * m.c + c2 * m.d;
+              d = b2 * m.c + d2 * m.d;
+              tx = a2 * m.tx + c2 * m.ty + tx2;
+              ty = b2 * m.tx + d2 * m.ty + ty2;
+            }
+          }
+          if (a === 1 && !b && !c && d === 1 && !tx && !ty) {
+            return;
           }
           for (var i = 1; i < arguments.length; i++) {
-            var point = arguments[i];
-            var x = point.x;
-            var y = point.y;
-            point.x = Math.round(m.a * x + m.c * y + m.tx);
-            point.y = Math.round(m.d * y + m.b * x + m.ty);
-          }
-          if (m === this._concatenatedTransform) {
-            var fn = targetCoordSpace._applyCurrentInverseTransform;
-            fn.call.apply(fn, arguments);
+            var pt = arguments[i];
+            var x = pt.x;
+            var y = pt.y;
+            pt.x = a * x + c * y + tx | 0;
+            pt.y = d * y + b * x + ty | 0;
           }
         },
-        _applyCurrentInverseTransform: function (point1, pointN) {
+        _applyConcatenatedInverseTransform: function (pt) {
           var m = this._getConcatenatedTransform();
-          var d = 1 / (m.a * m.d - m.b * m.c);
-          for (var i = 0; i < arguments.length; i++) {
-            var point = arguments[i];
-            var x = point.x - m.tx;
-            var y = point.y - m.ty;
-            point.x = Math.round((m.d * x - m.c * y) * d);
-            point.y = Math.round((m.a * y - m.b * x) * d);
-          }
+          var det = 1 / (m.a * m.d - m.b * m.c);
+          var x = pt.x - m.tx;
+          var y = pt.y - m.ty;
+          pt.x = (m.d * x - m.c * y) * det | 0;
+          pt.y = (m.a * y - m.b * x) * det | 0;
         },
         _hitTest: function (use_xy, x, y, useShape, hitTestObject) {
           if (use_xy) {
-            var pt = {
-                x: x,
-                y: y
-              };
-            this._applyCurrentInverseTransform(pt);
+            point.x = x;
+            point.y = y;
+            this._applyConcatenatedInverseTransform(point);
             var b = this._getContentBounds();
-            if (!(pt.x >= b.xMin && pt.x < b.xMax && pt.y >= b.yMin && pt.y < b.yMax)) {
+            if (!(point.x >= b.xMin && point.x < b.xMax && point.y >= b.yMin && point.y < b.yMax)) {
               return false;
             }
             if (!useShape || !this._graphics) {
@@ -38124,7 +36900,7 @@ var DisplayObjectDefinition = function () {
               var subpaths = this._graphics._paths;
               for (var i = 0, n = subpaths.length; i < n; i++) {
                 var path = subpaths[i];
-                if (path.isPointInPath(pt.x, pt.y)) {
+                if (path.isPointInPath(point.x, point.y)) {
                   return true;
                 }
                 if (path.strokeStyle) {
@@ -38133,7 +36909,7 @@ var DisplayObjectDefinition = function () {
                     strokePath = path.strokePath(path.drawingStyles);
                     path._strokePath = strokePath;
                   }
-                  if (strokePath.isPointInPath(pt.x, pt.y)) {
+                  if (strokePath.isPointInPath(point.x, point.y)) {
                     return true;
                   }
                 }
@@ -38148,8 +36924,8 @@ var DisplayObjectDefinition = function () {
             }
             return false;
           }
-          var b1 = this.getBounds();
-          var b2 = hitTestObject.getBounds();
+          var b1 = this.getBounds(this._stage);
+          var b2 = hitTestObject.getBounds(hitTestObject._stage);
           x = Math.max(b1.xMin, b2.xMin);
           y = Math.max(b1.yMin, b2.yMin);
           var width = Math.min(b1.xMax, b2.xMax) - x;
@@ -38169,57 +36945,37 @@ var DisplayObjectDefinition = function () {
           }
         },
         _invalidateTransform: function () {
-          var stack = [
-              this
-            ];
-          while (stack.length) {
-            var node = stack.pop();
-            if (node._concatenatedTransform && !node._concatenatedTransform.invalid) {
-              node._concatenatedTransform.invalid = true;
-              var children = node._children;
-              for (var i = 0; i < children.length; i++) {
-                stack.push(children[i]);
-              }
-            }
-          }
+          this._concatenatedTransform.invalid = true;
         },
-        _updateCurrentTransform: function () {
-          var scaleX = this._scaleX;
-          var scaleY = this._scaleY;
-          var rotation, u, v;
-          switch (this._rotation) {
-          case 0:
-          case 360:
-            u = 1;
-            v = 0;
-            break;
-          case 90:
-          case -270:
-            u = 0;
-            v = 1;
-            break;
-          case 180:
-          case -180:
-            u = -1;
-            v = 0;
-            break;
-          case 270:
-          case -90:
-            u = 0;
-            v = -1;
-            break;
-          default:
-            rotation = this._rotation / 180 * Math.PI;
-            u = Math.cos(rotation);
-            v = Math.sin(rotation);
-            break;
+        _setTransformMatrix: function (matrix, convertToTwips) {
+          var a = matrix.a;
+          var b = matrix.b;
+          var c = matrix.c;
+          var d = matrix.d;
+          var tx, ty;
+          if (convertToTwips) {
+            tx = matrix.tx * 20 | 0;
+            ty = matrix.ty * 20 | 0;
+          } else {
+            tx = matrix.tx;
+            ty = matrix.ty;
           }
-          this._invalidateTransform();
+          var angle = a !== 0 ? Math.atan(b / a) : b > 0 ? Math.PI / 2 : -Math.PI / 2;
+          this._rotation = angle * 180 / Math.PI;
+          this._rotationCos = Math.cos(angle);
+          this._rotationSin = Math.sin(angle);
+          var sx = Math.sqrt(a * a + b * b);
+          this._scaleX = a > 0 ? sx : -sx;
+          var sy = Math.sqrt(d * d + c * c);
+          this._scaleY = d > 0 ? sy : -sy;
           var transform = this._currentTransform;
-          transform.a = u * scaleX;
-          transform.b = v * scaleX;
-          transform.c = -v * scaleY;
-          transform.d = u * scaleY;
+          transform.a = a;
+          transform.b = b;
+          transform.c = c;
+          transform.d = d;
+          transform.tx = tx;
+          transform.ty = ty;
+          this._invalidateTransform();
         },
         get accessibilityProperties() {
           return this._accessibilityProperties;
@@ -38234,8 +36990,9 @@ var DisplayObjectDefinition = function () {
           if (val === this._alpha) {
             return;
           }
-          this._alpha = val;
           this._invalidate();
+          this._alpha = val;
+          this._animated = false;
         },
         get blendMode() {
           return this._blendMode;
@@ -38246,12 +37003,14 @@ var DisplayObjectDefinition = function () {
           } else {
             throwError('ArgumentError', Errors.InvalidEnumError, 'blendMode');
           }
+          this._animated = false;
         },
         get cacheAsBitmap() {
           return this._cacheAsBitmap;
         },
         set cacheAsBitmap(val) {
           this._cacheAsBitmap = this._filters.length ? true : val;
+          this._animated = false;
         },
         get filters() {
           return this._filters;
@@ -38265,6 +37024,7 @@ var DisplayObjectDefinition = function () {
             this._cacheAsBitmap = this._wasCachedAsBitmap;
           }
           this._filters = val;
+          this._animated = false;
         },
         get height() {
           var bounds = this._getContentBounds();
@@ -38275,12 +37035,11 @@ var DisplayObjectDefinition = function () {
           if (val < 0) {
             return;
           }
-          var rotation = this._rotation / 180 * Math.PI;
-          var u = Math.abs(Math.cos(rotation));
-          var v = Math.abs(Math.sin(rotation));
+          var u = Math.abs(this._rotationCos);
+          var v = Math.abs(this._rotationSin);
           var bounds = this._getContentBounds();
           var baseHeight = v * (bounds.xMax - bounds.xMin) + u * (bounds.yMax - bounds.yMin);
-          if (baseHeight === 0) {
+          if (!baseHeight) {
             return;
           }
           var baseWidth = u * (bounds.xMax - bounds.xMin) + v * (bounds.yMax - bounds.yMin);
@@ -38297,6 +37056,7 @@ var DisplayObjectDefinition = function () {
           if (this._mask === val) {
             return;
           }
+          this._invalidate();
           if (val && val._maskedObject) {
             val._maskedObject.mask = null;
           }
@@ -38304,7 +37064,7 @@ var DisplayObjectDefinition = function () {
           if (val) {
             val._maskedObject = this;
           }
-          this._invalidate();
+          this._animated = false;
         },
         get name() {
           return this._name || (this._name = generateName());
@@ -38313,22 +37073,29 @@ var DisplayObjectDefinition = function () {
           this._name = val;
         },
         get mouseX() {
-          p1.x = this._stage._mouseX;
-          p1.y = this._stage._mouseY;
-          this._applyCurrentInverseTransform(p1);
-          return p1.x;
+          if (!this._stage) {
+            return 0;
+          }
+          point.x = this._stage._mouseX;
+          point.y = this._stage._mouseY;
+          this._applyConcatenatedInverseTransform(point);
+          return point.x;
         },
         get mouseY() {
-          p1.x = this._stage._mouseX;
-          p1.y = this._stage._mouseY;
-          this._applyCurrentInverseTransform(p1);
-          return p1.y;
+          if (!this._stage) {
+            return 0;
+          }
+          point.x = this._stage._mouseX;
+          point.y = this._stage._mouseY;
+          this._applyConcatenatedInverseTransform(point);
+          return point.y;
         },
         get opaqueBackground() {
           return this._opaqueBackground;
         },
         set opaqueBackground(val) {
           this._opaqueBackground = val;
+          this._animated = false;
         },
         get parent() {
           return this._index > -1 ? this._parent : null;
@@ -38348,8 +37115,40 @@ var DisplayObjectDefinition = function () {
             return;
           this._invalidate();
           this._invalidateBounds();
+          this._invalidateTransform();
           this._rotation = val;
-          this._updateCurrentTransform();
+          var u, v;
+          switch (val) {
+          case 0:
+          case 360:
+            u = 1, v = 0;
+            break;
+          case 90:
+          case -270:
+            u = 0, v = 1;
+            break;
+          case 180:
+          case -180:
+            u = -1, v = 0;
+            break;
+          case 270:
+          case -90:
+            u = 0, v = -1;
+            break;
+          default:
+            var angle = this._rotation / 180 * Math.PI;
+            u = Math.cos(angle);
+            v = Math.sin(angle);
+            break;
+          }
+          this._rotationCos = u;
+          this._rotationSin = v;
+          var m = this._currentTransform;
+          m.a = u * this._scaleX;
+          m.b = v * this._scaleX;
+          m.c = -v * this._scaleY;
+          m.d = u * this._scaleY;
+          this._animated = false;
         },
         get rotationX() {
           return 0;
@@ -38381,8 +37180,12 @@ var DisplayObjectDefinition = function () {
             return;
           this._invalidate();
           this._invalidateBounds();
+          this._invalidateTransform();
           this._scaleX = val;
-          this._updateCurrentTransform();
+          var m = this._currentTransform;
+          m.a = this._rotationCos * val;
+          m.b = this._rotationSin * val;
+          this._animated = false;
         },
         get scaleY() {
           return this._scaleY;
@@ -38392,8 +37195,12 @@ var DisplayObjectDefinition = function () {
             return;
           this._invalidate();
           this._invalidateBounds();
+          this._invalidateTransform();
           this._scaleY = val;
-          this._updateCurrentTransform();
+          var m = this._currentTransform;
+          m.c = -this._rotationSin * val;
+          m.d = this._rotationCos * val;
+          this._animated = false;
         },
         get scaleZ() {
           return 1;
@@ -38407,6 +37214,7 @@ var DisplayObjectDefinition = function () {
         set scale9Grid(val) {
           somewhatImplemented('DisplayObject.scale9Grid');
           this._scale9Grid = val;
+          this._animated = false;
         },
         get scrollRect() {
           return this._scrollRect;
@@ -38416,12 +37224,11 @@ var DisplayObjectDefinition = function () {
           this._scrollRect = val;
         },
         get transform() {
-          return this._transform || new flash.geom.Transform(this);
+          return new flash.geom.Transform(this);
         },
         set transform(val) {
-          this._animated = false;
           this._invalidateBounds();
-          var transform = this._transform;
+          var transform = this.transform;
           transform.colorTransform = val.colorTransform;
           if (val.matrix3D) {
             transform.matrix3D = val.matrix3D;
@@ -38435,8 +37242,9 @@ var DisplayObjectDefinition = function () {
         set visible(val) {
           if (val === this._visible)
             return;
-          this._visible = val;
           this._invalidate();
+          this._visible = val;
+          this._animated = false;
         },
         get width() {
           var bounds = this._getContentBounds();
@@ -38447,12 +37255,11 @@ var DisplayObjectDefinition = function () {
           if (val < 0) {
             return;
           }
-          var rotation = this._rotation / 180 * Math.PI;
-          var u = Math.abs(Math.cos(rotation));
-          var v = Math.abs(Math.sin(rotation));
+          var u = Math.abs(this._rotationCos);
+          var v = Math.abs(this._rotationSin);
           var bounds = this._getContentBounds();
           var baseWidth = u * (bounds.xMax - bounds.xMin) + v * (bounds.yMax - bounds.yMin);
-          if (baseWidth === 0) {
+          if (!baseWidth) {
             return;
           }
           var baseHeight = v * (bounds.xMax - bounds.xMin) + u * (bounds.yMax - bounds.yMin);
@@ -38470,6 +37277,7 @@ var DisplayObjectDefinition = function () {
           this._invalidateBounds();
           this._invalidateTransform();
           this._currentTransform.tx = val;
+          this._animated = false;
         },
         get y() {
           return this._currentTransform.ty;
@@ -38482,6 +37290,7 @@ var DisplayObjectDefinition = function () {
           this._invalidateBounds();
           this._invalidateTransform();
           this._currentTransform.ty = val;
+          this._animated = false;
         },
         get z() {
           return 0;
@@ -38507,10 +37316,7 @@ var DisplayObjectDefinition = function () {
               var numChildren = children.length;
               for (var i = 0; i < numChildren; i++) {
                 var child = children[i];
-                if (!child._visible) {
-                  continue;
-                }
-                var b = child.getBounds(null);
+                var b = child.getBounds(this);
                 var x1 = b.xMin;
                 var y1 = b.yMin;
                 var x2 = b.xMax;
@@ -38553,6 +37359,9 @@ var DisplayObjectDefinition = function () {
           return this._getTransformedRect(this._getContentBounds(), targetCoordSpace);
         },
         _getTransformedRect: function (rect, targetCoordSpace) {
+          if (!targetCoordSpace || targetCoordSpace === this) {
+            return rect;
+          }
           if (rect.xMax - rect.xMin === 0 || rect.yMax - rect.yMin === 0) {
             return {
               xMin: 0,
@@ -38561,19 +37370,19 @@ var DisplayObjectDefinition = function () {
               yMax: 0
             };
           }
-          p1.x = rect.xMin;
-          p1.y = rect.yMin;
-          p2.x = rect.xMax;
-          p2.y = rect.yMin;
-          p3.x = rect.xMax;
-          p3.y = rect.yMax;
-          p4.x = rect.xMin;
-          p4.y = rect.yMax;
-          this._applyCurrentTransform(targetCoordSpace, p1, p2, p3, p4);
-          var xMin = Math.min(p1.x, p2.x, p3.x, p4.x);
-          var xMax = Math.max(p1.x, p2.x, p3.x, p4.x);
-          var yMin = Math.min(p1.y, p2.y, p3.y, p4.y);
-          var yMax = Math.max(p1.y, p2.y, p3.y, p4.y);
+          topLeft.x = rect.xMin;
+          topLeft.y = rect.yMin;
+          topRight.x = rect.xMax;
+          topRight.y = rect.yMin;
+          bottomRight.x = rect.xMax;
+          bottomRight.y = rect.yMax;
+          bottomLeft.x = rect.xMin;
+          bottomLeft.y = rect.yMax;
+          this._applyCurrentTransform(targetCoordSpace, topLeft, topRight, bottomRight, bottomLeft);
+          var xMin = Math.min(topLeft.x, topRight.x, bottomRight.x, bottomLeft.x);
+          var xMax = Math.max(topLeft.x, topRight.x, bottomRight.x, bottomLeft.x);
+          var yMin = Math.min(topLeft.y, topRight.y, bottomRight.y, bottomLeft.y);
+          var yMax = Math.max(topLeft.y, topRight.y, bottomRight.y, bottomLeft.y);
           return {
             xMin: xMin,
             yMin: yMin,
@@ -38690,20 +37499,16 @@ var DisplayObjectDefinition = function () {
           loaderInfo: desc(def, 'loaderInfo'),
           accessibilityProperties: desc(def, 'accessibilityProperties'),
           globalToLocal: function (pt) {
-            var twipPt = {
-                x: pt.x * 20 | 0,
-                y: pt.y * 20 | 0
-              };
-            this._applyCurrentInverseTransform(twipPt);
-            return new flash.geom.Point(twipPt.x / 20, twipPt.y / 20);
+            point.x = pt.x * 20 | 0;
+            point.y = pt.y * 20 | 0;
+            this._applyConcatenatedInverseTransform(point);
+            return new flash.geom.Point(point.x / 20, point.y / 20);
           },
           localToGlobal: function (pt) {
-            var twipPt = {
-                x: pt.x * 20 | 0,
-                y: pt.y * 20 | 0
-              };
-            this._applyCurrentTransform(this._stage, twipPt);
-            return new flash.geom.Point(twipPt.x / 20, twipPt.y / 20);
+            point.x = pt.x * 20 | 0;
+            point.y = pt.y * 20 | 0;
+            this._applyCurrentTransform(this._stage, point);
+            return new flash.geom.Point(point.x / 20, point.y / 20);
           },
           getBounds: function (targetCoordSpace) {
             var bounds = this.getBounds(targetCoordSpace);
@@ -38773,7 +37578,7 @@ var DisplayObjectContainerDefinition = function () {
           child._index = index;
           child._invalidateTransform();
           this._invalidateBounds();
-          child._dispatchEvent('added');
+          child._dispatchEvent('added', undefined, true);
           if (this._stage) {
             this._stage._addToStage(child);
           }
@@ -38827,7 +37632,7 @@ var DisplayObjectContainerDefinition = function () {
             throwError('RangeError', Errors.ParamRangeError);
           }
           var child = children[index];
-          child._dispatchEvent('removed');
+          child._dispatchEvent('removed', undefined, true);
           if (this._stage) {
             this._stage._removeFromStage(child);
           }
@@ -38868,14 +37673,22 @@ var DisplayObjectContainerDefinition = function () {
           child._invalidate();
           return child;
         },
-        removeChildren: function (begin, end) {
-          var children = this._children;
-          var numChildren = children.length;
-          if (begin < 0 || begin > numChildren || end < 0 || end < begin || end > numChildren) {
+        removeChildren: function (beginIndex, endIndex) {
+          beginIndex = arguments.length < 1 ? 0 : beginIndex | 0;
+          endIndex = arguments.length < 2 ? 2147483647 : endIndex | 0;
+          var numChildren = this._children.length;
+          if (beginIndex < 0 || endIndex < 0 || endIndex < beginIndex) {
             throwError('RangeError', Errors.ParamRangeError);
           }
-          for (var i = begin; i < end; i++) {
-            this.removeChildAt(i);
+          if (numChildren === 0) {
+            return;
+          }
+          if (endIndex > numChildren - 1) {
+            endIndex = numChildren - 1;
+          }
+          var count = endIndex - beginIndex + 1;
+          while (count--) {
+            this.removeChildAt(beginIndex);
           }
         },
         swapChildren: function (child1, child2) {
@@ -38919,6 +37732,7 @@ var DisplayObjectContainerDefinition = function () {
       this._mouseChildren = true;
       this._tabChildren = true;
       this._sparse = false;
+      this._isContainer = true;
     };
     def.__glue__ = {
       native: {
@@ -38982,8 +37796,12 @@ var GraphicsDefinition = function () {
           this.beginPath();
           this._bitmap = null;
           this._parent = 0;
+          this.bbox = null;
+          this.strokeBbox = null;
         },
         _invalidate: function () {
+          this.bbox = null;
+          this.strokeBbox = null;
           if (this._parent._stage) {
             this._parent._stage._invalidateOnStage(this._parent);
           }
@@ -39205,12 +38023,13 @@ var GraphicsDefinition = function () {
           if (this.bbox) {
             return this.bbox;
           }
+          Counter.count('CACHE ME: Graphics._getBounds');
           var subpaths = this._paths;
           var xMins = [], yMins = [], xMaxs = [], yMaxs = [];
           for (var i = 0, n = subpaths.length; i < n; i++) {
             var path = subpaths[i];
             if (path.commands.length) {
-              var b = path.getBounds(true);
+              var b = path.getBounds(includeStroke);
               if (b) {
                 xMins.push(b.xMin);
                 yMins.push(b.yMin);
@@ -39222,16 +38041,18 @@ var GraphicsDefinition = function () {
           if (xMins.length === 0) {
             return 0;
           }
-          var xMin = Math.min.apply(Math, xMins);
-          var yMin = Math.min.apply(Math, yMins);
-          var xMax = Math.max.apply(Math, xMaxs);
-          var yMax = Math.max.apply(Math, yMaxs);
-          return {
-            xMin: xMin,
-            yMin: yMin,
-            xMax: xMax,
-            yMax: yMax
+          bbox = {
+            xMin: Math.min.apply(Math, xMins),
+            yMin: Math.min.apply(Math, yMins),
+            xMax: Math.max.apply(Math, xMaxs),
+            yMax: Math.max.apply(Math, yMaxs)
           };
+          if (includeStroke) {
+            this.strokeBbox = bbox;
+          } else {
+            this.bbox = bbox;
+          }
+          return bbox;
         }
       };
     def.__glue__ = {
@@ -39425,424 +38246,7 @@ var InteractiveObjectDefinition = function () {
 var $RELEASE = false;
 var LoaderDefinition = function () {
     var WORKERS_ENABLED = true;
-    var LOADER_PATH;
-    var workerScripts;
-    if (true) {
-      LOADER_PATH = 'shumway-worker.js';
-    } else {
-      LOADER_PATH = 'flash/display/Loader.js';
-      workerScripts = [
-        '../../../lib/DataView.js/DataView.js',
-        '../util.js',
-        '../../swf/config.js',
-        '../../swf/util.js',
-        '../../swf/swf.js',
-        '../../swf/types.js',
-        '../../swf/structs.js',
-        '../../swf/tags.js',
-        '../../swf/inflate.js',
-        '../../swf/stream.js',
-        '../../swf/templates.js',
-        '../../swf/generator.js',
-        '../../swf/handlers.js',
-        '../../swf/parser.js',
-        '../../swf/bitmap.js',
-        '../../swf/button.js',
-        '../../swf/font.js',
-        '../../swf/image.js',
-        '../../swf/label.js',
-        '../../swf/shape.js',
-        '../../swf/sound.js',
-        '../../swf/text.js'
-      ];
-    }
-    var isWorker = typeof window === 'undefined';
-    function loadFromWorker(loader, request, context) {
-      var symbols = {};
-      var commitData;
-      if (loader) {
-        commitData = function (data) {
-          return loader._commitData(data);
-        };
-      } else {
-        commitData = function (data) {
-          self.postMessage(data);
-        };
-      }
-      function defineSymbol(swfTag) {
-        var symbol;
-        switch (swfTag.code) {
-        case SWF_TAG_CODE_DEFINE_BITS:
-        case SWF_TAG_CODE_DEFINE_BITS_JPEG2:
-        case SWF_TAG_CODE_DEFINE_BITS_JPEG3:
-        case SWF_TAG_CODE_DEFINE_BITS_JPEG4:
-        case SWF_TAG_CODE_JPEG_TABLES:
-          symbol = defineImage(swfTag, symbols);
-          break;
-        case SWF_TAG_CODE_DEFINE_BITS_LOSSLESS:
-        case SWF_TAG_CODE_DEFINE_BITS_LOSSLESS2:
-          symbol = defineBitmap(swfTag, symbols);
-          break;
-        case SWF_TAG_CODE_DEFINE_BUTTON:
-        case SWF_TAG_CODE_DEFINE_BUTTON2:
-          symbol = defineButton(swfTag, symbols);
-          break;
-        case SWF_TAG_CODE_DEFINE_EDIT_TEXT:
-          symbol = defineText(swfTag, symbols);
-          break;
-        case SWF_TAG_CODE_DEFINE_FONT:
-        case SWF_TAG_CODE_DEFINE_FONT2:
-        case SWF_TAG_CODE_DEFINE_FONT3:
-        case SWF_TAG_CODE_DEFINE_FONT4:
-          symbol = defineFont(swfTag, symbols);
-          break;
-        case SWF_TAG_CODE_DEFINE_MORPH_SHAPE:
-        case SWF_TAG_CODE_DEFINE_MORPH_SHAPE2:
-        case SWF_TAG_CODE_DEFINE_SHAPE:
-        case SWF_TAG_CODE_DEFINE_SHAPE2:
-        case SWF_TAG_CODE_DEFINE_SHAPE3:
-        case SWF_TAG_CODE_DEFINE_SHAPE4:
-          symbol = defineShape(swfTag, symbols);
-          break;
-        case SWF_TAG_CODE_DEFINE_SOUND:
-          symbol = defineSound(swfTag, symbols);
-          break;
-        case SWF_TAG_CODE_DEFINE_BINARY_DATA:
-          symbol = {
-            type: 'binary',
-            id: swfTag.id,
-            data: swfTag.data
-          };
-          break;
-        case SWF_TAG_CODE_DEFINE_SPRITE:
-          var depths = {};
-          var frame = {
-              type: 'frame'
-            };
-          var frames = [];
-          var tags = swfTag.tags;
-          var frameScripts = null;
-          var frameIndex = 0;
-          var soundStream = null;
-          for (var i = 0, n = tags.length; i < n; i++) {
-            var tag = tags[i];
-            switch (tag.code) {
-            case SWF_TAG_CODE_DO_ACTION:
-              if (!frameScripts)
-                frameScripts = [];
-              frameScripts.push(frameIndex);
-              frameScripts.push(tag.actionsData);
-              break;
-            case SWF_TAG_CODE_START_SOUND:
-              var startSounds = frame.startSounds || (frame.startSounds = []);
-              startSounds.push(tag);
-              break;
-            case SWF_TAG_CODE_SOUND_STREAM_HEAD:
-              try {
-                soundStream = createSoundStream(tag);
-                frame.soundStream = soundStream.info;
-              } catch (e) {
-              }
-              break;
-            case SWF_TAG_CODE_SOUND_STREAM_BLOCK:
-              if (soundStream) {
-                frame.soundStreamBlock = soundStream.decode(tag.data);
-              }
-              break;
-            case SWF_TAG_CODE_FRAME_LABEL:
-              frame.labelName = tag.name;
-              break;
-            case SWF_TAG_CODE_PLACE_OBJECT:
-            case SWF_TAG_CODE_PLACE_OBJECT2:
-            case SWF_TAG_CODE_PLACE_OBJECT3:
-              depths[tag.depth] = tag;
-              break;
-            case SWF_TAG_CODE_REMOVE_OBJECT:
-            case SWF_TAG_CODE_REMOVE_OBJECT2:
-              depths[tag.depth] = null;
-              break;
-            case SWF_TAG_CODE_SHOW_FRAME:
-              var repeat = 1;
-              while (i < n - 1) {
-                var nextTag = tags[i + 1];
-                if (nextTag.code !== SWF_TAG_CODE_SHOW_FRAME)
-                  break;
-                i++;
-                repeat++;
-              }
-              frameIndex += repeat;
-              frame.repeat = repeat;
-              frame.depths = depths;
-              frames.push(frame);
-              depths = {};
-              frame = {
-                type: 'frame'
-              };
-              break;
-            }
-          }
-          symbol = {
-            type: 'sprite',
-            id: swfTag.id,
-            frameCount: swfTag.frameCount,
-            frames: frames,
-            frameScripts: frameScripts
-          };
-          break;
-        case SWF_TAG_CODE_DEFINE_TEXT:
-        case SWF_TAG_CODE_DEFINE_TEXT2:
-          symbol = defineLabel(swfTag, symbols);
-          break;
-        }
-        if (!symbol) {
-          commitData({
-            command: 'error',
-            message: 'unknown symbol type: ' + swfTag.code
-          });
-          return;
-        }
-        symbol.isSymbol = true;
-        symbols[swfTag.id] = symbol;
-        commitData(symbol);
-      }
-      function createParsingContext() {
-        var depths = {};
-        var frame = {
-            type: 'frame'
-          };
-        var tagsProcessed = 0;
-        var soundStream = null;
-        var lastProgressSent = 0;
-        return {
-          onstart: function (result) {
-            commitData({
-              command: 'init',
-              result: result
-            });
-          },
-          onprogress: function (result) {
-            if (Date.now() - lastProgressSent > 1000 / 24 || result.bytesLoaded === result.bytesTotal) {
-              commitData({
-                command: 'progress',
-                result: {
-                  bytesLoaded: result.bytesLoaded,
-                  bytesTotal: result.bytesTotal
-                }
-              });
-              lastProgressSent = Date.now();
-            }
-            var tags = result.tags;
-            for (var n = tags.length; tagsProcessed < n; tagsProcessed++) {
-              var tag = tags[tagsProcessed];
-              if ('id' in tag) {
-                defineSymbol(tag);
-                continue;
-              }
-              switch (tag.code) {
-              case SWF_TAG_CODE_DEFINE_SCENE_AND_FRAME_LABEL_DATA:
-                frame.sceneData = tag;
-                break;
-              case SWF_TAG_CODE_DEFINE_SCALING_GRID:
-                var symbolUpdate = {
-                    isSymbol: true,
-                    id: tag.symbolId,
-                    updates: {
-                      scale9Grid: tag.splitter
-                    }
-                  };
-                commitData(symbolUpdate);
-                break;
-              case SWF_TAG_CODE_DO_ABC:
-              case SWF_TAG_CODE_DO_ABC_:
-                var abcBlocks = frame.abcBlocks;
-                if (abcBlocks)
-                  abcBlocks.push({
-                    data: tag.data,
-                    flags: tag.flags
-                  });
-                else
-                  frame.abcBlocks = [
-                    {
-                      data: tag.data,
-                      flags: tag.flags
-                    }
-                  ];
-                break;
-              case SWF_TAG_CODE_DO_ACTION:
-                var actionBlocks = frame.actionBlocks;
-                if (actionBlocks)
-                  actionBlocks.push(tag.actionsData);
-                else
-                  frame.actionBlocks = [
-                    tag.actionsData
-                  ];
-                break;
-              case SWF_TAG_CODE_DO_INIT_ACTION:
-                var initActionBlocks = frame.initActionBlocks || (frame.initActionBlocks = []);
-                initActionBlocks.push({
-                  spriteId: tag.spriteId,
-                  actionsData: tag.actionsData
-                });
-                break;
-              case SWF_TAG_CODE_START_SOUND:
-                var startSounds = frame.startSounds;
-                if (!startSounds)
-                  frame.startSounds = startSounds = [];
-                startSounds.push(tag);
-                break;
-              case SWF_TAG_CODE_SOUND_STREAM_HEAD:
-                try {
-                  soundStream = createSoundStream(tag);
-                  frame.soundStream = soundStream.info;
-                } catch (e) {
-                }
-                break;
-              case SWF_TAG_CODE_SOUND_STREAM_BLOCK:
-                if (soundStream) {
-                  frame.soundStreamBlock = soundStream.decode(tag.data);
-                }
-                break;
-              case SWF_TAG_CODE_SYMBOL_CLASS:
-                var exports = frame.exports;
-                if (exports)
-                  frame.exports = exports.concat(tag.exports);
-                else
-                  frame.exports = tag.exports.slice(0);
-                break;
-              case SWF_TAG_CODE_FRAME_LABEL:
-                frame.labelName = tag.name;
-                break;
-              case SWF_TAG_CODE_PLACE_OBJECT:
-              case SWF_TAG_CODE_PLACE_OBJECT2:
-              case SWF_TAG_CODE_PLACE_OBJECT3:
-                depths[tag.depth] = tag;
-                break;
-              case SWF_TAG_CODE_REMOVE_OBJECT:
-              case SWF_TAG_CODE_REMOVE_OBJECT2:
-                depths[tag.depth] = null;
-                break;
-              case SWF_TAG_CODE_SET_BACKGROUND_COLOR:
-                frame.bgcolor = tag.color;
-                break;
-              case SWF_TAG_CODE_SHOW_FRAME:
-                var repeat = 1;
-                while (tagsProcessed < n) {
-                  var nextTag = tags[tagsProcessed + 1];
-                  if (!nextTag || nextTag.code !== SWF_TAG_CODE_SHOW_FRAME)
-                    break;
-                  tagsProcessed++;
-                  repeat++;
-                }
-                frame.repeat = repeat;
-                frame.depths = depths;
-                commitData(frame);
-                depths = {};
-                frame = {
-                  type: 'frame'
-                };
-                break;
-              }
-            }
-          },
-          oncomplete: function (result) {
-            commitData(result);
-            var stats;
-            if (typeof result.swfVersion === 'number') {
-              var bbox = result.bbox;
-              stats = {
-                topic: 'parseInfo',
-                parseTime: result.parseTime,
-                bytesTotal: result.bytesTotal,
-                swfVersion: result.swfVersion,
-                frameRate: result.frameRate,
-                width: (bbox.xMax - bbox.xMin) / 20,
-                height: (bbox.yMax - bbox.yMin) / 20,
-                isAvm2: !(!result.fileAttributes.doAbc)
-              };
-            }
-            commitData({
-              command: 'complete',
-              stats: stats
-            });
-          }
-        };
-      }
-      function parseBytes(bytes) {
-        SWF.parse(bytes, createParsingContext());
-      }
-      if (isWorker || !flash.net.URLRequest.class.isInstanceOf(request)) {
-        var input = request;
-        if (input instanceof ArrayBuffer) {
-          parseBytes(input);
-        } else if ('subscribe' in input) {
-          var pipe = SWF.parseAsync(createParsingContext());
-          input.subscribe(function (data, progress) {
-            if (data) {
-              pipe.push(data, progress);
-            } else {
-              pipe.close();
-            }
-          });
-        } else if (typeof FileReaderSync !== 'undefined') {
-          var reader = new FileReaderSync();
-          var buffer = reader.readAsArrayBuffer(input);
-          parseBytes(buffer);
-        } else {
-          var reader = new FileReader();
-          reader.onload = function () {
-            parseBytes(this.result);
-          };
-          reader.readAsArrayBuffer(input);
-        }
-      } else {
-        var session = FileLoadingService.createSession();
-        var pipe = SWF.parseAsync(createParsingContext());
-        session.onprogress = function (data, progressState) {
-          pipe.push(data, progressState);
-          var data = {
-              command: 'progress',
-              result: {
-                bytesLoaded: progressState.bytesLoaded,
-                bytesTotal: progressState.bytesTotal
-              }
-            };
-          loader._commitData(data);
-        };
-        session.onerror = function (error) {
-          loader._commitData({
-            command: 'error',
-            error: error
-          });
-        };
-        session.onopen = function () {
-        };
-        session.onclose = function () {
-          pipe.close();
-        };
-        session.open(request._toFileRequest());
-      }
-    }
-    if (isWorker) {
-      if (workerScripts) {
-        importScripts.apply(null, workerScripts);
-      }
-      var subscription = null;
-      self.onmessage = function (evt) {
-        if (subscription) {
-          subscription.callback(evt.data.data, evt.data.progress);
-        } else if (evt.data === 'pipe:') {
-          subscription = {
-            subscribe: function (callback) {
-              this.callback = callback;
-            }
-          };
-          loadFromWorker(null, subscription);
-        } else {
-          loadFromWorker(null, evt.data);
-        }
-      };
-      return;
-    }
+    var LOADER_PATH = true ? 'shumway-worker.js' : 'swf/resourceloader.js';
     var head = document.head;
     head.insertBefore(document.createElement('style'), head.firstChild);
     var style = document.styleSheets[0];
@@ -39875,7 +38279,8 @@ var LoaderDefinition = function () {
               }
             });
             Promise.when(frameConstructed, this._lastPromise).then(function () {
-              this.contentLoaderInfo._dispatchEvent('complete');
+              this._content._complete = true;
+              this._contentLoaderInfo._dispatchEvent('complete');
             }.bind(this));
             var stats = data.stats;
             if (stats) {
@@ -39888,7 +38293,7 @@ var LoaderDefinition = function () {
             this._lastPromise.resolve();
             break;
           case 'error':
-            this.contentLoaderInfo._dispatchEvent('ioError', flash.events.IOErrorEvent);
+            this._contentLoaderInfo._dispatchEvent('ioError', flash.events.IOErrorEvent);
             break;
           default:
             if (data.id === 0)
@@ -39903,7 +38308,7 @@ var LoaderDefinition = function () {
           }
         },
         _updateProgress: function (state) {
-          var loaderInfo = this.contentLoaderInfo;
+          var loaderInfo = this._contentLoaderInfo;
           loaderInfo._bytesLoaded = state.bytesLoaded || 0;
           loaderInfo._bytesTotal = state.bytesTotal || 0;
           var event = new flash.events.ProgressEvent('progress', false, false, loaderInfo._bytesLoaded, loaderInfo._bytesTotal);
@@ -39967,10 +38372,11 @@ var LoaderDefinition = function () {
           var actionBlocks = frame.actionBlocks;
           var initActionBlocks = frame.initActionBlocks;
           var exports = frame.exports;
+          var symbolClasses = frame.symbolClasses;
           var sceneData = frame.sceneData;
           var loader = this;
           var dictionary = loader._dictionary;
-          var loaderInfo = loader.contentLoaderInfo;
+          var loaderInfo = loader._contentLoaderInfo;
           var timeline = loader._timeline;
           var frameNum = timeline.length + 1;
           var framePromise = new Promise();
@@ -40002,7 +38408,25 @@ var LoaderDefinition = function () {
                 }
               }
             }
-            if (exports && loader._isAvm2Enabled) {
+            if (symbolClasses && loader._isAvm2Enabled) {
+              var symbolClassesPromises = [];
+              for (var i = 0, n = symbolClasses.length; i < n; i++) {
+                var asset = symbolClasses[i];
+                var symbolPromise = dictionary[asset.symbolId];
+                if (!symbolPromise)
+                  continue;
+                symbolPromise.then(function (symbolPromise, className) {
+                  return function symbolPromiseResolved() {
+                    var symbolInfo = symbolPromise.value;
+                    symbolInfo.className = className;
+                    avm2.applicationDomain.getClass(className).setSymbol(symbolInfo.props);
+                  };
+                }(symbolPromise, asset.className));
+                symbolClassesPromises.push(symbolPromise);
+              }
+              return Promise.when.apply(Promise, symbolClassesPromises);
+            }
+            if (exports && !loader._isAvm2Enabled) {
               var exportPromises = [];
               for (var i = 0, n = exports.length; i < n; i++) {
                 var asset = exports[i];
@@ -40012,8 +38436,7 @@ var LoaderDefinition = function () {
                 symbolPromise.then(function (symbolPromise, className) {
                   return function symbolPromiseResolved() {
                     var symbolInfo = symbolPromise.value;
-                    symbolInfo.className = className;
-                    avm2.applicationDomain.getClass(className).setSymbol(symbolInfo.props);
+                    loader._avm1Context.addAsset(className, symbolInfo.props);
                   };
                 }(symbolPromise, asset.className));
                 exportPromises.push(symbolPromise);
@@ -40036,7 +38459,8 @@ var LoaderDefinition = function () {
                 level: parent ? 0 : -1,
                 timeline: timeline,
                 totalFrames: rootInfo.props.totalFrames,
-                stage: loader._stage
+                stage: loader._stage,
+                complete: frame.complete
               });
               var isRootMovie = parent && parent == loader._stage && loader._stage._children.length === 0;
               if (isRootMovie) {
@@ -40083,6 +38507,7 @@ var LoaderDefinition = function () {
                   labels.push(new flash.display.FrameLabel(labelName, frameNum));
                 }
                 var scene = new flash.display.Scene('Scene 1', labels, root.symbol.totalFrames);
+                scene._startFrame = 1;
                 scene._endFrame = root.symbol.totalFrames;
                 root.symbol.scenes = [
                   scene
@@ -40092,9 +38517,14 @@ var LoaderDefinition = function () {
                 var avm1Context = loader._avm1Context;
                 var _root = root;
                 if (parent && parent !== loader._stage) {
-                  var parentLoader = parent._loader;
+                  var parentLoader = parent.loaderInfo._loader;
                   while (parentLoader._parent && parentLoader._parent !== loader._stage) {
-                    parentLoader = parentLoader._parent._loader;
+                    parentLoader = parentLoader._parent.loaderInfo._loader;
+                  }
+                  if (parentLoader._isAvm2Enabled) {
+                    somewhatImplemented('AVM1Movie');
+                    this._worker && this._worker.terminate();
+                    return;
                   }
                   _root = parentLoader._content;
                 }
@@ -40109,10 +38539,13 @@ var LoaderDefinition = function () {
                   }
                 }
               }
+              if (loader._stage) {
+                loader._stage._children[0] = root;
+              }
               rootClass.instanceConstructor.call(root);
               loader._content = root;
             } else {
-              root._framesLoaded += frame.repeat;
+              root._framesLoaded = timeline.length;
               if (labelName && root._labelMap) {
                 if (root._labelMap[labelName] === undefined) {
                   root._labelMap[labelName] = frameNum;
@@ -40145,7 +38578,7 @@ var LoaderDefinition = function () {
                     if (state.executed)
                       return;
                     state.executed = true;
-                    return executeActions(actionsData, avm1Context, this._getAS2Object(), exports);
+                    return executeActions(actionsData, avm1Context, this._getAS2Object());
                   }.bind(root, actionsData, spriteId, {
                     executed: false
                   }));
@@ -40156,7 +38589,7 @@ var LoaderDefinition = function () {
                   var block = actionBlocks[i];
                   root.addFrameScript(frameNum - 1, function (block) {
                     return function () {
-                      return executeActions(block, avm1Context, this._getAS2Object(), exports);
+                      return executeActions(block, avm1Context, this._getAS2Object());
                     };
                   }(block));
                 }
@@ -40187,7 +38620,7 @@ var LoaderDefinition = function () {
             image._parent = loader;
             loader._content = image;
             imgPromise.resolve(imageInfo);
-            loader.contentLoaderInfo._dispatchEvent('init');
+            loader._contentLoaderInfo._dispatchEvent('init');
           };
           img.src = URL.createObjectURL(imageInfo.data);
           delete imageInfo.data;
@@ -40429,7 +38862,7 @@ var LoaderDefinition = function () {
         },
         _init: function (info) {
           var loader = this;
-          var loaderInfo = loader.contentLoaderInfo;
+          var loaderInfo = loader._contentLoaderInfo;
           loaderInfo._swfVersion = info.swfVersion;
           var bbox = info.bbox;
           loaderInfo._width = bbox.xMax - bbox.xMin;
@@ -40452,43 +38885,45 @@ var LoaderDefinition = function () {
           this._setup();
         },
         _load: function (request, checkPolicyFile, applicationDomain, securityDomain, deblockingFilter) {
-          if (!isWorker && flash.net.URLRequest.class.isInstanceOf(request)) {
+          if (flash.net.URLRequest.class.isInstanceOf(request)) {
             this._contentLoaderInfo._url = request._url;
           }
-          if (!isWorker && WORKERS_ENABLED) {
-            var loader = this;
-            var worker = loader._worker = new Worker(SHUMWAY_ROOT + LOADER_PATH);
-            worker.onmessage = function (evt) {
-              loader._commitData(evt.data);
-            };
-            if (flash.net.URLRequest.class.isInstanceOf(request)) {
-              var session = FileLoadingService.createSession();
-              session.onprogress = function (data, progress) {
-                worker.postMessage({
-                  data: data,
-                  progress: progress
-                });
-              };
-              session.onerror = function (error) {
-                loader._commitData({
-                  command: 'error',
-                  error: error
-                });
-              };
-              session.onopen = function () {
-                worker.postMessage('pipe:');
-              };
-              session.onclose = function () {
-                worker.postMessage({
-                  data: null
-                });
-              };
-              session.open(request._toFileRequest());
-            } else {
-              worker.postMessage(request);
-            }
+          var worker;
+          if (WORKERS_ENABLED) {
+            worker = new Worker(SHUMWAY_ROOT + LOADER_PATH);
           } else {
-            loadFromWorker(this, request);
+            worker = new ResourceLoader(window);
+          }
+          var loader = this;
+          loader._worker = worker;
+          worker.onmessage = function (evt) {
+            loader._commitData(evt.data);
+          };
+          if (flash.net.URLRequest.class.isInstanceOf(request)) {
+            var session = FileLoadingService.createSession();
+            session.onprogress = function (data, progress) {
+              worker.postMessage({
+                data: data,
+                progress: progress
+              });
+            };
+            session.onerror = function (error) {
+              loader._commitData({
+                command: 'error',
+                error: error
+              });
+            };
+            session.onopen = function () {
+              worker.postMessage('pipe:');
+            };
+            session.onclose = function () {
+              worker.postMessage({
+                data: null
+              });
+            };
+            session.open(request._toFileRequest());
+          } else {
+            worker.postMessage(request);
           }
         },
         _setup: function () {
@@ -40505,7 +38940,7 @@ var LoaderDefinition = function () {
             return;
           }
           var loaded = function () {
-            var loaderInfo = loader.contentLoaderInfo;
+            var loaderInfo = loader._contentLoaderInfo;
             var avm1Context = new AS2Context(loaderInfo._swfVersion);
             avm1Context.stage = stage;
             loader._avm1Context = avm1Context;
@@ -40539,7 +38974,7 @@ var LoaderDefinition = function () {
           },
           _load: def._load,
           _loadBytes: function _loadBytes(bytes, checkPolicyFile, applicationDomain, securityDomain, requestedContentParent, parameters, deblockingFilter, allowLoadBytesCodeExecution, imageDecodingPolicy) {
-            def._load(bytes.a);
+            def._load.call(this, bytes.a, checkPolicyFile, applicationDomain, securityDomain);
           },
           _unload: function _unload(halt, gc) {
             somewhatImplemented('Loader._unload, do we even need to do anything here?');
@@ -40780,6 +39215,7 @@ var MovieClipDefinition = function () {
           this._totalFrames = 1;
           this._startSoundRegistrations = [];
           this._allowFrameNavigation = true;
+          this._complete = true;
           var s = this.symbol;
           if (s) {
             this._timeline = s.timeline || null;
@@ -40789,6 +39225,7 @@ var MovieClipDefinition = function () {
             this._totalFrames = s.totalFrames || 1;
             this._startSoundRegistrations = s.startSoundRegistrations || [];
             this._scenes = s.scenes || null;
+            this._complete = s.complete === false ? false : true;
             var map = this._labelMap;
             for (var name in map) {
               var frame = map[name];
@@ -40810,18 +39247,17 @@ var MovieClipDefinition = function () {
             self._postConstructChildren();
           };
           this._addEventListener('executeFrame', this._onExecuteFrame);
-          if (this._totalFrames <= 1) {
+          if (this._complete && this._totalFrames <= 1) {
             return this;
           }
           this._onAdvanceFrame = function onAdvanceFrame() {
             var frameNum = self._playHead + 1;
-            if (frameNum > self._totalFrames) {
+            if (self._complete && frameNum > self._totalFrames) {
               frameNum = 1;
             } else if (frameNum > self._framesLoaded) {
               return;
             }
-            self._destructChildren(frameNum);
-            self._declareChildren(frameNum);
+            self._updateDisplayList(frameNum);
             if (self._sparse) {
               self._addEventListener('constructChildren', self._onConstructChildren);
             }
@@ -40836,6 +39272,10 @@ var MovieClipDefinition = function () {
             self._constructChildren();
           };
           this.play();
+        },
+        _updateDisplayList: function (nextFrameNum) {
+          this._destructChildren(nextFrameNum);
+          this._declareChildren(nextFrameNum);
         },
         _declareChildren: function declareChildren(nextFrameNum) {
           var currentFrame = this._currentFrame;
@@ -40871,41 +39311,27 @@ var MovieClipDefinition = function () {
             if (!nextCmd || nextCmd === currentCmd) {
               continue;
             }
-            if (currentCmd && currentChild && currentChild._animated && nextCmd.symbolId === currentCmd.symbolId && nextCmd.ratio === currentCmd.ratio) {
-              currentChild._invalidate();
-              currentChild._invalidateBounds();
-              if (nextCmd.hasMatrix) {
-                var m = nextCmd.matrix;
-                var a = m.a;
-                var b = m.b;
-                var c = m.c;
-                var d = m.d;
-                currentChild._rotation = Math.atan2(b, a) * 180 / Math.PI;
-                var sx = Math.sqrt(a * a + b * b);
-                currentChild._scaleX = a > 0 ? sx : -sx;
-                var sy = Math.sqrt(d * d + c * c);
-                currentChild._scaleY = d > 0 ? sy : -sy;
-                var t = currentChild._currentTransform;
-                t.a = a;
-                t.b = b;
-                t.c = c;
-                t.d = d;
-                t.tx = m.tx;
-                t.ty = m.ty;
-                currentChild._invalidateTransform();
+            if (currentCmd && currentChild && nextCmd.symbolId === currentCmd.symbolId && nextCmd.ratio === currentCmd.ratio) {
+              if (currentChild._animated) {
+                currentChild._invalidate();
+                currentChild._invalidateBounds();
+                if (nextCmd.hasMatrix) {
+                  currentChild._setTransformMatrix(nextCmd.matrix, false);
+                }
+                if (nextCmd.hasCxform) {
+                  currentChild._cxform = nextCmd.cxform;
+                }
+                if (nextCmd.clip) {
+                  currentChild._clipDepth = nextCmd.clipDepth;
+                }
+                if (nextCmd.hasName) {
+                  currentChild.name = nextCmd.name;
+                }
+                if (nextCmd.blend) {
+                  currentChild.blendMode = this._resolveBlendMode(nextCmd.blendMode);
+                }
               }
-              if (nextCmd.hasCxform) {
-                currentChild._cxform = nextCmd.cxform;
-              }
-              if (nextCmd.clip) {
-                currentChild._clipDepth = nextCmd.clipDepth;
-              }
-              if (nextCmd.hasName) {
-                currentChild.name = nextCmd.name;
-              }
-              if (nextCmd.blend) {
-                currentChild.blendMode = this._resolveBlendMode(nextCmd.blendMode);
-              }
+              currentDisplayListItem.cmd = nextCmd;
               continue;
             }
             var newDisplayListItem = this._addTimelineChild(nextCmd, index);
@@ -40928,31 +39354,31 @@ var MovieClipDefinition = function () {
           if (nextDisplayList === timeline[currentFrame - 1]) {
             return;
           }
-          var prevDisplayListItem = null;
-          var currentDisplayListItem = this._currentDisplayList;
+          var prevEntry = null;
+          var currentEntry = this._currentDisplayList;
           var toRemove = null;
-          while (currentDisplayListItem) {
-            var depth = currentDisplayListItem.depth;
-            var currentCmd = currentDisplayListItem.cmd;
+          while (currentEntry) {
+            var depth = currentEntry.depth;
+            var currentCmd = currentEntry.cmd;
             var nextCmd = nextDisplayList[depth];
             if (!nextCmd || nextCmd.symbolId !== currentCmd.symbolId || nextCmd.ratio !== currentCmd.ratio) {
-              var nextDisplayListItem = currentDisplayListItem.next;
-              if (prevDisplayListItem) {
-                prevDisplayListItem.next = nextDisplayListItem;
+              var nextDisplayListItem = currentEntry.next;
+              if (prevEntry) {
+                prevEntry.next = nextDisplayListItem;
               } else {
                 this._currentDisplayList = nextDisplayListItem;
               }
-              currentDisplayListItem.next = toRemove;
-              toRemove = currentDisplayListItem;
-              currentDisplayListItem = nextDisplayListItem;
+              currentEntry.next = toRemove;
+              toRemove = currentEntry;
+              currentEntry = nextDisplayListItem;
             } else {
-              prevDisplayListItem = currentDisplayListItem;
-              currentDisplayListItem = currentDisplayListItem.next;
+              prevEntry = currentEntry;
+              currentEntry = currentEntry.next;
             }
           }
           while (toRemove) {
             var child = toRemove.obj;
-            if (child) {
+            if (child && child._owned) {
               this._sparse = true;
               this.removeChild(child);
               child.destroy();
@@ -40967,8 +39393,7 @@ var MovieClipDefinition = function () {
           var enterFrame = frameNum !== this._currentFrame;
           if (this._allowFrameNavigation || !this._loader._isAvm2Enabled) {
             if (enterFrame) {
-              this._destructChildren(frameNum);
-              this._declareChildren(frameNum);
+              this._updateDisplayList(frameNum);
               this._enterFrame(frameNum);
             }
             this._constructChildren();
@@ -41068,9 +39493,6 @@ var MovieClipDefinition = function () {
               }
             }
           }
-          if (frameNum > this._totalFrames) {
-            return 1;
-          }
           if (frameNum > this._framesLoaded) {
             return this._framesLoaded;
           }
@@ -41167,7 +39589,7 @@ var MovieClipDefinition = function () {
             if (element) {
               var soundStreamData = soundStream.data;
               var time = soundStream.seekIndex[frameNum] / soundStreamData.sampleRate / soundStreamData.channels;
-              if (this._framesLoaded >= this._totalFrames && !soundStream.channel) {
+              if (this._complete && !soundStream.channel) {
                 var blob = new Blob(soundStream.rawFrames);
                 element.preload = 'metadata';
                 element.loop = false;
@@ -41238,7 +39660,7 @@ var MovieClipDefinition = function () {
           }
         },
         get currentScene() {
-          return this._scenes ? this._scenes[this._currentScene] : new flash.display.Scene('', this.currentLabels, this._totalFrames);
+          return this._scenes ? this._scenes[this._currentScene] : new flash.display.Scene('', this.currentLabels, this._framesLoaded);
         },
         get enabled() {
           return this._enabled;
@@ -41254,7 +39676,7 @@ var MovieClipDefinition = function () {
         },
         get scenes() {
           return this._scenes || [
-            new flash.display.Scene('', this.currentLabels, this._totalFrames)
+            new flash.display.Scene('', this.currentLabels, this._framesLoaded)
           ];
         },
         get trackAsMenu() {
@@ -41318,7 +39740,7 @@ var MovieClipDefinition = function () {
           }
         },
         play: function () {
-          if (this._isPlaying || this._totalFrames <= 1) {
+          if (this._isPlaying || this._complete && this._totalFrames <= 1) {
             return;
           }
           this._isPlaying = true;
@@ -41336,7 +39758,7 @@ var MovieClipDefinition = function () {
           }
         },
         stop: function () {
-          if (!this._isPlaying || this._totalFrames <= 1) {
+          if (!this._isPlaying || this._complete && this._totalFrames <= 1) {
             return;
           }
           this._isPlaying = false;
@@ -41446,6 +39868,61 @@ var SceneDefinition = function () {
       }
     };
   }.call(this);
+var ShaderDefinition = function () {
+    return {
+      __class__: 'flash.display.Shader',
+      initialize: function () {
+        this._data = null;
+      },
+      __glue__: {
+        native: {
+          static: {},
+          instance: {
+            data: {
+              get: function data() {
+                return this._data;
+              },
+              set: function data(p) {
+                this._data = p;
+              }
+            },
+            precisionHint: {
+              get: function precisionHint() {
+                return this._precisionHint;
+              },
+              set: function precisionHint(p) {
+                this._precisionHint = p;
+              }
+            }
+          }
+        },
+        script: {
+          instance: Glue.ALL
+        }
+      }
+    };
+  }.call(this);
+var ShaderDataDefinition = function () {
+    return {
+      __class__: 'flash.display.ShaderData',
+      initialize: function () {
+        this._byteCode = null;
+      },
+      __glue__: {
+        native: {
+          static: {},
+          instance: {
+            _setByteCode: function _setByteCode(code) {
+              this._byteCode = code;
+            }
+          }
+        },
+        script: {
+          instance: Glue.ALL
+        }
+      }
+    };
+  }.call(this);
 var ShapeDefinition = function () {
     var def = {
         __class__: 'flash.display.Shape',
@@ -41455,7 +39932,9 @@ var ShapeDefinition = function () {
           var s = this.symbol;
           if (s && s.paths) {
             graphics._paths = s.paths;
-            finishShapePaths(s.paths, s.dictionary);
+            for (var i = 0; i < s.paths.length; i++) {
+              s.paths[i] = finishShapePath(s.paths[i], s.dictionary);
+            }
             graphics.bbox = s.bbox;
             graphics.strokeBbox = s.strokeBbox;
             graphics.dictionary = s.dictionary;
@@ -41535,6 +40014,7 @@ var SimpleButtonDefinition = function () {
         this._prevAvm1StateCode = 0;
         this._avm1StateCode = 0;
         this._avm1MouseEvents = null;
+        this._isContainer = true;
         var s = this.symbol;
         if (s) {
           var states = s.states;
@@ -41581,6 +40061,9 @@ var SimpleButtonDefinition = function () {
           state = this._downState;
           break;
         }
+        if (!state) {
+          return;
+        }
         var currentChild = this._children[0];
         if (currentChild) {
           if (currentChild === state) {
@@ -41590,6 +40073,10 @@ var SimpleButtonDefinition = function () {
             this._stage._removeFromStage(currentChild);
           }
           currentChild._invalidateTransform();
+        }
+        if (!state) {
+          this._children.shift();
+          return;
         }
         this._children[0] = state;
         state._parent = this;
@@ -41847,6 +40334,7 @@ var SpriteDefinition = function () {
           var children = this._children;
           for (var i = 0; i < children.length; i++) {
             var displayListItem = children[i];
+            Counter.count('constructChild');
             if (flash.display.DisplayObject.class.isInstanceOf(displayListItem)) {
               displayListItem._index = i;
             } else {
@@ -41879,7 +40367,7 @@ var SpriteDefinition = function () {
               } else {
                 instance._dispatchEvent('load');
               }
-              instance._dispatchEvent('added');
+              instance._dispatchEvent('added', undefined, true);
               if (this._stage) {
                 this._stage._addToStage(instance);
               }
@@ -41945,37 +40433,7 @@ var SpriteDefinition = function () {
           var avm1Context = loader._avm1Context;
           var symbolProps = instance.symbol;
           if (symbolProps && symbolProps.variableName) {
-            var variableName = symbolProps.variableName;
-            var hasPath = variableName.lastIndexOf('.') >= 0 || variableName.lastIndexOf(':') >= 0;
-            var clip;
-            if (hasPath) {
-              var targetPath = variableName.split(/[.:\/]/g);
-              variableName = targetPath.pop();
-              if (targetPath[0] == '_root' || targetPath[0] === '') {
-                clip = this.root._getAS2Object();
-                targetPath.shift();
-                if (targetPath[0] === '') {
-                  targetPath.shift();
-                }
-              } else {
-                clip = this._getAS2Object();
-              }
-              while (targetPath.length > 0) {
-                var childName = targetPath.shift();
-                clip = clip.asGetPublicProperty(childName) || clip[childName];
-                if (!clip) {
-                  throw new Error('Cannot find ' + childName + ' variable');
-                }
-              }
-            } else {
-              clip = this._getAS2Object();
-            }
-            if (!clip.asHasProperty(undefined, variableName, 0)) {
-              clip.asSetPublicProperty(variableName, instance.text);
-            }
-            instance._addEventListener('advanceFrame', function () {
-              instance.text = '' + clip.asGetPublicProperty(variableName);
-            });
+            instance._getAS2Object().asSetPublicProperty('variable', symbolProps.variableName);
           }
           if (events) {
             var eventsBound = [];
@@ -42014,7 +40472,7 @@ var SpriteDefinition = function () {
               }.bind(instance, eventsBound), false);
             }
           }
-          if (name) {
+          if (name && this._getAS2Object && instance._getAS2Object) {
             this._getAS2Object().asSetPublicProperty(name, instance._getAS2Object());
           }
         },
@@ -42117,6 +40575,7 @@ var StageDefinition = function () {
         this._invalidObjects = [];
         this._mouseMoved = false;
         this._mouseTarget = this;
+        this._mouseEvents = [];
         this._cursor = 'auto';
         this._concatenatedTransform.invalid = false;
       },
@@ -42219,7 +40678,7 @@ var StageDefinition = function () {
           var neighbours = this._qtree.retrieve(xMin, yMin, xMax, yMax);
           for (var j = 0; j < neighbours.length; j++) {
             var item = neighbours[j];
-            if (item.obj._invalid || xMin > item.x + item.width || xMax < item.x || yMin > item.y + item.height || yMax < item.y) {
+            if (item.obj._invalid || xMin > item.xMax || xMax < item.xMin || yMin > item.yMax || yMax < item.yMin) {
               continue;
             }
             item.obj._invalid = true;
@@ -42227,6 +40686,26 @@ var StageDefinition = function () {
           invalidPath.rect(xMin, yMin, xMax - xMin, yMax - yMin);
         }
         return invalidPath;
+      },
+      _handleMouseButtons: function () {
+        if (this._mouseEvents.length === 0) {
+          return;
+        }
+        var eventType = this._mouseEvents.shift();
+        switch (eventType) {
+        case 'mousedown':
+          if (this._mouseTarget._buttonMode) {
+            this._mouseTarget._gotoButtonState('down');
+          }
+          this._mouseTarget._dispatchEvent('mouseDown');
+          break;
+        case 'mouseup':
+          if (this._mouseTarget._buttonMode) {
+            this._mouseTarget._gotoButtonState('over');
+          }
+          this._mouseTarget._dispatchEvent('mouseUp');
+          break;
+        }
       },
       _handleMouse: function handleMouse() {
         var mouseX = this._mouseX;
@@ -42645,11 +41124,11 @@ var EventDispatcherDefinition = function () {
         rollOut: false,
         rollOver: false
       };
-    function doDispatchEvent(dispatcher, event, eventClass) {
+    function doDispatchEvent(dispatcher, event, eventClass, bubbles) {
       var target = dispatcher._target;
       var type = event._type || event;
       var listeners = dispatcher._listeners[type];
-      if (typeof event === 'string' && mouseEvents[event] || event._bubbles) {
+      if (bubbles || typeof event === 'string' && mouseEvents[event] || event._bubbles) {
         var ancestors = [];
         var currentNode = target._parent;
         while (currentNode) {
@@ -42666,22 +41145,22 @@ var EventDispatcherDefinition = function () {
         while (i-- && keepPropagating) {
           var currentTarget = ancestors[i];
           var queue = currentTarget._captureListeners[type];
-          keepPropagating = processListeners(queue, event, null, target, currentTarget, 1);
+          keepPropagating = processListeners(queue, event, eventClass, bubbles, target, currentTarget, 1);
         }
         if (listeners && keepPropagating) {
-          keepPropagating = processListeners(listeners, event, null, target);
+          keepPropagating = processListeners(listeners, event, eventClass, bubbles, target);
         }
         for (var i = 0; i < ancestors.length && keepPropagating; i++) {
           var currentTarget = ancestors[i];
           var queue = currentTarget._listeners[type];
-          keepPropagating = processListeners(queue, event, null, target, currentTarget, 3);
+          keepPropagating = processListeners(queue, event, eventClass, bubbles, target, currentTarget, 3);
         }
       } else if (listeners) {
-        processListeners(listeners, event, null, target);
+        processListeners(listeners, event, eventClass, bubbles, target);
       }
       return !event._isDefaultPrevented;
     }
-    function processListeners(queue, event, eventClass, target, currentTarget, eventPhase) {
+    function processListeners(queue, event, eventClass, bubbles, target, currentTarget, eventPhase) {
       if (queue) {
         queue = queue.slice();
         var needsInit = true;
@@ -42791,8 +41270,8 @@ var EventDispatcherDefinition = function () {
       _hasEventListener: function hasEventListener(type) {
         return type in this._listeners || type in this._captureListeners;
       },
-      _dispatchEvent: function dispatchEvent(event, eventClass) {
-        doDispatchEvent(this, event, eventClass);
+      _dispatchEvent: function dispatchEvent(event, eventClass, bubbles) {
+        doDispatchEvent(this, event, eventClass, bubbles);
       },
       __glue__: {
         native: {
@@ -43843,27 +42322,9 @@ var TransformDefinition = function () {
           }
           var target = this._target;
           target._invalidate();
-          var a = val.a;
-          var b = val.b;
-          var c = val.c;
-          var d = val.d;
-          var tx = val.tx * 20 | 0;
-          var ty = val.ty * 20 | 0;
-          target._rotation = a !== 0 ? Math.atan(b / a) * 180 / Math.PI : b > 0 ? 90 : -90;
-          var sx = Math.sqrt(a * a + b * b);
-          target._scaleX = a > 0 ? sx : -sx;
-          var sy = Math.sqrt(d * d + c * c);
-          target._scaleY = d > 0 ? sy : -sy;
-          target._invalidateTransform();
-          target._currentTransform = {
-            a: a,
-            b: b,
-            c: c,
-            d: d,
-            tx: tx,
-            ty: ty
-          };
+          target._setTransformMatrix(val, true);
           target._current3DTransform = null;
+          target._animated = false;
         },
         get matrix3D() {
           var m = this._target._current3DTransform;
@@ -43880,7 +42341,6 @@ var TransformDefinition = function () {
         },
         ctor: function (target) {
           this._target = target;
-          target._transform = this;
         }
       };
     var desc = Object.getOwnPropertyDescriptor;
@@ -43929,6 +42389,181 @@ var Vector3DDefinition = function () {
       };
     }.call(this);
 }
+var MicrophoneDefinition = function () {
+    return {
+      __class__: 'flash.media.Microphone',
+      initialize: function () {
+      },
+      __glue__: {
+        native: {
+          static: {
+            getMicrophone: function getMicrophone(index) {
+              notImplemented('Microphone.getMicrophone');
+            },
+            getEnhancedMicrophone: function getEnhancedMicrophone(index) {
+              notImplemented('Microphone.getEnhancedMicrophone');
+            },
+            names: {
+              get: function names() {
+                notImplemented('Microphone.names');
+              }
+            },
+            isSupported: {
+              get: function isSupported() {
+                notImplemented('Microphone.isSupported');
+              }
+            }
+          },
+          instance: {
+            setSilenceLevel: function setSilenceLevel(silenceLevel, timeout) {
+              notImplemented('Microphone.setSilenceLevel');
+            },
+            setUseEchoSuppression: function setUseEchoSuppression(useEchoSuppression) {
+              notImplemented('Microphone.setUseEchoSuppression');
+            },
+            setLoopBack: function setLoopBack(state) {
+              notImplemented('Microphone.setLoopBack');
+            },
+            gain: {
+              set: function gain(gain) {
+                notImplemented('Microphone.gain');
+                this._gain = gain;
+              },
+              get: function gain() {
+                notImplemented('Microphone.gain');
+                return this._gain;
+              }
+            },
+            rate: {
+              set: function rate(rate) {
+                notImplemented('Microphone.rate');
+                this._rate = rate;
+              },
+              get: function rate() {
+                notImplemented('Microphone.rate');
+                return this._rate;
+              }
+            },
+            codec: {
+              set: function codec(codec) {
+                notImplemented('Microphone.codec');
+                this._codec = codec;
+              },
+              get: function codec() {
+                notImplemented('Microphone.codec');
+                return this._codec;
+              }
+            },
+            framesPerPacket: {
+              get: function framesPerPacket() {
+                notImplemented('Microphone.framesPerPacket');
+                return this._framesPerPacket;
+              },
+              set: function framesPerPacket(frames) {
+                notImplemented('Microphone.framesPerPacket');
+                this._framesPerPacket = frames;
+              }
+            },
+            encodeQuality: {
+              get: function encodeQuality() {
+                notImplemented('Microphone.encodeQuality');
+                return this._encodeQuality;
+              },
+              set: function encodeQuality(quality) {
+                notImplemented('Microphone.encodeQuality');
+                this._encodeQuality = quality;
+              }
+            },
+            noiseSuppressionLevel: {
+              get: function noiseSuppressionLevel() {
+                notImplemented('Microphone.noiseSuppressionLevel');
+                return this._noiseSuppressionLevel;
+              },
+              set: function noiseSuppressionLevel(level) {
+                notImplemented('Microphone.noiseSuppressionLevel');
+                this._noiseSuppressionLevel = level;
+              }
+            },
+            enableVAD: {
+              get: function enableVAD() {
+                notImplemented('Microphone.enableVAD');
+                return this._enableVAD;
+              },
+              set: function enableVAD(enable) {
+                notImplemented('Microphone.enableVAD');
+                this._enableVAD = enable;
+              }
+            },
+            activityLevel: {
+              get: function activityLevel() {
+                notImplemented('Microphone.activityLevel');
+                return this._activityLevel;
+              }
+            },
+            index: {
+              get: function index() {
+                notImplemented('Microphone.index');
+                return this._index;
+              }
+            },
+            muted: {
+              get: function muted() {
+                notImplemented('Microphone.muted');
+                return this._muted;
+              }
+            },
+            name: {
+              get: function name() {
+                notImplemented('Microphone.name');
+                return this._name;
+              }
+            },
+            silenceLevel: {
+              get: function silenceLevel() {
+                notImplemented('Microphone.silenceLevel');
+                return this._silenceLevel;
+              }
+            },
+            silenceTimeout: {
+              get: function silenceTimeout() {
+                notImplemented('Microphone.silenceTimeout');
+                return this._silenceTimeout;
+              }
+            },
+            useEchoSuppression: {
+              get: function useEchoSuppression() {
+                notImplemented('Microphone.useEchoSuppression');
+                return this._useEchoSuppression;
+              }
+            },
+            soundTransform: {
+              get: function soundTransform() {
+                notImplemented('Microphone.soundTransform');
+                return this._soundTransform;
+              },
+              set: function soundTransform(sndTransform) {
+                notImplemented('Microphone.soundTransform');
+                this._soundTransform = sndTransform;
+              }
+            },
+            enhancedOptions: {
+              get: function enhancedOptions() {
+                notImplemented('Microphone.enhancedOptions');
+                return this._enhancedOptions;
+              },
+              set: function enhancedOptions(options) {
+                notImplemented('Microphone.enhancedOptions');
+                this._enhancedOptions = options;
+              }
+            }
+          }
+        },
+        script: {
+          instance: Glue.ALL
+        }
+      }
+    };
+  }.call(this);
 var PLAY_USING_AUDIO_TAG = true;
 var SoundDefinition = function () {
     function getAudioDescription(soundData, onComplete) {
@@ -44344,8 +42979,6 @@ var SoundChannelDefinition = function () {
 function createAudioChannel(sampleRate, channels) {
   if (WebAudioChannel.isSupported)
     return new WebAudioChannel(sampleRate, channels);
-  else if (AudioDataChannel.isSupported)
-    return new AudioDataChannel(sampleRate, channels);
   else
     error('PCM data playback is not supported by the browser');
 }
@@ -44450,59 +43083,6 @@ WebAudioChannel.prototype = {
 };
 WebAudioChannel.isSupported = function () {
   return typeof AudioContext !== 'undefined' || typeof webkitAudioContext != 'undefined';
-}();
-function AudioDataChannel(sampleRate, channels) {
-  this.sampleRate = sampleRate;
-  this.channels = channels;
-}
-AudioDataChannel.prototype = {
-  start: function () {
-    var sampleRate = this.sampleRate;
-    var channels = this.channels;
-    var self = this;
-    var audio = new Audio();
-    audio.mozSetup(channels, sampleRate);
-    var currentWritePosition = 0;
-    var prebufferSize = sampleRate * channels / 2;
-    var tail = null, tailPosition;
-    this.interval = setInterval(function () {
-      var written;
-      if (tail) {
-        written = audio.mozWriteAudio(tail.subarray(tailPosition));
-        currentWritePosition += written;
-        tailPosition += written;
-        if (tailPosition < tail.length) {
-          return;
-        }
-        tail = null;
-      }
-      var currentPosition = audio.mozCurrentSampleOffset();
-      var available = currentPosition + prebufferSize - currentWritePosition;
-      available -= available % channels;
-      if (available > 0) {
-        var soundData = new Float32Array(available);
-        self.requestData(soundData, available);
-        written = audio.mozWriteAudio(soundData);
-        if (written < soundData.length) {
-          tail = soundData;
-          tailPosition = written;
-        }
-        currentWritePosition += written;
-      }
-    }, 100);
-  },
-  stop: function () {
-    clearInterval(this.interval);
-  },
-  requestData: function (data, count) {
-    this.ondatarequested({
-      data: data,
-      count: count
-    });
-  }
-};
-AudioDataChannel.isSupported = function () {
-  return 'mozSetup' in new Audio();
 }();
 var SoundMixerDefinition = function () {
     var masterVolume = 1;
@@ -44839,56 +43419,40 @@ var VideoDefinition = function () {
     return def;
   }.call(this);
 {
-  var LocalConnectionDefinition = function () {
+  var FileFilterDefinition = function () {
       return {
-        __class__: 'flash.net.LocalConnection',
+        __class__: 'flash.net.FileFilter',
         initialize: function () {
+          this._description = null;
+          this._extension = null;
+          this._macType = null;
         },
         __glue__: {
           native: {
             static: {},
             instance: {
-              close: function close() {
-                notImplemented('LocalConnection.close');
-              },
-              connect: function connect(connectionName) {
-                notImplemented('LocalConnection.connect');
-              },
-              send: function send(connectionName, methodName) {
-                notImplemented('LocalConnection.send');
-              },
-              allowDomain: function allowDomain() {
-                notImplemented('LocalConnection.allowDomain');
-              },
-              allowInsecureDomain: function allowInsecureDomain() {
-                notImplemented('LocalConnection.allowInsecureDomain');
-              },
-              domain: {
-                get: function domain() {
-                  somewhatImplemented('LocalConnection.domain');
-                  var url = FileLoadingService.resolveUrl('/');
-                  var m = /:\/\/(.+?)[:?#\/]/.exec(url);
-                  return m && m[1];
+              description: {
+                get: function description() {
+                  return this._description;
+                },
+                set: function description(value) {
+                  this._description = value;
                 }
               },
-              client: {
-                get: function client() {
-                  notImplemented('LocalConnection.client');
-                  return this._client;
+              extension: {
+                get: function extension() {
+                  return this._extension;
                 },
-                set: function client(client) {
-                  notImplemented('LocalConnection.client');
-                  this._client = client;
+                set: function extension(value) {
+                  this._extension = value;
                 }
               },
-              isPerUser: {
-                get: function isPerUser() {
-                  notImplemented('LocalConnection.isPerUser');
-                  return this._isPerUser;
+              macType: {
+                get: function macType() {
+                  return this._macType;
                 },
-                set: function isPerUser(newValue) {
-                  notImplemented('LocalConnection.isPerUser');
-                  this._isPerUser = newValue;
+                set: function macType(value) {
+                  this._macType = value;
                 }
               }
             }
@@ -44897,6 +43461,63 @@ var VideoDefinition = function () {
       };
     }.call(this);
 }
+var LocalConnectionDefinition = function () {
+    return {
+      __class__: 'flash.net.LocalConnection',
+      initialize: function () {
+      },
+      __glue__: {
+        native: {
+          static: {},
+          instance: {
+            close: function close() {
+              notImplemented('LocalConnection.close');
+            },
+            connect: function connect(connectionName) {
+              notImplemented('LocalConnection.connect');
+            },
+            send: function send(connectionName, methodName) {
+              notImplemented('LocalConnection.send');
+            },
+            allowDomain: function allowDomain() {
+              notImplemented('LocalConnection.allowDomain');
+            },
+            allowInsecureDomain: function allowInsecureDomain() {
+              notImplemented('LocalConnection.allowInsecureDomain');
+            },
+            domain: {
+              get: function domain() {
+                somewhatImplemented('LocalConnection.domain');
+                var url = FileLoadingService.resolveUrl('/');
+                var m = /:\/\/(.+?)[:?#\/]/.exec(url);
+                return m && m[1];
+              }
+            },
+            client: {
+              get: function client() {
+                notImplemented('LocalConnection.client');
+                return this._client;
+              },
+              set: function client(client) {
+                notImplemented('LocalConnection.client');
+                this._client = client;
+              }
+            },
+            isPerUser: {
+              get: function isPerUser() {
+                notImplemented('LocalConnection.isPerUser');
+                return this._isPerUser;
+              },
+              set: function isPerUser(newValue) {
+                notImplemented('LocalConnection.isPerUser');
+                this._isPerUser = newValue;
+              }
+            }
+          }
+        }
+      }
+    };
+  }.call(this);
 var NetConnectionDefinition = function () {
     return {
       __class__: 'flash.net.NetConnection',
@@ -45195,12 +43816,12 @@ var NetStreamDefinition = function () {
               request._checkPolicyFile = this._checkPolicyFile;
               var stream = new flash.net.URLStream();
               stream._addEventListener('httpStatus', function (e) {
-                var responseHeaders = e[Multiname.getPublicQualifiedName('responseHeaders')];
+                var responseHeaders = e.asGetPublicProperty('responseHeaders');
                 var contentTypeHeader = responseHeaders.filter(function (h) {
-                    return h[Multiname.getPublicQualifiedName('name')] === 'Content-Type';
+                    return h.asGetPublicProperty('name') === 'Content-Type';
                   })[0];
-                if (contentTypeHeader && contentTypeHeader[Multiname.getPublicQualifiedName('value')] !== 'application/octet-stream') {
-                  this._contentTypeHint = contentTypeHeader[Multiname.getPublicQualifiedName('value')];
+                if (contentTypeHeader && contentTypeHeader.asGetPublicProperty('value') !== 'application/octet-stream') {
+                  this._contentTypeHint = contentTypeHeader.asGetPublicProperty('value');
                 }
               }.bind(this));
               stream._addEventListener('progress', function (e) {
@@ -45496,14 +44117,16 @@ var SharedObjectDefinition = function () {
       var simulated = false, result;
       switch (index) {
       case 4:
-        result = JSON.stringify(this._data).length;
+        result = JSON.stringify(this._data).length - 2;
         simulated = true;
         break;
       case 6:
         this._data = {};
+        sessionStorage.removeItem(this._path);
         simulated = true;
         break;
       case 2:
+        sessionStorage.setItem(this._path, JSON.stringify(this._data));
         simulated = true;
         result = true;
         break;
@@ -45517,10 +44140,9 @@ var SharedObjectDefinition = function () {
     return {
       __class__: 'flash.net.SharedObject',
       initialize: function () {
-        this._data = {};
+        this._path = null;
+        this._data = null;
         this._objectEncoding = _defaultObjectEncoding;
-        this._data[Multiname.getPublicQualifiedName('levelCompleted')] = 32;
-        this._data[Multiname.getPublicQualifiedName('completeLevels')] = 32;
         TelemetryService.reportTelemetry({
           topic: 'feature',
           feature: SHAREDOBJECT_FEATURE
@@ -45536,8 +44158,15 @@ var SharedObjectDefinition = function () {
               notImplemented('SharedObject.getDiskUsage');
             },
             getLocal: function getLocal(name, localPath, secure) {
-              var path = localPath + '/' + name;
-              return sharedObjects[path] || (sharedObjects[path] = new flash.net.SharedObject());
+              var path = (localPath || '') + '/' + name;
+              if (sharedObjects[path]) {
+                return sharedObjects[path];
+              }
+              var so = new flash.net.SharedObject();
+              so._path = path;
+              var data = sessionStorage.getItem(path);
+              so._data = data ? JSON.parse(data) : {};
+              return so;
             },
             getRemote: function getRemote(name, remotePath, persistence, secure) {
               notImplemented('SharedObject.getRemote');
@@ -45553,7 +44182,7 @@ var SharedObjectDefinition = function () {
           },
           instance: {
             setDirty: function setDirty(propertyName) {
-              notImplemented('SharedObject.setDirty');
+              somewhatImplemented('SharedObject.setDirty');
             },
             invoke: function invoke(index) {
               return invokeWithArgsArray.call(this, index, Array.prototype.slice.call(arguments, 1));
@@ -45585,6 +44214,154 @@ var SharedObjectDefinition = function () {
               }
             }
           }
+        }
+      }
+    };
+  }.call(this);
+var SocketDefinition = function () {
+    return {
+      __class__: 'flash.net.Socket',
+      initialize: function () {
+      },
+      __glue__: {
+        native: {
+          static: {},
+          instance: {
+            internalGetSecurityErrorMessage: function internalGetSecurityErrorMessage(host, port) {
+              notImplemented('Socket.internalGetSecurityErrorMessage');
+            },
+            internalConnect: function internalConnect(host, port) {
+              notImplemented('Socket.internalConnect');
+            },
+            didFailureOccur: function didFailureOccur() {
+              notImplemented('Socket.didFailureOccur');
+            },
+            readBytes: function readBytes(bytes, offset, length) {
+              notImplemented('Socket.readBytes');
+            },
+            writeBytes: function writeBytes(bytes, offset, length) {
+              notImplemented('Socket.writeBytes');
+            },
+            writeBoolean: function writeBoolean(value) {
+              notImplemented('Socket.writeBoolean');
+            },
+            writeByte: function writeByte(value) {
+              notImplemented('Socket.writeByte');
+            },
+            writeShort: function writeShort(value) {
+              notImplemented('Socket.writeShort');
+            },
+            writeInt: function writeInt(value) {
+              notImplemented('Socket.writeInt');
+            },
+            writeUnsignedInt: function writeUnsignedInt(value) {
+              notImplemented('Socket.writeUnsignedInt');
+            },
+            writeFloat: function writeFloat(value) {
+              notImplemented('Socket.writeFloat');
+            },
+            writeDouble: function writeDouble(value) {
+              notImplemented('Socket.writeDouble');
+            },
+            writeMultiByte: function writeMultiByte(value, charSet) {
+              notImplemented('Socket.writeMultiByte');
+            },
+            writeUTF: function writeUTF(value) {
+              notImplemented('Socket.writeUTF');
+            },
+            writeUTFBytes: function writeUTFBytes(value) {
+              notImplemented('Socket.writeUTFBytes');
+            },
+            readBoolean: function readBoolean() {
+              notImplemented('Socket.readBoolean');
+            },
+            readByte: function readByte() {
+              notImplemented('Socket.readByte');
+            },
+            readUnsignedByte: function readUnsignedByte() {
+              notImplemented('Socket.readUnsignedByte');
+            },
+            readShort: function readShort() {
+              notImplemented('Socket.readShort');
+            },
+            readUnsignedShort: function readUnsignedShort() {
+              notImplemented('Socket.readUnsignedShort');
+            },
+            readInt: function readInt() {
+              notImplemented('Socket.readInt');
+            },
+            readUnsignedInt: function readUnsignedInt() {
+              notImplemented('Socket.readUnsignedInt');
+            },
+            readFloat: function readFloat() {
+              notImplemented('Socket.readFloat');
+            },
+            readDouble: function readDouble() {
+              notImplemented('Socket.readDouble');
+            },
+            readMultiByte: function readMultiByte(length, charSet) {
+              notImplemented('Socket.readMultiByte');
+            },
+            readUTF: function readUTF() {
+              notImplemented('Socket.readUTF');
+            },
+            readUTFBytes: function readUTFBytes(length) {
+              notImplemented('Socket.readUTFBytes');
+            },
+            internalClose: function internalClose() {
+              notImplemented('Socket.internalClose');
+            },
+            flush: function flush() {
+              notImplemented('Socket.flush');
+            },
+            writeObject: function writeObject(object) {
+              notImplemented('Socket.writeObject');
+            },
+            readObject: function readObject() {
+              notImplemented('Socket.readObject');
+            },
+            bytesAvailable: {
+              get: function bytesAvailable() {
+                notImplemented('Socket.bytesAvailable');
+                return this._bytesAvailable;
+              }
+            },
+            connected: {
+              get: function connected() {
+                notImplemented('Socket.connected');
+                return this._connected;
+              }
+            },
+            objectEncoding: {
+              get: function objectEncoding() {
+                notImplemented('Socket.objectEncoding');
+                return this._objectEncoding;
+              },
+              set: function objectEncoding(version) {
+                notImplemented('Socket.objectEncoding');
+                this._objectEncoding = version;
+              }
+            },
+            endian: {
+              get: function endian() {
+                notImplemented('Socket.endian');
+                return this._endian;
+              },
+              set: function endian(type) {
+                notImplemented('Socket.endian');
+                this._endian = type;
+              }
+            },
+            bytesPending: {
+              get: function bytesPending() {
+                notImplemented('Socket.bytesPending');
+                return this._bytesPending;
+              }
+            }
+          }
+        },
+        script: {
+          instance: Glue.ALL
         }
       }
     };
@@ -45763,7 +44540,7 @@ var URLStreamDefinition = function () {
                 httpStatus
               ]);
             var headers = [];
-            httpHeaders.split(/\r\n/g).forEach(function (h) {
+            httpHeaders.split(/(?:\n|\r?\n)/g).forEach(function (h) {
               var m = /^([^:]+): (.*)$/.exec(h);
               if (m) {
                 headers.push(URLRequestHeaderClass.createInstance([
@@ -45775,8 +44552,8 @@ var URLStreamDefinition = function () {
                 }
               }
             });
-            httpStatusEvent.public$responseHeaders = headers;
-            httpStatusEvent.public$responseURL = location;
+            httpStatusEvent.asSetPublicProperty('responseHeaders', headers);
+            httpStatusEvent.asSetPublicProperty('responseURL', location);
             self._dispatchEvent(httpStatusEvent);
           };
           session.onclose = function () {
@@ -45921,12 +44698,12 @@ var URLStreamDefinition = function () {
             },
             instance: {
               ctor: function ctor(parentDomainOrNativeObject) {
-                if (parentDomainOrNativeObject instanceof Domain) {
+                if (parentDomainOrNativeObject instanceof ApplicationDomain) {
                   this.nativeObject = parentDomainOrNativeObject;
                   return;
                 }
                 var parentNativeObject = parentDomainOrNativeObject ? parentDomainOrNativeObject.nativeObject : AVM2.currentDomain().system;
-                this.nativeObject = new Domain(parentNativeObject.vm, parentNativeObject);
+                this.nativeObject = new ApplicationDomain(parentNativeObject.vm, parentNativeObject);
               },
               getDefinition: function getDefinition(name) {
                 var simpleName = name.replace('::', '.');
@@ -46027,6 +44804,24 @@ var CapabilitiesDefinition = function () {
             get: function screenResolutionY() {
               return window.screen.height;
             }
+          },
+          manufacturer: {
+            get: function manufacturer() {
+              somewhatImplemented('Capabilities.manufacturer');
+              return 'Mozilla Research';
+            }
+          },
+          language: {
+            get: function language() {
+              somewhatImplemented('Capabilities.language');
+              return 'en';
+            }
+          },
+          playerType: {
+            get: function playerType() {
+              somewhatImplemented('Capabilities.playerType');
+              return 'PlugIn';
+            }
           }
         }
       },
@@ -46079,7 +44874,7 @@ var SecurityDefinition = function () {
               somewhatImplemented('Security.allowInsecureDomain');
             },
             loadPolicyFile: function loadPolicyFile(url) {
-              notImplemented('Security.loadPolicyFile');
+              somewhatImplemented('Security.loadPolicyFile');
             },
             duplicateSandboxBridgeInputArguments: function duplicateSandboxBridgeInputArguments(toplevel, args) {
               notImplemented('Security.duplicateSandboxBridgeInputArguments');
@@ -46219,7 +45014,8 @@ var SystemDefinition = function () {
             },
             useCodePage: {
               get: function useCodePage() {
-                notImplemented('System.useCodePage');
+                somewhatImplemented('System.useCodePage');
+                return false;
               },
               set: function useCodePage(value) {
                 notImplemented('System.useCodePage');
@@ -46227,8 +45023,25 @@ var SystemDefinition = function () {
             },
             vmVersion: {
               get: function vmVersion() {
-                notImplemented('System.vmVersion');
+                somewhatImplemented('System.vmVersion');
+                return '1.0 shumway';
               }
+            },
+            swfVersion: {
+              get: function () {
+                return 19;
+              }
+            },
+            apiVersion: {
+              get: function () {
+                return 26;
+              }
+            },
+            getArgv: function () {
+              return [];
+            },
+            getRunmode: function () {
+              return 'mixed';
             }
           },
           instance: {}
@@ -49397,6 +48210,42 @@ var StaticTextDefinition = function () {
     };
     return def;
   }.call(this);
+var StyleSheetDefinition = function () {
+    return {
+      __class__: 'flash.text.StyleSheet',
+      initialize: function () {
+      },
+      __glue__: {
+        native: {
+          static: {},
+          instance: {
+            _update: function _update() {
+              somewhatImplemented('StyleSheet._update');
+            },
+            _parseCSSInternal: function _parseCSSInternal(cssText) {
+              somewhatImplemented('StyleSheet._parseCSSInternal');
+              return null;
+            },
+            _parseCSSFontFamily: function _parseCSSFontFamily(fontFamily) {
+              notImplemented('StyleSheet._parseCSSFontFamily');
+            },
+            _parseColor: function _parseColor(color) {
+              notImplemented('StyleSheet._parseColor');
+            },
+            _styles: {
+              get: function _styles() {
+                return this.__styles;
+              },
+              set: function _styles(styles) {
+                somewhatImplemented('StyleSheet._styles');
+                this.__styles = styles;
+              }
+            }
+          }
+        }
+      }
+    };
+  }.call(this);
 var TextFieldDefinition = function () {
     var htmlParser = document.createElement('p');
     var measureCtx = document.createElement('canvas').getContext('2d');
@@ -49449,7 +48298,7 @@ var TextFieldDefinition = function () {
     }
     function createTrunk(initialFormat) {
       var trunk = {
-          type: 'P',
+          type: 'SPAN',
           format: {
             ALIGN: initialFormat.align
           },
@@ -49501,6 +48350,14 @@ var TextFieldDefinition = function () {
       }
       var nodeType = input.localName.toUpperCase();
       if (!knownNodeTypes[nodeType] || multiline === false && (nodeType === 'P' || nodeType === 'BR')) {
+        if (nodeType === 'SBR') {
+          destinationList.push({
+            type: 'BR',
+            text: null,
+            format: null,
+            children: null
+          });
+        }
         convertNodeList(input.childNodes, destinationList, content, multiline);
         return;
       }
@@ -49536,20 +48393,23 @@ var TextFieldDefinition = function () {
       var blockNode = false;
       switch (node.type) {
       case 'plain-text':
-        for (var i = 0; i < node.lines.length; i++) {
-          addRunsForText(state, node.lines[i]);
-          finishLine(state);
+        var lines = node.lines;
+        for (var i = 0; i < lines.length; i++) {
+          addRunsForText(state, lines[i]);
+          if (i < lines.length - 1) {
+            finishLine(state, true);
+          }
         }
         return;
       case 'text':
         addRunsForText(state, node.text);
         return;
       case 'BR':
-        finishLine(state);
+        finishLine(state, true);
         return;
       case 'LI':
       case 'P':
-        finishLine(state);
+        finishLine(state, false);
         pushFormat(state, node);
         blockNode = true;
         break;
@@ -49574,7 +48434,7 @@ var TextFieldDefinition = function () {
         popFormat(state);
       }
       if (blockNode) {
-        finishLine(state);
+        finishLine(state, true);
       }
     }
     var WRAP_OPPORTUNITIES = {
@@ -49595,7 +48455,7 @@ var TextFieldDefinition = function () {
         var width = state.ctx.measureText(text).width;
         var availableWidth = state.w - state.line.width;
         if (availableWidth <= 0) {
-          finishLine(state);
+          finishLine(state, false);
           availableWidth = state.w - state.line.width;
         }
         if (width <= availableWidth) {
@@ -49616,7 +48476,7 @@ var TextFieldDefinition = function () {
           }
           if (wrapOffset === -1) {
             if (state.line.width > 0) {
-              finishLine(state);
+              finishLine(state, false);
               continue;
             }
             while (state.ctx.measureText(text.substr(0, offset)).width > availableWidth) {
@@ -49631,7 +48491,7 @@ var TextFieldDefinition = function () {
           width = state.ctx.measureText(runText).width;
           addTextRun(state, runText, width);
           if (state.wordWrap) {
-            finishLine(state);
+            finishLine(state, false);
           }
           text = text.substr(wrapOffset);
         }
@@ -49659,9 +48519,13 @@ var TextFieldDefinition = function () {
         line.largestFormat = format;
       }
     }
-    function finishLine(state) {
+    function finishLine(state, forceNewline) {
       var line = state.line;
       if (line.runs.length === 0) {
+        if (forceNewline) {
+          var format = state.currentFormat;
+          state.line.y += format.font._metrics.height * format.size + format.leading | 0;
+        }
         return;
       }
       var runs = line.runs;
@@ -49959,10 +48823,6 @@ var TextFieldDefinition = function () {
           this._invalidateBounds();
           this._dimensionsValid = false;
         },
-        _getRegion: function getRegion(targetCoordSpace) {
-          this.ensureDimensions();
-          return this._getTransformedRect(this._getContentBounds(), targetCoordSpace);
-        },
         ensureDimensions: function () {
           if (this._dimensionsValid) {
             return;
@@ -49996,6 +48856,7 @@ var TextFieldDefinition = function () {
               embedFonts: this._embedFonts
             };
           collectRuns(this._content.tree, state);
+          finishLine(state, false);
           this._textWidth = state.maxLineWidth | 0;
           this._textHeight = state.line.y | 0;
           this._lines = state.lines;
@@ -50063,10 +48924,24 @@ var TextFieldDefinition = function () {
           return this._content.text;
         },
         set text(val) {
+          val = String(val);
           if (this._content && this._content.text === val) {
             return;
           }
-          var lines = val.split('\r\n').join('\n').split('\r').join('\n').split('\n');
+          var lines = [];
+          var lineOffset = 0;
+          for (var index = 0; index < val.length;) {
+            var char = val[index];
+            if (char === '\r' || char === '\n') {
+              lines.push(val.substring(lineOffset, index));
+              lineOffset = index;
+              if (char === '\r' && val[index + 1] === '\n') {
+                index++;
+              }
+            }
+            index++;
+          }
+          lines.push(val.substring(lineOffset, index));
           this._content = {
             tree: createTrunk(this._defaultTextFormat),
             text: val,
@@ -50085,6 +48960,8 @@ var TextFieldDefinition = function () {
           if (this._htmlText === val) {
             return;
           }
+          this._defaultTextFormat.bold = false;
+          this._defaultTextFormat.italic = false;
           this._content = parseHtml(val, this._defaultTextFormat, this._multiline);
           this.invalidateDimensions();
         },
@@ -50100,6 +48977,11 @@ var TextFieldDefinition = function () {
         },
         setTextFormat: function (format, beginIndex, endIndex) {
           this.defaultTextFormat = format;
+          if (this._content && this._content.text === this._content.htmlText) {
+            var text = this.text;
+            this._content = null;
+            this.text = text;
+          }
           this.invalidateDimensions();
         },
         get x() {
@@ -50136,6 +49018,27 @@ var TextFieldDefinition = function () {
           }
           this._bbox.yMax = value;
           this._invalidate();
+        },
+        _getContentBounds: function () {
+          this.ensureDimensions();
+          return this._bbox;
+        },
+        _getRegion: function getRegion(targetCoordSpace) {
+          return this._getTransformedRect(this._getContentBounds(), targetCoordSpace);
+        },
+        getLineMetrics: function (lineIndex) {
+          this.ensureDimensions();
+          if (lineIndex < 0 || lineIndex >= this._lines.length) {
+            throwError('RangeError', Errors.ParamRangeError);
+          }
+          var line = this._lines[lineIndex];
+          var format = line.largestFormat;
+          var metrics = format.font._metrics;
+          var size = format.size;
+          var ascent = metrics.ascent * size + 0.49999 | 0;
+          var descent = metrics.descent * size + 0.49999 | 0;
+          var leading = metrics.leading * size + 0.49999 + line.leading | 0;
+          return new flash.text.TextLineMetrics(line.x + 2, line.width, line.height, ascent, descent, leading);
         }
       };
     var desc = Object.getOwnPropertyDescriptor;
@@ -50230,18 +49133,10 @@ var TextFieldDefinition = function () {
             }
           },
           getLineMetrics: function (lineIndex) {
-            this.ensureDimensions();
-            if (lineIndex < 0 || lineIndex >= this._lines.length) {
-              throwError('RangeError', Errors.ParamRangeError);
-            }
-            var line = this._lines[lineIndex];
-            var format = line.largestFormat;
-            var metrics = format.font._metrics;
-            var size = format.size;
-            var ascent = metrics.ascent * size + 0.49999 | 0;
-            var descent = metrics.descent * size + 0.49999 | 0;
-            var leading = metrics.leading * size + 0.49999 + line.leading | 0;
-            return new flash.text.TextLineMetrics(line.x + 2, line.width, line.height, ascent, descent, leading);
+            return this.getLineMetrics(lineIndex);
+          },
+          setSelection: function (beginIndex, endIndex) {
+            somewhatImplemented('TextField.setSelection');
           },
           scrollV: {
             get: function scrollV() {
@@ -50377,6 +49272,7 @@ var TextFieldDefinition = function () {
     return def;
   }.call(this);
 var TextFormatDefinition = function () {
+    var measureTextField;
     return {
       __class__: 'flash.text.TextFormat',
       initialize: function () {
@@ -50413,6 +49309,32 @@ var TextFormatDefinition = function () {
           indent: this._indent || 0,
           leading: this._leading || 0
         };
+      },
+      as2GetTextExtent: function (text, width) {
+        if (!measureTextField) {
+          measureTextField = new flash.text.TextField();
+          measureTextField._multiline = true;
+        }
+        if (!isNaN(width) && width > 0) {
+          measureTextField.width = width + 4;
+          measureTextField._wordWrap = true;
+        } else {
+          measureTextField._wordWrap = false;
+        }
+        measureTextField.defaultTextFormat = this;
+        measureTextField.text = text;
+        measureTextField.ensureDimensions();
+        var result = {};
+        var textWidth = measureTextField._textWidth;
+        var textHeight = measureTextField._textHeight;
+        result.asSetPublicProperty('width', textWidth);
+        result.asSetPublicProperty('height', textHeight);
+        result.asSetPublicProperty('textFieldWidth', textWidth + 4);
+        result.asSetPublicProperty('textFieldHeight', textHeight + 4);
+        var metrics = measureTextField.getLineMetrics(0);
+        result.asSetPublicProperty('ascent', metrics.asGetPublicProperty('ascent'));
+        result.asSetPublicProperty('descent', metrics.asGetPublicProperty('descent'));
+        return result;
       },
       __glue__: {
         native: {
@@ -50575,6 +49497,257 @@ var TextFormatDefinition = function () {
       }
     };
   }.call(this);
+var ContentElementDefinition = function () {
+    return {
+      __class__: 'flash.text.engine.ContentElement',
+      initialize: function () {
+      },
+      __glue__: {
+        native: {
+          static: {},
+          instance: {
+            textBlock: {
+              get: function textBlock() {
+                notImplemented('ContentElement.textBlock');
+                return this._textBlock;
+              }
+            },
+            textBlockBeginIndex: {
+              get: function textBlockBeginIndex() {
+                notImplemented('ContentElement.textBlockBeginIndex');
+                return this._textBlockBeginIndex;
+              }
+            },
+            elementFormat: {
+              get: function elementFormat() {
+                return this._elementFormat;
+              },
+              set: function elementFormat(value) {
+                somewhatImplemented('ContentElement.elementFormat');
+                this._elementFormat = value;
+              }
+            },
+            eventMirror: {
+              get: function eventMirror() {
+                return this._eventMirror;
+              },
+              set: function eventMirror(value) {
+                somewhatImplemented('ContentElement.eventMirror');
+                this._eventMirror = value;
+              }
+            },
+            groupElement: {
+              get: function groupElement() {
+                notImplemented('ContentElement.groupElement');
+                return this._groupElement;
+              }
+            },
+            rawText: {
+              get: function rawText() {
+                notImplemented('ContentElement.rawText');
+                return this._rawText;
+              }
+            },
+            text: {
+              get: function text() {
+                notImplemented('ContentElement.text');
+                return this._text;
+              }
+            },
+            textRotation: {
+              get: function textRotation() {
+                return this._textRotation;
+              },
+              set: function textRotation(value) {
+                somewhatImplemented('ContentElement.textRotation');
+                this._textRotation = value;
+              }
+            }
+          }
+        }
+      }
+    };
+  }.call(this);
+var ElementFormatDefinition = function () {
+    return {
+      __class__: 'flash.text.engine.ElementFormat',
+      initialize: function () {
+      },
+      __glue__: {
+        native: {
+          static: {},
+          instance: {
+            getFontMetrics: function getFontMetrics() {
+              notImplemented('ElementFormat.getFontMetrics');
+            },
+            alignmentBaseline: {
+              get: function alignmentBaseline() {
+                return this._alignmentBaseline;
+              },
+              set: function alignmentBaseline(alignmentBaseline) {
+                somewhatImplemented('ElementFormat.alignmentBaseline');
+                this._alignmentBaseline = alignmentBaseline;
+              }
+            },
+            alpha: {
+              get: function alpha() {
+                return this._alpha;
+              },
+              set: function alpha(value) {
+                somewhatImplemented('ElementFormat.alpha');
+                this._alpha = value;
+              }
+            },
+            baselineShift: {
+              get: function baselineShift() {
+                return this._baselineShift;
+              },
+              set: function baselineShift(value) {
+                somewhatImplemented('ElementFormat.baselineShift');
+                this._baselineShift = value;
+              }
+            },
+            breakOpportunity: {
+              get: function breakOpportunity() {
+                return this._breakOpportunity;
+              },
+              set: function breakOpportunity(opportunityType) {
+                somewhatImplemented('ElementFormat.breakOpportunity');
+                this._breakOpportunity = opportunityType;
+              }
+            },
+            color: {
+              get: function color() {
+                return this._color;
+              },
+              set: function color(value) {
+                somewhatImplemented('ElementFormat.color');
+                this._color = value;
+              }
+            },
+            dominantBaseline: {
+              get: function dominantBaseline() {
+                return this._dominantBaseline;
+              },
+              set: function dominantBaseline(dominantBaseline) {
+                somewhatImplemented('ElementFormat.dominantBaseline');
+                this._dominantBaseline = dominantBaseline;
+              }
+            },
+            fontDescription: {
+              get: function fontDescription() {
+                return this._fontDescription;
+              },
+              set: function fontDescription(value) {
+                somewhatImplemented('ElementFormat.fontDescription');
+                this._fontDescription = value;
+              }
+            },
+            digitCase: {
+              get: function digitCase() {
+                return this._digitCase;
+              },
+              set: function digitCase(digitCaseType) {
+                somewhatImplemented('ElementFormat.digitCase');
+                this._digitCase = digitCaseType;
+              }
+            },
+            digitWidth: {
+              get: function digitWidth() {
+                return this._digitWidth;
+              },
+              set: function digitWidth(digitWidthType) {
+                somewhatImplemented('ElementFormat.digitWidth');
+                this._digitWidth = digitWidthType;
+              }
+            },
+            ligatureLevel: {
+              get: function ligatureLevel() {
+                return this._ligatureLevel;
+              },
+              set: function ligatureLevel(ligatureLevelType) {
+                somewhatImplemented('ElementFormat.ligatureLevel');
+                this._ligatureLevel = ligatureLevelType;
+              }
+            },
+            fontSize: {
+              get: function fontSize() {
+                return this._fontSize;
+              },
+              set: function fontSize(value) {
+                somewhatImplemented('ElementFormat.fontSize');
+                this._fontSize = value;
+              }
+            },
+            kerning: {
+              get: function kerning() {
+                return this._kerning;
+              },
+              set: function kerning(value) {
+                somewhatImplemented('ElementFormat.kerning');
+                this._kerning = value;
+              }
+            },
+            locale: {
+              get: function locale() {
+                return this._locale;
+              },
+              set: function locale(value) {
+                somewhatImplemented('ElementFormat.locale');
+                this._locale = value;
+              }
+            },
+            textRotation: {
+              get: function textRotation() {
+                return this._textRotation;
+              },
+              set: function textRotation(value) {
+                somewhatImplemented('ElementFormat.textRotation');
+                this._textRotation = value;
+              }
+            },
+            trackingRight: {
+              get: function trackingRight() {
+                return this._trackingRight;
+              },
+              set: function trackingRight(value) {
+                somewhatImplemented('ElementFormat.trackingRight');
+                this._trackingRight = value;
+              }
+            },
+            trackingLeft: {
+              get: function trackingLeft() {
+                return this._trackingLeft;
+              },
+              set: function trackingLeft(value) {
+                somewhatImplemented('ElementFormat.trackingLeft');
+                this._trackingLeft = value;
+              }
+            },
+            typographicCase: {
+              get: function typographicCase() {
+                return this._typographicCase;
+              },
+              set: function typographicCase(typographicCaseType) {
+                somewhatImplemented('ElementFormat.typographicCase');
+                this._typographicCase = typographicCaseType;
+              }
+            },
+            locked: {
+              get: function locked() {
+                notImplemented('ElementFormat.locked');
+                return this._locked;
+              },
+              set: function locked(value) {
+                notImplemented('ElementFormat.locked');
+                this._locked = value;
+              }
+            }
+          }
+        }
+      }
+    };
+  }.call(this);
 var FontDescriptionDefinition = function () {
     return {
       __class__: 'flash.text.engine.FontDescription',
@@ -50593,61 +49766,55 @@ var FontDescriptionDefinition = function () {
           instance: {
             renderingMode: {
               get: function renderingMode() {
-                notImplemented('FontDescription.renderingMode');
                 return this._renderingMode;
               },
               set: function renderingMode(value) {
-                notImplemented('FontDescription.renderingMode');
+                somewhatImplemented('FontDescription.renderingMode');
                 this._renderingMode = value;
               }
             },
             fontLookup: {
               get: function fontLookup() {
-                notImplemented('FontDescription.fontLookup');
                 return this._fontLookup;
               },
               set: function fontLookup(value) {
-                notImplemented('FontDescription.fontLookup');
+                somewhatImplemented('FontDescription.fontLookup');
                 this._fontLookup = value;
               }
             },
             fontName: {
               get: function fontName() {
-                notImplemented('FontDescription.fontName');
                 return this._fontName;
               },
               set: function fontName(value) {
-                notImplemented('FontDescription.fontName');
+                somewhatImplemented('FontDescription.fontName');
                 this._fontName = value;
               }
             },
             fontPosture: {
               get: function fontPosture() {
-                notImplemented('FontDescription.fontPosture');
                 return this._fontPosture;
               },
               set: function fontPosture(value) {
-                notImplemented('FontDescription.fontPosture');
+                somewhatImplemented('FontDescription.fontPosture');
                 this._fontPosture = value;
               }
             },
             fontWeight: {
               get: function fontWeight() {
-                notImplemented('FontDescription.fontWeight');
                 return this._fontWeight;
               },
               set: function fontWeight(value) {
-                notImplemented('FontDescription.fontWeight');
+                somewhatImplemented('FontDescription.fontWeight');
                 this._fontWeight = value;
               }
             },
             cffHinting: {
               get: function cffHinting() {
-                notImplemented('FontDescription.cffHinting');
                 return this._cffHinting;
               },
               set: function cffHinting(value) {
-                notImplemented('FontDescription.cffHinting');
+                somewhatImplemented('FontDescription.cffHinting');
                 this._cffHinting = value;
               }
             },
@@ -50666,6 +49833,499 @@ var FontDescriptionDefinition = function () {
         script: {
           static: {},
           instance: {}
+        }
+      }
+    };
+  }.call(this);
+var GroupElementDefinition = function () {
+    return {
+      __class__: 'flash.text.engine.GroupElement',
+      initialize: function () {
+      },
+      __glue__: {
+        native: {
+          static: {},
+          instance: {
+            getElementAt: function getElementAt(index) {
+              notImplemented('GroupElement.getElementAt');
+            },
+            setElements: function setElements(value) {
+              somewhatImplemented('GroupElement.setElements');
+              this._elements = value;
+            },
+            groupElements: function groupElements(beginIndex, endIndex) {
+              notImplemented('GroupElement.groupElements');
+            },
+            ungroupElements: function ungroupElements(groupIndex) {
+              notImplemented('GroupElement.ungroupElements');
+            },
+            mergeTextElements: function mergeTextElements(beginIndex, endIndex) {
+              notImplemented('GroupElement.mergeTextElements');
+            },
+            splitTextElement: function splitTextElement(elementIndex, splitIndex) {
+              notImplemented('GroupElement.splitTextElement');
+            },
+            replaceElements: function replaceElements(beginIndex, endIndex, newElements) {
+              notImplemented('GroupElement.replaceElements');
+            },
+            getElementAtCharIndex: function getElementAtCharIndex(charIndex) {
+              notImplemented('GroupElement.getElementAtCharIndex');
+            },
+            elementCount: {
+              get: function elementCount() {
+                notImplemented('GroupElement.elementCount');
+                return this._elementCount;
+              }
+            }
+          }
+        }
+      }
+    };
+  }.call(this);
+var SpaceJustifierDefinition = function () {
+    return {
+      __class__: 'flash.text.engine.SpaceJustifier',
+      initialize: function () {
+        this._letterSpacing = false;
+        this._optimumSpacing = 1;
+        this._minimumSpacing = 0.5;
+        this._maximumSpacing = 1.5;
+      },
+      __glue__: {
+        native: {
+          static: {},
+          instance: {
+            cloneSpacing: function cloneSpacing(justifier) {
+              somewhatImplemented('SpaceJustifier.cloneSpacing');
+              justifier._optimumSpacing = this._optimumSpacing;
+              justifier._minimumSpacing = this._minimumSpacing;
+              justifier._maximumSpacing = this._maximumSpacing;
+            },
+            letterSpacing: {
+              get: function letterSpacing() {
+                return this._letterSpacing;
+              },
+              set: function letterSpacing(value) {
+                somewhatImplemented('SpaceJustifier.letterSpacing');
+                this._letterSpacing = value;
+              }
+            },
+            minimumSpacing: {
+              get: function minimumSpacing() {
+                return this._minimumSpacing;
+              },
+              set: function minimumSpacing(value) {
+                somewhatImplemented('SpaceJustifier.minimumSpacing');
+                this._minimumSpacing = value;
+              }
+            },
+            optimumSpacing: {
+              get: function optimumSpacing() {
+                return this._optimumSpacing;
+              },
+              set: function optimumSpacing(value) {
+                somewhatImplemented('SpaceJustifier.optimumSpacing');
+                this._optimumSpacing = value;
+              }
+            },
+            maximumSpacing: {
+              get: function maximumSpacing() {
+                return this._maximumSpacing;
+              },
+              set: function maximumSpacing(value) {
+                somewhatImplemented('SpaceJustifier.maximumSpacing');
+                this._maximumSpacing = value;
+              }
+            }
+          }
+        }
+      }
+    };
+  }.call(this);
+var TextBlockDefinition = function () {
+    return {
+      __class__: 'flash.text.engine.TextBlock',
+      initialize: function () {
+        this._firstLine = null;
+        this._lastLine = null;
+      },
+      __glue__: {
+        native: {
+          static: {},
+          instance: {
+            getTextJustifier: function getTextJustifier() {
+              return this._textJustifier;
+            },
+            setTextJustifier: function setTextJustifier(value) {
+              somewhatImplemented('TextBlock.setTextJustifier');
+              this._textJustifier = value;
+            },
+            getTabStops: function getTabStops() {
+              return this._tabStops;
+            },
+            setTabStops: function setTabStops(value) {
+              somewhatImplemented('TextBlock.setTabStops');
+              this._tabStops = value;
+            },
+            findNextAtomBoundary: function findNextAtomBoundary(afterCharIndex) {
+              notImplemented('TextBlock.findNextAtomBoundary');
+            },
+            findPreviousAtomBoundary: function findPreviousAtomBoundary(beforeCharIndex) {
+              notImplemented('TextBlock.findPreviousAtomBoundary');
+            },
+            findNextWordBoundary: function findNextWordBoundary(afterCharIndex) {
+              notImplemented('TextBlock.findNextWordBoundary');
+            },
+            findPreviousWordBoundary: function findPreviousWordBoundary(beforeCharIndex) {
+              notImplemented('TextBlock.findPreviousWordBoundary');
+            },
+            getTextLineAtCharIndex: function getTextLineAtCharIndex(charIndex) {
+              notImplemented('TextBlock.getTextLineAtCharIndex');
+            },
+            DoCreateTextLine: function DoCreateTextLine(previousLine, width, lineOffset, fitSomething, reuseLine) {
+              somewhatImplemented('TextBlock.DoCreateTextLine');
+              if (previousLine) {
+                return null;
+              }
+              var textLine = new flash.text.engine.TextLine();
+              textLine._textBlock = this;
+              textLine._specifiedWidth = width;
+              textLine._rawTextLength = 0;
+              textLine._textWidth = 0;
+              textLine._textHeight = 0;
+              textLine._ascent = 0;
+              textLine._descent = 0;
+              textLine._unjustifiedTextWidth = 0;
+              textLine._validity = 'valid';
+              textLine._previousLine = null;
+              textLine._nextLine = null;
+              this._firstLine = textLine;
+              this._lastLine = textLine;
+              return textLine;
+            },
+            releaseLineCreationData: function releaseLineCreationData() {
+              notImplemented('TextBlock.releaseLineCreationData');
+            },
+            releaseLines: function releaseLines(firstLine, lastLine) {
+              notImplemented('TextBlock.releaseLines');
+            },
+            dump: function dump() {
+              notImplemented('TextBlock.dump');
+            },
+            applyNonLinearFontScaling: {
+              get: function applyNonLinearFontScaling() {
+                return this._applyNonLinearFontScaling;
+              },
+              set: function applyNonLinearFontScaling(value) {
+                somewhatImplemented('TextBlock.applyNonLinearFontScaling');
+                this._applyNonLinearFontScaling = value;
+              }
+            },
+            baselineFontDescription: {
+              get: function baselineFontDescription() {
+                return this._baselineFontDescription;
+              },
+              set: function baselineFontDescription(value) {
+                somewhatImplemented('TextBlock.baselineFontDescription');
+                this._baselineFontDescription = value;
+              }
+            },
+            baselineFontSize: {
+              get: function baselineFontSize() {
+                return this._baselineFontSize;
+              },
+              set: function baselineFontSize(value) {
+                somewhatImplemented('TextBlock.baselineFontSize');
+                this._baselineFontSize = value;
+              }
+            },
+            baselineZero: {
+              get: function baselineZero() {
+                return this._baselineZero;
+              },
+              set: function baselineZero(value) {
+                somewhatImplemented('TextBlock.baselineZero');
+                this._baselineZero = value;
+              }
+            },
+            content: {
+              get: function content() {
+                return this._content;
+              },
+              set: function content(value) {
+                somewhatImplemented('TextBlock.content');
+                this._content = value;
+              }
+            },
+            bidiLevel: {
+              get: function bidiLevel() {
+                return this._bidiLevel;
+              },
+              set: function bidiLevel(value) {
+                somewhatImplemented('TextBlock.bidiLevel');
+                this._bidiLevel = value;
+              }
+            },
+            firstInvalidLine: {
+              get: function firstInvalidLine() {
+                notImplemented('TextBlock.firstInvalidLine');
+                return this._firstInvalidLine;
+              }
+            },
+            firstLine: {
+              get: function firstLine() {
+                somewhatImplemented('TextBlock.firstLine');
+                return this._firstLine;
+              }
+            },
+            lastLine: {
+              get: function lastLine() {
+                somewhatImplemented('TextBlock.lastLine');
+                return this._lastLine;
+              }
+            },
+            textLineCreationResult: {
+              get: function textLineCreationResult() {
+                notImplemented('TextBlock.textLineCreationResult');
+                return this._textLineCreationResult;
+              }
+            },
+            lineRotation: {
+              get: function lineRotation() {
+                return this._lineRotation;
+              },
+              set: function lineRotation(value) {
+                somewhatImplemented('TextBlock.lineRotation');
+                this._lineRotation = value;
+              }
+            }
+          }
+        }
+      }
+    };
+  }.call(this);
+var TextElementDefinition = function () {
+    return {
+      __class__: 'flash.text.engine.TextElement',
+      initialize: function () {
+      },
+      __glue__: {
+        native: {
+          static: {},
+          instance: {
+            replaceText: function replaceText(beginIndex, endIndex, newText) {
+              somewhatImplemented('TextElement.replaceText');
+              var text = this._text || '';
+              this._text = text.slice(0, beginIndex) + newText + text.slice(endIndex);
+            },
+            text: {
+              set: function text(value) {
+                somewhatImplemented('TextElement.text');
+                this._text = value;
+              }
+            }
+          }
+        }
+      }
+    };
+  }.call(this);
+var TextJustifierDefinition = function () {
+    return {
+      __class__: 'flash.text.engine.TextJustifier',
+      initialize: function () {
+        this._locale = null;
+        this._lineJustification = null;
+      },
+      __glue__: {
+        native: {
+          static: {},
+          instance: {
+            setLocale: function setLocale(value) {
+              somewhatImplemented('TextJustifier.setLocale');
+              this._locale = value;
+            },
+            locale: {
+              get: function locale() {
+                return this._locale;
+              }
+            },
+            lineJustification: {
+              get: function lineJustification() {
+                return this._lineJustification;
+              },
+              set: function lineJustification(value) {
+                somewhatImplemented('TextJustifier.lineJustification');
+                this._lineJustification = value;
+              }
+            }
+          }
+        }
+      }
+    };
+  }.call(this);
+var TextLineDefinition = function () {
+    return {
+      __class__: 'flash.text.engine.TextLine',
+      initialize: function () {
+      },
+      __glue__: {
+        native: {
+          static: {},
+          instance: {
+            getAtomIndexAtPoint: function getAtomIndexAtPoint(stageX, stageY) {
+              notImplemented('TextLine.getAtomIndexAtPoint');
+            },
+            getAtomIndexAtCharIndex: function getAtomIndexAtCharIndex(charIndex) {
+              notImplemented('TextLine.getAtomIndexAtCharIndex');
+            },
+            getAtomBounds: function getAtomBounds(atomIndex) {
+              notImplemented('TextLine.getAtomBounds');
+            },
+            getAtomBidiLevel: function getAtomBidiLevel(atomIndex) {
+              notImplemented('TextLine.getAtomBidiLevel');
+            },
+            getAtomTextRotation: function getAtomTextRotation(atomIndex) {
+              notImplemented('TextLine.getAtomTextRotation');
+            },
+            getAtomTextBlockBeginIndex: function getAtomTextBlockBeginIndex(atomIndex) {
+              notImplemented('TextLine.getAtomTextBlockBeginIndex');
+            },
+            getAtomTextBlockEndIndex: function getAtomTextBlockEndIndex(atomIndex) {
+              notImplemented('TextLine.getAtomTextBlockEndIndex');
+            },
+            getAtomCenter: function getAtomCenter(atomIndex) {
+              notImplemented('TextLine.getAtomCenter');
+            },
+            getAtomWordBoundaryOnLeft: function getAtomWordBoundaryOnLeft(atomIndex) {
+              notImplemented('TextLine.getAtomWordBoundaryOnLeft');
+            },
+            getAtomGraphic: function getAtomGraphic(atomIndex) {
+              notImplemented('TextLine.getAtomGraphic');
+            },
+            getBaselinePosition: function getBaselinePosition(baseline) {
+              notImplemented('TextLine.getBaselinePosition');
+            },
+            dump: function dump() {
+              notImplemented('TextLine.dump');
+            },
+            textBlock: {
+              get: function textBlock() {
+                notImplemented('TextLine.textBlock');
+                return this._textBlock;
+              }
+            },
+            hasGraphicElement: {
+              get: function hasGraphicElement() {
+                notImplemented('TextLine.hasGraphicElement');
+                return this._hasGraphicElement;
+              }
+            },
+            hasTabs: {
+              get: function hasTabs() {
+                notImplemented('TextLine.hasTabs');
+                return this._hasTabs;
+              }
+            },
+            nextLine: {
+              get: function nextLine() {
+                somewhatImplemented('TextLine.nextLine');
+                return this._nextLine;
+              }
+            },
+            previousLine: {
+              get: function previousLine() {
+                somewhatImplemented('TextLine.previousLine');
+                return this._previousLine;
+              }
+            },
+            ascent: {
+              get: function ascent() {
+                somewhatImplemented('TextLine.ascent');
+                return this._ascent;
+              }
+            },
+            descent: {
+              get: function descent() {
+                somewhatImplemented('TextLine.descent');
+                return this._descent;
+              }
+            },
+            textHeight: {
+              get: function textHeight() {
+                somewhatImplemented('TextLine.textHeight');
+                return this._textHeight;
+              }
+            },
+            textWidth: {
+              get: function textWidth() {
+                somewhatImplemented('TextLine.textWidth');
+                return this._textWidth;
+              }
+            },
+            totalAscent: {
+              get: function totalAscent() {
+                notImplemented('TextLine.totalAscent');
+                return this._totalAscent;
+              }
+            },
+            totalDescent: {
+              get: function totalDescent() {
+                notImplemented('TextLine.totalDescent');
+                return this._totalDescent;
+              }
+            },
+            totalHeight: {
+              get: function totalHeight() {
+                notImplemented('TextLine.totalHeight');
+                return this._totalHeight;
+              }
+            },
+            textBlockBeginIndex: {
+              get: function textBlockBeginIndex() {
+                notImplemented('TextLine.textBlockBeginIndex');
+                return this._textBlockBeginIndex;
+              }
+            },
+            rawTextLength: {
+              get: function rawTextLength() {
+                somewhatImplemented('TextLine.rawTextLength');
+                return this._rawTextLength;
+              }
+            },
+            specifiedWidth: {
+              get: function specifiedWidth() {
+                somewhatImplemented('TextLine.specifiedWidth');
+                return this._specifiedWidth;
+              }
+            },
+            unjustifiedTextWidth: {
+              get: function unjustifiedTextWidth() {
+                somewhatImplemented('TextLine.unjustifiedTextWidth');
+                return this._unjustifiedTextWidth;
+              }
+            },
+            validity: {
+              get: function validity() {
+                return this._validity;
+              },
+              set: function validity(value) {
+                somewhatImplemented('TextLine.validity');
+                this._validity = value;
+              }
+            },
+            atomCount: {
+              get: function atomCount() {
+                notImplemented('TextLine.atomCount');
+                return this._atomCount;
+              }
+            },
+            mirrorRegions: {
+              get: function mirrorRegions() {
+                notImplemented('TextLine.mirrorRegions');
+                return this._mirrorRegions;
+              }
+            }
+          }
         }
       }
     };
@@ -50790,6 +50450,7 @@ var ContextMenuItemDefinition = function () {
 var ShumwayKeyboardListener = {
     _lastKeyCode: 0,
     _captureKeyPress: false,
+    _charCodeMap: [],
     focus: null,
     handleEvent: function (domEvt) {
       var keyCode = domEvt.keyCode;
@@ -50799,15 +50460,17 @@ var ShumwayKeyboardListener = {
         if (this._captureKeyPress) {
           return;
         }
+        this._charCodeMap[keyCode] = 0;
       } else if (domEvt.type === 'keypress') {
         if (this._captureKeyPress) {
           keyCode = this._lastKeyCode;
+          this._charCodeMap[keyCode] = domEvt.charCode;
         } else {
           return;
         }
       }
       if (this.focus) {
-        this.focus._dispatchEvent(new flash.events.KeyboardEvent(domEvt.type === 'keyup' ? 'keyUp' : 'keyDown', true, false, domEvt.charCode, domEvt.type === 'keyup' ? domEvt.keyCode : this._lastKeyCode, domEvt.keyLocation, domEvt.ctrlKey, domEvt.altKey, domEvt.shiftKey));
+        this.focus._dispatchEvent(new flash.events.KeyboardEvent(domEvt.type === 'keyup' ? 'keyUp' : 'keyDown', true, false, domEvt.type === 'keyup' ? this._charCodeMap[keyCode] : domEvt.charCode, domEvt.type === 'keyup' ? domEvt.keyCode : this._lastKeyCode, domEvt.keyLocation, domEvt.ctrlKey, domEvt.altKey, domEvt.shiftKey));
       }
     }
   };
@@ -51285,9 +50948,14 @@ var AS2GlobalsDefinition = function () {
     var def = {
         __class__: 'avm1lib.AS2Globals',
         initialize: function () {
+          flash.text.TextFormat.prototype.asDefinePublicProperty('getTextExtent', {
+            value: TextFormatDefinition.as2GetTextExtent,
+            writable: false,
+            enumerable: false,
+            configurable: false
+          });
         }
       };
-    var desc = Object.getOwnPropertyDescriptor;
     def.__glue__ = {
       native: {
         instance: {
@@ -51338,14 +51006,17 @@ var AS2MovieClipDefinition = function () {
           return this.$nativeObject._duplicate(name, depth, initObject);
         },
         _constructSymbol: function constructSymbol(symbolId, name) {
-          var theClass = AS2Context.instance.classes && AS2Context.instance.classes[name];
-          if (!theClass) {
-            return;
-          }
-          var mc = new flash.display.MovieClip();
+          var theClass = AS2Context.instance.classes && AS2Context.instance.classes[symbolId];
+          var symbolProps = AS2Context.instance.assets[symbolId];
+          var symbolClass = flash.display.MovieClip.class;
+          var mc = symbolClass.createAsSymbol(symbolProps);
           mc._avm1SymbolClass = theClass;
+          symbolClass.instanceConstructor.call(mc);
           this.$nativeObject.addChild(mc);
           return mc;
+        },
+        _gotoLabel: function (label) {
+          this.$nativeObject.gotoLabel(label);
         },
         _callFrame: function callFrame(frame) {
           this.$nativeObject._callFrame(frame);
@@ -51374,7 +51045,8 @@ var AS2MovieClipDefinition = function () {
           _insertChildAtDepth: def._insertChildAtDepth,
           _duplicate: def._duplicate,
           _constructSymbol: def._constructSymbol,
-          _callFrame: def._callFrame
+          _callFrame: def._callFrame,
+          _gotoLabel: def._gotoLabel
         }
       },
       script: {
@@ -51414,12 +51086,54 @@ var AS2TextFieldDefinition = function () {
     var def = {
         __class__: 'avm1lib.AS2TextField',
         initialize: function () {
+          this._variable = '';
         }
       };
-    var desc = Object.getOwnPropertyDescriptor;
     def.__glue__ = {
       native: {
         instance: {
+          variable: {
+            get: function () {
+              return this._variable;
+            },
+            set: function (name) {
+              if (name === this._variable) {
+                return;
+              }
+              this._variable = name;
+              var instance = this.$nativeObject;
+              var hasPath = name.indexOf('.') >= 0 || name.indexOf(':') >= 0;
+              var clip;
+              if (hasPath) {
+                var targetPath = name.split(/[.:\/]/g);
+                name = targetPath.pop();
+                if (targetPath[0] == '_root' || targetPath[0] === '') {
+                  clip = instance.root._getAS2Object();
+                  targetPath.shift();
+                  if (targetPath[0] === '') {
+                    targetPath.shift();
+                  }
+                } else {
+                  clip = instance._parent._getAS2Object();
+                }
+                while (targetPath.length > 0) {
+                  var childName = targetPath.shift();
+                  clip = clip.asGetPublicProperty(childName) || clip[childName];
+                  if (!clip) {
+                    throw new Error('Cannot find ' + childName + ' variable');
+                  }
+                }
+              } else {
+                clip = instance._parent._getAS2Object();
+              }
+              if (!clip.asHasProperty(undefined, name, 0)) {
+                clip.asSetPublicProperty(name, instance.text);
+              }
+              instance._addEventListener('advanceFrame', function () {
+                instance.text = '' + clip.asGetPublicProperty(name);
+              });
+            }
+          },
           _as3Object: {
             get: function () {
               return this.$nativeObject;
@@ -51476,12 +51190,11 @@ var AS2UtilsDefinition = function () {
         configurable: false
       });
     }
-    var desc = Object.getOwnPropertyDescriptor;
     def.__glue__ = {
       native: {
         static: {
           getAS2Object: function (nativeObject) {
-            return nativeObject ? nativeObject._getAS2Object() : null;
+            return nativeObject && nativeObject._getAS2Object ? nativeObject._getAS2Object() : null;
           },
           addProperty: function (obj, propertyName, getter, setter) {
             obj.asDefinePublicProperty(propertyName, {
@@ -51515,12 +51228,12 @@ function initDefaultListeners(thisArg) {
   }
   for (var i = 0; i < defaultListeners.length; i++) {
     var p = defaultListeners[i];
-    p.setter.call(thisArg, p.value);
+    p.asGetPublicProperty('setter').call(thisArg, p.value);
   }
 }
 function bindNativeClassDefinition(nativeName, definition) {
-  natives[nativeName] = function (runtime, scope, instanceConstructor, baseClass) {
-    var c = new Class(undefined, instanceConstructor, Domain.coerceCallable);
+  natives[nativeName] = function (domain, scope, instanceConstructor, baseClass) {
+    var c = new Class(undefined, instanceConstructor, ApplicationDomain.coerceCallable);
     c.extend(baseClass);
     c.linkNatives(definition);
     return c;
@@ -51616,6 +51329,8 @@ var Stubs = new function () {
       M('flash.display.FrameLabel', 'FrameLabelClass', FrameLabelDefinition),
       M('flash.display.Scene'),
       M('flash.display.BlendMode'),
+      M('flash.display.Shader', 'ShaderClass', ShaderDefinition),
+      M('flash.display.ShaderData', 'ShaderDataClass', ShaderDataDefinition),
       M('flash.filters.BevelFilter', 'BevelFilterClass', BevelFilterDefinition),
       M('flash.filters.BitmapFilter', 'BitmapFilterClass', BitmapFilterDefinition),
       M('flash.filters.BlurFilter', 'BlurFilterClass', BlurFilterDefinition),
@@ -51652,15 +51367,26 @@ var Stubs = new function () {
       M('flash.text.Font', 'FontClass', FontDefinition),
       M('flash.text.TextField', 'TextFieldClass', TextFieldDefinition),
       M('flash.text.StaticText', 'StaticTextClass', StaticTextDefinition),
+      M('flash.text.StyleSheet', 'StyleSheetClass', StyleSheetDefinition),
       M('flash.text.TextFormat', 'TextFormatClass', TextFormatDefinition),
       M('flash.text.TextLineMetrics'),
+      M('flash.text.engine.ContentElement', 'ContentElementClass', ContentElementDefinition),
+      M('flash.text.engine.ElementFormat', 'ElementFormatClass', ElementFormatDefinition),
       M('flash.text.engine.FontDescription', 'FontDescriptionClass', FontDescriptionDefinition),
+      M('flash.text.engine.GroupElement', 'GroupElementClass', GroupElementDefinition),
+      M('flash.text.engine.SpaceJustifier', 'SpaceJustifierClass', SpaceJustifierDefinition),
+      M('flash.text.engine.TextBlock', 'TextBlockClass', TextBlockDefinition),
+      M('flash.text.engine.TextElement', 'TextElementClass', TextElementDefinition),
+      M('flash.text.engine.TextJustifier', 'TextJustifierClass', TextJustifierDefinition),
+      M('flash.text.engine.TextLine', 'TextLineClass', TextLineDefinition),
       M('flash.media.Sound', 'SoundClass', SoundDefinition),
       M('flash.media.SoundChannel', 'SoundChannelClass', SoundChannelDefinition),
       M('flash.media.SoundMixer', 'SoundMixerClass', SoundMixerDefinition),
       M('flash.media.SoundTransform', 'SoundTransformClass', SoundTransformDefinition),
       M('flash.media.Video', 'VideoClass', VideoDefinition),
       M('flash.media.ID3Info', 'ID3InfoClass', ID3InfoDefinition),
+      M('flash.media.Microphone', 'MicrophoneClass', MicrophoneDefinition),
+      M('flash.net.FileFilter', 'FileFilterClass', FileFilterDefinition),
       M('flash.net.NetConnection', 'NetConnectionClass', NetConnectionDefinition),
       M('flash.net.NetStream', 'NetStreamClass', NetStreamDefinition),
       M('flash.net.Responder', 'ResponderClass', ResponderDefinition),
@@ -51670,6 +51396,7 @@ var Stubs = new function () {
       M('flash.net.SharedObject', 'SharedObjectClass', SharedObjectDefinition),
       M('flash.net.ObjectEncoding', 'ObjectEncodingClass', ObjectEncodingDefinition),
       M('flash.net.LocalConnection', 'LocalConnectionClass', LocalConnectionDefinition),
+      M('flash.net.Socket', 'SocketClass', SocketDefinition),
       M('flash.net.URLVariables'),
       M('packageInternal flash.system.FSCommand', 'FSCommandClass', FSCommandDefinition),
       M('flash.system.Capabilities', 'CapabilitiesClass', CapabilitiesDefinition),
@@ -51708,25 +51435,25 @@ var Stubs = new function () {
       definitions[className.getOriginalName()] = m.definition;
     });
   }();
-natives['FlashUtilScript::getAliasName'] = function (runtime, scope, instanceConstructor, baseClass) {
+natives['FlashUtilScript::getAliasName'] = function (domain, scope, instanceConstructor, baseClass) {
   return function getAliasName(value) {
     return value.debugName;
   };
 };
 natives['FlashUtilScript::getDefinitionByName'] = natives.getDefinitionByName;
-natives['FlashUtilScript::getTimer'] = function GetTimerMethod(runtime, scope, instanceConstructor, baseClass) {
+natives['FlashUtilScript::getTimer'] = function GetTimerMethod(domain, scope, instanceConstructor, baseClass) {
   var start = Date.now();
   return function getTimer() {
     return Date.now() - start;
   };
 };
-natives['FlashUtilScript::escapeMultiByte'] = function EscapeMultiByteMethod(runtime, scope, instanceConstructor, baseClass) {
+natives['FlashUtilScript::escapeMultiByte'] = function EscapeMultiByteMethod(domain, scope, instanceConstructor, baseClass) {
   return escape;
 };
-natives['FlashUtilScript::unescapeMultiByte'] = function UnescapeMultiByteMethod(runtime, scope, instanceConstructor, baseClass) {
+natives['FlashUtilScript::unescapeMultiByte'] = function UnescapeMultiByteMethod(domain, scope, instanceConstructor, baseClass) {
   return unescape;
 };
-natives['FlashNetScript::navigateToURL'] = function GetNavigateToURLMethod(runtime, scope, instanceConstructor, baseClass) {
+natives['FlashNetScript::navigateToURL'] = function GetNavigateToURLMethod(domain, scope, instanceConstructor, baseClass) {
   return function navigateToURL(request, window_) {
     if (request === null || request === undefined) {
       throwError('TypeError', Errors.NullPointerError, 'request');
@@ -51744,7 +51471,7 @@ natives['FlashNetScript::navigateToURL'] = function GetNavigateToURLMethod(runti
     window.open(FileLoadingService.resolveUrl(url), window_);
   };
 };
-natives['FlashNetScript::sendToURL'] = function GetSendToURLMethod(runtime, scope, instanceConstructor, baseClass) {
+natives['FlashNetScript::sendToURL'] = function GetSendToURLMethod(domain, scope, instanceConstructor, baseClass) {
   return function sendToURL(request) {
     if (request === null || request === undefined) {
       throwError('TypeError', Errors.NullPointerError, 'request');
@@ -51759,7 +51486,7 @@ natives['FlashNetScript::sendToURL'] = function GetSendToURLMethod(runtime, scop
     session.open(request);
   };
 };
-natives['Toplevel::registerClassAlias'] = function GetRegisterClassAliasMethod(runtime, scope, instance, baseClass) {
+natives['Toplevel::registerClassAlias'] = function GetRegisterClassAliasMethod(domain, scope, instance, baseClass) {
   return function registerClassAlias(aliasName, classObject) {
     if (!aliasName) {
       throwError('TypeError', Errors.NullPointerError, 'aliasName');
@@ -51771,7 +51498,7 @@ natives['Toplevel::registerClassAlias'] = function GetRegisterClassAliasMethod(r
     AMFUtils.aliasesCache.names[aliasName] = classObject;
   };
 };
-natives['Toplevel::getClassByAlias'] = function GetGetClassByAliasMethod(runtime, scope, instance, baseClass) {
+natives['Toplevel::getClassByAlias'] = function GetGetClassByAliasMethod(domain, scope, instance, baseClass) {
   return function getClassByAlias(aliasName) {
     if (!aliasName) {
       throwError('TypeError', Errors.NullPointerError, 'aliasName');

@@ -510,6 +510,19 @@ private:
                     prevented the default actions yet. we still need to abort animations. */
   };
 
+  /**
+   * Helper to set the current state. Holds the monitor before actually setting
+   * it and fires content controller events based on state changes. Always set
+   * the state using this call, do not set it directly.
+   */
+  void SetState(PanZoomState aState);
+
+  /**
+   * Internal helpers for checking general state of this apzc.
+   */
+  bool IsTransformingState(PanZoomState aState);
+  bool IsPanningState(PanZoomState mState);
+
   enum AxisLockMode {
     FREE,     /* No locking at all */
     STANDARD, /* Default axis locking mode that remains locked until pan ends*/
@@ -517,15 +530,6 @@ private:
   };
 
   static AxisLockMode GetAxisLockMode();
-
-  /**
-   * Helper to set the current state. Holds the monitor before actually setting
-   * it. If the monitor is already held by the current thread, it is safe to
-   * instead use: |mState = NEWSTATE;|
-   */
-  void SetState(PanZoomState aState);
-
-  bool IsPanningState(PanZoomState mState);
 
   uint64_t mLayersId;
   nsRefPtr<CompositorParent> mCompositorParent;

@@ -71,7 +71,6 @@ typedef uint8_t nsHttpVersion;
 // These flags allow a transaction to use TLS false start with
 // weaker security profiles based on past history
 #define NS_HTTP_ALLOW_RSA_FALSESTART (1<<9)
-#define NS_HTTP_ALLOW_RC4_FALSESTART (1<<10)
 
 //-----------------------------------------------------------------------------
 // some default values

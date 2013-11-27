@@ -113,6 +113,23 @@ struct GSNCache {
     void purge();
 };
 
+/*
+ * ScopeCoordinateName cache to avoid O(n^2) growth in finding the name
+ * associated with a given aliasedvar operation.
+ */
+struct ScopeCoordinateNameCache {
+    typedef HashMap<uint32_t,
+                    jsid,
+                    DefaultHasher<uint32_t>,
+                    SystemAllocPolicy> Map;
+
+    Shape *shape;
+    Map map;
+
+    ScopeCoordinateNameCache() : shape(nullptr) {}
+    void purge();
+};
+
 typedef Vector<ScriptAndCounts, 0, SystemAllocPolicy> ScriptAndCountsVector;
 
 struct ConservativeGCData
@@ -1427,6 +1444,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
     js::GSNCache        gsnCache;
+    js::ScopeCoordinateNameCache scopeCoordinateNameCache;
     js::NewObjectCache  newObjectCache;
     js::NativeIterCache nativeIterCache;
     js::SourceDataCache sourceDataCache;
