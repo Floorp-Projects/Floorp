@@ -18,6 +18,7 @@ nsIFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
 typedef nsContainerFrame nsFlexContainerFrameSuper;
 
 class FlexItem;
+class FlexLine;
 class FlexboxAxisTracker;
 class MainAxisPositionTracker;
 class SingleLineCrossAxisPositionTracker;
@@ -93,20 +94,14 @@ protected:
                                            const nsHTMLReflowState& aParentReflowState,
                                            const FlexboxAxisTracker& aAxisTracker);
 
-  // Runs the "resolve the flexible lengths" algorithm, distributing
-  // |aFlexContainerMainSize| among the |aItems| and freezing them.
-  void ResolveFlexibleLengths(const FlexboxAxisTracker& aAxisTracker,
-                              nscoord aFlexContainerMainSize,
-                              nsTArray<FlexItem>& aItems);
-
   nsresult GenerateFlexItems(nsPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              const FlexboxAxisTracker& aAxisTracker,
-                             nsTArray<FlexItem>& aItems);
+                             FlexLine& aLine);
 
   nscoord ComputeFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
                                        const FlexboxAxisTracker& aAxisTracker,
-                                       const nsTArray<FlexItem>& aFlexItems,
+                                       const FlexLine& aLine,
                                        nscoord aAvailableHeightForContent,
                                        nsReflowStatus& aStatus);
 
@@ -117,18 +112,10 @@ protected:
                                         bool* aIsDefinite,
                                         nsReflowStatus& aStatus);
 
-  void PositionItemInMainAxis(MainAxisPositionTracker& aMainAxisPosnTracker,
-                              FlexItem& aItem);
-
   nsresult SizeItemInCrossAxis(nsPresContext* aPresContext,
                                const FlexboxAxisTracker& aAxisTracker,
                                nsHTMLReflowState& aChildReflowState,
                                FlexItem& aItem);
-
-  void PositionItemInCrossAxis(
-    nscoord aLineStartPosition,
-    SingleLineCrossAxisPositionTracker& aLineCrossAxisPosnTracker,
-    FlexItem& aItem);
 
   bool mChildrenHaveBeenReordered; // Have we ever had to reorder our kids
                                    // to satisfy their 'order' values?

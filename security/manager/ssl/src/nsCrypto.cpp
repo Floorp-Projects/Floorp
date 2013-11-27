@@ -108,12 +108,6 @@ using namespace mozilla::dom;
 #define JS_ERR_BAD_CIPHER_ENABLE_FLAGS    -9
 #define JS_ERR_ADD_DUPLICATE_MOD          -10
 
-namespace {
-  
-NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
-} // unnamed namespace
-
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
 
 NSSCleanupAutoPtrClass_WithParam(PK11Context, PK11_DestroyContext, TrueParam, true)
@@ -270,6 +264,8 @@ nsCrypto::Init(nsIDOMWindow* aWindow)
 void
 nsCrypto::SetEnableSmartCardEvents(bool aEnable, ErrorResult& aRv)
 {
+  NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   nsresult rv = NS_OK;
 
   // this has the side effect of starting the nssComponent (and initializing
@@ -2110,6 +2106,8 @@ nsP12Runnable::~nsP12Runnable()
 NS_IMETHODIMP
 nsP12Runnable::Run()
 {
+  NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   NS_ASSERTION(NS_IsMainThread(), "nsP12Runnable dispatched to the wrong thread");
 
   nsNSSShutDownPreventionLock locker;
@@ -2828,6 +2826,8 @@ nsCrypto::SignText(JSContext* aContext,
 void
 nsCrypto::Logout(ErrorResult& aRv)
 {
+  NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   nsresult rv;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   if (NS_FAILED(rv)) {
@@ -2895,6 +2895,8 @@ nsPkcs11::~nsPkcs11()
 NS_IMETHODIMP
 nsPkcs11::DeleteModule(const nsAString& aModuleName)
 {
+  NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   nsNSSShutDownPreventionLock locker;
   nsresult rv;
   nsString errorMessage;
@@ -2932,6 +2934,8 @@ nsPkcs11::AddModule(const nsAString& aModuleName,
                     int32_t aCryptoMechanismFlags, 
                     int32_t aCipherFlags)
 {
+  NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   nsNSSShutDownPreventionLock locker;
   nsresult rv;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));

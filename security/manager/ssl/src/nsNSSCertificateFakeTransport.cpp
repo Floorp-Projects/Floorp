@@ -324,11 +324,11 @@ nsNSSCertificateFakeTransport::GetFlags(uint32_t *aFlags)
   return NS_OK;
 }
 
-static NS_DEFINE_CID(kNSSCertificateCID, NS_X509CERT_CID);
-
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
+  static NS_DEFINE_CID(kNSSCertificateCID, NS_X509CERT_CID);
+
   *aClassIDNoAlloc = kNSSCertificateCID;
   return NS_OK;
 }
