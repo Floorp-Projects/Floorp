@@ -203,6 +203,12 @@ function activateCurrent(aMessage) {
       dispatchMouseEvent('mousedown');
       dispatchMouseEvent('mouseup');
     }
+
+    if (aAccessible.role !== Roles.KEY) {
+      // Keys will typically have a sound of their own.
+      sendAsyncMessage('AccessFu:Present',
+                       Presentation.actionInvoked(aAccessible, 'click'));
+    }
   }
 
   function moveCaretTo(aAccessible, aOffset) {

@@ -496,7 +496,9 @@ var Output = {
   },
 
   speechHelper: {
-    EARCONS: ['virtual_cursor_move.ogg', 'virtual_cursor_key.ogg'],
+    EARCONS: ['virtual_cursor_move.ogg',
+              'virtual_cursor_key.ogg',
+              'clicked.ogg'],
 
     earconBuffers: {},
 
