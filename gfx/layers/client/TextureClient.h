@@ -279,6 +279,12 @@ public:
 
   virtual bool AllocateForSurface(gfx::IntSize aSize) MOZ_OVERRIDE;
 
+  // TextureClientDrawTarget
+
+  virtual TextureClientDrawTarget* AsTextureClientDrawTarget() MOZ_OVERRIDE { return this; }
+
+  virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
+
   // TextureClientYCbCr
 
   virtual TextureClientYCbCr* AsTextureClientYCbCr() MOZ_OVERRIDE { return this; }
@@ -289,7 +295,7 @@ public:
                                 gfx::IntSize aCbCrSize,
                                 StereoMode aStereoMode) MOZ_OVERRIDE;
 
-  gfx::SurfaceFormat GetFormat() const { return mFormat; }
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
 
   // XXX - Bug 908196 - Make Allocate(uint32_t) and GetBufferSize() protected.
   // these two methods should only be called by methods of BufferTextureClient
