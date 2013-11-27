@@ -93,6 +93,32 @@ MP4Reader::~MP4Reader()
   MOZ_COUNT_DTOR(MP4Reader);
 }
 
+void
+MP4Reader::InitLayersBackendType()
+{
+  if (!IsVideoContentType(mDecoder->GetResource()->GetContentType())) {
+    // Not playing video, we don't care about the layers backend type.
+    return;
+  }
+  // Extract the layer manager backend type so that platform decoders
+  // can determine whether it's worthwhile using hardware accelerated
+  // video decoding.
+  MediaDecoderOwner* owner = mDecoder->GetOwner();
+  if (!owner) {
+    NS_WARNING("MP4Reader without a decoder owner, can't get HWAccel");
+    return;
+  }
+
+  dom::HTMLMediaElement* element = owner->GetMediaElement();
+  NS_ENSURE_TRUE_VOID(element);
+
+  nsRefPtr<LayerManager> layerManager =
+    nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
+  NS_ENSURE_TRUE_VOID(layerManager);
+
+  mLayersBackendType = layerManager->GetBackendType();
+}
+
 nsresult
 MP4Reader::Init(MediaDecoderReader* aCloneDonor)
 {
@@ -103,22 +129,7 @@ MP4Reader::Init(MediaDecoderReader* aCloneDonor)
   mPlatform = PlatformDecoderModule::Create();
   NS_ENSURE_TRUE(mPlatform, NS_ERROR_FAILURE);
 
-  if (IsVideoContentType(mDecoder->GetResource()->GetContentType())) {
-    // Extract the layer manager backend type so that platform decoders
-    // can determine whether it's worthwhile using hardware accelerated
-    // video decoding.
-    MediaDecoderOwner* owner = mDecoder->GetOwner();
-    NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
-
-    dom::HTMLMediaElement* element = owner->GetMediaElement();
-    NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
-
-    nsRefPtr<LayerManager> layerManager =
-      nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
-    NS_ENSURE_TRUE(layerManager, NS_ERROR_FAILURE);
-
-    mLayersBackendType = layerManager->GetBackendType();
-  }
+  InitLayersBackendType();
 
   return NS_OK;
 }
