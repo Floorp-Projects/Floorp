@@ -183,10 +183,10 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
     MOZ_CRASH("Cannot create an image bridge compositable this way");
     break;
   case BUFFER_CONTENT:
-    result = new ContentHostSingleBuffered(aTextureInfo);
+    result = new DeprecatedContentHostSingleBuffered(aTextureInfo);
     break;
   case BUFFER_CONTENT_DIRECT:
-    result = new ContentHostDoubleBuffered(aTextureInfo);
+    result = new DeprecatedContentHostDoubleBuffered(aTextureInfo);
     break;
   case BUFFER_CONTENT_INC:
     result = new ContentHostIncremental(aTextureInfo);
@@ -198,10 +198,10 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
     result = new ImageHost(aTextureInfo);
     break;
   case COMPOSITABLE_CONTENT_SINGLE:
-    result = new ContentHostSingleBufferedNew(aTextureInfo);
+    result = new ContentHostSingleBuffered(aTextureInfo);
     break;
   case COMPOSITABLE_CONTENT_DOUBLE:
-    result = new ContentHostDoubleBufferedNew(aTextureInfo);
+    result = new ContentHostDoubleBuffered(aTextureInfo);
     break;
   default:
     MOZ_CRASH("Unknown CompositableType");
