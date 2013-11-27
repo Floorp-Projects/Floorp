@@ -331,6 +331,27 @@ CompositorParent::RecvNotifyRegionInvalidated(const nsIntRegion& aRegion)
   return true;
 }
 
+bool
+CompositorParent::RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex)
+{
+  if (mLayerManager) {
+    *aOutStartIndex = mLayerManager->StartFrameTimeRecording(aBufferSize);
+  } else {
+    *aOutStartIndex = 0;
+  }
+  return true;
+}
+
+bool
+CompositorParent::RecvStopFrameTimeRecording(const uint32_t& aStartIndex,
+                                             InfallibleTArray<float>* intervals)
+{
+  if (mLayerManager) {
+    mLayerManager->StopFrameTimeRecording(aStartIndex, *intervals);
+  }
+  return true;
+}
+
 void
 CompositorParent::ActorDestroy(ActorDestroyReason why)
 {
@@ -906,6 +927,8 @@ public:
   { return true; }
   virtual bool RecvFlushRendering() MOZ_OVERRIDE { return true; }
   virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) { return true; }
+  virtual bool RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) MOZ_OVERRIDE { return true; }
+  virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) MOZ_OVERRIDE  { return true; }
 
   virtual PLayerTransactionParent*
     AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aBackendHints,

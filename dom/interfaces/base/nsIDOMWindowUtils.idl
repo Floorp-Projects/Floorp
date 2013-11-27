@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(928356ff-26b2-434e-a7ce-c1a660162d81)]
+[scriptable, uuid(e12df416-e3e0-4177-b936-fa106f62ae3f)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1044,7 +1044,7 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean layerManagerRemote;
 
   /**
-   * Record (and return) frame-intervals and paint-times for frames which were presented
+   * Record (and return) frame-intervals for frames which were presented
    *   between calling StartFrameTimeRecording and StopFrameTimeRecording.
    *
    * - Uses a cyclic buffer and serves concurrent consumers, so if Stop is called too late
@@ -1066,7 +1066,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * - Allocation is infallible. Should be released even if size is 0.
    */
    void stopFrameTimeRecording(in unsigned long startIndex,
-                              [optional, array, size_is(frameCount)] out float paintTimes,
                               [optional] out unsigned long frameCount,
                               [retval, array, size_is(frameCount)] out float frameIntervals);
 

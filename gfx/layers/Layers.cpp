@@ -17,7 +17,6 @@
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxUtils.h"                   // for gfxUtils, etc
 #include "mozilla/DebugOnly.h"          // for DebugOnly
-#include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/Telemetry.h"          // for Accumulate
 #include "mozilla/TelemetryHistogramEnums.h"
 #include "mozilla/gfx/2D.h"             // for DrawTarget
@@ -997,16 +996,14 @@ RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 
 /** 
  * StartFrameTimeRecording, together with StopFrameTimeRecording
- * enable recording of frame intrvals and paint times.
- * (Paint start time is set from the refresh driver right before starting
- * flush/paint and ends at PostPresent. Intervals are measured at PostPresent).
+ * enable recording of frame intervals.
  *
- * To allow concurrent consumers, 2 cyclic arrays are used (for intervals, paints)
- * which serve all consumers, practically stateless with regard to consumers.
+ * To allow concurrent consumers, a cyclic array is used which serves all
+ * consumers, practically stateless with regard to consumers.
  *
- * To save resources, the buffers are allocated on first call to StartFrameTimeRecording
+ * To save resources, the buffer is allocated on first call to StartFrameTimeRecording
  * and recording is paused if no consumer which called StartFrameTimeRecording is able
- * to get valid results (because the cyclic buffers were overwritten since that call).
+ * to get valid results (because the cyclic buffer was overwritten since that call).
  *
  * To determine availability of the data upon StopFrameTimeRecording:
  * - mRecording.mNextIndex increases on each PostPresent, and never resets.
@@ -1024,29 +1021,20 @@ RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
  *   older than this, it means that some frames were not recorded, so data is invalid.
  */
 uint32_t
-LayerManager::StartFrameTimeRecording()
+LayerManager::StartFrameTimeRecording(int32_t aBufferSize)
 {
   if (mRecording.mIsPaused) {
     mRecording.mIsPaused = false;
 
     if (!mRecording.mIntervals.Length()) { // Initialize recording buffers
-      const uint32_t kRecordingMinSize = 60 * 10; // 10 seconds @60 fps.
-      const uint32_t kRecordingMaxSize = 60 * 60 * 60; // One hour
-      uint32_t bufferSize = Preferences::GetUint("toolkit.framesRecording.bufferSize",
-                                                 kRecordingMinSize);
-      bufferSize = std::min(bufferSize, kRecordingMaxSize);
-      bufferSize = std::max(bufferSize, kRecordingMinSize);
-
-      if (!mRecording.mIntervals.SetLength(bufferSize) || !mRecording.mPaints.SetLength(bufferSize)) {
+      if (!mRecording.mIntervals.SetLength(aBufferSize)) {
         mRecording.mIsPaused = true; // OOM
         mRecording.mIntervals.Clear();
-        mRecording.mPaints.Clear();
       }
     }
 
     // After being paused, recent values got invalid. Update them to now.
     mRecording.mLastFrameTime = TimeStamp::Now();
-    mRecording.mPaintStartTime = mRecording.mLastFrameTime;
 
     // Any recording which started before this is invalid, since we were paused.
     mRecording.mCurrentRunStartIndex = mRecording.mNextIndex;
@@ -1059,22 +1047,12 @@ LayerManager::StartFrameTimeRecording()
 }
 
 void
-LayerManager::SetPaintStartTime(TimeStamp& aTime)
-{
-  if (!mRecording.mIsPaused) {
-    mRecording.mPaintStartTime = aTime;
-  }
-}
-
-void
-LayerManager::PostPresent()
+LayerManager::RecordFrame()
 {
   if (!mRecording.mIsPaused) {
     TimeStamp now = TimeStamp::Now();
     uint32_t i = mRecording.mNextIndex % mRecording.mIntervals.Length();
     mRecording.mIntervals[i] = static_cast<float>((now - mRecording.mLastFrameTime)
-                                                  .ToMilliseconds());
-    mRecording.mPaints[i]    = static_cast<float>((now - mRecording.mPaintStartTime)
                                                   .ToMilliseconds());
     mRecording.mNextIndex++;
     mRecording.mLastFrameTime = now;
@@ -1084,6 +1062,11 @@ LayerManager::PostPresent()
       mRecording.mIsPaused = true;
     }
   }
+}
+
+void
+LayerManager::PostPresent()
+{
   if (!mTabSwitchStart.IsNull()) {
     Telemetry::Accumulate(Telemetry::FX_TAB_SWITCH_TOTAL_MS,
                           uint32_t((TimeStamp::Now() - mTabSwitchStart).ToMilliseconds()));
@@ -1093,8 +1076,7 @@ LayerManager::PostPresent()
 
 void
 LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
-                                     nsTArray<float>& aFrameIntervals,
-                                     nsTArray<float>& aPaintTimes)
+                                     nsTArray<float>& aFrameIntervals)
 {
   uint32_t bufferSize = mRecording.mIntervals.Length();
   uint32_t length = mRecording.mNextIndex - aStartIndex;
@@ -1105,9 +1087,8 @@ LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
   }
 
   // Set length in advance to avoid possibly repeated reallocations (and OOM checks).
-  if (!length || !aFrameIntervals.SetLength(length) || !aPaintTimes.SetLength(length)) {
+  if (!length || !aFrameIntervals.SetLength(length)) {
     aFrameIntervals.Clear();
-    aPaintTimes.Clear();
     return; // empty recording or OOM, return empty arrays.
   }
 
@@ -1117,7 +1098,6 @@ LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
       cyclicPos = 0;
     }
     aFrameIntervals[i] = mRecording.mIntervals[cyclicPos];
-    aPaintTimes[i]     = mRecording.mPaints[cyclicPos];
   }
 }
 

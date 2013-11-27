@@ -4088,41 +4088,30 @@
             return;
           }
 
-          let paints = {};
           let intervals = window.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDOMWindowUtils)
-                                .stopFrameTimeRecording(aTab._recordingHandle, paints);
+                                .stopFrameTimeRecording(aTab._recordingHandle);
           delete aTab._recordingHandle;
-          paints = paints.value; // The result array itself.
           let frameCount = intervals.length;
 
           if (this._tabAnimationLoggingEnabled) {
-            let msg = "Tab " + (aTab.closing ? "close" : "open") + " (Frame-interval / paint-processing):\n";
+            let msg = "Tab " + (aTab.closing ? "close" : "open") + " (Frame-interval):\n";
             for (let i = 0; i < frameCount; i++) {
-              msg += Math.round(intervals[i]) + " / " + Math.round(paints[i]) + "\n";
+              msg += Math.round(intervals[i]) + "\n";
             }
             Services.console.logStringMessage(msg);
           }
 
           // For telemetry, the first frame interval is not useful since it may represent an interval
           // to a relatively old frame (prior to recording start). So we'll ignore it for the average.
-          // But if we recorded only 1 frame (very rare), then the first paint duration is a good
-          // representative of the first frame interval for our cause (indicates very bad animation).
-          // First paint duration is always useful for us.
-          if (frameCount > 0) {
+          if (frameCount > 1) {
             let averageInterval = 0;
-            let averagePaint = paints[0];
             for (let i = 1; i < frameCount; i++) {
               averageInterval += intervals[i];
-              averagePaint    += paints[i];
             };
-            averagePaint /= frameCount;
-            averageInterval = (frameCount == 1)
-                              ? averagePaint
-                              : averageInterval / (frameCount - 1);
+            averageInterval = averageInterval / (frameCount - 1);
 
             Services.telemetry.getHistogramById("FX_TAB_ANIM_ANY_FRAME_INTERVAL_MS").add(averageInterval);
-            Services.telemetry.getHistogramById("FX_TAB_ANIM_ANY_FRAME_PAINT_MS").add(averagePaint);
 
             if (aTab._recordingTabOpenPlain) {
               delete aTab._recordingTabOpenPlain;
@@ -4130,7 +4119,6 @@
               // easier to overview the data without slicing by it. Hence the additional histograms with _PREVIEW.
               let preview = this._browserNewtabpageEnabled ? "_PREVIEW" : "";
               Services.telemetry.getHistogramById("FX_TAB_ANIM_OPEN" + preview + "_FRAME_INTERVAL_MS").add(averageInterval);
-              Services.telemetry.getHistogramById("FX_TAB_ANIM_OPEN" + preview + "_FRAME_PAINT_MS").add(averagePaint);
             }
           }
         ]]>
