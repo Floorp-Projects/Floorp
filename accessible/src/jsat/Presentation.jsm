@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, 'UtteranceGenerator',
   'resource://gre/modules/accessibility/OutputGenerator.jsm');
 XPCOMUtils.defineLazyModuleGetter(this, 'BrailleGenerator',
   'resource://gre/modules/accessibility/OutputGenerator.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Roles',
+  'resource://gre/modules/accessibility/Constants.jsm');
 
 this.EXPORTED_SYMBOLS = ['Presentation'];
 
@@ -451,7 +453,10 @@ SpeechPresenter.prototype = {
       type: this.type,
       details: {
         actions: [
-          {method: 'playEarcon', data: 'tick', options: {}},
+          {method: 'playEarcon',
+           data: aContext.accessible.role === Roles.KEY ?
+             'virtual_cursor_key' : 'virtual_cursor_move',
+           options: {}},
           {method: 'speak',
             data: UtteranceGenerator.genForContext(aContext).output.join(' '),
             options: {enqueue: true}}
