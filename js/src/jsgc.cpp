@@ -2824,6 +2824,7 @@ PurgeRuntime(JSRuntime *rt)
     rt->interpreterStack().purge(rt);
 
     rt->gsnCache.purge();
+    rt->scopeCoordinateNameCache.purge();
     rt->newObjectCache.purge();
     rt->nativeIterCache.purge();
     rt->sourceDataCache.purge();
