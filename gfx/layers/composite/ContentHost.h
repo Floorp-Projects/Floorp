@@ -112,9 +112,8 @@ public:
                     const char* aPrefix="",
                     bool aDumpHtml=false) MOZ_OVERRIDE;
 #endif
-#ifdef MOZ_LAYERS_HAVE_LOG
+
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix) MOZ_OVERRIDE;
-#endif
 
   virtual TextureHost* GetAsTextureHost() MOZ_OVERRIDE;
 
@@ -123,6 +122,8 @@ public:
   virtual void RemoveTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
 
   virtual void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
+
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
 
 protected:
   virtual nsIntPoint GetOriginOffset()
