@@ -37,7 +37,6 @@ using mozilla::plugins::PluginInstanceParent;
 #include "nsIWidgetListener.h"
 #include "mozilla/unused.h"
 
-#include "LayerManagerOGL.h"
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
 #endif
@@ -550,11 +549,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
             }
           }
         }
-        break;
-      case LAYERS_OPENGL:
-        static_cast<mozilla::layers::LayerManagerOGL*>(GetLayerManager())->
-          SetClippingRegion(region);
-        result = listener->PaintWindow(this, region);
         break;
 #ifdef MOZ_ENABLE_D3D9_LAYER
       case LAYERS_D3D9:

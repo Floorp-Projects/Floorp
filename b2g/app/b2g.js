@@ -736,8 +736,7 @@ pref("font.size.inflation.disabledInMasterProcess", true);
 // consumption when applications are sent to the background.
 pref("memory.free_dirty_pages", true);
 
-pref("layout.imagevisibility.enabled", false);
-pref("layout.imagevisibility.enabled_for_browser_elements_only", true);
+pref("layout.imagevisibility.enabled", true);
 pref("layout.imagevisibility.numscrollportwidths", 1);
 pref("layout.imagevisibility.numscrollportheights", 1);
 

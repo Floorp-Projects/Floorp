@@ -794,17 +794,37 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod *ins)
 
     JS_ASSERT_IF(output == eax, ToRegister(ins->remainder()) == edx);
 
-    masm.testl(rhs, rhs);
+    ReturnZero *ool = nullptr;
 
-    ReturnZero *ool = new ReturnZero(output);
-    masm.j(Assembler::Zero, ool->entry());
-    if (!addOutOfLineCode(ool))
-        return false;
+    // Prevent divide by zero.
+    if (ins->canBeDivideByZero()) {
+        masm.testl(rhs, rhs);
+        if (ins->mir()->isTruncated()) {
+            if (!ool)
+                ool = new ReturnZero(output);
+            masm.j(Assembler::Zero, ool->entry());
+        } else {
+            if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+                return false;
+        }
+    }
 
     masm.mov(ImmWord(0), edx);
     masm.udiv(rhs);
 
-    masm.bind(ool->rejoin());
+    // Unsigned div or mod can return a value that's not a signed int32.
+    // If our users aren't expecting that, bail.
+    if (!ins->mir()->isTruncated()) {
+        masm.testl(output, output);
+        if (!bailoutIf(Assembler::Signed, ins->snapshot()))
+            return false;
+    }
+
+    if (ool) {
+        if (!addOutOfLineCode(ool))
+            return false;
+        masm.bind(ool->rejoin());
+    }
 
     return true;
 }
