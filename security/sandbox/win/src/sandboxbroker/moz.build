@@ -16,3 +16,7 @@ EXPORTS += [
 ]
 
 FORCE_SHARED_LIB = True
+
+for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM', 'NOMINMAX',
+            'SANDBOX_EXPORTS'):
+    DEFINES[var] = True
