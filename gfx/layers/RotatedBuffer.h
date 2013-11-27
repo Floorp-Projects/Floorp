@@ -33,6 +33,7 @@ class Matrix;
 namespace layers {
 
 class DeprecatedTextureClient;
+class TextureClient;
 class ThebesLayer;
 
 /**
@@ -159,6 +160,8 @@ public:
   RotatedContentBuffer(BufferSizePolicy aBufferSizePolicy)
     : mBufferProvider(nullptr)
     , mBufferProviderOnWhite(nullptr)
+    , mNewBufferProvider(nullptr)
+    , mNewBufferProviderOnWhite(nullptr)
     , mBufferSizePolicy(aBufferSizePolicy)
   {
     MOZ_COUNT_CTOR(RotatedContentBuffer);
@@ -178,6 +181,8 @@ public:
     mDTBufferOnWhite = nullptr;
     mBufferProvider = nullptr;
     mBufferProviderOnWhite = nullptr;
+    mNewBufferProvider = nullptr;
+    mNewBufferProviderOnWhite = nullptr;
     mBufferRect.SetEmpty();
   }
 
@@ -294,7 +299,7 @@ protected:
   {
     // Only this buffer provider can give us a buffer.  If we
     // already have one, something has gone wrong.
-    MOZ_ASSERT(!aClient || !mDTBuffer);
+    MOZ_ASSERT((!aClient || !mDTBuffer) && !mNewBufferProvider);
 
     mBufferProvider = aClient;
     if (!mBufferProvider) {
@@ -306,10 +311,35 @@ protected:
   {
     // Only this buffer provider can give us a buffer.  If we
     // already have one, something has gone wrong.
-    MOZ_ASSERT(!aClient || !mDTBufferOnWhite);
+    MOZ_ASSERT((!aClient || !mDTBufferOnWhite) && !mNewBufferProviderOnWhite);
 
     mBufferProviderOnWhite = aClient;
     if (!mBufferProviderOnWhite) {
+      mDTBufferOnWhite = nullptr;
+    }
+  }
+
+  // new texture client versions
+  void SetNewBufferProvider(TextureClient* aClient)
+  {
+    // Only this buffer provider can give us a buffer.  If we
+    // already have one, something has gone wrong.
+    MOZ_ASSERT((!aClient || !mDTBuffer) && !mBufferProvider);
+
+    mNewBufferProvider = aClient;
+    if (!mNewBufferProvider) {
+      mDTBuffer = nullptr;
+    }
+  }
+
+  void SetNewBufferProviderOnWhite(TextureClient* aClient)
+  {
+    // Only this buffer provider can give us a buffer.  If we
+    // already have one, something has gone wrong.
+    MOZ_ASSERT((!aClient || !mDTBufferOnWhite) && !mBufferProviderOnWhite);
+
+    mNewBufferProviderOnWhite = aClient;
+    if (!mNewBufferProviderOnWhite) {
       mDTBufferOnWhite = nullptr;
     } 
   }
@@ -351,6 +381,8 @@ protected:
    */
   DeprecatedTextureClient* mBufferProvider;
   DeprecatedTextureClient* mBufferProviderOnWhite;
+  TextureClient* mNewBufferProvider;
+  TextureClient* mNewBufferProviderOnWhite;
 
   BufferSizePolicy      mBufferSizePolicy;
 };
