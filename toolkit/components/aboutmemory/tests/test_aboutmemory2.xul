@@ -45,8 +45,7 @@
   let jk2Path = "explicit/j/k2";
 
   let fakeReporters = [
-    { name: "fake1",
-      collectReports: function(aCbObj, aClosure) {
+    { collectReports: function(aCbObj, aClosure) {
         function f(aP, aK, aA) {
           aCbObj.callback("", aP, aK, BYTES, aA, "Desc.", aClosure);
         }
