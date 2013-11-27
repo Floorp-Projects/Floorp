@@ -1605,7 +1605,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
             if (tab != null) {
                 tab.addToReadingList();
             }
-        }
     }
 
     @Override
