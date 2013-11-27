@@ -4050,6 +4050,20 @@ class MMul : public MBinaryArithInstruction
         return 1;
     }
 
+    bool congruentTo(MDefinition *ins) const {
+        if (!ins->isMul())
+            return false;
+
+        MMul *mul = ins->toMul();
+        if (canBeNegativeZero_ != mul->canBeNegativeZero())
+            return false;
+
+        if (mode_ != mul->mode())
+            return false;
+
+        return MBinaryInstruction::congruentTo(ins);
+    }
+
     bool canOverflow() const;
 
     bool canBeNegativeZero() const {
