@@ -278,21 +278,8 @@ void SourceSurfaceCGBitmapContext::EnsureImage() const
   // memcpy when the bitmap context is modified gives us more predictable
   // performance characteristics.
   if (!mImage) {
-    void *info;
-    if (mCg) {
-      // if we have an mCg than it owns the data
-      // and we don't want to tranfer ownership
-      // to the CGDataProviderCreateWithData
-      info = nullptr;
-    } else {
-      // otherwise we transfer ownership to
-      // the dataProvider
-      info = mData;
-    }
-
     if (!mData) abort();
-
-    mImage = CreateCGImage(info, mData, mSize, mStride, mFormat);
+    mImage = CreateCGImage(nullptr, mData, mSize, mStride, mFormat);
   }
 }
 
@@ -310,8 +297,8 @@ SourceSurfaceCGBitmapContext::DrawTargetWillChange()
     size_t stride = CGBitmapContextGetBytesPerRow(mCg);
     size_t height = CGBitmapContextGetHeight(mCg);
 
-    //XXX: infalliable malloc?
-    mData = malloc(stride * height);
+    mDataHolder.Realloc(stride * height);
+    mData = mDataHolder;
 
     // copy out the data from the CGBitmapContext
     // we'll maintain ownership of mData until
@@ -330,10 +317,6 @@ SourceSurfaceCGBitmapContext::DrawTargetWillChange()
 
 SourceSurfaceCGBitmapContext::~SourceSurfaceCGBitmapContext()
 {
-  if (!mImage && !mCg) {
-    // neither mImage or mCg owns the data
-    free(mData);
-  }
   if (mImage)
     CGImageRelease(mImage);
 }

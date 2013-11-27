@@ -272,7 +272,7 @@ void
 nsTSubstring_CharT::Assign( char_type c )
   {
     if (!ReplacePrep(0, mLength, 1))
-      NS_RUNTIMEABORT("OOM");
+      NS_ABORT_OOM(mLength);
 
     *mData = c;
   }
@@ -291,14 +291,14 @@ void
 nsTSubstring_CharT::Assign( const char_type* data )
   {
     if (!Assign(data, size_type(-1), fallible_t()))
-      NS_RUNTIMEABORT("OOM");
+      NS_ABORT_OOM(char_traits::length(data));
   }
 
 void
 nsTSubstring_CharT::Assign( const char_type* data, size_type length )
   {
     if (!Assign(data, length, fallible_t()))
-      NS_RUNTIMEABORT("OOM");
+      NS_ABORT_OOM(length);
   }
 
 bool
@@ -329,7 +329,7 @@ void
 nsTSubstring_CharT::AssignASCII( const char* data, size_type length )
   {
     if (!AssignASCII(data, length, fallible_t()))
-      NS_RUNTIMEABORT("OOM");
+      NS_ABORT_OOM(length);
   }
 
 bool
@@ -355,7 +355,7 @@ void
 nsTSubstring_CharT::Assign( const self_type& str )
 {
   if (!Assign(str, fallible_t()))
-    NS_RUNTIMEABORT("OOM");
+    NS_ABORT_OOM(str.Length());
 }
 
 bool
@@ -400,7 +400,7 @@ void
 nsTSubstring_CharT::Assign( const substring_tuple_type& tuple )
   {
     if (!Assign(tuple, fallible_t()))
-      NS_RUNTIMEABORT("OOM");
+      NS_ABORT_OOM(tuple.Length());
   }
 
 bool
@@ -540,7 +540,7 @@ void
 nsTSubstring_CharT::SetCapacity( size_type capacity )
   {
     if (!SetCapacity(capacity, fallible_t()))
-      NS_RUNTIMEABORT("OOM");
+      NS_ABORT_OOM(capacity);
   }
 
 bool
@@ -711,7 +711,7 @@ nsTSubstring_CharT::StripChar( char_type aChar, int32_t aOffset )
       return;
 
     if (!EnsureMutable()) // XXX do this lazily?
-      NS_RUNTIMEABORT("OOM");
+      NS_ABORT_OOM(mLength);
 
     // XXX(darin): this code should defer writing until necessary.
 
@@ -736,7 +736,7 @@ nsTSubstring_CharT::StripChars( const char_type* aChars, uint32_t aOffset )
       return;
 
     if (!EnsureMutable()) // XXX do this lazily?
-      NS_RUNTIMEABORT("OOM");
+      NS_ABORT_OOM(mLength);
 
     // XXX(darin): this code should defer writing until necessary.
 

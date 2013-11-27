@@ -70,7 +70,6 @@ const SEC_ASN1Template SECKEY_PQGParamsTemplate[] = {
 
 
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
-static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 static PQGParams *
 decode_pqg_params(char *aStr)
@@ -288,6 +287,8 @@ nsKeygenFormProcessor::Create(nsISupports* aOuter, const nsIID& aIID, void* *aRe
 nsresult
 nsKeygenFormProcessor::Init()
 {
+  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   nsresult rv;
 
   nsCOMPtr<nsINSSComponent> nssComponent;

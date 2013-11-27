@@ -344,7 +344,7 @@ JSONSpewer::spewLIns(LInstruction *ins)
 
     property("opcode");
     fprintf(fp_, "\"");
-    ins->print(fp_);
+    ins->dump(fp_);
     fprintf(fp_, "\"");
 
     beginListProperty("defs");

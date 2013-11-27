@@ -186,6 +186,14 @@ PollSensors()
       if (buffer[i].type == SENSOR_TYPE_MAGNETIC_FIELD)
         continue;
 
+      // Bug 938035, transfer HAL data for orientation sensor to meet w3c spec
+      // ex: HAL report alpha=90 means East but alpha=90 means West in w3c spec
+      if (buffer[i].type == SENSOR_TYPE_ORIENTATION) {
+        buffer[i].orientation.azimuth = 360 - buffer[i].orientation.azimuth;
+        buffer[i].orientation.pitch = -buffer[i].orientation.pitch;
+        buffer[i].orientation.roll = -buffer[i].orientation.roll;
+      }
+
       if (HardwareSensorToHalSensor(buffer[i].type) == SENSOR_UNKNOWN) {
         // Emulator is broken and gives us events without types set
         int index;

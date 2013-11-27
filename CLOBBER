@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 921918 - need clobber for Windows.
+Bug 942207 - apparently need clobber to avoid bustage

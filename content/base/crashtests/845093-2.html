@@ -1,0 +1,7 @@
+><bdi id=test1><refa id=test2>&#xf921;>></bdi>><h1 id=test3><script>
+document.addEventListener("DOMContentLoaded", CFcrash, false);
+function CFcrash() {
+test1.setAttribute("dir", "invalid");
+test2.textContent = "	&#xf851;S	";
+test3.appendChild(test1);
+}</script>

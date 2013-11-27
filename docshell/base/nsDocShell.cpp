@@ -186,6 +186,7 @@
 #include "nsIURILoader.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWidget.h"
+#include "mozilla/dom/EncodingUtils.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -1968,14 +1969,25 @@ NS_IMETHODIMP
 nsDocShell::SetCharset(const nsACString& aCharset)
 {
     // set the charset override
-    SetForcedCharset(aCharset);
-
-    return NS_OK;
+    return SetForcedCharset(aCharset);
 }
 
 NS_IMETHODIMP nsDocShell::SetForcedCharset(const nsACString& aCharset)
 {
-  mForcedCharset = aCharset;
+  if (aCharset.IsEmpty()) {
+    mForcedCharset.Truncate();
+    return NS_OK;
+  }
+  nsAutoCString encoding;
+  if (!EncodingUtils::FindEncodingForLabel(aCharset, encoding)) {
+    // Reject unknown labels
+    return NS_ERROR_INVALID_ARG;
+  }
+  if (!EncodingUtils::IsAsciiCompatible(encoding)) {
+    // Reject XSS hazards
+    return NS_ERROR_INVALID_ARG;
+  }
+  mForcedCharset = encoding;
   return NS_OK;
 }
 

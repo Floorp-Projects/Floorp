@@ -238,6 +238,8 @@ child:
      */
     async AudioChannelNotify();
 
+    async SpeakerManagerNotify();
+
     /**
      * Do a memory info dump to a file in our temp directory.
      *
@@ -247,7 +249,6 @@ child:
     async DumpMemoryInfoToTempDir(nsString identifier,
                                   bool minimizeMemoryUsage,
                                   bool dumpChildProcesses);
-
     /**
      * Dump this process's GC and CC logs.
      *
@@ -470,6 +471,11 @@ parent:
 
     sync KeywordToURI(nsCString keyword)
         returns (OptionalInputStreamParams postData, OptionalURIParams uri);
+
+    sync SpeakerManagerForceSpeaker(bool aEnable);
+
+    sync SpeakerManagerGetSpeakerStatus()
+        returns (bool value);
 
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,

@@ -10,7 +10,7 @@ EXPORTS += [
     'nsJSProtocolHandler.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsJSProtocolHandler.cpp',
 ]
 

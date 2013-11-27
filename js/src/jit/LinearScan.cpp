@@ -245,8 +245,7 @@ LinearScanAllocator::resolveControlFlow()
                 LiveInterval *from = vregs[input].intervalFor(outputOf(predecessor->lastId()));
                 JS_ASSERT(from);
 
-                LMoveGroup *moves = predecessor->getExitMoveGroup(alloc());
-                if (!addMove(moves, from, to))
+                if (!moveAtExit(predecessor, from, to))
                     return false;
             }
 
@@ -284,12 +283,10 @@ LinearScanAllocator::resolveControlFlow()
 
                 if (mSuccessor->numPredecessors() > 1) {
                     JS_ASSERT(predecessor->mir()->numSuccessors() == 1);
-                    LMoveGroup *moves = predecessor->getExitMoveGroup(alloc());
-                    if (!addMove(moves, from, to))
+                    if (!moveAtExit(predecessor, from, to))
                         return false;
                 } else {
-                    LMoveGroup *moves = successor->getEntryMoveGroup(alloc());
-                    if (!addMove(moves, from, to))
+                    if (!moveAtEntry(successor, from, to))
                         return false;
                 }
             }

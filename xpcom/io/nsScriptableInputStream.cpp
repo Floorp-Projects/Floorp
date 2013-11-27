@@ -42,7 +42,7 @@ nsScriptableInputStream::Read(uint32_t aCount, char **_retval) {
 
     // bug716556 - Ensure count+1 doesn't overflow
     uint32_t count = XPCOM_MIN((uint32_t)XPCOM_MIN<uint64_t>(count64, aCount), UINT32_MAX - 1);
-    buffer = (char*)nsMemory::Alloc(count+1); // make room for '\0'
+    buffer = (char*)moz_malloc(count+1); // make room for '\0'
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
     uint32_t amtRead = 0;

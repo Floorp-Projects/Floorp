@@ -75,8 +75,6 @@ using namespace mozilla::psm;
 PRLogModuleInfo* gPIPNSSLog = nullptr;
 #endif
 
-static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
 int nsNSSComponent::mInstanceCount = 0;
 
 #ifndef NSS_NO_LIBPKIX
@@ -117,6 +115,8 @@ nsTokenEventRunnable::~nsTokenEventRunnable() { }
 NS_IMETHODIMP
 nsTokenEventRunnable::Run()
 { 
+  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   nsresult rv;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   if (NS_FAILED(rv))
