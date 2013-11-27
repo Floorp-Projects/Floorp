@@ -27,19 +27,19 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="gBrowserInit.onLoad()" onunload="gBrowserInit.onUnload()" onclose="return WindowIsClosing();"
-        title="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
-        title_normal="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
+        title="&mainWindow.title;"
+        title_normal="&mainWindow.title;"
 #ifdef XP_MACOSX
-        title_privatebrowsing="&mainWindow.title;@PRE_RELEASE_SUFFIX@&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
-        titledefault="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
+        title_privatebrowsing="&mainWindow.title;&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
+        titledefault="&mainWindow.title;"
         titlemodifier=""
         titlemodifier_normal=""
         titlemodifier_privatebrowsing="&mainWindow.titlePrivateBrowsingSuffix;"
 #else
-        title_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
-        titlemodifier="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@"
-        titlemodifier_normal="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@"
-        titlemodifier_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
+        title_privatebrowsing="&mainWindow.titlemodifier; &mainWindow.titlePrivateBrowsingSuffix;"
+        titlemodifier="&mainWindow.titlemodifier;"
+        titlemodifier_normal="&mainWindow.titlemodifier;"
+        titlemodifier_privatebrowsing="&mainWindow.titlemodifier; &mainWindow.titlePrivateBrowsingSuffix;"
 #endif
 #ifdef CAN_DRAW_IN_TITLEBAR
 #ifdef XP_WIN
