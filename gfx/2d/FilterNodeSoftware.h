@@ -212,6 +212,26 @@ protected:
 
 // Subclasses for specific filters.
 
+class FilterNodeTransformSoftware : public FilterNodeSoftware
+{
+public:
+  FilterNodeTransformSoftware();
+  using FilterNodeSoftware::SetAttribute;
+  virtual void SetAttribute(uint32_t aIndex, uint32_t aGraphicsFilter) MOZ_OVERRIDE;
+  virtual void SetAttribute(uint32_t aIndex, const Matrix &aMatrix) MOZ_OVERRIDE;
+
+protected:
+  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
+  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
+  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
+  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
+  IntRect SourceRectForOutputRect(const IntRect &aRect);
+
+private:
+  Matrix mMatrix;
+  Filter mFilter;
+};
+
 class FilterNodeBlendSoftware : public FilterNodeSoftware
 {
 public:
@@ -447,23 +467,6 @@ private:
   ConvolveMatrixEdgeMode mEdgeMode;
   Size mKernelUnitLength;
   bool mPreserveAlpha;
-};
-
-class FilterNodeOffsetSoftware : public FilterNodeSoftware
-{
-public:
-  using FilterNodeSoftware::SetAttribute;
-  virtual void SetAttribute(uint32_t aIndex, const IntPoint &aOffset) MOZ_OVERRIDE;
-
-protected:
-  virtual TemporaryRef<DataSourceSurface> GetOutput(const IntRect &aRect) MOZ_OVERRIDE;
-  virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
-  virtual int32_t InputIndex(uint32_t aInputEnumIndex) MOZ_OVERRIDE;
-  virtual void RequestFromInputsForRect(const IntRect &aRect) MOZ_OVERRIDE;
-
-private:
-  IntPoint mOffset;
 };
 
 class FilterNodeDisplacementMapSoftware : public FilterNodeSoftware

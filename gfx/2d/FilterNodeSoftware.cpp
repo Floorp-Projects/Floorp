@@ -473,6 +473,9 @@ FilterNodeSoftware::Create(FilterType aType)
     case FILTER_BLEND:
       filter = new FilterNodeBlendSoftware();
       break;
+    case FILTER_TRANSFORM:
+      filter = new FilterNodeTransformSoftware();
+      break;
     case FILTER_MORPHOLOGY:
       filter = new FilterNodeMorphologySoftware();
       break;
@@ -499,9 +502,6 @@ FilterNodeSoftware::Create(FilterType aType)
       break;
     case FILTER_CONVOLVE_MATRIX:
       filter = new FilterNodeConvolveMatrixSoftware();
-      break;
-    case FILTER_OFFSET:
-      filter = new FilterNodeOffsetSoftware();
       break;
     case FILTER_DISPLACEMENT_MAP:
       filter = new FilterNodeDisplacementMapSoftware();
@@ -906,6 +906,96 @@ FilterNodeBlendSoftware::GetOutputRectInRect(const IntRect& aRect)
 {
   return GetInputRectInRect(IN_BLEND_IN, aRect).Union(
     GetInputRectInRect(IN_BLEND_IN2, aRect)).Intersect(aRect);
+}
+
+FilterNodeTransformSoftware::FilterNodeTransformSoftware()
+ : mFilter(FILTER_GOOD)
+{}
+
+int32_t
+FilterNodeTransformSoftware::InputIndex(uint32_t aInputEnumIndex)
+{
+  switch (aInputEnumIndex) {
+    case IN_TRANSFORM_IN: return 0;
+    default: return -1;
+  }
+}
+
+void
+FilterNodeTransformSoftware::SetAttribute(uint32_t aIndex, uint32_t aFilter)
+{
+  MOZ_ASSERT(aIndex == ATT_TRANSFORM_FILTER);
+  mFilter = static_cast<Filter>(aFilter);
+  Invalidate();
+}
+
+void
+FilterNodeTransformSoftware::SetAttribute(uint32_t aIndex, const Matrix &aMatrix)
+{
+  MOZ_ASSERT(aIndex == ATT_TRANSFORM_MATRIX);
+  mMatrix = aMatrix;
+  Invalidate();
+}
+
+IntRect
+FilterNodeTransformSoftware::SourceRectForOutputRect(const IntRect &aRect)
+{
+  Matrix inverted(mMatrix);
+  if (!inverted.Invert()) {
+    return IntRect();
+  }
+
+  Rect neededRect = inverted.TransformBounds(Rect(aRect));
+  neededRect.RoundOut();
+  return GetInputRectInRect(IN_TRANSFORM_IN, RoundedToInt(neededRect));
+}
+
+TemporaryRef<DataSourceSurface>
+FilterNodeTransformSoftware::Render(const IntRect& aRect)
+{
+  IntRect srcRect = SourceRectForOutputRect(aRect);
+
+  RefPtr<DataSourceSurface> input =
+    GetInputDataSourceSurface(IN_TRANSFORM_IN, srcRect, NEED_COLOR_CHANNELS);
+
+  if (!input) {
+    return nullptr;
+  }
+
+  Matrix transform = Matrix().Translate(srcRect.x, srcRect.y) * mMatrix *
+                     Matrix().Translate(-aRect.x, -aRect.y);
+  if (transform.IsIdentity() && srcRect.Size() == aRect.Size()) {
+    return input;
+  }
+
+  RefPtr<DrawTarget> dt =
+    Factory::CreateDrawTarget(BACKEND_CAIRO, aRect.Size(), input->GetFormat());
+  if (!dt) {
+    return nullptr;
+  }
+
+  Rect r(0, 0, srcRect.width, srcRect.height);
+  dt->SetTransform(transform);
+  dt->DrawSurface(input, r, r, DrawSurfaceOptions(mFilter));
+
+  RefPtr<SourceSurface> result = dt->Snapshot();
+  RefPtr<DataSourceSurface> resultData = result->GetDataSurface();
+  return resultData;
+}
+
+void
+FilterNodeTransformSoftware::RequestFromInputsForRect(const IntRect &aRect)
+{
+  RequestInputRect(IN_TRANSFORM_IN, SourceRectForOutputRect(aRect));
+}
+
+IntRect
+FilterNodeTransformSoftware::GetOutputRectInRect(const IntRect& aRect)
+{
+  IntRect srcRect = SourceRectForOutputRect(aRect);
+  Rect outRect = mMatrix.TransformBounds(Rect(srcRect));
+  outRect.RoundOut();
+  return RoundedToInt(outRect).Intersect(aRect);
 }
 
 FilterNodeMorphologySoftware::FilterNodeMorphologySoftware()
@@ -2185,49 +2275,6 @@ FilterNodeConvolveMatrixSoftware::GetOutputRectInRect(const IntRect& aRect)
   IntRect srcRequest = InflatedSourceRect(aRect);
   IntRect srcOutput = GetInputRectInRect(IN_COLOR_MATRIX_IN, srcRequest);
   return InflatedDestRect(srcOutput).Intersect(aRect);
-}
-
-int32_t
-FilterNodeOffsetSoftware::InputIndex(uint32_t aInputEnumIndex)
-{
-  switch (aInputEnumIndex) {
-    case IN_OFFSET_IN: return 0;
-    default: return -1;
-  }
-}
-
-void
-FilterNodeOffsetSoftware::SetAttribute(uint32_t aIndex,
-                                       const IntPoint &aOffset)
-{
-  MOZ_ASSERT(aIndex == ATT_OFFSET_OFFSET);
-  mOffset = aOffset;
-  Invalidate();
-}
-
-TemporaryRef<DataSourceSurface>
-FilterNodeOffsetSoftware::Render(const IntRect& aRect)
-{
-  return GetInputDataSourceSurface(IN_OFFSET_IN, aRect - mOffset);
-}
-
-// Override GetOutput in order to disable caching.
-TemporaryRef<DataSourceSurface>
-FilterNodeOffsetSoftware::GetOutput(const IntRect& aRect)
-{
-  return Render(aRect);
-}
-
-void
-FilterNodeOffsetSoftware::RequestFromInputsForRect(const IntRect &aRect)
-{
-  RequestInputRect(IN_OFFSET_IN, aRect - mOffset);
-}
-
-IntRect
-FilterNodeOffsetSoftware::GetOutputRectInRect(const IntRect& aRect)
-{
-  return GetInputRectInRect(IN_OFFSET_IN, aRect - mOffset) + mOffset;
 }
 
 FilterNodeDisplacementMapSoftware::FilterNodeDisplacementMapSoftware()

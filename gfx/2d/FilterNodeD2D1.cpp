@@ -30,6 +30,22 @@ D2D1_COLORMATRIX_ALPHA_MODE D2DAlphaMode(uint32_t aMode)
   return D2D1_COLORMATRIX_ALPHA_MODE_PREMULTIPLIED;
 }
 
+D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE D2DAffineTransformInterpolationMode(uint32_t aFilter)
+{
+  switch (aFilter) {
+  case FILTER_GOOD:
+    return D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE_LINEAR;
+  case FILTER_LINEAR:
+    return D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE_LINEAR;
+  case FILTER_POINT:
+    return D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+  default:
+    MOZ_CRASH("Unknown enum value!");
+  }
+
+  return D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE_LINEAR;
+}
+
 D2D1_BLEND_MODE D2DBlendMode(uint32_t aMode)
 {
   switch (aMode) {
@@ -145,6 +161,11 @@ uint32_t ConvertValue(uint32_t aType, uint32_t aAttribute, uint32_t aValue)
       aValue = D2DAlphaMode(aValue);
     }
     break;
+  case FILTER_TRANSFORM:
+    if (aAttribute == ATT_TRANSFORM_FILTER) {
+      aValue = D2DAffineTransformInterpolationMode(aValue);
+    }
+    break;
   case FILTER_BLEND:
     if (aAttribute == ATT_BLEND_BLENDMODE) {
       aValue = D2DBlendMode(aValue);
@@ -210,6 +231,11 @@ GetD2D1PropForAttribute(uint32_t aType, uint32_t aIndex)
       CONVERT_PROP(COLOR_MATRIX_ALPHA_MODE, COLORMATRIX_PROP_ALPHA_MODE);
     }
     break;
+  case FILTER_TRANSFORM:
+    switch (aIndex) {
+      CONVERT_PROP(TRANSFORM_MATRIX, 2DAFFINETRANSFORM_PROP_TRANSFORM_MATRIX);
+      CONVERT_PROP(TRANSFORM_FILTER, 2DAFFINETRANSFORM_PROP_INTERPOLATION_MODE);
+    }
   case FILTER_BLEND:
     switch (aIndex) {
       CONVERT_PROP(BLEND_BLENDMODE, BLEND_PROP_MODE);
@@ -430,6 +456,8 @@ static inline REFCLSID GetCLDIDForFilterType(FilterType aType)
   switch (aType) {
   case FILTER_COLOR_MATRIX:
     return CLSID_D2D1ColorMatrix;
+  case FILTER_TRANSFORM:
+    return CLSID_D2D12DAffineTransform;
   case FILTER_BLEND:
     return CLSID_D2D1Blend;
   case FILTER_MORPHOLOGY:
@@ -446,8 +474,6 @@ static inline REFCLSID GetCLDIDForFilterType(FilterType aType)
     return CLSID_D2D1DiscreteTransfer;
   case FILTER_GAMMA_TRANSFER:
     return CLSID_D2D1GammaTransfer;
-  case FILTER_OFFSET:
-    return CLSID_D2D12DAffineTransform;
   case FILTER_DISPLACEMENT_MAP:
     return CLSID_D2D1DisplacementMap;
   case FILTER_TURBULENCE:
@@ -508,6 +534,18 @@ FilterNodeD2D1::Create(DrawTarget* aDT, ID2D1DeviceContext *aDC, FilterType aTyp
       return new FilterNodeComponentTransferD2D1(aDT, aDC, effect, aType);
     default:
       return new FilterNodeD2D1(aDT, effect, aType);
+  }
+}
+
+void
+FilterNodeD2D1::InitUnmappedProperties()
+{
+  switch (mType) {
+    case FILTER_TRANSFORM:
+      mEffect->SetValue(D2D1_2DAFFINETRANSFORM_PROP_BORDER_MODE, D2D1_BORDER_MODE_HARD);
+      break;
+    default:
+      break;
   }
 }
 
@@ -705,19 +743,19 @@ FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Float *aValues, uint32_t aSi
 void
 FilterNodeD2D1::SetAttribute(uint32_t aIndex, const IntPoint &aValue)
 {
-  if (mType == FILTER_OFFSET) {
-    MOZ_ASSERT(aIndex == ATT_OFFSET_OFFSET);
-
-    Matrix mat;
-    mat.Translate(Float(aValue.x), Float(aValue.y));
-    mEffect->SetValue(D2D1_2DAFFINETRANSFORM_PROP_TRANSFORM_MATRIX, D2DMatrix(mat));
-    return;
-  }
-
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
   mEffect->SetValue(input, D2DPoint(aValue));
+}
+
+void
+FilterNodeD2D1::SetAttribute(uint32_t aIndex, const Matrix &aMatrix)
+{
+  UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
+  MOZ_ASSERT(input < mEffect->GetPropertyCount());
+
+  mEffect->SetValue(input, D2DMatrix(aMatrix));
 }
 
 FilterNodeConvolveD2D1::FilterNodeConvolveD2D1(DrawTarget *aDT, ID2D1DeviceContext *aDC)
