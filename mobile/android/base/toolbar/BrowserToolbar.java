@@ -545,6 +545,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         switch (msg) {
             case ADDED:
+            case CLOSED:
                 updateTabCount(tabs.getDisplayCount());
                 break;
             case RESTORED:
