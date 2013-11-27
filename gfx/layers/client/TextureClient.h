@@ -60,6 +60,17 @@ public:
 };
 
 /**
+ * Interface for TextureClients that can be updated using a DrawTarget.
+ */
+class TextureClientDrawTarget
+{
+public:
+  virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() = 0;
+  virtual gfx::SurfaceFormat GetFormat() const = 0;
+  virtual bool AllocateForSurface(gfx::IntSize aSize) = 0;
+};
+
+/**
  * Interface for TextureClients that can be updated using YCbCr data.
  */
 class TextureClientYCbCr
@@ -124,6 +135,7 @@ public:
   virtual ~TextureClient();
 
   virtual TextureClientSurface* AsTextureClientSurface() { return nullptr; }
+  virtual TextureClientDrawTarget* AsTextureClientDrawTarget() { return nullptr; }
   virtual TextureClientYCbCr* AsTextureClientYCbCr() { return nullptr; }
 
   /**
@@ -240,7 +252,8 @@ protected:
  */
 class BufferTextureClient : public TextureClient
                           , public TextureClientSurface
-                          , TextureClientYCbCr
+                          , public TextureClientYCbCr
+                          , public TextureClientDrawTarget
 {
 public:
   BufferTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat,
