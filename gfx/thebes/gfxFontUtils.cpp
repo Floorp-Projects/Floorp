@@ -14,12 +14,13 @@
 
 #include "nsServiceManagerUtils.h"
 
+#include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 
 #include "nsIUUIDGenerator.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIObserverService.h"
+#include "nsIUnicodeDecoder.h"
 #include "nsCRT.h"
 
 #include "harfbuzz/hb.h"
@@ -1295,23 +1296,15 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
         return true;
     }
 
-    nsresult rv;
-    nsCOMPtr<nsICharsetConverterManager> ccm =
-        do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get charset converter manager");
-    if (NS_FAILED(rv)) {
-        return false;
-    }
-
-    nsCOMPtr<nsIUnicodeDecoder> decoder;
-    rv = ccm->GetUnicodeDecoderRaw(csName, getter_AddRefs(decoder));
-    if (NS_FAILED(rv)) {
+    nsCOMPtr<nsIUnicodeDecoder> decoder =
+        mozilla::dom::EncodingUtils::DecoderForEncoding(csName);
+    if (!decoder) {
         NS_WARNING("failed to get the decoder for a font name string");
         return false;
     }
 
     int32_t destLength;
-    rv = decoder->GetMaxLength(aNameData, aByteLen, &destLength);
+    nsresult rv = decoder->GetMaxLength(aNameData, aByteLen, &destLength);
     if (NS_FAILED(rv)) {
         NS_WARNING("decoder->GetMaxLength failed, invalid font name?");
         return false;
