@@ -127,6 +127,10 @@
       SpecialPowers.pushPrefEnv({"set": [["dom.datastore.enabled", true]]}, runTest);
     },
 
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["geo.testing.ignore_ipc_principal", true]]}, runTest);
+    },
+
     // Enabling mozBrowser
     function() {
       SpecialPowers.setAllAppsLaunchable(true);
