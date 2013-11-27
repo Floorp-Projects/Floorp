@@ -6,8 +6,11 @@
 #include "mozilla/dom/SVGFEDiffuseLightingElement.h"
 #include "mozilla/dom/SVGFEDiffuseLightingElementBinding.h"
 #include "nsSVGUtils.h"
+#include "nsSVGFilterInstance.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEDiffuseLighting)
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace dom {
@@ -57,6 +60,18 @@ SVGFEDiffuseLightingElement::KernelUnitLengthY()
     nsSVGNumberPair::eSecond, this);
 }
 
+FilterPrimitiveDescription
+SVGFEDiffuseLightingElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
+                                                     const IntRect& aFilterSubregion,
+                                                     nsTArray<nsRefPtr<gfxASurface> >& aInputImages)
+{
+  float diffuseConstant = mNumberAttributes[DIFFUSE_CONSTANT].GetAnimValue();
+
+  FilterPrimitiveDescription descr(FilterPrimitiveDescription::eDiffuseLighting);
+  descr.Attributes().Set(eDiffuseLightingDiffuseConstant, diffuseConstant);
+  return AddLightingAttributes(descr, aInstance);
+}
+
 bool
 SVGFEDiffuseLightingElement::AttributeAffectsRendering(int32_t aNameSpaceID,
                                                        nsIAtom* aAttribute) const
@@ -64,27 +79,6 @@ SVGFEDiffuseLightingElement::AttributeAffectsRendering(int32_t aNameSpaceID,
   return SVGFEDiffuseLightingElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           aAttribute == nsGkAtoms::diffuseConstant);
-}
-
-//----------------------------------------------------------------------
-// nsSVGElement methods
-
-void
-SVGFEDiffuseLightingElement::LightPixel(const float *N, const float *L,
-                                        nscolor color, uint8_t *targetData)
-{
-  float diffuseNL =
-    mNumberAttributes[DIFFUSE_CONSTANT].GetAnimValue() * DOT(N, L);
-
-  if (diffuseNL < 0) diffuseNL = 0;
-
-  targetData[GFX_ARGB32_OFFSET_B] =
-    std::min(uint32_t(diffuseNL * NS_GET_B(color)), 255U);
-  targetData[GFX_ARGB32_OFFSET_G] =
-    std::min(uint32_t(diffuseNL * NS_GET_G(color)), 255U);
-  targetData[GFX_ARGB32_OFFSET_R] =
-    std::min(uint32_t(diffuseNL * NS_GET_R(color)), 255U);
-  targetData[GFX_ARGB32_OFFSET_A] = 255;
 }
 
 } // namespace dom
