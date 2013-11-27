@@ -50,7 +50,7 @@ ContentHostBaseNew::DestroyTextureHost()
   // The third clause in the if statement checks that we are in fact done with
   // this texture. We don't want to prematurely deallocate a texture we might
   // use again or double deallocate. Deallocation will happen in
-  // RemoveTextureHostDeferred.
+  // RemoveTextureHost.
   // Note that GetTextureHost is linear in the number of texture hosts, but as
   // long as that number is small (I expect a maximum of 6 for now) then it
   // should be ok.
@@ -76,13 +76,16 @@ ContentHostBaseNew::DestroyTextureHostOnWhite()
 }
 
 void
-ContentHostBaseNew::RemoveTextureHostDeferred(TextureHost* aTexture)
+ContentHostBaseNew::RemoveTextureHost(TextureHost* aTexture)
 {
-  if (!(mTextureHost && mTextureHost == aTexture) &&
+  if ((aTexture->GetFlags() & TEXTURE_DEALLOCATE_DEFERRED) &&
+      !(mTextureHost && mTextureHost == aTexture) &&
       !(mTextureHostOnWhite && mTextureHostOnWhite == aTexture)) {
-    MOZ_ASSERT(aTexture->GetFlags() & TEXTURE_DEALLOCATE_DEFERRED);
+    MOZ_ASSERT(!(aTexture->GetFlags() & TEXTURE_DEALLOCATE_CLIENT));
     aTexture->DeallocateSharedData();
   }
+
+  CompositableHost::RemoveTextureHost(aTexture);
 }
 
 class MOZ_STACK_CLASS AutoLockTextureHost
