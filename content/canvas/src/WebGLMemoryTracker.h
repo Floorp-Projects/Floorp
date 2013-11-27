@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGLMEMORYREPORTERWRAPPER_H_
-#define WEBGLMEMORYREPORTERWRAPPER_H_
+#ifndef WEBGLMEMORYTRACKER_H_
+#define WEBGLMEMORYTRACKER_H_
 
 #include "WebGLContext.h"
 #include "WebGLBuffer.h"
@@ -14,24 +14,28 @@
 #include "WebGLUniformLocation.h"
 #include "WebGLTexture.h"
 #include "WebGLRenderbuffer.h"
+#include "mozilla/StaticPtr.h"
+#include "nsIMemoryReporter.h"
 
 namespace mozilla {
 
-class WebGLMemoryReporterWrapper
+class WebGLMemoryTracker : public MemoryMultiReporter
 {
-    WebGLMemoryReporterWrapper();
-    ~WebGLMemoryReporterWrapper();
-    static WebGLMemoryReporterWrapper* sUniqueInstance;
+    NS_DECL_ISUPPORTS
 
-    // here we store plain pointers, not RefPtrs: we don't want the
-    // WebGLMemoryReporterWrapper unique instance to keep alive all
+    WebGLMemoryTracker();
+    virtual ~WebGLMemoryTracker();
+    static StaticRefPtr<WebGLMemoryTracker> sUniqueInstance;
+
+    // Here we store plain pointers, not RefPtrs: we don't want the
+    // WebGLMemoryTracker unique instance to keep alive all
     // WebGLContexts ever created.
     typedef nsTArray<const WebGLContext*> ContextsArrayType;
     ContextsArrayType mContexts;
 
-    nsCOMPtr<nsIMemoryReporter> mReporter;
+    void InitMemoryReporter();
 
-    static WebGLMemoryReporterWrapper* UniqueInstance();
+    static WebGLMemoryTracker* UniqueInstance();
 
     static ContextsArrayType & Contexts() { return UniqueInstance()->mContexts; }
 
@@ -47,11 +51,14 @@ class WebGLMemoryReporterWrapper
         ContextsArrayType & contexts = Contexts();
         contexts.RemoveElement(c);
         if (contexts.IsEmpty()) {
-            delete sUniqueInstance; 
             sUniqueInstance = nullptr;
         }
     }
 
+    NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                              nsISupports* aData);
+
+  private:
     static int64_t GetTextureMemoryUsed() {
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
