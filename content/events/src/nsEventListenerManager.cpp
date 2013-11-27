@@ -614,7 +614,7 @@ nsEventListenerManager::SetEventHandlerInternal(JS::Handle<JSObject*> aScopeObje
     bool same = scriptListener->GetHandler() == aHandler;
     // Possibly the same listener, but update still the context and scope.
     scriptListener->SetHandler(aHandler, aScopeObject);
-    if (mTarget && !same) {
+    if (mTarget && !same && aName) {
       mTarget->EventListenerRemoved(aName);
       mTarget->EventListenerAdded(aName);
     }
