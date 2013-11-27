@@ -164,6 +164,10 @@ public:
     MASKSURFACE
   };
 
+  static const uint32_t kTotalEventTypes = RecordedEvent::MASKSURFACE + 1;
+
+  static std::string GetEventName(EventType aType);
+
   virtual void PlayEvent(Translator *aTranslator) const {}
 
   virtual void RecordToStream(std::ostream &aStream) const {}
