@@ -5,32 +5,170 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * This code implements a mark-and-sweep garbage collector. The mark phase is
- * incremental. Most sweeping is done on a background thread. A GC is divided
- * into slices as follows:
+ * This code implements an incremental mark-and-sweep garbage collector, with
+ * most sweeping carried out in the background on a parallel thread.
  *
- * Slice 1: Roots pushed onto the mark stack. The mark stack is processed by
- * popping an element, marking it, and pushing its children.
- *   ... JS code runs ...
- * Slice 2: More mark stack processing.
- *   ... JS code runs ...
- * Slice n-1: More mark stack processing.
- *   ... JS code runs ...
- * Slice n: Mark stack is completely drained. Some sweeping is done.
- *   ... JS code runs, remaining sweeping done on background thread ...
+ * Full vs. zone GC
+ * ----------------
+ *
+ * The collector can collect all zones at once, or a subset. These types of
+ * collection are referred to as a full GC and a zone GC respectively.
+ *
+ * The atoms zone is only collected in a full GC since objects in any zone may
+ * have pointers to atoms, and these are not recorded in the cross compartment
+ * pointer map. Also, the atoms zone is not collected if any thread has an
+ * AutoKeepAtoms instance on the stack, or there are any exclusive threads using
+ * the runtime.
+ *
+ * It is possible for an incremental collection that started out as a full GC to
+ * become a zone GC if new zones are created during the course of the
+ * collection.
+ *
+ * Incremental collection
+ * ----------------------
+ *
+ * For a collection to be carried out incrementally the following conditions
+ * must be met:
+ *  - the collection must be run by calling js::GCSlice() rather than js::GC()
+ *  - the GC mode must have been set to JSGC_MODE_INCREMENTAL with
+ *    JS_SetGCParameter()
+ *  - no thread may have an AutoKeepAtoms instance on the stack
+ *  - all native objects that have their own trace hook must indicate that they
+ *    implement read and write barriers with the JSCLASS_IMPLEMENTS_BARRIERS
+ *    flag
+ *
+ * The last condition is an engine-internal mechanism to ensure that incremental
+ * collection is not carried out without the correct barriers being implemented.
+ * For more information see 'Incremental marking' below.
+ *
+ * If the collection is not incremental, all foreground activity happens inside
+ * a single call to GC() or GCSlice(). However the collection is not complete
+ * until the background sweeping activity has finished.
+ *
+ * An incremental collection proceeds as a series of slices, interleaved with
+ * mutator activity, i.e. running JavaScript code. Slices are limited by a time
+ * budget. The slice finishes as soon as possible after the requested time has
+ * passed.
+ *
+ * Collector states
+ * ----------------
+ *
+ * The collector proceeds through the following states, the current state being
+ * held in JSRuntime::gcIncrementalState:
+ *
+ *  - MARK_ROOTS - marks the stack and other roots
+ *  - MARK       - incrementally marks reachable things
+ *  - SWEEP      - sweeps zones in groups and continues marking unswept zones
+ *
+ * The MARK_ROOTS activity always takes place in the first slice. The next two
+ * states can take place over one or more slices.
+ *
+ * In other words an incremental collection proceeds like this:
+ *
+ * Slice 1:   MARK_ROOTS: Roots pushed onto the mark stack.
+ *            MARK:       The mark stack is processed by popping an element,
+ *                        marking it, and pushing its children.
+ *
+ *          ... JS code runs ...
+ *
+ * Slice 2:   MARK:       More mark stack processing.
+ *
+ *          ... JS code runs ...
+ *
+ * Slice n-1: MARK:       More mark stack processing.
+ *
+ *          ... JS code runs ...
+ *
+ * Slice n:   MARK:       Mark stack is completely drained.
+ *            SWEEP:      Select first group of zones to sweep and sweep them.
+ *
+ *          ... JS code runs ...
+ *
+ * Slice n+1: SWEEP:      Mark objects in unswept zones that were newly
+ *                        identified as alive (see below). Then sweep more zone
+ *                        groups.
+ *
+ *          ... JS code runs ...
+ *
+ * Slice n+2: SWEEP:      Mark objects in unswept zones that were newly
+ *                        identified as alive. Then sweep more zone groups.
+ *
+ *          ... JS code runs ...
+ *
+ * Slice m:   SWEEP:      Sweeping is finished, and background sweeping
+ *                        started on the helper thread.
+ *
+ *          ... JS code runs, remaining sweeping done on background thread ...
  *
  * When background sweeping finishes the GC is complete.
  *
- * Incremental GC requires close collaboration with the mutator (i.e., JS code):
+ * Incremental marking
+ * -------------------
  *
- * 1. During an incremental GC, if a memory location (except a root) is written
- * to, then the value it previously held must be marked. Write barriers ensure
- * this.
- * 2. Any object that is allocated during incremental GC must start out marked.
- * 3. Roots are special memory locations that don't need write
- * barriers. However, they must be marked in the first slice. Roots are things
- * like the C stack and the VM stack, since it would be too expensive to put
- * barriers on them.
+ * Incremental collection requires close collaboration with the mutator (i.e.,
+ * JS code) to guarantee correctness.
+ *
+ *  - During an incremental GC, if a memory location (except a root) is written
+ *    to, then the value it previously held must be marked. Write barriers
+ *    ensure this.
+ *
+ *  - Any object that is allocated during incremental GC must start out marked.
+ *
+ *  - Roots are marked in the first slice and hence don't need write barriers.
+ *    Roots are things like the C stack and the VM stack.
+ *
+ * The problem that write barriers solve is that between slices the mutator can
+ * change the object graph. We must ensure that it cannot do this in such a way
+ * that makes us fail to mark a reachable object (marking an unreachable object
+ * is tolerable).
+ *
+ * We use a snapshot-at-the-beginning algorithm to do this. This means that we
+ * promise to mark at least everything that is reachable at the beginning of
+ * collection. To implement it we mark the old contents of every non-root memory
+ * location written to by the mutator while the collection is in progress, using
+ * write barriers. This is described in gc/Barrier.h.
+ *
+ * Incremental sweeping
+ * --------------------
+ *
+ * Sweeping is difficult to do incrementally because object finalizers must be
+ * run at the start of sweeping, before any mutator code runs. The reason is
+ * that some objects use their finalizers to remove themselves from caches. If
+ * mutator code was allowed to run after the start of sweeping, it could observe
+ * the state of the cache and create a new reference to an object that was just
+ * about to be destroyed.
+ *
+ * Sweeping all finalizable objects in one go would introduce long pauses, so
+ * instead sweeping broken up into groups of zones. Zones which are not yet
+ * being swept are still marked, so the issue above does not apply.
+ *
+ * The order of sweeping is restricted by cross compartment pointers - for
+ * example say that object |a| from zone A points to object |b| in zone B and
+ * neither object was marked when we transitioned to the SWEEP phase. Imagine we
+ * sweep B first and then return to the mutator. It's possible that the mutator
+ * could cause |a| to become alive through a read barrier (perhaps it was a
+ * shape that was accessed via a shape table). Then we would need to mark |b|,
+ * which |a| points to, but |b| has already been swept.
+ *
+ * So if there is such a pointer then marking of zone B must not finish before
+ * marking of zone A.  Pointers which form a cycle between zones therefore
+ * restrict those zones to being swept at the same time, and these are found
+ * using Tarjan's algorithm for finding the strongly connected components of a
+ * graph.
+ *
+ * GC things without finalizers, and things with finalizers that are able to run
+ * in the background, are swept on the background thread. This accounts for most
+ * of the sweeping work.
+ *
+ * Reset
+ * -----
+ *
+ * During incremental collection it is possible, although unlikely, for
+ * conditions to change such that incremental collection is no longer safe. In
+ * this case, the collection is 'reset' by ResetIncrementalGC(). If we are in
+ * the mark state, this just stops marking, but if we have started sweeping
+ * already, we continue until we have swept the current zone group. Following a
+ * reset, a new non-incremental collection is started.
  */
 
 #include "jsgcinlines.h"

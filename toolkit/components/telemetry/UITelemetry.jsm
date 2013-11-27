@@ -99,5 +99,55 @@ this.UITelemetry =  {
 
   _logEvent: function sendEvent(aEvent) {
     this.measurements.push(aEvent);
+  },
+
+  /**
+   * Holds the functions that provide UITelemety's simple
+   * measurements. Those functions are mapped to unique names,
+   * and should be registered with addSimpleMeasureFunction.
+   */
+  _simpleMeasureFuncs: {},
+
+  /**
+   * Called by TelemetryPing to populate the simple measurement
+   * blob. This function will iterate over all functions added
+   * via addSimpleMeasureFunction and return an object with the
+   * results of those functions.
+   */
+  getSimpleMeasures: function() {
+    let result = {};
+    for (let name in this._simpleMeasureFuncs) {
+      result[name] = this._simpleMeasureFuncs[name]();
+    }
+    return result;
+  },
+
+  /**
+   * Allows the caller to register functions that will get called
+   * for simple measures during a Telemetry ping. aName is a unique
+   * identifier used as they key for the simple measurement in the
+   * object that getSimpleMeasures returns.
+   *
+   * This function throws an exception if aName already has a function
+   * registered for it.
+   */
+  addSimpleMeasureFunction: function(aName, aFunction) {
+    if (aName in this._simpleMeasureFuncs) {
+      throw new Error("A simple measurement function is already registered for "
+                      + aName);
+    }
+    if (!aFunction || typeof aFunction !== 'function') {
+      throw new Error("A function must be passed as the second argument.");
+    }
+
+    this._simpleMeasureFuncs[aName] = aFunction;
+  },
+
+  removeSimpleMeasureFunction: function(aName) {
+    delete this._simpleMeasureFuncs[aName];
+  },
+
+  getUIMeasurements: function getUIMeasurements() {
+    return this.measurements.slice();
   }
 };

@@ -78,6 +78,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/dom/audiochannel \
 		   -I$(topsrcdir)/dom/telephony \
 		   -I$(topsrcdir)/dom/media \
+		   -I$(topsrcdir)/dom/speakermanager \
 		   -I. \
 		   -I$(topsrcdir)/editor/libeditor/base \
 		   -I$(topsrcdir)/editor/libeditor/text \
@@ -100,6 +101,7 @@ endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/system/gonk
+LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/speakermanager
 endif #}
 
 ifdef MOZ_B2G_FM #{
