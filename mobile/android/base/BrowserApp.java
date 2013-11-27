@@ -197,6 +197,16 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        if (tab == null) {
+            // Only RESTORED is allowed a null tab: it's the only event that
+            // isn't tied to a specific tab.
+            if (msg != Tabs.TabEvents.RESTORED) {
+                throw new IllegalArgumentException("onTabChanged:" + msg + " must specify a tab.");
+            }
+            return;
+        }
+
+        Log.d(LOGTAG, "BrowserApp.onTabChanged: " + tab.getId() + ": " + msg);
         switch(msg) {
             case LOCATION_CHANGE:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
@@ -1428,10 +1438,13 @@ abstract public class BrowserApp extends GeckoApp
     private void maybeCancelFaviconLoad(Tab tab) {
         int faviconLoadId = tab.getFaviconLoadId();
 
-        // Cancel pending favicon load task
-        Favicons.cancelFaviconLoad(faviconLoadId);
+        if (Favicons.NOT_LOADING == faviconLoadId) {
+            return;
+        }
 
-        // Reset favicon load state
+        // Cancel load task and reset favicon load state if it wasn't already
+        // in NOT_LOADING state.
+        Favicons.cancelFaviconLoad(faviconLoadId);
         tab.setFaviconLoadId(Favicons.NOT_LOADING);
     }
 
