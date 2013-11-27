@@ -291,6 +291,15 @@ SymbolicBound::print(Sprinter &sp) const
     sum.print(sp);
 }
 
+void
+SymbolicBound::dump() const
+{
+    Sprinter sp(GetIonContext()->cx);
+    sp.init();
+    print(sp);
+    fprintf(stderr, "%s\n", sp.string());
+}
+
 // Test whether the given range's exponent tells us anything that its lower
 // and upper bound values don't.
 static bool
@@ -363,6 +372,12 @@ Range::dump(FILE *fp) const
     sp.init();
     print(sp);
     fprintf(fp, "%s\n", sp.string());
+}
+
+void
+Range::dump() const
+{
+    dump(stderr);
 }
 
 Range *

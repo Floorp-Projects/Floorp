@@ -337,6 +337,7 @@ class MDefinition : public MNode
     static void PrintOpcodeName(FILE *fp, Opcode op);
     virtual void printOpcode(FILE *fp) const;
     void dump(FILE *fp) const;
+    void dump() const;
 
     // For LICM.
     virtual bool neverHoist() const { return false; }
@@ -513,6 +514,10 @@ class MDefinition : public MNode
     // (only counting MDefinitions, ignoring MResumePoints)
     bool hasOneDefUse() const;
 
+    // Test whether this MDefinition has at least one use.
+    // (only counting MDefinitions, ignoring MResumePoints)
+    bool hasDefUses() const;
+
     bool hasUses() const {
         return !uses_.empty();
     }
@@ -530,11 +535,6 @@ class MDefinition : public MNode
     // returning false if the replacement should not be performed. For use when
     // GVN eliminates instructions which are not equivalent to one another.
     virtual bool updateForReplacement(MDefinition *ins) {
-        return true;
-    }
-
-    // Same thing, but for folding
-    virtual bool updateForFolding(MDefinition *ins) {
         return true;
     }
 
@@ -8326,7 +8326,8 @@ class MGetFrameArgument
 
 // This MIR instruction is used to set an argument value in the frame.
 class MSetFrameArgument
-  : public MUnaryInstruction
+  : public MUnaryInstruction,
+    public NoFloatPolicy<0>
 {
     uint32_t argno_;
 
@@ -8357,6 +8358,9 @@ class MSetFrameArgument
     }
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::FrameArgument);
+    }
+    TypePolicy *typePolicy() {
+        return this;
     }
 };
 

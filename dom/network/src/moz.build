@@ -15,7 +15,7 @@ EXPORTS.mozilla.dom.network += [
     'UDPSocketParent.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'Connection.cpp',
     'TCPServerSocketChild.cpp',
     'TCPServerSocketParent.cpp',
@@ -30,7 +30,7 @@ if CONFIG['MOZ_B2G_RIL']:
         'MobileConnection.h',
         'MobileConnectionArray.h',
     ]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'MobileConnection.cpp',
         'MobileConnectionArray.cpp',
     ]
