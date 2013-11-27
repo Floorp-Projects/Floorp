@@ -296,18 +296,13 @@ public:
 
   void AddTextureHost(TextureHost* aTexture);
   virtual void UseTextureHost(TextureHost* aTexture) {}
-  virtual void RemoveTextureHost(uint64_t aTextureID);
   // If a texture host is flagged for deferred removal, the compositable will
   // get an option to run any cleanup code early, that is when it would have
-  // been run if the texture host was not marked deferred. That is, this method
-  // is called _before_ RemoveTextureHost for deferred removal texture hosts.
+  // been run if the texture host was not marked deferred.
   // If the compositable does not cleanup the texture host now, it is the
   // compositable's responsibility to cleanup the texture host before the
   // texture host dies.
-  virtual void RemoveTextureHostDeferred(TextureHost* aTexture)
-  {
-    MOZ_CRASH("Compositable was not expecting to handle deferred removal of texture hosts");
-  }
+  virtual void RemoveTextureHost(TextureHost* aTexture);
   TextureHost* GetTextureHost(uint64_t aTextureID);
 
 protected:
