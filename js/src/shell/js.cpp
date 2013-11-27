@@ -1351,6 +1351,12 @@ Help(JSContext *cx, unsigned argc, jsval *vp);
 static bool
 Quit(JSContext *cx, unsigned argc, jsval *vp)
 {
+#ifdef JS_MORE_DETERMINISTIC
+    // Print a message to stderr in more-deterministic builds to help jsfunfuzz
+    // find uncatchable-exception bugs.
+    fprintf(stderr, "quit called\n");
+#endif
+
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ConvertArguments(cx, args.length(), args.array(), "/ i", &gExitCode);
 
