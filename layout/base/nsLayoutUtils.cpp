@@ -4762,7 +4762,7 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   SurfaceFromElementResult result;
   nsresult rv;
 
-  bool forceCopy = (aSurfaceFlags & SFE_WANT_NEW_SURFACE) != 0;
+  bool forceCopy = false;
   bool wantImageSurface = (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) != 0;
   bool premultAlpha = (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) == 0;
 
@@ -4874,7 +4874,7 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
   SurfaceFromElementResult result;
   nsresult rv;
 
-  bool forceCopy = (aSurfaceFlags & SFE_WANT_NEW_SURFACE) != 0;
+  bool forceCopy = false;
   bool wantImageSurface = (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) != 0;
   bool premultAlpha = (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) == 0;
 

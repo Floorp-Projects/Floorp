@@ -1546,19 +1546,17 @@ public:
    */
 
   enum {
-    /* Always create a new surface for the result */
-    SFE_WANT_NEW_SURFACE   = 1 << 0,
     /* When creating a new surface, create an image surface */
-    SFE_WANT_IMAGE_SURFACE = 1 << 1,
+    SFE_WANT_IMAGE_SURFACE = 1 << 0,
     /* Whether to extract the first frame (as opposed to the
        current frame) in the case that the element is an image. */
-    SFE_WANT_FIRST_FRAME = 1 << 2,
+    SFE_WANT_FIRST_FRAME = 1 << 1,
     /* Whether we should skip colorspace/gamma conversion */
-    SFE_NO_COLORSPACE_CONVERSION = 1 << 3,
+    SFE_NO_COLORSPACE_CONVERSION = 1 << 2,
     /* Whether we should skip premultiplication -- the resulting
        image will always be an image surface, and must not be given to
        Thebes for compositing! */
-    SFE_NO_PREMULTIPLY_ALPHA = 1 << 4
+    SFE_NO_PREMULTIPLY_ALPHA = 1 << 3
   };
 
   struct SurfaceFromElementResult {
