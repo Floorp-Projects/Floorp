@@ -512,7 +512,6 @@ ShmemTextureHost::DeallocateSharedData()
     MOZ_ASSERT(mDeallocator,
                "Shared memory would leak without a ISurfaceAllocator");
     mDeallocator->DeallocShmem(*mShmem);
-    mShmem = nullptr;
   }
 }
 
@@ -551,7 +550,6 @@ MemoryTextureHost::DeallocateSharedData()
     GfxMemoryImageReporter::WillFree(mBuffer);
   }
   delete[] mBuffer;
-  mBuffer = nullptr;
 }
 
 uint8_t* MemoryTextureHost::GetBuffer()
