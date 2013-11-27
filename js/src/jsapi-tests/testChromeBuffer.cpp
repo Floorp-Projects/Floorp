@@ -6,9 +6,7 @@
 
 #include "jsapi-tests/tests.h"
 
-static JSPrincipals system_principals = {
-    1
-};
+static TestJSPrincipals system_principals(1);
 
 static const JSClass global_class = {
     "global",

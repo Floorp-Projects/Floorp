@@ -1605,7 +1605,11 @@ struct JSRuntime : public JS::shadow::Runtime,
     // their callee.
     js::Value            ionReturnOverride_;
 
+#ifdef JS_THREADSAFE
     static mozilla::Atomic<size_t> liveRuntimesCount;
+#else
+    static size_t liveRuntimesCount;
+#endif
 
   public:
     static bool hasLiveRuntimes() {
