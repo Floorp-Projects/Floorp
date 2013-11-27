@@ -94,7 +94,7 @@ nsWindowMemoryReporter::Init()
   MOZ_ASSERT(!sWindowReporter);
   sWindowReporter = new nsWindowMemoryReporter();
   ClearOnShutdown(&sWindowReporter);
-  NS_RegisterMemoryReporter(sWindowReporter);
+  RegisterStrongMemoryReporter(sWindowReporter);
   RegisterNonJSSizeOfTab(NonJSSizeOfTab);
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
@@ -107,7 +107,7 @@ nsWindowMemoryReporter::Init()
                     /* weakRef = */ true);
   }
 
-  NS_RegisterMemoryReporter(new GhostWindowsReporter());
+  RegisterStrongMemoryReporter(new GhostWindowsReporter());
   RegisterGhostWindowsDistinguishedAmount(GhostWindowsReporter::DistinguishedAmount);
 }
 
@@ -446,13 +446,6 @@ ReportGhostWindowsEnumerator(nsUint64HashKey* aIDHashKey, void* aClosure)
   }
 
   return PL_DHASH_NEXT;
-}
-
-NS_IMETHODIMP
-nsWindowMemoryReporter::GetName(nsACString &aName)
-{
-  aName.AssignLiteral("window-objects");
-  return NS_OK;
 }
 
 NS_IMETHODIMP
