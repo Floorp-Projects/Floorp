@@ -490,8 +490,14 @@ UpdateParser.prototype = {
         this.notifyError(AddonUpdateChecker.ERROR_PARSE_ERROR);
         return;
       }
-      if ("onUpdateCheckComplete" in this.observer)
-        this.observer.onUpdateCheckComplete(results);
+      if ("onUpdateCheckComplete" in this.observer) {
+        try {
+          this.observer.onUpdateCheckComplete(results);
+        }
+        catch (e) {
+          WARN("onUpdateCheckComplete notification failed", e);
+        }
+      }
       return;
     }
 
@@ -534,8 +540,14 @@ UpdateParser.prototype = {
    * Helper method to notify the observer that an error occured.
    */
   notifyError: function UP_notifyError(aStatus) {
-    if ("onUpdateCheckError" in this.observer)
-      this.observer.onUpdateCheckError(aStatus);
+    if ("onUpdateCheckError" in this.observer) {
+      try {
+        this.observer.onUpdateCheckError(aStatus);
+      }
+      catch (e) {
+        WARN("onUpdateCheckError notification failed", e);
+      }
+    }
   },
 
   /**
@@ -549,6 +561,17 @@ UpdateParser.prototype = {
     WARN("Request timed out");
 
     this.notifyError(AddonUpdateChecker.ERROR_TIMEOUT);
+  },
+
+  /**
+   * Called to cancel an in-progress update check.
+   */
+  cancel: function UP_cancel() {
+    this.timer.cancel();
+    this.timer = null;
+    this.request.abort();
+    this.request = null;
+    this.notifyError(AddonUpdateChecker.ERROR_CANCELLED);
   }
 };
 
@@ -610,6 +633,8 @@ this.AddonUpdateChecker = {
   ERROR_UNKNOWN_FORMAT: -4,
   // The update information was not correctly signed or there was an SSL error.
   ERROR_SECURITY_ERROR: -5,
+  // The update was cancelled
+  ERROR_CANCELLED: -6,
 
   /**
    * Retrieves the best matching compatibility update for the application from
@@ -721,9 +746,11 @@ this.AddonUpdateChecker = {
    *         The URL of the add-on's update manifest
    * @param  aObserver
    *         An observer to notify of results
+   * @return UpdateParser so that the caller can use UpdateParser.cancel() to shut
+   *         down in-progress update requests
    */
   checkForUpdates: function AUC_checkForUpdates(aId, aUpdateKey, aUrl,
                                                 aObserver) {
-    new UpdateParser(aId, aUpdateKey, aUrl, aObserver);
+    return new UpdateParser(aId, aUpdateKey, aUrl, aObserver);
   }
 };

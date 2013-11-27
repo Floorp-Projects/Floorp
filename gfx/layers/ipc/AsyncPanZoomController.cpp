@@ -992,7 +992,7 @@ bool AsyncPanZoomController::DoFling(const TimeDuration& aDelta) {
   if (!shouldContinueFlingX && !shouldContinueFlingY) {
     SendAsyncScrollEvent();
     RequestContentRepaint();
-    mState = NOTHING;
+    SetState(NOTHING);
     return false;
   }
 
@@ -1016,8 +1016,7 @@ bool AsyncPanZoomController::DoFling(const TimeDuration& aDelta) {
 }
 
 void AsyncPanZoomController::CancelAnimation() {
-  ReentrantMonitorAutoEnter lock(mMonitor);
-  mState = NOTHING;
+  SetState(NOTHING);
 }
 
 void AsyncPanZoomController::SetCompositorParent(CompositorParent* aCompositorParent) {
@@ -1268,7 +1267,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
       requestAnimationFrame = true;
 
       if (aSampleTime - mAnimationStartTime >= ZOOM_TO_DURATION) {
-        mState = NOTHING;
+        SetState(NOTHING);
         SendAsyncScrollEvent();
         RequestContentRepaint();
       }
@@ -1376,7 +1375,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     mY.CancelTouch();
 
     mFrameMetrics = aLayerMetrics;
-    mState = NOTHING;
+    SetState(NOTHING);
   } else {
     // If we're not taking the aLayerMetrics wholesale we still need to pull
     // in some things into our local mFrameMetrics because these things are
@@ -1554,12 +1553,16 @@ void AsyncPanZoomController::SetState(PanZoomState aNewState) {
   }
 
   if (mGeckoContentController) {
-    if (IsPanningState(oldState) && !IsPanningState(aNewState)) {
-      mGeckoContentController->HandlePanEnd();
-    } else if (!IsPanningState(oldState) && IsPanningState(aNewState)) {
-      mGeckoContentController->HandlePanBegin();
+    if (!IsTransformingState(oldState) && IsTransformingState(aNewState)) {
+      mGeckoContentController->NotifyTransformBegin();
+    } else if (IsTransformingState(oldState) && !IsTransformingState(aNewState)) {
+      mGeckoContentController->NotifyTransformEnd();
     }
   }
+}
+
+bool AsyncPanZoomController::IsTransformingState(PanZoomState aState) {
+  return !(aState == NOTHING || aState == TOUCHING || aState == WAITING_LISTENERS);
 }
 
 bool AsyncPanZoomController::IsPanningState(PanZoomState aState) {

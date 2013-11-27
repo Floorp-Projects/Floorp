@@ -168,6 +168,11 @@ let TabStateInternal = {
       // text and scroll data.
       let history = yield Messenger.send(tab, "SessionStore:collectSessionHistory");
 
+      // The tab could have been closed while waiting for a response.
+      if (!tab.linkedBrowser) {
+        return;
+      }
+
       // Collect basic tab data, without session history and storage.
       let tabData = this._collectBaseTabData(tab);
 

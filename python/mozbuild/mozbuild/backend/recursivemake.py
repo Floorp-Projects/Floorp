@@ -373,8 +373,7 @@ class RecursiveMakeBackend(CommonBackend):
                             unified_suffix=unified_suffixes[k],
                             unified_files_makefile_variable=k,
                             include_curdir_build_rules=False,
-                            files_per_unified_file=files_per_unification,
-                            unified_checks=True)
+                            files_per_unified_file=files_per_unification)
                         backend_file.write('%s += $(%s)\n' % (k[len('UNIFIED_'):], k))
                     else:
                         backend_file.write('%s += %s\n' % (
@@ -600,7 +599,6 @@ class RecursiveMakeBackend(CommonBackend):
                                  unified_files_makefile_variable='unified_files',
                                  include_curdir_build_rules=True,
                                  poison_windows_h=False,
-                                 unified_checks=False,
                                  files_per_unified_file=16):
 
         explanation = "\n" \
@@ -654,19 +652,18 @@ class RecursiveMakeBackend(CommonBackend):
                         '#ifdef _WINDOWS_\n'
                         '#error "%(cppfile)s included windows.h"\n'
                         "#endif")
-                if unified_checks:
-                    includeTemplate += (
-                        '\n'
-                        '#ifdef PL_ARENA_CONST_ALIGN_MASK\n'
-                        '#error "%(cppfile)s uses PL_ARENA_CONST_ALIGN_MASK, '
-                        'so it cannot be built in unified mode."\n'
-                        '#undef PL_ARENA_CONST_ALIGN_MASK\n'
-                        '#endif\n'
-                        '#ifdef FORCE_PR_LOG\n'
-                        '#error "%(cppfile)s forces NSPR logging, '
-                        'so it cannot be built in unified mode."\n'
-                        '#undef FORCE_PR_LOG\n'
-                        '#endif')
+                includeTemplate += (
+                    '\n'
+                    '#ifdef PL_ARENA_CONST_ALIGN_MASK\n'
+                    '#error "%(cppfile)s uses PL_ARENA_CONST_ALIGN_MASK, '
+                    'so it cannot be built in unified mode."\n'
+                    '#undef PL_ARENA_CONST_ALIGN_MASK\n'
+                    '#endif\n'
+                    '#ifdef FORCE_PR_LOG\n'
+                    '#error "%(cppfile)s forces NSPR logging, '
+                    'so it cannot be built in unified mode."\n'
+                    '#undef FORCE_PR_LOG\n'
+                    '#endif')
                 f.write('\n'.join(includeTemplate % { "cppfile": s } for
                                   s in source_filenames))
 

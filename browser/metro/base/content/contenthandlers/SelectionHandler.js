@@ -547,7 +547,7 @@ var SelectionHandler = {
         break;
 
       case "Browser:ResetLastPos":
-        this._onClickCoords(json.xPos, json.yPos);
+        this.onClickCoords(json.xPos, json.yPos);
         break;
     }
   },

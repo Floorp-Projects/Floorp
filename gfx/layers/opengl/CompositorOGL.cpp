@@ -10,7 +10,6 @@
 #include "FPSCounter.h"                 // for FPSState, FPSCounter
 #include "GLContextProvider.h"          // for GLContextProvider
 #include "GLContext.h"                  // for GLContext
-#include "LayerManagerOGL.h"            // for BUFFER_OFFSET
 #include "Layers.h"                     // for WriteSnapshotToDumpFile
 #include "gfx2DGlue.h"                  // for ThebesFilter
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
@@ -49,6 +48,8 @@
 #include "GfxInfo.h"
 #endif
 
+#define BUFFER_OFFSET(i) ((char *)nullptr + (i))
+ 
 namespace mozilla {
 
 using namespace gfx;

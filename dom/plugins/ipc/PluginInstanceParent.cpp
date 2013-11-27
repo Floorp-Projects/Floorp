@@ -26,6 +26,7 @@
 #include "gfxContext.h"
 #include "gfxColor.h"
 #include "gfxUtils.h"
+#include "mozilla/gfx/2D.h"
 #include "Layers.h"
 #include "SharedTextureImage.h"
 #include "GLContext.h"
@@ -814,13 +815,15 @@ PluginInstanceParent::BeginUpdateBackground(const nsIntRect& aRect,
         }
     }
 
-#ifdef DEBUG
     gfxIntSize sz = mBackground->GetSize();
+#ifdef DEBUG
     NS_ABORT_IF_FALSE(nsIntRect(0, 0, sz.width, sz.height).Contains(aRect),
                       "Update outside of background area");
 #endif
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(mBackground);
+    RefPtr<gfx::DrawTarget> dt = gfxPlatform::GetPlatform()->
+      CreateDrawTargetForSurface(mBackground, gfx::IntSize(sz.width, sz.height));
+    nsRefPtr<gfxContext> ctx = new gfxContext(dt);
     *aCtx = ctx.forget().get();
 
     return NS_OK;

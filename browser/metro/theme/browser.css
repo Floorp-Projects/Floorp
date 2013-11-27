@@ -595,11 +595,6 @@ documenttab[selected] .documenttab-selection {
   padding: 0 !important;
 }
 
-#urlbar-edit > hbox > .textbox-input-box > .textbox-input::-moz-selection {
-  color: white;
-  background-color: @metro_orange@;
-}
-
 #urlbar-edit > hbox > .textbox-input-box > .textbox-input:invalid {
   /* Hide error glow around the address bar that shows by default
    * when URLs are made invalid by trmming. */

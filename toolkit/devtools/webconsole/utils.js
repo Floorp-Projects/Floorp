@@ -741,10 +741,14 @@ function findCompletionBeginning(aStr)
 
 /**
  * Provides a list of properties, that are possible matches based on the passed
- * scope and inputValue.
+ * Debugger.Environment/Debugger.Object and inputValue.
  *
- * @param object aScope
- *        Scope to use for the completion.
+ * @param object aDbgObject
+ *        When the debugger is not paused this Debugger.Object wraps the scope for autocompletion.
+ *        It is null if the debugger is paused.
+ * @param object anEnvironment
+ *        When the debugger is paused this Debugger.Environment is the scope for autocompletion.
+ *        It is null if the debugger is not paused.
  * @param string aInputValue
  *        Value that should be completed.
  * @param number [aCursor=aInputValue.length]
@@ -760,14 +764,13 @@ function findCompletionBeginning(aStr)
  *                         the matches-strings.
  *            }
  */
-function JSPropertyProvider(aScope, aInputValue, aCursor)
+function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
 {
   if (aCursor === undefined) {
     aCursor = aInputValue.length;
   }
 
   let inputValue = aInputValue.substring(0, aCursor);
-  let obj = WCU.unwrap(aScope);
 
   // Analyse the inputValue and find the beginning of the last part that
   // should be completed.
@@ -799,69 +802,221 @@ function JSPropertyProvider(aScope, aInputValue, aCursor)
       (completionPart[0] == "'" || completionPart[0] == '"') &&
       completionPart[lastDot - 1] == completionPart[0]) {
     // We are completing a string literal.
-    obj = obj.String.prototype;
+    let obj = String.prototype;
     matchProp = completionPart.slice(lastDot + 1);
+    let matches = Object.keys(getMatchedProps(obj, {matchProp:matchProp}));
 
+    return {
+      matchProp: matchProp,
+      matches: matches,
+    };
   }
   else {
     // We are completing a variable / a property lookup.
-
     let properties = completionPart.split(".");
     if (properties.length > 1) {
       matchProp = properties.pop().trimLeft();
-      for (let i = 0; i < properties.length; i++) {
+      let obj;
+
+      //The first property must be found in the environment or the Debugger.Object 
+      //depending of whether the debugger is paused or not
+      let prop = properties[0];
+      if (anEnvironment) {
+        obj = getVariableInEnvironment(anEnvironment, prop);
+      }
+      else {
+        obj = getPropertyInDebuggerObject(aDbgObject, prop);
+      }
+      if (obj == null) {
+        return null;
+      }
+
+      //We get the rest of the properties recursively starting from the Debugger.Object
+      // that wraps the first property
+      for (let i = 1; i < properties.length; i++) {
         let prop = properties[i].trim();
         if (!prop) {
           return null;
         }
+
+        obj = getPropertyInDebuggerObject(obj, prop);
 
         // If obj is undefined or null (which is what "== null" does),
         // then there is no chance to run completion on it. Exit here.
         if (obj == null) {
           return null;
         }
-
-        // Check if prop is a getter function on obj. Functions can change other
-        // stuff so we can't execute them to get the next object. Stop here.
-        if (WCU.isNonNativeGetter(obj, prop)) {
-          return null;
-        }
-        try {
-          obj = obj[prop];
-        }
-        catch (ex) {
-          return null;
-        }
       }
+
+      // If the final property is a primitive
+      if (typeof obj != 'object' || obj === null) {
+        matchProp = completionPart.slice(lastDot + 1);
+        let matches = Object.keys(getMatchedProps(obj, {matchProp:matchProp}));
+
+        return {
+          matchProp: matchProp,
+          matches: matches,
+        };
+      }
+      return getMatchedPropsInDbgObject(obj, matchProp);
     }
     else {
       matchProp = properties[0].trimLeft();
-    }
+      if (anEnvironment) {
+        return getMatchedPropsInEnvironment(anEnvironment, matchProp);
+      }
+      else {
+        if (typeof aDbgObject != 'object' || aDbgObject === null) {
+          matchProp = completionPart.slice(lastDot + 1);
+          let matches = Object.keys(getMatchedProps(aDbgObject, {matchProp:matchProp}));
 
-    // If obj is undefined or null (which is what "== null" does),
-    // then there is no chance to run completion on it. Exit here.
-    if (obj == null) {
-      return null;
+          return {
+            matchProp: matchProp,
+            matches: matches,
+          };
+        }
+        return getMatchedPropsInDbgObject(aDbgObject, matchProp);
+      }
     }
+  }
+}
 
+/**
+ * Returns the value of aProp in anEnvironment as a debuggee value, by recursively checking the environment chain
+ *
+ * @param object anEnvironment
+ *        A Debugger.Environment to look the aProp into.
+ * @param string aProp
+ *        The property that is looked up.
+ * @returns null or object
+ *        A Debugger.Object if aProp exists in the environment chain, null otherwise.
+ */
+function getVariableInEnvironment(anEnvironment, aProp)
+{
+  for (let env = anEnvironment; env; env = env.parent) {
     try {
-      // Skip Iterators and Generators.
-      if (WCU.isIteratorOrGenerator(obj)) {
-        return null;
+      let obj = env.getVariable(aProp);
+      if (obj) {
+        return obj;
       }
     }
     catch (ex) {
-      // The above can throw if |obj| is a dead object.
-      // TODO: we should use Cu.isDeadWrapper() - see bug 885800.
       return null;
     }
   }
+  return null;
+}
 
-  let matches = Object.keys(getMatchedProps(obj, {matchProp:matchProp}));
+/**
+ * Returns the value of aProp in aDbgObject as a debuggee value, by recursively checking the prototype chain
+ *
+ * @param object aDbgObject
+ *        A Debugger.Object to look the aProp into.
+ * @param string aProp
+ *        The property that is looked up.
+ * @returns null or object
+ *        A Debugger.Object if aProp exists in the prototype chain, null otherwise.
+ */
+function getPropertyInDebuggerObject(aDbgObject, aProp)
+{
+  let dbgObject = aDbgObject;
+  while (dbgObject) {
+    try {
+      let desc = dbgObject.getOwnPropertyDescriptor(aProp)
+      if (desc) {
+        let obj = desc.value;
+        if (obj)
+          return obj;
+        obj = desc.get;
+        if (obj)
+          return obj;
+      }
+      dbgObject = dbgObject.proto;
+    }
+    catch (ex) {
+      return null;
+    }
+  }
+  return null;
+}
 
+/**
+ * Get all properties on the given Debugger.Environment (and its parent chain) that match a given prefix.
+ *
+ * @param Debugger.Environment anEnvironment
+ *        Debugger.Environment whose properties we want to filter.
+ *
+ * @param string matchProp Filter for properties that match this one.
+ *
+ * @return object
+ *         Object that contains the matchProp and the list of names.
+ */
+function getMatchedPropsInEnvironment(anEnvironment, matchProp)
+{
+  let names = Object.create(null);
+  let c = MAX_COMPLETIONS;
+  for (let env = anEnvironment; env; env = env.parent) {
+    let ownNames = env.names();
+    for (let i = 0; i < ownNames.length; i++) {
+      if (ownNames[i].indexOf(matchProp) != 0 ||
+        ownNames[i] in names) {
+        continue;
+      }
+      c--;
+      if (c < 0) {
+        return {
+          matchProp: matchProp,
+          matches: Object.keys(names)
+        };
+      }
+      names[ownNames[i]] = true;
+    }
+  }
   return {
     matchProp: matchProp,
-    matches: matches,
+    matches: Object.keys(names)
+  };
+}
+
+/**
+ * Get all properties on the given Debugger.Object (and the prototype chain of the wrapped value) that match a given prefix.
+ *
+ * @param Debugger.Object aDbgObject
+ *        Debugger.Object whose properties we want to filter.
+ *
+ * @param string matchProp Filter for properties that match this one.
+ *
+ * @return object
+ *         Object that contains the matchProp and the list of names.
+ */
+function getMatchedPropsInDbgObject(aDbgObject, matchProp)
+{
+  let names = Object.create(null);
+  let c = MAX_COMPLETIONS;
+  for (let dbg = aDbgObject; dbg; dbg = dbg.proto) {
+    let raw = dbg.unsafeDereference();
+    if (Cu.isDeadWrapper(raw)) {
+      return null;
+    }
+    let ownNames = dbg.getOwnPropertyNames();
+    for (let i = 0; i < ownNames.length; i++) {
+      if (ownNames[i].indexOf(matchProp) != 0 ||
+        ownNames[i] in names) {
+        continue;
+      }
+      c--;
+      if (c < 0) {
+        return {
+          matchProp: matchProp,
+          matches: Object.keys(names)
+        };
+      }
+      names[ownNames[i]] = true;
+    }
+  }
+  return {
+    matchProp: matchProp,
+    matches: Object.keys(names)
   };
 }
 

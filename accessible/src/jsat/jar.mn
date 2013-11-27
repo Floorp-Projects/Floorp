@@ -5,4 +5,6 @@
 toolkit.jar:
     content/global/accessibility/AccessFu.css (AccessFu.css)
     content/global/accessibility/content-script.js (content-script.js)
-    content/global/accessibility/tick.wav (tick.wav)
+    content/global/accessibility/virtual_cursor_move.ogg (sounds/virtual_cursor_move.ogg)
+    content/global/accessibility/virtual_cursor_key.ogg (sounds/virtual_cursor_key.ogg)
+    content/global/accessibility/clicked.ogg (sounds/clicked.ogg)

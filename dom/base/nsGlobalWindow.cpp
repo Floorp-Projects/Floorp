@@ -238,13 +238,11 @@ class nsIScriptTimeoutHandler;
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
 
-#ifdef XP_LINUX
-#include <unistd.h> // for getpid()
-#endif
-
 #ifdef XP_WIN
 #include <process.h>
 #define getpid _getpid
+#else
+#include <unistd.h> // for getpid()
 #endif
 
 static const char kStorageEnabled[] = "dom.storage.enabled";

@@ -150,6 +150,8 @@ class MochitestRunner(MozbuildObject):
         options.totalChunks = total_chunks
         options.thisChunk = this_chunk
 
+        options.symbolsPath = os.path.join(self.distdir, 'crashreporter-symbols')
+
         options.consoleLevel = 'INFO'
         if conditions.is_b2g_desktop(self):
             if self.substs.get('ENABLE_MARIONETTE') != '1':

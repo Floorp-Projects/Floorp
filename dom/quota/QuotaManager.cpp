@@ -26,6 +26,7 @@
 #include "GeckoProfiler.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/CondVar.h"
+#include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/file/FileService.h"
 #include "mozilla/dom/indexedDB/Client.h"
 #include "mozilla/Mutex.h"
@@ -1098,7 +1099,7 @@ QuotaManager::Init()
     NS_WARNING("Unable to respond to testing pref changes!");
   }
 
-  static_assert(Client::IDB == 0 && Client::TYPE_MAX == 1,
+  static_assert(Client::IDB == 0 && Client::ASMJS == 1 && Client::TYPE_MAX == 2,
                 "Fix the registration!");
 
   NS_ASSERTION(mClients.Capacity() == Client::TYPE_MAX,
@@ -1106,6 +1107,7 @@ QuotaManager::Init()
 
   // Register IndexedDB
   mClients.AppendElement(new indexedDB::Client());
+  mClients.AppendElement(asmjscache::CreateClient());
 
   return NS_OK;
 }
@@ -2006,6 +2008,7 @@ QuotaManager::GetStorageQuotaMB()
 void
 QuotaManager::GetStorageId(PersistenceType aPersistenceType,
                            const nsACString& aOrigin,
+                           Client::Type aClientType,
                            const nsAString& aName,
                            nsACString& aDatabaseId)
 {
@@ -2013,6 +2016,8 @@ QuotaManager::GetStorageId(PersistenceType aPersistenceType,
   str.AppendInt(aPersistenceType);
   str.Append('*');
   str.Append(aOrigin);
+  str.Append('*');
+  str.AppendInt(aClientType);
   str.Append('*');
   str.Append(NS_ConvertUTF16toUTF8(aName));
 

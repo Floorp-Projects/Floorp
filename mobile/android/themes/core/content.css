@@ -300,9 +300,9 @@ select[disabled] > button {
 *:-moz-any-link:active,
 *[role=button]:active,
 button:not([disabled]):active,
-input:not([disabled]):active,
+input:not(:focus):not([disabled]):active,
 select:not([disabled]):active,
-textarea:not([disabled]):active,
+textarea:not(:focus):not([disabled]):active,
 option:active,
 label:active,
 xul|menulist:active {

@@ -43,7 +43,7 @@ EXPORTS.mozilla.dom += [
     'SmsSegmentInfo.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'Constants.cpp',
     'ipc/SmsChild.cpp',
     'ipc/SmsIPCService.cpp',

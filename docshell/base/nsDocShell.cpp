@@ -198,6 +198,8 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #ifdef XP_WIN
 #include <process.h>
 #define getpid _getpid
+#else
+#include <unistd.h> // for getpid()
 #endif
 
 using namespace mozilla;

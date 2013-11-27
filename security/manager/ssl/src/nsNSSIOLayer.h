@@ -56,8 +56,13 @@ public:
                 const nsNSSShutDownPreventionLock & proofOfLock);
   
   void SetNegotiatedNPN(const char *value, uint32_t length);
-  void SetHandshakeCompleted(bool aResumedSession);
+
+  void SetHandshakeCompleted();
   void NoteTimeUntilReady();
+
+
+  void SetFalseStartCallbackCalled() { mFalseStartCallbackCalled = true; }
+  void SetFalseStarted() { mFalseStarted = true; }
 
   // Note that this is only valid *during* a handshake; at the end of the handshake,
   // it gets reset back to false.
@@ -101,17 +106,6 @@ public:
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return result;
   }
-  void SetSymmetricCipherUsed(uint16_t symmetricCipher)
-  {
-    mSymmetricCipherUsed = symmetricCipher;
-  }
-  inline int16_t GetSymmetricCipherExpected() // infallible in nsISSLSocketControl
-  {
-    int16_t result;
-    mozilla::DebugOnly<nsresult> rv = GetSymmetricCipherExpected(&result);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return result;
-  }
 
 private:
   PRFileDesc* mFd;
@@ -130,18 +124,18 @@ private:
 
   nsCString mNegotiatedNPN;
   bool      mNPNCompleted;
+  bool      mFalseStartCallbackCalled;
+  bool      mFalseStarted;
   bool      mIsFullHandshake;
   bool      mHandshakeCompleted;
   bool      mJoined;
   bool      mSentClientCert;
   bool      mNotedTimeUntilReady;
 
-  // mKEA* and mSymmetricCipher* are used in false start detetermination
-  // values are from nsISSLSocketControl
+  // mKEA* are used in false start detetermination
+  // Values are from nsISSLSocketControl
   int16_t mKEAUsed;
   int16_t mKEAExpected;
-  int16_t mSymmetricCipherUsed;
-  int16_t mSymmetricCipherExpected;
 
   uint32_t mProviderFlags;
   mozilla::TimeStamp mSocketCreationTimestamp;

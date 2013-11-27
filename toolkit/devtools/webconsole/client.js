@@ -121,14 +121,17 @@ WebConsoleClient.prototype = {
    *        Cursor location inside the string. Index starts from 0.
    * @param function aOnResponse
    *        The function invoked when the response is received.
+   * @param string aFrameActor
+   *        The id of the frame actor that made the call.
    */
-  autocomplete: function WCC_autocomplete(aString, aCursor, aOnResponse)
+  autocomplete: function WCC_autocomplete(aString, aCursor, aOnResponse, aFrameActor)
   {
     let packet = {
       to: this._actor,
       type: "autocomplete",
       text: aString,
       cursor: aCursor,
+      frameActor: aFrameActor,
     };
     this._client.request(packet, aOnResponse);
   },

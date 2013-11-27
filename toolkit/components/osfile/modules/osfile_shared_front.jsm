@@ -474,8 +474,10 @@ AbstractFile.writeAtomic =
   */
 AbstractFile.removeDir = function(path, options = {}) {
   let iterator = new OS.File.DirectoryIterator(path);
-  if (!iterator.exists() && options.ignoreAbsent) {
-    return;
+  if (!iterator.exists()) {
+    if (!("ignoreAbsent" in options) || options.ignoreAbsent) {
+      return;
+    }
   }
 
   try {

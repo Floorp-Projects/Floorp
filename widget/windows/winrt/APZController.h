@@ -37,8 +37,8 @@ public:
   virtual void HandleLongTap(const mozilla::CSSIntPoint& aPoint, int32_t aModifiers);
   virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect, const mozilla::CSSSize &aScrollableSize);
   virtual void PostDelayedTask(Task* aTask, int aDelayMs);
-  virtual void HandlePanBegin();
-  virtual void HandlePanEnd();
+  virtual void NotifyTransformBegin();
+  virtual void NotifyTransformEnd();
   
   void SetWidgetListener(nsIWidgetListener* aWidgetListener);
   void UpdateScrollOffset(const mozilla::layers::ScrollableLayerGuid& aScrollLayerId, CSSIntPoint& aScrollOffset);

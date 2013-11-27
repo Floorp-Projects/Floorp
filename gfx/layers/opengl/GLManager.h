@@ -7,7 +7,7 @@
 #define MOZILLA_GFX_GLMANAGER_H
 
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
-#include "LayerManagerOGLProgram.h"
+#include "OGLShaderProgram.h"
 
 namespace mozilla {
 namespace gl {
@@ -20,8 +20,8 @@ class LayerManager;
 
 /**
  * Minimal interface to allow widgets to draw using OpenGL. Abstracts
- * LayerManagerOGL and CompositorOGL. Call CreateGLManager with either a
- * LayerManagerOGL or a LayerManagerComposite backed by a CompositorOGL.
+ * CompositorOGL. Call CreateGLManager with a LayerManagerComposite
+ * backed by a CompositorOGL.
  */
 class GLManager
 {

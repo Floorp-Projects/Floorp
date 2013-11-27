@@ -137,3 +137,19 @@ interface mozRTCPeerConnection : EventTarget  {
   attribute EventHandler onconnection;
   attribute EventHandler onclosedconnection;
 };
+
+callback RTCLogCallback = void (sequence<DOMString> logMessages);
+
+[JSImplementation="@mozilla.org/dom/webrtcglobalinformation;1",
+ ChromeOnly,
+ Constructor ()]
+interface WebrtcGlobalInformation {
+    void getAllStats(RTCStatsCallback callback,
+                     RTCPeerConnectionErrorCallback errorCallback);
+    void getCandPairLogs(DOMString candPairId,
+                         RTCLogCallback callback,
+                         RTCPeerConnectionErrorCallback errorCallback);
+};
+
+
+

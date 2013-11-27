@@ -6,23 +6,28 @@
 package org.mozilla.gecko.favicons;
 
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.cache.FaviconCache;
 import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.NonEvictingLruCache;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 import android.util.Log;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,6 +36,9 @@ import java.util.Set;
 
 public class Favicons {
     private static final String LOGTAG = "GeckoFavicons";
+
+    // A magic URL representing the app's own favicon, used for about: pages.
+    private static final String BUILT_IN_FAVICON_URL = "about:favicon";
 
     // Size of the favicon bitmap cache, in bytes (Counting payload only).
     public static final int FAVICON_CACHE_SIZE_BYTES = 512 * 1024;
@@ -98,6 +106,20 @@ public class Favicons {
     }
 
     /**
+     * Only returns a non-null Bitmap if the entire path is cached -- the
+     * page URL to favicon URL, and the favicon URL to in-memory bitmaps.
+     *
+     * Returns null otherwise.
+     */
+    public static Bitmap getCachedFaviconForSize(final String pageURL, int targetSize) {
+        final String faviconURL = sPageURLMappings.get(pageURL);
+        if (faviconURL == null) {
+            return null;
+        }
+        return getSizedFaviconFromCache(faviconURL, targetSize);
+    }
+
+    /**
      * Get a Favicon as close as possible to the target dimensions for the URL provided.
      * If a result is instantly available from the cache, it is returned and the listener is invoked.
      * Otherwise, the result is drawn from the database or network and the listener invoked when the
@@ -113,8 +135,13 @@ public class Favicons {
      *         LOADED if the value could be dispatched on the current thread.
      */
     public static int getFaviconForSize(String pageURL, String faviconURL, int targetSize, int flags, OnFaviconLoadedListener listener) {
-        // If there's no favicon URL given, try and hit the cache with the default one.
+        // Do we know the favicon URL for this page already?
         String cacheURL = faviconURL;
+        if (cacheURL == null) {
+            cacheURL = sPageURLMappings.get(pageURL);
+        }
+
+        // If there's no favicon URL given, try and hit the cache with the default one.
         if (cacheURL == null)  {
             cacheURL = guessDefaultFaviconURL(pageURL);
         }
@@ -262,8 +289,8 @@ public class Favicons {
         sFaviconsCache.putSingleFavicon(pageUrl, image);
     }
 
-    public static void putFaviconsInMemCache(String pageUrl, Iterator<Bitmap> images) {
-        sFaviconsCache.putFavicons(pageUrl, images);
+    public static void putFaviconsInMemCache(String pageUrl, Iterator<Bitmap> images, boolean permanently) {
+        sFaviconsCache.putFavicons(pageUrl, images, permanently);
     }
 
     public static void clearMemCache() {
@@ -328,16 +355,49 @@ public class Favicons {
      * @param context A reference to the GeckoApp instance.
      */
     public static void attachToContext(Context context) throws Exception {
+        final Resources res = context.getResources();
         sContext = context;
 
         // Decode the default Favicon ready for use.
-        sDefaultFavicon = BitmapFactory.decodeResource(context.getResources(), R.drawable.favicon);
+        sDefaultFavicon = BitmapFactory.decodeResource(res, R.drawable.favicon);
         if (sDefaultFavicon == null) {
             throw new Exception("Null default favicon was returned from the resources system!");
         }
 
-        sDefaultFaviconSize = context.getResources().getDimensionPixelSize(R.dimen.favicon_bg);
-        sFaviconsCache = new FaviconCache(FAVICON_CACHE_SIZE_BYTES, context.getResources().getDimensionPixelSize(R.dimen.favicon_largest_interesting_size));
+        sDefaultFaviconSize = res.getDimensionPixelSize(R.dimen.favicon_bg);
+        sFaviconsCache = new FaviconCache(FAVICON_CACHE_SIZE_BYTES, res.getDimensionPixelSize(R.dimen.favicon_largest_interesting_size));
+
+        // Initialize page mappings for each of our special pages.
+        for (String url : AboutPages.getDefaultIconPages()) {
+            sPageURLMappings.putWithoutEviction(url, BUILT_IN_FAVICON_URL);
+        }
+
+        // Load and cache the built-in favicon in each of its sizes.
+        // TODO: don't open the zip twice!
+        ArrayList<Bitmap> toInsert = new ArrayList<Bitmap>(2);
+        toInsert.add(loadBrandingBitmap(context, "favicon64.png"));
+        toInsert.add(loadBrandingBitmap(context, "favicon32.png"));
+        putFaviconsInMemCache(BUILT_IN_FAVICON_URL, toInsert.iterator(), true);
+    }
+
+    /**
+     * Compute a string like:
+     * "jar:jar:file:///data/app/org.mozilla.firefox-1.apk!/assets/omni.ja!/chrome/chrome/content/branding/favicon64.png"
+     */
+    private static String getBrandingBitmapPath(Context context, String name) {
+        final String apkPath = context.getPackageResourcePath();
+        return "jar:jar:" + new File(apkPath).toURI() + "!/" +
+               AppConstants.OMNIJAR_NAME + "!/" +
+               "chrome/chrome/content/branding/" + name;
+    }
+
+    private static Bitmap loadBrandingBitmap(Context context, String name) {
+        Bitmap b = GeckoJarReader.getBitmap(context.getResources(),
+                                            getBrandingBitmapPath(context, name));
+        if (b == null) {
+            throw new IllegalStateException("Bitmap " + name + " missing from JAR!");
+        }
+        return b;
     }
 
     /**

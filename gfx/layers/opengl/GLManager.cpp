@@ -6,7 +6,6 @@
 #include "GLManager.h"
 #include "CompositorOGL.h"              // for CompositorOGL
 #include "GLContext.h"                  // for GLContext
-#include "LayerManagerOGL.h"            // for LayerManagerOGL
 #include "Layers.h"                     // for LayerManager
 #include "mozilla/Assertions.h"         // for MOZ_CRASH
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
@@ -22,32 +21,6 @@ using namespace mozilla::gl;
 
 namespace mozilla {
 namespace layers {
-
-class GLManagerLayerManager : public GLManager
-{
-public:
-  GLManagerLayerManager(LayerManagerOGL* aManager)
-    : mImpl(aManager)
-  {}
-
-  virtual GLContext* gl() const MOZ_OVERRIDE
-  {
-    return mImpl->gl();
-  }
-
-  virtual ShaderProgramOGL* GetProgram(ShaderProgramType aType) MOZ_OVERRIDE
-  {
-    return mImpl->GetProgram(aType);
-  }
-
-  virtual void BindAndDrawQuad(ShaderProgramOGL *aProg) MOZ_OVERRIDE
-  {
-    mImpl->BindAndDrawQuad(aProg);
-  }
-
-private:
-  nsRefPtr<LayerManagerOGL> mImpl;
-};
 
 class GLManagerCompositor : public GLManager
 {
@@ -80,8 +53,6 @@ GLManager::CreateGLManager(LayerManager* aManager)
 {
   if (!aManager) {
     return nullptr;
-  } else if (aManager->GetBackendType() == LAYERS_OPENGL) {
-    return new GLManagerLayerManager(static_cast<LayerManagerOGL*>(aManager));
   }
   if (aManager->GetBackendType() == LAYERS_NONE) {
     if (Compositor::GetBackend() == LAYERS_OPENGL) {

@@ -415,12 +415,20 @@ class LUDiv : public LBinaryMath<0>
 {
   public:
     LIR_HEADER(UDiv);
+
+    MDiv *mir() {
+        return mir_->toDiv();
+    }
 };
 
 class LUMod : public LBinaryMath<0>
 {
   public:
     LIR_HEADER(UMod);
+
+    MMod *mir() {
+        return mir_->toMod();
+    }
 };
 
 // This class performs a simple x86 'div', yielding either a quotient or remainder depending on
