@@ -326,10 +326,6 @@ PlacesViewBase.prototype = {
           popup.setAttribute("placespopup", "true");
         }
 
-#ifdef XP_MACOSX
-        // No context menu on mac.
-        popup.setAttribute("context", "placesContext");
-#endif
         element.appendChild(popup);
         element.className = "menu-iconic bookmark-item";
 
@@ -988,9 +984,7 @@ PlacesToolbar.prototype = {
         popup.setAttribute("placespopup", "true");
         button.appendChild(popup);
         popup._placesNode = PlacesUtils.asContainer(aChild);
-#ifndef XP_MACOSX
         popup.setAttribute("context", "placesContext");
-#endif
 
         this._domNodes.set(aChild, popup);
       }
