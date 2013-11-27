@@ -52,7 +52,7 @@ ImageHost::RemoveTextureHost(uint64_t aTextureID)
 }
 
 TextureHost*
-ImageHost::GetTextureHost()
+ImageHost::GetAsTextureHost()
 {
   return mFrontBuffer;
 }

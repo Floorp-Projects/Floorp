@@ -132,7 +132,7 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
     oldHost->Lock();
     source = oldHost;
   } else {
-    RefPtr<TextureHost> host = GetTextureHost();
+    RefPtr<TextureHost> host = GetAsTextureHost();
     if (host) {
       host->Lock();
       source = host->GetTextureSources();
@@ -159,7 +159,7 @@ CompositableHost::RemoveMaskEffect()
   if (oldHost) {
     oldHost->Unlock();
   } else {
-    RefPtr<TextureHost> host = GetTextureHost();
+    RefPtr<TextureHost> host = GetAsTextureHost();
     if (host) {
       host->Unlock();
     }
