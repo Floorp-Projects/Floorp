@@ -6,6 +6,7 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.EditBookmarkDialog;
+import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
@@ -39,6 +40,9 @@ import android.widget.Toast;
 abstract class HomeFragment extends Fragment {
     // Log Tag.
     private static final String LOGTAG="GeckoHomeFragment";
+
+    // Share MIME type.
+    private static final String SHARE_MIME_TYPE = "text/plain";
 
     // Whether the fragment can load its content or not
     // This is used to defer data loading until the editing
@@ -91,6 +95,8 @@ abstract class HomeFragment extends Fragment {
             menu.findItem(R.id.home_remove).setVisible(false);
         }
 
+        menu.findItem(R.id.home_share).setVisible(!GeckoProfile.get(getActivity()).inGuestMode());
+
         final boolean canOpenInReader = (info.display == Combined.DISPLAY_READER);
         menu.findItem(R.id.home_open_in_reader).setVisible(canOpenInReader);
     }
@@ -111,6 +117,25 @@ abstract class HomeFragment extends Fragment {
         final Context context = getActivity().getApplicationContext();
 
         final int itemId = item.getItemId();
+        if (itemId == R.id.home_share) {
+            if (info.url == null) {
+                Log.e(LOGTAG, "Can't share because URL is null");
+            } else {
+                GeckoAppShell.openUriExternal(info.url, SHARE_MIME_TYPE, "", "",
+                                              Intent.ACTION_SEND, info.getDisplayTitle());
+            }
+        }
+
+        if (itemId == R.id.home_add_to_launcher) {
+            if (info.url == null) {
+                Log.e(LOGTAG, "Can't add to home screen because URL is null");
+                return false;
+            }
+
+            // Fetch the largest cacheable icon size.
+            Favicons.getLargestFaviconForPage(info.url, new GeckoAppShell.CreateShortcutFaviconLoadedListener(info.url, info.getDisplayTitle()));
+            return true;
+        }
 
         if (itemId == R.id.home_open_private_tab || itemId == R.id.home_open_new_tab) {
             if (info.url == null) {
