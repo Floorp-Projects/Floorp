@@ -1180,17 +1180,20 @@ WebGLProxy.prototype = {
    * Returns the framebuffer property value for the specified WebGL parameter.
    * If no framebuffer binding is available, null is returned.
    *
+   * @param string type
+   *        The framebuffer object attachment point, for example "COLOR_ATTACHMENT0".
    * @param string name
-   *        The WebGL parameter name, for example "BLEND_COLOR".
+   *        The WebGL parameter name, for example "FRAMEBUFFER_ATTACHMENT_OBJECT_NAME".
+   *        If unspecified, defaults to "FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE".
    * @return any
    *         The corresponding parameter's value.
    */
-  _getFramebufferAttachmentParameter: function(type, name) {
+  _getFramebufferAttachmentParameter: function(type, name = "FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE") {
     if (!this._getParameter("FRAMEBUFFER_BINDING")) {
       return null;
     }
     let gl = this._gl;
-    return gl.getFramebufferAttachmentParameter(gl.RENDERBUFFER, gl[type], gl[name]);
+    return gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl[type], gl[name]);
   },
 
   /**
@@ -1281,9 +1284,19 @@ WebGLProxy.prototype = {
   _enableHighlighting: function() {
     let gl = this._gl;
 
-    // Avoid changing the blending params when rendering to a depth texture.
-    let format = this._getRenderbufferParameter("RENDERBUFFER_INTERNAL_FORMAT");
-    if (format == gl.DEPTH_COMPONENT16) {
+    // Avoid changing the blending params when "rendering to texture".
+
+    // Check drawing to a custom framebuffer bound to the default renderbuffer.
+    let hasFramebuffer = this._getParameter("FRAMEBUFFER_BINDING");
+    let hasRenderbuffer = this._getParameter("RENDERBUFFER_BINDING");
+    if (hasFramebuffer && !hasRenderbuffer) {
+      return;
+    }
+
+    // Check drawing to a depth or stencil component of the framebuffer.
+    let writesDepth = this._getFramebufferAttachmentParameter("DEPTH_ATTACHMENT");
+    let writesStencil = this._getFramebufferAttachmentParameter("STENCIL_ATTACHMENT");
+    if (writesDepth || writesStencil) {
       return;
     }
 
