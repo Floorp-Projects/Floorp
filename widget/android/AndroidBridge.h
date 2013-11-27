@@ -331,7 +331,7 @@ protected:
     JNIEnv *mJNIEnv;
     pthread_t mThread;
 
-    GeckoLayerClient *mLayerClient = NULL;
+    GeckoLayerClient *mLayerClient;
 
     // the android.telephony.SmsMessage class
     jclass mAndroidSmsMessageClass;
