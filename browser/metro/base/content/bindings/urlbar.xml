@@ -551,7 +551,9 @@
         </getter>
         <setter>
           <![CDATA[
-            return this._isGridBound(this._results) ? this._results.selectedItem : null;
+            if (this._isGridBound(this._results)) {
+              this._results.selectedItem = val;
+            }
           ]]>
         </setter>
       </property>
@@ -564,7 +566,9 @@
         </getter>
         <setter>
           <![CDATA[
-            return this._isGridBound(this._results) ? this._results.selectedIndex : -1;
+            if (this._isGridBound(this._results)) {
+              this._results.selectedIndex = val;
+            }
           ]]>
         </setter>
       </property>
