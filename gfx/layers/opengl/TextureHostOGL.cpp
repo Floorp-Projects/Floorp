@@ -5,6 +5,7 @@
 
 #include "TextureHostOGL.h"
 #include "GLContext.h"                  // for GLContext, etc
+#include "GLContextUtils.h"             // for GLContextUtils
 #include "SharedSurface.h"              // for SharedSurface
 #include "SharedSurfaceEGL.h"           // for SharedSurface_EGLImage
 #include "SharedSurfaceGL.h"            // for SharedSurface_GLTexture, etc
@@ -1297,58 +1298,50 @@ GrallocDeprecatedTextureHostOGL::GetGLTexture()
 
 #endif // MOZ_WIDGET_GONK
 
-already_AddRefed<gfxImageSurface>
+TemporaryRef<gfx::DataSourceSurface>
 TextureImageDeprecatedTextureHostOGL::GetAsSurface() {
-  nsRefPtr<gfxImageSurface> surf = IsValid() ?
-    mGL->GetTexImage(mTexture->GetTextureID(),
-                     false,
-                     mTexture->GetTextureFormat())
-    : nullptr;
+  RefPtr<gfx::DataSourceSurface> surf =
+    IsValid() ? ReadBackSurface(mGL, mTexture->GetTextureID(),
+                                false, mTexture->GetTextureFormat())
+              : nullptr;
   return surf.forget();
 }
 
-already_AddRefed<gfxImageSurface>
+TemporaryRef<gfx::DataSourceSurface>
 YCbCrDeprecatedTextureHostOGL::GetAsSurface() {
-  nsRefPtr<gfxImageSurface> surf = IsValid() ?
-    mGL->GetTexImage(mYTexture->mTexImage->GetTextureID(),
-                     false,
-                     mYTexture->mTexImage->GetTextureFormat())
-    : nullptr;
+  RefPtr<gfx::DataSourceSurface> surf =
+    IsValid() ? ReadBackSurface(mGL, mYTexture->mTexImage->GetTextureID(),
+                                false, mYTexture->mTexImage->GetTextureFormat())
+              : nullptr;
   return surf.forget();
 }
 
-already_AddRefed<gfxImageSurface>
+TemporaryRef<gfx::DataSourceSurface>
 SharedDeprecatedTextureHostOGL::GetAsSurface() {
-  nsRefPtr<gfxImageSurface> surf = IsValid() ?
-    mGL->GetTexImage(GetTextureHandle(),
-                     false,
-                     GetFormat())
-    : nullptr;
+  RefPtr<gfx::DataSourceSurface> surf =
+    IsValid() ? ReadBackSurface(mGL, GetTextureHandle(), false, GetFormat())
+              : nullptr;
   return surf.forget();
 }
 
-already_AddRefed<gfxImageSurface>
+TemporaryRef<gfx::DataSourceSurface>
 SurfaceStreamHostOGL::GetAsSurface() {
-  nsRefPtr<gfxImageSurface> surf = IsValid() ?
-    mGL->GetTexImage(mTextureHandle,
-                     false,
-                     GetFormat())
-    : nullptr;
+  RefPtr<gfx::DataSourceSurface> surf =
+    IsValid() ? ReadBackSurface(mGL, mTextureHandle, false, GetFormat())
+              : nullptr;
   return surf.forget();
 }
 
-already_AddRefed<gfxImageSurface>
+TemporaryRef<gfx::DataSourceSurface>
 TiledDeprecatedTextureHostOGL::GetAsSurface() {
-  nsRefPtr<gfxImageSurface> surf = IsValid() ?
-    mGL->GetTexImage(mTextureHandle,
-                     false,
-                     GetFormat())
-    : nullptr;
+  RefPtr<DataSourceSurface> surf =
+    IsValid() ? ReadBackSurface(mGL, mTextureHandle, false, GetFormat())
+              : nullptr;
   return surf.forget();
 }
 
 #ifdef MOZ_WIDGET_GONK
-already_AddRefed<gfxImageSurface>
+TemporaryRef<gfx::DataSourceSurface>
 GrallocDeprecatedTextureHostOGL::GetAsSurface() {
   gl()->MakeCurrent();
 
@@ -1360,11 +1353,9 @@ GrallocDeprecatedTextureHostOGL::GetAsSurface() {
   }
   gl()->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
 
-  nsRefPtr<gfxImageSurface> surf = IsValid() ?
-    gl()->GetTexImage(tex,
-                      false,
-                      GetFormat())
-    : nullptr;
+  RefPtr<gfx::DataSourceSurface> surf =
+    IsValid() ? ReadBackSurface(gl(), tex, false, GetFormat())
+              : nullptr;
   return surf.forget();
 }
 #endif // MOZ_WIDGET_GONK
