@@ -18,14 +18,14 @@ function consoleOpened(aHud) {
   HUD = aHud;
   info("web console opened");
 
-  content.wrappedJSObject.foobarBug585991 = {
-    "item0": "value0",
-    "item1": "value1",
-    "item2": "value2",
-    "item3": "value3",
-  };
-
   jsterm = HUD.jsterm;
+
+  jsterm.execute("window.foobarBug585991={" +
+    "'item0': 'value0'," +
+    "'item1': 'value1'," +
+    "'item2': 'value2'," +
+    "'item3': 'value3'" +
+  "}");
   popup = jsterm.autocompletePopup;
   completeNode = jsterm.completeNode;
   inputNode = jsterm.inputNode;

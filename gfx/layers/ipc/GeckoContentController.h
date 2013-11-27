@@ -77,14 +77,12 @@ public:
   }
 
   /**
-   * Request any special actions be performed when panning starts
+   * General tranformation notices for consumers. These fire any time
+   * the apzc is modifying the view, including panning, zooming, and
+   * fling.
    */
-  virtual void HandlePanBegin() {}
-
-  /**
-   * Request any special actions be performed when panning ends
-   */
-  virtual void HandlePanEnd() {}
+  virtual void NotifyTransformBegin() {}
+  virtual void NotifyTransformEnd() {}
 
   GeckoContentController() {}
   virtual ~GeckoContentController() {}
