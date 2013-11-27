@@ -1669,7 +1669,7 @@ IonCompile(JSContext *cx, JSScript *script,
     RootedScript builderScript(cx, builder->script());
     IonSpewNewFunction(graph, builderScript);
 
-    Maybe<AutoProtectHeapForCompilation> protect;
+    mozilla::Maybe<AutoProtectHeapForCompilation> protect;
     if (js_IonOptions.checkThreadSafety &&
         cx->runtime()->gcIncrementalState == gc::NO_INCREMENTAL &&
         !cx->runtime()->profilingScripts &&
