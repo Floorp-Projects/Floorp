@@ -1947,14 +1947,6 @@ JS_AddStringRoot(JSContext *cx, JSString **rp);
 extern JS_PUBLIC_API(bool)
 JS_AddObjectRoot(JSContext *cx, JSObject **rp);
 
-#ifdef NAME_ALL_GC_ROOTS
-#define JS_DEFINE_TO_TOKEN(def) #def
-#define JS_DEFINE_TO_STRING(def) JS_DEFINE_TO_TOKEN(def)
-#define JS_AddValueRoot(cx,vp) JS_AddNamedValueRoot((cx), (vp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
-#define JS_AddStringRoot(cx,rp) JS_AddNamedStringRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
-#define JS_AddObjectRoot(cx,rp) JS_AddNamedObjectRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
-#endif
-
 extern JS_PUBLIC_API(bool)
 JS_AddNamedValueRoot(JSContext *cx, jsval *vp, const char *name);
 

@@ -5,7 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/LiveRangeAllocator.h"
+
 #include "mozilla/DebugOnly.h"
+
+#include "jsprf.h"
+
 #include "jit/BacktrackingAllocator.h"
 #include "jit/BitSet.h"
 #include "jit/LinearScan.h"
@@ -355,8 +359,8 @@ VirtualRegister::getFirstInterval()
 }
 
 // Instantiate LiveRangeAllocator for each template instance.
-template bool LiveRangeAllocator<LinearScanVirtualRegister>::buildLivenessInfo();
-template bool LiveRangeAllocator<BacktrackingVirtualRegister>::buildLivenessInfo();
+template bool LiveRangeAllocator<LinearScanVirtualRegister, true>::buildLivenessInfo();
+template bool LiveRangeAllocator<BacktrackingVirtualRegister, false>::buildLivenessInfo();
 
 #ifdef DEBUG
 static inline bool
@@ -399,9 +403,9 @@ IsInputReused(LInstruction *ins, LUse *use)
  * This function pre-allocates and initializes as much global state as possible
  * to avoid littering the algorithms with memory management cruft.
  */
-template <typename VREG>
+template <typename VREG, bool forLSRA>
 bool
-LiveRangeAllocator<VREG>::init()
+LiveRangeAllocator<VREG, forLSRA>::init()
 {
     if (!RegisterAllocator::init())
         return false;
@@ -490,9 +494,9 @@ AddRegisterToSafepoint(LSafepoint *safepoint, AnyRegister reg, const LDefinition
  * block. To deal with loop backedges, variables live at the beginning of
  * a loop gain an interval covering the entire loop.
  */
-template <typename VREG>
+template <typename VREG, bool forLSRA>
 bool
-LiveRangeAllocator<VREG>::buildLivenessInfo()
+LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
 {
     if (!init())
         return false;
@@ -859,3 +863,37 @@ LiveInterval::validateRanges()
 }
 
 #endif // DEBUG
+
+const char *
+LiveInterval::rangesToString() const
+{
+#ifdef DEBUG
+    if (!numRanges())
+        return " empty";
+
+    // Not reentrant!
+    static char buf[1000];
+
+    char *cursor = buf;
+    char *end = cursor + sizeof(buf);
+
+    for (size_t i = 0; i < numRanges(); i++) {
+        const LiveInterval::Range *range = getRange(i);
+        int n = JS_snprintf(cursor, end - cursor, " [%u,%u>", range->from.pos(), range->to.pos());
+        if (n < 0)
+            return " ???";
+        cursor += n;
+    }
+
+    return buf;
+#else
+    return " ???";
+#endif
+}
+
+void
+LiveInterval::dump()
+{
+    fprintf(stderr, "v%u: index=%u allocation=%s %s\n",
+            vreg(), index(), getAllocation()->toString(), rangesToString());
+}

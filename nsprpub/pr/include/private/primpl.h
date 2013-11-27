@@ -1974,6 +1974,12 @@ extern PRStatus _PR_MD_MEM_UNMAP(void *addr, PRUint32 size);
 extern PRStatus _PR_MD_CLOSE_FILE_MAP(PRFileMap *fmap);
 #define _PR_MD_CLOSE_FILE_MAP _MD_CLOSE_FILE_MAP
 
+extern PRStatus _PR_MD_SYNC_MEM_MAP(
+    PRFileDesc *fd,
+    void *addr,
+    PRUint32 len);
+#define _PR_MD_SYNC_MEM_MAP _MD_SYNC_MEM_MAP
+
 /* Named Shared Memory */
 
 /*

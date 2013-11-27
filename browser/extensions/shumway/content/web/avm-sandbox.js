@@ -120,6 +120,8 @@ function runViewer() {
   }
   var showURLMenu = document.getElementById('showURLMenu');
   showURLMenu.addEventListener('click', showURL);
+  var inspectorMenu = document.getElementById('inspectorMenu');
+  inspectorMenu.addEventListener('click', showInInspector);
 
   document.getElementById('copyProfileMenu').addEventListener('click', copyProfile);
 }
@@ -127,6 +129,15 @@ function runViewer() {
 function showURL() {
   var flashParams = JSON.parse(FirefoxCom.requestSync('getPluginParams', null));
   window.prompt("Copy to clipboard", flashParams.url);
+}
+
+function showInInspector() {
+  var base = "http://www.areweflashyet.com/shumway/examples/inspector/inspector.html?rfile=";
+  var params = '';
+  for (var k in movieParams) {
+    params += '&' + k + '=' + encodeURIComponent(movieParams[k]);
+  }
+  window.open(base + encodeURIComponent(movieUrl) + params);
 }
 
 function copyProfile() {

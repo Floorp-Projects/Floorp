@@ -35,8 +35,6 @@ extern PRLogModuleInfo* gPIPNSSLog;
 
 using namespace mozilla;
 
-static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
 #define PIP_PKCS12_TMPFILENAME   NS_LITERAL_CSTRING(".pip_p12tmp")
 #define PIP_PKCS12_BUFFER_SIZE   2048
 #define PIP_PKCS12_RESTORE_OK          1
@@ -682,6 +680,8 @@ nsPKCS12Blob::digest_write(void *arg, unsigned char *buf, unsigned long len)
 SECItem *
 nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
 {
+  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   nsNSSShutDownPreventionLock locker;
   *cancel = false;
   nsresult rv;
@@ -769,6 +769,8 @@ pip_ucs2_ascii_conversion_fn(PRBool toUnicode,
 void
 nsPKCS12Blob::handleError(int myerr)
 {
+  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   if (!NS_IsMainThread()) {
     NS_ERROR("nsPKCS12Blob::handleError called off the mai nthread.");
     return;

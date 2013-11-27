@@ -146,10 +146,10 @@ function getRepositoryAddon(aAddon, aCallback) {
 /**
  * Wrap an API-supplied function in an exception handler to make it safe to call
  */
-function safeCallback(aCallback) {
+function makeSafe(aCallback) {
   return function(...aArgs) {
     try {
-      aCallback.apply(null, aArgs);
+      aCallback(...aArgs);
     }
     catch(ex) {
       WARN("XPI Database callback failed", ex);
@@ -1057,12 +1057,12 @@ this.XPIDatabase = {
     this.asyncLoadDB().then(
       addonDB => {
         let addonList = _filterDB(addonDB, aFilter);
-        asyncMap(addonList, getRepositoryAddon, safeCallback(aCallback));
+        asyncMap(addonList, getRepositoryAddon, makeSafe(aCallback));
       })
     .then(null,
         error => {
           ERROR("getAddonList failed", e);
-          safeCallback(aCallback)([]);
+          makeSafe(aCallback)([]);
         });
   },
 
@@ -1077,12 +1077,12 @@ this.XPIDatabase = {
   getAddon: function(aFilter, aCallback) {
     return this.asyncLoadDB().then(
       addonDB => {
-        getRepositoryAddon(_findAddon(addonDB, aFilter), safeCallback(aCallback));
+        getRepositoryAddon(_findAddon(addonDB, aFilter), makeSafe(aCallback));
       })
     .then(null,
         error => {
           ERROR("getAddon failed", e);
-          safeCallback(aCallback)(null);
+          makeSafe(aCallback)(null);
         });
   },
 
@@ -1112,7 +1112,7 @@ this.XPIDatabase = {
   getAddonInLocation: function XPIDB_getAddonInLocation(aId, aLocation, aCallback) {
     this.asyncLoadDB().then(
         addonDB => getRepositoryAddon(addonDB.get(aLocation + ":" + aId),
-                                      safeCallback(aCallback)));
+                                      makeSafe(aCallback)));
   },
 
   /**

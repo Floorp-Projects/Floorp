@@ -494,12 +494,6 @@ NS_SizeOfAtomTablesIncludingThis(MallocSizeOf aMallocSizeOf) {
 
 #define ATOM_HASHTABLE_INITIAL_SIZE  4096
 
-static void HandleOOM()
-{
-  fputs("Out of memory allocating atom hashtable.\n", stderr);
-  MOZ_CRASH();
-}
-
 static inline void
 EnsureTableExists()
 {
@@ -507,7 +501,7 @@ EnsureTableExists()
       !PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
                          sizeof(AtomTableEntry), ATOM_HASHTABLE_INITIAL_SIZE)) {
     // Initialization failed.
-    HandleOOM();
+    NS_ABORT_OOM(ATOM_HASHTABLE_INITIAL_SIZE * sizeof(AtomTableEntry));
   }
 }
 
@@ -521,7 +515,7 @@ GetAtomHashEntry(const char* aString, uint32_t aLength, uint32_t& aHash)
     static_cast<AtomTableEntry*>
                (PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
   if (!e) {
-    HandleOOM();
+    NS_ABORT_OOM(gAtomTable.entryCount * gAtomTable.entrySize);
   }
   return e;
 }
@@ -536,7 +530,7 @@ GetAtomHashEntry(const PRUnichar* aString, uint32_t aLength, uint32_t& aHash)
     static_cast<AtomTableEntry*>
                (PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
   if (!e) {
-    HandleOOM();
+    NS_ABORT_OOM(gAtomTable.entryCount * gAtomTable.entrySize);
   }
   return e;
 }

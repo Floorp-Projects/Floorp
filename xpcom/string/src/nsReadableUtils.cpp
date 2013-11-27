@@ -157,7 +157,7 @@ void
 AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
 {
   if (!AppendUTF8toUTF16(aSource, aDest, mozilla::fallible_t())) {
-    NS_RUNTIMEABORT("OOM");
+    NS_ABORT_OOM(aDest.Length() + aSource.Length());
   }
 }
 

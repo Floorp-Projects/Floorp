@@ -1,0 +1,11 @@
+><bdi id=test>
+<xmp></xmp><font>><span><br>><keygen>><script>
+document.addEventListener("DOMContentLoaded", CFcrash, false);
+function editFuzz() {
+document.designMode = "on";
+try { document.execCommand("indent", false, true) } catch(e) {}
+}
+function CFcrash() {
+setTimeout("try { editFuzz(); } catch(e) {}", 0);
+try { test.setAttribute("dir", "&locale.dir;"); } catch(e) {}
+}</script>>
