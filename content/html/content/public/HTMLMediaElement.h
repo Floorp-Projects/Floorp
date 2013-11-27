@@ -207,10 +207,6 @@ public:
   virtual VideoFrameContainer* GetVideoFrameContainer() MOZ_FINAL MOZ_OVERRIDE;
   layers::ImageContainer* GetImageContainer();
 
-  // Called by the video frame to get the print surface, if this is
-  // a static document and we're not actually playing video
-  gfxASurface* GetPrintSurface() { return mPrintSurface; }
-
   // Dispatch events
   using nsGenericHTMLElement::DispatchEvent;
   virtual nsresult DispatchEvent(const nsAString& aName) MOZ_FINAL MOZ_OVERRIDE;
@@ -1012,8 +1008,6 @@ protected:
   // True if pitch correction is applied when playbackRate is set to a
   // non-intrinsic value.
   bool mPreservesPitch;
-
-  nsRefPtr<gfxASurface> mPrintSurface;
 
   // Reference to the source element last returned by GetNextSource().
   // This is the child source element which we're trying to load from.
