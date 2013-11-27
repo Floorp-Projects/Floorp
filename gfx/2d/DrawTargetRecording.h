@@ -15,7 +15,7 @@ namespace gfx {
 class DrawTargetRecording : public DrawTarget
 {
 public:
-  DrawTargetRecording(DrawEventRecorder *aRecorder, DrawTarget *aDT);
+  DrawTargetRecording(DrawEventRecorder *aRecorder, DrawTarget *aDT, bool aHasData = false);
   ~DrawTargetRecording();
 
   virtual BackendType GetType() const { return mFinalDT->GetType(); }

@@ -20,7 +20,7 @@ namespace gfx {
 // loss of backwards compatibility. Old streams will not work in a player
 // using a newer major revision. And new streams will not work in a player
 // using an older major revision.
-const uint16_t kMajorRevision = 2;
+const uint16_t kMajorRevision = 3;
 // A change in minor revision means additions of new events. New streams will
 // not play in older players.
 const uint16_t kMinorRevision = 1;
@@ -222,8 +222,10 @@ protected:
 
 class RecordedDrawTargetCreation : public RecordedEvent {
 public:
-  RecordedDrawTargetCreation(ReferencePtr aRefPtr, BackendType aType, const IntSize &aSize, SurfaceFormat aFormat)
+  RecordedDrawTargetCreation(ReferencePtr aRefPtr, BackendType aType, const IntSize &aSize, SurfaceFormat aFormat,
+                             bool aHasExistingData = false, SourceSurface *aExistingData = nullptr)
     : RecordedEvent(DRAWTARGETCREATION), mRefPtr(aRefPtr), mBackendType(aType), mSize(aSize), mFormat(aFormat)
+    , mHasExistingData(aHasExistingData), mExistingData(aExistingData)
   {}
 
   virtual void PlayEvent(Translator *aTranslator) const;
@@ -238,6 +240,8 @@ public:
   BackendType mBackendType;
   IntSize mSize;
   SurfaceFormat mFormat;
+  bool mHasExistingData;
+  RefPtr<SourceSurface> mExistingData;
   
 private:
   friend class RecordedEvent;
