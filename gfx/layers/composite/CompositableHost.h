@@ -211,7 +211,7 @@ public:
   /**
    * Returns the front buffer.
    */
-  virtual TextureHost* GetTextureHost() { return nullptr; }
+  virtual TextureHost* GetAsTextureHost() { return nullptr; }
 
   virtual LayerRenderState GetRenderState() = 0;
 
