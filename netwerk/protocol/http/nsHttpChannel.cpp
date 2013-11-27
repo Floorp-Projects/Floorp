@@ -4302,6 +4302,8 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsITimedChannel)
     NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
     NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
+    NS_INTERFACE_MAP_ENTRY(nsIDNSListener)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 //-----------------------------------------------------------------------------
@@ -4534,7 +4536,7 @@ nsHttpChannel::BeginConnect()
         // timing we used.
         LOG(("nsHttpChannel::BeginConnect [this=%p] prefetching%s\n",
              this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : ""));
-        mDNSPrefetch = new nsDNSPrefetch(mURI, mTimingEnabled);
+        mDNSPrefetch = new nsDNSPrefetch(mURI, this, mTimingEnabled);
         mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
     }
 
@@ -5919,6 +5921,39 @@ nsHttpChannel::PopRedirectAsyncFunc(nsContinueRedirectionFunc func)
     mRedirectFuncStack.TruncateLength(mRedirectFuncStack.Length() - 1);
 }
 
+//-----------------------------------------------------------------------------
+// nsIDNSListener functions
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::OnLookupComplete(nsICancelable *request,
+                                nsIDNSRecord  *rec,
+                                nsresult       status)
+{
+    MOZ_ASSERT(NS_IsMainThread(), "Expecting DNS callback on main thread.");
+    MOZ_ASSERT(mDNSPrefetch, "Expecting an nsDNSPrefetch object.");
+
+    LOG(("nsHttpChannel::OnLookupComplete [this=%p] prefetch complete%s: "
+         "%s status[0x%x]\n",
+         this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : "",
+         NS_SUCCEEDED(status) ? "success" : "failure", status));
+
+    // We no longer need the dns prefetch object
+    if (mDNSPrefetch && mDNSPrefetch->TimingsValid()) {
+        mTransactionTimings.domainLookupStart =
+            mDNSPrefetch->StartTimestamp();
+        mTransactionTimings.domainLookupEnd =
+            mDNSPrefetch->EndTimestamp();
+    }
+    mDNSPrefetch = nullptr;
+
+    // Unset DNS cache refresh if it was requested,
+    if (mCaps & NS_HTTP_REFRESH_DNS) {
+        mCaps &= ~NS_HTTP_REFRESH_DNS;
+    }
+
+    return NS_OK;
+}
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel internal functions
