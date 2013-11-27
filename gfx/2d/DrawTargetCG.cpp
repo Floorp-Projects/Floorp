@@ -11,6 +11,7 @@
 #include <vector>
 #include <algorithm>
 #include "MacIOSurface.h"
+#include "FilterNodeSoftware.h"
 
 using namespace std;
 
@@ -318,6 +319,22 @@ DrawTargetCG::DrawSurface(SourceSurface *aSurface,
   CGContextRestoreGState(mCg);
 
   CGImageRelease(subimage);
+}
+
+TemporaryRef<FilterNode>
+DrawTargetCG::CreateFilter(FilterType aType)
+{
+  return FilterNodeSoftware::Create(aType);
+}
+
+void
+DrawTargetCG::DrawFilter(FilterNode *aNode,
+                         const Rect &aSourceRect,
+                         const Point &aDestPoint,
+                         const DrawOptions &aOptions)
+{
+  FilterNodeSoftware* filter = static_cast<FilterNodeSoftware*>(aNode);
+  filter->Draw(this, aSourceRect, aDestPoint, aOptions);
 }
 
 static CGColorRef ColorToCGColor(CGColorSpaceRef aColorSpace, const Color& aColor)

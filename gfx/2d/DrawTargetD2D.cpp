@@ -15,6 +15,7 @@
 #include "Tools.h"
 #include <algorithm>
 #include "mozilla/Constants.h"
+#include "FilterNodeSoftware.h"
 
 #include <dwrite.h>
 
@@ -342,6 +343,21 @@ DrawTargetD2D::DrawSurface(SourceSurface *aSurface,
   rt->DrawBitmap(bitmap, D2DRect(aDest), aOptions.mAlpha, D2DFilter(aSurfOptions.mFilter), D2DRect(srcRect));
 
   FinalizeRTForOperation(aOptions.mCompositionOp, ColorPattern(Color()), aDest);
+}
+
+void
+DrawTargetD2D::DrawFilter(FilterNode *aNode,
+                          const Rect &aSourceRect,
+                          const Point &aDestPoint,
+                          const DrawOptions &aOptions)
+{
+  if (aNode->GetBackendType() != FILTER_BACKEND_SOFTWARE) {
+    gfxWarning() << "Invalid filter backend passed to DrawTargetD2D!";
+    return;
+  }
+
+  FilterNodeSoftware* filter = static_cast<FilterNodeSoftware*>(aNode);
+  filter->Draw(this, aSourceRect, aDestPoint, aOptions);
 }
 
 void
@@ -1211,6 +1227,12 @@ DrawTargetD2D::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, E
   }
 
   return new GradientStopsD2D(stopCollection);
+}
+
+TemporaryRef<FilterNode>
+DrawTargetD2D::CreateFilter(FilterType aType)
+{
+  return FilterNodeSoftware::Create(aType);
 }
 
 void*
