@@ -1454,7 +1454,7 @@ CanvasRenderingContext2D::CreatePattern(const HTMLImageOrCanvasOrVideoElement& e
   // of animated images
   nsLayoutUtils::SurfaceFromElementResult res =
     nsLayoutUtils::SurfaceFromElement(htmlElement,
-      nsLayoutUtils::SFE_WANT_FIRST_FRAME | nsLayoutUtils::SFE_WANT_NEW_SURFACE);
+      nsLayoutUtils::SFE_WANT_FIRST_FRAME);
 
   if (!res.mSurface) {
     error.Throw(NS_ERROR_NOT_AVAILABLE);
