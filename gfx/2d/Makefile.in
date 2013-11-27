@@ -52,11 +52,13 @@ ifneq (,$(INTEL_ARCHITECTURE))
 ifdef GNU_CC
 ImageScalingSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
 BlurSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+FilterProcessingSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
 endif
 
 ifdef SOLARIS_SUNPRO_CXX
 ImageScalingSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
 BlurSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
+FilterProcessingSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
 endif
 endif
 
