@@ -8309,7 +8309,7 @@ ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler &masm, Handle<Ion
 }
 
 typedef bool (*CreateThisFn)(JSContext *cx, HandleObject callee, MutableHandleValue rval);
-static const VMFunction CreateThisInfo = FunctionInfo<CreateThisFn>(CreateThis);
+static const VMFunction CreateThisInfoBaseline = FunctionInfo<CreateThisFn>(CreateThis);
 
 bool
 ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
@@ -8386,7 +8386,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
                                sizeof(Value) + STUB_FRAME_SIZE + sizeof(size_t));
         masm.loadValue(calleeSlot2, R1);
         masm.push(masm.extractObject(R1, ExtractTemp0));
-        if (!callVM(CreateThisInfo, masm))
+        if (!callVM(CreateThisInfoBaseline, masm))
             return false;
 
         // Return of CreateThis must be an object.
@@ -9395,7 +9395,7 @@ typedef bool(*DoRetSubFallbackFn)(JSContext *cx, BaselineFrame *, ICRetSub_Fallb
 static const VMFunction DoRetSubFallbackInfo = FunctionInfo<DoRetSubFallbackFn>(DoRetSubFallback);
 
 typedef bool (*ThrowFn)(JSContext *, HandleValue);
-static const VMFunction ThrowInfo = FunctionInfo<ThrowFn>(js::Throw);
+static const VMFunction ThrowInfoBaseline = FunctionInfo<ThrowFn>(js::Throw);
 
 bool
 ICRetSub_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -9430,7 +9430,7 @@ ICRetSub_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&rethrow);
     EmitRestoreTailCallReg(masm);
     masm.pushValue(R1);
-    return tailCallVM(ThrowInfo, masm);
+    return tailCallVM(ThrowInfoBaseline, masm);
 }
 
 bool
@@ -9456,7 +9456,7 @@ ICRetSub_Resume::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&rethrow);
     EmitRestoreTailCallReg(masm);
     masm.pushValue(R1);
-    if (!tailCallVM(ThrowInfo, masm))
+    if (!tailCallVM(ThrowInfoBaseline, masm))
         return false;
 
     masm.bind(&fail);
