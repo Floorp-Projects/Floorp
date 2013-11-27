@@ -253,9 +253,6 @@ protected:
   // and notify the compositor that we have created the buffer(s).
   virtual void CreateFrontBuffer(const nsIntRect& aBufferRect) = 0;
   virtual void DestroyFrontBuffer() {}
-  // We're about to hand off to the compositor, if you've got a back buffer,
-  // lock it now.
-  virtual void LockFrontBuffer() {}
 
   bool CreateAndAllocateTextureClient(RefPtr<TextureClient>& aClient,
                                       TextureFlags aFlags = 0);
@@ -406,7 +403,6 @@ public:
 protected:
   virtual void CreateFrontBuffer(const nsIntRect& aBufferRect) MOZ_OVERRIDE;
   virtual void DestroyFrontBuffer() MOZ_OVERRIDE;
-  virtual void LockFrontBuffer() MOZ_OVERRIDE;
 
 private:
   void UpdateDestinationFrom(const RotatedBuffer& aSource,
