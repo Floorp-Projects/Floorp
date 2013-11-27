@@ -179,7 +179,7 @@ interface nsIMemoryReporter : nsISupports
   const int32_t UNITS_PERCENTAGE = 3;
 };
 
-[scriptable, builtinclass, uuid(4db7040a-16f9-4249-879b-fe72729c7ef5)]
+[scriptable, builtinclass, uuid(b8fbab52-cdc0-424d-ab18-a5d9fc4b98c8)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -236,6 +236,9 @@ interface nsIMemoryReporterManager : nsISupports
    * |vsize| (UNITS_BYTES)  The virtual size, i.e. the amount of address space
    * taken up.
    *
+   * |vsizeMaxContiguous| (UNITS_BYTES)  The size of the largest contiguous
+   * block of virtual memory.
+   *
    * |resident| (UNITS_BYTES)  The resident size (a.k.a. RSS or physical memory
    * used).
    *
@@ -276,6 +279,7 @@ interface nsIMemoryReporterManager : nsISupports
    */
   readonly attribute int64_t explicit;
   readonly attribute int64_t vsize;
+  readonly attribute int64_t vsizeMaxContiguous;
   readonly attribute int64_t resident;
   readonly attribute int64_t residentFast;
 
