@@ -742,20 +742,24 @@ CompositorParent::AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aB
   if (!mLayerManager) {
     NS_WARNING("Failed to initialise Compositor");
     *aSuccess = false;
-    return new LayerTransactionParent(nullptr, this, 0);
+    LayerTransactionParent* p = new LayerTransactionParent(nullptr, this, 0);
+    p->AddIPDLReference();
+    return p;
   }
 
   mCompositionManager = new AsyncCompositionManager(mLayerManager);
+  *aSuccess = true;
 
   *aTextureFactoryIdentifier = mLayerManager->GetTextureFactoryIdentifier();
-  *aSuccess = true;
-  return new LayerTransactionParent(mLayerManager, this, 0);
+  LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, 0);
+  p->AddIPDLReference();
+  return p;
 }
 
 bool
 CompositorParent::DeallocPLayerTransactionParent(PLayerTransactionParent* actor)
 {
-  delete actor;
+  static_cast<LayerTransactionParent*>(actor)->ReleaseIPDLReference();
   return true;
 }
 
@@ -1056,14 +1060,18 @@ CrossProcessCompositorParent::AllocPLayerTransactionParent(const nsTArray<Layers
     LayerManagerComposite* lm = sIndirectLayerTrees[aId].mParent->GetLayerManager();
     *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
     *aSuccess = true;
-    return new LayerTransactionParent(lm, this, aId);
+    LayerTransactionParent* p = new LayerTransactionParent(lm, this, aId);
+    p->AddIPDLReference();
+    return p;
   }
 
   NS_WARNING("Created child without a matching parent?");
   // XXX: should be false, but that causes us to fail some tests on Mac w/ OMTC.
   // Bug 900745. change *aSuccess to false to see test failures.
   *aSuccess = true;
-  return new LayerTransactionParent(nullptr, this, aId);
+  LayerTransactionParent* p = new LayerTransactionParent(nullptr, this, aId);
+  p->AddIPDLReference();
+  return p;
 }
 
 bool
@@ -1071,7 +1079,7 @@ CrossProcessCompositorParent::DeallocPLayerTransactionParent(PLayerTransactionPa
 {
   LayerTransactionParent* slp = static_cast<LayerTransactionParent*>(aLayers);
   RemoveIndirectTree(slp->GetId());
-  delete aLayers;
+  static_cast<LayerTransactionParent*>(aLayers)->ReleaseIPDLReference();
   return true;
 }
 
