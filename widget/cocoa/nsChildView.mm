@@ -2363,9 +2363,12 @@ nsChildView::MaybeDrawRoundedCorners(GLManager* aManager, const nsIntRect& aRect
   nsIntSize size(mDevPixelCornerRadius, mDevPixelCornerRadius);
   mCornerMaskImage->UpdateIfNeeded(size, nsIntRegion(), ^(gfx::DrawTarget* drawTarget, const nsIntRegion& updateRegion) {
     ClearRegion(drawTarget, updateRegion);
-    gfx::BorrowedCGContext borrow(drawTarget);
-    DrawTopLeftCornerMask(borrow.cg, mDevPixelCornerRadius);
-    borrow.Finish();
+    RefPtr<gfx::PathBuilder> builder = drawTarget->CreatePathBuilder();
+    builder->Arc(gfx::Point(mDevPixelCornerRadius, mDevPixelCornerRadius), mDevPixelCornerRadius, 0, 2.0f * M_PI);
+    RefPtr<gfx::Path> path = builder->Finish();
+    drawTarget->Fill(path,
+                     gfx::ColorPattern(gfx::Color(1.0, 1.0, 1.0, 1.0)),
+                     gfx::DrawOptions(1.0f, gfx::OP_SOURCE));
   });
 
   // Use operator destination in: multiply all 4 channels with source alpha.
