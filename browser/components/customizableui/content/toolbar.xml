@@ -378,6 +378,7 @@
       <constructor><![CDATA[
           // Reading these immediately so nobody messes with them anymore:
           this._delegatingToolbar = this.getAttribute("toolbar-delegate");
+          this._wasCollapsed = this.getAttribute("collapsed");
           // Leaving those in here to unbreak some code:
           if (document.readyState == "complete") {
             this._init();
@@ -409,8 +410,17 @@
           }
 
           // pass the current set of children for comparison with placements:
-          let children = [node.id for (node of this.childNodes)
-                          if (node.getAttribute("skipintoolbarset") != "true" && node.id)];
+          let children = [];
+          for (node of this.childNodes) {
+            if (node.getAttribute("skipintoolbarset") != "true" && node.id) {
+              // Force everything to be removable so that buildArea can chuck stuff
+              // out if the user has customized things / we've been here before:
+              if (!this._whiteListed.has(node.id)) {
+                node.setAttribute("removable", "true");
+              }
+              children.push(node);
+            }
+          }
           CustomizableUI.registerToolbarNode(this, children);
           this.evictNodes();
           // We can't easily use |this| or strong bindings for the observer fn here
@@ -455,20 +465,28 @@
           }
           const kItemMaxWidth = 100;
           let oldParent = aNode.parentNode;
+          aNode.setAttribute("removable", "true");
 
-          try {
-            aNode.setAttribute("removable", "true");
-
-            let nodeWidth = aNode.getBoundingClientRect().width;
-            if (nodeWidth == 0 || nodeWidth > kItemMaxWidth) {
-              throw new Error(aNode.id + " is too big (" + nodeWidth +
-                              "px wide), moving to the palette");
+          let movedOut = false;
+          if (!this._wasCollapsed) {
+            try {
+              let nodeWidth = aNode.getBoundingClientRect().width;
+              if (nodeWidth == 0 || nodeWidth > kItemMaxWidth) {
+                throw new Error(aNode.id + " is too big (" + nodeWidth +
+                                "px wide), moving to the palette");
+              }
+              CustomizableUI.addWidgetToArea(aNode.id, this._delegatingToolbar);
+              movedOut = true;
+            } catch (ex) {
+              // This will throw if the node is too big, or can't be moved there for
+              // some reason. Report this:
+              Cu.reportError(ex);
             }
-            CustomizableUI.addWidgetToArea(aNode.id, this._delegatingToolbar);
-          } catch (ex) {
-            Cu.reportError(ex);
-            // This will throw if the node is too big, or can't be moved there for
-            // some reason. Try to remove it anyway:
+          }
+
+          /* We won't have moved the widget if either the add-on bar was collapsed,
+           * or if it was too wide to be inserted into the navbar. */
+          if (!movedOut) {
             try {
               CustomizableUI.removeWidgetFromArea(aNode.id);
             } catch (ex) {

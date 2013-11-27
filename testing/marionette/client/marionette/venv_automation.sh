@@ -11,13 +11,15 @@ then
     exit 1
 fi
 
+VIRTUAL_ENV_VERSION="49f40128a9ca3824ebf253eca408596e135cf893"
+
 # Check if environment exists, if not, create a virtualenv:
 if [ -d "marionette_auto_venv" ]
 then
   cd marionette_auto_venv
   . bin/activate
 else
-  curl https://raw.github.com/pypa/virtualenv/develop/virtualenv.py | ${PYTHON} - marionette_auto_venv 
+  curl https://raw.github.com/pypa/virtualenv/${VIRTUAL_ENV_VERSION}/virtualenv.py | ${PYTHON} - marionette_auto_venv 
   cd marionette_auto_venv
   . bin/activate
 

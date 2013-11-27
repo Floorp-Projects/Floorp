@@ -165,6 +165,13 @@ public:
     virtual PFMRadioChild* AllocPFMRadioChild();
     virtual bool DeallocPFMRadioChild(PFMRadioChild* aActor);
 
+    virtual PAsmJSCacheEntryChild* AllocPAsmJSCacheEntryChild(
+                                 const asmjscache::OpenMode& aOpenMode,
+                                 const int64_t& aSizeToWrite,
+                                 const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
+    virtual bool DeallocPAsmJSCacheEntryChild(
+                                    PAsmJSCacheEntryChild* aActor) MOZ_OVERRIDE;
+
     virtual PSpeechSynthesisChild* AllocPSpeechSynthesisChild();
     virtual bool DeallocPSpeechSynthesisChild(PSpeechSynthesisChild* aActor);
 

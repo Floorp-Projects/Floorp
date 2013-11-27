@@ -4605,30 +4605,32 @@ namespace JS {
 
 /*
  * This callback represents a request by the JS engine to open for reading the
- * existing cache entry for the given global. If a cache entry exists, the
- * callback shall return 'true' and return the size, base address and an opaque
- * file handle as outparams. If the callback returns 'true', the JS engine
- * guarantees a call to CloseAsmJSCacheEntryForReadOp, passing the same base
- * address, size and handle.
+ * existing cache entry for the given global and char range that may contain a
+ * module. If a cache entry exists, the callback shall return 'true' and return
+ * the size, base address and an opaque file handle as outparams. If the
+ * callback returns 'true', the JS engine guarantees a call to
+ * CloseAsmJSCacheEntryForReadOp, passing the same base address, size and
+ * handle.
  */
 typedef bool
-(* OpenAsmJSCacheEntryForReadOp)(HandleObject global, size_t *size, const uint8_t **memory,
-                                 intptr_t *handle);
+(* OpenAsmJSCacheEntryForReadOp)(HandleObject global, const jschar *begin, const jschar *limit,
+                                 size_t *size, const uint8_t **memory, intptr_t *handle);
 typedef void
 (* CloseAsmJSCacheEntryForReadOp)(HandleObject global, size_t size, const uint8_t *memory,
                                   intptr_t handle);
 
 /*
  * This callback represents a request by the JS engine to open for writing a
- * cache entry of the given size for the given global. If cache entry space is
- * available, the callback shall return 'true' and return the base address and
- * an opaque file handle as outparams. If the callback returns 'true', the JS
- * engine guarantees a call to CloseAsmJSCacheEntryForWriteOp passing the same
- * base address, size and handle.
+ * cache entry of the given size for the given global and char range containing
+ * the just-compiled module. If cache entry space is available, the callback
+ * shall return 'true' and return the base address and an opaque file handle as
+ * outparams. If the callback returns 'true', the JS engine guarantees a call
+ * to CloseAsmJSCacheEntryForWriteOp passing the same base address, size and
+ * handle.
  */
 typedef bool
-(* OpenAsmJSCacheEntryForWriteOp)(HandleObject global, size_t size, uint8_t **memory,
-                                  intptr_t *handle);
+(* OpenAsmJSCacheEntryForWriteOp)(HandleObject global, const jschar *begin, const jschar *end,
+                                  size_t size, uint8_t **memory, intptr_t *handle);
 typedef void
 (* CloseAsmJSCacheEntryForWriteOp)(HandleObject global, size_t size, uint8_t *memory,
                                    intptr_t handle);

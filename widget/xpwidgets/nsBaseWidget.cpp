@@ -23,7 +23,6 @@
 #include "mozilla/Preferences.h"
 #include "BasicLayers.h"
 #include "ClientLayerManager.h"
-#include "LayerManagerOGL.h"
 #include "mozilla/layers/Compositor.h"
 #include "nsIXULRuntime.h"
 #include "nsIXULWindow.h"
@@ -41,6 +40,7 @@
 #include "gfxPlatform.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MouseEvents.h"
+#include "GLConsts.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -1014,22 +1014,6 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayerTransactionChild* aShadowManag
       CreateCompositor();
     }
 
-    if (mUseLayersAcceleration) {
-      if (!mLayerManager) {
-        nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(this);
-        /**
-         * XXX - On several OSes initialization is expected to fail for now.
-         * If we'd get a non-basic layer manager they'd crash. This is ok though
-         * since on those platforms it will fail. Anyone implementing new
-         * platforms on LayerManagerOGL should ensure their widget is able to
-         * deal with it though!
-         */
-
-        if (layerManager->Initialize(mForceLayersAcceleration)) {
-          mLayerManager = layerManager;
-        }
-      }
-    }
     if (!mLayerManager) {
       mLayerManager = CreateBasicLayerManager();
     }
@@ -1415,13 +1399,7 @@ nsBaseWidget::BeginMoveDrag(WidgetMouseEvent* aEvent)
 uint32_t
 nsBaseWidget::GetGLFrameBufferFormat()
 {
-  if (mLayerManager &&
-      mLayerManager->GetBackendType() == LAYERS_OPENGL) {
-    // Assume that the default framebuffer has RGBA format.  Specific
-    // backends that know differently will override this method.
-    return LOCAL_GL_RGBA;
-  }
-  return LOCAL_GL_NONE;
+  return LOCAL_GL_RGBA;
 }
 
 void nsBaseWidget::SetSizeConstraints(const SizeConstraints& aConstraints)

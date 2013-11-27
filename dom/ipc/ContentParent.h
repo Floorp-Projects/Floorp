@@ -368,6 +368,13 @@ private:
     virtual PFMRadioParent* AllocPFMRadioParent();
     virtual bool DeallocPFMRadioParent(PFMRadioParent* aActor);
 
+    virtual PAsmJSCacheEntryParent* AllocPAsmJSCacheEntryParent(
+                                 const asmjscache::OpenMode& aOpenMode,
+                                 const int64_t& aSizeToWrite,
+                                 const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
+    virtual bool DeallocPAsmJSCacheEntryParent(
+                                   PAsmJSCacheEntryParent* aActor) MOZ_OVERRIDE;
+
     virtual PSpeechSynthesisParent* AllocPSpeechSynthesisParent();
     virtual bool DeallocPSpeechSynthesisParent(PSpeechSynthesisParent* aActor);
     virtual bool RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor);

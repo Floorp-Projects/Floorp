@@ -276,7 +276,7 @@ int NrIceCtx::stream_failed(void *obj, nr_ice_media_stream *stream) {
   // Streams which do not exist should never fail.
   MOZ_ASSERT(s);
 
-  ctx->SetState(ICE_CTX_FAILED);
+  ctx->SetConnectionState(ICE_CTX_FAILED);
   s -> SignalFailed(s);
   return 0;
 }
@@ -287,7 +287,7 @@ int NrIceCtx::ice_completed(void *obj, nr_ice_peer_ctx *pctx) {
   // Get the ICE ctx
   NrIceCtx *ctx = static_cast<NrIceCtx *>(obj);
 
-  ctx->SetState(ICE_CTX_OPEN);
+  ctx->SetConnectionState(ICE_CTX_OPEN);
 
   return 0;
 }
@@ -551,7 +551,7 @@ nsresult NrIceCtx::StartGathering() {
   if (ctx_->state != ICE_CTX_INIT) {
     MOZ_MTLOG(ML_ERROR, "ICE ctx in the wrong state for gathering: '"
               << name_ << "'");
-    SetState(ICE_CTX_FAILED);
+    SetConnectionState(ICE_CTX_FAILED);
     return NS_ERROR_FAILURE;
   }
 
@@ -561,11 +561,11 @@ nsresult NrIceCtx::StartGathering() {
   if (r && r != R_WOULDBLOCK) {
       MOZ_MTLOG(ML_ERROR, "Couldn't gather ICE candidates for '"
                 << name_ << "'");
-      SetState(ICE_CTX_FAILED);
+      SetConnectionState(ICE_CTX_FAILED);
       return NS_ERROR_FAILURE;
   }
 
-  SetState(ICE_CTX_GATHERING);
+  SetGatheringState(ICE_CTX_GATHER_STARTED);
 
   return NS_OK;
 }
@@ -630,7 +630,7 @@ nsresult NrIceCtx::StartChecks() {
   if (r) {
     MOZ_MTLOG(ML_ERROR, "Couldn't pair candidates on "
               << name_ << "'");
-    SetState(ICE_CTX_FAILED);
+    SetConnectionState(ICE_CTX_FAILED);
     return NS_ERROR_FAILURE;
   }
 
@@ -642,11 +642,11 @@ nsresult NrIceCtx::StartChecks() {
     } else {
       MOZ_MTLOG(ML_ERROR, "Couldn't start peer checks on "
                 << name_ << "'");
-      SetState(ICE_CTX_FAILED);
+      SetConnectionState(ICE_CTX_FAILED);
       return NS_ERROR_FAILURE;
     }
   } else {
-    SetState(ICE_CTX_CHECKING);
+    SetConnectionState(ICE_CTX_CHECKING);
   }
 
   return NS_OK;
@@ -656,7 +656,7 @@ nsresult NrIceCtx::StartChecks() {
 void NrIceCtx::initialized_cb(NR_SOCKET s, int h, void *arg) {
   NrIceCtx *ctx = static_cast<NrIceCtx *>(arg);
 
-  ctx->SetState(ICE_CTX_GATHERED);
+  ctx->SetGatheringState(ICE_CTX_GATHER_COMPLETE);
 }
 
 nsresult NrIceCtx::Finalize() {
@@ -671,27 +671,26 @@ nsresult NrIceCtx::Finalize() {
   return NS_OK;
 }
 
-void NrIceCtx::SetState(State state) {
-  if (state == state_)
+void NrIceCtx::SetConnectionState(ConnectionState state) {
+  if (state == connection_state_)
     return;
 
   MOZ_MTLOG(ML_INFO, "NrIceCtx(" << name_ << "): state " <<
-            state_ << "->" << state);
-  state_ = state;
+            connection_state_ << "->" << state);
+  connection_state_ = state;
 
-  switch(state_) {
-    case ICE_CTX_GATHERED:
-      SignalGatheringCompleted(this);
-      break;
-    case ICE_CTX_OPEN:
-      SignalCompleted(this);
-      break;
-    case ICE_CTX_FAILED:
-      SignalFailed(this);
-      break;
-    default:
-      break;
-  }
+  SignalConnectionStateChange(this, state);
+}
+
+void NrIceCtx::SetGatheringState(GatheringState state) {
+  if (state == gathering_state_)
+    return;
+
+  MOZ_MTLOG(ML_DEBUG, "NrIceCtx(" << name_ << "): gathering state " <<
+            gathering_state_ << "->" << state);
+  gathering_state_ = state;
+
+  SignalGatheringStateChange(this, state);
 }
 
 }  // close namespace

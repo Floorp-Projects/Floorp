@@ -10,6 +10,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 
 #include "AsyncConnectionHelper.h"
@@ -23,6 +24,7 @@
 USING_INDEXEDDB_NAMESPACE
 
 using namespace mozilla::dom;
+using mozilla::dom::quota::Client;
 using mozilla::dom::quota::QuotaManager;
 
 namespace {
@@ -288,8 +290,8 @@ IndexedDBDatabaseChild::EnsureDatabase(
     databaseId = mDatabase->Id();
   }
   else {
-    QuotaManager::GetStorageId(aDBInfo.persistenceType,
-                               aDBInfo.origin, aDBInfo.name, databaseId);
+    QuotaManager::GetStorageId(aDBInfo.persistenceType, aDBInfo.origin,
+                               Client::IDB, aDBInfo.name, databaseId);
   }
   MOZ_ASSERT(!databaseId.IsEmpty());
 

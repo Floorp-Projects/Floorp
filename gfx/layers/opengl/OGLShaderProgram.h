@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GFX_LAYERMANAGEROGLPROGRAM_H
-#define GFX_LAYERMANAGEROGLPROGRAM_H
+#ifndef GFX_OGLSHADERPROGRAM_H
+#define GFX_OGLSHADERPROGRAM_H
 
 #include "GLDefs.h"                     // for GLint, GLenum, GLuint, etc
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
@@ -248,20 +248,6 @@ public:
   }
 
   /**
-   * aLayer is the mask layer to use for rendering, or null, if there is no
-   * mask layer.
-   * If aLayer is non-null, then the result of rendering aLayer is stored as
-   * as a texture to be used by the shader. It is stored in the next available
-   * texture unit, as determined by the texture unit requirements for the
-   * shader.
-   * Any other features of the mask layer required by the shader are also
-   * loaded to graphics memory. In particular the transform used to move from
-   * the layer's coordinates to the mask's coordinates is loaded; this must be
-   * a 2D transform.
-   */
-  bool LoadMask(Layer* aLayer);
-
-  /**
    * The following set of methods set a uniform argument to the shader program.
    * Not all uniforms may be set for all programs, and such uses will throw
    * an assertion.
@@ -420,4 +406,4 @@ protected:
 } /* layers */
 } /* mozilla */
 
-#endif /* GFX_LAYERMANAGEROGLPROGRAM_H */
+#endif /* GFX_OGLSHADERPROGRAM_H */

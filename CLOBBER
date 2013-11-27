@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 942207 - apparently need clobber to avoid bustage
+Another Windows WebIDL clobber needed due to bug 928195
