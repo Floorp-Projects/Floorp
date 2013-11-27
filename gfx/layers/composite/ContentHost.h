@@ -84,14 +84,14 @@ protected:
  * It is the responsibility of the ContentHost to destroy its resources when
  * they are recreated or the ContentHost dies.
  */
-class ContentHostBaseNew : public ContentHost
+class ContentHostBase : public ContentHost
 {
 public:
   typedef RotatedContentBuffer::ContentType ContentType;
   typedef RotatedContentBuffer::PaintState PaintState;
 
-  ContentHostBaseNew(const TextureInfo& aTextureInfo);
-  virtual ~ContentHostBaseNew();
+  ContentHostBase(const TextureInfo& aTextureInfo);
+  virtual ~ContentHostBase();
 
   virtual void Composite(EffectChain& aEffectChain,
                          float aOpacity,
@@ -143,14 +143,14 @@ protected:
   bool mPaintWillResample;
   bool mInitialised;
 };
-class ContentHostBase : public ContentHost
+class DeprecatedContentHostBase : public ContentHost
 {
 public:
   typedef RotatedContentBuffer::ContentType ContentType;
   typedef RotatedContentBuffer::PaintState PaintState;
 
-  ContentHostBase(const TextureInfo& aTextureInfo);
-  ~ContentHostBase();
+  DeprecatedContentHostBase(const TextureInfo& aTextureInfo);
+  ~DeprecatedContentHostBase();
 
   virtual void Composite(EffectChain& aEffectChain,
                          float aOpacity,
@@ -218,14 +218,14 @@ protected:
  * We assume that whenever we use double buffering, then we have
  * render-to-texture and thus no texture upload to do.
  */
-class ContentHostDoubleBufferedNew : public ContentHostBaseNew
+class ContentHostDoubleBuffered : public ContentHostBase
 {
 public:
-  ContentHostDoubleBufferedNew(const TextureInfo& aTextureInfo)
-    : ContentHostBaseNew(aTextureInfo)
+  ContentHostDoubleBuffered(const TextureInfo& aTextureInfo)
+    : ContentHostBase(aTextureInfo)
   {}
 
-  virtual ~ContentHostDoubleBufferedNew() {}
+  virtual ~ContentHostDoubleBuffered() {}
 
   virtual CompositableType GetType() { return COMPOSITABLE_CONTENT_DOUBLE; }
 
@@ -238,14 +238,14 @@ protected:
   nsIntRegion mValidRegionForNextBackBuffer;
 };
 
-class ContentHostDoubleBuffered : public ContentHostBase
+class DeprecatedContentHostDoubleBuffered : public DeprecatedContentHostBase
 {
 public:
-  ContentHostDoubleBuffered(const TextureInfo& aTextureInfo)
-    : ContentHostBase(aTextureInfo)
+  DeprecatedContentHostDoubleBuffered(const TextureInfo& aTextureInfo)
+    : DeprecatedContentHostBase(aTextureInfo)
   {}
 
-  ~ContentHostDoubleBuffered();
+  ~DeprecatedContentHostDoubleBuffered();
 
   virtual CompositableType GetType() { return BUFFER_CONTENT_DIRECT; }
 
@@ -282,13 +282,13 @@ protected:
  * Single buffered, therefore we must synchronously upload the image from the
  * DeprecatedTextureHost in the layers transaction (i.e., in UpdateThebes).
  */
-class ContentHostSingleBufferedNew : public ContentHostBaseNew
+class ContentHostSingleBuffered : public ContentHostBase
 {
 public:
-  ContentHostSingleBufferedNew(const TextureInfo& aTextureInfo)
-    : ContentHostBaseNew(aTextureInfo)
+  ContentHostSingleBuffered(const TextureInfo& aTextureInfo)
+    : ContentHostBase(aTextureInfo)
   {}
-  virtual ~ContentHostSingleBufferedNew() {}
+  virtual ~ContentHostSingleBuffered() {}
 
   virtual CompositableType GetType() { return COMPOSITABLE_CONTENT_SINGLE; }
 
@@ -298,13 +298,13 @@ public:
                             nsIntRegion* aUpdatedRegionBack);
 };
 
-class ContentHostSingleBuffered : public ContentHostBase
+class DeprecatedContentHostSingleBuffered : public DeprecatedContentHostBase
 {
 public:
-  ContentHostSingleBuffered(const TextureInfo& aTextureInfo)
-    : ContentHostBase(aTextureInfo)
+  DeprecatedContentHostSingleBuffered(const TextureInfo& aTextureInfo)
+    : DeprecatedContentHostBase(aTextureInfo)
   {}
-  virtual ~ContentHostSingleBuffered();
+  virtual ~DeprecatedContentHostSingleBuffered();
 
   virtual CompositableType GetType() { return BUFFER_CONTENT; }
 
@@ -332,11 +332,11 @@ public:
  * Delays texture uploads until the next composite to
  * avoid blocking the main thread.
  */
-class ContentHostIncremental : public ContentHostBase
+class ContentHostIncremental : public DeprecatedContentHostBase
 {
 public:
   ContentHostIncremental(const TextureInfo& aTextureInfo)
-    : ContentHostBase(aTextureInfo)
+    : DeprecatedContentHostBase(aTextureInfo)
     , mDeAllocator(nullptr)
   {}
 
@@ -378,7 +378,7 @@ public:
   {
     ProcessTextureUpdates();
 
-    ContentHostBase::Composite(aEffectChain, aOpacity,
+    DeprecatedContentHostBase::Composite(aEffectChain, aOpacity,
                                aTransform, aFilter,
                                aClipRect, aVisibleRegion,
                                aLayerProperties);
