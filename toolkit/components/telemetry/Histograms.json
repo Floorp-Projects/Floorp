@@ -2831,6 +2831,13 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Duration of the longest uninterruptible operation while writing session data (ms)"
   },
+  "FX_SESSION_RESTORE_FILE_SIZE_BYTES": {
+    "kind": "exponential",
+    "high": 50000000,
+    "n_buckets": 30,
+    "extended_statistics_ok": true,
+    "description": "Session restore: The size of file sessionstore.js (bytes)"
+  },
   "FX_SESSION_RESTORE_CORRUPT_FILE": {
     "kind": "boolean",
     "description": "Session restore: Whether the file read on startup contained parse-able JSON"

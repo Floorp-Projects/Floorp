@@ -8,9 +8,18 @@
 @namespace url("http://www.w3.org/1999/xhtml");
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* Typography & General Styling -------------------------------------------- */
+
+::-moz-selection {
+  color: white;
+  background-color: @metro_orange@;
+}
+
 *:-moz-any-link:focus {
   outline-offset: -2px;
 }
+
+/* Input Styling -------------------------------------------- */
 
 select:not([size]):not([multiple]) > xul|scrollbar,
 select[size="1"] > xul|scrollbar,

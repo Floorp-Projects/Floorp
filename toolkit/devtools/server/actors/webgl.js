@@ -15,16 +15,10 @@ const { method, Arg, Option, RetVal } = protocol;
 
 const WEBGL_CONTEXT_NAMES = ["webgl", "experimental-webgl", "moz-webgl"];
 
-const HIGHLIGHT_FRAG_SHADER = [
-  "precision lowp float;",
-  "void main() {",
-    "gl_FragColor.rgba = vec4(%color);",
-  "}"
-].join("\n");
-
 // These traits are bit masks. Make sure they're powers of 2.
 const PROGRAM_DEFAULT_TRAITS = 0;
 const PROGRAM_BLACKBOX_TRAIT = 1;
+const PROGRAM_HIGHLIGHT_TRAIT = 2;
 
 exports.register = function(handle) {
   handle.addTabActor(WebGLActor, "webglActor");
@@ -160,26 +154,21 @@ let ProgramActor = protocol.ActorClass({
   }),
 
   /**
-   * Replaces this program's fragment shader with an temporary
-   * easy-to-distinguish alternative. See HIGHLIGHT_FRAG_SHADER.
+   * Highlights any geometry rendered using this program.
    */
-  highlight: method(function(color) {
-    let shaderActor = this._getShaderActor("fragment");
-    let oldText = shaderActor.text;
-    let newText = HIGHLIGHT_FRAG_SHADER.replace("%color", color)
-    shaderActor.compile(newText);
-    shaderActor.text = oldText;
+  highlight: method(function(tint) {
+    this.linkedProxy.highlightTint = tint;
+    this.linkedCache.setProgramTrait(this.program, PROGRAM_HIGHLIGHT_TRAIT);
   }, {
-    request: { color: Arg(0, "array:string") },
+    request: { tint: Arg(0, "array:number") },
     oneway: true
   }),
 
   /**
-   * Reverts this program's fragment shader to the latest user-defined source.
+   * Allows geometry to be rendered normally using this program.
    */
   unhighlight: method(function() {
-    let shaderActor = this._getShaderActor("fragment");
-    shaderActor.compile(shaderActor.text);
+    this.linkedCache.unsetProgramTrait(this.program, PROGRAM_HIGHLIGHT_TRAIT);
   }, {
     oneway: true
   }),
@@ -477,29 +466,31 @@ let WebGLInstrumenter = {
    *        The targeted WebGL context instance.
    * @param string funcName
    *        The function to override.
-   * @param string callbackName [optional]
-   *        A custom callback function name in the observer. If unspecified,
-   *        it will default to the name of the function to override.
+   * @param array callbackName [optional]
+   *        The two callback function names in the observer, corresponding to
+   *        the "before" and "after" invocation times. If unspecified, they will
+   *        default to the name of the function to override.
    * @param number timing [optional]
    *        When to issue the callback in relation to the actual context
-   *        function call. Availalble values are 0 for "before" (default)
-   *        and 1 for "after".
+   *        function call. Availalble values are -1 for "before" (default)
+   *        1 for "after" and 0 for "before and after".
    */
-  _instrument: function(observer, context, funcName, callbackName, timing = 0) {
+  _instrument: function(observer, context, funcName, callbackName = [], timing = -1) {
     let { cache, proxy } = observer.for(context);
     let originalFunc = context[funcName];
-    let proxyFuncName = callbackName || funcName;
+    let beforeFuncName = callbackName[0] || funcName;
+    let afterFuncName = callbackName[1] || callbackName[0] || funcName;
 
     context[funcName] = function(...glArgs) {
-      if (timing == 0 && !observer.suppressHandlers) {
-        let glBreak = observer[proxyFuncName](glArgs, cache, proxy);
+      if (timing <= 0 && !observer.suppressHandlers) {
+        let glBreak = observer[beforeFuncName](glArgs, cache, proxy);
         if (glBreak) return undefined;
       }
 
       let glResult = originalFunc.apply(this, glArgs);
 
-      if (timing == 1 && !observer.suppressHandlers) {
-        let glBreak = observer[proxyFuncName](glArgs, glResult, cache, proxy);
+      if (timing >= 0 && !observer.suppressHandlers) {
+        let glBreak = observer[afterFuncName](glArgs, glResult, cache, proxy);
         if (glBreak) return undefined;
       }
 
@@ -516,19 +507,28 @@ let WebGLInstrumenter = {
       "linkProgram", "getAttribLocation", "getUniformLocation"
     ]
   }, {
-    callback: "toggleVertexAttribArray",
+    timing: -1, // before
+    callback: [
+      "toggleVertexAttribArray"
+    ],
     functions: [
       "enableVertexAttribArray", "disableVertexAttribArray"
     ]
   }, {
-    callback: "attribute_",
+    timing: -1, // before
+    callback: [
+      "attribute_"
+    ],
     functions: [
       "vertexAttrib1f", "vertexAttrib2f", "vertexAttrib3f", "vertexAttrib4f",
       "vertexAttrib1fv", "vertexAttrib2fv", "vertexAttrib3fv", "vertexAttrib4fv",
       "vertexAttribPointer"
     ]
   }, {
-    callback: "uniform_",
+    timing: -1, // before
+    callback: [
+      "uniform_"
+    ],
     functions: [
       "uniform1i", "uniform2i", "uniform3i", "uniform4i",
       "uniform1f", "uniform2f", "uniform3f", "uniform4f",
@@ -537,10 +537,17 @@ let WebGLInstrumenter = {
       "uniformMatrix2fv", "uniformMatrix3fv", "uniformMatrix4fv"
     ]
   }, {
-    timing: 1, // after
-    functions: ["useProgram"]
+    timing: -1, // before
+    functions: [
+      "useProgram", "enable", "disable", "blendColor",
+      "blendEquation", "blendEquationSeparate",
+      "blendFunc", "blendFuncSeparate"
+    ]
   }, {
-    callback: "draw_",
+    timing: 0, // before and after
+    callback: [
+      "beforeDraw_", "afterDraw_"
+    ],
     functions: [
       "drawArrays", "drawElements"
     ]
@@ -573,6 +580,7 @@ WebGLObserver.prototype = {
   registerContextForWindow: function(id, context) {
     let cache = new WebGLCache(id, context);
     let proxy = new WebGLProxy(id, context, cache, this);
+    cache.refreshState(proxy);
 
     this._contexts.set(context, {
       ownerWindow: id,
@@ -706,19 +714,114 @@ WebGLObserver.prototype = {
   },
 
   /**
-   * Called immediately *after* 'useProgram' is requested in the context.
+   * Called immediately *before* 'useProgram' is requested in the context.
    *
    * @param array glArgs
    *        Overridable arguments with which the function is called.
-   * @param void glResult
-   *        The returned value of the original function call.
    * @param WebGLCache cache
    *        The state storage for the WebGL context initiating this call.
    */
-  useProgram: function(glArgs, glResult, cache) {
+  useProgram: function(glArgs, cache) {
     // Manually keeping a cache and not using gl.getParameter(CURRENT_PROGRAM)
     // because gl.get* functions are slow as potatoes.
     cache.currentProgram = glArgs[0];
+  },
+
+  /**
+   * Called immediately *before* 'enable' is requested in the context.
+   *
+   * @param array glArgs
+   *        Overridable arguments with which the function is called.
+   * @param WebGLCache cache
+   *        The state storage for the WebGL context initiating this call.
+   */
+  enable: function(glArgs, cache) {
+    cache.currentState[glArgs[0]] = true;
+  },
+
+  /**
+   * Called immediately *before* 'disable' is requested in the context.
+   *
+   * @param array glArgs
+   *        Overridable arguments with which the function is called.
+   * @param WebGLCache cache
+   *        The state storage for the WebGL context initiating this call.
+   */
+  disable: function(glArgs, cache) {
+    cache.currentState[glArgs[0]] = false;
+  },
+
+  /**
+   * Called immediately *before* 'blendColor' is requested in the context.
+   *
+   * @param array glArgs
+   *        Overridable arguments with which the function is called.
+   * @param WebGLCache cache
+   *        The state storage for the WebGL context initiating this call.
+   */
+  blendColor: function(glArgs, cache) {
+    let blendColor = cache.currentState.blendColor;
+    blendColor[0] = glArgs[0];
+    blendColor[1] = glArgs[1];
+    blendColor[2] = glArgs[2];
+    blendColor[3] = glArgs[3];
+  },
+
+  /**
+   * Called immediately *before* 'blendEquation' is requested in the context.
+   *
+   * @param array glArgs
+   *        Overridable arguments with which the function is called.
+   * @param WebGLCache cache
+   *        The state storage for the WebGL context initiating this call.
+   */
+  blendEquation: function(glArgs, cache) {
+    let state = cache.currentState;
+    state.blendEquationRgb = state.blendEquationAlpha = glArgs[0];
+  },
+
+  /**
+   * Called immediately *before* 'blendEquationSeparate' is requested in the context.
+   *
+   * @param array glArgs
+   *        Overridable arguments with which the function is called.
+   * @param WebGLCache cache
+   *        The state storage for the WebGL context initiating this call.
+   */
+  blendEquationSeparate: function(glArgs, cache) {
+    let state = cache.currentState;
+    state.blendEquationRgb = glArgs[0];
+    state.blendEquationAlpha = glArgs[1];
+  },
+
+  /**
+   * Called immediately *before* 'blendFunc' is requested in the context.
+   *
+   * @param array glArgs
+   *        Overridable arguments with which the function is called.
+   * @param WebGLCache cache
+   *        The state storage for the WebGL context initiating this call.
+   */
+  blendFunc: function(glArgs, cache) {
+    let state = cache.currentState;
+    state.blendSrcRgb = state.blendSrcAlpha = glArgs[0];
+    state.blendDstRgb = state.blendDstAlpha = glArgs[1];
+  },
+
+  /**
+   * Called immediately *before* 'blendFuncSeparate' is requested in the context.
+   *
+   * @param array glArgs
+   *        Overridable arguments with which the function is called.
+   * @param WebGLCache cache
+   *        The state storage for the WebGL context initiating this call.
+   */
+  blendFuncSeparate: function(glArgs, cache) {
+    let state = cache.currentState;
+    state.blendSrcRgb = glArgs[0];
+    state.blendDstRgb = glArgs[1];
+    state.blendSrcAlpha = glArgs[2];
+    state.blendDstAlpha = glArgs[3];
   },
 
   /**
@@ -729,10 +832,44 @@ WebGLObserver.prototype = {
    *        Overridable arguments with which the function is called.
    * @param WebGLCache cache
    *        The state storage for the WebGL context initiating this call.
+   * @param WebGLProxy proxy
+   *        The proxy methods for the WebGL context initiating this call.
    */
-  draw_: function(glArgs, cache) {
-    // Return true to break original function call.
-    return cache.currentProgramTraits & PROGRAM_BLACKBOX_TRAIT;
+  beforeDraw_: function(glArgs, cache, proxy) {
+    let traits = cache.currentProgramTraits;
+
+    // Handle program blackboxing.
+    if (traits & PROGRAM_BLACKBOX_TRAIT) {
+      return true; // Return true to break original function call.
+    }
+    // Handle program highlighting.
+    if (traits & PROGRAM_HIGHLIGHT_TRAIT) {
+      proxy.enableHighlighting();
+    }
+
+    return false;
+  },
+
+  /**
+   * Called immediately *after* 'drawArrays' or 'drawElements' is requested
+   * in the context.
+   *
+   * @param array glArgs
+   *        Overridable arguments with which the function is called.
+   * @param void glResult
+   *        The returned value of the original function call.
+   * @param WebGLCache cache
+   *        The state storage for the WebGL context initiating this call.
+   * @param WebGLProxy proxy
+   *        The proxy methods for the WebGL context initiating this call.
+   */
+  afterDraw_: function(glArgs, glResult, cache, proxy) {
+    let traits = cache.currentProgramTraits;
+
+    // Handle program highlighting.
+    if (traits & PROGRAM_HIGHLIGHT_TRAIT) {
+      proxy.disableHighlighting();
+    }
   }
 };
 
@@ -749,6 +886,7 @@ function WebGLCache(id, context) {
   this._id = id;
   this._gl = context;
   this._programs = new Map();
+  this.currentState = {};
 }
 
 WebGLCache.prototype = {
@@ -761,6 +899,35 @@ WebGLCache.prototype = {
 
   get ownerWindow() this._id,
   get ownerContext() this._gl,
+
+  /**
+   * A collection of flags or properties representing the context's state.
+   * Implemented as an object hash and not a Map instance because keys are
+   * always either strings or numbers.
+   */
+  currentState: null,
+
+  /**
+   * Populates the current state with values retrieved from the context.
+   *
+   * @param WebGLProxy proxy
+   *        The proxy methods for the WebGL context owning the state.
+   */
+  refreshState: function(proxy) {
+    let gl = this._gl;
+    let s = this.currentState;
+
+    // Populate only with the necessary parameters. Not all default WebGL
+    // state values are required.
+    s[gl.BLEND] = proxy.isEnabled("BLEND");
+    s.blendColor = proxy.getParameter("BLEND_COLOR");
+    s.blendEquationRgb = proxy.getParameter("BLEND_EQUATION_RGB");
+    s.blendEquationAlpha = proxy.getParameter("BLEND_EQUATION_ALPHA");
+    s.blendSrcRgb = proxy.getParameter("BLEND_SRC_RGB");
+    s.blendSrcAlpha = proxy.getParameter("BLEND_SRC_ALPHA");
+    s.blendDstRgb = proxy.getParameter("BLEND_DST_RGB");
+    s.blendDstAlpha = proxy.getParameter("BLEND_DST_ALPHA");
+  },
 
   /**
    * Adds a program to the cache.
@@ -947,10 +1114,14 @@ function WebGLProxy(id, context, cache, observer) {
   this._observer = observer;
 
   let exports = [
+    "isEnabled",
+    "getParameter",
     "getAttachedShaders",
     "getShaderSource",
     "getShaderOfType",
-    "compileShader"
+    "compileShader",
+    "enableHighlighting",
+    "disableHighlighting"
   ];
   exports.forEach(e => this[e] = (...args) => this._call(e, args));
 }
@@ -963,6 +1134,64 @@ WebGLProxy.prototype = {
 
   get ownerWindow() this._id,
   get ownerContext() this._gl,
+
+  /**
+   * Test whether a WebGL capability is enabled.
+   *
+   * @param string name
+   *        The WebGL capability name, for example "BLEND".
+   * @return boolean
+   *         True if enabled, false otherwise.
+   */
+  _isEnabled: function(name) {
+    return this._gl.isEnabled(this._gl[name]);
+  },
+
+  /**
+   * Returns the value for the specified WebGL parameter name.
+   *
+   * @param string name
+   *        The WebGL parameter name, for example "BLEND_COLOR".
+   * @return any
+   *         The corresponding parameter's value.
+   */
+  _getParameter: function(name) {
+    return this._gl.getParameter(this._gl[name]);
+  },
+
+  /**
+   * Returns the renderbuffer property value for the specified WebGL parameter.
+   * If no renderbuffer binding is available, null is returned.
+   *
+   * @param string name
+   *        The WebGL parameter name, for example "BLEND_COLOR".
+   * @return any
+   *         The corresponding parameter's value.
+   */
+  _getRenderbufferParameter: function(name) {
+    if (!this._getParameter("RENDERBUFFER_BINDING")) {
+      return null;
+    }
+    let gl = this._gl;
+    return gl.getRenderbufferParameter(gl.RENDERBUFFER, gl[name]);
+  },
+
+  /**
+   * Returns the framebuffer property value for the specified WebGL parameter.
+   * If no framebuffer binding is available, null is returned.
+   *
+   * @param string name
+   *        The WebGL parameter name, for example "BLEND_COLOR".
+   * @return any
+   *         The corresponding parameter's value.
+   */
+  _getFramebufferAttachmentParameter: function(type, name) {
+    if (!this._getParameter("FRAMEBUFFER_BINDING")) {
+      return null;
+    }
+    let gl = this._gl;
+    return gl.getFramebufferAttachmentParameter(gl.RENDERBUFFER, gl[type], gl[name]);
+  },
 
   /**
    * Returns the shader objects attached to a program object.
@@ -1045,6 +1274,48 @@ WebGLProxy.prototype = {
 
     return error;
   },
+
+  /**
+   * Enables color blending based on the geometry highlight tint.
+   */
+  _enableHighlighting: function() {
+    let gl = this._gl;
+
+    // Avoid changing the blending params when rendering to a depth texture.
+    let format = this._getRenderbufferParameter("RENDERBUFFER_INTERNAL_FORMAT");
+    if (format == gl.DEPTH_COMPONENT16) {
+      return;
+    }
+
+    // Non-premultiplied alpha blending based on a predefined constant color.
+    // Simply using gl.colorMask won't work, because we want non-tinted colors
+    // to be drawn as black, not ignored.
+    gl.enable(gl.BLEND);
+    gl.blendColor.apply(gl, this.highlightTint);
+    gl.blendEquation(gl.FUNC_ADD);
+    gl.blendFunc(gl.CONSTANT_COLOR, gl.ONE_MINUS_SRC_ALPHA, gl.CONSTANT_COLOR, gl.ZERO);
+    this.wasHighlighting = true;
+  },
+
+  /**
+   * Disables color blending based on the geometry highlight tint, by
+   * reverting the corresponding params back to their original values.
+   */
+  _disableHighlighting: function() {
+    let gl = this._gl;
+    let s = this._cache.currentState;
+
+    gl[s[gl.BLEND] ? "enable" : "disable"](gl.BLEND);
+    gl.blendColor.apply(gl, s.blendColor);
+    gl.blendEquationSeparate(s.blendEquationRgb, s.blendEquationAlpha);
+    gl.blendFuncSeparate(s.blendSrcRgb, s.blendDstRgb, s.blendSrcAlpha, s.blendDstAlpha);
+  },
+
+  /**
+   * The color tint used for highlighting geometry.
+   * @see _enableHighlighting and _disableHighlighting.
+   */
+  highlightTint: [0, 0, 0, 0],
 
   /**
    * Executes a function in this object.

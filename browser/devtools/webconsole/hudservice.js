@@ -28,6 +28,8 @@ const BROWSER_CONSOLE_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,re
 // The preference prefix for all of the Browser Console filters.
 const BROWSER_CONSOLE_FILTER_PREFS_PREFIX = "devtools.browserconsole.filter.";
 
+let gHudId = 0;
+
 ///////////////////////////////////////////////////////////////////////////
 //// The HUD service
 
@@ -301,7 +303,7 @@ function WebConsole(aTarget, aIframeWindow, aChromeWindow)
 {
   this.iframeWindow = aIframeWindow;
   this.chromeWindow = aChromeWindow;
-  this.hudId = "hud_" + Date.now();
+  this.hudId = "hud_" + ++gHudId;
   this.target = aTarget;
 
   this.browserWindow = this.chromeWindow.top;
