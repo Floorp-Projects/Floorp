@@ -336,6 +336,17 @@ public:
     return mOuterWindow && mOuterWindow->GetCurrentInnerWindow() == this;
   }
 
+  // Returns true if the document of this window is the active document.  This
+  // is not identical to IsCurrentInnerWindow() because document.open() will
+  // keep the same document active but create a new window.
+  bool HasActiveDocument()
+  {
+    return IsCurrentInnerWindow() ||
+      (GetOuterWindow() &&
+       GetOuterWindow()->GetCurrentInnerWindow() &&
+       GetOuterWindow()->GetCurrentInnerWindow()->GetDoc() == mDoc);
+  }
+
   bool IsOuterWindow() const
   {
     return !IsInnerWindow();
