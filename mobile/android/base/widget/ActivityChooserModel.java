@@ -668,6 +668,20 @@ public class ActivityChooserModel extends DataSetObservable {
         }
     }
 
+    public int getDistinctActivityCountInHistory() {
+        synchronized (mInstanceLock) {
+            ensureConsistentState();
+            final List<String> packages = new ArrayList<String>();
+            for (HistoricalRecord record : mHistoricalRecords) {
+              String activity = record.activity.flattenToString();
+              if (!packages.contains(activity)) {
+                packages.add(activity);
+              }
+            }
+            return packages.size();
+        }
+    }
+
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
