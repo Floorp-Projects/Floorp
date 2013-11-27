@@ -73,11 +73,6 @@ public:
 
   void ClearInsertedChildren()
   {
-    mInsertedChildren.Clear();
-  }
-
-  void ClearInsertedChildrenAndInsertionParents()
-  {
     for (uint32_t c = 0; c < mInsertedChildren.Length(); ++c) {
       mInsertedChildren[c]->SetXBLInsertionParent(nullptr);
     }
