@@ -43,7 +43,7 @@ SurfaceFactory_Gralloc::SurfaceFactory_Gralloc(GLContext* prodGL,
 
     MOZ_ASSERT(allocator);
 
-    mAllocator = allocator->asWeakPtr();
+    mAllocator = allocator;
 }
 
 SharedSurface_Gralloc*

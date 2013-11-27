@@ -39,8 +39,7 @@ class CompositableParent;
 class ShadowLayersManager;
 
 class LayerTransactionParent : public PLayerTransactionParent,
-                               public CompositableParentManager,
-                               public AtomicRefCounted<LayerTransactionParent>
+                               public CompositableParentManager
 {
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
   typedef InfallibleTArray<Edit> EditArray;
