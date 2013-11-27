@@ -532,6 +532,7 @@ if CONFIG['MOZ_NFC']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     WEBIDL_FILES += [
+        'MozSpeakerManager.webidl',
         'MozWifiConnectionInfoEvent.webidl',
         'MozWifiStatusChangeEvent.webidl',
     ]

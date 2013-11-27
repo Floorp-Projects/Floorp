@@ -43,7 +43,6 @@ extern UINT sAppShellGeckoMsgId;
 static ComPtr<ICoreWindowStatic> sCoreStatic;
 static bool sIsDispatching = false;
 static bool sWillEmptyThreadQueue = false;
-static bool sEmptyingThreadQueue = false;
 
 MetroAppShell::~MetroAppShell()
 {
@@ -242,12 +241,9 @@ MetroAppShell::DispatchAllGeckoEvents()
     return;
   }
 
-  NS_ASSERTION(NS_IsMainThread(), "DispatchAllXPCOMEvents should be called on the main thread");
+  NS_ASSERTION(NS_IsMainThread(), "DispatchAllGeckoEvents should be called on the main thread");
 
   sWillEmptyThreadQueue = false;
-
-  AutoRestore<bool> dispatching(sEmptyingThreadQueue);
-  sEmptyingThreadQueue = true;
   nsIThread *thread = NS_GetCurrentThread();
   NS_ProcessPendingEvents(thread, 0);
 }
@@ -297,14 +293,6 @@ MetroAppShell::ProcessOneNativeEventIfPresent()
 bool
 MetroAppShell::ProcessNextNativeEvent(bool mayWait)
 {
-  // NS_ProcessPendingEvents will process thread events *and* call
-  // nsBaseAppShell::OnProcessNextEvent to process native events. However
-  // we do not want native events getting dispatched while we are in
-  // DispatchAllGeckoEvents.
-  if (sEmptyingThreadQueue) {
-    return false;
-  }
-
   if (ProcessOneNativeEventIfPresent()) {
     return true;
   }
