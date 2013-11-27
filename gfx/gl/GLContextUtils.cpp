@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GLContext.h"
+#include "GLContextUtils.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Assertions.h"
@@ -490,6 +491,19 @@ GLContext::BlitTextureToTexture(GLuint srcTex, GLuint destTex,
                              srcSize, destSize, destTarget);
 }
 
+TemporaryRef<gfx::DataSourceSurface>
+ReadBackSurface(GLContext* aContext, GLuint aTexture, bool aYInvert, SurfaceFormat aFormat)
+{
+    nsRefPtr<gfxImageSurface> image = aContext->GetTexImage(aTexture, aYInvert, aFormat);
+    RefPtr<gfx::DataSourceSurface> surf =
+        Factory::CreateDataSourceSurface(gfx::ToIntSize(image->GetSize()), aFormat);
+
+    if (!image->CopyTo(surf)) {
+        return nullptr;
+    }
+
+    return surf.forget();
+}
 
 } /* namespace gl */
 } /* namespace mozilla */
