@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef THEBESLAYERBUFFER_H_
-#define THEBESLAYERBUFFER_H_
+#ifndef ROTATEDBUFFER_H_
+#define ROTATEDBUFFER_H_
 
 #include <stdint.h>                     // for uint32_t
 #include "gfxASurface.h"                // for gfxASurface, etc
@@ -83,7 +83,7 @@ public:
 
   /**
    * |BufferRect()| is the rect of device pixels that this
-   * ThebesLayerBuffer covers.  That is what DrawBufferWithRotation()
+   * RotatedBuffer covers.  That is what DrawBufferWithRotation()
    * will paint when it's called.
    */
   const nsIntRect& BufferRect() const { return mBufferRect; }
@@ -140,7 +140,7 @@ protected:
  * This class encapsulates the buffer used to retain ThebesLayer contents,
  * i.e., the contents of the layer's GetVisibleRegion().
  */
-class ThebesLayerBuffer : public RotatedBuffer {
+class RotatedContentBuffer : public RotatedBuffer {
 public:
   typedef gfxContentType ContentType;
 
@@ -156,16 +156,16 @@ public:
     ContainsVisibleBounds
   };
 
-  ThebesLayerBuffer(BufferSizePolicy aBufferSizePolicy)
+  RotatedContentBuffer(BufferSizePolicy aBufferSizePolicy)
     : mBufferProvider(nullptr)
     , mBufferProviderOnWhite(nullptr)
     , mBufferSizePolicy(aBufferSizePolicy)
   {
-    MOZ_COUNT_CTOR(ThebesLayerBuffer);
+    MOZ_COUNT_CTOR(RotatedContentBuffer);
   }
-  virtual ~ThebesLayerBuffer()
+  virtual ~RotatedContentBuffer()
   {
-    MOZ_COUNT_DTOR(ThebesLayerBuffer);
+    MOZ_COUNT_DTOR(RotatedContentBuffer);
   }
 
   /**
@@ -184,7 +184,7 @@ public:
   /**
    * This is returned by BeginPaint. The caller should draw into mContext.
    * mRegionToDraw must be drawn. mRegionToInvalidate has been invalidated
-   * by ThebesLayerBuffer and must be redrawn on the screen.
+   * by RotatedContentBuffer and must be redrawn on the screen.
    * mRegionToInvalidate is set when the buffer has changed from
    * opaque to transparent or vice versa, since the details of rendering can
    * depend on the buffer type.  mDidSelfCopy is true if we kept our buffer
@@ -286,7 +286,7 @@ protected:
    *
    * It's the caller's responsibility to ensure |aClient| is valid
    * for the duration of operations it requests of this
-   * ThebesLayerBuffer.  It's also the caller's responsibility to
+   * RotatedContentBuffer.  It's also the caller's responsibility to
    * unset the provider when inactive, by calling
    * SetBufferProvider(nullptr).
    */
@@ -345,7 +345,7 @@ protected:
   virtual bool HaveBufferOnWhite() const;
 
   /**
-   * These members are only set transiently.  They're used to map mBuffer
+   * These members are only set transiently.  They're used to map mDTBuffer
    * when we're using surfaces that require explicit map/unmap. Only one
    * may be used at a time.
    */
@@ -358,4 +358,4 @@ protected:
 }
 }
 
-#endif /* THEBESLAYERBUFFER_H_ */
+#endif /* ROTATEDBUFFER_H_ */
