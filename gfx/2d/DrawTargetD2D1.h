@@ -125,6 +125,9 @@ public:
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
   uint32_t GetByteSize() const;
 
+  TemporaryRef<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTransform,
+                                              ExtendMode aExtendMode);
+
   static ID2D1Factory1 *factory();
   static void CleanupD2D();
   static IDWriteFactory *GetDWriteFactory();
@@ -165,9 +168,6 @@ private:
   void PopClipsFromDC(ID2D1DeviceContext *aDC);
 
   TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
-
-  TemporaryRef<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTransform,
-                                              ExtendMode aExtendMode);
 
   void PushD2DLayer(ID2D1DeviceContext *aDC, ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform);
 

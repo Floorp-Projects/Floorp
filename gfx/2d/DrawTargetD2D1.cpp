@@ -12,6 +12,7 @@
 #include "RadialGradientEffectD2D1.h"
 
 #include "HelpersD2D.h"
+#include "FilterNodeD2D1.h"
 #include "Tools.h"
 
 using namespace std;
@@ -112,13 +113,14 @@ DrawTargetD2D1::DrawFilter(FilterNode *aNode,
                            const Point &aDestPoint,
                            const DrawOptions &aOptions)
 {
-  if (aNode->GetBackendType() != FILTER_BACKEND_SOFTWARE) {
-    gfxWarning() << "Invalid filter backend passed to DrawTargetD2D!";
+  if (aNode->GetBackendType() != FILTER_BACKEND_DIRECT2D1_1) {
+    gfxWarning() << *this << ": Incompatible filter passed to DrawFilter.";
     return;
   }
 
-  FilterNodeSoftware* filter = static_cast<FilterNodeSoftware*>(aNode);
-  filter->Draw(this, aSourceRect, aDestPoint, aOptions);
+  PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
+
+  mDC->DrawImage(static_cast<FilterNodeD2D1*>(aNode)->OutputEffect(), D2DPoint(aDestPoint), D2DRect(aSourceRect));
 }
 
 void
@@ -590,7 +592,7 @@ DrawTargetD2D1::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, 
 TemporaryRef<FilterNode>
 DrawTargetD2D1::CreateFilter(FilterType aType)
 {
-  return FilterNodeSoftware::Create(aType);
+  return FilterNodeD2D1::Create(this, mDC, aType);
 }
 
 bool
