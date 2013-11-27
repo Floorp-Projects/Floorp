@@ -9,12 +9,9 @@ abs_srcdir = $(abspath $(srcdir))
 
 include $(topsrcdir)/config/rules.mk
 
-PRE_RELEASE_SUFFIX := ""
-
 DEFINES += \
 	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
 	-DAPP_LICENSE_BLOCK=$(abs_srcdir)/content/overrides/app-license.html \
-	-DPRE_RELEASE_SUFFIX="$(PRE_RELEASE_SUFFIX)" \
 	$(NULL)
 
 ifneq (,$(filter windows gtk2 gtk3 cocoa, $(MOZ_WIDGET_TOOLKIT)))
