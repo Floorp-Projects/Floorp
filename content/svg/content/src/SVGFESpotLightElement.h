@@ -9,15 +9,13 @@
 #include "nsSVGFilters.h"
 #include "nsSVGNumber2.h"
 
-class nsSVGFELightingElement;
-
 nsresult NS_NewSVGFESpotLightElement(nsIContent **aResult,
                                      already_AddRefed<nsINodeInfo> aNodeInfo);
 
 namespace mozilla {
 namespace dom {
 
-typedef SVGFEUnstyledElement SVGFESpotLightElementBase;
+typedef SVGFELightElement SVGFESpotLightElementBase;
 
 class SVGFESpotLightElement : public SVGFESpotLightElementBase
 {
@@ -33,6 +31,7 @@ protected:
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
 public:
+  virtual AttributeMap ComputeLightAttributes(nsSVGFilterInstance* aInstance) MOZ_OVERRIDE;
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
