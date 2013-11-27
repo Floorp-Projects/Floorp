@@ -592,5 +592,12 @@ NS_ErrorAccordingToNSPR()
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+void
+NS_ABORT_OOM(size_t size)
+{
+#ifdef MOZ_CRASHREPORTER
+  CrashReporter::AnnotateOOMAllocationSize(size);
+#endif
+  MOZ_CRASH();
+}
 

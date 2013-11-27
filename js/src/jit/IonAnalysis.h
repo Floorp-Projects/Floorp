@@ -121,6 +121,7 @@ class LinearSum
 
     void print(Sprinter &sp) const;
     void dump(FILE *) const;
+    void dump() const;
 
   private:
     Vector<LinearTerm, 2, IonAllocPolicy> terms_;

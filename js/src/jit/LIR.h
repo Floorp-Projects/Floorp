@@ -203,6 +203,8 @@ class LAllocation : public TempObject
 #else
     const char *toString() const { return "???"; }
 #endif
+
+    void dump() const;
 };
 
 class LUse : public LAllocation
@@ -675,7 +677,8 @@ class LInstruction
         return false;
     }
 
-    virtual void print(FILE *fp);
+    virtual void dump(FILE *fp);
+    void dump();
     static void printName(FILE *fp, Opcode op);
     virtual void printName(FILE *fp);
     virtual void printOperands(FILE *fp);

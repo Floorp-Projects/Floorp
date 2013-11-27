@@ -675,7 +675,8 @@ class IonBuilder : public MIRGenerator
     bool makeCall(JSFunction *target, CallInfo &callInfo, bool cloneAtCallsite);
 
     MDefinition *patchInlinedReturn(CallInfo &callInfo, MBasicBlock *exit, MBasicBlock *bottom);
-    MDefinition *patchInlinedReturns(CallInfo &callInfo, MIRGraphExits &exits, MBasicBlock *bottom);
+    MDefinition *patchInlinedReturns(CallInfo &callInfo, MIRGraphReturns &returns,
+                                     MBasicBlock *bottom);
 
     bool objectsHaveCommonPrototype(types::TemporaryTypeSet *types, PropertyName *name,
                                     bool isGetter, JSObject *foundProto);

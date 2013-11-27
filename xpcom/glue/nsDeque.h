@@ -80,7 +80,7 @@ class NS_COM_GLUE nsDeque {
    */
   void Push(void* aItem) {
     if (!Push(aItem, fallible_t())) {
-      NS_RUNTIMEABORT("OOM");
+      NS_ABORT_OOM(mSize);
     }
   }
 
@@ -93,7 +93,7 @@ class NS_COM_GLUE nsDeque {
    */
   void PushFront(void* aItem) {
     if (!PushFront(aItem, fallible_t())) {
-      NS_RUNTIMEABORT("OOM");
+      NS_ABORT_OOM(mSize);
     }
   }
 
