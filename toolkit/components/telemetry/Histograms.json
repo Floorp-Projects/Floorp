@@ -4619,5 +4619,15 @@
     "kind": "enumerated",
     "n_values": 32,
     "description": "Symmetric cipher used in resumed handshake (null=0, rc4=1, 3des=4, aes-cbc=7, camellia=8, seed=9, aes-gcm=10)"
+  },
+  "SSL_REASONS_FOR_NOT_FALSE_STARTING": {
+    "kind": "enumerated",
+    "n_values": 512,
+    "description": "Bitmask of reasons we did not false start when libssl would have let us (see key in nsNSSCallbacks.cpp)"
+  },
+  "SSL_HANDSHAKE_TYPE": { 
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "Type of handshake (1=resumption, 2=false started, 3=chose not to false start, 4=not allowed to false start)"
   }
 }

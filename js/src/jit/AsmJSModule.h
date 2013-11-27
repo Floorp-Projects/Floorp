@@ -776,7 +776,7 @@ class AsmJSModule
 };
 
 // Store the just-parsed module in the cache using AsmJSCacheOps.
-extern void
+extern bool
 StoreAsmJSModuleInCache(AsmJSParser &parser,
                         const AsmJSModule &module,
                         const AsmJSStaticLinkData &linkData,

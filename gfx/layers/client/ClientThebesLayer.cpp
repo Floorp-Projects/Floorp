@@ -49,11 +49,11 @@ ClientThebesLayer::PaintThebes()
     uint32_t flags = 0;
 #ifndef MOZ_WIDGET_ANDROID
     if (ClientManager()->CompositorMightResample()) {
-      flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
+      flags |= RotatedContentBuffer::PAINT_WILL_RESAMPLE;
     }
-    if (!(flags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE)) {
+    if (!(flags & RotatedContentBuffer::PAINT_WILL_RESAMPLE)) {
       if (MayResample()) {
-        flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
+        flags |= RotatedContentBuffer::PAINT_WILL_RESAMPLE;
       }
     }
 #endif

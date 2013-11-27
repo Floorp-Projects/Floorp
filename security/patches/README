@@ -1,4 +1,2 @@
 This directory contains patches that were added locally
 on top of the NSS release.
-
-bug-935831.patch Backout the fix for bug 927230.

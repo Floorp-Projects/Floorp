@@ -7,7 +7,7 @@
 #define MOZILLA_GFX_CONTENTCLIENT_H
 
 #include <stdint.h>                     // for uint32_t
-#include "ThebesLayerBuffer.h"          // for ThebesLayerBuffer, etc
+#include "RotatedBuffer.h"              // for RotatedContentBuffer, etc
 #include "gfxTypes.h"
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "mozilla/Assertions.h"         // for MOZ_CRASH
@@ -44,7 +44,7 @@ class ThebesLayer;
 /**
  * A compositable client for Thebes layers. These are different to Image/Canvas
  * clients due to sending a valid region across IPC and because we do a lot more
- * optimisation work, encapsualted in ThebesLayerBuffers.
+ * optimisation work, encapsualted in RotatedContentBuffers.
  *
  * We use content clients for OMTC and non-OMTC, basic rendering so that
  * BasicThebesLayer has only one interface to deal with. We support single and
@@ -56,10 +56,10 @@ class ThebesLayer;
  * methods - PaintThebes, which is the same for MT and OMTC, and PaintBuffer
  * which is different (the OMTC one does a little more). The 'buffer' in the
  * names of a lot of these method is actually the TextureClient. But, 'buffer'
- * for the ThebesLayerBuffer (as in SetBuffer) means a gfxSurface. See the
- * comments for SetBuffer and SetBufferProvider in ThebesLayerBuffer. To keep
+ * for the RotatedContentBuffer (as in SetBuffer) means a gfxSurface. See the
+ * comments for SetBuffer and SetBufferProvider in RotatedContentBuffer. To keep
  * these mapped buffers alive, we store a pointer in mOldTextures if the
- * ThebesLayerBuffer's surface is not the one from our texture client, once we
+ * RotatedContentBuffer's surface is not the one from our texture client, once we
  * are done painting we unmap the surface/texture client and don't need to keep
  * it alive anymore, so we clear mOldTextures.
  *
@@ -94,9 +94,9 @@ public:
 
 
   virtual void Clear() = 0;
-  virtual ThebesLayerBuffer::PaintState BeginPaintBuffer(ThebesLayer* aLayer,
-                                                         ThebesLayerBuffer::ContentType aContentType,
-                                                         uint32_t aFlags) = 0;
+  virtual RotatedContentBuffer::PaintState BeginPaintBuffer(ThebesLayer* aLayer,
+                                                            RotatedContentBuffer::ContentType aContentType,
+                                                            uint32_t aFlags) = 0;
 
   // Sync front/back buffers content
   // After executing, the new back buffer has the same (interesting) pixels as
@@ -129,34 +129,32 @@ public:
                        bool aDidSelfCopy) = 0;
 };
 
-// thin wrapper around BasicThebesLayerBuffer, for on-mtc
+// thin wrapper around RotatedContentBuffer, for on-mtc
 class ContentClientBasic : public ContentClient
-                         , protected ThebesLayerBuffer
+                         , protected RotatedContentBuffer
 {
 public:
   ContentClientBasic(CompositableForwarder* aForwarder,
                      BasicLayerManager* aManager);
 
-  typedef ThebesLayerBuffer::PaintState PaintState;
-  typedef ThebesLayerBuffer::ContentType ContentType;
+  typedef RotatedContentBuffer::PaintState PaintState;
+  typedef RotatedContentBuffer::ContentType ContentType;
 
-  virtual void Clear() { ThebesLayerBuffer::Clear(); }
+  virtual void Clear() { RotatedContentBuffer::Clear(); }
   PaintState BeginPaintBuffer(ThebesLayer* aLayer, ContentType aContentType,
                               uint32_t aFlags)
   {
-    return ThebesLayerBuffer::BeginPaint(aLayer, aContentType, aFlags);
+    return RotatedContentBuffer::BeginPaint(aLayer, aContentType, aFlags);
   }
 
   void DrawTo(ThebesLayer* aLayer, gfxContext* aTarget, float aOpacity,
               gfxASurface* aMask, const gfxMatrix* aMaskTransform)
   {
-    ThebesLayerBuffer::DrawTo(aLayer, aTarget, aOpacity, aMask, aMaskTransform);
+    RotatedContentBuffer::DrawTo(aLayer, aTarget, aOpacity, aMask, aMaskTransform);
   }
 
   virtual void CreateBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags,
-                            gfxASurface** aBlackSurface, gfxASurface** aWhiteSurface,
                             RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) MOZ_OVERRIDE;
-  virtual bool SupportsAzureContent() const;
 
   virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
   {
@@ -170,7 +168,7 @@ private:
 };
 
 /**
- * A ContentClientRemote backed by a ThebesLayerBuffer.
+ * A ContentClientRemote backed by a RotatedContentBuffer.
  *
  * When using a ContentClientRemote, SurfaceDescriptors are created on
  * the rendering side and destroyed on the compositing side. They are only
@@ -185,35 +183,35 @@ private:
  * create them.
  */
 class ContentClientRemoteBuffer : public ContentClientRemote
-                                , protected ThebesLayerBuffer
+                                , protected RotatedContentBuffer
 {
-  using ThebesLayerBuffer::BufferRect;
-  using ThebesLayerBuffer::BufferRotation;
+  using RotatedContentBuffer::BufferRect;
+  using RotatedContentBuffer::BufferRotation;
 public:
   ContentClientRemoteBuffer(CompositableForwarder* aForwarder)
     : ContentClientRemote(aForwarder)
-    , ThebesLayerBuffer(ContainsVisibleBounds)
+    , RotatedContentBuffer(ContainsVisibleBounds)
     , mDeprecatedTextureClient(nullptr)
     , mIsNewBuffer(false)
     , mFrontAndBackBufferDiffer(false)
     , mContentType(GFX_CONTENT_COLOR_ALPHA)
   {}
 
-  typedef ThebesLayerBuffer::PaintState PaintState;
-  typedef ThebesLayerBuffer::ContentType ContentType;
+  typedef RotatedContentBuffer::PaintState PaintState;
+  typedef RotatedContentBuffer::ContentType ContentType;
 
-  virtual void Clear() { ThebesLayerBuffer::Clear(); }
+  virtual void Clear() { RotatedContentBuffer::Clear(); }
   PaintState BeginPaintBuffer(ThebesLayer* aLayer, ContentType aContentType,
                               uint32_t aFlags)
   {
-    return ThebesLayerBuffer::BeginPaint(aLayer, aContentType, aFlags);
+    return RotatedContentBuffer::BeginPaint(aLayer, aContentType, aFlags);
   }
 
   /**
    * Begin/End Paint map a gfxASurface from the texture client
-   * into the buffer of ThebesLayerBuffer. The surface is only
+   * into the buffer of RotatedContentBuffer. The surface is only
    * valid when the texture client is locked, so is mapped out
-   * of ThebesLayerBuffer when we are done painting.
+   * of RotatedContentBuffer when we are done painting.
    * None of the underlying buffer attributes (rect, rotation)
    * are affected by mapping/unmapping.
    */
@@ -229,18 +227,15 @@ public:
   // Expose these protected methods from the superclass.
   virtual const nsIntRect& BufferRect() const
   {
-    return ThebesLayerBuffer::BufferRect();
+    return RotatedContentBuffer::BufferRect();
   }
   virtual const nsIntPoint& BufferRotation() const
   {
-    return ThebesLayerBuffer::BufferRotation();
+    return RotatedContentBuffer::BufferRotation();
   }
 
   virtual void CreateBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags,
-                            gfxASurface** aBlackSurface, gfxASurface** aWhiteSurface,
                             RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) MOZ_OVERRIDE;
-
-  virtual bool SupportsAzureContent() const MOZ_OVERRIDE;
 
   void DestroyBuffers();
 
@@ -369,8 +364,8 @@ public:
     mTextureInfo.mCompositableType = BUFFER_CONTENT_INC;
   }
 
-  typedef ThebesLayerBuffer::PaintState PaintState;
-  typedef ThebesLayerBuffer::ContentType ContentType;
+  typedef RotatedContentBuffer::PaintState PaintState;
+  typedef RotatedContentBuffer::ContentType ContentType;
 
   virtual TextureInfo GetTextureInfo() const
   {
@@ -383,9 +378,9 @@ public:
     mHasBuffer = false;
     mHasBufferOnWhite = false;
   }
-  virtual ThebesLayerBuffer::PaintState BeginPaintBuffer(ThebesLayer* aLayer,
-                                                         ThebesLayerBuffer::ContentType aContentType,
-                                                         uint32_t aFlags);
+  virtual RotatedContentBuffer::PaintState BeginPaintBuffer(ThebesLayer* aLayer,
+                                                            RotatedContentBuffer::ContentType aContentType,
+                                                            uint32_t aFlags);
 
   virtual void Updated(const nsIntRegion& aRegionToDraw,
                        const nsIntRegion& aVisibleRegion,

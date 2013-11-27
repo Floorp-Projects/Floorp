@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ThebesLayerBuffer.h"
+#include "RotatedBuffer.h"
 #include <sys/types.h>                  // for int32_t
 #include <algorithm>                    // for max
 #include "BasicImplData.h"              // for BasicImplData
@@ -11,14 +11,10 @@
 #include "BufferUnrotate.h"             // for BufferUnrotate
 #include "GeckoProfiler.h"              // for PROFILER_LABEL
 #include "Layers.h"                     // for ThebesLayer, Layer, etc
-#include "gfxColor.h"                   // for gfxRGBA
 #include "gfxContext.h"                 // for gfxContext, etc
 #include "gfxMatrix.h"                  // for gfxMatrix
-#include "gfxPattern.h"                 // for gfxPattern
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxPoint.h"                   // for gfxPoint
-#include "gfxRect.h"                    // for gfxRect
-#include "gfxTeeSurface.h"              // for gfxTeeSurface
 #include "gfxUtils.h"                   // for gfxUtils
 #include "mozilla/Util.h"               // for ArrayLength
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
@@ -69,106 +65,6 @@ RotatedBuffer::GetSourceRectangle(XSide aXSide, YSide aYSide) const
     result.height = mBufferRect.height - mBufferRotation.y;
   }
   return result;
-}
-
-/**
- * @param aXSide LEFT means we draw from the left side of the buffer (which
- * is drawn on the right side of mBufferRect). RIGHT means we draw from
- * the right side of the buffer (which is drawn on the left side of
- * mBufferRect).
- * @param aYSide TOP means we draw from the top side of the buffer (which
- * is drawn on the bottom side of mBufferRect). BOTTOM means we draw from
- * the bottom side of the buffer (which is drawn on the top side of
- * mBufferRect).
- */
-void
-RotatedBuffer::DrawBufferQuadrant(gfxContext* aTarget,
-                                  XSide aXSide, YSide aYSide,
-                                  ContextSource aSource,
-                                  float aOpacity,
-                                  gfxASurface* aMask,
-                                  const gfxMatrix* aMaskTransform) const
-{
-  // The rectangle that we're going to fill. Basically we're going to
-  // render the buffer at mBufferRect + quadrantTranslation to get the
-  // pixels in the right place, but we're only going to paint within
-  // mBufferRect
-  nsIntRect quadrantRect = GetQuadrantRectangle(aXSide, aYSide);
-  nsIntRect fillRect;
-  if (!fillRect.IntersectRect(mBufferRect, quadrantRect)) {
-    return;
-  }
-
-  nsRefPtr<gfxASurface> source;
-
-  if (aSource == BUFFER_BLACK) {
-    if (mBuffer) {
-      source = mBuffer;
-    } else if (mDTBuffer) {
-      source = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDTBuffer);
-    } else {
-      NS_WARNING("Can't draw a RotatedBuffer without any buffer!");
-      return;
-    }
-  } else {
-    MOZ_ASSERT(aSource == BUFFER_WHITE);
-    if (mBufferOnWhite) {
-      source = mBufferOnWhite;
-    } else if (mDTBufferOnWhite) {
-      source = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDTBufferOnWhite);
-    } else {
-      NS_WARNING("Can't draw a RotatedBuffer without any buffer!");
-      return;
-    }
-  }
-
-
-  aTarget->NewPath();
-  aTarget->Rectangle(gfxRect(fillRect.x, fillRect.y,
-                             fillRect.width, fillRect.height),
-                     true);
-
-  gfxPoint quadrantTranslation(quadrantRect.x, quadrantRect.y);
-  nsRefPtr<gfxPattern> pattern = new gfxPattern(source);
-
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  GraphicsFilter filter = GraphicsFilter::FILTER_NEAREST;
-  pattern->SetFilter(filter);
-#endif
-
-  gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
-
-  // Transform from user -> buffer space.
-  gfxMatrix transform;
-  transform.Translate(-quadrantTranslation);
-
-  pattern->SetMatrix(transform);
-  aTarget->SetPattern(pattern);
-
-  if (aMask) {
-    if (aOpacity == 1.0) {
-      aTarget->SetMatrix(*aMaskTransform);
-      aTarget->Mask(aMask);
-    } else {
-      aTarget->PushGroup(GFX_CONTENT_COLOR_ALPHA);
-      aTarget->Paint(aOpacity);
-      aTarget->PopGroupToSource();
-      aTarget->SetMatrix(*aMaskTransform);
-      aTarget->Mask(aMask);
-    }
-  } else {
-    if (aOpacity == 1.0) {
-      aTarget->Fill();
-    } else {
-      aTarget->Save();
-      aTarget->Clip();
-      aTarget->Paint(aOpacity);
-      aTarget->Restore();
-    }
-  }
-
-  nsRefPtr<gfxASurface> surf = aTarget->CurrentSurface();
-  surf->Flush();
 }
 
 /**
@@ -265,21 +161,6 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
 }
 
 void
-RotatedBuffer::DrawBufferWithRotation(gfxContext* aTarget, ContextSource aSource,
-                                      float aOpacity,
-                                      gfxASurface* aMask,
-                                      const gfxMatrix* aMaskTransform) const
-{
-  PROFILER_LABEL("RotatedBuffer", "DrawBufferWithRotation");
-  // Draw four quadrants. We could use REPEAT_, but it's probably better
-  // not to, to be performance-safe.
-  DrawBufferQuadrant(aTarget, LEFT, TOP, aSource, aOpacity, aMask, aMaskTransform);
-  DrawBufferQuadrant(aTarget, RIGHT, TOP, aSource, aOpacity, aMask, aMaskTransform);
-  DrawBufferQuadrant(aTarget, LEFT, BOTTOM, aSource, aOpacity, aMask, aMaskTransform);
-  DrawBufferQuadrant(aTarget, RIGHT, BOTTOM, aSource, aOpacity, aMask, aMaskTransform);
-}
-
-void
 RotatedBuffer::DrawBufferWithRotation(gfx::DrawTarget *aTarget, ContextSource aSource,
                                       float aOpacity,
                                       gfx::CompositionOp aOperator,
@@ -297,7 +178,7 @@ RotatedBuffer::DrawBufferWithRotation(gfx::DrawTarget *aTarget, ContextSource aS
 }
 
 /* static */ bool
-ThebesLayerBuffer::IsClippingCheap(gfxContext* aTarget, const nsIntRegion& aRegion)
+RotatedContentBuffer::IsClippingCheap(gfxContext* aTarget, const nsIntRegion& aRegion)
 {
   // Assume clipping is cheap if the context just has an integer
   // translation, and the visible region is simple.
@@ -306,88 +187,58 @@ ThebesLayerBuffer::IsClippingCheap(gfxContext* aTarget, const nsIntRegion& aRegi
 }
 
 void
-ThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
-                          gfxContext* aTarget,
-                          float aOpacity,
-                          gfxASurface* aMask,
-                          const gfxMatrix* aMaskTransform)
+RotatedContentBuffer::DrawTo(ThebesLayer* aLayer,
+                             gfxContext* aTarget,
+                             float aOpacity,
+                             gfxASurface* aMask,
+                             const gfxMatrix* aMaskTransform)
 {
   if (!EnsureBuffer()) {
     return;
   }
 
-  if (aTarget->IsCairo()) {
-    aTarget->Save();
-    // If the entire buffer is valid, we can just draw the whole thing,
-    // no need to clip. But we'll still clip if clipping is cheap ---
-    // that might let us copy a smaller region of the buffer.
-    // Also clip to the visible region if we're told to.
-    if (!aLayer->GetValidRegion().Contains(BufferRect()) ||
-        (ToData(aLayer)->GetClipToVisibleRegion() &&
-         !aLayer->GetVisibleRegion().Contains(BufferRect())) ||
-        IsClippingCheap(aTarget, aLayer->GetEffectiveVisibleRegion())) {
-      // We don't want to draw invalid stuff, so we need to clip. Might as
-      // well clip to the smallest area possible --- the visible region.
-      // Bug 599189 if there is a non-integer-translation transform in aTarget,
-      // we might sample pixels outside GetEffectiveVisibleRegion(), which is wrong
-      // and may cause gray lines.
-      gfxUtils::ClipToRegionSnapped(aTarget, aLayer->GetEffectiveVisibleRegion());
-    }
+  RefPtr<DrawTarget> dt = aTarget->GetDrawTarget();
+  MOZ_ASSERT(dt, "Did you pass a non-Azure gfxContext?");
+  bool clipped = false;
 
-    DrawBufferWithRotation(aTarget, BUFFER_BLACK, aOpacity, aMask, aMaskTransform);
-    aTarget->Restore();
-  } else {
-    RefPtr<DrawTarget> dt = aTarget->GetDrawTarget();
-    bool clipped = false;
+  // If the entire buffer is valid, we can just draw the whole thing,
+  // no need to clip. But we'll still clip if clipping is cheap ---
+  // that might let us copy a smaller region of the buffer.
+  // Also clip to the visible region if we're told to.
+  if (!aLayer->GetValidRegion().Contains(BufferRect()) ||
+      (ToData(aLayer)->GetClipToVisibleRegion() &&
+       !aLayer->GetVisibleRegion().Contains(BufferRect())) ||
+      IsClippingCheap(aTarget, aLayer->GetEffectiveVisibleRegion())) {
+    // We don't want to draw invalid stuff, so we need to clip. Might as
+    // well clip to the smallest area possible --- the visible region.
+    // Bug 599189 if there is a non-integer-translation transform in aTarget,
+    // we might sample pixels outside GetEffectiveVisibleRegion(), which is wrong
+    // and may cause gray lines.
+    gfxUtils::ClipToRegionSnapped(dt, aLayer->GetEffectiveVisibleRegion());
+    clipped = true;
+  }
 
-    // If the entire buffer is valid, we can just draw the whole thing,
-    // no need to clip. But we'll still clip if clipping is cheap ---
-    // that might let us copy a smaller region of the buffer.
-    // Also clip to the visible region if we're told to.
-    if (!aLayer->GetValidRegion().Contains(BufferRect()) ||
-        (ToData(aLayer)->GetClipToVisibleRegion() &&
-         !aLayer->GetVisibleRegion().Contains(BufferRect())) ||
-        IsClippingCheap(aTarget, aLayer->GetEffectiveVisibleRegion())) {
-      // We don't want to draw invalid stuff, so we need to clip. Might as
-      // well clip to the smallest area possible --- the visible region.
-      // Bug 599189 if there is a non-integer-translation transform in aTarget,
-      // we might sample pixels outside GetEffectiveVisibleRegion(), which is wrong
-      // and may cause gray lines.
-      gfxUtils::ClipToRegionSnapped(dt, aLayer->GetEffectiveVisibleRegion());
-      clipped = true;
-    }
+  RefPtr<gfx::SourceSurface> mask;
+  if (aMask) {
+    mask = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, aMask);
+  }
 
-    RefPtr<gfx::SourceSurface> mask;
-    if (aMask) {
-      mask = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, aMask);
-    }
+  Matrix maskTransform;
+  if (aMaskTransform) {
+    maskTransform = ToMatrix(*aMaskTransform);
+  }
 
-    Matrix maskTransform;
-    if (aMaskTransform) {
-      maskTransform = ToMatrix(*aMaskTransform);
-    }
-
-    CompositionOp op = CompositionOpForOp(aTarget->CurrentOperator());
-    DrawBufferWithRotation(dt, BUFFER_BLACK, aOpacity, op, mask, &maskTransform);
-    if (clipped) {
-      dt->PopClip();
-    }
+  CompositionOp op = CompositionOpForOp(aTarget->CurrentOperator());
+  DrawBufferWithRotation(dt, BUFFER_BLACK, aOpacity, op, mask, &maskTransform);
+  if (clipped) {
+    dt->PopClip();
   }
 }
 
-static void
-FillSurface(gfxASurface* aSurface, const nsIntRegion& aRegion,
-            const nsIntPoint& aOffset, const gfxRGBA& aColor)
-{
-  nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
-  ctx->Translate(-gfxPoint(aOffset.x, aOffset.y));
-  gfxUtils::ClipToRegion(ctx, aRegion);
-  ctx->SetColor(aColor);
-  ctx->Paint();
-}
-
 already_AddRefed<gfxContext>
-ThebesLayerBuffer::GetContextForQuadrantUpdate(const nsIntRect& aBounds, ContextSource aSource, nsIntPoint *aTopLeft)
+RotatedContentBuffer::GetContextForQuadrantUpdate(const nsIntRect& aBounds,
+                                                  ContextSource aSource,
+                                                  nsIntPoint *aTopLeft)
 {
   if (!EnsureBuffer()) {
     return nullptr;
@@ -398,41 +249,17 @@ ThebesLayerBuffer::GetContextForQuadrantUpdate(const nsIntRect& aBounds, Context
     if (!EnsureBufferOnWhite()) {
       return nullptr;
     }
-    if (mBuffer) {
-      MOZ_ASSERT(mBufferOnWhite);
-      gfxASurface* surfaces[2] = { mBuffer, mBufferOnWhite };
-      nsRefPtr<gfxTeeSurface> surf = new gfxTeeSurface(surfaces, ArrayLength(surfaces));
-
-      // XXX If the device offset is set on the individual surfaces instead of on
-      // the tee surface, we render in the wrong place. Why?
-      gfxPoint deviceOffset = mBuffer->GetDeviceOffset();
-      surfaces[0]->SetDeviceOffset(gfxPoint(0, 0));
-      surfaces[1]->SetDeviceOffset(gfxPoint(0, 0));
-      surf->SetDeviceOffset(deviceOffset);
-
-      surf->SetAllowUseAsSource(false);
-      ctx = new gfxContext(surf);
-    } else {
-      MOZ_ASSERT(mDTBuffer && mDTBufferOnWhite);
-      RefPtr<DrawTarget> dualDT = Factory::CreateDualDrawTarget(mDTBuffer, mDTBufferOnWhite);
-      ctx = new gfxContext(dualDT);
-    }
+    MOZ_ASSERT(mDTBuffer && mDTBufferOnWhite);
+    RefPtr<DrawTarget> dualDT = Factory::CreateDualDrawTarget(mDTBuffer, mDTBufferOnWhite);
+    ctx = new gfxContext(dualDT);
   } else if (aSource == BUFFER_WHITE) {
     if (!EnsureBufferOnWhite()) {
       return nullptr;
     }
-    if (mBufferOnWhite) {
-      ctx = new gfxContext(mBufferOnWhite);
-    } else {
-      ctx = new gfxContext(mDTBufferOnWhite);
-    }
+    ctx = new gfxContext(mDTBufferOnWhite);
   } else {
     // BUFFER_BLACK, or BUFFER_BOTH with a single buffer.
-    if (mBuffer) {
-      ctx = new gfxContext(mBuffer);
-    } else {
-      ctx = new gfxContext(mDTBuffer);
-    }
+    ctx = new gfxContext(mDTBuffer);
   }
 
   // Figure out which quadrant to draw in
@@ -452,11 +279,8 @@ ThebesLayerBuffer::GetContextForQuadrantUpdate(const nsIntRect& aBounds, Context
 }
 
 gfxContentType
-ThebesLayerBuffer::BufferContentType()
+RotatedContentBuffer::BufferContentType()
 {
-  if (mBuffer) {
-    return mBuffer->GetContentType();
-  }
   if (mBufferProvider) {
     return mBufferProvider->GetContentType();
   }
@@ -475,7 +299,7 @@ ThebesLayerBuffer::BufferContentType()
 }
 
 bool
-ThebesLayerBuffer::BufferSizeOkFor(const nsIntSize& aSize)
+RotatedContentBuffer::BufferSizeOkFor(const nsIntSize& aSize)
 {
   return (aSize == mBufferRect.Size() ||
           (SizedToVisibleBounds != mBufferSizePolicy &&
@@ -483,66 +307,37 @@ ThebesLayerBuffer::BufferSizeOkFor(const nsIntSize& aSize)
 }
 
 bool
-ThebesLayerBuffer::IsAzureBuffer()
+RotatedContentBuffer::EnsureBuffer()
 {
-  MOZ_ASSERT(!(mDTBuffer && mBuffer), "Trying to use Azure and Thebes in the same buffer?");
-  if (mDTBuffer) {
-    return true;
+  if (!mDTBuffer && mBufferProvider) {
+    mDTBuffer = mBufferProvider->LockDrawTarget();
   }
-  if (mBuffer) {
-    return false;
-  }
-  if (mBufferProvider) {
-    return gfxPlatform::GetPlatform()->SupportsAzureContentForType(
-      mBufferProvider->BackendType());
-  }
-  return SupportsAzureContent();
+
+  NS_WARN_IF_FALSE(mDTBuffer, "no buffer");
+  return !!mDTBuffer;
 }
 
 bool
-ThebesLayerBuffer::EnsureBuffer()
+RotatedContentBuffer::EnsureBufferOnWhite()
 {
-  if ((!mBuffer && !mDTBuffer) && mBufferProvider) {
-    if (IsAzureBuffer()) {
-      mDTBuffer = mBufferProvider->LockDrawTarget();
-      mBuffer = nullptr;
-    } else {
-      mBuffer = mBufferProvider->LockSurface();
-      mDTBuffer = nullptr;
-    }
+  if (!mDTBufferOnWhite && mBufferProviderOnWhite) {
+    mDTBufferOnWhite = mBufferProviderOnWhite->LockDrawTarget();
   }
 
-  NS_WARN_IF_FALSE(mBuffer || mDTBuffer, "no buffer");
-  return mBuffer || mDTBuffer;
+  NS_WARN_IF_FALSE(mDTBufferOnWhite, "no buffer");
+  return mDTBufferOnWhite;
 }
 
 bool
-ThebesLayerBuffer::EnsureBufferOnWhite()
+RotatedContentBuffer::HaveBuffer() const
 {
-  if ((!mBufferOnWhite && !mDTBufferOnWhite) && mBufferProviderOnWhite) {
-    if (IsAzureBuffer()) {
-      mDTBufferOnWhite = mBufferProviderOnWhite->LockDrawTarget();
-      mBufferOnWhite = nullptr;
-    } else {
-      mBufferOnWhite = mBufferProviderOnWhite->LockSurface();
-      mDTBufferOnWhite = nullptr;
-    }
-  }
-
-  NS_WARN_IF_FALSE(mBufferOnWhite || mDTBufferOnWhite, "no buffer");
-  return mBufferOnWhite || mDTBufferOnWhite;
+  return mDTBuffer || mBufferProvider;
 }
 
 bool
-ThebesLayerBuffer::HaveBuffer() const
+RotatedContentBuffer::HaveBufferOnWhite() const
 {
-  return mDTBuffer || mBuffer || mBufferProvider;
-}
-
-bool
-ThebesLayerBuffer::HaveBufferOnWhite() const
-{
-  return mDTBufferOnWhite || mBufferOnWhite || mBufferProviderOnWhite;
+  return mDTBufferOnWhite || mBufferProviderOnWhite;
 }
 
 static void
@@ -582,9 +377,9 @@ ComputeBufferRect(const nsIntRect& aRequestedRect)
   return rect;
 }
 
-ThebesLayerBuffer::PaintState
-ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
-                              uint32_t aFlags)
+RotatedContentBuffer::PaintState
+RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
+                                 uint32_t aFlags)
 {
   PaintState result;
   // We need to disable rotation if we're going to be resampled when
@@ -665,7 +460,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
       validRegion.SetEmpty();
       Clear();
       // Restart decision process with the cleared buffer. We can only go
-      // around the loop one more iteration, since mBuffer is null now.
+      // around the loop one more iteration, since mDTBuffer is null now.
       continue;
     }
 
@@ -680,8 +475,6 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
     return result;
 
   nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
-  nsRefPtr<gfxASurface> destBuffer;
-  nsRefPtr<gfxASurface> destBufferOnWhite;
   RefPtr<DrawTarget> destDTBuffer;
   RefPtr<DrawTarget> destDTBufferOnWhite;
   uint32_t bufferFlags = canHaveRotation ? ALLOW_REPEAT : 0;
@@ -694,7 +487,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
     }
     nsIntRect keepArea;
     if (keepArea.IntersectRect(destBufferRect, mBufferRect)) {
-      // Set mBufferRotation so that the pixels currently in mBuffer
+      // Set mBufferRotation so that the pixels currently in mDTBuffer
       // will still be rendered in the right place when mBufferRect
       // changes to destBufferRect.
       nsIntPoint newRotation = mBufferRotation +
@@ -714,28 +507,16 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
         if (mBufferRotation == nsIntPoint(0,0)) {
           nsIntRect srcRect(nsIntPoint(0, 0), mBufferRect.Size());
           nsIntPoint dest = mBufferRect.TopLeft() - destBufferRect.TopLeft();
-          if (IsAzureBuffer()) {
-            MOZ_ASSERT(mDTBuffer);
-            mDTBuffer->CopyRect(IntRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height),
-                                IntPoint(dest.x, dest.y));
-            if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
-              if (!EnsureBufferOnWhite()) {
-                return result;
-              }
-              MOZ_ASSERT(mDTBufferOnWhite);
-              mDTBufferOnWhite->CopyRect(IntRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height),
-                                         IntPoint(dest.x, dest.y));
+          MOZ_ASSERT(mDTBuffer);
+          mDTBuffer->CopyRect(IntRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height),
+                              IntPoint(dest.x, dest.y));
+          if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+            if (!EnsureBufferOnWhite()) {
+              return result;
             }
-          } else {
-            MOZ_ASSERT(mBuffer);
-            mBuffer->MovePixels(srcRect, dest);
-            if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
-              if (!EnsureBufferOnWhite()) {
-                return result;
-              }
-              MOZ_ASSERT(mBufferOnWhite);
-              mBufferOnWhite->MovePixels(srcRect, dest);
-            }
+            MOZ_ASSERT(mDTBufferOnWhite);
+            mDTBufferOnWhite->CopyRect(IntRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height),
+                                       IntPoint(dest.x, dest.y));
           }
           result.mDidSelfCopy = true;
           mDidSelfCopy = true;
@@ -745,50 +526,48 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
         } else {
           // With azure and a data surface perform an buffer unrotate
           // (SelfCopy).
-          if (IsAzureBuffer()) {
-            unsigned char* data;
-            IntSize size;
-            int32_t stride;
-            SurfaceFormat format;
+          unsigned char* data;
+          IntSize size;
+          int32_t stride;
+          SurfaceFormat format;
 
-            if (mDTBuffer->LockBits(&data, &size, &stride, &format)) {
+          if (mDTBuffer->LockBits(&data, &size, &stride, &format)) {
+            uint8_t bytesPerPixel = BytesPerPixel(format);
+            BufferUnrotate(data,
+                           size.width * bytesPerPixel,
+                           size.height, stride,
+                           newRotation.x * bytesPerPixel, newRotation.y);
+            mDTBuffer->ReleaseBits(data);
+
+            if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+              if (!EnsureBufferOnWhite()) {
+                return result;
+              }
+              MOZ_ASSERT(mDTBufferOnWhite);
+              mDTBufferOnWhite->LockBits(&data, &size, &stride, &format);
               uint8_t bytesPerPixel = BytesPerPixel(format);
               BufferUnrotate(data,
                              size.width * bytesPerPixel,
                              size.height, stride,
                              newRotation.x * bytesPerPixel, newRotation.y);
-              mDTBuffer->ReleaseBits(data);
-
-              if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
-                if (!EnsureBufferOnWhite()) {
-                  return result;
-                }
-                MOZ_ASSERT(mDTBufferOnWhite);
-                mDTBufferOnWhite->LockBits(&data, &size, &stride, &format);
-                uint8_t bytesPerPixel = BytesPerPixel(format);
-                BufferUnrotate(data,
-                               size.width * bytesPerPixel,
-                               size.height, stride,
-                               newRotation.x * bytesPerPixel, newRotation.y);
-                mDTBufferOnWhite->ReleaseBits(data);
-              }
-
-              // Buffer unrotate moves all the pixels, note that
-              // we self copied for SyncBackToFrontBuffer
-              result.mDidSelfCopy = true;
-              mDidSelfCopy = true;
-              mBufferRect = destBufferRect;
-              mBufferRotation = nsIntPoint(0, 0);
+              mDTBufferOnWhite->ReleaseBits(data);
             }
+
+            // Buffer unrotate moves all the pixels, note that
+            // we self copied for SyncBackToFrontBuffer
+            result.mDidSelfCopy = true;
+            mDidSelfCopy = true;
+            mBufferRect = destBufferRect;
+            mBufferRotation = nsIntPoint(0, 0);
           }
 
           if (!result.mDidSelfCopy) {
             destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
             CreateBuffer(contentType, destBufferRect, bufferFlags,
-                         getter_AddRefs(destBuffer), getter_AddRefs(destBufferOnWhite),
                          &destDTBuffer, &destDTBufferOnWhite);
-            if (!destBuffer && !destDTBuffer)
+            if (!destDTBuffer) {
               return result;
+            }
           }
         }
       } else {
@@ -805,10 +584,10 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
   } else {
     // The buffer's not big enough, so allocate a new one
     CreateBuffer(contentType, destBufferRect, bufferFlags,
-                 getter_AddRefs(destBuffer), getter_AddRefs(destBufferOnWhite),
                  &destDTBuffer, &destDTBufferOnWhite);
-    if (!destBuffer && !destDTBuffer)
+    if (!destDTBuffer) {
       return result;
+    }
   }
 
   NS_ASSERTION(!(aFlags & PAINT_WILL_RESAMPLE) || destBufferRect == neededRegion.GetBounds(),
@@ -818,37 +597,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
   // and we do not need to clear it below.
   bool isClear = !HaveBuffer();
 
-  if (destBuffer) {
-    if (!isClear && (mode != Layer::SURFACE_COMPONENT_ALPHA || HaveBufferOnWhite())) {
-      // Copy the bits
-      nsRefPtr<gfxContext> tmpCtx = new gfxContext(destBuffer);
-      nsIntPoint offset = -destBufferRect.TopLeft();
-      tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-      tmpCtx->Translate(gfxPoint(offset.x, offset.y));
-      if (!EnsureBuffer()) {
-        return result;
-      }
-      DrawBufferWithRotation(tmpCtx, BUFFER_BLACK);
-
-      if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
-        if (!EnsureBufferOnWhite()) {
-          return result;
-        }
-        NS_ASSERTION(destBufferOnWhite, "Must have a white buffer!");
-        nsRefPtr<gfxContext> tmpCtx = new gfxContext(destBufferOnWhite);
-        tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-        tmpCtx->Translate(gfxPoint(offset.x, offset.y));
-        DrawBufferWithRotation(tmpCtx, BUFFER_WHITE);
-      }
-    }
-
-    mBuffer = destBuffer.forget();
-    mDTBuffer = nullptr;
-    mBufferRect = destBufferRect;
-    mBufferOnWhite = destBufferOnWhite.forget();
-    mDTBufferOnWhite = nullptr;
-    mBufferRotation = nsIntPoint(0,0);
-  } else if (destDTBuffer) {
+  if (destDTBuffer) {
     if (!isClear && (mode != Layer::SURFACE_COMPONENT_ALPHA || HaveBufferOnWhite())) {
       // Copy the bits
       nsIntPoint offset = -destBufferRect.TopLeft();
@@ -875,9 +624,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
     }
 
     mDTBuffer = destDTBuffer.forget();
-    mBuffer = nullptr;
     mDTBufferOnWhite = destDTBufferOnWhite.forget();
-    mBufferOnWhite = nullptr;
     mBufferRect = destBufferRect;
     mBufferRotation = nsIntPoint(0,0);
   }
@@ -893,37 +640,20 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
   result.mClip = CLIP_DRAW_SNAPPED;
 
   if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
-    if (IsAzureBuffer()) {
-      MOZ_ASSERT(mDTBuffer && mDTBufferOnWhite);
-      nsIntRegionRectIterator iter(result.mRegionToDraw);
-      const nsIntRect *iterRect;
-      while ((iterRect = iter.Next())) {
-        mDTBuffer->FillRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
-                            ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
-        mDTBufferOnWhite->FillRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
-                                   ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
-      }
-    } else {
-      MOZ_ASSERT(mBuffer && mBufferOnWhite);
-      FillSurface(mBuffer, result.mRegionToDraw, topLeft, gfxRGBA(0.0, 0.0, 0.0, 1.0));
-      FillSurface(mBufferOnWhite, result.mRegionToDraw, topLeft, gfxRGBA(1.0, 1.0, 1.0, 1.0));
+    MOZ_ASSERT(mDTBuffer && mDTBufferOnWhite);
+    nsIntRegionRectIterator iter(result.mRegionToDraw);
+    const nsIntRect *iterRect;
+    while ((iterRect = iter.Next())) {
+      mDTBuffer->FillRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
+                          ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
+      mDTBufferOnWhite->FillRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
+                                 ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
     }
   } else if (contentType == GFX_CONTENT_COLOR_ALPHA && !isClear) {
-    if (IsAzureBuffer()) {
-      nsIntRegionRectIterator iter(result.mRegionToDraw);
-      const nsIntRect *iterRect;
-      while ((iterRect = iter.Next())) {
-        result.mContext->GetDrawTarget()->ClearRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height));
-      }
-      // Clear will do something expensive with a complex clip pushed, so clip
-      // here.
-    } else {
-      MOZ_ASSERT(result.mContext->IsCairo());
-      result.mContext->Save();
-      gfxUtils::ClipToRegionSnapped(result.mContext, result.mRegionToDraw);
-      result.mContext->SetOperator(gfxContext::OPERATOR_CLEAR);
-      result.mContext->Paint();
-      result.mContext->Restore();
+    nsIntRegionRectIterator iter(result.mRegionToDraw);
+    const nsIntRect *iterRect;
+    while ((iterRect = iter.Next())) {
+      result.mContext->GetDrawTarget()->ClearRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height));
     }
   }
 

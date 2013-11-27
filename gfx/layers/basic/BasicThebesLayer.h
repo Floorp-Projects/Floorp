@@ -7,7 +7,7 @@
 #define GFX_BASICTHEBESLAYER_H
 
 #include "Layers.h"                     // for ThebesLayer, LayerManager, etc
-#include "ThebesLayerBuffer.h"          // for ThebesLayerBuffer, etc
+#include "RotatedBuffer.h"              // for RotatedContentBuffer, etc
 #include "BasicImplData.h"              // for BasicImplData
 #include "BasicLayers.h"                // for BasicLayerManager
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
@@ -28,8 +28,8 @@ class ReadbackProcessor;
 
 class BasicThebesLayer : public ThebesLayer, public BasicImplData {
 public:
-  typedef ThebesLayerBuffer::PaintState PaintState;
-  typedef ThebesLayerBuffer::ContentType ContentType;
+  typedef RotatedContentBuffer::PaintState PaintState;
+  typedef RotatedContentBuffer::ContentType ContentType;
 
   BasicThebesLayer(BasicLayerManager* aLayerManager) :
     ThebesLayer(aLayerManager,

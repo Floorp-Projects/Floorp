@@ -510,3 +510,4 @@ load 885009-1.html
 load 893523.html
 test-pref(layout.css.sticky.enabled,true) load 914891.html
 test-pref(layout.css.sticky.enabled,true) load 915475.xhtml
+load 943509-1.html

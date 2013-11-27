@@ -9,7 +9,6 @@
 
 #include "BasicLayers.h"
 #include "gfx3DMatrix.h"
-#include "LayerManagerOGL.h"
 #ifdef MOZ_ENABLE_D3D9_LAYER
 # include "LayerManagerD3D9.h"
 #endif //MOZ_ENABLE_D3D9_LAYER
