@@ -81,6 +81,11 @@ public:
   virtual void FlushRendering() MOZ_OVERRIDE;
   void SendInvalidRegion(const nsIntRegion& aRegion);
 
+  virtual uint32_t StartFrameTimeRecording(int32_t aBufferSize) MOZ_OVERRIDE;
+
+  virtual void StopFrameTimeRecording(uint32_t         aStartIndex,
+                                      nsTArray<float>& aFrameIntervals) MOZ_OVERRIDE;
+
   virtual bool NeedsWidgetInvalidation() MOZ_OVERRIDE { return false; }
 
   ShadowableLayer* Hold(Layer* aLayer);
