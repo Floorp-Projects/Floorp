@@ -52,13 +52,13 @@ ValueNumberer::simplify(MDefinition *def, bool useValueNumbers)
         return def;
 
     MDefinition *ins = def->foldsTo(alloc(), useValueNumbers);
-
-    if (ins == def || !ins->updateForFolding(def))
+    if (ins == def)
         return def;
 
-    // ensure this instruction has a VN
+    // Ensure this instruction has a value number.
     if (!ins->valueNumberData())
         ins->setValueNumberData(new(alloc()) ValueNumberData);
+
     if (!ins->block()) {
         // In this case, we made a new def by constant folding, for
         // example, we replaced add(#3,#4) with a new const(#7) node.
@@ -85,7 +85,7 @@ ValueNumberer::simplifyControlInstruction(MControlInstruction *def)
         return def;
 
     MDefinition *repl = def->foldsTo(alloc(), false);
-    if (repl == def || !repl->updateForFolding(def))
+    if (repl == def)
         return def;
 
     // Ensure this instruction has a value number.
@@ -246,6 +246,15 @@ ValueNumberer::computeValueNumbers()
                     continue;
                 }
 
+                // Don't bother storing this instruction in the HashMap if
+                // (a) eliminateRedundancies will never eliminate it (because
+                // it's non-movable or effectful) and (b) no other instruction's
+                // value number depends on it.
+                if (!ins->hasDefUses() && (!ins->isMovable() || ins->isEffectful())) {
+                    iter++;
+                    continue;
+                }
+
                 uint32_t value = lookupValue(ins);
 
                 if (!value)
@@ -286,7 +295,8 @@ ValueNumberer::computeValueNumbers()
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
         for (MDefinitionIterator iter(*block); iter; iter++) {
             JS_ASSERT(!iter->isInWorklist());
-            JS_ASSERT(iter->valueNumber() != 0);
+            JS_ASSERT_IF(iter->valueNumber() == 0,
+                         !iter->hasDefUses() && (!iter->isMovable() || iter->isEffectful()));
         }
     }
 #endif

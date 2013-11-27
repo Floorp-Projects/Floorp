@@ -1,0 +1,16 @@
+<foo id=test1>>><body id=test2 '><bdi id=test3><keygen>
+<test><script>
+var docElement = document.body ? document.body : document.documentElement;
+function initCF() {
+try { test4 = document.createElementNS("http://www.w3.org/1999/xhtml", "td"); } catch(e) {}
+try { docElement.appendChild(test4); } catch(e) {}
+try { test5 = test3.cloneNode(true); } catch(e) {}
+try { test5.setAttribute("dir", "invalid"); } catch(e) {}
+try { docElement.appendChild(test5); } catch(e) {}
+setTimeout("CFcrash()", 0);
+}
+document.addEventListener("DOMContentLoaded", initCF, false);
+function CFcrash() {
+try { test1.appendChild(test4); } catch(e) {}
+try { document.adoptNode(test2); } catch(e) {}
+}</script>>

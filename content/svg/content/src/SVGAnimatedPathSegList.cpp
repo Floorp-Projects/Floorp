@@ -155,7 +155,7 @@ SVGAnimatedPathSegList::
                                bool& aPreventCachingOfSandwich) const
 {
   nsSMILValue val(SVGPathSegListSMILType::Singleton());
-  SVGPathDataAndOwner *list = static_cast<SVGPathDataAndOwner*>(val.mU.mPtr);
+  SVGPathDataAndInfo *list = static_cast<SVGPathDataAndInfo*>(val.mU.mPtr);
   nsresult rv = list->SetValueFromString(aStr);
   if (NS_SUCCEEDED(rv)) {
     list->SetElement(mElement);
@@ -174,7 +174,7 @@ SVGAnimatedPathSegList::SMILAnimatedPathSegList::GetBaseValue() const
   nsSMILValue val;
 
   nsSMILValue tmp(SVGPathSegListSMILType::Singleton());
-  SVGPathDataAndOwner *list = static_cast<SVGPathDataAndOwner*>(tmp.mU.mPtr);
+  SVGPathDataAndInfo *list = static_cast<SVGPathDataAndInfo*>(tmp.mU.mPtr);
   nsresult rv = list->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
     list->SetElement(mElement);
@@ -189,7 +189,7 @@ SVGAnimatedPathSegList::SMILAnimatedPathSegList::SetAnimValue(const nsSMILValue&
   NS_ASSERTION(aValue.mType == SVGPathSegListSMILType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SVGPathSegListSMILType::Singleton()) {
-    mVal->SetAnimValue(*static_cast<SVGPathDataAndOwner*>(aValue.mU.mPtr),
+    mVal->SetAnimValue(*static_cast<SVGPathDataAndInfo*>(aValue.mU.mPtr),
                        mElement);
   }
   return NS_OK;

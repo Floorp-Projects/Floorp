@@ -83,7 +83,8 @@
         "remote-tsvgx": {
             "tests": ["tsvgx"],
             "talos_options": [
-                "--noChrome"
+                "--noChrome",
+                "--tppagecycles", "10"
             ]
         },
         "remote-tcanvasmark": {
