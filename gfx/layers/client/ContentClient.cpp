@@ -110,7 +110,6 @@ ContentClientRemoteBuffer::DestroyBuffers()
   if (!mTextureClient) {
     return;
   }
-  MOZ_ASSERT(mTextureClient->GetAccessMode() == TextureClient::ACCESS_READ_WRITE);
 
   mOldTextures.AppendElement(mTextureClient);
   mTextureClient = nullptr;
@@ -278,11 +277,6 @@ ContentClientRemoteBuffer::Updated(const nsIntRegion& aRegionToDraw,
                                                aDidSelfCopy);
 
   MOZ_ASSERT(mTextureClient);
-  mTextureClient->SetAccessMode(TextureClient::ACCESS_NONE);
-  if (mTextureClientOnWhite) {
-    mTextureClientOnWhite->SetAccessMode(TextureClient::ACCESS_NONE);
-  }
-  LockFrontBuffer();
   mForwarder->UseTexture(this, mTextureClient);
   mForwarder->UpdateTextureRegion(this,
                                   ThebesBufferData(BufferRect(),
@@ -293,15 +287,8 @@ ContentClientRemoteBuffer::Updated(const nsIntRegion& aRegionToDraw,
 void
 ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 {
-  MOZ_ASSERT(mTextureClient->GetAccessMode() == TextureClient::ACCESS_NONE);
-  MOZ_ASSERT(!mTextureClientOnWhite || mTextureClientOnWhite->GetAccessMode() == TextureClient::ACCESS_NONE);
   MOZ_ASSERT(mTextureClient);
-
   mFrontAndBackBufferDiffer = true;
-  mTextureClient->SetAccessMode(TextureClient::ACCESS_READ_WRITE);
-  if (mTextureClientOnWhite) {
-    mTextureClientOnWhite->SetAccessMode(TextureClient::ACCESS_READ_WRITE);
-  }
 }
 
 void
@@ -311,7 +298,6 @@ DeprecatedContentClientRemoteBuffer::DestroyBuffers()
     return;
   }
 
-  MOZ_ASSERT(mDeprecatedTextureClient->GetAccessMode() == DeprecatedTextureClient::ACCESS_READ_WRITE);
   mDeprecatedTextureClient = nullptr;
   mDeprecatedTextureClientOnWhite = nullptr;
 
@@ -529,23 +515,12 @@ void
 ContentClientDoubleBuffered::DestroyFrontBuffer()
 {
   MOZ_ASSERT(mFrontClient);
-  MOZ_ASSERT(mFrontClient->GetAccessMode() != TextureClient::ACCESS_NONE);
 
   mOldTextures.AppendElement(mFrontClient);
   mFrontClient = nullptr;
   if (mFrontClientOnWhite) {
     mOldTextures.AppendElement(mFrontClientOnWhite);
     mFrontClientOnWhite = nullptr;
-  }
-}
-
-void
-ContentClientDoubleBuffered::LockFrontBuffer()
-{
-  MOZ_ASSERT(mFrontClient);
-  mFrontClient->SetAccessMode(TextureClient::ACCESS_NONE);
-  if (mFrontClientOnWhite) {
-    mFrontClientOnWhite->SetAccessMode(TextureClient::ACCESS_NONE);
   }
 }
 
@@ -571,10 +546,6 @@ ContentClientDoubleBuffered::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
   mFrontBufferRotation = oldBufferRotation;
 
   MOZ_ASSERT(mFrontClient);
-  mFrontClient->SetAccessMode(TextureClient::ACCESS_READ_ONLY);
-  if (mFrontClientOnWhite) {
-    mFrontClientOnWhite->SetAccessMode(TextureClient::ACCESS_READ_ONLY);
-  }
 
   ContentClientRemoteBuffer::SwapBuffers(aFrontUpdatedRegion);
 }
@@ -586,9 +557,6 @@ ContentClientDoubleBuffered::SyncFrontBufferToBackBuffer()
     return;
   }
   MOZ_ASSERT(mFrontClient);
-  MOZ_ASSERT(mFrontClient->GetAccessMode() == TextureClient::ACCESS_READ_ONLY);
-  MOZ_ASSERT(!mFrontClientOnWhite ||
-             mFrontClientOnWhite->GetAccessMode() == TextureClient::ACCESS_READ_ONLY);
 
   MOZ_LAYERS_LOG(("BasicShadowableThebes(%p): reading back <x=%d,y=%d,w=%d,h=%d>",
                   this,
