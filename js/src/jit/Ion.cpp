@@ -1391,7 +1391,8 @@ GenerateLIR(MIRGenerator *mir)
     switch (js_IonOptions.registerAllocator) {
       case RegisterAllocator_LSRA: {
 #ifdef DEBUG
-        integrity.record();
+        if (!integrity.record())
+            return nullptr;
 #endif
 
         LinearScanAllocator regalloc(mir, &lirgen, *lir);
@@ -1399,7 +1400,8 @@ GenerateLIR(MIRGenerator *mir)
             return nullptr;
 
 #ifdef DEBUG
-        integrity.check(false);
+        if (!integrity.check(false))
+            return nullptr;
 #endif
 
         IonSpewPass("Allocate Registers [LSRA]", &regalloc);
@@ -1408,7 +1410,8 @@ GenerateLIR(MIRGenerator *mir)
 
       case RegisterAllocator_Backtracking: {
 #ifdef DEBUG
-        integrity.record();
+        if (!integrity.record())
+            return nullptr;
 #endif
 
         BacktrackingAllocator regalloc(mir, &lirgen, *lir);
@@ -1416,7 +1419,8 @@ GenerateLIR(MIRGenerator *mir)
             return nullptr;
 
 #ifdef DEBUG
-        integrity.check(false);
+        if (!integrity.check(false))
+            return nullptr;
 #endif
 
         IonSpewPass("Allocate Registers [Backtracking]");
@@ -1426,7 +1430,8 @@ GenerateLIR(MIRGenerator *mir)
       case RegisterAllocator_Stupid: {
         // Use the integrity checker to populate safepoint information, so
         // run it in all builds.
-        integrity.record();
+        if (!integrity.record())
+            return nullptr;
 
         StupidAllocator regalloc(mir, &lirgen, *lir);
         if (!regalloc.go())
