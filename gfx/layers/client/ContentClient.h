@@ -183,13 +183,13 @@ private:
  * create them.
  */
 // Version using new texture clients
-class ContentClientRemoteBufferNew : public ContentClientRemote
-                                   , protected RotatedContentBuffer
+class ContentClientRemoteBuffer : public ContentClientRemote
+                                , protected RotatedContentBuffer
 {
   using RotatedContentBuffer::BufferRect;
   using RotatedContentBuffer::BufferRotation;
 public:
-  ContentClientRemoteBufferNew(CompositableForwarder* aForwarder)
+  ContentClientRemoteBuffer(CompositableForwarder* aForwarder)
     : ContentClientRemote(aForwarder)
     , RotatedContentBuffer(ContainsVisibleBounds)
     , mIsNewBuffer(false)
@@ -285,13 +285,13 @@ protected:
   gfx::SurfaceFormat mSurfaceFormat;
 };
 
-class ContentClientRemoteBuffer : public ContentClientRemote
-                                , protected RotatedContentBuffer
+class DeprecatedContentClientRemoteBuffer : public ContentClientRemote
+                                          , protected RotatedContentBuffer
 {
   using RotatedContentBuffer::BufferRect;
   using RotatedContentBuffer::BufferRotation;
 public:
-  ContentClientRemoteBuffer(CompositableForwarder* aForwarder)
+  DeprecatedContentClientRemoteBuffer(CompositableForwarder* aForwarder)
     : ContentClientRemote(aForwarder)
     , RotatedContentBuffer(ContainsVisibleBounds)
     , mDeprecatedTextureClient(nullptr)
@@ -393,15 +393,15 @@ protected:
  * references. In response to the compositor's reply we swap our references
  * (in SwapBuffers).
  */
-class ContentClientDoubleBufferedNew : public ContentClientRemoteBufferNew
+class ContentClientDoubleBuffered : public ContentClientRemoteBuffer
 {
 public:
-  ContentClientDoubleBufferedNew(CompositableForwarder* aFwd)
-    : ContentClientRemoteBufferNew(aFwd)
+  ContentClientDoubleBuffered(CompositableForwarder* aFwd)
+    : ContentClientRemoteBuffer(aFwd)
   {
     mTextureInfo.mCompositableType = COMPOSITABLE_CONTENT_DOUBLE;
   }
-  virtual ~ContentClientDoubleBufferedNew() {}
+  virtual ~ContentClientDoubleBuffered() {}
 
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) MOZ_OVERRIDE;
 
@@ -431,15 +431,15 @@ private:
   nsIntPoint mFrontBufferRotation;
 };
 
-class ContentClientDoubleBuffered : public ContentClientRemoteBuffer
+class DeprecatedContentClientDoubleBuffered : public DeprecatedContentClientRemoteBuffer
 {
 public:
-  ContentClientDoubleBuffered(CompositableForwarder* aFwd)
-    : ContentClientRemoteBuffer(aFwd)
+  DeprecatedContentClientDoubleBuffered(CompositableForwarder* aFwd)
+    : DeprecatedContentClientRemoteBuffer(aFwd)
   {
     mTextureInfo.mCompositableType = BUFFER_CONTENT_DIRECT;
   }
-  ~ContentClientDoubleBuffered();
+  ~DeprecatedContentClientDoubleBuffered();
 
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) MOZ_OVERRIDE;
 
@@ -471,15 +471,15 @@ private:
  * kind. We are free to modify the TextureClient once we receive reply from
  * the compositor.
  */
-class ContentClientSingleBufferedNew : public ContentClientRemoteBufferNew
+class ContentClientSingleBuffered : public ContentClientRemoteBuffer
 {
 public:
-  ContentClientSingleBufferedNew(CompositableForwarder* aFwd)
-    : ContentClientRemoteBufferNew(aFwd)
+  ContentClientSingleBuffered(CompositableForwarder* aFwd)
+    : ContentClientRemoteBuffer(aFwd)
   {
     mTextureInfo.mCompositableType = COMPOSITABLE_CONTENT_SINGLE;
   }
-  virtual ~ContentClientSingleBufferedNew() {}
+  virtual ~ContentClientSingleBuffered() {}
 
   virtual void SyncFrontBufferToBackBuffer() MOZ_OVERRIDE;
 
@@ -487,15 +487,15 @@ protected:
   virtual void CreateFrontBuffer(const nsIntRect& aBufferRect) MOZ_OVERRIDE {}
 };
 
-class ContentClientSingleBuffered : public ContentClientRemoteBuffer
+class DeprecatedContentClientSingleBuffered : public DeprecatedContentClientRemoteBuffer
 {
 public:
-  ContentClientSingleBuffered(CompositableForwarder* aFwd)
-    : ContentClientRemoteBuffer(aFwd)
+  DeprecatedContentClientSingleBuffered(CompositableForwarder* aFwd)
+    : DeprecatedContentClientRemoteBuffer(aFwd)
   {
     mTextureInfo.mCompositableType = BUFFER_CONTENT;    
   }
-  ~ContentClientSingleBuffered();
+  ~DeprecatedContentClientSingleBuffered();
 
   virtual void SyncFrontBufferToBackBuffer() MOZ_OVERRIDE;
 
