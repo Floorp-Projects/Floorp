@@ -271,7 +271,11 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
       TextureFlags flags = texture->GetFlags();
 
-      if (!(flags & TEXTURE_DEALLOCATE_CLIENT)) {
+      if (flags & TEXTURE_DEALLOCATE_DEFERRED) {
+        MOZ_ASSERT(!(flags & TEXTURE_DEALLOCATE_CLIENT),
+                   "textures should not be marked for deferred removal and client-side removal");
+        compositable->RemoveTextureHostDeferred(texture);
+      } else if (!(flags & TEXTURE_DEALLOCATE_CLIENT)) {
         texture->DeallocateSharedData();
       }
 
