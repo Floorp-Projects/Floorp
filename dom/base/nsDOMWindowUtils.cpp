@@ -83,6 +83,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "GeckoProfiler.h"
+#include "mozilla/Preferences.h"
 
 #ifdef XP_WIN
 #undef GetClassName
@@ -2242,14 +2243,18 @@ nsDOMWindowUtils::StartFrameTimeRecording(uint32_t *startIndex)
   if (!mgr)
     return NS_ERROR_FAILURE;
 
-  *startIndex = mgr->StartFrameTimeRecording();
+  const uint32_t kRecordingMinSize = 60 * 10; // 10 seconds @60 fps.
+  const uint32_t kRecordingMaxSize = 60 * 60 * 60; // One hour
+  uint32_t bufferSize = Preferences::GetUint("toolkit.framesRecording.bufferSize", uint32_t(0));
+  bufferSize = std::min(bufferSize, kRecordingMaxSize);
+  bufferSize = std::max(bufferSize, kRecordingMinSize);
+  *startIndex = mgr->StartFrameTimeRecording(bufferSize);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMWindowUtils::StopFrameTimeRecording(uint32_t   startIndex,
-                                         float    **paintTimes,
                                          uint32_t  *frameCount,
                                          float    **frameIntervals)
 {
@@ -2259,7 +2264,6 @@ nsDOMWindowUtils::StopFrameTimeRecording(uint32_t   startIndex,
 
   NS_ENSURE_ARG_POINTER(frameCount);
   NS_ENSURE_ARG_POINTER(frameIntervals);
-  NS_ENSURE_ARG_POINTER(paintTimes);
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
@@ -2270,22 +2274,14 @@ nsDOMWindowUtils::StopFrameTimeRecording(uint32_t   startIndex,
     return NS_ERROR_FAILURE;
 
   nsTArray<float> tmpFrameIntervals;
-  nsTArray<float> tmpPaintTimes;
-  mgr->StopFrameTimeRecording(startIndex, tmpFrameIntervals, tmpPaintTimes);
+  mgr->StopFrameTimeRecording(startIndex, tmpFrameIntervals);
   *frameCount = tmpFrameIntervals.Length();
 
   *frameIntervals = (float*)nsMemory::Alloc(*frameCount * sizeof(float*));
-  *paintTimes =     (float*)nsMemory::Alloc(*frameCount * sizeof(float*));
 
   /* copy over the frame intervals and paint times into the arrays we just allocated */
   for (uint32_t i = 0; i < *frameCount; i++) {
     (*frameIntervals)[i] = tmpFrameIntervals[i];
-#ifndef MOZ_WIDGET_GONK
-    (*paintTimes)[i] = tmpPaintTimes[i];
-#else
-    // Waiting for bug 830475 to work on B2G.
-    (*paintTimes)[i] = 0;
-#endif
   }
 
   return NS_OK;
