@@ -5,6 +5,7 @@
 
 #include "DrawTargetD2D1.h"
 #include "DrawTargetD2D.h"
+#include "FilterNodeSoftware.h"
 #include "GradientStopsD2D.h"
 #include "SourceSurfaceD2D1.h"
 #include "SourceSurfaceD2D.h"
@@ -103,6 +104,21 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
   mDC->FillRectangle(D2DRect(aDest), brush);
 
   FinalizeDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
+}
+
+void
+DrawTargetD2D1::DrawFilter(FilterNode *aNode,
+                           const Rect &aSourceRect,
+                           const Point &aDestPoint,
+                           const DrawOptions &aOptions)
+{
+  if (aNode->GetBackendType() != FILTER_BACKEND_SOFTWARE) {
+    gfxWarning() << "Invalid filter backend passed to DrawTargetD2D!";
+    return;
+  }
+
+  FilterNodeSoftware* filter = static_cast<FilterNodeSoftware*>(aNode);
+  filter->Draw(this, aSourceRect, aDestPoint, aOptions);
 }
 
 void
@@ -569,6 +585,12 @@ DrawTargetD2D1::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, 
   }
 
   return new GradientStopsD2D(stopCollection);
+}
+
+TemporaryRef<FilterNode>
+DrawTargetD2D1::CreateFilter(FilterType aType)
+{
+  return FilterNodeSoftware::Create(aType);
 }
 
 bool
