@@ -17,6 +17,10 @@
 #include "mozilla/Constants.h"
 #include "FilterNodeSoftware.h"
 
+#ifdef USE_D2D1_1
+#include "FilterNodeD2D1.h"
+#endif
+
 #include <dwrite.h>
 
 typedef HRESULT (WINAPI*D2D1CreateFactoryFunc)(
@@ -351,6 +355,31 @@ DrawTargetD2D::DrawFilter(FilterNode *aNode,
                           const Point &aDestPoint,
                           const DrawOptions &aOptions)
 {
+#ifdef USE_D2D1_1
+  RefPtr<ID2D1DeviceContext> dc;
+  HRESULT hr;
+  
+  hr = mRT->QueryInterface((ID2D1DeviceContext**)byRef(dc));
+
+  if (SUCCEEDED(hr) && aNode->GetBackendType() == FILTER_BACKEND_DIRECT2D1_1) {
+    ID2D1RenderTarget *rt = GetRTForOperation(aOptions.mCompositionOp, ColorPattern(Color()));
+  
+    PrepareForDrawing(rt);
+
+    rt->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
+    hr = rt->QueryInterface((ID2D1DeviceContext**)byRef(dc));
+
+    if (SUCCEEDED(hr)) {
+      dc->DrawImage(static_cast<FilterNodeD2D1*>(aNode)->OutputEffect(), D2DPoint(aDestPoint), D2DRect(aSourceRect));
+
+      Rect destRect = aSourceRect;
+      destRect.MoveBy(aDestPoint);
+      FinalizeRTForOperation(aOptions.mCompositionOp, ColorPattern(Color()), destRect);
+      return;
+    }
+  }
+#endif
+
   if (aNode->GetBackendType() != FILTER_BACKEND_SOFTWARE) {
     gfxWarning() << "Invalid filter backend passed to DrawTargetD2D!";
     return;
@@ -1232,6 +1261,14 @@ DrawTargetD2D::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, E
 TemporaryRef<FilterNode>
 DrawTargetD2D::CreateFilter(FilterType aType)
 {
+#ifdef USE_D2D1_1
+  RefPtr<ID2D1DeviceContext> dc;
+  HRESULT hr = mRT->QueryInterface((ID2D1DeviceContext**)byRef(dc));
+
+  if (SUCCEEDED(hr)) {
+    return FilterNodeD2D1::Create(this, dc, aType);
+  }
+#endif
   return FilterNodeSoftware::Create(aType);
 }
 

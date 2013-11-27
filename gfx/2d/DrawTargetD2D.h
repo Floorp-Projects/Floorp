@@ -141,6 +141,7 @@ public:
   static ID2D1Factory *factory();
   static void CleanupD2D();
   static IDWriteFactory *GetDWriteFactory();
+  ID2D1RenderTarget *GetRT() { return mRT; }
 
   operator std::string() const {
     std::stringstream stream;
