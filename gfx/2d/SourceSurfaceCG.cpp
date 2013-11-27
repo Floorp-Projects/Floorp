@@ -52,7 +52,7 @@ static void releaseCallback(void *info, const void *data, size_t size) {
   free(info);
 }
 
-static CGImageRef
+CGImageRef
 CreateCGImage(void *aInfo,
               const void *aData,
               const IntSize &aSize,
