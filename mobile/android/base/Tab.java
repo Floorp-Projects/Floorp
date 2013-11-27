@@ -610,6 +610,12 @@ public class Tab {
         final String uri = message.getString("uri");
         final String oldUrl = getURL();
         mEnteringReaderMode = ReaderModeUtils.isEnteringReaderMode(oldUrl, uri);
+
+        if (TextUtils.equals(oldUrl, uri)) {
+            Log.d(LOGTAG, "Ignoring location change event: URIs are the same.");
+            return;
+        }
+
         updateURL(uri);
         updateUserSearch(message.getString("userSearch"));
 
@@ -622,7 +628,13 @@ public class Tab {
         }
 
         setContentType(message.getString("contentType"));
+
+        // We can unconditionally clear the favicon here: we already
+        // short-circuited for both cases in which this was a (pseudo-)
+        // spurious location change, so we're definitely loading a new page.
+        // The same applies to all of the other fields we're wiping out.
         clearFavicon();
+
         setFeedsEnabled(false);
         updateTitle(null);
         updateIdentityData(null);
