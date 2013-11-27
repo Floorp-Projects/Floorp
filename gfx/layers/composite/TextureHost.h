@@ -308,7 +308,7 @@ public:
    * @param aRegion The region that has been changed, if nil, it means that the
    * entire surface should be updated.
    */
-  virtual void Updated(const nsIntRegion* aRegion) {}
+  virtual void Updated(const nsIntRegion* aRegion = nullptr) {}
 
   /**
    * Sets this TextureHost's compositor.
@@ -422,7 +422,7 @@ public:
 
   virtual uint8_t* GetBuffer() = 0;
 
-  virtual void Updated(const nsIntRegion* aRegion) MOZ_OVERRIDE;
+  virtual void Updated(const nsIntRegion* aRegion = nullptr) MOZ_OVERRIDE;
 
   virtual bool Lock() MOZ_OVERRIDE;
 
