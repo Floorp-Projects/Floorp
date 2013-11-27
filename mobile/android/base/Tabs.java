@@ -382,6 +382,7 @@ public class Tabs implements GeckoEventListener {
 
     @Override
     public void handleMessage(String event, JSONObject message) {
+        Log.d(LOGTAG, "handleMessage: " + event);
         try {
             if (event.equals("Session:RestoreEnd")) {
                 notifyListeners(null, TabEvents.RESTORED);
