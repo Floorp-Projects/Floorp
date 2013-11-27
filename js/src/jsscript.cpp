@@ -3110,6 +3110,8 @@ LazyScript::Create(ExclusiveContext *cx, HandleFunction fun,
     if (!res)
         return nullptr;
 
+    cx->compartment()->scheduleDelazificationForDebugMode();
+
     return new (res) LazyScript(fun, table, numFreeVariables, numInnerFunctions, version,
                                 begin, end, lineno, column);
 }
