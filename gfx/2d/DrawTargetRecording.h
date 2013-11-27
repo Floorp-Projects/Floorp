@@ -47,6 +47,11 @@ public:
                            const DrawSurfaceOptions &aSurfOptions = DrawSurfaceOptions(),
                            const DrawOptions &aOptions = DrawOptions());
 
+  virtual void DrawFilter(FilterNode *aNode,
+                          const Rect &aSourceRect,
+                          const Point &aDestPoint,
+                          const DrawOptions &aOptions = DrawOptions());
+
   /*
    * Blend a surface to the draw target with a shadow. The shadow is drawn as a
    * gaussian blur using a specified sigma. The shadow is clipped to the size
@@ -252,6 +257,8 @@ public:
     CreateGradientStops(GradientStop *aStops,
                         uint32_t aNumStops,
                         ExtendMode aExtendMode = EXTEND_CLAMP) const;
+
+  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType);
 
   /*
    * Set a transform on the surface, this transform is applied at drawing time
