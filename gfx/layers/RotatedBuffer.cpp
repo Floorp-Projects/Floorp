@@ -284,16 +284,16 @@ RotatedContentBuffer::BufferContentType()
   if (mBufferProvider) {
     return mBufferProvider->GetContentType();
   }
-  if (mDTBuffer) {
-    switch (mDTBuffer->GetFormat()) {
-    case FORMAT_A8:
-      return GFX_CONTENT_ALPHA;
-    case FORMAT_B8G8R8A8:
-    case FORMAT_R8G8B8A8:
-      return GFX_CONTENT_COLOR_ALPHA;
-    default:
-      return GFX_CONTENT_COLOR;
+  if (mNewBufferProvider || mDTBuffer) {
+    SurfaceFormat format;
+
+    if (mNewBufferProvider) {
+      format = mNewBufferProvider->AsTextureClientDrawTarget()->GetFormat();
+    } else if (mDTBuffer) {
+      format = mDTBuffer->GetFormat();
     }
+
+    return ContentForFormat(format);
   }
   return GFX_CONTENT_SENTINEL;
 }
@@ -309,8 +309,12 @@ RotatedContentBuffer::BufferSizeOkFor(const nsIntSize& aSize)
 bool
 RotatedContentBuffer::EnsureBuffer()
 {
-  if (!mDTBuffer && mBufferProvider) {
-    mDTBuffer = mBufferProvider->LockDrawTarget();
+  if (!mDTBuffer) {
+    if (mBufferProvider) {
+      mDTBuffer = mBufferProvider->LockDrawTarget();
+    } else if (mNewBufferProvider) {
+      mDTBuffer = mNewBufferProvider->AsTextureClientDrawTarget()->GetAsDrawTarget();
+    }
   }
 
   NS_WARN_IF_FALSE(mDTBuffer, "no buffer");
@@ -320,8 +324,13 @@ RotatedContentBuffer::EnsureBuffer()
 bool
 RotatedContentBuffer::EnsureBufferOnWhite()
 {
-  if (!mDTBufferOnWhite && mBufferProviderOnWhite) {
-    mDTBufferOnWhite = mBufferProviderOnWhite->LockDrawTarget();
+  if (!mDTBufferOnWhite) {
+    if (mBufferProviderOnWhite) {
+      mDTBufferOnWhite = mBufferProviderOnWhite->LockDrawTarget();
+    } else if (mNewBufferProviderOnWhite) {
+      mDTBufferOnWhite =
+        mNewBufferProviderOnWhite->AsTextureClientDrawTarget()->GetAsDrawTarget();
+    }
   }
 
   NS_WARN_IF_FALSE(mDTBufferOnWhite, "no buffer");
@@ -331,13 +340,13 @@ RotatedContentBuffer::EnsureBufferOnWhite()
 bool
 RotatedContentBuffer::HaveBuffer() const
 {
-  return mDTBuffer || mBufferProvider;
+  return mDTBuffer || mBufferProvider || mNewBufferProvider;
 }
 
 bool
 RotatedContentBuffer::HaveBufferOnWhite() const
 {
-  return mDTBufferOnWhite || mBufferProviderOnWhite;
+  return mDTBufferOnWhite || mBufferProviderOnWhite || mNewBufferProviderOnWhite;
 }
 
 static void
