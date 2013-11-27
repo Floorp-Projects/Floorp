@@ -10,6 +10,7 @@
 #include "HelpersCairo.h"
 #include "ScaledFontBase.h"
 #include "BorrowedContext.h"
+#include "FilterNodeSoftware.h"
 
 #include "cairo.h"
 #include "cairo-tee.h"
@@ -557,6 +558,16 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
 }
 
 void
+DrawTargetCairo::DrawFilter(FilterNode *aNode,
+                            const Rect &aSourceRect,
+                            const Point &aDestPoint,
+                            const DrawOptions &aOptions)
+{
+  FilterNodeSoftware* filter = static_cast<FilterNodeSoftware*>(aNode);
+  filter->Draw(this, aSourceRect, aDestPoint, aOptions);
+}
+
+void
 DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                        const Point &aDest,
                                        const Color &aColor,
@@ -1015,6 +1026,12 @@ DrawTargetCairo::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops,
   RefPtr<GradientStopsCairo> stops = new GradientStopsCairo(aStops, aNumStops,
                                                             aExtendMode);
   return stops;
+}
+
+TemporaryRef<FilterNode>
+DrawTargetCairo::CreateFilter(FilterType aType)
+{
+  return FilterNodeSoftware::Create(aType);
 }
 
 /**

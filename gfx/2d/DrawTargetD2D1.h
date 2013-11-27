@@ -48,6 +48,10 @@ public:
                            const Rect &aSource,
                            const DrawSurfaceOptions &aSurfOptions,
                            const DrawOptions &aOptions);
+  virtual void DrawFilter(FilterNode *aNode,
+                          const Rect &aSourceRect,
+                          const Point &aDestPoint,
+                          const DrawOptions &aOptions = DrawOptions());
   virtual void DrawSurfaceWithShadow(SourceSurface *aSurface,
                                      const Point &aDest,
                                      const Color &aColor,
@@ -113,6 +117,8 @@ public:
     CreateGradientStops(GradientStop *aStops,
                         uint32_t aNumStops,
                         ExtendMode aExtendMode = EXTEND_CLAMP) const;
+
+  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType);
 
   virtual void *GetNativeSurface(NativeSurfaceType aType) { return nullptr; }
 
