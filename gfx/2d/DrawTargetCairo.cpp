@@ -588,7 +588,7 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
     Rect extents(0, 0, width, height);
     AlphaBoxBlur blur(extents,
                       cairo_image_surface_get_stride(blursurf),
-                      aSigma);
+                      aSigma, aSigma);
     blur.Blur(cairo_image_surface_get_data(blursurf));
   } else {
     blursurf = sourcesurf;
