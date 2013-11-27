@@ -79,6 +79,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     if CONFIG['_MSC_VER'] != '1400':
         SOURCES += [
             'BlurSSE2.cpp',
+            'FilterProcessingSSE2.cpp',
             'ImageScalingSSE2.cpp',
         ]
 
@@ -90,6 +91,8 @@ UNIFIED_SOURCES += [
     'DrawTargetDual.cpp',
     'DrawTargetRecording.cpp',
     'Factory.cpp',
+    'FilterProcessing.cpp',
+    'FilterProcessingScalar.cpp',
     'ImageScaling.cpp',
     'Matrix.cpp',
     'Path.cpp',
