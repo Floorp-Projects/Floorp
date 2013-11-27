@@ -17,6 +17,10 @@
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
 
+#ifdef MOZ_WIDGET_GONK
+#include "SpeakerManagerService.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::hal;
@@ -120,6 +124,12 @@ AudioChannelServiceChild::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
   if (obs) {
     obs->NotifyObservers(nullptr, "audio-channel-agent-changed", nullptr);
   }
+#ifdef MOZ_WIDGET_GONK
+  bool active = AnyAudioChannelIsActive();
+  for (uint32_t i = 0; i < mSpeakerManager.Length(); i++) {
+    mSpeakerManager[i]->SetAudioChannelActive(active);
+  }
+#endif
 }
 
 void
