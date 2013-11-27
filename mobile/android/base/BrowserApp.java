@@ -197,10 +197,24 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        if (tab == null) {
+            // Only RESTORED is allowed a null tab: it's the only event that
+            // isn't tied to a specific tab.
+            if (msg != Tabs.TabEvents.RESTORED) {
+                throw new IllegalArgumentException("onTabChanged:" + msg + " must specify a tab.");
+            }
+            return;
+        }
+
+        Log.d(LOGTAG, "BrowserApp.onTabChanged: " + tab.getId() + ": " + msg);
         switch(msg) {
+            // We don't get a LOCATION_CHANGE event for the first about:home
+            // load, because the previous and current URIs are the
+            // same. That means it's OK to trigger a new favicon load
+            // at this point.
             case LOCATION_CHANGE:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
-                    maybeCancelFaviconLoad(tab);
+                    loadFavicon(tab);
                 }
                 // fall through
             case SELECTED:
@@ -240,9 +254,6 @@ abstract public class BrowserApp extends GeckoApp
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     invalidateOptionsMenu();
                 }
-                break;
-            case PAGE_SHOW:
-                loadFavicon(tab);
                 break;
             case LINK_FAVICON:
                 // If tab is not loading and the favicon is updated, we
@@ -1229,7 +1240,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void addTab() {
-        Tabs.getInstance().loadUrl(AboutPages.HOME, Tabs.LOADURL_NEW_TAB);
+        super.loadHomePage(Tabs.LOADURL_NEW_TAB);
     }
 
     @Override
@@ -1401,7 +1412,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void openReadingList() {
-        Tabs.getInstance().loadUrl(AboutPages.HOME, Tabs.LOADURL_READING_LIST);
+        super.loadHomePage(Tabs.LOADURL_READING_LIST);
     }
 
     /* Favicon stuff. */
@@ -1428,10 +1439,13 @@ abstract public class BrowserApp extends GeckoApp
     private void maybeCancelFaviconLoad(Tab tab) {
         int faviconLoadId = tab.getFaviconLoadId();
 
-        // Cancel pending favicon load task
-        Favicons.cancelFaviconLoad(faviconLoadId);
+        if (Favicons.NOT_LOADING == faviconLoadId) {
+            return;
+        }
 
-        // Reset favicon load state
+        // Cancel load task and reset favicon load state if it wasn't already
+        // in NOT_LOADING state.
+        Favicons.cancelFaviconLoad(faviconLoadId);
         tab.setFaviconLoadId(Favicons.NOT_LOADING);
     }
 
