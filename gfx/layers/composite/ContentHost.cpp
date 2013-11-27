@@ -335,6 +335,18 @@ ContentHostBase::Dump(FILE* aFile,
 }
 #endif
 
+void
+ContentHostBase::OnActorDestroy()
+{
+  if (mTextureHost) {
+    mTextureHost->OnActorDestroy();
+  }
+  if (mTextureHostOnWhite) {
+    mTextureHostOnWhite->OnActorDestroy();
+  }
+  CompositableHost::OnActorDestroy();
+}
+
 DeprecatedContentHostBase::DeprecatedContentHostBase(const TextureInfo& aTextureInfo)
   : ContentHost(aTextureInfo)
   , mPaintWillResample(false)
