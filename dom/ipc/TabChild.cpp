@@ -655,6 +655,8 @@ TabChild::HandlePossibleViewportChange()
     MOZ_ASSERT(viewportInfo.GetMinZoom() <= defaultZoom &&
                defaultZoom <= viewportInfo.GetMaxZoom());
     metrics.mZoom = defaultZoom;
+
+    metrics.mScrollId = viewId;
   }
 
   metrics.mDisplayPort = AsyncPanZoomController::CalculatePendingDisplayPort(
