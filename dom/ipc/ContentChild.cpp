@@ -23,6 +23,7 @@
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/layers/CompositorChild.h"
@@ -43,6 +44,7 @@
 #include "mozilla/unused.h"
 
 #include "nsIConsoleListener.h"
+#include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIMemoryReporter.h"
 #include "nsIMemoryInfoDumper.h"
@@ -310,6 +312,34 @@ SystemMessageHandledObserver::Observe(nsISupports* aSubject,
 
 NS_IMPL_ISUPPORTS1(SystemMessageHandledObserver, nsIObserver)
 
+class BackgroundChildPrimer MOZ_FINAL :
+  public nsIIPCBackgroundChildCreateCallback
+{
+public:
+    BackgroundChildPrimer()
+    { }
+
+    NS_DECL_ISUPPORTS
+
+private:
+    ~BackgroundChildPrimer()
+    { }
+
+    virtual void
+    ActorCreated(PBackgroundChild* aActor) MOZ_OVERRIDE
+    {
+        MOZ_ASSERT(aActor, "Failed to create a PBackgroundChild actor!");
+    }
+
+    virtual void
+    ActorFailed() MOZ_OVERRIDE
+    {
+        MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+    }
+};
+
+NS_IMPL_ISUPPORTS1(BackgroundChildPrimer, nsIIPCBackgroundChildCreateCallback)
+
 ContentChild* ContentChild::sSingleton;
 
 // Performs initialization that is not fork-safe, i.e. that must be done after
@@ -451,6 +481,16 @@ ContentChild::AppendProcessId(nsACString& aName)
 void
 ContentChild::InitXPCOM()
 {
+    // Do this as early as possible to get the parent process to initialize the
+    // background thread since we'll likely need database information very soon.
+    BackgroundChild::Startup();
+
+    nsCOMPtr<nsIIPCBackgroundChildCreateCallback> callback =
+        new BackgroundChildPrimer();
+    if (!BackgroundChild::GetOrCreateForCurrentThread(callback)) {
+        MOZ_CRASH("Failed to create PBackgroundChild!");
+    }
+
     nsCOMPtr<nsIConsoleService> svc(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
     if (!svc) {
         NS_WARNING("Couldn't acquire console service");
@@ -604,6 +644,13 @@ ContentChild::AllocPImageBridgeChild(mozilla::ipc::Transport* aTransport,
                                      base::ProcessId aOtherProcess)
 {
     return ImageBridgeChild::StartUpInChildProcess(aTransport, aOtherProcess);
+}
+
+PBackgroundChild*
+ContentChild::AllocPBackgroundChild(Transport* aTransport,
+                                    ProcessId aOtherProcess)
+{
+    return BackgroundChild::Alloc(aTransport, aOtherProcess);
 }
 
 bool
@@ -1685,6 +1732,20 @@ ContentChild::RecvNuwaFork()
         return true;
     }
     sNuwaForking = true;
+
+    // We want to ensure that the PBackground actor gets cloned in the Nuwa
+    // process before we freeze. Also, we have to do this to avoid deadlock.
+    // Protocols that are "opened" (e.g. PBackground, PCompositor) block the
+    // main thread to wait for the IPC thread during the open operation.
+    // NuwaSpawnWait() blocks the IPC thread to wait for the main thread when
+    // the Nuwa process is forked. Unless we ensure that the two cannot happen
+    // at the same time then we risk deadlock. Spinning the event loop here
+    // guarantees the ordering is safe for PBackground.
+    while (!BackgroundChild::GetForCurrentThread()) {
+        if (NS_WARN_IF(NS_FAILED(NS_ProcessNextEvent()))) {
+            return false;
+        }
+    }
 
     MessageLoop* ioloop = XRE_GetIOMessageLoop();
     ioloop->PostTask(FROM_HERE, NewRunnableFunction(RunNuwaFork));
