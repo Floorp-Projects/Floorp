@@ -91,6 +91,7 @@ UNIFIED_SOURCES += [
     'DrawTargetDual.cpp',
     'DrawTargetRecording.cpp',
     'Factory.cpp',
+    'FilterNodeSoftware.cpp',
     'FilterProcessing.cpp',
     'FilterProcessingScalar.cpp',
     'ImageScaling.cpp',
