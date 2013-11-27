@@ -397,7 +397,7 @@ JSObject::getChildProperty(ExclusiveContext *cx,
     StackShape::AutoRooter childRoot(cx, &child);
     RootedShape shape(cx, getChildPropertyOnDictionary(cx, obj, parent, child));
 
-    if (!shape) {
+    if (!obj->inDictionaryMode()) {
         shape = cx->compartment()->propertyTree.getChild(cx, parent, obj->numFixedSlots(), child);
         if (!shape)
             return nullptr;
@@ -419,7 +419,7 @@ JSObject::lookupChildProperty(ThreadSafeContext *cx,
 
     RootedShape shape(cx, getChildPropertyOnDictionary(cx, obj, parent, child));
 
-    if (!shape) {
+    if (!obj->inDictionaryMode()) {
         shape = cx->compartment_->propertyTree.lookupChild(cx, parent, child);
         if (!shape)
             return nullptr;
