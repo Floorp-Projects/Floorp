@@ -8,6 +8,7 @@
 #include "ScaledFontBase.h"
 #include "ScaledFontCairo.h"
 #include "skia/SkDevice.h"
+#include "FilterNodeSoftware.h"
 
 #ifdef USE_SKIA_GPU
 #include "skia/SkGpuDevice.h"
@@ -397,6 +398,16 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
   if (!integerAligned) {
     mCanvas->restore();
   }
+}
+
+void
+DrawTargetSkia::DrawFilter(FilterNode *aNode,
+                           const Rect &aSourceRect,
+                           const Point &aDestPoint,
+                           const DrawOptions &aOptions)
+{
+  FilterNodeSoftware* filter = static_cast<FilterNodeSoftware*>(aNode);
+  filter->Draw(this, aSourceRect, aDestPoint, aOptions);
 }
 
 void
@@ -887,6 +898,12 @@ DrawTargetSkia::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops, Ex
   std::stable_sort(stops.begin(), stops.end());
   
   return new GradientStopsSkia(stops, aNumStops, aExtendMode);
+}
+
+TemporaryRef<FilterNode>
+DrawTargetSkia::CreateFilter(FilterType aType)
+{
+  return FilterNodeSoftware::Create(aType);
 }
 
 void
