@@ -98,6 +98,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mPriority(0)
     , mRestartCount(0)
     , mCaps(0)
+    , mCapsToClear(0)
     , mClassification(CLASS_GENERAL)
     , mPipelinePosition(0)
     , mHttpVersion(NS_HTTP_VERSION_UNKNOWN)
@@ -552,7 +553,14 @@ nsHttpTransaction::Status()
 uint32_t
 nsHttpTransaction::Caps()
 {
-    return mCaps;
+    return mCaps & ~mCapsToClear;
+}
+
+void
+nsHttpTransaction::SetDNSWasRefreshed()
+{
+    MOZ_ASSERT(NS_IsMainThread(), "SetDNSWasRefreshed on main thread only!");
+    mCapsToClear |= NS_HTTP_REFRESH_DNS;
 }
 
 uint64_t
