@@ -20,7 +20,8 @@ class SourceSurface;
 
 enum FilterBackend {
   FILTER_BACKEND_SOFTWARE = 0,
-  FILTER_BACKEND_DIRECT2D1_1
+  FILTER_BACKEND_DIRECT2D1_1,
+  FILTER_BACKEND_RECORDING
 };
 
 enum TransformFilterAtts
