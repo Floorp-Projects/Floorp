@@ -356,7 +356,11 @@ public:
    */
   virtual void MarkDirty() {}
 
-  virtual TemporaryRef<DataSourceSurface> GetDataSurface() { RefPtr<DataSourceSurface> temp = this; return temp.forget(); }
+  /*
+   * Returns a DataSourceSurface with the same data as this one, but
+   * guaranteed to have surface->GetType() == SURFACE_DATA.
+   */
+  virtual TemporaryRef<DataSourceSurface> GetDataSurface();
 };
 
 /* This is an abstract object that accepts path segments. */
