@@ -154,9 +154,7 @@ public:
   }
 
   virtual void CreateBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags,
-                            gfxASurface** aBlackSurface, gfxASurface** aWhiteSurface,
                             RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) MOZ_OVERRIDE;
-  virtual bool SupportsAzureContent() const;
 
   virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
   {
@@ -237,10 +235,7 @@ public:
   }
 
   virtual void CreateBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags,
-                            gfxASurface** aBlackSurface, gfxASurface** aWhiteSurface,
                             RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) MOZ_OVERRIDE;
-
-  virtual bool SupportsAzureContent() const MOZ_OVERRIDE;
 
   void DestroyBuffers();
 

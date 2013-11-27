@@ -55,15 +55,6 @@ class RotatedBuffer {
 public:
   typedef gfxContentType ContentType;
 
-  RotatedBuffer(gfxASurface* aBuffer, gfxASurface* aBufferOnWhite,
-                const nsIntRect& aBufferRect,
-                const nsIntPoint& aBufferRotation)
-    : mBuffer(aBuffer)
-    , mBufferOnWhite(aBufferOnWhite)
-    , mBufferRect(aBufferRect)
-    , mBufferRotation(aBufferRotation)
-    , mDidSelfCopy(false)
-  { }
   RotatedBuffer(gfx::DrawTarget* aDTBuffer, gfx::DrawTarget* aDTBufferOnWhite,
                 const nsIntRect& aBufferRect,
                 const nsIntPoint& aBufferRotation)
@@ -85,11 +76,6 @@ public:
     BUFFER_WHITE, // The buffer with white background, only valid with component alpha.
     BUFFER_BOTH // The combined black/white buffers, only valid for writing operations, not reading.
   };
-  void DrawBufferWithRotation(gfxContext* aTarget, ContextSource aSource,
-                              float aOpacity = 1.0,
-                              gfxASurface* aMask = nullptr,
-                              const gfxMatrix* aMaskTransform = nullptr) const;
-
   void DrawBufferWithRotation(gfx::DrawTarget* aTarget, ContextSource aSource,
                               float aOpacity = 1.0,
                               gfx::CompositionOp aOperator = gfx::OP_OVER,
@@ -104,8 +90,8 @@ public:
   const nsIntRect& BufferRect() const { return mBufferRect; }
   const nsIntPoint& BufferRotation() const { return mBufferRotation; }
 
-  virtual bool HaveBuffer() const { return mBuffer || mDTBuffer; }
-  virtual bool HaveBufferOnWhite() const { return mBufferOnWhite || mDTBufferOnWhite; }
+  virtual bool HaveBuffer() const { return mDTBuffer; }
+  virtual bool HaveBufferOnWhite() const { return mDTBufferOnWhite; }
 
 protected:
 
@@ -124,11 +110,6 @@ protected:
    * buffer. aMaskTransform must be non-null if aMask is non-null, and is used
    * to adjust the coordinate space of the mask.
    */
-  void DrawBufferQuadrant(gfxContext* aTarget, XSide aXSide, YSide aYSide,
-                          ContextSource aSource,
-                          float aOpacity,
-                          gfxASurface* aMask,
-                          const gfxMatrix* aMaskTransform) const;
   void DrawBufferQuadrant(gfx::DrawTarget* aTarget, XSide aXSide, YSide aYSide,
                           ContextSource aSource,
                           float aOpacity,
@@ -136,8 +117,6 @@ protected:
                           gfx::SourceSurface* aMask,
                           const gfx::Matrix* aMaskTransform) const;
 
-  nsRefPtr<gfxASurface> mBuffer;
-  nsRefPtr<gfxASurface> mBufferOnWhite;
   RefPtr<gfx::DrawTarget> mDTBuffer;
   RefPtr<gfx::DrawTarget> mDTBufferOnWhite;
   /** The area of the ThebesLayer that is covered by the buffer as a whole */
@@ -196,8 +175,6 @@ public:
    */
   void Clear()
   {
-    mBuffer = nullptr;
-    mBufferOnWhite = nullptr;
     mDTBuffer = nullptr;
     mDTBufferOnWhite = nullptr;
     mBufferProvider = nullptr;
@@ -264,18 +241,13 @@ public:
    */
   virtual void
   CreateBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags,
-               gfxASurface** aBlackSurface, gfxASurface** aWhiteSurface,
                RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) = 0;
-  virtual bool SupportsAzureContent() const 
-  { return false; }
 
   /**
    * Get the underlying buffer, if any. This is useful because we can pass
    * in the buffer as the default "reference surface" if there is one.
    * Don't use it for anything else!
    */
-  gfxASurface* GetBuffer() { return mBuffer; }
-  gfxASurface* GetBufferOnWhite() { return mBufferOnWhite; }
   gfx::DrawTarget* GetDTBuffer() { return mDTBuffer; }
   gfx::DrawTarget* GetDTBufferOnWhite() { return mDTBufferOnWhite; }
 
@@ -288,35 +260,11 @@ public:
               gfxASurface* aMask, const gfxMatrix* aMaskTransform);
 
 protected:
-  // If this buffer is currently using Azure.
-  bool IsAzureBuffer();
-
-  already_AddRefed<gfxASurface>
-  SetBuffer(gfxASurface* aBuffer,
-            const nsIntRect& aBufferRect, const nsIntPoint& aBufferRotation)
-  {
-    MOZ_ASSERT(!SupportsAzureContent());
-    nsRefPtr<gfxASurface> tmp = mBuffer.forget();
-    mBuffer = aBuffer;
-    mBufferRect = aBufferRect;
-    mBufferRotation = aBufferRotation;
-    return tmp.forget();
-  }
-
-  already_AddRefed<gfxASurface>
-  SetBufferOnWhite(gfxASurface* aBuffer)
-  {
-    MOZ_ASSERT(!SupportsAzureContent());
-    nsRefPtr<gfxASurface> tmp = mBufferOnWhite.forget();
-    mBufferOnWhite = aBuffer;
-    return tmp.forget();
-  }
-
   TemporaryRef<gfx::DrawTarget>
   SetDTBuffer(gfx::DrawTarget* aBuffer,
-            const nsIntRect& aBufferRect, const nsIntPoint& aBufferRotation)
+              const nsIntRect& aBufferRect,
+              const nsIntPoint& aBufferRotation)
   {
-    MOZ_ASSERT(SupportsAzureContent());
     RefPtr<gfx::DrawTarget> tmp = mDTBuffer.forget();
     mDTBuffer = aBuffer;
     mBufferRect = aBufferRect;
@@ -327,7 +275,6 @@ protected:
   TemporaryRef<gfx::DrawTarget>
   SetDTBufferOnWhite(gfx::DrawTarget* aBuffer)
   {
-    MOZ_ASSERT(SupportsAzureContent());
     RefPtr<gfx::DrawTarget> tmp = mDTBufferOnWhite.forget();
     mDTBufferOnWhite = aBuffer;
     return tmp.forget();
@@ -348,11 +295,10 @@ protected:
   {
     // Only this buffer provider can give us a buffer.  If we
     // already have one, something has gone wrong.
-    MOZ_ASSERT(!aClient || (!mBuffer && !mDTBuffer));
+    MOZ_ASSERT(!aClient || !mDTBuffer);
 
     mBufferProvider = aClient;
     if (!mBufferProvider) {
-      mBuffer = nullptr;
       mDTBuffer = nullptr;
     } 
   }
@@ -361,11 +307,10 @@ protected:
   {
     // Only this buffer provider can give us a buffer.  If we
     // already have one, something has gone wrong.
-    MOZ_ASSERT(!aClient || (!mBufferOnWhite && !mDTBufferOnWhite));
+    MOZ_ASSERT(!aClient || !mDTBufferOnWhite);
 
     mBufferProviderOnWhite = aClient;
     if (!mBufferProviderOnWhite) {
-      mBufferOnWhite = nullptr;
       mDTBufferOnWhite = nullptr;
     } 
   }
@@ -382,9 +327,6 @@ protected:
   static bool IsClippingCheap(gfxContext* aTarget, const nsIntRegion& aRegion);
 
 protected:
-  // Buffer helpers.  Don't use mBuffer directly; instead use one of
-  // these helpers.
-
   /**
    * Return the buffer's content type.  Requires a valid buffer or
    * buffer provider.
