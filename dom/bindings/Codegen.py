@@ -63,7 +63,7 @@ def isTypeCopyConstructible(type):
              CGDictionary.isDictionaryCopyConstructible(type.inner)))
 
 def wantsAddProperty(desc):
-    return desc.concrete and not desc.nativeOwnership == 'worker' and \
+    return desc.concrete and \
            desc.wrapperCache and not desc.customWrapperManagement and \
            not desc.interface.getExtendedAttribute("Global")
 
@@ -164,10 +164,7 @@ def DOMClass(descriptor):
     # padding.
     protoList.extend(['prototypes::id::_ID_Count'] * (descriptor.config.maxProtoChainLength - len(protoList)))
     prototypeChainString = ', '.join(protoList)
-    if descriptor.nativeOwnership == 'worker':
-        participant = "nullptr"
-    else:
-        participant = "GetCCParticipant<%s>::Get()" % descriptor.nativeType
+    participant = "GetCCParticipant<%s>::Get()" % descriptor.nativeType
     getParentObject = "GetParentObject<%s>::Get" % descriptor.nativeType
     return """{
   { %s },
@@ -1055,7 +1052,7 @@ class CGAddPropertyHook(CGAbstractClassHook):
                                      'bool', args)
 
     def generate_code(self):
-        assert not self.descriptor.nativeOwnership == 'worker' and self.descriptor.wrapperCache
+        assert self.descriptor.wrapperCache
         return ("  // We don't want to preserve if we don't have a wrapper.\n"
                 "  if (self->GetWrapperPreserveColor()) {\n"
                 "    PreserveWrapper(self);\n"
@@ -1080,11 +1077,8 @@ def finalizeHook(descriptor, hookName, context):
             finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
         if descriptor.interface.getExtendedAttribute("Global"):
             finalize += "mozilla::dom::FinalizeGlobal(fop, obj);\n"
-        if descriptor.nativeOwnership == 'worker':
-            finalize += "self->Release();"
-        else:
-            finalize += ("AddForDeferredFinalization<%s, %s >(self);" %
-                (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
+        finalize += ("AddForDeferredFinalization<%s, %s >(self);" %
+            (descriptor.nativeType, DeferredFinalizeSmartPtr(descriptor)))
     return CGIfWrapper(CGGeneric(finalize), "self")
 
 class CGClassFinalizeHook(CGAbstractClassHook):
@@ -2320,10 +2314,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
         self.properties = properties
 
     def definition_body(self):
-        if self.descriptor.nativeOwnership == 'worker':
-            assert not self.descriptor.interface.hasMembersInSlots()
-            return """  return aObject->GetJSObject();"""
-
         assertISupportsInheritance = (
             '  MOZ_ASSERT(ToSupportsIsOnPrimaryInheritanceChain(aObject, aCache),\n'
             '             "nsISupports must be on our primary inheritance chain");\n')
@@ -3315,7 +3305,7 @@ for (uint32_t i = 0; i < length; ++i) {
             else:
                 declType = CGGeneric("OwningNonNull<%s>" % name)
             conversion = (
-                "  ${declName} = new %s(&${val}.toObject());\n" % name)
+                "${declName} = new %s(&${val}.toObject());\n" % name)
 
             template = wrapObjectTemplate(conversion, type,
                                           "${declName} = nullptr",
@@ -5045,10 +5035,7 @@ if (!${obj}) {
             assert(isResultAlreadyAddRefed(self.extendedAttributes) or
                    # NewObject can return raw pointers to owned objects
                    (self.returnType.isGeckoInterface() and
-                    self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'owned') or
-                   # Workers use raw pointers for new-object return
-                   # values or something
-                   self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'worker')
+                    self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'owned'))
 
         resultTemplateValues = { 'jsvalRef': 'args.rval()',
                                  'jsvalHandle': 'args.rval()',
@@ -8395,7 +8382,7 @@ class CGDescriptor(CGThing):
             cgThings.append(CGClassFinalizeHook(descriptor))
 
             # Only generate a trace hook if the class wants a custom hook.
-            if (descriptor.customTrace):
+            if descriptor.customTrace:
                 cgThings.append(CGClassTraceHook(descriptor))
 
         properties = PropertyArrays(descriptor)
