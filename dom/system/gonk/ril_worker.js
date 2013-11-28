@@ -903,6 +903,9 @@ let RIL = {
    */
   updateICCContact: function updateICCContact(options) {
     let onsuccess = function onsuccess() {
+      let recordIndex =
+        contact.pbrIndex * ICC_MAX_LINEAR_FIXED_RECORDS + contact.recordId;
+      contact.contactId = this.iccInfo.iccid + recordIndex;
       // Reuse 'options' to get 'requestId' and 'contactType'.
       RIL.sendChromeMessage(options);
     }.bind(this);
@@ -919,14 +922,14 @@ let RIL = {
 
     let contact = options.contact;
     let iccid = RIL.iccInfo.iccid;
+    let isValidRecordId = false;
     if (typeof contact.contactId === "string" &&
         contact.contactId.startsWith(iccid)) {
       let recordIndex = contact.contactId.substring(iccid.length);
       contact.pbrIndex = Math.floor(recordIndex / ICC_MAX_LINEAR_FIXED_RECORDS);
       contact.recordId = recordIndex % ICC_MAX_LINEAR_FIXED_RECORDS;
+      isValidRecordId = contact.recordId > 0 && contact.recordId < 0xff;
     }
-
-    let isValidRecordId = contact.recordId > 0 && contact.recordId < 0xff;
 
     if (DEBUG) {
       debug("Update ICC Contact " + JSON.stringify(contact));
