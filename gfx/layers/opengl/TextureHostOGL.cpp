@@ -29,6 +29,7 @@
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRegion.h"                   // for nsIntRegion
 #include "GfxTexturesReporter.h"        // for GfxTexturesReporter
+#include "GLBlitTextureImageHelper.h"
 #ifdef XP_MACOSX
 #include "SharedSurfaceIO.h"
 #include "mozilla/layers/MacIOSurfaceTextureHostOGL.h"
@@ -515,8 +516,8 @@ TextureImageDeprecatedTextureHostOGL::CopyTo(const nsIntRect& aSourceRect,
     aDest->AsSourceOGL()->AsTextureImageDeprecatedTextureHost();
   MOZ_ASSERT(dest, "Incompatible destination type!");
 
-  mGL->BlitTextureImage(mTexture, aSourceRect,
-                        dest->mTexture, aDestRect);
+  mGL->BlitTextureImageHelper()->BlitTextureImage(mTexture, aSourceRect,
+                                                  dest->mTexture, aDestRect);
   dest->mTexture->MarkValid();
 }
 
