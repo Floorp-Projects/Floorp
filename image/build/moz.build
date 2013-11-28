@@ -13,3 +13,11 @@ LIBRARY_NAME = 'imglib2'
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
+LOCAL_INCLUDES += [
+    '../encoders/bmp',
+    '../encoders/ico',
+    '../encoders/jpeg',
+    '../encoders/png',
+    '../src',
+]
+
