@@ -6,36 +6,8 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/content/xml/document/src \
 	$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gtk3 gonk qt))
-DEFINES += -DMOZ_ENABLE_FREETYPE
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-
-ifdef MOZ_ENABLE_D3D9_LAYER
-DEFINES +=	-DMOZ_ENABLE_D3D9_LAYER
-endif
-
-ifdef MOZ_ENABLE_D3D10_LAYER
-DEFINES +=	-DMOZ_ENABLE_D3D10_LAYER
-endif
-
 ACDEFINES +=	-UWIN32_LEAN_AND_MEAN
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-# This is set for "normal Android", that is, when Gecko is running on
-# top of the android java runtime.
-DEFINES +=	-DMOZ_USING_ANDROID_JAVA_WIDGETS
-endif
-
-DEFINES += \
-	-DMOZ_OTS_REPORT_ERRORS \
-	-DGRAPHITE2_STATIC \
-	$(NULL)
-
-ifeq (WINNT,$(OS_TARGET))
-DEFINES += -DOTS_DLL
 endif
 
 include $(topsrcdir)/config/rules.mk

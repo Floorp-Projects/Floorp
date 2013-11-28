@@ -269,7 +269,7 @@ class NameResolver
      * ParseNode instance given. The prefix is for each subsequent name, and
      * should initially be nullptr.
      */
-    void resolve(ParseNode *cur, HandleAtom prefixArg = NullPtr()) {
+    void resolve(ParseNode *cur, HandleAtom prefixArg = js::NullPtr()) {
         RootedAtom prefix(cx, prefixArg);
         if (cur == nullptr)
             return;

@@ -5,38 +5,8 @@
 
 VPATH		=  $(srcdir) $(srcdir)/unittest
 
-DEFINES += -DMOZ_GFX -DUSE_CAIRO -DGFX2D_INTERNAL -DMOZ2D_HAS_MOZ_CAIRO
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gtk3 gonk qt))
-DEFINES += -DMOZ_ENABLE_FREETYPE
 OS_CXXFLAGS += $(CAIRO_FT_CFLAGS)
-endif
-
-DEFINES += -DSK_A32_SHIFT=24 -DSK_R32_SHIFT=16 -DSK_G32_SHIFT=8 -DSK_B32_SHIFT=0
-
-ifdef MOZ_DEBUG
-DEFINES += -DGFX_LOG_DEBUG -DGFX_LOG_WARNING
-endif
-
-# Are we targeting x86 or x64?  If so, build SSE2 files.
-ifneq (,$(INTEL_ARCHITECTURE))
-# VC2005 doesn't support _mm_castsi128_ps, so SSE2 is turned off
-ifneq (1400,$(_MSC_VER))
-DEFINES += -DUSE_SSE2
-endif
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-DEFINES += -DWIN32 -DINITGUID
-
-ifdef MOZ_ENABLE_SKIA
-DEFINES += -DSKIA_IMPLEMENTATION=1 -DGR_IMPLEMENTATION=1
-endif
-
-# For Direct2D 1.1 we require WINSDK_MAXVER 0x06020000 or higher.
-ifdef MOZ_ENABLE_DIRECT2D1_1
-DEFINES += -DUSE_D2D1_1
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -52,11 +22,13 @@ ifneq (,$(INTEL_ARCHITECTURE))
 ifdef GNU_CC
 ImageScalingSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
 BlurSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
+FilterProcessingSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
 endif
 
 ifdef SOLARIS_SUNPRO_CXX
 ImageScalingSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
 BlurSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
+FilterProcessingSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
 endif
 endif
 

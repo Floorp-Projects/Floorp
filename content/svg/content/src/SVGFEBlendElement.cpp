@@ -9,6 +9,8 @@
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEBlend)
 
+using namespace mozilla::gfx;
+
 namespace mozilla {
 namespace dom {
 
@@ -68,60 +70,15 @@ SVGFEBlendElement::Mode()
   return mEnumAttributes[MODE].ToDOMAnimatedEnum(this);
 }
 
-nsresult
-SVGFEBlendElement::Filter(nsSVGFilterInstance* aInstance,
-                          const nsTArray<const Image*>& aSources,
-                          const Image* aTarget,
-                          const nsIntRect& rect)
+FilterPrimitiveDescription
+SVGFEBlendElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
+                                           const IntRect& aFilterSubregion,
+                                           nsTArray<nsRefPtr<gfxASurface> >& aInputImages)
 {
-  CopyRect(aTarget, aSources[0], rect);
-
-  uint8_t* sourceData = aSources[1]->mImage->Data();
-  uint8_t* targetData = aTarget->mImage->Data();
-  uint32_t stride = aTarget->mImage->Stride();
-
-  uint16_t mode = mEnumAttributes[MODE].GetAnimValue();
-
-  for (int32_t x = rect.x; x < rect.XMost(); x++) {
-    for (int32_t y = rect.y; y < rect.YMost(); y++) {
-      uint32_t targIndex = y * stride + 4 * x;
-      uint32_t qa = targetData[targIndex + GFX_ARGB32_OFFSET_A];
-      uint32_t qb = sourceData[targIndex + GFX_ARGB32_OFFSET_A];
-      for (int32_t i = std::min(GFX_ARGB32_OFFSET_B, GFX_ARGB32_OFFSET_R);
-           i <= std::max(GFX_ARGB32_OFFSET_B, GFX_ARGB32_OFFSET_R); i++) {
-        uint32_t ca = targetData[targIndex + i];
-        uint32_t cb = sourceData[targIndex + i];
-        uint32_t val;
-        switch (mode) {
-          case SVG_FEBLEND_MODE_NORMAL:
-            val = (255 - qa) * cb + 255 * ca;
-            break;
-          case SVG_FEBLEND_MODE_MULTIPLY:
-            val = ((255 - qa) * cb + (255 - qb + cb) * ca);
-            break;
-          case SVG_FEBLEND_MODE_SCREEN:
-            val = 255 * (cb + ca) - ca * cb;
-            break;
-          case SVG_FEBLEND_MODE_DARKEN:
-            val = std::min((255 - qa) * cb + 255 * ca,
-                         (255 - qb) * ca + 255 * cb);
-            break;
-          case SVG_FEBLEND_MODE_LIGHTEN:
-            val = std::max((255 - qa) * cb + 255 * ca,
-                         (255 - qb) * ca + 255 * cb);
-            break;
-          default:
-            return NS_ERROR_FAILURE;
-            break;
-        }
-        val = std::min(val / 255, 255U);
-        targetData[targIndex + i] =  static_cast<uint8_t>(val);
-      }
-      uint32_t alpha = 255 * 255 - (255 - qa) * (255 - qb);
-      FAST_DIVIDE_BY_255(targetData[targIndex + GFX_ARGB32_OFFSET_A], alpha);
-    }
-  }
-  return NS_OK;
+  uint32_t mode = mEnumAttributes[MODE].GetAnimValue();
+  FilterPrimitiveDescription descr(FilterPrimitiveDescription::eBlend);
+  descr.Attributes().Set(eBlendBlendmode, mode);
+  return descr;
 }
 
 bool

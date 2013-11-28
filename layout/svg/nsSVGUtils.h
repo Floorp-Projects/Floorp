@@ -61,6 +61,9 @@ class SVGPreserveAspectRatio;
 namespace dom {
 class Element;
 } // namespace dom
+namespace gfx {
+class SourceSurface;
+}
 } // namespace mozilla
 
 // SVG Frame state bits
@@ -473,9 +476,16 @@ public:
   GetClipRectForFrame(nsIFrame *aFrame,
                       float aX, float aY, float aWidth, float aHeight);
 
+  /**
+   * Composites a surface into a context with a given surface offset and an
+   * additional transform. Supports both Thebes and DrawTarget drawing.
+   * If aSurface is null, aSourceSurface will be used instead.
+   */
   static void CompositeSurfaceMatrix(gfxContext *aContext,
                                      gfxASurface *aSurface,
-                                     const gfxMatrix &aCTM, float aOpacity);
+                                     mozilla::gfx::SourceSurface *aSourceSurface,
+                                     const gfxPoint &aSurfaceOffset,
+                                     const gfxMatrix &aCTM);
 
   static void CompositePatternMatrix(gfxContext *aContext,
                                      gfxPattern *aPattern,
