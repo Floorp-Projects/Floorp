@@ -35,7 +35,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFloodElement)
 FilterPrimitiveDescription
 SVGFEFloodElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                            const IntRect& aFilterSubregion,
-                                           nsTArray<nsRefPtr<gfxASurface> >& aInputImages)
+                                           nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   FilterPrimitiveDescription descr(FilterPrimitiveDescription::eFlood);
   nsIFrame* frame = GetPrimaryFrame();
