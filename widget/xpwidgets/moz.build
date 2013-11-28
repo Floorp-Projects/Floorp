@@ -69,6 +69,23 @@ LIBRARY_NAME = 'xpwidgets_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    '../shared',
+    '/layout/base',
+    '/layout/forms',
+    '/layout/generic',
+    '/layout/xul/base/src',
+    '/view/src',
+]
+
+widget_dir = CONFIG['MOZ_WIDGET_TOOLKIT']
+if widget_dir in ('gtk3', 'gtk2'):
+    # gtk3 shares includes with gtk2
+    widget_dir = 'gtk'
+
+LOCAL_INCLUDES += [
+    '../%s' % widget_dir,
+]
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     FINAL_LIBRARY = 'widget_mac'
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gonk', 'android', 'qt', 'gtk2', 'gtk3'):
