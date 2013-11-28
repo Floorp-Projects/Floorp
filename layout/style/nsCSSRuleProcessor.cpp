@@ -318,7 +318,11 @@ RuleHash_ClassTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 {
   const RuleHashTableEntry *entry =
     static_cast<const RuleHashTableEntry*>(hdr);
-  return entry->mRules[0].mSelector->mClassList->mAtom;
+  nsCSSSelector* selector = entry->mRules[0].mSelector;
+  if (selector->IsPseudoElement()) {
+    selector = selector->mNext;
+  }
+  return selector->mClassList->mAtom;
 }
 
 static nsIAtom*
@@ -326,7 +330,11 @@ RuleHash_IdTable_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 {
   const RuleHashTableEntry *entry =
     static_cast<const RuleHashTableEntry*>(hdr);
-  return entry->mRules[0].mSelector->mIDList->mAtom;
+  nsCSSSelector* selector = entry->mRules[0].mSelector;
+  if (selector->IsPseudoElement()) {
+    selector = selector->mNext;
+  }
+  return selector->mIDList->mAtom;
 }
 
 static PLDHashNumber
@@ -343,8 +351,11 @@ RuleHash_NameSpaceTable_MatchEntry(PLDHashTable *table,
   const RuleHashTableEntry *entry =
     static_cast<const RuleHashTableEntry*>(hdr);
 
-  return NS_PTR_TO_INT32(key) ==
-         entry->mRules[0].mSelector->mNameSpace;
+  nsCSSSelector* selector = entry->mRules[0].mSelector;
+  if (selector->IsPseudoElement()) {
+    selector = selector->mNext;
+  }
+  return NS_PTR_TO_INT32(key) == selector->mNameSpace;
 }
 
 static const PLDHashTableOps RuleHash_TagTable_Ops = {
@@ -613,6 +624,9 @@ void RuleHash::AppendUniversalRule(const RuleSelectorPair& aRuleInfo)
 void RuleHash::AppendRule(const RuleSelectorPair& aRuleInfo)
 {
   nsCSSSelector *selector = aRuleInfo.mSelector;
+  if (selector->IsPseudoElement()) {
+    selector = selector->mNext;
+  }
   if (nullptr != selector->mIDList) {
     if (!mIdTable.ops) {
       PL_DHashTableInit(&mIdTable,
@@ -2248,6 +2262,7 @@ static bool SelectorMatchesTree(Element* aPrevElement,
                                   TreeMatchContext& aTreeMatchContext,
                                   bool aLookForRelevantLink)
 {
+  MOZ_ASSERT(!aSelector || !aSelector->IsPseudoElement());
   nsCSSSelector* selector = aSelector;
   Element* prevElement = aPrevElement;
   while (selector) { // check compound selectors
@@ -2401,9 +2416,13 @@ void ContentEnumFunc(const RuleValue& value, nsCSSSelector* aSelector,
     // of the selector matching is not in its scope.
     return;
   }
-  if (SelectorMatches(data->mElement, aSelector, nodeContext,
+  nsCSSSelector* selector = aSelector;
+  if (selector->IsPseudoElement()) {
+    selector = selector->mNext;
+  }
+  if (SelectorMatches(data->mElement, selector, nodeContext,
                       data->mTreeMatchContext)) {
-    nsCSSSelector *next = aSelector->mNext;
+    nsCSSSelector *next = selector->mNext;
     if (!next || SelectorMatchesTree(data->mElement, next,
                                      data->mTreeMatchContext,
                                      !nodeContext.mIsRelevantLink)) {
@@ -2992,7 +3011,6 @@ AddRule(RuleSelectorPair* aRuleInfo, RuleCascadeData* aCascade)
                  "Must have mNext; parser screwed up");
     NS_ASSERTION(aRuleInfo->mSelector->mNext->mOperator == ':',
                  "Unexpected mNext combinator");
-    aRuleInfo->mSelector = aRuleInfo->mSelector->mNext;
     ruleHash->AppendRule(*aRuleInfo);
   } else if (pseudoType == nsCSSPseudoElements::ePseudo_AnonBox) {
     NS_ASSERTION(!aRuleInfo->mSelector->mCasedTag &&
@@ -3027,11 +3045,19 @@ AddRule(RuleSelectorPair* aRuleInfo, RuleCascadeData* aCascade)
   for (nsCSSSelector* selector = aRuleInfo->mSelector;
            selector; selector = selector->mNext) {
     if (selector->IsPseudoElement()) {
-      NS_ASSERTION(!selector->mNegations, "Shouldn't have negations");
-      // Make sure these selectors don't end up in the hashtables we use to
-      // match against actual elements, no matter what.  Normally they wouldn't
-      // anyway, but trees overload mPseudoClassList with weird stuff.
-      continue;
+      nsCSSPseudoElements::Type pseudo = selector->PseudoType();
+      if (pseudo >= nsCSSPseudoElements::ePseudo_PseudoElementCount ||
+          !nsCSSPseudoElements::PseudoElementSupportsUserActionState(pseudo)) {
+        NS_ASSERTION(!selector->mNegations, "Shouldn't have negations");
+        // We do store selectors ending with pseudo-elements that allow :hover
+        // and :active after them in the hashtables corresponding to that
+        // selector's mNext (i.e. the thing that matches against the element),
+        // but we want to make sure that selectors for any other kinds of
+        // pseudo-elements don't end up in the hashtables.  In particular, tree
+        // pseudos store strange things in mPseudoClassList that we don't want
+        // to try to match elements against.
+        continue;
+      }
     }
     if (!AddSelector(cascade, selector, selector)) {
       return false;
