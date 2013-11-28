@@ -115,6 +115,14 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_SetProperty(cx, info, "threadsafe", value))
         return false;
 
+#ifdef JS_WORKER_THREADS
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "worker-threads", value))
+        return false;
+
 #ifdef JS_MORE_DETERMINISTIC
     value = BooleanValue(true);
 #else
@@ -1361,6 +1369,14 @@ Neuter(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static bool
+WorkerThreadCount(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setNumber(static_cast<double>(cx->runtime()->helperThreadCount()));
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -1579,6 +1595,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("neuter", Neuter, 1, 0,
 "neuter(buffer)",
 "  Neuter the given ArrayBuffer object as if it had been transferred to a WebWorker."),
+
+    JS_FN_HELP("workerThreadCount", WorkerThreadCount, 0, 0,
+"workerThreadCount()",
+"  Returns the number of worker threads available for off-main-thread tasks."),
 
     JS_FS_HELP_END
 };
