@@ -64,6 +64,7 @@ namespace mozilla {
         class GLScreenBuffer;
         class TextureGarbageBin;
         class GLBlitHelper;
+        class GLBlitTextureImageHelper;
     }
 
     namespace layers {
@@ -2763,34 +2764,6 @@ public:
     TemporaryRef<gfx::SourceSurface> ReadPixelsToSourceSurface(const gfx::IntSize &aSize);
 
     /**
-     * Copy a rectangle from one TextureImage into another.  The
-     * source and destination are given in integer coordinates, and
-     * will be converted to texture coordinates.
-     *
-     * For the source texture, the wrap modes DO apply -- it's valid
-     * to use REPEAT or PAD and expect appropriate behaviour if the source
-     * rectangle extends beyond its bounds.
-     *
-     * For the destination texture, the wrap modes DO NOT apply -- the
-     * destination will be clipped by the bounds of the texture.
-     *
-     * Note: calling this function will cause the following OpenGL state
-     * to be changed:
-     *
-     *   - current program
-     *   - framebuffer binding
-     *   - viewport
-     *   - blend state (will be enabled at end)
-     *   - scissor state (will be enabled at end)
-     *   - vertex attrib 0 and 1 (pointer and enable state [enable state will be disabled at exit])
-     *   - array buffer binding (will be 0)
-     *   - active texture (will be 0)
-     *   - texture 0 binding
-     */
-    void BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
-                          TextureImage *aDst, const nsIntRect& aDstRect);
-
-    /**
      * Creates a RGB/RGBA texture (or uses one provided) and uploads the surface
      * contents to it within aSrcRect.
      *
@@ -2943,16 +2916,13 @@ protected:
 #endif
     bool mFlipped;
 
-    // lazy-initialized things
-    GLuint mBlitProgram, mBlitFramebuffer;
-    void UseBlitProgram();
-    void SetBlitFramebufferForDestTexture(GLuint aTexture);
-
     ScopedDeletePtr<GLBlitHelper> mBlitHelper;
+    ScopedDeletePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
 
 public:
 
     GLBlitHelper* BlitHelper();
+    GLBlitTextureImageHelper* BlitTextureImageHelper();
 
     // Assumes shares are created by all sharing with the same global context.
     bool SharesWith(const GLContext* other) const {
