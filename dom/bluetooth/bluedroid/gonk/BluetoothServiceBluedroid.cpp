@@ -35,43 +35,6 @@ using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
 
-class SetupAfterEnabledTask : public nsRunnable
-{
-public:
-  SetupAfterEnabledTask()
-  { }
-
-  NS_IMETHOD
-  Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    // Bluetooth scan mode is NONE by default
-    bt_scan_mode_t mode = BT_SCAN_MODE_CONNECTABLE;
-    bt_property_t prop;
-    prop.type = BT_PROPERTY_ADAPTER_SCAN_MODE;
-    prop.val = (void*)&mode;
-    prop.len = sizeof(mode);
-
-    NS_ENSURE_TRUE(sBtInterface, NS_ERROR_FAILURE);
-
-    int ret = sBtInterface->set_adapter_property(&prop);
-    if (ret != BT_STATUS_SUCCESS) {
-      BT_LOGR("%s: Fail to set: BT_SCAN_MODE_CONNECTABLE", __FUNCTION__);
-    }
-
-    // Try to fire event 'AdapterAdded' to fit the original behaviour when
-    // we used BlueZ as backend.
-    BluetoothService* bs = BluetoothService::Get();
-    NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
-
-    bs->AdapterAddedReceived();
-    bs->TryFiringAdapterAdded();
-
-    return NS_OK;
-  }
-};
-
 /**
  *  Classes only used in this file
  */
@@ -88,8 +51,6 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     BluetoothService* bs = BluetoothService::Get();
-    NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
-
     bs->DistributeSignal(mSignal);
 
     return NS_OK;
@@ -262,6 +223,34 @@ BdAddressTypeToString(bt_bdaddr_t* aBdAddressType, nsAString& aRetBdAddress)
 }
 
 static void
+Setup()
+{
+  // Bluetooth scan mode is NONE by default
+  bt_scan_mode_t mode = BT_SCAN_MODE_CONNECTABLE;
+  bt_property_t prop;
+  prop.type = BT_PROPERTY_ADAPTER_SCAN_MODE;
+  prop.val = (void*)&mode;
+  prop.len = sizeof(mode);
+
+  NS_ENSURE_TRUE_VOID(sBtInterface);
+
+  int ret = sBtInterface->set_adapter_property(&prop);
+  if (ret != BT_STATUS_SUCCESS) {
+    BT_LOGR("%s: Fail to set: BT_SCAN_MODE_CONNECTABLE", __FUNCTION__);
+  }
+
+  // Event 'AdapterAdded' has to be fired after enabled to notify Gaia
+  // that BluetoothAdapter is ready.
+  BluetoothSignal signal(NS_LITERAL_STRING("AdapterAdded"),
+                         NS_LITERAL_STRING(KEY_MANAGER), true);
+  nsRefPtr<DistributeBluetoothSignalTask>
+    t = new DistributeBluetoothSignalTask(signal);
+  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+    BT_WARNING("Failed to dispatch to main thread!");
+  }
+}
+
+static void
 AdapterStateChangeCallback(bt_state_t aStatus)
 {
   MOZ_ASSERT(!NS_IsMainThread());
@@ -275,9 +264,8 @@ AdapterStateChangeCallback(bt_state_t aStatus)
     lock.Notify();
   }
 
-  if (sIsBtEnabled &&
-      NS_FAILED(NS_DispatchToMainThread(new SetupAfterEnabledTask()))) {
-    BT_WARNING("Failed to dispatch to main thread!");
+  if (sIsBtEnabled) {
+    Setup();
   }
 }
 
