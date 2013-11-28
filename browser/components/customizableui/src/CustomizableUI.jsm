@@ -97,6 +97,13 @@ let gSeenWidgets = new Set();
  */
 let gDirtyAreaCache = new Set();
 
+/**
+ * gPendingBuildAreas is a map from area IDs to map from build nodes to their
+ * existing children at the time of node registration, that are waiting
+ * for the area to be registered
+ */
+let gPendingBuildAreas = new Map();
+
 let gSavedState = null;
 let gRestoring = false;
 let gDirty = false;
@@ -263,11 +270,9 @@ let CustomizableUIInternal = {
     if (typeof aName != "string" || !/^[a-z0-9-_]{1,}$/i.test(aName)) {
       throw new Error("Invalid area name");
     }
-    if (gAreas.has(aName)) {
-      throw new Error("Area already registered");
-    }
 
-    let props = new Map();
+    let areaIsKnown = gAreas.has(aName);
+    let props = areaIsKnown ? gAreas.get(aName) : new Map();
     for (let key in aProperties) {
       //XXXgijs for special items, we need to make sure they have an appropriate ID
       // so we aren't perpetually in a non-default state:
@@ -277,14 +282,44 @@ let CustomizableUIInternal = {
         props.set(key, aProperties[key]);
       }
     }
-    gAreas.set(aName, props);
+    // Default to a toolbar:
+    if (!props.has("type")) {
+      props.set("type", CustomizableUI.TYPE_TOOLBAR);
+    }
+    // Sanity check type:
+    let allTypes = [CustomizableUI.TYPE_TOOLBAR, CustomizableUI.TYPE_MENU_PANEL];
+    if (allTypes.indexOf(props.get("type")) == -1) {
+      throw new Error("Invalid area type " + props.get("type"));
+    }
 
-    if (props.get("legacy")) {
-      // Guarantee this area exists in gFuturePlacements, to avoid checking it in
-      // various places elsewhere.
-      gFuturePlacements.set(aName, new Set());
-    } else {
-      this.restoreStateForArea(aName);
+    // And to no placements:
+    if (!props.has("defaultPlacements")) {
+      props.set("defaultPlacements", []);
+    }
+    // Sanity check default placements array:
+    if (!Array.isArray(props.get("defaultPlacements"))) {
+      throw new Error("Should provide an array of default placements");
+    }
+
+    if (!areaIsKnown) {
+      gAreas.set(aName, props);
+
+      if (props.get("legacy")) {
+        // Guarantee this area exists in gFuturePlacements, to avoid checking it in
+        // various places elsewhere.
+        gFuturePlacements.set(aName, new Set());
+      } else {
+        this.restoreStateForArea(aName);
+      }
+
+      // If we have pending build area nodes, register all of them
+      if (gPendingBuildAreas.has(aName)) {
+        let pendingNodes = gPendingBuildAreas.get(aName);
+        for (let [pendingNode, existingChildren] of pendingNodes) {
+          this.registerToolbarNode(pendingNode, existingChildren);
+        }
+        gPendingBuildAreas.delete(aName);
+      }
     }
   },
 
@@ -331,8 +366,23 @@ let CustomizableUIInternal = {
     let document = aToolbar.ownerDocument;
     let areaProperties = gAreas.get(area);
 
+    // If this area is not registered, try to do it automatically:
     if (!areaProperties) {
-      throw new Error("Unknown customization area: " + area);
+      // If there's no default set attribute at all, we assume that we should
+      // wait for registerArea to be called:
+      if (!aToolbar.hasAttribute("defaultset")) {
+        if (!gPendingBuildAreas.has(area)) {
+          gPendingBuildAreas.set(area, new Map());
+        }
+        let pendingNodes = gPendingBuildAreas.get(area);
+        pendingNodes.set(aToolbar, aExistingChildren);
+        return;
+      }
+      let props = {type: CustomizableUI.TYPE_TOOLBAR, legacy: true};
+      let defaultsetAttribute = aToolbar.getAttribute("defaultset");
+      props.defaultPlacements = defaultsetAttribute.split(',').filter(s => s);
+      this.registerArea(area, props);
+      areaProperties = gAreas.get(area);
     }
 
     this.beginBatchUpdate();
@@ -729,6 +779,18 @@ let CustomizableUIInternal = {
     for (let [,widget] of gPalette) {
       widget.instances.delete(document);
       this.notifyListeners("onWidgetInstanceRemoved", widget.id, document);
+    }
+
+    for (let [area, areaMap] of gPendingBuildAreas) {
+      let toDelete = [];
+      for (let [areaNode, ] of areaMap) {
+        if (areaNode.ownerDocument == document) {
+          toDelete.push(areaNode);
+        }
+      }
+      for (let areaNode of toDelete) {
+        areaMap.delete(toDelete);
+      }
     }
   },
 

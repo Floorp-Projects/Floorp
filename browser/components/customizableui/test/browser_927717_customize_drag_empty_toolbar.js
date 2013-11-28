@@ -7,7 +7,7 @@ let gTests = [
   {
     desc: "Attempting to drag an item to an empty container should work.",
     setup: function() {
-      createToolbarWithPlacements(kTestToolbarId, "");
+      createToolbarWithPlacements(kTestToolbarId, []);
     },
     run: function() {
       yield startCustomizing();
