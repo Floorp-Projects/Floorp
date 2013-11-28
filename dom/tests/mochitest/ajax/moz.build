@@ -6,7 +6,6 @@
 
 DIRS += [
     'lib',
-    'prototype',
     'offline',
     'mochikit',
     'scriptaculous',
@@ -14,5 +13,6 @@ DIRS += [
 
 MOCHITEST_MANIFESTS += [
     'jquery/mochitest.ini',
+    'prototype/mochitest.ini',
 ]
 
