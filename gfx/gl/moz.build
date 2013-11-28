@@ -72,6 +72,7 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     UNIFIED_SOURCES += ['SharedSurfaceGralloc.cpp']
     EXPORTS += ['SharedSurfaceGralloc.h']
+    LOCAL_INCLUDES += ['/widget/gonk']
 
 if gl_provider == 'CGL':
     # This file includes Mac headers that are unfriendly to unified builds,

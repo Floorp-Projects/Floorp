@@ -42,3 +42,9 @@ EXPORT_LIBRARY = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    '/gfx/2d',
+    '/gfx/2d/unittest',
+    '/gfx/layers',
+]
+
