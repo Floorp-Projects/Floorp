@@ -88,3 +88,9 @@ LIBRARY_NAME = 'widget_windows'
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+DEFINES['MOZ_UNICODE'] = True
+
+for var in ('MOZ_ENABLE_D3D9_LAYER', 'MOZ_ENABLE_D3D10_LAYER'):
+    if CONFIG[var]:
+        DEFINES[var] = True

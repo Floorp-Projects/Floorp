@@ -121,8 +121,13 @@ var FeedHandler = {
     var haveFeeds = feeds && feeds.length > 0;
 
     var feedButton = document.getElementById("feed-button");
-    if (feedButton)
-      feedButton.disabled = !haveFeeds;
+    if (feedButton) {
+      if (haveFeeds) {
+        feedButton.removeAttribute("disabled");
+      } else {
+        feedButton.setAttribute("disabled", "true");
+      }
+    }
 
     if (!haveFeeds) {
       this._feedMenuitem.setAttribute("disabled", "true");

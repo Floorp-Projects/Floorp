@@ -6,9 +6,3 @@
 DEFFILE		= $(win_srcdir)/tm.def
 
 STL_FLAGS	=
-
-DEFINES		+= -DMOZ_NO_MOZALLOC
-
-ifdef WRAP_SYSTEM_INCLUDES
-DEFINES		+= -DWRAP_SYSTEM_INCLUDES
-endif

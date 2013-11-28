@@ -145,10 +145,10 @@
   <string name="pref_private_data_siteSettings">&pref_private_data_siteSettings2;</string>
   <string name="pref_private_data_downloadFiles">&pref_private_data_downloadFiles;</string>
   <string name="pref_import_android">&pref_import_android;</string>
-  <string name="pref_update_autodownload">&pref_update_autodownload;</string>
+  <string name="pref_update_autodownload">&pref_update_autodownload2;</string>
   <string name="pref_update_autodownload_wifi">&pref_update_autodownload_wifi;</string>
-  <string name="pref_update_autodownload_disabled">&pref_update_autodownload_disabled;</string>
-  <string name="pref_update_autodownload_enabled">&pref_update_autodownload_enabled;</string>
+  <string name="pref_update_autodownload_disabled">&pref_update_autodownload_never;</string>
+  <string name="pref_update_autodownload_enabled">&pref_update_autodownload_always;</string>
 
 
   <string name="pref_about_firefox">&pref_about_firefox;</string>

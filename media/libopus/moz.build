@@ -14,3 +14,26 @@ EXPORTS.opus += [
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gkmedias'
+
+DEFINES['OPUS_BUILD'] = True
+DEFINES['OPUS_VERSION'] = '"v1.1-beta-23-gf2446c2-mozilla"'
+DEFINES['USE_ALLOCA'] = True
+
+if CONFIG['OS_ARCH'] in ('Linux', 'Darwin', 'DragonFly', 'FreeBSD',
+                         'NetBSD', 'OpenBSD'):
+    DEFINES['HAVE_LRINTF'] = True
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    DEFINES['inline'] = '__inline'
+    if CONFIG['GNU_CC']:
+        DEFINES['HAVE_LRINTF'] = True
+
+if CONFIG['OS_ARCH'] == 'AIX':
+    DEFINES['alloca'] = '__alloca'
+
+if CONFIG['OS_ARCH'] == 'SunOS':
+    DEFINES['HAVE_ALLOCA_H'] = True
+
+if not CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
+    DEFINES['FIXED_POINT'] = 1
+    DEFINES['DISABLE_FLOAT_API'] = True

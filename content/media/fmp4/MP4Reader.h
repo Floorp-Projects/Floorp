@@ -53,6 +53,8 @@ public:
   virtual void OnDecodeThreadFinish() MOZ_OVERRIDE;
 
 private:
+  // Initializes mLayersBackendType if possible.
+  void InitLayersBackendType();
 
   MP4SampleQueue& SampleQueue(mp4_demuxer::TrackType aTrack);
 
