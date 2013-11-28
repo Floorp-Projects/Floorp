@@ -74,6 +74,7 @@
 #include "mozInlineSpellChecker.h"
 #include "mozilla/Services.h"
 #include <stdlib.h>
+#include "nsIMemoryReporter.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
@@ -83,7 +84,6 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(mozHunspell)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(mozHunspell)
 
 NS_INTERFACE_MAP_BEGIN(mozHunspell)
-  NS_INTERFACE_MAP_ENTRY(nsIMemoryReporter)
   NS_INTERFACE_MAP_ENTRY(mozISpellCheckingEngine)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -96,28 +96,39 @@ NS_IMPL_CYCLE_COLLECTION_3(mozHunspell,
                            mEncoder,
                            mDecoder)
 
-int64_t mozHunspell::sAmount = 0;
+class SpellCheckReporter MOZ_FINAL : public mozilla::MemoryUniReporter
+{
+public:
+  SpellCheckReporter()
+    : MemoryUniReporter("explicit/spell-check", KIND_HEAP, UNITS_BYTES,
+"Memory used by the Hunspell spell checking engine's internal data structures.")
+  {
+#ifdef DEBUG
+    // There must be only one instance of this class, due to |sAmount|
+    // being static.
+    static bool hasRun = false;
+    MOZ_ASSERT(!hasRun);
+    hasRun = true;
+#endif
+  }
+
+  static void OnAlloc(void* ptr) { sAmount += MallocSizeOfOnAlloc(ptr); }
+  static void OnFree (void* ptr) { sAmount -= MallocSizeOfOnFree (ptr); }
+
+private:
+  int64_t Amount() MOZ_OVERRIDE { return sAmount; }
+
+  static int64_t sAmount;
+};
+
+int64_t SpellCheckReporter::sAmount = 0;
 
 // WARNING: hunspell_alloc_hooks.h uses these two functions.
 void HunspellReportMemoryAllocation(void* ptr) {
-  mozHunspell::OnAlloc(ptr);
+  SpellCheckReporter::OnAlloc(ptr);
 }
 void HunspellReportMemoryDeallocation(void* ptr) {
-  mozHunspell::OnFree(ptr);
-}
-
-mozHunspell::mozHunspell()
-  : MemoryUniReporter("explicit/spell-check", KIND_HEAP, UNITS_BYTES,
-"Memory used by the spell-checking engine's internal data structures."),
-    mHunspell(nullptr)
-{
-#ifdef DEBUG
-  // There must be only one instance of this class, due to |sAmount|
-  // being static.
-  static bool hasRun = false;
-  MOZ_ASSERT(!hasRun);
-  hasRun = true;
-#endif
+  SpellCheckReporter::OnFree(ptr);
 }
 
 nsresult
@@ -131,14 +142,15 @@ mozHunspell::Init()
     obs->AddObserver(this, "profile-after-change", true);
   }
 
-  RegisterWeakMemoryReporter(this);
+  mReporter = new SpellCheckReporter();
+  NS_RegisterMemoryReporter(mReporter);
 
   return NS_OK;
 }
 
 mozHunspell::~mozHunspell()
 {
-  UnregisterWeakMemoryReporter(this);
+  NS_UnregisterMemoryReporter(mReporter);
 
   mPersonalDictionary = nullptr;
   delete mHunspell;

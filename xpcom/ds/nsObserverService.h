@@ -8,7 +8,6 @@
 
 #include "nsIObserverService.h"
 #include "nsObserverList.h"
-#include "nsIMemoryReporter.h"
 #include "nsTHashtable.h"
 #include "mozilla/Attributes.h"
 
@@ -18,10 +17,13 @@
 
 class nsIMemoryReporter;
 
-class nsObserverService MOZ_FINAL
-  : public mozilla::MemoryMultiReporter
-  , public nsIObserverService
-{
+namespace mozilla {
+class ObserverServiceReporter;
+} // namespace mozilla
+
+class nsObserverService MOZ_FINAL : public nsIObserverService {
+  friend class mozilla::ObserverServiceReporter;
+
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_OBSERVERSERVICE_CID)
 
@@ -39,18 +41,13 @@ public:
   // collector will not traverse them.
   NS_IMETHOD UnmarkGrayStrongObservers();
 
-  NS_IMETHOD CollectReports(nsIHandleReportCallback *aHandleReport,
-                            nsISupports *aData);
-
 private:
   ~nsObserverService(void);
   void RegisterReporter();
 
-  static const size_t kSuspectReferentCount = 100;
-  static PLDHashOperator CountReferents(nsObserverList* aObserverList,
-                                        void* aClosure);
   bool mShuttingDown;
   nsTHashtable<nsObserverList> mObserverTopicTable;
+  nsCOMPtr<nsIMemoryReporter> mReporter;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsObserverService, NS_OBSERVERSERVICE_CID)

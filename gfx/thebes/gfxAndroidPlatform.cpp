@@ -97,7 +97,8 @@ gfxAndroidPlatform::gfxAndroidPlatform()
     FT_New_Library(&sFreetypeMemoryRecord, &gPlatformFTLibrary);
     FT_Add_Default_Modules(gPlatformFTLibrary);
 
-    RegisterStrongMemoryReporter(new FreetypeReporter());
+    mFreetypeReporter = new FreetypeReporter();
+    NS_RegisterMemoryReporter(mFreetypeReporter);
 
     nsCOMPtr<nsIScreenManager> screenMgr = do_GetService("@mozilla.org/gfx/screenmanager;1");
     nsCOMPtr<nsIScreen> screen;
@@ -118,6 +119,8 @@ gfxAndroidPlatform::gfxAndroidPlatform()
 gfxAndroidPlatform::~gfxAndroidPlatform()
 {
     cairo_debug_reset_static_data();
+
+    NS_UnregisterMemoryReporter(mFreetypeReporter);
 
     FT_Done_Library(gPlatformFTLibrary);
     gPlatformFTLibrary = nullptr;

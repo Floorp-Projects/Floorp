@@ -102,9 +102,7 @@ private:
 #undef ETLD_STR_NUM1
 };
 
-class nsEffectiveTLDService MOZ_FINAL
-  : public mozilla::MemoryUniReporter
-  , public nsIEffectiveTLDService
+class nsEffectiveTLDService MOZ_FINAL : public nsIEffectiveTLDService
 {
 public:
   NS_DECL_ISUPPORTS
@@ -113,7 +111,6 @@ public:
   nsEffectiveTLDService();
   nsresult Init();
 
-  int64_t Amount() MOZ_OVERRIDE;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
 private:
@@ -121,6 +118,7 @@ private:
   nsresult NormalizeHostname(nsCString &aHostname);
   ~nsEffectiveTLDService();
 
+  nsCOMPtr<nsIMemoryReporter> mReporter;
   nsTHashtable<nsDomainEntry> mHash;
   nsCOMPtr<nsIIDNService>     mIDNService;
 };

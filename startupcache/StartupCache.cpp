@@ -16,6 +16,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsIClassInfo.h"
 #include "nsIFile.h"
+#include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIOutputStream.h"
@@ -51,31 +52,38 @@
 namespace mozilla {
 namespace scache {
 
-NS_IMETHODIMP
-StartupCache::CollectReports(nsIHandleReportCallback* aHandleReport,
-                             nsISupports* aData)
+class StartupCacheMappingReporter MOZ_FINAL : public MemoryUniReporter
 {
-#define REPORT(_path, _kind, _amount, _desc)                                \
-  do {                                                                      \
-    nsresult rv =                                                           \
-      aHandleReport->Callback(EmptyCString(),                               \
-                              NS_LITERAL_CSTRING(_path),                    \
-                              _kind, UNITS_BYTES, _amount,                  \
-                              NS_LITERAL_CSTRING(_desc), aData);            \
-    NS_ENSURE_SUCCESS(rv, rv);                                              \
-  } while (0)
+public:
+  StartupCacheMappingReporter()
+    : MemoryUniReporter("explicit/startup-cache/mapping",
+                         KIND_NONHEAP, UNITS_BYTES,
+"Memory used to hold the mapping of the startup cache from file.  This memory "
+"is likely to be swapped out shortly after start-up.")
+  {}
+private:
+  int64_t Amount() MOZ_OVERRIDE
+  {
+    mozilla::scache::StartupCache* sc =
+      mozilla::scache::StartupCache::GetSingleton();
+    return sc ? sc->SizeOfMapping() : 0;
+  }
+};
 
-  REPORT("explicit/startup-cache/mapping", KIND_NONHEAP,
-         SizeOfMapping(),
-         "Memory used to hold the mapping of the startup cache from file. "
-         "This memory is likely to be swapped out shortly after start-up.");
-
-  REPORT("explicit/startup-cache/data", KIND_HEAP,
-         HeapSizeOfIncludingThis(MallocSizeOf),
-         "Memory used by the startup cache for things other than the file "
-         "mapping.");
-
-  return NS_OK;
+class StartupCacheDataReporter MOZ_FINAL : public MemoryUniReporter
+{
+public:
+  StartupCacheDataReporter()
+    : MemoryUniReporter("explicit/startup-cache/data", KIND_HEAP, UNITS_BYTES,
+"Memory used by the startup cache for things other than the file mapping.")
+  {}
+private:
+  int64_t Amount() MOZ_OVERRIDE
+  {
+    mozilla::scache::StartupCache* sc =
+      mozilla::scache::StartupCache::GetSingleton();
+    return sc ? sc->HeapSizeOfIncludingThis(MallocSizeOf) : 0;
+  }
 };
 
 static const char sStartupCacheName[] = "startupCache." SC_WORDSIZE "." SC_ENDIAN;
@@ -102,6 +110,7 @@ StartupCache::GetSingleton()
 void
 StartupCache::DeleteSingleton()
 {
+  delete StartupCache::gStartupCache;
   StartupCache::gStartupCache = nullptr;
 }
 
@@ -113,21 +122,19 @@ StartupCache::InitSingleton()
 
   rv = StartupCache::gStartupCache->Init();
   if (NS_FAILED(rv)) {
+    delete StartupCache::gStartupCache;
     StartupCache::gStartupCache = nullptr;
   }
   return rv;
 }
 
-StaticRefPtr<StartupCache> StartupCache::gStartupCache;
+StartupCache* StartupCache::gStartupCache;
 bool StartupCache::gShutdownInitiated;
 bool StartupCache::gIgnoreDiskCache;
 enum StartupCache::TelemetrifyAge StartupCache::gPostFlushAgeAction = StartupCache::IGNORE_AGE;
 
-NS_IMPL_ISUPPORTS_INHERITED0(StartupCache, MemoryMultiReporter)
-
 StartupCache::StartupCache()
-  : MemoryMultiReporter("startup-cache"),
-    mArchive(nullptr), mStartupWriteInitiated(false), mWriteThread(nullptr)
+  : mArchive(nullptr), mStartupWriteInitiated(false), mWriteThread(nullptr)
 { }
 
 StartupCache::~StartupCache()
@@ -149,7 +156,9 @@ StartupCache::~StartupCache()
     WriteToDisk();
   }
 
-  UnregisterWeakMemoryReporter(this);
+  gStartupCache = nullptr;
+  NS_UnregisterMemoryReporter(mMappingReporter);
+  NS_UnregisterMemoryReporter(mDataReporter);
 }
 
 nsresult
@@ -236,7 +245,10 @@ StartupCache::Init()
     InvalidateCache();
   }
 
-  RegisterWeakMemoryReporter(this);
+  mMappingReporter = new StartupCacheMappingReporter();
+  mDataReporter    = new StartupCacheDataReporter();
+  NS_RegisterMemoryReporter(mMappingReporter);
+  NS_RegisterMemoryReporter(mDataReporter);
 
   return NS_OK;
 }
@@ -374,7 +386,7 @@ StartupCache::PutBuffer(const char* id, const char* inbuf, uint32_t len)
 }
 
 size_t
-StartupCache::SizeOfMapping()
+StartupCache::SizeOfMapping() 
 {
     return mArchive ? mArchive->SizeOfMapping() : 0;
 }
@@ -531,7 +543,7 @@ StartupCache::WaitOnWriteThread()
   mWriteThread = nullptr;
 }
 
-void
+void 
 StartupCache::ThreadedWrite(void *aClosure)
 {
   PR_SetCurrentThreadName("StartupCache");

@@ -10,7 +10,6 @@
 #include "nsISupportsUtils.h"
 #include "nsID.h"
 #include "nsIFile.h"
-#include "nsIMemoryReporter.h"
 #include "nsIMutableArray.h"
 #include "nsIUrlClassifierPrefixSet.h"
 #include "nsTArray.h"
@@ -20,9 +19,9 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/FileUtils.h"
 
-class nsUrlClassifierPrefixSet
-  : public nsIUrlClassifierPrefixSet
-  , public nsIMemoryReporter
+class nsIMemoryReporter;
+
+class nsUrlClassifierPrefixSet : public nsIUrlClassifierPrefixSet
 {
 public:
   nsUrlClassifierPrefixSet();
@@ -36,16 +35,18 @@ public:
   NS_IMETHOD LoadFromFile(nsIFile* aFile);
   NS_IMETHOD StoreToFile(nsIFile* aFile);
 
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIMEMORYREPORTER
+  NS_DECL_ISUPPORTS
 
-  // Return the estimated size of the set on disk and in memory, in bytes.
+  // Return the estimated size of the set on disk and in memory,
+  // in bytes
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
 protected:
   static const uint32_t DELTAS_LIMIT = 100;
   static const uint32_t MAX_INDEX_DIFF = (1 << 16);
   static const uint32_t PREFIXSET_VERSION_MAGIC = 1;
+
+  nsCOMPtr<nsIMemoryReporter> mReporter;
 
   nsresult MakePrefixSet(const uint32_t* aArray, uint32_t aLength);
   uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target);
@@ -62,8 +63,6 @@ protected:
   FallibleTArray<uint32_t> mIndexStarts;
   // array containing deltas from indices.
   FallibleTArray<uint16_t> mDeltas;
-
-  nsCString mMemoryReportPath;
 };
 
 #endif

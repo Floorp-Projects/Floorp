@@ -18,7 +18,6 @@
 #include "MediaResource.h"
 #include "nsError.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPtr.h"
 #include "nsIMemoryReporter.h"
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
@@ -54,20 +53,15 @@ PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(type, msg)
 #endif
 
-class MediaMemoryTracker : public MemoryMultiReporter
+class MediaMemoryTracker
 {
-  NS_DECL_ISUPPORTS
-
   MediaMemoryTracker();
-  virtual ~MediaMemoryTracker();
-  void InitMemoryReporter();
-
-  static StaticRefPtr<MediaMemoryTracker> sUniqueInstance;
+  ~MediaMemoryTracker();
+  static MediaMemoryTracker* sUniqueInstance;
 
   static MediaMemoryTracker* UniqueInstance() {
     if (!sUniqueInstance) {
       sUniqueInstance = new MediaMemoryTracker();
-      sUniqueInstance->InitMemoryReporter();
     }
     return sUniqueInstance;
   }
@@ -78,6 +72,8 @@ class MediaMemoryTracker : public MemoryMultiReporter
   }
 
   DecodersArray mDecoders;
+
+  nsCOMPtr<nsIMemoryReporter> mReporter;
 
 public:
   static void AddMediaDecoder(MediaDecoder* aDecoder)
@@ -90,17 +86,24 @@ public:
     DecodersArray& decoders = Decoders();
     decoders.RemoveElement(aDecoder);
     if (decoders.IsEmpty()) {
+      delete sUniqueInstance;
       sUniqueInstance = nullptr;
     }
   }
 
-  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData);
+  static void GetAmounts(int64_t* aVideo, int64_t* aAudio)
+  {
+    *aVideo = 0;
+    *aAudio = 0;
+    DecodersArray& decoders = Decoders();
+    for (size_t i = 0; i < decoders.Length(); ++i) {
+      *aVideo += decoders[i]->VideoQueueMemoryInUse();
+      *aAudio += decoders[i]->AudioQueueMemoryInUse();
+    }
+  }
 };
 
-StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
-
-NS_IMPL_ISUPPORTS_INHERITED0(MediaMemoryTracker, MemoryMultiReporter)
+MediaMemoryTracker* MediaMemoryTracker::sUniqueInstance = nullptr;
 
 NS_IMPL_ISUPPORTS1(MediaDecoder, nsIObserver)
 
@@ -1769,34 +1772,38 @@ MediaDecoder::IsAppleMP3Enabled()
 }
 #endif
 
-NS_IMETHODIMP
-MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                   nsISupports* aData)
+class MediaReporter MOZ_FINAL : public MemoryMultiReporter
 {
-  int64_t video = 0, audio = 0;
-  DecodersArray& decoders = Decoders();
-  for (size_t i = 0; i < decoders.Length(); ++i) {
-    video += decoders[i]->VideoQueueMemoryInUse();
-    audio += decoders[i]->AudioQueueMemoryInUse();
+public:
+  MediaReporter()
+    : MemoryMultiReporter("media")
+  {}
+
+  NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
+                            nsISupports* aClosure)
+  {
+    int64_t video, audio;
+    MediaMemoryTracker::GetAmounts(&video, &audio);
+
+  #define REPORT(_path, _amount, _desc)                                       \
+    do {                                                                      \
+        nsresult rv;                                                          \
+        rv = aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path),         \
+                           nsIMemoryReporter::KIND_HEAP,                      \
+                           nsIMemoryReporter::UNITS_BYTES, _amount,           \
+                           NS_LITERAL_CSTRING(_desc), aClosure);              \
+        NS_ENSURE_SUCCESS(rv, rv);                                            \
+    } while (0)
+
+    REPORT("explicit/media/decoded-video", video,
+           "Memory used by decoded video frames.");
+
+    REPORT("explicit/media/decoded-audio", audio,
+           "Memory used by decoded audio chunks.");
+
+    return NS_OK;
   }
-
-#define REPORT(_path, _amount, _desc)                                         \
-  do {                                                                        \
-      nsresult rv;                                                            \
-      rv = aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
-                                   KIND_HEAP, UNITS_BYTES, _amount,           \
-                                   NS_LITERAL_CSTRING(_desc), aData);         \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
-  } while (0)
-
-  REPORT("explicit/media/decoded-video", video,
-         "Memory used by decoded video frames.");
-
-  REPORT("explicit/media/decoded-audio", audio,
-         "Memory used by decoded audio chunks.");
-
-  return NS_OK;
-}
+};
 
 MediaDecoderOwner*
 MediaDecoder::GetOwner()
@@ -1806,19 +1813,14 @@ MediaDecoder::GetOwner()
 }
 
 MediaMemoryTracker::MediaMemoryTracker()
-  : MemoryMultiReporter("media")
+  : mReporter(new MediaReporter())
 {
-}
-
-void
-MediaMemoryTracker::InitMemoryReporter()
-{
-  RegisterWeakMemoryReporter(this);
+  NS_RegisterMemoryReporter(mReporter);
 }
 
 MediaMemoryTracker::~MediaMemoryTracker()
 {
-  UnregisterWeakMemoryReporter(this);
+  NS_UnregisterMemoryReporter(mReporter);
 }
 
 } // namespace mozilla

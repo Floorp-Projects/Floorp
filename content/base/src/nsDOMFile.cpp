@@ -733,7 +733,9 @@ nsDOMMemoryFile::DataOwner::EnsureMemoryReporterRegistered()
     return;
   }
 
-  RegisterStrongMemoryReporter(new nsDOMMemoryFileDataOwnerMemoryReporter());
+  nsRefPtr<nsDOMMemoryFileDataOwnerMemoryReporter> reporter = new
+    nsDOMMemoryFileDataOwnerMemoryReporter();
+  NS_RegisterMemoryReporter(reporter);
 
   sMemoryReporterRegistered = true;
 }
