@@ -402,20 +402,3 @@ if CONFIG['MOZ_ETW']:
     GENERATED_FILES = [
         'ETWProvider.h',
     ]
-
-if CONFIG['NIGHTLY_BUILD']:
-    DEFINES['ENABLE_PARALLEL_JS'] = True
-    DEFINES['ENABLE_BINARYDATA'] = True
-
-DEFINES['EXPORT_JS_API'] = True
-
-if CONFIG['JS_THREADSAFE']:
-    DEFINES['JS_THREADSAFE'] = True
-
-if CONFIG['JS_HAS_CTYPES']:
-    DEFINES['JS_HAS_CTYPES'] = True
-    for var in ('DLL_PREFIX', 'DLL_SUFFIX'):
-        DEFINES[var] = '"%s"' % CONFIG[var]
-
-if CONFIG['MOZ_LINKER']:
-    DEFINES['MOZ_LINKER'] = True

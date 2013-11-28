@@ -10,6 +10,7 @@ endif
 LOCAL_INCLUDES += -I$(srcdir)/../src
 
 ifneq ($(OS_ARCH),WINNT)
+DEFINES += -DMAR_NSS
 LOCAL_INCLUDES += -I$(srcdir)/../sign
 endif
 

@@ -6,10 +6,8 @@
 #ifndef MOZZCONF_H
 #define MOZZCONF_H
 
-#include "mozilla/Types.h"
-
-#if defined(ZLIB_IN_MOZGLUE)
-#define ZEXTERN MFBT_API
+#if defined(XP_WIN)
+#define ZLIB_DLL 1
 #endif
 
 /* Exported Symbols */

@@ -23,5 +23,3 @@ HOST_SOURCES += [
 ]
 
 HOST_PROGRAM = 'elfhack'
-
-DEFINES['ELFHACK_BUILD'] = True

@@ -12,5 +12,3 @@ SIMPLE_PROGRAMS = [
 SOURCES += [
     '%s.cpp' % s for s in SIMPLE_PROGRAMS
 ]
-
-DEFINES['NS_NO_XPCOM'] = True

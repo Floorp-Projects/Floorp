@@ -12,50 +12,42 @@ if CONFIG['MOZ_ALSA']:
     SOURCES += [
         'cubeb_alsa.c',
     ]
-    DEFINES['USE_ALSA'] = True
 
 if CONFIG['MOZ_PULSEAUDIO']:
     SOURCES += [
         'cubeb_pulse.c',
     ]
-    DEFINES['USE_PULSE'] = True
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        DEFINES['DISABLE_LIBPULSE_DLOPEN'] = True
 
 if CONFIG['OS_ARCH'] == 'OpenBSD':
     SOURCES += [
         'cubeb_sndio.c',
     ]
-    DEFINES['USE_SNDIO'] = True
 
 if CONFIG['OS_TARGET'] == 'Darwin':
     SOURCES += [
         'cubeb_audiounit.c',
     ]
-    DEFINES['USE_AUDIOUNIT'] = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     SOURCES += [
-        'cubeb_wasapi.cpp',
         'cubeb_winmm.c',
     ]
-    DEFINES['USE_WINMM'] = True
-    DEFINES['USE_WASAPI'] = True
+    SOURCES += [
+        'cubeb_wasapi.cpp'
+    ]
 
 if CONFIG['OS_TARGET'] == 'Android':
     SOURCES += [
         'cubeb_opensl.c',
     ]
-    DEFINES['USE_OPENSL'] = True
     if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         SOURCES += [
             'cubeb_audiotrack.c',
         ]
-        DEFINES['USE_AUDIOTRACK'] = True
 
 MSVC_ENABLE_PGO = True
 
-if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
+if CONFIG['OS_TARGET'] == 'WINNT':
     NO_VISIBILITY_FLAGS = True
 
 FINAL_LIBRARY = 'gkmedias'

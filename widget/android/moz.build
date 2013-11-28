@@ -46,5 +46,3 @@ LIBRARY_NAME = 'widget_android'
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
-
-#DEFINES['DEBUG_WIDGETS'] = True

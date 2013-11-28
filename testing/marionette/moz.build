@@ -5,6 +5,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['components', 'atoms']
-
-if CONFIG['ENABLE_TESTS']:
-    DEFINES['ENABLE_TESTS'] = True

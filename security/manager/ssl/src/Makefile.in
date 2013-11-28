@@ -1,0 +1,11 @@
+#! gmake
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES += \
+  -DNSS_ENABLE_ECC \
+  -DDLL_PREFIX=\"$(DLL_PREFIX)\" \
+  -DDLL_SUFFIX=\"$(DLL_SUFFIX)\" \
+  $(NULL)

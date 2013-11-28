@@ -106,6 +106,3 @@ IPDL_SOURCES = [
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
-
-for var in ('MOZ_CHILD_PROCESS_NAME', 'MOZ_CHILD_PROCESS_BUNDLE'):
-    DEFINES[var] = '"%s"' % CONFIG[var]

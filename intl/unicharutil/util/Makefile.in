@@ -20,4 +20,5 @@ ifdef _MSC_VER
 # Don't include directives about which CRT to use
 OS_COMPILE_CXXFLAGS += -Zl
 OS_COMPILE_CFLAGS += -Zl
+DEFINES += -D_USE_ANSI_CPP
 endif

@@ -22,5 +22,3 @@ HOST_SOURCES += [
 HOST_PROGRAM = 'szip'
 
 FINAL_LIBRARY = 'mozglue'
-
-DEFINES['IMPL_MFBT'] = True
