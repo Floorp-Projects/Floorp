@@ -335,6 +335,24 @@ private:
   BluetoothSignal mSignal;
 };
 
+class TryFiringAdapterAddedTask : public nsRunnable
+{
+public:
+  NS_IMETHOD
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BluetoothService* bs = BluetoothService::Get();
+    NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
+
+    bs->AdapterAddedReceived();
+    bs->TryFiringAdapterAdded();
+
+    return NS_OK;
+  }
+};
+
 static bool
 IsDBusMessageError(DBusMessage* aMsg, DBusError* aErr, nsAString& aErrorStr)
 {
@@ -709,11 +727,7 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
     // Notify BluetoothManager whenever adapter name is ready.
     if (!propertyValue.get_nsString().IsEmpty()) {
       sAdapterNameIsReady = true;
-      BluetoothSignal signal(NS_LITERAL_STRING("AdapterAdded"),
-                             NS_LITERAL_STRING(KEY_MANAGER), sAdapterPath);
-      nsRefPtr<DistributeBluetoothSignalTask> task =
-        new DistributeBluetoothSignalTask(signal);
-      NS_DispatchToMainThread(task);
+      NS_DispatchToMainThread(new TryFiringAdapterAddedTask());
     }
   }
 
