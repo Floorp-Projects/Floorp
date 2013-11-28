@@ -10,6 +10,7 @@
 #include <ctype.h>
 
 #include "GLContext.h"
+#include "GLBlitHelper.h"
 
 #include "gfxCrashReporterUtils.h"
 #include "gfxPlatform.h"
@@ -257,13 +258,6 @@ GLContext::GLContext(const SurfaceCaps& caps,
 #ifdef DEBUG
     mGLError(LOCAL_GL_NO_ERROR),
 #endif
-    mTexBlit_Buffer(0),
-    mTexBlit_VertShader(0),
-    mTex2DBlit_FragShader(0),
-    mTex2DRectBlit_FragShader(0),
-    mTex2DBlit_Program(0),
-    mTex2DRectBlit_Program(0),
-    mTexBlit_UseDrawNotCopy(false),
     mSharedContext(sharedContext),
     mFlipped(false),
     mBlitProgram(0),
@@ -279,8 +273,6 @@ GLContext::GLContext(const SurfaceCaps& caps,
     mWorkAroundDriverBugs(true)
 {
     mOwningThread = NS_GetCurrentThread();
-
-    mTexBlit_UseDrawNotCopy = Preferences::GetBool("gl.blit-draw-not-copy", false);
 }
 
 GLContext::~GLContext() {
@@ -1860,8 +1852,7 @@ GLContext::MarkDestroyed()
     if (MakeCurrent()) {
         DestroyScreenBuffer();
 
-        // This is for Blit{Tex,FB}To{TexFB}.
-        DeleteTexBlitProgram();
+        mBlitHelper = nullptr;
 
         // Likely used by OGL Layers.
         fDeleteProgram(mBlitProgram);
@@ -3358,6 +3349,16 @@ GLContext::DispatchToOwningThread(nsIRunnable *event)
     if (NS_SUCCEEDED(NS_GetMainThread(getter_AddRefs(mainThread)))) {
         mOwningThread->Dispatch(event, NS_DISPATCH_NORMAL);
     }
+}
+
+GLBlitHelper*
+GLContext::BlitHelper()
+{
+    if (!mBlitHelper) {
+        mBlitHelper = new GLBlitHelper(this);
+    }
+
+    return mBlitHelper;
 }
 
 bool

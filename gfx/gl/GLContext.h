@@ -40,6 +40,7 @@
 #include "GLScreenBuffer.h"
 #include "GLContextSymbols.h"
 #include "mozilla/GenericRefCounted.h"
+#include "mozilla/Scoped.h"
 
 class nsIntRegion;
 class nsIRunnable;
@@ -62,6 +63,7 @@ namespace mozilla {
         class GLLibraryEGL;
         class GLScreenBuffer;
         class TextureGarbageBin;
+        class GLBlitHelper;
     }
 
     namespace layers {
@@ -2520,46 +2522,6 @@ public:
     // Before reads from offscreen texture
     void GuaranteeResolve();
 
-protected:
-    GLuint mTexBlit_Buffer;
-    GLuint mTexBlit_VertShader;
-    GLuint mTex2DBlit_FragShader;
-    GLuint mTex2DRectBlit_FragShader;
-    GLuint mTex2DBlit_Program;
-    GLuint mTex2DRectBlit_Program;
-
-    bool mTexBlit_UseDrawNotCopy;
-
-    bool UseTexQuadProgram(GLenum target = LOCAL_GL_TEXTURE_2D,
-                           const gfxIntSize& srcSize = gfxIntSize());
-    bool InitTexQuadProgram(GLenum target = LOCAL_GL_TEXTURE_2D);
-    void DeleteTexBlitProgram();
-
-public:
-    // If you don't have |srcFormats| for the 2nd definition,
-    // then you'll need the framebuffer_blit extensions to use
-    // the first BlitFramebufferToFramebuffer.
-    void BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
-                                      const gfxIntSize& srcSize,
-                                      const gfxIntSize& destSize);
-    void BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
-                                      const gfxIntSize& srcSize,
-                                      const gfxIntSize& destSize,
-                                      const GLFormats& srcFormats);
-    void BlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
-                                  const gfxIntSize& srcSize,
-                                  const gfxIntSize& destSize,
-                                  GLenum srcTarget = LOCAL_GL_TEXTURE_2D);
-    void BlitFramebufferToTexture(GLuint srcFB, GLuint destTex,
-                                  const gfxIntSize& srcSize,
-                                  const gfxIntSize& destSize,
-                                  GLenum destTarget = LOCAL_GL_TEXTURE_2D);
-    void BlitTextureToTexture(GLuint srcTex, GLuint destTex,
-                              const gfxIntSize& srcSize,
-                              const gfxIntSize& destSize,
-                              GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
-                              GLenum destTarget = LOCAL_GL_TEXTURE_2D);
-
     /*
      * Resize the current offscreen buffer.  Returns true on success.
      * If it returns false, the context should be treated as unusable
@@ -2986,7 +2948,12 @@ protected:
     void UseBlitProgram();
     void SetBlitFramebufferForDestTexture(GLuint aTexture);
 
+    ScopedDeletePtr<GLBlitHelper> mBlitHelper;
+
 public:
+
+    GLBlitHelper* BlitHelper();
+
     // Assumes shares are created by all sharing with the same global context.
     bool SharesWith(const GLContext* other) const {
         MOZ_ASSERT(!this->mSharedContext || !this->mSharedContext->mSharedContext);
