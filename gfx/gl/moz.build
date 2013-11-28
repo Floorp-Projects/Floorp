@@ -105,6 +105,7 @@ else:
 UNIFIED_SOURCES += [
     'DecomposeIntoNoRepeatTriangles.cpp',
     'GfxTexturesReporter.cpp',
+    'GLBlitHelper.cpp',
     'GLContext.cpp',
     'GLContextFeatures.cpp',
     'GLContextTypes.cpp',
