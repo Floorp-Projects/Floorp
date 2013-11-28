@@ -32,6 +32,24 @@ bool nsRegion::Intersects(const nsRect& aRect) const
   return false;
 }
 
+void nsRegion::Inflate(const nsMargin& aMargin)
+{
+  int n;
+  pixman_box32_t *boxes = pixman_region32_rectangles(&mImpl, &n);
+  for (int i=0; i<n; i++) {
+    nsRect rect = BoxToRect(boxes[i]);
+    rect.Inflate(aMargin);
+    boxes[i] = RectToBox(rect);
+  }
+
+  pixman_region32_t region;
+  // This will union all of the rectangles and runs in about O(n lg(n))
+  pixman_region32_init_rects(&region, boxes, n);
+
+  pixman_region32_fini(&mImpl);
+  mImpl = region;
+}
+
 void nsRegion::SimplifyOutward (uint32_t aMaxRects)
 {
   MOZ_ASSERT(aMaxRects >= 1, "Invalid max rect count");

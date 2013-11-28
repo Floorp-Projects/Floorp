@@ -11,6 +11,10 @@ module.metadata = {
 const { Cc, Ci, Cr } = require("chrome");
 const apiUtils = require("./deprecated/api-utils");
 const errors = require("./deprecated/errors");
+const { isString, isUndefined, instanceOf } = require('./lang/type');
+const { URL } = require('./url');
+
+const NOTIFICATION_DIRECTIONS  = ["auto", "ltr", "rtl"];
 
 try {
   let alertServ = Cc["@mozilla.org/alerts-service;1"].
@@ -36,7 +40,7 @@ exports.notify = function notifications_notify(options) {
   };
   function notifyWithOpts(notifyFn) {
     notifyFn(valOpts.iconURL, valOpts.title, valOpts.text, !!clickObserver,
-             valOpts.data, clickObserver);
+             valOpts.data, clickObserver, valOpts.tag, valOpts.dir, valOpts.lang);
   }
   try {
     notifyWithOpts(notify);
@@ -66,15 +70,32 @@ function validateOptions(options) {
       is: ["string", "undefined"]
     },
     iconURL: {
-      is: ["string", "undefined"]
+      is: ["string", "undefined", "object"],
+      ok: function(value) {
+        return isUndefined(value) || isString(value) || (value instanceof URL);
+      },
+      msg: "`iconURL` must be a string or an URL instance."
     },
     onClick: {
       is: ["function", "undefined"]
     },
     text: {
-      is: ["string", "undefined"]
+      is: ["string", "undefined", "number"]
     },
     title: {
+      is: ["string", "undefined", "number"]
+    },
+    tag: {
+      is: ["string", "undefined", "number"]
+    },
+    dir: {
+      is: ["string", "undefined"],
+      ok: function(value) {
+        return isUndefined(value) || ~NOTIFICATION_DIRECTIONS.indexOf(value);
+      },
+      msg: '`dir` option must be one of: "auto", "ltr" or "rtl".'
+    },
+    lang: {
       is: ["string", "undefined"]
     }
   });

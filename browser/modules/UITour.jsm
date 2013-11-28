@@ -118,6 +118,11 @@ this.UITour = {
         break;
       }
 
+      case "hideMenu": {
+        this.hideMenu(window, data.name);
+        break;
+      }
+
       case "startUrlbarCapture": {
         if (typeof data.text != "string" || !data.text ||
             typeof data.url != "string" || !data.url) {
@@ -391,6 +396,19 @@ this.UITour = {
       aWindow.PanelUI.show();
     else if (aMenuName == "bookmarks")
       openMenuButton("bookmarks-menu-button");
+  },
+
+  hideMenu: function(aWindow, aMenuName) {
+    function closeMenuButton(aId) {
+      let menuBtn = aWindow.document.getElementById(aId);
+      if (menuBtn && menuBtn.boxObject)
+        menuBtn.boxObject.QueryInterface(Ci.nsIMenuBoxObject).openMenu(false);
+    }
+
+    if (aMenuName == "appmenu")
+      aWindow.PanelUI.hide();
+    else if (aMenuName == "bookmarks")
+      closeMenuButton("bookmarks-menu-button");
   },
 
   startUrlbarCapture: function(aWindow, aExpectedText, aUrl) {

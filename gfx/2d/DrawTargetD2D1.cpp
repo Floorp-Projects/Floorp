@@ -5,12 +5,14 @@
 
 #include "DrawTargetD2D1.h"
 #include "DrawTargetD2D.h"
+#include "FilterNodeSoftware.h"
 #include "GradientStopsD2D.h"
 #include "SourceSurfaceD2D1.h"
 #include "SourceSurfaceD2D.h"
 #include "RadialGradientEffectD2D1.h"
 
 #include "HelpersD2D.h"
+#include "FilterNodeD2D1.h"
 #include "Tools.h"
 
 using namespace std;
@@ -103,6 +105,22 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
   mDC->FillRectangle(D2DRect(aDest), brush);
 
   FinalizeDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
+}
+
+void
+DrawTargetD2D1::DrawFilter(FilterNode *aNode,
+                           const Rect &aSourceRect,
+                           const Point &aDestPoint,
+                           const DrawOptions &aOptions)
+{
+  if (aNode->GetBackendType() != FILTER_BACKEND_DIRECT2D1_1) {
+    gfxWarning() << *this << ": Incompatible filter passed to DrawFilter.";
+    return;
+  }
+
+  PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
+
+  mDC->DrawImage(static_cast<FilterNodeD2D1*>(aNode)->OutputEffect(), D2DPoint(aDestPoint), D2DRect(aSourceRect));
 }
 
 void
@@ -569,6 +587,12 @@ DrawTargetD2D1::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, 
   }
 
   return new GradientStopsD2D(stopCollection);
+}
+
+TemporaryRef<FilterNode>
+DrawTargetD2D1::CreateFilter(FilterType aType)
+{
+  return FilterNodeD2D1::Create(this, mDC, aType);
 }
 
 bool
