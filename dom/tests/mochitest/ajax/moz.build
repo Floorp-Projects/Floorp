@@ -6,7 +6,6 @@
 
 DIRS += [
     'lib',
-    'scriptaculous',
 ]
 
 MOCHITEST_MANIFESTS += [
@@ -15,5 +14,6 @@ MOCHITEST_MANIFESTS += [
     'mochikit/tests/mochitest.ini',
     'offline/mochitest.ini',
     'prototype/mochitest.ini',
+    'scriptaculous/mochitest.ini',
 ]
 
