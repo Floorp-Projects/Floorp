@@ -6,6 +6,7 @@
 
 XPIDL_SOURCES += [
     'nsIDOMMozWifiConnectionInfoEvent.idl',
+    'nsIDOMMozWifiP2pStatusChangeEvent.idl',
     'nsIDOMMozWifiStatusChangeEvent.idl',
     'nsIWifi.idl',
     'nsIWifiService.idl',
@@ -16,13 +17,18 @@ XPIDL_MODULE = 'dom_wifi'
 EXTRA_COMPONENTS += [
     'DOMWifiManager.js',
     'DOMWifiManager.manifest',
+    'DOMWifiP2pManager.js',
+    'DOMWifiP2pManager.manifest',
     'WifiWorker.js',
     'WifiWorker.manifest',
 ]
 
 EXTRA_JS_MODULES += [
+    'StateMachine.jsm',
     'WifiCommand.jsm',
     'WifiNetUtil.jsm',
+    'WifiP2pManager.jsm',
+    'WifiP2pWorkerObserver.jsm',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
