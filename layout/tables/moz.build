@@ -31,4 +31,14 @@ MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gklayout'
 
+LOCAL_INCLUDES += [
+    '../../content/base/src',
+    '../../content/html/content/src',
+    '../../intl/unicharutil/util',
+    '../base',
+    '../generic',
+    '../style',
+    '../xul/base/src',
+]
+
 DEFINES['DEBUG_TABLE_STRATEGY_off'] = True
