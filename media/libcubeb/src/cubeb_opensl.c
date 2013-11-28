@@ -523,10 +523,16 @@ static int
 opensl_stream_get_position(cubeb_stream * stm, uint64_t * position)
 {
   SLmillisecond msec;
-  SLresult res = (*stm->play)->GetPosition(stm->play, &msec);
+  uint64_t samplerate;
+  SLresult res;
+
+  res = (*stm->play)->GetPosition(stm->play, &msec);
   if (res != SL_RESULT_SUCCESS)
     return CUBEB_ERROR;
-  *position = (stm->bytespersec / (1000 * stm->framesize)) * msec;
+
+  samplerate = stm->bytespersec / stm->framesize;
+
+  *position = samplerate * msec / 1000;
   return CUBEB_OK;
 }
 
