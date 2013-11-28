@@ -473,7 +473,13 @@ int32_t nsCSSSelector::CalcWeightWithoutNegations() const
 {
   int32_t weight = 0;
 
-  if (nullptr != mLowercaseTag) {
+  MOZ_ASSERT(!IsPseudoElement() ||
+             mPseudoType >= nsCSSPseudoElements::ePseudo_PseudoElementCount ||
+             (!mIDList && !mClassList && !mAttrList),
+             "if pseudo-elements can have ID, class or attribute selectors "
+             "after them, specificity calculation must be updated");
+
+  if (nullptr != mCasedTag) {
     weight += 0x000001;
   }
   nsAtomList* list = mIDList;
