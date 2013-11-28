@@ -13,6 +13,7 @@ const { activateTab, getTabTitle, setTabTitle, closeTab, getTabURL, getTabConten
 const { emit } = require('../event/core');
 const { getOwnerWindow: getPBOwnerWindow } = require('../private-browsing/window/utils');
 const { when: unload } = require('../system/unload');
+const { viewFor } = require('../event/core');
 const { EVENTS } = require('./events');
 
 const ERR_FENNEC_MSG = 'This method is not yet supported by Fennec';
@@ -33,7 +34,7 @@ const Tab = Class({
     // TabReady
     let onReady = tabInternals.onReady = onTabReady.bind(this);
     tab.browser.addEventListener(EVENTS.ready.dom, onReady, false);
-    
+
     let onPageShow = tabInternals.onPageShow = onTabPageShow.bind(this);
     tab.browser.addEventListener(EVENTS.pageshow.dom, onPageShow, false);
 
@@ -175,6 +176,10 @@ const Tab = Class({
   }
 });
 exports.Tab = Tab;
+
+// Implement `viewFor` polymorphic function for the Tab
+// instances.
+viewFor.define(Tab, x => tabNS(x).tab);
 
 function cleanupTab(tab) {
   let tabInternals = tabNS(tab);

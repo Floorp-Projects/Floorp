@@ -108,6 +108,27 @@ const Symbiont = Worker.resolve({
     
     this._frame = frame;
 
+    if (getDocShell(frame)) {
+      this._reallyInitFrame(frame);
+    }
+    else {
+      if (this._waitForFrame) {
+        observers.remove('content-document-global-created', this._waitForFrame);
+      }
+      this._waitForFrame = this.__waitForFrame.bind(this, frame);
+      observers.add('content-document-global-created', this._waitForFrame);
+    }
+  },
+
+  __waitForFrame: function _waitForFrame(frame, win, topic) {
+    if (frame.contentWindow == win) {
+      observers.remove('content-document-global-created', this._waitForFrame);
+      delete this._waitForFrame;
+      this._reallyInitFrame(frame);
+    }
+  },
+
+  _reallyInitFrame: function _reallyInitFrame(frame) {
     getDocShell(frame).allowJavascript = this.allow.script;
     frame.setAttribute("src", this._contentURL);
 
@@ -179,6 +200,11 @@ const Symbiont = Worker.resolve({
    * This listener is registered in `Symbiont._initFrame`.
    */
   _unregisterListener: function _unregisterListener() {
+    if (this._waitForFrame) {
+      observers.remove('content-document-global-created', this._waitForFrame);
+      delete this._waitForFrame;
+    }
+
     if (!this._loadListener)
       return;
     if (this._loadEvent == "start") {

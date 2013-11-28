@@ -404,7 +404,7 @@
 
       <method name="toggleHistoryPopup">
         <body><![CDATA[
-          if (!this.popup.mPopupOpen)
+          if (!this.popup.popupOpen)
             this.showHistoryPopup();
           else
             this.closePopup();
@@ -460,7 +460,7 @@
           if (!this.disableKeyNavigation && !aEvent.ctrlKey && !aEvent.altKey) {
             switch (aEvent.keyCode) {
               case KeyEvent.DOM_VK_TAB:
-                if (this.tabScrolling && this.popup.mPopupOpen)
+                if (this.tabScrolling && this.popup.popupOpen)
                   cancel = this.mController.handleKeyNavigation(aEvent.shiftKey ?
                                                                 KeyEvent.DOM_VK_UP :
                                                                 KeyEvent.DOM_VK_DOWN);
