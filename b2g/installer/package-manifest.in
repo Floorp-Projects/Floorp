@@ -748,6 +748,13 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #endif
 
 [b2g]
+#ifndef MOZ_WIDGET_GONK
+#ifdef XP_WIN32
+@BINPATH@/xpcshell.exe
+#else
+@BINPATH@/xpcshell
+#endif
+#endif
 @BINPATH@/chrome/icons/
 @BINPATH@/chrome/chrome@JAREXT@
 @BINPATH@/chrome/chrome.manifest
