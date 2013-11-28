@@ -6,7 +6,6 @@
 
 DIRS += [
     'dom-level0',
-    'dom-level2-core',
     'dom-level2-html',
     'ajax',
     'bugs',
@@ -30,4 +29,5 @@ if CONFIG['MOZ_GAMEPAD']:
 
 MOCHITEST_MANIFESTS += [
     'dom-level1-core/mochitest.ini',
+    'dom-level2-core/mochitest.ini',
 ]
