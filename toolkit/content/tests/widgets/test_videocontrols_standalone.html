@@ -23,7 +23,7 @@ var popup = window.open("seek_with_sound.ogg");
 popup.addEventListener("load", function onLoad() {
   popup.removeEventListener("load", onLoad);
   var video = getMediaElement(popup);
-  if (video.readyState >= video.HAVE_ENOUGH_DATA)
+  if (!video.paused)
     runTestVideo(video);
   else {
     video.addEventListener("play", function onPlay() {
@@ -46,7 +46,7 @@ function runTestAudioPre() {
   popup.addEventListener("load", function onLoad() {
     popup.removeEventListener("load", onLoad);
     var audio = getMediaElement(popup);
-    if (audio.readyState >= audio.HAVE_ENOUGH_DATA)
+    if (!audio.paused)
       runTestAudio(audio);
     else {
       audio.addEventListener("play", function onPlay() {
