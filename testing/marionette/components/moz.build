@@ -11,3 +11,6 @@ EXTRA_COMPONENTS += [
 EXTRA_PP_COMPONENTS += [
     'marionettecomponent.js'
 ]
+
+if CONFIG['ENABLE_MARIONETTE']:
+    DEFINES['ENABLE_MARIONETTE'] = 1

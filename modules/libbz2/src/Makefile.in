@@ -8,12 +8,6 @@ ifeq ($(OS_ARCH),WINNT)
 USE_STATIC_LIBS = 1
 endif
 
-# This is defined by the bzip2-1.0.3 Makefile.  It appears to be used to
-# configure GLIBC to support large files.  This isn't something we care about
-# at this stage, since we're only interested in the streaming API, but we
-# define it here anyways for consistency.
-DEFINES	+= -D_FILE_OFFSET_BITS=64
-
 include $(topsrcdir)/config/rules.mk
 
 # The intermediate (.ii/.s) files for host and target can have the same name...

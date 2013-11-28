@@ -7,3 +7,5 @@
 ANDROID_RESFILES = [
     'res/values/strings.xml',
 ]
+
+DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']

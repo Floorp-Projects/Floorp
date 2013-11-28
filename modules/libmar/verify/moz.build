@@ -12,3 +12,6 @@ SOURCES += [
 ]
 
 FORCE_STATIC_LIB = True
+
+if CONFIG['OS_ARCH'] != 'WINNT':
+    DEFINES['MAR_NSS'] = True
