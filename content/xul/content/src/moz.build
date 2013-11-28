@@ -7,7 +7,7 @@
 if CONFIG['MOZ_XUL']:
     MSVC_ENABLE_PGO = True
 
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsXULContextMenuBuilder.cpp',
         'nsXULElement.cpp',
         'nsXULPopupListener.cpp',

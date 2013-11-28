@@ -6,7 +6,3 @@
 
 # override optimization
 MOZ_OPTIMIZE_FLAGS = -fno-omit-frame-pointer
-
-include $(topsrcdir)/config/rules.mk
-
-DEFINES		+= -D_IMPL_JPROF_API

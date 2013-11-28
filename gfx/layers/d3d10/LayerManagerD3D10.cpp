@@ -733,7 +733,8 @@ LayerManagerD3D10::Render(EndTransactionFlags aFlags)
     mSwapChain->Present(0, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0);
     mDisableSequenceForNextFrame = false;
   }
-  LayerManager::PostPresent();
+  RecordFrame();
+  PostPresent();
 }
 
 void

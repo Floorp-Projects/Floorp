@@ -277,7 +277,8 @@ LayerManagerD3D9::Render()
          (r = iter.Next()) != nullptr;) {
       mSwapChain->Present(*r);
     }
-    LayerManager::PostPresent();
+    RecordFrame();
+    PostPresent();
   } else {
     PaintToTarget();
   }

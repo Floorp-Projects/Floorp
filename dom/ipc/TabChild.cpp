@@ -655,6 +655,8 @@ TabChild::HandlePossibleViewportChange()
     MOZ_ASSERT(viewportInfo.GetMinZoom() <= defaultZoom &&
                defaultZoom <= viewportInfo.GetMaxZoom());
     metrics.mZoom = defaultZoom;
+
+    metrics.mScrollId = viewId;
   }
 
   metrics.mDisplayPort = AsyncPanZoomController::CalculatePendingDisplayPort(
@@ -1559,44 +1561,49 @@ TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
         return true;
     }
 
-    CSSRect cssCompositedRect = aFrameMetrics.CalculateCompositedRectInCssPixels();
+    nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
+
+    FrameMetrics newMetrics = aFrameMetrics;
+    APZCCallbackHelper::UpdateRootFrame(utils, newMetrics);
+
+    CSSRect cssCompositedRect = newMetrics.CalculateCompositedRectInCssPixels();
     // The BrowserElementScrolling helper must know about these updated metrics
     // for other functions it performs, such as double tap handling.
     // Note, %f must not be used because it is locale specific!
     nsCString data;
-    data.AppendPrintf("{ \"x\" : %d", NS_lround(aFrameMetrics.mScrollOffset.x));
-    data.AppendPrintf(", \"y\" : %d", NS_lround(aFrameMetrics.mScrollOffset.y));
+    data.AppendPrintf("{ \"x\" : %d", NS_lround(newMetrics.mScrollOffset.x));
+    data.AppendPrintf(", \"y\" : %d", NS_lround(newMetrics.mScrollOffset.y));
     data.AppendLiteral(", \"viewport\" : ");
         data.AppendLiteral("{ \"width\" : ");
-        data.AppendFloat(aFrameMetrics.mViewport.width);
+        data.AppendFloat(newMetrics.mViewport.width);
         data.AppendLiteral(", \"height\" : ");
-        data.AppendFloat(aFrameMetrics.mViewport.height);
+        data.AppendFloat(newMetrics.mViewport.height);
         data.AppendLiteral(" }");
     data.AppendLiteral(", \"displayPort\" : ");
         data.AppendLiteral("{ \"x\" : ");
-        data.AppendFloat(aFrameMetrics.mDisplayPort.x);
+        data.AppendFloat(newMetrics.mDisplayPort.x);
         data.AppendLiteral(", \"y\" : ");
-        data.AppendFloat(aFrameMetrics.mDisplayPort.y);
+        data.AppendFloat(newMetrics.mDisplayPort.y);
         data.AppendLiteral(", \"width\" : ");
-        data.AppendFloat(aFrameMetrics.mDisplayPort.width);
+        data.AppendFloat(newMetrics.mDisplayPort.width);
         data.AppendLiteral(", \"height\" : ");
-        data.AppendFloat(aFrameMetrics.mDisplayPort.height);
+        data.AppendFloat(newMetrics.mDisplayPort.height);
         data.AppendLiteral(" }");
     data.AppendLiteral(", \"compositionBounds\" : ");
-        data.AppendPrintf("{ \"x\" : %d", aFrameMetrics.mCompositionBounds.x);
-        data.AppendPrintf(", \"y\" : %d", aFrameMetrics.mCompositionBounds.y);
-        data.AppendPrintf(", \"width\" : %d", aFrameMetrics.mCompositionBounds.width);
-        data.AppendPrintf(", \"height\" : %d", aFrameMetrics.mCompositionBounds.height);
+        data.AppendPrintf("{ \"x\" : %d", newMetrics.mCompositionBounds.x);
+        data.AppendPrintf(", \"y\" : %d", newMetrics.mCompositionBounds.y);
+        data.AppendPrintf(", \"width\" : %d", newMetrics.mCompositionBounds.width);
+        data.AppendPrintf(", \"height\" : %d", newMetrics.mCompositionBounds.height);
         data.AppendLiteral(" }");
     data.AppendLiteral(", \"cssPageRect\" : ");
         data.AppendLiteral("{ \"x\" : ");
-        data.AppendFloat(aFrameMetrics.mScrollableRect.x);
+        data.AppendFloat(newMetrics.mScrollableRect.x);
         data.AppendLiteral(", \"y\" : ");
-        data.AppendFloat(aFrameMetrics.mScrollableRect.y);
+        data.AppendFloat(newMetrics.mScrollableRect.y);
         data.AppendLiteral(", \"width\" : ");
-        data.AppendFloat(aFrameMetrics.mScrollableRect.width);
+        data.AppendFloat(newMetrics.mScrollableRect.width);
         data.AppendLiteral(", \"height\" : ");
-        data.AppendFloat(aFrameMetrics.mScrollableRect.height);
+        data.AppendFloat(newMetrics.mScrollableRect.height);
         data.AppendLiteral(" }");
     data.AppendLiteral(", \"cssCompositedRect\" : ");
         data.AppendLiteral("{ \"width\" : ");
@@ -1608,19 +1615,7 @@ TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
 
     DispatchMessageManagerMessage(NS_LITERAL_STRING("Viewport:Change"), data);
 
-    nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
-
-    APZCCallbackHelper::UpdateRootFrame(utils, aFrameMetrics);
-
-    mLastMetrics = aFrameMetrics;
-
-    // ScrollWindowTo() can make some small adjustments to the offset before
-    // actually scrolling the window. To ensure that the scroll offset stored
-    // in mLastMetrics is the same as the offset stored in the window,
-    // re-query the latter.
-    CSSIntPoint actualScrollOffset;
-    utils->GetScrollXY(false, &actualScrollOffset.x, &actualScrollOffset.y);
-    mLastMetrics.mScrollOffset = actualScrollOffset;
+    mLastMetrics = newMetrics;
 
     return true;
 }

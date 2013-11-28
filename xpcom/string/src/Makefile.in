@@ -19,5 +19,3 @@ ifdef SOLARIS_SUNPRO_CXX
 nsUTF8UtilsSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-xarch=sse2 -xO4
 endif
 endif
-
-DEFINES		+= -DIMPL_LIBXUL

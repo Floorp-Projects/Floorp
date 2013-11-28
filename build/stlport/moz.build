@@ -45,3 +45,5 @@ SOURCES += [
     'src/c_locale.c',
     'src/cxa.c',
 ]
+
+DEFINES['_GNU_SOURCE'] = True

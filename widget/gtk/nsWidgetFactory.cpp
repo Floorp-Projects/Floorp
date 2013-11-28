@@ -43,9 +43,7 @@
 #include "GfxInfoX11.h"
 #endif
 
-#ifdef NATIVE_THEME_SUPPORT
 #include "nsNativeThemeGTK.h"
-#endif
 
 #include "nsIComponentRegistrar.h"
 #include "nsComponentManagerUtils.h"
@@ -78,7 +76,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGtk)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageToPixbuf)
 
 
-#ifdef NATIVE_THEME_SUPPORT
 // from nsWindow.cpp
 extern bool gDisableNativeTheme;
 
@@ -109,7 +106,6 @@ nsNativeThemeGTKConstructor(nsISupports *aOuter, REFNSIID aIID,
 
     return rv;
 }
-#endif
 
 #if defined(MOZ_X11)
 namespace mozilla {
@@ -234,9 +230,7 @@ NS_DEFINE_NAMED_CID(NS_NATIVEKEYBINDINGSINPUT_CID);
 NS_DEFINE_NAMED_CID(NS_NATIVEKEYBINDINGSTEXTAREA_CID);
 NS_DEFINE_NAMED_CID(NS_NATIVEKEYBINDINGSEDITOR_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
-#ifdef NATIVE_THEME_SUPPORT
 NS_DEFINE_NAMED_CID(NS_THEMERENDERER_CID);
-#endif
 #ifdef NS_PRINTING
 NS_DEFINE_NAMED_CID(NS_PRINTSETTINGSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTER_ENUMERATOR_CID);
@@ -270,9 +264,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_NATIVEKEYBINDINGSTEXTAREA_CID, false, nullptr, nsNativeKeyBindingsTextAreaConstructor },
     { &kNS_NATIVEKEYBINDINGSEDITOR_CID, false, nullptr, nsNativeKeyBindingsTextAreaConstructor },
     { &kNS_SCREENMANAGER_CID, false, nullptr, nsScreenManagerGtkConstructor },
-#ifdef NATIVE_THEME_SUPPORT
     { &kNS_THEMERENDERER_CID, false, nullptr, nsNativeThemeGTKConstructor },
-#endif
 #ifdef NS_PRINTING
     { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintOptionsGTKConstructor },
     { &kNS_PRINTER_ENUMERATOR_CID, false, nullptr, nsPrinterEnumeratorGTKConstructor },
@@ -307,9 +299,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     { NS_NATIVEKEYBINDINGSTEXTAREA_CONTRACTID, &kNS_NATIVEKEYBINDINGSTEXTAREA_CID },
     { NS_NATIVEKEYBINDINGSEDITOR_CONTRACTID, &kNS_NATIVEKEYBINDINGSEDITOR_CID },
     { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID },
-#ifdef NATIVE_THEME_SUPPORT
     { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
-#endif
 #ifdef NS_PRINTING
     { "@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID },
     { "@mozilla.org/gfx/printerenumerator;1", &kNS_PRINTER_ENUMERATOR_CID },

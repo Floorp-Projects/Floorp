@@ -348,7 +348,7 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
     // internal entry point. The return value is stored in the first element of
     // the array (which, therefore, must have length >= 1).
 
-    Vector<uint64_t, 8> coercedArgs(cx);
+    js::Vector<uint64_t, 8> coercedArgs(cx);
     if (!coercedArgs.resize(Max<size_t>(1, func.numArgs())))
         return false;
 

@@ -35,3 +35,9 @@ UNIFIED_SOURCES += [
 ]
 
 FORCE_STATIC_LIB = True
+
+# This is defined by the bzip2-1.0.3 Makefile.  It appears to be used to
+# configure GLIBC to support large files.  This isn't something we care about
+# at this stage, since we're only interested in the streaming API, but we
+# define it here anyways for consistency.
+DEFINES['_FILE_OFFSET_BITS'] = 64

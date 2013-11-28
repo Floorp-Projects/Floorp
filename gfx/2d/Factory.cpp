@@ -311,7 +311,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
   }
 
   if (mRecorder && retVal) {
-    RefPtr<DrawTarget> recordDT = new DrawTargetRecording(mRecorder, retVal);
+    RefPtr<DrawTarget> recordDT = new DrawTargetRecording(mRecorder, retVal, true);
     return recordDT;
   }
 
@@ -417,7 +417,7 @@ Factory::CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceForma
     RefPtr<DrawTarget> retVal = newTarget;
 
     if (mRecorder) {
-      retVal = new DrawTargetRecording(mRecorder, retVal);
+      retVal = new DrawTargetRecording(mRecorder, retVal, true);
     }
 
     return retVal;
@@ -582,7 +582,7 @@ Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSiz
   }
 
   if (mRecorder && retVal) {
-    RefPtr<DrawTarget> recordDT = new DrawTargetRecording(mRecorder, retVal);
+    RefPtr<DrawTarget> recordDT = new DrawTargetRecording(mRecorder, retVal, true);
     return recordDT;
   }
 #endif

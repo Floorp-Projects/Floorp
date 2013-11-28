@@ -155,6 +155,10 @@ struct LayoutDevicePixel {
     return LayoutDeviceIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
   }
 
+  static nsIntRect ToUntyped(const LayoutDeviceIntRect& aRect) {
+    return nsIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
+  }
+
   static LayoutDeviceRect FromAppUnits(const nsRect& aRect, nscoord aAppUnitsPerDevPixel) {
     return LayoutDeviceRect(NSAppUnitsToFloatPixels(aRect.x, float(aAppUnitsPerDevPixel)),
                             NSAppUnitsToFloatPixels(aRect.y, float(aAppUnitsPerDevPixel)),

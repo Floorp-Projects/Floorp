@@ -13,3 +13,9 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     ]
 include('/ipc/chromium/chromium-config.mozbuild')
 
+if CONFIG['OS_TARGET'] in ('Darwin', 'Android'):
+    DEFINES['GTEST_USE_OWN_TR1_TUPLE'] = 1
+
+for var in ('USE_FAKE_MEDIA_STREAMS', 'USE_FAKE_PCOBSERVER',
+            'NR_SOCKET_IS_VOID_PTR', 'HAVE_STRDUP'):
+    DEFINES[var] = True

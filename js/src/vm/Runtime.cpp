@@ -15,6 +15,10 @@
 #include <locale.h>
 #include <string.h>
 
+#if defined(DEBUG) && !defined(XP_WIN)
+# include <sys/mman.h>
+#endif
+
 #include "jsatom.h"
 #include "jsdtoa.h"
 #include "jsgc.h"
@@ -52,7 +56,11 @@ using JS::DoubleNaNValue;
 
 /* static */ ThreadLocal<PerThreadData*> js::TlsPerThreadData;
 
+#ifdef JS_THREADSAFE
 /* static */ Atomic<size_t> JSRuntime::liveRuntimesCount;
+#else
+/* static */ size_t JSRuntime::liveRuntimesCount;
+#endif
 
 const JSSecurityCallbacks js::NullSecurityCallbacks = { };
 
@@ -262,6 +270,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     decimalSeparator(0),
     numGrouping(0),
 #endif
+    heapProtected_(false),
     mathCache_(nullptr),
     activeCompilations_(0),
     keepAtoms_(0),
@@ -797,6 +806,76 @@ JSRuntime::activeGCInAtomsZone()
     Zone *zone = atomsCompartment_->zone();
     return zone->needsBarrier() || zone->isGCScheduled() || zone->wasGCStarted();
 }
+
+#if defined(DEBUG) && !defined(XP_WIN)
+
+AutoProtectHeapForCompilation::AutoProtectHeapForCompilation(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : runtime(rt)
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+    JS_ASSERT(!runtime->heapProtected_);
+    runtime->heapProtected_ = true;
+
+    for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront()) {
+        Chunk *chunk = r.front();
+        // Note: Don't protect the last page in the chunk, which stores
+        // immutable info and needs to be accessible for runtimeFromAnyThread()
+        // in AutoThreadSafeAccess.
+        if (mprotect(chunk, ChunkSize - sizeof(Arena), PROT_NONE))
+            MOZ_CRASH();
+    }
+}
+
+AutoProtectHeapForCompilation::~AutoProtectHeapForCompilation()
+{
+    JS_ASSERT(runtime->heapProtected_);
+    JS_ASSERT(runtime->unprotectedArenas.empty());
+    runtime->heapProtected_ = false;
+
+    for (GCChunkSet::Range r(runtime->gcChunkSet.all()); !r.empty(); r.popFront()) {
+        Chunk *chunk = r.front();
+        if (mprotect(chunk, ChunkSize - sizeof(Arena), PROT_READ | PROT_WRITE))
+            MOZ_CRASH();
+    }
+}
+
+AutoThreadSafeAccess::AutoThreadSafeAccess(const Cell *cell MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : runtime(cell->runtimeFromAnyThread()), arena(nullptr)
+{
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+    if (!runtime->heapProtected_)
+        return;
+
+    ArenaHeader *base = cell->arenaHeader();
+    for (size_t i = 0; i < runtime->unprotectedArenas.length(); i++) {
+        if (base == runtime->unprotectedArenas[i])
+            return;
+    }
+
+    arena = base;
+
+    if (mprotect(arena, sizeof(Arena), PROT_READ))
+        MOZ_CRASH();
+
+    if (!runtime->unprotectedArenas.append(arena))
+        MOZ_CRASH();
+}
+
+AutoThreadSafeAccess::~AutoThreadSafeAccess()
+{
+    if (!arena)
+        return;
+
+    if (mprotect(arena, sizeof(Arena), PROT_NONE))
+        MOZ_CRASH();
+
+    JS_ASSERT(arena == runtime->unprotectedArenas.back());
+    runtime->unprotectedArenas.popBack();
+}
+
+#endif // DEBUG && !XP_WIN
 
 #ifdef JS_WORKER_THREADS
 

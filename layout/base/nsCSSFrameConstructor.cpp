@@ -8653,7 +8653,8 @@ nsCSSFrameConstructor::GetFirstLetterStyle(nsIContent* aContent,
     return mPresShell->StyleSet()->
       ResolvePseudoElementStyle(aContent->AsElement(),
                                 nsCSSPseudoElements::ePseudo_firstLetter,
-                                aStyleContext);
+                                aStyleContext,
+                                nullptr);
   }
   return nullptr;
 }
@@ -8666,7 +8667,8 @@ nsCSSFrameConstructor::GetFirstLineStyle(nsIContent* aContent,
     return mPresShell->StyleSet()->
       ResolvePseudoElementStyle(aContent->AsElement(),
                                 nsCSSPseudoElements::ePseudo_firstLine,
-                                aStyleContext);
+                                aStyleContext,
+                                nullptr);
   }
   return nullptr;
 }

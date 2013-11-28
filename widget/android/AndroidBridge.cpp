@@ -1927,7 +1927,7 @@ AndroidBridge::IsContentDocumentDisplayed()
 }
 
 bool
-AndroidBridge::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const LayerRect& aDisplayPort, float aDisplayResolution, bool aDrawingCritical, gfx::Rect& aViewport, float& aScaleX, float& aScaleY)
+AndroidBridge::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const LayerRect& aDisplayPort, float aDisplayResolution, bool aDrawingCritical, ScreenRect& aCompositionBounds, CSSToScreenScale& aZoom)
 {
     GeckoLayerClient *client = mLayerClient;
     if (!client) {
@@ -1947,11 +1947,11 @@ AndroidBridge::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const
 
     ProgressiveUpdateData* progressiveUpdateData = ProgressiveUpdateData::Wrap(progressiveUpdateDataJObj);
 
-    aViewport.x = progressiveUpdateData->getx();
-    aViewport.y = progressiveUpdateData->gety();
-    aViewport.width = progressiveUpdateData->getwidth();
-    aViewport.height = progressiveUpdateData->getheight();
-    aScaleX = aScaleY = progressiveUpdateData->getscale();
+    aCompositionBounds.x = progressiveUpdateData->getx();
+    aCompositionBounds.y = progressiveUpdateData->gety();
+    aCompositionBounds.width = progressiveUpdateData->getwidth();
+    aCompositionBounds.height = progressiveUpdateData->getheight();
+    aZoom.scale = progressiveUpdateData->getscale();
 
     bool ret = progressiveUpdateData->getabort();
     delete progressiveUpdateData;

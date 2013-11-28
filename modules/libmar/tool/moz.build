@@ -13,3 +13,9 @@ SOURCES = [
 HOST_SOURCES += SOURCES
 
 HOST_PROGRAM = 'mar'
+
+for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
+    DEFINES[var] = '"%s"' % CONFIG[var]
+
+if not CONFIG['MOZ_ENABLE_SIGNMAR']:
+    DEFINES['NO_SIGN_VERIFY'] = True

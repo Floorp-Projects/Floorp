@@ -25,7 +25,6 @@ LIBS += \
   $(NULL)
 LOCAL_INCLUDES += -I$(srcdir)
 RCINCLUDE = crashreporter.rc
-DEFINES += -DUNICODE -D_UNICODE
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 shell32 wininet shlwapi)
 MOZ_WINCONSOLE = 0
 endif

@@ -8,13 +8,6 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/,xulrunner.js)
 
 DEFINES += -DAB_CD=$(AB_CD)
 
-DEFINES += -DXULRUNNER_PROGNAME=\"xulrunner\"
-
-ifdef TARGET_XPCOM_ABI
-DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
-endif
-
-DEFINES += -DXPCOM_GLUE
 STL_FLAGS=
 
 LOCAL_INCLUDES += \

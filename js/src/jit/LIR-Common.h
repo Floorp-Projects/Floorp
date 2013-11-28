@@ -3298,7 +3298,7 @@ class LMaybeToDoubleElement : public LInstructionHelper<BOX_PIECES, 2, 1>
     }
 };
 
-// Load a dense array's initialized length from an elements vector.
+// Load the initialized length from an elements header.
 class LInitializedLength : public LInstructionHelper<1, 1, 0>
 {
   public:
@@ -3313,7 +3313,8 @@ class LInitializedLength : public LInstructionHelper<1, 1, 0>
     }
 };
 
-// Set a dense array's initialized length to an elements vector.
+// Store to the initialized length in an elements header. Note the input is an
+// *index*, one less than the desired initialized length.
 class LSetInitializedLength : public LInstructionHelper<0, 2, 0>
 {
   public:
@@ -3332,7 +3333,7 @@ class LSetInitializedLength : public LInstructionHelper<0, 2, 0>
     }
 };
 
-// Read length field of an object element.
+// Load the length from an elements header.
 class LArrayLength : public LInstructionHelper<1, 1, 0>
 {
   public:
@@ -3344,6 +3345,26 @@ class LArrayLength : public LInstructionHelper<1, 1, 0>
 
     const LAllocation *elements() {
         return getOperand(0);
+    }
+};
+
+// Store to the length in an elements header. Note the input is an *index*,
+// one less than the desired length.
+class LSetArrayLength : public LInstructionHelper<0, 2, 0>
+{
+  public:
+    LIR_HEADER(SetArrayLength)
+
+    LSetArrayLength(const LAllocation &elements, const LAllocation &index) {
+        setOperand(0, elements);
+        setOperand(1, index);
+    }
+
+    const LAllocation *elements() {
+        return getOperand(0);
+    }
+    const LAllocation *index() {
+        return getOperand(1);
     }
 };
 

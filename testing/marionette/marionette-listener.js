@@ -939,10 +939,6 @@ function actions(chain, touchId, command_id, i) {
         return;
       }
       el = elementManager.getKnownElement(pack[1], curFrame);
-      if (!checkVisible(el)) {
-         sendError("Element is not currently visible and may not be manipulated", 11, null, command_id);
-         return;
-      }
       c = coordinates(el, pack[2], pack[3]);
       touchId = generateEvents('press', c.x, c.y, null, el);
       actions(chain, touchId, command_id, i);

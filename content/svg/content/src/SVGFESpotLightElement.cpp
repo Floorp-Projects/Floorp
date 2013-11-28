@@ -5,8 +5,11 @@
 
 #include "mozilla/dom/SVGFESpotLightElement.h"
 #include "mozilla/dom/SVGFESpotLightElementBinding.h"
+#include "nsSVGFilterInstance.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FESpotLight)
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace dom {
@@ -53,6 +56,28 @@ SVGFESpotLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 }
 
 //----------------------------------------------------------------------
+
+AttributeMap
+SVGFESpotLightElement::ComputeLightAttributes(nsSVGFilterInstance* aInstance)
+{
+  Point3D lightPos, pointsAt;
+  float specularExponent, limitingConeAngle;
+  GetAnimatedNumberValues(&lightPos.x, &lightPos.y, &lightPos.z,
+                          &pointsAt.x, &pointsAt.y, &pointsAt.z,
+                          &specularExponent, &limitingConeAngle,
+                          nullptr);
+  if (!mNumberAttributes[SVGFESpotLightElement::LIMITING_CONE_ANGLE].IsExplicitlySet()) {
+    limitingConeAngle = 90;
+  }
+
+  AttributeMap map;
+  map.Set(eLightType, (uint32_t)eLightTypeSpot);
+  map.Set(eSpotLightPosition, aInstance->ConvertLocation(lightPos));
+  map.Set(eSpotLightPointsAt, aInstance->ConvertLocation(pointsAt));
+  map.Set(eSpotLightFocus, specularExponent);
+  map.Set(eSpotLightLimitingConeAngle, limitingConeAngle);
+  return map;
+}
 
 already_AddRefed<SVGAnimatedNumber>
 SVGFESpotLightElement::X()

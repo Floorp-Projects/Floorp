@@ -6,7 +6,7 @@ DEFINES = {
     'FOO': True,
 }
 
-DEFINES['BAZ'] = '"abcd"'
+DEFINES['BAZ'] = '"ab\'cd"'
 DEFINES.update({
     'BAR': 7,
     'VALUE': value

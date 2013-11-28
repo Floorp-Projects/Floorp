@@ -2,28 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEFINES += \
-  -DOPUS_BUILD \
-  -DOPUS_VERSION='"v1.1-beta-23-gf2446c2-mozilla"' \
-  -DUSE_ALLOCA \
-  $(NULL)
-
-ifneq ($(filter $(OS_ARCH),Linux Darwin DragonFly FreeBSD NetBSD OpenBSD),)
-  DEFINES += -DHAVE_LRINTF
-endif
-ifeq ($(OS_ARCH), WINNT)
-  DEFINES += -Dinline=__inline
-ifdef GNU_CC
-  DEFINES += -DHAVE_LRINTF
-endif
-endif
-ifeq ($(OS_ARCH),AIX)
-DEFINES += -Dalloca=__alloca
-endif
-ifeq ($(OS_ARCH),SunOS)
-DEFINES += -DHAVE_ALLOCA_H
-endif
-
 LOCAL_INCLUDES += \
   -I$(srcdir)/include \
   -I$(srcdir)/celt \
@@ -52,7 +30,6 @@ ifndef MOZ_SAMPLE_TYPE_FLOAT32
 endif
 
 ifdef MOZ_OPUS_FIXED
-DEFINES += -DFIXED_POINT=1 -DDISABLE_FLOAT_API
 LOCAL_INCLUDES += -I$(srcdir)/silk/fixed
 VPATH += $(srcdir)/silk/fixed
 CSRCS += $(notdir $(SILK_SOURCES_FIXED))

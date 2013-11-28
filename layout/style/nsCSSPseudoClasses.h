@@ -33,6 +33,7 @@ public:
   static bool HasSelectorListArg(Type aType) {
     return aType == ePseudoClass_any;
   }
+  static bool IsUserActionPseudoClass(Type aType);
 
   // Should only be used on types other than Count and NotPseudoClass
   static void PseudoTypeToString(Type aType, nsAString& aString);

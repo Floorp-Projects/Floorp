@@ -630,9 +630,9 @@ protected:
   void MaybeDrawRoundedCorners(mozilla::layers::GLManager* aManager, const nsIntRect& aRect);
   void MaybeDrawTitlebar(mozilla::layers::GLManager* aManager, const nsIntRect& aRect);
 
-  // Redraw the contents of mTitlebarImageBuffer on the main thread, as
+  // Redraw the contents of mTitlebarCGContext on the main thread, as
   // determined by mDirtyTitlebarRegion.
-  void UpdateTitlebarImageBuffer();
+  void UpdateTitlebarCGContext();
 
   nsIntRect RectContainingTitlebarControls();
 
@@ -653,7 +653,6 @@ protected:
   nsWeakPtr             mAccessible;
 #endif
 
-
   nsRefPtr<gfxASurface> mTempThebesSurface;
 
   // Protects the view from being teared down while a composition is in
@@ -671,11 +670,10 @@ protected:
   bool mIsCoveringTitlebar;
   nsIntRect mTitlebarRect;
 
-  // The area of mTitlebarImageBuffer that needs to be redrawn during the next
+  // The area of mTitlebarCGContext that needs to be redrawn during the next
   // transaction. Accessed from any thread, protected by mEffectsLock.
   nsIntRegion mUpdatedTitlebarRegion;
-
-  mozilla::RefPtr<mozilla::gfx::DrawTarget> mTitlebarImageBuffer;
+  CGContextRef mTitlebarCGContext;
 
   // Compositor thread only
   nsAutoPtr<RectTextureImage> mResizerImage;
@@ -683,7 +681,7 @@ protected:
   nsAutoPtr<RectTextureImage> mTitlebarImage;
   nsAutoPtr<RectTextureImage> mBasicCompositorImage;
 
-  // The area of mTitlebarImageBuffer that has changed and needs to be
+  // The area of mTitlebarCGContext that has changed and needs to be
   // uploaded to to mTitlebarImage. Main thread only.
   nsIntRegion           mDirtyTitlebarRegion;
 
@@ -706,6 +704,8 @@ protected:
   nsAutoPtr<GLPresenter> mGLPresenter;
 
   static uint32_t sLastInputEventCount;
+
+  void ReleaseTitlebarCGContext();
 };
 
 void NS_InstallPluginKeyEventsHandler();

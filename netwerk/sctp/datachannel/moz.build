@@ -21,3 +21,14 @@ FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'necko'
+
+DEFINES['INET'] = 1
+DEFINES['SCTP_DEBUG'] = 1
+
+if CONFIG['OS_TARGET'] != 'Android':
+    DEFINES['INET6'] = 1
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFINES['__Userspace_os_Windows'] = 1
+else:
+    DEFINES['__Userspace_os_%s' % CONFIG['OS_TARGET']] = 1

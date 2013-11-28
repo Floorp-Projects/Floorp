@@ -219,6 +219,11 @@ public:
     return mMultiProcess;
   }
 
+  const TextureFactoryIdentifier& GetTextureFactoryIdentifier() const
+  {
+    return mTextureFactoryIdentifier;
+  }
+
 protected:
   TextureFactoryIdentifier mTextureFactoryIdentifier;
   bool mMultiProcess;

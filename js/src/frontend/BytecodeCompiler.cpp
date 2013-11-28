@@ -142,7 +142,8 @@ CanLazilyParse(ExclusiveContext *cx, const ReadOnlyCompileOptions &options)
     return options.canLazilyParse &&
         options.compileAndGo &&
         options.sourcePolicy == CompileOptions::SAVE_SOURCE &&
-        !cx->compartment()->debugMode();
+        !(cx->compartment()->debugMode() &&
+          cx->compartment()->runtimeFromAnyThread()->debugHooks.newScriptHook);
 }
 
 void

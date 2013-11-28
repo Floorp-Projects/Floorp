@@ -5,3 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += ['tests']
+
+for var in ('target', 'ac_configure_args', 'CC', 'CC_VERSION', 'CFLAGS',
+            'CXX', 'CXX_VERSION'):
+    DEFINES[var] = CONFIG[var]
+
+if CONFIG['OS_TARGET'] == 'Android':
+    DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
+
+if 'stlport' in CONFIG['STLPORT_LIBS']:
+    DEFINES['USE_STLPORT'] = True

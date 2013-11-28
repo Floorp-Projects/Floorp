@@ -17,6 +17,7 @@
 #include "nsChangeHint.h"
 
 struct RuleProcessorData;
+struct ElementDependentRuleProcessorData;
 struct ElementRuleProcessorData;
 struct PseudoElementRuleProcessorData;
 struct AnonBoxRuleProcessorData;
@@ -24,6 +25,7 @@ struct AnonBoxRuleProcessorData;
 struct XULTreeRuleProcessorData;
 #endif
 struct StateRuleProcessorData;
+struct PseudoElementStateRuleProcessorData;
 struct AttributeRuleProcessorData;
 class nsPresContext;
 
@@ -95,6 +97,8 @@ public:
    */
   virtual nsRestyleHint
     HasStateDependentStyle(StateRuleProcessorData* aData) = 0;
+  virtual nsRestyleHint
+    HasStateDependentStyle(PseudoElementStateRuleProcessorData* aData) = 0;
 
   /**
    * This method will be called twice for every attribute change.

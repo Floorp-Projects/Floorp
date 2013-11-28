@@ -15,8 +15,6 @@ WRAP_LDFLAGS=
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DELFHACK_BUILD
-
 test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX): %$(DLL_SUFFIX): %.$(OBJ_SUFFIX) elfhack
 	$(MKSHLIB) $(LDFLAGS) $< -nostartfiles
 	@echo ===

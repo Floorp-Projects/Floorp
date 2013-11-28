@@ -108,3 +108,11 @@ LOCAL_INCLUDES += [
     '/xpcom/base',
 ]
 
+DEFINES['BIN_SUFFIX'] = '"%s"' % CONFIG['BIN_SUFFIX']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gonk', 'qt'):
+    DEFINES['MOZ_ENABLE_FREETYPE'] = True
+
+for var in ('MOZ_PERMISSIONS', 'MOZ_CHILD_PERMISSIONS'):
+    if CONFIG[var]:
+        DEFINES[var] = True

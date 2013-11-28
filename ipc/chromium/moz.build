@@ -146,6 +146,7 @@ elif not CONFIG['MOZ_NATIVE_LIBEVENT']:
         'src/third_party/libevent/signal.c',
         'src/third_party/libevent/strlcpy.c',
     ]
+    DEFINES['HAVE_CONFIG_H'] = True
 
 if os_posix:
     SOURCES += [
@@ -177,6 +178,8 @@ if os_posix:
         SOURCES += [
             'src/base/message_pump_android.cc',
         ]
+        DEFINES['ANDROID'] = True
+        DEFINES['_POSIX_MONOTONIC_CLOCK'] = 0
 
 if os_macosx:
     UNIFIED_SOURCES += [
@@ -265,6 +268,8 @@ if os_bsd:
         SOURCES += [
             'src/third_party/libevent/kqueue.c',
         ]
+        if not os_freebsd and not os_dragonfly:
+            DEFINES['_EVENT_HAVE_SENDFILE'] = True
 
 if CONFIG['_MSC_VER']:
     SOURCES += [

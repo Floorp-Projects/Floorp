@@ -93,6 +93,32 @@ MP4Reader::~MP4Reader()
   MOZ_COUNT_DTOR(MP4Reader);
 }
 
+void
+MP4Reader::InitLayersBackendType()
+{
+  if (!IsVideoContentType(mDecoder->GetResource()->GetContentType())) {
+    // Not playing video, we don't care about the layers backend type.
+    return;
+  }
+  // Extract the layer manager backend type so that platform decoders
+  // can determine whether it's worthwhile using hardware accelerated
+  // video decoding.
+  MediaDecoderOwner* owner = mDecoder->GetOwner();
+  if (!owner) {
+    NS_WARNING("MP4Reader without a decoder owner, can't get HWAccel");
+    return;
+  }
+
+  dom::HTMLMediaElement* element = owner->GetMediaElement();
+  NS_ENSURE_TRUE_VOID(element);
+
+  nsRefPtr<LayerManager> layerManager =
+    nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
+  NS_ENSURE_TRUE_VOID(layerManager);
+
+  mLayersBackendType = layerManager->GetBackendType();
+}
+
 nsresult
 MP4Reader::Init(MediaDecoderReader* aCloneDonor)
 {
@@ -103,22 +129,7 @@ MP4Reader::Init(MediaDecoderReader* aCloneDonor)
   mPlatform = PlatformDecoderModule::Create();
   NS_ENSURE_TRUE(mPlatform, NS_ERROR_FAILURE);
 
-  if (IsVideoContentType(mDecoder->GetResource()->GetContentType())) {
-    // Extract the layer manager backend type so that platform decoders
-    // can determine whether it's worthwhile using hardware accelerated
-    // video decoding.
-    MediaDecoderOwner* owner = mDecoder->GetOwner();
-    NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
-
-    dom::HTMLMediaElement* element = owner->GetMediaElement();
-    NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
-
-    nsRefPtr<LayerManager> layerManager =
-      nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
-    NS_ENSURE_TRUE(layerManager, NS_ERROR_FAILURE);
-
-    mLayersBackendType = layerManager->GetBackendType();
-  }
+  InitLayersBackendType();
 
   return NS_OK;
 }
@@ -130,16 +141,30 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   bool ok = mDemuxer->Init();
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
-  mInfo.mAudio.mHasAudio = mHasAudio = mDemuxer->HasAudio();
+  const AudioDecoderConfig& audio = mDemuxer->AudioConfig();
+  mInfo.mAudio.mHasAudio = mHasAudio = mDemuxer->HasAudio() &&
+                                       audio.IsValidConfig();
+  // If we have audio, we *only* allow AAC to be decoded.
+  if (mHasAudio && audio.codec() != kCodecAAC) {
+    return NS_ERROR_FAILURE;
+  }
+
+  const VideoDecoderConfig& video = mDemuxer->VideoConfig();
+  mInfo.mVideo.mHasVideo = mHasVideo = mDemuxer->HasVideo() &&
+                                       video.IsValidConfig();
+  // If we have video, we *only* allow H.264 to be decoded.
+  if (mHasVideo && video.codec() != kCodecH264) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (mHasAudio) {
-    const AudioDecoderConfig& config = mDemuxer->AudioConfig();
-    mInfo.mAudio.mRate = config.samples_per_second();
-    mInfo.mAudio.mChannels = ChannelLayoutToChannelCount(config.channel_layout());
+    mInfo.mAudio.mRate = audio.samples_per_second();
+    mInfo.mAudio.mChannels = ChannelLayoutToChannelCount(audio.channel_layout());
     mAudioDecoder = mPlatform->CreateAudioDecoder(mInfo.mAudio.mChannels,
                                                   mInfo.mAudio.mRate,
-                                                  config.bits_per_channel(),
-                                                  config.extra_data(),
-                                                  config.extra_data_size());
+                                                  audio.bits_per_channel(),
+                                                  audio.extra_data(),
+                                                  audio.extra_data_size());
     NS_ENSURE_TRUE(mAudioDecoder != nullptr, NS_ERROR_FAILURE);
   }
 
@@ -148,7 +173,6 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     const VideoDecoderConfig& config = mDemuxer->VideoConfig();
     IntSize sz = config.natural_size();
     mInfo.mVideo.mDisplay = nsIntSize(sz.width(), sz.height());
-
     mVideoDecoder = mPlatform->CreateVideoDecoder(mLayersBackendType,
                                                   mDecoder->GetImageContainer());
     NS_ENSURE_TRUE(mVideoDecoder != nullptr, NS_ERROR_FAILURE);

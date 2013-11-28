@@ -106,13 +106,13 @@ public:
   void Upload(const BasicTiledLayerBuffer* aMainMemoryTiledBuffer,
               const nsIntRegion& aNewValidRegion,
               const nsIntRegion& aInvalidateRegion,
-              const gfxSize& aResolution);
+              const CSSToScreenScale& aResolution);
 
   TiledTexture GetPlaceholderTile() const { return TiledTexture(); }
 
   // Stores the absolute resolution of the containing frame, calculated
   // by the sum of the resolutions of all parent layers' FrameMetrics.
-  const gfxSize& GetFrameResolution() { return mFrameResolution; }
+  const CSSToScreenScale& GetFrameResolution() { return mFrameResolution; }
 
   void SetCompositor(Compositor* aCompositor)
   {
@@ -144,7 +144,7 @@ protected:
 private:
   Compositor* mCompositor;
   const BasicTiledLayerBuffer* mMainMemoryTiledBuffer;
-  gfxSize mFrameResolution;
+  CSSToScreenScale mFrameResolution;
 };
 
 /**

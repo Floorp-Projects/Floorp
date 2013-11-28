@@ -4,18 +4,4 @@
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gonk qt))
-DEFINES += -DMOZ_ENABLE_FREETYPE
-endif
-
-ifdef MOZ_PERMISSIONS
-DEFINES += -DMOZ_PERMISSIONS
-endif
-
-ifdef MOZ_CHILD_PERMISSIONS
-DEFINES += -DMOZ_CHILD_PERMISSIONS
-endif
-
 CXXFLAGS += $(TK_CFLAGS)

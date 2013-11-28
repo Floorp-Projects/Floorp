@@ -127,6 +127,9 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
   if (!aSurface) {
     return;
   }
+  if (!IPCOpen()) {
+    return;
+  }
   if (PlatformDestroySharedSurface(aSurface)) {
     return;
   }

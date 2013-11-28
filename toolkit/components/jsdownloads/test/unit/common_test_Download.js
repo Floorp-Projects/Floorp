@@ -1521,6 +1521,7 @@ add_task(function test_launch() {
         source: httpUrl("source.txt"),
         target: getTempFile(TEST_TARGET_FILE_NAME).path,
         launcherPath: launcherPath,
+        launchWhenSucceeded: true
       });
 
       try {
@@ -1537,11 +1538,12 @@ add_task(function test_launch() {
       // it is created, thus we don't test calling "launch" before starting.
       download = yield promiseStartLegacyDownload(
                                          httpUrl("source.txt"),
-                                         { launcherPath: launcherPath });
+                                         { launcherPath: launcherPath,
+                                           launchWhenSucceeded: true });
       yield promiseDownloadStopped(download);
     }
 
-    do_check_false(download.launchWhenSucceeded);
+    do_check_true(download.launchWhenSucceeded);
 
     DownloadIntegration._deferTestOpenFile = Promise.defer();
     download.launch();

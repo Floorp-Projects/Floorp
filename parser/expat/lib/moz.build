@@ -22,3 +22,5 @@ FINAL_LIBRARY = 'gkmedias'
 GENERATED_FILES = [
     'moz_extensions.c',
 ]
+
+DEFINES['HAVE_EXPAT_CONFIG_H'] = True

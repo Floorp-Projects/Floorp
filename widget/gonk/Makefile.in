@@ -19,12 +19,6 @@ VPATH           = \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DHAVE_OFF64_T -DSK_BUILD_FOR_ANDROID_NDK
-
-ifdef MOZ_OMX_DECODER
-DEFINES += -DMOZ_OMX_DECODER
-endif
-
 LOCAL_INCLUDES += \
 	-I$(ANDROID_SOURCE)/hardware/libhardware/include \
 	-I$(ANDROID_SOURCE)/hardware/libhardware_legacy/include \

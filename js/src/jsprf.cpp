@@ -1208,3 +1208,22 @@ JS_PUBLIC_API(char *) JS_vsprintf_append(char *last, const char *fmt, va_list ap
     return ss.base;
 }
 
+#undef TYPE_INT16
+#undef TYPE_UINT16
+#undef TYPE_INTN
+#undef TYPE_UINTN
+#undef TYPE_INT32
+#undef TYPE_UINT32
+#undef TYPE_INT64
+#undef TYPE_UINT64
+#undef TYPE_STRING
+#undef TYPE_DOUBLE
+#undef TYPE_INTSTR
+#undef TYPE_WSTRING
+#undef TYPE_UNKNOWN
+
+#undef FLAG_LEFT
+#undef FLAG_SIGNED
+#undef FLAG_SPACED
+#undef FLAG_ZEROS
+#undef FLAG_NEG

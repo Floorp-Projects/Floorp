@@ -81,3 +81,16 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xulapp_s'
+
+if CONFIG['OS_TARGET'] == 'Android':
+    DEFINES['ANDROID_PACKAGE_NAME'] = '"%s"' % CONFIG['ANDROID_PACKAGE_NAME']
+    # NDK5 workarounds
+    DEFINES['_STLP_CONST_CONSTRUCTOR_BUG'] = True
+    DEFINES['_STLP_NO_MEMBER_TEMPLATES'] = True
+
+if CONFIG['OS_ARCH'] == 'SunOS':
+    # there's no define for this normally
+    DEFINES['XP_SOLARIS'] = True
+
+DEFINES['UNICODE'] = True
+DEFINES['_UNICODE'] = True
