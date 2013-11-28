@@ -1729,8 +1729,13 @@ ElementForStyleContext(nsIContent* aParentContent,
     return f->GetContent()->AsElement();
   }
 
-  nsIContent* content = aParentContent ? aParentContent : aFrame->GetContent();
-  return content->AsElement();
+  if (aParentContent) {
+    return aParentContent->AsElement();
+  }
+
+  MOZ_ASSERT(aFrame->GetContent()->GetParent(),
+             "should not have got here for the root element");
+  return aFrame->GetContent()->GetParent()->AsElement();
 }
 
 /**
