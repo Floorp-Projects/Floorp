@@ -92,6 +92,9 @@ typedef struct {
     /* I:   Opus encoder is allowing us to switch bandwidth                                 */
     opus_int opusCanSwitch;
 
+    /* I: Make frames as independent as possible (but still use LPC)                        */
+    opus_int reducedDependency;
+
     /* O:   Internal sampling rate used, in Hertz; 8000/12000/16000                         */
     opus_int32 internalSampleRate;
 

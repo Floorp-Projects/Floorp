@@ -1,5 +1,5 @@
-/* Copyright (c) 2008-2011 Octasic Inc.
-   Written by Jean-Marc Valin */
+/* Copyright (c) 2010 Xiph.Org Foundation
+ * Copyright (c) 2013 Parrot */
 /*
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
@@ -15,8 +15,8 @@
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-   A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR
-   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+   OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
    PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
    PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
@@ -25,17 +25,33 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _MLP_H_
-#define _MLP_H_
+#if !defined(PITCH_ARM_H)
+# define PITCH_ARM_H
 
-#include "arch.h"
+# include "armcpu.h"
 
-typedef struct {
-	int layers;
-	const int *topo;
-	const float *weights;
-} MLP;
+# if defined(FIXED_POINT)
 
-void mlp_process(const MLP *m, const float *in, float *out);
+#  if defined(OPUS_ARM_MAY_HAVE_NEON)
+opus_val32 celt_pitch_xcorr_neon(const opus_val16 *_x, const opus_val16 *_y,
+    opus_val32 *xcorr, int len, int max_pitch);
+#  endif
 
-#endif /* _MLP_H_ */
+#  if defined(OPUS_ARM_MAY_HAVE_MEDIA)
+#   define celt_pitch_xcorr_media MAY_HAVE_EDSP(celt_pitch_xcorr)
+#  endif
+
+#  if defined(OPUS_ARM_MAY_HAVE_EDSP)
+opus_val32 celt_pitch_xcorr_edsp(const opus_val16 *_x, const opus_val16 *_y,
+    opus_val32 *xcorr, int len, int max_pitch);
+#  endif
+
+#  if !defined(OPUS_HAVE_RTCD)
+#   define OVERRIDE_PITCH_XCORR (1)
+#   define celt_pitch_xcorr(_x, _y, xcorr, len, max_pitch, arch) \
+  ((void)(arch),PRESUME_NEON(celt_pitch_xcorr)(_x, _y, xcorr, len, max_pitch))
+#  endif
+
+# endif
+
+#endif

@@ -35,6 +35,7 @@
 #define ARCH_H
 
 #include "opus_types.h"
+#include "opus_defines.h"
 
 # if !defined(__GNUC_PREREQ)
 #  if defined(__GNUC__)&&defined(__GNUC_MINOR__)
@@ -54,7 +55,7 @@
 #ifdef __GNUC__
 __attribute__((noreturn))
 #endif
-static inline void _celt_fatal(const char *str, const char *file, int line)
+static OPUS_INLINE void _celt_fatal(const char *str, const char *file, int line)
 {
    fprintf (stderr, "Fatal (internal) error in %s, line %d: %s\n", file, line, str);
    abort();
@@ -113,9 +114,9 @@ typedef opus_val32 celt_ener;
 
 #include "fixed_generic.h"
 
-#ifdef ARMv5E_ASM
+#ifdef OPUS_ARM_INLINE_EDSP
 #include "arm/fixed_armv5e.h"
-#elif defined (ARMv4_ASM)
+#elif defined (OPUS_ARM_INLINE_ASM)
 #include "arm/fixed_armv4.h"
 #elif defined (BFIN_ASM)
 #include "fixed_bfin.h"
@@ -185,6 +186,7 @@ typedef float celt_ener;
 #define MAC16_32_Q15(c,a,b)     ((c)+(a)*(b))
 
 #define MULT16_16_Q11_32(a,b)     ((a)*(b))
+#define MULT16_16_Q11(a,b)     ((a)*(b))
 #define MULT16_16_Q13(a,b)     ((a)*(b))
 #define MULT16_16_Q14(a,b)     ((a)*(b))
 #define MULT16_16_Q15(a,b)     ((a)*(b))
