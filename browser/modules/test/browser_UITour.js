@@ -235,4 +235,16 @@ let tests = [
 
     done();
   },
+  function test_menu(done) {
+    let bookmarksMenuButton = document.getElementById("bookmarks-menu-button");
+    ise(bookmarksMenuButton.open, false, "Menu should initially be closed");
+
+    gContentAPI.showMenu("bookmarks");
+    ise(bookmarksMenuButton.open, true, "Menu should be shown after showMenu()");
+
+    gContentAPI.hideMenu("bookmarks");
+    ise(bookmarksMenuButton.open, false, "Menu should be closed after hideMenu()");
+
+    done();
+  },
 ];
