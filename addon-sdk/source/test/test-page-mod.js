@@ -430,6 +430,50 @@ exports.testWorksWithExistingTabs = function(assert, done) {
   });
 };
 
+exports.testExistingFrameDoesntMatchInclude = function(assert, done) {
+  let iframeURL = 'data:text/html;charset=utf-8,UNIQUE-TEST-STRING-42';
+  let iframe = '<iframe src="' + iframeURL + '" />';
+  let url = 'data:text/html;charset=utf-8,' + encodeURIComponent(iframe);
+  tabs.open({
+    url: url,
+    onReady: function onReady(tab) {
+      let pagemod = new PageMod({
+        include: url,
+        attachTo: ['existing', 'frame'],
+        onAttach: function() {
+          assert.fail("Existing iframe URL doesn't match include, must not attach to anything");
+        }
+      });
+      timer.setTimeout(function() {
+        assert.pass("PageMod didn't attach to anything")
+        pagemod.destroy();
+        tab.close(done);
+      }, 250);
+    }
+  });
+};
+
+exports.testExistingOnlyFrameMatchesInclude = function(assert, done) {
+  let iframeURL = 'data:text/html;charset=utf-8,UNIQUE-TEST-STRING-43';
+  let iframe = '<iframe src="' + iframeURL + '" />';
+  let url = 'data:text/html;charset=utf-8,' + encodeURIComponent(iframe);
+  tabs.open({
+    url: url,
+    onReady: function onReady(tab) {
+      let pagemod = new PageMod({
+        include: iframeURL,
+        attachTo: ['existing', 'frame'],
+        onAttach: function(worker) {
+          assert.equal(iframeURL, worker.url, 
+              "PageMod attached to existing iframe when only it matches include rules");
+          pagemod.destroy();
+          tab.close(done);
+        }
+      });
+    }
+  });
+};
+
 exports.testTabWorkerOnMessage = function(assert, done) {
   let { browserWindows } = require("sdk/windows");
   let tabs = require("sdk/tabs");
