@@ -1431,9 +1431,10 @@ MmsService.prototype = {
    * @param intermediate
    *        Intermediate MMS message parsed from PDU.
    */
-  convertIntermediateToSavable: function convertIntermediateToSavable(mmsConnection,
-                                                                      intermediate,
-                                                                      retrievalMode) {
+  convertIntermediateToSavable:
+    function convertIntermediateToSavable(mmsConnection,
+                                          intermediate,
+                                          retrievalMode) {
     intermediate.type = "mms";
     intermediate.delivery = DELIVERY_NOT_DOWNLOADED;
 
@@ -1682,11 +1683,12 @@ MmsService.prototype = {
   /**
    * Callback for saveReceivedMessage.
    */
-  saveReceivedMessageCallback: function saveReceivedMessageCallback(mmsConnection,
-                                                                    retrievalMode,
-                                                                    savableMessage,
-                                                                    rv,
-                                                                    domMessage) {
+  saveReceivedMessageCallback:
+    function saveReceivedMessageCallback(mmsConnection,
+                                         retrievalMode,
+                                         savableMessage,
+                                         rv,
+                                         domMessage) {
     let success = Components.isSuccessCode(rv);
     if (!success) {
       // At this point we could send a message to content to notify the
@@ -1706,19 +1708,11 @@ MmsService.prototype = {
 
     this.broadcastReceivedMessageEvent(domMessage);
 
-    // In the roaming environment, we send notify response only for the
-    // automatic retrieval mode.
-    if ((retrievalMode !== RETRIEVAL_MODE_AUTOMATIC) &&
+    // To avoid costing money, we only send notify response when it's under
+    // the "automatic" retrieval mode or it's not in the roaming environment.
+    if (retrievalMode !== RETRIEVAL_MODE_AUTOMATIC &&
         mmsConnection.isVoiceRoaming()) {
       return;
-    }
-
-    // Under the "automatic" retrieval mode, for the non-active SIM, we have to
-    // download the MMS as if it is downloaded by the "manual" retrieval mode.
-    if ((retrievalMode == RETRIEVAL_MODE_AUTOMATIC ||
-         retrievalMode == RETRIEVAL_MODE_AUTOMATIC_HOME) &&
-        mmsConnection.serviceId != this.mmsDefaultServiceId) {
-      retrievalMode = RETRIEVAL_MODE_MANUAL;
     }
 
     if (RETRIEVAL_MODE_MANUAL === retrievalMode ||
@@ -1777,17 +1771,33 @@ MmsService.prototype = {
         retrievalMode = Services.prefs.getCharPref(kPrefRetrievalMode);
       } catch (e) {}
 
+      // Under the "automatic"/"automatic-home" retrieval mode, we switch to
+      // the "manual" retrieval mode to download MMS for non-active SIM.
+      if ((retrievalMode == RETRIEVAL_MODE_AUTOMATIC ||
+           retrievalMode == RETRIEVAL_MODE_AUTOMATIC_HOME) &&
+          serviceId != this.mmsDefaultServiceId) {
+        if (DEBUG) {
+          debug("Switch to 'manual' mode to download MMS for non-active SIM: " +
+                "serviceId = " + serviceId + " doesn't equal to " +
+                "mmsDefaultServiceId = " + this.mmsDefaultServiceId);
+        }
+
+        retrievalMode = RETRIEVAL_MODE_MANUAL;
+      }
+
       let mmsConnection = gMmsConnections.getConnByServiceId(serviceId);
+
       let savableMessage = this.convertIntermediateToSavable(mmsConnection,
                                                              notification,
                                                              retrievalMode);
 
       gMobileMessageDatabaseService
         .saveReceivedMessage(savableMessage,
-                             this.saveReceivedMessageCallback.bind(this,
-                                                                   mmsConnection,
-                                                                   retrievalMode,
-                                                                   savableMessage));
+                             this.saveReceivedMessageCallback
+                                 .bind(this,
+                                       mmsConnection,
+                                       retrievalMode,
+                                       savableMessage));
     }).bind(this));
   },
 

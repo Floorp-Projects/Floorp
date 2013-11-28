@@ -997,6 +997,7 @@ add_test(function test_stk_event_download_language_selection() {
   let worker = newUint8SupportOutgoingIndexWorker();
   let buf = worker.Buf;
   let pduHelper = worker.GsmPDUHelper;
+  let iccHelper = worker.ICCPDUHelper;
 
   buf.sendParcel = function () {
     // Type
@@ -1034,7 +1035,7 @@ add_test(function test_stk_event_download_language_selection() {
     // Language, Type-Length-Value
     do_check_eq(pduHelper.readHexOctet(), COMPREHENSIONTLV_TAG_LANGUAGE);
     do_check_eq(pduHelper.readHexOctet(), 2);
-    do_check_eq(pduHelper.read8BitUnpackedToString(2), "zh");
+    do_check_eq(iccHelper.read8BitUnpackedToString(2), "zh");
 
     run_next_test();
   };
