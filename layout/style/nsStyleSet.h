@@ -129,12 +129,14 @@ class nsStyleSet
 
   // Get a style context for a pseudo-element.  aParentElement must be
   // non-null.  aPseudoID is the nsCSSPseudoElements::Type for the
-  // pseudo-element.
+  // pseudo-element.  aPseudoElement must be non-null if the pseudo-element
+  // type is one that allows user action pseudo-classes after it; otherwise,
+  // it is ignored.
   already_AddRefed<nsStyleContext>
   ResolvePseudoElementStyle(mozilla::dom::Element* aParentElement,
                             nsCSSPseudoElements::Type aType,
                             nsStyleContext* aParentContext,
-                            mozilla::dom::Element* aPseudoElement = nullptr);
+                            mozilla::dom::Element* aPseudoElement);
 
   // This functions just like ResolvePseudoElementStyle except that it will
   // return nullptr if there are no explicit style rules for that

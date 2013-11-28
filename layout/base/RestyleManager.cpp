@@ -2355,20 +2355,20 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
           // We're reframing anyway; just keep the same context
           newContext = oldContext;
         }
-      } else if (nsCSSPseudoElements::PseudoElementSupportsStyleAttribute(pseudoTag)) {
-        newContext = styleSet->ResolvePseudoElementStyle(element,
-                                                         pseudoType,
-                                                         parentContext,
-                                                         aSelf->GetContent()->AsElement());
       } else {
         // Don't expect XUL tree stuff here, since it needs a comparator and
         // all.
         NS_ASSERTION(pseudoType <
                        nsCSSPseudoElements::ePseudo_PseudoElementCount,
                      "Unexpected pseudo type");
+        Element* pseudoElement =
+          nsCSSPseudoElements::PseudoElementSupportsStyleAttribute(pseudoTag) ||
+          nsCSSPseudoElements::PseudoElementSupportsUserActionState(pseudoTag) ?
+            aSelf->GetContent()->AsElement() : nullptr;
         newContext = styleSet->ResolvePseudoElementStyle(element,
                                                          pseudoType,
-                                                         parentContext);
+                                                         parentContext,
+                                                         pseudoElement);
       }
     }
     else {
@@ -2446,7 +2446,8 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
                    "Unexpected type");
       newExtraContext = styleSet->ResolvePseudoElementStyle(mContent->AsElement(),
                                                             extraPseudoType,
-                                                            newContext);
+                                                            newContext,
+                                                            nullptr);
     }
 
     MOZ_ASSERT(newExtraContext);
