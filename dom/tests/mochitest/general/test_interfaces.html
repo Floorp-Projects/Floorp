@@ -20,10 +20,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=766694
 
 /** Test for Bug 766694 **/
 
-// This is a list of all interfaces that are exposed to every webpage.  Please only
-// add things to this list with great care.
+// This is a list of all interfaces that are exposed to every webpage.
+// Please only add things to this list with great care and proper review
+// from the associated module peers.
 
-// IMPORTANT: Do not change this list without review from a JavaScript Engine peer!
+// This file lists global interfaces we want exposed and verifies they
+// are what we intend. Each entry in the arrays below can either be a
+// simple string with the interface name, or an object with a 'name'
+// property giving the interface name as a string, and additional
+// properties which quality the exposure of that interface. For example:
+//
+// [
+//   "AGlobalInterface",
+//   {name: "ExperimentalThing", release: false},
+//   {name: "OptionalThing", pref: "some.thing.enabled"},
+//   {name: "FancyControl", xbl: true},
+// ];
+//
+// See createInterfaceMap() below for a complete list of properties.
+
+// IMPORTANT: Do not change this list without review from
+//            a JavaScript Engine peer!
 var ecmaGlobals =
   [
     "Array",
@@ -70,10 +87,11 @@ var ecmaGlobals =
     "URIError",
     "WeakMap",
   ];
-// IMPORTANT: Do not change this list without review from a JavaScript Engine peer!
+// IMPORTANT: Do not change the list above without review from
+//            a JavaScript Engine peer!
 
-// IMPORTANT: Do not change this list without review from a DOM peer, except to
-//            remove items from it!
+// IMPORTANT: Do not change the list below without review from a DOM peer,
+//            except to remove items from it!
 //
 // This is a list of interfaces that were prefixed with 'moz' instead of 'Moz'.
 // We should never to that again, interfaces in the DOM start with an uppercase
@@ -86,10 +104,10 @@ var legacyMozPrefixedInterfaces =
     "mozRTCPeerConnection",
     "mozRTCSessionDescription",
   ];
-// IMPORTANT: Do not change this list without review from a DOM peer, except to
-//            remove items from it!
+// IMPORTANT: Do not change the list above without review from a DOM peer,
+//            except to remove items from it!
 
-// IMPORTANT: Do not change this list without review from a DOM peer!
+// IMPORTANT: Do not change the list below without review from a DOM peer!
 var interfaceNamesInGlobalScope =
   [
     "AnalyserNode",
@@ -630,8 +648,8 @@ var interfaceNamesInGlobalScope =
     {name: "XULPopupElement", xbl: true},
     {name: "XULTemplateBuilder", xbl: true},
     {name: "XULTreeBuilder", xbl: true},
-  ]
-// IMPORTANT: Do not change this list without review from a DOM peer!
+  ];
+// IMPORTANT: Do not change the list above without review from a DOM peer!
 
 function createInterfaceMap(isXBLScope) {
   var prefs = SpecialPowers.Services.prefs;

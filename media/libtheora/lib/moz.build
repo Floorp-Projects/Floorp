@@ -29,6 +29,11 @@ if CONFIG['OS_TEST'] == 'arm' and CONFIG['GNU_AS']:
     ]]
 
 if '86' in CONFIG['OS_TEST']:
+    if CONFIG['OS_ARCH'] != 'SunOS':
+        if CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['OS_TEST'] != 'x86_64':
+            DEFINES['OC_X86_ASM'] = True
+            if '64' in CONFIG['OS_TEST']:
+                DEFINES['OC_X86_64_ASM'] = True
     if CONFIG['_MSC_VER']:
         if '64' not in CONFIG['OS_TEST']:
             SOURCES += [
@@ -54,6 +59,13 @@ if CONFIG['GNU_AS']:
             'arm/armcpu.c',
             'arm/armstate.c',
         ]
+        for var in ('OC_ARM_ASM', 'OC_ARM_ASM_EDSP', 'OC_ARM_ASM_MEDIA',
+                    'OC_ARM_ASM_NEON'):
+            DEFINES[var] = True
+        # The Android NDK doesn't pre-define anything to indicate the OS it's
+        # on, so do it for them.
+        if CONFIG['OS_TARGET'] == 'Android':
+            DEFINES['__linux__'] = True
 
 MSVC_ENABLE_PGO = True
 
@@ -61,3 +73,6 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     NO_VISIBILITY_FLAGS = True
 
 FINAL_LIBRARY = 'gkmedias'
+
+# The encoder is currently not included.
+DEFINES['THEORA_DISABLE_ENCODE'] = True

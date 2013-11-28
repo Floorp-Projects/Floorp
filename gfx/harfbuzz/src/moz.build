@@ -56,3 +56,9 @@ UNIFIED_SOURCES += [
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gkmedias'
+
+DEFINES['PACKAGE_VERSION'] = '"moz"'
+DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
+DEFINES['HAVE_OT'] = 1
+DEFINES['HB_NO_MT'] = True
+DEFINES['HB_NO_UNICODE_FUNCS'] = True
