@@ -10,5 +10,9 @@ DIRS += [
     'offline',
     'mochikit',
     'scriptaculous',
-    'jquery',
 ]
+
+MOCHITEST_MANIFESTS += [
+    'jquery/mochitest.ini',
+]
+
