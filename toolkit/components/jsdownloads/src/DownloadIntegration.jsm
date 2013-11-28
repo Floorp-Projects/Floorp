@@ -306,7 +306,16 @@ this.DownloadIntegration = {
     // progress, as well as stopped downloads for which we retained partially
     // downloaded data.  Stopped downloads for which we don't need to track the
     // presence of a ".part" file are only retained in the browser history.
+    // On b2g, we keep a few days of history.
+#ifdef MOZ_B2G
+    let maxTime = Date.now() -
+      Services.prefs.getIntPref("dom.downloads.max_retention_days") * 24 * 60 * 60 * 1000;
+    return (aDownload.startTime > maxTime) ||
+           aDownload.hasPartialData ||
+           !aDownload.stopped;
+#else
     return aDownload.hasPartialData || !aDownload.stopped;
+#endif
   },
 
   /**
