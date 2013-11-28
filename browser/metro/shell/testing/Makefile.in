@@ -21,3 +21,5 @@ OS_LIBS = \
 	propsys.lib \
 	advapi32.lib \
 	$(NULL)
+
+DEFINES += -DUNICODE -D_UNICODE

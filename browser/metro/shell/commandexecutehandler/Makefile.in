@@ -21,3 +21,5 @@ OS_LIBS = \
 	advapi32.lib \
 	wininet.lib \
 	$(NULL)
+
+DEFINES += -DUNICODE -D_UNICODE -DNS_NO_XPCOM

@@ -9,5 +9,3 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'redit.cpp',
     ]
-    for var in ('WIN32_LEAN_AND_MEAN', 'UNICODE', '_UNICODE', 'XPCOM_GLUE'):
-        DEFINES[var] = True

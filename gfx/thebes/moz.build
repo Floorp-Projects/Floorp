@@ -299,22 +299,3 @@ FINAL_LIBRARY = 'xul'
 GENERATED_FILES = [
     'PremultiplyTables.h',
 ]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk', 'qt'):
-    DEFINES['MOZ_ENABLE_FREETYPE'] = True
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    for var in ('MOZ_ENABLE_D3D9_LAYER', 'MOZ_ENABLE_D3D10_LAYER'):
-        if CONFIG[var]:
-            DEFINES[var] = True
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    # This is set for "normal Android", that is, when Gecko is running on
-    # top of the android java runtime.
-    DEFINES['MOZ_USING_ANDROID_JAVA_WIDGETS'] = True
-
-DEFINES['MOZ_OTS_REPORT_ERRORS'] = True
-DEFINES['GRAPHITE2_STATIC'] = True
-
-if CONFIG['OS_TARGET'] == 'WINNT':
-    DEFINES['OTS_DLL'] = True

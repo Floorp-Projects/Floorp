@@ -5,6 +5,8 @@
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES         += -DDEBUG_TABLE_STRATEGY_off
+
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../base \
 		-I$(srcdir)/../generic \

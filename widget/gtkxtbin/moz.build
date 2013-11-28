@@ -14,5 +14,3 @@ if CONFIG['MOZ_ENABLE_GTK2']:
     ]
 
 FINAL_LIBRARY = 'xul'
-
-DEFINES['_IMPL_GTKXTBIN_API'] = True

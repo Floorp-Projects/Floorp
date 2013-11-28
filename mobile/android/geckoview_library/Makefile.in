@@ -30,6 +30,8 @@ GARBAGE_DIRS = \
   res \
   $(NULL)
 
+DEFINES += -DANDROID_SDK=$(ANDROID_SDK)
+
 include $(topsrcdir)/config/rules.mk
 
 package: $(properties_deps)
