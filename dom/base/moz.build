@@ -164,3 +164,6 @@ LOCAL_INCLUDES += [
     '/xpcom/ds',
 ]
 
+for var in ('MOZ_JSDEBUGGER', 'MOZ_B2G_RIL', 'MOZ_B2G_FM'):
+    if CONFIG[var]:
+        DEFINES[var] = True

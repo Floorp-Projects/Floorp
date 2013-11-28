@@ -16,3 +16,5 @@ else:
 GENERATED_SOURCES += [
     "%s.c" % cpu,
 ]
+
+DEFINES['ELFHACK_BUILD'] = True

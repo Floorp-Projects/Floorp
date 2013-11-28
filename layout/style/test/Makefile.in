@@ -220,8 +220,6 @@ VISITED_REFTEST_FILES = \
 VISITED_REFTEST_DEST = $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/css-visited/
 INSTALL_TARGETS += VISITED_REFTEST
 
-DEFINES += -DMOZILLA_INTERNAL_API
-
 ifdef COMPILE_ENVIRONMENT
 MOCHITEST_FILES += \
 		test_property_database.html \

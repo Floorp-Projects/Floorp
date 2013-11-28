@@ -50,3 +50,6 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'necko'
+
+for var in ('IMPL_NS_NET', 'FORCE_PR_LOG'):
+    DEFINES[var] = True

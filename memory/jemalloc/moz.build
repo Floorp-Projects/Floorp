@@ -39,3 +39,12 @@ if CONFIG['OS_TARGET'] == 'Darwin' and not CONFIG['MOZ_REPLACE_MALLOC']:
 LIBRARY_NAME = 'jemalloc'
 
 FORCE_STATIC_LIB = True
+
+if CONFIG['_MSC_VER']:
+    DEFINES['DLLEXPORT'] = True
+
+if CONFIG['OS_TARGET'] == 'Linux':
+    # For mremap
+    DEFINES['_GNU_SOURCE'] = True
+
+DEFINES['abort'] = 'moz_abort'

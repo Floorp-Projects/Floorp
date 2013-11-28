@@ -15,6 +15,4 @@ $(CSRCS): %.c: ../inject.c
 
 GARBAGE += $(CSRCS)
 
-DEFINES += -DELFHACK_BUILD
-
 CFLAGS := -O2 -fno-stack-protector $(filter -m% -I%,$(CFLAGS))
