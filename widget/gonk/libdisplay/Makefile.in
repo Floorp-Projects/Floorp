@@ -20,8 +20,6 @@ STL_FLAGS=
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DXPCOM_GLUE
-
 LOCAL_INCLUDES += \
 	-I$(ANDROID_SOURCE)/hardware/libhardware/include \
 	-I$(ANDROID_SOURCE)/hardware/libhardware_legacy/include \

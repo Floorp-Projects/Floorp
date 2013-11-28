@@ -16,6 +16,8 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'crashreporter_win.cpp',
     ]
+    DEFINES['UNICODE'] = True
+    DEFINES['_UNICODE'] = True
 elif CONFIG['OS_ARCH'] == 'Darwin':
     SOURCES += [
         'crashreporter_unix_common.cpp',

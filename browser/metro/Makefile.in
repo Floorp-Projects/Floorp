@@ -7,12 +7,8 @@ include $(topsrcdir)/config/rules.mk
 #########################################
 # application.ini
 
-ifdef MOZILLA_OFFICIAL
-DEFINES += -DMOZILLA_OFFICIAL
-endif
-
 GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
-DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
+DEFINES += -DGRE_BUILDID=$(GRE_BUILDID)
 
 # 'application.ini' breaks firefox build config. So we use something different.
 metroapp.ini: metroapp.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt

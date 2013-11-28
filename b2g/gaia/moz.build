@@ -10,7 +10,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'run-b2g.cpp',
     ]
+    DEFINES['B2G_NAME'] = 'L"%s-bin%s"' % (PROGRAM, CONFIG['BIN_SUFFIX'])
+    DEFINES['GAIA_PATH'] = 'L"gaia\\\\profile"'
 else:
     SOURCES += [
         'run-b2g.c',
     ]
+    DEFINES['B2G_NAME'] = '"%s-bin%s"' % (PROGRAM, CONFIG['BIN_SUFFIX'])
+    DEFINES['GAIA_PATH'] = '"gaia/profile"'

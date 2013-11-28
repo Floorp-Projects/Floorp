@@ -24,8 +24,6 @@ endif
  
 MOZ_GLUE_LDFLAGS = # Don't link against ourselves
 
-DEFINES += -DIMPL_MFBT
-
 ifneq (,$(ZLIB_IN_MOZGLUE)$(MOZ_LINKER))
 ifdef MOZ_NATIVE_ZLIB
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)

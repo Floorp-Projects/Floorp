@@ -7,9 +7,3 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../wrappers \
   -I$(topsrcdir)/content/base/src \
   $(NULL)
-
-include $(topsrcdir)/config/rules.mk
-
-DEFINES += \
-  -DJS_THREADSAFE \
-  $(NULL)

@@ -13,3 +13,8 @@ SOURCES += [
 XPI_NAME = 'crashreporter'
 
 FINAL_LIBRARY = 'xulapp_s'
+
+if CONFIG['OS_TARGET'] == 'Android':
+    # NDK5 workarounds
+    DEFINES['_STLP_CONST_CONSTRUCTOR_BUG'] = True
+    DEFINES['_STLP_NO_MEMBER_TEMPLATES'] = True

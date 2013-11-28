@@ -3,8 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEFINES += -DSK_A32_SHIFT=24 -DSK_R32_SHIFT=16 -DSK_G32_SHIFT=8 -DSK_B32_SHIFT=0
-
 LOCAL_INCLUDES += \
 	-I$(srcdir)/include/core \
 	-I$(srcdir)/include/config \
@@ -50,7 +48,6 @@ VPATH += \
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gonk))
 OS_CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(CAIRO_FT_CFLAGS)
-DEFINES += -DSK_FONTHOST_CAIRO_STANDALONE=0
 endif
 
 ifdef MOZ_WIDGET_GTK
@@ -59,23 +56,6 @@ endif
 
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
 OS_CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PANGO_CFLAGS) $(CAIRO_FT_CFLAGS)
-ifeq (Linux,$(OS_TARGET))
-DEFINES += -DSK_USE_POSIX_THREADS=1
-endif
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gtk3 gonk cocoa))
-DEFINES += -DSK_USE_POSIX_THREADS=1
-endif
-
-ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-DEFINES += -DSKIA_IMPLEMENTATION=1 -DGR_IMPLEMENTATION=1
-endif
-
-ifneq (,$(INTEL_ARCHITECTURE))
-ifdef HAVE_TOOLCHAIN_SUPPORT_MSSSE3
-DEFINES += -DSK_BUILD_SSSE3
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk

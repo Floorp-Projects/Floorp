@@ -19,3 +19,46 @@ if CONFIG['MOZ_FOLD_LIBS']:
     FORCE_STATIC_LIB = True
 else:
     FORCE_SHARED_LIB = True
+
+# -DSQLITE_SECURE_DELETE=1 will cause SQLITE to 0-fill delete data so we
+# don't have to vacuum to make sure the data is not visible in the file.
+# -DSQLITE_ENABLE_FTS3=1 enables the full-text index module.
+# -DSQLITE_CORE=1 statically links that module into the SQLite library.
+# -DSQLITE_DEFAULT_PAGE_SIZE=32768 and SQLITE_MAX_DEFAULT_PAGE_SIZE=32768
+# increases the page size from 1k, see bug 416330.  It must be kept in sync with
+# the value of PREF_TS_PAGESIZE_DEFAULT in mozStorageService.cpp.  The value can
+# be overridden on a per-platform basis through the use of the PREF_TS_PAGESIZE
+# hidden preference.  If that preference is missing or invalid then this value
+# will be used.
+# -DSQLITE_MAX_SCHEMA_RETRY increases the times SQLite may try to reparse
+# statements when the schema changes. This is important when supporting lots of
+# concurrent connections, especially when they use shared cache.
+# Note: Be sure to update the configure.in checks when these change!
+for var in ('SQLITE_SECURE_DELETE', 'SQLITE_THREADSAFE', 'SQLITE_CORE',
+            'SQLITE_ENABLE_FTS3', 'SQLITE_ENABLE_UNLOCK_NOTIFY'):
+    DEFINES[var] = 1
+
+DEFINES['SQLITE_DEFAULT_PAGE_SIZE'] = 32768
+DEFINES['SQLITE_MAX_DEFAULT_PAGE_SIZE'] = 32768
+DEFINES['SQLITE_MAX_SCHEMA_RETRY'] = 25
+
+# -DSQLITE_ENABLE_LOCKING_STYLE=1 to help with AFP folders
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    DEFINES['SQLITE_ENABLE_LOCKING_STYLE'] = 1
+
+# Turn on SQLite's assertions in debug builds.
+if CONFIG['MOZ_DEBUG']:
+    DEFINES['SQLITE_DEBUG'] = 1
+
+if CONFIG['OS_ARCH'] == 'OS2' and CONFIG['MOZ_OS2_HIGH_MEMORY']:
+    DEFINES['OS2_HIGH_MEMORY'] = True
+
+if CONFIG['OS_TARGET'] == 'Android':
+    # default to user readable only to fit Android security model
+    DEFINES['SQLITE_DEFAULT_FILE_PERMISSIONS'] = '0600'
+
+# Force using malloc_usable_size when building with jemalloc because _msize
+# causes assertions on Win64. See bug 719579.
+if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_MEMORY']:
+    DEFINES['HAVE_MALLOC_USABLE_SIZE'] = True
+    DEFINES['SQLITE_WITHOUT_MSIZE'] = True

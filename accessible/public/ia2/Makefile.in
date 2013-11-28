@@ -6,8 +6,6 @@ DEFFILE       = $(win_srcdir)/IA2Marshal.def
 
 IA2DIR        = $(topsrcdir)/other-licenses/ia2
 
-DEFINES       += -DREGISTER_PROXY_DLL
-
 GARBAGE       += $(MIDL_GENERATED_FILES)
 
 # Please keep this list in sync with the moz.build file until the rest of this

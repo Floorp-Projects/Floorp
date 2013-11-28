@@ -102,3 +102,42 @@ LIBRARY_NAME = 'xulapp_s'
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['MOZ_GL_DEFAULT_PROVIDER'] == 'GLX':
+    DEFINES['USE_GLX_TEST'] = True
+
+for var in ('MOZ_APP_NAME', 'MOZ_APP_VERSION', 'OS_TARGET',
+            'MOZ_WIDGET_TOOLKIT'):
+    DEFINES[var] = '"%s"' % CONFIG[var]
+
+if CONFIG['MOZ_UPDATER'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+    DEFINES['MOZ_UPDATER'] = True
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    DEFINES['WIN32_LEAN_AND_MEAN'] = True
+    DEFINES['UNICODE'] = True
+    DEFINES['_UNICODE'] = True
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    DEFINES['ANDROID_PACKAGE_NAME'] = '"%s"' % CONFIG['ANDROID_PACKAGE_NAME']
+
+if CONFIG['TARGET_XPCOM_ABI']:
+    DEFINES['TARGET_XPCOM_ABI'] = '"%s"' % CONFIG['TARGET_XPCOM_ABI']
+    DEFINES['TARGET_OS_ABI'] = '"%s_%s"' % (CONFIG['OS_TARGET'],
+                                            CONFIG['TARGET_XPCOM_ABI'])
+
+if CONFIG['WRAP_SYSTEM_INCLUDES']:
+    DEFINES['WRAP_SYSTEM_INCLUDES'] = True
+
+if CONFIG['OS_ARCH'] == 'Linux' and 'lib64' in CONFIG['libdir']:
+    DEFINES['HAVE_USR_LIB64_DIR'] = True
+
+DEFINES['GRE_MILESTONE'] = CONFIG['GRE_MILESTONE']
+for var in ('GRE_MILESTONE', 'MOZ_APP_ID'):
+    DEFINES[var] = CONFIG[var]
+
+for var in ('APP_VERSION', 'APP_ID'):
+    DEFINES[var] = CONFIG['MOZ_%s' % var]
+
+if CONFIG['MOZILLA_OFFICIAL']:
+    DEFINES['MOZILLA_OFFICIAL'] = True

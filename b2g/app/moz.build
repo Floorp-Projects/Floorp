@@ -12,3 +12,11 @@ if not CONFIG['LIBXUL_SDK']:
     SOURCES += [
         'nsBrowserApp.cpp',
     ]
+
+if CONFIG['ENABLE_MARIONETTE']:
+    DEFINES['ENABLE_MARIONETTE'] = 1
+
+DEFINES['XPCOM_GLUE'] = True
+
+for var in ('MOZ_APP_NAME', 'MOZ_APP_VERSION', 'MOZ_UPDATER'):
+    DEFINES[var] = CONFIG[var]

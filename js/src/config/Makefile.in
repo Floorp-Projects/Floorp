@@ -15,11 +15,6 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-# Force wrap zlib system header if building js as a shared library.
-ifneq (,$(JS_SHARED_LIBRARY)$(MOZ_NATIVE_ZLIB))
-DEFINES += -DMOZ_NATIVE_ZLIB=1
-endif
-
 ifneq (WINNT,$(HOST_OS_ARCH))
 # Ensure nsinstall is atomically created
 nsinstall$(HOST_BIN_SUFFIX): $(HOST_PROGRAM)
