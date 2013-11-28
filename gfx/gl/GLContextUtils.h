@@ -7,7 +7,8 @@
 #ifndef GLCONTEXTUTILS_H_
 #define GLCONTEXTUTILS_H_
 
-#include "GLContext.h"
+#include "GLContextTypes.h"
+#include "mozilla/gfx/Types.h"
 
 namespace mozilla {
 namespace gfx {
