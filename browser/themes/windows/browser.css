@@ -940,7 +940,6 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   background: transparent;
 }
 
-#urlbar-search-splitter + #urlbar-container > #urlbar-wrapper > #urlbar,
 #urlbar-search-splitter + #search-container > #searchbar > .searchbar-textbox {
   -moz-margin-start: 0;
 }

@@ -96,7 +96,7 @@ package.json modified: please re-run 'cfx run'
 alt="Mozilla icon widget" />
 
 Run `cfx run` again, and it will run an instance of Firefox. In the
-bottom-right corner of the browser you'll see an icon with the Firefox
+bottom-right corner of the browser you'll see an icon with the Mozilla
 logo. Click the icon, and a new tab will open with
 [http://www.mozilla.org/](http://www.mozilla.org/) loaded into it.
 
