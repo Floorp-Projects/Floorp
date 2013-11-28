@@ -5,7 +5,7 @@
 'use strict';
 
 const { on, emit } = require("sdk/event/core");
-const { filter, map, merge, expand } = require("sdk/event/utils");
+const { filter, map, merge, expand, pipe } = require("sdk/event/utils");
 const $ = require("./event/helpers");
 
 function isEven(x) !(x % 2)
@@ -163,7 +163,96 @@ exports["test expand"] = function(assert) {
 
   assert.deepEqual(actual, ["a1", "b1", "a2", "c1", "c2", "b2", "a3"],
                    "all inputs data merged into one");
-}
+};
 
+exports["test pipe"] = function (assert, done) {
+  let src = {};
+  let dest = {};
+  
+  let aneventCount = 0, multiargsCount = 0;
+  let wildcardCount = {};
+
+  on(dest, 'an-event', arg => {
+    assert.equal(arg, 'my-arg', 'piped argument to event');
+    ++aneventCount;
+    check();
+  });
+  on(dest, 'multiargs', (...data) => {
+    assert.equal(data[0], 'a', 'multiple arguments passed via pipe');
+    assert.equal(data[1], 'b', 'multiple arguments passed via pipe');
+    assert.equal(data[2], 'c', 'multiple arguments passed via pipe');
+    ++multiargsCount;
+    check();
+  });
+  
+  on(dest, '*', (name, ...data) => {
+    wildcardCount[name] = (wildcardCount[name] || 0) + 1;
+    if (name === 'multiargs') {
+      assert.equal(data[0], 'a', 'multiple arguments passed via pipe, wildcard');
+      assert.equal(data[1], 'b', 'multiple arguments passed via pipe, wildcard');
+      assert.equal(data[2], 'c', 'multiple arguments passed via pipe, wildcard');
+    }
+    if (name === 'an-event')
+      assert.equal(data[0], 'my-arg', 'argument passed via pipe, wildcard');
+    check();
+  });
+
+  pipe(src, dest);
+
+  for (let i = 0; i < 3; i++)
+    emit(src, 'an-event', 'my-arg');
+  
+  emit(src, 'multiargs', 'a', 'b', 'c');
+
+  function check () {
+    if (aneventCount === 3 && multiargsCount === 1 &&
+        wildcardCount['an-event'] === 3 && 
+        wildcardCount['multiargs'] === 1)
+      done();
+  }
+};
+
+exports["test pipe multiple targets"] = function (assert) {
+  let src1 = {};
+  let src2 = {};
+  let middle = {};
+  let dest = {};
+
+  pipe(src1, middle);
+  pipe(src2, middle);
+  pipe(middle, dest);
+
+  let middleFired = 0;
+  let destFired = 0;
+  let src1Fired = 0;
+  let src2Fired = 0;
+
+  on(src1, '*', () => src1Fired++);
+  on(src2, '*', () => src2Fired++);
+  on(middle, '*', () => middleFired++);
+  on(dest, '*', () => destFired++);
+
+  emit(src1, 'ev');
+  assert.equal(src1Fired, 1, 'event triggers in source in pipe chain');
+  assert.equal(middleFired, 1, 'event passes through the middle of pipe chain');
+  assert.equal(destFired, 1, 'event propagates to end of pipe chain');
+  assert.equal(src2Fired, 0, 'event does not fire on alternative chain routes');
+  
+  emit(src2, 'ev');
+  assert.equal(src2Fired, 1, 'event triggers in source in pipe chain');
+  assert.equal(middleFired, 2,
+    'event passes through the middle of pipe chain from different src');
+  assert.equal(destFired, 2,
+    'event propagates to end of pipe chain from different src');
+  assert.equal(src1Fired, 1, 'event does not fire on alternative chain routes');
+  
+  emit(middle, 'ev');
+  assert.equal(middleFired, 3,
+    'event triggers in source of pipe chain');
+  assert.equal(destFired, 3,
+    'event propagates to end of pipe chain from middle src');
+  assert.equal(src1Fired, 1, 'event does not fire on alternative chain routes');
+  assert.equal(src2Fired, 1, 'event does not fire on alternative chain routes');
+};
 
 require('test').run(exports);

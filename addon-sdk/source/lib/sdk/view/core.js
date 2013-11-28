@@ -16,13 +16,12 @@ var method = require("method/core");
 // it returns `null`. You can implement this method for
 // this type to define what the result should be for it.
 let getNodeView = method("getNodeView");
-getNodeView.define(function(value) {
-  if (value instanceof Ci.nsIDOMNode)
-    return value;
-  return null;
-});
-
+getNodeView.define(x =>
+                     x instanceof Ci.nsIDOMNode ? x :
+                     x instanceof Ci.nsIDOMWindow ? x :
+                     null);
 exports.getNodeView = getNodeView;
+exports.viewFor = getNodeView;
 
 let getActiveView = method("getActiveView");
 exports.getActiveView = getActiveView;
