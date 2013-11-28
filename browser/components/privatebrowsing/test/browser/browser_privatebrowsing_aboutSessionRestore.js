@@ -18,6 +18,10 @@ function test() {
         win.gBrowser.selectedTab = newTab;
         let tabBrowser = win.gBrowser.getBrowserForTab(newTab);
         tabBrowser.addEventListener("load", function tabLoadListener() {
+          if (win.gBrowser.contentWindow.location != "about:sessionrestore") {
+            win.gBrowser.selectedBrowser.loadURI("about:sessionrestore");
+            return;
+          }
           tabBrowser.removeEventListener("load", tabLoadListener, true);
           executeSoon(function() {
             info("about:sessionrestore got loaded");
