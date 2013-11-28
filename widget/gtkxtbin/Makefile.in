@@ -10,6 +10,3 @@ ifdef MOZ_ENABLE_GTK2
 CFLAGS		+= $(MOZ_GTK2_CFLAGS)
 endif
 
-INCLUDES	+= \
-		-I$(srcdir) \
-		$(NULL)
