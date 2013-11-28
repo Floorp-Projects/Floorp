@@ -3712,6 +3712,19 @@ CodeGenerator::visitArrayLength(LArrayLength *lir)
 }
 
 bool
+CodeGenerator::visitSetArrayLength(LSetArrayLength *lir)
+{
+    Address length(ToRegister(lir->elements()), ObjectElements::offsetOfLength());
+    Int32Key newLength = ToInt32Key(lir->index());
+
+    masm.bumpKey(&newLength, 1);
+    masm.storeKey(newLength, length);
+    // Restore register value if it is used/captured after.
+    masm.bumpKey(&newLength, -1);
+    return true;
+}
+
+bool
 CodeGenerator::visitTypedArrayLength(LTypedArrayLength *lir)
 {
     Register obj = ToRegister(lir->object());
