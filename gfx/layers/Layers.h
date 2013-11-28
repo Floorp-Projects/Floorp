@@ -544,18 +544,17 @@ public:
   /**
    * Returns a handle which represents current recording start position.
    */
-  uint32_t StartFrameTimeRecording();
+  virtual uint32_t StartFrameTimeRecording(int32_t aBufferSize);
 
   /**
-   *  Clears, then populates 2 arraye with the recorded frames timing data.
-   *  The arrays will be empty if data was overwritten since aStartIndex was obtained.
+   *  Clears, then populates aFrameIntervals with the recorded frame timing
+   *  data. The array will be empty if data was overwritten since
+   *  aStartIndex was obtained.
    */
-  void StopFrameTimeRecording(uint32_t         aStartIndex,
-                              nsTArray<float>& aFrameIntervals,
-                              nsTArray<float>& aPaintTimes);
+  virtual void StopFrameTimeRecording(uint32_t         aStartIndex,
+                                      nsTArray<float>& aFrameIntervals);
 
-  void SetPaintStartTime(TimeStamp& aTime);
-
+  void RecordFrame();
   void PostPresent();
 
   void BeginTabSwitch();
@@ -600,9 +599,7 @@ private:
     bool mIsPaused;
     uint32_t mNextIndex;
     TimeStamp mLastFrameTime;
-    TimeStamp mPaintStartTime;
     nsTArray<float> mIntervals;
-    nsTArray<float> mPaints;
     uint32_t mLatestStartIndex;
     uint32_t mCurrentRunStartIndex;
   };

@@ -53,6 +53,13 @@ bool AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest,
 void AppendUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest );
 void AppendUTF8toUTF16( const char* aSource, nsAString& aDest );
 
+#ifdef MOZ_USE_CHAR16_WRAPPER
+inline void AppendUTF16toUTF8( char16ptr_t aSource, nsACString& aDest )
+  {
+    return AppendUTF16toUTF8(static_cast<const char16_t*>(aSource), aDest);
+  }
+#endif
+
   /**
    * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
    *

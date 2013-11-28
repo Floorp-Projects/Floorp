@@ -6,10 +6,6 @@
 
 VPATH		= @srcdir@ @srcdir@/tests
 
-# Building against js_static requires that we declare mfbt sybols "exported"
-# on its behalf.
-DEFINES += -DEXPORT_JS_API -DIMPL_MFBT
-
 LIBS = $(DEPTH)/$(LIB_PREFIX)js_static.$(LIB_SUFFIX) $(NSPR_LIBS) $(MOZ_ZLIB_LIBS)
 
 LOCAL_INCLUDES += -I$(topsrcdir) -I..

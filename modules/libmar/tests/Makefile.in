@@ -4,8 +4,6 @@
 
 TESTROOT = $(abspath $(DEPTH))/_tests/xpcshell/$(relativesrcdir)
 
-DEFINES += -DBIN_SUFFIX=$(BIN_SUFFIX)
-
 include $(topsrcdir)/config/rules.mk
 
 libs:: unit/head_libmar.js.in

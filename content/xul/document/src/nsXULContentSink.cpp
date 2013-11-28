@@ -58,7 +58,7 @@
 #include "nsContentTypeParser.h"
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo* gLog;
+static PRLogModuleInfo* gContentSinkLog;
 #endif
 
 //----------------------------------------------------------------------
@@ -169,8 +169,8 @@ XULContentSinkImpl::XULContentSinkImpl()
 {
 
 #ifdef PR_LOGGING
-    if (! gLog)
-        gLog = PR_NewLogModule("nsXULContentSink");
+    if (! gContentSinkLog)
+        gContentSinkLog = PR_NewLogModule("nsXULContentSink");
 #endif
 }
 
@@ -496,7 +496,7 @@ XULContentSinkImpl::HandleStartElement(const PRUnichar *aName,
 
   case eInEpilog:
   case eInScript:
-      PR_LOG(gLog, PR_LOG_WARNING,
+      PR_LOG(gContentSinkLog, PR_LOG_WARNING,
              ("xul: warning: unexpected tags in epilog at line %d",
              aLineNumber));
       rv = NS_ERROR_UNEXPECTED; // XXX
@@ -759,7 +759,7 @@ XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes,
 
     if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) || 
         aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XUL)) {
-        PR_LOG(gLog, PR_LOG_ERROR,
+        PR_LOG(gContentSinkLog, PR_LOG_ERROR,
                ("xul: script tag not allowed as root content element"));
 
         return NS_ERROR_UNEXPECTED;
@@ -771,10 +771,10 @@ XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes,
 
     if (NS_FAILED(rv)) {
 #ifdef PR_LOGGING
-        if (PR_LOG_TEST(gLog, PR_LOG_ERROR)) {
+        if (PR_LOG_TEST(gContentSinkLog, PR_LOG_ERROR)) {
             nsAutoString anodeC;
             aNodeInfo->GetName(anodeC);
-            PR_LOG(gLog, PR_LOG_ERROR,
+            PR_LOG(gContentSinkLog, PR_LOG_ERROR,
                    ("xul: unable to create element '%s' at line %d",
                     NS_ConvertUTF16toUTF8(anodeC).get(),
                     -1)); // XXX pass in line number
@@ -814,10 +814,10 @@ XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes,
 
     if (NS_FAILED(rv)) {
 #ifdef PR_LOGGING
-        if (PR_LOG_TEST(gLog, PR_LOG_ERROR)) {
+        if (PR_LOG_TEST(gContentSinkLog, PR_LOG_ERROR)) {
             nsAutoString anodeC;
             aNodeInfo->GetName(anodeC);
-            PR_LOG(gLog, PR_LOG_ERROR,
+            PR_LOG(gContentSinkLog, PR_LOG_ERROR,
                    ("xul: unable to create element '%s' at line %d",
                     NS_ConvertUTF16toUTF8(anodeC).get(),
                     aLineNumber));
@@ -1034,7 +1034,7 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
       NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef PR_LOGGING
-      if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
+      if (PR_LOG_TEST(gContentSinkLog, PR_LOG_DEBUG)) {
           nsAutoString extraWhiteSpace;
           int32_t cnt = mContextStack.Depth();
           while (--cnt >= 0)
@@ -1042,7 +1042,7 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
           nsAutoString qnameC,valueC;
           qnameC.Assign(aAttributes[0]);
           valueC.Assign(aAttributes[1]);
-          PR_LOG(gLog, PR_LOG_DEBUG,
+          PR_LOG(gContentSinkLog, PR_LOG_DEBUG,
                  ("xul: %.5d. %s    %s=%s",
                   -1, // XXX pass in line number
                   NS_ConvertUTF16toUTF8(extraWhiteSpace).get(),

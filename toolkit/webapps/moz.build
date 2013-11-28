@@ -9,3 +9,5 @@ EXTRA_PP_JS_MODULES += [
     'WebappsInstaller.jsm',
 ]
 
+if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
+    DEFINES['MOZ_FENNEC'] = True

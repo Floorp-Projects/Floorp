@@ -4,8 +4,6 @@
 
 DEFFILE = $(win_srcdir)/AccessibleMarshal.def
 
-DEFINES += -DREGISTER_PROXY_DLL
-
 GARBAGE += $(MIDL_GENERATED_FILES) done_gen dlldata.c
 
 MIDL_GENERATED_FILES = \

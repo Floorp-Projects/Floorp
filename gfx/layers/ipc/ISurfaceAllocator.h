@@ -11,7 +11,7 @@
 #include "gfxTypes.h"
 #include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
-#include "mozilla/WeakPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsIMemoryReporter.h"          // for MemoryUniReporter
 #include "mozilla/Atomics.h"            // for Atomic
 
@@ -73,10 +73,10 @@ bool ReleaseOwnedSurfaceDescriptor(const SurfaceDescriptor& aDescriptor);
  * These methods should be only called in the ipdl implementor's thread, unless
  * specified otherwise in the implementing class.
  */
-class ISurfaceAllocator : public SupportsWeakPtr<ISurfaceAllocator>
+class ISurfaceAllocator : public AtomicRefCounted<ISurfaceAllocator>
 {
 public:
-ISurfaceAllocator() {}
+  ISurfaceAllocator() {}
 
   /**
    * Allocate shared memory that can be accessed by only one process at a time.
@@ -124,6 +124,8 @@ ISurfaceAllocator() {}
     return nullptr;
   }
 
+  virtual bool IPCOpen() const { return true; }
+
   // Returns true if aSurface wraps a Shmem.
   static bool IsShmem(SurfaceDescriptor* aSurface);
 
@@ -138,7 +140,10 @@ protected:
                                               SurfaceDescriptor* aBuffer);
 
 
-  ~ISurfaceAllocator() {}
+  virtual ~ISurfaceAllocator() {}
+
+  friend class detail::RefCounted<ISurfaceAllocator, detail::AtomicRefCount>;
+  //friend class detail::RefCounted<ISurfaceAllocator, detail::AtomicRefCount>;
 };
 
 class GfxMemoryImageReporter MOZ_FINAL : public mozilla::MemoryUniReporter

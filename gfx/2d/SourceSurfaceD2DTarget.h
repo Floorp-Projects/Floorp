@@ -28,8 +28,12 @@ public:
   virtual SurfaceFormat GetFormat() const;
   virtual TemporaryRef<DataSourceSurface> GetDataSurface();
 
+  DrawTargetD2D* GetDT() { return mDrawTarget; }
+  ID2D1Bitmap *GetBitmap(ID2D1RenderTarget *aRT);
+
 private:
   friend class DrawTargetD2D;
+
   ID3D10ShaderResourceView *GetSRView();
 
   // This function is called by the draw target this texture belongs to when
@@ -40,8 +44,6 @@ private:
   // This will mark the surface as no longer depending on its drawtarget,
   // this may happen on destruction or copying.
   void MarkIndependent();
-
-  ID2D1Bitmap *GetBitmap(ID2D1RenderTarget *aRT);
 
   RefPtr<ID3D10ShaderResourceView> mSRView;
   RefPtr<ID2D1Bitmap> mBitmap;

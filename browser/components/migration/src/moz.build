@@ -18,6 +18,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     EXTRA_COMPONENTS += [
         'IEProfileMigrator.js',
     ]
+    DEFINES['HAS_IE_MIGRATOR'] = True
 
 EXTRA_PP_COMPONENTS += [
     'BrowserProfileMigrators.manifest',
@@ -28,11 +29,13 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     EXTRA_PP_COMPONENTS += [
         'SafariProfileMigrator.js',
     ]
+    DEFINES['HAS_SAFARI_MIGRATOR'] = True
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXTRA_PP_COMPONENTS += [
         'SafariProfileMigrator.js',
     ]
+    DEFINES['HAS_SAFARI_MIGRATOR'] = True
 
 EXTRA_PP_JS_MODULES += [
     'MigrationUtils.jsm',

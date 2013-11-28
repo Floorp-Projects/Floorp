@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "Types.h"
 #include "BasePoint.h"
+#include "BasePoint3D.h"
 #include "BaseSize.h"
 
 #include <cmath>
@@ -69,6 +70,27 @@ IntPointTyped<units> RoundedToInt(const PointTyped<units>& aPoint) {
   return IntPointTyped<units>(int32_t(floorf(aPoint.x + 0.5f)),
                               int32_t(floorf(aPoint.y + 0.5f)));
 }
+
+template<class units>
+struct Point3DTyped :
+  public BasePoint3D< Float, Point3DTyped<units> > {
+  typedef BasePoint3D< Float, Point3DTyped<units> > Super;
+
+  Point3DTyped() : Super() {}
+  Point3DTyped(Float aX, Float aY, Float aZ) : Super(aX, aY, aZ) {}
+
+  // XXX When all of the code is ported, the following functions to convert to and from
+  // unknown types should be removed.
+
+  static Point3DTyped<units> FromUnknownPoint(const Point3DTyped<UnknownUnits>& aPoint) {
+    return Point3DTyped<units>(aPoint.x, aPoint.y, aPoint.z);
+  }
+
+  Point3DTyped<UnknownUnits> ToUnknownPoint() const {
+    return Point3DTyped<UnknownUnits>(this->x, this->y, this->z);
+  }
+};
+typedef Point3DTyped<UnknownUnits> Point3D;
 
 template<class units>
 struct IntSizeTyped :

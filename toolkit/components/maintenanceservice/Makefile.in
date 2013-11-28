@@ -2,9 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# For debugging purposes only
-#DEFINES += -DDISABLE_UPDATER_AUTHENTICODE_CHECK
-
 DIST_PROGRAM = maintenanceservice$(BIN_SUFFIX)
 
 # Don't link the maintenanceservice against mozglue.dll. See bug 687139 and
@@ -23,7 +20,6 @@ USE_STATIC_LIBS = 1
 RCINCLUDE = maintenanceservice.rc
 
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
-DEFINES += -DUNICODE -D_UNICODE
 ifndef GNU_CC
 RCFLAGS += -I$(srcdir)
 else
@@ -39,8 +35,6 @@ endif
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-DEFINES += -DNS_NO_XPCOM
 
 ifdef _MSC_VER
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup

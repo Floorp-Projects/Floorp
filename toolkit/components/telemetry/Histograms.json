@@ -2677,24 +2677,12 @@
     "n_buckets": 50,
     "description": "Average frame interval during tab open animation of about:newtab (preview=on), when other tabs are unaffected"
   },
-  "FX_TAB_ANIM_OPEN_PREVIEW_FRAME_PAINT_MS": {
-    "kind": "exponential",
-    "high": "500",
-    "n_buckets": 30,
-    "description": "Average paint duration during tab open animation of about:newtab (preview=on), when other tabs are unaffected"
-  },
   "FX_TAB_ANIM_OPEN_FRAME_INTERVAL_MS": {
     "kind": "exponential",
     "low" : 7,
     "high": "500",
     "n_buckets": 50,
     "description": "Average frame interval during tab open animation of about:newtab (preview=off), when other tabs are unaffected"
-  },
-  "FX_TAB_ANIM_OPEN_FRAME_PAINT_MS": {
-    "kind": "exponential",
-    "high": "500",
-    "n_buckets": 30,
-    "description": "Average paint duration during tab open animation of about:newtab (preview=off), when other tabs are unaffected"
   },
   "FX_TAB_ANIM_ANY_FRAME_INTERVAL_MS": {
     "kind": "exponential",

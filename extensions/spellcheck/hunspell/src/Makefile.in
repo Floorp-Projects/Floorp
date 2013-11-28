@@ -2,12 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifndef MOZ_NATIVE_HUNSPELL
-# This variable is referenced in configure.in.  Make sure to change that file
-# too if you need to change this variable.
-DEFINES = -DHUNSPELL_STATIC
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES        += -I$(topsrcdir)/extensions/spellcheck/src

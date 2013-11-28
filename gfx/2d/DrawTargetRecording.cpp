@@ -9,6 +9,7 @@
 
 #include "Logging.h"
 #include "Tools.h"
+#include "Filters.h"
 
 namespace mozilla {
 namespace gfx {
@@ -72,6 +73,83 @@ GetGradientStops(GradientStops *aStops)
   }
 
   return static_cast<GradientStopsRecording*>(aStops)->mFinalGradientStops;
+}
+
+class FilterNodeRecording : public FilterNode
+{
+public:
+  using FilterNode::SetAttribute;
+
+  FilterNodeRecording(FilterNode *aFinalFilterNode, DrawEventRecorderPrivate *aRecorder)
+    : mFinalFilterNode(aFinalFilterNode), mRecorder(aRecorder)
+  {
+  }
+
+  ~FilterNodeRecording()
+  {
+    mRecorder->RecordEvent(RecordedFilterNodeDestruction(this));
+  }
+
+  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface)
+  {
+    mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aSurface));
+    mFinalFilterNode->SetInput(aIndex, GetSourceSurface(aSurface));
+  }
+  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter)
+  {
+    FilterNode *finalNode = aFilter;
+    if (aFilter->GetBackendType() != FILTER_BACKEND_RECORDING) {
+      gfxWarning() << "Non recording filter node used with recording DrawTarget!";
+    } else {
+      finalNode = static_cast<FilterNodeRecording*>(aFilter)->mFinalFilterNode;
+    }
+
+    mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aFilter));
+    mFinalFilterNode->SetInput(aIndex, finalNode);
+  }
+
+
+#define FORWARD_SET_ATTRIBUTE(type, argtype) \
+  virtual void SetAttribute(uint32_t aIndex, type aValue) { \
+    mRecorder->RecordEvent(RecordedFilterNodeSetAttribute(this, aIndex, aValue, RecordedFilterNodeSetAttribute::ARGTYPE_##argtype)); \
+    mFinalFilterNode->SetAttribute(aIndex, aValue); \
+  }
+
+  FORWARD_SET_ATTRIBUTE(bool, BOOL);
+  FORWARD_SET_ATTRIBUTE(uint32_t, UINT32);
+  FORWARD_SET_ATTRIBUTE(Float, FLOAT);
+  FORWARD_SET_ATTRIBUTE(const Size&, SIZE);
+  FORWARD_SET_ATTRIBUTE(const IntSize&, INTSIZE);
+  FORWARD_SET_ATTRIBUTE(const IntPoint&, INTPOINT);
+  FORWARD_SET_ATTRIBUTE(const Rect&, RECT);
+  FORWARD_SET_ATTRIBUTE(const IntRect&, INTRECT);
+  FORWARD_SET_ATTRIBUTE(const Point&, POINT);
+  FORWARD_SET_ATTRIBUTE(const Matrix5x4&, MATRIX5X4);
+  FORWARD_SET_ATTRIBUTE(const Point3D&, POINT3D);
+  FORWARD_SET_ATTRIBUTE(const Color&, COLOR);
+
+#undef FORWARD_SET_ATTRIBUTE
+
+  virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) {
+    mRecorder->RecordEvent(RecordedFilterNodeSetAttribute(this, aIndex, aFloat, aSize));
+    mFinalFilterNode->SetAttribute(aIndex, aFloat, aSize);
+  }
+
+  virtual FilterBackend GetBackendType() MOZ_OVERRIDE { return FILTER_BACKEND_RECORDING; }
+
+  RefPtr<FilterNode> mFinalFilterNode;
+  RefPtr<DrawEventRecorderPrivate> mRecorder;
+};
+
+static FilterNode*
+GetFilterNode(FilterNode* aNode)
+{
+  if (aNode->GetBackendType() != FILTER_BACKEND_RECORDING) {
+    gfxWarning() << "Non recording filter node used with recording DrawTarget!";
+    return aNode;
+  }
+
+  return static_cast<FilterNodeRecording*>(aNode)->mFinalFilterNode;
 }
 
 struct AdjustedPattern
@@ -139,11 +217,13 @@ struct AdjustedPattern
   Pattern *mPattern;
 };
 
-DrawTargetRecording::DrawTargetRecording(DrawEventRecorder *aRecorder, DrawTarget *aDT)
+DrawTargetRecording::DrawTargetRecording(DrawEventRecorder *aRecorder, DrawTarget *aDT, bool aHasData)
   : mRecorder(static_cast<DrawEventRecorderPrivate*>(aRecorder))
   , mFinalDT(aDT)
 {
-  mRecorder->RecordEvent(RecordedDrawTargetCreation(this, mFinalDT->GetType(), mFinalDT->GetSize(), mFinalDT->GetFormat()));
+  RefPtr<SourceSurface> snapshot = aHasData ? mFinalDT->Snapshot() : nullptr;
+  mRecorder->RecordEvent(RecordedDrawTargetCreation(this, mFinalDT->GetType(), mFinalDT->GetSize(), mFinalDT->GetFormat(),
+                                                    aHasData, snapshot));
   mFormat = mFinalDT->GetFormat();
 }
 
@@ -312,6 +392,28 @@ DrawTargetRecording::DrawSurfaceWithShadow(SourceSurface *aSurface,
 {
   mRecorder->RecordEvent(RecordedDrawSurfaceWithShadow(this, aSurface, aDest, aColor, aOffset, aSigma, aOp));
   mFinalDT->DrawSurfaceWithShadow(GetSourceSurface(aSurface), aDest, aColor, aOffset, aSigma, aOp);
+}
+
+void
+DrawTargetRecording::DrawFilter(FilterNode *aNode,
+                                const Rect &aSourceRect,
+                                const Point &aDestPoint,
+                                const DrawOptions &aOptions)
+{
+  mRecorder->RecordEvent(RecordedDrawFilter(this, aNode, aSourceRect, aDestPoint, aOptions));
+  mFinalDT->DrawFilter(GetFilterNode(aNode), aSourceRect, aDestPoint, aOptions);
+}
+
+TemporaryRef<FilterNode>
+DrawTargetRecording::CreateFilter(FilterType aType)
+{
+  RefPtr<FilterNode> node = mFinalDT->CreateFilter(aType);
+
+  RefPtr<FilterNode> retNode = new FilterNodeRecording(node, mRecorder);
+
+  mRecorder->RecordEvent(RecordedFilterNodeCreation(retNode, aType));
+
+  return retNode;
 }
 
 void

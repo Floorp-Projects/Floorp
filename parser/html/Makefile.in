@@ -7,5 +7,3 @@ include $(topsrcdir)/config/rules.mk
 INCLUDES	+= \
 		-I$(srcdir)/../../content/base/src \
 		$(NULL)
-
-#DEFINES		+= -DENABLE_VOID_MENUITEM

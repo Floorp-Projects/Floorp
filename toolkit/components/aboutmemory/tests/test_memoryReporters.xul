@@ -175,9 +175,6 @@
   while (e.hasMoreElements()) {
     let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
     r.collectReports(handleReport, null);
-
-    // Access |name| to make sure it doesn't crash or assert.
-    dummy = r.name;
   }
 
   function checkSpecialReport(aName, aAmounts, aCanBeUnreasonable)

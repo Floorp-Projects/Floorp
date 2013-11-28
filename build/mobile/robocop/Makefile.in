@@ -75,10 +75,6 @@ JAVAFILES += \
   $(testconstants-dep) \
   $(NULL)
 
-DEFINES += \
-  -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 tools:: $(ANDROID_APK_NAME).apk

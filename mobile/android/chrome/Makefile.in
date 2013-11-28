@@ -1,9 +1,0 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-DEFINES += -DAB_CD=$(MOZ_UI_LOCALE) \
-           -DPACKAGE=browser \
-           -DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
-           -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
-           $(NULL)

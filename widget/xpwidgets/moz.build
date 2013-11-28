@@ -75,3 +75,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gonk', 'android', 'qt', 'gtk2'
     FINAL_LIBRARY = 'widget_%s' % CONFIG['MOZ_WIDGET_TOOLKIT']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     FINAL_LIBRARY = 'wdgtos2'
+
+if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
+    DEFINES['MOZ_ENABLE_D3D10_LAYER'] = True

@@ -2,12 +2,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-DEFINES += \
-  -DHAVE_STRDUP -DNR_SOCKET_IS_VOID_PTR -DSCTP_DEBUG -DINET
-
-ifneq ($(OS_TARGET),Android)
-DEFINES += -DINET6
-endif
 
 LIBS = \
   $(XPCOM_LIBS) \
@@ -48,35 +42,10 @@ LOCAL_INCLUDES += \
  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/event \
  $(NULL)
 
-# SCTP DEFINES
-ifeq ($(OS_TARGET),WINNT)
-DEFINES += -D__Userspace_os_Windows=1
-else
-ifeq ($(OS_TARGET),Darwin)
-DEFINES += -D__Userspace_os_Darwin=1
-else
-ifeq ($(OS_TARGET),Linux)
-DEFINES += -D__Userspace_os_Linux=1
-else
-ifeq ($(OS_TARGET),FreeBSD)
-DEFINES += -D__Userspace_os_FreeBSD=1
-else
-#default_fallback; probably doesn't work
-DEFINES += -D__Userspace_os_$(OS_TARGET)=1
-endif
-endif
-endif
-endif
-
 ifneq (,$(filter Darwin DragonFly FreeBSD NetBSD OpenBSD,$(OS_TARGET)))
 LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/darwin/include
 ifneq (,$(filter DragonFly FreeBSD NetBSD OpenBSD,$(OS_TARGET)))
 LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/generic/include
-endif
-ifeq ($(OS_TARGET), Darwin)
-DEFINES += \
-  -DGTEST_USE_OWN_TR1_TUPLE=1 \
-  $(NULL)
 endif
 endif
 
@@ -93,8 +62,5 @@ LIBS += \
   $(NULL)
 CPPFLAGS += \
   $(STLPORT_CPPFLAGS) \
-  $(NULL)
-DEFINES += \
-  -DGTEST_USE_OWN_TR1_TUPLE=1 \
   $(NULL)
 endif

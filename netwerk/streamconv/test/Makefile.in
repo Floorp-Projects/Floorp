@@ -17,10 +17,4 @@ LDFLAGS		+= -mconsole
 else
 LDFLAGS		+= -SUBSYSTEM:CONSOLE
 endif
-ifdef MOZ_NO_DEBUG_RTL
-DEFINES		+= -MOZ_NO_DEBUG_RTL
-endif
-ifdef NGPREFS
-DEFINES		+= -DNGPREFS
-endif
 endif # WINNT

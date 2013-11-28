@@ -53,3 +53,12 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     NO_VISIBILITY_FLAGS = True
 
 FINAL_LIBRARY = 'gkmedias'
+
+DEFINES['PACKAGE_VERSION'] = '"moz"'
+DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
+DEFINES['NOMINMAX'] = True
+DEFINES['MOZ_OTS_REPORT_ERRORS'] = True
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFINES['OTS_DLL'] = True
+    DEFINES['OTS_DLL_EXPORTS'] = True

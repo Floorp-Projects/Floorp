@@ -33,9 +33,6 @@ LIBS += \
 CPPFLAGS += \
   $(STLPORT_CPPFLAGS) \
   $(NULL)
-DEFINES += \
-  -DGTEST_USE_OWN_TR1_TUPLE=1 \
-   $(NULL)
 endif
 
 ifdef MOZ_NATIVE_JPEG
@@ -105,19 +102,6 @@ endif
 ifeq ($(OS_TARGET),WINNT)
 LIBS += \
   $(DEPTH)/staticlib/components/$(LIB_PREFIX)windowsproxy.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-
-DEFINES += \
-  -DUSE_FAKE_MEDIA_STREAMS \
-  -DUSE_FAKE_PCOBSERVER \
-  -DNR_SOCKET_IS_VOID_PTR \
-  -DHAVE_STRDUP \
-  $(NULL)
-
-ifeq ($(OS_TARGET),Darwin)
-DEFINES += \
-  -DGTEST_USE_OWN_TR1_TUPLE=1 \
   $(NULL)
 endif
 

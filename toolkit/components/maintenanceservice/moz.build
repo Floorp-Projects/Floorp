@@ -14,3 +14,10 @@ SOURCES += [
     'serviceinstall.cpp',
     'workmonitor.cpp',
 ]
+
+# For debugging purposes only
+#DEFINES['DISABLE_UPDATER_AUTHENTICODE_CHECK'] = True
+
+DEFINES['UNICODE'] = True
+DEFINES['_UNICODE'] = True
+DEFINES['NS_NO_XPCOM'] = True

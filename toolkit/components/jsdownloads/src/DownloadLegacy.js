@@ -200,7 +200,8 @@ DownloadLegacyTransfer.prototype = {
       contentType = aMIMEInfo.type;
 
       let appHandler = aMIMEInfo.preferredApplicationHandler;
-      if (appHandler instanceof Ci.nsILocalHandlerApp) {
+      if (aMIMEInfo.preferredAction == Ci.nsIMIMEInfo.useHelperApp &&
+          appHandler instanceof Ci.nsILocalHandlerApp) {
         launcherPath = appHandler.executable.path;
       }
     }

@@ -2,7 +2,7 @@
 
 <filter id="f1" filterUnits="objectBoundingBox" primitiveUnits="objectBoundingBox" 
          x="0" y="0" width="1" height="1">
-  <feGaussianBlur x="10%" y="10%" width="80%" height="80%" in="SourceGraphic" stdDeviation="0.1"/>
+  <feGaussianBlur x="10%" y="10%" width="80%" height="80%" in="SourceGraphic" stdDeviation="0.04"/>
 </filter>
 <g filter="url(#f1)">
   <rect x="0" y="0" width="100" height="100" fill="#00ff00"/>
@@ -10,7 +10,7 @@
 
 <filter id="f2" filterUnits="objectBoundingBox" primitiveUnits="objectBoundingBox" 
          x="0" y="0" width="1" height="1">
-  <feGaussianBlur x="10%" y="10%" width="80%" height="80%" in="SourceAlpha" stdDeviation="0.1"
+  <feGaussianBlur x="10%" y="10%" width="80%" height="80%" in="SourceAlpha" stdDeviation="0.04"
    result="blur" style="color-interpolation-filters:sRGB"/>
   <feFlood flood-color="#00ff00" result="flood"/>
   <feComposite in="flood" operator="in" in2="blur"/>

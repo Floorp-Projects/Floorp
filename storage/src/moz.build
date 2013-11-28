@@ -40,3 +40,22 @@ SOURCES += [
 ]
 
 FINAL_LIBRARY = 'storagecomps'
+
+# Don't use the jemalloc allocator on Android, because we can't guarantee
+# that Gecko will configure sqlite before it is first used (bug 730495).
+#
+# Don't use the jemalloc allocator when using system sqlite. Linked in libraries
+# (such as NSS) might trigger an initialization of sqlite and allocation
+# of memory using the default allocator, prior to the storage service
+# registering its allocator, causing memory management failures (bug 938730).
+#
+# Note: On Windows our sqlite build assumes we use jemalloc.  If you disable
+# MOZ_STORAGE_MEMORY on Windows, you will also need to change the "ifdef
+# MOZ_MEMORY" options in db/sqlite3/src/Makefile.in.
+if CONFIG['MOZ_MEMORY'] and not CONFIG['MOZ_NATIVE_SQLITE']:
+    if CONFIG['OS_TARGET'] != 'Android':
+        DEFINES['MOZ_STORAGE_MEMORY'] = True
+
+# This is the default value.  If we ever change it when compiling sqlite, we
+# will need to change it here as well.
+DEFINES['SQLITE_MAX_LIKE_PATTERN_LENGTH'] = 50000

@@ -24,8 +24,6 @@ endif
  
 MOZ_GLUE_LDFLAGS = # Don't link against ourselves
 
-DEFINES += -DIMPL_MFBT
-
 ifeq (WINNT,$(OS_TARGET))
 DEFFILE = mozglue.def
 

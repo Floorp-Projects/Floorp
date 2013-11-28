@@ -19,8 +19,6 @@ VPATH += \
   $(topsrcdir)/toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation \
   $(NULL)
 
-DEFINES += -DUNICODE -DUNICODE_ -DBREAKPAD_NO_TERMINATE_THREAD -DNOMINMAX
-
 CPPSRCS += \
   $(objs_common) \
   $(objs_crash_generation) \

@@ -80,6 +80,12 @@ CommonAnimationManager::HasStateDependentStyle(StateRuleProcessorData* aData)
   return nsRestyleHint(0);
 }
 
+nsRestyleHint
+CommonAnimationManager::HasStateDependentStyle(PseudoElementStateRuleProcessorData* aData)
+{
+  return nsRestyleHint(0);
+}
+
 bool
 CommonAnimationManager::HasDocumentStateDependentStyle(StateRuleProcessorData* aData)
 {

@@ -47,6 +47,9 @@
     * typedef from wchar_t.
     */
 #  define MOZ_CHAR16_IS_NOT_WCHAR
+#  ifdef WIN32
+#    define MOZ_USE_CHAR16_WRAPPER
+#  endif
 #elif !defined(__cplusplus)
 #  if defined(WIN32)
 #    include <yvals.h>
@@ -61,6 +64,108 @@
 #  endif
 #else
 #  error "Char16.h requires C++11 (or something like it) for UTF-16 support."
+#endif
+
+#ifdef MOZ_USE_CHAR16_WRAPPER
+# include <string>
+  /**
+   * Win32 API extensively uses wchar_t, which is represented by a separated
+   * builtin type than char16_t per spec. It's not the case for MSVC, but GCC
+   * follows the spec. We want to mix wchar_t and char16_t on Windows builds.
+   * This class is supposed to make it easier. It stores char16_t const pointer,
+   * but provides implicit casts for wchar_t as well. On other platforms, we
+   * simply use |typedef const char16_t* char16ptr_t|. Here, we want to make
+   * the class as similar to this typedef, including providing some casts that
+   * are allowed by the typedef.
+   */
+class char16ptr_t
+{
+  private:
+    const char16_t* ptr;
+    static_assert(sizeof(char16_t) == sizeof(wchar_t), "char16_t and wchar_t sizes differ");
+
+  public:
+    char16ptr_t(const char16_t* ptr) : ptr(ptr) {}
+    char16ptr_t(const wchar_t* ptr) : ptr(reinterpret_cast<const char16_t*>(ptr)) {}
+
+    /* Without this, nullptr assignment would be ambiguous. */
+    constexpr char16ptr_t(decltype(nullptr)) : ptr(nullptr) {}
+
+    operator const char16_t*() const {
+      return ptr;
+    }
+    operator const wchar_t*() const {
+      return reinterpret_cast<const wchar_t*>(ptr);
+    }
+    operator const void*() const {
+      return ptr;
+    }
+    operator bool() const {
+      return ptr != nullptr;
+    }
+    operator std::wstring() const {
+      return std::wstring(static_cast<const wchar_t*>(*this));
+    }
+
+    /* Explicit cast operators to allow things like (char16_t*)str. */
+    explicit operator char16_t*() const {
+      return const_cast<char16_t*>(ptr);
+    }
+    explicit operator wchar_t*() const {
+      return const_cast<wchar_t*>(static_cast<const wchar_t*>(*this));
+    }
+
+    /**
+     * Some Windows API calls accept BYTE* but require that data actually be WCHAR*.
+     * Supporting this requires explicit operators to support the requisite explicit
+     * casts.
+     */
+    explicit operator const char*() const {
+      return reinterpret_cast<const char*>(ptr);
+    }
+    explicit operator const unsigned char*() const {
+      return reinterpret_cast<const unsigned char*>(ptr);
+    }
+    explicit operator unsigned char*() const {
+      return const_cast<unsigned char*>(reinterpret_cast<const unsigned char*>(ptr));
+    }
+    explicit operator void*() const {
+      return const_cast<char16_t*>(ptr);
+    }
+
+    /* Some operators used on pointers. */
+    char16_t operator[](size_t i) const {
+      return ptr[i];
+    }
+    bool operator==(const char16ptr_t &x) const {
+      return ptr == x.ptr;
+    }
+    bool operator==(decltype(nullptr)) const {
+      return ptr == nullptr;
+    }
+    bool operator!=(const char16ptr_t &x) const {
+      return ptr != x.ptr;
+    }
+    bool operator!=(decltype(nullptr)) const {
+      return ptr != nullptr;
+    }
+    char16ptr_t operator+(size_t add) const {
+      return char16ptr_t(ptr + add);
+    }
+    ptrdiff_t operator-(const char16ptr_t &other) const {
+      return ptr - other.ptr;
+    }
+};
+
+inline decltype((char*)0-(char*)0)
+operator-(const char16_t* x, const char16ptr_t y) {
+  return x - static_cast<const char16_t*>(y);
+}
+
+#else
+
+typedef const char16_t* char16ptr_t;
+
 #endif
 
 /* This is a temporary hack until bug 927728 is fixed. */

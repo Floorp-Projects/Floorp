@@ -969,7 +969,7 @@ VectorBase<T, N, AP, TV>::erase(T* it)
     *it = *(it + 1);
     ++it;
   }
-  popBack();
+    popBack();
 }
 
 template<typename T, size_t N, class AP, class TV>

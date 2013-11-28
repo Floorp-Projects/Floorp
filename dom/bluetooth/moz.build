@@ -45,6 +45,7 @@ if CONFIG['MOZ_B2G_BT']:
                 'bluez/gonk',
                 'bluez/linux',
             ]
+            DEFINES['MOZ_B2G_BT_BLUEZ'] = True
         elif CONFIG['MOZ_B2G_BT_BLUEDROID']:
             SOURCES += [
                 'bluedroid/BluetoothA2dpManager.cpp',
@@ -55,6 +56,7 @@ if CONFIG['MOZ_B2G_BT']:
                 'bluedroid',
                 'bluedroid/gonk',
             ]
+            DEFINES['MOZ_B2G_BT_BLUEDROID'] = True
     elif CONFIG['MOZ_ENABLE_DBUS']:
         SOURCES += [
             'bluez/BluetoothHfpManager.cpp',
@@ -64,6 +66,7 @@ if CONFIG['MOZ_B2G_BT']:
             'bluez',
             'bluez/linux',
         ]
+        DEFINES['MOZ_BLUETOOTH_DBUS'] = True
 
     FINAL_LIBRARY = 'gklayout'
 

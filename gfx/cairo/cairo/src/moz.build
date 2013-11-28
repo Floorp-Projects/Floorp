@@ -48,10 +48,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'cairo-win32-font.c',
         'cairo-win32-surface.c',
     ]
+    DEFINES['DISABLE_SOME_FLOATING_POINT'] = True
+    DEFINES['CAIRO_WIN32_STATIC_BUILD'] = True
     if CONFIG['NS_PRINTING']:
         SOURCES += [
             'cairo-win32-printing-surface.c',
         ]
+    else:
+        DEFINES['CAIRO_OMIT_WIN32_PRINTING'] = True
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     EXPORTS.cairo += [
         'cairo-os2-private.h',
@@ -60,6 +64,9 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     SOURCES += [
         'cairo-os2-surface.c',
     ]
+    DEFINES['OS2_USE_PLATFORM_ALLOC'] = True
+    if CONFIG['MOZ_OS2_HIGH_MEMORY']:
+        DEFINES['OS2_HIGH_MEMORY'] = True
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.cairo += [
         'cairo-quartz-image.h',
@@ -192,3 +199,17 @@ UNIFIED_SOURCES += [
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gkmedias'
+
+DEFINES['PACKAGE_VERSION'] = '"moz"'
+DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
+
+for var in ('CAIRO_HAS_PTHREAD', '_GNU_SOURCE'):
+    DEFINES[var] = True
+
+for var in ('MOZ_TREE_CAIRO', 'MOZ_TREE_PIXMAN'):
+    if CONFIG[var]:
+        DEFINES[var] = True
+
+if CONFIG['MOZ_TREE_FREETYPE']:
+    DEFINES['HAVE_FT_LIBRARY_SETLCDFILTER'] = True
+    DEFINES['FT_LCD_FILTER_H'] = '%s/modules/freetype2/include/freetype/ftlcdfil.h' % TOPSRCDIR

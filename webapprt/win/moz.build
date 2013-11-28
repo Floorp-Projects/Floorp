@@ -9,3 +9,5 @@ PROGRAM = 'webapprt-stub'
 SOURCES += [
     'webapprt.cpp',
 ]
+
+DEFINES['XPCOM_GLUE'] = True

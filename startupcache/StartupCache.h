@@ -17,6 +17,7 @@
 #include "nsIFile.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/StaticPtr.h"
 
 class nsIMemoryReporter;
 
@@ -67,9 +68,10 @@ class nsIMemoryReporter;
  */
 
 namespace mozilla {
+
 namespace scache {
 
-struct CacheEntry 
+struct CacheEntry
 {
   nsAutoArrayPtr<char> data;
   uint32_t size;
@@ -96,17 +98,18 @@ class StartupCacheListener MOZ_FINAL : public nsIObserver
   NS_DECL_NSIOBSERVER
 };
 
-class StartupCache
+class StartupCache : public nsISupports
 {
 
 friend class StartupCacheListener;
 friend class StartupCacheWrapper;
-                                
+
 public:
+  NS_DECL_ISUPPORTS
 
   // StartupCache methods. See above comments for a more detailed description.
 
-  // Returns a buffer that was previously stored, caller takes ownership. 
+  // Returns a buffer that was previously stored, caller takes ownership.
   nsresult GetBuffer(const char* id, char** outbuf, uint32_t* length);
 
   // Stores a buffer. Caller keeps ownership, we make a copy.
@@ -136,7 +139,7 @@ public:
 
 private:
   StartupCache();
-  ~StartupCache();
+  virtual ~StartupCache();
 
   enum TelemetrifyAge {
     IGNORE_AGE = 0,
@@ -162,14 +165,14 @@ private:
   nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
   nsRefPtr<nsZipArchive> mArchive;
   nsCOMPtr<nsIFile> mFile;
-  
+
   nsCOMPtr<nsIObserverService> mObserverService;
   nsRefPtr<StartupCacheListener> mListener;
   nsCOMPtr<nsITimer> mTimer;
 
   bool mStartupWriteInitiated;
 
-  static StartupCache *gStartupCache;
+  static StaticRefPtr<StartupCache> gStartupCache;
   static bool gShutdownInitiated;
   static bool gIgnoreDiskCache;
   PRThread *mWriteThread;

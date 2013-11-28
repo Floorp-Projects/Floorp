@@ -679,6 +679,7 @@ class MarkingValidator;
 typedef Vector<JS::Zone *, 4, SystemAllocPolicy> ZoneVector;
 
 class AutoLockForExclusiveAccess;
+class AutoProtectHeapForCompilation;
 
 void RecomputeStackLimit(JSRuntime *rt, StackKind kind);
 
@@ -1432,6 +1433,18 @@ struct JSRuntime : public JS::shadow::Runtime,
     const char          *numGrouping;
 #endif
 
+    friend class js::AutoProtectHeapForCompilation;
+    friend class js::AutoThreadSafeAccess;
+    mozilla::DebugOnly<bool> heapProtected_;
+#ifdef DEBUG
+    js::Vector<js::gc::ArenaHeader *, 0, js::SystemAllocPolicy> unprotectedArenas;
+
+  public:
+    bool heapProtected() {
+        return heapProtected_;
+    }
+#endif
+
   private:
     js::MathCache *mathCache_;
     js::MathCache *createMathCache(JSContext *cx);
@@ -1605,7 +1618,11 @@ struct JSRuntime : public JS::shadow::Runtime,
     // their callee.
     js::Value            ionReturnOverride_;
 
+#ifdef JS_THREADSAFE
     static mozilla::Atomic<size_t> liveRuntimesCount;
+#else
+    static size_t liveRuntimesCount;
+#endif
 
   public:
     static bool hasLiveRuntimes() {
@@ -2018,6 +2035,23 @@ class RuntimeAllocPolicy
 };
 
 extern const JSSecurityCallbacks NullSecurityCallbacks;
+
+class AutoProtectHeapForCompilation
+{
+  public:
+#if defined(DEBUG) && !defined(XP_WIN)
+    JSRuntime *runtime;
+
+    AutoProtectHeapForCompilation(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoProtectHeapForCompilation();
+#else
+    AutoProtectHeapForCompilation(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+#endif
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 
 } /* namespace js */
 

@@ -418,6 +418,8 @@ LayerManagerComposite::Render()
   }
 
   mCompositor->GetWidget()->PostRender(this);
+
+  RecordFrame();
 }
 
 void

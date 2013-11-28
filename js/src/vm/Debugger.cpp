@@ -8,6 +8,7 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
+#include "jshashutil.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jswrapper.h"
@@ -95,6 +96,25 @@ ReportMoreArgsNeeded(JSContext *cx, const char *name, unsigned required)
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                          name, s, required == 2 ? "" : "s");
     return false;
+}
+
+static inline bool
+EnsureFunctionHasScript(JSContext *cx, JSFunction *fun)
+{
+    if (fun->isInterpretedLazy()) {
+        AutoCompartment ac(cx, fun);
+        return !!fun->getOrCreateScript(cx);
+    }
+    return true;
+}
+
+static inline JSScript *
+GetOrCreateFunctionScript(JSContext *cx, JSFunction *fun)
+{
+    MOZ_ASSERT(fun->isInterpreted());
+    if (!EnsureFunctionHasScript(cx, fun))
+        return nullptr;
+    return fun->nonLazyScript();
 }
 
 #define REQUIRE_ARGC(name, n)                                                 \
@@ -652,7 +672,7 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, MutableHandleValue rv
     JS_ASSERT(!env->is<ScopeObject>());
 
     JSObject *envobj;
-    ObjectWeakMap::AddPtr p = environments.lookupForAdd(env);
+    DependentAddPtr<ObjectWeakMap> p(cx, environments, env);
     if (p) {
         envobj = p->value;
     } else {
@@ -663,7 +683,7 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, MutableHandleValue rv
             return false;
         envobj->setPrivateGCThing(env);
         envobj->setReservedSlot(JSSLOT_DEBUGENV_OWNER, ObjectValue(*object));
-        if (!environments.relookupOrAdd(p, env, envobj)) {
+        if (!p.add(environments, env, envobj)) {
             js_ReportOutOfMemory(cx);
             return false;
         }
@@ -687,7 +707,10 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
     if (vp.isObject()) {
         RootedObject obj(cx, &vp.toObject());
 
-        ObjectWeakMap::AddPtr p = objects.lookupForAdd(obj);
+        if (obj->is<JSFunction>() && !EnsureFunctionHasScript(cx, &obj->as<JSFunction>()))
+            return false;
+
+        DependentAddPtr<ObjectWeakMap> p(cx, objects, obj);
         if (p) {
             vp.setObject(*p->value);
         } else {
@@ -699,7 +722,8 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
                 return false;
             dobj->setPrivateGCThing(obj);
             dobj->setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*object));
-            if (!objects.relookupOrAdd(p, obj, dobj)) {
+
+            if (!p.add(objects, obj, dobj)) {
                 js_ReportOutOfMemory(cx);
                 return false;
             }
@@ -2404,10 +2428,14 @@ class Debugger::ScriptQuery {
         if (!prepareQuery())
             return false;
 
+        JSCompartment *singletonComp = nullptr;
+        if (compartments.count() == 1)
+            singletonComp = compartments.all().front();
+
         /* Search each compartment for debuggee scripts. */
         vector = v;
         oom = false;
-        IterateScripts(cx->runtime(), nullptr, this, considerScript);
+        IterateScripts(cx->runtime(), singletonComp, this, considerScript);
         if (oom) {
             js_ReportOutOfMemory(cx);
             return false;
@@ -2477,10 +2505,21 @@ class Debugger::ScriptQuery {
     /* Indicates whether OOM has occurred while matching. */
     bool oom;
 
+    bool addCompartment(JSCompartment *comp) {
+        {
+            // All scripts in the debuggee compartment must be visible, so
+            // delazify everything.
+            AutoCompartment ac(cx, comp);
+            if (!comp->ensureDelazifyScriptsForDebugMode(cx))
+                return false;
+        }
+        return compartments.put(comp);
+    }
+
     /* Arrange for this ScriptQuery to match only scripts that run in |global|. */
     bool matchSingleGlobal(GlobalObject *global) {
         JS_ASSERT(compartments.count() == 0);
-        if (!compartments.put(global->compartment())) {
+        if (!addCompartment(global->compartment())) {
             js_ReportOutOfMemory(cx);
             return false;
         }
@@ -2495,7 +2534,7 @@ class Debugger::ScriptQuery {
         JS_ASSERT(compartments.count() == 0);
         /* Build our compartment set from the debugger's set of debuggee globals. */
         for (GlobalObjectSet::Range r = debugger->debuggees.all(); !r.empty(); r.popFront()) {
-            if (!compartments.put(r.front()->compartment())) {
+            if (!addCompartment(r.front()->compartment())) {
                 js_ReportOutOfMemory(cx);
                 return false;
             }
@@ -2757,14 +2796,13 @@ Debugger::wrapScript(JSContext *cx, HandleScript script)
 {
     assertSameCompartment(cx, object.get());
     JS_ASSERT(cx->compartment() != script->compartment());
-    ScriptWeakMap::AddPtr p = scripts.lookupForAdd(script);
+    DependentAddPtr<ScriptWeakMap> p(cx, scripts, script);
     if (!p) {
         JSObject *scriptobj = newDebuggerScript(cx, script);
         if (!scriptobj)
             return nullptr;
 
-        /* The allocation may have caused a GC, which can remove table entries. */
-        if (!scripts.relookupOrAdd(p, script, scriptobj)) {
+        if (!p.add(scripts, script, scriptobj)) {
             js_ReportOutOfMemory(cx);
             return nullptr;
         }
@@ -2938,8 +2976,10 @@ DebuggerScript_getChildScripts(JSContext *cx, unsigned argc, Value *vp)
         for (uint32_t i = script->innerObjectsStart(); i < objects->length; i++) {
             obj = objects->vector[i];
             if (obj->is<JSFunction>()) {
-                fun = static_cast<JSFunction *>(obj.get());
-                funScript = fun->nonLazyScript();
+                fun = &obj->as<JSFunction>();
+                funScript = GetOrCreateFunctionScript(cx, fun);
+                if (!funScript)
+                    return false;
                 s = dbg->wrapScript(cx, funScript);
                 if (!s || !js_NewbornArrayPush(cx, result, ObjectValue(*s)))
                     return false;
@@ -3649,14 +3689,13 @@ Debugger::wrapSource(JSContext *cx, HandleScriptSource source)
 {
     assertSameCompartment(cx, object.get());
     JS_ASSERT(cx->compartment() != source->compartment());
-    SourceWeakMap::AddPtr p = sources.lookupForAdd(source);
+    DependentAddPtr<SourceWeakMap> p(cx, sources, source);
     if (!p) {
         JSObject *sourceobj = newDebuggerSource(cx, source);
         if (!sourceobj)
             return nullptr;
 
-        /* The allocation may have caused a GC, which can remove table entries. */
-        if (!sources.relookupOrAdd(p, source, sourceobj)) {
+        if (!p.add(sources, source, sourceobj)) {
             js_ReportOutOfMemory(cx);
             return nullptr;
         }
@@ -4685,14 +4724,9 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
     result->ensureDenseInitializedLength(cx, 0, fun->nargs);
 
     if (fun->isInterpreted()) {
-        RootedScript script(cx);
-
-        {
-            AutoCompartment ac(cx, fun);
-            script = fun->getOrCreateScript(cx);
-            if (!script)
-                return false;
-        }
+        RootedScript script(cx, GetOrCreateFunctionScript(cx, fun));
+        if (!script)
+            return false;
 
         JS_ASSERT(fun->nargs == script->bindings.numArgs());
 
@@ -4734,15 +4768,9 @@ DebuggerObject_getScript(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    RootedScript script(cx);
-
-    {
-        AutoCompartment ac(cx, obj);
-
-        script = fun->getOrCreateScript(cx);
-        if (!script)
-            return false;
-    }
+    RootedScript script(cx, GetOrCreateFunctionScript(cx, fun));
+    if (!script)
+        return false;
 
     /* Only hand out debuggee scripts. */
     if (!dbg->observesScript(script)) {

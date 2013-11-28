@@ -86,6 +86,21 @@ static inline D2D1_INTERPOLATION_MODE D2DInterpolationMode(const Filter &aFilter
     return D2D1_INTERPOLATION_MODE_LINEAR;
   }
 }
+
+static inline D2D1_MATRIX_5X4_F D2DMatrix5x4(const Matrix5x4 &aMatrix)
+{
+  return D2D1::Matrix5x4F(aMatrix._11, aMatrix._12, aMatrix._13, aMatrix._14,
+                          aMatrix._21, aMatrix._22, aMatrix._23, aMatrix._24,
+                          aMatrix._31, aMatrix._32, aMatrix._33, aMatrix._34,
+                          aMatrix._41, aMatrix._42, aMatrix._43, aMatrix._44,
+                          aMatrix._51, aMatrix._52, aMatrix._53, aMatrix._54);
+}
+
+static inline D2D1_VECTOR_3F D2DVector3D(const Point3D &aPoint)
+{
+  return D2D1::Vector3F(aPoint.x, aPoint.y, aPoint.z);
+}
+
 #endif
 
 static inline D2D1_ANTIALIAS_MODE D2DAAMode(AntialiasMode aMode)

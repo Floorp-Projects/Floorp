@@ -11,3 +11,8 @@ UNIFIED_SOURCES += [
     'jsheaptools.cpp',
     'jsoptparse.cpp',
 ]
+
+# Building against js_static requires that we declare mfbt sybols "exported"
+# on its behalf.
+for var in ('EXPORT_JS_API', 'IMPL_MFBT'):
+    DEFINES[var] = True

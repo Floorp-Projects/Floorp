@@ -609,9 +609,8 @@ WindowGlobalOrNull(JSObject *aObj)
 static void
 CompartmentDestroyedCallback(JSFreeOp *fop, JSCompartment *compartment)
 {
-    XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
-    if (!self)
-        return;
+    // NB - This callback may be called in JS_DestroyRuntime, which happens
+    // after the XPCJSRuntime has been torn down.
 
     // Get the current compartment private into an AutoPtr (which will do the
     // cleanup for us), and null out the private (which may already be null).
@@ -1519,6 +1518,13 @@ void XPCJSRuntime::SystemIsBeingShutDown()
 
 XPCJSRuntime::~XPCJSRuntime()
 {
+    // This destructor runs before ~CycleCollectedJSRuntime, which does the
+    // actual JS_DestroyRuntime() call. But destroying the runtime triggers
+    // one final GC, which can call back into the runtime with various
+    // callback if we aren't careful. Null out the relevant callbacks.
+    js::SetActivityCallback(Runtime(), nullptr, nullptr);
+    JS_SetFinalizeCallback(Runtime(), nullptr);
+
     // Clear any pending exception.  It might be an XPCWrappedJS, and if we try
     // to destroy it later we will crash.
     SetPendingException(nullptr);
@@ -1537,41 +1543,52 @@ XPCJSRuntime::~XPCJSRuntime()
     delete rtPrivate;
     JS_SetRuntimePrivate(Runtime(), nullptr);
 
-    // Tell the superclas to destroy the JSRuntime. We need to do this here,
-    // because destroying the runtime runs one final rambo GC, which sometimes
-    // calls various finalizers that assume that XPCJSRuntime is still
-    // operational. We have bug 911303 on file for fixing this.
-    DestroyRuntime();
-
     // clean up and destroy maps...
     if (mWrappedJSMap) {
         mWrappedJSMap->ShutdownMarker();
         delete mWrappedJSMap;
+        mWrappedJSMap = nullptr;
     }
 
-    if (mWrappedJSClassMap)
+    if (mWrappedJSClassMap) {
         delete mWrappedJSClassMap;
+        mWrappedJSClassMap = nullptr;
+    }
 
-    if (mIID2NativeInterfaceMap)
+    if (mIID2NativeInterfaceMap) {
         delete mIID2NativeInterfaceMap;
+        mIID2NativeInterfaceMap = nullptr;
+    }
 
-    if (mClassInfo2NativeSetMap)
+    if (mClassInfo2NativeSetMap) {
         delete mClassInfo2NativeSetMap;
+        mClassInfo2NativeSetMap = nullptr;
+    }
 
-    if (mNativeSetMap)
+    if (mNativeSetMap) {
         delete mNativeSetMap;
+        mNativeSetMap = nullptr;
+    }
 
-    if (mThisTranslatorMap)
+    if (mThisTranslatorMap) {
         delete mThisTranslatorMap;
+        mThisTranslatorMap = nullptr;
+    }
 
-    if (mNativeScriptableSharedMap)
+    if (mNativeScriptableSharedMap) {
         delete mNativeScriptableSharedMap;
+        mNativeScriptableSharedMap = nullptr;
+    }
 
-    if (mDyingWrappedNativeProtoMap)
+    if (mDyingWrappedNativeProtoMap) {
         delete mDyingWrappedNativeProtoMap;
+        mDyingWrappedNativeProtoMap = nullptr;
+    }
 
-    if (mDetachedWrappedNativeProtoMap)
+    if (mDetachedWrappedNativeProtoMap) {
         delete mDetachedWrappedNativeProtoMap;
+        mDetachedWrappedNativeProtoMap = nullptr;
+    }
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
     // Tell the profiler that the runtime is gone

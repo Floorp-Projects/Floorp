@@ -24,3 +24,18 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
 
 FAIL_ON_WARNINGS = True
 
+for var in ('HAVE_STRDUP', 'NR_SOCKET_IS_VOID_PTR', 'SCTP_DEBUG', 'INET'):
+    DEFINES[var] = True
+
+if CONFIG['OS_TARGET'] != 'Android':
+    DEFINES['INET6'] = True
+
+# SCTP DEFINES
+if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFINES['__Userspace_os_Windows'] = 1
+else:
+    # Works for Darwin, Linux, Android. Probably doesn't work for others.
+    DEFINES['__Userspace_os_%s' % CONFIG['OS_TARGET']] = 1
+
+if CONFIG['OS_TARGET'] in ('Darwin', 'Android'):
+    DEFINES['GTEST_USE_OWN_TR1_TUPLE'] = 1

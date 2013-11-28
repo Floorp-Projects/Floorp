@@ -6,14 +6,6 @@ ifeq ($(OS_TARGET),Android)
 MODULE_OPTIMIZE_FLAGS = -O2
 endif
 
-ifdef MOZ_USE_PTHREADS
-DEFINES += -DHAVE_PTHREAD_SETSPECIFIC
-endif
-
-ifdef _MSC_VER
-DEFINES += -DPIXMAN_USE_XP_DLL_TLS_WORKAROUND
-endif
-
 # Build MMX code either with VC or with gcc-on-x86
 ifdef _MSC_VER
 ifeq (86,$(findstring 86,$(OS_TEST)))
@@ -104,8 +96,6 @@ endif
 LOCAL_INCLUDES	+= -I$(srcdir) -I$(srcdir)/../../cairo/src
 
 include $(topsrcdir)/config/rules.mk
-
-CFLAGS += -DPACKAGE="mozpixman" -D_USE_MATH_DEFINES
 
 # Disable spammy "missing initializer" GCC warning
 ifdef GNU_CC

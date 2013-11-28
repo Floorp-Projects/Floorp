@@ -109,7 +109,6 @@ UNIFIED_SOURCES += [
     'frontend/NameFunctions.cpp',
     'frontend/ParseMaps.cpp',
     'frontend/ParseNode.cpp',
-    'frontend/Parser.cpp',
     'frontend/TokenStream.cpp',
     'gc/Barrier.cpp',
     'gc/Iteration.cpp',
@@ -196,11 +195,14 @@ UNIFIED_SOURCES += [
     'yarr/YarrSyntaxChecker.cpp',
 ]
 
+# frontend/Parser.cpp cannot be built in unified mode because of explicit
+# template instantiations.
 # jsmath.cpp cannot be built in unified mode because it needs to pull rand_s
 # from <stdlib.h> on Windows through a preprocessor define.
 # jsutil.cpp cannot be built in unified mode because it is needed for
 # check-vanilla-allocations.
 SOURCES += [
+    'frontend/Parser.cpp',
     'jsmath.cpp',
     'jsutil.cpp',
 ]
@@ -400,3 +402,20 @@ if CONFIG['MOZ_ETW']:
     GENERATED_FILES = [
         'ETWProvider.h',
     ]
+
+if CONFIG['NIGHTLY_BUILD']:
+    DEFINES['ENABLE_PARALLEL_JS'] = True
+    DEFINES['ENABLE_BINARYDATA'] = True
+
+DEFINES['EXPORT_JS_API'] = True
+
+if CONFIG['JS_THREADSAFE']:
+    DEFINES['JS_THREADSAFE'] = True
+
+if CONFIG['JS_HAS_CTYPES']:
+    DEFINES['JS_HAS_CTYPES'] = True
+    for var in ('DLL_PREFIX', 'DLL_SUFFIX'):
+        DEFINES[var] = '"%s"' % CONFIG[var]
+
+if CONFIG['MOZ_LINKER']:
+    DEFINES['MOZ_LINKER'] = True

@@ -64,6 +64,12 @@ parent:
   // block until they are completed.
   sync FlushRendering();
 
+  sync StartFrameTimeRecording(int32_t bufferSize)
+    returns (uint32_t startIndex);
+
+  sync StopFrameTimeRecording(uint32_t startIndex)
+    returns (float[] intervals);
+
   // layersBackendHints is an ordered list of preffered backends where
   // layersBackendHints[0] is the best backend. If any hints are LAYERS_NONE
   // that hint is ignored.

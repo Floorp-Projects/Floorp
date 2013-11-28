@@ -4,10 +4,6 @@
 
 dist_dest   = $(DIST)/$(MOZ_MACBUNDLE_NAME)
 
-ifdef ENABLE_MARIONETTE
-DEFINES += -DENABLE_MARIONETTE=1
-endif
-
 PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js \
 		  $(NULL)
 
@@ -17,7 +13,6 @@ AB_CD = en-US
 
 DEFINES += \
   -DAB_CD=$(AB_CD) \
-  -DAPP_VERSION="$(MOZ_APP_VERSION)" \
   -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" \
   -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\" \
   -DNEWWINDOW_ICO=\"$(DIST)/branding/newwindow.ico\" \
@@ -25,13 +20,8 @@ DEFINES += \
   -DPBMODE_ICO=\"$(DIST)/branding/pbmode.ico\" \
   $(NULL)
 
-ifdef MOZILLA_OFFICIAL
-DEFINES += -DMOZILLA_OFFICIAL
-endif
-
 ifdef LIBXUL_SDK #{
 PREF_JS_EXPORTS += $(srcdir)/profile/channel-prefs.js
-DEFINES += -DLIBXUL_SDK
 endif #} LIBXUL_SDK
 
 # Build a binary bootstrapping with XRE_main
@@ -43,7 +33,6 @@ LOCAL_INCLUDES += \
   -I$(DEPTH)/build \
   $(NULL)
 
-DEFINES += -DXPCOM_GLUE
 STL_FLAGS=
 
 LIBS += \

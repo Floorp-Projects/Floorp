@@ -83,6 +83,12 @@ struct IonOptions
     // Default: false
     bool checkRangeAnalysis;
 
+    // Whether to protect the GC heap during Ion compilation and ensure that
+    // only threadsafe operations are performed on it.
+    //
+    // Default: false
+    bool checkThreadSafety;
+
     // Whether to perform expensive graph-consistency DEBUG-only assertions.
     // It can be useful to disable this to reduce DEBUG-compile time of large
     // asm.js programs.
@@ -221,6 +227,7 @@ struct IonOptions
         edgeCaseAnalysis(true),
         rangeAnalysis(true),
         checkRangeAnalysis(false),
+        checkThreadSafety(false),
         assertGraphConsistency(true),
         uce(true),
         eaa(true),
