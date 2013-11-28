@@ -3672,18 +3672,6 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
     return eSelectorParsingStatus_Error;
   }
 
-  if (!mUnsafeRulesEnabled &&
-      (pseudoElementType == nsCSSPseudoElements::ePseudo_mozNumberWrapper ||
-       pseudoElementType == nsCSSPseudoElements::ePseudo_mozNumberText ||
-       pseudoElementType == nsCSSPseudoElements::ePseudo_mozNumberSpinBox ||
-       pseudoElementType == nsCSSPseudoElements::ePseudo_mozNumberSpinUp ||
-       pseudoElementType == nsCSSPseudoElements::ePseudo_mozNumberSpinDown)) {
-    // Hide these pseudo-elements from content until we standardize them.
-    REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
-    UngetToken();
-    return eSelectorParsingStatus_Error;
-  }
-
   // We currently allow :-moz-placeholder and ::-moz-placeholder. We have to
   // be a bit stricter regarding the pseudo-element parsing rules.
   if (pseudoElementType == nsCSSPseudoElements::ePseudo_mozPlaceholder &&
