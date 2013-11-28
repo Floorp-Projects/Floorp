@@ -108,6 +108,7 @@ this.SystemMessagePermissionsTable = {
     "settings": ["read", "write"]
   },
   "rtsp-open-video": {},
+  "wifip2p-pairing-request": { },
 };
 
 this.SystemMessagePermissionsChecker = {
