@@ -6,7 +6,7 @@
 
 include('objs.mozbuild')
 
-SOURCES += modules_profiledirservice_src_csrcs
+UNIFIED_SOURCES += modules_profiledirservice_src_csrcs
 
 LIBRARY_NAME = 'profdirserviceprovider_s'
 

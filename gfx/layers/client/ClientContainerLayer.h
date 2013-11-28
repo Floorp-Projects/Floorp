@@ -92,9 +92,9 @@ public:
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
-    ClientManager()->InsertAfter(ClientManager()->Hold(this),
-                                 ClientManager()->Hold(aChild),
-                                 aAfter ? ClientManager()->Hold(aAfter) : nullptr);
+    ClientManager()->AsShadowForwarder()->InsertAfter(ClientManager()->Hold(this),
+                                                      ClientManager()->Hold(aChild),
+                                                      aAfter ? ClientManager()->Hold(aAfter) : nullptr);
     ContainerLayer::InsertAfter(aChild, aAfter);
   }
 
@@ -102,8 +102,8 @@ public:
   { 
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
-    ClientManager()->RemoveChild(ClientManager()->Hold(this),
-                                 ClientManager()->Hold(aChild));
+    ClientManager()->AsShadowForwarder()->RemoveChild(ClientManager()->Hold(this),
+                                                      ClientManager()->Hold(aChild));
     ContainerLayer::RemoveChild(aChild);
   }
 
@@ -111,9 +111,9 @@ public:
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
-    ClientManager()->RepositionChild(ClientManager()->Hold(this),
-                                     ClientManager()->Hold(aChild),
-                                     aAfter ? ClientManager()->Hold(aAfter) : nullptr);
+    ClientManager()->AsShadowForwarder()->RepositionChild(ClientManager()->Hold(this),
+                                                          ClientManager()->Hold(aChild),
+                                                          aAfter ? ClientManager()->Hold(aAfter) : nullptr);
     ContainerLayer::RepositionChild(aChild, aAfter);
   }
   
