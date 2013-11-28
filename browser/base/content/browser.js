@@ -4149,6 +4149,14 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
     }
   }
 
+
+  let addToPanel = popup.querySelector(".customize-context-addToPanel");
+  let removeFromToolbar = popup.querySelector(".customize-context-removeFromToolbar");
+  // View -> Toolbars menu doesn't have the addToPanel or removeFromToolbar items.
+  if (!addToPanel || !removeFromToolbar) {
+    return;
+  }
+
   // The explicitOriginalTarget can be a nested child element of a toolbaritem.
   let toolbarItem = aEvent.explicitOriginalTarget;
 
@@ -4167,17 +4175,10 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
 
   // Right-clicking on an empty part of the tabstrip will exit
   // the above loop with toolbarItem being the xul:document.
-  if (!toolbarItem.parentNode) {
-    return;
-  }
-
-  let addToPanel = popup.querySelector(".customize-context-addToPanel");
-  let removeFromToolbar = popup.querySelector(".customize-context-removeFromToolbar");
-  // View -> Toolbars menu doesn't have the addToPanel or removeFromToolbar items.
-  if (!addToPanel || !removeFromToolbar) {
-    return;
-  }
-  let movable = toolbarItem && CustomizableUI.isWidgetRemovable(toolbarItem);
+  // That has no parentNode, and we should disable the items in
+  // this case.
+  let movable = toolbarItem && toolbarItem.parentNode &&
+                CustomizableUI.isWidgetRemovable(toolbarItem);
   if (movable) {
     addToPanel.removeAttribute("disabled");
     removeFromToolbar.removeAttribute("disabled");
