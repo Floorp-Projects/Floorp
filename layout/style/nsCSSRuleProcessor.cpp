@@ -1632,6 +1632,64 @@ static_assert(NS_ARRAY_LENGTH(sPseudoClassStates) ==
               "ePseudoClass_NotPseudoClass is no longer at the end of"
               "sPseudoClassStates");
 
+static bool
+StateSelectorMatches(Element* aElement,
+                     nsCSSSelector* aSelector,
+                     NodeMatchContext& aNodeMatchContext,
+                     TreeMatchContext& aTreeMatchContext,
+                     bool* const aDependence,
+                     nsEventStates aStatesToCheck)
+{
+  NS_PRECONDITION(!aStatesToCheck.IsEmpty(),
+                  "should only need to call StateSelectorMatches if "
+                  "aStatesToCheck is not empty");
+
+  const bool isNegated = aDependence != nullptr;
+
+  // Bit-based pseudo-classes
+  if (aStatesToCheck.HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE) &&
+      aTreeMatchContext.mCompatMode == eCompatibility_NavQuirks &&
+      // global selector:
+      !aSelector->HasTagSelector() && !aSelector->mIDList &&
+      !aSelector->mClassList && !aSelector->mAttrList &&
+      // This (or the other way around) both make :not() asymmetric
+      // in quirks mode (and it's hard to work around since we're
+      // testing the current mNegations, not the first
+      // (unnegated)). This at least makes it closer to the spec.
+      !isNegated &&
+      // important for |IsQuirkEventSensitive|:
+      aElement->IsHTML() && !nsCSSRuleProcessor::IsLink(aElement) &&
+      !IsQuirkEventSensitive(aElement->Tag())) {
+    // In quirks mode, only make certain elements sensitive to
+    // selectors ":hover" and ":active".
+    return false;
+  }
+
+  if (aTreeMatchContext.mForStyling &&
+      aStatesToCheck.HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER)) {
+    // Mark the element as having :hover-dependent style
+    aElement->SetHasRelevantHoverRules();
+  }
+
+  if (aNodeMatchContext.mStateMask.HasAtLeastOneOfStates(aStatesToCheck)) {
+    if (aDependence) {
+      *aDependence = true;
+    }
+  } else {
+    nsEventStates contentState =
+      nsCSSRuleProcessor::GetContentStateForVisitedHandling(
+                                   aElement,
+                                   aTreeMatchContext,
+                                   aTreeMatchContext.VisitedHandling(),
+                                   aNodeMatchContext.mIsRelevantLink);
+    if (!contentState.HasAtLeastOneOfStates(aStatesToCheck)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // |aDependence| has two functions:
 //  * when non-null, it indicates that we're processing a negation,
 //    which is done only when SelectorMatches calls itself recursively
@@ -2113,43 +2171,10 @@ static bool SelectorMatches(Element* aElement,
         NS_ABORT_IF_FALSE(false, "How did that happen?");
       }
     } else {
-      // Bit-based pseudo-classes
-      if (statesToCheck.HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE) &&
-          aTreeMatchContext.mCompatMode == eCompatibility_NavQuirks &&
-          // global selector:
-          !aSelector->HasTagSelector() && !aSelector->mIDList && 
-          !aSelector->mClassList && !aSelector->mAttrList &&
-          // This (or the other way around) both make :not() asymmetric
-          // in quirks mode (and it's hard to work around since we're
-          // testing the current mNegations, not the first
-          // (unnegated)). This at least makes it closer to the spec.
-          !isNegated &&
-          // important for |IsQuirkEventSensitive|:
-          aElement->IsHTML() && !nsCSSRuleProcessor::IsLink(aElement) &&
-          !IsQuirkEventSensitive(aElement->Tag())) {
-        // In quirks mode, only make certain elements sensitive to
-        // selectors ":hover" and ":active".
+      if (!StateSelectorMatches(aElement, aSelector, aNodeMatchContext,
+                                aTreeMatchContext, aDependence,
+                                statesToCheck)) {
         return false;
-      } else {
-        if (aTreeMatchContext.mForStyling &&
-            statesToCheck.HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER)) {
-          // Mark the element as having :hover-dependent style
-          aElement->SetHasRelevantHoverRules();
-        }
-        if (aNodeMatchContext.mStateMask.HasAtLeastOneOfStates(statesToCheck)) {
-          if (aDependence)
-            *aDependence = true;
-        } else {
-          nsEventStates contentState =
-            nsCSSRuleProcessor::GetContentStateForVisitedHandling(
-                                         aElement,
-                                         aTreeMatchContext,
-                                         aTreeMatchContext.VisitedHandling(),
-                                         aNodeMatchContext.mIsRelevantLink);
-          if (!contentState.HasAtLeastOneOfStates(statesToCheck)) {
-            return false;
-          }
-        }
       }
     }
   }
