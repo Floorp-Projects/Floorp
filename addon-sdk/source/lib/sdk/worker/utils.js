@@ -76,9 +76,6 @@ function Worker(options) {
   ["pageshow", "pagehide", "detach", "message", "error"].forEach(function(key) {
     trait.on(key, function() {
       emit.apply(emit, [worker, key].concat(Array.slice(arguments)));
-      // Workaround lack of ability to listen on all events by emulating
-      // such ability. This will become obsolete once Bug 821065 is fixed.
-      emit.apply(emit, [worker, "*", key].concat(Array.slice(arguments)));
     });
   });
   traits.set(worker, trait);

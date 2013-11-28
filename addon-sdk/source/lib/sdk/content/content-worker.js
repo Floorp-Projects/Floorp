@@ -137,6 +137,14 @@ const ContentWorker = Object.freeze({
         registerMethod = chromeSetInterval;
       else
         throw new Error("Unknown timer kind: " + timer.kind);
+
+      if (typeof timer.fun == 'string') {
+        let code = timer.fun;
+        timer.fun = () => chromeAPI.sandbox.evaluate(exports, code);
+      } else if (typeof timer.fun != 'function') {
+        throw new Error('Unsupported callback type' + typeof timer.fun);
+      }
+
       let id = registerMethod(onFire, timer.delay);
       function onFire() {
         try {
@@ -145,10 +153,45 @@ const ContentWorker = Object.freeze({
           timer.fun.apply(null, timer.args);
         } catch(e) {
           console.exception(e);
+          let wrapper = {
+            instanceOfError: instanceOf(e, Error),
+            value: e,
+          };
+          if (wrapper.instanceOfError) {
+            wrapper.value = {
+              message: e.message,
+              fileName: e.fileName,
+              lineNumber: e.lineNumber,
+              stack: e.stack,
+              name: e.name, 
+            };
+          }
+          pipe.emit('error', wrapper);
         }
       }
       _timers[id] = timer;
       return id;
+    }
+
+    // copied from sdk/lang/type.js since modules are not available here
+    function instanceOf(value, Type) {
+      var isConstructorNameSame;
+      var isConstructorSourceSame;
+
+      // If `instanceof` returned `true` we know result right away.
+      var isInstanceOf = value instanceof Type;
+
+      // If `instanceof` returned `false` we do ducktype check since `Type` may be
+      // from a different sandbox. If a constructor of the `value` or a constructor
+      // of the value's prototype has same name and source we assume that it's an
+      // instance of the Type.
+      if (!isInstanceOf && value) {
+        isConstructorNameSame = value.constructor.name === Type.name;
+        isConstructorSourceSame = String(value.constructor) == String(Type);
+        isInstanceOf = (isConstructorNameSame && isConstructorSourceSame) ||
+                        instanceOf(Object.getPrototypeOf(value), Type);
+      }
+      return isInstanceOf;
     }
 
     function unregisterTimer(id) {

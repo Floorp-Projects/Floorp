@@ -43,7 +43,9 @@ class StringHelper {
         "Open in New Tab",
         "Open in Private Tab",
         "Edit",
-        "Remove"
+        "Remove",
+        "Share",
+        "Add to Home Screen"
     };
 
     public static final String TITLE_PLACE_HOLDER = "Enter Search or Address";
