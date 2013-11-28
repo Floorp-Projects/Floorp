@@ -95,7 +95,6 @@ vorbis_synthesis_pcmout
 vorbis_synthesis_read
 vorbis_synthesis_restart
 #endif
-#ifdef MOZ_SPEEX_RESAMPLER
 speex_resampler_init
 speex_resampler_init_frac
 speex_resampler_destroy
@@ -118,7 +117,6 @@ speex_resampler_get_output_latency
 speex_resampler_skip_zeros
 speex_resampler_reset_mem
 speex_resampler_strerror
-#endif
 #ifdef MOZ_CUBEB
 cubeb_destroy
 cubeb_init

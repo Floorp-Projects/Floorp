@@ -3938,8 +3938,6 @@ MOZ_JSDEBUGGER=1
 MOZ_AUTH_EXTENSION=1
 MOZ_OGG=1
 MOZ_RAW=
-MOZ_SPEEX_RESAMPLER=1
-MOZ_SOUNDTOUCH=1
 MOZ_CUBEB=
 MOZ_VORBIS=
 MOZ_TREMOR=
@@ -5520,14 +5518,6 @@ fi
 dnl ========================================================
 dnl = Handle dependent CUBEB and MEDIA defines
 dnl ========================================================
-
-if test -n "$MOZ_SPEEX_RESAMPLER"; then
-    AC_DEFINE(MOZ_SPEEX_RESAMPLER)
-fi
-
-if test -n "$MOZ_SOUNDTOUCH"; then
-    AC_DEFINE(MOZ_SOUNDTOUCH)
-fi
 
 if test -n "$MOZ_CUBEB"; then
     AC_DEFINE(MOZ_CUBEB)
@@ -8665,8 +8655,6 @@ AC_SUBST(MOZ_NSS_PATCH)
 AC_SUBST(MOZ_APP_COMPONENT_LIBS)
 AC_SUBST(MOZ_APP_EXTRA_LIBS)
 
-AC_SUBST(MOZ_SPEEX_RESAMPLER)
-AC_SUBST(MOZ_SOUNDTOUCH)
 AC_SUBST(MOZ_CUBEB)
 AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
