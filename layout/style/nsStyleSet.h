@@ -221,6 +221,11 @@ class nsStyleSet
   nsRestyleHint HasStateDependentStyle(nsPresContext* aPresContext,
                                        mozilla::dom::Element* aElement,
                                        nsEventStates aStateMask);
+  nsRestyleHint HasStateDependentStyle(nsPresContext* aPresContext,
+                                       mozilla::dom::Element* aElement,
+                                       nsCSSPseudoElements::Type aPseudoType,
+                                       mozilla::dom::Element* aPseudoElement,
+                                       nsEventStates aStateMask);
 
   // Test if style is dependent on the presence of an attribute.
   nsRestyleHint HasAttributeDependentStyle(nsPresContext* aPresContext,
