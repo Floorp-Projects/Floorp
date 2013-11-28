@@ -31,7 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 /* (a32 * (opus_int32)((opus_int16)(b32))) >> 16 output have to be 32bit int */
 #undef silk_SMULWB
-static inline opus_int32 silk_SMULWB_armv5e(opus_int32 a, opus_int16 b)
+static OPUS_INLINE opus_int32 silk_SMULWB_armv5e(opus_int32 a, opus_int16 b)
 {
   int res;
   __asm__(
@@ -46,7 +46,7 @@ static inline opus_int32 silk_SMULWB_armv5e(opus_int32 a, opus_int16 b)
 
 /* a32 + (b32 * (opus_int32)((opus_int16)(c32))) >> 16 output have to be 32bit int */
 #undef silk_SMLAWB
-static inline opus_int32 silk_SMLAWB_armv5e(opus_int32 a, opus_int32 b,
+static OPUS_INLINE opus_int32 silk_SMLAWB_armv5e(opus_int32 a, opus_int32 b,
  opus_int16 c)
 {
   int res;
@@ -62,7 +62,7 @@ static inline opus_int32 silk_SMLAWB_armv5e(opus_int32 a, opus_int32 b,
 
 /* (a32 * (b32 >> 16)) >> 16 */
 #undef silk_SMULWT
-static inline opus_int32 silk_SMULWT_armv5e(opus_int32 a, opus_int32 b)
+static OPUS_INLINE opus_int32 silk_SMULWT_armv5e(opus_int32 a, opus_int32 b)
 {
   int res;
   __asm__(
@@ -77,7 +77,7 @@ static inline opus_int32 silk_SMULWT_armv5e(opus_int32 a, opus_int32 b)
 
 /* a32 + (b32 * (c32 >> 16)) >> 16 */
 #undef silk_SMLAWT
-static inline opus_int32 silk_SMLAWT_armv5e(opus_int32 a, opus_int32 b,
+static OPUS_INLINE opus_int32 silk_SMLAWT_armv5e(opus_int32 a, opus_int32 b,
  opus_int32 c)
 {
   int res;
@@ -93,7 +93,7 @@ static inline opus_int32 silk_SMLAWT_armv5e(opus_int32 a, opus_int32 b,
 
 /* (opus_int32)((opus_int16)(a3))) * (opus_int32)((opus_int16)(b32)) output have to be 32bit int */
 #undef silk_SMULBB
-static inline opus_int32 silk_SMULBB_armv5e(opus_int32 a, opus_int32 b)
+static OPUS_INLINE opus_int32 silk_SMULBB_armv5e(opus_int32 a, opus_int32 b)
 {
   int res;
   __asm__(
@@ -108,7 +108,7 @@ static inline opus_int32 silk_SMULBB_armv5e(opus_int32 a, opus_int32 b)
 
 /* a32 + (opus_int32)((opus_int16)(b32)) * (opus_int32)((opus_int16)(c32)) output have to be 32bit int */
 #undef silk_SMLABB
-static inline opus_int32 silk_SMLABB_armv5e(opus_int32 a, opus_int32 b,
+static OPUS_INLINE opus_int32 silk_SMLABB_armv5e(opus_int32 a, opus_int32 b,
  opus_int32 c)
 {
   int res;
@@ -124,7 +124,7 @@ static inline opus_int32 silk_SMLABB_armv5e(opus_int32 a, opus_int32 b,
 
 /* (opus_int32)((opus_int16)(a32)) * (b32 >> 16) */
 #undef silk_SMULBT
-static inline opus_int32 silk_SMULBT_armv5e(opus_int32 a, opus_int32 b)
+static OPUS_INLINE opus_int32 silk_SMULBT_armv5e(opus_int32 a, opus_int32 b)
 {
   int res;
   __asm__(
@@ -139,7 +139,7 @@ static inline opus_int32 silk_SMULBT_armv5e(opus_int32 a, opus_int32 b)
 
 /* a32 + (opus_int32)((opus_int16)(b32)) * (c32 >> 16) */
 #undef silk_SMLABT
-static inline opus_int32 silk_SMLABT_armv5e(opus_int32 a, opus_int32 b,
+static OPUS_INLINE opus_int32 silk_SMLABT_armv5e(opus_int32 a, opus_int32 b,
  opus_int32 c)
 {
   int res;
@@ -155,7 +155,7 @@ static inline opus_int32 silk_SMLABT_armv5e(opus_int32 a, opus_int32 b,
 
 /* add/subtract with output saturated */
 #undef silk_ADD_SAT32
-static inline opus_int32 silk_ADD_SAT32_armv5e(opus_int32 a, opus_int32 b)
+static OPUS_INLINE opus_int32 silk_ADD_SAT32_armv5e(opus_int32 a, opus_int32 b)
 {
   int res;
   __asm__(
@@ -169,7 +169,7 @@ static inline opus_int32 silk_ADD_SAT32_armv5e(opus_int32 a, opus_int32 b)
 #define silk_ADD_SAT32(a, b) (silk_ADD_SAT32_armv5e(a, b))
 
 #undef silk_SUB_SAT32
-static inline opus_int32 silk_SUB_SAT32_armv5e(opus_int32 a, opus_int32 b)
+static OPUS_INLINE opus_int32 silk_SUB_SAT32_armv5e(opus_int32 a, opus_int32 b)
 {
   int res;
   __asm__(
@@ -183,7 +183,7 @@ static inline opus_int32 silk_SUB_SAT32_armv5e(opus_int32 a, opus_int32 b)
 #define silk_SUB_SAT32(a, b) (silk_SUB_SAT32_armv5e(a, b))
 
 #undef silk_CLZ16
-static inline opus_int32 silk_CLZ16_armv5(opus_int16 in16)
+static OPUS_INLINE opus_int32 silk_CLZ16_armv5(opus_int16 in16)
 {
   int res;
   __asm__(
@@ -197,7 +197,7 @@ static inline opus_int32 silk_CLZ16_armv5(opus_int16 in16)
 #define silk_CLZ16(in16) (silk_CLZ16_armv5(in16))
 
 #undef silk_CLZ32
-static inline opus_int32 silk_CLZ32_armv5(opus_int32 in32)
+static OPUS_INLINE opus_int32 silk_CLZ32_armv5(opus_int32 in32)
 {
   int res;
   __asm__(
