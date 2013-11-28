@@ -189,13 +189,16 @@ let DebuggerView = {
     dumpn("Initializing the DebuggerView editor");
 
     let extraKeys = {};
-    let tokenSearch = document.getElementById("tokenSearchKey").getAttribute("key");
-    let globalSearch = document.getElementById("globalSearchKey").getAttribute("key");
-    let tokenSearchShortcut = Editor.accel(tokenSearch);
-    let globalSearchShortcut = Editor.accel(globalSearch, { alt: true });
-    extraKeys[tokenSearchShortcut] = () => this.Filtering._doTokenSearch();
-    extraKeys[globalSearchShortcut] = () => this.Filtering._doGlobalSearch();
+    bindKey("_doTokenSearch", "tokenSearchKey");
+    bindKey("_doGlobalSearch", "globalSearchKey", { alt: true });
+    bindKey("_doFunctionSearch", "functionSearchKey");
     extraKeys[Editor.keyFor("jumpToLine")] = false;
+
+    function bindKey(func, key, modifiers = {}) {
+      let key = document.getElementById(key).getAttribute("key");
+      let shortcut = Editor.accel(key, modifiers);
+      extraKeys[shortcut] = () => DebuggerView.Filtering[func]();
+    }
 
     this.editor = new Editor({
       mode: Editor.modes.text,
