@@ -3,39 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_A11Y_FILES =\
-		dumbfile.xpi \
-		formimage.png \
-		letters.gif \
-		moz.png \
-		$(topsrcdir)/content/media/test/bug461281.ogg \
-		longdesc_src.html \
-		actions.js \
-		attributes.js \
-		autocomplete.js \
-		browser.js \
-		common.js \
-		events.js \
-		grid.js \
-		layout.js \
-		name.js \
-		pivot.js \
-		relations.js \
-		role.js \
-		selectable.js \
-		states.js \
-		table.js \
-		value.js \
-		test_aria_token_attrs.html \
-		test_bug420863.html \
-		test_descr.html \
-		test_nsIAccessibleDocument.html \
-		test_nsIAccessibleImage.html \
-		test_OuterDocAccessible.html \
-		test_textboxes.html \
-		test_textboxes.xul \
-		testTextboxes.js \
-		text.js \
-		treeview.css \
-		treeview.js \
-		$(NULL)
+MOCHITEST_A11Y_FILES += \
+  $(topsrcdir)/content/media/test/bug461281.ogg \
+  $(NULL)
