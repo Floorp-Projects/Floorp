@@ -15,6 +15,7 @@ CPP_UNIT_TESTS += [
     'TestEnumSet.cpp',
     'TestFloatingPoint.cpp',
     'TestIntegerPrintfMacros.cpp',
+    'TestRollingMean.cpp',
     'TestSHA1.cpp',
     'TestTypedEnum.cpp',
     'TestTypeTraits.cpp',
@@ -25,3 +26,6 @@ if not CONFIG['MOZ_ASAN']:
     CPP_UNIT_TESTS += [
         'TestPoisonArea.cpp',
     ]
+
+# Since we link directly with MFBT object files, define IMPL_MFBT
+DEFINES['IMPL_MFBT'] = True

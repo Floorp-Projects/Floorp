@@ -23,15 +23,6 @@ LOCAL_INCLUDES	= \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= \
-		-D_IMPL_NS_STRINGAPI \
-		-DOMNIJAR_NAME="$(OMNIJAR_NAME)" \
-		$(NULL)
-
-ifdef TARGET_XPCOM_ABI
-DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
-endif
-
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CXXFLAGS	+= $(TK_CFLAGS)
 endif
