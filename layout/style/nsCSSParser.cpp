@@ -3664,6 +3664,15 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
     nsCSSPseudoClasses::IsUserActionPseudoClass(pseudoClassType);
 
   if (!mUnsafeRulesEnabled &&
+      pseudoElementType < nsCSSPseudoElements::ePseudo_PseudoElementCount &&
+      nsCSSPseudoElements::PseudoElementIsChromeOnly(pseudoElementType)) {
+    // This pseudo-element is not exposed to content.
+    REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
+    UngetToken();
+    return eSelectorParsingStatus_Error;
+  }
+
+  if (!mUnsafeRulesEnabled &&
       (pseudoElementType == nsCSSPseudoElements::ePseudo_mozNumberWrapper ||
        pseudoElementType == nsCSSPseudoElements::ePseudo_mozNumberText ||
        pseudoElementType == nsCSSPseudoElements::ePseudo_mozNumberSpinBox ||
