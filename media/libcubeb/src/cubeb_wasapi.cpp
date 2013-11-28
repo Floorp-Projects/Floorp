@@ -88,6 +88,7 @@ extern cubeb_ops const wasapi_ops;
 struct cubeb
 {
   cubeb_ops const * ops;
+  IMMDevice * device;
   /* Library dynamically opened to increase the render
    * thread priority, and the two function pointers we need. */
   HMODULE mmcss_module;
@@ -423,38 +424,13 @@ BOOL WINAPI revert_mm_thread_characteristics_noop(HANDLE mmcss_handle)
 {
   return true;
 }
-
-HRESULT get_default_endpoint(IMMDevice ** device)
-{
-  IMMDeviceEnumerator * enumerator;
-  HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator),
-                                NULL, CLSCTX_INPROC_SERVER,
-                                IID_PPV_ARGS(&enumerator));
-  if (FAILED(hr)) {
-    LOG("Could not get device enumerator.");
-    return hr;
-  }
-  /* eMultimedia is okay for now ("Music, movies, narration, [...]").
-   * We will need to change this when we distinguish streams by use-case, other
-   * possible values being eConsole ("Games, system notification sounds [...]")
-   * and eCommunication ("Voice communication"). */
-  hr = enumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, device);
-  if (FAILED(hr)) {
-    LOG("Could not get default audio endpoint.");
-    SafeRelease(enumerator);
-    return hr;
-  }
-
-  SafeRelease(enumerator);
-
-  return ERROR_SUCCESS;
-}
 } // namespace anonymous
 
 extern "C" {
 int wasapi_init(cubeb ** context, char const * context_name)
 {
   HRESULT hr;
+  IMMDeviceEnumerator * enumerator = NULL;
 
   hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
   if (FAILED(hr)) {
@@ -465,6 +441,29 @@ int wasapi_init(cubeb ** context, char const * context_name)
   cubeb * ctx = (cubeb *)calloc(1, sizeof(cubeb));
 
   ctx->ops = &wasapi_ops;
+
+  hr = CoCreateInstance(__uuidof(MMDeviceEnumerator),
+                        NULL, CLSCTX_INPROC_SERVER,
+                        IID_PPV_ARGS(&enumerator));
+  if (FAILED(hr)) {
+    LOG("Could not get device enumerator.");
+    wasapi_destroy(ctx);
+    return CUBEB_ERROR;
+  }
+
+  /* eMultimedia is okay for now ("Music, movies, narration, [...]").
+   * We will need to change this when we distinguish streams by use-case, other
+   * possible values being eConsole ("Games, system notification sounds [...]")
+   * and eCommunication ("Voice communication"). */
+  hr = enumerator->GetDefaultAudioEndpoint(eRender,
+                                           eMultimedia,
+                                           &ctx->device);
+  if (FAILED(hr)) {
+    LOG("Could not get default audio endpoint.");
+    SafeRelease(enumerator);
+    wasapi_destroy(ctx);
+    return CUBEB_ERROR;
+  }
 
   ctx->mmcss_module = LoadLibraryA("Avrt.dll");
 
@@ -486,6 +485,8 @@ int wasapi_init(cubeb ** context, char const * context_name)
     ctx->set_mm_thread_characteristics = &set_mm_thread_characteristics_noop;
     ctx->revert_mm_thread_characteristics = &revert_mm_thread_characteristics_noop;
   }
+  
+  SafeRelease(enumerator);
 
   *context = ctx;
 
@@ -497,6 +498,7 @@ namespace {
 
 void wasapi_destroy(cubeb * context)
 {
+  SafeRelease(context->device);
   if (context->mmcss_module) {
     FreeLibrary(context->mmcss_module);
   }
@@ -511,28 +513,21 @@ char const* wasapi_get_backend_id(cubeb * context)
 int
 wasapi_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 {
+  HRESULT hr;
   IAudioClient * client;
   WAVEFORMATEX * mix_format;
 
   assert(ctx && max_channels);
 
-  IMMDevice * device;
-  HRESULT hr = get_default_endpoint(&device);
-  if (FAILED(hr)) {
-    return CUBEB_ERROR;
-  }
-
-  hr = device->Activate(__uuidof(IAudioClient),
-                        CLSCTX_INPROC_SERVER,
-                        NULL, (void **)&client);
-  SafeRelease(device);
+  hr = ctx->device->Activate(__uuidof(IAudioClient),
+                             CLSCTX_INPROC_SERVER,
+                             NULL, (void **)&client);
   if (FAILED(hr)) {
     return CUBEB_ERROR;
   }
 
   hr = client->GetMixFormat(&mix_format);
   if (FAILED(hr)) {
-    SafeRelease(client);
     return CUBEB_ERROR;
   }
 
@@ -551,26 +546,16 @@ wasapi_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * laten
   IAudioClient * client;
   REFERENCE_TIME default_period;
 
-  IMMDevice * device;
-  hr = get_default_endpoint(&device);
-  if (FAILED(hr)) {
-    return CUBEB_ERROR;
-  }
+  hr = ctx->device->Activate(__uuidof(IAudioClient),
+                             CLSCTX_INPROC_SERVER,
+                             NULL, (void **)&client);
 
-  hr = device->Activate(__uuidof(IAudioClient),
-                        CLSCTX_INPROC_SERVER,
-                        NULL, (void **)&client);
-  SafeRelease(device);
   if (FAILED(hr)) {
     return CUBEB_ERROR;
   }
 
   /* The second parameter is for exclusive mode, that we don't use. */
-  hr = client->GetDevicePeriod(&default_period, NULL);
-  if (FAILED(hr)) {
-    SafeRelease(client);
-    return CUBEB_ERROR;
-  }
+  hr= client->GetDevicePeriod(&default_period, NULL);
 
   /* According to the docs, the best latency we can achieve is by synchronizing
    * the stream and the engine.
@@ -589,21 +574,16 @@ wasapi_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
   IAudioClient * client;
   WAVEFORMATEX * mix_format;
 
-  IMMDevice * device;
-  hr = get_default_endpoint(&device);
-  if (FAILED(hr)) {
-    return CUBEB_ERROR;
-  };
+  hr = ctx->device->Activate(__uuidof(IAudioClient),
+                             CLSCTX_INPROC_SERVER,
+                             NULL, (void **)&client);
 
-  hr = device->Activate(__uuidof(IAudioClient),
-                        CLSCTX_INPROC_SERVER,
-                        NULL, (void **)&client);
-  SafeRelease(device);
   if (FAILED(hr)) {
     return CUBEB_ERROR;
   }
 
   hr = client->GetMixFormat(&mix_format);
+
   if (FAILED(hr)) {
     SafeRelease(client);
     return CUBEB_ERROR;
@@ -731,19 +711,11 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
     return CUBEB_ERROR;
   }
 
-  IMMDevice * device;
-  hr = get_default_endpoint(&device);
-  if (FAILED(hr)) {
-    wasapi_stream_destroy(stm);
-    return CUBEB_ERROR;
-  }
-
   /* Get a client. We will get all other interfaces we need from
    * this pointer. */
-  hr = device->Activate(__uuidof(IAudioClient),
-                        CLSCTX_INPROC_SERVER,
-                        NULL, (void **)&stm->client);
-  SafeRelease(device);
+  hr = context->device->Activate(__uuidof(IAudioClient),
+                                 CLSCTX_INPROC_SERVER,
+                                 NULL, (void **)&stm->client);
   if (FAILED(hr)) {
     LOG("Could not activate the device to get an audio client.");
     wasapi_stream_destroy(stm);
@@ -752,12 +724,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
 
   /* We have to distinguish between the format the mixer uses,
   * and the format the stream we want to play uses. */
-  hr = stm->client->GetMixFormat(&mix_format);
-  if (FAILED(hr)) {
-    LOG("Could not fetch current mix format from the audio client.");
-    wasapi_stream_destroy(stm);
-    return CUBEB_ERROR;
-  }
+  stm->client->GetMixFormat(&mix_format);
 
   handle_channel_layout(stm, &mix_format, &stream_params);
 
@@ -843,7 +810,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   }
 
   hr = stm->client->GetService(__uuidof(IAudioRenderClient),
-                               (void **)&stm->render_client);
+                                     (void **)&stm->render_client);
   if (FAILED(hr)) {
     LOG("Could not get the render client.");
     wasapi_stream_destroy(stm);
@@ -851,7 +818,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   }
 
   hr = stm->client->GetService(__uuidof(IAudioClock),
-                               (void **)&stm->audio_clock);
+                                     (void **)&stm->audio_clock);
   if (FAILED(hr)) {
     LOG("Could not get the IAudioClock.");
     wasapi_stream_destroy(stm);
