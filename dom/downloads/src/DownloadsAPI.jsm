@@ -23,6 +23,7 @@ function debug(aStr) {
 }
 
 function sendPromiseMessage(aMm, aMessageName, aData, aError) {
+  debug("sendPromiseMessage " + aMessageName);
   let msg = {
     id: aData.id,
     promiseId: aData.promiseId
