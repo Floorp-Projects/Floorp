@@ -56,7 +56,7 @@ Sampler *SamplerRegistry::sampler = NULL;
 // a pointer.
 static const pthread_t kNoThread = (pthread_t) 0;
 
-class MacOSMutex : public Mutex {
+class MacOSMutex : public ::Mutex {
  public:
   MacOSMutex() {
     pthread_mutexattr_t attr;
@@ -85,7 +85,7 @@ class MacOSMutex : public Mutex {
 };
 
 
-Mutex* OS::CreateMutex() {
+::Mutex* OS::CreateMutex() {
   return new MacOSMutex();
 }
 
@@ -298,7 +298,7 @@ class SamplerThread : public Thread {
   //RuntimeProfilerRateLimiter rate_limiter_;
 
   // Protects the process wide state below.
-  static Mutex* mutex_;
+  static ::Mutex* mutex_;
   static SamplerThread* instance_;
 
   DISALLOW_COPY_AND_ASSIGN(SamplerThread);
