@@ -1537,6 +1537,13 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
         }
       }
 
+      if (name.EqualsLiteral("mozDownloadManager")) {
+        if (!CheckPermission("downloads")) {
+          aValue.setNull();
+          return true;
+        }
+      }
+
       domObject = construct(aCx, naviObj);
       if (!domObject) {
         return Throw(aCx, NS_ERROR_FAILURE);
