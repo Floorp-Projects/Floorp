@@ -4218,12 +4218,12 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
                                           &pseudoElementType);
       if (pseudoElement &&
           pseudoElementType != nsCSSPseudoElements::ePseudo_AnonBox) {
-        // Pseudo-elements other than anonymous boxes are represented as
-        // direct children ('>' combinator) of the rest of the selector.
+        // Pseudo-elements other than anonymous boxes are represented with
+        // a special ':' combinator.
 
         aList->mWeight += selector->CalcWeight();
 
-        selector = aList->AddSelector('>');
+        selector = aList->AddSelector(':');
 
         selector->mLowercaseTag.swap(pseudoElement);
         selector->mClassList = pseudoElementArgs.forget();

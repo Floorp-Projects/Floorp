@@ -550,7 +550,7 @@ nsCSSSelector::ToString(nsAString& aString, nsCSSStyleSheet* aSheet,
       const nsCSSSelector *next = stack.ElementAt(index - 1);
       PRUnichar oper = s->mOperator;
       if (next->IsPseudoElement()) {
-        NS_ASSERTION(oper == PRUnichar('>'),
+        NS_ASSERTION(oper == PRUnichar(':'),
                      "improperly chained pseudo element");
       } else {
         NS_ASSERTION(oper != PRUnichar(0),
