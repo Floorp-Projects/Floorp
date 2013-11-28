@@ -50,6 +50,3 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
     ]
 
 FORCE_STATIC_LIB = True
-
-if CONFIG['OS_TARGET'] == 'WINNT':
-    NO_VISIBILITY_FLAGS = True
