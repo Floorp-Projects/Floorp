@@ -170,7 +170,7 @@ function testOnWindow(aIsPrivate, aCallback) {
   win.addEventListener("load", function onLoad() {
     win.removeEventListener("load", onLoad, false);
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
-      if (win.content.location.href == "about:privatebrowsing") {
+      if (win.content.location.href != contentPage) {
         win.gBrowser.loadURI(contentPage);
         return;
       }
