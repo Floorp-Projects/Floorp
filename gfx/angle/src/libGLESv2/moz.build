@@ -20,7 +20,6 @@ SOURCES += ['../compiler/preprocessor/' + src for src in [
     'Tokenizer.cpp',
 ]]
 
-
 # Target: 'translator_common'
 #   Requires: 'preprocessor'
 # src/compiler:
@@ -88,7 +87,6 @@ else:
         '../compiler/ossource_posix.cpp',
     ]
 
-
 # Target: 'translator_hlsl'
 #   Requires: 'translator_common'
 # src/compiler:
@@ -101,7 +99,6 @@ SOURCES += ['../compiler/' + src for src in [
     'TranslatorHLSL.cpp',
     'UnfoldShortCircuit.cpp',
 ]]
-
 
 # Target: 'libGLESv2'
 #   Requires: 'translator_hlsl'
@@ -179,6 +176,13 @@ SOURCES += ['renderer/' + src for src in [
 LIBRARY_NAME = 'libGLESv2'
 
 FORCE_SHARED_LIB = True
+
+LOCAL_INCLUDES += [
+    '..',
+    '../../include',
+    '../../include/KHR',
+]
+
 
 for var in ('LIBGLESV2_EXPORTS', 'ANGLE_BUILD', 'NOMINMAX',
             '_CRT_SECURE_NO_DEPRECATE', 'ANGLE_DISABLE_TRACE',
