@@ -2990,7 +2990,7 @@ AddRule(RuleSelectorPair* aRuleInfo, RuleCascadeData* aCascade)
     }
     NS_ASSERTION(aRuleInfo->mSelector->mNext,
                  "Must have mNext; parser screwed up");
-    NS_ASSERTION(aRuleInfo->mSelector->mNext->mOperator == '>',
+    NS_ASSERTION(aRuleInfo->mSelector->mNext->mOperator == ':',
                  "Unexpected mNext combinator");
     aRuleInfo->mSelector = aRuleInfo->mSelector->mNext;
     ruleHash->AppendRule(*aRuleInfo);
