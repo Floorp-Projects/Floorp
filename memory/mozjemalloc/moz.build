@@ -14,3 +14,15 @@ if not CONFIG['MOZ_JEMALLOC3']:
     ]
     LIBRARY_NAME = 'jemalloc'
     FORCE_STATIC_LIB = True
+
+# For non release/esr builds, enable (some) fatal jemalloc assertions.  This
+# helps us catch memory errors.
+if CONFIG['MOZ_UPDATE_CHANNEL'] not in ('release', 'esr'):
+    DEFINES['MOZ_JEMALLOC_HARD_ASSERTS'] = True
+
+DEFINES['abort'] = 'moz_abort'
+
+if CONFIG['MOZ_REPLACE_MALLOC']:
+    DEFINES['MOZ_REPLACE_MALLOC'] = True
+
+DEFINES['MOZ_JEMALLOC_IMPL'] = True

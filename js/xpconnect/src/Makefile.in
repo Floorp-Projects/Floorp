@@ -37,31 +37,7 @@ extra_export_files_FILES := \
 extra_export_files_DEST = $(DIST)/include
 extra_export_files_TARGET := export
 
-# XPCShellImpl.cpp requires hardcoded vendor/profile/appname stuff on Windows
-# This sucks, bug 921148 tracks this.
-ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-  ifdef MOZ_APP_PROFILE
-    DEFINES += -DMOZ_APP_PROFILE='"$(MOZ_APP_PROFILE)"'
-  else
-    ifdef MOZ_APP_VENDOR
-      DEFINES += -DMOZ_APP_VENDOR='"$(MOZ_APP_VENDOR)"'
-    endif
-    ifdef MOZ_APP_BASENAME
-      DEFINES += -DMOZ_APP_BASENAME='"$(MOZ_APP_BASENAME)"'
-    endif
-    DEFINES += -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"'
-  endif
-endif
-
 include $(topsrcdir)/config/rules.mk
-
-DEFINES += \
-  -DJS_THREADSAFE \
-  $(NULL)
-
-ifdef MOZ_JSDEBUGGER
-DEFINES += -DMOZ_JSDEBUGGER
-endif
 
 dom_quickstubs.h: dom_quickstubs.cpp
 

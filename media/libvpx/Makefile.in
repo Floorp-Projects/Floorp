@@ -2,10 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-DEFINES += -DHAVE_CONFIG_H=vpx_config.h
-
-
 LOCAL_INCLUDES += \
   -I. \
   -I$(topsrcdir)/media/libvpx \
@@ -186,11 +182,6 @@ ifdef VPX_ARM_ASM
 # the optimized assembly in the build.
 
 ifeq ($(OS_TARGET),Android)
-
-# Older versions of the Android NDK don't pre-define anything to indicate the
-# OS they're on, so do it for them.
-DEFINES += -D__linux__
-
 # For cpu-features.h
 LOCAL_INCLUDES += -I$(ANDROID_NDK)/sources/android/cpufeatures
 ifndef MOZ_WEBRTC

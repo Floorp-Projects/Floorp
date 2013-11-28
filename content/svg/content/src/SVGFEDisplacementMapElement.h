@@ -30,21 +30,14 @@ protected:
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
 public:
-  virtual nsresult Filter(nsSVGFilterInstance* aInstance,
-                          const nsTArray<const Image*>& aSources,
-                          const Image* aTarget,
-                          const nsIntRect& aDataRect) MOZ_OVERRIDE;
+  virtual FilterPrimitiveDescription
+    GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
+                            const IntRect& aFilterSubregion,
+                            nsTArray<nsRefPtr<gfxASurface> >& aInputImages) MOZ_OVERRIDE;
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
   virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
   virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) MOZ_OVERRIDE;
-  virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
-          const nsSVGFilterInstance& aInstance) MOZ_OVERRIDE;
-  virtual void ComputeNeededSourceBBoxes(const nsIntRect& aTargetBBox,
-          nsTArray<nsIntRect>& aSourceBBoxes, const nsSVGFilterInstance& aInstance) MOZ_OVERRIDE;
-  virtual nsIntRect ComputeChangeBBox(const nsTArray<nsIntRect>& aSourceChangeBoxes,
-          const nsSVGFilterInstance& aInstance) MOZ_OVERRIDE;
-
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
@@ -56,21 +49,17 @@ public:
   already_AddRefed<SVGAnimatedEnumeration> YChannelSelector();
 
 protected:
-  virtual bool OperatesOnSRGB(nsSVGFilterInstance* aInstance,
-                              int32_t aInput, Image* aImage) MOZ_OVERRIDE {
-    switch (aInput) {
+  virtual bool OperatesOnSRGB(int32_t aInputIndex,
+                              bool aInputIsAlreadySRGB) MOZ_OVERRIDE {
+    switch (aInputIndex) {
     case 0:
-      return aImage->mColorModel.mColorSpace == ColorModel::SRGB;
+      return aInputIsAlreadySRGB;
     case 1:
-      return SVGFEDisplacementMapElementBase::OperatesOnSRGB(aInstance,
-                                                             aInput, aImage);
+      return SVGFEDisplacementMapElementBase::OperatesOnSRGB(aInputIndex, aInputIsAlreadySRGB);
     default:
-      NS_ERROR("Will not give correct output color model");
+      NS_ERROR("Will not give correct color model");
       return false;
     }
-  }
-  virtual bool OperatesOnPremultipledAlpha(int32_t aInput) MOZ_OVERRIDE {
-    return !(aInput == 1);
   }
 
   virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;

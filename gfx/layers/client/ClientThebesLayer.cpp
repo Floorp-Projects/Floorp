@@ -94,12 +94,12 @@ ClientThebesLayer::RenderLayer()
   }
   
   if (!mContentClient) {
-    mContentClient = ContentClient::CreateContentClient(ClientManager());
+    mContentClient = ContentClient::CreateContentClient(ClientManager()->AsShadowForwarder());
     if (!mContentClient) {
       return;
     }
     mContentClient->Connect();
-    ClientManager()->Attach(mContentClient, this);
+    ClientManager()->AsShadowForwarder()->Attach(mContentClient, this);
     MOZ_ASSERT(mContentClient->GetForwarder());
   }
 
@@ -154,7 +154,7 @@ already_AddRefed<ThebesLayer>
 ClientLayerManager::CreateThebesLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  if (Preferences::GetBool("layers.force-tiles") && GetCompositorBackendType() == LAYERS_OPENGL) {
+  if (Preferences::GetBool("layers.force-tiles") && AsShadowForwarder()->GetCompositorBackendType() == LAYERS_OPENGL) {
     nsRefPtr<ClientTiledThebesLayer> layer =
       new ClientTiledThebesLayer(this);
     CREATE_SHADOW(Thebes);

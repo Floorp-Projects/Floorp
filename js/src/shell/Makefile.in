@@ -11,11 +11,6 @@ ifdef _MSC_VER
 NO_PROFILE_GUIDED_OPTIMIZE := 1
 endif
 
-DEFINES         += -DEXPORT_JS_API
-# Building against js_static requires that we declare mfbt sybols "exported"
-# on its behalf.
-DEFINES         += -DIMPL_MFBT
-
 LIBS      = $(NSPR_LIBS) $(EDITLINE_LIBS) $(DEPTH)/$(LIB_PREFIX)js_static.$(LIB_SUFFIX) $(MOZ_ZLIB_LIBS)
 ifdef MOZ_NATIVE_FFI
 EXTRA_LIBS += $(MOZ_FFI_LIBS)

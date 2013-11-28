@@ -6550,7 +6550,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
           nsCSSPseudoElements::GetPseudoAtom(pseudoType))->StyleContext();
       nsRefPtr<nsStyleContext> kidSC = shell->StyleSet()->
         ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
-                                  parentStyle);
+                                  parentStyle, nullptr);
 
       // Create bullet frame
       nsBulletFrame* bullet = new (shell) nsBulletFrame(kidSC);

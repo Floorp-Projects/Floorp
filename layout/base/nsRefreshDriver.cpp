@@ -1202,13 +1202,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       printf_stderr("Starting ProcessPendingUpdates\n");
     }
 #endif
-#ifndef MOZ_WIDGET_GONK
-    // Waiting for bug 830475 to work on B2G.
-    nsRefPtr<layers::LayerManager> mgr = mPresContext->GetPresShell()->GetLayerManager();
-    if (mgr) {
-      mgr->SetPaintStartTime(mMostRecentRefresh);
-    }
-#endif
 
     mViewManagerFlushIsPending = false;
     nsRefPtr<nsViewManager> vm = mPresContext->GetPresShell()->GetViewManager();

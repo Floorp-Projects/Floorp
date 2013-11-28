@@ -3,13 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 STL_FLAGS=
-DEFINES += \
-  -DANDROID_PACKAGE_NAME='"$(ANDROID_PACKAGE_NAME)"' \
-  $(NULL)
-
-ifdef MOZ_FOLD_LIBS
-DEFINES += -DMOZ_FOLD_LIBS
-endif
 
 LOCAL_INCLUDES += -I$(DEPTH)/build
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build

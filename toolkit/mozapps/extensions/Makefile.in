@@ -2,18 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq (,$(filter aurora beta release esr,$(MOZ_UPDATE_CHANNEL)))
-DEFINES += -DMOZ_COMPATIBILITY_NIGHTLY=1
-endif
-
-# This is used in multiple places, so is defined here to avoid it getting
-# out of sync.
-DEFINES += -DMOZ_EXTENSIONS_DB_SCHEMA=15
-
-# Additional debugging info is exposed in debug builds, or by setting the
-# MOZ_EM_DEBUG environment variable when building.
+# Additional debugging info is exposed by setting the MOZ_EM_DEBUG
+# environment variable when building.
 ifneq (,$(MOZ_EM_DEBUG))
-DEFINES += -DMOZ_EM_DEBUG=1
-else ifdef MOZ_DEBUG
 DEFINES += -DMOZ_EM_DEBUG=1
 endif

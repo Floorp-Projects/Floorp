@@ -15,6 +15,11 @@
 #include "Tools.h"
 #include <algorithm>
 #include "mozilla/Constants.h"
+#include "FilterNodeSoftware.h"
+
+#ifdef USE_D2D1_1
+#include "FilterNodeD2D1.h"
+#endif
 
 #include <dwrite.h>
 
@@ -342,6 +347,46 @@ DrawTargetD2D::DrawSurface(SourceSurface *aSurface,
   rt->DrawBitmap(bitmap, D2DRect(aDest), aOptions.mAlpha, D2DFilter(aSurfOptions.mFilter), D2DRect(srcRect));
 
   FinalizeRTForOperation(aOptions.mCompositionOp, ColorPattern(Color()), aDest);
+}
+
+void
+DrawTargetD2D::DrawFilter(FilterNode *aNode,
+                          const Rect &aSourceRect,
+                          const Point &aDestPoint,
+                          const DrawOptions &aOptions)
+{
+#ifdef USE_D2D1_1
+  RefPtr<ID2D1DeviceContext> dc;
+  HRESULT hr;
+  
+  hr = mRT->QueryInterface((ID2D1DeviceContext**)byRef(dc));
+
+  if (SUCCEEDED(hr) && aNode->GetBackendType() == FILTER_BACKEND_DIRECT2D1_1) {
+    ID2D1RenderTarget *rt = GetRTForOperation(aOptions.mCompositionOp, ColorPattern(Color()));
+  
+    PrepareForDrawing(rt);
+
+    rt->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
+    hr = rt->QueryInterface((ID2D1DeviceContext**)byRef(dc));
+
+    if (SUCCEEDED(hr)) {
+      dc->DrawImage(static_cast<FilterNodeD2D1*>(aNode)->OutputEffect(), D2DPoint(aDestPoint), D2DRect(aSourceRect));
+
+      Rect destRect = aSourceRect;
+      destRect.MoveBy(aDestPoint);
+      FinalizeRTForOperation(aOptions.mCompositionOp, ColorPattern(Color()), destRect);
+      return;
+    }
+  }
+#endif
+
+  if (aNode->GetBackendType() != FILTER_BACKEND_SOFTWARE) {
+    gfxWarning() << "Invalid filter backend passed to DrawTargetD2D!";
+    return;
+  }
+
+  FilterNodeSoftware* filter = static_cast<FilterNodeSoftware*>(aNode);
+  filter->Draw(this, aSourceRect, aDestPoint, aOptions);
 }
 
 void
@@ -1211,6 +1256,20 @@ DrawTargetD2D::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, E
   }
 
   return new GradientStopsD2D(stopCollection);
+}
+
+TemporaryRef<FilterNode>
+DrawTargetD2D::CreateFilter(FilterType aType)
+{
+#ifdef USE_D2D1_1
+  RefPtr<ID2D1DeviceContext> dc;
+  HRESULT hr = mRT->QueryInterface((ID2D1DeviceContext**)byRef(dc));
+
+  if (SUCCEEDED(hr)) {
+    return FilterNodeD2D1::Create(this, dc, aType);
+  }
+#endif
+  return FilterNodeSoftware::Create(aType);
 }
 
 void*

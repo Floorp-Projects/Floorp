@@ -28,7 +28,6 @@ LIBS += $(call EXPAND_LIBNAME_PATH,verifymar,$(DEPTH)/modules/libmar/verify)
 USE_STATIC_LIBS = 1
 RCINCLUDE = updater.rc
 OS_LIBS += $(call EXPAND_LIBNAME,delayimp comctl32 ws2_32 shell32 shlwapi)
-DEFINES += -DUNICODE -D_UNICODE
 ifndef GNU_CC
 RCFLAGS += -I$(srcdir)
 else
@@ -62,11 +61,6 @@ endif
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-DEFINES += -DNS_NO_XPCOM \
-  -DMAR_CHANNEL_ID='"$(MAR_CHANNEL_ID)"' \
-  -DMOZ_APP_VERSION='"$(MOZ_APP_VERSION)"' \
-  $(NULL)
 
 ifdef _MSC_VER
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup

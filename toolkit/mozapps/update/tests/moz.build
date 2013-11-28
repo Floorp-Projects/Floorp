@@ -21,3 +21,18 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     SOURCES += [
         '%s.cpp' % s for s in SIMPLE_PROGRAMS
     ]
+
+for var in ('MOZ_APP_NAME', 'MOZ_APP_DISPLAYNAME', 'BIN_SUFFIX', 'MOZ_DEBUG'):
+    DEFINES[var] = CONFIG[var]
+
+DEFINES['NS_NO_XPCOM'] = True
+
+if CONFIG['MOZ_MAINTENANCE_SERVICE']:
+    DEFINES['MOZ_MAINTENANCE_SERVICE'] = CONFIG['MOZ_MAINTENANCE_SERVICE']
+
+# For debugging purposes only
+#DEFINES['DISABLE_UPDATER_AUTHENTICODE_CHECK'] = True
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    DEFINES['UNICODE'] = True
+    DEFINES['_UNICODE'] = True

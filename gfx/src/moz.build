@@ -12,6 +12,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'gfx'
 
 EXPORTS += [
+    'FilterSupport.h',
     'gfxCore.h',
     'gfxCrashReporterUtils.h',
     'nsBoundingMetrics.h',
@@ -45,6 +46,7 @@ if CONFIG['MOZ_X11']:
     ]
 
 SOURCES += [
+    'FilterSupport.cpp',
     'gfxCrashReporterUtils.cpp',
     'nsColor.cpp',
     'nsDeviceContext.cpp',

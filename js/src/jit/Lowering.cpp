@@ -2224,6 +2224,17 @@ LIRGenerator::visitArrayLength(MArrayLength *ins)
 }
 
 bool
+LIRGenerator::visitSetArrayLength(MSetArrayLength *ins)
+{
+    JS_ASSERT(ins->elements()->type() == MIRType_Elements);
+    JS_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    JS_ASSERT(ins->index()->isConstant());
+    return add(new LSetArrayLength(useRegister(ins->elements()),
+                                   useRegisterOrConstant(ins->index())), ins);
+}
+
+bool
 LIRGenerator::visitTypedArrayLength(MTypedArrayLength *ins)
 {
     JS_ASSERT(ins->object()->type() == MIRType_Object);

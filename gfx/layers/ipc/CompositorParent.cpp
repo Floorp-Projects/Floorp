@@ -331,6 +331,27 @@ CompositorParent::RecvNotifyRegionInvalidated(const nsIntRegion& aRegion)
   return true;
 }
 
+bool
+CompositorParent::RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex)
+{
+  if (mLayerManager) {
+    *aOutStartIndex = mLayerManager->StartFrameTimeRecording(aBufferSize);
+  } else {
+    *aOutStartIndex = 0;
+  }
+  return true;
+}
+
+bool
+CompositorParent::RecvStopFrameTimeRecording(const uint32_t& aStartIndex,
+                                             InfallibleTArray<float>* intervals)
+{
+  if (mLayerManager) {
+    mLayerManager->StopFrameTimeRecording(aStartIndex, *intervals);
+  }
+  return true;
+}
+
 void
 CompositorParent::ActorDestroy(ActorDestroyReason why)
 {
@@ -477,6 +498,10 @@ CompositorParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint)
   ScheduleComposition();
 }
 
+// Used when layout.frame_rate is -1. Needs to be kept in sync with
+// DEFAULT_FRAME_RATE in nsRefreshDriver.cpp.
+static const int32_t kDefaultFrameRate = 60;
+
 void
 CompositorParent::ScheduleComposition()
 {
@@ -489,19 +514,29 @@ CompositorParent::ScheduleComposition()
   if (!initialComposition)
     delta = TimeStamp::Now() - mLastCompose;
 
+  int32_t rate = gfxPlatform::GetPrefLayoutFrameRate();
+  if (rate < 0) {
+    // TODO: The main thread frame scheduling code consults the actual monitor
+    // refresh rate in this case. We should do the same.
+    rate = kDefaultFrameRate;
+  }
+
+  // If rate == 0 (ASAP mode), minFrameDelta must be 0 so there's no delay.
+  TimeDuration minFrameDelta = TimeDuration::FromMilliseconds(
+    rate == 0 ? 0.0 : std::max(0.0, 1000.0 / rate));
+
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
-  mExpectedComposeTime = TimeStamp::Now() + TimeDuration::FromMilliseconds(15);
+  mExpectedComposeTime = TimeStamp::Now() + minFrameDelta;
 #endif
 
   mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite);
 
-  // Since 60 fps is the maximum frame rate we can acheive, scheduling composition
-  // events less than 15 ms apart wastes computation..
-  if (!initialComposition && delta.ToMilliseconds() < 15) {
+  if (!initialComposition && delta < minFrameDelta) {
+    TimeDuration delay = minFrameDelta - delta;
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
-    mExpectedComposeTime = TimeStamp::Now() + TimeDuration::FromMilliseconds(15 - delta.ToMilliseconds());
+    mExpectedComposeTime = TimeStamp::Now() + delay;
 #endif
-    ScheduleTask(mCurrentCompositeTask, 15 - delta.ToMilliseconds());
+    ScheduleTask(mCurrentCompositeTask, delay.ToMilliseconds());
   } else {
     ScheduleTask(mCurrentCompositeTask, 0);
   }
@@ -707,20 +742,24 @@ CompositorParent::AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aB
   if (!mLayerManager) {
     NS_WARNING("Failed to initialise Compositor");
     *aSuccess = false;
-    return new LayerTransactionParent(nullptr, this, 0);
+    LayerTransactionParent* p = new LayerTransactionParent(nullptr, this, 0);
+    p->AddIPDLReference();
+    return p;
   }
 
   mCompositionManager = new AsyncCompositionManager(mLayerManager);
+  *aSuccess = true;
 
   *aTextureFactoryIdentifier = mLayerManager->GetTextureFactoryIdentifier();
-  *aSuccess = true;
-  return new LayerTransactionParent(mLayerManager, this, 0);
+  LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, 0);
+  p->AddIPDLReference();
+  return p;
 }
 
 bool
 CompositorParent::DeallocPLayerTransactionParent(PLayerTransactionParent* actor)
 {
-  delete actor;
+  static_cast<LayerTransactionParent*>(actor)->ReleaseIPDLReference();
   return true;
 }
 
@@ -906,6 +945,8 @@ public:
   { return true; }
   virtual bool RecvFlushRendering() MOZ_OVERRIDE { return true; }
   virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) { return true; }
+  virtual bool RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) MOZ_OVERRIDE { return true; }
+  virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) MOZ_OVERRIDE  { return true; }
 
   virtual PLayerTransactionParent*
     AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aBackendHints,
@@ -1019,14 +1060,18 @@ CrossProcessCompositorParent::AllocPLayerTransactionParent(const nsTArray<Layers
     LayerManagerComposite* lm = sIndirectLayerTrees[aId].mParent->GetLayerManager();
     *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
     *aSuccess = true;
-    return new LayerTransactionParent(lm, this, aId);
+    LayerTransactionParent* p = new LayerTransactionParent(lm, this, aId);
+    p->AddIPDLReference();
+    return p;
   }
 
   NS_WARNING("Created child without a matching parent?");
   // XXX: should be false, but that causes us to fail some tests on Mac w/ OMTC.
   // Bug 900745. change *aSuccess to false to see test failures.
   *aSuccess = true;
-  return new LayerTransactionParent(nullptr, this, aId);
+  LayerTransactionParent* p = new LayerTransactionParent(nullptr, this, aId);
+  p->AddIPDLReference();
+  return p;
 }
 
 bool
@@ -1034,7 +1079,7 @@ CrossProcessCompositorParent::DeallocPLayerTransactionParent(PLayerTransactionPa
 {
   LayerTransactionParent* slp = static_cast<LayerTransactionParent*>(aLayers);
   RemoveIndirectTree(slp->GetId());
-  delete aLayers;
+  static_cast<LayerTransactionParent*>(aLayers)->ReleaseIPDLReference();
   return true;
 }
 

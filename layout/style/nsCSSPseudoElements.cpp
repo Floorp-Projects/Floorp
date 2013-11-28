@@ -112,3 +112,10 @@ nsCSSPseudoElements::FlagsForPseudoElement(const Type aType)
                "argument must be a pseudo-element");
   return CSSPseudoElements_flags[index];
 }
+
+/* static */ bool
+nsCSSPseudoElements::PseudoElementSupportsUserActionState(const Type aType)
+{
+  return PseudoElementHasFlags(aType,
+                               CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE);
+}

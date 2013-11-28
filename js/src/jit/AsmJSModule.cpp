@@ -466,7 +466,7 @@ DeserializeName(ExclusiveContext *cx, const uint8_t *cursor, PropertyName **name
         return cursor;
     }
 
-    Vector<jschar> tmp(cx);
+    js::Vector<jschar> tmp(cx);
     jschar *src;
     if ((size_t(cursor) & (sizeof(jschar) - 1)) != 0) {
         // Align 'src' for AtomizeChars.
@@ -488,7 +488,7 @@ DeserializeName(ExclusiveContext *cx, const uint8_t *cursor, PropertyName **name
 
 template <class T>
 size_t
-SerializedVectorSize(const Vector<T, 0, SystemAllocPolicy> &vec)
+SerializedVectorSize(const js::Vector<T, 0, SystemAllocPolicy> &vec)
 {
     size_t size = sizeof(uint32_t);
     for (size_t i = 0; i < vec.length(); i++)
@@ -498,7 +498,7 @@ SerializedVectorSize(const Vector<T, 0, SystemAllocPolicy> &vec)
 
 template <class T>
 uint8_t *
-SerializeVector(uint8_t *cursor, const Vector<T, 0, SystemAllocPolicy> &vec)
+SerializeVector(uint8_t *cursor, const js::Vector<T, 0, SystemAllocPolicy> &vec)
 {
     cursor = WriteScalar<uint32_t>(cursor, vec.length());
     for (size_t i = 0; i < vec.length(); i++)
@@ -508,7 +508,7 @@ SerializeVector(uint8_t *cursor, const Vector<T, 0, SystemAllocPolicy> &vec)
 
 template <class T>
 const uint8_t *
-DeserializeVector(ExclusiveContext *cx, const uint8_t *cursor, Vector<T, 0, SystemAllocPolicy> *vec)
+DeserializeVector(ExclusiveContext *cx, const uint8_t *cursor, js::Vector<T, 0, SystemAllocPolicy> *vec)
 {
     uint32_t length;
     cursor = ReadScalar<uint32_t>(cursor, &length);
@@ -799,7 +799,7 @@ class ModuleChars
     uint32_t length_;
     const jschar *begin_;
     uint32_t isFunCtor_;
-    Vector<PropertyNameWrapper, 0, SystemAllocPolicy> funCtorArgs_;
+    js::Vector<PropertyNameWrapper, 0, SystemAllocPolicy> funCtorArgs_;
 
   public:
     static uint32_t beginOffset(AsmJSParser &parser) {

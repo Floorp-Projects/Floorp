@@ -9,10 +9,6 @@ LOCAL_INCLUDES = \
 		-I$(srcdir)/../unix \
 		-I$(srcdir)/../../../../xptinfo/src \
 		$(NULL)
-DEFINES		+= -DMOZ_NEED_LEADING_UNDERSCORE
-
 include $(topsrcdir)/config/rules.mk
-
-DEFINES		+= -DIMPL_LIBXUL
 
 LOCAL_INCLUDES	+= -I$(srcdir)/../..

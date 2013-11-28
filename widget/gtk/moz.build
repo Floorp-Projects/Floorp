@@ -80,3 +80,7 @@ else:
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+DEFINES['CAIRO_GFX'] = True
+
+DEFINES['MOZ_APP_NAME'] = '"%s"' % CONFIG['MOZ_APP_NAME']

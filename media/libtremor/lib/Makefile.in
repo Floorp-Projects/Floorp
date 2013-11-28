@@ -3,11 +3,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 LOCAL_INCLUDES += -I$(topsrcdir)/media/libtremor/include/tremor
-
-ifeq ($(OS_ARCH),AIX)
-DEFINES += -Dalloca=__alloca
-endif
-
-ifeq (arm_1_, $(TARGET_CPU)_$(GNU_CC)_$(MOZ_THUMB2))
-DEFINES += -D_ARM_ASSEM_
-endif

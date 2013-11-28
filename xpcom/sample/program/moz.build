@@ -14,3 +14,7 @@ SOURCES += [
 SIMPLE_PROGRAMS += [
     'nsTestSample'
 ]
+
+# Whatever code is going to be linked with the *standalone* glue must be
+# built with the XPCOM_GLUE define set.
+DEFINES['XPCOM_GLUE'] = True

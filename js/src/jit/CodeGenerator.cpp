@@ -3523,7 +3523,7 @@ CodeGenerator::visitInitPropGetterSetter(LInitPropGetterSetter *lir)
 }
 
 typedef bool (*CreateThisFn)(JSContext *cx, HandleObject callee, MutableHandleValue rval);
-static const VMFunction CreateThisInfo = FunctionInfo<CreateThisFn>(CreateThis);
+static const VMFunction CreateThisInfoCodeGen = FunctionInfo<CreateThisFn>(CreateThis);
 
 bool
 CodeGenerator::visitCreateThis(LCreateThis *lir)
@@ -3535,7 +3535,7 @@ CodeGenerator::visitCreateThis(LCreateThis *lir)
     else
         pushArg(ToRegister(callee));
 
-    return callVM(CreateThisInfo, lir);
+    return callVM(CreateThisInfoCodeGen, lir);
 }
 
 static JSObject *
@@ -3708,6 +3708,19 @@ CodeGenerator::visitArrayLength(LArrayLength *lir)
 {
     Address length(ToRegister(lir->elements()), ObjectElements::offsetOfLength());
     masm.load32(length, ToRegister(lir->output()));
+    return true;
+}
+
+bool
+CodeGenerator::visitSetArrayLength(LSetArrayLength *lir)
+{
+    Address length(ToRegister(lir->elements()), ObjectElements::offsetOfLength());
+    Int32Key newLength = ToInt32Key(lir->index());
+
+    masm.bumpKey(&newLength, 1);
+    masm.storeKey(newLength, length);
+    // Restore register value if it is used/captured after.
+    masm.bumpKey(&newLength, -1);
     return true;
 }
 
@@ -6635,13 +6648,13 @@ CodeGenerator::visitSetPropertyParIC(OutOfLineUpdateCache *ool, DataPtr<SetPrope
 }
 
 typedef bool (*ThrowFn)(JSContext *, HandleValue);
-static const VMFunction ThrowInfo = FunctionInfo<ThrowFn>(js::Throw);
+static const VMFunction ThrowInfoCodeGen = FunctionInfo<ThrowFn>(js::Throw);
 
 bool
 CodeGenerator::visitThrow(LThrow *lir)
 {
     pushArg(ToValue(lir, LThrow::Value));
-    return callVM(ThrowInfo, lir);
+    return callVM(ThrowInfoCodeGen, lir);
 }
 
 typedef bool (*BitNotFn)(JSContext *, HandleValue, int *p);

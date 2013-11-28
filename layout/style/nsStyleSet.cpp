@@ -1874,6 +1874,18 @@ struct MOZ_STACK_CLASS StatefulData : public StateRuleProcessorData {
   nsRestyleHint   mHint;
 };
 
+struct MOZ_STACK_CLASS StatefulPseudoElementData : public PseudoElementStateRuleProcessorData {
+  StatefulPseudoElementData(nsPresContext* aPresContext, Element* aElement,
+               nsEventStates aStateMask, nsCSSPseudoElements::Type aPseudoType,
+               TreeMatchContext& aTreeMatchContext, Element* aPseudoElement)
+    : PseudoElementStateRuleProcessorData(aPresContext, aElement, aStateMask,
+                                          aPseudoType, aTreeMatchContext,
+                                          aPseudoElement),
+      mHint(nsRestyleHint(0))
+  {}
+  nsRestyleHint   mHint;
+};
+
 static bool SheetHasDocumentStateStyle(nsIStyleRuleProcessor* aProcessor,
                                          void *aData)
 {
@@ -1912,6 +1924,15 @@ static bool SheetHasStatefulStyle(nsIStyleRuleProcessor* aProcessor,
   return true; // continue
 }
 
+static bool SheetHasStatefulPseudoElementStyle(nsIStyleRuleProcessor* aProcessor,
+                                               void *aData)
+{
+  StatefulPseudoElementData* data = (StatefulPseudoElementData*)aData;
+  nsRestyleHint hint = aProcessor->HasStateDependentStyle(data);
+  data->mHint = nsRestyleHint(data->mHint | hint);
+  return true; // continue
+}
+
 // Test if style is dependent on content state
 nsRestyleHint
 nsStyleSet::HasStateDependentStyle(nsPresContext*       aPresContext,
@@ -1923,6 +1944,22 @@ nsStyleSet::HasStateDependentStyle(nsPresContext*       aPresContext,
   InitStyleScopes(treeContext, aElement);
   StatefulData data(aPresContext, aElement, aStateMask, treeContext);
   WalkRuleProcessors(SheetHasStatefulStyle, &data, false);
+  return data.mHint;
+}
+
+nsRestyleHint
+nsStyleSet::HasStateDependentStyle(nsPresContext* aPresContext,
+                                   Element* aElement,
+                                   nsCSSPseudoElements::Type aPseudoType,
+                                   Element* aPseudoElement,
+                                   nsEventStates aStateMask)
+{
+  TreeMatchContext treeContext(false, nsRuleWalker::eLinksVisitedOrUnvisited,
+                               aElement->OwnerDoc());
+  InitStyleScopes(treeContext, aElement);
+  StatefulPseudoElementData data(aPresContext, aElement, aStateMask,
+                                 aPseudoType, treeContext, aPseudoElement);
+  WalkRuleProcessors(SheetHasStatefulPseudoElementStyle, &data, false);
   return data.mHint;
 }
 

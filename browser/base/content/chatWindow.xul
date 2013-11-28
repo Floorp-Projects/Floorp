@@ -18,7 +18,7 @@
         windowtype="Social:Chat"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
+        title="&mainWindow.title;"
         onload="gChatWindow.onLoad();"
         onunload="gChatWindow.onUnload();"
         macanimationtype="document"

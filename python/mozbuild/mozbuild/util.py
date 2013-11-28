@@ -490,3 +490,18 @@ class PushbackIter(object):
 
     def pushback(self, item):
         self.pushed_back.append(item)
+
+
+def shell_quote(s):
+    '''Given a string, returns a version enclosed with single quotes for use
+    in a shell command line.
+
+    As a special case, if given an int, returns a string containing the int,
+    not enclosed in quotes.
+    '''
+    if type(s) == int:
+        return '%d' % s
+    # Single quoted strings can contain any characters unescaped except the
+    # single quote itself, which can't even be escaped, so the string needs to
+    # be closed, an escaped single quote added, and reopened.
+    return "'%s'" % s.replace("'", "'\\''")

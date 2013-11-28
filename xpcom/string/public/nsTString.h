@@ -39,6 +39,15 @@ class nsTString_CharT : public nsTSubstring_CharT
           Assign(data, length);
         }
 
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+      explicit
+      nsTString_CharT( char16ptr_t data, size_type length = size_type(-1) )
+        : substring_type()
+        {
+          Assign(static_cast<const char16_t*>(data), length);
+        }
+#endif
+
       nsTString_CharT( const self_type& str )
         : substring_type()
         {
@@ -63,6 +72,9 @@ class nsTString_CharT : public nsTSubstring_CharT
       self_type& operator=( char_type c )                                                       { Assign(c);        return *this; }
       self_type& operator=( const char_type* data )                                             { Assign(data);     return *this; }
       self_type& operator=( const self_type& str )                                              { Assign(str);      return *this; }
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+      self_type& operator=( const char16ptr_t data )                                            { Assign(static_cast<const char16_t*>(data));     return *this; }
+#endif
       self_type& operator=( const substring_type& str )                                         { Assign(str);      return *this; }
       self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
 
@@ -70,7 +82,11 @@ class nsTString_CharT : public nsTSubstring_CharT
          * returns the null-terminated string
          */
 
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+      char16ptr_t get() const
+#else
       const char_type* get() const
+#endif
         {
           return mData;
         }
@@ -115,6 +131,12 @@ class nsTString_CharT : public nsTSubstring_CharT
 #ifdef CharT_is_PRUnichar
       int32_t Find( const nsAFlatString& aString, int32_t aOffset=0, int32_t aCount=-1 ) const;
       int32_t Find( const PRUnichar* aString, int32_t aOffset=0, int32_t aCount=-1 ) const;
+#ifdef MOZ_USE_CHAR16_WRAPPER
+      int32_t Find( char16ptr_t aString, int32_t aOffset=0, int32_t aCount=-1 ) const
+        {
+          return Find(static_cast<const char16_t*>(aString), aOffset, aCount);
+        }
+#endif
 #endif
 
         
@@ -474,6 +496,13 @@ class nsTAutoString_CharT : public nsTFixedString_CharT
           Assign(data, length);
         }
 
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+      explicit
+      nsTAutoString_CharT( char16ptr_t data, size_type length = size_type(-1) )
+        : nsTAutoString_CharT(static_cast<const char16_t*>(data), length)
+        {}
+#endif
+
       nsTAutoString_CharT( const self_type& str )
         : fixed_string_type(mStorage, kDefaultStorageSize, 0)
         {
@@ -496,6 +525,9 @@ class nsTAutoString_CharT : public nsTFixedString_CharT
         // |operator=| does not inherit, so we must define our own
       self_type& operator=( char_type c )                                                       { Assign(c);        return *this; }
       self_type& operator=( const char_type* data )                                             { Assign(data);     return *this; }
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+      self_type& operator=( char16ptr_t data )                                                  { Assign(data);     return *this; }
+#endif
       self_type& operator=( const self_type& str )                                              { Assign(str);      return *this; }
       self_type& operator=( const substring_type& str )                                         { Assign(str);      return *this; }
       self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
@@ -567,7 +599,11 @@ class nsTXPIDLString_CharT : public nsTString_CharT
         }
 
         // return nullptr if we are voided
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+      char16ptr_t get() const
+#else
       const char_type* get() const
+#endif
         {
           return (mFlags & F_VOIDED) ? nullptr : mData;
         }

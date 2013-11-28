@@ -2,19 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-ifdef MOZ_WEBGL
-DEFINES += -DMOZ_D3DCOMPILER_DLL=$(MOZ_D3DCOMPILER_DLL)
-endif
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 LOCAL_INCLUDES = -I$(topsrcdir)/widget/gonk
 LOCAL_INCLUDES += -I$(ANDROID_SOURCE)/hardware/libhardware/include
-endif
-
-ifdef MOZ_ANDROID_OMTC
-DEFINES += -DMOZ_ANDROID_OMTC
 endif
 
 include $(topsrcdir)/config/rules.mk

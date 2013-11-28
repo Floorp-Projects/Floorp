@@ -183,6 +183,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitMonitorTypes(MMonitorTypes *ins);
     bool visitPostWriteBarrier(MPostWriteBarrier *ins);
     bool visitArrayLength(MArrayLength *ins);
+    bool visitSetArrayLength(MSetArrayLength *ins);
     bool visitTypedArrayLength(MTypedArrayLength *ins);
     bool visitTypedArrayElements(MTypedArrayElements *ins);
     bool visitTypedObjectElements(MTypedObjectElements *ins);

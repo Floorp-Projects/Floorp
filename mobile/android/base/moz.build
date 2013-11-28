@@ -984,3 +984,28 @@ if CONFIG['MOZ_CRASHREPORTER']:
         'resources/drawable-mdpi/crash_reporter.png',
         'resources/layout/crash_reporter.xml',
     ]
+
+for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_LINKER_EXTRACT'):
+    if CONFIG[var]:
+        DEFINES[var] = 1
+
+for var in ('MOZ_UPDATER', 'MOZ_PKG_SPECIAL'):
+    if CONFIG[var]:
+        DEFINES[var] = CONFIG[var]
+
+for var in ('ANDROID_PACKAGE_NAME', 'ANDROID_CPU_ARCH', 'CPU_ARCH',
+            'GRE_MILESTONE', 'MOZILLA_OFFICIAL', 'MOZ_APP_BASENAME',
+            'MOZ_APP_DISPLAYNAME', 'MOZ_APP_ID', 'MOZ_APP_NAME',
+            'MOZ_APP_VENDOR', 'MOZ_APP_VERSION', 'MOZ_CHILD_PROCESS_NAME',
+            'MOZ_CRASHREPORTER', 'MOZ_UPDATE_CHANNEL', 'OMNIJAR_NAME',
+            'OS_TARGET', 'TARGET_XPCOM_ABI'):
+    DEFINES[var] = CONFIG[var]
+
+# Mangle our package name to avoid Bug 750548.
+DEFINES['MANGLED_ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME'].replace('fennec', 'f3nn3c')
+DEFINES['MOZ_APP_ABI'] = CONFIG['TARGET_XPCOM_ABI']
+
+if '-march=armv7' in CONFIG['OS_CFLAGS']:
+    DEFINES['MOZ_MIN_CPU_VERSION'] = 7
+else:
+    DEFINES['MOZ_MIN_CPU_VERSION'] = 5

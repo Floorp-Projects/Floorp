@@ -37,6 +37,7 @@ EXPORTS += [
     'opengl/TexturePoolOGL.h',
     'ReadbackLayer.h',
     'SharedTextureImage.h',
+    'TiledLayerBuffer.h',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
@@ -292,3 +293,9 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'thebes'
+
+if CONFIG['MOZ_DEBUG']:
+    DEFINES['D3D_DEBUG_INFO'] = True
+
+if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
+    DEFINES['MOZ_ENABLE_D3D10_LAYER'] = True

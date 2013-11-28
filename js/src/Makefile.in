@@ -46,14 +46,6 @@ VPATH		+= \
 ###############################################
 # BEGIN enable non-releasable features
 #
-ifdef NIGHTLY_BUILD
-DEFINES += -DENABLE_PARALLEL_JS
-endif
-
-ifdef NIGHTLY_BUILD
-DEFINES += -DENABLE_BINARYDATA
-endif
-
 # Ion
 ifdef ENABLE_ION
 VPATH +=	$(srcdir)/jit
@@ -238,7 +230,7 @@ ifeq ($(OS_ARCH),WINNT)
     ICU_LIB_SUFFIX=d
   endif
   ICU_LIB_RENAME = $(foreach libname,$(ICU_LIB_NAMES),\
-                     cp -p intl/icu/lib/s$(libname)$(ICU_LIB_SUFFIX).lib intl/icu/lib/$(libname).lib;)
+                     cp -p intl/icu/target/lib/s$(libname)$(ICU_LIB_SUFFIX).lib intl/icu/target/lib/$(libname).lib;)
 endif
 
 ifdef .PYMAKE
@@ -254,11 +246,17 @@ endif
 # - Options for genrb: -k strict parsing; -R omit collation tailoring rules.
 buildicu:
 # ICU's build system is full of races, so force non-parallel build.
-	+$(ICU_MAKE) -j1 -C intl/icu STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
+ifdef CROSS_COMPILE
+	+$(ICU_MAKE) -j1 -C intl/icu/host STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R -C'
+endif
+	+$(ICU_MAKE) -j1 -C intl/icu/target STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
 	$(ICU_LIB_RENAME)
 
 distclean clean::
-	$(call SUBMAKE,$@,intl/icu)
+ifdef CROSS_COMPILE
+	$(call SUBMAKE,$@,intl/icu/host)
+endif
+	$(call SUBMAKE,$@,intl/icu/target)
 
 endif
 endif
@@ -361,18 +359,7 @@ DIST_GARBAGE = config.cache config.log config.status* \
 distclean::
 	$(RM) $(DIST_GARBAGE)
 
-DEFINES		+= -DEXPORT_JS_API
-
 INCLUDES	+= -I$(srcdir)
-
-ifdef JS_THREADSAFE
-DEFINES		+= -DJS_THREADSAFE
-endif
-
-ifdef JS_HAS_CTYPES
-DEFINES		+= -DJS_HAS_CTYPES
-DEFINES         += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
-endif
 
 ifneq ($(findstring -L,$(NSPR_LIBS)),)
 NSPR_STATIC_PATH = $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
@@ -397,10 +384,6 @@ EXTRA_LIBS += $(MOZ_ZLIB_LIBS)
 # also enable zlib if mozglue is present.
 ifneq (,$(MOZ_ZLIB_LIBS)$(MOZ_GLUE_LDFLAGS))
 DEFINES += -DUSE_ZLIB
-endif
-
-ifdef MOZ_LINKER
-DEFINES += -DMOZ_LINKER
 endif
 
 ifdef MOZ_NATIVE_ICU

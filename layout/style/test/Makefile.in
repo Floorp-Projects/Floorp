@@ -131,6 +131,8 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_position_sticky.html \
 		test_priority_preservation.html \
 		test_property_syntax_errors.html \
+		test_pseudoelement_state.html \
+		test_pseudoelement_parsing.html \
 		test_redundant_font_download.html \
 		redundant_font_download.sjs \
 		test_rem_unit.html \
@@ -219,8 +221,6 @@ VISITED_REFTEST_FILES = \
 		$(NULL)
 VISITED_REFTEST_DEST = $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/css-visited/
 INSTALL_TARGETS += VISITED_REFTEST
-
-DEFINES += -DMOZILLA_INTERNAL_API
 
 ifdef COMPILE_ENVIRONMENT
 MOCHITEST_FILES += \

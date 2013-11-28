@@ -147,16 +147,9 @@ interface nsIMemoryReporterCallback : nsISupports
  * - All other reports are unconstrained except that they must have a
  *   description that is a sentence.
  */
-[scriptable, uuid(53248304-124b-43cd-99dc-6e5797b91618)]
+[scriptable, uuid(0884cd0f-5829-4381-979b-0f53904030ed)]
 interface nsIMemoryReporter : nsISupports
 {
-  /*
-   * The name of the reporter.  Useful when only one reporter needs to be run.
-   * Must be unique;  if reporters share names it's likely the wrong one will
-   * be called in certain circumstances.
-   */
-  readonly attribute ACString name;
-
   /*
    * Run the reporter.
    */
@@ -588,12 +581,6 @@ public:
   virtual ~MemoryMultiReporter() {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
-
-  NS_IMETHOD GetName(nsACString& aName)
-  {
-    aName.Assign(mName);
-    return NS_OK;
-  }
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
                             nsISupports* aClosure) = 0;

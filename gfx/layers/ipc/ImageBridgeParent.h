@@ -36,8 +36,6 @@ namespace layers {
 class ImageBridgeParent : public PImageBridgeParent,
                           public CompositableParentManager
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageBridgeParent)
-
 public:
   typedef InfallibleTArray<CompositableOperation> EditArray;
   typedef InfallibleTArray<EditReply> EditReplyArray;

@@ -675,20 +675,20 @@ CreateLazyScriptsForCompartment(JSContext *cx)
 {
     AutoObjectVector lazyFunctions(cx);
 
-    // Find all root lazy functions in the compartment: those which have not been
-    // compiled and which have a source object, indicating that their parent has
-    // been compiled.
-    for (gc::CellIter i(cx->zone(), JSFunction::FinalizeKind); !i.done(); i.next()) {
-        JSObject *obj = i.get<JSObject>();
-        if (obj->compartment() == cx->compartment() && obj->is<JSFunction>()) {
-            JSFunction *fun = &obj->as<JSFunction>();
-            if (fun->isInterpretedLazy()) {
-                LazyScript *lazy = fun->lazyScriptOrNull();
-                if (lazy && lazy->sourceObject() && !lazy->maybeScript()) {
-                    if (!lazyFunctions.append(fun))
-                        return false;
-                }
-            }
+    // Find all live lazy scripts in the compartment, and via them all root
+    // lazy functions in the compartment: those which have not been compiled
+    // and which have a source object, indicating that their parent has been
+    // compiled.
+    for (gc::CellIter i(cx->zone(), gc::FINALIZE_LAZY_SCRIPT); !i.done(); i.next()) {
+        LazyScript *lazy = i.get<LazyScript>();
+        JSFunction *fun = lazy->function();
+        if (fun->compartment() == cx->compartment() &&
+            lazy->sourceObject() && !lazy->maybeScript())
+        {
+            MOZ_ASSERT(fun->isInterpretedLazy());
+            MOZ_ASSERT(lazy == fun->lazyScriptOrNull());
+            if (!lazyFunctions.append(fun))
+                return false;
         }
     }
 
@@ -710,19 +710,16 @@ CreateLazyScriptsForCompartment(JSContext *cx)
             return false;
     }
 
-    // Repoint any clones of the original functions to their new script.
-    for (gc::CellIter i(cx->zone(), JSFunction::FinalizeKind); !i.done(); i.next()) {
-        JSObject *obj = i.get<JSObject>();
-        if (obj->compartment() == cx->compartment() && obj->is<JSFunction>()) {
-            JSFunction *fun = &obj->as<JSFunction>();
-            if (fun->isInterpretedLazy()) {
-                LazyScript *lazy = fun->lazyScriptOrNull();
-                if (lazy && lazy->maybeScript())
-                    fun->existingScript();
-            }
-        }
-    }
+    return true;
+}
 
+bool
+JSCompartment::ensureDelazifyScriptsForDebugMode(JSContext *cx)
+{
+    MOZ_ASSERT(cx->compartment() == this);
+    if ((debugModeBits & DebugNeedDelazification) && !CreateLazyScriptsForCompartment(cx))
+        return false;
+    debugModeBits &= ~DebugNeedDelazification;
     return true;
 }
 
@@ -730,7 +727,7 @@ bool
 JSCompartment::setDebugModeFromC(JSContext *cx, bool b, AutoDebugModeInvalidation &invalidate)
 {
     bool enabledBefore = debugMode();
-    bool enabledAfter = (debugModeBits & ~unsigned(DebugFromC)) || b;
+    bool enabledAfter = (debugModeBits & DebugModeFromMask & ~DebugFromC) || b;
 
     // Debug mode can be enabled only when no scripts from the target
     // compartment are on the stack. It would even be incorrect to discard just
@@ -749,11 +746,9 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b, AutoDebugModeInvalidatio
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_IDLE);
             return false;
         }
-        if (enabledAfter && !CreateLazyScriptsForCompartment(cx))
-            return false;
     }
 
-    debugModeBits = (debugModeBits & ~unsigned(DebugFromC)) | (b ? DebugFromC : 0);
+    debugModeBits = (debugModeBits & ~DebugFromC) | (b ? DebugFromC : 0);
     JS_ASSERT(debugMode() == enabledAfter);
     if (enabledBefore != enabledAfter) {
         updateForDebugMode(cx->runtime()->defaultFreeOp(), invalidate);
@@ -803,8 +798,6 @@ JSCompartment::addDebuggee(JSContext *cx,
     Rooted<GlobalObject*> global(cx, globalArg);
 
     bool wasEnabled = debugMode();
-    if (!wasEnabled && !CreateLazyScriptsForCompartment(cx))
-        return false;
     if (!debuggees.put(global)) {
         js_ReportOutOfMemory(cx);
         return false;

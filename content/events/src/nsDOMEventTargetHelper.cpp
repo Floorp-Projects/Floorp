@@ -358,3 +358,17 @@ nsDOMEventTargetHelper::WantsUntrusted(bool* aRetVal)
   *aRetVal = (doc && !nsContentUtils::IsChromeDoc(doc)) || !NS_IsMainThread();
   return rv;
 }
+
+void
+nsDOMEventTargetHelper::EventListenerAdded(nsIAtom* aType)
+{
+  mozilla::ErrorResult rv;
+  EventListenerWasAdded(Substring(nsDependentAtomString(aType), 2), rv);
+}
+
+void
+nsDOMEventTargetHelper::EventListenerRemoved(nsIAtom* aType)
+{
+  mozilla::ErrorResult rv;
+  EventListenerWasRemoved(Substring(nsDependentAtomString(aType), 2), rv);
+}

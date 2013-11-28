@@ -19,22 +19,6 @@ endif
 endif
 
 ######################################################################
-# i386 and beyond
-######################################################################
-#
-# Lots of Unixish x86 flavors
-#
-
-ifeq (Darwin,$(OS_ARCH))
-ifeq (86,$(findstring 86,$(OS_TEST)))
-ifeq (x86_64,$(OS_TEST))
-else
-DEFINES		+= -DMOZ_NEED_LEADING_UNDERSCORE
-endif
-endif
-endif
-
-######################################################################
 # ARM
 ######################################################################
 #
@@ -124,8 +108,6 @@ CXXFLAGS	+= -fno-strict-aliasing -fno-inline -fomit-frame-pointer -mbackchain
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-DEFINES		+= -DIMPL_LIBXUL
 
 LOCAL_INCLUDES += \
 	-I$(srcdir)/../.. \

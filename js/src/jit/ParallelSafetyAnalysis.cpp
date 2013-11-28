@@ -217,6 +217,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(GuardClass)
     SAFE_OP(AssertRange)
     SAFE_OP(ArrayLength)
+    WRITE_GUARDED_OP(SetArrayLength, elements)
     SAFE_OP(TypedArrayLength)
     SAFE_OP(TypedArrayElements)
     SAFE_OP(TypedObjectElements)

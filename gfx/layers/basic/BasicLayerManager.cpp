@@ -629,7 +629,8 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
       FlashWidgetUpdateArea(mTarget);
     }
     RenderDebugOverlay();
-    LayerManager::PostPresent();
+    RecordFrame();
+    PostPresent();
 
     if (!mTransactionIncomplete) {
       // Clear out target if we have a complete transaction.

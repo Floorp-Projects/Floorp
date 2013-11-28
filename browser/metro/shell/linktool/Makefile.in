@@ -14,5 +14,3 @@ OS_LIBS = \
 	shell32.lib \
 	propsys.lib \
 	$(NULL)
-
-DEFINES += -DUNICODE -D_UNICODE
