@@ -995,10 +995,8 @@ enum ccType {
 // Top level structure for the cycle collector.
 ////////////////////////////////////////////////////////////////////////
 
-class nsCycleCollector : public MemoryMultiReporter
+class nsCycleCollector
 {
-    NS_DECL_ISUPPORTS
-
     bool mCollectionInProgress;
     // mScanInProgress should be false when we're collecting white objects.
     bool mScanInProgress;
@@ -1020,6 +1018,8 @@ class nsCycleCollector : public MemoryMultiReporter
     CC_BeforeUnlinkCallback mBeforeUnlinkCB;
     CC_ForgetSkippableCallback mForgetSkippableCB;
 
+    nsCOMPtr<nsIMemoryReporter> mReporter;
+
     nsPurpleBuffer mPurpleBuf;
 
     uint32_t mUnmergedNeeded;
@@ -1027,7 +1027,7 @@ class nsCycleCollector : public MemoryMultiReporter
 
 public:
     nsCycleCollector();
-    virtual ~nsCycleCollector();
+    ~nsCycleCollector();
 
     void RegisterJSRuntime(CycleCollectedJSRuntime *aJSRuntime);
     void ForgetJSRuntime();
@@ -1054,10 +1054,7 @@ public:
                  nsICycleCollectorListener *aManualListener);
     void Shutdown();
 
-    NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                              nsISupports* aData);
-
-    void SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+    void SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
                              size_t *aObjectSize,
                              size_t *aGraphNodesSize,
                              size_t *aGraphEdgesSize,
@@ -1081,8 +1078,6 @@ private:
 
     void CleanupAfterCollection();
 };
-
-NS_IMPL_ISUPPORTS_INHERITED0(nsCycleCollector, MemoryMultiReporter)
 
 /**
  * GraphWalker is templatized over a Visitor class that must provide
@@ -1121,7 +1116,7 @@ public:
 ////////////////////////////////////////////////////////////////////////
 
 struct CollectorData {
-  nsRefPtr<nsCycleCollector> mCollector;
+  nsCycleCollector* mCollector;
   CycleCollectedJSRuntime* mRuntime;
 };
 
@@ -2476,58 +2471,70 @@ nsCycleCollector::CollectWhite()
 
 
 ////////////////////////
-// Memory reporting
+// Memory reporter
 ////////////////////////
 
-NS_IMETHODIMP
-nsCycleCollector::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                 nsISupports* aData)
+class CycleCollectorReporter MOZ_FINAL : public MemoryMultiReporter
 {
-    size_t objectSize, graphNodesSize, graphEdgesSize, weakMapsSize,
-           purpleBufferSize;
-    SizeOfIncludingThis(MallocSizeOf,
-                        &objectSize,
-                        &graphNodesSize, &graphEdgesSize,
-                        &weakMapsSize,
-                        &purpleBufferSize);
+  public:
+    CycleCollectorReporter(nsCycleCollector* aCollector)
+        : MemoryMultiReporter("cycle-collector"),
+          mCollector(aCollector)
+    {}
 
-#define REPORT(_path, _amount, _desc)                                     \
-    do {                                                                  \
-        size_t amount = _amount;  /* evaluate |_amount| only once */      \
-        if (amount > 0) {                                                 \
-            nsresult rv;                                                  \
-            rv = aHandleReport->Callback(EmptyCString(),                  \
-                                         NS_LITERAL_CSTRING(_path),       \
-                                         KIND_HEAP, UNITS_BYTES, _amount, \
-                                         NS_LITERAL_CSTRING(_desc),       \
-                                         aData);                          \
-            if (NS_WARN_IF(NS_FAILED(rv)))                                \
-                return rv;                                                \
-        }                                                                 \
-    } while (0)
+    NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
+                              nsISupports* aClosure)
+    {
+        size_t objectSize, graphNodesSize, graphEdgesSize, weakMapsSize,
+            purpleBufferSize;
+        mCollector->SizeOfIncludingThis(MallocSizeOf,
+                                        &objectSize,
+                                        &graphNodesSize, &graphEdgesSize,
+                                        &weakMapsSize,
+                                        &purpleBufferSize);
 
-    REPORT("explicit/cycle-collector/collector-object", objectSize,
-           "Memory used for the cycle collector object itself.");
+    #define REPORT(_path, _amount, _desc)                                     \
+        do {                                                                  \
+            size_t amount = _amount;  /* evaluate |_amount| only once */      \
+            if (amount > 0) {                                                 \
+                nsresult rv;                                                  \
+                rv = aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
+                                   nsIMemoryReporter::KIND_HEAP,              \
+                                   nsIMemoryReporter::UNITS_BYTES, _amount,   \
+                                   NS_LITERAL_CSTRING(_desc), aClosure);      \
+                if (NS_WARN_IF(NS_FAILED(rv)))                                \
+                    return rv;                                                \
+            }                                                                 \
+        } while (0)
 
-    REPORT("explicit/cycle-collector/graph-nodes", graphNodesSize,
-           "Memory used for the nodes of the cycle collector's graph. "
-           "This should be zero when the collector is idle.");
+        REPORT("explicit/cycle-collector/collector-object", objectSize,
+               "Memory used for the cycle collector object itself.");
 
-    REPORT("explicit/cycle-collector/graph-edges", graphEdgesSize,
-           "Memory used for the edges of the cycle collector's graph. "
-           "This should be zero when the collector is idle.");
+        REPORT("explicit/cycle-collector/graph-nodes", graphNodesSize,
+               "Memory used for the nodes of the cycle collector's graph. "
+               "This should be zero when the collector is idle.");
 
-    REPORT("explicit/cycle-collector/weak-maps", weakMapsSize,
-           "Memory used for the representation of weak maps in the "
-           "cycle collector's graph. "
-           "This should be zero when the collector is idle.");
+        REPORT("explicit/cycle-collector/graph-edges", graphEdgesSize,
+               "Memory used for the edges of the cycle collector's graph. "
+               "This should be zero when the collector is idle.");
 
-    REPORT("explicit/cycle-collector/purple-buffer", purpleBufferSize,
-           "Memory used for the cycle collector's purple buffer.");
+        REPORT("explicit/cycle-collector/weak-maps", weakMapsSize,
+               "Memory used for the representation of weak maps in the "
+               "cycle collector's graph. "
+               "This should be zero when the collector is idle.");
 
-#undef REPORT
+        REPORT("explicit/cycle-collector/purple-buffer", purpleBufferSize,
+               "Memory used for the cycle collector's purple buffer.");
 
-    return NS_OK;
+    #undef REPORT
+
+        return NS_OK;
+    }
+
+  private:
+    NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MallocSizeOf)
+
+    nsCycleCollector* mCollector;
 };
 
 
@@ -2536,7 +2543,6 @@ nsCycleCollector::CollectReports(nsIHandleReportCallback* aHandleReport,
 ////////////////////////////////////////////////////////////////////////
 
 nsCycleCollector::nsCycleCollector() :
-    MemoryMultiReporter("cycle-collector"),
     mCollectionInProgress(false),
     mScanInProgress(false),
     mJSRuntime(nullptr),
@@ -2544,6 +2550,7 @@ nsCycleCollector::nsCycleCollector() :
     mWhiteNodeCount(0),
     mBeforeUnlinkCB(nullptr),
     mForgetSkippableCB(nullptr),
+    mReporter(nullptr),
     mUnmergedNeeded(0),
     mMergedInARow(0)
 {
@@ -2551,7 +2558,7 @@ nsCycleCollector::nsCycleCollector() :
 
 nsCycleCollector::~nsCycleCollector()
 {
-    UnregisterWeakMemoryReporter(this);
+    NS_UnregisterMemoryReporter(mReporter);
 }
 
 void
@@ -2562,12 +2569,12 @@ nsCycleCollector::RegisterJSRuntime(CycleCollectedJSRuntime *aJSRuntime)
 
     mJSRuntime = aJSRuntime;
 
-    // We can't register as a reporter in nsCycleCollector() because that runs
+    // We can't register the reporter in nsCycleCollector() because that runs
     // before the memory reporter manager is initialized.  So we do it here
     // instead.
     static bool registered = false;
     if (!registered) {
-        RegisterWeakMemoryReporter(this);
+        NS_RegisterMemoryReporter(new CycleCollectorReporter(this));
         registered = true;
     }
 }
@@ -2848,7 +2855,7 @@ nsCycleCollector::Shutdown()
 }
 
 void
-nsCycleCollector::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+nsCycleCollector::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
                                       size_t *aObjectSize,
                                       size_t *aGraphNodesSize,
                                       size_t *aGraphEdgesSize,
@@ -3094,11 +3101,12 @@ nsCycleCollector_startup()
         MOZ_CRASH();
     }
 
-    CollectorData* data = new CollectorData;
-    data->mCollector = new nsCycleCollector();
+    nsAutoPtr<nsCycleCollector> collector(new nsCycleCollector());
+    nsAutoPtr<CollectorData> data(new CollectorData);
     data->mRuntime = nullptr;
+    data->mCollector = collector.forget();
 
-    sCollectorData.set(data);
+    sCollectorData.set(data.forget());
 }
 
 void
@@ -3202,6 +3210,7 @@ nsCycleCollector_shutdown()
         MOZ_ASSERT(data->mCollector);
         PROFILER_LABEL("CC", "nsCycleCollector_shutdown");
         data->mCollector->Shutdown();
+        delete data->mCollector;
         data->mCollector = nullptr;
         if (!data->mRuntime) {
           delete data;

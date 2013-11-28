@@ -13,7 +13,6 @@
 #include "nsCacheEntry.h"
 #include "nsThreadUtils.h"
 #include "nsICacheListener.h"
-#include "nsIMemoryReporter.h"
 
 #include "prthread.h"
 #include "nsIObserver.h"
@@ -62,8 +61,7 @@ private:
  *  nsCacheService
  ******************************************************************************/
 
-class nsCacheService : public mozilla::MemoryMultiReporter,
-                       public nsICacheServiceInternal
+class nsCacheService : public nsICacheServiceInternal
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -222,9 +220,6 @@ public:
     bool             IsDoomListEmpty();
 
     typedef bool (*DoomCheckFn)(nsCacheEntry* entry);
-
-    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                             nsISupports* aData);
 
 private:
     friend class nsCacheServiceAutoLock;

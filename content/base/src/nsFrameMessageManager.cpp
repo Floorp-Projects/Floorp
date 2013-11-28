@@ -1300,7 +1300,7 @@ NS_NewGlobalMessageManager(nsIMessageBroadcaster** aResult)
   nsFrameMessageManager* mm = new nsFrameMessageManager(nullptr,
                                                         nullptr,
                                                         MM_CHROME | MM_GLOBAL | MM_BROADCASTER);
-  RegisterStrongMemoryReporter(new MessageManagerReporter());
+  NS_RegisterMemoryReporter(new MessageManagerReporter());
   return CallQueryInterface(mm, aResult);
 }
 
@@ -1835,7 +1835,7 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
     cb = new SameChildProcessMessageManagerCallback();
   } else {
     cb = new ChildProcessMessageManagerCallback();
-    RegisterStrongMemoryReporter(new MessageManagerReporter());
+    NS_RegisterMemoryReporter(new MessageManagerReporter());
   }
   nsFrameMessageManager* mm = new nsFrameMessageManager(cb,
                                                         nullptr,

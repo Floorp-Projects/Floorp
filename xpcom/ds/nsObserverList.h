@@ -46,7 +46,7 @@ struct ObserverRef
 
 class nsObserverList : public nsCharPtrHashKey
 {
-  friend class nsObserverService;
+  friend class mozilla::ObserverServiceReporter;
 
 public:
   nsObserverList(const char *key) : nsCharPtrHashKey(key)

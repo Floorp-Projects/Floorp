@@ -7,7 +7,6 @@
 
 #include "nsPIDNSService.h"
 #include "nsIIDNService.h"
-#include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "nsHostResolver.h"
 #include "nsAutoPtr.h"
@@ -17,8 +16,9 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Attributes.h"
 
-class nsDNSService MOZ_FINAL : public mozilla::MemoryUniReporter
-                             , public nsPIDNSService
+class nsIMemoryReporter;
+
+class nsDNSService MOZ_FINAL : public nsPIDNSService
                              , public nsIObserver
 {
 public:
@@ -30,10 +30,6 @@ public:
     nsDNSService();
     ~nsDNSService();
 
-    int64_t Amount() MOZ_OVERRIDE
-    {
-        return SizeOfIncludingThis(MallocSizeOf);
-    }
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 private:
@@ -54,6 +50,8 @@ private:
     bool                      mFirstTime;
     bool                      mOffline;
     nsTHashtable<nsCStringHashKey> mLocalDomains;
+
+    nsCOMPtr<nsIMemoryReporter> mReporter;
 };
 
 #endif //nsDNSService2_h__

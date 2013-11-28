@@ -66,7 +66,6 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
-#include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
@@ -80,10 +79,11 @@
 { 0x56c778e4, 0x1bee, 0x45f3, \
   { 0xa6, 0x89, 0x88, 0x66, 0x92, 0xa9, 0x7f, 0xe7 } }
 
-class mozHunspell : public mozilla::MemoryUniReporter,
-                    public mozISpellCheckingEngine,
-                    public nsIObserver,
-                    public nsSupportsWeakReference
+class nsIMemoryReporter;
+
+class mozHunspell : public mozISpellCheckingEngine,
+                   public nsIObserver,
+                   public nsSupportsWeakReference
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -91,7 +91,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(mozHunspell, mozISpellCheckingEngine)
 
-  mozHunspell();
+  mozHunspell() : mHunspell(nullptr) { }
   virtual ~mozHunspell();
 
   nsresult Init();
@@ -101,16 +101,11 @@ public:
   // helper method for converting a word to the charset of the dictionary
   nsresult ConvertCharset(const PRUnichar* aStr, char ** aDst);
 
-  static void OnAlloc(void* ptr) { sAmount += MallocSizeOfOnAlloc(ptr); }
-  static void OnFree (void* ptr) { sAmount -= MallocSizeOfOnFree (ptr); }
-
-  int64_t Amount() MOZ_OVERRIDE { return sAmount; }
-
 protected:
-
+ 
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;
-  nsCOMPtr<nsIUnicodeEncoder>      mEncoder;
-  nsCOMPtr<nsIUnicodeDecoder>      mDecoder;
+  nsCOMPtr<nsIUnicodeEncoder>      mEncoder; 
+  nsCOMPtr<nsIUnicodeDecoder>      mDecoder; 
 
   // Hashtable matches dictionary name to .aff file
   nsInterfaceHashtable<nsStringHashKey, nsIFile> mDictionaries;
@@ -123,7 +118,7 @@ protected:
 
   Hunspell  *mHunspell;
 
-  static int64_t sAmount;
+  nsCOMPtr<nsIMemoryReporter> mReporter;
 };
 
 #endif

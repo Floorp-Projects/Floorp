@@ -1237,7 +1237,7 @@ void
 GLContext::PlatformStartup()
 {
   CacheCanUploadNPOT();
-  RegisterStrongMemoryReporter(new GfxTexturesReporter());
+  NS_RegisterMemoryReporter(new GfxTexturesReporter());
 }
 
 void

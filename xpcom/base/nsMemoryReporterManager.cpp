@@ -713,7 +713,7 @@ private:
 // registered with nsMemoryReporterManager entirely within nsAtomTable.cpp.
 // However, the obvious time to register it is when the table is initialized,
 // and that happens before XPCOM components are initialized, which means the
-// RegisterStrongMemoryReporter call fails.  So instead we do it here.
+// NS_RegisterMemoryReporter call fails.  So instead we do it here.
 class AtomTablesReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
@@ -801,40 +801,40 @@ nsMemoryReporterManager::Init()
 #endif
 
 #ifdef HAVE_JEMALLOC_STATS
-    RegisterStrongReporter(new HeapAllocatedReporter());
-    RegisterStrongReporter(new HeapOverheadWasteReporter());
-    RegisterStrongReporter(new HeapOverheadBookkeepingReporter());
-    RegisterStrongReporter(new HeapOverheadPageCacheReporter());
-    RegisterStrongReporter(new HeapCommittedReporter());
-    RegisterStrongReporter(new HeapOverheadRatioReporter());
+    RegisterReporter(new HeapAllocatedReporter);
+    RegisterReporter(new HeapOverheadWasteReporter);
+    RegisterReporter(new HeapOverheadBookkeepingReporter);
+    RegisterReporter(new HeapOverheadPageCacheReporter);
+    RegisterReporter(new HeapCommittedReporter);
+    RegisterReporter(new HeapOverheadRatioReporter);
 #endif
 
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
-    RegisterStrongReporter(new VsizeReporter());
-    RegisterStrongReporter(new ResidentReporter());
+    RegisterReporter(new VsizeReporter);
+    RegisterReporter(new ResidentReporter);
 #endif
 
 #ifdef HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER
-    RegisterStrongReporter(new VsizeMaxContiguousReporter());
+    RegisterReporter(new VsizeMaxContiguousReporter);
 #endif
 
 #ifdef HAVE_RESIDENT_UNIQUE_REPORTER
-    RegisterStrongReporter(new ResidentUniqueReporter());
+    RegisterReporter(new ResidentUniqueReporter);
 #endif
 
 #ifdef HAVE_PAGE_FAULT_REPORTERS
-    RegisterStrongReporter(new PageFaultsSoftReporter());
-    RegisterStrongReporter(new PageFaultsHardReporter());
+    RegisterReporter(new PageFaultsSoftReporter);
+    RegisterReporter(new PageFaultsHardReporter);
 #endif
 
 #ifdef HAVE_PRIVATE_REPORTER
-    RegisterStrongReporter(new PrivateReporter());
+    RegisterReporter(new PrivateReporter);
 #endif
 
-    RegisterStrongReporter(new AtomTablesReporter());
+    RegisterReporter(new AtomTablesReporter);
 
 #ifdef MOZ_DMD
-    RegisterStrongReporter(new mozilla::dmd::DMDReporter());
+    RegisterReporter(new mozilla::dmd::DMDReporter);
 #endif
 
 #if defined(XP_LINUX)
@@ -846,23 +846,21 @@ nsMemoryReporterManager::Init()
 
 namespace {
 
-// ReporterEnumerator takes the two hashtables of reporters in its constructor
-// and creates an nsISimpleEnumerator from its contents.
-//
-// The resultant enumerator works over a copy of the hashtable elements, so
-// it's safe to mutate or destroy the hashtables after the enumerator is
-// created.
-//
-class ReporterEnumerator MOZ_FINAL : public nsISimpleEnumerator
+/**
+ * HastableEnumerator takes an nsTHashtable<nsISupportsHashKey>& in its
+ * constructor and creates an nsISimpleEnumerator from its contents.
+ *
+ * The resultant enumerator works over a copy of the hashtable, so it's safe to
+ * mutate or destroy the hashtable after the enumerator is created.
+ */
+
+class HashtableEnumerator MOZ_FINAL : public nsISimpleEnumerator
 {
 public:
-    ReporterEnumerator(
-        nsMemoryReporterManager::StrongReportersTable* aStrongReporters,
-        nsMemoryReporterManager::WeakReportersTable* aWeakReporters)
-      : mIndex(0)
+    HashtableEnumerator(nsTHashtable<nsISupportsHashKey>& aHashtable)
+        : mIndex(0)
     {
-        aStrongReporters->EnumerateEntries(StrongEnumerator, this);
-        aWeakReporters->EnumerateEntries(WeakEnumerator, this);
+        aHashtable.EnumerateEntries(EnumeratorFunc, this);
     }
 
     NS_DECL_ISUPPORTS
@@ -870,43 +868,31 @@ public:
 
 private:
     static PLDHashOperator
-    StrongEnumerator(nsISupportsHashKey* aEntry, void* aData);
-
-    static PLDHashOperator
-    WeakEnumerator(nsPtrHashKey<nsISupports>* aEntry, void* aData);
+    EnumeratorFunc(nsISupportsHashKey* aEntry, void* aData);
 
     uint32_t mIndex;
     nsCOMArray<nsISupports> mArray;
 };
 
-NS_IMPL_ISUPPORTS1(ReporterEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS1(HashtableEnumerator, nsISimpleEnumerator)
 
 /* static */ PLDHashOperator
-ReporterEnumerator::StrongEnumerator(nsISupportsHashKey* aElem, void* aData)
+HashtableEnumerator::EnumeratorFunc(nsISupportsHashKey* aElem, void* aData)
 {
-    ReporterEnumerator* enumerator = static_cast<ReporterEnumerator*>(aData);
-    enumerator->mArray.AppendObject(aElem->GetKey());
-    return PL_DHASH_NEXT;
-}
-
-/* static */ PLDHashOperator
-ReporterEnumerator::WeakEnumerator(nsPtrHashKey<nsISupports>* aElem,
-                                   void* aData)
-{
-    ReporterEnumerator* enumerator = static_cast<ReporterEnumerator*>(aData);
+    HashtableEnumerator* enumerator = static_cast<HashtableEnumerator*>(aData);
     enumerator->mArray.AppendObject(aElem->GetKey());
     return PL_DHASH_NEXT;
 }
 
 NS_IMETHODIMP
-ReporterEnumerator::HasMoreElements(bool* aResult)
+HashtableEnumerator::HasMoreElements(bool* aResult)
 {
     *aResult = mIndex < mArray.Length();
     return NS_OK;
 }
 
 NS_IMETHODIMP
-ReporterEnumerator::GetNext(nsISupports** aNext)
+HashtableEnumerator::GetNext(nsISupports** aNext)
 {
     if (mIndex < mArray.Length()) {
         nsCOMPtr<nsISupports> next = mArray.ObjectAt(mIndex);
@@ -924,10 +910,6 @@ ReporterEnumerator::GetNext(nsISupports** aNext)
 nsMemoryReporterManager::nsMemoryReporterManager()
   : mMutex("nsMemoryReporterManager::mMutex"),
     mIsRegistrationBlocked(false),
-    mStrongReporters(new StrongReportersTable()),
-    mWeakReporters(new WeakReportersTable()),
-    mSavedStrongReporters(nullptr),
-    mSavedWeakReporters(nullptr),
     mNumChildProcesses(0),
     mNextGeneration(1),
     mGetReportsState(nullptr)
@@ -936,10 +918,6 @@ nsMemoryReporterManager::nsMemoryReporterManager()
 
 nsMemoryReporterManager::~nsMemoryReporterManager()
 {
-    delete mStrongReporters;
-    delete mWeakReporters;
-    NS_ASSERTION(!mSavedStrongReporters, "failed to restore strong reporters");
-    NS_ASSERTION(!mSavedWeakReporters, "failed to restore weak reporters");
 }
 
 NS_IMETHODIMP
@@ -953,8 +931,8 @@ nsMemoryReporterManager::EnumerateReporters(nsISimpleEnumerator** aResult)
 
     mozilla::MutexAutoLock autoLock(mMutex);
 
-    nsRefPtr<ReporterEnumerator> enumerator =
-        new ReporterEnumerator(mStrongReporters, mWeakReporters);
+    nsRefPtr<HashtableEnumerator> enumerator =
+        new HashtableEnumerator(mReporters);
     enumerator.forget(aResult);
     return NS_OK;
 }
@@ -1047,9 +1025,12 @@ nsMemoryReporterManager::GetReports(
     }
 
     // Get reports for this process.
+    nsRefPtr<HashtableEnumerator> e;
+    {
+        mozilla::MutexAutoLock autoLock(mMutex);
+        e = new HashtableEnumerator(mReporters);
+    }
     bool more;
-    nsCOMPtr<nsISimpleEnumerator> e;
-    EnumerateReporters(getter_AddRefs(e));
     while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
         nsCOMPtr<nsIMemoryReporter> r;
         e->GetNext(getter_AddRefs(r));
@@ -1171,96 +1152,76 @@ nsMemoryReporterManager::FinishReporting()
 }
 
 static void
-CrashIfRefcountIsZero(nsISupports* aObj)
+DebugAssertRefcountIsNonZero(nsISupports* aObj)
 {
+#ifdef DEBUG
     // This will probably crash if the object's refcount is 0.
     uint32_t refcnt = NS_ADDREF(aObj);
-    if (refcnt <= 1) {
-        MOZ_CRASH("CrashIfRefcountIsZero: refcount is zero");
-    }
+    MOZ_ASSERT(refcnt >= 2);
     NS_RELEASE(aObj);
+#endif
 }
 
 nsresult
 nsMemoryReporterManager::RegisterReporterHelper(
-    nsIMemoryReporter* aReporter, bool aForce, bool aStrong)
+    nsIMemoryReporter* aReporter, bool aForce)
 {
     // This method is thread-safe.
     mozilla::MutexAutoLock autoLock(mMutex);
 
-    if (mIsRegistrationBlocked && !aForce) {
+    if ((mIsRegistrationBlocked && !aForce) || mReporters.Contains(aReporter)) {
         return NS_ERROR_FAILURE;
     }
 
-    if (mStrongReporters->Contains(aReporter) ||
-        mWeakReporters->Contains(aReporter))
+    // This method needs to be safe even if |aReporter| has a refcnt of 0, so
+    // we take a kung fu death grip before calling PutEntry.  Otherwise, if
+    // PutEntry addref'ed and released |aReporter| before finally addref'ing it
+    // for good, it would free aReporter!
+    //
+    // The kung fu death grip could itself be problematic if PutEntry didn't
+    // addref |aReporter| (because then when the death grip goes out of scope,
+    // we would delete the reporter).  In debug mode, we check that this
+    // doesn't happen.
+
     {
-        return NS_ERROR_FAILURE;
+        nsCOMPtr<nsIMemoryReporter> kungFuDeathGrip = aReporter;
+        mReporters.PutEntry(aReporter);
     }
 
-    // If |aStrong| is true, |aReporter| may have a refcnt of 0, so we take
-    // a kung fu death grip before calling PutEntry.  Otherwise, if PutEntry
-    // addref'ed and released |aReporter| before finally addref'ing it for
-    // good, it would free aReporter!  The kung fu death grip could itself be
-    // problematic if PutEntry didn't addref |aReporter| (because then when the
-    // death grip goes out of scope, we would delete the reporter).  In debug
-    // mode, we check that this doesn't happen.
-    //
-    // If |aStrong| is false, we require that |aReporter| have a non-zero
-    // refcnt.
-    //
-    if (aStrong) {
-        nsCOMPtr<nsIMemoryReporter> kungFuDeathGrip = aReporter;
-        mStrongReporters->PutEntry(aReporter);
-        CrashIfRefcountIsZero(aReporter);
-    } else {
-        CrashIfRefcountIsZero(aReporter);
-        mWeakReporters->PutEntry(aReporter);
-    }
+    DebugAssertRefcountIsNonZero(aReporter);
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMemoryReporterManager::RegisterStrongReporter(nsIMemoryReporter* aReporter)
+nsMemoryReporterManager::RegisterReporter(nsIMemoryReporter* aReporter)
 {
-    return RegisterReporterHelper(aReporter, /* force = */ false,
-                                  /* strong = */ true);
+    return RegisterReporterHelper(aReporter, /* force = */ false);
 }
 
 NS_IMETHODIMP
-nsMemoryReporterManager::RegisterWeakReporter(nsIMemoryReporter* aReporter)
-{
-    return RegisterReporterHelper(aReporter, /* force = */ false,
-                                  /* strong = */ false);
-}
-
-NS_IMETHODIMP
-nsMemoryReporterManager::RegisterStrongReporterEvenIfBlocked(
+nsMemoryReporterManager::RegisterReporterEvenIfBlocked(
     nsIMemoryReporter* aReporter)
 {
-    return RegisterReporterHelper(aReporter, /* force = */ true,
-                                  /* strong = */ true);
+    return RegisterReporterHelper(aReporter, /* force = */ true);
 }
 
 NS_IMETHODIMP
-nsMemoryReporterManager::UnregisterWeakReporter(nsIMemoryReporter* aReporter)
+nsMemoryReporterManager::UnregisterReporter(nsIMemoryReporter* aReporter)
 {
     // This method is thread-safe.
     mozilla::MutexAutoLock autoLock(mMutex);
 
-    MOZ_ASSERT(!mStrongReporters->Contains(aReporter));
-
-    if (mWeakReporters->Contains(aReporter)) {
-        mWeakReporters->RemoveEntry(aReporter);
-        return NS_OK;
+    if (!mReporters.Contains(aReporter)) {
+        return NS_ERROR_FAILURE;
     }
 
-    return NS_ERROR_FAILURE;
+    mReporters.RemoveEntry(aReporter);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMemoryReporterManager::BlockRegistrationAndHideExistingReporters()
+nsMemoryReporterManager::BlockRegistration()
 {
     // This method is thread-safe.
     mozilla::MutexAutoLock autoLock(mMutex);
@@ -1268,35 +1229,17 @@ nsMemoryReporterManager::BlockRegistrationAndHideExistingReporters()
         return NS_ERROR_FAILURE;
     }
     mIsRegistrationBlocked = true;
-
-    // Hide the existing reporters, saving them for later restoration.
-    MOZ_ASSERT(!mSavedStrongReporters);
-    MOZ_ASSERT(!mSavedWeakReporters);
-    mSavedStrongReporters = mStrongReporters;
-    mSavedWeakReporters = mWeakReporters;
-    mStrongReporters = new StrongReportersTable();
-    mWeakReporters = new WeakReportersTable();
-
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMemoryReporterManager::UnblockRegistrationAndRestoreOriginalReporters()
+nsMemoryReporterManager::UnblockRegistration()
 {
     // This method is thread-safe.
     mozilla::MutexAutoLock autoLock(mMutex);
     if (!mIsRegistrationBlocked) {
         return NS_ERROR_FAILURE;
     }
-
-    // Banish the current reporters, and restore the hidden ones.
-    delete mStrongReporters;
-    delete mWeakReporters;
-    mStrongReporters = mSavedStrongReporters;
-    mWeakReporters = mSavedWeakReporters;
-    mSavedStrongReporters = nullptr;
-    mSavedWeakReporters = nullptr;
-
     mIsRegistrationBlocked = false;
     return NS_OK;
 }
@@ -1678,37 +1621,27 @@ nsMemoryReporterManager::SizeOfTab(nsIDOMWindow* aTopWindow,
 NS_IMPL_ISUPPORTS1(MemoryUniReporter, nsIMemoryReporter)
 NS_IMPL_ISUPPORTS1(MemoryMultiReporter, nsIMemoryReporter)
 
+nsresult
+NS_RegisterMemoryReporter(nsIMemoryReporter* aReporter)
+{
+    nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
+    if (!mgr) {
+        return NS_ERROR_FAILURE;
+    }
+    return mgr->RegisterReporter(aReporter);
+}
+
+nsresult
+NS_UnregisterMemoryReporter(nsIMemoryReporter* aReporter)
+{
+    nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
+    if (!mgr) {
+        return NS_ERROR_FAILURE;
+    }
+    return mgr->UnregisterReporter(aReporter);
+}
+
 namespace mozilla {
-
-nsresult
-RegisterStrongMemoryReporter(nsIMemoryReporter* aReporter)
-{
-    nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    if (!mgr) {
-        return NS_ERROR_FAILURE;
-    }
-    return mgr->RegisterStrongReporter(aReporter);
-}
-
-nsresult
-RegisterWeakMemoryReporter(nsIMemoryReporter* aReporter)
-{
-    nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    if (!mgr) {
-        return NS_ERROR_FAILURE;
-    }
-    return mgr->RegisterWeakReporter(aReporter);
-}
-
-nsresult
-UnregisterWeakMemoryReporter(nsIMemoryReporter* aReporter)
-{
-    nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    if (!mgr) {
-        return NS_ERROR_FAILURE;
-    }
-    return mgr->UnregisterWeakReporter(aReporter);
-}
 
 #define GET_MEMORY_REPORTER_MANAGER(mgr)                                      \
     nsRefPtr<nsMemoryReporterManager> mgr =                                   \

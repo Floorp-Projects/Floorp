@@ -11,7 +11,6 @@
 
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsIMemoryReporter.h"
 #include "nsIStyleSheetService.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
@@ -27,9 +26,7 @@ class nsIStyleSheet;
 #define NS_STYLESHEETSERVICE_CONTRACTID \
   "@mozilla.org/content/style-sheet-service;1"
 
-class nsStyleSheetService MOZ_FINAL
-  : public mozilla::MemoryUniReporter
-  , public nsIStyleSheetService
+class nsStyleSheetService MOZ_FINAL : public nsIStyleSheetService
 {
  public:
   nsStyleSheetService() NS_HIDDEN;
@@ -49,8 +46,6 @@ class nsStyleSheetService MOZ_FINAL
   static nsStyleSheetService *GetInstance();
   static nsStyleSheetService *gInstance;
 
-  int64_t Amount() MOZ_OVERRIDE;
-
  private:
 
   NS_HIDDEN_(void) RegisterFromEnumerator(nsICategoryManager  *aManager,
@@ -67,6 +62,8 @@ class nsStyleSheetService MOZ_FINAL
                                                     uint32_t aSheetType);
 
   nsCOMArray<nsIStyleSheet> mSheets[3];
+
+  nsCOMPtr<nsIMemoryReporter> mReporter;
 };
 
 #endif

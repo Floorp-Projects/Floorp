@@ -20,9 +20,10 @@
 #include "nsURIHashKey.h"
 #include "nsTObserverArray.h"
 #include "nsDeque.h"
-#include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "mozIStorageConnection.h"
+
+class nsIMemoryReporter;
 
 namespace mozilla {
 namespace places {
@@ -35,8 +36,7 @@ struct VisitData;
 // Max size of History::mRecentlyVisitedURIs
 #define RECENTLY_VISITED_URI_SIZE 8
 
-class History : mozilla::MemoryUniReporter
-              , public IHistory
+class History : public IHistory
               , public nsIDownloadHistory
               , public mozIAsyncHistory
               , public nsIObserver
@@ -85,7 +85,6 @@ public:
    * Get the number of bytes of memory this History object is using,
    * including sizeof(*this))
    */
-  int64_t Amount() MOZ_OVERRIDE;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
   /**
@@ -131,8 +130,6 @@ public:
 
 private:
   virtual ~History();
-
-  void InitMemoryReporter();
 
   /**
    * Obtains a read-write database connection.
@@ -213,6 +210,8 @@ private:
   RecentlyVisitedArray::index_type mRecentlyVisitedURIsNextIndex;
 
   bool IsRecentlyVisitedURI(nsIURI* aURI);
+
+  nsCOMPtr<nsIMemoryReporter> mReporter;
 };
 
 } // namespace places

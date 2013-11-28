@@ -53,7 +53,7 @@ nsHostObjectProtocolHandler::nsHostObjectProtocolHandler()
 
   if (!initialized) {
     initialized = true;
-    RegisterStrongMemoryReporter(new mozilla::HostObjectURLsReporter());
+    NS_RegisterMemoryReporter(new mozilla::HostObjectURLsReporter());
   }
 }
 

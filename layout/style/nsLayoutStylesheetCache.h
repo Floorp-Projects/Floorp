@@ -7,7 +7,6 @@
 #ifndef nsLayoutStylesheetCache_h__
 #define nsLayoutStylesheetCache_h__
 
-#include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
@@ -15,6 +14,7 @@
 
 class nsCSSStyleSheet;
 class nsIFile;
+class nsIMemoryReporter;
 class nsIURI;
 
 namespace mozilla {
@@ -24,8 +24,7 @@ class Loader;
 }
 
 class nsLayoutStylesheetCache MOZ_FINAL
- : public mozilla::MemoryUniReporter
- , public nsIObserver
+ : public nsIObserver
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -40,8 +39,7 @@ class nsLayoutStylesheetCache MOZ_FINAL
 
   static void Shutdown();
 
-  int64_t Amount() MOZ_OVERRIDE;
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  static size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
 private:
   nsLayoutStylesheetCache();
@@ -49,10 +47,11 @@ private:
 
   static void EnsureGlobal();
   void InitFromProfile();
-  void InitMemoryReporter();
   static void LoadSheetFile(nsIFile* aFile, nsRefPtr<nsCSSStyleSheet> &aSheet);
   static void LoadSheet(nsIURI* aURI, nsRefPtr<nsCSSStyleSheet> &aSheet,
                         bool aEnableUnsafeRules);
+
+  size_t SizeOfIncludingThisHelper(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   static nsLayoutStylesheetCache* gStyleCache;
   static mozilla::css::Loader* gCSSLoader;
@@ -63,6 +62,8 @@ private:
   nsRefPtr<nsCSSStyleSheet> mUASheet;
   nsRefPtr<nsCSSStyleSheet> mQuirkSheet;
   nsRefPtr<nsCSSStyleSheet> mFullScreenOverrideSheet;
+
+  nsCOMPtr<nsIMemoryReporter> mReporter;
 };
 
 #endif

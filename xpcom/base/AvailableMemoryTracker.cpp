@@ -510,10 +510,10 @@ void Activate()
   Preferences::AddUintVarCache(&sLowMemoryNotificationIntervalMS,
       "memory.low_memory_notification_interval_ms", 10000);
 
-  RegisterStrongMemoryReporter(new LowCommitSpaceEventsReporter());
-  RegisterStrongMemoryReporter(new LowMemoryEventsPhysicalReporter());
+  NS_RegisterMemoryReporter(new LowCommitSpaceEventsReporter());
+  NS_RegisterMemoryReporter(new LowMemoryEventsPhysicalReporter());
   if (sizeof(void*) == 4) {
-    RegisterStrongMemoryReporter(new LowMemoryEventsVirtualReporter());
+    NS_RegisterMemoryReporter(new LowMemoryEventsVirtualReporter());
   }
   RegisterLowMemoryEventsVirtualDistinguishedAmount(LowMemoryEventsVirtualDistinguishedAmount);
   RegisterLowMemoryEventsPhysicalDistinguishedAmount(LowMemoryEventsPhysicalDistinguishedAmount);

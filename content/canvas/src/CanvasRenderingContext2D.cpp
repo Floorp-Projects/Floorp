@@ -888,7 +888,7 @@ CanvasRenderingContext2D::EnsureTarget()
     static bool registered = false;
     if (!registered) {
       registered = true;
-      RegisterStrongMemoryReporter(new Canvas2dPixelsReporter());
+      NS_RegisterMemoryReporter(new Canvas2dPixelsReporter());
     }
 
     gCanvasAzureMemoryUsed += mWidth * mHeight * 4;
