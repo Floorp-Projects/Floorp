@@ -33,6 +33,9 @@ LIBS += \
 CPPFLAGS += \
   $(STLPORT_CPPFLAGS) \
   $(NULL)
+DEFINES += \
+  -DGTEST_USE_OWN_TR1_TUPLE=1 \
+   $(NULL)
 endif
 
 ifdef MOZ_NATIVE_JPEG
@@ -105,6 +108,19 @@ LIBS += \
   $(NULL)
 endif
 
+DEFINES += \
+  -DUSE_FAKE_MEDIA_STREAMS \
+  -DUSE_FAKE_PCOBSERVER \
+  -DNR_SOCKET_IS_VOID_PTR \
+  -DHAVE_STRDUP \
+  $(NULL)
+
+ifeq ($(OS_TARGET),Darwin)
+DEFINES += \
+  -DGTEST_USE_OWN_TR1_TUPLE=1 \
+  $(NULL)
+endif
+
 LOCAL_INCLUDES += \
  -I. \
  -I$(topsrcdir)/media/webrtc/trunk/testing/gtest/include \
@@ -153,8 +169,13 @@ ifeq ($(OS_TARGET), Android)
 LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/android/include
 endif
 
-ifndef ZLIB_IN_MOZGLUE
+
+ifneq ($(OS_TARGET),WINNT)
+ifneq (gonk,$(MOZ_WIDGET_TOOLKIT))
+ifdef JS_SHARED_LIBRARY
 LIBS += $(MOZ_ZLIB_LIBS)
+endif
+endif
 endif
 
 include $(topsrcdir)/config/config.mk

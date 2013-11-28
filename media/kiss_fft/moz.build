@@ -14,7 +14,7 @@ SOURCES += [
     'kiss_fftr.c',
 ]
 
-if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
+if CONFIG['OS_TARGET'] == 'WINNT':
     NO_VISIBILITY_FLAGS = True
 
 FINAL_LIBRARY = 'xul'

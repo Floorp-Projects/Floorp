@@ -7,6 +7,8 @@
 # the application binaries. The fact that it's under mozilla/widget is a fluke
 # of tree history.
 
+DEFINES += -DXPCOM_GLUE
+
 LIBCPPSRCS = XRemoteClient.cpp
 
 OBJS = $(LIBCPPSRCS:.cpp=.$(OBJ_SUFFIX))
