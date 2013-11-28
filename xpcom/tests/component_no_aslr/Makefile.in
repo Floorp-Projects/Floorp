@@ -29,5 +29,3 @@ INSTALL_TARGETS += LIB
 include $(topsrcdir)/config/rules.mk
 
 LDFLAGS := $(filter-out -DYNAMICBASE,$(LDFLAGS)) -DYNAMICBASE:NO
-
-DEFINES += -DLIBRARY_FILENAME="$(SHARED_LIBRARY)"

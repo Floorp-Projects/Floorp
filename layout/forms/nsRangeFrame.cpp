@@ -117,7 +117,8 @@ nsRangeFrame::MakeAnonymousDiv(nsIContent** aResult,
   nsRefPtr<nsStyleContext> newStyleContext =
     PresContext()->StyleSet()->ResolvePseudoElementStyle(mContent->AsElement(),
                                                          aPseudoType,
-                                                         StyleContext());
+                                                         StyleContext(),
+                                                         (*aResult)->AsElement());
 
   if (!aElements.AppendElement(ContentInfo(*aResult, newStyleContext))) {
     return NS_ERROR_OUT_OF_MEMORY;

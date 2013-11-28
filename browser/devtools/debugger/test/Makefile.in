@@ -18,6 +18,5 @@ endif
 ifneq (Darwin,$(OS_ARCH))
 MOCHITEST_BROWSER_FILES += \
 	browser_dbg_break-on-dom-event.js \
-	browser_dbg_event-listeners.js \
 	$(NULL)
 endif
