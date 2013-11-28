@@ -5197,7 +5197,7 @@ class MMaybeToDoubleElement
     }
 };
 
-// Load a dense array's initialized length from an elements vector.
+// Load the initialized length from an elements header.
 class MInitializedLength
   : public MUnaryInstruction
 {
@@ -5228,12 +5228,12 @@ class MInitializedLength
     void computeRange();
 };
 
-// Set a dense array's initialized length to an elements vector.
+// Store to the initialized length in an elements header. Note the input is an
+// *index*, one less than the desired length.
 class MSetInitializedLength
   : public MAryInstruction<2>
 {
-    MSetInitializedLength(MDefinition *elements, MDefinition *index)
-    {
+    MSetInitializedLength(MDefinition *elements, MDefinition *index) {
         setOperand(0, elements);
         setOperand(1, index);
     }
@@ -5256,7 +5256,7 @@ class MSetInitializedLength
     }
 };
 
-// Load a dense array's initialized length from an elements vector.
+// Load the array length from an elements header.
 class MArrayLength
   : public MUnaryInstruction
 {
@@ -5281,6 +5281,34 @@ class MArrayLength
     }
 
     void computeRange();
+};
+
+// Store to the length in an elements header. Note the input is an *index*, one
+// less than the desired length.
+class MSetArrayLength
+  : public MAryInstruction<2>
+{
+    MSetArrayLength(MDefinition *elements, MDefinition *index) {
+        setOperand(0, elements);
+        setOperand(1, index);
+    }
+
+  public:
+    INSTRUCTION_HEADER(SetArrayLength)
+
+    static MSetArrayLength *New(TempAllocator &alloc, MDefinition *elements, MDefinition *index) {
+        return new(alloc) MSetArrayLength(elements, index);
+    }
+
+    MDefinition *elements() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::ObjectFields);
+    }
 };
 
 // Read the length of a typed array.
