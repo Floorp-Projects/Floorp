@@ -12,9 +12,6 @@ let gTests = [
       SimpleTest.doesThrow(function() CustomizableUI.registerArea([]),
                            "Registering areas with an invalid ID should throw.");
 
-      SimpleTest.doesThrow(function() CustomizableUI.registerArea(CustomizableUI.AREA_NAVBAR),
-                           "Registering an area with an ID that's already registered should throw.");
-
       SimpleTest.doesThrow(function() CustomizableUI.unregisterArea("@foo"),
                            "Unregistering areas with an invalid ID should throw.");
 
