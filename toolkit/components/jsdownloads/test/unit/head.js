@@ -341,6 +341,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
     localHandlerApp.executable = new FileUtils.File(aOptions.launcherPath);
 
     mimeInfo.preferredApplicationHandler = localHandlerApp;
+    mimeInfo.preferredAction = Ci.nsIMIMEInfo.useHelperApp;
   }
 
   if (aOptions && aOptions.launchWhenSucceeded) {
