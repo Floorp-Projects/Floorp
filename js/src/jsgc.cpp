@@ -1700,14 +1700,19 @@ ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
         } else {
 #ifdef JS_WORKER_THREADS
             /*
-             * If we're off the main thread, we try to allocate once and return
-             * whatever value we get. First, though, we need to ensure the main
-             * thread is not in a GC session.
+             * If we're off the main thread, we try to allocate once and
+             * return whatever value we get. If we aren't in a ForkJoin
+             * session (i.e. we are in a worker thread async with the main
+             * thread), we need to first ensure the main thread is not in a GC
+             * session.
              */
+            mozilla::Maybe<AutoLockWorkerThreadState> lock;
             JSRuntime *rt = zone->runtimeFromAnyThread();
-            AutoLockWorkerThreadState lock(*rt->workerThreadState);
-            while (rt->isHeapBusy())
-                rt->workerThreadState->wait(WorkerThreadState::PRODUCER);
+            if (rt->exclusiveThreadsPresent()) {
+                lock.construct<WorkerThreadState &>(*rt->workerThreadState);
+                while (rt->isHeapBusy())
+                    rt->workerThreadState->wait(WorkerThreadState::PRODUCER);
+            }
 
             void *thing = cx->allocator()->arenas.allocateFromArenaInline(zone, thingKind);
             if (thing)
