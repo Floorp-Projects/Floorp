@@ -557,6 +557,29 @@ struct MOZ_STACK_CLASS StateRuleProcessorData :
                                   //  Constants defined in nsEventStates.h .
 };
 
+struct MOZ_STACK_CLASS PseudoElementStateRuleProcessorData :
+                          public StateRuleProcessorData {
+  PseudoElementStateRuleProcessorData(nsPresContext* aPresContext,
+                                      mozilla::dom::Element* aElement,
+                                      nsEventStates aStateMask,
+                                      nsCSSPseudoElements::Type aPseudoType,
+                                      TreeMatchContext& aTreeMatchContext,
+                                      mozilla::dom::Element* aPseudoElement)
+    : StateRuleProcessorData(aPresContext, aElement, aStateMask,
+                             aTreeMatchContext),
+      mPseudoType(aPseudoType),
+      mPseudoElement(aPseudoElement)
+  {
+    NS_PRECONDITION(!aTreeMatchContext.mForStyling, "Not styling here!");
+  }
+
+  // We kind of want to inherit from both StateRuleProcessorData and
+  // PseudoElementRuleProcessorData.  Instead we've just copied those
+  // members from PseudoElementRuleProcessorData to this struct.
+  nsCSSPseudoElements::Type mPseudoType;
+  mozilla::dom::Element* const mPseudoElement; // weak ref
+};
+
 struct MOZ_STACK_CLASS AttributeRuleProcessorData :
                           public ElementDependentRuleProcessorData {
   AttributeRuleProcessorData(nsPresContext* aPresContext,
