@@ -126,6 +126,9 @@ public class GeckoAppShell
     static private final HashMap<String, String>
         mAlertCookies = new HashMap<String, String>();
 
+    // See also HardwareUtils.LOW_MEMORY_THRESHOLD_MB.
+    static private final int HIGH_MEMORY_DEVICE_THRESHOLD_MB = 768;
+
     /* Keep in sync with constants found here:
       http://mxr.mozilla.org/mozilla-central/source/uriloader/base/nsIWebProgressListener.idl
     */
@@ -199,6 +202,7 @@ public class GeckoAppShell
     }
     public static native Message getNextMessageFromQueue(MessageQueue queue);
     public static native void onSurfaceTextureFrameAvailable(Object surfaceTexture, int id);
+    public static native void dispatchMemoryPressure();
 
     public static void registerGlobalExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -1377,29 +1381,7 @@ public class GeckoAppShell
     }
 
     private static boolean isHighMemoryDevice() {
-        BufferedReader br = null;
-        FileReader fr = null;
-        try {
-            fr = new FileReader("/proc/meminfo");
-            if (fr == null)
-                return false;
-            br = new BufferedReader(fr);
-            String line = br.readLine();
-            while (line != null && !line.startsWith("MemTotal")) {
-                line = br.readLine();
-            }
-            String[] tokens = line.split("\\s+");
-            if (tokens.length >= 2 && Long.parseLong(tokens[1]) >= 786432 /* 768MB in kb*/) {
-                return true;
-            }
-        } catch (Exception ex) {
-        } finally {
-            try {
-                if (fr != null)
-                    fr.close();
-            } catch (IOException ioe) {}
-        }
-        return false;
+        return HardwareUtils.getMemSize() > HIGH_MEMORY_DEVICE_THRESHOLD_MB;
     }
 
     /**
