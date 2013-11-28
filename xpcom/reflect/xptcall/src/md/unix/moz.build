@@ -16,6 +16,8 @@ if CONFIG['OS_ARCH'] == 'Darwin':
         GENERATED_SOURCES += [
             'xptcstubs_asm_ppc_darwin.s',
         ]
+    if '86' in CONFIG['OS_TEST'] and CONFIG['OS_TEST'] != 'x86_64':
+        DEFINES['MOZ_NEED_LEADING_UNDERSCORE'] = True
 
 if CONFIG['OS_ARCH'] in ('NetBSD', 'OpenBSD', 'GNU'):
     if CONFIG['CPU_ARCH'] == 'x86':

@@ -475,7 +475,7 @@ class TestRecursiveMakeBackend(BackendTester):
         var = 'DEFINES'
         defines = [val for val in lines if val.startswith(var)]
 
-        expected = ['DEFINES += -DFOO -DBAZ=\'"abcd"\' -DBAR=7 -DVALUE=\'xyz\'']
+        expected = ['DEFINES += -DFOO -DBAZ=\'"ab\'\\\'\'cd"\' -DBAR=7 -DVALUE=\'xyz\'']
         self.assertEqual(defines, expected)
 
     def test_local_includes(self):

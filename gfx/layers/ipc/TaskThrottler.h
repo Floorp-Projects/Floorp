@@ -10,6 +10,7 @@
 #include <stdint.h>                     // for uint32_t
 #include "base/task.h"                  // for CancelableTask
 #include "mozilla/TimeStamp.h"          // for TimeDuration, TimeStamp
+#include "mozilla/RollingMean.h"        // for RollingMean
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsAutoPtr.h"                  // for nsAutoPtr
 #include "nsTArray.h"                   // for nsTArray
@@ -56,7 +57,10 @@ public:
    * Calculate the average time between processing the posted task and getting
    * the TaskComplete() call back.
    */
-  TimeDuration AverageDuration();
+  TimeDuration AverageDuration()
+  {
+    return mMean.empty() ? TimeDuration() : mMean.mean();
+  }
 
   /**
    * return true if Throttler has an outstanding task
@@ -71,7 +75,7 @@ public:
   /**
    * Clear average history.
    */
-  void ClearHistory() { mDurations.Clear(); }
+  void ClearHistory() { mMean.clear(); }
 
   /**
    * @param aMaxDurations The maximum number of durations to measure.
@@ -79,17 +83,16 @@ public:
 
   void SetMaxDurations(uint32_t aMaxDurations)
   {
-    mMaxDurations = aMaxDurations;
+    if (aMaxDurations != mMean.maxValues()) {
+      mMean = RollingMean<TimeDuration, TimeDuration>(aMaxDurations);
+    }
   }
 
 private:
   bool mOutstanding;
   nsAutoPtr<CancelableTask> mQueuedTask;
   TimeStamp mStartTime;
-
-  // How long it took in the past to paint after a series of previous requests.
-  nsTArray<TimeDuration> mDurations;
-  uint32_t mMaxDurations;
+  RollingMean<TimeDuration, TimeDuration> mMean;
 };
 
 }

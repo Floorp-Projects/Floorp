@@ -4,18 +4,6 @@
 
 GAIA_PATH := gaia/profile
 
-ifeq ($(OS_ARCH),WINNT)
-DEFINES += \
-  -DB2G_NAME=L\"$(MOZ_APP_NAME)-bin$(BIN_SUFFIX)\" \
-  -DGAIA_PATH=L\"$(subst /,\\\\,$(GAIA_PATH))\" \
-  $(NULL)
-else # Non-windows machines use the same wrapper program
-DEFINES += \
-  -DB2G_NAME=\"$(MOZ_APP_NAME)-bin$(BIN_SUFFIX)\" \
-  -DGAIA_PATH=\"$(GAIA_PATH)\" \
-  $(NULL)
-endif
-
 ifdef .PYMAKE
 # For use of GNU make in pymake builds.
 GAIA_MAKE=$(GMAKE)

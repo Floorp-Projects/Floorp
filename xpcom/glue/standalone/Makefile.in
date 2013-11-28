@@ -19,11 +19,4 @@ ifdef _MSC_VER
 # Don't include directives in obj files about which CRT to use
 OS_COMPILE_CXXFLAGS += -Zl
 OS_COMPILE_CFLAGS += -Zl
-DEFINES += -D_USE_ANSI_CPP
-endif
-
-DEFINES		+= -DXPCOM_GLUE
-
-ifdef TARGET_XPCOM_ABI
-DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
 endif

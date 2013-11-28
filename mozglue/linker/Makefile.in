@@ -6,8 +6,6 @@ STL_FLAGS =
 
 HOST_LIBS = -lz
 
-DEFINES += -DIMPL_MFBT
-
 include $(topsrcdir)/config/rules.mk
 
 ifeq (arm,$(TARGET_CPU))

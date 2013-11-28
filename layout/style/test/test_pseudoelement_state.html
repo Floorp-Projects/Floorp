@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<title>Test for Bug 922669</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+
+<iframe src="data:text/html,<!DOCTYPE html><style></style><div></div>"></iframe>
+
+<script>
+var gIsAndroid = navigator.appVersion.indexOf("Android") != -1;
+
+var gTests = [
+  // Interact with the ::-moz-progress-bar.
+  { markup:                 '<progress value="75" max="100"></progress>',
+    common_style:           'progress { -moz-appearance: none; } progress::-moz-progress-bar { background: black; }',
+    hover_test_style:       'progress::-moz-progress-bar:hover { background: green; }',
+    hover_reference_style:  'progress::-moz-progress-bar { background: green; }',
+    active_test_style:      'progress::-moz-progress-bar:active { background: lime; }',
+    active_reference_style: 'progress::-moz-progress-bar { background: lime; }' },
+
+  // Interact with the part of the <progress> not covered by the ::-moz-progress-bar.
+  { markup:                 '<progress value="25" max="100"></progress>',
+    common_style:           'progress { -moz-appearance: none; }',
+    hover_test_style:       'progress::-moz-progress-bar { background: green; } progress::-moz-progress-bar:hover { background: red; }',
+    hover_reference_style:  'progress::-moz-progress-bar { background: green; }',
+    active_test_style:      'progress::-moz-progress-bar { background: lime; } progress::-moz-progress-bar:active { background: red; }',
+    active_reference_style: 'progress::-moz-progress-bar { background: lime; }' },
+
+  // Interact with the ::-moz-range-thumb.
+  { markup:                 '<input type="range" value="50" min="0" max="100">',
+    common_style:           'input { -moz-appearance: none; } input::-moz-range-thumb { background: black; }',
+    hover_test_style:       'input::-moz-range-thumb:hover { background: green; }',
+    hover_reference_style:  'input::-moz-range-thumb { background: green; }',
+    active_test_style:      'input::-moz-range-thumb:active { background: lime; }',
+    active_reference_style: 'input::-moz-range-thumb { background: lime; }' },
+
+  // Interact with the part of the <input type="range"> not covered by the ::-moz-range-thumb.
+  { markup:                 '<input type="range" value="25" min="0" max="100">',
+    common_style:           'input { -moz-appearance: none; }',
+    hover_test_style:       'input::-moz-range-thumb { background: green; } input::-moz-range-thumb:hover { background: red; }',
+    hover_reference_style:  'input::-moz-range-thumb { background: green; }',
+    active_test_style:      'input::-moz-range-thumb { background: lime; } input::-moz-range-thumb:active { background: red; }',
+    active_reference_style: 'input::-moz-range-thumb { background: lime; }' },
+
+  // Interact with the ::-moz-meter-bar.
+  { markup:                 '<meter value="75" min="0" max="100"></meter>',
+    common_style:           'meter { -moz-appearance: none; } meter::-moz-meter-bar { background: black; }',
+    hover_test_style:       'meter::-moz-meter-bar:hover { background: green; }',
+    hover_reference_style:  'meter::-moz-meter-bar { background: green; }',
+    active_test_style:      'meter::-moz-meter-bar:active { background: lime; }',
+    active_reference_style: 'meter::-moz-meter-bar { background: lime; }' },
+
+  // Interact with the part of the <meter> not covered by the ::-moz-meter-bar.
+  { markup:                 '<meter value="25" min="0" max="100"></meter>',
+    common_style:           'meter { -moz-appearance: none; }',
+    hover_test_style:       'meter::-moz-meter-bar { background: green; } meter::-moz-meter-bar:hover { background: red; }',
+    hover_reference_style:  'meter::-moz-meter-bar { background: green; }',
+    active_test_style:      'meter::-moz-meter-bar { background: lime; } meter::-moz-meter-bar:active { background: red; }',
+    active_reference_style: 'meter::-moz-meter-bar { background: lime; }' },
+
+  // Do the same as the "Interact with the ::-moz-range-thumb" subtest above,
+  // but with selectors that include descendant operators.
+  { markup:                 '<input type="range" value="50" min="0" max="100">',
+    common_style:           'body input { -moz-appearance: none; } input::-moz-range-thumb { background: black; }',
+    hover_test_style:       'body input::-moz-range-thumb:hover { background: green; }',
+    hover_reference_style:  'body input::-moz-range-thumb { background: green; }',
+    active_test_style:      'body input::-moz-range-thumb:active { background: lime; }',
+    active_reference_style: 'body input::-moz-range-thumb { background: lime; }' },
+
+  // ::-moz-placeholder can't be tested, since the UA style sheet sets it to
+  // be pointer-events:none.
+];
+
+function countPixelDifferences(aCanvas1, aCanvas2) {
+  var ctx1 = aCanvas1.getContext("2d");
+  var ctx2 = aCanvas2.getContext("2d");
+  var data1 = ctx1.getImageData(0, 0, aCanvas1.width, aCanvas1.height);
+  var data2 = ctx2.getImageData(0, 0, aCanvas2.width, aCanvas2.height);
+  var n = 0;
+  for (var i = 0; i < data1.width * data2.height * 4; i += 4) {
+    if (data1.data[i] != data2.data[i] ||
+        data1.data[i + 1] != data2.data[i + 1] ||
+        data1.data[i + 2] != data2.data[i + 2] ||
+        data1.data[i + 3] != data2.data[i + 3]) {
+      n++;
+    }
+  }
+  return n;
+}
+
+function runTests() {
+  var iframe = document.querySelector("iframe");
+  var style = iframe.contentDocument.querySelector("style");
+  var div = iframe.contentDocument.querySelector("div");
+  var canvas1, canvas2;
+
+  function runTestPart1(aIndex) {
+    var test = gTests[aIndex];
+    div.innerHTML = test.markup;
+    style.textContent = test.common_style + test.hover_test_style;
+    synthesizeMouseAtCenter(div.lastChild, { type: 'mouseover' }, iframe.contentWindow);
+  }
+
+  function runTestPart2(aIndex) {
+    var test = gTests[aIndex];
+    canvas1 = SpecialPowers.snapshotWindow(iframe.contentWindow, false);
+    style.textContent = test.common_style + test.hover_reference_style;
+  }
+
+  function runTestPart3(aIndex) {
+    var test = gTests[aIndex];
+    canvas2 = SpecialPowers.snapshotWindow(iframe.contentWindow, false);
+    ok(canvas1.width == canvas2.width && canvas1.height == canvas2.height, "hover subtest #" + aIndex + ", canvas sizes equal");
+    is(countPixelDifferences(canvas1, canvas2), 0, "hover subtest #" + aIndex + ", number of different pixels");
+
+    if (!gIsAndroid) {
+      style.textContent = test.common_style + test.active_test_style;
+      synthesizeMouseAtCenter(div.lastChild, { type: 'mousedown' }, iframe.contentWindow);
+    }
+  }
+
+  function runTestPart4(aIndex) {
+    if (!gIsAndroid) {
+      var test = gTests[aIndex];
+      canvas1 = SpecialPowers.snapshotWindow(iframe.contentWindow, false);
+      synthesizeMouseAtCenter(div.lastChild, { type: 'mouseup' }, iframe.contentWindow);
+      style.textContent = test.common_style + test.active_reference_style;
+    }
+  }
+
+  function runTestPart5(aIndex) {
+    if (!gIsAndroid) {
+      canvas2 = SpecialPowers.snapshotWindow(iframe.contentWindow, false);
+      ok(canvas1.width == canvas2.width && canvas1.height == canvas2.height, "active subtest #" + aIndex + ", canvas sizes equal");
+      is(countPixelDifferences(canvas1, canvas2), 0, "active subtest #" + aIndex + ", number of different pixels");
+    }
+  }
+
+  for (var i = 0; i < gTests.length; i++) {
+    setTimeout(runTestPart1, 0, i);
+    setTimeout(runTestPart2, 0, i);
+    setTimeout(runTestPart3, 0, i);
+    setTimeout(runTestPart4, 0, i);
+    setTimeout(runTestPart5, 0, i);
+  }
+  setTimeout(function() { SimpleTest.finish(); }, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+window.addEventListener("load", runTests);
+</script>

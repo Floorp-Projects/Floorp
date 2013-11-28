@@ -117,6 +117,12 @@ nsHTMLCSSStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
   return nsRestyleHint(0);
 }
 
+/* virtual */ nsRestyleHint
+nsHTMLCSSStyleSheet::HasStateDependentStyle(PseudoElementStateRuleProcessorData* aData)
+{
+  return nsRestyleHint(0);
+}
+
 /* virtual */ bool
 nsHTMLCSSStyleSheet::HasDocumentStateDependentStyle(StateRuleProcessorData* aData)
 {
