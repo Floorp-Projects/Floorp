@@ -14,6 +14,7 @@
 #include "nsIUrlClassifierPrefixSet.h"
 #include "nsIRandomGenerator.h"
 #include "nsIFile.h"
+#include "nsIMemoryReporter.h"
 #include "nsToolkitCompsCID.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -35,12 +36,34 @@ static const PRLogModuleInfo *gUrlClassifierPrefixSetLog = nullptr;
 #define LOG_ENABLED() (false)
 #endif
 
-NS_IMPL_ISUPPORTS2(
-  nsUrlClassifierPrefixSet, nsIUrlClassifierPrefixSet, nsIMemoryReporter)
+class PrefixSetReporter MOZ_FINAL : public MemoryUniReporter
+{
+public:
+  PrefixSetReporter(nsUrlClassifierPrefixSet* aPrefixSet,
+                    const nsACString& aName)
+    : MemoryUniReporter(
+        nsPrintfCString(
+          "explicit/storage/prefix-set/%s",
+          (!aName.IsEmpty() ? PromiseFlatCString(aName).get() : "?!")
+        ).get(),
+        KIND_HEAP, UNITS_BYTES,
+        "Memory used by the prefix set for a URL classifier.")
+    , mPrefixSet(aPrefixSet)
+  {}
+
+private:
+  int64_t Amount() MOZ_OVERRIDE
+  {
+    return mPrefixSet->SizeOfIncludingThis(MallocSizeOf);
+  }
+
+  nsUrlClassifierPrefixSet* mPrefixSet;
+};
+
+NS_IMPL_ISUPPORTS1(nsUrlClassifierPrefixSet, nsIUrlClassifierPrefixSet)
 
 nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
   : mHasPrefixes(false)
-  , mMemoryReportPath()
 {
 #if defined(PR_LOGGING)
   if (!gUrlClassifierPrefixSetLog)
@@ -51,20 +74,15 @@ nsUrlClassifierPrefixSet::nsUrlClassifierPrefixSet()
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::Init(const nsACString& aName)
 {
-  mMemoryReportPath =
-    nsPrintfCString(
-      "explicit/storage/prefix-set/%s",
-      (!aName.IsEmpty() ? PromiseFlatCString(aName).get() : "?!")
-    );
-
-  RegisterWeakMemoryReporter(this);
+  mReporter = new PrefixSetReporter(this, aName);
+  NS_RegisterMemoryReporter(mReporter);
 
   return NS_OK;
 }
 
 nsUrlClassifierPrefixSet::~nsUrlClassifierPrefixSet()
 {
-  UnregisterWeakMemoryReporter(this);
+  NS_UnregisterMemoryReporter(mReporter);
 }
 
 NS_IMETHODIMP
@@ -250,21 +268,8 @@ nsUrlClassifierPrefixSet::Contains(uint32_t aPrefix, bool* aFound)
   return NS_OK;
 }
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(UrlClassifierMallocSizeOf)
-
-NS_IMETHODIMP
-nsUrlClassifierPrefixSet::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                         nsISupports* aData)
-{
-  return aHandleReport->Callback(
-    EmptyCString(), mMemoryReportPath, KIND_HEAP, UNITS_BYTES,
-    SizeOfIncludingThis(UrlClassifierMallocSizeOf),
-    NS_LITERAL_CSTRING("Memory used by the prefix set for a URL classifier."),
-    aData);
-}
-
 size_t
-nsUrlClassifierPrefixSet::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+nsUrlClassifierPrefixSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 {
   size_t n = 0;
   n += aMallocSizeOf(this);

@@ -820,7 +820,7 @@ void imgLoader::GlobalInit()
     sCacheMaxSize = 5 * 1024 * 1024;
 
   sMemReporter = new imgMemoryReporter();
-  RegisterStrongMemoryReporter(sMemReporter);
+  NS_RegisterMemoryReporter(sMemReporter);
   RegisterImagesContentUsedUncompressedDistinguishedAmount(imgMemoryReporter::ImagesContentUsedUncompressedDistinguishedAmount);
 }
 

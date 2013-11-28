@@ -18,6 +18,7 @@
 #include "nsCOMArray.h"
 
 class nsDiskCacheMap;
+class nsIMemoryReporter;
 
 
 class nsDiskCacheDevice : public nsCacheDevice {
@@ -111,6 +112,8 @@ private:
     nsDiskCacheMap          mCacheMap;
     bool                    mInitialized;
     bool                    mClearingDiskCache;
+
+    nsCOMPtr<nsIMemoryReporter> mReporter;
 };
 
 #endif // _nsDiskCacheDevice_h_

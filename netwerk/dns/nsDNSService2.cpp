@@ -7,6 +7,7 @@
 #include "nsIDNSRecord.h"
 #include "nsIDNSListener.h"
 #include "nsICancelable.h"
+#include "nsIMemoryReporter.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
@@ -393,11 +394,26 @@ nsDNSSyncRequest::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 
 //-----------------------------------------------------------------------------
 
+class NetworkDNSServiceReporter MOZ_FINAL : public MemoryUniReporter
+{
+public:
+    NetworkDNSServiceReporter(nsDNSService* aService)
+        : MemoryUniReporter("explicit/network/dns-service",
+                             KIND_HEAP, UNITS_BYTES,
+                             "Memory used for the DNS service.")
+        , mService(aService)
+    {}
+private:
+    int64_t Amount() MOZ_OVERRIDE
+    {
+        return mService->SizeOfIncludingThis(MallocSizeOf);
+    }
+
+    nsDNSService *mService;
+};
+
 nsDNSService::nsDNSService()
-    : MemoryUniReporter("explicit/network/dns-service",
-                        KIND_HEAP, UNITS_BYTES,
-                        "Memory used for the DNS service.")
-    , mLock("nsDNSServer.mLock")
+    : mLock("nsDNSServer.mLock")
     , mFirstTime(true)
     , mOffline(false)
 {
@@ -407,8 +423,7 @@ nsDNSService::~nsDNSService()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsDNSService, MemoryUniReporter, nsIDNSService,
-                             nsPIDNSService, nsIObserver)
+NS_IMPL_ISUPPORTS3(nsDNSService, nsIDNSService, nsPIDNSService, nsIObserver)
 
 NS_IMETHODIMP
 nsDNSService::Init()
@@ -514,7 +529,8 @@ nsDNSService::Init()
         }
     }
 
-    RegisterWeakMemoryReporter(this);
+    mReporter = new NetworkDNSServiceReporter(this);
+    NS_RegisterMemoryReporter(mReporter);
 
     return rv;
 }
@@ -522,7 +538,7 @@ nsDNSService::Init()
 NS_IMETHODIMP
 nsDNSService::Shutdown()
 {
-    UnregisterWeakMemoryReporter(this);
+    NS_UnregisterMemoryReporter(mReporter);
 
     nsRefPtr<nsHostResolver> res;
     {
@@ -921,7 +937,7 @@ SizeOfLocalDomainsEntryExcludingThis(nsCStringHashKey* entry,
 }
 
 size_t
-nsDNSService::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+nsDNSService::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 {
     // Measurement of the following members may be added later if DMD finds it
     // is worthwhile:

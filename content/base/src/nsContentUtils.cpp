@@ -417,7 +417,7 @@ nsContentUtils::Init()
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    RegisterStrongMemoryReporter(new DOMEventListenerManagersHashReporter());
+    NS_RegisterMemoryReporter(new DOMEventListenerManagersHashReporter);
   }
 
   sBlockedScriptRunners = new nsTArray< nsCOMPtr<nsIRunnable> >;

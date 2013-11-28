@@ -676,7 +676,7 @@ gfxASurface::RecordMemoryUsedForSurfaceType(gfxSurfaceType aType,
 
     static bool registered = false;
     if (!registered) {
-        RegisterStrongMemoryReporter(new SurfaceMemoryReporter());
+        NS_RegisterMemoryReporter(new SurfaceMemoryReporter());
         registered = true;
     }
 
