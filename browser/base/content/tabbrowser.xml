@@ -208,7 +208,8 @@
           if (!window.gShowPageResizers)
             return;
 
-          var show = window.windowState == window.STATE_NORMAL;
+          var show = document.getElementById("addon-bar").collapsed &&
+                     window.windowState == window.STATE_NORMAL;
           for (let i = 0; i < this.browsers.length; i++) {
             this.browsers[i].showWindowResizer = show;
           }
@@ -999,7 +1000,7 @@
             this.mCurrentTab = this.tabContainer.selectedItem;
             this.showTab(this.mCurrentTab);
 
-            var backForwardContainer = document.getElementById("urlbar-container");
+            var backForwardContainer = document.getElementById("unified-back-forward-button");
             if (backForwardContainer) {
               backForwardContainer.setAttribute("switchingtabs", "true");
               window.addEventListener("MozAfterPaint", function removeSwitchingtabsAttr() {
@@ -1500,7 +1501,8 @@
             if (remote)
               b.setAttribute("remote", "true");
 
-            if (window.gShowPageResizers && window.windowState == window.STATE_NORMAL) {
+            if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed &&
+                window.windowState == window.STATE_NORMAL) {
               b.setAttribute("showresizer", "true");
             }
 
@@ -1926,11 +1928,6 @@
             aTab.closing = true;
             this._removingTabs.push(aTab);
             this._visibleTabs = null; // invalidate cache
-
-            // Invalidate hovered tab state tracking for this closing tab.
-            if (this.tabContainer._hoveredTab == aTab)
-              aTab._mouseleave();
-
             if (newTab)
               this.addTab(BROWSER_NEW_TAB_URL, {skipAnimation: true});
             else
@@ -3249,28 +3246,6 @@
           return !tab.pinned && !tab.hidden;
         ]]></body>
       </method>
-      <field name="_tabMarginLeft">null</field>
-      <field name="_tabMarginRight">null</field>
-      <method name="_adjustElementStartAndEnd">
-        <parameter name="aTab"/>
-        <parameter name="tabStart"/>
-        <parameter name="tabEnd"/>
-        <body><![CDATA[
-          if (this._tabMarginLeft === null || this._tabMarginRight === null) {
-            let tabMiddle = document.getAnonymousElementByAttribute(aTab, "class", "tab-background-middle");
-            let tabMiddleStyle = window.getComputedStyle(tabMiddle, null);
-            this._tabMarginLeft = parseFloat(tabMiddleStyle.marginLeft);
-            this._tabMarginRight = parseFloat(tabMiddleStyle.marginRight);
-          }
-          if (this._tabMarginLeft < 0) {
-            tabStart = tabStart + this._tabMarginLeft;
-          }
-          if (this._tabMarginRight < 0) {
-            tabEnd = tabEnd - this._tabMarginRight;
-          }
-          return [tabStart, tabEnd];
-        ]]></body>
-      </method>
     </implementation>
 
     <handlers>
@@ -3292,11 +3267,8 @@
       <handler event="overflow"><![CDATA[
         if (event.detail == 0)
           return; // Ignore vertical events
-        var tabs = document.getBindingParent(this);
-        var numberOfTabs = tabs.tabbrowser.visibleTabs.length;
-        if (numberOfTabs == 1)
-          return;
 
+        var tabs = document.getBindingParent(this);
         tabs.setAttribute("overflow", "true");
         tabs._positionPinnedTabs();
         tabs._handleTabSelect(false);
@@ -3393,15 +3365,6 @@
       <field name="_afterSelectedTab">null</field>
       <field name="_beforeHoveredTab">null</field>
       <field name="_afterHoveredTab">null</field>
-      <field name="_hoveredTab">null</field>
-
-      <property name="_isCustomizing" readonly="true">
-        <getter>
-          let root = document.documentElement;
-          return root.getAttribute("customizing") == "true" ||
-                 root.getAttribute("customize-exiting") == "true";
-        </getter>
-      </property>
 
       <method name="_setPositionalAttributes">
         <body><![CDATA[
@@ -3432,12 +3395,6 @@
             this._lastTab.removeAttribute("last-visible-tab");
           this._lastTab = visibleTabs[lastVisible];
           this._lastTab.setAttribute("last-visible-tab", "true");
-
-          let hoveredTab = this._hoveredTab;
-          if (hoveredTab) {
-            hoveredTab._mouseleave();
-            hoveredTab._mouseenter();
-          }
         ]]></body>
       </method>
 
@@ -3515,6 +3472,10 @@
           document.getElementById("menu_closeWindow").hidden = !visible;
           document.getElementById("menu_close").setAttribute("label",
             this.tabbrowser.mStringBundle.getString(visible ? "tabs.closeTab" : "tabs.close"));
+
+          goSetCommandEnabled("cmd_ToggleTabsOnTop", visible);
+
+          TabsOnTop.syncUI();
 
           TabsInTitlebar.allowedBy("tabs-visible", visible);
         ]]></body>
@@ -3867,16 +3828,16 @@
               if (aEvent.target != window)
                 break;
 
-              TabsInTitlebar.updateAppearance();
+              let sizemode = document.documentElement.getAttribute("sizemode");
+              TabsInTitlebar.allowedBy("sizemode",
+                                       sizemode == "maximized" || sizemode == "fullscreen");
 
-              if (this.tabbrowser.visibleTabs.length > 1) {
-                var width = this.mTabstrip.boxObject.width;
-                if (width != this.mTabstripWidth) {
-                  this.adjustTabstrip();
-                  this._fillTrailingGap();
-                  this._handleTabSelect();
-                  this.mTabstripWidth = width;
-                }
+              var width = this.mTabstrip.boxObject.width;
+              if (width != this.mTabstripWidth) {
+                this.adjustTabstrip();
+                this._fillTrailingGap();
+                this._handleTabSelect();
+                this.mTabstripWidth = width;
               }
 
               this.tabbrowser.updateWindowResizers();
@@ -4158,7 +4119,8 @@
         // When the tabbar has an unified appearance with the titlebar
         // and menubar, a double-click in it should have the same behavior
         // as double-clicking the titlebar
-        if (TabsInTitlebar.enabled || this.parentNode._dragBindingAlive)
+        if (TabsInTitlebar.enabled ||
+            (TabsOnTop.enabled && this.parentNode._dragBindingAlive))
           return;
 #endif
 
@@ -4281,7 +4243,7 @@
 
       <handler event="dragstart"><![CDATA[
         var tab = this._getDragTargetTab(event);
-        if (!tab || this._isCustomizing)
+        if (!tab)
           return;
 
         let dt = event.dataTransfer;
@@ -4525,7 +4487,7 @@
 
         var dt = event.dataTransfer;
         var draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
-        if (dt.mozUserCancelled || dt.dropEffect != "none" || this._isCustomizing) {
+        if (dt.mozUserCancelled || dt.dropEffect != "none") {
           delete draggedTab._dragData;
           return;
         }
@@ -4632,7 +4594,7 @@
 
     <content context="tabContextMenu" closetabtext="&closeTab.label;">
       <xul:stack class="tab-stack" flex="1">
-        <xul:hbox xbl:inherits="pinned,selected,titlechanged,fadein"
+        <xul:hbox xbl:inherits="pinned,selected,titlechanged"
                   class="tab-background">
           <xul:hbox xbl:inherits="pinned,selected,titlechanged"
                     class="tab-background-start"/>
@@ -4657,7 +4619,7 @@
                      role="presentation"/>
           <xul:toolbarbutton anonid="close-button"
                              xbl:inherits="fadein,pinned,selected"
-                             class="tab-close-button close-icon"/>
+                             class="tab-close-button"/>
         </xul:hbox>
       </xul:stack>
     </content>
@@ -4678,54 +4640,6 @@
       <field name="mCorrespondingMenuitem">null</field>
       <field name="closing">false</field>
       <field name="lastAccessed">0</field>
-
-      <method name="_mouseenter">
-        <body><![CDATA[
-          if (this.closing)
-            return;
-
-          let tabContainer = this.parentNode;
-          let visibleTabs = tabContainer.tabbrowser.visibleTabs;
-          let tabIndex = visibleTabs.indexOf(this);
-          if (tabIndex == 0) {
-            tabContainer._beforeHoveredTab = null;
-          } else {
-            let candidate = visibleTabs[tabIndex - 1];
-            if (!candidate.selected) {
-              tabContainer._beforeHoveredTab = candidate;
-              candidate.setAttribute("beforehovered", "true");
-            }
-          }
-
-          if (tabIndex == visibleTabs.length - 1) {
-            tabContainer._afterHoveredTab = null;
-          } else {
-            let candidate = visibleTabs[tabIndex + 1];
-            if (!candidate.selected) {
-              tabContainer._afterHoveredTab = candidate;
-              candidate.setAttribute("afterhovered", "true");
-            }
-          }
-
-          tabContainer._hoveredTab = this;
-        ]]></body>
-      </method>
-
-      <method name="_mouseleave">
-        <body><![CDATA[
-          let tabContainer = this.parentNode;
-          if (tabContainer._beforeHoveredTab) {
-            tabContainer._beforeHoveredTab.removeAttribute("beforehovered");
-            tabContainer._beforeHoveredTab = null;
-          }
-          if (tabContainer._afterHoveredTab) {
-            tabContainer._afterHoveredTab.removeAttribute("afterhovered");
-            tabContainer._afterHoveredTab = null;
-          }
-
-          tabContainer._hoveredTab = null;
-        ]]></body>
-      </method>
     </implementation>
 
     <handlers>
@@ -4734,14 +4648,47 @@
         if (anonid == "close-button")
           this.mOverCloseButton = true;
 
-        this._mouseenter();
+        let tab = event.target;
+        if (tab.closing)
+          return;
+
+        let tabContainer = this.parentNode;
+        let visibleTabs = tabContainer.tabbrowser.visibleTabs;
+        let tabIndex = visibleTabs.indexOf(tab);
+        if (tabIndex == 0) {
+          tabContainer._beforeHoveredTab = null;
+        } else {
+          let candidate = visibleTabs[tabIndex - 1];
+          if (!candidate.selected) {
+            tabContainer._beforeHoveredTab = candidate;
+            candidate.setAttribute("beforehovered", "true");
+          }
+        }
+
+        if (tabIndex == visibleTabs.length - 1) {
+          tabContainer._afterHoveredTab = null;
+        } else {
+          let candidate = visibleTabs[tabIndex + 1];
+          if (!candidate.selected) {
+            tabContainer._afterHoveredTab = candidate;
+            candidate.setAttribute("afterhovered", "true");
+          }
+        }
       ]]></handler>
       <handler event="mouseout"><![CDATA[
         let anonid = event.originalTarget.getAttribute("anonid");
         if (anonid == "close-button")
           this.mOverCloseButton = false;
 
-        this._mouseleave();
+        let tabContainer = this.parentNode;
+        if (tabContainer._beforeHoveredTab) {
+          tabContainer._beforeHoveredTab.removeAttribute("beforehovered");
+          tabContainer._beforeHoveredTab = null;
+        }
+        if (tabContainer._afterHoveredTab) {
+          tabContainer._afterHoveredTab.removeAttribute("afterhovered");
+          tabContainer._afterHoveredTab = null;
+        }
       ]]></handler>
       <handler event="dragstart" phase="capturing">
         this.style.MozUserFocus = '';
