@@ -590,6 +590,30 @@ if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gkmedias'
+LOCAL_INCLUDES += [
+    'include/config',
+    'include/core',
+    'include/effects',
+    'include/gpu',
+    'include/images',
+    'include/lazy',
+    'include/pipe',
+    'include/ports',
+    'include/utils',
+    'include/utils/mac',
+    'include/utils/win',
+    'include/views',
+    'src/core',
+    'src/gpu',
+    'src/gpu/effects',
+    'src/gpu/gl',
+    'src/image',
+    'src/lazy',
+    'src/sfnt',
+    'src/utils',
+    'src/utils/android',
+]
+
 
 DEFINES['SK_A32_SHIFT'] = 24
 DEFINES['SK_R32_SHIFT'] = 16

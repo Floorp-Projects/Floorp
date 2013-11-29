@@ -276,8 +276,8 @@
 #endif
     />
 
-    <key id="key_devToolboxMenuItem" keycode="&devToolboxMenuItem.keycode;"
-         keytext="&devToolboxMenuItem.keytext;" command="Tools:DevToolbox" key="&devToolboxMenuItem.keytext;"
+    <key id="key_devToolboxMenuItem" keytext="&devToolboxMenuItem.keytext;"
+         command="Tools:DevToolbox" key="&devToolboxMenuItem.keytext;"
 #ifdef XP_MACOSX
         modifiers="accel,alt"
 #else

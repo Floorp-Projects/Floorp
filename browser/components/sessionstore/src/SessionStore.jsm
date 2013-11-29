@@ -650,6 +650,16 @@ let SessionStoreInternal = {
         TabState.onBrowserContentsSwapped(browser, otherBrowser);
         TabStateCache.onBrowserContentsSwapped(browser, otherBrowser);
         break;
+      case "UserTypedValueChanged":
+        browser = aEvent.currentTarget;
+        if (browser.userTypedValue) {
+          TabStateCache.updateField(browser, "userTypedValue", browser.userTypedValue);
+          TabStateCache.updateField(browser, "userTypedClear", browser.userTypedClear);
+        } else {
+          TabStateCache.removeField(browser, "userTypedValue");
+          TabStateCache.removeField(browser, "userTypedClear");
+        }
+        break;
       case "TabOpen":
         this.onTabAdd(win, aEvent.originalTarget);
         break;
@@ -1235,6 +1245,7 @@ let SessionStoreInternal = {
     let browser = aTab.linkedBrowser;
     browser.addEventListener("load", this, true);
     browser.addEventListener("SwapDocShells", this, true);
+    browser.addEventListener("UserTypedValueChanged", this, true);
 
     let mm = browser.messageManager;
     MESSAGES.forEach(msg => mm.addMessageListener(msg, this));
@@ -1262,6 +1273,7 @@ let SessionStoreInternal = {
     let browser = aTab.linkedBrowser;
     browser.removeEventListener("load", this, true);
     browser.removeEventListener("SwapDocShells", this, true);
+    browser.removeEventListener("UserTypedValueChanged", this, true);
 
     let mm = browser.messageManager;
     MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));

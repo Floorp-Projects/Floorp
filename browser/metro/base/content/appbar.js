@@ -126,16 +126,7 @@ var Appbar = {
       if (!Services.metro.immersive)
         typesArray.push("open-jsshell");
 
-      try {
-        // If we have a valid http or https URI then show the view on desktop
-        // menu item.
-        let uri = Services.io.newURI(Browser.selectedBrowser.currentURI.spec,
-                                     null, null);
-        if (uri.schemeIs('http') || uri.schemeIs('https')) {
-          typesArray.push("view-on-desktop");
-        }
-      } catch(ex) {
-      }
+      typesArray.push("view-on-desktop");
 
       var x = this.menuButton.getBoundingClientRect().left;
       var y = Elements.toolbar.getBoundingClientRect().top;
@@ -153,16 +144,12 @@ var Appbar = {
   },
 
   onViewOnDesktop: function() {
-    try {
-      // Make sure we have a valid URI so Windows doesn't prompt
-      // with an unrecognized command, select default program window
-      var uri = Services.io.newURI(Browser.selectedBrowser.currentURI.spec,
-                                   null, null);
-      if (uri.schemeIs('http') || uri.schemeIs('https')) {
-        Services.metro.launchInDesktop(Browser.selectedBrowser.currentURI.spec, "");
-      }
-    } catch(ex) {
-    }
+    let appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"].
+      getService(Components.interfaces.nsIAppStartup);
+
+    Services.prefs.setBoolPref('browser.sessionstore.resume_session_once', true);
+    appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
+                    Components.interfaces.nsIAppStartup.eRestart);
   },
 
   onAutocompleteCloseButton: function () {
