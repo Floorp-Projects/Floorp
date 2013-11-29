@@ -45,18 +45,6 @@ struct PatchableBackedgeInfo
     {}
 };
 
-struct LinkVMWrapper {
-    MacroAssembler::CodeOffsetCall offset;
-    const VMFunction &fun;
-
-    LinkVMWrapper(MacroAssembler &masm, uint32_t offset, const VMFunction &fun)
-      : offset(masm.lastPatchableCall(offset)), fun(fun)
-    { }
-
-    void patchCall(MacroAssembler &masm, IonCode *code,
-                   IonCode *trap, IonCode *wrapper) const;
-};
-
 class CodeGeneratorShared : public LInstructionVisitor
 {
     js::Vector<OutOfLineCode *, 0, SystemAllocPolicy> outOfLineCode_;
@@ -82,7 +70,6 @@ class CodeGeneratorShared : public LInstructionVisitor
     Label invalidate_;
     CodeOffsetLabel invalidateEpilogueData_;
 
-    js::Vector<LinkVMWrapper, 0, SystemAllocPolicy> patchableVMCalls_;
     js::Vector<SafepointIndex, 0, SystemAllocPolicy> safepointIndices_;
     js::Vector<OsiIndex, 0, SystemAllocPolicy> osiIndices_;
 
@@ -286,11 +273,6 @@ class CodeGeneratorShared : public LInstructionVisitor
     // The location should be just after a call.
     bool markSafepoint(LInstruction *ins);
     bool markSafepointAt(uint32_t offset, LInstruction *ins);
-
-    // Mark the safepoint of a VM Function call.it also register the location to
-    // be patched if the wrapper correspond to the unreachable trap.
-    bool markVMCall(uint32_t offset, LInstruction *ins,
-                    const VMFunction &fun, const IonCode *wrapper);
 
     // Mark the OSI point |ins| as corresponding to the current
     // assembler location inside the |osiIndices_|. Return the assembler

@@ -5809,26 +5809,6 @@ CodeGenerator::generate()
     return !masm.oom();
 }
 
-
-bool
-CodeGenerator::initUsedVMWrappers(JSContext *cx)
-{
-    // VM Wrappers are shared stubs created in the atoms compartment.
-    AutoLockForExclusiveAccess atomsLock(cx);
-    JSRuntime::AutoLockForOperationCallback lock(cx->runtime());
-    AutoCompartment ac(cx, cx->runtime()->atomsCompartment());
-
-    JitRuntime *rt = cx->runtime()->jitRuntime();
-    LinkVMWrapper *end = patchableVMCalls_.end();
-    for (LinkVMWrapper *it = patchableVMCalls_.begin(); it != end; it++) {
-        IonCode *wrapper = rt->getVMWrapper(cx, it->fun, atomsLock);
-        if (!wrapper)
-            return false;
-    }
-
-    return true;
-}
-
 bool
 CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 {
@@ -5865,13 +5845,6 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
                      patchableBackedges_.length());
     if (!ionScript)
         return false;
-
-    if (!initUsedVMWrappers(cx)) {
-        // Use js_free instead of IonScript::Destroy: the cache list and
-        // backedge list are still uninitialized.
-        js_free(ionScript);
-        return false;
-    }
 
     // Lock the runtime against operation callbacks during the link.
     // We don't want an operation callback to protect the code for the script
@@ -5958,11 +5931,6 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         ionScript->copyCallTargetEntries(callTargets.begin());
     if (patchableBackedges_.length() > 0)
         ionScript->copyPatchableBackedges(cx, code, patchableBackedges_.begin());
-
-    // Link VM wrappers needed by the current Ion Script.
-    if (patchableVMCalls_.length() > 0)
-        ionScript->patchVMCalls(cx, code, patchableVMCalls_.begin(),
-                                patchableVMCalls_.length(), masm);
 
     switch (executionMode) {
       case SequentialExecution:

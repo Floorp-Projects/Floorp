@@ -145,7 +145,6 @@ class OsiIndex;
 class IonCache;
 struct PatchableBackedgeInfo;
 struct CacheLocation;
-struct LinkVMWrapper;
 
 // Describes a single AsmJSModule which jumps (via an FFI exit with the given
 // index) directly into an IonScript.
@@ -505,8 +504,6 @@ struct IonScript
     void copyCallTargetEntries(JSScript **callTargets);
     void copyPatchableBackedges(JSContext *cx, IonCode *code,
                                 PatchableBackedgeInfo *backedges);
-    void patchVMCalls(JSContext *cx, IonCode *code, LinkVMWrapper *begin, size_t length,
-                      MacroAssembler &masm);
 
     bool invalidated() const {
         return refcount_ != 0;

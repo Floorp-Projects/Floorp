@@ -433,15 +433,6 @@ class CodeGenerator : public CodeGeneratorSpecific
 #if defined(JS_ION_PERF)
     PerfSpewer perfSpewer_;
 #endif
-
-    // callVM function might not be able to produce a call to the corresponding
-    // VM function as the code generation is working concurrently on a separated
-    // thread. When the code is linked, we lock the main thread, and use
-    // initUsedVMWrappers to compile the VM wrappers of the VMFunctions which
-    // were not yet compiled. The list |patchableVMCalls| contains the call-site
-    // and their corresponding VMFunctions if it was not already compiled at the
-    // time of the generation of code.
-    bool initUsedVMWrappers(JSContext *cx);
 };
 
 } // namespace jit

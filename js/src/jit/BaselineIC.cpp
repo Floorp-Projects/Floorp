@@ -615,7 +615,7 @@ ICStubCompiler::getStubCode()
 bool
 ICStubCompiler::tailCallVM(const VMFunction &fun, MacroAssembler &masm)
 {
-    IonCode *code = cx->runtime()->jitRuntime()->getVMWrapper(cx, fun);
+    IonCode *code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
     if (!code)
         return false;
 
@@ -627,7 +627,7 @@ ICStubCompiler::tailCallVM(const VMFunction &fun, MacroAssembler &masm)
 bool
 ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
 {
-    IonCode *code = cx->runtime()->jitRuntime()->getVMWrapper(cx, fun);
+    IonCode *code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
     if (!code)
         return false;
 
@@ -638,7 +638,7 @@ ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
 bool
 ICStubCompiler::callTypeUpdateIC(MacroAssembler &masm, uint32_t objectOffset)
 {
-    IonCode *code = cx->runtime()->jitRuntime()->getVMWrapper(cx, DoTypeUpdateFallbackInfo);
+    IonCode *code = cx->runtime()->jitRuntime()->getVMWrapper(DoTypeUpdateFallbackInfo);
     if (!code)
         return false;
 

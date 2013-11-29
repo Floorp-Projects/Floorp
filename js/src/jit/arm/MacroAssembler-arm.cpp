@@ -1781,13 +1781,6 @@ MacroAssemblerARMCompat::callWithExitFrame(IonCode *target, Register dynStack)
     ma_callIonHalfPush(ScratchRegister);
 }
 
-MacroAssemblerARMCompat::CodeOffsetCall
-MacroAssemblerARMCompat::lastPatchableCall(uint32_t callOffset)
-{
-    JS_ASSERT(jumps_.back().offset.getOffset() < callOffset);
-    return CodeOffsetCall(jumps_.back().offset.getOffset());
-}
-
 void
 MacroAssemblerARMCompat::callIon(const Register &callee)
 {
