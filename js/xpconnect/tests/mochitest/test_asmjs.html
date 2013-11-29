@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=854209
 
   <script>
   var jsFuns = SpecialPowers.Cu.getJSTestingFunctions();
-  ok(jsFuns.isAsmJSCompilationAvailable());
+  ok(jsFuns.isAsmJSCompilationAvailable(), "asm.js compilation is available");
   </script>
 
   <script src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_asmjs.js"></script>
