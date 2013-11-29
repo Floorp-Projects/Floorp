@@ -48,3 +48,15 @@ FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'imglib2'
+
+LOCAL_INCLUDES += [
+    # Because SVGDocumentWrapper.cpp includes "mozilla/dom/SVGSVGElement.h"
+    '/content/base/src',
+    '/content/svg/content/src',
+    # We need to instantiate the decoders
+    '/image/decoders',
+    # Because VectorImage.cpp includes nsSVGUtils.h and nsSVGEffects.h
+    '/layout/svg',
+    # For URI-related functionality
+    '/netwerk/base/src',
+]

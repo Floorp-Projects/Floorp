@@ -9,7 +9,6 @@
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsICategoryManager.h"
-#include "nsIMemoryReporter.h"
 #include "nsIServiceManager.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -117,30 +116,17 @@ GlobalNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
   return true;
 }
 
-class ScriptNameSpaceManagerReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-  ScriptNameSpaceManagerReporter(nsScriptNameSpaceManager* aManager)
-    : MemoryUniReporter(
-        "explicit/script-namespace-manager",
-        KIND_HEAP,
-        nsIMemoryReporter::UNITS_BYTES,
-        "Memory used for the script namespace manager.")
-    , mManager(aManager)
-  {}
-
-private:
-  int64_t Amount() { return mManager->SizeOfIncludingThis(MallocSizeOf); }
-
-  nsScriptNameSpaceManager* mManager;
-};
-
-NS_IMPL_ISUPPORTS2(nsScriptNameSpaceManager,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS_INHERITED2(
+  nsScriptNameSpaceManager,
+  MemoryUniReporter,
+  nsIObserver,
+  nsISupportsWeakReference)
 
 nsScriptNameSpaceManager::nsScriptNameSpaceManager()
-  : mIsInitialized(false)
+  : MemoryUniReporter("explicit/script-namespace-manager",
+                      KIND_HEAP, UNITS_BYTES,
+                      "Memory used for the script namespace manager.")
+  , mIsInitialized(false)
 {
   MOZ_COUNT_CTOR(nsScriptNameSpaceManager);
 }
@@ -148,7 +134,7 @@ nsScriptNameSpaceManager::nsScriptNameSpaceManager()
 nsScriptNameSpaceManager::~nsScriptNameSpaceManager()
 {
   if (mIsInitialized) {
-    NS_UnregisterMemoryReporter(mReporter);
+    UnregisterWeakMemoryReporter(this);
     // Destroy the hash
     PL_DHashTableFinish(&mGlobalNames);
     PL_DHashTableFinish(&mNavigatorNames);
@@ -363,8 +349,7 @@ nsScriptNameSpaceManager::Init()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mReporter = new ScriptNameSpaceManagerReporter(this);
-  NS_RegisterMemoryReporter(mReporter);
+  RegisterWeakMemoryReporter(this);
 
   nsresult rv = NS_OK;
 
@@ -882,8 +867,14 @@ SizeOfEntryExcludingThis(PLDHashEntryHdr *aHdr, MallocSizeOf aMallocSizeOf,
     return entry->SizeOfExcludingThis(aMallocSizeOf);
 }
 
+int64_t
+nsScriptNameSpaceManager::Amount()
+{
+  return SizeOfIncludingThis(MallocSizeOf);
+}
+
 size_t
-nsScriptNameSpaceManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
+nsScriptNameSpaceManager::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = 0;
   n += PL_DHashTableSizeOfExcludingThis(&mGlobalNames,

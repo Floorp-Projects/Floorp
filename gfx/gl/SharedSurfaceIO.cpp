@@ -8,6 +8,7 @@
 #include "gfxImageSurface.h"
 #include "mozilla/gfx/MacIOSurface.h"
 #include "mozilla/DebugOnly.h"
+#include "ScopedGLHelpers.h"
 
 namespace mozilla {
 namespace gl {

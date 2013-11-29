@@ -55,10 +55,6 @@ include $(topsrcdir)/config/rules.mk
 
 HOST_CFLAGS += -DUNICODE -D_UNICODE
 
-ifeq ($(OS_CONFIG),SunOS4.1)
-NSPR_CFLAGS	+= -I$(srcdir)/../nsprpub/pr/include/md
-endif
-
 # Generate a new buildid every time we "export" in config... that's only
 # supposed to be once per-build!
 export::

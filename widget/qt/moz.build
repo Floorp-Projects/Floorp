@@ -62,6 +62,18 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
+LOCAL_INCLUDES += [
+    '../shared',
+    '/widget/qt/faststartupqt',
+    '/widget/shared',
+    '/widget/xpwidgets',
+]
+
+if CONFIG['MOZ_X11']:
+    LOCAL_INCLUDES += [
+        '../shared/x11',
+    ]
+
 #DEFINES['DEBUG_WIDGETS'] = True
 
 if CONFIG['OS_ARCH'] == 'Linux':

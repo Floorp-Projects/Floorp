@@ -9,14 +9,3 @@ CXXFLAGS	+= $(MOZ_QT_CFLAGS) $(GLIB_CFLAGS) $(MOZ_CAIRO_CFLAGS) \
 		$(MOZ_PIXMAN_CFLAGS)
 CFLAGS		+= $(MOZ_QT_CFLAGS) $(GLIB_CFLAGS) $(MOZ_CAIRO_CFLAGS) \
 		$(MOZ_PIXMAN_CFLAGS)
-
-LOCAL_INCLUDES	+= \
-		   -I$(topsrcdir)/widget/shared \
-		   -I$(topsrcdir)/widget/xpwidgets \
-		   -I$(topsrcdir)/widget/qt/faststartupqt \
-		   -I$(srcdir) \
-		   $(NULL)
-ifdef MOZ_X11
-INCLUDES   	+= -I$(srcdir)/../shared/x11
-endif
-INCLUDES   	+= -I$(srcdir)/../shared

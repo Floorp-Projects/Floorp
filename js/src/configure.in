@@ -2994,6 +2994,10 @@ ZLIB_DIR=yes
 
 MOZ_ZLIB_CHECK([1.2.3])
 
+if test -n "$ZLIB_IN_MOZGLUE"; then
+    AC_DEFINE(ZLIB_IN_MOZGLUE)
+fi
+
 dnl ========================================================
 dnl system libffi Support
 dnl ========================================================
