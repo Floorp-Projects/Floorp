@@ -140,27 +140,9 @@ let CustomizableUIInternal = {
       "history-panelmenu",
       "fullscreen-button",
       "find-button",
-      "preferences-button"
+      "preferences-button",
+      "add-ons-button",
     ];
-
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-    // Show switch-to-metro-button if in Windows 8.
-    let isMetroCapable = false;
-    try {
-      // Windows 8 is version 6.2.
-      let version = Cc["@mozilla.org/system-info;1"]
-                      .getService(Ci.nsIPropertyBag2)
-                      .getProperty("version");
-      isMetroCapable = (parseFloat(version) >= 6.2);
-    } catch (ex) { }
-
-    if (isMetroCapable) {
-      panelPlacements.push("switch-to-metro-button");
-    }
-#endif
-#endif
-
     let showCharacterEncoding = Services.prefs.getComplexValue(
       "browser.menu.showCharacterEncoding",
       Ci.nsIPrefLocalizedString
@@ -983,12 +965,6 @@ let CustomizableUIInternal = {
           ERROR("Key element with id '" + aWidget.shortcutId + "' for widget '" + aWidget.id +
                 "' not found!");
         }
-      }
-
-      if (aWidget.id == "switch-to-metro-button") {
-        let brandBundle = aDocument.getElementById("bundle_brand");
-        let brandShortName = brandBundle.getString("brandShortName");
-        additionalTooltipArguments = [brandShortName];
       }
       let tooltip = this.getLocalizedProperty(aWidget, "tooltiptext", additionalTooltipArguments);
       node.setAttribute("tooltiptext", tooltip);
