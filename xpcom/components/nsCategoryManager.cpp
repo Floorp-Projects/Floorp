@@ -17,7 +17,6 @@
 #include "nsClassHashtable.h"
 #include "nsIFactory.h"
 #include "nsIStringEnumerator.h"
-#include "nsIMemoryReporter.h"
 #include "nsSupportsPrimitives.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -401,22 +400,7 @@ CategoryEnumerator::enumfunc_createenumerator(const char* aStr, CategoryNode* aN
 // nsCategoryManager implementations
 //
 
-NS_IMPL_QUERY_INTERFACE1(nsCategoryManager, nsICategoryManager)
-
-class XPCOMCategoryManagerReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-    XPCOMCategoryManagerReporter()
-      : MemoryUniReporter("explicit/xpcom/category-manager",
-                           KIND_HEAP, UNITS_BYTES,
-                           "Memory used for the XPCOM category manager.")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE
-    {
-        return nsCategoryManager::SizeOfIncludingThis(MallocSizeOf);
-    }
-};
+NS_IMPL_QUERY_INTERFACE_INHERITED1(nsCategoryManager, MemoryUniReporter, nsICategoryManager)
 
 NS_IMETHODIMP_(nsrefcnt)
 nsCategoryManager::AddRef()
@@ -457,9 +441,11 @@ nsCategoryManager::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 }
 
 nsCategoryManager::nsCategoryManager()
-  : mLock("nsCategoryManager")
+  : MemoryUniReporter("explicit/xpcom/category-manager",
+                       KIND_HEAP, UNITS_BYTES,
+                       "Memory used for the XPCOM category manager.")
+  , mLock("nsCategoryManager")
   , mSuppressNotifications(false)
-  , mReporter(nullptr)
 {
   PL_INIT_ARENA_POOL(&mArena, "CategoryManagerArena",
                      NS_CATEGORYMANAGER_ARENA_SIZE);
@@ -468,13 +454,12 @@ nsCategoryManager::nsCategoryManager()
 void
 nsCategoryManager::InitMemoryReporter()
 {
-  mReporter = new XPCOMCategoryManagerReporter();
-  NS_RegisterMemoryReporter(mReporter);
+  RegisterWeakMemoryReporter(this);
 }
 
 nsCategoryManager::~nsCategoryManager()
 {
-  NS_UnregisterMemoryReporter(mReporter);
+  UnregisterWeakMemoryReporter(this);
 
   // the hashtable contains entries that must be deleted before the arena is
   // destroyed, or else you will have PRLocks undestroyed and other Really
@@ -493,13 +478,10 @@ nsCategoryManager::get_category(const char* aName) {
   return node;
 }
 
-/* static */ int64_t
-nsCategoryManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
+int64_t
+nsCategoryManager::Amount()
 {
-  return nsCategoryManager::gCategoryManager
-       ? nsCategoryManager::gCategoryManager->SizeOfIncludingThisHelper(
-          aMallocSizeOf)
-       : 0;
+    return SizeOfIncludingThis(MallocSizeOf);
 }
 
 static size_t
@@ -514,7 +496,7 @@ SizeOfCategoryManagerTableEntryExcludingThis(nsDepCharHashKey::KeyType aKey,
 }
 
 size_t
-nsCategoryManager::SizeOfIncludingThisHelper(MallocSizeOf aMallocSizeOf)
+nsCategoryManager::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
 
@@ -583,7 +565,9 @@ nsCategoryManager::NotifyObservers( const char *aTopic,
 
     r = new CategoryNotificationRunnable(entry, aTopic, aCategoryName);
   } else {
-    r = new CategoryNotificationRunnable(this, aTopic, aCategoryName);
+    r = new CategoryNotificationRunnable(
+              NS_ISUPPORTS_CAST(nsICategoryManager*, this),
+              aTopic, aCategoryName);
   }
 
   NS_DispatchToMainThread(r);

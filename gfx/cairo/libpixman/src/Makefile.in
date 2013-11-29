@@ -93,8 +93,6 @@ DEFINES += -DUSE_ARM_NEON
 ARM_NEON_CFLAGS = -mfpu=neon
 endif
 
-LOCAL_INCLUDES	+= -I$(srcdir) -I$(srcdir)/../../cairo/src
-
 include $(topsrcdir)/config/rules.mk
 
 # Disable spammy "missing initializer" GCC warning

@@ -43,7 +43,7 @@
 
 [xpcom]
 @BINPATH@/dependentlibs.list
-#ifdef XP_WIN32
+#ifdef GKMEDIAS_SHARED_LIBRARY
 @BINPATH@/@DLL_PREFIX@gkmedias@DLL_SUFFIX@
 #endif
 #ifndef MOZ_STATIC_JS
@@ -393,6 +393,8 @@
 @BINPATH@/components/jsconsole-clhandler.js
 @BINPATH@/components/nsDownloadManagerUI.manifest
 @BINPATH@/components/nsDownloadManagerUI.js
+@BINPATH@/components/Downloads.manifest
+@BINPATH@/components/DownloadLegacy.js
 @BINPATH@/components/nsSidebar.manifest
 @BINPATH@/components/nsSidebar.js
 
@@ -561,6 +563,9 @@
 @BINPATH@/components/PaymentFlowInfo.js
 @BINPATH@/components/PaymentRequestInfo.js
 @BINPATH@/components/Payment.manifest
+
+@BINPATH@/components/DownloadsAPI.js
+@BINPATH@/components/DownloadsAPI.manifest
 
 ; InputMethod API
 @BINPATH@/components/MozKeyboard.js
@@ -748,6 +753,13 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #endif
 
 [b2g]
+#ifndef MOZ_WIDGET_GONK
+#ifdef XP_WIN32
+@BINPATH@/xpcshell.exe
+#else
+@BINPATH@/xpcshell
+#endif
+#endif
 @BINPATH@/chrome/icons/
 @BINPATH@/chrome/chrome@JAREXT@
 @BINPATH@/chrome/chrome.manifest
@@ -778,6 +790,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/B2GAboutRedirector.js
 @BINPATH@/components/FilePicker.js
 @BINPATH@/components/HelperAppDialog.js
+@BINPATH@/components/DownloadsUI.js
 
 @BINPATH@/components/DataStore.manifest
 @BINPATH@/components/DataStoreService.js
