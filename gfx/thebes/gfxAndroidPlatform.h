@@ -81,8 +81,6 @@ public:
 private:
     int mScreenDepth;
     gfxImageFormat mOffscreenFormat;
-
-    nsCOMPtr<nsIMemoryReporter> mFreetypeReporter;
 };
 
 #endif /* GFX_PLATFORM_ANDROID_H */

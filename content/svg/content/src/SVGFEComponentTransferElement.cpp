@@ -54,7 +54,7 @@ SVGFEComponentTransferElement::GetStringInfo()
 FilterPrimitiveDescription
 SVGFEComponentTransferElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                        const IntRect& aFilterSubregion,
-                                                       nsTArray<nsRefPtr<gfxASurface> >& aInputImages)
+                                                       nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   nsRefPtr<SVGComponentTransferFunctionElement> childForChannel[4];
 

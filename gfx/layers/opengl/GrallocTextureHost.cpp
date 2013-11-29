@@ -10,6 +10,7 @@
 #include "GrallocImages.h"  // for GrallocImage
 #include "mozilla/layers/GrallocTextureHost.h"
 #include "mozilla/layers/CompositorOGL.h"
+#include "GLContextUtils.h"
 
 namespace mozilla {
 namespace layers {
@@ -297,13 +298,13 @@ GrallocTextureHostOGL::GetRenderState()
   return LayerRenderState();
 }
 
-already_AddRefed<gfxImageSurface>
+TemporaryRef<gfx::DataSourceSurface>
 GrallocTextureHostOGL::GetAsSurface() {
   return mTextureSource ? mTextureSource->GetAsSurface()
                         : nullptr;
 }
 
-already_AddRefed<gfxImageSurface>
+TemporaryRef<gfx::DataSourceSurface>
 GrallocTextureSourceOGL::GetAsSurface() {
   MOZ_ASSERT(gl());
   gl()->MakeCurrent();
@@ -316,8 +317,9 @@ GrallocTextureSourceOGL::GetAsSurface() {
   }
   gl()->fEGLImageTargetTexture2D(GetTextureTarget(), mEGLImage);
 
-  nsRefPtr<gfxImageSurface> surf = IsValid() ? gl()->GetTexImage(tex, false, GetFormat())
-                                             : nullptr;
+  RefPtr<gfx::DataSourceSurface> surf =
+    IsValid() ? ReadBackSurface(gl(), tex, false, GetFormat())
+              : nullptr;
 
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   return surf.forget();

@@ -95,7 +95,6 @@ vorbis_synthesis_pcmout
 vorbis_synthesis_read
 vorbis_synthesis_restart
 #endif
-#ifdef MOZ_SPEEX_RESAMPLER
 speex_resampler_init
 speex_resampler_init_frac
 speex_resampler_destroy
@@ -118,8 +117,6 @@ speex_resampler_get_output_latency
 speex_resampler_skip_zeros
 speex_resampler_reset_mem
 speex_resampler_strerror
-#endif
-#ifdef MOZ_CUBEB
 cubeb_destroy
 cubeb_init
 cubeb_get_max_channel_count
@@ -131,7 +128,6 @@ cubeb_stream_init
 cubeb_stream_start
 cubeb_stream_stop
 cubeb_stream_get_latency
-#endif
 #ifdef MOZ_OGG
 th_comment_clear
 th_comment_init
