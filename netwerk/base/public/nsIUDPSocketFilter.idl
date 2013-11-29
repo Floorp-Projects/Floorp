@@ -1,0 +1,45 @@
+/* -*- Mode: IDL; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsINetAddr.idl"
+
+native NetAddr(mozilla::net::NetAddr);
+[ptr] native NetAddrPtr(mozilla::net::NetAddr);
+
+
+/**
+ * Filters are created and run on the parent, and filter all UDP packets, both
+ * ingoing and outgoing. The child must specify the name of a recognized filter
+ * in order to create a UDP socket.
+ */
+[uuid(24f20de4-09e9-42ab-947a-0d6a3d103d59)]
+interface nsIUDPSocketFilter : nsISupports
+{
+  const long SF_INCOMING = 0;
+  const long SF_OUTGOING = 1;
+
+  bool filterPacket([const]in NetAddrPtr remote_addr,
+                    [const, array, size_is(len)]in uint8_t data,
+                    in unsigned long len,
+                    in long direction);
+};
+
+/**
+ * Factory of a specified filter.
+ */
+[uuid(81ee76c6-4753-4125-9c8c-290ed9ba62fb)]
+interface nsIUDPSocketFilterHandler : nsISupports
+{
+   nsIUDPSocketFilter newFilter();
+};
+
+%{C++
+/**
+ * Filter handlers are registered with XPCOM under the following CONTRACTID prefix:
+ */
+#define NS_NETWORK_UDP_SOCKET_FILTER_HANDLER_PREFIX "@mozilla.org/network/udp-filter-handler;1?name="
+%}
