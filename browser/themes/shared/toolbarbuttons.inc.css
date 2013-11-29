@@ -49,6 +49,10 @@
   -moz-image-region: rect(0, 216px, 18px, 198px);
 }
 
+#switch-to-metro-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 648px, 18px, 630px);
+}
+
 #open-file-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 234px, 18px, 216px);
 }

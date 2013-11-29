@@ -21,6 +21,9 @@ import android.util.Log;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import org.mozilla.gecko.mozglue.WebRTCJNITarget;
+
+@WebRTCJNITarget
 class AudioManagerAndroid {
   // Most of Google lead devices use 44.1K as the default sampling rate, 44.1K
   // is also widely used on other android devices.
