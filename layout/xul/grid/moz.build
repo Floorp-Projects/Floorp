@@ -31,3 +31,10 @@ UNIFIED_SOURCES += [
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'gklayout'
+LOCAL_INCLUDES += [
+    '../../forms',
+    '../../generic',
+    '../../style',
+    '../base/src',
+]
+

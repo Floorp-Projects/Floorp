@@ -26,13 +26,13 @@
 #include "nscore.h"                     // for nsACString
 #include "Units.h"                      // for CSSToScreenScale
 
-class gfxImageSurface;
 struct nsIntPoint;
 struct nsIntRect;
 
 namespace mozilla {
 namespace gfx {
 class Matrix4x4;
+class DataSourceSurface;
 }
 
 namespace layers {
@@ -289,7 +289,7 @@ public:
   static void DumpDeprecatedTextureHost(FILE* aFile, DeprecatedTextureHost* aTexture);
   static void DumpTextureHost(FILE* aFile, TextureHost* aTexture);
 
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() { return nullptr; }
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() { return nullptr; }
 #endif
 
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix) { }

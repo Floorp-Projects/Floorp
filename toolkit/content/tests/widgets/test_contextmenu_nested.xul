@@ -78,7 +78,9 @@ var popupTests = [
   events: [ "DOMMenuItemActive outercontextmenu", "popupshowing innercontext", "popupshown innercontext" ],
   test: function () {
     synthesizeMouse($("outercontextmenu"), 4, 4, { type: "mousemove" });
-    synthesizeMouse($("outercontextmenu"), 2, 2, { type: "mousemove" });
+    setTimeout(function() {
+        synthesizeMouse($("outercontextmenu"), 2, 2, { type: "mousemove" });
+      }, 1000);
   },
   result: function (testname) {
     is($("outermain").triggerNode, $("popuparea"), testname + " outer");

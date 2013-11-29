@@ -49,13 +49,3 @@
    obj:/lib/libgobject-2.0.so.0.2200.5
    ...
 }
-# XXX: temporary disabling
-#{
-#   Bug 850134
-#   Memcheck:Leak
-#   fun:realloc
-#   fun:_ZN2js6VectorIyLj0ENS_15TempAllocPolicyEE13growStorageByEj
-#   fun:_ZN2js8SCOutput5writeEy
-#   fun:_ZN2js8SCOutput9writePairEjj
-#   ...
-#}

@@ -73,7 +73,7 @@ SVGFEBlendElement::Mode()
 FilterPrimitiveDescription
 SVGFEBlendElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                            const IntRect& aFilterSubregion,
-                                           nsTArray<nsRefPtr<gfxASurface> >& aInputImages)
+                                           nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   uint32_t mode = mEnumAttributes[MODE].GetAnimValue();
   FilterPrimitiveDescription descr(FilterPrimitiveDescription::eBlend);

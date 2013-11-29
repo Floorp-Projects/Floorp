@@ -17,10 +17,5 @@ ifeq (WINNT,$(OS_TARGET))
 symbols.def: symbols.def.in $(GLOBAL_DEPS)
 	$(call py_action,preprocessor,$(ACDEFINES) $< -o $@)
 
-OS_LIBS += $(call EXPAND_LIBNAME, msimg32)
-
-ifdef MOZ_CUBEB
-OS_LIBS += $(call EXPAND_LIBNAME, winmm)
-endif
-
+OS_LIBS += $(call EXPAND_LIBNAME, msimg32 winmm)
 endif

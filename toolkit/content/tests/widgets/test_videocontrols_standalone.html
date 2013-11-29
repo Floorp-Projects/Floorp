@@ -23,11 +23,11 @@ var popup = window.open("seek_with_sound.ogg");
 popup.addEventListener("load", function onLoad() {
   popup.removeEventListener("load", onLoad);
   var video = getMediaElement(popup);
-  if (!video.paused)
+  if (video.readyState >= video.HAVE_METADATA)
     runTestVideo(video);
   else {
-    video.addEventListener("play", function onPlay() {
-      video.removeEventListener("play", onPlay);
+    video.addEventListener("loadedmetadata", function onLoadedMetaData() {
+      video.removeEventListener("loadedmetadata", onLoadedMetaData);
       runTestVideo(video);
     });
   }
@@ -46,11 +46,11 @@ function runTestAudioPre() {
   popup.addEventListener("load", function onLoad() {
     popup.removeEventListener("load", onLoad);
     var audio = getMediaElement(popup);
-    if (!audio.paused)
+    if (audio.readyState >= audio.HAVE_METADATA)
       runTestAudio(audio);
     else {
-      audio.addEventListener("play", function onPlay() {
-        audio.removeEventListener("play", onPlay);
+      audio.addEventListener("loadedmetadata", function onLoadedMetaData() {
+        audio.removeEventListener("loadedmetadata", onLoadedMetaData);
         runTestAudio(audio);
       })
     }
@@ -59,9 +59,8 @@ function runTestAudioPre() {
 
 function runTestAudio(aAudio) {
   var boundingRect = aAudio.getBoundingClientRect();
-  var isAndroid = navigator.userAgent.contains("Android");
+  var isAndroid = (navigator.userAgent.indexOf("Android") !== -1);
   var expectedHeight = isAndroid ? 123 : 28;
-  info("User agent (help diagnose bug #943556): " + navigator.userAgent);
   is(boundingRect.height, expectedHeight,
      "Height of audio element should be " + expectedHeight + ", which is equal to the controls bar.");
   popup.close();

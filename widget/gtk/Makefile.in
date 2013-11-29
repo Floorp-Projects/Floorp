@@ -12,13 +12,3 @@ CXXFLAGS        += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) \
 CFLAGS          += $(TK_CFLAGS)
 CXXFLAGS        += $(TK_CFLAGS)
 
-INCLUDES	+= \
-		-I$(srcdir)/../xpwidgets \
-		-I$(srcdir)/../shared \
-		-I$(topsrcdir)/layout/generic \
-		-I$(topsrcdir)/layout/xul/base/src \
-		-I$(topsrcdir)/other-licenses/atk-1.0 \
-		$(NULL)
-ifdef MOZ_X11
-INCLUDES   	+= -I$(srcdir)/../shared/x11
-endif

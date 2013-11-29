@@ -73,6 +73,12 @@ function resize() {
 }
 
 function finish() {
+  if (win.outerWidth != oldWidth ||
+      win.outerHeight != oldHeight) {
+    // We should eventually get back to the original size.
+    setTimeout(finish, 0);
+    return;
+  }
   is(mozBeforeResizeHasFired, true, "The MozBeforeResize event should already have fired");
   sbo.scrollBy(scrollX, scrollY);
 

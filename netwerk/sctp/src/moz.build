@@ -49,6 +49,13 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'necko'
 
+LOCAL_INCLUDES += [
+    '../../base/src',
+    '/content/base/src',
+    '/content/events/src',
+    '/xpcom/ds',
+]
+
 for var in ('SCTP_SIMPLE_ALLOCATOR', 'USE_SCTP_SHA1',
             'SCTP_PROCESS_LEVEL_LOCKS', '__Userspace__', 'INET',
             'CALLBACK_API', 'SCTP_DEBUG'):

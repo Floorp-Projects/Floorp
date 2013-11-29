@@ -56,39 +56,6 @@ Sampler *SamplerRegistry::sampler = NULL;
 // a pointer.
 static const pthread_t kNoThread = (pthread_t) 0;
 
-class MacOSMutex : public Mutex {
- public:
-  MacOSMutex() {
-    pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&mutex_, &attr);
-  }
-
-  virtual ~MacOSMutex() { pthread_mutex_destroy(&mutex_); }
-
-  virtual int Lock() { return pthread_mutex_lock(&mutex_); }
-  virtual int Unlock() { return pthread_mutex_unlock(&mutex_); }
-
-  virtual bool TryLock() {
-    int result = pthread_mutex_trylock(&mutex_);
-    // Return false if the lock is busy and locking failed.
-    if (result == EBUSY) {
-      return false;
-    }
-    ASSERT(result == 0);  // Verify no other errors.
-    return true;
-  }
-
- private:
-  pthread_mutex_t mutex_;
-};
-
-
-Mutex* OS::CreateMutex() {
-  return new MacOSMutex();
-}
-
 void OS::Sleep(int milliseconds) {
   usleep(1000 * milliseconds);
 }
@@ -297,8 +264,6 @@ class SamplerThread : public Thread {
   int intervalMicro_;
   //RuntimeProfilerRateLimiter rate_limiter_;
 
-  // Protects the process wide state below.
-  static Mutex* mutex_;
   static SamplerThread* instance_;
 
   DISALLOW_COPY_AND_ASSIGN(SamplerThread);

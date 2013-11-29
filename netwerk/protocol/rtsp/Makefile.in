@@ -2,30 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH     = @DEPTH@
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-
-include $(DEPTH)/config/autoconf.mk
-
-LOCAL_INCLUDES = \
-  -I$(srcdir)/../../base/src \
-  -I$(topsrcdir)/content/base/src \
-  -I$(topsrcdir)/content/events/src \
-  -I$(topsrcdir)/xpcom/ds \
-  -I$(srcdir) \
-  -I$(srcdir)/rtsp \
-  -I$(srcdir)/controller \
-  $(NULL)
-
-ifeq ($(ANDROID_VERSION),$(findstring $(ANDROID_VERSION),15))
-LOCAL_INCLUDES += -I$(ANDROID_SOURCE)/frameworks/base/media/libstagefright/mpeg2ts \
-                  $(NULL)
-else
-LOCAL_INCLUDES += -I$(ANDROID_SOURCE)/frameworks/av/media/libstagefright/mpeg2ts \
-                  $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -Wno-multichar
+ifeq ($(ANDROID_VERSION),$(findstring $(ANDROID_VERSION),15))
+CXXFLAGS += \
+  -I$(ANDROID_SOURCE)/frameworks/base/media/libstagefright/mpeg2ts \
+  $(NULL)
+else
+CXXFLAGS += \
+  -I$(ANDROID_SOURCE)/frameworks/av/media/libstagefright/mpeg2ts \
+  $(NULL)
+endif
+
+CXXFLAGS += \
+  -Wno-multichar \
+  $(NULL)

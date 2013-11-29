@@ -10,7 +10,6 @@
 #include "nsICacheService.h"
 #include "nsICacheVisitor.h"
 #include "nsIStorageStream.h"
-#include "nsIMemoryReporter.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "mozilla/MathAlgorithms.h"
@@ -29,25 +28,6 @@
 
 const char *gMemoryDeviceID      = "memory";
 
-class NetworkMemoryCacheReporter MOZ_FINAL :
-    public mozilla::MemoryUniReporter
-{
-public:
-    NetworkMemoryCacheReporter(nsMemoryCacheDevice* aDevice)
-      : MemoryUniReporter(
-            "explicit/network/memory-cache",
-            KIND_HEAP,
-            UNITS_BYTES,
-            "Memory used by the network memory cache.")
-      , mDevice(aDevice)
-    {}
-
-private:
-    int64_t Amount() { return mDevice->TotalSize(); }
-
-    nsMemoryCacheDevice* mDevice;
-};
-
 
 nsMemoryCacheDevice::nsMemoryCacheDevice()
     : mInitialized(false),
@@ -57,20 +37,15 @@ nsMemoryCacheDevice::nsMemoryCacheDevice()
       mInactiveSize(0),
       mEntryCount(0),
       mMaxEntryCount(0),
-      mMaxEntrySize(-1), // -1 means "no limit"
-      mReporter(nullptr)
+      mMaxEntrySize(-1)  // -1 means "no limit"
 {
     for (int i=0; i<kQueueCount; ++i)
         PR_INIT_CLIST(&mEvictionList[i]);
-
-    mReporter = new NetworkMemoryCacheReporter(this);
-    NS_RegisterMemoryReporter(mReporter);
 }
 
 
 nsMemoryCacheDevice::~nsMemoryCacheDevice()
 {
-    NS_UnregisterMemoryReporter(mReporter);
     Shutdown();
 }
 

@@ -6,7 +6,7 @@
 
 LIBRARY_NAME = 'gfxtest'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'gfxSurfaceRefCountTest.cpp',
     'gfxWordCacheTest.cpp',
     'TestAsyncPanZoomController.cpp',
@@ -25,13 +25,13 @@ SOURCES += [
 # Because of gkmedia on windows we wont find these
 # symbols in xul.dll.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
-    SOURCES += [ '%s/gfx/2d/unittest/%s' % (TOPSRCDIR, p) for p in [
+    UNIFIED_SOURCES += [ '%s/gfx/2d/unittest/%s' % (TOPSRCDIR, p) for p in [
         'TestBase.cpp',
         'TestBugs.cpp',
         'TestPoint.cpp',
         'TestScaling.cpp',
     ]]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'TestMoz2D.cpp',
         'TestRect.cpp',
     ]
@@ -41,4 +41,10 @@ LIBXUL_LIBRARY = True
 EXPORT_LIBRARY = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/gfx/2d',
+    '/gfx/2d/unittest',
+    '/gfx/layers',
+]
 

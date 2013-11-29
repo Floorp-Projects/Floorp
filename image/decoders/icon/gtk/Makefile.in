@@ -2,9 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_ENABLE_GNOMEUI
-LOCAL_INCLUDES += $(MOZ_GNOMEUI_CFLAGS)
+CXXFLAGS += $(MOZ_GNOMEUI_CFLAGS)
 else
-LOCAL_INCLUDES += $(TK_CFLAGS)
+CXXFLAGS += $(TK_CFLAGS)
 endif

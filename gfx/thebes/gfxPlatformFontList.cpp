@@ -137,7 +137,7 @@ gfxPlatformFontList::gfxPlatformFontList(bool aNeedFullnamePostscriptNames)
     NS_ADDREF(gFontListPrefObserver);
     Preferences::AddStrongObservers(gFontListPrefObserver, kObservedPrefs);
 
-    NS_RegisterMemoryReporter(new MemoryReporter);
+    RegisterStrongMemoryReporter(new MemoryReporter());
 }
 
 gfxPlatformFontList::~gfxPlatformFontList()

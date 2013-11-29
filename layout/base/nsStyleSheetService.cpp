@@ -21,50 +21,32 @@
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
 #include "nsLayoutStatics.h"
-#include "nsIMemoryReporter.h"
 
 using namespace mozilla;
-
-class LayoutStyleSheetServiceReporter MOZ_FINAL
-  : public mozilla::MemoryUniReporter
-{
-public:
-  LayoutStyleSheetServiceReporter()
-    : MemoryUniReporter("explicit/layout/style-sheet-service",
-                         KIND_HEAP, UNITS_BYTES,
-"Memory used for style sheets held by the style sheet service.")
-  {}
-private:
-  int64_t Amount() MOZ_OVERRIDE
-  {
-    return nsStyleSheetService::gInstance
-         ? nsStyleSheetService::gInstance->SizeOfIncludingThis(MallocSizeOf)
-         : 0;
-  }
-};
 
 nsStyleSheetService *nsStyleSheetService::gInstance = nullptr;
 
 nsStyleSheetService::nsStyleSheetService()
+  : MemoryUniReporter("explicit/layout/style-sheet-service",
+                       KIND_HEAP, UNITS_BYTES,
+"Memory used for style sheets held by the style sheet service.")
 {
   PR_STATIC_ASSERT(0 == AGENT_SHEET && 1 == USER_SHEET && 2 == AUTHOR_SHEET);
   NS_ASSERTION(!gInstance, "Someone is using CreateInstance instead of GetService");
   gInstance = this;
   nsLayoutStatics::AddRef();
-
-  mReporter = new LayoutStyleSheetServiceReporter();
-  NS_RegisterMemoryReporter(mReporter);
 }
 
 nsStyleSheetService::~nsStyleSheetService()
 {
-  NS_UnregisterMemoryReporter(mReporter);
+  UnregisterWeakMemoryReporter(this);
 
   gInstance = nullptr;
   nsLayoutStatics::Release();
 }
 
-NS_IMPL_ISUPPORTS1(nsStyleSheetService, nsIStyleSheetService)
+NS_IMPL_ISUPPORTS_INHERITED1(
+  nsStyleSheetService, MemoryUniReporter, nsIStyleSheetService)
 
 void
 nsStyleSheetService::RegisterFromEnumerator(nsICategoryManager  *aManager,
@@ -140,6 +122,8 @@ nsStyleSheetService::Init()
 
   catMan->EnumerateCategory("author-style-sheets", getter_AddRefs(sheets));
   RegisterFromEnumerator(catMan, "author-style-sheets", sheets, AUTHOR_SHEET);
+
+  RegisterWeakMemoryReporter(this);
 
   return NS_OK;
 }
@@ -301,8 +285,14 @@ SizeOfElementIncludingThis(nsIStyleSheet* aElement,
     return aElement->SizeOfIncludingThis(aMallocSizeOf);
 }
 
+int64_t
+nsStyleSheetService::Amount()
+{
+  return SizeOfIncludingThis(MallocSizeOf);
+}
+
 size_t
-nsStyleSheetService::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+nsStyleSheetService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
   n += mSheets[AGENT_SHEET].SizeOfExcludingThis(SizeOfElementIncludingThis,

@@ -22,12 +22,11 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     EXTRA_JS_MODULES = [
         'Profiler.jsm',
     ]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'BreakpadSampler.cpp',
         'IOInterposer.cpp',
         'JSCustomObjectBuilder.cpp',
         'JSObjectBuilder.cpp',
-        'local_debug_info_symbolizer.cc',
         'NSPRInterposer.cpp',
         'nsProfiler.cpp',
         'nsProfilerFactory.cpp',
@@ -42,7 +41,13 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'UnwinderThread2.cpp',
     ]
 
+    # This file cannot be built in unified mode because of name clashes with mozglue headers on Android.
+    SOURCES += [
+        'local_debug_info_symbolizer.cc',
+    ]
+
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
+	# These files cannot be built in unified mode because of name clashes with mozglue headers on Android.
         SOURCES += [
             'platform-linux.cc',
             'shared-libraries-linux.cc',
@@ -52,11 +57,9 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
                 'EHABIStackWalk.cpp',
             ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
-        SOURCES += [
+        UNIFIED_SOURCES += [
             'platform-macos.cc',
             'shared-libraries-macos.cc',
-        ]
-        SOURCES += [
             'shim_mac_dump_syms.mm',
         ]
     elif CONFIG['OS_TARGET'] == 'WINNT':

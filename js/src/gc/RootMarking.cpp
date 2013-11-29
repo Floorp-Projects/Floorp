@@ -799,9 +799,8 @@ void
 js::gc::BufferGrayRoots(GCMarker *gcmarker)
 {
     JSRuntime *rt = gcmarker->runtime;
-    if (JSTraceDataOp op = rt->gcGrayRootTracer.op) {
-        gcmarker->startBufferingGrayRoots();
+    gcmarker->startBufferingGrayRoots();
+    if (JSTraceDataOp op = rt->gcGrayRootTracer.op)
         (*op)(gcmarker, rt->gcGrayRootTracer.data);
-        gcmarker->endBufferingGrayRoots();
-    }
+    gcmarker->endBufferingGrayRoots();
 }

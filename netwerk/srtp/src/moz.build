@@ -39,6 +39,11 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'necko'
 
+LOCAL_INCLUDES += [
+    'crypto/include',
+    'include',
+]
+
 # We know stdint.h will define uint8/16/32/64_t, so we don't need
 # to define SIZEOF_UNSIGNED_LONG/SIZEOF_UNSIGNED_LONG_LONG
 for var in ('HAVE_STDLIB_H', 'HAVE_UINT8_T', 'HAVE_UINT16_T',

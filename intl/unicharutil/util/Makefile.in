@@ -12,8 +12,6 @@ SDK_LIBRARY = $(LIBRARY)
 
 USE_STATIC_LIBS = 1
 
-LOCAL_INCLUDES += -I$(srcdir)/../src
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef _MSC_VER

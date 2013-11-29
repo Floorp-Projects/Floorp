@@ -327,7 +327,7 @@ private:
   SourceInfo              mFillPaint;
   SourceInfo              mStrokePaint;
   nsIFrame*               mTransformRoot;
-  nsTArray<nsRefPtr<gfxASurface> > mInputImages;
+  nsTArray<mozilla::RefPtr<SourceSurface>> mInputImages;
   nsTArray<FilterPrimitiveDescription> mPrimitiveDescriptions;
 };
 

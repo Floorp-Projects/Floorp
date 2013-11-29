@@ -168,6 +168,9 @@ LocalDebugInfoSymbolizer::FillSourceLineInfo(const CodeModules* modules,
 #   if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
     ok = ReadSymbolData_ANDROID(module->code_file(), debug_dirs_,
                                 ONLY_CFI, &debug_info_module);
+#   elif defined(SPS_PLAT_amd64_darwin) || defined(SPS_PLAT_x86_darwin)
+    ok = ReadSymbolData_DARWIN(module->code_file(), debug_dirs_,
+                        ONLY_CFI, &debug_info_module);
 #   else
     ok = ReadSymbolData(module->code_file(), debug_dirs_,
                         ONLY_CFI, &debug_info_module);

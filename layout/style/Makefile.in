@@ -14,17 +14,6 @@ structlist_TARGET := export
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES	+= \
-		-I$(srcdir)/../base \
-		-I$(topsrcdir)/dom/base \
-		-I$(srcdir)/../generic \
-		-I$(srcdir)/../xul/base/src \
-		-I$(srcdir)/../../content/base/src \
-		-I$(srcdir)/../../content/html/content/src \
-		-I$(srcdir)/../../content/xbl/src \
-		-I$(srcdir)/../../content/xul/document/src \
-		$(NULL)
-
 nsStyleStructList.h : $(srcdir)/generate-stylestructlist.py
 	$(PYTHON) $< > $@
 

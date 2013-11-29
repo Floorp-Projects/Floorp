@@ -28,3 +28,9 @@ if CONFIG['MOZ_XUL']:
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'gklayout'
+LOCAL_INCLUDES += [
+    '../../style',
+    '/content/base/src',
+    '/content/xbl/src',
+]
+

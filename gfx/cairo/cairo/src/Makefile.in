@@ -21,8 +21,6 @@ ifdef MOZ_ENABLE_CAIRO_FT
 OS_INCLUDES += $(CAIRO_FT_CFLAGS)
 endif
 
-LOCAL_INCLUDES  += -I$(srcdir)
-
 INSTALL_TARGETS += cairo_features
 cairo_features_FILES := cairo-features.h
 cairo_features_DEST = $(DIST)/include/cairo

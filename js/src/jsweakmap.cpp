@@ -268,6 +268,21 @@ TryPreserveReflector(JSContext *cx, HandleObject obj)
     return true;
 }
 
+static inline void
+WeakMapPostWriteBarrier(JSRuntime *rt, ObjectValueMap *map, JSObject *key)
+{
+#ifdef JSGC_GENERATIONAL
+    /*
+     * Strip the barriers from the type before inserting into the store buffer.
+     * This will automatically ensure that barriers do not fire during GC.
+     */
+    typedef WeakMap<JSObject *, Value> UnbarrieredObjectValueMap;
+    typedef HashKeyRef<UnbarrieredObjectValueMap, JSObject *> Ref;
+    if (key && IsInsideNursery(rt, key))
+        rt->gcStoreBuffer.putGeneric(Ref(reinterpret_cast<UnbarrieredObjectValueMap *>(map), key));
+#endif
+}
+
 JS_ALWAYS_INLINE bool
 WeakMap_set_impl(JSContext *cx, CallArgs args)
 {
@@ -312,7 +327,7 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
         JS_ReportOutOfMemory(cx);
         return false;
     }
-    HashTableWriteBarrierPost(cx->runtime(), map, key.get());
+    WeakMapPostWriteBarrier(cx->runtime(), map, key.get());
 
     args.rval().setUndefined();
     return true;

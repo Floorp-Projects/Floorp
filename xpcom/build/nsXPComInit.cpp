@@ -583,7 +583,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 
     // The memory reporter manager is up and running -- register a reporter for
     // ICU's memory usage.
-    NS_RegisterMemoryReporter(new ICUReporter());
+    RegisterStrongMemoryReporter(new ICUReporter());
 
     mozilla::Telemetry::Init();
 

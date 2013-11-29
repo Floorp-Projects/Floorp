@@ -24,6 +24,14 @@ endif
  
 MOZ_GLUE_LDFLAGS = # Don't link against ourselves
 
+ifneq (,$(ZLIB_IN_MOZGLUE)$(MOZ_LINKER))
+ifdef MOZ_NATIVE_ZLIB
+EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
+else
+SHARED_LIBRARY_LIBS += $(MOZ_ZLIB_LIBS)
+endif
+endif
+
 ifeq (WINNT,$(OS_TARGET))
 DEFFILE = mozglue.def
 
@@ -39,7 +47,6 @@ endif
 
 
 EXTRA_DSO_LDOPTS += \
-	$(MOZ_ZLIB_LIBS) \
 	version.lib \
 	$(NULL)
 
@@ -74,8 +81,6 @@ endif
 endif
 
 ifeq (android, $(MOZ_WIDGET_TOOLKIT))
-# Add Android specific code
-EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 # To properly wrap jemalloc's pthread_atfork call.
 EXTRA_DSO_LDOPTS += -Wl,--wrap=pthread_atfork
 endif
