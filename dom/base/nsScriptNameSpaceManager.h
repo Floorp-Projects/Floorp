@@ -22,6 +22,7 @@
 #define nsScriptNameSpaceManager_h__
 
 #include "mozilla/MemoryReporting.h"
+#include "nsIMemoryReporter.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsString.h"
 #include "nsID.h"
@@ -84,11 +85,11 @@ struct nsGlobalNameStruct
 
 class nsIScriptContext;
 class nsICategoryManager;
-class nsIMemoryReporter;
 class GlobalNameMapEntry;
 
 
-class nsScriptNameSpaceManager : public nsIObserver,
+class nsScriptNameSpaceManager : public mozilla::MemoryUniReporter,
+                                 public nsIObserver,
                                  public nsSupportsWeakReference
 {
 public:
@@ -162,6 +163,7 @@ public:
   void EnumerateNavigatorNames(NameEnumerator aEnumerator,
                                void* aClosure);
 
+  int64_t Amount() MOZ_OVERRIDE;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
 private:
@@ -224,8 +226,6 @@ private:
   PLDHashTable mNavigatorNames;
 
   bool mIsInitialized;
-
-  nsCOMPtr<nsIMemoryReporter> mReporter;
 };
 
 #endif /* nsScriptNameSpaceManager_h__ */

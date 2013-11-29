@@ -5,6 +5,7 @@
 "use strict";
 
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm")
+Cu.import("resource://gre/modules/WindowsPrefSync.jsm");
 
 /**
  * Constants
@@ -153,7 +154,10 @@ var BrowserUI = {
         Util.dumpLn("Exception in delay load module:", ex.message);
       }
 
-      BrowserUI._pullDesktopControlledPrefs();
+      if (WindowsPrefSync) {
+        // Pulls in Desktop controlled prefs and pushes out Metro controlled prefs
+        WindowsPrefSync.init();
+      }
 
       // check for left over crash reports and submit them if found.
       BrowserUI.startupCrashCheck();
@@ -189,6 +193,9 @@ var BrowserUI = {
     MetroDownloadsView.uninit();
     SettingsCharm.uninit();
     PageThumbs.uninit();
+    if (WindowsPrefSync) {
+      WindowsPrefSync.uninit();
+    }
     this.stopDebugServer();
   },
 
@@ -637,37 +644,6 @@ var BrowserUI = {
   /*********************************
    * Internal utils
    */
-
-  /**
-  * Some prefs that have consequences in both Metro and Desktop such as
-  * app-update prefs, are automatically pulled from Desktop here.
-  */
-  _pullDesktopControlledPrefs: function() {
-    function pullDesktopControlledPrefType(prefType, prefFunc) {
-      try {
-        registry.create(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                      "Software\\Mozilla\\Firefox\\Metro\\Prefs\\" + prefType,
-                      Ci.nsIWindowsRegKey.ACCESS_ALL);
-        for (let i = 0; i < registry.valueCount; i++) {
-          let prefName = registry.getValueName(i);
-          let prefValue = registry.readStringValue(prefName);
-          if (prefType == Ci.nsIPrefBranch.PREF_BOOL) {
-            prefValue = prefValue == "true";
-          }
-          Services.prefs[prefFunc](prefName, prefValue);
-        }
-      } catch (ex) {
-        Util.dumpLn("Could not pull for prefType " + prefType + ": " + ex);
-      } finally {
-        registry.close();
-      }
-    }
-    let registry = Cc["@mozilla.org/windows-registry-key;1"].
-                   createInstance(Ci.nsIWindowsRegKey);
-    pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_INT, "setIntPref");
-    pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_BOOL, "setBoolPref");
-    pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_STRING, "setCharPref");
-  },
 
   _titleChanged: function(aBrowser) {
     let url = this.getDisplayURI(aBrowser);
@@ -1327,11 +1303,15 @@ var SettingsCharm = {
         label: Strings.browser.GetStringFromName("optionsCharm"),
         onselected: function() FlyoutPanelsUI.show('PrefsFlyoutPanel')
     });
+/*
+ * Temporarily disabled until we can have sync prefs together with the
+ * Desktop browser's sync prefs.
     // Sync
     this.addEntry({
         label: Strings.brand.GetStringFromName("syncBrandShortName"),
         onselected: function() FlyoutPanelsUI.show('SyncFlyoutPanel')
     });
+*/
     // About
     this.addEntry({
         label: Strings.browser.GetStringFromName("aboutCharm1"),

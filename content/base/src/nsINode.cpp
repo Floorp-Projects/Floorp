@@ -739,6 +739,14 @@ nsINode::CompareDocumentPosition(nsINode& aOtherNode) const
   if (this == &aOtherNode) {
     return 0;
   }
+  if (GetPreviousSibling() == &aOtherNode) {
+    MOZ_ASSERT(GetParentNode() == aOtherNode.GetParentNode());
+    return static_cast<uint16_t>(nsIDOMNode::DOCUMENT_POSITION_PRECEDING);
+  }
+  if (GetNextSibling() == &aOtherNode) {
+    MOZ_ASSERT(GetParentNode() == aOtherNode.GetParentNode());
+    return static_cast<uint16_t>(nsIDOMNode::DOCUMENT_POSITION_FOLLOWING);
+  }
 
   nsAutoTArray<const nsINode*, 32> parents1, parents2;
 

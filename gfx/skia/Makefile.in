@@ -3,30 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LOCAL_INCLUDES += \
-	-I$(srcdir)/include/core \
-	-I$(srcdir)/include/config \
-	-I$(srcdir)/include/gpu \
-	-I$(srcdir)/include/pipe \
-	-I$(srcdir)/include/ports \
-	-I$(srcdir)/include/images \
-	-I$(srcdir)/include/lazy \
-	-I$(srcdir)/include/utils \
-	-I$(srcdir)/include/utils/mac \
-	-I$(srcdir)/include/utils/win \
-	-I$(srcdir)/include/views \
-	-I$(srcdir)/include/effects \
-	-I$(srcdir)/src/core \
-	-I$(srcdir)/src/image \
-	-I$(srcdir)/src/gpu \
-	-I$(srcdir)/src/gpu/effects \
-	-I$(srcdir)/src/gpu/gl \
-	-I$(srcdir)/src/lazy \
-	-I$(srcdir)/src/utils \
-	-I$(srcdir)/src/utils/android \
-	-I$(srcdir)/src/sfnt \
-	$(NULL)
-
 VPATH += \
 	$(srcdir)/src/core \
 	$(srcdir)/src/gpu \

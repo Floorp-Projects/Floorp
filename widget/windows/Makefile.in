@@ -5,18 +5,6 @@
 
 RESFILE		= widget.res
 
-LOCAL_INCLUDES	= \
-		-I. \
-		-I$(srcdir)/../xpwidgets \
-		-I$(srcdir)/../shared \
-		-I$(srcdir) \
-		-I$(topsrcdir)/layout/generic \
-		-I$(topsrcdir)/layout/xul/base/src \
-		-I$(topsrcdir)/toolkit/xre \
-		-I$(topsrcdir)/xpcom/base \
-		-I$(topsrcdir)/content/events/src \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)

@@ -193,29 +193,32 @@
           // Get a list of items only in the new list
           let newIds = [id for (id of newVal) if (oldIds.indexOf(id) == -1)];
           CustomizableUI.beginBatchUpdate();
-          for (let newId of newIds) {
-            oldIds = CustomizableUI.getWidgetIdsInArea(this.id);
-            let nextId = newId;
-            let pos;
-            do {
-              // Get the next item
-              nextId = newVal[newVal.indexOf(nextId) + 1];
-              // Figure out where it is in the old list
-              pos = oldIds.indexOf(nextId);
-              // If it's not in the old list, repeat:
-            } while (pos == -1 && nextId);
-            if (pos == -1) {
-              pos = null; // We didn't find anything, insert at the end
+          try {
+            for (let newId of newIds) {
+              oldIds = CustomizableUI.getWidgetIdsInArea(this.id);
+              let nextId = newId;
+              let pos;
+              do {
+                // Get the next item
+                nextId = newVal[newVal.indexOf(nextId) + 1];
+                // Figure out where it is in the old list
+                pos = oldIds.indexOf(nextId);
+                // If it's not in the old list, repeat:
+              } while (pos == -1 && nextId);
+              if (pos == -1) {
+                pos = null; // We didn't find anything, insert at the end
+              }
+              CustomizableUI.addWidgetToArea(newId, this.id, pos);
             }
-            CustomizableUI.addWidgetToArea(newId, this.id, pos);
-          }
 
-          let currentIds = this.currentSet.split(',');
-          let removedIds = [id for (id of currentIds) if (newIds.indexOf(id) == -1 && newVal.indexOf(id) == -1)];
-          for (let removedId of removedIds) {
-            CustomizableUI.removeWidgetFromArea(removedId);
+            let currentIds = this.currentSet.split(',');
+            let removedIds = [id for (id of currentIds) if (newIds.indexOf(id) == -1 && newVal.indexOf(id) == -1)];
+            for (let removedId of removedIds) {
+              CustomizableUI.removeWidgetFromArea(removedId);
+            }
+          } finally {
+            CustomizableUI.endBatchUpdate();
           }
-          CustomizableUI.endBatchUpdate();
         ]]></setter>
       </property>
 

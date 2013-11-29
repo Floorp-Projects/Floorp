@@ -9,3 +9,9 @@ include('../objs.mozbuild')
 UNIFIED_SOURCES += intl_unicharutil_util_cppsrcs
 
 FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '..',
+    '../../src',
+]
+
