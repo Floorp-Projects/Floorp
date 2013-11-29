@@ -202,6 +202,9 @@
                 observes="sync-syncnow-state"
                 oncommand="gSyncUI.doSync(event);"/>
 #endif
+      <menuitem id="switch-to-metro"
+                label="&switchToMetroCmd.label;"
+                oncommand="SwitchToMetro()"/>
       <menuitem id="appmenu-quit"
                 class="menuitem-iconic"
 #ifdef XP_WIN

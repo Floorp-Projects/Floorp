@@ -2504,6 +2504,14 @@ function BrowserFullScreen()
   window.fullScreen = !window.fullScreen;
 }
 
+function SwitchToMetro() {
+  let appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"].
+    getService(Components.interfaces.nsIAppStartup);
+
+  appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
+                  Components.interfaces.nsIAppStartup.eRestartTouchEnvironment);
+}
+
 function onFullScreen(event) {
   FullScreen.toggle(event);
 }
