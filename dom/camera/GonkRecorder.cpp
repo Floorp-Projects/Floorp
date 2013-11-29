@@ -28,7 +28,7 @@
 #define RE_LOGE(fmt, ...) DOM_CAMERA_LOGE("[%s:%d]" fmt,__FILE__,__LINE__, ## __VA_ARGS__)
 
 #include <binder/IPCThreadState.h>
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
 # include <media/openmax/OMX_Audio.h>
 #endif
 #include <media/stagefright/foundation/ADebug.h>
@@ -683,7 +683,7 @@ status_t GonkRecorder::start() {
             status = startAMRRecording();
             break;
 
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
         case OUTPUT_FORMAT_AAC_ADIF:
         case OUTPUT_FORMAT_AAC_ADTS:
             status = startAACRecording();
@@ -735,7 +735,7 @@ sp<MediaSource> GonkRecorder::createAudioSource() {
         case AUDIO_ENCODER_AMR_WB:
             mime = MEDIA_MIMETYPE_AUDIO_AMR_WB;
             break;
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
         case AUDIO_ENCODER_AAC:
             mime = MEDIA_MIMETYPE_AUDIO_AAC;
             encMeta->setInt32(kKeyAACProfile, OMX_AUDIO_AACObjectLC);
@@ -780,7 +780,7 @@ sp<MediaSource> GonkRecorder::createAudioSource() {
     return audioEncoder;
 }
 
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
 status_t GonkRecorder::startAACRecording() {
     // FIXME:
     // Add support for OUTPUT_FORMAT_AAC_ADIF
@@ -871,7 +871,7 @@ status_t GonkRecorder::startMPEG2TSRecording() {
     sp<MediaWriter> writer = new MPEG2TSWriter(mOutputFd);
 
     if (mAudioSource != AUDIO_SOURCE_CNT) {
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
         if (mAudioEncoder != AUDIO_ENCODER_AAC &&
             mAudioEncoder != AUDIO_ENCODER_HE_AAC &&
             mAudioEncoder != AUDIO_ENCODER_AAC_ELD) {
@@ -1257,7 +1257,7 @@ status_t GonkRecorder::setupVideoEncoder(
 
     uint32_t encoder_flags = 0;
     if (mIsMetaDataStoredInVideoBuffers) {
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
         encoder_flags |= OMXCodec::kStoreMetaDataInVideoBuffers;
 #else
         encoder_flags |= OMXCodec::kHardwareCodecsOnly;
@@ -1293,7 +1293,7 @@ status_t GonkRecorder::setupAudioEncoder(const sp<MediaWriter>& writer) {
     switch(mAudioEncoder) {
         case AUDIO_ENCODER_AMR_NB:
         case AUDIO_ENCODER_AMR_WB:
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
         case AUDIO_ENCODER_AAC:
         case AUDIO_ENCODER_HE_AAC:
         case AUDIO_ENCODER_AAC_ELD:
