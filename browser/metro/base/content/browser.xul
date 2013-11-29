@@ -142,10 +142,14 @@
     <!-- development/testing -->
     <key id="key_console" key="&jsConsole.key;" modifiers="accel,shift" oncommand="PanelUI.show('console-container')"/>
     <key id="key_options" key="&optionsFlyout.key;" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('PrefsFlyoutPanel')" />
+    <key id="key_options" key="&aboutFlyout.key;" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('AboutFlyoutPanel')" />
+<!--
+Temporarily disabled until we can have sync prefs together with the
+Desktop browser's sync prefs.
 #ifdef MOZ_SERVICES_SYNC
     <key id="key_options" key="&syncFlyout.key;" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('SyncFlyoutPanel')" />
 #endif
-    <key id="key_options" key="&aboutFlyout.key;" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('AboutFlyoutPanel')" />
+-->
 
     <!-- manage tabs -->
     <key id="key_newTab" key="&newTab.key;" modifiers="accel" command="cmd_newTab"/>
@@ -784,7 +788,7 @@
             <label value="&appbarFindInPage2.label;"/>
           </richlistitem>
           <richlistitem id="context-viewondesktop" type="view-on-desktop" onclick="ContextCommands.viewOnDesktop();">
-            <label value="&appbarViewOnDesktop2.label;"/>
+            <label value="&appbarRelaunchInDesktop.label;"/>
           </richlistitem>
           <richlistitem id="context-msmetadata" type="ms-meta-data" onclick="ContextCommands.openWindowsStoreLink();">
             <label value="&appbarMSMetaData2.label;"/>

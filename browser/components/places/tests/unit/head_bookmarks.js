@@ -63,9 +63,9 @@ let (XULAppInfo = {
 }
 
 // Smart bookmarks constants.
-const SMART_BOOKMARKS_VERSION = 4;
+const SMART_BOOKMARKS_VERSION = 5;
 const SMART_BOOKMARKS_ON_TOOLBAR = 1;
-const SMART_BOOKMARKS_ON_MENU = 3; // Takes in count the additional separator.
+const SMART_BOOKMARKS_ON_MENU = 4; // Takes in count the additional separator.
 
 // Default bookmarks constants.
 const DEFAULT_BOOKMARKS_ON_TOOLBAR = 1;

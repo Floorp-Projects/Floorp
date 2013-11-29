@@ -15,6 +15,7 @@
 #include "WinUtils.h"
 #include "nsIAppStartup.h"
 #include "nsToolkitCompsCID.h"
+#include <shellapi.h>
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -113,7 +114,7 @@ HRESULT SHCreateShellItemArrayFromShellItemDynamic(IShellItem *psi, REFIID riid,
 }
 
 BOOL
-WinLaunchDeferredMetroFirefox()
+WinLaunchDeferredMetroFirefox(bool aInMetro)
 {
   // Create an instance of the Firefox Metro DEH which is used to launch the browser
   const CLSID CLSID_FirefoxMetroDEH = {0x5100FEC1,0x212B, 0x4BF5 ,{0x9B,0xF8, 0x3E,0x65, 0x0F,0xD7,0x94,0xA3}};
@@ -159,7 +160,11 @@ WinLaunchDeferredMetroFirefox()
   if (FAILED(hr))
     return FALSE;
 
-  hr = executeCommand->SetParameters(L"--metro-restart");
+  if (aInMetro) {
+    hr = executeCommand->SetParameters(L"--metro-restart");
+  } else {
+    hr = executeCommand->SetParameters(L"--desktop-restart");
+  }
   if (FAILED(hr))
     return FALSE;
 
@@ -195,16 +200,35 @@ MetroAppShell::Run(void)
       mozilla::widget::StopAudioSession();
 
       nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID));
-      bool restarting;
-      if (appStartup && NS_SUCCEEDED(appStartup->GetRestarting(&restarting)) && restarting) {
-        if (!WinLaunchDeferredMetroFirefox()) {
-          NS_WARNING("Couldn't deferred launch Metro Firefox.");
-        }
+      bool restartingInMetro = false, restarting = false;
+
+      if (appStartup && NS_SUCCEEDED(appStartup->GetRestartingTouchEnvironment(&restartingInMetro)) &&
+          restartingInMetro) {
+        WinLaunchDeferredMetroFirefox(true);
+      }
+
+      if (!appStartup || NS_FAILED(appStartup->GetRestarting(&restarting))) {
+        WinUtils::Log("appStartup->GetRestarting() unsuccessful");
       }
 
       // This calls XRE_metroShutdown() in xre. This will also destroy
       // MessagePump.
       sMetroApp->ShutdownXPCOM();
+
+      if (restarting) {
+        SHELLEXECUTEINFOW sinfo;
+        memset(&sinfo, 0, sizeof(SHELLEXECUTEINFOW));
+        sinfo.cbSize       = sizeof(SHELLEXECUTEINFOW);
+        // Per the Metro style enabled desktop browser, for some reason,
+        // SEE_MASK_FLAG_LOG_USAGE is needed to change from immersive mode
+        // to desktop.
+        sinfo.fMask        = SEE_MASK_FLAG_LOG_USAGE;
+        sinfo.lpFile       = L"http://-desktop";
+        sinfo.lpVerb       = L"open";
+        sinfo.lpParameters = L"--desktop-restart";
+        sinfo.nShow        = SW_SHOWNORMAL;
+        ShellExecuteEx(&sinfo);
+      }
 
       // This will free the real main thread in CoreApplication::Run()
       // once winrt cleans up this thread.

@@ -8,7 +8,9 @@ package org.mozilla.gecko.db;
 import org.mozilla.gecko.AppConstants;
 
 import android.net.Uri;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
+@RobocopTarget
 public class BrowserContract {
     public static final String AUTHORITY = AppConstants.ANDROID_PACKAGE_NAME + ".db.browser";
     public static final Uri AUTHORITY_URI = Uri.parse("content://" + AUTHORITY);
@@ -50,31 +52,37 @@ public class BrowserContract {
         return order.toString();
     }
 
+    @RobocopTarget
     public interface CommonColumns {
         public static final String _ID = "_id";
     }
 
+    @RobocopTarget
     public interface DateSyncColumns {
         public static final String DATE_CREATED = "created";
         public static final String DATE_MODIFIED = "modified";
     }
 
+    @RobocopTarget
     public interface SyncColumns extends DateSyncColumns {
         public static final String GUID = "guid";
         public static final String IS_DELETED = "deleted";
     }
 
+    @RobocopTarget
     public interface URLColumns {
         public static final String URL = "url";
         public static final String TITLE = "title";
     }
 
+    @RobocopTarget
     public interface FaviconColumns {
         public static final String FAVICON = "favicon";
         public static final String FAVICON_ID = "favicon_id";
         public static final String FAVICON_URL = "favicon_url";
     }
 
+    @RobocopTarget
     public interface HistoryColumns {
         public static final String DATE_LAST_VISITED = "date";
         public static final String VISITS = "visits";
@@ -86,6 +94,7 @@ public class BrowserContract {
         public static final String TIME_DELETED = "timeDeleted";
     }
 
+    @RobocopTarget
     public static final class Favicons implements CommonColumns, DateSyncColumns {
         private Favicons() {}
 
@@ -96,6 +105,7 @@ public class BrowserContract {
         public static final String PAGE_URL = "page_url";
     }
 
+    @RobocopTarget
     public static final class Thumbnails implements CommonColumns {
         private Thumbnails() {}
 
@@ -105,6 +115,7 @@ public class BrowserContract {
         public static final String DATA = "data";
     }
 
+    @RobocopTarget
     public static final class Bookmarks implements CommonColumns, URLColumns, FaviconColumns, SyncColumns {
         private Bookmarks() {}
 
@@ -145,6 +156,7 @@ public class BrowserContract {
         public static final String KEYWORD = "keyword";
     }
 
+    @RobocopTarget
     public static final class History implements CommonColumns, URLColumns, HistoryColumns, FaviconColumns, SyncColumns {
         private History() {}
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "history");
@@ -154,6 +166,7 @@ public class BrowserContract {
     }
 
     // Combined bookmarks and history
+    @RobocopTarget
     public static final class Combined implements CommonColumns, URLColumns, HistoryColumns, FaviconColumns  {
         private Combined() {}
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "combined");
