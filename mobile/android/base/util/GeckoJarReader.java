@@ -10,6 +10,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -98,7 +99,7 @@ public final class GeckoJarReader {
         return new NativeZip(fileUrl.getPath());
     }
 
-    // Public for testing only.
+    @RobocopTarget
     public static InputStream getStream(String url) {
         Stack<String> jarUrls = parseUrl(url);
         try {

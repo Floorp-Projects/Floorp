@@ -81,6 +81,19 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
+LOCAL_INCLUDES += [
+    '../shared',
+    '../xpwidgets',
+    '/layout/generic',
+    '/layout/xul/base/src',
+    '/other-licenses/atk-1.0',
+]
+
+if CONFIG['MOZ_X11']:
+    LOCAL_INCLUDES += [
+        '../shared/x11',
+    ]
+
 DEFINES['CAIRO_GFX'] = True
 
 DEFINES['MOZ_APP_NAME'] = '"%s"' % CONFIG['MOZ_APP_NAME']

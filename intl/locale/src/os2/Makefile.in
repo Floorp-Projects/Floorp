@@ -5,7 +5,5 @@
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(srcdir)/..
-
 os2charset.properties.h: $(srcdir)/../props2arrays.py os2charset.properties
 	$(PYTHON) $^ $@

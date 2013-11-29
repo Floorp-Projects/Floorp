@@ -17,8 +17,7 @@ VPATH       = \
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += \
-        -I$(topsrcdir)/content/events/src \
+CXXFLAGS += \
         -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright \
         -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
         -I$(ANDROID_SOURCE)/frameworks/av/include/media/stagefright \

@@ -1591,7 +1591,7 @@ BrowserGlue.prototype = {
     // be set to the version it has been added in, we will compare its value
     // to users' smartBookmarksVersion and add new smart bookmarks without
     // recreating old deleted ones.
-    const SMART_BOOKMARKS_VERSION = 4;
+    const SMART_BOOKMARKS_VERSION = 5;
     const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
     const SMART_BOOKMARKS_PREF = "browser.places.smartBookmarksVersion";
 
@@ -1652,7 +1652,21 @@ BrowserGlue.prototype = {
             parent: PlacesUtils.bookmarksMenuFolderId,
             position: menuIndex++,
             newInVersion: 1
-          }
+          },
+          FirefoxTouch: {
+            title: bundle.GetStringFromName("firefoxTouchTitle"),
+            uri: NetUtil.newURI("place:folder=" +
+                                PlacesUtils.annotations.getItemsWithAnnotation('metro/bookmarksRoot', {})[0] +
+                                "&queryType=" +
+                                Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
+                                "&sort=" +
+                                Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+                                "&maxResults=" + MAX_RESULTS +
+                                "&excludeQueries=1"),
+            parent: PlacesUtils.bookmarksMenuFolderId,
+            position: menuIndex++,
+            newInVersion: 5
+          },
         };
 
         // Set current itemId, parent and position if Smart Bookmark exists,

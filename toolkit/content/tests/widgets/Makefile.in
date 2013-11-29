@@ -3,31 +3,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES =	\
-		tree_shared.js \
-		test_audiocontrols_dimensions.html \
-		test_mousecapture_area.html \
-		test_videocontrols.html \
-		test_videocontrols_audio.html \
-		test_videocontrols_audio_direction.html \
-		test_videocontrols_standalone.html \
-		test_videocontrols_video_direction.html \
-		videocontrols_direction-1-ref.html \
-		videocontrols_direction-1a.html \
-		videocontrols_direction-1b.html \
-		videocontrols_direction-1c.html \
-		videocontrols_direction-1d.html \
-		videocontrols_direction-1e.html \
-		videocontrols_direction-2-ref.html \
-		videocontrols_direction-2a.html \
-		videocontrols_direction-2b.html \
-		videocontrols_direction-2c.html \
-		videocontrols_direction-2d.html \
-		videocontrols_direction-2e.html \
-		videocontrols_direction_test.js \
-		$(topsrcdir)/content/media/test/audio.wav \
-		$(topsrcdir)/browser/base/content/test/general/audio.ogg \
-		$(topsrcdir)/content/media/test/seek_with_sound.ogg \
-		videomask.css \
-		test_bug898940.html \
-		$(NULL)
+MOCHITEST_FILES += \
+  $(topsrcdir)/content/media/test/audio.wav \
+  $(topsrcdir)/browser/base/content/test/general/audio.ogg \
+  $(topsrcdir)/content/media/test/seek_with_sound.ogg \
+  $(NULL)

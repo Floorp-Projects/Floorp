@@ -44,6 +44,7 @@ static const WCHAR* kFirefoxExe = L"firefox.exe";
 static const WCHAR* kMetroFirefoxExe = L"firefox.exe";
 static const WCHAR* kDefaultMetroBrowserIDPathKey = L"FirefoxURL";
 static const WCHAR* kMetroRestartCmdLine = L"--metro-restart";
+static const WCHAR* kDesktopRestartCmdLine = L"--desktop-restart";
 
 static bool GetDefaultBrowserPath(CStringW& aPathBuffer);
 
@@ -104,7 +105,9 @@ public:
     mTargetIsBrowser(false),
     mIsDesktopRequest(true),
     mIsRestartMetroRequest(false),
-    mRequestMet(false)
+    mIsRestartDesktopRequest(false),
+    mRequestMet(false),
+    mVerb(L"open")
   {
   }
 
@@ -152,6 +155,8 @@ public:
 
     if (_wcsicmp(aParameters, kMetroRestartCmdLine) == 0) {
       mIsRestartMetroRequest = true;
+    } else if (_wcsicmp(aParameters, kDesktopRestartCmdLine) == 0) {
+      mIsRestartDesktopRequest = true;
     } else {
       mParameters = aParameters;
     }
@@ -260,8 +265,21 @@ public:
     *aLaunchType = AHE_DESKTOP;
     mIsDesktopRequest = true;
 
+    if (!mIsRestartMetroRequest && IsProcessRunning(kFirefoxExe, false)) {
+      return S_OK;
+    } else if (!mIsRestartDesktopRequest && IsProcessRunning(kMetroFirefoxExe, true)) {
+      *aLaunchType = AHE_IMMERSIVE;
+      mIsDesktopRequest = false;
+      return S_OK;
+    }
+
     if (!mUnkSite) {
       Log(L"No mUnkSite.");
+      return S_OK;
+    }
+
+    if (mIsRestartDesktopRequest) {
+      Log(L"Restarting in desktop host environment.");
       return S_OK;
     }
 
@@ -416,6 +434,7 @@ private:
   DWORD mKeyState;
   bool mIsDesktopRequest;
   bool mIsRestartMetroRequest;
+  bool mIsRestartDesktopRequest;
   bool mRequestMet;
 };
 
@@ -574,6 +593,48 @@ bool CExecuteCommandVerb::SetTargetPath(IShellItem* aItem)
  * Desktop launch - Launch the destop browser to display the current
  * target using shellexecute.
  */
+void LaunchDesktopBrowserWithParams(CStringW& aBrowserPath, CStringW& aVerb, CStringW& aTarget, CStringW& aParameters,
+                                    bool aTargetIsDefaultBrowser, bool aTargetIsBrowser)
+{
+  // If a taskbar shortcut, link or local file is clicked, the target will
+  // be the browser exe or file.  Don't pass in -url for the target if the
+  // target is known to be a browser.  Otherwise, one instance of Firefox
+  // will try to open another instance.
+  CStringW params;
+  if (!aTargetIsDefaultBrowser && !aTargetIsBrowser && !aTarget.IsEmpty()) {
+    // Fallback to the module path if it failed to get the default browser.
+    GetDefaultBrowserPath(aBrowserPath);
+    params += "-url ";
+    params += "\"";
+    params += aTarget;
+    params += "\"";
+  }
+
+  // Tack on any extra parameters we received (for example -profilemanager)
+  if (!aParameters.IsEmpty()) {
+    params += " ";
+    params += aParameters;
+  }
+
+  Log(L"Desktop Launch: verb:%s exe:%s params:%s", aVerb, aBrowserPath, params);
+
+  SHELLEXECUTEINFOW seinfo;
+  memset(&seinfo, 0, sizeof(seinfo));
+  seinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
+  seinfo.fMask  = SEE_MASK_FLAG_LOG_USAGE;
+  seinfo.lpVerb = aVerb;
+  seinfo.lpFile = aBrowserPath;
+  seinfo.nShow  = SW_SHOWNORMAL;
+
+  // Relaunch in Desktop mode uses a special URL to trick Windows into
+  // switching environments. We shouldn't actually try to open this URL
+  if (_wcsicmp(aTarget, L"http://-desktop/") != 0) {
+    seinfo.lpParameters = params;
+  }
+
+  ShellExecuteEx(&seinfo);
+}
+
 void CExecuteCommandVerb::LaunchDesktopBrowser()
 {
   CStringW browserPath;
@@ -581,40 +642,7 @@ void CExecuteCommandVerb::LaunchDesktopBrowser()
     return;
   }
 
-  // If a taskbar shortcut, link or local file is clicked, the target will
-  // be the browser exe or file.  Don't pass in -url for the target if the
-  // target is known to be a browser.  Otherwise, one instance of Firefox
-  // will try to open another instance.
-  CStringW params;
-  if (!mTargetIsDefaultBrowser && !mTargetIsBrowser && !mTarget.IsEmpty()) {
-    // Fallback to the module path if it failed to get the default browser.
-    GetDefaultBrowserPath(browserPath);
-    params += "-url ";
-    params += "\"";
-    params += mTarget;
-    params += "\"";
-  }
-
-  // Tack on any extra parameters we received (for example -profilemanager)
-  if (!mParameters.IsEmpty()) {
-    params += " ";
-    params += mParameters;
-  }
-
-  Log(L"Desktop Launch: verb:%s exe:%s params:%s", mVerb, browserPath, params); 
-
-  SHELLEXECUTEINFOW seinfo;
-  memset(&seinfo, 0, sizeof(seinfo));
-  seinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
-  seinfo.fMask  = 0;
-  seinfo.hwnd   = nullptr;
-  seinfo.lpVerb = nullptr;
-  seinfo.lpFile = browserPath;
-  seinfo.lpParameters =  params;
-  seinfo.lpDirectory  = nullptr;
-  seinfo.nShow  = SW_SHOWNORMAL;
-        
-  ShellExecuteExW(&seinfo);
+  LaunchDesktopBrowserWithParams(browserPath, mVerb, mTarget, mParameters, mTargetIsDefaultBrowser, mTargetIsBrowser);
 }
 
 class AutoSetRequestMet
@@ -664,7 +692,7 @@ DelayedExecuteThread(LPVOID param)
 
   size_t currentWaitTime = 0;
   while(currentWaitTime < RESTART_WAIT_TIMEOUT) {
-    if (!IsImmersiveProcessRunning(kMetroFirefoxExe))
+    if (!IsProcessRunning(kMetroFirefoxExe, true))
       break;
     currentWaitTime += RESTART_WAIT_PER_RETRY;
     Sleep(RESTART_WAIT_PER_RETRY);
@@ -705,6 +733,21 @@ IFACEMETHODIMP CExecuteCommandVerb::Execute()
     return S_OK;
   }
 
+  if (mIsRestartDesktopRequest) {
+    CStringW browserPath;
+    if (!GetDesktopBrowserPath(browserPath)) {
+      return E_FAIL;
+    }
+
+    LaunchDesktopBrowserWithParams(browserPath,
+                                   mVerb,
+                                   mTarget,
+                                   mParameters,
+                                   mTargetIsDefaultBrowser,
+                                   mTargetIsBrowser);
+    return S_OK;
+  }
+
   // We shut down when this flips to true
   AutoSetRequestMet asrm(&mRequestMet);
 
@@ -728,8 +771,7 @@ IFACEMETHODIMP CExecuteCommandVerb::Execute()
     return S_OK;
   }
 
-  Log(L"Metro Launch: verb:%s appid:%s params:%s", mVerb, appModelID, mTarget); 
-
+  Log(L"Metro Launch: verb:%s appid:%s params:%s", mVerb, appModelID, mTarget);
 
   // shortcuts to the application
   DWORD processID;

@@ -6,10 +6,9 @@
 package org.mozilla.gecko.util;
 
 import org.json.JSONObject;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
-/* This class is referenced by Robocop via reflection; use care when 
- * modifying the signature.
- */
+@RobocopTarget
 public interface GeckoEventListener {
     void handleMessage(String event, JSONObject message);
 }

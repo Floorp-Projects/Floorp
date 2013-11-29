@@ -54,6 +54,10 @@ ifneq (,$(filter rtsp,$(NECKO_PROTOCOLS)))
 DEFINES += -DMOZ_RTSP
 endif
 
+ifdef GKMEDIAS_SHARED_LIBRARY
+DEFINES += -DGKMEDIAS_SHARED_LIBRARY
+endif
+
 ifdef MOZ_PKG_MANIFEST_P
 $(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) FORCE
 	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $< -o $@)
