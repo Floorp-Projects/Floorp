@@ -26,20 +26,24 @@ if CONFIG['MOZ_GL_PROVIDER']:
     gl_provider = CONFIG['MOZ_GL_PROVIDER']
 
 EXPORTS += [
+    'DecomposeIntoNoRepeatTriangles.h',
     'ForceDiscreteGPUHelperCGL.h',
     'GfxTexturesReporter.h',
+    'GLBlitTextureImageHelper.h',
     'GLConsts.h',
     'GLContext.h',
     'GLContextProvider.h',
     'GLContextProviderImpl.h',
     'GLContextSymbols.h',
     'GLContextTypes.h',
+    'GLContextUtils.h',
     'GLDefs.h',
     'GLLibraryEGL.h',
     'GLLibraryLoader.h',
     'GLScreenBuffer.h',
     'GLTextureImage.h',
     'GLTypes.h',
+    'ScopedGLHelpers.h',
     'SharedSurface.h',
     'SharedSurfaceEGL.h',
     'SharedSurfaceGL.h',
@@ -102,7 +106,10 @@ else:
     ]
 
 UNIFIED_SOURCES += [
+    'DecomposeIntoNoRepeatTriangles.cpp',
     'GfxTexturesReporter.cpp',
+    'GLBlitHelper.cpp',
+    'GLBlitTextureImageHelper.cpp',
     'GLContext.cpp',
     'GLContextFeatures.cpp',
     'GLContextTypes.cpp',
@@ -111,6 +118,7 @@ UNIFIED_SOURCES += [
     'GLLibraryLoader.cpp',
     'GLScreenBuffer.cpp',
     'GLTextureImage.cpp',
+    'ScopedGLHelpers.cpp',
     'SharedSurface.cpp',
     'SharedSurfaceEGL.cpp',
     'SharedSurfaceGL.cpp',
