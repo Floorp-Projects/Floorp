@@ -26,8 +26,8 @@ this.UITour = {
 
   highlightEffects: ["wobble", "zoom", "color"],
   targets: new Map([
-    ["backforward", "#back-button"],
-    ["appmenu", "#PanelUI-menu-button"],
+    ["backforward", "#unified-back-forward-button"],
+    ["appmenu", "#appmenu-button"],
     ["home", "#home-button"],
     ["urlbar", "#urlbar"],
     ["bookmarks", "#bookmarks-menu-button"],
@@ -115,11 +115,6 @@ this.UITour = {
 
       case "showMenu": {
         this.showMenu(window, data.name);
-        break;
-      }
-
-      case "hideMenu": {
-        this.hideMenu(window, data.name);
         break;
       }
 
@@ -393,22 +388,9 @@ this.UITour = {
     }
 
     if (aMenuName == "appmenu")
-      aWindow.PanelUI.show();
+      openMenuButton("appmenu-button");
     else if (aMenuName == "bookmarks")
       openMenuButton("bookmarks-menu-button");
-  },
-
-  hideMenu: function(aWindow, aMenuName) {
-    function closeMenuButton(aId) {
-      let menuBtn = aWindow.document.getElementById(aId);
-      if (menuBtn && menuBtn.boxObject)
-        menuBtn.boxObject.QueryInterface(Ci.nsIMenuBoxObject).openMenu(false);
-    }
-
-    if (aMenuName == "appmenu")
-      aWindow.PanelUI.hide();
-    else if (aMenuName == "bookmarks")
-      closeMenuButton("bookmarks-menu-button");
   },
 
   startUrlbarCapture: function(aWindow, aExpectedText, aUrl) {
