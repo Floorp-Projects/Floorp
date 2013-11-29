@@ -2810,8 +2810,7 @@ GLContext::TexSubImage2DWithoutUnpackSubimage(GLenum target, GLint level,
     fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
 }
 
-#ifdef DEBUG
-
+#ifdef MOZ_ENABLE_GL_TRACKING
 void
 GLContext::CreatedProgram(GLContext *aOrigin, GLuint aName)
 {
