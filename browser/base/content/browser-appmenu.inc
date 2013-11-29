@@ -6,6 +6,7 @@
 <menupopup id="appmenu-popup"
            onpopupshowing="if (event.target == this) {
                              updateEditUIVisibility();
+                             updateSwitchToMetroVisibility();
 #ifdef MOZ_SERVICES_SYNC
                              gSyncUI.updateUI();
 #endif

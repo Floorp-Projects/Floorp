@@ -2512,6 +2512,12 @@ function SwitchToMetro() {
                   Components.interfaces.nsIAppStartup.eRestartTouchEnvironment);
 }
 
+function updateSwitchToMetroVisibility() {
+  if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+    document.getElementById("switch-to-metro").hidden = true;
+  }
+}
+
 function onFullScreen(event) {
   FullScreen.toggle(event);
 }
