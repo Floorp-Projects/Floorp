@@ -1212,6 +1212,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void callWithExitFrame(IonCode *target);
     void callWithExitFrame(IonCode *target, Register dynStack);
 
+    typedef CodeOffsetLabel CodeOffsetCall;
+    CodeOffsetCall lastPatchableCall(uint32_t callOffset);
+
     // Makes an Ion call using the only two methods that it is sane for
     // indep code to make a call
     void callIon(const Register &callee);

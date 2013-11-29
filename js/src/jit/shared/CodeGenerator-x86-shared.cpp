@@ -59,6 +59,15 @@ CodeGeneratorX86Shared::generateEpilogue()
     return true;
 }
 
+void
+LinkVMWrapper::patchCall(MacroAssembler &masm, IonCode *code,
+                         IonCode *trap, IonCode *wrapper) const
+{
+    CodeLocationJump vmcall(code, offset);
+    CodeLocationLabel target(wrapper);
+    PatchJump(vmcall, target);
+}
+
 bool
 OutOfLineBailout::accept(CodeGeneratorX86Shared *codegen)
 {
