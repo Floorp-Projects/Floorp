@@ -127,6 +127,10 @@
 #include "nsXREDirProvider.h"
 #include "nsToolkitCompsCID.h"
 
+#if defined(XP_WIN) && defined(MOZ_METRO)
+#include "updatehelper.h"
+#endif
+
 #include "nsINIParser.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/StartupTimeline.h"
@@ -4047,12 +4051,18 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   // Check for an application initiated restart.  This is one that
   // corresponds to nsIAppStartup.quit(eRestart)
-  if (rv == NS_SUCCESS_RESTART_APP) {
+  if (rv == NS_SUCCESS_RESTART_APP || rv == NS_SUCCESS_RESTART_METRO_APP) {
     appInitiatedRestart = true;
 
     // We have an application restart don't do any shutdown checks here
     // In particular we don't want to poison IO for checking late-writes.
     gShutdownChecks = SCM_NOTHING;
+
+    #if defined(MOZ_METRO) && defined(XP_WIN)
+    if (rv == NS_SUCCESS_RESTART_METRO_APP) {
+      LaunchDefaultMetroBrowser();
+    }
+    #endif
   }
 
   if (!mShuttingDown) {
