@@ -9,6 +9,7 @@ let Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NotificationDB.jsm");
 Cu.import("resource:///modules/RecentWindow.jsm");
+Cu.import("resource://gre/modules/WindowsPrefSync.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
@@ -1151,14 +1152,10 @@ var gBrowserInit = {
       Cu.reportError("Could not end startup crash tracking: " + ex);
     }
 
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-    gMetroPrefs.prefDomain.forEach(function(prefName) {
-      gMetroPrefs.pushDesktopControlledPrefToMetro(prefName);
-      Services.prefs.addObserver(prefName, gMetroPrefs, false);
-    }, this);
-#endif
-#endif
+    if (typeof WindowsPrefSync !== 'undefined') {
+      // Pulls in Metro controlled prefs and pushes out Desktop controlled prefs
+      WindowsPrefSync.init();
+    }
 
     if (gMultiProcessBrowser) {
       // Bug 862519 - Backspace doesn't work in electrolysis builds.
@@ -1280,13 +1277,9 @@ var gBrowserInit = {
         Cu.reportError(ex);
       }
 
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-      gMetroPrefs.prefDomain.forEach(function(prefName) {
-        Services.prefs.removeObserver(prefName, gMetroPrefs);
-      });
-#endif
-#endif
+      if (typeof WindowsPrefSync !== 'undefined') {
+        WindowsPrefSync.uninit();
+      }
 
       BrowserOffline.uninit();
       OfflineApps.uninit();
@@ -2458,6 +2451,49 @@ function getMeOutOfHere() {
 function BrowserFullScreen()
 {
   window.fullScreen = !window.fullScreen;
+}
+
+function _checkDefaultAndSwitchToMetro() {
+#ifdef HAVE_SHELL_SERVICE
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+  let shell = Components.classes["@mozilla.org/browser/shell-service;1"].
+    getService(Components.interfaces.nsIShellService);
+  let isDefault = shell.isDefaultBrowser(false, false);
+
+  if (isDefault) {
+    let appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"].
+    getService(Components.interfaces.nsIAppStartup);
+
+    Services.prefs.setBoolPref('browser.sessionstore.resume_session_once', true);
+    appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
+                    Components.interfaces.nsIAppStartup.eRestartTouchEnvironment);
+    return true;
+  }
+  return false;
+#endif
+#endif
+#endif
+}
+
+function SwitchToMetro() {
+#ifdef HAVE_SHELL_SERVICE
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+  if (this._checkDefaultAndSwitchToMetro()) {
+    return;
+  }
+
+  let shell = Components.classes["@mozilla.org/browser/shell-service;1"].
+    getService(Components.interfaces.nsIShellService);
+
+  shell.setDefaultBrowser(false, false);
+
+  let intervalID = window.setInterval(this._checkDefaultAndSwitchToMetro, 1000);
+  window.setTimeout(function() { window.clearInterval(intervalID); }, 10000);
+#endif
+#endif
+#endif
 }
 
 function onFullScreen(event) {
@@ -4149,6 +4185,14 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
     }
   }
 
+
+  let addToPanel = popup.querySelector(".customize-context-addToPanel");
+  let removeFromToolbar = popup.querySelector(".customize-context-removeFromToolbar");
+  // View -> Toolbars menu doesn't have the addToPanel or removeFromToolbar items.
+  if (!addToPanel || !removeFromToolbar) {
+    return;
+  }
+
   // The explicitOriginalTarget can be a nested child element of a toolbaritem.
   let toolbarItem = aEvent.explicitOriginalTarget;
 
@@ -4167,17 +4211,10 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
 
   // Right-clicking on an empty part of the tabstrip will exit
   // the above loop with toolbarItem being the xul:document.
-  if (!toolbarItem.parentNode) {
-    return;
-  }
-
-  let addToPanel = popup.querySelector(".customize-context-addToPanel");
-  let removeFromToolbar = popup.querySelector(".customize-context-removeFromToolbar");
-  // View -> Toolbars menu doesn't have the addToPanel or removeFromToolbar items.
-  if (!addToPanel || !removeFromToolbar) {
-    return;
-  }
-  let movable = toolbarItem && CustomizableUI.isWidgetRemovable(toolbarItem);
+  // That has no parentNode, and we should disable the items in
+  // this case.
+  let movable = toolbarItem && toolbarItem.parentNode &&
+                CustomizableUI.isWidgetRemovable(toolbarItem);
   if (movable) {
     addToPanel.removeAttribute("disabled");
     removeFromToolbar.removeAttribute("disabled");
@@ -4639,60 +4676,6 @@ function fireSidebarFocusedEvent() {
   sidebar.contentWindow.dispatchEvent(event);
 }
 
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-/**
- * Some prefs that have consequences in both Metro and Desktop such as
- * app-update prefs, are automatically pushed from Desktop here for use
- * in Metro.
- */
-var gMetroPrefs = {
-  prefDomain: ["app.update.auto", "app.update.enabled",
-               "app.update.service.enabled",
-               "app.update.metro.enabled"],
-  observe: function (aSubject, aTopic, aPrefName)
-  {
-    if (aTopic != "nsPref:changed")
-      return;
-
-    this.pushDesktopControlledPrefToMetro(aPrefName);
-  },
-
-  /**
-   * Writes the pref to HKCU in the registry and adds a pref-observer to keep
-   * the registry in sync with changes to the value.
-   */
-  pushDesktopControlledPrefToMetro: function(aPrefName) {
-    let registry = Cc["@mozilla.org/windows-registry-key;1"].
-                    createInstance(Ci.nsIWindowsRegKey);
-    try {
-      var prefType = Services.prefs.getPrefType(aPrefName);
-      let prefFunc;
-      if (prefType == Components.interfaces.nsIPrefBranch.PREF_INT)
-        prefFunc = "getIntPref";
-      else if (prefType == Components.interfaces.nsIPrefBranch.PREF_BOOL)
-        prefFunc = "getBoolPref";
-      else if (prefType == Components.interfaces.nsIPrefBranch.PREF_STRING)
-        prefFunc = "getCharPref";
-      else
-        throw "Unsupported pref type";
-
-      let prefValue = Services.prefs[prefFunc](aPrefName);
-      registry.create(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                    "Software\\Mozilla\\Firefox\\Metro\\Prefs\\" + prefType,
-                    Ci.nsIWindowsRegKey.ACCESS_WRITE);
-      // Always write as string, but the registry subfolder will determine
-      // how Metro interprets that string value.
-      registry.writeStringValue(aPrefName, prefValue);
-    } catch (ex) {
-      Components.utils.reportError("Couldn't push pref " + aPrefName + ": " + ex);
-    } finally {
-      registry.close();
-    }
-  }
-};
-#endif
-#endif
 
 var gHomeButton = {
   prefDomain: "browser.startup.homepage",
@@ -5087,7 +5070,7 @@ function MultiplexHandler(event)
         SelectDetector(event, false);
     } else if (name == 'charsetGroup') {
         var charset = node.getAttribute('id');
-        charset = charset.substring('charset.'.length, charset.length)
+        charset = charset.substring(charset.indexOf('charset.') + 'charset.'.length);
         BrowserSetForcedCharacterSet(charset);
     } else if (name == 'charsetCustomize') {
         //do nothing - please remove this else statement, once the charset prefs moves to the pref window
@@ -5100,7 +5083,7 @@ function MultiplexHandler(event)
 function SelectDetector(event, doReload)
 {
     var uri =  event.target.getAttribute("id");
-    var prefvalue = uri.substring('chardet.'.length, uri.length);
+    var prefvalue = uri.substring(uri.indexOf('chardet.') + 'chardet.'.length);
     if ("off" == prefvalue) { // "off" is special value to turn off the detectors
         prefvalue = "";
     }

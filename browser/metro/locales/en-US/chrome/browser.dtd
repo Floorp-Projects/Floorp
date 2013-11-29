@@ -13,12 +13,12 @@
 
 <!ENTITY autocompleteResultsHeader.label  "Your Results">
 
-<!ENTITY appbarErrorConsole.label   "Open error console">
-<!ENTITY appbarJSShell.label        "Open JavaScript shell">
-<!ENTITY appbarFindInPage2.label    "Find in page">
-<!ENTITY appbarViewOnDesktop2.label "View on desktop">
-<!ENTITY appbarMSMetaData2.label    "Get app for this site">
-<!ENTITY appbarViewPageSource.label "View page source">
+<!ENTITY appbarErrorConsole.label      "Open error console">
+<!ENTITY appbarJSShell.label           "Open JavaScript shell">
+<!ENTITY appbarFindInPage2.label       "Find in page">
+<!ENTITY appbarRelaunchInDesktop.label "Relaunch in Desktop">
+<!ENTITY appbarMSMetaData2.label       "Get app for this site">
+<!ENTITY appbarViewPageSource.label    "View page source">
 
 <!ENTITY topSitesHeader.label        "Top Sites">
 <!ENTITY bookmarksHeader.label       "Bookmarks">

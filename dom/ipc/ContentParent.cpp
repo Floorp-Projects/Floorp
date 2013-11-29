@@ -337,7 +337,8 @@ ContentParent::StartUp()
         return;
     }
 
-    NS_RegisterMemoryReporter(new ContentParentsMemoryReporter());
+    // Note: This reporter measures all ContentParents.
+    RegisterStrongMemoryReporter(new ContentParentsMemoryReporter());
 
     sCanLaunchSubprocesses = true;
 

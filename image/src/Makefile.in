@@ -3,21 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# We need to instantiate the decoders
-LOCAL_INCLUDES += -I$(topsrcdir)/image/decoders
-
-# For URI-related functionality
-LOCAL_INCLUDES += -I$(topsrcdir)/netwerk/base/src
-
-# Because SVGDocumentWrapper.cpp includes "mozilla/dom/SVGSVGElement.h"
-LOCAL_INCLUDES += \
-			-I$(topsrcdir)/content/svg/content/src \
-			-I$(topsrcdir)/content/base/src \
-			$(NULL)
-
-# Because VectorImage.cpp includes nsSVGUtils.h and nsSVGEffects.h
-LOCAL_INCLUDES += -I$(topsrcdir)/layout/svg
-
 include $(topsrcdir)/config/rules.mk
 
 # Because imgFrame.cpp includes "cairo.h"

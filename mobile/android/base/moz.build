@@ -18,8 +18,11 @@ mgjar.sources += [
     'mozglue/generatorannotations/OptionalGeneratedParameter.java',
     'mozglue/generatorannotations/WrapElementForJNI.java',
     'mozglue/generatorannotations/WrapEntireClassForJNI.java',
+    'mozglue/JNITarget.java',
     'mozglue/NativeReference.java',
     'mozglue/NativeZip.java',
+    'mozglue/RobocopTarget.java',
+    'mozglue/WebRTCJNITarget.java',
 ]
 mgjar.generated_sources += [
     'org/mozilla/gecko/mozglue/GeckoLoader.java',

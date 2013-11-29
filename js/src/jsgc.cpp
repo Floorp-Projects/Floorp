@@ -1813,7 +1813,7 @@ GCMarker::GCMarker(JSRuntime *rt)
     started(false),
     unmarkedArenaStackTop(nullptr),
     markLaterArenas(0),
-    grayFailed(false)
+    grayBufferState(GRAY_BUFFER_UNUSED)
 {
     InitTracer(this, rt, nullptr);
 }
@@ -1856,6 +1856,7 @@ GCMarker::stop()
     stack.reset();
 
     resetBufferedGrayRoots();
+    grayBufferState = GRAY_BUFFER_UNUSED;
 }
 
 void
@@ -1984,13 +1985,14 @@ GCMarker::checkZone(void *p)
 bool
 GCMarker::hasBufferedGrayRoots() const
 {
-    return !grayFailed;
+    return grayBufferState == GRAY_BUFFER_OK;
 }
 
 void
 GCMarker::startBufferingGrayRoots()
 {
-    JS_ASSERT(!grayFailed);
+    JS_ASSERT(grayBufferState == GRAY_BUFFER_UNUSED);
+    grayBufferState = GRAY_BUFFER_OK;
     for (GCZonesIter zone(runtime); !zone.done(); zone.next())
         JS_ASSERT(zone->gcGrayRoots.empty());
 
@@ -2005,6 +2007,8 @@ GCMarker::endBufferingGrayRoots()
     JS_ASSERT(callback == GrayCallback);
     callback = nullptr;
     JS_ASSERT(IS_GC_MARKING_TRACER(this));
+    JS_ASSERT(grayBufferState == GRAY_BUFFER_OK ||
+              grayBufferState == GRAY_BUFFER_FAILED);
 }
 
 void
@@ -2012,13 +2016,12 @@ GCMarker::resetBufferedGrayRoots()
 {
     for (GCZonesIter zone(runtime); !zone.done(); zone.next())
         zone->gcGrayRoots.clearAndFree();
-    grayFailed = false;
 }
 
 void
 GCMarker::markBufferedGrayRoots(JS::Zone *zone)
 {
-    JS_ASSERT(!grayFailed);
+    JS_ASSERT(grayBufferState == GRAY_BUFFER_OK);
     JS_ASSERT(zone->isGCMarkingGray());
 
     for (GrayRoot *elem = zone->gcGrayRoots.begin(); elem != zone->gcGrayRoots.end(); elem++) {
@@ -2039,7 +2042,7 @@ GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
 {
     JS_ASSERT(started);
 
-    if (grayFailed)
+    if (grayBufferState == GRAY_BUFFER_FAILED)
         return;
 
     GrayRoot root(thing, kind);
@@ -2053,8 +2056,8 @@ GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
     if (zone->isCollecting()) {
         zone->maybeAlive = true;
         if (!zone->gcGrayRoots.append(root)) {
-            grayFailed = true;
             resetBufferedGrayRoots();
+            grayBufferState = GRAY_BUFFER_FAILED;
         }
     }
 }
@@ -2062,6 +2065,8 @@ GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
 void
 GCMarker::GrayCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
+    JS_ASSERT(thingp);
+    JS_ASSERT(*thingp);
     GCMarker *gcmarker = static_cast<GCMarker *>(trc);
     gcmarker->appendGrayRoot(*thingp, kind);
 }
@@ -3082,7 +3087,8 @@ BeginMarkPhase(JSRuntime *rt)
         UnmarkScriptData(rt);
 
     MarkRuntime(gcmarker);
-    BufferGrayRoots(gcmarker);
+    if (rt->gcIsIncremental)
+        BufferGrayRoots(gcmarker);
 
     /*
      * This code ensures that if a zone is "dead", then it will be
@@ -3562,6 +3568,7 @@ FindZoneGroups(JSRuntime *rt)
     rt->gcZoneGroups = finder.getResultsList();
     rt->gcCurrentZoneGroup = rt->gcZoneGroups;
     rt->gcZoneGroupIndex = 0;
+    JS_ASSERT_IF(!rt->gcIsIncremental, !rt->gcCurrentZoneGroup->nextGroup());
 }
 
 static void
@@ -4604,15 +4611,17 @@ IncrementalCollectSlice(JSRuntime *rt,
 
         rt->gcIncrementalState = MARK;
 
-        if (zeal == ZealIncrementalRootsThenFinish)
+        if (rt->gcIsIncremental && zeal == ZealIncrementalRootsThenFinish)
             break;
 
         /* fall through */
 
       case MARK: {
         /* If we needed delayed marking for gray roots, then collect until done. */
-        if (!rt->gcMarker.hasBufferedGrayRoots())
+        if (!rt->gcMarker.hasBufferedGrayRoots()) {
             sliceBudget.reset();
+            rt->gcIsIncremental = false;
+        }
 
         bool finished = DrainMarkStack(rt, sliceBudget, gcstats::PHASE_MARK);
         if (!finished)
@@ -4620,8 +4629,8 @@ IncrementalCollectSlice(JSRuntime *rt,
 
         JS_ASSERT(rt->gcMarker.isDrained());
 
-        if (!rt->gcLastMarkSlice &&
-            ((initialState == MARK && budget != SliceBudget::Unlimited) ||
+        if (!rt->gcLastMarkSlice && rt->gcIsIncremental &&
+            ((initialState == MARK && zeal != ZealIncrementalRootsThenFinish) ||
              zeal == ZealIncrementalMarkAllThenFinish))
         {
             /*
@@ -4647,7 +4656,7 @@ IncrementalCollectSlice(JSRuntime *rt,
          * Always yield here when running in incremental multi-slice zeal
          * mode, so RunDebugGC can reset the slice buget.
          */
-        if (zeal == ZealIncrementalMultipleSlices)
+        if (rt->gcIsIncremental && zeal == ZealIncrementalMultipleSlices)
             break;
 
         /* fall through */
