@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.DisplayPortMetrics;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
+import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.mozglue.generatorannotations.GeneratorOptions;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI;
 
@@ -36,11 +37,13 @@ import java.nio.ByteBuffer;
 /* This class is referenced by Robocop via reflection; use care when
  * modifying the signature.
  */
+@JNITarget
 public class GeckoEvent {
     private static final String LOGTAG = "GeckoEvent";
 
     // Make sure to keep these values in sync with the enum in
     // AndroidGeckoEvent in widget/android/AndroidJavaWrapper.h
+    @JNITarget
     private enum NativeGeckoEvent {
         NATIVE_POKE(0),
         KEY_EVENT(1),
@@ -103,6 +106,7 @@ public class GeckoEvent {
     }
 
     // Encapsulation of common IME actions.
+    @JNITarget
     public enum ImeAction {
         IME_SYNCHRONIZE(0),
         IME_REPLACE_TEXT(1),

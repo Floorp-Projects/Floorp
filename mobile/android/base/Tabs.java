@@ -8,6 +8,8 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.mozglue.JNITarget;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -374,6 +376,7 @@ public class Tabs implements GeckoEventListener {
         private static final Tabs INSTANCE = new Tabs();
     }
 
+    @RobocopTarget
     public static Tabs getInstance() {
        return Tabs.TabsInstanceHolder.INSTANCE;
     }
@@ -666,6 +669,7 @@ public class Tabs implements GeckoEventListener {
      *
      * @param url URL of page to load, or search term used if searchEngine is given
      */
+    @RobocopTarget
     public Tab loadUrl(String url) {
         return loadUrl(url, LOADURL_NONE);
     }
@@ -797,9 +801,8 @@ public class Tabs implements GeckoEventListener {
 
     /**
      * Gets the next tab ID.
-     *
-     * This method is invoked via JNI.
      */
+    @JNITarget
     public static int getNextTabId() {
         return sTabId.getAndIncrement();
     }

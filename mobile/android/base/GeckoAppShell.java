@@ -10,6 +10,7 @@ import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
+import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.mozglue.generatorannotations.OptionalGeneratedParameter;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.prompts.PromptService;
@@ -391,7 +392,6 @@ public class GeckoAppShell
         } catch (NoSuchElementException e) {}
     }
 
-    /* This method is referenced by Robocop via reflection. */
     public static void sendEventToGecko(GeckoEvent e) {
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             notifyGeckoOfEvent(e);
@@ -859,6 +859,7 @@ public class GeckoAppShell
         });
     }
 
+    @JNITarget
     static public int getPreferredIconSize() {
         if (android.os.Build.VERSION.SDK_INT >= 11) {
             ActivityManager am = (ActivityManager)getContext().getSystemService(Context.ACTIVITY_SERVICE);
@@ -2320,8 +2321,6 @@ public class GeckoAppShell
      * with an event that is currently being processed has the properly-defined behaviour that
      * any added listeners will not be invoked on the event currently being processed, but
      * will be invoked on future events of that type.
-     *
-     * This method is referenced by Robocop via reflection.
      */
     public static void registerEventListener(String event, GeckoEventListener listener) {
         sEventDispatcher.registerEventListener(event, listener);
@@ -2337,8 +2336,6 @@ public class GeckoAppShell
      * with an event that is currently being processed has the properly-defined behaviour that
      * any removed listeners will still be invoked on the event currently being processed, but
      * will not be invoked on future events of that type.
-     *
-     * This method is referenced by Robocop via reflection.
      */
     public static void unregisterEventListener(String event, GeckoEventListener listener) {
         sEventDispatcher.unregisterEventListener(event, listener);
