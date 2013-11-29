@@ -234,11 +234,6 @@ class Assembler : public AssemblerX86Shared
 
     static void TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
 
-    // GenerateVMWrapperOnCall needs to find the location of its call-site such
-    // as we can link the call-site to the newly allocated VM wrapper instead of
-    // the trampoline to this lazy function.
-    static CodeOffsetJump findPatchableCall(IonCode *method, size_t returnOffset, IonCode **target);
-
     // The buffer is about to be linked, make sure any constant pools or excess
     // bookkeeping has been flushed to the instruction stream.
     void finish();

@@ -392,20 +392,7 @@ CodeGeneratorShared::markSafepointAt(uint32_t offset, LInstruction *ins)
 {
     JS_ASSERT_IF(safepointIndices_.length(),
                  offset - safepointIndices_.back().displacement() >= sizeof(uint32_t));
-
     return safepointIndices_.append(SafepointIndex(offset, ins->safepoint()));
-}
-
-bool
-CodeGeneratorShared::markVMCall(uint32_t offset, LInstruction *ins,
-                                const VMFunction &fun, const IonCode *wrapper)
-{
-    if (wrapper == gen->jitRuntime()->unreachableTrap()) {
-        if (!patchableVMCalls_.append(LinkVMWrapper(masm, offset, fun)))
-            return false;
-    }
-
-    return markSafepointAt(offset, ins);
 }
 
 void
@@ -655,7 +642,9 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
 #endif
 
     // Get the wrapper of the VM function.
-    IonCode *wrapper = gen->jitRuntime()->maybeGetVMWrapper(fun);
+    IonCode *wrapper = gen->jitRuntime()->getVMWrapper(fun);
+    if (!wrapper)
+        return false;
 
 #ifdef CHECK_OSIPOINT_REGISTERS
     if (shouldVerifyOsiPointRegs(ins->safepoint()))
@@ -672,7 +661,7 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
     else
         callOffset = masm.callWithExitFrame(wrapper);
 
-    if (!markVMCall(callOffset, ins, fun, wrapper))
+    if (!markSafepointAt(callOffset, ins))
         return false;
 
     // Remove rest of the frame left on the stack. We remove the return address

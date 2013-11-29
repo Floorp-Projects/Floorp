@@ -21,10 +21,6 @@
 #include "vm/Stack.h"
 
 namespace js {
-
-// defined in jscntxtinlines.h
-class AutoLockForExclusiveAccess;
-
 namespace jit {
 
 class FrameSizeClass;
@@ -215,10 +211,6 @@ class JitRuntime
     // IonScripts in the runtime.
     InlineList<PatchableBackedge> backedgeList_;
 
-    // Thunk that is not supposed to be called and crashes the application if it
-    // is ever called.
-    IonCode *unreachableTrap_;
-
   private:
     IonCode *generateExceptionTailStub(JSContext *cx);
     IonCode *generateBailoutTailStub(JSContext *cx);
@@ -228,9 +220,8 @@ class JitRuntime
     IonCode *generateBailoutHandler(JSContext *cx);
     IonCode *generateInvalidator(JSContext *cx);
     IonCode *generatePreBarrier(JSContext *cx, MIRType type);
-    IonCode *generateDebugTrapHandler(JSContext *cx, AutoLockForExclusiveAccess &atomsLock);
+    IonCode *generateDebugTrapHandler(JSContext *cx);
     IonCode *generateVMWrapper(JSContext *cx, const VMFunction &f);
-    IonCode *generateUnreachableTrap(JSContext *cx);
 
     JSC::ExecutableAllocator *createIonAlloc(JSContext *cx);
 
@@ -284,12 +275,7 @@ class JitRuntime
 
     bool handleAccessViolation(JSRuntime *rt, void *faultingAddress);
 
-    // This bad code pointer is set to be on the first page, which is not
-    // mapped, and thus not executable.
-    IonCode *maybeGetVMWrapper(const VMFunction &f) const;
-    IonCode *getVMWrapper(JSContext *cx, const VMFunction &f);
-    IonCode *getVMWrapper(JSContext *cx, const VMFunction &f,
-                          AutoLockForExclusiveAccess &atomsLock);
+    IonCode *getVMWrapper(const VMFunction &f) const;
     IonCode *debugTrapHandler(JSContext *cx);
 
     IonCode *getGenericBailoutHandler() const {
@@ -336,10 +322,6 @@ class JitRuntime
 
     IonCode *shapePreBarrier() const {
         return shapePreBarrier_;
-    }
-
-    IonCode *unreachableTrap() const {
-        return unreachableTrap_;
     }
 };
 

@@ -1082,11 +1082,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         call(target);
     }
 
-    typedef CodeOffsetJump CodeOffsetCall;
-    CodeOffsetCall lastPatchableCall(uint32_t callOffset) {
-        return CodeOffsetCall(callOffset);
-    }
-
     // Save an exit frame to the thread data of the current thread, given a
     // register that holds a PerThreadData *.
     void linkParallelExitFrame(const Register &pt) {
