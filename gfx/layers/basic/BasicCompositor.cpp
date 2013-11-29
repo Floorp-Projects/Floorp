@@ -123,7 +123,10 @@ protected:
   }
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE {
-    return nullptr;
+    if (!mSurface) {
+        return nullptr;
+    }
+    return mSurface->GetDataSurface();
   }
 
   BasicCompositor *mCompositor;
