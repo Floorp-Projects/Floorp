@@ -3938,9 +3938,6 @@ MOZ_JSDEBUGGER=1
 MOZ_AUTH_EXTENSION=1
 MOZ_OGG=1
 MOZ_RAW=
-MOZ_SPEEX_RESAMPLER=1
-MOZ_SOUNDTOUCH=1
-MOZ_CUBEB=
 MOZ_VORBIS=
 MOZ_TREMOR=
 MOZ_WAVE=1
@@ -5201,7 +5198,6 @@ MOZ_ARG_DISABLE_BOOL(ogg,
 
 if test -n "$MOZ_OGG"; then
     AC_DEFINE(MOZ_OGG)
-    MOZ_CUBEB=1
 
     dnl Checks for __attribute__(aligned()) directive
     AC_CACHE_CHECK([__attribute__ ((aligned ())) support],
@@ -5261,7 +5257,6 @@ MOZ_ARG_DISABLE_BOOL(directshow,
 
 if test -n "$MOZ_DIRECTSHOW"; then
     AC_DEFINE(MOZ_DIRECTSHOW)
-    MOZ_CUBEB=1
 fi;
 
 dnl ========================================================
@@ -5281,7 +5276,6 @@ MOZ_ARG_DISABLE_BOOL(wmf,
 
 if test -n "$MOZ_WMF"; then
     AC_DEFINE(MOZ_WMF)
-    MOZ_CUBEB=1
 fi;
 
 dnl ========================================================
@@ -5412,7 +5406,6 @@ AC_SUBST(MOZ_LIBVPX_CFLAGS)
 AC_SUBST(MOZ_LIBVPX_LIBS)
 
 if test "$MOZ_WEBM" -o "$MOZ_OGG"; then
-    MOZ_CUBEB=1
     if test "$MOZ_SAMPLE_TYPE_FLOAT32"; then
         MOZ_VORBIS=1
     else
@@ -5514,24 +5507,11 @@ MOZ_ARG_DISABLE_BOOL(wave,
 
 if test -n "$MOZ_WAVE"; then
     AC_DEFINE(MOZ_WAVE)
-    MOZ_CUBEB=1
 fi
 
 dnl ========================================================
-dnl = Handle dependent CUBEB and MEDIA defines
+dnl = Handle dependent MEDIA defines
 dnl ========================================================
-
-if test -n "$MOZ_SPEEX_RESAMPLER"; then
-    AC_DEFINE(MOZ_SPEEX_RESAMPLER)
-fi
-
-if test -n "$MOZ_SOUNDTOUCH"; then
-    AC_DEFINE(MOZ_SOUNDTOUCH)
-fi
-
-if test -n "$MOZ_CUBEB"; then
-    AC_DEFINE(MOZ_CUBEB)
-fi
 
 if test -n "$MOZ_OPUS" -a -z "$MOZ_OGG"; then
     AC_MSG_ERROR([MOZ_OPUS requires MOZ_OGG which is disabled.])
@@ -5562,12 +5542,12 @@ if test -n "$MOZ_OPUS"; then
     AC_DEFINE(MOZ_OPUS)
 fi
 
-dnl ====================================================
-dnl = Check alsa availability on Linux if using libcubeb
-dnl ====================================================
+dnl ==================================
+dnl = Check alsa availability on Linux
+dnl ==================================
 
-dnl If using libcubeb with Linux, ensure that the alsa library is available
-if test -n "$MOZ_CUBEB" -a "$OS_TARGET" = "Linux"; then
+dnl If using Linux, ensure that the alsa library is available
+if test "$OS_TARGET" = "Linux"; then
     MOZ_ALSA=1
 fi
 
@@ -5577,7 +5557,6 @@ MOZ_ARG_ENABLE_BOOL(alsa,
    MOZ_ALSA=)
 
 if test -n "$MOZ_ALSA"; then
-    AC_DEFINE(MOZ_CUBEB)
     PKG_CHECK_MODULES(MOZ_ALSA, alsa, ,
          [echo "$MOZ_ALSA_PKG_ERRORS"
           AC_MSG_ERROR([Need alsa for Ogg, Wave or WebM decoding on Linux.  Disable with --disable-ogg --disable-wave --disable-webm.  (On Ubuntu, you might try installing the package libasound2-dev.)])])
@@ -5591,8 +5570,8 @@ dnl ========================================================
 dnl = Disable PulseAudio
 dnl ========================================================
 
-dnl If using libcubeb with Linux, ensure that the PA library is available
-if test -n "$MOZ_CUBEB" -a "$OS_TARGET" = "Linux" -a -z "$MOZ_B2G"; then
+dnl If using Linux, ensure that the PA library is available
+if test "$OS_TARGET" = "Linux" -a -z "$MOZ_B2G"; then
     MOZ_PULSEAUDIO=1
 fi
 
@@ -5602,7 +5581,6 @@ MOZ_ARG_DISABLE_BOOL(pulseaudio,
    MOZ_PULSEAUDIO=1)
 
 if test -n "$MOZ_PULSEAUDIO"; then
-    AC_DEFINE(MOZ_CUBEB)
     if test -z "$gonkdir"; then
         PKG_CHECK_MODULES(MOZ_PULSEAUDIO, libpulse, ,
              [echo "$MOZ_PULSEAUDIO_PKG_ERRORS"
@@ -7770,6 +7748,20 @@ AC_SUBST(JS_SHARED_LIBRARY)
 AC_SUBST(LIBXUL_LIBS)
 XPCOM_LIBS="$LIBXUL_LIBS"
 
+if test "$OS_ARCH" = "WINNT"; then
+  GKMEDIAS_SHARED_LIBRARY=1
+fi
+AC_SUBST(GKMEDIAS_SHARED_LIBRARY)
+
+if test -z "$MOZ_NATIVE_ZLIB"; then
+if test -n "$JS_SHARED_LIBRARY" -o "$GKMEDIAS_SHARED_LIBRARY"; then
+  ZLIB_IN_MOZGLUE=1
+  AC_DEFINE(ZLIB_IN_MOZGLUE)
+fi
+fi
+
+AC_SUBST(ZLIB_IN_MOZGLUE)
+
 dnl ========================================================
 dnl =
 dnl = Standalone module options
@@ -8651,9 +8643,6 @@ AC_SUBST(MOZ_NSS_PATCH)
 AC_SUBST(MOZ_APP_COMPONENT_LIBS)
 AC_SUBST(MOZ_APP_EXTRA_LIBS)
 
-AC_SUBST(MOZ_SPEEX_RESAMPLER)
-AC_SUBST(MOZ_SOUNDTOUCH)
-AC_SUBST(MOZ_CUBEB)
 AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
@@ -9217,7 +9206,7 @@ fi
 if test -n "$MOZ_GLUE_PROGRAM_LDFLAGS"; then
    export MOZ_GLUE_PROGRAM_LDFLAGS
 fi
-if test "$MOZ_NATIVE_ZLIB" != 1 -a "$OS_ARCH" = "WINNT"; then
+if test -n "$ZLIB_IN_MOZGLUE"; then
    MOZ_ZLIB_LIBS=
 fi
 export MOZ_NATIVE_ZLIB
@@ -9232,6 +9221,7 @@ export STLPORT_LDFLAGS
 export STLPORT_LIBS
 export JS_STANDALONE=no
 export MOZ_LINKER
+export ZLIB_IN_MOZGLUE
 
 if ! test -e js; then
     mkdir js

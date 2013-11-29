@@ -11,7 +11,6 @@
 #include "jsworkers.h"
 
 #include "gc/Zone.h"
-
 #include "vm/Runtime.h"
 
 namespace js {

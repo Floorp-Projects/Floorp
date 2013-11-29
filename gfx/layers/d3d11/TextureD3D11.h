@@ -144,7 +144,7 @@ public:
 
   virtual bool Lock() MOZ_OVERRIDE { return true; }
 
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
   {
     return nullptr; // TODO: cf bug 872568
   }
@@ -207,7 +207,7 @@ public:
   virtual bool Lock() MOZ_OVERRIDE;
   virtual void Unlock() MOZ_OVERRIDE;
 
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
   {
     return nullptr; // TODO: cf bug 872568
   }
@@ -243,7 +243,7 @@ public:
 
   virtual bool IsYCbCrSource() const MOZ_OVERRIDE { return true; }
 
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
   {
     return nullptr; // TODO: cf bug 872568
   }

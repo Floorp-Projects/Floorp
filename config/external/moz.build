@@ -33,18 +33,14 @@ if CONFIG['MOZ_VP8'] and not CONFIG['MOZ_NATIVE_LIBVPX']:
 if CONFIG['MOZ_OGG']:
     external_dirs += ['media/libogg', 'media/libtheora']
 
-if CONFIG['MOZ_SPEEX_RESAMPLER']:
-    external_dirs += ['media/libspeex_resampler']
-
-if CONFIG['MOZ_SOUNDTOUCH']:
-    external_dirs += ['media/libsoundtouch']
-
-if CONFIG['MOZ_CUBEB']:
-    external_dirs += ['media/libcubeb']
-
 if not CONFIG['MOZ_NATIVE_PNG']:
     external_dirs += ['media/libpng']
 
-external_dirs += ['media/kiss_fft']
+external_dirs += [
+    'media/kiss_fft',
+    'media/libcubeb',
+    'media/libspeex_resampler',
+    'media/libsoundtouch',
+]
 
 PARALLEL_DIRS += ['../../' + i for i in external_dirs]

@@ -6,6 +6,8 @@
 #include "SharedSurfaceEGL.h"
 
 #include "GLContext.h"
+#include "GLBlitHelper.h"
+#include "ScopedGLHelpers.h"
 #include "SharedSurfaceGL.h"
 #include "SurfaceFactory.h"
 #include "GLLibraryEGL.h"
@@ -112,7 +114,7 @@ SharedSurface_EGLImage::LockProdImpl()
     if (mPipeActive)
         return;
 
-    mGL->BlitTextureToTexture(mProdTex, mProdTexForPipe, Size(), Size());
+    mGL->BlitHelper()->BlitTextureToTexture(mProdTex, mProdTexForPipe, Size(), Size());
     mGL->fDeleteTextures(1, &mProdTex);
     mProdTex = mProdTexForPipe;
     mProdTexForPipe = 0;
