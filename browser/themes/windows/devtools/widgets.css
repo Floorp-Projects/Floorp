@@ -465,6 +465,7 @@
 }
 
 .variable-or-property > .title > .value {
+  -moz-box-flex: 1;
   -moz-padding-start: 6px;
   -moz-padding-end: 4px;
 }
@@ -488,6 +489,9 @@
 .variables-view-variable {
   -moz-margin-start: 1px;
   -moz-margin-end: 1px;
+}
+
+.variables-view-variable:not(:last-child) {
   border-bottom: 1px solid #eee;
 }
 
@@ -598,6 +602,7 @@
 }
 
 .variables-view-container[aligned-values] .title > .value {
+  -moz-box-flex: 0;
   width: 70vw;
 }
 

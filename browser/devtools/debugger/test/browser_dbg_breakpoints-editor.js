@@ -242,7 +242,7 @@ function test() {
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils);
 
-    let coords = gEditor.cursorCoords({ line: 4, ch: 0 });
+    let coords = gEditor.getCoordsFromPosition({ line: 4, ch: 0 });
     let rect = iframe.getBoundingClientRect();
     let left = rect.left + 10;
     let top = rect.top + coords.top + 4;
