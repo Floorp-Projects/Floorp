@@ -42,6 +42,10 @@
 #include "mozilla/GenericRefCounted.h"
 #include "mozilla/Scoped.h"
 
+#ifdef DEBUG
+#define MOZ_ENABLE_GL_TRACKING 1
+#endif
+
 class nsIntRegion;
 class nsIRunnable;
 class nsIThread;
@@ -583,7 +587,7 @@ private:
 #undef BEFORE_GL_CALL
 #undef AFTER_GL_CALL
 
-#ifdef DEBUG
+#ifdef MOZ_ENABLE_GL_TRACKING
 
 #ifndef MOZ_FUNCTION_NAME
 # ifdef __GNUC__
@@ -2380,14 +2384,14 @@ public:
 
     virtual bool MakeCurrentImpl(bool aForce = false) = 0;
 
-#ifdef DEBUG
+#ifdef MOZ_ENABLE_GL_TRACKING
     static void StaticInit() {
         PR_NewThreadPrivateIndex(&sCurrentGLContextTLS, nullptr);
     }
 #endif
 
     bool MakeCurrent(bool aForce = false) {
-#ifdef DEBUG
+#ifdef MOZ_ENABLE_GL_TRACKING
     PR_SetThreadPrivate(sCurrentGLContextTLS, this);
 
     // XXX this assertion is disabled because it's triggering on Mac;
@@ -3242,7 +3246,7 @@ public:
 
 #undef ASSERT_SYMBOL_PRESENT
 
-#ifdef DEBUG
+#ifdef MOZ_ENABLE_GL_TRACKING
     void CreatedProgram(GLContext *aOrigin, GLuint aName);
     void CreatedShader(GLContext *aOrigin, GLuint aName);
     void CreatedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
