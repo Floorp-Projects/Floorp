@@ -31,11 +31,6 @@ interface nsIAppStartup : nsISupports
      * @returnCode NS_SUCCESS_RESTART_APP
      *             This return code indicates that the application should be
      *             restarted because quit was called with the eRestart flag.
-
-     * @returnCode NS_SUCCESS_RESTART_METRO_APP
-     *             This return code indicates that the application should be
-     *             restarted in metro because quit was called with the
-     *             eRestartTouchEnviroment flag.
      */
     void run();
 
