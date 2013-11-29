@@ -9,7 +9,7 @@
 ;
 
 
-    EXPORT  |vp8_sixtap_predict_neon|
+    EXPORT  |vp8_sixtap_predict4x4_neon|
     ARM
     REQUIRE8
     PRESERVE8
@@ -33,7 +33,7 @@ filter4_coeff
 ; stack(r4) unsigned char *dst_ptr,
 ; stack(lr) int  dst_pitch
 
-|vp8_sixtap_predict_neon| PROC
+|vp8_sixtap_predict4x4_neon| PROC
     push            {r4, lr}
 
     adr             r12, filter4_coeff

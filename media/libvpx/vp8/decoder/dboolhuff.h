@@ -55,7 +55,7 @@ void vp8dx_bool_decoder_fill(BOOL_DECODER *br);
         int loop_end, x; \
         size_t bits_left = ((_bufend)-(_bufptr))*CHAR_BIT; \
         \
-        x = shift + CHAR_BIT - bits_left; \
+        x = (int)(shift + CHAR_BIT - bits_left); \
         loop_end = 0; \
         if(x >= 0) \
         { \
