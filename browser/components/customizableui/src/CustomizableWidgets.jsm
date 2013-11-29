@@ -260,6 +260,18 @@ const CustomizableWidgets = [{
                                         win.PanelUI.onCommandHandler);
     }
   }, {
+    id: "switch-to-metro-button",
+    removable: true,
+    defaultArea: CustomizableUI.AREA_PANEL,
+    onCommand: function(aEvent) {
+      let win = aEvent.target &&
+                aEvent.target.ownerDocument &&
+                aEvent.target.ownerDocument.defaultView;
+      if (win && typeof win.SwitchToMetro == "function") {
+        win.SwitchToMetro();
+      }
+    }
+  }, {
     id: "add-ons-button",
     removable: true,
     shortcutId: "key_openAddons",

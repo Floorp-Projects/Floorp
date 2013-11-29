@@ -32,7 +32,6 @@ UNIFIED_SOURCES += ['src/compiler/preprocessor/' + src for src in [
     'Tokenizer.cpp',
 ]]
 
-
 # Target: 'translator_common'
 #   Requires: 'preprocessor'
 # src/compiler:
@@ -103,7 +102,6 @@ else:
         'src/compiler/ossource_posix.cpp',
     ]
 
-
 # Target: 'translator_glsl'
 #   Requires: 'translator_common'
 # src/compiler:
@@ -118,6 +116,12 @@ UNIFIED_SOURCES += ['src/compiler/' + src for src in [
     'VersionGLSL.cpp',
 ]]
 MSVC_ENABLE_PGO = True
+
+LOCAL_INCLUDES += [
+    'include',
+    'include/KHR',
+    'src',
+]
 
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True

@@ -4,16 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LOCAL_INCLUDES = \
-	-I$(srcdir)/../style \
-	-I$(srcdir)/../base \
-	-I$(srcdir)/../generic \
-	-I$(srcdir)/../tables \
-	-I$(topsrcdir)/content/base/src \
-	-I$(topsrcdir)/content/mathml/content/src \
-	-I$(srcdir)/../xul/base/src \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 font_properties = \

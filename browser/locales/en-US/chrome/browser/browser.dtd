@@ -258,7 +258,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY devToolbar.keytext                "F2">
 <!ENTITY devToolboxMenuItem.label          "Toggle Tools">
 <!ENTITY devToolboxMenuItem.accesskey      "T">
-<!ENTITY devToolboxMenuItem.keycode        "I">
 <!ENTITY devToolboxMenuItem.keytext        "I">
 
 <!ENTITY devToolbarToolsButton.tooltip     "Toggle developer tools">
@@ -434,6 +433,7 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY bookmarkThisFrameCmd.accesskey  "m">
 <!ENTITY emailPageCmd.label           "Email Link…">
 <!ENTITY emailPageCmd.accesskey       "E">
+<!ENTITY switchToMetroCmd.label       "Relaunch in Windows 8 style &brandShortName;">
 <!ENTITY savePageCmd.label            "Save Page As…">
 <!ENTITY savePageCmd.accesskey        "A">
 <!-- alternate for content area context menu -->

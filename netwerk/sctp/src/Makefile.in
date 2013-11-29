@@ -11,13 +11,6 @@ VPATH     = \
 
 NO_PROFILE_GUIDED_OPTIMIZE = 1 # Don't PGO
 
-LOCAL_INCLUDES = \
-  -I$(srcdir)/../../base/src \
-  -I$(topsrcdir)/content/base/src \
-  -I$(topsrcdir)/content/events/src \
-  -I$(topsrcdir)/xpcom/ds \
-  $(NULL)
-
 ifeq ($(OS_TARGET),Darwin)
 DEFINES += \
   -U__APPLE__ \

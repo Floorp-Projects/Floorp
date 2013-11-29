@@ -29,6 +29,16 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
+LOCAL_INCLUDES += [
+    '../',
+    '../../shared',
+    '../../xpwidgets',
+    '/layout/generic',
+    '/layout/xul/base/src',
+    '/toolkit/xre',
+    '/xpcom/base',
+]
+
 DEFINES['MOZ_UNICODE'] = True
 
 for var in ('MOZ_ENABLE_D3D9_LAYER', 'MOZ_ENABLE_D3D10_LAYER'):

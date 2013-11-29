@@ -15,6 +15,7 @@ import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.home.SearchLoader.SearchCursorLoader;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.StringUtils;
@@ -27,10 +28,8 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -96,6 +95,7 @@ public class BrowserSearch extends HomeFragment
     private HomeListView mList;
 
     // Client that performs search suggestion queries
+    @RobocopTarget
     private volatile SuggestClient mSuggestClient;
 
     // List of search engines from gecko

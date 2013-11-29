@@ -220,8 +220,11 @@ const PanelUI = {
         CustomizableUI.registerMenuPanel(this.contents);
       } else {
         this.beginBatchUpdate();
-        CustomizableUI.registerMenuPanel(this.contents);
-        this.endBatchUpdate();
+        try {
+          CustomizableUI.registerMenuPanel(this.contents);
+        } finally {
+          this.endBatchUpdate();
+        }
       }
       this.panel.hidden = false;
     }.bind(this)).then(null, Cu.reportError);
