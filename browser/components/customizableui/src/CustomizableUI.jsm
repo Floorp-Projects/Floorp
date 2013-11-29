@@ -295,6 +295,7 @@ let CustomizableUIInternal = {
     if (gBuildAreas.has(area) && gBuildAreas.get(area).has(aToolbar)) {
       return;
     }
+    this.beginBatchUpdate();
     let document = aToolbar.ownerDocument;
     let areaProperties = gAreas.get(area);
 
@@ -302,7 +303,6 @@ let CustomizableUIInternal = {
       throw new Error("Unknown customization area: " + area);
     }
 
-    this.beginBatchUpdate();
     let placements = gPlacements.get(area);
     if (!placements && areaProperties.has("legacy")) {
       let legacyState = aToolbar.getAttribute("currentset");
