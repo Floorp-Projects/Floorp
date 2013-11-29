@@ -116,6 +116,7 @@ namespace gc {
 static JS_ALWAYS_INLINE uintptr_t *
 GetGCThingMarkBitmap(const void *thing)
 {
+    JS_ASSERT(thing);
     uintptr_t addr = uintptr_t(thing);
     addr &= ~js::gc::ChunkMask;
     addr |= js::gc::ChunkMarkBitmapOffset;
@@ -125,6 +126,7 @@ GetGCThingMarkBitmap(const void *thing)
 static JS_ALWAYS_INLINE JS::shadow::Runtime *
 GetGCThingRuntime(const void *thing)
 {
+    JS_ASSERT(thing);
     uintptr_t addr = uintptr_t(thing);
     addr &= ~js::gc::ChunkMask;
     addr |= js::gc::ChunkRuntimeOffset;
