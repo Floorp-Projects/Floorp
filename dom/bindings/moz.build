@@ -68,6 +68,15 @@ LOCAL_INCLUDES += [
     '/media/webrtc/signaling/src/peerconnection',
 ]
 
+UNIFIED_SOURCES += [
+    'BindingUtils.cpp',
+    'CallbackInterface.cpp',
+    'CallbackObject.cpp',
+    'Date.cpp',
+    'DOMJSProxyHandler.cpp',
+    'Exceptions.cpp',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 if CONFIG['MOZ_AUDIO_CHANNEL_MANAGER']:

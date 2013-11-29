@@ -61,6 +61,10 @@ SOURCES += [
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gkmedias'
+LOCAL_INCLUDES += [
+    '../../cairo/src',
+]
+
 
 if CONFIG['MOZ_USE_PTHREADS']:
     DEFINES['HAVE_PTHREAD_SETSPECIFIC'] = True

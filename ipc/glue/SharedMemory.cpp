@@ -46,8 +46,8 @@ SharedMemory::SharedMemory()
 {
   static Atomic<uint32_t> registered;
   if (registered.compareExchange(0, 1)) {
-    NS_RegisterMemoryReporter(new ShmemAllocatedReporter());
-    NS_RegisterMemoryReporter(new ShmemMappedReporter());
+    RegisterStrongMemoryReporter(new ShmemAllocatedReporter());
+    RegisterStrongMemoryReporter(new ShmemMappedReporter());
   }
 }
 

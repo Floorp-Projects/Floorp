@@ -7,10 +7,11 @@
 TEST_TOOL_DIRS += [
     'idl',
     'mochitest',
-    'chrome',
     'browser',
     'components/native',
     'components/js',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
+

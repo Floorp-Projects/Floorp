@@ -40,7 +40,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
 #include "nsIConsoleService.h"
-#include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIStringEnumerator.h"
@@ -283,24 +282,6 @@ CloneAndAppend(nsIFile* aBase, const nsACString& append)
 // nsComponentManagerImpl
 ////////////////////////////////////////////////////////////////////////////////
 
-class XPCOMComponentManagerReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-    XPCOMComponentManagerReporter()
-      : MemoryUniReporter("explicit/xpcom/component-manager",
-                           KIND_HEAP, UNITS_BYTES,
-                           "Memory used for the XPCOM component manager.")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE
-    {
-        return nsComponentManagerImpl::gComponentManager
-             ? nsComponentManagerImpl::gComponentManager->SizeOfIncludingThis(
-                 MallocSizeOf)
-             : 0;
-    }
-};
-
 nsresult
 nsComponentManagerImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
@@ -316,7 +297,10 @@ nsComponentManagerImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResul
 static const int CONTRACTID_HASHTABLE_INITIAL_SIZE = 2048;
 
 nsComponentManagerImpl::nsComponentManagerImpl()
-    : mFactories(CONTRACTID_HASHTABLE_INITIAL_SIZE)
+    : MemoryUniReporter("explicit/xpcom/component-manager",
+                        KIND_HEAP, UNITS_BYTES,
+                        "Memory used for the XPCOM component manager.")
+    , mFactories(CONTRACTID_HASHTABLE_INITIAL_SIZE)
     , mContractIDs(CONTRACTID_HASHTABLE_INITIAL_SIZE)
     , mLock("nsComponentManagerImpl.mLock")
     , mStatus(NOT_INITIALIZED)
@@ -414,8 +398,7 @@ nsresult nsComponentManagerImpl::Init()
 
     nsCategoryManager::GetSingleton()->SuppressNotifications(false);
 
-    mReporter = new XPCOMComponentManagerReporter();
-    NS_RegisterMemoryReporter(mReporter);
+    RegisterWeakMemoryReporter(this);
 
     // Unfortunately, we can't register the nsCategoryManager memory reporter
     // in its constructor (which is triggered by the GetSingleton() call
@@ -800,8 +783,7 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     // Shutdown the component manager
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsComponentManager: Beginning Shutdown."));
 
-    NS_UnregisterMemoryReporter(mReporter);
-    mReporter = nullptr;
+    UnregisterWeakMemoryReporter(this);
 
     // Release all cached factories
     mContractIDs.Clear();
@@ -836,13 +818,14 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsComponentManager: Destroyed."));
 }
 
-NS_IMPL_ISUPPORTS5(nsComponentManagerImpl,
-                   nsIComponentManager,
-                   nsIServiceManager,
-                   nsIComponentRegistrar,
-                   nsISupportsWeakReference,
-                   nsIInterfaceRequestor)
-
+NS_IMPL_ISUPPORTS_INHERITED5(
+    nsComponentManagerImpl,
+    MemoryUniReporter,
+    nsIComponentManager,
+    nsIServiceManager,
+    nsIComponentRegistrar,
+    nsISupportsWeakReference,
+    nsIInterfaceRequestor)
 
 nsresult
 nsComponentManagerImpl::GetInterface(const nsIID & uuid, void **result)
@@ -1707,8 +1690,14 @@ SizeOfContractIDsEntryExcludingThis(nsCStringHashKey::KeyType aKey,
     return aKey.SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
 }
 
+int64_t
+nsComponentManagerImpl::Amount()
+{
+    return SizeOfIncludingThis(MallocSizeOf);
+}
+
 size_t
-nsComponentManagerImpl::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
+nsComponentManagerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
     size_t n = aMallocSizeOf(this);
     n += mLoaderMap.SizeOfExcludingThis(nullptr, aMallocSizeOf);

@@ -87,7 +87,7 @@ SVGFEColorMatrixElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources
 FilterPrimitiveDescription
 SVGFEColorMatrixElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                  const IntRect& aFilterSubregion,
-                                                 nsTArray<nsRefPtr<gfxASurface> >& aInputImages)
+                                                 nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   uint32_t type = mEnumAttributes[TYPE].GetAnimValue();
   const SVGNumberList &values = mNumberListAttributes[VALUES].GetAnimValue();

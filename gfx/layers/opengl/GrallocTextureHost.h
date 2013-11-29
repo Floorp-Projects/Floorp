@@ -60,7 +60,7 @@ public:
     mGraphicBuffer = nullptr;
   }
 
-  already_AddRefed<gfxImageSurface> GetAsSurface();
+  TemporaryRef<gfx::DataSourceSurface> GetAsSurface();
 
   GLuint GetGLTexture();
 
@@ -104,7 +104,7 @@ public:
     return mTextureSource;
   }
 
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
 
   virtual void SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData) MOZ_OVERRIDE;
 

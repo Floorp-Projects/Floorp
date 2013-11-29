@@ -11,3 +11,7 @@ SOURCES += [
 ]
 
 FINAL_LIBRARY = 'i18n'
+LOCAL_INCLUDES += [
+    '..',
+]
+

@@ -6,10 +6,10 @@
 #include "common/mac/dump_syms.h"
 #include "shim_mac_dump_syms.h"
 
-bool ReadSymbolData(const string& obj_file,
-                    const std::vector<string> &debug_dirs,
-                    SymbolData symbol_data,
-                    google_breakpad::Module** module)
+bool ReadSymbolData_DARWIN(const string& obj_file,
+                           const std::vector<string> &debug_dirs,
+                           SymbolData symbol_data,
+                           google_breakpad::Module** module)
 {
   google_breakpad::DumpSymbols ds(symbol_data);
 

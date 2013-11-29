@@ -104,6 +104,9 @@ if CONFIG['MOZ_GAMEPAD']:
 if CONFIG['MOZ_NFC']:
     PARALLEL_DIRS += ['nfc']
 
+if CONFIG['MOZ_B2G']:
+    PARALLEL_DIRS += ['downloads']
+
 # bindings/test is here, because it needs to build after bindings/, and
 # we build subdirectories before ourselves.
 TEST_DIRS += [

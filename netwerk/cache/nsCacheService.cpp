@@ -1071,10 +1071,12 @@ private:
  *****************************************************************************/
 nsCacheService *   nsCacheService::gService = nullptr;
 
-NS_IMPL_ISUPPORTS2(nsCacheService, nsICacheService, nsICacheServiceInternal)
+NS_IMPL_ISUPPORTS_INHERITED2(nsCacheService, MemoryMultiReporter,
+                             nsICacheService, nsICacheServiceInternal)
 
 nsCacheService::nsCacheService()
-    : mObserver(nullptr),
+    : MemoryMultiReporter("cache-service"),
+      mObserver(nullptr),
       mLock("nsCacheService.mLock"),
       mCondVar(mLock, "nsCacheService.mCondVar"),
       mTimeStampLock("nsCacheService.mTimeStampLock"),
@@ -1156,7 +1158,7 @@ nsCacheService::Init()
     // initialize hashtable for active cache entries
     rv = mActiveEntries.Init();
     if (NS_FAILED(rv)) return rv;
-    
+
     // create profile/preference observer
     if (!mObserver) {
       mObserver = new nsCacheProfilePrefObserver();
@@ -1167,6 +1169,8 @@ nsCacheService::Init()
     mEnableDiskDevice    = mObserver->DiskCacheEnabled();
     mEnableOfflineDevice = mObserver->OfflineCacheEnabled();
     mEnableMemoryDevice  = mObserver->MemoryCacheEnabled();
+
+    RegisterWeakMemoryReporter(this);
 
     mInitialized = true;
     return NS_OK;
@@ -1209,6 +1213,8 @@ nsCacheService::Shutdown()
     }
 
     CloseAllStreams();
+
+    UnregisterWeakMemoryReporter(this);
 
     {
         nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SHUTDOWN));
@@ -1356,7 +1362,8 @@ nsresult
 nsCacheService::EvictEntriesForClient(const char *          clientID,
                                       nsCacheStoragePolicy  storagePolicy)
 {
-    nsRefPtr<EvictionNotifierRunnable> r = new EvictionNotifierRunnable(this);
+    nsRefPtr<EvictionNotifierRunnable> r =
+        new EvictionNotifierRunnable(NS_ISUPPORTS_CAST(nsICacheService*, this));
     NS_DispatchToMainThread(r);
 
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_EVICTENTRIESFORCLIENT));
@@ -3176,4 +3183,36 @@ nsCacheService::LeavePrivateBrowsing()
         // clear memory cache
         gService->mMemoryDevice->EvictPrivateEntries();
     }
+}
+
+NS_IMETHODIMP
+nsCacheService::CollectReports(nsIHandleReportCallback* aHandleReport,
+                               nsISupports* aData)
+{
+    size_t disk = 0;
+    if (mDiskDevice) {
+        nsCacheServiceAutoLock
+            lock(LOCK_TELEM(NSCACHESERVICE_DISKDEVICEHEAPSIZE));
+        disk = mDiskDevice->SizeOfIncludingThis(MallocSizeOf);
+    }
+
+    size_t memory = mMemoryDevice ? mMemoryDevice->TotalSize() : 0;
+
+#define REPORT(_path, _amount, _desc)                                         \
+    do {                                                                      \
+        nsresult rv;                                                          \
+        rv = aHandleReport->Callback(EmptyCString(),                          \
+                                     NS_LITERAL_CSTRING(_path),               \
+                                     KIND_HEAP, UNITS_BYTES, _amount,         \
+                                     NS_LITERAL_CSTRING(_desc), aData);       \
+        NS_ENSURE_SUCCESS(rv, rv);                                            \
+    } while (0)
+
+    REPORT("explicit/network/disk-cache", disk,
+           "Memory used by the network disk cache.");
+
+    REPORT("explicit/network/memory-cache", memory,
+           "Memory used by the network memory cache.");
+
+    return NS_OK;
 }

@@ -1056,7 +1056,7 @@ void MediaDecoderStateMachine::AudioLoop()
     // AudioStream initialization can block for extended periods in unusual
     // circumstances, so we take care to drop the decoder monitor while
     // initializing.
-    nsAutoPtr<AudioStream> audioStream(AudioStream::AllocateStream());
+    nsAutoPtr<AudioStream> audioStream(new AudioStream());
     audioStream->Init(channels, rate, audioChannelType, AudioStream::HighLatency);
     audioStream->SetVolume(volume);
     if (audioStream->SetPreservesPitch(preservesPitch) != NS_OK) {
