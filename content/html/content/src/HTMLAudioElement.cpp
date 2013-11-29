@@ -111,7 +111,7 @@ HTMLAudioElement::MozSetup(uint32_t aChannels, uint32_t aRate, ErrorResult& aRv)
   }
 #endif
 
-  mAudioStream = new AudioStream();
+  mAudioStream = AudioStream::AllocateStream();
   aRv = mAudioStream->Init(aChannels, aRate, mAudioChannelType, AudioStream::HighLatency);
   if (aRv.Failed()) {
     mAudioStream->Shutdown();
