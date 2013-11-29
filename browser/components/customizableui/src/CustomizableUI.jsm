@@ -140,8 +140,7 @@ let CustomizableUIInternal = {
       "history-panelmenu",
       "fullscreen-button",
       "find-button",
-      "preferences-button",
-      "add-ons-button"
+      "preferences-button"
     ];
 
 #ifdef XP_WIN
@@ -157,8 +156,7 @@ let CustomizableUIInternal = {
     } catch (ex) { }
 
     if (isMetroCapable) {
-      // TODO: Bug 942915 - Place 'Metro Mode' button as a default
-      // for Windows 8 in the customization panel.
+      panelPlacements.push("switch-to-metro-button");
     }
 #endif
 #endif
