@@ -270,7 +270,14 @@ nsAppStartup::Run(void)
       return rv;
   }
 
-  return (mRestart || mRestartTouchEnvironment) ? NS_SUCCESS_RESTART_APP : NS_OK;
+  nsresult retval = NS_OK;
+  if (mRestartTouchEnvironment) {
+    retval = NS_SUCCESS_RESTART_METRO_APP;
+  } else if (mRestart) {
+    retval = NS_SUCCESS_RESTART_APP;
+  }
+
+  return retval;
 }
 
 
