@@ -317,9 +317,16 @@ public:
   void
   RemoveObserverFromTable(const nsAString& key);
 
+  /**
+   * Below 2 function/variable are used for ensuring event 'AdapterAdded' will
+   * be fired after event 'Enabled'.
+   */
+  void TryFiringAdapterAdded();
+  void AdapterAddedReceived();
+
 protected:
-  BluetoothService()
-  : mEnabled(false)
+  BluetoothService() : mEnabled(false)
+                     , mAdapterAddedReceived(false)
   {
   }
 
@@ -408,6 +415,8 @@ private:
    * Bluetooth operations though.
    */
   nsCOMPtr<nsIThread> mBluetoothThread;
+
+  bool mAdapterAddedReceived;
 };
 
 END_BLUETOOTH_NAMESPACE

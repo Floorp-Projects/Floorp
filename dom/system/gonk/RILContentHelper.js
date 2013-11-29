@@ -1102,6 +1102,7 @@ RILContentHelper.prototype = {
 
     let request = Services.DOMRequest.createRequest(window);
     let requestId = this.getRequestId(request);
+    this._windowsMap[requestId] = window;
 
     // Parsing nsDOMContact to Icc Contact format
     let iccContact = {};
@@ -1728,7 +1729,7 @@ RILContentHelper.prototype = {
         this.handleReadIccContacts(data);
         break;
       case "RIL:UpdateIccContact":
-        this.handleSimpleRequest(data.requestId, data.errorMsg, null);
+        this.handleUpdateIccContact(data);
         break;
       case "RIL:DataError":
         this.updateConnectionInfo(data, this.rilContexts[clientId].dataConnectionInfo);
@@ -1892,6 +1893,32 @@ RILContentHelper.prototype = {
     });
 
     this.fireRequestSuccess(message.requestId, result);
+  },
+
+  handleUpdateIccContact: function handleUpdateIccContact(message) {
+    if (message.errorMsg) {
+      this.fireRequestError(message.requestId, message.errorMsg);
+      return;
+    }
+
+    let window = this._windowsMap[message.requestId];
+    delete this._windowsMap[message.requestId];
+    let iccContact = message.contact;
+    let prop = {name: [iccContact.alphaId], tel: [{value: iccContact.number}]};
+    if (iccContact.email) {
+      prop.email = [{value: iccContact.email}];
+    }
+
+    // ANR - Additional Number
+    let anrLen = iccContact.anr ? iccContact.anr.length : 0;
+    for (let i = 0; i < anrLen; i++) {
+      prop.tel.push({value: iccContact.anr[i]});
+    }
+
+    let contact = new window.mozContact(prop);
+    contact.id = iccContact.contactId;
+
+    this.fireRequestSuccess(message.requestId, contact);
   },
 
   handleVoicemailNotification: function handleVoicemailNotification(clientId,

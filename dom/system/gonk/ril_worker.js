@@ -79,7 +79,6 @@ let RILQUIRKS_CALLSTATE_EXTRA_UINT32 = libcutils.property_get("ro.moz.ril.callst
 // number via the UNSOLICITED_RIL_CONNECTED parcel.
 let RILQUIRKS_V5_LEGACY = libcutils.property_get("ro.moz.ril.v5_legacy", "true") === "true";
 let RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = libcutils.property_get("ro.moz.ril.dial_emergency_call", "false") === "true";
-let RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE = libcutils.property_get("ro.moz.ril.emergency_by_default", "false") === "true";
 let RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS = libcutils.property_get("ro.moz.ril.simstate_extra_field", "false") === "true";
 // Needed for call-waiting on Peak device
 let RILQUIRKS_EXTRA_UINT32_2ND_CALL = libcutils.property_get("ro.moz.ril.extra_int_2nd_call", "false") == "true";
@@ -903,6 +902,9 @@ let RIL = {
    */
   updateICCContact: function updateICCContact(options) {
     let onsuccess = function onsuccess() {
+      let recordIndex =
+        contact.pbrIndex * ICC_MAX_LINEAR_FIXED_RECORDS + contact.recordId;
+      contact.contactId = this.iccInfo.iccid + recordIndex;
       // Reuse 'options' to get 'requestId' and 'contactType'.
       RIL.sendChromeMessage(options);
     }.bind(this);
@@ -919,14 +921,14 @@ let RIL = {
 
     let contact = options.contact;
     let iccid = RIL.iccInfo.iccid;
+    let isValidRecordId = false;
     if (typeof contact.contactId === "string" &&
         contact.contactId.startsWith(iccid)) {
       let recordIndex = contact.contactId.substring(iccid.length);
       contact.pbrIndex = Math.floor(recordIndex / ICC_MAX_LINEAR_FIXED_RECORDS);
       contact.recordId = recordIndex % ICC_MAX_LINEAR_FIXED_RECORDS;
+      isValidRecordId = contact.recordId > 0 && contact.recordId < 0xff;
     }
-
-    let isValidRecordId = contact.recordId > 0 && contact.recordId < 0xff;
 
     if (DEBUG) {
       debug("Update ICC Contact " + JSON.stringify(contact));
@@ -3295,12 +3297,7 @@ let RIL = {
       curState.connected = regState == NETWORK_CREG_STATE_REGISTERED_HOME ||
                            regState == NETWORK_CREG_STATE_REGISTERED_ROAMING;
       curState.roaming = regState == NETWORK_CREG_STATE_REGISTERED_ROAMING;
-      curState.emergencyCallsOnly =
-        (regState >= NETWORK_CREG_STATE_NOT_SEARCHING_EMERGENCY_CALLS) &&
-        (regState <= NETWORK_CREG_STATE_UNKNOWN_EMERGENCY_CALLS);
-      if (RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE) {
-        curState.emergencyCallsOnly = !curState.connected;
-      }
+      curState.emergencyCallsOnly = !curState.connected;
     }
 
     if (!curState.cell) {
