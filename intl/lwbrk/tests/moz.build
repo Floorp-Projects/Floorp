@@ -8,3 +8,7 @@ CPP_UNIT_TESTS += [
     'TestLineBreak.cpp',
 ]
 
+LOCAL_INCLUDES += [
+    '../public',
+]
+

@@ -51,5 +51,17 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'necko'
 
+DEFINES['IMPL_NS_NET'] = True
+DEFINES['FORCE_PR_LOG'] = True
+
+LOCAL_INCLUDES += [
+    '../../base/src',
+    '/content/base/src',
+    '/content/events/src',
+    '/xpcom/ds',
+    'controller',
+    'rtsp',
+]
+
 for var in ('IMPL_NS_NET', 'FORCE_PR_LOG'):
     DEFINES[var] = True

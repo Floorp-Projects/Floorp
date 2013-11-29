@@ -11,3 +11,11 @@ SOURCES += [
 LIBRARY_NAME = 'i18n'
 
 FINAL_LIBRARY = 'xul'
+LOCAL_INCLUDES += [
+    '../locale/src',
+    '../lwbrk/src',
+    '../strres/src',
+    '../uconv/src',
+    '../unicharutil/src',
+]
+

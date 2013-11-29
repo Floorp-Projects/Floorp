@@ -106,3 +106,17 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'gklayout'
+
+LOCAL_INCLUDES += [
+    '../../content/base/src',
+    '../../content/html/content/src',
+    '../../content/xul/content/src',
+    '../../dom/base',
+    '../../dom/plugins/base',
+    '../base',
+    '../forms',
+    '../style',
+    '../svg',
+    '../tables',
+    '../xul/base/src',
+]

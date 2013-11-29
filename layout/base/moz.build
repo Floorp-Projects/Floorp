@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['tests']
-
 XPIDL_SOURCES += [
     'nsIStyleSheetService.idl',
 ]
@@ -114,6 +112,28 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
+    '../../content/base/src',
+    '../../content/events/src',
+    '../../content/html/content/src',
+    '../../content/svg/content/src',
+    '../../content/xbl/src',
+    '../../dom/base',
+    '../../view/src',
+    '../forms',
+    '../generic',
+    '../mathml',
+    '../printing',
+    '../style',
+    '../svg',
+    '../tables',
+    '../xul/base/src',
+    '../xul/tree/',
     '/docshell/base',
+    '/xpcom/ds',
 ]
+
 FINAL_LIBRARY = 'gklayout'
+
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']

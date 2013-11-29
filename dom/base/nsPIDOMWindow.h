@@ -70,39 +70,37 @@ public:
 
   virtual nsPIDOMWindow* GetPrivateRoot() = 0;
 
+  // Outer windows only.
   virtual void ActivateOrDeactivate(bool aActivate) = 0;
 
   // this is called GetTopWindowRoot to avoid conflicts with nsIDOMWindow::GetWindowRoot
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
 
-  virtual void SetActive(bool aActive)
-  {
-    NS_PRECONDITION(IsOuterWindow(),
-                    "active state is only maintained on outer windows");
-    mIsActive = aActive;
-  }
-
+  // Inner windows only.
   virtual nsresult RegisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;
   virtual nsresult UnregisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;
 
+  // Outer windows only.
+  virtual void SetActive(bool aActive)
+  {
+    MOZ_ASSERT(IsOuterWindow());
+    mIsActive = aActive;
+  }
   bool IsActive()
   {
-    NS_PRECONDITION(IsOuterWindow(),
-                    "active state is only maintained on outer windows");
+    MOZ_ASSERT(IsOuterWindow());
     return mIsActive;
   }
 
+  // Outer windows only.
   virtual void SetIsBackground(bool aIsBackground)
   {
-    NS_PRECONDITION(IsOuterWindow(),
-                    "background state is only maintained on outer windows");
+    MOZ_ASSERT(IsOuterWindow());
     mIsBackground = aIsBackground;
   }
-
   bool IsBackground()
   {
-    NS_PRECONDITION(IsOuterWindow(),
-                    "background state is only maintained on outer windows");
+    MOZ_ASSERT(IsOuterWindow());
     return mIsBackground;
   }
 
@@ -566,12 +564,18 @@ public:
   virtual nsresult DispatchSyncPopState() = 0;
 
   /**
-   * Tell this window that it should listen for sensor changes of the given type.
+   * Tell this window that it should listen for sensor changes of the given
+   * type.
+   *
+   * Inner windows only.
    */
   virtual void EnableDeviceSensor(uint32_t aType) = 0;
 
   /**
-   * Tell this window that it should remove itself from sensor change notifications.
+   * Tell this window that it should remove itself from sensor change
+   * notifications.
+   *
+   * Inner windows only.
    */
   virtual void DisableDeviceSensor(uint32_t aType) = 0;
 
@@ -582,12 +586,16 @@ public:
   /**
    * Tell the window that it should start to listen to the network event of the
    * given aType.
+   *
+   * Inner windows only.
    */
   virtual void EnableNetworkEvent(uint32_t aType) = 0;
 
   /**
    * Tell the window that it should stop to listen to the network event of the
    * given aType.
+   *
+   * Inner windows only.
    */
   virtual void DisableNetworkEvent(uint32_t aType) = 0;
 #endif // MOZ_B2G

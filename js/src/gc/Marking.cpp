@@ -151,7 +151,7 @@ CheckMarkedThing(JSTracer *trc, T *thing)
                  thing->zone()->isCollecting() || rt->isAtomsZone(thing->zone()));
 
     JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && AsGCMarker(trc)->getMarkColor() == GRAY,
-                 thing->zone()->isGCMarkingGray() || rt->isAtomsZone(thing->zone()));
+                 !thing->zone()->isGCMarkingBlack() || rt->isAtomsZone(thing->zone()));
 
     /*
      * Try to assert that the thing is allocated.  This is complicated by the

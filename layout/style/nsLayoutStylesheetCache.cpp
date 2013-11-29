@@ -10,30 +10,14 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/Loader.h"
 #include "nsIFile.h"
-#include "nsIMemoryReporter.h"
 #include "nsNetUtil.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIXULRuntime.h"
 #include "nsCSSStyleSheet.h"
 
-class LayoutStyleSheetCacheReporter MOZ_FINAL
-  : public mozilla::MemoryUniReporter
-{
-public:
-  LayoutStyleSheetCacheReporter()
-    : MemoryUniReporter("explicit/layout/style-sheet-cache",
-                         KIND_HEAP, UNITS_BYTES,
-                         "Memory used for some built-in style sheets.")
-  {}
-private:
-  int64_t Amount() MOZ_OVERRIDE
-  {
-    return nsLayoutStylesheetCache::SizeOfIncludingThis(MallocSizeOf);
-  }
-};
-
-NS_IMPL_ISUPPORTS1(nsLayoutStylesheetCache, nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED1(
+  nsLayoutStylesheetCache, MemoryUniReporter, nsIObserver)
 
 nsresult
 nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
@@ -158,17 +142,14 @@ nsLayoutStylesheetCache::Shutdown()
   NS_IF_RELEASE(gStyleCache);
 }
 
-size_t
-nsLayoutStylesheetCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+int64_t
+nsLayoutStylesheetCache::Amount()
 {
-  return nsLayoutStylesheetCache::gStyleCache
-       ? nsLayoutStylesheetCache::gStyleCache->
-           SizeOfIncludingThisHelper(aMallocSizeOf)
-       : 0;
+  return SizeOfIncludingThis(MallocSizeOf);
 }
 
 size_t
-nsLayoutStylesheetCache::SizeOfIncludingThisHelper(mozilla::MallocSizeOf aMallocSizeOf) const
+nsLayoutStylesheetCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
 
@@ -190,6 +171,9 @@ nsLayoutStylesheetCache::SizeOfIncludingThisHelper(mozilla::MallocSizeOf aMalloc
 }
 
 nsLayoutStylesheetCache::nsLayoutStylesheetCache()
+  : MemoryUniReporter("explicit/layout/style-sheet-cache",
+                      KIND_HEAP, UNITS_BYTES,
+                      "Memory used for some built-in style sheets.")
 {
   nsCOMPtr<nsIObserverService> obsSvc =
     mozilla::services::GetObserverService();
@@ -224,15 +208,18 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
     LoadSheet(uri, mFullScreenOverrideSheet, true);
   }
   NS_ASSERTION(mFullScreenOverrideSheet, "Could not load full-screen-override.css");
-
-  mReporter = new LayoutStyleSheetCacheReporter();
-  NS_RegisterMemoryReporter(mReporter);
 }
 
 nsLayoutStylesheetCache::~nsLayoutStylesheetCache()
 {
-  NS_UnregisterMemoryReporter(mReporter);
+  UnregisterWeakMemoryReporter(this);
   gStyleCache = nullptr;
+}
+
+void
+nsLayoutStylesheetCache::InitMemoryReporter()
+{
+  RegisterWeakMemoryReporter(this);
 }
 
 void
@@ -244,6 +231,8 @@ nsLayoutStylesheetCache::EnsureGlobal()
   if (!gStyleCache) return;
 
   NS_ADDREF(gStyleCache);
+
+  gStyleCache->InitMemoryReporter();
 }
 
 void

@@ -26,6 +26,14 @@ LIBRARY_NAME = 'libEGL'
 
 FORCE_SHARED_LIB = True
 
+LOCAL_INCLUDES += [
+    '..',
+    '../../include',
+    '../../include/KHR',
+    '../libGLESv2',
+]
+
+
 for var in ('LIBEGL_EXPORTS', 'ANGLE_BUILD', 'NOMINMAX',
             '_CRT_SECURE_NO_DEPRECATE', 'ANGLE_DISABLE_TRACE'):
     DEFINES[var] = True

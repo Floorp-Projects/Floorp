@@ -3,12 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# need to include etld_data.inc
-LOCAL_INCLUDES = \
-  -I$(srcdir)/../base/src \
-  -I. \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 # Generate the include file containing compact, static definitions

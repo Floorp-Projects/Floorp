@@ -363,23 +363,18 @@ class Descriptor(DescriptorProvider):
                     iface = iface.parent
         self.operations = operations
 
-        if self.workers and desc.get('nativeOwnership', None) == 'worker':
-            self.nativeOwnership = "worker"
-        else:
-            self.nativeOwnership = desc.get('nativeOwnership', 'refcounted')
-            if not self.nativeOwnership in ['owned', 'refcounted']:
-                raise TypeError("Descriptor for %s has unrecognized value (%s) "
-                                "for nativeOwnership" %
-                                (self.interface.identifier.name, self.nativeOwnership))
-        self.customTrace = (self.nativeOwnership == 'worker')
-        self.customFinalize = desc.get('customFinalize', self.nativeOwnership == 'worker')
+        self.nativeOwnership = desc.get('nativeOwnership', 'refcounted')
+        if not self.nativeOwnership in ('owned', 'refcounted'):
+            raise TypeError("Descriptor for %s has unrecognized value (%s) "
+                            "for nativeOwnership" %
+                            (self.interface.identifier.name, self.nativeOwnership))
+        self.customFinalize = desc.get('customFinalize', False)
         self.customWrapperManagement = desc.get('customWrapperManagement', False)
         if desc.get('wantsQI', None) != None:
             self._wantsQI = desc.get('wantsQI', None)
         self.wrapperCache = (not self.interface.isCallback() and
-                             (self.nativeOwnership == 'worker' or
-                              (self.nativeOwnership != 'owned' and
-                               desc.get('wrapperCache', True))))
+                             (self.nativeOwnership != 'owned' and
+                              desc.get('wrapperCache', True)))
         if self.customWrapperManagement and not self.wrapperCache:
             raise TypeError("Descriptor for %s has customWrapperManagement "
                             "but is not wrapperCached." %

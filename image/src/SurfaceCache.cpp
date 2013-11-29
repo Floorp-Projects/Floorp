@@ -224,22 +224,22 @@ private:
  * maintains high-level invariants and encapsulates the details of the surface
  * cache's implementation.
  */
-class SurfaceCacheImpl : public nsISupports
+class SurfaceCacheImpl : public MemoryUniReporter
 {
 public:
   NS_DECL_ISUPPORTS
 
   SurfaceCacheImpl(uint32_t aSurfaceCacheExpirationTimeMS,
                    uint32_t aSurfaceCacheSize)
-    : mExpirationTracker(MOZ_THIS_IN_INITIALIZER_LIST(),
+    : MemoryUniReporter("imagelib-surface-cache",
+                        KIND_OTHER, UNITS_BYTES,
+                        "Memory used by the imagelib temporary surface cache.")
+    , mExpirationTracker(MOZ_THIS_IN_INITIALIZER_LIST(),
                          aSurfaceCacheExpirationTimeMS)
-    , mReporter(new SurfaceCacheReporter)
     , mMemoryPressureObserver(new MemoryPressureObserver)
     , mMaxCost(aSurfaceCacheSize)
     , mAvailableCost(aSurfaceCacheSize)
   {
-    NS_RegisterMemoryReporter(mReporter);
-
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os)
       os->AddObserver(mMemoryPressureObserver, "memory-pressure", false);
@@ -251,7 +251,11 @@ public:
     if (os)
       os->RemoveObserver(mMemoryPressureObserver, "memory-pressure");
 
-    NS_UnregisterMemoryReporter(mReporter);
+    UnregisterWeakMemoryReporter(this);
+  }
+
+  void InitMemoryReporter() {
+    RegisterWeakMemoryReporter(this);
   }
 
   void Insert(DrawTarget*       aTarget,
@@ -385,9 +389,18 @@ public:
     return PL_DHASH_NEXT;
   }
 
-  int64_t SizeOfSurfacesEstimate() const
+  int64_t Amount() MOZ_OVERRIDE
   {
-    return int64_t(mMaxCost - mAvailableCost);
+    return SizeOfSurfacesEstimate();
+  }
+
+  // XXX(seth): This is currently only an estimate and, since we don't know
+  // which surfaces are in GPU memory and which aren't, it's reported as
+  // KIND_OTHER and will also show up in heap-unclassified. Bug 923302 will
+  // make this nicer.
+  Cost SizeOfSurfacesEstimate() const
+  {
+    return mMaxCost - mAvailableCost;
   }
 
 private:
@@ -417,25 +430,6 @@ private:
     SurfaceCacheImpl* const mCache;  // Weak pointer to owner.
   };
 
-  // XXX(seth): This is currently only an estimate and, since we don't know which
-  // surfaces are in GPU memory and which aren't, it's reported as KIND_OTHER and
-  // will also show up in heap-unclassified. Bug 923302 will make this nicer.
-  struct SurfaceCacheReporter : public MemoryUniReporter
-  {
-    SurfaceCacheReporter()
-      : MemoryUniReporter("imagelib-surface-cache",
-                          KIND_OTHER,
-                          UNITS_BYTES,
-                          "Memory used by the imagelib temporary surface cache.")
-    { }
-
-  protected:
-    int64_t Amount() MOZ_OVERRIDE
-    {
-      return sInstance ? sInstance->SizeOfSurfacesEstimate() : 0;
-    }
-  };
-
   struct MemoryPressureObserver : public nsIObserver
   {
     NS_DECL_ISUPPORTS
@@ -455,13 +449,12 @@ private:
   nsTArray<CostEntry>                                       mCosts;
   nsRefPtrHashtable<nsPtrHashKey<Image>, ImageSurfaceCache> mImageCaches;
   SurfaceTracker                                            mExpirationTracker;
-  nsRefPtr<SurfaceCacheReporter>                            mReporter;
   nsRefPtr<MemoryPressureObserver>                          mMemoryPressureObserver;
   const Cost                                                mMaxCost;
   Cost                                                      mAvailableCost;
 };
 
-NS_IMPL_ISUPPORTS1(SurfaceCacheImpl, nsISupports)
+NS_IMPL_ISUPPORTS_INHERITED0(SurfaceCacheImpl, MemoryUniReporter)
 NS_IMPL_ISUPPORTS1(SurfaceCacheImpl::MemoryPressureObserver, nsIObserver)
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -506,6 +499,7 @@ SurfaceCache::Initialize()
   // we do not actually allocate any storage for surfaces at this time.
   sInstance = new SurfaceCacheImpl(surfaceCacheExpirationTimeMS,
                                    surfaceCacheSizeBytes);
+  sInstance->InitMemoryReporter();
 }
 
 /* static */ void

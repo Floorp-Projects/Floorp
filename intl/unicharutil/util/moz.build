@@ -22,5 +22,10 @@ LIBRARY_NAME = 'unicharutil_external_s'
 
 FORCE_STATIC_LIB = True
 
+LOCAL_INCLUDES += [
+    '../src',
+]
+
+
 if CONFIG['_MSC_VER']:
     DEFINES['_USE_ANSI_CPP'] = True

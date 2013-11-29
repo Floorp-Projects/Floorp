@@ -24,9 +24,6 @@
 # Mozilla author(s): Jonathan Kew
 #
 
-LOCAL_INCLUDES  += -I$(srcdir) 
-
-
 include $(topsrcdir)/config/rules.mk
 
 # Cancel the effect of the -DDEBUG macro if present,

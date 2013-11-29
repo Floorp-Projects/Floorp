@@ -11,7 +11,6 @@
 #include "nsObserverList.h"
 #include "nsThreadUtils.h"
 #include "nsEnumeratorUtils.h"
-#include "nsIMemoryReporter.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/Services.h"
 
@@ -42,22 +41,6 @@ GetObserverServiceLog()
 
 namespace mozilla {
 
-class ObserverServiceReporter MOZ_FINAL : public MemoryMultiReporter
-{
-public:
-    ObserverServiceReporter()
-        : MemoryMultiReporter("observer-service")
-    {}
-
-    NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCb,
-                              nsISupports *aClosure);
-
-protected:
-    static const size_t kSuspectReferentCount = 100;
-    static PLDHashOperator CountReferents(nsObserverList* aObserverList,
-                                          void* aClosure);
-};
-
 struct SuspectObserver {
     SuspectObserver(const char* aTopic, size_t aReferentCount)
         : topic(aTopic), referentCount(aReferentCount) {}
@@ -74,9 +57,13 @@ struct ObserverServiceReferentCount {
     nsTArray<SuspectObserver> suspectObservers;
 };
 
+} // namespace mozilla
+
+using namespace mozilla;
+
 PLDHashOperator
-ObserverServiceReporter::CountReferents(nsObserverList* aObserverList,
-                                        void* aClosure)
+nsObserverService::CountReferents(nsObserverList* aObserverList,
+                                  void* aClosure)
 {
     if (!aObserverList) {
         return PL_DHASH_NEXT;
@@ -120,18 +107,11 @@ ObserverServiceReporter::CountReferents(nsObserverList* aObserverList,
 }
 
 NS_IMETHODIMP
-ObserverServiceReporter::CollectReports(nsIMemoryReporterCallback* cb,
-                                        nsISupports* aClosure)
+nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                  nsISupports* aData)
 {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    nsObserverService* service = static_cast<nsObserverService*>(os.get());
-    if (!service) {
-        return NS_OK;
-    }
-
     ObserverServiceReferentCount referentCount;
-    service->mObserverTopicTable.EnumerateEntries(CountReferents,
-                                                  &referentCount);
+    mObserverTopicTable.EnumerateEntries(CountReferents, &referentCount);
 
     nsresult rv;
     for (uint32_t i = 0; i < referentCount.suspectObservers.Length(); i++) {
@@ -139,53 +119,44 @@ ObserverServiceReporter::CollectReports(nsIMemoryReporterCallback* cb,
         nsPrintfCString suspectPath("observer-service-suspect/"
                                     "referent(topic=%s)",
                                     suspect.topic);
-        rv = cb->Callback(/* process */ EmptyCString(),
-            suspectPath,
-            nsIMemoryReporter::KIND_OTHER,
-            nsIMemoryReporter::UNITS_COUNT,
-            suspect.referentCount,
+        rv = aHandleReport->Callback(/* process */ EmptyCString(),
+            suspectPath, KIND_OTHER, UNITS_COUNT, suspect.referentCount,
             NS_LITERAL_CSTRING("A topic with a suspiciously large number of "
                                "referents.  This may be symptomatic of a leak "
                                "if the number of referents is high with "
                                "respect to the number of windows."),
-            aClosure);
+            aData);
 
       if (NS_WARN_IF(NS_FAILED(rv)))
           return rv;
     }
 
-    rv = cb->Callback(/* process */ EmptyCString(),
+    rv = aHandleReport->Callback(/* process */ EmptyCString(),
         NS_LITERAL_CSTRING("observer-service/referent/strong"),
-        nsIMemoryReporter::KIND_OTHER,
-        nsIMemoryReporter::UNITS_COUNT,
-        referentCount.numStrong,
+        KIND_OTHER, UNITS_COUNT, referentCount.numStrong,
         NS_LITERAL_CSTRING("The number of strong references held by the "
                            "observer service."),
-        aClosure);
+        aData);
 
     if (NS_WARN_IF(NS_FAILED(rv)))
         return rv;
 
-    rv = cb->Callback(/* process */ EmptyCString(),
+    rv = aHandleReport->Callback(/* process */ EmptyCString(),
         NS_LITERAL_CSTRING("observer-service/referent/weak/alive"),
-        nsIMemoryReporter::KIND_OTHER,
-        nsIMemoryReporter::UNITS_COUNT,
-        referentCount.numWeakAlive,
+        KIND_OTHER, UNITS_COUNT, referentCount.numWeakAlive,
         NS_LITERAL_CSTRING("The number of weak references held by the "
                            "observer service that are still alive."),
-        aClosure);
+        aData);
 
     if (NS_WARN_IF(NS_FAILED(rv)))
         return rv;
 
-    rv = cb->Callback(/* process */ EmptyCString(),
+    rv = aHandleReport->Callback(/* process */ EmptyCString(),
         NS_LITERAL_CSTRING("observer-service/referent/weak/dead"),
-        nsIMemoryReporter::KIND_OTHER,
-        nsIMemoryReporter::UNITS_COUNT,
-        referentCount.numWeakDead,
+        KIND_OTHER, UNITS_COUNT, referentCount.numWeakDead,
         NS_LITERAL_CSTRING("The number of weak references held by the "
                            "observer service that are dead."),
-        aClosure);
+        aData);
 
     if (NS_WARN_IF(NS_FAILED(rv)))
         return rv;
@@ -193,18 +164,19 @@ ObserverServiceReporter::CollectReports(nsIMemoryReporterCallback* cb,
     return NS_OK;
 }
 
-} // namespace mozilla
-
-using namespace mozilla;
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsObserverService Implementation
 
 
-NS_IMPL_ISUPPORTS2(nsObserverService, nsIObserverService, nsObserverService)
+NS_IMPL_ISUPPORTS_INHERITED2(
+    nsObserverService,
+    MemoryMultiReporter,
+    nsIObserverService,
+    nsObserverService)
 
 nsObserverService::nsObserverService() :
-    mShuttingDown(false), mReporter(nullptr)
+    MemoryMultiReporter("observer-service"),
+    mShuttingDown(false)
 {
 }
 
@@ -216,16 +188,13 @@ nsObserverService::~nsObserverService(void)
 void
 nsObserverService::RegisterReporter()
 {
-    mReporter = new ObserverServiceReporter();
-    NS_RegisterMemoryReporter(mReporter);
+    RegisterWeakMemoryReporter(this);
 }
 
 void
 nsObserverService::Shutdown()
 {
-    if (mReporter) {
-        NS_UnregisterMemoryReporter(mReporter);
-    }
+    UnregisterWeakMemoryReporter(this);
 
     mShuttingDown = true;
 

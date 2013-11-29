@@ -4023,7 +4023,7 @@ WorkerPrivate::EnableMemoryReporter()
   // successfully registered the reporter.
   mMemoryReporter = new MemoryReporter(this);
 
-  if (NS_FAILED(NS_RegisterMemoryReporter(mMemoryReporter))) {
+  if (NS_FAILED(RegisterWeakMemoryReporter(mMemoryReporter))) {
     NS_WARNING("Failed to register memory reporter!");
     // No need to lock here since a failed registration means our memory
     // reporter can't start running. Just clean up.
@@ -4078,7 +4078,7 @@ WorkerPrivate::DisableMemoryReporter()
   }
 
   // Finally unregister the memory reporter.
-  if (NS_FAILED(NS_UnregisterMemoryReporter(memoryReporter))) {
+  if (NS_FAILED(UnregisterWeakMemoryReporter(memoryReporter))) {
     NS_WARNING("Failed to unregister memory reporter!");
   }
 }

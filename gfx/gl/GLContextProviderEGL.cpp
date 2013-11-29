@@ -808,7 +808,7 @@ GLContextEGL::UpdateSharedHandle(SharedTextureShareType shareType,
     // draw quads, but if we want that, we need to assure that our default
     // framebuffer is texture-backed.
     gfxIntSize size = OffscreenSize();
-    BlitFramebufferToTexture(0, mTemporaryEGLImageTexture, size, size);
+    BlitHelper()->BlitFramebufferToTexture(0, mTemporaryEGLImageTexture, size, size);
 
     // Make sure our copy is finished, so that we can be ready to draw
     // in different thread GLContext.  If we have KHR_fence_sync, then

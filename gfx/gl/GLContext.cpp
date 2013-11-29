@@ -10,6 +10,8 @@
 #include <ctype.h>
 
 #include "GLContext.h"
+#include "GLBlitHelper.h"
+#include "GLBlitTextureImageHelper.h"
 
 #include "gfxCrashReporterUtils.h"
 #include "gfxPlatform.h"
@@ -20,6 +22,7 @@
 #include "nsThreadUtils.h"
 #include "prenv.h"
 #include "prlink.h"
+#include "ScopedGLHelpers.h"
 #include "SurfaceStream.h"
 #include "GfxTexturesReporter.h"
 #include "TextureGarbageBin.h"
@@ -257,17 +260,8 @@ GLContext::GLContext(const SurfaceCaps& caps,
 #ifdef DEBUG
     mGLError(LOCAL_GL_NO_ERROR),
 #endif
-    mTexBlit_Buffer(0),
-    mTexBlit_VertShader(0),
-    mTex2DBlit_FragShader(0),
-    mTex2DRectBlit_FragShader(0),
-    mTex2DBlit_Program(0),
-    mTex2DRectBlit_Program(0),
-    mTexBlit_UseDrawNotCopy(false),
     mSharedContext(sharedContext),
     mFlipped(false),
-    mBlitProgram(0),
-    mBlitFramebuffer(0),
     mCaps(caps),
     mScreen(nullptr),
     mLockedSurface(nullptr),
@@ -279,8 +273,6 @@ GLContext::GLContext(const SurfaceCaps& caps,
     mWorkAroundDriverBugs(true)
 {
     mOwningThread = NS_GetCurrentThread();
-
-    mTexBlit_UseDrawNotCopy = Preferences::GetBool("gl.blit-draw-not-copy", false);
 }
 
 GLContext::~GLContext() {
@@ -1237,7 +1229,7 @@ void
 GLContext::PlatformStartup()
 {
   CacheCanUploadNPOT();
-  NS_RegisterMemoryReporter(new GfxTexturesReporter());
+  RegisterStrongMemoryReporter(new GfxTexturesReporter());
 }
 
 void
@@ -1860,14 +1852,8 @@ GLContext::MarkDestroyed()
     if (MakeCurrent()) {
         DestroyScreenBuffer();
 
-        // This is for Blit{Tex,FB}To{TexFB}.
-        DeleteTexBlitProgram();
-
-        // Likely used by OGL Layers.
-        fDeleteProgram(mBlitProgram);
-        mBlitProgram = 0;
-        fDeleteFramebuffers(1, &mBlitFramebuffer);
-        mBlitFramebuffer = 0;
+        mBlitHelper = nullptr;
+        mBlitTextureImageHelper = nullptr;
 
         mTexGarbageBin->GLContextTeardown();
     } else {
@@ -2331,150 +2317,6 @@ GLContext::ReadPixelsIntoImageSurface(gfxImageSurface* dest)
         }
     }
 #endif
-}
-
-void
-GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
-                            TextureImage *aDst, const nsIntRect& aDstRect)
-{
-    NS_ASSERTION(!aSrc->InUpdate(), "Source texture is in update!");
-    NS_ASSERTION(!aDst->InUpdate(), "Destination texture is in update!");
-
-    if (aSrcRect.IsEmpty() || aDstRect.IsEmpty())
-        return;
-
-    int savedFb = 0;
-    fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &savedFb);
-
-    fDisable(LOCAL_GL_SCISSOR_TEST);
-    fDisable(LOCAL_GL_BLEND);
-
-    // 2.0 means scale up by two
-    float blitScaleX = float(aDstRect.width) / float(aSrcRect.width);
-    float blitScaleY = float(aDstRect.height) / float(aSrcRect.height);
-
-    // We start iterating over all destination tiles
-    aDst->BeginTileIteration();
-    do {
-        // calculate portion of the tile that is going to be painted to
-        nsIntRect dstSubRect;
-        nsIntRect dstTextureRect = ThebesIntRect(aDst->GetTileRect());
-        dstSubRect.IntersectRect(aDstRect, dstTextureRect);
-
-        // this tile is not part of the destination rectangle aDstRect
-        if (dstSubRect.IsEmpty())
-            continue;
-
-        // (*) transform the rect of this tile into the rectangle defined by aSrcRect...
-        nsIntRect dstInSrcRect(dstSubRect);
-        dstInSrcRect.MoveBy(-aDstRect.TopLeft());
-        // ...which might be of different size, hence scale accordingly
-        dstInSrcRect.ScaleRoundOut(1.0f / blitScaleX, 1.0f / blitScaleY);
-        dstInSrcRect.MoveBy(aSrcRect.TopLeft());
-
-        SetBlitFramebufferForDestTexture(aDst->GetTextureID());
-        UseBlitProgram();
-
-        aSrc->BeginTileIteration();
-        // now iterate over all tiles in the source Image...
-        do {
-            // calculate portion of the source tile that is in the source rect
-            nsIntRect srcSubRect;
-            nsIntRect srcTextureRect = ThebesIntRect(aSrc->GetTileRect());
-            srcSubRect.IntersectRect(aSrcRect, srcTextureRect);
-
-            // this tile is not part of the source rect
-            if (srcSubRect.IsEmpty()) {
-                continue;
-            }
-            // calculate intersection of source rect with destination rect
-            srcSubRect.IntersectRect(srcSubRect, dstInSrcRect);
-            // this tile does not overlap the current destination tile
-            if (srcSubRect.IsEmpty()) {
-                continue;
-            }
-            // We now have the intersection of
-            //     the current source tile
-            // and the desired source rectangle
-            // and the destination tile
-            // and the desired destination rectange
-            // in destination space.
-            // We need to transform this back into destination space, inverting the transform from (*)
-            nsIntRect srcSubInDstRect(srcSubRect);
-            srcSubInDstRect.MoveBy(-aSrcRect.TopLeft());
-            srcSubInDstRect.ScaleRoundOut(blitScaleX, blitScaleY);
-            srcSubInDstRect.MoveBy(aDstRect.TopLeft());
-
-            // we transform these rectangles to be relative to the current src and dst tiles, respectively
-            nsIntSize srcSize = srcTextureRect.Size();
-            nsIntSize dstSize = dstTextureRect.Size();
-            srcSubRect.MoveBy(-srcTextureRect.x, -srcTextureRect.y);
-            srcSubInDstRect.MoveBy(-dstTextureRect.x, -dstTextureRect.y);
-
-            float dx0 = 2.0f * float(srcSubInDstRect.x) / float(dstSize.width) - 1.0f;
-            float dy0 = 2.0f * float(srcSubInDstRect.y) / float(dstSize.height) - 1.0f;
-            float dx1 = 2.0f * float(srcSubInDstRect.x + srcSubInDstRect.width) / float(dstSize.width) - 1.0f;
-            float dy1 = 2.0f * float(srcSubInDstRect.y + srcSubInDstRect.height) / float(dstSize.height) - 1.0f;
-            PushViewportRect(nsIntRect(0, 0, dstSize.width, dstSize.height));
-
-            RectTriangles rects;
-
-            nsIntSize realTexSize = srcSize;
-            if (!CanUploadNonPowerOfTwo()) {
-                realTexSize = nsIntSize(NextPowerOfTwo(srcSize.width),
-                                        NextPowerOfTwo(srcSize.height));
-            }
-
-            if (aSrc->GetWrapMode() == LOCAL_GL_REPEAT) {
-                rects.addRect(/* dest rectangle */
-                        dx0, dy0, dx1, dy1,
-                        /* tex coords */
-                        srcSubRect.x / float(realTexSize.width),
-                        srcSubRect.y / float(realTexSize.height),
-                        srcSubRect.XMost() / float(realTexSize.width),
-                        srcSubRect.YMost() / float(realTexSize.height));
-            } else {
-                DecomposeIntoNoRepeatTriangles(srcSubRect, realTexSize, rects);
-
-                // now put the coords into the d[xy]0 .. d[xy]1 coordinate space
-                // from the 0..1 that it comes out of decompose
-                RectTriangles::vert_coord* v = (RectTriangles::vert_coord*)rects.vertexPointer();
-
-                for (unsigned int i = 0; i < rects.elements(); ++i) {
-                    v[i].x = (v[i].x * (dx1 - dx0)) + dx0;
-                    v[i].y = (v[i].y * (dy1 - dy0)) + dy0;
-                }
-            }
-
-            TextureImage::ScopedBindTexture texBind(aSrc, LOCAL_GL_TEXTURE0);
-
-            fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
-
-            fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.vertexPointer());
-            fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.texCoordPointer());
-
-            fEnableVertexAttribArray(0);
-            fEnableVertexAttribArray(1);
-
-            fDrawArrays(LOCAL_GL_TRIANGLES, 0, rects.elements());
-
-            fDisableVertexAttribArray(0);
-            fDisableVertexAttribArray(1);
-
-            PopViewportRect();
-        } while (aSrc->NextTile());
-    } while (aDst->NextTile());
-
-    fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, nullptr);
-    fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, nullptr);
-
-    // unbind the previous texture from the framebuffer
-    SetBlitFramebufferForDestTexture(0);
-
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, savedFb);
-
-    fEnable(LOCAL_GL_SCISSOR_TEST);
-    fEnable(LOCAL_GL_BLEND);
 }
 
 static unsigned int
@@ -2968,303 +2810,6 @@ GLContext::TexSubImage2DWithoutUnpackSubimage(GLenum target, GLint level,
     fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
 }
 
-void
-GLContext::RectTriangles::addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
-                                  GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1,
-                                  bool flip_y /* = false */)
-{
-    vert_coord v;
-    v.x = x0; v.y = y0;
-    vertexCoords.AppendElement(v);
-    v.x = x1; v.y = y0;
-    vertexCoords.AppendElement(v);
-    v.x = x0; v.y = y1;
-    vertexCoords.AppendElement(v);
-
-    v.x = x0; v.y = y1;
-    vertexCoords.AppendElement(v);
-    v.x = x1; v.y = y0;
-    vertexCoords.AppendElement(v);
-    v.x = x1; v.y = y1;
-    vertexCoords.AppendElement(v);
-
-    if (flip_y) {
-        tex_coord t;
-        t.u = tx0; t.v = ty1;
-        texCoords.AppendElement(t);
-        t.u = tx1; t.v = ty1;
-        texCoords.AppendElement(t);
-        t.u = tx0; t.v = ty0;
-        texCoords.AppendElement(t);
-
-        t.u = tx0; t.v = ty0;
-        texCoords.AppendElement(t);
-        t.u = tx1; t.v = ty1;
-        texCoords.AppendElement(t);
-        t.u = tx1; t.v = ty0;
-        texCoords.AppendElement(t);
-    } else {
-        tex_coord t;
-        t.u = tx0; t.v = ty0;
-        texCoords.AppendElement(t);
-        t.u = tx1; t.v = ty0;
-        texCoords.AppendElement(t);
-        t.u = tx0; t.v = ty1;
-        texCoords.AppendElement(t);
-
-        t.u = tx0; t.v = ty1;
-        texCoords.AppendElement(t);
-        t.u = tx1; t.v = ty0;
-        texCoords.AppendElement(t);
-        t.u = tx1; t.v = ty1;
-        texCoords.AppendElement(t);
-    }
-}
-
-static GLfloat
-WrapTexCoord(GLfloat v)
-{
-    // fmodf gives negative results for negative numbers;
-    // that is, fmodf(0.75, 1.0) == 0.75, but
-    // fmodf(-0.75, 1.0) == -0.75.  For the negative case,
-    // the result we need is 0.25, so we add 1.0f.
-    if (v < 0.0f) {
-        return 1.0f + fmodf(v, 1.0f);
-    }
-
-    return fmodf(v, 1.0f);
-}
-
-void
-GLContext::DecomposeIntoNoRepeatTriangles(const nsIntRect& aTexCoordRect,
-                                          const nsIntSize& aTexSize,
-                                          RectTriangles& aRects,
-                                          bool aFlipY /* = false */)
-{
-    // normalize this
-    nsIntRect tcr(aTexCoordRect);
-    while (tcr.x >= aTexSize.width)
-        tcr.x -= aTexSize.width;
-    while (tcr.y >= aTexSize.height)
-        tcr.y -= aTexSize.height;
-
-    // Compute top left and bottom right tex coordinates
-    GLfloat tl[2] =
-        { GLfloat(tcr.x) / GLfloat(aTexSize.width),
-          GLfloat(tcr.y) / GLfloat(aTexSize.height) };
-    GLfloat br[2] =
-        { GLfloat(tcr.XMost()) / GLfloat(aTexSize.width),
-          GLfloat(tcr.YMost()) / GLfloat(aTexSize.height) };
-
-    // then check if we wrap in either the x or y axis; if we do,
-    // then also use fmod to figure out the "true" non-wrapping
-    // texture coordinates.
-
-    bool xwrap = false, ywrap = false;
-    if (tcr.x < 0 || tcr.x > aTexSize.width ||
-        tcr.XMost() < 0 || tcr.XMost() > aTexSize.width)
-    {
-        xwrap = true;
-        tl[0] = WrapTexCoord(tl[0]);
-        br[0] = WrapTexCoord(br[0]);
-    }
-
-    if (tcr.y < 0 || tcr.y > aTexSize.height ||
-        tcr.YMost() < 0 || tcr.YMost() > aTexSize.height)
-    {
-        ywrap = true;
-        tl[1] = WrapTexCoord(tl[1]);
-        br[1] = WrapTexCoord(br[1]);
-    }
-
-    NS_ASSERTION(tl[0] >= 0.0f && tl[0] <= 1.0f &&
-                 tl[1] >= 0.0f && tl[1] <= 1.0f &&
-                 br[0] >= 0.0f && br[0] <= 1.0f &&
-                 br[1] >= 0.0f && br[1] <= 1.0f,
-                 "Somehow generated invalid texture coordinates");
-
-    // If xwrap is false, the texture will be sampled from tl[0]
-    // .. br[0].  If xwrap is true, then it will be split into tl[0]
-    // .. 1.0, and 0.0 .. br[0].  Same for the Y axis.  The
-    // destination rectangle is also split appropriately, according
-    // to the calculated xmid/ymid values.
-
-    // There isn't a 1:1 mapping between tex coords and destination coords;
-    // when computing midpoints, we have to take that into account.  We
-    // need to map the texture coords, which are (in the wrap case):
-    // |tl->1| and |0->br| to the |0->1| range of the vertex coords.  So
-    // we have the length (1-tl)+(br) that needs to map into 0->1.
-    // These are only valid if there is wrap involved, they won't be used
-    // otherwise.
-    GLfloat xlen = (1.0f - tl[0]) + br[0];
-    GLfloat ylen = (1.0f - tl[1]) + br[1];
-
-    NS_ASSERTION(!xwrap || xlen > 0.0f, "xlen isn't > 0, what's going on?");
-    NS_ASSERTION(!ywrap || ylen > 0.0f, "ylen isn't > 0, what's going on?");
-    NS_ASSERTION(aTexCoordRect.width <= aTexSize.width &&
-                 aTexCoordRect.height <= aTexSize.height, "tex coord rect would cause tiling!");
-
-    if (!xwrap && !ywrap) {
-        aRects.addRect(0.0f, 0.0f,
-                       1.0f, 1.0f,
-                       tl[0], tl[1],
-                       br[0], br[1],
-                       aFlipY);
-    } else if (!xwrap && ywrap) {
-        GLfloat ymid = (1.0f - tl[1]) / ylen;
-        aRects.addRect(0.0f, 0.0f,
-                       1.0f, ymid,
-                       tl[0], tl[1],
-                       br[0], 1.0f,
-                       aFlipY);
-        aRects.addRect(0.0f, ymid,
-                       1.0f, 1.0f,
-                       tl[0], 0.0f,
-                       br[0], br[1],
-                       aFlipY);
-    } else if (xwrap && !ywrap) {
-        GLfloat xmid = (1.0f - tl[0]) / xlen;
-        aRects.addRect(0.0f, 0.0f,
-                       xmid, 1.0f,
-                       tl[0], tl[1],
-                       1.0f, br[1],
-                       aFlipY);
-        aRects.addRect(xmid, 0.0f,
-                       1.0f, 1.0f,
-                       0.0f, tl[1],
-                       br[0], br[1],
-                       aFlipY);
-    } else {
-        GLfloat xmid = (1.0f - tl[0]) / xlen;
-        GLfloat ymid = (1.0f - tl[1]) / ylen;
-        aRects.addRect(0.0f, 0.0f,
-                       xmid, ymid,
-                       tl[0], tl[1],
-                       1.0f, 1.0f,
-                       aFlipY);
-        aRects.addRect(xmid, 0.0f,
-                       1.0f, ymid,
-                       0.0f, tl[1],
-                       br[0], 1.0f,
-                       aFlipY);
-        aRects.addRect(0.0f, ymid,
-                       xmid, 1.0f,
-                       tl[0], 0.0f,
-                       1.0f, br[1],
-                       aFlipY);
-        aRects.addRect(xmid, ymid,
-                       1.0f, 1.0f,
-                       0.0f, 0.0f,
-                       br[0], br[1],
-                       aFlipY);
-    }
-}
-
-void
-GLContext::UseBlitProgram()
-{
-    if (mBlitProgram) {
-        fUseProgram(mBlitProgram);
-        return;
-    }
-
-    mBlitProgram = fCreateProgram();
-
-    GLuint shaders[2];
-    shaders[0] = fCreateShader(LOCAL_GL_VERTEX_SHADER);
-    shaders[1] = fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
-
-    const char *blitVSSrc =
-        "attribute vec2 aVertex;"
-        "attribute vec2 aTexCoord;"
-        "varying vec2 vTexCoord;"
-        "void main() {"
-        "  vTexCoord = aTexCoord;"
-        "  gl_Position = vec4(aVertex, 0.0, 1.0);"
-        "}";
-    const char *blitFSSrc = "#ifdef GL_ES\nprecision mediump float;\n#endif\n"
-        "uniform sampler2D uSrcTexture;"
-        "varying vec2 vTexCoord;"
-        "void main() {"
-        "  gl_FragColor = texture2D(uSrcTexture, vTexCoord);"
-        "}";
-
-    fShaderSource(shaders[0], 1, (const GLchar**) &blitVSSrc, nullptr);
-    fShaderSource(shaders[1], 1, (const GLchar**) &blitFSSrc, nullptr);
-
-    for (int i = 0; i < 2; ++i) {
-        GLint success, len = 0;
-
-        fCompileShader(shaders[i]);
-        fGetShaderiv(shaders[i], LOCAL_GL_COMPILE_STATUS, &success);
-        NS_ASSERTION(success, "Shader compilation failed!");
-
-        if (!success) {
-            nsAutoCString log;
-            fGetShaderiv(shaders[i], LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
-            log.SetCapacity(len);
-            fGetShaderInfoLog(shaders[i], len, (GLint*) &len, (char*) log.BeginWriting());
-            log.SetLength(len);
-
-            printf_stderr("Shader %d compilation failed:\n%s\n", log.get());
-            return;
-        }
-
-        fAttachShader(mBlitProgram, shaders[i]);
-        fDeleteShader(shaders[i]);
-    }
-
-    fBindAttribLocation(mBlitProgram, 0, "aVertex");
-    fBindAttribLocation(mBlitProgram, 1, "aTexCoord");
-
-    fLinkProgram(mBlitProgram);
-
-    GLint success, len = 0;
-    fGetProgramiv(mBlitProgram, LOCAL_GL_LINK_STATUS, &success);
-    NS_ASSERTION(success, "Shader linking failed!");
-
-    if (!success) {
-        nsAutoCString log;
-        fGetProgramiv(mBlitProgram, LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
-        log.SetCapacity(len);
-        fGetProgramInfoLog(mBlitProgram, len, (GLint*) &len, (char*) log.BeginWriting());
-        log.SetLength(len);
-
-        printf_stderr("Program linking failed:\n%s\n", log.get());
-        return;
-    }
-
-    fUseProgram(mBlitProgram);
-    fUniform1i(fGetUniformLocation(mBlitProgram, "uSrcTexture"), 0);
-}
-
-void
-GLContext::SetBlitFramebufferForDestTexture(GLuint aTexture)
-{
-    if (!mBlitFramebuffer) {
-        fGenFramebuffers(1, &mBlitFramebuffer);
-    }
-
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mBlitFramebuffer);
-    fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
-                          LOCAL_GL_COLOR_ATTACHMENT0,
-                          LOCAL_GL_TEXTURE_2D,
-                          aTexture,
-                          0);
-
-    GLenum result = fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
-    if (aTexture && (result != LOCAL_GL_FRAMEBUFFER_COMPLETE)) {
-        nsAutoCString msg;
-        msg.Append("Framebuffer not complete -- error 0x");
-        msg.AppendInt(result, 16);
-        // Note: if you are hitting this, it is likely that
-        // your texture is not texture complete -- that is, you
-        // allocated a texture name, but didn't actually define its
-        // size via a call to TexImage2D.
-        NS_RUNTIMEABORT(msg.get());
-    }
-}
-
 #ifdef DEBUG
 
 void
@@ -3550,6 +3095,26 @@ GLContext::DispatchToOwningThread(nsIRunnable *event)
     if (NS_SUCCEEDED(NS_GetMainThread(getter_AddRefs(mainThread)))) {
         mOwningThread->Dispatch(event, NS_DISPATCH_NORMAL);
     }
+}
+
+GLBlitHelper*
+GLContext::BlitHelper()
+{
+    if (!mBlitHelper) {
+        mBlitHelper = new GLBlitHelper(this);
+    }
+
+    return mBlitHelper;
+}
+
+GLBlitTextureImageHelper*
+GLContext::BlitTextureImageHelper()
+{
+    if (!mBlitTextureImageHelper) {
+        mBlitTextureImageHelper = new GLBlitTextureImageHelper(this);
+    }
+
+    return mBlitTextureImageHelper;
 }
 
 bool

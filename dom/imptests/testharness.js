@@ -133,6 +133,18 @@ policies and contribution forms [3].
  *       asserts outside these places won't be detected correctly by the harness
  *       and may cause a file to stop testing.
  *
+ * == Harness Timeout ==
+ * 
+ * The overall harness admits two timeout values "normal" (the
+ * default) and "long", used for tests which have an unusually long
+ * runtime. After the timeout is reached, the harness will stop
+ * waiting for further async tests to complete. By default the
+ * timeouts are set to 10s and 60s, respectively, but may be changed
+ * when the test is run on hardware with different performance
+ * characteristics to a common desktop computer.  In order to opt-in
+ * to the longer test timeout, the test must specify a meta element:
+ * <meta name="timeout" content="long">
+ *
  * == Setup ==
  *
  * Sometimes tests require non-trivial setup that may fail. For this purpose
@@ -146,9 +158,6 @@ policies and contribution forms [3].
  * any tests have returned results. Properties are global properties of the test
  * harness. Currently recognised properties are:
  *
- * timeout - The time in ms after which the harness should stop waiting for
- *           tests to complete (this is different to the per-test timeout
- *           because async tests do not start their timer until .step is called)
  *
  * explicit_done - Wait for an explicit call to done() before declaring all
  *                 tests complete (see below)
@@ -166,6 +175,8 @@ policies and contribution forms [3].
  * allow_uncaught_exception - don't treat an uncaught exception as an error;
  *                            needed when e.g. testing the window.onerror
  *                            handler.
+ *
+ * timeout_multiplier - Multiplier to apply to per-test timeouts.
  *
  * == Determining when all tests are complete ==
  *
@@ -359,11 +370,12 @@ policies and contribution forms [3].
 (function ()
 {
     var debug = false;
-    // default timeout is 5 seconds, test can override if needed
+    // default timeout is 10 seconds, test can override if needed
     var settings = {
       output:true,
-      timeout:5000,
-      test_timeout:2000
+      harness_timeout:{"normal":10000,
+                       "long":60000},
+      test_timeout:null
     };
 
     var xhtml_ns = "http://www.w3.org/1999/xhtml";
@@ -415,7 +427,7 @@ policies and contribution forms [3].
         properties = properties ? properties : {};
         var test_obj = new Test(test_name, properties);
         test_obj.step(func);
-        if (test_obj.status === test_obj.NOTRUN) {
+        if (test_obj.phase === test_obj.phases.STARTED) {
             test_obj.done();
         }
     }
@@ -494,12 +506,41 @@ policies and contribution forms [3].
     }
 
     /*
+     * Return true if object is probably a Node object.
+     */
+    function is_node(object)
+    {
+        // I use duck-typing instead of instanceof, because
+        // instanceof doesn't work if the node is from another window (like an
+        // iframe's contentWindow):
+        // http://www.w3.org/Bugs/Public/show_bug.cgi?id=12295
+        if ("nodeType" in object
+        && "nodeName" in object
+        && "nodeValue" in object
+        && "childNodes" in object)
+        {
+            try
+            {
+                object.nodeType;
+            }
+            catch (e)
+            {
+                // The object is probably Node.prototype or another prototype
+                // object that inherits from it, and not a Node instance.
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /*
      * Convert a value to a nice, human-readable string
      */
     function format_value(val, seen)
     {
-	if (!seen) {
-	    seen = [];
+        if (!seen) {
+            seen = [];
         }
         if (typeof val === "object" && val !== null)
         {
@@ -507,7 +548,7 @@ policies and contribution forms [3].
             {
                 return "[...]";
             }
-	    seen.push(val);
+            seen.push(val);
         }
         if (Array.isArray(val))
         {
@@ -576,14 +617,8 @@ policies and contribution forms [3].
             }
 
             // Special-case Node objects, since those come up a lot in my tests.  I
-            // ignore namespaces.  I use duck-typing instead of instanceof, because
-            // instanceof doesn't work if the node is from another window (like an
-            // iframe's contentWindow):
-            // http://www.w3.org/Bugs/Public/show_bug.cgi?id=12295
-            if ("nodeType" in val
-            && "nodeName" in val
-            && "nodeValue" in val
-            && "childNodes" in val)
+            // ignore namespaces.
+            if (is_node(val))
             {
                 switch (val.nodeType)
                 {
@@ -1070,12 +1105,25 @@ policies and contribution forms [3].
     function Test(name, properties)
     {
         this.name = name;
+
+        this.phases = {
+            INITIAL:0,
+            STARTED:1,
+            HAS_RESULT:2,
+            COMPLETE:3
+        };
+        this.phase = this.phases.INITIAL;
+
         this.status = this.NOTRUN;
         this.timeout_id = null;
-        this.is_done = false;
 
         this.properties = properties;
-        this.timeout_length = properties.timeout ? properties.timeout : settings.test_timeout;
+        var timeout = properties.timeout ? properties.timeout : settings.test_timeout
+        if (timeout != null) {
+            this.timeout_length = timeout * tests.timeout_multiplier;
+        } else {
+            this.timeout_length = null;
+        }
 
         this.message = null;
 
@@ -1111,15 +1159,18 @@ policies and contribution forms [3].
 
     Test.prototype.step = function(func, this_obj)
     {
-        //In case the test has already failed
-        if (this.status !== this.NOTRUN)
+        if (this.phase > this.phases.STARTED)
         {
           return;
         }
+        this.phase = this.phases.STARTED;
+        //If we don't get a result before the harness times out that will be a test timout
+        this.set_status(this.TIMEOUT, "Test timed out");
 
         tests.started = true;
 
-        if (this.timeout_id === null) {
+        if (this.timeout_id === null)
+        {
             this.set_timeout();
         }
 
@@ -1136,25 +1187,21 @@ policies and contribution forms [3].
         }
         catch(e)
         {
-            //This can happen if something called synchronously invoked another
-            //step
-            if (this.status !== this.NOTRUN)
+            if (this.phase >= this.phases.HAS_RESULT)
             {
                 return;
             }
-            this.status = this.FAIL;
-            this.message = (typeof e === "object" && e !== null) ? e.message : e;
+            var message = (typeof e === "object" && e !== null) ? e.message : e;
             if (typeof e.stack != "undefined" && typeof e.message == "string") {
                 //Try to make it more informative for some exceptions, at least
                 //in Gecko and WebKit.  This results in a stack dump instead of
                 //just errors like "Cannot read property 'parentNode' of null"
                 //or "root is null".  Makes it a lot longer, of course.
-                this.message += "(stack: " + e.stack + ")";
+                message += "(stack: " + e.stack + ")";
             }
+            this.set_status(this.FAIL, message);
+            this.phase = this.phases.HAS_RESULT;
             this.done();
-            if (debug && e.constructor !== AssertionError) {
-                throw e;
-            }
         }
     };
 
@@ -1189,36 +1236,51 @@ policies and contribution forms [3].
                 Array.prototype.slice.call(arguments)));
             test_this.done();
         };
-    };
+    }
 
     Test.prototype.set_timeout = function()
     {
-        var this_obj = this;
-        this.timeout_id = setTimeout(function()
-                                     {
-                                         this_obj.timeout();
-                                     }, this.timeout_length);
-    };
+        if (this.timeout_length !== null)
+        {
+            var this_obj = this;
+            this.timeout_id = setTimeout(function()
+                                         {
+                                             this_obj.timeout();
+                                         }, this.timeout_length);
+        }
+    }
+
+    Test.prototype.set_status = function(status, message)
+    {
+        this.status = status;
+        this.message = message;
+    }
 
     Test.prototype.timeout = function()
     {
-        this.status = this.TIMEOUT;
         this.timeout_id = null;
-        this.message = "Test timed out";
+        this.set_status(this.TIMEOUT, "Test timed out")
+        this.phase = this.phases.HAS_RESULT;
         this.done();
     };
 
     Test.prototype.done = function()
     {
-        if (this.is_done) {
+        if (this.phase == this.phases.COMPLETE) {
             return;
-        }
-        clearTimeout(this.timeout_id);
-        if (this.status === this.NOTRUN)
+        } else if (this.phase <= this.phases.STARTED)
         {
-            this.status = this.PASS;
+            this.set_status(this.PASS, null);
         }
-        this.is_done = true;
+
+        if (this.status == this.NOTRUN)
+        {
+            alert(this.phase);
+        }
+
+        this.phase = this.phases.COMPLETE;
+
+        clearTimeout(this.timeout_id);
         tests.result(this);
     };
 
@@ -1278,7 +1340,8 @@ policies and contribution forms [3].
 
         this.allow_uncaught_exception = false;
 
-        this.timeout_length = settings.timeout;
+        this.timeout_multiplier = 1;
+        this.timeout_length = this.get_timeout();
         this.timeout_id = null;
 
         this.start_callbacks = [];
@@ -1320,11 +1383,7 @@ policies and contribution forms [3].
             if (properties.hasOwnProperty(p))
             {
                 var value = properties[p]
-                if (p == "timeout")
-                {
-                    this.timeout_length = value;
-                }
-                else if (p == "allow_uncaught_exception") {
+                if (p == "allow_uncaught_exception") {
                     this.allow_uncaught_exception = value;
                 }
                 else if (p == "explicit_done" && value)
@@ -1333,6 +1392,14 @@ policies and contribution forms [3].
                 }
                 else if (p == "explicit_timeout" && value) {
                     this.timeout_length = null;
+                    if (this.timeout_id)
+                    {
+                        clearTimeout(this.timeout_id);
+                    }
+                }
+                else if (p == "timeout_multiplier")
+                {
+                    this.timeout_multiplier = value;
                 }
             }
         }
@@ -1350,6 +1417,23 @@ policies and contribution forms [3].
         }
         this.set_timeout();
     };
+
+    Tests.prototype.get_timeout = function()
+    {
+        var metas = document.getElementsByTagName("meta");
+        for (var i=0; i<metas.length; i++)
+        {
+            if (metas[i].name == "timeout")
+            {
+                if (metas[i].content == "long")
+                {
+                    return settings.harness_timeout.long;
+                }
+                break;
+            }
+        }
+        return settings.harness_timeout.normal;
+    }
 
     Tests.prototype.set_timeout = function()
     {
@@ -1630,7 +1714,7 @@ policies and contribution forms [3].
         if (typeof this.output_document === "function")
         {
             output_document = this.output_document.apply(undefined);
-        } else
+        } else 
         {
             output_document = this.output_document;
         }

@@ -5,15 +5,5 @@
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES	= \
-		-I$(srcdir)/../base \
-		-I$(srcdir)/../generic \
-		-I$(srcdir)/../style \
-		-I$(srcdir)/../xul/base/src \
-		-I$(srcdir)/../../content/svg/content/src \
-		-I$(srcdir)/../../content/base/src \
-		-I$(srcdir)/../../widget \
-		$(NULL)
-
 libs::
 	$(INSTALL) $(srcdir)/svg.css $(DIST)/bin/res

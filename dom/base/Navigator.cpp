@@ -102,8 +102,7 @@ Navigator::Init()
 Navigator::Navigator(nsPIDOMWindow* aWindow)
   : mWindow(aWindow)
 {
-  NS_ASSERTION(aWindow->IsInnerWindow(),
-               "Navigator must get an inner window!");
+  MOZ_ASSERT(aWindow->IsInnerWindow(), "Navigator must get an inner window!");
   SetIsDOMBinding();
 }
 

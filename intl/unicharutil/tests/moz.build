@@ -14,3 +14,8 @@ SOURCES += [
 SIMPLE_PROGRAMS += [
     "%s" % (fyl[0:-4]) for fyl in SOURCES
 ]
+
+LOCAL_INCLUDES += [
+    '../public',
+]
+

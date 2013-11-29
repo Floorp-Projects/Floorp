@@ -11,3 +11,7 @@ SOURCES += [
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'necko'
+LOCAL_INCLUDES += [
+    '../../base/src',
+]
+
