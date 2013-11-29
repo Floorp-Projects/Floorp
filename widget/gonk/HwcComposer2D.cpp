@@ -451,6 +451,7 @@ HwcComposer2D::TryHwComposition()
 
     if (!(fbsurface && fbsurface->lastHandle)) {
         LOGD("H/W Composition failed. FBSurface not initialized.");
+        mList->numHwLayers = 0;
         return false;
     }
 
@@ -459,6 +460,7 @@ HwcComposer2D::TryHwComposition()
     if (idx >= mMaxLayerCount) {
         if (!ReallocLayerList() || idx >= mMaxLayerCount) {
             LOGE("TryHwComposition failed! Could not add FB layer");
+            mList->numHwLayers = 0;
             return false;
         }
     }
