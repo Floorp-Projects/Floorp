@@ -125,6 +125,8 @@
 #include "nsIWidgetListener.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/gfx/2D.h"
+#include "nsToolkitCompsCID.h"
+#include "nsIAppStartup.h"
 #include "mozilla/WindowsVersion.h"
 
 #ifdef MOZ_ENABLE_D3D9_LAYER
@@ -173,6 +175,10 @@
 #include "WinIMEHandler.h"
 
 #include "npapi.h"
+
+#if !defined(SM_CONVERTIBLESLATEMODE)
+#define SM_CONVERTIBLESLATEMODE 0x2003
+#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -5462,6 +5468,21 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       }
     }
     break;
+    case WM_SETTINGCHANGE:
+      if (IsWin8OrLater() && lParam &&
+          !wcsicmp(L"ConvertibleSlateMode", (wchar_t*)lParam)) {
+        // If we're switching into slate mode, switch to Metro for hardware
+        // that supports this feature.
+        if (GetSystemMetrics(SM_CONVERTIBLESLATEMODE) == 0) {
+          nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
+          if (appStartup) {
+            appStartup->Quit(nsIAppStartup::eForceQuit |
+                             nsIAppStartup::eRestartTouchEnvironment);
+          }
+        }
+      }
+    break;
+
   }
 
   //*aRetValue = result;

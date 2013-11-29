@@ -236,7 +236,6 @@ let TabStateCacheInternal = {
     if (data) {
       data[aField] = aValue;
     }
-    TabStateCacheTelemetry.recordAccess(!!data);
   },
 
   /**
@@ -252,7 +251,6 @@ let TabStateCacheInternal = {
     if (data && aField in data) {
       delete data[aField];
     }
-    TabStateCacheTelemetry.recordAccess(!!data);
   },
 
   /**

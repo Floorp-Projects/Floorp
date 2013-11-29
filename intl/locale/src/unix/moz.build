@@ -24,6 +24,10 @@ FINAL_LIBRARY = 'i18n'
 GENERATED_FILES = [
     'unixcharset.properties.h',
 ]
+LOCAL_INCLUDES += [
+    '..',
+]
+
 
 # CODESET is not automatically defined on some older versions of Redhat.
 # Define _XOPEN_SOURCE so CODESET will get defined and thus allow

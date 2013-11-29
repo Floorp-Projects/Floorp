@@ -12,9 +12,7 @@ import java.util.Map;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserContract.Clients;
 import org.mozilla.gecko.db.BrowserContract.Tabs;
-import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.db.DBUtils;
-import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -248,6 +246,7 @@ public class TabsProvider extends ContentProvider {
         return dbHelper;
     }
 
+    @RobocopTarget
     private String getDatabasePath(String profile) {
         trace("Getting database path for profile: " + profile);
 

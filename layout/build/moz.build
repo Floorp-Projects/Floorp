@@ -30,6 +30,91 @@ LIBRARY_NAME = 'gklayout'
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
+    '../base',
+    '../forms',
+    '../generic',
+    '../inspector/src',
+    '../mathml',
+    '../style',
+    '../tables',
+    '../xul/base/src',
+    '/caps/include',
+    '/content/base/src',
+    '/content/canvas/src',
+    '/content/events/src',
+    '/content/html/content/src',
+    '/content/html/document/src',
+    '/content/svg/content/src',
+    '/content/xbl/src',
+    '/content/xslt/src/base',
+    '/content/xslt/src/xml',
+    '/content/xslt/src/xpath',
+    '/content/xslt/src/xslt',
+    '/content/xul/content/src',
+    '/content/xul/document/src',
+    '/content/xul/templates/src',
     '/docshell/base',
+    '/dom/audiochannel',
+    '/dom/base',
+    '/dom/camera',
+    '/dom/file',
+    '/dom/media',
+    '/dom/speakermanager',
+    '/dom/src/geolocation',
+    '/dom/src/json',
+    '/dom/src/jsurl',
+    '/dom/src/offline',
+    '/dom/src/storage',
+    '/dom/telephony',
+    '/editor/composer/src',
+    '/editor/libeditor/base',
+    '/editor/libeditor/html',
+    '/editor/libeditor/text',
+    '/editor/txmgr/src',
+    '/editor/txtsvc/src',
+    '/extensions/cookie',
+    '/js/xpconnect/loader',
+    '/js/xpconnect/src',
+    '/netwerk/base/src',
+    '/netwerk/cookie',
+    '/view/src',
 ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3'):
+    LOCAL_INCLUDES += [
+        '/dom/system/unix',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    LOCAL_INCLUDES += [
+        '/dom/system/windows',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    LOCAL_INCLUDES += [
+        '/dom/system/mac',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    LOCAL_INCLUDES += [
+        '/dom/system',
+        '/dom/system/android',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    LOCAL_INCLUDES += [
+        '/dom/system/gonk',
+    ]
+
+if CONFIG['MOZ_B2G_FM']:
+    LOCAL_INCLUDES += [
+        '/dom/fmradio',
+    ]
+
+if CONFIG['MOZ_B2G_BT']:
+    LOCAL_INCLUDES += [
+        '/dom/bluetooth',
+    ]
+
+if CONFIG['MOZ_WEBSPEECH']:
+    LOCAL_INCLUDES += [
+        '/content/media/webspeech/synth',
+    ]
+
 FINAL_LIBRARY = 'xul'

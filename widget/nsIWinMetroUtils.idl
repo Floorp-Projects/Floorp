@@ -12,7 +12,7 @@
  * implementation of this interface for non-Windows systems, for testing and
  * development purposes only.
  */
-[scriptable, uuid(496b4450-5757-40f7-aeb9-a958ae86dbd1)]
+[scriptable, uuid(d30daa27-ce2b-4503-80cc-b162f4c24e93)]
 interface nsIWinMetroUtils : nsISupports
 {
   /**
@@ -83,29 +83,6 @@ interface nsIWinMetroUtils : nsISupports
    * @return true if the tile is pinned
    */
   bool isTilePinned(in AString aTileID);
-
-  /**
-   * Stores the sync info securely
-   *
-   * @param aEmail The sync account email
-   * @param aPassword The sync account password
-   * @param aKey The sync account key
-   */
-  void storeSyncInfo(in AString aEmail, in AString aPassword, in AString aKey);
-
-  /**
-   * Loads the sync info
-   *
-   * @param aEmail The sync account email
-   * @param aPassword The sync account password
-   * @param aKey The sync account key
-   */
-  void loadSyncInfo(out AString aEmail, out AString aPassword, out AString aKey);
-
-  /**
-   * Clears the stored sync info if any.
-   */
-  void clearSyncInfo();
 
   /**
    * Soft keyboard attributes. Used in unison with shown/hidden observer

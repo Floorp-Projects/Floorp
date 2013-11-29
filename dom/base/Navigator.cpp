@@ -102,8 +102,7 @@ Navigator::Init()
 Navigator::Navigator(nsPIDOMWindow* aWindow)
   : mWindow(aWindow)
 {
-  NS_ASSERTION(aWindow->IsInnerWindow(),
-               "Navigator must get an inner window!");
+  MOZ_ASSERT(aWindow->IsInnerWindow(), "Navigator must get an inner window!");
   SetIsDOMBinding();
 }
 
@@ -1532,6 +1531,13 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
         bool hasPermission = CheckPermission("settings-read") ||
                              CheckPermission("settings-write");
         if (!hasPermission) {
+          aValue.setNull();
+          return true;
+        }
+      }
+
+      if (name.EqualsLiteral("mozDownloadManager")) {
+        if (!CheckPermission("downloads")) {
           aValue.setNull();
           return true;
         }
