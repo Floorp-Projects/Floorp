@@ -260,4 +260,3 @@ Assembler::TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReade
         JS_ASSERT(child == CodeFromJump(code, code->raw() + iter.offset()));
     }
 }
-
