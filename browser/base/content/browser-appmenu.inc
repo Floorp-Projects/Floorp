@@ -172,7 +172,8 @@
 #include browser-charsetmenu.inc
 #undef ID_PREFIX
 #undef OMIT_ACCESSKEYS
-          <menuitem label="&goOfflineCmd.label;"
+          <menuitem id="appmenu_offlineMode"
+                    label="&goOfflineCmd.label;"
                     type="checkbox"
                     observes="workOfflineMenuitemState"
                     oncommand="BrowserOffline.toggleOfflineStatus();"/>
