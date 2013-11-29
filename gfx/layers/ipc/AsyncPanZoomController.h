@@ -270,14 +270,22 @@ public:
    * at these points, but this function will scroll as if there had been.
    * If this attempt causes overscroll (i.e. the layer cannot be scrolled
    * by the entire amount requested), the overscroll is passed back to the
-   * tree manager via APZCTreeManager::HandleOverscroll().
+   * tree manager via APZCTreeManager::DispatchScroll().
    * |aOverscrollHandoffChainIndex| is used by the tree manager to keep track
-   * of which APZC to hand off the overscroll to; this function simply
-   * propagates it to APZCTreeManager::HandleOverscroll() in the event of
+   * of which APZC to hand off the overscroll to; this function increments it
+   * and passes it on to APZCTreeManager::DispatchScroll() in the event of
    * overscroll.
    */
   void AttemptScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
                      uint32_t aOverscrollHandoffChainIndex = 0);
+
+  /**
+   * A helper function for calling APZCTreeManager::DispatchScroll().
+   * Guards against the case where the APZC is being concurrently destroyed
+   * (and thus mTreeManager is being nulled out).
+   */
+  void CallDispatchScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
+                          uint32_t aOverscrollHandoffChainIndex);
 
   /**
    * Returns whether this APZC is for an element marked with the 'scrollgrab'
