@@ -11,11 +11,11 @@
 
 %include "vpx_ports/x86_abi_support.asm"
 
-global sym(vp8_sad16x16_mmx)
-global sym(vp8_sad8x16_mmx)
-global sym(vp8_sad8x8_mmx)
-global sym(vp8_sad4x4_mmx)
-global sym(vp8_sad16x8_mmx)
+global sym(vp8_sad16x16_mmx) PRIVATE
+global sym(vp8_sad8x16_mmx) PRIVATE
+global sym(vp8_sad8x8_mmx) PRIVATE
+global sym(vp8_sad4x4_mmx) PRIVATE
+global sym(vp8_sad16x8_mmx) PRIVATE
 
 ;unsigned int vp8_sad16x16_mmx(
 ;    unsigned char *src_ptr,

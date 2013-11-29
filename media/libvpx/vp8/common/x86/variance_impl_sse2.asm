@@ -17,7 +17,7 @@
 ;(
 ;    short *src_ptr
 ;)
-global sym(vp8_get_mb_ss_sse2)
+global sym(vp8_get_mb_ss_sse2) PRIVATE
 sym(vp8_get_mb_ss_sse2):
     push        rbp
     mov         rbp, rsp
@@ -80,7 +80,7 @@ sym(vp8_get_mb_ss_sse2):
 ;    unsigned int    *  SSE,
 ;    int             *  Sum
 ;)
-global sym(vp8_get16x16var_sse2)
+global sym(vp8_get16x16var_sse2) PRIVATE
 sym(vp8_get16x16var_sse2):
     push        rbp
     mov         rbp, rsp
@@ -224,7 +224,7 @@ sym(vp8_get16x16var_sse2):
 ;    unsigned int    *  SSE,
 ;    int             *  Sum
 ;)
-global sym(vp8_get8x8var_sse2)
+global sym(vp8_get8x8var_sse2) PRIVATE
 sym(vp8_get8x8var_sse2):
     push        rbp
     mov         rbp, rsp
@@ -413,7 +413,7 @@ sym(vp8_get8x8var_sse2):
 ;    unsigned int *sumsquared;;
 ;
 ;)
-global sym(vp8_filter_block2d_bil_var_sse2)
+global sym(vp8_filter_block2d_bil_var_sse2) PRIVATE
 sym(vp8_filter_block2d_bil_var_sse2):
     push        rbp
     mov         rbp, rsp
@@ -690,7 +690,7 @@ filter_block2d_bil_variance:
 ;    int *sum,
 ;    unsigned int *sumsquared
 ;)
-global sym(vp8_half_horiz_vert_variance8x_h_sse2)
+global sym(vp8_half_horiz_vert_variance8x_h_sse2) PRIVATE
 sym(vp8_half_horiz_vert_variance8x_h_sse2):
     push        rbp
     mov         rbp, rsp
@@ -812,7 +812,7 @@ vp8_half_horiz_vert_variance8x_h_1:
 ;    int *sum,
 ;    unsigned int *sumsquared
 ;)
-global sym(vp8_half_horiz_vert_variance16x_h_sse2)
+global sym(vp8_half_horiz_vert_variance16x_h_sse2) PRIVATE
 sym(vp8_half_horiz_vert_variance16x_h_sse2):
     push        rbp
     mov         rbp, rsp
@@ -928,7 +928,7 @@ vp8_half_horiz_vert_variance16x_h_1:
 ;    int *sum,
 ;    unsigned int *sumsquared
 ;)
-global sym(vp8_half_vert_variance8x_h_sse2)
+global sym(vp8_half_vert_variance8x_h_sse2) PRIVATE
 sym(vp8_half_vert_variance8x_h_sse2):
     push        rbp
     mov         rbp, rsp
@@ -1035,7 +1035,7 @@ vp8_half_vert_variance8x_h_1:
 ;    int *sum,
 ;    unsigned int *sumsquared
 ;)
-global sym(vp8_half_vert_variance16x_h_sse2)
+global sym(vp8_half_vert_variance16x_h_sse2) PRIVATE
 sym(vp8_half_vert_variance16x_h_sse2):
     push        rbp
     mov         rbp, rsp
@@ -1143,7 +1143,7 @@ vp8_half_vert_variance16x_h_1:
 ;    int *sum,
 ;    unsigned int *sumsquared
 ;)
-global sym(vp8_half_horiz_variance8x_h_sse2)
+global sym(vp8_half_horiz_variance8x_h_sse2) PRIVATE
 sym(vp8_half_horiz_variance8x_h_sse2):
     push        rbp
     mov         rbp, rsp
@@ -1248,7 +1248,7 @@ vp8_half_horiz_variance8x_h_1:
 ;    int *sum,
 ;    unsigned int *sumsquared
 ;)
-global sym(vp8_half_horiz_variance16x_h_sse2)
+global sym(vp8_half_horiz_variance16x_h_sse2) PRIVATE
 sym(vp8_half_horiz_variance16x_h_sse2):
     push        rbp
     mov         rbp, rsp

@@ -34,7 +34,7 @@
 ;    unsigned int    output_height,
 ;    unsigned int    vp8_filter_index
 ;)
-global sym(vp8_filter_block1d8_h6_ssse3)
+global sym(vp8_filter_block1d8_h6_ssse3) PRIVATE
 sym(vp8_filter_block1d8_h6_ssse3):
     push        rbp
     mov         rbp, rsp
@@ -177,7 +177,7 @@ vp8_filter_block1d8_h4_ssse3:
 ;    unsigned int    output_height,
 ;    unsigned int    vp8_filter_index
 ;)
-global sym(vp8_filter_block1d16_h6_ssse3)
+global sym(vp8_filter_block1d16_h6_ssse3) PRIVATE
 sym(vp8_filter_block1d16_h6_ssse3):
     push        rbp
     mov         rbp, rsp
@@ -284,7 +284,7 @@ sym(vp8_filter_block1d16_h6_ssse3):
 ;    unsigned int    output_height,
 ;    unsigned int    vp8_filter_index
 ;)
-global sym(vp8_filter_block1d4_h6_ssse3)
+global sym(vp8_filter_block1d4_h6_ssse3) PRIVATE
 sym(vp8_filter_block1d4_h6_ssse3):
     push        rbp
     mov         rbp, rsp
@@ -352,6 +352,7 @@ sym(vp8_filter_block1d4_h6_ssse3):
     pop rdi
     pop rsi
     RESTORE_GOT
+    RESTORE_XMM
     UNSHADOW_ARGS
     pop         rbp
     ret
@@ -413,7 +414,7 @@ sym(vp8_filter_block1d4_h6_ssse3):
 ;    unsigned int   output_height,
 ;    unsigned int   vp8_filter_index
 ;)
-global sym(vp8_filter_block1d16_v6_ssse3)
+global sym(vp8_filter_block1d16_v6_ssse3) PRIVATE
 sym(vp8_filter_block1d16_v6_ssse3):
     push        rbp
     mov         rbp, rsp
@@ -601,7 +602,7 @@ sym(vp8_filter_block1d16_v6_ssse3):
 ;    unsigned int   output_height,
 ;    unsigned int   vp8_filter_index
 ;)
-global sym(vp8_filter_block1d8_v6_ssse3)
+global sym(vp8_filter_block1d8_v6_ssse3) PRIVATE
 sym(vp8_filter_block1d8_v6_ssse3):
     push        rbp
     mov         rbp, rsp
@@ -741,7 +742,7 @@ sym(vp8_filter_block1d8_v6_ssse3):
 ;    unsigned int   output_height,
 ;    unsigned int   vp8_filter_index
 ;)
-global sym(vp8_filter_block1d4_v6_ssse3)
+global sym(vp8_filter_block1d4_v6_ssse3) PRIVATE
 sym(vp8_filter_block1d4_v6_ssse3):
     push        rbp
     mov         rbp, rsp
@@ -880,7 +881,7 @@ sym(vp8_filter_block1d4_v6_ssse3):
 ;    unsigned char *dst_ptr,
 ;    int dst_pitch
 ;)
-global sym(vp8_bilinear_predict16x16_ssse3)
+global sym(vp8_bilinear_predict16x16_ssse3) PRIVATE
 sym(vp8_bilinear_predict16x16_ssse3):
     push        rbp
     mov         rbp, rsp
@@ -1143,7 +1144,7 @@ sym(vp8_bilinear_predict16x16_ssse3):
 ;    unsigned char *dst_ptr,
 ;    int dst_pitch
 ;)
-global sym(vp8_bilinear_predict8x8_ssse3)
+global sym(vp8_bilinear_predict8x8_ssse3) PRIVATE
 sym(vp8_bilinear_predict8x8_ssse3):
     push        rbp
     mov         rbp, rsp

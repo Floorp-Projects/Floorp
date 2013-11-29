@@ -219,7 +219,7 @@ unsigned int vp8_sub_pixel_variance4x4_mmx
         &xsum, &xxsum
     );
     *sse = xxsum;
-    return (xxsum - ((xsum * xsum) >> 4));
+    return (xxsum - ((unsigned int)(xsum * xsum) >> 4));
 }
 
 
@@ -244,7 +244,7 @@ unsigned int vp8_sub_pixel_variance8x8_mmx
         &xsum, &xxsum
     );
     *sse = xxsum;
-    return (xxsum - ((xsum * xsum) >> 6));
+    return (xxsum - ((unsigned int)(xsum * xsum) >> 6));
 }
 
 unsigned int vp8_sub_pixel_variance16x16_mmx
@@ -282,7 +282,7 @@ unsigned int vp8_sub_pixel_variance16x16_mmx
     xxsum0 += xxsum1;
 
     *sse = xxsum0;
-    return (xxsum0 - ((xsum0 * xsum0) >> 8));
+    return (xxsum0 - ((unsigned int)(xsum0 * xsum0) >> 8));
 
 
 }
@@ -335,7 +335,7 @@ unsigned int vp8_sub_pixel_variance16x8_mmx
     xxsum0 += xxsum1;
 
     *sse = xxsum0;
-    return (xxsum0 - ((xsum0 * xsum0) >> 7));
+    return (xxsum0 - ((unsigned int)(xsum0 * xsum0) >> 7));
 }
 
 unsigned int vp8_sub_pixel_variance8x16_mmx
@@ -358,7 +358,7 @@ unsigned int vp8_sub_pixel_variance8x16_mmx
         &xsum, &xxsum
     );
     *sse = xxsum;
-    return (xxsum - ((xsum * xsum) >> 7));
+    return (xxsum - ((unsigned int)(xsum * xsum) >> 7));
 }
 
 
