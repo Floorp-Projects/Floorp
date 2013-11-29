@@ -156,12 +156,16 @@ public:
     // Update mEnabled of BluetoothService object since
     // StartInternal/StopInternal have been already done.
     gBluetoothService->SetEnabled(mEnabled);
+    gToggleInProgress = false;
 
     nsAutoString signalName;
     signalName = mEnabled ? NS_LITERAL_STRING("Enabled")
                           : NS_LITERAL_STRING("Disabled");
     BluetoothSignal signal(signalName, NS_LITERAL_STRING(KEY_MANAGER), true);
     gBluetoothService->DistributeSignal(signal);
+
+    // Event 'AdapterAdded' has to be fired after firing 'Enabled'
+    gBluetoothService->TryFiringAdapterAdded();
 
     return NS_OK;
   }
@@ -507,6 +511,8 @@ BluetoothService::StartStopBluetooth(bool aStart, bool aIsStartup)
                                           LazyIdleThread::ManualShutdown);
   }
 
+  mAdapterAddedReceived = false;
+
   nsCOMPtr<nsIRunnable> runnable = new ToggleBtTask(aStart, aIsStartup);
   nsresult rv = mBluetoothThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -547,8 +553,6 @@ BluetoothService::SetEnabled(bool aEnabled)
   }
 
   mEnabled = aEnabled;
-
-  gToggleInProgress = false;
 }
 
 nsresult
@@ -785,6 +789,28 @@ BluetoothService::Observe(nsISupports* aSubject, const char* aTopic,
 
   MOZ_ASSERT(false, "BluetoothService got unexpected topic!");
   return NS_ERROR_UNEXPECTED;
+}
+
+void
+BluetoothService::TryFiringAdapterAdded()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (IsToggling() || !mAdapterAddedReceived) {
+    return;
+  }
+
+  BluetoothSignal signal(NS_LITERAL_STRING("AdapterAdded"),
+                         NS_LITERAL_STRING(KEY_MANAGER), true);
+  DistributeSignal(signal);
+}
+
+void
+BluetoothService::AdapterAddedReceived()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mAdapterAddedReceived = true;
 }
 
 void
