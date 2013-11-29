@@ -2734,6 +2734,14 @@ public:
         return nullptr;
     }
 
+private:
+    /**
+     * Helpers for ReadTextureImage
+     */
+    GLuint TextureImageProgramFor(GLenum aTextureTarget, int aShader);
+    bool ReadBackPixelsIntoSurface(gfxImageSurface* aSurface, const gfxIntSize& aSize);
+
+public:
     /**
      * Read the image data contained in aTexture, and return it as an ImageSurface.
      * If GL_RGBA is given as the format, a gfxImageFormatARGB32 surface is returned.
@@ -2744,13 +2752,20 @@ public:
      * THIS IS EXPENSIVE.  It is ridiculously expensive.  Only do this
      * if you absolutely positively must, and never in any performance
      * critical path.
+     *
+     * NOTE: aShaderProgram is really mozilla::layers::ShaderProgramType. It is
+     * passed as int to eliminate including LayerManagerOGLProgram.h in this
+     * hub header.
      */
-    already_AddRefed<gfxImageSurface> ReadTextureImage(GLuint aTexture,
+    already_AddRefed<gfxImageSurface> ReadTextureImage(GLuint aTextureId,
+                                                       GLenum aTextureTarget,
                                                        const gfxIntSize& aSize,
-                                                       GLenum aTextureFormat,
+                               /* ShaderProgramType */ int aShaderProgram,
                                                        bool aYInvert = false);
 
-    already_AddRefed<gfxImageSurface> GetTexImage(GLuint aTexture, bool aYInvert, SurfaceFormat aFormat);
+    already_AddRefed<gfxImageSurface> GetTexImage(GLuint aTexture,
+                                                  bool aYInvert,
+                                                  SurfaceFormat aFormat);
 
     /**
      * Call ReadPixels into an existing gfxImageSurface.
@@ -3110,6 +3125,8 @@ public:
 
 protected:
     nsDataHashtable<nsPtrHashKey<void>, void*> mUserData;
+
+    GLuint mReadTextureImagePrograms[4];
 
     bool InitWithPrefix(const char *prefix, bool trygl);
 
