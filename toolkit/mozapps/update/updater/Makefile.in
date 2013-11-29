@@ -99,7 +99,7 @@ CXXFLAGS += $(MOZ_BZ2_CFLAGS)
 ifneq (,$(filter beta release esr,$(MOZ_UPDATE_CHANNEL)))
 RCFLAGS += -DMAR_SIGNING_RELEASE_BETA=1
 else
-ifneq (,$(filter nightly aurora nightly-elm nightly-profiling nightly-oak,$(MOZ_UPDATE_CHANNEL)))
+ifneq (,$(filter nightly aurora nightly-elm nightly-profiling nightly-oak nightly-holly,$(MOZ_UPDATE_CHANNEL)))
 RCFLAGS += -DMAR_SIGNING_AURORA_NIGHTLY=1
 endif
 endif
