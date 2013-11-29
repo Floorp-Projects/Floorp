@@ -506,11 +506,6 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     typedef MoveResolver::MoveOperand MoveOperand;
 
     JS_ASSERT(!StackKeptAligned);
-    JS_ASSERT(functionWrappers_);
-    JS_ASSERT(functionWrappers_->initialized());
-    VMWrapperMap::AddPtr p = functionWrappers_->lookupForAdd(&f);
-    if (p)
-        return p->value;
 
     // Generate a separated code for the wrapper.
     MacroAssembler masm;
@@ -679,11 +674,6 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     writePerfSpewerIonCodeProfile(wrapper, "VMWrapper");
 #endif
 
-    // linker.newCode may trigger a GC and sweep functionWrappers_ so we have to
-    // use relookupOrAdd instead of add.
-    if (!functionWrappers_->relookupOrAdd(p, &f, wrapper))
-        return nullptr;
-
     return wrapper;
 }
 
@@ -726,7 +716,7 @@ typedef bool (*HandleDebugTrapFn)(JSContext *, BaselineFrame *, uint8_t *, bool 
 static const VMFunction HandleDebugTrapInfo = FunctionInfo<HandleDebugTrapFn>(HandleDebugTrap);
 
 IonCode *
-JitRuntime::generateDebugTrapHandler(JSContext *cx)
+JitRuntime::generateDebugTrapHandler(JSContext *cx, AutoLockForExclusiveAccess &atomsLock)
 {
     MacroAssembler masm;
 
@@ -747,7 +737,7 @@ JitRuntime::generateDebugTrapHandler(JSContext *cx)
     masm.movePtr(ImmPtr(nullptr), BaselineStubReg);
     EmitEnterStubFrame(masm, scratch3);
 
-    IonCode *code = cx->runtime()->jitRuntime()->getVMWrapper(HandleDebugTrapInfo);
+    IonCode *code = cx->runtime()->jitRuntime()->getVMWrapper(cx, HandleDebugTrapInfo, atomsLock);
     if (!code)
         return nullptr;
 
@@ -813,4 +803,25 @@ JitRuntime::generateBailoutTailStub(JSContext *cx)
 #endif
 
     return code;
+}
+
+IonCode *
+JitRuntime::generateUnreachableTrap(JSContext *cx)
+{
+    // Generate a separated code for the wrapper.
+    MacroAssembler masm;
+
+    masm.breakpoint();
+    masm.ret();
+
+    Linker linker(masm);
+    IonCode *trap = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
+    if (!trap)
+        return nullptr;
+
+#ifdef JS_ION_PERF
+    writePerfSpewerIonCodeProfile(wrapper, "Unreachable Trap");
+#endif
+
+    return trap;
 }

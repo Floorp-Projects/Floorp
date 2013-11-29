@@ -289,11 +289,10 @@ JitRuntime::initialize(JSContext *cx)
     if (!shapePreBarrier_)
         return false;
 
-    IonSpew(IonSpew_Codegen, "# Emitting VM function wrappers");
-    for (VMFunction *fun = VMFunction::functions; fun; fun = fun->next) {
-        if (!generateVMWrapper(cx, *fun))
-            return false;
-    }
+    IonSpew(IonSpew_Codegen, "# Emitting Unreachable Trap");
+    unreachableTrap_ = generateUnreachableTrap(cx);
+    if (!unreachableTrap_)
+        return false;
 
     return true;
 }
@@ -306,7 +305,7 @@ JitRuntime::debugTrapHandler(JSContext *cx)
         // be allocated in the atoms compartment.
         AutoLockForExclusiveAccess lock(cx);
         AutoCompartment ac(cx, cx->runtime()->atomsCompartment());
-        debugTrapHandler_ = generateDebugTrapHandler(cx);
+        debugTrapHandler_ = generateDebugTrapHandler(cx, lock);
     }
     return debugTrapHandler_;
 }
@@ -596,14 +595,63 @@ JitRuntime::getBailoutTable(const FrameSizeClass &frameClass) const
 }
 
 IonCode *
-JitRuntime::getVMWrapper(const VMFunction &f) const
+JitRuntime::maybeGetVMWrapper(const VMFunction &f) const
 {
     JS_ASSERT(functionWrappers_);
     JS_ASSERT(functionWrappers_->initialized());
     JitRuntime::VMWrapperMap::Ptr p = functionWrappers_->readonlyThreadsafeLookup(&f);
-    JS_ASSERT(p);
+    return p ? p->value : unreachableTrap();
+}
 
-    return p->value;
+IonCode *
+JitRuntime::getVMWrapper(JSContext *cx, const VMFunction &f)
+{
+    JS_ASSERT(functionWrappers_);
+    JS_ASSERT(functionWrappers_->initialized());
+    VMWrapperMap::AddPtr p = functionWrappers_->lookupForAdd(&f);
+    if (p)
+        return p->value;
+
+    AutoLockForExclusiveAccess atomsLock(cx);
+    AutoCompartment ac(cx, cx->atomsCompartment());
+    IonContext ictx(cx, nullptr);
+
+    IonCode *wrapper = generateVMWrapper(cx, f);
+    if (!wrapper) {
+        js_ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    // linker.newCode may trigger a GC and sweep functionWrappers_ so we have to
+    // use relookupOrAdd instead of add.
+    if (!functionWrappers_->relookupOrAdd(p, &f, wrapper))
+        return nullptr;
+
+    return wrapper;
+}
+
+IonCode *
+JitRuntime::getVMWrapper(JSContext *cx, const VMFunction &f,
+                         AutoLockForExclusiveAccess &atomsLock)
+{
+    JS_ASSERT(functionWrappers_);
+    JS_ASSERT(functionWrappers_->initialized());
+    VMWrapperMap::AddPtr p = functionWrappers_->lookupForAdd(&f);
+    if (p)
+        return p->value;
+
+    IonCode *wrapper = generateVMWrapper(cx, f);
+    if (!wrapper) {
+        js_ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    // linker.newCode may trigger a GC and sweep functionWrappers_ so we have to
+    // use relookupOrAdd instead of add.
+    if (!functionWrappers_->relookupOrAdd(p, &f, wrapper))
+        return nullptr;
+
+    return wrapper;
 }
 
 template <AllowGC allowGC>
@@ -967,6 +1015,21 @@ IonScript::copyCacheEntries(const uint32_t *caches, MacroAssembler &masm)
     // final code address now.
     for (size_t i = 0; i < numCaches(); i++)
         getCacheFromIndex(i).updateBaseAddress(method_, masm);
+}
+
+void
+IonScript::patchVMCalls(JSContext *cx, IonCode *code, LinkVMWrapper *it, size_t length,
+                        MacroAssembler &masm)
+{
+    JitRuntime *rt = cx->runtime()->jitRuntime();
+    LinkVMWrapper *end = it + length;
+    for (; it != end; it++) {
+        it->offset.fixup(&masm);
+        // VM Wrappers should be compiled before linking them.
+        IonCode *wrapper = rt->maybeGetVMWrapper(it->fun);
+        JS_ASSERT(wrapper != rt->unreachableTrap());
+        it->patchCall(masm, code, rt->unreachableTrap(), wrapper);
+    }
 }
 
 const SafepointIndex *

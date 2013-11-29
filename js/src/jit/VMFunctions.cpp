@@ -922,6 +922,5 @@ JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject type,
     return TypedObject::createDerived(cx, type, owner, offset);
 }
 
-
 } // namespace jit
 } // namespace js

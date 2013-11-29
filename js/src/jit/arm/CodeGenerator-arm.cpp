@@ -76,6 +76,14 @@ CodeGeneratorARM::generateEpilogue()
 }
 
 void
+LinkVMWrapper::patchCall(MacroAssembler &masm, IonCode *code,
+                         IonCode *trap, IonCode *wrapper) const
+{
+    CodeLocationLabel vmcall(code, offset);
+    masm.patchDataWithValueCheck(vmcall, ImmPtr(wrapper->raw()), ImmPtr(trap->raw()));
+}
+
+void
 CodeGeneratorARM::emitBranch(Assembler::Condition cond, MBasicBlock *mirTrue, MBasicBlock *mirFalse)
 {
     if (isNextBlock(mirFalse->lir())) {
