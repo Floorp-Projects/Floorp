@@ -78,6 +78,7 @@ h2 {
   border: 1px solid gray;
   white-space: nowrap;
   padding: 10px;
+  position: relative; /* required for position:absolute of the contained .copy-node */
 }
 
 body[dir="rtl"] .histogram {
@@ -127,4 +128,19 @@ caption {
 
 body[dir="rtl"] caption {
   text-align: right;
+}
+
+.copy-node {
+  visibility: hidden;
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+}
+
+body[dir="rtl"] .copy-node {
+  left: 1px;
+}
+
+.histogram:hover .copy-node {
+  visibility: visible;
 }
