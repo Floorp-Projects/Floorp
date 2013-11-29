@@ -896,6 +896,8 @@ void NrSocketIpc::create_m(const nsACString &host, const uint16_t port) {
     MOZ_ASSERT(false, "Failed to create UDPSocketChild");
   }
 
+  socket_child_->SetFilterName(nsCString("stun"));
+
   if (NS_FAILED(socket_child_->Bind(this, host, port))) {
     err_ = true;
     MOZ_ASSERT(false, "Failed to create UDP socket");
