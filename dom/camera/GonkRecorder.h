@@ -129,7 +129,7 @@ private:
         sp<MetaData> *meta);
     status_t startMPEG4Recording();
     status_t startAMRRecording();
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
     status_t startAACRecording();
 #endif
     status_t startRawAudioRecording();
