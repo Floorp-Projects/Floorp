@@ -32,15 +32,15 @@ function ifWebGLSupported() {
   let content = tooltip.content;
   ok(tooltip.content,
     "Some tooltip's content was set.");
-  is(tooltip.content.className, "devtools-tooltip-simple-text-container",
+  ok(tooltip.content.className.contains("devtools-tooltip-simple-text-container"),
     "The tooltip's content container was created correctly.");
 
   let messages = content.childNodes;
   is(messages.length, 2,
     "There are two messages displayed in the tooltip.");
-  is(messages[0].className, "devtools-tooltip-simple-text",
+  ok(messages[0].className.contains("devtools-tooltip-simple-text"),
     "The first message was created correctly.");
-  is(messages[1].className, "devtools-tooltip-simple-text",
+  ok(messages[1].className.contains("devtools-tooltip-simple-text"),
     "The second message was created correctly.");
 
   ok(messages[0].textContent.contains("'constructor' : too many arguments"),
