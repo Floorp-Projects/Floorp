@@ -192,24 +192,12 @@ let SessionSaverInternal = {
     stopWatchStart("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
     let state = SessionStore.getCurrentState(forceUpdateAllWindows);
 
-    // Forget about private windows and tabs.
+    // Forget about private windows.
     for (let i = state.windows.length - 1; i >= 0; i--) {
-      let win = state.windows[i];
-      if (win.isPrivate || false) { // The whole window is private, remove it
-         state.windows.splice(i, 1);
-         if (state.selectedWindow >= i) {
-           state.selectedWindow--;
-         }
-        continue;
-      }
-      // The window is not private, but its tabs still might
-      for (let j = win.tabs.length - 1; j >= 0 ; --j) {
-        let tab = win.tabs[j];
-        if (tab.isPrivate || false) {
-          win.tabs.splice(j, 1);
-          if (win.selected >= j) {
-            win.selected--;
-          }
+      if (state.windows[i].isPrivate) {
+        state.windows.splice(i, 1);
+        if (state.selectedWindow >= i) {
+          state.selectedWindow--;
         }
       }
     }
@@ -220,10 +208,6 @@ let SessionSaverInternal = {
         state._closedWindows.splice(i, 1);
       }
     }
-
-    // Note that closed private tabs are never stored (see
-    // SessionStoreInternal.onTabClose), so we do not need to remove
-    // them.
 
     // Make sure that we keep the previous session if we started with a single
     // private window and no non-private windows have been opened, yet.
