@@ -162,7 +162,7 @@ x86_readtsc(void)
     return tsc;
 #else
 #if ARCH_X86_64
-    return __rdtsc();
+    return (unsigned int)__rdtsc();
 #else
     __asm  rdtsc;
 #endif

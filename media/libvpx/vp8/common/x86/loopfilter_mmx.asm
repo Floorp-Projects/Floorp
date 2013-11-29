@@ -21,7 +21,7 @@
 ;    const char *thresh,
 ;    int  count
 ;)
-global sym(vp8_loop_filter_horizontal_edge_mmx)
+global sym(vp8_loop_filter_horizontal_edge_mmx) PRIVATE
 sym(vp8_loop_filter_horizontal_edge_mmx):
     push        rbp
     mov         rbp, rsp
@@ -233,7 +233,7 @@ sym(vp8_loop_filter_horizontal_edge_mmx):
 ;    const char *thresh,
 ;    int count
 ;)
-global sym(vp8_loop_filter_vertical_edge_mmx)
+global sym(vp8_loop_filter_vertical_edge_mmx) PRIVATE
 sym(vp8_loop_filter_vertical_edge_mmx):
     push        rbp
     mov         rbp, rsp
@@ -603,7 +603,7 @@ sym(vp8_loop_filter_vertical_edge_mmx):
 ;    const char *thresh,
 ;    int count
 ;)
-global sym(vp8_mbloop_filter_horizontal_edge_mmx)
+global sym(vp8_mbloop_filter_horizontal_edge_mmx) PRIVATE
 sym(vp8_mbloop_filter_horizontal_edge_mmx):
     push        rbp
     mov         rbp, rsp
@@ -920,7 +920,7 @@ sym(vp8_mbloop_filter_horizontal_edge_mmx):
 ;    const char *thresh,
 ;    int count
 ;)
-global sym(vp8_mbloop_filter_vertical_edge_mmx)
+global sym(vp8_mbloop_filter_vertical_edge_mmx) PRIVATE
 sym(vp8_mbloop_filter_vertical_edge_mmx):
     push        rbp
     mov         rbp, rsp
@@ -1384,7 +1384,7 @@ sym(vp8_mbloop_filter_vertical_edge_mmx):
 ;    int  src_pixel_step,
 ;    const char *blimit
 ;)
-global sym(vp8_loop_filter_simple_horizontal_edge_mmx)
+global sym(vp8_loop_filter_simple_horizontal_edge_mmx) PRIVATE
 sym(vp8_loop_filter_simple_horizontal_edge_mmx):
     push        rbp
     mov         rbp, rsp
@@ -1500,7 +1500,7 @@ sym(vp8_loop_filter_simple_horizontal_edge_mmx):
 ;    int  src_pixel_step,
 ;    const char *blimit
 ;)
-global sym(vp8_loop_filter_simple_vertical_edge_mmx)
+global sym(vp8_loop_filter_simple_vertical_edge_mmx) PRIVATE
 sym(vp8_loop_filter_simple_vertical_edge_mmx):
     push        rbp
     mov         rbp, rsp

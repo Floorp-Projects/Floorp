@@ -82,6 +82,8 @@ vp8_lookahead_pop(struct lookahead_ctx *ctx,
                   int                   drain);
 
 
+#define PEEK_FORWARD   1
+#define PEEK_BACKWARD -1
 /**\brief Get a future source buffer to encode
  *
  * \param[in] ctx       Pointer to the lookahead context
@@ -92,7 +94,8 @@ vp8_lookahead_pop(struct lookahead_ctx *ctx,
  */
 struct lookahead_entry*
 vp8_lookahead_peek(struct lookahead_ctx *ctx,
-                   unsigned int          index);
+                   unsigned int          index,
+                   int                   direction);
 
 
 /**\brief Get the number of frames currently in the lookahead queue
