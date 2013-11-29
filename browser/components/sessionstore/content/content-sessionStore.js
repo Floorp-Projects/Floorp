@@ -309,6 +309,30 @@ let SessionStorageListener = {
 };
 
 /**
+ * Listen for changes to the privacy status of the tab.
+ * By definition, tabs start in non-private mode.
+ *
+ * Causes a SessionStore:update message to be sent for
+ * field "isPrivate". This message contains
+ *  |true| if the tab is now private
+ *  |null| if the tab is now public - the field is therefore
+ *  not saved.
+ */
+let PrivacyListener = {
+  init: function() {
+    docShell.addWeakPrivacyTransitionObserver(this);
+  },
+
+  // Ci.nsIPrivacyTransitionObserver
+  privateModeChanged: function(enabled) {
+    MessageQueue.push("isPrivate", () => enabled || null);
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrivacyTransitionObserver,
+                                         Ci.nsISupportsWeakReference])
+};
+
+/**
  * A message queue that takes collected data and will take care of sending it
  * to the chrome process. It allows flushing using synchronous messages and
  * takes care of any race conditions that might occur because of that. Changes
@@ -461,3 +485,4 @@ ProgressListener.init();
 PageStyleListener.init();
 SessionStorageListener.init();
 DocShellCapabilitiesListener.init();
+PrivacyListener.init();
