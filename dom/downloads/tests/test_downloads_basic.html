@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=938023
+-->
+<head>
+  <title>Test for Bug 938023 Downloads API</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=938023">Mozilla Bug 938023</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<a href="serve_file.sjs?contentType=application/octet-stream&size=1024" download="test.bin" id="download1">Download #1</a>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+
+// Testing a simple download, waiting for it to be done.
+
+SimpleTest.waitForExplicitFinish();
+
+var index = -1;
+
+function next() {
+  index += 1;
+  if (index >= steps.length) {
+    ok(false, "Shouldn't get here!");
+    return;
+  }
+  try {
+    steps[index]();
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+}
+
+function downloadChange(evt) {
+  var download = evt.download;
+  if (download.state == "succeeded") {
+    ok(download.totalBytes == 1024, "Download size is 1024 bytes.");
+    ok(download.contentType == "application/octet-stream",
+       "contentType is application/octet-stream.");
+    SimpleTest.finish();
+  }
+}
+
+var steps = [
+  // Start by setting the pref to true.
+  function() {
+    SpecialPowers.pushPrefEnv({
+      set: [["dom.mozDownloads.enabled", true]]
+    }, next);
+  },
+
+  // Setup the event listeners.
+  function() {
+    SpecialPowers.pushPermissions([
+      {type: "downloads", allow: true, context: document}
+    ], function() {
+      navigator.mozDownloadManager.ondownloadstart =
+        function(evt) {
+          ok(true, "Download started");
+          evt.download.addEventListener("statechange", downloadChange);
+        }
+      next();
+    });
+  },
+
+  // Click on the <a download> to start the download.
+  function() {
+    document.getElementById("download1").click();
+  }
+];
+
+next();
+
+</script>
+</pre>
+</body>
+</html>
