@@ -11,6 +11,7 @@
 #include "nsZipArchive.h"
 #include "nsIStartupCache.h"
 #include "nsITimer.h"
+#include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsIOutputStream.h"
@@ -18,8 +19,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StaticPtr.h"
-
-class nsIMemoryReporter;
 
 /**
  * The StartupCache is a persistent cache of simple key-value pairs,
@@ -98,7 +97,7 @@ class StartupCacheListener MOZ_FINAL : public nsIObserver
   NS_DECL_NSIOBSERVER
 };
 
-class StartupCache : public nsISupports
+class StartupCache : public mozilla::MemoryMultiReporter
 {
 
 friend class StartupCacheListener;
@@ -130,6 +129,9 @@ public:
 
   static StartupCache* GetSingleton();
   static void DeleteSingleton();
+
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData);
 
   // This measures all the heap memory used by the StartupCache, i.e. it
   // excludes the mapping.
@@ -179,9 +181,6 @@ private:
 #ifdef DEBUG
   nsTHashtable<nsISupportsHashKey> mWriteObjectMap;
 #endif
-
-  nsCOMPtr<nsIMemoryReporter> mMappingReporter;
-  nsCOMPtr<nsIMemoryReporter> mDataReporter;
 };
 
 // This debug outputstream attempts to detect if clients are writing multiple

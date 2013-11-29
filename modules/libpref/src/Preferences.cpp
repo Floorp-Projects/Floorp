@@ -341,7 +341,7 @@ class AddPreferencesMemoryReporterRunnable : public nsRunnable
 {
   NS_IMETHOD Run()
   {
-    return NS_RegisterMemoryReporter(new PreferenceServiceReporter());
+    return RegisterStrongMemoryReporter(new PreferenceServiceReporter());
   }
 };
 } // anonymous namespace
@@ -376,9 +376,9 @@ Preferences::GetInstanceForService()
   gObserverTable = new nsRefPtrHashtable<ValueObserverHashKey, ValueObserver>();
 
   // Preferences::GetInstanceForService() can be called from GetService(), and
-  // NS_RegisterMemoryReporter calls GetService(nsIMemoryReporter).  To avoid a
-  // potential recursive GetService() call, we can't register the memory
-  // reporter here; instead, do it off a runnable.
+  // RegisterStrongMemoryReporter calls GetService(nsIMemoryReporter).  To
+  // avoid a potential recursive GetService() call, we can't register the
+  // memory reporter here; instead, do it off a runnable.
   nsRefPtr<AddPreferencesMemoryReporterRunnable> runnable =
     new AddPreferencesMemoryReporterRunnable();
   NS_DispatchToMainThread(runnable);

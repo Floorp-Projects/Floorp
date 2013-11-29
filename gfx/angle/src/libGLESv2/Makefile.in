@@ -25,12 +25,6 @@ VPATH += $(srcdir)/../compiler/preprocessor
 
 # Target: 'translator_common'
 #   Requires: 'preprocessor'
-LOCAL_INCLUDES += \
-  -I$(srcdir)/../../include \
-  -I$(srcdir)/../../include/KHR \
-  -I$(srcdir)/.. \
-  -I"$(MOZ_DIRECTX_SDK_PATH)/include"
-
 VPATH += $(srcdir)/renderer
 VPATH += $(srcdir)/..
 VPATH += $(srcdir)/../compiler
@@ -49,6 +43,8 @@ RCFILE  = $(srcdir)/libGLESv2.rc
 # End build_angle.gypi transcription.
 
 include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS += -I"$(MOZ_DIRECTX_SDK_PATH)/include"
 
 ifdef GNU_CC
 

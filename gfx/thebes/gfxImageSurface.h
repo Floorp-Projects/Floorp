@@ -102,6 +102,12 @@ public:
      */
     bool CopyFrom (mozilla::gfx::SourceSurface *aSurface);
 
+    /**
+     * Fast copy to a source surface; returns TRUE if successful, FALSE otherwise
+     * Assumes that the format of this surface is compatible with aSurface
+     */
+    bool CopyTo (mozilla::gfx::SourceSurface *aSurface);
+
     /* return new Subimage with pointing to original image starting from aRect.pos
      * and size of aRect.size. New subimage keeping current image reference
      */

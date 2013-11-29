@@ -6,11 +6,6 @@ VPATH += $(topsrcdir)/build
 
 LIBS += $(XPCOM_LIBS)
 
-# Needed to resolve __yylex (?)
-ifeq ($(OS_ARCH)$(OS_RELEASE),FreeBSD2)
-LIBS		+= -lpcap
-endif
-
 # Make sure we have symbols in case we need to debug these.
 MOZ_DEBUG_SYMBOLS = 1
 

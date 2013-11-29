@@ -13,13 +13,13 @@
 
 #include "nsEffectiveTLDService.h"
 #include "nsIIDNService.h"
-#include "nsIMemoryReporter.h"
 #include "nsNetUtil.h"
 #include "prnetdb.h"
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS1(nsEffectiveTLDService, nsIEffectiveTLDService)
+NS_IMPL_ISUPPORTS_INHERITED1(nsEffectiveTLDService, MemoryUniReporter,
+                             nsIEffectiveTLDService)
 
 // ----------------------------------------------------------------------
 
@@ -61,28 +61,15 @@ nsDomainEntry::FuncForStaticAsserts(void)
 
 static nsEffectiveTLDService *gService = nullptr;
 
-class EffectiveTLDServiceReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-  EffectiveTLDServiceReporter()
-    : MemoryUniReporter("explicit/xpcom/effective-TLD-service",
-                         KIND_HEAP, UNITS_BYTES,
-                         "Memory used by the effective TLD service.")
-  {}
-
-private:
-  int64_t Amount() MOZ_OVERRIDE
-  {
-    return gService ? gService->SizeOfIncludingThis(MallocSizeOf) : 0;
-  }
-};
-
 nsEffectiveTLDService::nsEffectiveTLDService()
   // We'll probably have to rehash at least once, since nsTHashtable doesn't
   // use a perfect hash, but at least we'll save a few rehashes along the way.
   // Next optimization here is to precompute the hash using something like
   // gperf, but one step at a time.  :-)
-  : mHash(ArrayLength(nsDomainEntry::entries))
+  : MemoryUniReporter("explicit/xpcom/effective-TLD-service",
+                       KIND_HEAP, UNITS_BYTES,
+                       "Memory used by the effective TLD service.")
+  , mHash(ArrayLength(nsDomainEntry::entries))
 {
 }
 
@@ -112,27 +99,31 @@ nsEffectiveTLDService::Init()
 
   MOZ_ASSERT(!gService);
   gService = this;
-  mReporter = new EffectiveTLDServiceReporter();
-  NS_RegisterMemoryReporter(mReporter);
+  RegisterWeakMemoryReporter(this);
 
   return NS_OK;
 }
 
 nsEffectiveTLDService::~nsEffectiveTLDService()
 {
-  NS_UnregisterMemoryReporter(mReporter);
+  UnregisterWeakMemoryReporter(this);
   gService = nullptr;
 }
 
+int64_t
+nsEffectiveTLDService::Amount()
+{
+  return SizeOfIncludingThis(MallocSizeOf);
+}
+
 size_t
-nsEffectiveTLDService::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
+nsEffectiveTLDService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   size_t n = aMallocSizeOf(this);
   n += mHash.SizeOfExcludingThis(nullptr, aMallocSizeOf);
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
-  // - mReporter
   // - mIDNService
 
   return n;

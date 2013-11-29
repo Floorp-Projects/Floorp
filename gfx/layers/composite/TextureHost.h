@@ -357,7 +357,7 @@ public:
    * Debug facility.
    * XXX - cool kids use Moz2D. See bug 882113.
    */
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() = 0;
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() = 0;
 
   /**
    * XXX - Flags should only be set at creation time, this will be removed.
@@ -445,7 +445,7 @@ public:
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
 
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
 
 protected:
   bool Upload(nsIntRegion *aRegion = nullptr);
@@ -662,7 +662,7 @@ public:
     return LayerRenderState();
   }
 
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() = 0;
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() = 0;
 
   virtual const char *Name() = 0;
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);

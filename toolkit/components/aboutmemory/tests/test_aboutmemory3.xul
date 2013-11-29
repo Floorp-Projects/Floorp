@@ -22,15 +22,8 @@
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
-  // Remove all the real reporters;  save them to restore at the end.
-  mgr.blockRegistration();
-  let e = mgr.enumerateReporters();
-  let realReporters = [];
-  while (e.hasMoreElements()) {
-    let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    mgr.unregisterReporter(r);
-    realReporters.push(r);
-  }
+  // Hide all the real reporters;  we'll restore them at the end.
+  mgr.blockRegistrationAndHideExistingReporters();
 
   // Setup a minimal number of fake reporters.
   const KB = 1024;
@@ -53,7 +46,7 @@
   ];
 
   for (let i = 0; i < fakeReporters.length; i++) {
-    mgr.registerReporterEvenIfBlocked(fakeReporters[i]);
+    mgr.registerStrongReporterEvenIfBlocked(fakeReporters[i]);
   }
 
   ]]>
@@ -65,16 +58,7 @@
   <![CDATA[
   function finish()
   {
-    // Unregister fake reporters and re-register the real reporters, just in
-    // case subsequent tests rely on them.
-    for (let i = 0; i < fakeReporters.length; i++) {
-      mgr.unregisterReporter(fakeReporters[i]);
-    }
-    for (let i = 0; i < realReporters.length; i++) {
-      mgr.registerReporterEvenIfBlocked(realReporters[i]);
-    }
-    mgr.unblockRegistration();
-
+    mgr.unblockRegistrationAndRestoreOriginalReporters();
     SimpleTest.finish();
   }
 

@@ -307,7 +307,8 @@ struct IonScript
     }
     bool addDependentAsmJSModule(JSContext *cx, DependentAsmJSModuleExit exit);
     void removeDependentAsmJSModule(DependentAsmJSModuleExit exit) {
-        JS_ASSERT(dependentAsmJSModules);
+        if (!dependentAsmJSModules)
+            return;
         for (size_t i = 0; i < dependentAsmJSModules->length(); i++) {
             if (dependentAsmJSModules->begin()[i].module == exit.module &&
                 dependentAsmJSModules->begin()[i].exitIndex == exit.exitIndex)

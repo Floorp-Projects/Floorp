@@ -193,7 +193,7 @@ SVGFEImageElement::Href()
 FilterPrimitiveDescription
 SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                            const IntRect& aFilterSubregion,
-                                           nsTArray<nsRefPtr<gfxASurface> >& aInputImages)
+                                           nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) {
@@ -220,6 +220,11 @@ SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
     return FilterPrimitiveDescription(FilterPrimitiveDescription::eNone);
   }
 
+  gfxPlatform* platform = gfxPlatform::GetPlatform();
+  DrawTarget* dt = platform->ScreenReferenceDrawTarget();
+  RefPtr<SourceSurface> image =
+    platform->GetSourceSurfaceForSurface(dt, currentFrame);
+
   IntSize nativeSize;
   imageContainer->GetWidth(&nativeSize.width);
   imageContainer->GetHeight(&nativeSize.height);
@@ -239,7 +244,7 @@ SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
 
   // Append the image to aInputImages and store its index in the description.
   size_t imageIndex = aInputImages.Length();
-  aInputImages.AppendElement(currentFrame);
+  aInputImages.AppendElement(image);
   descr.Attributes().Set(eImageInputIndex, (uint32_t)imageIndex);
 
   return descr;

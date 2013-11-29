@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsICollation.h"
 #include "nsIFile.h"
+#include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
 #include "mozilla/Mutex.h"
@@ -24,7 +25,8 @@ namespace mozilla {
 namespace storage {
 
 class Connection;
-class Service : public mozIStorageService
+class Service : public MemoryMultiReporter
+              , public mozIStorageService
               , public nsIObserver
 {
 public:
@@ -55,6 +57,9 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGESERVICE
   NS_DECL_NSIOBSERVER
+
+  NS_IMETHOD CollectReports(nsIHandleReportCallback *aHandleReport,
+                            nsISupports *aData);
 
   /**
    * Obtains an already AddRefed pointer to XPConnect.  This is used by

@@ -1528,6 +1528,31 @@ js_IsDebugScopeSlow(ProxyObject *proxy)
 
 /*****************************************************************************/
 
+/* static */ JS_ALWAYS_INLINE void
+DebugScopes::proxiedScopesPostWriteBarrier(JSRuntime *rt, ObjectWeakMap *map,
+                                           const EncapsulatedPtr<JSObject> &key)
+{
+#ifdef JSGC_GENERATIONAL
+    /*
+     * Strip the barriers from the type before inserting into the store buffer.
+     * This will automatically ensure that barriers do not fire during GC.
+     */
+    typedef WeakMap<JSObject *, JSObject *> UnbarrieredMap;
+    typedef gc::HashKeyRef<UnbarrieredMap, JSObject *> Ref;
+    if (key && IsInsideNursery(rt, key))
+        rt->gcStoreBuffer.putGeneric(Ref(reinterpret_cast<UnbarrieredMap *>(map), key.get()));
+#endif
+}
+
+/* static */ JS_ALWAYS_INLINE void
+DebugScopes::liveScopesPostWriteBarrier(JSRuntime *rt, LiveScopeMap *map, ScopeObject *key)
+{
+#ifdef JSGC_GENERATIONAL
+    if (key && IsInsideNursery(rt, key))
+        rt->gcStoreBuffer.putGeneric(gc::HashKeyRef<LiveScopeMap, ScopeObject *>(map, key));
+#endif
+}
+
 DebugScopes::DebugScopes(JSContext *cx)
  : proxiedScopes(cx),
    missingScopes(cx->runtime()),
@@ -1661,7 +1686,7 @@ DebugScopes::addDebugScope(JSContext *cx, ScopeObject &scope, DebugScopeObject &
         return false;
     }
 
-    HashTableWriteBarrierPost(cx->runtime(), &scopes->proxiedScopes, &scope);
+    proxiedScopesPostWriteBarrier(cx->runtime(), &scopes->proxiedScopes, &scope);
     return true;
 }
 
@@ -1705,7 +1730,7 @@ DebugScopes::addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject 
         js_ReportOutOfMemory(cx);
         return false;
     }
-    HashTableWriteBarrierPost(cx->runtime(), &scopes->liveScopes, &debugScope.scope());
+    liveScopesPostWriteBarrier(cx->runtime(), &scopes->liveScopes, &debugScope.scope());
 
     return true;
 }
@@ -1859,7 +1884,7 @@ DebugScopes::onGeneratorFrameChange(AbstractFramePtr from, AbstractFramePtr to, 
                 livePtr->value = to;
             } else {
                 scopes->liveScopes.add(livePtr, &toIter.scope(), to);  // OOM here?
-                HashTableWriteBarrierPost(cx->runtime(), &scopes->liveScopes, &toIter.scope());
+                liveScopesPostWriteBarrier(cx->runtime(), &scopes->liveScopes, &toIter.scope());
             }
         } else {
             ScopeIter si(toIter, from, cx);
@@ -1921,7 +1946,7 @@ DebugScopes::updateLiveScopes(JSContext *cx)
                     return false;
                 if (!scopes->liveScopes.put(&si.scope(), frame))
                     return false;
-                HashTableWriteBarrierPost(cx->runtime(), &scopes->liveScopes, &si.scope());
+                liveScopesPostWriteBarrier(cx->runtime(), &scopes->liveScopes, &si.scope());
             }
         }
 

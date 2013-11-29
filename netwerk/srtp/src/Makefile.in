@@ -15,11 +15,6 @@ VPATH = \
   @srcdir@/crypto/rng \
   $(NULL)
 
-LOCAL_INCLUDES = \
-  -I$(srcdir)/include \
-  -I$(srcdir)/crypto/include \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef GNU_CC

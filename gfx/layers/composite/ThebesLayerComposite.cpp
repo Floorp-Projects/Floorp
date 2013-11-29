@@ -9,7 +9,6 @@
 #include "Units.h"                      // for CSSRect, LayerPixel, etc
 #include "gfx2DGlue.h"                  // for ToMatrix4x4
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
-#include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxUtils.h"                   // for gfxUtils, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
@@ -112,8 +111,14 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPainting) {
-    nsRefPtr<gfxImageSurface> surf = mBuffer->GetAsSurface();
-    if (surf) {
+    RefPtr<gfx::DataSourceSurface> dSurf = mBuffer->GetAsSurface();
+    if (dSurf) {
+      gfxPlatform *platform = gfxPlatform::GetPlatform();
+      RefPtr<gfx::DrawTarget> dt = platform->CreateDrawTargetForData(dSurf->GetData(),
+                                                                     dSurf->GetSize(),
+                                                                     dSurf->Stride(),
+                                                                     dSurf->GetFormat());
+      nsRefPtr<gfxASurface> surf = platform->GetThebesSurfaceForDrawTarget(dt);
       WriteSnapshotToDumpFile(this, surf);
     }
   }

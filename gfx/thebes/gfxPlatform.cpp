@@ -502,7 +502,7 @@ gfxPlatform::Init()
         obs->AddObserver(gPlatform->mMemoryPressureObserver, "memory-pressure", false);
     }
 
-    NS_RegisterMemoryReporter(new GfxMemoryImageReporter());
+    RegisterStrongMemoryReporter(new GfxMemoryImageReporter());
 }
 
 void

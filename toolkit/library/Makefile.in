@@ -137,7 +137,7 @@ ifdef MOZ_NATIVE_PNG
 EXTRA_DSO_LDOPTS += $(MOZ_PNG_LIBS)
 endif
 
-ifneq (WINNT,$(OS_ARCH))
+ifndef ZLIB_IN_MOZGLUE
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 endif
 
@@ -180,10 +180,8 @@ endif
 endif
 
 
-ifdef MOZ_CUBEB
 ifdef MOZ_ALSA
 EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
-endif
 endif
 
 ifdef HAVE_CLOCK_MONOTONIC
@@ -247,9 +245,7 @@ OS_LIBS += \
 endif
 
 ifeq (OpenBSD,$(OS_ARCH))
-ifdef MOZ_CUBEB
 EXTRA_DSO_LDOPTS += -lsndio
-endif
 endif
 
 ifdef MOZ_ENABLE_DBUS

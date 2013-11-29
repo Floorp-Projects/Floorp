@@ -83,7 +83,7 @@ elif CONFIG['OS_TARGET'] == 'WINNT':
         '/media/mtransport/third_party/nrappkit/src/port/win32/include',
     ]
 
-if CONFIG['OS_TARGET'] == 'WINNT':
+if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 
 FINAL_LIBRARY = 'xul'

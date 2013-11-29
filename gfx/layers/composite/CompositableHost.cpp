@@ -10,7 +10,6 @@
 #include "Effects.h"                    // for EffectMask, Effect, etc
 #include "ImageHost.h"                  // for DeprecatedImageHostBuffered, etc
 #include "TiledContentHost.h"           // for TiledContentHost
-#include "gfxImageSurface.h"            // for gfxImageSurface
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/TextureHost.h"  // for TextureHost, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr
@@ -212,7 +211,13 @@ CompositableHost::DumpDeprecatedTextureHost(FILE* aFile, DeprecatedTextureHost* 
   if (!aTexture) {
     return;
   }
-  nsRefPtr<gfxImageSurface> surf = aTexture->GetAsSurface();
+  RefPtr<gfx::DataSourceSurface> dSurf = aTexture->GetAsSurface();
+  gfxPlatform *platform = gfxPlatform::GetPlatform();
+  RefPtr<gfx::DrawTarget> dt = platform->CreateDrawTargetForData(dSurf->GetData(),
+                                                                 dSurf->GetSize(),
+                                                                 dSurf->Stride(),
+                                                                 dSurf->GetFormat());
+  nsRefPtr<gfxASurface> surf = platform->GetThebesSurfaceForDrawTarget(dt);
   if (!surf) {
     return;
   }
@@ -225,7 +230,13 @@ CompositableHost::DumpTextureHost(FILE* aFile, TextureHost* aTexture)
   if (!aTexture) {
     return;
   }
-  nsRefPtr<gfxImageSurface> surf = aTexture->GetAsSurface();
+  RefPtr<gfx::DataSourceSurface> dSurf = aTexture->GetAsSurface();
+  gfxPlatform *platform = gfxPlatform::GetPlatform();
+  RefPtr<gfx::DrawTarget> dt = platform->CreateDrawTargetForData(dSurf->GetData(),
+                                                                 dSurf->GetSize(),
+                                                                 dSurf->Stride(),
+                                                                 dSurf->GetFormat());
+  nsRefPtr<gfxASurface> surf = platform->GetThebesSurfaceForDrawTarget(dt);
   if (!surf) {
     return;
   }

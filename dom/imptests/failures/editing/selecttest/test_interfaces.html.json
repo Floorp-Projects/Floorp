@@ -1,6 +1,7 @@
 {
   "Selection interface: existence and properties of interface object":true,
   "Selection interface: existence and properties of interface prototype object":true,
+  "Selection interface object length":true,
   "Selection interface: existence and properties of interface prototype object's \"constructor\" property":true,
   "Selection interface: attribute anchorNode":true,
   "Selection interface: attribute anchorOffset":true,

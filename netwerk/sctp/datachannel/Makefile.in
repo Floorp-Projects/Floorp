@@ -4,10 +4,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 NO_PROFILE_GUIDED_OPTIMIZE = 1 # Don't PGO
-LOCAL_INCLUDES = \
-  -I$(topsrcdir)/xpcom/ds \
-  -I$(srcdir)/../src \
-  -I$(DEPTH)/dist/include/mozilla/net \
-  -I$(topsrcdir)/media/webrtc/trunk/third_party/libjingle/source \
-  -I$(topsrcdir)/media/mtransport \
-  $(NULL)
