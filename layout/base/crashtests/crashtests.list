@@ -44,8 +44,8 @@ load 265973-1.html
 asserts(6-12) load 265986-1.html # Bug 512405
 load 265999-1.html
 load 266222-1.html
-asserts(3-7) load 266360-1.html # bug 575011 / bug 576358
-asserts(4) load 266445-1.html # Bug 575011
+asserts(2-7) load 266360-1.html # bug 576358
+load 266445-1.html
 load 268157-1.html
 load 269566-1.html
 load 272647-1.html
@@ -245,7 +245,7 @@ load 432752-1.svg
 load 433450-1.html
 load 436982-1.html
 load 437142-1.html
-asserts(1) load 439343.html # bug 575011
+load 439343.html
 load 444863-1.html
 load 444925-1.xul
 load 444967-1.html
@@ -255,7 +255,7 @@ load 448543-1.html
 load 448543-2.html
 load 448543-3.html
 load 450319-1.xhtml
-asserts(3) load 453894-1.xhtml # Bug 575011
+asserts(1) load 453894-1.xhtml # Bug 398043
 load 454751-1.xul
 load 455063-1.html
 load 455063-2.html
