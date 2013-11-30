@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1384551293000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1385765544000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -69,8 +69,8 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i348" id="{13c9f1f9-2322-4d5c-81df-6d4bf8476ba4}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+      <emItem  blockID="i488" id="jid1-4P0kohSJxU1qGg@jetpack">
+                        <versionRange  minVersion="1.2.50" maxVersion="1.2.50" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i486" id="xz123@ya456.com">
@@ -102,12 +102,16 @@
                         <versionRange  minVersion="3.4.1" maxVersion="3.4.1.194" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i474" id="{906000a4-88d9-4d52-b209-7a772970d91f}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+      <emItem  blockID="i100" id="{394DCBA4-1F92-4f8e-8EC9-8D2CB90CB69B}">
+                        <versionRange  minVersion="2.5.0" maxVersion="2.5.0" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i40" id="{28387537-e3f9-4ed7-860c-11e69af4a8a0}">
                         <versionRange  minVersion="0.1" maxVersion="4.3.1.00" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i20" id="{AB2CE124-6272-4b12-94A9-7303C7397BD1}">
+                        <versionRange  minVersion="0.1" maxVersion="5.2.0.7164" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i430" id="1chtw@facebook.com">
@@ -181,10 +185,6 @@
                                 <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i475" id="{B21F5E31-B8E8-41CD-B74C-168A71A10E49}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="3">
-                    </versionRange>
-                  </emItem>
       <emItem  blockID="i11" id="yslow@yahoo-inc.com">
                         <versionRange  minVersion="2.0.5" maxVersion="2.0.5">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
@@ -256,6 +256,10 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i487" id="{df6bb2ec-333b-4267-8c4f-3f27dc8c6e07}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i142" id="{a3a5c777-f583-4fef-9380-ab4add1bc2a8}">
                         <versionRange  minVersion="2.0.3" maxVersion="2.0.3">
                     </versionRange>
@@ -311,8 +315,8 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i100" id="{394DCBA4-1F92-4f8e-8EC9-8D2CB90CB69B}">
-                        <versionRange  minVersion="2.5.0" maxVersion="2.5.0" severity="1">
+      <emItem  blockID="i348" id="{13c9f1f9-2322-4d5c-81df-6d4bf8476ba4}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i338" id="{1FD91A9C-410C-4090-BBCC-55D3450EF433}">
@@ -455,6 +459,10 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i474" id="{906000a4-88d9-4d52-b209-7a772970d91f}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i453" id="/^brasilescape.*\@facebook\.com$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -582,8 +590,8 @@
                         <versionRange  severity="3">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i20" id="{AB2CE124-6272-4b12-94A9-7303C7397BD1}">
-                        <versionRange  minVersion="0.1" maxVersion="5.2.0.7164" severity="1">
+      <emItem  blockID="i491" id="{515b2424-5911-40bd-8a2c-bdb20286d8f5}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i444" id="fplayer@adobe.flash">
@@ -660,6 +668,10 @@
                   </emItem>
       <emItem  blockID="i318" id="ffxtlbr@incredibar.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i490" id="now.msn.com@services.mozilla.org">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i312" id="extension21804@extension21804.com">
@@ -773,6 +785,10 @@
                   </emItem>
       <emItem  blockID="i90" id="videoplugin@player.com">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i489" id="astrovia@facebook.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i68" id="flashupdate@adobe.com">
