@@ -783,6 +783,7 @@ JSRuntime::initSelfHosting(JSContext *cx)
 
 #ifdef DEBUG
     options.strictOption = true;
+    options.extraWarningsOption = true;
 #endif
 
     /*
