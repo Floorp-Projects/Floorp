@@ -193,7 +193,7 @@ function promiseContentMessage(browser, name) {
 
   function listener(msg) {
     removeListener();
-    deferred.resolve(msg);
+    deferred.resolve(msg.data);
   }
 
   mm.addMessageListener(name, listener);
@@ -280,9 +280,11 @@ function forceSaveState() {
 }
 
 function whenBrowserLoaded(aBrowser, aCallback = next) {
-  aBrowser.addEventListener("load", function onLoad() {
-    aBrowser.removeEventListener("load", onLoad, true);
-    executeSoon(aCallback);
+  aBrowser.addEventListener("load", function onLoad(event) {
+    if (event.target == aBrowser.contentDocument) {
+      aBrowser.removeEventListener("load", onLoad, true);
+      executeSoon(aCallback);
+    }
   }, true);
 }
 function promiseBrowserLoaded(aBrowser) {
