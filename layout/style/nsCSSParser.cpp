@@ -3847,7 +3847,7 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
         UngetToken();
         return eSelectorParsingStatus_Done;
       }
-      REPORT_UNEXPECTED_TOKEN(PEPseudoSelTrailing);
+      REPORT_UNEXPECTED_TOKEN(PEPseudoSelEndOrUserActionPC);
       UngetToken();
       return eSelectorParsingStatus_Error;
     }
