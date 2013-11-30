@@ -11,3 +11,4 @@ fails-if(B2G||Android) == margin-padding-1.html margin-padding-1-ref.html
 == block-invalidate-1.html block-invalidate-1-ref.html
 fails-if(B2G||Android) == transformations-1.html transformations-1-ref.html
 fails-if(B2G||Android) == custom-style-1.html custom-style-1-ref.html
+fails-if(B2G||Android) == custom-style-2.html custom-style-2-ref.html
