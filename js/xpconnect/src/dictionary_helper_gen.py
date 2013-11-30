@@ -58,6 +58,8 @@ def attributeVariableTypeAndName(a):
         l = ["nsString %s" % a.name]
     elif a.realtype.nativeType('in').count("JS::Value"):
         l = ["JS::Value %s" % a.name]
+    elif a.realtype.nativeType('in').count("DOMTimeStamp"):
+        l = ["uint64_t /* DOMTimeStamp */ %s" % a.name]
     else:
         l = ["%s%s" % (a.realtype.nativeType('in'),
                        a.name)]
@@ -291,7 +293,7 @@ def write_getter(a, iface, fd):
         fd.write("    NS_ENSURE_STATE(JS::ToUint32(aCx, v, &aDict.%s));\n" % a.name)
     elif realtype.count("int32_t"):
         fd.write("    NS_ENSURE_STATE(JS::ToInt32(aCx, v, &aDict.%s));\n" % a.name)
-    elif realtype.count("uint64_t"):
+    elif realtype.count("uint64_t") or realtype.count("DOMTimeStamp"):
         fd.write("    NS_ENSURE_STATE(JS::ToUint64(aCx, v, &aDict.%s));\n" % a.name)
     elif realtype.count("int64_t"):
         fd.write("    NS_ENSURE_STATE(JS::ToInt64(aCx, v, &aDict.%s));\n" % a.name)

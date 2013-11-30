@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "domstubs.idl"
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(db9ff254-2745-11e3-aa37-8793b90fc643)]
+[scriptable, builtinclass, uuid(c591dcf8-5322-11e3-899e-9baad640ca82)]
 interface nsIDOMMozSmsMessage : nsISupports
 {
   /**
@@ -49,13 +50,11 @@ interface nsIDOMMozSmsMessage : nsISupports
    */
   readonly attribute DOMString messageClass;
 
-  [implicit_jscontext]
-  readonly attribute jsval     timestamp; // Date object.
+  readonly attribute DOMTimeStamp timestamp;
 
-  [implicit_jscontext]
-  readonly attribute jsval     deliveryTimestamp;
-                               // Date object; null if not available (e.g.,
-                               // |delivery| = "received" or not yet delivered).
+  readonly attribute DOMTimeStamp deliveryTimestamp;
+                                  // 0 if not available (e.g., |delivery| =
+                                  // "received" or not yet delivered).
 
   readonly attribute boolean   read;
 };
