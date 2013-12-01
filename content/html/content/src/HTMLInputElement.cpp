@@ -3295,6 +3295,15 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     // nsIFormControlFrame::SetFocus, we handle focus here.
     nsIFrame* frame = GetPrimaryFrame();
     if (frame) {
+      if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
+        // Tell our frame it's getting focus so that it can make sure focus
+        // is moved to our anonymous text control.
+        nsNumberControlFrame* numberControlFrame =
+          do_QueryFrame(GetPrimaryFrame());
+        if (numberControlFrame) {
+          numberControlFrame->HandleFocusEvent(aVisitor.mEvent);
+        }
+      }
       frame->InvalidateFrameSubtree();
     }
   }
@@ -5758,8 +5767,7 @@ HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable, int32_t* 
   }
 
   if (IsSingleLineTextControl(false) ||
-      mType == NS_FORM_INPUT_RANGE ||
-      mType == NS_FORM_INPUT_NUMBER) {
+      mType == NS_FORM_INPUT_RANGE) {
     *aIsFocusable = true;
     return false;
   }
@@ -5770,11 +5778,17 @@ HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable, int32_t* 
   const bool defaultFocusable = true;
 #endif
 
-  if (mType == NS_FORM_INPUT_FILE) {
+  if (mType == NS_FORM_INPUT_FILE ||
+      mType == NS_FORM_INPUT_NUMBER) {
     if (aTabIndex) {
+      // We only want our native anonymous child to be tabable to, not ourself.
       *aTabIndex = -1;
     }
-    *aIsFocusable = defaultFocusable;
+    if (mType == NS_FORM_INPUT_NUMBER) {
+      *aIsFocusable = true;
+    } else {
+      *aIsFocusable = defaultFocusable;
+    }
     return true;
   }
 
