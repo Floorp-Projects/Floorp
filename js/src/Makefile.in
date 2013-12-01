@@ -140,6 +140,8 @@ endif
 MOZILLA_DTRACE_SRC = $(srcdir)/devtools/javascript-trace.d
 endif
 
+NO_PROFILE_GUIDED_OPTIMIZE := jsanchor.cpp
+
 backend.RecursiveMakeBackend:
 	@echo "Build configuration changed. Regenerating backend."
 	$(PYTHON) config.status
