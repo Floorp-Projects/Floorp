@@ -3295,15 +3295,6 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     // nsIFormControlFrame::SetFocus, we handle focus here.
     nsIFrame* frame = GetPrimaryFrame();
     if (frame) {
-      if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
-        // Tell our frame it's getting focus so that it can make sure focus
-        // is moved to our anonymous text control.
-        nsNumberControlFrame* numberControlFrame =
-          do_QueryFrame(GetPrimaryFrame());
-        if (numberControlFrame) {
-          numberControlFrame->HandleFocusEvent(aVisitor.mEvent);
-        }
-      }
       frame->InvalidateFrameSubtree();
     }
   }
@@ -3340,6 +3331,21 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
         }
       } else if (aVisitor.mEvent->message == NS_MOUSE_BUTTON_UP) {
         StopNumberControlSpinnerSpin();
+      }
+    }
+    if (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
+        aVisitor.mEvent->message == NS_BLUR_CONTENT) {
+      nsIFrame* frame = GetPrimaryFrame();
+      if (frame) {
+        if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
+          // Tell our frame it's getting focus so that it can make sure focus
+          // is moved to our anonymous text control.
+          nsNumberControlFrame* numberControlFrame =
+            do_QueryFrame(GetPrimaryFrame());
+          if (numberControlFrame) {
+            numberControlFrame->HandleFocusEvent(aVisitor.mEvent);
+          }
+        }
       }
     }
   }
