@@ -98,7 +98,18 @@ public:
                         const gfx::Rect& aClipRect,
                         const EffectChain &aEffectChain,
                         gfx::Float aOpacity,
-                        const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE;
+                        const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE
+  {
+    DrawQuadInternal(aRect, aClipRect, aEffectChain,
+                     aOpacity, aTransform, LOCAL_GL_TRIANGLE_STRIP);
+  }
+
+  virtual void DrawLines(const std::vector<gfx::Point>& aLines,
+                         const gfx::Rect& aClipRect,
+                         const gfx::Color& aColor,
+                         gfx::Float aOpacity,
+                         const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE;
+
 
   virtual void EndFrame() MOZ_OVERRIDE;
   virtual void EndFrameForExternalComposition(const gfxMatrix& aTransform) MOZ_OVERRIDE;
@@ -171,6 +182,13 @@ public:
    */
   GLuint GetTemporaryTexture(GLenum aUnit);
 private:
+  virtual void DrawQuadInternal(const gfx::Rect& aRect,
+                                const gfx::Rect& aClipRect,
+                                const EffectChain &aEffectChain,
+                                gfx::Float aOpacity,
+                                const gfx::Matrix4x4 &aTransformi,
+                                GLuint aDrawMode);
+
   /** 
    * Context target, nullptr when drawing directly to our swap chain.
    */
@@ -291,9 +309,11 @@ private:
   void QuadVBOFlippedTexCoordsAttrib(GLuint aAttribIndex);
   void BindAndDrawQuad(GLuint aVertAttribIndex,
                        GLuint aTexCoordAttribIndex,
-                       bool aFlipped = false);
+                       bool aFlipped = false,
+                       GLuint aDrawMode = LOCAL_GL_TRIANGLE_STRIP);
   void BindAndDrawQuad(ShaderProgramOGL *aProg,
-                       bool aFlipped = false);
+                       bool aFlipped = false,
+                       GLuint aDrawMode = LOCAL_GL_TRIANGLE_STRIP);
   void BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
                                       const gfx::Rect& aTexCoordRect,
                                       TextureSource *aTexture);
