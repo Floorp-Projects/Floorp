@@ -371,6 +371,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                                    bool aRealTime) :
   mDecoder(aDecoder),
   mState(DECODER_STATE_DECODING_METADATA),
+  mSyncPointInMediaStream(-1),
+  mSyncPointInDecodedStream(-1),
   mResetPlayStartTime(false),
   mPlayDuration(0),
   mStartTime(-1),
@@ -1317,6 +1319,19 @@ void MediaDecoderStateMachine::StopPlayback()
   mDecoder->GetReentrantMonitor().NotifyAll();
   NS_ASSERTION(!IsPlaying(), "Should report not playing at end of StopPlayback()");
   mDecoder->UpdateStreamBlockingForStateMachinePlaying();
+}
+
+void MediaDecoderStateMachine::SetSyncPointForMediaStream()
+{
+  AssertCurrentThreadInMonitor();
+
+  DecodedStreamData* stream = mDecoder->GetDecodedStream();
+  if (!stream) {
+    return;
+  }
+
+  mSyncPointInMediaStream = stream->GetLastOutputTime();
+  mSyncPointInDecodedStream = mStartTime + mPlayDuration;
 }
 
 void MediaDecoderStateMachine::StartPlayback()
@@ -2329,7 +2344,8 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // end of the media, and so that we update the readyState.
       if (mState == DECODER_STATE_COMPLETED &&
           (mReader->VideoQueue().GetSize() > 0 ||
-          (HasAudio() && !mAudioCompleted)))
+           (HasAudio() && !mAudioCompleted) ||
+           (mDecoder->GetDecodedStream() && !mDecoder->GetDecodedStream()->IsFinished())))
       {
         AdvanceFrame();
         NS_ASSERTION(mDecoder->GetState() != MediaDecoder::PLAY_STATE_PLAYING ||
@@ -2432,10 +2448,16 @@ int64_t MediaDecoderStateMachine::GetClock() {
 
   // Determine the clock time. If we've got audio, and we've not reached
   // the end of the audio, use the audio clock. However if we've finished
-  // audio, or don't have audio, use the system clock.
+  // audio, or don't have audio, use the system clock. If our output is being
+  // fed to a MediaStream, use that stream as the source of the clock.
   int64_t clock_time = -1;
+  DecodedStreamData* stream = mDecoder->GetDecodedStream();
   if (!IsPlaying()) {
     clock_time = mPlayDuration + mStartTime;
+  } else if (stream) {
+    NS_ASSERTION(mSyncPointInDecodedStream >= 0, "Should have set up sync point");
+    StreamTime streamDelta = stream->GetLastOutputTime() - mSyncPointInMediaStream;
+    clock_time = mSyncPointInDecodedStream + MediaTimeToMicroseconds(streamDelta);
   } else {
     int64_t audio_time = GetAudioClock();
     if (HasAudio() && !mAudioCompleted && audio_time != -1) {
