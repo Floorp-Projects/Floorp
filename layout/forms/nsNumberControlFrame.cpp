@@ -14,6 +14,7 @@
 #include "nsGkAtoms.h"
 #include "nsINodeInfo.h"
 #include "nsINameSpaceManager.h"
+#include "mozilla/BasicEvents.h"
 #include "nsContentUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
@@ -313,6 +314,21 @@ HTMLInputElement*
 nsNumberControlFrame::GetAnonTextControl()
 {
   return mTextField ? HTMLInputElement::FromContent(mTextField) : nullptr;
+}
+
+int32_t
+nsNumberControlFrame::GetSpinButtonForPointerEvent(WidgetGUIEvent* aEvent) const
+{
+  MOZ_ASSERT(aEvent->eventStructType == NS_MOUSE_EVENT,
+             "Unexpected event type");
+
+  if (aEvent->originalTarget == mSpinUp) {
+    return eSpinButtonUp;
+  }
+  if (aEvent->originalTarget == mSpinDown) {
+    return eSpinButtonDown;
+  }
+  return eSpinButtonNone;
 }
 
 void
