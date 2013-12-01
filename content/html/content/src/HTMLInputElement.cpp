@@ -3601,7 +3601,32 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   }
 
   if (NS_SUCCEEDED(rv)) {
-    if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
+    WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
+    if (mType ==  NS_FORM_INPUT_NUMBER &&
+        keyEvent && keyEvent->message == NS_KEY_PRESS &&
+        aVisitor.mEvent->mFlags.mIsTrusted &&
+        (keyEvent->keyCode == NS_VK_UP || keyEvent->keyCode == NS_VK_DOWN) &&
+        !(keyEvent->IsShift() || keyEvent->IsControl() ||
+          keyEvent->IsAlt() || keyEvent->IsMeta() ||
+          keyEvent->IsAltGraph() || keyEvent->IsFn() ||
+          keyEvent->IsOS())) {
+      // We handle the up/down arrow keys specially for <input type=number>.
+      // On some platforms the editor for the nested text control will
+      // process these keys to send the cursor to the start/end of the text
+      // control and as a result aVisitor.mEventStatus will already have been
+      // set to nsEventStatus_eConsumeNoDefault. However, we know that
+      // whenever the up/down arrow keys cause the value of the number
+      // control to change the string in the text control will change, and
+      // the cursor will be moved to the end of the text control, overwriting
+      // the editor's handling of up/down keypress events. For that reason we
+      // just ignore aVisitor.mEventStatus here and go ahead and handle the
+      // event to increase/decrease the value of the number control.
+      // XXX we still need to allow script to call preventDefault() on the
+      // event, but right now we can't tell the difference between the editor
+      // on script doing that (bug 930374).
+      ApplyStep(keyEvent->keyCode == NS_VK_UP ? 1 : -1);
+      aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+    } else if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
       switch (aVisitor.mEvent->message) {
 
         case NS_FOCUS_CONTENT:
