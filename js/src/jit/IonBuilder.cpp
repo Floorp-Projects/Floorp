@@ -5318,7 +5318,7 @@ IonBuilder::jsop_eval(uint32_t argc)
     if (!singleton)
         return abort("No singleton callee for eval()");
 
-    if (IsBuiltinEvalForScope(&script()->global(), ObjectValue(*singleton))) {
+    if (script()->global().valueIsEval(ObjectValue(*singleton))) {
         if (argc != 1)
             return abort("Direct eval with more than one argument");
 
