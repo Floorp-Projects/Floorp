@@ -4171,9 +4171,9 @@ HTMLInputElement::SanitizeValue(nsAString& aValue)
       break;
     case NS_FORM_INPUT_NUMBER:
       {
-        nsresult ec;
-        double val = PromiseFlatString(aValue).ToDouble(&ec);
-        if (NS_FAILED(ec) || !IsFinite(val)) {
+        Decimal value;
+        bool ok = ConvertStringToNumber(aValue, value);
+        if (!ok) {
           aValue.Truncate();
         }
       }
