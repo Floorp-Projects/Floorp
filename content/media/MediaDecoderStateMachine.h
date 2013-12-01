@@ -328,9 +328,16 @@ public:
     mDecoder = nullptr;
   }
 
-   // Called when a "MozAudioAvailable" event listener is added to the media
-   // element. Called on the main thread.
-   void NotifyAudioAvailableListener();
+  // If we're playing into a MediaStream, record the current point in the
+  // MediaStream and the current point in our media resource so later we can
+  // convert MediaStream playback positions to media resource positions. Best to
+  // call this while we're not playing (while the MediaStream is blocked). Can
+  // be called on any thread with the decoder monitor held.
+  void SetSyncPointForMediaStream();
+
+  // Called when a "MozAudioAvailable" event listener is added to the media
+  // element. Called on the main thread.
+  void NotifyAudioAvailableListener();
 
   // Copy queued audio/video data in the reader to any output MediaStreams that
   // need it.
@@ -619,6 +626,12 @@ private:
   // Accessed only via the state machine thread.
   TimeStamp mPlayStartTime;
 
+  // When we start writing decoded data to a new DecodedDataStream, or we
+  // restart writing due to PlaybackStarted(), we record where we are in the
+  // MediaStream and what that corresponds to in the media.
+  StreamTime mSyncPointInMediaStream;
+  int64_t mSyncPointInDecodedStream; // microseconds
+
   // When the playbackRate changes, and there is no audio clock, it is necessary
   // to reset the mPlayStartTime. This is done next time the clock is queried,
   // when this member is true. Access protected by decoder monitor.
@@ -743,10 +756,12 @@ private:
   bool mPositionChangeQueued;
 
   // True if the audio playback thread has finished. It is finished
-  // when either all the audio frames in the Vorbis bitstream have completed
-  // playing, or we've moved into shutdown state, and the threads are to be
+  // when either all the audio frames have completed playing, or we've moved
+  // into shutdown state, and the threads are to be
   // destroyed. Written by the audio playback thread and read and written by
   // the state machine thread. Synchronised via decoder monitor.
+  // When data is being sent to a MediaStream, this is true when all data has
+  // been written to the MediaStream.
   bool mAudioCompleted;
 
   // True if mDuration has a value obtained from an HTTP header, or from

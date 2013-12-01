@@ -203,11 +203,14 @@ MediaDecoder::DecodedStreamData::DecodedStreamData(MediaDecoder* aDecoder,
     mHaveBlockedForStateMachineNotPlaying(false)
 {
   mStream->AddMainThreadListener(this);
+  mListener = new DecodedStreamGraphListener(mStream);
+  mStream->AddListener(mListener);
 }
 
 MediaDecoder::DecodedStreamData::~DecodedStreamData()
 {
   mStream->RemoveMainThreadListener(this);
+  mListener->Forget();
   mStream->Destroy();
 }
 
@@ -215,6 +218,27 @@ void
 MediaDecoder::DecodedStreamData::NotifyMainThreadStateChanged()
 {
   mDecoder->NotifyDecodedStreamMainThreadStateChanged();
+  if (mStream->IsFinished()) {
+    mListener->SetFinishedOnMainThread(true);
+  }
+}
+
+MediaDecoder::DecodedStreamGraphListener::DecodedStreamGraphListener(MediaStream* aStream)
+  : mMutex("MediaDecoder::DecodedStreamData::mMutex"),
+    mStream(aStream),
+    mLastOutputTime(aStream->GetCurrentTime()),
+    mStreamFinishedOnMainThread(false)
+{
+}
+
+void
+MediaDecoder::DecodedStreamGraphListener::NotifyOutput(MediaStreamGraph* aGraph,
+                                                       GraphTime aCurrentTime)
+{
+  MutexAutoLock lock(mMutex);
+  if (mStream) {
+    mLastOutputTime = mStream->GraphTimeToStreamTime(aCurrentTime);
+  }
 }
 
 void MediaDecoder::DestroyDecodedStream()
@@ -250,6 +274,9 @@ void MediaDecoder::UpdateStreamBlockingForStateMachinePlaying()
   GetReentrantMonitor().AssertCurrentThreadIn();
   if (!mDecodedStream) {
     return;
+  }
+  if (mDecoderStateMachine) {
+    mDecoderStateMachine->SetSyncPointForMediaStream();
   }
   bool blockForStateMachineNotPlaying =
     mDecoderStateMachine && !mDecoderStateMachine->IsPlaying() &&
