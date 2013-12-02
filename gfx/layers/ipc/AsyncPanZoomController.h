@@ -133,8 +133,16 @@ public:
    * minimum-scale, maximum-scale, and user-scalable.
    */
   void UpdateZoomConstraints(bool aAllowZoom,
-                             const mozilla::CSSToScreenScale& aMinScale,
-                             const mozilla::CSSToScreenScale& aMaxScale);
+                             const CSSToScreenScale& aMinScale,
+                             const CSSToScreenScale& aMaxScale);
+
+  /**
+   * Return the zoom constraints last set for this APZC (in the constructor
+   * or in UpdateZoomConstraints()).
+   */
+  void GetZoomConstraints(bool* aAllowZoom,
+                          CSSToScreenScale* aMinScale,
+                          CSSToScreenScale* aMaxScale);
 
   /**
    * Schedules a runnable to run on the controller/UI thread at some time
@@ -599,8 +607,8 @@ private:
   // values; for example, allowing a min zoom of 0.0 can cause very bad things
   // to happen.
   bool mAllowZoom;
-  mozilla::CSSToScreenScale mMinZoom;
-  mozilla::CSSToScreenScale mMaxZoom;
+  CSSToScreenScale mMinZoom;
+  CSSToScreenScale mMaxZoom;
 
   // The last time the compositor has sampled the content transform for this
   // frame.
