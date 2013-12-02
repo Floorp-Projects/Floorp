@@ -406,8 +406,8 @@ public:
           CopyFromBuffer(aStream, aOutput, channels, &written, &currentPosition, mLoopStart + offsetInLoop, mLoopEnd);
         }
       } else {
-        if (mOffset + t < mDuration) {
-          CopyFromBuffer(aStream, aOutput, channels, &written, &currentPosition, mOffset + t, mDuration);
+        if (t < mDuration) {
+          CopyFromBuffer(aStream, aOutput, channels, &written, &currentPosition, mOffset + t, mOffset + mDuration);
         } else {
           FillWithZeroes(aOutput, channels, &written, &currentPosition, TRACK_TICKS_MAX);
         }
@@ -417,7 +417,7 @@ public:
     // We've finished if we've gone past mStop, or if we're past mDuration when
     // looping is disabled.
     if (currentPosition >= mStop ||
-        (!mLoop && currentPosition - mStart + mOffset >= mDuration)) {
+        (!mLoop && currentPosition - mStart >= mDuration)) {
       *aFinished = true;
     }
   }
@@ -550,13 +550,10 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
                "Only call this when we have a buffer and start() has been called");
 
   float rate = mBuffer->SampleRate();
-  int32_t lengthSamples = mBuffer->Length();
-  double length = double(lengthSamples) / rate;
-  double offset = std::max(0.0, aOffset);
-  double endOffset = aDuration == std::numeric_limits<double>::min() ?
-                     length : std::min(aOffset + aDuration, length);
+  int32_t bufferLength = mBuffer->Length();
+  int32_t offsetSamples = std::max(0, NS_lround(aOffset * rate));
 
-  if (offset >= endOffset) {
+  if (offsetSamples >= bufferLength) {
     // The offset falls past the end of the buffer.  In this case, we need to
     // stop the playback immediately if it's in progress.
     // Note that we can't call Stop() here since that might be overridden if
@@ -566,13 +563,16 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
     }
     return;
   }
-
-  int32_t offsetTicks = NS_lround(offset*rate);
   // Don't set parameter unnecessarily
-  if (offsetTicks > 0) {
-    aStream->SetInt32Parameter(OFFSET, offsetTicks);
+  if (offsetSamples > 0) {
+    aStream->SetInt32Parameter(OFFSET, offsetSamples);
   }
-  aStream->SetInt32Parameter(DURATION, NS_lround(endOffset*rate));
+
+  int32_t playingLength = bufferLength - offsetSamples;
+  if (aDuration != std::numeric_limits<double>::min()) {
+    playingLength = std::min(NS_lround(aDuration * rate), playingLength);
+  }
+  aStream->SetInt32Parameter(DURATION, playingLength);
 }
 
 void
