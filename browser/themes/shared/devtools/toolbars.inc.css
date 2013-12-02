@@ -1,20 +1,11 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
+%if 0
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/* Font for code */
-
-:root {
-  font: message-box;
-}
-
-.devtools-monospace {
-  font-family: monospace;
-  font-size: 80%;
-}
-
-/* Toolbar and Toolbar items */
+%endif
+%filter substitution
+%define smallSeparator linear-gradient(transparent 15%, #5a6169 15%, #5a6169 85%, transparent 85%)
+%define solidSeparator linear-gradient(#2d5b7d, #2d5b7d)
 
 .devtools-toolbar {
   -moz-appearance: none;
@@ -71,7 +62,7 @@
 }
 
 .devtools-toolbarbutton[checked=true] {
-  color: hsl(208,100%,60%) !important;
+  color: hsl(208,100%,60%);
 }
 
 .devtools-toolbarbutton[checked=true]:hover {
@@ -139,7 +130,7 @@
   margin: 0 3px;
   min-height: 22px;
   border: 1px solid hsla(210,8%,5%,.6);
-  border-radius: 2px;
+  border-radius: 20px;
   background-color: transparent;
   background-image: linear-gradient(hsla(210,16%,76%,.15), hsla(210,16%,76%,.35));
   padding: 3px;
@@ -209,35 +200,7 @@
   opacity: 1;
 }
 
-/* Splitters */
-
-.devtools-horizontal-splitter {
-  -moz-appearance: none;
-  border-top: 1px solid black;
-  border-bottom-width: 0;
-  min-height: 3px;
-  height: 3px;
-  margin-bottom: -3px;
-  position: relative;
-}
-
-.devtools-side-splitter {
-  -moz-appearance: none;
-  border: 0;
-  -moz-border-start: 1px solid black;
-  min-width: 0;
-  width: 3px;
-  background-color: transparent;
-  -moz-margin-end: -3px;
-  position: relative;
-  cursor: e-resize;
-}
-
 /* In-tools sidebar */
-
-.devtools-toolbox-side-iframe {
-  min-width: 465px;
-}
 
 .devtools-sidebar-tabs {
   -moz-appearance: none;
@@ -253,6 +216,7 @@
 .devtools-sidebar-tabs > tabs {
   -moz-appearance: none;
   position: static;
+  font: inherit;
   color: #b6babf;
   margin-bottom: 0;
   padding: 0;
@@ -287,8 +251,6 @@
   color: inherit;
   -moz-box-flex: 1;
   border-width: 0;
-  background: transparent;
-  border-radius: 0;
   position: static;
   -moz-margin-start: -1px;
 }
@@ -307,11 +269,8 @@
   background-position: calc(100% - 1px), 100%;
 }
 
-%filter substitution
-%define smallSeparator linear-gradient(transparent 15%, #5a6169 15%, #5a6169 85%, transparent 85%)
-%define solidSeparator linear-gradient(#2d5b7d, #2d5b7d)
-
 .devtools-sidebar-tabs > tabs > tab {
+  background-color: transparent;
   background-image: linear-gradient(transparent, transparent), @smallSeparator@;
 }
 
@@ -348,4 +307,269 @@
   background-image: linear-gradient(#1f3e4f, #1f3e4f), @solidSeparator@;
 }
 
-%include ../../shared/devtools/common.inc.css
+/* Toolbox - moved from toolbox.css.
+ * Rules that apply to the global toolbox like command buttons,
+ * devtools tabs, docking buttons, etc. */
+
+#toolbox-controls {
+  margin: 0 4px;
+}
+
+#toolbox-controls > toolbarbutton,
+#toolbox-dock-buttons > toolbarbutton {
+  -moz-appearance: none;
+  margin: 0 4px;
+  min-width: 16px;
+  width: 16px;
+}
+
+#toolbox-controls > toolbarbutton > .toolbarbutton-text,
+#toolbox-dock-buttons > toolbarbutton > .toolbarbutton-text,
+.command-button > .toolbarbutton-text {
+  display: none;
+}
+
+#toolbox-dock-bottom {
+  list-style-image: url("chrome://browser/skin/devtools/dock-bottom.png");
+}
+
+#toolbox-dock-side {
+  list-style-image: url("chrome://browser/skin/devtools/dock-side.png");
+}
+
+#toolbox-dock-window {
+  list-style-image: url("chrome://browser/skin/devtools/undock.png");
+}
+
+#toolbox-dock-window,
+#toolbox-dock-bottom,
+#toolbox-dock-side {
+  opacity: 0.6;
+}
+
+#toolbox-dock-window:hover,
+#toolbox-dock-bottom:hover,
+#toolbox-dock-side:hover {
+  opacity: 1;
+}
+
+#toolbox-controls-separator {
+  width: 3px;
+  background-image: linear-gradient(hsla(204,45%,98%,0), hsla(204,45%,98%,.1), hsla(204,45%,98%,0)),
+                    linear-gradient(hsla(206,37%,4%,0), hsla(206,37%,4%,.6), hsla(206,37%,4%,0)),
+                    linear-gradient(hsla(204,45%,98%,0), hsla(204,45%,98%,.1), hsla(204,45%,98%,0));
+  background-size: 1px 100%;
+  background-repeat: no-repeat;
+  background-position: 0, 1px, 2px;
+  -moz-margin-start: 8px;
+}
+
+/* Command buttons */
+
+.command-button {
+  -moz-appearance: none;
+  padding: 0 8px;
+  margin: 0;
+  width: 16px;
+}
+
+.command-button:hover {
+  background-color: hsla(206,37%,4%,.2);
+}
+.command-button:hover:active, .command-button[checked=true]:not(:hover) {
+  background-color: hsla(206,37%,4%,.4);
+}
+
+#command-button-paintflashing {
+  list-style-image: url("chrome://browser/skin/devtools/command-paintflashing.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+#command-button-paintflashing:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+#command-button-paintflashing:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+#command-button-paintflashing[checked=true] {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+
+#command-button-responsive {
+  list-style-image: url("chrome://browser/skin/devtools/command-responsivemode.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+#command-button-responsive:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+#command-button-responsive:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+#command-button-responsive[checked=true] {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+
+#command-button-tilt {
+  list-style-image: url("chrome://browser/skin/devtools/command-tilt.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+#command-button-tilt:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+#command-button-tilt:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
+#command-button-tilt[checked=true] {
+  -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+
+#command-button-scratchpad {
+  list-style-image: url("chrome://browser/skin/devtools/command-scratchpad.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+#command-button-scratchpad:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+#command-button-scratchpad:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
+/* Tabs */
+
+.devtools-tabbar {
+  -moz-appearance: none;
+  background-image: url("background-noise-toolbar.png"),
+                    linear-gradient(#303840, #2d3640);
+  border-color: #060a0d;
+  border-style: solid;
+  border-width: 1px 0;
+  box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset,
+              0 -1px 0 hsla(206,37%,4%,.1) inset;
+  min-height: 32px;
+  padding: 0;
+}
+
+#toolbox-tabs {
+  margin: 0;
+}
+
+.devtools-tab {
+  -moz-binding: url("chrome://global/content/bindings/general.xml#control-item");
+  -moz-box-align: center;
+}
+
+.devtools-tab {
+  -moz-appearance: none;
+  min-width: 32px;
+  min-height: 32px;
+  max-width: 127px;
+  color: #b6babf;
+  margin: 0;
+  padding: 0;
+  background-image: linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
+                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1));
+  background-size: 1px 100%;
+  background-repeat: no-repeat;
+  background-position: left, right;
+  border-right: 1px solid hsla(206,37%,4%,.45);
+  -moz-box-align: center;
+}
+
+.devtools-tab > image {
+  border: none;
+  -moz-margin-end: 0;
+  -moz-margin-start: 4px;
+  opacity: 0.6;
+  max-height: 16px;
+  width: 16px; /* Prevents collapse during theme switching */
+}
+
+#toolbox-tab-options > image {
+  margin: 0 8px;
+}
+
+.devtools-tab > label {
+  white-space: nowrap;
+}
+
+.devtools-tab:hover > image {
+  opacity: 0.8;
+}
+
+.devtools-tab:active > image,
+.devtools-tab[selected=true] > label {
+  opacity: 1;
+}
+
+.devtools-tab:hover {
+  background-image: linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
+                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
+                    linear-gradient(hsla(206,37%,4%,.1), hsla(206,37%,4%,.2));
+  background-size: 1px 100%,
+                   1px 100%,
+                   100%;
+  background-repeat: no-repeat,
+                     no-repeat,
+                     repeat-x;
+  background-position: left, right;
+  color: #ced3d9;
+}
+.devtools-tab:hover:active {
+  background-color: hsla(206,37%,4%,.2);
+  color: #f5f7fa;
+}
+
+.devtools-tab[selected=true] {
+  color: #f5f7fa;
+  background-image: radial-gradient(farthest-corner at center top, #9fdfff, hsla(200,100%,70%,.3)),
+                    radial-gradient(farthest-side at center top, hsla(200,100%,70%,.4), hsla(200,100%,70%,0)),
+                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
+                    linear-gradient(hsla(204,45%,98%,.02), hsla(204,45%,98%,.04)),
+                    linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.3));
+  background-size: 100% 1px,
+                   100% 5px,
+                   1px 100%,
+                   1px 100%,
+                   100%;
+  background-repeat: no-repeat,
+                     no-repeat,
+                     no-repeat,
+                     no-repeat,
+                     repeat-x;
+  background-position: top right, top left, left, right;
+  box-shadow: 1px -1px 0 hsla(206,37%,4%,.2) inset;
+}
+
+.devtools-tab:not([selected=true]).highlighted {
+  color: #f5f7fa;
+  background-image: radial-gradient(farthest-corner at center top, #c0ff40, hsla(80,100%,63%,.5) 70%, hsla(80,100%,63%,.3) 97%),
+                    radial-gradient(farthest-side at center top, hsla(80,100%,35%,.5), hsla(80,100%,35%,0)),
+                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
+                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
+                    linear-gradient(hsla(99,100%,14%,.2), hsla(99,100%,14%,.2));
+  background-size: 100% 1px,
+                   100% 5px,
+                   1px 100%,
+                   1px 100%,
+                   100%;
+  background-repeat: no-repeat,
+                     no-repeat,
+                     no-repeat,
+                     no-repeat,
+                     repeat-x;
+  background-position: top right, top left, left, right;
+}
+
+.devtools-tab:not(.highlighted) > .highlighted-icon,
+.devtools-tab[selected=true] > .highlighted-icon,
+.devtools-tab:not([selected=true]).highlighted > .default-icon {
+  visibility: collapse;
+}
+
+.hidden-labels-box:not(.visible) > label,
+.hidden-labels-box.visible ~ .hidden-labels-box > label:last-child {
+  display: none;
+}
