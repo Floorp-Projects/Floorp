@@ -12,19 +12,38 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Application;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.res.Configuration;
+import android.util.Log;
 
 public class GeckoApplication extends Application {
 
     private boolean mInited;
     private boolean mInBackground;
     private boolean mPausedGecko;
-    private boolean mNeedsRestart;
 
     private LightweightTheme mLightweightTheme;
+
+    /**
+     * We need to do locale work here, because we need to intercept
+     * each hit to onConfigurationChanged.
+     */
+    @Override
+    public void onConfigurationChanged(Configuration config) {
+        Log.d("GeckoApplication", "onConfigurationChanged: " + config.locale +
+                                  ", background: " + mInBackground);
+
+        // Do nothing if we're in the background. It'll simply cause a loop
+        // (Bug 936756 Comment 11), and it's not necessary.
+        if (mInBackground) {
+            super.onConfigurationChanged(config);
+            return;
+        }
+
+        // Otherwise, correct the locale. This catches some cases that GeckoApp
+        // doesn't get a chance to.
+        LocaleManager.correctLocale(getResources(), config);
+        super.onConfigurationChanged(config);
+    }
 
     protected void initialize() {
         if (mInited)
@@ -42,14 +61,6 @@ public class GeckoApplication extends Application {
         GeckoBatteryManager.getInstance().start();
         GeckoNetworkManager.getInstance().init(getApplicationContext());
         MemoryMonitor.getInstance().init(getApplicationContext());
-
-        BroadcastReceiver receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                mNeedsRestart = true;
-            }
-        };
-        registerReceiver(receiver, new IntentFilter(Intent.ACTION_LOCALE_CHANGED));
 
         mInited = true;
     }
@@ -88,10 +99,6 @@ public class GeckoApplication extends Application {
         GeckoNetworkManager.getInstance().start();
 
         mInBackground = false;
-    }
-
-    protected boolean needsRestart() {
-        return mNeedsRestart;
     }
 
     @Override

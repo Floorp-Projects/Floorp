@@ -187,7 +187,7 @@ function performTest() {
   function getScroll() {
     let scrollX = {};
     let scrollY = {};
-    gVariables._boxObject.getPosition(scrollX, scrollY);
+    gVariables.boxObject.getPosition(scrollX, scrollY);
     return [scrollX.value, scrollY.value];
   }
 

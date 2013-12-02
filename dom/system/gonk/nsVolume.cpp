@@ -13,6 +13,8 @@
 #include "nsVolumeStat.h"
 #include "nsXULAppAPI.h"
 #include "Volume.h"
+#include "AutoMounter.h"
+#include "VolumeManager.h"
 
 #define VOLUME_MANAGER_LOG_TAG  "nsVolume"
 #include "VolumeManagerLog.h"
@@ -53,7 +55,8 @@ nsVolume::nsVolume(const Volume* aVolume)
     mMountLocked(aVolume->IsMountLocked()),
     mIsFake(false),
     mIsMediaPresent(aVolume->MediaPresent()),
-    mIsSharing(aVolume->IsSharing())
+    mIsSharing(aVolume->IsSharing()),
+    mIsFormatting(aVolume->IsFormatting())
 {
 }
 
@@ -101,6 +104,12 @@ bool nsVolume::Equals(nsIVolume* aVolume)
     return false;
   }
 
+  bool isFormatting;
+  aVolume->GetIsFormatting(&isFormatting);
+  if (mIsFormatting != isFormatting) {
+    return false;
+  }
+
   return true;
 }
 
@@ -119,6 +128,12 @@ NS_IMETHODIMP nsVolume::GetIsMountLocked(bool *aIsMountLocked)
 NS_IMETHODIMP nsVolume::GetIsSharing(bool *aIsSharing)
 {
   *aIsSharing = mIsSharing;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsVolume::GetIsFormatting(bool *aIsFormatting)
+{
+  *aIsFormatting = mIsFormatting;
   return NS_OK;
 }
 
@@ -170,15 +185,36 @@ NS_IMETHODIMP nsVolume::GetIsFake(bool *aIsFake)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsVolume::Format()
+{
+  XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(FormatVolumeIOThread, NameStr()));
+
+  return NS_OK;
+}
+
+/* static */
+void nsVolume::FormatVolumeIOThread(const nsCString& aVolume)
+{
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+  if (VolumeManager::State() != VolumeManager::VOLUMES_READY) {
+    return;
+  }
+
+  AutoMounterFormatVolume(aVolume);
+}
+
 void
 nsVolume::LogState() const
 {
   if (mState == nsIVolume::STATE_MOUNTED) {
     LOG("nsVolume: %s state %s @ '%s' gen %d locked %d fake %d "
-        "media %d sharing %d",
+        "media %d sharing %d formatting %d",
         NameStr().get(), StateStr(), MountPointStr().get(),
         MountGeneration(), (int)IsMountLocked(), (int)IsFake(),
-        (int)IsMediaPresent(), (int)IsSharing());
+        (int)IsMediaPresent(), (int)IsSharing(),
+        (int)IsFormatting());
     return;
   }
 
@@ -195,6 +231,7 @@ void nsVolume::Set(nsIVolume* aVolume)
   aVolume->GetIsFake(&mIsFake);
   aVolume->GetIsMediaPresent(&mIsMediaPresent);
   aVolume->GetIsSharing(&mIsSharing);
+  aVolume->GetIsFormatting(&mIsFormatting);
 
   int32_t volMountGeneration;
   aVolume->GetMountGeneration(&volMountGeneration);

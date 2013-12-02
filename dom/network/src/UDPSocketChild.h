@@ -46,6 +46,7 @@ public:
 private:
   uint16_t mLocalPort;
   nsCString mLocalAddress;
+  nsCString mFilterName;
 };
 
 } // namespace dom

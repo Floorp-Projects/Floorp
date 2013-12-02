@@ -229,8 +229,7 @@ public class GeckoAppShell
                     }
 
                     if (e instanceof OutOfMemoryError) {
-                        SharedPreferences prefs =
-                            getContext().getSharedPreferences(GeckoApp.PREFS_NAME, 0);
+                        SharedPreferences prefs = getSharedPreferences();
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
                         editor.commit();
@@ -1587,45 +1586,6 @@ public class GeckoAppShell
         }
     }
 
-    @WrapElementForJNI
-    public static void setSelectedLocale(String localeCode) {
-        /* Bug 713464: This method is still called from Gecko side.
-           Earlier we had an option to run Firefox in a language other than system's language.
-           However, this is not supported as of now.
-           Gecko resets the locale to en-US by calling this function with an empty string.
-           This affects GeckoPreferences activity in multi-locale builds.
-
-        N.B., if this code ever becomes live again, you need to hook it up to locale
-        recording in BrowserHealthRecorder: we track the current app and OS locales
-        as part of the recorded environment.
-
-        See similar note in GeckoApp.java for the startup path.
-
-        //We're not using this, not need to save it (see bug 635342)
-        SharedPreferences settings =
-            getContext().getPreferences(Activity.MODE_PRIVATE);
-        settings.edit().putString(getContext().getPackageName() + ".locale",
-                                  localeCode).commit();
-        Locale locale;
-        int index;
-        if ((index = localeCode.indexOf('-')) != -1 ||
-            (index = localeCode.indexOf('_')) != -1) {
-            String langCode = localeCode.substring(0, index);
-            String countryCode = localeCode.substring(index + 1);
-            locale = new Locale(langCode, countryCode);
-        } else {
-            locale = new Locale(localeCode);
-        }
-        Locale.setDefault(locale);
-
-        Resources res = getContext().getBaseContext().getResources();
-        Configuration config = res.getConfiguration();
-        config.locale = locale;
-        res.updateConfiguration(config, res.getDisplayMetrics());
-        */
-    }
-
-
     @WrapElementForJNI(stubName = "GetSystemColoursWrapper")
     public static int[] getSystemColors() {
         // attrsAppearance[] must correspond to AndroidSystemColors structure in android/AndroidBridge.h
@@ -2144,6 +2104,13 @@ public class GeckoAppShell
 
     public static void setContextGetter(ContextGetter cg) {
         sContextGetter = cg;
+    }
+
+    public static SharedPreferences getSharedPreferences() {
+        if (sContextGetter == null) {
+            throw new IllegalStateException("No ContextGetter; cannot fetch prefs.");
+        }
+        return sContextGetter.getSharedPreferences();
     }
 
     public interface AppStateListener {

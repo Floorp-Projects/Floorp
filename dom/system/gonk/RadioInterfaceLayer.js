@@ -302,11 +302,12 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       let msg = { topic : topic,
                   message : message,
                   options : options };
-      // Remove previous queued message of same message type, only one message
-      // per message type is allowed in queue.
+      // Remove previous queued message with the same message type and client Id
+      // , only one message per (message type + client Id) is allowed in queue.
       let messageQueue = this.targetMessageQueue;
       for(let i = 0; i < messageQueue.length; i++) {
-        if (messageQueue[i].message === message) {
+        if (messageQueue[i].message === message &&
+            messageQueue[i].options.clientId === options.clientId) {
           messageQueue.splice(i, 1);
           break;
         }

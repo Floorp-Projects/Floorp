@@ -12,6 +12,10 @@ function testSetupMenu(command, expect) {
     is(command.options.items[index].identifier, expect.items[index].identifier, expect.name);
     is(command.options.items[index].text, expect.items[index].text, expect.name);
   }
+  let length = command.options.nextActionList ? command.options.nextActionList.length : 0;
+  for (let i = 0; i < length; i++) {
+    is(command.options.nextActionList[i], expect.nextActionList[i], expect.name);
+  }
 
   runNextTest();
 }
@@ -77,7 +81,8 @@ let tests = [
    expect: {name: "setup_menu_cmd_7",
             commandQualifier: 0x00,
             title: "Toolkit Menu",
-            items: [{identifier: 1, text: "Item 1"}, {identifier: 2, text: "Item 2"}, {identifier: 3, text: "Item 3"}, {identifier: 4, text: "Item 4"}]}},
+            items: [{identifier: 1, text: "Item 1"}, {identifier: 2, text: "Item 2"}, {identifier: 3, text: "Item 3"}, {identifier: 4, text: "Item 4"}],
+            nextActionList: [iccManager.STK_CMD_SEND_SMS, iccManager.STK_CMD_SET_UP_CALL, iccManager.STK_CMD_LAUNCH_BROWSER, iccManager.STK_CMD_PROVIDE_LOCAL_INFO]}},
   {command: "d03c810301250082028182850c546f6f6c6b6974204d656e758f07014974656d20318f07024974656d20328f07034974656d20339e0201019f0401050505",
    func: testSetupMenu,
    expect: {name: "setup_menu_cmd_8",
@@ -222,6 +227,13 @@ let tests = [
             commandQualifier: 0x00,
             title: "80ル0",
             items: [{identifier: 17, text: "80ル5"}, {identifier: 18, text: "80ル6"}]}},
+  {command: "d041810301250082028182850c546f6f6c6b6974204d656e758f07014974656d20318f07024974656d20328f07034974656d20338f07044974656d2034180481000000",
+   func: testSetupMenu,
+   expect: {name: "setup_menu_cmd_32",
+            commandQualifier: 0x00,
+            title: "Toolkit Menu",
+            items: [{identifier: 1, text: "Item 1"}, {identifier: 2, text: "Item 2"}, {identifier: 3, text: "Item 3"}, {identifier: 4, text: "Item 4"}],
+            nextActionList: [iccManager.STK_NEXT_ACTION_END_PROACTIVE_SESSION, iccManager.STK_NEXT_ACTION_NULL, iccManager.STK_NEXT_ACTION_NULL, iccManager.STK_NEXT_ACTION_NULL]}},
   {command: "D00D81030125008202818285008F00",
    func: testRemoveSetupMenu},
   {command:"D03B810301250082028182850C546F6F6C6B6974204D656E758F07014974656D20318F07024974656D20328F07034974656D20338F07044974656D2034",

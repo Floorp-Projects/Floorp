@@ -10,6 +10,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.ActionProvider;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -114,7 +115,7 @@ public class GeckoMenu extends ListView
         mItems = new ArrayList<GeckoMenuItem>();
         mActionItems = new HashMap<GeckoMenuItem, View>();
 
-        mActionItemBarPresenter =  (DefaultActionItemBar) LayoutInflater.from(context).inflate(R.layout.menu_action_bar, null);
+        mActionItemBarPresenter = (DefaultActionItemBar) LayoutInflater.from(context).inflate(R.layout.menu_action_bar, null);
     }
 
     @Override
@@ -219,14 +220,26 @@ public class GeckoMenu extends ListView
     public void clear() {
         for (GeckoMenuItem menuItem : mItems) {
             if (menuItem.hasSubMenu()) {
-                menuItem.getSubMenu().clear();
+                SubMenu sub = menuItem.getSubMenu();
+                if (sub == null) {
+                    continue;
+                }
+                try {
+                    sub.clear();
+                } catch (Exception ex) {
+                    Log.e(LOGTAG, "Couldn't clear submenu.", ex);
+                }
             }
         }
 
         mAdapter.clear();
-
         mItems.clear();
 
+        /*
+         * Reinflating the menu will re-add any action items to the toolbar, so
+         * remove the old ones. This also ensures that any text associated with
+         * these is switched to the correct locale.
+         */
         if (mActionItemBarPresenter != null) {
             for (View item : mActionItems.values()) {
                 mActionItemBarPresenter.removeActionItem(item);

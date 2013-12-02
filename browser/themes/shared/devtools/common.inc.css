@@ -128,6 +128,16 @@
   transform: none;
 }
 
+.devtools-tooltip[clamped-dimensions] {
+  max-height: 400px;
+  max-width: 400px;
+}
+.devtools-tooltip[clamped-dimensions] .panel-arrowcontent {
+  overflow: hidden;
+}
+
+/* Tooltip: Simple Text */
+
 .devtools-tooltip-simple-text {
   max-width: 400px;
   margin: 0 -4px; /* Compensate for the .panel-arrowcontent padding. */
@@ -142,6 +152,14 @@
 .devtools-tooltip-simple-text:last-child {
   margin-bottom: -4px;
 }
+
+/* Tooltip: Variables View */
+
+.devtools-tooltip-variables-view-box {
+  margin: -4px; /* Compensate for the .panel-arrowcontent padding. */
+}
+
+/* Tooltip: Tiles */
 
 .devtools-tooltip-tiles {
   background-color: #eee;

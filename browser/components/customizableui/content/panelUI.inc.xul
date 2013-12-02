@@ -17,10 +17,11 @@
       <footer id="PanelUI-footer">
         <!-- The parentNode is used so that the footer is presented as the anchor
              instead of just the button being the anchor. -->
+        <toolbarbutton id="PanelUI-customize" label="&appMenuCustomize.label;"
+                       exitLabel="&appMenuCustomizeExit.label;" tabindex="0"
+                       oncommand="gCustomizeMode.toggle();"/>
         <toolbarbutton id="PanelUI-help" label="&helpMenu.label;" tabindex="0"
                        oncommand="PanelUI.showHelpView(this.parentNode);"/>
-        <toolbarbutton id="PanelUI-customize" label="&appMenuCustomize.label;" tabindex="0"
-                       oncommand="gCustomizeMode.toggle();"/>
         <toolbarbutton id="PanelUI-quit" tabindex="0"
 #ifdef XP_WIN
                        label="&quitApplicationCmdWin.label;"

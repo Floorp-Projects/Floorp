@@ -431,10 +431,11 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
     DBG("UpdateVolumeRunnable::Run '%s' state %s gen %d locked %d "
-        "media %d sharing %d",
+        "media %d sharing %d formatting %d",
         mVolume->NameStr().get(), mVolume->StateStr(),
         mVolume->MountGeneration(), (int)mVolume->IsMountLocked(),
-        (int)mVolume->IsMediaPresent(), mVolume->IsSharing());
+        (int)mVolume->IsMediaPresent(), mVolume->IsSharing(),
+        mVolume->IsFormatting());
 
     mVolumeService->UpdateVolume(mVolume);
     mVolumeService = nullptr;
@@ -451,10 +452,11 @@ void
 nsVolumeService::UpdateVolumeIOThread(const Volume* aVolume)
 {
   DBG("UpdateVolumeIOThread: Volume '%s' state %s mount '%s' gen %d locked %d "
-      "media %d sharing %d",
+      "media %d sharing %d formatting %d",
       aVolume->NameStr(), aVolume->StateStr(), aVolume->MountPoint().get(),
       aVolume->MountGeneration(), (int)aVolume->IsMountLocked(),
-      (int)aVolume->MediaPresent(), (int)aVolume->IsSharing());
+      (int)aVolume->MediaPresent(), (int)aVolume->IsSharing(),
+      (int)aVolume->IsFormatting());
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
   NS_DispatchToMainThread(new UpdateVolumeRunnable(this, aVolume));
 }
