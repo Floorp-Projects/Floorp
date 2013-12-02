@@ -2687,12 +2687,8 @@ class IDLAttribute(IDLInterfaceMember):
                               "[SetterThrows]",
                               [self.location])
         elif (((identifier == "Throws" or identifier == "GetterThrows") and
-               (self.getExtendedAttribute("Pure") or
-                self.getExtendedAttribute("StoreInSlot") or
-                self.getExtendedAttribute("SameObject") or
-                self.getExtendedAttribute("Constant"))) or
-              ((identifier == "Pure" or identifier == "SameObject" or
-                identifier == "Constant" or identifier == "StoreInSlot") and
+               self.getExtendedAttribute("StoreInSlot")) or
+              (identifier == "StoreInSlot" and
                (self.getExtendedAttribute("Throws") or
                 self.getExtendedAttribute("GetterThrows")))):
             raise WebIDLError("Throwing things can't be [Pure] or [Constant] "
@@ -3286,10 +3282,6 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         elif identifier == "Constant":
             raise WebIDLError("Methods must not be flagged as [Constant]",
                               [attr.location, self.location]);
-        elif ((identifier == "Pure" and self.getExtendedAttribute("Throws")) or
-              (identifier == "Throws" and self.getExtendedAttribute("Pure"))):
-            raise WebIDLError("Throwing methods can't be [Pure]",
-                              [attr.location]);
         elif identifier == "PutForwards":
             raise WebIDLError("Only attributes support [PutForwards]",
                               [attr.location, self.location])

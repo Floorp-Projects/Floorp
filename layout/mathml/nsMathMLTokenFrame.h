@@ -58,25 +58,9 @@ public:
         bool                 aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
 
-  virtual void MarkIntrinsicWidthsDirty() MOZ_OVERRIDE;
-
-  virtual nsresult
-  ChildListChanged(int32_t aModType) MOZ_OVERRIDE
-  {
-    ProcessTextData();
-    return nsMathMLContainerFrame::ChildListChanged(aModType);
-  }
-
 protected:
   nsMathMLTokenFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLTokenFrame();
-
-  // hook to perform MathML-specific actions depending on the tag
-  virtual void ProcessTextData();
-
-  // helper to set the style of <mi> which has to be italic or normal
-  // depending on its textual content
-  bool SetTextStyle();
 
   void MarkTextFramesAsTokenMathML();
 };

@@ -33,9 +33,9 @@
 typedef struct {
 	int layers;
 	const int *topo;
-	const opus_val16 *weights;
+	const float *weights;
 } MLP;
 
-void mlp_process(const MLP *m, const opus_val16 *in, opus_val16 *out);
+void mlp_process(const MLP *m, const float *in, float *out);
 
 #endif /* _MLP_H_ */
