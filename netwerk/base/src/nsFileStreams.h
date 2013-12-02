@@ -225,23 +225,28 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsSafeFileOutputStream : public nsFileOutputStream,
-                               public nsISafeOutputStream
+/**
+ * A safe file output stream that overwrites the destination file only
+ * once writing is complete. This protects against incomplete writes
+ * due to the process or the thread being interrupted or crashed.
+ */
+class nsAtomicFileOutputStream : public nsFileOutputStream,
+                                 public nsISafeOutputStream
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSISAFEOUTPUTSTREAM
 
-    nsSafeFileOutputStream() :
+    nsAtomicFileOutputStream() :
         mTargetFileExists(true),
         mWriteResult(NS_OK) {}
 
-    virtual ~nsSafeFileOutputStream()
+    virtual ~nsAtomicFileOutputStream()
     {
         Close();
     }
 
-    virtual nsresult DoOpen();
+    virtual nsresult DoOpen() MOZ_OVERRIDE;
 
     NS_IMETHODIMP Close();
     NS_IMETHODIMP Write(const char *buf, uint32_t count, uint32_t *result);
@@ -253,6 +258,22 @@ protected:
 
     bool     mTargetFileExists;
     nsresult mWriteResult; // Internally set in Write()
+
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * A safe file output stream that overwrites the destination file only
+ * once writing + flushing is complete. This protects against more
+ * classes of software/hardware errors than nsAtomicFileOutputStream,
+ * at the expense of being more costly to the disk, OS and battery.
+ */
+class nsSafeFileOutputStream : public nsAtomicFileOutputStream
+{
+public:
+
+    NS_IMETHOD Finish();
 };
 
 ////////////////////////////////////////////////////////////////////////////////
