@@ -5,6 +5,8 @@
 
 #include "GLContext.h"
 #include "GLContextUtils.h"
+#include "mozilla/gfx/2D.h"
+#include "gfx2DGlue.h"
 
 using namespace mozilla::gfx;
 

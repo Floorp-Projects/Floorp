@@ -67,6 +67,7 @@
 #include "nsStyleStructInlines.h"
 #include "nsPageContentFrame.h"
 #include "RestyleManager.h"
+#include "StickyScrollContainer.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
@@ -3097,6 +3098,10 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
       childItems.RemoveFrame(child);
       // Make sure to reparent the legend so it has the fieldset as the parent.
       fieldsetKids.InsertFrame(fieldsetFrame, nullptr, child);
+      if (scrollFrame) {
+        StickyScrollContainer::NotifyReparentedFrameAcrossScrollFrameBoundary(
+            child, blockFrame);
+      }
       break;
     }
   }
@@ -5959,10 +5964,12 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
       // siblings.
       return false;
     }
-
-    return true;
+    // Fall through; it's possible that the display type was overridden and
+    // a different sort of frame was constructed, so we may need to return false
+    // below.
   }
-  else if (IsFrameForFieldSet(parentFrame, parentType)) {
+
+  if (IsFrameForFieldSet(parentFrame, parentType)) {
     // Legends can be sibling of legends but not of other content in the fieldset
     nsIAtom* sibType = aSibling->GetContentInsertionFrame()->GetType();
     bool legendContent = aContent->IsHTML(nsGkAtoms::legend);
