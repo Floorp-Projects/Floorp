@@ -831,17 +831,10 @@ DumpProcessMemoryReportsToGZFileWriter(nsGZFileWriter* aWriter)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Process reporters.
-  bool more;
-  nsCOMPtr<nsISimpleEnumerator> e;
   nsCOMPtr<nsIMemoryReporterManager> mgr =
     do_GetService("@mozilla.org/memory-reporter-manager;1");
-  mgr->EnumerateReporters(getter_AddRefs(e));
   nsRefPtr<DumpReportCallback> dumpReport = new DumpReportCallback(aWriter);
-  while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
-    nsCOMPtr<nsIMemoryReporter> r;
-    e->GetNext(getter_AddRefs(r));
-    r->CollectReports(dumpReport, nullptr);
-  }
+  mgr->GetReportsForThisProcess(dumpReport, nullptr);
 
   return DumpFooter(aWriter);
 }
@@ -878,7 +871,8 @@ DumpProcessMemoryInfoToTempDir(const nsAString& aIdentifier)
   rv = nsMemoryInfoDumper::OpenTempFile(NS_LITERAL_CSTRING("incomplete-") +
                                         mrFilename,
                                         getter_AddRefs(mrTmpFile));
-  if (NS_WARN_IF(NS_FAILED(rv)))    return rv;
+  if (NS_WARN_IF(NS_FAILED(rv)))
+    return rv;
 
   nsRefPtr<nsGZFileWriter> mrWriter = new nsGZFileWriter();
   rv = mrWriter->Init(mrTmpFile);
