@@ -324,6 +324,9 @@ skip-if(B2G) include xul-document-load/reftest.list
 # xul/
 skip-if(B2G) include xul/reftest.list
 
+# webcomonents/
+include webcomponents/reftest.list
+
 # xul
 skip-if(B2G) include ../xul/base/reftest/reftest.list
 

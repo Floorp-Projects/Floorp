@@ -36,6 +36,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
+#include "mozilla/dom/HTMLContentElement.h"
 #include "mozilla/dom/TextDecoder.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/Likely.h"
@@ -6587,6 +6588,22 @@ nsContentUtils::InternalIsSupported(nsISupports* aObject,
 
   // Otherwise, we claim to support everything
   return true;
+}
+
+bool
+nsContentUtils::IsContentInsertionPoint(const nsIContent* aContent)
+{
+  // Check if the content is a XBL insertion point.
+  if (aContent->IsActiveChildrenElement()) {
+    return true;
+  }
+
+  // Check if the content is a web components content insertion point.
+  if (aContent->IsHTML(nsGkAtoms::content)) {
+    return static_cast<const HTMLContentElement*>(aContent)->IsInsertionPoint();
+  }
+
+  return false;
 }
 
 bool

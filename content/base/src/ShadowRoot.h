@@ -24,13 +24,20 @@ namespace mozilla {
 namespace dom {
 
 class Element;
+class HTMLContentElement;
 
-class ShadowRoot : public DocumentFragment
+class ShadowRoot : public DocumentFragment,
+                   public nsStubMutationObserver
 {
 public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ShadowRoot,
                                            DocumentFragment)
   NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   ShadowRoot(nsIContent* aContent, already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~ShadowRoot();
@@ -39,10 +46,35 @@ public:
   void RemoveFromIdTable(Element* aElement, nsIAtom* aId);
   static bool PrefEnabled();
 
+  /**
+   * Distributes a single explicit child of the host to the content
+   * insertion points in this ShadowRoot.
+   */
+  void DistributeSingleNode(nsIContent* aContent);
+
+  /**
+   * Removes a single explicit child of the host from the content
+   * insertion points in this ShadowRoot.
+   */
+  void RemoveDistributedNode(nsIContent* aContent);
+
+  /**
+   * Distributes all the explicit children of the host to the content
+   * insertion points in this ShadowRoot.
+   */
+  void DistributeAllNodes();
+
+  void AddInsertionPoint(HTMLContentElement* aInsertionPoint);
+  void RemoveInsertionPoint(HTMLContentElement* aInsertionPoint);
+
+  void SetInsertionPointChanged() { mInsertionPointChanged = true; }
+
   nsISupports* GetParentObject() const
   {
     return mHost;
   }
+
+  nsIContent* GetHost() { return mHost; }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
@@ -61,7 +93,21 @@ public:
   void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);
 protected:
   nsCOMPtr<nsIContent> mHost;
+
+  // An array of content insertion points that are a descendant of the ShadowRoot
+  // sorted in tree order. Insertion points are responsible for notifying
+  // the ShadowRoot when they are removed or added as a descendant. The insertion
+  // points are kept alive by the parent node, thus weak references are held
+  // by the array.
+  nsTArray<HTMLContentElement*> mInsertionPoints;
+
   nsTHashtable<nsIdentifierMapEntry> mIdentifierMap;
+
+  // A boolean that indicates that an insertion point was added or removed
+  // from this ShadowRoot and that the nodes need to be redistributed into
+  // the insertion points. After this flag is set, nodes will be distributed
+  // on the next mutation event.
+  bool mInsertionPointChanged;
 };
 
 } // namespace dom
