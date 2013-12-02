@@ -47,8 +47,6 @@ SERV_FILES = 	\
 		b2g-desktop.json \
 		b2g-debug.json \
 		b2g_start_script.js \
-		root-ev-tester.crl \
-		intermediate-ev-tester.crl \
 		$(NULL)	
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)
