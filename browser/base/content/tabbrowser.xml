@@ -1447,11 +1447,6 @@
 
             var uriIsAboutBlank = !aURI || aURI == "about:blank";
 
-            if (!aURI || isBlankPageURL(aURI))
-              t.setAttribute("label", this.mStringBundle.getString("tabs.emptyTabTitle"));
-            else
-              t.setAttribute("label", aURI);
-
             t.setAttribute("crop", "end");
             t.setAttribute("onerror", "this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
@@ -1557,6 +1552,14 @@
             // state, so it is important that the tab element is fully
             // initialized by this point.
             this.mPanelContainer.appendChild(notificationbox);
+
+            // We've waited until the tab is in the DOM to set the label. This
+            // allows the TabLabelModified event to be properly dispatched.
+            if (!aURI || isBlankPageURL(aURI)) {
+              t.label = this.mStringBundle.getString("tabs.emptyTabTitle");
+            } else {
+              t.label = aURI;
+            }
 
             this.tabContainer.updateVisibility();
 
@@ -3345,8 +3348,7 @@
           this._closeWindowWithLastTab = Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
 
           var tab = this.firstChild;
-          tab.setAttribute("label",
-                           this.tabbrowser.mStringBundle.getString("tabs.emptyTabTitle"));
+          tab.label = this.tabbrowser.mStringBundle.getString("tabs.emptyTabTitle");
           tab.setAttribute("crop", "end");
           tab.setAttribute("onerror", "this.removeAttribute('image');");
           this.adjustTabstrip();
@@ -4652,7 +4654,8 @@
                      validate="never"
                      role="presentation"/>
           <xul:label flex="1"
-                     xbl:inherits="value=label,crop,accesskey,fadein,pinned,selected"
+                     anonid="tab-label"
+                     xbl:inherits="value=visibleLabel,crop,accesskey,fadein,pinned,selected"
                      class="tab-text tab-label"
                      role="presentation"/>
           <xul:toolbarbutton anonid="close-button"
@@ -4663,6 +4666,32 @@
     </content>
 
     <implementation>
+      <property name="label">
+        <getter>
+          return this.getAttribute("label");
+        </getter>
+        <setter>
+          this.setAttribute("label", val);
+          let event = new CustomEvent("TabLabelModified", {
+            bubbles: true,
+            cancelable: true
+          });
+          this.dispatchEvent(event);
+
+          // Let listeners prevent synchronizing the actual label to the
+          // visible label (allowing them to override the visible label).
+          if (!event.defaultPrevented)
+            this.visibleLabel = val;
+        </setter>
+      </property>
+      <property name="visibleLabel">
+        <getter>
+          return this.getAttribute("visibleLabel");
+        </getter>
+        <setter>
+          this.setAttribute("visibleLabel", val);
+        </setter>
+      </property>
       <property name="pinned" readonly="true">
         <getter>
           return this.getAttribute("pinned") == "true";
