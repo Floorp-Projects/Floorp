@@ -554,11 +554,6 @@ TabChild::HandlePossibleViewportChange()
     return;
   }
 
-  // Make sure the viewport height is not shorter than the window when the page
-  // is zoomed out to show its full width. Note that before we set the viewport
-  // width, the "full width" of the page isn't properly defined, so that's why
-  // we have to call SetCSSViewport twice - once to set the width, and the
-  // second time to figure out the height based on the layout at that width.
   float oldBrowserWidth = mOldViewportWidth;
   mLastMetrics.mViewport.SizeTo(viewport);
   if (!oldBrowserWidth) {
@@ -605,13 +600,6 @@ TabChild::HandlePossibleViewportChange()
     // Return early rather than divide by 0.
     return;
   }
-
-  CSSToScreenScale minScale(mInnerSize.width / pageSize.width);
-  minScale = clamped(minScale, viewportInfo.GetMinZoom(), viewportInfo.GetMaxZoom());
-  NS_ENSURE_TRUE_VOID(minScale.scale); // (return early rather than divide by 0)
-
-  viewport.height = std::max(viewport.height, screenH / minScale.scale);
-  SetCSSViewport(viewport);
 
   float oldScreenWidth = mLastMetrics.mCompositionBounds.width;
   if (!oldScreenWidth) {

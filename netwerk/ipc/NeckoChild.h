@@ -48,7 +48,8 @@ protected:
                                                        const nsString& aBinaryType);
   virtual bool DeallocPTCPServerSocketChild(PTCPServerSocketChild*);
   virtual PUDPSocketChild* AllocPUDPSocketChild(const nsCString& aHost,
-                                                const uint16_t& aPort);
+                                                const uint16_t& aPort,
+                                                const nsCString& aFilter);
   virtual bool DeallocPUDPSocketChild(PUDPSocketChild*);
   virtual PRemoteOpenFileChild* AllocPRemoteOpenFileChild(const URIParams&,
                                                           const OptionalURIParams&);

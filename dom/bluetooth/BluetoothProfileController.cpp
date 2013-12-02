@@ -163,6 +163,7 @@ BluetoothProfileController::Start()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mDeviceAddress.IsEmpty());
   MOZ_ASSERT(mProfilesIndex == -1);
+  NS_ENSURE_TRUE_VOID(mProfiles.Length() > 0);
 
   ++mProfilesIndex;
   BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "");

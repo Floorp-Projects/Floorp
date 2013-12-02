@@ -12,6 +12,10 @@ function testSelectItem(command, expect) {
     is(command.options.items[index].identifier, expect.items[index].identifier, expect.name);
     is(command.options.items[index].text, expect.items[index].text, expect.name);
   }
+  let length = command.options.nextActionList ? command.options.nextActionList.length : 0;
+  for (let i = 0; i < length; i++) {
+    is(command.options.nextActionList[i], expect.nextActionList[i], expect.name);
+  }
 
   runNextTest();
 }
@@ -58,7 +62,8 @@ let tests = [
    expect: {name: "select_item_cmd_7",
             commandQualifier: 0x00,
             title: "Toolkit Select",
-            items: [{identifier: 1, text: "Item 1"}, {identifier: 2, text: "Item 2"}, {identifier: 3, text: "Item 3"}]}},
+            items: [{identifier: 1, text: "Item 1"}, {identifier: 2, text: "Item 2"}, {identifier: 3, text: "Item 3"}],
+            nextActionList: [iccManager.STK_CMD_SEND_SMS, iccManager.STK_CMD_SET_UP_CALL, iccManager.STK_CMD_PROVIDE_LOCAL_INFO]}},
   {command: "d037810301240082028182850e546f6f6c6b69742053656c6563748f07014974656d20318f07024974656d20328f07034974656d2033900102",
    func: testSelectItem,
    expect: {name: "select_item_cmd_8",
@@ -304,7 +309,14 @@ let tests = [
    expect: {name: "select_item_cmd_48",
             commandQualifier: 0x00,
             title: "82ル0",
-            items: [{identifier: 1, text: "82ル1"}, {identifier: 2, text: "82ル2"}, {identifier: 3, text: "82ル3"}]}}
+            items: [{identifier: 1, text: "82ル1"}, {identifier: 2, text: "82ル2"}, {identifier: 3, text: "82ル3"}]}},
+  {command: "d039810301240082028182850e546f6f6c6b69742053656c6563748f07014974656d20318f07024974656d20328f07034974656d20331803000081",
+   func: testSelectItem,
+   expect: {name: "select_item_cmd_49",
+            commandQualifier: 0x00,
+            title: "Toolkit Select",
+            items: [{identifier: 1, text: "Item 1"}, {identifier: 2, text: "Item 2"}, {identifier: 3, text: "Item 3"}],
+            nextActionList: [iccManager.STK_NEXT_ACTION_NULL, iccManager.STK_NEXT_ACTION_NULL, iccManager.STK_NEXT_ACTION_END_PROACTIVE_SESSION]}},
 ];
 
 runNextTest();
