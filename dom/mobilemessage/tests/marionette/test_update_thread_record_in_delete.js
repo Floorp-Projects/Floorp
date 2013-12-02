@@ -114,7 +114,7 @@ function checkThread(thread, id, body, unreadCount, timestamp)
   is(thread.body, body, "Thread subject is set to last message body");
   is(thread.unreadCount, unreadCount, "Thread unread count");
   is(JSON.stringify(thread.participants), JSON.stringify([FROM]), "Thread participants");
-  is(thread.timestamp.getTime(), timestamp.getTime(), "Thread timestamp is set");
+  is(thread.timestamp, timestamp, "Thread timestamp is set");
 }
 
 tasks.push(deleteAllMessages);

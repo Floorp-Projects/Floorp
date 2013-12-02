@@ -178,8 +178,7 @@ function getMsgs() {
 function verifyFoundMsgs(foundSmsList) {
   for (var x = 0; x < foundSmsList.length; x++) {
     is(foundSmsList[x].id, smsList[x].id, "id");
-    is(foundSmsList[x].timestamp.getTime(), smsList[x].timestamp.getTime(),
-        "timestmap");
+    is(foundSmsList[x].timestamp, smsList[x].timestamp, "timestmap");
   }
   deleteAllMsgs(cleanUp);
 }
