@@ -120,7 +120,7 @@ var files = [
   {
     url: "ting-44.1k-1ch.ogg",
     valid: true,
-    expected: "ting-44.1k-1ch.wav",
+    expectedUrl: "ting-44.1k-1ch.wav",
     numberOfChannels: 1,
     frames: 30592,
     sampleRate: 44100,
@@ -132,7 +132,7 @@ var files = [
   {
     url: "ting-44.1k-2ch.ogg",
     valid: true,
-    expected: "ting-44.1k-2ch.wav",
+    expectedUrl: "ting-44.1k-2ch.wav",
     numberOfChannels: 2,
     frames: 30592,
     sampleRate: 44100,
@@ -144,7 +144,7 @@ var files = [
   {
     url: "ting-48k-1ch.ogg",
     valid: true,
-    expected: "ting-48k-1ch.wav",
+    expectedUrl: "ting-48k-1ch.wav",
     numberOfChannels: 1,
     frames: 33297,
     sampleRate: 48000,
@@ -156,7 +156,7 @@ var files = [
   {
     url: "ting-48k-2ch.ogg",
     valid: true,
-    expected: "ting-48k-2ch.wav",
+    expectedUrl: "ting-48k-2ch.wav",
     numberOfChannels: 2,
     frames: 33297,
     sampleRate: 48000,
@@ -169,7 +169,7 @@ var files = [
   {
     url: "ting-44.1k-1ch.wav",
     valid: true,
-    expected: "ting-44.1k-1ch.wav",
+    expectedUrl: "ting-44.1k-1ch.wav",
     numberOfChannels: 1,
     frames: 30592,
     sampleRate: 44100,
@@ -180,7 +180,7 @@ var files = [
   {
     url: "ting-48k-1ch.wav",
     valid: true,
-    expected: "ting-48k-1ch.wav",
+    expectedUrl: "ting-48k-1ch.wav",
     numberOfChannels: 1,
     frames: 33297,
     sampleRate: 48000,
@@ -189,7 +189,7 @@ var files = [
     fuzzToleranceMobile: 0
   },
   //  // A wave file
-  //  //{ url: "24bit-44khz.wav", valid: true, expected: "24bit-44khz-expected.wav" },
+  //  //{ url: "24bit-44khz.wav", valid: true, expectedUrl: "24bit-44khz-expected.wav" },
   // A non-audio file
   { url: "invalid.txt", valid: false },
   // A webm file with no audio
@@ -198,7 +198,7 @@ var files = [
   {
     url: "audio.ogv",
     valid: true,
-    expected: "audio-expected.wav",
+    expectedUrl: "audio-expected.wav",
     numberOfChannels: 2,
     sampleRate: 44100,
     frames: 47680,
@@ -231,7 +231,7 @@ function getFuzzTolerance(test) {
   return kIsMobile ? test.fuzzToleranceMobile : test.fuzzTolerance;
 }
 
-function checkAudioBuffer(buffer, test, callback, monoTest) {
+function checkAudioBuffer(buffer, test) {
   is(buffer.numberOfChannels, test.numberOfChannels, "Correct number of channels");
   ok(Math.abs(buffer.duration - test.duration) < 1e-3, "Correct duration");
   if (Math.abs(buffer.duration - test.duration) >= 1e-3) {
@@ -243,46 +243,47 @@ function checkAudioBuffer(buffer, test, callback, monoTest) {
   ok(Math.abs(buffer.length - expectedLength) < 1.0, "Correct length", "got " + buffer.length + ", expected about " + expectedLength);
 
   var wave = createWaveFileData(buffer);
-
-  var getExpected = new XMLHttpRequest();
-  getExpected.open("GET", test.expected, true);
-  getExpected.responseType = "arraybuffer";
-  getExpected.onload = function() {
-    ok(fuzzyMemcmp(wave, new Uint8Array(getExpected.response), getFuzzTolerance(test)), "Received expected decoded data");
-    callback();
-  };
-  getExpected.send();
+  ok(fuzzyMemcmp(wave, test.expectedWaveData, getFuzzTolerance(test)), "Received expected decoded data");
 }
 
-function runTest(test, callback) {
+function runTest(test, response, callback) {
+  var expectCallback = false;
+  cx.decodeAudioData(response, function onSuccess(asyncResult) {
+    ok(expectCallback, "Success callback should fire asynchronously");
+    ok(test.valid, "Did expect success for test " + test.url);
+    checkAudioBuffer(asyncResult, test);
+
+    syncResult = cx.createBuffer(response, false);
+    compareBuffers(syncResult, asyncResult);
+    callback();
+  }, function onFailure() {
+    ok(expectCallback, "Failure callback should fire asynchronously");
+    ok(!test.valid, "Did expect failure for test " + test.url);
+    callback();
+  });
+  expectCallback = true;
+}
+
+function loadTest(test, callback) {
   var xhr = new XMLHttpRequest();
   xhr.open("GET", test.url, true);
   xhr.responseType = "arraybuffer";
   xhr.onload = function() {
-    var expectCallback = false;
-    cx.decodeAudioData(xhr.response, function onSuccess(result) {
-      ok(expectCallback, "Success callback should fire asynchronously");
-      ok(test.valid, "Did expect success for test " + test.url);
-
-      checkAudioBuffer(result, test, function() {
-        result = cx.createBuffer(xhr.response, false);
-        checkAudioBuffer(result, test, function() {
-            callback();
-        }, false);
-      }, false);
-    }, function onFailure() {
-      ok(expectCallback, "Failure callback should fire asynchronously");
-      ok(!test.valid, "Did expect failure for test " + test.url);
-      callback();
-    });
-    expectCallback = true;
+    var getExpected = new XMLHttpRequest();
+    getExpected.open("GET", test.expectedUrl, true);
+    getExpected.responseType = "arraybuffer";
+    getExpected.onload = function() {
+      test.expectedWaveData = new Uint8Array(getExpected.response);
+      runTest(test, xhr.response, callback);
+    };
+    getExpected.send();
   };
   xhr.send();
 }
 
-function runNextTest() {
+function loadNextTest() {
   if (files.length) {
-    runTest(files.shift(), runNextTest);
+    loadTest(files.shift(), loadNextTest);
   } else {
     SimpleTest.finish();
   }
@@ -310,7 +311,7 @@ expectTypeError(function() {
 
 if (cx.sampleRate >= 44100) {
   // Now, let's get real!
-  runNextTest();
+  loadNextTest();
 } else {
   todo(false, "Decoded data tests disabled; context sampleRate " + cx.sampleRate + " not supported");
   SimpleTest.finish();
