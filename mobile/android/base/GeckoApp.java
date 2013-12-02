@@ -1193,7 +1193,7 @@ public abstract class GeckoApp
         }
 
         BrowserDB.initialize(getProfile().getName());
-        ((GeckoApplication)getApplication()).initialize();
+        ((GeckoApplication) getApplication()).initialize();
 
         sAppContext = this;
         GeckoAppShell.setContextGetter(this);
@@ -1205,6 +1205,18 @@ public abstract class GeckoApp
             Favicons.attachToContext(this);
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception starting favicon cache. Corrupt resources?", e);
+        }
+
+        // Did the OS locale change while we were backgrounded? If so,
+        // we need to die so that Gecko will re-init add-ons that touch
+        // the UI.
+        // This is using a sledgehammer to crack a nut, but it'll do for
+        // now.
+        if (LocaleManager.systemLocaleDidChange()) {
+            Log.i(LOGTAG, "System locale changed. Restarting.");
+            doRestart();
+            System.exit(0);
+            return;
         }
 
         if (GeckoThread.isCreated()) {
@@ -1285,6 +1297,7 @@ public abstract class GeckoApp
                 // Wait until now to set this, because we'd rather throw an exception than 
                 // have a caller of LocaleManager regress startup.
                 LocaleManager.setContextGetter(GeckoApp.this);
+                LocaleManager.initialize();
 
                 SessionInformation previousSession = SessionInformation.fromSharedPrefs(prefs);
                 if (previousSession.wasKilled()) {
