@@ -5,7 +5,10 @@
 
 package org.mozilla.gecko;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -36,8 +39,31 @@ public class LocaleManager {
     private static volatile ContextGetter getter = null;
     private static volatile Locale currentLocale = null;
 
+    private static volatile boolean inited = false;
+    private static boolean systemLocaleDidChange = false;
+    private static BroadcastReceiver receiver;
+
     public static void setContextGetter(ContextGetter getter) {
         LocaleManager.getter = getter;
+    }
+
+    public static void initialize() {
+        if (inited) {
+            return;
+        }
+
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                systemLocaleDidChange = true;
+            }
+        };
+        getContext().registerReceiver(receiver, new IntentFilter(Intent.ACTION_LOCALE_CHANGED));
+        inited = true;
+    }
+
+    public static boolean systemLocaleDidChange() {
+        return systemLocaleDidChange;
     }
 
     private static Context getContext() {
