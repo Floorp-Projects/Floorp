@@ -309,6 +309,9 @@ include transform-3d/reftest.list
 # unicode/ (verify that we don't do expend effort doing unicode-aware case checks)
 skip-if(B2G) include unicode/reftest.list
 
+# webcomonents/
+include webcomponents/reftest.list
+
 # widget/
 skip-if(B2G) include ../../widget/reftests/reftest.list
 

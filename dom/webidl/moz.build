@@ -273,6 +273,7 @@ WEBIDL_FILES = [
     'ScriptProcessorNode.webidl',
     'ScrollAreaEvent.webidl',
     'SettingsManager.webidl',
+    'ShadowRoot.webidl',
     'SharedWorker.webidl',
     'SharedWorkerGlobalScope.webidl',
     'SimpleGestureEvent.webidl',
