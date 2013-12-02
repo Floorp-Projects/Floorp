@@ -21,6 +21,9 @@ class nsIFrame;
 class nsXBLBinding;
 
 namespace mozilla {
+namespace dom {
+class ShadowRoot;
+} // namespace dom
 namespace widget {
 struct IMEState;
 } // namespace widget
@@ -34,8 +37,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID \
-{ 0x34117ca3, 0x45d0, 0x479e, \
-  { 0x91, 0x30, 0x54, 0x49, 0xa9, 0x5f, 0x25, 0x99 } }
+{ 0x4b05faf2, 0x12e0, 0x4f56, \
+  { 0xb5, 0x2e, 0x3e, 0xb6, 0xad, 0x9c, 0x6e, 0xbe } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -624,6 +627,30 @@ public:
    */
   virtual void SetXBLBinding(nsXBLBinding* aBinding,
                              nsBindingManager* aOldBindingManager = nullptr) = 0;
+
+  /**
+   * Sets the ShadowRoot binding for this element. The contents of the
+   * binding is rendered in place of this node's children.
+   *
+   * @param aShadowRoot The ShadowRoot to be bound to this element.
+   */
+  virtual void SetShadowRoot(mozilla::dom::ShadowRoot* aShadowRoot) = 0;
+
+  /**
+   * Gets the ShadowRoot binding for this element.
+   *
+   * @return The ShadowRoot currently bound to this element.
+   */
+  virtual mozilla::dom::ShadowRoot *GetShadowRoot() const = 0;
+
+  /**
+   * Gets the root of the node tree for this content if it is in a shadow tree.
+   * This method is called |GetContainingShadow| instead of |GetRootShadowRoot|
+   * to avoid confusion with |GetShadowRoot|.
+   *
+   * @return The ShadowRoot that is the root of the node tree.
+   */
+  virtual mozilla::dom::ShadowRoot *GetContainingShadow() const = 0;
 
   /**
    * Gets the insertion parent element of the XBL binding.

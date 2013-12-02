@@ -75,6 +75,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 #include "nsError.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ShadowRoot.h"
 
 using namespace mozilla;
 
@@ -1745,7 +1746,16 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent *aNode,
       }
     }
   }
-  
+
+  // If the node is a ShadowRoot, the frame needs to be adjusted,
+  // because a ShadowRoot does not get a frame. Its children are rendered
+  // as children of the host.
+  mozilla::dom::ShadowRoot* shadowRoot =
+    mozilla::dom::ShadowRoot::FromNode(theNode);
+  if (shadowRoot) {
+    theNode = shadowRoot->GetHost();
+  }
+
   nsIFrame* returnFrame = theNode->GetPrimaryFrame();
   if (!returnFrame)
     return nullptr;
@@ -4647,20 +4657,34 @@ Selection::Extend(nsINode* aParentNode, int32_t aOffset)
   //compare anchor to old cursor.
 
   // We pass |disconnected| to the following ComparePoints calls in order
-  // to avoid assertions, and there is no special handling required, since
-  // ComparePoints returns 1 in the disconnected case.
+  // to avoid assertions. ComparePoints returns 1 in the disconnected case
+  // and we can end up in various cases below, but it is assumed that in
+  // any of the cases we end up, the nsRange implementation will collapse
+  // the range to the new point because we can not make a valid range with
+  // a disconnected point. This means that whatever range is currently
+  // selected will be cleared.
   bool disconnected = false;
+  bool shouldClearRange = false;
   int32_t result1 = nsContentUtils::ComparePoints(anchorNode, anchorOffset,
                                                   focusNode, focusOffset,
                                                   &disconnected);
   //compare old cursor to new cursor
+  shouldClearRange |= disconnected;
   int32_t result2 = nsContentUtils::ComparePoints(focusNode, focusOffset,
                                                   aParentNode, aOffset,
                                                   &disconnected);
   //compare anchor to new cursor
+  shouldClearRange |= disconnected;
   int32_t result3 = nsContentUtils::ComparePoints(anchorNode, anchorOffset,
                                                   aParentNode, aOffset,
                                                   &disconnected);
+
+  // If the points are disconnected, the range will be collapsed below,
+  // resulting in a range that selects nothing.
+  if (shouldClearRange) {
+    // Repaint the current range with the selection removed.
+    selectFrames(presContext, range, false);
+  }
 
   nsRefPtr<nsRange> difRange = new nsRange(aParentNode);
   if ((result1 == 0 && result3 < 0) || (result1 <= 0 && result2 < 0)){//a1,2  a,1,2

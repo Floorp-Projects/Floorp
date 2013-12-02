@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script>
+    function tweak() {
+      var shadowDiv = document.createElement("div");
+      shadowDiv.style.border = "10px solid green";
+
+      var shadowRoot = document.getElementById('outer').createShadowRoot();
+      shadowRoot.appendChild(shadowDiv);
+
+      var orangeDiv = document.createElement("div");
+      orangeDiv.style.border = "10px solid orange";
+
+      var purpleDiv = document.createElement("div");
+      purpleDiv.style.border = "10px solid purple";
+
+      shadowRoot.appendChild(purpleDiv);
+      shadowRoot.insertBefore(orangeDiv, purpleDiv);
+    }
+  </script>
+</head>
+<body onload="tweak()">
+<div id="outer">
+  <div style="background-color:red;"></div>
+</div>
+</body>
+</html>

@@ -1997,6 +1997,7 @@ struct ExposeRegion
     }
     bool Init(cairo_t* cr)
     {
+        mRects = cairo_copy_clip_rectangle_list(cr);
         if (mRects->status != CAIRO_STATUS_SUCCESS) {
             NS_WARNING("Failed to obtain cairo rectangle list.");
             return false;
@@ -5976,7 +5977,12 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
 TemporaryRef<DrawTarget>
 nsWindow::StartRemoteDrawing()
 {
+#if (MOZ_WIDGET_GTK == 2)
   gfxASurface *surf = GetThebesSurface();
+#else
+  // TODO GTK3
+  gfxASurface *surf = nullptr;
+#endif
   if (!surf) {
     return nullptr;
   }

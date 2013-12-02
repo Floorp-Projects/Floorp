@@ -214,7 +214,9 @@ void denormalise_bands(const CELTMode *m, const celt_norm * OPUS_RESTRICT X,
          j=M*eBands[i];
          band_end = M*eBands[i+1];
          lg = ADD16(bandLogE[i+c*m->nbEBands], SHL16((opus_val16)eMeans[i],6));
-#ifdef FIXED_POINT
+#ifndef FIXED_POINT
+         g = celt_exp2(lg);
+#else
          /* Handle the integer part of the log energy */
          shift = 16-(lg>>DB_SHIFT);
          if (shift>31)
@@ -225,9 +227,23 @@ void denormalise_bands(const CELTMode *m, const celt_norm * OPUS_RESTRICT X,
             /* Handle the fractional part. */
             g = celt_exp2_frac(lg&((1<<DB_SHIFT)-1));
          }
-#else
-         g = celt_exp2(lg);
+         /* Handle extreme gains with negative shift. */
+         if (shift<0)
+         {
+            /* For shift < -2 we'd be likely to overflow, so we're capping
+               the gain here. This shouldn't happen unless the bitstream is
+               already corrupted. */
+            if (shift < -2)
+            {
+               g = 32767;
+               shift = -2;
+            }
+            do {
+               *f++ = SHL32(MULT16_16(*x++, g), -shift);
+            } while (++j<band_end);
+         } else
 #endif
+         /* Be careful of the fixed-point "else" just above when changing this code */
          do {
             *f++ = SHR32(MULT16_16(*x++, g), shift);
          } while (++j<band_end);
@@ -492,7 +508,7 @@ int spreading_decision(const CELTMode *m, celt_norm *X, int *average,
          *tapset_decision=0;
    }
    /*printf("%d %d %d\n", hf_sum, *hf_average, *tapset_decision);*/
-   celt_assert(nbBands>0); /*M*(eBands[end]-eBands[end-1]) <= 8 assures this*/
+   celt_assert(nbBands>0); /* end has to be non-zero */
    sum /= nbBands;
    /* Recursive averaging */
    sum = (sum+*average)>>1;
@@ -869,7 +885,6 @@ static unsigned quant_partition(struct band_ctx *ctx, celt_norm *X,
    int q;
    int curr_bits;
    int imid=0, iside=0;
-   int N_B=N;
    int B0=B;
    opus_val16 mid=0, side=0;
    unsigned cm=0;
@@ -890,8 +905,6 @@ static unsigned quant_partition(struct band_ctx *ctx, celt_norm *X,
    i = ctx->i;
    spread = ctx->spread;
    ec = ctx->ec;
-
-   N_B /= B;
 
    /* If we need 1.5 more bit than we can produce, split the band in two. */
    cache = m->cache.bits + m->cache.index[(LM+1)*m->nbEBands+i];
@@ -1072,7 +1085,6 @@ static unsigned quant_band(struct band_ctx *ctx, celt_norm *X,
    longBlocks = B0==1;
 
    N_B /= B;
-   N_B0 = N_B;
 
    /* Special case for one sample */
    if (N==1)

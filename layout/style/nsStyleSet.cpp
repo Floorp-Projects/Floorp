@@ -79,7 +79,9 @@ nsInitialStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
               index == nsCSSProps::PropertyIndexInStruct(
                           eCSSProperty_script_size_multiplier) ||
               index == nsCSSProps::PropertyIndexInStruct(
-                          eCSSProperty_script_min_size)) {
+                          eCSSProperty_script_min_size) ||
+              index == nsCSSProps::PropertyIndexInStruct(
+                          eCSSProperty_math_variant)) {
             continue;
           }
         }

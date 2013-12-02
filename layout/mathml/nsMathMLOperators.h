@@ -58,26 +58,6 @@ enum {
 
 #define NS_MATHML_OPERATOR_SIZE_INFINITY NS_IEEEPositiveInfinity()
 
-// Style invariant characters (chars have their own intrinsic predefined style)
-enum eMATHVARIANT {
-  eMATHVARIANT_NONE = -1,
-  eMATHVARIANT_normal = 0,
-  eMATHVARIANT_bold,
-  eMATHVARIANT_italic,
-  eMATHVARIANT_bold_italic,
-  eMATHVARIANT_sans_serif,
-  eMATHVARIANT_bold_sans_serif,
-  eMATHVARIANT_sans_serif_italic,
-  eMATHVARIANT_sans_serif_bold_italic,
-  eMATHVARIANT_monospace,
-  eMATHVARIANT_script,
-  eMATHVARIANT_bold_script,
-  eMATHVARIANT_fraktur,
-  eMATHVARIANT_bold_fraktur,
-  eMATHVARIANT_double_struck,
-  eMATHVARIANT_COUNT
-};
-
 class nsMathMLOperators {
 public:
   static void AddRefTable(void);
@@ -123,19 +103,6 @@ public:
 
   // Helper function used by the nsMathMLChar class.
   static nsStretchDirection GetStretchyDirection(const nsString& aOperator);
-
-  // Return the variant type of one Unicode Mathematical Alphanumeric Symbol
-  // character (which may be represented by a surrogate pair), or return
-  // eMATHVARIANT_NONE if aChar is not such a character.
-  static eMATHVARIANT LookupInvariantChar(const nsAString& aChar);
-
-  // Return the styled Mathematical Alphanumeric Symbol character
-  // corresponding to a BMP character and a mathvariant value, or return aChar
-  // if there is no such corresponding character.
-  // Note the result may be dependent on aChar, and should be considered a
-  // temporary.
-  static const nsDependentSubstring
-  TransformVariantChar(const PRUnichar& aChar, eMATHVARIANT aVariant);
 };
 
 ////////////////////////////////////////////////////////////////////////////

@@ -3386,7 +3386,9 @@ LIRGenerator::visitGetDOMProperty(MGetDOMProperty *ins)
 bool
 LIRGenerator::visitGetDOMMember(MGetDOMMember *ins)
 {
-    MOZ_ASSERT(ins->isDomPure(), "Members had better be pure");
+    MOZ_ASSERT(ins->isDomMovable(), "Members had better be movable");
+    MOZ_ASSERT(ins->domAliasSet() == JSJitInfo::AliasNone,
+               "Members had better not alias anything");
     LGetDOMMember *lir =
         new LGetDOMMember(useRegister(ins->object()));
     return defineBox(lir, ins);

@@ -289,6 +289,10 @@ OS_LIBS += $(call EXPAND_LIBNAME,kvm)
 EXTRA_DSO_LDOPTS += -Wl,--warn-unresolved-symbols
 endif
 
+ifeq ($(OS_ARCH),FreeBSD)
+OS_LIBS += $(call EXPAND_LIBNAME,util)
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 version winspool comdlg32 imm32 msimg32 shlwapi psapi ws2_32 dbghelp rasapi32 rasdlg iphlpapi uxtheme setupapi secur32 sensorsapi portabledeviceguids windowscodecs wininet wbemuuid)
 ifdef ACCESSIBILITY

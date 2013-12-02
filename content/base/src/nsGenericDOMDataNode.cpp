@@ -13,6 +13,7 @@
 #include "nsGenericDOMDataNode.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "nsIDocument.h"
 #include "nsEventListenerManager.h"
 #include "nsIDOMDocument.h"
@@ -480,6 +481,13 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     if (aParent->HasFlag(NODE_CHROME_ONLY_ACCESS)) {
       SetFlags(NODE_CHROME_ONLY_ACCESS);
     }
+    if (aParent->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+      SetFlags(NODE_IS_IN_SHADOW_TREE);
+    }
+    ShadowRoot* parentContainingShadow = aParent->GetContainingShadow();
+    if (parentContainingShadow) {
+      DataSlots()->mContainingShadow = parentContainingShadow;
+    }
   }
 
   // Set parent
@@ -531,7 +539,10 @@ nsGenericDOMDataNode::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   // Unset frame flags; if we need them again later, they'll get set again.
   UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE |
-             NS_REFRAME_IF_WHITESPACE);
+             NS_REFRAME_IF_WHITESPACE |
+             // Also unset the shadow tree flag because it can
+             // no longer be a descendant of a ShadowRoot.
+             NODE_IS_IN_SHADOW_TREE);
   
   nsIDocument *document = GetCurrentDoc();
   if (document) {
@@ -557,6 +568,7 @@ nsGenericDOMDataNode::UnbindFromTree(bool aDeep, bool aNullParent)
   nsDataSlots *slots = GetExistingDataSlots();
   if (slots) {
     slots->mBindingParent = nullptr;
+    slots->mContainingShadow = nullptr;
   }
 
   nsNodeUtils::ParentChainChanged(this);
@@ -645,6 +657,24 @@ nsGenericDOMDataNode::GetBindingParent() const
   return slots ? slots->mBindingParent : nullptr;
 }
 
+ShadowRoot *
+nsGenericDOMDataNode::GetShadowRoot() const
+{
+  return nullptr;
+}
+
+ShadowRoot *
+nsGenericDOMDataNode::GetContainingShadow() const
+{
+  nsDataSlots *slots = GetExistingDataSlots();
+  return slots ? slots->mContainingShadow : nullptr;
+}
+
+void
+nsGenericDOMDataNode::SetShadowRoot(ShadowRoot* aShadowRoot)
+{
+}
+
 nsXBLBinding *
 nsGenericDOMDataNode::GetXBLBinding() const
 {
@@ -725,17 +755,26 @@ nsGenericDOMDataNode::CreateSlots()
   return new nsDataSlots();
 }
 
+nsGenericDOMDataNode::nsDataSlots::nsDataSlots()
+  : nsINode::nsSlots(), mBindingParent(nullptr)
+{
+}
+
 void
 nsGenericDOMDataNode::nsDataSlots::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mXBLInsertionParent");
   cb.NoteXPCOMChild(mXBLInsertionParent.get());
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mContainingShadow");
+  cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mContainingShadow));
 }
 
 void
 nsGenericDOMDataNode::nsDataSlots::Unlink()
 {
   mXBLInsertionParent = nullptr;
+  mContainingShadow = nullptr;
 }
 
 //----------------------------------------------------------------------

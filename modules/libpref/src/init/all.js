@@ -269,7 +269,7 @@ pref("media.tabstreaming.height", 240);
 pref("media.tabstreaming.time_per_frame", 40);
 
 // TextTrack support
-pref("media.webvtt.enabled", false);
+pref("media.webvtt.enabled", true);
 
 // Whether to enable MediaSource support
 pref("media.mediasource.enabled", false);
@@ -307,6 +307,10 @@ pref("apz.axis_lock_mode", 0);
 //   >= 2 : hidpi supported even with mixed backingScaleFactors (somewhat broken)
 pref("gfx.hidpi.enabled", 2);
 #endif
+
+// Whether to enable LayerScope tool and default listening port
+pref("gfx.layerscope.enabled", false);
+pref("gfx.layerscope.port", 23456);
 
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
 // See eCMSMode in gfx/thebes/gfxPlatform.h
@@ -895,6 +899,8 @@ pref("privacy.donottrackheader.value",      1);
 
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.clipboardevents.enabled",   true);
+
+pref("dom.webcomponents.enabled",           false);
 
 pref("javascript.enabled",                  true);
 pref("javascript.options.strict",           false);

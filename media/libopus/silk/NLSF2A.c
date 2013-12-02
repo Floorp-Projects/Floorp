@@ -41,7 +41,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define QA      16
 
 /* helper function for NLSF2A(..) */
-static inline void silk_NLSF2A_find_poly(
+static OPUS_INLINE void silk_NLSF2A_find_poly(
     opus_int32          *out,      /* O    intermediate polynomial, QA [dd+1]        */
     const opus_int32    *cLSF,     /* I    vector of interleaved 2*cos(LSFs), QA [d] */
     opus_int            dd         /* I    polynomial order (= 1/2 * filter order)   */

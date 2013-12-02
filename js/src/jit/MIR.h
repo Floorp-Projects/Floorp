@@ -1913,7 +1913,9 @@ class MCall
             const JSJitInfo* jitInfo = getSingleTarget()->jitInfo();
             JS_ASSERT(jitInfo);
 
-            if (jitInfo->isPure && jitInfo->argTypes) {
+            JS_ASSERT(jitInfo->aliasSet != JSJitInfo::AliasNone);
+            if (jitInfo->aliasSet == JSJitInfo::AliasDOMSets &&
+                jitInfo->argTypes) {
                 uint32_t argIndex = 0;
                 for (const JSJitInfo::ArgType* argType = jitInfo->argTypes;
                      *argType != JSJitInfo::ArgTypeListEnd;
@@ -7875,8 +7877,10 @@ class MGetDOMProperty
         setOperand(1, guard);
 
         // We are movable iff the jitinfo says we can be.
-        if (jitinfo->isPure)
+        if (isDomMovable()) {
+            JS_ASSERT(jitinfo->aliasSet != JSJitInfo::AliasEverything);
             setMovable();
+        }
 
         setResultType(MIRType_Value);
     }
@@ -7900,11 +7904,11 @@ class MGetDOMProperty
     bool isInfallible() const {
         return info_->isInfallible;
     }
-    bool isDomConstant() const {
-        return info_->isConstant;
+    bool isDomMovable() const {
+        return info_->isMovable;
     }
-    bool isDomPure() const {
-        return info_->isPure;
+    JSJitInfo::AliasSet domAliasSet() const {
+        return info_->aliasSet;
     }
     size_t domMemberSlotIndex() const {
         MOZ_ASSERT(info_->isInSlot);
@@ -7919,7 +7923,7 @@ class MGetDOMProperty
     }
 
     bool congruentTo(MDefinition *ins) const {
-        if (!isDomPure())
+        if (!isDomMovable())
             return false;
 
         if (!ins->isGetDOMProperty())
@@ -7933,14 +7937,12 @@ class MGetDOMProperty
     }
 
     AliasSet getAliasSet() const {
-        // The whole point of constancy is that it's non-effectful and doesn't
-        // conflict with anything
-        if (isDomConstant())
+        JSJitInfo::AliasSet aliasSet = domAliasSet();
+        if (aliasSet == JSJitInfo::AliasNone)
             return AliasSet::None();
-        // Pure DOM attributes can only alias things that alias the world or
-        // explicitly alias DOM properties.
-        if (isDomPure())
+        if (aliasSet == JSJitInfo::AliasDOMSets)
             return AliasSet::Load(AliasSet::DOMProperty);
+        JS_ASSERT(aliasSet == JSJitInfo::AliasEverything);
         return AliasSet::Store(AliasSet::Any);
     }
 

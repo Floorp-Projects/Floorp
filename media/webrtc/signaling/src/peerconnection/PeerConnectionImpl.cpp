@@ -112,7 +112,7 @@ static nsresult InitNSSInContent()
     return NS_ERROR_FAILURE;
   }
 
-  mozilla::psm::ConfigureMD5(false);
+  mozilla::psm::DisableMD5();
 
   nssStarted = true;
 

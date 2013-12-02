@@ -16,6 +16,7 @@
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "nsRegion.h"
+#include <vector>
 
 /**
  * Different elements of a web pages are rendered into separate "layers" before
@@ -284,7 +285,7 @@ public:
   virtual void SetScreenRenderOffset(const ScreenPoint& aOffset) = 0;
 
   /**
-   * Tell the compositor to actually draw a quad. What to do draw and how it is
+   * Tell the compositor to draw a quad. What to do draw and how it is
    * drawn is specified by aEffectChain. aRect is the quad to draw, in user space.
    * aTransform transforms from user space to screen space. If texture coords are
    * required, these will be in the primary effect in the effect chain.
@@ -292,6 +293,15 @@ public:
   virtual void DrawQuad(const gfx::Rect& aRect, const gfx::Rect& aClipRect,
                         const EffectChain& aEffectChain,
                         gfx::Float aOpacity, const gfx::Matrix4x4 &aTransform) = 0;
+
+  /**
+   * Tell the compositor to draw lines connecting the points. Behaves like
+   * DrawQuad.
+   */
+  virtual void DrawLines(const std::vector<gfx::Point>& aLines, const gfx::Rect& aClipRect,
+                         const gfx::Color& aColor,
+                         gfx::Float aOpacity, const gfx::Matrix4x4 &aTransform)
+  { /* Should turn into pure virtual once implemented in D3D */ }
 
   /**
    * Start a new frame.

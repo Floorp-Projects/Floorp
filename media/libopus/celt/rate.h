@@ -45,12 +45,12 @@
 
 void compute_pulse_cache(CELTMode *m, int LM);
 
-static inline int get_pulses(int i)
+static OPUS_INLINE int get_pulses(int i)
 {
    return i<8 ? i : (8 + (i&7)) << ((i>>3)-1);
 }
 
-static inline int bits2pulses(const CELTMode *m, int band, int LM, int bits)
+static OPUS_INLINE int bits2pulses(const CELTMode *m, int band, int LM, int bits)
 {
    int i;
    int lo, hi;
@@ -77,7 +77,7 @@ static inline int bits2pulses(const CELTMode *m, int band, int LM, int bits)
       return hi;
 }
 
-static inline int pulses2bits(const CELTMode *m, int band, int LM, int pulses)
+static OPUS_INLINE int pulses2bits(const CELTMode *m, int band, int LM, int pulses)
 {
    const unsigned char *cache;
 

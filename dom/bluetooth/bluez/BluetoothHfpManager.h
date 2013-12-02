@@ -102,8 +102,9 @@ public:
    * This function set up a Synchronous Connection (SCO) link for HFP.
    * Service Level Connection (SLC) should be established before SCO setup
    * process.
-   * If SLC haven't been established, this function will return false and send a
-   * request to set up SCO ater HfpManager receive AT+CMER.
+   * If SLC haven't been established, this function will return false and
+   * send a request to set up SCO ater HfpManager receive AT+CMER, unless we are
+   * connecting HSP socket rather than HFP socket.
    *
    * @param  aRunnable Indicate a BluetoothReplyRunnable to execute this
    *                   function. The default value is nullpter
@@ -188,6 +189,7 @@ private:
   bool mCMER;
   bool mConnectScoRequest;
   bool mSlcConnected;
+  bool mHspConnected;
 #ifdef MOZ_B2G_RIL
   bool mFirstCKPD;
   int mNetworkSelectionMode;

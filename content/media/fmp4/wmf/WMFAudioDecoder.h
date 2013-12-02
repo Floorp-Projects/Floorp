@@ -7,7 +7,7 @@
 #if !defined(WMFAudioDecoder_h_)
 #define WMFAudioDecoder_h_
 
-#include "wmf.h"
+#include "WMF.h"
 #include "MP4Reader.h"
 #include "MFTDecoder.h"
 

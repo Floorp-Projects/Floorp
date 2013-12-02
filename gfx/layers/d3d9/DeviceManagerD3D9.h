@@ -206,7 +206,7 @@ public:
 #ifdef DEBUG
   // Looks for aFind in the list of texture hosts.
   // O(n) so only use for assertions.
-  bool DeviceManagerD3D9::IsInTextureHostList(TextureSourceD3D9* aFind);
+  bool IsInTextureHostList(TextureSourceD3D9* aFind);
 #endif
 
   /**

@@ -21,10 +21,9 @@ namespace mozilla {
 namespace dom {
 
 class Element;
-class HTMLTemplateElement;
 
-class DocumentFragment MOZ_FINAL : public FragmentOrElement,
-                                   public nsIDOMDocumentFragment
+class DocumentFragment : public FragmentOrElement,
+                         public nsIDOMDocumentFragment
 {
 private:
   void Init()
@@ -127,12 +126,12 @@ public:
     return nullptr;
   }
 
-  HTMLTemplateElement* GetHost() const
+  nsIContent* GetHost() const
   {
     return mHost;
   }
 
-  void SetHost(HTMLTemplateElement* aHost)
+  void SetHost(nsIContent* aHost)
   {
     mHost = aHost;
   }
@@ -147,7 +146,7 @@ public:
 
 protected:
   nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
-  mozilla::dom::HTMLTemplateElement* mHost; // Weak
+  nsIContent* mHost; // Weak
 };
 
 } // namespace dom

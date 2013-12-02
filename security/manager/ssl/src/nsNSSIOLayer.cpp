@@ -974,14 +974,15 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
       // to retry without TLS.
 
       // Don't allow STARTTLS connections to fall back on connection resets or
-      // EOF. Also, don't fall back from TLS 1.0 to SSL 3.0 for those errors,
-      // because connection resets and EOF have too many false positives,
+      // EOF. Also, don't fall back from TLS 1.0 to SSL 3.0 for connection
+      // resets, because connection resets have too many false positives,
       // and we want to maximize how often we send TLS 1.0+ with extensions
       // if at all reasonable. Unfortunately, it appears we have to allow
-      // fallback from TLS 1.2 and TLS 1.1 for those errors due to bad
-      // intermediaries.
+      // fallback from TLS 1.2 and TLS 1.1 for connection resets due to bad
+      // servers and possibly bad intermediaries.
     conditional:
-      if (range.max <= SSL_LIBRARY_VERSION_TLS_1_0 ||
+      if ((err == PR_CONNECT_RESET_ERROR &&
+           range.max <= SSL_LIBRARY_VERSION_TLS_1_0) ||
           socketInfo->GetHasCleartextPhase()) {
         return false;
       }

@@ -29,7 +29,7 @@ TOP_SRC_DIR = os.path.dirname(os.path.dirname(JS_DIR))
 TEST_DIR = os.path.join(JS_DIR, 'jit-test', 'tests')
 LIB_DIR = os.path.join(JS_DIR, 'jit-test', 'lib') + os.path.sep
 JS_CACHE_DIR = os.path.join(JS_DIR, 'jit-test', '.js-cache')
-ECMA6_DIR = posixpath.join(JS_DIR, 'tests', 'ecma_6')
+JS_TESTS_DIR = posixpath.join(JS_DIR, 'tests')
 
 # Backported from Python 3.1 posixpath.py
 def _relpath(path, start=None):
@@ -661,7 +661,9 @@ def run_tests_remote(tests, prefix, options):
     Test.CacheDir = posixpath.join(options.remote_test_root, '.js-cache')
     dm.mkDir(Test.CacheDir)
 
-    dm.pushDir(ECMA6_DIR, posixpath.join(jit_tests_dir, 'tests', 'ecma_6'), timeout=600)
+    for path in os.listdir(JS_TESTS_DIR):
+        dm.pushDir(os.path.join(JS_TESTS_DIR, path), posixpath.join(jit_tests_dir, 'tests', path))
+
     dm.pushDir(os.path.dirname(TEST_DIR), options.remote_test_root, timeout=600)
     prefix[0] = os.path.join(options.remote_test_root, 'js')
 

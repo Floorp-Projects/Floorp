@@ -33,7 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "resampler_private.h"
 #include "stack_alloc.h"
 
-static inline opus_int16 *silk_resampler_private_IIR_FIR_INTERPOL(
+static OPUS_INLINE opus_int16 *silk_resampler_private_IIR_FIR_INTERPOL(
     opus_int16  *out,
     opus_int16  *buf,
     opus_int32  max_index_Q16,

@@ -133,7 +133,7 @@ void
 HTMLStyleElement::ContentChanged(nsIContent* aContent)
 {
   if (nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
-    UpdateStyleSheetInternal(nullptr);
+    UpdateStyleSheetInternal(nullptr, nullptr);
   }
 }
 
@@ -157,9 +157,9 @@ void
 HTMLStyleElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
-
+  ShadowRoot* oldShadow = GetContainingShadow();
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
-  UpdateStyleSheetInternal(oldDoc);
+  UpdateStyleSheetInternal(oldDoc, oldShadow);
 }
 
 nsresult
@@ -173,7 +173,7 @@ HTMLStyleElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     if (aName == nsGkAtoms::title ||
         aName == nsGkAtoms::media ||
         aName == nsGkAtoms::type) {
-      UpdateStyleSheetInternal(nullptr, true);
+      UpdateStyleSheetInternal(nullptr, nullptr, true);
     } else if (aName == nsGkAtoms::scoped) {
       UpdateStyleSheetScopedness(true);
     }
@@ -192,7 +192,7 @@ HTMLStyleElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
     if (aAttribute == nsGkAtoms::title ||
         aAttribute == nsGkAtoms::media ||
         aAttribute == nsGkAtoms::type) {
-      UpdateStyleSheetInternal(nullptr, true);
+      UpdateStyleSheetInternal(nullptr, nullptr, true);
     } else if (aAttribute == nsGkAtoms::scoped) {
       UpdateStyleSheetScopedness(false);
     }
@@ -218,7 +218,7 @@ HTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML,
 
   SetEnableUpdates(true);
 
-  UpdateStyleSheetInternal(nullptr);
+  UpdateStyleSheetInternal(nullptr, nullptr);
 }
 
 already_AddRefed<nsIURI>

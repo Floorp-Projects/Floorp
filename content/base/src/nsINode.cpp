@@ -97,6 +97,7 @@
 #include "nsCSSParser.h"
 #include "HTMLLegendElement.h"
 #include "nsWrapperCacheInlines.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "WrapperFactory.h"
 #include "DocumentType.h"
 #include <algorithm>
@@ -238,6 +239,15 @@ nsINode::GetTextEditorRootContent(nsIEditor** aEditor)
 static nsIContent* GetRootForContentSubtree(nsIContent* aContent)
 {
   NS_ENSURE_TRUE(aContent, nullptr);
+
+  // Special case for ShadowRoot because the ShadowRoot itself is
+  // the root. This is necessary to prevent selection from crossing
+  // the ShadowRoot boundary.
+  ShadowRoot* containingShadow = aContent->GetContainingShadow();
+  if (containingShadow) {
+    return containingShadow;
+  }
+
   nsIContent* stop = aContent->GetBindingParent();
   while (aContent) {
     nsIContent* parent = aContent->GetParent();
@@ -306,8 +316,17 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
   // This node might be in another subtree, if so, we should find this subtree's
   // root.  Otherwise, we can return the content simply.
   NS_ENSURE_TRUE(content, nullptr);
-  return nsContentUtils::IsInSameAnonymousTree(this, content) ?
-           content : GetRootForContentSubtree(static_cast<nsIContent*>(this));
+  if (!nsContentUtils::IsInSameAnonymousTree(this, content)) {
+    content = GetRootForContentSubtree(static_cast<nsIContent*>(this));
+    // Fixup for ShadowRoot because the ShadowRoot itself does not have a frame.
+    // Use the host as the root.
+    ShadowRoot* shadowRoot = ShadowRoot::FromNode(content);
+    if (shadowRoot) {
+      content = shadowRoot->GetHost();
+    }
+  }
+
+  return content;
 }
 
 nsINodeList*
@@ -520,8 +539,11 @@ nsINode::Normalize()
       HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEREMOVED);
   if (hasRemoveListeners) {
     for (uint32_t i = 0; i < nodes.Length(); ++i) {
-      nsContentUtils::MaybeFireNodeRemoved(nodes[i], nodes[i]->GetParentNode(),
-                                           doc);
+      nsINode* parentNode = nodes[i]->GetParentNode();
+      if (parentNode) { // Node may have already been removed.
+        nsContentUtils::MaybeFireNodeRemoved(nodes[i], parentNode,
+                                             doc);
+      }
     }
   }
 
@@ -1551,7 +1573,11 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
   // could be pretty deep in the DOM tree.
   if (aNewChild == aParent ||
       ((aNewChild->GetFirstChild() ||
-        aNewChild->Tag() == nsGkAtoms::_template) &&
+        // HTML template elements and ShadowRoot hosts need
+        // to be checked to ensure that they are not inserted into
+        // the hosted content.
+        aNewChild->Tag() == nsGkAtoms::_template ||
+        aNewChild->GetShadowRoot()) &&
        nsContentUtils::ContentIsHostIncludingDescendantOf(aParent,
                                                           aNewChild))) {
     return false;

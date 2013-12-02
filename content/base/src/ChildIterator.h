@@ -39,6 +39,24 @@ public:
 
   nsIContent* GetNextChild();
 
+  // Looks for aChildToFind respecting insertion points until aChildToFind
+  // or aBound is found. If aBound is nullptr then the seek is unbounded. Returns
+  // whether aChildToFind was found as an explicit child prior to encountering
+  // aBound.
+  bool Seek(nsIContent* aChildToFind, nsIContent* aBound = nullptr)
+  {
+    // It would be nice to assert that we find aChildToFind, but bz thinks that
+    // we might not find aChildToFind when called from ContentInserted
+    // if first-letter frames are about.
+
+    nsIContent* child;
+    do {
+      child = GetNextChild();
+    } while (child && child != aChildToFind && child != aBound);
+
+    return child == aChildToFind;
+  }
+
 protected:
   // The parent of the children being iterated. For the FlattenedChildIterator,
   // if there is a binding attached to the original parent, mParent points to
@@ -83,19 +101,6 @@ public:
   // The inverse of GetNextChild. Properly steps in and out of <xbl:children>
   // elements.
   nsIContent* GetPreviousChild();
-
-  // Looks for aChildToFind respecting XBL insertion points.
-  void Seek(nsIContent* aChildToFind)
-  {
-    // It would be nice to assert that we find aChildToFind, but bz thinks that
-    // we might not find aChildToFind when called from ContentInserted
-    // if first-letter frames are about.
-
-    nsIContent* child;
-    do {
-      child = GetNextChild();
-    } while (child && child != aChildToFind);
-  }
 
   bool XBLInvolved() { return mXBLInvolved; }
 

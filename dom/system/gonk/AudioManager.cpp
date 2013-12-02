@@ -14,11 +14,13 @@
  */
 
 #include <android/log.h>
+#include <cutils/properties.h>
 
 #include "AudioChannelService.h"
 #include "AudioManager.h"
 
 #include "nsIObserverService.h"
+#include "nsIRadioInterfaceLayer.h"
 #include "nsISettingsService.h"
 #include "nsPrintfCString.h"
 
@@ -369,7 +371,8 @@ public:
 };
 
 AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
-                 mObserver(new HeadphoneSwitchObserver())
+                 mObserver(new HeadphoneSwitchObserver()),
+                 mMuteCallToRIL(false)
 {
   RegisterSwitchObserver(SWITCH_HEADPHONES, mObserver);
 
@@ -419,6 +422,12 @@ AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
   if (NS_FAILED(obs->AddObserver(this, MOZ_SETTINGS_CHANGE_ID, false))) {
     NS_WARNING("Failed to add mozsettings-changed observer!");
   }
+
+  char value[PROPERTY_VALUE_MAX];
+  property_get("ro.moz.mute.call.to_ril", value, "false");
+  if (!strcmp(value, "true")) {
+    mMuteCallToRIL = true;
+  }
 }
 
 AudioManager::~AudioManager() {
@@ -443,6 +452,12 @@ AudioManager::~AudioManager() {
 NS_IMETHODIMP
 AudioManager::GetMicrophoneMuted(bool* aMicrophoneMuted)
 {
+  if (mMuteCallToRIL) {
+    // Simply return cached mIsMicMuted if mute call go via RIL.
+    *aMicrophoneMuted = mIsMicMuted;
+    return NS_OK;
+  }
+
   if (AudioSystem::isMicrophoneMuted(aMicrophoneMuted)) {
     return NS_ERROR_FAILURE;
   }
@@ -452,10 +467,17 @@ AudioManager::GetMicrophoneMuted(bool* aMicrophoneMuted)
 NS_IMETHODIMP
 AudioManager::SetMicrophoneMuted(bool aMicrophoneMuted)
 {
-  if (AudioSystem::muteMicrophone(aMicrophoneMuted)) {
-    return NS_ERROR_FAILURE;
+  if (!AudioSystem::muteMicrophone(aMicrophoneMuted)) {
+    if (mMuteCallToRIL) {
+      // Extra mute request to RIL for specific platform.
+      nsCOMPtr<nsIRadioInterfaceLayer> ril = do_GetService("@mozilla.org/ril;1");
+      NS_ENSURE_TRUE(ril, NS_ERROR_FAILURE);
+      ril->SetMicrophoneMuted(aMicrophoneMuted);
+      mIsMicMuted = aMicrophoneMuted;
+    }
+    return NS_OK;
   }
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

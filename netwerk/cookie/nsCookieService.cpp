@@ -52,6 +52,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsIAppsService.h"
 #include "mozIApplication.h"
+#include "nsIConsoleService.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -1577,6 +1578,17 @@ nsCookieService::SetCookieString(nsIURI     *aHostURI,
                                  const char *aCookieHeader,
                                  nsIChannel *aChannel)
 {
+  // The aPrompt argument is deprecated and unused.  Avoid introducing new
+  // code that uses this argument by warning if the value is non-null.
+  MOZ_ASSERT(!aPrompt);
+  if (aPrompt) {
+    nsCOMPtr<nsIConsoleService> aConsoleService =
+        do_GetService("@mozilla.org/consoleservice;1");
+    if (aConsoleService) {
+      aConsoleService->LogStringMessage(
+        NS_LITERAL_STRING("Non-null prompt ignored by nsCookieService.").get());
+    }
+  }
   return SetCookieStringCommon(aHostURI, aCookieHeader, nullptr, aChannel,
                                false);
 }
@@ -1589,6 +1601,17 @@ nsCookieService::SetCookieStringFromHttp(nsIURI     *aHostURI,
                                          const char *aServerTime,
                                          nsIChannel *aChannel) 
 {
+  // The aPrompt argument is deprecated and unused.  Avoid introducing new
+  // code that uses this argument by warning if the value is non-null.
+  MOZ_ASSERT(!aPrompt);
+  if (aPrompt) {
+    nsCOMPtr<nsIConsoleService> aConsoleService =
+        do_GetService("@mozilla.org/consoleservice;1");
+    if (aConsoleService) {
+      aConsoleService->LogStringMessage(
+        NS_LITERAL_STRING("Non-null prompt ignored by nsCookieService.").get());
+    }
+  }
   return SetCookieStringCommon(aHostURI, aCookieHeader, aServerTime, aChannel,
                                true);
 }

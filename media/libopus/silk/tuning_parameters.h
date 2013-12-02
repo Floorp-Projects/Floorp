@@ -50,7 +50,7 @@ extern "C"
 /* Linear prediction */
 /*********************/
 
-/* LPC analysis defines: regularization and bandwidth expansion */
+/* LPC analysis regularization */
 #define FIND_LPC_COND_FAC                               1e-5f
 
 /* LTP analysis defines */
@@ -62,6 +62,9 @@ extern "C"
 #define MU_LTP_QUANT_NB                                 0.03f
 #define MU_LTP_QUANT_MB                                 0.025f
 #define MU_LTP_QUANT_WB                                 0.02f
+
+/* Max cumulative LTP gain */
+#define MAX_SUM_LOG_GAIN_DB								250.0f
 
 /***********************/
 /* High pass filtering */
