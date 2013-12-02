@@ -416,6 +416,25 @@ VsizeMaxContiguousDistinguishedAmount(int64_t* aN)
     return NS_OK;
 }
 
+#define HAVE_PRIVATE_REPORTER
+static nsresult
+PrivateDistinguishedAmount(int64_t* aN)
+{
+    PROCESS_MEMORY_COUNTERS_EX pmcex;
+    pmcex.cb = sizeof(PROCESS_MEMORY_COUNTERS_EX);
+
+    if (!GetProcessMemoryInfo(
+            GetCurrentProcess(),
+            (PPROCESS_MEMORY_COUNTERS) &pmcex, sizeof(pmcex))) {
+        return NS_ERROR_FAILURE;
+    }
+
+    *aN = pmcex.PrivateUsage;
+    return NS_OK;
+}
+#endif  // XP_<PLATFORM>
+
+#ifdef HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER
 class VsizeMaxContiguousReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
@@ -429,8 +448,9 @@ public:
         return VsizeMaxContiguousDistinguishedAmount(aAmount);
     }
 };
+#endif
 
-#define HAVE_PRIVATE_REPORTER
+#ifdef HAVE_PRIVATE_REPORTER
 class PrivateReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
@@ -443,21 +463,10 @@ public:
 
     NS_IMETHOD GetAmount(int64_t* aAmount)
     {
-        PROCESS_MEMORY_COUNTERS_EX pmcex;
-        pmcex.cb = sizeof(PROCESS_MEMORY_COUNTERS_EX);
-
-        if (!GetProcessMemoryInfo(
-                GetCurrentProcess(),
-                (PPROCESS_MEMORY_COUNTERS) &pmcex, sizeof(pmcex))) {
-            return NS_ERROR_FAILURE;
-        }
-
-        *aAmount = pmcex.PrivateUsage;
-        return NS_OK;
+        return PrivateDistinguishedAmount(aAmount);
     }
 };
-
-#endif  // XP_<PLATFORM>
+#endif
 
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
 class VsizeReporter MOZ_FINAL : public MemoryUniReporter
