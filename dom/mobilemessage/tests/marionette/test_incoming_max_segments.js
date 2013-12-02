@@ -44,8 +44,7 @@ function simulateIncomingSms() {
     is(incomingSms.read, false, "read");
     is(incomingSms.receiver, EMULATOR, "receiver");
     is(incomingSms.sender, REMOTE, "sender");
-    ok(incomingSms.timestamp instanceof Date, "timestamp is instanceof date");
-    ok(incomingSms.deliveryTimestamp === null, "deliveryTimestamp is null");
+    is(incomingSms.deliveryTimestamp, 0, "deliveryTimestamp is 0");
 
     verifySmsExists(incomingSms);
   };
