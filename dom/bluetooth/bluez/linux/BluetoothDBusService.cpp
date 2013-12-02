@@ -1512,6 +1512,20 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
                         errorStr,
                         sAdapterProperties,
                         ArrayLength(sAdapterProperties));
+
+    BluetoothNamedValue& property = v.get_ArrayOfBluetoothNamedValue()[0];
+    if (property.name().EqualsLiteral("Discovering")) {
+      bool isDiscovering = property.value();
+      BluetoothSignal signal(NS_LITERAL_STRING(DISCOVERY_STATE_CHANGED_ID),
+                             NS_LITERAL_STRING(KEY_ADAPTER),
+                             isDiscovering);
+
+      nsRefPtr<DistributeBluetoothSignalTask>
+        t = new DistributeBluetoothSignalTask(signal);
+      if (NS_FAILED(NS_DispatchToMainThread(t))) {
+        BT_WARNING("Failed to dispatch to main thread!");
+      }
+    }
   } else if (dbus_message_is_signal(aMsg, DBUS_DEVICE_IFACE,
                                     "PropertyChanged")) {
     ParsePropertyChange(aMsg,

@@ -40,8 +40,8 @@ BEGIN_BLUETOOTH_NAMESPACE
 // Bit 18: Major service class = 0x20, Rendering
 #define HAS_RENDERING(cod)           (cod & 0x40000)
 
-// Major device class = 0xA, Peripheral
-#define IS_PERIPHERAL(cod)           (GET_MAJOR_DEVICE_CLASS(cod) == 0xa)
+// Major device class = 0x5, Peripheral
+#define IS_PERIPHERAL(cod)           (GET_MAJOR_DEVICE_CLASS(cod) == 0x5)
 
 class BluetoothProfileManagerBase;
 class BluetoothReplyRunnable;

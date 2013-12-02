@@ -1,7 +1,10 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsIServiceManager.h"
 #include "UDPSocketParent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIUDPSocket.h"
@@ -65,6 +68,7 @@ bool
 UDPSocketParent::Init(const nsCString &aHost, const uint16_t aPort)
 {
   nsresult rv;
+  NS_ASSERTION(mFilter, "No packet filter");
 
   nsCOMPtr<nsIUDPSocket> sock =
       do_CreateInstance("@mozilla.org/network/udp-socket;1", &rv);
@@ -124,6 +128,13 @@ UDPSocketParent::RecvData(const InfallibleTArray<uint8_t> &aData,
                           const uint16_t& aPort)
 {
   NS_ENSURE_TRUE(mSocket, true);
+  NS_ASSERTION(mFilter, "No packet filter");
+  // TODO, Bug 933102, filter packets that are sent with hostname.
+  // Until then we simply throw away packets that are sent to a hostname.
+  return true;
+
+#if 0
+  // Enable this once we have filtering working with hostname delivery.
   uint32_t count;
   nsresult rv = mSocket->Send(aRemoteAddress,
                               aPort, aData.Elements(),
@@ -135,6 +146,7 @@ UDPSocketParent::RecvData(const InfallibleTArray<uint8_t> &aData,
   NS_ENSURE_SUCCESS(rv, true);
   NS_ENSURE_TRUE(count > 0, true);
   return true;
+#endif
 }
 
 bool
@@ -142,9 +154,20 @@ UDPSocketParent::RecvDataWithAddress(const InfallibleTArray<uint8_t>& aData,
                                      const mozilla::net::NetAddr& aAddr)
 {
   NS_ENSURE_TRUE(mSocket, true);
+  NS_ASSERTION(mFilter, "No packet filter");
+
   uint32_t count;
-  nsresult rv = mSocket->SendWithAddress(&aAddr, aData.Elements(),
-                                         aData.Length(), &count);
+  nsresult rv;
+  bool allowed;
+  rv = mFilter->FilterPacket(&aAddr, aData.Elements(),
+                             aData.Length(), nsIUDPSocketFilter::SF_OUTGOING,
+                             &allowed);
+  // Sending unallowed data, kill content.
+  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_TRUE(allowed, false);
+
+  rv = mSocket->SendWithAddress(&aAddr, aData.Elements(),
+                                aData.Length(), &count);
   mozilla::unused <<
       PUDPSocketParent::SendCallback(NS_LITERAL_CSTRING("onsent"),
                                      UDPSendResult(rv),
@@ -191,6 +214,7 @@ UDPSocketParent::OnPacketReceived(nsIUDPSocket* aSocket, nsIUDPMessage* aMessage
   if (!mIPCOpen) {
     return NS_OK;
   }
+  NS_ASSERTION(mFilter, "No packet filter");
 
   uint16_t port;
   nsCString ip;
@@ -204,6 +228,17 @@ UDPSocketParent::OnPacketReceived(nsIUDPSocket* aSocket, nsIUDPMessage* aMessage
 
   const char* buffer = data.get();
   uint32_t len = data.Length();
+
+  bool allowed;
+  mozilla::net::NetAddr addr;
+  fromAddr->GetNetAddr(&addr);
+  nsresult rv = mFilter->FilterPacket(&addr,
+                                      (const uint8_t*)buffer, len,
+                                      nsIUDPSocketFilter::SF_INCOMING,
+                                      &allowed);
+  // Receiving unallowed data, drop.
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+  NS_ENSURE_TRUE(allowed, NS_OK);
 
   FallibleTArray<uint8_t> fallibleArray;
   if (!fallibleArray.InsertElementsAt(0, buffer, len)) {
