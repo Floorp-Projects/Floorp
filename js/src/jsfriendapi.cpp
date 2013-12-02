@@ -1165,6 +1165,14 @@ js::GetObjectMetadata(JSObject *obj)
     return obj->getMetadata();
 }
 
+JS_FRIEND_API(void)
+js::UnsafeDefineElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::HandleValue value)
+{
+    JS_ASSERT(obj->isNative());
+    JS_ASSERT(index < obj->getDenseInitializedLength());
+    obj->setDenseElementWithType(cx, index, value);
+}
+
 JS_FRIEND_API(bool)
 js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
                      JS::Handle<js::PropertyDescriptor> descriptor, bool *bp)
