@@ -322,10 +322,6 @@ documenttab[selected] .documenttab-selection {
   min-width: @scroller_minimum@;
 }
 
-#browsers[input="imprecise"] browser {
-  overflow: hidden;
-}
-
 /* overlay buttons */
 
 .overlay-button {
