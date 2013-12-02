@@ -201,10 +201,10 @@
         ok(true, "== InitDOMRequestHelper with objects array");
         initDOMRequestHelperTest([{
           name: "name1",
-          strongRef: false
+          weakRef: false
         }, {
           name: "nameN",
-          strongRef: true
+          weakRef: true
         }]);
         checkMessageListeners({"name1": false, "nameN": true}, 2);
         next();
@@ -243,10 +243,10 @@
         ok(true, "== AddMessageListeners new listeners, objects array");
         addMessageListenersTest([{
           name: "name5",
-          strongRef: true
+          weakRef: true
         }, {
           name: "name6",
-          strongRef: false
+          weakRef: false
         }], {
           "name1": false,
           "name2": false,
@@ -320,7 +320,7 @@
       function() {
         ok(true, "== AddMessageListeners, same message, different kind");
         try {
-          addMessageListenersTest({name: "name4", strongRef: true}, {
+          addMessageListenersTest({name: "name4", weakRef: true}, {
             "name4": true,
             "name5": true,
             "name6": false,
@@ -435,7 +435,7 @@
       },
       function() {
         ok(true, "== Test window destroyed with weak messages and without GC");
-        checkWindowDestruction({ messages: [{ name: "foo", strongRef: false }],
+        checkWindowDestruction({ messages: [{ name: "foo", weakRef: true }],
                                  gc: false }, function(uninitCalled) {
           ok(uninitCalled, "uninit() should have been called");
           next();
@@ -443,7 +443,7 @@
       },
       function() {
         ok(true, "== Test window destroyed with weak messages and with GC");
-        checkWindowDestruction({ messages: [{ name: "foo", strongRef: false }],
+        checkWindowDestruction({ messages: [{ name: "foo", weakRef: true }],
                                  gc: true }, function(uninitCalled) {
           ok(!uninitCalled, "uninit() should NOT have been called");
           next();
@@ -451,7 +451,7 @@
       },
       function() {
         ok(true, "== Test window destroyed with strong messages and without GC");
-        checkWindowDestruction({ messages: [{ name: "foo", strongRef: true }],
+        checkWindowDestruction({ messages: [{ name: "foo", weakRef: false }],
                                  gc: false }, function(uninitCalled) {
           ok(uninitCalled, "uninit() should have been called");
           next();
@@ -459,7 +459,7 @@
       },
       function() {
         ok(true, "== Test window destroyed with strong messages and with GC");
-        checkWindowDestruction({ messages: [{ name: "foo", strongRef: true }],
+        checkWindowDestruction({ messages: [{ name: "foo", weakRef: false }],
                                  gc: true }, function(uninitCalled) {
           ok(uninitCalled, "uninit() should have been called");
           next();
