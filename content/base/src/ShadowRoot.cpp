@@ -150,3 +150,15 @@ ShadowRoot::PrefEnabled()
   return Preferences::GetBool("dom.webcomponents.enabled", false);
 }
 
+void
+ShadowRoot::GetInnerHTML(nsAString& aInnerHTML)
+{
+  GetMarkup(false, aInnerHTML);
+}
+
+void
+ShadowRoot::SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError)
+{
+  SetInnerHTMLInternal(aInnerHTML, aError);
+}
+

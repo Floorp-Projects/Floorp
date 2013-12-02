@@ -1846,6 +1846,18 @@ public:
   static bool HasPluginWithUncontrolledEventDispatch(nsIDocument* aDoc);
 
   /**
+   * Fire mutation events for changes caused by parsing directly into a
+   * context node.
+   *
+   * @param aDoc the document of the node
+   * @param aDest the destination node that got stuff appended to it
+   * @param aOldChildCount the number of children the node had before parsing
+   */
+  static void FireMutationEventsForDirectParsing(nsIDocument* aDoc,
+                                                 nsIContent* aDest,
+                                                 int32_t aOldChildCount);
+
+  /**
    * Returns true if the content is in a document and contains a plugin
    * which we don't control event dispatch for, i.e. do any plugins in this
    * doc tree receive key events outside of our control? This always returns
