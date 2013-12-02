@@ -1816,7 +1816,7 @@ int celt_encode_with_ec(CELTEncoder * OPUS_RESTRICT st, const opus_val16 * pcm, 
       if (LM!=0)
          dual_stereo = stereo_analysis(mode, X, LM, N);
 
-      st->intensity = hysteresis_decision((opus_val16)equiv_rate/1000,
+      st->intensity = hysteresis_decision((opus_val16)(equiv_rate/1000),
             intensity_thresholds, intensity_histeresis, 21, st->intensity);
       st->intensity = IMIN(st->end,IMAX(st->start, st->intensity));
    }
