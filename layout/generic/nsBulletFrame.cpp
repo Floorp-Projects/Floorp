@@ -361,6 +361,15 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
   case NS_STYLE_LIST_STYLE_KATAKANA:
   case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
   case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
+  case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
+  case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
+  case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
+  case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
+  case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
+  case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
+  case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
+  case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
+  case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
   case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL: 
   case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL: 
   case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL: 
@@ -765,103 +774,203 @@ static bool CharListDecimalToText(int32_t ordinal, nsString& result, const PRUni
   return true;
 }
 
-static const PRUnichar gCJKIdeographicDigit1[10] =
-{
-  0x96f6, 0x4e00, 0x4e8c, 0x4e09, 0x56db,  // 0 - 4
-  0x4e94, 0x516d, 0x4e03, 0x516b, 0x4e5d   // 5 - 9
+enum CJKIdeographicLang {
+  CHINESE, KOREAN, JAPANESE
 };
-static const PRUnichar gCJKIdeographicDigit2[10] =
-{
-  0x96f6, 0x58f9, 0x8cb3, 0x53c3, 0x8086,  // 0 - 4
-  0x4f0d, 0x9678, 0x67d2, 0x634c, 0x7396   // 5 - 9
+struct CJKIdeographicData {
+  const PRUnichar *negative;
+  PRUnichar digit[10];
+  PRUnichar unit[3];
+  PRUnichar unit10K[2];
+  uint8_t lang;
+  bool informal;
 };
-static const PRUnichar gCJKIdeographicDigit3[10] =
-{
-  0x96f6, 0x58f9, 0x8d30, 0x53c1, 0x8086,  // 0 - 4
-  0x4f0d, 0x9646, 0x67d2, 0x634c, 0x7396   // 5 - 9
+static const PRUnichar gJapaneseNegative[] = {
+  0x30de, 0x30a4, 0x30ca, 0x30b9, 0x0000
 };
-static const PRUnichar gCJKIdeographicUnit1[4] =
-{
-  0x000, 0x5341, 0x767e, 0x5343
+static const CJKIdeographicData gDataJapaneseInformal = {
+  gJapaneseNegative,          // negative
+  {                           // digit
+    0x3007, 0x4e00, 0x4e8c, 0x4e09, 0x56db,
+    0x4e94, 0x516d, 0x4e03, 0x516b, 0x4e5d
+  },
+  { 0x5341, 0x767e, 0x5343 }, // unit
+  { 0x4e07, 0x5104 },         // unit10K
+  JAPANESE,                   // lang
+  true                        // informal
 };
-static const PRUnichar gCJKIdeographicUnit2[4] =
-{
-  0x000, 0x62FE, 0x4F70, 0x4EDF
+static const CJKIdeographicData gDataJapaneseFormal = {
+  gJapaneseNegative,          // negative
+  {                           // digit
+    0x96f6, 0x58f1, 0x5f10, 0x53c2, 0x56db,
+    0x4f0d, 0x516d, 0x4e03, 0x516b, 0x4e5d
+  },
+  { 0x62fe, 0x767e, 0x9621 }, // unit
+  { 0x842c, 0x5104 },         // unit10K
+  JAPANESE,                   // lang
+  false                       // informal
 };
-static const PRUnichar gCJKIdeographic10KUnit1[4] =
-{
-  0x000, 0x842c, 0x5104, 0x5146
+static const PRUnichar gKoreanNegative[] = {
+  0xb9c8, 0xc774, 0xb108, 0xc2a4, 0x0020, 0x0000
 };
-static const PRUnichar gCJKIdeographic10KUnit2[4] =
-{
-  0x000, 0x4E07, 0x4ebf, 0x5146
+static const CJKIdeographicData gDataKoreanHangulFormal = {
+  gKoreanNegative,            // negative
+  {                           // digit
+    0xc601, 0xc77c, 0xc774, 0xc0bc, 0xc0ac,
+    0xc624, 0xc721, 0xce60, 0xd314, 0xad6c
+  },
+  { 0xc2ed, 0xbc31, 0xcc9c }, // unit
+  { 0xb9cc, 0xc5b5 },         // unit10K
+  KOREAN,                     // lang
+  false                       // informal
 };
-static const PRUnichar gCJKIdeographic10KUnit3[4] =
-{
-  0x000, 0x4E07, 0x5104, 0x5146
+static const CJKIdeographicData gDataKoreanHanjaInformal = {
+  gKoreanNegative,            // negative
+  {                           // digit
+    0x96f6, 0x4e00, 0x4e8c, 0x4e09, 0x56db,
+    0x4e94, 0x516d, 0x4e03, 0x516b, 0x4e5d
+  },
+  { 0x5341, 0x767e, 0x5343 }, // unit
+  { 0x842c, 0x5104 },         // unit10K
+  KOREAN,                     // lang
+  true                        // informal
+};
+static const CJKIdeographicData gDataKoreanHanjaFormal = {
+  gKoreanNegative,            // negative
+  {                           // digit
+    0x96f6, 0x58f9, 0x8cb3, 0x53c3, 0x56db,
+    0x4e94, 0x516d, 0x4e03, 0x516b, 0x4e5d
+  },
+  { 0x62fe, 0x767e, 0x4edf }, // unit
+  { 0x842c, 0x5104 },         // unit10K
+  KOREAN,                     // lang
+  false                       // informal
+};
+static const PRUnichar gSimpChineseNegative[] = {
+  0x8d1f, 0x0000
+};
+static const CJKIdeographicData gDataSimpChineseInformal = {
+  gSimpChineseNegative,       // negative
+  {                           // digit
+    0x96f6, 0x4e00, 0x4e8c, 0x4e09, 0x56db,
+    0x4e94, 0x516d, 0x4e03, 0x516b, 0x4e5d
+  },
+  { 0x5341, 0x767e, 0x5343 }, // unit
+  { 0x4e07, 0x4ebf },         // unit10K
+  CHINESE,                    // lang
+  true                        // informal
+};
+static const CJKIdeographicData gDataSimpChineseFormal = {
+  gSimpChineseNegative,       // negative
+  {                           // digit
+    0x96f6, 0x58f9, 0x8d30, 0x53c1, 0x8086,
+    0x4f0d, 0x9646, 0x67d2, 0x634c, 0x7396
+  },
+  { 0x62fe, 0x4f70, 0x4edf }, // unit
+  { 0x4e07, 0x4ebf },         // unit10K
+  CHINESE,                    // lang
+  false                       // informal
+};
+static const PRUnichar gTradChineseNegative[] = {
+  0x8ca0, 0x0000
+};
+static const CJKIdeographicData gDataTradChineseInformal = {
+  gTradChineseNegative,       // negative
+  {                           // digit
+    0x96f6, 0x4e00, 0x4e8c, 0x4e09, 0x56db,
+    0x4e94, 0x516d, 0x4e03, 0x516b, 0x4e5d
+  },
+  { 0x5341, 0x767e, 0x5343 }, // unit
+  { 0x842c, 0x5104 },         // unit10K
+  CHINESE,                    // lang
+  true                        // informal
+};
+static const CJKIdeographicData gDataTradChineseFormal = {
+  gTradChineseNegative,       // negative
+  {                           // digit
+    0x96f6, 0x58f9, 0x8cb3, 0x53c3, 0x8086,
+    0x4f0d, 0x9678, 0x67d2, 0x634c, 0x7396
+  },
+  { 0x62fe, 0x4f70, 0x4edf }, // unit
+  { 0x842c, 0x5104 },         // unit10K
+  CHINESE,                    // lang
+  false                       // informal
 };
 
-static const bool CJKIdeographicToText(int32_t ordinal, nsString& result, 
-                                   const PRUnichar* digits,
-                                   const PRUnichar *unit, 
-                                   const PRUnichar* unit10k)
+static const bool CJKIdeographicToText(int32_t ordinal, nsString& result,
+                                       const CJKIdeographicData& data)
 {
-// In theory, we need the following if condiction,
-// However, the limit, 10 ^ 16, is greater than the max of uint32_t
-// so we don't really need to test it here.
-// if( ordinal > 9999999999999999)
-// {
-//    PR_snprintf(cbuf, sizeof(cbuf), "%ld", ordinal);
-//    result.Append(cbuf);
-// } 
-// else 
-// {
-  if (ordinal < 0) {
-    return false;
-  }
-  PRUnichar c10kUnit = 0;
-  PRUnichar cUnit = 0;
-  PRUnichar cDigit = 0;
-  uint32_t ud = 0;
   PRUnichar buf[NUM_BUF_SIZE];
   int32_t idx = NUM_BUF_SIZE;
-  bool bOutputZero = ( 0 == ordinal );
+  int32_t pos = 0;
+  bool isNegative = (ordinal < 0);
+  bool needZero = (ordinal == 0);
+  int32_t unitidx = 0, unit10Kidx = 0;
+  if (isNegative) {
+    ordinal = -ordinal;
+  }
   do {
-    if(0 == (ud % 4)) {
-      c10kUnit = unit10k[ud/4];
+    unitidx = pos % 4;
+    if (unitidx == 0) {
+      unit10Kidx = pos / 4;
     }
     int32_t cur = ordinal % 10;
-    cDigit = digits[cur];
-    if( 0 == cur)
-    {
-      cUnit = 0;
-      if(bOutputZero) {
-        bOutputZero = false;
-        if(0 != cDigit)
-          buf[--idx] = cDigit;
+    if (cur == 0) {
+      if (needZero) {
+        needZero = false;
+        buf[--idx] = data.digit[0];
       }
-    }
-    else
-    {
-      bOutputZero = true;
-      cUnit = unit[ud%4];
-
-      if(0 != c10kUnit)
-        buf[--idx] = c10kUnit;
-      if(0 != cUnit)
-        buf[--idx] = cUnit;
-      if((0 != cDigit) && 
-         ( (1 != cur) || (1 != (ud%4)) || ( ordinal > 10)) )
-        buf[--idx] = cDigit;
-
-      c10kUnit =  0;
+    } else {
+      if (data.lang == CHINESE) {
+        needZero = true;
+      }
+      if (unit10Kidx != 0) {
+        if (data.lang == KOREAN) {
+          buf[--idx] = ' ';
+        }
+        buf[--idx] = data.unit10K[unit10Kidx - 1];
+      }
+      if (unitidx != 0) {
+        buf[--idx] = data.unit[unitidx - 1];
+      }
+      if (cur != 1) {
+        buf[--idx] = data.digit[cur];
+      } else {
+        bool needOne = true;
+        if (data.informal) {
+          switch (data.lang) {
+            case CHINESE:
+              if (unitidx == 1 &&
+                  (ordinal == 1 || (pos > 4 && ordinal % 1000 == 1))) {
+                needOne = false;
+              }
+              break;
+            case JAPANESE:
+              if (unitidx > 0 &&
+                  (unitidx != 3 || (pos == 3 && ordinal == 1))) {
+                needOne = false;
+              }
+              break;
+            case KOREAN:
+              if (unitidx > 0 || (pos == 4 && (ordinal % 1000) == 1)) {
+                needOne = false;
+              }
+              break;
+          }
+        }
+        if (needOne) {
+          buf[--idx] = data.digit[1];
+        }
+      }
+      unit10Kidx = 0;
     }
     ordinal /= 10;
-    ++ud;
-
-  } while( ordinal > 0);
-  result.Append(buf+idx,NUM_BUF_SIZE-idx);
-// }
+    pos++;
+  } while (ordinal > 0);
+  if (isNegative) {
+    result.Append(data.negative);
+  }
+  result.Append(buf + idx, NUM_BUF_SIZE - idx);
   return true;
 }
 
@@ -1154,46 +1263,59 @@ nsBulletFrame::AppendCounterText(int32_t aListStyleType,
       break;
 
     case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
+    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL: 
       fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
-      success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit1,
-                                     gCJKIdeographicUnit1,
-                                     gCJKIdeographic10KUnit1);
+      success =
+        CJKIdeographicToText(aOrdinal, result, gDataTradChineseInformal);
       break;
 
+    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL: 
       fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
-      success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit2,
-                                     gCJKIdeographicUnit2,
-                                     gCJKIdeographic10KUnit1);
+      success = CJKIdeographicToText(aOrdinal, result, gDataTradChineseFormal);
       break;
 
+    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL: 
       fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
-      success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit1,
-                                     gCJKIdeographicUnit1,
-                                     gCJKIdeographic10KUnit2);
+      success =
+        CJKIdeographicToText(aOrdinal, result, gDataSimpChineseInformal);
       break;
 
+    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL: 
       fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
-      success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit3,
-                                     gCJKIdeographicUnit2,
-                                     gCJKIdeographic10KUnit2);
+      success = CJKIdeographicToText(aOrdinal, result, gDataSimpChineseFormal);
       break;
 
+    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL: 
       fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
-      success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit1,
-                                     gCJKIdeographicUnit1,
-                                     gCJKIdeographic10KUnit3);
+      success = CJKIdeographicToText(aOrdinal, result, gDataJapaneseInformal);
       break;
 
+    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL: 
       fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
-      success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit2,
-                                     gCJKIdeographicUnit2,
-                                     gCJKIdeographic10KUnit3);
+      success = CJKIdeographicToText(aOrdinal, result, gDataJapaneseFormal);
+      break;
+
+    case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
+      fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
+      success =
+        CJKIdeographicToText(aOrdinal, result, gDataKoreanHangulFormal);
+      break;
+
+    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
+      fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
+      success =
+        CJKIdeographicToText(aOrdinal, result, gDataKoreanHanjaInformal);
+      break;
+
+    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
+      fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
+      success = CJKIdeographicToText(aOrdinal, result, gDataKoreanHanjaFormal);
       break;
 
     case NS_STYLE_LIST_STYLE_HEBREW: 
@@ -1338,6 +1460,12 @@ nsBulletFrame::GetListItemSuffix(int32_t aListStyleType,
 
     case NS_STYLE_LIST_STYLE_CJK_DECIMAL:
     case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC:
+    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
+    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
+    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
+    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
+    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
+    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL:
@@ -1350,6 +1478,9 @@ nsBulletFrame::GetListItemSuffix(int32_t aListStyleType,
       aSuppressPadding = true;
       break;
 
+    case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
+    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
+    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
       aResult = ',';
@@ -1464,6 +1595,15 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_ARMENIAN: 
     case NS_STYLE_LIST_STYLE_GEORGIAN: 
     case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
+    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
+    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
+    case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
+    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
+    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
+    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
+    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
+    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
+    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL: 
     case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL: 
     case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL: 
