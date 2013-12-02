@@ -18,6 +18,5 @@
   "itemRef.add should normalize \\t as a space": true,
   "itemRef.add should normalize \\r as a space": true,
   "itemRef.add should normalize \\n as a space": true,
-  "itemRef.add should normalize \\f as a space": true,
-  "itemValue must reflect the src attribute on track elements": true
+  "itemRef.add should normalize \\f as a space": true
 }

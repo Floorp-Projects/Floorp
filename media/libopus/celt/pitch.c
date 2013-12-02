@@ -145,7 +145,7 @@ static void celt_fir5(const opus_val16 *x,
 
 
 void pitch_downsample(celt_sig * OPUS_RESTRICT x[], opus_val16 * OPUS_RESTRICT x_lp,
-      int len, int C)
+      int len, int C, int arch)
 {
    int i;
    opus_val32 ac[5];
@@ -180,7 +180,7 @@ void pitch_downsample(celt_sig * OPUS_RESTRICT x[], opus_val16 * OPUS_RESTRICT x
    }
 
    _celt_autocorr(x_lp, ac, NULL, 0,
-                  4, len>>1);
+                  4, len>>1, arch);
 
    /* Noise floor -40 dB */
 #ifdef FIXED_POINT
@@ -250,9 +250,14 @@ opus_val32
 #else
 void
 #endif
-celt_pitch_xcorr(const opus_val16 *_x, const opus_val16 *_y, opus_val32 *xcorr, int len, int max_pitch)
+celt_pitch_xcorr_c(const opus_val16 *_x, const opus_val16 *_y, opus_val32 *xcorr, int len, int max_pitch)
 {
    int i,j;
+   /*The EDSP version requires that max_pitch is at least 1, and that _x is
+      32-bit aligned.
+     Since it's hard to put asserts in assembly, put them here.*/
+   celt_assert(max_pitch>0);
+   celt_assert((((unsigned char *)_x-(unsigned char *)NULL)&3)==0);
 #ifdef FIXED_POINT
    opus_val32 maxcorr=1;
 #endif
@@ -289,7 +294,7 @@ celt_pitch_xcorr(const opus_val16 *_x, const opus_val16 *_y, opus_val32 *xcorr, 
 
 #endif
 void pitch_search(const opus_val16 * OPUS_RESTRICT x_lp, opus_val16 * OPUS_RESTRICT y,
-                  int len, int max_pitch, int *pitch)
+                  int len, int max_pitch, int *pitch, int arch)
 {
    int i, j;
    int lag;
@@ -342,7 +347,7 @@ void pitch_search(const opus_val16 * OPUS_RESTRICT x_lp, opus_val16 * OPUS_RESTR
 #ifdef FIXED_POINT
    maxcorr =
 #endif
-   celt_pitch_xcorr(x_lp4, y_lp4, xcorr, len>>2, max_pitch>>2);
+   celt_pitch_xcorr(x_lp4, y_lp4, xcorr, len>>2, max_pitch>>2, arch);
 
    find_best_pitch(xcorr, y_lp4, len>>2, max_pitch>>2, best_pitch
 #ifdef FIXED_POINT

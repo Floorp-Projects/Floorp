@@ -37,7 +37,7 @@ which makes Windows Media Foundation unavailable.
 
 // Some SDK versions don't define the AAC decoder CLSID.
 #ifndef CLSID_CMSAACDecMFT
-extern const CLSID CLSID_CMSAACDecMFT;
+extern "C" const CLSID CLSID_CMSAACDecMFT;
 #define WMF_MUST_DEFINE_AAC_MFT_CLSID
 #endif
 

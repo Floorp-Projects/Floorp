@@ -167,6 +167,9 @@ static Element::MappedAttributeEntry sTokenStyles[] = {
   { &nsGkAtoms::fontsize_ },
   { &nsGkAtoms::color },
   { &nsGkAtoms::fontfamily_ },
+  { &nsGkAtoms::fontstyle_ },
+  { &nsGkAtoms::fontweight_ },
+  { &nsGkAtoms::mathvariant_},
   { nullptr }
 };
 
@@ -643,6 +646,110 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
         fontFamily->GetUnit() == eCSSUnit_Null) {
       fontFamily->SetStringValue(value->GetStringValue(), eCSSUnit_Families);
     }
+
+    // fontstyle
+    //
+    // "Specified the font style to use for the token. Deprecated in favor of
+    //  mathvariant."
+    //
+    // values: "normal" | "italic"
+    // default:	normal (except on <mi>)
+    //
+    // Note that the font-style property is reset in layout/style/ when
+    // -moz-math-variant is specified.
+    nsCSSValue* fontStyle = aData->ValueForFontStyle();
+    value = aAttributes->GetAttr(nsGkAtoms::fontstyle_);
+    if (value) {
+      WarnDeprecated(nsGkAtoms::fontstyle_->GetUTF16String(),
+                       nsGkAtoms::mathvariant_->GetUTF16String(),
+                       aData->mPresContext->Document());
+      if (value->Type() == nsAttrValue::eString &&
+          fontStyle->GetUnit() == eCSSUnit_Null) {
+        nsAutoString str(value->GetStringValue());
+        str.CompressWhitespace();
+        if (str.EqualsASCII("normal")) {
+          fontStyle->SetIntValue(NS_STYLE_FONT_STYLE_NORMAL,
+                                eCSSUnit_Enumerated);
+        } else if (str.EqualsASCII("italic")) {
+          fontStyle->SetIntValue(NS_STYLE_FONT_STYLE_ITALIC,
+                                eCSSUnit_Enumerated);
+        }
+      }
+    }
+
+    // fontweight
+    //
+    // "Specified the font weight for the token. Deprecated in favor of
+    // mathvariant."
+    //
+    // values: "normal" | "bold"
+    // default: normal
+    //
+    // Note that the font-weight property is reset in layout/style/ when
+    // -moz-math-variant is specified.
+    nsCSSValue* fontWeight = aData->ValueForFontWeight();
+    value = aAttributes->GetAttr(nsGkAtoms::fontweight_);
+    if (value) {
+      WarnDeprecated(nsGkAtoms::fontweight_->GetUTF16String(),
+                       nsGkAtoms::mathvariant_->GetUTF16String(),
+                       aData->mPresContext->Document());
+      if (value->Type() == nsAttrValue::eString &&
+          fontWeight->GetUnit() == eCSSUnit_Null) {
+        nsAutoString str(value->GetStringValue());
+        str.CompressWhitespace();
+        if (str.EqualsASCII("normal")) {
+          fontWeight->SetIntValue(NS_STYLE_FONT_WEIGHT_NORMAL,
+                                 eCSSUnit_Enumerated);
+        } else if (str.EqualsASCII("bold")) {
+          fontWeight->SetIntValue(NS_STYLE_FONT_WEIGHT_BOLD,
+                                  eCSSUnit_Enumerated);
+        }
+      }
+    }
+
+    // mathvariant
+    //
+    // "Specifies the logical class of the token. Note that this class is more
+    // than styling, it typically conveys semantic intent;"
+    //
+    // values: "normal" | "bold" | "italic" | "bold-italic" | "double-struck" |
+    // "bold-fraktur" | "script" | "bold-script" | "fraktur" | "sans-serif" |
+    // "bold-sans-serif" | "sans-serif-italic" | "sans-serif-bold-italic" |
+    // "monospace" | "initial" | "tailed" | "looped" | "stretched"
+    // default: normal (except on <mi>)
+    //
+    nsCSSValue* mathVariant = aData->ValueForMathVariant();
+    value = aAttributes->GetAttr(nsGkAtoms::mathvariant_);
+    if (value && value->Type() == nsAttrValue::eString &&
+        mathVariant->GetUnit() == eCSSUnit_Null) {
+      nsAutoString str(value->GetStringValue());
+      str.CompressWhitespace();
+      static const char sizes[19][23] = {
+        "normal", "bold", "italic", "bold-italic", "script", "bold-script",
+        "fraktur", "double-struck", "bold-fraktur", "sans-serif",
+        "bold-sans-serif", "sans-serif-italic", "sans-serif-bold-italic",
+        "monospace", "initial", "tailed", "looped", "stretched"
+      };
+      static const int32_t values[NS_ARRAY_LENGTH(sizes)] = {
+        NS_MATHML_MATHVARIANT_NORMAL, NS_MATHML_MATHVARIANT_BOLD,
+        NS_MATHML_MATHVARIANT_ITALIC, NS_MATHML_MATHVARIANT_BOLD_ITALIC,
+        NS_MATHML_MATHVARIANT_SCRIPT, NS_MATHML_MATHVARIANT_BOLD_SCRIPT,
+        NS_MATHML_MATHVARIANT_FRAKTUR, NS_MATHML_MATHVARIANT_DOUBLE_STRUCK,
+        NS_MATHML_MATHVARIANT_BOLD_FRAKTUR, NS_MATHML_MATHVARIANT_SANS_SERIF,
+        NS_MATHML_MATHVARIANT_BOLD_SANS_SERIF,
+        NS_MATHML_MATHVARIANT_SANS_SERIF_ITALIC,
+        NS_MATHML_MATHVARIANT_SANS_SERIF_BOLD_ITALIC,
+        NS_MATHML_MATHVARIANT_MONOSPACE, NS_MATHML_MATHVARIANT_INITIAL,
+        NS_MATHML_MATHVARIANT_TAILED, NS_MATHML_MATHVARIANT_LOOPED,
+        NS_MATHML_MATHVARIANT_STRETCHED
+      };
+      for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
+        if (str.EqualsASCII(sizes[i])) {
+          mathVariant->SetIntValue(values[i], eCSSUnit_Enumerated);
+          break;
+        }
+      }
+    }
   }
 
   // mathbackground
@@ -719,7 +826,18 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
   }
 
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
-    // width: value
+    // width
+    //
+    // "Specifies the desired width of the entire table and is intended for
+    // visual user agents. When the value is a percentage value, the value is
+    // relative to the horizontal space a MathML renderer has available for the
+    // math element. When the value is "auto", the MathML renderer should
+    // calculate the table width from its contents using whatever layout
+    // algorithm it chooses. "
+    //
+    // values: "auto" | length
+    // default: auto
+    //
     nsCSSValue* width = aData->ValueForWidth();
     if (width->GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);

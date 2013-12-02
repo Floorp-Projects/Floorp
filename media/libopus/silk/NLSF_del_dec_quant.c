@@ -121,7 +121,7 @@ opus_int32 silk_NLSF_del_dec_quant(                             /* O    Returns 
             RD_Q25[ j + nStates ] = silk_SMLABB( silk_MLA( RD_tmp_Q25, silk_SMULBB( diff_Q10, diff_Q10 ), w_Q5[ i ] ), mu_Q20, rate1_Q5 );
         }
 
-        if( nStates < NLSF_QUANT_DEL_DEC_STATES ) {
+        if( nStates <= ( NLSF_QUANT_DEL_DEC_STATES >> 1 ) ) {
             /* double number of states and copy */
             for( j = 0; j < nStates; j++ ) {
                 ind[ j + nStates ][ i ] = ind[ j ][ i ] + 1;
