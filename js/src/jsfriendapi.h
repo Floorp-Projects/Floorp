@@ -882,6 +882,16 @@ struct ExpandoAndGeneration {
       expando.setUndefined();
   }
 
+  static size_t offsetOfExpando()
+  {
+      return offsetof(ExpandoAndGeneration, expando);
+  }
+
+  static size_t offsetOfGeneration()
+  {
+      return offsetof(ExpandoAndGeneration, generation);
+  }
+
   JS::Heap<JS::Value> expando;
   uint32_t generation;
 };
