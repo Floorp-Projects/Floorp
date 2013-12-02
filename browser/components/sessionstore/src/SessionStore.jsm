@@ -1508,12 +1508,34 @@ let SessionStoreInternal = {
     throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
   },
 
+  /**
+   * Restores the given state |aState| for a given window |aWindow|.
+   *
+   * @param aWindow (xul window)
+   *        The window that the given state will be restored to.
+   * @param aState (string)
+   *        The state that will be applied to the given window.
+   * @param aOverwrite (bool)
+   *        When true, existing tabs in the given window will be re-used or
+   *        removed. When false, only new tabs will be added, no existing ones
+   8        will be removed or overwritten.
+   */
   setWindowState: function ssi_setWindowState(aWindow, aState, aOverwrite) {
     if (!aWindow.__SSi) {
       throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    this.restoreWindow(aWindow, aState, {overwriteTabs: aOverwrite});
+    let winState = JSON.parse(aState);
+    if (!winState) {
+      throw Components.Exception("Invalid state string: not JSON", Cr.NS_ERROR_INVALID_ARG);
+    }
+
+    if (!winState.windows || !winState.windows[0]) {
+      throw Components.Exception("Invalid window state passed", Cr.NS_ERROR_INVALID_ARG);
+    }
+
+    let state = {windows: [winState.windows[0]]};
+    this.restoreWindow(aWindow, state, {overwriteTabs: aOverwrite});
   },
 
   getTabState: function ssi_getTabState(aTab) {
@@ -2280,7 +2302,7 @@ let SessionStoreInternal = {
    * @param aWindow
    *        Window reference
    * @param aState
-   *        JS object or its eval'able source
+   *        JS object
    * @param aOptions
    *        {overwriteTabs: true} to overwrite existing tabs w/ new ones
    *        {isFollowUp: true} if this is not the restoration of the 1st window
@@ -2300,17 +2322,10 @@ let SessionStoreInternal = {
     if (aWindow && (!aWindow.__SSi || !this._windows[aWindow.__SSi]))
       this.onLoad(aWindow);
 
-    try {
-      var root = typeof aState == "string" ? JSON.parse(aState) : aState;
-      if (!root.windows[0]) {
-        this._sendRestoreCompletedNotifications();
-        return; // nothing to restore
-      }
-    }
-    catch (ex) { // invalid state object - don't restore anything
-      debug(ex);
+    var root = aState;
+    if (!root.windows[0]) {
       this._sendRestoreCompletedNotifications();
-      return;
+      return; // nothing to restore
     }
 
     TelemetryStopwatch.start("FX_SESSION_RESTORE_RESTORE_WINDOW_MS");
