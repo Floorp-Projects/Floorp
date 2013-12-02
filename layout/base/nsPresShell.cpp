@@ -40,6 +40,7 @@
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "nsIDocument.h"
 #include "nsCSSStyleSheet.h"
 #include "nsAnimationManager.h"
@@ -159,6 +160,7 @@
 #include "nsIScreenManager.h"
 #include "nsPlaceholderFrame.h"
 #include "nsTransitionManager.h"
+#include "ChildIterator.h"
 #include "RestyleManager.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDragSession.h"
@@ -4209,8 +4211,13 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   // Call this here so it only happens for real content mutations and
   // not cases when the frame constructor calls its own methods to force
   // frame reconstruction.
-  mPresContext->RestyleManager()->
-    RestyleForAppend(aContainer->AsElement(), aFirstNewContent);
+  if (aContainer->IsElement()) {
+    // Ensure the container is an element before trying to restyle
+    // because it can be the case that the container is a ShadowRoot
+    // which is a document fragment.
+    mPresContext->RestyleManager()->
+      RestyleForAppend(aContainer->AsElement(), aFirstNewContent);
+  }
 
   mFrameConstructor->ContentAppended(aContainer, aFirstNewContent, true);
 
@@ -4240,7 +4247,10 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   // Call this here so it only happens for real content mutations and
   // not cases when the frame constructor calls its own methods to force
   // frame reconstruction.
-  if (aContainer) {
+  if (aContainer && aContainer->IsElement()) {
+    // Ensure the container is an element before trying to restyle
+    // because it can be the case that the container is a ShadowRoot
+    // which is a document fragment.
     mPresContext->RestyleManager()->
       RestyleForInsertOrChange(aContainer->AsElement(), aChild);
   }
@@ -5724,6 +5734,22 @@ private:
   PresShell* mShell;
   nsIFrame* mFrame;
 };
+
+void
+PresShell::RestyleShadowRoot(ShadowRoot* aShadowRoot)
+{
+  // Mark the children of the ShadowRoot as style changed but not
+  // the ShadowRoot itself because it is a document fragment and does not
+  // have a frame.
+  ExplicitChildIterator iterator(aShadowRoot);
+  for (nsIContent* child = iterator.GetNextChild();
+       child;
+       child = iterator.GetNextChild()) {
+    if (child->IsElement()) {
+      mChangedScopeStyleRoots.AppendElement(child->AsElement());
+    }
+  }
+}
 
 void
 PresShell::Paint(nsView*        aViewToPaint,

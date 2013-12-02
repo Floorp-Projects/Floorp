@@ -17,6 +17,7 @@
 
 // OES_EGL_image_external
 #define LOCAL_GL_TEXTURE_EXTERNAL                       0x8D65
+#define LOCAL_GL_TEXTURE_BINDING_EXTERNAL               0x8D67
 
 // EGL_KHR_fence_sync
 #define LOCAL_EGL_SYNC_FENCE                            0x30F9

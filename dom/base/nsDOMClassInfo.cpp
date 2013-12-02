@@ -4278,9 +4278,10 @@ nsISupports*
 nsStyleSheetListSH::GetItemAt(nsISupports *aNative, uint32_t aIndex,
                               nsWrapperCache **aCache, nsresult *rv)
 {
-  nsDOMStyleSheetList* list = nsDOMStyleSheetList::FromSupports(aNative);
-
-  return list->GetItemAt(aIndex);
+  nsIDOMStyleSheetList* list = static_cast<nsIDOMStyleSheetList*>(aNative);
+  nsCOMPtr<nsIDOMStyleSheet> sheet;
+  list->Item(aIndex, getter_AddRefs(sheet));
+  return sheet;
 }
 
 

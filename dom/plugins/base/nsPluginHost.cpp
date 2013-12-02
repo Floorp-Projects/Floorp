@@ -422,32 +422,6 @@ nsresult nsPluginHost::UserAgent(const char **retstring)
   return res;
 }
 
-nsresult nsPluginHost::GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt)
-{
-  nsresult rv;
-  nsCOMPtr<nsIPrompt> prompt;
-  nsCOMPtr<nsIWindowWatcher> wwatch = do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-
-  if (wwatch) {
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    if (aOwner) {
-      nsCOMPtr<nsIDocument> document;
-      aOwner->GetDocument(getter_AddRefs(document));
-      if (document) {
-        domWindow = document->GetWindow();
-      }
-    }
-
-    if (!domWindow) {
-      wwatch->GetWindowByName(NS_LITERAL_STRING("_content").get(), nullptr, getter_AddRefs(domWindow));
-    }
-    rv = wwatch->GetNewPrompter(domWindow, getter_AddRefs(prompt));
-  }
-
-  NS_IF_ADDREF(*aPrompt = prompt);
-  return rv;
-}
-
 nsresult nsPluginHost::GetURL(nsISupports* pluginInst,
                               const char* url,
                               const char* target,

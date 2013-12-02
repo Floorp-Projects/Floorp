@@ -33,7 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "stack_alloc.h"
 
 /* Generates excitation for CNG LPC synthesis */
-static inline void silk_CNG_exc(
+static OPUS_INLINE void silk_CNG_exc(
     opus_int32                       residual_Q10[],     /* O    CNG residual signal Q10                     */
     opus_int32                       exc_buf_Q14[],      /* I    Random samples buffer Q10                   */
     opus_int32                       Gain_Q16,           /* I    Gain to apply                               */

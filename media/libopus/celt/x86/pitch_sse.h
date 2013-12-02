@@ -36,7 +36,7 @@
 #include "arch.h"
 
 #define OVERRIDE_XCORR_KERNEL
-static inline void xcorr_kernel(const opus_val16 *x, const opus_val16 *y, opus_val32 sum[4], int len)
+static OPUS_INLINE void xcorr_kernel(const opus_val16 *x, const opus_val16 *y, opus_val32 sum[4], int len)
 {
    int j;
    __m128 xsum1, xsum2;
@@ -72,7 +72,7 @@ static inline void xcorr_kernel(const opus_val16 *x, const opus_val16 *y, opus_v
 }
 
 #define OVERRIDE_DUAL_INNER_PROD
-static inline void dual_inner_prod(const opus_val16 *x, const opus_val16 *y01, const opus_val16 *y02,
+static OPUS_INLINE void dual_inner_prod(const opus_val16 *x, const opus_val16 *y01, const opus_val16 *y02,
       int N, opus_val32 *xy1, opus_val32 *xy2)
 {
    int i;
@@ -102,7 +102,7 @@ static inline void dual_inner_prod(const opus_val16 *x, const opus_val16 *y01, c
 }
 
 #define OVERRIDE_COMB_FILTER_CONST
-static inline void comb_filter_const(opus_val32 *y, opus_val32 *x, int T, int N,
+static OPUS_INLINE void comb_filter_const(opus_val32 *y, opus_val32 *x, int T, int N,
       opus_val16 g10, opus_val16 g11, opus_val16 g12)
 {
    int i;

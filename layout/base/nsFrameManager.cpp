@@ -611,7 +611,7 @@ nsFrameManagerBase::UndisplayedMap::GetEntryFor(nsIContent** aParentContent)
   // be a <xbl:children> element) but the parent in the frame tree would be the
   // insertion parent (parent of the <xbl:children> element). Here the children
   // elements are normalized to the insertion parent to correct for the mismatch.
-  if (parentContent && parentContent->IsActiveChildrenElement()) {
+  if (parentContent && nsContentUtils::IsContentInsertionPoint(parentContent)) {
     parentContent = parentContent->GetParent();
     // Change the caller's pointer for the parent content to be the insertion parent.
     *aParentContent = parentContent;

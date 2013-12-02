@@ -931,7 +931,6 @@ setNonPkixOcspEnabled(int32_t ocspEnabled)
 #define OCSP_STAPLING_ENABLED_DEFAULT true
 
 static const bool SUPPRESS_WARNING_PREF_DEFAULT = false;
-static const bool MD5_ENABLED_DEFAULT = false;
 static const bool REQUIRE_SAFE_NEGOTIATION_DEFAULT = false;
 static const bool ALLOW_UNRESTRICTED_RENEGO_DEFAULT = false;
 static const bool FALSE_START_ENABLED_DEFAULT = true;
@@ -1294,9 +1293,7 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
         return NS_ERROR_UNEXPECTED;
       }
 
-      bool md5Enabled = Preferences::GetBool("security.enable_md5_signatures",
-                                             MD5_ENABLED_DEFAULT);
-      ConfigureMD5(md5Enabled);
+      DisableMD5();
 
       SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, true);
 
@@ -1708,11 +1705,6 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
         prefName.Equals("security.tls.version.max")) {
       (void) setEnabledTLSVersions();
       clearSessionCache = true;
-    } else if (prefName.Equals("security.enable_md5_signatures")) {
-      bool md5Enabled = Preferences::GetBool("security.enable_md5_signatures",
-                                             MD5_ENABLED_DEFAULT);
-      ConfigureMD5(md5Enabled);
-      clearSessionCache = true;
     } else if (prefName.Equals("security.ssl.require_safe_negotiation")) {
       bool requireSafeNegotiation =
         Preferences::GetBool("security.ssl.require_safe_negotiation",
@@ -2035,24 +2027,14 @@ setPassword(PK11SlotInfo *slot, nsIInterfaceRequestor *ctx)
 namespace mozilla {
 namespace psm {
 
-void ConfigureMD5(bool enabled)
+void DisableMD5()
 {
-  if (enabled) { // set flags
-    NSS_SetAlgorithmPolicy(SEC_OID_MD5,
-        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
-    NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
-        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
-    NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
-        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
-  }
-  else { // clear flags
-    NSS_SetAlgorithmPolicy(SEC_OID_MD5,
-        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
-    NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
-        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
-    NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
-        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
-  }
+  NSS_SetAlgorithmPolicy(SEC_OID_MD5,
+      0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+  NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
+      0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+  NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
+      0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
 }
 
 nsresult InitializeCipherSuite()

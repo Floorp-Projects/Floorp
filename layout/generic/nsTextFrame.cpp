@@ -41,6 +41,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsTextFrameUtils.h"
 #include "nsTextRunTransformations.h"
+#include "MathVariantTextRunFactory.h"
 #include "nsExpirationTracker.h"
 #include "nsUnicodeProperties.h"
 
@@ -220,6 +221,9 @@ NS_DECLARE_FRAME_PROPERTY(TextFrameGlyphObservers, DestroyGlyphObserverList);
 
 // nsTextFrame.h has
 // #define TEXT_IS_IN_TOKEN_MATHML          NS_FRAME_STATE_BIT(32)
+
+// nsTextFrame.h has
+// #define TEXT_IS_IN_SINGLE_CHAR_MI        NS_FRAME_STATE_BIT(59)
 
 // Set when this text frame is mentioned in the userdata for the
 // uninflated textrun property
@@ -1296,6 +1300,10 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
                  "Wrong line container hint");
   }
 
+  if (aForFrame && aForFrame->HasAnyStateBits(TEXT_IS_IN_SINGLE_CHAR_MI)) {
+    aLineContainer->AddStateBits(TEXT_IS_IN_SINGLE_CHAR_MI);
+  }
+
   nsPresContext* presContext = aLineContainer->PresContext();
   BuildTextRunsScanner scanner(presContext, aContext, aLineContainer,
                                aWhichTextRun);
@@ -1859,6 +1867,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   const void* textPtr = aTextBuffer;
   bool anySmallcapsStyle = false;
   bool anyTextTransformStyle = false;
+  bool anyMathVariantStyle = false;
   uint32_t textFlags = nsTextFrameUtils::TEXT_NO_BREAKS;
 
   if (mCurrentRunContextInfo & nsTextFrameUtils::INCOMING_WHITESPACE) {
@@ -1935,6 +1944,12 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     fontStyle = f->StyleFont();
     if (NS_STYLE_FONT_VARIANT_SMALL_CAPS == fontStyle->mFont.variant) {
       anySmallcapsStyle = true;
+    }
+    if (NS_MATHML_MATHVARIANT_NONE != fontStyle->mMathVariant) {
+      anyMathVariantStyle = true;
+    } else if (mLineContainer->GetStateBits() & TEXT_IS_IN_SINGLE_CHAR_MI) {
+      textFlags |= nsTextFrameUtils::TEXT_IS_SINGLE_CHAR_MI;
+      anyMathVariantStyle = true;
     }
 
     // Figure out what content is included in this flow.
@@ -2076,6 +2091,10 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   if (anyTextTransformStyle) {
     transformingFactory =
       new nsCaseTransformTextRunFactory(transformingFactory.forget());
+  }
+  if (anyMathVariantStyle) {
+    transformingFactory =
+      new nsMathVariantTextRunFactory(transformingFactory.forget());
   }
   nsTArray<nsStyleContext*> styles;
   if (transformingFactory) {

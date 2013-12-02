@@ -6,6 +6,7 @@
 #define MEDIA_MP4_BASIC_TYPES_H_
 
 #include <iostream>
+#include <limits>
 #include <stdint.h>
 #include "prlog.h"
 
