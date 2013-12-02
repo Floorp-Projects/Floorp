@@ -520,6 +520,27 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER 0.71f
 #define NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT 8
 
+// See nsStyleFont
+#define NS_MATHML_MATHVARIANT_NONE                     0
+#define NS_MATHML_MATHVARIANT_NORMAL                   1
+#define NS_MATHML_MATHVARIANT_BOLD                     2
+#define NS_MATHML_MATHVARIANT_ITALIC                   3
+#define NS_MATHML_MATHVARIANT_BOLD_ITALIC              4
+#define NS_MATHML_MATHVARIANT_SCRIPT                   5
+#define NS_MATHML_MATHVARIANT_BOLD_SCRIPT              6
+#define NS_MATHML_MATHVARIANT_FRAKTUR                  7
+#define NS_MATHML_MATHVARIANT_DOUBLE_STRUCK            8
+#define NS_MATHML_MATHVARIANT_BOLD_FRAKTUR             9
+#define NS_MATHML_MATHVARIANT_SANS_SERIF              10
+#define NS_MATHML_MATHVARIANT_BOLD_SANS_SERIF         11
+#define NS_MATHML_MATHVARIANT_SANS_SERIF_ITALIC       12
+#define NS_MATHML_MATHVARIANT_SANS_SERIF_BOLD_ITALIC  13
+#define NS_MATHML_MATHVARIANT_MONOSPACE               14
+#define NS_MATHML_MATHVARIANT_INITIAL                 15
+#define NS_MATHML_MATHVARIANT_TAILED                  16
+#define NS_MATHML_MATHVARIANT_LOOPED                  17
+#define NS_MATHML_MATHVARIANT_STRETCHED               18
+
 // See nsStylePosition::mWidth, mMinWidth, mMaxWidth
 #define NS_STYLE_WIDTH_MAX_CONTENT              0
 #define NS_STYLE_WIDTH_MIN_CONTENT              1
