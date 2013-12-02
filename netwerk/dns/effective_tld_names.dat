@@ -299,14 +299,7 @@ org.bb
 store.bb
 
 // bd : http://en.wikipedia.org/wiki/.bd
-bd
-ac.bd
-com.bd
-edu.bd
-gov.bd
-mil.bd
-net.bd
-org.bd
+*.bd
 
 // be : http://en.wikipedia.org/wiki/.be
 // Confirmed by registry <tech@dns.be> 2008-06-08
@@ -391,13 +384,8 @@ gov.bm
 net.bm
 org.bm
 
-// bn : http://whois.btcl.net.bd/faq_dotbd.php
-bn
-com.bn
-edu.bn
-gov.bn
-net.bn
-org.bn
+// bn : http://en.wikipedia.org/wiki/.bn
+*.bn
 
 // bo : http://www.nic.bo/
 bo
@@ -594,15 +582,8 @@ md.ci
 gouv.ci
 
 // ck : http://en.wikipedia.org/wiki/.ck
-ck
-biz.ck
-co.ck
-edu.ck
-gen.ck
-gov.ck
-info.ck
-net.ck
-org.ck
+*.ck
+!www.ck
 
 // cl : http://en.wikipedia.org/wiki/.cl
 cl
@@ -722,21 +703,8 @@ org.cw
 cx
 gov.cx
 
-// cy : http://www.nic.cy/rulesreg.htm
-cy
-ac.cy
-biz.cy
-com.cy
-ekloges.cy
-gov.cy
-ltd.cy
-name.cy
-net.cy
-org.cy
-parliament.cy
-press.cy
-pro.cy
-tm.cy
+// cy : http://en.wikipedia.org/wiki/.cy
+*.cy
 
 // cz : http://en.wikipedia.org/wiki/.cz
 cz
