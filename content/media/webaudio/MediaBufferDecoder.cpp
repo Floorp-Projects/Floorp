@@ -382,20 +382,12 @@ MediaDecodeTask::Decode()
   if (sampleRate != destSampleRate) {
     int inputLatency = speex_resampler_get_input_latency(resampler);
     int outputLatency = speex_resampler_get_output_latency(resampler);
-    AudioDataValue* zero = (AudioDataValue*)calloc(inputLatency, sizeof(AudioDataValue));
-
-    if (!zero) {
-      // Out of memory!
-      ReportFailureOnMainThread(WebAudioDecodeJob::UnknownError);
-      return;
-    }
-
     for (uint32_t i = 0; i < channelCount; ++i) {
       uint32_t inSamples = inputLatency;
       uint32_t outSamples = outputLatency;
 
       WebAudioUtils::SpeexResamplerProcess(
-          resampler, i, zero, &inSamples,
+          resampler, i, (AudioDataValue*)nullptr, &inSamples,
           mDecodeJob.mChannelBuffers[i] + mDecodeJob.mWriteIndex,
           &outSamples);
 
@@ -404,8 +396,6 @@ MediaDecodeTask::Decode()
         MOZ_ASSERT(mDecodeJob.mWriteIndex <= resampledFrames);
       }
     }
-
-    free(zero);
   }
 
   mPhase = PhaseEnum::AllocateBuffer;
