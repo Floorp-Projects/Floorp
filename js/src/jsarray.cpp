@@ -157,7 +157,8 @@ ToId(JSContext *cx, uint32_t index, MutableHandleId id)
  */
 template<typename IndexType>
 static inline bool
-DoGetElement(JSContext *cx, HandleObject obj, IndexType index, bool *hole, MutableHandleValue vp)
+DoGetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
+             IndexType index, bool *hole, MutableHandleValue vp)
 {
     RootedId id(cx);
 
@@ -173,7 +174,7 @@ DoGetElement(JSContext *cx, HandleObject obj, IndexType index, bool *hole, Mutab
         vp.setUndefined();
         *hole = true;
     } else {
-        if (!JSObject::getGeneric(cx, obj, obj, id, vp))
+        if (!JSObject::getGeneric(cx, obj, receiver, id, vp))
             return false;
         *hole = false;
     }
@@ -196,7 +197,8 @@ AssertGreaterThanZero(uint32_t index)
 
 template<typename IndexType>
 static bool
-GetElement(JSContext *cx, HandleObject obj, IndexType index, bool *hole, MutableHandleValue vp)
+GetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
+           IndexType index, bool *hole, MutableHandleValue vp)
 {
     AssertGreaterThanZero(index);
     if (obj->isNative() && index < obj->getDenseInitializedLength()) {
@@ -213,7 +215,14 @@ GetElement(JSContext *cx, HandleObject obj, IndexType index, bool *hole, Mutable
         }
     }
 
-    return DoGetElement(cx, obj, index, hole, vp);
+    return DoGetElement(cx, obj, receiver, index, hole, vp);
+}
+
+template<typename IndexType>
+static inline bool
+GetElement(JSContext *cx, HandleObject obj, IndexType index, bool *hole, MutableHandleValue vp)
+{
+    return GetElement(cx, obj, obj, index, hole, vp);
 }
 
 static bool
@@ -2733,26 +2742,46 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
     }
 
     if (js::SliceOp op = obj->getOps()->slice) {
-        if (!op(cx, obj, begin, end, narr))
-            return false;
+        // Ensure that we have dense elements, so that DOM can use js::UnsafeDefineElement.
+        JSObject::EnsureDenseResult result = narr->ensureDenseElements(cx, 0, end - begin);
+        if (result == JSObject::ED_FAILED)
+             return false;
 
-        args.rval().setObject(*narr);
-        return true;
+        if (result == JSObject::ED_OK) {
+            if (!op(cx, obj, begin, end, narr))
+                return false;
+
+            args.rval().setObject(*narr);
+            return true;
+        }
+
+        // Fallthrough
+        JS_ASSERT(result == JSObject::ED_SPARSE);
     }
 
+
+    if (!SliceSlowly(cx, obj, obj, begin, end, narr))
+        return false;
+
+    args.rval().setObject(*narr);
+    return true;
+}
+
+JS_FRIEND_API(bool)
+js::SliceSlowly(JSContext* cx, HandleObject obj, HandleObject receiver,
+                uint32_t begin, uint32_t end, HandleObject result)
+{
     RootedValue value(cx);
     for (uint32_t slot = begin; slot < end; slot++) {
         bool hole;
         if (!JS_CHECK_OPERATION_LIMIT(cx) ||
-            !GetElement(cx, obj, slot, &hole, &value))
+            !GetElement(cx, obj, receiver, slot, &hole, &value))
         {
             return false;
         }
-        if (!hole && !JSObject::defineElement(cx, narr, slot - begin, value))
+        if (!hole && !JSObject::defineElement(cx, result, slot - begin, value))
             return false;
     }
-
-    args.rval().setObject(*narr);
     return true;
 }
 
