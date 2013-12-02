@@ -158,7 +158,11 @@ public:
   void Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
-    mSocket->CloseDroidSocket();
+
+    if (mSocket->GetConnectionStatus() ==
+        SocketConnectionStatus::SOCKET_CONNECTED) {
+      mSocket->Disconnect();
+    }
   }
 
 private:
@@ -185,7 +189,7 @@ BluetoothOppManager::BluetoothOppManager() : mConnected(false)
                                            , mWaitingToSendPutFinal(false)
                                            , mCurrentBlobIndex(-1)
 {
-  mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
+  mConnectedDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
 }
 
 BluetoothOppManager::~BluetoothOppManager()
@@ -207,14 +211,7 @@ BluetoothOppManager::Init()
     return false;
   }
 
-  /**
-   * We don't start listening here as BluetoothServiceBluedroid calls Listen()
-   * immediately when BT stops.
-   *
-   * If we start listening here, the listening fails when device boots up since
-   * Listen() is called again and restarts server socket. The restart causes
-   * absence of read events when device boots up.
-   */
+  Listen();
 
   return true;
 }
@@ -247,9 +244,14 @@ BluetoothOppManager::ConnectInternal(const nsAString& aDeviceAddress)
   MOZ_ASSERT(NS_IsMainThread());
 
   // Stop listening because currently we only support one connection at a time.
-  if (mServerSocket) {
-    mServerSocket->Disconnect();
-    mServerSocket = nullptr;
+  if (mRfcommSocket) {
+    mRfcommSocket->Disconnect();
+    mRfcommSocket = nullptr;
+  }
+
+  if (mL2capSocket) {
+    mL2capSocket->Disconnect();
+    mL2capSocket = nullptr;
   }
 
   mIsServer = false;
@@ -260,9 +262,18 @@ BluetoothOppManager::ConnectInternal(const nsAString& aDeviceAddress)
     return;
   }
 
+  mNeedsUpdatingSdpRecords = true;
+
+  nsString uuid;
+  BluetoothUuidHelper::GetString(BluetoothServiceClass::OBJECT_PUSH, uuid);
+
+  if (NS_FAILED(bs->GetServiceChannel(aDeviceAddress, uuid, this))) {
+    OnSocketConnectError(mSocket);
+    return;
+  }
+
   mSocket =
     new BluetoothSocket(this, BluetoothSocketType::RFCOMM, true, true);
-  mSocket->Connect(aDeviceAddress, -1);
 }
 
 void
@@ -275,9 +286,13 @@ BluetoothOppManager::HandleShutdown()
     mSocket->Disconnect();
     mSocket = nullptr;
   }
-  if (mServerSocket) {
-    mServerSocket->Disconnect();
-    mServerSocket = nullptr;
+  if (mRfcommSocket) {
+    mRfcommSocket->Disconnect();
+    mRfcommSocket = nullptr;
+  }
+  if (mL2capSocket) {
+    mL2capSocket->Disconnect();
+    mL2capSocket = nullptr;
   }
   sBluetoothOppManager = nullptr;
 }
@@ -292,23 +307,28 @@ BluetoothOppManager::Listen()
     return false;
   }
 
-  /**
-   * Restart server socket since its underlying fd becomes invalid when
-   * BT stops; otherwise no more read events would be received even if
-   * BT restarts.
-   */
-  if (mServerSocket) {
-    mServerSocket->Disconnect();
-    mServerSocket = nullptr;
+  if (!mRfcommSocket) {
+    mRfcommSocket =
+      new BluetoothSocket(this, BluetoothSocketType::RFCOMM, true, true);
+
+    if (!mRfcommSocket->Listen(BluetoothReservedChannels::CHANNEL_OPUSH)) {
+      BT_WARNING("[OPP] Can't listen on RFCOMM socket!");
+      mRfcommSocket = nullptr;
+      return false;
+    }
   }
 
-  mServerSocket =
-    new BluetoothSocket(this, BluetoothSocketType::RFCOMM, true, true);
+  if (!mL2capSocket) {
+    mL2capSocket =
+      new BluetoothSocket(this, BluetoothSocketType::EL2CAP, true, true);
 
-  if (!mServerSocket->Listen(BluetoothReservedChannels::CHANNEL_OPUSH)) {
-    BT_WARNING("[OPP] Can't listen on RFCOMM socket!");
-    mServerSocket = nullptr;
-    return false;
+    if (!mL2capSocket->Listen(BluetoothReservedChannels::CHANNEL_OPUSH_L2CAP)) {
+      BT_WARNING("[OPP] Can't listen on L2CAP socket!");
+      mRfcommSocket->Disconnect();
+      mRfcommSocket = nullptr;
+      mL2capSocket = nullptr;
+      return false;
+    }
   }
 
   mIsServer = true;
@@ -1230,7 +1250,7 @@ BluetoothOppManager::SendObexData(uint8_t* aData, uint8_t aOpcode, int aSize)
 
   UnixSocketRawData* s = new UnixSocketRawData(aSize);
   memcpy(s->mData, aData, s->mSize);
-  mSocket->SendDroidSocketData(s);
+  mSocket->SendSocketData(s);
 }
 
 void
@@ -1246,7 +1266,7 @@ BluetoothOppManager::FileTransferComplete()
   type.AssignLiteral("bluetooth-opp-transfer-complete");
 
   name.AssignLiteral("address");
-  v = mDeviceAddress;
+  v = mConnectedDeviceAddress;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   name.AssignLiteral("success");
@@ -1286,7 +1306,7 @@ BluetoothOppManager::StartFileTransfer()
   type.AssignLiteral("bluetooth-opp-transfer-start");
 
   name.AssignLiteral("address");
-  v = mDeviceAddress;
+  v = mConnectedDeviceAddress;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   name.AssignLiteral("received");
@@ -1322,7 +1342,7 @@ BluetoothOppManager::UpdateProgress()
   type.AssignLiteral("bluetooth-opp-update-progress");
 
   name.AssignLiteral("address");
-  v = mDeviceAddress;
+  v = mConnectedDeviceAddress;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   name.AssignLiteral("received");
@@ -1352,7 +1372,7 @@ BluetoothOppManager::ReceivingFileConfirmation()
   type.AssignLiteral("bluetooth-opp-receiving-file-confirmation");
 
   name.AssignLiteral("address");
-  v = mDeviceAddress;
+  v = mConnectedDeviceAddress;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   name.AssignLiteral("fileName");
@@ -1392,19 +1412,28 @@ BluetoothOppManager::OnSocketConnectSuccess(BluetoothSocket* aSocket)
   MOZ_ASSERT(aSocket);
 
   /**
-   * If the created connection is an inbound connection, close server socket
-   * because currently only one file-transfer session is allowed. After that,
-   * we need to make sure that server socket would be nulled out.
+   * If the created connection is an inbound connection, close another server
+   * socket because currently only one file-transfer session is allowed. After
+   * that, we need to make sure that both server socket would be nulled out.
    * As for outbound connections, we just notify the controller that it's done.
    */
-  if (aSocket == mServerSocket) {
+  if (aSocket == mRfcommSocket) {
     MOZ_ASSERT(!mSocket);
-    mServerSocket.swap(mSocket);
+    mRfcommSocket.swap(mSocket);
+
+    mL2capSocket->Disconnect();
+    mL2capSocket = nullptr;
+  } else if (aSocket == mL2capSocket) {
+    MOZ_ASSERT(!mSocket);
+    mL2capSocket.swap(mSocket);
+
+    mRfcommSocket->Disconnect();
+    mRfcommSocket = nullptr;
   }
 
   // Cache device address since we can't get socket address when a remote
   // device disconnect with us.
-  mSocket->GetAddress(mDeviceAddress);
+  mSocket->GetAddress(mConnectedDeviceAddress);
 
   // Start sending file if we connect as a client
   if (!mIsServer) {
@@ -1417,7 +1446,8 @@ BluetoothOppManager::OnSocketConnectError(BluetoothSocket* aSocket)
 {
   BT_LOGR("%s: [%s]", __FUNCTION__, (mIsServer)? "server" : "client");
 
-  mServerSocket = nullptr;
+  mRfcommSocket = nullptr;
+  mL2capSocket = nullptr;
   mSocket = nullptr;
 
   if (!mIsServer) {
@@ -1434,12 +1464,13 @@ BluetoothOppManager::OnSocketConnectError(BluetoothSocket* aSocket)
 void
 BluetoothOppManager::OnSocketDisconnect(BluetoothSocket* aSocket)
 {
+  BT_LOGR("%s: [%s]", __FUNCTION__, (mIsServer)? "server" : "client");
   MOZ_ASSERT(aSocket);
+
   if (aSocket != mSocket) {
     // Do nothing when a listening server socket is closed.
     return;
   }
-  BT_LOGR("%s: [%s]", __FUNCTION__, (mIsServer) ? "client" : "server");
 
   /**
    * It is valid for a bluetooth device which is transfering file via OPP
@@ -1461,13 +1492,57 @@ BluetoothOppManager::OnSocketDisconnect(BluetoothSocket* aSocket)
   }
 
   AfterOppDisconnected();
-  mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
+  mConnectedDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
   mSuccessFlag = false;
 
   mSocket = nullptr;
   // Listen as a server if there's no more batch to process
   if (!ProcessNextBatch()) {
     Listen();
+  }
+}
+
+void
+BluetoothOppManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
+                                         const nsAString& aServiceUuid,
+                                         int aChannel)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aDeviceAddress.IsEmpty());
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  if (aChannel < 0) {
+    if (mNeedsUpdatingSdpRecords) {
+      mNeedsUpdatingSdpRecords = false;
+      bs->UpdateSdpRecords(aDeviceAddress, this);
+    } else {
+      OnSocketConnectError(mSocket);
+    }
+
+    return;
+  }
+
+  if (!mSocket->Connect(NS_ConvertUTF16toUTF8(aDeviceAddress), aChannel)) {
+    OnSocketConnectError(mSocket);
+  }
+}
+
+void
+BluetoothOppManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aDeviceAddress.IsEmpty());
+
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  nsString uuid;
+  BluetoothUuidHelper::GetString(BluetoothServiceClass::OBJECT_PUSH, uuid);
+
+  if (NS_FAILED(bs->GetServiceChannel(aDeviceAddress, uuid, this))) {
+    OnSocketConnectError(mSocket);
   }
 }
 
@@ -1484,20 +1559,6 @@ BluetoothOppManager::AcquireSdcardMountLock()
                                   getter_AddRefs(mMountLock));
   NS_ENSURE_SUCCESS(rv, false);
   return true;
-}
-
-void
-BluetoothOppManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
-                                         const nsAString& aServiceUuid,
-                                         int aChannel)
-{
-  MOZ_ASSERT(false);
-}
-
-void
-BluetoothOppManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
-{
-  MOZ_ASSERT(false);
 }
 
 void
