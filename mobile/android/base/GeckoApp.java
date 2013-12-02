@@ -126,12 +126,18 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-abstract public class GeckoApp
-                extends GeckoActivity 
-    implements GeckoEventListener, SensorEventListener, LocationListener,
-                           Tabs.OnTabsChangedListener, GeckoEventResponder,
-                           GeckoMenu.Callback, GeckoMenu.MenuPresenter,
-                           ContextGetter, GeckoAppShell.GeckoInterface
+public abstract class GeckoApp
+    extends GeckoActivity 
+    implements
+    ContextGetter,
+    GeckoAppShell.GeckoInterface,
+    GeckoEventListener,
+    GeckoEventResponder,
+    GeckoMenu.Callback,
+    GeckoMenu.MenuPresenter,
+    LocationListener,
+    SensorEventListener,
+    Tabs.OnTabsChangedListener
 {
     private static final String LOGTAG = "GeckoApp";
 
@@ -233,8 +239,18 @@ abstract public class GeckoApp
 
     void focusChrome() { }
 
+    @Override
     public Context getContext() {
         return sAppContext;
+    }
+
+    @Override
+    public SharedPreferences getSharedPreferences() {
+        return GeckoApp.getAppSharedPreferences();
+    }
+
+    public static SharedPreferences getAppSharedPreferences() {
+        return GeckoApp.sAppContext.getSharedPreferences(GeckoApp.PREFS_NAME, 0);
     }
 
     public Activity getActivity() {
@@ -256,10 +272,6 @@ abstract public class GeckoApp
 
     public SensorEventListener getSensorEventListener() {
         return this;
-    }
-
-    public static SharedPreferences getAppSharedPreferences() {
-        return GeckoApp.sAppContext.getSharedPreferences(PREFS_NAME, 0);
     }
 
     public View getCameraView() {
