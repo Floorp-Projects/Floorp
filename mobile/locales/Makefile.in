@@ -107,10 +107,10 @@ search-jar-preqs = \
 .PHONY: search-jar
 search-jar: $(search-jar)
 $(search-jar): $(search-jar-preqs)
-	@echo "\nGenerating: search-jar"
-	printf "$(AB_CD).jar:" > $@
+	@echo '\nGenerating: search-jar'
+	printf '$(AB_CD).jar:' > $@
 	ln -fn $@ .
-	printf "$(foreach plugin,$(SEARCH_PLUGINS),$(subst __PLUGIN_SUBST__,$(plugin), \n locale/$(AB_CD)/browser/searchplugins/__PLUGIN_SUBST__.xml (__PLUGIN_SUBST__.xml)))" >>  $@
+	printf '$(foreach plugin,$(SEARCH_PLUGINS),$(subst __PLUGIN_SUBST__,$(plugin), \n locale/$(AB_CD)/browser/searchplugins/__PLUGIN_SUBST__.xml (__PLUGIN_SUBST__.xml)))' >>  $@
 	@echo   >> $@
 
 ###################
@@ -194,7 +194,7 @@ $(bookmarks-ts): $(bookmarks-preqs)
 .PHONY: bookmarks $(bookmarks)
 bookmarks: $(bookmarks)
 $(bookmarks): $(bookmarks-ts)
-	@echo "\nGenerating: $@"
+	@echo '\nGenerating: $@'
 	ln -fn $< .
 
 
