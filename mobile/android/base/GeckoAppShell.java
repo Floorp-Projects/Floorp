@@ -1586,7 +1586,6 @@ public class GeckoAppShell
         }
     }
 
-    @WrapElementForJNI
     public static void setSelectedLocale(String localeCode) {
         /* Bug 713464: This method is still called from Gecko side.
            Earlier we had an option to run Firefox in a language other than system's language.
