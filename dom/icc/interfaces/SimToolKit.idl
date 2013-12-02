@@ -116,6 +116,17 @@ dictionary MozStkMenu
    * false: no help information available.
    */
   boolean isHelpAvailable;
+
+  /**
+   * List of Next Action Indicators.
+   * Each element should be one of nsIDOMMozIccManager.STK_CMD_*
+   *                            or nsIDOMMozIccManager.STK_NEXT_ACTION_*
+   * If it's STK_NEXT_ACTION_NULL, the terminal should ignore this action
+   * in corresponding item.
+   *
+   * @see TS 11.14, clause 12.24, Items Next Action Indicator.
+   */
+  jsval nextActionList; // unsigned short []
 };
 
 dictionary MozStkInput

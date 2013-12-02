@@ -46,10 +46,14 @@ public:
   bool IsMountLocked() const          { return mMountLocked; }
   bool MediaPresent() const           { return mMediaPresent; }
   bool CanBeShared() const            { return mCanBeShared; }
+  bool CanBeFormatted() const         { return CanBeShared(); }
   bool IsSharingEnabled() const       { return mCanBeShared && mSharingEnabled; }
+  bool IsFormatRequested() const      { return CanBeFormatted() && mFormatRequested; }
   bool IsSharing() const              { return mIsSharing; }
+  bool IsFormatting() const           { return mIsFormatting; }
 
   void SetSharingEnabled(bool aSharingEnabled);
+  void SetFormatRequested(bool aFormatRequested);
 
   typedef mozilla::Observer<Volume *>     EventObserver;
   typedef mozilla::ObserverList<Volume *> EventObserverList;
@@ -69,10 +73,12 @@ private:
   // be called as each one completes.
   void StartMount(VolumeResponseCallback* aCallback);
   void StartUnmount(VolumeResponseCallback* aCallback);
+  void StartFormat(VolumeResponseCallback* aCallback);
   void StartShare(VolumeResponseCallback* aCallback);
   void StartUnshare(VolumeResponseCallback* aCallback);
 
   void SetIsSharing(bool aIsSharing);
+  void SetIsFormatting(bool aIsFormatting);
   void SetState(STATE aNewState);
   void SetMediaPresent(bool aMediaPresent);
   void SetMountPoint(const nsCSubstring& aMountPoint);
@@ -91,8 +97,10 @@ private:
   int32_t           mMountGeneration;
   bool              mMountLocked;
   bool              mSharingEnabled;
+  bool              mFormatRequested;
   bool              mCanBeShared;
   bool              mIsSharing;
+  bool              mIsFormatting;
 
   static EventObserverList mEventObserverList;
 };

@@ -48,6 +48,10 @@ const kEventConstructors = {
                                                           return new BluetoothDeviceEvent(aName, aProps);
                                                        },
                                              },
+  BluetoothDiscoveryStateChangedEvent:       { create: function (aName, aProps) {
+                                                          return new BluetoothDiscoveryStateChangedEvent(aName, aProps);
+                                                       },
+                                             },
   BluetoothStatusChangedEvent:               { create: function (aName, aProps) {
                                                           return new BluetoothStatusChangedEvent(aName, aProps);
                                                        },
