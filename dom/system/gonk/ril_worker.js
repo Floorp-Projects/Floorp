@@ -4990,8 +4990,8 @@ RIL[REQUEST_DIAL] = function REQUEST_DIAL(length, options) {
   if (options.rilRequestError) {
     // The connection is not established yet.
     options.callIndex = -1;
-    this.getFailCauseCode(options);
-    return;
+    this._sendCallError(options.callIndex,
+                        RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError]);
   }
 };
 RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length, options) {
@@ -5070,15 +5070,8 @@ RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = function REQUEST_LAST_CALL_FAIL_CAUSE(length
   }
 
   let failCause = Buf.readInt32();
-  switch (failCause) {
-    case CALL_FAIL_NORMAL:
-      this._handleDisconnectedCall(options);
-      break;
-    default:
-      this._sendCallError(options.callIndex,
-                          RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[failCause]);
-      break;
-  }
+  options.failCause = RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[failCause];
+  this._handleDisconnectedCall(options);
 };
 RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH(length, options) {
   this._receivedNetworkInfo(NETWORK_INFO_SIGNAL);
