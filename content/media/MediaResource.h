@@ -13,7 +13,6 @@
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsProxyRelease.h"
 #include "MediaCache.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
@@ -396,7 +395,7 @@ protected:
 
 class BaseMediaResource : public MediaResource {
 public:
-  virtual nsIURI* URI() const { return const_cast<nsIURI*>(mURI.get()); }
+  virtual nsIURI* URI() const { return mURI; }
   virtual void MoveLoadsToBackground();
 
 protected:
@@ -405,8 +404,8 @@ protected:
                     nsIURI* aURI,
                     const nsACString& aContentType) :
     mDecoder(aDecoder),
-    mChannel(new nsMainThreadPtrHolder<nsIChannel>(aChannel)),
-    mURI(new nsMainThreadPtrHolder<nsIURI>(aURI)),
+    mChannel(aChannel),
+    mURI(aURI),
     mContentType(aContentType),
     mLoadInBackground(false)
   {
@@ -439,11 +438,11 @@ protected:
 
   // Channel used to download the media data. Must be accessed
   // from the main thread only.
-  nsMainThreadPtrHandle<nsIChannel> mChannel;
+  nsCOMPtr<nsIChannel> mChannel;
 
   // URI in case the stream needs to be re-opened. Access from
   // main thread only.
-  nsMainThreadPtrHandle<nsIURI> mURI;
+  nsCOMPtr<nsIURI> mURI;
 
   // Content-Type of the channel. This is copied from the nsIChannel when the
   // MediaResource is created. This is constant, so accessing from any thread
