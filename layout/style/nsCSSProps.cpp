@@ -1270,6 +1270,29 @@ const int32_t nsCSSProps::kListStyleKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const int32_t nsCSSProps::kMathVariantKTable[] = {
+  eCSSKeyword_none, NS_MATHML_MATHVARIANT_NONE,
+  eCSSKeyword_normal, NS_MATHML_MATHVARIANT_NORMAL,
+  eCSSKeyword_bold, NS_MATHML_MATHVARIANT_BOLD,
+  eCSSKeyword_italic, NS_MATHML_MATHVARIANT_ITALIC,
+  eCSSKeyword_bold_italic, NS_MATHML_MATHVARIANT_BOLD_ITALIC,
+  eCSSKeyword_script, NS_MATHML_MATHVARIANT_SCRIPT,
+  eCSSKeyword_bold_script, NS_MATHML_MATHVARIANT_BOLD_SCRIPT,
+  eCSSKeyword_fraktur, NS_MATHML_MATHVARIANT_FRAKTUR,
+  eCSSKeyword_double_struck, NS_MATHML_MATHVARIANT_DOUBLE_STRUCK,
+  eCSSKeyword_bold_fraktur, NS_MATHML_MATHVARIANT_BOLD_FRAKTUR,
+  eCSSKeyword_sans_serif, NS_MATHML_MATHVARIANT_SANS_SERIF,
+  eCSSKeyword_bold_sans_serif, NS_MATHML_MATHVARIANT_BOLD_SANS_SERIF,
+  eCSSKeyword_sans_serif_italic, NS_MATHML_MATHVARIANT_SANS_SERIF_ITALIC,
+  eCSSKeyword_sans_serif_bold_italic, NS_MATHML_MATHVARIANT_SANS_SERIF_BOLD_ITALIC,
+  eCSSKeyword_monospace, NS_MATHML_MATHVARIANT_MONOSPACE,
+  eCSSKeyword_initial, NS_MATHML_MATHVARIANT_INITIAL,
+  eCSSKeyword_tailed, NS_MATHML_MATHVARIANT_TAILED,
+  eCSSKeyword_looped, NS_MATHML_MATHVARIANT_LOOPED,
+  eCSSKeyword_stretched, NS_MATHML_MATHVARIANT_STRETCHED,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const int32_t nsCSSProps::kContextOpacityKTable[] = {
   eCSSKeyword_context_fill_opacity, NS_STYLE_CONTEXT_FILL_OPACITY,
   eCSSKeyword_context_stroke_opacity, NS_STYLE_CONTEXT_STROKE_OPACITY,
