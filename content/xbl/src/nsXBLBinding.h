@@ -26,10 +26,11 @@ class nsIScriptContext;
 namespace mozilla {
 namespace dom {
 
+class ShadowRoot;
 class XBLChildrenElement;
 
-}
-}
+} // namespace dom
+} // namespace mozilla
 
 class nsAnonymousContentList;
 
@@ -40,6 +41,7 @@ class nsXBLBinding
 {
 public:
   nsXBLBinding(nsXBLPrototypeBinding* aProtoBinding);
+  nsXBLBinding(mozilla::dom::ShadowRoot* aShadowRoot, nsXBLPrototypeBinding* aProtoBinding);
   ~nsXBLBinding();
 
   /**

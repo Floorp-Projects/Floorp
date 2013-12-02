@@ -28,8 +28,6 @@ nsMathMLTokenFrame::InheritAutomaticData(nsIFrame* aParent)
   // let the base class get the default from our parent
   nsMathMLContainerFrame::InheritAutomaticData(aParent);
 
-  ProcessTextData();
-
   return NS_OK;
 }
 
@@ -41,40 +39,16 @@ nsMathMLTokenFrame::GetMathMLFrameType()
     return eMathMLFrameType_Ordinary;
   }
 
-  // for <mi>, distinguish between italic and upright...
-  nsAutoString style;
-  // mathvariant overrides fontstyle
-  // http://www.w3.org/TR/2003/REC-MathML2-20031021/chapter3.html#presm.deprecatt
-  mContent->GetAttr(kNameSpaceID_None,
-                    nsGkAtoms::_moz_math_fontstyle_, style) ||
-    GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::mathvariant_,
-                 style) ||
-    GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::fontstyle_,
-                 style);
-
-  if (style.EqualsLiteral("italic") || style.EqualsLiteral("bold-italic") ||
-      style.EqualsLiteral("script") || style.EqualsLiteral("bold-script") ||
-      style.EqualsLiteral("sans-serif-italic") ||
-      style.EqualsLiteral("sans-serif-bold-italic")) {
+  uint8_t mathVariant = StyleFont()->mMathVariant;
+  if ((mathVariant == NS_MATHML_MATHVARIANT_NONE &&
+       (StyleFont()->mFont.style == NS_STYLE_FONT_STYLE_ITALIC ||
+        HasAnyStateBits(TEXT_IS_IN_SINGLE_CHAR_MI))) ||
+      mathVariant == NS_MATHML_MATHVARIANT_ITALIC ||
+      mathVariant == NS_MATHML_MATHVARIANT_ITALIC ||
+      mathVariant == NS_MATHML_MATHVARIANT_BOLD_ITALIC ||
+      mathVariant == NS_MATHML_MATHVARIANT_SANS_SERIF_ITALIC ||
+      mathVariant == NS_MATHML_MATHVARIANT_SANS_SERIF_BOLD_ITALIC) {
     return eMathMLFrameType_ItalicIdentifier;
-  }
-  else if(style.EqualsLiteral("invariant")) {
-    nsAutoString data;
-    nsContentUtils::GetNodeTextContent(mContent, false, data);
-    data.CompressWhitespace();
-    eMATHVARIANT variant = nsMathMLOperators::LookupInvariantChar(data);
-
-    switch (variant) {
-    case eMATHVARIANT_italic:
-    case eMATHVARIANT_bold_italic:
-    case eMATHVARIANT_script:
-    case eMATHVARIANT_bold_script:
-    case eMATHVARIANT_sans_serif_italic:
-    case eMATHVARIANT_sans_serif_bold_italic:
-      return eMathMLFrameType_ItalicIdentifier;
-    default:
-      ; // fall through to upright
-    }
   }
   return eMathMLFrameType_UprightIdentifier;
 }
@@ -82,15 +56,35 @@ nsMathMLTokenFrame::GetMathMLFrameType()
 void
 nsMathMLTokenFrame::MarkTextFramesAsTokenMathML()
 {
-  // Set flags on child text frames to force them to trim their leading and
-  // trailing whitespaces.
+  nsIFrame* child = nullptr;
+  uint32_t childCount = 0;
+
+  // Set flags on child text frames
+  // - to force them to trim their leading and trailing whitespaces.
+  // - Indicate which frames are suitable for mathvariant
+  // - flag single character <mi> frames for special italic treatment
   for (nsIFrame* childFrame = GetFirstPrincipalChild(); childFrame;
        childFrame = childFrame->GetNextSibling()) {
     for (nsIFrame* childFrame2 = childFrame->GetFirstPrincipalChild();
          childFrame2; childFrame2 = childFrame2->GetNextSibling()) {
       if (childFrame2->GetType() == nsGkAtoms::textFrame) {
         childFrame2->AddStateBits(TEXT_IS_IN_TOKEN_MATHML);
+        child = childFrame2;
+        childCount++;
       }
+    }
+  }
+  if (mContent->Tag() == nsGkAtoms::mi_ && childCount == 1) {
+    nsAutoString data;
+    nsContentUtils::GetNodeTextContent(mContent, false, data);
+    data.CompressWhitespace();
+    int32_t length = data.Length();
+
+    bool isSingleCharacter = length == 1 ||
+      (length == 2 && NS_IS_HIGH_SURROGATE(data[0]));
+
+    if (isSingleCharacter) {
+      child->AddStateBits(TEXT_IS_IN_SINGLE_CHAR_MI);
     }
   }
 }
@@ -106,7 +100,6 @@ nsMathMLTokenFrame::SetInitialChildList(ChildListID     aListID,
 
   MarkTextFramesAsTokenMathML();
 
-  ProcessTextData();
   return rv;
 }
 
@@ -232,120 +225,3 @@ nsMathMLTokenFrame::Place(nsRenderingContext& aRenderingContext,
   return NS_OK;
 }
 
-/* virtual */ void
-nsMathMLTokenFrame::MarkIntrinsicWidthsDirty()
-{
-  // this could be called due to changes in the nsTextFrame beneath us
-  // when something changed in the text content. So re-process our text
-  ProcessTextData();
-
-  nsMathMLContainerFrame::MarkIntrinsicWidthsDirty();
-}
-
-void
-nsMathMLTokenFrame::ProcessTextData()
-{
-  // see if the style changes from normal to italic or vice-versa
-  if (!SetTextStyle())
-    return;
-
-  // explicitly request a re-resolve to pick up the change of style
-  PresContext()->RestyleManager()->
-    PostRestyleEvent(mContent->AsElement(), eRestyle_Subtree, NS_STYLE_HINT_NONE);
-}
-
-///////////////////////////////////////////////////////////////////////////
-// For <mi>, if the content is not a single character, turn the font to
-// normal (this function will also query attributes from the mstyle hierarchy)
-// Returns true if there is a style change.
-//
-// http://www.w3.org/TR/2003/REC-MathML2-20031021/chapter3.html#presm.commatt
-//
-//  "It is important to note that only certain combinations of
-//   character data and mathvariant attribute values make sense.
-//   ...
-//   By design, the only cases that have an unambiguous
-//   interpretation are exactly the ones that correspond to SMP Math
-//   Alphanumeric Symbol characters, which are enumerated in Section
-//   6.2.3 Mathematical Alphanumeric Symbols Characters. In all other
-//   cases, it is suggested that renderers ignore the value of the
-//   mathvariant attribute if it is present."
-//
-// There are no corresponding characters for mathvariant=normal, suggesting
-// that this value should be ignored, but this (from the same section of
-// Chapter 3) implies that font-style should not be inherited, but set to
-// normal for mathvariant=normal:
-//
-//  "In particular, inheritance of the mathvariant attribute does not follow
-//   the CSS model. The default value for this attribute is "normal"
-//   (non-slanted) for all tokens except mi. ... (The deprecated fontslant
-//   attribute also behaves this way.)"
-
-bool
-nsMathMLTokenFrame::SetTextStyle()
-{
-  if (mContent->Tag() != nsGkAtoms::mi_)
-    return false;
-
-  if (!mFrames.FirstChild())
-    return false;
-
-  // Get the text content that we enclose and its length
-  nsAutoString data;
-  nsContentUtils::GetNodeTextContent(mContent, false, data);
-  data.CompressWhitespace();
-  int32_t length = data.Length();
-  if (!length)
-    return false;
-
-  nsAutoString fontstyle;
-  bool isSingleCharacter =
-    length == 1 ||
-    (length == 2 && NS_IS_HIGH_SURROGATE(data[0]));
-  if (isSingleCharacter &&
-      nsMathMLOperators::LookupInvariantChar(data) != eMATHVARIANT_NONE) {
-    // bug 65951 - a non-stylable character has its own intrinsic appearance
-    fontstyle.AssignLiteral("invariant");
-  }
-  else {
-    // Attributes override the default behavior.
-    nsAutoString value;
-    if (!(GetAttribute(mContent, mPresentationData.mstyle,
-                       nsGkAtoms::mathvariant_, value) ||
-          GetAttribute(mContent, mPresentationData.mstyle,
-                       nsGkAtoms::fontstyle_, value))) {
-      if (!isSingleCharacter) {
-        fontstyle.AssignLiteral("normal");
-      }
-      else if (length == 1 && // BMP
-               !nsMathMLOperators::
-                TransformVariantChar(data[0], eMATHVARIANT_italic).
-                Equals(data)) {
-        // Transformation exists.  Try to make the BMP character look like the
-        // styled character using the style system until bug 114365 is resolved.
-        fontstyle.AssignLiteral("italic");
-      }
-      // else single character but there is no corresponding Math Alphanumeric
-      // Symbol character: "ignore the value of the [default] mathvariant
-      // attribute".
-    }
-  }
-
-  // set the _moz-math-font-style attribute without notifying that we want a reflow
-  if (fontstyle.IsEmpty()) {
-    if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::_moz_math_fontstyle_)) {
-      mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::_moz_math_fontstyle_,
-                          false);
-      return true;
-    }
-  }
-  else if (!mContent->AttrValueIs(kNameSpaceID_None,
-                                  nsGkAtoms::_moz_math_fontstyle_,
-                                  fontstyle, eCaseMatters)) {
-    mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::_moz_math_fontstyle_,
-                      fontstyle, false);
-    return true;
-  }
-
-  return false;
-}
