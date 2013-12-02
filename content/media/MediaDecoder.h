@@ -229,6 +229,8 @@ class MediaDecoder : public nsIObserver,
                      public AbstractMediaDecoder
 {
 public:
+  class DecodedStreamGraphListener;
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
@@ -353,6 +355,11 @@ public:
                       int64_t aInitialTime, SourceMediaStream* aStream);
     ~DecodedStreamData();
 
+    virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
+
+    StreamTime GetLastOutputTime() { return mListener->GetLastOutputTime(); }
+    bool IsFinished() { return mListener->IsFinishedOnMainThread(); }
+
     // The following group of fields are protected by the decoder's monitor
     // and can be read or written on any thread.
     int64_t mLastAudioPacketTime; // microseconds
@@ -381,12 +388,51 @@ public:
     // The decoder is responsible for calling Destroy() on this stream.
     // Can be read from any thread.
     const nsRefPtr<SourceMediaStream> mStream;
+    // Can be read from any thread.
+    nsRefPtr<DecodedStreamGraphListener> mListener;
     // True when we've explicitly blocked this stream because we're
     // not in PLAY_STATE_PLAYING. Used on the main thread only.
     bool mHaveBlockedForPlayState;
-
-    virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
+    // We also have an explicit blocker on the stream when
+    // mDecoderStateMachine is non-null and MediaDecoderStateMachine is false.
+    bool mHaveBlockedForStateMachineNotPlaying;
   };
+
+  class DecodedStreamGraphListener : public MediaStreamListener {
+  public:
+    DecodedStreamGraphListener(MediaStream* aStream);
+    virtual void NotifyOutput(MediaStreamGraph* aGraph, GraphTime aCurrentTime) MOZ_OVERRIDE;
+
+    StreamTime GetLastOutputTime()
+    {
+      MutexAutoLock lock(mMutex);
+      return mLastOutputTime;
+    }
+    void Forget()
+    {
+      MutexAutoLock lock(mMutex);
+      mStream = nullptr;
+    }
+    void SetFinishedOnMainThread(bool aFinished)
+    {
+      MutexAutoLock lock(mMutex);
+      mStreamFinishedOnMainThread = aFinished;
+    }
+    bool IsFinishedOnMainThread()
+    {
+      MutexAutoLock lock(mMutex);
+      return mStreamFinishedOnMainThread;
+    }
+  private:
+    Mutex mMutex;
+    // Protected by mMutex
+    nsRefPtr<MediaStream> mStream;
+    // Protected by mMutex
+    StreamTime mLastOutputTime;
+    // Protected by mMutex
+    bool mStreamFinishedOnMainThread;
+  };
+
   struct OutputStreamData {
     void Init(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
     {
@@ -411,8 +457,14 @@ public:
    * Recreates mDecodedStream. Call this to create mDecodedStream at first,
    * and when seeking, to ensure a new stream is set up with fresh buffers.
    * aStartTimeUSecs is relative to the state machine's mStartTime.
+   * Decoder monitor must be held.
    */
   void RecreateDecodedStream(int64_t aStartTimeUSecs);
+  /**
+   * Call this when mDecoderStateMachine or mDecoderStateMachine->IsPlaying() changes.
+   * Decoder monitor must be held.
+   */
+  void UpdateStreamBlockingForStateMachinePlaying();
   /**
    * Called when the state of mDecodedStream as visible on the main thread
    * has changed. In particular we want to know when the stream has finished
