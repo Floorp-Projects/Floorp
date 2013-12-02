@@ -19,6 +19,9 @@ namespace mozilla {
 
 static const int DEFAULT_CHANNELS = 1;
 static const int DEFAULT_SAMPLING_RATE = 16000;
+static const int DEFAULT_FRAME_WIDTH = 640;
+static const int DEFAULT_FRAME_HEIGHT = 480;
+static const int DEFAULT_TRACK_RATE = USECS_PER_S;
 
 void
 AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
@@ -122,6 +125,105 @@ AudioTrackEncoder::InterleaveTrackData(AudioChunk& aChunk,
                                aChunk.mBufferFormat, aDuration, aChunk.mVolume,
                                mChannels, aOutput);
   }
+}
+
+void
+VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
+                                            TrackID aID,
+                                            TrackRate aTrackRate,
+                                            TrackTicks aTrackOffset,
+                                            uint32_t aTrackEvents,
+                                            const MediaSegment& aQueuedMedia)
+{
+  if (mCanceled) {
+    return;
+  }
+
+  const VideoSegment& video = static_cast<const VideoSegment&>(aQueuedMedia);
+
+   // Check and initialize parameters for codec encoder.
+  if (!mInitialized) {
+    VideoSegment::ChunkIterator iter(const_cast<VideoSegment&>(video));
+    while (!iter.IsEnded()) {
+      VideoChunk chunk = *iter;
+      if (!chunk.IsNull()) {
+        gfxIntSize imgsize = chunk.mFrame.GetImage()->GetSize();
+        int width = (imgsize.width + 1) / 2 * 2;
+        int height = (imgsize.height + 1) / 2 * 2;
+        nsresult rv = Init(width, height, aTrackRate);
+        if (NS_FAILED(rv)) {
+          LOG("[VideoTrackEncoder]: Fail to initialize the encoder!");
+          NotifyCancel();
+        }
+        break;
+      }
+
+      iter.Next();
+    }
+  }
+
+  AppendVideoSegment(video);
+
+  // The stream has stopped and reached the end of track.
+  if (aTrackEvents == MediaStreamListener::TRACK_EVENT_ENDED) {
+    LOG("[VideoTrackEncoder]: Receive TRACK_EVENT_ENDED .");
+    NotifyEndOfStream();
+  }
+
+}
+
+nsresult
+VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  // Append all video segments from MediaStreamGraph, including null an
+  // non-null frames.
+  VideoSegment::ChunkIterator iter(const_cast<VideoSegment&>(aSegment));
+  while (!iter.IsEnded()) {
+    VideoChunk chunk = *iter;
+    nsRefPtr<layers::Image> image = chunk.mFrame.GetImage();
+    mRawSegment.AppendFrame(image.forget(), chunk.GetDuration(),
+                            chunk.mFrame.GetIntrinsicSize());
+    iter.Next();
+  }
+
+  if (mRawSegment.GetDuration() > 0) {
+    mReentrantMonitor.NotifyAll();
+  }
+
+  return NS_OK;
+}
+
+void
+VideoTrackEncoder::NotifyEndOfStream()
+{
+  // If source video track is muted till the end of encoding, initialize the
+  // encoder with default frame width, frame height, and track rate.
+  if (!mCanceled && !mInitialized) {
+    Init(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, DEFAULT_TRACK_RATE);
+  }
+
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  mEndOfStream = true;
+  mReentrantMonitor.NotifyAll();
+}
+
+void
+VideoTrackEncoder::CreateMutedFrame(nsTArray<uint8_t>* aOutputBuffer)
+{
+  NS_ENSURE_TRUE_VOID(aOutputBuffer);
+
+  // Supports YUV420 image format only.
+  int yPlaneLen = mFrameWidth * mFrameHeight;
+  int cbcrPlaneLen = yPlaneLen / 2;
+  int frameLen = yPlaneLen + cbcrPlaneLen;
+
+  aOutputBuffer->SetLength(frameLen);
+  // Fill Y plane.
+  memset(aOutputBuffer->Elements(), 0x10, yPlaneLen);
+  // Fill Cb/Cr planes.
+  memset(aOutputBuffer->Elements() + yPlaneLen, 0x80, cbcrPlaneLen);
 }
 
 }
