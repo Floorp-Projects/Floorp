@@ -306,8 +306,8 @@ public:
       _vsnprintf(buff, SAMPLER_MAX_STRING, aFormat, args);
       _snprintf(mDest, SAMPLER_MAX_STRING, "%s %s", aDefault, buff);
 #else
-      vsnprintf(buff, SAMPLER_MAX_STRING, aFormat, args);
-      snprintf(mDest, SAMPLER_MAX_STRING, "%s %s", aDefault, buff);
+      ::vsnprintf(buff, SAMPLER_MAX_STRING, aFormat, args);
+      ::snprintf(mDest, SAMPLER_MAX_STRING, "%s %s", aDefault, buff);
 #endif
       mHandle = mozilla_sampler_call_enter(mDest, this, true, line);
       va_end(args);

@@ -16,7 +16,7 @@ MSVC_ENABLE_PGO = True
 FINAL_LIBRARY = 'gkmedias'
 
 DEFINES['OPUS_BUILD'] = True
-DEFINES['OPUS_VERSION'] = '"v1.1-beta-23-gf2446c2-mozilla"'
+DEFINES['OPUS_VERSION'] = '"v1.1-rc2-1-g35a44c6-mozilla"'
 DEFINES['USE_ALLOCA'] = True
 
 if CONFIG['OS_ARCH'] in ('Linux', 'Darwin', 'DragonFly', 'FreeBSD',
