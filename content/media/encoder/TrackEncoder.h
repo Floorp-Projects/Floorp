@@ -12,6 +12,7 @@
 #include "EncodedFrameContainer.h"
 #include "StreamBuffer.h"
 #include "TrackMetadataBase.h"
+#include "VideoSegment.h"
 
 namespace mozilla {
 
@@ -208,7 +209,85 @@ protected:
 
 class VideoTrackEncoder : public TrackEncoder
 {
+public:
+  VideoTrackEncoder()
+    : TrackEncoder()
+    , mFrameWidth(0)
+    , mFrameHeight(0)
+    , mTrackRate(0)
+    , mTotalFrameDuration(0)
+  {}
 
+  /**
+   * Notified by the same callbcak of MediaEncoder when it has received a track
+   * change from MediaStreamGraph. Called on the MediaStreamGraph thread.
+   */
+  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
+                                TrackRate aTrackRate,
+                                TrackTicks aTrackOffset,
+                                uint32_t aTrackEvents,
+                                const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
+
+protected:
+  /**
+   * Initialized the video encoder. In order to collect the value of width and
+   * height of source frames, this initialization is delayed until we have
+   * received the first valid video frame from MediaStreamGraph;
+   * mReentrantMonitor will be notified after it has successfully initialized,
+   * and this method is called on the MediaStramGraph thread.
+   */
+  virtual nsresult Init(int aWidth, int aHeight, TrackRate aTrackRate) = 0;
+
+  /**
+   * Appends source video frames to mRawSegment. We only append the source chunk
+   * if it is unique to mLastChunk. Called on the MediaStreamGraph thread.
+   */
+  nsresult AppendVideoSegment(const VideoSegment& aSegment);
+
+  /**
+   * Tells the video track encoder that we've reached the end of source stream,
+   * and wakes up mReentrantMonitor if encoder is waiting for more track data.
+   * Called on the MediaStreamGraph thread.
+   */
+  virtual void NotifyEndOfStream() MOZ_OVERRIDE;
+
+  /**
+   * Create a buffer of black image in format of YUV:420. Called on the worker
+   * thread.
+   */
+  void CreateMutedFrame(nsTArray<uint8_t>* aOutputBuffer);
+
+  /**
+   * The width of source video frame, ceiled if the source width is odd.
+   */
+  int mFrameWidth;
+
+  /**
+   * The height of source video frame, ceiled if the source height is odd.
+   */
+  int mFrameHeight;
+
+  /**
+   * The track rate of source video.
+   */
+  TrackRate mTrackRate;
+
+  /**
+   * The total duration of frames in encoded video in TrackTicks, kept track of
+   * in subclasses.
+   */
+  TrackTicks mTotalFrameDuration;
+
+  /**
+   * The last unique frame we've sent to track encoder, kept track of in
+   * subclasses.
+   */
+  VideoFrame mLastFrame;
+
+  /**
+   * A segment queue of audio track data, protected by mReentrantMonitor.
+   */
+  VideoSegment mRawSegment;
 };
 
 }
