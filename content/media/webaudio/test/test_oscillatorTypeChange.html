@@ -43,8 +43,8 @@ function startTest() {
     oscillator2.connect(gain);
 
     processor.onaudioprocess = function(e) {
-      compareBuffers(e.inputBuffer.getChannelData(0),
-                     new Float32Array(bufferSize));
+      compareChannels(e.inputBuffer.getChannelData(0),
+                      new Float32Array(bufferSize));
       e.target.onaudioprocess = null;
       SimpleTest.finish();
     }
