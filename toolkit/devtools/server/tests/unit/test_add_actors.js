@@ -27,6 +27,7 @@ function run_test()
   add_test(test_pre_init_tab_actor);
   add_test(test_post_init_global_actor);
   add_test(test_post_init_tab_actor);
+  add_test(test_stable_global_actor_instances);
   add_test(close_client);
   run_next_test();
 }
@@ -80,6 +81,25 @@ function test_post_init_tab_actor()
       run_next_test();
     }
   );
+}
+
+// Get the object object, from the server side, for a given actor ID
+function getActorInstance(connID, actorID) {
+  return DebuggerServer._connections[connID].getActor(actorID);
+}
+
+function test_stable_global_actor_instances()
+{
+  // Consider that there is only one connection,
+  // and the first one is ours
+  let connID = Object.keys(DebuggerServer._connections)[0];
+  let postInitGlobalActor = getActorInstance(connID, gActors.postInitGlobalActor);
+  let preInitGlobalActor = getActorInstance(connID, gActors.preInitGlobalActor);
+  gClient.listTabs(function onListTabs(aResponse) {
+    do_check_eq(postInitGlobalActor, getActorInstance(connID, aResponse.postInitGlobalActor));
+    do_check_eq(preInitGlobalActor, getActorInstance(connID, aResponse.preInitGlobalActor));
+    run_next_test();
+  });
 }
 
 function close_client() {

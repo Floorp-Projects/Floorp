@@ -405,12 +405,12 @@ let gDevToolsBrowser = {
     let appMgrEnabled = Services.prefs.getBoolPref("devtools.appmanager.enabled");
     toggleCmd("Tools:DevAppMgr", appMgrEnabled);
 
-    // Enable Chrome Debugger?
+    // Enable Browser Toolbox?
     let chromeEnabled = Services.prefs.getBoolPref("devtools.chrome.enabled");
     let devtoolsRemoteEnabled = Services.prefs.getBoolPref("devtools.debugger.remote-enabled");
     let remoteEnabled = chromeEnabled && devtoolsRemoteEnabled &&
                         Services.prefs.getBoolPref("devtools.debugger.chrome-enabled");
-    toggleCmd("Tools:ChromeDebugger", remoteEnabled);
+    toggleCmd("Tools:BrowserToolbox", remoteEnabled);
 
     // Enable Error Console?
     let consoleEnabled = Services.prefs.getBoolPref("devtools.errorconsole.enabled");

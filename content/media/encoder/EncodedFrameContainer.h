@@ -6,6 +6,7 @@
 #ifndef EncodedFrameContainer_H_
 #define EncodedFrameContainer_H_
 
+#include "nsAutoPtr.h"
 #include "nsTArray.h"
 
 namespace mozilla {

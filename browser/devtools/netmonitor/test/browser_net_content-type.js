@@ -75,31 +75,27 @@ function test() {
       EventUtils.sendMouseEvent({ type: "mousedown" },
         document.querySelectorAll("#details-pane tab")[3]);
 
-      testResponseTab("xml")
-        .then(() => {
-          RequestsMenu.selectedIndex = 1;
-          return testResponseTab("css");
-        })
-        .then(() => {
-          RequestsMenu.selectedIndex = 2;
-          return testResponseTab("js");
-        })
-        .then(() => {
-          RequestsMenu.selectedIndex = 3;
-          return testResponseTab("json");
-        })
-        .then(() => {
-          RequestsMenu.selectedIndex = 4;
-          return testResponseTab("html");
-        })
-        .then(() => {
-          RequestsMenu.selectedIndex = 5;
-          return testResponseTab("png");
-        })
-        .then(() => {
-          return teardown(aMonitor);
-        })
-        .then(finish);
+      Task.spawn(function*() {
+        yield waitForResponseBodyDisplayed();
+        yield testResponseTab("xml");
+        RequestsMenu.selectedIndex = 1;
+        yield waitForTabUpdated();
+        yield testResponseTab("css");
+        RequestsMenu.selectedIndex = 2;
+        yield waitForTabUpdated();
+        yield testResponseTab("js");
+        RequestsMenu.selectedIndex = 3;
+        yield waitForTabUpdated();
+        yield testResponseTab("json");
+        RequestsMenu.selectedIndex = 4;
+        yield waitForTabUpdated();
+        yield testResponseTab("html");
+        RequestsMenu.selectedIndex = 5;
+        yield waitForTabUpdated();
+        yield testResponseTab("png");
+        yield teardown(aMonitor);
+        finish();
+      });
 
       function testResponseTab(aType) {
         let tab = document.querySelectorAll("#details-pane tab")[3];
@@ -220,6 +216,14 @@ function test() {
             return deferred.promise;
           }
         }
+      }
+
+      function waitForTabUpdated () {
+        return waitFor(aMonitor.panelWin, aMonitor.panelWin.EVENTS.TAB_UPDATED);
+      }
+
+      function waitForResponseBodyDisplayed () {
+        return waitFor(aMonitor.panelWin, aMonitor.panelWin.EVENTS.RESPONSE_BODY_DISPLAYED);
       }
     });
 

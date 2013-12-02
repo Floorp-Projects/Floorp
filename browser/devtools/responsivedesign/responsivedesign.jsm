@@ -176,7 +176,7 @@ function ResponsiveUI(aWindow, aTab)
   // Events
   this.tab.addEventListener("TabClose", this);
   this.tabContainer.addEventListener("TabSelect", this);
-  this.mainWindow.document.addEventListener("keypress", this.bound_onKeypress, false);
+  this.mainWindow.document.addEventListener("keypress", this.bound_onKeypress, true);
 
   this.buildUI();
   this.checkMenus();
@@ -276,7 +276,7 @@ ResponsiveUI.prototype = {
       this.stopResizing();
 
     // Remove listeners.
-    this.mainWindow.document.removeEventListener("keypress", this.bound_onKeypress, false);
+    this.mainWindow.document.removeEventListener("keypress", this.bound_onKeypress, true);
     this.menulist.removeEventListener("select", this.bound_presetSelected, true);
     this.tab.removeEventListener("TabClose", this);
     this.tabContainer.removeEventListener("TabSelect", this);
