@@ -258,11 +258,7 @@ RootActor.prototype = {
       }
 
       /* DebuggerServer.addGlobalActor support: create actors. */
-      if (!this._globalActorPool) {
-        this._globalActorPool = new ActorPool(this.conn);
-        this._createExtraActors(this._parameters.globalActorFactories, this._globalActorPool);
-        this.conn.addActorPool(this._globalActorPool);
-      }
+      this._createExtraActors(this._parameters.globalActorFactories, newActorPool);
 
       /*
        * Drop the old actorID -> actor map. Actors that still mattered were
