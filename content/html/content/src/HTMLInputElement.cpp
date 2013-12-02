@@ -21,6 +21,7 @@
 #include "nsFocusManager.h"
 #include "nsNumberControlFrame.h"
 #include "nsPIDOMWindow.h"
+#include "nsRepeatService.h"
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -1092,6 +1093,7 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   , mHasRange(false)
   , mIsDraggingRange(false)
   , mProgressTimerIsActive(false)
+  , mNumberControlSpinnerIsSpinning(false)
 {
   // We are in a type=text so we now we currenty need a nsTextEditorState.
   mInputData.mState = new nsTextEditorState(this);
@@ -1113,6 +1115,9 @@ HTMLInputElement::~HTMLInputElement()
 {
   if (mFileList) {
     mFileList->Disconnect();
+  }
+  if (mNumberControlSpinnerIsSpinning) {
+    StopNumberControlSpinnerSpin();
   }
   DestroyImageLoadingContent();
   FreeData();
@@ -2582,6 +2587,26 @@ HTMLInputElement::Notify(nsITimer* aTimer)
   return NS_ERROR_INVALID_POINTER;
 }
 
+/* static */ void
+HTMLInputElement::HandleNumberControlSpin(void* aData)
+{
+  HTMLInputElement* input = static_cast<HTMLInputElement*>(aData);
+
+  NS_ASSERTION(input->mNumberControlSpinnerIsSpinning,
+               "Should have called nsRepeatService::Stop()");
+
+  nsNumberControlFrame* numberControlFrame =
+    do_QueryFrame(input->GetPrimaryFrame());
+  if (input->mType != NS_FORM_INPUT_NUMBER || !numberControlFrame) {
+    // Type has changed (and possibly our frame type hasn't been updated yet)
+    // or else we've lost our frame. Either way, stop the timer and don't do
+    // anything else.
+    input->StopNumberControlSpinnerSpin();
+  } else {
+    input->ApplyStep(input->mNumberControlSpinnerSpinsUp ? 1 : -1);
+  }
+}
+
 void
 HTMLInputElement::MaybeDispatchProgressEvent(bool aFinalProgress)
 {
@@ -3274,6 +3299,57 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
+  if (mType == NS_FORM_INPUT_NUMBER &&
+      aVisitor.mEvent->mFlags.mIsTrusted) {
+    if (mNumberControlSpinnerIsSpinning) {
+      // If the timer is running the user has depressed the mouse on one of the
+      // spin buttons. If the mouse exits the button we either want to reverse
+      // the direction of spin if it has moved over the other button, or else
+      // we want to end the spin. We do this here (rather than in
+      // PostHandleEvent) because we don't want to let content preventDefault()
+      // the end of the spin.
+      if (aVisitor.mEvent->message == NS_MOUSE_MOVE) {
+        // Be aggressive about stopping the spin:
+        bool stopSpin = true;
+        nsNumberControlFrame* numberControlFrame =
+          do_QueryFrame(GetPrimaryFrame());
+        if (numberControlFrame) {
+          switch (numberControlFrame->GetSpinButtonForPointerEvent(
+                    aVisitor.mEvent->AsMouseEvent())) {
+          case nsNumberControlFrame::eSpinButtonUp:
+            mNumberControlSpinnerSpinsUp = true;
+            stopSpin = false;
+            break;
+          case nsNumberControlFrame::eSpinButtonDown:
+            mNumberControlSpinnerSpinsUp = false;
+            stopSpin = false;
+            break;
+          }
+        }
+        if (stopSpin) {
+          StopNumberControlSpinnerSpin();
+        }
+      } else if (aVisitor.mEvent->message == NS_MOUSE_BUTTON_UP) {
+        StopNumberControlSpinnerSpin();
+      }
+    }
+    if (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
+        aVisitor.mEvent->message == NS_BLUR_CONTENT) {
+      nsIFrame* frame = GetPrimaryFrame();
+      if (frame) {
+        if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
+          // Tell our frame it's getting focus so that it can make sure focus
+          // is moved to our anonymous text control.
+          nsNumberControlFrame* numberControlFrame =
+            do_QueryFrame(GetPrimaryFrame());
+          if (numberControlFrame) {
+            numberControlFrame->HandleFocusEvent(aVisitor.mEvent);
+          }
+        }
+      }
+    }
+  }
+
   nsresult rv = nsGenericHTMLFormElementWithState::PreHandleEvent(aVisitor);
 
   // We do this after calling the base class' PreHandleEvent so that
@@ -3397,6 +3473,34 @@ HTMLInputElement::SetValueOfRangeForUserEvent(Decimal aValue)
                                        false);
 }
 
+void
+HTMLInputElement::StartNumberControlSpinnerSpin()
+{
+  MOZ_ASSERT(!mNumberControlSpinnerIsSpinning);
+
+  mNumberControlSpinnerIsSpinning = true;
+
+  nsRepeatService::GetInstance()->Start(HandleNumberControlSpin, this);
+
+  // Capture the mouse so that we can tell if the pointer moves from one
+  // spin button to the other, or to some other element:
+  nsIPresShell::SetCapturingContent(this, CAPTURE_IGNOREALLOWED);
+}
+
+void
+HTMLInputElement::StopNumberControlSpinnerSpin()
+{
+  if (mNumberControlSpinnerIsSpinning) {
+    if (nsIPresShell::GetCapturingContent() == this) {
+      nsIPresShell::SetCapturingContent(nullptr, 0); // cancel capture
+    }
+
+    nsRepeatService::GetInstance()->Stop(HandleNumberControlSpin, this);
+
+    mNumberControlSpinnerIsSpinning = false;
+  }
+}
+
 static bool
 SelectTextFieldOnFocus()
 {
@@ -3484,9 +3588,12 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       GetValueInternal(mFocusedValue);
     }
 
-    if (mIsDraggingRange &&
-        aVisitor.mEvent->message == NS_BLUR_CONTENT) {
-      FinishRangeThumbDrag();
+    if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
+      if (mIsDraggingRange) {
+        FinishRangeThumbDrag();
+      } else if (mNumberControlSpinnerIsSpinning) {
+        StopNumberControlSpinnerSpin();
+      }
     }
 
     UpdateValidityUIBits(aVisitor.mEvent->message == NS_FOCUS_CONTENT);
@@ -3601,7 +3708,32 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   }
 
   if (NS_SUCCEEDED(rv)) {
-    if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
+    WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
+    if (mType ==  NS_FORM_INPUT_NUMBER &&
+        keyEvent && keyEvent->message == NS_KEY_PRESS &&
+        aVisitor.mEvent->mFlags.mIsTrusted &&
+        (keyEvent->keyCode == NS_VK_UP || keyEvent->keyCode == NS_VK_DOWN) &&
+        !(keyEvent->IsShift() || keyEvent->IsControl() ||
+          keyEvent->IsAlt() || keyEvent->IsMeta() ||
+          keyEvent->IsAltGraph() || keyEvent->IsFn() ||
+          keyEvent->IsOS())) {
+      // We handle the up/down arrow keys specially for <input type=number>.
+      // On some platforms the editor for the nested text control will
+      // process these keys to send the cursor to the start/end of the text
+      // control and as a result aVisitor.mEventStatus will already have been
+      // set to nsEventStatus_eConsumeNoDefault. However, we know that
+      // whenever the up/down arrow keys cause the value of the number
+      // control to change the string in the text control will change, and
+      // the cursor will be moved to the end of the text control, overwriting
+      // the editor's handling of up/down keypress events. For that reason we
+      // just ignore aVisitor.mEventStatus here and go ahead and handle the
+      // event to increase/decrease the value of the number control.
+      // XXX we still need to allow script to call preventDefault() on the
+      // event, but right now we can't tell the difference between the editor
+      // on script doing that (bug 930374).
+      ApplyStep(keyEvent->keyCode == NS_VK_UP ? 1 : -1);
+      aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+    } else if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
       switch (aVisitor.mEvent->message) {
 
         case NS_FOCUS_CONTENT:
@@ -3812,7 +3944,43 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                 rv = NS_ERROR_FAILURE;
               }
             }
-
+          }
+          if (mType == NS_FORM_INPUT_NUMBER &&
+              aVisitor.mEvent->mFlags.mIsTrusted) {
+            if (mouseEvent->button == WidgetMouseEvent::eLeftButton &&
+                !(mouseEvent->IsShift() || mouseEvent->IsControl() ||
+                  mouseEvent->IsAlt() || mouseEvent->IsMeta() ||
+                  mouseEvent->IsAltGraph() || mouseEvent->IsFn() ||
+                  mouseEvent->IsOS())) {
+              nsNumberControlFrame* numberControlFrame =
+                do_QueryFrame(GetPrimaryFrame());
+              if (numberControlFrame) {
+                if (aVisitor.mEvent->message == NS_MOUSE_BUTTON_DOWN) {
+                  switch (numberControlFrame->GetSpinButtonForPointerEvent(
+                            aVisitor.mEvent->AsMouseEvent())) {
+                  case nsNumberControlFrame::eSpinButtonUp:
+                    ApplyStep(1);
+                    mNumberControlSpinnerSpinsUp = true;
+                    StartNumberControlSpinnerSpin();
+                    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+                    break;
+                  case nsNumberControlFrame::eSpinButtonDown:
+                    ApplyStep(-1);
+                    mNumberControlSpinnerSpinsUp = false;
+                    StartNumberControlSpinnerSpin();
+                    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+                    break;
+                  }
+                }
+              }
+            }
+            if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
+              // We didn't handle this to step up/down. Whatever this was, be
+              // aggressive about stopping the spin. (And don't set
+              // nsEventStatus_eConsumeNoDefault after doing so, since that
+              // might prevent, say, the context menu from opening.)
+              StopNumberControlSpinnerSpin();
+            }
           }
           break;
         }
@@ -4171,9 +4339,9 @@ HTMLInputElement::SanitizeValue(nsAString& aValue)
       break;
     case NS_FORM_INPUT_NUMBER:
       {
-        nsresult ec;
-        double val = PromiseFlatString(aValue).ToDouble(&ec);
-        if (NS_FAILED(ec) || !IsFinite(val)) {
+        Decimal value;
+        bool ok = ConvertStringToNumber(aValue, value);
+        if (!ok) {
           aValue.Truncate();
         }
       }
@@ -5605,8 +5773,7 @@ HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable, int32_t* 
   }
 
   if (IsSingleLineTextControl(false) ||
-      mType == NS_FORM_INPUT_RANGE ||
-      mType == NS_FORM_INPUT_NUMBER) {
+      mType == NS_FORM_INPUT_RANGE) {
     *aIsFocusable = true;
     return false;
   }
@@ -5617,11 +5784,17 @@ HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable, int32_t* 
   const bool defaultFocusable = true;
 #endif
 
-  if (mType == NS_FORM_INPUT_FILE) {
+  if (mType == NS_FORM_INPUT_FILE ||
+      mType == NS_FORM_INPUT_NUMBER) {
     if (aTabIndex) {
+      // We only want our native anonymous child to be tabable to, not ourself.
       *aTabIndex = -1;
     }
-    *aIsFocusable = defaultFocusable;
+    if (mType == NS_FORM_INPUT_NUMBER) {
+      *aIsFocusable = true;
+    } else {
+      *aIsFocusable = defaultFocusable;
+    }
     return true;
   }
 
