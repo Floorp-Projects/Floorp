@@ -35,7 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 /*
 * Prefilter for finding Quantizer input signal
 */
-static inline void silk_prefilt_FLP(
+static OPUS_INLINE void silk_prefilt_FLP(
     silk_prefilter_state_FLP    *P,                 /* I/O state */
     silk_float                  st_res[],           /* I */
     silk_float                  xw[],               /* O */
@@ -153,7 +153,7 @@ void silk_prefilter_FLP(
 /*
 * Prefilter for finding Quantizer input signal
 */
-static inline void silk_prefilt_FLP(
+static OPUS_INLINE void silk_prefilt_FLP(
     silk_prefilter_state_FLP    *P,                 /* I/O state */
     silk_float                  st_res[],           /* I */
     silk_float                  xw[],               /* O */

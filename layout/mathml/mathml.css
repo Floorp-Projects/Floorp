@@ -34,37 +34,21 @@ math[display="inline"] {
 }
 
 /**************************************************************************/
-/* Style switching during frame construction depending on the context of <mi>:
-   These rules are not used when mathvariant or fontstyle is specified
-   explicitly. 
+/* Token elements                                                         */
 /**************************************************************************/
 
-/* If the textual content of an <mi> consists of a single character
-   with a corresponding mathematical italic alphanumeric character,
-   then try to emulate that character */
-[_moz-math-font-style="italic"] {
-  font-style: italic;
-  font-weight: normal;
+ms {
+  display: inline;
 }
-/* If the textual content consists of multiple characters, then the default is
-   mathvariant=normal.  It seems that mathvariant=normal should be interpreted
-   to mean non-slanted:
-
-   http://www.w3.org/TR/2003/REC-MathML2-20031021/chapter3.html#presm.commatt
-
-   "In particular, inheritance of the mathvariant attribute does not follow
-    the CSS model. The default value for this attribute is "normal"
-    (non-slanted) for all tokens except mi. ... (The deprecated fontslant
-    attribute also behaves this way.)"   
- */
-[_moz-math-font-style="normal"] {
-  font-style: normal;
+ms:before, ms:after {
+  content: "\0022"
 }
-/* A style-invariant character preserves its own style */
-[_moz-math-font-style="invariant"] {
-  font-style: normal;
-  font-weight: normal;
+ms[lquote]:before {
+  content: attr(lquote)
 }
+ms[rquote]:after {
+  content: attr(rquote)
+ }
 
 /**************************************************************************/
 /* Links                                                                  */
@@ -77,120 +61,28 @@ math[display="inline"] {
 /* attributes common to all tags                                          */
 /**************************************************************************/
 
-/* deprecated attributes from MathML 1.0 */
+/* These attributes are mapped to style in nsMathMLElement.cpp:
 
-/* fontstyle */
-[fontstyle="normal"] {
-  font-style: normal;
-}
-[fontstyle="italic"] {
-  font-style: italic;
-}
-/* fontweight */
-[fontweight="normal"] {
-  font-weight: normal;
-}
-[fontweight="bold"] {
-  font-weight: bold;
-}
+   - background -> background                             (deprecated)
+   - color -> color                                       (deprecated)
+   - fontfamily -> font-family                            (deprecated)
+   - fontsize -> font-size                                (deprecated)
+   - fontstyle -> font-style                              (deprecated)
+   - fontweight -> font-weight                            (deprecated)
+   - mathvariant -> -moz-math-variant
+   - scriptsizemultiplier -> -moz-script-size-multiplier
+   - scriptminsize -> -moz-script-min-size
+   - scriptlevel -> -moz-script-level
+   - mathsize -> font-size
+   - mathcolor -> color
+   - mathbackground -> background
 
-/* attributes from MathML 2.0 */
-
-/* These ones are handled in the back-end:
-   mathcolor (replaces 'color'):
-     #rgb | #rrggbb | html-color-name
-   mathbackground (replaces 'background'):
-     #rgb | #rrggbb | html-color-name
 */
-/* mathvariant (replaces 'fontstyle' & 'fontweight' & 'fontslant'):
-     normal | bold | italic | bold-italic | double-struck | bold-fraktur | script |
-     bold-script | fraktur | sans-serif | bold-sans-serif | sans-serif-italic |
-     sans-serif-bold-italic | monospace
 
-   Note1: Back-end code for these is not yet written (bug 114365):
-          double-struck, script, fraktur, bold-fraktur, bold-script
-
-   Note2: Don't use the 'font' shorthand because it resets the font-size and this
-          breaks the propagation of the scriptlevel size.
-
-   XXX bugs 46622 & 114365: need -moz-math-serif, etc, to only lookup math fonts
-
-   The meaning of mathvariant=normal is unclear as there is no interpretation
-   that "corresponds to SMP Math Alphanumeric Symbol characters"
-   (http://www.w3.org/TR/2003/REC-MathML2-20031021/chapter3.html#presm.commatt),
-   but let's assume an explicit mathvariant=normal is an attempt to reset all
-   style.
-*/
-[mathvariant] { /* shared and same as [mathvariant="normal"] */
-  /* reset all font properties except those that affect the size */
-  font-family: MathJax_Main, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
-  font-style: normal;
-  font-variant: normal;
-  font-weight: normal;
-}
-[mathvariant="bold-fraktur"] {
-  font-weight: bold;
-  font-family: MathJax_Fraktur, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
-}
-[mathvariant="bold-script"] {
-  font-weight: bold;
-  font-family: MathJax_Script, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
-}
-[mathvariant="bold"] {
-  font-weight: bold;
-}
-[mathvariant="italic"] { 
-  font-style: italic;
-}
-[mathvariant="bold-italic"] {
-  font-weight: bold;
-  font-style: italic;
-}
-[mathvariant="sans-serif"] {
-  font-family: MathJax_SansSerif, sans-serif;
-}
-[mathvariant="bold-sans-serif"] {
-  font-weight: bold;
-  font-family: MathJax_SansSerif, sans-serif;
-}
-[mathvariant="sans-serif-italic"] {
-  font-family: MathJax_SansSerif, sans-serif;
-  font-style: italic;
-}
-[mathvariant="sans-serif-bold-italic"] {
-  font-family: MathJax_SansSerif, sans-serif;
-  font-weight: bold;
-  font-style: italic;
-}
-[mathvariant="monospace"] {
-  font-family: MathJax_Typewriter, monospace;
-}
-[mathvariant="double-struck"] {
-  font-family: MathJax_AMS, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
-}
-[mathvariant="script"] {
-  font-family: MathJax_Script, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
-}
-[mathvariant="fraktur"] {
-  font-family: MathJax_Fraktur, STIXGeneral, DejaVu Serif, DejaVu Sans, Cambria, Cambria Math, Times, Lucida Sans Unicode, OpenSymbol, Standard Symbols L, serif;
-}
 
 /**************************************************************************/
-/* tags with generated content                                            */
+/* merror                                                                 */
 /**************************************************************************/
-
-ms {
-  display: inline;
-}
-ms:before, ms:after {
-  content: "\0022";
-}
-ms[lquote]:before {
-  content: attr(lquote);
-}
-ms[rquote]:after {
-  content: attr(rquote);
-}
 
 merror {
   display: block;

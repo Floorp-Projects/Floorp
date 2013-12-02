@@ -29,7 +29,7 @@
 
 /** 16x32 multiplication, followed by a 16-bit shift right. Results fits in 32 bits */
 #undef MULT16_32_Q16
-static inline opus_val32 MULT16_32_Q16_armv4(opus_val16 a, opus_val32 b)
+static OPUS_INLINE opus_val32 MULT16_32_Q16_armv4(opus_val16 a, opus_val32 b)
 {
   unsigned rd_lo;
   int rd_hi;
@@ -46,7 +46,7 @@ static inline opus_val32 MULT16_32_Q16_armv4(opus_val16 a, opus_val32 b)
 
 /** 16x32 multiplication, followed by a 15-bit shift right. Results fits in 32 bits */
 #undef MULT16_32_Q15
-static inline opus_val32 MULT16_32_Q15_armv4(opus_val16 a, opus_val32 b)
+static OPUS_INLINE opus_val32 MULT16_32_Q15_armv4(opus_val16 a, opus_val32 b)
 {
   unsigned rd_lo;
   int rd_hi;
