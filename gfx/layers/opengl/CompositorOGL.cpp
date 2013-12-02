@@ -11,6 +11,7 @@
 #include "GLContextProvider.h"          // for GLContextProvider
 #include "GLContext.h"                  // for GLContext
 #include "Layers.h"                     // for WriteSnapshotToDumpFile
+#include "LayerScope.h"                 // for LayerScope
 #include "gfx2DGlue.h"                  // for ThebesFilter
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxASurface.h"                // for gfxASurface, etc
@@ -50,7 +51,7 @@
 #endif
 
 #define BUFFER_OFFSET(i) ((char *)nullptr + (i))
- 
+
 namespace mozilla {
 
 using namespace gfx;
@@ -767,6 +768,8 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   PROFILER_LABEL("CompositorOGL", "BeginFrame");
   MOZ_ASSERT(!mFrameInProgress, "frame still in progress (should have called EndFrame or AbortFrame");
 
+  LayerScope::BeginFrame(mGLContext, PR_Now());
+
   mVBOs.Reset();
 
   mFrameInProgress = true;
@@ -1033,6 +1036,9 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
   clipRect.ToIntRect(&intClipRect);
   mGLContext->PushScissorRect(nsIntRect(intClipRect.x, intClipRect.y,
                                         intClipRect.width, intClipRect.height));
+
+  LayerScope::SendEffectChain(mGLContext, aEffectChain,
+                              aRect.width, aRect.height);
 
   MaskType maskType;
   EffectMask* effectMask;
@@ -1327,6 +1333,8 @@ CompositorOGL::EndFrame()
 #endif
 
   mFrameInProgress = false;
+
+  LayerScope::EndFrame(mGLContext);
 
   if (mTarget) {
     CopyToTarget(mTarget, mCurrentRenderTarget->GetTransform());

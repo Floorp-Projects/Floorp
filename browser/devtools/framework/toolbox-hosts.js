@@ -26,7 +26,7 @@ exports.Hosts = {
   "side": SidebarHost,
   "window": WindowHost,
   "custom": CustomHost
-}
+};
 
 /**
  * Host object for the dock on the bottom of the browser
@@ -272,7 +272,7 @@ WindowHost.prototype = {
 
     return promise.resolve(null);
   }
-}
+};
 
 /**
  * Host object for the toolbox in its own tab
@@ -286,11 +286,14 @@ function CustomHost(hostTab, options) {
 CustomHost.prototype = {
   type: "custom",
 
-  _sendMessageToTopWindow: function CH__sendMessageToTopWindow(msg) {
+  _sendMessageToTopWindow: function CH__sendMessageToTopWindow(msg, data) {
     // It's up to the custom frame owner (parent window) to honor
     // "close" or "raise" instructions.
     let topWindow = this.frame.ownerDocument.defaultView;
-    let json = {name:"toolbox-" + msg, uid: this.uid}
+    let json = {name:"toolbox-" + msg, uid: this.uid};
+    if (data) {
+      json.data = data;
+    }
     topWindow.postMessage(JSON.stringify(json), "*");
   },
 
@@ -312,7 +315,7 @@ CustomHost.prototype = {
    * Set the toolbox title.
    */
   setTitle: function CH_setTitle(title) {
-    // Not supported
+    this._sendMessageToTopWindow("title", { value: title });
   },
 
   /**

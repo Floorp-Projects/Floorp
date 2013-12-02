@@ -924,15 +924,21 @@ void AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
   }
 
   if (fabs(overscroll.x) > EPSILON || fabs(overscroll.y) > EPSILON) {
-    // Make a local copy of the tree manager pointer and check if it's not
-    // null before calling HandleOverscroll(). This is necessary because
-    // Destroy(), which nulls out mTreeManager, could be called concurrently.
-    APZCTreeManager* treeManagerLocal = mTreeManager;
-    if (treeManagerLocal) {
-      // "+ overscroll" rather than "- overscroll" for the same reason as above.
-      treeManagerLocal->HandleOverscroll(this, aEndPoint + overscroll, aEndPoint,
-                                         aOverscrollHandoffChainIndex);
-    }
+    // "+ overscroll" rather than "- overscroll" because "overscroll" is what's
+    // left of "displacement", and "displacement" is "start - end".
+    CallDispatchScroll(aEndPoint + overscroll, aEndPoint, aOverscrollHandoffChainIndex + 1);
+  }
+}
+
+void AsyncPanZoomController::CallDispatchScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
+                                                uint32_t aOverscrollHandoffChainIndex) {
+  // Make a local copy of the tree manager pointer and check if it's not
+  // null before calling HandleOverscroll(). This is necessary because
+  // Destroy(), which nulls out mTreeManager, could be called concurrently.
+  APZCTreeManager* treeManagerLocal = mTreeManager;
+  if (treeManagerLocal) {
+    treeManagerLocal->DispatchScroll(this, aStartPoint, aEndPoint,
+                                     aOverscrollHandoffChainIndex);
   }
 }
 
@@ -974,7 +980,7 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
 
   UpdateWithTouchAtDevicePoint(aEvent);
 
-  AttemptScroll(prevTouchPoint, touchPoint);
+  CallDispatchScroll(prevTouchPoint, touchPoint, 0);
 }
 
 ScreenIntPoint& AsyncPanZoomController::GetFirstTouchScreenPoint(const MultiTouchInput& aEvent) {

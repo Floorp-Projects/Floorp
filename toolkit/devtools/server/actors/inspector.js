@@ -81,10 +81,12 @@ loader.lazyGetter(this, "DOMParser", function() {
 });
 
 exports.register = function(handle) {
+  handle.addGlobalActor(InspectorActor, "inspectorActor");
   handle.addTabActor(InspectorActor, "inspectorActor");
 };
 
 exports.unregister = function(handle) {
+  handle.removeGlobalActor(InspectorActor);
   handle.removeTabActor(InspectorActor);
 };
 

@@ -55,17 +55,30 @@ const EVENTS = {
   REQUEST_POST_PARAMS_DISPLAYED: "NetMonitor:RequestPostParamsAvailable",
 
   // When the response body is displayed in the UI.
-  RESPONSE_BODY_DISPLAYED: "NetMonitor:ResponseBodyAvailable"
-}
+  RESPONSE_BODY_DISPLAYED: "NetMonitor:ResponseBodyAvailable",
+
+  // When `onTabSelect` is fired and subsequently rendered
+  TAB_UPDATED: "NetMonitor:TabUpdated",
+
+  // Fired when Sidebar is finished being populated
+  SIDEBAR_POPULATED: "NetMonitor:SidebarPopulated",
+
+  // Fired when NetworkDetailsView is finished being populated
+  NETWORKDETAILSVIEW_POPULATED: "NetMonitor:NetworkDetailsViewPopulated",
+
+  // Fired when NetworkDetailsView is finished being populated
+  CUSTOMREQUESTVIEW_POPULATED: "NetMonitor:CustomRequestViewPopulated"
+};
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
 Cu.import("resource:///modules/devtools/VariablesView.jsm");
 Cu.import("resource:///modules/devtools/VariablesViewController.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 const Editor = require("devtools/sourceeditor/editor");

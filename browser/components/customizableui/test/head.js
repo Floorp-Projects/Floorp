@@ -54,6 +54,21 @@ function resetCustomization() {
   return CustomizableUI.reset();
 }
 
+function isInWin8() {
+  let sysInfo = Services.sysinfo;
+  let osName = sysInfo.getProperty("name");
+  let version = sysInfo.getProperty("version");
+
+  // Windows 8 is version >= 6.2
+  return osName == "Windows_NT" && version >= 6.2;
+}
+
+function addSwitchToMetroButtonInWindows8(areaPanelPlacements) {
+  if (isInWin8()) {
+    areaPanelPlacements.push("switch-to-metro-button");
+  }
+}
+
 function assertAreaPlacements(areaId, expectedPlacements) {
   let actualPlacements = getAreaWidgetIds(areaId);
   is(actualPlacements.length, expectedPlacements.length,

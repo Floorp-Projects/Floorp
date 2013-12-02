@@ -518,9 +518,9 @@
                   <menuitem id="menu_devAppMgr"
                             observes="devtoolsMenuBroadcaster_DevAppMgr"
                             accesskey="&devAppMgrMenu.accesskey;"/>
-                  <menuitem id="menu_chromeDebugger"
-                            observes="devtoolsMenuBroadcaster_ChromeDebugger"
-                            accesskey="&chromeDebuggerMenu.accesskey;"/>
+                  <menuitem id="menu_browserToolbox"
+                            observes="devtoolsMenuBroadcaster_BrowserToolbox"
+                            accesskey="&browserToolboxMenu.accesskey;"/>
                   <menuitem id="menu_browserConsole"
                             observes="devtoolsMenuBroadcaster_BrowserConsole"
                             accesskey="&browserConsoleCmd.accesskey;"/>
