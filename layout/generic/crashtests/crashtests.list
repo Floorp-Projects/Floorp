@@ -7,7 +7,7 @@ load 255982-2.html
 load 255982-3.html
 load 255982-4.html
 load 264937-1.html
-asserts(9) load 265867-1.html # Bug 575011
+load 265867-1.html
 load 265867-2.html
 load 286491.html
 load 289864-1.html
@@ -24,7 +24,7 @@ load 321224.xul
 load 322780-1.xul
 load 323381-1.html
 load 323381-2.html
-asserts-if(gtk2Widget,5) load 323386-1.html # Bug 575011
+asserts-if(gtk2Widget,1) load 323386-1.html # Bug 718883
 load 323389-1.html
 load 323389-2.html
 load 323493-1.html
@@ -283,7 +283,7 @@ load 444861-1.html
 load 445288.html
 load 448903-1.html
 load 448996-1.html
-asserts(3) load 451315-1.html # Bug 575011
+load 451315-1.html
 load 451317-1.html
 load 451334-1.html
 load 452157-1.html
@@ -348,7 +348,7 @@ load 496742.html
 load 499138.html
 load 499862-1.html
 load 499857-1.html
-asserts(10-90) asserts-if(winWidget,3-108) load 499885-1.xhtml # nscoord_MAX assertions (bug 575011), plus bug 570436 on some versions of windows
+asserts-if(winWidget,3-4) load 499885-1.xhtml # bug 893509
 load 501535-1.html
 load 503961-1.xhtml
 load 503961-2.html
@@ -386,7 +386,7 @@ load 545571-1.html
 load 547338.xul
 load 547843-1.xhtml
 load 551635-1.html
-asserts(3) load 553504-1.xhtml # nscoord_MAX assertions (bug 575011)
+load 553504-1.xhtml
 load 564368-1.xhtml
 load 564968.xhtml
 load 570160.html

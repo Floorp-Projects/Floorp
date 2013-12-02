@@ -64,6 +64,41 @@ StickyScrollContainer::GetStickyScrollContainerForFrame(nsIFrame* aFrame)
 }
 
 // static
+void
+StickyScrollContainer::NotifyReparentedFrameAcrossScrollFrameBoundary(nsIFrame* aFrame,
+                                                                      nsIFrame* aOldParent)
+{
+  nsIScrollableFrame* oldScrollFrame =
+    nsLayoutUtils::GetNearestScrollableFrame(aOldParent,
+      nsLayoutUtils::SCROLLABLE_SAME_DOC |
+      nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+  if (!oldScrollFrame) {
+    // XXX maybe aFrame has sticky descendants that can be sticky now, but
+    // we aren't going to handle that.
+    return;
+  }
+  FrameProperties props = static_cast<nsIFrame*>(do_QueryFrame(oldScrollFrame))->
+    Properties();
+  StickyScrollContainer* oldSSC = static_cast<StickyScrollContainer*>
+    (props.Get(StickyScrollContainerProperty()));
+  if (!oldSSC) {
+    // aOldParent had no sticky descendants, so aFrame doesn't have any sticky
+    // descendants, and we're done here.
+    return;
+  }
+
+  auto i = oldSSC->mFrames.Length();
+  while (i-- > 0) {
+    nsIFrame* f = oldSSC->mFrames[i];
+    StickyScrollContainer* newSSC = GetStickyScrollContainerForFrame(f);
+    if (newSSC != oldSSC) {
+      oldSSC->RemoveFrame(f);
+      newSSC->AddFrame(f);
+    }
+  }
+}
+
+// static
 StickyScrollContainer*
 StickyScrollContainer::GetStickyScrollContainerForScrollFrame(nsIFrame* aFrame)
 {

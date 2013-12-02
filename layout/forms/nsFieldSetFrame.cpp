@@ -17,6 +17,7 @@
 #include "nsRenderingContext.h"
 #include "nsIScrollableFrame.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Maybe.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;
@@ -475,13 +476,14 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   // get the legend's margin
   nsMargin legendMargin(0,0,0,0);
   // reflow the legend only if needed
+  Maybe<nsHTMLReflowState> legendReflowState;
+  if (legend) {
+    legendReflowState.construct(aPresContext, aReflowState, legend, availSize);
+  }
   if (reflowLegend) {
-    nsHTMLReflowState legendReflowState(aPresContext, aReflowState,
-                                        legend, availSize);
-
     nsHTMLReflowMetrics legendDesiredSize;
 
-    ReflowChild(legend, aPresContext, legendDesiredSize, legendReflowState,
+    ReflowChild(legend, aPresContext, legendDesiredSize, legendReflowState.ref(),
                 0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
 #ifdef NOISY_REFLOW
     printf("  returned (%d, %d)\n", legendDesiredSize.width, legendDesiredSize.height);
@@ -508,7 +510,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
       reflowInner = true;
     }
 
-    FinishReflowChild(legend, aPresContext, &legendReflowState, 
+    FinishReflowChild(legend, aPresContext, &legendReflowState.ref(), 
                       legendDesiredSize, 0, 0, NS_FRAME_NO_MOVE_FRAME);    
   } else if (!legend) {
     mLegendRect.SetEmpty();
@@ -597,21 +599,15 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
       innerContentRect.width = mLegendRect.width;
       contentRect.width = mLegendRect.width + aReflowState.mComputedPadding.LeftRight();
     }
+
     // place the legend
     nsRect actualLegendRect(mLegendRect);
     actualLegendRect.Deflate(legendMargin);
-
-    nsPoint curOrigin = legend->GetPosition();
-
-    // only if the origin changed
-    if ((curOrigin.x != actualLegendRect.x) || (curOrigin.y != actualLegendRect.y)) {
-      legend->SetPosition(nsPoint(actualLegendRect.x , actualLegendRect.y));
-      nsContainerFrame::PositionFrameView(legend);
-
-      // We need to recursively process the legend frame's
-      // children since we're moving the frame after Reflow.
-      nsContainerFrame::PositionChildViews(legend);
-    }
+    nsPoint actualLegendPos(actualLegendRect.TopLeft());
+    legendReflowState.ref().ApplyRelativePositioning(&actualLegendPos);
+    legend->SetPosition(actualLegendPos);
+    nsContainerFrame::PositionFrameView(legend);
+    nsContainerFrame::PositionChildViews(legend);
   }
 
   // Return our size and our result

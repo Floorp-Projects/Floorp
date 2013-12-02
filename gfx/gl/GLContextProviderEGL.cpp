@@ -109,6 +109,9 @@ public:
 
 #include "gfxCrashReporterUtils.h"
 
+#include "ScopedGLHelpers.h"
+#include "GLBlitHelper.h"
+
 using namespace mozilla::gfx;
 
 #ifdef MOZ_WIDGET_GONK

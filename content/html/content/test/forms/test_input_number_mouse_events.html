@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=935501
+-->
+<head>
+  <title>Test mouse events for number</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    input {
+      margin: 0 ! important;
+      border: 0 ! important;
+      padding: 0 ! important;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=935501">Mozilla Bug 935501</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input" type="number">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 935501
+ * This test checks how the value of <input type=number> changes in response to
+ * various mouse events.
+ **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+function test() {
+  var input = document.getElementById("input");
+  var inputRect = input.getBoundingClientRect();
+
+  // Points over the input's spin-up and spin-down buttons (as offsets from the
+  // top-left of the input's bounding client rect):
+  const SPIN_UP_X = inputRect.width - 3;
+  const SPIN_UP_Y = 3;
+  const SPIN_DOWN_X = inputRect.width - 3;
+  const SPIN_DOWN_Y = inputRect.height - 3;
+
+  // Test click on spin-up button:
+  synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mousedown" });
+  is(input.value, 1, "Test step-up on mousedown on spin-up button");
+  synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, { type: "mouseup" });
+  is(input.value, 1, "Test mouseup on spin-up button");
+
+  // Test click on spin-down button:
+  synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mousedown" });
+  is(input.value, 0, "Test step-down on mousedown on spin-down button");
+  synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mouseup" });
+  is(input.value, 0, "Test mouseup on spin-down button");
+
+  // Test that preventDefault() works:
+  function preventDefault(e) {
+    e.preventDefault();
+  }
+  input.value = 1;
+  input.addEventListener("mousedown", preventDefault, false);
+  synthesizeMouse(input, SPIN_UP_X, SPIN_UP_Y, {});
+  is(input.value, 1, "Test that preventDefault() works for click on spin-up button");
+  synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, {});
+  is(input.value, 1, "Test that preventDefault() works for click on spin-down button");
+  input.removeEventListener("mousedown", preventDefault, false);
+
+  // XXX TODO
+  // Test spining when the mouse button is kept depressed on the spin-up
+  // button:
+
+  // XXX TODO
+  // Test spining when the mouse button is kept depressed on the spin-down
+  // button:
+
+  // XXX TODO
+  // Test spin direction reverses when the mouse button is depressod on the
+  // spin-up button, then moved over the spin-down button once the spin begins:
+
+  // XXX TODO
+  // Test spin direction reverses when the mouse button is depressod on the
+  // spin-down button, then moved over the spin-up button once the spin begins:
+
+  // XXX TODO
+  // Test that the spin is stopped when the mouse button is depressod on the
+  // spin-down button, then moved outside both buttons once the spin starts:
+
+  // XXX TODO
+  // Test that the spin is stopped when the mouse button is depressod on the
+  // spin-up button, then moved outside both buttons once the spin starts:
+
+  // XXX TODO
+  // Test that changing the input type in the middle of a spin cancels the spin:
+
+  // XXX TODO
+  // Check that we do not spin when a mousedown occurs outside the spin
+  // buttons and then the mouse is moved over the buttons:
+}
+
+</script>
+</pre>
+</body>
+</html>

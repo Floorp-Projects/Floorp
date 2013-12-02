@@ -564,10 +564,7 @@ JS_FRIEND_API(bool)
 js::GetOriginalEval(JSContext *cx, HandleObject scope, MutableHandleObject eval)
 {
     assertSameCompartment(cx, scope);
-    if (!scope->global().getOrCreateObjectPrototype(cx))
-        return false;
-    eval.set(&scope->global().getOriginalEval().toObject());
-    return true;
+    return scope->global().getOrCreateEval(cx, eval);
 }
 
 JS_FRIEND_API(void)

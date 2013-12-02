@@ -175,7 +175,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     number.value = "";
     number.focus();
     synthesizeKey("1", {});
-    is(numberChange, 0, "Change event shouldn't be dispatched on number input element for keyboard input until it is looses focus");
+    is(numberChange, 0, "Change event shouldn't be dispatched on number input element for keyboard input until it loses focus");
     number.blur();
     is(numberChange, 1, "Change event should be dispatched on number input element on blur");
 
@@ -187,7 +187,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     is(rangeChange, 0, "Change event shouldn't be dispatched on range input element for key changes that don't change its value");
     range.focus();
     synthesizeKey("VK_HOME", {});
-    is(rangeChange, 0, "Change event shouldn't be dispatched on range input element for key changes until it is looses focus");
+    is(rangeChange, 0, "Change event shouldn't be dispatched on range input element for key changes until it loses focus");
     range.blur();
     is(rangeChange, 1, "Change event should be dispatched on range input element on blur");
     range.focus();

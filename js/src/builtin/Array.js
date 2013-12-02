@@ -35,9 +35,16 @@ function ArrayIndexOf(searchElement/*, fromIndex*/) {
     }
 
     /* Step 9. */
-    for (; k < len; k++) {
-        if (k in O && O[k] === searchElement)
-            return k;
+    if (IsPackedArray(O)) {
+        for (; k < len; k++) {
+            if (O[k] === searchElement)
+                return k;
+        }
+    } else {
+        for (; k < len; k++) {
+            if (k in O && O[k] === searchElement)
+                return k;
+        }
     }
 
     /* Step 10. */
@@ -76,9 +83,16 @@ function ArrayLastIndexOf(searchElement/*, fromIndex*/) {
         k = n;
 
     /* Step 8. */
-    for (; k >= 0; k--) {
-        if (k in O && O[k] === searchElement)
-            return k;
+    if (IsPackedArray(O)) {
+        for (; k >= 0; k--) {
+            if (O[k] === searchElement)
+                return k;
+        }
+    } else {
+        for (; k >= 0; k--) {
+            if (k in O && O[k] === searchElement)
+                return k;
+        }
     }
 
     /* Step 9. */
@@ -291,17 +305,21 @@ function ArrayReduce(callbackfn/*, initialValue*/) {
         /* Step 5. */
         if (len === 0)
             ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
-        var kPresent = false;
-        for (; k < len; k++) {
-            if (k in O) {
-                accumulator = O[k];
-                kPresent = true;
-                k++;
-                break;
+        if (IsPackedArray(O)) {
+            accumulator = O[k++];
+        } else {
+            var kPresent = false;
+            for (; k < len; k++) {
+                if (k in O) {
+                    accumulator = O[k];
+                    kPresent = true;
+                    k++;
+                    break;
+                }
             }
+            if (!kPresent)
+              ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
         }
-        if (!kPresent)
-            ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
     }
 
     /* Step 9. */
@@ -354,17 +372,21 @@ function ArrayReduceRight(callbackfn/*, initialValue*/) {
         /* Step 5. */
         if (len === 0)
             ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
-        var kPresent = false;
-        for (; k >= 0; k--) {
-            if (k in O) {
-                accumulator = O[k];
-                kPresent = true;
-                k--;
-                break;
+        if (IsPackedArray(O)) {
+            accumulator = O[k--];
+        } else {
+            var kPresent = false;
+            for (; k >= 0; k--) {
+                if (k in O) {
+                    accumulator = O[k];
+                    kPresent = true;
+                    k--;
+                    break;
+                }
             }
+            if (!kPresent)
+                ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
         }
-        if (!kPresent)
-            ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
     }
 
     /* Step 9. */
@@ -534,8 +556,6 @@ function ArrayKeys() {
     return CreateArrayIterator(this, ITEM_KIND_KEY);
 }
 
-#ifdef ENABLE_PARALLEL_JS
-
 /*
  * Strawman spec:
  *   http://wiki.ecmascript.org/doku.php?id=strawman:data_parallelism
@@ -594,8 +614,12 @@ function ComputeNumChunks(length) {
  */
 function ComputeSliceBounds(numItems, sliceIndex, numSlices) {
   var sliceWidth = (numItems / numSlices) | 0;
-  var startIndex = sliceWidth * sliceIndex;
-  var endIndex = sliceIndex === numSlices - 1 ? numItems : sliceWidth * (sliceIndex + 1);
+  var extraChunks = (numItems % numSlices) | 0;
+
+  var startIndex = sliceWidth * sliceIndex + std_Math_min(extraChunks, sliceIndex);
+  var endIndex = startIndex + sliceWidth;
+  if (sliceIndex < extraChunks)
+    endIndex += 1;
   return [startIndex, endIndex];
 }
 
@@ -609,13 +633,23 @@ function ComputeSliceBounds(numItems, sliceIndex, numSlices) {
  */
 function ComputeAllSliceBounds(numItems, numSlices) {
   // FIXME(bug 844890): Use typed arrays here.
+  var sliceWidth = (numItems / numSlices) | 0;
+  var extraChunks = (numItems % numSlices) | 0;
+  var counter = 0;
   var info = [];
-  for (var i = 0; i < numSlices; i++) {
-    var [start, end] = ComputeSliceBounds(numItems, i, numSlices);
-    ARRAY_PUSH(info, SLICE_INFO(start, end));
+  var i = 0;
+  for (; i < extraChunks; i++) {
+    ARRAY_PUSH(info, SLICE_INFO(counter, counter + sliceWidth + 1));
+    counter += sliceWidth + 1;
+  }
+  for (; i < numSlices; i++) {
+    ARRAY_PUSH(info, SLICE_INFO(counter, counter + sliceWidth));
+    counter += sliceWidth;
   }
   return info;
 }
+
+#ifdef ENABLE_PARALLEL_JS
 
 /**
  * Creates a new array by applying |func(e, i, self)| for each element |e|
@@ -676,6 +710,8 @@ function ArrayMapPar(func, mode) {
 
     return chunkEnd === info[SLICE_END(sliceId)];
   }
+
+  return undefined;
 }
 
 /**
@@ -760,6 +796,8 @@ function ArrayReducePar(func, mode) {
       accumulator = func(accumulator, self[i]);
     return accumulator;
   }
+
+  return undefined;
 }
 
 /**
@@ -947,6 +985,8 @@ function ArrayScanPar(func, mode) {
 
     return indexEnd === info[SLICE_END(sliceId)];
   }
+
+  return undefined;
 }
 
 /**
@@ -1099,6 +1139,8 @@ function ArrayScatterPar(targets, defaultValue, conflictFunc, length, mode) {
 
       return indexEnd === targetsLength;
     }
+
+    return undefined;
   }
 
   function parDivideScatterVector() {
@@ -1177,6 +1219,8 @@ function ArrayScatterPar(targets, defaultValue, conflictFunc, length, mode) {
         }
       }
     }
+
+    return undefined;
   }
 
   function seq() {
@@ -1210,6 +1254,8 @@ function ArrayScatterPar(targets, defaultValue, conflictFunc, length, mode) {
     // It's not enough to return t, as -0 | 0 === -0.
     return TO_INT32(t);
   }
+
+  return undefined;
 }
 
 /**
@@ -1345,6 +1391,8 @@ function ArrayFilterPar(func, mode) {
 
     return true;
   }
+
+  return undefined;
 }
 
 /**
@@ -1416,6 +1464,8 @@ function ArrayStaticBuildPar(length, func, mode) {
     for (var i = indexStart; i < indexEnd; i++)
       UnsafePutElements(buffer, i, func(i));
   }
+
+  return undefined;
 }
 
 /*

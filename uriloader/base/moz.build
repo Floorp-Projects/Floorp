@@ -23,7 +23,7 @@ EXPORTS += [
     'nsURILoader.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsDocLoader.cpp',
     'nsURILoader.cpp',
 ]

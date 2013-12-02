@@ -33,16 +33,6 @@ DirectEvalFromIon(JSContext *cx,
                   HandleValue thisValue, HandleString str,
                   jsbytecode * pc, MutableHandleValue vp);
 
-// True iff 'v' is the built-in eval function for the global object that
-// corresponds to 'scopeChain'.
-extern bool
-IsBuiltinEvalForScope(JSObject *scopeChain, const Value &v);
-
-class GlobalObject;
-
-extern bool
-IsBuiltinEvalForScope(GlobalObject *global, const Value &v);
-
 // True iff fun is a built-in eval function.
 extern bool
 IsAnyBuiltinEval(JSFunction *fun);
