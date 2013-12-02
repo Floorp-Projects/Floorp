@@ -73,6 +73,11 @@ try {
   ok(true, "Excpetion should be thrown when creating a cycle with host content.");
 }
 
+// Basic innerHTML tests.
+shadow.innerHTML = '<span id="first"></span><div id="second"></div>';
+is(shadow.childNodes.length, 2, "There should be two children in the ShadowRoot.");
+is(shadow.getElementById("second").tagName, "DIV", "Elements created by innerHTML should be accessible by ShadowRoot API.");
+
 </script>
 </body>
 </html>

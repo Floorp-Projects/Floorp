@@ -1133,8 +1133,6 @@ private:
   nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr,
                                      bool aFlushLayout = true);
 
-  void GetMarkup(bool aIncludeSelf, nsAString& aMarkup);
-
   // Data members
   nsEventStates mState;
 };

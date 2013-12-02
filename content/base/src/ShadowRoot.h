@@ -57,6 +57,8 @@ public:
                            const nsAString& aLocalName);
   already_AddRefed<nsContentList>
     GetElementsByClassName(const nsAString& aClasses);
+  void GetInnerHTML(nsAString& aInnerHTML);
+  void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);
 protected:
   nsCOMPtr<nsIContent> mHost;
   nsTHashtable<nsIdentifierMapEntry> mIdentifierMap;
