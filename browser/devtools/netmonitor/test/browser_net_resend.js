@@ -21,6 +21,8 @@ function test() {
 
     let { NetMonitorView } = gPanelWin;
     let { RequestsMenu } = NetMonitorView;
+    let TAB_UPDATED = aMonitor.panelWin.EVENTS.TAB_UPDATED;
+    let CUSTOMREQUESTVIEW_POPULATED = aMonitor.panelWin.EVENTS.CUSTOMREQUESTVIEW_POPULATED;
 
     RequestsMenu.lazyUpdate = false;
 
@@ -28,24 +30,28 @@ function test() {
       let origItem = RequestsMenu.getItemAtIndex(0);
       RequestsMenu.selectedItem = origItem;
 
-      // add a new custom request cloned from selected request
-      RequestsMenu.cloneSelectedRequest();
-      testCustomForm(origItem.attachment);
+      waitFor(aMonitor.panelWin, TAB_UPDATED).then(() => {
+        // add a new custom request cloned from selected request
+        RequestsMenu.cloneSelectedRequest();
+        return waitFor(aMonitor.panelWin, CUSTOMREQUESTVIEW_POPULATED);
+      }).then(() => {
+        testCustomForm(origItem.attachment);
 
-      let customItem = RequestsMenu.selectedItem;
-      testCustomItem(customItem, origItem);
+        let customItem = RequestsMenu.selectedItem;
+        testCustomItem(customItem, origItem);
 
-      // edit the custom request
-      editCustomForm(() => {
-        testCustomItemChanged(customItem, origItem);
+        // edit the custom request
+        editCustomForm(() => {
+          testCustomItemChanged(customItem, origItem);
 
-        waitForNetworkEvents(aMonitor, 0, 1).then(() => {
-          let sentItem = RequestsMenu.selectedItem;
-          testSentRequest(sentItem.attachment, origItem.attachment);
-          finishUp(aMonitor);
+          waitForNetworkEvents(aMonitor, 0, 1).then(() => {
+            let sentItem = RequestsMenu.selectedItem;
+            testSentRequest(sentItem.attachment, origItem.attachment);
+            finishUp(aMonitor);
+          });
+          // send the new request
+          RequestsMenu.sendCustomRequest();
         });
-        // send the new request
-        RequestsMenu.sendCustomRequest();
       });
     });
 
