@@ -96,11 +96,12 @@ addLoadEvent(function() {
       is(e.outputBuffer.sampleRate, context.sampleRate, "Correct sample rate for the output buffer");
 
       var firstNonZero = findFirstNonZeroSample(e.inputBuffer);
+      ok(firstNonZero <= 2048, "First non-zero sample within range");
 
-      compareChannels(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0), 0, Math.min(firstNonZero, 2048));
-      compareChannels(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0), 0, Math.min(firstNonZero, 2048));
-      compareChannels(e.inputBuffer.getChannelData(0), buffer.getChannelData(0), Math.min(firstNonZero, 2048), 2048 - firstNonZero, 0, -firstNonZero);
-      compareChannels(e.inputBuffer.getChannelData(1), buffer.getChannelData(1), Math.min(firstNonZero, 2048), 2048 - firstNonZero, 0, -firstNonZero);
+      compareChannels(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0), firstNonZero);
+      compareChannels(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0), firstNonZero);
+      compareChannels(e.inputBuffer.getChannelData(0), buffer.getChannelData(0), 2048 - firstNonZero, firstNonZero, 0);
+      compareChannels(e.inputBuffer.getChannelData(1), buffer.getChannelData(1), 2048 - firstNonZero, firstNonZero, 0);
       compareChannels(e.outputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
       compareChannels(e.outputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
 
@@ -122,10 +123,10 @@ addLoadEvent(function() {
           is(e.outputBuffer.length, 2048, "Correct length for the output buffer");
           is(e.outputBuffer.sampleRate, context.sampleRate, "Correct sample rate for the output buffer");
 
-          compareChannels(e.inputBuffer.getChannelData(0), buffer.getChannelData(0), 0, firstNonZero, 0, 2048 - firstNonZero);
-          compareChannels(e.inputBuffer.getChannelData(1), buffer.getChannelData(1), 0, firstNonZero, 0, 2048 - firstNonZero);
-          compareChannels(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0), firstNonZero);
-          compareChannels(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0), firstNonZero);
+          compareChannels(e.inputBuffer.getChannelData(0), buffer.getChannelData(0), firstNonZero, 0, 2048 - firstNonZero);
+          compareChannels(e.inputBuffer.getChannelData(1), buffer.getChannelData(1), firstNonZero, 0, 2048 - firstNonZero);
+          compareChannels(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0), undefined, firstNonZero);
+          compareChannels(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0), undefined, firstNonZero);
           compareChannels(e.outputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
           compareChannels(e.outputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
 
