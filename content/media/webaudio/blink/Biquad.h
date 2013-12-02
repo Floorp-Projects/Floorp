@@ -93,6 +93,10 @@ private:
     double m_a2;
 
     // Filter memory
+    //
+    // Double precision for the output values is valuable because errors can
+    // accumulate.  Input values are also stored as double so they need not be
+    // converted again for computation.
     double m_x1; // input delayed by 1 sample
     double m_x2; // input delayed by 2 samples
     double m_y1; // output delayed by 1 sample
