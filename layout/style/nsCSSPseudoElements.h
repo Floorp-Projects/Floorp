@@ -78,17 +78,9 @@ public:
     return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_CONTAINS_ELEMENTS);
   }
 
-  static bool PseudoElementSupportsStyleAttribute(nsIAtom *aAtom) {
-    return PseudoElementHasFlags(GetPseudoType(aAtom), CSS_PSEUDO_ELEMENT_SUPPORTS_STYLE_ATTRIBUTE);
-  }
-
   static bool PseudoElementSupportsStyleAttribute(const Type aType) {
     MOZ_ASSERT(aType < ePseudo_PseudoElementCount);
     return PseudoElementHasFlags(aType, CSS_PSEUDO_ELEMENT_SUPPORTS_STYLE_ATTRIBUTE);
-  }
-
-  static bool PseudoElementSupportsUserActionState(nsIAtom *aAtom) {
-    return PseudoElementSupportsUserActionState(GetPseudoType(aAtom));
   }
 
   static bool PseudoElementSupportsUserActionState(const Type aType);
