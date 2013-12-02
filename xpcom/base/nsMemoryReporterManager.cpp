@@ -204,6 +204,60 @@ ResidentFastDistinguishedAmount(int64_t* aN)
     return ResidentDistinguishedAmount(aN);
 }
 
+#ifdef __FreeBSD__
+#include <libutil.h>
+
+static nsresult
+GetKinfoVmentrySelf(int64_t* prss, uint64_t* maxreg)
+{
+    int cnt;
+    struct kinfo_vmentry *vmmap, *kve;
+    if ((vmmap = kinfo_getvmmap(getpid(), &cnt)) == NULL)
+        return NS_ERROR_FAILURE;
+
+    if (prss)
+        *prss = 0;
+    if (maxreg)
+        *maxreg = 0;
+
+    for (int i = 0; i < cnt; i++) {
+        kve = &vmmap[i];
+        if (prss)
+            *prss += kve->kve_private_resident;
+        if (maxreg)
+            *maxreg = std::max(*maxreg,
+                               kve->kve_end - kve->kve_start);
+    }
+
+    free(vmmap);
+    return NS_OK;
+}
+
+#define HAVE_PRIVATE_REPORTER
+static nsresult
+PrivateDistinguishedAmount(int64_t* aN)
+{
+    int64_t priv;
+    nsresult rv = GetKinfoVmentrySelf(&priv, NULL);
+    if (NS_SUCCEEDED(rv))
+        *aN = priv * getpagesize();
+
+    return NS_OK;
+}
+
+#define HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER 1
+static nsresult
+VsizeMaxContiguousDistinguishedAmount(int64_t* aN)
+{
+    uint64_t biggestRegion;
+    nsresult rv = GetKinfoVmentrySelf(NULL, &biggestRegion);
+    if (NS_SUCCEEDED(rv))
+        *aN = biggestRegion;
+
+    return NS_OK;
+}
+#endif // FreeBSD
+
 #elif defined(SOLARIS)
 
 #include <procfs.h>
