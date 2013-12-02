@@ -12,6 +12,15 @@ public class GeckoActivity extends FragmentActivity implements GeckoActivityStat
     // has this activity recently started another Gecko activity?
     private boolean mGeckoActivityOpened = false;
 
+    /**
+     * Display any resources that show strings or encompass locale-specific
+     * representations.
+     *
+     * onLocaleReady must always be called on the UI thread.
+     */
+    public void onLocaleReady(final String locale) {
+    }
+
     @Override
     public void onPause() {
         super.onPause();

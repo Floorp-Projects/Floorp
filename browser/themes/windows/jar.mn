@@ -299,6 +299,14 @@ browser.jar:
         skin/classic/browser/syncQuota.css
         skin/classic/browser/syncProgress.css
 #endif
+        skin/classic/browser/devtools/tooltip/arrow-horizontal-dark.png   (../shared/devtools/tooltip/arrow-horizontal-dark.png)
+        skin/classic/browser/devtools/tooltip/arrow-horizontal-dark@2x.png   (../shared/devtools/tooltip/arrow-horizontal-dark@2x.png)
+        skin/classic/browser/devtools/tooltip/arrow-vertical-dark.png   (../shared/devtools/tooltip/arrow-vertical-dark.png)
+        skin/classic/browser/devtools/tooltip/arrow-vertical-dark@2x.png   (../shared/devtools/tooltip/arrow-vertical-dark@2x.png)
+        skin/classic/browser/devtools/tooltip/arrow-horizontal-light.png   (../shared/devtools/tooltip/arrow-horizontal-light.png)
+        skin/classic/browser/devtools/tooltip/arrow-horizontal-light@2x.png   (../shared/devtools/tooltip/arrow-horizontal-light@2x.png)
+        skin/classic/browser/devtools/tooltip/arrow-vertical-light.png   (../shared/devtools/tooltip/arrow-vertical-light.png)
+        skin/classic/browser/devtools/tooltip/arrow-vertical-light@2x.png   (../shared/devtools/tooltip/arrow-vertical-light@2x.png)
 
 #ifdef XP_WIN
 browser.jar:
@@ -593,11 +601,11 @@ browser.jar:
         skin/classic/aero/browser/syncProgress.css
 #endif
 #endif
-        skin/classic/browser/devtools/tooltip/arrow-horizontal-dark.png   (../shared/devtools/tooltip/arrow-horizontal-dark.png)
-        skin/classic/browser/devtools/tooltip/arrow-horizontal-dark@2x.png   (../shared/devtools/tooltip/arrow-horizontal-dark@2x.png)
-        skin/classic/browser/devtools/tooltip/arrow-vertical-dark.png   (../shared/devtools/tooltip/arrow-vertical-dark.png)
-        skin/classic/browser/devtools/tooltip/arrow-vertical-dark@2x.png   (../shared/devtools/tooltip/arrow-vertical-dark@2x.png)
-        skin/classic/browser/devtools/tooltip/arrow-horizontal-light.png   (../shared/devtools/tooltip/arrow-horizontal-light.png)
-        skin/classic/browser/devtools/tooltip/arrow-horizontal-light@2x.png   (../shared/devtools/tooltip/arrow-horizontal-light@2x.png)
-        skin/classic/browser/devtools/tooltip/arrow-vertical-light.png   (../shared/devtools/tooltip/arrow-vertical-light.png)
-        skin/classic/browser/devtools/tooltip/arrow-vertical-light@2x.png   (../shared/devtools/tooltip/arrow-vertical-light@2x.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-horizontal-dark.png   (../shared/devtools/tooltip/arrow-horizontal-dark.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-horizontal-dark@2x.png   (../shared/devtools/tooltip/arrow-horizontal-dark@2x.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-vertical-dark.png   (../shared/devtools/tooltip/arrow-vertical-dark.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-vertical-dark@2x.png   (../shared/devtools/tooltip/arrow-vertical-dark@2x.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-horizontal-light.png   (../shared/devtools/tooltip/arrow-horizontal-light.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-horizontal-light@2x.png   (../shared/devtools/tooltip/arrow-horizontal-light@2x.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-vertical-light.png   (../shared/devtools/tooltip/arrow-vertical-light.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-vertical-light@2x.png   (../shared/devtools/tooltip/arrow-vertical-light@2x.png)

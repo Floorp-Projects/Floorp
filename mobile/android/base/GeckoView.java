@@ -19,6 +19,7 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.os.Handler;
 import android.util.AttributeSet;
@@ -30,6 +31,7 @@ import java.util.List;
 public class GeckoView extends LayerView
     implements GeckoEventListener, ContextGetter {
 
+    private static final String DEFAULT_SHARED_PREFERENCES_FILE = "GeckoView";
     private static final String LOGTAG = "GeckoView";
 
     private ChromeDelegate mChromeDelegate;
@@ -303,6 +305,14 @@ public class GeckoView extends LayerView
 
     public static GeckoAppShell.GeckoInterface getGeckoInterface() {
         return GeckoAppShell.getGeckoInterface();
+    }
+
+    protected String getSharedPreferencesFile() {
+        return DEFAULT_SHARED_PREFERENCES_FILE;
+    }
+
+    public SharedPreferences getSharedPreferences() {
+        return getContext().getSharedPreferences(getSharedPreferencesFile(), 0);
     }
 
     /**
