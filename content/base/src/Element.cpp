@@ -745,14 +745,19 @@ Element::CreateShadowRoot(ErrorResult& aError)
     return nullptr;
   }
 
+  // Unlike for XBL, false is the default for inheriting style.
+  protoBinding->SetInheritsStyle(false);
+
   // Calling SetPrototypeBinding takes ownership of protoBinding.
   docInfo->SetPrototypeBinding(NS_LITERAL_CSTRING("shadowroot"), protoBinding);
 
-  nsRefPtr<ShadowRoot> shadowRoot = new ShadowRoot(this, nodeInfo.forget());
+  nsRefPtr<ShadowRoot> shadowRoot = new ShadowRoot(this, nodeInfo.forget(),
+                                                   protoBinding);
   SetShadowRoot(shadowRoot);
 
   // xblBinding takes ownership of docInfo.
   nsRefPtr<nsXBLBinding> xblBinding = new nsXBLBinding(shadowRoot, protoBinding);
+  shadowRoot->SetAssociatedBinding(xblBinding);
   xblBinding->SetBoundElement(this);
 
   SetXBLBinding(xblBinding);

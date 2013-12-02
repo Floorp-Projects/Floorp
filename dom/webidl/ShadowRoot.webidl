@@ -19,5 +19,7 @@ interface ShadowRoot : DocumentFragment
   HTMLCollection getElementsByClassName(DOMString classNames);
   [SetterThrows,TreatNullAs=EmptyString]
   attribute DOMString innerHTML;
+  attribute boolean applyAuthorStyles;
+  readonly attribute StyleSheetList styleSheets;
 };
 

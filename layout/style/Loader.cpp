@@ -48,6 +48,7 @@
 #include "nsIThreadInternal.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsINetworkSeer.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/URL.h"
 
 #ifdef MOZ_XUL
@@ -1878,8 +1879,14 @@ Loader::LoadInlineStyle(nsIContent* aElement,
 
   PrepareSheet(sheet, aTitle, aMedia, nullptr, aScopeElement, *aIsAlternate);
 
-  rv = InsertSheetInDoc(sheet, aElement, mDocument);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (aElement->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    ShadowRoot* containingShadow = aElement->GetContainingShadow();
+    MOZ_ASSERT(containingShadow);
+    containingShadow->InsertSheet(sheet, aElement);
+  } else {
+    rv = InsertSheetInDoc(sheet, aElement, mDocument);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   SheetLoadData* data = new SheetLoadData(this, aTitle, nullptr, sheet,
                                           owningElement, *aIsAlternate,
