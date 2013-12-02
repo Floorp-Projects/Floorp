@@ -16,7 +16,6 @@ PARALLEL_DIRS += [
     'console',
     'contentprefs',
     'cookie',
-    'crashmonitor',
     'diskspacewatcher',
     'downloads',
     'exthelper',
