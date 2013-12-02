@@ -31,38 +31,41 @@ function test() {
       let tab = document.querySelectorAll("#details-pane tab")[3];
       let tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
 
-      is(tab.getAttribute("selected"), "true",
-        "The response tab in the network details pane should be selected.");
+      let RESPONSE_BODY_DISPLAYED = aMonitor.panelWin.EVENTS.RESPONSE_BODY_DISPLAYED;
+      waitFor(aMonitor.panelWin, RESPONSE_BODY_DISPLAYED).then(() => {
+        is(tab.getAttribute("selected"), "true",
+          "The response tab in the network details pane should be selected.");
 
-      is(tabpanel.querySelector("#response-content-info-header")
-        .hasAttribute("hidden"), false,
-        "The response info header doesn't have the intended visibility.");
-      is(tabpanel.querySelector("#response-content-info-header")
-        .getAttribute("value"),
-        "SyntaxError: JSON.parse: unexpected non-whitespace character after JSON data",
-        "The response info header doesn't have the intended value attribute.");
-      is(tabpanel.querySelector("#response-content-info-header")
-        .getAttribute("tooltiptext"),
-        "SyntaxError: JSON.parse: unexpected non-whitespace character after JSON data",
-        "The response info header doesn't have the intended tooltiptext attribute.");
+        is(tabpanel.querySelector("#response-content-info-header")
+          .hasAttribute("hidden"), false,
+          "The response info header doesn't have the intended visibility.");
+        is(tabpanel.querySelector("#response-content-info-header")
+          .getAttribute("value"),
+          "SyntaxError: JSON.parse: unexpected non-whitespace character after JSON data",
+          "The response info header doesn't have the intended value attribute.");
+        is(tabpanel.querySelector("#response-content-info-header")
+          .getAttribute("tooltiptext"),
+          "SyntaxError: JSON.parse: unexpected non-whitespace character after JSON data",
+          "The response info header doesn't have the intended tooltiptext attribute.");
 
-      is(tabpanel.querySelector("#response-content-json-box")
-        .hasAttribute("hidden"), true,
-        "The response content json box doesn't have the intended visibility.");
-      is(tabpanel.querySelector("#response-content-textarea-box")
-        .hasAttribute("hidden"), false,
-        "The response content textarea box doesn't have the intended visibility.");
-      is(tabpanel.querySelector("#response-content-image-box")
-        .hasAttribute("hidden"), true,
-        "The response content image box doesn't have the intended visibility.");
+        is(tabpanel.querySelector("#response-content-json-box")
+          .hasAttribute("hidden"), true,
+          "The response content json box doesn't have the intended visibility.");
+        is(tabpanel.querySelector("#response-content-textarea-box")
+          .hasAttribute("hidden"), false,
+          "The response content textarea box doesn't have the intended visibility.");
+        is(tabpanel.querySelector("#response-content-image-box")
+          .hasAttribute("hidden"), true,
+          "The response content image box doesn't have the intended visibility.");
 
-      NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
-        is(aEditor.getText(), "{ \"greeting\": \"Hello malformed JSON!\" },",
-          "The text shown in the source editor is incorrect.");
-        is(aEditor.getMode(), Editor.modes.js,
-          "The mode active in the source editor is incorrect.");
+        NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
+          is(aEditor.getText(), "{ \"greeting\": \"Hello malformed JSON!\" },",
+            "The text shown in the source editor is incorrect.");
+          is(aEditor.getMode(), Editor.modes.js,
+            "The mode active in the source editor is incorrect.");
 
-        teardown(aMonitor).then(finish);
+          teardown(aMonitor).then(finish);
+        });
       });
     });
 

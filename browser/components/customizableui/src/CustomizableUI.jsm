@@ -157,8 +157,7 @@ let CustomizableUIInternal = {
     } catch (ex) { }
 
     if (isMetroCapable) {
-      // TODO: Bug 942915 - Place 'Metro Mode' button as a default
-      // for Windows 8 in the customization panel.
+      panelPlacements.push("switch-to-metro-button");
     }
 #endif
 #endif
