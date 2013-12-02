@@ -4,18 +4,4 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-JS_MODULES_PATH = 'modules/workers'
-
-EXTRA_JS_MODULES += [
-    'lz4.js',
-    'lz4_internal.js',
-]
-
-SOURCES += [
-    'lz4.cpp',
-]
-
-TEST_DIRS += ['tests']
-
-EXPORT_LIBRARY = True
-FINAL_LIBRARY = 'xul'
+XPCSHELL_TESTS_MANIFESTS += ['xpcshell/xpcshell.ini']
