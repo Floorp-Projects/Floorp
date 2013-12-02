@@ -336,12 +336,28 @@ WebConsole.prototype = {
   get lastFinishedRequestCallback() HUDService.lastFinishedRequest.callback,
 
   /**
+   * Getter for the window that can provide various utilities that the web
+   * console makes use of, like opening links, managing popups, etc.  In
+   * most cases, this will be |this.browserWindow|, but in some uses (such as
+   * the Browser Toolbox), there is no browser window, so an alternative window
+   * hosts the utilities there.
+   * @type nsIDOMWindow
+   */
+  get chromeUtilsWindow()
+  {
+    if (this.browserWindow) {
+      return this.browserWindow;
+    }
+    return this.chromeWindow.top;
+  },
+
+  /**
    * Getter for the xul:popupset that holds any popups we open.
    * @type nsIDOMElement
    */
   get mainPopupSet()
   {
-    return this.browserWindow.document.getElementById("mainPopupSet");
+    return this.chromeUtilsWindow.document.getElementById("mainPopupSet");
   },
 
   /**
@@ -353,7 +369,10 @@ WebConsole.prototype = {
     return this.ui ? this.ui.outputNode : null;
   },
 
-  get gViewSourceUtils() this.browserWindow.gViewSourceUtils,
+  get gViewSourceUtils()
+  {
+    return this.chromeUtilsWindow.gViewSourceUtils;
+  },
 
   /**
    * Initialize the Web Console instance.
@@ -416,7 +435,7 @@ WebConsole.prototype = {
    */
   openLink: function WC_openLink(aLink)
   {
-    this.browserWindow.openUILinkIn(aLink, "tab");
+    this.chromeUtilsWindow.openUILinkIn(aLink, "tab");
   },
 
   /**

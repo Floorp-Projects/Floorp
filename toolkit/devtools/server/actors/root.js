@@ -192,6 +192,11 @@ RootActor.prototype = {
   get window() Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType),
 
   /**
+   * URL of the chrome window.
+   */
+  get url() { return this.window ? this.window.document.location.href : null; },
+
+  /**
    * Getter for the best nsIWebProgress for to watching this window.
    */
   get webProgress() {
@@ -274,6 +279,11 @@ RootActor.prototype = {
         "selected": selected || 0,
         "tabs": [actor.form() for (actor of tabActorList)],
       };
+
+      /* If a root window is accessible, include its URL. */
+      if (this.url) {
+        reply.url = this.url;
+      }
 
       /* DebuggerServer.addGlobalActor support: name actors in 'listTabs' reply. */
       this._appendExtraActors(reply);
