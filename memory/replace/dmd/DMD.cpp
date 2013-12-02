@@ -715,7 +715,7 @@ public:
       W("   ??? 0x%x\n", entryPc);
     } else {
       // Use "???" for unknown functions.
-      char* entryFunction = entry.mFunction ? entry.mFunction : "???";
+      const char* entryFunction = entry.mFunction ? entry.mFunction : "???";
       if (entry.mFileName) {
         // On Windows we can get the filename and line number at runtime.
         W("   %s (%s:%lu) 0x%x\n",
