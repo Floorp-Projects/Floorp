@@ -229,8 +229,7 @@ public class GeckoAppShell
                     }
 
                     if (e instanceof OutOfMemoryError) {
-                        SharedPreferences prefs =
-                            getContext().getSharedPreferences(GeckoApp.PREFS_NAME, 0);
+                        SharedPreferences prefs = getSharedPreferences();
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
                         editor.commit();
@@ -2144,6 +2143,13 @@ public class GeckoAppShell
 
     public static void setContextGetter(ContextGetter cg) {
         sContextGetter = cg;
+    }
+
+    public static SharedPreferences getSharedPreferences() {
+        if (sContextGetter == null) {
+            throw new IllegalStateException("No ContextGetter; cannot fetch prefs.");
+        }
+        return sContextGetter.getSharedPreferences();
     }
 
     public interface AppStateListener {
