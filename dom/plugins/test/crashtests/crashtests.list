@@ -12,4 +12,4 @@ skip-if(browserIsRemote||!haveTestPlugin||http.platform!="X11"||!testPluginIsOOP
 
 # SkiaGL is causing a compositor hang here, disable temporarily while that gets resolved in bug 908363
 skip-if(Android) load 626602-1.html
-load 752340.html
+skip-if(cocoaWidget) load 752340.html

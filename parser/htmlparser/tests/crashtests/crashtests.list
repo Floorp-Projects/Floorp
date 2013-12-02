@@ -1,4 +1,4 @@
-load 30885-1.html
+skip-if(cocoaWidget) load 30885-1.html
 load 30956-1.html
 load 31392-1.html
 load 31694-1.html
