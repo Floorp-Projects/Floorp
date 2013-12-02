@@ -20,7 +20,7 @@ namespace mozilla {
 namespace gl {
 
 TemporaryRef<gfx::DataSourceSurface>
-ReadBackSurface(GLContext* aContext, GLuint aTexture, bool aYInvert, SurfaceFormat aFormat);
+ReadBackSurface(GLContext* aContext, GLuint aTexture, bool aYInvert, gfx::SurfaceFormat aFormat);
 
 } // namespace gl
 } // namespace mozilla

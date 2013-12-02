@@ -1785,3 +1785,4 @@ fuzzy-if(cocoaWidget,1,40) == 928607-1.html 928607-1-ref.html
 == 931853-quirks.html 931853-quirks-ref.html
 == 936670-1.svg 936670-1-ref.svg
 == 941940-1.html 941940-1-ref.html
+fails-if(winWidget&&!d2d) == 942672-1.html 942672-1-ref.html

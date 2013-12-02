@@ -13,105 +13,109 @@
 # Support usage outside of config/rules.mk
 ifndef INCLUDED_DEBUGMAKE_MK #{
 
+define shell_quote
+'$(subst ','\'',$(1))'
+endef
+
 echo-variable-%:
-	@echo "$($*)"
+	@echo $(call shell_quote,$($*))
 
 echo-tiers:
 	@echo $(TIERS)
 
 echo-tier-dirs:
-	@$(foreach tier,$(TIERS),echo '$(tier):'; echo '  dirs: $(tier_$(tier)_dirs)'; echo '  staticdirs: $(tier_$(tier)_staticdirs)'; )
+	@$(foreach tier,$(TIERS),echo '$(tier):'; echo '  dirs: $(tier_$(tier)_dirs)'; $(if $(tier_$(tier)_staticdirs),echo '  staticdirs: $(tier_$(tier)_staticdirs)';) )
 
 echo-dirs:
-	@echo $(DIRS)
+	@echo $(call shell_quote,$(DIRS))
 
-echo-module:
-	@echo $(MODULE)
+define print_var
+@printf '%20s = %s\n' $1 $(call shell_quote,$($1))
 
-echo-depth-path:
-	@$(topsrcdir)/build/unix/print-depth-path.sh
+endef
 
-echo-module-name:
-	@$(topsrcdir)/build/package/rpm/print-module-name.sh
-
-echo-module-filelist:
-	@$(topsrcdir)/build/package/rpm/print-module-filelist.sh
+define print_vars
+$(foreach var,$1,$(call print_var,$(var)))
+endef
 
 showtargs:
 ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY),$(TARGETS)))
 	@echo --------------------------------------------------------------------------------
-	@echo "PROGRAM             = $(PROGRAM)"
-	@echo "SIMPLE_PROGRAMS     = $(SIMPLE_PROGRAMS)"
-	@echo "LIBRARY             = $(LIBRARY)"
-	@echo "SHARED_LIBRARY      = $(SHARED_LIBRARY)"
-	@echo "SHARED_LIBRARY_LIBS = $(SHARED_LIBRARY_LIBS)"
-	@echo "LIBS                = $(LIBS)"
-	@echo "DEF_FILE            = $(DEF_FILE)"
-	@echo "IMPORT_LIBRARY      = $(IMPORT_LIBRARY)"
-	@echo "STATIC_LIBS         = $(STATIC_LIBS)"
-	@echo "SHARED_LIBS         = $(SHARED_LIBS)"
-	@echo "EXTRA_DSO_LDOPTS    = $(EXTRA_DSO_LDOPTS)"
-	@echo "DEPENDENT_LIBS      = $(DEPENDENT_LIBS)"
+	$(call print_vars,\
+		PROGRAM \
+		SIMPLE_PROGRAMS \
+		LIBRARY \
+		SHARED_LIBRARY \
+		SHARED_LIBRARY_LIBS \
+		LIBS \
+		DEF_FILE \
+		IMPORT_LIBRARY \
+		STATIC_LIBS \
+		EXTRA_DSO_LDOPTS \
+		DEPENDENT_LIBS \
+	)
 	@echo --------------------------------------------------------------------------------
 endif
 	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_TOOL_DIRS)
 
 showbuild:
-	@echo "MOZ_BUILD_ROOT     = $(MOZ_BUILD_ROOT)"
-	@echo "MOZ_WIDGET_TOOLKIT = $(MOZ_WIDGET_TOOLKIT)"
-	@echo "CC                 = $(CC)"
-	@echo "CXX                = $(CXX)"
-	@echo "CCC                = $(CCC)"
-	@echo "CPP                = $(CPP)"
-	@echo "LD                 = $(LD)"
-	@echo "AR                 = $(AR)"
-	@echo "IMPLIB             = $(IMPLIB)"
-	@echo "FILTER             = $(FILTER)"
-	@echo "MKSHLIB            = $(MKSHLIB)"
-	@echo "MKCSHLIB           = $(MKCSHLIB)"
-	@echo "RC                 = $(RC)"
-	@echo "MC                 = $(MC)"
-	@echo "CFLAGS             = $(CFLAGS)"
-	@echo "OS_CFLAGS          = $(OS_CFLAGS)"
-	@echo "COMPILE_CFLAGS     = $(COMPILE_CFLAGS)"
-	@echo "CXXFLAGS           = $(CXXFLAGS)"
-	@echo "OS_CXXFLAGS        = $(OS_CXXFLAGS)"
-	@echo "COMPILE_CXXFLAGS   = $(COMPILE_CXXFLAGS)"
-	@echo "COMPILE_CMFLAGS    = $(COMPILE_CMFLAGS)"
-	@echo "COMPILE_CMMFLAGS   = $(COMPILE_CMMFLAGS)"
-	@echo "LDFLAGS            = $(LDFLAGS)"
-	@echo "OS_LDFLAGS         = $(OS_LDFLAGS)"
-	@echo "DSO_LDOPTS         = $(DSO_LDOPTS)"
-	@echo "OS_INCLUDES        = $(OS_INCLUDES)"
-	@echo "OS_LIBS            = $(OS_LIBS)"
-	@echo "EXTRA_LIBS         = $(EXTRA_LIBS)"
-	@echo "BIN_FLAGS          = $(BIN_FLAGS)"
-	@echo "INCLUDES           = $(INCLUDES)"
-	@echo "DEFINES            = $(DEFINES)"
-	@echo "ACDEFINES          = $(ACDEFINES)"
-	@echo "BIN_SUFFIX         = $(BIN_SUFFIX)"
-	@echo "LIB_SUFFIX         = $(LIB_SUFFIX)"
-	@echo "DLL_SUFFIX         = $(DLL_SUFFIX)"
-	@echo "IMPORT_LIB_SUFFIX  = $(IMPORT_LIB_SUFFIX)"
-	@echo "INSTALL            = $(INSTALL)"
-	@echo "VPATH              = $(VPATH)"
+	$(call print_vars,\
+		MOZ_BUILD_ROOT \
+		MOZ_WIDGET_TOOLKIT \
+		CC \
+		CXX \
+		CCC \
+		CPP \
+		LD \
+		AR \
+		IMPLIB \
+		FILTER \
+		MKSHLIB \
+		MKCSHLIB \
+		RC \
+		MC \
+		CFLAGS \
+		OS_CFLAGS \
+		COMPILE_CFLAGS \
+		CXXFLAGS \
+		OS_CXXFLAGS \
+		COMPILE_CXXFLAGS \
+		COMPILE_CMFLAGS \
+		COMPILE_CMMFLAGS \
+		LDFLAGS \
+		OS_LDFLAGS \
+		DSO_LDOPTS \
+		OS_INCLUDES \
+		OS_LIBS \
+		EXTRA_LIBS \
+		BIN_FLAGS \
+		INCLUDES \
+		DEFINES \
+		ACDEFINES \
+		BIN_SUFFIX \
+		LIB_SUFFIX \
+		DLL_SUFFIX \
+		IMPORT_LIB_SUFFIX \
+		INSTALL \
+		VPATH \
+	)
 
 showhost:
-	@echo "HOST_CC            = $(HOST_CC)"
-	@echo "HOST_CXX           = $(HOST_CXX)"
-	@echo "HOST_CFLAGS        = $(HOST_CFLAGS)"
-	@echo "HOST_LDFLAGS       = $(HOST_LDFLAGS)"
-	@echo "HOST_LIBS          = $(HOST_LIBS)"
-	@echo "HOST_EXTRA_LIBS    = $(HOST_EXTRA_LIBS)"
-	@echo "HOST_EXTRA_DEPS    = $(HOST_EXTRA_DEPS)"
-	@echo "HOST_PROGRAM       = $(HOST_PROGRAM)"
-	@echo "HOST_OBJS          = $(HOST_OBJS)"
-	@echo "HOST_PROGOBJS      = $(HOST_PROGOBJS)"
-	@echo "HOST_LIBRARY       = $(HOST_LIBRARY)"
-
-showbuildmods::
-	@echo "Module dirs	= $(BUILD_MODULE_DIRS)"
+	$(call print_vars,\
+		HOST_CC \
+		HOST_CXX \
+		HOST_CFLAGS \
+		HOST_LDFLAGS \
+		HOST_LIBS \
+		HOST_EXTRA_LIBS \
+		HOST_EXTRA_DEPS \
+		HOST_PROGRAM \
+		HOST_OBJS \
+		HOST_PROGOBJS \
+		HOST_LIBRARY \
+	)
 
 INCLUDED_DEBUGMAKE_MK = 1
 endif #}
