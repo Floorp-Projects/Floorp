@@ -51,7 +51,7 @@ done
 
 # query git for the revision we're copying from
 if test -d $1/.git; then
-  version=$(cd $1 && git describe --tags)
+  version=$(cd $1 && git describe --tags --match 'v*' --dirty)
 else
   version="UNKNOWN"
 fi
