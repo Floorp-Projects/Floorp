@@ -347,6 +347,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
 
   case NS_STYLE_LIST_STYLE_DECIMAL:
   case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
+  case NS_STYLE_LIST_STYLE_CJK_DECIMAL:
   case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
   case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
   case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
@@ -744,6 +745,25 @@ static bool CharListToText(int32_t ordinal, nsString& result, const PRUnichar* c
   return true;
 }
 
+static const PRUnichar gCJKDecimalChars[10] =
+{
+  0x3007, 0x4e00, 0x4e8c, 0x4e09, 0x56db,
+  0x4e94, 0x516d, 0x4e03, 0x516b, 0x4e5d
+};
+static bool CharListDecimalToText(int32_t ordinal, nsString& result, const PRUnichar* chars)
+{
+  if (ordinal < 0) {
+    return false;
+  }
+  PRUnichar buf[NUM_BUF_SIZE];
+  int32_t idx = NUM_BUF_SIZE;
+  do {
+    buf[--idx] = chars[ordinal % 10];
+    ordinal /= 10;
+  } while (ordinal > 0);
+  result.Append(buf + idx, NUM_BUF_SIZE - idx);
+  return true;
+}
 
 static const PRUnichar gCJKIdeographicDigit1[10] =
 {
@@ -1087,6 +1107,10 @@ nsBulletFrame::AppendCounterText(int32_t aListStyleType,
       success = DecimalLeadingZeroToText(aOrdinal, result);
       break;
 
+    case NS_STYLE_LIST_STYLE_CJK_DECIMAL:
+      success = CharListDecimalToText(aOrdinal, result, gCJKDecimalChars);
+      break;
+
     case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
       success = RomanToText(aOrdinal, result,
                             gLowerRomanCharsA, gLowerRomanCharsB);
@@ -1131,36 +1155,42 @@ nsBulletFrame::AppendCounterText(int32_t aListStyleType,
 
     case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
     case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL: 
+      fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
       success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit1,
                                      gCJKIdeographicUnit1,
                                      gCJKIdeographic10KUnit1);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL: 
+      fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
       success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit2,
                                      gCJKIdeographicUnit2,
                                      gCJKIdeographic10KUnit1);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL: 
+      fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
       success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit1,
                                      gCJKIdeographicUnit1,
                                      gCJKIdeographic10KUnit2);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL: 
+      fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
       success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit3,
                                      gCJKIdeographicUnit2,
                                      gCJKIdeographic10KUnit2);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL: 
+      fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
       success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit1,
                                      gCJKIdeographicUnit1,
                                      gCJKIdeographic10KUnit3);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL: 
+      fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
       success = CJKIdeographicToText(aOrdinal, result, gCJKIdeographicDigit2,
                                      gCJKIdeographicUnit2,
                                      gCJKIdeographic10KUnit3);
@@ -1241,11 +1271,13 @@ nsBulletFrame::AppendCounterText(int32_t aListStyleType,
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM:
+      fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
       success = CharListToText(aOrdinal, result, gCJKHeavenlyStemChars,
                                CJK_HEAVENLY_STEM_CHARS_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH:
+      fallback = NS_STYLE_LIST_STYLE_CJK_DECIMAL;
       success = CharListToText(aOrdinal, result, gCJKEarthlyBranchChars,
                                CJK_EARTHLY_BRANCH_CHARS_SIZE);
       break;
@@ -1304,6 +1336,7 @@ nsBulletFrame::GetListItemSuffix(int32_t aListStyleType,
       aResult.Truncate();
       break;
 
+    case NS_STYLE_LIST_STYLE_CJK_DECIMAL:
     case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC:
     case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL:
@@ -1417,6 +1450,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     default:
     case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
     case NS_STYLE_LIST_STYLE_DECIMAL:
+    case NS_STYLE_LIST_STYLE_CJK_DECIMAL:
     case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
     case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
     case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
