@@ -149,8 +149,8 @@ var files = [
     frames: 33297,
     sampleRate: 48000,
     duration: 0.693,
-    fuzzTolerance: 7,
-    fuzzToleranceMobile: 7070
+    fuzzTolerance: 3,
+    fuzzToleranceMobile: 1388
   },
   // An ogg file, 48khz, stereo
   {
@@ -161,8 +161,8 @@ var files = [
     frames: 33297,
     sampleRate: 48000,
     duration: 0.693,
-    fuzzTolerance: 12,
-    fuzzToleranceMobile: 13982
+    fuzzTolerance: 14,
+    fuzzToleranceMobile: 2752
   },
   // Make sure decoding a wave file results in the same buffer (for both the
   // resampling and non-resampling cases)
@@ -239,8 +239,8 @@ function checkAudioBuffer(buffer, test, callback, monoTest) {
   }
   is(buffer.sampleRate, cx.sampleRate, "Correct sample rate");
   // Take into account the resampling when checking the size
-  var SRCRate = test.sampleRate / cx.sampleRate;
-  ok(Math.abs(buffer.length * SRCRate - test.frames) < test.frames * 0.01, "Correct length");
+  var expectedLength = test.frames * cx.sampleRate / test.sampleRate;
+  ok(Math.abs(buffer.length - expectedLength) < 1.0, "Correct length", "got " + buffer.length + ", expected about " + expectedLength);
 
   var wave = createWaveFileData(buffer);
 
@@ -272,7 +272,7 @@ function runTest(test, callback) {
       }, false);
     }, function onFailure() {
       ok(expectCallback, "Failure callback should fire asynchronously");
-      ok(!test.valid, "Did not expect failure for test " + test.url);
+      ok(!test.valid, "Did expect failure for test " + test.url);
       callback();
     });
     expectCallback = true;
