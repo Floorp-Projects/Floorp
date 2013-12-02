@@ -201,8 +201,7 @@ function verifyFoundMsgs(foundSmsList, reverse) {
     }
 
     isIn(foundSmsList[x].sender, [smsList[x].sender, "+15552229797"], "sender");
-    is(foundSmsList[x].timestamp.getTime(), smsList[x].timestamp.getTime(),
-        "timestamp");
+    is(foundSmsList[x].timestamp, smsList[x].timestamp, "timestamp");
   }
 
   log("Content in all of the returned SMS messages is correct.");

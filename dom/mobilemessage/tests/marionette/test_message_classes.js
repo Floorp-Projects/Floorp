@@ -49,8 +49,7 @@ function checkMessage(message, id, threadId, messageClass) {
   is(message.sender, "+1", "message.sender");
   is(message.body, "A", "message.body");
   is(message.messageClass, messageClass, "message.messageClass");
-  ok(message.timestamp instanceof Date, "timestamp is instanceof Date");
-  ok(message.deliveryTimestamp === null, "deliveryTimestamp is null");
+  is(message.deliveryTimestamp, 0, "deliveryTimestamp is 0");
   is(message.read, false, "message.read");
 }
 
@@ -67,9 +66,9 @@ function test_message_class_0() {
 
       let message = event.message;
       checkMessage(message, -1, 0, "class-0");
-      ok(event.message.timestamp.getTime() >= timeBeforeSend,
+      ok(event.message.timestamp >= timeBeforeSend,
          "Message's timestamp should be greater then the timetamp of sending");
-      ok(event.message.timestamp.getTime() <= Date.now(),
+      ok(event.message.timestamp <= Date.now(),
          "Message's timestamp should be lesser than the timestamp of now");
 
       // Make sure the message is not stored.
@@ -115,9 +114,9 @@ function doTestMessageClassGeneric(allDCSs, messageClass, next) {
 
       // Make sure we can correctly receive the message
       checkMessage(event.message, null, null, messageClass);
-      ok(event.message.timestamp.getTime() >= timeBeforeSend,
+      ok(event.message.timestamp >= timeBeforeSend,
          "Message's timestamp should be greater then the timetamp of sending");
-      ok(event.message.timestamp.getTime() <= Date.now(),
+      ok(event.message.timestamp <= Date.now(),
          "Message's timestamp should be lesser than the timestamp of now");
 
       ++dcsIndex;
@@ -170,9 +169,9 @@ function test_message_class_2() {
         if (pidIndex == 0) {
           // Make sure we can correctly receive the message
           checkMessage(event.message, null, null, "class-2");
-          ok(event.message.timestamp.getTime() >= timeBeforeSend,
+          ok(event.message.timestamp >= timeBeforeSend,
              "Message's timestamp should be greater then the timetamp of sending");
-          ok(event.message.timestamp.getTime() <= Date.now(),
+          ok(event.message.timestamp <= Date.now(),
              "Message's timestamp should be lesser than the timestamp of now");
 
           next();

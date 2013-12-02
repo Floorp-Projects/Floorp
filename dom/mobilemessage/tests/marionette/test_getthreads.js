@@ -153,8 +153,6 @@ function checkThread(bodies, lastBody, unreadCount, participants,
        "thread.participants[" + i + "]");
   }
 
-  ok(thread.timestamp instanceof Date, "thread.timestamp");
-
   // Check whether the thread does contain all the messages it supposed to have.
   let filter = new MozSmsFilter;
   filter.threadId = thread.id;

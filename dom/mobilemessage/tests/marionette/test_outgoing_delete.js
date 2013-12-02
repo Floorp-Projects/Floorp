@@ -42,8 +42,7 @@ function sendSms() {
     is(sentSms.receiver, RECEIVER, "receiver");
     is(sentSms.sender, SENDER, "sender");
     is(sentSms.messageClass, "normal", "messageClass");
-    ok(sentSms.timestamp instanceof Date, "timestamp is istanceof date");
-    ok(sentSms.deliveryTimestamp === null, "deliveryTimestamp is null");
+    is(sentSms.deliveryTimestamp, 0, "deliveryTimestamp is 0");
 
     if (gotSmsOnsent && gotReqOnsuccess) { verifySmsExists(smsId); }
   };

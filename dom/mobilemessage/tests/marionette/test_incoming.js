@@ -35,8 +35,7 @@ manager.onreceived = function onreceived(event) {
   is(message.receiver, RECEIVER, "Message receiver");
   is(message.body, body, "Message body");
   is(message.messageClass, "normal", "Message class");
-  ok(message.timestamp instanceof Date, "Message timestamp is a date");
-  ok(message.deliveryTimestamp === null, "Message deliveryTimestamp is null");
+  is(message.deliveryTimestamp, 0, "deliveryTimestamp is 0");
 
   cleanUp();
 };
