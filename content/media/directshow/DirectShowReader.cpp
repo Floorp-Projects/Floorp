@@ -67,6 +67,29 @@ DirectShowReader::Init(MediaDecoderReader* aCloneDonor)
   return NS_OK;
 }
 
+// Try to parse the MP3 stream to make sure this is indeed an MP3, get the
+// estimated duration of the stream, and find the offset of the actual MP3
+// frames in the stream, as DirectShow doesn't like large ID3 sections.
+static nsresult
+ParseMP3Headers(MP3FrameParser *aParser, MediaResource *aResource)
+{
+  const uint32_t MAX_READ_SIZE = 4096;
+
+  uint64_t offset = 0;
+  while (aParser->NeedsData() && !aParser->ParsedHeaders()) {
+    uint32_t bytesRead;
+    char buffer[MAX_READ_SIZE];
+    nsresult rv = aResource->ReadAt(offset, buffer,
+                                    MAX_READ_SIZE, &bytesRead);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aParser->Parse(buffer, bytesRead, offset);
+    offset += bytesRead;
+  }
+
+  return aParser->IsMP3() ? NS_OK : NS_ERROR_FAILURE;
+}
+
 // Windows XP's MP3 decoder filter. This is available on XP only, on Vista
 // and later we can use the DMO Wrapper filter and MP3 decoder DMO.
 static const GUID CLSID_MPEG_LAYER_3_DECODER_FILTER =
@@ -88,6 +111,9 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
                         IID_IGraphBuilder,
                         reinterpret_cast<void**>(static_cast<IGraphBuilder**>(byRef(mGraph))));
   NS_ENSURE_TRUE(SUCCEEDED(hr) && mGraph, NS_ERROR_FAILURE);
+
+  rv = ParseMP3Headers(&mMP3FrameParser, mDecoder->GetResource());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   #ifdef DEBUG
   // Add the graph to the Running Object Table so that we can connect
@@ -113,7 +139,7 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
   mSourceFilter = new SourceFilter(MEDIATYPE_Stream, MEDIASUBTYPE_MPEG1Audio);
   NS_ENSURE_TRUE(mSourceFilter, NS_ERROR_FAILURE);
 
-  rv = mSourceFilter->Init(mDecoder->GetResource());
+  rv = mSourceFilter->Init(mDecoder->GetResource(), mMP3FrameParser.GetMP3Offset());
   NS_ENSURE_SUCCESS(rv, rv);
 
   hr = mGraph->AddFilter(mSourceFilter, L"MozillaDirectShowSource");
@@ -184,11 +210,10 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
     mDecoder->SetMediaSeekable(false);
   }
 
-  int64_t duration = 0;
-  hr = mMediaSeeking->GetDuration(&duration);
+  int64_t duration = mMP3FrameParser.GetDuration();
   if (SUCCEEDED(hr)) {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mDecoder->SetMediaDuration(RefTimeToUsecs(duration));
+    mDecoder->SetMediaDuration(duration);
   }
 
   LOG("Successfully initialized DirectShow MP3 decoder.");
