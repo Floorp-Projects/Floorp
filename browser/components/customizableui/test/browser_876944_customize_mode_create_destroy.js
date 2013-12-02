@@ -28,7 +28,7 @@ let gTests = [
     desc: "Creating and destroying a widget should correctly deal with panel placeholders",
     run: function() {
       let panel = document.getElementById(CustomizableUI.AREA_PANEL);
-      is(panel.querySelectorAll(".panel-customization-placeholder").length, 3, "The number of placeholders should be correct.");
+      is(panel.querySelectorAll(".panel-customization-placeholder").length, isInWin8() ? 2 : 3, "The number of placeholders should be correct.");
       CustomizableUI.createWidget({id: kTestWidget2, label: 'Pretty label', tooltiptext: 'Pretty tooltip', defaultArea: CustomizableUI.AREA_PANEL});
       let elem = document.getElementById(kTestWidget2);
       let wrapper = document.getElementById("wrapper-" + kTestWidget2);
@@ -36,7 +36,7 @@ let gTests = [
       ok(wrapper, "There should be a wrapper");
       is(wrapper.firstChild.id, kTestWidget2, "Wrapper should have test widget");
       is(wrapper.parentNode, panel, "Wrapper should be in panel");
-      is(panel.querySelectorAll(".panel-customization-placeholder").length, 2, "The number of placeholders should be correct.");
+      is(panel.querySelectorAll(".panel-customization-placeholder").length, isInWin8() ? 1 : 2, "The number of placeholders should be correct.");
       CustomizableUI.destroyWidget(kTestWidget2);
       wrapper = document.getElementById("wrapper-" + kTestWidget2);
       ok(!wrapper, "There should be a wrapper");
