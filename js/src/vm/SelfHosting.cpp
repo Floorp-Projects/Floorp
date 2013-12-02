@@ -463,6 +463,22 @@ js::intrinsic_HaveSameClass(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+bool
+js::intrinsic_IsPackedArray(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 1);
+    JS_ASSERT(args[0].isObject());
+
+    JSObject *obj = &args[0].toObject();
+    bool isPacked = obj->is<ArrayObject>() &&
+                    !obj->type()->hasAllFlags(types::OBJECT_FLAG_NON_PACKED) &&
+                    obj->getDenseInitializedLength() == obj->as<ArrayObject>().length();
+
+    args.rval().setBoolean(isPacked);
+    return true;
+}
+
 static bool
 intrinsic_GetIteratorPrototype(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -612,6 +628,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("UnsafeSetReservedSlot",   intrinsic_UnsafeSetReservedSlot,   3,0),
     JS_FN("UnsafeGetReservedSlot",   intrinsic_UnsafeGetReservedSlot,   2,0),
     JS_FN("HaveSameClass",           intrinsic_HaveSameClass,           2,0),
+    JS_FN("IsPackedArray",           intrinsic_IsPackedArray,           1,0),
 
     JS_FN("GetIteratorPrototype",    intrinsic_GetIteratorPrototype,    0,0),
 
@@ -762,6 +779,12 @@ JSRuntime::initSelfHosting(JSContext *cx)
     options.setCanLazilyParse(false);
     options.setSourcePolicy(CompileOptions::NO_SOURCE);
     options.setVersion(JSVERSION_LATEST);
+    options.werrorOption = true;
+
+#ifdef DEBUG
+    options.strictOption = true;
+    options.extraWarningsOption = true;
+#endif
 
     /*
      * Set a temporary error reporter printing to stderr because it is too

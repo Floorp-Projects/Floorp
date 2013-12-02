@@ -134,8 +134,7 @@ class ContentClientBasic : public ContentClient
                          , protected RotatedContentBuffer
 {
 public:
-  ContentClientBasic(CompositableForwarder* aForwarder,
-                     BasicLayerManager* aManager);
+  ContentClientBasic();
 
   typedef RotatedContentBuffer::PaintState PaintState;
   typedef RotatedContentBuffer::ContentType ContentType;
@@ -162,9 +161,6 @@ public:
   }
 
   virtual void OnActorDestroy() MOZ_OVERRIDE {}
-
-private:
-  BasicLayerManager* mManager;
 };
 
 /**

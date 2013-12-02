@@ -415,7 +415,7 @@ js::DirectEval(JSContext *cx, const CallArgs &args)
     ScriptFrameIter iter(cx);
     AbstractFramePtr caller = iter.abstractFramePtr();
 
-    JS_ASSERT(IsBuiltinEvalForScope(caller.scopeChain(), args.calleev()));
+    JS_ASSERT(caller.scopeChain()->global().valueIsEval(args.calleev()));
     JS_ASSERT(JSOp(*iter.pc()) == JSOP_EVAL ||
               JSOp(*iter.pc()) == JSOP_SPREADEVAL);
     JS_ASSERT_IF(caller.isFunctionFrame(),
@@ -423,18 +423,6 @@ js::DirectEval(JSContext *cx, const CallArgs &args)
 
     RootedObject scopeChain(cx, caller.scopeChain());
     return EvalKernel(cx, args, DIRECT_EVAL, caller, scopeChain, iter.pc());
-}
-
-bool
-js::IsBuiltinEvalForScope(JSObject *scopeChain, const Value &v)
-{
-    return scopeChain->global().getOriginalEval() == v;
-}
-
-bool
-js::IsBuiltinEvalForScope(GlobalObject *global, const Value &v)
-{
-    return global->getOriginalEval() == v;
 }
 
 bool

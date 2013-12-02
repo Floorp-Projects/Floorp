@@ -124,8 +124,6 @@ UNIFIED_SOURCES += [
     'jsalloc.cpp',
     'jsanalyze.cpp',
     'jsapi.cpp',
-    'jsarray.cpp',
-    'jsatom.cpp',
     'jsbool.cpp',
     'jscntxt.cpp',
     'jscompartment.cpp',
@@ -195,6 +193,8 @@ UNIFIED_SOURCES += [
     'yarr/YarrSyntaxChecker.cpp',
 ]
 
+# jsarray.cpp and jsatom.cpp cannot be built in unified mode because
+# xpcshell is broken during packaging when compiled with gcc-4.8.2
 # frontend/Parser.cpp cannot be built in unified mode because of explicit
 # template instantiations.
 # jsmath.cpp cannot be built in unified mode because it needs to pull rand_s
@@ -203,6 +203,8 @@ UNIFIED_SOURCES += [
 # check-vanilla-allocations.
 SOURCES += [
     'frontend/Parser.cpp',
+    'jsarray.cpp',
+    'jsatom.cpp',
     'jsmath.cpp',
     'jsutil.cpp',
 ]

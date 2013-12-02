@@ -17,6 +17,7 @@
 #include "nsXPCOM.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
+#include <stdarg.h>
 
 #ifdef DEBUG
 #include "prprf.h"
