@@ -7,12 +7,8 @@
 #
 # We want to run the tests in our own (modified) harness.
 #
-
-include $(topsrcdir)/config/rules.mk
-
-_STUBS_FILES = \
+STUBS_FILES = \
 	test.css \
 	$(NULL)
-
-libs:: $(_STUBS_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/$(relativesrcdir)
+STUBS_DEST = $(DEPTH)/_tests/$(relativesrcdir)
+INSTALL_TARGETS += STUBS
