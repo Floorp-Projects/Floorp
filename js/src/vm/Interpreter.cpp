@@ -2384,7 +2384,7 @@ END_CASE(JSOP_ENUMELEM)
 CASE(JSOP_EVAL)
 {
     CallArgs args = CallArgsFromSp(GET_ARGC(REGS.pc), REGS.sp);
-    if (IsBuiltinEvalForScope(REGS.fp()->scopeChain(), args.calleev())) {
+    if (REGS.fp()->scopeChain()->global().valueIsEval(args.calleev())) {
         if (!DirectEval(cx, args))
             goto error;
     } else {
@@ -2438,7 +2438,7 @@ CASE(JSOP_SPREADEVAL)
             goto error;
         break;
       case JSOP_SPREADEVAL:
-        if (IsBuiltinEvalForScope(REGS.fp()->scopeChain(), args.calleev())) {
+        if (REGS.fp()->scopeChain()->global().valueIsEval(args.calleev())) {
             if (!DirectEval(cx, args))
                 goto error;
         } else {

@@ -364,7 +364,7 @@ ifdef MOZ_UPDATE_XTERM
 # Its good not to have a newline at the end of the titlebar string because it
 # makes the make -s output easier to read.  Echo -n does not work on all
 # platforms, but we can trick printf into doing it.
-UPDATE_TITLE = printf "\033]0;%s in %s\007" $(1) $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$(2) ;
+UPDATE_TITLE = printf "\033]0;%s in %s\007" $(1) $(relativesrcdir)/$(2) ;
 endif
 
 ifdef MACH

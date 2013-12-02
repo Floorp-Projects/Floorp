@@ -4780,7 +4780,7 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
   if (mContext) {
     // we don't need to blur if skipRect is equal to rect
     // and mContext will be nullptr
-    mContext->SetMatrix(transform);
+    mContext->Multiply(transform);
   }
   return mContext;
 }

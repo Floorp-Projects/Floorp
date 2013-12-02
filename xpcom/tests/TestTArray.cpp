@@ -847,18 +847,17 @@ static bool test_fallible()
     return true;
   }
 
-  // Allocate a bunch of 512MB arrays.  We could go bigger, but nsTArray will
-  // bail before even attempting to malloc() for gigantic arrays.  512MB should
-  // be under that threshold.
+  // Allocate a bunch of 128MB arrays.  Larger allocations will fail on some
+  // platforms without actually hitting OOM.
   //
-  // 9 * 512MB > 4GB, so we should definitely OOM by the 9th array.
-  const unsigned numArrays = 9;
+  // 36 * 128MB > 4GB, so we should definitely OOM by the 36th array.
+  const unsigned numArrays = 36;
   FallibleTArray<char> arrays[numArrays];
   for (uint32_t i = 0; i < numArrays; i++) {
-    bool success = arrays[i].SetCapacity(512 * 1024 * 1024);
+    bool success = arrays[i].SetCapacity(128 * 1024 * 1024);
     if (!success) {
       // We got our OOM.  Check that it didn't come too early.
-      if (i < 2) {
+      if (i < 8) {
         printf("test_fallible: Got OOM on iteration %d.  Too early!\n", i);
         return false;
       }

@@ -678,6 +678,15 @@ public:
 
   HTMLInputElement* GetOwnerNumberControl();
 
+  void StartNumberControlSpinnerSpin();
+  void StopNumberControlSpinnerSpin();
+
+  /**
+   * The callback function used by the nsRepeatService that we use to spin the
+   * spinner for <input type=number>.
+   */
+  static void HandleNumberControlSpin(void* aData);
+
   bool MozIsTextField(bool aExcludePassword);
 
   nsIEditor* GetEditor();
@@ -1231,6 +1240,8 @@ protected:
   bool                     mHasRange            : 1;
   bool                     mIsDraggingRange     : 1;
   bool                     mProgressTimerIsActive : 1;
+  bool                     mNumberControlSpinnerIsSpinning : 1;
+  bool                     mNumberControlSpinnerSpinsUp : 1;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,

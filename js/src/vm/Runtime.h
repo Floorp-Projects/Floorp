@@ -1709,17 +1709,20 @@ struct JSRuntime : public JS::shadow::Runtime,
   private:
 
     JSUseHelperThreads useHelperThreads_;
-    int32_t requestedHelperThreadCount;
+    unsigned cpuCount_;
 
     // Settings for how helper threads can be used.
-    bool useHelperThreadsForIonCompilation_;
-    bool useHelperThreadsForParsing_;
+    bool parallelIonCompilationEnabled_;
+    bool parallelParsingEnabled_;
 
     // True iff this is a DOM Worker runtime.
     bool isWorkerRuntime_;
 
   public:
 
+    // This controls whether the JSRuntime is allowed to create any helper
+    // threads at all. This means both specific threads (background GC thread)
+    // and the general JS worker thread pool.
     bool useHelperThreads() const {
 #ifdef JS_THREADSAFE
         return useHelperThreads_ == JS_USE_HELPER_THREADS;
@@ -1728,36 +1731,48 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
     }
 
-    void requestHelperThreadCount(size_t count) {
-        requestedHelperThreadCount = count;
+    // This allows the JS shell to override GetCPUCount() when passed the
+    // --thread-count=N option.
+    void setFakeCPUCount(size_t count) {
+        cpuCount_ = count;
     }
 
-    /* Number of helper threads which should be created for this runtime. */
-    size_t helperThreadCount() const {
-#ifdef JS_WORKER_THREADS
-        if (requestedHelperThreadCount < 0) {
-            unsigned ncpus = js::GetCPUCount();
-            return ncpus == 1 ? 0 : ncpus;
-        }
-        return requestedHelperThreadCount;
-#else
-        return 0;
-#endif
+    // Return a cached value of GetCPUCount() to avoid making the syscall all
+    // the time. Furthermore, this avoids pathological cases where the result of
+    // GetCPUCount() changes during execution.
+    unsigned cpuCount() const {
+        JS_ASSERT(cpuCount_ > 0);
+        return cpuCount_;
     }
 
-    void setCanUseHelperThreadsForIonCompilation(bool value) {
-        useHelperThreadsForIonCompilation_ = value;
-    }
-    bool useHelperThreadsForIonCompilation() const {
-        return useHelperThreadsForIonCompilation_;
+    // The number of worker threads that will be available after
+    // EnsureWorkerThreadsInitialized has been called successfully.
+    unsigned workerThreadCount() const {
+        if (!useHelperThreads())
+            return 0;
+        return js::Max(2u, cpuCount());
     }
 
-    void setCanUseHelperThreadsForParsing(bool value) {
-        useHelperThreadsForParsing_ = value;
+    // Note: these values may be toggled dynamically (in response to about:config
+    // prefs changing).
+    void setParallelIonCompilationEnabled(bool value) {
+        parallelIonCompilationEnabled_ = value;
     }
-    bool useHelperThreadsForParsing() const {
-        return useHelperThreadsForParsing_;
+    bool canUseParallelIonCompilation() const {
+        // Require cpuCount_ > 1 so that Ion compilation jobs and main-thread
+        // execution are not competing for the same resources.
+        return useHelperThreads() &&
+               parallelIonCompilationEnabled_ &&
+               cpuCount_ > 1;
     }
+    void setParallelParsingEnabled(bool value) {
+        parallelParsingEnabled_ = value;
+    }
+    bool canUseParallelParsing() const {
+        return useHelperThreads() &&
+               parallelParsingEnabled_;
+    }
+
     void setIsWorkerRuntime() {
         isWorkerRuntime_ = true;
     }

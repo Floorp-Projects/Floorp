@@ -293,14 +293,20 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     parallelWarmup(0),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     useHelperThreads_(useHelperThreads),
-    requestedHelperThreadCount(-1),
-    useHelperThreadsForIonCompilation_(true),
-    useHelperThreadsForParsing_(true),
+#ifdef JS_THREADSAFE
+    cpuCount_(GetCPUCount()),
+#else
+    cpuCount_(1),
+#endif
+    parallelIonCompilationEnabled_(true),
+    parallelParsingEnabled_(true),
     isWorkerRuntime_(false)
 #ifdef DEBUG
     , enteredPolicy(nullptr)
 #endif
 {
+    MOZ_ASSERT(cpuCount_ > 0, "GetCPUCount() seems broken");
+
     liveRuntimesCount++;
 
     setGCMode(JSGC_MODE_GLOBAL);

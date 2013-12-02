@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for untrusted DOM KeyboardEvent on input element</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+  <input id="input">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runNextTest, window);
+
+const kTests = Iterator([
+  { type: "text", value: "foo", key: "b", expectedNewValue: "foo" },
+  { type: "number", value: "123", key: "4", expectedNewValue: "123" },
+  { type: "number", value: "123", key: KeyEvent.DOM_VK_UP, expectedNewValue: "123" },
+  { type: "number", value: "123", key: KeyEvent.DOM_VK_DOWN, expectedNewValue: "123" },
+]);
+
+function sendUntrustedKeyEvent(eventType, keyCode, target) {
+  var evt = document.createEvent("KeyboardEvent");
+  var canBubbleArg = true;
+  var cancelableArg = true;
+  var viewArg = document.defaultView;
+  var ctrlKeyArg = false;
+  var altKeyArg = false;
+  var shiftKeyArg = false;
+  var metaKeyArg = false;
+  var keyCodeArg = keyCode;
+  var charCodeArg = 0;
+  evt.initKeyEvent(eventType, canBubbleArg, cancelableArg, viewArg,
+                   ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
+                   keyCodeArg, charCodeArg);
+  target.dispatchEvent(evt);
+}
+
+var input = document.getElementById("input");
+
+var gotEvents = {};
+
+function handleEvent(event) {
+  gotEvents[event.type] = true;
+}
+
+input.addEventListener("keydown", handleEvent, false);
+input.addEventListener("keyup", handleEvent, false);
+input.addEventListener("keypress", handleEvent, false);
+
+var previousTest = null;
+
+function runNextTest() {
+  if (previousTest) {
+    var msg = "For <input " + "type=" + previousTest.type + ">, ";
+    is(gotEvents.keydown,  true, msg + "checking got keydown");
+    is(gotEvents.keyup,    true, msg + "checking got keyup");
+    is(gotEvents.keypress, true, msg + "checking got keypress");
+    is(input.value, previousTest.expectedNewValue, msg + "checking element " +
+         " after being sent '" + previousTest.key + "' key events");
+  }
+
+  // reset flags
+  gotEvents.keydown = false;
+  gotEvents.keyup = false;
+  gotEvents.keypress = false;
+
+  try {
+    var [index, test] = kTests.next();
+  } catch(e) {
+    if (e == StopIteration) {
+      SimpleTest.finish();
+      return; // We're all done
+    }
+    throw e;
+  }
+
+  input.type = test.type;
+  input.focus(); // make sure we still have focus after type change
+  input.value = test.value;
+
+  sendUntrustedKeyEvent("keydown", test.key, input);
+  sendUntrustedKeyEvent("keyup", test.key, input);
+  sendUntrustedKeyEvent("keypress", test.key, input);
+
+  previousTest = test;
+
+  SimpleTest.executeSoon(runNextTest);
+};
+
+</script>
+</pre>
+</body>
+</html>

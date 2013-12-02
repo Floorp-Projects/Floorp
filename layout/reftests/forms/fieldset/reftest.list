@@ -6,3 +6,6 @@
 == fieldset-scrolled-1.html fieldset-scrolled-1-ref.html
 random-if(B2G) == fieldset-overflow-auto-1.html fieldset-overflow-auto-1-ref.html
 == positioned-container-1.html positioned-container-1-ref.html
+== relpos-legend-1.html relpos-legend-1-ref.html
+== relpos-legend-2.html relpos-legend-2-ref.html
+== sticky-legend-1.html sticky-legend-1-ref.html

@@ -197,18 +197,6 @@ struct WorkerThread
 
 #endif /* JS_WORKER_THREADS */
 
-inline bool
-OffThreadIonCompilationEnabled(JSRuntime *rt)
-{
-#ifdef JS_WORKER_THREADS
-    return rt->useHelperThreads()
-        && rt->helperThreadCount() != 0
-        && rt->useHelperThreadsForIonCompilation();
-#else
-    return false;
-#endif
-}
-
 /* Methods for interacting with worker threads. */
 
 /* Initialize worker threads unless already initialized. */

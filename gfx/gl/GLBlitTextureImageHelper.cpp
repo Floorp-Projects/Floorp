@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GLBlitTextureImageHelper.h"
+#include "DecomposeIntoNoRepeatTriangles.h"
 #include "GLContext.h"
 #include "nsRect.h"
 #include "gfx2DGlue.h"

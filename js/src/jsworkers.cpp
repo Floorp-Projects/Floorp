@@ -317,10 +317,10 @@ static const uint32_t WORKER_STACK_QUOTA = 450 * 1024;
 bool
 WorkerThreadState::init()
 {
-    if (!runtime->useHelperThreads()) {
-        numThreads = 0;
+    JS_ASSERT(numThreads == 0);
+
+    if (!runtime->useHelperThreads())
         return true;
-    }
 
     workerLock = PR_NewLock();
     if (!workerLock)
@@ -334,15 +334,11 @@ WorkerThreadState::init()
     if (!producerWakeup)
         return false;
 
-    numThreads = runtime->helperThreadCount();
-
-    threads = (WorkerThread*) js_pod_calloc<WorkerThread>(numThreads);
-    if (!threads) {
-        numThreads = 0;
+    threads = (WorkerThread*) js_pod_calloc<WorkerThread>(runtime->workerThreadCount());
+    if (!threads)
         return false;
-    }
 
-    for (size_t i = 0; i < numThreads; i++) {
+    for (size_t i = 0; i < runtime->workerThreadCount(); i++) {
         WorkerThread &helper = threads[i];
         helper.runtime = runtime;
         helper.threadData.construct(runtime);
@@ -351,15 +347,15 @@ WorkerThreadState::init()
                                         WorkerThread::ThreadMain, &helper,
                                         PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, WORKER_STACK_SIZE);
         if (!helper.thread || !helper.threadData.ref().init()) {
-            for (size_t j = 0; j < numThreads; j++)
+            for (size_t j = 0; j < runtime->workerThreadCount(); j++)
                 threads[j].destroy();
             js_free(threads);
             threads = nullptr;
-            numThreads = 0;
             return false;
         }
     }
 
+    numThreads = runtime->workerThreadCount();
     resetAsmJSFailureState();
     return true;
 }

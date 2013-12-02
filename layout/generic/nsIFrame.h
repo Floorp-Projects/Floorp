@@ -862,6 +862,12 @@ public:
    * Accessor functions for geometric parent
    */
   nsIFrame* GetParent() const { return mParent; }
+  /**
+   * Set this frame's parent to aParent.
+   * If the frame may have moved into or out of a scrollframe's
+   * frame subtree, StickyScrollContainer::NotifyReparentedFrameAcrossScrollFrameBoundary
+   * must also be called.
+   */
   virtual void SetParent(nsIFrame* aParent) = 0;
 
   /**
