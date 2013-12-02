@@ -16,18 +16,21 @@ let Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 
-XPCOMUtils.defineLazyModuleGetter(this, "Utils",
-  "resource:///modules/sessionstore/Utils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageStyle",
   "resource:///modules/sessionstore/PageStyle.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ScrollPosition",
+  "resource:///modules/sessionstore/ScrollPosition.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionHistory",
   "resource:///modules/sessionstore/SessionHistory.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
   "resource:///modules/sessionstore/SessionStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TextAndScrollData",
   "resource:///modules/sessionstore/TextAndScrollData.jsm");
+
+Cu.import("resource:///modules/sessionstore/FrameTree.jsm", this);
+let gFrameTree = new FrameTree(this);
 
 /**
  * Returns a lazy function that will evaluate the given
@@ -78,7 +81,7 @@ let EventListener = {
   handleEvent: function (event) {
     switch (event.type) {
       case "pageshow":
-        if (event.persisted)
+        if (event.persisted && event.target == content.document)
           sendAsyncMessage("SessionStore:pageshow");
         break;
       case "input":
@@ -196,6 +199,43 @@ let ProgressListener = {
   onSecurityChange: function() {},
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference])
+};
+
+/**
+ * Listens for scroll position changes. Whenever the user scrolls the top-most
+ * frame we update the scroll position and will restore it when requested.
+ *
+ * Causes a SessionStore:update message to be sent that contains the current
+ * scroll positions as a tree of strings. If no frame of the whole frame tree
+ * is scrolled this will return null so that we don't tack a property onto
+ * the tabData object in the parent process.
+ *
+ * Example:
+ *   {scroll: "100,100", children: [null, null, {scroll: "200,200"}]}
+ */
+let ScrollPositionListener = {
+  init: function () {
+    addEventListener("scroll", this);
+    gFrameTree.addObserver(this);
+  },
+
+  handleEvent: function (event) {
+    let frame = event.target && event.target.defaultView;
+
+    // Don't collect scroll data for frames created at or after the load event
+    // as SessionStore can't restore scroll data for those.
+    if (frame && gFrameTree.contains(frame)) {
+      MessageQueue.push("scroll", () => this.collect());
+    }
+  },
+
+  onFrameTreeReset: function () {
+    MessageQueue.push("scroll", () => null);
+  },
+
+  collect: function () {
+    return gFrameTree.map(ScrollPosition.collect);
+  }
 };
 
 /**
@@ -489,5 +529,6 @@ SyncHandler.init();
 ProgressListener.init();
 PageStyleListener.init();
 SessionStorageListener.init();
+ScrollPositionListener.init();
 DocShellCapabilitiesListener.init();
 PrivacyListener.init();
