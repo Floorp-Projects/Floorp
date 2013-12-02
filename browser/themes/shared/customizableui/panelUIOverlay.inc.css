@@ -212,19 +212,36 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   border-bottom-style: none;
   border-radius: 0;
   transition: background-color;
-  -moz-box-orient: vertical;
-  flex: 1 1 33.33%;
+  -moz-box-orient: horizontal;
 }
-:-moz-any(#PanelUI-help, #PanelUI-customize, #PanelUI-quit) > .toolbarbutton-icon {
-  margin: 0 0 3px;
+
+#PanelUI-help,
+#PanelUI-quit {
+  min-width: 46px;
+}
+
+#PanelUI-customize > .toolbarbutton-text {
+  text-align: start;
+}
+
+#PanelUI-help > .toolbarbutton-text,
+#PanelUI-quit > .toolbarbutton-text {
+  display: none;
+}
+
+#PanelUI-help > .toolbarbutton-icon,
+#PanelUI-quit > .toolbarbutton-icon {
+  -moz-margin-end: 0;
 }
 
 #PanelUI-customize {
+  flex: 1;
+  -moz-padding-start: 15px;
+  -moz-border-start-style: none;
   list-style-image: url(chrome://browser/skin/menuPanel-customize.png);
 }
 
 #PanelUI-help {
-  -moz-border-start-style: none;
   list-style-image: url(chrome://browser/skin/menuPanel-help.png);
 }
 

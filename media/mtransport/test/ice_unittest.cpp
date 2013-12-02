@@ -37,6 +37,8 @@
 // TODO(bcampen@mozilla.com): Big fat hack since the build system doesn't give
 // us a clean way to add object files to a single executable.
 #include "stunserver.cpp"
+#include "stun_udp_socket_filter.h"
+#include "mozilla/net/DNS.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -920,6 +922,52 @@ class PrioritizerTest : public ::testing::Test {
   nr_interface_prioritizer *prioritizer_;
 };
 
+class PacketFilterTest : public ::testing::Test {
+ public:
+  PacketFilterTest(): filter_(nullptr) {}
+
+  void SetUp() {
+    nsCOMPtr<nsIUDPSocketFilterHandler> handler =
+      do_GetService(NS_STUN_UDP_SOCKET_FILTER_HANDLER_CONTRACTID);
+    handler->NewFilter(getter_AddRefs(filter_));
+  }
+
+  void TestIncoming(const uint8_t* data, uint32_t len,
+                    uint8_t from_addr, int from_port,
+                    bool expected_result) {
+    mozilla::net::NetAddr addr;
+    MakeNetAddr(&addr, from_addr, from_port);
+    bool result;
+    nsresult rv = filter_->FilterPacket(&addr, data, len,
+                                        nsIUDPSocketFilter::SF_INCOMING,
+                                        &result);
+    ASSERT_EQ(NS_OK, rv);
+    ASSERT_EQ(expected_result, result);
+  }
+
+  void TestOutgoing(const uint8_t* data, uint32_t len,
+                    uint8_t to_addr, int to_port,
+                    bool expected_result) {
+    mozilla::net::NetAddr addr;
+    MakeNetAddr(&addr, to_addr, to_port);
+    bool result;
+    nsresult rv = filter_->FilterPacket(&addr, data, len,
+                                        nsIUDPSocketFilter::SF_OUTGOING,
+                                        &result);
+    ASSERT_EQ(NS_OK, rv);
+    ASSERT_EQ(expected_result, result);
+  }
+
+ private:
+  void MakeNetAddr(mozilla::net::NetAddr* net_addr,
+                   uint8_t last_digit, uint16_t port) {
+    net_addr->inet.family = AF_INET;
+    net_addr->inet.ip = 192 << 24 | 168 << 16 | 1 << 8 | last_digit;
+    net_addr->inet.port = port;
+  }
+
+  nsCOMPtr<nsIUDPSocketFilter> filter_;
+};
 }  // end namespace
 
 TEST_F(IceGatherTest, TestGatherFakeStunServerHostnameNoResolver) {
@@ -1321,6 +1369,117 @@ TEST_F(PrioritizerTest, TestPrioritizer) {
   HasLowerPreference("7", "1");
   HasLowerPreference("1", "5");
   HasLowerPreference("5", "4");
+}
+
+TEST_F(PacketFilterTest, TestSendNonStunPacket) {
+  const unsigned char data[] = "12345abcde";
+  TestOutgoing(data, sizeof(data), 123, 45, false);
+}
+
+TEST_F(PacketFilterTest, TestRecvNonStunPacket) {
+  const unsigned char data[] = "12345abcde";
+  TestIncoming(data, sizeof(data), 123, 45, false);
+}
+
+TEST_F(PacketFilterTest, TestSendStunPacket) {
+  nr_stun_message *msg;
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+  msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+  ASSERT_EQ(0, nr_stun_message_destroy(&msg));
+}
+
+TEST_F(PacketFilterTest, TestRecvStunPacketWithoutAPendingId) {
+  nr_stun_message *msg;
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+
+  msg->header.id.octet[0] = 1;
+  msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+
+  msg->header.id.octet[0] = 0;
+  msg->header.type = NR_STUN_MSG_BINDING_RESPONSE;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestIncoming(msg->buffer, msg->length, 123, 45, true);
+
+  ASSERT_EQ(0, nr_stun_message_destroy(&msg));
+}
+
+TEST_F(PacketFilterTest, TestRecvStunPacketWithoutAPendingAddress) {
+  nr_stun_message *msg;
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+
+  msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+
+  msg->header.type = NR_STUN_MSG_BINDING_RESPONSE;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestIncoming(msg->buffer, msg->length, 123, 46, false);
+  TestIncoming(msg->buffer, msg->length, 124, 45, false);
+
+  ASSERT_EQ(0, nr_stun_message_destroy(&msg));
+}
+
+TEST_F(PacketFilterTest, TestRecvStunPacketWithPendingIdAndAddress) {
+  nr_stun_message *msg;
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+
+  msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+
+  msg->header.type = NR_STUN_MSG_BINDING_RESPONSE;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestIncoming(msg->buffer, msg->length, 123, 45, true);
+
+  // Test whitelist by filtering non-stun packets.
+  const unsigned char data[] = "12345abcde";
+
+  // 123:45 is white-listed.
+  TestOutgoing(data, sizeof(data), 123, 45, true);
+  TestIncoming(data, sizeof(data), 123, 45, true);
+
+  // Indications pass as well.
+  msg->header.type = NR_STUN_MSG_BINDING_INDICATION;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+  TestIncoming(msg->buffer, msg->length, 123, 45, true);
+
+  // Packets from and to other address are still disallowed.
+  TestOutgoing(data, sizeof(data), 123, 46, false);
+  TestIncoming(data, sizeof(data), 123, 46, false);
+  TestOutgoing(data, sizeof(data), 124, 45, false);
+  TestIncoming(data, sizeof(data), 124, 45, false);
+
+  ASSERT_EQ(0, nr_stun_message_destroy(&msg));
+}
+
+TEST_F(PacketFilterTest, TestSendNonRequestStunPacket) {
+  nr_stun_message *msg;
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+
+  msg->header.type = NR_STUN_MSG_BINDING_RESPONSE;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, false);
+
+  // Send a packet so we allow the incoming request.
+  msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+
+  // This packet makes us able to send a response.
+  msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestIncoming(msg->buffer, msg->length, 123, 45, true);
+
+  msg->header.type = NR_STUN_MSG_BINDING_RESPONSE;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+
+  ASSERT_EQ(0, nr_stun_message_destroy(&msg));
 }
 
 static std::string get_environment(const char *name) {

@@ -8,6 +8,7 @@ if CONFIG['MOZ_B2G_BT']:
     XPIDL_SOURCES += [
         'nsIDOMBluetoothDevice.idl',
         'nsIDOMBluetoothDeviceEvent.idl',
+        'nsIDOMBluetoothDiscoveryStateChangedEvent.idl',
         'nsIDOMBluetoothStatusChangedEvent.idl',
     ]
     XPIDL_MODULE = 'dom_bluetooth'

@@ -187,6 +187,27 @@ div.cm-s-mozilla span.CodeMirror-matchingbracket { /* highlight brackets */
   color: black;
 }
 
+/* Highlight for a line that contains an error. */
+div.CodeMirror div.error-line {
+  background: rgba(255,0,0,0.2);
+}
+
+/* Highlight for a line that represents a stack frame's location. */
+div.CodeMirror div.debug-line {
+  background: rgba(0,128,255,0.1);
+  box-shadow:
+    0 1px 0 0 rgba(0,128,255,0.4),
+    0 -1px 0 0 rgba(0,128,255,0.4);
+}
+
+/* Generic highlighted text */
+div.CodeMirror span.marked-text {
+  background: rgba(255,255,0,0.2);
+  border: 1px dashed rgba(192,192,0,0.6);
+  -moz-margin-start: -1px;
+  -moz-margin-end: -1px;
+}
+
 /* Highlight for evaluating current statement. */
 div.CodeMirror span.eval-text {
   background-color: #ccd;
