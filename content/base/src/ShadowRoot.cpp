@@ -11,6 +11,7 @@
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIDOMHTMLElement.h"
+#include "nsIStyleSheetLinkingElement.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLContentElement.h"
 #include "nsXBLPrototypeBinding.h"
@@ -32,6 +33,8 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ShadowRoot)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ShadowRoot,
                                                   DocumentFragment)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHost)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheetList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAssociatedBinding)
   tmp->mIdentifierMap.EnumerateEntries(IdentifierMapEntryTraverse, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -41,6 +44,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ShadowRoot,
     tmp->mHost->RemoveMutationObserver(tmp);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHost)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStyleSheetList)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAssociatedBinding)
   tmp->mIdentifierMap.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -55,9 +60,10 @@ NS_IMPL_ADDREF_INHERITED(ShadowRoot, DocumentFragment)
 NS_IMPL_RELEASE_INHERITED(ShadowRoot, DocumentFragment)
 
 ShadowRoot::ShadowRoot(nsIContent* aContent,
-                       already_AddRefed<nsINodeInfo> aNodeInfo)
+                       already_AddRefed<nsINodeInfo> aNodeInfo,
+                       nsXBLPrototypeBinding* aProtoBinding)
   : DocumentFragment(aNodeInfo), mHost(aContent),
-    mInsertionPointChanged(false)
+    mProtoBinding(aProtoBinding), mInsertionPointChanged(false)
 {
   SetHost(aContent);
   SetFlags(NODE_IS_IN_SHADOW_TREE);
@@ -99,6 +105,66 @@ ShadowRoot::FromNode(nsINode* aNode)
   }
 
   return nullptr;
+}
+
+void
+ShadowRoot::Restyle()
+{
+  mProtoBinding->FlushSkinSheets();
+
+  nsIPresShell* shell = OwnerDoc()->GetShell();
+  if (shell) {
+    OwnerDoc()->BeginUpdate(UPDATE_STYLE);
+    shell->RestyleShadowRoot(this);
+    OwnerDoc()->EndUpdate(UPDATE_STYLE);
+  }
+}
+
+void
+ShadowRoot::InsertSheet(nsCSSStyleSheet* aSheet,
+                        nsIContent* aLinkingContent)
+{
+  nsCOMPtr<nsIStyleSheetLinkingElement>
+    linkingElement = do_QueryInterface(aLinkingContent);
+  MOZ_ASSERT(linkingElement, "The only styles in a ShadowRoot should come "
+                             "from <style>.");
+
+  linkingElement->SetStyleSheet(aSheet); // This sets the ownerNode on the sheet
+
+  nsTArray<nsRefPtr<nsCSSStyleSheet> >* sheets =
+    mProtoBinding->GetOrCreateStyleSheets();
+  MOZ_ASSERT(sheets, "Style sheets array should never be null.");
+
+  // Find the correct position to insert into the style sheet list (must
+  // be in tree order).
+  for (uint32_t i = 0; i <= sheets->Length(); i++) {
+    if (i == sheets->Length()) {
+      sheets->AppendElement(aSheet);
+      break;
+    }
+
+    nsINode* sheetOwnerNode = sheets->ElementAt(i)->GetOwnerNode();
+    if (nsContentUtils::PositionIsBefore(aLinkingContent, sheetOwnerNode)) {
+      sheets->InsertElementAt(i, aSheet);
+      break;
+    }
+  }
+
+  Restyle();
+}
+
+void
+ShadowRoot::RemoveSheet(nsCSSStyleSheet* aSheet)
+{
+  nsTArray<nsRefPtr<nsCSSStyleSheet> >* sheets =
+    mProtoBinding->GetOrCreateStyleSheets();
+  MOZ_ASSERT(sheets, "Style sheets array should never be null.");
+
+  DebugOnly<bool> found = sheets->RemoveElement(aSheet);
+  MOZ_ASSERT(found, "Trying to remove a sheet from a ShadowRoot "
+                    "that does not exist.");
+
+  Restyle();
 }
 
 Element*
@@ -332,6 +398,35 @@ ShadowRoot::SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError)
   SetInnerHTMLInternal(aInnerHTML, aError);
 }
 
+bool
+ShadowRoot::ApplyAuthorStyles()
+{
+  return mProtoBinding->InheritsStyle();
+}
+
+void
+ShadowRoot::SetApplyAuthorStyles(bool aApplyAuthorStyles)
+{
+  mProtoBinding->SetInheritsStyle(aApplyAuthorStyles);
+
+  nsIPresShell* shell = OwnerDoc()->GetShell();
+  if (shell) {
+    OwnerDoc()->BeginUpdate(UPDATE_STYLE);
+    shell->RestyleShadowRoot(this);
+    OwnerDoc()->EndUpdate(UPDATE_STYLE);
+  }
+}
+
+nsIDOMStyleSheetList*
+ShadowRoot::StyleSheets()
+{
+  if (!mStyleSheetList) {
+    mStyleSheetList = new ShadowRootStyleSheetList(this);
+  }
+
+  return mStyleSheetList;
+}
+
 /**
  * Returns whether the web components pool population algorithm
  * on the host would contain |aContent|. This function ignores
@@ -439,5 +534,57 @@ ShadowRoot::ContentRemoved(nsIDocument* aDocument,
   if (IsPooledNode(aChild, aContainer, mHost)) {
     RemoveDistributedNode(aChild);
   }
+}
+
+NS_IMPL_CYCLE_COLLECTION_1(ShadowRootStyleSheetList, mShadowRoot)
+
+NS_INTERFACE_TABLE_HEAD(ShadowRootStyleSheetList)
+  NS_INTERFACE_TABLE1(ShadowRootStyleSheetList, nsIDOMStyleSheetList)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(ShadowRootStyleSheetList)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StyleSheetList)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ShadowRootStyleSheetList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ShadowRootStyleSheetList)
+
+ShadowRootStyleSheetList::ShadowRootStyleSheetList(ShadowRoot* aShadowRoot)
+  : mShadowRoot(aShadowRoot)
+{
+  MOZ_COUNT_CTOR(ShadowRootStyleSheetList);
+}
+
+ShadowRootStyleSheetList::~ShadowRootStyleSheetList()
+{
+  MOZ_COUNT_DTOR(ShadowRootStyleSheetList);
+}
+
+NS_IMETHODIMP
+ShadowRootStyleSheetList::Item(uint32_t aIndex, nsIDOMStyleSheet** aReturn)
+{
+  nsTArray<nsRefPtr<nsCSSStyleSheet> >* sheets =
+    mShadowRoot->mProtoBinding->GetStyleSheets();
+
+  if (sheets) {
+    NS_IF_ADDREF(*aReturn = sheets->SafeElementAt(aIndex));
+  } else {
+    *aReturn = nullptr;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ShadowRootStyleSheetList::GetLength(uint32_t* aLength)
+{
+  nsTArray<nsRefPtr<nsCSSStyleSheet> >* sheets =
+    mShadowRoot->mProtoBinding->GetStyleSheets();
+
+  if (sheets) {
+    *aLength = sheets->Length();
+  } else {
+    *aLength = 0;
+  }
+
+  return NS_OK;
 }
 

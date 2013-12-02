@@ -25,10 +25,12 @@ namespace dom {
 
 class Element;
 class HTMLContentElement;
+class ShadowRootStyleSheetList;
 
 class ShadowRoot : public DocumentFragment,
                    public nsStubMutationObserver
 {
+  friend class ShadowRootStyleSheetList;
 public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ShadowRoot,
                                            DocumentFragment)
@@ -39,12 +41,18 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  ShadowRoot(nsIContent* aContent, already_AddRefed<nsINodeInfo> aNodeInfo);
+  ShadowRoot(nsIContent* aContent, already_AddRefed<nsINodeInfo> aNodeInfo,
+             nsXBLPrototypeBinding* aProtoBinding);
   virtual ~ShadowRoot();
 
   void AddToIdTable(Element* aElement, nsIAtom* aId);
   void RemoveFromIdTable(Element* aElement, nsIAtom* aId);
   static bool PrefEnabled();
+  void InsertSheet(nsCSSStyleSheet* aSheet, nsIContent* aLinkingContent);
+  void RemoveSheet(nsCSSStyleSheet* aSheet);
+  bool ApplyAuthorStyles();
+  void SetApplyAuthorStyles(bool aApplyAuthorStyles);
+  nsIDOMStyleSheetList* StyleSheets();
 
   /**
    * Distributes a single explicit child of the host to the content
@@ -69,6 +77,11 @@ public:
 
   void SetInsertionPointChanged() { mInsertionPointChanged = true; }
 
+  void SetAssociatedBinding(nsXBLBinding* aBinding)
+  {
+    mAssociatedBinding = aBinding;
+  }
+
   nsISupports* GetParentObject() const
   {
     return mHost;
@@ -92,6 +105,8 @@ public:
   void GetInnerHTML(nsAString& aInnerHTML);
   void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);
 protected:
+  void Restyle();
+
   nsCOMPtr<nsIContent> mHost;
 
   // An array of content insertion points that are a descendant of the ShadowRoot
@@ -102,12 +117,36 @@ protected:
   nsTArray<HTMLContentElement*> mInsertionPoints;
 
   nsTHashtable<nsIdentifierMapEntry> mIdentifierMap;
+  nsXBLPrototypeBinding* mProtoBinding;
+
+  // It is necessary to hold a reference to the associated nsXBLBinding
+  // because the binding holds a reference on the nsXBLDocumentInfo that
+  // owns |mProtoBinding|.
+  nsRefPtr<nsXBLBinding> mAssociatedBinding;
+
+  nsRefPtr<ShadowRootStyleSheetList> mStyleSheetList;
 
   // A boolean that indicates that an insertion point was added or removed
   // from this ShadowRoot and that the nodes need to be redistributed into
   // the insertion points. After this flag is set, nodes will be distributed
   // on the next mutation event.
   bool mInsertionPointChanged;
+};
+
+class ShadowRootStyleSheetList : public nsIDOMStyleSheetList
+{
+public:
+  ShadowRootStyleSheetList(ShadowRoot* aShadowRoot);
+  virtual ~ShadowRootStyleSheetList();
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(ShadowRootStyleSheetList)
+
+  // nsIDOMStyleSheetList
+  NS_DECL_NSIDOMSTYLESHEETLIST
+
+protected:
+  nsRefPtr<ShadowRoot> mShadowRoot;
 };
 
 } // namespace dom

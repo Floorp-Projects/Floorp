@@ -3540,7 +3540,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   nsIContent* parent = content->GetParent();
   TreeMatchContext::AutoAncestorPusher
     insertionPointPusher(aState.mTreeMatchContext);
-  if (parent && parent->IsActiveChildrenElement()) {
+  if (parent && nsContentUtils::IsContentInsertionPoint(parent)) {
     if (aState.mTreeMatchContext.mAncestorFilter.HasFilter()) {
       insertionPointPusher.PushAncestorAndStyleScope(parent);
     } else {
