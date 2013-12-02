@@ -436,7 +436,7 @@ ifndef UNIVERSAL_BINARY
 endif
 	find $(PKG_STAGE) -name "*.pyc" -exec rm {} \;
 	cd $(PKG_STAGE) && \
-	  zip -rq9D "$(abspath $(DIST)/$(PKG_PATH)$(TEST_PACKAGE))" \
+	  zip -rq9D "$(abspath $(DIST))/$(PKG_PATH)$(TEST_PACKAGE)" \
 	  * -x \*/.mkdir.done
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
