@@ -15,7 +15,6 @@
 # limitations under the License.
 
 EXPORTS += [
-    'GonkPermission.h',
     'OrientationObserver.h',
 ]
 
@@ -47,7 +46,6 @@ SOURCES += [
     'Framebuffer.cpp',
     'GfxInfo.cpp',
     'GonkMemoryPressureMonitoring.cpp',
-    'GonkPermission.cpp',
     'HwcComposer2D.cpp',
     'HwcUtils.cpp',
     'nsAppShell.cpp',
