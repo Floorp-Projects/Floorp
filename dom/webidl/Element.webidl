@@ -56,7 +56,7 @@ interface Element : Node {
 
   [Pure]
   HTMLCollection getElementsByTagName(DOMString localName);
-  [Throws]
+  [Throws, Pure]
   HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
   [Pure]
   HTMLCollection getElementsByClassName(DOMString classNames);
@@ -86,7 +86,7 @@ interface Element : Node {
    *
    * See <http://dev.w3.org/2006/webapi/selectors-api2/#matchesselector>
    */
-  [Throws]
+  [Throws, Pure]
   boolean mozMatchesSelector(DOMString selector);
 
   // Proprietary extensions
@@ -188,9 +188,9 @@ partial interface Element {
 
 // http://www.w3.org/TR/selectors-api/#interface-definitions
 partial interface Element {
-  [Throws]
+  [Throws, Pure]
   Element?  querySelector(DOMString selectors);
-  [Throws]
+  [Throws, Pure]
   NodeList  querySelectorAll(DOMString selectors);
 };
 
