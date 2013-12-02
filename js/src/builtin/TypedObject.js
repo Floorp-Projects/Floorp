@@ -127,6 +127,7 @@ TypedObjectPointer.prototype.moveTo = function(propName) {
   }
 
   ThrowError(JSMSG_TYPEDOBJECT_NO_SUCH_PROP, propName);
+  return undefined;
 };
 
 // Adjust `this` in place to point at the element `index`.  `this`
@@ -205,6 +206,7 @@ TypedObjectPointer.prototype.get = function() {
   }
 
   assert(false, "Unhandled kind: " + REPR_KIND(this.typeRepr));
+  return undefined;
 }
 
 TypedObjectPointer.prototype.getScalar = function() {
@@ -237,6 +239,7 @@ TypedObjectPointer.prototype.getScalar = function() {
   }
 
   assert(false, "Unhandled scalar type: " + type);
+  return undefined;
 }
 
 TypedObjectPointer.prototype.getReference = function() {
@@ -253,6 +256,7 @@ TypedObjectPointer.prototype.getReference = function() {
   }
 
   assert(false, "Unhandled scalar type: " + type);
+  return undefined;
 }
 
 TypedObjectPointer.prototype.getX4 = function() {
@@ -273,7 +277,9 @@ TypedObjectPointer.prototype.getX4 = function() {
     var w = Load_int32(this.datum, this.offset + 12);
     return T.int32x4(x, y, z, w);
   }
+
   assert(false, "Unhandled x4 type: " + type);
+  return undefined;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -352,7 +358,7 @@ TypedObjectPointer.prototype.set = function(fromValue) {
 
   ThrowError(JSMSG_CANT_CONVERT_TO,
              typeof(fromValue),
-             this.typeRepr.toSource())
+             this.typeRepr.toSource());
 }
 
 // Sets `fromValue` to `this` assuming that `this` is a scalar type.
@@ -398,6 +404,7 @@ TypedObjectPointer.prototype.setScalar = function(fromValue) {
   }
 
   assert(false, "Unhandled scalar type: " + type);
+  return undefined;
 }
 
 TypedObjectPointer.prototype.setReference = function(fromValue) {
@@ -415,6 +422,7 @@ TypedObjectPointer.prototype.setReference = function(fromValue) {
   }
 
   assert(false, "Unhandled scalar type: " + type);
+  return undefined;
 }
 
 // Sets `fromValue` to `this` assuming that `this` is a scalar type.
@@ -425,7 +433,7 @@ TypedObjectPointer.prototype.setX4 = function(fromValue) {
   // to "adapt" fromValue, but there are no legal adaptions.
   ThrowError(JSMSG_CANT_CONVERT_TO,
              typeof(fromValue),
-             this.typeRepr.toSource())
+             this.typeRepr.toSource());
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -661,10 +669,12 @@ function X4ProtoString(type) {
   case JS_X4TYPEREPR_FLOAT32:
     return "float32x4";
   }
+
   assert(false, "Unhandled type constant");
+  return undefined;
 }
 
-X4LaneStrings = ["x", "y", "z", "w"];
+var X4LaneStrings = ["x", "y", "z", "w"];
 
 // Generalized handler for the various properties for accessing a
 // single lane of an X4 vector value. Note that this is the slow path;
@@ -685,7 +695,9 @@ function X4GetLane(datum, type, lane) {
   case JS_X4TYPEREPR_FLOAT32:
     return Load_float32(datum, lane * 4);
   }
+
   assert(false, "Unhandled type constant");
+  return undefined;
 }
 
 function Float32x4Lane0() { return X4GetLane(this, JS_X4TYPEREPR_FLOAT32, 0); }
