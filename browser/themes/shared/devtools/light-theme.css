@@ -278,3 +278,5 @@ div.CodeMirror span.eval-text {
 .theme-tooltip-panel .devtools-tooltip-simple-text:last-child {
   border-bottom: 0;
 }
+
+%include toolbars.inc.css
