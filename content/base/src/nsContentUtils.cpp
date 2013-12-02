@@ -37,6 +37,7 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/TextDecoder.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/MutationEvent.h"
@@ -4329,9 +4330,17 @@ nsContentUtils::IsInSameAnonymousTree(const nsINode* aNode,
     return aContent->GetBindingParent() == nullptr;
   }
 
-  return static_cast<const nsIContent*>(aNode)->GetBindingParent() ==
-         aContent->GetBindingParent();
- 
+  const nsIContent* nodeAsContent = static_cast<const nsIContent*>(aNode);
+
+  // For nodes in a shadow tree, it is insufficient to simply compare
+  // the binding parent because a node may host multiple ShadowRoots,
+  // thus nodes in different shadow tree may have the same binding parent.
+  if (aNode->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    return nodeAsContent->GetContainingShadow() ==
+      aContent->GetContainingShadow();
+  }
+
+  return nodeAsContent->GetBindingParent() == aContent->GetBindingParent();
 }
 
 class AnonymousContentDestroyer : public nsRunnable {
