@@ -83,3 +83,4 @@ pref("dom.ipc.plugins.enabled.x86_64", true);
 pref("dom.ipc.plugins.enabled", true);
 #endif
 
+pref("places.database.growthIncrementKiB", 0);

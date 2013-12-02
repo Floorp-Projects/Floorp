@@ -122,7 +122,8 @@ public class UpdateService extends IntentService {
             // Use this instead for forcing a download from about:fennec
             // startUpdate(UpdateServiceHelper.FLAG_FORCE_DOWNLOAD | UpdateServiceHelper.FLAG_REINSTALL);
         } else if (UpdateServiceHelper.ACTION_DOWNLOAD_UPDATE.equals(intent.getAction())) {
-            // We always want to do the download here
+            // We always want to do the download and apply it here
+            mApplyImmediately = true;
             startUpdate(UpdateServiceHelper.FLAG_FORCE_DOWNLOAD);
         } else if (UpdateServiceHelper.ACTION_APPLY_UPDATE.equals(intent.getAction())) {
             applyUpdate(intent.getStringExtra(UpdateServiceHelper.EXTRA_PACKAGE_PATH_NAME));

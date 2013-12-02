@@ -2067,12 +2067,13 @@ moz_gtk_tab_paint(cairo_t *cr, GdkRectangle* rect,
 
     GtkStyleContext* style;
     GdkRectangle focusRect;
+    GdkRectangle backRect;
 
     ensure_tab_widget();
     gtk_widget_set_direction(gTabWidget, direction);
 
     style = gtk_widget_get_style_context(gTabWidget);    
-    focusRect = *rect;
+    backRect = focusRect = *rect;
 
     gtk_style_context_save(style);
 
@@ -2153,20 +2154,26 @@ moz_gtk_tab_paint(cairo_t *cr, GdkRectangle* rect,
                                  rect->x, rect->y + gap_voffset, rect->width,
                                  rect->height - gap_voffset, GTK_POS_TOP);
 
+            gtk_style_context_remove_region(style, GTK_STYLE_REGION_TAB);
+
+            backRect.y += (gap_voffset - gap_height);
+            backRect.height = gap_height;
+
             /* Draw the gap; erase with background color before painting in
              * case theme does not */
-            gtk_render_background(style, cr,
-                                 rect->x,
-                                 rect->y + gap_voffset
-                                         - gap_height,
-                                 rect->width, gap_height);
+            gtk_render_background(style, cr, backRect.x, backRect.y,
+                                 backRect.width, backRect.height);
+            cairo_save(cr);
+            cairo_rectangle(cr, backRect.x, backRect.y, backRect.width, backRect.height);
+            cairo_clip(cr);
+
             gtk_render_frame_gap(style, cr,
                                  rect->x - gap_loffset,
                                  rect->y + gap_voffset - 3 * gap_height,
                                  rect->width + gap_loffset + gap_roffset,
                                  3 * gap_height, GTK_POS_BOTTOM,
                                  gap_loffset, gap_loffset + rect->width);
-                                 
+            cairo_restore(cr);
         } else {
             /* Draw the tab on top */
             focusRect.height -= gap_voffset;
@@ -2174,19 +2181,26 @@ moz_gtk_tab_paint(cairo_t *cr, GdkRectangle* rect,
                                  rect->x, rect->y, rect->width,
                                  rect->height - gap_voffset, GTK_POS_BOTTOM);
 
+            gtk_style_context_remove_region(style, GTK_STYLE_REGION_TAB);
+
+            backRect.y += (rect->height - gap_voffset);
+            backRect.height = gap_height;
+
             /* Draw the gap; erase with background color before painting in
              * case theme does not */
-            gtk_render_background(style, cr,
-                                  rect->x,
-                                  rect->y + rect->height
-                                          - gap_voffset,
-                                  rect->width, gap_height);
+            gtk_render_background(style, cr, backRect.x, backRect.y,
+                                  backRect.width, backRect.height);
+            cairo_save(cr);
+            cairo_rectangle(cr, backRect.x, backRect.y, backRect.width, backRect.height);
+            cairo_clip(cr);
+
             gtk_render_frame_gap(style, cr,
                                  rect->x - gap_loffset,
                                  rect->y + rect->height - gap_voffset,
                                  rect->width + gap_loffset + gap_roffset,
                                  3 * gap_height, GTK_POS_TOP,
                                  gap_loffset, gap_loffset + rect->width);
+            cairo_restore(cr);
         }
     }
 

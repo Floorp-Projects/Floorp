@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+  <script>
+    function tweak() {
+      var host = document.getElementById("host");
+      var shadow = host.createShadowRoot();
+
+      var textNode = document.createTextNode(" World");
+      shadow.appendChild(textNode);
+
+      // Create a selection with focus preceeding anchor
+      var selection = window.getSelection();
+      var range = document.createRange();
+      range.setStart(shadow, 1);
+      range.setEnd(shadow, 1);
+      selection.addRange(range);
+      selection.extend(shadow, 0);
+
+      // Extend selection into a different node tree
+      // (from ShadowRoot into the previous node in the parent node tree).
+      setTimeout(function() {
+        selection.extend(document.getElementById("previous"), 0);
+        document.documentElement.className = '';
+      }, 100);
+    }
+  </script>
+</head>
+<body onload="tweak()">
+<span id="previous">Hello</span><span id="host"></span>
+</body>
+</html>

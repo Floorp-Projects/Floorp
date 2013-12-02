@@ -3540,7 +3540,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   nsIContent* parent = content->GetParent();
   TreeMatchContext::AutoAncestorPusher
     insertionPointPusher(aState.mTreeMatchContext);
-  if (parent && parent->IsActiveChildrenElement()) {
+  if (parent && nsContentUtils::IsContentInsertionPoint(parent)) {
     if (aState.mTreeMatchContext.mAncestorFilter.HasFilter()) {
       insertionPointPusher.PushAncestorAndStyleScope(parent);
     } else {
@@ -6268,6 +6268,7 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
 
   if (aOperation == CONTENTINSERT) {
     if (aChild->IsRootOfAnonymousSubtree() ||
+        aChild->HasFlag(NODE_IS_IN_SHADOW_TREE) ||
         aChild->IsEditable() || aChild->IsXUL()) {
       return false;
     }
@@ -6579,6 +6580,17 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
 
   }
 #endif // MOZ_XUL
+
+  if (aContainer && aContainer->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    // Recreate frames if content is appended into a ShadowRoot
+    // because children of ShadowRoot are rendered in place of children
+    // of the host.
+    nsIContent* bindingParent = aContainer->GetBindingParent();
+    LAYOUT_PHASE_TEMP_EXIT();
+    nsresult rv = RecreateFramesForContent(bindingParent, false);
+    LAYOUT_PHASE_TEMP_REENTER();
+    return rv;
+  }
 
   // Get the frame associated with the content
   nsIFrame* parentFrame = GetFrameFor(aContainer);
@@ -7001,6 +7013,17 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
 #endif
 
     return NS_OK;
+  }
+
+  if (aContainer->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    // Recreate frames if content is inserted into a ShadowRoot
+    // because children of ShadowRoot are rendered in place of
+    // the children of the host.
+    nsIContent* bindingParent = aContainer->GetBindingParent();
+    LAYOUT_PHASE_TEMP_EXIT();
+    nsresult rv = RecreateFramesForContent(bindingParent, false);
+    LAYOUT_PHASE_TEMP_REENTER();
+    return rv;
   }
 
   nsIFrame* parentFrame = GetFrameFor(aContainer);
@@ -7481,6 +7504,18 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
         NS_ASSERTION(!childFrame->GetNextSibling(), "How did that happen?");
       }
     }
+  }
+
+  if (aContainer && aContainer->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    // Recreate frames if content is removed from a ShadowRoot
+    // because it may contain an insertion point which can change
+    // how the host is rendered.
+    nsIContent* bindingParent = aContainer->GetBindingParent();
+    *aDidReconstruct = true;
+    LAYOUT_PHASE_TEMP_EXIT();
+    nsresult rv = RecreateFramesForContent(bindingParent, false);
+    LAYOUT_PHASE_TEMP_REENTER();
+    return rv;
   }
 
   if (childFrame) {
@@ -9282,9 +9317,8 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
       // it does not have a frame and would not otherwise be pushed as an ancestor.
       nsIContent* parent = child->GetParent();
       MOZ_ASSERT(parent, "Parent must be non-null because we are iterating children.");
-      MOZ_ASSERT(parent->IsElement());
       TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
-      if (parent != aContent) {
+      if (parent != aContent && parent->IsElement()) {
         if (aState.mTreeMatchContext.mAncestorFilter.HasFilter()) {
           ancestorPusher.PushAncestorAndStyleScope(parent->AsElement());
         } else {
@@ -10579,9 +10613,8 @@ nsCSSFrameConstructor::BuildInlineChildItems(nsFrameConstructorState& aState,
       // it does not have a frame and would not otherwise be pushed as an ancestor.
       nsIContent* contentParent = content->GetParent();
       MOZ_ASSERT(contentParent, "Parent must be non-null because we are iterating children.");
-      MOZ_ASSERT(contentParent->IsElement());
       TreeMatchContext::AutoAncestorPusher insertionPointPusher(aState.mTreeMatchContext);
-      if (contentParent != parentContent) {
+      if (contentParent != parentContent && contentParent->IsElement()) {
         if (aState.mTreeMatchContext.mAncestorFilter.HasFilter()) {
           insertionPointPusher.PushAncestorAndStyleScope(contentParent->AsElement());
         } else {
