@@ -77,15 +77,15 @@ RUN_MOCHITEST_ROBOCOP = \
 ifndef NO_FAIL_ON_TEST_ERRORS
 define check_test_error_internal
   @errors=`grep 'TEST-UNEXPECTED-' $@.log` ;\
-  if test '$$errors' ; then \
+  if test "$$errors" ; then \
 	  echo '$@ failed:'; \
-	  echo '$$errors'; \
-          $(if $(1),echo $(1)) \
+	  echo "$$errors"; \
+          $(if $(1),echo $(1)); \
 	  exit 1; \
   fi
 endef
 CHECK_TEST_ERROR = $(call check_test_error_internal)
-CHECK_TEST_ERROR_RERUN = $(call check_test_error_internal,'To rerun your failures please run 'make $@-rerun-failures'')
+CHECK_TEST_ERROR_RERUN = $(call check_test_error_internal,'To rerun your failures please run "make $@-rerun-failures"')
 endif
 
 mochitest-remote: DM_TRANS?=adb
