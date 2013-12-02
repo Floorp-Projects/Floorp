@@ -39,6 +39,10 @@ public:
   TransmitAutomaticData() MOZ_OVERRIDE;
 
   NS_IMETHOD
+  SetInitialChildList(ChildListID     aListID,
+                      nsFrameList&    aChildList) MOZ_OVERRIDE;
+
+  NS_IMETHOD
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
@@ -63,6 +67,13 @@ public:
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize) MOZ_OVERRIDE;
 
+  virtual nsresult
+  ChildListChanged(int32_t aModType) MOZ_OVERRIDE
+  {
+    ProcessTextData();
+    return nsMathMLContainerFrame::ChildListChanged(aModType);
+  }
+
 protected:
   nsMathMLmoFrame(nsStyleContext* aContext) : nsMathMLTokenFrame(aContext) {}
   virtual ~nsMathMLmoFrame();
@@ -75,7 +86,7 @@ protected:
   bool UseMathMLChar();
 
   // overload the base method so that we can setup our nsMathMLChar
-  virtual void ProcessTextData() MOZ_OVERRIDE;
+  void ProcessTextData();
 
   // helper to get our 'form' and lookup in the Operator Dictionary to fetch 
   // our default data that may come from there, and to complete the setup
