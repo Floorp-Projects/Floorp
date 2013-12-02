@@ -29,7 +29,6 @@
 #include <unistd.h>
 
 #include "base/basictypes.h"
-#include "GonkPermission.h"
 #include "nscore.h"
 #ifdef MOZ_OMX_DECODER
 #include "MediaResourceManagerService.h"
@@ -759,7 +758,6 @@ nsAppShell::Init()
 #if ANDROID_VERSION >= 18
         android::FakeSurfaceComposer::instantiate();
 #endif
-        GonkPermissionService::instantiate();
     }
 
     nsCOMPtr<nsIObserverService> obsServ = GetObserverService();
