@@ -73,7 +73,8 @@ opus_int silk_encode_frame_FIX(
 
 /* Initializes the Silk encoder state */
 opus_int silk_init_encoder(
-    silk_encoder_state_Fxx          *psEnc                                  /* I/O  Pointer to Silk FIX encoder state                                           */
+    silk_encoder_state_Fxx          *psEnc,                                 /* I/O  Pointer to Silk FIX encoder state                                           */
+    int                              arch                                   /* I    Run-time architecture                                                       */
 );
 
 /* Control the Silk encoder */
@@ -104,7 +105,8 @@ void silk_noise_shape_analysis_FIX(
     silk_encoder_state_FIX          *psEnc,                                 /* I/O  Encoder state FIX                                                           */
     silk_encoder_control_FIX        *psEncCtrl,                             /* I/O  Encoder control FIX                                                         */
     const opus_int16                *pitch_res,                             /* I    LPC residual from pitch analysis                                            */
-    const opus_int16                *x                                      /* I    Input signal [ frame_length + la_shape ]                                    */
+    const opus_int16                *x,                                     /* I    Input signal [ frame_length + la_shape ]                                    */
+    int                              arch                                   /* I    Run-time architecture                                                       */
 );
 
 /* Autocorrelations for a warped frequency axis */
@@ -132,7 +134,8 @@ void silk_find_pitch_lags_FIX(
     silk_encoder_state_FIX          *psEnc,                                 /* I/O  encoder state                                                               */
     silk_encoder_control_FIX        *psEncCtrl,                             /* I/O  encoder control                                                             */
     opus_int16                      res[],                                  /* O    residual                                                                    */
-    const opus_int16                x[]                                     /* I    Speech signal                                                               */
+    const opus_int16                x[],                                    /* I    Speech signal                                                               */
+    int                             arch                                    /* I    Run-time architecture                                                       */
 );
 
 /* Find LPC and LTP coefficients */

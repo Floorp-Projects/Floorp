@@ -83,9 +83,9 @@ void
 SVGStyleElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
-
+  ShadowRoot* oldShadow = GetShadowRoot();
   SVGStyleElementBase::UnbindFromTree(aDeep, aNullParent);
-  UpdateStyleSheetInternal(oldDoc);
+  UpdateStyleSheetInternal(oldDoc, oldShadow);
 }
 
 nsresult
@@ -99,7 +99,7 @@ SVGStyleElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     if (aName == nsGkAtoms::title ||
         aName == nsGkAtoms::media ||
         aName == nsGkAtoms::type) {
-      UpdateStyleSheetInternal(nullptr, true);
+      UpdateStyleSheetInternal(nullptr, nullptr, true);
     } else if (aName == nsGkAtoms::scoped) {
       UpdateStyleSheetScopedness(true);
     }
@@ -118,7 +118,7 @@ SVGStyleElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
     if (aAttribute == nsGkAtoms::title ||
         aAttribute == nsGkAtoms::media ||
         aAttribute == nsGkAtoms::type) {
-      UpdateStyleSheetInternal(nullptr, true);
+      UpdateStyleSheetInternal(nullptr, nullptr, true);
     } else if (aAttribute == nsGkAtoms::scoped) {
       UpdateStyleSheetScopedness(false);
     }
@@ -186,7 +186,7 @@ void
 SVGStyleElement::ContentChanged(nsIContent* aContent)
 {
   if (nsContentUtils::IsInSameAnonymousTree(this, aContent)) {
-    UpdateStyleSheetInternal(nullptr);
+    UpdateStyleSheetInternal(nullptr, nullptr);
   }
 }
 

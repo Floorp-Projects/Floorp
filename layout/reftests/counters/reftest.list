@@ -68,3 +68,14 @@
 == counter-ua-limits-list-00.html counter-ua-limits-list-00-ref.html
 == counter-ua-limits-list-01.html counter-ua-limits-list-01-ref.html
 == multiple-thai-counters.html multiple-thai-counters-ref.html
+== counter-suffix.html counter-suffix-ref.html
+== counter-cjk-decimal.html counter-cjk-decimal-ref.html
+== counter-japanese-informal.html counter-japanese-informal-ref.html
+== counter-japanese-formal.html counter-japanese-formal-ref.html
+== counter-korean-hangul-formal.html counter-korean-hangul-formal-ref.html
+== counter-korean-hanja-informal.html counter-korean-hanja-informal-ref.html
+== counter-korean-hanja-formal.html counter-korean-hanja-formal-ref.html
+== counter-simp-chinese-informal.html counter-simp-chinese-informal-ref.html
+== counter-simp-chinese-formal.html counter-simp-chinese-formal-ref.html
+== counter-trad-chinese-informal.html counter-trad-chinese-informal-ref.html
+== counter-trad-chinese-formal.html counter-trad-chinese-formal-ref.html

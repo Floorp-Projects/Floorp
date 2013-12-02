@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<style>
+  p, span { margin: 0; padding: 0; line-height: 150%; }
+  #wrapper { width: 10em; }
+  span {
+    display: inline-block;
+    width: 3em;
+    text-align: end;
+    -moz-box-sizing: border-box;
+  }
+  .def span { -moz-padding-end: 0.5em; }
+  .fix span { -moz-padding-end: 1em; }
+</style>
+<div id="wrapper">
+  <p class="def">
+    <span>1.</span>foo<br>
+    <span>2.</span>bar
+  </p>
+  <p class="def">
+    <span>&#x5d0;.</span>foo<br>
+    <span>&#x5d1;.</span>bar
+  </p>
+  <p>
+    <span>&#x4e00;&#x3001;</span>foo<br>
+    <span>&#x4e8c;&#x3001;</span>bar
+  </p>
+  <p class="def">
+    <span>&#xc77c;,</span>foo<br>
+    <span>&#xc774;,</span>bar
+  </p>
+  <p class="fix">
+    <span>1.</span>foo<br>
+    <span>2.</span>bar
+  </p>
+  <p class="fix">
+    <span>&#x5d0;.</span>foo<br>
+    <span>&#x5d1;.</span>bar
+  </p>
+  <p class="fix">
+    <span>&#x4e00;&#x3001;</span>foo<br>
+    <span>&#x4e8c;&#x3001;</span>bar
+  </p>
+  <p class="fix">
+    <span>&#xc77c;,</span>foo<br>
+    <span>&#xc774;,</span>bar
+  </p>
+  <p class="def" dir="rtl">
+    <span>1.</span>foo<br>
+    <span>2.</span>bar
+  </p>
+  <p class="def" dir="rtl">
+    <span>&#x5d0;.</span>foo<br>
+    <span>&#x5d1;.</span>bar
+  </p>
+  <p class="fix" dir="rtl">
+    <span>1.</span>foo<br>
+    <span>2.</span>bar
+  </p>
+  <p class="fix" dir="rtl">
+    <span>&#x5d0;.</span>foo<br>
+    <span>&#x5d1;.</span>bar
+  </p>
+</div>

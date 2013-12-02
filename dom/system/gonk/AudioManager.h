@@ -66,6 +66,9 @@ protected:
 private:
   nsAutoPtr<mozilla::hal::SwitchObserver> mObserver;
   nsCOMPtr<AudioChannelAgent>             mPhoneAudioAgent;
+  bool                                    mMuteCallToRIL;
+  // mIsMicMuted is only used for toggling mute call to RIL.
+  bool                                    mIsMicMuted;
 
   void HandleBluetoothStatusChanged(nsISupports* aSubject,
                                     const char* aTopic,

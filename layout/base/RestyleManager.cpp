@@ -2577,7 +2577,7 @@ ElementRestyler::RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint)
       // not have a frame and would not otherwise be pushed as an ancestor.
       nsIContent* parent = undisplayed->mContent->GetParent();
       TreeMatchContext::AutoAncestorPusher insertionPointPusher(mTreeMatchContext);
-      if (parent && parent->IsActiveChildrenElement()) {
+      if (parent && nsContentUtils::IsContentInsertionPoint(parent)) {
         insertionPointPusher.PushAncestorAndStyleScope(parent);
       }
 
@@ -2748,7 +2748,7 @@ ElementRestyler::RestyleContentChildren(nsIFrame* aParent,
         // nsPageFrame that does not have a content.
         nsIContent* parent = child->GetContent() ? child->GetContent()->GetParent() : nullptr;
         TreeMatchContext::AutoAncestorPusher insertionPointPusher(mTreeMatchContext);
-        if (parent && parent->IsActiveChildrenElement()) {
+        if (parent && nsContentUtils::IsContentInsertionPoint(parent)) {
           insertionPointPusher.PushAncestorAndStyleScope(parent);
         }
 

@@ -916,6 +916,7 @@ nsMathMLmoFrame::InheritAutomaticData(nsIFrame* aParent)
   // retain our native direction, it only changes if our text content changes
   nsStretchDirection direction = mEmbellishData.direction;
   nsMathMLTokenFrame::InheritAutomaticData(aParent);
+  ProcessTextData();
   mEmbellishData.direction = direction;
   return NS_OK;
 }
@@ -929,6 +930,19 @@ nsMathMLmoFrame::TransmitAutomaticData()
   mEmbellishData.coreFrame = nullptr;
   ProcessOperatorData();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMathMLmoFrame::SetInitialChildList(ChildListID     aListID,
+                                     nsFrameList&    aChildList)
+{
+  // First, let the parent class do its work
+  nsresult rv = nsMathMLTokenFrame::SetInitialChildList(aListID, aChildList);
+  if (NS_FAILED(rv))
+    return rv;
+
+  ProcessTextData();
+  return rv;
 }
 
 NS_IMETHODIMP

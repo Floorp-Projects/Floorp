@@ -279,9 +279,9 @@ partial interface Document {
 
 // http://dev.w3.org/2006/webapi/selectors-api2/#interface-definitions
 partial interface Document {
-  [Throws]
+  [Throws, Pure]
   Element?  querySelector(DOMString selectors);
-  [Throws]
+  [Throws, Pure]
   NodeList  querySelectorAll(DOMString selectors);
 
   //(Not implemented)Element?  find(DOMString selectors, optional (Element or sequence<Node>)? refNodes);

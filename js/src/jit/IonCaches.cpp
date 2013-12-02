@@ -683,12 +683,16 @@ GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, JSObject *obj,
         ExpandoAndGeneration *expandoAndGeneration = (ExpandoAndGeneration*)expandoVal.toPrivate();
         masm.movePtr(ImmPtr(expandoAndGeneration), tempVal.scratchReg());
 
-        masm.branch32(Assembler::NotEqual, Address(tempVal.scratchReg(), sizeof(Value)),
-                                                   Imm32(expandoAndGeneration->generation),
-                                                   &failDOMProxyCheck);
+        masm.branch32(Assembler::NotEqual,
+                      Address(tempVal.scratchReg(),
+                              ExpandoAndGeneration::offsetOfGeneration()),
+                      Imm32(expandoAndGeneration->generation),
+                      &failDOMProxyCheck);
 
         expandoVal = expandoAndGeneration->expando;
-        masm.loadValue(Address(tempVal.scratchReg(), 0), tempVal);
+        masm.loadValue(Address(tempVal.scratchReg(),
+                               ExpandoAndGeneration::offsetOfExpando()),
+                       tempVal);
     }
 
     // If the incoming object does not have an expando object then we're sure we're not

@@ -77,13 +77,18 @@ public:
 
 
   /* get list item text, without '.' */
-  static bool AppendCounterText(int32_t aListStyleType,
-                                  int32_t aOrdinal,
-                                  nsString& aResult);
+  static void AppendCounterText(int32_t aListStyleType,
+                                int32_t aOrdinal,
+                                nsString& aResult,
+                                bool& aIsRTL);
+
+  /* get suffix of list item */
+  static void GetListItemSuffix(int32_t aListStyleType,
+                                nsString& aResult,
+                                bool& aSuppressPadding);
 
   /* get list item text, with '.' */
-  bool GetListItemText(const nsStyleList& aStyleList,
-                         nsString& aResult);
+  void GetListItemText(const nsStyleList& aStyleList, nsString& aResult);
                          
   void PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                    const nsRect& aDirtyRect, uint32_t aFlags);
@@ -119,6 +124,12 @@ protected:
   nsSize mIntrinsicSize;
   int32_t mOrdinal;
   bool mTextIsRTL;
+
+  // If set to true, any padding of bullet defined in the UA style sheet will
+  // be suppressed.  This is used for some CJK numbering styles where extra
+  // space after the suffix is not desired.  Note that, any author-specified
+  // padding overriding the default style will NOT be suppressed.
+  bool mSuppressPadding;
 
 private:
 

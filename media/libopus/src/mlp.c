@@ -29,23 +29,26 @@
 #include "config.h"
 #endif
 
+#include "opus_types.h"
+#include "opus_defines.h"
+
 #include <math.h>
 #include "mlp.h"
 #include "arch.h"
 #include "tansig_table.h"
 #define MAX_NEURONS 100
 
-#ifdef FIXED_POINT
-static inline opus_val16 tansig_approx(opus_val32 _x) /* Q19 */
+#if 0
+static OPUS_INLINE opus_val16 tansig_approx(opus_val32 _x) /* Q19 */
 {
 	int i;
 	opus_val16 xx; /* Q11 */
 	/*double x, y;*/
 	opus_val16 dy, yy; /* Q14 */
 	/*x = 1.9073e-06*_x;*/
-	if (_x>=QCONST32(10,19))
+	if (_x>=QCONST32(8,19))
 		return QCONST32(1.,14);
-	if (_x<=-QCONST32(10,19))
+	if (_x<=-QCONST32(8,19))
 		return -QCONST32(1.,14);
 	xx = EXTRACT16(SHR32(_x, 8));
 	/*i = lrint(25*x);*/
@@ -62,14 +65,15 @@ static inline opus_val16 tansig_approx(opus_val32 _x) /* Q19 */
 }
 #else
 /*extern const float tansig_table[501];*/
-static inline opus_val16 tansig_approx(opus_val16 x)
+static OPUS_INLINE float tansig_approx(float x)
 {
 	int i;
-	opus_val16 y, dy;
-	opus_val16 sign=1;
-    if (x>=8)
+	float y, dy;
+	float sign=1;
+	/* Tests are reversed to catch NaNs */
+    if (!(x<8))
         return 1;
-    if (x<=-8)
+    if (!(x>-8))
         return -1;
 	if (x<0)
 	{
@@ -85,6 +89,7 @@ static inline opus_val16 tansig_approx(opus_val16 x)
 }
 #endif
 
+#if 0
 void mlp_process(const MLP *m, const opus_val16 *in, opus_val16 *out)
 {
 	int j;
@@ -108,4 +113,28 @@ void mlp_process(const MLP *m, const opus_val16 *in, opus_val16 *out)
 		out[j] = tansig_approx(EXTRACT16(PSHR32(sum,17)));
 	}
 }
-
+#else
+void mlp_process(const MLP *m, const float *in, float *out)
+{
+    int j;
+    float hidden[MAX_NEURONS];
+    const float *W = m->weights;
+    /* Copy to tmp_in */
+    for (j=0;j<m->topo[1];j++)
+    {
+        int k;
+        float sum = *W++;
+        for (k=0;k<m->topo[0];k++)
+            sum = sum + in[k]**W++;
+        hidden[j] = tansig_approx(sum);
+    }
+    for (j=0;j<m->topo[2];j++)
+    {
+        int k;
+        float sum = *W++;
+        for (k=0;k<m->topo[1];k++)
+            sum = sum + hidden[k]**W++;
+        out[j] = tansig_approx(sum);
+    }
+}
+#endif

@@ -456,8 +456,8 @@ input[type="file"] > button[type="button"] {
 input[type="color"]:-moz-system-metric(color-picker-available)::-moz-color-swatch {
   width: 100%;
   height: 100%;
-  min-width: 40px;
-  min-height: 15px;
+  min-width: 3px;
+  min-height: 3px;
   margin-left: auto;
   margin-right: auto;
   -moz-box-sizing: border-box;
@@ -572,6 +572,11 @@ input[type="submit"] {
   white-space: pre;
   text-align: center;
   text-shadow: none;
+}
+
+input[type="color"]:-moz-system-metric(color-picker-available) {
+  width: 64px;
+  height: 23px;
 }
 
 button {

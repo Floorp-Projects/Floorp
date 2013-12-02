@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define SILK_TYPEDEF_H
 
 #include "opus_types.h"
+#include "opus_defines.h"
 
 #ifndef FIXED_POINT
 # include <float.h>
@@ -63,7 +64,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifdef __GNUC__
 __attribute__((noreturn))
 #endif
-static inline void _silk_fatal(const char *str, const char *file, int line)
+static OPUS_INLINE void _silk_fatal(const char *str, const char *file, int line)
 {
    fprintf (stderr, "Fatal (internal) error in %s, line %d: %s\n", file, line, str);
    abort();

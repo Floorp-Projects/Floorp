@@ -901,7 +901,7 @@ add_test(function test_read_pbr() {
   let buf    = worker.Buf;
   let io     = worker.ICCIOHelper;
 
-  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options)  {
+  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
     let pbr_1 = [
       0xa8, 0x05, 0xc0, 0x03, 0x4f, 0x3a, 0x01
     ];
@@ -937,16 +937,24 @@ add_test(function test_read_pbr() {
   let successCb = function successCb(pbrs) {
     do_check_eq(pbrs[0].adn.fileId, 0x4f3a);
     do_check_eq(pbrs.length, 1);
-    run_next_test();
   };
 
   let errorCb = function errorCb(errorMsg) {
     do_print("Reading EF_PBR failed, msg = " + errorMsg);
     do_check_true(false);
-    run_next_test();
   };
 
   record.readPBR(successCb, errorCb);
+
+  // Check cache pbrs when 2nd call
+  let ifLoadEF = false;
+  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options)  {
+    ifLoadEF = true;
+  }
+  record.readPBR(successCb, errorCb);
+  do_check_false(ifLoadEF);
+
+  run_next_test();
 });
 
 /**

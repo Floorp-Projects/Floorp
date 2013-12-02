@@ -14,6 +14,6 @@ function run_test() {
   httpserver.start(-1);
   prefs.setCharPref("geo.wifi.uri", "http://localhost:" +
                     httpserver.identity.primaryPort + "/geo");
-  prefs.setBoolPref("geo.testing.ignore_ipc_principal", true);
+  prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
   run_test_in_child("./test_geolocation_timeout.js");
 }

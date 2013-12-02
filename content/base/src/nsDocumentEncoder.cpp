@@ -49,6 +49,7 @@
 #include "nsIFrame.h"
 #include "nsStringBuffer.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsIDocShell.h"
@@ -108,7 +109,16 @@ protected:
     NS_PRECONDITION(aNode, "");
 
     if (mFlags & SkipInvisibleContent) {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+      // Treat the visibility of the ShadowRoot as if it were
+      // the host content.
+      nsCOMPtr<nsIContent> content;
+      ShadowRoot* shadowRoot = ShadowRoot::FromNode(aNode);
+      if (shadowRoot) {
+        content = shadowRoot->GetHost();
+      } else {
+        content = do_QueryInterface(aNode);
+      }
+
       if (content) {
         nsIFrame* frame = content->GetPrimaryFrame();
         if (!frame) {

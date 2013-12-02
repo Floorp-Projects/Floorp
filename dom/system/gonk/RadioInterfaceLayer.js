@@ -728,6 +728,13 @@ RadioInterfaceLayer.prototype = {
     }
 
     throw Cr.NS_ERROR_NOT_AVAILABLE;
+  },
+
+  setMicrophoneMuted: function setMicrophoneMuted(muted) {
+    for (let clientId = 0; clientId < this.numRadioInterfaces; clientId++) {
+      let radioInterface = this.radioInterfaces[clientId];
+      radioInterface.workerMessenger.send("setMute", { muted: muted });
+    }
   }
 };
 

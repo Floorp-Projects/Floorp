@@ -384,6 +384,7 @@ BluetoothHfpManager::Reset()
   mCMER = false;
   mConnectScoRequest = false;
   mSlcConnected = false;
+  mHspConnected = false;
   mReceiveVgsFlag = false;
 
 #ifdef MOZ_B2G_RIL
@@ -1617,6 +1618,7 @@ BluetoothHfpManager::OnSocketConnectSuccess(BluetoothSocket* aSocket)
     mHeadsetSocket = nullptr;
   } else if (aSocket == mHeadsetSocket) {
     MOZ_ASSERT(!mSocket);
+    mHspConnected = true;
     mHeadsetSocket.swap(mSocket);
 
     mHandsfreeSocket->Disconnect();
@@ -1802,9 +1804,9 @@ BluetoothHfpManager::ConnectSco(BluetoothReplyRunnable* aRunnable)
     return false;
   }
 
-  // Make sure Service Level Connection established before we start to
-  // set up SCO (synchronous connection).
-  if (!mSlcConnected) {
+  // If we are not using HSP, we have to make sure Service Level Connection
+  // established before we start to set up SCO (synchronous connection).
+  if (!mSlcConnected && !mHspConnected) {
     mConnectScoRequest = true;
     BT_WARNING("ConnectSco called before Service Level Connection established");
     return false;

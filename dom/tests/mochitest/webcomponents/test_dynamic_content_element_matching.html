@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=806506
+-->
+<head>
+  <title>Test for dynamic changes to content matching content elements</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div class="tall" id="bodydiv"></div>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=806506">Bug 806506</a>
+<script>
+// Create ShadowRoot.
+var elem = document.createElement("div");
+var root = elem.createShadowRoot();
+
+var redInsertionPoint = document.createElement("content");
+redInsertionPoint.select = "*[data-color=red]";
+
+var blueInsertionPoint = document.createElement("content");
+blueInsertionPoint.select = "*[data-color=blue]";
+
+root.appendChild(redInsertionPoint);
+root.appendChild(blueInsertionPoint);
+
+is(blueInsertionPoint.getDistributedNodes().length, 0, "Blue insertion point should have no distributed nodes.");
+is(redInsertionPoint.getDistributedNodes().length, 0, "Red insertion point should have no distrubted nodes.");
+
+var matchElement = document.createElement("div");
+matchElement.setAttribute("data-color", "red");
+elem.appendChild(matchElement);
+
+is(blueInsertionPoint.getDistributedNodes().length, 0, "Blue insertion point should have no distributed nodes.");
+is(redInsertionPoint.getDistributedNodes().length, 1, "Red insertion point should match recently inserted div.");
+
+matchElement.setAttribute("data-color", "blue");
+is(blueInsertionPoint.getDistributedNodes().length, 1, "Blue insertion point should match element after changing attribute value.");
+is(redInsertionPoint.getDistributedNodes().length, 0, "Red insertion point should not match element after changing attribute value.");
+
+matchElement.removeAttribute("data-color");
+
+is(blueInsertionPoint.getDistributedNodes().length, 0, "Blue insertion point should have no distributed nodes after removing the matching attribute.");
+is(redInsertionPoint.getDistributedNodes().length, 0, "Red insertion point should have no distrubted nodes after removing the matching attribute.");
+
+</script>
+</body>
+</html>
+

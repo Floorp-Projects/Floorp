@@ -78,7 +78,6 @@
 #include "nsArrayUtils.h"
 #include "nsIEffectiveTLDService.h"
 
-#include "nsIPrompt.h"
 //AHMED 12-2
 #include "nsBidiUtils.h"
 
@@ -1233,12 +1232,6 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie, ErrorResult& rv)
   // not having a cookie service isn't an error
   nsCOMPtr<nsICookieService> service = do_GetService(NS_COOKIESERVICE_CONTRACTID);
   if (service && mDocumentURI) {
-    nsCOMPtr<nsIPrompt> prompt;
-    nsCOMPtr<nsPIDOMWindow> window = GetWindow();
-    if (window) {
-      window->GetPrompter(getter_AddRefs(prompt));
-    }
-
     // The for getting the URI matches nsNavigator::GetCookieEnabled
     nsCOMPtr<nsIURI> codebaseURI;
     NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
@@ -1251,7 +1244,7 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie, ErrorResult& rv)
     }
 
     NS_ConvertUTF16toUTF8 cookie(aCookie);
-    service->SetCookieString(codebaseURI, prompt, cookie.get(), mChannel);
+    service->SetCookieString(codebaseURI, nullptr, cookie.get(), mChannel);
   }
 }
 

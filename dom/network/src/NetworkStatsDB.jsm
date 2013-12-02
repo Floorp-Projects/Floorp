@@ -385,7 +385,7 @@ NetworkStatsDB.prototype = {
       request.onsuccess = function onsuccess(event) {
         let cursor = event.target.result;
         if (cursor) {
-          if (!sample) {
+          if (!sample && cursor.value.appId == 0) {
             sample = cursor.value;
           }
 

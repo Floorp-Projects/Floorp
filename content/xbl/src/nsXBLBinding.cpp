@@ -58,6 +58,7 @@
 #include "nsDOMClassInfo.h"
 
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ShadowRoot.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -163,6 +164,16 @@ nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
   NS_ADDREF(mPrototypeBinding->XBLDocumentInfo());
 }
 
+// Constructor used by web components.
+nsXBLBinding::nsXBLBinding(ShadowRoot* aShadowRoot, nsXBLPrototypeBinding* aBinding)
+  : mMarkedForDeath(false),
+    mPrototypeBinding(aBinding),
+    mContent(aShadowRoot)
+{
+  NS_ASSERTION(mPrototypeBinding, "Must have a prototype binding!");
+  // Grab a ref to the document info so the prototype binding won't die
+  NS_ADDREF(mPrototypeBinding->XBLDocumentInfo());
+}
 
 nsXBLBinding::~nsXBLBinding(void)
 {
@@ -273,6 +284,13 @@ void
 nsXBLBinding::UninstallAnonymousContent(nsIDocument* aDocument,
                                         nsIContent* aAnonParent)
 {
+  if (aAnonParent->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    // It is unnecessary to uninstall anonymous content in a shadow tree
+    // because the ShadowRoot itself is a DocumentFragment and does not
+    // need any additional cleanup.
+    return;
+  }
+
   nsAutoScriptBlocker scriptBlocker;
   // Hold a strong ref while doing this, just in case.
   nsCOMPtr<nsIContent> anonParent = aAnonParent;

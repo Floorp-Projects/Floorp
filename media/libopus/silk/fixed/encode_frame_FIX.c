@@ -34,7 +34,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "tuning_parameters.h"
 
 /* Low Bitrate Redundancy (LBRR) encoding. Reuse all parameters but encode with lower bitrate           */
-static inline void silk_LBRR_encode_FIX(
+static OPUS_INLINE void silk_LBRR_encode_FIX(
     silk_encoder_state_FIX          *psEnc,                                 /* I/O  Pointer to Silk FIX encoder state                                           */
     silk_encoder_control_FIX        *psEncCtrl,                             /* I/O  Pointer to Silk FIX encoder control struct                                  */
     const opus_int32                xfw_Q3[],                               /* I    Input signal                                                                */
@@ -132,12 +132,12 @@ opus_int silk_encode_frame_FIX(
         /*****************************************/
         /* Find pitch lags, initial LPC analysis */
         /*****************************************/
-        silk_find_pitch_lags_FIX( psEnc, &sEncCtrl, res_pitch, x_frame );
+        silk_find_pitch_lags_FIX( psEnc, &sEncCtrl, res_pitch, x_frame, psEnc->sCmn.arch );
 
         /************************/
         /* Noise shape analysis */
         /************************/
-        silk_noise_shape_analysis_FIX( psEnc, &sEncCtrl, res_pitch_frame, x_frame );
+        silk_noise_shape_analysis_FIX( psEnc, &sEncCtrl, res_pitch_frame, x_frame, psEnc->sCmn.arch );
 
         /***************************************************/
         /* Find linear prediction coefficients (LPC + LTP) */
@@ -302,10 +302,6 @@ opus_int silk_encode_frame_FIX(
     silk_memmove( psEnc->x_buf, &psEnc->x_buf[ psEnc->sCmn.frame_length ],
         ( psEnc->sCmn.ltp_mem_length + LA_SHAPE_MS * psEnc->sCmn.fs_kHz ) * sizeof( opus_int16 ) );
 
-    /* Parameters needed for next frame */
-    psEnc->sCmn.prevLag        = sEncCtrl.pitchL[ psEnc->sCmn.nb_subfr - 1 ];
-    psEnc->sCmn.prevSignalType = psEnc->sCmn.indices.signalType;
-
     /* Exit without entropy coding */
     if( psEnc->sCmn.prefillFlag ) {
         /* No payload */
@@ -313,6 +309,10 @@ opus_int silk_encode_frame_FIX(
         RESTORE_STACK;
         return ret;
     }
+
+    /* Parameters needed for next frame */
+    psEnc->sCmn.prevLag        = sEncCtrl.pitchL[ psEnc->sCmn.nb_subfr - 1 ];
+    psEnc->sCmn.prevSignalType = psEnc->sCmn.indices.signalType;
 
     /****************************************/
     /* Finalize payload                     */
@@ -326,7 +326,7 @@ opus_int silk_encode_frame_FIX(
 }
 
 /* Low-Bitrate Redundancy (LBRR) encoding. Reuse all parameters but encode excitation at lower bitrate  */
-static inline void silk_LBRR_encode_FIX(
+static OPUS_INLINE void silk_LBRR_encode_FIX(
     silk_encoder_state_FIX          *psEnc,                                 /* I/O  Pointer to Silk FIX encoder state                                           */
     silk_encoder_control_FIX        *psEncCtrl,                             /* I/O  Pointer to Silk FIX encoder control struct                                  */
     const opus_int32                xfw_Q3[],                               /* I    Input signal                                                                */
