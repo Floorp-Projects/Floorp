@@ -319,6 +319,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     }
 
     public void onAppLocaleChanged(String to) {
+        Log.d(LOG_TAG, "Setting health recorder app locale to " + to);
         this.profileCache.beginInitialization();
         this.profileCache.setAppLocale(to);
     }
@@ -349,10 +350,19 @@ public class BrowserHealthRecorder implements GeckoEventListener {
      * Invoke this method after calls that mutate the environment.
      *
      * If this change resulted in a transition between two environments, {@link
-     * #onEnvironmentTransition(int, int)} will be invoked on the background
+     * #onEnvironmentTransition(int, int, boolean, String)} will be invoked on the background
      * thread.
      */
     public synchronized void onEnvironmentChanged() {
+        onEnvironmentChanged(true, "E");
+    }
+
+    /**
+     * If `startNewSession` is false, it means no new session should begin
+     * (e.g., because we're about to restart, and we don't want to create
+     * an orphan).
+     */
+    public synchronized void onEnvironmentChanged(final boolean startNewSession, final String sessionEndReason) {
         final int previousEnv = this.env;
         this.env = -1;
         try {
@@ -374,7 +384,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
             @Override
             public void run() {
                 try {
-                    onEnvironmentTransition(previousEnv, updatedEnv);
+                    onEnvironmentTransition(previousEnv, updatedEnv, startNewSession, sessionEndReason);
                 } catch (Exception e) {
                     Log.w(LOG_TAG, "Could not record environment transition.", e);
                 }
@@ -643,7 +653,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
      * Invoked in the background whenever the environment transitions between
      * two valid values.
      */
-    protected void onEnvironmentTransition(int prev, int env) {
+    protected void onEnvironmentTransition(int prev, int env, boolean startNewSession, String sessionEndReason) {
         if (this.state != State.INITIALIZED) {
             Log.d(LOG_TAG, "Not initialized: not recording env transition (" + prev + " => " + env + ").");
             return;
@@ -652,7 +662,12 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         final SharedPreferences prefs = GeckoApp.getAppSharedPreferences();
         final SharedPreferences.Editor editor = prefs.edit();
 
-        recordSessionEnd("E", editor, prev);
+        recordSessionEnd(sessionEndReason, editor, prev);
+
+        if (!startNewSession) {
+            editor.commit();
+            return;
+        }
 
         final SessionInformation newSession = SessionInformation.forRuntimeTransition();
         setCurrentSession(newSession);
