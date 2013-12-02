@@ -29,8 +29,8 @@ endif
 
 abs_srcdir = $(abspath $(srcdir))
 
-regOrderDir="$(call getnativepath,$(abs_srcdir)/regorder)";
+regOrderDir = $(call getnativepath,$(abs_srcdir)/regorder)
 
 check::
 	XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
-	  $(DIST)/bin/TestRegistrationOrder$(BIN_SUFFIX) $(regOrderDir)
+	  $(DIST)/bin/TestRegistrationOrder$(BIN_SUFFIX) '$(regOrderDir)'

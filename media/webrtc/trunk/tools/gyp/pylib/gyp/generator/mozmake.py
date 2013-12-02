@@ -75,7 +75,7 @@ endif
 ifeq (WINNT,$(OS_TARGET))
 # These get set via VC project file settings for normal GYP builds.
 DEFINES += -DUNICODE -D_UNICODE
-LOCAL_INCLUDES += -I"$(MOZ_DIRECTX_SDK_PATH)/include"
+LOCAL_INCLUDES += -I'$(MOZ_DIRECTX_SDK_PATH)/include'
 endif
 
 # Don't use STL wrappers when compiling Google code.
@@ -97,7 +97,7 @@ endif
 
 define COPY_SRC
 $(notdir $(1)): $(1)
-	$$(INSTALL) $$(IFLAGS1) "$$<" .
+	$$(INSTALL) $$(IFLAGS1) '$$<' .
 
 endef # COPY_SRC
 ifdef COPY_SRCS
