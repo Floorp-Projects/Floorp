@@ -28,7 +28,6 @@ function fuzzyCompare(a, b) {
 }
 
 function compareChannels(buf1, buf2,
-                        /*optional*/ offset,
                         /*optional*/ length,
                         /*optional*/ sourceOffset,
                         /*optional*/ destOffset,
@@ -36,15 +35,15 @@ function compareChannels(buf1, buf2,
   if (!skipLengthCheck) {
     is(buf1.length, buf2.length, "Channels must have the same length");
   }
-  if (length == undefined) {
-    length = buf1.length - (offset || 0);
-  }
   sourceOffset = sourceOffset || 0;
   destOffset = destOffset || 0;
+  if (length == undefined) {
+    length = buf1.length - sourceOffset;
+  }
   var difference = 0;
   var maxDifference = 0;
   var firstBadIndex = -1;
-  for (var i = offset || 0; i < Math.min(buf1.length, (offset || 0) + length); ++i) {
+  for (var i = 0; i < length; ++i) {
     if (!fuzzyCompare(buf1[i + sourceOffset], buf2[i + destOffset])) {
       difference++;
       maxDifference = Math.max(maxDifference, Math.abs(buf1[i + sourceOffset] - buf2[i + destOffset]));
@@ -79,7 +78,7 @@ function compareBuffers(got, expected) {
 
   for (var i = 0; i < got.numberOfChannels; ++i) {
     compareChannels(got.getChannelData(i), expected.getChannelData(i),
-                    0, got.length, 0, 0, true);
+                    got.length, 0, 0, true);
   }
 }
 
@@ -194,7 +193,6 @@ function runTest()
             for (var i = 0; i < e.renderedBuffer.numberOfChannels; ++i) {
               compareChannels(e.renderedBuffer.getChannelData(i),
                              expectedBuffer.getChannelData(i),
-                             undefined,
                              expectedBuffer.length,
                              samplesSeen,
                              undefined,
