@@ -37,7 +37,7 @@ function onAudioProcess(e) {
     var ctx = e.target.context;
     var expected = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     applySignal(expected, offset);
-    compareBuffers(e.inputBuffer.getChannelData(0), expected.getChannelData(0));
+    compareBuffers(e.inputBuffer, expected);
     SimpleTest.finish();
   }
   count++;

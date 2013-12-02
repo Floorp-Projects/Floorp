@@ -29,8 +29,8 @@ addLoadEvent(function() {
   ctx.startRendering();
   ctx.oncomplete = function(e) {
     is(e.renderedBuffer.numberOfChannels, 2, "Correct expected number of buffers");
-    compareBuffers(e.renderedBuffer.getChannelData(0), buf.getChannelData(0));
-    compareBuffers(e.renderedBuffer.getChannelData(1), buf.getChannelData(1));
+    compareChannels(e.renderedBuffer.getChannelData(0), buf.getChannelData(0));
+    compareChannels(e.renderedBuffer.getChannelData(1), buf.getChannelData(1));
 
     SimpleTest.finish();
   };

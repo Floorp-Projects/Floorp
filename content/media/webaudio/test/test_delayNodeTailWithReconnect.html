@@ -74,7 +74,7 @@ function onDelayOutput(e) {
       var ctx = e.target.context;
       var expected = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       applySignal(expected, delayBufferOffset);
-      compareBuffers(e.inputBuffer.getChannelData(0), expected.getChannelData(0));
+      compareBuffers(e.inputBuffer, expected);
       e.target.onaudioprocess = null;
       SimpleTest.finish();
     }
