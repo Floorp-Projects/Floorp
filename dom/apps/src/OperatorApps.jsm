@@ -28,15 +28,19 @@ function debug(aMsg) {
   //dump("-*-*- OperatorApps.jsm : " + aMsg + "\n");
 }
 
-const DIRECTORY_NAME = "webappsDir";
-
-// The files will be stored on DIRECTORY_NAME + "/" + SINGLE_VARIANT_SOURCE_DIR
-// SINGLE_VARIANT_CONF_FILE will be stored on SINGLE_VARIANT_SOURCE_DIR
-// Apps will be stored on a app per directory basis, hanging from
+// Single Variant source dir will be set in PREF_SINGLE_VARIANT_DIR
+// preference.
+// if PREF_SINGLE_VARIANT_DIR does not exist or has not value, it will use (as
+// single variant source) the value of
+// DIRECTORY_NAME + "/" + SINGLE_VARIANT_SOURCE_DIR value instead.
+// SINGLE_VARIANT_CONF_FILE will be stored on Single Variant Source.
+// Apps will be stored on an app per directory basis, hanging from
 // SINGLE_VARIANT_SOURCE_DIR
+const DIRECTORY_NAME = "webappsDir";
 const SINGLE_VARIANT_SOURCE_DIR = "svoperapps";
 const SINGLE_VARIANT_CONF_FILE  = "singlevariantconf.json";
 const PREF_FIRST_RUN_WITH_SIM   = "dom.webapps.firstRunWithSIM";
+const PREF_SINGLE_VARIANT_DIR   = "dom.mozApps.single_variant_sourcedir";
 const METADATA                  = "metadata.json";
 const UPDATEMANIFEST            = "update.webapp";
 const MANIFEST                  = "manifest.webapp";
@@ -54,6 +58,9 @@ function isFirstRunWithSIM() {
 }
 
 #ifdef MOZ_B2G_RIL
+let File = OS.File;
+let Path = OS.Path;
+
 let iccListener = {
   notifyStkCommand: function() {},
 
@@ -88,30 +95,118 @@ this.OperatorAppsRegistry = {
 #ifdef MOZ_B2G_RIL
     if (isFirstRunWithSIM()) {
       debug("First Run with SIM");
-      // TODO: Bug 927709 - OperatorApps for multi-sim
-      // In Multi-sim, there is more than one client in iccProvider. Each
-      // client represents a icc service. To maintain the backward compatibility
-      // with single sim, we always use client 0 for now. Adding support for
-      // multiple sim will be addressed in bug 927709, if needed.
-      let clientId = 0;
-      let iccInfo = iccProvider.getIccInfo(clientId);
-      let mcc = 0;
-      let mnc = 0;
-      if (iccInfo && iccInfo.mcc) {
-        mcc = iccInfo.mcc;
-      }
-      if (iccInfo && iccInfo.mnc) {
-        mnc = iccInfo.mnc;
-      }
-      if (mcc && mnc) {
-        this._installOperatorApps(mcc, mnc);
-      } else {
-        iccProvider.registerIccMsg(clientId, iccListener);
-      }
+      Task.spawn(function() {
+        try {
+          yield this._initializeSourceDir();
+          // TODO: Bug 927709 - OperatorApps for multi-sim
+          // In Multi-sim, there is more than one client in iccProvider. Each
+          // client represents a icc service. To maintain the backward
+          // compatibility with single sim, we always use client 0 for now.
+          // Adding support for multiple sim will be addressed in bug 927709, if
+          // needed.
+          let clientId = 0;
+          let iccInfo = iccProvider.getIccInfo(clientId);
+          let mcc = 0;
+          let mnc = 0;
+          if (iccInfo && iccInfo.mcc) {
+            mcc = iccInfo.mcc;
+          }
+          if (iccInfo && iccInfo.mnc) {
+            mnc = iccInfo.mnc;
+          }
+          if (mcc && mnc) {
+            this._installOperatorApps(mcc, mnc);
+          } else {
+            iccProvider.registerIccMsg(clientId, iccListener);
+          }
+        } catch (e) {
+          debug("Error Initializing OperatorApps. " + e);
+        }
+      }.bind(this));
     } else {
       debug("No First Run with SIM");
     }
 #endif
+  },
+
+  _copyDirectory: function(aOrg, aDst) {
+    debug("copying " + aOrg + " to " + aDst);
+    return aDst && Task.spawn(function() {
+      try {
+        let orgInfo = yield File.stat(aOrg);
+        if (!orgInfo.isDir) {
+          return;
+        }
+
+        let dirDstExists = yield File.exists(aDst);
+        if (!dirDstExists) {
+          yield File.makeDir(aDst);
+        }
+        let iterator = new File.DirectoryIterator(aOrg);
+        if (!iterator) {
+          debug("No iterator over: " + aOrg);
+          return;
+        }
+        try {
+          while (true) {
+            let entry;
+            try {
+              entry = yield iterator.next();
+            } catch (ex if ex == StopIteration) {
+              break;
+            }
+
+            if (!entry.isDir) {
+              yield File.copy(entry.path, Path.join(aDst, entry.name));
+            } else {
+              yield this._copyDirectory(entry.path,
+                                        Path.join(aDst, entry.name));
+            }
+          }
+        } finally {
+          iterator.close();
+        }
+      } catch (e) {
+        debug("Error copying " + aOrg + " to " + aDst + ". " + e);
+      }
+    }.bind(this));
+  },
+
+  _initializeSourceDir: function() {
+    return Task.spawn(function() {
+      let svFinalDirName;
+      try {
+        svFinalDirName = Services.prefs.getCharPref(PREF_SINGLE_VARIANT_DIR);
+      } catch(e) {
+        debug ("Error getting pref. " + e);
+        this.appsDir = FileUtils.getFile(DIRECTORY_NAME,
+                                         [SINGLE_VARIANT_SOURCE_DIR]).path;
+        return;
+      }
+      // If SINGLE_VARIANT_CONF_FILE is in PREF_SINGLE_VARIANT_DIR return
+      // PREF_SINGLE_VARIANT_DIR as sourceDir, else go to
+      // DIRECTORY_NAME + SINGLE_VARIANT_SOURCE_DIR and move all apps (and
+      // configuration file) to PREF_SINGLE_VARIANT_DIR and return
+      // PREF_SINGLE_VARIANT_DIR as sourceDir.
+      let existsDir = yield File.exists(svFinalDirName);
+      if (!existsDir) {
+        yield File.makeDir(svFinalDirName, {ignoreExisting: true});
+      }
+
+      let existsSvIndex = yield File.exists(Path.join(svFinalDirName,
+                                            SINGLE_VARIANT_CONF_FILE));
+      if (!existsSvIndex) {
+        let svSourceDirName = FileUtils.getFile(DIRECTORY_NAME,
+                                              [SINGLE_VARIANT_SOURCE_DIR]).path;
+        yield this._copyDirectory(svSourceDirName, svFinalDirName);
+        debug("removing directory:" + svSourceDirName);
+        File.removeDir(svSourceDirName, {
+          ignoreAbsent: true,
+          ignorePermissions: true
+        });
+      }
+      this.appsDir = svFinalDirName;
+    }.bind(this));
   },
 
   set appsDir(aDir) {
@@ -126,10 +221,6 @@ this.OperatorAppsRegistry = {
   },
 
   get appsDir() {
-    if (!this._baseDirectory) {
-      this._baseDirectory = FileUtils.getFile(DIRECTORY_NAME,
-                                              [SINGLE_VARIANT_SOURCE_DIR]);
-    }
     return this._baseDirectory;
   },
 

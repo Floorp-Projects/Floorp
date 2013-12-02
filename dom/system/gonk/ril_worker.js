@@ -362,11 +362,6 @@ let RIL = {
     this._pendingNetworkInfo = {rilMessageType: "networkinfochanged"};
 
     /**
-     * Mute or unmute the radio.
-     */
-    this._muted = true;
-
-    /**
      * USSD session flag.
      * Only one USSD session may exist at a time, and the session is assumed
      * to exist until:
@@ -389,17 +384,6 @@ let RIL = {
       MMI: cbmmi || null
     };
     this.mergedCellBroadcastConfig = null;
-  },
-
-  get muted() {
-    return this._muted;
-  },
-  set muted(val) {
-    val = Boolean(val);
-    if (this._muted != val) {
-      this.setMute(val);
-      this._muted = val;
-    }
   },
 
   /**
@@ -1466,10 +1450,10 @@ let RIL = {
    * @param mute
    *        Boolean to indicate whether to mute or unmute the radio.
    */
-  setMute: function setMute(mute) {
+  setMute: function setMute(options) {
     Buf.newParcel(REQUEST_SET_MUTE);
     Buf.writeInt32(1);
-    Buf.writeInt32(mute ? 1 : 0);
+    Buf.writeInt32(options.muted ? 1 : 0);
     Buf.sendParcel();
   },
 
@@ -3617,10 +3601,6 @@ let RIL = {
     if (conferenceChanged) {
       this._ensureConference();
     }
-
-    // Update our mute status. If there is anything in our currentCalls map then
-    // we know it's a voice call and we should leave audio on.
-    this.muted = (Object.getOwnPropertyNames(this.currentCalls).length === 0);
   },
 
   _ensureConference: function _ensureConference() {
@@ -11575,9 +11555,15 @@ let ICCRecordHelper = {
         ICCIOHelper.loadNextRecord(options);
       } else {
         if (onsuccess) {
+          RIL.iccInfoPrivate.pbrs = pbrs;
           onsuccess(pbrs);
         }
       }
+    }
+
+    if (RIL.iccInfoPrivate.pbrs) {
+      onsuccess(RIL.iccInfoPrivate.pbrs);
+      return;
     }
 
     let pbrs = [];

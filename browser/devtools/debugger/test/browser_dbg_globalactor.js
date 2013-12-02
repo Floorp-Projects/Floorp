@@ -44,26 +44,15 @@ function test() {
           let extraPools = conn._extraPools;
           let globalPool;
 
-          for (let pool of extraPools) {
-            if (Object.keys(pool._actors).some(e => {
-              // Tab actors are in the global pool.
-              let re = new RegExp(conn._prefix + "tab", "g");
-              return e.match(re) !== null;
-            })) {
-              globalPool = pool;
-              break;
-            }
-          }
-
-          // Then we look if the global pool contains only one test actor.
           let actorPrefix = conn._prefix + "test_one";
-          let actors = Object.keys(globalPool._actors).join();
-          info("Global actors: " + actors);
-
-          isnot(actors.indexOf(actorPrefix), -1,
-            "The test actor exists in the pool.");
-          is(actors.indexOf(actorPrefix), actors.lastIndexOf(actorPrefix),
-            "Only one actor exists in the pool.");
+          let count = 0;
+          for (let pool of extraPools) {
+            count += Object.keys(pool._actors).filter(e => {
+              return e.startsWith(actorPrefix);
+            }).length;
+          }
+          is(count, 2,
+            "Only two actor exists in all pools. One tab actor and one global.");
 
           gClient.close(finish);
         });

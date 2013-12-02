@@ -308,6 +308,10 @@ pref("apz.axis_lock_mode", 0);
 pref("gfx.hidpi.enabled", 2);
 #endif
 
+// Whether to enable LayerScope tool and default listening port
+pref("gfx.layerscope.enabled", false);
+pref("gfx.layerscope.port", 23456);
+
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
 // See eCMSMode in gfx/thebes/gfxPlatform.h
 pref("gfx.color_management.mode", 2);
