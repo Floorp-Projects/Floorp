@@ -1687,7 +1687,7 @@ ReportAndDump(JSContext *cx, unsigned argc, JS::Value *vp)
 
   dmd::ClearReports();
   fprintf(stderr, "DMD: running reporters...\n");
-  dmd::RunReporters();
+  dmd::RunReportersForThisProcess();
   dmd::Writer writer(FpWrite, fp);
   dmd::Dump(writer);
 
