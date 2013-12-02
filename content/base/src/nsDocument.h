@@ -134,7 +134,7 @@ public:
   }
   ~nsIdentifierMapEntry();
 
-  void AddNameElement(nsIDocument* aDocument, Element* aElement);
+  void AddNameElement(nsINode* aDocument, Element* aElement);
   void RemoveNameElement(Element* aElement);
   bool IsEmpty();
   nsBaseContentList* GetNameContentList() {

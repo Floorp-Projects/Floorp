@@ -194,6 +194,14 @@ partial interface Element {
   NodeList  querySelectorAll(DOMString selectors);
 };
 
+// https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/shadow/index.html#shadow-root-object
+partial interface Element {
+  [Throws,Pref="dom.webcomponents.enabled"]
+  ShadowRoot createShadowRoot();
+  [Pref="dom.webcomponents.enabled"]
+  readonly attribute ShadowRoot? shadowRoot;
+};
+
 Element implements ChildNode;
 Element implements NonDocumentTypeChildNode;
 Element implements ParentNode;

@@ -123,6 +123,7 @@
 #include "mozilla/Telemetry.h"
 
 #include "mozilla/CORSMode.h"
+#include "mozilla/dom/ShadowRoot.h"
 
 #include "nsStyledElement.h"
 #include "nsXBLService.h"
@@ -686,6 +687,91 @@ Element::GetClientRects()
 
 //----------------------------------------------------------------------
 
+void
+Element::AddToIdTable(nsIAtom* aId)
+{
+  NS_ASSERTION(HasID(), "Node doesn't have an ID?");
+  if (HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    ShadowRoot* containingShadow = GetContainingShadow();
+    containingShadow->AddToIdTable(this, aId);
+  } else {
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc && (!IsInAnonymousSubtree() || doc->IsXUL())) {
+      doc->AddToIdTable(this, aId);
+    }
+  }
+}
+
+void
+Element::RemoveFromIdTable()
+{
+  if (HasID()) {
+    if (HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+      ShadowRoot* containingShadow = GetContainingShadow();
+      // Check for containingShadow because it may have
+      // been deleted during unlinking.
+      if (containingShadow) {
+        containingShadow->RemoveFromIdTable(this, DoGetID());
+      }
+    } else {
+      nsIDocument* doc = GetCurrentDoc();
+      if (doc) {
+        nsIAtom* id = DoGetID();
+        // id can be null during mutation events evilness. Also, XUL elements
+        // loose their proto attributes during cc-unlink, so this can happen
+        // during cc-unlink too.
+        if (id) {
+          doc->RemoveFromIdTable(this, DoGetID());
+        }
+      }
+    }
+  }
+}
+
+already_AddRefed<ShadowRoot>
+Element::CreateShadowRoot(ErrorResult& aError)
+{
+  nsAutoScriptBlocker scriptBlocker;
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nodeInfo = mNodeInfo->NodeInfoManager()->GetNodeInfo(
+    nsGkAtoms::documentFragmentNodeName, nullptr, kNameSpaceID_None,
+    nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
+
+  nsRefPtr<nsXBLDocumentInfo> docInfo = new nsXBLDocumentInfo(OwnerDoc());
+
+  nsXBLPrototypeBinding* protoBinding = new nsXBLPrototypeBinding();
+  aError = protoBinding->Init(NS_LITERAL_CSTRING("shadowroot"),
+                              docInfo, this, true);
+  if (aError.Failed()) {
+    delete protoBinding;
+    return nullptr;
+  }
+
+  // Calling SetPrototypeBinding takes ownership of protoBinding.
+  docInfo->SetPrototypeBinding(NS_LITERAL_CSTRING("shadowroot"), protoBinding);
+
+  nsRefPtr<ShadowRoot> shadowRoot = new ShadowRoot(this, nodeInfo.forget());
+  SetShadowRoot(shadowRoot);
+
+  // xblBinding takes ownership of docInfo.
+  nsRefPtr<nsXBLBinding> xblBinding = new nsXBLBinding(shadowRoot, protoBinding);
+  xblBinding->SetBoundElement(this);
+
+  SetXBLBinding(xblBinding);
+
+  // Recreate the frame for the bound content because binding a ShadowRoot
+  // changes how things are rendered.
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    nsIPresShell *shell = doc->GetShell();
+    if (shell) {
+      shell->RecreateFramesFor(this);
+    }
+  }
+
+  return shadowRoot.forget();
+}
 
 void
 Element::GetAttribute(const nsAString& aName, DOMString& aReturn)
@@ -997,6 +1083,13 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     if (aParent->HasFlag(NODE_CHROME_ONLY_ACCESS)) {
       SetFlags(NODE_CHROME_ONLY_ACCESS);
     }
+    if (aParent->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+      SetFlags(NODE_IS_IN_SHADOW_TREE);
+    }
+    ShadowRoot* parentContainingShadow = aParent->GetContainingShadow();
+    if (parentContainingShadow) {
+      DOMSlots()->mContainingShadow = parentContainingShadow;
+    }
   }
 
   bool hadForceXBL = HasFlag(NODE_FORCE_XBL_BINDINGS);
@@ -1090,8 +1183,8 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   nsNodeUtils::ParentChainChanged(this);
 
-  if (aDocument && HasID() && !aBindingParent) {
-    aDocument->AddToIdTable(this, DoGetID());
+  if (HasID()) {
+    AddToIdTable(DoGetID());
   }
 
   if (MayHaveStyle() && !IsXUL()) {
@@ -1210,7 +1303,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   }
 
   // Unset this since that's what the old code effectively did.
-  UnsetFlags(NODE_FORCE_XBL_BINDINGS);
+  UnsetFlags(NODE_FORCE_XBL_BINDINGS | NODE_IS_IN_SHADOW_TREE);
   
 #ifdef MOZ_XUL
   nsXULElement* xulElem = nsXULElement::FromContent(this);
@@ -1223,6 +1316,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     nsDOMSlots *slots = GetExistingDOMSlots();
     if (slots) {
       slots->mBindingParent = nullptr;
+      slots->mContainingShadow = nullptr;
     }
   }
 
@@ -3091,8 +3185,8 @@ Serialize(Element* aRoot, bool aDescendentsOnly, nsAString& aOut)
       // should be the host template element.
       if (current->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
         DocumentFragment* frag = static_cast<DocumentFragment*>(current);
-        HTMLTemplateElement* fragHost = frag->GetHost();
-        if (fragHost) {
+        nsIContent* fragHost = frag->GetHost();
+        if (fragHost && nsNodeUtils::IsTemplateElement(fragHost)) {
           current = fragHost;
         }
       }

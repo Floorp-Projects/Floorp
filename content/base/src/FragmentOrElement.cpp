@@ -120,6 +120,8 @@
 
 #include "mozilla/CORSMode.h"
 
+#include "mozilla/dom/ShadowRoot.h"
+
 #include "nsStyledElement.h"
 
 using namespace mozilla;
@@ -546,6 +548,12 @@ FragmentOrElement::nsDOMSlots::Traverse(nsCycleCollectionTraversalCallback &cb, 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mXBLInsertionParent");
   cb.NoteXPCOMChild(mXBLInsertionParent.get());
 
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mShadowRoot");
+  cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mShadowRoot));
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mContainingShadow");
+  cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mContainingShadow));
+
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mChildrenList");
   cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMNodeList*, mChildrenList));
 
@@ -566,6 +574,8 @@ FragmentOrElement::nsDOMSlots::Unlink(bool aIsXUL)
     NS_IF_RELEASE(mControllers);
   mXBLBinding = nullptr;
   mXBLInsertionParent = nullptr;
+  mShadowRoot = nullptr;
+  mContainingShadow = nullptr;
   mChildrenList = nullptr;
   mUndoManager = nullptr;
   if (mClassList) {
@@ -958,6 +968,33 @@ FragmentOrElement::GetXBLInsertionParent() const
   }
 
   return nullptr;
+}
+
+ShadowRoot*
+FragmentOrElement::GetShadowRoot() const
+{
+  nsDOMSlots *slots = GetExistingDOMSlots();
+  if (slots) {
+    return slots->mShadowRoot;
+  }
+  return nullptr;
+}
+
+ShadowRoot*
+FragmentOrElement::GetContainingShadow() const
+{
+  nsDOMSlots *slots = GetExistingDOMSlots();
+  if (slots) {
+    return slots->mContainingShadow;
+  }
+  return nullptr;
+}
+
+void
+FragmentOrElement::SetShadowRoot(ShadowRoot* aShadowRoot)
+{
+  nsDOMSlots *slots = DOMSlots();
+  slots->mShadowRoot = aShadowRoot;
 }
 
 void

@@ -896,6 +896,8 @@ pref("privacy.donottrackheader.value",      1);
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.clipboardevents.enabled",   true);
 
+pref("dom.webcomponents.enabled",           false);
+
 pref("javascript.enabled",                  true);
 pref("javascript.options.strict",           false);
 #ifdef DEBUG
