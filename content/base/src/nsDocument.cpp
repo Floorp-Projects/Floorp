@@ -8490,7 +8490,10 @@ FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments,
     return;
 
   for (uint32_t i = 0; i < aDocuments.Length(); ++i) {
-    if (!aDocuments[i]->EventHandlingSuppressed()) {
+    // NB: Don't bother trying to fire delayed events on documents that were
+    // closed before this event ran.
+    if (!aDocuments[i]->EventHandlingSuppressed() &&
+        aDocuments[i]->IsActive()) {
       fm->FireDelayedEvents(aDocuments[i]);
       nsCOMPtr<nsIPresShell> shell = aDocuments[i]->GetShell();
       if (shell) {
