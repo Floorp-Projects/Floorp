@@ -300,7 +300,7 @@ FindNumVBRFrames(const nsAutoCString& aFrame)
 // Some MP3's have large ID3v2 tags, up to 150KB, so we allow lots of
 // skipped bytes to be read, just in case, before we give up and assume
 // we're not parsing an MP3 stream.
-static const uint32_t MAX_SKIPPED_BYTES = 200 * 1024;
+static const uint32_t MAX_SKIPPED_BYTES = 4096;
 
 // The number of audio samples per MP3 frame. This is constant over all MP3
 // streams. With this constant, the stream's sample rate, and an estimated
