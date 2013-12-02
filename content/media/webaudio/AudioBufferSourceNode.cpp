@@ -265,7 +265,7 @@ public:
   /**
    * Copy as many frames as possible from the source buffer to aOutput, and
    * advance aOffsetWithinBlock and aCurrentPosition based on how many frames
-   * we copy.  This will never advance aOffsetWithinBlock past
+   * we write.  This will never advance aOffsetWithinBlock past
    * WEBAUDIO_BLOCK_SIZE, or aCurrentPosition past mStop.  It takes data from
    * the buffer at aBufferOffset, and never takes more data than aBufferMax.
    * This function knows when it needs to allocate the output buffer, and also
@@ -306,18 +306,10 @@ public:
 
         CopyFromInputBufferWithResampling(aStream, aOutput, aChannels, aBufferOffset, *aOffsetWithinBlock, availableInInputBuffer, framesRead, framesWritten);
         *aOffsetWithinBlock += framesWritten;
-        *aCurrentPosition += framesRead;
+        *aCurrentPosition += framesWritten;
         mPosition += framesRead;
       }
     }
-  }
-
-  TrackTicks GetPosition(AudioNodeStream* aStream)
-  {
-    if (aStream->GetCurrentPosition() < mStart) {
-      return aStream->GetCurrentPosition();
-    }
-    return mStart + mPosition;
   }
 
   uint32_t ComputeFinalOutSampleRate(TrackRate aStreamSampleRate)
@@ -386,38 +378,37 @@ public:
     UpdateSampleRateIfNeeded(aStream, channels);
 
     uint32_t written = 0;
-    TrackTicks currentPosition = GetPosition(aStream);
+    TrackTicks streamPosition = aStream->GetCurrentPosition();
     while (written < WEBAUDIO_BLOCK_SIZE) {
       if (mStop != TRACK_TICKS_MAX &&
-          currentPosition >= mStop) {
-        FillWithZeroes(aOutput, channels, &written, &currentPosition, TRACK_TICKS_MAX);
+          streamPosition >= mStop) {
+        FillWithZeroes(aOutput, channels, &written, &streamPosition, TRACK_TICKS_MAX);
         continue;
       }
-      if (currentPosition < mStart) {
-        FillWithZeroes(aOutput, channels, &written, &currentPosition, mStart);
+      if (streamPosition < mStart) {
+        FillWithZeroes(aOutput, channels, &written, &streamPosition, mStart);
         continue;
       }
-      TrackTicks t = currentPosition - mStart;
+      TrackTicks t = mPosition;
       if (mLoop) {
         if (mOffset + t < mLoopEnd) {
-          CopyFromBuffer(aStream, aOutput, channels, &written, &currentPosition, mOffset + t, mLoopEnd);
+          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mOffset + t, mLoopEnd);
         } else {
           uint32_t offsetInLoop = (mOffset + t - mLoopEnd) % (mLoopEnd - mLoopStart);
-          CopyFromBuffer(aStream, aOutput, channels, &written, &currentPosition, mLoopStart + offsetInLoop, mLoopEnd);
+          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mLoopStart + offsetInLoop, mLoopEnd);
         }
       } else {
         if (t < mDuration) {
-          CopyFromBuffer(aStream, aOutput, channels, &written, &currentPosition, mOffset + t, mOffset + mDuration);
+          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mOffset + t, mOffset + mDuration);
         } else {
-          FillWithZeroes(aOutput, channels, &written, &currentPosition, TRACK_TICKS_MAX);
+          FillWithZeroes(aOutput, channels, &written, &streamPosition, TRACK_TICKS_MAX);
         }
       }
     }
 
     // We've finished if we've gone past mStop, or if we're past mDuration when
     // looping is disabled.
-    if (currentPosition >= mStop ||
-        (!mLoop && currentPosition - mStart >= mDuration)) {
+    if (streamPosition >= mStop || (!mLoop && mPosition >= mDuration)) {
       *aFinished = true;
     }
   }
@@ -431,7 +422,7 @@ public:
   int32_t mLoopStart;
   int32_t mLoopEnd;
   int32_t mBufferSampleRate;
-  uint32_t mPosition;
+  int32_t mPosition;
   uint32_t mChannels;
   float mPlaybackRate;
   float mDopplerShift;
