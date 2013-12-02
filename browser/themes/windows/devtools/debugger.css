@@ -145,6 +145,34 @@
   margin: 2px;
 }
 
+/* Variable bubble view */
+
+.devtools-tooltip-simple-text.token-undefined,
+.devtools-tooltip-simple-text.token-null {
+  text-align: center;
+  color: #666 !important; /* Override the theme's color. */
+}
+
+.devtools-tooltip-simple-text.token-boolean {
+  text-align: center;
+  color: #10c !important;
+}
+
+.devtools-tooltip-simple-text.token-number {
+  text-align: center;
+  color: #c00 !important;
+}
+
+.devtools-tooltip-simple-text.token-string {
+  text-align: start;
+  color: #282 !important;
+}
+
+.devtools-tooltip-simple-text.token-other {
+  text-align: center;
+  color: #333 !important;
+}
+
 /* Instruments pane (watch expressions, variables, event listeners...) */
 
 #instruments-pane > tabs > tab {
@@ -201,7 +229,7 @@
 
 /* Searchbox and the search operations help panel */
 
-.devtools-searchinput {
+#searchbox {
   min-width: 220px;
   -moz-margin-start: 1px;
 }

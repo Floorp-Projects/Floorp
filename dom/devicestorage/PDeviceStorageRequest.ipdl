@@ -53,6 +53,11 @@ struct AvailableStorageResponse
   nsString mountState;
 };
 
+struct FormatStorageResponse
+{
+  nsString mountState;
+};
+
 union DeviceStorageResponseValue
 {
   ErrorResponse;
@@ -62,6 +67,7 @@ union DeviceStorageResponseValue
   FreeSpaceStorageResponse;
   UsedSpaceStorageResponse;
   AvailableStorageResponse;
+  FormatStorageResponse;
 };
 
 sync protocol PDeviceStorageRequest {

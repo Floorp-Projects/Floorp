@@ -727,7 +727,7 @@ var Scratchpad = {
       ch: funcStatement.loc.end.column
     };
 
-    const marker = this.editor.markText(from, to, { className: "eval-text" });
+    const marker = this.editor.markText(from, to, "eval-text");
     setTimeout(() => marker.clear(), EVAL_FUNCTION_TIMEOUT);
 
     return this.evaluate(functionText);

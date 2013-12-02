@@ -49,6 +49,7 @@ interface BluetoothAdapter : EventTarget {
   readonly attribute any            uuids;
 
            attribute EventHandler   ondevicefound;
+           attribute EventHandler   ondiscoverystatechanged;
 
   // Fired when pairing process is completed
            attribute EventHandler   onpairedstatuschanged;

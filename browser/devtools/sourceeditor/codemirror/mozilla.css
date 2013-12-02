@@ -31,12 +31,9 @@
 }
 
 .breakpoint.debugLocation {
-  background-image: url("chrome://browser/skin/devtools/editor-debug-location.png"),
+  background-image:
+    url("chrome://browser/skin/devtools/editor-debug-location.png"),
     url("chrome://browser/skin/devtools/editor-breakpoint.png");
-}
-
-.error-line {
-  background: rgba(255,0,0,0.2);
 }
 
 .CodeMirror {

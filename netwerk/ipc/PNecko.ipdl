@@ -57,7 +57,7 @@ parent:
 
   PWebSocket(PBrowser browser, SerializedLoadContext loadContext);
   PTCPServerSocket(uint16_t localPort, uint16_t backlog, nsString binaryType);
-  PUDPSocket(nsCString host, uint16_t port);
+  PUDPSocket(nsCString host, uint16_t port, nsCString filter);
 
   PRemoteOpenFile(URIParams fileuri, OptionalURIParams appuri);
 
