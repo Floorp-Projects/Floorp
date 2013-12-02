@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=655877
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 
-<iframe id="svg" src="text-helper-selection.svg" width="400" height="300"></iframe>
+<iframe src="text-helper-selection.svg" width="400" height="300"></iframe>
 
 <pre id="test">
 <script class="testbody" type="application/javascript">
@@ -61,8 +61,9 @@ function deselect()
 
 function testSelection()
 {
-  doc = $("svg").contentDocument;
-  win = $("svg").contentWindow;
+  svg = document.getElementsByTagName("iframe")[0];
+  doc = svg.contentDocument;
+  win = svg.contentWindow;
   dragstart = doc.getElementById("dragstart");
   dragend = doc.getElementById("dragend");
 
@@ -136,7 +137,7 @@ if (/Android/.test(navigator.userAgent)) {
   ok(true, "No need to test text selection with the mouse on Android.");
   SimpleTest.finish();
 } else {
-  $("svg").addEventListener("load", runTest, false);
+  window.addEventListener("load", runTest, false);
 }
 </script>
 </pre>
