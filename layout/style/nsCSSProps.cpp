@@ -1231,6 +1231,7 @@ const int32_t nsCSSProps::kListStyleKTable[] = {
   eCSSKeyword_hebrew, NS_STYLE_LIST_STYLE_HEBREW,
   eCSSKeyword_armenian, NS_STYLE_LIST_STYLE_ARMENIAN,
   eCSSKeyword_georgian, NS_STYLE_LIST_STYLE_GEORGIAN,
+  eCSSKeyword_cjk_decimal, NS_STYLE_LIST_STYLE_CJK_DECIMAL,
   eCSSKeyword_cjk_ideographic, NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC,
   eCSSKeyword_hiragana, NS_STYLE_LIST_STYLE_HIRAGANA,
   eCSSKeyword_katakana, NS_STYLE_LIST_STYLE_KATAKANA,
