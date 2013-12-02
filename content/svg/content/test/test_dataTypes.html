@@ -375,7 +375,7 @@ function runTestsWithPref() {
   SpecialPowers.pushPrefEnv({ 'set': [['svg.marker-improvements.enabled', true]] }, runTests);
 }
 
-$("svg").addEventListener("load", runTestsWithPref, false);
+window.addEventListener("load", runTestsWithPref, false);
 </script>
 </pre>
 </body>
