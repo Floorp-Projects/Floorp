@@ -478,16 +478,16 @@ static bool OtherDecimalToText(int32_t ordinal, PRUnichar zeroChar, nsString& re
 }
 static bool TamilToText(int32_t ordinal,  nsString& result)
 {
+   if (ordinal < 1 || ordinal > 9999) {
+     // Can't do those in this system.
+     return false;
+   }
    PRUnichar diff = 0x0BE6 - PRUnichar('0');
    // We're going to be appending to whatever is in "result" already, so make
    // sure to only munge the new bits.  Note that we can't just grab the pointer
    // to the new stuff here, since appending to the string can realloc.
    size_t offset = result.Length();
    DecimalToText(ordinal, result); 
-   if (ordinal < 1 || ordinal > 9999) {
-     // Can't do those in this system.
-     return false;
-   }
    PRUnichar* p = result.BeginWriting() + offset;
    for(; '\0' != *p ; p++) 
       if(*p != PRUnichar('0'))
@@ -504,7 +504,6 @@ static const char gUpperRomanCharsB[] = "VLD";
 static bool RomanToText(int32_t ordinal, nsString& result, const char* achars, const char* bchars)
 {
   if (ordinal < 1 || ordinal > 3999) {
-    DecimalToText(ordinal, result);
     return false;
   }
   nsAutoString addOn, decStr;
@@ -733,7 +732,6 @@ static bool CharListToText(int32_t ordinal, nsString& result, const PRUnichar* c
   PRUnichar buf[NUM_BUF_SIZE];
   int32_t idx = NUM_BUF_SIZE;
   if (ordinal < 1) {
-    DecimalToText(ordinal, result);
     return false;
   }
   do {
@@ -799,7 +797,6 @@ static const bool CJKIdeographicToText(int32_t ordinal, nsString& result,
 // else 
 // {
   if (ordinal < 0) {
-    DecimalToText(ordinal, result);
     return false;
   }
   PRUnichar c10kUnit = 0;
@@ -862,7 +859,6 @@ static const PRUnichar gHebrewDigit[22] =
 static bool HebrewToText(int32_t ordinal, nsString& result)
 {
   if (ordinal < 1 || ordinal > 999999) {
-    DecimalToText(ordinal, result);
     return false;
   }
   bool outputSep = false;
@@ -921,7 +917,6 @@ static bool HebrewToText(int32_t ordinal, nsString& result)
 static bool ArmenianToText(int32_t ordinal, nsString& result)
 {
   if (ordinal < 1 || ordinal > 9999) { // zero or reach the limit of Armenian numbering system
-    DecimalToText(ordinal, result);
     return false;
   }
 
@@ -958,7 +953,6 @@ static const PRUnichar gGeorgianValue [ 37 ] = { // 4 * 9 + 1 = 37
 static bool GeorgianToText(int32_t ordinal, nsString& result)
 {
   if (ordinal < 1 || ordinal > 19999) { // zero or reach the limit of Georgian numbering system
-    DecimalToText(ordinal, result);
     return false;
   }
 
@@ -991,12 +985,11 @@ static bool GeorgianToText(int32_t ordinal, nsString& result)
 
 static bool EthiopicToText(int32_t ordinal, nsString& result)
 {
-  nsAutoString asciiNumberString;      // decimal string representation of ordinal
-  DecimalToText(ordinal, asciiNumberString);
   if (ordinal < 1) {
-    result.Append(asciiNumberString);
     return false;
   }
+  nsAutoString asciiNumberString;      // decimal string representation of ordinal
+  DecimalToText(ordinal, asciiNumberString);
   uint8_t asciiStringLength = asciiNumberString.Length();
 
   // If number length is odd, add a leading "0"
@@ -1054,12 +1047,15 @@ static bool EthiopicToText(int32_t ordinal, nsString& result)
 }
 
 
-/* static */ bool
+/* static */ void
 nsBulletFrame::AppendCounterText(int32_t aListStyleType,
                                  int32_t aOrdinal,
-                                 nsString& result)
+                                 nsString& result,
+                                 bool& isRTL)
 {
   bool success = true;
+  int32_t fallback = NS_STYLE_LIST_STYLE_DECIMAL;
+  isRTL = false;
   
   switch (aListStyleType) {
     case NS_STYLE_LIST_STYLE_NONE: // used by counters code only
@@ -1084,6 +1080,7 @@ nsBulletFrame::AppendCounterText(int32_t aListStyleType,
     default: // CSS2 say "A users  agent that does not recognize a numbering system
       // should use 'decimal'
       success = DecimalToText(aOrdinal, result);
+      NS_ASSERTION(success, "DecimalToText must never fail");
       break;
 
     case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
@@ -1170,6 +1167,7 @@ nsBulletFrame::AppendCounterText(int32_t aListStyleType,
       break;
 
     case NS_STYLE_LIST_STYLE_HEBREW: 
+      isRTL = true;
       success = HebrewToText(aOrdinal, result);
       break;
 
@@ -1285,10 +1283,48 @@ nsBulletFrame::AppendCounterText(int32_t aListStyleType,
                                ETHIOPIC_HALEHAME_TI_ET_CHARS_SIZE);
       break;
   }
-  return success;
+  if (!success) {
+    AppendCounterText(fallback, aOrdinal, result, isRTL);
+  }
 }
 
-bool
+/* static */ void
+nsBulletFrame::GetListItemSuffix(int32_t aListStyleType,
+                                 nsString& aResult,
+                                 bool& aSuppressPadding)
+{
+  aResult = '.';
+  aSuppressPadding = false;
+
+  switch (aListStyleType) {
+    case NS_STYLE_LIST_STYLE_NONE: // used by counters code only
+    case NS_STYLE_LIST_STYLE_DISC: // used by counters code only
+    case NS_STYLE_LIST_STYLE_CIRCLE: // used by counters code only
+    case NS_STYLE_LIST_STYLE_SQUARE: // used by counters code only
+      aResult.Truncate();
+      break;
+
+    case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC:
+    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL:
+    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL:
+    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL:
+    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL:
+    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL:
+    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL:
+    case NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM:
+    case NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH:
+      aResult = 0x3001;
+      aSuppressPadding = true;
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
+    case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
+      aResult = ',';
+      break;
+  }
+}
+
+void
 nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
                                nsString& result)
 {
@@ -1299,14 +1335,12 @@ nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
                aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_CIRCLE &&
                aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_SQUARE,
                "we should be using specialized code for these types");
-  bool success =
-    AppendCounterText(aListStyle.mListStyleType, mOrdinal, result);
-  if (success && aListStyle.mListStyleType == NS_STYLE_LIST_STYLE_HEBREW)
-    mTextIsRTL = true;
 
-  // XXX For some of these systems, "." is wrong!  This should really be
-  // pushed down into the individual cases!
-  nsString suffix = NS_LITERAL_STRING(".");
+  result.Truncate();
+  AppendCounterText(aListStyle.mListStyleType, mOrdinal, result, mTextIsRTL);
+
+  nsAutoString suffix;
+  GetListItemSuffix(aListStyle.mListStyleType, suffix, mSuppressPadding);
 
   // We're not going to do proper Bidi reordering on the list item marker, but
   // just display the whole thing as RTL or LTR, so we fake reordering by
@@ -1315,7 +1349,6 @@ nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
   // prepending it to the beginning if they are different.
   result = (mTextIsRTL == (vis->mDirection == NS_STYLE_DIRECTION_RTL)) ?
           result + suffix : suffix + result;
-  return success;
 }
 
 #define MIN_BULLET_SIZE 1
@@ -1377,8 +1410,8 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       bulletSize = std::max(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
                           NSToCoordRound(0.8f * (float(ascent) / 2.0f)));
       mPadding.bottom = NSToCoordRound(float(ascent) / 8.0f);
-      aMetrics.width = mPadding.right + bulletSize;
-      aMetrics.ascent = aMetrics.height = mPadding.bottom + bulletSize;
+      aMetrics.width = aMetrics.height = bulletSize;
+      aMetrics.ascent = bulletSize + mPadding.bottom;
       break;
 
     default:
@@ -1434,7 +1467,6 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       aMetrics.width =
         nsLayoutUtils::GetStringWidth(this, aRenderingContext,
                                       text.get(), text.Length());
-      aMetrics.width += mPadding.right;
       aMetrics.ascent = fm->MaxAscent();
       break;
   }
@@ -1453,14 +1485,25 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
   SetFontSizeInflation(inflation);
 
   // Get the base size
+  // This will also set mSuppressPadding appropriately (via GetListItemText())
+  // for the builtin counter styles with ideographic comma as suffix where the
+  // default padding from ua.css is not desired.
   GetDesiredSize(aPresContext, aReflowState.rendContext, aMetrics, inflation);
 
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice
   const nsMargin& borderPadding = aReflowState.mComputedBorderPadding;
-  aMetrics.width += borderPadding.left + borderPadding.right;
-  aMetrics.height += borderPadding.top + borderPadding.bottom;
-  aMetrics.ascent += borderPadding.top;
+  if (!mSuppressPadding ||
+      aPresContext->HasAuthorSpecifiedRules(this,
+                                            NS_AUTHOR_SPECIFIED_PADDING)) {
+    mPadding.top += NSToCoordRound(borderPadding.top * inflation);
+    mPadding.right += NSToCoordRound(borderPadding.right * inflation);
+    mPadding.bottom += NSToCoordRound(borderPadding.bottom * inflation);
+    mPadding.left += NSToCoordRound(borderPadding.left * inflation);
+  }
+  aMetrics.width += mPadding.left + mPadding.right;
+  aMetrics.height += mPadding.top + mPadding.bottom;
+  aMetrics.ascent += mPadding.top;
 
   // XXX this is a bit of a hack, we're assuming that no glyphs used for bullets
   // overflow their font-boxes. It'll do for now; to fix it for real, we really
