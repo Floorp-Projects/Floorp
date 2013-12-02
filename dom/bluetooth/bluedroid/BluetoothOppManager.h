@@ -122,7 +122,7 @@ private:
    * Set when OBEX session is established.
    */
   bool mConnected;
-  nsString mConnectedDeviceAddress;
+  nsString mDeviceAddress;
 
   /**
    * Remote information
@@ -212,15 +212,13 @@ private:
 
   // If a connection has been established, mSocket will be the socket
   // communicating with the remote socket. We maintain the invariant that if
-  // mSocket is non-null, mRfcommSocket and mL2capSocket must be null (and vice
-  // versa).
+  // mSocket is non-null, mServerSocket must be null (and vice versa).
   nsRefPtr<BluetoothSocket> mSocket;
 
   // Server sockets. Once an inbound connection is established, it will hand
   // over the ownership to mSocket, and get a new server socket while Listen()
   // is called.
-  nsRefPtr<BluetoothSocket> mRfcommSocket;
-  nsRefPtr<BluetoothSocket> mL2capSocket;
+  nsRefPtr<BluetoothSocket> mServerSocket;
 };
 
 END_BLUETOOTH_NAMESPACE
