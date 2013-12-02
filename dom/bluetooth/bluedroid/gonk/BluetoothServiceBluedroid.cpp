@@ -49,7 +49,6 @@ static InfallibleTArray<nsString> sAdapterBondedAddressArray;
 static InfallibleTArray<BluetoothNamedValue> sRemoteDevicesPack;
 static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sBondingRunnableArray;
-static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sChangeDiscoveryRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sGetDeviceRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sSetPropertyRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sUnbondingRunnableArray;
@@ -496,12 +495,16 @@ DiscoveryStateChangedCallback(bt_discovery_state_t aState)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  if (!sChangeDiscoveryRunnableArray.IsEmpty()) {
-    BluetoothValue values(true);
-    DispatchBluetoothReply(sChangeDiscoveryRunnableArray[0],
-                           values, EmptyString());
+  bool isDiscovering = (aState == BT_DISCOVERY_STARTED);
 
-    sChangeDiscoveryRunnableArray.RemoveElementAt(0);
+  BluetoothSignal signal(NS_LITERAL_STRING(DISCOVERY_STATE_CHANGED_ID),
+                         NS_LITERAL_STRING(KEY_ADAPTER),
+                         isDiscovering);
+
+  nsRefPtr<DistributeBluetoothSignalTask>
+    t = new DistributeBluetoothSignalTask(signal);
+  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+    BT_WARNING("Failed to dispatch to main thread!");
   }
 }
 
@@ -918,17 +921,17 @@ BluetoothServiceBluedroid::StartDiscoveryInternal(
   if (!IsReady()) {
     NS_NAMED_LITERAL_STRING(errorStr, "Bluetooth service is not ready yet!");
     DispatchBluetoothReply(aRunnable, BluetoothValue(), errorStr);
-
     return NS_OK;
   }
+
   int ret = sBtInterface->start_discovery();
   if (ret != BT_STATUS_SUCCESS) {
     ReplyStatusError(aRunnable, ret, NS_LITERAL_STRING("StartDiscovery"));
-
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
-  sChangeDiscoveryRunnableArray.AppendElement(aRunnable);
+  DispatchBluetoothReply(aRunnable, true, EmptyString());
+
   return NS_OK;
 }
 
@@ -947,10 +950,10 @@ BluetoothServiceBluedroid::StopDiscoveryInternal(
   int ret = sBtInterface->cancel_discovery();
   if (ret != BT_STATUS_SUCCESS) {
     ReplyStatusError(aRunnable, ret, NS_LITERAL_STRING("StopDiscovery"));
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
-  sChangeDiscoveryRunnableArray.AppendElement(aRunnable);
+  DispatchBluetoothReply(aRunnable, true, EmptyString());
 
   return NS_OK;
 }

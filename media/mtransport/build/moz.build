@@ -15,6 +15,7 @@ EXPORTS.mtransport += [
     '../runnable_utils_generated.h',
     '../sigslot.h',
     '../simpletokenbucket.h',
+    '../stun_udp_socket_filter.h',
     '../transportflow.h',
     '../transportlayer.h',
     '../transportlayerdtls.h',

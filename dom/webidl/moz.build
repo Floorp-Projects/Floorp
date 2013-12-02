@@ -503,6 +503,7 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothAdapter.webidl',
         'BluetoothDevice.webidl',
         'BluetoothDeviceEvent.webidl',
+        'BluetoothDiscoveryStateChangedEvent.webidl',
         'BluetoothManager.webidl',
         'BluetoothStatusChangedEvent.webidl',
     ]
