@@ -212,11 +212,9 @@ class GetUserMediaNotificationEvent: public nsRunnable
     GetUserMediaNotificationEvent(GetUserMediaStatus aStatus,
                                   already_AddRefed<DOMMediaStream> aStream,
                                   DOMMediaStream::OnTracksAvailableCallback* aOnTracksAvailableCallback,
-                                  bool aIsAudio, bool aIsVideo, uint64_t aWindowID,
-                                  already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError)
+                                  bool aIsAudio, bool aIsVideo, uint64_t aWindowID)
     : mStream(aStream), mOnTracksAvailableCallback(aOnTracksAvailableCallback),
-      mStatus(aStatus), mIsAudio(aIsAudio), mIsVideo(aIsVideo), mWindowID(aWindowID),
-      mError(aError) {}
+      mStatus(aStatus), mIsAudio(aIsAudio), mIsVideo(aIsVideo), mWindowID(aWindowID) {}
     virtual ~GetUserMediaNotificationEvent()
     {
 
@@ -232,49 +230,12 @@ class GetUserMediaNotificationEvent: public nsRunnable
     bool mIsAudio;
     bool mIsVideo;
     uint64_t mWindowID;
-    nsRefPtr<nsIDOMGetUserMediaErrorCallback> mError;
 };
 
 typedef enum {
   MEDIA_START,
   MEDIA_STOP
 } MediaOperation;
-
-class MediaManager;
-
-/**
- * Send an error back to content. The error is the form a string.
- * Do this only on the main thread. The success callback is also passed here
- * so it can be released correctly.
- */
-class ErrorCallbackRunnable : public nsRunnable
-{
-public:
-  ErrorCallbackRunnable(
-    already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aSuccess,
-    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
-    const nsAString& aErrorMsg, uint64_t aWindowID);
-  NS_IMETHOD Run();
-private:
-  already_AddRefed<nsIDOMGetUserMediaSuccessCallback> mSuccess;
-  already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
-  const nsString mErrorMsg;
-  uint64_t mWindowID;
-  nsRefPtr<MediaManager> mManager; // get ref to this when creating the runnable
-};
-
-class ReleaseMediaOperationResource : public nsRunnable
-{
-public:
-  ReleaseMediaOperationResource(already_AddRefed<DOMMediaStream> aStream,
-    DOMMediaStream::OnTracksAvailableCallback* aOnTracksAvailableCallback):
-    mStream(aStream),
-    mOnTracksAvailableCallback(aOnTracksAvailableCallback) {}
-  NS_IMETHOD Run() MOZ_OVERRIDE {return NS_OK;}
-private:
-  nsRefPtr<DOMMediaStream> mStream;
-  nsAutoPtr<DOMMediaStream::OnTracksAvailableCallback> mOnTracksAvailableCallback;
-};
 
 // Generic class for running long media operations like Start off the main
 // thread, and then (because nsDOMMediaStreams aren't threadsafe),
@@ -290,8 +251,7 @@ public:
     MediaEngineSource* aAudioSource,
     MediaEngineSource* aVideoSource,
     bool aNeedsFinish,
-    uint64_t aWindowID,
-    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError)
+    uint64_t aWindowID)
     : mType(aType)
     , mStream(aStream)
     , mOnTracksAvailableCallback(aOnTracksAvailableCallback)
@@ -300,25 +260,11 @@ public:
     , mListener(aListener)
     , mFinish(aNeedsFinish)
     , mWindowID(aWindowID)
-    , mError(aError)
-  {}
+    {}
 
   ~MediaOperationRunnable()
   {
     // MediaStreams can be released on any thread.
-  }
-
-  nsresult returnAndCallbackError(nsresult rv, const char* errorLog)
-  {
-    MM_LOG(("%s , rv=%d", errorLog, rv));
-    NS_DispatchToMainThread(new ReleaseMediaOperationResource(mStream.forget(),
-          mOnTracksAvailableCallback.forget()));
-    nsString log;
-
-    log.AssignASCII(errorLog, strlen(errorLog));
-    NS_DispatchToMainThread(new ErrorCallbackRunnable(nullptr, mError.forget(),
-      log, mWindowID));
-    return NS_OK;
   }
 
   NS_IMETHOD
@@ -344,7 +290,7 @@ public:
             if (NS_SUCCEEDED(rv)) {
               expectedTracks |= DOMMediaStream::HINT_CONTENTS_AUDIO;
             } else {
-              return returnAndCallbackError(rv, "Starting audio failed");
+              MM_LOG(("Starting audio failed, rv=%d",rv));
             }
           }
           if (mVideoSource) {
@@ -352,7 +298,7 @@ public:
             if (NS_SUCCEEDED(rv)) {
               expectedTracks |= DOMMediaStream::HINT_CONTENTS_VIDEO;
             } else {
-              return returnAndCallbackError(rv, "Starting video failed");
+              MM_LOG(("Starting video failed, rv=%d",rv));
             }
           }
 
@@ -368,7 +314,7 @@ public:
                                               mOnTracksAvailableCallback.forget(),
                                               mAudioSource != nullptr,
                                               mVideoSource != nullptr,
-                                              mWindowID, mError.forget());
+                                              mWindowID);
           NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
         }
         break;
@@ -415,7 +361,6 @@ private:
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener; // threadsafe
   bool mFinish;
   uint64_t mWindowID;
-  nsRefPtr<nsIDOMGetUserMediaErrorCallback> mError;
 };
 
 typedef nsTArray<nsRefPtr<GetUserMediaCallbackMediaStreamListener> > StreamListeners;
