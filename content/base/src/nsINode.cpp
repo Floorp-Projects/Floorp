@@ -539,8 +539,11 @@ nsINode::Normalize()
       HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEREMOVED);
   if (hasRemoveListeners) {
     for (uint32_t i = 0; i < nodes.Length(); ++i) {
-      nsContentUtils::MaybeFireNodeRemoved(nodes[i], nodes[i]->GetParentNode(),
-                                           doc);
+      nsINode* parentNode = nodes[i]->GetParentNode();
+      if (parentNode) { // Node may have already been removed.
+        nsContentUtils::MaybeFireNodeRemoved(nodes[i], parentNode,
+                                             doc);
+      }
     }
   }
 
