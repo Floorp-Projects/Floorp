@@ -928,7 +928,9 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
 }
 #endif
 
+#if !defined(XP_MACOSX)
 static bool sHandlersInstalled = false;
+#endif
 
 bool
 js::EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt)
