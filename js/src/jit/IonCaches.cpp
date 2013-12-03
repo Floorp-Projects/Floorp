@@ -611,8 +611,19 @@ IsCacheableGetPropCallNative(JSObject *obj, JSObject *holder, Shape *shape)
     if (!shape->hasGetterValue() || !shape->getterValue().isObject())
         return false;
 
-    return shape->getterValue().toObject().is<JSFunction>() &&
-           shape->getterValue().toObject().as<JSFunction>().isNative();
+    if (!shape->getterValue().toObject().is<JSFunction>())
+        return false;
+
+    JSFunction& getter = shape->getterValue().toObject().as<JSFunction>();
+    if (!getter.isNative())
+        return false;
+
+    // Check for a DOM method; those are OK with both inner and outer objects.
+    if (getter.jitInfo())
+        return true;
+
+    // For non-DOM methods, don't cache if obj has an outerObject hook.
+    return !obj->getClass()->ext.outerObject;
 }
 
 static bool
