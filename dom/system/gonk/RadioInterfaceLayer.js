@@ -2334,7 +2334,12 @@ RadioInterface.prototype = {
 
   handleStkProactiveCommand: function handleStkProactiveCommand(message) {
     if (DEBUG) this.debug("handleStkProactiveCommand " + JSON.stringify(message));
-    gSystemMessenger.broadcastMessage("icc-stkcommand", message);
+    let iccId = this.rilContext.iccInfo && this.rilContext.iccInfo.iccid;
+    if (iccId) {
+      gSystemMessenger.broadcastMessage("icc-stkcommand",
+                                        {iccId: iccId,
+                                         command: message});
+    }
     gMessageManager.sendIccMessage("RIL:StkCommand", this.clientId, message);
   },
 
