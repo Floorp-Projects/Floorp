@@ -2523,10 +2523,6 @@ public:
     virtual void DestroyEGLImage(EGLImage image) = 0;
 #endif
 
-    virtual already_AddRefed<TextureImage>
-    CreateDirectTextureImage(::android::GraphicBuffer* aBuffer, GLenum aWrapMode)
-    { return nullptr; }
-
     // Before reads from offscreen texture
     void GuaranteeResolve();
 
@@ -2624,10 +2620,6 @@ public:
 
     void ForceDirtyScreen();
     void CleanDirtyScreen();
-
-    virtual bool TextureImageSupportsGetBackingSurface() {
-        return false;
-    }
 
     virtual GLenum GetPreferredARGB32Format() { return LOCAL_GL_RGBA; }
 
