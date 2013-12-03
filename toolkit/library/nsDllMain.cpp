@@ -4,6 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
 #include <windows.h>
+#if defined(_WIN32_WINNT_WIN8) && defined(_MSC_VER) && _MSC_VER < 1700
+// The Windows 8 SDK defines FACILITY_VISUALCPP in winerror.h, and MSVC
+// defines it in delayimp.h previous to VS2012.
+#undef FACILITY_VISUALCPP
+#endif
 #include <delayimp.h>
 #include "nsToolkit.h"
 #include "mozilla/Assertions.h"
