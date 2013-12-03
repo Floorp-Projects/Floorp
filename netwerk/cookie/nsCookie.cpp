@@ -111,6 +111,14 @@ nsCookie::Create(const nsACString &aName,
                               aIsSession, aIsSecure, aIsHttpOnly);
 }
 
+size_t
+nsCookie::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+    // There is no need to measure the sizes of the individual string
+    // members, since the strings are stored in-line with the nsCookie.
+    return aMallocSizeOf(this);
+}
+
 /******************************************************************************
  * nsCookie:
  * xpcom impl
