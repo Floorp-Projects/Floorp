@@ -84,6 +84,7 @@ public:
     static void SendMessageWrapper(const nsAString& a0, const nsAString& a1, int32_t a2);
     static void SetFullScreen(bool a0);
     static void SetKeepScreenOn(bool a0);
+    static void SetSelectedLocale(const nsAString& a0);
     static void SetURITitle(const nsAString& a0, const nsAString& a1);
     static void ShowAlertNotificationWrapper(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3, const nsAString& a4);
     static void ShowFilePickerAsyncWrapper(const nsAString& a0, int64_t a1);
