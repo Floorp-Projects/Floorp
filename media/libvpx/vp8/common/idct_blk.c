@@ -9,8 +9,7 @@
  */
 
 #include "vpx_config.h"
-#include "vp8/common/idct.h"
-#include "dequantize.h"
+#include "vpx_rtcd.h"
 
 void vp8_dequant_idct_add_c(short *input, short *dq,
                             unsigned char *dest, int stride);

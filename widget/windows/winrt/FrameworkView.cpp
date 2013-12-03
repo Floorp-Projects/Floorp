@@ -414,7 +414,7 @@ FrameworkView::OnWindowActivated(ICoreWindow* aSender, IWindowActivatedEventArgs
 {
   LogFunction();
   if (mShuttingDown || !mWidget)
-    return E_FAIL;
+    return S_OK;
   CoreWindowActivationState state;
   aArgs->get_WindowActivationState(&state);
   mWinActiveState = !(state == CoreWindowActivationState::CoreWindowActivationState_Deactivated);

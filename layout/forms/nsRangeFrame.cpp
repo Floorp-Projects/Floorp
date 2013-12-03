@@ -832,3 +832,21 @@ nsRangeFrame::ShouldUseNativeStyle() const
          !PresContext()->HasAuthorSpecifiedRules(mThumbDiv->GetPrimaryFrame(),
                                                  STYLES_DISABLING_NATIVE_THEMING);
 }
+
+nsIContent*
+nsRangeFrame::GetPseudoElementContent(nsCSSPseudoElements::Type aType)
+{
+  if (aType == nsCSSPseudoElements::ePseudo_mozRangeTrack) {
+    return mTrackDiv;
+  }
+
+  if (aType == nsCSSPseudoElements::ePseudo_mozRangeThumb) {
+    return mThumbDiv;
+  }
+
+  if (aType == nsCSSPseudoElements::ePseudo_mozRangeProgress) {
+    return mProgressDiv;
+  }
+
+  return nsContainerFrame::GetPseudoElementContent(aType);
+}

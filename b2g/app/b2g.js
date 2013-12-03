@@ -847,3 +847,6 @@ pref("media.webspeech.synth.enabled", true);
 // Downloads API
 pref("dom.mozDownloads.enabled", true);
 pref("dom.downloads.max_retention_days", 7);
+
+// The URL of the Firefox Accounts auth server backend
+pref("identity.fxaccounts.auth.uri", "https://api-accounts.dev.lcip.org/v1");

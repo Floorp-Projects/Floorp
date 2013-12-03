@@ -1,5 +1,3 @@
-diff --git a/media/libvpx/stdint.patch b/media/libvpx/stdint.patch
-new file mode 100644
 diff --git a/media/libvpx/vpx/vpx_integer.h b/media/libvpx/vpx/vpx_integer.h
 --- a/media/libvpx/vpx/vpx_integer.h
 +++ b/media/libvpx/vpx/vpx_integer.h

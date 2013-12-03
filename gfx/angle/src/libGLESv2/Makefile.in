@@ -44,7 +44,7 @@ RCFILE  = $(srcdir)/libGLESv2.rc
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += -I"$(MOZ_DIRECTX_SDK_PATH)/include"
+CXXFLAGS += -I'$(MOZ_DIRECTX_SDK_PATH)/include'
 
 ifdef GNU_CC
 
@@ -55,8 +55,8 @@ OS_LIBS += -ld3d9 -ldxguid
 
 else
 
-EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3d9.lib" \
-                   "$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/dxguid.lib" \
+EXTRA_DSO_LDOPTS = '$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/d3d9.lib' \
+                   '$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)/dxguid.lib' \
                    delayimp.lib
 
 endif

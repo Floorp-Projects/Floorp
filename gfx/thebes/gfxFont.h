@@ -29,6 +29,7 @@
 #include "nsUnicodeScriptCodes.h"
 #include "nsDataHashtable.h"
 #include "harfbuzz/hb.h"
+#include "mozilla/gfx/2D.h"
 
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 typedef struct gr_face            gr_face;

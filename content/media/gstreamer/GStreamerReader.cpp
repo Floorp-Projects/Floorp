@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsError.h"
+#include "nsMimeTypes.h"
 #include "MediaDecoderStateMachine.h"
 #include "AbstractMediaDecoder.h"
 #include "MediaResource.h"
@@ -57,6 +58,8 @@ typedef enum {
 
 GStreamerReader::GStreamerReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder),
+  mMP3FrameParser(aDecoder->GetResource()->GetLength()),
+  mUseParserDuration(false),
   mPlayBin(nullptr),
   mBus(nullptr),
   mSource(nullptr),
@@ -243,6 +246,35 @@ void GStreamerReader::PlayBinSourceSetup(GstAppSrc* aSource)
   gst_caps_unref(caps);
 }
 
+/**
+ * If this stream is an MP3, we want to parse the headers to estimate the
+ * stream duration.
+ */
+nsresult GStreamerReader::ParseMP3Headers()
+{
+  MediaResource *resource = mDecoder->GetResource();
+
+  const uint32_t MAX_READ_BYTES = 4096;
+
+  uint64_t offset = 0;
+  char bytes[MAX_READ_BYTES];
+  uint32_t bytesRead;
+  do {
+    nsresult rv = resource->ReadAt(offset, bytes, MAX_READ_BYTES, &bytesRead);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(bytesRead, NS_ERROR_FAILURE);
+
+    mMP3FrameParser.Parse(bytes, bytesRead, offset);
+    offset += bytesRead;
+  } while (!mMP3FrameParser.ParsedHeaders());
+
+  if (mMP3FrameParser.IsMP3()) {
+    mLastParserDuration = mMP3FrameParser.GetDuration();
+  }
+
+  return NS_OK;
+}
+
 nsresult GStreamerReader::ReadMetadata(MediaInfo* aInfo,
                                        MetadataTags** aTags)
 {
@@ -338,16 +370,32 @@ nsresult GStreamerReader::ReadMetadata(MediaInfo* aInfo,
     }
   }
 
+  bool isMP3 = mDecoder->GetResource()->GetContentType().EqualsASCII(AUDIO_MP3);
+  if (isMP3) {
+    ParseMP3Headers();
+  }
+
   /* report the duration */
   gint64 duration;
   GstFormat format = GST_FORMAT_TIME;
-  if (gst_element_query_duration(GST_ELEMENT(mPlayBin),
+
+  if (isMP3 && mMP3FrameParser.IsMP3()) {
+    // The MP3FrameParser has reported a duration; use that over the gstreamer
+    // reported duration for inter-platform consistency.
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    mUseParserDuration = true;
+    mLastParserDuration = mMP3FrameParser.GetDuration();
+    mDecoder->SetMediaDuration(mLastParserDuration);
+
+  } else if (gst_element_query_duration(GST_ELEMENT(mPlayBin),
       &format, &duration) && format == GST_FORMAT_TIME) {
+    // Otherwise use the gstreamer duration.
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     LOG(PR_LOG_DEBUG, ("returning duration %" GST_TIME_FORMAT,
           GST_TIME_ARGS (duration)));
     duration = GST_TIME_AS_USECONDS (duration);
     mDecoder->SetMediaDuration(duration);
+
   } else {
     mDecoder->SetMediaSeekable(false);
   }
@@ -1016,6 +1064,34 @@ void GStreamerReader::Eos()
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     /* Potentially unblock the decode thread in ::DecodeLoop */
     mon.NotifyAll();
+  }
+}
+
+/**
+ * If this is an MP3 stream, pass any new data we get to the MP3 frame parser
+ * for duration estimation.
+ */
+void GStreamerReader::NotifyDataArrived(const char *aBuffer,
+                                        uint32_t aLength,
+                                        int64_t aOffset)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (HasVideo()) {
+    return;
+  }
+
+  if (!mMP3FrameParser.NeedsData()) {
+    return;
+  }
+
+  mMP3FrameParser.Parse(aBuffer, aLength, aOffset);
+
+  int64_t duration = mMP3FrameParser.GetDuration();
+  if (duration != mLastParserDuration && mUseParserDuration) {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    mLastParserDuration = duration;
+    mDecoder->UpdateEstimatedMediaDuration(mLastParserDuration);
   }
 }
 

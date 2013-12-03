@@ -53,6 +53,7 @@ if(x->mbmi.ref_frame !=INTRA_FRAME)   \
 void vp8_cal_dissimilarity(VP8_COMP *cpi)
 {
     VP8_COMMON *cm = &cpi->common;
+    int i;
 
     /* Note: The first row & first column in mip are outside the frame, which
      * were initialized to all 0.(ref_frame, mode, mv...)
@@ -65,14 +66,25 @@ void vp8_cal_dissimilarity(VP8_COMP *cpi)
         /* Store info for show/no-show frames for supporting alt_ref.
          * If parent frame is alt_ref, child has one too.
          */
+        LOWER_RES_FRAME_INFO* store_info
+                      = (LOWER_RES_FRAME_INFO*)cpi->oxcf.mr_low_res_mode_info;
+
+        store_info->frame_type = cm->frame_type;
+
+        if(cm->frame_type != KEY_FRAME)
+        {
+            store_info->is_frame_dropped = 0;
+            for (i = 1; i < MAX_REF_FRAMES; i++)
+                store_info->low_res_ref_frames[i] = cpi->current_ref_frames[i];
+        }
+
         if(cm->frame_type != KEY_FRAME)
         {
             int mb_row;
             int mb_col;
             /* Point to beginning of allocated MODE_INFO arrays. */
             MODE_INFO *tmp = cm->mip + cm->mode_info_stride;
-            LOWER_RES_INFO* store_mode_info
-                            = (LOWER_RES_INFO*)cpi->oxcf.mr_low_res_mode_info;
+            LOWER_RES_MB_INFO* store_mode_info = store_info->mb_info;
 
             for (mb_row = 0; mb_row < cm->mb_rows; mb_row ++)
             {
@@ -197,5 +209,28 @@ void vp8_cal_dissimilarity(VP8_COMP *cpi)
                 }
             }
         }
+    }
+}
+
+/* This function is called only when this frame is dropped at current
+   resolution level. */
+void vp8_store_drop_frame_info(VP8_COMP *cpi)
+{
+    /* If the frame is dropped in lower-resolution encoding, this information
+       is passed to higher resolution level so that the encoder knows there
+       is no mode & motion info available.
+     */
+    if (cpi->oxcf.mr_total_resolutions >1
+        && cpi->oxcf.mr_encoder_id < (cpi->oxcf.mr_total_resolutions - 1))
+    {
+        /* Store info for show/no-show frames for supporting alt_ref.
+         * If parent frame is alt_ref, child has one too.
+         */
+        LOWER_RES_FRAME_INFO* store_info
+                      = (LOWER_RES_FRAME_INFO*)cpi->oxcf.mr_low_res_mode_info;
+
+        /* Set frame_type to be INTER_FRAME since we won't drop key frame. */
+        store_info->frame_type = INTER_FRAME;
+        store_info->is_frame_dropped = 1;
     }
 }

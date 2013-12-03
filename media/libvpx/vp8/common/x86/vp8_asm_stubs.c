@@ -10,8 +10,8 @@
 
 
 #include "vpx_config.h"
+#include "vpx_rtcd.h"
 #include "vpx_ports/mem.h"
-#include "vp8/common/subpixel.h"
 #include "filter_x86.h"
 
 extern const short vp8_six_tap_mmx[8][6*8];
@@ -114,7 +114,6 @@ extern void vp8_filter_block1d8_v6_only_sse2
     unsigned int   output_height,
     const short   *vp8_filter
 );
-extern prototype_subpixel_predict(vp8_bilinear_predict8x8_mmx);
 
 
 #if HAVE_MMX
@@ -439,19 +438,35 @@ void vp8_sixtap_predict16x16_ssse3
     {
         if (yoffset)
         {
-            vp8_filter_block1d16_h6_ssse3(src_ptr - (2 * src_pixels_per_line), src_pixels_per_line, FData2, 16, 21, xoffset);
-            vp8_filter_block1d16_v6_ssse3(FData2 , 16, dst_ptr, dst_pitch, 16, yoffset);
+            vp8_filter_block1d16_h6_ssse3(src_ptr - (2 * src_pixels_per_line),
+                                          src_pixels_per_line, FData2,
+                                          16, 21, xoffset);
+            vp8_filter_block1d16_v6_ssse3(FData2 , 16, dst_ptr, dst_pitch,
+                                          16, yoffset);
         }
         else
         {
             /* First-pass only */
-            vp8_filter_block1d16_h6_ssse3(src_ptr, src_pixels_per_line, dst_ptr, dst_pitch, 16, xoffset);
+            vp8_filter_block1d16_h6_ssse3(src_ptr, src_pixels_per_line,
+                                          dst_ptr, dst_pitch, 16, xoffset);
         }
     }
     else
     {
-        /* Second-pass only */
-        vp8_filter_block1d16_v6_ssse3(src_ptr - (2 * src_pixels_per_line) , src_pixels_per_line, dst_ptr, dst_pitch, 16, yoffset);
+        if (yoffset)
+        {
+            /* Second-pass only */
+            vp8_filter_block1d16_v6_ssse3(src_ptr - (2 * src_pixels_per_line),
+                                          src_pixels_per_line,
+                                          dst_ptr, dst_pitch, 16, yoffset);
+        }
+        else
+        {
+            /* ssse3 second-pass only function couldn't handle (xoffset==0 &&
+             * yoffset==0) case correctly. Add copy function here to guarantee
+             * six-tap function handles all possible offsets. */
+            vp8_copy_mem16x16(src_ptr, src_pixels_per_line, dst_ptr, dst_pitch);
+        }
     }
 }
 
@@ -471,18 +486,34 @@ void vp8_sixtap_predict8x8_ssse3
     {
         if (yoffset)
         {
-            vp8_filter_block1d8_h6_ssse3(src_ptr - (2 * src_pixels_per_line), src_pixels_per_line, FData2, 8, 13, xoffset);
-            vp8_filter_block1d8_v6_ssse3(FData2, 8, dst_ptr, dst_pitch, 8, yoffset);
+            vp8_filter_block1d8_h6_ssse3(src_ptr - (2 * src_pixels_per_line),
+                                         src_pixels_per_line, FData2,
+                                         8, 13, xoffset);
+            vp8_filter_block1d8_v6_ssse3(FData2, 8, dst_ptr, dst_pitch,
+                                         8, yoffset);
         }
         else
         {
-            vp8_filter_block1d8_h6_ssse3(src_ptr, src_pixels_per_line, dst_ptr, dst_pitch, 8, xoffset);
+            vp8_filter_block1d8_h6_ssse3(src_ptr, src_pixels_per_line,
+                                         dst_ptr, dst_pitch, 8, xoffset);
         }
     }
     else
     {
-        /* Second-pass only */
-        vp8_filter_block1d8_v6_ssse3(src_ptr - (2 * src_pixels_per_line), src_pixels_per_line, dst_ptr, dst_pitch, 8, yoffset);
+        if (yoffset)
+        {
+            /* Second-pass only */
+            vp8_filter_block1d8_v6_ssse3(src_ptr - (2 * src_pixels_per_line),
+                                         src_pixels_per_line,
+                                         dst_ptr, dst_pitch, 8, yoffset);
+        }
+        else
+        {
+            /* ssse3 second-pass only function couldn't handle (xoffset==0 &&
+             * yoffset==0) case correctly. Add copy function here to guarantee
+             * six-tap function handles all possible offsets. */
+            vp8_copy_mem8x8(src_ptr, src_pixels_per_line, dst_ptr, dst_pitch);
+        }
     }
 }
 
@@ -503,19 +534,35 @@ void vp8_sixtap_predict8x4_ssse3
     {
         if (yoffset)
         {
-            vp8_filter_block1d8_h6_ssse3(src_ptr - (2 * src_pixels_per_line), src_pixels_per_line, FData2, 8, 9, xoffset);
-            vp8_filter_block1d8_v6_ssse3(FData2, 8, dst_ptr, dst_pitch, 4, yoffset);
+            vp8_filter_block1d8_h6_ssse3(src_ptr - (2 * src_pixels_per_line),
+                                         src_pixels_per_line, FData2,
+                                         8, 9, xoffset);
+            vp8_filter_block1d8_v6_ssse3(FData2, 8, dst_ptr, dst_pitch,
+                                         4, yoffset);
         }
         else
         {
             /* First-pass only */
-            vp8_filter_block1d8_h6_ssse3(src_ptr, src_pixels_per_line, dst_ptr, dst_pitch, 4, xoffset);
+            vp8_filter_block1d8_h6_ssse3(src_ptr, src_pixels_per_line,
+                                         dst_ptr, dst_pitch, 4, xoffset);
         }
     }
     else
     {
-        /* Second-pass only */
-        vp8_filter_block1d8_v6_ssse3(src_ptr - (2 * src_pixels_per_line), src_pixels_per_line, dst_ptr, dst_pitch, 4, yoffset);
+        if (yoffset)
+        {
+            /* Second-pass only */
+            vp8_filter_block1d8_v6_ssse3(src_ptr - (2 * src_pixels_per_line),
+                                         src_pixels_per_line,
+                                         dst_ptr, dst_pitch, 4, yoffset);
+        }
+        else
+        {
+            /* ssse3 second-pass only function couldn't handle (xoffset==0 &&
+             * yoffset==0) case correctly. Add copy function here to guarantee
+             * six-tap function handles all possible offsets. */
+            vp8_copy_mem8x4(src_ptr, src_pixels_per_line, dst_ptr, dst_pitch);
+        }
     }
 }
 
@@ -535,19 +582,48 @@ void vp8_sixtap_predict4x4_ssse3
   {
       if (yoffset)
       {
-          vp8_filter_block1d4_h6_ssse3(src_ptr - (2 * src_pixels_per_line), src_pixels_per_line, FData2, 4, 9, xoffset);
-          vp8_filter_block1d4_v6_ssse3(FData2, 4, dst_ptr, dst_pitch, 4, yoffset);
+          vp8_filter_block1d4_h6_ssse3(src_ptr - (2 * src_pixels_per_line),
+                                       src_pixels_per_line,
+                                       FData2, 4, 9, xoffset);
+          vp8_filter_block1d4_v6_ssse3(FData2, 4, dst_ptr, dst_pitch,
+                                       4, yoffset);
       }
       else
       {
-          vp8_filter_block1d4_h6_ssse3(src_ptr, src_pixels_per_line, dst_ptr, dst_pitch, 4, xoffset);
+          vp8_filter_block1d4_h6_ssse3(src_ptr, src_pixels_per_line,
+                                       dst_ptr, dst_pitch, 4, xoffset);
       }
   }
   else
   {
-      vp8_filter_block1d4_v6_ssse3(src_ptr - (2 * src_pixels_per_line), src_pixels_per_line, dst_ptr, dst_pitch, 4, yoffset);
-  }
+      if (yoffset)
+      {
+          vp8_filter_block1d4_v6_ssse3(src_ptr - (2 * src_pixels_per_line),
+                                       src_pixels_per_line,
+                                       dst_ptr, dst_pitch, 4, yoffset);
+      }
+      else
+      {
+        /* ssse3 second-pass only function couldn't handle (xoffset==0 &&
+          * yoffset==0) case correctly. Add copy function here to guarantee
+          * six-tap function handles all possible offsets. */
+          int r;
 
+          for (r = 0; r < 4; r++)
+          {
+  #if !(CONFIG_FAST_UNALIGNED)
+            dst_ptr[0]  = src_ptr[0];
+            dst_ptr[1]  = src_ptr[1];
+            dst_ptr[2]  = src_ptr[2];
+            dst_ptr[3]  = src_ptr[3];
+  #else
+              *(uint32_t *)dst_ptr = *(uint32_t *)src_ptr ;
+  #endif
+              dst_ptr     += dst_pitch;
+              src_ptr     += src_pixels_per_line;
+          }
+      }
+  }
 }
 
 #endif

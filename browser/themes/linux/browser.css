@@ -700,6 +700,10 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   color: GrayText;
 }
 
+#search-container {
+  min-width: calc(54px + 11ch);
+}
+
 %include ../shared/identity-block.inc.css
 
 #page-proxy-favicon {

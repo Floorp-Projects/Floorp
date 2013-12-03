@@ -120,21 +120,6 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
    * store.
    */
   {
-    // This is the testing EV signature. (mochitest)
-    // C=US, ST=CA, L=Mountain View, O=Mozilla - EV debug test CA, OU=Security Engineering, CN=EV Testing (untrustworthy) CA/name=ev-test-ca/emailAddress=charlatan@testing.example.com
-    "1.3.6.1.4.1.13769.666.666.666.1.500.9.1",
-    "DEBUGtesting EV OID",
-    SEC_OID_UNKNOWN,
-    "AD:FE:0E:44:16:45:B0:17:46:8B:76:01:74:B7:FF:64:5A:EC:35:91",
-    "MIHhMQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFjAUBgNVBAcTDU1vdW50YWlu"
-    "IFZpZXcxIzAhBgNVBAoTGk1vemlsbGEgLSBFViBkZWJ1ZyB0ZXN0IENBMR0wGwYD"
-    "VQQLExRTZWN1cml0eSBFbmdpbmVlcmluZzEmMCQGA1UEAxMdRVYgVGVzdGluZyAo"
-    "dW50cnVzdHdvcnRoeSkgQ0ExEzARBgNVBCkTCmV2LXRlc3QtY2ExLDAqBgkqhkiG"
-    "9w0BCQEWHWNoYXJsYXRhbkB0ZXN0aW5nLmV4YW1wbGUuY29t",
-    "AK/FPSJmJkky",
-    nullptr
-  },
-  {
     // This is the testing EV signature (xpcshell) (RSA)
     // CN=XPCShell EV Testing (untrustworthy) CA,OU=Security Engineering,O=Mozilla - EV debug test CA,L=Mountain View,ST=CA,C=US"
     "1.3.6.1.4.1.13769.666.666.666.1.500.9.1",
@@ -1148,8 +1133,8 @@ nsNSSComponent::IdentityInfoInit()
     entry.cert = CERT_FindCertByIssuerAndSN(nullptr, &ias);
 
 #ifdef DEBUG
-    // The debug CA certs are at positions 0-1, and are NOT in the NSS root db.
-    if (iEV > 1) {
+    // The debug CA cert is at positions 0, and is NOT in the NSS root db.
+    if (iEV > 0) {
        NS_ASSERTION(entry.cert, "Could not find EV root in NSS storage");
     }
 #endif

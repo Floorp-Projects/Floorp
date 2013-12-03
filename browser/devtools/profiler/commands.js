@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/devtools/gcli.jsm");
 loader.lazyGetter(this, "gDevTools",
   () => Cu.import("resource:///modules/devtools/gDevTools.jsm", {}).gDevTools);
 
-var promise = require("sdk/core/promise");
+var { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 /*
  * 'profiler' command. Doesn't do anything.
