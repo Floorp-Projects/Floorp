@@ -380,17 +380,17 @@ nss3.def: $(NSS_STATIC_LIBS_DEFS) $(DEPTH)/db/sqlite3/src/sqlite-processed.def
 	mv $@.tmp $@
 endif
 
-endif # MOZ_FOLD_LIBS
-
-include $(topsrcdir)/config/rules.mk
-
-ifdef MOZ_FOLD_LIBS
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 else
 SDK_LIBRARY = $(SHARED_LIBRARY)
 endif
 
+endif # MOZ_FOLD_LIBS
+
+include $(topsrcdir)/config/rules.mk
+
+ifdef MOZ_FOLD_LIBS
 # Force the linker to include everything from the static libraries.
 EXPAND_LIBS_EXEC += --extract
 
