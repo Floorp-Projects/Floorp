@@ -851,7 +851,7 @@ let RIL = {
    */
   readICCContacts: function readICCContacts(options) {
     if (!this.appType) {
-      options.errorMsg = GECKO_ERROR_REQUEST_NOT_SUPPORTED;
+      options.errorMsg = CONTACT_ERR_REQUEST_NOT_SUPPORTED;
       this.sendChromeMessage(options);
       return;
     }
@@ -899,7 +899,7 @@ let RIL = {
     }.bind(this);
 
     if (!this.appType || !options.contact) {
-      onerror(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
+      onerror(CONTACT_ERR_REQUEST_NOT_SUPPORTED );
       return;
     }
 
@@ -11148,19 +11148,20 @@ let ICCIOHelper = {
    * Process ICC IO error.
    */
   processICCIOError: function processICCIOError(options) {
-    let error = options.onerror || debug;
-
-    // See GSM11.11, TS 51.011 clause 9.4, and ISO 7816-4 for the error
-    // description.
-    let errorMsg = "ICC I/O Error code " +
-                   RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError] +
-                   " EF id = " + options.fileId.toString(16) +
-                   " command = " + options.command.toString(16);
-    if (options.sw1 && options.sw2) {
-      errorMsg += "(" + options.sw1.toString(16) +
-                  "/" + options.sw2.toString(16) + ")";
+    let requestError = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    if (DEBUG) {
+      // See GSM11.11, TS 51.011 clause 9.4, and ISO 7816-4 for the error
+      // description.
+      let errorMsg = "ICC I/O Error code " + requestError +
+                     " EF id = " + options.fileId.toString(16) +
+                     " command = " + options.command.toString(16);
+      if (options.sw1 && options.sw2) {
+        errorMsg += "(" + options.sw1.toString(16) +
+                    "/" + options.sw2.toString(16) + ")";
+      }
+      debug(errorMsg);
     }
-    error(errorMsg);
+    onerror(requestError);
   },
 };
 ICCIOHelper[ICC_COMMAND_SEEK] = null;
@@ -11641,8 +11642,10 @@ let ICCRecordHelper = {
         ICCIOHelper.loadNextRecord(options);
       } else {
         // No free record found.
-        let error = onerror || debug;
-        error("No free record found.");
+        if (DEBUG) {
+          debug(CONTACT_ERR_NO_FREE_RECORD_FOUND);
+        }
+        onerror(CONTACT_ERR_NO_FREE_RECORD_FOUND);
       }
     }
 
@@ -12881,8 +12884,10 @@ let ICCContactHelper = {
         ICCRecordHelper.readADNLike(ICC_EF_FDN, onsuccess, onerror);
         break;
       default:
-        let error = onerror || debug;
-        error(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
+        if (DEBUG) {
+          debug("Unsupported contactType :" + contactType);
+        }
+        onerror(CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
         break;
     }
   },
@@ -12912,8 +12917,10 @@ let ICCContactHelper = {
         ICCRecordHelper.findFreeRecordId(ICC_EF_FDN, onsuccess.bind(null, 0), onerror);
         break;
       default:
-        let error = onerror || debug;
-        error(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
+        if (DEBUG) {
+          debug("Unsupported contactType :" + contactType);
+        }
+        onerror(CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
         break;
     }
   },
@@ -12928,8 +12935,10 @@ let ICCContactHelper = {
   findUSimFreeADNRecordId: function findUSimFreeADNRecordId(pbrs, onsuccess, onerror) {
     (function findFreeRecordId(pbrIndex) {
       if (pbrIndex >= pbrs.length) {
-        let error = onerror || debug;
-        error("No free record found.");
+        if (DEBUG) {
+          debug(CONTACT_ERR_NO_FREE_RECORD_FOUND);
+        }
+        onerror(CONTACT_ERR_NO_FREE_RECORD_FOUND);
         return;
       }
 
@@ -12973,7 +12982,6 @@ let ICCContactHelper = {
    * @param onerror       Callback to be called when error.
    */
   updateICCContact: function updateICCContact(appType, contactType, contact, pin2, onsuccess, onerror) {
-   let error = onerror || debug;
     switch (contactType) {
       case "adn":
         if (!this.hasDfPhoneBook(appType)) {
@@ -12984,13 +12992,16 @@ let ICCContactHelper = {
         break;
       case "fdn":
         if (!pin2) {
-          error("pin2 is empty");
+          onerror(GECKO_ERROR_SIM_PIN2);
           return;
         }
         ICCRecordHelper.updateADNLike(ICC_EF_FDN, contact, pin2, onsuccess, onerror);
         break;
       default:
-        error(GECKO_ERROR_REQUEST_NOT_SUPPORTED);
+        if (DEBUG) {
+          debug("Unsupported contactType :" + contactType);
+        }
+        onerror(CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
         break;
     }
   },
@@ -13161,8 +13172,10 @@ let ICCContactHelper = {
           ICCRecordHelper.readANR(fileId, fileType, recordId, gotFieldCb, onerror);
           break;
         default:
-          let error = onerror || debug;
-          error("Unknown field " + field);
+          if (DEBUG) {
+            debug("Unsupported field :" + field);
+          }
+          onerror(CONTACT_ERR_FIELD_NOT_SUPPORTED);
           break;
       }
     }.bind(this);
@@ -13202,8 +13215,10 @@ let ICCContactHelper = {
 
       ICCRecordHelper.readIAP(pbr.iap.fileId, contact.recordId, gotIapCb, onerror);
     } else {
-      let error = onerror | debug;
-      error("USIM PBR files in Type 3 format are not supported.");
+      if (DEBUG) {
+        debug("USIM PBR files in Type 3 format are not supported.");
+      }
+      onerror(CONTACT_ERR_REQUEST_NOT_SUPPORTED);
     }
   },
 
@@ -13218,8 +13233,10 @@ let ICCContactHelper = {
     let gotPbrCb = function gotPbrCb(pbrs) {
       let pbr = pbrs[contact.pbrIndex];
       if (!pbr) {
-        let error = onerror || debug;
-        error("Cannot access Phonebook.");
+        if (DEBUG) {
+          debug(CONTACT_ERR_CANNOT_ACCESS_PHONEBOOK);
+        }
+        onerror(CONTACT_ERR_CANNOT_ACCESS_PHONEBOOK);
         return;
       }
       this.updatePhonebookSet(pbr, contact, onsuccess, onerror);
@@ -13296,6 +13313,11 @@ let ICCContactHelper = {
       this.updateContactFieldType1(pbr, contact, field, onsuccess, onerror);
     } else if (pbr[field].fileType === ICC_USIM_TYPE2_TAG) {
       this.updateContactFieldType2(pbr, contact, field, onsuccess, onerror);
+    } else {
+      if (DEBUG) {
+        debug("USIM PBR files in Type 3 format are not supported.");
+      }
+      onerror(CONTACT_ERR_REQUEST_NOT_SUPPORTED);
     }
   },
 
@@ -13313,6 +13335,11 @@ let ICCContactHelper = {
       ICCRecordHelper.updateEmail(pbr, contact.recordId, contact.email, null, onsuccess, onerror);
     } else if (field === USIM_PBR_ANR0) {
       ICCRecordHelper.updateANR(pbr, contact.recordId, contact.anr[0], null, onsuccess, onerror);
+    } else {
+     if (DEBUG) {
+       debug("Unsupported field :" + field);
+     }
+     onerror(CONTACT_ERR_FIELD_NOT_SUPPORTED);
     }
   },
 
@@ -13347,7 +13374,13 @@ let ICCContactHelper = {
         ICCRecordHelper.updateEmail(pbr, recordId, contact.email, contact.recordId, onsuccess, onerror);
       } else if (field === USIM_PBR_ANR0) {
         ICCRecordHelper.updateANR(pbr, recordId, contact.anr[0], contact.recordId, onsuccess, onerror);
+      } else {
+        if (DEBUG) {
+          debug("Unsupported field :" + field);
+        }
+        onerror(CONTACT_ERR_FIELD_NOT_SUPPORTED);
       }
+
     }.bind(this);
 
     ICCRecordHelper.readIAP(pbr.iap.fileId, contact.recordId, gotIapCb, onerror);
@@ -13376,8 +13409,10 @@ let ICCContactHelper = {
     }.bind(this);
 
     let errorCb = function errorCb(errorMsg) {
-      let error = onerror || debug;
-      error(errorMsg + " USIM field " + field);
+      if (DEBUG) {
+        debug(errorMsg + " USIM field " + field);
+      }
+      onerror(errorMsg);
     }.bind(this);
 
     ICCRecordHelper.findFreeRecordId(pbr[field].fileId, successCb, errorCb);
