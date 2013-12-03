@@ -1873,6 +1873,94 @@ add_test(function test_find_free_icc_contact_usim() {
   run_next_test();
 });
 
+/**
+ * Test error message returned in onerror for readICCContacts.
+ */
+add_test(function test_error_message_read_icc_contact () {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+
+  function do_test(options, expectedErrorMsg) {
+    ril.sendChromeMessage = function (message) {
+      do_check_eq(message.errorMsg, expectedErrorMsg);
+    }
+    ril.readICCContacts(options);
+  }
+
+  // Error 1, didn't specify correct contactType.
+  do_test({}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
+
+  // Error 2, specifying a non-supported contactType.
+  ril.appType = CARD_APPTYPE_USIM;
+  do_test({contactType: "sdn"}, CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
+
+  // Error 3, suppose we update the supported PBR fields in USIM_PBR_FIELDS,
+  // but forget to add implemenetations for it.
+  USIM_PBR_FIELDS.push("pbc");
+  do_test({contactType: "adn"}, CONTACT_ERR_FIELD_NOT_SUPPORTED);
+
+  run_next_test();
+});
+
+/**
+ * Test error message returned in onerror for updateICCContact.
+ */
+add_test(function test_error_message_update_icc_contact() {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+
+  function do_test(options, expectedErrorMsg) {
+    ril.sendChromeMessage = function (message) {
+      do_check_eq(message.errorMsg, expectedErrorMsg);
+    }
+    ril.updateICCContact(options);
+  }
+
+  // Error 1, didn't specify correct contactType.
+  do_test({}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
+
+  // Error 2, specifying a correct contactType, but without providing 'contact'.
+  do_test({contactType: "adn"}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
+
+  // Error 3, specifying a non-supported contactType.
+  ril.appType = CARD_APPTYPE_USIM;
+  do_test({contactType: "sdn", contact: {}}, CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
+
+  // Error 4, No free record found in EF_ADN.
+  let record = worker.ICCRecordHelper;
+  record.readPBR = function (onsuccess, onerror) {
+    onsuccess([{adn: {fileId: 0x4f3a}}]);
+  };
+
+  let io = worker.ICCIOHelper;
+  io.loadLinearFixedEF = function (options) {
+    options.totalRecords = 1;
+    options.p1 = 1;
+    options.callback(options);
+  };
+
+  do_test({contactType: "adn", contact: {}}, CONTACT_ERR_NO_FREE_RECORD_FOUND);
+
+  const ICCID = "123456789";
+  ril.iccInfo.iccid = ICCID;
+
+  // Error 5, suppose we update the supported PBR fields in USIM_PBR_FIELDS,
+  // but forget to add implemenetations for it.
+  USIM_PBR_FIELDS.push("pbc");
+  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+          CONTACT_ERR_FIELD_NOT_SUPPORTED);
+
+  // Error 6, EF_PBR doesn't exist.
+  record.readPBR = function (onsuccess, onerror) {
+    onsuccess([]);
+  };
+
+  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+          CONTACT_ERR_CANNOT_ACCESS_PHONEBOOK);
+
+  run_next_test();
+});
+
 add_test(function test_personalization_state() {
   let worker = newUint8Worker();
   let ril = worker.RIL;
