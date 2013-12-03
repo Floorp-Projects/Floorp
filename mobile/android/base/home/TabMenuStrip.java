@@ -95,7 +95,7 @@ public class TabMenuStrip extends LinearLayout
         }
     }
 
-    // Page scroll animates the drawable and its bounds from the previous to next child view.
+    // Page scroll animates the drawable and it's bounds from the previous to next child view.
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
         if (mStrip == null) {

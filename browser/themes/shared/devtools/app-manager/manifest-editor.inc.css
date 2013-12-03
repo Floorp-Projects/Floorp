@@ -6,7 +6,7 @@
 
 .variables-view-container.manifest-editor {
   background-color: #F5F5F5;
-  padding: 20px 13px;
+  padding: 20px 2px;
 }
 
 .manifest-editor .variable-or-property:focus > .title {
@@ -19,7 +19,8 @@
   color: #27406A;
 }
 
-.manifest-editor .variable-or-property > .title > label {
+.manifest-editor .variable-or-property > .title > label,
+.manifest-editor textbox  {
   font-family: monospace;
 }
 
@@ -52,16 +53,28 @@
 
 .manifest-editor .variables-view-delete,
 .manifest-editor .variables-view-delete:hover,
-.manifest-editor .variables-view-delete:active {
+.manifest-editor .variables-view-delete:active,
+.manifest-editor .variables-view-add-property,
+.manifest-editor .variables-view-add-property:hover,
+.manifest-editor .variables-view-add-property:active {
   list-style-image: none;
   -moz-image-region: initial;
 }
 
-.manifest-editor .variables-view-delete::before {
-  width: 12px;
-  height: 12px;
+.manifest-editor .variables-view-delete::before,
+.manifest-editor .variables-view-add-property::before {
+  width: 11px;
+  height: 11px;
   content: "";
   display: inline-block;
+  background-size: 11px auto;
+}
+
+.manifest-editor .variables-view-delete::before {
   background-image: url("app-manager/remove.svg");
-  background-size: 12px auto;
+}
+
+.manifest-editor .variables-view-add-property::before {
+  background-image: url("app-manager/add.svg");
+  -moz-margin-end: 2px;
 }
