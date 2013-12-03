@@ -208,7 +208,10 @@ NS_NewElement(nsIContent** aResult,
   }
 #endif
   if (ns == kNameSpaceID_MathML) {
-    return NS_NewMathMLElement(aResult, aNodeInfo);
+    nsCOMPtr<Element> el;
+    nsresult rv = NS_NewMathMLElement(getter_AddRefs(el), aNodeInfo);
+    el.forget(aResult);
+    return rv;
   }
   if (ns == kNameSpaceID_SVG) {
     return NS_NewSVGElement(aResult, aNodeInfo, aFromParser);
