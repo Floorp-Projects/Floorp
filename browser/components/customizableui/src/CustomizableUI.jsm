@@ -654,11 +654,17 @@ let CustomizableUIInternal = {
 
     let placements = gPlacements.get(CustomizableUI.AREA_PANEL);
     this.buildArea(CustomizableUI.AREA_PANEL, placements, aPanel);
-    for (let btn of aPanel.querySelectorAll("toolbarbutton")) {
-      btn.setAttribute("tabindex", "0");
-      this.ensureButtonContextMenu(btn, aPanel);
-      if (!btn.hasAttribute("type")) {
-        btn.setAttribute("type", "wrap");
+    for (let child of aPanel.children) {
+      if (child.localName != "toolbarbutton") {
+        if (child.localName == "toolbaritem") {
+          this.ensureButtonContextMenu(child, aPanel);
+        }
+        continue;
+      }
+      this.ensureButtonContextMenu(child, aPanel);
+      child.setAttribute("tabindex", "0");
+      if (!child.hasAttribute("type")) {
+        child.setAttribute("type", "wrap");
       }
     }
 
