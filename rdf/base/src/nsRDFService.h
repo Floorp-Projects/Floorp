@@ -28,7 +28,6 @@
 #include "nsString.h"
 
 struct PLHashTable;
-struct PRLogModuleInfo;
 class nsIRDFLiteral;
 class nsIRDFInt;
 class nsIRDFDate;
@@ -37,10 +36,6 @@ class BlobImpl;
 class RDFServiceImpl : public nsIRDFService,
                        public nsSupportsWeakReference
 {
-#ifdef PR_LOGGING
-    static PRLogModuleInfo* gLog;
-#endif
-
 protected:
     PLHashTable* mNamedDataSources;
     PLDHashTable mResources;
