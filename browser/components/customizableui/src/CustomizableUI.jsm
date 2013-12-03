@@ -151,23 +151,9 @@ let CustomizableUIInternal = {
       "add-ons-button"
     ];
 
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-    // Show switch-to-metro-button if in Windows 8.
-    let isMetroCapable = false;
-    try {
-      // Windows 8 is version 6.2.
-      let version = Cc["@mozilla.org/system-info;1"]
-                      .getService(Ci.nsIPropertyBag2)
-                      .getProperty("version");
-      isMetroCapable = (parseFloat(version) >= 6.2);
-    } catch (ex) { }
-
-    if (isMetroCapable) {
+    if (gPalette.has("switch-to-metro-button")) {
       panelPlacements.push("switch-to-metro-button");
     }
-#endif
-#endif
 
     let showCharacterEncoding = Services.prefs.getComplexValue(
       "browser.menu.showCharacterEncoding",
