@@ -103,6 +103,7 @@ LayerManagerComposite::LayerManagerComposite(Compositor* aCompositor)
 : mCompositor(aCompositor)
 , mInTransaction(false)
 , mIsCompositorReady(false)
+, mDebugOverlayWantsNextFrame(false)
 {
   MOZ_ASSERT(aCompositor);
 }

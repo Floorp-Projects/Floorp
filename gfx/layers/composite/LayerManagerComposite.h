@@ -241,6 +241,14 @@ public:
 
   bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
 
+  /**
+   * LayerManagerComposite provides sophisticated debug overlays
+   * that can request a next frame.
+   */
+  bool DebugOverlayWantsNextFrame() { return mDebugOverlayWantsNextFrame; }
+  void SetDebugOverlayWantsNextFrame(bool aVal)
+  { mDebugOverlayWantsNextFrame = aVal; }
+
 private:
   /** Region we're clipping our current drawing to. */
   nsIntRegion mClippingRegion;
@@ -287,6 +295,7 @@ private:
   bool mIsCompositorReady;
   nsIntRegion mInvalidRegion;
   nsAutoPtr<LayerProperties> mClonedLayerTreeProperties;
+  bool mDebugOverlayWantsNextFrame;
 };
 
 /**
