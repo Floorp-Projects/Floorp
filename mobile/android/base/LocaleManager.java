@@ -44,6 +44,7 @@ public class LocaleManager {
     private static BroadcastReceiver receiver;
 
     public static void setContextGetter(ContextGetter getter) {
+        Log.d(LOG_TAG, "Calling setContextGetter: " + getter);
         LocaleManager.getter = getter;
     }
 
