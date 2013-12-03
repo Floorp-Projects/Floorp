@@ -490,6 +490,18 @@ parent:
     sync SpeakerManagerGetSpeakerStatus()
         returns (bool value);
 
+    /**
+     * Notifies the parent about a recording device is starting or shutdown.
+     * @param recordingStatus starting or shutdown
+     * @param pageURL URL that request that changing the recording status
+     * @param isAudio recording start with microphone
+     * @param isVideo recording start with camera
+     */
+    async RecordingDeviceEvents(nsString recordingStatus,
+                                nsString pageURL,
+                                bool isAudio,
+                                bool isVideo);
+
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,
                   CpowEntry[] aCpows, Principal aPrincipal);
