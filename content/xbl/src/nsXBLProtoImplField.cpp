@@ -494,5 +494,5 @@ nsXBLProtoImplField::Write(nsIObjectOutputStream* aStream)
   rv = aStream->Write32(mLineNumber);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aStream->WriteWStringZ(mFieldText ? mFieldText : EmptyString().get());
+  return aStream->WriteWStringZ(mFieldText ? mFieldText : MOZ_UTF16(""));
 }
