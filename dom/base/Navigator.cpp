@@ -1776,15 +1776,6 @@ Navigator::HasIccManagerSupport(JSContext* /* unused */,
   nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
   return win && CheckPermission(win, "mobileconnection");
 }
-
-/* static */
-bool
-Navigator::HasWifiManagerSupport(JSContext* /* unused */,
-                                 JSObject* aGlobal)
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
-  return win && CheckPermission(win, "wifi-manage");
-}
 #endif // MOZ_B2G_RIL
 
 #ifdef MOZ_B2G_BT
