@@ -242,12 +242,7 @@ nsresult
 txMozillaTextOutput::createXHTMLElement(nsIAtom* aName,
                                         nsIContent** aResult)
 {
-    *aResult = nullptr;
-
-    nsCOMPtr<nsINodeInfo> ni;
-    ni = mDocument->NodeInfoManager()->
-        GetNodeInfo(aName, nullptr, kNameSpaceID_XHTML,
-                    nsIDOMNode::ELEMENT_NODE);
-
-    return NS_NewHTMLElement(aResult, ni.forget(), NOT_FROM_PARSER);
+    nsCOMPtr<Element> element = mDocument->CreateHTMLElement(aName);
+    element.forget(aResult);
+    return NS_OK;
 }

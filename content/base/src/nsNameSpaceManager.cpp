@@ -19,6 +19,7 @@
 #include "nsString.h"
 #include "nsINodeInfo.h"
 #include "mozilla/dom/XBLChildrenElement.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -193,7 +194,10 @@ NS_NewElement(nsIContent** aResult,
 {
   int32_t ns = aNodeInfo.get()->NamespaceID();
   if (ns == kNameSpaceID_XHTML) {
-    return NS_NewHTMLElement(aResult, aNodeInfo, aFromParser);
+    nsCOMPtr<Element> el;
+    nsresult rv = NS_NewHTMLElement(getter_AddRefs(el), aNodeInfo, aFromParser);
+    el.forget(aResult);
+    return rv;
   }
 #ifdef MOZ_XUL
   if (ns == kNameSpaceID_XUL) {
