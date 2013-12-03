@@ -96,7 +96,7 @@ public:
     {}
 
     TimeStamp mFrameTime;
-    Point mPoint;
+    gfx::Point mPoint;
   };
   std::vector<VelocityData> mData;
 };
@@ -186,8 +186,8 @@ static void DrawVelGraph(const nsIntRect& aClipRect,
   std::vector<gfx::Point> graph;
   int yScaleFactor = 3;
   for (int32_t i = (int32_t)velocityData->mData.size() - 2; i >= 0; i--) {
-    const Point& p1 = velocityData->mData[i+1].mPoint;
-    const Point& p2 = velocityData->mData[i].mPoint;
+    const gfx::Point& p1 = velocityData->mData[i+1].mPoint;
+    const gfx::Point& p2 = velocityData->mData[i].mPoint;
     int vel = sqrt((p1.x - p2.x) * (p1.x - p2.x) +
                    (p1.y - p2.y) * (p1.y - p2.y));
     graph.push_back(
