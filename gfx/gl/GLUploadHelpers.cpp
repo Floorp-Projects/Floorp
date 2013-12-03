@@ -92,6 +92,37 @@ CopyAndPadTextureData(const GLvoid* srcBuffer,
     }
 }
 
+// In both of these cases (for the Adreno at least) it is impossible
+// to determine good or bad driver versions for POT texture uploads,
+// so blacklist them all. Newer drivers use a different rendering
+// string in the form "Adreno (TM) 200" and the drivers we've seen so
+// far work fine with NPOT textures, so don't blacklist those until we
+// have evidence of any problems with them.
+bool
+CanUploadSubTextures(GLContext* gl)
+{
+    if (!gl->WorkAroundDriverBugs())
+        return true;
+
+    // There are certain GPUs that we don't want to use glTexSubImage2D on
+    // because that function can be very slow and/or buggy
+    if (gl->Renderer() == GLContext::RendererAdreno200 ||
+        gl->Renderer() == GLContext::RendererAdreno205)
+    {
+        return false;
+    }
+
+    // On PowerVR glTexSubImage does a readback, so it will be slower
+    // than just doing a glTexImage2D() directly. i.e. 26ms vs 10ms
+    if (gl->Renderer() == GLContext::RendererSGX540 ||
+        gl->Renderer() == GLContext::RendererSGX530)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 static void
 TexSubImage2DWithUnpackSubimageGLES(GLContext* gl,
                                     GLenum target, GLint level,
@@ -446,7 +477,7 @@ UploadImageDataToTexture(GLContext* gl,
         NS_ASSERTION(textureInited || (iterRect->x == 0 && iterRect->y == 0),
                      "Must be uploading to the origin when we don't have an existing texture");
 
-        if (textureInited && gl->CanUploadSubTextures()) {
+        if (textureInited && CanUploadSubTextures(gl)) {
             TexSubImage2DHelper(gl,
                                 aTextureTarget,
                                 0,

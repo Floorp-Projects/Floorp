@@ -95,6 +95,8 @@ UploadSurfaceToTexture(GLContext* gl,
                        GLenum aTextureUnit,
                        GLenum aTextureTarget);
 
+bool CanUploadSubTextures(GLContext* gl);
+
 }
 }
 

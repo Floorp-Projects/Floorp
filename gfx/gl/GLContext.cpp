@@ -1145,32 +1145,6 @@ GLContext::InitExtensions()
 #endif
 }
 
-// In both of these cases (for the Adreno at least) it is impossible
-// to determine good or bad driver versions for POT texture uploads,
-// so blacklist them all. Newer drivers use a different rendering
-// string in the form "Adreno (TM) 200" and the drivers we've seen so
-// far work fine with NPOT textures, so don't blacklist those until we
-// have evidence of any problems with them.
-bool
-GLContext::CanUploadSubTextures()
-{
-    if (!mWorkAroundDriverBugs)
-        return true;
-
-    // There are certain GPUs that we don't want to use glTexSubImage2D on
-    // because that function can be very slow and/or buggy
-    if (Renderer() == RendererAdreno200 || Renderer() == RendererAdreno205)
-        return false;
-
-    // On PowerVR glTexSubImage does a readback, so it will be slower
-    // than just doing a glTexImage2D() directly. i.e. 26ms vs 10ms
-    if (Renderer() == RendererSGX540 || Renderer() == RendererSGX530)
-        return false;
-
-    return true;
-}
-
-
 bool
 GLContext::CanReadSRGBFromFBOTexture()
 {
@@ -1225,24 +1199,6 @@ GLContext::CanUploadNonPowerOfTwo()
     // Some GPUs driver crash when uploading non power of two 565 textures.
     return sPowerOfTwoForced ? false : (Renderer() != RendererAdreno200 &&
                                         Renderer() != RendererAdreno205);
-}
-
-bool
-GLContext::WantsSmallTiles()
-{
-    // We must use small tiles for good performance if we can't use
-    // glTexSubImage2D() for some reason.
-    if (!CanUploadSubTextures())
-        return true;
-
-    // We can't use small tiles on the SGX 540, because of races in texture upload.
-    if (mWorkAroundDriverBugs &&
-        Renderer() == RendererSGX540)
-        return false;
-
-    // Don't use small tiles otherwise. (If we implement incremental texture upload,
-    // then we will want to revisit this.)
-    return false;
 }
 
 // Common code for checking for both GL extensions and GLX extensions.
