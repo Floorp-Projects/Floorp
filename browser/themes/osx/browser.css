@@ -1674,6 +1674,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   height: 22px;
 }
 
+#search-container {
+  min-width: calc(54px + 11ch);
+}
+
 %include ../shared/identity-block.inc.css
 
 #page-proxy-favicon {
