@@ -615,8 +615,13 @@
 
 /* Actions first */
 
-.variables-view-container[actions-first] .variables-view-delete {
+.variables-view-container[actions-first] .variables-view-delete,
+.variables-view-container[actions-first] .variables-view-add-property {
   -moz-box-ordinal-group: 0;
+}
+
+.variables-view-container[actions-first] [invisible] {
+  visibility: hidden;
 }
 
 /* Variables and properties tooltips */
@@ -652,10 +657,6 @@
 
 .variables-view-delete:active {
   -moz-image-region: rect(0,48px,16px,32px);
-}
-
-.variables-view-delete > .toolbarbutton-text {
-  display: none;
 }
 
 .variables-view-edit {
