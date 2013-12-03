@@ -7,6 +7,7 @@
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/FromParser.h"
 
 using namespace mozilla;
