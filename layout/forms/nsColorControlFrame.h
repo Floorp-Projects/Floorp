@@ -17,6 +17,8 @@ typedef nsHTMLButtonControlFrame nsColorControlFrameSuper;
 class nsColorControlFrame MOZ_FINAL : public nsColorControlFrameSuper,
                                       public nsIAnonymousContentCreator
 {
+  typedef mozilla::dom::Element Element;
+
 public:
   friend nsIFrame* NS_NewColorControlFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
@@ -44,7 +46,7 @@ public:
   virtual bool IsLeaf() const MOZ_OVERRIDE { return true; }
   virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE;
 
-  virtual nsIContent* GetPseudoElementContent(nsCSSPseudoElements::Type aType) MOZ_OVERRIDE;
+  virtual Element* GetPseudoElement(nsCSSPseudoElements::Type aType) MOZ_OVERRIDE;
 
 private:
   nsColorControlFrame(nsStyleContext* aContext);
@@ -52,7 +54,7 @@ private:
   // Update the color swatch
   nsresult UpdateColor();
 
-  nsCOMPtr<nsIContent> mColorContent;
+  nsCOMPtr<Element> mColorContent;
 };
 
 
