@@ -1,6 +1,0 @@
-# DOMWifiP2pManager.js
-component {8d9125a0-3498-11e3-aa6e-0800200c9a66} DOMWifiP2pManager.js
-contract @mozilla.org/wifip2pmanager;1 {8d9125a0-3498-11e3-aa6e-0800200c9a66}
-
-component {a9b81450-349d-11e3-aa6e-0800200c9a66} DOMWifiP2pManager.js
-contract @mozilla.org/wifip2pgroupowner;1 {a9b81450-349d-11e3-aa6e-0800200c9a66}
