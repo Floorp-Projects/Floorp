@@ -2391,6 +2391,9 @@ public:
 #endif
 
     bool MakeCurrent(bool aForce = false) {
+        if (IsDestroyed()) {
+            return false;
+        }
 #ifdef MOZ_ENABLE_GL_TRACKING
     PR_SetThreadPrivate(sCurrentGLContextTLS, this);
 

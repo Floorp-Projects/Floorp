@@ -70,6 +70,7 @@ const COMPAT = {
 // A map from the console API call levels to the Web Console severities.
 const CONSOLE_API_LEVELS_TO_SEVERITIES = {
   error: "error",
+  exception: "error",
   warn: "warning",
   info: "info",
   log: "log",

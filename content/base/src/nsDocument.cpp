@@ -4983,13 +4983,13 @@ nsIDocument::CreateElementNS(const nsAString& aNamespaceURI,
     return nullptr;
   }
 
-  nsCOMPtr<nsIContent> content;
-  rv = NS_NewElement(getter_AddRefs(content), nodeInfo.forget(),
+  nsCOMPtr<Element> element;
+  rv = NS_NewElement(getter_AddRefs(element), nodeInfo.forget(),
                      NOT_FROM_PARSER);
   if (rv.Failed()) {
     return nullptr;
   }
-  return dont_AddRef(content.forget().get()->AsElement());
+  return element.forget();
 }
 
 NS_IMETHODIMP
@@ -7567,7 +7567,11 @@ nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix, int32_t aNamesp
                                 getter_AddRefs(nodeInfo));
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  return NS_NewElement(aResult, nodeInfo.forget(), NOT_FROM_PARSER);
+  nsCOMPtr<Element> element;
+  nsresult rv = NS_NewElement(getter_AddRefs(element), nodeInfo.forget(),
+                              NOT_FROM_PARSER);
+  element.forget(aResult);
+  return rv;
 }
 
 bool
@@ -11399,9 +11403,7 @@ nsIDocument::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
 
   NS_NAMED_LITERAL_STRING(doc_str, "document");
 
-  if (!JS_DefineUCProperty(aCx, JSVAL_TO_OBJECT(winVal),
-                           reinterpret_cast<const jschar *>
-                                           (doc_str.get()),
+  if (!JS_DefineUCProperty(aCx, JSVAL_TO_OBJECT(winVal), doc_str.get(),
                            doc_str.Length(), JS::ObjectValue(*obj),
                            JS_PropertyStub, JS_StrictPropertyStub,
                            JSPROP_READONLY | JSPROP_ENUMERATE)) {
@@ -11456,6 +11458,23 @@ nsIDocument::SetStateObject(nsIStructuredCloneContainer *scContainer)
 {
   mStateObjectContainer = scContainer;
   mStateObjectCached = nullptr;
+}
+
+already_AddRefed<Element>
+nsIDocument::CreateHTMLElement(nsIAtom* aTag)
+{
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nodeInfo = mNodeInfoManager->GetNodeInfo(aTag, nullptr, kNameSpaceID_XHTML,
+                                           nsIDOMNode::ELEMENT_NODE);
+  MOZ_ASSERT(nodeInfo, "GetNodeInfo should never fail");
+
+  nsCOMPtr<Element> element;
+  DebugOnly<nsresult> rv = NS_NewHTMLElement(getter_AddRefs(element),
+                                             nodeInfo.forget(),
+                                             mozilla::dom::NOT_FROM_PARSER);
+
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "NS_NewHTMLElement should never fail");
+  return element.forget();
 }
 
 bool

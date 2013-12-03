@@ -96,10 +96,10 @@ class CompileInfo
     }
 
     jsbytecode *startPC() const {
-        return script_->code;
+        return script_->code();
     }
     jsbytecode *limitPC() const {
-        return script_->code + script_->length;
+        return script_->codeEnd();
     }
 
     const char *filename() const {

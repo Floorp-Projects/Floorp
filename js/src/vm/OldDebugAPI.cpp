@@ -391,7 +391,7 @@ JS_LineNumberToPC(JSContext *cx, JSScript *script, unsigned lineno)
 JS_PUBLIC_API(jsbytecode *)
 JS_EndPC(JSContext *cx, JSScript *script)
 {
-    return script->code + script->length;
+    return script->codeEnd();
 }
 
 JS_PUBLIC_API(bool)
@@ -399,7 +399,7 @@ JS_GetLinePCs(JSContext *cx, JSScript *script,
               unsigned startLine, unsigned maxLines,
               unsigned* count, unsigned** retLines, jsbytecode*** retPCs)
 {
-    size_t len = (script->length > maxLines ? maxLines : script->length);
+    size_t len = (script->length() > maxLines ? maxLines : script->length());
     unsigned *lines = cx->pod_malloc<unsigned>(len);
     if (!lines)
         return false;
@@ -424,7 +424,7 @@ JS_GetLinePCs(JSContext *cx, JSScript *script,
 
             if (lineno >= startLine) {
                 lines[i] = lineno;
-                pcs[i] = script->code + offset;
+                pcs[i] = script->offsetToPC(offset);
                 if (++i >= maxLines)
                     break;
             }

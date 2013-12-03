@@ -414,7 +414,7 @@
 
           // pass the current set of children for comparison with placements:
           let children = [];
-          for (node of this.childNodes) {
+          for (let node of this.childNodes) {
             if (node.getAttribute("skipintoolbarset") != "true" && node.id) {
               // Force everything to be removable so that buildArea can chuck stuff
               // out if the user has customized things / we've been here before:
@@ -425,6 +425,10 @@
             }
           }
           CustomizableUI.registerToolbarNode(this, children);
+          let existingMigratedItems = (this.getAttribute("migratedset") || "").split(',');
+          for (let migratedItem of existingMigratedItems.filter((x) => !!x)) {
+            this._currentSetMigrated.add(migratedItem);
+          }
           this.evictNodes();
           // We can't easily use |this| or strong bindings for the observer fn here
           // because that creates leaky circular references when the node goes away,
@@ -457,6 +461,7 @@
             }
           }
           this._isModifying = false;
+          this._updateMigratedSet();
         ]]></body>
       </method>
       <method name="evictNode">
@@ -469,6 +474,7 @@
           const kItemMaxWidth = 100;
           let oldParent = aNode.parentNode;
           aNode.setAttribute("removable", "true");
+          this._currentSetMigrated.add(aNode.id);
 
           let movedOut = false;
           if (!this._wasCollapsed) {
@@ -531,12 +537,27 @@
           this.appendChild(node);
           this.evictNode(node);
           this._isModifying = false;
+          this._updateMigratedSet();
           // We will now have moved stuff around; kick off an aftercustomization event
           // so add-ons know we've just moved their stuff:
           if (window.gCustomizeMode) {
             window.gCustomizeMode.dispatchToolboxEvent("aftercustomization");
           }
           return node;
+        ]]></body>
+      </method>
+      <method name="getMigratedItems">
+        <body><![CDATA[
+          return [... this._currentSetMigrated];
+        ]]></body>
+      </method>
+      <method name="_updateMigratedSet">
+        <body><![CDATA[
+          let newMigratedItems = this.getMigratedItems().join(',');
+          if (this.getAttribute("migratedset") != newMigratedItems) {
+            this.setAttribute("migratedset", newMigratedItems);
+            this.ownerDocument.persist(this.id, "migratedset");
+          }
         ]]></body>
       </method>
       <property name="customizationTarget" readonly="true">
@@ -553,10 +574,11 @@
           let newButtons = v.filter(x => x && (!this._whiteListed.has(x) &&
                                                !CustomizableUI.isSpecialWidget(x) &&
                                                !this._currentSetMigrated.has(x)));
-          for (x of newButtons) {
-            this._currentSetMigrated.add(x);
-            this.insertItem(x);
+          for (let newButton of newButtons) {
+            this._currentSetMigrated.add(newButton);
+            this.insertItem(newButton);
           }
+          this._updateMigratedSet();
         ]]></setter>
       </property>
       <property name="toolbox" readonly="true">

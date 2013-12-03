@@ -1247,7 +1247,7 @@ IonBuilder::traverseBytecode()
         // adding any SSA uses and doesn't call setFoldedUnchecked on it.
         Vector<MDefinition *, 4, IonAllocPolicy> popped(alloc());
         Vector<size_t, 4, IonAllocPolicy> poppedUses(alloc());
-        unsigned nuses = GetUseCount(script_, pc - script_->code);
+        unsigned nuses = GetUseCount(script_, script_->pcToOffset(pc));
 
         for (unsigned i = 0; i < nuses; i++) {
             MDefinition *def = current->peek(-int32_t(i + 1));
@@ -3983,7 +3983,7 @@ IonBuilder::patchInlinedReturns(CallInfo &callInfo, MIRGraphReturns &returns, MB
 static bool
 IsSmallFunction(JSScript *script)
 {
-    return script->length <= js_IonOptions.smallFunctionMaxBytecodeLength;
+    return script->length() <= js_IonOptions.smallFunctionMaxBytecodeLength;
 }
 
 bool
@@ -4031,7 +4031,7 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
             }
 
             // Caller must not be excessively large.
-            if (script()->length >= js_IonOptions.inliningMaxCallerBytecodeLength) {
+            if (script()->length() >= js_IonOptions.inliningMaxCallerBytecodeLength) {
                 IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: caller excessively large.",
                         targetScript->filename(), targetScript->lineno);
                 return false;
@@ -4040,7 +4040,7 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
 
         // Callee must not be excessively large.
         // This heuristic also applies to the callsite as a whole.
-        if (targetScript->length > js_IonOptions.inlineMaxTotalBytecodeLength) {
+        if (targetScript->length() > js_IonOptions.inlineMaxTotalBytecodeLength) {
             IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: callee excessively large.",
                     targetScript->filename(), targetScript->lineno);
             return false;
@@ -4080,7 +4080,7 @@ IonBuilder::selectInliningTargets(ObjectVector &targets, CallInfo &callInfo, Boo
 
         // Enforce a maximum inlined bytecode limit at the callsite.
         if (inlineable && target->isInterpreted()) {
-            totalSize += target->nonLazyScript()->length;
+            totalSize += target->nonLazyScript()->length();
             if (totalSize > js_IonOptions.inlineMaxTotalBytecodeLength)
                 inlineable = false;
         }

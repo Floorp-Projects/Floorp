@@ -21,12 +21,15 @@
                        exitLabel="&appMenuCustomizeExit.label;" tabindex="0"
                        oncommand="gCustomizeMode.toggle();"/>
         <toolbarbutton id="PanelUI-help" label="&helpMenu.label;" tabindex="0"
+                       tooltiptext="&helpMenu.label;"
                        oncommand="PanelUI.showHelpView(this.parentNode);"/>
         <toolbarbutton id="PanelUI-quit" tabindex="0"
 #ifdef XP_WIN
                        label="&quitApplicationCmdWin.label;"
+                       tooltiptext="&quitApplicationCmdWin.label;"
 #else
                        label="&quitApplicationCmd.label;"
+                       tooltiptext="&quitApplicationCmd.label;"
 #endif
                        command="cmd_quitApplication"/>
       </footer>

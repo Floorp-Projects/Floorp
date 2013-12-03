@@ -849,7 +849,7 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 #ifdef XP_WIN
 
     int32_t         driveType;
-    PRUnichar       drive[32];
+    wchar_t         drive[32];
     int32_t         volNum;
 
     for (volNum = 0; volNum < 26; volNum++)
