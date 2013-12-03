@@ -20,8 +20,11 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsContentList.h"
+#include "mozilla/dom/Element.h"
 
 //#define DEBUG_REFLOW
+
+using namespace mozilla::dom;
 
 class nsDocElementBoxFrame : public nsBoxFrame,
                              public nsIAnonymousContentCreator
@@ -55,8 +58,8 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 private:
-  nsCOMPtr<nsIContent> mPopupgroupContent;
-  nsCOMPtr<nsIContent> mTooltipContent;
+  nsCOMPtr<Element> mPopupgroupContent;
+  nsCOMPtr<Element> mTooltipContent;
 };
 
 //----------------------------------------------------------------------

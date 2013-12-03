@@ -53,7 +53,8 @@ NS_NewMathMLElement(nsIContent** aResult,
 
 #ifdef MOZ_XUL
 nsresult
-NS_NewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo);
+NS_NewXULElement(mozilla::dom::Element** aResult,
+                 already_AddRefed<nsINodeInfo> aNodeInfo);
 
 void
 NS_TrustedNewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo);
