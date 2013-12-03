@@ -933,13 +933,6 @@ TRY_AGAIN_NO_SHARING:
         return true;
     }
 
-    virtual already_AddRefed<TextureImage>
-    CreateTextureImage(const nsIntSize& aSize,
-                       TextureImage::ContentType aContentType,
-                       GLenum aWrapMode,
-                       TextureImage::Flags aFlags = TextureImage::NoFlags,
-                       TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown);
-
 private:
     friend class GLContextProviderGLX;
 
@@ -979,20 +972,6 @@ private:
 
     nsRefPtr<gfxXlibSurface> mPixmap;
 };
-
-already_AddRefed<TextureImage>
-GLContextGLX::CreateTextureImage(const nsIntSize& aSize,
-                                 TextureImage::ContentType aContentType,
-                                 GLenum aWrapMode,
-                                 TextureImage::Flags aFlags,
-                                 TextureImage::ImageFormat aImageFormat)
-{
-    return GLContext::CreateTextureImage(aSize,
-                                         aContentType,
-                                         aWrapMode,
-                                         aFlags,
-                                         aImageFormat);
-}
 
 static GLContextGLX *
 GetGlobalContextGLX(const ContextFlags aFlags = ContextFlagsNone)
