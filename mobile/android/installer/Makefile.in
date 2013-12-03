@@ -52,8 +52,8 @@ ifdef MOZ_CHROME_MULTILOCALE
 	printf '\n[multilocale]\n' >> $@
 	for LOCALE in en-US $(MOZ_CHROME_MULTILOCALE) ;\
 	do \
-	  printf '$(BINPATH)/chrome/$$LOCALE$(JAREXT)\n' >> $@; \
-	  printf '$(BINPATH)/chrome/$$LOCALE.manifest\n' >> $@; \
+	  printf '$(BINPATH)/chrome/'"$$LOCALE"'$(JAREXT)\n' >> $@; \
+	  printf '$(BINPATH)/chrome/'"$$LOCALE"'.manifest\n' >> $@; \
 	done
 endif
 
