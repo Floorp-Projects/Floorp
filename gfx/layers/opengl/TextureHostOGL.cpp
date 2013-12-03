@@ -205,8 +205,9 @@ void CompositableDataGonkOGL::ClearData()
 GLuint CompositableDataGonkOGL::GetTexture()
 {
   if (!mTexture) {
-    gl()->MakeCurrent();
-    gl()->fGenTextures(1, &mTexture);
+    if (gl()->MakeCurrent()) {
+      gl()->fGenTextures(1, &mTexture);
+    }
   }
   return mTexture;
 }
@@ -215,8 +216,9 @@ void
 CompositableDataGonkOGL::DeleteTextureIfPresent()
 {
   if (mTexture) {
-    gl()->MakeCurrent();
-    gl()->fDeleteTextures(1, &mTexture);
+    if (gl()->MakeCurrent()) {
+      gl()->fDeleteTextures(1, &mTexture);
+    }
   }
 }
 
@@ -608,7 +610,11 @@ void
 SharedDeprecatedTextureHostOGL::DeleteTextures()
 {
   MOZ_ASSERT(mGL);
-  mGL->MakeCurrent();
+  if (!mGL->MakeCurrent()) {
+    mSharedHandle = 0;
+    mTextureHandle = 0;
+    return;
+  }
   if (mSharedHandle) {
     mGL->ReleaseSharedHandle(mShareType, mSharedHandle);
     mSharedHandle = 0;
@@ -708,8 +714,9 @@ SurfaceStreamHostOGL::DeleteTextures()
 {
   if (mUploadTexture) {
     MOZ_ASSERT(mGL);
-    mGL->MakeCurrent();
-    mGL->fDeleteTextures(1, &mUploadTexture);
+    if (mGL->MakeCurrent()) {
+      mGL->fDeleteTextures(1, &mUploadTexture);
+    }
     mUploadTexture = 0;
     mTextureHandle = 0;
   }
@@ -746,7 +753,9 @@ SurfaceStreamHostOGL::Unlock()
 bool
 SurfaceStreamHostOGL::Lock()
 {
-  mGL->MakeCurrent();
+  if (!mGL->MakeCurrent()) {
+    return false;
+  }
 
   SharedSurface* sharedSurf = mStream->SwapConsumer();
   if (!sharedSurf) {
@@ -957,12 +966,21 @@ void
 TiledDeprecatedTextureHostOGL::DeleteTextures()
 {
   if (mTextureHandle) {
-    mGL->MakeCurrent();
-    mGL->fDeleteTextures(1, &mTextureHandle);
+    if (mGL->MakeCurrent()) {
+      mGL->fDeleteTextures(1, &mTextureHandle);
 
-    gl::GfxTexturesReporter::UpdateAmount(gl::GfxTexturesReporter::MemoryFreed,
-                                          mGLFormat, GetTileType(),
-                                          TILEDLAYERBUFFER_TILE_SIZE);
+      gl::GfxTexturesReporter::UpdateAmount(gl::GfxTexturesReporter::MemoryFreed,
+                                            mGLFormat, GetTileType(),
+                                            TILEDLAYERBUFFER_TILE_SIZE);
+    } else if (mGL->IsDestroyed()) {
+      // if MakeCurrent failed because the context was already destoyed, it means
+      // the driver already freed the texture memory underneith us, so it should
+      // not count as a leak.
+      gl::GfxTexturesReporter::UpdateAmount(gl::GfxTexturesReporter::MemoryFreed,
+                                            mGLFormat, GetTileType(),
+                                            TILEDLAYERBUFFER_TILE_SIZE);
+    }
+
     mTextureHandle = 0;
   }
 }
@@ -971,7 +989,10 @@ void
 TiledDeprecatedTextureHostOGL::Update(gfxReusableSurfaceWrapper* aReusableSurface, TextureFlags aFlags, const gfx::IntSize& aSize)
 {
   mSize = aSize;
-  mGL->MakeCurrent();
+  if (!mGL->MakeCurrent()) {
+    return;
+  }
+
   if (aFlags & TEXTURE_NEW_TILE) {
     SetFlags(aFlags);
     mGL->fGenTextures(1, &mTextureHandle);
@@ -1016,7 +1037,9 @@ TiledDeprecatedTextureHostOGL::Lock()
     return false;
   }
 
-  mGL->MakeCurrent();
+  if (!mGL->MakeCurrent()) {
+    return false;
+  }
   mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
 
   return true;
@@ -1124,8 +1147,9 @@ void
 GrallocDeprecatedTextureHostOGL::DeleteTextures()
 {
   if (mEGLImage) {
-    gl()->MakeCurrent();
-    gl()->DestroyEGLImage(mEGLImage);
+    if (gl()->MakeCurrent()) {
+      gl()->DestroyEGLImage(mEGLImage);
+    }
     mEGLImage = 0;
   }
 }
@@ -1174,7 +1198,9 @@ GrallocDeprecatedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImag
   // delete old EGLImage
   DeleteTextures();
 
-  gl()->MakeCurrent();
+  if (!gl()->MakeCurrent()) {
+    return;
+  }
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(mTextureTarget, tex);
   // create new EGLImage
@@ -1206,7 +1232,9 @@ void GrallocDeprecatedTextureHostOGL::BindTexture(GLenum aTextureUnit)
    * as the mEGLImage member of this class.
    */
   MOZ_ASSERT(gl());
-  gl()->MakeCurrent();
+  if (!gl()->MakeCurrent()) {
+    return;
+  }
 
   GLuint tex = GetGLTexture();
 
@@ -1344,8 +1372,9 @@ TiledDeprecatedTextureHostOGL::GetAsSurface() {
 #ifdef MOZ_WIDGET_GONK
 TemporaryRef<gfx::DataSourceSurface>
 GrallocDeprecatedTextureHostOGL::GetAsSurface() {
-  gl()->MakeCurrent();
-
+  if (!gl()->MakeCurrent()) {
+    return nullptr;
+  }
   GLuint tex = GetGLTexture();
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(mTextureTarget, tex);
