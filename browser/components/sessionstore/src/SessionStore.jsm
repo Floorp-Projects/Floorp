@@ -52,11 +52,6 @@ const WINDOW_HIDEABLE_FEATURES = [
 ];
 
 const MESSAGES = [
-  // The content script tells us that its form data (or that of one of its
-  // subframes) might have changed. This can be the contents or values of
-  // standard form fields or of ContentEditables.
-  "SessionStore:input",
-
   // The content script has received a pageshow event. This happens when a
   // page is loaded from bfcache without any network activity, i.e. when
   // clicking the back or forward button.
@@ -613,9 +608,6 @@ let SessionStoreInternal = {
     switch (aMessage.name) {
       case "SessionStore:pageshow":
         this.onTabLoad(win, browser);
-        break;
-      case "SessionStore:input":
-        this.onTabInput(win, browser);
         break;
       case "SessionStore:loadStart":
         TabStateCache.delete(browser);
@@ -1442,18 +1434,6 @@ let SessionStoreInternal = {
 
     // attempt to update the current URL we send in a crash report
     this._updateCrashReportURL(aWindow);
-  },
-
-  /**
-   * Called when a browser sends the "input" notification
-   * @param aWindow
-   *        Window reference
-   * @param aBrowser
-   *        Browser reference
-   */
-  onTabInput: function ssi_onTabInput(aWindow, aBrowser) {
-    TabStateCache.delete(aBrowser);
-    this.saveStateDelayed(aWindow);
   },
 
   /**
@@ -2739,6 +2719,7 @@ let SessionStoreInternal = {
       TabStateCache.updatePersistent(browser, {
         scroll: tabData.scroll || null,
         storage: tabData.storage || null,
+        formdata: tabData.formdata || null,
         disallow: tabData.disallow || null,
         pageStyle: tabData.pageStyle || null
       });
