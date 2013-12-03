@@ -4,7 +4,7 @@
 
 include $(MOZILLA_DIR)/build/binary-location.mk
 
-browser_path := \"$(browser_path)\"
+browser_path := '"$(browser_path)"'
 
 _PROFILE_DIR = $(TARGET_DEPTH)/_profile/pgo
 
@@ -13,11 +13,11 @@ _CERTS_SRC_DIR = $(ABSOLUTE_TOPSRCDIR)/build/pgo/certs
 
 AUTOMATION_PPARGS = 	\
 			-DBROWSER_PATH=$(browser_path) \
-			-DXPC_BIN_PATH=\"$(LIBXUL_DIST)/bin\" \
-			-DBIN_SUFFIX=\"$(BIN_SUFFIX)\" \
-			-DPROFILE_DIR=\"$(_PROFILE_DIR)\" \
-			-DCERTS_SRC_DIR=\"$(_CERTS_SRC_DIR)\" \
-			-DPERL="\"$(PERL)\"" \
+			-DXPC_BIN_PATH='"$(LIBXUL_DIST)/bin"' \
+			-DBIN_SUFFIX='"$(BIN_SUFFIX)"' \
+			-DPROFILE_DIR='"$(_PROFILE_DIR)"' \
+			-DCERTS_SRC_DIR='"$(_CERTS_SRC_DIR)"' \
+			-DPERL='"$(PERL)"' \
 			$(NULL)
 
 ifeq ($(OS_ARCH),Darwin)
