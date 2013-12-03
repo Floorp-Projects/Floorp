@@ -871,7 +871,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
     nsString crashReporterPath_temp;
 
     exePath->GetPath(crashReporterPath_temp);
-    crashReporterPath = ToNewUnicode(crashReporterPath_temp);
+    crashReporterPath = reinterpret_cast<wchar_t*>(ToNewUnicode(crashReporterPath_temp));
 #elif !defined(__ANDROID__)
     nsCString crashReporterPath_temp;
 
@@ -1098,7 +1098,7 @@ nsresult SetMinidumpPath(const nsAString& aPath)
 
 #ifndef XP_LINUX
   gExceptionHandler->set_dump_path(
-      CONVERT_UTF16_TO_XP_CHAR(aPath).BeginReading());
+      char16ptr_t(CONVERT_UTF16_TO_XP_CHAR(aPath).BeginReading()));
 #else
   gExceptionHandler->set_minidump_descriptor(
       MinidumpDescriptor(CONVERT_UTF16_TO_XP_CHAR(aPath).BeginReading()));
@@ -1922,7 +1922,7 @@ FindPendingDir()
 #ifdef XP_WIN
     nsString path;
     pendingDir->GetPath(path);
-    pendingDirectory = ToNewUnicode(path);
+    pendingDirectory = reinterpret_cast<wchar_t*>(ToNewUnicode(path));
 #else
     nsCString path;
     pendingDir->GetNativePath(path);
@@ -2503,7 +2503,7 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
                      nullptr,    // no callback context
                      google_breakpad::ExceptionHandler::HANDLER_ALL,
                      MiniDumpNormal,
-                     NS_ConvertASCIItoUTF16(crashPipe).BeginReading(),
+                     NS_ConvertASCIItoUTF16(crashPipe).get(),
                      nullptr);
 #ifdef XP_WIN
   gExceptionHandler->set_handle_debug_exceptions(true);

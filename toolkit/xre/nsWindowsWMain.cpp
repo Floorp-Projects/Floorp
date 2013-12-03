@@ -49,7 +49,7 @@ int main(int argc, char **argv, char **envp);
 #endif
 
 static char*
-AllocConvertUTF16toUTF8(const WCHAR *arg)
+AllocConvertUTF16toUTF8(char16ptr_t arg)
 {
   // be generous... UTF16 units can expand up to 3 UTF8 units
   int len = wcslen(arg);
