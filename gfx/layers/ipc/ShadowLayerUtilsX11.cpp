@@ -227,15 +227,6 @@ LayerManagerComposite::PlatformSyncBeforeReplyUpdate()
   }
 }
 
-/*static*/ already_AddRefed<TextureImage>
-LayerManagerComposite::OpenDescriptorForDirectTexturing(GLContext*,
-                                                        const SurfaceDescriptor&,
-                                                        GLenum)
-{
-  // FIXME/bug XXXXXX: implement this using texture-from-pixmap
-  return nullptr;
-}
-
 /*static*/ bool
 LayerManagerComposite::SupportsDirectTexturing()
 {
