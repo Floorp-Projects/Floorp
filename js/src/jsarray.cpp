@@ -1681,7 +1681,7 @@ MatchNumericComparator(JSContext *cx, const Value &v)
     if (!script)
         return Match_Failure;
 
-    jsbytecode *pc = script->code;
+    jsbytecode *pc = script->code();
 
     uint16_t arg0, arg1;
     if (JSOp(*pc) != JSOP_GETARG)

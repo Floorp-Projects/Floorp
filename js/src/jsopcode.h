@@ -774,7 +774,7 @@ JS_STATIC_ASSERT(sizeof(PCCounts) % sizeof(Value) == 0);
 static inline jsbytecode *
 GetNextPc(jsbytecode *pc)
 {
-    return pc + js_CodeSpec[JSOp(*pc)].length;
+    return pc + GetBytecodeLength(pc);
 }
 
 } /* namespace js */

@@ -126,7 +126,7 @@ js::ExistingCloneFunctionAtCallsite(const CallsiteCloneTable &table, JSFunction 
     if (!table.initialized())
         return nullptr;
 
-    CallsiteCloneTable::Ptr p = table.lookup(CallsiteCloneKey(fun, script, pc - script->code));
+    CallsiteCloneTable::Ptr p = table.lookup(CallsiteCloneKey(fun, script, script->pcToOffset(pc)));
     if (p)
         return p->value;
 
@@ -159,7 +159,7 @@ js::CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun, HandleScript scri
     if (!table.initialized() && !table.init())
         return nullptr;
 
-    if (!table.putNew(Key(fun, script, pc - script->code), clone))
+    if (!table.putNew(Key(fun, script, script->pcToOffset(pc)), clone))
         return nullptr;
 
     return clone;

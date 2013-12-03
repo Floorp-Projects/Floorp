@@ -255,7 +255,7 @@ StackFrame::prologue(JSContext *cx)
     RootedScript script(cx, this->script());
 
     JS_ASSERT(!isGeneratorFrame());
-    JS_ASSERT(cx->interpreterRegs().pc == script->code);
+    JS_ASSERT(cx->interpreterRegs().pc == script->code());
 
     if (isEvalFrame()) {
         if (script->strict) {
@@ -465,7 +465,7 @@ FrameRegs::setToEndOfScript()
 {
     JSScript *script = fp()->script();
     sp = fp()->base();
-    pc = script->code + script->length - JSOP_RETRVAL_LENGTH;
+    pc = script->codeEnd() - JSOP_RETRVAL_LENGTH;
     JS_ASSERT(*pc == JSOP_RETRVAL);
 }
 

@@ -119,7 +119,7 @@ SPSProfiler::enter(JSContext *cx, JSScript *script, JSFunction *maybeFun)
 
     JS_ASSERT_IF(*size_ > 0 && *size_ - 1 < max_ && stack_[*size_ - 1].js(),
                  stack_[*size_ - 1].pc() != nullptr);
-    push(str, nullptr, script, script->code);
+    push(str, nullptr, script, script->code());
     return true;
 }
 
@@ -271,15 +271,13 @@ SPSEntryMarker::~SPSEntryMarker()
 JS_FRIEND_API(jsbytecode*)
 ProfileEntry::pc() const volatile
 {
-    JS_ASSERT_IF(idx != NullPCIndex, idx >= 0 && uint32_t(idx) < script()->length);
-    return idx == NullPCIndex ? nullptr : script()->code + idx;
+    return idx == NullPCIndex ? nullptr : script()->offsetToPC(idx);
 }
 
 JS_FRIEND_API(void)
 ProfileEntry::setPC(jsbytecode *pc) volatile
 {
-    JS_ASSERT_IF(pc != nullptr, script()->code <= pc && pc < script()->code + script()->length);
-    idx = pc == nullptr ? NullPCIndex : pc - script()->code;
+    idx = pc == nullptr ? NullPCIndex : script()->pcToOffset(pc);
 }
 
 JS_FRIEND_API(void)
