@@ -5,6 +5,7 @@
 
 #include "GLContextProvider.h"
 #include "GLContext.h"
+#include "TextureImageCGL.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include "OpenGL/OpenGL.h"
@@ -219,114 +220,6 @@ GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
     return ResizeScreenBuffer(aNewSize);
 }
-
-class TextureImageCGL : public BasicTextureImage
-{
-    friend already_AddRefed<TextureImage>
-    GLContextCGL::CreateTextureImageInternal(const nsIntSize& aSize,
-                                             TextureImage::ContentType aContentType,
-                                             GLenum aWrapMode,
-                                             TextureImage::Flags aFlags,
-                                             TextureImage::ImageFormat aImageFormat);
-public:
-    ~TextureImageCGL()
-    {
-        if (mPixelBuffer) {
-            mGLContext->MakeCurrent();
-            mGLContext->fDeleteBuffers(1, &mPixelBuffer);
-        }
-    }
-
-protected:
-    already_AddRefed<gfxASurface>
-    GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt)
-    {
-        gfxIntSize size(aSize.width + 1, aSize.height + 1);
-        mGLContext->MakeCurrent();
-        if (!mGLContext->
-            IsExtensionSupported(GLContext::ARB_pixel_buffer_object)) 
-        {
-            return gfxPlatform::GetPlatform()->
-                CreateOffscreenSurface(size,
-                                       gfxASurface::ContentFromFormat(aFmt));
-        }
-
-        if (!mPixelBuffer) {
-            mGLContext->fGenBuffers(1, &mPixelBuffer);
-        }
-        mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPixelBuffer);
-        int32_t length = size.width * 4 * size.height;
-
-        if (length > mPixelBufferSize) {
-            mGLContext->fBufferData(LOCAL_GL_PIXEL_UNPACK_BUFFER, length,
-                                    NULL, LOCAL_GL_STREAM_DRAW);
-            mPixelBufferSize = length;
-        }
-        unsigned char* data = 
-            (unsigned char*)mGLContext->
-                fMapBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 
-                           LOCAL_GL_WRITE_ONLY);
-
-        mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
-
-        if (!data) {
-            nsAutoCString failure;
-            failure += "Pixel buffer binding failed: ";
-            failure.AppendPrintf("%dx%d\n", size.width, size.height);
-            gfx::LogFailure(failure);
-
-            mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
-            return gfxPlatform::GetPlatform()->
-                CreateOffscreenSurface(size,
-                                       gfxASurface::ContentFromFormat(aFmt));
-        }
-
-        nsRefPtr<gfxQuartzSurface> surf = 
-            new gfxQuartzSurface(data, size, size.width * 4, aFmt);
-
-        mBoundPixelBuffer = true;
-        return surf.forget();
-    }
-  
-    bool FinishedSurfaceUpdate()
-    {
-        if (mBoundPixelBuffer) {
-            mGLContext->MakeCurrent();
-            mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPixelBuffer);
-            mGLContext->fUnmapBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER);
-            return true;
-        }
-        return false;
-    }
-
-    void FinishedSurfaceUpload()
-    {
-        if (mBoundPixelBuffer) {
-            mGLContext->MakeCurrent();
-            mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
-            mBoundPixelBuffer = false;
-        }
-    }
-
-private:
-    TextureImageCGL(GLuint aTexture,
-                    const nsIntSize& aSize,
-                    GLenum aWrapMode,
-                    ContentType aContentType,
-                    GLContext* aContext,
-                    TextureImage::Flags aFlags = TextureImage::NoFlags,
-                    TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown)
-        : BasicTextureImage(aTexture, aSize, aWrapMode, aContentType,
-                            aContext, aFlags, aImageFormat)
-        , mPixelBuffer(0)
-        , mPixelBufferSize(0)
-        , mBoundPixelBuffer(false)
-    {}
-    
-    GLuint mPixelBuffer;
-    int32_t mPixelBufferSize;
-    bool mBoundPixelBuffer;
-};
 
 already_AddRefed<TextureImage>
 GLContextCGL::CreateTextureImageInternal(const nsIntSize& aSize,
