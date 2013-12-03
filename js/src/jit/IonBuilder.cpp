@@ -7924,7 +7924,7 @@ IonBuilder::annotateGetPropertyCache(JSContext *cx, MDefinition *obj, MGetProper
         JSObject *singleton;
         if (!testSingletonProperty(typeObj->proto().toObject(), name, &singleton))
             return false;
-        if (!singleton)
+        if (!singleton || !singleton->is<JSFunction>())
             continue;
 
         // Don't add cases corresponding to non-observed pushes
