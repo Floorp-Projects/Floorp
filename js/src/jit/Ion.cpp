@@ -1872,7 +1872,7 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
     if (executionMode == SequentialExecution) {
         // Use getUseCount instead of incUseCount to avoid bumping the
         // use count twice.
-        if (script->getUseCount() < js_IonOptions.usesBeforeCompile)
+        if (script->getUseCount() < UsesBeforeIonRecompile(script, osrPc ? osrPc : script->code))
             return Method_Skipped;
     }
 
