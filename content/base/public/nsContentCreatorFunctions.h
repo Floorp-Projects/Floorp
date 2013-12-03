@@ -48,8 +48,8 @@ CreateHTMLElement(uint32_t aNodeType, already_AddRefed<nsINodeInfo> aNodeInfo,
                   mozilla::dom::FromParser aFromParser);
 
 nsresult
-NS_NewMathMLElement(nsIContent** aResult,
-                     already_AddRefed<nsINodeInfo> aNodeInfo);
+NS_NewMathMLElement(mozilla::dom::Element** aResult,
+                    already_AddRefed<nsINodeInfo> aNodeInfo);
 
 #ifdef MOZ_XUL
 nsresult
