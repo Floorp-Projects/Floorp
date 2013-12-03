@@ -116,7 +116,6 @@ function getOverflowContentBoundingRect(aElement) {
  */
 let Content = {
   _debugEvents: false,
-  _isZoomedIn: false,
 
   get formAssistant() {
     delete this.formAssistant;
@@ -145,7 +144,6 @@ let Content = {
     addEventListener("DOMAutoComplete", this, false);
     addEventListener("DOMFormHasPassword", this, false);
     addEventListener("blur", this, false);
-    addEventListener("pagehide", this, false);
     // Attach a listener to watch for "click" events bubbling up from error
     // pages and other similar page. This lets us fix bugs like 401575 which
     // require error page UI to do privileged things, without letting error
@@ -208,10 +206,6 @@ let Content = {
       case "DOMAutoComplete":
       case "blur":
         LoginManagerContent.onUsernameInput(aEvent);
-        break;
-
-      case "pagehide":
-        this._isZoomedIn = false;
         break;
 
       case "touchstart":
@@ -381,11 +375,6 @@ let Content = {
   },
 
   _onDoubleTap: function (aX, aY) {
-    if (this._isZoomedIn) {
-      this._zoomOut();
-      return;
-    }
-
     let { element } = Content.getCurrentWindowAndOffset(aX, aY);
     while (element && !this._shouldZoomToElement(element)) {
       element = element.parentNode;
@@ -404,14 +393,12 @@ let Content = {
   _zoomOut: function() {
     let rect = new Rect(0,0,0,0);
     this._zoomToRect(rect);
-    this._isZoomedIn = false;
   },
 
   _zoomToElement: function(aElement) {
     let rect = getBoundingContentRect(aElement);
     this._inflateRect(rect, kZoomToElementMargin);
     this._zoomToRect(rect);
-    this._isZoomedIn = true;
   },
 
   _inflateRect: function(aRect, aMargin) {
@@ -426,13 +413,11 @@ let Content = {
     let viewId = utils.getViewId(content.document.documentElement);
     let presShellId = {};
     utils.getPresShellId(presShellId);
-    let zoomData = [aRect.x,
-                    aRect.y,
-                    aRect.width,
-                    aRect.height,
-                    presShellId.value,
-                    viewId].join(",");
-    Services.obs.notifyObservers(null, "apzc-zoom-to-rect", zoomData);
+    sendAsyncMessage("Content:ZoomToRect", {
+      rect: aRect,
+      presShellId: presShellId.value,
+      viewId: viewId,
+    });
   },
 
   _shouldZoomToElement: function(aElement) {
