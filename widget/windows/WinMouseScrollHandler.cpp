@@ -1142,7 +1142,7 @@ MouseScrollHandler::Device::Elantech::Init()
 int32_t
 MouseScrollHandler::Device::Elantech::GetDriverMajorVersion()
 {
-  PRUnichar buf[40];
+  wchar_t buf[40];
   // The driver version is found in one of these two registry keys.
   bool foundKey =
     WinUtils::GetRegistryKey(HKEY_CURRENT_USER,
@@ -1163,7 +1163,7 @@ MouseScrollHandler::Device::Elantech::GetDriverMajorVersion()
 
   // Assume that the major version number can be found just after a space
   // or at the start of the string.
-  for (PRUnichar* p = buf; *p; p++) {
+  for (wchar_t* p = buf; *p; p++) {
     if (*p >= L'0' && *p <= L'9' && (p == buf || *(p - 1) == L' ')) {
       return wcstol(p, nullptr, 10);
     }
@@ -1179,7 +1179,7 @@ MouseScrollHandler::Device::Elantech::IsHelperWindow(HWND aWnd)
   // The helper window cannot be distinguished based on its window class, so we
   // need to check if it is owned by the helper process, ETDCtrl.exe.
 
-  const PRUnichar* filenameSuffix = L"\\etdctrl.exe";
+  const wchar_t* filenameSuffix = L"\\etdctrl.exe";
   const int filenameSuffixLength = 12;
 
   DWORD pid;
@@ -1191,7 +1191,7 @@ MouseScrollHandler::Device::Elantech::IsHelperWindow(HWND aWnd)
   }
 
   bool result = false;
-  PRUnichar path[256] = {L'\0'};
+  wchar_t path[256] = {L'\0'};
   if (::GetProcessImageFileNameW(hProcess, path, ArrayLength(path))) {
     int pathLength = lstrlenW(path);
     if (pathLength >= filenameSuffixLength) {
@@ -1389,7 +1389,7 @@ MouseScrollHandler::Device::UltraNav::IsObsoleteDriverInstalled()
     return false;
   }
 
-  PRUnichar buf[40];
+  wchar_t buf[40];
   bool foundKey =
     WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
                              L"Software\\Synaptics\\SynTP\\Install",
@@ -1404,7 +1404,7 @@ MouseScrollHandler::Device::UltraNav::IsObsoleteDriverInstalled()
 
   int majorVersion = wcstol(buf, nullptr, 10);
   int minorVersion = 0;
-  PRUnichar* p = wcschr(buf, L'.');
+  wchar_t* p = wcschr(buf, L'.');
   if (p) {
     minorVersion = wcstol(p + 1, nullptr, 10);
   }
