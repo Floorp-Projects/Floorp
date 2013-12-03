@@ -61,6 +61,7 @@
 #include "gc/Marking.h"
 #include "jit/AsmJSLink.h"
 #include "js/CharacterEncoding.h"
+#include "js/SliceBudget.h"
 #include "js/StructuredClone.h"
 #if ENABLE_INTL_API
 #include "unicode/uclean.h"
