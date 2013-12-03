@@ -331,16 +331,16 @@ public:
 #endif
             }
 
+        SetupLookupFunction();
+        if (!InitWithPrefix("gl", true))
+            return false;
+
         bool current = MakeCurrent();
         if (!current) {
             gfx::LogFailure(NS_LITERAL_CSTRING(
                 "Couldn't get device attachments for device."));
             return false;
         }
-
-        SetupLookupFunction();
-        if (!InitWithPrefix("gl", true))
-            return false;
 
         PR_STATIC_ASSERT(sizeof(GLint) >= sizeof(int32_t));
         mMaxTextureImageSize = INT32_MAX;
