@@ -376,7 +376,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
         return NS_ERROR_UNEXPECTED;
 
       // Add the tasks
-      hr = mJumpListMgr->AppendCategory(catName.BeginReading(), pArray);
+      hr = mJumpListMgr->AppendCategory(reinterpret_cast<const wchar_t*>(catName.BeginReading()), pArray);
       if (SUCCEEDED(hr))
         *_retval = true;
       return NS_OK;

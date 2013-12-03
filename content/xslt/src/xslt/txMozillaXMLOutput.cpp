@@ -934,9 +934,13 @@ txMozillaXMLOutput::createHTMLElement(nsIAtom* aName,
                                        kNameSpaceID_XHTML,
                                        nsIDOMNode::ELEMENT_NODE);
 
-    return NS_NewHTMLElement(aResult, ni.forget(), mCreatingNewDocument ?
-        FROM_PARSER_XSLT : FROM_PARSER_FRAGMENT);
-
+    nsCOMPtr<Element> el;
+    nsresult rv =
+        NS_NewHTMLElement(getter_AddRefs(el), ni.forget(),
+                          mCreatingNewDocument ?
+                            FROM_PARSER_XSLT : FROM_PARSER_FRAGMENT);
+    el.forget(aResult);
+    return rv;
 }
 
 txTransformNotifier::txTransformNotifier()

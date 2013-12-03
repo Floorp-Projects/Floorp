@@ -855,7 +855,7 @@ InterpreterActivation::InterpreterActivation(RunState &state, JSContext *cx, Sta
 {
     if (!state.isGenerator()) {
         regs_.prepareToRun(*entryFrame, state.script());
-        JS_ASSERT(regs_.pc == state.script()->code);
+        JS_ASSERT(regs_.pc == state.script()->code());
     } else {
         regs_ = state.asGenerator()->gen()->regs;
     }

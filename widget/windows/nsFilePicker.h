@@ -95,7 +95,7 @@ protected:
   /* method from nsBaseFilePicker */
   virtual void InitNative(nsIWidget *aParent,
                           const nsAString& aTitle);
-  static void GetQualifiedPath(const PRUnichar *aInPath, nsString &aOutPath);
+  static void GetQualifiedPath(const wchar_t *aInPath, nsString &aOutPath);
   void GetFilterListArray(nsString& aFilterList);
   bool FilePickerWrapper(OPENFILENAMEW* ofn, PickerType aType);
   bool ShowXPFolderPicker(const nsString& aInitialDir);

@@ -410,7 +410,7 @@ IonCache::linkAndAttachStub(JSContext *cx, MacroAssembler &masm, StubAttacher &a
 
     if (pc_) {
         IonSpew(IonSpew_InlineCaches, "Cache %p(%s:%d/%d) generated %s %s stub at %p",
-                this, script_->filename(), script_->lineno, pc_ - script_->code,
+                this, script_->filename(), script_->lineno, script_->pcToOffset(pc_),
                 attachKind, CacheName(kind()), code->raw());
     } else {
         IonSpew(IonSpew_InlineCaches, "Cache %p generated %s %s stub at %p",

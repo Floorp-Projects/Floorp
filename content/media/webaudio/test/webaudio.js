@@ -27,24 +27,23 @@ function fuzzyCompare(a, b) {
   return Math.abs(a - b) < 9e-3;
 }
 
-function compareBuffers(buf1, buf2,
-                        /*optional*/ offset,
+function compareChannels(buf1, buf2,
                         /*optional*/ length,
                         /*optional*/ sourceOffset,
                         /*optional*/ destOffset,
                         /*optional*/ skipLengthCheck) {
   if (!skipLengthCheck) {
-    is(buf1.length, buf2.length, "Buffers must have the same length");
-  }
-  if (length == undefined) {
-    length = buf1.length - (offset || 0);
+    is(buf1.length, buf2.length, "Channels must have the same length");
   }
   sourceOffset = sourceOffset || 0;
   destOffset = destOffset || 0;
+  if (length == undefined) {
+    length = buf1.length - sourceOffset;
+  }
   var difference = 0;
   var maxDifference = 0;
   var firstBadIndex = -1;
-  for (var i = offset || 0; i < Math.min(buf1.length, (offset || 0) + length); ++i) {
+  for (var i = 0; i < length; ++i) {
     if (!fuzzyCompare(buf1[i + sourceOffset], buf2[i + destOffset])) {
       difference++;
       maxDifference = Math.max(maxDifference, Math.abs(buf1[i + sourceOffset] - buf2[i + destOffset]));
@@ -58,6 +57,29 @@ function compareBuffers(buf1, buf2,
      maxDifference + ", first bad index: " + firstBadIndex +
      " with source offset " + sourceOffset + " and destination offset " +
      destOffset);
+}
+
+function compareBuffers(got, expected) {
+  if (got.numberOfChannels != expected.numberOfChannels) {
+    is(got.numberOfChannels, expected.numberOfChannels,
+       "Correct number of buffer channels");
+    return;
+  }
+  if (got.length != expected.length) {
+    is(got.length, expected.length,
+       "Correct buffer length");
+    return;
+  }
+  if (got.sampleRate != expected.sampleRate) {
+    is(got.sampleRate, expected.sampleRate,
+       "Correct sample rate");
+    return;
+  }
+
+  for (var i = 0; i < got.numberOfChannels; ++i) {
+    compareChannels(got.getChannelData(i), expected.getChannelData(i),
+                    got.length, 0, 0, true);
+  }
 }
 
 function getEmptyBuffer(context, length) {
@@ -148,11 +170,7 @@ function runTest()
         sp.onaudioprocess = function(e) {
           var expectedBuffer = expectedBuffers.shift();
           testLength += expectedBuffer.length;
-          is(e.inputBuffer.numberOfChannels, expectedBuffer.numberOfChannels,
-             "Correct number of input buffer channels");
-          for (var i = 0; i < e.inputBuffer.numberOfChannels; ++i) {
-            compareBuffers(e.inputBuffer.getChannelData(i), expectedBuffer.getChannelData(i));
-          }
+          compareBuffers(e.inputBuffer, expectedBuffer);
           if (expectedBuffers.length == 0) {
             sp.onaudioprocess = null;
             callback();
@@ -173,9 +191,8 @@ function runTest()
             is(e.renderedBuffer.numberOfChannels, expectedBuffer.numberOfChannels,
                "Correct number of input buffer channels");
             for (var i = 0; i < e.renderedBuffer.numberOfChannels; ++i) {
-              compareBuffers(e.renderedBuffer.getChannelData(i),
+              compareChannels(e.renderedBuffer.getChannelData(i),
                              expectedBuffer.getChannelData(i),
-                             undefined,
                              expectedBuffer.length,
                              samplesSeen,
                              undefined,

@@ -109,7 +109,7 @@ public class DoCommand {
 
     private static final int DEFAULT_STARTPRG_TIMEOUT_SECONDS = 300;
 
-    private final String prgVersion = "SUTAgentAndroid Version 1.19";
+    public final String prgVersion = "SUTAgentAndroid Version 1.20";
 
     public enum Command
         {
@@ -1433,29 +1433,48 @@ private void CancelNotification()
         Log.i("SUTAgentAndroid", "Changed permissions on /data/local/tmp to make it writable: " + chmodResult);
         }
 
+    private Boolean _SetTestRoot(String testroot)
+        {
+        String isWritable = IsDirWritable(testroot);
+        if (isWritable.contains(sErrorPrefix) || isWritable.contains("is not writable")) {
+            Log.w("SUTAgentAndroid", isWritable);
+            Log.w("SUTAgentAndroid", "Unable to set device root to " + testroot);
+            return false;
+        }
+
+        Log.i("SUTAgentAndroid", "Set device root to " + testroot);
+        SUTAgentAndroid.sTestRoot = testroot;
+        return true;
+        }
+
+    public void SetTestRoot(String testroot)
+        {
+        Boolean success = false;
+        if (!testroot.equals("")) {
+            // Device specified the required testroot.
+            success = _SetTestRoot(testroot);
+            if (!success) {
+                Log.e("SUTAgentAndroid", "Unable to set device root to " + testroot);
+            }
+        } else {
+            // Detect the testroot.
+            // Attempt external storage.
+            success = _SetTestRoot(Environment.getExternalStorageDirectory().getAbsolutePath());
+            if (!success) {
+                Log.e("SUTAgentAndroid", "Cannot access world writeable test root");
+            }
+        }
+        if (!success) {
+            SUTAgentAndroid.sTestRoot = sErrorPrefix + " unable to determine test root";
+        }
+        }
+
     public String GetTestRoot()
         {
-        String state = Environment.getExternalStorageState();
-        // Ensure sdcard is mounted and NOT read only
-        if (state.equalsIgnoreCase(Environment.MEDIA_MOUNTED) &&
-            (Environment.MEDIA_MOUNTED_READ_ONLY.compareTo(state) != 0))
-            {
-            return(Environment.getExternalStorageDirectory().getAbsolutePath());
-            }
-        File tmpFile = new java.io.File("/data/local/tmp/tests");
-        try{
-            tmpFile.createNewFile();
-        } catch (IOException e){
-            Log.i("SUTAgentAndroid", "Caught exception creating file in /data/local/tmp: " + e.getMessage());
+        if (SUTAgentAndroid.sTestRoot.equals("")) {
+            SetTestRoot("");
         }
-        if (tmpFile.exists())
-            {
-            tmpFile.delete();
-            return("/data/local");
-            }
-        Log.e("SUTAgentAndroid", "ERROR: Cannot access world writeable test root");
-
-        return sErrorPrefix + " unable to determine test root";
+        return SUTAgentAndroid.sTestRoot;
         }
 
     public String GetAppRoot(String AppName)
@@ -3441,11 +3460,16 @@ private void CancelNotification()
             try {
                 outThrd3.joinAndStopRedirect(60000);
                 int nRet3 = pProc.exitValue();
-                sRet = "\ninstallation complete [" + nRet3 + "]";
+                if (nRet3 == 0) {
+                    sRet = "\ninstallation complete [0]\n";
+                }
+                else {
+                    sRet = "\nFailure pm install [" + nRet3 + "]\n";
+                }
                 }
             catch (IllegalThreadStateException itse) {
                 itse.printStackTrace();
-                sRet = "\npm install command timed out";
+                sRet = "\nFailure pm install command timed out\n";
             }
             try {
                 out.write(sRet.getBytes());

@@ -1779,9 +1779,9 @@ CheckScriptSize(JSContext *cx, JSScript* script)
     if (!js_IonOptions.limitScriptSize)
         return Method_Compiled;
 
-    if (script->length > MAX_OFF_THREAD_SCRIPT_SIZE) {
+    if (script->length() > MAX_OFF_THREAD_SCRIPT_SIZE) {
         // Some scripts are so large we never try to Ion compile them.
-        IonSpew(IonSpew_Abort, "Script too large (%u bytes)", script->length);
+        IonSpew(IonSpew_Abort, "Script too large (%u bytes)", script->length());
         return Method_CantCompile;
     }
 
@@ -1792,7 +1792,7 @@ CheckScriptSize(JSContext *cx, JSScript* script)
         // scripts.
         JS_ASSERT(!cx->runtime()->canUseParallelIonCompilation());
 
-        if (script->length > MAX_DOM_WORKER_SCRIPT_SIZE ||
+        if (script->length() > MAX_DOM_WORKER_SCRIPT_SIZE ||
             numLocalsAndArgs > MAX_DOM_WORKER_LOCALS_AND_ARGS)
         {
             return Method_CantCompile;
@@ -1801,7 +1801,7 @@ CheckScriptSize(JSContext *cx, JSScript* script)
         return Method_Compiled;
     }
 
-    if (script->length > MAX_MAIN_THREAD_SCRIPT_SIZE ||
+    if (script->length() > MAX_MAIN_THREAD_SCRIPT_SIZE ||
         numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
     {
         if (cx->runtime()->canUseParallelIonCompilation()) {
@@ -1813,12 +1813,12 @@ CheckScriptSize(JSContext *cx, JSScript* script)
             if (!OffThreadCompilationAvailable(cx) && !cx->runtime()->profilingScripts) {
                 IonSpew(IonSpew_Abort,
                         "Script too large for main thread, skipping (%u bytes) (%u locals/args)",
-                        script->length, numLocalsAndArgs);
+                        script->length(), numLocalsAndArgs);
                 return Method_Skipped;
             }
         } else {
             IonSpew(IonSpew_Abort, "Script too large (%u bytes) (%u locals/args)",
-                    script->length, numLocalsAndArgs);
+                    script->length(), numLocalsAndArgs);
             return Method_CantCompile;
         }
     }
@@ -1872,7 +1872,7 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
     if (executionMode == SequentialExecution) {
         // Use getUseCount instead of incUseCount to avoid bumping the
         // use count twice.
-        if (script->getUseCount() < js_IonOptions.usesBeforeCompile)
+        if (script->getUseCount() < UsesBeforeIonRecompile(script, osrPc ? osrPc : script->code()))
             return Method_Skipped;
     }
 
@@ -2642,7 +2642,7 @@ jit::ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode)
 uint32_t
 jit::UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc)
 {
-    JS_ASSERT(pc == script->code || JSOp(*pc) == JSOP_LOOPENTRY);
+    JS_ASSERT(pc == script->code() || JSOp(*pc) == JSOP_LOOPENTRY);
 
     uint32_t minUses = js_IonOptions.usesBeforeCompile;
 
@@ -2651,8 +2651,8 @@ jit::UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc)
     // to improve the compilation's type information and hopefully avoid later
     // recompilation.
 
-    if (script->length > MAX_MAIN_THREAD_SCRIPT_SIZE)
-        minUses = minUses * (script->length / (double) MAX_MAIN_THREAD_SCRIPT_SIZE);
+    if (script->length() > MAX_MAIN_THREAD_SCRIPT_SIZE)
+        minUses = minUses * (script->length() / (double) MAX_MAIN_THREAD_SCRIPT_SIZE);
 
     uint32_t numLocalsAndArgs = analyze::TotalSlots(script);
     if (numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)

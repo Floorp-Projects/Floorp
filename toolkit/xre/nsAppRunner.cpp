@@ -153,8 +153,8 @@
 #include <process.h>
 #include <shlobj.h>
 #include "nsThreadUtils.h"
-#include <comutil.h>
-#include <Wbemidl.h>
+#include <comdef.h>
+#include <wbemidl.h>
 #endif
 
 #ifdef XP_MACOSX
