@@ -1167,38 +1167,10 @@ GLContext::CanReadSRGBFromFBOTexture()
 }
 
 
-bool GLContext::sPowerOfTwoForced = false;
-bool GLContext::sPowerOfTwoPrefCached = false;
-
 void
 GLContext::PlatformStartup()
 {
-  CacheCanUploadNPOT();
   RegisterStrongMemoryReporter(new GfxTexturesReporter());
-}
-
-void
-GLContext::CacheCanUploadNPOT()
-{
-    MOZ_ASSERT(NS_IsMainThread(), "Can't cache prefs off the main thread.");
-    MOZ_ASSERT(!sPowerOfTwoPrefCached, "Must only call this function once!");
-
-    sPowerOfTwoPrefCached = true;
-    mozilla::Preferences::AddBoolVarCache(&sPowerOfTwoForced,
-                                          "gfx.textures.poweroftwo.force-enabled");
-}
-
-bool
-GLContext::CanUploadNonPowerOfTwo()
-{
-    MOZ_ASSERT(sPowerOfTwoPrefCached);
-
-    if (!mWorkAroundDriverBugs)
-        return true;
-
-    // Some GPUs driver crash when uploading non power of two 565 textures.
-    return sPowerOfTwoForced ? false : (Renderer() != RendererAdreno200 &&
-                                        Renderer() != RendererAdreno205);
 }
 
 // Common code for checking for both GL extensions and GLX extensions.

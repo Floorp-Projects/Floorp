@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GLBlitTextureImageHelper.h"
+#include "GLUploadHelpers.h"
 #include "DecomposeIntoNoRepeatTriangles.h"
 #include "GLContext.h"
 #include "nsRect.h"
@@ -116,7 +117,7 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
             RectTriangles rects;
 
             nsIntSize realTexSize = srcSize;
-            if (!mGL->CanUploadNonPowerOfTwo()) {
+            if (!CanUploadNonPowerOfTwo(mGL)) {
                 realTexSize = nsIntSize(gfx::NextPowerOfTwo(srcSize.width),
                                         gfx::NextPowerOfTwo(srcSize.height));
             }
