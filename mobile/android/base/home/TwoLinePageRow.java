@@ -218,14 +218,14 @@ public class TwoLinePageRow extends LinearLayout
             }
         }
 
+        // Use the URL instead of an empty title for consistency with the normal URL
+        // bar view - this is the equivalent of getDisplayTitle() in Tab.java
+        setTitle(TextUtils.isEmpty(title) ? url : title);
+
         // No point updating the below things if URL has not changed. Prevents evil Favicon flicker.
         if (url.equals(mPageUrl)) {
             return;
         }
-
-        // Use the URL instead of an empty title for consistency with the normal URL
-        // bar view - this is the equivalent of getDisplayTitle() in Tab.java
-        setTitle(TextUtils.isEmpty(title) ? url : title);
 
         // Blank the Favicon, so we don't show the wrong Favicon if we scroll and miss DB.
         mFavicon.clearImage();
