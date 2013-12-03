@@ -559,7 +559,6 @@ CompositorParent::CompositeInTransaction()
   NS_ABORT_IF_FALSE(CompositorThreadID() == PlatformThread::CurrentId(),
                     "Composite can only be called on the compositor thread");
   mCurrentCompositeTask = nullptr;
-  mLayerManager->SetDebugOverlayWantsNextFrame(false);
 
   mLastCompose = TimeStamp::Now();
 
@@ -594,6 +593,7 @@ CompositorParent::CompositeInTransaction()
     mLayerManager->Dump();
   }
 #endif
+  mLayerManager->SetDebugOverlayWantsNextFrame(false);
   mLayerManager->EndEmptyTransaction();
 
   if (mLayerManager->DebugOverlayWantsNextFrame()) {
