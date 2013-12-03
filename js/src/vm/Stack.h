@@ -1040,7 +1040,7 @@ class FrameRegs
         JS_ASSERT(fp_);
     }
     void prepareToRun(StackFrame &fp, JSScript *script) {
-        pc = script->code;
+        pc = script->code();
         sp = fp.slots() + script->nfixed;
         fp_ = &fp;
     }

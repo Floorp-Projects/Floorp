@@ -661,7 +661,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
     // Get the pc. If we are handling an exception, resume at the pc of the
     // catch or finally block.
-    jsbytecode *pc = excInfo ? excInfo->resumePC : script->code + iter.pcOffset();
+    jsbytecode *pc = excInfo ? excInfo->resumePC : script->offsetToPC(iter.pcOffset());
     bool resumeAfter = excInfo ? false : iter.resumeAfter();
 
     JSOp op = JSOp(*pc);
@@ -790,7 +790,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         }
     }
 
-    uint32_t pcOff = pc - script->code;
+    uint32_t pcOff = script->pcToOffset(pc);
     bool isCall = IsCallPC(pc);
     BaselineScript *baselineScript = script->baselineScript();
 
@@ -959,7 +959,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                     if (caller && bailoutKind == Bailout_ArgumentCheck) {
                         IonSpew(IonSpew_BaselineBailouts, "      Setting PCidx on innermost "
                                 "inlined frame's parent's SPS entry (%s:%d) (pcIdx=%d)!",
-                                caller->filename(), caller->lineno, callerPC - caller->code);
+                                caller->filename(), caller->lineno, caller->pcToOffset(callerPC));
                         cx->runtime()->spsProfiler.updatePC(caller, callerPC);
                     } else if (bailoutKind != Bailout_ArgumentCheck) {
                         IonSpew(IonSpew_BaselineBailouts,
