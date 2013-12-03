@@ -16,8 +16,7 @@ namespace js {
 static inline unsigned
 GetDefCount(JSScript *script, unsigned offset)
 {
-    JS_ASSERT(offset < script->length);
-    jsbytecode *pc = script->code + offset;
+    jsbytecode *pc = script->offsetToPC(offset);
 
     /*
      * Add an extra pushed value for OR/AND opcodes, so that they are included
@@ -43,8 +42,7 @@ GetDefCount(JSScript *script, unsigned offset)
 static inline unsigned
 GetUseCount(JSScript *script, unsigned offset)
 {
-    JS_ASSERT(offset < script->length);
-    jsbytecode *pc = script->code + offset;
+    jsbytecode *pc = script->offsetToPC(offset);
 
     if (JSOp(*pc) == JSOP_PICK)
         return (pc[1] + 1);
@@ -56,11 +54,12 @@ GetUseCount(JSScript *script, unsigned offset)
 class BytecodeRange {
   public:
     BytecodeRange(JSContext *cx, JSScript *script)
-      : script(cx, script), pc(script->code), end(pc + script->length) {}
+      : script(cx, script), pc(script->code()), end(pc + script->length())
+    {}
     bool empty() const { return pc == end; }
     jsbytecode *frontPC() const { return pc; }
     JSOp frontOpcode() const { return JSOp(*pc); }
-    size_t frontOffset() const { return pc - script->code; }
+    size_t frontOffset() const { return script->pcToOffset(pc); }
     void popFront() { pc += GetBytecodeLength(pc); }
 
   private:

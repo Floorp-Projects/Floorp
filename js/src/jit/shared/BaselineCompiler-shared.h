@@ -76,7 +76,7 @@ class BaselineCompilerShared
             return nullptr;
 
         // Create the entry and add it to the vector.
-        if (!icEntries_.append(ICEntry((uint32_t) (pc - script->code), isForOp)))
+        if (!icEntries_.append(ICEntry(script->pcToOffset(pc), isForOp)))
             return nullptr;
         ICEntry &vecEntry = icEntries_[icEntries_.length() - 1];
 
