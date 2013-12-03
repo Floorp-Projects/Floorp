@@ -104,6 +104,7 @@
                                                 android:textColor="@color/url_bar_title"
                                                 android:textColorHint="@color/url_bar_title_hint"
                                                 android:gravity="center_vertical|left"
+                                                android:hint="@string/url_bar_default_text"
                                                 android:layout_gravity="center_vertical"
                                                 gecko:autoUpdateTheme="false"/>
 
