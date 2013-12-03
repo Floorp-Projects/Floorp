@@ -59,6 +59,7 @@ function performTest() {
   gVariablesView.eval = function() {};
   gVariablesView.switch = function() {};
   gVariablesView.delete = function() {};
+  gVariablesView.new = function() {};
   gVariablesView.rawObject = test;
 
   testHierarchy();
@@ -503,8 +504,8 @@ function testAnonymousHeaders(fooScope, anonymousVar, anonymousScope, barVar, ba
 }
 
 function testPropertyInheritance(fooScope, anonymousVar, anonymousScope, barVar, bazProperty) {
-  is(fooScope.preventDisableOnChage, gVariablesView.preventDisableOnChage,
-    "The preventDisableOnChage property should persist from the view to all scopes.");
+  is(fooScope.preventDisableOnChange, gVariablesView.preventDisableOnChange,
+    "The preventDisableOnChange property should persist from the view to all scopes.");
   is(fooScope.preventDescriptorModifiers, gVariablesView.preventDescriptorModifiers,
     "The preventDescriptorModifiers property should persist from the view to all scopes.");
   is(fooScope.editableNameTooltip, gVariablesView.editableNameTooltip,
@@ -525,13 +526,15 @@ function testPropertyInheritance(fooScope, anonymousVar, anonymousScope, barVar,
     "The switch property should persist from the view to all scopes.");
   is(fooScope.delete, gVariablesView.delete,
     "The delete property should persist from the view to all scopes.");
+  is(fooScope.new, gVariablesView.new,
+    "The new property should persist from the view to all scopes.");
   isnot(fooScope.eval, fooScope.switch,
     "The eval and switch functions got mixed up in the scope.");
   isnot(fooScope.switch, fooScope.delete,
     "The eval and switch functions got mixed up in the scope.");
 
-  is(barVar.preventDisableOnChage, gVariablesView.preventDisableOnChage,
-    "The preventDisableOnChage property should persist from the view to all variables.");
+  is(barVar.preventDisableOnChange, gVariablesView.preventDisableOnChange,
+    "The preventDisableOnChange property should persist from the view to all variables.");
   is(barVar.preventDescriptorModifiers, gVariablesView.preventDescriptorModifiers,
     "The preventDescriptorModifiers property should persist from the view to all variables.");
   is(barVar.editableNameTooltip, gVariablesView.editableNameTooltip,
@@ -552,13 +555,15 @@ function testPropertyInheritance(fooScope, anonymousVar, anonymousScope, barVar,
     "The switch property should persist from the view to all variables.");
   is(barVar.delete, gVariablesView.delete,
     "The delete property should persist from the view to all variables.");
+  is(barVar.new, gVariablesView.new,
+    "The new property should persist from the view to all variables.");
   isnot(barVar.eval, barVar.switch,
     "The eval and switch functions got mixed up in the variable.");
   isnot(barVar.switch, barVar.delete,
     "The eval and switch functions got mixed up in the variable.");
 
-  is(bazProperty.preventDisableOnChage, gVariablesView.preventDisableOnChage,
-    "The preventDisableOnChage property should persist from the view to all properties.");
+  is(bazProperty.preventDisableOnChange, gVariablesView.preventDisableOnChange,
+    "The preventDisableOnChange property should persist from the view to all properties.");
   is(bazProperty.preventDescriptorModifiers, gVariablesView.preventDescriptorModifiers,
     "The preventDescriptorModifiers property should persist from the view to all properties.");
   is(bazProperty.editableNameTooltip, gVariablesView.editableNameTooltip,
@@ -579,6 +584,8 @@ function testPropertyInheritance(fooScope, anonymousVar, anonymousScope, barVar,
     "The switch property should persist from the view to all properties.");
   is(bazProperty.delete, gVariablesView.delete,
     "The delete property should persist from the view to all properties.");
+  is(bazProperty.new, gVariablesView.new,
+    "The new property should persist from the view to all properties.");
   isnot(bazProperty.eval, bazProperty.switch,
     "The eval and switch functions got mixed up in the property.");
   isnot(bazProperty.switch, bazProperty.delete,
