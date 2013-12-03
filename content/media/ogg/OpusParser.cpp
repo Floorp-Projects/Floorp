@@ -96,7 +96,7 @@ bool OpusParser::DecodeHeader(unsigned char* aData, size_t aLength)
                            " mapping family 1.", mChannels));
         return false;
       }
-      if (aLength>20+mChannels) {
+      if (aLength>static_cast<unsigned>(20+mChannels)) {
         mStreams = aData[19];
         mCoupledStreams = aData[20];
         int i;
