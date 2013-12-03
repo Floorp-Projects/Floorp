@@ -129,6 +129,11 @@ public class HomePager extends ViewPager {
         super.addView(child, index, params);
     }
 
+    public void redisplay(FragmentManager fm) {
+        final TabsAdapter adapter = (TabsAdapter) getAdapter();
+        show(fm, adapter.getCurrentPage(), null);
+    }
+
     /**
      * Loads and initializes the pager.
      *
@@ -279,6 +284,12 @@ public class HomePager extends ViewPager {
             }
 
             return -1;
+        }
+
+        public Page getCurrentPage() {
+            int currentItem = getCurrentItem();
+            TabInfo info = mTabs.get(currentItem);
+            return info.page;
         }
 
         @Override
