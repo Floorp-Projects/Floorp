@@ -582,7 +582,7 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
   GLenum wrapMode = aTexture->AsSourceOGL()->GetWrapMode();
 
   IntSize realTexSize = aTexture->GetSize();
-  if (!mGLContext->CanUploadNonPowerOfTwo()) {
+  if (!CanUploadNonPowerOfTwo(mGLContext)) {
     realTexSize = IntSize(NextPowerOfTwo(realTexSize.width),
                           NextPowerOfTwo(realTexSize.height));
   }
@@ -757,7 +757,7 @@ bool CompositorOGL::sDrawFPS = false;
 static IntSize
 CalculatePOTSize(const IntSize& aSize, GLContext* gl)
 {
-  if (gl->CanUploadNonPowerOfTwo())
+  if (CanUploadNonPowerOfTwo(gl))
     return aSize;
 
   return IntSize(NextPowerOfTwo(aSize.width), NextPowerOfTwo(aSize.height));
