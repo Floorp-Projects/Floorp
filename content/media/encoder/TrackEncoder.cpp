@@ -208,13 +208,15 @@ VideoTrackEncoder::NotifyEndOfStream()
   mReentrantMonitor.NotifyAll();
 }
 
+/* static */
 void
-VideoTrackEncoder::CreateMutedFrame(nsTArray<uint8_t>* aOutputBuffer)
+VideoTrackEncoder::CreateMutedFrame(nsTArray<uint8_t>* aOutputBuffer,
+                                    int aFrameWidth, int aFrameHeight)
 {
   NS_ENSURE_TRUE_VOID(aOutputBuffer);
 
   // Supports YUV420 image format only.
-  int yPlaneLen = mFrameWidth * mFrameHeight;
+  int yPlaneLen = aFrameWidth * aFrameHeight;
   int cbcrPlaneLen = yPlaneLen / 2;
   int frameLen = yPlaneLen + cbcrPlaneLen;
 
