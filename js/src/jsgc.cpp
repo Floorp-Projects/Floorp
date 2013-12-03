@@ -209,6 +209,7 @@
 # include "jit/BaselineJIT.h"
 #endif
 #include "jit/IonCode.h"
+#include "js/SliceBudget.h"
 #include "vm/Debugger.h"
 #include "vm/ForkJoin.h"
 #include "vm/ProxyObject.h"
