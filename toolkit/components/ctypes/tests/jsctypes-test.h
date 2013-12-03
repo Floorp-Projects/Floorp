@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef jsctypes_test_h
+#define jsctypes_test_h
+
 #include "nscore.h"
 #include "jspubtd.h"
 
@@ -110,12 +113,12 @@ NS_EXTERN_C
     char g;
   };
 
-  struct POINT {
+  struct myPOINT {
     int32_t x;
     int32_t y;
   };
 
-  struct RECT {
+  struct myRECT {
     int32_t top;
     int32_t left;
     int32_t bottom;
@@ -136,19 +139,19 @@ NS_EXTERN_C
     int32_t n4;
   };
 
-  NS_EXPORT int32_t test_pt_in_rect(RECT, POINT);
-  NS_EXPORT void test_init_pt(POINT* pt, int32_t x, int32_t y);
+  NS_EXPORT int32_t test_pt_in_rect(myRECT, myPOINT);
+  NS_EXPORT void test_init_pt(myPOINT* pt, int32_t x, int32_t y);
 
   NS_EXPORT int32_t test_nested_struct(NESTED);
-  NS_EXPORT POINT test_struct_return(RECT);
-  NS_EXPORT RECT test_large_struct_return(RECT, RECT);
-  NS_EXPORT ONE_BYTE test_1_byte_struct_return(RECT);
-  NS_EXPORT TWO_BYTE test_2_byte_struct_return(RECT);
-  NS_EXPORT THREE_BYTE test_3_byte_struct_return(RECT);
-  NS_EXPORT FOUR_BYTE test_4_byte_struct_return(RECT);
-  NS_EXPORT FIVE_BYTE test_5_byte_struct_return(RECT);
-  NS_EXPORT SIX_BYTE test_6_byte_struct_return(RECT);
-  NS_EXPORT SEVEN_BYTE test_7_byte_struct_return(RECT);
+  NS_EXPORT myPOINT test_struct_return(myRECT);
+  NS_EXPORT myRECT test_large_struct_return(myRECT, myRECT);
+  NS_EXPORT ONE_BYTE test_1_byte_struct_return(myRECT);
+  NS_EXPORT TWO_BYTE test_2_byte_struct_return(myRECT);
+  NS_EXPORT THREE_BYTE test_3_byte_struct_return(myRECT);
+  NS_EXPORT FOUR_BYTE test_4_byte_struct_return(myRECT);
+  NS_EXPORT FIVE_BYTE test_5_byte_struct_return(myRECT);
+  NS_EXPORT SIX_BYTE test_6_byte_struct_return(myRECT);
+  NS_EXPORT SEVEN_BYTE test_7_byte_struct_return(myRECT);
 
   NS_EXPORT void * test_fnptr();
 
@@ -169,5 +172,7 @@ NS_EXTERN_C
                                                   uint8_t vec_len,
                                                   int32_t* result, ...);
 
-  NS_EXPORT extern RECT data_rect;
+  NS_EXPORT extern myRECT data_rect;
 }
+
+#endif
