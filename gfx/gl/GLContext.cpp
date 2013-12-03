@@ -1145,28 +1145,6 @@ GLContext::InitExtensions()
 #endif
 }
 
-bool
-GLContext::CanReadSRGBFromFBOTexture()
-{
-    if (!mWorkAroundDriverBugs)
-        return true;
-
-#ifdef XP_MACOSX
-    // Bug 843668:
-    // MacOSX 10.6 reports to support EXT_framebuffer_sRGB and
-    // EXT_texture_sRGB but fails to convert from sRGB to linear
-    // when writing to an sRGB texture attached to an FBO.
-    SInt32 major, minor;
-    ::Gestalt(gestaltSystemVersionMajor, &major);
-    ::Gestalt(gestaltSystemVersionMinor, &minor);
-    if (major == 10 && minor <= 6) {
-        return false;
-    }
-#endif // XP_MACOSX
-    return true;
-}
-
-
 void
 GLContext::PlatformStartup()
 {
