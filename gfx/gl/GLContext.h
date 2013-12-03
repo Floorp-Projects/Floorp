@@ -3053,6 +3053,8 @@ public:
 
     void EmptyTexGarbageBin();
 
+    bool IsOffscreenSizeAllowed(const gfxIntSize& aSize) const;
+
 protected:
     nsDataHashtable<nsPtrHashKey<void>, void*> mUserData;
 
@@ -3061,8 +3063,6 @@ protected:
     bool InitWithPrefix(const char *prefix, bool trygl);
 
     void InitExtensions();
-
-    bool IsOffscreenSizeAllowed(const gfxIntSize& aSize) const;
 
     nsTArray<nsIntRect> mViewportStack;
     nsTArray<nsIntRect> mScissorStack;
