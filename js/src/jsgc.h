@@ -16,6 +16,7 @@
 #include "jsobj.h"
 
 #include "js/GCAPI.h"
+#include "js/SliceBudget.h"
 #include "js/Tracer.h"
 #include "js/Vector.h"
 
@@ -39,7 +40,6 @@ class PropertyName;
 class ScopeObject;
 class Shape;
 class UnownedBaseShape;
-struct SliceBudget;
 
 unsigned GetCPUCount();
 
