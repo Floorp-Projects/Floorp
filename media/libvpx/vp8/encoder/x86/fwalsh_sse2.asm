@@ -12,7 +12,7 @@
 %include "vpx_ports/x86_abi_support.asm"
 
 ;void vp8_short_walsh4x4_sse2(short *input, short *output, int pitch)
-global sym(vp8_short_walsh4x4_sse2)
+global sym(vp8_short_walsh4x4_sse2) PRIVATE
 sym(vp8_short_walsh4x4_sse2):
     push        rbp
     mov         rbp, rsp

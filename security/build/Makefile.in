@@ -116,7 +116,7 @@ endif
 export MOZ_DEBUG_SYMBOLS
 
 DEFAULT_GMAKE_FLAGS =
-DEFAULT_GMAKE_FLAGS += CC="$(CC)"
+DEFAULT_GMAKE_FLAGS += CC='$(CC)'
 DEFAULT_GMAKE_FLAGS += SOURCE_MD_DIR=$(ABS_DIST)
 DEFAULT_GMAKE_FLAGS += SOURCE_MDHEADERS_DIR=$(NSPR_INCLUDE_DIR)
 DEFAULT_GMAKE_FLAGS += DIST=$(ABS_DIST)
@@ -126,7 +126,7 @@ DEFAULT_GMAKE_FLAGS += MOZILLA_CLIENT=1
 DEFAULT_GMAKE_FLAGS += NO_MDUPDATE=1
 DEFAULT_GMAKE_FLAGS += NSS_ENABLE_ECC=1
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_1)
-DEFAULT_GMAKE_FLAGS += OS_DLLFLAGS="-static-libgcc"
+DEFAULT_GMAKE_FLAGS += OS_DLLFLAGS='-static-libgcc'
 endif
 ifndef MOZ_NATIVE_SQLITE
 ifdef MOZ_FOLD_LIBS
@@ -205,35 +205,35 @@ DEFAULT_GMAKE_FLAGS += CHECKLOC=
 ifdef CROSS_COMPILE
 
 DEFAULT_GMAKE_FLAGS += \
-	NATIVE_CC="$(HOST_CC)" \
-	CC="$(CC)" \
-	CCC="$(CXX)" \
-	LINK="$(LD)" \
-	AS="$(AS)" \
+	NATIVE_CC='$(HOST_CC)' \
+	CC='$(CC)' \
+	CCC='$(CXX)' \
+	LINK='$(LD)' \
+	AS='$(AS)' \
 	AR='$(AR) $(AR_FLAGS:$@=$$@)' \
-	RANLIB="$(RANLIB)" \
-	RC="$(RC) $(RCFLAGS)" \
-	OS_ARCH="$(OS_ARCH)" \
-	OS_TEST="$(OS_TEST)" \
-	CPU_ARCH="$(TARGET_CPU)" \
+	RANLIB='$(RANLIB)' \
+	RC='$(RC) $(RCFLAGS)' \
+	OS_ARCH='$(OS_ARCH)' \
+	OS_TEST='$(OS_TEST)' \
+	CPU_ARCH='$(TARGET_CPU)' \
 	$(NULL)
 
 # Android has pthreads integrated into -lc, so OS_PTHREAD is set to nothing
 ifeq ($(OS_TARGET), Android)
 DEFAULT_GMAKE_FLAGS += \
-	OS_RELEASE="2.6" \
+	OS_RELEASE='2.6' \
 	OS_PTHREAD= \
-	STANDARDS_CFLAGS="-std=gnu89" \
+	STANDARDS_CFLAGS='-std=gnu89' \
 	$(NULL)
 
-DEFAULT_GMAKE_FLAGS += ARCHFLAG="$(CFLAGS) -DCHECK_FORK_GETPID -DRTLD_NOLOAD=0 -include $(ABS_topsrcdir)/security/manager/android_stub.h"
+DEFAULT_GMAKE_FLAGS += ARCHFLAG='$(CFLAGS) -DCHECK_FORK_GETPID -DRTLD_NOLOAD=0 -include $(ABS_topsrcdir)/security/manager/android_stub.h'
 endif
 endif
 
 ifdef WRAP_LDFLAGS
 DEFAULT_GMAKE_FLAGS += \
-	LDFLAGS="$(LDFLAGS) $(WRAP_LDFLAGS)" \
-	DSO_LDOPTS="$(DSO_LDOPTS) $(LDFLAGS) $(WRAP_LDFLAGS)" \
+	LDFLAGS='$(LDFLAGS) $(WRAP_LDFLAGS)' \
+	DSO_LDOPTS='$(DSO_LDOPTS) $(LDFLAGS) $(WRAP_LDFLAGS)' \
 	$(NULL)
 endif
 
@@ -246,8 +246,8 @@ ifdef MOZ_NO_WLZDEFS
 DEFAULT_GMAKE_FLAGS += ZDEFS_FLAG=
 endif
 ifdef MOZ_CFLAGS_NSS
-DEFAULT_GMAKE_FLAGS += XCFLAGS="$(CFLAGS)"
-DEFAULT_GMAKE_FLAGS += DARWIN_DYLIB_VERSIONS="-compatibility_version 1 -current_version 1 $(LDFLAGS)"
+DEFAULT_GMAKE_FLAGS += XCFLAGS='$(CFLAGS)'
+DEFAULT_GMAKE_FLAGS += DARWIN_DYLIB_VERSIONS='-compatibility_version 1 -current_version 1 $(LDFLAGS)'
 endif
 
 DEFAULT_GMAKE_FLAGS += NSS_NO_PKCS11_BYPASS=1
@@ -318,7 +318,7 @@ ifdef MOZ_FOLD_LIBS
 # TODO: The following can be replaced by something simpler when bug 844880
 # is fixed.
 # All static libraries required for nss, smime, ssl and nssutil.
-NSS_STATIC_LIBS := $(shell $(MAKE) --no-print-directory -f $(srcdir)/nss.mk DEPTH="$(DEPTH)" topsrcdir="$(topsrcdir)" srcdir="$(srcdir)" echo-variable-libs)
+NSS_STATIC_LIBS := $(shell $(MAKE) --no-print-directory -f $(srcdir)/nss.mk DEPTH='$(DEPTH)' topsrcdir='$(topsrcdir)' srcdir='$(srcdir)' echo-variable-libs)
 # Corresponding build directories
 NSS_STATIC_DIRS := $(foreach lib,$(NSS_STATIC_LIBS),$(patsubst %/,%,$(dir $(lib))))
 NSS_DIRS += $(NSS_STATIC_DIRS)

@@ -32,8 +32,33 @@ static int arm_cpu_env_mask(void)
     return env && *env ? (int)strtol(env, NULL, 0) : ~0;
 }
 
+#if !CONFIG_RUNTIME_CPU_DETECT
 
-#if defined(_MSC_VER)
+int arm_cpu_caps(void)
+{
+  /* This function should actually be a no-op. There is no way to adjust any of
+   * these because the RTCD tables do not exist: the functions are called
+   * statically */
+    int flags;
+    int mask;
+    if (!arm_cpu_env_flags(&flags))
+    {
+        return flags;
+    }
+    mask = arm_cpu_env_mask();
+#if HAVE_EDSP
+    flags |= HAS_EDSP;
+#endif /* HAVE_EDSP */
+#if HAVE_MEDIA
+    flags |= HAS_MEDIA;
+#endif /* HAVE_MEDIA */
+#if HAVE_NEON
+    flags |= HAS_NEON;
+#endif /* HAVE_NEON */
+    return flags & mask;
+}
+
+#elif defined(_MSC_VER) /* end !CONFIG_RUNTIME_CPU_DETECT */
 /*For GetExceptionCode() and EXCEPTION_ILLEGAL_INSTRUCTION.*/
 #define WIN32_LEAN_AND_MEAN
 #define WIN32_EXTRA_LEAN
@@ -52,7 +77,7 @@ int arm_cpu_caps(void)
      *  instructions via their assembled hex code.
      * All of these instructions should be essentially nops.
      */
-#if defined(HAVE_ARMV5TE)
+#if HAVE_EDSP
     if (mask & HAS_EDSP)
     {
         __try
@@ -66,7 +91,7 @@ int arm_cpu_caps(void)
             /*Ignore exception.*/
         }
     }
-#if defined(HAVE_ARMV6)
+#if HAVE_MEDIA
     if (mask & HAS_MEDIA)
         __try
         {
@@ -79,7 +104,7 @@ int arm_cpu_caps(void)
             /*Ignore exception.*/
         }
     }
-#if defined(HAVE_ARMV7)
+#if HAVE_NEON
     if (mask & HAS_NEON)
     {
         __try
@@ -93,14 +118,13 @@ int arm_cpu_caps(void)
             /*Ignore exception.*/
         }
     }
-#endif
-#endif
-#endif
+#endif /* HAVE_NEON */
+#endif /* HAVE_MEDIA */
+#endif /* HAVE_EDSP */
     return flags & mask;
 }
 
-#elif defined(__linux__)
-#if defined(__ANDROID__)
+#elif defined(__ANDROID__) /* end _MSC_VER */
 #include <cpu-features.h>
 
 int arm_cpu_caps(void)
@@ -115,19 +139,20 @@ int arm_cpu_caps(void)
     mask = arm_cpu_env_mask();
     features = android_getCpuFeatures();
 
-#if defined(HAVE_ARMV5TE)
+#if HAVE_EDSP
     flags |= HAS_EDSP;
-#endif
-#if defined(HAVE_ARMV6)
+#endif /* HAVE_EDSP */
+#if HAVE_MEDIA
     flags |= HAS_MEDIA;
-#endif
-#if defined(HAVE_ARMV7)
+#endif /* HAVE_MEDIA */
+#if HAVE_NEON
     if (features & ANDROID_CPU_ARM_FEATURE_NEON)
         flags |= HAS_NEON;
-#endif
+#endif /* HAVE_NEON */
     return flags & mask;
 }
-#else // !defined(__ANDROID__)
+
+#elif defined(__linux__) /* end __ANDROID__ */
 #include <stdio.h>
 
 int arm_cpu_caps(void)
@@ -153,27 +178,27 @@ int arm_cpu_caps(void)
         char buf[512];
         while (fgets(buf, 511, fin) != NULL)
         {
-#if defined(HAVE_ARMV5TE) || defined(HAVE_ARMV7)
+#if HAVE_EDSP || HAVE_NEON
             if (memcmp(buf, "Features", 8) == 0)
             {
                 char *p;
-#if defined(HAVE_ARMV5TE)
+#if HAVE_EDSP
                 p=strstr(buf, " edsp");
                 if (p != NULL && (p[5] == ' ' || p[5] == '\n'))
                 {
                     flags |= HAS_EDSP;
                 }
-#if defined(HAVE_ARMV7)
+#if HAVE_NEON
                 p = strstr(buf, " neon");
                 if (p != NULL && (p[5] == ' ' || p[5] == '\n'))
                 {
                     flags |= HAS_NEON;
                 }
-#endif
-#endif
+#endif /* HAVE_NEON */
+#endif /* HAVE_EDSP */
             }
-#endif
-#if defined(HAVE_ARMV6)
+#endif /* HAVE_EDSP || HAVE_NEON */
+#if HAVE_MEDIA
             if (memcmp(buf, "CPU architecture:",17) == 0){
                 int version;
                 version = atoi(buf+17);
@@ -182,37 +207,13 @@ int arm_cpu_caps(void)
                     flags |= HAS_MEDIA;
                 }
             }
-#endif
+#endif /* HAVE_MEDIA */
         }
         fclose(fin);
     }
     return flags & mask;
 }
-#endif // defined(__linux__)
-#elif !CONFIG_RUNTIME_CPU_DETECT
-
-int arm_cpu_caps(void)
-{
-    int flags;
-    int mask;
-    if (!arm_cpu_env_flags(&flags))
-    {
-        return flags;
-    }
-    mask = arm_cpu_env_mask();
-#if defined(HAVE_ARMV5TE)
-    flags |= HAS_EDSP;
-#endif
-#if defined(HAVE_ARMV6)
-    flags |= HAS_MEDIA;
-#endif
-#if defined(HAVE_ARMV7)
-    flags |= HAS_NEON;
-#endif
-    return flags & mask;
-}
-
-#else
+#else /* end __linux__ */
 #error "--enable-runtime-cpu-detect selected, but no CPU detection method " \
- "available for your platform. Reconfigure without --enable-runtime-cpu-detect."
+ "available for your platform. Reconfigure with --disable-runtime-cpu-detect."
 #endif

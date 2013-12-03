@@ -152,7 +152,7 @@
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride,
 ;    int  *results)
-global sym(vp8_sad16x16x3_ssse3)
+global sym(vp8_sad16x16x3_ssse3) PRIVATE
 sym(vp8_sad16x16x3_ssse3):
     push        rbp
     mov         rbp, rsp
@@ -265,7 +265,7 @@ sym(vp8_sad16x16x3_ssse3):
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride,
 ;    int  *results)
-global sym(vp8_sad16x8x3_ssse3)
+global sym(vp8_sad16x8x3_ssse3) PRIVATE
 sym(vp8_sad16x8x3_ssse3):
     push        rbp
     mov         rbp, rsp
