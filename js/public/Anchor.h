@@ -93,14 +93,31 @@ class Anchor : AnchorPermitted<T>
     Anchor() { }
     explicit Anchor(T t) { hold = t; }
     inline ~Anchor();
-    T &get() { return hold; }
-    const T &get() const { return hold; }
-    void set(const T &t) { hold = t; }
-    void operator=(const T &t) { hold = t; }
-    void clear() { hold = 0; }
 
   private:
     T hold;
+
+    /*
+     * Rooting analysis considers use of operator= to be a use of an anchor.
+     * For simplicity, Anchor is treated as if it contained a GC thing, from
+     * construction. Thus if we had
+     *
+     *   void operator=(const T &t) { hold = t; }
+     *
+     * and this code
+     *
+     *   JS::Anchor<JSString*> anchor;
+     *   stuff that could GC, producing |str|;
+     *   anchor = str;
+     *
+     * the last line would be seen as a hazard, because the final = would "use"
+     * |anchor| that is a GC thing -- which could have been moved around by the
+     * GC. The workaround is to structure your code so that JS::Anchor is
+     * always constructed, living for however long the corresponding value must
+     * live.
+     */
+    void operator=(const T &t) MOZ_DELETE;
+
     Anchor(const Anchor &other) MOZ_DELETE;
     void operator=(const Anchor &other) MOZ_DELETE;
 };

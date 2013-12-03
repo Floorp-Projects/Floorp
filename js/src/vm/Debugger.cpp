@@ -99,7 +99,7 @@ ReportMoreArgsNeeded(JSContext *cx, const char *name, unsigned required)
 }
 
 static inline bool
-EnsureFunctionHasScript(JSContext *cx, JSFunction *fun)
+EnsureFunctionHasScript(JSContext *cx, HandleFunction fun)
 {
     if (fun->isInterpretedLazy()) {
         AutoCompartment ac(cx, fun);
@@ -109,7 +109,7 @@ EnsureFunctionHasScript(JSContext *cx, JSFunction *fun)
 }
 
 static inline JSScript *
-GetOrCreateFunctionScript(JSContext *cx, JSFunction *fun)
+GetOrCreateFunctionScript(JSContext *cx, HandleFunction fun)
 {
     MOZ_ASSERT(fun->isInterpreted());
     if (!EnsureFunctionHasScript(cx, fun))
@@ -707,8 +707,11 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
     if (vp.isObject()) {
         RootedObject obj(cx, &vp.toObject());
 
-        if (obj->is<JSFunction>() && !EnsureFunctionHasScript(cx, &obj->as<JSFunction>()))
-            return false;
+        if (obj->is<JSFunction>()) {
+            RootedFunction fun(cx, &obj->as<JSFunction>());
+            if (!EnsureFunctionHasScript(cx, fun))
+                return false;
+        }
 
         DependentAddPtr<ObjectWeakMap> p(cx, objects, obj);
         if (p) {

@@ -10,6 +10,6 @@ EXTRA_PP_COMPONENTS_FLAGS = -I google_api_key
 include $(topsrcdir)/config/rules.mk
 
 google_api_key:
-	@echo "#define MOZ_GOOGLE_API_KEY $(MOZ_GOOGLE_API_KEY)" > $@
+	@echo '#define MOZ_GOOGLE_API_KEY $(MOZ_GOOGLE_API_KEY)' > $@
 
 GARBAGE += google_api_key

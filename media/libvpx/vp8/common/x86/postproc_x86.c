@@ -18,4 +18,7 @@ extern int rand(void)
 {
   return __rand();
 }
+#else
+/* ISO C forbids an empty translation unit. */
+int vp8_unused;
 #endif

@@ -288,3 +288,12 @@ nsProgressFrame::ShouldUseNativeStyle() const
                                                  NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND);
 }
 
+nsIContent*
+nsProgressFrame::GetPseudoElementContent(nsCSSPseudoElements::Type aType)
+{
+  if (aType == nsCSSPseudoElements::ePseudo_mozProgressBar) {
+    return mBarDiv;
+  }
+
+  return nsContainerFrame::GetPseudoElementContent(aType);
+}

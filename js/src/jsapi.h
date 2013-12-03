@@ -1988,13 +1988,6 @@ extern JS_PUBLIC_API(void)
 JS_RemoveScriptRootRT(JSRuntime *rt, JSScript **rp);
 
 /*
- * C-compatible version of the Anchor class. It should be called after the last
- * use of the variable it protects.
- */
-extern JS_NEVER_INLINE JS_PUBLIC_API(void)
-JS_AnchorPtr(void *p);
-
-/*
  * Register externally maintained GC roots.
  *
  * traceOp: the trace operation. For each root the implementation should call

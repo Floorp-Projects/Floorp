@@ -59,7 +59,7 @@ HOST_CFLAGS += -DUNICODE -D_UNICODE
 # supposed to be once per-build!
 export::
 ifdef MOZ_BUILD_DATE
-	printf "%s" $(MOZ_BUILD_DATE) > buildid
+	printf '%s' $(MOZ_BUILD_DATE) > buildid
 else
 	$(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid > buildid
 endif

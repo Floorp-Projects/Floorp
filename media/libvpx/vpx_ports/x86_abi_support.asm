@@ -22,6 +22,8 @@
 %define ABI_IS_32BIT 1
 %elifidn __OUTPUT_FORMAT__,win32
 %define ABI_IS_32BIT 1
+%elifidn __OUTPUT_FORMAT__,aout
+%define ABI_IS_32BIT 1
 %else
 %define ABI_IS_32BIT 0
 %endif
@@ -86,10 +88,39 @@
 %define sym(x) x
 %elifidn __OUTPUT_FORMAT__,elf64
 %define sym(x) x
+%elifidn __OUTPUT_FORMAT__,elfx32
+%define sym(x) x
 %elifidn __OUTPUT_FORMAT__,x64
 %define sym(x) x
 %else
 %define sym(x) _ %+ x
+%endif
+
+;  PRIVATE
+;  Macro for the attribute to hide a global symbol for the target ABI.
+;  This is only active if CHROMIUM is defined.
+;
+;  Chromium doesn't like exported global symbols due to symbol clashing with
+;  plugins among other things.
+;
+;  Requires Chromium's patched copy of yasm:
+;    http://src.chromium.org/viewvc/chrome?view=rev&revision=73761
+;    http://www.tortall.net/projects/yasm/ticket/236
+;
+%ifdef CHROMIUM
+  %ifidn   __OUTPUT_FORMAT__,elf32
+    %define PRIVATE :hidden
+  %elifidn __OUTPUT_FORMAT__,elf64
+    %define PRIVATE :hidden
+  %elifidn __OUTPUT_FORMAT__,elfx32
+    %define PRIVATE :hidden
+  %elifidn __OUTPUT_FORMAT__,x64
+    %define PRIVATE
+  %else
+    %define PRIVATE :private_extern
+  %endif
+%else
+  %define PRIVATE
 %endif
 
 ; arg()
@@ -179,12 +210,24 @@
     %endmacro
   %endif
   %endif
-  %define HIDDEN_DATA(x) x
+
+  %ifdef CHROMIUM
+    %ifidn __OUTPUT_FORMAT__,macho32
+      %define HIDDEN_DATA(x) x:private_extern
+    %else
+      %define HIDDEN_DATA(x) x
+    %endif
+  %else
+    %define HIDDEN_DATA(x) x
+  %endif
 %else
   %macro GET_GOT 1
   %endmacro
   %define GLOBAL(x) rel x
   %ifidn __OUTPUT_FORMAT__,elf64
+    %define WRT_PLT wrt ..plt
+    %define HIDDEN_DATA(x) x:data hidden
+  %elifidn __OUTPUT_FORMAT__,elfx32
     %define WRT_PLT wrt ..plt
     %define HIDDEN_DATA(x) x:data hidden
   %else
@@ -314,6 +357,8 @@
 %macro SECTION_RODATA 0
 section .text
 %endmacro
+%elifidn __OUTPUT_FORMAT__,aout
+%define SECTION_RODATA section .data
 %else
 %define SECTION_RODATA section .rodata
 %endif
@@ -324,6 +369,9 @@ section .text
 section .note.GNU-stack noalloc noexec nowrite progbits
 section .text
 %elifidn __OUTPUT_FORMAT__,elf64
+section .note.GNU-stack noalloc noexec nowrite progbits
+section .text
+%elifidn __OUTPUT_FORMAT__,elfx32
 section .note.GNU-stack noalloc noexec nowrite progbits
 section .text
 %endif

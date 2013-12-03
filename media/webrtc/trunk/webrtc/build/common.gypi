@@ -190,7 +190,7 @@
     'defines': [
       # TODO(leozwang): Run this as a gclient hook rather than at build-time:
       # http://code.google.com/p/webrtc/issues/detail?id=687
-      'WEBRTC_SVNREVISION="\\\"Unavailable_issue687\\\""',
+      'WEBRTC_SVNREVISION="Unavailable_issue687"',
       #'WEBRTC_SVNREVISION="<!(python <(webrtc_root)/build/version.py)"',
     ],
     'conditions': [

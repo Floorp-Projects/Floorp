@@ -1320,7 +1320,7 @@ case "$host" in
 *mingw*)
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
-        HOST_AR_FLAGS='-NOLOGO -OUT:"$@"'
+        HOST_AR_FLAGS='-NOLOGO -OUT:$@'
         HOST_CFLAGS="$HOST_CFLAGS -TC -nologo -Fd\$(HOST_PDBFILE)"
         HOST_RANLIB='echo ranlib'
     else
@@ -1619,7 +1619,7 @@ ia64*-hpux*)
             AS="$(basename "$AS_BIN")"
         fi
         AR='lib'
-        AR_FLAGS='-NOLOGO -OUT:"$@"'
+        AR_FLAGS='-NOLOGO -OUT:$@'
         AR_EXTRACT=
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
@@ -2882,6 +2882,21 @@ case "$GRE_MILESTONE" in
 esac
 AC_SUBST(NIGHTLY_BUILD)
 AC_SUBST(RELEASE_BUILD)
+
+dnl ========================================================
+dnl Disable compiling sources in unified mode.
+dnl ========================================================
+
+if test -z "$NIGHTLY_BUILD"; then
+    MOZ_DISABLE_UNIFIED_COMPILATION=1
+fi
+
+MOZ_ARG_DISABLE_BOOL(unified-compilation,
+[  --disable-unified-compilation
+                          Disable unified compilation of some C/C++ sources],
+    MOZ_DISABLE_UNIFIED_COMPILATION=1,
+    MOZ_DISABLE_UNIFIED_COMPILATION=)
+AC_SUBST(MOZ_DISABLE_UNIFIED_COMPILATION)
 
 dnl ========================================================
 dnl =

@@ -28,7 +28,7 @@ extern sym(vp8_bilinear_filters_x86_8)
 ;    unsigned int    output_width,
 ;    short           * vp8_filter
 ;)
-global sym(vp8_filter_block1d_h6_mmx)
+global sym(vp8_filter_block1d_h6_mmx) PRIVATE
 sym(vp8_filter_block1d_h6_mmx):
     push        rbp
     mov         rbp, rsp
@@ -125,7 +125,7 @@ sym(vp8_filter_block1d_h6_mmx):
 ;   unsigned int output_width,
 ;   short * vp8_filter
 ;)
-global sym(vp8_filter_block1dc_v6_mmx)
+global sym(vp8_filter_block1dc_v6_mmx) PRIVATE
 sym(vp8_filter_block1dc_v6_mmx):
     push        rbp
     mov         rbp, rsp
@@ -213,7 +213,7 @@ sym(vp8_filter_block1dc_v6_mmx):
 ;   unsigned char *dst_ptr,
 ;    int dst_pitch
 ;)
-global sym(vp8_bilinear_predict8x8_mmx)
+global sym(vp8_bilinear_predict8x8_mmx) PRIVATE
 sym(vp8_bilinear_predict8x8_mmx):
     push        rbp
     mov         rbp, rsp
@@ -370,7 +370,7 @@ sym(vp8_bilinear_predict8x8_mmx):
 ;    unsigned char *dst_ptr,
 ;    int dst_pitch
 ;)
-global sym(vp8_bilinear_predict8x4_mmx)
+global sym(vp8_bilinear_predict8x4_mmx) PRIVATE
 sym(vp8_bilinear_predict8x4_mmx):
     push        rbp
     mov         rbp, rsp
@@ -525,7 +525,7 @@ sym(vp8_bilinear_predict8x4_mmx):
 ;    unsigned char *dst_ptr,
 ;    int dst_pitch
 ;)
-global sym(vp8_bilinear_predict4x4_mmx)
+global sym(vp8_bilinear_predict4x4_mmx) PRIVATE
 sym(vp8_bilinear_predict4x4_mmx):
     push        rbp
     mov         rbp, rsp

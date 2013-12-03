@@ -378,3 +378,29 @@ nsNumberControlFrame::UpdateForValueChange(const nsAString& aValue)
   // control.
   HTMLInputElement::FromContent(mTextField)->SetValue(aValue);
 }
+
+nsIContent*
+nsNumberControlFrame::GetPseudoElementContent(nsCSSPseudoElements::Type aType)
+{
+  if (aType == nsCSSPseudoElements::ePseudo_mozNumberWrapper) {
+    return mOuterWrapper;
+  }
+
+  if (aType == nsCSSPseudoElements::ePseudo_mozNumberText) {
+    return mTextField;
+  }
+
+  if (aType == nsCSSPseudoElements::ePseudo_mozNumberSpinBox) {
+    return mSpinBox;
+  }
+
+  if (aType == nsCSSPseudoElements::ePseudo_mozNumberSpinUp) {
+    return mSpinUp;
+  }
+
+  if (aType == nsCSSPseudoElements::ePseudo_mozNumberSpinDown) {
+    return mSpinDown;
+  }
+
+  return nsContainerFrame::GetPseudoElementContent(aType);
+}

@@ -16,7 +16,7 @@ endif
 
 TOPLEVEL_BUILD := 1
 
-run_for_side_effects := $(shell echo "MAKE: $(MAKE)")
+run_for_side_effects := $(shell echo 'MAKE: $(MAKE)')
 STATIC_LIBRARY_NAME = js_static
 LIBS		= $(NSPR_LIBS)
 
@@ -141,7 +141,7 @@ MOZILLA_DTRACE_SRC = $(srcdir)/devtools/javascript-trace.d
 endif
 
 backend.RecursiveMakeBackend:
-	@echo "Build configuration changed. Regenerating backend."
+	@echo 'Build configuration changed. Regenerating backend.'
 	$(PYTHON) config.status
 
 Makefile: backend.RecursiveMakeBackend
@@ -172,7 +172,7 @@ EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
 
 symverscript: symverscript.in
 	$(call py_action,preprocessor, \
-		-DVERSION="$(subst -,_,$(LIBRARY_NAME))" $< -o $@)
+		-DVERSION='$(subst -,_,$(LIBRARY_NAME))' $< -o $@)
 
 EXTRA_DEPS += symverscript
 endif
@@ -319,7 +319,7 @@ check:: check-style check-jit-test
 # --no-extensions is set to skip that test. Remove as soon as possible.
 check-jstests:
 	RC=0; \
-	for f in `echo "$(JITFLAGS)" | tr ',' '\n'`; \
+	for f in `echo '$(JITFLAGS)' | tr ',' '\n'`; \
 		do \
 			$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/tests/jstests.py \
 				--tinderbox --no-progress \
@@ -478,20 +478,20 @@ endif
 # Set the various definitions that will be substituted for js-config
 # and for the pck-config .pc file.
 JS_CONFIG_SUBSTITUTIONS=\
-	-Dprefix="$(prefix)" \
-	-Dexec_prefix="$(exec_prefix)" \
-	-Dincludedir="$(includedir)" \
-	-Dlibdir="$(libdir)" \
-	-DMOZILLA_VERSION="$(MOZILLA_VERSION)" \
-	-DLIBRARY_NAME="$(LIBRARY_NAME)" \
-	-DJS_CONFIG_LIBS="$(JS_CONFIG_LIBS)" \
-	-DJS_CONFIG_MOZ_JS_LIBS="$(JS_CONFIG_MOZ_JS_LIBS)" \
-	-DMOZJS_MAJOR_VERSION="$(MOZJS_MAJOR_VERSION)" \
-	-DMOZJS_MINOR_VERSION="$(MOZJS_MINOR_VERSION)" \
-	-DMOZJS_PATCH_VERSION="$(MOZJS_PATCH_VERSION)" \
-	-DMOZJS_ALPHA="$(MOZJS_ALPHA)" \
-	-DNSPR_CFLAGS="$(NSPR_CFLAGS)" \
-	-DNSPR_PKGCONF_CHECK="$(NSPR_PKGCONF_CHECK)" \
+	-Dprefix='$(prefix)' \
+	-Dexec_prefix='$(exec_prefix)' \
+	-Dincludedir='$(includedir)' \
+	-Dlibdir='$(libdir)' \
+	-DMOZILLA_VERSION='$(MOZILLA_VERSION)' \
+	-DLIBRARY_NAME='$(LIBRARY_NAME)' \
+	-DJS_CONFIG_LIBS='$(JS_CONFIG_LIBS)' \
+	-DJS_CONFIG_MOZ_JS_LIBS='$(JS_CONFIG_MOZ_JS_LIBS)' \
+	-DMOZJS_MAJOR_VERSION='$(MOZJS_MAJOR_VERSION)' \
+	-DMOZJS_MINOR_VERSION='$(MOZJS_MINOR_VERSION)' \
+	-DMOZJS_PATCH_VERSION='$(MOZJS_PATCH_VERSION)' \
+	-DMOZJS_ALPHA='$(MOZJS_ALPHA)' \
+	-DNSPR_CFLAGS='$(NSPR_CFLAGS)' \
+	-DNSPR_PKGCONF_CHECK='$(NSPR_PKGCONF_CHECK)' \
 	$(NULL)
 
 $(JS_CONFIG_NAME): js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk $(topsrcdir)/config/rules.mk
@@ -573,7 +573,7 @@ ETWProvider.h ETWProvider.rc ETWProvider.mof: ETWProvider.man
 	$(MC) -um -mof $^
 
 ETWProvider.res: ETWProvider.rc
-	$(RC) -r -i "$(SDKDIR)Include" $^
+	$(RC) -r -i '$(SDKDIR)Include' $^
 
 export:: ETWProvider.res
 

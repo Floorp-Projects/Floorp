@@ -5,9 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <algorithm>
+
 #include "nsMemory.h"
 #include "MP3FrameParser.h"
 #include "VideoUtils.h"
+
+
+#define FROM_BIG_ENDIAN(X) ((uint32_t)((uint8_t)(X)[0] << 24 | (uint8_t)(X)[1] << 16 | \
+                                       (uint8_t)(X)[2] << 8 | (uint8_t)(X)[3]))
 
 
 namespace mozilla {
@@ -161,6 +166,13 @@ MP3Parser::GetSampleRate()
   return mpeg_srates[frame.mVersion][frame.mSampleRate];
 }
 
+uint32_t
+MP3Parser::GetSamplesPerFrame()
+{
+  MP3Frame &frame = mData.mFrame;
+  return mpeg_frame_samples[frame.mVersion][frame.mLayer];
+}
+
 
 /** ID3Parser methods **/
 
@@ -222,12 +234,73 @@ ID3Parser::GetHeaderLength() const
 }
 
 
+/** VBR header helper stuff **/
+
+// Helper function to find a VBR header in an MP3 frame.
+// Based on information from
+// http://www.codeproject.com/Articles/8295/MPEG-Audio-Frame-Header
+
+const uint32_t VBRI_TAG = FROM_BIG_ENDIAN("VBRI");
+const uint32_t VBRI_OFFSET = 32 - sizeof(MP3Frame);
+const uint32_t VBRI_FRAME_COUNT_OFFSET = VBRI_OFFSET + 14;
+const uint32_t VBRI_MIN_FRAME_SIZE = VBRI_OFFSET + 26;
+
+const uint32_t XING_TAG = FROM_BIG_ENDIAN("Xing");
+enum XingFlags {
+  XING_HAS_NUM_FRAMES = 0x01,
+  XING_HAS_NUM_BYTES = 0x02,
+  XING_HAS_TOC = 0x04,
+  XING_HAS_VBR_SCALE = 0x08
+};
+
+static int64_t
+ParseXing(const char *aBuffer)
+{
+  uint32_t flags = FROM_BIG_ENDIAN(aBuffer + 4);
+
+  if (!(flags & XING_HAS_NUM_FRAMES)) {
+    NS_WARNING("VBR file without frame count. Duration estimation likely to "
+               "be totally wrong.");
+    return -1;
+  }
+
+  int64_t numFrames = -1;
+  if (flags & XING_HAS_NUM_FRAMES) {
+    numFrames = FROM_BIG_ENDIAN(aBuffer + 8);
+  }
+
+  return numFrames;
+}
+
+static int64_t
+FindNumVBRFrames(const nsAutoCString& aFrame)
+{
+  const char *buffer = aFrame.get();
+  const char *bufferEnd = aFrame.get() + aFrame.Length();
+
+  // VBRI header is nice and well-defined; let's try to find that first.
+  if (aFrame.Length() > VBRI_MIN_FRAME_SIZE &&
+      FROM_BIG_ENDIAN(buffer + VBRI_OFFSET) == VBRI_TAG) {
+    return FROM_BIG_ENDIAN(buffer + VBRI_FRAME_COUNT_OFFSET);
+  }
+
+  // We have to search for the Xing header as its position can change.
+  for (; buffer + sizeof(XING_TAG) < bufferEnd; buffer++) {
+    if (FROM_BIG_ENDIAN(buffer) == XING_TAG) {
+      return ParseXing(buffer);
+    }
+  }
+
+  return -1;
+}
+
+
 /** MP3FrameParser methods **/
 
 // Some MP3's have large ID3v2 tags, up to 150KB, so we allow lots of
 // skipped bytes to be read, just in case, before we give up and assume
 // we're not parsing an MP3 stream.
-static const uint32_t MAX_SKIPPED_BYTES = 200 * 1024;
+static const uint32_t MAX_SKIPPED_BYTES = 4096;
 
 // The number of audio samples per MP3 frame. This is constant over all MP3
 // streams. With this constant, the stream's sample rate, and an estimated
@@ -241,12 +314,14 @@ enum {
 
 MP3FrameParser::MP3FrameParser(int64_t aLength)
 : mLock("MP3FrameParser.mLock"),
+  mTotalID3Size(0),
   mTotalFrameSize(0),
-  mNumFrames(0),
+  mFrameCount(0),
   mOffset(0),
   mLength(aLength),
   mMP3Offset(-1),
-  mSampleRate(0),
+  mSamplesPerSecond(0),
+  mFirstFrameEnd(-1),
   mIsMP3(MAYBE_MP3)
 { }
 
@@ -257,7 +332,6 @@ nsresult MP3FrameParser::ParseBuffer(const uint8_t* aBuffer,
 {
   // Iterate forwards over the buffer, looking for ID3 tag, or MP3
   // Frame headers.
-
   const uint8_t *buffer = aBuffer;
   const uint8_t *bufferEnd = aBuffer + aLength;
 
@@ -271,6 +345,8 @@ nsresult MP3FrameParser::ParseBuffer(const uint8_t* aBuffer,
         buffer = ch + mID3Parser.GetHeaderLength() - (ID3_HEADER_LENGTH - 1);
         ch = buffer;
 
+        mTotalID3Size += mID3Parser.GetHeaderLength();
+
         // Yes, this is an MP3!
         mIsMP3 = DEFINITELY_MP3;
 
@@ -279,43 +355,95 @@ nsresult MP3FrameParser::ParseBuffer(const uint8_t* aBuffer,
     }
   }
 
+  // The first MP3 frame in a variable bitrate stream can contain metadata
+  // for duration estimation and seeking, so we buffer that first frame here.
+  if (aStreamOffset < mFirstFrameEnd) {
+    uint64_t copyLen = std::min((int64_t)aLength, mFirstFrameEnd - aStreamOffset);
+    mFirstFrame.Append((const char *)buffer, copyLen);
+    buffer += copyLen;
+  }
+
   while (buffer < bufferEnd) {
     uint16_t frameLen = mMP3Parser.ParseFrameLength(*buffer);
 
     if (frameLen) {
+      // We've found an MP3 frame!
+      // This is the first frame (and the only one we'll bother parsing), so:
+      // * Mark this stream as MP3;
+      // * Store the offset at which the MP3 data started; and
+      // * Start buffering the frame, as it might contain handy metadata.
 
-      if (mMP3Offset < 0) {
-        // Found our first frame: mark this stream as MP3 and let the decoder
-        // know where in the stream the MP3 data starts.
-        mIsMP3 = DEFINITELY_MP3;
-        // We're at the last byte of an MP3Frame, so MP3 data started
-        // sizeof - 1 bytes ago.
-        mMP3Offset = aStreamOffset
-          + (buffer - aBuffer)
-          - (sizeof(MP3Frame) - 1);
+      // We're now sure this is an MP3 stream.
+      mIsMP3 = DEFINITELY_MP3;
+
+      // We need to know these to convert the number of frames in the stream
+      // to the length of the stream in seconds.
+      mSamplesPerSecond = mMP3Parser.GetSampleRate();
+      mSamplesPerFrame = mMP3Parser.GetSamplesPerFrame();
+
+      // If the stream has a constant bitrate, we should only need the length
+      // of the first frame and the length (in bytes) of the stream to
+      // estimate the length (in seconds).
+      mTotalFrameSize += frameLen;
+      mFrameCount++;
+
+      // If |mMP3Offset| isn't set then this is the first MP3 frame we have
+      // seen in the stream, which is useful for duration estimation.
+      if (mMP3Offset > -1) {
+        uint16_t skip = frameLen - sizeof(MP3Frame);
+        buffer += skip ? skip : 1;
+        continue;
       }
 
-      mSampleRate = mMP3Parser.GetSampleRate();
-      mTotalFrameSize += frameLen;
-      mNumFrames++;
+      // Remember the offset of the MP3 stream.
+      // We're at the last byte of an MP3Frame, so MP3 data started
+      // sizeof(MP3Frame) - 1 bytes ago.
+      mMP3Offset = aStreamOffset
+        + (buffer - aBuffer)
+        - (sizeof(MP3Frame) - 1);
 
-      buffer += frameLen - sizeof(MP3Frame);
+      buffer++;
+
+      // If the stream has a variable bitrate, the first frame has metadata
+      // we need for duration estimation and seeking. Start buffering it so we
+      // can parse it later.
+      mFirstFrameEnd = mMP3Offset + frameLen;
+      uint64_t currOffset = buffer - aBuffer + aStreamOffset;
+      uint64_t copyLen = std::min(mFirstFrameEnd - currOffset,
+                                  (uint64_t)(bufferEnd - buffer));
+      mFirstFrame.Append((const char *)buffer, copyLen);
+
+      buffer += copyLen;
+
     } else {
+      // Nothing to see here. Move along.
       buffer++;
     }
   }
 
   *aOutBytesRead = buffer - aBuffer;
+
+  if (mFirstFrameEnd > -1 && mFirstFrameEnd <= aStreamOffset + buffer - aBuffer) {
+    // We have our whole first frame. Try to find a VBR header.
+    mNumFrames = FindNumVBRFrames(mFirstFrame);
+    mFirstFrameEnd = -1;
+  }
+
   return NS_OK;
 }
 
-void MP3FrameParser::Parse(const char* aBuffer, uint32_t aLength, int64_t aOffset)
+void MP3FrameParser::Parse(const char* aBuffer, uint32_t aLength, uint64_t aOffset)
 {
   MutexAutoLock mon(mLock);
 
+  if (HasExactDuration()) {
+    // We know the duration; nothing to do here.
+    return;
+  }
+
   const uint8_t* buffer = reinterpret_cast<const uint8_t*>(aBuffer);
   int32_t length = aLength;
-  int64_t offset = aOffset;
+  uint64_t offset = aOffset;
 
   // Got some data we have seen already. Skip forward to what we need.
   if (aOffset < mOffset) {
@@ -335,6 +463,12 @@ void MP3FrameParser::Parse(const char* aBuffer, uint32_t aLength, int64_t aOffse
       // Only reset this if it hasn't finished yet.
       mID3Parser.Reset();
     }
+
+    if (mFirstFrameEnd > -1) {
+      NS_WARNING("Discontinuity in input while buffering first frame.");
+      mFirstFrameEnd = -1;
+    }
+
     mMP3Parser.Reset();
   }
 
@@ -352,7 +486,10 @@ void MP3FrameParser::Parse(const char* aBuffer, uint32_t aLength, int64_t aOffse
   mOffset = offset + bytesRead;
 
   // If we've parsed lots of data and we still have nothing, just give up.
-  if (!mID3Parser.IsParsed() && !mNumFrames && mOffset > MAX_SKIPPED_BYTES) {
+  // We don't count ID3 headers towards that count, as MP3 files can have
+  // massive ID3 sections.
+  if (!mID3Parser.IsParsed() && mMP3Offset < 0 &&
+      mOffset - mTotalID3Size > MAX_SKIPPED_BYTES) {
     mIsMP3 = NOT_MP3;
   }
 }
@@ -361,28 +498,51 @@ int64_t MP3FrameParser::GetDuration()
 {
   MutexAutoLock mon(mLock);
 
-  if (!mNumFrames || !mSampleRate) {
+  if (mMP3Offset < 0) {
     return -1; // Not a single frame decoded yet
   }
 
-  // Estimate the total number of frames in the file from the average frame
-  // size we've seen so far, and the length of the file.
-  double avgFrameSize = (double)mTotalFrameSize / mNumFrames;
-
-  // Need to cut out the header here. Ignore everything up to the first MP3
-  // frames.
-  double estimatedFrames = (double)(mLength - mMP3Offset) / avgFrameSize;
+  double frames;
+  if (mNumFrames < 0) {
+    // Estimate the number of frames in the stream based on the average frame
+    // size and the length of the MP3 file.
+    double frameSize = (double)mTotalFrameSize / mFrameCount;
+    frames = (double)(mLength - mMP3Offset) / frameSize;
+  } else {
+    // We know the exact number of frames from the VBR header.
+    frames = mNumFrames;
+  }
 
   // The duration of each frame is constant over a given stream.
-  double usPerFrame = USECS_PER_S * SAMPLES_PER_FRAME / mSampleRate;
+  double usPerFrame = USECS_PER_S * mSamplesPerFrame / mSamplesPerSecond;
 
-  return estimatedFrames * usPerFrame;
+  return frames * usPerFrame;
 }
 
 int64_t MP3FrameParser::GetMP3Offset()
 {
   MutexAutoLock mon(mLock);
   return mMP3Offset;
+}
+
+bool MP3FrameParser::ParsedHeaders()
+{
+  // We have seen both the beginning and the end of the first MP3 frame in the
+  // stream.
+  return mMP3Offset > -1 && mFirstFrameEnd < 0;
+}
+
+bool MP3FrameParser::HasExactDuration()
+{
+  return ParsedHeaders() && mNumFrames > -1;
+}
+
+bool MP3FrameParser::NeedsData()
+{
+  // If we don't know the duration exactly then either:
+  //  - we're still waiting for a VBR header; or
+  //  - we look at all frames to constantly update our duration estimate.
+  return IsMP3() && !HasExactDuration();
 }
 
 }

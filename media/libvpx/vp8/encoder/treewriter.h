@@ -119,4 +119,8 @@ void vp8_cost_tokens(
     int *Costs, const vp8_prob *, vp8_tree
 );
 
+void vp8_cost_tokens2(
+    int *Costs, const vp8_prob *, vp8_tree, int
+);
+
 #endif

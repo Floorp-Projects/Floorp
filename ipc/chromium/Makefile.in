@@ -70,6 +70,6 @@ export-preqs = \
   $(NULL)
 
 export:: $(export-preqs)
-	echo "#include <event.h>" > $(DIST)/third_party/libevent/event.h
+	echo '#include <event.h>' > $(DIST)/third_party/libevent/event.h
 
 endif # }

@@ -25,6 +25,8 @@ extern void vp8_build_inter16x16_predictors_mby(MACROBLOCKD *x,
                                                 unsigned char *dst_y,
                                                 int dst_ystride);
 extern void vp8_build_inter_predictors_b(BLOCKD *d, int pitch,
+                                         unsigned char *base_pre,
+                                         int pre_stride,
                                          vp8_subpix_fn_t sppf);
 
 extern void vp8_build_inter16x16_predictors_mbuv(MACROBLOCKD *x);

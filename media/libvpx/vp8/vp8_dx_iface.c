@@ -11,12 +11,19 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "vpx_rtcd.h"
 #include "vpx/vpx_decoder.h"
 #include "vpx/vp8dx.h"
 #include "vpx/internal/vpx_codec_internal.h"
 #include "vpx_version.h"
 #include "common/onyxd.h"
 #include "decoder/onyxd_int.h"
+#include "common/alloccommon.h"
+#include "vpx_mem/vpx_mem.h"
+#if CONFIG_ERROR_CONCEALMENT
+#include "decoder/error_concealment.h"
+#endif
+#include "decoder/decoderthreading.h"
 
 #define VP8_CAP_POSTPROC (CONFIG_POSTPROC ? VPX_CODEC_CAP_POSTPROC : 0)
 #define VP8_CAP_ERROR_CONCEALMENT (CONFIG_ERROR_CONCEALMENT ? \
@@ -69,7 +76,7 @@ struct vpx_codec_alg_priv
 #endif
     vpx_image_t             img;
     int                     img_setup;
-    int                     img_avail;
+    void                    *user_priv;
 };
 
 static unsigned long vp8_priv_sz(const vpx_codec_dec_cfg_t *si, vpx_codec_flags_t flags)
@@ -186,6 +193,8 @@ static vpx_codec_err_t vp8_init(vpx_codec_ctx_t *ctx,
 {
     vpx_codec_err_t        res = VPX_CODEC_OK;
     (void) data;
+
+    vpx_rtcd();
 
     /* This function only allocates space for the vpx_codec_alg_priv_t
      * structure. More memory may be required at the time the stream
@@ -341,16 +350,30 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t  *ctx,
                                   long                    deadline)
 {
     vpx_codec_err_t res = VPX_CODEC_OK;
-
-    ctx->img_avail = 0;
+    unsigned int resolution_change = 0;
+    unsigned int w, h;
 
     /* Determine the stream parameters. Note that we rely on peek_si to
      * validate that we have a buffer that does not wrap around the top
      * of the heap.
      */
-    if (!ctx->si.h)
-        res = ctx->base.iface->dec.peek_si(data, data_sz, &ctx->si);
+    w = ctx->si.w;
+    h = ctx->si.h;
 
+    res = ctx->base.iface->dec.peek_si(data, data_sz, &ctx->si);
+
+    if((res == VPX_CODEC_UNSUP_BITSTREAM) && !ctx->si.is_kf)
+    {
+        /* the peek function returns an error for non keyframes, however for
+         * this case, it is not an error */
+        res = VPX_CODEC_OK;
+    }
+
+    if(!ctx->decoder_init && !ctx->si.is_kf)
+        res = VPX_CODEC_UNSUP_BITSTREAM;
+
+    if ((ctx->si.h != h) || (ctx->si.w != w))
+        resolution_change = 1;
 
     /* Perform deferred allocations, if required */
     if (!res && ctx->defer_alloc)
@@ -391,8 +414,6 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t  *ctx,
             VP8D_CONFIG oxcf;
             struct VP8D_COMP* optr;
 
-            vp8dx_initialize();
-
             oxcf.Width = ctx->si.w;
             oxcf.Height = ctx->si.h;
             oxcf.Version = 9;
@@ -428,6 +449,122 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t  *ctx,
 
     if (!res && ctx->pbi)
     {
+        if(resolution_change)
+        {
+            VP8D_COMP *pbi = ctx->pbi;
+            VP8_COMMON *const pc = & pbi->common;
+            MACROBLOCKD *const xd  = & pbi->mb;
+#if CONFIG_MULTITHREAD
+            int i;
+#endif
+            pc->Width = ctx->si.w;
+            pc->Height = ctx->si.h;
+            {
+                int prev_mb_rows = pc->mb_rows;
+
+                if (setjmp(pbi->common.error.jmp))
+                {
+                    pbi->common.error.setjmp = 0;
+                    /* same return value as used in vp8dx_receive_compressed_data */
+                    return -1;
+                }
+
+                pbi->common.error.setjmp = 1;
+
+                if (pc->Width <= 0)
+                {
+                    pc->Width = w;
+                    vpx_internal_error(&pc->error, VPX_CODEC_CORRUPT_FRAME,
+                                       "Invalid frame width");
+                }
+
+                if (pc->Height <= 0)
+                {
+                    pc->Height = h;
+                    vpx_internal_error(&pc->error, VPX_CODEC_CORRUPT_FRAME,
+                                       "Invalid frame height");
+                }
+
+                if (vp8_alloc_frame_buffers(pc, pc->Width, pc->Height))
+                    vpx_internal_error(&pc->error, VPX_CODEC_MEM_ERROR,
+                                       "Failed to allocate frame buffers");
+
+                xd->pre = pc->yv12_fb[pc->lst_fb_idx];
+                xd->dst = pc->yv12_fb[pc->new_fb_idx];
+
+#if CONFIG_MULTITHREAD
+                for (i = 0; i < pbi->allocated_decoding_thread_count; i++)
+                {
+                    pbi->mb_row_di[i].mbd.dst = pc->yv12_fb[pc->new_fb_idx];
+                    vp8_build_block_doffsets(&pbi->mb_row_di[i].mbd);
+                }
+#endif
+                vp8_build_block_doffsets(&pbi->mb);
+
+                /* allocate memory for last frame MODE_INFO array */
+#if CONFIG_ERROR_CONCEALMENT
+
+                if (pbi->ec_enabled)
+                {
+                    /* old prev_mip was released by vp8_de_alloc_frame_buffers()
+                     * called in vp8_alloc_frame_buffers() */
+                    pc->prev_mip = vpx_calloc(
+                                       (pc->mb_cols + 1) * (pc->mb_rows + 1),
+                                       sizeof(MODE_INFO));
+
+                    if (!pc->prev_mip)
+                    {
+                        vp8_de_alloc_frame_buffers(pc);
+                        vpx_internal_error(&pc->error, VPX_CODEC_MEM_ERROR,
+                                           "Failed to allocate"
+                                           "last frame MODE_INFO array");
+                    }
+
+                    pc->prev_mi = pc->prev_mip + pc->mode_info_stride + 1;
+
+                    if (vp8_alloc_overlap_lists(pbi))
+                        vpx_internal_error(&pc->error, VPX_CODEC_MEM_ERROR,
+                                           "Failed to allocate overlap lists "
+                                           "for error concealment");
+                }
+
+#endif
+
+#if CONFIG_MULTITHREAD
+                if (pbi->b_multithreaded_rd)
+                    vp8mt_alloc_temp_buffers(pbi, pc->Width, prev_mb_rows);
+#else
+                (void)prev_mb_rows;
+#endif
+            }
+
+            pbi->common.error.setjmp = 0;
+
+            /* required to get past the first get_free_fb() call */
+            ctx->pbi->common.fb_idx_ref_cnt[0] = 0;
+        }
+
+        ctx->user_priv = user_priv;
+        if (vp8dx_receive_compressed_data(ctx->pbi, data_sz, data, deadline))
+        {
+            VP8D_COMP *pbi = (VP8D_COMP *)ctx->pbi;
+            res = update_error_state(ctx, &pbi->common.error);
+        }
+    }
+
+    return res;
+}
+
+static vpx_image_t *vp8_get_frame(vpx_codec_alg_priv_t  *ctx,
+                                  vpx_codec_iter_t      *iter)
+{
+    vpx_image_t *img = NULL;
+
+    /* iter acts as a flip flop, so an image is only returned on the first
+     * call to get_frame.
+     */
+    if (!(*iter))
+    {
         YV12_BUFFER_CONFIG sd;
         int64_t time_stamp = 0, time_end_stamp = 0;
         vp8_ppflags_t flags = {0};
@@ -453,34 +590,10 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t  *ctx,
 #endif
         }
 
-        if (vp8dx_receive_compressed_data(ctx->pbi, data_sz, data, deadline))
+        if (0 == vp8dx_get_raw_frame(ctx->pbi, &sd, &time_stamp, &time_end_stamp, &flags))
         {
-            VP8D_COMP *pbi = (VP8D_COMP *)ctx->pbi;
-            res = update_error_state(ctx, &pbi->common.error);
-        }
+            yuvconfig2image(&ctx->img, &sd, ctx->user_priv);
 
-        if (!res && 0 == vp8dx_get_raw_frame(ctx->pbi, &sd, &time_stamp, &time_end_stamp, &flags))
-        {
-            yuvconfig2image(&ctx->img, &sd, user_priv);
-            ctx->img_avail = 1;
-        }
-    }
-
-    return res;
-}
-
-static vpx_image_t *vp8_get_frame(vpx_codec_alg_priv_t  *ctx,
-                                  vpx_codec_iter_t      *iter)
-{
-    vpx_image_t *img = NULL;
-
-    if (ctx->img_avail)
-    {
-        /* iter acts as a flip flop, so an image is only returned on the first
-         * call to get_frame.
-         */
-        if (!(*iter))
-        {
             img = &ctx->img;
             *iter = img;
         }
@@ -766,36 +879,6 @@ CODEC_INTERFACE(vpx_codec_vp8_dx) =
     VPX_CODEC_INTERNAL_ABI_VERSION,
     VPX_CODEC_CAP_DECODER | VP8_CAP_POSTPROC | VP8_CAP_ERROR_CONCEALMENT |
     VPX_CODEC_CAP_INPUT_FRAGMENTS,
-    /* vpx_codec_caps_t          caps; */
-    vp8_init,         /* vpx_codec_init_fn_t       init; */
-    vp8_destroy,      /* vpx_codec_destroy_fn_t    destroy; */
-    vp8_ctf_maps,     /* vpx_codec_ctrl_fn_map_t  *ctrl_maps; */
-    vp8_xma_get_mmap, /* vpx_codec_get_mmap_fn_t   get_mmap; */
-    vp8_xma_set_mmap, /* vpx_codec_set_mmap_fn_t   set_mmap; */
-    {
-        vp8_peek_si,      /* vpx_codec_peek_si_fn_t    peek_si; */
-        vp8_get_si,       /* vpx_codec_get_si_fn_t     get_si; */
-        vp8_decode,       /* vpx_codec_decode_fn_t     decode; */
-        vp8_get_frame,    /* vpx_codec_frame_get_fn_t  frame_get; */
-    },
-    { /* encoder functions */
-        NOT_IMPLEMENTED,
-        NOT_IMPLEMENTED,
-        NOT_IMPLEMENTED,
-        NOT_IMPLEMENTED,
-        NOT_IMPLEMENTED,
-        NOT_IMPLEMENTED
-    }
-};
-
-/*
- * BEGIN BACKWARDS COMPATIBILITY SHIM.
- */
-vpx_codec_iface_t vpx_codec_vp8_algo =
-{
-    "WebM Project VP8 Decoder (Deprecated API)" VERSION_STRING,
-    VPX_CODEC_INTERNAL_ABI_VERSION,
-    VPX_CODEC_CAP_DECODER | VP8_CAP_POSTPROC | VP8_CAP_ERROR_CONCEALMENT,
     /* vpx_codec_caps_t          caps; */
     vp8_init,         /* vpx_codec_init_fn_t       init; */
     vp8_destroy,      /* vpx_codec_destroy_fn_t    destroy; */

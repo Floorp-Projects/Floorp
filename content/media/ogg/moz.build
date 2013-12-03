@@ -9,6 +9,7 @@ EXPORTS += [
     'OggDecoder.h',
     'OggReader.h',
     'OggWriter.h',
+    'OpusParser.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -16,6 +17,7 @@ UNIFIED_SOURCES += [
     'OggDecoder.cpp',
     'OggReader.cpp',
     'OggWriter.cpp',
+    'OpusParser.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

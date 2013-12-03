@@ -10,7 +10,7 @@ weave_id      := {340c2bbc-ce74-4362-90b5-7c26312808ef}
 SYNC_PP := modules/constants.js
 SYNC_PP_FLAGS := \
  -Dweave_version=$(weave_version) \
- -Dweave_id="$(weave_id)"
+ -Dweave_id='$(weave_id)'
 SYNC_PP_PATH = $(FINAL_TARGET)/modules/services-sync
 PP_TARGETS += SYNC_PP
 

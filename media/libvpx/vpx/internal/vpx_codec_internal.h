@@ -165,7 +165,7 @@ typedef vpx_codec_err_t (*vpx_codec_control_fn_t)(vpx_codec_alg_priv_t  *ctx,
  * mapping. This implies that ctrl_id values chosen by the algorithm
  * \ref MUST be non-zero.
  */
-typedef const struct
+typedef const struct vpx_codec_ctrl_fn_map
 {
     int                    ctrl_id;
     vpx_codec_control_fn_t   fn;
@@ -280,7 +280,7 @@ typedef vpx_codec_err_t
  * one mapping must be present, in addition to the end-of-list.
  *
  */
-typedef const struct
+typedef const struct vpx_codec_enc_cfg_map
 {
     int                 usage;
     vpx_codec_enc_cfg_t cfg;
@@ -302,14 +302,14 @@ struct vpx_codec_iface
     vpx_codec_ctrl_fn_map_t  *ctrl_maps;   /**< \copydoc ::vpx_codec_ctrl_fn_map_t */
     vpx_codec_get_mmap_fn_t   get_mmap;    /**< \copydoc ::vpx_codec_get_mmap_fn_t */
     vpx_codec_set_mmap_fn_t   set_mmap;    /**< \copydoc ::vpx_codec_set_mmap_fn_t */
-    struct
+    struct vpx_codec_dec_iface
     {
         vpx_codec_peek_si_fn_t    peek_si;     /**< \copydoc ::vpx_codec_peek_si_fn_t */
         vpx_codec_get_si_fn_t     get_si;      /**< \copydoc ::vpx_codec_peek_si_fn_t */
         vpx_codec_decode_fn_t     decode;      /**< \copydoc ::vpx_codec_decode_fn_t */
         vpx_codec_get_frame_fn_t  get_frame;   /**< \copydoc ::vpx_codec_get_frame_fn_t */
     } dec;
-    struct
+    struct vpx_codec_enc_iface
     {
         vpx_codec_enc_cfg_map_t           *cfg_maps;      /**< \copydoc ::vpx_codec_enc_cfg_map_t */
         vpx_codec_encode_fn_t              encode;        /**< \copydoc ::vpx_codec_encode_fn_t */

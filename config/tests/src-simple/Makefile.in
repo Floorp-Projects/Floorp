@@ -21,16 +21,16 @@ REF_MANIFEST = $(if $(USE_EXTENSION_MANIFEST),chrome.manifest,test.manifest)
 check-%::
 	if test -d $(FINAL_TARGET); then rm -rf $(FINAL_TARGET); fi;
 	$(MAKE) realchrome MOZ_CHROME_FILE_FORMAT=$*
-	@echo "Comparing manifests..."
+	@echo 'Comparing manifests...'
 	@if ! sort $(MY_MANIFEST) | diff --text -U 0 $(srcdir)/../$(REF_MANIFEST).$* - ; then \
-	  echo "TEST-UNEXPECTED-FAIL | config/tests/$(REF_MANIFEST).$* | differing content in manifest!" ; \
+	  echo 'TEST-UNEXPECTED-FAIL | config/tests/$(REF_MANIFEST).$* | differing content in manifest!' ; \
 	  false; \
 	fi
-	@if [ $* = "jar" ]; then \
+	@if [ $* = 'jar' ]; then \
 	  $(UNZIP) -d $(FINAL_TARGET)/chrome/test $(FINAL_TARGET)/chrome/test.jar; \
 	fi
-	@echo "Comparing packages..."
+	@echo 'Comparing packages...'
 	@if ! diff -ur $(srcdir)/../ref-simple $(FINAL_TARGET)/chrome/test ; then\
-	  echo "TEST-UNEXPECTED-FAIL | config/tests/ref-simple | different content in jar" ; \
+	  echo 'TEST-UNEXPECTED-FAIL | config/tests/ref-simple | different content in jar' ; \
 	  false; \
 	fi

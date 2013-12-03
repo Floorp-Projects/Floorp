@@ -44,6 +44,8 @@ public:
   virtual bool IsLeaf() const MOZ_OVERRIDE { return true; }
   virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE;
 
+  virtual nsIContent* GetPseudoElementContent(nsCSSPseudoElements::Type aType) MOZ_OVERRIDE;
+
 private:
   nsColorControlFrame(nsStyleContext* aContext);
 

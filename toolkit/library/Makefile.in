@@ -62,7 +62,7 @@ EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
 
 symverscript: symverscript.in
 	$(call py_action,preprocessor, \
-		-DVERSION="$(LIBRARY_NAME)$(MOZILLA_SYMBOLVERSION)" $< -o $@)
+		-DVERSION='$(LIBRARY_NAME)$(MOZILLA_SYMBOLVERSION)' $< -o $@)
 
 EXTRA_DEPS += symverscript
 endif
@@ -173,7 +173,7 @@ endif
 
 ifeq (WINNT,$(OS_TARGET))
 EXTRA_DSO_LDOPTS += \
-  -LIBPATH:"$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)" \
+  -LIBPATH:'$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)' \
   $(NULL)
 OS_LIBS += $(call EXPAND_LIBNAME,secur32 crypt32 iphlpapi strmiids dmoguids wmcodecdspuuid amstrmid msdmo wininet)
 endif
@@ -337,8 +337,8 @@ ifdef MOZ_GAMEPAD
 ifndef GNU_CC
 DXSDK := $(subst \,/,$(MOZ_DIRECTX_SDK_PATH))/Lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)
 OS_LIBS += \
-  "$(DXSDK)/dxguid.lib" \
-  "$(DXSDK)/dinput8.lib" \
+  '$(DXSDK)/dxguid.lib' \
+  '$(DXSDK)/dinput8.lib' \
   $(NULL)
 else
 OS_LIBS += $(call EXPAND_LIBNAME,dxguid dinput8)
@@ -416,7 +416,7 @@ endif
 .PHONY: gtestxul
 
 $(FINAL_TARGET)/dependentlibs.list.gtest: $(FINAL_TARGET)/dependentlibs.list
-	sed -e "s|$(SHARED_LIBRARY)|gtest/$(SHARED_LIBRARY)|" $< > $@
+	sed -e 's|$(SHARED_LIBRARY)|gtest/$(SHARED_LIBRARY)|' $< > $@
 
 # Remove this target when actually linking gtest to prevent redefining
 # the implicit rules.mk target

@@ -32,8 +32,19 @@ extern "C" {
 #define VPX_ENCODER_H
 #include "vpx_codec.h"
 
-#define MAX_PERIODICITY 16
-#define MAX_LAYERS       5
+/*! Temporal Scalability: Maximum length of the sequence defining frame
+ * layer membership
+ */
+#define VPX_TS_MAX_PERIODICITY 16
+
+/*! Temporal Scalability: Maximum number of coding layers */
+#define VPX_TS_MAX_LAYERS       5
+
+/*!\deprecated Use #VPX_TS_MAX_PERIODICITY instead. */
+#define MAX_PERIODICITY VPX_TS_MAX_PERIODICITY
+
+/*!\deprecated Use #VPX_TS_MAX_LAYERS instead. */
+#define MAX_LAYERS      VPX_TS_MAX_LAYERS
 
     /*!\brief Current ABI version number
      *
@@ -608,14 +619,14 @@ extern "C" {
          *
          * These values specify the target coding bitrate for each coding layer.
          */
-        unsigned int           ts_target_bitrate[MAX_LAYERS];
+        unsigned int           ts_target_bitrate[VPX_TS_MAX_LAYERS];
 
         /*!\brief Frame rate decimation factor for each layer
          *
          * These values specify the frame rate decimation factors to apply
          * to each layer.
          */
-        unsigned int           ts_rate_decimator[MAX_LAYERS];
+        unsigned int           ts_rate_decimator[VPX_TS_MAX_LAYERS];
 
         /*!\brief Length of the sequence defining frame layer membership
          *
@@ -633,7 +644,7 @@ extern "C" {
          * and odd numbered frames to a second layer (1) with ts_periodicity=8,
          * then ts_layer_id = (0,1,0,1,0,1,0,1).
          */
-        unsigned int           ts_layer_id[MAX_PERIODICITY];
+        unsigned int           ts_layer_id[VPX_TS_MAX_PERIODICITY];
     } vpx_codec_enc_cfg_t; /**< alias for struct vpx_codec_enc_cfg */
 
 
@@ -643,6 +654,10 @@ extern "C" {
      * should call the vpx_codec_enc_init convenience macro instead of this
      * function directly, to ensure that the ABI version number parameter
      * is properly initialized.
+     *
+     * If the library was configured with --disable-multithread, this call
+     * is not thread safe and should be guarded with a lock if being used
+     * in a multithreaded context.
      *
      * In XMA mode (activated by setting VPX_CODEC_USE_XMA in the flags
      * parameter), the storage pointed to by the cfg parameter must be
