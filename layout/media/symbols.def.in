@@ -11,6 +11,7 @@ nestegg_free_packet
 nestegg_init
 nestegg_offset_seek
 nestegg_packet_count
+nestegg_packet_discard_padding
 nestegg_packet_data
 nestegg_packet_track
 nestegg_packet_tstamp

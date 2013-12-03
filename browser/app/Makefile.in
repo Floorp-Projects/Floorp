@@ -13,11 +13,11 @@ AB_CD = en-US
 
 DEFINES += \
   -DAB_CD=$(AB_CD) \
-  -DFIREFOX_ICO=\"$(DIST)/branding/firefox.ico\" \
-  -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\" \
-  -DNEWWINDOW_ICO=\"$(DIST)/branding/newwindow.ico\" \
-  -DNEWTAB_ICO=\"$(DIST)/branding/newtab.ico\" \
-  -DPBMODE_ICO=\"$(DIST)/branding/pbmode.ico\" \
+  -DFIREFOX_ICO='"$(DIST)/branding/firefox.ico"' \
+  -DDOCUMENT_ICO='"$(DIST)/branding/document.ico"' \
+  -DNEWWINDOW_ICO='"$(DIST)/branding/newwindow.ico"' \
+  -DNEWTAB_ICO='"$(DIST)/branding/newtab.ico"' \
+  -DPBMODE_ICO='"$(DIST)/branding/pbmode.ico"' \
   $(NULL)
 
 ifdef LIBXUL_SDK #{
@@ -84,7 +84,7 @@ endif
 ifeq ($(OS_ARCH),OS2)
 RESFILE=splashos2.res
 RCFLAGS += -DMOZ_PHOENIX
-RCFLAGS += -DFIREFOX_ICO=\"$(DIST)/branding/firefox-os2.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document-os2.ico\"
+RCFLAGS += -DFIREFOX_ICO='"$(DIST)/branding/firefox-os2.ico"' -DDOCUMENT_ICO='"$(DIST)/branding/document-os2.ico"'
 endif
 
 PROGRAMS_DEST = $(DIST)/bin
@@ -166,10 +166,10 @@ MAC_BUNDLE_VERSION = $(shell $(PYTHON) $(srcdir)/macversion.py --version=$(MOZ_A
 tools repackage:: $(PROGRAM)
 	$(MKDIR) -p $(dist_dest)/Contents/MacOS
 	$(MKDIR) -p $(dist_dest)/Contents/Resources/$(AB).lproj
-	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents $(dist_dest) --exclude English.lproj
-	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(dist_dest)/Contents/Resources/$(AB).lproj
-	sed -e "s/%APP_VERSION%/$(MOZ_APP_VERSION)/" -e "s/%MAC_APP_NAME%/$(MAC_APP_NAME)/" -e "s/%MOZ_MACBUNDLE_ID%/$(MOZ_MACBUNDLE_ID)/" -e "s/%MAC_BUNDLE_VERSION%/$(MAC_BUNDLE_VERSION)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(dist_dest)/Contents/Info.plist
-	sed -e "s/%MAC_APP_NAME%/$(MAC_APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(dist_dest)/Contents/Resources/$(AB).lproj/InfoPlist.strings
+	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents $(dist_dest) --exclude English.lproj
+	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(dist_dest)/Contents/Resources/$(AB).lproj
+	sed -e 's/%APP_VERSION%/$(MOZ_APP_VERSION)/' -e 's/%MAC_APP_NAME%/$(MAC_APP_NAME)/' -e 's/%MOZ_MACBUNDLE_ID%/$(MOZ_MACBUNDLE_ID)/' -e 's/%MAC_BUNDLE_VERSION%/$(MAC_BUNDLE_VERSION)/' $(srcdir)/macbuild/Contents/Info.plist.in > $(dist_dest)/Contents/Info.plist
+	sed -e 's/%MAC_APP_NAME%/$(MAC_APP_NAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(dist_dest)/Contents/Resources/$(AB).lproj/InfoPlist.strings
 	rsync -a $(DIST)/bin/ $(dist_dest)/Contents/$(APPFILES)
 	$(RM) $(dist_dest)/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(dist_dest)/Contents/MacOS
