@@ -431,6 +431,7 @@ EnsureTrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
         AutoEnterAnalysis enter(cx);
         if (obj->hasLazyType() && !obj->getType(cx)) {
             cx->compartment()->types.setPendingNukeTypes(cx);
+            cx->clearPendingException();
             return;
         }
         if (!obj->type()->unknownProperties())
