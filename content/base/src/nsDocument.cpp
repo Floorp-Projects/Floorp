@@ -11458,6 +11458,23 @@ nsIDocument::SetStateObject(nsIStructuredCloneContainer *scContainer)
   mStateObjectCached = nullptr;
 }
 
+already_AddRefed<Element>
+nsIDocument::CreateHTMLElement(nsIAtom* aTag)
+{
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nodeInfo = mNodeInfoManager->GetNodeInfo(aTag, nullptr, kNameSpaceID_XHTML,
+                                           nsIDOMNode::ELEMENT_NODE);
+  MOZ_ASSERT(nodeInfo, "GetNodeInfo should never fail");
+
+  nsCOMPtr<nsIContent> content = nullptr;
+  DebugOnly<nsresult> rv = NS_NewHTMLElement(getter_AddRefs(content),
+                                             nodeInfo.forget(),
+                                             mozilla::dom::NOT_FROM_PARSER);
+
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "NS_NewHTMLElement should never fail");
+  return dont_AddRef(content.forget().get()->AsElement());
+}
+
 bool
 MarkDocumentTreeToBeInSyncOperation(nsIDocument* aDoc, void* aData)
 {

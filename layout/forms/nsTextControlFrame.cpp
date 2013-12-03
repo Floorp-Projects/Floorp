@@ -1432,15 +1432,19 @@ nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 }
 
-nsIContent*
-nsTextControlFrame::GetPseudoElementContent(nsCSSPseudoElements::Type aType)
+mozilla::dom::Element*
+nsTextControlFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
 {
   if (aType == nsCSSPseudoElements::ePseudo_mozPlaceholder) {
     nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
-    return txtCtrl->GetPlaceholderNode();
+    nsIContent* placeholderNode = txtCtrl->GetPlaceholderNode();
+    if (placeholderNode && placeholderNode->IsElement()) {
+      return placeholderNode->AsElement();
+    }
+    return nullptr;
   }
 
-  return nsContainerFrame::GetPseudoElementContent(aType);
+  return nsContainerFrame::GetPseudoElement(aType);
 }
 
 NS_IMETHODIMP
