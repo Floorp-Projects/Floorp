@@ -268,14 +268,14 @@ HTMLTextAreaElement::GetRootEditorNode()
   return mState.GetRootNode();
 }
 
-NS_IMETHODIMP_(nsIContent*)
+NS_IMETHODIMP_(Element*)
 HTMLTextAreaElement::CreatePlaceholderNode()
 {
   NS_ENSURE_SUCCESS(mState.CreatePlaceholderNode(), nullptr);
   return mState.GetPlaceholderNode();
 }
 
-NS_IMETHODIMP_(nsIContent*)
+NS_IMETHODIMP_(Element*)
 HTMLTextAreaElement::GetPlaceholderNode()
 {
   return mState.GetPlaceholderNode();
