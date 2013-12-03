@@ -19,7 +19,7 @@ libs:: TestXREMakeCommandLineWin.ini
 	$(INSTALL) $^ $(FINAL_TARGET)/
 
 check::
-	@echo "Running TestXREMakeCommandLineWin tests"
+	@echo 'Running TestXREMakeCommandLineWin tests'
 	@$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestXREMakeCommandLineWin.exe
-	@echo "Running TestDllInterceptor tests"
+	@echo 'Running TestDllInterceptor tests'
 	@$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestDllInterceptor.exe

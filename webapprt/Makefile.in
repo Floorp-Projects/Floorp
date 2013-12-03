@@ -11,7 +11,7 @@ PREF_JS_EXPORTS = $(srcdir)/prefs.js \
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(call mkdir_deps,$(FINAL_TARGET))
-	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest "resource webapprt ./")
+	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest 'resource webapprt ./')
 
 GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
 DEFINES += -DGRE_BUILDID=$(GRE_BUILDID)
