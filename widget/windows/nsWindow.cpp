@@ -6639,7 +6639,11 @@ nsWindow::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
   LayerManagerPrefs prefs;
   GetLayerManagerPrefs(&prefs);
 
-  if (!prefs.mDisableAcceleration) {
+  // We don't currently support using an accelerated layer manager with
+  // transparent windows so don't even try. I'm also not sure if we even
+  // want to support this case. See bug 593471
+  if (!(prefs.mDisableAcceleration ||
+        mTransparencyMode == eTransparencyTransparent)) {
     if (prefs.mPreferOpenGL) {
       aHints.AppendElement(LAYERS_OPENGL);
     }
