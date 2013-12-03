@@ -1105,6 +1105,7 @@ let RemoteDebugger = {
         DebuggerServer.registerModule("devtools/server/actors/stylesheets");
         DebuggerServer.registerModule("devtools/server/actors/tracer");
         DebuggerServer.registerModule("devtools/server/actors/webgl");
+        DebuggerServer.registerModule("devtools/server/actors/memory");
       }
       DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');
       DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
