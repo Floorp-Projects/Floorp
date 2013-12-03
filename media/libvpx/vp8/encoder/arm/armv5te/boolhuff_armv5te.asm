@@ -47,7 +47,6 @@
     mvn     r2,  #23
     str     r12, [r0, #vp8_writer_lowvalue]
     str     r3,  [r0, #vp8_writer_range]
-    str     r12, [r0, #vp8_writer_value]
     str     r2,  [r0, #vp8_writer_count]
     str     r12, [r0, #vp8_writer_pos]
     str     r1,  [r0, #vp8_writer_buffer]

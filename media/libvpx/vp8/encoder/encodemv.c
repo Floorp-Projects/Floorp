@@ -29,15 +29,15 @@ static void encode_mvcomponent(
     const vp8_prob *p = mvc->prob;
     const int x = v < 0 ? -v : v;
 
-    if (x < mvnum_short)     // Small
+    if (x < mvnum_short)     /* Small */
     {
         vp8_write(w, 0, p [mvpis_short]);
         vp8_treed_write(w, vp8_small_mvtree, p + MVPshort, x, 3);
 
         if (!x)
-            return;         // no sign bit
+            return;         /* no sign bit */
     }
-    else                    // Large
+    else                    /* Large */
     {
         int i = 0;
 
@@ -100,7 +100,7 @@ void vp8_encode_motion_vector(vp8_writer *w, const MV *mv, const MV_CONTEXT *mvc
 static unsigned int cost_mvcomponent(const int v, const struct mv_context *mvc)
 {
     const vp8_prob *p = mvc->prob;
-    const int x = v;   //v<0? -v:v;
+    const int x = v;
     unsigned int cost;
 
     if (x < mvnum_short)
@@ -132,12 +132,12 @@ static unsigned int cost_mvcomponent(const int v, const struct mv_context *mvc)
             cost += vp8_cost_bit(p [MVPbits + 3], (x >> 3) & 1);
     }
 
-    return cost;   // + vp8_cost_bit( p [MVPsign], v < 0);
+    return cost;   /* + vp8_cost_bit( p [MVPsign], v < 0); */
 }
 
 void vp8_build_component_cost_table(int *mvcost[2], const MV_CONTEXT *mvc, int mvc_flag[2])
 {
-    int i = 1;   //-mv_max;
+    int i = 1;
     unsigned int cost0 = 0;
     unsigned int cost1 = 0;
 
@@ -151,7 +151,6 @@ void vp8_build_component_cost_table(int *mvcost[2], const MV_CONTEXT *mvc, int m
 
         do
         {
-            //mvcost [0] [i] = cost_mvcomponent( i, &mvc[0]);
             cost0 = cost_mvcomponent(i, &mvc[0]);
 
             mvcost [0] [i] = cost0 + vp8_cost_zero(mvc[0].prob[MVPsign]);
@@ -168,7 +167,6 @@ void vp8_build_component_cost_table(int *mvcost[2], const MV_CONTEXT *mvc, int m
 
         do
         {
-            //mvcost [1] [i] = cost_mvcomponent( i, mvc[1]);
             cost1 = cost_mvcomponent(i, &mvc[1]);
 
             mvcost [1] [i] = cost1 + vp8_cost_zero(mvc[1].prob[MVPsign]);
@@ -179,10 +177,10 @@ void vp8_build_component_cost_table(int *mvcost[2], const MV_CONTEXT *mvc, int m
 }
 
 
-// Motion vector probability table update depends on benefit.
-// Small correction allows for the fact that an update to an MV probability
-// may have benefit in subsequent frames as well as the current one.
-
+/* Motion vector probability table update depends on benefit.
+ * Small correction allows for the fact that an update to an MV probability
+ * may have benefit in subsequent frames as well as the current one.
+ */
 #define MV_PROB_UPDATE_CORRECTION   -1
 
 
@@ -254,22 +252,22 @@ static void write_component_probs(
     vp8_zero(short_bct)
 
 
-    //j=0
+    /* j=0 */
     {
         const int c = events [mv_max];
 
-        is_short_ct [0] += c;     // Short vector
-        short_ct [0] += c;       // Magnitude distribution
+        is_short_ct [0] += c;     /* Short vector */
+        short_ct [0] += c;       /* Magnitude distribution */
     }
 
-    //j: 1 ~ mv_max (1023)
+    /* j: 1 ~ mv_max (1023) */
     {
         int j = 1;
 
         do
         {
-            const int c1 = events [mv_max + j];  //positive
-            const int c2 = events [mv_max - j];  //negative
+            const int c1 = events [mv_max + j];  /* positive */
+            const int c2 = events [mv_max - j];  /* negative */
             const int c  = c1 + c2;
             int a = j;
 
@@ -278,13 +276,13 @@ static void write_component_probs(
 
             if (a < mvnum_short)
             {
-                is_short_ct [0] += c;     // Short vector
-                short_ct [a] += c;       // Magnitude distribution
+                is_short_ct [0] += c;     /* Short vector */
+                short_ct [a] += c;       /* Magnitude distribution */
             }
             else
             {
                 int k = mvlong_width - 1;
-                is_short_ct [1] += c;     // Long vector
+                is_short_ct [1] += c;     /* Long vector */
 
                 /*  bit 3 not always encoded. */
                 do
@@ -295,43 +293,6 @@ static void write_component_probs(
         }
         while (++j <= mv_max);
     }
-
-    /*
-    {
-        int j = -mv_max;
-        do
-        {
-
-            const int c = events [mv_max + j];
-            int a = j;
-
-            if( j < 0)
-            {
-                sign_ct [1] += c;
-                a = -j;
-            }
-            else if( j)
-                sign_ct [0] += c;
-
-            if( a < mvnum_short)
-            {
-                is_short_ct [0] += c;     // Short vector
-                short_ct [a] += c;       // Magnitude distribution
-            }
-            else
-            {
-                int k = mvlong_width - 1;
-                is_short_ct [1] += c;     // Long vector
-
-                //  bit 3 not always encoded.
-
-                do
-                    bit_ct [k] [(a >> k) & 1] += c;
-                while( --k >= 0);
-            }
-        } while( ++j <= mv_max);
-    }
-    */
 
     calc_prob(Pnew + mvpis_short, is_short_ct);
 
@@ -402,10 +363,12 @@ void vp8_write_mvprobs(VP8_COMP *cpi)
     active_section = 4;
 #endif
     write_component_probs(
-        w, &mvc[0], &vp8_default_mv_context[0], &vp8_mv_update_probs[0], cpi->MVcount[0], 0, &flags[0]
+        w, &mvc[0], &vp8_default_mv_context[0], &vp8_mv_update_probs[0],
+        cpi->mb.MVcount[0], 0, &flags[0]
     );
     write_component_probs(
-        w, &mvc[1], &vp8_default_mv_context[1], &vp8_mv_update_probs[1], cpi->MVcount[1], 1, &flags[1]
+        w, &mvc[1], &vp8_default_mv_context[1], &vp8_mv_update_probs[1],
+        cpi->mb.MVcount[1], 1, &flags[1]
     );
 
     if (flags[0] || flags[1])

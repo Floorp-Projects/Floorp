@@ -1420,7 +1420,8 @@ MMod::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 bool
 MMod::fallible() const
 {
-    return !isTruncated();
+    return !isTruncated() &&
+           (isUnsigned() || canBeDivideByZero() || canBeNegativeDividend());
 }
 
 void

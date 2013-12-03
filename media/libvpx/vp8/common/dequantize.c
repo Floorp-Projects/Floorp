@@ -10,8 +10,8 @@
 
 
 #include "vpx_config.h"
-#include "dequantize.h"
-#include "vp8/common/idct.h"
+#include "vpx_rtcd.h"
+#include "vp8/common/blockd.h"
 #include "vpx_mem/vpx_mem.h"
 
 void vp8_dequantize_b_c(BLOCKD *d, short *DQC)

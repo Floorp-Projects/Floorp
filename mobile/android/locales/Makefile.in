@@ -54,32 +54,32 @@ endif
 # builds. It is called from the tinderbox scripts. Alter it with caution.
 
 installers-%: clobber-stage repackage-zip-%
-	@echo "repackaging done"
+	@echo 'repackaging done'
 
 # When we unpack fennec on MacOS X the platform.ini and application.ini are in slightly
 # different locations that on all other platforms
 ifeq (Darwin, $(OS_ARCH))
 ifdef LIBXUL_SDK
-GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/../Frameworks/XUL.framework/Versions/$(MOZILLA_VERSION)/platform.ini"
+GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/../Frameworks/XUL.framework/Versions/$(MOZILLA_VERSION)/platform.ini'
 else
-GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/platform.ini"
+GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/platform.ini'
 endif
-FENNEC_APPLICATION_INI_PATH="$(STAGEDIST)/application.ini"
+FENNEC_APPLICATION_INI_PATH='$(STAGEDIST)/application.ini'
 else
 ifdef LIBXUL_SDK
-GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/xulrunner/platform.ini"
+GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/xulrunner/platform.ini'
 else
-GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/platform.ini"
+GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/platform.ini'
 endif
-FENNEC_APPLICATION_INI_PATH="$(STAGEDIST)/application.ini"
+FENNEC_APPLICATION_INI_PATH='$(STAGEDIST)/application.ini'
 endif
 
 ident:
-	@printf "gecko_revision "
+	@printf 'gecko_revision '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(GECKO_PLATFORM_INI_PATH) Build SourceStamp
-	@printf "fennec_revision "
+	@printf 'fennec_revision '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App SourceStamp
-	@printf "buildid "
+	@printf 'buildid '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(FENNEC_APPLICATION_INI_PATH) App BuildID
 
 merge-%:

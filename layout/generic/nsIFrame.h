@@ -3021,6 +3021,13 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
     return GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER;
   }
 
+  /**
+   * Returns the content node within the anonymous content that this frame
+   * generated and which corresponds to the specified pseudo-element type,
+   * or nullptr if there is no such anonymous content.
+   */
+  virtual nsIContent* GetPseudoElementContent(nsCSSPseudoElements::Type aType);
+
 protected:
   // Members
   nsRect           mRect;

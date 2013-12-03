@@ -12,19 +12,18 @@ TESTPATH        = $(topsrcdir)/mobile/android/base/tests/roboextender
 
 include $(DEPTH)/config/autoconf.mk
 
-_TEST_FILES = \
+TEST_EXTENSIONS_DIR = $(DEPTH)/_tests/testing/mochitest/extensions
+
+TEST_FILES = \
   bootstrap.js \
   install.rdf \
   chrome.manifest \
   $(NULL)
-
-TEST_EXTENSIONS_DIR = $(DEPTH)/_tests/testing/mochitest/extensions
+TEST_DEST = $(TEST_EXTENSIONS_DIR)/roboextender@mozilla.org/
+INSTALL_TARGETS += TEST
 
 include $(topsrcdir)/config/rules.mk
 
 libs:: $(_TEST_FILES)
-	$(MKDIR) -p $(TEST_EXTENSIONS_DIR)/roboextender@mozilla.org
-	$(INSTALL) $(foreach f,$^,"$f") $(TEST_EXTENSIONS_DIR)/roboextender@mozilla.org/
 	$(MKDIR) -p $(TEST_EXTENSIONS_DIR)/roboextender@mozilla.org/base
-	$(MKDIR) -p $(TESTPATH)
 	-cp $(TESTPATH)/* $(TEST_EXTENSIONS_DIR)/roboextender@mozilla.org/base

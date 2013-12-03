@@ -116,7 +116,7 @@ void vp8_copy_and_extend_frame_with_rect(YV12_BUFFER_CONFIG *src,
     int src_uv_offset = ((srcy * src->uv_stride) >> 1) + (srcx >> 1);
     int dst_uv_offset = ((srcy * dst->uv_stride) >> 1) + (srcx >> 1);
 
-    // If the side is not touching the bounder then don't extend.
+    /* If the side is not touching the bounder then don't extend. */
     if (srcy)
       et = 0;
     if (srcx)
@@ -157,7 +157,10 @@ void vp8_copy_and_extend_frame_with_rect(YV12_BUFFER_CONFIG *src,
 
 
 /* note the extension is only for the last row, for intra prediction purpose */
-void vp8_extend_mb_row(YV12_BUFFER_CONFIG *ybf, unsigned char *YPtr, unsigned char *UPtr, unsigned char *VPtr)
+void vp8_extend_mb_row(YV12_BUFFER_CONFIG *ybf,
+                       unsigned char *YPtr,
+                       unsigned char *UPtr,
+                       unsigned char *VPtr)
 {
     int i;
 

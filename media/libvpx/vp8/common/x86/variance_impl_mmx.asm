@@ -12,7 +12,7 @@
 %include "vpx_ports/x86_abi_support.asm"
 
 ;unsigned int vp8_get_mb_ss_mmx( short *src_ptr )
-global sym(vp8_get_mb_ss_mmx)
+global sym(vp8_get_mb_ss_mmx) PRIVATE
 sym(vp8_get_mb_ss_mmx):
     push        rbp
     mov         rbp, rsp
@@ -72,7 +72,7 @@ sym(vp8_get_mb_ss_mmx):
 ;    unsigned int *SSE,
 ;    int *Sum
 ;)
-global sym(vp8_get8x8var_mmx)
+global sym(vp8_get8x8var_mmx) PRIVATE
 sym(vp8_get8x8var_mmx):
     push        rbp
     mov         rbp, rsp
@@ -320,7 +320,7 @@ sym(vp8_get8x8var_mmx):
 ;    unsigned int *SSE,
 ;    int *Sum
 ;)
-global sym(vp8_get4x4var_mmx)
+global sym(vp8_get4x4var_mmx) PRIVATE
 sym(vp8_get4x4var_mmx):
     push        rbp
     mov         rbp, rsp
@@ -433,7 +433,7 @@ sym(vp8_get4x4var_mmx):
 ;    unsigned char *ref_ptr,
 ;    int  recon_stride
 ;)
-global sym(vp8_get4x4sse_cs_mmx)
+global sym(vp8_get4x4sse_cs_mmx) PRIVATE
 sym(vp8_get4x4sse_cs_mmx):
     push        rbp
     mov         rbp, rsp
@@ -522,7 +522,7 @@ sym(vp8_get4x4sse_cs_mmx):
 ;    int *sum,
 ;    unsigned int *sumsquared
 ;)
-global sym(vp8_filter_block2d_bil4x4_var_mmx)
+global sym(vp8_filter_block2d_bil4x4_var_mmx) PRIVATE
 sym(vp8_filter_block2d_bil4x4_var_mmx):
     push        rbp
     mov         rbp, rsp
@@ -667,7 +667,7 @@ sym(vp8_filter_block2d_bil4x4_var_mmx):
 ;    int *sum,
 ;    unsigned int *sumsquared
 ;)
-global sym(vp8_filter_block2d_bil_var_mmx)
+global sym(vp8_filter_block2d_bil_var_mmx) PRIVATE
 sym(vp8_filter_block2d_bil_var_mmx):
     push        rbp
     mov         rbp, rsp

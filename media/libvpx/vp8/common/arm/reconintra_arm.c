@@ -10,12 +10,11 @@
 
 
 #include "vpx_config.h"
+#include "vpx_rtcd.h"
 #include "vp8/common/blockd.h"
-#include "vp8/common/reconintra.h"
 #include "vpx_mem/vpx_mem.h"
-#include "vp8/common/recon.h"
 
-#if HAVE_ARMV7
+#if HAVE_NEON
 extern void vp8_build_intra_predictors_mby_neon_func(
     unsigned char *y_buffer,
     unsigned char *ypred_ptr,
@@ -35,10 +34,7 @@ void vp8_build_intra_predictors_mby_neon(MACROBLOCKD *x)
 
     vp8_build_intra_predictors_mby_neon_func(y_buffer, ypred_ptr, y_stride, mode, Up, Left);
 }
-#endif
 
-
-#if HAVE_ARMV7
 extern void vp8_build_intra_predictors_mby_s_neon_func(
     unsigned char *y_buffer,
     unsigned char *ypred_ptr,

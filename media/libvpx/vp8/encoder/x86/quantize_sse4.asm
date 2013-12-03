@@ -16,7 +16,7 @@
 ;  (BLOCK  *b,                     |  0
 ;   BLOCKD *d)                     |  1
 
-global sym(vp8_regular_quantize_b_sse4)
+global sym(vp8_regular_quantize_b_sse4) PRIVATE
 sym(vp8_regular_quantize_b_sse4):
 
 %if ABI_IS_32BIT

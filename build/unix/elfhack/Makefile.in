@@ -27,7 +27,7 @@ test-array$(DLL_SUFFIX) test-ctors$(DLL_SUFFIX): %$(DLL_SUFFIX): %.$(OBJ_SUFFIX)
 	@rm -f $@.bak
 	$(CURDIR)/elfhack -b -f $@
 	# Fail if the backup file doesn't exist
-	[ -f "$@.bak" ]
+	[ -f '$@.bak' ]
 	# Fail if the new library doesn't contain less relocations
 	[ $$($(TOOLCHAIN_PREFIX)objdump -R $@.bak | wc -l) -gt $$(objdump -R $@ | wc -l) ]
 

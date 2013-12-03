@@ -65,7 +65,7 @@ UA_UPDATE_FILE = ua-update.json
 
 $(UA_UPDATE_FILE): % : %.in
 	# strip out comment lines, which are not valid in JSON
-	sed -e "/^ *\\/\\//d" -e "/^ *$$/d" $^ > $@
+	sed -e '/^ *\/\//d' -e '/^ *$$/d' $^ > $@
 
 UA_UPDATE_FILES = $(UA_UPDATE_FILE)
 UA_UPDATE_DEST  = $(FINAL_TARGET)
@@ -80,7 +80,7 @@ APP_ICON = b2g
 
 source_repo ?= $(call getSourceRepo,$(srcdir)/..)
 ifneq (,$(filter http%,$(source_repo)))
-  DEFINES += -DMOZ_SOURCE_REPO="$(source_repo)"
+  DEFINES += -DMOZ_SOURCE_REPO='$(source_repo)'
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -118,10 +118,10 @@ libs-preqs = \
 
 .PHONY: repackage
 tools repackage:: $(libs-preqs)
-	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
-	rsync -a --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
-	sed -e "s/%MOZ_APP_VERSION%/$(MOZ_APP_VERSION)/" -e "s/%MOZ_APP_NAME%/$(MOZ_APP_NAME)/" -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" -e "s/%APP_BINARY%/$(APP_BINARY)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
-	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj/InfoPlist.strings
+	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
+	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
+	sed -e 's/%MOZ_APP_VERSION%/$(MOZ_APP_VERSION)/' -e 's/%MOZ_APP_NAME%/$(MOZ_APP_NAME)/' -e 's/%APP_VERSION%/$(APP_VERSION)/' -e 's/%APP_NAME%/$(APP_NAME)/' -e 's/%APP_BINARY%/$(APP_BINARY)/' $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
+	sed -e 's/%APP_VERSION%/$(APP_VERSION)/' -e 's/%APP_NAME%/$(APP_NAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj/InfoPlist.strings
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)
 	$(RM) $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/mangle $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/shlibsign
 ifdef LIBXUL_SDK
@@ -132,7 +132,7 @@ else
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
 endif
 	cp -RL $(srcdir)/b2g.icns $(DIST)/$(APP_NAME).app/Contents/Resources/$(MOZ_APP_NAME).icns
-	printf "APPLMOZB" > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
+	printf APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 
 else # MOZ_WIDGET_TOOLKIT != cocoa
 

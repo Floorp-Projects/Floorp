@@ -17,7 +17,6 @@
 #include "onyxd_int.h"
 #include "vpx_mem/vpx_mem.h"
 #include "vp8/common/alloccommon.h"
-#include "vpx_scale/yv12extend.h"
 #include "vp8/common/loopfilter.h"
 #include "vp8/common/swapyv12buffer.h"
 #include "vp8/common/threading.h"
@@ -42,20 +41,6 @@ extern void vp8cx_init_de_quantizer(VP8D_COMP *pbi);
 static int get_free_fb (VP8_COMMON *cm);
 static void ref_cnt_fb (int *buf, int *idx, int new_idx);
 
-
-void vp8dx_initialize()
-{
-    static int init_done = 0;
-
-    if (!init_done)
-    {
-        vp8_initialize_common();
-        vp8_scale_machine_specific_config();
-        init_done = 1;
-    }
-}
-
-
 struct VP8D_COMP * vp8dx_create_decompressor(VP8D_CONFIG *oxcf)
 {
     VP8D_COMP *pbi = vpx_memalign(32, sizeof(VP8D_COMP));
@@ -73,10 +58,8 @@ struct VP8D_COMP * vp8dx_create_decompressor(VP8D_CONFIG *oxcf)
     }
 
     pbi->common.error.setjmp = 1;
-    vp8dx_initialize();
 
     vp8_create_common(&pbi->common);
-    vp8_dmachine_specific_config(pbi);
 
     pbi->common.current_video_frame = 0;
     pbi->ready_for_new_data = 1;
@@ -97,6 +80,7 @@ struct VP8D_COMP * vp8dx_create_decompressor(VP8D_CONFIG *oxcf)
 
 #if CONFIG_ERROR_CONCEALMENT
     pbi->ec_enabled = oxcf->error_concealment;
+    pbi->overlaps = NULL;
 #else
     pbi->ec_enabled = 0;
 #endif
@@ -116,6 +100,8 @@ struct VP8D_COMP * vp8dx_create_decompressor(VP8D_CONFIG *oxcf)
      */
     pbi->independent_partitions = 0;
 
+    vp8_setup_block_dptrs(&pbi->mb);
+
     return pbi;
 }
 
@@ -134,21 +120,20 @@ void vp8dx_remove_decompressor(VP8D_COMP *pbi)
     vp8_de_alloc_overlap_lists(pbi);
 #endif
     vp8_remove_common(&pbi->common);
-    vpx_free(pbi->mbc);
     vpx_free(pbi);
 }
 
 
-vpx_codec_err_t vp8dx_get_reference(VP8D_COMP *pbi, VP8_REFFRAME ref_frame_flag, YV12_BUFFER_CONFIG *sd)
+vpx_codec_err_t vp8dx_get_reference(VP8D_COMP *pbi, enum vpx_ref_frame_type ref_frame_flag, YV12_BUFFER_CONFIG *sd)
 {
     VP8_COMMON *cm = &pbi->common;
     int ref_fb_idx;
 
-    if (ref_frame_flag == VP8_LAST_FLAG)
+    if (ref_frame_flag == VP8_LAST_FRAME)
         ref_fb_idx = cm->lst_fb_idx;
-    else if (ref_frame_flag == VP8_GOLD_FLAG)
+    else if (ref_frame_flag == VP8_GOLD_FRAME)
         ref_fb_idx = cm->gld_fb_idx;
-    else if (ref_frame_flag == VP8_ALT_FLAG)
+    else if (ref_frame_flag == VP8_ALTR_FRAME)
         ref_fb_idx = cm->alt_fb_idx;
     else{
         vpx_internal_error(&pbi->common.error, VPX_CODEC_ERROR,
@@ -164,23 +149,23 @@ vpx_codec_err_t vp8dx_get_reference(VP8D_COMP *pbi, VP8_REFFRAME ref_frame_flag,
             "Incorrect buffer dimensions");
     }
     else
-        vp8_yv12_copy_frame_ptr(&cm->yv12_fb[ref_fb_idx], sd);
+        vp8_yv12_copy_frame(&cm->yv12_fb[ref_fb_idx], sd);
 
     return pbi->common.error.error_code;
 }
 
 
-vpx_codec_err_t vp8dx_set_reference(VP8D_COMP *pbi, VP8_REFFRAME ref_frame_flag, YV12_BUFFER_CONFIG *sd)
+vpx_codec_err_t vp8dx_set_reference(VP8D_COMP *pbi, enum vpx_ref_frame_type ref_frame_flag, YV12_BUFFER_CONFIG *sd)
 {
     VP8_COMMON *cm = &pbi->common;
     int *ref_fb_ptr = NULL;
     int free_fb;
 
-    if (ref_frame_flag == VP8_LAST_FLAG)
+    if (ref_frame_flag == VP8_LAST_FRAME)
         ref_fb_ptr = &cm->lst_fb_idx;
-    else if (ref_frame_flag == VP8_GOLD_FLAG)
+    else if (ref_frame_flag == VP8_GOLD_FRAME)
         ref_fb_ptr = &cm->gld_fb_idx;
-    else if (ref_frame_flag == VP8_ALT_FLAG)
+    else if (ref_frame_flag == VP8_ALTR_FRAME)
         ref_fb_ptr = &cm->alt_fb_idx;
     else{
         vpx_internal_error(&pbi->common.error, VPX_CODEC_ERROR,
@@ -204,14 +189,14 @@ vpx_codec_err_t vp8dx_set_reference(VP8D_COMP *pbi, VP8_REFFRAME ref_frame_flag,
 
         /* Manage the reference counters and copy image. */
         ref_cnt_fb (cm->fb_idx_ref_cnt, ref_fb_ptr, free_fb);
-        vp8_yv12_copy_frame_ptr(sd, &cm->yv12_fb[*ref_fb_ptr]);
+        vp8_yv12_copy_frame(sd, &cm->yv12_fb[*ref_fb_ptr]);
     }
 
    return pbi->common.error.error_code;
 }
 
 /*For ARM NEON, d8-d15 are callee-saved registers, and need to be saved by us.*/
-#if HAVE_ARMV7
+#if HAVE_NEON
 extern void vp8_push_neon(int64_t *store);
 extern void vp8_pop_neon(int64_t *store);
 #endif
@@ -296,28 +281,22 @@ static int swap_frame_buffers (VP8_COMMON *cm)
     return err;
 }
 
-int vp8dx_receive_compressed_data(VP8D_COMP *pbi, unsigned long size, const unsigned char *source, int64_t time_stamp)
+int vp8dx_receive_compressed_data(VP8D_COMP *pbi, size_t size,
+                                  const uint8_t *source,
+                                  int64_t time_stamp)
 {
-#if HAVE_ARMV7
+#if HAVE_NEON
     int64_t dx_store_reg[8];
 #endif
     VP8_COMMON *cm = &pbi->common;
-    int retcode = 0;
-
-    /*if(pbi->ready_for_new_data == 0)
-        return -1;*/
-
-    if (pbi == 0)
-    {
-        return -1;
-    }
+    int retcode = -1;
 
     pbi->common.error.error_code = VPX_CODEC_OK;
 
     if (pbi->num_fragments == 0)
     {
         /* New frame, reset fragment pointers and sizes */
-        vpx_memset(pbi->fragments, 0, sizeof(pbi->fragments));
+        vpx_memset((void*)pbi->fragments, 0, sizeof(pbi->fragments));
         vpx_memset(pbi->fragment_sizes, 0, sizeof(pbi->fragment_sizes));
     }
     if (pbi->input_fragments && !(source == NULL && size == 0))
@@ -368,7 +347,7 @@ int vp8dx_receive_compressed_data(VP8D_COMP *pbi, unsigned long size, const unsi
             const int prev_idx = cm->lst_fb_idx;
             cm->fb_idx_ref_cnt[prev_idx]--;
             cm->lst_fb_idx = get_free_fb(cm);
-            vp8_yv12_copy_frame_ptr(&cm->yv12_fb[prev_idx],
+            vp8_yv12_copy_frame(&cm->yv12_fb[prev_idx],
                                     &cm->yv12_fb[cm->lst_fb_idx]);
         }
         /* This is used to signal that we are missing frames.
@@ -387,9 +366,9 @@ int vp8dx_receive_compressed_data(VP8D_COMP *pbi, unsigned long size, const unsi
         return 0;
     }
 
-#if HAVE_ARMV7
+#if HAVE_NEON
 #if CONFIG_RUNTIME_CPU_DETECT
-    if (cm->rtcd.flags & HAS_NEON)
+    if (cm->cpu_caps & HAS_NEON)
 #endif
     {
         vp8_push_neon(dx_store_reg);
@@ -398,20 +377,14 @@ int vp8dx_receive_compressed_data(VP8D_COMP *pbi, unsigned long size, const unsi
 
     cm->new_fb_idx = get_free_fb (cm);
 
+    /* setup reference frames for vp8_decode_frame */
+    pbi->dec_fb_ref[INTRA_FRAME]  = &cm->yv12_fb[cm->new_fb_idx];
+    pbi->dec_fb_ref[LAST_FRAME]   = &cm->yv12_fb[cm->lst_fb_idx];
+    pbi->dec_fb_ref[GOLDEN_FRAME] = &cm->yv12_fb[cm->gld_fb_idx];
+    pbi->dec_fb_ref[ALTREF_FRAME] = &cm->yv12_fb[cm->alt_fb_idx];
+
     if (setjmp(pbi->common.error.jmp))
     {
-#if HAVE_ARMV7
-#if CONFIG_RUNTIME_CPU_DETECT
-        if (cm->rtcd.flags & HAS_NEON)
-#endif
-        {
-            vp8_pop_neon(dx_store_reg);
-        }
-#endif
-        pbi->common.error.setjmp = 0;
-
-        pbi->num_fragments = 0;
-
        /* We do not know if the missing frame(s) was supposed to update
         * any of the reference buffers, but we act conservative and
         * mark only the last buffer as corrupted.
@@ -420,7 +393,8 @@ int vp8dx_receive_compressed_data(VP8D_COMP *pbi, unsigned long size, const unsi
 
         if (cm->fb_idx_ref_cnt[cm->new_fb_idx] > 0)
           cm->fb_idx_ref_cnt[cm->new_fb_idx]--;
-        return -1;
+
+        goto decode_exit;
     }
 
     pbi->common.error.setjmp = 1;
@@ -429,67 +403,18 @@ int vp8dx_receive_compressed_data(VP8D_COMP *pbi, unsigned long size, const unsi
 
     if (retcode < 0)
     {
-#if HAVE_ARMV7
-#if CONFIG_RUNTIME_CPU_DETECT
-        if (cm->rtcd.flags & HAS_NEON)
-#endif
-        {
-            vp8_pop_neon(dx_store_reg);
-        }
-#endif
-        pbi->common.error.error_code = VPX_CODEC_ERROR;
-        pbi->common.error.setjmp = 0;
-        pbi->num_fragments = 0;
         if (cm->fb_idx_ref_cnt[cm->new_fb_idx] > 0)
           cm->fb_idx_ref_cnt[cm->new_fb_idx]--;
-        return retcode;
+
+        pbi->common.error.error_code = VPX_CODEC_ERROR;
+        goto decode_exit;
     }
 
-#if CONFIG_MULTITHREAD
-    if (pbi->b_multithreaded_rd && cm->multi_token_partition != ONE_PARTITION)
+    if (swap_frame_buffers (cm))
     {
-        if (swap_frame_buffers (cm))
-        {
-#if HAVE_ARMV7
-#if CONFIG_RUNTIME_CPU_DETECT
-            if (cm->rtcd.flags & HAS_NEON)
-#endif
-            {
-                vp8_pop_neon(dx_store_reg);
-            }
-#endif
-            pbi->common.error.error_code = VPX_CODEC_ERROR;
-            pbi->common.error.setjmp = 0;
-            pbi->num_fragments = 0;
-            return -1;
-        }
-    } else
-#endif
-    {
-        if (swap_frame_buffers (cm))
-        {
-#if HAVE_ARMV7
-#if CONFIG_RUNTIME_CPU_DETECT
-            if (cm->rtcd.flags & HAS_NEON)
-#endif
-            {
-                vp8_pop_neon(dx_store_reg);
-            }
-#endif
-            pbi->common.error.error_code = VPX_CODEC_ERROR;
-            pbi->common.error.setjmp = 0;
-            pbi->num_fragments = 0;
-            return -1;
-        }
-
-        if(cm->filter_level)
-        {
-            /* Apply the loop filter if appropriate. */
-            vp8_loop_filter_frame(cm, &pbi->mb);
-        }
-        vp8_yv12_extend_frame_borders_ptr(cm->frame_to_show);
+        pbi->common.error.error_code = VPX_CODEC_ERROR;
+        goto decode_exit;
     }
-
 
     vp8_clear_system_state();
 
@@ -515,58 +440,24 @@ int vp8dx_receive_compressed_data(VP8D_COMP *pbi, unsigned long size, const unsi
     }
 #endif
 
-    /*vp8_print_modes_and_motion_vectors( cm->mi, cm->mb_rows,cm->mb_cols, cm->current_video_frame);*/
-
     if (cm->show_frame)
         cm->current_video_frame++;
 
     pbi->ready_for_new_data = 0;
     pbi->last_time_stamp = time_stamp;
-    pbi->num_fragments = 0;
 
-#if 0
-    {
-        int i;
-        int64_t earliest_time = pbi->dr[0].time_stamp;
-        int64_t latest_time = pbi->dr[0].time_stamp;
-        int64_t time_diff = 0;
-        int bytes = 0;
-
-        pbi->dr[pbi->common.current_video_frame&0xf].size = pbi->bc.pos + pbi->bc2.pos + 4;;
-        pbi->dr[pbi->common.current_video_frame&0xf].time_stamp = time_stamp;
-
-        for (i = 0; i < 16; i++)
-        {
-
-            bytes += pbi->dr[i].size;
-
-            if (pbi->dr[i].time_stamp < earliest_time)
-                earliest_time = pbi->dr[i].time_stamp;
-
-            if (pbi->dr[i].time_stamp > latest_time)
-                latest_time = pbi->dr[i].time_stamp;
-        }
-
-        time_diff = latest_time - earliest_time;
-
-        if (time_diff > 0)
-        {
-            pbi->common.bitrate = 80000.00 * bytes / time_diff  ;
-            pbi->common.framerate = 160000000.00 / time_diff ;
-        }
-
-    }
-#endif
-
-#if HAVE_ARMV7
+decode_exit:
+#if HAVE_NEON
 #if CONFIG_RUNTIME_CPU_DETECT
-    if (cm->rtcd.flags & HAS_NEON)
+    if (cm->cpu_caps & HAS_NEON)
 #endif
     {
         vp8_pop_neon(dx_store_reg);
     }
 #endif
+
     pbi->common.error.setjmp = 0;
+    pbi->num_fragments = 0;
     return retcode;
 }
 int vp8dx_get_raw_frame(VP8D_COMP *pbi, YV12_BUFFER_CONFIG *sd, int64_t *time_stamp, int64_t *time_end_stamp, vp8_ppflags_t *flags)

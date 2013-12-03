@@ -278,3 +278,12 @@ nsMeterFrame::ShouldUseNativeStyle() const
                                                  NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND);
 }
 
+nsIContent*
+nsMeterFrame::GetPseudoElementContent(nsCSSPseudoElements::Type aType)
+{
+  if (aType == nsCSSPseudoElements::ePseudo_mozMeterBar) {
+    return mBarDiv;
+  }
+
+  return nsContainerFrame::GetPseudoElementContent(aType);
+}

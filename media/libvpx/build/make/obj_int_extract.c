@@ -680,7 +680,7 @@ int parse_coff(uint8_t *buf, size_t sz)
     uint32_t symoffset;
 
     char **sectionlist;  //this array holds all section names in their correct order.
-    //it is used to check if the symbol is in .bss or .data section.
+    //it is used to check if the symbol is in .bss or .rdata section.
 
     nsections = get_le16(buf + 2);
     symtab_ptr = get_le32(buf + 8);
@@ -725,15 +725,15 @@ int parse_coff(uint8_t *buf, size_t sz)
         }
         strcpy(sectionlist[i], sectionname);
 
-        if (!strcmp(sectionname, ".data")) sectionrawdata_ptr = get_le32(ptr + 20);
+        if (!strcmp(sectionname, ".rdata")) sectionrawdata_ptr = get_le32(ptr + 20);
 
         ptr += 40;
     }
 
     //log_msg("COFF: Symbol table at offset %u\n", symtab_ptr);
-    //log_msg("COFF: raw data pointer ofset for section .data is %u\n", sectionrawdata_ptr);
+    //log_msg("COFF: raw data pointer ofset for section .rdata is %u\n", sectionrawdata_ptr);
 
-    /*  The compiler puts the data with non-zero offset in .data section, but puts the data with
+    /*  The compiler puts the data with non-zero offset in .rdata section, but puts the data with
         zero offset in .bss section. So, if the data in in .bss section, set offset=0.
         Note from Wiki: In an object module compiled from C, the bss section contains
         the local variables (but not functions) that were declared with the static keyword,

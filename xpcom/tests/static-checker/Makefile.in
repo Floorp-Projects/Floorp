@@ -115,32 +115,32 @@ check:: \
   $(STATIC_PASS_TESTCASES:.cpp=.s-pass)
 
 %.s-fail: %.cpp $(GLOBAL_DEPS) $(DEHYDRA_SCRIPTS) $(call mkdir_deps,$(MDDEPDIR))
-	@printf "Compiling $(<F) to check that the static-analysis script is checking properly..."
+	@printf 'Compiling $(<F) to check that the static-analysis script is checking properly...'
 	@if $(CCC) $(OUTOPTION)/dev/null -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) >$(*F).errlog 2>&1; then \
-	  printf "fail:\nerror: compilation of $(<F) succeeded. It shouldn't have!\n"; \
+	  printf 'fail:\nerror: compilation of $(<F) succeeded. It shouldn't have!\n'; \
 	  exit 1; \
 	else \
-	  printf "ok.\n"; \
+	  printf 'ok.\n'; \
 	fi
 
 %.s-warn: %.cpp $(GLOBAL_DEPS) $(DEHYDRA_SCRIPTS) $(call mkdir_deps,$(MDDEPDIR))
-	@printf "Compiling $(<F) to check that the static-analysis script is checking properly..."
+	@printf 'Compiling $(<F) to check that the static-analysis script is checking properly...'
 	@if $(CCC) -Werror $(OUTOPTION)/dev/null -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) >$(*F).errlog 2>&1; then \
-	  printf "fail:\nerror: compilation of $(<F) succeeded with -Werror. It shouldn't have!\n"; \
+	  printf 'fail:\nerror: compilation of $(<F) succeeded with -Werror. It shouldn't have!\n'; \
 	  exit 1; \
 	fi
 	@if $(CCC) $(OUTOPTION)/dev/null -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) >$(*F).werrlog 2>&1; then \
-	  printf "ok.\n"; \
+	  printf 'ok.\n'; \
 	else \
-	  printf "fail:\nerror: compilation of $(<F) without -Werror failed. A warning should have been issued.\n"; \
+	  printf 'fail:\nerror: compilation of $(<F) without -Werror failed. A warning should have been issued.\n'; \
 	  exit 1; \
 	fi
 
 %.s-pass: %.cpp $(GLOBAL_DEPS) $(DEHYDRA_SCRIPTS) $(call mkdir_deps,$(MDDEPDIR))
-	@printf "Compiling $(<F) to check that the static-analysis script is checking properly..."
+	@printf 'Compiling $(<F) to check that the static-analysis script is checking properly...'
 	@if $(CCC) -Werror $(OUTOPTION)/dev/null -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS) >$(*F).errlog 2>&1; then \
-	  printf "ok.\n"; \
+	  printf 'ok.\n'; \
 	else \
-	  printf "fail:\nerror: compilation of $(<F) failed. It shouldn't have!\n"; \
+	  printf 'fail:\nerror: compilation of $(<F) failed. It shouldn't have!\n'; \
 	  exit 1; \
 	fi

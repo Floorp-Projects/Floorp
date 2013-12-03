@@ -31,7 +31,7 @@ ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
 MOZ_PKG_MAC_DSSTORE=$(_ABS_DIST)/branding/dsstore
 MOZ_PKG_MAC_BACKGROUND=$(_ABS_DIST)/branding/background.png
 MOZ_PKG_MAC_ICON=$(_ABS_DIST)/branding/disk.icns
-MOZ_PKG_MAC_EXTRA=--symlink "/Applications:/ "
+MOZ_PKG_MAC_EXTRA=--symlink '/Applications:/ '
 endif
 
 ifeq (WINNT,$(OS_ARCH))
@@ -53,7 +53,7 @@ $(DIST)/branding:
 	$(NSINSTALL) -D $@
 
 libs::
-	@if test -f "$(LOCALE_SRCDIR)/existing-profile-defaults.js"; then \
+	@if test -f '$(LOCALE_SRCDIR)/existing-profile-defaults.js'; then \
 	  $(PYTHON) -m mozbuild.action.preprocessor $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
 	    $(LOCALE_SRCDIR)/existing-profile-defaults.js -o $(FINAL_TARGET)/defaults/existing-profile-defaults.js; \
 	fi
@@ -74,20 +74,20 @@ chrome-%:
 
 repackage-win32-installer: WIN32_INSTALLER_OUT=$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 repackage-win32-installer: $(call ESCAPE_SPACE,$(WIN32_INSTALLER_IN)) $(SUBMAKEFILES) libs-$(AB_CD)
-	@echo "Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT)."
+	@echo 'Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT).'
 	$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY) export
 	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
 	$(MAKE) repackage-zip \
 	  AB_CD=$(AB_CD) \
 	  MOZ_PKG_FORMAT=SFX7Z \
-	  ZIP_IN="$(WIN32_INSTALLER_IN)" \
-	  ZIP_OUT="$(WIN32_INSTALLER_OUT)" \
-	  SFX_HEADER="$(PWD)/../installer/windows/l10ngen/7zSD.sfx \
-	              $(topsrcdir)/b2g/installer/windows/app.tag"
+	  ZIP_IN='$(WIN32_INSTALLER_IN)' \
+	  ZIP_OUT='$(WIN32_INSTALLER_OUT)' \
+	  SFX_HEADER='$(PWD)/../installer/windows/l10ngen/7zSD.sfx \
+	              $(topsrcdir)/b2g/installer/windows/app.tag'
 
 ifeq (WINNT,$(OS_ARCH))
 repackage-win32-installer-%:
-	@$(MAKE) repackage-win32-installer AB_CD=$* WIN32_INSTALLER_IN="$(WIN32_INSTALLER_IN)"
+	@$(MAKE) repackage-win32-installer AB_CD=$* WIN32_INSTALLER_IN='$(WIN32_INSTALLER_IN)'
 else
 repackage-win32-installer-%: ;
 endif
@@ -109,33 +109,33 @@ langpack: langpack-$(AB_CD)
 # tinderbox scripts. Alter it with caution.
 
 installers-%: clobber-% langpack-% repackage-win32-installer-% repackage-zip-%
-	@echo "repackaging done"
+	@echo 'repackaging done'
 
 # When we unpack b2g on MacOS X the platform.ini and application.ini are in slightly
 # different locations that on all other platforms
 ifeq (Darwin, $(OS_ARCH))
 ifdef LIBXUL_SDK
-GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/../Frameworks/XUL.framework/Versions/$(MOZILLA_VERSION)/platform.ini"
+GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/../Frameworks/XUL.framework/Versions/$(MOZILLA_VERSION)/platform.ini'
 else
-GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/platform.ini"
+GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/platform.ini'
 endif
-B2G_APPLICATION_INI_PATH="$(STAGEDIST)/application.ini"
+B2G_APPLICATION_INI_PATH='$(STAGEDIST)/application.ini'
 else
 ifdef LIBXUL_SDK
-GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/xulrunner/platform.ini"
+GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/xulrunner/platform.ini'
 else
-GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/platform.ini"
+GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/platform.ini'
 endif
-B2G_APPLICATION_INI_PATH="$(STAGEDIST)/application.ini"
+B2G_APPLICATION_INI_PATH='$(STAGEDIST)/application.ini'
 endif
 
 
 ident:
-	@printf "gecko_revision "
+	@printf 'gecko_revision '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(GECKO_PLATFORM_INI_PATH) Build SourceStamp
-	@printf "b2g_revision "
+	@printf 'b2g_revision '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(B2G_APPLICATION_INI_PATH) App SourceStamp
-	@printf "buildid "
+	@printf 'buildid '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(B2G_APPLICATION_INI_PATH) App BuildID
 
 merge-%:
@@ -150,5 +150,5 @@ endif
 l10n-check::
 	$(RM) -rf x-test
 	$(NSINSTALL) -D x-test/toolkit
-	echo "#define MOZ_LANG_TITLE Just testing" > x-test/toolkit/defines.inc
-	$(MAKE) installers-x-test L10NBASEDIR="$(PWD)" LOCALE_MERGEDIR="$(PWD)/mergedir"
+	echo '#define MOZ_LANG_TITLE Just testing' > x-test/toolkit/defines.inc
+	$(MAKE) installers-x-test L10NBASEDIR='$(PWD)' LOCALE_MERGEDIR='$(PWD)/mergedir'
