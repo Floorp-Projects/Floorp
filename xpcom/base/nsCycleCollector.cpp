@@ -1020,6 +1020,7 @@ class nsCycleCollector : public MemoryMultiReporter
     ccPhase mIncrementalPhase;
     GCGraph mGraph;
     nsAutoPtr<GCGraphBuilder> mBuilder;
+    nsAutoPtr<NodePool::Enumerator> mCurrNode;
     nsCOMPtr<nsICycleCollectorListener> mListener;
 
     nsIThread* mThread;
@@ -2217,14 +2218,13 @@ nsCycleCollector::MarkRoots()
     MOZ_ASSERT(!mScanInProgress);
     mScanInProgress = true;
     MOZ_ASSERT(mIncrementalPhase == GraphBuildingPhase);
+    MOZ_ASSERT(mCurrNode);
 
-    // read the PtrInfo out of the graph that we are building
-    NodePool::Enumerator queue(mGraph.mNodes);
-    while (!queue.IsDone()) {
-        PtrInfo *pi = queue.GetNext();
+    while (!mCurrNode->IsDone()) {
+        PtrInfo *pi = mCurrNode->GetNext();
         CC_AbortIfNull(pi);
         mBuilder->Traverse(pi);
-        if (queue.AtBlockEnd()) {
+        if (mCurrNode->AtBlockEnd()) {
             mBuilder->SetLastChild();
         }
     }
@@ -2238,6 +2238,7 @@ nsCycleCollector::MarkRoots()
     }
 
     mBuilder = nullptr;
+    mCurrNode = nullptr;
     mIncrementalPhase = ScanAndCollectWhitePhase;
     timeLog.Checkpoint("MarkRoots()");
 }
@@ -2902,6 +2903,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     // We've finished adding roots, and everything in the graph is a root.
     mGraph.mRootCount = mGraph.MapCount();
 
+    mCurrNode = new NodePool::Enumerator(mGraph.mNodes);
     mIncrementalPhase = GraphBuildingPhase;
 }
 
