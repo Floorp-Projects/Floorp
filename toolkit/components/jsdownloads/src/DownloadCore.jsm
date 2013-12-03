@@ -363,19 +363,22 @@ this.Download.prototype = {
 
     // This function propagates progress from the DownloadSaver object, unless
     // it comes in late from a download attempt that was replaced by a new one.
+    // If the cancellation process for the download has started, then the update
+    // is ignored.
     function DS_setProgressBytes(aCurrentBytes, aTotalBytes, aHasPartialData)
     {
-      if (this._currentAttempt == currentAttempt || !this._currentAttempt) {
+      if (this._currentAttempt == currentAttempt) {
         this._setBytes(aCurrentBytes, aTotalBytes, aHasPartialData);
       }
     }
 
     // This function propagates download properties from the DownloadSaver
     // object, unless it comes in late from a download attempt that was
-    // replaced by a new one.
+    // replaced by a new one.  If the cancellation process for the download has
+    // started, then the update is ignored.
     function DS_setProperties(aOptions)
     {
-      if (this._currentAttempt && this._currentAttempt != currentAttempt) {
+      if (this._currentAttempt != currentAttempt) {
         return;
       }
 
