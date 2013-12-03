@@ -261,11 +261,13 @@ DeprecatedTextureHost::PrintInfo(nsACString& aTo, const char* aPrefix)
   AppendToString(aTo, mFlags, " [flags=", "]");
 }
 
-
-
-
-
-
+void
+DeprecatedTextureHost::SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator)
+{
+  MOZ_ASSERT(!mBuffer || mBuffer == aBuffer, "Will leak the old mBuffer");
+  mBuffer = aBuffer;
+  mDeAllocator = aAllocator;
+}
 
 BufferTextureHost::BufferTextureHost(uint64_t aID,
                                      gfx::SurfaceFormat aFormat,
