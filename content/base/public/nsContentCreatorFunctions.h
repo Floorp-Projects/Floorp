@@ -34,7 +34,8 @@ NS_NewElement(nsIContent** aResult,
               mozilla::dom::FromParser aFromParser);
 
 nsresult
-NS_NewXMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo);
+NS_NewXMLElement(mozilla::dom::Element** aResult,
+                 already_AddRefed<nsINodeInfo> aNodeInfo);
 
 nsresult
 NS_NewHTMLElement(mozilla::dom::Element** aResult,
