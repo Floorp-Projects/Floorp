@@ -127,6 +127,10 @@ struct nsCachedStyleData
     return nsStyleStructID_Reset_Start <= aSID;
   }
 
+  static bool IsInherited(const nsStyleStructID aSID) {
+    return !IsReset(aSID);
+  }
+
   static uint32_t GetBitForSID(const nsStyleStructID aSID) {
     return 1 << aSID;
   }

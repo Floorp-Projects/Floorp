@@ -44,7 +44,7 @@ public:
   virtual bool CanSavePresentation(nsIRequest *aNewRequest);
 
   const nsCString& GetType() const { return mMimeType; }
-  nsIContent*      GetPluginContent() { return mPluginContent; }
+  Element*         GetPluginContent() { return mPluginContent; }
 
   void StartLayout() { MediaDocument::StartLayout(); }
 
@@ -52,7 +52,7 @@ public:
 protected:
   nsresult CreateSyntheticPluginDocument();
 
-  nsCOMPtr<nsIContent>                     mPluginContent;
+  nsCOMPtr<Element>                        mPluginContent;
   nsRefPtr<MediaDocumentStreamListener>    mStreamListener;
   nsCString                                mMimeType;
 };

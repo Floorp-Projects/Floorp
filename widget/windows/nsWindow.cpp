@@ -246,7 +246,7 @@ bool            nsWindow::sAllowD3D9              = false;
 TriStateBool nsWindow::sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
 
 // Used in OOPP plugin focus processing.
-const PRUnichar* kOOPPPluginFocusEventId   = L"OOPP Plugin Focus Widget Event";
+const wchar_t* kOOPPPluginFocusEventId   = L"OOPP Plugin Focus Widget Event";
 uint32_t        nsWindow::sOOPPPluginFocusEvent   =
                   RegisterWindowMessageW(kOOPPPluginFocusEventId);
 
@@ -1997,7 +1997,7 @@ nsWindow::ResetLayout()
 // Internally track the caption status via a window property. Required
 // due to our internal handling of WM_NCACTIVATE when custom client
 // margins are set.
-static const PRUnichar kManageWindowInfoProperty[] = L"ManageWindowInfoProperty";
+static const wchar_t kManageWindowInfoProperty[] = L"ManageWindowInfoProperty";
 typedef BOOL (WINAPI *GetWindowInfoPtr)(HWND hwnd, PWINDOWINFO pwi);
 static GetWindowInfoPtr sGetWindowInfoPtrStub = nullptr;
 
@@ -4206,7 +4206,7 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
         // Check for Adobe Reader X sync activate message from their
         // helper window and ignore. Fixes an annoying focus problem.
         if ((InSendMessageEx(nullptr) & (ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
-          PRUnichar szClass[10];
+          wchar_t szClass[10];
           HWND focusWnd = (HWND)lParam;
           if (IsWindowVisible(focusWnd) &&
               GetClassNameW(focusWnd, szClass,

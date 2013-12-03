@@ -58,19 +58,9 @@ nsProgressFrame::DestroyFrom(nsIFrame* aDestructRoot)
 nsresult
 nsProgressFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
-  // Get the NodeInfoManager and tag necessary to create the progress bar div.
+  // Create the progress bar div.
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
-
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nullptr,
-                                                 kNameSpaceID_XHTML,
-                                                 nsIDOMNode::ELEMENT_NODE);
-  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
-
-  // Create the div.
-  nsresult rv = NS_NewHTMLElement(getter_AddRefs(mBarDiv), nodeInfo.forget(),
-                                  mozilla::dom::NOT_FROM_PARSER);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mBarDiv = doc->CreateHTMLElement(nsGkAtoms::div);
 
   // Associate ::-moz-progress-bar pseudo-element to the anonymous child.
   nsCSSPseudoElements::Type pseudoType = nsCSSPseudoElements::ePseudo_mozProgressBar;
@@ -288,12 +278,12 @@ nsProgressFrame::ShouldUseNativeStyle() const
                                                  NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND);
 }
 
-nsIContent*
-nsProgressFrame::GetPseudoElementContent(nsCSSPseudoElements::Type aType)
+Element*
+nsProgressFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
 {
   if (aType == nsCSSPseudoElements::ePseudo_mozProgressBar) {
     return mBarDiv;
   }
 
-  return nsContainerFrame::GetPseudoElementContent(aType);
+  return nsContainerFrame::GetPseudoElement(aType);
 }

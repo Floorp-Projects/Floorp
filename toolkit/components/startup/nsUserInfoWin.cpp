@@ -32,7 +32,7 @@ nsUserInfo::GetUsername(char **aUsername)
   *aUsername = nullptr;
 
   // ULEN is the max username length as defined in lmcons.h
-  PRUnichar username[UNLEN +1];
+  wchar_t username[UNLEN +1];
   DWORD size = mozilla::ArrayLength(username);
   if (!GetUserNameW(username, &size))
     return NS_ERROR_FAILURE;
@@ -47,7 +47,7 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
   NS_ENSURE_ARG_POINTER(aFullname);
   *aFullname = nullptr;
 
-  PRUnichar fullName[512];
+  wchar_t fullName[512];
   DWORD size = mozilla::ArrayLength(fullName);
 
   if (GetUserNameExW(NameDisplay, fullName, &size)) {
@@ -57,7 +57,7 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
 
     // Try to use the net APIs regardless of the error because it may be
     // able to obtain the information.
-    PRUnichar username[UNLEN + 1];
+    wchar_t username[UNLEN + 1];
     size = mozilla::ArrayLength(username);
     if (!GetUserNameW(username, &size)) {
       // ERROR_NONE_MAPPED means the user info is not filled out on this computer
@@ -119,7 +119,7 @@ nsUserInfo::GetEmailAddress(char **aEmailAddress)
   *aEmailAddress = nullptr;
 
   // RFC3696 says max length of an email address is 254
-  PRUnichar emailAddress[255];
+  wchar_t emailAddress[255];
   DWORD size = mozilla::ArrayLength(emailAddress);
 
   if (!GetUserNameExW(NameUserPrincipal, emailAddress, &size)) {

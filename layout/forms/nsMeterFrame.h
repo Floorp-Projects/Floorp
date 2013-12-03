@@ -15,6 +15,8 @@ class nsMeterFrame : public nsContainerFrame,
                      public nsIAnonymousContentCreator
 
 {
+  typedef mozilla::dom::Element Element;
+
 public:
   NS_DECL_QUERYFRAME_TARGET(nsMeterFrame)
   NS_DECL_QUERYFRAME
@@ -66,7 +68,7 @@ public:
    */
   bool ShouldUseNativeStyle() const;
 
-  virtual nsIContent* GetPseudoElementContent(nsCSSPseudoElements::Type aType) MOZ_OVERRIDE;
+  virtual Element* GetPseudoElement(nsCSSPseudoElements::Type aType) MOZ_OVERRIDE;
 
 protected:
   // Helper function which reflow the anonymous div frame.
@@ -78,7 +80,7 @@ protected:
    * The div used to show the meter bar.
    * @see nsMeterFrame::CreateAnonymousContent
    */
-  nsCOMPtr<nsIContent> mBarDiv;
+  nsCOMPtr<Element> mBarDiv;
 };
 
 #endif

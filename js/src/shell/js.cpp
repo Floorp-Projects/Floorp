@@ -1489,7 +1489,7 @@ GetScriptAndPCArgs(JSContext *cx, unsigned argc, jsval *argv, MutableHandleScrip
         if (argc > intarg) {
             if (!JS::ToInt32(cx, HandleValue::fromMarkedLocation(&argv[intarg]), ip))
                 return false;
-            if ((uint32_t)*ip >= script->length) {
+            if ((uint32_t)*ip >= script->length()) {
                 JS_ReportError(cx, "Invalid PC");
                 return false;
             }
@@ -1552,12 +1552,8 @@ Trap(JSContext *cx, unsigned argc, jsval *vp)
     args[argc].setString(str);
     if (!GetScriptAndPCArgs(cx, argc, args.array(), &script, &i))
         return false;
-    if (uint32_t(i) >= script->length) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_TRAP_USAGE);
-        return false;
-    }
     args.rval().setUndefined();
-    return JS_SetTrap(cx, script, script->code + i, TrapHandler, STRING_TO_JSVAL(str));
+    return JS_SetTrap(cx, script, script->offsetToPC(i), TrapHandler, STRING_TO_JSVAL(str));
 }
 
 static bool
@@ -1569,7 +1565,7 @@ Untrap(JSContext *cx, unsigned argc, jsval *vp)
 
     if (!GetScriptAndPCArgs(cx, args.length(), args.array(), &script, &i))
         return false;
-    JS_ClearTrap(cx, script, script->code + i, nullptr, nullptr);
+    JS_ClearTrap(cx, script, script->offsetToPC(i), nullptr, nullptr);
     args.rval().setUndefined();
     return true;
 }
@@ -1646,7 +1642,7 @@ LineToPC(JSContext *cx, unsigned argc, jsval *vp)
     jsbytecode *pc = JS_LineNumberToPC(cx, script, lineno);
     if (!pc)
         return false;
-    args.rval().setInt32(pc - script->code);
+    args.rval().setInt32(script->pcToOffset(pc));
     return true;
 }
 
@@ -1660,7 +1656,7 @@ PCToLine(JSContext *cx, unsigned argc, jsval *vp)
 
     if (!GetScriptAndPCArgs(cx, args.length(), args.array(), &script, &i))
         return false;
-    lineno = JS_PCToLineNumber(cx, script, script->code + i);
+    lineno = JS_PCToLineNumber(cx, script, script->offsetToPC(i));
     if (!lineno)
         return false;
     args.rval().setInt32(lineno);
@@ -1678,7 +1674,7 @@ UpdateSwitchTableBounds(JSContext *cx, HandleScript script, unsigned offset,
     ptrdiff_t jmplen;
     int32_t low, high, n;
 
-    pc = script->code + offset;
+    pc = script->offsetToPC(offset);
     op = JSOp(*pc);
     switch (op) {
       case JSOP_TABLESWITCH:
@@ -1697,7 +1693,7 @@ UpdateSwitchTableBounds(JSContext *cx, HandleScript script, unsigned offset,
         return;
     }
 
-    *start = (unsigned)(pc - script->code);
+    *start = script->pcToOffset(pc);
     *end = *start + (unsigned)(n * jmplen);
 }
 
@@ -1769,7 +1765,7 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             break;
 
           case SRC_TABLESWITCH: {
-            JSOp op = JSOp(script->code[offset]);
+            JSOp op = JSOp(script->code()[offset]);
             JS_ASSERT(op == JSOP_TABLESWITCH);
             Sprint(sp, " length %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             UpdateSwitchTableBounds(cx, script, offset,
@@ -1777,7 +1773,7 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             break;
           }
           case SRC_CONDSWITCH: {
-            JSOp op = JSOp(script->code[offset]);
+            JSOp op = JSOp(script->code()[offset]);
             JS_ASSERT(op == JSOP_CONDSWITCH);
             Sprint(sp, " length %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             unsigned caseOff = (unsigned) js_GetSrcNoteOffset(sn, 1);
@@ -1789,7 +1785,7 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
           }
 
           case SRC_TRY:
-            JS_ASSERT(JSOp(script->code[offset]) == JSOP_TRY);
+            JS_ASSERT(JSOp(script->code()[offset]) == JSOP_TRY);
             Sprint(sp, " offset to jump %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             break;
 
@@ -2081,8 +2077,8 @@ DisassWithSrc(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         }
 
-        pc = script->code;
-        end = pc + script->length;
+        pc = script->code();
+        end = script->codeEnd();
 
         Sprinter sprinter(cx);
         if (!sprinter.init()) {
@@ -2127,7 +2123,7 @@ DisassWithSrc(JSContext *cx, unsigned argc, jsval *vp)
                 }
             }
 
-            len = js_Disassemble1(cx, script, pc, pc - script->code, true, &sprinter);
+            len = js_Disassemble1(cx, script, pc, script->pcToOffset(pc), true, &sprinter);
             if (!len) {
                 ok = false;
                 goto bail;
@@ -3390,6 +3386,9 @@ ReadFile(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
 
     RootedString givenPath(cx, args[0].toString());
     RootedString str(cx, ResolvePath(cx, givenPath, scriptRelative));
+    if (!str)
+        return false;
+
     JSAutoByteString filename(cx, str);
     if (!filename)
         return false;

@@ -131,7 +131,7 @@ function onTestOutput(e) {
   }
 
   for (var i = 0; i < 2; ++i) {
-    compareBuffers(e.inputBuffer.getChannelData(i), referenceOutput[i]);
+    compareChannels(e.inputBuffer.getChannelData(i), referenceOutput[i]);
   }
   e.target.onaudioprocess = null;
   e.target.disconnect();

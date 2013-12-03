@@ -2860,7 +2860,7 @@ LambdaIsGetElem(JSContext *cx, JSObject &lambda, MutableHandleObject pobj)
     if (!script)
         return false;
 
-    jsbytecode *pc = script->code;
+    jsbytecode *pc = script->code();
 
     /*
      * JSOP_GETALIASEDVAR tells us exactly where to find the base object 'b'.
