@@ -189,45 +189,30 @@ NameSpaceManagerImpl::GetNameSpaceID(const nsAString& aURI)
 }
 
 nsresult
-NS_NewElement(nsIContent** aResult,
+NS_NewElement(Element** aResult,
               already_AddRefed<nsINodeInfo> aNodeInfo, FromParser aFromParser)
 {
   int32_t ns = aNodeInfo.get()->NamespaceID();
   if (ns == kNameSpaceID_XHTML) {
-    nsCOMPtr<Element> el;
-    nsresult rv = NS_NewHTMLElement(getter_AddRefs(el), aNodeInfo, aFromParser);
-    el.forget(aResult);
-    return rv;
+    return NS_NewHTMLElement(aResult, aNodeInfo, aFromParser);
   }
 #ifdef MOZ_XUL
   if (ns == kNameSpaceID_XUL) {
-    nsCOMPtr<Element> el;
-    nsresult rv = NS_NewXULElement(getter_AddRefs(el), aNodeInfo);
-    el.forget(aResult);
-    return rv;
+    return NS_NewXULElement(aResult, aNodeInfo);
   }
 #endif
   if (ns == kNameSpaceID_MathML) {
-    nsCOMPtr<Element> el;
-    nsresult rv = NS_NewMathMLElement(getter_AddRefs(el), aNodeInfo);
-    el.forget(aResult);
-    return rv;
+    return NS_NewMathMLElement(aResult, aNodeInfo);
   }
   if (ns == kNameSpaceID_SVG) {
-    nsCOMPtr<Element> el;
-    nsresult rv = NS_NewSVGElement(getter_AddRefs(el), aNodeInfo, aFromParser);
-    el.forget(aResult);
-    return rv;
+    return NS_NewSVGElement(aResult, aNodeInfo, aFromParser);
   }
   if (ns == kNameSpaceID_XBL && aNodeInfo.get()->Equals(nsGkAtoms::children)) {
     NS_ADDREF(*aResult = new XBLChildrenElement(aNodeInfo));
     return NS_OK;
   }
 
-  nsCOMPtr<Element> el;
-  nsresult rv = NS_NewXMLElement(getter_AddRefs(el), aNodeInfo);
-  el.forget(aResult);
-  return el;
+  return NS_NewXMLElement(aResult, aNodeInfo);
 }
 
 bool

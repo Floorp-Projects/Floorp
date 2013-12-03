@@ -29,7 +29,7 @@ class Element;
 } // namespace mozilla
 
 nsresult
-NS_NewElement(nsIContent** aResult,
+NS_NewElement(mozilla::dom::Element** aResult,
               already_AddRefed<nsINodeInfo> aNodeInfo,
               mozilla::dom::FromParser aFromParser);
 
