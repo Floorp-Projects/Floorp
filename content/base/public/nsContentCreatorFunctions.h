@@ -62,7 +62,8 @@ NS_TrustedNewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNod
 #endif
 
 nsresult
-NS_NewSVGElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewSVGElement(mozilla::dom::Element** aResult,
+                 already_AddRefed<nsINodeInfo> aNodeInfo,
                  mozilla::dom::FromParser aFromParser);
 
 nsresult
