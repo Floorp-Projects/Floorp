@@ -3026,7 +3026,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * generated and which corresponds to the specified pseudo-element type,
    * or nullptr if there is no such anonymous content.
    */
-  virtual nsIContent* GetPseudoElementContent(nsCSSPseudoElements::Type aType);
+  virtual mozilla::dom::Element* GetPseudoElement(nsCSSPseudoElements::Type aType);
 
 protected:
   // Members
