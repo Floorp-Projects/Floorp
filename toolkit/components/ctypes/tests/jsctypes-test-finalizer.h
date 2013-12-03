@@ -13,7 +13,7 @@ NS_EXTERN_C
   EXPORT_CDECL(size_t) test_finalizer_acq_size_t(size_t i);
   EXPORT_CDECL(void) test_finalizer_rel_size_t(size_t i);
   EXPORT_CDECL(size_t) test_finalizer_rel_size_t_return_size_t(size_t i);
-  EXPORT_CDECL(RECT) test_finalizer_rel_size_t_return_struct_t(size_t i);
+  EXPORT_CDECL(myRECT) test_finalizer_rel_size_t_return_struct_t(size_t i);
   EXPORT_CDECL(bool) test_finalizer_cmp_size_t(size_t a, size_t b);
 
   EXPORT_CDECL(int32_t) test_finalizer_acq_int32_t(size_t i);
@@ -41,9 +41,9 @@ NS_EXTERN_C
   EXPORT_CDECL(bool) test_finalizer_cmp_null_t(void *a, void *b);
   EXPORT_CDECL(bool) test_finalizer_null_resource_is_acquired(size_t i);
 
-  EXPORT_CDECL(RECT) test_finalizer_acq_struct_t(int i);
-  EXPORT_CDECL(void) test_finalizer_rel_struct_t(RECT i);
-  EXPORT_CDECL(bool) test_finalizer_cmp_struct_t(RECT a, RECT b);
+  EXPORT_CDECL(myRECT) test_finalizer_acq_struct_t(int i);
+  EXPORT_CDECL(void) test_finalizer_rel_struct_t(myRECT i);
+  EXPORT_CDECL(bool) test_finalizer_cmp_struct_t(myRECT a, myRECT b);
 
   typedef void (*afun)(size_t);
   EXPORT_CDECL(afun*) test_finalizer_rel_null_function();
