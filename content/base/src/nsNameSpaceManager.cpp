@@ -220,7 +220,11 @@ NS_NewElement(nsIContent** aResult,
     NS_ADDREF(*aResult = new XBLChildrenElement(aNodeInfo));
     return NS_OK;
   }
-  return NS_NewXMLElement(aResult, aNodeInfo);
+
+  nsCOMPtr<Element> el;
+  nsresult rv = NS_NewXMLElement(getter_AddRefs(el), aNodeInfo);
+  el.forget(aResult);
+  return el;
 }
 
 bool
