@@ -20,7 +20,7 @@ using namespace mozilla::a11y;
 bool
 IsModuleVersionLessThan(HMODULE aModuleHandle, DWORD aMajor, DWORD aMinor)
 {
-  PRUnichar fileName[MAX_PATH];
+  wchar_t fileName[MAX_PATH];
   ::GetModuleFileNameW(aModuleHandle, fileName, MAX_PATH);
 
   DWORD dummy = 0;
