@@ -19,17 +19,23 @@ function ifWebGLSupported() {
 
   reload(target);
 
-  let [firstProgramActor, secondProgramActor] = yield promise.all([
-    getPrograms(gFront, 2, (actors) => {
-      // Fired upon each actor addition, we want to check only
-      // after the first actor has been added so we can test state
-      if (actors.length === 1)
-        checkFirstProgram();
-      if (actors.length === 2)
-        checkSecondProgram();
-    }),
-    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
-  ]).then(([programs, ]) => programs);
+  let firstProgramActor = yield once(gFront, "program-linked");
+
+  is(ShadersListView.itemCount, 1,
+    "The shaders list contains one entry.");
+  is(ShadersListView.selectedItem, ShadersListView.items[0],
+    "The shaders list has a correct item selected.");
+  is(ShadersListView.selectedIndex, 0,
+    "The shaders list has a correct index selected.");
+
+  let secondProgramActor = yield once(gFront, "program-linked");
+
+  is(ShadersListView.itemCount, 2,
+    "The shaders list contains two entries.");
+  is(ShadersListView.selectedItem, ShadersListView.items[0],
+    "The shaders list has a correct item selected.");
+  is(ShadersListView.selectedIndex, 0,
+    "The shaders list has a correct index selected.");
 
   is(ShadersListView.labels[0], L10N.getFormatStr("shadersList.programLabel", 0),
     "The correct first label is shown in the shaders list.");
@@ -67,21 +73,10 @@ function ifWebGLSupported() {
 
   yield teardown(panel);
   finish();
+}
 
-  function checkFirstProgram () {
-    is(ShadersListView.itemCount, 1,
-      "The shaders list contains one entry.");
-    is(ShadersListView.selectedItem, ShadersListView.items[0],
-      "The shaders list has a correct item selected.");
-    is(ShadersListView.selectedIndex, 0,
-      "The shaders list has a correct index selected.");
-  }
-  function checkSecondProgram () {
-    is(ShadersListView.itemCount, 2,
-      "The shaders list contains two entries.");
-    is(ShadersListView.selectedItem, ShadersListView.items[0],
-      "The shaders list has a correct item selected.");
-    is(ShadersListView.selectedIndex, 0,
-      "The shaders list has a correct index selected.");
-  }
+function once(aTarget, aEvent) {
+  let deferred = promise.defer();
+  aTarget.once(aEvent, deferred.resolve);
+  return deferred.promise;
 }
