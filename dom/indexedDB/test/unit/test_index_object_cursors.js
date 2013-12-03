@@ -34,10 +34,17 @@ function testSteps()
 
   event.target.onsuccess = continueToNextStep;
 
+  // Bug 943409.
+  var bug943409 = [];
+  (function () { bug943409 })();
+
   for (let objectStoreIndex in objectStoreData) {
     const objectStoreInfo = objectStoreData[objectStoreIndex];
     let objectStore = db.createObjectStore(objectStoreInfo.name,
                                            objectStoreInfo.options);
+
+    bug943409.push(objectStore);
+
     for (let indexIndex in indexData) {
       const indexInfo = indexData[indexIndex];
       let index = objectStore.createIndex(indexInfo.name,
@@ -141,5 +148,7 @@ function testSteps()
   }
 
   finishTest();
+  // Bug 943409.
+  gc();
   yield undefined;
 }
