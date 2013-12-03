@@ -4726,7 +4726,7 @@ nsGlobalWindow::SetOuterHeight(int32_t aOuterHeight)
 nsIntPoint
 nsGlobalWindow::GetScreenXY(ErrorResult& aError)
 {
-  FORWARD_TO_OUTER_OR_THROW(GetScreenXY, (aError), aError, nsIntPoint(0, 0));
+  MOZ_ASSERT(IsOuterWindow());
 
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = GetTreeOwnerWindow();
   if (!treeOwnerAsWin) {
@@ -4742,6 +4742,8 @@ nsGlobalWindow::GetScreenXY(ErrorResult& aError)
 int32_t
 nsGlobalWindow::GetScreenX(ErrorResult& aError)
 {
+  FORWARD_TO_OUTER_OR_THROW(GetScreenX, (aError), aError, 0);
+
   return DevToCSSIntPixels(GetScreenXY(aError).x);
 }
 
@@ -5091,6 +5093,8 @@ nsGlobalWindow::SetScreenX(int32_t aScreenX)
 int32_t
 nsGlobalWindow::GetScreenY(ErrorResult& aError)
 {
+  FORWARD_TO_OUTER_OR_THROW(GetScreenY, (aError), aError, 0);
+
   return DevToCSSIntPixels(GetScreenXY(aError).y);
 }
 
