@@ -8,18 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "./vpx_rtcd.h"
 
-#include "vpx_scale/yv12config.h"
-#include "vpx_mem/vpx_mem.h"
-#include "vpx_scale/vpxscale.h"
+extern void vp8_yv12_copy_frame_func_neon(struct yv12_buffer_config *src_ybc,
+                                          struct yv12_buffer_config *dst_ybc);
 
-extern void vp8_yv12_copy_frame_func_neon(YV12_BUFFER_CONFIG *src_ybc,
-                                          YV12_BUFFER_CONFIG *dst_ybc);
+void vp8_yv12_copy_frame_neon(struct yv12_buffer_config *src_ybc,
+                              struct yv12_buffer_config *dst_ybc) {
+  vp8_yv12_copy_frame_func_neon(src_ybc, dst_ybc);
 
-void vp8_yv12_copy_frame_neon(YV12_BUFFER_CONFIG *src_ybc,
-                              YV12_BUFFER_CONFIG *dst_ybc)
-{
-    vp8_yv12_copy_frame_func_neon(src_ybc, dst_ybc);
-
-    vp8_yv12_extend_frame_borders_neon(dst_ybc);
+  vp8_yv12_extend_frame_borders_neon(dst_ybc);
 }

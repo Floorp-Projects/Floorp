@@ -63,8 +63,8 @@ jclass AndroidBridge::GetClassGlobalRef(JNIEnv* env, const char* className)
 {
     jobject classLocalRef = env->FindClass(className);
     if (!classLocalRef) {
-        ALOG(">>> FATAL JNI ERROR! FindClass(className=\"%s\") failed. Did "
-             "ProGuard optimize away a non-public class?", className);
+        ALOG(">>> FATAL JNI ERROR! FindClass(className=\"%s\") failed. Did ProGuard optimize away something it shouldn't have?",
+             className);
         env->ExceptionDescribe();
         MOZ_CRASH();
     }
@@ -85,8 +85,8 @@ jmethodID AndroidBridge::GetMethodID(JNIEnv* env, jclass jClass,
    jmethodID methodID = env->GetMethodID(jClass, methodName, methodType);
    if (!methodID) {
        ALOG(">>> FATAL JNI ERROR! GetMethodID(methodName=\"%s\", "
-            "methodType=\"%s\") failed. Did ProGuard optimize away a non-"
-            "public method?", methodName, methodType);
+            "methodType=\"%s\") failed. Did ProGuard optimize away something it shouldn't have?",
+            methodName, methodType);
        env->ExceptionDescribe();
        MOZ_CRASH();
    }
@@ -99,8 +99,8 @@ jmethodID AndroidBridge::GetStaticMethodID(JNIEnv* env, jclass jClass,
   jmethodID methodID = env->GetStaticMethodID(jClass, methodName, methodType);
   if (!methodID) {
       ALOG(">>> FATAL JNI ERROR! GetStaticMethodID(methodName=\"%s\", "
-           "methodType=\"%s\") failed. Did ProGuard optimize away a non-"
-           "public method?", methodName, methodType);
+           "methodType=\"%s\") failed. Did ProGuard optimize away something it shouldn't have?",
+           methodName, methodType);
       env->ExceptionDescribe();
       MOZ_CRASH();
   }
@@ -113,8 +113,8 @@ jfieldID AndroidBridge::GetFieldID(JNIEnv* env, jclass jClass,
     jfieldID fieldID = env->GetFieldID(jClass, fieldName, fieldType);
     if (!fieldID) {
         ALOG(">>> FATAL JNI ERROR! GetFieldID(fieldName=\"%s\", "
-             "fieldType=\"%s\") failed. Did ProGuard optimize away a non-"
-             "public field?", fieldName, fieldType);
+             "fieldType=\"%s\") failed. Did ProGuard optimize away something it shouldn't have?",
+             fieldName, fieldType);
         env->ExceptionDescribe();
         MOZ_CRASH();
     }
@@ -127,8 +127,8 @@ jfieldID AndroidBridge::GetStaticFieldID(JNIEnv* env, jclass jClass,
     jfieldID fieldID = env->GetStaticFieldID(jClass, fieldName, fieldType);
     if (!fieldID) {
         ALOG(">>> FATAL JNI ERROR! GetStaticFieldID(fieldName=\"%s\", "
-             "fieldType=\"%s\") failed. Did ProGuard optimize away a non-"
-             "public field?", fieldName, fieldType);
+             "fieldType=\"%s\") failed. Did ProGuard optimize away something it shouldn't have?",
+             fieldName, fieldType);
         env->ExceptionDescribe();
         MOZ_CRASH();
     }

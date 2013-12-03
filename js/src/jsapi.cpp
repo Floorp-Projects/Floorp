@@ -1669,11 +1669,6 @@ JS_RemoveScriptRootRT(JSRuntime *rt, JSScript **rp)
     RemoveRoot(rt, (void *)rp);
 }
 
-JS_NEVER_INLINE JS_PUBLIC_API(void)
-JS_AnchorPtr(void *p)
-{
-}
-
 JS_PUBLIC_API(bool)
 JS_AddExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {

@@ -17,10 +17,10 @@ const {
 const { TextEncoder } = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 
 var EventEmitter = require("devtools/shared/event-emitter");
-var promise      = require("sdk/core/promise");
 var Cleopatra    = require("devtools/profiler/cleopatra");
 var Sidebar      = require("devtools/profiler/sidebar");
 var ProfilerController = require("devtools/profiler/controller");
+var { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");

@@ -50,7 +50,7 @@ ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
 MOZ_PKG_MAC_DSSTORE=$(_ABS_DIST)/branding/dsstore
 MOZ_PKG_MAC_BACKGROUND=$(_ABS_DIST)/branding/background.png
 MOZ_PKG_MAC_ICON=$(_ABS_DIST)/branding/disk.icns
-MOZ_PKG_MAC_EXTRA=--symlink "/Applications:/ "
+MOZ_PKG_MAC_EXTRA=--symlink '/Applications:/ '
 endif
 
 ifeq (WINNT,$(OS_ARCH))
@@ -61,10 +61,10 @@ UNINSTALLER_PACKAGE_HOOK = $(RM) -r $(STAGEDIST)/uninstall; \
     cp ../installer/windows/l10ngen/setup.exe $(_ABS_DIST)/l10n-stage; \
     $(NULL)
 
-STUB_HOOK = $(NSINSTALL) -D "$(_ABS_DIST)/$(PKG_INST_PATH)"; \
-    $(RM) "$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe"; \
-    cp ../installer/windows/l10ngen/stub.exe "$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe"; \
-    chmod 0755 "$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe"; \
+STUB_HOOK = $(NSINSTALL) -D '$(_ABS_DIST)/$(PKG_INST_PATH)'; \
+    $(RM) '$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe'; \
+    cp ../installer/windows/l10ngen/stub.exe '$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe'; \
+    chmod 0755 '$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe'; \
     $(NULL)
 endif
 
@@ -140,20 +140,20 @@ endif
 
 repackage-win32-installer: WIN32_INSTALLER_OUT=$(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 repackage-win32-installer: $(call ESCAPE_WILDCARD,$(WIN32_INSTALLER_IN)) $(SUBMAKEFILES) libs-$(AB_CD)
-	@echo "Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT)."
+	@echo 'Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT).'
 	$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY) export
 	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
 	$(MAKE) repackage-zip \
 	  AB_CD=$(AB_CD) \
 	  MOZ_PKG_FORMAT=SFX7Z \
-	  ZIP_IN="$(WIN32_INSTALLER_IN)" \
-	  ZIP_OUT="$(WIN32_INSTALLER_OUT)" \
-	  SFX_HEADER="$(PWD)/../installer/windows/l10ngen/7zSD.sfx \
-	              $(topsrcdir)/browser/installer/windows/app.tag"
+	  ZIP_IN='$(WIN32_INSTALLER_IN)' \
+	  ZIP_OUT='$(WIN32_INSTALLER_OUT)' \
+	  SFX_HEADER='$(PWD)/../installer/windows/l10ngen/7zSD.sfx \
+	              $(topsrcdir)/browser/installer/windows/app.tag'
 
 ifeq (WINNT,$(OS_ARCH))
 repackage-win32-installer-%: $(STAGEDIST)
-	@$(MAKE) repackage-win32-installer AB_CD=$* WIN32_INSTALLER_IN="$(WIN32_INSTALLER_IN)"
+	@$(MAKE) repackage-win32-installer AB_CD=$* WIN32_INSTALLER_IN='$(WIN32_INSTALLER_IN)'
 
 repackage-zip-%: repackage-win32-installer-%
 else
@@ -182,7 +182,7 @@ langpack: langpack-$(AB_CD)
 # tinderbox scripts. Alter it with caution.
 
 installers-%: clobber-% langpack-% repackage-win32-installer-% repackage-zip-%
-	@echo "repackaging done"
+	@echo 'repackaging done'
 
 ifdef MOZ_UPDATER
 # Note that we want updater.ini to be in the top directory, not the browser/
@@ -190,13 +190,13 @@ ifdef MOZ_UPDATER
 libs:: $(call MERGE_FILE,updater/updater.ini) $(call mkdir_deps,$(DIST)/bin)
 ifeq ($(OS_ARCH),WINNT)
 	cat $< $(srcdir)/../installer/windows/nsis/updater_append.ini | \
-	  sed -e "s/^InfoText=/Info=/" -e "s/^TitleText=/Title=/" | \
-	  sed -e "s/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/" > \
+	  sed -e 's/^InfoText=/Info=/' -e 's/^TitleText=/Title=/' | \
+	  sed -e 's/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/' > \
 	  $(FINAL_TARGET)/../updater.ini
 else
 	cat $< | \
-	  sed -e "s/^InfoText=/Info=/" -e "s/^TitleText=/Title=/" | \
-	  sed -e "s/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/" > \
+	  sed -e 's/^InfoText=/Info=/' -e 's/^TitleText=/Title=/' | \
+	  sed -e 's/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/' > \
 	  $(FINAL_TARGET)/../updater.ini
 endif
 endif
@@ -207,10 +207,10 @@ libs:: crashreporter-override.ini
 endif
 
 ident:
-	@printf "fx_revision "
+	@printf 'fx_revision '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
 	    $(STAGEDIST)/application.ini App SourceStamp
-	@printf "buildid "
+	@printf 'buildid '
 	@$(PYTHON) $(topsrcdir)/config/printconfigsetting.py \
 	    $(STAGEDIST)/application.ini App BuildID
 
@@ -227,7 +227,7 @@ l10n-check:: INNER_UNMAKE_PACKAGE=true
 l10n-check::
 	$(RM) -rf x-test
 	$(NSINSTALL) -D x-test/toolkit
-	echo "#define MOZ_LANG_TITLE Just testing" > x-test/toolkit/defines.inc
-	$(MAKE) installers-x-test L10NBASEDIR="$(PWD)" LOCALE_MERGEDIR="$(PWD)/mergedir"
+	echo '#define MOZ_LANG_TITLE Just testing' > x-test/toolkit/defines.inc
+	$(MAKE) installers-x-test L10NBASEDIR='$(PWD)' LOCALE_MERGEDIR='$(PWD)/mergedir'
 	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/unpack.py $(DIST)/l10n-stage/$(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)
 	cd $(DIST)/l10n-stage && test $$(cat $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/update.locale) = x-test

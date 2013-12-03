@@ -47,9 +47,13 @@ public:
                              AudioFileStreamPropertyID aPropertyID,
                              UInt32 *aFlags);
 
+  virtual void NotifyDataArrived(const char* aBuffer,
+                                 uint32_t aLength,
+                                 int64_t aOffset) MOZ_OVERRIDE;
+
 private:
   void SetupDecoder();
-  nsresult ReadAndNotify(uint32_t *aNumBytes, char *aData);
+  nsresult Read(uint32_t *aNumBytes, char *aData);
 
   static OSStatus PassthroughInputDataCallback(AudioConverterRef aAudioConverter,
                                                UInt32 *aNumDataPackets,
