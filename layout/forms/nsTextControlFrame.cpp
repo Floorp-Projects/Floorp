@@ -1437,11 +1437,7 @@ nsTextControlFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
 {
   if (aType == nsCSSPseudoElements::ePseudo_mozPlaceholder) {
     nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
-    nsIContent* placeholderNode = txtCtrl->GetPlaceholderNode();
-    if (placeholderNode && placeholderNode->IsElement()) {
-      return placeholderNode->AsElement();
-    }
-    return nullptr;
+    return txtCtrl->GetPlaceholderNode();
   }
 
   return nsContainerFrame::GetPseudoElement(aType);
