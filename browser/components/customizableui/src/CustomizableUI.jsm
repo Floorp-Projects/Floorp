@@ -2549,7 +2549,7 @@ OverflowableToolbar.prototype = {
       this._lazyResizeHandler = new DeferredTask(this._onLazyResize.bind(this),
                                                  LAZY_RESIZE_INTERVAL_MS);
     }
-    this._lazyResizeHandler.arm();
+    this._lazyResizeHandler.start();
   },
 
   _moveItemsBackToTheirOrigin: function(shouldMoveAllItems) {
@@ -2608,7 +2608,7 @@ OverflowableToolbar.prototype = {
     this._enabled = false;
     this._moveItemsBackToTheirOrigin(true);
     if (this._lazyResizeHandler) {
-      this._lazyResizeHandler.disarm();
+      this._lazyResizeHandler.cancel();
     }
   },
 
