@@ -142,8 +142,7 @@ nsXULTemplateQueryProcessorRDF::InitGlobals()
     // Initialize the global shared reference to the service
     // manager and get some shared resource objects.
     if (!gRDFService) {
-        NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-        rv = CallGetService(kRDFServiceCID, &gRDFService);
+        rv = CallGetService(NS_RDFSERVICE_CID, &gRDFService);
         if (NS_FAILED(rv))
             return rv;
     }
