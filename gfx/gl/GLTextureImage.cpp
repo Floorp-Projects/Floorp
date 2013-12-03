@@ -130,7 +130,7 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
     NS_ASSERTION(!mUpdateSurface, "BeginUpdate() without EndUpdate()?");
 
     // determine the region the client will need to repaint
-    if (mGLContext->CanUploadSubTextures()) {
+    if (CanUploadSubTextures(mGLContext)) {
         GetUpdateRegion(aRegion);
     } else {
         aRegion = nsIntRect(nsIntPoint(0, 0), mSize);
@@ -333,6 +333,24 @@ CreateBasicTextureImage(GLContext* aGL,
   return CreateBasicTextureImage(aGL, ThebesIntSize(aSize), aContentType, aWrapMode, aFlags);
 }
 
+static bool
+WantsSmallTiles(GLContext* gl)
+{
+    // We must use small tiles for good performance if we can't use
+    // glTexSubImage2D() for some reason.
+    if (!CanUploadSubTextures(gl))
+        return true;
+
+    // We can't use small tiles on the SGX 540, because of races in texture upload.
+    if (gl->WorkAroundDriverBugs() &&
+        gl->Renderer() == GLContext::RendererSGX540)
+        return false;
+
+    // Don't use small tiles otherwise. (If we implement incremental texture upload,
+    // then we will want to revisit this.)
+    return false;
+}
+
 TiledTextureImage::TiledTextureImage(GLContext* aGL,
                                      nsIntSize aSize,
                                      TextureImage::ContentType aContentType,
@@ -348,7 +366,7 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
     , mTextureState(Created)
     , mImageFormat(aImageFormat)
 {
-    if (!(aFlags & TextureImage::DisallowBigImage) && mGL->WantsSmallTiles()) {
+    if (!(aFlags & TextureImage::DisallowBigImage) && WantsSmallTiles(mGL)) {
       mTileSize = 256;
     } else {
       mGL->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, (GLint*) &mTileSize);
@@ -392,7 +410,7 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
         if (tileRegion.IsEmpty())
             continue;
 
-        if (mGL->CanUploadSubTextures()) {
+        if (CanUploadSubTextures(mGL)) {
           tileRegion.MoveBy(-xPos, -yPos); // translate into tile local space
         } else {
           // If sub-textures are unsupported, expand to tile boundaries

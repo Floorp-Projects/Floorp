@@ -2473,7 +2473,6 @@ public:
         MOZ_CRASH("Must be called against a GLContextEGL.");
     }
 
-    bool CanUploadSubTextures();
     bool CanReadSRGBFromFBOTexture();
 
     static void PlatformStartup();
@@ -2485,8 +2484,6 @@ protected:
 
 public:
     bool CanUploadNonPowerOfTwo();
-
-    bool WantsSmallTiles();
 
     /**
      * If this context wraps a double-buffered target, swap the back
