@@ -56,7 +56,15 @@ InefficientNonFlatteningStringHashPolicy::hash(const Lookup &l)
         chars = ownedChars;
     }
 
-    return mozilla::HashString(chars, l->length());
+    // We include the result of isShort() in the hash.  This is because it is
+    // possible for a particular string (i.e. unique char sequence) to have one
+    // or more copies as short strings and one or more copies as non-short
+    // strings, and treating them separately for the purposes of notable string
+    // detection makes things simpler.  In practice, although such collisions
+    // do happen, they are sufficiently rare that they are unlikely to have a
+    // significant effect on which strings are considered notable.
+    return mozilla::AddToHash(mozilla::HashString(chars, l->length()),
+                              l->isShort());
 }
 
 /* static */ bool
@@ -64,6 +72,10 @@ InefficientNonFlatteningStringHashPolicy::match(const JSString *const &k, const 
 {
     // We can't use js::EqualStrings, because that flattens our strings.
     if (k->length() != l->length())
+        return false;
+
+    // Just like in hash(), we must consider isShort() for the two strings.
+    if (k->isShort() != l->isShort())
         return false;
 
     const jschar *c1;
@@ -277,11 +289,17 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
       case JSTRACE_STRING: {
         JSString *str = static_cast<JSString *>(thing);
 
+        bool isShort = str->isShort();
         size_t strCharsSize = str->sizeOfExcludingThis(rtStats->mallocSizeOf_);
-        MOZ_ASSERT_IF(str->isShort(), strCharsSize == 0);
 
-        size_t shortStringThingSize  =  str->isShort() ? thingSize : 0;
-        size_t normalStringThingSize = !str->isShort() ? thingSize : 0;
+
+        if (isShort) {
+            zStats->stringsShortGCHeap += thingSize;
+            MOZ_ASSERT(strCharsSize == 0);
+        } else {
+            zStats->stringsNormalGCHeap += thingSize;
+            zStats->stringsNormalMallocHeap += strCharsSize;
+        }
 
         // This string hashing is expensive.  Its results are unused when doing
         // coarse-grained measurements, and skipping it more than doubles the
@@ -289,17 +307,12 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         if (granularity == FineGrained) {
             ZoneStats::StringsHashMap::AddPtr p = zStats->strings.lookupForAdd(str);
             if (!p) {
-                JS::StringInfo info(shortStringThingSize,
-                                    normalStringThingSize, strCharsSize);
+                JS::StringInfo info(isShort, thingSize, strCharsSize);
                 zStats->strings.add(p, str, info);
             } else {
-                p->value().add(shortStringThingSize, normalStringThingSize, strCharsSize);
+                p->value().add(isShort, thingSize, strCharsSize);
             }
         }
-
-        zStats->stringsShortGCHeap += shortStringThingSize;
-        zStats->stringsNormalGCHeap += normalStringThingSize;
-        zStats->stringsNormalMallocHeap += strCharsSize;
 
         break;
       }
@@ -402,7 +415,7 @@ FindNotableStrings(ZoneStats &zStats)
 
         // If this string is too small, or if we can't grow the notableStrings
         // vector, skip this string.
-        if (info.totalSizeOf() < NotableStringInfo::notableSize() ||
+        if (info.gcHeap + info.mallocHeap < NotableStringInfo::notableSize() ||
             !zStats.notableStrings.growBy(1))
             continue;
 
@@ -410,12 +423,16 @@ FindNotableStrings(ZoneStats &zStats)
 
         // We're moving this string from a non-notable to a notable bucket, so
         // subtract it out of the non-notable tallies.
-        MOZ_ASSERT(zStats.stringsShortGCHeap >= info.shortGCHeap);
-        MOZ_ASSERT(zStats.stringsNormalGCHeap >= info.normalGCHeap);
-        MOZ_ASSERT(zStats.stringsNormalMallocHeap >= info.normalMallocHeap);
-        zStats.stringsShortGCHeap -= info.shortGCHeap;
-        zStats.stringsNormalGCHeap -= info.normalGCHeap;
-        zStats.stringsNormalMallocHeap -= info.normalMallocHeap;
+        if (info.isShort) {
+            MOZ_ASSERT(zStats.stringsShortGCHeap >= info.gcHeap);
+            zStats.stringsShortGCHeap -= info.gcHeap;
+            MOZ_ASSERT(info.mallocHeap == 0);
+        } else {
+            MOZ_ASSERT(zStats.stringsNormalGCHeap >= info.gcHeap);
+            MOZ_ASSERT(zStats.stringsNormalMallocHeap >= info.mallocHeap);
+            zStats.stringsNormalGCHeap -= info.gcHeap;
+            zStats.stringsNormalMallocHeap -= info.mallocHeap;
+        }
     }
 
     // zStats.strings holds unrooted JSString pointers, which we don't want to
