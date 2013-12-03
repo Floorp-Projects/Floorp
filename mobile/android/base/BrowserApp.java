@@ -124,7 +124,7 @@ abstract public class BrowserApp extends GeckoApp
 
     private static final int GECKO_TOOLS_MENU = -1;
     private static final int ADDON_MENU_OFFSET = 1000;
-    private static class MenuItemInfo {
+    private class MenuItemInfo {
         public int id;
         public String label;
         public String icon;
@@ -133,7 +133,6 @@ abstract public class BrowserApp extends GeckoApp
         public boolean enabled = true;
         public boolean visible = true;
         public int parent;
-        public boolean added = false;    // So we can re-add after a locale change.
     }
 
     // The types of guest mdoe dialogs we show
@@ -1640,20 +1639,6 @@ abstract public class BrowserApp extends GeckoApp
         showHomePagerWithAnimator(page, null);
     }
 
-    @Override
-    public void onLocaleReady(final String locale) {
-        super.onLocaleReady(locale);
-        if (mHomePager != null) {
-            // Blow it away and rebuild it with the right strings.
-            mHomePager.redisplay(getSupportFragmentManager());
-        }
-
-        if (mMenu != null) {
-            mMenu.clear();
-            onCreateOptionsMenu(mMenu);
-        }
-    }
-
     private void showHomePagerWithAnimator(HomePager.Page page, PropertyAnimator animator) {
         if (isHomePagerVisible()) {
             return;
@@ -1826,7 +1811,7 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
-    private static Menu findParentMenu(Menu menu, MenuItem item) {
+    private Menu findParentMenu(Menu menu, MenuItem item) {
         final int itemId = item.getItemId();
 
         final int count = (menu != null) ? menu.size() : 0;
@@ -1846,58 +1831,54 @@ abstract public class BrowserApp extends GeckoApp
         return null;
     }
 
-    /**
-     * Add the provided item to the provided menu, which should be
-     * the root (mMenu).
-     */
-    private void addAddonMenuItemToMenu(final Menu menu, final MenuItemInfo info) {
-        info.added = true;
-        
-        final Menu destination;
-        if (info.parent == 0) {
-            destination = menu;
-        } else if (info.parent == GECKO_TOOLS_MENU) {
-            MenuItem tools = menu.findItem(R.id.tools);
-            destination = tools != null ? tools.getSubMenu() : menu;
-        } else {
-            MenuItem parent = menu.findItem(info.parent);
-            if (parent == null) {
-                return;
-            }
+    private void addAddonMenuItem(final MenuItemInfo info) {
+        if (mMenu == null) {
+            if (mAddonMenuItemsCache == null)
+                mAddonMenuItemsCache = new Vector<MenuItemInfo>();
 
-            Menu parentMenu = findParentMenu(menu, parent);
+            mAddonMenuItemsCache.add(info);
+            return;
+        }
+
+        Menu menu;
+        if (info.parent == 0) {
+            menu = mMenu;
+        } else if (info.parent == GECKO_TOOLS_MENU) {
+            MenuItem tools = mMenu.findItem(R.id.tools);
+            menu = tools != null ? tools.getSubMenu() : mMenu;
+        } else {
+            MenuItem parent = mMenu.findItem(info.parent);
+            if (parent == null)
+                return;
+
+            Menu parentMenu = findParentMenu(mMenu, parent);
 
             if (!parent.hasSubMenu()) {
                 parentMenu.removeItem(parent.getItemId());
-                destination = parentMenu.addSubMenu(Menu.NONE, parent.getItemId(), Menu.NONE, parent.getTitle());
-                if (parent.getIcon() != null) {
-                    ((SubMenu) destination).getItem().setIcon(parent.getIcon());
-                }
+                menu = parentMenu.addSubMenu(Menu.NONE, parent.getItemId(), Menu.NONE, parent.getTitle());
+                if (parent.getIcon() != null)
+                    ((SubMenu) menu).getItem().setIcon(parent.getIcon());
             } else {
-                destination = parent.getSubMenu();
+                menu = parent.getSubMenu();
             }
         }
 
-        MenuItem item = destination.add(Menu.NONE, info.id, Menu.NONE, info.label);
-
+        MenuItem item = menu.add(Menu.NONE, info.id, Menu.NONE, info.label);
         item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                Log.i(LOGTAG, "Menu item clicked");
+                Log.i(LOGTAG, "menu item clicked");
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Menu:Clicked", Integer.toString(info.id - ADDON_MENU_OFFSET)));
                 return true;
             }
         });
 
-        if (info.icon == null) {
-            item.setIcon(R.drawable.ic_menu_addons_filler);
-        } else {
+        if (info.icon != null) {
             final int id = info.id;
             BitmapUtils.getDrawable(this, info.icon, new BitmapUtils.BitmapLoader() {
                 @Override
                 public void onBitmapFound(Drawable d) {
-                    // TODO: why do we re-find the item?
-                    MenuItem item = destination.findItem(id);
+                    MenuItem item = mMenu.findItem(id);
                     if (item == null) {
                         return;
                     }
@@ -1908,30 +1889,14 @@ abstract public class BrowserApp extends GeckoApp
                     item.setIcon(d);
                 }
             });
+        } else {
+            item.setIcon(R.drawable.ic_menu_addons_filler);
         }
 
         item.setCheckable(info.checkable);
         item.setChecked(info.checked);
         item.setEnabled(info.enabled);
         item.setVisible(info.visible);
-    }
-
-    private void addAddonMenuItem(final MenuItemInfo info) {
-        if (mAddonMenuItemsCache == null) {
-            mAddonMenuItemsCache = new Vector<MenuItemInfo>();
-        }
-
-        // Mark it as added if the menu was ready.
-        info.added = (mMenu != null);
-
-        // Always cache so we can rebuild after a locale switch.
-        mAddonMenuItemsCache.add(info);
-
-        if (mMenu == null) {
-            return;
-        }
-
-        addAddonMenuItemToMenu(mMenu, info);
     }
 
     private void removeAddonMenuItem(int id) {
@@ -1963,15 +1928,13 @@ abstract public class BrowserApp extends GeckoApp
                     item.checked = options.optBoolean("checked", item.checked);
                     item.enabled = options.optBoolean("enabled", item.enabled);
                     item.visible = options.optBoolean("visible", item.visible);
-                    item.added = (mMenu != null);
                     break;
                 }
             }
         }
 
-        if (mMenu == null) {
+        if (mMenu == null)
             return;
-        }
 
         MenuItem menuItem = mMenu.findItem(id);
         if (menuItem != null) {
@@ -1985,23 +1948,22 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Sets mMenu = menu.
         super.onCreateOptionsMenu(menu);
 
         // Inform the menu about the action-items bar. 
-        if (menu instanceof GeckoMenu &&
-            HardwareUtils.isTablet()) {
+        if (menu instanceof GeckoMenu && HardwareUtils.isTablet())
             ((GeckoMenu) menu).setActionItemBarPresenter(mBrowserToolbar);
-        }
 
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.browser_app_menu, mMenu);
 
-        // Add add-on menu items, if any exist.
+        // Add add-on menu items if any.
         if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
             for (MenuItemInfo item : mAddonMenuItemsCache) {
-                addAddonMenuItemToMenu(mMenu, item);
+                 addAddonMenuItem(item);
             }
+
+            mAddonMenuItemsCache.clear();
         }
 
         // Action providers are available only ICS+.

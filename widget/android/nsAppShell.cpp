@@ -163,8 +163,12 @@ nsAppShell::NotifyNativeEvent()
     mQueueCond.Notify();
 }
 
+#define PREFNAME_MATCH_OS  "intl.locale.matchOS"
+#define PREFNAME_UA_LOCALE "general.useragent.locale"
 #define PREFNAME_COALESCE_TOUCHES "dom.event.touch.coalescing.enabled"
 static const char* kObservedPrefs[] = {
+  PREFNAME_MATCH_OS,
+  PREFNAME_UA_LOCALE,
   PREFNAME_COALESCE_TOUCHES,
   nullptr
 };
@@ -178,6 +182,8 @@ nsAppShell::Init()
 #endif
 
     nsresult rv = nsBaseAppShell::Init();
+    AndroidBridge* bridge = AndroidBridge::Bridge();
+
     nsCOMPtr<nsIObserverService> obsServ =
         mozilla::services::GetObserverService();
     if (obsServ) {
@@ -187,7 +193,27 @@ nsAppShell::Init()
     if (sPowerManagerService)
         sPowerManagerService->AddWakeLockListener(sWakeLockListener);
 
+    if (!bridge)
+        return rv;
+
     Preferences::AddStrongObservers(this, kObservedPrefs);
+
+    bool match;
+    rv = Preferences::GetBool(PREFNAME_MATCH_OS, &match);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (match) {
+        GeckoAppShell::SetSelectedLocale(EmptyString());
+        return NS_OK;
+    }
+
+    nsAutoString locale;
+    rv = Preferences::GetLocalizedString(PREFNAME_UA_LOCALE, &locale);
+    if (NS_FAILED(rv)) {
+        rv = Preferences::GetString(PREFNAME_UA_LOCALE, &locale);
+    }
+
+    GeckoAppShell::SetSelectedLocale(locale);
     mAllowCoalescingTouches = Preferences::GetBool(PREFNAME_COALESCE_TOUCHES, true);
     return rv;
 }
@@ -202,9 +228,30 @@ nsAppShell::Observe(nsISupports* aSubject,
         // or we'll see crashes, as the app shell outlives XPConnect.
         mObserversHash.Clear();
         return nsBaseAppShell::Observe(aSubject, aTopic, aData);
-    } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) &&
-               aData &&
-               nsDependentString(aData).Equals(NS_LITERAL_STRING(PREFNAME_COALESCE_TOUCHES))) {
+    } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) && aData && (
+                   nsDependentString(aData).Equals(
+                       NS_LITERAL_STRING(PREFNAME_UA_LOCALE)) ||
+                   nsDependentString(aData).Equals(
+                       NS_LITERAL_STRING(PREFNAME_COALESCE_TOUCHES)) ||
+                   nsDependentString(aData).Equals(
+                       NS_LITERAL_STRING(PREFNAME_MATCH_OS)))) {
+        bool match;
+        nsresult rv = Preferences::GetBool(PREFNAME_MATCH_OS, &match);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (match) {
+            GeckoAppShell::SetSelectedLocale(EmptyString());
+            return NS_OK;
+        }
+
+        nsAutoString locale;
+        if (NS_FAILED(Preferences::GetLocalizedString(PREFNAME_UA_LOCALE,
+                                                      &locale))) {
+            locale = Preferences::GetString(PREFNAME_UA_LOCALE);
+        }
+
+        GeckoAppShell::SetSelectedLocale(locale);
+
         mAllowCoalescingTouches = Preferences::GetBool(PREFNAME_COALESCE_TOUCHES, true);
         return NS_OK;
     }

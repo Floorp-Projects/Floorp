@@ -525,6 +525,8 @@ HwcComposer2D::Render(EGLDisplay dpy, EGLSurface sur)
         mList->hwLayers[0].compositionType = HWC_BACKGROUND;
         mList->hwLayers[0].flags = HWC_SKIP_LAYER;
         mList->hwLayers[0].backgroundColor = {0};
+        mList->hwLayers[0].acquireFenceFd = -1;
+        mList->hwLayers[0].releaseFenceFd = -1;
         mList->hwLayers[0].displayFrame = {0, 0, mScreenRect.width, mScreenRect.height};
         Prepare(fbsurface->lastHandle, fbsurface->lastFenceFD);
     }
