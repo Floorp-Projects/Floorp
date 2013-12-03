@@ -214,7 +214,10 @@ NS_NewElement(nsIContent** aResult,
     return rv;
   }
   if (ns == kNameSpaceID_SVG) {
-    return NS_NewSVGElement(aResult, aNodeInfo, aFromParser);
+    nsCOMPtr<Element> el;
+    nsresult rv = NS_NewSVGElement(getter_AddRefs(el), aNodeInfo, aFromParser);
+    el.forget(aResult);
+    return rv;
   }
   if (ns == kNameSpaceID_XBL && aNodeInfo.get()->Equals(nsGkAtoms::children)) {
     NS_ADDREF(*aResult = new XBLChildrenElement(aNodeInfo));
