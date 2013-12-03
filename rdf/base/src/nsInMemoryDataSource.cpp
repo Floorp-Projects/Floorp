@@ -69,6 +69,11 @@
 #include "rdfIDataSource.h"
 #include "rdfITripleVisitor.h"
 
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gLog = nullptr;
+#endif
+
+
 // This struct is used as the slot value in the forward and reverse
 // arcs hash tables.
 //
@@ -360,16 +365,7 @@ public:
 #endif
 
     bool    mPropagateChanges;
-
-private:
-#ifdef PR_LOGGING
-    static PRLogModuleInfo* gLog;
-#endif
 };
-
-#ifdef PR_LOGGING
-PRLogModuleInfo* InMemoryDataSource::gLog;
-#endif
 
 //----------------------------------------------------------------------
 //
