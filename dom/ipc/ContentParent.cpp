@@ -3104,5 +3104,32 @@ ContentParent::ShouldSandboxContentProcesses()
 #endif
 }
 
+bool
+ContentParent::RecvRecordingDeviceEvents(const nsString& aRecordingStatus,
+                                         const nsString& aPageURL,
+                                         const bool& aIsAudio,
+                                         const bool& aIsVideo)
+{
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+        // recording-device-ipc-events needs to gather more information from content process
+        nsRefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
+        props->SetPropertyAsUint64(NS_LITERAL_STRING("childID"), ChildID());
+        props->SetPropertyAsBool(NS_LITERAL_STRING("isApp"), IsForApp());
+        props->SetPropertyAsBool(NS_LITERAL_STRING("isAudio"), aIsAudio);
+        props->SetPropertyAsBool(NS_LITERAL_STRING("isVideo"), aIsVideo);
+
+        nsString requestURL = IsForApp() ? AppManifestURL() : aPageURL;
+        props->SetPropertyAsAString(NS_LITERAL_STRING("requestURL"), requestURL);
+
+        obs->NotifyObservers((nsIPropertyBag2*) props,
+                             "recording-device-ipc-events",
+                             aRecordingStatus.get());
+    } else {
+        NS_WARNING("Could not get the Observer service for ContentParent::RecvRecordingDeviceEvents.");
+    }
+    return true;
+}
+
 } // namespace dom
 } // namespace mozilla

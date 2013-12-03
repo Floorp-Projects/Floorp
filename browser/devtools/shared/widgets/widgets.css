@@ -63,8 +63,14 @@
   display: none;
 }
 
-*:not(:hover) .variables-view-delete {
+*:not(:hover) .variables-view-delete,
+*:not(:hover) .variables-view-add-property {
   visibility: hidden;
+}
+
+.variables-view-delete > .toolbarbutton-text,
+.variables-view-add-property > .toolbarbutton-text {
+  display: none;
 }
 
 .variables-view-container[aligned-values] .title > [optional-visibility] {

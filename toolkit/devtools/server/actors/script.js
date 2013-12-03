@@ -2661,49 +2661,6 @@ function isObject(aValue) {
 }
 
 /**
- * Determines if a descriptor has a getter which doesn't call into JavaScript.
- *
- * @param Object aDesc
- *        The descriptor to check for a safe getter.
- * @return Boolean
- *         Whether a safe getter was found.
- */
-function hasSafeGetter(aDesc) {
-  let fn = aDesc.get;
-  return fn && fn.callable && fn.class == "Function" && fn.script === undefined;
-}
-
-/**
- * Safely get the property value from a Debugger.Object for a given key. Walks
- * the prototype chain until the property is found.
- *
- * @param Debugger.Object aObject
- *        The Debugger.Object to get the value from.
- * @param String aKey
- *        The key to look for.
- * @return Any
- */
-function getProperty(aObj, aKey) {
-  try {
-    do {
-      const desc = aObj.getOwnPropertyDescriptor(aKey);
-      if (desc) {
-        if ("value" in desc) {
-          return desc.value
-        }
-        // Call the getter if it's safe.
-        return hasSafeGetter(desc) ? desc.get.call(aObj) : undefined;
-      }
-      aObj = aObj.proto;
-    } while (aObj);
-  } catch (e) {
-    // If anything goes wrong report the error and return undefined.
-    DevToolsUtils.reportException("getProperty", e);
-  }
-  return undefined;
-}
-
-/**
  * Create a function that can safely stringify Debugger.Objects of a given
  * builtin type.
  *
@@ -2725,14 +2682,14 @@ function createBuiltinStringifier(aCtor) {
  *         The stringification of the object.
  */
 function errorStringify(aObj) {
-  let name = getProperty(aObj, "name");
+  let name = DevToolsUtils.getProperty(aObj, "name");
   if (name === "" || name === undefined) {
     name = aObj.class;
   } else if (isObject(name)) {
     name = stringify(name);
   }
 
-  let message = getProperty(aObj, "message");
+  let message = DevToolsUtils.getProperty(aObj, "message");
   if (isObject(message)) {
     message = stringify(message);
   }
@@ -2790,7 +2747,7 @@ let stringifiers = {
 
     seen.add(obj);
 
-    const len = getProperty(obj, "length");
+    const len = DevToolsUtils.getProperty(obj, "length");
     let string = "";
 
     // The following check is only required because the debuggee could possibly
@@ -2819,10 +2776,10 @@ let stringifiers = {
     return string;
   },
   DOMException: obj => {
-    const message = getProperty(obj, "message") || "<no message>";
-    const result = (+getProperty(obj, "result")).toString(16);
-    const code = getProperty(obj, "code");
-    const name = getProperty(obj, "name") || "<unknown>";
+    const message = DevToolsUtils.getProperty(obj, "message") || "<no message>";
+    const result = (+DevToolsUtils.getProperty(obj, "result")).toString(16);
+    const code = DevToolsUtils.getProperty(obj, "code");
+    const name = DevToolsUtils.getProperty(obj, "name") || "<unknown>";
 
     return '[Exception... "' + message + '" ' +
            'code: "' + code +'" ' +
@@ -3102,7 +3059,7 @@ ObjectActor.prototype = {
         continue;
       }
 
-      if (hasSafeGetter(desc)) {
+      if (DevToolsUtils.hasSafeGetter(desc)) {
         getters.add(name);
       }
     }

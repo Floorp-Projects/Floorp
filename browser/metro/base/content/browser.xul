@@ -76,6 +76,7 @@
 
     <!-- tabs -->
     <command id="cmd_newTab" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_newTabKey" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_closeTab" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_undoCloseTab" oncommand="CommandUpdater.doCommand(this.id);"/>
 #ifdef MOZ_SERVICES_SYNC
@@ -152,8 +153,8 @@ Desktop browser's sync prefs.
 -->
 
     <!-- manage tabs -->
-    <key id="key_newTab" key="&newTab.key;" modifiers="accel" command="cmd_newTab"/>
-    <key id="key_newTab2" key="&newTab2.key;" modifiers="accel" command="cmd_newTab"/>
+    <key id="key_newTab" key="&newTab.key;" modifiers="accel" command="cmd_newTabKey"/>
+    <key id="key_newTab2" key="&newTab2.key;" modifiers="accel" command="cmd_newTabKey"/>
     <key id="key_closeTab" key="&closeTab.key;" modifiers="accel" command="cmd_closeTab"/>
     <key id="key_closeTab2" keycode="VK_F4" modifiers="accel" command="cmd_closeTab"/>
     <key id="key_undoCloseTab" key="&newTab.key;" modifiers="accel,shift" command="cmd_undoCloseTab"/>

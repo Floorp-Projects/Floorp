@@ -104,7 +104,7 @@ private:
   nsDOMCameraControl& operator=(const nsDOMCameraControl&) MOZ_DELETE;
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
-  already_AddRefed<nsHashPropertyBag> CreateRecordingDeviceEventsSubject();
+  nsresult NotifyRecordingStatusChange(const nsString& aMsg);
 
 protected:
   /* additional members */

@@ -166,3 +166,48 @@ function defineLazyPrototypeGetter(aObject, aKey, aCallback) {
     }
   });
 }
+
+/**
+ * Safely get the property value from a Debugger.Object for a given key. Walks
+ * the prototype chain until the property is found.
+ *
+ * @param Debugger.Object aObject
+ *        The Debugger.Object to get the value from.
+ * @param String aKey
+ *        The key to look for.
+ * @return Any
+ */
+this.getProperty = function getProperty(aObj, aKey) {
+  let root = aObj;
+  try {
+    do {
+      const desc = aObj.getOwnPropertyDescriptor(aKey);
+      if (desc) {
+        if ("value" in desc) {
+          return desc.value;
+        }
+        // Call the getter if it's safe.
+        return hasSafeGetter(desc) ? desc.get.call(root).return : undefined;
+      }
+      aObj = aObj.proto;
+    } while (aObj);
+  } catch (e) {
+    // If anything goes wrong report the error and return undefined.
+    reportException("getProperty", e);
+  }
+  return undefined;
+};
+
+/**
+ * Determines if a descriptor has a getter which doesn't call into JavaScript.
+ *
+ * @param Object aDesc
+ *        The descriptor to check for a safe getter.
+ * @return Boolean
+ *         Whether a safe getter was found.
+ */
+this.hasSafeGetter = function hasSafeGetter(aDesc) {
+  let fn = aDesc.get;
+  return fn && fn.callable && fn.class == "Function" && fn.script === undefined;
+};
+

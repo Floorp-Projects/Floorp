@@ -118,6 +118,18 @@ add_test(function test_spawn_function()
   });
 });
 
+add_test(function test_spawn_function_returning_promise()
+{
+  Task.spawn(function () {
+    return promiseResolvedLater("Resolution value.");
+  }).then(function (result) {
+    do_check_eq("Resolution value.", result);
+    run_next_test();
+  }, function (ex) {
+    do_throw("Unexpected error: " + ex);
+  });
+});
+
 add_test(function test_spawn_function_exceptions()
 {
   Task.spawn(function () {

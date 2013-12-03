@@ -209,6 +209,10 @@ public:
         return PContentParent::RecvPJavaScriptConstructor(aActor);
     }
 
+    virtual bool RecvRecordingDeviceEvents(const nsString& aRecordingStatus,
+                                           const nsString& aPageURL,
+                                           const bool& aIsAudio,
+                                           const bool& aIsVideo) MOZ_OVERRIDE;
 protected:
     void OnChannelConnected(int32_t pid) MOZ_OVERRIDE;
     virtual void ActorDestroy(ActorDestroyReason why);

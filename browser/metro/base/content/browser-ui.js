@@ -965,6 +965,7 @@ var BrowserUI = {
       case "cmd_quit":
       case "cmd_close":
       case "cmd_newTab":
+      case "cmd_newTabKey":
       case "cmd_closeTab":
       case "cmd_undoCloseTab":
       case "cmd_actions":
@@ -1056,6 +1057,9 @@ var BrowserUI = {
         this._closeOrQuit();
         break;
       case "cmd_newTab":
+        this.addAndShowTab();
+        break;
+      case "cmd_newTabKey":
         this.addAndShowTab();
         // Make sure navbar is displayed before setting focus on url bar. Bug 907244
         ContextUI.displayNavbar();

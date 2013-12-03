@@ -126,18 +126,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class GeckoApp
-    extends GeckoActivity 
-    implements
-    ContextGetter,
-    GeckoAppShell.GeckoInterface,
-    GeckoEventListener,
-    GeckoEventResponder,
-    GeckoMenu.Callback,
-    GeckoMenu.MenuPresenter,
-    LocationListener,
-    SensorEventListener,
-    Tabs.OnTabsChangedListener
+abstract public class GeckoApp
+                extends GeckoActivity 
+    implements GeckoEventListener, SensorEventListener, LocationListener,
+                           Tabs.OnTabsChangedListener, GeckoEventResponder,
+                           GeckoMenu.Callback, GeckoMenu.MenuPresenter,
+                           ContextGetter, GeckoAppShell.GeckoInterface
 {
     private static final String LOGTAG = "GeckoApp";
 
@@ -239,18 +233,8 @@ public abstract class GeckoApp
 
     void focusChrome() { }
 
-    @Override
     public Context getContext() {
         return sAppContext;
-    }
-
-    @Override
-    public SharedPreferences getSharedPreferences() {
-        return GeckoApp.getAppSharedPreferences();
-    }
-
-    public static SharedPreferences getAppSharedPreferences() {
-        return GeckoApp.sAppContext.getSharedPreferences(GeckoApp.PREFS_NAME, 0);
     }
 
     public Activity getActivity() {
@@ -272,6 +256,10 @@ public abstract class GeckoApp
 
     public SensorEventListener getSensorEventListener() {
         return this;
+    }
+
+    public static SharedPreferences getAppSharedPreferences() {
+        return GeckoApp.sAppContext.getSharedPreferences(PREFS_NAME, 0);
     }
 
     public View getCameraView() {
@@ -715,8 +703,6 @@ public abstract class GeckoApp
                 GeckoAppShell.openUriExternal(message.optString("url"),
                     message.optString("mime"), message.optString("packageName"),
                     message.optString("className"), message.optString("action"), message.optString("title"));
-            } else if (event.equals("Locale:Set")) {
-                setLocale(message.getString("locale"));
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1193,7 +1179,7 @@ public abstract class GeckoApp
         }
 
         BrowserDB.initialize(getProfile().getName());
-        ((GeckoApplication) getApplication()).initialize();
+        ((GeckoApplication)getApplication()).initialize();
 
         sAppContext = this;
         GeckoAppShell.setContextGetter(this);
@@ -1207,13 +1193,12 @@ public abstract class GeckoApp
             Log.e(LOGTAG, "Exception starting favicon cache. Corrupt resources?", e);
         }
 
-        // Did the OS locale change while we were backgrounded? If so,
-        // we need to die so that Gecko will re-init add-ons that touch
-        // the UI.
-        // This is using a sledgehammer to crack a nut, but it'll do for
-        // now.
-        if (LocaleManager.systemLocaleDidChange()) {
-            Log.i(LOGTAG, "System locale changed. Restarting.");
+        // When we detect a locale change, we need to restart Gecko, which
+        // actually means restarting the entire application. This logic should
+        // actually be handled elsewhere since GeckoApp may not be alive to
+        // handle this event if "Don't keep activities" is enabled (filed as
+        // bug 889082).
+        if (((GeckoApplication)getApplication()).needsRestart()) {
             doRestart();
             System.exit(0);
             return;
@@ -1294,11 +1279,6 @@ public abstract class GeckoApp
             public void run() {
                 final SharedPreferences prefs = GeckoApp.getAppSharedPreferences();
 
-                // Wait until now to set this, because we'd rather throw an exception than 
-                // have a caller of LocaleManager regress startup.
-                LocaleManager.setContextGetter(GeckoApp.this);
-                LocaleManager.initialize();
-
                 SessionInformation previousSession = SessionInformation.fromSharedPrefs(prefs);
                 if (previousSession.wasKilled()) {
                     Telemetry.HistogramAdd("FENNEC_WAS_KILLED", 1);
@@ -1319,58 +1299,22 @@ public abstract class GeckoApp
                 final String profilePath = getProfile().getDir().getAbsolutePath();
                 final EventDispatcher dispatcher = GeckoAppShell.getEventDispatcher();
                 Log.i(LOGTAG, "Creating BrowserHealthRecorder.");
-
                 final String osLocale = Locale.getDefault().toString();
-                String appLocale = LocaleManager.getAndApplyPersistedLocale();
-                Log.d(LOGTAG, "OS locale is " + osLocale + ", app locale is " + appLocale);
+                Log.d(LOGTAG, "Locale is " + osLocale);
 
-                if (appLocale == null) {
-                    appLocale = osLocale;
-                }
-
+                // Replace the duplicate `osLocale` argument when we support switchable
+                // application locales.
                 mHealthRecorder = new BrowserHealthRecorder(GeckoApp.this,
                                                             profilePath,
                                                             dispatcher,
                                                             osLocale,
-                                                            appLocale,
+                                                            osLocale,    // Placeholder.
                                                             previousSession);
-
-                final String uiLocale = appLocale;
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        GeckoApp.this.onLocaleReady(uiLocale);
-                    }
-                });
             }
         });
 
         GeckoAppShell.setNotificationClient(makeNotificationClient());
         NotificationHelper.init(getApplicationContext());
-    }
-
-    /**
-     * At this point, the resource system and the rest of the browser are
-     * aware of the locale.
-     *
-     * Now we can display strings!
-     */
-    @Override
-    public void onLocaleReady(final String locale) {
-        if (!ThreadUtils.isOnUiThread()) {
-            throw new RuntimeException("onLocaleReady must always be called from the UI thread.");
-        }
-
-        // The URL bar hint needs to be populated.
-        TextView urlBar = (TextView) findViewById(R.id.url_bar_title);
-        if (urlBar == null) {
-            return;
-        }
-        final String hint = getResources().getString(R.string.url_bar_default_text);
-        urlBar.setHint(hint);
-
-        // Allow onConfigurationChanged to take care of the rest.
-        onConfigurationChanged(getResources().getConfiguration());
     }
 
     protected void initializeChrome() {
@@ -1582,7 +1526,6 @@ public abstract class GeckoApp
         registerEventListener("Contact:Add");
         registerEventListener("Intent:Open");
         registerEventListener("Intent:GetHandlers");
-        registerEventListener("Locale:Set");
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -1636,6 +1579,23 @@ public abstract class GeckoApp
                 // intervals.
                 GeckoPreferences.broadcastAnnouncementsPref(context);
                 GeckoPreferences.broadcastHealthReportUploadPref(context);
+
+                /*
+                XXXX see Bug 635342.
+                We want to disable this code if possible.  It is about 145ms in runtime.
+
+                If this code ever becomes live again, you'll need to chain the
+                new locale into BrowserHealthRecorder correctly. See
+                GeckoAppShell.setSelectedLocale.
+                We pass the OS locale into the BHR constructor: we need to grab
+                that *before* we modify the current locale!
+
+                SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
+                String localeCode = settings.getString(getPackageName() + ".locale", "");
+                if (localeCode != null && localeCode.length() > 0)
+                    GeckoAppShell.setSelectedLocale(localeCode);
+                */
+
                 if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.Launched)) {
                     return;
                 }
@@ -2180,8 +2140,6 @@ public abstract class GeckoApp
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
-        Log.d(LOGTAG, "onConfigurationChanged: " + newConfig.locale);
-        LocaleManager.correctLocale(getResources(), newConfig);
         super.onConfigurationChanged(newConfig);
 
         if (mOrientation != newConfig.orientation) {
@@ -2766,53 +2724,5 @@ public abstract class GeckoApp
             Log.wtf(LOGTAG, getPackageName() + " not found", e);
         }
         return versionCode;
-    }
-
-    // FHR reason code for a session end prior to a restart for a
-    // locale change.
-    private static final String SESSION_END_LOCALE_CHANGED = "L";
-
-    /**
-     * Use LocaleManager to change our persisted and current locales,
-     * and poke BrowserHealthRecorder to tell it of our changed state.
-     */
-    private void setLocale(final String locale) {
-        if (locale == null) {
-            return;
-        }
-        final String resultant = LocaleManager.setSelectedLocale(locale);
-        if (resultant == null) {
-            return;
-        }
-
-        final BrowserHealthRecorder rec = mHealthRecorder;
-        if (rec == null) {
-            return;
-        }
-
-        final boolean startNewSession = true;
-        final boolean shouldRestart = false;
-        rec.onAppLocaleChanged(resultant);
-        rec.onEnvironmentChanged(startNewSession, SESSION_END_LOCALE_CHANGED);
-
-        if (!shouldRestart) {
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    GeckoApp.this.onLocaleReady(resultant);
-                }
-            });
-            return;
-        }
-
-        // Do this in the background so that the health recorder has its
-        // time to finish.
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                GeckoApp.this.doRestart();
-                GeckoApp.this.finish();
-            }
-        });
     }
 }
