@@ -43,6 +43,297 @@ ImageFormatForSurfaceFormat(gfx::SurfaceFormat aFormat)
     }
 }
 
+static GLint GetAddressAlignment(ptrdiff_t aAddress)
+{
+    if (!(aAddress & 0x7)) {
+       return 8;
+    } else if (!(aAddress & 0x3)) {
+        return 4;
+    } else if (!(aAddress & 0x1)) {
+        return 2;
+    } else {
+        return 1;
+    }
+}
+
+// Take texture data in a given buffer and copy it into a larger buffer,
+// padding out the edge pixels for filtering if necessary
+static void
+CopyAndPadTextureData(const GLvoid* srcBuffer,
+                      GLvoid* dstBuffer,
+                      GLsizei srcWidth, GLsizei srcHeight,
+                      GLsizei dstWidth, GLsizei dstHeight,
+                      GLsizei stride, GLint pixelsize)
+{
+    unsigned char *rowDest = static_cast<unsigned char*>(dstBuffer);
+    const unsigned char *source = static_cast<const unsigned char*>(srcBuffer);
+
+    for (GLsizei h = 0; h < srcHeight; ++h) {
+        memcpy(rowDest, source, srcWidth * pixelsize);
+        rowDest += dstWidth * pixelsize;
+        source += stride;
+    }
+
+    GLsizei padHeight = srcHeight;
+
+    // Pad out an extra row of pixels so that edge filtering doesn't use garbage data
+    if (dstHeight > srcHeight) {
+        memcpy(rowDest, source - stride, srcWidth * pixelsize);
+        padHeight++;
+    }
+
+    // Pad out an extra column of pixels
+    if (dstWidth > srcWidth) {
+        rowDest = static_cast<unsigned char*>(dstBuffer) + srcWidth * pixelsize;
+        for (GLsizei h = 0; h < padHeight; ++h) {
+            memcpy(rowDest, rowDest - pixelsize, pixelsize);
+            rowDest += dstWidth * pixelsize;
+        }
+    }
+}
+
+static void
+TexSubImage2DWithUnpackSubimageGLES(GLContext* gl,
+                                    GLenum target, GLint level,
+                                    GLint xoffset, GLint yoffset,
+                                    GLsizei width, GLsizei height,
+                                    GLsizei stride, GLint pixelsize,
+                                    GLenum format, GLenum type,
+                                    const GLvoid* pixels)
+{
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                     std::min(GetAddressAlignment((ptrdiff_t)pixels),
+                              GetAddressAlignment((ptrdiff_t)stride)));
+    // When using GL_UNPACK_ROW_LENGTH, we need to work around a Tegra
+    // driver crash where the driver apparently tries to read
+    // (stride - width * pixelsize) bytes past the end of the last input
+    // row. We only upload the first height-1 rows using GL_UNPACK_ROW_LENGTH,
+    // and then we upload the final row separately. See bug 697990.
+    int rowLength = stride/pixelsize;
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
+    gl->fTexSubImage2D(target,
+                       level,
+                       xoffset,
+                       yoffset,
+                       width,
+                       height-1,
+                       format,
+                       type,
+                       pixels);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+    gl->fTexSubImage2D(target,
+                       level,
+                       xoffset,
+                       yoffset+height-1,
+                       width,
+                       1,
+                       format,
+                       type,
+                       (const unsigned char *)pixels+(height-1)*stride);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+}
+
+static void
+TexSubImage2DWithoutUnpackSubimage(GLContext* gl,
+                                   GLenum target, GLint level,
+                                   GLint xoffset, GLint yoffset,
+                                   GLsizei width, GLsizei height,
+                                   GLsizei stride, GLint pixelsize,
+                                   GLenum format, GLenum type,
+                                   const GLvoid* pixels)
+{
+    // Not using the whole row of texture data and GL_UNPACK_ROW_LENGTH
+    // isn't supported. We make a copy of the texture data we're using,
+    // such that we're using the whole row of data in the copy. This turns
+    // out to be more efficient than uploading row-by-row; see bug 698197.
+    unsigned char *newPixels = new unsigned char[width*height*pixelsize];
+    unsigned char *rowDest = newPixels;
+    const unsigned char *rowSource = (const unsigned char *)pixels;
+    for (int h = 0; h < height; h++) {
+            memcpy(rowDest, rowSource, width*pixelsize);
+            rowDest += width*pixelsize;
+            rowSource += stride;
+    }
+
+    stride = width*pixelsize;
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                     std::min(GetAddressAlignment((ptrdiff_t)newPixels),
+                              GetAddressAlignment((ptrdiff_t)stride)));
+    gl->fTexSubImage2D(target,
+                       level,
+                       xoffset,
+                       yoffset,
+                       width,
+                       height,
+                       format,
+                       type,
+                       newPixels);
+    delete [] newPixels;
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+}
+
+static void
+TexSubImage2DHelper(GLContext *gl,
+                    GLenum target, GLint level,
+                    GLint xoffset, GLint yoffset,
+                    GLsizei width, GLsizei height, GLsizei stride,
+                    GLint pixelsize, GLenum format,
+                    GLenum type, const GLvoid* pixels)
+{
+    if (gl->IsGLES2()) {
+        if (stride == width * pixelsize) {
+            gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                             std::min(GetAddressAlignment((ptrdiff_t)pixels),
+                                      GetAddressAlignment((ptrdiff_t)stride)));
+            gl->fTexSubImage2D(target,
+                               level,
+                               xoffset,
+                               yoffset,
+                               width,
+                               height,
+                               format,
+                               type,
+                               pixels);
+            gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+        } else if (gl->IsExtensionSupported(GLContext::EXT_unpack_subimage)) {
+            TexSubImage2DWithUnpackSubimageGLES(gl, target, level, xoffset, yoffset,
+                                                width, height, stride,
+                                                pixelsize, format, type, pixels);
+
+        } else {
+            TexSubImage2DWithoutUnpackSubimage(gl, target, level, xoffset, yoffset,
+                                              width, height, stride,
+                                              pixelsize, format, type, pixels);
+        }
+    } else {
+        // desktop GL (non-ES) path
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                         std::min(GetAddressAlignment((ptrdiff_t)pixels),
+                                  GetAddressAlignment((ptrdiff_t)stride)));
+        int rowLength = stride/pixelsize;
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
+        gl->fTexSubImage2D(target,
+                           level,
+                           xoffset,
+                           yoffset,
+                           width,
+                           height,
+                           format,
+                           type,
+                           pixels);
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+    }
+}
+
+static void
+TexImage2DHelper(GLContext *gl,
+                 GLenum target, GLint level, GLint internalformat,
+                 GLsizei width, GLsizei height, GLsizei stride,
+                 GLint pixelsize, GLint border, GLenum format,
+                 GLenum type, const GLvoid *pixels)
+{
+    if (gl->IsGLES2()) {
+
+        NS_ASSERTION(format == (GLenum)internalformat,
+                    "format and internalformat not the same for glTexImage2D on GLES2");
+
+        if (!gl->CanUploadNonPowerOfTwo()
+            && (stride != width * pixelsize
+            || !gfx::IsPowerOfTwo(width)
+            || !gfx::IsPowerOfTwo(height))) {
+
+            // Pad out texture width and height to the next power of two
+            // as we don't support/want non power of two texture uploads
+            GLsizei paddedWidth = gfx::NextPowerOfTwo(width);
+            GLsizei paddedHeight = gfx::NextPowerOfTwo(height);
+
+            GLvoid* paddedPixels = new unsigned char[paddedWidth * paddedHeight * pixelsize];
+
+            // Pad out texture data to be in a POT sized buffer for uploading to
+            // a POT sized texture
+            CopyAndPadTextureData(pixels, paddedPixels, width, height,
+                                  paddedWidth, paddedHeight, stride, pixelsize);
+
+            gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                             std::min(GetAddressAlignment((ptrdiff_t)paddedPixels),
+                                      GetAddressAlignment((ptrdiff_t)paddedWidth * pixelsize)));
+            gl->fTexImage2D(target,
+                            border,
+                            internalformat,
+                            paddedWidth,
+                            paddedHeight,
+                            border,
+                            format,
+                            type,
+                            paddedPixels);
+            gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+
+            delete[] static_cast<unsigned char*>(paddedPixels);
+            return;
+        }
+
+        if (stride == width * pixelsize) {
+            gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                             std::min(GetAddressAlignment((ptrdiff_t)pixels),
+                                      GetAddressAlignment((ptrdiff_t)stride)));
+            gl->fTexImage2D(target,
+                            border,
+                            internalformat,
+                            width,
+                            height,
+                            border,
+                            format,
+                            type,
+                            pixels);
+            gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+        } else {
+            // Use GLES-specific workarounds for GL_UNPACK_ROW_LENGTH; these are
+            // implemented in TexSubImage2D.
+            gl->fTexImage2D(target,
+                            border,
+                            internalformat,
+                            width,
+                            height,
+                            border,
+                            format,
+                            type,
+                            nullptr);
+            TexSubImage2DHelper(gl,
+                                target,
+                                level,
+                                0,
+                                0,
+                                width,
+                                height,
+                                stride,
+                                pixelsize,
+                                format,
+                                type,
+                                pixels);
+        }
+    } else {
+        // desktop GL (non-ES) path
+
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                         std::min(GetAddressAlignment((ptrdiff_t)pixels),
+                                  GetAddressAlignment((ptrdiff_t)stride)));
+        int rowLength = stride/pixelsize;
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
+        gl->fTexImage2D(target,
+                        level,
+                        internalformat,
+                        width,
+                        height,
+                        border,
+                        format,
+                        type,
+                        pixels);
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+    }
+}
+
 SurfaceFormat
 UploadImageDataToTexture(GLContext* gl,
                          unsigned char* aData,
@@ -156,29 +447,31 @@ UploadImageDataToTexture(GLContext* gl,
                      "Must be uploading to the origin when we don't have an existing texture");
 
         if (textureInited && gl->CanUploadSubTextures()) {
-            gl->TexSubImage2D(aTextureTarget,
-                              0,
-                              iterRect->x,
-                              iterRect->y,
-                              iterRect->width,
-                              iterRect->height,
-                              aStride,
-                              pixelSize,
-                              format,
-                              type,
-                              rectData);
+            TexSubImage2DHelper(gl,
+                                aTextureTarget,
+                                0,
+                                iterRect->x,
+                                iterRect->y,
+                                iterRect->width,
+                                iterRect->height,
+                                aStride,
+                                pixelSize,
+                                format,
+                                type,
+                                rectData);
         } else {
-            gl->TexImage2D(aTextureTarget,
-                           0,
-                           internalFormat,
-                           iterRect->width,
-                           iterRect->height,
-                           aStride,
-                           pixelSize,
-                           0,
-                           format,
-                           type,
-                          rectData);
+            TexImage2DHelper(gl,
+                             aTextureTarget,
+                             0,
+                             internalFormat,
+                             iterRect->width,
+                             iterRect->height,
+                             aStride,
+                             pixelSize,
+                             0,
+                             format,
+                             type,
+                             rectData);
         }
 
     }
