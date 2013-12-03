@@ -37,8 +37,20 @@ function testParseCssProperty() {
   target.appendChild(frag);
 
   is(target.innerHTML,
-     '1px solid <span style="background-color:red" class="test-colorswatch"></span>#F00',
+     '1px solid <span style="background-color:red" class="test-colorswatch"></span><span>#F00</span>',
      "CSS property correctly parsed");
+
+  target.innerHTML = "";
+
+  let frag = parser.parseCssProperty("background-image", "linear-gradient(to right, #F60 10%, rgba(0,0,0,1))", {
+    colorSwatchClass: "test-colorswatch",
+    colorClass: "test-color"
+  });
+  target.appendChild(frag);
+  is(target.innerHTML,
+     'linear-gradient(to right, <span style="background-color:#F60" class="test-colorswatch"></span><span class="test-color">#F60</span> 10%, ' +
+     '<span style="background-color:rgba(0,0,0,1)" class="test-colorswatch"></span><span class="test-color">#000</span>)',
+     "Gradient CSS property correctly parsed");
 
   target.innerHTML = "";
 
@@ -49,14 +61,15 @@ function testParseHTMLAttribute() {
   let attrib = "color:red; font-size: 12px; background-image: " +
                "url(chrome://branding/content/about-logo.png)";
   let frag = parser.parseHTMLAttribute(attrib, {
-    urlClass: "theme-link"
+    urlClass: "theme-link",
+    colorClass: "theme-color"
   });
 
   let target = doc.querySelector("div");
   ok(target, "captain, we have the div");
   target.appendChild(frag);
 
-  let expected = 'color:#F00; font-size: 12px; ' +
+  let expected = 'color:<span class="theme-color">#F00</span>; font-size: 12px; ' +
                  'background-image: url(\'<a href="chrome://branding/content/about-logo.png" ' +
                  'class="theme-link" ' +
                  'target="_blank">chrome://branding/content/about-logo.png</a>\')';
