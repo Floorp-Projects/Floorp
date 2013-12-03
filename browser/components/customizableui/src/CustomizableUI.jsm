@@ -866,7 +866,7 @@ let CustomizableUIInternal = {
     this.insertWidgetBefore(widgetNode, nextNode, insertionContainer, areaId);
 
     if (gAreas.get(areaId).get("type") == CustomizableUI.TYPE_TOOLBAR) {
-      areaNode.setAttribute("currentset", gPlacements.get(areaId).join(','));
+      aAreaNode.setAttribute("currentset", gPlacements.get(areaId).join(','));
     }
   },
 
