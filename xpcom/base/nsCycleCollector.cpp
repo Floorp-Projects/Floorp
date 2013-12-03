@@ -1085,7 +1085,7 @@ private:
     bool ShouldMergeZones(ccType aCCType);
 
     void BeginCollection(ccType aCCType, nsICycleCollectorListener *aManualListener);
-    void MarkRoots();
+    void MarkRoots(SliceBudget &aBudget);
     void ScanRoots();
     void ScanWeakMaps();
 
@@ -2211,8 +2211,11 @@ nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
 }
 
 MOZ_NEVER_INLINE void
-nsCycleCollector::MarkRoots()
+nsCycleCollector::MarkRoots(SliceBudget &aBudget)
 {
+    const intptr_t kNumNodesBetweenTimeChecks = 1000;
+    const intptr_t kStep = SliceBudget::CounterReset / kNumNodesBetweenTimeChecks;
+
     TimeLog timeLog;
     AutoRestore<bool> ar(mScanInProgress);
     MOZ_ASSERT(!mScanInProgress);
@@ -2220,14 +2223,20 @@ nsCycleCollector::MarkRoots()
     MOZ_ASSERT(mIncrementalPhase == GraphBuildingPhase);
     MOZ_ASSERT(mCurrNode);
 
-    while (!mCurrNode->IsDone()) {
+    while (!aBudget.isOverBudget() && !mCurrNode->IsDone()) {
         PtrInfo *pi = mCurrNode->GetNext();
         CC_AbortIfNull(pi);
         mBuilder->Traverse(pi);
         if (mCurrNode->AtBlockEnd()) {
             mBuilder->SetLastChild();
         }
+        aBudget.step(kStep);
     }
+
+    if (!mCurrNode->IsDone()) {
+        return;
+    }
+
     if (mGraph.mRootCount > 0) {
         mBuilder->SetLastChild();
     }
@@ -2763,7 +2772,7 @@ nsCycleCollector::Collect(ccType aCCType,
             break;
         case GraphBuildingPhase:
             PrintPhase("MarkRoots");
-            MarkRoots();
+            MarkRoots(aBudget);
             break;
         case ScanAndCollectWhitePhase:
             // We do ScanRoots and CollectWhite in a single slice to ensure
