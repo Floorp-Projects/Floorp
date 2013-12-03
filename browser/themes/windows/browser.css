@@ -956,6 +956,10 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   color: GrayText;
 }
 
+#search-container {
+  min-width: calc(54px + 11ch);
+}
+
 /* identity box */
 
 #identity-box {

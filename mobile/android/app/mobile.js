@@ -800,5 +800,8 @@ pref("browser.snippets.updateInterval", 86400);
 // URL used to check for user's country code
 pref("browser.snippets.geoUrl", "https://geo.mozilla.org/country.json");
 
+// URL used to ping metrics with stats about which snippets have been shown
+pref("browser.snippets.statsUrl", "https://snippets-stats.mozilla.org/mobile");
+
 // This pref requires a restart to take effect.
 pref("browser.snippets.enabled", false);
