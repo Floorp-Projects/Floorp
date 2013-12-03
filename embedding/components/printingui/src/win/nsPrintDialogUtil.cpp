@@ -688,7 +688,7 @@ static HGLOBAL CreateGlobalDevModeAndInit(const nsXPIDLString& aPrintName, nsIPr
 
   HANDLE hPrinter = nullptr;
   // const cast kludge for silly Win32 api's
-  LPWSTR printName = const_cast<wchar_t*>(aPrintName.get());
+  LPWSTR printName = const_cast<wchar_t*>(static_cast<const wchar_t*>(aPrintName.get()));
   BOOL status = ::OpenPrinterW(printName, &hPrinter, nullptr);
   if (status) {
 
@@ -806,7 +806,7 @@ ShowNativePrintDialog(HWND              aHWnd,
     GetDefaultPrinterNameFromGlobalPrinters(printerName);
   } else {
     HANDLE hPrinter = nullptr;
-    if(!::OpenPrinterW(const_cast<wchar_t*>(printerName.get()), &hPrinter, nullptr)) {
+    if(!::OpenPrinterW(const_cast<wchar_t*>(static_cast<const wchar_t*>(printerName.get())), &hPrinter, nullptr)) {
       // If the last used printer is not found, we should use default printer.
       GetDefaultPrinterNameFromGlobalPrinters(printerName);
     } else {
@@ -910,8 +910,8 @@ ShowNativePrintDialog(HWND              aHWnd,
       return NS_ERROR_FAILURE;
     }
 
-    wchar_t* device = &(((wchar_t *)devnames)[devnames->wDeviceOffset]);
-    wchar_t* driver = &(((wchar_t *)devnames)[devnames->wDriverOffset]);
+    char16_t* device = &(((char16_t *)devnames)[devnames->wDeviceOffset]);
+    char16_t* driver = &(((char16_t *)devnames)[devnames->wDriverOffset]);
 
     // Check to see if the "Print To File" control is checked
     // then take the name from devNames and set it in the PrintSettings
@@ -922,7 +922,7 @@ ShowNativePrintDialog(HWND              aHWnd,
     // if the "Print To File" checkbox is checked it MUST be "FILE:"
     // We assert as an extra safety check.
     if (prntdlg.Flags & PD_PRINTTOFILE) {
-      wchar_t* fileName = &(((wchar_t *)devnames)[devnames->wOutputOffset]);
+      char16ptr_t fileName = &(((wchar_t *)devnames)[devnames->wOutputOffset]);
       NS_ASSERTION(wcscmp(fileName, L"FILE:") == 0, "FileName must be `FILE:`");
       aPrintSettings->SetToFileName(fileName);
       aPrintSettings->SetPrintToFile(true);

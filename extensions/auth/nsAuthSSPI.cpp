@@ -40,7 +40,7 @@
 
 //-----------------------------------------------------------------------------
 
-static const PRUnichar *const pTypeName [] = {
+static const wchar_t *const pTypeName [] = {
     L"Kerberos",
     L"Negotiate",
     L"NTLM"
