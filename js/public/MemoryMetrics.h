@@ -211,49 +211,45 @@ struct CodeSizes
 
 // This class holds information about the memory taken up by identical copies of
 // a particular string.  Multiple JSStrings may have their sizes aggregated
-// together into one StringInfo object.
+// together into one StringInfo object.  Note that two strings with identical
+// chars will not be aggregated together if one is a short string and the other
+// is not.
 struct StringInfo
 {
     StringInfo()
-      : numCopies(0), shortGCHeap(0), normalGCHeap(0), normalMallocHeap(0)
+      : numCopies(0),
+        isShort(0),
+        gcHeap(0),
+        mallocHeap(0)
     {}
 
-    StringInfo(size_t shorts, size_t normals, size_t chars)
+    StringInfo(bool isShort, size_t gcSize, size_t mallocSize)
       : numCopies(1),
-        shortGCHeap(shorts),
-        normalGCHeap(normals),
-        normalMallocHeap(chars)
+        isShort(isShort),
+        gcHeap(gcSize),
+        mallocHeap(mallocSize)
     {}
 
-    void add(size_t shorts, size_t normals, size_t chars) {
-        shortGCHeap += shorts;
-        normalGCHeap += normals;
-        normalMallocHeap += chars;
+    void add(bool isShort, size_t gcSize, size_t mallocSize) {
         numCopies++;
+        MOZ_ASSERT(isShort == this->isShort);
+        gcHeap += gcSize;
+        mallocHeap += mallocSize;
     }
 
     void add(const StringInfo& info) {
-        shortGCHeap += info.shortGCHeap;
-        normalGCHeap += info.normalGCHeap;
-        normalMallocHeap += info.normalMallocHeap;
         numCopies += info.numCopies;
+        MOZ_ASSERT(info.isShort == isShort);
+        gcHeap += info.gcHeap;
+        mallocHeap += info.mallocHeap;
     }
 
-    size_t totalSizeOf() const {
-        return shortGCHeap + normalGCHeap + normalMallocHeap;
-    }
-
-    size_t totalGCHeapSizeOf() const {
-        return shortGCHeap + normalGCHeap;
-    }
-
-    // How many copies of the string have we seen?
-    size_t numCopies;
+    uint32_t numCopies:31;  // How many copies of the string have we seen?
+    uint32_t isShort:1;     // Is it a short string?
 
     // These are all totals across all copies of the string we've seen.
-    size_t shortGCHeap;
-    size_t normalGCHeap;
-    size_t normalMallocHeap;
+    size_t gcHeap;
+    size_t mallocHeap;
 };
 
 // Holds data about a notable string (one which uses more than
@@ -353,7 +349,7 @@ struct ZoneStats : js::ZoneStatsPod
         size_t n = ZoneStatsPod::sizeOfLiveGCThings();
         for (size_t i = 0; i < notableStrings.length(); i++) {
             const JS::NotableStringInfo& info = notableStrings[i];
-            n += info.totalGCHeapSizeOf();
+            n += info.gcHeap;
         }
         return n;
     }
