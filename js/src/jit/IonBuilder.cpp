@@ -715,6 +715,9 @@ IonBuilder::build()
     if (!traverseBytecode())
         return false;
 
+    if (!maybeAddOsrTypeBarriers())
+        return false;
+
     if (!processIterators())
         return false;
 
@@ -1204,7 +1207,7 @@ IonBuilder::traverseBytecode()
                 if (status == ControlStatus_Abort)
                     return abort("Aborted while processing control flow");
                 if (!current)
-                    return maybeAddOsrTypeBarriers();
+                    return true;
                 continue;
             }
 
@@ -1232,7 +1235,7 @@ IonBuilder::traverseBytecode()
             if (status == ControlStatus_Abort)
                 return abort("Aborted while processing control flow");
             if (!current)
-                return maybeAddOsrTypeBarriers();
+                return true;
         }
 
 #ifdef DEBUG
@@ -1311,7 +1314,7 @@ IonBuilder::traverseBytecode()
         current->updateTrackedPc(pc);
     }
 
-    return maybeAddOsrTypeBarriers();
+    return true;
 }
 
 IonBuilder::ControlStatus
