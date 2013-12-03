@@ -235,3 +235,28 @@ void NS_HSV2RGB(nscolor &aColor, uint16_t aHue, uint16_t aSat, uint16_t aValue,
   }
   aColor = NS_RGBA(r, g, b, aAlpha);
 }
+
+#undef RED_LUMINOSITY
+#undef GREEN_LUMINOSITY
+#undef BLUE_LUMINOSITY
+#undef INTENSITY_FACTOR
+#undef LIGHT_FACTOR
+#undef LUMINOSITY_FACTOR
+
+#undef MAX_COLOR
+#undef COLOR_DARK_THRESHOLD
+#undef COLOR_LIGHT_THRESHOLD
+
+#undef COLOR_LITE_BS_FACTOR
+#undef COLOR_LITE_TS_FACTOR
+
+#undef COLOR_DARK_BS_FACTOR
+#undef COLOR_DARK_TS_FACTOR
+
+#undef LIGHT_GRAY
+#undef DARK_GRAY
+#undef WHITE
+#undef BLACK
+
+#undef MAX_BRIGHTNESS
+#undef MAX_DARKNESS
