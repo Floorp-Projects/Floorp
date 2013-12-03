@@ -14,7 +14,8 @@ function ifWebGLSupported() {
   yield reloaded;
 
   let navigated = navigate(target, MULTIPLE_CONTEXTS_URL);
-  let [secondProgram, thirdProgram] = yield getPrograms(gFront, 2);
+  let secondProgram = yield once(gFront, "program-linked");
+  let thirdProgram = yield once(gFront, "program-linked");
   yield navigated;
 
   let vsEditor = yield ShadersEditorsView._getEditor("vs");
@@ -54,4 +55,10 @@ function ifWebGLSupported() {
 
   yield teardown(panel);
   finish();
+}
+
+function once(aTarget, aEvent) {
+  let deferred = promise.defer();
+  aTarget.once(aEvent, deferred.resolve);
+  return deferred.promise;
 }

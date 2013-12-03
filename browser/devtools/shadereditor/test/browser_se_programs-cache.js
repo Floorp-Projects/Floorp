@@ -7,14 +7,10 @@
 
 function ifWebGLSupported() {
   let [target, debuggee, panel] = yield initShaderEditor(MULTIPLE_CONTEXTS_URL);
-  let { EVENTS, gFront, ShadersListView, ShadersEditorsView } = panel.panelWin;
+  let { gFront, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
-  let [programActor, ] = yield promise.all([
-    getPrograms(gFront, 1),
-    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
-  ]).then(([programs, ]) => programs);
-
+  let programActor = yield once(gFront, "program-linked");
   let programItem = ShadersListView.selectedItem;
 
   is(programItem.attachment.programActor, programActor,
