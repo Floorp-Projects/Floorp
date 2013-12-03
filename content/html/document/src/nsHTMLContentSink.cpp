@@ -242,7 +242,7 @@ public:
 };
 
 nsresult
-NS_NewHTMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewHTMLElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
                   FromParser aFromParser)
 {
   *aResult = nullptr;

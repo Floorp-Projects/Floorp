@@ -11466,13 +11466,13 @@ nsIDocument::CreateHTMLElement(nsIAtom* aTag)
                                            nsIDOMNode::ELEMENT_NODE);
   MOZ_ASSERT(nodeInfo, "GetNodeInfo should never fail");
 
-  nsCOMPtr<nsIContent> content = nullptr;
-  DebugOnly<nsresult> rv = NS_NewHTMLElement(getter_AddRefs(content),
+  nsCOMPtr<Element> element;
+  DebugOnly<nsresult> rv = NS_NewHTMLElement(getter_AddRefs(element),
                                              nodeInfo.forget(),
                                              mozilla::dom::NOT_FROM_PARSER);
 
   MOZ_ASSERT(NS_SUCCEEDED(rv), "NS_NewHTMLElement should never fail");
-  return dont_AddRef(content.forget().get()->AsElement());
+  return element.forget();
 }
 
 bool
