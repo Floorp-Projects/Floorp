@@ -39,7 +39,7 @@ upload_classapi:
 	done
 	$(EXIT_ON_ERROR) \
 	for class in `cat graphtypes.list`; do \
-	  $(PYTHON) $(srcdir)/MDC-attach.py $${class}-graph.png en/$${class} "image/png" "Class inheritance graph"; \
+	  $(PYTHON) $(srcdir)/MDC-attach.py $${class}-graph.png en/$${class} image/png 'Class inheritance graph'; \
 	done
 
 GARBAGE += $(wildcard *.html) $(wildcard *.png) $(wildcard *.map) \

@@ -25,8 +25,8 @@ ifdef IS_COMPONENT
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/components
 	$(ELF_DYNSTR_GC) $(FINAL_TARGET)/components/$(SHARED_LIBRARY)
 ifndef NO_COMPONENTS_MANIFEST
-	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest "manifest components/components.manifest")
-	$(call py_action,buildlist,$(FINAL_TARGET)/components/components.manifest "binary-component $(SHARED_LIBRARY)")
+	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest 'manifest components/components.manifest')
+	$(call py_action,buildlist,$(FINAL_TARGET)/components/components.manifest 'binary-component $(SHARED_LIBRARY)')
 endif
 endif # IS_COMPONENT
 endif # SHARED_LIBRARY
@@ -109,11 +109,11 @@ BINARIES_INSTALL_TARGETS := $(foreach category,$(INSTALL_TARGETS),$(if $(filter 
 BINARIES_PP := $(MDDEPDIR)/binaries.pp
 
 $(BINARIES_PP): Makefile $(wildcard backend.mk) $(call mkdir_deps,$(MDDEPDIR))
-	@echo "$(strip $(foreach category,$(BINARIES_INSTALL_TARGETS),\
+	@echo '$(strip $(foreach category,$(BINARIES_INSTALL_TARGETS),\
 		$(foreach file,$($(category)_FILES) $($(category)_EXECUTABLES),\
 			$($(category)_DEST)/$(notdir $(file)): $(file)%\
 		)\
-	))binaries: Makefile $(wildcard backend.mk)" | tr % '\n' > $@
+	))binaries: Makefile $(wildcard backend.mk)' | tr % '\n' > $@
 
 else
 binaries::

@@ -192,6 +192,8 @@ class BacktrackingAllocator
     bool tryGroupRegisters(uint32_t vreg0, uint32_t vreg1);
     bool tryGroupReusedRegister(uint32_t def, uint32_t use);
     bool groupAndQueueRegisters();
+    bool tryAllocateFixed(LiveInterval *interval, bool *success, bool *pfixed, LiveInterval **pconflicting);
+    bool tryAllocateNonFixed(LiveInterval *interval, bool *success, bool *pfixed, LiveInterval **pconflicting);
     bool processInterval(LiveInterval *interval);
     bool processGroup(VirtualRegisterGroup *group);
     bool setIntervalRequirement(LiveInterval *interval);

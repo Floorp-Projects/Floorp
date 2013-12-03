@@ -18,15 +18,23 @@
     AREA ||.text||, CODE, READONLY, ALIGN=2
 
 
-;void vp8_intra4x4_predict(unsigned char *src, int src_stride, int b_mode,
-;                          unsigned char *dst, int dst_stride)
+;void vp8_intra4x4_predict_armv6(unsigned char *Above, unsigned char *yleft,
+;                                B_PREDICTION_MODE left_stride, int b_mode,
+;                                unsigned char *dst, int dst_stride,
+;                                unsigned char top_left)
 
+; r0: *Above
+; r1: *yleft
+; r2: left_stride
+; r3: b_mode
+; sp + #40: dst
+; sp + #44: dst_stride
+; sp + #48: top_left
 |vp8_intra4x4_predict_armv6| PROC
     push        {r4-r12, lr}
 
-
-    cmp         r2, #10
-    addlt       pc, pc, r2, lsl #2       ; position independent switch
+    cmp         r3, #10
+    addlt       pc, pc, r3, lsl #2       ; position independent switch
     pop         {r4-r12, pc}             ; default
     b           b_dc_pred
     b           b_tm_pred
@@ -41,13 +49,13 @@
 
 b_dc_pred
     ; load values
-    ldr         r8, [r0, -r1]            ; Above
-    ldrb        r4, [r0, #-1]!           ; Left[0]
+    ldr         r8, [r0]                 ; Above
+    ldrb        r4, [r1], r2             ; Left[0]
     mov         r9, #0
-    ldrb        r5, [r0, r1]             ; Left[1]
-    ldrb        r6, [r0, r1, lsl #1]!    ; Left[2]
+    ldrb        r5, [r1], r2             ; Left[1]
+    ldrb        r6, [r1], r2             ; Left[2]
     usad8       r12, r8, r9
-    ldrb        r7, [r0, r1]             ; Left[3]
+    ldrb        r7, [r1]                 ; Left[3]
 
     ; calculate dc
     add         r4, r4, r5
@@ -55,31 +63,30 @@ b_dc_pred
     add         r4, r4, r7
     add         r4, r4, r12
     add         r4, r4, #4
-    ldr         r0, [sp, #40]           ; load stride
+    ldr         r0, [sp, #44]           ; dst_stride
     mov         r12, r4, asr #3         ; (expected_dc + 4) >> 3
 
     add         r12, r12, r12, lsl #8
-    add         r3, r3, r0
+    ldr         r3, [sp, #40]           ; dst
     add         r12, r12, r12, lsl #16
 
     ; store values
-    str         r12, [r3, -r0]
+    str         r12, [r3], r0
+    str         r12, [r3], r0
+    str         r12, [r3], r0
     str         r12, [r3]
-    str         r12, [r3, r0]
-    str         r12, [r3, r0, lsl #1]
 
     pop        {r4-r12, pc}
 
 b_tm_pred
-    sub         r10, r0, #1             ; Left
-    ldr         r8, [r0, -r1]           ; Above
-    ldrb        r9, [r10, -r1]          ; top_left
-    ldrb        r4, [r0, #-1]!          ; Left[0]
-    ldrb        r5, [r10, r1]!          ; Left[1]
-    ldrb        r6, [r0, r1, lsl #1]    ; Left[2]
-    ldrb        r7, [r10, r1, lsl #1]   ; Left[3]
-    ldr         r0, [sp, #40]           ; load stride
-
+    ldr         r8, [r0]                ; Above
+    ldrb        r9, [sp, #48]           ; top_left
+    ldrb        r4, [r1], r2            ; Left[0]
+    ldrb        r5, [r1], r2            ; Left[1]
+    ldrb        r6, [r1], r2            ; Left[2]
+    ldrb        r7, [r1]                ; Left[3]
+    ldr         r0, [sp, #44]           ; dst_stride
+    ldr         r3, [sp, #40]           ; dst
 
     add         r9, r9, r9, lsl #16     ; [tl|tl]
     uxtb16      r10, r8                 ; a[2|0]
@@ -126,25 +133,26 @@ b_tm_pred
     str         r12, [r3], r0
 
     add         r12, r4, r5, lsl #8     ; [3|2|1|0]
-    str         r12, [r3], r0
+    str         r12, [r3]
 
     pop        {r4-r12, pc}
 
 b_ve_pred
-    ldr         r8, [r0, -r1]!          ; a[3|2|1|0]
+    ldr         r8, [r0]                ; a[3|2|1|0]
     ldr         r11, c00FF00FF
-    ldrb        r9, [r0, #-1]           ; top_left
+    ldrb        r9, [sp, #48]           ; top_left
     ldrb        r10, [r0, #4]           ; a[4]
 
     ldr         r0, c00020002
 
     uxtb16      r4, r8                  ; a[2|0]
     uxtb16      r5, r8, ror #8          ; a[3|1]
-    ldr         r2, [sp, #40]           ; stride
+    ldr         r2, [sp, #44]           ; dst_stride
     pkhbt       r9, r9, r5, lsl #16     ; a[1|-1]
 
     add         r9, r9, r4, lsl #1      ;[a[1]+2*a[2]       | tl+2*a[0]       ]
     uxtab16     r9, r9, r5              ;[a[1]+2*a[2]+a[3]  | tl+2*a[0]+a[1]  ]
+    ldr         r3, [sp, #40]           ; dst
     uxtab16     r9, r9, r0              ;[a[1]+2*a[2]+a[3]+2| tl+2*a[0]+a[1]+2]
 
     add         r0, r0, r10, lsl #16    ;[a[4]+2            |                 2]
@@ -154,25 +162,23 @@ b_ve_pred
 
     and         r9, r11, r9, asr #2
     and         r4, r11, r4, asr #2
-    add         r3, r3, r2              ; dst + dst_stride
     add         r9, r9, r4, lsl #8
 
     ; store values
-    str         r9, [r3, -r2]
+    str         r9, [r3], r2
+    str         r9, [r3], r2
+    str         r9, [r3], r2
     str         r9, [r3]
-    str         r9, [r3, r2]
-    str         r9, [r3, r2, lsl #1]
 
     pop        {r4-r12, pc}
 
 
 b_he_pred
-    sub         r10, r0, #1             ; Left
-    ldrb        r4, [r0, #-1]!          ; Left[0]
-    ldrb        r8, [r10, -r1]          ; top_left
-    ldrb        r5, [r10, r1]!          ; Left[1]
-    ldrb        r6, [r0, r1, lsl #1]    ; Left[2]
-    ldrb        r7, [r10, r1, lsl #1]   ; Left[3]
+    ldrb        r4, [r1], r2            ; Left[0]
+    ldrb        r8, [sp, #48]           ; top_left
+    ldrb        r5, [r1], r2            ; Left[1]
+    ldrb        r6, [r1], r2            ; Left[2]
+    ldrb        r7, [r1]                ; Left[3]
 
     add         r8, r8, r4              ; tl   + l[0]
     add         r9, r4, r5              ; l[0] + l[1]
@@ -197,7 +203,8 @@ b_he_pred
     pkhtb       r10, r10, r10, asr #16  ; l[-|2|-|2]
     pkhtb       r11, r11, r11, asr #16  ; l[-|3|-|3]
 
-    ldr         r0, [sp, #40]           ; stride
+    ldr         r0, [sp, #44]           ; dst_stride
+    ldr         r3, [sp, #40]           ; dst
 
     add         r8, r8, r8, lsl #8      ; l[0|0|0|0]
     add         r9, r9, r9, lsl #8      ; l[1|1|1|1]
@@ -206,16 +213,16 @@ b_he_pred
 
     ; store values
     str         r8, [r3], r0
-    str         r9, [r3]
-    str         r10, [r3, r0]
-    str         r11, [r3, r0, lsl #1]
+    str         r9, [r3], r0
+    str         r10, [r3], r0
+    str         r11, [r3]
 
     pop        {r4-r12, pc}
 
 b_ld_pred
-    ldr         r4, [r0, -r1]!          ; Above
+    ldr         r4, [r0]                ; Above[0-3]
     ldr         r12, c00020002
-    ldr         r5, [r0, #4]
+    ldr         r5, [r0, #4]            ; Above[4-7]
     ldr         lr,  c00FF00FF
 
     uxtb16      r6, r4                  ; a[2|0]
@@ -224,7 +231,6 @@ b_ld_pred
     uxtb16      r9, r5, ror #8          ; a[7|5]
     pkhtb       r10, r6, r8             ; a[2|4]
     pkhtb       r11, r7, r9             ; a[3|5]
-
 
     add         r4, r6, r7, lsl #1      ; [a2+2*a3      |      a0+2*a1]
     add         r4, r4, r10, ror #16    ; [a2+2*a3+a4   |   a0+2*a1+a2]
@@ -244,7 +250,8 @@ b_ld_pred
     add         r7, r7, r9, asr #16     ; [                 a5+2*a6+a7]
     uxtah       r7, r7, r12             ; [               a5+2*a6+a7+2]
 
-    ldr         r0, [sp, #40]           ; stride
+    ldr         r0, [sp, #44]           ; dst_stride
+    ldr         r3, [sp, #40]           ; dst
 
     ; scale down
     and         r4, lr, r4, asr #2
@@ -266,18 +273,17 @@ b_ld_pred
     mov         r6, r6, lsr #16
     mov         r11, r10, lsr #8
     add         r11, r11, r6, lsl #24   ; [6|5|4|3]
-    str         r11, [r3], r0
+    str         r11, [r3]
 
     pop        {r4-r12, pc}
 
 b_rd_pred
-    sub         r12, r0, r1             ; Above = src - src_stride
-    ldrb        r7, [r0, #-1]!          ; l[0] = pp[3]
-    ldr         lr, [r12]               ; Above = pp[8|7|6|5]
-    ldrb        r8, [r12, #-1]!         ; tl   = pp[4]
-    ldrb        r6, [r12, r1, lsl #1]   ; l[1] = pp[2]
-    ldrb        r5, [r0, r1, lsl #1]    ; l[2] = pp[1]
-    ldrb        r4, [r12, r1, lsl #2]   ; l[3] = pp[0]
+    ldrb        r7, [r1], r2            ; l[0] = pp[3]
+    ldr         lr, [r0]                ; Above = pp[8|7|6|5]
+    ldrb        r8, [sp, #48]           ; tl   = pp[4]
+    ldrb        r6, [r1], r2            ; l[1] = pp[2]
+    ldrb        r5, [r1], r2            ; l[2] = pp[1]
+    ldrb        r4, [r1], r2            ; l[3] = pp[0]
 
 
     uxtb16      r9, lr                  ; p[7|5]
@@ -307,7 +313,8 @@ b_rd_pred
     add         r7, r7, r10             ; [p6+2*p7+p8   |   p4+2*p5+p6]
     uxtab16     r7, r7, r12             ; [p6+2*p7+p8+2 | p4+2*p5+p6+2]
 
-    ldr         r0, [sp, #40]           ; stride
+    ldr         r0, [sp, #44]           ; dst_stride
+    ldr         r3, [sp, #40]           ; dst
 
     ; scale down
     and         r7, lr, r7, asr #2
@@ -328,18 +335,17 @@ b_rd_pred
 
     mov         r11, r10, lsl #8        ; [3|2|1|-]
     uxtab       r11, r11, r4            ; [3|2|1|0]
-    str         r11, [r3], r0
+    str         r11, [r3]
 
     pop        {r4-r12, pc}
 
 b_vr_pred
-    sub         r12, r0, r1             ; Above = src - src_stride
-    ldrb        r7, [r0, #-1]!          ; l[0] = pp[3]
-    ldr         lr, [r12]               ; Above = pp[8|7|6|5]
-    ldrb        r8, [r12, #-1]!         ; tl   = pp[4]
-    ldrb        r6, [r12, r1, lsl #1]   ; l[1] = pp[2]
-    ldrb        r5, [r0, r1, lsl #1]    ; l[2] = pp[1]
-    ldrb        r4, [r12, r1, lsl #2]   ; l[3] = pp[0]
+    ldrb        r7, [r1], r2            ; l[0] = pp[3]
+    ldr         lr, [r0]                ; Above = pp[8|7|6|5]
+    ldrb        r8, [sp, #48]           ; tl   = pp[4]
+    ldrb        r6, [r1], r2            ; l[1] = pp[2]
+    ldrb        r5, [r1], r2            ; l[2] = pp[1]
+    ldrb        r4, [r1]                ; l[3] = pp[0]
 
     add         r5, r5, r7, lsl #16     ; p[3|1]
     add         r6, r6, r8, lsl #16     ; p[4|2]
@@ -376,7 +382,8 @@ b_vr_pred
     add         r8, r8, r10             ; [p6+2*p7+p8   |   p4+2*p5+p6]
     uxtab16     r8, r8, r12             ; [p6+2*p7+p8+2 | p4+2*p5+p6+2]
 
-    ldr         r0, [sp, #40]           ; stride
+    ldr         r0, [sp, #44]           ; dst_stride
+    ldr         r3, [sp, #40]           ; dst
 
     ; scale down
     and         r5, lr, r5, asr #2      ; [B|A]
@@ -397,14 +404,14 @@ b_vr_pred
     pkhtb       r10, r7, r5, asr #16    ; [-|H|-|B]
     str         r2, [r3], r0
     add         r12, r12, r10, lsl #8   ; [H|D|B|A]
-    str         r12, [r3], r0
+    str         r12, [r3]
 
     pop        {r4-r12, pc}
 
 b_vl_pred
-    ldr         r4, [r0, -r1]!          ; [3|2|1|0]
+    ldr         r4, [r0]                ; [3|2|1|0] = Above[0-3]
     ldr         r12, c00020002
-    ldr         r5, [r0, #4]            ; [7|6|5|4]
+    ldr         r5, [r0, #4]            ; [7|6|5|4] = Above[4-7]
     ldr         lr,  c00FF00FF
     ldr         r2,  c00010001
 
@@ -441,14 +448,14 @@ b_vl_pred
     add         r9, r9, r11             ; [p5+2*p6+p7   |   p3+2*p4+p5]
     uxtab16     r9, r9, r12             ; [p5+2*p6+p7+2 | p3+2*p4+p5+2]
 
-    ldr         r0, [sp, #40]           ; stride
+    ldr         r0, [sp, #44]           ; dst_stride
+    ldr         r3, [sp, #40]           ; dst
 
     ; scale down
     and         r5, lr, r5, asr #2      ; [D|C]
     and         r7, lr, r7, asr #2      ; [H|G]
     and         r8, lr, r8, asr #2      ; [I|D]
     and         r9, lr, r9, asr #2      ; [J|H]
-
 
     add         r10, r4, r6, lsl #8     ; [F|B|E|A]
     str         r10, [r3], r0
@@ -463,18 +470,17 @@ b_vl_pred
     str         r12, [r3], r0
 
     add         r10, r7, r10, lsl #8    ; [J|H|D|G]
-    str         r10, [r3], r0
+    str         r10, [r3]
 
     pop        {r4-r12, pc}
 
 b_hd_pred
-    sub         r12, r0, r1             ; Above = src - src_stride
-    ldrb        r7, [r0, #-1]!          ; l[0] = pp[3]
-    ldr         lr, [r12]               ; Above = pp[8|7|6|5]
-    ldrb        r8, [r12, #-1]!         ; tl   = pp[4]
-    ldrb        r6, [r0, r1]            ; l[1] = pp[2]
-    ldrb        r5, [r0, r1, lsl #1]    ; l[2] = pp[1]
-    ldrb        r4, [r12, r1, lsl #2]   ; l[3] = pp[0]
+    ldrb        r7, [r1], r2            ; l[0] = pp[3]
+    ldr         lr, [r0]                ; Above = pp[8|7|6|5]
+    ldrb        r8, [sp, #48]           ; tl   = pp[4]
+    ldrb        r6, [r1], r2            ; l[1] = pp[2]
+    ldrb        r5, [r1], r2            ; l[2] = pp[1]
+    ldrb        r4, [r1]                ; l[3] = pp[0]
 
     uxtb16      r9, lr                  ; p[7|5]
     uxtb16      r10, lr, ror #8         ; p[8|6]
@@ -491,7 +497,6 @@ b_hd_pred
     pkhtb       r8, r7, r9              ; p[4|5]
     pkhtb       r1, r9, r10             ; p[7|6]
     pkhbt       r10, r8, r10, lsl #16   ; p[6|5]
-
 
     uadd16      r11, r4, r5             ; [p1+p2        |        p0+p1]
     uhadd16     r11, r11, r2            ; [(p1+p2+1)>>1 | (p0+p1+1)>>1]
@@ -518,7 +523,8 @@ b_hd_pred
     and         r5, lr, r5, asr #2      ; [H|G]
     and         r6, lr, r6, asr #2      ; [J|I]
 
-    ldr         lr, [sp, #40]           ; stride
+    ldr         lr, [sp, #44]           ; dst_stride
+    ldr         r3, [sp, #40]           ; dst
 
     pkhtb       r2, r0, r6              ; [-|F|-|I]
     pkhtb       r12, r6, r5, asr #16    ; [-|J|-|H]
@@ -526,7 +532,6 @@ b_hd_pred
     add         r2, r0, r5, lsl #8      ; [H|F|G|E]
     mov         r12, r12, ror #24       ; [J|I|H|F]
     str         r12, [r3], lr
-
 
     mov         r7, r11, asr #16        ; [-|-|-|B]
     str         r2, [r3], lr
@@ -536,21 +541,20 @@ b_hd_pred
     str         r7, [r3], lr
 
     add         r5, r11, r4, lsl #8     ; [D|B|C|A]
-    str         r5, [r3], lr
+    str         r5, [r3]
 
     pop        {r4-r12, pc}
 
 
 
 b_hu_pred
-    ldrb        r4, [r0, #-1]!          ; Left[0]
+    ldrb        r4, [r1], r2            ; Left[0]
     ldr         r12, c00020002
-    ldrb        r5, [r0, r1]!           ; Left[1]
+    ldrb        r5, [r1], r2            ; Left[1]
     ldr         lr,  c00FF00FF
-    ldrb        r6, [r0, r1]!           ; Left[2]
+    ldrb        r6, [r1], r2            ; Left[2]
     ldr         r2,  c00010001
-    ldrb        r7, [r0, r1]            ; Left[3]
-
+    ldrb        r7, [r1]                ; Left[3]
 
     add         r4, r4, r5, lsl #16     ; [1|0]
     add         r5, r5, r6, lsl #16     ; [2|1]
@@ -563,7 +567,8 @@ b_hu_pred
     add         r4, r4, r5, lsl #1      ; [p1+2*p2      |      p0+2*p1]
     add         r4, r4, r9              ; [p1+2*p2+p3   |   p0+2*p1+p2]
     uxtab16     r4, r4, r12             ; [p1+2*p2+p3+2 | p0+2*p1+p2+2]
-    ldr         r2, [sp, #40]           ; stride
+    ldr         r2, [sp, #44]           ; dst_stride
+    ldr         r3, [sp, #40]           ; dst
     and         r4, lr, r4, asr #2      ; [D|C]
 
     add         r10, r6, r7             ; [p2+p3]
@@ -587,9 +592,9 @@ b_hu_pred
 
     add         r10, r11, lsl #8        ; [-|-|F|E]
     add         r10, r10, r9, lsl #16   ; [G|G|F|E]
-    str         r10, [r3]
+    str         r10, [r3], r2
 
-    str         r7, [r3, r2]
+    str         r7, [r3]
 
     pop        {r4-r12, pc}
 

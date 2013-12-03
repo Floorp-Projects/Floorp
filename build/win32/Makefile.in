@@ -44,7 +44,7 @@ libs-preqs = \
   $(NULL)
 
 libs:: $(libs-preqs)
-	install --preserve-timestamps $(foreach f,$(REDIST_FILES),"$(WIN32_REDIST_DIR)"/$(f)) $(FINAL_TARGET)
+	install --preserve-timestamps $(foreach f,$(REDIST_FILES),'$(WIN32_REDIST_DIR)'/$(f)) $(FINAL_TARGET)
 endif
 
 endif # ! MOZ_DEBUG

@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Endian.h"
 #include <stdint.h>
 
 #include "nsDebug.h"
@@ -37,35 +38,6 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 #else
 #define LOG(type, msg)
 #endif
-
-// Reads a little-endian encoded unsigned 32bit integer at p.
-static uint32_t LEUint32(const unsigned char* p)
-{
-  return p[0] +
-        (p[1] << 8) +
-        (p[2] << 16) +
-        (p[3] << 24);
-}
-
-// Reads a little-endian encoded 64bit integer at p.
-static int64_t LEInt64(const unsigned char* p)
-{
-  uint32_t lo = LEUint32(p);
-  uint32_t hi = LEUint32(p + 4);
-  return static_cast<int64_t>(lo) | (static_cast<int64_t>(hi) << 32);
-}
-
-// Reads a little-endian encoded unsigned 16bit integer at p.
-static uint16_t LEUint16(const unsigned char* p)
-{
-  return p[0] + (p[1] << 8);
-}
-
-// Reads a little-endian encoded signed 16bit integer at p.
-inline int16_t LEInt16(const unsigned char* p)
-{
-  return static_cast<int16_t>(LEUint16(p));
-}
 
 /** Decoder base class for Ogg-encapsulated streams. */
 OggCodecState*
@@ -826,18 +798,7 @@ nsresult VorbisState::ReconstructVorbisGranulepos()
 #ifdef MOZ_OPUS
 OpusState::OpusState(ogg_page* aBosPage) :
   OggCodecState(aBosPage, true),
-  mRate(0),
-  mNominalRate(0),
-  mChannels(0),
-  mPreSkip(0),
-#ifdef MOZ_SAMPLE_TYPE_FLOAT32
-  mGain(1.0f),
-#else
-  mGain_Q16(65536),
-#endif
-  mChannelMapping(0),
-  mStreams(0),
-  mCoupledStreams(0),
+  mParser(nullptr),
   mDecoder(nullptr),
   mSkip(0),
   mPrevPacketGranulepos(0),
@@ -869,7 +830,7 @@ nsresult OpusState::Reset(bool aStart)
     // Reset the decoder.
     opus_multistream_decoder_ctl(mDecoder, OPUS_RESET_STATE);
     // Let the seek logic handle pre-roll if we're not seeking to the start.
-    mSkip = aStart ? mPreSkip : 0;
+    mSkip = aStart ? mParser->mPreSkip : 0;
     // This lets us distinguish the first page being the last page vs. just
     // not having processed the previous page when we encounter the last page.
     mPrevPageGranulepos = aStart ? 0 : -1;
@@ -895,14 +856,14 @@ bool OpusState::Init(void)
 
   NS_ASSERTION(mDecoder == nullptr, "leaking OpusDecoder");
 
-  mDecoder = opus_multistream_decoder_create(mRate,
-                                             mChannels,
-                                             mStreams,
-                                             mCoupledStreams,
-                                             mMappingTable,
+  mDecoder = opus_multistream_decoder_create(mParser->mRate,
+                                             mParser->mChannels,
+                                             mParser->mStreams,
+                                             mParser->mCoupledStreams,
+                                             mParser->mMappingTable,
                                              &error);
 
-  mSkip = mPreSkip;
+  mSkip = mParser->mPreSkip;
 
   LOG(PR_LOG_DEBUG, ("Opus decoder init, to skip %d", mSkip));
 
@@ -915,147 +876,26 @@ bool OpusState::DecodeHeader(ogg_packet* aPacket)
   switch(mPacketCount++) {
     // Parse the id header.
     case 0: {
-      if (aPacket->bytes < 19 || memcmp(aPacket->packet, "OpusHead", 8)) {
-        LOG(PR_LOG_DEBUG, ("Invalid Opus file: unrecognized header"));
-        return false;
-      }
-
-      mRate = 48000; // The Opus decoder runs at 48 kHz regardless.
-
-      int version = aPacket->packet[8];
-      // Accept file format versions 0.x.
-      if ((version & 0xf0) != 0) {
-        LOG(PR_LOG_DEBUG, ("Rejecting unknown Opus file version %d", version));
-        return false;
-      }
-
-      mChannels = aPacket->packet[9];
-      if (mChannels<1) {
-        LOG(PR_LOG_DEBUG, ("Invalid Opus file: Number of channels %d", mChannels));
-        return false;
-      }
-      mPreSkip = LEUint16(aPacket->packet + 10);
-      mNominalRate = LEUint32(aPacket->packet + 12);
-      double gain_dB = LEInt16(aPacket->packet + 16) / 256.0;
+        mParser = new OpusParser;
+        if(!mParser->DecodeHeader(aPacket->packet, aPacket->bytes)) {
+          return false;
+        }
+        mRate = mParser->mRate;
+        mChannels = mParser->mChannels;
+        mPreSkip = mParser->mPreSkip;
 #ifdef MOZ_SAMPLE_TYPE_FLOAT32
-      mGain = static_cast<float>(pow(10,0.05*gain_dB));
+        mGain = mParser->mGain;
 #else
-      mGain_Q16 = static_cast<int32_t>(std::min(65536*pow(10,0.05*gain_dB)+0.5,
-                                              static_cast<double>(INT32_MAX)));
-#endif
-      mChannelMapping = aPacket->packet[18];
-
-      if (mChannelMapping == 0) {
-        // Mapping family 0 only allows two channels
-        if (mChannels>2) {
-          LOG(PR_LOG_DEBUG, ("Invalid Opus file: too many channels (%d) for"
-                             " mapping family 0.", mChannels));
-          return false;
-        }
-        mStreams = 1;
-        mCoupledStreams = mChannels - 1;
-        mMappingTable[0] = 0;
-        mMappingTable[1] = 1;
-      } else if (mChannelMapping == 1) {
-        // Currently only up to 8 channels are defined for mapping family 1
-        if (mChannels>8) {
-          LOG(PR_LOG_DEBUG, ("Invalid Opus file: too many channels (%d) for"
-                             " mapping family 1.", mChannels));
-          return false;
-        }
-        if (aPacket->bytes>20+mChannels) {
-          mStreams = aPacket->packet[19];
-          mCoupledStreams = aPacket->packet[20];
-          int i;
-          for (i=0; i<mChannels; i++)
-            mMappingTable[i] = aPacket->packet[21+i];
-        } else {
-          LOG(PR_LOG_DEBUG, ("Invalid Opus file: channel mapping %d,"
-                             " but no channel mapping table", mChannelMapping));
-          return false;
-        }
-      } else {
-        LOG(PR_LOG_DEBUG, ("Invalid Opus file: unsupported channel mapping "
-                           "family %d", mChannelMapping));
-        return false;
-      }
-      if (mStreams < 1) {
-        LOG(PR_LOG_DEBUG, ("Invalid Opus file: no streams"));
-        return false;
-      }
-      if (mCoupledStreams > mStreams) {
-        LOG(PR_LOG_DEBUG, ("Invalid Opus file: more coupled streams (%d) than "
-                           "total streams (%d)", mCoupledStreams, mStreams));
-        return false;
-      }
-
-#ifdef DEBUG
-      LOG(PR_LOG_DEBUG, ("Opus stream header:"));
-      LOG(PR_LOG_DEBUG, (" channels: %d", mChannels));
-      LOG(PR_LOG_DEBUG, ("  preskip: %d", mPreSkip));
-      LOG(PR_LOG_DEBUG, (" original: %d Hz", mNominalRate));
-      LOG(PR_LOG_DEBUG, ("     gain: %.2f dB", gain_dB));
-      LOG(PR_LOG_DEBUG, ("Channel Mapping:"));
-      LOG(PR_LOG_DEBUG, ("   family: %d", mChannelMapping));
-      LOG(PR_LOG_DEBUG, ("  streams: %d", mStreams));
+        mGain_Q16 = mParser->mGain_Q16;
 #endif
     }
     break;
 
     // Parse the metadata header.
     case 1: {
-      if (aPacket->bytes < 16 || memcmp(aPacket->packet, "OpusTags", 8))
-        return false;
-
-      // Copy out the raw comment lines, but only do basic validation
-      // checks against the string packing: too little data, too many
-      // comments, or comments that are too long. Rejecting these cases
-      // helps reduce the propagation of broken files.
-      // We do not ensure they are valid UTF-8 here, nor do we validate
-      // the required ASCII_TAG=value format of the user comments.
-      const unsigned char* buf = aPacket->packet + 8;
-      uint32_t bytes = aPacket->bytes - 8;
-      uint32_t len;
-      // Read the vendor string.
-      len = LEUint32(buf);
-      buf += 4;
-      bytes -= 4;
-      if (len > bytes)
-        return false;
-      mVendorString = nsCString(reinterpret_cast<const char*>(buf), len);
-      buf += len;
-      bytes -= len;
-      // Read the user comments.
-      if (bytes < 4)
-        return false;
-      uint32_t ncomments = LEUint32(buf);
-      buf += 4;
-      bytes -= 4;
-      // If there are so many comments even their length fields
-      // won't fit in the packet, stop reading now.
-      if (ncomments > (bytes>>2))
-        return false;
-      uint32_t i;
-      for (i = 0; i < ncomments; i++) {
-        if (bytes < 4)
+        if(!mParser->DecodeTags(aPacket->packet, aPacket->bytes)) {
           return false;
-        len = LEUint32(buf);
-        buf += 4;
-        bytes -= 4;
-        if (len > bytes)
-          return false;
-        mTags.AppendElement(nsCString(reinterpret_cast<const char*>(buf), len));
-        buf += len;
-        bytes -= len;
-      }
-
-#ifdef DEBUG
-      LOG(PR_LOG_DEBUG, ("Opus metadata header:"));
-      LOG(PR_LOG_DEBUG, ("  vendor: %s", mVendorString.get()));
-      for (uint32_t i = 0; i < mTags.Length(); i++) {
-        LOG(PR_LOG_DEBUG, (" %s", mTags[i].get()));
-      }
-#endif
+        }
     }
     break;
 
@@ -1077,8 +917,8 @@ MetadataTags* OpusState::GetTags()
   MetadataTags* tags;
 
   tags = new MetadataTags;
-  for (uint32_t i = 0; i < mTags.Length(); i++) {
-    AddVorbisComment(tags, mTags[i].Data(), mTags[i].Length());
+  for (uint32_t i = 0; i < mParser->mTags.Length(); i++) {
+    AddVorbisComment(tags, mParser->mTags[i].Data(), mParser->mTags[i].Length());
   }
 
   return tags;
@@ -1090,7 +930,7 @@ int64_t OpusState::Time(int64_t aGranulepos)
   if (!mActive)
     return -1;
 
-  return Time(mPreSkip, aGranulepos);
+  return Time(mParser->mPreSkip, aGranulepos);
 }
 
 int64_t OpusState::Time(int aPreSkip, int64_t aGranulepos)
@@ -1328,13 +1168,13 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket)
     return false;
   }
 
-  uint32_t serialno = LEUint32(aPacket->packet + INDEX_SERIALNO_OFFSET);
-  int64_t numKeyPoints = LEInt64(aPacket->packet + INDEX_NUM_KEYPOINTS_OFFSET);
+  uint32_t serialno = LittleEndian::readUint32(aPacket->packet + INDEX_SERIALNO_OFFSET);
+  int64_t numKeyPoints = LittleEndian::readInt64(aPacket->packet + INDEX_NUM_KEYPOINTS_OFFSET);
 
   int64_t endTime = 0, startTime = 0;
   const unsigned char* p = aPacket->packet;
 
-  int64_t timeDenom = LEInt64(aPacket->packet + INDEX_TIME_DENOM_OFFSET);
+  int64_t timeDenom = LittleEndian::readInt64(aPacket->packet + INDEX_TIME_DENOM_OFFSET);
   if (timeDenom == 0) {
     LOG(PR_LOG_DEBUG, ("Ogg Skeleton Index packet for stream %u has 0 "
                        "timestamp denominator.", serialno));
@@ -1342,7 +1182,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket)
   }
 
   // Extract the start time.
-  CheckedInt64 t = CheckedInt64(LEInt64(p + INDEX_FIRST_NUMER_OFFSET)) * USECS_PER_S;
+  CheckedInt64 t = CheckedInt64(LittleEndian::readInt64(p + INDEX_FIRST_NUMER_OFFSET)) * USECS_PER_S;
   if (!t.isValid()) {
     return (mActive = false);
   } else {
@@ -1350,7 +1190,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket)
   }
 
   // Extract the end time.
-  t = LEInt64(p + INDEX_LAST_NUMER_OFFSET) * USECS_PER_S;
+  t = LittleEndian::readInt64(p + INDEX_LAST_NUMER_OFFSET) * USECS_PER_S;
   if (!t.isValid()) {
     return (mActive = false);
   } else {
@@ -1531,13 +1371,13 @@ bool SkeletonState::DecodeHeader(ogg_packet* aPacket)
 {
   nsAutoRef<ogg_packet> autoRelease(aPacket);
   if (IsSkeletonBOS(aPacket)) {
-    uint16_t verMajor = LEUint16(aPacket->packet + SKELETON_VERSION_MAJOR_OFFSET);
-    uint16_t verMinor = LEUint16(aPacket->packet + SKELETON_VERSION_MINOR_OFFSET);
+    uint16_t verMajor = LittleEndian::readUint16(aPacket->packet + SKELETON_VERSION_MAJOR_OFFSET);
+    uint16_t verMinor = LittleEndian::readUint16(aPacket->packet + SKELETON_VERSION_MINOR_OFFSET);
 
     // Read the presentation time. We read this before the version check as the
     // presentation time exists in all versions.
-    int64_t n = LEInt64(aPacket->packet + SKELETON_PRESENTATION_TIME_NUMERATOR_OFFSET);
-    int64_t d = LEInt64(aPacket->packet + SKELETON_PRESENTATION_TIME_DENOMINATOR_OFFSET);
+    int64_t n = LittleEndian::readInt64(aPacket->packet + SKELETON_PRESENTATION_TIME_NUMERATOR_OFFSET);
+    int64_t d = LittleEndian::readInt64(aPacket->packet + SKELETON_PRESENTATION_TIME_DENOMINATOR_OFFSET);
     mPresentationTime = d == 0 ? 0 : (static_cast<float>(n) / static_cast<float>(d)) * USECS_PER_S;
 
     mVersion = SKELETON_VERSION(verMajor, verMinor);
@@ -1548,7 +1388,7 @@ bool SkeletonState::DecodeHeader(ogg_packet* aPacket)
       return false;
 
     // Extract the segment length.
-    mLength = LEInt64(aPacket->packet + SKELETON_FILE_LENGTH_OFFSET);
+    mLength = LittleEndian::readInt64(aPacket->packet + SKELETON_FILE_LENGTH_OFFSET);
 
     LOG(PR_LOG_DEBUG, ("Skeleton segment length: %lld", mLength));
 

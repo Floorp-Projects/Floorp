@@ -32,7 +32,7 @@ chrome-%:
 
 ifdef MOZ_UPDATER
 libs:: update.locale
-	cat $< | sed -e "s/%AB_CD%/$(AB_CD)/" > $(FINAL_TARGET)/update.locale
+	sed -e 's/%AB_CD%/$(AB_CD)/' $< > $(FINAL_TARGET)/update.locale
 endif
 
 ifdef MOZ_CRASHREPORTER

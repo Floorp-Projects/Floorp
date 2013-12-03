@@ -123,13 +123,14 @@ tabbrowser {
   /* Explicitly set the visibility to override the value (collapsed)
    * we inherit from #TabsToolbar[collapsed] upon opening a browser window. */
   visibility: visible;
-  /* This transition is only applied when opening a new tab. Closing tabs
-   * are just hidden so we don't need to adjust the delay for that. */
+  /* The transition is only delayed for opening tabs. */
   transition: visibility 0ms 25ms;
 }
 
-.tab-background[selected]:not([fadein]):not([pinned]) {
+.tab-background:not([fadein]):not([pinned]) {
   visibility: hidden;
+  /* Closing tabs are hidden without a delay. */
+  transition-delay: 0ms;
 }
 
 .tab-throbber:not([fadein]):not([pinned]),

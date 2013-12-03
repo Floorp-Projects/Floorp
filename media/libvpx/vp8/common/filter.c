@@ -149,7 +149,7 @@ static void filter_block2d
 }
 
 
-void vp8_sixtap_predict_c
+void vp8_sixtap_predict4x4_c
 (
     unsigned char  *src_ptr,
     int   src_pixels_per_line,

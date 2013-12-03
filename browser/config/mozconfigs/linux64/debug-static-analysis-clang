@@ -2,6 +2,8 @@
 
 ac_add_options --enable-debug
 
+ac_add_options --disable-unified-compilation
+
 # Use Clang as specified in manifest
 export CC="$topsrcdir/clang/bin/clang"
 export CXX="$topsrcdir/clang/bin/clang++"

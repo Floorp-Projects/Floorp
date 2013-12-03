@@ -39,12 +39,13 @@ function createToolbarWithPlacements(id, placements) {
     defaultPlacements: placements
   });
   gNavToolbox.appendChild(tb);
+  return tb;
 }
 
 function removeCustomToolbars() {
   CustomizableUI.reset();
   for (let toolbarId of gAddedToolbars) {
-    CustomizableUI.unregisterArea(toolbarId);
+    CustomizableUI.unregisterArea(toolbarId, true);
     document.getElementById(toolbarId).remove();
   }
   gAddedToolbars.clear();
@@ -71,6 +72,10 @@ function addSwitchToMetroButtonInWindows8(areaPanelPlacements) {
 
 function assertAreaPlacements(areaId, expectedPlacements) {
   let actualPlacements = getAreaWidgetIds(areaId);
+  placementArraysEqual(areaId, actualPlacements, expectedPlacements);
+}
+
+function placementArraysEqual(areaId, actualPlacements, expectedPlacements) {
   is(actualPlacements.length, expectedPlacements.length,
      "Area " + areaId + " should have " + expectedPlacements.length + " items.");
   let minItems = Math.min(expectedPlacements.length, actualPlacements.length);
