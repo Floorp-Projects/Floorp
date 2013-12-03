@@ -11,6 +11,9 @@
 #include <opus/opus.h>
 #include "opus/opus_multistream.h"
 
+#include "nsTArray.h"
+#include "nsString.h"
+
 namespace mozilla {
 
 class OpusParser
