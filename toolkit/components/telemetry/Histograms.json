@@ -3497,6 +3497,13 @@
     "extended_statistics_ok": true,
     "description": "Time (ms) spent to initialize Firefox Health Report service."
   },
+  "HEALTHREPORT_SHUTDOWN_DELAY_MS": {
+    "kind": "exponential",
+    "high": "20000",
+    "n_buckets": 15,
+    "extended_statistics_ok": true,
+    "description": "Time (ms) that Firefox Health Report delays application shutdown by."
+  },
   "HEALTHREPORT_GENERATE_JSON_PAYLOAD_MS": {
     "kind": "exponential",
     "high": "30000",
