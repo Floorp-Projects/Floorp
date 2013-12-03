@@ -18,7 +18,6 @@ void vpx_log(const char *format, ...);
 #include "vpx_scale/yv12config.h"
 #include "mv.h"
 #include "treecoder.h"
-#include "subpixel.h"
 #include "vpx_ports/mem.h"
 
 /*#define DCPRED 1*/
@@ -151,56 +150,61 @@ typedef enum
 
 typedef struct
 {
-    MB_PREDICTION_MODE mode, uv_mode;
-    MV_REFERENCE_FRAME ref_frame;
+    uint8_t mode, uv_mode;
+    uint8_t ref_frame;
+    uint8_t is_4x4;
     int_mv mv;
 
-    unsigned char partitioning;
-    unsigned char mb_skip_coeff;                                /* does this mb has coefficients at all, 1=no coefficients, 0=need decode tokens */
-    unsigned char need_to_clamp_mvs;
-    unsigned char segment_id;                  /* Which set of segmentation parameters should be used for this MB */
+    uint8_t partitioning;
+    uint8_t mb_skip_coeff;                                /* does this mb has coefficients at all, 1=no coefficients, 0=need decode tokens */
+    uint8_t need_to_clamp_mvs;
+    uint8_t segment_id;                  /* Which set of segmentation parameters should be used for this MB */
 } MB_MODE_INFO;
 
-typedef struct
+typedef struct modeinfo
 {
     MB_MODE_INFO mbmi;
     union b_mode_info bmi[16];
 } MODE_INFO;
 
 #if CONFIG_MULTI_RES_ENCODING
-/* The information needed to be stored for higher-resolution encoder */
+/* The mb-level information needed to be stored for higher-resolution encoder */
 typedef struct
 {
     MB_PREDICTION_MODE mode;
     MV_REFERENCE_FRAME ref_frame;
     int_mv mv;
-    //union b_mode_info bmi[16];
-    int dissim;    // dissimilarity level of the macroblock
-} LOWER_RES_INFO;
+    int dissim;    /* dissimilarity level of the macroblock */
+} LOWER_RES_MB_INFO;
+
+/* The frame-level information needed to be stored for higher-resolution
+ *  encoder */
+typedef struct
+{
+    FRAME_TYPE frame_type;
+    int is_frame_dropped;
+    /* The frame number of each reference frames */
+    unsigned int low_res_ref_frames[MAX_REF_FRAMES];
+    LOWER_RES_MB_INFO *mb_info;
+} LOWER_RES_FRAME_INFO;
 #endif
 
-typedef struct
+typedef struct blockd
 {
     short *qcoeff;
     short *dqcoeff;
     unsigned char  *predictor;
     short *dequant;
 
-    /* 16 Y blocks, 4 U blocks, 4 V blocks each with 16 entries */
-    unsigned char **base_pre;
-    int pre;
-    int pre_stride;
-
-    unsigned char **base_dst;
-    int dst;
-    int dst_stride;
-
+    int offset;
     char *eob;
 
     union b_mode_info bmi;
 } BLOCKD;
 
-typedef struct MacroBlockD
+typedef void (*vp8_subpix_fn_t)(unsigned char *src, int src_pitch, int xofst, int yofst, unsigned char *dst, int dst_pitch);
+
+typedef struct macroblockd
 {
     DECLARE_ALIGNED(16, unsigned char,  predictor[384]);
     DECLARE_ALIGNED(16, short, qcoeff[400]);
@@ -226,6 +230,10 @@ typedef struct MacroBlockD
 
     int up_available;
     int left_available;
+
+    unsigned char *recon_above[3];
+    unsigned char *recon_left[3];
+    int recon_left_stride[2];
 
     /* Y,U,V,Y2 */
     ENTROPY_CONTEXT_PLANES *above_context;
@@ -265,11 +273,8 @@ typedef struct MacroBlockD
     int mb_to_top_edge;
     int mb_to_bottom_edge;
 
-    int ref_frame_cost[MAX_REF_FRAMES];
 
 
-    unsigned int frames_since_golden;
-    unsigned int frames_till_alt_ref_frame;
     vp8_subpix_fn_t  subpixel_predict;
     vp8_subpix_fn_t  subpixel_predict8x4;
     vp8_subpix_fn_t  subpixel_predict8x8;
@@ -285,10 +290,6 @@ typedef struct MacroBlockD
      * purpose.
      */
     DECLARE_ALIGNED(32, unsigned char, y_buf[22*32]);
-#endif
-
-#if CONFIG_RUNTIME_CPU_DETECT
-    struct VP8_COMMON_RTCD  *rtcd;
 #endif
 } MACROBLOCKD;
 

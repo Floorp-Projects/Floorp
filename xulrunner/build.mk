@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 installer:
-	@echo "XULRunner doesn't have an installer yet."
+	@echo 'XULRunner doesn't have an installer yet.'
 
 package:
 	@$(MAKE) -C xulrunner/installer

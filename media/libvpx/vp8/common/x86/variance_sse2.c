@@ -184,7 +184,7 @@ unsigned int vp8_variance16x16_wmt
 
     vp8_get16x16var_sse2(src_ptr, source_stride, ref_ptr, recon_stride, &sse0, &sum0) ;
     *sse = sse0;
-    return (sse0 - ((sum0 * sum0) >> 8));
+    return (sse0 - ((unsigned int)(sum0 * sum0) >> 8));
 }
 unsigned int vp8_mse16x16_wmt(
     const unsigned char *src_ptr,
@@ -265,7 +265,7 @@ unsigned int vp8_sub_pixel_variance4x4_wmt
         &xsum, &xxsum
     );
     *sse = xxsum;
-    return (xxsum - ((xsum * xsum) >> 4));
+    return (xxsum - ((unsigned int)(xsum * xsum) >> 4));
 }
 
 
@@ -314,7 +314,7 @@ unsigned int vp8_sub_pixel_variance8x8_wmt
     }
 
     *sse = xxsum;
-    return (xxsum - ((xsum * xsum) >> 6));
+    return (xxsum - ((unsigned int)(xsum * xsum) >> 6));
 }
 
 unsigned int vp8_sub_pixel_variance16x16_wmt
@@ -332,8 +332,9 @@ unsigned int vp8_sub_pixel_variance16x16_wmt
     unsigned int xxsum0, xxsum1;
 
 
-    // note we could avoid these if statements if the calling function
-    // just called the appropriate functions inside.
+    /* note we could avoid these if statements if the calling function
+     * just called the appropriate functions inside.
+     */
     if (xoffset == 4 && yoffset == 0)
     {
         vp8_half_horiz_variance16x_h_sse2(
@@ -375,7 +376,7 @@ unsigned int vp8_sub_pixel_variance16x16_wmt
     }
 
     *sse = xxsum0;
-    return (xxsum0 - ((xsum0 * xsum0) >> 8));
+    return (xxsum0 - ((unsigned int)(xsum0 * xsum0) >> 8));
 }
 
 unsigned int vp8_sub_pixel_mse16x16_wmt(
@@ -446,7 +447,7 @@ unsigned int vp8_sub_pixel_variance16x8_wmt
     }
 
     *sse = xxsum0;
-    return (xxsum0 - ((xsum0 * xsum0) >> 7));
+    return (xxsum0 - ((unsigned int)(xsum0 * xsum0) >> 7));
 }
 
 unsigned int vp8_sub_pixel_variance8x16_wmt
@@ -494,7 +495,7 @@ unsigned int vp8_sub_pixel_variance8x16_wmt
     }
 
     *sse = xxsum;
-    return (xxsum - ((xsum * xsum) >> 7));
+    return (xxsum - ((unsigned int)(xsum * xsum) >> 7));
 }
 
 
@@ -514,7 +515,7 @@ unsigned int vp8_variance_halfpixvar16x16_h_wmt(
         &xsum0, &xxsum0);
 
     *sse = xxsum0;
-    return (xxsum0 - ((xsum0 * xsum0) >> 8));
+    return (xxsum0 - ((unsigned int)(xsum0 * xsum0) >> 8));
 }
 
 
@@ -533,7 +534,7 @@ unsigned int vp8_variance_halfpixvar16x16_v_wmt(
         &xsum0, &xxsum0);
 
     *sse = xxsum0;
-    return (xxsum0 - ((xsum0 * xsum0) >> 8));
+    return (xxsum0 - ((unsigned int)(xsum0 * xsum0) >> 8));
 }
 
 
@@ -553,5 +554,5 @@ unsigned int vp8_variance_halfpixvar16x16_hv_wmt(
         &xsum0, &xxsum0);
 
     *sse = xxsum0;
-    return (xxsum0 - ((xsum0 * xsum0) >> 8));
+    return (xxsum0 - ((unsigned int)(xsum0 * xsum0) >> 8));
 }

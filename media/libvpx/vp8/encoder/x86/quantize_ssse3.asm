@@ -17,7 +17,7 @@
 ;   BLOCKD *d)                   |  1
 ;
 
-global sym(vp8_fast_quantize_b_ssse3)
+global sym(vp8_fast_quantize_b_ssse3) PRIVATE
 sym(vp8_fast_quantize_b_ssse3):
     push        rbp
     mov         rbp, rsp

@@ -12,7 +12,7 @@ DEFINES += -DGRE_BUILDID=$(GRE_BUILDID) -DMOZ_APP_BASENAME=$(MOZ_APP_BASENAME)
 
 # 'application.ini' breaks firefox build config. So we use something different.
 metroapp.ini: metroapp.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
-	$(RM) "metroapp.ini"
+	$(RM) metroapp.ini
 	$(call py_action,preprocessor,$(DEFINES) $< -o $@)
 
 libs:: metroapp.ini

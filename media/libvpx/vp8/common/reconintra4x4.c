@@ -9,22 +9,23 @@
  */
 
 
-#include "recon.h"
+#include "vpx_config.h"
+#include "vpx_rtcd.h"
+#include "blockd.h"
 
-void vp8_intra4x4_predict_c(unsigned char *src, int src_stride,
-                            int b_mode,
-                            unsigned char *dst, int dst_stride)
+void vp8_intra4x4_predict_c(unsigned char *Above,
+                            unsigned char *yleft, int left_stride,
+                            B_PREDICTION_MODE b_mode,
+                            unsigned char *dst, int dst_stride,
+                            unsigned char top_left)
 {
     int i, r, c;
 
-    unsigned char *Above = src - src_stride;
     unsigned char Left[4];
-    unsigned char top_left = Above[-1];
-
-    Left[0] = src[-1];
-    Left[1] = src[-1 + src_stride];
-    Left[2] = src[-1 + 2 * src_stride];
-    Left[3] = src[-1 + 3 * src_stride];
+    Left[0] = yleft[0];
+    Left[1] = yleft[left_stride];
+    Left[2] = yleft[2 * left_stride];
+    Left[3] = yleft[3 * left_stride];
 
     switch (b_mode)
     {
@@ -289,27 +290,8 @@ void vp8_intra4x4_predict_c(unsigned char *src, int src_stride,
     }
     break;
 
+    default:
+    break;
 
     }
-}
-
-
-
-
-
-/* copy 4 bytes from the above right down so that the 4x4 prediction modes using pixels above and
- * to the right prediction have filled in pixels to use.
- */
-void vp8_intra_prediction_down_copy(MACROBLOCKD *x)
-{
-    unsigned char *above_right = *(x->block[0].base_dst) + x->block[0].dst - x->block[0].dst_stride + 16;
-
-    unsigned int *src_ptr = (unsigned int *)above_right;
-    unsigned int *dst_ptr0 = (unsigned int *)(above_right + 4 * x->block[0].dst_stride);
-    unsigned int *dst_ptr1 = (unsigned int *)(above_right + 8 * x->block[0].dst_stride);
-    unsigned int *dst_ptr2 = (unsigned int *)(above_right + 12 * x->block[0].dst_stride);
-
-    *dst_ptr0 = *src_ptr;
-    *dst_ptr1 = *src_ptr;
-    *dst_ptr2 = *src_ptr;
 }
