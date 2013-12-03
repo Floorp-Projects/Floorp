@@ -1361,19 +1361,46 @@ BluetoothServiceBluedroid::ConfirmReceivingFile(
 void
 BluetoothServiceBluedroid::ConnectSco(BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  if (!hfp || !hfp->ConnectSco()) {
+    NS_NAMED_LITERAL_STRING(replyError, "Calling ConnectSco() failed");
+    DispatchBluetoothReply(aRunnable, BluetoothValue(), replyError);
+    return;
+  }
+
+  DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
 }
 
 void
 BluetoothServiceBluedroid::DisconnectSco(BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  if (!hfp || !hfp->DisconnectSco()) {
+    NS_NAMED_LITERAL_STRING(replyError, "Calling DisconnectSco() failed");
+    DispatchBluetoothReply(aRunnable, BluetoothValue(), replyError);
+    return;
+  }
+
+  DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
 }
 
 void
 BluetoothServiceBluedroid::IsScoConnected(BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  if (!hfp) {
+    NS_NAMED_LITERAL_STRING(replyError, "Fail to get BluetoothHfpManager");
+    DispatchBluetoothReply(aRunnable, BluetoothValue(), replyError);
+    return;
+  }
+
+  DispatchBluetoothReply(aRunnable, hfp->IsScoConnected(), EmptyString());
 }
 
 void
