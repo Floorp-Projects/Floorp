@@ -10,6 +10,7 @@
 #include "gfxUtils.h"
 #include "gfx2DGlue.h"
 #include "ScopedGLHelpers.h"
+#include "GLUploadHelpers.h"
 
 #include "TextureImageEGL.h"
 #ifdef XP_MACOSX
@@ -183,12 +184,13 @@ BasicTextureImage::EndUpdate()
     bool relative = FinishedSurfaceUpdate();
 
     mTextureFormat =
-        mGLContext->UploadSurfaceToTexture(mUpdateSurface,
-                                           mUpdateRegion,
-                                           mTexture,
-                                           mTextureState == Created,
-                                           mUpdateOffset,
-                                           relative);
+        UploadSurfaceToTexture(mGLContext,
+                               mUpdateSurface,
+                               mUpdateRegion,
+                               mTexture,
+                               mTextureState == Created,
+                               mUpdateOffset,
+                               relative);
     FinishedSurfaceUpload();
 
     mUpdateSurface = nullptr;
@@ -241,12 +243,13 @@ BasicTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
     }
 
     mTextureFormat =
-        mGLContext->UploadSurfaceToTexture(aSurf,
-                                           region,
-                                           mTexture,
-                                           mTextureState == Created,
-                                           bounds.TopLeft() + aFrom,
-                                           false);
+        UploadSurfaceToTexture(mGLContext,
+                               aSurf,
+                               region,
+                               mTexture,
+                               mTextureState == Created,
+                               bounds.TopLeft() + aFrom,
+                               false);
     mTextureState = Valid;
     return true;
 }
