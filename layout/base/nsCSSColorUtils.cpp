@@ -16,7 +16,6 @@
 #define GREEN_LUMINOSITY      587
 #define BLUE_LUMINOSITY       114
 #define INTENSITY_FACTOR      25
-#define LIGHT_FACTOR          0
 #define LUMINOSITY_FACTOR     75
 
 #define MAX_COLOR             255
@@ -31,8 +30,6 @@
 
 #define LIGHT_GRAY NS_RGB(192, 192, 192)
 #define DARK_GRAY  NS_RGB(96, 96, 96)
-#define WHITE      NS_RGB(255, 255, 255)
-#define BLACK      NS_RGB(0, 0, 0)
 
 #define MAX_BRIGHTNESS  254
 #define MAX_DARKNESS     0
