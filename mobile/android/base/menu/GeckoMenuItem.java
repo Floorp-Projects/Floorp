@@ -142,7 +142,11 @@ public class GeckoMenuItem implements MenuItem {
 
     @Override
     public SubMenu getSubMenu() {
-        return mSubMenu;
+        // For consistency with hasSubMenu.
+        if (mActionProvider == null) {
+            return mSubMenu;
+        }
+        return null;
     }
 
     @Override
