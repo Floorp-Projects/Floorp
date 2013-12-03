@@ -7,6 +7,8 @@
 #ifndef js_SliceBudget_h
 #define js_SliceBudget_h
 
+#include <stdint.h>
+
 namespace js {
 
 /*
@@ -15,7 +17,8 @@ namespace js {
  * unlimited time, and others are bounded. To reduce the number of gettimeofday
  * calls, we only check the time every 1000 operations.
  */
-struct JS_PUBLIC_API(SliceBudget) {
+struct JS_PUBLIC_API(SliceBudget)
+{
     int64_t deadline; /* in microseconds */
     intptr_t counter;
 
