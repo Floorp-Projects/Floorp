@@ -11,13 +11,8 @@ function ifWebGLSupported() {
   let { gFront, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
-
-  yield promise.all([
-    once(gFront, "program-linked"),
-    once(gFront, "program-linked")
-  ]);
-
-  yield once(panel.panelWin, EVENTS.SOURCES_SHOWN)
+  let firstProgramActor = yield once(gFront, "program-linked");
+  let secondProgramActor = yield once(gFront, "program-linked");
 
   let vsEditor = yield ShadersEditorsView._getEditor("vs");
   let fsEditor = yield ShadersEditorsView._getEditor("fs");
@@ -82,4 +77,10 @@ function ifWebGLSupported() {
 
   yield teardown(panel);
   finish();
+}
+
+function once(aTarget, aEvent) {
+  let deferred = promise.defer();
+  aTarget.once(aEvent, deferred.resolve);
+  return deferred.promise;
 }

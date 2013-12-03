@@ -14,10 +14,8 @@ function ifWebGLSupported() {
   });
 
   reload(target);
-  let [firstProgramActor, secondProgramActor] = yield promise.all([
-    getPrograms(gFront, 2),
-    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
-  ]).then(([programs, ]) => programs);
+  let firstProgramActor = yield once(gFront, "program-linked");
+  let secondProgramActor = yield once(gFront, "program-linked");
 
   let vsEditor = yield ShadersEditorsView._getEditor("vs");
   let fsEditor = yield ShadersEditorsView._getEditor("fs");
