@@ -806,10 +806,7 @@ add_task(function test_cancel_immediately_restart_immediately()
   continueResponses();
   try {
     yield promiseAttempt;
-    // If we get here, it means that the first attempt actually succeeded.  In
-    // fact, this could be a valid outcome, because the cancellation request may
-    // not have been processed in time before the download finished.
-    do_print("The download should have been canceled.");
+    do_throw("The download should have been canceled.");
   } catch (ex if ex instanceof Downloads.Error) {
     do_check_false(ex.becauseSourceFailed);
     do_check_false(ex.becauseTargetFailed);
