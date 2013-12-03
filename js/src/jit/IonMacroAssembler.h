@@ -876,9 +876,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     // been made so that a safepoint can be made at that location.
 
     template <typename T>
+    void callWithABINoProfiling(const T &fun, Result result = GENERAL) {
+        MacroAssemblerSpecific::callWithABI(fun, result);
+    }
+
+    template <typename T>
     void callWithABI(const T &fun, Result result = GENERAL) {
         leaveSPSFrame();
-        MacroAssemblerSpecific::callWithABI(fun, result);
+        callWithABINoProfiling(fun, result);
         reenterSPSFrame();
     }
 
