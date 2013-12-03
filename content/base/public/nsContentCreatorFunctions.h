@@ -22,16 +22,24 @@ class imgRequestProxy;
 class nsNodeInfoManager;
 class nsGenericHTMLElement;
 
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
+
 nsresult
-NS_NewElement(nsIContent** aResult,
+NS_NewElement(mozilla::dom::Element** aResult,
               already_AddRefed<nsINodeInfo> aNodeInfo,
               mozilla::dom::FromParser aFromParser);
 
 nsresult
-NS_NewXMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo);
+NS_NewXMLElement(mozilla::dom::Element** aResult,
+                 already_AddRefed<nsINodeInfo> aNodeInfo);
 
 nsresult
-NS_NewHTMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewHTMLElement(mozilla::dom::Element** aResult,
+                  already_AddRefed<nsINodeInfo> aNodeInfo,
                   mozilla::dom::FromParser aFromParser);
 
 // First argument should be nsHTMLTag, but that adds dependency to parser
@@ -41,19 +49,21 @@ CreateHTMLElement(uint32_t aNodeType, already_AddRefed<nsINodeInfo> aNodeInfo,
                   mozilla::dom::FromParser aFromParser);
 
 nsresult
-NS_NewMathMLElement(nsIContent** aResult,
-                     already_AddRefed<nsINodeInfo> aNodeInfo);
+NS_NewMathMLElement(mozilla::dom::Element** aResult,
+                    already_AddRefed<nsINodeInfo> aNodeInfo);
 
 #ifdef MOZ_XUL
 nsresult
-NS_NewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo);
+NS_NewXULElement(mozilla::dom::Element** aResult,
+                 already_AddRefed<nsINodeInfo> aNodeInfo);
 
 void
 NS_TrustedNewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo);
 #endif
 
 nsresult
-NS_NewSVGElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewSVGElement(mozilla::dom::Element** aResult,
+                 already_AddRefed<nsINodeInfo> aNodeInfo,
                  mozilla::dom::FromParser aFromParser);
 
 nsresult

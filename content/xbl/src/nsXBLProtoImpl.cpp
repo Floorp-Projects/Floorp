@@ -304,9 +304,7 @@ nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JS::Handle<JSObject*> obj) const
     // all.
     nsDependentString name(f->GetName());
     JS::Rooted<JS::Value> dummy(cx);
-    if (!::JS_LookupUCProperty(cx, obj,
-                               reinterpret_cast<const jschar*>(name.get()),
-                               name.Length(), &dummy)) {
+    if (!::JS_LookupUCProperty(cx, obj, name.get(), name.Length(), &dummy)) {
       return false;
     }
   }
@@ -321,7 +319,7 @@ nsXBLProtoImpl::UndefineFields(JSContext *cx, JS::Handle<JSObject*> obj) const
   for (nsXBLProtoImplField* f = mFields; f; f = f->GetNext()) {
     nsDependentString name(f->GetName());
 
-    const jschar* s = reinterpret_cast<const jschar*>(name.get());
+    const jschar* s = name.get();
     bool hasProp;
     if (::JS_AlreadyHasOwnUCProperty(cx, obj, s, name.Length(), &hasProp) &&
         hasProp) {

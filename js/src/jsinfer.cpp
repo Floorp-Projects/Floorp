@@ -1719,7 +1719,7 @@ PreviousOpcode(HandleScript script, jsbytecode *pc)
     ScriptAnalysis *analysis = script->analysis();
     JS_ASSERT(analysis->maybeCode(pc));
 
-    if (pc == script->code)
+    if (pc == script->code())
         return nullptr;
 
     for (pc--;; pc--) {
@@ -1811,13 +1811,13 @@ TypeCompartment::addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey ke
      * try to reuse the type objects from earlier elements to avoid
      * distinguishing elements of the outer array unnecessarily.
      */
-    jsbytecode *pc = key.script->code + key.offset;
+    jsbytecode *pc = key.script->offsetToPC(key.offset);
     RootedScript keyScript(cx, key.script);
     jsbytecode *prev = FindPreviousInnerInitializer(keyScript, pc);
     if (prev) {
         AllocationSiteKey nkey;
         nkey.script = key.script;
-        nkey.offset = prev - key.script->code;
+        nkey.offset = key.script->pcToOffset(prev);
         nkey.kind = JSProto_Array;
 
         AllocationSiteTable::Ptr p = cx->compartment()->types.allocationSiteTable->lookup(nkey);
@@ -1927,7 +1927,7 @@ types::UseNewTypeForInitializer(JSScript *script, jsbytecode *pc, JSProtoKey key
     if (!script->hasTrynotes())
         return SingletonObject;
 
-    unsigned offset = pc - script->code;
+    unsigned offset = script->pcToOffset(pc);
 
     JSTryNote *tn = script->trynotes()->vector;
     JSTryNote *tnlimit = tn + script->trynotes()->length;
@@ -2974,7 +2974,7 @@ TypeObject::clearNewScriptAddendum(ExclusiveContext *cx)
     if (cx->isJSContext()) {
         Vector<uint32_t, 32> pcOffsets(cx);
         for (ScriptFrameIter iter(cx->asJSContext()); !iter.done(); ++iter) {
-            pcOffsets.append(uint32_t(iter.pc() - iter.script()->code));
+            pcOffsets.append(iter.script()->pcToOffset(iter.pc()));
             if (!iter.isConstructing() ||
                 iter.callee() != newScript()->fun ||
                 !iter.thisv().isObject() ||
@@ -3373,7 +3373,7 @@ types::TypeMonitorResult(JSContext *cx, JSScript *script, jsbytecode *pc, const 
         return;
 
     InferSpew(ISpewOps, "bytecodeType: #%u:%05u: %s",
-              script->id(), pc - script->code, TypeString(type));
+              script->id(), script->pcToOffset(pc), TypeString(type));
     types->addType(cx, type);
 }
 
@@ -4368,10 +4368,7 @@ TypeScript::printTypes(JSContext *cx, HandleScript script) const
     }
     fprintf(stderr, "\n");
 
-    for (jsbytecode *pc = script->code;
-         pc < script->code + script->length;
-         pc += GetBytecodeLength(pc))
-    {
+    for (jsbytecode *pc = script->code(); pc < script->codeEnd(); pc += GetBytecodeLength(pc)) {
         PrintBytecode(cx, script, pc);
 
         if (js_CodeSpec[*pc].format & JOF_TYPESET) {

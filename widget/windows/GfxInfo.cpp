@@ -77,22 +77,17 @@ GfxInfo::GetCleartypeParameters(nsAString & aCleartypeParams)
   bool displayNames = (numDisplays > 1);
   bool foundData = false;
   nsString outStr;
-  WCHAR valStr[256];
 
   for (d = 0; d < numDisplays; d++) {
     ClearTypeParameterInfo& params = clearTypeParams[d];
 
     if (displayNames) {
-      swprintf_s(valStr, ArrayLength(valStr),
-                 L"%s [ ", params.displayName.get());
-      outStr.Append(valStr);
+      outStr.AppendPrintf("%s [ ", params.displayName.get());
     }
 
     if (params.gamma >= 0) {
       foundData = true;
-      swprintf_s(valStr, ArrayLength(valStr),
-                 L"Gamma: %d ", params.gamma);
-      outStr.Append(valStr);
+      outStr.AppendPrintf("Gamma: %d ", params.gamma);
     }
 
     if (params.pixelStructure >= 0) {
@@ -100,33 +95,26 @@ GfxInfo::GetCleartypeParameters(nsAString & aCleartypeParams)
       if (params.pixelStructure == PIXEL_STRUCT_RGB ||
           params.pixelStructure == PIXEL_STRUCT_BGR)
       {
-        swprintf_s(valStr, ArrayLength(valStr),
-                   L"Pixel Structure: %s ",
+        outStr.AppendPrintf("Pixel Structure: %s ",
                    (params.pixelStructure == PIXEL_STRUCT_RGB ?
                       L"RGB" : L"BGR"));
       } else {
-        swprintf_s(valStr, ArrayLength(valStr),
-                   L"Pixel Structure: %d ", params.pixelStructure);
+        outStr.AppendPrintf("Pixel Structure: %d ", params.pixelStructure);
       }
-      outStr.Append(valStr);
     }
 
     if (params.clearTypeLevel >= 0) {
       foundData = true;
-      swprintf_s(valStr, ArrayLength(valStr),
-                 L"ClearType Level: %d ", params.clearTypeLevel);
-      outStr.Append(valStr);
+      outStr.AppendPrintf("ClearType Level: %d ", params.clearTypeLevel);
     }
 
     if (params.enhancedContrast >= 0) {
       foundData = true;
-      swprintf_s(valStr, ArrayLength(valStr),
-                 L"Enhanced Contrast: %d ", params.enhancedContrast);
-      outStr.Append(valStr);
+      outStr.AppendPrintf("Enhanced Contrast: %d ", params.enhancedContrast);
     }
 
     if (displayNames) {
-      outStr.Append(L"] ");
+      outStr.Append(MOZ_UTF16("] "));
     }
   }
 
@@ -372,7 +360,7 @@ GfxInfo::Init()
                                             nullptr)) {
         nsAutoString driverKey(driverKeyPre);
         driverKey += value;
-        result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, driverKey.BeginReading(), 0, KEY_QUERY_VALUE, &key);
+        result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, driverKey.get(), 0, KEY_QUERY_VALUE, &key);
         if (result == ERROR_SUCCESS) {
           /* we've found the driver we're looking for */
           dwcbData = sizeof(value);
@@ -446,7 +434,7 @@ GfxInfo::Init()
                                               nullptr)) {
           nsAutoString driverKey2(driverKeyPre);
           driverKey2 += value;
-          result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, driverKey2.BeginReading(), 0, KEY_QUERY_VALUE, &key);
+          result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, driverKey2.get(), 0, KEY_QUERY_VALUE, &key);
           if (result == ERROR_SUCCESS) {
             dwcbData = sizeof(value);
             result = RegQueryValueExW(key, L"MatchingDeviceId", nullptr,
@@ -469,7 +457,7 @@ GfxInfo::Init()
 
             // If this device is missing driver information, it is unlikely to
             // be a real display adapter.
-            if (NS_FAILED(GetKeyValue(driverKey2.BeginReading(), L"InstalledDisplayDrivers",
+            if (NS_FAILED(GetKeyValue(driverKey2.get(), L"InstalledDisplayDrivers",
                            adapterDriver2, REG_MULTI_SZ))) {
               RegCloseKey(key);
               continue;
@@ -526,11 +514,11 @@ GfxInfo::Init()
     // by the registry was not the version of the DLL.
     bool is64bitApp = sizeof(void*) == 8;
     const PRUnichar *dllFileName = is64bitApp
-                                 ? L"igd10umd64.dll"
-                                 : L"igd10umd32.dll",
+                                 ? MOZ_UTF16("igd10umd64.dll")
+                                 : MOZ_UTF16("igd10umd32.dll"),
                     *dllFileName2 = is64bitApp
-                                 ? L"igd10iumd64.dll"
-                                 : L"igd10iumd32.dll";
+                                 ? MOZ_UTF16("igd10iumd64.dll")
+                                 : MOZ_UTF16("igd10iumd32.dll");
     nsString dllVersion, dllVersion2;
     gfxWindowsPlatform::GetDLLVersion((PRUnichar*)dllFileName, dllVersion);
     gfxWindowsPlatform::GetDLLVersion((PRUnichar*)dllFileName2, dllVersion2);
@@ -594,7 +582,7 @@ GfxInfo::GetAdapterDescription2(nsAString & aAdapterDescription)
 NS_IMETHODIMP
 GfxInfo::GetAdapterRAM(nsAString & aAdapterRAM)
 {
-  if (NS_FAILED(GetKeyValue(mDeviceKey.BeginReading(), L"HardwareInformation.MemorySize", aAdapterRAM, REG_DWORD)))
+  if (NS_FAILED(GetKeyValue(mDeviceKey.get(), L"HardwareInformation.MemorySize", aAdapterRAM, REG_DWORD)))
     aAdapterRAM = L"Unknown";
   return NS_OK;
 }
@@ -605,7 +593,7 @@ GfxInfo::GetAdapterRAM2(nsAString & aAdapterRAM)
 {
   if (!mHasDualGPU) {
     aAdapterRAM.AssignLiteral("");
-  } else if (NS_FAILED(GetKeyValue(mDeviceKey2.BeginReading(), L"HardwareInformation.MemorySize", aAdapterRAM, REG_DWORD))) {
+  } else if (NS_FAILED(GetKeyValue(mDeviceKey2.get(), L"HardwareInformation.MemorySize", aAdapterRAM, REG_DWORD))) {
     aAdapterRAM = L"Unknown";
   }
   return NS_OK;
@@ -615,7 +603,7 @@ GfxInfo::GetAdapterRAM2(nsAString & aAdapterRAM)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDriver(nsAString & aAdapterDriver)
 {
-  if (NS_FAILED(GetKeyValue(mDeviceKey.BeginReading(), L"InstalledDisplayDrivers", aAdapterDriver, REG_MULTI_SZ)))
+  if (NS_FAILED(GetKeyValue(mDeviceKey.get(), L"InstalledDisplayDrivers", aAdapterDriver, REG_MULTI_SZ)))
     aAdapterDriver = L"Unknown";
   return NS_OK;
 }
@@ -626,7 +614,7 @@ GfxInfo::GetAdapterDriver2(nsAString & aAdapterDriver)
 {
   if (!mHasDualGPU) {
     aAdapterDriver.AssignLiteral("");
-  } else if (NS_FAILED(GetKeyValue(mDeviceKey2.BeginReading(), L"InstalledDisplayDrivers", aAdapterDriver, REG_MULTI_SZ))) {
+  } else if (NS_FAILED(GetKeyValue(mDeviceKey2.get(), L"InstalledDisplayDrivers", aAdapterDriver, REG_MULTI_SZ))) {
     aAdapterDriver = L"Unknown";
   }
   return NS_OK;

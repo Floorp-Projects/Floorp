@@ -212,8 +212,9 @@ OpusTrackEncoder::GetMetadata()
   }
 
   // The ogg time stamping and pre-skip is always timed at 48000.
-  SerializeOpusIdHeader(mChannels, mLookahead*(kOpusSamplingRate/mSamplingRate),
-                        mSamplingRate, &meta->mIdHeader);
+  SerializeOpusIdHeader(mChannels, mLookahead * (kOpusSamplingRate /
+                        GetOutputSampleRate()), mSamplingRate,
+                        &meta->mIdHeader);
 
   nsCString vendor;
   vendor.AppendASCII(opus_get_version_string());

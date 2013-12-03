@@ -15,6 +15,8 @@
 #include "nsIFormControl.h"
 #include "nsStyleSet.h"
 
+using mozilla::dom::Element;
+
 nsColorControlFrame::nsColorControlFrame(nsStyleContext* aContext):
   nsColorControlFrameSuper(aContext)
 {
@@ -60,20 +62,12 @@ nsresult
 nsColorControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   nsCOMPtr<nsIDocument> doc = mContent->GetCurrentDoc();
-  nsCOMPtr<nsINodeInfo> nodeInfo =
-      doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nullptr,
-        kNameSpaceID_XHTML,
-        nsIDOMNode::ELEMENT_NODE);
-
-  nsresult rv = NS_NewHTMLElement(getter_AddRefs(mColorContent),
-                                  nodeInfo.forget(),
-                                  mozilla::dom::NOT_FROM_PARSER);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mColorContent = doc->CreateHTMLElement(nsGkAtoms::div);
 
   // Mark the element to be native anonymous before setting any attributes.
   mColorContent->SetIsNativeAnonymousRoot();
 
-  rv = UpdateColor();
+  nsresult rv = UpdateColor();
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCSSPseudoElements::Type pseudoType = nsCSSPseudoElements::ePseudo_mozColorSwatch;
@@ -136,12 +130,12 @@ nsColorControlFrame::GetContentInsertionFrame()
   return this;
 }
 
-nsIContent*
-nsColorControlFrame::GetPseudoElementContent(nsCSSPseudoElements::Type aType)
+Element*
+nsColorControlFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
 {
   if (aType == nsCSSPseudoElements::ePseudo_mozColorSwatch) {
     return mColorContent;
   }
 
-  return nsContainerFrame::GetPseudoElementContent(aType);
+  return nsContainerFrame::GetPseudoElement(aType);
 }

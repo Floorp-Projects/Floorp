@@ -695,7 +695,7 @@ protected:
     bool BoolAttrIsTrue(nsIAtom* aName) const;
 
     friend nsresult
-    NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
+    NS_NewXULElement(mozilla::dom::Element** aResult, nsINodeInfo *aNodeInfo);
     friend void
     NS_TrustedNewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
 
