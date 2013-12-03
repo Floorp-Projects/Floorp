@@ -106,5 +106,53 @@ TextureImageCGL::FinishedSurfaceUpload()
     }
 }
 
+already_AddRefed<TextureImage>
+CreateTextureImageCGL(GLContext* gl,
+                      const nsIntSize& aSize,
+                      TextureImage::ContentType aContentType,
+                      GLenum aWrapMode,
+                      TextureImage::Flags aFlags,
+                      TextureImage::ImageFormat aImageFormat)
+{
+    if (!gl->IsOffscreenSizeAllowed(gfxIntSize(aSize.width, aSize.height)) &&
+        gfxPlatform::OffMainThreadCompositingEnabled()) {
+      NS_ASSERTION(aWrapMode == LOCAL_GL_CLAMP_TO_EDGE, "Can't support wrapping with tiles!");
+      nsRefPtr<TextureImage> t = new gl::TiledTextureImage(gl, aSize, aContentType,
+                                                           aFlags, aImageFormat);
+      return t.forget();
+    }
+
+    return CreateBasicTextureImage(gl, aSize, aContentType, aWrapMode,
+                                   aFlags, aImageFormat);
+}
+
+already_AddRefed<TextureImage>
+TileGenFuncCGL(GLContext *gl,
+               const nsIntSize& aSize,
+               TextureImage::ContentType aContentType,
+               TextureImage::Flags aFlags,
+               TextureImage::ImageFormat aImageFormat)
+{
+    bool useNearestFilter = aFlags & TextureImage::UseNearestFilter;
+    gl->MakeCurrent();
+
+    GLuint texture;
+    gl->fGenTextures(1, &texture);
+
+    gl->fActiveTexture(LOCAL_GL_TEXTURE0);
+    gl->fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
+
+    GLint texfilter = useNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+
+    nsRefPtr<TextureImageCGL> teximage
+        (new TextureImageCGL(texture, aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType,
+                             gl, aFlags, aImageFormat));
+    return teximage.forget();
+}
+
 }
 }
