@@ -473,7 +473,7 @@ nsWyciwygChannel::WriteToCacheEntryInternal(const nsAString &aData, const nsACSt
     if (NS_FAILED(rv)) return rv;
   }
 
-  return mCacheOutputStream->Write((char *)PromiseFlatString(aData).get(),
+  return mCacheOutputStream->Write((const char *)PromiseFlatString(aData).get(),
                                    aData.Length() * sizeof(PRUnichar), &out);
 }
 
