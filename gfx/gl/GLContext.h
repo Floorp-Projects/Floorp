@@ -2477,14 +2477,7 @@ public:
 
     static void PlatformStartup();
 
-protected:
-    static bool sPowerOfTwoForced;
-    static bool sPowerOfTwoPrefCached;
-    static void CacheCanUploadNPOT();
-
 public:
-    bool CanUploadNonPowerOfTwo();
-
     /**
      * If this context wraps a double-buffered target, swap the back
      * and front buffers.  It should be assumed that after a swap, the

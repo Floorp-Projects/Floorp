@@ -96,6 +96,7 @@ UploadSurfaceToTexture(GLContext* gl,
                        GLenum aTextureTarget);
 
 bool CanUploadSubTextures(GLContext* gl);
+bool CanUploadNonPowerOfTwo(GLContext* gl);
 
 }
 }

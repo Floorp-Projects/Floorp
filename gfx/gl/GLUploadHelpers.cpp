@@ -269,7 +269,7 @@ TexImage2DHelper(GLContext *gl,
         NS_ASSERTION(format == (GLenum)internalformat,
                     "format and internalformat not the same for glTexImage2D on GLES2");
 
-        if (!gl->CanUploadNonPowerOfTwo()
+        if (!CanUploadNonPowerOfTwo(gl)
             && (stride != width * pixelsize
             || !gfx::IsPowerOfTwo(width)
             || !gfx::IsPowerOfTwo(height))) {
@@ -585,6 +585,17 @@ UploadSurfaceToTexture(GLContext* gl,
                                     aDstRegion, aTexture, aOverwrite,
                                     aPixelBuffer, aTextureUnit,
                                     aTextureTarget);
+}
+
+bool
+CanUploadNonPowerOfTwo(GLContext* gl)
+{
+    if (!gl->WorkAroundDriverBugs())
+        return true;
+
+    // Some GPUs driver crash when uploading non power of two 565 textures.
+    return gl->Renderer() != GLContext::RendererAdreno200 &&
+           gl->Renderer() != GLContext::RendererAdreno205;
 }
 
 }

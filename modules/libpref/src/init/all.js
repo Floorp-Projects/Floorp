@@ -404,7 +404,6 @@ pref("gfx.content.azure.backends", "cairo");
 pref("gfx.content.azure.backends", "cairo");
 #endif
 #ifdef ANDROID
-pref("gfx.textures.poweroftwo.force-enabled", false);
 pref("gfx.content.azure.backends", "cairo");
 #endif
 
