@@ -119,13 +119,5 @@ VPX_CTRL_USE_TYPE(VP8_SET_DBG_DISPLAY_MV,      int)
 
 /*! @} - end defgroup vp8 */
 
-#if !defined(VPX_CODEC_DISABLE_COMPAT) || !VPX_CODEC_DISABLE_COMPAT
-/* The following definitions are provided for backward compatibility with
- * the VP8 1.0.x SDK. USE IN PRODUCTION CODE IS NOT RECOMMENDED.
- */
-
-DECLSPEC_DEPRECATED extern vpx_codec_iface_t vpx_codec_vp8_algo DEPRECATED;
-#endif
-
 #include "vpx_codec_impl_bottom.h"
 #endif

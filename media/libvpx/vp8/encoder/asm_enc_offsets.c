@@ -45,7 +45,6 @@ DEFINE(vp8_blockd_predictor,                    offsetof(BLOCKD, predictor));
 /* pack tokens */
 DEFINE(vp8_writer_lowvalue,                     offsetof(vp8_writer, lowvalue));
 DEFINE(vp8_writer_range,                        offsetof(vp8_writer, range));
-DEFINE(vp8_writer_value,                        offsetof(vp8_writer, value));
 DEFINE(vp8_writer_count,                        offsetof(vp8_writer, count));
 DEFINE(vp8_writer_pos,                          offsetof(vp8_writer, pos));
 DEFINE(vp8_writer_buffer,                       offsetof(vp8_writer, buffer));
@@ -88,7 +87,7 @@ END
  * change they will have to be adjusted.
  */
 
-#if HAVE_ARMV5TE
+#if HAVE_EDSP
 ct_assert(TOKENEXTRA_SZ, sizeof(TOKENEXTRA) == 8)
 ct_assert(vp8_extra_bit_struct_sz, sizeof(vp8_extra_bit_struct) == 16)
 #endif

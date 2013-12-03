@@ -33,6 +33,7 @@
     macro(Collator, Collator, "Collator") \
     macro(CollatorCompareGet, CollatorCompareGet, "Intl_Collator_compare_get") \
     macro(columnNumber, columnNumber, "columnNumber") \
+    macro(comma, comma, ",") \
     macro(compare, compare, "compare") \
     macro(configurable, configurable, "configurable") \
     macro(construct, construct, "construct") \

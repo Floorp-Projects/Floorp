@@ -171,10 +171,11 @@ static const char* const gWebMTypes[3] = {
   nullptr
 };
 
-static char const *const gWebMCodecs[4] = {
+static char const *const gWebMCodecs[5] = {
   "vp8",
   "vp8.0",
   "vorbis",
+  "opus",
   nullptr
 };
 

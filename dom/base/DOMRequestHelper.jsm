@@ -40,7 +40,7 @@ this.DOMRequestIpcHelper = function DOMRequestIpcHelper() {
   //  }
   //
   // where each property is the name of the message and its value is a boolean
-  // that indicates if the listener is strong or not.
+  // that indicates if the listener is weak or not.
   this._listeners = null;
   this._requests = null;
   this._window = null;
@@ -48,9 +48,8 @@ this.DOMRequestIpcHelper = function DOMRequestIpcHelper() {
 
 DOMRequestIpcHelper.prototype = {
   /**
-   * An object which "inherits" from DOMRequestIpcHelper, declares its own
-   * queryInterface method and adds at least one weak listener to the Message
-   * Manager MUST implement Ci.nsISupportsWeakReference.
+   * An object which "inherits" from DOMRequestIpcHelper and declares its own
+   * queryInterface method MUST implement Ci.nsISupportsWeakReference.
    */
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
                                          Ci.nsIObserver]),
@@ -60,13 +59,13 @@ DOMRequestIpcHelper.prototype = {
    *  - objects of this form:
    *    {
    *      name: "messageName",
-   *      strongRef: false
+   *      weakRef: false
    *    }
-   *    where 'name' is the message identifier and 'strongRef' a boolean
-   *    indicating if the listener should be a strong referred one or not.
+   *    where 'name' is the message identifier and 'weakRef' a boolean
+   *    indicating if the listener should be a weak referred one or not.
    *
    *  - or only strings containing the message name, in which case the listener
-   *    will be added as a weak reference by default.
+   *    will be added as a strong reference by default.
    */
   addMessageListeners: function(aMessages) {
     if (!aMessages) {
@@ -86,16 +85,16 @@ DOMRequestIpcHelper.prototype = {
       // If the listener is already set and it is of the same type we just
       // bail out. If it is not of the same type, we throw an exception.
       if (this._listeners[name] != undefined) {
-        if (!!aMsg.strongRef == this._listeners[name]) {
+        if (!!aMsg.weakRef == this._listeners[name]) {
           return;
         } else {
           throw Cr.NS_ERROR_FAILURE;
         }
       }
 
-      aMsg.strongRef ? cpmm.addMessageListener(name, this)
-                     : cpmm.addWeakMessageListener(name, this);
-      this._listeners[name] = !!aMsg.strongRef;
+      aMsg.weakRef ? cpmm.addWeakMessageListener(name, this)
+                   : cpmm.addMessageListener(name, this);
+      this._listeners[name] = !!aMsg.weakRef;
     });
   },
 
@@ -117,8 +116,8 @@ DOMRequestIpcHelper.prototype = {
         return;
       }
 
-      this._listeners[aName] ? cpmm.removeMessageListener(aName, this)
-                             : cpmm.removeWeakMessageListener(aName, this);
+      this._listeners[aName] ? cpmm.removeWeakMessageListener(aName, this)
+                             : cpmm.removeMessageListener(aName, this);
       delete this._listeners[aName];
     });
   },
@@ -132,13 +131,13 @@ DOMRequestIpcHelper.prototype = {
    *  - objects of this form:
    *    {
    *      name: 'messageName',
-   *      strongRef: false
+   *      weakRef: false
    *    }
-   *    where 'name' is the message identifier and 'strongRef' a boolean
-   *    indicating if the listener should be a strong referred one or not.
+   *    where 'name' is the message identifier and 'weakRef' a boolean
+   *    indicating if the listener should be a weak referred one or not.
    *
    *  - or only strings containing the message name, in which case the listener
-   *    will be added as a weak referred one by default.
+   *    will be added as a strong referred one by default.
    */
   initDOMRequestHelper: function(aWindow, aMessages) {
     // Query our required interfaces to force a fast fail if they are not
@@ -177,8 +176,8 @@ DOMRequestIpcHelper.prototype = {
 
     if (this._listeners) {
       Object.keys(this._listeners).forEach((aName) => {
-        this._listeners[aName] ? cpmm.removeMessageListener(aName, this)
-                               : cpmm.removeWeakMessageListener(aName, this);
+        this._listeners[aName] ? cpmm.removeWeakMessageListener(aName, this)
+                               : cpmm.removeMessageListener(aName, this);
         delete this._listeners[aName];
       });
     }

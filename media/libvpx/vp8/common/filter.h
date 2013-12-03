@@ -19,4 +19,4 @@
 extern const short vp8_bilinear_filters[8][2];
 extern const short vp8_sub_pel_filters[8][6];
 
-#endif //FILTER_H
+#endif

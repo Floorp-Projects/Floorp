@@ -16,7 +16,7 @@
 ;  (BLOCK  *b,                     |  0
 ;   BLOCKD *d)                     |  1
 
-global sym(vp8_regular_quantize_b_sse2)
+global sym(vp8_regular_quantize_b_sse2) PRIVATE
 sym(vp8_regular_quantize_b_sse2):
     push        rbp
     mov         rbp, rsp
@@ -240,7 +240,7 @@ ZIGZAG_LOOP 15
 ;  (BLOCK  *b,                  |  0
 ;   BLOCKD *d)                  |  1
 
-global sym(vp8_fast_quantize_b_sse2)
+global sym(vp8_fast_quantize_b_sse2) PRIVATE
 sym(vp8_fast_quantize_b_sse2):
     push        rbp
     mov         rbp, rsp

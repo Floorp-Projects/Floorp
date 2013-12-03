@@ -90,7 +90,6 @@ numparts_loop
     mov     r5, #255                    ; vp8_writer_range
     mvn     r3, #23                     ; vp8_writer_count
 
-    str     r2,  [r0, #vp8_writer_value]
     str     r2,  [r0, #vp8_writer_pos]
     str     r10, [r0, #vp8_writer_buffer]
 

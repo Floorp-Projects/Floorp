@@ -188,6 +188,16 @@ var gPlayTests = [
   // owl.mp3 as above, but with something even funnier going on in the ID3v2 tag
   // that causes DirectShow to fail.
   { name:"owl-funnier-id3.mp3", type:"audio/mpeg", duration:3.29 },
+  // One second of silence with ~140KB of ID3 tags. Usually when the first MP3
+  // frame is at such a high offset into the file, MP3FrameParser will give up
+  // and report that the stream is not MP3. However, it does not count ID3 tags
+  // in that offset. This test case makes sure that ID3 exclusion holds.
+  { name:"huge-id3.mp3", type:"audio/mpeg", duration:1.00 },
+  // A truncated VBR MP3 with just enough frames to keep most decoders happy.
+  // The Xing header reports the length of the file to be around 10 seconds, but
+  // there is really only one second worth of data. We want MP3FrameParser to
+  // trust the header, so this should be reported as 10 seconds.
+  { name:"vbr-head.mp3", type:"audio/mpeg", duration:10.00 },
 
   // Invalid file
   { name:"bogus.duh", type:"bogus/duh", duration:Number.NaN }

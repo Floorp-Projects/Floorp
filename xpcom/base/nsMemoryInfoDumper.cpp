@@ -1047,6 +1047,10 @@ public:
     rv = writer->Finish();
     NS_ENSURE_SUCCESS(rv, rv);
 
+    if (!mFinishDumping) {
+      return NS_OK;
+    }
+
     return mFinishDumping->Callback(mFinishDumpingData);
   }
 

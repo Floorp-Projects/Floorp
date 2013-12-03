@@ -12,14 +12,14 @@
 %include "vpx_ports/x86_abi_support.asm"
 
 section .text
-    global sym(vpx_reset_mmx_state)
+global sym(vpx_reset_mmx_state) PRIVATE
 sym(vpx_reset_mmx_state):
     emms
     ret
 
 
 %ifidn __OUTPUT_FORMAT__,x64
-global sym(vpx_winx64_fldcw)
+global sym(vpx_winx64_fldcw) PRIVATE
 sym(vpx_winx64_fldcw):
     sub   rsp, 8
     mov   [rsp], rcx ; win x64 specific
@@ -28,7 +28,7 @@ sym(vpx_winx64_fldcw):
     ret
 
 
-global sym(vpx_winx64_fstcw)
+global sym(vpx_winx64_fstcw) PRIVATE
 sym(vpx_winx64_fstcw):
     sub   rsp, 8
     fstcw [rsp]

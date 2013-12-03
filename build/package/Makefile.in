@@ -58,7 +58,7 @@ makedmg-%:
 
 ifndef PACKAGES
 stage-packages makexpi-packages:
-	@echo "Please set PACKAGES on the makefile command line or environment."
+	@echo 'Please set PACKAGES on the makefile command line or environment.'
 
 else #PACKAGES
 stage-packages:

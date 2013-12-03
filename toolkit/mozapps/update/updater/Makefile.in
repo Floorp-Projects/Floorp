@@ -76,8 +76,8 @@ endif
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 libs::
 	$(NSINSTALL) -D $(DIST)/bin/updater.app
-	rsync -a -C --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/bin/updater.app 
-	sed -e "s/%APP_NAME%/$(MOZ_APP_DISPLAYNAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
+	rsync -a -C --exclude '*.in' $(srcdir)/macbuild/Contents $(DIST)/bin/updater.app 
+	sed -e 's/%APP_NAME%/$(MOZ_APP_DISPLAYNAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
 	  iconv -f UTF-8 -t UTF-16 > $(DIST)/bin/updater.app/Contents/Resources/English.lproj/InfoPlist.strings
 	$(NSINSTALL) -D $(DIST)/bin/updater.app/Contents/MacOS
 	$(NSINSTALL) $(DIST)/bin/updater $(DIST)/bin/updater.app/Contents/MacOS

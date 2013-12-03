@@ -61,9 +61,9 @@ sed -e "s/^The git tag\/revision used was .*/The git tag\/revision used was ${ve
     ${TARGET}/README_MOZILLA > ${TARGET}/README_MOZILLA+ && \
     mv ${TARGET}/README_MOZILLA+ ${TARGET}/README_MOZILLA
 # update compiled-in version string
-sed -e "s/-DOPUS_VERSION='\".*\"'/-DOPUS_VERSION='\"${version}-mozilla\"'/" \
-    ${TARGET}/Makefile.in > ${TARGET}/Makefile.in+ && \
-    mv ${TARGET}/Makefile.in+ ${TARGET}/Makefile.in
+sed -e "s/DEFINES\['OPUS_VERSION'\][ \t]*=[ \t]*'\".*\"'/DEFINES['OPUS_VERSION'] = '\"${version}-mozilla\"'/" \
+    ${TARGET}/moz.build > ${TARGET}/moz.build+ && \
+    mv ${TARGET}/moz.build+ ${TARGET}/moz.build
 
 # apply outstanding local patches
 # ... no patches to apply ...
