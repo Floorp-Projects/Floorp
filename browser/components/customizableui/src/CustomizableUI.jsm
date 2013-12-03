@@ -288,11 +288,11 @@ let CustomizableUIInternal = {
     }
   },
 
-  unregisterArea: function(aName, aDestroyPlacements) {
+  unregisterArea: function(aName) {
     if (typeof aName != "string" || !/^[a-z0-9-_]{1,}$/i.test(aName)) {
       throw new Error("Invalid area name");
     }
-    if (!gAreas.has(aName) && !gPlacements.has(aName)) {
+    if (!gAreas.has(aName)) {
       throw new Error("Area not registered");
     }
 
@@ -300,22 +300,11 @@ let CustomizableUIInternal = {
     this.beginBatchUpdate();
     try {
       let placements = gPlacements.get(aName);
-      if (placements) {
-        // Need to clone this array so removeWidgetFromArea doesn't modify it
-        placements = [...placements];
-        placements.forEach(this.removeWidgetFromArea, this);
-      }
+      placements.forEach(this.removeWidgetFromArea, this);
 
       // Delete all remaining traces.
       gAreas.delete(aName);
-      // Only destroy placements when necessary:
-      if (aDestroyPlacements) {
-        gPlacements.delete(aName);
-      } else {
-        // Otherwise we need to re-set them, as removeFromArea will have emptied
-        // them out:
-        gPlacements.set(aName, placements);
-      }
+      gPlacements.delete(aName);
       gFuturePlacements.delete(aName);
       gBuildAreas.delete(aName);
     } finally {
@@ -1217,15 +1206,12 @@ let CustomizableUIInternal = {
     return [...widgets];
   },
 
-  getPlacementOfWidget: function(aWidgetId, aOnlyRegistered, aDeadAreas) {
+  getPlacementOfWidget: function(aWidgetId, aOnlyRegistered) {
     if (aOnlyRegistered && !this.widgetExists(aWidgetId)) {
       return null;
     }
 
     for (let [area, placements] of gPlacements) {
-      if (!gAreas.has(area) && !aDeadAreas) {
-        continue;
-      }
       let index = placements.indexOf(aWidgetId);
       if (index != -1) {
         return { area: area, position: index };
@@ -1270,7 +1256,7 @@ let CustomizableUIInternal = {
       aWidgetId = this.ensureSpecialWidgetId(aWidgetId);
     }
 
-    let oldPlacement = this.getPlacementOfWidget(aWidgetId, false, true);
+    let oldPlacement = this.getPlacementOfWidget(aWidgetId);
     if (oldPlacement && oldPlacement.area == aArea) {
       this.moveWidgetWithinArea(aWidgetId, aPosition);
       return;
@@ -1318,7 +1304,7 @@ let CustomizableUIInternal = {
   },
 
   removeWidgetFromArea: function(aWidgetId) {
-    let oldPlacement = this.getPlacementOfWidget(aWidgetId, false, true);
+    let oldPlacement = this.getPlacementOfWidget(aWidgetId);
     if (!oldPlacement) {
       return;
     }
@@ -2059,8 +2045,8 @@ this.CustomizableUI = {
   registerMenuPanel: function(aPanel) {
     CustomizableUIInternal.registerMenuPanel(aPanel);
   },
-  unregisterArea: function(aName, aDestroyPlacements) {
-    CustomizableUIInternal.unregisterArea(aName, aDestroyPlacements);
+  unregisterArea: function(aName) {
+    CustomizableUIInternal.unregisterArea(aName);
   },
   addWidgetToArea: function(aWidgetId, aArea, aPosition) {
     CustomizableUIInternal.addWidgetToArea(aWidgetId, aArea, aPosition);
@@ -2250,11 +2236,7 @@ function WidgetGroupWrapper(aWidget) {
       return [];
     }
     let area = placement.area;
-    let buildAreas = gBuildAreas.get(area);
-    if (!buildAreas) {
-      return [];
-    }
-    return [this.forWindow(node.ownerDocument.defaultView) for (node of buildAreas)];
+    return [this.forWindow(node.ownerDocument.defaultView) for (node of gBuildAreas.get(area))];
   });
 
   this.__defineGetter__("areaType", function() {
