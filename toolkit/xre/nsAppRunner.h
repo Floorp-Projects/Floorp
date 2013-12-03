@@ -97,7 +97,7 @@ WriteConsoleLog();
 
 #ifdef XP_WIN
 BOOL
-WinLaunchChild(const PRUnichar *exePath, int argc, 
+WinLaunchChild(const wchar_t *exePath, int argc,
                char **argv, HANDLE userToken = nullptr,
                HANDLE *hProcess = nullptr);
 BOOL
