@@ -2831,6 +2831,32 @@ NS_DOMStructuredCloneError(JSContext* cx,
   xpc::Throw(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
 }
 
+static bool
+AsmJSCacheOpenEntryForRead(JS::Handle<JSObject*> aGlobal,
+                           const jschar* aBegin,
+                           const jschar* aLimit,
+                           size_t* aSize,
+                           const uint8_t** aMemory,
+                           intptr_t *aHandle)
+{
+  nsIPrincipal* principal = nsContentUtils::GetObjectPrincipal(aGlobal);
+  return asmjscache::OpenEntryForRead(principal, aBegin, aLimit, aSize, aMemory,
+                                      aHandle);
+}
+
+static bool
+AsmJSCacheOpenEntryForWrite(JS::Handle<JSObject*> aGlobal,
+                            const jschar* aBegin,
+                            const jschar* aEnd,
+                            size_t aSize,
+                            uint8_t** aMemory,
+                            intptr_t* aHandle)
+{
+  nsIPrincipal* principal = nsContentUtils::GetObjectPrincipal(aGlobal);
+  return asmjscache::OpenEntryForWrite(principal, aBegin, aEnd, aSize, aMemory,
+                                       aHandle);
+}
+
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 void
@@ -2879,9 +2905,9 @@ nsJSContext::EnsureStatics()
 
   // Set up the asm.js cache callbacks
   static JS::AsmJSCacheOps asmJSCacheOps = {
-    asmjscache::OpenEntryForRead,
+    AsmJSCacheOpenEntryForRead,
     asmjscache::CloseEntryForRead,
-    asmjscache::OpenEntryForWrite,
+    AsmJSCacheOpenEntryForWrite,
     asmjscache::CloseEntryForWrite,
     asmjscache::GetBuildId
   };
