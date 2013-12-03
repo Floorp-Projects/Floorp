@@ -404,16 +404,14 @@ class B2GReftest(RefTest):
         prefs = {}
         # Turn off the locale picker screen
         prefs["browser.firstrun.show.localepicker"] = False
-        prefs["browser.homescreenURL"] = "app://system.gaiamobile.org"
-        prefs["browser.manifestURL"] = "app://system.gaiamobile.org/manifest.webapp"
+        prefs["browser.homescreenURL"] = "app://test-container.gaiamobile.org/index.html"
+        prefs["browser.manifestURL"] = "app://test-container.gaiamobile.org/manifest.webapp"
         prefs["browser.tabs.remote"] = False
-        prefs["dom.ipc.browser_frames.oop_by_default"] = True
         prefs["dom.ipc.tabs.disabled"] = False
         prefs["dom.mozBrowserFramesEnabled"] = True
-        prefs["dom.mozBrowserFramesWhitelist"] = "app://system.gaiamobile.org"
-        prefs["network.dns.localDomains"] = "app://system.gaiamobile.org"
         prefs["font.size.inflation.emPerLine"] = 0
         prefs["font.size.inflation.minTwips"] = 0
+        prefs["network.dns.localDomains"] = "app://test-container.gaiamobile.org"
         prefs["reftest.browser.iframe.enabled"] = False
         prefs["reftest.remote"] = True
         prefs["reftest.uri"] = "%s" % reftestlist
