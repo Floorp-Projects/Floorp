@@ -1308,7 +1308,6 @@ Tab.prototype = {
     Elements.browsers.addEventListener("SizeChanged", this, false);
 
     browser.messageManager.addMessageListener("Content:StateChange", this);
-    Services.obs.addObserver(this, "metro_viewstate_changed", false);
 
     if (aOwner)
       this._copyHistoryFrom(aOwner);
@@ -1323,8 +1322,11 @@ Tab.prototype = {
   handleEvent: function (aEvent) {
     switch (aEvent.type) {
       case "DOMWindowCreated":
+        this.updateViewport();
+        break;
       case "SizeChanged":
         this.updateViewport();
+        this._delayUpdateThumbnail();
         break;
     }
   },
@@ -1336,30 +1338,23 @@ Tab.prototype = {
         this.updateThumbnail();
         // ...and in a little while to capture page after load.
         if (aMessage.json.stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-          clearTimeout(this._updateThumbnailTimeout);
-          this._updateThumbnailTimeout = setTimeout(() => {
-            this.updateThumbnail();
-          }, kTabThumbnailDelayCapture);
+          this._delayUpdateThumbnail();
         }
         break;
     }
   },
 
-  observe: function BrowserUI_observe(aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "metro_viewstate_changed":
-        if (aData !== "snapped") {
-          this.updateThumbnail();
-        }
-        break;
-    }
+  _delayUpdateThumbnail: function() {
+    clearTimeout(this._updateThumbnailTimeout);
+    this._updateThumbnailTimeout = setTimeout(() => {
+      this.updateThumbnail();
+    }, kTabThumbnailDelayCapture);
   },
 
   destroy: function destroy() {
     this._browser.messageManager.removeMessageListener("Content:StateChange", this);
     this._browser.removeEventListener("DOMWindowCreated", this, false);
     Elements.browsers.removeEventListener("SizeChanged", this, false);
-    Services.obs.removeObserver(this, "metro_viewstate_changed", false);
     clearTimeout(this._updateThumbnailTimeout);
 
     Elements.tabList.removeTab(this._chromeTab);

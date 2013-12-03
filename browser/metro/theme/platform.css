@@ -788,8 +788,8 @@ appbar toolbar[labelled] toolbarbutton > .toolbarbutton-text {
 
 /* Sprites */
 
-.appbar-primary > .toolbarbutton-icon,
-.appbar-secondary > .toolbarbutton-icon {
+.appbar-primary .toolbarbutton-icon,
+.appbar-secondary .toolbarbutton-icon {
   width: 40px;
   height: 40px;
 }

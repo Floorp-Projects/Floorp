@@ -35,6 +35,26 @@ function do_check_throws(aFunc, aResult, aStack) {
   do_throw("Expected result " + aResult + ", none thrown.", aStack);
 }
 
+
+/**
+ * Test whether specified function throws exception with expected
+ * result.
+ *
+ * @param func
+ *        Function to be tested.
+ * @param message
+ *        Message of expected exception. <code>null</code> for no throws.
+ */
+function do_check_throws_message(aFunc, aResult) {
+  try {
+    aFunc();
+  } catch (e) {
+    do_check_eq(e.message, aResult);
+    return;
+  }
+  do_throw("Expected an error, none thrown.");
+}
+
 /**
  * Print some debug message to the console. All arguments will be printed,
  * separated by spaces.

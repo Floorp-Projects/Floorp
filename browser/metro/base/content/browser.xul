@@ -260,7 +260,7 @@ Desktop browser's sync prefs.
             <observes element="bcast_windowState" attribute="*"/>
             <observes element="bcast_urlbarState" attribute="*"/>
             <hbox id="toolbar-context-page" pack="end">
-              <circularprogressindicator id="download-progress"
+              <circularprogressindicator id="download-progress" class="appbar-primary"
                                      oncommand="MetroDownloadsView.onDownloadButton()"/>
               <toolbarbutton id="star-button" class="appbar-primary"
                              type="checkbox"
