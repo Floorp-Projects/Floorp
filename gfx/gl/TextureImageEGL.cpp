@@ -6,6 +6,7 @@
 #include "TextureImageEGL.h"
 #include "GLLibraryEGL.h"
 #include "GLContext.h"
+#include "GLUploadHelpers.h"
 #include "gfxPlatform.h"
 #include "mozilla/gfx/Types.h"
 
@@ -215,12 +216,13 @@ TextureImageEGL::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, co
     }
 
     mTextureFormat =
-      mGLContext->UploadSurfaceToTexture(aSurf,
-                                          region,
-                                          mTexture,
-                                          mTextureState == Created,
-                                          bounds.TopLeft() + aFrom,
-                                          false);
+      UploadSurfaceToTexture(mGLContext,
+                             aSurf,
+                             region,
+                             mTexture,
+                             mTextureState == Created,
+                             bounds.TopLeft() + aFrom,
+                             false);
 
     mTextureState = Valid;
     return true;
