@@ -711,7 +711,7 @@ let CustomizableUIInternal = {
       this.notifyListeners("onWidgetAfterDOMChange", widgetNode, null, container, true);
 
       if (area.get("type") == CustomizableUI.TYPE_TOOLBAR) {
-        areaNode.setAttribute("currentset", areaNode.currentSet);
+        areaNode.setAttribute("currentset", gPlacements.get(aArea).join(','));
       }
 
       let windowCache = gSingleWrapperCache.get(window);
@@ -866,7 +866,7 @@ let CustomizableUIInternal = {
     this.insertWidgetBefore(widgetNode, nextNode, insertionContainer, areaId);
 
     if (gAreas.get(areaId).get("type") == CustomizableUI.TYPE_TOOLBAR) {
-      aAreaNode.setAttribute("currentset", aAreaNode.currentSet);
+      areaNode.setAttribute("currentset", gPlacements.get(areaId).join(','));
     }
   },
 
