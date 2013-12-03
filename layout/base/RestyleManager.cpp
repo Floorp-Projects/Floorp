@@ -2386,8 +2386,8 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
                        nsCSSPseudoElements::ePseudo_PseudoElementCount,
                      "Unexpected pseudo type");
         Element* pseudoElement =
-          nsCSSPseudoElements::PseudoElementSupportsStyleAttribute(pseudoTag) ||
-          nsCSSPseudoElements::PseudoElementSupportsUserActionState(pseudoTag) ?
+          nsCSSPseudoElements::PseudoElementSupportsStyleAttribute(pseudoType) ||
+          nsCSSPseudoElements::PseudoElementSupportsUserActionState(pseudoType) ?
             aSelf->GetContent()->AsElement() : nullptr;
         MOZ_ASSERT(element != pseudoElement);
         newContext = styleSet->ResolvePseudoElementStyle(element,

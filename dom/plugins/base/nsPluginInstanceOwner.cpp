@@ -361,9 +361,8 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   }
 }
 
-NS_IMPL_ISUPPORTS5(nsPluginInstanceOwner,
+NS_IMPL_ISUPPORTS4(nsPluginInstanceOwner,
                    nsIPluginInstanceOwner,
-                   nsIPluginTagInfo,
                    nsIDOMEventListener,
                    nsIPrivacyTransitionObserver,
                    nsISupportsWeakReference)
@@ -824,7 +823,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetParameter(const char* name, const char* 
 {
   NS_ENSURE_ARG_POINTER(name);
   NS_ENSURE_ARG_POINTER(result);
-  
+
   nsresult rv = EnsureCachedAttrParamArrays();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -840,195 +839,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetParameter(const char* name, const char* 
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
-{
-  NS_ENSURE_ARG_POINTER(result);
-  nsresult rv = NS_OK;
-  if (mDocumentBase.IsEmpty()) {
-    if (!mObjectFrame) {
-      *result = nullptr;
-      return NS_ERROR_FAILURE;
-    }
-
-    nsIDocument* doc = mContent->OwnerDoc();
-    NS_ASSERTION(doc, "Must have an owner doc");
-    rv = doc->GetDocBaseURI()->GetSpec(mDocumentBase);
-  }
-  if (NS_SUCCEEDED(rv))
-    *result = ToNewCString(mDocumentBase);
-  return rv;
-}
-
-static nsDataHashtable<nsDepCharHashKey, const char *> * gCharsetMap;
-typedef struct {
-    char mozName[16];
-    char javaName[12];
-} moz2javaCharset;
-
-/* XXX If you add any strings longer than
- *  {"x-mac-cyrillic",  "MacCyrillic"},
- *  {"x-mac-ukrainian", "MacUkraine"},
- * to the following array then you MUST update the
- * sizes of the arrays in the moz2javaCharset struct
- */
-
-static const moz2javaCharset charsets[] = 
-{
-    {"windows-1252",    "Cp1252"},
-    {"IBM850",          "Cp850"},
-    {"IBM852",          "Cp852"},
-    {"IBM855",          "Cp855"},
-    {"IBM857",          "Cp857"},
-    {"IBM828",          "Cp862"},
-    {"IBM866",          "Cp866"},
-    {"windows-1250",    "Cp1250"},
-    {"windows-1251",    "Cp1251"},
-    {"windows-1253",    "Cp1253"},
-    {"windows-1254",    "Cp1254"},
-    {"windows-1255",    "Cp1255"},
-    {"windows-1256",    "Cp1256"},
-    {"windows-1257",    "Cp1257"},
-    {"windows-1258",    "Cp1258"},
-    {"EUC-JP",          "EUC_JP"},
-    {"EUC-KR",          "MS949"},
-    {"x-euc-tw",        "EUC_TW"},
-    {"gb18030",         "GB18030"},
-    {"gbk",             "GBK"},
-    {"ISO-2022-JP",     "ISO2022JP"},
-    {"ISO-2022-KR",     "ISO2022KR"},
-    {"ISO-8859-2",      "ISO8859_2"},
-    {"ISO-8859-3",      "ISO8859_3"},
-    {"ISO-8859-4",      "ISO8859_4"},
-    {"ISO-8859-5",      "ISO8859_5"},
-    {"ISO-8859-6",      "ISO8859_6"},
-    {"ISO-8859-7",      "ISO8859_7"},
-    {"ISO-8859-8",      "ISO8859_8"},
-    {"ISO-8859-9",      "ISO8859_9"},
-    {"ISO-8859-13",     "ISO8859_13"},
-    {"x-johab",         "Johab"},
-    {"KOI8-R",          "KOI8_R"},
-    {"TIS-620",         "MS874"},
-    {"x-mac-arabic",    "MacArabic"},
-    {"x-mac-croatian",  "MacCroatia"},
-    {"x-mac-cyrillic",  "MacCyrillic"},
-    {"x-mac-greek",     "MacGreek"},
-    {"x-mac-hebrew",    "MacHebrew"},
-    {"x-mac-icelandic", "MacIceland"},
-    {"macintosh",       "MacRoman"},
-    {"x-mac-romanian",  "MacRomania"},
-    {"x-mac-ukrainian", "MacUkraine"},
-    {"Shift_JIS",       "SJIS"},
-    {"TIS-620",         "TIS620"}
-};
-
-NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
-{
-  NS_ENSURE_ARG_POINTER(result);
-  *result = nullptr;
-
-  nsresult rv;
-  // XXX sXBL/XBL2 issue: current doc or owner doc?
-  nsCOMPtr<nsIDocument> doc;
-  rv = GetDocument(getter_AddRefs(doc));
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get document");
-  if (NS_FAILED(rv))
-    return rv;
-
-  const nsCString &charset = doc->GetDocumentCharacterSet();
-
-  if (charset.IsEmpty())
-    return NS_OK;
-
-  // common charsets and those not requiring conversion first
-  if (charset.EqualsLiteral("us-ascii")) {
-    *result = PL_strdup("US_ASCII");
-  } else if (charset.EqualsLiteral("ISO-8859-1") ||
-      !nsCRT::strncmp(charset.get(), "UTF", 3)) {
-    *result = ToNewCString(charset);
-  } else {
-    if (!gCharsetMap) {
-      const int NUM_CHARSETS = sizeof(charsets) / sizeof(moz2javaCharset);
-      gCharsetMap = new nsDataHashtable<nsDepCharHashKey, const char*>(NUM_CHARSETS);
-      if (!gCharsetMap)
-        return NS_ERROR_OUT_OF_MEMORY;
-      for (uint16_t i = 0; i < NUM_CHARSETS; i++) {
-        gCharsetMap->Put(charsets[i].mozName, charsets[i].javaName);
-      }
-    }
-    // if found mapping, return it; otherwise return original charset
-    const char *mapping;
-    *result = gCharsetMap->Get(charset.get(), &mapping) ? PL_strdup(mapping) :
-                                                          ToNewCString(charset);
-  }
-
-  return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP nsPluginInstanceOwner::GetAlignment(const char* *result)
-{
-  return GetAttribute("ALIGN", result);
-}
-  
-NS_IMETHODIMP nsPluginInstanceOwner::GetWidth(uint32_t *result)
-{
-  NS_ENSURE_ARG_POINTER(result);
-
-  NS_ENSURE_TRUE(mPluginWindow, NS_ERROR_NULL_POINTER);
-
-  *result = mPluginWindow->width;
-
-  return NS_OK;
-}
-  
-NS_IMETHODIMP nsPluginInstanceOwner::GetHeight(uint32_t *result)
-{
-  NS_ENSURE_ARG_POINTER(result);
-
-  NS_ENSURE_TRUE(mPluginWindow, NS_ERROR_NULL_POINTER);
-
-  *result = mPluginWindow->height;
-
-  return NS_OK;
-}
-
-  
-NS_IMETHODIMP nsPluginInstanceOwner::GetBorderVertSpace(uint32_t *result)
-{
-  nsresult    rv;
-  const char  *vspace;
-
-  rv = GetAttribute("VSPACE", &vspace);
-
-  if (NS_OK == rv) {
-    if (*result != 0)
-      *result = (uint32_t)atol(vspace);
-    else
-      *result = 0;
-  }
-  else
-    *result = 0;
-
-  return rv;
-}
-  
-NS_IMETHODIMP nsPluginInstanceOwner::GetBorderHorizSpace(uint32_t *result)
-{
-  nsresult    rv;
-  const char  *hspace;
-
-  rv = GetAttribute("HSPACE", &hspace);
-
-  if (NS_OK == rv) {
-    if (*result != 0)
-      *result = (uint32_t)atol(hspace);
-    else
-      *result = 0;
-  }
-  else
-    *result = 0;
-
-  return rv;
-}
 
 // Cache the attributes and/or parameters of our tag into a single set
 // of arrays to be compatible with Netscape 4.x. The attributes go first,

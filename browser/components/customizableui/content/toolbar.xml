@@ -414,7 +414,7 @@
 
           // pass the current set of children for comparison with placements:
           let children = [];
-          for (node of this.childNodes) {
+          for (let node of this.childNodes) {
             if (node.getAttribute("skipintoolbarset") != "true" && node.id) {
               // Force everything to be removable so that buildArea can chuck stuff
               // out if the user has customized things / we've been here before:

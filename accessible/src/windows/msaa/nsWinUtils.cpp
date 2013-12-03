@@ -22,7 +22,7 @@ using namespace mozilla::a11y;
 
 // Window property used by ipc related code in identifying accessible
 // tab windows.
-const PRUnichar* kPropNameTabContent = L"AccessibleTabWindow";
+const wchar_t* kPropNameTabContent = L"AccessibleTabWindow";
 
 /**
  * WindowProc to process WM_GETOBJECT messages, used in windows emulation mode.

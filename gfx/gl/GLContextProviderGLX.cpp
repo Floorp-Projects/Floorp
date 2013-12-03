@@ -861,7 +861,6 @@ TRY_AGAIN_NO_SHARING:
 
     bool Init()
     {
-        MakeCurrent();
         SetupLookupFunction();
         if (!InitWithPrefix("gl", true)) {
             return false;

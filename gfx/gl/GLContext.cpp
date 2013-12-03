@@ -456,7 +456,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
     };
 
     mInitialized = LoadSymbols(&symbols[0], trygl, prefix);
-
+    MakeCurrent();
     if (mInitialized) {
         unsigned int version = 0;
 

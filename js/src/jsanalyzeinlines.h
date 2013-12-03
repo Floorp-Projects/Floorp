@@ -17,16 +17,15 @@ namespace analyze {
 inline const SSAValue &
 ScriptAnalysis::poppedValue(uint32_t offset, uint32_t which)
 {
-    JS_ASSERT(offset < script_->length);
     JS_ASSERT(which < GetUseCount(script_, offset) +
-              (ExtendedUse(script_->code + offset) ? 1 : 0));
+              (ExtendedUse(script_->offsetToPC(offset)) ? 1 : 0));
     return getCode(offset).poppedValues[which];
 }
 
 inline const SSAValue &
 ScriptAnalysis::poppedValue(const jsbytecode *pc, uint32_t which)
 {
-    return poppedValue(pc - script_->code, which);
+    return poppedValue(script_->pcToOffset(pc), which);
 }
 
 inline SSAUseChain *&
@@ -43,10 +42,10 @@ ScriptAnalysis::useChain(const SSAValue &v)
 inline jsbytecode *
 ScriptAnalysis::getCallPC(jsbytecode *pc)
 {
-    SSAUseChain *uses = useChain(SSAValue::PushedValue(pc - script_->code, 0));
+    SSAUseChain *uses = useChain(SSAValue::PushedValue(script_->pcToOffset(pc), 0));
     JS_ASSERT(uses && uses->popped);
-    JS_ASSERT(js_CodeSpec[script_->code[uses->offset]].format & JOF_INVOKE);
-    return script_->code + uses->offset;
+    JS_ASSERT(js_CodeSpec[script_->code()[uses->offset]].format & JOF_INVOKE);
+    return script_->offsetToPC(uses->offset);
 }
 
 } /* namespace analyze */

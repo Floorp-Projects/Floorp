@@ -107,8 +107,6 @@ function createWaveFileData(audioBuffer) {
 
 SimpleTest.waitForExplicitFinish();
 
-var cx = new AudioContext();
-
 // fuzzTolerance and fuzzToleranceMobile are used to determine fuzziness
 // thresholds.  They're needed to make sure that we can deal with neglibible
 // differences in the binary buffer caused as a result of resampling the
@@ -120,7 +118,7 @@ var files = [
   {
     url: "ting-44.1k-1ch.ogg",
     valid: true,
-    expected: "ting-44.1k-1ch.wav",
+    expectedUrl: "ting-44.1k-1ch.wav",
     numberOfChannels: 1,
     frames: 30592,
     sampleRate: 44100,
@@ -132,7 +130,7 @@ var files = [
   {
     url: "ting-44.1k-2ch.ogg",
     valid: true,
-    expected: "ting-44.1k-2ch.wav",
+    expectedUrl: "ting-44.1k-2ch.wav",
     numberOfChannels: 2,
     frames: 30592,
     sampleRate: 44100,
@@ -144,32 +142,32 @@ var files = [
   {
     url: "ting-48k-1ch.ogg",
     valid: true,
-    expected: "ting-48k-1ch.wav",
+    expectedUrl: "ting-48k-1ch.wav",
     numberOfChannels: 1,
     frames: 33297,
     sampleRate: 48000,
     duration: 0.693,
-    fuzzTolerance: 7,
-    fuzzToleranceMobile: 7070
+    fuzzTolerance: 3,
+    fuzzToleranceMobile: 1388
   },
   // An ogg file, 48khz, stereo
   {
     url: "ting-48k-2ch.ogg",
     valid: true,
-    expected: "ting-48k-2ch.wav",
+    expectedUrl: "ting-48k-2ch.wav",
     numberOfChannels: 2,
     frames: 33297,
     sampleRate: 48000,
     duration: 0.693,
-    fuzzTolerance: 12,
-    fuzzToleranceMobile: 13982
+    fuzzTolerance: 14,
+    fuzzToleranceMobile: 2752
   },
   // Make sure decoding a wave file results in the same buffer (for both the
   // resampling and non-resampling cases)
   {
     url: "ting-44.1k-1ch.wav",
     valid: true,
-    expected: "ting-44.1k-1ch.wav",
+    expectedUrl: "ting-44.1k-1ch.wav",
     numberOfChannels: 1,
     frames: 30592,
     sampleRate: 44100,
@@ -180,7 +178,7 @@ var files = [
   {
     url: "ting-48k-1ch.wav",
     valid: true,
-    expected: "ting-48k-1ch.wav",
+    expectedUrl: "ting-48k-1ch.wav",
     numberOfChannels: 1,
     frames: 33297,
     sampleRate: 48000,
@@ -189,16 +187,16 @@ var files = [
     fuzzToleranceMobile: 0
   },
   //  // A wave file
-  //  //{ url: "24bit-44khz.wav", valid: true, expected: "24bit-44khz-expected.wav" },
+  //  //{ url: "24bit-44khz.wav", valid: true, expectedUrl: "24bit-44khz-expected.wav" },
   // A non-audio file
-  { url: "invalid.txt", valid: false },
+  { url: "invalid.txt", valid: false, sampleRate: 44100 },
   // A webm file with no audio
-  { url: "noaudio.webm", valid: false },
+  { url: "noaudio.webm", valid: false, sampleRate: 48000 },
   // A video ogg file with audio
   {
     url: "audio.ogv",
     valid: true,
-    expected: "audio-expected.wav",
+    expectedUrl: "audio-expected.wav",
     numberOfChannels: 2,
     sampleRate: 44100,
     frames: 47680,
@@ -231,58 +229,60 @@ function getFuzzTolerance(test) {
   return kIsMobile ? test.fuzzToleranceMobile : test.fuzzTolerance;
 }
 
-function checkAudioBuffer(buffer, test, callback, monoTest) {
+function checkAudioBuffer(buffer, test) {
   is(buffer.numberOfChannels, test.numberOfChannels, "Correct number of channels");
   ok(Math.abs(buffer.duration - test.duration) < 1e-3, "Correct duration");
   if (Math.abs(buffer.duration - test.duration) >= 1e-3) {
     ok(false, "got: " + buffer.duration  + ", expected: " + test.duration);
   }
-  is(buffer.sampleRate, cx.sampleRate, "Correct sample rate");
+  is(buffer.sampleRate, test.sampleRate, "Correct sample rate");
   // Take into account the resampling when checking the size
-  var SRCRate = test.sampleRate / cx.sampleRate;
-  ok(Math.abs(buffer.length * SRCRate - test.frames) < test.frames * 0.01, "Correct length");
+  var expectedLength = test.frames * buffer.sampleRate / test.sampleRate;
+  ok(Math.abs(buffer.length - expectedLength) < 1.0, "Correct length", "got " + buffer.length + ", expected about " + expectedLength);
 
   var wave = createWaveFileData(buffer);
-
-  var getExpected = new XMLHttpRequest();
-  getExpected.open("GET", test.expected, true);
-  getExpected.responseType = "arraybuffer";
-  getExpected.onload = function() {
-    ok(fuzzyMemcmp(wave, new Uint8Array(getExpected.response), getFuzzTolerance(test)), "Received expected decoded data");
-    callback();
-  };
-  getExpected.send();
+  ok(fuzzyMemcmp(wave, test.expectedWaveData, getFuzzTolerance(test)), "Received expected decoded data");
 }
 
-function runTest(test, callback) {
+function runTest(test, response, callback) {
+  var expectCallback = false;
+  var cx = new OfflineAudioContext(1, 1, test.sampleRate);
+  cx.decodeAudioData(response, function onSuccess(asyncResult) {
+    ok(expectCallback, "Success callback should fire asynchronously");
+    ok(test.valid, "Did expect success for test " + test.url);
+    checkAudioBuffer(asyncResult, test);
+
+    syncResult = cx.createBuffer(response, false);
+    compareBuffers(syncResult, asyncResult);
+    callback();
+  }, function onFailure() {
+    ok(expectCallback, "Failure callback should fire asynchronously");
+    ok(!test.valid, "Did expect failure for test " + test.url);
+    callback();
+  });
+  expectCallback = true;
+}
+
+function loadTest(test, callback) {
   var xhr = new XMLHttpRequest();
   xhr.open("GET", test.url, true);
   xhr.responseType = "arraybuffer";
   xhr.onload = function() {
-    var expectCallback = false;
-    cx.decodeAudioData(xhr.response, function onSuccess(result) {
-      ok(expectCallback, "Success callback should fire asynchronously");
-      ok(test.valid, "Did expect success for test " + test.url);
-
-      checkAudioBuffer(result, test, function() {
-        result = cx.createBuffer(xhr.response, false);
-        checkAudioBuffer(result, test, function() {
-            callback();
-        }, false);
-      }, false);
-    }, function onFailure() {
-      ok(expectCallback, "Failure callback should fire asynchronously");
-      ok(!test.valid, "Did not expect failure for test " + test.url);
-      callback();
-    });
-    expectCallback = true;
+    var getExpected = new XMLHttpRequest();
+    getExpected.open("GET", test.expectedUrl, true);
+    getExpected.responseType = "arraybuffer";
+    getExpected.onload = function() {
+      test.expectedWaveData = new Uint8Array(getExpected.response);
+      runTest(test, xhr.response, callback);
+    };
+    getExpected.send();
   };
   xhr.send();
 }
 
-function runNextTest() {
+function loadNextTest() {
   if (files.length) {
-    runTest(files.shift(), runNextTest);
+    loadTest(files.shift(), loadNextTest);
   } else {
     SimpleTest.finish();
   }
@@ -292,29 +292,27 @@ function runNextTest() {
 function callbackShouldNeverRun() {
   ok(false, "callback should not fire");
 }
-expectTypeError(function() {
-  cx.decodeAudioData(null, callbackShouldNeverRun, callbackShouldNeverRun);
-});
-expectTypeError(function() {
-  cx.decodeAudioData(undefined, callbackShouldNeverRun, callbackShouldNeverRun);
-});
-expectTypeError(function() {
-  cx.decodeAudioData(123, callbackShouldNeverRun, callbackShouldNeverRun);
-});
-expectTypeError(function() {
-  cx.decodeAudioData("buffer", callbackShouldNeverRun, callbackShouldNeverRun);
-});
-expectTypeError(function() {
-  cx.decodeAudioData(new Uint8Array(100), callbackShouldNeverRun, callbackShouldNeverRun);
-});
+(function() {
+  var cx = new AudioContext();
+  expectTypeError(function() {
+    cx.decodeAudioData(null, callbackShouldNeverRun, callbackShouldNeverRun);
+  });
+  expectTypeError(function() {
+    cx.decodeAudioData(undefined, callbackShouldNeverRun, callbackShouldNeverRun);
+  });
+  expectTypeError(function() {
+    cx.decodeAudioData(123, callbackShouldNeverRun, callbackShouldNeverRun);
+  });
+  expectTypeError(function() {
+    cx.decodeAudioData("buffer", callbackShouldNeverRun, callbackShouldNeverRun);
+  });
+  expectTypeError(function() {
+    cx.decodeAudioData(new Uint8Array(100), callbackShouldNeverRun, callbackShouldNeverRun);
+  });
+})();
 
-if (cx.sampleRate >= 44100) {
-  // Now, let's get real!
-  runNextTest();
-} else {
-  todo(false, "Decoded data tests disabled; context sampleRate " + cx.sampleRate + " not supported");
-  SimpleTest.finish();
-}
+// Now, let's get real!
+loadNextTest();
 
 </script>
 </pre>
