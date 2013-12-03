@@ -77,6 +77,7 @@ jmethodID GeckoAppShell::jScheduleRestart = 0;
 jmethodID GeckoAppShell::jSendMessageWrapper = 0;
 jmethodID GeckoAppShell::jSetFullScreen = 0;
 jmethodID GeckoAppShell::jSetKeepScreenOn = 0;
+jmethodID GeckoAppShell::jSetSelectedLocale = 0;
 jmethodID GeckoAppShell::jSetURITitle = 0;
 jmethodID GeckoAppShell::jShowAlertNotificationWrapper = 0;
 jmethodID GeckoAppShell::jShowFilePickerAsyncWrapper = 0;
@@ -157,6 +158,7 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jSendMessageWrapper = getStaticMethod("sendMessage", "(Ljava/lang/String;Ljava/lang/String;I)V");
     jSetFullScreen = getStaticMethod("setFullScreen", "(Z)V");
     jSetKeepScreenOn = getStaticMethod("setKeepScreenOn", "(Z)V");
+    jSetSelectedLocale = getStaticMethod("setSelectedLocale", "(Ljava/lang/String;)V");
     jSetURITitle = getStaticMethod("setUriTitle", "(Ljava/lang/String;Ljava/lang/String;)V");
     jShowAlertNotificationWrapper = getStaticMethod("showAlertNotification", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     jShowFilePickerAsyncWrapper = getStaticMethod("showFilePickerAsync", "(Ljava/lang/String;J)V");
@@ -2041,6 +2043,35 @@ void GeckoAppShell::SetKeepScreenOn(bool a0) {
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jSetKeepScreenOn, a0);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return;
+    }
+
+    env->PopLocalFrame(NULL);
+}
+
+void GeckoAppShell::SetSelectedLocale(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(1) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
+
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jSetSelectedLocale, j0);
 
     if (env->ExceptionCheck()) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);

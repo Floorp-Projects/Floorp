@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef ScriptedNotificationObserver_h
+#define ScriptedNotificationObserver_h
+
 #include "imgINotificationObserver.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -28,3 +31,5 @@ private:
 };
 
 }}
+
+#endif

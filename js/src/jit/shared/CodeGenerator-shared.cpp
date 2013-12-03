@@ -571,9 +571,24 @@ CodeGeneratorShared::verifyOsiPointRegs(LSafepoint *safepoint)
 
     masm.jump(&done);
 
+    // Do not profile the callWithABI that occurs below.  This is to avoid a
+    // rare corner case that occurs when profiling interacts with itself:
+    //
+    // When slow profiling assertions are turned on, FunctionBoundary ops
+    // (which update the profiler pseudo-stack) may emit a callVM, which
+    // forces them to have an osi point associated with them.  The
+    // FunctionBoundary for inline function entry is added to the caller's
+    // graph with a PC from the caller's code, but during codegen it modifies
+    // SPS instrumentation to add the callee as the current top-most script.
+    // When codegen gets to the OSIPoint, and the callWithABI below is
+    // emitted, the codegen thinks that the current frame is the callee, but
+    // the PC it's using from the OSIPoint refers to the caller.  This causes
+    // the profiler instrumentation of the callWithABI below to ASSERT, since
+    // the script and pc are mismatched.  To avoid this, we simply omit
+    // instrumentation for these callWithABIs.
     masm.bind(&failure);
     masm.setupUnalignedABICall(0, scratch);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, OsiPointRegisterCheckFailed));
+    masm.callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, OsiPointRegisterCheckFailed));
     masm.breakpoint();
 
     masm.bind(&done);

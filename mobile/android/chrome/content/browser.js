@@ -274,7 +274,6 @@ var BrowserApp = {
 
     Services.androidBridge.browserApp = this;
 
-    Services.obs.addObserver(this, "Locale:Changed", false);
     Services.obs.addObserver(this, "Tab:Load", false);
     Services.obs.addObserver(this, "Tab:Selected", false);
     Services.obs.addObserver(this, "Tab:Closed", false);
@@ -409,14 +408,6 @@ var BrowserApp = {
       return savedmstone ? "upgrade" : "new";
     }
     return "";
-  },
-
-  /**
-   * Pass this a locale string, such as "fr" or "es_ES".
-   */
-  setLocale: function (locale) {
-    console.log("browser.js: requesting locale set: " + locale);
-    sendMessageToJava({ type: "Locale:Set", locale: locale });
   },
 
   initContextMenu: function ba_initContextMenu() {
@@ -792,7 +783,6 @@ var BrowserApp = {
     let tab = this.getTabForBrowser(aBrowser);
     if (tab) {
       if (!tab.aboutHomePage) tab.aboutHomePage = ("aboutHomePage" in aParams) ? aParams.aboutHomePage : "";
-      if ("showProgress" in aParams) tab.showProgress = aParams.showProgress;
       if ("userSearch" in aParams) tab.userSearch = aParams.userSearch;
     }
 
@@ -1403,10 +1393,6 @@ var BrowserApp = {
           }
         }
 
-        // Don't show progress throbber for about:home or about:reader
-        if (!shouldShowProgress(url))
-          params.showProgress = false;
-
         if (data.newTab) {
           this.addTab(url, params);
         } else {
@@ -1508,13 +1494,6 @@ var BrowserApp = {
 
       case "nsPref:changed":
         this.notifyPrefObservers(aData);
-        break;
-
-      case "Locale:Changed":
-        // TODO: do we need to be more nuanced here -- e.g., checking for the
-        // OS locale -- or should it always be false on Fennec?
-        Services.prefs.setBoolPref("intl.locale.matchOS", false);
-        Services.prefs.setCharPref("general.useragent.locale", aData);
         break;
 
       default:
@@ -2600,7 +2579,6 @@ function Tab(aURL, aParams) {
   this.browser = null;
   this.id = 0;
   this.lastTouchedAt = Date.now();
-  this.showProgress = true;
   this._zoom = 1.0;
   this._drawZoom = 1.0;
   this._fixedMarginLeft = 0;
@@ -2755,9 +2733,6 @@ Tab.prototype = {
       let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
       let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
       let charset = "charset" in aParams ? aParams.charset : null;
-
-      // This determines whether or not we show the progress throbber in the urlbar
-      this.showProgress = "showProgress" in aParams ? aParams.showProgress : true;
 
       // The search term the user entered to load the current URL
       this.userSearch = "userSearch" in aParams ? aParams.userSearch : "";
@@ -3738,11 +3713,6 @@ Tab.prototype = {
           this.browser.feeds = null;
       }
 
-      // Check to see if we restoring the content from a previous presentation (session)
-      // since there should be no real network activity
-      let restoring = aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING;
-      let showProgress = restoring ? false : this.showProgress;
-
       // true if the page loaded successfully (i.e., no 404s or other errors)
       let success = false; 
       let uri = "";
@@ -3757,6 +3727,11 @@ Tab.prototype = {
         success = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel).requestSucceeded;
       } catch (e) { }
 
+      // Check to see if we restoring the content from a previous presentation (session)
+      // since there should be no real network activity
+      let restoring = aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING;
+      let showProgress = restoring ? false : shouldShowProgress(uri);
+
       let message = {
         type: "Content:StateChange",
         tabID: this.id,
@@ -3766,9 +3741,6 @@ Tab.prototype = {
         success: success
       };
       sendMessageToJava(message);
-
-      // Reset showProgress after state change
-      this.showProgress = true;
     }
   },
 

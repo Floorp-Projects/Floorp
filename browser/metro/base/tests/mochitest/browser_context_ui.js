@@ -209,7 +209,7 @@ gTests.push({
     // addTab will dismiss navbar, but lets check anyway.
     ok(!ContextUI.navbarVisible, "navbar dismissed");
 
-    BrowserUI.doCommand("cmd_newTab");
+    BrowserUI.doCommand("cmd_newTabKey");
     let newTab = Browser.selectedTab;
     yield newTab.pageShowPromise;
 
@@ -227,6 +227,30 @@ gTests.push({
     }
 
     ok(parent === edit, 'Active element is a descendant of urlbar');
+
+    Browser.closeTab(newTab, { forceClose: true });
+    Browser.closeTab(mozTab, { forceClose: true });
+  }
+});
+
+gTests.push({
+  desc: "Bug 933989 - New tab button in tab bar always sets focus to the url bar, triggering soft keyboard",
+  run: function () {
+    let mozTab = yield addTab("about:mozilla");
+
+    // addTab will dismiss navbar, but lets check anyway.
+    ok(!ContextUI.navbarVisible, "navbar dismissed");
+
+    BrowserUI.doCommand("cmd_newTab");
+    let newTab = Browser.selectedTab;
+    yield newTab.pageShowPromise;
+
+    yield waitForCondition(() => ContextUI.navbarVisible);
+    ok(ContextUI.navbarVisible, "navbar visible");
+
+    let edit = document.getElementById("urlbar-edit");
+
+    ok(!edit.focused, "Edit is not focused");
 
     Browser.closeTab(newTab, { forceClose: true });
     Browser.closeTab(mozTab, { forceClose: true });

@@ -51,7 +51,7 @@ struct CallsiteCloneKey {
     typedef CallsiteCloneKey Lookup;
 
     static inline uint32_t hash(CallsiteCloneKey key) {
-        return uint32_t(size_t(key.script->code + key.offset) ^ size_t(key.original));
+        return uint32_t(size_t(key.script->offsetToPC(key.offset)) ^ size_t(key.original));
     }
 
     static inline bool match(const CallsiteCloneKey &a, const CallsiteCloneKey &b) {
