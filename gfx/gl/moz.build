@@ -126,6 +126,7 @@ UNIFIED_SOURCES += [
     'SharedSurfaceGL.cpp',
     'SurfaceFactory.cpp',
     'SurfaceStream.cpp',
+    'SurfaceTypes.cpp',
     'TextureGarbageBin.cpp',
     'TextureImageEGL.cpp',
     'VBOArena.cpp',
