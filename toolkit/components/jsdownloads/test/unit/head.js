@@ -34,7 +34,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/commonjs/sdk/core/promise.js");
+                                  "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
@@ -730,6 +730,15 @@ add_task(function test_common_initialize()
   gHttpServer = new HttpServer();
   gHttpServer.registerDirectory("/", do_get_file("../data"));
   gHttpServer.start(-1);
+
+  // Cache locks might prevent concurrent requests to the same resource, and
+  // this may block tests that use the interruptible handlers.
+  Services.prefs.setBoolPref("browser.cache.disk.enable", false);
+  Services.prefs.setBoolPref("browser.cache.memory.enable", false);
+  do_register_cleanup(function () {
+    Services.prefs.clearUserPref("browser.cache.disk.enable");
+    Services.prefs.clearUserPref("browser.cache.memory.enable");
+  });
 
   registerInterruptibleHandler("/interruptible.txt",
     function firstPart(aRequest, aResponse) {
