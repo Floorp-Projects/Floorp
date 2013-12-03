@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-More Windows webidl changes 
+Bug 915533 - Remove unused files under dom/bluetooth.
