@@ -24,7 +24,7 @@ using namespace mozilla::widget;
 extern PRLogModuleInfo* gWindowsLog;
 #endif
 
-const PRUnichar nsWinGesture::kGestureLibraryName[] =  L"user32.dll";
+const wchar_t nsWinGesture::kGestureLibraryName[] =  L"user32.dll";
 HMODULE nsWinGesture::sLibraryHandle = nullptr;
 nsWinGesture::GetGestureInfoPtr nsWinGesture::getGestureInfo = nullptr;
 nsWinGesture::CloseGestureInfoHandlePtr nsWinGesture::closeGestureInfoHandle = nullptr;

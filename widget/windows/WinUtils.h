@@ -114,9 +114,9 @@ public:
    * @return Whether the value exists and is a string.
    */
   static bool GetRegistryKey(HKEY aRoot,
-                             const PRUnichar* aKeyName,
-                             const PRUnichar* aValueName,
-                             PRUnichar* aBuffer,
+                             char16ptr_t aKeyName,
+                             char16ptr_t aValueName,
+                             wchar_t* aBuffer,
                              DWORD aBufferLength);
 
   /**
@@ -128,7 +128,7 @@ public:
    * @return TRUE if it exists and is readable.  Otherwise, FALSE.
    */
   static bool HasRegistryKey(HKEY aRoot,
-                             const PRUnichar* aKeyName);
+                             char16ptr_t aKeyName);
 
   /**
    * GetTopLevelHWND() returns a window handle of the top level window which

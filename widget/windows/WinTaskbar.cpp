@@ -34,7 +34,7 @@
 #include <propkey.h>
 #include <shellapi.h>
 
-const PRUnichar kShellLibraryName[] =  L"shell32.dll";
+const wchar_t kShellLibraryName[] =  L"shell32.dll";
 
 static NS_DEFINE_CID(kJumpListBuilderCID, NS_WIN_JUMPLISTBUILDER_CID);
 
@@ -291,14 +291,14 @@ WinTaskbar::GetAppUserModelID(nsAString & aDefaultGroupId) {
 
   WCHAR path[MAX_PATH];
   if (GetModuleFileNameW(nullptr, path, MAX_PATH)) {
-    PRUnichar* slash = wcsrchr(path, '\\');
+    wchar_t* slash = wcsrchr(path, '\\');
     if (!slash)
       return false;
     *slash = '\0'; // no trailing slash
 
     // The hash is short, but users may customize this, so use a respectable
     // string buffer.
-    PRUnichar buf[256];
+    wchar_t buf[256];
     if (WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
                                  regKey.get(),
                                  path,
