@@ -981,6 +981,13 @@ nsPurpleBuffer::SelectPointers(GCGraphBuilder &aBuilder)
     }
 }
 
+enum ccPhase {
+    IdlePhase,
+    GraphBuildingPhase,
+    ScanAndCollectWhitePhase,
+    CleanupPhase
+};
+
 enum ccType {
     ScheduledCC, /* Automatically triggered, based on time or the purple buffer. */
     ManualCC,    /* Explicitly triggered. */
@@ -1007,6 +1014,7 @@ class nsCycleCollector : public MemoryMultiReporter
 
     CycleCollectedJSRuntime *mJSRuntime;
 
+    ccPhase mIncrementalPhase;
     GCGraph mGraph;
     nsAutoPtr<GCGraphBuilder> mBuilder;
     nsCOMPtr<nsICycleCollectorListener> mListener;
@@ -2204,6 +2212,7 @@ nsCycleCollector::MarkRoots()
     AutoRestore<bool> ar(mScanInProgress);
     MOZ_ASSERT(!mScanInProgress);
     mScanInProgress = true;
+    MOZ_ASSERT(mIncrementalPhase == GraphBuildingPhase);
 
     // read the PtrInfo out of the graph that we are building
     NodePool::Enumerator queue(mGraph.mNodes);
@@ -2225,6 +2234,7 @@ nsCycleCollector::MarkRoots()
     }
 
     mBuilder = nullptr;
+    mIncrementalPhase = ScanAndCollectWhitePhase;
     timeLog.Checkpoint("MarkRoots()");
 }
 
@@ -2353,6 +2363,7 @@ nsCycleCollector::ScanRoots()
     MOZ_ASSERT(!mScanInProgress);
     mScanInProgress = true;
     mWhiteNodeCount = 0;
+    MOZ_ASSERT(mIncrementalPhase == ScanAndCollectWhitePhase);
 
     // On the assumption that most nodes will be black, it's
     // probably faster to use a GraphWalker than a
@@ -2394,6 +2405,7 @@ nsCycleCollector::ScanRoots()
         mListener->End();
         mListener = nullptr;
     }
+
     timeLog.Checkpoint("ScanRoots()");
 }
 
@@ -2421,6 +2433,8 @@ nsCycleCollector::CollectWhite()
 
     TimeLog timeLog;
     nsAutoTArray<PtrInfo*, 4000> whiteNodes;
+
+    MOZ_ASSERT(mIncrementalPhase == ScanAndCollectWhitePhase);
 
     whiteNodes.SetCapacity(mWhiteNodeCount);
     uint32_t numWhiteGCed = 0;
@@ -2470,6 +2484,7 @@ nsCycleCollector::CollectWhite()
     timeLog.Checkpoint("CollectWhite::Unroot");
 
     nsCycleCollector_dispatchDeferredDeletion(false);
+    mIncrementalPhase = CleanupPhase;
 
     return count > 0;
 }
@@ -2540,6 +2555,7 @@ nsCycleCollector::nsCycleCollector() :
     mCollectionInProgress(false),
     mScanInProgress(false),
     mJSRuntime(nullptr),
+    mIncrementalPhase(IdlePhase),
     mThread(NS_GetCurrentThread()),
     mWhiteNodeCount(0),
     mBeforeUnlinkCB(nullptr),
@@ -2661,6 +2677,7 @@ nsCycleCollector::FixGrayBits(bool aForceGC)
 void
 nsCycleCollector::CleanupAfterCollection()
 {
+    MOZ_ASSERT(mIncrementalPhase == CleanupPhase);
     mGraph.Clear();
     mCollectionInProgress = false;
 
@@ -2687,6 +2704,7 @@ nsCycleCollector::CleanupAfterCollection()
     if (mJSRuntime) {
         mJSRuntime->EndCycleCollectionCallback(mResults);
     }
+    mIncrementalPhase = IdlePhase;
 }
 
 void
@@ -2711,11 +2729,16 @@ nsCycleCollector::Collect(ccType aCCType,
         return false;
     }
 
+    MOZ_ASSERT(mIncrementalPhase == IdlePhase);
+
     BeginCollection(aCCType, aManualListener);
     MarkRoots();
     ScanRoots();
     bool collectedAny = CollectWhite();
     CleanupAfterCollection();
+
+    MOZ_ASSERT(mIncrementalPhase == IdlePhase);
+
     return collectedAny;
 }
 
@@ -2759,6 +2782,7 @@ nsCycleCollector::BeginCollection(ccType aCCType,
                                   nsICycleCollectorListener *aManualListener)
 {
     TimeLog timeLog;
+    MOZ_ASSERT(mIncrementalPhase == IdlePhase);
 
     mCollectionStart = TimeStamp::Now();
 
@@ -2822,6 +2846,8 @@ nsCycleCollector::BeginCollection(ccType aCCType,
 
     // We've finished adding roots, and everything in the graph is a root.
     mGraph.mRootCount = mGraph.MapCount();
+
+    mIncrementalPhase = GraphBuildingPhase;
 }
 
 uint32_t
