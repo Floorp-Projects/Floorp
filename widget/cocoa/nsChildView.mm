@@ -61,6 +61,7 @@
 #include "GLTextureImage.h"
 #include "GLContextProvider.h"
 #include "GLContext.h"
+#include "GLUploadHelpers.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorCocoaWidgetHelper.h"
 #include "mozilla/layers/CompositorOGL.h"
@@ -2634,14 +2635,15 @@ RectTextureImage::EndUpdate(bool aKeepSurface)
   RefPtr<gfx::SourceSurface> snapshot = mUpdateDrawTarget->Snapshot();
   RefPtr<gfx::DataSourceSurface> dataSnapshot = snapshot->GetDataSurface();
 
-  mGLContext->UploadSurfaceToTexture(dataSnapshot,
-                                     updateRegion,
-                                     mTexture,
-                                     overwriteTexture,
-                                     updateRegion.GetBounds().TopLeft(),
-                                     false,
-                                     LOCAL_GL_TEXTURE0,
-                                     LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+  UploadSurfaceToTexture(mGLContext,
+                         dataSnapshot,
+                         updateRegion,
+                         mTexture,
+                         overwriteTexture,
+                         updateRegion.GetBounds().TopLeft(),
+                         false,
+                         LOCAL_GL_TEXTURE0,
+                         LOCAL_GL_TEXTURE_RECTANGLE_ARB);
 
   if (!aKeepSurface) {
     mUpdateDrawTarget = nullptr;
