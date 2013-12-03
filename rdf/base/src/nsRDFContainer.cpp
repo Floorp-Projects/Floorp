@@ -45,6 +45,10 @@
 #include "nsXPIDLString.h"
 #include "rdf.h"
 
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
+static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
+
 #define RDF_SEQ_LIST_LIMIT   8
 
 class RDFContainerImpl : public nsIRDFContainer
@@ -377,7 +381,6 @@ RDFContainerImpl::Init()
     if (gRefCnt++ == 0) {
         nsresult rv;
 
-        NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
         rv = CallGetService(kRDFServiceCID, &gRDFService);
         if (NS_FAILED(rv)) {
             NS_ERROR("unable to get RDF service");
@@ -388,7 +391,6 @@ RDFContainerImpl::Init()
                                       &kRDF_nextVal);
         if (NS_FAILED(rv)) return rv;
 
-        NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
         rv = CallGetService(kRDFContainerUtilsCID, &gRDFContainerUtils);
         if (NS_FAILED(rv)) {
             NS_ERROR("unable to get RDF container utils service");
@@ -686,7 +688,6 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
         }
     }
 
-    static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
     char buf[sizeof(kRDFNameSpaceURI) + 16];
     nsFixedCString nextValStr(buf, sizeof(buf), 0);
     nextValStr = kRDFNameSpaceURI;
