@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Endian.h"
 #include <stdint.h>
 
 #include "nsDebug.h"
@@ -37,35 +38,6 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 #else
 #define LOG(type, msg)
 #endif
-
-// Reads a little-endian encoded unsigned 32bit integer at p.
-static uint32_t LEUint32(const unsigned char* p)
-{
-  return p[0] +
-        (p[1] << 8) +
-        (p[2] << 16) +
-        (p[3] << 24);
-}
-
-// Reads a little-endian encoded 64bit integer at p.
-static int64_t LEInt64(const unsigned char* p)
-{
-  uint32_t lo = LEUint32(p);
-  uint32_t hi = LEUint32(p + 4);
-  return static_cast<int64_t>(lo) | (static_cast<int64_t>(hi) << 32);
-}
-
-// Reads a little-endian encoded unsigned 16bit integer at p.
-static uint16_t LEUint16(const unsigned char* p)
-{
-  return p[0] + (p[1] << 8);
-}
-
-// Reads a little-endian encoded signed 16bit integer at p.
-inline int16_t LEInt16(const unsigned char* p)
-{
-  return static_cast<int16_t>(LEUint16(p));
-}
 
 /** Decoder base class for Ogg-encapsulated streams. */
 OggCodecState*
@@ -1196,13 +1168,13 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket)
     return false;
   }
 
-  uint32_t serialno = LEUint32(aPacket->packet + INDEX_SERIALNO_OFFSET);
-  int64_t numKeyPoints = LEInt64(aPacket->packet + INDEX_NUM_KEYPOINTS_OFFSET);
+  uint32_t serialno = LittleEndian::readUint32(aPacket->packet + INDEX_SERIALNO_OFFSET);
+  int64_t numKeyPoints = LittleEndian::readInt64(aPacket->packet + INDEX_NUM_KEYPOINTS_OFFSET);
 
   int64_t endTime = 0, startTime = 0;
   const unsigned char* p = aPacket->packet;
 
-  int64_t timeDenom = LEInt64(aPacket->packet + INDEX_TIME_DENOM_OFFSET);
+  int64_t timeDenom = LittleEndian::readInt64(aPacket->packet + INDEX_TIME_DENOM_OFFSET);
   if (timeDenom == 0) {
     LOG(PR_LOG_DEBUG, ("Ogg Skeleton Index packet for stream %u has 0 "
                        "timestamp denominator.", serialno));
@@ -1210,7 +1182,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket)
   }
 
   // Extract the start time.
-  CheckedInt64 t = CheckedInt64(LEInt64(p + INDEX_FIRST_NUMER_OFFSET)) * USECS_PER_S;
+  CheckedInt64 t = CheckedInt64(LittleEndian::readInt64(p + INDEX_FIRST_NUMER_OFFSET)) * USECS_PER_S;
   if (!t.isValid()) {
     return (mActive = false);
   } else {
@@ -1218,7 +1190,7 @@ bool SkeletonState::DecodeIndex(ogg_packet* aPacket)
   }
 
   // Extract the end time.
-  t = LEInt64(p + INDEX_LAST_NUMER_OFFSET) * USECS_PER_S;
+  t = LittleEndian::readInt64(p + INDEX_LAST_NUMER_OFFSET) * USECS_PER_S;
   if (!t.isValid()) {
     return (mActive = false);
   } else {
@@ -1399,13 +1371,13 @@ bool SkeletonState::DecodeHeader(ogg_packet* aPacket)
 {
   nsAutoRef<ogg_packet> autoRelease(aPacket);
   if (IsSkeletonBOS(aPacket)) {
-    uint16_t verMajor = LEUint16(aPacket->packet + SKELETON_VERSION_MAJOR_OFFSET);
-    uint16_t verMinor = LEUint16(aPacket->packet + SKELETON_VERSION_MINOR_OFFSET);
+    uint16_t verMajor = LittleEndian::readUint16(aPacket->packet + SKELETON_VERSION_MAJOR_OFFSET);
+    uint16_t verMinor = LittleEndian::readUint16(aPacket->packet + SKELETON_VERSION_MINOR_OFFSET);
 
     // Read the presentation time. We read this before the version check as the
     // presentation time exists in all versions.
-    int64_t n = LEInt64(aPacket->packet + SKELETON_PRESENTATION_TIME_NUMERATOR_OFFSET);
-    int64_t d = LEInt64(aPacket->packet + SKELETON_PRESENTATION_TIME_DENOMINATOR_OFFSET);
+    int64_t n = LittleEndian::readInt64(aPacket->packet + SKELETON_PRESENTATION_TIME_NUMERATOR_OFFSET);
+    int64_t d = LittleEndian::readInt64(aPacket->packet + SKELETON_PRESENTATION_TIME_DENOMINATOR_OFFSET);
     mPresentationTime = d == 0 ? 0 : (static_cast<float>(n) / static_cast<float>(d)) * USECS_PER_S;
 
     mVersion = SKELETON_VERSION(verMajor, verMinor);
@@ -1416,7 +1388,7 @@ bool SkeletonState::DecodeHeader(ogg_packet* aPacket)
       return false;
 
     // Extract the segment length.
-    mLength = LEInt64(aPacket->packet + SKELETON_FILE_LENGTH_OFFSET);
+    mLength = LittleEndian::readInt64(aPacket->packet + SKELETON_FILE_LENGTH_OFFSET);
 
     LOG(PR_LOG_DEBUG, ("Skeleton segment length: %lld", mLength));
 
