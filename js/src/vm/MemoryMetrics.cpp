@@ -94,11 +94,14 @@ InefficientNonFlatteningStringHashPolicy::match(const JSString *const &k, const 
 namespace JS {
 
 NotableStringInfo::NotableStringInfo()
-  : buffer(0)
-{}
+  : buffer(0),
+    length(0)
+{
+}
 
 NotableStringInfo::NotableStringInfo(JSString *str, const StringInfo &info)
-  : StringInfo(info)
+  : StringInfo(info),
+    length(str->length())
 {
     size_t bufferSize = Min(str->length() + 1, size_t(4096));
     buffer = js_pod_malloc<char>(bufferSize);
@@ -123,7 +126,8 @@ NotableStringInfo::NotableStringInfo(JSString *str, const StringInfo &info)
 }
 
 NotableStringInfo::NotableStringInfo(NotableStringInfo &&info)
-  : StringInfo(Move(info))
+  : StringInfo(Move(info)),
+    length(info.length)
 {
     buffer = info.buffer;
     info.buffer = nullptr;
@@ -285,7 +289,7 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         if (granularity == FineGrained) {
             ZoneStats::StringsHashMap::AddPtr p = zStats->strings.lookupForAdd(str);
             if (!p) {
-                JS::StringInfo info(str->length(), shortStringThingSize,
+                JS::StringInfo info(shortStringThingSize,
                                     normalStringThingSize, strCharsSize);
                 zStats->strings.add(p, str, info);
             } else {

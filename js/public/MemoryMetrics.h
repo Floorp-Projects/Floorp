@@ -215,12 +215,11 @@ struct CodeSizes
 struct StringInfo
 {
     StringInfo()
-      : length(0), numCopies(0), shortGCHeap(0), normalGCHeap(0), normalMallocHeap(0)
+      : numCopies(0), shortGCHeap(0), normalGCHeap(0), normalMallocHeap(0)
     {}
 
-    StringInfo(size_t len, size_t shorts, size_t normals, size_t chars)
-      : length(len),
-        numCopies(1),
+    StringInfo(size_t shorts, size_t normals, size_t chars)
+      : numCopies(1),
         shortGCHeap(shorts),
         normalGCHeap(normals),
         normalMallocHeap(chars)
@@ -234,8 +233,6 @@ struct StringInfo
     }
 
     void add(const StringInfo& info) {
-        MOZ_ASSERT(length == info.length);
-
         shortGCHeap += info.shortGCHeap;
         normalGCHeap += info.normalGCHeap;
         normalMallocHeap += info.normalMallocHeap;
@@ -249,9 +246,6 @@ struct StringInfo
     size_t totalGCHeapSizeOf() const {
         return shortGCHeap + normalGCHeap;
     }
-
-    // The string's length, excluding the null-terminator.
-    size_t length;
 
     // How many copies of the string have we seen?
     size_t numCopies;
@@ -286,6 +280,7 @@ struct NotableStringInfo : public StringInfo
     }
 
     char *buffer;
+    size_t length;
 
   private:
     NotableStringInfo(const NotableStringInfo& info) MOZ_DELETE;
