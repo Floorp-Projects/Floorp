@@ -7,6 +7,10 @@
 #include "GLContext.h"
 #include "nsPrintfCString.h"
 
+#ifdef XP_MACOSX
+#include "nsCocoaFeatures.h"
+#endif
+
 namespace mozilla {
 namespace gl {
 
@@ -366,6 +370,24 @@ GLContext::GetFeatureName(GLFeature::Enum feature)
     return GetFeatureInfo(feature).mName;
 }
 
+static bool
+CanReadSRGBFromFBOTexture(GLContext* gl)
+{
+    if (!gl->WorkAroundDriverBugs())
+        return true;
+
+#ifdef XP_MACOSX
+    // Bug 843668:
+    // MacOSX 10.6 reports to support EXT_framebuffer_sRGB and
+    // EXT_texture_sRGB but fails to convert from sRGB to linear
+    // when writing to an sRGB texture attached to an FBO.
+    if (!nsCocoaFeatures::OnLionOrLater()) {
+        return false;
+    }
+#endif // XP_MACOSX
+    return true;
+}
+
 void
 GLContext::InitFeatures()
 {
@@ -407,7 +429,7 @@ GLContext::InitFeatures()
 
     mAvailableFeatures[GLFeature::sRGB] =
         aresRGBExtensionsAvailable &&
-        CanReadSRGBFromFBOTexture();
+        CanReadSRGBFromFBOTexture(this);
 }
 
 void
