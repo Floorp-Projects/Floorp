@@ -611,6 +611,10 @@ IsCacheableGetPropCallNative(JSObject *obj, JSObject *holder, Shape *shape)
     if (!shape->hasGetterValue() || !shape->getterValue().isObject())
         return false;
 
+    // Don't cache if obj has an outerObject hook.
+    if (obj->getClass()->ext.outerObject)
+        return false;
+
     return shape->getterValue().toObject().is<JSFunction>() &&
            shape->getterValue().toObject().as<JSFunction>().isNative();
 }
