@@ -29,11 +29,14 @@ function consoleOpened(aHud) {
 
     ok(popup.isOpen, "popup is open");
 
-    // expected properties:
-    // __defineGetter__  __defineSetter__ __lookupGetter__ __lookupSetter__
-    // constructor hasOwnProperty isPrototypeOf propertyIsEnumerable
-    // toLocaleString toSource toString unwatch valueOf watch.
-    ok(popup.itemCount >= 14, "popup.itemCount is correct");
+    is(popup.itemCount, jsterm._autocompleteCache.length,
+       "popup.itemCount is correct");
+    isnot(jsterm._autocompleteCache.indexOf("addEventListener"), -1,
+          "addEventListener is in the list of suggestions");
+    isnot(jsterm._autocompleteCache.indexOf("bgColor"), -1,
+          "bgColor is in the list of suggestions");
+    isnot(jsterm._autocompleteCache.indexOf("ATTRIBUTE_NODE"), -1,
+          "ATTRIBUTE_NODE is in the list of suggestions");
 
     popup._panel.addEventListener("popuphidden", autocompletePopupHidden, false);
 

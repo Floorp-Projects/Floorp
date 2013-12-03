@@ -11,6 +11,8 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+  "resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
@@ -2655,7 +2657,7 @@ Engine.prototype = {
     url.addParam(aName, aValue);
 
     // Serialize the changes to file lazily
-    this.lazySerializeTask.start();
+    this.lazySerializeTask.arm();
   },
 
 #ifdef ANDROID
@@ -3871,7 +3873,8 @@ SearchService.prototype = {
     engine._initFromMetadata(aName, aIconURL, aAlias, aDescription,
                              aMethod, aTemplate);
     this._addEngineToStore(engine);
-    this.batchTask.start();
+    this.batchTask.disarm();
+    this.batchTask.arm();
   },
 
   addEngine: function SRCH_SVC_addEngine(aEngineURL, aDataType, aIconURL,
@@ -3934,9 +3937,10 @@ SearchService.prototype = {
       engineToRemove.hidden = true;
       engineToRemove.alias = null;
     } else {
-      // Cancel the serialized task if it's running
+      // Cancel the serialized task if it's pending.  Since the task is a
+      // synchronous function, we don't need to wait on the "finalize" method.
       if (engineToRemove._lazySerializeTask) {
-        engineToRemove._lazySerializeTask.cancel();
+        engineToRemove._lazySerializeTask.disarm();
         engineToRemove._lazySerializeTask = null;
       }
 
@@ -4135,22 +4139,19 @@ SearchService.prototype = {
               LOG("nsSearchService::observe: setting current");
               this.currentEngine = aEngine;
             }
-            this.batchTask.start();
+            this.batchTask.disarm();
+            this.batchTask.arm();
             break;
           case SEARCH_ENGINE_CHANGED:
           case SEARCH_ENGINE_REMOVED:
-            this.batchTask.start();
+            this.batchTask.disarm();
+            this.batchTask.arm();
             break;
         }
         break;
 
       case QUIT_APPLICATION_TOPIC:
         this._removeObservers();
-        if (this._batchTask) {
-          // Flush to disk immediately
-          this._batchTask.flush();
-        }
-        engineMetadataService.flush();
         break;
 
       case "nsPref:changed":
@@ -4209,6 +4210,16 @@ SearchService.prototype = {
     Services.obs.addObserver(this, QUIT_APPLICATION_TOPIC, false);
     Services.prefs.addObserver(BROWSER_SEARCH_PREF + "defaultenginename", this, false);
     Services.prefs.addObserver(BROWSER_SEARCH_PREF + "selectedEngine", this, false);
+
+    AsyncShutdown.profileBeforeChange.addBlocker(
+      "Search service: shutting down",
+      () => Task.spawn(function () {
+        if (this._batchTask) {
+          yield this._batchTask.finalize().then(null, Cu.reportError);
+        }
+        yield engineMetadataService.finalize();
+      }.bind(this))
+    );
   },
 
   _removeObservers: function SRCH_SVC_removeObservers() {
@@ -4428,11 +4439,8 @@ var engineMetadataService = {
   /**
    * Flush any waiting write.
    */
-  flush: function epsFlush() {
-    if (this._lazyWriter) {
-      this._lazyWriter.flush();
-    }
-  },
+  finalize: function () this._lazyWriter ? this._lazyWriter.finalize()
+                                         : Promise.resolve(),
 
   /**
    * Commit changes to disk, asynchronously.
@@ -4469,12 +4477,14 @@ var engineMetadataService = {
             LOG("metadata writeCommit: done");
           }
         );
-        TaskUtils.captureErrors(promise);
+        // Use our error logging instead of the default one.
+        return TaskUtils.captureErrors(promise).then(null, () => {});
       }
       this._lazyWriter = new DeferredTask(writeCommit, LAZY_SERIALIZE_DELAY);
     }
     LOG("metadata _commit: (re)setting timer");
-    this._lazyWriter.start();
+    this._lazyWriter.disarm();
+    this._lazyWriter.arm();
   },
   _lazyWriter: null
 };

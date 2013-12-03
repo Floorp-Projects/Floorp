@@ -25,6 +25,14 @@ const kWidePanelItemClass = "panel-wide-item";
 let gModuleName = "[CustomizableWidgets]";
 #include logging.js
 
+function isWin8OrHigher() {
+  let osName = Services.sysinfo.getProperty("name");
+  let version = Services.sysinfo.getProperty("version");
+
+  // Windows 8 is version >= 6.2
+  return osName == "Windows_NT" && Services.vc.compare(version, "6.2") >= 0;
+}
+
 function setAttributes(aNode, aAttrs) {
   for (let [name, value] of Iterator(aAttrs)) {
     if (!value) {
@@ -260,18 +268,6 @@ const CustomizableWidgets = [{
                                         win.PanelUI.onCommandHandler);
     }
   }, {
-    id: "switch-to-metro-button",
-    removable: true,
-    defaultArea: CustomizableUI.AREA_PANEL,
-    onCommand: function(aEvent) {
-      let win = aEvent.target &&
-                aEvent.target.ownerDocument &&
-                aEvent.target.ownerDocument.defaultView;
-      if (win && typeof win.SwitchToMetro == "function") {
-        win.SwitchToMetro();
-      }
-    }
-  }, {
     id: "add-ons-button",
     removable: true,
     shortcutId: "key_openAddons",
@@ -492,8 +488,6 @@ const CustomizableWidgets = [{
           node.appendChild(aDocument.createElementNS(kNSXUL, "separator"));
         let btnNode = aDocument.createElementNS(kNSXUL, "toolbarbutton");
         setAttributes(btnNode, aButton);
-        if (inPanel)
-          btnNode.setAttribute("tabindex", "0");
         node.appendChild(btnNode);
       });
 
@@ -799,3 +793,23 @@ const CustomizableWidgets = [{
       win.MailIntegration.sendLinkForWindow(win.content);
     }
   }];
+
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+if (isWin8OrHigher()) {
+  CustomizableWidgets.push({
+    id: "switch-to-metro-button",
+    removable: true,
+    defaultArea: CustomizableUI.AREA_PANEL,
+    onCommand: function(aEvent) {
+      let win = aEvent.target &&
+        aEvent.target.ownerDocument &&
+        aEvent.target.ownerDocument.defaultView;
+      if (win && typeof win.SwitchToMetro == "function") {
+        win.SwitchToMetro();
+      }
+    }
+  });
+}
+#endif
+#endif

@@ -13,11 +13,14 @@
 namespace mozilla {
 namespace system {
 
-OpenFileFinder::OpenFileFinder(const nsACString& aPath)
+OpenFileFinder::OpenFileFinder(const nsACString& aPath,
+                               bool aCheckIsB2gOrDescendant /* = true */)
   : mPath(aPath),
     mProcDir(nullptr),
     mFdDir(nullptr),
-    mPid(0)
+    mPid(0),
+    mMyPid(-1),
+    mCheckIsB2gOrDescendant(aCheckIsB2gOrDescendant)
 {
 }
 
@@ -86,7 +89,14 @@ OpenFileFinder::Next(OpenFileFinder::Info* aInfo)
             // We found an open file contained within the directory tree passed
             // into the constructor.
             FillInfo(aInfo, resolvedPath);
-            return true;
+            // If sCheckIsB2gOrDescendant is set false, the caller cares about
+            // all processes which have open files. If sCheckIsB2gOrDescendant
+            // is set false, we only care about the b2g proccess or its descendants.
+            if (!mCheckIsB2gOrDescendant || aInfo->mIsB2gOrDescendant) {
+              return true;
+            }
+            LOG("Ignore process(%d), not a b2g process or its descendant.",
+                aInfo->mPid);
           }
         }
         // We've checked all of the files for this pid, move onto the next one.
@@ -153,9 +163,41 @@ OpenFileFinder::FillInfo(OpenFileFinder::Info* aInfo, const nsACString& aPath)
   // 01234
   int ppid = atoi(&closeParen[4]);
   // We assume that we're running in the parent process
-  if (ppid != getpid()) {
+  if (mMyPid == -1) {
+    mMyPid = getpid();
+  }
+
+  if (mPid == mMyPid) {
+    // This is chrome process
+    aInfo->mIsB2gOrDescendant = true;
+    DBG("Chrome process has open file(s)");
     return;
   }
+  // For the rest (non-chrome process), we recursively check the ppid to know
+  // it is a descendant of b2g or not. See bug 931456.
+  while (ppid != mMyPid && ppid != 1) {
+    DBG("Process(%d) is not forked from b2g(%d) or Init(1), keep looking",
+        ppid, mMyPid);
+    nsPrintfCString ppStatPath("/proc/%d/stat", ppid);
+    ReadSysFile(ppStatPath.get(), stat, statString.Length());
+    closeParen = strrchr(stat, ')');
+    if (!closeParen) {
+      return;
+    }
+    ppid = atoi(&closeParen[4]);
+  }
+  if (ppid == 1) {
+    // This is a not a b2g process.
+    DBG("Non-b2g process has open file(s)");
+    aInfo->mIsB2gOrDescendant = false;
+    return;
+  }
+  if (ppid == mMyPid) {
+    // This is a descendant of b2g.
+    DBG("Child process of chrome process has open file(s)");
+    aInfo->mIsB2gOrDescendant = true;
+  }
+
   // This looks like a content process. The comm field will be the
   // app name.
   aInfo->mAppName = aInfo->mComm;
