@@ -598,6 +598,70 @@ NS_IMPL_ISUPPORTS1(AppClearDataObserver, nsIObserver)
 
 } // anonymous namespace
 
+size_t
+nsCookieKey::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return mBaseDomain.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+}
+
+size_t
+nsCookieEntry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t amount = nsCookieKey::SizeOfExcludingThis(aMallocSizeOf);
+
+  amount += mCookies.SizeOfExcludingThis(aMallocSizeOf);
+  for (uint32_t i = 0; i < mCookies.Length(); ++i) {
+    amount += mCookies[i]->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  return amount;
+}
+
+static size_t
+HostTableEntrySizeOfExcludingThis(nsCookieEntry *aEntry,
+                                  MallocSizeOf aMallocSizeOf,
+                                  void *arg)
+{
+  return aEntry->SizeOfExcludingThis(aMallocSizeOf);
+}
+
+size_t
+CookieDomainTuple::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t amount = 0;
+
+  amount += key.SizeOfExcludingThis(aMallocSizeOf);
+  amount += cookie->SizeOfIncludingThis(aMallocSizeOf);
+
+  return amount;
+}
+
+static size_t
+ReadSetEntrySizeOfExcludingThis(nsCookieKey *aEntry,
+                                MallocSizeOf aMallocSizeOf,
+                                void *)
+{
+  return aEntry->SizeOfExcludingThis(aMallocSizeOf);
+}
+
+size_t
+DBState::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t amount = 0;
+
+  amount += aMallocSizeOf(this);
+  amount += hostTable.SizeOfExcludingThis(HostTableEntrySizeOfExcludingThis,
+                                          aMallocSizeOf);
+  amount += hostArray.SizeOfExcludingThis(aMallocSizeOf);
+  for (uint32_t i = 0; i < hostArray.Length(); ++i) {
+    amount += hostArray[i].SizeOfExcludingThis(aMallocSizeOf);
+  }
+  amount += readSet.SizeOfExcludingThis(ReadSetEntrySizeOfExcludingThis,
+                                        aMallocSizeOf);
+
+  return amount;
+}
+
 /******************************************************************************
  * nsCookieService impl:
  * singleton instance ctor/dtor methods
@@ -653,15 +717,17 @@ nsCookieService::AppClearDataObserverInit()
  * public methods
  ******************************************************************************/
 
-NS_IMPL_ISUPPORTS5(nsCookieService,
-                   nsICookieService,
-                   nsICookieManager,
-                   nsICookieManager2,
-                   nsIObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS_INHERITED5(nsCookieService, MemoryUniReporter,
+                             nsICookieService,
+                             nsICookieManager,
+                             nsICookieManager2,
+                             nsIObserver,
+                             nsISupportsWeakReference)
 
 nsCookieService::nsCookieService()
- : mDBState(nullptr)
+ : MemoryUniReporter("explicit/cookie-service", KIND_HEAP, UNITS_BYTES,
+                     "Memory used by the cookie service.")
+ , mDBState(nullptr)
  , mCookieBehavior(BEHAVIOR_ACCEPT)
  , mThirdPartySession(false)
  , mMaxNumberOfCookies(kMaxNumberOfCookies)
@@ -699,6 +765,8 @@ nsCookieService::Init()
 
   // Init our default, and possibly private DBStates.
   InitDBStates();
+
+  RegisterWeakMemoryReporter(this);
 
   mObserverService = mozilla::services::GetObserverService();
   NS_ENSURE_STATE(mObserverService);
@@ -1479,6 +1547,8 @@ nsCookieService::RebuildCorruptDB(DBState* aDBState)
 nsCookieService::~nsCookieService()
 {
   CloseDBStates();
+
+  UnregisterWeakMemoryReporter(this);
 
   gCookieService = nullptr;
 }
@@ -4269,3 +4339,23 @@ nsCookieService::UpdateCookieInList(nsCookie                      *aCookie,
   }
 }
 
+size_t
+nsCookieService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+
+  if (mDefaultDBState) {
+    n += mDefaultDBState->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  if (mPrivateDBState) {
+    n += mPrivateDBState->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  return n;
+}
+
+int64_t
+nsCookieService::Amount()
+{
+  return SizeOfIncludingThis(MallocSizeOf);
+}
