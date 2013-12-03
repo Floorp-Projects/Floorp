@@ -13,6 +13,13 @@ interface nsIDocument;
 #include "npapi.h"
 #include "mozilla/EventForwards.h"
 class nsNPAPIPluginInstance;
+
+enum nsPluginTagType {
+  nsPluginTagType_Unknown,
+  nsPluginTagType_Embed,
+  nsPluginTagType_Object,
+  nsPluginTagType_Applet
+};
 %}
 
 [ptr] native nsNPAPIPluginInstancePtr(nsNPAPIPluginInstance);
