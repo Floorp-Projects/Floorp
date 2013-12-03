@@ -2724,12 +2724,13 @@ void
 nsCycleCollector::ShutdownCollect()
 {
     SliceBudget unlimitedBudget;
-    for (uint32_t i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
-        NS_ASSERTION(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
+    uint32_t i;
+    for (i = 0; i < DEFAULT_SHUTDOWN_COLLECTIONS; ++i) {
         if (!Collect(ShutdownCC, unlimitedBudget, nullptr)) {
             break;
         }
     }
+    NS_ASSERTION(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
 }
 
 static void

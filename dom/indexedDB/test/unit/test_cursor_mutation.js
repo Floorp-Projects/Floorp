@@ -35,6 +35,11 @@ function testSteps()
   let objectStore = db.createObjectStore("foo", { keyPath: "ss" });
   objectStore.createIndex("name", "name", { unique: true });
 
+  // This function expression causes objectStore to be aliased, and thus
+  // allocated on the scope chain.  Comment it out and the test passes.
+  // Bug 943409.
+  (function() { objectStore });
+
   for (let i = 0; i < objectStoreData.length - 1; i++) {
     objectStore.add(objectStoreData[i]);
   }
@@ -111,5 +116,12 @@ function testSteps()
   is(sawRemoved, false, "Didn't see item that was removed");
 
   finishTest();
+
+  // This workaround allows this cycle test to pass, as the data
+  // associated with the transaction is collected, and thus there is no
+  // more cycle in which the outer objectStore participates.  Bug
+  // 943409.
+  gc();
+
   yield undefined;
 }
