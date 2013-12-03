@@ -756,9 +756,19 @@ class HashTable : private AllocPolicy
         void nonNull() {}
 
         Entry *entry_;
+#ifdef DEBUG
+        const HashTable *table_;
+        uint32_t generation;
+#endif
 
       protected:
-        Ptr(Entry &entry) : entry_(&entry) {}
+        Ptr(Entry &entry, const HashTable &table)
+          : entry_(&entry)
+#ifdef DEBUG
+          , table_(&table)
+          , generation(table.generation())
+#endif
+        {}
 
       public:
         // Leaves Ptr uninitialized.
@@ -768,13 +778,34 @@ class HashTable : private AllocPolicy
 #endif
         }
 
-        bool found() const                    { return entry_->isLive(); }
-        operator ConvertibleToBool() const    { return found() ? &Ptr::nonNull : 0; }
-        bool operator==(const Ptr &rhs) const { JS_ASSERT(found() && rhs.found()); return entry_ == rhs.entry_; }
-        bool operator!=(const Ptr &rhs) const { return !(*this == rhs); }
+        bool found() const {
+            JS_ASSERT(generation == table_->generation());
+            return entry_->isLive();
+        }
 
-        T &operator*() const                  { return entry_->get(); }
-        T *operator->() const                 { return &entry_->get(); }
+        operator ConvertibleToBool() const {
+            return found() ? &Ptr::nonNull : 0;
+        }
+
+        bool operator==(const Ptr &rhs) const {
+            JS_ASSERT(found() && rhs.found());
+            return entry_ == rhs.entry_;
+        }
+
+        bool operator!=(const Ptr &rhs) const {
+            JS_ASSERT(generation == table_->generation());
+            return !(*this == rhs);
+        }
+
+        T &operator*() const {
+            JS_ASSERT(generation == table_->generation());
+            return entry_->get();
+        }
+
+        T *operator->() const {
+            JS_ASSERT(generation == table_->generation());
+            return &entry_->get();
+        }
     };
 
     // A Ptr that can be used to add a key after a failed lookup.
@@ -784,7 +815,10 @@ class HashTable : private AllocPolicy
         HashNumber keyHash;
         mozilla::DebugOnly<uint64_t> mutationCount;
 
-        AddPtr(Entry &entry, HashNumber hn) : Ptr(entry), keyHash(hn) {}
+        AddPtr(Entry &entry, const HashTable &table, HashNumber hn)
+          : Ptr(entry, table), keyHash(hn), mutationCount(table.mutationCount)
+        {}
+
       public:
         // Leaves AddPtr uninitialized.
         AddPtr() {}
@@ -799,32 +833,63 @@ class HashTable : private AllocPolicy
       protected:
         friend class HashTable;
 
-        Range(Entry *c, Entry *e) : cur(c), end(e), validEntry(true) {
+        Range(const HashTable &table, Entry *c, Entry *e)
+          : cur(c)
+          , end(e)
+#ifdef DEBUG
+          , table(&table)
+          , mutationCount(table.mutationCount)
+          , generation(table.generation())
+          , validEntry(true)
+#endif
+        {
             while (cur < end && !cur->isLive())
                 ++cur;
         }
 
         Entry *cur, *end;
-        mozilla::DebugOnly<bool> validEntry;
+#ifdef DEBUG
+        const HashTable *table;
+        uint64_t mutationCount;
+        uint32_t generation;
+        bool validEntry;
+#endif
 
       public:
-        Range() : cur(nullptr), end(nullptr), validEntry(false) {}
+        Range()
+          : cur(nullptr)
+          , end(nullptr)
+#ifdef DEBUG
+          , table(nullptr)
+          , mutationCount(0)
+          , generation(0)
+          , validEntry(false)
+#endif
+        {}
 
         bool empty() const {
+            JS_ASSERT(generation == table->generation());
+            JS_ASSERT(mutationCount == table->mutationCount);
             return cur == end;
         }
 
         T &front() const {
             JS_ASSERT(validEntry);
             JS_ASSERT(!empty());
+            JS_ASSERT(generation == table->generation());
+            JS_ASSERT(mutationCount == table->mutationCount);
             return cur->get();
         }
 
         void popFront() {
             JS_ASSERT(!empty());
+            JS_ASSERT(generation == table->generation());
+            JS_ASSERT(mutationCount == table->mutationCount);
             while (++cur < end && !cur->isLive())
                 continue;
+#ifdef DEBUG
             validEntry = true;
+#endif
         }
     };
 
@@ -842,8 +907,8 @@ class HashTable : private AllocPolicy
         bool removed;
 
         /* Not copyable. */
-        Enum(const Enum &);
-        void operator=(const Enum &);
+        Enum(const Enum &) MOZ_DELETE;
+        void operator=(const Enum &) MOZ_DELETE;
 
       public:
         template<class Map> explicit
@@ -859,16 +924,23 @@ class HashTable : private AllocPolicy
         void removeFront() {
             table.remove(*this->cur);
             removed = true;
+#ifdef DEBUG
             this->validEntry = false;
+            this->mutationCount = table.mutationCount;
+#endif
         }
 
         // Removes the |front()| element and re-inserts it into the table with
         // a new key at the new Lookup position.  |front()| is invalid after
         // this operation until the next call to |popFront()|.
         void rekeyFront(const Lookup &l, const Key &k) {
-            table.rekeyWithoutRehash(*this->cur, l, k);
+            Ptr p(*this->cur, table);
+            table.rekeyWithoutRehash(p, l, k);
             rekeyed = true;
+#ifdef DEBUG
             this->validEntry = false;
+            this->mutationCount = table.mutationCount;
+#endif
         }
 
         void rekeyFront(const Key &k) {
@@ -1392,7 +1464,7 @@ class HashTable : private AllocPolicy
     Range all() const
     {
         JS_ASSERT(table);
-        return Range(table, table + capacity());
+        return Range(*this, table, table + capacity());
     }
 
     bool empty() const
@@ -1433,13 +1505,13 @@ class HashTable : private AllocPolicy
     {
         mozilla::ReentrancyGuard g(*this);
         HashNumber keyHash = prepareHash(l);
-        return Ptr(lookup(l, keyHash, 0));
+        return Ptr(lookup(l, keyHash, 0), *this);
     }
 
     Ptr readonlyThreadsafeLookup(const Lookup &l) const
     {
         HashNumber keyHash = prepareHash(l);
-        return Ptr(lookup(l, keyHash, 0));
+        return Ptr(lookup(l, keyHash, 0), *this);
     }
 
     AddPtr lookupForAdd(const Lookup &l) const
@@ -1447,8 +1519,7 @@ class HashTable : private AllocPolicy
         mozilla::ReentrancyGuard g(*this);
         HashNumber keyHash = prepareHash(l);
         Entry &entry = lookup(l, keyHash, sCollisionBit);
-        AddPtr p(entry, keyHash);
-        p.mutationCount = mutationCount;
+        AddPtr p(entry, *this, keyHash);
         return p;
     }
 
@@ -1456,7 +1527,6 @@ class HashTable : private AllocPolicy
     bool add(AddPtr &p, U &&u)
     {
         mozilla::ReentrancyGuard g(*this);
-        JS_ASSERT(mutationCount == p.mutationCount);
         JS_ASSERT(table);
         JS_ASSERT(!p.found());
         JS_ASSERT(!(p.keyHash & sCollisionBit));
@@ -1479,6 +1549,10 @@ class HashTable : private AllocPolicy
         p.entry_->setLive(p.keyHash, mozilla::Forward<U>(u));
         entryCount++;
         mutationCount++;
+#ifdef DEBUG
+        p.generation = generation();
+        p.mutationCount = mutationCount;
+#endif
         return true;
     }
 
@@ -1520,7 +1594,10 @@ class HashTable : private AllocPolicy
     template <class U>
     bool relookupOrAdd(AddPtr& p, const Lookup &l, U &&u)
     {
+#ifdef DEBUG
+        p.generation = generation();
         p.mutationCount = mutationCount;
+#endif
         {
             mozilla::ReentrancyGuard g(*this);
             JS_ASSERT(prepareHash(l) == p.keyHash); // l has not been destroyed
