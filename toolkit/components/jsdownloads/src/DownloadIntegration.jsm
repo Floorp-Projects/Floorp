@@ -25,8 +25,6 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
-                                  "resource://gre/modules/DeferredTask.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadStore",
@@ -1100,7 +1098,6 @@ this.DownloadAutoSaveView = function (aList, aStore)
   this._list = aList;
   this._store = aStore;
   this._downloadsMap = new Map();
-  this._writer = new DeferredTask(() => this._store.save(), kSaveDelayMs);
 }
 
 this.DownloadAutoSaveView.prototype = {
@@ -1141,9 +1138,45 @@ this.DownloadAutoSaveView.prototype = {
   _downloadsMap: null,
 
   /**
-   * DeferredTask for the save operation.
+   * This is set to true when the save operation should be triggered.  This is
+   * required so that a new operation can be scheduled while the current one is
+   * in progress, without re-entering the save method.
    */
-  _writer: null,
+  _shouldSave: false,
+
+  /**
+   * nsITimer used for triggering the save operation after a delay, or null if
+   * saving has finished and there is no operation scheduled for execution.
+   *
+   * The logic here is different from the DeferredTask module in that multiple
+   * requests will never delay the operation for longer than the expected time
+   * (no grace delay), and the operation is never re-entered during execution.
+   */
+  _timer: null,
+
+  /**
+   * Timer callback used to serialize the list of downloads.
+   */
+  _save: function ()
+  {
+    Task.spawn(function () {
+      // Any save request received during execution will be handled later.
+      this._shouldSave = false;
+
+      // Execute the asynchronous save operation.
+      try {
+        yield this._store.save();
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+
+      // Handle requests received during the operation.
+      this._timer = null;
+      if (this._shouldSave) {
+        this.saveSoon();
+      }
+    }.bind(this)).then(null, Cu.reportError);
+  },
 
   /**
    * Called when the list of downloads changed, this triggers the asynchronous
@@ -1151,7 +1184,11 @@ this.DownloadAutoSaveView.prototype = {
    */
   saveSoon: function ()
   {
-    this._writer.arm();
+    this._shouldSave = true;
+    if (!this._timer) {
+      this._timer = new Timer(this._save.bind(this), kSaveDelayMs,
+                              Ci.nsITimer.TYPE_ONE_SHOT);
+    }
   },
 
   //////////////////////////////////////////////////////////////////////////////
