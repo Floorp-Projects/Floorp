@@ -636,7 +636,7 @@ let CustomizableUIInternal = {
     }
 
     LOG("No node for " + aWidgetId + " found.");
-    return [];
+    return [null, null];
   },
 
   registerMenuPanel: function(aPanel) {
@@ -1877,27 +1877,23 @@ let CustomizableUIInternal = {
     // This will not remove the widget from gPlacements - we want to keep the
     // setting so the widget gets put back in it's old position if/when it
     // returns.
-
-    let area = widget.currentArea;
-    let buildAreaNodes = area && gBuildAreas.get(area);
-    if (buildAreaNodes) {
-      for (let buildNode of buildAreaNodes) {
-        let widgetNode = buildNode.ownerDocument.getElementById(aWidgetId);
-        let windowCache = gSingleWrapperCache.get(buildNode.ownerDocument.defaultView);
-        if (windowCache) {
-          windowCache.delete(aWidgetId);
-        }
-        if (widgetNode) {
-          widgetNode.parentNode.removeChild(widgetNode);
-        }
-        if (widget.type == "view") {
-          let viewNode = buildNode.ownerDocument.getElementById(widget.viewId);
-          if (viewNode) {
-            for (let eventName of kSubviewEvents) {
-              let handler = "on" + eventName;
-              if (typeof widget[handler] == "function") {
-                viewNode.removeEventListener(eventName, widget[handler], false);
-              }
+    for (let [window, ] of gBuildWindows) {
+      let windowCache = gSingleWrapperCache.get(window);
+      if (windowCache) {
+        windowCache.delete(aWidgetId);
+      }
+      let widgetNode = window.document.getElementById(aWidgetId) ||
+                       window.gNavToolbox.palette.querySelector(idToSelector(aWidgetId));
+      if (widgetNode) {
+        widgetNode.remove();
+      }
+      if (widget.type == "view") {
+        let viewNode = window.document.getElementById(widget.viewId);
+        if (viewNode) {
+          for (let eventName of kSubviewEvents) {
+            let handler = "on" + eventName;
+            if (typeof widget[handler] == "function") {
+              viewNode.removeEventListener(eventName, widget[handler], false);
             }
           }
         }
