@@ -3390,6 +3390,9 @@ ReadFile(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
 
     RootedString givenPath(cx, args[0].toString());
     RootedString str(cx, ResolvePath(cx, givenPath, scriptRelative));
+    if (!str)
+        return false;
+
     JSAutoByteString filename(cx, str);
     if (!filename)
         return false;
