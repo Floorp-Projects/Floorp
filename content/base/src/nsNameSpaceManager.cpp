@@ -201,7 +201,10 @@ NS_NewElement(nsIContent** aResult,
   }
 #ifdef MOZ_XUL
   if (ns == kNameSpaceID_XUL) {
-    return NS_NewXULElement(aResult, aNodeInfo);
+    nsCOMPtr<Element> el;
+    nsresult rv = NS_NewXULElement(getter_AddRefs(el), aNodeInfo);
+    el.forget(aResult);
+    return rv;
   }
 #endif
   if (ns == kNameSpaceID_MathML) {
