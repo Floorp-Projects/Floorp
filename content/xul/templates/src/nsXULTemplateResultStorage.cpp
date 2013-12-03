@@ -9,11 +9,13 @@
 #include "nsString.h"
 #include "nsXULTemplateResultStorage.h"
 
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+
 NS_IMPL_ISUPPORTS1(nsXULTemplateResultStorage, nsIXULTemplateResult)
 
 nsXULTemplateResultStorage::nsXULTemplateResultStorage(nsXULTemplateResultSetStorage* aResultSet)
 {
-    nsCOMPtr<nsIRDFService> rdfService = do_GetService(NS_RDFSERVICE_CID);
+    nsCOMPtr<nsIRDFService> rdfService = do_GetService(kRDFServiceCID);
     rdfService->GetAnonymousResource(getter_AddRefs(mNode));
     mResultSet = aResultSet;
     if (aResultSet) {
