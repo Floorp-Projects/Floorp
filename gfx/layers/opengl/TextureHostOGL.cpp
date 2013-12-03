@@ -5,6 +5,7 @@
 
 #include "TextureHostOGL.h"
 #include "GLContext.h"                  // for GLContext, etc
+#include "GLSharedHandleHelpers.h"
 #include "GLContextUtils.h"             // for GLContextUtils
 #include "SharedSurface.h"              // for SharedSurface
 #include "SharedSurfaceEGL.h"           // for SharedSurface_EGLImage
@@ -325,7 +326,7 @@ SharedTextureSourceOGL::BindTexture(GLenum aTextureUnit)
 
   gl()->fActiveTexture(aTextureUnit);
   gl()->fBindTexture(mTextureTarget, tex);
-  if (!gl()->AttachSharedHandle(mShareType, mSharedHandle)) {
+  if (!AttachSharedHandle(gl(), mShareType, mSharedHandle)) {
     NS_ERROR("Failed to bind shared texture handle");
     return;
   }
@@ -338,7 +339,7 @@ SharedTextureSourceOGL::DetachSharedHandle()
   if (!gl()) {
     return;
   }
-  gl()->DetachSharedHandle(mShareType, mSharedHandle);
+  gl::DetachSharedHandle(gl(), mShareType, mSharedHandle);
 }
 
 void
@@ -362,8 +363,8 @@ SharedTextureSourceOGL::gl() const
 gfx3DMatrix
 SharedTextureSourceOGL::GetTextureTransform()
 {
-  GLContext::SharedHandleDetails handleDetails;
-  if (!gl()->GetSharedHandleDetails(mShareType, mSharedHandle, handleDetails)) {
+  SharedHandleDetails handleDetails;
+  if (!GetSharedHandleDetails(gl(), mShareType, mSharedHandle, handleDetails)) {
     NS_WARNING("Could not get shared handle details");
     return gfx3DMatrix();
   }
@@ -407,8 +408,8 @@ SharedTextureHostOGL::Lock()
   if (!mTextureSource) {
     // XXX on android GetSharedHandleDetails can call into Java which we'd
     // rather not do from the compositor
-    GLContext::SharedHandleDetails handleDetails;
-    if (!gl()->GetSharedHandleDetails(mShareType, mSharedHandle, handleDetails)) {
+    SharedHandleDetails handleDetails;
+    if (!GetSharedHandleDetails(gl(), mShareType, mSharedHandle, handleDetails)) {
       NS_WARNING("Could not get shared handle details");
       return false;
     }
@@ -616,7 +617,7 @@ SharedDeprecatedTextureHostOGL::DeleteTextures()
     return;
   }
   if (mSharedHandle) {
-    mGL->ReleaseSharedHandle(mShareType, mSharedHandle);
+    ReleaseSharedHandle(mGL, mShareType, mSharedHandle);
     mSharedHandle = 0;
   }
   if (mTextureHandle) {
@@ -650,14 +651,14 @@ SharedDeprecatedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage
   }
 
   if (mSharedHandle && mSharedHandle != newHandle) {
-    mGL->ReleaseSharedHandle(mShareType, mSharedHandle);
+    ReleaseSharedHandle(mGL, mShareType, mSharedHandle);
   }
 
   mShareType = texture.shareType();
   mSharedHandle = newHandle;
 
-  GLContext::SharedHandleDetails handleDetails;
-  if (mSharedHandle && mGL->GetSharedHandleDetails(mShareType, mSharedHandle, handleDetails)) {
+  SharedHandleDetails handleDetails;
+  if (mSharedHandle && GetSharedHandleDetails(mGL, mShareType, mSharedHandle, handleDetails)) {
     mTextureTarget = handleDetails.mTarget;
     mFormat = handleDetails.mTextureFormat;
   }
@@ -670,7 +671,7 @@ SharedDeprecatedTextureHostOGL::Lock()
 
   mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
   mGL->fBindTexture(mTextureTarget, mTextureHandle);
-  if (!mGL->AttachSharedHandle(mShareType, mSharedHandle)) {
+  if (!AttachSharedHandle(mGL, mShareType, mSharedHandle)) {
     NS_ERROR("Failed to bind shared texture handle");
     return false;
   }
@@ -681,7 +682,7 @@ SharedDeprecatedTextureHostOGL::Lock()
 void
 SharedDeprecatedTextureHostOGL::Unlock()
 {
-  mGL->DetachSharedHandle(mShareType, mSharedHandle);
+  DetachSharedHandle(mGL, mShareType, mSharedHandle);
   mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, 0);
 }
 
@@ -689,11 +690,11 @@ SharedDeprecatedTextureHostOGL::Unlock()
 gfx3DMatrix
 SharedDeprecatedTextureHostOGL::GetTextureTransform()
 {
-  GLContext::SharedHandleDetails handleDetails;
+  SharedHandleDetails handleDetails;
   // GetSharedHandleDetails can call into Java which we'd
   // rather not do from the compositor
   if (mSharedHandle) {
-    mGL->GetSharedHandleDetails(mShareType, mSharedHandle, handleDetails);
+    GetSharedHandleDetails(mGL, mShareType, mSharedHandle, handleDetails);
   }
   return handleDetails.mTextureTransform;
 }
