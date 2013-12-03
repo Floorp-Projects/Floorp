@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Endian.h"
 #include <stdint.h>
 
 #include "OpusParser.h"
@@ -67,9 +68,9 @@ bool OpusParser::DecodeHeader(unsigned char* aData, size_t aLength)
       return false;
     }
 
-    mPreSkip = LEUint16(aData + 10);
-    mNominalRate = LEUint32(aData + 12);
-    double gain_dB = LEInt16(aData + 16) / 256.0;
+    mPreSkip = LittleEndian::readUint16(aData + 10);
+    mNominalRate = LittleEndian::readUint32(aData + 12);
+    double gain_dB = LittleEndian::readInt16(aData + 16) / 256.0;
 #ifdef MOZ_SAMPLE_TYPE_FLOAT32
     mGain = static_cast<float>(pow(10,0.05*gain_dB));
 #else
@@ -150,7 +151,7 @@ bool OpusParser::DecodeTags(unsigned char* aData, size_t aLength)
   uint32_t bytes = aLength - 8;
   uint32_t len;
   // Read the vendor string.
-  len = LEUint32(buf);
+  len = LittleEndian::readUint32(buf);
   buf += 4;
   bytes -= 4;
   if (len > bytes)
@@ -161,7 +162,7 @@ bool OpusParser::DecodeTags(unsigned char* aData, size_t aLength)
   // Read the user comments.
   if (bytes < 4)
     return false;
-  uint32_t ncomments = LEUint32(buf);
+  uint32_t ncomments = LittleEndian::readUint32(buf);
   buf += 4;
   bytes -= 4;
   // If there are so many comments even their length fields
@@ -172,7 +173,7 @@ bool OpusParser::DecodeTags(unsigned char* aData, size_t aLength)
   for (i = 0; i < ncomments; i++) {
     if (bytes < 4)
       return false;
-    len = LEUint32(buf);
+    len = LittleEndian::readUint32(buf);
     buf += 4;
     bytes -= 4;
     if (len > bytes)
