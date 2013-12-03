@@ -1320,17 +1320,6 @@ GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
     return false;
 }
 
-already_AddRefed<TextureImage>
-GLContext::CreateTextureImage(const nsIntSize& aSize,
-                              TextureImage::ContentType aContentType,
-                              GLenum aWrapMode,
-                              TextureImage::Flags aFlags,
-                              TextureImage::ImageFormat aImageFormat)
-{
-    return CreateBasicTextureImage(this, aSize, aContentType, aWrapMode,
-                                   aFlags, aImageFormat);
-}
-
 void GLContext::ApplyFilterToBoundTexture(GraphicsFilter aFilter)
 {
     ApplyFilterToBoundTexture(LOCAL_GL_TEXTURE_2D, aFilter);

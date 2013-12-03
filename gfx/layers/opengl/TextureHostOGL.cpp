@@ -245,10 +245,11 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
       // require the size of the destination surface to be different from
       // the size of aSurface.
       // See bug 893300 (tracks the implementation of ContentHost for new textures).
-      mTexImage = mGL->CreateTextureImage(size,
-                                          gfx::ContentForFormat(aSurface->GetFormat()),
-                                          WrapMode(mGL, aFlags & TEXTURE_ALLOW_REPEAT),
-                                          FlagsToGLFlags(aFlags));
+      mTexImage = CreateTextureImage(mGL,
+                                     size,
+                                     gfx::ContentForFormat(aSurface->GetFormat()),
+                                     WrapMode(mGL, aFlags & TEXTURE_ALLOW_REPEAT),
+                                     FlagsToGLFlags(aFlags));
     } else {
       mTexImage = CreateBasicTextureImage(mGL,
                                           size,
@@ -501,10 +502,11 @@ TextureImageDeprecatedTextureHostOGL::EnsureBuffer(const nsIntSize& aSize,
   if (!mTexture ||
       mTexture->GetSize() != aSize ||
       mTexture->GetContentType() != aContentType) {
-    mTexture = mGL->CreateTextureImage(aSize,
-                                       aContentType,
-                                       WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
-                                       FlagsToGLFlags(mFlags));
+    mTexture = CreateTextureImage(mGL,
+                                  aSize,
+                                  aContentType,
+                                  WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
+                                  FlagsToGLFlags(mFlags));
   }
   mTexture->Resize(aSize);
 }
@@ -557,11 +559,12 @@ TextureImageDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage
       (mTexture->GetImageFormat() != format &&
        mTexture->GetImageFormat() != gfxImageFormatUnknown)) {
 
-    mTexture = mGL->CreateTextureImage(size,
-                                       surf.ContentType(),
-                                       WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
-                                       FlagsToGLFlags(mFlags),
-                                       format);
+    mTexture = CreateTextureImage(mGL,
+                                  size,
+                                  surf.ContentType(),
+                                  WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
+                                  FlagsToGLFlags(mFlags),
+                                  format);
   }
 
   // XXX this is always just ridiculously slow

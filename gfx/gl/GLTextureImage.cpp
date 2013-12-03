@@ -11,17 +11,62 @@
 #include "gfx2DGlue.h"
 #include "ScopedGLHelpers.h"
 
+#include "TextureImageEGL.h"
+#ifdef XP_MACOSX
+#include "TextureImageCGL.h"
+#endif
+
 namespace mozilla {
 namespace gl {
 
 already_AddRefed<TextureImage>
+CreateTextureImage(GLContext* gl,
+                   const nsIntSize& aSize,
+                   TextureImage::ContentType aContentType,
+                   GLenum aWrapMode,
+                   TextureImage::Flags aFlags,
+                   TextureImage::ImageFormat aImageFormat)
+{
+    switch (gl->GetContextType()) {
+#ifdef XP_MACOSX
+        case ContextTypeCGL:
+            return CreateTextureImageCGL(gl, aSize, aContentType, aWrapMode, aFlags, aImageFormat);
+#endif
+        case ContextTypeEGL:
+            return CreateTextureImageEGL(gl, aSize, aContentType, aWrapMode, aFlags, aImageFormat);
+        default:
+            return CreateBasicTextureImage(gl, aSize, aContentType, aWrapMode, aFlags, aImageFormat);
+    }
+}
+
+
+static already_AddRefed<TextureImage>
+TileGenFunc(GLContext* gl,
+            const nsIntSize& aSize,
+            TextureImage::ContentType aContentType,
+            TextureImage::Flags aFlags,
+            TextureImage::ImageFormat aImageFormat)
+{
+    switch (gl->GetContextType()) {
+#ifdef XP_MACOSX
+        case ContextTypeCGL:
+            return TileGenFuncCGL(gl, aSize, aContentType, aFlags, aImageFormat);
+#endif
+        case ContextTypeEGL:
+            return TileGenFuncEGL(gl, aSize, aContentType, aFlags, aImageFormat);
+        default:
+            return nullptr;
+    }
+}
+already_AddRefed<TextureImage>
+
 TextureImage::Create(GLContext* gl,
                      const nsIntSize& size,
                      TextureImage::ContentType contentType,
                      GLenum wrapMode,
                      TextureImage::Flags flags)
 {
-    return gl->CreateTextureImage(size, contentType, wrapMode, flags);
+    return CreateTextureImage(gl, size, contentType, wrapMode, flags);
 }
 
 // Moz2D equivalent...
@@ -645,7 +690,7 @@ void TiledTextureImage::Resize(const nsIntSize& aSize)
 
             // Create a new tile.
             nsRefPtr<TextureImage> teximg =
-                    mGL->TileGenFunc(size, mContentType, mFlags, mImageFormat);
+                TileGenFunc(mGL, size, mContentType, mFlags, mImageFormat);
             if (replace)
                 mImages.ReplaceElementAt(i, teximg.forget());
             else

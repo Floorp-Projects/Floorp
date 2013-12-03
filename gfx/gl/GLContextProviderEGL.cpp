@@ -534,20 +534,7 @@ public:
             return false;
         }
     }
-    // GLContext interface - returns Tiled Texture Image in our case
-    virtual already_AddRefed<TextureImage>
-    CreateTextureImage(const nsIntSize& aSize,
-                       TextureImage::ContentType aContentType,
-                       GLenum aWrapMode,
-                       TextureImage::Flags aFlags = TextureImage::NoFlags,
-                       TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown);
 
-    // a function to generate Tiles for Tiled Texture Image
-    virtual already_AddRefed<TextureImage>
-    TileGenFunc(const nsIntSize& aSize,
-                TextureImage::ContentType aContentType,
-                TextureImage::Flags aFlags = TextureImage::NoFlags,
-                TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown) MOZ_OVERRIDE;
     // hold a reference to the given surface
     // for the lifetime of this context.
     void HoldSurface(gfxASurface *aSurf) {
@@ -635,43 +622,6 @@ bool
 GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
 	return ResizeScreenBuffer(aNewSize);
-}
-
-already_AddRefed<TextureImage>
-GLContextEGL::CreateTextureImage(const nsIntSize& aSize,
-                                 TextureImage::ContentType aContentType,
-                                 GLenum aWrapMode,
-                                 TextureImage::Flags aFlags,
-                                 TextureImage::ImageFormat aImageFormat)
-{
-    nsRefPtr<TextureImage> t = new gl::TiledTextureImage(this, aSize, aContentType, aFlags, aImageFormat);
-    return t.forget();
-}
-
-already_AddRefed<TextureImage>
-GLContextEGL::TileGenFunc(const nsIntSize& aSize,
-                          TextureImage::ContentType aContentType,
-                          TextureImage::Flags aFlags,
-                          TextureImage::ImageFormat aImageFormat)
-{
-  MakeCurrent();
-
-  GLuint texture;
-  fGenTextures(1, &texture);
-
-  nsRefPtr<TextureImageEGL> teximage =
-      new TextureImageEGL(texture, aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType,
-                          this, aFlags, TextureImage::Created, aImageFormat);
-  
-  teximage->BindTexture(LOCAL_GL_TEXTURE0);
-
-  GLint texfilter = aFlags & TextureImage::UseNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
-  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
-  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
-  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-
-  return teximage.forget();
 }
 
 static const EGLint kEGLConfigAttribsOffscreenPBuffer[] = {
