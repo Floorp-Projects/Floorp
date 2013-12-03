@@ -3732,14 +3732,11 @@ XULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
                                                     aPrototype->mNodeInfo->NamespaceID(),
                                                     nsIDOMNode::ELEMENT_NODE);
         if (!newNodeInfo) return NS_ERROR_OUT_OF_MEMORY;
-        nsCOMPtr<nsIContent> content;
         nsCOMPtr<nsINodeInfo> xtfNi = newNodeInfo;
-        rv = NS_NewElement(getter_AddRefs(content), newNodeInfo.forget(),
+        rv = NS_NewElement(getter_AddRefs(result), newNodeInfo.forget(),
                            NOT_FROM_PARSER);
         if (NS_FAILED(rv))
             return rv;
-
-        result = content->AsElement();
 
         rv = AddAttributes(aPrototype, result);
         if (NS_FAILED(rv)) return rv;

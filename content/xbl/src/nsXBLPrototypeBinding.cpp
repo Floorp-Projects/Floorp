@@ -1332,7 +1332,9 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
   }
   else {
 #endif
-    NS_NewElement(getter_AddRefs(content), nodeInfo.forget(), NOT_FROM_PARSER);
+    nsCOMPtr<Element> element;
+    NS_NewElement(getter_AddRefs(element), nodeInfo.forget(), NOT_FROM_PARSER);
+    content = element;
 
     for (uint32_t i = 0; i < attrCount; i++) {
       rv = ReadNamespace(aStream, namespaceID);

@@ -10,6 +10,7 @@
 #include "nsIDOMHTMLMenuItemElement.h"
 #include "nsXULContextMenuBuilder.h"
 #include "nsIDocument.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -46,13 +47,13 @@ nsXULContextMenuBuilder::OpenContainer(const nsAString& aLabel)
   if (!mCurrentNode) {
     mCurrentNode = mFragment;
   } else {
-    nsCOMPtr<nsIContent> menu;
+    nsCOMPtr<Element> menu;
     nsresult rv = CreateElement(nsGkAtoms::menu, nullptr, getter_AddRefs(menu));
     NS_ENSURE_SUCCESS(rv, rv);
 
     menu->SetAttr(kNameSpaceID_None, nsGkAtoms::label, aLabel, false);
 
-    nsCOMPtr<nsIContent> menuPopup;
+    nsCOMPtr<Element> menuPopup;
     rv = CreateElement(nsGkAtoms::menupopup, nullptr,
                        getter_AddRefs(menuPopup));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -77,7 +78,7 @@ nsXULContextMenuBuilder::AddItemFor(nsIDOMHTMLMenuItemElement* aElement,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsCOMPtr<nsIContent> menuitem;
+  nsCOMPtr<Element> menuitem;
   nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(aElement);
   nsresult rv = CreateElement(nsGkAtoms::menuitem, element,
                               getter_AddRefs(menuitem));
@@ -129,7 +130,7 @@ nsXULContextMenuBuilder::AddSeparator()
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsCOMPtr<nsIContent> menuseparator;
+  nsCOMPtr<Element> menuseparator;
   nsresult rv = CreateElement(nsGkAtoms::menuseparator, nullptr,
                               getter_AddRefs(menuseparator));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -203,7 +204,7 @@ nsXULContextMenuBuilder::Click(const nsAString& aGeneratedItemId)
 nsresult
 nsXULContextMenuBuilder::CreateElement(nsIAtom* aTag,
                                        nsIDOMHTMLElement* aHTMLElement,
-                                       nsIContent** aResult)
+                                       Element** aResult)
 {
   *aResult = nullptr;
 
