@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=936056
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 936056</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 936056 **/
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    var desc = Object.getOwnPropertyDescriptor(frames[0], "document");
+    if (!desc || !desc.get) {
+      todo(false, "This test does nothing so far, but will once Window is on WebIDL bindings");
+      SimpleTest.finish();
+      return;
+    }
+    get = desc.get;
+    ok(get, "Couldn't find document getter");
+    Object.defineProperty(frames[0], "foo", { get: get });
+
+    var barewordFunc = frames[0].eval("(function (count) { var doc; for (var i = 0; i < count; ++i) doc = foo; return doc.documentElement; })");
+    var qualifiedFunc = frames[0].eval("(function (count) { var doc; for (var i = 0; i < count; ++i) doc = window.document; return doc.documentElement; })");
+    document.querySelector("iframe").onload = function () {
+      // interp
+      is(barewordFunc(1).textContent, "OLD", "Bareword should see own inner 1");
+      is(qualifiedFunc(1).textContent, "NEW",
+         "Qualified should see current inner 1");
+      // baseline
+      is(barewordFunc(100).textContent, "OLD", "Bareword should see own inner 2");
+      is(qualifiedFunc(100).textContent, "NEW",
+         "Qualified should see current inner 2");
+      // ion
+      is(barewordFunc(10000).textContent, "OLD", "Bareword should see own inner 3");
+      is(qualifiedFunc(10000).textContent, "NEW",
+         "Qualified should see current inner 2");
+      SimpleTest.finish();
+    }
+    frames[0].location = "data:text/plain,NEW";
+  }
+
+
+
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=936056">Mozilla Bug 936056</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe src="data:text/plain,OLD"></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
