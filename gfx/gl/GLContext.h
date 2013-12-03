@@ -2473,8 +2473,6 @@ public:
         MOZ_CRASH("Must be called against a GLContextEGL.");
     }
 
-    bool CanReadSRGBFromFBOTexture();
-
     static void PlatformStartup();
 
 public:
