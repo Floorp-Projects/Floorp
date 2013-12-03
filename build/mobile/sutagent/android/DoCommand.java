@@ -3460,11 +3460,16 @@ private void CancelNotification()
             try {
                 outThrd3.joinAndStopRedirect(60000);
                 int nRet3 = pProc.exitValue();
-                sRet = "\ninstallation complete [" + nRet3 + "]";
+                if (nRet3 == 0) {
+                    sRet = "\ninstallation complete [0]\n";
+                }
+                else {
+                    sRet = "\nFailure pm install [" + nRet3 + "]\n";
+                }
                 }
             catch (IllegalThreadStateException itse) {
                 itse.printStackTrace();
-                sRet = "\npm install command timed out";
+                sRet = "\nFailure pm install command timed out\n";
             }
             try {
                 out.write(sRet.getBytes());
