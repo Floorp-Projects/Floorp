@@ -11,6 +11,20 @@ Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.CryptoUtils = {
+  xor: function xor(a, b) {
+    let bytes = [];
+
+    if (a.length != b.length) {
+      throw new Error("can't xor unequal length strings: "+a.length+" vs "+b.length);
+    }
+
+    for (let i = 0; i < a.length; i++) {
+      bytes[i] = a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+
+    return String.fromCharCode.apply(String, bytes);
+  },
+
   /**
    * Generate a string of random bytes.
    */
@@ -107,6 +121,22 @@ this.CryptoUtils = {
                    .createInstance(Ci.nsICryptoHMAC);
     hasher.init(type, key);
     return hasher;
+  },
+
+  /**
+   * HMAC-based Key Derivation (RFC 5869).
+   */
+  hkdf: function hkdf(ikm, xts, info, len) {
+    const BLOCKSIZE = 256 / 8;
+    if (typeof xts === undefined)
+      xts = String.fromCharCode(0, 0, 0, 0,  0, 0, 0, 0,
+                                0, 0, 0, 0,  0, 0, 0, 0,
+                                0, 0, 0, 0,  0, 0, 0, 0,
+                                0, 0, 0, 0,  0, 0, 0, 0);
+    let h = CryptoUtils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256,
+                                       CryptoUtils.makeHMACKey(xts));
+    let prk = CryptoUtils.digestBytes(ikm, h);
+    return CryptoUtils.hkdfExpand(prk, info, len);
   },
 
   /**
@@ -458,9 +488,8 @@ this.CryptoUtils = {
 
     let contentType = CryptoUtils.stripHeaderAttributes(options.contentType);
 
-    if (!artifacts.hash &&
-        options.hasOwnProperty("payload") &&
-        options.payload) {
+    if (!artifacts.hash && options.hasOwnProperty("payload")
+        && options.payload) {
       let hasher = Cc["@mozilla.org/security/hash;1"]
                      .createInstance(Ci.nsICryptoHash);
       hasher.init(hash_algo);
@@ -469,8 +498,9 @@ this.CryptoUtils = {
       CryptoUtils.updateUTF8(options.payload, hasher);
       CryptoUtils.updateUTF8("\n", hasher);
       let hash = hasher.finish(false);
-      // HAWK specifies this .hash to include trailing "==" padding.
-      let hash_b64 = CommonUtils.encodeBase64URL(hash, true);
+      // HAWK specifies this .hash to use +/ (not _-) and include the
+      // trailing "==" padding.
+      let hash_b64 = btoa(hash);
       artifacts.hash = hash_b64;
     }
 
