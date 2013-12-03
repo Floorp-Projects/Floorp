@@ -16,7 +16,7 @@ const XUL_NS      = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.x
 // while shifting to a line which was initially out of view.
 const MAX_VERTICAL_OFFSET = 3;
 
-const promise = require("sdk/core/promise");
+const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const events  = require("devtools/shared/event-emitter");
 
 Cu.import("resource://gre/modules/Services.jsm");

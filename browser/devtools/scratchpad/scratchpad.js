@@ -33,11 +33,12 @@ const PREF_RECENT_FILES_MAX = "devtools.scratchpad.recentFilesMax";
 const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesView.xul";
 
 const require   = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
-const promise   = require("sdk/core/promise");
+
 const Telemetry = require("devtools/shared/telemetry");
 const Editor    = require("devtools/sourceeditor/editor");
 const TargetFactory = require("devtools/framework/target").TargetFactory;
 
+const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
