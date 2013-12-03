@@ -8185,8 +8185,10 @@ nsGlobalWindow::EnterModalState()
     NS_ASSERTION(!mSuspendedDoc, "Shouldn't have mSuspendedDoc here!");
 
     mSuspendedDoc = topWin->GetExtantDoc();
-    if (mSuspendedDoc) {
+    if (mSuspendedDoc && mSuspendedDoc->EventHandlingSuppressed()) {
       mSuspendedDoc->SuppressEventHandling();
+    } else {
+      mSuspendedDoc = nullptr;
     }
   }
   topWin->mModalStateDepth++;
@@ -8200,8 +8202,7 @@ nsGlobalWindow::RunPendingTimeoutsRecursive(nsGlobalWindow *aTopWindow,
   nsGlobalWindow *inner;
 
   // Return early if we're frozen or have no inner window.
-  if (aWindow->IsClosedOrClosing() ||
-      !(inner = aWindow->GetCurrentInnerWindowInternal()) ||
+  if (!(inner = aWindow->GetCurrentInnerWindowInternal()) ||
       inner->IsFrozen()) {
     return;
   }
