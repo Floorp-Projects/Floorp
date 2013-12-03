@@ -46,9 +46,9 @@ MOZ_APP_ID={ec8030f7-c20a-464f-9b0e-13a3a9e97384}
 # This should usually be the same as the value MAR_CHANNEL_ID.
 # If more than one ID is needed, then you should use a comma separated list
 # of values.
-ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-beta,firefox-mozilla-release
+ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-release
 # The MAR_CHANNEL_ID must not contain the following 3 characters: ",\t "
-MAR_CHANNEL_ID=firefox-mozilla-beta
+MAR_CHANNEL_ID=firefox-mozilla-release
 MOZ_PROFILE_MIGRATOR=1
 MOZ_EXTENSION_MANAGER=1
 MOZ_APP_STATIC_INI=1
