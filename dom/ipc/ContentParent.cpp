@@ -196,9 +196,7 @@ MemoryReportRequestParent::~MemoryReportRequestParent()
 class ContentParentsMemoryReporter MOZ_FINAL : public MemoryMultiReporter
 {
 public:
-    ContentParentsMemoryReporter()
-      : MemoryMultiReporter("content-parents")
-    {}
+    ContentParentsMemoryReporter() {}
 
     NS_IMETHOD CollectReports(nsIMemoryReporterCallback* cb,
                               nsISupports* aClosure);

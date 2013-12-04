@@ -2397,9 +2397,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
 class JSMainRuntimeCompartmentsReporter MOZ_FINAL : public MemoryMultiReporter
 {
   public:
-    JSMainRuntimeCompartmentsReporter()
-      : MemoryMultiReporter("js-main-runtime-compartments")
-    {}
+    JSMainRuntimeCompartmentsReporter() {}
 
     typedef js::Vector<nsCString, 0, js::SystemAllocPolicy> Paths;
 
