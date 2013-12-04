@@ -2430,12 +2430,12 @@ class CGWrapGlobalMethod(CGAbstractMethod):
                     self.descriptor.nativeType,
                     InitUnforgeableProperties(self.descriptor, self.properties))
 
-class CGUpdateMemberSlotsMethod(CGAbstractMethod):
+class CGUpdateMemberSlotsMethod(CGAbstractStaticMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'aWrapper'),
                 Argument(descriptor.nativeType + '*' , 'aObject')]
-        CGAbstractMethod.__init__(self, descriptor, 'UpdateMemberSlots', 'bool', args)
+        CGAbstractStaticMethod.__init__(self, descriptor, 'UpdateMemberSlots', 'bool', args)
 
     def definition_body(self):
         slotMembers = (m for m in self.descriptor.interface.members if
@@ -2458,6 +2458,57 @@ class CGUpdateMemberSlotsMethod(CGAbstractMethod):
         body.append(CGGeneric("return true;"))
 
         return CGIndenter(body).define()
+
+class CGClearCachedValueMethod(CGAbstractMethod):
+    def __init__(self, descriptor, member):
+        self.member = member
+        # If we're StoreInSlot, we'll need to call the getter
+        if member.getExtendedAttribute("StoreInSlot"):
+            args = [Argument('JSContext*', 'aCx')]
+            returnType = 'bool'
+        else:
+            args = []
+            returnType = 'void'
+        args.append(Argument(descriptor.nativeType + '*', 'aObject'))
+        name = ("ClearCached%sValue" % MakeNativeName(member.identifier.name))
+        CGAbstractMethod.__init__(self, descriptor, name, returnType, args)
+
+    def definition_body(self):
+        slotIndex = memberReservedSlot(self.member)
+        if self.member.getExtendedAttribute("StoreInSlot"):
+            # We have to root things and save the old value in case
+            # regetting fails, so we can restore it.
+            declObj = "JS::Rooted<JSObject*> obj(aCx);"
+            noopRetval = " true"
+            saveMember = (
+                "JS::Rooted<JS::Value> oldValue(aCx, js::GetReservedSlot(obj, %d));\n" %
+                slotIndex)
+            regetMember = ("\n"
+                           "JS::Rooted<JS::Value> temp(aCx);\n"
+                           "JSJitGetterCallArgs args(&temp);\n"
+                           "if (!get_%s(aCx, obj, aObject, args)) {\n"
+                           "  js::SetReservedSlot(obj, %d, oldValue);\n"
+                           "  nsJSUtils::ReportPendingException(aCx);\n"
+                           "  return false;\n"
+                           "}\n"
+                           "return true;" % (self.member.identifier.name, slotIndex))
+        else:
+            declObj = "JSObject* obj;"
+            noopRetval = ""
+            saveMember = ""
+            regetMember = ""
+
+        return CGIndenter(CGGeneric(
+                "%s\n"
+                "obj = aObject->GetWrapper();\n"
+                "if (!obj) {\n"
+                "  return%s;\n"
+                "}\n"
+                "%s"
+                "js::SetReservedSlot(obj, %d, JS::UndefinedValue());"
+                "%s"
+                % (declObj, noopRetval, saveMember, slotIndex, regetMember)
+                )).define()
 
 builtinNames = {
     IDLType.Tags.bool: 'bool',
@@ -8542,6 +8593,13 @@ class CGDescriptor(CGThing):
                 cgThings.append(CGWrapNonWrapperCacheMethod(descriptor,
                                                             properties))
 
+        # If we're not wrappercached, we don't know how to clear our
+        # cached values, since we can't get at the JSObject.
+        if descriptor.wrapperCache:
+            cgThings.extend(CGClearCachedValueMethod(descriptor, m) for
+                            m in descriptor.interface.members if
+                            m.isAttr() and m.slotIndex is not None)
+
         # CGCreateInterfaceObjectsMethod needs to come after our
         # CGDOMJSClass, if any.
         cgThings.append(CGCreateInterfaceObjectsMethod(descriptor, properties))
@@ -9393,6 +9451,13 @@ class CGBindingRoot(CGThing):
                 return False
             return typeDesc.hasXPConnectImpls
         addHeaderBasedOnTypes("nsDOMQS.h", checkForXPConnectImpls)
+
+        def descriptorClearsPropsInSlots(descriptor):
+            if not descriptor.wrapperCache:
+                return False
+            return any(m.isAttr() and m.getExtendedAttribute("StoreInSlot")
+                       for m in descriptor.interface.members)
+        bindingHeaders["nsJSUtils.h"] = any(descriptorClearsPropsInSlots(d) for d in descriptors)
 
         # Do codegen for all the enums
         enums = config.getEnums(webIDLFile)
