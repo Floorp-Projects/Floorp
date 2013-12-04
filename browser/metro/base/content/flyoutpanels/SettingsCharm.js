@@ -29,6 +29,13 @@ var SettingsCharm = {
         label: Strings.browser.GetStringFromName("optionsCharm"),
         onselected: function() FlyoutPanelsUI.show('PrefsFlyoutPanel')
     });
+
+    // Search providers
+    this.addEntry({
+        label: Strings.browser.GetStringFromName("searchCharm"),
+        onselected: function() FlyoutPanelsUI.show('SearchFlyoutPanel')
+    });
+
 /*
  * Temporarily disabled until we can have sync prefs together with the
  * Desktop browser's sync prefs.
@@ -38,11 +45,13 @@ var SettingsCharm = {
         onselected: function() FlyoutPanelsUI.show('SyncFlyoutPanel')
     });
 */
+
     // About
     this.addEntry({
         label: Strings.browser.GetStringFromName("aboutCharm1"),
         onselected: function() FlyoutPanelsUI.show('AboutFlyoutPanel')
     });
+
     // Help
     this.addEntry({
         label: Strings.browser.GetStringFromName("helpOnlineCharm"),
