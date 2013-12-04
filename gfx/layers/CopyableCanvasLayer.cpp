@@ -69,6 +69,12 @@ CopyableCanvasLayer::Initialize(const Data& aData)
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
 }
 
+bool
+CopyableCanvasLayer::IsDataValid(const Data& aData)
+{
+  return mGLContext == aData.mGLContext;
+}
+
 void
 CopyableCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
 {
