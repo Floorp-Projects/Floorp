@@ -5,7 +5,8 @@
  /* Copyright © 2013 Deutsche Telekom, Inc. */
 
 [JSImplementation="@mozilla.org/navigatorNfc;1",
- NavigatorProperty="mozNfc"]
+ NavigatorProperty="mozNfc",
+ Func="Navigator::HasNfcSupport"]
 interface MozNfc : EventTarget {
    MozNFCTag getNFCTag(DOMString sessionId);
    MozNFCPeer getNFCPeer(DOMString sessionId);
