@@ -27,7 +27,7 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += [
     '../../../layout/generic',
-    '../../../layout/xul/base/src',
+    '../../../layout/xul',
     '../base',
     '../html',
     '../xpcom',
