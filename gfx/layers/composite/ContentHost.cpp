@@ -31,339 +31,16 @@ ContentHostBase::ContentHostBase(const TextureInfo& aTextureInfo)
 {}
 
 ContentHostBase::~ContentHostBase()
-{
-  DestroyTextureHost();
-  DestroyTextureHostOnWhite();
-}
-
-TextureHost*
-ContentHostBase::GetAsTextureHost()
-{
-  return mTextureHost;
-}
-
-void
-ContentHostBase::DestroyTextureHost()
-{
-  // The third clause in the if statement checks that we are in fact done with
-  // this texture. We don't want to prematurely deallocate a texture we might
-  // use again or double deallocate. Deallocation will happen in
-  // RemoveTextureHost.
-  // Note that GetTextureHost is linear in the number of texture hosts, but as
-  // long as that number is small (I expect a maximum of 6 for now) then it
-  // should be ok.
-  if (mTextureHost &&
-      mTextureHost->GetFlags() & TEXTURE_DEALLOCATE_DEFERRED &&
-      !GetTextureHost(mTextureHost->GetID())) {
-    MOZ_ASSERT(!(mTextureHost->GetFlags() & TEXTURE_DEALLOCATE_CLIENT));
-    mTextureHost->DeallocateSharedData();
-  }
-  mTextureHost = nullptr;
-}
-
-void
-ContentHostBase::DestroyTextureHostOnWhite()
-{
-  if (mTextureHostOnWhite &&
-      mTextureHostOnWhite->GetFlags() & TEXTURE_DEALLOCATE_DEFERRED &&
-      !GetTextureHost(mTextureHostOnWhite->GetID())) {
-    MOZ_ASSERT(!(mTextureHostOnWhite->GetFlags() & TEXTURE_DEALLOCATE_CLIENT));
-    mTextureHostOnWhite->DeallocateSharedData();
-  }
-  mTextureHostOnWhite = nullptr;
-}
-
-void
-ContentHostBase::RemoveTextureHost(TextureHost* aTexture)
-{
-  if ((aTexture->GetFlags() & TEXTURE_DEALLOCATE_DEFERRED) &&
-      !(mTextureHost && mTextureHost == aTexture) &&
-      !(mTextureHostOnWhite && mTextureHostOnWhite == aTexture)) {
-    MOZ_ASSERT(!(aTexture->GetFlags() & TEXTURE_DEALLOCATE_CLIENT));
-    aTexture->DeallocateSharedData();
-  }
-
-  CompositableHost::RemoveTextureHost(aTexture);
-}
-
-class MOZ_STACK_CLASS AutoLockTextureHost
-{
-public:
-  AutoLockTextureHost(TextureHost* aHost)
-    : mHost(aHost)
-  {
-    mLockSuccess = mHost ? mHost->Lock() : true;
-  }
-
-  ~AutoLockTextureHost()
-  {
-    if (mHost) {
-      mHost->Unlock();
-    }
-  }
-
-  bool IsValid()
-  {
-    return mLockSuccess;
-  }
-
-private:
-  TextureHost* mHost;
-  bool mLockSuccess;
-};
-
-void
-ContentHostBase::Composite(EffectChain& aEffectChain,
-                           float aOpacity,
-                           const gfx::Matrix4x4& aTransform,
-                           const Filter& aFilter,
-                           const Rect& aClipRect,
-                           const nsIntRegion* aVisibleRegion,
-                           TiledLayerProperties* aLayerProperties)
-{
-  NS_ASSERTION(aVisibleRegion, "Requires a visible region");
-
-  AutoLockTextureHost lock(mTextureHost);
-  AutoLockTextureHost lockOnWhite(mTextureHostOnWhite);
-
-  if (!mTextureHost ||
-      !lock.IsValid() ||
-      !lockOnWhite.IsValid()) {
-    return;
-  }
-
-  RefPtr<NewTextureSource> source = mTextureHost->GetTextureSources();
-  RefPtr<NewTextureSource> sourceOnWhite = mTextureHostOnWhite
-                                             ? mTextureHostOnWhite->GetTextureSources()
-                                             : nullptr;
-  if (!source) {
-    return;
-  }
-  RefPtr<TexturedEffect> effect =
-    CreateTexturedEffect(source, sourceOnWhite, aFilter);
-
-  aEffectChain.mPrimaryEffect = effect;
-
-  nsIntRegion tmpRegion;
-  const nsIntRegion* renderRegion;
-  if (PaintWillResample()) {
-    // If we're resampling, then the texture image will contain exactly the
-    // entire visible region's bounds, and we should draw it all in one quad
-    // to avoid unexpected aliasing.
-    tmpRegion = aVisibleRegion->GetBounds();
-    renderRegion = &tmpRegion;
-  } else {
-    renderRegion = aVisibleRegion;
-  }
-
-  nsIntRegion region(*renderRegion);
-  nsIntPoint origin = GetOriginOffset();
-  // translate into TexImage space, buffer origin might not be at texture (0,0)
-  region.MoveBy(-origin);
-
-  // Figure out the intersecting draw region
-  gfx::IntSize texSize = source->GetSize();
-  nsIntRect textureRect = nsIntRect(0, 0, texSize.width, texSize.height);
-  textureRect.MoveBy(region.GetBounds().TopLeft());
-  nsIntRegion subregion;
-  subregion.And(region, textureRect);
-  if (subregion.IsEmpty()) {
-    // Region is empty, nothing to draw
-    return;
-  }
-
-  nsIntRegion screenRects;
-  nsIntRegion regionRects;
-
-  // Collect texture/screen coordinates for drawing
-  nsIntRegionRectIterator iter(subregion);
-  while (const nsIntRect* iterRect = iter.Next()) {
-    nsIntRect regionRect = *iterRect;
-    nsIntRect screenRect = regionRect;
-    screenRect.MoveBy(origin);
-
-    screenRects.Or(screenRects, screenRect);
-    regionRects.Or(regionRects, regionRect);
-  }
-
-  TileIterator* tileIter = source->AsTileIterator();
-  TileIterator* iterOnWhite = nullptr;
-  if (tileIter) {
-    tileIter->BeginTileIteration();
-  }
-
-  if (mTextureHostOnWhite) {
-    iterOnWhite = sourceOnWhite->AsTileIterator();
-    MOZ_ASSERT(!tileIter || tileIter->GetTileCount() == iterOnWhite->GetTileCount(),
-               "Tile count mismatch on component alpha texture");
-    if (iterOnWhite) {
-      iterOnWhite->BeginTileIteration();
-    }
-  }
-
-  bool usingTiles = (tileIter && tileIter->GetTileCount() > 1);
-  do {
-    if (iterOnWhite) {
-      MOZ_ASSERT(iterOnWhite->GetTileRect() == tileIter->GetTileRect(),
-                 "component alpha textures should be the same size.");
-    }
-
-    nsIntRect texRect = tileIter ? tileIter->GetTileRect()
-                                 : nsIntRect(0, 0,
-                                             texSize.width,
-                                             texSize.height);
-
-    // Draw texture. If we're using tiles, we do repeating manually, as texture
-    // repeat would cause each individual tile to repeat instead of the
-    // compound texture as a whole. This involves drawing at most 4 sections,
-    // 2 for each axis that has texture repeat.
-    for (int y = 0; y < (usingTiles ? 2 : 1); y++) {
-      for (int x = 0; x < (usingTiles ? 2 : 1); x++) {
-        nsIntRect currentTileRect(texRect);
-        currentTileRect.MoveBy(x * texSize.width, y * texSize.height);
-
-        nsIntRegionRectIterator screenIter(screenRects);
-        nsIntRegionRectIterator regionIter(regionRects);
-
-        const nsIntRect* screenRect;
-        const nsIntRect* regionRect;
-        while ((screenRect = screenIter.Next()) &&
-               (regionRect = regionIter.Next())) {
-          nsIntRect tileScreenRect(*screenRect);
-          nsIntRect tileRegionRect(*regionRect);
-
-          // When we're using tiles, find the intersection between the tile
-          // rect and this region rect. Tiling is then handled by the
-          // outer for-loops and modifying the tile rect.
-          if (usingTiles) {
-            tileScreenRect.MoveBy(-origin);
-            tileScreenRect = tileScreenRect.Intersect(currentTileRect);
-            tileScreenRect.MoveBy(origin);
-
-            if (tileScreenRect.IsEmpty())
-              continue;
-
-            tileRegionRect = regionRect->Intersect(currentTileRect);
-            tileRegionRect.MoveBy(-currentTileRect.TopLeft());
-          }
-          gfx::Rect rect(tileScreenRect.x, tileScreenRect.y,
-                         tileScreenRect.width, tileScreenRect.height);
-
-          effect->mTextureCoords = Rect(Float(tileRegionRect.x) / texRect.width,
-                                        Float(tileRegionRect.y) / texRect.height,
-                                        Float(tileRegionRect.width) / texRect.width,
-                                        Float(tileRegionRect.height) / texRect.height);
-          GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain, aOpacity, aTransform);
-          if (usingTiles) {
-            DiagnosticTypes diagnostics = DIAGNOSTIC_CONTENT | DIAGNOSTIC_BIGIMAGE;
-            diagnostics |= iterOnWhite ? DIAGNOSTIC_COMPONENT_ALPHA : 0;
-            GetCompositor()->DrawDiagnostics(diagnostics, rect, aClipRect,
-                                             aTransform);
-          }
-        }
-      }
-    }
-
-    if (iterOnWhite) {
-      iterOnWhite->NextTile();
-    }
-  } while (usingTiles && tileIter->NextTile());
-
-  if (tileIter) {
-    tileIter->EndTileIteration();
-  }
-  if (iterOnWhite) {
-    iterOnWhite->EndTileIteration();
-  }
-
-  DiagnosticTypes diagnostics = DIAGNOSTIC_CONTENT;
-  diagnostics |= iterOnWhite ? DIAGNOSTIC_COMPONENT_ALPHA : 0;
-  GetCompositor()->DrawDiagnostics(diagnostics, *aVisibleRegion, aClipRect, aTransform);
-}
-
-
-void
-ContentHostBase::UseTextureHost(TextureHost* aTexture)
-{
-  if (aTexture->GetFlags() & TEXTURE_ON_WHITE) {
-    DestroyTextureHost();
-    mTextureHostOnWhite = aTexture;
-  } else {
-    DestroyTextureHostOnWhite();
-    mTextureHost = aTexture;
-  }
-}
-
-void
-ContentHostBase::SetCompositor(Compositor* aCompositor)
-{
-  CompositableHost::SetCompositor(aCompositor);
-  if (mTextureHost) {
-    mTextureHost->SetCompositor(aCompositor);
-  }
-  if (mTextureHostOnWhite) {
-    mTextureHostOnWhite->SetCompositor(aCompositor);
-  }
-}
-
-#ifdef MOZ_DUMP_PAINTING
-void
-ContentHostBase::Dump(FILE* aFile,
-                      const char* aPrefix,
-                      bool aDumpHtml)
-{
-  if (!aDumpHtml) {
-    return;
-  }
-  if (!aFile) {
-    aFile = stderr;
-  }
-  fprintf(aFile, "<ul>");
-  if (mTextureHost) {
-    fprintf(aFile, "%s", aPrefix);
-    fprintf(aFile, "<li> <a href=");
-    DumpTextureHost(aFile, mTextureHost);
-    fprintf(aFile, "> Front buffer </a></li> ");
-  }
-  if (mTextureHostOnWhite) {
-    fprintf(aFile, "%s", aPrefix);
-    fprintf(aFile, "<li> <a href=");
-    DumpTextureHost(aFile, mTextureHostOnWhite);
-    fprintf(aFile, "> Front buffer on white </a> </li> ");
-  }
-  fprintf(aFile, "</ul>");
-}
-#endif
-
-void
-ContentHostBase::OnActorDestroy()
-{
-  if (mTextureHost) {
-    mTextureHost->OnActorDestroy();
-  }
-  if (mTextureHostOnWhite) {
-    mTextureHostOnWhite->OnActorDestroy();
-  }
-  CompositableHost::OnActorDestroy();
-}
-
-DeprecatedContentHostBase::DeprecatedContentHostBase(const TextureInfo& aTextureInfo)
-  : ContentHost(aTextureInfo)
-  , mPaintWillResample(false)
-  , mInitialised(false)
-{}
-
-DeprecatedContentHostBase::~DeprecatedContentHostBase()
 {}
 
 DeprecatedTextureHost*
-DeprecatedContentHostBase::GetDeprecatedTextureHost()
+ContentHostBase::GetDeprecatedTextureHost()
 {
   return mDeprecatedTextureHost;
 }
 
 void
-DeprecatedContentHostBase::DestroyFrontHost()
+ContentHostBase::DestroyFrontHost()
 {
   MOZ_ASSERT(!mDeprecatedTextureHost || mDeprecatedTextureHost->GetDeAllocator(),
              "We won't be able to destroy our SurfaceDescriptor");
@@ -374,7 +51,7 @@ DeprecatedContentHostBase::DestroyFrontHost()
 }
 
 void
-DeprecatedContentHostBase::OnActorDestroy()
+ContentHostBase::OnActorDestroy()
 {
   if (mDeprecatedTextureHost) {
     mDeprecatedTextureHost->OnActorDestroy();
@@ -391,7 +68,7 @@ DeprecatedContentHostBase::OnActorDestroy()
 }
 
 void
-DeprecatedContentHostBase::Composite(EffectChain& aEffectChain,
+ContentHostBase::Composite(EffectChain& aEffectChain,
                            float aOpacity,
                            const gfx::Matrix4x4& aTransform,
                            const Filter& aFilter,
@@ -557,7 +234,7 @@ DeprecatedContentHostBase::Composite(EffectChain& aEffectChain,
 }
 
 void
-DeprecatedContentHostBase::SetCompositor(Compositor* aCompositor)
+ContentHostBase::SetCompositor(Compositor* aCompositor)
 {
   CompositableHost::SetCompositor(aCompositor);
   if (mDeprecatedTextureHost) {
@@ -571,7 +248,7 @@ DeprecatedContentHostBase::SetCompositor(Compositor* aCompositor)
 #ifdef MOZ_DUMP_PAINTING
 
 void
-DeprecatedContentHostBase::Dump(FILE* aFile,
+ContentHostBase::Dump(FILE* aFile,
                       const char* aPrefix,
                       bool aDumpHtml)
 {
@@ -599,56 +276,14 @@ DeprecatedContentHostBase::Dump(FILE* aFile,
 
 #endif
 
-void
-ContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
-                                        const nsIntRegion& aUpdated,
-                                        const nsIntRegion& aOldValidRegionBack,
-                                        nsIntRegion* aUpdatedRegionBack)
-{
-  aUpdatedRegionBack->SetEmpty();
-
-  if (!mTextureHost) {
-    mInitialised = false;
-    return;
-  }
-
-  // updated is in screen coordinates. Convert it to buffer coordinates.
-  nsIntRegion destRegion(aUpdated);
-  destRegion.MoveBy(-aData.rect().TopLeft());
-
-  // Correct for rotation
-  destRegion.MoveBy(aData.rotation());
-
-  gfxIntSize size = aData.rect().Size();
-  nsIntRect destBounds = destRegion.GetBounds();
-  destRegion.MoveBy((destBounds.x >= size.width) ? -size.width : 0,
-                    (destBounds.y >= size.height) ? -size.height : 0);
-
-  // There's code to make sure that updated regions don't cross rotation
-  // boundaries, so assert here that this is the case
-  MOZ_ASSERT((destBounds.x % size.width) + destBounds.width <= size.width,
-               "updated region lies across rotation boundaries!");
-  MOZ_ASSERT((destBounds.y % size.height) + destBounds.height <= size.height,
-               "updated region lies across rotation boundaries!");
-
-  mTextureHost->Updated(&destRegion);
-  if (mTextureHostOnWhite) {
-    mTextureHostOnWhite->Updated(&destRegion);
-  }
-  mInitialised = true;
-
-  mBufferRect = aData.rect();
-  mBufferRotation = aData.rotation();
-}
-
-DeprecatedContentHostSingleBuffered::~DeprecatedContentHostSingleBuffered()
+ContentHostSingleBuffered::~ContentHostSingleBuffered()
 {
   DestroyTextures();
   DestroyFrontHost();
 }
 
 void
-DeprecatedContentHostSingleBuffered::EnsureDeprecatedTextureHost(TextureIdentifier aTextureId,
+ContentHostSingleBuffered::EnsureDeprecatedTextureHost(TextureIdentifier aTextureId,
                                              const SurfaceDescriptor& aSurface,
                                              ISurfaceAllocator* aAllocator,
                                              const TextureInfo& aTextureInfo)
@@ -671,7 +306,7 @@ DeprecatedContentHostSingleBuffered::EnsureDeprecatedTextureHost(TextureIdentifi
 }
 
 void
-DeprecatedContentHostSingleBuffered::DestroyTextures()
+ContentHostSingleBuffered::DestroyTextures()
 {
   MOZ_ASSERT(!mNewFrontHost || mNewFrontHost->GetDeAllocator(),
              "We won't be able to destroy our SurfaceDescriptor");
@@ -684,7 +319,7 @@ DeprecatedContentHostSingleBuffered::DestroyTextures()
 }
 
 void
-DeprecatedContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
+ContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
                                         const nsIntRegion& aUpdated,
                                         const nsIntRegion& aOldValidRegionBack,
                                         nsIntRegion* aUpdatedRegionBack)
@@ -738,51 +373,14 @@ DeprecatedContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
   mBufferRotation = aData.rotation();
 }
 
-void
-ContentHostDoubleBuffered::UpdateThebes(const ThebesBufferData& aData,
-                                        const nsIntRegion& aUpdated,
-                                        const nsIntRegion& aOldValidRegionBack,
-                                        nsIntRegion* aUpdatedRegionBack)
-{
-  if (!mTextureHost) {
-    mInitialised = false;
-
-    *aUpdatedRegionBack = aUpdated;
-    return;
-  }
-
-  // We don't need to calculate an update region because we assume that if we
-  // are using double buffering then we have render-to-texture and thus no
-  // upload to do.
-  mTextureHost->Updated();
-  if (mTextureHostOnWhite) {
-    mTextureHostOnWhite->Updated();
-  }
-  mInitialised = true;
-
-  mBufferRect = aData.rect();
-  mBufferRotation = aData.rotation();
-
-  *aUpdatedRegionBack = aUpdated;
-
-  // Save the current valid region of our front buffer, because if
-  // we're double buffering, it's going to be the valid region for the
-  // next back buffer sent back to the renderer.
-  //
-  // NB: we rely here on the fact that mValidRegion is initialized to
-  // empty, and that the first time Swap() is called we don't have a
-  // valid front buffer that we're going to return to content.
-  mValidRegionForNextBackBuffer = aOldValidRegionBack;
-}
-
-DeprecatedContentHostDoubleBuffered::~DeprecatedContentHostDoubleBuffered()
+ContentHostDoubleBuffered::~ContentHostDoubleBuffered()
 {
   DestroyTextures();
   DestroyFrontHost();
 }
 
 void
-DeprecatedContentHostDoubleBuffered::EnsureDeprecatedTextureHost(TextureIdentifier aTextureId,
+ContentHostDoubleBuffered::EnsureDeprecatedTextureHost(TextureIdentifier aTextureId,
                                              const SurfaceDescriptor& aSurface,
                                              ISurfaceAllocator* aAllocator,
                                              const TextureInfo& aTextureInfo)
@@ -822,7 +420,7 @@ DeprecatedContentHostDoubleBuffered::EnsureDeprecatedTextureHost(TextureIdentifi
 }
 
 void
-DeprecatedContentHostDoubleBuffered::DestroyTextures()
+ContentHostDoubleBuffered::DestroyTextures()
 {
   if (mNewFrontHost) {
     MOZ_ASSERT(mNewFrontHost->GetDeAllocator(),
@@ -849,7 +447,7 @@ DeprecatedContentHostDoubleBuffered::DestroyTextures()
 }
 
 void
-DeprecatedContentHostDoubleBuffered::OnActorDestroy()
+ContentHostDoubleBuffered::OnActorDestroy()
 {
   if (mDeprecatedTextureHost) {
     mDeprecatedTextureHost->OnActorDestroy();
@@ -872,7 +470,7 @@ DeprecatedContentHostDoubleBuffered::OnActorDestroy()
 }
 
 void
-DeprecatedContentHostDoubleBuffered::UpdateThebes(const ThebesBufferData& aData,
+ContentHostDoubleBuffered::UpdateThebes(const ThebesBufferData& aData,
                                         const nsIntRegion& aUpdated,
                                         const nsIntRegion& aOldValidRegionBack,
                                         nsIntRegion* aUpdatedRegionBack)
@@ -1157,31 +755,10 @@ ContentHostIncremental::TextureUpdateRequest::Execute(ContentHostIncremental* aH
 }
 
 void
-ContentHostBase::PrintInfo(nsACString& aTo, const char* aPrefix)
+ContentHostSingleBuffered::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   aTo += aPrefix;
-  aTo += nsPrintfCString("ContentHost (0x%p)", this);
-
-  AppendToString(aTo, mBufferRect, " [buffer-rect=", "]");
-  AppendToString(aTo, mBufferRotation, " [buffer-rotation=", "]");
-  if (PaintWillResample()) {
-    aTo += " [paint-will-resample]";
-  }
-
-  nsAutoCString pfx(aPrefix);
-  pfx += "  ";
-
-  if (mTextureHost) {
-    aTo += "\n";
-    mTextureHost->PrintInfo(aTo, pfx.get());
-  }
-}
-
-void
-DeprecatedContentHostSingleBuffered::PrintInfo(nsACString& aTo, const char* aPrefix)
-{
-  aTo += aPrefix;
-  aTo += nsPrintfCString("DeprecatedContentHostSingleBuffered (0x%p)", this);
+  aTo += nsPrintfCString("ContentHostSingleBuffered (0x%p)", this);
 
   AppendToString(aTo, mBufferRect, " [buffer-rect=", "]");
   AppendToString(aTo, mBufferRotation, " [buffer-rotation=", "]");
@@ -1199,10 +776,10 @@ DeprecatedContentHostSingleBuffered::PrintInfo(nsACString& aTo, const char* aPre
 }
 
 void
-DeprecatedContentHostDoubleBuffered::PrintInfo(nsACString& aTo, const char* aPrefix)
+ContentHostDoubleBuffered::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   aTo += aPrefix;
-  aTo += nsPrintfCString("DeprecatedContentHostDoubleBuffered (0x%p)", this);
+  aTo += nsPrintfCString("ContentHostDoubleBuffered (0x%p)", this);
 
   AppendToString(aTo, mBufferRect, " [buffer-rect=", "]");
   AppendToString(aTo, mBufferRotation, " [buffer-rotation=", "]");
@@ -1226,11 +803,11 @@ DeprecatedContentHostDoubleBuffered::PrintInfo(nsACString& aTo, const char* aPre
 
 #ifdef MOZ_DUMP_PAINTING
 void
-DeprecatedContentHostDoubleBuffered::Dump(FILE* aFile,
+ContentHostDoubleBuffered::Dump(FILE* aFile,
                                 const char* aPrefix,
                                 bool aDumpHtml)
 {
-  DeprecatedContentHostBase::Dump(aFile, aPrefix, aDumpHtml);
+  ContentHostBase::Dump(aFile, aPrefix, aDumpHtml);
   if (!aDumpHtml) {
     return;
   }
@@ -1257,22 +834,6 @@ DeprecatedContentHostDoubleBuffered::Dump(FILE* aFile,
 LayerRenderState
 ContentHostBase::GetRenderState()
 {
-  if (!mTextureHost) {
-    return LayerRenderState();
-  }
-
-  LayerRenderState result = mTextureHost->GetRenderState();
-
-  if (mBufferRotation != nsIntPoint()) {
-    result.mFlags |= LAYER_RENDER_STATE_BUFFER_ROTATION;
-  }
-  result.SetOffset(GetOriginOffset());
-  return result;
-}
-
-LayerRenderState
-DeprecatedContentHostBase::GetRenderState()
-{
   LayerRenderState result = mDeprecatedTextureHost->GetRenderState();
 
   if (mBufferRotation != nsIntPoint()) {
@@ -1285,16 +846,6 @@ DeprecatedContentHostBase::GetRenderState()
 #ifdef MOZ_DUMP_PAINTING
 TemporaryRef<gfx::DataSourceSurface>
 ContentHostBase::GetAsSurface()
-{
-  if (!mTextureHost) {
-    return nullptr;
-  }
-
-  return mTextureHost->GetAsSurface();
-}
-
-TemporaryRef<gfx::DataSourceSurface>
-DeprecatedContentHostBase::GetAsSurface()
 {
   return mDeprecatedTextureHost->GetAsSurface();
 }
