@@ -530,6 +530,7 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
 
         if(r=nr_ice_candidate_pair_insert(&comp->stream->check_list,pair)) {
           *error=(r==R_NO_MEMORY)?500:400;
+          nr_ice_candidate_pair_destroy(&pair);
           ABORT(r);
         }
 
