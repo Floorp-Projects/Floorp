@@ -222,11 +222,10 @@ TabChild::PreloadSlowThings()
         return;
     }
     // Just load and compile these scripts, but don't run them.
-    tab->TryCacheLoadAndCompileScript(BROWSER_ELEMENT_CHILD_SCRIPT, true);
+    tab->TryCacheLoadAndCompileScript(BROWSER_ELEMENT_CHILD_SCRIPT);
     // Load, compile, and run these scripts.
     tab->RecvLoadRemoteScript(
-        NS_LITERAL_STRING("chrome://global/content/preload.js"),
-        true);
+        NS_LITERAL_STRING("chrome://global/content/preload.js"));
 
     nsCOMPtr<nsIDocShell> docShell = do_GetInterface(tab->mWebNav);
     if (nsIPresShell* presShell = docShell->GetPresShell()) {
@@ -2059,14 +2058,14 @@ TabChild::DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* actor)
 }
 
 bool
-TabChild::RecvLoadRemoteScript(const nsString& aURL, const bool& aRunInGlobalScope)
+TabChild::RecvLoadRemoteScript(const nsString& aURL)
 {
   if (!mGlobal && !InitTabChildGlobal())
     // This can happen if we're half-destroyed.  It's not a fatal
     // error.
     return true;
 
-  LoadFrameScriptInternal(aURL, aRunInGlobalScope);
+  LoadFrameScriptInternal(aURL);
   return true;
 }
 
@@ -2197,7 +2196,7 @@ TabChild::InitTabChildGlobal(FrameScriptLoading aScriptLoading)
     // Initialize the child side of the browser element machinery,
     // if appropriate.
     if (IsBrowserOrApp()) {
-      RecvLoadRemoteScript(BROWSER_ELEMENT_CHILD_SCRIPT, true);
+      RecvLoadRemoteScript(BROWSER_ELEMENT_CHILD_SCRIPT);
     }
   }
 
