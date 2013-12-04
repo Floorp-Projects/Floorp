@@ -27,7 +27,7 @@ ENUM_ENTRY_VARIABLE_NAME = 'strings'
 INSTANCE_RESERVED_SLOTS = 3
 
 def memberReservedSlot(member):
-    return INSTANCE_RESERVED_SLOTS + member.slotIndex
+    return "(DOM_INSTANCE_RESERVED_SLOTS + %d)" % member.slotIndex
 
 def replaceFileIfChanged(filename, newContents):
     """
@@ -2442,7 +2442,7 @@ class CGUpdateMemberSlotsMethod(CGAbstractStaticMethod):
                        m.isAttr() and m.getExtendedAttribute("StoreInSlot"))
         storeSlots = (
             CGGeneric(
-                'static_assert(%d < js::shadow::Object::MAX_FIXED_SLOTS,\n'
+                'static_assert(%s < js::shadow::Object::MAX_FIXED_SLOTS,\n'
                 '              "Not enough fixed slots to fit \'%s.%s\'");\n'
                 "if (!get_%s(aCx, aWrapper, aObject, args)) {\n"
                 "  return false;\n"
@@ -2481,13 +2481,13 @@ class CGClearCachedValueMethod(CGAbstractMethod):
             declObj = "JS::Rooted<JSObject*> obj(aCx);"
             noopRetval = " true"
             saveMember = (
-                "JS::Rooted<JS::Value> oldValue(aCx, js::GetReservedSlot(obj, %d));\n" %
+                "JS::Rooted<JS::Value> oldValue(aCx, js::GetReservedSlot(obj, %s));\n" %
                 slotIndex)
             regetMember = ("\n"
                            "JS::Rooted<JS::Value> temp(aCx);\n"
                            "JSJitGetterCallArgs args(&temp);\n"
                            "if (!get_%s(aCx, obj, aObject, args)) {\n"
-                           "  js::SetReservedSlot(obj, %d, oldValue);\n"
+                           "  js::SetReservedSlot(obj, %s, oldValue);\n"
                            "  nsJSUtils::ReportPendingException(aCx);\n"
                            "  return false;\n"
                            "}\n"
@@ -2505,7 +2505,7 @@ class CGClearCachedValueMethod(CGAbstractMethod):
                 "  return%s;\n"
                 "}\n"
                 "%s"
-                "js::SetReservedSlot(obj, %d, JS::UndefinedValue());"
+                "js::SetReservedSlot(obj, %s, JS::UndefinedValue());"
                 "%s"
                 % (declObj, noopRetval, saveMember, slotIndex, regetMember)
                 )).define()
@@ -5101,7 +5101,7 @@ if (!${obj}) {
                 "  if (!%s(cx, &tempVal)) {\n"
                 "    return false;\n"
                 "  }\n"
-                "  js::SetReservedSlot(reflector, %d, tempVal);\n"
+                "  js::SetReservedSlot(reflector, %s, tempVal);\n"
                 "%s"
                 "}\n"
                 "return true;" %
@@ -5965,7 +5965,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                 "  reflector = IsDOMObject(obj) ? obj : js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);\n"
                 "  {\n"
                 "    // Scope for cachedVal\n"
-                "    JS::Value cachedVal = js::GetReservedSlot(reflector, %d);\n"
+                "    JS::Value cachedVal = js::GetReservedSlot(reflector, %s);\n"
                 "    if (!cachedVal.isUndefined()) {\n"
                 "      args.rval().set(cachedVal);\n"
                 "      // The cached value is in the compartment of reflector,\n"
@@ -6186,7 +6186,7 @@ class CGMemberJITInfo(CGThing):
                 "  %s,  /* isMovable.  Not relevant for setters. */\n"
                 "  JSJitInfo::%s,  /* aliasSet.  Not relevant for setters. */\n"
                 "  %s,  /* hasSlot.  Only relevant for getters. */\n"
-                "  %d,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
+                "  %s,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
                 "  %s,  /* returnType.  Not relevant for setters. */\n"
                 "  %s,  /* argTypes.  Only relevant for methods */\n"
                 "  nullptr /* parallelNative */\n"
@@ -6216,11 +6216,10 @@ class CGMemberJITInfo(CGThing):
             isInSlot = self.member.getExtendedAttribute("StoreInSlot")
             if isInSlot:
                 slotIndex = memberReservedSlot(self.member);
-                if slotIndex >= 16 : # JS engine currently allows 16 fixed slots
-                    raise TypeError("Make sure we can actually have this many "
-                                    "fixed slots, please!")
+                # We'll statically assert that this is not too big in
+                # CGUpdateMemberSlotsMethod
             else:
-                slotIndex = 0
+                slotIndex = "0"
 
             result = self.defineJitInfo(getterinfo, getter, "Getter",
                                         getterinfal, movable, aliasSet,
@@ -6236,7 +6235,7 @@ class CGMemberJITInfo(CGThing):
                 # Setters are always fallible, since they have to do a typed unwrap.
                 result += self.defineJitInfo(setterinfo, setter, "Setter",
                                              False, False, "AliasEverything",
-                                             False, 0,
+                                             False, "0",
                                              [BuiltinTypes[IDLBuiltinType.Types.void]],
                                              None)
             return result
@@ -6277,7 +6276,7 @@ class CGMemberJITInfo(CGThing):
             else:
                 aliasSet = "AliasEverything"
             result = self.defineJitInfo(methodinfo, method, "Method",
-                                        methodInfal, False, aliasSet, False, 0,
+                                        methodInfal, False, aliasSet, False, "0",
                                         [s[0] for s in sigs], args)
             return result
         raise TypeError("Illegal member type to CGPropertyJITInfo")
