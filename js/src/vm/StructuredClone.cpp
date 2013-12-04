@@ -829,7 +829,7 @@ JSStructuredCloneWriter::startObject(HandleObject obj, bool *backref)
     /* Handle cycles in the object graph. */
     CloneMemory::AddPtr p = memory.lookupForAdd(obj);
     if ((*backref = p))
-        return out.writePair(SCTAG_BACK_REFERENCE_OBJECT, p->value);
+        return out.writePair(SCTAG_BACK_REFERENCE_OBJECT, p->value());
     if (!memory.add(p, obj, memory.count()))
         return false;
 

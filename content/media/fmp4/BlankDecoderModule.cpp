@@ -198,18 +198,18 @@ public:
   }
 
   // Decode thread.
-  virtual MediaDataDecoder* CreateVideoDecoder(layers::LayersBackend aLayersBackend,
-                                               layers::ImageContainer* aImageContainer) MOZ_OVERRIDE {
+  virtual MediaDataDecoder* CreateH264Decoder(layers::LayersBackend aLayersBackend,
+                                              layers::ImageContainer* aImageContainer) MOZ_OVERRIDE {
     BlankVideoDataCreator* decoder = new BlankVideoDataCreator(aImageContainer);
     return new BlankMediaDataDecoder<BlankVideoDataCreator>(decoder);
   }
 
   // Decode thread.
-  virtual MediaDataDecoder* CreateAudioDecoder(uint32_t aChannelCount,
-                                               uint32_t aSampleRate,
-                                               uint16_t aBitsPerSample,
-                                               const uint8_t* aUserData,
-                                               uint32_t aUserDataLength) MOZ_OVERRIDE {
+  virtual MediaDataDecoder* CreateAACDecoder(uint32_t aChannelCount,
+                                             uint32_t aSampleRate,
+                                             uint16_t aBitsPerSample,
+                                             const uint8_t* aUserData,
+                                             uint32_t aUserDataLength) MOZ_OVERRIDE {
     BlankAudioDataCreator* decoder = new BlankAudioDataCreator(aChannelCount,
                                                                aSampleRate,
                                                                aBitsPerSample);

@@ -157,6 +157,12 @@ public:
     * Should we insert a dropmarker inside of combobox button?
    */
   virtual bool ThemeNeedsComboboxDropmarker()=0;
+
+  /**
+   * Should we hide scrollbars?
+   */
+  virtual bool ShouldHideScrollbars()
+  { return false; }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITheme, NS_ITHEME_IID)

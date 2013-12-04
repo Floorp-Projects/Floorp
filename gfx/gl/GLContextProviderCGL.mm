@@ -5,6 +5,7 @@
 
 #include "GLContextProvider.h"
 #include "GLContext.h"
+#include "TextureImageCGL.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include "OpenGL/OpenGL.h"
@@ -189,201 +190,14 @@ public:
 
     bool ResizeOffscreen(const gfxIntSize& aNewSize);
 
-    virtual already_AddRefed<TextureImage>
-    CreateTextureImage(const nsIntSize& aSize,
-                       TextureImage::ContentType aContentType,
-                       GLenum aWrapMode,
-                       TextureImage::Flags aFlags = TextureImage::NoFlags,
-                       TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown) MOZ_OVERRIDE;
-
-    virtual already_AddRefed<TextureImage>
-    TileGenFunc(const nsIntSize& aSize,
-                TextureImage::ContentType aContentType,
-                TextureImage::Flags aFlags = TextureImage::NoFlags,
-                TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown) MOZ_OVERRIDE;
-
     NSOpenGLContext *mContext;
     GLuint mTempTextureName;
-
-    already_AddRefed<TextureImage>
-    CreateTextureImageInternal(const nsIntSize& aSize,
-                               TextureImage::ContentType aContentType,
-                               GLenum aWrapMode,
-                               TextureImage::Flags aFlags,
-                               TextureImage::ImageFormat aImageFormat);
-
 };
 
 bool
 GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
     return ResizeScreenBuffer(aNewSize);
-}
-
-class TextureImageCGL : public BasicTextureImage
-{
-    friend already_AddRefed<TextureImage>
-    GLContextCGL::CreateTextureImageInternal(const nsIntSize& aSize,
-                                             TextureImage::ContentType aContentType,
-                                             GLenum aWrapMode,
-                                             TextureImage::Flags aFlags,
-                                             TextureImage::ImageFormat aImageFormat);
-public:
-    ~TextureImageCGL()
-    {
-        if (mPixelBuffer) {
-            mGLContext->MakeCurrent();
-            mGLContext->fDeleteBuffers(1, &mPixelBuffer);
-        }
-    }
-
-protected:
-    already_AddRefed<gfxASurface>
-    GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt)
-    {
-        gfxIntSize size(aSize.width + 1, aSize.height + 1);
-        mGLContext->MakeCurrent();
-        if (!mGLContext->
-            IsExtensionSupported(GLContext::ARB_pixel_buffer_object)) 
-        {
-            return gfxPlatform::GetPlatform()->
-                CreateOffscreenSurface(size,
-                                       gfxASurface::ContentFromFormat(aFmt));
-        }
-
-        if (!mPixelBuffer) {
-            mGLContext->fGenBuffers(1, &mPixelBuffer);
-        }
-        mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPixelBuffer);
-        int32_t length = size.width * 4 * size.height;
-
-        if (length > mPixelBufferSize) {
-            mGLContext->fBufferData(LOCAL_GL_PIXEL_UNPACK_BUFFER, length,
-                                    NULL, LOCAL_GL_STREAM_DRAW);
-            mPixelBufferSize = length;
-        }
-        unsigned char* data = 
-            (unsigned char*)mGLContext->
-                fMapBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 
-                           LOCAL_GL_WRITE_ONLY);
-
-        mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
-
-        if (!data) {
-            nsAutoCString failure;
-            failure += "Pixel buffer binding failed: ";
-            failure.AppendPrintf("%dx%d\n", size.width, size.height);
-            gfx::LogFailure(failure);
-
-            mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
-            return gfxPlatform::GetPlatform()->
-                CreateOffscreenSurface(size,
-                                       gfxASurface::ContentFromFormat(aFmt));
-        }
-
-        nsRefPtr<gfxQuartzSurface> surf = 
-            new gfxQuartzSurface(data, size, size.width * 4, aFmt);
-
-        mBoundPixelBuffer = true;
-        return surf.forget();
-    }
-  
-    bool FinishedSurfaceUpdate()
-    {
-        if (mBoundPixelBuffer) {
-            mGLContext->MakeCurrent();
-            mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPixelBuffer);
-            mGLContext->fUnmapBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER);
-            return true;
-        }
-        return false;
-    }
-
-    void FinishedSurfaceUpload()
-    {
-        if (mBoundPixelBuffer) {
-            mGLContext->MakeCurrent();
-            mGLContext->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
-            mBoundPixelBuffer = false;
-        }
-    }
-
-private:
-    TextureImageCGL(GLuint aTexture,
-                    const nsIntSize& aSize,
-                    GLenum aWrapMode,
-                    ContentType aContentType,
-                    GLContext* aContext,
-                    TextureImage::Flags aFlags = TextureImage::NoFlags,
-                    TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown)
-        : BasicTextureImage(aTexture, aSize, aWrapMode, aContentType,
-                            aContext, aFlags, aImageFormat)
-        , mPixelBuffer(0)
-        , mPixelBufferSize(0)
-        , mBoundPixelBuffer(false)
-    {}
-    
-    GLuint mPixelBuffer;
-    int32_t mPixelBufferSize;
-    bool mBoundPixelBuffer;
-};
-
-already_AddRefed<TextureImage>
-GLContextCGL::CreateTextureImageInternal(const nsIntSize& aSize,
-                                         TextureImage::ContentType aContentType,
-                                         GLenum aWrapMode,
-                                         TextureImage::Flags aFlags,
-                                         TextureImage::ImageFormat aImageFormat)
-{
-    bool useNearestFilter = aFlags & TextureImage::UseNearestFilter;
-    MakeCurrent();
-
-    GLuint texture;
-    fGenTextures(1, &texture);
-
-    fActiveTexture(LOCAL_GL_TEXTURE0);
-    fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
-
-    GLint texfilter = useNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
-
-    nsRefPtr<TextureImageCGL> teximage
-        (new TextureImageCGL(texture, aSize, aWrapMode, aContentType,
-                             this, aFlags, aImageFormat));
-    return teximage.forget();
-}
-
-already_AddRefed<TextureImage>
-GLContextCGL::CreateTextureImage(const nsIntSize& aSize,
-                                 TextureImage::ContentType aContentType,
-                                 GLenum aWrapMode,
-                                 TextureImage::Flags aFlags,
-                                 TextureImage::ImageFormat aImageFormat)
-{
-    if (!IsOffscreenSizeAllowed(gfxIntSize(aSize.width, aSize.height)) &&
-        gfxPlatform::OffMainThreadCompositingEnabled()) {
-      NS_ASSERTION(aWrapMode == LOCAL_GL_CLAMP_TO_EDGE, "Can't support wrapping with tiles!");
-      nsRefPtr<TextureImage> t = new gl::TiledTextureImage(this, aSize, aContentType,
-                                                           aFlags, aImageFormat);
-      return t.forget();
-    }
-
-    return CreateBasicTextureImage(this, aSize, aContentType, aWrapMode,
-                                   aFlags, aImageFormat);
-}
-
-already_AddRefed<TextureImage>
-GLContextCGL::TileGenFunc(const nsIntSize& aSize,
-                          TextureImage::ContentType aContentType,
-                          TextureImage::Flags aFlags,
-                          TextureImage::ImageFormat aImageFormat)
-{
-    return CreateTextureImageInternal(aSize, aContentType,
-                                      LOCAL_GL_CLAMP_TO_EDGE, aFlags,
-                                      aImageFormat);
 }
 
 static GLContextCGL *

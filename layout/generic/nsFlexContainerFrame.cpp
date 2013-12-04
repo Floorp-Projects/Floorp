@@ -2552,8 +2552,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // If this is our first child and we haven't established a baseline for
-    // the container yet, then use this child's baseline as the container's
-    // baseline.
+    // the container yet (i.e. if we don't have 'align-self: baseline' on any
+    // children), then use this child's baseline as the container's baseline.
     if (i == 0 && flexContainerAscent == nscoord_MIN) {
       ResolveReflowedChildAscent(curItem.Frame(), childDesiredSize);
 

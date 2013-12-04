@@ -160,11 +160,11 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   if (mHasAudio) {
     mInfo.mAudio.mRate = audio.samples_per_second();
     mInfo.mAudio.mChannels = ChannelLayoutToChannelCount(audio.channel_layout());
-    mAudioDecoder = mPlatform->CreateAudioDecoder(mInfo.mAudio.mChannels,
-                                                  mInfo.mAudio.mRate,
-                                                  audio.bits_per_channel(),
-                                                  audio.extra_data(),
-                                                  audio.extra_data_size());
+    mAudioDecoder = mPlatform->CreateAACDecoder(mInfo.mAudio.mChannels,
+                                                mInfo.mAudio.mRate,
+                                                audio.bits_per_channel(),
+                                                audio.extra_data(),
+                                                audio.extra_data_size());
     NS_ENSURE_TRUE(mAudioDecoder != nullptr, NS_ERROR_FAILURE);
   }
 
@@ -173,8 +173,8 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     const VideoDecoderConfig& config = mDemuxer->VideoConfig();
     IntSize sz = config.natural_size();
     mInfo.mVideo.mDisplay = nsIntSize(sz.width(), sz.height());
-    mVideoDecoder = mPlatform->CreateVideoDecoder(mLayersBackendType,
-                                                  mDecoder->GetImageContainer());
+    mVideoDecoder = mPlatform->CreateH264Decoder(mLayersBackendType,
+                                                 mDecoder->GetImageContainer());
     NS_ENSURE_TRUE(mVideoDecoder != nullptr, NS_ERROR_FAILURE);
   }
 

@@ -6,7 +6,7 @@
 
 PARALLEL_DIRS += ['test']
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsAppShellFactory.cpp',
     'nsAppShellService.cpp',
     'nsAppShellWindowEnumerator.cpp',

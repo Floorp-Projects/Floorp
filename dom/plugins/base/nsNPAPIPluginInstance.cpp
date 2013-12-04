@@ -54,6 +54,7 @@ using namespace mozilla;
 #include "GLContextProvider.h"
 #include "GLContext.h"
 #include "TexturePoolOGL.h"
+#include "GLSharedHandleHelpers.h"
 
 using namespace mozilla::gl;
 
@@ -138,9 +139,10 @@ public:
       return 0;
 
     SharedTextureHandle handle =
-      sPluginContext->CreateSharedHandle(gl::SameProcess,
-                                         (void*)mTextureInfo.mTexture,
-                                         gl::TextureID);
+      gl::CreateSharedHandle(sPluginContext,
+                             gl::SameProcess,
+                             (void*)mTextureInfo.mTexture,
+                             gl::TextureID);
 
     // We want forget about this now, so delete the texture. Assigning it to zero
     // ensures that we create a new one in Lock()
@@ -1018,9 +1020,10 @@ SharedTextureHandle nsNPAPIPluginInstance::CreateSharedHandle()
     return mContentTexture->CreateSharedHandle();
   } else if (mContentSurface) {
     EnsureGLContext();
-    return sPluginContext->CreateSharedHandle(gl::SameProcess,
-                                              mContentSurface,
-                                              gl::SurfaceTexture);
+    return gl::CreateSharedHandle(sPluginContext,
+                                  gl::SameProcess,
+                                  mContentSurface,
+                                  gl::SurfaceTexture);
   } else return 0;
 }
 

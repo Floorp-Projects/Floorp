@@ -603,7 +603,7 @@ JitRuntime::getVMWrapper(const VMFunction &f) const
     JitRuntime::VMWrapperMap::Ptr p = functionWrappers_->readonlyThreadsafeLookup(&f);
     JS_ASSERT(p);
 
-    return p->value;
+    return p->value();
 }
 
 template <AllowGC allowGC>

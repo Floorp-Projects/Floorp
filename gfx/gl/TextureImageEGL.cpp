@@ -6,6 +6,7 @@
 #include "TextureImageEGL.h"
 #include "GLLibraryEGL.h"
 #include "GLContext.h"
+#include "GLUploadHelpers.h"
 #include "gfxPlatform.h"
 #include "mozilla/gfx/Types.h"
 
@@ -215,12 +216,13 @@ TextureImageEGL::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, co
     }
 
     mTextureFormat =
-      mGLContext->UploadSurfaceToTexture(aSurf,
-                                          region,
-                                          mTexture,
-                                          mTextureState == Created,
-                                          bounds.TopLeft() + aFrom,
-                                          false);
+      UploadSurfaceToTexture(mGLContext,
+                             aSurf,
+                             region,
+                             mTexture,
+                             mTextureState == Created,
+                             bounds.TopLeft() + aFrom,
+                             false);
 
     mTextureState = Valid;
     return true;
@@ -313,6 +315,45 @@ void
 TextureImageEGL::ApplyFilter()
 {
     mGLContext->ApplyFilterToBoundTexture(mFilter);
+}
+
+already_AddRefed<TextureImage>
+CreateTextureImageEGL(GLContext *gl,
+                      const nsIntSize& aSize,
+                      TextureImage::ContentType aContentType,
+                      GLenum aWrapMode,
+                      TextureImage::Flags aFlags,
+                      TextureImage::ImageFormat aImageFormat)
+{
+    nsRefPtr<TextureImage> t = new gl::TiledTextureImage(gl, aSize, aContentType, aFlags, aImageFormat);
+    return t.forget();
+}
+
+already_AddRefed<TextureImage>
+TileGenFuncEGL(GLContext *gl,
+               const nsIntSize& aSize,
+               TextureImage::ContentType aContentType,
+               TextureImage::Flags aFlags,
+               TextureImage::ImageFormat aImageFormat)
+{
+  gl->MakeCurrent();
+
+  GLuint texture;
+  gl->fGenTextures(1, &texture);
+
+  nsRefPtr<TextureImageEGL> teximage =
+      new TextureImageEGL(texture, aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType,
+                          gl, aFlags, TextureImage::Created, aImageFormat);
+
+  teximage->BindTexture(LOCAL_GL_TEXTURE0);
+
+  GLint texfilter = aFlags & TextureImage::UseNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+
+  return teximage.forget();
 }
 
 }

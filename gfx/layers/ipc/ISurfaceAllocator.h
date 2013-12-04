@@ -143,7 +143,6 @@ protected:
   virtual ~ISurfaceAllocator() {}
 
   friend class detail::RefCounted<ISurfaceAllocator, detail::AtomicRefCount>;
-  //friend class detail::RefCounted<ISurfaceAllocator, detail::AtomicRefCount>;
 };
 
 class GfxMemoryImageReporter MOZ_FINAL : public mozilla::MemoryUniReporter

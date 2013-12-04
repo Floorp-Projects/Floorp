@@ -462,7 +462,7 @@ private:
 
     nsIntRect GetQuadrantRectangle(XSide aXSide, YSide aYSide) const;
 
-    ISurfaceAllocator* mDeAllocator;
+    RefPtr<ISurfaceAllocator> mDeAllocator;
     TextureIdentifier mTextureId;
     SurfaceDescriptor mDescriptor;
     nsIntRegion mUpdated;
@@ -472,7 +472,7 @@ private:
 
   nsTArray<nsAutoPtr<Request> > mUpdateList;
 
-  ISurfaceAllocator* mDeAllocator;
+  RefPtr<ISurfaceAllocator> mDeAllocator;
 };
 
 }

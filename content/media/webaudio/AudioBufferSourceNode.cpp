@@ -57,7 +57,7 @@ public:
                                        AudioDestinationNode* aDestination) :
     AudioNodeEngine(aNode),
     mStart(0), mStop(TRACK_TICKS_MAX),
-    mResampler(nullptr),
+    mResampler(nullptr), mRemainingResamplerTail(0),
     mOffset(0), mDuration(0),
     mLoopStart(0), mLoopEnd(0),
     mBufferSampleRate(0), mPosition(0), mChannels(0), mPlaybackRate(1.0f),
@@ -85,15 +85,6 @@ public:
     switch (aIndex) {
     case AudioBufferSourceNode::PLAYBACKRATE:
       mPlaybackRateTimeline = aValue;
-      // If we have a simple value that is 1.0 (i.e. intrinsic speed), and our
-      // input buffer is already at the ideal audio rate, and we have a
-      // resampler, we can release it.
-      if (mResampler && mPlaybackRateTimeline.HasSimpleValue() &&
-          mPlaybackRateTimeline.GetValue() == 1.0 &&
-          mBufferSampleRate == aSampleRate) {
-        speex_resampler_destroy(mResampler);
-        mResampler = nullptr;
-      }
       WebAudioUtils::ConvertAudioParamToTicks(mPlaybackRateTimeline, mSource, mDestination);
       break;
     default:
@@ -150,6 +141,7 @@ public:
                                         ComputeFinalOutSampleRate(aStream->SampleRate()),
                                         SPEEX_RESAMPLER_QUALITY_DEFAULT,
                                         nullptr);
+      speex_resampler_skip_zeros(mResampler);
     }
     return mResampler;
   }
@@ -196,39 +188,74 @@ public:
                                          uintptr_t aSourceOffset,
                                          uintptr_t aBufferOffset,
                                          uint32_t aAvailableInInputBuffer,
-                                         uint32_t& aFramesRead,
                                          uint32_t& aFramesWritten) {
-    double finalPlaybackRate =
-      static_cast<double>(mBufferSampleRate) / ComputeFinalOutSampleRate(aStream->SampleRate());
-    uint32_t availableInOuputBuffer = WEBAUDIO_BLOCK_SIZE - aBufferOffset;
-    uint32_t inputSamples, outputSamples;
-
-    // Check if we are short on input or output buffer.
-    if (aAvailableInInputBuffer < availableInOuputBuffer * finalPlaybackRate) {
-      outputSamples = ceil(aAvailableInInputBuffer / finalPlaybackRate);
-      inputSamples = aAvailableInInputBuffer;
-    } else {
-      inputSamples = ceil(availableInOuputBuffer * finalPlaybackRate);
-      outputSamples = availableInOuputBuffer;
-    }
-
+    // TODO: adjust for mStop (see bug 913854 comment 9).
+    uint32_t availableInOutputBuffer = WEBAUDIO_BLOCK_SIZE - aBufferOffset;
     SpeexResamplerState* resampler = Resampler(aStream, aChannels);
+    MOZ_ASSERT(aChannels > 0);
 
-    for (uint32_t i = 0; i < aChannels; ++i) {
-      uint32_t inSamples = inputSamples;
-      uint32_t outSamples = outputSamples;
+    if (aAvailableInInputBuffer) {
+      // Limit the number of input samples copied and possibly
+      // format-converted for resampling by estimating how many will be used.
+      // This may be a little small when filling the resampler with initial
+      // data, but we'll get called again and it will work out.
+      uint32_t num, den;
+      speex_resampler_get_ratio(resampler, &num, &den);
+      uint32_t inputLimit = std::min(aAvailableInInputBuffer,
+                                     availableInOutputBuffer * den / num + 10);
+      for (uint32_t i = 0; true; ) {
+        uint32_t inSamples = inputLimit;
+        const float* inputData = mBuffer->GetData(i) + aSourceOffset;
 
-      const float* inputData = mBuffer->GetData(i) + aSourceOffset;
-      float* outputData =
-        static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])) +
-        aBufferOffset;
+        uint32_t outSamples = availableInOutputBuffer;
+        float* outputData =
+          static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])) +
+          aBufferOffset;
 
-      WebAudioUtils::SpeexResamplerProcess(resampler, i,
-                                           inputData, &inSamples,
-                                           outputData, &outSamples);
+        WebAudioUtils::SpeexResamplerProcess(resampler, i,
+                                             inputData, &inSamples,
+                                             outputData, &outSamples);
+        if (++i == aChannels) {
+          mPosition += inSamples;
+          MOZ_ASSERT(mPosition <= mDuration);
+          aFramesWritten = outSamples;
+          if (inSamples == aAvailableInInputBuffer && !mLoop) {
+            // If the available output space were unbounded then the input
+            // latency would always be the correct amount of extra input to
+            // provide in order to advance the output position to align with
+            // the final point in the buffer.  However, when the output space
+            // becomes full, the resampler may read all available input
+            // without writing out the corresponding output.  Add one more
+            // input sample, so that we know that enough output has been
+            // written when the last input sample has been read.  This may
+            // often write more than necessary but the extra samples will be
+            // based on (mostly) zero input.
+            mRemainingResamplerTail =
+              speex_resampler_get_input_latency(resampler) + 1;
+          }
+          return;
+        }
+      }
+    } else {
+      for (uint32_t i = 0; true; ) {
+        uint32_t inSamples = mRemainingResamplerTail;
+        uint32_t outSamples = availableInOutputBuffer;
+        float* outputData =
+          static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])) +
+          aBufferOffset;
 
-      aFramesRead = inSamples;
-      aFramesWritten = outSamples;
+        // AudioDataValue* for aIn selects the function that does not try to
+        // copy and format-convert input data.
+        WebAudioUtils::SpeexResamplerProcess(resampler, i,
+                         static_cast<AudioDataValue*>(nullptr), &inSamples,
+                         outputData, &outSamples);
+        if (++i == aChannels) {
+          mRemainingResamplerTail -= inSamples;
+          MOZ_ASSERT(mRemainingResamplerTail >= 0);
+          aFramesWritten = outSamples;
+          break;
+        }
+      }
     }
   }
 
@@ -300,14 +327,13 @@ public:
         *aCurrentPosition += numFrames;
         mPosition += numFrames;
       } else {
-        uint32_t framesRead, framesWritten, availableInInputBuffer;
+        uint32_t framesWritten, availableInInputBuffer;
 
         availableInInputBuffer = aBufferMax - aBufferOffset;
 
-        CopyFromInputBufferWithResampling(aStream, aOutput, aChannels, aBufferOffset, *aOffsetWithinBlock, availableInInputBuffer, framesRead, framesWritten);
+        CopyFromInputBufferWithResampling(aStream, aOutput, aChannels, aBufferOffset, *aOffsetWithinBlock, availableInInputBuffer, framesWritten);
         *aOffsetWithinBlock += framesWritten;
         *aCurrentPosition += framesWritten;
-        mPosition += framesRead;
       }
     }
   }
@@ -326,9 +352,12 @@ public:
 
   bool ShouldResample(TrackRate aStreamSampleRate) const
   {
-    return !(mPlaybackRate == 1.0 &&
-             mDopplerShift == 1.0 &&
-             mBufferSampleRate == aStreamSampleRate);
+    // There is latency in the resampler.  If there is already a resampler,
+    // then it will have moved mPosition to after the samples it has read, but
+    // it hasn't output its buffered samples.  Keep using the resampler, even
+    // if the rates now match, so that this latency segment is output.
+    return mResampler ||
+      (mPlaybackRate * mDopplerShift * mBufferSampleRate != aStreamSampleRate);
   }
 
   void UpdateSampleRateIfNeeded(AudioNodeStream* aStream, uint32_t aChannels)
@@ -346,9 +375,9 @@ public:
       mDopplerShift = 1.0;
     }
 
-    uint32_t currentOutSampleRate, currentInSampleRate;
-    if (ShouldResample(aStream->SampleRate())) {
+    if (mResampler) {
       SpeexResamplerState* resampler = Resampler(aStream, aChannels);
+      uint32_t currentOutSampleRate, currentInSampleRate;
       speex_resampler_get_rate(resampler, &currentInSampleRate, &currentOutSampleRate);
       uint32_t finalSampleRate = ComputeFinalOutSampleRate(aStream->SampleRate());
       if (currentOutSampleRate != finalSampleRate) {
@@ -398,7 +427,7 @@ public:
           CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mLoopStart + offsetInLoop, mLoopEnd);
         }
       } else {
-        if (t < mDuration) {
+        if (t < mDuration || mRemainingResamplerTail) {
           CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mOffset + t, mOffset + mDuration);
         } else {
           FillWithZeroes(aOutput, channels, &written, &streamPosition, TRACK_TICKS_MAX);
@@ -408,7 +437,8 @@ public:
 
     // We've finished if we've gone past mStop, or if we're past mDuration when
     // looping is disabled.
-    if (streamPosition >= mStop || (!mLoop && mPosition >= mDuration)) {
+    if (streamPosition >= mStop ||
+        (!mLoop && mPosition >= mDuration && !mRemainingResamplerTail)) {
       *aFinished = true;
     }
   }
@@ -417,6 +447,9 @@ public:
   TrackTicks mStop;
   nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   SpeexResamplerState* mResampler;
+  // mRemainingResamplerTail, like mPosition, mOffset, and mDuration, is
+  // measured in input buffer samples.
+  int mRemainingResamplerTail;
   int32_t mOffset;
   int32_t mDuration;
   int32_t mLoopStart;

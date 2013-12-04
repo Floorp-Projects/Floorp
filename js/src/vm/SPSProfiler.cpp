@@ -33,7 +33,7 @@ SPSProfiler::~SPSProfiler()
 {
     if (strings.initialized()) {
         for (ProfileStringMap::Enum e(strings); !e.empty(); e.popFront())
-            js_free(const_cast<char *>(e.front().value));
+            js_free(const_cast<char *>(e.front().value()));
     }
 }
 
@@ -80,7 +80,7 @@ SPSProfiler::profileString(JSContext *cx, JSScript *script, JSFunction *maybeFun
     JS_ASSERT(strings.initialized());
     ProfileStringMap::AddPtr s = strings.lookupForAdd(script);
     if (s)
-        return s->value;
+        return s->value();
     const char *str = allocProfileString(cx, script, maybeFun);
     if (str == nullptr)
         return nullptr;
@@ -104,7 +104,7 @@ SPSProfiler::onScriptFinalized(JSScript *script)
     if (!strings.initialized())
         return;
     if (ProfileStringMap::Ptr entry = strings.lookup(script)) {
-        const char *tofree = entry->value;
+        const char *tofree = entry->value();
         strings.remove(entry);
         js_free(const_cast<char *>(tofree));
     }

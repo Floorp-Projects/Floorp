@@ -252,6 +252,9 @@ public:
   void
   GarbageCollectAllWorkers(bool aShrinking);
 
+  void
+  CycleCollectAllWorkers();
+
 private:
   RuntimeService();
   ~RuntimeService();
