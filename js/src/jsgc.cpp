@@ -5267,8 +5267,16 @@ void
 js::ReleaseAllJITCode(FreeOp *fop)
 {
 #ifdef JS_ION
-    for (ZonesIter zone(fop->runtime(), SkipAtoms); !zone.done(); zone.next()) {
 
+# ifdef JSGC_GENERATIONAL
+    /*
+     * Scripts can entrain nursery things, inserting references to the script
+     * into the store buffer. Clear the store buffer before discarding scripts.
+     */
+    MinorGC(fop->runtime(), JS::gcreason::EVICT_NURSERY);
+# endif
+
+    for (ZonesIter zone(fop->runtime(), SkipAtoms); !zone.done(); zone.next()) {
 # ifdef DEBUG
         /* Assert no baseline scripts are marked as active. */
         for (CellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {

@@ -933,22 +933,33 @@ JS::DisableIncrementalGC(JSRuntime *rt)
 extern JS_FRIEND_API(void)
 JS::DisableGenerationalGC(JSRuntime *rt)
 {
-    rt->gcGenerationalEnabled = false;
 #ifdef JSGC_GENERATIONAL
-    MinorGC(rt, JS::gcreason::API);
-    rt->gcNursery.disable();
-    rt->gcStoreBuffer.disable();
+    if (IsGenerationalGCEnabled(rt)) {
+        MinorGC(rt, JS::gcreason::API);
+        rt->gcNursery.disable();
+        rt->gcStoreBuffer.disable();
+    }
 #endif
+    ++rt->gcGenerationalDisabled;
 }
 
 extern JS_FRIEND_API(void)
 JS::EnableGenerationalGC(JSRuntime *rt)
 {
-    rt->gcGenerationalEnabled = true;
+    JS_ASSERT(rt->gcGenerationalDisabled > 0);
+    --rt->gcGenerationalDisabled;
 #ifdef JSGC_GENERATIONAL
-    rt->gcNursery.enable();
-    rt->gcStoreBuffer.enable();
+    if (IsGenerationalGCEnabled(rt)) {
+        rt->gcNursery.enable();
+        rt->gcStoreBuffer.enable();
+    }
 #endif
+}
+
+extern JS_FRIEND_API(bool)
+JS::IsGenerationalGCEnabled(JSRuntime *rt)
+{
+    return rt->gcGenerationalDisabled == 0;
 }
 
 JS_FRIEND_API(bool)
