@@ -18,17 +18,10 @@ function testSteps()
   let db = event.target.result;
   db.onerror = errorHandler;
 
-  // Bug 943409.
-  var bug943409 = [];
-  (function () { bug943409 })();
-
   for each (let autoIncrement in [false, true]) {
     let objectStore =
       db.createObjectStore(autoIncrement, { keyPath: "id",
                                             autoIncrement: autoIncrement });
-
-    // Bug 943409.
-    bug943409.push(objectStore);
 
     for (let i = 0; i < 10; i++) {
       objectStore.add({ id: i, index: i });
@@ -170,7 +163,5 @@ function testSteps()
   }
 
   finishTest();
-  // Bug 943409.
-  gc();
   yield undefined;
 }
