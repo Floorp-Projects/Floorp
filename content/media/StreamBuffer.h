@@ -224,6 +224,13 @@ public:
    */
   StreamTime GetEnd() const;
 
+  /**
+   * Returns the earliest time >= 0 at which all tracks have ended
+   * and all their data has been played out and no new tracks can be added,
+   * or STREAM_TIME_MAX if there is no such time.
+   */
+  StreamTime GetAllTracksEnd() const;
+
 #ifdef DEBUG
   void DumpTrackInfo() const;
 #endif
