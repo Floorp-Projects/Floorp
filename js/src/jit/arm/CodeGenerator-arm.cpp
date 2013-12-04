@@ -654,18 +654,23 @@ CodeGeneratorARM::visitDivPowTwoI(LDivPowTwoI *ins)
     int32_t shift = ins->shift();
 
     if (shift != 0) {
-        if (!ins->mir()->isTruncated()) {
+        MDiv *mir = ins->mir();
+        if (!mir->isTruncated()) {
             // If the remainder is != 0, bailout since this must be a double.
             masm.as_mov(ScratchRegister, lsl(lhs, 32 - shift), SetCond);
             if (!bailoutIf(Assembler::NonZero, ins->snapshot()))
                 return false;
         }
 
+        if (!mir->canBeNegativeDividend()) {
+            // Numerator is unsigned, so needs no adjusting. Do the shift.
+            masm.as_mov(output, asr(lhs, shift));
+            return true;
+        }
+
         // Adjust the value so that shifting produces a correctly rounded result
         // when the numerator is negative. See 10-1 "Signed Division by a Known
         // Power of 2" in Henry S. Warren, Jr.'s Hacker's Delight.
-        // Note that we wouldn't need to do this adjustment if we could use
-        // Range Analysis to find cases when the value is never negative.
         if (shift > 1) {
             masm.as_mov(ScratchRegister, asr(lhs, 31));
             masm.as_add(ScratchRegister, lhs, lsr(ScratchRegister, 32 - shift));
