@@ -42,16 +42,16 @@ ImageHost::UseTextureHost(TextureHost* aTexture)
 }
 
 void
-ImageHost::RemoveTextureHost(TextureHost* aTexture)
+ImageHost::RemoveTextureHost(uint64_t aTextureID)
 {
-  CompositableHost::RemoveTextureHost(aTexture);
-  if (mFrontBuffer && mFrontBuffer->GetID() == aTexture->GetID()) {
+  CompositableHost::RemoveTextureHost(aTextureID);
+  if (mFrontBuffer && mFrontBuffer->GetID() == aTextureID) {
     mFrontBuffer = nullptr;
   }
 }
 
 TextureHost*
-ImageHost::GetAsTextureHost()
+ImageHost::GetTextureHost()
 {
   return mFrontBuffer;
 }
