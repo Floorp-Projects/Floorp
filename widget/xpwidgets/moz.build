@@ -74,7 +74,7 @@ LOCAL_INCLUDES += [
     '/layout/base',
     '/layout/forms',
     '/layout/generic',
-    '/layout/xul',
+    '/layout/xul/base/src',
     '/view/src',
 ]
 

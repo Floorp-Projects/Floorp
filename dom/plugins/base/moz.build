@@ -107,7 +107,7 @@ LOCAL_INCLUDES += [
     '/gfx/skia/include/config',
     '/gfx/skia/include/core',
     '/layout/generic',
-    '/layout/xul',
+    '/layout/xul/base/src',
     '/widget/android',
     '/widget/xpwidgets',
     '/xpcom/base',

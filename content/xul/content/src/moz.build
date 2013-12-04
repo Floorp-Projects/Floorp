@@ -26,7 +26,7 @@ LOCAL_INCLUDES += [
     '/content/xml/document/src',
     '/layout/generic',
     '/layout/style',
-    '/layout/xul',
+    '/layout/xul/base/src',
     '/xpcom/ds',
 ]
 
