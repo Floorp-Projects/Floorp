@@ -186,8 +186,7 @@ GrallocTextureClientOGL::GetBuffer() const
 }
 
 bool
-GrallocTextureClientOGL::AllocateForSurface(gfx::IntSize aSize,
-                                            TextureAllocationFlags)
+GrallocTextureClientOGL::AllocateForSurface(gfx::IntSize aSize)
 {
   MOZ_ASSERT(IsValid());
   MOZ_ASSERT(mCompositable);

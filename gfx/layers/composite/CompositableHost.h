@@ -112,7 +112,7 @@ public:
    * Our IPDL actor is being destroyed, get rid of any shmem resources now and
    * don't worry about compositing anymore.
    */
-  virtual void OnActorDestroy();
+  virtual void OnActorDestroy() = 0;
 
   // If base class overrides, it should still call the parent implementation
   virtual void SetCompositor(Compositor* aCompositor);
@@ -211,7 +211,7 @@ public:
   /**
    * Returns the front buffer.
    */
-  virtual TextureHost* GetAsTextureHost() { return nullptr; }
+  virtual TextureHost* GetTextureHost() { return nullptr; }
 
   virtual LayerRenderState GetRenderState() = 0;
 
@@ -296,13 +296,7 @@ public:
 
   void AddTextureHost(TextureHost* aTexture);
   virtual void UseTextureHost(TextureHost* aTexture) {}
-  // If a texture host is flagged for deferred removal, the compositable will
-  // get an option to run any cleanup code early, that is when it would have
-  // been run if the texture host was not marked deferred.
-  // If the compositable does not cleanup the texture host now, it is the
-  // compositable's responsibility to cleanup the texture host before the
-  // texture host dies.
-  virtual void RemoveTextureHost(TextureHost* aTexture);
+  virtual void RemoveTextureHost(uint64_t aTextureID);
   TextureHost* GetTextureHost(uint64_t aTextureID);
 
 protected:

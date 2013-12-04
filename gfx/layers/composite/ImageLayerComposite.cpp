@@ -121,10 +121,10 @@ ImageLayerComposite::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToS
   gfxRect sourceRect(0, 0, 0, 0);
   if (mImageHost &&
       mImageHost->IsAttached() &&
-      (mImageHost->GetDeprecatedTextureHost() || mImageHost->GetAsTextureHost())) {
+      (mImageHost->GetDeprecatedTextureHost() || mImageHost->GetTextureHost())) {
     IntSize size =
-      mImageHost->GetAsTextureHost() ? mImageHost->GetAsTextureHost()->GetSize()
-                                     : mImageHost->GetDeprecatedTextureHost()->GetSize();
+      mImageHost->GetTextureHost() ? mImageHost->GetTextureHost()->GetSize()
+                                   : mImageHost->GetDeprecatedTextureHost()->GetSize();
     sourceRect.SizeTo(size.width, size.height);
     if (mScaleMode != SCALE_NONE &&
         sourceRect.width != 0.0 && sourceRect.height != 0.0) {

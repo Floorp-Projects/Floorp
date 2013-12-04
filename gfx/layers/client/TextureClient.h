@@ -48,11 +48,6 @@ class Image;
  * using AsTextureCLientSurface(), etc.
  */
 
-enum TextureAllocationFlags {
-  ALLOC_DEFAULT = 0,
-  ALLOC_CLEAR_BUFFER = 1
-};
-
 /**
  * Interface for TextureClients that can be updated using a gfxASurface.
  */
@@ -61,34 +56,7 @@ class TextureClientSurface
 public:
   virtual bool UpdateSurface(gfxASurface* aSurface) = 0;
   virtual already_AddRefed<gfxASurface> GetAsSurface() = 0;
-  /**
-   * Allocates for a given surface size, taking into account the pixel format
-   * which is part of the state of the TextureClient.
-   *
-   * Does not clear the surface by default, clearing the surface can be done
-   * by passing the CLEAR_BUFFER flag.
-   */
-  virtual bool AllocateForSurface(gfx::IntSize aSize,
-                                  TextureAllocationFlags flags = ALLOC_DEFAULT) = 0;
-};
-
-/**
- * Interface for TextureClients that can be updated using a DrawTarget.
- */
-class TextureClientDrawTarget
-{
-public:
-  virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() = 0;
-  virtual gfx::SurfaceFormat GetFormat() const = 0;
-  /**
-   * Allocates for a given surface size, taking into account the pixel format
-   * which is part of the state of the TextureClient.
-   *
-   * Does not clear the surface by default, clearing the surface can be done
-   * by passing the CLEAR_BUFFER flag.
-   */
-  virtual bool AllocateForSurface(gfx::IntSize aSize,
-                                  TextureAllocationFlags flags = ALLOC_DEFAULT) = 0;
+  virtual bool AllocateForSurface(gfx::IntSize aSize) = 0;
 };
 
 /**
@@ -156,7 +124,6 @@ public:
   virtual ~TextureClient();
 
   virtual TextureClientSurface* AsTextureClientSurface() { return nullptr; }
-  virtual TextureClientDrawTarget* AsTextureClientDrawTarget() { return nullptr; }
   virtual TextureClientYCbCr* AsTextureClientYCbCr() { return nullptr; }
 
   /**
@@ -273,8 +240,7 @@ protected:
  */
 class BufferTextureClient : public TextureClient
                           , public TextureClientSurface
-                          , public TextureClientYCbCr
-                          , public TextureClientDrawTarget
+                          , TextureClientYCbCr
 {
 public:
   BufferTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat,
@@ -298,14 +264,7 @@ public:
 
   virtual already_AddRefed<gfxASurface> GetAsSurface() MOZ_OVERRIDE;
 
-  virtual bool AllocateForSurface(gfx::IntSize aSize,
-                                  TextureAllocationFlags aFlags = ALLOC_DEFAULT) MOZ_OVERRIDE;
-
-  // TextureClientDrawTarget
-
-  virtual TextureClientDrawTarget* AsTextureClientDrawTarget() MOZ_OVERRIDE { return this; }
-
-  virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
+  virtual bool AllocateForSurface(gfx::IntSize aSize) MOZ_OVERRIDE;
 
   // TextureClientYCbCr
 
@@ -317,7 +276,7 @@ public:
                                 gfx::IntSize aCbCrSize,
                                 StereoMode aStereoMode) MOZ_OVERRIDE;
 
-  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
+  gfx::SurfaceFormat GetFormat() const { return mFormat; }
 
   // XXX - Bug 908196 - Make Allocate(uint32_t) and GetBufferSize() protected.
   // these two methods should only be called by methods of BufferTextureClient
