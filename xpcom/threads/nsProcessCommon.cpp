@@ -113,7 +113,7 @@ nsProcess::Init(nsIFile* executable)
 
 #if defined(XP_WIN)
 // Out param `wideCmdLine` must be PR_Freed by the caller.
-static int assembleCmdLine(char *const *argv, PRUnichar **wideCmdLine,
+static int assembleCmdLine(char *const *argv, wchar_t **wideCmdLine,
                            UINT codePage)
 {
     char *const *arg;
@@ -214,7 +214,7 @@ static int assembleCmdLine(char *const *argv, PRUnichar **wideCmdLine,
 
     *p = '\0';
     int32_t numChars = MultiByteToWideChar(codePage, 0, cmdLine, -1, nullptr, 0);
-    *wideCmdLine = (PRUnichar *) PR_MALLOC(numChars*sizeof(PRUnichar));
+    *wideCmdLine = (wchar_t *) PR_MALLOC(numChars*sizeof(wchar_t));
     MultiByteToWideChar(codePage, 0, cmdLine, -1, *wideCmdLine, numChars); 
     PR_Free(cmdLine);
     return 0;
@@ -430,7 +430,7 @@ nsProcess::RunProcess(bool blocking, char **my_argv, nsIObserver* observer,
 
 #if defined(PROCESSMODEL_WINAPI)
     BOOL retVal;
-    PRUnichar *cmdLine = nullptr;
+    wchar_t *cmdLine = nullptr;
 
     // The 'argv' array is null-terminated and always starts with the program path.
     // If the second slot is non-null then arguments are being passed.

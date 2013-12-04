@@ -15,7 +15,7 @@
 
 #ifdef XP_WIN
 #include <objbase.h>
-bool ShouldProtectPluginCurrentDirectory(LPCWSTR pluginFilePath);
+bool ShouldProtectPluginCurrentDirectory(char16ptr_t pluginFilePath);
 #endif
 
 using mozilla::ipc::IOThreadChild;

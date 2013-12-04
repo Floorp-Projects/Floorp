@@ -4497,9 +4497,7 @@ nsStorage2SH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   if (enum_op == JSENUMERATE_NEXT && keys->Length() != 0) {
     nsString& key = keys->ElementAt(0);
     JSString *str =
-      JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>
-                                              (key.get()),
-                          key.Length());
+      JS_NewUCStringCopyN(cx, key.get(), key.Length());
     NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
     JS_ValueToId(cx, STRING_TO_JSVAL(str), idp);

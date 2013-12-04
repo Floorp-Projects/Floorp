@@ -1053,7 +1053,11 @@ js::ThreadSafeContext::ThreadSafeContext(JSRuntime *rt, PerThreadData *pt, Conte
     contextKind_(kind),
     perThreadData(pt),
     allocator_(nullptr)
-{ }
+{
+#ifdef JS_WORKER_THREADS
+    JS_ASSERT_IF(kind == Context_Exclusive, rt->workerThreadState != nullptr);
+#endif
+}
 
 bool
 ThreadSafeContext::isForkJoinSlice() const
