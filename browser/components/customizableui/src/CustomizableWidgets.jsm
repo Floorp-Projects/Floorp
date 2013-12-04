@@ -799,6 +799,8 @@ const CustomizableWidgets = [{
 if (isWin8OrHigher()) {
   CustomizableWidgets.push({
     id: "switch-to-metro-button",
+    label: "switch-to-metro-button2.label",
+    tooltiptext: "switch-to-metro-button2.tooltiptext",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
