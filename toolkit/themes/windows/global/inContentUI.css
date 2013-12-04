@@ -16,7 +16,9 @@
   background-repeat: repeat;
   color: -moz-dialogText;
   background-color: -moz-dialog;
-  background-image: /* Texture */
+  background-image: /* Fade-out texture at the top, and blend with browser tab */
+                    linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0) 30%),
+                    /* Texture */
                     url("chrome://global/skin/inContentUI/background-texture.png");
 }
 
@@ -29,7 +31,9 @@ html|html {
   *|*:root {
     color: #000;
     background-color: #CCD9EA;
-    background-image: /* Texture */
+    background-image: /* Fade-out texture at the top */
+                      linear-gradient(rgb(237,245,252), rgba(237,245,252,0) 156px),
+                      /* Texture */
                       url("chrome://global/skin/inContentUI/background-texture.png");
   }
 }
@@ -38,7 +42,9 @@ html|html {
   *|*:root {
     color: #000;
     /* Blame shorlander for this monstrosity. */
-    background-image: /* Side gradients */
+    background-image: /* Fade-out texture and light beams at the top */
+                      linear-gradient(rgb(237,245,252) 3px, rgba(237,245,252,0) 156px),
+                      /* Side gradients */
                       linear-gradient(to right,
                                       rgba(255,255,255,0.2), rgba(255,255,255,0) 40%,
                                       rgba(255,255,255,0) 60%, rgba(255,255,255,0.2)),
