@@ -5025,6 +5025,19 @@ if (!${obj}) {
                     self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'owned'))
 
         if self.idlNode.isAttr() and self.idlNode.slotIndex is not None:
+            # For the case of Cached attributes, go ahead and preserve our
+            # wrapper if needed.  We need to do this because otherwise the
+            # wrapper could get garbage-collected and the cached value would
+            # suddenly disappear, but the whole premise of cached values is that
+            # they never change without explicit action on someone's part.  We
+            # don't do this for StoreInSlot, since those get dealt with during
+            # wrapper setup, and failure would involve us trying to clear an
+            # already-preserved wrapper.
+            if (self.idlNode.getExtendedAttribute("Cached") and
+                self.descriptor.wrapperCache):
+                preserveWrapper = "  PreserveWrapper(self);\n"
+            else:
+                preserveWrapper = ""
             successCode = (
                 "// Be careful here: Have to wrap the value into the\n"
                 "// compartment of reflector before storing, since we might\n"
@@ -5037,9 +5050,10 @@ if (!${obj}) {
                 "    return false;\n"
                 "  }\n"
                 "  js::SetReservedSlot(reflector, %d, tempVal);\n"
+                "%s"
                 "}\n"
                 "return true;" %
-                memberReservedSlot(self.idlNode))
+                (memberReservedSlot(self.idlNode), preserveWrapper))
         else:
             successCode = None
 
