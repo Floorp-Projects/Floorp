@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2013 Glenn Randers-Pehrson
  * Written by Mans Rullgard, 2011.
- * Last changed in libpng 1.6.5 [September 16, 2013]
+ * Last changed in libpng 1.6.6 [September 16, 2013]
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -154,6 +154,16 @@ png_have_neon(png_structp png_ptr)
 void
 png_init_filter_functions_neon(png_structp pp, unsigned int bpp)
 {
+   /* The switch statement is compiled in for ARM_NEON_API, the call to
+    * png_have_neon is compiled in for ARM_NEON_CHECK.  If both are defined
+    * the check is only performed if the API has not set the NEON option on
+    * or off explicitly.  In this case the check controls what happens.
+    *
+    * If the CHECK is not compiled in and the option is UNSET the behavior prior
+    * to 1.6.7 was to use the NEON code - this was a bug caused by having the
+    * wrong order of the 'ON' and 'default' cases.  UNSET now defaults to OFF,
+    * as documented in png.h
+    */
 #ifdef PNG_ARM_NEON_API_SUPPORTED
    switch ((pp->options >> PNG_ARM_NEON) & 3)
    {
@@ -178,13 +188,14 @@ png_init_filter_functions_neon(png_structp pp, unsigned int bpp)
          break;
 #endif
 #endif /* PNG_ARM_NEON_CHECK_SUPPORTED */
+
 #ifdef PNG_ARM_NEON_API_SUPPORTED
+      default: /* OFF or INVALID */
+         return;
+
       case PNG_OPTION_ON:
          /* Option turned on */
          break;
-
-      default: /* OFF or INVALID */
-         return;
    }
 #endif
 
