@@ -34,6 +34,7 @@ chrome.jar:
 * content/flyoutpanels/FlyoutPanelsUI.js       (content/flyoutpanels/FlyoutPanelsUI.js)
 * content/flyoutpanels/AboutFlyoutPanel.js     (content/flyoutpanels/AboutFlyoutPanel.js)
   content/flyoutpanels/PrefsFlyoutPanel.js     (content/flyoutpanels/PrefsFlyoutPanel.js)
+  content/flyoutpanels/SearchFlyoutPanel.js    (content/flyoutpanels/SearchFlyoutPanel.js)
 #ifdef MOZ_SERVICES_SYNC
   content/flyoutpanels/SyncFlyoutPanel.js      (content/flyoutpanels/SyncFlyoutPanel.js)
 #endif
