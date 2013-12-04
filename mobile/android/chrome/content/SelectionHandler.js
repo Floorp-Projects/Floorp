@@ -353,7 +353,8 @@ var SelectionHandler = {
         SelectionHandler.copySelection();
         aElement.value = aElement.value.substring(0, start) + aElement.value.substring(end)
 
-        SelectionHandler._updateMenu();
+        // copySelection closes the selection. Show a caret where we just cut the text.
+        SelectionHandler.attachCaret(aElement);
       },
       selector: ClipboardHelper.cutContext,
     },
@@ -364,7 +365,6 @@ var SelectionHandler = {
       icon: "drawable://copy",
       action: function() {
         SelectionHandler.copySelection();
-        SelectionHandler._updateMenu();
       },
       selector: ClipboardHelper.getCopyContext(false)
     },
@@ -387,7 +387,6 @@ var SelectionHandler = {
       icon: "drawable://ic_menu_share",
       action: function() {
         SelectionHandler.shareSelection();
-        SelectionHandler._closeSelection();
       },
       showAsAction: function(aElement) {
         return !(aElement instanceof HTMLInputElement && aElement.mozIsTextField(false))
