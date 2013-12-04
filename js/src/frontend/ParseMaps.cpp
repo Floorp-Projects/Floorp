@@ -115,8 +115,8 @@ frontend::InitAtomMap(frontend::AtomIndexMap *indices, HeapPtrAtom *atoms)
         typedef AtomIndexMap::WordMap WordMap;
         const WordMap &wm = indices->asMap();
         for (WordMap::Range r = wm.all(); !r.empty(); r.popFront()) {
-            JSAtom *atom = r.front().key;
-            jsatomid index = r.front().value;
+            JSAtom *atom = r.front().key();
+            jsatomid index = r.front().value();
             JS_ASSERT(index < indices->count());
             atoms[index].init(atom);
         }

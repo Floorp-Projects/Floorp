@@ -101,8 +101,8 @@ JSCompartment::sweepCallsiteClones()
 {
     if (callsiteClones.initialized()) {
         for (CallsiteCloneTable::Enum e(callsiteClones); !e.empty(); e.popFront()) {
-            CallsiteCloneKey key = e.front().key;
-            JSFunction *fun = e.front().value;
+            CallsiteCloneKey key = e.front().key();
+            JSFunction *fun = e.front().value();
             if (!IsScriptMarked(&key.script) || !IsObjectMarked(&fun))
                 e.removeFront();
         }
@@ -128,7 +128,7 @@ js::ExistingCloneFunctionAtCallsite(const CallsiteCloneTable &table, JSFunction 
 
     CallsiteCloneTable::Ptr p = table.lookup(CallsiteCloneKey(fun, script, script->pcToOffset(pc)));
     if (p)
-        return p->value;
+        return p->value();
 
     return nullptr;
 }

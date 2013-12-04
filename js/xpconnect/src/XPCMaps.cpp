@@ -85,7 +85,7 @@ void
 JSObject2WrappedJSMap::FindDyingJSObjects(nsTArray<nsXPCWrappedJS*>* dying)
 {
     for (Map::Range r = mTable.all(); !r.empty(); r.popFront()) {
-        nsXPCWrappedJS* wrapper = r.front().value;
+        nsXPCWrappedJS* wrapper = r.front().value();
         MOZ_ASSERT(wrapper, "found a null JS wrapper!");
 
         // walk the wrapper chain and find any whose JSObject is to be finalized
@@ -101,7 +101,7 @@ void
 JSObject2WrappedJSMap::ShutdownMarker()
 {
     for (Map::Range r = mTable.all(); !r.empty(); r.popFront()) {
-        nsXPCWrappedJS* wrapper = r.front().value;
+        nsXPCWrappedJS* wrapper = r.front().value();
         MOZ_ASSERT(wrapper, "found a null JS wrapper!");
         MOZ_ASSERT(wrapper->IsValid(), "found an invalid JS wrapper!");
         wrapper->SystemIsBeingShutDown();

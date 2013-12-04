@@ -210,16 +210,6 @@ public:
   float ComputeRenderIntegrity();
 
   /**
-   * Try to open |aDescriptor| for direct texturing.  If the
-   * underlying surface supports direct texturing, a non-null
-   * TextureImage is returned.  Otherwise null is returned.
-   */
-  static already_AddRefed<gl::TextureImage>
-  OpenDescriptorForDirectTexturing(gl::GLContext* aContext,
-                                   const SurfaceDescriptor& aDescriptor,
-                                   GLenum aWrapMode);
-
-  /**
    * returns true if PlatformAllocBuffer will return a buffer that supports
    * direct texturing
    */
@@ -240,6 +230,14 @@ public:
   }
 
   bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
+
+  /**
+   * LayerManagerComposite provides sophisticated debug overlays
+   * that can request a next frame.
+   */
+  bool DebugOverlayWantsNextFrame() { return mDebugOverlayWantsNextFrame; }
+  void SetDebugOverlayWantsNextFrame(bool aVal)
+  { mDebugOverlayWantsNextFrame = aVal; }
 
 private:
   /** Region we're clipping our current drawing to. */
@@ -287,6 +285,7 @@ private:
   bool mIsCompositorReady;
   nsIntRegion mInvalidRegion;
   nsAutoPtr<LayerProperties> mClonedLayerTreeProperties;
+  bool mDebugOverlayWantsNextFrame;
 };
 
 /**

@@ -60,8 +60,8 @@ class HashMap
     struct MapHashPolicy : HashPolicy
     {
         typedef Key KeyType;
-        static const Key &getKey(TableEntry &e) { return e.key; }
-        static void setKey(TableEntry &e, Key &k) { HashPolicy::rekey(const_cast<Key &>(e.key), k); }
+        static const Key &getKey(TableEntry &e) { return e.key(); }
+        static void setKey(TableEntry &e, Key &k) { HashPolicy::rekey(e.mutableKey(), k); }
     };
 
     typedef detail::HashTable<TableEntry, MapHashPolicy, AllocPolicy> Impl;
@@ -151,7 +151,7 @@ class HashMap
     template<typename KeyInput, typename ValueInput>
     bool relookupOrAdd(AddPtr &p, KeyInput &&k, ValueInput &&v) {
         Entry e(mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
-        return impl.relookupOrAdd(p, e.key, mozilla::Move(e));
+        return impl.relookupOrAdd(p, e.key(), mozilla::Move(e));
     }
 
     // |all()| returns a Range containing |count()| elements. E.g.:
@@ -223,7 +223,7 @@ class HashMap
     bool put(KeyInput &&k, ValueInput &&v) {
         AddPtr p = lookupForAdd(k);
         if (p) {
-            p->value = mozilla::Forward<ValueInput>(v);
+            p->value() = mozilla::Forward<ValueInput>(v);
             return true;
         }
         return add(p, mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
@@ -233,7 +233,7 @@ class HashMap
     template<typename KeyInput, typename ValueInput>
     bool putNew(KeyInput &&k, ValueInput &&v) {
         Entry e(mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
-        return impl.putNew(e.key, mozilla::Move(e));
+        return impl.putNew(e.key(), mozilla::Move(e));
     }
 
     // Add (k,defaultValue) if |k| is not found. Return a false-y Ptr on oom.
@@ -616,25 +616,37 @@ struct DefaultHasher<float>
 template <class Key, class Value>
 class HashMapEntry
 {
+    Key key_;
+    Value value_;
+
     template <class, class, class> friend class detail::HashTable;
     template <class> friend class detail::HashTableEntry;
+    template <class, class, class, class> friend class HashMap;
 
-    HashMapEntry(const HashMapEntry &) MOZ_DELETE;
-    void operator=(const HashMapEntry &) MOZ_DELETE;
+    Key & mutableKey() { return key_; }
 
   public:
     template<typename KeyInput, typename ValueInput>
     HashMapEntry(KeyInput &&k, ValueInput &&v)
-      : key(mozilla::Forward<KeyInput>(k)), value(mozilla::Forward<ValueInput>(v)) { }
+      : key_(mozilla::Forward<KeyInput>(k)),
+        value_(mozilla::Forward<ValueInput>(v))
+    {}
 
     HashMapEntry(HashMapEntry &&rhs)
-      : key(mozilla::Move(const_cast<Key &>(rhs.key))), value(mozilla::Move(rhs.value)) { }
+      : key_(mozilla::Move(rhs.key_)),
+        value_(mozilla::Move(rhs.value_))
+    {}
 
     typedef Key KeyType;
     typedef Value ValueType;
 
-    const Key key;
-    Value value;
+    const Key & key() const { return key_; }
+    const Value & value() const { return value_; }
+    Value & value() { return value_; }
+
+  private:
+    HashMapEntry(const HashMapEntry &) MOZ_DELETE;
+    void operator=(const HashMapEntry &) MOZ_DELETE;
 };
 
 } // namespace js

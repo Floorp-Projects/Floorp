@@ -80,7 +80,7 @@ define check_test_error_internal
   if test "$$errors" ; then \
 	  echo '$@ failed:'; \
 	  echo "$$errors"; \
-          $(if $(1),echo $(1)); \
+          $(if $(1),echo $(1);) \
 	  exit 1; \
   fi
 endef

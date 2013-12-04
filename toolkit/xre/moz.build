@@ -22,15 +22,15 @@ if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += ['nsWindowsDllInterceptor.h']
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsNativeAppSupportWin.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS += ['MacQuirks.h']
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsCommandLineServiceMac.cpp',
     ]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'MacApplicationDelegate.mm',
         'MacAutoreleasePool.mm',
         'MacLaunchHelper.mm',
@@ -50,48 +50,53 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
         'nsNativeAppSupportOS2.cpp',
     ]
 elif CONFIG['MOZ_ENABLE_GTK']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsNativeAppSupportUnix.cpp',
     ]
 else:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsNativeAppSupportDefault.cpp',
     ]
 
 if CONFIG['MOZ_X11']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsX11ErrorHandler.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsAndroidStartup.cpp',
     ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'CreateAppData.cpp',
-    'nsAppRunner.cpp',
     'nsConsoleWriter.cpp',
-    'nsEmbedFunctions.cpp',
     'nsNativeAppSupportBase.cpp',
     'nsSigHandlers.cpp',
     'nsXREDirProvider.cpp',
     'ProfileReset.cpp',
 ]
 
+# nsAppRunner.cpp cannot be built in unified mode because it pulls in OS X system headers.
+# nsEmbedFunctions.cpp cannot be built in unified mode because it pulls in X11 headers.
+SOURCES += [
+    'nsAppRunner.cpp',
+    'nsEmbedFunctions.cpp',
+]
+
 if CONFIG['MOZ_GL_DEFAULT_PROVIDER'] == 'GLX':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'glxtest.cpp',
     ]
 
 if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'EventTracer.cpp',
     ]
 
 if CONFIG['MOZ_UPDATER']:
     if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
-        SOURCES += [
+        UNIFIED_SOURCES += [
             'nsUpdateDriver.cpp',
         ]
 

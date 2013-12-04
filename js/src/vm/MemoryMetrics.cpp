@@ -289,7 +289,7 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
                                     normalStringThingSize, strCharsSize);
                 zStats->strings.add(p, str, info);
             } else {
-                p->value.add(shortStringThingSize, normalStringThingSize, strCharsSize);
+                p->value().add(shortStringThingSize, normalStringThingSize, strCharsSize);
             }
         }
 
@@ -393,8 +393,8 @@ FindNotableStrings(ZoneStats &zStats)
 
     for (ZoneStats::StringsHashMap::Range r = zStats.strings.all(); !r.empty(); r.popFront()) {
 
-        JSString *str = r.front().key;
-        StringInfo &info = r.front().value;
+        JSString *str = r.front().key();
+        StringInfo &info = r.front().value();
 
         // If this string is too small, or if we can't grow the notableStrings
         // vector, skip this string.

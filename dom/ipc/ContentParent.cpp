@@ -627,6 +627,7 @@ ContentParent::Init()
         obs->AddObserver(this, "memory-pressure", false);
         obs->AddObserver(this, "child-gc-request", false);
         obs->AddObserver(this, "child-cc-request", false);
+        obs->AddObserver(this, "child-mmu-request", false);
         obs->AddObserver(this, "last-pb-context-exited", false);
         obs->AddObserver(this, "file-watcher-update", false);
 #ifdef MOZ_WIDGET_GONK
@@ -1008,6 +1009,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         obs->RemoveObserver(static_cast<nsIObserver*>(this), NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-gc-request");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-cc-request");
+        obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-mmu-request");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "last-pb-context-exited");
         obs->RemoveObserver(static_cast<nsIObserver*>(this), "file-watcher-update");
 #ifdef MOZ_WIDGET_GONK
@@ -1836,6 +1838,9 @@ ContentParent::Observe(nsISupports* aSubject,
     }
     else if (!strcmp(aTopic, "child-cc-request")){
         unused << SendCycleCollect();
+    }
+    else if (!strcmp(aTopic, "child-mmu-request")){
+        unused << SendMinimizeMemoryUsage();
     }
     else if (!strcmp(aTopic, "last-pb-context-exited")) {
         unused << SendLastPrivateDocShellDestroyed();

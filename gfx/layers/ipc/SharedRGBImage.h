@@ -91,7 +91,7 @@ public:
 protected:
   gfxIntSize mSize;
   gfxImageFormat mImageFormat;
-  ISurfaceAllocator* mSurfaceAllocator;
+  RefPtr<ISurfaceAllocator> mSurfaceAllocator;
 
   bool mAllocated;
   ipc::Shmem *mShmem;

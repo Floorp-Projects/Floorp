@@ -76,14 +76,14 @@ test_finalizer_rel_size_t_return_size_t(size_t i)
   return i;
 }
 
-RECT
+myRECT
 test_finalizer_rel_size_t_return_struct_t(size_t i)
 {
   if (-- gFinalizerTestResources[i] < 0) {
     MOZ_CRASH("Assertion failed");
   }
   const int32_t narrowed = (int32_t)i;
-  RECT result = { narrowed, narrowed, narrowed, narrowed };
+  myRECT result = { narrowed, narrowed, narrowed, narrowed };
   return result;
 }
 
@@ -267,20 +267,20 @@ test_finalizer_cmp_string_t(char *a, char *b)
   return !strncmp(a, b, 10);
 }
 
-// Resource type: RECT
+// Resource type: myRECT
 
 // Acquire resource i
-RECT
+myRECT
 test_finalizer_acq_struct_t(int i)
 {
   gFinalizerTestResources[i] = 1;
-  RECT result = { i, i, i, i };
+  myRECT result = { i, i, i, i };
   return result;
 }
 
 // Release resource i
 void
-test_finalizer_rel_struct_t(RECT i)
+test_finalizer_rel_struct_t(myRECT i)
 {
   int index = i.top;
   if (index < 0 || index >= (int)gFinalizerTestSize) {
@@ -290,7 +290,7 @@ test_finalizer_rel_struct_t(RECT i)
 }
 
 bool
-test_finalizer_struct_resource_is_acquired(RECT i)
+test_finalizer_struct_resource_is_acquired(myRECT i)
 {
   int index = i.top;
   if (index < 0 || index >= (int)gFinalizerTestSize) {
@@ -300,7 +300,7 @@ test_finalizer_struct_resource_is_acquired(RECT i)
 }
 
 bool
-test_finalizer_cmp_struct_t(RECT a, RECT b)
+test_finalizer_cmp_struct_t(myRECT a, myRECT b)
 {
   return a.top == b.top;
 }

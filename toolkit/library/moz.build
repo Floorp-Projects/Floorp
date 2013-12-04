@@ -18,6 +18,8 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'nsDllMain.cpp',
     ]
 
+FAIL_ON_WARNINGS = True
+
 MSVC_ENABLE_PGO = True
 
 FORCE_SHARED_LIB = True

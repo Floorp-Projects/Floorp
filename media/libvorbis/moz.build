@@ -9,15 +9,12 @@ EXPORTS.vorbis += [
     'include/vorbis/vorbisenc.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'lib/vorbis_analysis.c',
     'lib/vorbis_bitrate.c',
     'lib/vorbis_block.c',
-    'lib/vorbis_codebook.c',
     'lib/vorbis_envelope.c',
     'lib/vorbis_floor0.c',
-    'lib/vorbis_floor1.c',
-    'lib/vorbis_info.c',
     'lib/vorbis_lookup.c',
     'lib/vorbis_lpc.c',
     'lib/vorbis_lsp.c',
@@ -25,12 +22,19 @@ SOURCES += [
     'lib/vorbis_mdct.c',
     'lib/vorbis_psy.c',
     'lib/vorbis_registry.c',
-    'lib/vorbis_res0.c',
     'lib/vorbis_sharedbook.c',
     'lib/vorbis_smallft.c',
     'lib/vorbis_synthesis.c',
-    'lib/vorbis_window.c',
     'lib/vorbisenc.c',
+]
+
+# These files can't be unified because of function redefinitions.
+SOURCES += [
+    'lib/vorbis_codebook.c',
+    'lib/vorbis_floor1.c',
+    'lib/vorbis_info.c',
+    'lib/vorbis_res0.c',
+    'lib/vorbis_window.c',
 ]
 
 LOCAL_INCLUDES += ['lib']

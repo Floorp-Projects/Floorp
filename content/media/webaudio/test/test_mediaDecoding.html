@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test the decodeAudioData API</title>
+  <title>Test the decodeAudioData API and Resampling</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -229,32 +229,104 @@ function getFuzzTolerance(test) {
   return kIsMobile ? test.fuzzToleranceMobile : test.fuzzTolerance;
 }
 
+function bufferIsSilent(buffer) {
+  for (var i = 0; i < buffer.length; ++i) {
+    if (buffer.getChannelData(0)[i] != 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function checkAudioBuffer(buffer, test) {
-  is(buffer.numberOfChannels, test.numberOfChannels, "Correct number of channels");
+  if (buffer.numberOfChannels != test.numberOfChannels) {
+    is(buffer.numberOfChannels, test.numberOfChannels, "Correct number of channels");
+    return;
+  }
   ok(Math.abs(buffer.duration - test.duration) < 1e-3, "Correct duration");
   if (Math.abs(buffer.duration - test.duration) >= 1e-3) {
     ok(false, "got: " + buffer.duration  + ", expected: " + test.duration);
   }
   is(buffer.sampleRate, test.sampleRate, "Correct sample rate");
-  // Take into account the resampling when checking the size
-  var expectedLength = test.frames * buffer.sampleRate / test.sampleRate;
-  ok(Math.abs(buffer.length - expectedLength) < 1.0, "Correct length", "got " + buffer.length + ", expected about " + expectedLength);
+  is(buffer.length, test.frames, "Correct length");
 
   var wave = createWaveFileData(buffer);
   ok(fuzzyMemcmp(wave, test.expectedWaveData, getFuzzTolerance(test)), "Received expected decoded data");
 }
 
+function checkResampledBuffer(buffer, test, callback) {
+  if (buffer.numberOfChannels != test.numberOfChannels) {
+    is(buffer.numberOfChannels, test.numberOfChannels, "Correct number of channels");
+    return;
+  }
+  ok(Math.abs(buffer.duration - test.duration) < 1e-3, "Correct duration");
+  if (Math.abs(buffer.duration - test.duration) >= 1e-3) {
+    ok(false, "got: " + buffer.duration  + ", expected: " + test.duration);
+  }
+  // Take into account the resampling when checking the size
+  var expectedLength = test.frames * buffer.sampleRate / test.sampleRate;
+  ok(Math.abs(buffer.length - expectedLength) < 1.0, "Correct length", "got " + buffer.length + ", expected about " + expectedLength);
+
+  // Playback the buffer in the original context, to resample back to the
+  // original rate and compare with the decoded buffer without resampling.
+  cx = test.nativeContext;
+  var expected = cx.createBufferSource();
+  expected.buffer = test.expectedBuffer;
+  expected.start();
+  var inverse = cx.createGain();
+  inverse.gain.value = -1;
+  expected.connect(inverse);
+  inverse.connect(cx.destination);
+  var resampled = cx.createBufferSource();
+  resampled.buffer = buffer;
+  resampled.start();
+  // This stop should do nothing, but it tests for bug 937475
+  resampled.stop(test.frames / cx.sampleRate);
+  resampled.connect(cx.destination);
+  cx.oncomplete = function(e) {
+    ok(!bufferIsSilent(e.renderedBuffer), "Expect buffer not silent");
+    // Resampling will lose the highest frequency components, so we should
+    // pass the difference through a low pass filter.  However, either the
+    // input files don't have significant high frequency components or the
+    // tolerance in compareBuffers() is too high to detect them.
+    compareBuffers(e.renderedBuffer,
+                   cx.createBuffer(test.numberOfChannels,
+                                   test.frames, test.sampleRate));
+    callback();
+  }
+  cx.startRendering();
+}
+
+function runResampling(test, response, callback) {
+  var sampleRate = test.sampleRate == 44100 ? 48000 : 44100;
+  var cx = new OfflineAudioContext(1, 1, sampleRate);
+  cx.decodeAudioData(response, function onSuccess(asyncResult) {
+    is(asyncResult.sampleRate, sampleRate, "Correct sample rate");
+    syncResult = cx.createBuffer(response, false);
+    compareBuffers(syncResult, asyncResult);
+
+    checkResampledBuffer(asyncResult, test, callback);
+  }, function onFailure() {
+    ok(false, "Expected successful decode with resample");
+    callback();
+  });
+}
+
 function runTest(test, response, callback) {
   var expectCallback = false;
-  var cx = new OfflineAudioContext(1, 1, test.sampleRate);
+  var cx = new OfflineAudioContext(test.numberOfChannels || 1,
+                                   test.frames || 1, test.sampleRate);
   cx.decodeAudioData(response, function onSuccess(asyncResult) {
     ok(expectCallback, "Success callback should fire asynchronously");
     ok(test.valid, "Did expect success for test " + test.url);
-    checkAudioBuffer(asyncResult, test);
 
     syncResult = cx.createBuffer(response, false);
     compareBuffers(syncResult, asyncResult);
-    callback();
+    checkAudioBuffer(asyncResult, test);
+
+    test.expectedBuffer = asyncResult;
+    test.nativeContext = cx;
+    runResampling(test, response, callback);
   }, function onFailure() {
     ok(expectCallback, "Failure callback should fire asynchronously");
     ok(!test.valid, "Did expect failure for test " + test.url);

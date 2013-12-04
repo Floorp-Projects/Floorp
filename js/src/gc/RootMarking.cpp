@@ -474,11 +474,11 @@ AutoGCRooter::trace(JSTracer *trc)
       case OBJOBJHASHMAP: {
         AutoObjectObjectHashMap::HashMapImpl &map = static_cast<AutoObjectObjectHashMap *>(this)->map;
         for (AutoObjectObjectHashMap::Enum e(map); !e.empty(); e.popFront()) {
-            MarkObjectRoot(trc, &e.front().value, "AutoObjectObjectHashMap value");
-            JS_SET_TRACING_LOCATION(trc, (void *)&e.front().key);
-            JSObject *key = e.front().key;
+            MarkObjectRoot(trc, &e.front().value(), "AutoObjectObjectHashMap value");
+            JS_SET_TRACING_LOCATION(trc, (void *)&e.front().key());
+            JSObject *key = e.front().key();
             MarkObjectRoot(trc, &key, "AutoObjectObjectHashMap key");
-            if (key != e.front().key)
+            if (key != e.front().key())
                 e.rekeyFront(key);
         }
         return;
@@ -488,9 +488,9 @@ AutoGCRooter::trace(JSTracer *trc)
         AutoObjectUnsigned32HashMap *self = static_cast<AutoObjectUnsigned32HashMap *>(this);
         AutoObjectUnsigned32HashMap::HashMapImpl &map = self->map;
         for (AutoObjectUnsigned32HashMap::Enum e(map); !e.empty(); e.popFront()) {
-            JSObject *key = e.front().key;
+            JSObject *key = e.front().key();
             MarkObjectRoot(trc, &key, "AutoObjectUnsignedHashMap key");
-            if (key != e.front().key)
+            if (key != e.front().key())
                 e.rekeyFront(key);
         }
         return;
@@ -684,16 +684,18 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
 
     for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {
         const RootEntry &entry = r.front();
-        const char *name = entry.value.name ? entry.value.name : "root";
-        if (entry.value.type == JS_GC_ROOT_VALUE_PTR) {
-            MarkValueRoot(trc, reinterpret_cast<Value *>(entry.key), name);
-        } else if (*reinterpret_cast<void **>(entry.key)){
-            if (entry.value.type == JS_GC_ROOT_STRING_PTR)
-                MarkStringRoot(trc, reinterpret_cast<JSString **>(entry.key), name);
-            else if (entry.value.type == JS_GC_ROOT_OBJECT_PTR)
-                MarkObjectRoot(trc, reinterpret_cast<JSObject **>(entry.key), name);
-            else if (entry.value.type == JS_GC_ROOT_SCRIPT_PTR)
-                MarkScriptRoot(trc, reinterpret_cast<JSScript **>(entry.key), name);
+        const char *name = entry.value().name ? entry.value().name : "root";
+        JSGCRootType type = entry.value().type;
+        void *key = entry.key();
+        if (type == JS_GC_ROOT_VALUE_PTR) {
+            MarkValueRoot(trc, reinterpret_cast<Value *>(key), name);
+        } else if (*reinterpret_cast<void **>(key)){
+            if (type == JS_GC_ROOT_STRING_PTR)
+                MarkStringRoot(trc, reinterpret_cast<JSString **>(key), name);
+            else if (type == JS_GC_ROOT_OBJECT_PTR)
+                MarkObjectRoot(trc, reinterpret_cast<JSObject **>(key), name);
+            else if (type == JS_GC_ROOT_SCRIPT_PTR)
+                MarkScriptRoot(trc, reinterpret_cast<JSScript **>(key), name);
             else
                 MOZ_ASSUME_UNREACHABLE("unexpected js::RootInfo::type value");
         }

@@ -10,6 +10,7 @@
 #include "FPSCounter.h"                 // for FPSState, FPSCounter
 #include "GLContextProvider.h"          // for GLContextProvider
 #include "GLContext.h"                  // for GLContext
+#include "GLUploadHelpers.h"
 #include "Layers.h"                     // for WriteSnapshotToDumpFile
 #include "LayerScope.h"                 // for LayerScope
 #include "gfx2DGlue.h"                  // for ThebesFilter
@@ -581,7 +582,7 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
   GLenum wrapMode = aTexture->AsSourceOGL()->GetWrapMode();
 
   IntSize realTexSize = aTexture->GetSize();
-  if (!mGLContext->CanUploadNonPowerOfTwo()) {
+  if (!CanUploadNonPowerOfTwo(mGLContext)) {
     realTexSize = IntSize(NextPowerOfTwo(realTexSize.width),
                           NextPowerOfTwo(realTexSize.height));
   }
@@ -756,7 +757,7 @@ bool CompositorOGL::sDrawFPS = false;
 static IntSize
 CalculatePOTSize(const IntSize& aSize, GLContext* gl)
 {
-  if (gl->CanUploadNonPowerOfTwo())
+  if (CanUploadNonPowerOfTwo(gl))
     return aSize;
 
   return IntSize(NextPowerOfTwo(aSize.width), NextPowerOfTwo(aSize.height));
@@ -1501,7 +1502,7 @@ CompositorOGL::CreateDataTextureSource(TextureFlags aFlags)
 bool
 CompositorOGL::SupportsPartialTextureUpdate()
 {
-  return mGLContext->CanUploadSubTextures();
+  return CanUploadSubTextures(mGLContext);
 }
 
 int32_t
