@@ -15,7 +15,8 @@ PARALLEL_DIRS += [
     'xul/base/src',
     'ipc',
     'mathml',
-    'inspector',
+    'inspector/public',
+    'inspector/src',
     'tools/recording',
 ]
 
@@ -27,6 +28,8 @@ if CONFIG['MOZ_XUL']:
 
 if CONFIG['ENABLE_TESTS']:
     PARALLEL_DIRS += [
+        'inspector/tests',
+        'inspector/tests/chrome',
         'mathml/tests',
         'xul/test',
         'xul/base/test',
