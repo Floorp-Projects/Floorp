@@ -139,6 +139,3 @@ SpecialPowersManager.prototype = {
 };
 
 var specialpowersmanager = new SpecialPowersManager();
-
-this.SpecialPowers = SpecialPowers;
-this.attachSpecialPowersToWindow = attachSpecialPowersToWindow;

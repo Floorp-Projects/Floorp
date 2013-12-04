@@ -37,13 +37,13 @@ XPCOMUtils.defineLazyServiceGetter(this, "gFocusManager",
 XPCOMUtils.defineLazyServiceGetter(this, "gDOMUtils",
   "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
-this.XULDocument = Ci.nsIDOMXULDocument;
-this.HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
-this.HTMLIFrameElement = Ci.nsIDOMHTMLIFrameElement;
-this.HTMLFrameElement = Ci.nsIDOMHTMLFrameElement;
-this.HTMLFrameSetElement = Ci.nsIDOMHTMLFrameSetElement;
-this.HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
-this.HTMLOptionElement = Ci.nsIDOMHTMLOptionElement;
+let XULDocument = Ci.nsIDOMXULDocument;
+let HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
+let HTMLIFrameElement = Ci.nsIDOMHTMLIFrameElement;
+let HTMLFrameElement = Ci.nsIDOMHTMLFrameElement;
+let HTMLFrameSetElement = Ci.nsIDOMHTMLFrameSetElement;
+let HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
+let HTMLOptionElement = Ci.nsIDOMHTMLOptionElement;
 
 const kReferenceDpi = 240; // standard "pixel" size used in some preferences
 
@@ -82,7 +82,6 @@ function getBoundingContentRect(aElement) {
 
   return new Rect(r.left + offset.x, r.top + offset.y, r.width, r.height);
 }
-this.getBoundingContentRect = getBoundingContentRect;
 
 /*
  * getOverflowContentBoundingRect
@@ -109,7 +108,6 @@ function getOverflowContentBoundingRect(aElement) {
 
   return r;
 }
-this.getOverflowContentBoundingRect = getOverflowContentBoundingRect;
 
 /*
  * Content
@@ -586,6 +584,5 @@ var FormSubmitObserver = {
     return this;
   }
 };
-this.Content = Content;
 
 FormSubmitObserver.init();
