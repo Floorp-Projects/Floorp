@@ -26,6 +26,9 @@ ENUMERATE_HOOK_NAME= '_enumerate'
 ENUM_ENTRY_VARIABLE_NAME = 'strings'
 INSTANCE_RESERVED_SLOTS = 3
 
+def memberReservedSlot(member):
+    return INSTANCE_RESERVED_SLOTS + member.slotIndex
+
 def replaceFileIfChanged(filename, newContents):
     """
     Read a copy of the old file, so that we don't touch it if it hasn't changed.
@@ -2437,8 +2440,6 @@ class CGUpdateMemberSlotsMethod(CGAbstractMethod):
     def definition_body(self):
         slotMembers = (m for m in self.descriptor.interface.members if
                        m.isAttr() and m.getExtendedAttribute("StoreInSlot"))
-        def slotIndex(member):
-            return member.slotIndex + INSTANCE_RESERVED_SLOTS
         storeSlots = (
             CGGeneric(
                 'static_assert(%d < js::shadow::Object::MAX_FIXED_SLOTS,\n'
@@ -2446,9 +2447,10 @@ class CGUpdateMemberSlotsMethod(CGAbstractMethod):
                 "if (!get_%s(aCx, aWrapper, aObject, args)) {\n"
                 "  return false;\n"
                 "}\n"
-                "js::SetReservedSlot(aWrapper, %d, args.rval());" %
-                (slotIndex(m), self.descriptor.interface.identifier.name,
-                 m.identifier.name, m.identifier.name, slotIndex(m)))
+                "// Getter handled setting our reserved slots" %
+                (memberReservedSlot(m),
+                 self.descriptor.interface.identifier.name,
+                 m.identifier.name, m.identifier.name))
             for m in slotMembers)
         body = CGList(storeSlots, "\n\n")
         body.prepend(CGGeneric("JS::Rooted<JS::Value> temp(aCx);\n"
@@ -5022,9 +5024,30 @@ if (!${obj}) {
                    (self.returnType.isGeckoInterface() and
                     self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'owned'))
 
+        if self.idlNode.isAttr() and self.idlNode.slotIndex is not None:
+            successCode = (
+                "// Be careful here: Have to wrap the value into the\n"
+                "// compartment of reflector before storing, since we might\n"
+                "// be coming in via Xrays and the value is already in the\n"
+                "// caller compartment.\n"
+                "{ // Scope for tempVal\n"
+                "  JS::Rooted<JS::Value> tempVal(cx, args.rval());\n"
+                "  JSAutoCompartment ac(cx, reflector);\n"
+                "  if (!MaybeWrapValue(cx, &tempVal)) {\n"
+                "    return false;\n"
+                "  }\n"
+                "  js::SetReservedSlot(reflector, %d, tempVal);\n"
+                "}\n"
+                "return true;" %
+                memberReservedSlot(self.idlNode))
+        else:
+            successCode = None
+
         resultTemplateValues = { 'jsvalRef': 'args.rval()',
                                  'jsvalHandle': 'args.rval()',
-                                 'returnsNewObject': returnsNewObject}
+                                 'returnsNewObject': returnsNewObject,
+                                 'successCode': successCode,
+                                 }
         try:
             return wrapForType(self.returnType, self.descriptor,
                                resultTemplateValues)
@@ -5860,8 +5883,35 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
     def definition_body(self):
         nativeName = CGSpecializedGetter.makeNativeName(self.descriptor,
                                                         self.attr)
-        return CGIndenter(CGGetterCall(self.attr.type, nativeName,
-                                       self.descriptor, self.attr)).define()
+        if self.attr.slotIndex is not None:
+            if self.descriptor.hasXPConnectImpls:
+                raise TypeError("Interface '%s' has XPConnect impls, so we "
+                                "can't use our slot for property '%s'!" %
+                                (self.descriptor.interface.identifier.name,
+                                 self.attr.identifier.name))
+            prefix = (
+                "  // Have to either root across the getter call or reget after.\n"
+                "  JS::Rooted<JSObject*> reflector(cx);\n"
+                "  // Safe to do an unchecked unwrap, since we've gotten this far.\n"
+                "  // Also make sure to unwrap outer windows, since we want the\n"
+                "  // real DOM object.\n"
+                "  reflector = IsDOMObject(obj) ? obj : js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);\n"
+                "  {\n"
+                "    // Scope for cachedVal\n"
+                "    JS::Value cachedVal = js::GetReservedSlot(reflector, %d);\n"
+                "    if (!cachedVal.isUndefined()) {\n"
+                "      args.rval().set(cachedVal);\n"
+                "      // The cached value is in the compartment of reflector,\n"
+                "      // so wrap into the caller compartment as needed.\n"
+                "      return MaybeWrapValue(cx, args.rval());\n"
+                "    }\n"
+                "  }\n\n" % memberReservedSlot(self.attr))
+        else:
+            prefix = ""
+
+        return (prefix +
+                CGIndenter(CGGetterCall(self.attr.type, nativeName,
+                                        self.descriptor, self.attr)).define())
 
     @staticmethod
     def makeNativeName(descriptor, attr):
@@ -6097,7 +6147,7 @@ class CGMemberJITInfo(CGThing):
             getterinfal = getterinfal and infallibleForMember(self.member, self.member.type, self.descriptor)
             isInSlot = self.member.getExtendedAttribute("StoreInSlot")
             if isInSlot:
-                slotIndex = INSTANCE_RESERVED_SLOTS + self.member.slotIndex;
+                slotIndex = memberReservedSlot(self.member);
                 if slotIndex >= 16 : # JS engine currently allows 16 fixed slots
                     raise TypeError("Make sure we can actually have this many "
                                     "fixed slots, please!")
