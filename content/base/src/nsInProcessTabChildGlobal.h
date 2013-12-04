@@ -119,7 +119,7 @@ public:
 
   virtual JSContext* GetJSContextForEventHandlers() MOZ_OVERRIDE { return nsContentUtils::GetSafeJSContext(); }
   virtual nsIPrincipal* GetPrincipal() MOZ_OVERRIDE { return mPrincipal; }
-  void LoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope);
+  void LoadFrameScript(const nsAString& aURL);
   void Disconnect();
   void SendMessageToParent(const nsString& aMessage, bool aSync,
                            const nsString& aJSON,
