@@ -62,6 +62,7 @@ HashString(const nsACString& aStr)
  * nsCharPtrHashKey
  * nsUnicharPtrHashKey
  * nsHashableHashKey
+ * nsGenericHashKey
  */
 
 /**
@@ -583,6 +584,31 @@ public:
 
 private:
     nsCOMPtr<nsIHashable> mKey;
+};
+
+/**
+ * Hashtable key class to use with objects for which Hash() and operator==()
+ * are defined.
+ */
+template <typename T>
+class nsGenericHashKey : public PLDHashEntryHdr
+{
+public:
+  typedef const T& KeyType;
+  typedef const T* KeyTypePointer;
+
+  nsGenericHashKey(KeyTypePointer aKey) : mKey(*aKey) { }
+  nsGenericHashKey(const nsGenericHashKey<T>& aOther) : mKey(aOther.mKey) { }
+
+  KeyType GetKey() const { return mKey; }
+  bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mKey; }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return aKey->Hash(); }
+  enum { ALLOW_MEMMOVE = true };
+
+private:
+  T mKey;
 };
 
 #endif // nsTHashKeys_h__
