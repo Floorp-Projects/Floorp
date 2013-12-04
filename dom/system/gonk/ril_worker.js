@@ -6093,8 +6093,20 @@ RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = function UNSOLICITED_RESPONSE_
   this.acknowledgeGsmSms(result == PDU_FCS_OK, result);
 };
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = function UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM(length) {
-  // let info = Buf.readInt32List();
-  //TODO
+  let recordNumber = Buf.readInt32List()[0];
+
+  ICCRecordHelper.readSMS(
+    recordNumber,
+    function onsuccess(message) {
+      if (message && message.simStatus === 3) { //New Unread SMS
+        this._processSmsMultipart(message);
+      }
+    }.bind(this),
+    function onerror(errorMsg) {
+      if (DEBUG) {
+        debug("Failed to Read NEW SMS on SIM #" + recordNumber + ", errorMsg: " + errorMsg);
+      }
+    });
 };
 RIL[UNSOLICITED_ON_USSD] = function UNSOLICITED_ON_USSD() {
   let [typeCode, message] = Buf.readStringList();
@@ -10833,6 +10845,7 @@ let ICCFileHelper = {
     switch (fileId) {
       case ICC_EF_FDN:
       case ICC_EF_MSISDN:
+      case ICC_EF_SMS:
         return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
       case ICC_EF_AD:
       case ICC_EF_MBDN:
@@ -10869,6 +10882,7 @@ let ICCFileHelper = {
       case ICC_EF_CBMIR:
       case ICC_EF_OPL:
       case ICC_EF_PNN:
+      case ICC_EF_SMS:
         return EF_PATH_MF_SIM + EF_PATH_ADF_USIM;
       default:
         // The file ids in USIM phone book entries are decided by the
@@ -12240,6 +12254,46 @@ let SimRecordHelper = {
       index ++;
     }
     return plmnList;
+  },
+
+  /**
+   * Read the SMS from the ICC.
+   *
+   * @param recordNumber The number of the record shall be loaded.
+   * @param onsuccess    Callback to be called when success.
+   * @param onerror      Callback to be called when error.
+   */
+  readSMS: function readSMS(recordNumber, onsuccess, onerror) {
+    function callback(options) {
+      let strLen = Buf.readInt32();
+
+      // TS 51.011, 10.5.3 EF_SMS
+      // b3 b2 b1
+      //  0  0  1 message received by MS from network; message read
+      //  0  1  1 message received by MS from network; message to be read
+      //  1  1  1 MS originating message; message to be sent
+      //  1  0  1 MS originating message; message sent to the network:
+      let status = GsmPDUHelper.readHexOctet();
+
+      let message = GsmPDUHelper.readMessage();
+      message.simStatus = status;
+
+      // Consumes the remaining buffer
+      Buf.seekIncoming(Buf.getReadAvailable() - Buf.PDU_HEX_OCTET_SIZE);
+
+      Buf.readStringDelimiter(strLen);
+
+      if (message) {
+        onsuccess(message);
+      } else {
+        onerror("Failed to decode SMS on SIM #" + recordNumber);
+      }
+    }
+
+    ICCIOHelper.loadLinearFixedEF({fileId: ICC_EF_SMS,
+                                   recordNumber: recordNumber,
+                                   callback: callback,
+                                   onerror: onerror});
   },
 };
 
