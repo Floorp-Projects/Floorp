@@ -1560,11 +1560,13 @@ PluginModuleParent::AllocPCrashReporterParent(mozilla::dom::NativeThreadId* id,
 bool
 PluginModuleParent::DeallocPCrashReporterParent(PCrashReporterParent* actor)
 {
+#ifdef MOZ_CRASHREPORTER
 #ifdef XP_WIN
     mozilla::MutexAutoLock lock(mCrashReporterMutex);
     if (actor == static_cast<PCrashReporterParent*>(mCrashReporter)) {
         mCrashReporter = nullptr;
     }
+#endif
 #endif
     delete actor;
     return true;
