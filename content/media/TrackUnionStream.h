@@ -226,6 +226,15 @@ protected:
     for (GraphTime t = aFrom; t < aTo; t = next) {
       MediaInputPort::InputInterval interval = map->mInputPort->GetNextInputInterval(t);
       interval.mEnd = std::min(interval.mEnd, aTo);
+      StreamTime inputEnd = source->GraphTimeToStreamTime(interval.mEnd);
+      TrackTicks inputTrackEndPoint = TRACK_TICKS_MAX;
+
+      if (aInputTrack->IsEnded() &&
+          aInputTrack->GetEndTimeRoundDown() <= inputEnd) {
+        inputTrackEndPoint = aInputTrack->GetEnd();
+        *aOutputTrackFinished = true;
+      }
+
       if (interval.mStart >= interval.mEnd)
         break;
       next = interval.mEnd;
@@ -239,16 +248,6 @@ protected:
       TrackTicks endTicks = TimeToTicksRoundUp(rate, outputEnd);
       TrackTicks ticks = endTicks - startTicks;
       StreamTime inputStart = source->GraphTimeToStreamTime(interval.mStart);
-      StreamTime inputEnd = source->GraphTimeToStreamTime(interval.mEnd);
-      TrackTicks inputTrackEndPoint = TRACK_TICKS_MAX;
-
-      if (aInputTrack->IsEnded()) {
-        TrackTicks inputEndTicks = aInputTrack->TimeToTicksRoundDown(inputEnd);
-        if (aInputTrack->GetEnd() <= inputEndTicks) {
-          inputTrackEndPoint = aInputTrack->GetEnd();
-          *aOutputTrackFinished = true;
-        }
-      }
 
       if (interval.mInputIsBlocked) {
         // Maybe the input track ended?
