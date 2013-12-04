@@ -260,6 +260,7 @@ this.OnRefTestLoad = function OnRefTestLoad(win)
     if (gBrowserIsIframe) {
       gBrowser = gContainingWindow.document.createElementNS(XHTML_NS, "iframe");
       gBrowser.setAttribute("mozbrowser", "");
+      gBrowser.setAttribute("mozapp", prefs.getCharPref("browser.manifestURL"));
     } else {
       gBrowser = gContainingWindow.document.createElementNS(XUL_NS, "xul:browser");
     }
@@ -270,8 +271,8 @@ this.OnRefTestLoad = function OnRefTestLoad(win)
     // what size our window is
     gBrowser.setAttribute("style", "min-width: 800px; min-height: 1000px; max-width: 800px; max-height: 1000px");
 
-#if BOOTSTRAP
-#if REFTEST_B2G
+#ifdef BOOTSTRAP
+#ifdef REFTEST_B2G
     var doc = gContainingWindow.document.getElementsByTagName("html")[0];
 #else
     var doc = gContainingWindow.document.getElementById('main-window');
@@ -332,8 +333,8 @@ function InitAndStartRefTests()
                 var mfl = FileUtils.openFileOutputStream(f, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE);
                 // Set to mirror to stdout as well as the file
                 gDumpLog = function (msg) {
-#if BOOTSTRAP
-#if REFTEST_B2G
+#ifdef BOOTSTRAP
+#ifdef REFTEST_B2G
                     dump(msg);
 #else
                     //NOTE: on android-xul, we have a libc crash if we do a dump with %7s in the string
