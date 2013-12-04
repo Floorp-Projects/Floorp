@@ -33,7 +33,7 @@ LOCAL_INCLUDES += [
     '../base',
     '../forms',
     '../generic',
-    '../inspector/src',
+    '../inspector',
     '../mathml',
     '../style',
     '../tables',
