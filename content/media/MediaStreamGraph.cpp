@@ -699,7 +699,8 @@ MediaStreamGraphImpl::RecomputeBlockingAt(const nsTArray<MediaStream*>& aStreams
     MediaStream* stream = aStreams[i];
 
     if (stream->mFinished) {
-      GraphTime endTime = StreamTimeToGraphTime(stream, stream->GetBufferEnd());
+      GraphTime endTime = StreamTimeToGraphTime(stream,
+         stream->GetStreamBuffer().GetAllTracksEnd());
       if (endTime <= aTime) {
         STREAM_LOG(PR_LOG_DEBUG+1, ("MediaStream %p is blocked due to being finished", stream));
         // We'll block indefinitely
