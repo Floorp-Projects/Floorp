@@ -558,13 +558,9 @@ CustomizeMode.prototype = {
     if (aPlace != "toolbar") {
       wrapper.setAttribute("context", contextMenuForPlace);
     }
-    // Only keep track of the menu if it is non-default.
-    if (currentContextMenu &&
-        currentContextMenu != contextMenuForPlace) {
+    if (currentContextMenu) {
       aNode.setAttribute("wrapped-context", currentContextMenu);
       aNode.setAttribute("wrapped-contextAttrName", contextMenuAttrName)
-      aNode.removeAttribute(contextMenuAttrName);
-    } else if (currentContextMenu == contextMenuForPlace) {
       aNode.removeAttribute(contextMenuAttrName);
     }
 
