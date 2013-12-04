@@ -215,6 +215,6 @@ LOCAL_INCLUDES += [
     '/layout/generic',
     '/layout/style',
     '/layout/svg',
-    '/layout/xul',
+    '/layout/xul/base/src',
     '/netwerk/base/src',
 ]

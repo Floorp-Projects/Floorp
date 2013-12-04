@@ -126,7 +126,7 @@ LOCAL_INCLUDES += [
     '../style',
     '../svg',
     '../tables',
-    '../xul',
+    '../xul/base/src',
     '../xul/tree/',
     '/docshell/base',
     '/xpcom/ds',
