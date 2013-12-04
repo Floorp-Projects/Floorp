@@ -140,12 +140,13 @@ interface nsIMemoryReporterCallback : nsISupports
  *   regions of memory that have been explicitly allocated with an
  *   OS-level allocation (e.g. mmap/VirtualAlloc/vm_allocate) or a
  *   heap-level allocation (e.g. malloc/calloc/operator new).  Reporters
- *   in this tree must have kind HEAP or NONHEAP, units BYTES, and a
- *   description that is a sentence (i.e. starts with a capital letter and
- *   ends with a period, or similar).
+ *   in this tree must have kind HEAP or NONHEAP, units BYTES.
  *
- * - All other reports are unconstrained except that they must have a
- *   description that is a sentence.
+ * - All other reports are unconstrained.
+ *
+ * It is preferred, but not required, that report descriptions use complete
+ * sentences (i.e. start with a capital letter and end with a period, or
+ * similar).
  */
 [scriptable, uuid(0884cd0f-5829-4381-979b-0f53904030ed)]
 interface nsIMemoryReporter : nsISupports
