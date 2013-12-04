@@ -1,7 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const ROOT = getRootDirectory(gTestPath);
+"use strict";
+
 const URL = ROOT + "browser_frametree_sample.html";
 const URL_FRAMESET = ROOT + "browser_frametree_sample_frameset.html";
 

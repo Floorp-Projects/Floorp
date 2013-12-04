@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // This tests that session restore component does restore the right <select> option.
 // Session store should not rely only on previous user's selectedIndex, it should
 // check its value as well.
@@ -13,13 +15,6 @@ function test() {
   let formData = [
   // default case
     { },
-  // old format
-    { "#select_id" : 0 },
-    { "#select_id" : 2 },
-    // invalid index
-    { "#select_id" : 8 },
-    { "/xhtml:html/xhtml:body/xhtml:select" : 5},
-    { "/xhtml:html/xhtml:body/xhtml:select[@name='select_name']" : 6},
 
   // new format
     // index doesn't match value (testing an option in between (two))
@@ -36,32 +31,17 @@ function test() {
     { xpath: { "/xhtml:html/xhtml:body/xhtml:select[@name='select_name']" : {"selectedIndex":3,"value":"val3"} } },
     // index matches default option however it doesn't match value
     { id:{ "select_id": {"selectedIndex":3,"value":"val4"} } },
-
-  // combinations
-    { "#select_id" : 3, id:{ "select_id": {"selectedIndex":1,"value":"val1"} } },
-    { "#select_id" : 5, xpath: { "/xhtml:html/xhtml:body/xhtml:select[@name='select_name']" : {"selectedIndex":4,"value":"val4"} } },
-    { "/xhtml:html/xhtml:body/xhtml:select" : 5, id:{ "select_id": {"selectedIndex":1,"value":"val1"} }},
-    { "/xhtml:html/xhtml:body/xhtml:select[@name='select_name']" : 2, xpath: { "/xhtml:html/xhtml:body/xhtml:select[@name='select_name']" : {"selectedIndex":7,"value":"val7"} } }
   ];
 
   let expectedValues = [
-    [ "val3"], // default value
-    [ "val0"],
-    [ "val2"],
-    [ "val3"], // default value (invalid index)
-    [ "val5"],
-    [ "val6"],
-    [ "val2"],
-    [ "val3"], // default value (invalid value)
-    [ "val5"], // value is still valid (even it has an invalid index)
-    [ "val0"],
-    [ "val7"],
-    [ "val3"],
-    [ "val4"],
-    [ "val1"],
-    [ "val4"],
-    [ "val1"],
-    [ "val7"]
+    null,   // default value
+    "val2",
+    null,   // default value (invalid value)
+    "val5", // value is still valid (even it has an invalid index)
+    "val0",
+    "val7",
+    null,
+    "val4",
   ];
   let callback = function() {
     testTabCount--;
@@ -76,7 +56,7 @@ function test() {
   }
 }
 
-function testTabRestoreData(aFormData, aExpectedValues, aCallback) {
+function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
   let testURL =
     getRootDirectory(gTestPath) + "browser_662743_sample.html";
   let tab = gBrowser.addTab(testURL);
@@ -90,38 +70,40 @@ function testTabRestoreData(aFormData, aExpectedValues, aCallback) {
       let select = doc.getElementById("select_id");
       let value = select.options[select.selectedIndex].value;
 
+      // Flush to make sure we have the latest form data.
+      SyncHandlers.get(tab.linkedBrowser).flush();
+      let restoredTabState = JSON.parse(ss.getTabState(tab));
+
+      // If aExpectedValue=null we don't expect any form data to be collected.
+      if (!aExpectedValue) {
+        ok(!restoredTabState.hasOwnProperty("formdata"), "no formdata collected");
+        gBrowser.removeTab(tab);
+        aCallback();
+        return;
+      }
+
       // test select options values
-      is(value, aExpectedValues[0],
+      is(value, aExpectedValue,
         "Select Option by selectedIndex &/or value has been restored correctly");
+
+      let restoredFormData = restoredTabState.formdata;
+      let selectIdFormData = restoredFormData.id.select_id;
+      let value = restoredFormData.id.select_id.value;
+
+      // test format
+      ok("id" in restoredFormData || "xpath" in restoredFormData,
+        "FormData format is valid");
+      // test format
+      ok("selectedIndex" in selectIdFormData && "value" in selectIdFormData,
+        "select format is valid");
+       // test set collection values
+      is(value, aExpectedValue,
+        "Collection has been saved correctly");
 
       // clean up
       gBrowser.removeTab(tab);
 
       aCallback();
-    });
-
-    tab.addEventListener("TabClose", function(aEvent) {
-      tab.removeEventListener("TabClose", arguments.callee);
-      let restoredTabState = JSON.parse(ss.getTabState(tab));
-      let restoredFormData = restoredTabState.entries[0].formdata;
-      let selectIdFormData = restoredFormData.id.select_id;
-      let value = restoredFormData.id.select_id.value;
-
-      // test format
-      ok("id" in restoredFormData && "xpath" in restoredFormData,
-        "FormData format is valid");
-      // validate that there are no old keys
-      is(Object.keys(restoredFormData).length, 2,
-        "FormData key length is valid");
-      // test format
-      ok("selectedIndex" in selectIdFormData && "value" in selectIdFormData,
-        "select format is valid");
-      // validate that there are no old keys
-      is(Object.keys(selectIdFormData).length, 2,
-        "select_id length is valid");
-       // test set collection values
-      is(value, aExpectedValues[0],
-        "Collection has been saved correctly");
     });
   });
 }

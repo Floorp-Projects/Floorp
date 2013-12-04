@@ -1,34 +1,37 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
-  /** Test for Bug 485482 **/
+"use strict";
 
-  waitForExplicitFinish();
+const URL = ROOT + "browser_485482_sample.html";
 
+/**
+ * Bug 485482 - Make sure that we produce valid XPath expressions even for very
+ * weird HTML documents.
+ */
+add_task(function test_xpath_exp_for_strange_documents() {
+  // Load a page with weird tag names.
+  let tab = gBrowser.addTab(URL);
+  let browser = tab.linkedBrowser;
+  yield promiseBrowserLoaded(browser);
+
+  // Fill in some values.
   let uniqueValue = Math.random();
+  yield setInputValue(browser, {selector: "input[type=text]", value: uniqueValue});
+  yield setInputChecked(browser, {selector: "input[type=checkbox]", checked: true});
 
-  let rootDir = getRootDirectory(gTestPath);
-  let testURL = rootDir + "browser_485482_sample.html";
-  let tab = gBrowser.addTab(testURL);
-  whenBrowserLoaded(tab.linkedBrowser, function() {
-    let doc = tab.linkedBrowser.contentDocument;
-    doc.querySelector("input[type=text]").value = uniqueValue;
-    doc.querySelector("input[type=checkbox]").checked = true;
+  // Duplicate the tab.
+  let tab2 = gBrowser.duplicateTab(tab);
+  let browser2 = tab2.linkedBrowser;
+  yield promiseTabRestored(tab2);
 
-    let tab2 = gBrowser.duplicateTab(tab);
-    whenTabRestored(tab2, function() {
-      doc = tab2.linkedBrowser.contentDocument;
-      is(doc.querySelector("input[type=text]").value, uniqueValue,
-         "generated XPath expression was valid");
-      ok(doc.querySelector("input[type=checkbox]").checked,
-         "generated XPath expression was valid");
+  // Check that we generated valid XPath expressions to restore form values.
+  let text = yield getInputValue(browser2, {selector: "input[type=text]"});
+  is(text, uniqueValue, "generated XPath expression was valid");
+  let checkbox = yield getInputChecked(browser2, {selector: "input[type=checkbox]"});
+  ok(checkbox, "generated XPath expression was valid");
 
-      // clean up
-      gBrowser.removeTab(tab2);
-      gBrowser.removeTab(tab);
-      finish();
-    });
-  });
-}
+  // Cleanup.
+  gBrowser.removeTab(tab2);
+  gBrowser.removeTab(tab);
+});
