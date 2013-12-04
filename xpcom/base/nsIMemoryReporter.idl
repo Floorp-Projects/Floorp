@@ -136,13 +136,13 @@ interface nsIMemoryReporterCallback : nsISupports
  * aboutMemory.js is the most important consumer of memory reports.  It
  * places the following constraints on reports.
  *
- * - There must be an "explicit" tree.  It represents non-overlapping
- *   regions of memory that have been explicitly allocated with an
- *   OS-level allocation (e.g. mmap/VirtualAlloc/vm_allocate) or a
- *   heap-level allocation (e.g. malloc/calloc/operator new).  Reporters
- *   in this tree must have kind HEAP or NONHEAP, units BYTES.
+ * - All reports within a single sub-tree must have the same units.
  *
- * - All other reports are unconstrained.
+ * - There may be an "explicit" tree.  If present, it represents
+ *   non-overlapping regions of memory that have been explicitly allocated with
+ *   an OS-level allocation (e.g. mmap/VirtualAlloc/vm_allocate) or a
+ *   heap-level allocation (e.g. malloc/calloc/operator new).  Reporters in
+ *   this tree must have kind HEAP or NONHEAP, units BYTES.
  *
  * It is preferred, but not required, that report descriptions use complete
  * sentences (i.e. start with a capital letter and end with a period, or
