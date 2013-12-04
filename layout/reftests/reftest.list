@@ -328,7 +328,7 @@ skip-if(B2G) include xul/reftest.list
 include webcomponents/reftest.list
 
 # xul
-skip-if(B2G) include ../xul/base/reftest/reftest.list
+skip-if(B2G) include ../xul/reftest/reftest.list
 
 # xul grid
 skip-if(B2G) include ../xul/grid/reftests/reftest.list

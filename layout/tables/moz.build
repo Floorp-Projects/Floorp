@@ -38,7 +38,7 @@ LOCAL_INCLUDES += [
     '../base',
     '../generic',
     '../style',
-    '../xul/base/src',
+    '../xul',
 ]
 
 DEFINES['DEBUG_TABLE_STRATEGY_off'] = True
