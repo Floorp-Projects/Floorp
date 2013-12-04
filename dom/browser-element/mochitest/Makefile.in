@@ -232,7 +232,6 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_RemoveBrowserElement.html \
 		test_browserElement_oop_DOMRequestError.html \
 		test_browserElement_oop_AppFramePermission.html \
-		test_browserElement_oop_ExposableURI.html \
 		test_browserElement_oop_FrameWrongURI.html \
 		test_browserElement_oop_ReloadPostRequest.html \
 		test_browserElement_oop_PurgeHistory.html \
@@ -244,13 +243,12 @@ MOCHITEST_FILES += \
 # Disabled until bug 930449 makes it stop timing out
 #		test_browserElement_oop_ContextmenuEvents.html \
 
-# Disabled until bug 924771 makes it stop timing out
+# Disabled until bug 924771 makes them stop timing out
 # 		test_browserElement_oop_CloseFromOpener.html \
+#		test_browserElement_oop_CloseApp.html \
+#		test_browserElement_oop_ExposableURI.html \
 
 # Disabled until we fix bug 906096.
 #		test_browserElement_oop_SetInputMethodActive.html \
-
-# Disabled until we fix bug 925200
-#		test_browserElement_oop_CloseApp.html \
 
 endif #}
