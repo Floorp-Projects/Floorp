@@ -102,6 +102,10 @@ private:
   virtual void OnCallbacksChanged() {
   }
 
+  // Called when our channel is done, to allow subclasses to drop resources.
+  virtual void OnChannelDone() {
+  }
+
 public:
   // ----------------------------------------------
   // Methods provided for use by the derived class:
@@ -211,6 +215,13 @@ private:
     mProgressSink = nullptr;
     mQueriedProgressSink = false;
     OnCallbacksChanged();
+  }
+
+  // Called when our channel is done.  This should drop no-longer-needed pointers.
+  void ChannelDone() {
+      mListener = nullptr;
+      mListenerContext = nullptr;
+      OnChannelDone();
   }
 
   // Handle an async redirect callback.  This will only be called if we
