@@ -312,35 +312,37 @@ struct RuntimeSizes
 
 struct ZoneStats : js::ZoneStatsPod
 {
-    ZoneStats() {
-        strings.init();
-    }
+    ZoneStats()
+      : strings(nullptr)
+    {}
 
     ZoneStats(ZoneStats &&other)
       : ZoneStatsPod(mozilla::Move(other)),
-        strings(mozilla::Move(other.strings)),
+        strings(other.strings),
         notableStrings(mozilla::Move(other.notableStrings))
-    {}
+    {
+        other.strings = nullptr;
+    }
 
-    // Add other's numbers to this object's numbers.  Both objects'
-    // notableStrings vectors must be empty at this point, because we can't
-    // merge them.  (A NotableStringInfo contains only a prefix of the string,
-    // so we can't tell whether two NotableStringInfo objects correspond to the
-    // same string.)
-    void add(const ZoneStats &other) {
+    bool initStrings(JSRuntime *rt);
+
+    // Add |other|'s numbers to this object's numbers.  The strings data isn't
+    // touched.
+    void addIgnoringStrings(const ZoneStats &other) {
         ZoneStatsPod::add(other);
+    }
 
-        MOZ_ASSERT(notableStrings.empty());
-        MOZ_ASSERT(other.notableStrings.empty());
-
-        for (StringsHashMap::Range r = other.strings.all(); !r.empty(); r.popFront()) {
-            StringsHashMap::AddPtr p = strings.lookupForAdd(r.front().key());
+    // Add |other|'s strings data to this object's strings data.  (We don't do
+    // anything with notableStrings.)
+    void addStrings(const ZoneStats &other) {
+        for (StringsHashMap::Range r = other.strings->all(); !r.empty(); r.popFront()) {
+            StringsHashMap::AddPtr p = strings->lookupForAdd(r.front().key());
             if (p) {
                 // We've seen this string before; add its size to our tally.
                 p->value().add(r.front().value());
             } else {
                 // We haven't seen this string before; add it to the hashtable.
-                strings.add(p, r.front().key(), r.front().value());
+                strings->add(p, r.front().key(), r.front().value());
             }
         }
     }
@@ -359,7 +361,11 @@ struct ZoneStats : js::ZoneStatsPod
                         js::InefficientNonFlatteningStringHashPolicy,
                         js::SystemAllocPolicy> StringsHashMap;
 
-    StringsHashMap strings;
+    // |strings| is only used transiently.  During the zone traversal it is
+    // filled with info about every string in the zone.  It's then used to fill
+    // in |notableStrings| (which actually gets reported), and immediately
+    // discarded afterwards.
+    StringsHashMap *strings;
     js::Vector<NotableStringInfo, 0, js::SystemAllocPolicy> notableStrings;
 };
 
@@ -435,6 +441,9 @@ struct CompartmentStats
 #undef FOR_EACH_SIZE
 };
 
+typedef js::Vector<CompartmentStats, 0, js::SystemAllocPolicy> CompartmentStatsVector;
+typedef js::Vector<ZoneStats, 0, js::SystemAllocPolicy> ZoneStatsVector;
+
 struct RuntimeStats
 {
 #define FOR_EACH_SIZE(macro) \
@@ -483,8 +492,8 @@ struct RuntimeStats
     CompartmentStats cTotals;   // The sum of this runtime's compartments' measurements.
     ZoneStats zTotals;          // The sum of this runtime's zones' measurements.
 
-    js::Vector<CompartmentStats, 0, js::SystemAllocPolicy> compartmentStatsVector;
-    js::Vector<ZoneStats, 0, js::SystemAllocPolicy> zoneStatsVector;
+    CompartmentStatsVector compartmentStatsVector;
+    ZoneStatsVector zoneStatsVector;
 
     ZoneStats *currZoneStats;
 

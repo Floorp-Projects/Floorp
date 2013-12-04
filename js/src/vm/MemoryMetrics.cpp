@@ -193,6 +193,7 @@ StatsZoneCallback(JSRuntime *rt, void *data, Zone *zone)
     // CollectRuntimeStats reserves enough space.
     MOZ_ALWAYS_TRUE(rtStats->zoneStatsVector.growBy(1));
     ZoneStats &zStats = rtStats->zoneStatsVector.back();
+    zStats.initStrings(rt);
     rtStats->initExtraZoneStats(zone, &zStats);
     rtStats->currZoneStats = &zStats;
 
@@ -305,10 +306,10 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         // coarse-grained measurements, and skipping it more than doubles the
         // profile speed for complex pages such as gmail.com.
         if (granularity == FineGrained) {
-            ZoneStats::StringsHashMap::AddPtr p = zStats->strings.lookupForAdd(str);
+            ZoneStats::StringsHashMap::AddPtr p = zStats->strings->lookupForAdd(str);
             if (!p) {
                 JS::StringInfo info(isShort, thingSize, strCharsSize);
-                zStats->strings.add(p, str, info);
+                zStats->strings->add(p, str, info);
             } else {
                 p->value().add(isShort, thingSize, strCharsSize);
             }
@@ -408,7 +409,7 @@ FindNotableStrings(ZoneStats &zStats)
     // unless you add to |strings| in the meantime).
     MOZ_ASSERT(zStats.notableStrings.empty());
 
-    for (ZoneStats::StringsHashMap::Range r = zStats.strings.all(); !r.empty(); r.popFront()) {
+    for (ZoneStats::StringsHashMap::Range r = zStats.strings->all(); !r.empty(); r.popFront()) {
 
         JSString *str = r.front().key();
         StringInfo &info = r.front().value();
@@ -434,10 +435,20 @@ FindNotableStrings(ZoneStats &zStats)
             zStats.stringsNormalMallocHeap -= info.mallocHeap;
         }
     }
+}
 
-    // zStats.strings holds unrooted JSString pointers, which we don't want to
-    // expose out into the dangerous land where we might GC.
-    zStats.strings.clear();
+bool
+ZoneStats::initStrings(JSRuntime *rt)
+{
+    strings = rt->new_<StringsHashMap>();
+    if (!strings)
+        return false;
+    if (!strings->init()) {
+        js_delete(strings);
+        strings = nullptr;
+        return false;
+    }
+    return true;
 }
 
 JS_PUBLIC_API(bool)
@@ -468,17 +479,44 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
     // Take the "explicit/js/runtime/" measurements.
     rt->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &rtStats->runtime);
 
-    for (size_t i = 0; i < rtStats->zoneStatsVector.length(); i++) {
-        ZoneStats &zStats = rtStats->zoneStatsVector[i];
+    ZoneStatsVector &zs = rtStats->zoneStatsVector;
+    ZoneStats &zTotals = rtStats->zTotals;
 
-        rtStats->zTotals.add(zStats);
-
-        // Move any strings which take up more than the sundries threshold
-        // (counting all of their copies together) into notableStrings.
-        FindNotableStrings(zStats);
+    // For each zone:
+    // - sum everything except its strings data into zTotals, and
+    // - find its notable strings.
+    // Also, record which zone had the biggest |strings| hashtable -- to save
+    // time and memory, we will re-use that hashtable to find the notable
+    // strings for zTotals.
+    size_t iMax = 0;
+    for (size_t i = 0; i < zs.length(); i++) {
+        zTotals.addIgnoringStrings(zs[i]);
+        FindNotableStrings(zs[i]);
+        if (zs[i].strings->count() > zs[iMax].strings->count())
+            iMax = i;
     }
 
-    FindNotableStrings(rtStats->zTotals);
+    // Transfer the biggest strings table to zTotals.  We can do this because:
+    // (a) we've found the notable strings for zs[IMax], and so don't need it
+    //     any more for zs, and
+    // (b) zs[iMax].strings contains a subset of the values that will end up in
+    //     zTotals.strings.
+    MOZ_ASSERT(!zTotals.strings);
+    zTotals.strings = zs[iMax].strings;
+    zs[iMax].strings = nullptr;
+
+    // Add the remaining strings hashtables to zTotals, and then get the
+    // notable strings for zTotals.
+    for (size_t i = 0; i < zs.length(); i++) {
+        if (i != iMax) {
+            zTotals.addStrings(zs[i]);
+            js_delete(zs[i].strings);
+            zs[i].strings = nullptr;
+        }
+    }
+    FindNotableStrings(zTotals);
+    js_delete(zTotals.strings);
+    zTotals.strings = nullptr;
 
     for (size_t i = 0; i < rtStats->compartmentStatsVector.length(); i++) {
         CompartmentStats &cStats = rtStats->compartmentStatsVector[i];
