@@ -87,7 +87,7 @@ LOCAL_INCLUDES += [
     '/dom/settings',
     '/dom/src/storage',
     '/layout/generic',
-    '/layout/xul',
+    '/layout/xul/base/src',
     '/layout/xul/tree/',
 ]
 
