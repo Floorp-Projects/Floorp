@@ -191,6 +191,8 @@ interface TestExampleInterface {
   void passConsequentialInterface(IndirectlyImplementedInterface arg);
 
   // Sequence types
+  [Cached, Pure]
+  readonly attribute sequence<long> readonlySequence;
   sequence<long> receiveSequence();
   sequence<long>? receiveNullableSequence();
   sequence<long?> receiveSequenceOfNullableInts();

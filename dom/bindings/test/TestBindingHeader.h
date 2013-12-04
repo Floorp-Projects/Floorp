@@ -340,6 +340,7 @@ public:
   void PassConsequentialInterface(IndirectlyImplementedInterface&);
 
   // Sequence types
+  void GetReadonlySequence(nsTArray<int32_t>&);
   void ReceiveSequence(nsTArray<int32_t>&);
   void ReceiveNullableSequence(Nullable< nsTArray<int32_t> >&);
   void ReceiveSequenceOfNullableInts(nsTArray< Nullable<int32_t> >&);
