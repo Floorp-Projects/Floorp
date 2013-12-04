@@ -27,6 +27,7 @@ if CONFIG['MOZ_XUL']:
 
 if CONFIG['ENABLE_TESTS']:
     PARALLEL_DIRS += [
+        'mathml/tests',
         'xul/test',
         'xul/base/test',
     ]
