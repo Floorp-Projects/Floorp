@@ -1088,7 +1088,7 @@ function fillInTree(aRoot)
  * @param aHeapAllocatedNode
  *        The "heap-allocated" tree node.
  * @param aHeapTotal
- *        The sum of all explicit HEAP reporters for this process.
+ *        The sum of all explicit HEAP reports for this process.
  * @return A boolean indicating if "heap-allocated" is known for the process.
  */
 function addHeapUnclassifiedNode(aT, aHeapAllocatedNode, aHeapTotal)
@@ -1101,7 +1101,7 @@ function addHeapUnclassifiedNode(aT, aHeapAllocatedNode, aHeapTotal)
   let heapUnclassifiedT = new TreeNode("heap-unclassified", UNITS_BYTES);
   heapUnclassifiedT._amount = heapAllocatedBytes - aHeapTotal;
   heapUnclassifiedT._description =
-      "Memory not classified by a more specific reporter. This includes " +
+      "Memory not classified by a more specific report. This includes " +
       "slop bytes due to internal fragmentation in the heap allocator " +
       "(caused when the allocator rounds up request sizes).";
   aT._kids.push(heapUnclassifiedT);
@@ -1527,7 +1527,7 @@ function appendMrNameSpan(aP, aDescription, aUnsafeName, aIsInvalid, aNMerged,
     let noteSpan = appendElementWithText(aP, "span", "mrNote", noteText);
     noteSpan.title =
       "This value is the sum of " + aNMerged +
-      " memory reporters that all have the same path.";
+      " memory reports that all have the same path.";
   }
 
   if (aPresence) {
