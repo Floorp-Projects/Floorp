@@ -14,6 +14,7 @@
 
 #include "gc/GCInternals.h"
 #include "gc/Zone.h"
+#include "js/GCAPI.h"
 #include "js/HashTable.h"
 
 #include "jscntxtinlines.h"
@@ -365,7 +366,8 @@ typedef HashMap<void *, VerifyNode *, DefaultHasher<void *>, SystemAllocPolicy> 
  * The nodemap field is a hashtable that maps from the address of the GC thing
  * to the VerifyNode that represents it.
  */
-struct VerifyPreTracer : JSTracer {
+struct VerifyPreTracer : JSTracer
+{
     /* The gcNumber when the verification began. */
     uint64_t number;
 
@@ -379,8 +381,14 @@ struct VerifyPreTracer : JSTracer {
     char *term;
     NodeMap nodemap;
 
-    VerifyPreTracer() : root(nullptr) {}
-    ~VerifyPreTracer() { js_free(root); }
+    VerifyPreTracer(JSRuntime *rt) : root(nullptr) {
+        JS::DisableGenerationalGC(rt);
+    }
+
+    ~VerifyPreTracer() {
+        js_free(root);
+        JS::EnableGenerationalGC(runtime);
+    }
 };
 
 /*
@@ -446,7 +454,7 @@ gc::StartVerifyPreBarriers(JSRuntime *rt)
     if (rt->gcVerifyPreData || rt->gcIncrementalState != NO_INCREMENTAL)
         return;
 
-    MinorGC(rt, JS::gcreason::API);
+    MinorGC(rt, JS::gcreason::EVICT_NURSERY);
 
     AutoPrepareForTracing prep(rt, WithAtoms);
 
@@ -456,7 +464,7 @@ gc::StartVerifyPreBarriers(JSRuntime *rt)
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
         r.front()->bitmap.clear();
 
-    VerifyPreTracer *trc = js_new<VerifyPreTracer>();
+    VerifyPreTracer *trc = js_new<VerifyPreTracer>(rt);
     if (!trc)
         return;
 
@@ -576,6 +584,8 @@ AssertMarkedOrAllocated(const EdgeValue &edge)
 void
 gc::EndVerifyPreBarriers(JSRuntime *rt)
 {
+    JS_ASSERT(!JS::IsGenerationalGCEnabled(rt));
+
     AutoPrepareForTracing prep(rt, SkipAtoms);
 
     VerifyPreTracer *trc = (VerifyPreTracer *)rt->gcVerifyPreData;
@@ -658,7 +668,7 @@ gc::StartVerifyPostBarriers(JSRuntime *rt)
         return;
     }
 
-    MinorGC(rt, JS::gcreason::API);
+    MinorGC(rt, JS::gcreason::EVICT_NURSERY);
 
     VerifyPostTracer *trc = js_new<VerifyPostTracer>();
     if (!trc)

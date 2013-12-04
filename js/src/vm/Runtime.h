@@ -1153,7 +1153,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     /*
      * GGC can be enabled from the command line while testing.
      */
-    bool                gcGenerationalEnabled;
+    unsigned            gcGenerationalDisabled;
 
     /*
      * This is true if we are in the middle of a brain transplant (e.g.,

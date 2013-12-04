@@ -57,6 +57,7 @@ class Nursery
     explicit Nursery(JSRuntime *rt)
       : runtime_(rt),
         position_(0),
+        currentStart_(0),
         currentEnd_(0),
         currentChunk_(0),
         numActiveChunks_(0)
@@ -68,6 +69,9 @@ class Nursery
     void enable();
     void disable();
     bool isEnabled() const { return numActiveChunks_ != 0; }
+
+    /* Return true if no allocations have been made since the last collection. */
+    bool isEmpty() const;
 
     template <typename T>
     JS_ALWAYS_INLINE bool isInside(const T *p) const {
@@ -144,6 +148,9 @@ class Nursery
     /* Pointer to the first unallocated byte in the nursery. */
     uintptr_t position_;
 
+    /* Pointer to the logic start of the Nursery. */
+    uintptr_t currentStart_;
+
     /* Pointer to the last byte of space in the current chunk. */
     uintptr_t currentEnd_;
 
@@ -196,6 +203,7 @@ class Nursery
         JS_ASSERT(chunkno < numActiveChunks_);
         currentChunk_ = chunkno;
         position_ = chunk(chunkno).start();
+        currentStart_ = chunk(0).start();
         currentEnd_ = chunk(chunkno).end();
     }
 
