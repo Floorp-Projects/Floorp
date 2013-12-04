@@ -71,6 +71,7 @@ namespace {
 enum MainThreadTaskCmd {
   NOTIFY_CONN_STATE_CHANGED,
   NOTIFY_DIALER,
+  NOTIFY_SCO_VOLUME_CHANGED,
   POST_TASK_RESPOND_TO_BLDN,
   POST_TASK_CLOSE_SCO
 };
@@ -275,6 +276,16 @@ public:
         break;
       case MainThreadTaskCmd::NOTIFY_DIALER:
         sBluetoothHfpManager->NotifyDialer(mParameter);
+        break;
+      case MainThreadTaskCmd::NOTIFY_SCO_VOLUME_CHANGED:
+        {
+          nsCOMPtr<nsIObserverService> os =
+            mozilla::services::GetObserverService();
+          NS_ENSURE_TRUE(os, NS_OK);
+
+          os->NotifyObservers(nullptr, "bluetooth-volume-change",
+                              mParameter.get());
+        }
         break;
       case MainThreadTaskCmd::POST_TASK_RESPOND_TO_BLDN:
         MessageLoop::current()->
@@ -552,7 +563,8 @@ BluetoothHfpManager::ProcessHangupCall()
 }
 
 void
-BluetoothHfpManager::ProcessVolumeControl(bthf_volume_type_t aType, int aVolume)
+BluetoothHfpManager::ProcessVolumeControl(bthf_volume_type_t aType,
+                                          int aVolume)
 {
   NS_ENSURE_TRUE_VOID(aVolume >= 0 && aVolume <= 15);
 
@@ -564,9 +576,8 @@ BluetoothHfpManager::ProcessVolumeControl(bthf_volume_type_t aType, int aVolume)
     NS_ENSURE_TRUE_VOID(aVolume != mCurrentVgs);
 
     nsString data;
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     data.AppendInt(aVolume);
-    os->NotifyObservers(nullptr, "bluetooth-volume-change", data.get());
+    BT_HF_DISPATCH_MAIN(MainThreadTaskCmd::NOTIFY_SCO_VOLUME_CHANGED, data);
   }
 }
 
