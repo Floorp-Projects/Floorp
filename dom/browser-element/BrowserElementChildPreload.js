@@ -839,18 +839,18 @@ BrowserElementChild.prototype = {
     let json = data.json;
     let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDOMWindowUtils);
-    utils.sendMouseEvent(json.type, json.x, json.y, json.button,
-                         json.clickCount, json.modifiers);
+    utils.sendMouseEventToWindow(json.type, json.x, json.y, json.button,
+                                 json.clickCount, json.modifiers);
   },
 
   _recvSendTouchEvent: function(data) {
     let json = data.json;
     let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDOMWindowUtils);
-    utils.sendTouchEvent(json.type, json.identifiers, json.touchesX,
-                         json.touchesY, json.radiisX, json.radiisY,
-                         json.rotationAngles, json.forces, json.count,
-                         json.modifiers);
+    utils.sendTouchEventToWindow(json.type, json.identifiers, json.touchesX,
+                                 json.touchesY, json.radiisX, json.radiisY,
+                                 json.rotationAngles, json.forces, json.count,
+                                 json.modifiers);
   },
 
   _recvCanGoBack: function(data) {
