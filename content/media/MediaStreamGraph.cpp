@@ -416,7 +416,10 @@ MediaStreamGraphImpl::UpdateCurrentTime()
 
   for (uint32_t i = 0; i < streamsReadyToFinish.Length(); ++i) {
     MediaStream* stream = streamsReadyToFinish[i];
-    if (StreamTimeToGraphTime(stream, stream->GetBufferEnd()) <= mCurrentTime) {
+    // The stream is fully finished when all of its track data has been played
+    // out.
+    if (mCurrentTime >=
+          stream->StreamTimeToGraphTime(stream->GetStreamBuffer().GetAllTracksEnd()))  {
       stream->mNotifiedFinished = true;
       stream->mLastPlayedVideoFrame.SetNull();
       for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
