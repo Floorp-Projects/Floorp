@@ -112,7 +112,7 @@ protected:
   // Sets the mPosterImage's src attribute to be the video's poster attribute,
   // if we're the frame for a video element. Only call on frames for video
   // elements, not for frames for audio elements.
-  void UpdatePosterSource(bool aNotify);
+  nsresult UpdatePosterSource(bool aNotify);
 
   virtual ~nsVideoFrame();
 
