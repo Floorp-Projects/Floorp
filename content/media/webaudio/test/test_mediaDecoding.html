@@ -280,6 +280,8 @@ function checkResampledBuffer(buffer, test, callback) {
   var resampled = cx.createBufferSource();
   resampled.buffer = buffer;
   resampled.start();
+  // This stop should do nothing, but it tests for bug 937475
+  resampled.stop(test.frames / cx.sampleRate);
   resampled.connect(cx.destination);
   cx.oncomplete = function(e) {
     ok(!bufferIsSilent(e.renderedBuffer), "Expect buffer not silent");
