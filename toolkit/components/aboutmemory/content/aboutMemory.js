@@ -1287,12 +1287,14 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
   let warningsDiv = appendElement(aP, "div", "accuracyWarning");
 
   // The explicit tree.
+  let hasExplicitTree;
   let hasKnownHeapAllocated;
   {
     let treeName = "explicit";
-    let pre = appendSectionHeader(aP, "Explicit Allocations");
     let t = aTrees[treeName];
     if (t) {
+      let pre = appendSectionHeader(aP, "Explicit Allocations");
+      hasExplicitTree = true;
       fillInTree(t);
       // Using the "heap-allocated" reporter here instead of
       // nsMemoryReporterManager.heapAllocated goes against the usual pattern.
@@ -1350,11 +1352,13 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
   }
   appendTextNode(aP, "\n");  // gives nice spacing when we copy and paste
 
-  // Add any warnings about inaccuracies due to platform limitations.
-  // These must be computed after generating all the text.  The newlines give
-  // nice spacing if we copy+paste into a text buffer.
-  appendWarningElements(warningsDiv, hasKnownHeapAllocated,
-                        aHasMozMallocUsableSize);
+  // Add any warnings about inaccuracies in the "explicit" tree due to platform
+  // limitations.  These must be computed after generating all the text.  The
+  // newlines give nice spacing if we copy+paste into a text buffer.
+  if (hasExplicitTree) {
+    appendWarningElements(warningsDiv, hasKnownHeapAllocated,
+                          aHasMozMallocUsableSize);
+  }
 
   appendElementWithText(aP, "h3", "", "End of " + aProcess);
   appendLink("end", "start", kUpwardsArrow);
