@@ -236,7 +236,7 @@ int nr_ice_peer_peer_rflx_candidate_create(nr_ice_ctx *ctx,char *label, nr_ice_c
       ABORT(r);
     /* Bogus foundation */
     if(!(cand->foundation=r_strdup(cand->addr.as_string)))
-      ABORT(r);
+      ABORT(R_NO_MEMORY);
 
     nr_ice_candidate_compute_codeword(cand);
 

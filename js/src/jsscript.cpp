@@ -912,30 +912,30 @@ js::PCCounts
 JSScript::getPCCounts(jsbytecode *pc) {
     JS_ASSERT(containsPC(pc));
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    return p->value.pcCountsVector[pcToOffset(pc)];
+    return p->value().pcCountsVector[pcToOffset(pc)];
 }
 
 void
 JSScript::addIonCounts(jit::IonScriptCounts *ionCounts)
 {
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    if (p->value.ionCounts)
-        ionCounts->setPrevious(p->value.ionCounts);
-    p->value.ionCounts = ionCounts;
+    if (p->value().ionCounts)
+        ionCounts->setPrevious(p->value().ionCounts);
+    p->value().ionCounts = ionCounts;
 }
 
 jit::IonScriptCounts *
 JSScript::getIonCounts()
 {
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    return p->value.ionCounts;
+    return p->value().ionCounts;
 }
 
 ScriptCounts
 JSScript::releaseScriptCounts()
 {
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
-    ScriptCounts counts = p->value;
+    ScriptCounts counts = p->value();
     compartment()->scriptCountsMap->remove(p);
     hasScriptCounts = false;
     return counts;
@@ -1082,7 +1082,7 @@ SourceDataCache::lookup(ScriptSource *ss, const AutoSuppressPurge &asp)
     if (!map_)
         return nullptr;
     if (Map::Ptr p = map_->lookup(ss))
-        return p->value;
+        return p->value();
     return nullptr;
 }
 
@@ -1113,7 +1113,7 @@ SourceDataCache::purge()
         return;
 
     for (Map::Range r = map_->all(); !r.empty(); r.popFront())
-        js_delete(const_cast<jschar*>(r.front().value));
+        js_delete(const_cast<jschar*>(r.front().value()));
 
     js_delete(map_);
     map_ = nullptr;
@@ -2164,7 +2164,7 @@ js::GetSrcNote(GSNCache &cache, JSScript *script, jsbytecode *pc)
     if (cache.code == script->code()) {
         JS_ASSERT(cache.map.initialized());
         GSNCache::Map::Ptr p = cache.map.lookup(pc);
-        return p ? p->value : nullptr;
+        return p ? p->value() : nullptr;
     }
 
     size_t offset = 0;
@@ -2591,7 +2591,7 @@ JSScript::debugScript()
     JS_ASSERT(map);
     DebugScriptMap::Ptr p = map->lookup(this);
     JS_ASSERT(p);
-    return p->value;
+    return p->value();
 }
 
 DebugScript *
@@ -2602,7 +2602,7 @@ JSScript::releaseDebugScript()
     JS_ASSERT(map);
     DebugScriptMap::Ptr p = map->lookup(this);
     JS_ASSERT(p);
-    DebugScript *debug = p->value;
+    DebugScript *debug = p->value();
     map->remove(p);
     hasDebugScript = false;
     return debug;

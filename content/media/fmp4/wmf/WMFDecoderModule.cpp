@@ -56,8 +56,8 @@ WMFDecoderModule::Shutdown()
 }
 
 MediaDataDecoder*
-WMFDecoderModule::CreateVideoDecoder(mozilla::layers::LayersBackend aLayersBackend,
-                                     mozilla::layers::ImageContainer* aImageContainer)
+WMFDecoderModule::CreateH264Decoder(mozilla::layers::LayersBackend aLayersBackend,
+                                    mozilla::layers::ImageContainer* aImageContainer)
 {
   nsAutoPtr<WMFVideoDecoder> decoder(new WMFVideoDecoder(mDXVAEnabled));
   nsresult rv = decoder->Init(aLayersBackend, aImageContainer);
@@ -66,11 +66,11 @@ WMFDecoderModule::CreateVideoDecoder(mozilla::layers::LayersBackend aLayersBacke
 }
 
 MediaDataDecoder*
-WMFDecoderModule::CreateAudioDecoder(uint32_t aChannelCount,
-                                     uint32_t aSampleRate,
-                                     uint16_t aBitsPerSample,
-                                     const uint8_t* aUserData,
-                                     uint32_t aUserDataLength)
+WMFDecoderModule::CreateAACDecoder(uint32_t aChannelCount,
+                                   uint32_t aSampleRate,
+                                   uint16_t aBitsPerSample,
+                                   const uint8_t* aUserData,
+                                   uint32_t aUserDataLength)
 {
   nsAutoPtr<WMFAudioDecoder> decoder(new WMFAudioDecoder());
   nsresult rv = decoder->Init(aChannelCount,

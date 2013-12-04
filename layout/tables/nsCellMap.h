@@ -214,7 +214,7 @@ public:
                        nscoord       aSize,
                        bool          aChanged);
 
-  void SetBCBorderCorner(Corner      aCorner,
+  void SetBCBorderCorner(::Corner    aCorner,
                          nsCellMap&  aCellMap,
                          uint32_t    aCellMapStart,
                          uint32_t    aYPos,

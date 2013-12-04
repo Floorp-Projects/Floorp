@@ -56,9 +56,10 @@ function childFocused() {
 function childResized() {
     const isOSXLion = navigator.userAgent.indexOf("Mac OS X 10.7") != -1;
     const isOSXMtnLion = navigator.userAgent.indexOf("Mac OS X 10.8") != -1;
-    if (isOSXLion || isOSXMtnLion) {
+    const isOSXMavericks = navigator.userAgent.indexOf("Mac OS X 10.9") != -1;
+    if (isOSXLion || isOSXMtnLion || isOSXMavericks) {
         todo_is(win.windowState, win.STATE_MAXIMIZED,
-                "A resize before being maximized breaks this test on 10.7 and 10.8");
+                "A resize before being maximized breaks this test on 10.7 and 10.8 and 10.9");
         finish();
         return;
     }

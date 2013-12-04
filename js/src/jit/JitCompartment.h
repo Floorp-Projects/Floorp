@@ -368,7 +368,7 @@ class JitCompartment
     IonCode *getStubCode(uint32_t key) {
         ICStubCodeMap::AddPtr p = stubCodes_->lookupForAdd(key);
         if (p)
-            return p->value;
+            return p->value();
         return nullptr;
     }
     bool putStubCode(uint32_t key, Handle<IonCode *> stubCode) {

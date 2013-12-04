@@ -669,7 +669,7 @@ RegExpCompartment::sweep(JSRuntime *rt)
 {
 #ifdef DEBUG
     for (Map::Range r = map_.all(); !r.empty(); r.popFront())
-        JS_ASSERT(inUse_.has(r.front().value));
+        JS_ASSERT(inUse_.has(r.front().value()));
 #endif
 
     map_.clear();
@@ -696,7 +696,7 @@ RegExpCompartment::get(ExclusiveContext *cx, JSAtom *source, RegExpFlag flags, R
     Key key(source, flags);
     Map::AddPtr p = map_.lookupForAdd(key);
     if (p) {
-        g->init(*p->value);
+        g->init(*p->value());
         return true;
     }
 

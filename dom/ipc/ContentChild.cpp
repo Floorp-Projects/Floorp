@@ -1311,6 +1311,11 @@ ContentChild::RecvActivateA11y()
 bool
 ContentChild::RecvGarbageCollect()
 {
+    // Rebroadcast the "child-gc-request" so that workers will GC.
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+        obs->NotifyObservers(nullptr, "child-gc-request", nullptr);
+    }
     nsJSContext::GarbageCollectNow(JS::gcreason::DOM_IPC);
     return true;
 }
@@ -1318,7 +1323,11 @@ ContentChild::RecvGarbageCollect()
 bool
 ContentChild::RecvCycleCollect()
 {
-    nsJSContext::GarbageCollectNow(JS::gcreason::DOM_IPC);
+    // Rebroadcast the "child-cc-request" so that workers will CC.
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+        obs->NotifyObservers(nullptr, "child-cc-request", nullptr);
+    }
     nsJSContext::CycleCollectNow();
     return true;
 }

@@ -63,23 +63,25 @@ struct SprintfStateStr {
 struct NumArgState{
     int	    type;		/* type of the current ap                    */
     va_list ap;			/* point to the corresponding position on ap */
+
+    enum Type {
+        INT16,
+        UINT16,
+        INTN,
+        UINTN,
+        INT32,
+        UINT32,
+        INT64,
+        UINT64,
+        STRING,
+        DOUBLE,
+        INTSTR,
+        UNISTRING,
+        UNKNOWN
+    };
 };
 
 #define NAS_DEFAULT_NUM 20  /* default number of NumberedArgumentState array */
-
-#define TYPE_INT16	0
-#define TYPE_UINT16	1
-#define TYPE_INTN	2
-#define TYPE_UINTN	3
-#define TYPE_INT32	4
-#define TYPE_UINT32	5
-#define TYPE_INT64	6
-#define TYPE_UINT64	7
-#define TYPE_STRING	8
-#define TYPE_DOUBLE	9
-#define TYPE_INTSTR	10
-#define TYPE_UNISTRING	11
-#define TYPE_UNKNOWN	20
 
 #define _LEFT		0x1
 #define _SIGNED		0x2
@@ -600,7 +602,7 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
     }
 
     for (i = 0; i < number; i++) {
-	nas[i].type = TYPE_UNKNOWN;
+	nas[i].type = NumArgState::UNKNOWN;
     }
 
     /*
@@ -631,7 +633,7 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 	/* nas[cn] starts from 0, and make sure 
            nas[cn].type is not assigned */
         cn--;
-	if (nas[cn].type != TYPE_UNKNOWN) {
+	if (nas[cn].type != NumArgState::UNKNOWN) {
 	    continue;
         }
 
@@ -663,19 +665,19 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 	}
 
 	/* size */
-	nas[cn].type = TYPE_INTN;
+	nas[cn].type = NumArgState::INTN;
 	if (c == 'h') {
-	    nas[cn].type = TYPE_INT16;
+	    nas[cn].type = NumArgState::INT16;
 	    c = *p++;
 	} else if (c == 'L') {
 	    /* XXX not quite sure here */
-	    nas[cn].type = TYPE_INT64;
+	    nas[cn].type = NumArgState::INT64;
 	    c = *p++;
 	} else if (c == 'l') {
-	    nas[cn].type = TYPE_INT32;
+	    nas[cn].type = NumArgState::INT32;
 	    c = *p++;
 	    if (c == 'l') {
-	        nas[cn].type = TYPE_INT64;
+	        nas[cn].type = NumArgState::INT64;
 	        c = *p++;
 	    }
 	}
@@ -694,48 +696,48 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 	case 'e':
 	case 'f':
 	case 'g':
-	    nas[cn].type = TYPE_DOUBLE;
+	    nas[cn].type = NumArgState::DOUBLE;
 	    break;
 
 	case 'p':
 	    /* XXX should use cpp */
 	    if (sizeof(void *) == sizeof(int32_t)) {
-		nas[cn].type = TYPE_UINT32;
+		nas[cn].type = NumArgState::UINT32;
 	    } else if (sizeof(void *) == sizeof(int64_t)) {
-	        nas[cn].type = TYPE_UINT64;
+	        nas[cn].type = NumArgState::UINT64;
 	    } else if (sizeof(void *) == sizeof(int)) {
-	        nas[cn].type = TYPE_UINTN;
+	        nas[cn].type = NumArgState::UINTN;
 	    } else {
-	        nas[cn].type = TYPE_UNKNOWN;
+	        nas[cn].type = NumArgState::UNKNOWN;
 	    }
 	    break;
 
 	case 'C':
 	    /* XXX not supported I suppose */
 	    PR_ASSERT(0);
-	    nas[cn].type = TYPE_UNKNOWN;
+	    nas[cn].type = NumArgState::UNKNOWN;
 	    break;
 
 	case 'S':
-	    nas[cn].type = TYPE_UNISTRING;
+	    nas[cn].type = NumArgState::UNISTRING;
 	    break;
 
 	case 's':
-	    nas[cn].type = TYPE_STRING;
+	    nas[cn].type = NumArgState::STRING;
 	    break;
 
 	case 'n':
-	    nas[cn].type = TYPE_INTSTR;
+	    nas[cn].type = NumArgState::INTSTR;
 	    break;
 
 	default:
 	    PR_ASSERT(0);
-	    nas[cn].type = TYPE_UNKNOWN;
+	    nas[cn].type = NumArgState::UNKNOWN;
 	    break;
 	}
 
 	/* get a legal para. */
-	if (nas[cn].type == TYPE_UNKNOWN) {
+	if (nas[cn].type == NumArgState::UNKNOWN) {
 	    *rv = -1;
 	    break;
 	}
@@ -755,7 +757,7 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 
     cn = 0;
     while (cn < number) {
-	if (nas[cn].type == TYPE_UNKNOWN) {
+	if (nas[cn].type == NumArgState::UNKNOWN) {
 	    cn++;
 	    continue;
 	}
@@ -763,26 +765,26 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 	VARARGS_ASSIGN(nas[cn].ap, ap);
 
 	switch (nas[cn].type) {
-	case TYPE_INT16:
-	case TYPE_UINT16:
-	case TYPE_INTN:
-	case TYPE_UINTN:     (void)va_arg(ap, int);         break;
+	case NumArgState::INT16:
+	case NumArgState::UINT16:
+	case NumArgState::INTN:
+	case NumArgState::UINTN:     (void)va_arg(ap, int);         break;
 
-	case TYPE_INT32:     (void)va_arg(ap, int32_t);     break;
+	case NumArgState::INT32:     (void)va_arg(ap, int32_t);     break;
 
-	case TYPE_UINT32:    (void)va_arg(ap, uint32_t);    break;
+	case NumArgState::UINT32:    (void)va_arg(ap, uint32_t);    break;
 
-	case TYPE_INT64:     (void)va_arg(ap, int64_t);     break;
+	case NumArgState::INT64:     (void)va_arg(ap, int64_t);     break;
 
-	case TYPE_UINT64:    (void)va_arg(ap, uint64_t);    break;
+	case NumArgState::UINT64:    (void)va_arg(ap, uint64_t);    break;
 
-	case TYPE_STRING:    (void)va_arg(ap, char*);       break;
+	case NumArgState::STRING:    (void)va_arg(ap, char*);       break;
 
-	case TYPE_INTSTR:    (void)va_arg(ap, int*);        break;
+	case NumArgState::INTSTR:    (void)va_arg(ap, int*);        break;
 
-	case TYPE_DOUBLE:    (void)va_arg(ap, double);      break;
+	case NumArgState::DOUBLE:    (void)va_arg(ap, double);      break;
 
-	case TYPE_UNISTRING: (void)va_arg(ap, PRUnichar*);  break;
+	case NumArgState::UNISTRING: (void)va_arg(ap, PRUnichar*);  break;
 
 	default:
 	    if( nas != nasArray ) {
@@ -871,7 +873,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 		c = *fmt++;
 	    }
 
-	    if (nas[i-1].type == TYPE_UNKNOWN) {
+	    if (nas[i-1].type == NumArgState::UNKNOWN) {
 		if (nas && (nas != nasArray)) {
 		    PR_DELETE(nas);
                 }
@@ -928,19 +930,19 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	}
 
 	/* size */
-	type = TYPE_INTN;
+	type = NumArgState::INTN;
 	if (c == 'h') {
-	    type = TYPE_INT16;
+	    type = NumArgState::INT16;
 	    c = *fmt++;
 	} else if (c == 'L') {
 	    /* XXX not quite sure here */
-	    type = TYPE_INT64;
+	    type = NumArgState::INT64;
 	    c = *fmt++;
 	} else if (c == 'l') {
-	    type = TYPE_INT32;
+	    type = NumArgState::INT32;
 	    c = *fmt++;
 	    if (c == 'l') {
-		type = TYPE_INT64;
+		type = NumArgState::INT64;
 		c = *fmt++;
 	    }
 	}
@@ -976,35 +978,35 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 
         fetch_and_convert:
 	    switch (type) {
-            case TYPE_INT16:
+            case NumArgState::INT16:
 		u.l = va_arg(ap, int);
 		if (u.l < 0) {
 		    u.l = -u.l;
 		    flags |= _NEG;
 		}
 		goto do_long;
-            case TYPE_UINT16:
+            case NumArgState::UINT16:
 		u.l = va_arg(ap, int) & 0xffff;
 		goto do_long;
-            case TYPE_INTN:
+            case NumArgState::INTN:
 		u.l = va_arg(ap, int);
 		if (u.l < 0) {
 		    u.l = -u.l;
 		    flags |= _NEG;
 		}
 		goto do_long;
-            case TYPE_UINTN:
+            case NumArgState::UINTN:
 		u.l = (long)va_arg(ap, unsigned int);
 		goto do_long;
 
-            case TYPE_INT32:
+            case NumArgState::INT32:
 		u.l = va_arg(ap, int32_t);
 		if (u.l < 0) {
 		    u.l = -u.l;
 		    flags |= _NEG;
 		}
 		goto do_long;
-            case TYPE_UINT32:
+            case NumArgState::UINT32:
 		u.l = (long)va_arg(ap, uint32_t);
             do_long:
 		rv = cvt_l(ss, u.l, width, prec, radix, type, flags, hexp);
@@ -1013,14 +1015,14 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 		}
 		break;
 
-            case TYPE_INT64:
+            case NumArgState::INT64:
 		u.ll = va_arg(ap, int64_t);
 		if (u.ll < 0) {
 		    u.ll = -u.ll;
 		    flags |= _NEG;
 		}
 		goto do_longlong;
-            case TYPE_UINT64:
+            case NumArgState::UINT64:
 		u.ll = va_arg(ap, uint64_t);
             do_longlong:
 		rv = cvt_ll(ss, u.ll, width, prec, radix, type, flags, hexp);
@@ -1069,11 +1071,11 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 
         case 'p':
 	    if (sizeof(void *) == sizeof(int32_t)) {
-	    	type = TYPE_UINT32;
+	    	type = NumArgState::UINT32;
 	    } else if (sizeof(void *) == sizeof(int64_t)) {
-	    	type = TYPE_UINT64;
+	    	type = NumArgState::UINT64;
 	    } else if (sizeof(void *) == sizeof(int)) {
-		type = TYPE_UINTN;
+		type = NumArgState::UINTN;
 	    } else {
 		PR_ASSERT(0);
 		break;

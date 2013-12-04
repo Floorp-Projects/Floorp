@@ -593,7 +593,12 @@ CompositorParent::CompositeInTransaction()
     mLayerManager->Dump();
   }
 #endif
+  mLayerManager->SetDebugOverlayWantsNextFrame(false);
   mLayerManager->EndEmptyTransaction();
+
+  if (mLayerManager->DebugOverlayWantsNextFrame()) {
+    ScheduleComposition();
+  }
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
   if (mExpectedComposeTime + TimeDuration::FromMilliseconds(15) < TimeStamp::Now()) {

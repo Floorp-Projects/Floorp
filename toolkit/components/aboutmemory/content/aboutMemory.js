@@ -359,22 +359,23 @@ function onLoad()
 
 function doGC()
 {
-  Cu.forceGC();
   Services.obs.notifyObservers(null, "child-gc-request", null);
+  Cu.forceGC();
   updateMainAndFooter("Garbage collection completed", HIDE_FOOTER);
 }
 
 function doCC()
 {
+  Services.obs.notifyObservers(null, "child-cc-request", null);
   window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils)
         .cycleCollect();
-  Services.obs.notifyObservers(null, "child-cc-request", null);
   updateMainAndFooter("Cycle collection completed", HIDE_FOOTER);
 }
 
 function doMMU()
 {
+  Services.obs.notifyObservers(null, "child-mmu-request", null);
   gMgr.minimizeMemoryUsage(
     () => updateMainAndFooter("Memory minimization completed", HIDE_FOOTER));
 }

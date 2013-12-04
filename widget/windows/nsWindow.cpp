@@ -3515,7 +3515,7 @@ nsWindow::StartRemoteDrawing()
 {
   MOZ_ASSERT(!mCompositeDC);
 
-  HDC dc = GetDC(mWnd);
+  HDC dc = (HDC)GetNativeData(NS_NATIVE_GRAPHIC);
   if (!dc) {
     return nullptr;
   }
@@ -3526,7 +3526,7 @@ nsWindow::StartRemoteDrawing()
 
   mozilla::gfx::IntSize size(surf->GetSize().width, surf->GetSize().height);
   if (size.width <= 0 || size.height <= 0) {
-    ReleaseDC(mWnd, dc);
+    FreeNativeData(dc, NS_NATIVE_GRAPHIC);
     return nullptr;
   }
 
@@ -3539,7 +3539,9 @@ nsWindow::StartRemoteDrawing()
 void
 nsWindow::EndRemoteDrawing()
 {
-  ReleaseDC(mWnd, mCompositeDC);
+  MOZ_ASSERT(mCompositeDC);
+  UpdateTranslucentWindow();
+  FreeNativeData(mCompositeDC, NS_NATIVE_GRAPHIC);
   mCompositeDC = nullptr;
 }
 
@@ -6637,7 +6639,11 @@ nsWindow::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
   LayerManagerPrefs prefs;
   GetLayerManagerPrefs(&prefs);
 
-  if (!prefs.mDisableAcceleration) {
+  // We don't currently support using an accelerated layer manager with
+  // transparent windows so don't even try. I'm also not sure if we even
+  // want to support this case. See bug 593471
+  if (!(prefs.mDisableAcceleration ||
+        mTransparencyMode == eTransparencyTransparent)) {
     if (prefs.mPreferOpenGL) {
       aHints.AppendElement(LAYERS_OPENGL);
     }

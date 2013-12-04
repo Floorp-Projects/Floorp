@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jit/IonCode.h"
+#include "js/SliceBudget.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ScopeObject.h"
 #include "vm/Shape.h"

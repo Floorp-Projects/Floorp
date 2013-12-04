@@ -134,12 +134,12 @@ class InlineMap
 
         K &key() {
             JS_ASSERT(found());
-            return isInlinePtr ? inlPtr->key : mapPtr->key;
+            return isInlinePtr ? inlPtr->key : mapPtr->key();
         }
 
         V &value() {
             JS_ASSERT(found());
-            return isInlinePtr ? inlPtr->value : mapPtr->value;
+            return isInlinePtr ? inlPtr->value : mapPtr->value();
         }
     }; /* class Ptr */
 
@@ -178,7 +178,7 @@ class InlineMap
             JS_ASSERT(found());
             if (isInlinePtr)
                 return inlAddPtr->value;
-            return mapAddPtr->value;
+            return mapAddPtr->value();
         }
     }; /* class AddPtr */
 
@@ -356,7 +356,7 @@ class InlineMap
             JS_ASSERT(!empty());
             if (isInlineRange())
                 return Entry(cur->key, cur->value);
-            return Entry(mapRange.front().key, mapRange.front().value);
+            return Entry(mapRange.front().key(), mapRange.front().value());
         }
 
         void popFront() {

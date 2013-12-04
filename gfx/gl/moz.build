@@ -41,8 +41,10 @@ EXPORTS += [
     'GLLibraryEGL.h',
     'GLLibraryLoader.h',
     'GLScreenBuffer.h',
+    'GLSharedHandleHelpers.h',
     'GLTextureImage.h',
     'GLTypes.h',
+    'GLUploadHelpers.h',
     'ScopedGLHelpers.h',
     'SharedSurface.h',
     'SharedSurfaceEGL.h',
@@ -79,10 +81,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     LOCAL_INCLUDES += ['/widget/gonk']
 
 if gl_provider == 'CGL':
-    # This file includes Mac headers that are unfriendly to unified builds,
-    # and we have only one .mm file here anyway.
+    # These files include Mac headers that are unfriendly to unified builds
     SOURCES += [
-        "GLContextProvider%s.mm" % (gl_provider),
+        "GLContextProviderCGL.mm",
+        "TextureImageCGL.mm"
     ]
     EXPORTS += [
         'SharedSurfaceIO.h',
@@ -117,13 +119,16 @@ UNIFIED_SOURCES += [
     'GLLibraryEGL.cpp',
     'GLLibraryLoader.cpp',
     'GLScreenBuffer.cpp',
+    'GLSharedHandleHelpers.cpp',
     'GLTextureImage.cpp',
+    'GLUploadHelpers.cpp',
     'ScopedGLHelpers.cpp',
     'SharedSurface.cpp',
     'SharedSurfaceEGL.cpp',
     'SharedSurfaceGL.cpp',
     'SurfaceFactory.cpp',
     'SurfaceStream.cpp',
+    'SurfaceTypes.cpp',
     'TextureGarbageBin.cpp',
     'TextureImageEGL.cpp',
     'VBOArena.cpp',

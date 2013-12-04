@@ -79,6 +79,20 @@ protected:
     virtual void ApplyFilter();
 };
 
+already_AddRefed<TextureImage>
+CreateTextureImageEGL(GLContext *gl,
+                      const nsIntSize& aSize,
+                      TextureImage::ContentType aContentType,
+                      GLenum aWrapMode,
+                      TextureImage::Flags aFlags,
+                      TextureImage::ImageFormat aImageFormat);
+
+already_AddRefed<TextureImage>
+TileGenFuncEGL(GLContext *gl,
+               const nsIntSize& aSize,
+               TextureImage::ContentType aContentType,
+               TextureImage::Flags aFlags,
+               TextureImage::ImageFormat aImageFormat);
 
 }
 }

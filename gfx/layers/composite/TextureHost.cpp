@@ -80,8 +80,14 @@ DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptorType aDescri
   }
 }
 
-// implemented in TextureOGL.cpp
+// implemented in TextureHostOGL.cpp
 TemporaryRef<TextureHost> CreateTextureHostOGL(uint64_t aID,
+                                               const SurfaceDescriptor& aDesc,
+                                               ISurfaceAllocator* aDeallocator,
+                                               TextureFlags aFlags);
+
+// implemented in TextureHostBasic.cpp
+TemporaryRef<TextureHost> CreateTextureHostBasic(uint64_t aID,
                                                const SurfaceDescriptor& aDesc,
                                                ISurfaceAllocator* aDeallocator,
                                                TextureFlags aFlags);
@@ -97,10 +103,7 @@ TextureHost::Create(uint64_t aID,
     case LAYERS_OPENGL:
       return CreateTextureHostOGL(aID, aDesc, aDeallocator, aFlags);
     case LAYERS_BASIC:
-      return CreateBackendIndependentTextureHost(aID,
-                                                 aDesc,
-                                                 aDeallocator,
-                                                 aFlags);
+      return CreateTextureHostBasic(aID, aDesc, aDeallocator, aFlags);
 #ifdef XP_WIN
     case LAYERS_D3D11:
     case LAYERS_D3D9:
@@ -261,11 +264,13 @@ DeprecatedTextureHost::PrintInfo(nsACString& aTo, const char* aPrefix)
   AppendToString(aTo, mFlags, " [flags=", "]");
 }
 
-
-
-
-
-
+void
+DeprecatedTextureHost::SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator)
+{
+  MOZ_ASSERT(!mBuffer || mBuffer == aBuffer, "Will leak the old mBuffer");
+  mBuffer = aBuffer;
+  mDeAllocator = aAllocator;
+}
 
 BufferTextureHost::BufferTextureHost(uint64_t aID,
                                      gfx::SurfaceFormat aFormat,

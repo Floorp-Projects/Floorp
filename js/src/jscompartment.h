@@ -610,11 +610,11 @@ struct WrapperValue
      * is in use, the AutoWrapper rooter will ensure the wrapper gets marked.
      */
     explicit WrapperValue(const WrapperMap::Ptr &ptr)
-      : value(*ptr->value.unsafeGet())
+      : value(*ptr->value().unsafeGet())
     {}
 
     explicit WrapperValue(const WrapperMap::Enum &e)
-      : value(*e.front().value.unsafeGet())
+      : value(*e.front().value().unsafeGet())
     {}
 
     Value &get() { return value; }

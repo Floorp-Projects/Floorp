@@ -101,6 +101,7 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define PREF_MAX_SCRIPT_RUN_TIME_CHROME "dom.max_chrome_script_run_time"
 
 #define GC_REQUEST_OBSERVER_TOPIC "child-gc-request"
+#define CC_REQUEST_OBSERVER_TOPIC "child-cc-request"
 #define MEMORY_PRESSURE_OBSERVER_TOPIC "memory-pressure"
 
 #define BROADCAST_ALL_WORKERS(_func, ...)                                      \
@@ -1579,6 +1580,10 @@ RuntimeService::Init()
     NS_WARNING("Failed to register for GC request notifications!");
   }
 
+  if (NS_FAILED(obs->AddObserver(this, CC_REQUEST_OBSERVER_TOPIC, false))) {
+    NS_WARNING("Failed to register for CC request notifications!");
+  }
+
   if (NS_FAILED(obs->AddObserver(this, MEMORY_PRESSURE_OBSERVER_TOPIC,
                                  false))) {
     NS_WARNING("Failed to register for memory pressure notifications!");
@@ -1825,6 +1830,10 @@ RuntimeService::Cleanup()
     if (obs) {
       if (NS_FAILED(obs->RemoveObserver(this, GC_REQUEST_OBSERVER_TOPIC))) {
         NS_WARNING("Failed to unregister for GC request notifications!");
+      }
+
+      if (NS_FAILED(obs->RemoveObserver(this, CC_REQUEST_OBSERVER_TOPIC))) {
+        NS_WARNING("Failed to unregister for CC request notifications!");
       }
 
       if (NS_FAILED(obs->RemoveObserver(this,
@@ -2203,6 +2212,12 @@ RuntimeService::GarbageCollectAllWorkers(bool aShrinking)
   BROADCAST_ALL_WORKERS(GarbageCollect, aShrinking);
 }
 
+void
+RuntimeService::CycleCollectAllWorkers()
+{
+  BROADCAST_ALL_WORKERS(CycleCollect, /* dummy = */ false);
+}
+
 // nsISupports
 NS_IMPL_ISUPPORTS1(RuntimeService, nsIObserver)
 
@@ -2222,11 +2237,16 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
   if (!strcmp(aTopic, GC_REQUEST_OBSERVER_TOPIC)) {
-    GarbageCollectAllWorkers(false);
+    GarbageCollectAllWorkers(/* shrinking = */ false);
+    return NS_OK;
+  }
+  if (!strcmp(aTopic, CC_REQUEST_OBSERVER_TOPIC)) {
+    CycleCollectAllWorkers();
     return NS_OK;
   }
   if (!strcmp(aTopic, MEMORY_PRESSURE_OBSERVER_TOPIC)) {
-    GarbageCollectAllWorkers(true);
+    GarbageCollectAllWorkers(/* shrinking = */ true);
+    CycleCollectAllWorkers();
     return NS_OK;
   }
 

@@ -2037,6 +2037,7 @@ static bool sPrefLayersAccelerationDisabled = false;
 static bool sPrefLayersPreferOpenGL = false;
 static bool sPrefLayersPreferD3D9 = false;
 static bool sPrefLayersDump = false;
+static bool sPrefLayersScrollGraph = false;
 static bool sLayersSupportsD3D9 = false;
 static int  sPrefLayoutFrameRate = -1;
 static bool sBufferRotationEnabled = false;
@@ -2064,6 +2065,7 @@ InitLayersAccelerationPrefs()
     sPrefLayersPreferOpenGL = Preferences::GetBool("layers.prefer-opengl", false);
     sPrefLayersPreferD3D9 = Preferences::GetBool("layers.prefer-d3d9", false);
     sPrefLayersDump = Preferences::GetBool("layers.dump", false);
+    sPrefLayersScrollGraph = Preferences::GetBool("layers.scroll-graph", false);
     sPrefLayoutFrameRate = Preferences::GetInt("layout.frame_rate", -1);
     sBufferRotationEnabled = Preferences::GetBool("layers.bufferrotation.enabled", true);
     sComponentAlphaEnabled = Preferences::GetBool("layers.componentalpha.enabled", true);
@@ -2166,6 +2168,15 @@ gfxPlatform::GetPrefLayersDump()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayersDump;
+}
+
+bool
+gfxPlatform::GetPrefLayersScrollGraph()
+{
+  // this function is called from the compositor thread, so it is not
+  // safe to init the prefs etc. from here.
+  MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
+  return sPrefLayersScrollGraph;
 }
 
 bool

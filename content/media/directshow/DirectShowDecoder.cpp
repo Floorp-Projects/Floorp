@@ -45,8 +45,7 @@ DirectShowDecoder::GetSupportedCodecs(const nsACString& aType,
 bool
 DirectShowDecoder::IsEnabled()
 {
-  return !IsVistaOrLater() &&
-         Preferences::GetBool("media.directshow.enabled");
+  return Preferences::GetBool("media.directshow.enabled");
 }
 
 DirectShowDecoder::DirectShowDecoder()

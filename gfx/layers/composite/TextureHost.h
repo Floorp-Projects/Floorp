@@ -488,7 +488,7 @@ public:
 
 protected:
   mozilla::ipc::Shmem* mShmem;
-  ISurfaceAllocator* mDeallocator;
+  RefPtr<ISurfaceAllocator> mDeallocator;
 };
 
 /**
@@ -705,12 +705,7 @@ public:
    */
   // only made virtual to allow overriding in GrallocDeprecatedTextureHostOGL, for hacky fix in gecko 23 for bug 862324.
   // see bug 865908 about fixing this.
-  virtual void SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator)
-  {
-    MOZ_ASSERT(!mBuffer || mBuffer == aBuffer, "Will leak the old mBuffer");
-    mBuffer = aBuffer;
-    mDeAllocator = aAllocator;
-  }
+  virtual void SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator);
 
   // used only for hacky fix in gecko 23 for bug 862324
   // see bug 865908 about fixing this.
@@ -762,7 +757,7 @@ protected:
                               // which can go away under our feet at any time. This is the cause
                               // of bug 862324 among others. Our current understanding is that
                               // this will be gone in Gecko 24. See bug 858914.
-  ISurfaceAllocator* mDeAllocator;
+  RefPtr<ISurfaceAllocator> mDeAllocator;
   gfx::SurfaceFormat mFormat;
 };
 

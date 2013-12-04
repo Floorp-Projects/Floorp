@@ -145,6 +145,8 @@ public:
   void HandleTap(const Point& aPoint, unsigned int aTapCount);
   void HandleLongTap(const Point& aPoint);
 
+  static bool IsInputModeImprecise();
+
 private:
   Microsoft::WRL::ComPtr<ICoreWindow> mWindow;
   Microsoft::WRL::ComPtr<MetroWidget> mWidget;
@@ -157,7 +159,7 @@ private:
     LEVEL_PRECISE,
     LEVEL_IMPRECISE
   };
-  InputPrecisionLevel mCurrentInputLevel;
+  static InputPrecisionLevel sCurrentInputLevel;
   void UpdateInputLevel(InputPrecisionLevel aInputLevel);
 
   // Initialization/Uninitialization helpers

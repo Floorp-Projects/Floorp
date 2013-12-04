@@ -891,7 +891,7 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
 {
     DependentAddPtr<CloneMemory> p(cx, clonedObjects, srcObj.get());
     if (p)
-        return p->value;
+        return p->value();
     RootedObject clone(cx);
     if (srcObj->is<JSFunction>()) {
         if (srcObj->as<JSFunction>().isWrappable()) {
