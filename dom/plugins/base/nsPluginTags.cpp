@@ -81,6 +81,7 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
            aPluginInfo->fExtensionArray,
            aPluginInfo->fVariantCount);
   EnsureMembersAreUTF8();
+  FixupVersion();
 }
 
 nsPluginTag::nsPluginTag(const char* aName,
@@ -111,6 +112,7 @@ nsPluginTag::nsPluginTag(const char* aName,
            static_cast<uint32_t>(aVariants));
   if (!aArgsAreUTF8)
     EnsureMembersAreUTF8();
+  FixupVersion();
 }
 
 nsPluginTag::~nsPluginTag()
@@ -247,6 +249,15 @@ nsresult nsPluginTag::EnsureMembersAreUTF8()
     }
   }
   return NS_OK;
+#endif
+}
+
+void nsPluginTag::FixupVersion()
+{
+#if defined(XP_LINUX)
+  if (mIsFlashPlugin) {
+    mVersion.ReplaceChar(',', '.');
+  }
 #endif
 }
 
