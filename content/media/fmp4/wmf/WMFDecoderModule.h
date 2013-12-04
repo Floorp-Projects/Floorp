@@ -26,15 +26,15 @@ public:
 
   // Decode thread.
   virtual MediaDataDecoder*
-  CreateVideoDecoder(mozilla::layers::LayersBackend aLayersBackend,
-                     mozilla::layers::ImageContainer* aImageContainer) MOZ_OVERRIDE;
+  CreateH264Decoder(mozilla::layers::LayersBackend aLayersBackend,
+                    mozilla::layers::ImageContainer* aImageContainer) MOZ_OVERRIDE;
 
   // Decode thread.
-  virtual MediaDataDecoder* CreateAudioDecoder(uint32_t aChannelCount,
-                                               uint32_t aSampleRate,
-                                               uint16_t aBitsPerSample,
-                                               const uint8_t* aUserData,
-                                               uint32_t aUserDataLength) MOZ_OVERRIDE;
+  virtual MediaDataDecoder* CreateAACDecoder(uint32_t aChannelCount,
+                                             uint32_t aSampleRate,
+                                             uint16_t aBitsPerSample,
+                                             const uint8_t* aUserData,
+                                             uint32_t aUserDataLength) MOZ_OVERRIDE;
 
   // Platform decoders can override these. Base implementation does nothing.
   virtual void OnDecodeThreadStart() MOZ_OVERRIDE;
