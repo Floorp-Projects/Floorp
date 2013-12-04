@@ -29,7 +29,7 @@ BEGIN
             VALUE "FileOpenName", "Second test type"
             VALUE "FileVersion", "1.0"
             VALUE "InternalName", "npsecondtest"
-            VALUE "MIMEType", "application/x-second-test"
+            VALUE "MIMEType", "application/x-Second-Test"
             VALUE "OriginalFilename", "npsecondtest.dll"
             VALUE "ProductName", "Second Test Plug-in"
             VALUE "ProductVersion", "1.0"
