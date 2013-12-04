@@ -1588,6 +1588,9 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProt
 {
     JS_ASSERT_IF(proto.isObject(), cx->isInsideCurrentCompartment(proto.toObject()));
     JS_ASSERT_IF(parent, cx->isInsideCurrentCompartment(parent));
+#ifdef JSGC_GENERATIONAL
+    JS_ASSERT_IF(metadata && cx->hasNursery(), !cx->nursery().isInside(metadata));
+#endif
 
     InitialShapeSet &table = cx->compartment()->initialShapes;
 
