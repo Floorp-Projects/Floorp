@@ -42,7 +42,3 @@ LOCAL_INCLUDES += [
     '/content/mathml/content/src',
 ]
 
-if CONFIG['ENABLE_TESTS']:
-    PARALLEL_DIRS += [
-        'tests',
-    ]
