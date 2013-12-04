@@ -125,6 +125,28 @@ function _onInputKeyPress (event, callback) {
     return;
   }
 
+  if ((currentlyFocused instanceof Ci.nsIDOMHTMLInputElement &&
+      currentlyFocused.mozIsTextField(false)) ||
+      currentlyFocused instanceof Ci.nsIDOMHTMLTextAreaElement) {
+    // If there is a text selection, remain in the element.
+    if (currentlyFocused.selectionEnd - currentlyFocused.selectionStart != 0) {
+      return;
+    }
+
+    // If there is no text, there is nothing special to do.
+    if (currentlyFocused.textLength > 0) {
+      if (key == PrefObserver['keyCodeRight'] ||
+          key == PrefObserver['keyCodeDown'] ) {
+        // We are moving forward into the document.
+        if (currentlyFocused.textLength != currentlyFocused.selectionEnd) {
+          return;
+        }
+      } else if (currentlyFocused.selectionStart != 0) {
+        return;
+      }
+    }
+  }
+
   let windowUtils = currentlyFocusedWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                                           .getInterface(Ci.nsIDOMWindowUtils);
   let cssPageRect = _getRootBounds(windowUtils);
