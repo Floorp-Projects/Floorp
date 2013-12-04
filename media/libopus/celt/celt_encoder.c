@@ -508,7 +508,7 @@ void celt_preemphasis(const opus_val16 * OPUS_RESTRICT pcmp, celt_sig * OPUS_RES
       opus_val16 coef2 = coef[2];
       for (i=0;i<N;i++)
       {
-         opus_val16 x, tmp;
+         celt_sig x, tmp;
          x = inp[i];
          /* Apply pre-emphasis */
          tmp = MULT16_16(coef2, x);
