@@ -246,7 +246,7 @@ class TextSelection extends Layer implements GeckoEventListener {
                 try {
                     final JSONObject obj = mItems.getJSONObject(i);
                     final GeckoMenuItem menuitem = (GeckoMenuItem) menu.add(0, i, 0, obj.optString("label"));
-                    menuitem.setShowAsAction(obj.optBoolean("showAsAction") ? 1 : 0);
+                    menuitem.setShowAsAction(obj.optBoolean("showAsAction") ? 1 : 0, R.attr.menuItemActionModeStyle);
 
                     BitmapUtils.getDrawable(mStartHandle.getContext(), obj.optString("icon"), new BitmapLoader() {
                         public void onBitmapFound(Drawable d) {

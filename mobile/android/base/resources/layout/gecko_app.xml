@@ -76,11 +76,11 @@
 
             <org.mozilla.gecko.toolbar.BrowserToolbar
                 android:id="@id/browser_toolbar"
-                    style="@style/BrowserToolbar"
-                    android:layout_width="fill_parent"
-                    android:layout_height="@dimen/browser_toolbar_height"
-                    android:clickable="true"
-                    android:focusable="true"
+                style="@style/BrowserToolbar"
+                android:layout_width="fill_parent"
+                android:layout_height="@dimen/browser_toolbar_height"
+                android:clickable="true"
+                android:focusable="true"
                 android:background="@drawable/url_bar_bg"/>
 
             <org.mozilla.gecko.ActionModeCompatView android:id="@+id/actionbar"
