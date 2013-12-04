@@ -247,10 +247,10 @@ SharedSurface_Basic::Create(GLContext* gl,
                             bool hasAlpha)
 {
     gl->MakeCurrent();
-    GLuint tex = gl->CreateTexture(formats.color_texInternalFormat,
-                                   formats.color_texFormat,
-                                   formats.color_texType,
-                                   size);
+    GLuint tex = CreateTexture(gl, formats.color_texInternalFormat,
+                               formats.color_texFormat,
+                               formats.color_texType,
+                               size);
 
     gfxImageFormat format = gfxImageFormatRGB24;
     switch (formats.color_texInternalFormat) {
@@ -319,7 +319,7 @@ SharedSurface_GLTexture::Create(GLContext* prodGL,
     MOZ_ASSERT(!consGL || prodGL->SharesWith(consGL));
 
     prodGL->MakeCurrent();
-    GLuint tex = prodGL->CreateTextureForOffscreen(formats, size);
+    GLuint tex = CreateTextureForOffscreen(prodGL, formats, size);
 
     return new SharedSurface_GLTexture(prodGL, consGL, size, hasAlpha, tex);
 }
