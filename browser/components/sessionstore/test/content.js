@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let Ci = Components.interfaces;
-
 /**
  * This frame script is only loaded for sessionstore mochitests. It enables us
  * to modify and query docShell data when running with multiple processes.

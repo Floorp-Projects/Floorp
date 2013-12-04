@@ -287,7 +287,7 @@ Pipe.prototype = {
             let frameLoader = frame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
             mm = frameLoader.messageManager;
             try {
-              mm.loadFrameScript(kIdentityShimFile, true, true);
+              mm.loadFrameScript(kIdentityShimFile, true);
               log("Loaded shim", kIdentityShimFile);
             } catch (e) {
               log("Error loading", kIdentityShimFile, "as a frame script:", e);

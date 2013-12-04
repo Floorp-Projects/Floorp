@@ -3,20 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-let Ci = Components.interfaces;
-let Cc = Components.classes;
-
 /*
  * SelectionPrototype - common base class used by both chrome and content selection logic.
  */
 
 // selection node parameters for various apis
-this.kSelectionNodeAnchor = 1;
-this.kSelectionNodeFocus = 2;
+const kSelectionNodeAnchor = 1;
+const kSelectionNodeFocus = 2;
 
 // selection type property constants
-this.kChromeSelector = 1;
-this.kContentSelector = 2;
+const kChromeSelector = 1;
+const kContentSelector = 2;
 
 dump("### SelectionPrototype.js loaded\n");
 
@@ -954,4 +951,3 @@ SelectionPrototype.prototype = {
     this._setDebugRect(rect, aColor, true);
   },
 };
-this.SelectionPrototype = SelectionPrototype;
