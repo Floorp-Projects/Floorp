@@ -11,8 +11,7 @@ PARALLEL_DIRS += [
     'forms',
     'tables',
     'svg',
-    'xul/base/public',
-    'xul/base/src',
+    'xul',
     'ipc',
     'mathml',
     'inspector',
@@ -21,15 +20,6 @@ PARALLEL_DIRS += [
 
 if CONFIG['NS_PRINTING']:
     PARALLEL_DIRS += ['printing']
-
-if CONFIG['MOZ_XUL']:
-    PARALLEL_DIRS += ['xul/tree', 'xul/grid']
-
-if CONFIG['ENABLE_TESTS']:
-    PARALLEL_DIRS += [
-        'xul/test',
-        'xul/base/test',
-    ]
 
 TEST_TOOL_DIRS += [
     'tools/reftest',
