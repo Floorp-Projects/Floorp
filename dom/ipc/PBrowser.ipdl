@@ -392,7 +392,7 @@ child:
      */
     ActivateFrameEvent(nsString aType, bool capture);
 
-    LoadRemoteScript(nsString aURL, bool aRunInGlobalScope);
+    LoadRemoteScript(nsString aURL);
 
     /**
      * Create a asynchronous request to render whatever document is
