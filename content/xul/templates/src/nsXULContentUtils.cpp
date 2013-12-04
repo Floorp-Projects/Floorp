@@ -61,8 +61,6 @@
 
 using namespace mozilla;
 
-static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
-
 //------------------------------------------------------------------------
 
 nsIRDFService* nsXULContentUtils::gRDF;
@@ -86,6 +84,7 @@ extern PRLogModuleInfo* gXULTemplateLog;
 nsresult
 nsXULContentUtils::Init()
 {
+    static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
     nsresult rv = CallGetService(kRDFServiceCID, &gRDF);
     if (NS_FAILED(rv)) {
         return rv;

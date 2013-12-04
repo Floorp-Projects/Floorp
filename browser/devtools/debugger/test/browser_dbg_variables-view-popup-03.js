@@ -11,30 +11,14 @@ function test() {
   Task.spawn(function() {
     let [tab, debuggee, panel] = yield initDebugger(TAB_URL);
     let win = panel.panelWin;
-    let events = win.EVENTS;
-    let editor = win.DebuggerView.editor;
     let bubble = win.DebuggerView.VariableBubble;
-    let tooltip = bubble._tooltip.panel;
-
-    function openPopup(coords) {
-      let popupshown = once(tooltip, "popupshown");
-      let { left, top } = editor.getCoordsFromPosition(coords);
-      bubble._findIdentifier(left, top);
-      return popupshown;
-    }
-
-    function hidePopup() {
-      let popuphiding = once(tooltip, "popuphiding");
-      bubble.hideContents();
-      return popuphiding.then(waitForTick);
-    }
 
     // Allow this generator function to yield first.
     executeSoon(() => debuggee.start());
     yield waitForSourceAndCaretAndScopes(panel, ".html", 24);
 
     // Inspect variable.
-    yield openPopup({ line: 15, ch: 12 });
+    yield openVarPopup(panel, { line: 15, ch: 12 });
 
     ok(!bubble._tooltip.isEmpty(),
       "The variable inspection popup isn't empty.");
@@ -43,7 +27,7 @@ function test() {
     ok(bubble._markedText.clear,
       "The marked text in the editor can be cleared.");
 
-    yield hidePopup();
+    yield hideVarPopup(panel);
 
     ok(bubble._tooltip.isEmpty(),
       "The variable inspection popup is now empty.");

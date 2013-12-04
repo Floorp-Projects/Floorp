@@ -37,8 +37,12 @@ LOCAL_INCLUDES += [
     '../generic',
     '../style',
     '../tables',
-    '../xul/base/src',
+    '../xul',
     '/content/base/src',
     '/content/mathml/content/src',
 ]
 
+if CONFIG['ENABLE_TESTS']:
+    PARALLEL_DIRS += [
+        'tests',
+    ]
