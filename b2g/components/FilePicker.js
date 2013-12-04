@@ -103,7 +103,10 @@ FilePicker.prototype = {
       this.mFilterTypes = this.mFilterTypes.concat(AUDIO_FILTERS);
     }
 
-    // Ci.nsIFilePicker.filterAll is by default
+    if (filterMask & Ci.nsIFilePicker.filterAll) {
+      // This property is needed for the gallery app pick activity.
+      this.mExtraProps['nocrop'] = true;
+    }
   },
 
   appendFilter: function(title, extensions) {
