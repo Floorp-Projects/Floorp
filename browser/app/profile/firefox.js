@@ -243,7 +243,7 @@ pref("xpinstall.whitelist.add.180", "marketplace.firefox.com");
 pref("lightweightThemes.update.enabled", true);
 
 // UI tour experience.
-pref("browser.uitour.enabled", true);
+pref("browser.uitour.enabled", false);
 pref("browser.uitour.requireSecure", true);
 pref("browser.uitour.themeOrigin", "https://addons.mozilla.org/%LOCALE%/firefox/themes/");
 pref("browser.uitour.pinnedTabUrl", "https://support.mozilla.org/%LOCALE%/kb/pinned-tabs-keep-favorite-websites-open");
