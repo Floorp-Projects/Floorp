@@ -4,12 +4,16 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.animation.AnimationUtils;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.MenuPopup;
 import org.mozilla.gecko.menu.MenuPanel;
 import org.mozilla.gecko.menu.MenuItemActionBar;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
+import android.view.animation.ScaleAnimation;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuInflater;
@@ -156,4 +160,18 @@ class ActionModeCompatView extends LinearLayout implements GeckoMenu.ActionItemB
         mPopupMenu.dismiss();
     }
 
+    public void animateIn() {
+        long duration = AnimationUtils.getShortDuration(getContext());
+        TranslateAnimation t = new TranslateAnimation(Animation.RELATIVE_TO_SELF, -0.5f, Animation.RELATIVE_TO_SELF, 0f,
+                                                      Animation.RELATIVE_TO_SELF,  0f,   Animation.RELATIVE_TO_SELF, 0f);
+        t.setDuration(duration);
+
+        ScaleAnimation s = new ScaleAnimation(1f, 1f, 0f, 1f,
+                                              Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        s.setDuration((long) (duration * 1.5f));
+
+        mTitleView.startAnimation(t);
+        mActionButtonBar.startAnimation(s);
+        mMenuButton.startAnimation(s);
+    }
 }
