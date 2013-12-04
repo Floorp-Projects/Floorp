@@ -4125,6 +4125,26 @@ class CGArgumentConverter(CGThing):
                                "}")
         return variadicConversion
 
+def getMaybeWrapValueFuncForType(type):
+    # Callbacks might actually be DOM objects; nothing prevents a page from
+    # doing that.
+    if type.isCallback() or type.isCallbackInterface() or type.isObject():
+        if type.nullable():
+            return "MaybeWrapObjectOrNullValue"
+        return "MaybeWrapObjectValue"
+    # Spidermonkey interfaces are never DOM objects
+    if type.isSpiderMonkeyInterface():
+        if type.nullable():
+            return "MaybeWrapNonDOMObjectOrNullValue"
+        return "MaybeWrapNonDOMObjectValue"
+    if type.isAny():
+        return "MaybeWrapValue"
+
+    # For other types, just go ahead an fall back on MaybeWrapValue for now:
+    # it's always safe to do, and shouldn't be particularly slow for any of
+    # them
+    return "MaybeWrapValue"
+
 sequenceWrapLevel = 0
 
 def getWrapTemplateForType(type, descriptorProvider, result, successCode,
@@ -4161,30 +4181,19 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     # if body.
     exceptionCodeIndented = CGIndenter(CGGeneric(exceptionCode))
 
-    def setValue(value, callWrapValue=None):
+    def setValue(value, wrapAsType=None):
         """
         Returns the code to set the jsval to value.
 
-        "callWrapValue" can be set to the following values:
-          * None: no wrapping will be done.
-          * "object": will wrap using MaybeWrapObjectValue.
-          * "objectOrNull": will wrap using MaybeWrapObjectOrNullValue.
-          * "nonDOMObject": will wrap using MaybeWrapNonDOMObjectValue.
-          * "nonDOMObjectOrNull": will wrap using MaybeWrapNonDOMObjectOrNullValue
-          * "value": will wrap using MaybeWrapValue.
+        If wrapAsType is not None, then will wrap the resulting value using the
+        function that getMaybeWrapValueFuncForType(wrapAsType) returns.
+        Otherwise, no wrapping will be done.
         """
-        if not callWrapValue:
+        if wrapAsType is None:
             tail = successCode
         else:
-            methodMap = {
-                "object": "MaybeWrapObjectValue",
-                "objectOrNull": "MaybeWrapObjectOrNullValue",
-                "nonDOMObject": "MaybeWrapNonDOMObjectValue",
-                "nonDOMObjectOrNull": "MaybeWrapNonDOMObjectOrNullValue",
-                "value": "MaybeWrapValue"
-                }
             tail = (("if (!%s(cx, ${jsvalHandle})) {\n"
-                     "%s\n" % (methodMap[callWrapValue],
+                     "%s\n" % (getMaybeWrapValueFuncForType(wrapAsType),
                                exceptionCodeIndented.define())) +
                     "}\n" +
                     successCode)
@@ -4347,14 +4356,14 @@ if (!returnArray) {
         if type.nullable():
             conversion = CGIfElseWrapper(
                 "%s.IsNull()" % result,
-                CGGeneric(setValue("JS::NullValue()", False)),
+                CGGeneric(setValue("JS::NullValue()")),
                 CGGeneric(conversion)).define()
         return conversion, False
 
     if type.isCallback() or type.isCallbackInterface():
         wrapCode = setValue(
             "JS::ObjectValue(*GetCallbackFromCallbackObject(%(result)s))",
-            "object")
+            wrapAsType=type)
         if type.nullable():
             wrapCode = (
                 "if (%(result)s) {\n" +
@@ -4368,8 +4377,8 @@ if (!returnArray) {
     if type.isAny():
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
-        # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
-        return (setValue(result, "value"), False)
+        # NB: setValue(..., type-that-is-any) calls JS_WrapValue(), so is fallible
+        return (setValue(result, wrapAsType=type), False)
 
     if (type.isObject() or (type.isSpiderMonkeyInterface() and
                             not typedArraysAreStructs)):
@@ -4377,18 +4386,10 @@ if (!returnArray) {
         # to wrap here.
         if type.nullable():
             toValue = "JS::ObjectOrNullValue(%s)"
-            if type.isSpiderMonkeyInterface():
-                wrapType = "nonDOMObjectOrNull"
-            else:
-                wrapType = "objectOrNull"
         else:
             toValue = "JS::ObjectValue(*%s)"
-            if type.isSpiderMonkeyInterface():
-                wrapType = "nonDOMObject"
-            else:
-                wrapType = "object"
-        # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
-        return (setValue(toValue % result, wrapType), False)
+        # NB: setValue(..., some-object-type) calls JS_WrapValue(), so is fallible
+        return (setValue(toValue % result, wrapAsType=type), False)
 
     if not (type.isUnion() or type.isPrimitive() or type.isDictionary() or
             type.isDate() or
@@ -4408,9 +4409,9 @@ if (!returnArray) {
         assert typedArraysAreStructs
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
-        # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
+        # NB: setValue(..., some-object-type) calls JS_WrapValue(), so is fallible
         return (setValue("JS::ObjectValue(*%s.Obj())" % result,
-                         "nonDOMObject"), False)
+                         wrapAsType=type), False)
 
     if type.isUnion():
         return (wrapAndSetPtr("%s.ToJSVal(cx, ${obj}, ${jsvalHandle})" % result),
@@ -5097,14 +5098,15 @@ if (!${obj}) {
                 "{ // Scope for tempVal\n"
                 "  JS::Rooted<JS::Value> tempVal(cx, args.rval());\n"
                 "  JSAutoCompartment ac(cx, reflector);\n"
-                "  if (!MaybeWrapValue(cx, &tempVal)) {\n"
+                "  if (!%s(cx, &tempVal)) {\n"
                 "    return false;\n"
                 "  }\n"
                 "  js::SetReservedSlot(reflector, %d, tempVal);\n"
                 "%s"
                 "}\n"
                 "return true;" %
-                (memberReservedSlot(self.idlNode), preserveWrapper))
+                (getMaybeWrapValueFuncForType(self.idlNode.type),
+                 memberReservedSlot(self.idlNode), preserveWrapper))
         else:
             successCode = None
 
@@ -5968,9 +5970,10 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                 "      args.rval().set(cachedVal);\n"
                 "      // The cached value is in the compartment of reflector,\n"
                 "      // so wrap into the caller compartment as needed.\n"
-                "      return MaybeWrapValue(cx, args.rval());\n"
+                "      return %s(cx, args.rval());\n"
                 "    }\n"
-                "  }\n\n" % memberReservedSlot(self.attr))
+                "  }\n\n" % (memberReservedSlot(self.attr),
+                             getMaybeWrapValueFuncForType(self.attr.type)))
         else:
             prefix = ""
 
@@ -8918,7 +8921,7 @@ if (""",
         methods.append(self.initFromJSONMethod())
         try:
             methods.append(self.toObjectMethod())
-        except MethodNotCreatorError:
+        except MethodNotNewObjectError:
             # If we can't have a ToObject() because one of our members can only
             # be returned from [NewObject] methods, then just skip generating
             # ToObject().
