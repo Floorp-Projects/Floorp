@@ -1,0 +1,29 @@
+<body>
+<head>
+  <title>Test mixed case mimetype for plugins</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script>
+  SimpleTest.expectAssertions(0, 1);
+
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+
+  function frameLoaded() {
+    var contentDocument = document.getElementById('testframe').contentDocument;
+    ok(contentDocument.body.innerHTML.length > 0, "Frame content shouldn't be empty.");
+    ok(contentDocument.plugins.length > 0, "Frame content should have a plugin.");
+    var plugin = contentDocument.plugins[0];
+    is(plugin.type.toLowerCase(), "application/x-second-test", "Should have loaded the second test plugin.");
+    SimpleTest.finish();
+  }
+</script>
+</head>
+<body>
+  <p id="display"></p>
+
+  <iframe id="testframe" name="testframe" onload="frameLoaded()" src="mixed_case_mime.sjs"></iframe>
+
+</body>
+</html>
