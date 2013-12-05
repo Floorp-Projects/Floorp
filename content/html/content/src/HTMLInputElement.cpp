@@ -3328,6 +3328,8 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
         nsNumberControlFrame* numberControlFrame =
           do_QueryFrame(GetPrimaryFrame());
         if (numberControlFrame) {
+          bool oldNumberControlSpinTimerSpinsUpValue =
+                 mNumberControlSpinnerSpinsUp;
           switch (numberControlFrame->GetSpinButtonForPointerEvent(
                     aVisitor.mEvent->AsMouseEvent())) {
           case nsNumberControlFrame::eSpinButtonUp:
@@ -3338,6 +3340,14 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
             mNumberControlSpinnerSpinsUp = false;
             stopSpin = false;
             break;
+          }
+          if (mNumberControlSpinnerSpinsUp !=
+                oldNumberControlSpinTimerSpinsUpValue) {
+            nsNumberControlFrame* numberControlFrame =
+              do_QueryFrame(GetPrimaryFrame());
+            if (numberControlFrame) {
+              numberControlFrame->SpinnerStateChanged();
+            }
           }
         }
         if (stopSpin) {
@@ -3359,6 +3369,15 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
           if (numberControlFrame) {
             numberControlFrame->HandleFocusEvent(aVisitor.mEvent);
           }
+        }
+        if (frame->IsThemed()) {
+          // Our frame's nested <input type=text> will be invalidated when it
+          // loses focus, but since we are also native themed we need to make
+          // sure that our entire area is repainted since any focus highlight
+          // from the theme should be removed from us (the repainting of the
+          // sub-area occupied by the anon text control is not enough to do
+          // that).
+          frame->InvalidateFrame();
         }
       }
     } else if (aVisitor.mEvent->message == NS_KEY_UP) {
@@ -3511,6 +3530,12 @@ HTMLInputElement::StartNumberControlSpinnerSpin()
   // Capture the mouse so that we can tell if the pointer moves from one
   // spin button to the other, or to some other element:
   nsIPresShell::SetCapturingContent(this, CAPTURE_IGNOREALLOWED);
+
+  nsNumberControlFrame* numberControlFrame =
+    do_QueryFrame(GetPrimaryFrame());
+  if (numberControlFrame) {
+    numberControlFrame->SpinnerStateChanged();
+  }
 }
 
 void
@@ -3526,6 +3551,12 @@ HTMLInputElement::StopNumberControlSpinnerSpin()
     mNumberControlSpinnerIsSpinning = false;
 
     FireChangeEventIfNeeded();
+
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      numberControlFrame->SpinnerStateChanged();
+    }
   }
 }
 

@@ -688,6 +688,16 @@ public:
    */
   static void HandleNumberControlSpin(void* aData);
 
+  bool NumberSpinnerUpButtonIsDepressed() const
+  {
+    return mNumberControlSpinnerIsSpinning && mNumberControlSpinnerSpinsUp;
+  }
+
+  bool NumberSpinnerDownButtonIsDepressed() const
+  {
+    return mNumberControlSpinnerIsSpinning && !mNumberControlSpinnerSpinsUp;
+  }
+
   bool MozIsTextField(bool aExcludePassword);
 
   nsIEditor* GetEditor();
