@@ -48,7 +48,7 @@ function setAttributes(aNode, aAttrs) {
 
 function updateCombinedWidgetStyle(aNode, aArea, aModifyAutoclose) {
   let inPanel = (aArea == CustomizableUI.AREA_PANEL);
-  let cls = inPanel ? "panel-combined-button" : null;
+  let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
   let attrs = {class: cls};
   if (aModifyAutoclose) {
     attrs.noautoclose = inPanel ? true : null;
@@ -305,7 +305,7 @@ const CustomizableWidgets = [{
       const kPanelId = "PanelUI-popup";
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
       let noautoclose = inPanel ? "true" : null;
-      let cls = inPanel ? "panel-combined-button" : null;
+      let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
 
       if (!this.currentArea)
         cls = null;
@@ -449,7 +449,7 @@ const CustomizableWidgets = [{
     defaultArea: CustomizableUI.AREA_PANEL,
     onBuild: function(aDocument) {
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
-      let cls = inPanel ? "panel-combined-button" : null;
+      let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
 
       if (!this.currentArea)
         cls = null;
@@ -799,6 +799,8 @@ const CustomizableWidgets = [{
 if (isWin8OrHigher()) {
   CustomizableWidgets.push({
     id: "switch-to-metro-button",
+    label: "switch-to-metro-button2.label",
+    tooltiptext: "switch-to-metro-button2.tooltiptext",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {

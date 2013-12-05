@@ -796,9 +796,13 @@ BrowserTabActor.prototype = {
    */
   postNest: function BTA_postNest(aNestData) {
     if (!this.window) {
-      // The tab is already closed.
-      dbg_assert(this._nestedEventLoopDepth === 0,
-                 "window shouldn't be closed before all nested event loops have been popped");
+      // The tab is already closed, so there is no way to resume events and
+      // timeouts.
+      // TODO: this wouldn't be necessary if closing a browser window could be
+      // identified early enough while this.window is still available. This is
+      // still cauisng leaks that we need to fix (bug 933950).
+      this._nestedEventLoopDepth--;
+      this._pendingNavigation = null;
       return;
     }
     let windowUtils = this.window

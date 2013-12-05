@@ -391,12 +391,23 @@
 }
 
 #resume {
-  list-style-image: url("chrome://browser/skin/devtools/debugger-play.png");
+  list-style-image: url("chrome://browser/skin/devtools/debugger-pause.png");
   -moz-image-region: rect(0px,16px,16px,0px);
+  transition: background 0.15s ease-in-out;
 }
 
 #resume[checked] {
+  background: none;
+  list-style-image: url("chrome://browser/skin/devtools/debugger-play.png");
   -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+#resume ~ toolbarbutton {
+  transition: opacity 0.15s ease-in-out;
+}
+
+#resume:not([checked]) ~ toolbarbutton {
+  opacity: 0.5;
 }
 
 #step-over {

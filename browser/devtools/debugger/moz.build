@@ -6,7 +6,7 @@
 JS_MODULES_PATH = 'modules/devtools/debugger'
 
 EXTRA_JS_MODULES += [
-    'debugger-panel.js'
+    'panel.js'
 ]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
