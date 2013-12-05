@@ -46,6 +46,7 @@ MediaResourceManagerService::~MediaResourceManagerService()
 void MediaResourceManagerService::binderDied(const wp<IBinder>& who)
 {
   if (who != NULL) {
+    Mutex::Autolock autoLock(mLock);
     sp<IBinder> binder = who.promote();
     if (binder != NULL) {
       cancelClientLocked(binder);

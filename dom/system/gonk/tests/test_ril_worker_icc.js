@@ -1873,6 +1873,104 @@ add_test(function test_find_free_icc_contact_usim() {
   run_next_test();
 });
 
+/**
+ * Test error message returned in onerror for readICCContacts.
+ */
+add_test(function test_error_message_read_icc_contact () {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+
+  function do_test(options, expectedErrorMsg) {
+    ril.sendChromeMessage = function (message) {
+      do_check_eq(message.errorMsg, expectedErrorMsg);
+    }
+    ril.readICCContacts(options);
+  }
+
+  // Error 1, didn't specify correct contactType.
+  do_test({}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
+
+  // Error 2, specifying a non-supported contactType.
+  ril.appType = CARD_APPTYPE_USIM;
+  do_test({contactType: "sdn"}, CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
+
+  // Error 3, suppose we update the supported PBR fields in USIM_PBR_FIELDS,
+  // but forget to add implemenetations for it.
+  USIM_PBR_FIELDS.push("pbc");
+  do_test({contactType: "adn"}, CONTACT_ERR_FIELD_NOT_SUPPORTED);
+
+  run_next_test();
+});
+
+/**
+ * Test error message returned in onerror for updateICCContact.
+ */
+add_test(function test_error_message_update_icc_contact() {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+
+  const ICCID = "123456789";
+  ril.iccInfo.iccid = ICCID;
+
+  function do_test(options, expectedErrorMsg) {
+    ril.sendChromeMessage = function (message) {
+      do_check_eq(message.errorMsg, expectedErrorMsg);
+    }
+    ril.updateICCContact(options);
+  }
+
+  // Error 1, didn't specify correct contactType.
+  do_test({}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
+
+  // Error 2, specifying a correct contactType, but without providing 'contact'.
+  do_test({contactType: "adn"}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
+
+  // Error 3, specifying a non-supported contactType.
+  ril.appType = CARD_APPTYPE_USIM;
+  do_test({contactType: "sdn", contact: {}}, CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
+
+  // Error 4, without supplying pin2.
+  do_test({contactType: "fdn", contact: {contactId: ICCID + "1"}}, GECKO_ERROR_SIM_PIN2);
+
+  // Error 5, No free record found in EF_ADN.
+  let record = worker.ICCRecordHelper;
+  record.readPBR = function (onsuccess, onerror) {
+    onsuccess([{adn: {fileId: 0x4f3a}}]);
+  };
+
+  let io = worker.ICCIOHelper;
+  io.loadLinearFixedEF = function (options) {
+    options.totalRecords = 1;
+    options.p1 = 1;
+    options.callback(options);
+  };
+
+  do_test({contactType: "adn", contact: {}}, CONTACT_ERR_NO_FREE_RECORD_FOUND);
+
+  // Error 6, ICC IO Error.
+  io.loadLinearFixedEF = function (options) {
+    ril[REQUEST_SIM_IO](0, {rilRequestError: ERROR_GENERIC_FAILURE});
+  };
+  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+          GECKO_ERROR_GENERIC_FAILURE);
+
+  // Error 7, suppose we update the supported PBR fields in USIM_PBR_FIELDS,
+  // but forget to add implemenetations for it.
+  USIM_PBR_FIELDS.push("pbc");
+  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+          CONTACT_ERR_FIELD_NOT_SUPPORTED);
+
+  // Error 8, EF_PBR doesn't exist.
+  record.readPBR = function (onsuccess, onerror) {
+    onsuccess([]);
+  };
+
+  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+          CONTACT_ERR_CANNOT_ACCESS_PHONEBOOK);
+
+  run_next_test();
+});
+
 add_test(function test_personalization_state() {
   let worker = newUint8Worker();
   let ril = worker.RIL;
@@ -2139,7 +2237,7 @@ add_test(function test_mcc_mnc_parsing() {
   */
 add_test(function test_reading_ad_and_parsing_mcc_mnc() {
   let worker = newUint8Worker();
-  let record = worker.ICCRecordHelper;
+  let record = worker.SimRecordHelper;
   let helper = worker.GsmPDUHelper;
   let ril    = worker.RIL;
   let buf    = worker.Buf;
@@ -2186,7 +2284,7 @@ add_test(function test_reading_ad_and_parsing_mcc_mnc() {
 
 add_test(function test_reading_optional_efs() {
   let worker = newUint8Worker();
-  let record = worker.ICCRecordHelper;
+  let record = worker.SimRecordHelper;
   let gsmPdu = worker.GsmPDUHelper;
   let ril    = worker.RIL;
   let buf    = worker.Buf;
@@ -2263,6 +2361,77 @@ add_test(function test_reading_optional_efs() {
   do_test(buildSST(supportedEf), supportedEf);
   ril.appType = CARD_APPTYPE_USIM;
   do_test(buildSST(supportedEf), supportedEf);
+
+  run_next_test();
+});
+
+/**
+ * Verify fetchSimRecords.
+ */
+add_test(function test_fetch_sim_recodes() {
+  let worker = newWorker();
+  let RIL = worker.RIL;
+  let iccRecord = worker.ICCRecordHelper;
+  let simRecord = worker.SimRecordHelper;
+
+  function testFetchSimRecordes(expectCalled) {
+    let ifCalled = [];
+
+    RIL.getIMSI = function () {
+      ifCalled.push("getIMSI");
+    };
+
+    simRecord.readAD = function () {
+      ifCalled.push("readAD");
+    };
+
+    simRecord.readSST = function () {
+      ifCalled.push("readSST");
+    };
+
+    simRecord.fetchSimRecords();
+
+    for (let i = 0; i < expectCalled.length; i++ ) {
+      if (ifCalled[i] != expectCalled[i]) {
+        do_print(expectCalled[i] + " is not called.");
+        do_check_true(false);
+      }
+    }
+  }
+
+  let expectCalled = ["getIMSI", "readAD", "readSST"];
+  testFetchSimRecordes(expectCalled);
+
+  run_next_test();
+});
+
+add_test(function test_fetch_icc_recodes() {
+  let worker = newWorker();
+  let RIL = worker.RIL;
+  let iccRecord = worker.ICCRecordHelper;
+  let simRecord = worker.SimRecordHelper;
+  let ruimRecord = worker.RuimRecordHelper;
+  let fetchTag = 0x00;
+
+  simRecord.fetchSimRecords = function () {
+    fetchTag = 0x01;
+  };
+
+  ruimRecord.fetchRuimRecords = function () {
+    fetchTag = 0x02;
+  };
+
+  RIL.appType = CARD_APPTYPE_SIM;
+  iccRecord.fetchICCRecords();
+  do_check_eq(fetchTag, 0x01);
+
+  RIL.appType = CARD_APPTYPE_RUIM;
+  iccRecord.fetchICCRecords();
+  do_check_eq(fetchTag, 0x02);
+
+  RIL.appType = CARD_APPTYPE_USIM;
+  iccRecord.fetchICCRecords();
+  do_check_eq(fetchTag, 0x01);
 
   run_next_test();
 });

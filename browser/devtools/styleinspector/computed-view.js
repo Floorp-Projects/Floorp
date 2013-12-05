@@ -505,21 +505,27 @@ CssHtmlTree.prototype = {
    */
   _buildTooltipContent: function(target)
   {
-    // If the hovered element is not a property view and is not a background
-    // image, then don't show a tooltip
-    let isPropertyValue = target.classList.contains("property-value");
-    if (!isPropertyValue) {
-      return false;
-    }
-    let propName = target.parentNode.querySelector(".property-name");
-    let isBackgroundImage = propName.textContent === "background-image";
-    if (!isBackgroundImage) {
-      return false;
+    // Test for image url
+    if (target.classList.contains("theme-link")) {
+      let propValue = target.parentNode;
+      let propName = propValue.parentNode.querySelector(".property-name");
+      if (propName.textContent === "background-image") {
+        this.tooltip.setCssBackgroundImageContent(propValue.textContent);
+        return true;
+      }
     }
 
-    // Fill some content
-    this.tooltip.setCssBackgroundImageContent(target.textContent);
-    return true;
+    // Test for css transform
+    if (target.classList.contains("property-value")) {
+      let def = promise.defer();
+      let propValue = target;
+      let propName = target.parentNode.querySelector(".property-name");
+      if (propName.textContent === "transform") {
+        this.tooltip.setCssTransformContent(propValue.textContent,
+          this.pageStyle, this.viewedElement).then(def.resolve);
+        return def.promise;
+      }
+    }
   },
 
   /**
