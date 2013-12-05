@@ -126,6 +126,8 @@ interface TestInterface {
   void passVariadicByte(byte... arg);
   [StoreInSlot, Pure]
   readonly attribute byte cachedByte;
+  [StoreInSlot, Pure]
+  attribute byte cachedWritableByte;
 
   readonly attribute short readonlyShort;
   attribute short writableShort;

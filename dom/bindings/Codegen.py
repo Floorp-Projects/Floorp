@@ -5657,8 +5657,21 @@ class CGSetterCall(CGPerSignatureCall):
                                     nativeMethodName, attr.isStatic(),
                                     descriptor, attr, setter=True)
     def wrap_return_value(self):
+        attr = self.idlNode
+        if self.descriptor.wrapperCache and attr.slotIndex is not None:
+            if attr.getExtendedAttribute("StoreInSlot"):
+                args = "cx, self"
+            else:
+                args = "self"
+            clearSlot = ("ClearCached%sValue(%s);\n" %
+                         (MakeNativeName(self.idlNode.identifier.name), args))
+        else:
+            clearSlot = ""
+
         # We have no return value
-        return "\nreturn true;"
+        return ("\n"
+                "%s"
+                "return true;" % clearSlot)
 
 class CGAbstractBindingMethod(CGAbstractStaticMethod):
     """
