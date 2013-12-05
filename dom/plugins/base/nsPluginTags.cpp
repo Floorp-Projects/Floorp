@@ -132,29 +132,19 @@ void nsPluginTag::InitMime(const char* const* aMimeTypes,
   }
 
   for (uint32_t i = 0; i < aVariantCount; i++) {
-    if (!aMimeTypes[i]) {
-      continue;
-    }
-
-    nsAutoCString mimeType(aMimeTypes[i]);
-
-    // Convert the MIME type, which is case insensitive, to lowercase in order
-    // to properly handle a mixed-case type.
-    ToLowerCase(mimeType);
-
-    if (!nsPluginHost::IsTypeWhitelisted(mimeType.get())) {
+    if (!aMimeTypes[i] || !nsPluginHost::IsTypeWhitelisted(aMimeTypes[i])) {
       continue;
     }
 
     // Look for certain special plugins.
-    if (nsPluginHost::IsJavaMIMEType(mimeType.get())) {
+    if (nsPluginHost::IsJavaMIMEType(aMimeTypes[i])) {
       mIsJavaPlugin = true;
-    } else if (mimeType.EqualsLiteral("application/x-shockwave-flash")) {
+    } else if (strcmp(aMimeTypes[i], "application/x-shockwave-flash") == 0) {
       mIsFlashPlugin = true;
     }
 
     // Fill in our MIME type array.
-    mMimeTypes.AppendElement(mimeType);
+    mMimeTypes.AppendElement(nsCString(aMimeTypes[i]));
 
     // Now fill in the MIME descriptions.
     if (aMimeDescriptions && aMimeDescriptions[i]) {
