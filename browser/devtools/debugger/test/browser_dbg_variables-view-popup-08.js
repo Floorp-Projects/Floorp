@@ -17,19 +17,6 @@ function test() {
     let bubble = win.DebuggerView.VariableBubble;
     let tooltip = bubble._tooltip.panel;
 
-    function openPopup(coords) {
-      let popupshown = once(tooltip, "popupshown");
-      let { left, top } = editor.getCoordsFromPosition(coords);
-      bubble._findIdentifier(left, top);
-      return popupshown;
-    }
-
-    function hidePopup() {
-      let popuphiding = once(tooltip, "popuphiding");
-      bubble.hideContents();
-      return popuphiding.then(waitForTick);
-    }
-
     function verifyContents(textContent, className) {
       is(tooltip.querySelectorAll(".variables-view-container").length, 0,
         "There should be no variables view containers added to the tooltip.");
@@ -59,18 +46,18 @@ function test() {
     checkView(0, 20);
 
     // Inspect variable in topmost frame.
-    yield openPopup({ line: 18, ch: 12 });
+    yield openVarPopup(panel, { line: 18, ch: 12 });
     verifyContents("\"second scope\"", "token-string");
     checkView(0, 20);
 
     // Change frame.
     let updatedFrame = waitForDebuggerEvents(panel, events.FETCHED_SCOPES);
-    yield hidePopup().then(() => frames.selectedDepth = 1);
+    frames.selectedDepth = 1;
     yield updatedFrame;
     checkView(1, 15);
 
     // Inspect variable in oldest frame.
-    yield openPopup({ line: 13, ch: 12 });
+    yield reopenVarPopup(panel, { line: 13, ch: 12 });
     verifyContents("\"first scope\"", "token-string");
     checkView(1, 15);
 

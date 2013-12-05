@@ -105,7 +105,7 @@ public:
 
     int ret = sBtInterface->set_adapter_property(&prop);
     if (ret != BT_STATUS_SUCCESS) {
-      BT_LOGR("%s: Fail to set: BT_SCAN_MODE_CONNECTABLE", __FUNCTION__);
+      BT_LOGR("Fail to set: BT_SCAN_MODE_CONNECTABLE");
     }
 
     // Try to fire event 'AdapterAdded' to fit the original behaviour when
@@ -119,7 +119,7 @@ public:
     // Trigger BluetoothOppManager to listen
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     if (!opp || !opp->Listen()) {
-      BT_LOGR("%s: Fail to start BluetoothOppManager listening", __FUNCTION__);
+      BT_LOGR("Fail to start BluetoothOppManager listening");
     }
 
     return NS_OK;
@@ -272,7 +272,7 @@ AdapterStateChangeCallback(bt_state_t aStatus)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  BT_LOGR("%s, BT_STATE:%d", __FUNCTION__, aStatus);
+  BT_LOGR("BT_STATE %d", aStatus);
 
   sIsBtEnabled = (aStatus == BT_STATE_ON);
 
@@ -673,7 +673,7 @@ EnsureBluetoothHalLoad()
   hw_device_t* device;
   int err = hw_get_module(BT_HARDWARE_MODULE_ID, (hw_module_t const**)&module);
   if (err != 0) {
-    BT_LOGR("Error: %s ", strerror(err));
+    BT_LOGR("Error: %s", strerror(err));
     return false;
   }
   module->methods->open(module, BT_HARDWARE_MODULE_ID, &device);
@@ -682,7 +682,7 @@ EnsureBluetoothHalLoad()
 
   int ret = sBtInterface->init(&sBluetoothCallbacks);
   if (ret != BT_STATUS_SUCCESS) {
-    BT_LOGR("Error while setting the callbacks %s", __FUNCTION__);
+    BT_LOGR("Error while setting the callbacks");
     sBtInterface = nullptr;
   }
 
@@ -712,7 +712,7 @@ ReplyStatusError(BluetoothReplyRunnable* aBluetoothReplyRunnable,
 {
   MOZ_ASSERT(aBluetoothReplyRunnable, "Reply runnable is nullptr");
 
-  BT_LOGR("%s: error code(%d)", __FUNCTION__, aStatusCode);
+  BT_LOGR("error code(%d)", aStatusCode);
 
   nsAutoString replyError;
   replyError.Assign(aCustomMsg);
@@ -743,7 +743,7 @@ BluetoothServiceBluedroid::BluetoothServiceBluedroid()
   sToggleBtMonitor = new Monitor("BluetoothService.sToggleBtMonitor");
 
   if (!EnsureBluetoothHalLoad()) {
-    BT_LOGR("Error! Failed to load bluedroid library.\n");
+    BT_LOGR("Error! Failed to load bluedroid library.");
     return;
   }
 
@@ -765,7 +765,7 @@ BluetoothServiceBluedroid::StartInternal()
 
   nsresult ret = StartStopGonkBluetooth(true);
   if (NS_FAILED(ret)) {
-    BT_LOGR("Error: %s", __FUNCTION__);
+    BT_LOGR("Error");
   }
 
   return ret;
@@ -778,7 +778,7 @@ BluetoothServiceBluedroid::StopInternal()
 
   nsresult ret = StartStopGonkBluetooth(false);
   if (NS_FAILED(ret)) {
-    BT_LOGR("Error: %s", __FUNCTION__);
+    BT_LOGR("Error");
   }
 
   return ret;
@@ -1361,19 +1361,46 @@ BluetoothServiceBluedroid::ConfirmReceivingFile(
 void
 BluetoothServiceBluedroid::ConnectSco(BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  if (!hfp || !hfp->ConnectSco()) {
+    NS_NAMED_LITERAL_STRING(replyError, "Calling ConnectSco() failed");
+    DispatchBluetoothReply(aRunnable, BluetoothValue(), replyError);
+    return;
+  }
+
+  DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
 }
 
 void
 BluetoothServiceBluedroid::DisconnectSco(BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  if (!hfp || !hfp->DisconnectSco()) {
+    NS_NAMED_LITERAL_STRING(replyError, "Calling DisconnectSco() failed");
+    DispatchBluetoothReply(aRunnable, BluetoothValue(), replyError);
+    return;
+  }
+
+  DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
 }
 
 void
 BluetoothServiceBluedroid::IsScoConnected(BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  if (!hfp) {
+    NS_NAMED_LITERAL_STRING(replyError, "Fail to get BluetoothHfpManager");
+    DispatchBluetoothReply(aRunnable, BluetoothValue(), replyError);
+    return;
+  }
+
+  DispatchBluetoothReply(aRunnable, hfp->IsScoConnected(), EmptyString());
 }
 
 void

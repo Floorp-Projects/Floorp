@@ -240,7 +240,6 @@ void NS_HSV2RGB(nscolor &aColor, uint16_t aHue, uint16_t aSat, uint16_t aValue,
 #undef GREEN_LUMINOSITY
 #undef BLUE_LUMINOSITY
 #undef INTENSITY_FACTOR
-#undef LIGHT_FACTOR
 #undef LUMINOSITY_FACTOR
 
 #undef MAX_COLOR
@@ -255,8 +254,6 @@ void NS_HSV2RGB(nscolor &aColor, uint16_t aHue, uint16_t aSat, uint16_t aValue,
 
 #undef LIGHT_GRAY
 #undef DARK_GRAY
-#undef WHITE
-#undef BLACK
 
 #undef MAX_BRIGHTNESS
 #undef MAX_DARKNESS

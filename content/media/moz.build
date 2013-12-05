@@ -164,7 +164,7 @@ FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/layout/generic',
-    '/layout/xul/base/src',
+    '/layout/xul',
 ]
 
 if CONFIG['MOZ_DIRECTSHOW']:

@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=942648
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 942648</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=942648">Mozilla Bug 942648</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <select>
+    <option value="1">1</option>
+    <option id="e1" value="2">2</option>
+  </select>
+  <select>
+    <option value="1">1</option>
+    <option id="e2" selected value="2">2</option>
+  </select>
+  <select>
+    <option value="1">1</option>
+    <option id="e3" selected="" value="2">2</option>
+  </select>
+  <select>
+    <option value="1">1</option>
+    <option id="e4" selected="selected" value="2">2</option>
+  </select>
+</pre>
+  <script type="application/javascript">
+
+  /** Test for Bug 942648 **/
+SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    var e1 = document.getElementById('e1');
+    var e2 = document.getElementById('e2');
+    var e3 = document.getElementById('e3');
+    var e4 = document.getElementById('e4');
+    ok(!e1.selected, "e1 should not be selected");
+    ok(e2.selected, "e2 should be selected");
+    ok(e3.selected, "e3 should be selected");
+    ok(e4.selected, "e4 should be selected");
+    e1.setAttribute('selected', 'selected');
+    e2.setAttribute('selected', 'selected');
+    e3.setAttribute('selected', 'selected');
+    e4.setAttribute('selected', 'selected');
+    ok(e1.selected, "e1 should now be selected");
+    ok(e2.selected, "e2 should still be selected");
+    ok(e3.selected, "e3 should still be selected");
+    ok(e4.selected, "e4 should still be selected");
+    SimpleTest.finish();
+  };
+  </script>
+</body>
+</html>

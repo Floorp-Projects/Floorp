@@ -50,5 +50,5 @@ LOCAL_INCLUDES += [
     '../../editor/txmgr/src',
     '../base',
     '../generic',
-    '../xul/base/src',
+    '../xul',
 ]

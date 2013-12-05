@@ -75,6 +75,6 @@ LOCAL_INCLUDES += [
     '../xpwidgets',
     '/layout/forms',
     '/layout/generic',
-    '/layout/xul/base/src',
+    '/layout/xul',
 ]
 

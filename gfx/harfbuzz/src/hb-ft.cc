@@ -418,8 +418,8 @@ hb_ft_font_create (FT_Face           ft_face,
 		     _hb_ft_get_font_funcs (),
 		     ft_face, (hb_destroy_func_t) _do_nothing);
   hb_font_set_scale (font,
-		     ((uint64_t) ft_face->size->metrics.x_scale * (uint64_t) ft_face->units_per_EM + (1<<15)) >> 16,
-		     ((uint64_t) ft_face->size->metrics.y_scale * (uint64_t) ft_face->units_per_EM + (1<<15)) >> 16);
+		     (int) (((uint64_t) ft_face->size->metrics.x_scale * (uint64_t) ft_face->units_per_EM + (1<<15)) >> 16),
+		     (int) (((uint64_t) ft_face->size->metrics.y_scale * (uint64_t) ft_face->units_per_EM + (1<<15)) >> 16));
   hb_font_set_ppem (font,
 		    ft_face->size->metrics.x_ppem,
 		    ft_face->size->metrics.y_ppem);

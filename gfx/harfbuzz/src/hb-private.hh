@@ -79,6 +79,9 @@ static inline Type MIN (const Type &a, const Type &b) { return a < b ? a : b; }
 template <typename Type>
 static inline Type MAX (const Type &a, const Type &b) { return a > b ? a : b; }
 
+static inline unsigned int DIV_CEIL (const unsigned int a, unsigned int b)
+{ return (a + (b - 1)) / b; }
+
 
 #undef  ARRAY_LENGTH
 template <typename Type, unsigned int n>

@@ -158,7 +158,7 @@ var DebuggerServer = {
 
   LONG_STRING_LENGTH: 10000,
   LONG_STRING_INITIAL_LENGTH: 1000,
-  LONG_STRING_READ_LENGTH: 1000,
+  LONG_STRING_READ_LENGTH: 65 * 1024,
 
   /**
    * A handler function that prompts the user to accept or decline the incoming

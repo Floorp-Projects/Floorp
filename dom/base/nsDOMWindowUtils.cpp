@@ -856,6 +856,45 @@ nsDOMWindowUtils::SendTouchEvent(const nsAString& aType,
                                  bool aIgnoreRootScrollFrame,
                                  bool *aPreventDefault)
 {
+  return SendTouchEventCommon(aType, aIdentifiers, aXs, aYs, aRxs, aRys,
+                              aRotationAngles, aForces, aCount, aModifiers,
+                              aIgnoreRootScrollFrame, false, aPreventDefault);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SendTouchEventToWindow(const nsAString& aType,
+                                         uint32_t* aIdentifiers,
+                                         int32_t* aXs,
+                                         int32_t* aYs,
+                                         uint32_t* aRxs,
+                                         uint32_t* aRys,
+                                         float* aRotationAngles,
+                                         float* aForces,
+                                         uint32_t aCount,
+                                         int32_t aModifiers,
+                                         bool aIgnoreRootScrollFrame,
+                                         bool* aPreventDefault)
+{
+  return SendTouchEventCommon(aType, aIdentifiers, aXs, aYs, aRxs, aRys,
+                              aRotationAngles, aForces, aCount, aModifiers,
+                              aIgnoreRootScrollFrame, true, aPreventDefault);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SendTouchEventCommon(const nsAString& aType,
+                                       uint32_t* aIdentifiers,
+                                       int32_t* aXs,
+                                       int32_t* aYs,
+                                       uint32_t* aRxs,
+                                       uint32_t* aRys,
+                                       float* aRotationAngles,
+                                       float* aForces,
+                                       uint32_t aCount,
+                                       int32_t aModifiers,
+                                       bool aIgnoreRootScrollFrame,
+                                       bool aToWindow,
+                                       bool* aPreventDefault)
+{
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
@@ -900,6 +939,27 @@ nsDOMWindowUtils::SendTouchEvent(const nsAString& aType,
   }
 
   nsEventStatus status;
+  if (aToWindow) {
+    nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
+    if (!presShell) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsViewManager* viewManager = presShell->GetViewManager();
+    if (!viewManager) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsView* view = viewManager->GetRootView();
+    if (!view) {
+      return NS_ERROR_FAILURE;
+    }
+
+    status = nsEventStatus_eIgnore;
+    *aPreventDefault = (status == nsEventStatus_eConsumeNoDefault);
+    return presShell->HandleEvent(view->GetFrame(), &event, false, &status);
+  }
+
   nsresult rv = widget->DispatchEvent(&event, status);
   *aPreventDefault = (status == nsEventStatus_eConsumeNoDefault);
   return rv;

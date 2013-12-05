@@ -29,6 +29,8 @@ interface TestExampleInterface {
   void passNullableByte(byte? arg);
   void passOptionalNullableByte(optional byte? arg);
   void passVariadicByte(byte... arg);
+  [Cached, Pure]
+  readonly attribute byte cachedByte;
 
   readonly attribute short readonlyShort;
   attribute short writableShort;
@@ -189,6 +191,8 @@ interface TestExampleInterface {
   void passConsequentialInterface(IndirectlyImplementedInterface arg);
 
   // Sequence types
+  [Cached, Pure]
+  readonly attribute sequence<long> readonlySequence;
   sequence<long> receiveSequence();
   sequence<long>? receiveNullableSequence();
   sequence<long?> receiveSequenceOfNullableInts();

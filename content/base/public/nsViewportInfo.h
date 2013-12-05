@@ -25,10 +25,11 @@ static const int32_t  kViewportDefaultScreenWidth = 980;
 class MOZ_STACK_CLASS nsViewportInfo
 {
   public:
-    nsViewportInfo(const mozilla::ScreenIntSize& aDisplaySize) :
+    nsViewportInfo(const mozilla::ScreenIntSize& aDisplaySize,
+                   bool aAllowZoom = true) :
       mDefaultZoom(1.0),
       mAutoSize(true),
-      mAllowZoom(true)
+      mAllowZoom(aAllowZoom)
     {
         mSize = mozilla::gfx::RoundedToInt(mozilla::ScreenSize(aDisplaySize) / mDefaultZoom);
         mozilla::CSSToLayoutDeviceScale pixelRatio(1.0f);

@@ -586,7 +586,7 @@ nsStringKey::nsStringKey(const nsStringKey& aKey)
 }
 
 nsStringKey::nsStringKey(const nsAFlatString& str)
-    : mStr(const_cast<PRUnichar*>(str.get())),
+    : mStr((PRUnichar*)str.get()),
       mStrLen(str.Length()),
       mOwnership(OWN_CLONE)
 {

@@ -141,6 +141,6 @@ LOCAL_INCLUDES += [
     '../../content/xul/document/src',
     '../base',
     '../generic',
-    '../xul/base/src',
+    '../xul',
     '/dom/base',
 ]

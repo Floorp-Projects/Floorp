@@ -94,7 +94,7 @@ LOCAL_INCLUDES += [
     '../xpwidgets',
     '/content/events/src',
     '/layout/generic',
-    '/layout/xul/base/src',
+    '/layout/xul',
     '/toolkit/xre',
     '/xpcom/base',
 ]

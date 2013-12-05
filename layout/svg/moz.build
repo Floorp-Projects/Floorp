@@ -56,6 +56,6 @@ LOCAL_INCLUDES += [
     '../base',
     '../generic',
     '../style',
-    '../xul/base/src',
+    '../xul',
 ]
 

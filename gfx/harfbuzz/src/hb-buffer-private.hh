@@ -181,12 +181,13 @@ struct hb_buffer_t {
   HB_INTERNAL bool enlarge (unsigned int size);
 
   inline bool ensure (unsigned int size)
-  { return likely (size < allocated) ? true : enlarge (size); }
+  { return likely (!size || size < allocated) ? true : enlarge (size); }
 
   HB_INTERNAL bool make_room_for (unsigned int num_in, unsigned int num_out);
   HB_INTERNAL bool shift_forward (unsigned int count);
 
-  HB_INTERNAL void *get_scratch_buffer (unsigned int *size);
+  typedef long scratch_buffer_t;
+  HB_INTERNAL scratch_buffer_t *get_scratch_buffer (unsigned int *size);
 
   inline void clear_context (unsigned int side) { context_len[side] = 0; }
 };

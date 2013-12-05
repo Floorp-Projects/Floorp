@@ -914,7 +914,7 @@ NS_CopyUnicodeToNative(const nsAString  &input, nsACString &output)
     nsAString::const_iterator iter;
     input.BeginReading(iter);
 
-    const PRUnichar *buf = iter.get();
+    char16ptr_t buf = iter.get();
 
     // determine length of result
     uint32_t resultLen = 0;
@@ -957,7 +957,7 @@ NS_ConvertWtoA(const PRUnichar *aStrInW, int aBufferSizeOut,
     if ((!aStrInW) || (!aStrOutA) || (aBufferSizeOut <= 0))
         return 0;
 
-    int numCharsConverted = WideCharToMultiByte(CP_ACP, 0, aStrInW, -1, 
+    int numCharsConverted = WideCharToMultiByte(CP_ACP, 0, char16ptr_t(aStrInW), -1,
                                                 aStrOutA, aBufferSizeOut,
                                                 aDefault, nullptr);
 

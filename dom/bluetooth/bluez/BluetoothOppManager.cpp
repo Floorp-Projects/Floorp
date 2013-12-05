@@ -399,7 +399,7 @@ BluetoothOppManager::DiscardBlobsToSend()
   while (length > mCurrentBlobIndex + 1) {
     mBlob = mBatches[0].mBlobs[++mCurrentBlobIndex];
 
-    BT_LOGR("%s: idx %d", __FUNCTION__, mCurrentBlobIndex);
+    BT_LOGR("idx %d", mCurrentBlobIndex);
     ExtractBlobHeaders();
     StartFileTransfer();
     FileTransferComplete();
@@ -416,7 +416,7 @@ BluetoothOppManager::ProcessNextBatch()
   if (mCurrentBlobIndex >= 0) {
     ClearQueue();
     mBatches.RemoveElementAt(0);
-    BT_LOGR("%s: REMOVE. %d remaining", __FUNCTION__, mBatches.Length());
+    BT_LOGR("REMOVE. %d remaining", mBatches.Length());
   }
 
   // Process the next batch
@@ -774,7 +774,7 @@ BluetoothOppManager::ComposePacket(uint8_t aOpCode, UnixSocketRawData* aMessage)
   // Check length before memcpy to prevent from memory pollution
   if (dataLength < 0 ||
       mPacketReceivedLength + dataLength > mPacketLength) {
-    BT_LOGR("%s: Received packet size is unreasonable", __FUNCTION__);
+    BT_LOGR("Received packet size is unreasonable");
 
     ReplyToPut(mPutFinalFlag, false);
     DeleteReceivedFile();
@@ -1392,7 +1392,7 @@ BluetoothOppManager::NotifyAboutFileChange()
 void
 BluetoothOppManager::OnSocketConnectSuccess(BluetoothSocket* aSocket)
 {
-  BT_LOGR("%s: [%s]", __FUNCTION__, (mIsServer)? "server" : "client");
+  BT_LOGR("[%s]", (mIsServer)? "server" : "client");
   MOZ_ASSERT(aSocket);
 
   /**
@@ -1428,7 +1428,7 @@ BluetoothOppManager::OnSocketConnectSuccess(BluetoothSocket* aSocket)
 void
 BluetoothOppManager::OnSocketConnectError(BluetoothSocket* aSocket)
 {
-  BT_LOGR("%s: [%s]", __FUNCTION__, (mIsServer)? "server" : "client");
+  BT_LOGR("[%s]", (mIsServer)? "server" : "client");
 
   mRfcommSocket = nullptr;
   mL2capSocket = nullptr;
@@ -1448,7 +1448,7 @@ BluetoothOppManager::OnSocketConnectError(BluetoothSocket* aSocket)
 void
 BluetoothOppManager::OnSocketDisconnect(BluetoothSocket* aSocket)
 {
-  BT_LOGR("%s: [%s]", __FUNCTION__, (mIsServer)? "server" : "client");
+  BT_LOGR("[%s]", (mIsServer)? "server" : "client");
   MOZ_ASSERT(aSocket);
 
   if (aSocket != mSocket) {

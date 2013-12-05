@@ -11,31 +11,15 @@ function test() {
   Task.spawn(function() {
     let [tab, debuggee, panel] = yield initDebugger(TAB_URL);
     let win = panel.panelWin;
-    let events = win.EVENTS;
-    let editor = win.DebuggerView.editor;
     let bubble = win.DebuggerView.VariableBubble;
-    let tooltip = bubble._tooltip.panel;
-
-    function openPopup(coords) {
-      let popupshown = once(tooltip, "popupshown");
-      let { left, top } = editor.getCoordsFromPosition(coords);
-      bubble._findIdentifier(left, top);
-      return popupshown;
-    }
-
-    function scrollEditor() {
-      let popuphiding = once(tooltip, "popuphiding");
-      editor.setFirstVisibleLine(0);
-      return popuphiding.then(waitForTick);
-    }
 
     // Allow this generator function to yield first.
     executeSoon(() => debuggee.start());
     yield waitForSourceAndCaretAndScopes(panel, ".html", 24);
 
     // Inspect variable.
-    yield openPopup({ line: 15, ch: 12 });
-    yield scrollEditor();
+    yield openVarPopup(panel, { line: 15, ch: 12 });
+    yield hideVarPopupByScrollingEditor(panel);
     ok(true, "The variable inspection popup was hidden.");
 
     ok(bubble._tooltip.isEmpty(),

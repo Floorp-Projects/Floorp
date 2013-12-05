@@ -15,12 +15,11 @@ EXPORTS += [
     'nsIImageToPixbuf.h',
 ]
 
-SOURCES += [
-    'nsAppShell.cpp',
+UNIFIED_SOURCES += [
+    'mozcontainer.c',
     'nsBidiKeyboard.cpp',
     'nsColorPicker.cpp',
     'nsFilePicker.cpp',
-    'nsGtkIMModule.cpp',
     'nsGtkKeyUtils.cpp',
     'nsImageToPixbuf.cpp',
     'nsLookAndFeel.cpp',
@@ -30,50 +29,58 @@ SOURCES += [
     'nsScreenManagerGtk.cpp',
     'nsSound.cpp',
     'nsToolkit.cpp',
-    'nsWidgetFactory.cpp',
-    'nsWindow.cpp',
     'WidgetTraceEvent.cpp',
 ]
 
+# These files force-enable NSPR logging and thus cannot be built in unified mode
+SOURCES += [
+    'nsAppShell.cpp',
+    'nsGtkIMModule.cpp',
+    'nsWidgetFactory.cpp',
+    'nsWindow.cpp',
+]
+
 if CONFIG['MOZ_X11']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsIdleServiceGTK.cpp',
     ]
 
 if CONFIG['NS_PRINTING']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsCUPSShim.cpp',
-        'nsDeviceContextSpecG.cpp',
         'nsPaperPS.cpp',
         'nsPrintDialogGTK.cpp',
         'nsPrintOptionsGTK.cpp',
         'nsPrintSettingsGTK.cpp',
         'nsPSPrinters.cpp',
     ]
+    # This file force-enables NSPR logging and thus cannot be built in unified mode
+    SOURCES += [
+        'nsDeviceContextSpecG.cpp',
+    ]
 
 if CONFIG['MOZ_X11']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsClipboard.cpp',
+    ]
+    # This file force-enables NSPR logging and thus cannot be built in unified mode
+    SOURCES += [
         'nsDragService.cpp',
     ]
 
 FAIL_ON_WARNINGS = True
 
-SOURCES += [
-    'mozcontainer.c',
-]
-
 if CONFIG['ACCESSIBILITY']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'maiRedundantObjectFactory.c',
     ]
 
 if CONFIG['MOZ_ENABLE_GTK2']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'gtk2drawing.c',
     ]
 else:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'gtk3drawing.c',
     ]
 
@@ -85,7 +92,7 @@ LOCAL_INCLUDES += [
     '../shared',
     '../xpwidgets',
     '/layout/generic',
-    '/layout/xul/base/src',
+    '/layout/xul',
     '/other-licenses/atk-1.0',
 ]
 

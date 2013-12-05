@@ -44,7 +44,7 @@ interface nsIAtom : nsISupports
     return aString.Equals(nsDependentString(mString, mLength));
   }
 
-  inline const PRUnichar* GetUTF16String() const {
+  inline char16ptr_t GetUTF16String() const {
     return mString;
   }
 

@@ -179,7 +179,7 @@ LOCAL_INCLUDES += [
     '/layout/generic',
     '/layout/style',
     '/layout/tables',
-    '/layout/xul/base/src',
+    '/layout/xul',
     '/netwerk/base/src',
     '/xpcom/ds',
 ]

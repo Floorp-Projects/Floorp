@@ -26,6 +26,9 @@ ENUMERATE_HOOK_NAME= '_enumerate'
 ENUM_ENTRY_VARIABLE_NAME = 'strings'
 INSTANCE_RESERVED_SLOTS = 3
 
+def memberReservedSlot(member):
+    return "(DOM_INSTANCE_RESERVED_SLOTS + %d)" % member.slotIndex
+
 def replaceFileIfChanged(filename, newContents):
     """
     Read a copy of the old file, so that we don't touch it if it hasn't changed.
@@ -2427,28 +2430,27 @@ class CGWrapGlobalMethod(CGAbstractMethod):
                     self.descriptor.nativeType,
                     InitUnforgeableProperties(self.descriptor, self.properties))
 
-class CGUpdateMemberSlotsMethod(CGAbstractMethod):
+class CGUpdateMemberSlotsMethod(CGAbstractStaticMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'aWrapper'),
                 Argument(descriptor.nativeType + '*' , 'aObject')]
-        CGAbstractMethod.__init__(self, descriptor, 'UpdateMemberSlots', 'bool', args)
+        CGAbstractStaticMethod.__init__(self, descriptor, 'UpdateMemberSlots', 'bool', args)
 
     def definition_body(self):
         slotMembers = (m for m in self.descriptor.interface.members if
                        m.isAttr() and m.getExtendedAttribute("StoreInSlot"))
-        def slotIndex(member):
-            return member.slotIndex + INSTANCE_RESERVED_SLOTS
         storeSlots = (
             CGGeneric(
-                'static_assert(%d < js::shadow::Object::MAX_FIXED_SLOTS,\n'
+                'static_assert(%s < js::shadow::Object::MAX_FIXED_SLOTS,\n'
                 '              "Not enough fixed slots to fit \'%s.%s\'");\n'
                 "if (!get_%s(aCx, aWrapper, aObject, args)) {\n"
                 "  return false;\n"
                 "}\n"
-                "js::SetReservedSlot(aWrapper, %d, args.rval());" %
-                (slotIndex(m), self.descriptor.interface.identifier.name,
-                 m.identifier.name, m.identifier.name, slotIndex(m)))
+                "// Getter handled setting our reserved slots" %
+                (memberReservedSlot(m),
+                 self.descriptor.interface.identifier.name,
+                 m.identifier.name, m.identifier.name))
             for m in slotMembers)
         body = CGList(storeSlots, "\n\n")
         body.prepend(CGGeneric("JS::Rooted<JS::Value> temp(aCx);\n"
@@ -2456,6 +2458,57 @@ class CGUpdateMemberSlotsMethod(CGAbstractMethod):
         body.append(CGGeneric("return true;"))
 
         return CGIndenter(body).define()
+
+class CGClearCachedValueMethod(CGAbstractMethod):
+    def __init__(self, descriptor, member):
+        self.member = member
+        # If we're StoreInSlot, we'll need to call the getter
+        if member.getExtendedAttribute("StoreInSlot"):
+            args = [Argument('JSContext*', 'aCx')]
+            returnType = 'bool'
+        else:
+            args = []
+            returnType = 'void'
+        args.append(Argument(descriptor.nativeType + '*', 'aObject'))
+        name = ("ClearCached%sValue" % MakeNativeName(member.identifier.name))
+        CGAbstractMethod.__init__(self, descriptor, name, returnType, args)
+
+    def definition_body(self):
+        slotIndex = memberReservedSlot(self.member)
+        if self.member.getExtendedAttribute("StoreInSlot"):
+            # We have to root things and save the old value in case
+            # regetting fails, so we can restore it.
+            declObj = "JS::Rooted<JSObject*> obj(aCx);"
+            noopRetval = " true"
+            saveMember = (
+                "JS::Rooted<JS::Value> oldValue(aCx, js::GetReservedSlot(obj, %s));\n" %
+                slotIndex)
+            regetMember = ("\n"
+                           "JS::Rooted<JS::Value> temp(aCx);\n"
+                           "JSJitGetterCallArgs args(&temp);\n"
+                           "if (!get_%s(aCx, obj, aObject, args)) {\n"
+                           "  js::SetReservedSlot(obj, %s, oldValue);\n"
+                           "  nsJSUtils::ReportPendingException(aCx);\n"
+                           "  return false;\n"
+                           "}\n"
+                           "return true;" % (self.member.identifier.name, slotIndex))
+        else:
+            declObj = "JSObject* obj;"
+            noopRetval = ""
+            saveMember = ""
+            regetMember = ""
+
+        return CGIndenter(CGGeneric(
+                "%s\n"
+                "obj = aObject->GetWrapper();\n"
+                "if (!obj) {\n"
+                "  return%s;\n"
+                "}\n"
+                "%s"
+                "js::SetReservedSlot(obj, %s, JS::UndefinedValue());"
+                "%s"
+                % (declObj, noopRetval, saveMember, slotIndex, regetMember)
+                )).define()
 
 builtinNames = {
     IDLType.Tags.bool: 'bool',
@@ -4072,6 +4125,26 @@ class CGArgumentConverter(CGThing):
                                "}")
         return variadicConversion
 
+def getMaybeWrapValueFuncForType(type):
+    # Callbacks might actually be DOM objects; nothing prevents a page from
+    # doing that.
+    if type.isCallback() or type.isCallbackInterface() or type.isObject():
+        if type.nullable():
+            return "MaybeWrapObjectOrNullValue"
+        return "MaybeWrapObjectValue"
+    # Spidermonkey interfaces are never DOM objects
+    if type.isSpiderMonkeyInterface():
+        if type.nullable():
+            return "MaybeWrapNonDOMObjectOrNullValue"
+        return "MaybeWrapNonDOMObjectValue"
+    if type.isAny():
+        return "MaybeWrapValue"
+
+    # For other types, just go ahead an fall back on MaybeWrapValue for now:
+    # it's always safe to do, and shouldn't be particularly slow for any of
+    # them
+    return "MaybeWrapValue"
+
 sequenceWrapLevel = 0
 
 def getWrapTemplateForType(type, descriptorProvider, result, successCode,
@@ -4108,30 +4181,19 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
     # if body.
     exceptionCodeIndented = CGIndenter(CGGeneric(exceptionCode))
 
-    def setValue(value, callWrapValue=None):
+    def setValue(value, wrapAsType=None):
         """
         Returns the code to set the jsval to value.
 
-        "callWrapValue" can be set to the following values:
-          * None: no wrapping will be done.
-          * "object": will wrap using MaybeWrapObjectValue.
-          * "objectOrNull": will wrap using MaybeWrapObjectOrNullValue.
-          * "nonDOMObject": will wrap using MaybeWrapNonDOMObjectValue.
-          * "nonDOMObjectOrNull": will wrap using MaybeWrapNonDOMObjectOrNullValue
-          * "value": will wrap using MaybeWrapValue.
+        If wrapAsType is not None, then will wrap the resulting value using the
+        function that getMaybeWrapValueFuncForType(wrapAsType) returns.
+        Otherwise, no wrapping will be done.
         """
-        if not callWrapValue:
+        if wrapAsType is None:
             tail = successCode
         else:
-            methodMap = {
-                "object": "MaybeWrapObjectValue",
-                "objectOrNull": "MaybeWrapObjectOrNullValue",
-                "nonDOMObject": "MaybeWrapNonDOMObjectValue",
-                "nonDOMObjectOrNull": "MaybeWrapNonDOMObjectOrNullValue",
-                "value": "MaybeWrapValue"
-                }
             tail = (("if (!%s(cx, ${jsvalHandle})) {\n"
-                     "%s\n" % (methodMap[callWrapValue],
+                     "%s\n" % (getMaybeWrapValueFuncForType(wrapAsType),
                                exceptionCodeIndented.define())) +
                     "}\n" +
                     successCode)
@@ -4294,14 +4356,14 @@ if (!returnArray) {
         if type.nullable():
             conversion = CGIfElseWrapper(
                 "%s.IsNull()" % result,
-                CGGeneric(setValue("JS::NullValue()", False)),
+                CGGeneric(setValue("JS::NullValue()")),
                 CGGeneric(conversion)).define()
         return conversion, False
 
     if type.isCallback() or type.isCallbackInterface():
         wrapCode = setValue(
             "JS::ObjectValue(*GetCallbackFromCallbackObject(%(result)s))",
-            "object")
+            wrapAsType=type)
         if type.nullable():
             wrapCode = (
                 "if (%(result)s) {\n" +
@@ -4315,8 +4377,8 @@ if (!returnArray) {
     if type.isAny():
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
-        # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
-        return (setValue(result, "value"), False)
+        # NB: setValue(..., type-that-is-any) calls JS_WrapValue(), so is fallible
+        return (setValue(result, wrapAsType=type), False)
 
     if (type.isObject() or (type.isSpiderMonkeyInterface() and
                             not typedArraysAreStructs)):
@@ -4324,18 +4386,10 @@ if (!returnArray) {
         # to wrap here.
         if type.nullable():
             toValue = "JS::ObjectOrNullValue(%s)"
-            if type.isSpiderMonkeyInterface():
-                wrapType = "nonDOMObjectOrNull"
-            else:
-                wrapType = "objectOrNull"
         else:
             toValue = "JS::ObjectValue(*%s)"
-            if type.isSpiderMonkeyInterface():
-                wrapType = "nonDOMObject"
-            else:
-                wrapType = "object"
-        # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
-        return (setValue(toValue % result, wrapType), False)
+        # NB: setValue(..., some-object-type) calls JS_WrapValue(), so is fallible
+        return (setValue(toValue % result, wrapAsType=type), False)
 
     if not (type.isUnion() or type.isPrimitive() or type.isDictionary() or
             type.isDate() or
@@ -4355,9 +4409,9 @@ if (!returnArray) {
         assert typedArraysAreStructs
         # See comments in WrapNewBindingObject explaining why we need
         # to wrap here.
-        # NB: setValue(..., True) calls JS_WrapValue(), so is fallible
+        # NB: setValue(..., some-object-type) calls JS_WrapValue(), so is fallible
         return (setValue("JS::ObjectValue(*%s.Obj())" % result,
-                         "nonDOMObject"), False)
+                         wrapAsType=type), False)
 
     if type.isUnion():
         return (wrapAndSetPtr("%s.ToJSVal(cx, ${obj}, ${jsvalHandle})" % result),
@@ -5022,9 +5076,45 @@ if (!${obj}) {
                    (self.returnType.isGeckoInterface() and
                     self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'owned'))
 
+        if self.idlNode.isAttr() and self.idlNode.slotIndex is not None:
+            # For the case of Cached attributes, go ahead and preserve our
+            # wrapper if needed.  We need to do this because otherwise the
+            # wrapper could get garbage-collected and the cached value would
+            # suddenly disappear, but the whole premise of cached values is that
+            # they never change without explicit action on someone's part.  We
+            # don't do this for StoreInSlot, since those get dealt with during
+            # wrapper setup, and failure would involve us trying to clear an
+            # already-preserved wrapper.
+            if (self.idlNode.getExtendedAttribute("Cached") and
+                self.descriptor.wrapperCache):
+                preserveWrapper = "  PreserveWrapper(self);\n"
+            else:
+                preserveWrapper = ""
+            successCode = (
+                "// Be careful here: Have to wrap the value into the\n"
+                "// compartment of reflector before storing, since we might\n"
+                "// be coming in via Xrays and the value is already in the\n"
+                "// caller compartment.\n"
+                "{ // Scope for tempVal\n"
+                "  JS::Rooted<JS::Value> tempVal(cx, args.rval());\n"
+                "  JSAutoCompartment ac(cx, reflector);\n"
+                "  if (!%s(cx, &tempVal)) {\n"
+                "    return false;\n"
+                "  }\n"
+                "  js::SetReservedSlot(reflector, %s, tempVal);\n"
+                "%s"
+                "}\n"
+                "return true;" %
+                (getMaybeWrapValueFuncForType(self.idlNode.type),
+                 memberReservedSlot(self.idlNode), preserveWrapper))
+        else:
+            successCode = None
+
         resultTemplateValues = { 'jsvalRef': 'args.rval()',
                                  'jsvalHandle': 'args.rval()',
-                                 'returnsNewObject': returnsNewObject}
+                                 'returnsNewObject': returnsNewObject,
+                                 'successCode': successCode,
+                                 }
         try:
             return wrapForType(self.returnType, self.descriptor,
                                resultTemplateValues)
@@ -5860,8 +5950,36 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
     def definition_body(self):
         nativeName = CGSpecializedGetter.makeNativeName(self.descriptor,
                                                         self.attr)
-        return CGIndenter(CGGetterCall(self.attr.type, nativeName,
-                                       self.descriptor, self.attr)).define()
+        if self.attr.slotIndex is not None:
+            if self.descriptor.hasXPConnectImpls:
+                raise TypeError("Interface '%s' has XPConnect impls, so we "
+                                "can't use our slot for property '%s'!" %
+                                (self.descriptor.interface.identifier.name,
+                                 self.attr.identifier.name))
+            prefix = (
+                "  // Have to either root across the getter call or reget after.\n"
+                "  JS::Rooted<JSObject*> reflector(cx);\n"
+                "  // Safe to do an unchecked unwrap, since we've gotten this far.\n"
+                "  // Also make sure to unwrap outer windows, since we want the\n"
+                "  // real DOM object.\n"
+                "  reflector = IsDOMObject(obj) ? obj : js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);\n"
+                "  {\n"
+                "    // Scope for cachedVal\n"
+                "    JS::Value cachedVal = js::GetReservedSlot(reflector, %s);\n"
+                "    if (!cachedVal.isUndefined()) {\n"
+                "      args.rval().set(cachedVal);\n"
+                "      // The cached value is in the compartment of reflector,\n"
+                "      // so wrap into the caller compartment as needed.\n"
+                "      return %s(cx, args.rval());\n"
+                "    }\n"
+                "  }\n\n" % (memberReservedSlot(self.attr),
+                             getMaybeWrapValueFuncForType(self.attr.type)))
+        else:
+            prefix = ""
+
+        return (prefix +
+                CGIndenter(CGGetterCall(self.attr.type, nativeName,
+                                        self.descriptor, self.attr)).define())
 
     @staticmethod
     def makeNativeName(descriptor, attr):
@@ -6068,7 +6186,7 @@ class CGMemberJITInfo(CGThing):
                 "  %s,  /* isMovable.  Not relevant for setters. */\n"
                 "  JSJitInfo::%s,  /* aliasSet.  Not relevant for setters. */\n"
                 "  %s,  /* hasSlot.  Only relevant for getters. */\n"
-                "  %d,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
+                "  %s,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
                 "  %s,  /* returnType.  Not relevant for setters. */\n"
                 "  %s,  /* argTypes.  Only relevant for methods */\n"
                 "  nullptr /* parallelNative */\n"
@@ -6097,12 +6215,11 @@ class CGMemberJITInfo(CGThing):
             getterinfal = getterinfal and infallibleForMember(self.member, self.member.type, self.descriptor)
             isInSlot = self.member.getExtendedAttribute("StoreInSlot")
             if isInSlot:
-                slotIndex = INSTANCE_RESERVED_SLOTS + self.member.slotIndex;
-                if slotIndex >= 16 : # JS engine currently allows 16 fixed slots
-                    raise TypeError("Make sure we can actually have this many "
-                                    "fixed slots, please!")
+                slotIndex = memberReservedSlot(self.member);
+                # We'll statically assert that this is not too big in
+                # CGUpdateMemberSlotsMethod
             else:
-                slotIndex = 0
+                slotIndex = "0"
 
             result = self.defineJitInfo(getterinfo, getter, "Getter",
                                         getterinfal, movable, aliasSet,
@@ -6118,7 +6235,7 @@ class CGMemberJITInfo(CGThing):
                 # Setters are always fallible, since they have to do a typed unwrap.
                 result += self.defineJitInfo(setterinfo, setter, "Setter",
                                              False, False, "AliasEverything",
-                                             False, 0,
+                                             False, "0",
                                              [BuiltinTypes[IDLBuiltinType.Types.void]],
                                              None)
             return result
@@ -6159,7 +6276,7 @@ class CGMemberJITInfo(CGThing):
             else:
                 aliasSet = "AliasEverything"
             result = self.defineJitInfo(methodinfo, method, "Method",
-                                        methodInfal, False, aliasSet, False, 0,
+                                        methodInfal, False, aliasSet, False, "0",
                                         [s[0] for s in sigs], args)
             return result
         raise TypeError("Illegal member type to CGPropertyJITInfo")
@@ -8478,6 +8595,13 @@ class CGDescriptor(CGThing):
                 cgThings.append(CGWrapNonWrapperCacheMethod(descriptor,
                                                             properties))
 
+        # If we're not wrappercached, we don't know how to clear our
+        # cached values, since we can't get at the JSObject.
+        if descriptor.wrapperCache:
+            cgThings.extend(CGClearCachedValueMethod(descriptor, m) for
+                            m in descriptor.interface.members if
+                            m.isAttr() and m.slotIndex is not None)
+
         # CGCreateInterfaceObjectsMethod needs to come after our
         # CGDOMJSClass, if any.
         cgThings.append(CGCreateInterfaceObjectsMethod(descriptor, properties))
@@ -8796,7 +8920,7 @@ if (""",
         methods.append(self.initFromJSONMethod())
         try:
             methods.append(self.toObjectMethod())
-        except MethodNotCreatorError:
+        except MethodNotNewObjectError:
             # If we can't have a ToObject() because one of our members can only
             # be returned from [NewObject] methods, then just skip generating
             # ToObject().
@@ -9329,6 +9453,13 @@ class CGBindingRoot(CGThing):
                 return False
             return typeDesc.hasXPConnectImpls
         addHeaderBasedOnTypes("nsDOMQS.h", checkForXPConnectImpls)
+
+        def descriptorClearsPropsInSlots(descriptor):
+            if not descriptor.wrapperCache:
+                return False
+            return any(m.isAttr() and m.getExtendedAttribute("StoreInSlot")
+                       for m in descriptor.interface.members)
+        bindingHeaders["nsJSUtils.h"] = any(descriptorClearsPropsInSlots(d) for d in descriptors)
 
         # Do codegen for all the enums
         enums = config.getEnums(webIDLFile)

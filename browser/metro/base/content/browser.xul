@@ -21,6 +21,8 @@
 %prefsDTD;
 <!ENTITY % aboutPanelDTD SYSTEM "chrome://browser/locale/aboutPanel.dtd">
 %aboutPanelDTD;
+<!ENTITY % searchPanelDTD SYSTEM "chrome://browser/locale/searchPanel.dtd">
+%searchPanelDTD;
 #ifdef MOZ_SERVICES_SYNC
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
 %syncBrandDTD;
@@ -684,6 +686,10 @@ Desktop browser's sync prefs.
           </radiogroup>
         </setting>
         <label class="text-link" href="https://www.mozilla.org/dnt">&doNotTrack.learnMoreLink;</label>
+      </settings>
+    </flyoutpanel>
+    <flyoutpanel id="search-flyoutpanel" class="flyout-narrow" headertext="&searchFlyoutHeader.title;">
+      <settings id="search-options" label="&searchSetting.title;">
       </settings>
     </flyoutpanel>
 
