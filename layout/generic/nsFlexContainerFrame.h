@@ -94,10 +94,10 @@ protected:
                                            const nsHTMLReflowState& aParentReflowState,
                                            const FlexboxAxisTracker& aAxisTracker);
 
-  nsresult GenerateFlexItems(nsPresContext* aPresContext,
+  nsresult GenerateFlexLines(nsPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              const FlexboxAxisTracker& aAxisTracker,
-                             FlexLine& aLine);
+                             nsTArray<FlexLine>& aLines);
 
   nscoord ComputeFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
                                        const FlexboxAxisTracker& aAxisTracker,
