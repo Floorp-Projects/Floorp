@@ -398,21 +398,6 @@ AsyncPanZoomController::GetTouchStartTolerance()
   return static_cast<AxisLockMode>(gAxisLockMode);
 }
 
-static CSSPoint
-WidgetSpaceToCompensatedViewportSpace(const ScreenPoint& aPoint,
-                                      const CSSToScreenScale& aCurrentZoom)
-{
-  // Transform the input point from local widget space to the content document
-  // space that the user is seeing, from last composite.
-  // FIXME/bug 775451: this doesn't attempt to compensate for content transforms
-  // in effect on the compositor.  The problem is that it's very hard for us to
-  // know what content CSS pixel is at widget point 0,0 based on information
-  // available here.  So we use this hacky implementation for now, which works
-  // in quiescent states.
-
-  return aPoint / aCurrentZoom;
-}
-
 nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent) {
   // If we may have touch listeners, we enable the machinery that allows touch
   // listeners to preventDefault any touch inputs. This should not happen unless
@@ -749,16 +734,37 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(const PinchGestureInput& aEvent
   return nsEventStatus_eConsumeNoDefault;
 }
 
+bool
+AsyncPanZoomController::ConvertToGecko(const ScreenPoint& aPoint, CSSIntPoint* aOut)
+{
+  APZCTreeManager* treeManagerLocal = mTreeManager;
+  if (treeManagerLocal) {
+    gfx3DMatrix transformToApzc;
+    gfx3DMatrix transformToGecko;
+    treeManagerLocal->GetInputTransforms(this, transformToApzc, transformToGecko);
+    gfxPoint result = transformToGecko.Transform(gfxPoint(aPoint.x, aPoint.y));
+    // NOTE: This isn't *quite* LayoutDevicePoint, we just don't have a name
+    // for this coordinate space and it maps the closest to LayoutDevicePoint.
+    LayoutDevicePoint layoutPoint = LayoutDevicePoint(result.x, result.y);
+    CSSPoint cssPoint = layoutPoint / mFrameMetrics.mDevPixelsPerCSSPixel;
+    *aOut = gfx::RoundedToInt(cssPoint);
+    return true;
+  }
+  return false;
+}
+
 nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent) {
   APZC_LOG("%p got a long-press in state %d\n", this, mState);
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
     ReentrantMonitorAutoEnter lock(mMonitor);
 
-    CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, mFrameMetrics.mZoom);
     int32_t modifiers = WidgetModifiersToDOMModifiers(aEvent.modifiers);
-    controller->HandleLongTap(gfx::RoundedToInt(point), modifiers);
-    return nsEventStatus_eConsumeNoDefault;
+    CSSIntPoint geckoScreenPoint;
+    if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
+      controller->HandleLongTap(geckoScreenPoint, modifiers);
+      return nsEventStatus_eConsumeNoDefault;
+    }
   }
   return nsEventStatus_eIgnore;
 }
@@ -769,10 +775,12 @@ nsEventStatus AsyncPanZoomController::OnSingleTapUp(const TapGestureInput& aEven
   if (controller && !mAllowZoom) {
     ReentrantMonitorAutoEnter lock(mMonitor);
 
-    CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, mFrameMetrics.mZoom);
     int32_t modifiers = WidgetModifiersToDOMModifiers(aEvent.modifiers);
-    controller->HandleSingleTap(gfx::RoundedToInt(point), modifiers);
-    return nsEventStatus_eConsumeNoDefault;
+    CSSIntPoint geckoScreenPoint;
+    if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
+      controller->HandleSingleTap(geckoScreenPoint, modifiers);
+      return nsEventStatus_eConsumeNoDefault;
+    }
   }
   return nsEventStatus_eIgnore;
 }
@@ -784,10 +792,12 @@ nsEventStatus AsyncPanZoomController::OnSingleTapConfirmed(const TapGestureInput
   if (controller && mAllowZoom) {
     ReentrantMonitorAutoEnter lock(mMonitor);
 
-    CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, mFrameMetrics.mZoom);
     int32_t modifiers = WidgetModifiersToDOMModifiers(aEvent.modifiers);
-    controller->HandleSingleTap(gfx::RoundedToInt(point), modifiers);
-    return nsEventStatus_eConsumeNoDefault;
+    CSSIntPoint geckoScreenPoint;
+    if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
+      controller->HandleSingleTap(geckoScreenPoint, modifiers);
+      return nsEventStatus_eConsumeNoDefault;
+    }
   }
   return nsEventStatus_eIgnore;
 }
@@ -796,12 +806,14 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(const TapGestureInput& aEvent)
   APZC_LOG("%p got a double-tap in state %d\n", this, mState);
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
-    ReentrantMonitorAutoEnter lock(mMonitor);
 
     if (mAllowZoom) {
-      CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, mFrameMetrics.mZoom);
+      ReentrantMonitorAutoEnter lock(mMonitor);
       int32_t modifiers = WidgetModifiersToDOMModifiers(aEvent.modifiers);
-      controller->HandleDoubleTap(gfx::RoundedToInt(point), modifiers);
+      CSSIntPoint geckoScreenPoint;
+      if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
+        controller->HandleDoubleTap(geckoScreenPoint, modifiers);
+      }
     }
 
     return nsEventStatus_eConsumeNoDefault;
