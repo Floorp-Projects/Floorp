@@ -1386,6 +1386,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
     }
 
     private void animateForwardButton(final boolean visible) {
+        // If the forward button is not visible, we must be
+        // in the phone UI.
         if (mForward.getVisibility() != View.VISIBLE)
             return;
 
