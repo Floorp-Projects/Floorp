@@ -104,10 +104,6 @@ protected:
                        const HIRect& inBoxRect, ThemeDrawState inDrawState,
                        ThemeButtonAdornment inAdornment, nsEventStates inState,
                        nsIFrame* aFrame);
-  void DrawSpinButton(CGContextRef context, ThemeButtonKind inKind,
-                      const HIRect& inBoxRect, ThemeDrawState inDrawState,
-                      ThemeButtonAdornment inAdornment, nsEventStates inState,
-                      nsIFrame* aFrame, uint8_t aWidgetType);
   void DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
                           NSWindow* aWindow);
   void DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
