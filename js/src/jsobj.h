@@ -1030,12 +1030,6 @@ class JSObject : public js::ObjectImpl
     static inline bool getElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
                                       uint32_t index, js::Value *vp);
 
-    /* If element is not present (e.g. array hole) *present is set to
-       false and the contents of *vp are unusable garbage. */
-    static inline bool getElementIfPresent(JSContext *cx, js::HandleObject obj,
-                                           js::HandleObject receiver, uint32_t index,
-                                           js::MutableHandleValue vp, bool *present);
-
     static bool getSpecial(JSContext *cx, js::HandleObject obj,
                            js::HandleObject receiver, js::SpecialId sid,
                            js::MutableHandleValue vp)

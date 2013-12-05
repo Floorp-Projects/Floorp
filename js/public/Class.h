@@ -347,9 +347,6 @@ typedef bool
 (* ElementIdOp)(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, uint32_t index,
                 JS::MutableHandleValue vp);
 typedef bool
-(* ElementIfPresentOp)(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver,
-                       uint32_t index, JS::MutableHandleValue vp, bool* present);
-typedef bool
 (* SpecialIdOp)(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver,
                 HandleSpecialId sid, JS::MutableHandleValue vp);
 typedef bool
@@ -459,7 +456,6 @@ struct ObjectOps
     GenericIdOp         getGeneric;
     PropertyIdOp        getProperty;
     ElementIdOp         getElement;
-    ElementIfPresentOp  getElementIfPresent; /* can be null */
     SpecialIdOp         getSpecial;
     StrictGenericIdOp   setGeneric;
     StrictPropertyIdOp  setProperty;
@@ -480,7 +476,7 @@ struct ObjectOps
 #define JS_NULL_OBJECT_OPS                                                    \
     {nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr, \
      nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr, \
-     nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr}
+     nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr}
 
 } // namespace js
 
