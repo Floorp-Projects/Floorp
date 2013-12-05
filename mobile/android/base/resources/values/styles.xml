@@ -556,8 +556,7 @@
     </style>
 
     <style name="GeckoActionBar.Button" parent="Widget.MenuItemActionBar">
-        <item name="android:background">@android:color/transparent</item>
-        <item name="android:gravity">center</item>
+        <item name="android:padding">8dp</item>
     </style>
 
     <style name="GeckoActionBar.Button.MenuButton">

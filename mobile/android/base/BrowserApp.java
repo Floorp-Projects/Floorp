@@ -2539,9 +2539,17 @@ abstract public class BrowserApp extends GeckoApp
         if (mActionMode == null) {
             mViewFlipper.showNext();
             LayerMarginsAnimator margins = mLayerView.getLayerMarginsAnimator();
-            margins.setMaxMargins(0, mViewFlipper.getHeight(), 0, 0);
+
+            // If the toolbar is dynamic and not currently showing, just slide it in
+            if (isDynamicToolbarEnabled() && !margins.areMarginsShown()) {
+                margins.setMaxMargins(0, mViewFlipper.getHeight(), 0, 0);
+                margins.showMargins(false);
+            } else {
+                // Otherwise, we animate the actionbar itself
+                mActionBar.animateIn();
+            }
+
             margins.setMarginsPinned(true);
-            margins.showMargins(false);
         } else {
             // Otherwise, we're already showing an action mode. Just finish it and show the new one
             mActionMode.finish();
