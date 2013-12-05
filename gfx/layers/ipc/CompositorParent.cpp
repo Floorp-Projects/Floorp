@@ -144,7 +144,17 @@ bool CompositorParent::CreateThread()
   }
   sCompositorThreadRefCount = 1;
   sCompositorThread = new Thread("Compositor");
-  if (!sCompositorThread->Start()) {
+
+  Thread::Options options;
+  /* Timeout values are powers-of-two to enable us get better data.
+     128ms is chosen for transient hangs because 8Hz should be the minimally
+     acceptable goal for Compositor responsiveness (normal goal is 60Hz). */
+  options.transient_hang_timeout = 128; // milliseconds
+  /* 8192ms is chosen for permanent hangs because it's several seconds longer
+     than the default hang timeout on major platforms (about 5 seconds). */
+  options.permanent_hang_timeout = 8192; // milliseconds
+
+  if (!sCompositorThread->StartWithOptions(options)) {
     delete sCompositorThread;
     sCompositorThread = nullptr;
     return false;
