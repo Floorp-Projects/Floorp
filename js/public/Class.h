@@ -380,6 +380,10 @@ typedef bool
 typedef bool
 (* UnwatchOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
 
+typedef bool
+(* SliceOp)(JSContext *cx, JS::HandleObject obj, uint32_t begin, uint32_t end,
+            JS::HandleObject result); // result is actually preallocted.
+
 typedef JSObject *
 (* ObjectOp)(JSContext *cx, JS::HandleObject obj);
 typedef void
@@ -468,6 +472,7 @@ struct ObjectOps
     DeleteSpecialOp     deleteSpecial;
     WatchOp             watch;
     UnwatchOp           unwatch;
+    SliceOp             slice; // Optimized slice, can be null.
 
     JSNewEnumerateOp    enumerate;
     ObjectOp            thisObject;

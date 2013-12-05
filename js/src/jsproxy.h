@@ -174,6 +174,9 @@ class JS_FRIEND_API(BaseProxyHandler)
                        JS::HandleObject callable);
     virtual bool unwatch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id);
 
+    virtual bool slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
+                       HandleObject result);
+
     /* See comment for weakmapKeyDelegateOp in js/Class.h. */
     virtual JSObject *weakmapKeyDelegate(JSObject *proxy);
     virtual bool isScripted() { return false; }
@@ -292,9 +295,11 @@ class Proxy
     static bool defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
     static bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop);
 
-    static bool watch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
-                      JS::HandleObject callable);
-    static bool unwatch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id);
+    static bool watch(JSContext *cx, HandleObject proxy, HandleId id, HandleObject callable);
+    static bool unwatch(JSContext *cx, HandleObject proxy, HandleId id);
+
+    static bool slice(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end,
+                      HandleObject result);
 
     /* IC entry path for handling __noSuchMethod__ on access. */
     static bool callProp(JSContext *cx, HandleObject proxy, HandleObject reveiver, HandleId id,
