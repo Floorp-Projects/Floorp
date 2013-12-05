@@ -125,6 +125,25 @@ GetSizePropertyForAxis(const nsIFrame* aFrame, AxisOrientationType aAxis)
     stylePos->mHeight;
 }
 
+/**
+ * Converts a logical position in a given axis into a position in the
+ * corresponding physical (x or y) axis. If the logical axis already maps
+ * directly onto one of our physical axes (i.e. LTR or TTB), then the logical
+ * and physical positions are equal; otherwise, we subtract the logical
+ * position from the container-size in that axis, to flip the polarity.
+ * (so e.g. a logical position of 2px in a RTL 20px-wide container
+ * would correspond to a physical position of 18px.)
+ */
+static nscoord
+PhysicalPosFromLogicalPos(nscoord aLogicalPosn,
+                          nscoord aLogicalContainerSize,
+                          AxisOrientationType aAxis) {
+  if (AxisGrowsInPositiveDirection(aAxis)) {
+    return aLogicalPosn;
+  }
+  return aLogicalContainerSize - aLogicalPosn;
+}
+
 static nscoord
 MarginComponentForSide(const nsMargin& aMargin, Side aSide)
 {
@@ -212,7 +231,7 @@ public:
   }
 
   /**
-   * Converts a logical position into a "physical" x,y position.
+   * Converts a logical point into a "physical" x,y point.
    *
    * In the simplest case where the main-axis is left-to-right and the
    * cross-axis is top-to-bottom, this just returns
@@ -225,24 +244,18 @@ public:
    *  @return A nsPoint representing the same position (in coordinates
    *          relative to the container's content box).
    */
-  nsPoint PhysicalPositionFromLogicalPosition(nscoord aMainPosn,
-                                              nscoord aCrossPosn,
-                                              nscoord aContainerMainSize,
-                                              nscoord aContainerCrossSize) const {
-    // If either of our logical axes are backwards with respect to our x,y
-    // coordinate system (e.g. right-to-left or bottom-to-top), then subtract
-    // that axis's logical coord them from the container size in that dimension,
-    // to flip the polarity around.
-    if (!AxisGrowsInPositiveDirection(mMainAxis)) {
-      aMainPosn = aContainerMainSize - aMainPosn;
-    }
-    if (!AxisGrowsInPositiveDirection(mCrossAxis)) {
-      aCrossPosn = aContainerCrossSize - aCrossPosn;
-    }
+  nsPoint PhysicalPointFromLogicalPoint(nscoord aMainPosn,
+                                        nscoord aCrossPosn,
+                                        nscoord aContainerMainSize,
+                                        nscoord aContainerCrossSize) const {
+    nscoord physicalPosnInMainAxis =
+      PhysicalPosFromLogicalPos(aMainPosn, aContainerMainSize, mMainAxis);
+    nscoord physicalPosnInCrossAxis =
+      PhysicalPosFromLogicalPos(aCrossPosn, aContainerCrossSize, mCrossAxis);
 
     return IsAxisHorizontal(mMainAxis) ?
-      nsPoint(aMainPosn, aCrossPosn) :
-      nsPoint(aCrossPosn, aMainPosn);
+      nsPoint(physicalPosnInMainAxis, physicalPosnInCrossAxis) :
+      nsPoint(physicalPosnInCrossAxis, physicalPosnInMainAxis);
   }
   nsSize PhysicalSizeFromLogicalSizes(nscoord aMainSize,
                                       nscoord aCrossSize) const {
@@ -2689,14 +2702,28 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     crossAxisPosnTracker(lines, aReflowState.mStylePosition->mAlignContent,
                          contentBoxCrossSize, isCrossSizeDefinite, axisTracker);
 
-  // Set the flex container's baseline, from its first line's baseline-aligned items.
-  // (This might give us nscoord_MIN if we don't have any baseline-aligned
-  // flex items.  That's OK, we'll update it below.)
-  nscoord flexContainerAscent =
-    lines[0].GetBaselineOffsetFromCrossStart();
-  if (flexContainerAscent != nscoord_MIN) {
-    // Add top borderpadding, so our ascent is w.r.t. border-box
-    flexContainerAscent += aReflowState.mComputedBorderPadding.top;
+  // Set the flex container's baseline, from the baseline-alignment position
+  // of the first line's baseline-aligned items.
+  nscoord flexContainerAscent;
+  nscoord firstLineBaselineOffset = lines[0].GetBaselineOffsetFromCrossStart();
+  if (firstLineBaselineOffset == nscoord_MIN) {
+    // No baseline-aligned flex items in first line --> just use a sentinel
+    // value for now, and we'll update it during final reflow.
+    flexContainerAscent = nscoord_MIN;
+  } else {
+    // Add the position of the first line to that line's baseline-alignment
+    // offset, to get the baseline offset with respect to the *container's*
+    // cross-start edge.
+    nscoord firstLineBaselineOffsetWRTContainer =
+      firstLineBaselineOffset + crossAxisPosnTracker.GetPosition();
+
+    // The container's ascent is that ^ offset, converted out of logical coords
+    // (into distance from top of content-box), plus the top border/padding
+    // (since ascent is measured with respect to the top of the border-box).
+    flexContainerAscent = aReflowState.mComputedBorderPadding.top +
+      PhysicalPosFromLogicalPos(firstLineBaselineOffsetWRTContainer,
+                                contentBoxCrossSize,
+                                axisTracker.GetCrossAxis());
   }
 
   for (uint32_t lineIdx = 0; lineIdx < lines.Length(); ++lineIdx) {
@@ -2731,7 +2758,7 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     for (uint32_t i = 0; i < line.mItems.Length(); ++i) {
       FlexItem& curItem = line.mItems[i];
 
-      nsPoint physicalPosn = axisTracker.PhysicalPositionFromLogicalPosition(
+      nsPoint physicalPosn = axisTracker.PhysicalPointFromLogicalPoint(
                                curItem.GetMainPosition(),
                                curItem.GetCrossPosition(),
                                contentBoxMainSize,
