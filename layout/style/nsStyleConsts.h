@@ -425,6 +425,11 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_FLEX_DIRECTION_COLUMN_REVERSE  3
 
 // See nsStylePosition
+#define NS_STYLE_FLEX_WRAP_NOWRAP               0
+#define NS_STYLE_FLEX_WRAP_WRAP                 1
+#define NS_STYLE_FLEX_WRAP_WRAP_REVERSE         2
+
+// See nsStylePosition
 // NOTE: This is the initial value of the integer-valued 'order' property
 // (rather than an internal numerical representation of some keyword).
 #define NS_STYLE_ORDER_INITIAL                  0

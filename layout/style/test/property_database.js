@@ -3844,6 +3844,14 @@ var gCSSProperties = {
 		other_values: [ "3", "0", "0.0", "2.5", "123" ],
 		invalid_values: [ "0px", "-5", "1%", "3em", "stretch", "auto" ]
 	},
+	"flex-wrap": {
+		domProp: "flexWrap",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "nowrap" ],
+		other_values: [ "wrap", "wrap-reverse" ],
+		invalid_values: [ "10px", "30%", "justify", "column wrap", "auto" ]
+	},
 	"order": {
 		domProp: "order",
 		inherited: false,
