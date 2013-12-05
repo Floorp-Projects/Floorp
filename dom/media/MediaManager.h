@@ -14,7 +14,6 @@
 #include "nsObserverService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsProxyRelease.h"
 
 #include "nsPIDOMWindow.h"
 #include "nsIDOMNavigatorUserMedia.h"
@@ -214,7 +213,7 @@ class GetUserMediaNotificationEvent: public nsRunnable
                                   already_AddRefed<DOMMediaStream> aStream,
                                   DOMMediaStream::OnTracksAvailableCallback* aOnTracksAvailableCallback,
                                   bool aIsAudio, bool aIsVideo, uint64_t aWindowID,
-                                  nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback> aError)
+                                  already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError)
     : mStream(aStream), mOnTracksAvailableCallback(aOnTracksAvailableCallback),
       mStatus(aStatus), mIsAudio(aIsAudio), mIsVideo(aIsVideo), mWindowID(aWindowID),
       mError(aError) {}
@@ -233,7 +232,7 @@ class GetUserMediaNotificationEvent: public nsRunnable
     bool mIsAudio;
     bool mIsVideo;
     uint64_t mWindowID;
-    nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback> mError;
+    nsRefPtr<nsIDOMGetUserMediaErrorCallback> mError;
 };
 
 typedef enum {
@@ -252,16 +251,13 @@ class ErrorCallbackRunnable : public nsRunnable
 {
 public:
   ErrorCallbackRunnable(
-    nsMainThreadPtrHandle<nsIDOMGetUserMediaSuccessCallback>& aSuccess,
-    nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback>& aError,
-    const nsAString& aErrorMsg, uint64_t aWindowID);
-  ErrorCallbackRunnable(
-    nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback>& aError,
+    already_AddRefed<nsIDOMGetUserMediaSuccessCallback> aSuccess,
+    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
     const nsAString& aErrorMsg, uint64_t aWindowID);
   NS_IMETHOD Run();
 private:
-  nsMainThreadPtrHandle<nsIDOMGetUserMediaSuccessCallback> mSuccess;
-  nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback> mError;
+  already_AddRefed<nsIDOMGetUserMediaSuccessCallback> mSuccess;
+  already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
   const nsString mErrorMsg;
   uint64_t mWindowID;
   nsRefPtr<MediaManager> mManager; // get ref to this when creating the runnable
@@ -295,7 +291,7 @@ public:
     MediaEngineSource* aVideoSource,
     bool aNeedsFinish,
     uint64_t aWindowID,
-    nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback> aError)
+    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError)
     : mType(aType)
     , mStream(aStream)
     , mOnTracksAvailableCallback(aOnTracksAvailableCallback)
@@ -305,25 +301,6 @@ public:
     , mFinish(aNeedsFinish)
     , mWindowID(aWindowID)
     , mError(aError)
-  {}
-
-  MediaOperationRunnable(MediaOperation aType,
-    GetUserMediaCallbackMediaStreamListener* aListener,
-    DOMMediaStream* aStream,
-    DOMMediaStream::OnTracksAvailableCallback* aOnTracksAvailableCallback,
-    MediaEngineSource* aAudioSource,
-    MediaEngineSource* aVideoSource,
-    bool aNeedsFinish,
-    uint64_t aWindowID)
-    : mType(aType)
-    , mStream(aStream)
-    , mOnTracksAvailableCallback(aOnTracksAvailableCallback)
-    , mAudioSource(aAudioSource)
-    , mVideoSource(aVideoSource)
-    , mListener(aListener)
-    , mFinish(aNeedsFinish)
-    , mWindowID(aWindowID)
-    , mError(nullptr)
   {}
 
   ~MediaOperationRunnable()
@@ -339,7 +316,8 @@ public:
     nsString log;
 
     log.AssignASCII(errorLog, strlen(errorLog));
-    NS_DispatchToMainThread(new ErrorCallbackRunnable(mError, log, mWindowID));
+    NS_DispatchToMainThread(new ErrorCallbackRunnable(nullptr, mError.forget(),
+      log, mWindowID));
     return NS_OK;
   }
 
@@ -390,7 +368,7 @@ public:
                                               mOnTracksAvailableCallback.forget(),
                                               mAudioSource != nullptr,
                                               mVideoSource != nullptr,
-                                              mWindowID, mError);
+                                              mWindowID, mError.forget());
           NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
         }
         break;
@@ -437,7 +415,7 @@ private:
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener; // threadsafe
   bool mFinish;
   uint64_t mWindowID;
-  nsMainThreadPtrHandle<nsIDOMGetUserMediaErrorCallback> mError;
+  nsRefPtr<nsIDOMGetUserMediaErrorCallback> mError;
 };
 
 typedef nsTArray<nsRefPtr<GetUserMediaCallbackMediaStreamListener> > StreamListeners;
