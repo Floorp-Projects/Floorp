@@ -11,10 +11,12 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/Shape-inl.h"
+
 using namespace js;
 
 /* static */ Shape *
-js::ErrorObject::assignInitialShapeNoMessage(JSContext *cx, Handle<ErrorObject*> obj)
+js::ErrorObject::assignInitialShape(ExclusiveContext *cx, Handle<ErrorObject*> obj)
 {
     MOZ_ASSERT(obj->nativeEmpty());
 
@@ -36,18 +38,8 @@ js::ErrorObject::init(JSContext *cx, Handle<ErrorObject*> obj, JSExnType type,
     // Null out early in case of error, for exn_finalize's sake.
     obj->initReservedSlot(ERROR_REPORT_SLOT, PrivateValue(nullptr));
 
-    if (obj->nativeEmpty()) {
-        // Create the initial shape now.  Subsequent error objects with this
-        // object's [[Prototype]] will then start life with that shape.
-        RootedShape shape(cx, ErrorObject::assignInitialShapeNoMessage(cx, obj));
-        if (!shape)
-            return false;
-        if (!obj->isDelegate()) {
-            RootedObject proto(cx, obj->getProto());
-            EmptyShape::insertInitialShape(cx, shape, proto);
-        }
-        MOZ_ASSERT(!obj->nativeEmpty());
-    }
+    if (!EmptyShape::ensureInitialCustomShape<ErrorObject>(cx, obj))
+        return false;
 
     // The .message property isn't part of the initial shape because it's
     // present in some error objects -- |Error.prototype|, |new Error("f")|,
