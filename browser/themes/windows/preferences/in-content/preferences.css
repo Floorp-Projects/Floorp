@@ -2,12 +2,11 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("chrome://global/skin/inContentUI.css");
-
 @namespace html "http://www.w3.org/1999/xhtml";
 
-#header {
-  margin-bottom: 18px;
+@font-face {
+  font-family: "Clear Sans";
+  src: url("chrome://browser/skin/fonts/ClearSans-Regular.ttf");
 }
 
 caption {
@@ -26,95 +25,169 @@ prefpane > .content-box {
 
 #categories {
   -moz-appearance: none;
-  border: none;
-  -moz-margin-end: -1px;
-  background-color: transparent;
-  position: relative;
-  margin-top: 31px;
+  background-color: #424e5a;
+  -moz-border-end: 1px solid rgba(0,0,0,0.20);
+  padding-top: 39px;
+  margin: 0;
 }
 
 .category {
   -moz-appearance: none;
-  background-color: transparent;
-  color: #252F3B;
-  padding: 10px 4px;
-  border-width: 1px;
-  border-style: solid;
-  border-color: transparent;
-  -moz-padding-end: 8px;
-  -moz-box-align: center;
-  overflow: hidden;
-  min-height: 0;
-  height: 52px;
+  color: rgba(241,241,241,0.70);
+  border: 1px solid transparent;
+  -moz-border-end-width: 0;
+  -moz-padding-start: 14px;
+  -moz-padding-end: 21px;
+  margin-bottom: -1px;
+  min-height: 40px;
 }
 
-.category:-moz-locale-dir(ltr) {
-  border-top-left-radius: 5px;
-  border-bottom-left-radius: 5px;
-}
-
-.category:-moz-locale-dir(rtl) {
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
+.category:hover {
+  background-color: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.20);
 }
 
 .category[selected] {
-  background-color: rgba(255, 255, 255, 0.4);
-  color: #252F3B;
-  border-color: #C3CEDF;
-  -moz-border-end-color: #E2E9F2;
+  background-color: rgba(0,0,0,0.20);
+  border-color: rgba(255,255,255,0.20);
+  -moz-border-start-width: 3px;
+  -moz-border-start-color: #ff9500;
+  -moz-padding-start: 12px;
+  color: #f1f1f1;
 }
 
 .category-name {
-  font-size: 1.5rem;
-  -moz-padding-end: 24px;
-}
-
-/* Maximize the size of the viewport when the window is small */
-@media (max-width: 800px) {
-  .category-name {
-    display: none;
-  }
+  line-height: 22px;
+  font-family: "Clear Sans", sans-serif;
+  font-size: 1.25rem;
+  padding-bottom: 2px;
+  -moz-padding-start: 9px;
+  margin: 0;
 }
 
 .category-icon {
-  width: 32px;
-  height: 32px;
-  margin: 0 6px;
-  -moz-margin-start: 6px;
-  -moz-margin-end: 5px;
-  list-style-image: url("chrome://browser/skin/preferences/Options.png");
+  width: 24px;
+  height: 24px;
+  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.png");
 }
 
 #category-general > .category-icon {
-  -moz-image-region: rect(0, 32px, 32px, 0);
+  -moz-image-region: rect(0, 24px, 24px, 0);
+}
+
+#category-general[selected] > .category-icon {
+  -moz-image-region: rect(24px, 24px, 48px, 0);
 }
 
 #category-content > .category-icon {
-  -moz-image-region: rect(0, 96px,  32px, 64px)
+  -moz-image-region: rect(0, 48px, 24px, 24px);
+}
+
+#category-content[selected] > .category-icon {
+  -moz-image-region: rect(24px, 48px, 48px, 24px);
 }
 
 #category-application > .category-icon {
-  -moz-image-region: rect(0, 128px,  32px, 96px)
+  -moz-image-region: rect(0, 72px, 24px, 48px);
+}
+
+#category-application[selected] > .category-icon {
+  -moz-image-region: rect(24px, 72px, 48px, 48px);
 }
 
 #category-privacy > .category-icon {
-  -moz-image-region: rect(0, 160px,  32px, 128px)
+  -moz-image-region: rect(0, 96px, 24px, 72px);
+}
+
+#category-privacy[selected] > .category-icon {
+  -moz-image-region: rect(24px, 96px, 48px, 72px);
 }
 
 #category-security > .category-icon {
-  -moz-image-region: rect(0, 192px,  32px, 160px)
+  -moz-image-region: rect(0, 120px, 24px, 96px);
+}
+
+#category-security[selected] > .category-icon {
+  -moz-image-region: rect(24px, 120px, 48px, 96px);
+}
+
+#category-sync > .category-icon {
+  -moz-image-region: rect(0, 144px, 24px, 120px);
+}
+
+#category-sync[selected] > .category-icon {
+  -moz-image-region: rect(24px, 144px, 48px, 120px);
 }
 
 #category-advanced > .category-icon {
-  -moz-image-region: rect(0, 224px, 32px, 192px)
+  -moz-image-region: rect(0, 168px, 24px, 144px);
 }
 
-%ifdef MOZ_SERVICES_SYNC
-#category-sync > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/Options-sync.png");
+#category-advanced[selected] > .category-icon {
+  -moz-image-region: rect(24px, 168px, 48px, 144px);
 }
-%endif
+
+@media (min-resolution: 2dppx) {
+  .category-icon {
+    list-style-image: url("chrome://browser/skin/preferences/in-content/icons@2x.png");
+  }
+
+  #category-general > .category-icon {
+    -moz-image-region: rect(0, 48px, 48px, 0);
+  }
+
+  #category-general[selected] > .category-icon {
+    -moz-image-region: rect(48px, 48px, 96px, 0);
+  }
+
+  #category-content > .category-icon {
+    -moz-image-region: rect(0, 96px, 48px, 48px);
+  }
+
+  #category-content[selected] > .category-icon {
+    -moz-image-region: rect(48px, 96px, 96px, 48px);
+  }
+
+  #category-application > .category-icon {
+    -moz-image-region: rect(0, 144px, 48px, 96px);
+  }
+
+  #category-application[selected] > .category-icon {
+    -moz-image-region: rect(48px, 144px, 96px, 96px);
+  }
+
+  #category-privacy > .category-icon {
+    -moz-image-region: rect(0, 192px, 48px, 144px);
+  }
+
+  #category-privacy[selected] > .category-icon {
+    -moz-image-region: rect(48px, 192px, 96px, 144px);
+  }
+
+  #category-security > .category-icon {
+    -moz-image-region: rect(0, 240px, 48px, 192px);
+  }
+
+  #category-security[selected] > .category-icon {
+    -moz-image-region: rect(48px, 240px, 96px, 192px);
+  }
+
+  #category-sync > .category-icon {
+    -moz-image-region: rect(0, 288px, 48px, 240px);
+  }
+
+  #category-sync[selected] > .category-icon {
+    -moz-image-region: rect(48px, 288px, 96px, 240px);
+  }
+
+  #category-advanced > .category-icon {
+    -moz-image-region: rect(0, 336px, 48px, 288px);
+  }
+
+  #category-advanced[selected] > .category-icon {
+    -moz-image-region: rect(48px, 336px, 96px, 288px);
+  }
+}
 
 /* Applications Pane Styles */
 
