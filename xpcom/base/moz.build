@@ -78,6 +78,7 @@ EXPORTS.mozilla += [
     'StackWalk.h',
     'StaticMutex.h',
     'StaticPtr.h',
+    'SystemMemoryReporter.h',
     'VisualEventTracer.h',
 ]
 
@@ -116,6 +117,11 @@ UNIFIED_SOURCES += [
     'nsVersionComparatorImpl.cpp',
     'VisualEventTracer.cpp',
 ]
+
+if CONFIG['OS_ARCH'] == 'Linux':
+    SOURCES += [
+        'SystemMemoryReporter.cpp',
+    ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     SOURCES += [
