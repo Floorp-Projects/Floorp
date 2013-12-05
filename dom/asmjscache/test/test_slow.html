@@ -20,10 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=854209
   ok(jsFuns.isAsmJSCompilationAvailable(), "asm.js compilation is available");
   </script>
 
-  <script src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_asmjs.js"></script>
+  <script src="http://mochi.test:8888/tests/dom/asmjscache/test/file_slow.js"></script>
 
   <script>
-  var w = new Worker('http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_asmjs.js');
+  var w = new Worker('http://mochi.test:8888/tests/dom/asmjscache/test/file_slow.js');
   w.onmessage = function(e) {
       ok(e.data === "ok", "Worker asm.js tests");
       SimpleTest.finish();
