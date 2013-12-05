@@ -1982,6 +1982,8 @@ nsresult
 nsFlexContainerFrame::GenerateFlexLines(
   nsPresContext* aPresContext,
   const nsHTMLReflowState& aReflowState,
+  nscoord aContentBoxMainSize,
+  nscoord aAvailableHeightForContent,
   const FlexboxAxisTracker& aAxisTracker,
   nsTArray<FlexLine>& aLines)
 {
@@ -2000,14 +2002,27 @@ nsFlexContainerFrame::GenerateFlexLines(
     // pre-allocate space for them.
     curLine->mItems.SetCapacity(mFrames.GetLength());
   } else {
-    // Wrapping! Set wrap threshold to container's content-box main-size.
-    // XXXdholbert Might want to split up ComputeFlexContainerMainSize() into
-    // a child-dependent part and a non-child-dependent part, and call the
-    // non-child-dependent part before we get here, to save us a call to
-    // GetEffectiveComputedHeight. For now, though, this is easy enough:
-    wrapThreshold = GET_MAIN_COMPONENT(aAxisTracker,
-                      aReflowState.ComputedWidth(),
-                      GetEffectiveComputedHeight(aReflowState));
+    // Wrapping! Set wrap threshold to flex container's content-box main-size.
+    wrapThreshold = aContentBoxMainSize;
+
+    // If the flex container doesn't have a definite content-box main-size
+    // (e.g. if we're 'height:auto'), make sure we at least wrap when we hit
+    // its max main-size.
+    if (wrapThreshold == NS_UNCONSTRAINEDSIZE) {
+      const nscoord flexContainerMaxMainSize =
+        GET_MAIN_COMPONENT(aAxisTracker,
+                           aReflowState.mComputedMaxWidth,
+                           aReflowState.mComputedMaxHeight);
+
+      wrapThreshold = flexContainerMaxMainSize;
+    }
+
+    // Also: if we're vertical and paginating, we may need to wrap sooner
+    // (before we run off the end of the page)
+    if (!IsAxisHorizontal(aAxisTracker.GetMainAxis()) &&
+        aAvailableHeightForContent != NS_UNCONSTRAINEDSIZE) {
+      wrapThreshold = std::min(wrapThreshold, aAvailableHeightForContent);
+    }
   }
 
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
@@ -2054,14 +2069,13 @@ nsFlexContainerFrame::GenerateFlexLines(
   return NS_OK;
 }
 
-// Computes the content-box main-size of our flex container.
+// Retrieves the content-box main-size of our flex container from the
+// reflow state (specifically, the main-size of *this continuation* of the
+// flex container).
 nscoord
-nsFlexContainerFrame::ComputeFlexContainerMainSize(
+nsFlexContainerFrame::GetMainSizeFromReflowState(
   const nsHTMLReflowState& aReflowState,
-  const FlexboxAxisTracker& aAxisTracker,
-  const FlexLine& aLine,
-  nscoord aAvailableHeightForContent,
-  nsReflowStatus& aStatus)
+  const FlexboxAxisTracker& aAxisTracker)
 {
   if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
     // Horizontal case is easy -- our main size is our computed width
@@ -2069,16 +2083,35 @@ nsFlexContainerFrame::ComputeFlexContainerMainSize(
     return aReflowState.ComputedWidth();
   }
 
-  nscoord effectiveComputedHeight = GetEffectiveComputedHeight(aReflowState);
-  if (effectiveComputedHeight != NS_INTRINSICSIZE) {
+  return GetEffectiveComputedHeight(aReflowState);
+}
+
+// Returns the content-box main-size of our flex container, based on the
+// available height (if appropriate) and the main-sizes of the flex items.
+static nscoord
+ClampFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
+                           const FlexboxAxisTracker& aAxisTracker,
+                           nscoord aUnclampedMainSize,
+                           nscoord aAvailableHeightForContent,
+                           const FlexLine& aLine,
+                           nsReflowStatus& aStatus)
+{
+  if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
+    // Horizontal case is easy -- our main size should already be resolved
+    // before we get a call to Reflow. We don't have to worry about doing
+    // page-breaking or shrinkwrapping in the horizontal axis.
+    return aUnclampedMainSize;
+  }
+
+  if (aUnclampedMainSize != NS_INTRINSICSIZE) {
     // Vertical case, with fixed height:
     if (aAvailableHeightForContent == NS_UNCONSTRAINEDSIZE ||
-        effectiveComputedHeight < aAvailableHeightForContent) {
+        aUnclampedMainSize < aAvailableHeightForContent) {
       // Not in a fragmenting context, OR no need to fragment because we have
       // more available height than we need. Either way, just use our fixed
       // height.  (Note that the reflow state has already done the appropriate
       // min/max-height clamping.)
-      return effectiveComputedHeight;
+      return aUnclampedMainSize;
     }
 
     // Fragmenting *and* our fixed height is too tall for available height:
@@ -2093,7 +2126,7 @@ nsFlexContainerFrame::ComputeFlexContainerMainSize(
     if (sumOfChildHeights <= aAvailableHeightForContent) {
       return aAvailableHeightForContent;
     }
-    return std::min(effectiveComputedHeight, sumOfChildHeights);
+    return std::min(aUnclampedMainSize, sumOfChildHeights);
   }
 
   // Vertical case, with auto-height:
@@ -2378,14 +2411,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   const FlexboxAxisTracker axisTracker(this);
 
-  // Generate an array of our flex items (already sorted), in a FlexLine.
-  nsAutoTArray<FlexLine, 1> lines;
-  nsresult rv = GenerateFlexLines(aPresContext, aReflowState,
-                                  axisTracker, lines);
-  NS_ENSURE_SUCCESS(rv, rv);
-  FlexLine& line = lines[0]; // XXXdholbert Temporary; a later patch will
-                             // rewrite the relevant code to loop over |lines|
-                             // where appropriate.
+  nscoord contentBoxMainSize = GetMainSizeFromReflowState(aReflowState,
+                                                          axisTracker);
 
   // If we're being fragmented into a constrained height, subtract off
   // borderpadding-top from it, to get the available height for our
@@ -2399,9 +2426,20 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     availableHeightForContent = std::max(availableHeightForContent, 0);
   }
 
-  const nscoord contentBoxMainSize =
-    ComputeFlexContainerMainSize(aReflowState, axisTracker, line,
-                                 availableHeightForContent, aStatus);
+  // Generate an array of our flex items (already sorted), in a FlexLine.
+  nsAutoTArray<FlexLine, 1> lines;
+  nsresult rv = GenerateFlexLines(aPresContext, aReflowState,
+                                  contentBoxMainSize, availableHeightForContent,
+                                  axisTracker, lines);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  FlexLine& line = lines[0]; // XXXdholbert Temporary; a later patch will
+                             // rewrite the relevant code to loop over |lines|
+                             // where appropriate.
+  contentBoxMainSize =
+    ClampFlexContainerMainSize(aReflowState, axisTracker,
+                               contentBoxMainSize, availableHeightForContent,
+                               line, aStatus);
 
   line.ResolveFlexibleLengths(contentBoxMainSize);
 
