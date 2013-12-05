@@ -7,13 +7,6 @@
 
 <script type="text/javascript">
 
-function setDOMStorageEnabled(enabled)
-{
-  var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
-              .getService(SpecialPowers.Ci.nsIPrefBranch);
-  prefs.setBoolPref("dom.storage.enabled", enabled);
-}
-
 function checkException(func, exc)
 {
   var exceptionThrew = false;
@@ -27,47 +20,32 @@ function checkException(func, exc)
   ok(exceptionThrew, "Exception "+exc+" threw");
 }
 
-function startTest()
-{
-  setDOMStorageEnabled(true);
-
+var storage;
+function test1() {
   is(typeof(window.localStorage), "object", "Storage is present");
-  var storage = window.localStorage;
+  storage = window.localStorage;
 
-  setDOMStorageEnabled(false);
+  SpecialPowers.pushPrefEnv({"set": [["dom.storage.enabled", false]]}, test2);
+}
 
+function test2() {
   is(window.localStorage, null, "Storage is null");
 
   checkException(function() {storage.setItem("test", "value");}, "SecurityError");
 
-  setDOMStorageEnabled(true);
+  SpecialPowers.pushPrefEnv({"set": [["dom.storage.enabled", true]]}, test3);
+}
 
+function test3() {
   is(typeof(window.localStorage), "object", "Storage is present again");
   storage.setItem("test", "value");
   ok(storage.getItem("test"), "value", "value can be set");
-}
-
-function cleanup()
-{
-  setDOMStorageEnabled(true);
   window.localStorage.clear();
   SimpleTest.finish();
 }
 
-function doTest()
-{
-  try
-  {
-    startTest();
-  }
-  catch(exc)
-  {
-    ok(false, exc+" was threw during the test")
-  }
-  finally
-  {
-    cleanup();
-  }
+function doTest() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.storage.enabled", true]]}, test1);
 }
 
 SimpleTest.waitForExplicitFinish();

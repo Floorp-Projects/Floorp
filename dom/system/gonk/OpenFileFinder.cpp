@@ -19,9 +19,10 @@ OpenFileFinder::OpenFileFinder(const nsACString& aPath,
     mProcDir(nullptr),
     mFdDir(nullptr),
     mPid(0),
-    mMyPid(-1),
     mCheckIsB2gOrDescendant(aCheckIsB2gOrDescendant)
 {
+  // We assume that we're running in the parent process
+  mMyPid = getpid();
 }
 
 OpenFileFinder::~OpenFileFinder()
@@ -162,10 +163,6 @@ OpenFileFinder::FillInfo(OpenFileFinder::Info* aInfo, const nsACString& aPath)
   // ) X ppid
   // 01234
   int ppid = atoi(&closeParen[4]);
-  // We assume that we're running in the parent process
-  if (mMyPid == -1) {
-    mMyPid = getpid();
-  }
 
   if (mPid == mMyPid) {
     // This is chrome process
