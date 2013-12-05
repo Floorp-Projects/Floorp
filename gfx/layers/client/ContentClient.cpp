@@ -50,6 +50,13 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
   }
 
   bool useDoubleBuffering = false;
+  bool useDeprecatedTextures = true;
+  // XXX We need support for gralloc with non-deprecated textures content before
+  // we can use them with FirefoxOS (bug 946720). We need the same locking for
+  // Windows.
+#if !defined(MOZ_WIDGET_GONK) && !defined(XP_WIN)
+  useDeprecatedTextures = gfxPlatform::GetPlatform()->UseDeprecatedTextures();
+#endif
 
 #ifdef XP_WIN
   if (backend == LAYERS_D3D11) {
@@ -62,7 +69,7 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
   }
 
   if (useDoubleBuffering || PR_GetEnv("MOZ_FORCE_DOUBLE_BUFFERING")) {
-    if (gfxPlatform::GetPlatform()->UseDeprecatedTextures()) {
+    if (useDeprecatedTextures) {
       return new DeprecatedContentClientDoubleBuffered(aForwarder);
     } else {
       return new ContentClientDoubleBuffered(aForwarder);
@@ -73,7 +80,7 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
     return new ContentClientIncremental(aForwarder);
   }
 #endif
-  if (gfxPlatform::GetPlatform()->UseDeprecatedTextures()) {
+  if (useDeprecatedTextures) {
     return new DeprecatedContentClientSingleBuffered(aForwarder);
   } else {
     return new ContentClientSingleBuffered(aForwarder);
