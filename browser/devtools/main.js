@@ -29,7 +29,7 @@ loader.lazyGetter(this, "DebuggerPanel", () => require("devtools/debugger/panel"
 loader.lazyImporter(this, "StyleEditorPanel", "resource:///modules/devtools/StyleEditorPanel.jsm");
 loader.lazyGetter(this, "ShaderEditorPanel", () => require("devtools/shadereditor/panel").ShaderEditorPanel);
 loader.lazyGetter(this, "ProfilerPanel", () => require("devtools/profiler/panel"));
-loader.lazyGetter(this, "NetMonitorPanel", () => require("devtools/netmonitor/netmonitor-panel").NetMonitorPanel);
+loader.lazyGetter(this, "NetMonitorPanel", () => require("devtools/netmonitor/panel").NetMonitorPanel);
 loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/scratchpad/scratchpad-panel").ScratchpadPanel);
 
 // Strings
