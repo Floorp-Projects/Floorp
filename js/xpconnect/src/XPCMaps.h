@@ -695,11 +695,20 @@ private:
      * has been moved.
      */
     static void KeyMarkCallback(JSTracer *trc, void *k, void *d) {
-        JSObject *key = static_cast<JSObject*>(k);
+        /*
+         * To stop the barriers on the values of mTable firing while we are
+         * marking the store buffer, we cast the table to one that is
+         * binary-equivatlent but without the barriers, and update that.
+         */
+        typedef js::HashMap<JSObject *, JSObject *, js::PointerHasher<JSObject *, 3>,
+                            js::SystemAllocPolicy> UnbarrieredMap;
         JSObject2JSObjectMap *self = static_cast<JSObject2JSObjectMap *>(d);
+        UnbarrieredMap &table = reinterpret_cast<UnbarrieredMap &>(self->mTable);
+
+        JSObject *key = static_cast<JSObject*>(k);
         JSObject *prior = key;
         JS_CallObjectTracer(trc, &key, "XPCWrappedNativeScope::mWaiverWrapperMap key");
-        self->mTable.rekeyIfMoved(prior, key);
+        table.rekeyIfMoved(prior, key);
     }
 
     Map mTable;
