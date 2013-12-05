@@ -8364,66 +8364,6 @@ class CGDOMJSProxyHandler_finalize(ClassMethod):
         return ("%s self = UnwrapProxy(proxy);\n\n" % (self.descriptor.nativeType + "*") +
                 finalizeHook(self.descriptor, FINALIZE_HOOK_NAME, self.args[0].name).define())
 
-class CGDOMJSProxyHandler_getElementIfPresent(ClassMethod):
-    def __init__(self, descriptor):
-        args = [Argument('JSContext*', 'cx'),
-                Argument('JS::Handle<JSObject*>', 'proxy'),
-                Argument('JS::Handle<JSObject*>', 'receiver'),
-                Argument('uint32_t', 'index'),
-                Argument('JS::MutableHandle<JS::Value>', 'vp'),
-                Argument('bool*', 'present')]
-        ClassMethod.__init__(self, "getElementIfPresent", "bool", args)
-        self.descriptor = descriptor
-    def getBody(self):
-        successCode = ("*present = found;\n"
-                       "return true;")
-        templateValues = {'jsvalRef': 'vp', 'jsvalHandle': 'vp',
-                          'obj': 'proxy', 'successCode': successCode}
-        if self.descriptor.supportsIndexedProperties():
-            get = (CGProxyIndexedGetter(self.descriptor, templateValues).define() + "\n"
-                   "// We skip the expando object and any named getters if\n"
-                   "// there is an indexed getter.\n" +
-                   "\n") % (self.descriptor.nativeType)
-        else:
-            if self.descriptor.supportsNamedProperties():
-                get = CGProxyNamedGetter(self.descriptor, templateValues,
-                                         "UINT_TO_JSVAL(index)").define()
-            get += """
-
-JS::Rooted<JSObject*> expando(cx, GetExpandoObject(proxy));
-if (expando) {
-  bool isPresent;
-  if (!JS_GetElementIfPresent(cx, expando, index, expando, vp, &isPresent)) {
-    return false;
-  }
-  if (isPresent) {
-    *present = true;
-    return true;
-  }
-}
-"""
-
-        return """MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy),
-             "Should not have a XrayWrapper here");
-
-""" + get + """
-JS::Rooted<JSObject*> proto(cx);
-if (!js::GetObjectProto(cx, proxy, &proto)) {
-  return false;
-}
-if (proto) {
-  bool isPresent;
-  if (!JS_GetElementIfPresent(cx, proto, index, proxy, vp, &isPresent)) {
-    return false;
-  }
-  *present = isPresent;
-  return true;
-}
-
-*present = false;
-// Can't Debug_SetValueRangeToCrashOnTouch because it's not public
-return true;"""
-
 class CGDOMJSProxyHandler_getInstance(ClassMethod):
     def __init__(self):
         ClassMethod.__init__(self, "getInstance", "DOMProxyHandler*", [], static=True)
@@ -8446,7 +8386,6 @@ class CGDOMJSProxyHandler(CGClass):
                    CGDOMJSProxyHandler_className(descriptor),
                    CGDOMJSProxyHandler_finalizeInBackground(descriptor),
                    CGDOMJSProxyHandler_finalize(descriptor),
-                   CGDOMJSProxyHandler_getElementIfPresent(descriptor),
                    CGDOMJSProxyHandler_getInstance(),
                    CGDOMJSProxyHandler_delete(descriptor)]
         CGClass.__init__(self, 'DOMProxyHandler',
