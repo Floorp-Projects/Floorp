@@ -6,6 +6,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 ///////////////////////////////////////////////////////////////////////////////
 //// Helper Functions
 
@@ -480,10 +482,11 @@ nsUnknownContentTypeDialog.prototype = {
 
     this.mDialog.setTimeout("dialog.postShowCallback()", 0);
 
+    let acceptDelay = Services.prefs.getIntPref("security.dialog_enable_delay");
     this.mDialog.document.documentElement.getButton("accept").disabled = true;
     this._showTimer = Components.classes["@mozilla.org/timer;1"]
                                 .createInstance(nsITimer);
-    this._showTimer.initWithCallback(this, 250, nsITimer.TYPE_ONE_SHOT);
+    this._showTimer.initWithCallback(this, acceptDelay, nsITimer.TYPE_ONE_SHOT);
   },
 
   notify: function (aTimer) {
