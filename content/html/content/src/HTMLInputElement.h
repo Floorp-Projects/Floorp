@@ -680,23 +680,12 @@ public:
 
   void StartNumberControlSpinnerSpin();
   void StopNumberControlSpinnerSpin();
-  void StepNumberControlForUserEvent(int32_t aDirection);
 
   /**
    * The callback function used by the nsRepeatService that we use to spin the
    * spinner for <input type=number>.
    */
   static void HandleNumberControlSpin(void* aData);
-
-  bool NumberSpinnerUpButtonIsDepressed() const
-  {
-    return mNumberControlSpinnerIsSpinning && mNumberControlSpinnerSpinsUp;
-  }
-
-  bool NumberSpinnerDownButtonIsDepressed() const
-  {
-    return mNumberControlSpinnerIsSpinning && !mNumberControlSpinnerSpinsUp;
-  }
 
   bool MozIsTextField(bool aExcludePassword);
 
