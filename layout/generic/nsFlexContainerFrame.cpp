@@ -1979,18 +1979,39 @@ FlexboxAxisTracker::FlexboxAxisTracker(nsFlexContainerFrame* aFlexContainerFrame
 }
 
 nsresult
-nsFlexContainerFrame::GenerateFlexItems(
+nsFlexContainerFrame::GenerateFlexLines(
   nsPresContext* aPresContext,
   const nsHTMLReflowState& aReflowState,
   const FlexboxAxisTracker& aAxisTracker,
-  FlexLine& aFlexLine)
+  nsTArray<FlexLine>& aLines)
 {
-  MOZ_ASSERT(aFlexLine.mItems.IsEmpty(),
-             "Expecting outparam to start out empty");
+  MOZ_ASSERT(aLines.IsEmpty(), "Expecting outparam to start out empty");
 
-  aFlexLine.mItems.SetCapacity(mFrames.GetLength());
+  // We have at least one FlexLine. Even an empty flex container has a single
+  // (empty) flex line.
+  FlexLine* curLine = aLines.AppendElement();
+
+  nscoord wrapThreshold;
+  if (NS_STYLE_FLEX_WRAP_NOWRAP == aReflowState.mStylePosition->mFlexWrap) {
+    // Not wrapping. Set threshold to sentinel value that tells us not to wrap.
+    wrapThreshold = NS_UNCONSTRAINEDSIZE;
+
+    // Optimization: We know all items will end up in the first line, so we can
+    // pre-allocate space for them.
+    curLine->mItems.SetCapacity(mFrames.GetLength());
+  } else {
+    // Wrapping! Set wrap threshold to container's content-box main-size.
+    // XXXdholbert Might want to split up ComputeFlexContainerMainSize() into
+    // a child-dependent part and a non-child-dependent part, and call the
+    // non-child-dependent part before we get here, to save us a call to
+    // GetEffectiveComputedHeight. For now, though, this is easy enough:
+    wrapThreshold = GET_MAIN_COMPONENT(aAxisTracker,
+                      aReflowState.ComputedWidth(),
+                      GetEffectiveComputedHeight(aReflowState));
+  }
+
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    FlexItem* item = aFlexLine.mItems.AppendElement(
+    FlexItem* item = curLine->mItems.AppendElement(
                        GenerateFlexItemForChild(aPresContext, e.get(),
                                                 aReflowState, aAxisTracker));
 
@@ -2001,12 +2022,33 @@ nsFlexContainerFrame::GenerateFlexItems(
     nscoord itemOuterHypotheticalMainSize = item->GetMainSize() +
       item->GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
 
-    // XXXdholbert When we support multi-line, we'll check here if this item's
-    // outerHypotheticalMainSize takes us past the end of our line's available
-    // space. If so, we'll create a new FlexLine and shift the item there.
+    // Check if we need to wrap |item| to a new line
+    // (i.e. check if its outer hypothetical main size pushes our line over
+    // the threshold)
+    if (wrapThreshold != NS_UNCONSTRAINEDSIZE &&
+        curLine->mItems.Length() > 1 && // Don't wrap if it'll leave line empty
+        wrapThreshold < (curLine->GetTotalOuterHypotheticalMainSize() +
+                         itemOuterHypotheticalMainSize)) {
+      // Need to wrap to a new line! Create a new line, create a copy of the
+      // newest FlexItem there, and clear that FlexItem out of the prev. line.
+      curLine = aLines.AppendElement();
+      // NOTE: if that^ AppendElement had to realloc, then |item| may now
+      // point to bogus memory. Null out our pointer and use a freshly-obtained
+      // reference ('itemToCopy'), to be on the safe side.
+      item = nullptr;
 
-    aFlexLine.AddToMainSizeTotals(itemInnerHypotheticalMainSize,
-                                  itemOuterHypotheticalMainSize);
+      FlexLine& prevLine = aLines[aLines.Length() - 2];
+      uint32_t itemIdxInPrevLine = prevLine.mItems.Length() - 1;
+      FlexItem& itemToCopy = prevLine.mItems[itemIdxInPrevLine];
+
+      // Copy item into cur line:
+      curLine->mItems.AppendElement(itemToCopy);
+      // ...and remove the old copy in prev line:
+      prevLine.mItems.RemoveElementAt(itemIdxInPrevLine);
+    }
+
+    curLine->AddToMainSizeTotals(itemInnerHypotheticalMainSize,
+                                 itemOuterHypotheticalMainSize);
   }
 
   return NS_OK;
@@ -2337,10 +2379,13 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   const FlexboxAxisTracker axisTracker(this);
 
   // Generate an array of our flex items (already sorted), in a FlexLine.
-  FlexLine line;
-  nsresult rv = GenerateFlexItems(aPresContext, aReflowState,
-                                  axisTracker, line);
+  nsAutoTArray<FlexLine, 1> lines;
+  nsresult rv = GenerateFlexLines(aPresContext, aReflowState,
+                                  axisTracker, lines);
   NS_ENSURE_SUCCESS(rv, rv);
+  FlexLine& line = lines[0]; // XXXdholbert Temporary; a later patch will
+                             // rewrite the relevant code to loop over |lines|
+                             // where appropriate.
 
   // If we're being fragmented into a constrained height, subtract off
   // borderpadding-top from it, to get the available height for our
