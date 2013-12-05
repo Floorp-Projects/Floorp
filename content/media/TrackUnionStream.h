@@ -29,7 +29,7 @@ public:
     mFilterCallback(nullptr),
     mMaxTrackID(0) {}
 
-  virtual void RemoveInput(MediaInputPort* aPort)
+  virtual void RemoveInput(MediaInputPort* aPort) MOZ_OVERRIDE
   {
     for (int32_t i = mTrackMap.Length() - 1; i >= 0; --i) {
       if (mTrackMap[i].mInputPort == aPort) {
@@ -39,7 +39,7 @@ public:
     }
     ProcessedMediaStream::RemoveInput(aPort);
   }
-  virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo)
+  virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) MOZ_OVERRIDE
   {
     nsAutoTArray<bool,8> mappedTracksFinished;
     nsAutoTArray<bool,8> mappedTracksWithMatchingInputTracks;
@@ -95,7 +95,7 @@ public:
         mTrackMap.RemoveElementAt(i);
       }
     }
-    if (allFinished && mAutofinish) {
+    if (allFinished && mAutofinish && (aFlags & ALLOW_FINISH)) {
       // All streams have finished and won't add any more tracks, and
       // all our tracks have actually finished and been removed from our map,
       // so we're finished now.
@@ -117,7 +117,7 @@ public:
 
   // Forward SetTrackEnabled(output_track_id, enabled) to the Source MediaStream,
   // translating the output track ID into the correct ID in the source.
-  virtual void ForwardTrackEnabled(TrackID aOutputID, bool aEnabled) {
+  virtual void ForwardTrackEnabled(TrackID aOutputID, bool aEnabled) MOZ_OVERRIDE {
     for (int32_t i = mTrackMap.Length() - 1; i >= 0; --i) {
       if (mTrackMap[i].mOutputTrackID == aOutputID) {
         mTrackMap[i].mInputPort->GetSource()->
