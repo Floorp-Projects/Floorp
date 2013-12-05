@@ -1250,7 +1250,6 @@
           <![CDATA[
             var aFromExternal;
             var aRelatedToCurrent;
-            var aIsUTF8;
             var aDisableMCB;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
@@ -1263,7 +1262,6 @@
               aAllowThirdPartyFixup = params.allowThirdPartyFixup;
               aFromExternal         = params.fromExternal;
               aRelatedToCurrent     = params.relatedToCurrent;
-              aIsUTF8               = params.isUTF8;
               aDisableMCB           = params.disableMCB;
             }
 
@@ -1278,7 +1276,6 @@
                                   allowThirdPartyFixup: aAllowThirdPartyFixup,
                                   fromExternal: aFromExternal,
                                   relatedToCurrent: aRelatedToCurrent,
-                                  isUTF8: aIsUTF8,
                                   disableMCB: aDisableMCB});
             if (!bgLoad)
               this.selectedTab = tab;
@@ -1427,7 +1424,6 @@
             var aFromExternal;
             var aRelatedToCurrent;
             var aSkipAnimation;
-            var aIsUTF8;
             var aDisableMCB;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
@@ -1441,7 +1437,6 @@
               aFromExternal         = params.fromExternal;
               aRelatedToCurrent     = params.relatedToCurrent;
               aSkipAnimation        = params.skipAnimation;
-              aIsUTF8               = params.isUTF8;
               aDisableMCB           = params.disableMCB;
             }
 
@@ -1610,8 +1605,6 @@
                 flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
               if (aFromExternal)
                 flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
-              if (aIsUTF8)
-                flags |= Ci.nsIWebNavigation.LOAD_FLAGS_URI_IS_UTF8;
               if (aDisableMCB)
                 flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT;
               try {
