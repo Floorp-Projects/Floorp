@@ -134,7 +134,7 @@ js::StringIsArrayIndex(JSLinearString *str, uint32_t *indexp)
 }
 
 static bool
-DoubleIndexToId(JSContext *cx, double index, MutableHandleId id)
+ToId(JSContext *cx, double index, MutableHandleId id)
 {
     if (index == uint32_t(index))
         return IndexToId(cx, uint32_t(index), id.address());
@@ -143,18 +143,25 @@ DoubleIndexToId(JSContext *cx, double index, MutableHandleId id)
     return ValueToId<CanGC>(cx, HandleValue::fromMarkedLocation(&tmp), id);
 }
 
+static bool
+ToId(JSContext *cx, uint32_t index, MutableHandleId id)
+{
+    return IndexToId(cx, index, id.address());
+}
+
 /*
  * If the property at the given index exists, get its value into location
  * pointed by vp and set *hole to false. Otherwise set *hole to true and *vp
  * to JSVAL_VOID. This function assumes that the location pointed by vp is
  * properly rooted and can be used as GC-protected storage for temporaries.
  */
+template<typename IndexType>
 static inline bool
-DoGetElement(JSContext *cx, HandleObject obj, double index, bool *hole, MutableHandleValue vp)
+DoGetElement(JSContext *cx, HandleObject obj, IndexType index, bool *hole, MutableHandleValue vp)
 {
     RootedId id(cx);
 
-    if (!DoubleIndexToId(cx, index, &id))
+    if (!ToId(cx, index, &id))
         return false;
 
     RootedObject obj2(cx);
@@ -170,20 +177,6 @@ DoGetElement(JSContext *cx, HandleObject obj, double index, bool *hole, MutableH
             return false;
         *hole = false;
     }
-    return true;
-}
-
-static inline bool
-DoGetElement(JSContext *cx, HandleObject obj, uint32_t index, bool *hole, MutableHandleValue vp)
-{
-    bool present;
-    if (!JSObject::getElementIfPresent(cx, obj, obj, index, vp, &present))
-        return false;
-
-    *hole = !present;
-    if (*hole)
-        vp.setUndefined();
-
     return true;
 }
 
@@ -296,7 +289,7 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, HandleValue v)
     }
 
     RootedId id(cx);
-    if (!DoubleIndexToId(cx, index, &id))
+    if (!ToId(cx, index, &id))
         return false;
 
     RootedValue tmp(cx, v);
