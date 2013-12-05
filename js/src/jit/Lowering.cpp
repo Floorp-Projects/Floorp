@@ -552,11 +552,23 @@ bool
 LIRGenerator::visitFilterArgumentsOrEval(MFilterArgumentsOrEval *ins)
 {
     MDefinition *string = ins->getString();
-    JS_ASSERT(string->type() == MIRType_String);
+    MOZ_ASSERT(string->type() == MIRType_String || string->type() == MIRType_Value);
 
-    LFilterArgumentsOrEval *lir = new(alloc()) LFilterArgumentsOrEval(useFixed(string, CallTempReg0),
-                                                                      tempFixed(CallTempReg1),
-                                                                      tempFixed(CallTempReg2));
+    LInstruction *lir;
+    if (string->type() == MIRType_String) {
+        lir = new(alloc()) LFilterArgumentsOrEvalS(useFixed(string, CallTempReg0),
+                                                   tempFixed(CallTempReg1),
+                                                   tempFixed(CallTempReg2));
+    } else {
+        lir = new(alloc()) LFilterArgumentsOrEvalV(tempFixed(CallTempReg0),
+                                                   tempFixed(CallTempReg1),
+                                                   tempFixed(CallTempReg2));
+        if (!useBoxFixed(lir, LFilterArgumentsOrEvalV::Input, string,
+                         CallTempReg3, CallTempReg4))
+        {
+            return false;
+        }
+    }
 
     return assignSnapshot(lir) && add(lir, ins) && assignSafepoint(lir, ins);
 }
@@ -568,15 +580,28 @@ LIRGenerator::visitCallDirectEval(MCallDirectEval *ins)
     JS_ASSERT(scopeChain->type() == MIRType_Object);
 
     MDefinition *string = ins->getString();
-    JS_ASSERT(string->type() == MIRType_String);
+    JS_ASSERT(string->type() == MIRType_String || string->type() == MIRType_Value);
 
     MDefinition *thisValue = ins->getThisValue();
 
-    LCallDirectEval *lir = new(alloc()) LCallDirectEval(useRegisterAtStart(scopeChain),
-                                                        useRegisterAtStart(string));
 
-    if (!useBoxAtStart(lir, LCallDirectEval::ThisValueInput, thisValue))
+    LInstruction *lir;
+    if (string->type() == MIRType_String) {
+        lir = new(alloc()) LCallDirectEvalS(useRegisterAtStart(scopeChain),
+                                            useRegisterAtStart(string));
+    } else {
+        lir = new(alloc()) LCallDirectEvalV(useRegisterAtStart(scopeChain));
+        if (!useBoxAtStart(lir, LCallDirectEvalV::Argument, string))
+            return false;
+    }
+
+    if (!useBoxAtStart(lir, (string->type() == MIRType_String
+                             ? LCallDirectEvalS::ThisValue
+                             : LCallDirectEvalV::ThisValue),
+                       thisValue))
+    {
         return false;
+    }
 
     return defineReturn(lir, ins) && assignSafepoint(lir, ins);
 }
