@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-version = '0.6.2'
+version = '0.7.0'
 
 # get documentation from the README
 try:
@@ -15,7 +15,7 @@ deps = ['manifestdestiny', 'mozhttpd >= 0.5',
         'mozprocess >= 0.9', 'mozrunner >= 5.15',
         'mozdevice >= 0.22', 'moznetwork >= 0.21',
         'mozcrash >= 0.5', 'mozprofile >= 0.7',
-        'moztest >= 0.1']
+        'moztest >= 0.1', 'py==1.4.14']
 
 setup(name='marionette_client',
       version=version,
