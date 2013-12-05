@@ -1731,13 +1731,8 @@ FlexLine::ComputeCrossSizeAndBaseline(const FlexboxAxisTracker& aAxisTracker)
 
     if (curItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_BASELINE &&
         curItem.GetNumAutoMarginsInAxis(aAxisTracker.GetCrossAxis()) == 0) {
-      // FIXME: Once we support multi-line flexbox with "wrap-reverse", that'll
-      // give us bottom-to-top cross axes. (But for now, we assume eAxis_TB.)
       // FIXME: Once we support "writing-mode", we'll have to do baseline
       // alignment in vertical flex containers here (w/ horizontal cross-axes).
-      MOZ_ASSERT(aAxisTracker.GetCrossAxis() == eAxis_TB,
-                 "Only expecting to do baseline-alignment in horizontal "
-                 "flex containers, with top-to-bottom cross axis");
 
       // Find distance from our item's cross-start and cross-end margin-box
       // edges to its baseline.
@@ -1919,8 +1914,8 @@ SingleLineCrossAxisPositionTracker::
 
 FlexboxAxisTracker::FlexboxAxisTracker(nsFlexContainerFrame* aFlexContainerFrame)
 {
-  uint32_t flexDirection =
-    aFlexContainerFrame->StylePosition()->mFlexDirection;
+  const nsStylePosition* pos = aFlexContainerFrame->StylePosition();
+  uint32_t flexDirection = pos->mFlexDirection;
   uint32_t cssDirection =
     aFlexContainerFrame->StyleVisibility()->mDirection;
 
@@ -1974,19 +1969,13 @@ FlexboxAxisTracker::FlexboxAxisTracker(nsFlexContainerFrame* aFlexContainerFrame
     mCrossAxis = blockDimension;
   }
 
-  // FIXME: Once we support "flex-wrap", check if it's "wrap-reverse"
-  // here to determine whether we should reverse mCrossAxis.
+  // "flex-wrap: wrap-reverse" reverses our cross axis.
+  if (pos->mFlexWrap == NS_STYLE_FLEX_WRAP_WRAP_REVERSE) {
+    mCrossAxis = GetReverseAxis(mCrossAxis);
+  }
+
   MOZ_ASSERT(IsAxisHorizontal(mMainAxis) != IsAxisHorizontal(mCrossAxis),
              "main & cross axes should be in different dimensions");
-
-
-  // NOTE: Right now, cross axis is never bottom-to-top.
-  // The only way for it to be different would be if we used a vertical
-  // "writing-mode" or if we had "flex-wrap: wrap-reverse" -- but we don't
-  // support either of those yet, so that can't happen right now.
-  // (When we add support for either of those properties, this assert will
-  // no longer hold.)
-  MOZ_ASSERT(mCrossAxis != eAxis_BT, "Not expecting bottom-to-top cross axis");
 }
 
 nsresult
