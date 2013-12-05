@@ -53,7 +53,6 @@ import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
@@ -1397,12 +1396,12 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 if (!enabled) {
                     // Set the margin before the transition when hiding the forward button. We
                     // have to do this so that the favicon isn't clipped during the transition
-                    ViewGroup.MarginLayoutParams layoutParams =
-                        (ViewGroup.MarginLayoutParams)mUrlDisplayContainer.getLayoutParams();
+                    MarginLayoutParams layoutParams =
+                        (MarginLayoutParams) mUrlDisplayContainer.getLayoutParams();
                     layoutParams.leftMargin = 0;
 
                     // Do the same on the URL edit container
-                    layoutParams = (ViewGroup.MarginLayoutParams) mUrlEditLayout.getLayoutParams();
+                    layoutParams = (MarginLayoutParams) mUrlEditLayout.getLayoutParams();
                     layoutParams.leftMargin = 0;
 
                     requestLayout();
@@ -1415,11 +1414,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
             @Override
             public void onPropertyAnimationEnd() {
                 if (enabled) {
-                    ViewGroup.MarginLayoutParams layoutParams =
-                        (ViewGroup.MarginLayoutParams)mUrlDisplayContainer.getLayoutParams();
+                    MarginLayoutParams layoutParams =
+                        (MarginLayoutParams) mUrlDisplayContainer.getLayoutParams();
                     layoutParams.leftMargin = mUrlBarViewOffset;
 
-                    layoutParams = (ViewGroup.MarginLayoutParams) mUrlEditLayout.getLayoutParams();
+                    layoutParams = (MarginLayoutParams) mUrlEditLayout.getLayoutParams();
                     layoutParams.leftMargin = mUrlBarViewOffset;
 
                     ViewHelper.setTranslationX(mTitle, 0);
@@ -1427,8 +1426,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     ViewHelper.setTranslationX(mSiteSecurity, 0);
                 }
 
-                ViewGroup.MarginLayoutParams layoutParams =
-                    (ViewGroup.MarginLayoutParams)mForward.getLayoutParams();
+                MarginLayoutParams layoutParams = (MarginLayoutParams) mForward.getLayoutParams();
                 layoutParams.leftMargin = mDefaultForwardMargin + (mForward.isEnabled() ? width : 0);
                 ViewHelper.setTranslationX(mForward, 0);
 
