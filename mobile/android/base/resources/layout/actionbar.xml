@@ -15,7 +15,7 @@
           android:layout_width="1dp"
           android:layout_marginTop="10dp"
           android:layout_marginBottom="10dp"
-          android:background="@android:color/darker_gray"/>
+          android:background="@color/text_color_secondary_inverse"/>
 
     <LinearLayout android:id="@+id/actionbar_buttons"
                   android:layout_height="fill_parent"

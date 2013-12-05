@@ -5,6 +5,7 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import org.json.JSONArray;
 
@@ -13,7 +14,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.text.TextUtils;
 import android.util.Log;
-import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
