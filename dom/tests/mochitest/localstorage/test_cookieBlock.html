@@ -9,14 +9,6 @@
 
 function startTest()
 {
-  var io = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
-    .getService(SpecialPowers.Ci.nsIIOService);
-  var uri = io.newURI(window.location, "", null);
-  var cp = SpecialPowers.Cc["@mozilla.org/cookie/permission;1"]
-    .getService(SpecialPowers.Ci.nsICookiePermission);
-
-  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DENY);
-
   try {
     localStorage.setItem("blocked", "blockedvalue");
     ok(false, "Exception for localStorage.setItem, ACCESS_DENY");
@@ -33,18 +25,18 @@ function startTest()
     ok(true, "Exception for localStorage.getItem, ACCESS_DENY");
   }
 
-  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
-
   SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();
 
+SpecialPowers.pushPermissions([{'type': 'cookie', 'allow': false, 'context': document}], startTest);
+
 </script>
 
 </head>
 
-<body onload="startTest();">
+<body>
 
 </body>
 </html>

@@ -2139,7 +2139,7 @@ add_test(function test_mcc_mnc_parsing() {
   */
 add_test(function test_reading_ad_and_parsing_mcc_mnc() {
   let worker = newUint8Worker();
-  let record = worker.ICCRecordHelper;
+  let record = worker.SimRecordHelper;
   let helper = worker.GsmPDUHelper;
   let ril    = worker.RIL;
   let buf    = worker.Buf;
@@ -2186,7 +2186,7 @@ add_test(function test_reading_ad_and_parsing_mcc_mnc() {
 
 add_test(function test_reading_optional_efs() {
   let worker = newUint8Worker();
-  let record = worker.ICCRecordHelper;
+  let record = worker.SimRecordHelper;
   let gsmPdu = worker.GsmPDUHelper;
   let ril    = worker.RIL;
   let buf    = worker.Buf;
@@ -2263,6 +2263,77 @@ add_test(function test_reading_optional_efs() {
   do_test(buildSST(supportedEf), supportedEf);
   ril.appType = CARD_APPTYPE_USIM;
   do_test(buildSST(supportedEf), supportedEf);
+
+  run_next_test();
+});
+
+/**
+ * Verify fetchSimRecords.
+ */
+add_test(function test_fetch_sim_recodes() {
+  let worker = newWorker();
+  let RIL = worker.RIL;
+  let iccRecord = worker.ICCRecordHelper;
+  let simRecord = worker.SimRecordHelper;
+
+  function testFetchSimRecordes(expectCalled) {
+    let ifCalled = [];
+
+    RIL.getIMSI = function () {
+      ifCalled.push("getIMSI");
+    };
+
+    simRecord.readAD = function () {
+      ifCalled.push("readAD");
+    };
+
+    simRecord.readSST = function () {
+      ifCalled.push("readSST");
+    };
+
+    simRecord.fetchSimRecords();
+
+    for (let i = 0; i < expectCalled.length; i++ ) {
+      if (ifCalled[i] != expectCalled[i]) {
+        do_print(expectCalled[i] + " is not called.");
+        do_check_true(false);
+      }
+    }
+  }
+
+  let expectCalled = ["getIMSI", "readAD", "readSST"];
+  testFetchSimRecordes(expectCalled);
+
+  run_next_test();
+});
+
+add_test(function test_fetch_icc_recodes() {
+  let worker = newWorker();
+  let RIL = worker.RIL;
+  let iccRecord = worker.ICCRecordHelper;
+  let simRecord = worker.SimRecordHelper;
+  let ruimRecord = worker.RuimRecordHelper;
+  let fetchTag = 0x00;
+
+  simRecord.fetchSimRecords = function () {
+    fetchTag = 0x01;
+  };
+
+  ruimRecord.fetchRuimRecords = function () {
+    fetchTag = 0x02;
+  };
+
+  RIL.appType = CARD_APPTYPE_SIM;
+  iccRecord.fetchICCRecords();
+  do_check_eq(fetchTag, 0x01);
+
+  RIL.appType = CARD_APPTYPE_RUIM;
+  iccRecord.fetchICCRecords();
+  do_check_eq(fetchTag, 0x02);
+
+  RIL.appType = CARD_APPTYPE_USIM;
+  iccRecord.fetchICCRecords();
+  do_check_eq(fetchTag, 0x01);
 
   run_next_test();
 });

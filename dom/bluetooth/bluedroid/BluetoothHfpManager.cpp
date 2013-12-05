@@ -339,7 +339,7 @@ Call::IsActive()
 /**
  *  BluetoothHfpManager
  */
-BluetoothHfpManager::BluetoothHfpManager()
+BluetoothHfpManager::BluetoothHfpManager() : mPhoneType(PhoneType::NONE)
 {
   Reset();
 }

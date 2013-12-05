@@ -10,7 +10,22 @@ interface MozNfc : EventTarget {
    MozNFCTag getNFCTag(DOMString sessionId);
    MozNFCPeer getNFCPeer(DOMString sessionId);
 
-   /*attribute EventHandler onpeerfound;
+   /**
+    * API to check if the given application's manifest
+    * URL is registered with the Chrome Process or not.
+    *
+    * Returns success if given manifestUrl is registered for 'onpeerready',
+    * otherwise error
+    *
+    * Users of this API should have valid permissions 'nfc-manager'
+    * and 'nfc-write'
+    */
+   DOMRequest checkP2PRegistration(DOMString manifestUrl);
+
+   attribute EventHandler onpeerready;
    attribute EventHandler onpeerlost;
-   attribute EventHandler onforegrounddispatch;*/
+   [ChromeOnly]
+   void eventListenerWasAdded(DOMString aType);
+   [ChromeOnly]
+   void eventListenerWasRemoved(DOMString aType);
 };
