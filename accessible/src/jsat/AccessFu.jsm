@@ -744,6 +744,7 @@ var Input = {
         this.contextAction('forward');
         break;
       case 'exploreend1':
+      case 'dwellend1':
         this.activateCurrent(null, true);
         break;
       case 'swiperight2':
