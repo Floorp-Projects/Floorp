@@ -1386,6 +1386,14 @@ public class BrowserToolbar extends GeckoRelativeLayout
         if (mForward.getVisibility() != View.VISIBLE)
             return;
 
+        // if the forward button's margin is non-zero, this means it has already
+        // been animated to be visible¸ and vice-versa.
+        MarginLayoutParams fwdParams = (MarginLayoutParams) mForward.getLayoutParams();
+        if ((fwdParams.leftMargin > mDefaultForwardMargin && enabled) ||
+            (fwdParams.leftMargin == mDefaultForwardMargin && !enabled)) {
+            return;
+        }
+
         // We want the forward button to show immediately when switching tabs
         mForwardAnim = new PropertyAnimator(mSwitchingTabs ? 10 : FORWARD_ANIMATION_DURATION);
         final int width = mForward.getWidth() / 2;
