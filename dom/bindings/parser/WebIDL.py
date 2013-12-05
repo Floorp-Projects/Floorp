@@ -2032,7 +2032,7 @@ class IDLWrapperType(IDLType):
         elif self.isEnum():
             return True
         elif self.isDictionary():
-            return all(m.isSerializable() for m in self.inner.members)
+            return all(m.type.isSerializable() for m in self.inner.members)
         else:
             raise WebIDLError("IDLWrapperType wraps type %s that we don't know if "
                               "is serializable" % type(self.inner), [self.location])
