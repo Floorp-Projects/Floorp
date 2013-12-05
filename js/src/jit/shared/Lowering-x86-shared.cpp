@@ -258,7 +258,7 @@ LIRGeneratorX86Shared::lowerUMod(MMod *mod)
 {
     // Optimize x%x. The comments in lowerModI apply here as well.
     if (mod->lhs() == mod->rhs()) {
-        if (mod->isTruncated())
+        if (mod->isTruncated() || (mod->isUnsigned() && !mod->canBeDivideByZero()))
             return define(new LInteger(0), mod);
 
         LModSelfI *lir = new LModSelfI(useRegisterAtStart(mod->lhs()));
