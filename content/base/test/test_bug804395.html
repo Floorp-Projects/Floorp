@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=804395
 <script type="application/javascript">
 
 function test200() {
-  var xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
+  var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
   xhr.open('GET', 'jar:http://example.org/tests/content/base/test/file_bug804395.jar!/foo.bar', true);
   xhr.onreadystatechange = function() {
     if (xhr.readyState == 4) {
@@ -31,7 +31,7 @@ function test200() {
 }
 
 function test404() {
-  var xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
+  var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
   xhr.open('GET', 'jar:http://example.org/tests/content/base/test/file_bug804395.jar!/foo.do_not_exist', true);
   xhr.onreadystatechange = function() {
     if (xhr.readyState == 4) {
@@ -43,7 +43,7 @@ function test404() {
 }
 
 function test0() {
-  var xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
+  var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
   xhr.open('GET', 'jar:http://example.org/tests/content/base/test/file_bug804395.jar!/foo.bar', true);
   ok(xhr.status == 0, "Not Sent request must have status 0");
   runTests();

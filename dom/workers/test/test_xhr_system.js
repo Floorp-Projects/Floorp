@@ -11,7 +11,7 @@ self.onmessage = function onmessage(event) {
   // An XHR with system privileges will be able to do cross-site calls.
 
   const TEST_URL = "http://example.com/tests/content/base/test/test_XHR_system.html";
-  is(location.hostname, "mochi.test", "hostname");
+  is(location.hostname, "mochi.test", "hostname should be mochi.test");
 
   var xhr = new XMLHttpRequest({mozSystem: true});
   is(xhr.mozSystem, true, ".mozSystem == true");
