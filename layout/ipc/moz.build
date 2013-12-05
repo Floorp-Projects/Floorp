@@ -29,5 +29,5 @@ LOCAL_INCLUDES += [
     '/content/base/src',
     '/layout/base',
     '/layout/generic',
-    '/layout/xul/base/src',
+    '/layout/xul',
 ]

@@ -24,6 +24,10 @@
 
 using namespace mozilla;
 
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wdelete-non-virtual-dtor"
+#endif
+
 /**
  * The shared hash table for atom lookups.
  *

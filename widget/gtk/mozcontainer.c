@@ -48,8 +48,6 @@ static void moz_container_allocate_child (MozContainer      *container,
 static MozContainerChild *
 moz_container_get_child (MozContainer *container, GtkWidget *child);
 
-static GtkContainerClass *parent_class = NULL;
-
 /* public methods */
 
 GType
@@ -152,8 +150,6 @@ moz_container_class_init (MozContainerClass *klass)
       GtkObjectClass *object_class = GTK_OBJECT_CLASS (klass); */
     GtkContainerClass *container_class = GTK_CONTAINER_CLASS (klass);
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
-
-    parent_class = g_type_class_peek_parent (klass);
 
     widget_class->map = moz_container_map;
     widget_class->unmap = moz_container_unmap;

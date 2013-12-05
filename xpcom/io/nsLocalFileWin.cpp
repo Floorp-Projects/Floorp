@@ -689,7 +689,7 @@ GetFileInfo(const nsAFlatString &name, PRFileInfo64 *info)
 {
     WIN32_FILE_ATTRIBUTE_DATA fileData;
 
-    if (name.IsEmpty() || name.FindCharInSet(L"?*") != kNotFound)
+    if (name.IsEmpty() || name.FindCharInSet(MOZ_UTF16("?*")) != kNotFound)
         return NS_ERROR_INVALID_ARG;
 
     if (!::GetFileAttributesExW(name.get(), GetFileExInfoStandard, &fileData))
@@ -782,7 +782,7 @@ ReadDir(nsDir *dir, PRDirFlags flags, nsString& name)
         if (rv == 0)
             break;
 
-        const PRUnichar *fileName;
+        const wchar_t *fileName;
         nsString tmp;
         fileName = (dir)->data.cFileName;
 
@@ -1268,7 +1268,7 @@ nsLocalFile::Create(uint32_t type, uint32_t attributes)
     }
 
     // search for first slash after the drive (or volume) name
-    PRUnichar* slash = wcschr(path, L'\\');
+    wchar_t* slash = wcschr(path, L'\\');
 
     nsresult directoryCreateError = NS_OK;
     if (slash)
@@ -1637,8 +1637,7 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
 
     // Cast away const-ness here because WinAPI functions don't understand it, 
     // the path is used for [in] parameters only however so it's safe. 
-    WCHAR *path = const_cast<WCHAR*>(mFollowSymlinks ? mResolvedPath.get() 
-                                                        : mWorkingPath.get());
+    const WCHAR *path = mFollowSymlinks ? mResolvedPath.get() : mWorkingPath.get();
 
     DWORD dummy;
     DWORD size = ::GetFileVersionInfoSizeW(path, &dummy);
@@ -1659,7 +1658,7 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
         {
             for (int32_t i = 0; i < 2; ++i) 
             { 
-                PRUnichar subBlock[MAX_PATH];
+                wchar_t subBlock[MAX_PATH];
                 _snwprintf(subBlock, MAX_PATH,
                            L"\\StringFileInfo\\%04x%04x\\%s", 
                            (i == 0 ? translate[0].wLanguage 
@@ -1737,8 +1736,8 @@ nsLocalFile::SetShortcut(nsIFile* targetFile,
                                 mWorkingPath.get(),
                                 targetFilePath,
                                 workingDirPath,
-                                args,
-                                description,
+                                char16ptr_t(args),
+                                char16ptr_t(description),
                                 iconFilePath,
                                 iconFilePath? iconIndex : 0);
     if (targetFilePath && NS_SUCCEEDED(rv)) {
@@ -2348,7 +2347,7 @@ nsLocalFile::SetModDate(PRTime aLastModifiedTime, const PRUnichar *filePath)
 {
     // The FILE_FLAG_BACKUP_SEMANTICS is required in order to change the
     // modification time for directories.
-    HANDLE file = ::CreateFileW(filePath,          // pointer to name of the file
+    HANDLE file = ::CreateFileW(char16ptr_t(filePath), // pointer to name of the file
                                 GENERIC_WRITE,     // access (write) mode
                                 0,                 // share mode
                                 nullptr,           // pointer to security attributes

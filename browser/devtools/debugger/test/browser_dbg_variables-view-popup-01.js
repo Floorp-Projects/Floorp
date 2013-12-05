@@ -12,23 +12,8 @@ function test() {
   Task.spawn(function() {
     let [tab, debuggee, panel] = yield initDebugger(TAB_URL);
     let win = panel.panelWin;
-    let events = win.EVENTS;
-    let editor = win.DebuggerView.editor;
     let bubble = win.DebuggerView.VariableBubble;
     let tooltip = bubble._tooltip.panel;
-
-    function openPopup(coords) {
-      let popupshown = once(tooltip, "popupshown");
-      let { left, top } = editor.getCoordsFromPosition(coords);
-      bubble._findIdentifier(left, top);
-      return popupshown;
-    }
-
-    function hidePopup() {
-      let popuphiding = once(tooltip, "popuphiding");
-      bubble.hideContents();
-      return popuphiding.then(waitForTick);
-    }
 
     function verifyContents(textContent, className) {
       is(tooltip.querySelectorAll(".variables-view-container").length, 0,
@@ -47,25 +32,25 @@ function test() {
     yield waitForSourceAndCaretAndScopes(panel, ".html", 24);
 
     // Inspect variables.
-    yield openPopup({ line: 15, ch: 12 });
+    yield openVarPopup(panel, { line: 15, ch: 12 });
     verifyContents("1", "token-number");
 
-    yield hidePopup().then(() => openPopup({ line: 16, ch: 21 }));
+    yield reopenVarPopup(panel, { line: 16, ch: 21 });
     verifyContents("1", "token-number");
 
-    yield hidePopup().then(() => openPopup({ line: 17, ch: 21 }));
+    yield reopenVarPopup(panel, { line: 17, ch: 21 });
     verifyContents("1", "token-number");
 
-    yield hidePopup().then(() => openPopup({ line: 17, ch: 27 }));
+    yield reopenVarPopup(panel, { line: 17, ch: 27 });
     verifyContents("\"beta\"", "token-string");
 
-    yield hidePopup().then(() => openPopup({ line: 17, ch: 44 }));
+    yield reopenVarPopup(panel, { line: 17, ch: 44 });
     verifyContents("false", "token-boolean");
 
-    yield hidePopup().then(() => openPopup({ line: 17, ch: 54 }));
+    yield reopenVarPopup(panel, { line: 17, ch: 54 });
     verifyContents("null", "token-null");
 
-    yield hidePopup().then(() => openPopup({ line: 17, ch: 63 }));
+    yield reopenVarPopup(panel, { line: 17, ch: 63 });
     verifyContents("undefined", "token-undefined");
 
     yield resumeDebuggerThenCloseAndFinish(panel);

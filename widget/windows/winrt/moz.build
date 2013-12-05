@@ -34,7 +34,7 @@ LOCAL_INCLUDES += [
     '../../shared',
     '../../xpwidgets',
     '/layout/generic',
-    '/layout/xul/base/src',
+    '/layout/xul',
     '/toolkit/xre',
     '/xpcom/base',
 ]

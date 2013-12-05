@@ -394,6 +394,7 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
                     unsigned int        num_features)
 {
   hb_face_t *face = font->face;
+  hb_coretext_shaper_face_data_t *face_data = HB_SHAPER_DATA_GET (face);
   hb_coretext_shaper_font_data_t *font_data = HB_SHAPER_DATA_GET (font);
 
   /*
@@ -553,11 +554,21 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
   } HB_STMT_END;
 
   unsigned int scratch_size;
-  char *scratch = (char *) buffer->get_scratch_buffer (&scratch_size);
+  hb_buffer_t::scratch_buffer_t *scratch = buffer->get_scratch_buffer (&scratch_size);
+
+#define ALLOCATE_ARRAY(Type, name, len) \
+  Type *name = (Type *) scratch; \
+  { \
+    unsigned int _consumed = DIV_CEIL ((len) * sizeof (Type), sizeof (*scratch)); \
+    assert (_consumed <= scratch_size); \
+    scratch += _consumed; \
+    scratch_size -= _consumed; \
+  }
 
 #define utf16_index() var1.u32
 
-  UniChar *pchars = (UniChar *) scratch;
+  ALLOCATE_ARRAY (UniChar, pchars, buffer->len * 2);
+
   unsigned int chars_len = 0;
   for (unsigned int i = 0; i < buffer->len; i++) {
     hb_codepoint_t c = buffer->info[i].codepoint;
@@ -586,7 +597,7 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
 
   if (num_features)
   {
-    unsigned int *log_clusters = (unsigned int *) (pchars + chars_len);
+    ALLOCATE_ARRAY (unsigned int, log_clusters, chars_len);
 
     /* Need log_clusters to assign features. */
     chars_len = 0;
@@ -638,8 +649,49 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
 
   const CFRange range_all = CFRangeMake (0, 0);
 
-  for (unsigned int i = 0; i < num_runs; i++) {
+  for (unsigned int i = 0; i < num_runs; i++)
+  {
     CTRunRef run = (CTRunRef) CFArrayGetValueAtIndex (glyph_runs, i);
+
+    /* CoreText does automatic font fallback (AKA "cascading") for  characters
+     * not supported by the requested font, and provides no way to turn it off,
+     * so we detect if the returned run uses a font other than the requested
+     * one and fill in the buffer with .notdef glyphs instead of random glyph
+     * indices from a different font.
+     */
+    CFDictionaryRef attributes = CTRunGetAttributes (run);
+    CTFontRef run_ct_font = static_cast<CTFontRef>(CFDictionaryGetValue (attributes, kCTFontAttributeName));
+    CGFontRef run_cg_font = CTFontCopyGraphicsFont (run_ct_font, 0);
+    if (!CFEqual (run_cg_font, face_data->cg_font))
+    {
+        CFRelease (run_cg_font);
+
+	CFRange range = CTRunGetStringRange (run);
+	buffer->ensure (buffer->len + range.length);
+	if (buffer->in_error)
+	  FAIL ("Buffer resize failed");
+	hb_glyph_info_t *info = buffer->info + buffer->len;
+	buffer->len += range.length;
+
+        for (CFIndex j = 0; j < range.length; j++)
+	{
+            CGGlyph notdef = 0;
+            double advance = CTFontGetAdvancesForGlyphs (font_data->ct_font, kCTFontHorizontalOrientation, &notdef, NULL, 1);
+
+            info->codepoint = notdef;
+	    /* TODO We have to fixup clusters later.  See vis_clusters in
+	     * hb-uniscribe.cc for example. */
+            info->cluster = range.location + j;
+
+            info->mask = advance;
+            info->var1.u32 = 0;
+            info->var2.u32 = 0;
+
+	    info++;
+        }
+        continue;
+    }
+    CFRelease (run_cg_font);
 
     unsigned int num_glyphs = CTRunGetGlyphCount (run);
     if (num_glyphs == 0)
@@ -647,17 +699,10 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
 
     buffer->ensure (buffer->len + num_glyphs);
 
-    /* Testing indicates that CTRunGetGlyphsPtr (almost?) always succeeds,
-     * and so copying data to our own buffer with CTRunGetGlyphs will be
-     * extremely rare. */
+    scratch = buffer->get_scratch_buffer (&scratch_size);
 
-    unsigned int scratch_size;
-    char *scratch = (char *) buffer->get_scratch_buffer (&scratch_size);
-
-#define ALLOCATE_ARRAY(Type, name, len) \
-  Type *name = (Type *) scratch; \
-  scratch += (len) * sizeof ((name)[0]); \
-  scratch_size -= (len) * sizeof ((name)[0]);
+    /* Testing indicates that CTRunGetGlyphsPtr, etc (almost?) always
+     * succeed, and so copying data to our own buffer will be rare. */
 
     const CGGlyph* glyphs = CTRunGetGlyphsPtr (run);
     if (!glyphs) {

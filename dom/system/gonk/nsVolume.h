@@ -29,7 +29,8 @@ public:
   // used to update the volume cache maintained in the child process.
   nsVolume(const nsAString& aName, const nsAString& aMountPoint,
            const int32_t& aState, const int32_t& aMountGeneration,
-           const bool& aIsMediaPresent, const bool& aIsSharing)
+           const bool& aIsMediaPresent, const bool& aIsSharing,
+           const bool& aIsFormatting)
     : mName(aName),
       mMountPoint(aMountPoint),
       mState(aState),
@@ -38,7 +39,7 @@ public:
       mIsFake(false),
       mIsMediaPresent(aIsMediaPresent),
       mIsSharing(aIsSharing),
-      mIsFormatting(false)
+      mIsFormatting(aIsFormatting)
   {
   }
 

@@ -685,8 +685,7 @@ doGetIdentifier(JSContext *cx, const NPUTF8* name)
 {
   NS_ConvertUTF8toUTF16 utf16name(name);
 
-  JSString *str = ::JS_InternUCStringN(cx, (jschar *)utf16name.get(),
-                                       utf16name.Length());
+  JSString *str = ::JS_InternUCStringN(cx, utf16name.get(), utf16name.Length());
 
   if (!str)
     return nullptr;

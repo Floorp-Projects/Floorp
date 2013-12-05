@@ -79,7 +79,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/layout/base',
     '/layout/generic',
-    '/layout/xul/base/src',
+    '/layout/xul',
     '/netwerk/protocol/viewsource',
     '/xpcom/ds',
 ]

@@ -729,18 +729,21 @@ _hb_uniscribe_shape (hb_shape_plan_t    *shape_plan,
 retry:
 
   unsigned int scratch_size;
-  char *scratch = (char *) buffer->get_scratch_buffer (&scratch_size);
-
-  /* Allocate char buffers; they all fit */
+  hb_buffer_t::scratch_buffer_t *scratch = buffer->get_scratch_buffer (&scratch_size);
 
 #define ALLOCATE_ARRAY(Type, name, len) \
   Type *name = (Type *) scratch; \
-  scratch += (len) * sizeof ((name)[0]); \
-  scratch_size -= (len) * sizeof ((name)[0]);
+  { \
+    unsigned int _consumed = DIV_CEIL ((len) * sizeof (Type), sizeof (*scratch)); \
+    assert (_consumed <= scratch_size); \
+    scratch += _consumed; \
+    scratch_size -= _consumed; \
+  }
 
 #define utf16_index() var1.u32
 
-  WCHAR *pchars = (WCHAR *) scratch;
+  ALLOCATE_ARRAY (WCHAR, pchars, buffer->len * 2);
+
   unsigned int chars_len = 0;
   for (unsigned int i = 0; i < buffer->len; i++)
   {
@@ -756,7 +759,6 @@ retry:
     }
   }
 
-  ALLOCATE_ARRAY (WCHAR, wchars, chars_len);
   ALLOCATE_ARRAY (WORD, log_clusters, chars_len);
   ALLOCATE_ARRAY (SCRIPT_CHARPROP, char_props, chars_len);
 
@@ -774,12 +776,13 @@ retry:
     }
   }
 
-  /* On Windows, we don't care about alignment...*/
-  unsigned int glyphs_size = scratch_size / (sizeof (WORD) +
-					     sizeof (SCRIPT_GLYPHPROP) +
-					     sizeof (int) +
-					     sizeof (GOFFSET) +
-					     sizeof (uint32_t));
+  /* All the following types are sized in multiples of sizeof(int). */
+  unsigned int glyphs_size = scratch_size / ((sizeof (WORD) +
+					      sizeof (SCRIPT_GLYPHPROP) +
+					      sizeof (int) +
+					      sizeof (GOFFSET) +
+					      sizeof (uint32_t))
+					     / sizeof (int));
 
   ALLOCATE_ARRAY (WORD, glyphs, glyphs_size);
   ALLOCATE_ARRAY (SCRIPT_GLYPHPROP, glyph_props, glyphs_size);
@@ -812,7 +815,7 @@ retry:
   bidi_state.uBidiLevel = HB_DIRECTION_IS_FORWARD (buffer->props.direction) ? 0 : 1;
   bidi_state.fOverrideDirection = 1;
 
-  hr = funcs->ScriptItemizeOpenType (wchars,
+  hr = funcs->ScriptItemizeOpenType (pchars,
 				     chars_len,
 				     MAX_ITEMS,
 				     &bidi_control,
@@ -887,7 +890,7 @@ retry:
 				     range_char_counts.array,
 				     range_properties.array,
 				     range_properties.len,
-				     wchars + chars_offset,
+				     pchars + chars_offset,
 				     item_chars_len,
 				     glyphs_size - glyphs_offset,
 				     /* out */
@@ -929,7 +932,7 @@ retry:
 				     range_char_counts.array,
 				     range_properties.array,
 				     range_properties.len,
-				     wchars + chars_offset,
+				     pchars + chars_offset,
 				     log_clusters + chars_offset,
 				     char_props + chars_offset,
 				     item_chars_len,

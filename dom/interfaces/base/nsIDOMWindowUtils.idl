@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(3772df78-905f-40cf-952f-e4954c63d0ec)]
+[scriptable, uuid(3d9bf70c-5b83-11e3-9090-3c970e9f4238)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -312,6 +312,21 @@ interface nsIDOMWindowUtils : nsISupports {
                               [optional] in boolean aIgnoreRootScrollFrame,
                               [optional] in float aPressure,
                               [optional] in unsigned short aInputSourceArg);
+
+  /** The same as sendTouchEvent but ensures that the event is dispatched to
+   *  this DOM window or one of its children.
+   */
+  boolean sendTouchEventToWindow(in AString aType,
+                                 [array, size_is(count)] in uint32_t aIdentifiers,
+                                 [array, size_is(count)] in int32_t aXs,
+                                 [array, size_is(count)] in int32_t aYs,
+                                 [array, size_is(count)] in uint32_t aRxs,
+                                 [array, size_is(count)] in uint32_t aRys,
+                                 [array, size_is(count)] in float aRotationAngles,
+                                 [array, size_is(count)] in float aForces,
+                                 in uint32_t count,
+                                 in long aModifiers,
+                                 [optional] in boolean aIgnoreRootScrollFrame);
 
   /** Synthesize a wheel event for a window. The event types supported is only
    *  wheel.

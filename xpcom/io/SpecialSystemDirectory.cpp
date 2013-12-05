@@ -170,7 +170,7 @@ GetLibrarySaveToPath(int aFallbackFolderId, REFKNOWNFOLDERID aFolderId,
     if (shellLib &&
         SUCCEEDED(shellLib->GetDefaultSaveFolder(DSFT_DETECT, IID_IShellItem,
                                                  getter_AddRefs(savePath)))) {
-        PRUnichar* str = nullptr;
+        wchar_t* str = nullptr;
         if (SUCCEEDED(savePath->GetDisplayName(SIGDN_FILESYSPATH, &str))) {
             nsAutoString path;
             path.Assign(str);
