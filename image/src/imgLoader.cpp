@@ -53,9 +53,7 @@ NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(ImagesMallocSizeOf)
 class imgMemoryReporter MOZ_FINAL : public MemoryMultiReporter
 {
 public:
-  imgMemoryReporter()
-    : MemoryMultiReporter("images")
-  {}
+  imgMemoryReporter() {}
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback *callback,
                             nsISupports *closure)

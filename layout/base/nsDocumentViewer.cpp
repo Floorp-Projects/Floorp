@@ -682,14 +682,19 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
   mPresShell->BeginObservingDocument();
 
   // Initialize our view manager
-  nscoord width = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel() * mBounds.width;
-  nscoord height = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel() * mBounds.height;
+  int32_t p2a = mPresContext->AppUnitsPerDevPixel();
+  MOZ_ASSERT(p2a == mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel());
+  nscoord width = p2a * mBounds.width;
+  nscoord height = p2a * mBounds.height;
 
   mViewManager->SetWindowDimensions(width, height);
   mPresContext->SetTextZoom(mTextZoom);
   mPresContext->SetFullZoom(mPageZoom);
   mPresContext->SetMinFontSize(mMinFontSize);
 
+  p2a = mPresContext->AppUnitsPerDevPixel();  // zoom may have changed it
+  width = p2a * mBounds.width;
+  height = p2a * mBounds.height;
   if (aDoInitialReflow) {
     nsCOMPtr<nsIPresShell> shellGrip = mPresShell;
     // Initial reflow

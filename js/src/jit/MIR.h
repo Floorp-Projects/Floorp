@@ -4095,6 +4095,7 @@ class MDiv : public MBinaryArithInstruction
     bool canBeNegativeZero_;
     bool canBeNegativeOverflow_;
     bool canBeDivideByZero_;
+    bool canBeNegativeDividend_;
     bool unsigned_;
 
     MDiv(MDefinition *left, MDefinition *right, MIRType type)
@@ -4102,6 +4103,7 @@ class MDiv : public MBinaryArithInstruction
         canBeNegativeZero_(true),
         canBeNegativeOverflow_(true),
         canBeDivideByZero_(true),
+        canBeNegativeDividend_(true),
         unsigned_(false)
     {
         if (type != MIRType_Value)
@@ -4150,6 +4152,10 @@ class MDiv : public MBinaryArithInstruction
         return canBeDivideByZero_;
     }
 
+    bool canBeNegativeDividend() const {
+        return canBeNegativeDividend_;
+    }
+
     bool isUnsigned() const {
         return unsigned_;
     }
@@ -4159,6 +4165,7 @@ class MDiv : public MBinaryArithInstruction
     void computeRange();
     bool fallible() const;
     bool truncate();
+    void collectRangeInfoPreTrunc();
 };
 
 class MMod : public MBinaryArithInstruction

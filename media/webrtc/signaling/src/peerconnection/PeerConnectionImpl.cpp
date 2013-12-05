@@ -787,7 +787,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   // DTLS identity
   unsigned char fingerprint[DTLS_FINGERPRINT_LENGTH];
   size_t fingerprint_length;
-  res = mIdentity->ComputeFingerprint("sha-1",
+  res = mIdentity->ComputeFingerprint("sha-256",
                                       fingerprint,
                                       sizeof(fingerprint),
                                       &fingerprint_length);
@@ -798,7 +798,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     return res;
   }
 
-  mFingerprint = "sha-1 " + mIdentity->FormatFingerprint(fingerprint,
+  mFingerprint = "sha-256 " + mIdentity->FormatFingerprint(fingerprint,
                                                          fingerprint_length);
   if (NS_FAILED(res)) {
     CSFLogError(logTag, "%s: do_GetService failed: %u",
@@ -992,15 +992,18 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
 // Without it, each weak-ref call in this file would look like this:
 //
 //  nsCOMPtr<nsISupportsWeakReference> tmp = do_QueryReferent(mPCObserver);
-//  nsRefPtr<nsSupportsWeakReference> tmp2 = do_QueryObject(tmp);
-//  nsRefPtr<PeerConnectionObserver> pco = static_cast<PeerConnectionObserver*>(&*tmp2);
-//  if (!pco) {
+//  if (!tmp) {
 //    return;
 //  }
+//  nsRefPtr<nsSupportsWeakReference> tmp2 = do_QueryObject(tmp);
+//  nsRefPtr<PeerConnectionObserver> pco = static_cast<PeerConnectionObserver*>(&*tmp2);
 
 static already_AddRefed<PeerConnectionObserver>
 do_QueryObjectReferent(nsIWeakReference* aRawPtr) {
   nsCOMPtr<nsISupportsWeakReference> tmp = do_QueryReferent(aRawPtr);
+  if (!tmp) {
+    return nullptr;
+  }
   nsRefPtr<nsSupportsWeakReference> tmp2 = do_QueryObject(tmp);
   nsRefPtr<PeerConnectionObserver> tmp3 = static_cast<PeerConnectionObserver*>(&*tmp2);
   return tmp3.forget();
@@ -1337,6 +1340,7 @@ PeerConnectionImpl::SetRemoteFingerprint(const char* hash, const char* fingerpri
     return NS_ERROR_FAILURE;
   }
 }
+*/
 
 NS_IMETHODIMP
 PeerConnectionImpl::GetFingerprint(char** fingerprint)
@@ -1354,7 +1358,6 @@ PeerConnectionImpl::GetFingerprint(char** fingerprint)
   *fingerprint = tmp;
   return NS_OK;
 }
-*/
 
 NS_IMETHODIMP
 PeerConnectionImpl::GetLocalDescription(char** aSDP)

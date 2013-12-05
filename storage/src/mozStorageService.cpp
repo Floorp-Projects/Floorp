@@ -278,8 +278,7 @@ Service::getSynchronousPref()
 int32_t Service::sDefaultPageSize = PREF_TS_PAGESIZE_DEFAULT;
 
 Service::Service()
-: MemoryMultiReporter("storage-sqlite")
-, mMutex("Service::mMutex")
+: mMutex("Service::mMutex")
 , mSqliteVFS(nullptr)
 , mRegistrationMutex("Service::mRegistrationMutex")
 , mConnections()

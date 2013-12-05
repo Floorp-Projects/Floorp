@@ -99,7 +99,6 @@ WebGLMemoryTracker* WebGLMemoryTracker::UniqueInstance()
 }
 
 WebGLMemoryTracker::WebGLMemoryTracker()
-    : MemoryMultiReporter("webgl")
 {
 }
 
