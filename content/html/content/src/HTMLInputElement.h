@@ -680,6 +680,7 @@ public:
 
   void StartNumberControlSpinnerSpin();
   void StopNumberControlSpinnerSpin();
+  void StepNumberControlForUserEvent(int32_t aDirection);
 
   /**
    * The callback function used by the nsRepeatService that we use to spin the
