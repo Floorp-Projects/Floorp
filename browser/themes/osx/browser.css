@@ -1432,8 +1432,8 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   margin: 0;
 }
 
-#zoom-controls[cui-areatype="toolbar"] > #zoom-reset-button > .toolbarbutton-text {
-  padding-top: 2px;
+#zoom-controls[cui-areatype="toolbar"]:not(.overflowedItem) > #zoom-reset-button > .toolbarbutton-text {
+  padding-top: 8px;
   margin: 2px;
 }
 
