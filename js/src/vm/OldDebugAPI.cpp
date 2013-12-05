@@ -170,7 +170,7 @@ js::DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
 JS_FRIEND_API(bool)
 JS_SetDebugModeForAllCompartments(JSContext *cx, bool debug)
 {
-    for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
+    for (ZonesIter zone(cx->runtime()); !zone.done(); zone.next()) {
         // Invalidate a zone at a time to avoid doing a zone-wide CellIter
         // per compartment.
         AutoDebugModeInvalidation invalidate(zone);
