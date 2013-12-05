@@ -9,6 +9,8 @@ import org.mozilla.gecko.tests.UITestContext;
 
 import com.jayway.android.robotium.solo.Solo;
 
+import android.app.Activity;
+
 /**
  * A base class for constructing components - an abstraction over small bits of Firefox
  * functionality. For example, the Toolbar or the about:home screen could be considered a
@@ -18,11 +20,13 @@ import com.jayway.android.robotium.solo.Solo;
  */
 public abstract class BaseComponent {
     private final UITestContext mTestContext;
+    protected final Activity mActivity;
     protected final Solo mSolo;
     protected final Actions mActions;
 
     public BaseComponent(final UITestContext testContext) {
         mTestContext = testContext;
+        mActivity = mTestContext.getActivity();
         mSolo = mTestContext.getSolo();
         mActions = mTestContext.getActions();
     }

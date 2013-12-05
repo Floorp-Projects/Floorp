@@ -6,11 +6,13 @@ package org.mozilla.gecko.tests.components;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
 
+import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.tests.helpers.*;
 import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.R;
 
 import com.jayway.android.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Solo;
 
 import android.view.View;
 import android.widget.EditText;
@@ -130,7 +132,13 @@ public class ToolbarComponent extends BaseComponent {
         WaitHelper.waitForPageLoad(new Runnable() {
             @Override
             public void run() {
-                mSolo.clickOnView(getGoButton());
+                if (InputMethods.shouldDisableUrlBarUpdate(mActivity)) {
+                    // Bug 945521 workaround: Some IMEs do not allow the go button
+                    // to be displayed in the toolbar so we hit enter instead.
+                    mSolo.sendKey(Solo.ENTER);
+                } else {
+                    mSolo.clickOnView(getGoButton());
+                }
             }
         });
         waitForNotEditing();
