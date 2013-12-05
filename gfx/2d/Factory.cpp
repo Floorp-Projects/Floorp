@@ -549,10 +549,10 @@ Factory::SetGlobalSkiaCacheLimits(int aCount, int aSizeInBytes)
 #endif // USE_SKIA_GPU
 
 void
-Factory::PurgeTextureCaches()
+Factory::PurgeAllCaches()
 {
 #ifdef USE_SKIA_GPU
-  DrawTargetSkia::PurgeTextureCaches();
+  DrawTargetSkia::PurgeAllCaches();
 #endif
 }
 
