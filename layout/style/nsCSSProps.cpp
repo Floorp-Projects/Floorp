@@ -2421,6 +2421,12 @@ static const nsCSSProperty gFlexSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
+static const nsCSSProperty gFlexFlowSubpropTable[] = {
+  eCSSProperty_flex_direction,
+  eCSSProperty_flex_wrap,
+  eCSSProperty_UNKNOWN
+};
+
 static const nsCSSProperty gOverflowSubpropTable[] = {
   eCSSProperty_overflow_x,
   eCSSProperty_overflow_y,
