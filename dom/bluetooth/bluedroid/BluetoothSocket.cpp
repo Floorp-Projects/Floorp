@@ -669,7 +669,7 @@ BluetoothSocket::ReceiveSocketInfo(nsAutoPtr<UnixSocketRawData>& aMessage)
     // 1st message: [channel:4]
     int32_t channel = ReadInt32(aMessage->mData, &offset);
 
-    BT_LOGR("%s: channel %d", __FUNCTION__, channel);
+    BT_LOGR("channel %d", channel);
   } else if (mReceivedSocketInfoLength == TOTAL_SOCKET_INFO_LENGTH) {
     // 2nd message: [size:2][bd address:6][channel:4][connection status:4]
     int16_t size = ReadInt16(aMessage->mData, &offset);
@@ -677,7 +677,7 @@ BluetoothSocket::ReceiveSocketInfo(nsAutoPtr<UnixSocketRawData>& aMessage)
     int32_t channel = ReadInt32(aMessage->mData, &offset);
     int32_t connectionStatus = ReadInt32(aMessage->mData, &offset);
 
-    BT_LOGR("%s: size %d channel %d remote addr %s status %d", __FUNCTION__,
+    BT_LOGR("size %d channel %d remote addr %s status %d",
       size, channel, NS_ConvertUTF16toUTF8(mDeviceAddress).get(), connectionStatus);
 
     if (connectionStatus != 0) {

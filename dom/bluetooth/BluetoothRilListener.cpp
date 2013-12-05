@@ -379,8 +379,7 @@ BluetoothRilListener::ServiceChanged(uint32_t aClientId, bool aRegistered)
   // Restart listening
   ListenMobileConnAndIccInfo(true);
 
-  BT_LOGR("%s: %d client %d. new mClientId %d",
-          __FUNCTION__, aRegistered, aClientId,
+  BT_LOGR("%d client %d. new mClientId %d", aRegistered, aClientId,
           (mClientId < mMobileConnListeners.Length()) ? mClientId : -1);
 }
 

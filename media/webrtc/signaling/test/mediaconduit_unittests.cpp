@@ -830,17 +830,23 @@ class TransportConduitTest : public ::testing::Test
     ASSERT_EQ(width, 80);
     ASSERT_EQ(height, 4);
 
+     // Extremely small width and height(see bug 919979).
+    cerr << "Test with extremely small width and height" << endl;
+    orig_width = 2;
+    orig_height = 2;
+    max_fs = 5;
+    GetVideoResolutionWithMaxFs(orig_width, orig_height, max_fs, &width, &height);
+    DumpMaxFs(orig_width, orig_height, max_fs, width, height);
+    ASSERT_EQ(width, 2);
+    ASSERT_EQ(height, 2);
+
     // Random values.
+    cerr << "Test with random values" << endl;
     for (int i = 0; i < 30; i++) {
+      cerr << ".";
       max_fs = rand() % 1000;
       orig_width = ((rand() % 2000) & ~1) + 2;
       orig_height = ((rand() % 2000) & ~1) + 2;
-      // Potential crash on small resolution, see bug 919979.
-      if (orig_width * orig_height <= 20) {
-        cerr << "Temporarily skip resolution " << orig_width << "x" <<
-             orig_height << endl;
-        continue;
-      }
 
       GetVideoResolutionWithMaxFs(orig_width, orig_height, max_fs,
                                   &width, &height);
@@ -854,6 +860,7 @@ class TransportConduitTest : public ::testing::Test
         ADD_FAILURE();
       }
     }
+    cerr << endl;
  }
 
 private:

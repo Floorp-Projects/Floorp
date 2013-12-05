@@ -12,31 +12,8 @@ function test() {
   Task.spawn(function() {
     let [tab, debuggee, panel] = yield initDebugger(TAB_URL);
     let win = panel.panelWin;
-    let events = win.EVENTS;
-    let editor = win.DebuggerView.editor;
     let bubble = win.DebuggerView.VariableBubble;
     let tooltip = bubble._tooltip.panel;
-
-    function openSimplePopup(coords) {
-      let popupshown = once(tooltip, "popupshown");
-      let { left, top } = editor.getCoordsFromPosition(coords);
-      bubble._findIdentifier(left, top);
-      return popupshown;
-    }
-
-    function openComplexPopup(coords) {
-      let popupshown = once(tooltip, "popupshown");
-      let fetched = waitForDebuggerEvents(panel, events.FETCHED_BUBBLE_PROPERTIES);
-      let { left, top } = editor.getCoordsFromPosition(coords);
-      bubble._findIdentifier(left, top);
-      return promise.all([popupshown, fetched]);
-    }
-
-    function hidePopup() {
-      let popuphiding = once(tooltip, "popuphiding");
-      bubble.hideContents();
-      return popuphiding.then(waitForTick);
-    }
 
     function verifySimpleContents(textContent, className) {
       is(tooltip.querySelectorAll(".variables-view-container").length, 0,
@@ -70,16 +47,16 @@ function test() {
     yield waitForSourceAndCaretAndScopes(panel, ".html", 24);
 
     // Inspect variables.
-    yield openSimplePopup({ line: 15, ch: 12 });
+    yield openVarPopup(panel, { line: 15, ch: 12 });
     verifySimpleContents("1", "token-number");
 
-    yield hidePopup().then(() => openComplexPopup({ line: 16, ch: 12 }));
+    yield reopenVarPopup(panel, { line: 16, ch: 12 }, true);
     verifyComplexContents(2);
 
-    yield hidePopup().then(() => openSimplePopup({ line: 19, ch: 10 }));
+    yield reopenVarPopup(panel, { line: 19, ch: 10 });
     verifySimpleContents("42", "token-number");
 
-    yield hidePopup().then(() => openComplexPopup({ line: 31, ch: 10 }));
+    yield reopenVarPopup(panel, { line: 31, ch: 10 }, true);
     verifyComplexContents(100);
 
     yield resumeDebuggerThenCloseAndFinish(panel);

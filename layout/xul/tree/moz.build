@@ -35,11 +35,11 @@ FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
+    '..',
     '../../base',
     '../../forms',
     '../../generic',
     '../../style',
-    '../base/src',
     '/content/base/src',
     '/content/events/src',
 ]

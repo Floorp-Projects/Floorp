@@ -64,8 +64,8 @@ using mozilla::dom::CrashReporterChild;
 using mozilla::dom::PCrashReporterChild;
 
 #if defined(XP_WIN)
-const PRUnichar * kFlashFullscreenClass = L"ShockwaveFlashFullScreen";
-const PRUnichar * kMozillaWindowClass = L"MozillaWindowClass";
+const wchar_t * kFlashFullscreenClass = L"ShockwaveFlashFullScreen";
+const wchar_t * kMozillaWindowClass = L"MozillaWindowClass";
 #endif
 
 namespace {
@@ -1910,7 +1910,7 @@ PMCGetWindowInfoHook(HWND hWnd, PWINDOWINFO pwi)
   }
 
   if (!sBrowserHwnd) {
-      PRUnichar szClass[20];
+      wchar_t szClass[20];
       if (GetClassNameW(hWnd, szClass, ArrayLength(szClass)) &&
           !wcscmp(szClass, kMozillaWindowClass)) {
           sBrowserHwnd = hWnd;
@@ -2331,7 +2331,7 @@ PluginModuleChild::CallWindowProcHook(int nCode, WPARAM wParam, LPARAM lParam)
             // core systems, sync killfocus events need to be handled
             // after the flash fullscreen window procedure processes this
             // message, otherwise fullscreen focus will not work correctly.
-            PRUnichar szClass[26];
+            wchar_t szClass[26];
             if (GetClassNameW(pCwp->hwnd, szClass,
                               sizeof(szClass)/sizeof(PRUnichar)) &&
                 !wcscmp(szClass, kFlashFullscreenClass)) {

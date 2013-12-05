@@ -467,7 +467,7 @@ nsTString_CharT::ReplaceSubstring( const self_type& aTarget, const self_type& aN
     uint32_t i = 0;
     while (i < mLength)
       {
-        int32_t r = FindSubstring(mData + i, mLength - i, aTarget.Data(), aTarget.Length(), false);
+        int32_t r = FindSubstring(mData + i, mLength - i, static_cast<const char_type*>(aTarget.Data()), aTarget.Length(), false);
         if (r == kNotFound)
           break;
 

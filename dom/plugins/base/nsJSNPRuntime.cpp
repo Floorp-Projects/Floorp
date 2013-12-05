@@ -344,9 +344,7 @@ NPVariantToJSVal(NPP npp, JSContext *cx, const NPVariant *variant)
       NS_ConvertUTF8toUTF16 utf16String(s->UTF8Characters, s->UTF8Length);
 
       JSString *str =
-        ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar*>
-                                                  (utf16String.get()),
-                              utf16String.Length());
+        ::JS_NewUCStringCopyN(cx, utf16String.get(), utf16String.Length());
 
       if (str) {
         return STRING_TO_JSVAL(str);
@@ -471,8 +469,7 @@ ThrowJSException(JSContext *cx, const char *message)
       AppendASCIItoUTF16("].", ucex);
     }
 
-    JSString *str = ::JS_NewUCStringCopyN(cx, (jschar *)ucex.get(),
-                                          ucex.Length());
+    JSString *str = ::JS_NewUCStringCopyN(cx, ucex.get(), ucex.Length());
 
     if (str) {
       JS::Rooted<JS::Value> exn(cx, JS::StringValue(str));

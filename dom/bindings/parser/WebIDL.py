@@ -661,10 +661,13 @@ class IDLInterface(IDLObjectWithScope):
         # Compute slot indices for our members before we pull in
         # unforgeable members from our parent.
         for member in self.members:
-            if member.isAttr() and member.getExtendedAttribute("StoreInSlot"):
+            if (member.isAttr() and
+                (member.getExtendedAttribute("StoreInSlot") or
+                 member.getExtendedAttribute("Cached"))):
                 member.slotIndex = self.totalMembersInSlots
                 self.totalMembersInSlots += 1
-                self._ownMembersInSlots += 1
+                if member.getExtendedAttribute("StoreInSlot"):
+                    self._ownMembersInSlots += 1
 
         if self.parent:
             # Make sure we don't shadow any of the [Unforgeable] attributes on
@@ -2621,7 +2624,7 @@ class IDLAttribute(IDLInterfaceMember):
         self.stringifier = stringifier
         self.enforceRange = False
         self.clamp = False
-        self.slotIndex = 0
+        self.slotIndex = None
 
         if static and identifier.name == "prototype":
             raise WebIDLError("The identifier of a static attribute must not be 'prototype'",
@@ -2649,9 +2652,9 @@ class IDLAttribute(IDLInterfaceMember):
         if self.type.isDictionary():
             raise WebIDLError("An attribute cannot be of a dictionary type",
                               [self.location])
-        if self.type.isSequence():
-            raise WebIDLError("An attribute cannot be of a sequence type",
-                              [self.location])
+        if self.type.isSequence() and not self.getExtendedAttribute("Cached"):
+            raise WebIDLError("A non-cached attribute cannot be of a sequence "
+                              "type", [self.location])
         if self.type.isUnion():
             for f in self.type.unroll().flatMemberTypes:
                 if f.isDictionary():
@@ -2675,6 +2678,14 @@ class IDLAttribute(IDLInterfaceMember):
                               "interface type as its type", [self.location])
 
     def validate(self):
+        if ((self.getExtendedAttribute("Cached") or
+             self.getExtendedAttribute("StoreInSlot")) and
+            not self.getExtendedAttribute("Constant") and
+            not self.getExtendedAttribute("Pure")):
+            raise WebIDLError("Cached attributes and attributes stored in "
+                              "slots must be constant or pure, since the "
+                              "getter won't always be called.",
+                              [self.location])
         pass
 
     def handleExtendedAttribute(self, attr):
@@ -2753,6 +2764,16 @@ class IDLAttribute(IDLInterfaceMember):
                 raise WebIDLError("[Clamp] used on a readonly attribute",
                                   [attr.location, self.location])
             self.clamp = True
+        elif identifier == "StoreInSlot":
+            if self.getExtendedAttribute("Cached"):
+                raise WebIDLError("[StoreInSlot] and [Cached] must not be "
+                                  "specified on the same attribute",
+                                  [attr.location, self.location])
+        elif identifier == "Cached":
+            if self.getExtendedAttribute("StoreInSlot"):
+                raise WebIDLError("[Cached] and [StoreInSlot] must not be "
+                                  "specified on the same attribute",
+                                  [attr.location, self.location])
         elif (identifier == "Pref" or
               identifier == "SetterThrows" or
               identifier == "Pure" or
@@ -2762,7 +2783,6 @@ class IDLAttribute(IDLInterfaceMember):
               identifier == "SameObject" or
               identifier == "Constant" or
               identifier == "Func" or
-              identifier == "StoreInSlot" or
               identifier == "NewObject"):
             # Known attributes that we don't need to do anything with here
             pass

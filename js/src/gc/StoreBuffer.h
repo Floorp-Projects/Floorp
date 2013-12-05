@@ -398,7 +398,8 @@ class StoreBuffer
     explicit StoreBuffer(JSRuntime *rt, const Nursery &nursery)
       : bufferVal(), bufferCell(), bufferSlot(), bufferWholeCell(),
         bufferRelocVal(), bufferRelocCell(), bufferGeneric(),
-        runtime_(rt), nursery_(nursery), aboutToOverflow_(false), enabled_(false)
+        runtime_(rt), nursery_(nursery), aboutToOverflow_(false), enabled_(false),
+        entered(false)
     {
     }
 

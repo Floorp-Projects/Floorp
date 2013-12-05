@@ -22,6 +22,7 @@ let FlyoutPanelsUI = {
           [
             ['AboutFlyoutPanel', 'chrome://browser/content/flyoutpanels/AboutFlyoutPanel.js'],
             ['PrefsFlyoutPanel', 'chrome://browser/content/flyoutpanels/PrefsFlyoutPanel.js'],
+            ['SearchFlyoutPanel', 'chrome://browser/content/flyoutpanels/SearchFlyoutPanel.js'],
 #ifdef MOZ_SERVICES_SYNC
             ['SyncFlyoutPanel', 'chrome://browser/content/flyoutpanels/SyncFlyoutPanel.js'],
 #endif

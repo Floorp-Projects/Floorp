@@ -30,9 +30,14 @@ chrome.jar:
   content/bindings/notification.xml            (content/bindings/notification.xml)
   content/bindings/tabprompts.xml              (content/bindings/tabprompts.xml)
 
+  content/flyoutpanels/SettingsCharm.js        (content/flyoutpanels/SettingsCharm.js)
 * content/flyoutpanels/FlyoutPanelsUI.js       (content/flyoutpanels/FlyoutPanelsUI.js)
 * content/flyoutpanels/AboutFlyoutPanel.js     (content/flyoutpanels/AboutFlyoutPanel.js)
   content/flyoutpanels/PrefsFlyoutPanel.js     (content/flyoutpanels/PrefsFlyoutPanel.js)
+  content/flyoutpanels/SearchFlyoutPanel.js    (content/flyoutpanels/SearchFlyoutPanel.js)
+#ifdef MOZ_SERVICES_SYNC
+  content/flyoutpanels/SyncFlyoutPanel.js      (content/flyoutpanels/SyncFlyoutPanel.js)
+#endif
 
   content/helperui/AlertsHelper.js             (content/helperui/AlertsHelper.js)
   content/helperui/IndexedDB.js                (content/helperui/IndexedDB.js)
@@ -81,9 +86,6 @@ chrome.jar:
   content/TopSites.js                          (content/TopSites.js)
   content/console.js                           (content/console.js)
   content/dbg-metro-actors.js                  (content/dbg-metro-actors.js)
-#ifdef MOZ_SERVICES_SYNC
-  content/flyoutpanels/SyncFlyoutPanel.js      (content/flyoutpanels/SyncFlyoutPanel.js)
-#endif
   content/NavButtonSlider.js                   (content/NavButtonSlider.js)
   content/ContextUI.js                         (content/ContextUI.js)
   content/apzc.js                              (content/apzc.js)

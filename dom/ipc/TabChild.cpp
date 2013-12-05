@@ -529,20 +529,19 @@ TabChild::HandlePossibleViewportChange()
 
   nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
 
+  nsViewportInfo viewportInfo = nsContentUtils::GetViewportInfo(document, mInnerSize);
   uint32_t presShellId;
   ViewID viewId;
-  if (!APZCCallbackHelper::GetScrollIdentifiers(document->GetDocumentElement(),
-                                                &presShellId, &viewId)) {
-    return;
+  if (APZCCallbackHelper::GetScrollIdentifiers(document->GetDocumentElement(),
+                                               &presShellId, &viewId)) {
+    SendUpdateZoomConstraints(presShellId,
+                              viewId,
+                              /* isRoot = */ true,
+                              viewportInfo.IsZoomAllowed(),
+                              viewportInfo.GetMinZoom(),
+                              viewportInfo.GetMaxZoom());
   }
 
-  nsViewportInfo viewportInfo = nsContentUtils::GetViewportInfo(document, mInnerSize);
-  SendUpdateZoomConstraints(presShellId,
-                            viewId,
-                            /* isRoot = */ true,
-                            viewportInfo.IsZoomAllowed(),
-                            viewportInfo.GetMinZoom(),
-                            viewportInfo.GetMaxZoom());
 
   float screenW = mInnerSize.width;
   float screenH = mInnerSize.height;

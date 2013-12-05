@@ -12,23 +12,8 @@ function test() {
   Task.spawn(function() {
     let [tab, debuggee, panel] = yield initDebugger(TAB_URL);
     let win = panel.panelWin;
-    let events = win.EVENTS;
-    let editor = win.DebuggerView.editor;
     let bubble = win.DebuggerView.VariableBubble;
     let tooltip = bubble._tooltip.panel;
-
-    function openPopup(coords) {
-      let popupshown = once(tooltip, "popupshown");
-      let { left, top } = editor.getCoordsFromPosition(coords);
-      bubble._findIdentifier(left, top);
-      return popupshown;
-    }
-
-    function hidePopup() {
-      let popuphiding = once(tooltip, "popuphiding");
-      bubble.hideContents();
-      return popuphiding.then(waitForTick);
-    }
 
     function verifyContents(textContent, className) {
       is(tooltip.querySelectorAll(".variables-view-container").length, 0,
@@ -47,13 +32,13 @@ function test() {
     yield waitForSourceAndCaretAndScopes(panel, ".html", 24);
 
     // Inspect properties.
-    yield openPopup({ line: 19, ch: 10 });
+    yield openVarPopup(panel, { line: 19, ch: 10 });
     verifyContents("42", "token-number");
 
-    yield hidePopup().then(() => openPopup({ line: 20, ch: 14 }));
+    yield reopenVarPopup(panel, { line: 20, ch: 14 });
     verifyContents("42", "token-number");
 
-    yield hidePopup().then(() => openPopup({ line: 21, ch: 14 }));
+    yield reopenVarPopup(panel, { line: 21, ch: 14 });
     verifyContents("42", "token-number");
 
     yield resumeDebuggerThenCloseAndFinish(panel);
