@@ -49,6 +49,18 @@ for (var a = 0; a < 2; ++a) {
   bug939893();
 }
 
+// bug 945860
+function bug945860(x) {
+    return (x % x);
+}
+for (var i = 0; i < 2; i++) {
+    try {
+        (function() {
+            assertEq(bug945860(1), 0);
+        })()
+    } catch (e) {}
+}
+
 // Assorted tests.
 
 function sdiv_truncate(y) {
