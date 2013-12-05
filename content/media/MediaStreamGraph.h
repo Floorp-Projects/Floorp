@@ -958,10 +958,19 @@ public:
    * streams (mBlocked is up to date up to mStateComputedTime).
    * Also, we've produced output for all streams up to this one. If this stream
    * is not in a cycle, then all its source streams have produced data.
-   * Generate output up to mStateComputedTime.
+   * Generate output from aFrom to aTo.
    * This is called only on streams that have not finished.
+   * ProduceOutput is allowed to call FinishOnGraphThread only if ALLOW_FINISH
+   * is in aFlags. (This flag will be set when aTo >= mStateComputedTime, i.e.
+   * when we've producing the last block of data we need to produce.) Otherwise
+   * we can get into a situation where we've determined the stream should not
+   * block before mStateComputedTime, but the stream finishes before
+   * mStateComputedTime, violating the invariant that finished streams are blocked.
    */
-  virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo) = 0;
+  enum {
+    ALLOW_FINISH = 0x01
+  };
+  virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) = 0;
   void SetAutofinishImpl(bool aAutofinish) { mAutofinish = aAutofinish; }
 
   /**

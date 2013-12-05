@@ -399,16 +399,11 @@ AudioNodeStream::UpMixDownMixChunk(const AudioChunk* aChunk,
 // The MediaStreamGraph guarantees that this is actually one block, for
 // AudioNodeStreams.
 void
-AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo)
+AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
 {
-  if (mMarkAsFinishedAfterThisBlock) {
-    // This stream was finished the last time that we looked at it, and all
-    // of the depending streams have finished their output as well, so now
-    // it's time to mark this stream as finished.
-    FinishOutput();
-  }
-
   EnsureTrack(AUDIO_TRACK, mSampleRate);
+  // No more tracks will be coming
+  mBuffer.AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
   uint16_t outputCount = std::max(uint16_t(1), mEngine->OutputCount());
   mLastChunks.SetLength(outputCount);
@@ -446,7 +441,16 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo)
     }
   }
 
-  AdvanceOutputSegment();
+  if (!IsFinishedOnGraphThread()) {
+    // Don't output anything after we've finished!
+    AdvanceOutputSegment();
+    if (mMarkAsFinishedAfterThisBlock && (aFlags & ALLOW_FINISH)) {
+      // This stream was finished the last time that we looked at it, and all
+      // of the depending streams have finished their output as well, so now
+      // it's time to mark this stream as finished.
+      FinishOutput();
+    }
+  }
 }
 
 void
