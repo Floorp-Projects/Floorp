@@ -237,7 +237,6 @@ class IonBuilder : public MIRGenerator
     JSFunction *getSingleCallTarget(types::TemporaryTypeSet *calleeTypes);
     bool getPolyCallTargets(types::TemporaryTypeSet *calleeTypes, bool constructing,
                             ObjectVector &targets, uint32_t maxTargets, bool *gotLambda);
-    bool canInlineTarget(JSFunction *target, CallInfo &callInfo);
 
     void popCfgStack();
     DeferredEdge *filterDeadDeferredEdges(DeferredEdge *edge);
@@ -576,11 +575,20 @@ class IonBuilder : public MIRGenerator
         InliningStatus_Inlined
     };
 
+    enum InliningDecision
+    {
+        InliningDecision_Error,
+        InliningDecision_Inline,
+        InliningDecision_DontInline
+    };
+
+    static InliningDecision DontInline(JSScript *targetScript, const char *reason);
+
     // Oracles.
-    bool canEnterInlinedFunction(JSFunction *target);
-    bool makeInliningDecision(JSFunction *target, CallInfo &callInfo);
-    uint32_t selectInliningTargets(ObjectVector &targets, CallInfo &callInfo,
-                                   BoolVector &choiceSet);
+    InliningDecision canInlineTarget(JSFunction *target, CallInfo &callInfo);
+    InliningDecision makeInliningDecision(JSFunction *target, CallInfo &callInfo);
+    bool selectInliningTargets(ObjectVector &targets, CallInfo &callInfo,
+                               BoolVector &choiceSet, uint32_t *numInlineable);
 
     // Native inlining helpers.
     types::TemporaryTypeSet *getInlineReturnTypeSet();
