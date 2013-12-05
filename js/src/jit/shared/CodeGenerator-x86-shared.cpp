@@ -1036,16 +1036,21 @@ CodeGeneratorX86Shared::visitModPowTwoI(LModPowTwoI *ins)
     Register lhs = ToRegister(ins->getOperand(0));
     int32_t shift = ins->shift();
 
-    Label negative, done;
-    // Switch based on sign of the lhs.
-    // Positive numbers are just a bitmask
-    masm.branchTest32(Assembler::Signed, lhs, lhs, &negative);
-    {
-        masm.andl(Imm32((1 << shift) - 1), lhs);
-        masm.jump(&done);
+    Label negative;
+
+    if (ins->mir()->canBeNegativeDividend()) {
+        // Switch based on sign of the lhs.
+        // Positive numbers are just a bitmask
+        masm.branchTest32(Assembler::Signed, lhs, lhs, &negative);
     }
-    // Negative numbers need a negate, bitmask, negate
-    {
+
+    masm.andl(Imm32((1 << shift) - 1), lhs);
+
+    if (ins->mir()->canBeNegativeDividend()) {
+        Label done;
+        masm.jump(&done);
+
+        // Negative numbers need a negate, bitmask, negate
         masm.bind(&negative);
         // visitModI has an overflow check here to catch INT_MIN % -1, but
         // here the rhs is a power of 2, and cannot be -1, so the check is not generated.
@@ -1054,8 +1059,8 @@ CodeGeneratorX86Shared::visitModPowTwoI(LModPowTwoI *ins)
         masm.negl(lhs);
         if (!ins->mir()->isTruncated() && !bailoutIf(Assembler::Zero, ins->snapshot()))
             return false;
+        masm.bind(&done);
     }
-    masm.bind(&done);
     return true;
 
 }
