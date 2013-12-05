@@ -111,12 +111,12 @@ class LAllocation : public TempObject
     LAllocation() : bits_(0)
     { }
 
-    static LAllocation *New() {
-        return new LAllocation();
+    static LAllocation *New(TempAllocator &alloc) {
+        return new(alloc) LAllocation();
     }
     template <typename T>
-    static LAllocation *New(const T &other) {
-        return new LAllocation(other);
+    static LAllocation *New(TempAllocator &alloc, const T &other) {
+        return new(alloc) LAllocation(other);
     }
 
     // The value pointer must be rooted in MIR and have its low bit cleared.
@@ -569,7 +569,7 @@ class LSafepoint;
 class LInstructionVisitor;
 
 class LInstruction
-  : public TempObject,
+  : public OldTempObject,
     public InlineListNode<LInstruction>
 {
     uint32_t id_;

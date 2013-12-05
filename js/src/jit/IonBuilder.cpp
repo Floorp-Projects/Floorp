@@ -666,7 +666,7 @@ IonBuilder::build()
     // this will create an OSI point that will read the incoming argument
     // values, which is nice to do before their last real use, to minimize
     // register/stack pressure.
-    MCheckOverRecursed *check = new MCheckOverRecursed;
+    MCheckOverRecursed *check = MCheckOverRecursed::New(alloc());
     current->add(check);
     check->setResumePoint(current->entryResumePoint());
 
@@ -2445,7 +2445,7 @@ IonBuilder::processBreak(JSOp op, jssrcnote *sn)
             CFGState &cfg = cfgStack_[labels_[i].cfgEntry];
             JS_ASSERT(cfg.state == CFGState::LABEL);
             if (cfg.stopAt == target) {
-                cfg.label.breaks = new DeferredEdge(current, cfg.label.breaks);
+                cfg.label.breaks = new(alloc()) DeferredEdge(current, cfg.label.breaks);
                 found = true;
                 break;
             }
@@ -2455,7 +2455,7 @@ IonBuilder::processBreak(JSOp op, jssrcnote *sn)
             CFGState &cfg = cfgStack_[loops_[i].cfgEntry];
             JS_ASSERT(cfg.isLoop());
             if (cfg.loop.exitpc == target) {
-                cfg.loop.breaks = new DeferredEdge(current, cfg.loop.breaks);
+                cfg.loop.breaks = new(alloc()) DeferredEdge(current, cfg.loop.breaks);
                 found = true;
                 break;
             }
@@ -2499,7 +2499,7 @@ IonBuilder::processContinue(JSOp op)
     JS_ASSERT(found);
     CFGState &state = *found;
 
-    state.loop.continues = new DeferredEdge(current, state.loop.continues);
+    state.loop.continues = new(alloc()) DeferredEdge(current, state.loop.continues);
 
     setCurrent(nullptr);
     pc += js_CodeSpec[op].length;
@@ -2538,7 +2538,7 @@ IonBuilder::processSwitchBreak(JSOp op)
         MOZ_ASSUME_UNREACHABLE("Unexpected switch state.");
     }
 
-    *breaks = new DeferredEdge(current, *breaks);
+    *breaks = new(alloc()) DeferredEdge(current, *breaks);
 
     setCurrent(nullptr);
     pc += js_CodeSpec[op].length;
@@ -5210,7 +5210,7 @@ IonBuilder::makeCallHelper(JSFunction *target, CallInfo &callInfo, bool cloneAtC
     // potentially perform rearrangement.
     JS_ASSERT(callInfo.thisArg()->isPassArg());
     MPassArg *thisArg = callInfo.thisArg()->toPassArg();
-    MPrepareCall *start = new MPrepareCall;
+    MPrepareCall *start = MPrepareCall::New(alloc());
     thisArg->block()->insertBefore(thisArg, start);
     call->initPrepareCall(start);
 
@@ -6726,10 +6726,11 @@ IonBuilder::getElemTryComplexElemOfTypedObject(bool *emitted,
     loadTypedObjectData(obj, indexAsByteOffset, &owner, &ownerOffset);
 
     // Create the derived type object.
-    MInstruction *derived = new MNewDerivedTypedObject(elemTypeReprs,
-                                                       elemType,
-                                                       owner,
-                                                       ownerOffset);
+    MInstruction *derived = MNewDerivedTypedObject::New(alloc(),
+                                                        elemTypeReprs,
+                                                        elemType,
+                                                        owner,
+                                                        ownerOffset);
 
     types::TemporaryTypeSet *resultTypes = bytecodeTypes(pc);
     derived->setResultTypeSet(resultTypes);
@@ -7701,7 +7702,7 @@ IonBuilder::jsop_length_fastPath()
             current->add(elements);
 
             // Read length.
-            MArrayLength *length = new MArrayLength(elements);
+            MArrayLength *length = MArrayLength::New(alloc(), elements);
             current->add(length);
             current->push(length);
             return true;
@@ -7849,7 +7850,7 @@ IonBuilder::jsop_not()
 {
     MDefinition *value = current->pop();
 
-    MNot *ins = new MNot(value);
+    MNot *ins = MNot::New(alloc(), value);
     current->add(ins);
     current->push(ins);
     ins->infer();
@@ -8362,10 +8363,11 @@ IonBuilder::getPropTryComplexPropOfTypedObject(bool *emitted,
                         &owner, &ownerOffset);
 
     // Create the derived type object.
-    MInstruction *derived = new MNewDerivedTypedObject(fieldTypeReprs,
-                                                       fieldType,
-                                                       owner,
-                                                       ownerOffset);
+    MInstruction *derived = MNewDerivedTypedObject::New(alloc(),
+                                                        fieldTypeReprs,
+                                                        fieldType,
+                                                        owner,
+                                                        ownerOffset);
     derived->setResultTypeSet(resultTypes);
     current->add(derived);
     current->push(derived);
@@ -9495,7 +9497,7 @@ IonBuilder::jsop_in()
 
     current->pop();
     current->pop();
-    MIn *ins = new MIn(id, obj);
+    MIn *ins = MIn::New(alloc(), id, obj);
 
     current->add(ins);
     current->push(ins);
@@ -9558,7 +9560,7 @@ IonBuilder::jsop_instanceof()
 
         rhs->setFoldedUnchecked();
 
-        MInstanceOf *ins = new MInstanceOf(obj, protoObject);
+        MInstanceOf *ins = MInstanceOf::New(alloc(), obj, protoObject);
 
         current->add(ins);
         current->push(ins);
@@ -9566,7 +9568,7 @@ IonBuilder::jsop_instanceof()
         return resumeAfter(ins);
     } while (false);
 
-    MCallInstanceOf *ins = new MCallInstanceOf(obj, rhs);
+    MCallInstanceOf *ins = MCallInstanceOf::New(alloc(), obj, rhs);
 
     current->add(ins);
     current->push(ins);
