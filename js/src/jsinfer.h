@@ -952,6 +952,9 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
      *    the only way they can become undefined again is after such an assign
      *    or deletion.
      *
+     *    There is another exception for array lengths, which are special cased
+     *    by the compiler and VM and are not reflected in property types.
+     *
      * We establish these by using write barriers on calls to setProperty and
      * defineProperty which are on native properties, and on any jitcode which
      * might update the property with a new type.
