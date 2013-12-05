@@ -5,6 +5,7 @@
 
 #include "nsNativeThemeCocoa.h"
 #include "nsObjCExceptions.h"
+#include "nsNumberControlFrame.h"
 #include "nsRangeFrame.h"
 #include "nsRenderingContext.h"
 #include "nsRect.h"
@@ -1210,6 +1211,26 @@ nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+static const CellRenderSettings spinnerSettings = {
+  {
+    NSMakeSize(11, 16), // mini (width trimmed by 2px to reduce blank border)
+    NSMakeSize(15, 22), // small
+    NSMakeSize(19, 27)  // regular
+  },
+  {
+    NSMakeSize(11, 16), // mini (width trimmed by 2px to reduce blank border)
+    NSMakeSize(15, 22), // small
+    NSMakeSize(19, 27)  // regular
+  },
+  {
+    { // Leopard
+      {0, 0, 0, 0},    // mini
+      {0, 0, 0, 0},    // small
+      {0, 0, 0, 0}     // regular
+    }
+  }
+};
+
 void
 nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKind,
                                     const HIRect& inBoxRect, ThemeDrawState inDrawState,
@@ -1230,6 +1251,56 @@ nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKi
     bdi.state = FrameIsInActiveWindow(aFrame) ? inDrawState : kThemeStateActive;
 
   HIThemeDrawButton(&inBoxRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void
+nsNativeThemeCocoa::DrawSpinButton(CGContextRef cgContext,
+                                   ThemeButtonKind inKind,
+                                   const HIRect& inBoxRect,
+                                   ThemeDrawState inDrawState,
+                                   ThemeButtonAdornment inAdornment,
+                                   nsEventStates inState,
+                                   nsIFrame* aFrame,
+                                   uint8_t aWidgetType)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  MOZ_ASSERT(aWidgetType == NS_THEME_SPINNER_UP_BUTTON ||
+             aWidgetType == NS_THEME_SPINNER_DOWN_BUTTON);
+
+  HIThemeButtonDrawInfo bdi;
+  bdi.version = 0;
+  bdi.kind = inKind;
+  bdi.value = kThemeButtonOff;
+  bdi.adornment = inAdornment;
+
+  if (IsDisabled(aFrame, inState))
+    bdi.state = kThemeStateUnavailable;
+  else
+    bdi.state = FrameIsInActiveWindow(aFrame) ? inDrawState : kThemeStateActive;
+
+  // Cocoa only allows kThemeIncDecButton to paint the up and down spin buttons
+  // together as a single unit (presumably because when one button is active,
+  // the appearance of both changes (in different ways)). Here we have to paint
+  // both buttons, using clip to hide the one we don't want to paint.
+  HIRect drawRect = inBoxRect;
+  drawRect.size.height *= 2;
+  if (aWidgetType == NS_THEME_SPINNER_DOWN_BUTTON) {
+    drawRect.origin.y -= inBoxRect.size.height;
+  }
+
+  // Shift the drawing a little to the left, since cocoa paints with more
+  // blank space around the visual buttons than we'd like:
+  drawRect.origin.x -= 1;
+
+  CGContextSaveGState(cgContext);
+  CGContextClipToRect(cgContext, inBoxRect);
+
+  HIThemeDrawButton(&drawRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
+
+  CGContextRestoreGState(cgContext);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2135,8 +2206,14 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       break;
 
     case NS_THEME_SPINNER: {
-      ThemeDrawState state = kThemeStateActive;
       nsIContent* content = aFrame->GetContent();
+      if (content->IsHTML()) {
+        // In HTML the theming for the spin buttons is drawn individually into
+        // their own backgrounds instead of being drawn into the background of
+        // their spinner parent as it is for XUL.
+        break;
+      }
+      ThemeDrawState state = kThemeStateActive;
       if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::state,
                                NS_LITERAL_STRING("up"), eCaseMatters)) {
         state = kThemeStatePressedUp;
@@ -2148,6 +2225,23 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 
       DrawSpinButtons(cgContext, kThemeIncDecButton, macRect, state,
                       kThemeAdornmentNone, eventState, aFrame);
+    }
+      break;
+
+    case NS_THEME_SPINNER_UP_BUTTON:
+    case NS_THEME_SPINNER_DOWN_BUTTON: {
+      nsNumberControlFrame* numberControlFrame =
+        nsNumberControlFrame::GetNumberControlFrameForSpinButton(aFrame);
+      if (numberControlFrame) {
+        ThemeDrawState state = kThemeStateActive;
+        if (numberControlFrame->SpinnerUpButtonIsDepressed()) {
+          state = kThemeStatePressedUp;
+        } else if (numberControlFrame->SpinnerDownButtonIsDepressed()) {
+          state = kThemeStatePressedDown;
+        }
+        DrawSpinButton(cgContext, kThemeIncDecButtonMini, macRect, state,
+                       kThemeAdornmentNone, eventState, aFrame, aWidgetType);
+      }
     }
       break;
 
@@ -2747,12 +2841,25 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
     }
 
     case NS_THEME_SPINNER:
+    case NS_THEME_SPINNER_UP_BUTTON:
+    case NS_THEME_SPINNER_DOWN_BUTTON:
     {
       SInt32 buttonHeight = 0, buttonWidth = 0;
-      ::GetThemeMetric(kThemeMetricLittleArrowsWidth, &buttonWidth);
-      ::GetThemeMetric(kThemeMetricLittleArrowsHeight, &buttonHeight);
+      if (aFrame->GetContent()->IsXUL()) {
+        ::GetThemeMetric(kThemeMetricLittleArrowsWidth, &buttonWidth);
+        ::GetThemeMetric(kThemeMetricLittleArrowsHeight, &buttonHeight);
+      } else {
+        NSSize size =
+          spinnerSettings.minimumSizes[EnumSizeForCocoaSize(NSMiniControlSize)];
+        buttonWidth = size.width;
+        buttonHeight = size.height;
+        if (aWidgetType != NS_THEME_SPINNER) {
+          // the buttons are half the height of the spinner
+          buttonHeight /= 2;
+        }
+      }
       aResult->SizeTo(buttonWidth, buttonHeight);
-      *aIsOverridable = false;
+      *aIsOverridable = true;
       break;
     }
 
@@ -3100,6 +3207,8 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_BUTTON_BEVEL:
     case NS_THEME_TOOLBAR_BUTTON:
     case NS_THEME_SPINNER:
+    case NS_THEME_SPINNER_UP_BUTTON:
+    case NS_THEME_SPINNER_DOWN_BUTTON:
     case NS_THEME_TOOLBAR:
     case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
     case NS_THEME_STATUSBAR:
@@ -3224,6 +3333,8 @@ nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType)
     case NS_THEME_MENUSEPARATOR:
     case NS_THEME_TOOLTIP:
     case NS_THEME_SPINNER:
+    case NS_THEME_SPINNER_UP_BUTTON:
+    case NS_THEME_SPINNER_DOWN_BUTTON:
     case NS_THEME_TOOLBAR_SEPARATOR:
     case NS_THEME_TOOLBOX:
     case NS_THEME_TEXTFIELD:
