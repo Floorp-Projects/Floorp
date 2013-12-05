@@ -96,7 +96,8 @@ class StoreBuffer
         MonoTypeBuffer &operator=(const MonoTypeBuffer& other) MOZ_DELETE;
 
         bool init() {
-            storage_ = js_new<LifoAlloc>(LifoAllocBlockSize);
+            if (!storage_)
+                storage_ = js_new<LifoAlloc>(LifoAllocBlockSize);
             return bool(storage_);
         }
 
@@ -170,7 +171,8 @@ class StoreBuffer
         GenericBuffer &operator=(const GenericBuffer& other) MOZ_DELETE;
 
         bool init() {
-            storage_ = js_new<LifoAlloc>(LifoAllocBlockSize);
+            if (!storage_)
+                storage_ = js_new<LifoAlloc>(LifoAllocBlockSize);
             return bool(storage_);
         }
 
