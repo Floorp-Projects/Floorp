@@ -5986,6 +5986,12 @@ ClassHasEffectlessLookup(const Class *clasp, PropertyName *name)
 static bool
 ClassHasResolveHook(CompileCompartment *comp, const Class *clasp, PropertyName *name)
 {
+    // While arrays do not have resolve hooks, the types of their |length|
+    // properties are not reflected in type information, so pretend there is a
+    // resolve hook for this property.
+    if (clasp == &ArrayObject::class_)
+        return name = comp->runtime()->names().length;
+
     if (clasp->resolve == JS_ResolveStub)
         return false;
 
@@ -6102,6 +6108,9 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton, Pr
             if (analysisContext)
                 object->ensureTrackedProperty(analysisContext, NameToId(name));
 
+            const Class *clasp = object->clasp();
+            if (!ClassHasEffectlessLookup(clasp, name) || ClassHasResolveHook(compartment, clasp, name))
+                return false;
             if (object->unknownProperties())
                 return false;
             types::HeapTypeSetKey property = object->property(NameToId(name));
@@ -7999,6 +8008,10 @@ IonBuilder::annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPro
             continue;
         types::TypeObjectKey *typeObj = types::TypeObjectKey::get(baseTypeObj);
         if (typeObj->unknownProperties() || !typeObj->proto().isObject())
+            continue;
+
+        const Class *clasp = typeObj->clasp();
+        if (!ClassHasEffectlessLookup(clasp, name) || ClassHasResolveHook(compartment, clasp, name))
             continue;
 
         types::HeapTypeSetKey ownTypes = typeObj->property(NameToId(name));
