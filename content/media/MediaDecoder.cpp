@@ -1858,7 +1858,6 @@ MediaDecoder::GetOwner()
 }
 
 MediaMemoryTracker::MediaMemoryTracker()
-  : MemoryMultiReporter("media")
 {
 }
 

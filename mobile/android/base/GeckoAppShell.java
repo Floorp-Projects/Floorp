@@ -15,6 +15,7 @@ import org.mozilla.gecko.mozglue.generatorannotations.OptionalGeneratedParameter
 import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.mozglue.GeckoLoader;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -2420,6 +2421,7 @@ public class GeckoAppShell
 
     /* Called by JNI from AndroidBridge, and by reflection from tests/BaseTest.java.in */
     @WrapElementForJNI
+    @RobocopTarget
     public static boolean isTablet() {
         return HardwareUtils.isTablet();
     }

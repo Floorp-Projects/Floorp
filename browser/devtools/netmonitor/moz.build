@@ -8,5 +8,5 @@ TEST_DIRS += ['test']
 JS_MODULES_PATH = 'modules/devtools/netmonitor'
 
 EXTRA_JS_MODULES += [
-    'netmonitor-panel.js'
+    'panel.js'
 ]

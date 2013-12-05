@@ -885,10 +885,11 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
     newHttpChannelChild->GetClientSetRequestHeaders(&headerTuples);
   }
 
+  /* If the redirect was canceled, bypass OMR and send an empty API
+   * redirect URI */
+  SerializeURI(nullptr, redirectURI);
+
   if (NS_SUCCEEDED(result)) {
-    // we know this is an HttpChannelChild
-    HttpChannelChild* base =
-      static_cast<HttpChannelChild*>(mRedirectChannelChild.get());
     // Note: this is where we would notify "http-on-modify-response" observers.
     // We have deliberately disabled this for child processes (see bug 806753)
     //
@@ -896,13 +897,18 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
     // "http-on-modify-request" observers the chance to cancel before that.
     //base->CallOnModifyRequestObservers();
 
-    /* If there was an API redirect of this redirect, we need to send it
-     * down here, since it can't get sent via SendAsyncOpen. */
-    SerializeURI(base->mAPIRedirectToURI, redirectURI);
-  } else {
-    /* If the redirect was canceled, bypass OMR and send an empty API
-     * redirect URI */
-    SerializeURI(nullptr, redirectURI);
+    nsCOMPtr<nsIHttpChannelInternal> newHttpChannelInternal =
+      do_QueryInterface(mRedirectChannelChild);
+    if (newHttpChannelInternal) {
+      nsCOMPtr<nsIURI> apiRedirectURI;
+      nsresult rv = newHttpChannelInternal->GetApiRedirectToURI(
+        getter_AddRefs(apiRedirectURI));
+      if (NS_SUCCEEDED(rv) && apiRedirectURI) {
+        /* If there was an API redirect of this channel, we need to send it
+         * up here, since it can't be sent via SendAsyncOpen. */
+        SerializeURI(apiRedirectURI, redirectURI);
+      }
+    }
   }
 
   if (mIPCOpen)

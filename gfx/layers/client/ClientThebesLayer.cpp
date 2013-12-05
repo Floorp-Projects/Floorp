@@ -153,8 +153,18 @@ ClientThebesLayer::PaintBuffer(gfxContext* aContext,
 already_AddRefed<ThebesLayer>
 ClientLayerManager::CreateThebesLayer()
 {
+  return CreateThebesLayerWithHint(NONE);
+}
+
+already_AddRefed<ThebesLayer>
+ClientLayerManager::CreateThebesLayerWithHint(ThebesLayerCreationHint aHint)
+{
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  if (Preferences::GetBool("layers.force-tiles") && AsShadowForwarder()->GetCompositorBackendType() == LAYERS_OPENGL) {
+  if (
+#ifdef MOZ_B2G
+      aHint == SCROLLABLE &&
+#endif
+      Preferences::GetBool("layers.force-tiles") && AsShadowForwarder()->GetCompositorBackendType() == LAYERS_OPENGL) {
     nsRefPtr<ClientTiledThebesLayer> layer =
       new ClientTiledThebesLayer(this);
     CREATE_SHADOW(Thebes);

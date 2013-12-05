@@ -4194,8 +4194,8 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
     return;
   }
 
-  // The explicitOriginalTarget can be a nested child element of a toolbaritem.
-  let toolbarItem = aEvent.explicitOriginalTarget;
+  // triggerNode can be a nested child element of a toolbaritem.
+  let toolbarItem = popup.triggerNode;
 
   if (toolbarItem && toolbarItem.localName == "toolbarpaletteitem") {
     toolbarItem = toolbarItem.firstChild;

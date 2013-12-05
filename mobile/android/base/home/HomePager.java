@@ -8,6 +8,7 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
@@ -37,6 +38,7 @@ public class HomePager extends ViewPager {
     private Decor mDecor;
 
     // List of pages in order.
+    @RobocopTarget
     public enum Page {
         HISTORY,
         TOP_SITES,

@@ -14,7 +14,7 @@
  */
 static const mozilla::LayoutDeviceToScreenScale kViewportMinScale(0.0f);
 static const mozilla::LayoutDeviceToScreenScale kViewportMaxScale(10.0f);
-static const mozilla::CSSIntSize kViewportMinSize(200, 223);
+static const mozilla::CSSIntSize kViewportMinSize(200, 40);
 static const mozilla::CSSIntSize kViewportMaxSize(10000, 10000);
 static const int32_t  kViewportDefaultScreenWidth = 980;
 

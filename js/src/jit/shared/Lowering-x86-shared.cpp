@@ -144,7 +144,16 @@ LIRGeneratorX86Shared::lowerDivI(MDiv *div)
         // constants can be optimized by a reciprocal multiplication technique.
         int32_t shift = FloorLog2(rhs);
         if (rhs > 0 && 1 << shift == rhs) {
-            LDivPowTwoI *lir = new LDivPowTwoI(useRegisterAtStart(div->lhs()), useRegister(div->lhs()), shift);
+            LAllocation lhs = useRegisterAtStart(div->lhs());
+            LDivPowTwoI *lir;
+            if (!div->canBeNegativeDividend()) {
+                // Numerator is unsigned, so does not need adjusting.
+                lir = new LDivPowTwoI(lhs, lhs, shift);
+            } else {
+                // Numerator is signed, and needs adjusting, and an extra
+                // lhs copy register is needed.
+                lir = new LDivPowTwoI(lhs, useRegister(div->lhs()), shift);
+            }
             if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
                 return false;
             return defineReuseInput(lir, div, 0);
@@ -249,7 +258,7 @@ LIRGeneratorX86Shared::lowerUMod(MMod *mod)
 {
     // Optimize x%x. The comments in lowerModI apply here as well.
     if (mod->lhs() == mod->rhs()) {
-        if (mod->isTruncated())
+        if (mod->isTruncated() || (mod->isUnsigned() && !mod->canBeDivideByZero()))
             return define(new LInteger(0), mod);
 
         LModSelfI *lir = new LModSelfI(useRegisterAtStart(mod->lhs()));

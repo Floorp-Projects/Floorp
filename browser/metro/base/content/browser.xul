@@ -276,7 +276,7 @@ Desktop browser's sync prefs.
             </hbox>
 
             <hbox id="toolbar-context-autocomplete" pack="end">
-              <toolbarbutton id="close-button" class="appbar-secondary"
+              <toolbarbutton id="close-button" class="appbar-primary"
                              oncommand="Appbar.onAutocompleteCloseButton()"/>
             </hbox>
           </stack>
@@ -362,19 +362,22 @@ Desktop browser's sync prefs.
     <!-- Context button bar -->
     <appbar id="contextappbar">
       <toolbar id="contextualactions-tray" labelled="true" flex="1">
-        <toolbarbutton id="pin-selected-button" class="appbar-secondary"
+        <toolbarbutton id="pin-selected-button" class="appbar-primary"
                        label-uses-set-name="true" hidden="true" fade="true"
                        oncommand="Appbar.dispatchContextualAction('pin')"/>
-        <toolbarbutton id="unpin-selected-button" class="appbar-secondary"
+        <toolbarbutton id="unpin-selected-button" class="appbar-primary"
                        label-uses-set-name="true" hidden="true" fade="true"
                        oncommand="Appbar.dispatchContextualAction('unpin')"/>
-        <toolbarbutton id="delete-selected-button" class="appbar-secondary"
+        <toolbarbutton id="hide-selected-button" class="appbar-primary"
+                       label-uses-set-name="true" hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('unpin')"/>
+        <toolbarbutton id="delete-selected-button" class="appbar-primary"
                        hidden="true" fade="true"
                        oncommand="Appbar.dispatchContextualAction('delete')"/>
-        <toolbarbutton id="restore-selected-button" class="appbar-secondary"
+        <toolbarbutton id="restore-selected-button" class="appbar-primary"
                        hidden="true" fade="true"
                        oncommand="Appbar.dispatchContextualAction('restore')"/>
-        <toolbarbutton id="clear-selected-button" class="appbar-secondary"
+        <toolbarbutton id="clear-selected-button" class="appbar-primary"
                        hidden="true" fade="true"
                        oncommand="Appbar.dispatchContextualAction('clear')"/>
       </toolbar>

@@ -14,6 +14,25 @@ const { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server
 Cu.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
+// TODO bug 943125: remove this polyfill and use Debugger.Frame.prototype.depth
+// once it is implemented.
+if (!Object.getOwnPropertyDescriptor(Debugger.Frame.prototype, "depth")) {
+  Debugger.Frame.prototype._depth = null;
+  Object.defineProperty(Debugger.Frame.prototype, "depth", {
+    get: function () {
+      if (this._depth === null) {
+        if (!this.older) {
+          this._depth = 0;
+        } else {
+          this._depth = 1 + this.older.depth;
+        }
+      }
+
+      return this._depth;
+    }
+  });
+}
+
 const { setTimeout } = require("sdk/timers");
 
 /**
@@ -44,7 +63,8 @@ const TRACE_TYPES = new Set([
   "location",
   "callsite",
   "parameterNames",
-  "arguments"
+  "arguments",
+  "depth"
 ]);
 
 /**
@@ -69,6 +89,7 @@ function TraceActor(aConn, aParentActor)
   this._sequence = 0;
   this._bufferSendTimer = null;
   this._buffer = [];
+  this.onExitFrame = this.onExitFrame.bind(this);
 
   this.global = aParentActor.window.wrappedJSObject;
 }
@@ -348,7 +369,14 @@ TraceActor.prototype = {
       }
     }
 
-    aFrame.onPop = this.onExitFrame.bind(this);
+    if (this._requestsForTraceType.depth) {
+      packet.depth = aFrame.depth;
+    }
+
+    const onExitFrame = this.onExitFrame;
+    aFrame.onPop = function (aCompletion) {
+      onExitFrame(this, aCompletion);
+    };
 
     this._send(packet);
   },
@@ -357,10 +385,12 @@ TraceActor.prototype = {
    * Called by the engine when a frame is exited. Sends an unsolicited packet to
    * the client carrying requested trace information.
    *
+   * @param Debugger.Frame aFrame
+   *        The Debugger.Frame that was just exited.
    * @param aCompletion object
    *        The debugger completion value for the frame.
    */
-  onExitFrame: function(aCompletion) {
+  onExitFrame: function(aFrame, aCompletion) {
     let packet = {
       type: "exitedFrame",
       sequence: this._sequence++,
@@ -378,6 +408,10 @@ TraceActor.prototype = {
 
     if (this._requestsForTraceType.time) {
       packet.time = Date.now() - this._startTime;
+    }
+
+    if (this._requestsForTraceType.depth) {
+      packet.depth = aFrame.depth;
     }
 
     if (aCompletion) {

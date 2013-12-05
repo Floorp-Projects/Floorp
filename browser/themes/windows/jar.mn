@@ -50,6 +50,9 @@ browser.jar:
         skin/classic/browser/menuPanel-exit.png
         skin/classic/browser/menuPanel-help.png
         skin/classic/browser/menuPanel-small.png
+        skin/classic/browser/Metro_Glyph.png                        (Metro_Glyph-aero.png)
+        skin/classic/browser/Metro_Glyph-inverted.png
+        skin/classic/browser/Metro_Glyph-menuPanel.png
         skin/classic/browser/mixed-content-blocked-16.png
         skin/classic/browser/mixed-content-blocked-64.png
         skin/classic/browser/monitor.png
@@ -170,9 +173,9 @@ browser.jar:
         skin/classic/browser/tabview/tabview.png                    (tabview/tabview.png)
         skin/classic/browser/tabview/tabview-inverted.png           (tabview/tabview-inverted.png)
         skin/classic/browser/tabview/tabview.css                    (tabview/tabview.css)
-*       skin/classic/browser/devtools/common.css                    (devtools/common.css)
-        skin/classic/browser/devtools/dark-theme.css                (../shared/devtools/dark-theme.css)
-        skin/classic/browser/devtools/light-theme.css               (../shared/devtools/light-theme.css)
+*       skin/classic/browser/devtools/common.css                    (../shared/devtools/common.css)
+*       skin/classic/browser/devtools/dark-theme.css                (../shared/devtools/dark-theme.css)
+*       skin/classic/browser/devtools/light-theme.css               (../shared/devtools/light-theme.css)
         skin/classic/browser/devtools/controls.png                  (../shared/devtools/controls.png)
 *       skin/classic/browser/devtools/widgets.css                   (devtools/widgets.css)
         skin/classic/browser/devtools/commandline-icon.png          (devtools/commandline-icon.png)
@@ -253,7 +256,6 @@ browser.jar:
         skin/classic/browser/devtools/floating-scrollbars-light.css (devtools/floating-scrollbars-light.css)
         skin/classic/browser/devtools/inspector.css                 (devtools/inspector.css)
         skin/classic/browser/devtools/profiler-stopwatch.png        (devtools/profiler-stopwatch.png)
-        skin/classic/browser/devtools/toolbox.css                   (devtools/toolbox.css)
         skin/classic/browser/devtools/tool-options.png              (devtools/tool-options.png)
         skin/classic/browser/devtools/tool-webconsole.png           (devtools/tool-webconsole.png)
         skin/classic/browser/devtools/tool-debugger.png             (devtools/tool-debugger.png)
@@ -354,6 +356,9 @@ browser.jar:
         skin/classic/aero/browser/menuPanel-exit.png
         skin/classic/aero/browser/menuPanel-help.png
         skin/classic/aero/browser/menuPanel-small.png                (menuPanel-small-aero.png)
+        skin/classic/aero/browser/Metro_Glyph.png                    (Metro_Glyph-aero.png)
+        skin/classic/aero/browser/Metro_Glyph-inverted.png
+        skin/classic/aero/browser/Metro_Glyph-menuPanel.png
         skin/classic/aero/browser/mixed-content-blocked-16.png
         skin/classic/aero/browser/mixed-content-blocked-64.png
         skin/classic/aero/browser/monitor.png
@@ -472,9 +477,9 @@ browser.jar:
         skin/classic/aero/browser/tabview/tabview.png                (tabview/tabview.png)
         skin/classic/aero/browser/tabview/tabview-inverted.png       (tabview/tabview-inverted.png)
         skin/classic/aero/browser/tabview/tabview.css                (tabview/tabview.css)
-*       skin/classic/aero/browser/devtools/common.css                (devtools/common.css)
-        skin/classic/aero/browser/devtools/dark-theme.css            (../shared/devtools/dark-theme.css)
-        skin/classic/aero/browser/devtools/light-theme.css           (../shared/devtools/light-theme.css)
+*       skin/classic/aero/browser/devtools/common.css                (../shared/devtools/common.css)
+*       skin/classic/aero/browser/devtools/dark-theme.css            (../shared/devtools/dark-theme.css)
+*       skin/classic/aero/browser/devtools/light-theme.css           (../shared/devtools/light-theme.css)
         skin/classic/aero/browser/devtools/controls.png              (../shared/devtools/controls.png)
 *       skin/classic/aero/browser/devtools/widgets.css               (devtools/widgets.css)
         skin/classic/aero/browser/devtools/commandline-icon.png      (devtools/commandline-icon.png)
@@ -555,7 +560,6 @@ browser.jar:
         skin/classic/aero/browser/devtools/floating-scrollbars-light.css (devtools/floating-scrollbars-light.css)
         skin/classic/aero/browser/devtools/inspector.css             (devtools/inspector.css)
         skin/classic/aero/browser/devtools/profiler-stopwatch.png    (devtools/profiler-stopwatch.png)
-        skin/classic/aero/browser/devtools/toolbox.css               (devtools/toolbox.css)
         skin/classic/aero/browser/devtools/tool-options.png          (devtools/tool-options.png)
         skin/classic/aero/browser/devtools/tool-webconsole.png       (devtools/tool-webconsole.png)
         skin/classic/aero/browser/devtools/tool-debugger.png         (devtools/tool-debugger.png)

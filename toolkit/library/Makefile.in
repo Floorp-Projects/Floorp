@@ -14,8 +14,6 @@ SHARED_LIBRARY_NAME=XUL
 MAKE_FRAMEWORK=1
 endif
 
-VPATH += $(topsrcdir)/build/
-
 ifdef MOZ_CONTENT_SANDBOX
 ifeq ($(OS_ARCH),WINNT)
   LOCAL_INCLUDES += -I$(srcdir)/../sandboxbroker
@@ -435,6 +433,7 @@ COMPONENT_LIBS += \
   gtest \
   gfxtest \
   ssltest \
+  xpcom_glue_gtest \
   $(NULL)
 endif
 
