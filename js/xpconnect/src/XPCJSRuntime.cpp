@@ -14,6 +14,7 @@
 #include "XPCJSMemoryReporter.h"
 #include "WrapperFactory.h"
 #include "dom_quickstubs.h"
+#include "mozJSComponentLoader.h"
 
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
@@ -2634,6 +2635,9 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
 
     size_t scopes = XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(JSMallocSizeOf);
 
+    mozJSComponentLoader* loader = mozJSComponentLoader::Get();
+    size_t jsComponentLoaderSize = loader ? loader->SizeOfIncludingThis(JSMallocSizeOf) : 0;
+
     // This is the second step (see above).  First we report stuff in the
     // "explicit" tree, then we report other stuff.
 
@@ -2722,6 +2726,10 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
     REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/scopes"),
                  KIND_HEAP, scopes,
                  "Memory used by XPConnect scopes.");
+
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/js-component-loader"),
+                 KIND_HEAP, jsComponentLoaderSize,
+                 "Memory used by XPConnect's JS component loader.");
 
     return NS_OK;
 }
