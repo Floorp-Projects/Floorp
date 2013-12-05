@@ -96,12 +96,16 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
 {
     js::Vector<LMove, 2, IonAllocPolicy> moves_;
 
-  public:
-    LIR_HEADER(MoveGroup)
-
     LMoveGroup(TempAllocator &alloc)
       : moves_(alloc)
     { }
+
+  public:
+    LIR_HEADER(MoveGroup)
+
+    static LMoveGroup *New(TempAllocator &alloc) {
+        return new(alloc) LMoveGroup(alloc);
+    }
 
     void printOperands(FILE *fp);
 
@@ -460,17 +464,19 @@ class LNewCallObjectPar : public LInstructionHelper<1, 2, 2>
 public:
     LIR_HEADER(NewCallObjectPar);
 
-    static LNewCallObjectPar *NewWithSlots(const LAllocation &slice, const LAllocation &slots,
+    static LNewCallObjectPar *NewWithSlots(TempAllocator &alloc,
+                                           const LAllocation &slice, const LAllocation &slots,
                                            const LDefinition &temp1, const LDefinition &temp2)
     {
-        return new LNewCallObjectPar(slice, slots, temp1, temp2);
+        return new(alloc) LNewCallObjectPar(slice, slots, temp1, temp2);
     }
 
-    static LNewCallObjectPar *NewSansSlots(const LAllocation &slice,
+    static LNewCallObjectPar *NewSansSlots(TempAllocator &alloc,
+                                           const LAllocation &slice,
                                            const LDefinition &temp1, const LDefinition &temp2)
     {
         LAllocation slots = LConstantIndex::Bogus();
-        return new LNewCallObjectPar(slice, slots, temp1, temp2);
+        return new(alloc) LNewCallObjectPar(slice, slots, temp1, temp2);
     }
 
     const LAllocation *forkJoinSlice() {

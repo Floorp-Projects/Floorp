@@ -3056,7 +3056,7 @@ IonBuilder::jsop_condswitch()
 
     // Allocate the current graph state.
     CFGState state = CFGState::CondSwitch(this, exitpc, defaultTarget);
-    if (!state.condswitch.bodies || !state.condswitch.bodies->init(nbBodies))
+    if (!state.condswitch.bodies || !state.condswitch.bodies->init(alloc(), nbBodies))
         return ControlStatus_Error;
 
     // We loop on case conditions with processCondSwitchCase.
