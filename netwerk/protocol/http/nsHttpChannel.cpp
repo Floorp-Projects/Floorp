@@ -5296,13 +5296,42 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
         if (!mLogicalOffset)
             MOZ_EVENT_TRACER_EXEC(this, "net::http::channel");
 
+        int64_t offsetBefore = 0;
+        nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(input);
+        if (seekable && NS_FAILED(seekable->Tell(&offsetBefore))) {
+            seekable = nullptr;
+        }
+
         nsresult rv =  mListener->OnDataAvailable(this,
                                                   mListenerContext,
                                                   input,
                                                   mLogicalOffset,
                                                   count);
-        if (NS_SUCCEEDED(rv))
-            mLogicalOffset = progress;
+        if (NS_SUCCEEDED(rv)) {
+            // by contract mListener must read all of "count" bytes, but
+            // nsInputStreamPump is tolerant to seekable streams that violate that
+            // and it will redeliver incompletely read data. So we need to do
+            // the same thing when updating the progress counter to stay in sync.
+            int64_t offsetAfter, delta;
+            if (seekable && NS_SUCCEEDED(seekable->Tell(&offsetAfter))) {
+                delta = offsetAfter - offsetBefore;
+                if (delta != count) {
+                    count = delta;
+
+                    NS_WARNING("Listener OnDataAvailable contract violation");
+                    nsCOMPtr<nsIConsoleService> consoleService =
+                        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+                    nsAutoString message
+                        (NS_LITERAL_STRING(
+                        "http channel Listener OnDataAvailable contract violation"));
+                    if (consoleService) {
+                        consoleService->LogStringMessage(message.get());
+                    }
+                }
+            }
+            mLogicalOffset += count;
+        }
+        
         return rv;
     }
 
