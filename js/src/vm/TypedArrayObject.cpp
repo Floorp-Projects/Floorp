@@ -3460,8 +3460,9 @@ const Class ArrayBufferObject::class_ = {
         ArrayBufferObject::obj_deleteElement,
         ArrayBufferObject::obj_deleteSpecial,
         nullptr, nullptr, /* watch/unwatch */
+        nullptr,          /* slice */
         ArrayBufferObject::obj_enumerate,
-        nullptr,       /* thisObject      */
+        nullptr,          /* thisObject      */
     }
 };
 
@@ -3622,8 +3623,9 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
         _typedArray##Object::obj_deleteElement,                                \
         _typedArray##Object::obj_deleteSpecial,                                \
         nullptr, nullptr, /* watch/unwatch */                                  \
+        nullptr,          /* slice */                                          \
         _typedArray##Object::obj_enumerate,                                    \
-        nullptr,             /* thisObject  */                                 \
+        nullptr,          /* thisObject  */                                    \
     }                                                                          \
 }
 

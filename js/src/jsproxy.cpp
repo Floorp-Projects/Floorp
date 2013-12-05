@@ -365,6 +365,34 @@ BaseProxyHandler::unwatch(JSContext *cx, HandleObject proxy, HandleId id)
 }
 
 bool
+BaseProxyHandler::slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
+                        HandleObject result)
+{
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
+
+    RootedId id(cx);
+    RootedValue value(cx);
+    for (uint32_t index = begin; index < end; index++) {
+        if (!IndexToId(cx, index, id.address()))
+            return false;
+
+        bool present;
+        if (!Proxy::has(cx, proxy, id, &present))
+            return false;
+
+        if (present) {
+            if (!Proxy::get(cx, proxy, proxy, id, &value))
+                return false;
+
+            if (!JSObject::defineElement(cx, result, index - begin, value))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool
 DirectProxyHandler::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                           MutableHandle<PropertyDescriptor> desc, unsigned flags)
 {
@@ -2720,6 +2748,18 @@ Proxy::unwatch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id)
     return proxy->as<ProxyObject>().handler()->unwatch(cx, proxy, id);
 }
 
+/* static */ bool
+Proxy::slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
+             HandleObject result)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
+    if (!policy.allowed())
+        return policy.returnValue();
+    return handler->slice(cx, proxy, begin, end, result);
+}
+
 static JSObject *
 proxy_innerObject(JSContext *cx, HandleObject obj)
 {
@@ -3013,15 +3053,22 @@ proxy_Construct(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
-proxy_Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable)
+proxy_Watch(JSContext *cx, HandleObject obj, HandleId id, HandleObject callable)
 {
     return Proxy::watch(cx, obj, id, callable);
 }
 
 static bool
-proxy_Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
+proxy_Unwatch(JSContext *cx, HandleObject obj, HandleId id)
 {
     return Proxy::unwatch(cx, obj, id);
+}
+
+static bool
+proxy_Slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
+            HandleObject result)
+{
+    return Proxy::slice(cx, proxy, begin, end, result);
 }
 
 #define PROXY_CLASS_EXT                             \
@@ -3076,6 +3123,7 @@ proxy_Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
         proxy_DeleteElement,                        \
         proxy_DeleteSpecial,                        \
         proxy_Watch, proxy_Unwatch,                 \
+        proxy_Slice,                                \
         nullptr,             /* enumerate       */  \
         nullptr,             /* thisObject      */  \
     }                                               \
@@ -3133,6 +3181,7 @@ const Class js::OuterWindowProxyObject::class_ = {
         proxy_DeleteElement,
         proxy_DeleteSpecial,
         proxy_Watch, proxy_Unwatch,
+        proxy_Slice,
         nullptr,             /* enumerate       */
         nullptr,             /* thisObject      */
     }
