@@ -790,7 +790,6 @@ bin/libfreebl_32int64_3.so
 [metro]
 ; gre resources
 @BINPATH@/CommandExecuteHandler@BIN_SUFFIX@
-@BINPATH@/dummyvccorlib.dll
 @BINPATH@/resources.pri
 @BINPATH@/VisualElementsManifest.xml
 @BINPATH@/tileresources
