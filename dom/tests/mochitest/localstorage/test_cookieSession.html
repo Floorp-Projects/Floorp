@@ -1,0 +1,132 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>cookie per-session only test</title>
+
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+/*
+  Set cookie access to be just per session and store to the localStorage.
+  Content stored must prevail only for session of the browser, so it must
+  be accessible in another window we try to access that key in the same
+  storage.
+ */
+
+function pushCookie(aPermission, aNext) {
+  SpecialPowers.pushPermissions([{'type': 'cookie', 'allow': aPermission, 'context': document}], aNext);
+}
+
+function test1() {
+  localStorage.setItem("persistent1", "persistent value 1");
+  localStorage.setItem("persistent2", "persistent value 2");
+
+  pushCookie(SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION, test1_b);
+}
+
+function test1_b() {
+  localStorage.setItem("session only", "session value");
+  parent.is(localStorage.getItem("session only"), "session value");
+  parent.is(localStorage.getItem("persistent1"), "persistent value 1");
+  parent.is(localStorage.getItem("persistent2"), "persistent value 2");
+
+  window.location.search = '?2';
+}
+
+function test2()
+{
+  parent.is(localStorage.getItem("session only"), "session value", "Value present when cookies in session-only mode");
+  parent.is(localStorage.getItem("persistent1"), "persistent value 1", "Persistent value present");
+  parent.is(localStorage.getItem("persistent2"), "persistent value 2", "Persistent value present");
+
+  localStorage.setItem("persistent1", "changed persistent value 1");
+  localStorage.removeItem("persistent2");
+
+  parent.is(localStorage.getItem("session only"), "session value", "Value present when cookies in session-only mode");
+  parent.is(localStorage.getItem("persistent1"), "changed persistent value 1", "Persistent value present");
+  parent.is(localStorage.getItem("persistent2"), null, "Persistent value removed");
+
+  // This clear has to delete only changes made in session only mode
+  localStorage.clear();
+
+  parent.is(localStorage.getItem("session only"), null, "Value not present when cookies in session-only mode after delete");
+  parent.is(localStorage.getItem("persistent1"), null, "Persistent value not present in session only after delete");
+  parent.is(localStorage.getItem("persistent2"), null, "Persistent value not present in session only after delete");
+
+  localStorage.setItem("session only 2", "must be deleted on drop of session-only cookies permissions");
+
+  pushCookie(SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT, function() { window.location.search = '?3'; });
+}
+
+function test3() {
+  parent.is(localStorage.getItem("session only"), null, "No value when cookies are in default mode");
+  parent.is(localStorage.getItem("session only 2"), null, "No value when cookies are in default mode");
+  parent.is(localStorage.getItem("persistent1"), "persistent value 1", "Persistent value present");
+  parent.is(localStorage.getItem("persistent2"), "persistent value 2", "Persistent value present");
+
+  pushCookie(SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION, function() { window.location.search = '?4'; });
+}
+
+function test4() {
+  parent.is(localStorage.getItem("session only"), null, "Value not present when cookies in session-only mode after delete");
+  parent.is(localStorage.getItem("session only 2"), null, "Value not present when cookies in session-only mode after delete");
+  parent.is(localStorage.getItem("persistent1"), "persistent value 1", "Persistent value present again");
+  parent.is(localStorage.getItem("persistent2"), "persistent value 2", "Persistent value present again");
+
+  pushCookie(SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT, function() { window.location.search = '?5'; });
+}
+
+function test5() {
+  localStorage.clear();
+
+  parent.is(localStorage.getItem("session only"), null, "No value when cookies are in default mode");
+  parent.is(localStorage.getItem("persistent1"), null, "Persistent value not present after delete");
+  parent.is(localStorage.getItem("persistent2"), null, "Persistent value not present after delete");
+
+  pushCookie(SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION, function() { window.location.search = '?6'; });
+}
+
+function test6() {
+  parent.is(localStorage.getItem("session only"), null, "Value not present when cookies in session-only mode after delete");
+  parent.is(localStorage.getItem("session only 2"), null, "No value when cookies are in default mode");
+  parent.is(localStorage.getItem("persistent1"), null, "Persistent value not present in session only after delete");
+  parent.is(localStorage.getItem("persistent2"), null, "Persistent value not present in session only after delete");
+
+  parent.SimpleTest.finish();
+}
+
+function startTest() {
+  switch (location.search) {
+    case '?1':
+      test1();
+      break;
+    case '?2':
+      test2();
+      break;
+    case '?3':
+      test3();
+      break;
+    case '?4':
+      test4();
+      break;
+    case '?5':
+      test5();
+      break;
+    case '?6':
+      test6();
+      break;
+    default:
+      SimpleTest.waitForExplicitFinish();
+      var iframe = document.createElement('iframe');
+      iframe.src = 'test_cookieSession.html?1';
+      document.body.appendChild(iframe);
+  }
+}
+</script>
+
+</head>
+
+<body onload="startTest()">
+</body>
+</html>

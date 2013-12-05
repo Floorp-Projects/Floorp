@@ -28,5 +28,9 @@
 	<true/>
 	<key>CGDisableCoalescedUpdates</key>
 	<true/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSPrincipalClass</key>
+	<string>GeckoNSApplication</string>
 </dict>
 </plist>

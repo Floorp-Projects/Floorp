@@ -7,13 +7,9 @@
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
 <script type="text/javascript">
+//Note: this test is currently giving failures when running standalone, see bug 914865
 
 var currentTest = 1;
-var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
-            .getService(SpecialPowers.Ci.nsIPrefBranch);
-var quota;
-var origBlockDisplay;
-var origBlockActive;
 
 function doNextTest()
 {
@@ -21,22 +17,7 @@ function doNextTest()
 
   switch (currentTest)
   {
-    // Initialy setup the quota to testing value of 1024B and
-    // set a 500 bytes key with name length 1 (allocate 501 bytes)
     case 1:
-      try {
-        quota = prefs.getIntPref("dom.storage.default_quota");
-      } catch (ex) {
-        quota = 5*1024;
-      }
-      prefs.setIntPref("dom.storage.default_quota", 1);
-
-      origBlockDisplay = prefs.getBoolPref("security.mixed_content.block_display_content");
-      origBlockActive = prefs.getBoolPref("security.mixed_content.block_active_content");
-
-      prefs.setBoolPref("security.mixed_content.block_display_content", false);
-      prefs.setBoolPref("security.mixed_content.block_active_content", false);
-
       slaveOrigin = "http://example.com";
       slave.location = slaveOrigin + slavePath + "frameQuota.html?add&A&success";
       break;
@@ -103,9 +84,6 @@ function doNextTest()
       break;
 
     default: // end
-      prefs.setIntPref("dom.storage.default_quota", quota);
-      prefs.setBoolPref("security.mixed_content.block_display_content", origBlockDisplay);
-      prefs.setBoolPref("security.mixed_content.block_active_content", origBlockActive);
       SimpleTest.finish();
   }
 
@@ -118,11 +96,16 @@ function doStep()
 
 SimpleTest.waitForExplicitFinish();
 
+function startTest() {
+  // Initialy setup the quota to testing value of 1024B and
+  // set a 500 bytes key with name length 1 (allocate 501 bytes)
+  SpecialPowers.pushPrefEnv({"set": [["dom.storage.default_quota", 1], ["security.mixed_content.block_display_content", false], ["security.mixed_content.block_active_content", false]]}, doNextTest);
+}
 </script>
 
 </head>
 
-<body onload="doNextTest();">
+<body onload="startTest();">
   <iframe src="" name="frame"></iframe>
 </body>
 </html>
