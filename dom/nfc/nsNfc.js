@@ -19,6 +19,13 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this,
+                                   "appsService",
+                                   "@mozilla.org/AppsService;1",
+                                   "nsIAppsService");
+const NFC_PEER_EVENT_READY = 0x01;
+const NFC_PEER_EVENT_LOST  = 0x02;
+
 /**
  * NFCTag
  */
@@ -27,6 +34,7 @@ function MozNFCTag() {
   this._nfcContentHelper = Cc["@mozilla.org/nfc/content-helper;1"]
                              .getService(Ci.nsINfcContentHelper);
   this.session = null;
+
   // Map WebIDL declared enum map names to integer
   this._techTypesMap = [];
   this._techTypesMap['NFC_A'] = 0;
@@ -102,7 +110,7 @@ MozNFCPeer.prototype = {
 
   initialize: function(aWindow, aSessionToken) {
     this._window = aWindow;
-    this.setSessionToken(aSessionToken);
+    this.session = aSessionToken;
   },
 
   // ChromeOnly interface
@@ -116,7 +124,7 @@ MozNFCPeer.prototype = {
   // NFCPeer interface:
   sendNDEF: function sendNDEF(records) {
     // Just forward sendNDEF to writeNDEF
-    return this._nfcContentHelper.writeNDEF(this._window, records);
+    return this._nfcContentHelper.writeNDEF(this._window, records, this.session);
   },
 
   classID: Components.ID("{c1b2bcf0-35eb-11e3-aa6e-0800200c9a66}"),
@@ -130,6 +138,8 @@ MozNFCPeer.prototype = {
  */
 function mozNfc() {
   debug("In mozNfc Constructor");
+  this._nfcContentHelper = Cc["@mozilla.org/nfc/content-helper;1"]
+                             .getService(Ci.nsINfcContentHelper);
 }
 mozNfc.prototype = {
   _nfcContentHelper: null,
@@ -141,6 +151,23 @@ mozNfc.prototype = {
   init: function init(aWindow) {
     debug("mozNfc init called");
     this._window = aWindow;
+    let origin = this._window.document.nodePrincipal.origin;
+    // Only System Process should listen on 'nfc-p2p-user-accept' event
+    if (origin !== 'app://system.gaiamobile.org') {
+      return;
+    }
+    let self = this;
+    this._window.addEventListener("nfc-p2p-user-accept", function (event) {
+      let appID = appsService.getAppLocalIdByManifestURL(event.detail.manifestUrl);
+      // Notify Chrome process of User's acknowledgement
+      self._nfcContentHelper.notifyUserAcceptedP2P(self._window, appID);
+    });
+  },
+
+  checkP2PRegistration: function checkP2PRegistration(manifestUrl) {
+    // Get the AppID and pass it to ContentHelper
+    let appID = appsService.getAppLocalIdByManifestURL(manifestUrl);
+    return this._nfcContentHelper.checkP2PRegistration(this._window, appID);
   },
 
   getNFCTag: function getNFCTag(sessionToken) {
@@ -157,7 +184,7 @@ mozNfc.prototype = {
 
   getNFCPeer: function getNFCPeer(sessionToken) {
     let obj = new MozNFCPeer();
-    let nfcPeer = this._window.MozNFCTag._create(this._window, obj);
+    let nfcPeer = this._window.MozNFCPeer._create(this._window, obj);
     if (nfcPeer) {
       obj.initialize(this._window, sessionToken);
       return nfcPeer;
@@ -167,7 +194,78 @@ mozNfc.prototype = {
     }
   },
 
-  // get/set onpeerfound/lost onforegrounddispatch
+  // get/set onpeerready
+  get onpeerready() {
+    return this.__DOM_IMPL__.getEventHandler("onpeerready");
+  },
+
+  set onpeerready(handler) {
+    this.__DOM_IMPL__.setEventHandler("onpeerready", handler);
+  },
+
+  // get/set onpeerlost
+  get onpeerlost() {
+    return this.__DOM_IMPL__.getEventHandler("onpeerlost");
+  },
+
+  set onpeerlost(handler) {
+    this.__DOM_IMPL__.setEventHandler("onpeerlost", handler);
+  },
+
+  eventListenerWasAdded: function(evt) {
+    let eventType = this.getEventType(evt);
+    if (eventType == -1)
+      return;
+    this.registerTarget(eventType);
+  },
+
+  eventListenerWasRemoved: function(evt) {
+    let eventType = this.getEventType(evt);
+    if (eventType == -1)
+      return;
+    this.unregisterTarget(eventType);
+  },
+
+  registerTarget: function registerTarget(event) {
+    let self = this;
+    let appId = this._window.document.nodePrincipal.appId;
+    this._nfcContentHelper.registerTargetForPeerEvent(this._window, appId,
+      event, function(evt, sessionToken) {
+        self.session = sessionToken;
+        self.firePeerEvent(evt, sessionToken);
+    });
+  },
+
+  unregisterTarget: function unregisterTarget(event) {
+    let appId = this._window.document.nodePrincipal.appId;
+    this._nfcContentHelper.unregisterTargetForPeerEvent(this._window,
+                                                        appId, event);
+  },
+
+  getEventType: function getEventType(evt) {
+    let eventType = -1;
+    switch (evt) {
+      case 'peerready':
+        eventType = NFC_PEER_EVENT_READY;
+        break;
+      case 'peerlost':
+        eventType = NFC_PEER_EVENT_LOST;
+        break;
+      default:
+        break;
+    }
+    return eventType;
+  },
+
+  firePeerEvent: function firePeerEvent(evt, sessionToken) {
+    let peerEvent = (NFC_PEER_EVENT_READY === evt) ? "peerready" : "peerlost";
+    let detail = {
+      "detail":sessionToken
+    };
+    let event = new this._window.CustomEvent(peerEvent,
+      ObjectWrapper.wrap(detail, this._window));
+    this.__DOM_IMPL__.dispatchEvent(event);
+  },
 
   classID: Components.ID("{6ff2b290-2573-11e3-8224-0800200c9a66}"),
   contractID: "@mozilla.org/navigatorNfc;1",

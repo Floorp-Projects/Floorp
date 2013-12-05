@@ -1041,7 +1041,7 @@ public:
     SetGlobalSkiaCacheLimits(int aCount, int aSizeInBytes);
 #endif
 
-  static void PurgeTextureCaches();
+  static void PurgeAllCaches();
 
 #if defined(USE_SKIA) && defined(MOZ_ENABLE_FREETYPE)
   static TemporaryRef<GlyphRenderingOptions>
