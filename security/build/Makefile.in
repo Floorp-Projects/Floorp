@@ -386,6 +386,12 @@ nss3.def: $(NSS_STATIC_LIBS_DEFS) $(DEPTH)/db/sqlite3/src/sqlite-processed.def
 	mv $@.tmp $@
 endif
 
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+SDK_LIBRARY = $(IMPORT_LIBRARY)
+else
+SDK_LIBRARY = $(SHARED_LIBRARY)
+endif
+
 else
 $(NSS_DIST_DLL_FILES) $(NSS_SDK_LIB_FILES): libs-nss/lib
 endif # MOZ_FOLD_LIBS
