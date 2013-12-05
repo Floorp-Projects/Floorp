@@ -181,10 +181,13 @@ MobileMessageManager::Send(const JS::Value& aNumber_,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_STATE(sc);
 
-  JS::Rooted<JSObject*> global(aCx, sc->GetWindowProxy());
-  NS_ASSERTION(global, "Failed to get global object!");
+  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
 
-  JSAutoCompartment ac(aCx, global);
+  mozilla::Maybe<JSAutoCompartment> ac;
+  if (!global) {
+    global = sc->GetWindowProxy();
+    ac.construct(aCx, global);
+  }
 
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, NS_ERROR_FAILURE);
