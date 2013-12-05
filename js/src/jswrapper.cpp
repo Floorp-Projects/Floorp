@@ -689,6 +689,25 @@ SecurityWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper,
     return Base::defineProperty(cx, wrapper, id, desc);
 }
 
+template <class Base>
+bool
+SecurityWrapper<Base>::watch(JSContext *cx, HandleObject proxy,
+                             HandleId id, HandleObject callable)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
+    return false;
+}
+
+template <class Base>
+bool
+SecurityWrapper<Base>::unwatch(JSContext *cx, HandleObject proxy,
+                               HandleId id)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
+    return false;
+}
+
+
 template class js::SecurityWrapper<Wrapper>;
 template class js::SecurityWrapper<CrossCompartmentWrapper>;
 
