@@ -5524,7 +5524,6 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     if (op->getBoolOption("ion-compile-try-catch"))
         jit::js_IonOptions.compileTryCatch = true;
 
-#ifdef JS_THREADSAFE
     bool parallelCompilation = true;
     if (const char *str = op->getStringOption("ion-parallel-compile")) {
         if (strcmp(str, "off") == 0)
@@ -5532,8 +5531,9 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
         else if (strcmp(str, "on") != 0)
             return OptionFailure("ion-parallel-compile", str);
     }
+#ifdef JS_THREADSAFE
     cx->runtime()->setParallelIonCompilationEnabled(parallelCompilation);
-#endif /* JS_THREADSAFE */
+#endif
 
 #endif /* JS_ION */
 
@@ -5786,10 +5786,8 @@ main(int argc, char **argv, char **envp)
                                "  stupid: Simple block local register allocation")
         || !op.addBoolOption('\0', "ion-eager", "Always ion-compile methods (implies --baseline-eager)")
         || !op.addBoolOption('\0', "ion-compile-try-catch", "Ion-compile try-catch statements")
-#ifdef JS_THREADSAFE
         || !op.addStringOption('\0', "ion-parallel-compile", "on/off",
                                "Compile scripts off thread (default: off)")
-#endif
         || !op.addBoolOption('\0', "baseline", "Enable baseline compiler (default)")
         || !op.addBoolOption('\0', "no-baseline", "Disable baseline compiler")
         || !op.addBoolOption('\0', "baseline-eager", "Always baseline-compile methods")
