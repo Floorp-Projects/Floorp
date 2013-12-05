@@ -4255,13 +4255,6 @@ pref("layers.use-deprecated-textures", true);
 // requires off-main-thread compositing.
 pref("layers.async-video.enabled",false);
 
-// For now, only nightly users get OMTC on windows.
-// Windows OMTC riding the trains is blocked on bugs 913503 and 904890,
-// and general stability.
-#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
-pref("layers.offmainthreadcomposition.enabled", true);
-#endif
-
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.use-deprecated-textures", false);
