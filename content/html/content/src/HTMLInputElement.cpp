@@ -3347,6 +3347,18 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
           }
         }
       }
+    } else if (aVisitor.mEvent->message == NS_KEY_UP) {
+      WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
+      if ((keyEvent->keyCode == NS_VK_UP || keyEvent->keyCode == NS_VK_DOWN) &&
+          !(keyEvent->IsShift() || keyEvent->IsControl() ||
+            keyEvent->IsAlt() || keyEvent->IsMeta() ||
+            keyEvent->IsAltGraph() || keyEvent->IsFn() ||
+            keyEvent->IsOS())) {
+        // The up/down arrow key events fire 'change' events when released
+        // so that at the end of a series of up/down arrow key repeat events
+        // the value is considered to be "commited" by the user.
+        FireChangeEventIfNeeded();
+      }
     }
   }
 
@@ -3506,7 +3518,25 @@ HTMLInputElement::StopNumberControlSpinnerSpin()
 void
 HTMLInputElement::StepNumberControlForUserEvent(int32_t aDirection)
 {
-  ApplyStep(aDirection);
+  // We cannot call ApplyStep here because that eventually calls SetValue, and
+  // that sets mFocusedValue. We are handling a user action here, not a script
+  // action, so we do not want to reset mFocusedValue or else we will fail to
+  // dispatch 'change' events correctly.
+  Decimal value = GetValueAsDecimal();
+  if (value.isNaN()) {
+    value = 0;
+  }
+  Decimal step = GetStep();
+  if (step == kStepAny) {
+    step = GetDefaultStep();
+  }
+  MOZ_ASSERT(value.isFinite() && step.isFinite());
+  Decimal newValue = value + step * aDirection;
+
+  nsAutoString newVal;
+  ConvertNumberToString(newValue, newVal);
+  SetValueInternal(newVal, true, true);
+
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                        static_cast<nsIDOMHTMLInputElement*>(this),
                                        NS_LITERAL_STRING("input"), true,
