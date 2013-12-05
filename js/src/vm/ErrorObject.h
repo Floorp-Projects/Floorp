@@ -9,6 +9,8 @@
 
 #include "jsobj.h"
 
+#include "vm/Shape.h"
+
 struct JSExnPrivate;
 
 /*
@@ -29,8 +31,18 @@ class ErrorObject : public JSObject
     friend JSObject *
     ::js_InitExceptionClasses(JSContext *cx, JS::HandleObject global);
 
+    /* For access to assignInitialShape. */
+    friend bool
+    EmptyShape::ensureInitialCustomShape<ErrorObject>(ExclusiveContext *cx,
+                                                      Handle<ErrorObject*> obj);
+
+    /*
+     * Assign the initial error shape to the empty object.  (This shape does
+     * *not* include .message, which must be added separately if needed; see
+     * ErrorObject::init.)
+     */
     static Shape *
-    assignInitialShapeNoMessage(JSContext *cx, Handle<ErrorObject*> obj);
+    assignInitialShape(ExclusiveContext *cx, Handle<ErrorObject*> obj);
 
     static bool
     init(JSContext *cx, Handle<ErrorObject*> obj, JSExnType type,
