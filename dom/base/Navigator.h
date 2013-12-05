@@ -286,8 +286,6 @@ public:
 
   static bool HasInputMethodSupport(JSContext* /* unused */, JSObject* aGlobal);
 
-  static bool HasDataStoreSupport(JSContext* /* unused */, JSObject* aGlobal);
-
   nsPIDOMWindow* GetParentObject() const
   {
     return GetWindow();
