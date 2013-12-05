@@ -1739,13 +1739,6 @@ SetObjectMetadata(JSContext *cx, JS::HandleObject obj, JS::HandleObject metadata
 JS_FRIEND_API(JSObject *)
 GetObjectMetadata(JSObject *obj);
 
-JS_FRIEND_API(void)
-UnsafeDefineElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::HandleValue value);
-
-JS_FRIEND_API(bool)
-SliceSlowly(JSContext* cx, JS::HandleObject obj, JS::HandleObject receiver,
-            uint32_t begin, uint32_t end, JS::HandleObject result);
-
 /* ES5 8.12.8. */
 extern JS_FRIEND_API(bool)
 DefaultValue(JSContext *cx, JS::HandleObject obj, JSType hint, JS::MutableHandleValue vp);

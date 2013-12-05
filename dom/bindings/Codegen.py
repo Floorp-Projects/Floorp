@@ -7572,13 +7572,8 @@ class CGProxySpecialOperation(CGPerSignatureCall):
     """
     Base class for classes for calling an indexed or named special operation
     (don't use this directly, use the derived classes below).
-
-    If checkFound is False, will just assert that the prop is found instead of
-    checking that it is before wrapping the value.
     """
-    def __init__(self, descriptor, operation, checkFound=True):
-        self.checkFound = checkFound;
-
+    def __init__(self, descriptor, operation):
         nativeName = MakeNativeName(descriptor.binaryNames.get(operation, operation))
         operation = descriptor.operations[operation]
         assert len(operation.signatures()) == 1
@@ -7624,26 +7619,15 @@ class CGProxySpecialOperation(CGPerSignatureCall):
             return ""
 
         wrap = CGGeneric(wrapForType(self.returnType, self.descriptor, self.templateValues))
-        if self.checkFound:
-            wrap = CGIfWrapper(wrap, "found")
-        else:
-            wrap = CGList([CGGeneric("MOZ_ASSERT(found);"), wrap], "\n")
+        wrap = CGIfWrapper(wrap, "found")
         return "\n" + wrap.define()
 
 class CGProxyIndexedOperation(CGProxySpecialOperation):
     """
     Class to generate a call to an indexed operation.
-
-    If doUnwrap is False, the caller is responsible for making sure a variable
-    named 'self' holds the C++ object somewhere where the code we generate
-    will see it.
-
-    If checkFound is False, will just assert that the prop is found instead of
-    checking that it is before wrapping the value.
     """
-    def __init__(self, descriptor, name, doUnwrap=True, checkFound=True):
-        self.doUnwrap = doUnwrap
-        CGProxySpecialOperation.__init__(self, descriptor, name, checkFound)
+    def __init__(self, descriptor, name):
+        CGProxySpecialOperation.__init__(self, descriptor, name)
     def define(self):
         # Our first argument is the id we're getting.
         argName = self.arguments[0].identifier.name
@@ -7652,30 +7636,18 @@ class CGProxyIndexedOperation(CGProxySpecialOperation):
             setIndex = ""
         else:
             setIndex = "uint32_t %s = index;\n" % argName
-        if self.doUnwrap:
-            unwrap = "%s* self = UnwrapProxy(proxy);\n"
-        else:
-            unwrap = ""
-        return (setIndex + unwrap +
+        return (setIndex +
+                "%s* self = UnwrapProxy(proxy);\n" +
                 CGProxySpecialOperation.define(self))
 
 class CGProxyIndexedGetter(CGProxyIndexedOperation):
     """
     Class to generate a call to an indexed getter. If templateValues is not None
     the returned value will be wrapped with wrapForType using templateValues.
-
-    If doUnwrap is False, the caller is responsible for making sure a variable
-    named 'self' holds the C++ object somewhere where the code we generate
-    will see it.
-
-    If checkFound is False, will just assert that the prop is found instead of
-    checking that it is before wrapping the value.
     """
-    def __init__(self, descriptor, templateValues=None, doUnwrap=True,
-                 checkFound=True):
+    def __init__(self, descriptor, templateValues=None):
         self.templateValues = templateValues
-        CGProxyIndexedOperation.__init__(self, descriptor, 'IndexedGetter',
-                                         doUnwrap, checkFound)
+        CGProxyIndexedOperation.__init__(self, descriptor, 'IndexedGetter')
 
 class CGProxyIndexedPresenceChecker(CGProxyIndexedGetter):
     """
@@ -8312,55 +8284,65 @@ class CGDOMJSProxyHandler_finalize(ClassMethod):
         return ("%s self = UnwrapProxy(proxy);\n\n" % (self.descriptor.nativeType + "*") +
                 finalizeHook(self.descriptor, FINALIZE_HOOK_NAME, self.args[0].name).define())
 
-class CGDOMJSProxyHandler_slice(ClassMethod):
+class CGDOMJSProxyHandler_getElementIfPresent(ClassMethod):
     def __init__(self, descriptor):
-        assert descriptor.supportsIndexedProperties()
-
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'proxy'),
-                Argument('uint32_t', 'begin'),
-                Argument('uint32_t', 'end'),
-                Argument('JS::Handle<JSObject*>', 'array')]
-        ClassMethod.__init__(self, "slice", "bool", args)
+                Argument('JS::Handle<JSObject*>', 'receiver'),
+                Argument('uint32_t', 'index'),
+                Argument('JS::MutableHandle<JS::Value>', 'vp'),
+                Argument('bool*', 'present')]
+        ClassMethod.__init__(self, "getElementIfPresent", "bool", args)
         self.descriptor = descriptor
-
     def getBody(self):
-        # Just like getOwnPropertyNames we'll assume that we have no holes, so
-        # we have all properties from 0 to length.  If that ever changes
-        # (unlikely), we'll need to do something a bit more clever with how we
-        # forward on to our ancestor.
-        header = CGGeneric(
-            'JS::Rooted<JS::Value> temp(cx);\n'
-            'MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy),\n'
-            '           "Should not have a XrayWrapper here");\n'
-            '\n'
-            '%s* self = UnwrapProxy(proxy);\n'
-            'uint32_t length = self->Length();\n'
-            "// Compute the end of the indices we'll get ourselves\n"
-            'uint32_t ourEnd = std::max(begin, std::min(end, length));' %
-            self.descriptor.nativeType)
-
-        successCode = ("js::UnsafeDefineElement(cx, array, index - begin, temp);\n"
-                       "continue;")
-        templateValues = {'jsvalRef': 'temp', 'jsvalHandle': '&temp',
+        successCode = ("*present = found;\n"
+                       "return true;")
+        templateValues = {'jsvalRef': 'vp', 'jsvalHandle': 'vp',
                           'obj': 'proxy', 'successCode': successCode}
-        get = CGProxyIndexedGetter(self.descriptor, templateValues, False, False)
+        if self.descriptor.supportsIndexedProperties():
+            get = (CGProxyIndexedGetter(self.descriptor, templateValues).define() + "\n"
+                   "// We skip the expando object and any named getters if\n"
+                   "// there is an indexed getter.\n" +
+                   "\n") % (self.descriptor.nativeType)
+        else:
+            if self.descriptor.supportsNamedProperties():
+                get = CGProxyNamedGetter(self.descriptor, templateValues,
+                                         "UINT_TO_JSVAL(index)").define()
+            get += """
 
-        getOurElements = CGWrapper(
-            CGIndenter(get),
-            pre="for (uint32_t index = begin; index < ourEnd; ++index) {\n",
-            post="\n}")
+JS::Rooted<JSObject*> expando(cx, GetExpandoObject(proxy));
+if (expando) {
+  bool isPresent;
+  if (!JS_GetElementIfPresent(cx, expando, index, expando, vp, &isPresent)) {
+    return false;
+  }
+  if (isPresent) {
+    *present = true;
+    return true;
+  }
+}
+"""
 
-        getProtoElements = CGIfWrapper(
-            CGGeneric("JS::Rooted<JSObject*> proto(cx);\n"
-                      "if (!js::GetObjectProto(cx, proxy, &proto)) {\n"
-                      "  return false;\n"
-                      "}\n"
-                      "return js::SliceSlowly(cx, proto, proxy, ourEnd, end, array);"),
-            "end > ourEnd")
+        return """MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(proxy),
+             "Should not have a XrayWrapper here");
 
-        return CGList([header, getOurElements, getProtoElements,
-                       CGGeneric("return true;")], "\n\n").define();
+""" + get + """
+JS::Rooted<JSObject*> proto(cx);
+if (!js::GetObjectProto(cx, proxy, &proto)) {
+  return false;
+}
+if (proto) {
+  bool isPresent;
+  if (!JS_GetElementIfPresent(cx, proto, index, proxy, vp, &isPresent)) {
+    return false;
+  }
+  *present = isPresent;
+  return true;
+}
+
+*present = false;
+// Can't Debug_SetValueRangeToCrashOnTouch because it's not public
+return true;"""
 
 class CGDOMJSProxyHandler_getInstance(ClassMethod):
     def __init__(self):
@@ -8384,11 +8366,9 @@ class CGDOMJSProxyHandler(CGClass):
                    CGDOMJSProxyHandler_className(descriptor),
                    CGDOMJSProxyHandler_finalizeInBackground(descriptor),
                    CGDOMJSProxyHandler_finalize(descriptor),
+                   CGDOMJSProxyHandler_getElementIfPresent(descriptor),
                    CGDOMJSProxyHandler_getInstance(),
                    CGDOMJSProxyHandler_delete(descriptor)]
-        if descriptor.supportsIndexedProperties():
-            methods.append(CGDOMJSProxyHandler_slice(descriptor))
-
         CGClass.__init__(self, 'DOMProxyHandler',
                          bases=[ClassBase('mozilla::dom::DOMProxyHandler')],
                          constructors=constructors,

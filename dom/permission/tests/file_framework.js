@@ -169,11 +169,7 @@ function expandPermissions(aPerms) {
   aPerms.forEach(function(el) {
     var access = permTable[el].access ? "readwrite" : null;
     var expanded = SpecialPowers.unwrap(expand(el, access));
-    // COW arrays don't behave array-like enough, to allow
-    // using expanded.slice(0) here.
-    for (let i = 0; i < expanded.length; i++) {
-      perms.push(expanded[i]);
-    }
+    perms = perms.concat(expanded.slice(0));
   });
 
   return perms;
