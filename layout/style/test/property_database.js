@@ -3696,6 +3696,20 @@ var gCSSProperties = {
 		other_values: [ "non-scaling-stroke" ],
 		invalid_values: []
 	},
+	"align-content": {
+		domProp: "alignContent",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "stretch" ],
+		other_values: [
+			"flex-start",
+			"flex-end",
+			"center",
+			"space-between",
+			"space-around"
+		],
+		invalid_values: [ "abc", "30px", "0", "auto" ]
+	},
 	"align-items": {
 		domProp: "alignItems",
 		inherited: false,

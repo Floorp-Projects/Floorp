@@ -1272,6 +1272,7 @@ nsStylePosition::nsStylePosition(void)
   mMaxHeight.SetNoneValue();
   mFlexBasis.SetAutoValue();
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
+  mAlignContent = NS_STYLE_ALIGN_CONTENT_STRETCH;
   mAlignItems = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
   mAlignSelf = NS_STYLE_ALIGN_SELF_AUTO;
   mFlexDirection = NS_STYLE_FLEX_DIRECTION_ROW;
@@ -1340,9 +1341,23 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 
+
   // Changing justify-content on a flexbox might affect the positioning of its
   // children, but it won't affect any sizing.
   if (mJustifyContent != aOther.mJustifyContent) {
+    NS_UpdateHint(hint, nsChangeHint_NeedReflow);
+  }
+
+  // Properties that apply only to multi-line flex containers:
+  // 'align-content' can change the positioning & sizing of a multi-line flex
+  // container's children when there's extra space in the cross axis, but it
+  // shouldn't affect the container's own sizing.
+  //
+  // NOTE: If we get here, we know that mFlexWrap == aOther.mFlexWrap
+  // (otherwise, we would've returned earlier). So it doesn't matter which one
+  // of those we check to see if we're multi-line.
+  if (mFlexWrap != NS_STYLE_FLEX_WRAP_NOWRAP &&
+      mAlignContent != aOther.mAlignContent) {
     NS_UpdateHint(hint, nsChangeHint_NeedReflow);
   }
 
