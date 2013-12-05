@@ -1593,6 +1593,17 @@ void AsyncPanZoomController::UpdateZoomConstraints(bool aAllowZoom,
   mMaxZoom = (MAX_ZOOM > aMaxZoom ? aMaxZoom : MAX_ZOOM);
 }
 
+void
+AsyncPanZoomController::GetZoomConstraints(bool* aAllowZoom,
+                                           CSSToScreenScale* aMinZoom,
+                                           CSSToScreenScale* aMaxZoom)
+{
+  *aAllowZoom = mAllowZoom;
+  *aMinZoom = mMinZoom;
+  *aMaxZoom = mMaxZoom;
+}
+
+
 void AsyncPanZoomController::PostDelayedTask(Task* aTask, int aDelayMs) {
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {

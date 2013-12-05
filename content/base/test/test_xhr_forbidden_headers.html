@@ -70,7 +70,7 @@ function  startTest() {
   }
 
   // Try setting headers in privileged context
-  request = new XMLHttpRequest({mozAnon: false, mozSystem: true});
+  request = new XMLHttpRequest({mozAnon: true, mozSystem: true});
   request.open("GET", window.location.href);
   for (i = 0; i < headers.length; i++)
     request.setRequestHeader(headers[i], "test" + i);
