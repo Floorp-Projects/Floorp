@@ -20,6 +20,7 @@ Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://testing-common/services-common/bagheeraserver.js");
 Cu.import("resource://testing-common/services/metrics/mocks.jsm");
 Cu.import("resource://testing-common/services/healthreport/utils.jsm");
+Cu.import("resource://testing-common/AppData.jsm");
 
 
 const DUMMY_URI = "http://localhost:62013/";
