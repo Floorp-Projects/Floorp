@@ -1165,16 +1165,31 @@ private:
 // content-box.
 class MOZ_STACK_CLASS CrossAxisPositionTracker : public PositionTracker {
 public:
-  CrossAxisPositionTracker(nsFlexContainerFrame* aFlexContainerFrame,
-                           const FlexboxAxisTracker& aAxisTracker,
-                           const nsHTMLReflowState& aReflowState)
-    : PositionTracker(aAxisTracker.GetCrossAxis()) {}
+  CrossAxisPositionTracker(nsTArray<FlexLine>& aLines,
+                           uint8_t aAlignContent,
+                           nscoord aContentBoxCrossSize,
+                           bool aIsCrossSizeDefinite,
+                           const FlexboxAxisTracker& aAxisTracker);
 
-  // XXXdholbert This probably needs a ResolveStretchedLines() method,
-  // (which takes an array of SingleLineCrossAxisPositionTracker objects
-  // and distributes an equal amount of space to each one).
-  // For now, we just have Reflow directly call
-  // SingleLineCrossAxisPositionTracker::SetLineCrossSize().
+  // Advances past the packing space (if any) between two flex lines
+  void TraversePackingSpace();
+
+  // Advances past the given FlexLine
+  void TraverseLine(FlexLine& aLine) { mPosition += aLine.GetLineCrossSize(); }
+
+private:
+  // Redeclare the frame-related methods from PositionTracker as private with
+  // MOZ_DELETE, to be sure (at compile time) that no client code can invoke
+  // them. (Unlike the other PositionTracker derived classes, this class here
+  // deals with FlexLines, not with individual FlexItems or frames.)
+  void EnterMargin(const nsMargin& aMargin) MOZ_DELETE;
+  void ExitMargin(const nsMargin& aMargin) MOZ_DELETE;
+  void EnterChildFrame(nscoord aChildFrameSize) MOZ_DELETE;
+  void ExitChildFrame(nscoord aChildFrameSize) MOZ_DELETE;
+
+  nscoord  mPackingSpaceRemaining;
+  uint32_t mNumPackingSpacesRemaining;
+  uint8_t  mAlignContent;
 };
 
 // Utility class for managing our position along the cross axis, *within* a
@@ -1695,6 +1710,147 @@ MainAxisPositionTracker::TraversePackingSpace()
   if (mNumPackingSpacesRemaining) {
     MOZ_ASSERT(mJustifyContent == NS_STYLE_JUSTIFY_CONTENT_SPACE_BETWEEN ||
                mJustifyContent == NS_STYLE_JUSTIFY_CONTENT_SPACE_AROUND,
+               "mNumPackingSpacesRemaining only applies for "
+               "space-between/space-around");
+
+    MOZ_ASSERT(mPackingSpaceRemaining >= 0,
+               "ran out of packing space earlier than we expected");
+
+    // NOTE: This integer math will skew the distribution of remainder
+    // app-units towards the end, which is fine.
+    nscoord curPackingSpace =
+      mPackingSpaceRemaining / mNumPackingSpacesRemaining;
+
+    mPosition += curPackingSpace;
+    mNumPackingSpacesRemaining--;
+    mPackingSpaceRemaining -= curPackingSpace;
+  }
+}
+
+CrossAxisPositionTracker::
+  CrossAxisPositionTracker(nsTArray<FlexLine>& aLines,
+                           uint8_t aAlignContent,
+                           nscoord aContentBoxCrossSize,
+                           bool aIsCrossSizeDefinite,
+                           const FlexboxAxisTracker& aAxisTracker)
+  : PositionTracker(aAxisTracker.GetCrossAxis()),
+    mPackingSpaceRemaining(0),
+    mNumPackingSpacesRemaining(0),
+    mAlignContent(aAlignContent)
+{
+  MOZ_ASSERT(!aLines.IsEmpty(), "We should have at least 1 line");
+
+  if (aIsCrossSizeDefinite && aLines.Length() == 1) {
+    // "If the flex container has only a single line (even if it's a
+    // multi-line flex container) and has a definite cross size, the cross
+    // size of the flex line is the flex container's inner cross size."
+    // SOURCE: http://dev.w3.org/csswg/css-flexbox/#algo-line-break
+    // NOTE: This means (by definition) that there's no packing space, which
+    // means we don't need to be concerned with "align-conent" at all and we
+    // can return early. This is handy, because this is the usual case (for
+    // single-line flexbox).
+    aLines[0].SetLineCrossSize(aContentBoxCrossSize);
+    return;
+  }
+
+  // NOTE: The rest of this function should essentially match
+  // MainAxisPositionTracker's constructor, though with FlexLines instead of
+  // FlexItems, and with the additional value "stretch" (and of course with
+  // cross sizes instead of main sizes.)
+
+  // Figure out how much packing space we have (container's cross size minus
+  // all the lines' cross sizes)
+  mPackingSpaceRemaining = aContentBoxCrossSize;
+  for (uint32_t i = 0; i < aLines.Length(); i++) {
+    const FlexLine& line = aLines[i];
+    mPackingSpaceRemaining -= line.GetLineCrossSize();
+  }
+
+  // If packing space is negative, 'space-between' and 'stretch' behave like
+  // 'flex-start', and 'space-around' behaves like 'center'. In those cases,
+  // it's simplest to just pretend we have a different 'align-content' value
+  // and share code.
+  if (mPackingSpaceRemaining < 0) {
+    if (mAlignContent == NS_STYLE_ALIGN_CONTENT_SPACE_BETWEEN ||
+        mAlignContent == NS_STYLE_ALIGN_CONTENT_STRETCH) {
+      mAlignContent = NS_STYLE_ALIGN_CONTENT_FLEX_START;
+    } else if (mAlignContent == NS_STYLE_ALIGN_CONTENT_SPACE_AROUND) {
+      mAlignContent = NS_STYLE_ALIGN_CONTENT_CENTER;
+    }
+  }
+
+  // Figure out how much space we'll set aside for packing spaces, and advance
+  // past any leading packing-space.
+  if (mPackingSpaceRemaining != 0) {
+    switch (mAlignContent) {
+      case NS_STYLE_ALIGN_CONTENT_FLEX_START:
+        // All packing space should go at the end --> nothing to do here.
+        break;
+      case NS_STYLE_ALIGN_CONTENT_FLEX_END:
+        // All packing space goes at the beginning
+        mPosition += mPackingSpaceRemaining;
+        break;
+      case NS_STYLE_ALIGN_CONTENT_CENTER:
+        // Half the packing space goes at the beginning
+        mPosition += mPackingSpaceRemaining / 2;
+        break;
+      case NS_STYLE_ALIGN_CONTENT_SPACE_BETWEEN:
+        MOZ_ASSERT(mPackingSpaceRemaining >= 0,
+                   "negative packing space should make us use 'flex-start' "
+                   "instead of 'space-between'");
+        // 1 packing space between each flex line, no packing space at ends.
+        mNumPackingSpacesRemaining = aLines.Length() - 1;
+        break;
+      case NS_STYLE_ALIGN_CONTENT_SPACE_AROUND: {
+        MOZ_ASSERT(mPackingSpaceRemaining >= 0,
+                   "negative packing space should make us use 'center' "
+                   "instead of 'space-around'");
+        // 1 packing space between each flex line, plus half a packing space
+        // at beginning & end.  So our number of full packing-spaces is equal
+        // to the number of flex lines.
+        mNumPackingSpacesRemaining = aLines.Length();
+        // The edges (start/end) share one full packing space
+        nscoord totalEdgePackingSpace =
+          mPackingSpaceRemaining / mNumPackingSpacesRemaining;
+
+        // ...and we'll use half of that right now, at the start
+        mPosition += totalEdgePackingSpace / 2;
+        // ...but we need to subtract all of it right away, so that we won't
+        // hand out any of it to intermediate packing spaces.
+        mPackingSpaceRemaining -= totalEdgePackingSpace;
+        mNumPackingSpacesRemaining--;
+        break;
+      }
+      case NS_STYLE_ALIGN_CONTENT_STRETCH:
+        // Split space equally between the lines:
+        MOZ_ASSERT(mPackingSpaceRemaining > 0,
+                   "negative packing space should make us use 'flex-start' "
+                   "instead of 'stretch' (and we shouldn't bother with this "
+                   "code if we have 0 packing space)");
+
+        for (uint32_t i = 0; i < aLines.Length(); i++) {
+          FlexLine& line = aLines[i];
+          // Our share is the amount of space remaining, divided by the number
+          // of lines remainig. 
+          nscoord shareOfExtraSpace =
+            mPackingSpaceRemaining / (aLines.Length() - i);
+          nscoord newSize = line.GetLineCrossSize() + shareOfExtraSpace;
+          line.SetLineCrossSize(newSize);
+          mPackingSpaceRemaining -= shareOfExtraSpace;
+        }
+        break;
+      default:
+        MOZ_CRASH("Unexpected align-content value");
+    }
+  }
+}
+
+void
+CrossAxisPositionTracker::TraversePackingSpace()
+{
+  if (mNumPackingSpacesRemaining) {
+    MOZ_ASSERT(mAlignContent == NS_STYLE_ALIGN_CONTENT_SPACE_BETWEEN ||
+               mAlignContent == NS_STYLE_ALIGN_CONTENT_SPACE_AROUND,
                "mNumPackingSpacesRemaining only applies for "
                "space-between/space-around");
 
@@ -2520,16 +2676,6 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     lines[lineIdx].ComputeCrossSizeAndBaseline(axisTracker);
   }
 
-  // Set up state for cross-axis alignment, at a high level (outside the
-  // scope of a particular flex line)
-  CrossAxisPositionTracker
-    crossAxisPosnTracker(this, axisTracker, aReflowState);
-
-  // XXXdholbert Once we've got multi-line flexbox support: here, after we've
-  // computed the cross size of all lines, we need to check if if
-  // 'align-content' is 'stretch' -- if it is, we need to give each line an
-  // additional share of our flex container's desired cross-size. (if it's
-  // not NS_AUTOHEIGHT and there's any cross-size left over to distribute)
   bool isCrossSizeDefinite;
   const nscoord contentBoxCrossSize =
     ComputeFlexContainerCrossSize(aReflowState, axisTracker,
@@ -2537,18 +2683,11 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
                                   availableHeightForContent,
                                   &isCrossSizeDefinite, aStatus);
 
-  if (isCrossSizeDefinite) {
-    if (lines.Length() == 1) {
-      // "If the flex container has only a single line (even if it's a multi-line
-      // flex container) and has a definite cross size, the cross size of the
-      // flex line is the flex container's inner cross size."
-      lines[0].SetLineCrossSize(contentBoxCrossSize);
-    } else {
-      // XXXdholbert Distribute contentBoxCrossSize among (or around) lines,
-      // depending on 'align-content' value. (This will be handled in the later
-      // patch about honoring "align-content".)
-    }
-  }
+  // Set up state for cross-axis alignment, at a high level (outside the
+  // scope of a particular flex line)
+  CrossAxisPositionTracker
+    crossAxisPosnTracker(lines, aReflowState.mStylePosition->mAlignContent,
+                         contentBoxCrossSize, isCrossSizeDefinite, axisTracker);
 
   // Set the flex container's baseline, from its first line's baseline-aligned items.
   // (This might give us nscoord_MIN if we don't have any baseline-aligned
@@ -2573,6 +2712,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     // ===============================================
     line.PositionItemsInCrossAxis(crossAxisPosnTracker.GetPosition(),
                                   axisTracker);
+    crossAxisPosnTracker.TraverseLine(line);
+    crossAxisPosnTracker.TraversePackingSpace();
   }
 
   // Before giving each child a final reflow, calculate the origin of the
