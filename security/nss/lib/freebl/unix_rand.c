@@ -983,6 +983,8 @@ size_t RNG_FileUpdate(const char *fileName, size_t limit)
 	 * Moreover, we read into a buffer of size BUFSIZ, so buffered I/O
 	 * has no performance advantage. */
 	fd = fileno(file);
+	/* 'file' was just opened, so this should not fail. */
+	PORT_Assert(fd != -1);
 	while (limit > fileBytes) {
 	    bytes = PR_MIN(sizeof buffer, limit - fileBytes);
 	    bytes = read(fd, buffer, bytes);
@@ -1150,6 +1152,8 @@ size_t RNG_SystemRNG(void *dest, size_t maxLen)
      * EOF in unbuffered I/O mode on Android.
      */
     fd = fileno(file);
+    /* 'file' was just opened, so this should not fail. */
+    PORT_Assert(fd != -1);
     while (maxLen > fileBytes) {
 	bytes = maxLen - fileBytes;
 	bytes = read(fd, buffer, bytes);

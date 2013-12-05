@@ -1,6 +1,6 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.6 - September 16, 2013
+ libpng version 1.6.7 - November 14, 2013
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2013 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.6 - September 16, 2013
+ libpng versions 0.97, January 1998, through 1.6.7 - November 14, 2013
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2013 Glenn Randers-Pehrson
 
@@ -5015,10 +5015,11 @@ where "rp" indicates a "restricted pointer".
 
 Error detection in some chunks has improved; in particular the iCCP chunk
 reader now does pretty complete validation of the basic format.  Some bad
-profiles that were previously accepted are now rejected, in particular the
-very old broken Microsoft/HP sRGB profile.  The PNG spec requirement that
-only grayscale profiles may appear in images with color type 0 or 4 and that
-even if the image only contains gray pixels, only RGB profiles may appear
+profiles that were previously accepted are now accepted with a warning or
+rejected, depending upon the png_set_benign_errors() setting, in particular the
+very old broken Microsoft/HP 3144-byte sRGB profile.  The PNG spec requirement
+that only grayscale profiles may appear in images with color type 0 or 4 and
+that even if the image only contains gray pixels, only RGB profiles may appear
 in images with color type 2, 3, or 6, is now enforced.  The sRGB chunk
 is allowed to appear in images with any color type.
 
@@ -5027,7 +5028,9 @@ an empty language field or an empty translated keyword.  Both of these
 are allowed by the PNG specification, so these warnings are no longer issued.
 
 The library now issues an error if the application attempts to set a
-transform after it calls png_read_update_info().
+transform after it calls png_read_update_info() or if it attempts to call
+both png_read_update_info() and png_start_read_image() or to call either
+of them more than once.
 
 The default condition for benign_errors is now to treat benign errors as
 warnings while reading and as errors while writing.
@@ -5229,13 +5232,13 @@ Other rules can be inferred by inspecting the libpng source.
 
 XVI. Y2K Compliance in libpng
 
-September 16, 2013
+November 14, 2013
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.6 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.7 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer

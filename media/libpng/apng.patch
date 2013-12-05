@@ -278,7 +278,7 @@ Index: png.h
 ===================================================================
 --- png.h
 +++ png.h
-@@ -443,6 +443,10 @@
+@@ -448,6 +448,10 @@
  #   include "pnglibconf.h"
  #endif
  
@@ -289,7 +289,7 @@ Index: png.h
  #ifndef PNG_VERSION_INFO_ONLY
     /* Machine specific configuration. */
  #  include "pngconf.h"
-@@ -533,6 +537,17 @@
+@@ -538,6 +542,17 @@
   * See pngconf.h for base types that vary by machine/system
   */
  
@@ -307,7 +307,7 @@ Index: png.h
  /* This triggers a compiler error in png.c, if png.c and png.h
   * do not agree upon the version number.
   */
-@@ -852,6 +867,10 @@
+@@ -858,6 +873,10 @@
  #define PNG_INFO_sPLT 0x2000   /* ESR, 1.0.6 */
  #define PNG_INFO_sCAL 0x4000   /* ESR, 1.0.6 */
  #define PNG_INFO_IDAT 0x8000   /* ESR, 1.0.6 */
@@ -318,7 +318,7 @@ Index: png.h
  
  /* This is used for the transformation routines, as some of them
   * change these values for the row.  It also should enable using
-@@ -889,6 +908,10 @@
+@@ -895,6 +914,10 @@
  #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
  typedef PNG_CALLBACK(void, *png_progressive_info_ptr, (png_structp, png_infop));
  typedef PNG_CALLBACK(void, *png_progressive_end_ptr, (png_structp, png_infop));
@@ -329,7 +329,7 @@ Index: png.h
  
  /* The following callback receives png_uint_32 row_number, int pass for the
   * png_bytep data of the row.  When transforming an interlaced image the
-@@ -3292,6 +3315,75 @@
+@@ -3298,6 +3321,75 @@
   *  END OF HARDWARE OPTIONS
   ******************************************************************************/
  
@@ -405,7 +405,7 @@ Index: png.h
  /* Maintainer: Put new public prototypes here ^, in libpng.3, and project
   * defs, scripts/pnglibconf.h, and scripts/pnglibconf.h.prebuilt
   */
-@@ -3301,7 +3393,11 @@
+@@ -3307,7 +3399,11 @@
   * scripts/symbols.def as well.
   */
  #ifdef PNG_EXPORT_LAST_ORDINAL
@@ -421,7 +421,7 @@ Index: pngpriv.h
 ===================================================================
 --- pngpriv.h
 +++ pngpriv.h
-@@ -502,6 +502,10 @@
+@@ -544,6 +544,10 @@
  #define PNG_HAVE_CHUNK_AFTER_IDAT 0x2000 /* Have another chunk after IDAT */
                     /*             0x4000 (unused) */
  #define PNG_IS_READ_STRUCT        0x8000 /* Else is a write struct */
@@ -432,7 +432,7 @@ Index: pngpriv.h
  
  /* Flags for the transformations the PNG library does on the image data */
  #define PNG_BGR                 0x0001
-@@ -723,6 +727,16 @@
+@@ -765,6 +769,16 @@
  #define png_tRNS PNG_U32(116,  82,  78,  83)
  #define png_zTXt PNG_U32(122,  84,  88, 116)
  
@@ -449,7 +449,7 @@ Index: pngpriv.h
  /* The following will work on (signed char*) strings, whereas the get_uint_32
   * macro will fail on top-bit-set values because of the sign extension.
   */
-@@ -1516,6 +1530,49 @@
+@@ -1559,6 +1573,49 @@
      png_bytep row),PNG_EMPTY);
  #endif
  
@@ -1251,7 +1251,7 @@ Index: pngrutil.c
  #ifdef PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
  /* Utility function for png_handle_unknown; set up png_ptr::unknown_chunk */
  static int
-@@ -3952,6 +4130,38 @@
+@@ -3953,6 +4131,38 @@
           uInt avail_in;
           png_bytep buffer;
  
@@ -1290,7 +1290,7 @@ Index: pngrutil.c
           while (png_ptr->idat_size == 0)
           {
              png_crc_finish(png_ptr, 0);
-@@ -3963,6 +4173,7 @@
+@@ -3964,6 +4174,7 @@
              if (png_ptr->chunk_name != png_IDAT)
                 png_error(png_ptr, "Not enough image data");
           }
@@ -1298,7 +1298,7 @@ Index: pngrutil.c
  
           avail_in = png_ptr->IDAT_read_size;
  
-@@ -4026,6 +4237,9 @@
+@@ -4027,6 +4238,9 @@
  
           png_ptr->mode |= PNG_AFTER_IDAT;
           png_ptr->flags |= PNG_FLAG_ZSTREAM_ENDED;
@@ -1308,7 +1308,7 @@ Index: pngrutil.c
  
           if (png_ptr->zstream.avail_in > 0 || png_ptr->idat_size > 0)
              png_chunk_benign_error(png_ptr, "Extra compressed data");
-@@ -4471,4 +4685,80 @@
+@@ -4472,4 +4686,80 @@
  
     png_ptr->flags |= PNG_FLAG_ROW_INIT;
  }

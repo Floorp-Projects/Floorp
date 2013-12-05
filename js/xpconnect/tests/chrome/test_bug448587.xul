@@ -19,6 +19,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448587.xul
   <script type="application/javascript">
   <![CDATA[
 
+  // Bonus test - collaborate with test_bug361111.xul to make sure that
+  // flushPrefEnv is appropriately called.
+  ok(!SpecialPowers.Services.prefs.prefHasUserValue('testing.some_arbitrary_pref'),
+     "Pref shouldn't carry over from previous test!");
+
+
   /** Test for Bug 448587 **/
   const Cu = Components.utils;
   var sandbox = new Cu.Sandbox("about:blank");

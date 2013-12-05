@@ -58,6 +58,12 @@ class LDivPowTwoI : public LBinaryMath<0>
         setOperand(1, lhsCopy);
     }
 
+    LDivPowTwoI(const LAllocation &lhs, int32_t shift)
+      : shift_(shift)
+    {
+        setOperand(0, lhs);
+    }
+
     const LAllocation *numerator() {
         return getOperand(0);
     }

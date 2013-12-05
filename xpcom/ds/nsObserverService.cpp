@@ -175,7 +175,6 @@ NS_IMPL_ISUPPORTS_INHERITED2(
     nsObserverService)
 
 nsObserverService::nsObserverService() :
-    MemoryMultiReporter("observer-service"),
     mShuttingDown(false)
 {
 }

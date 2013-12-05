@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - multiframe containing-block element</title>
+    <link rel="author" title="Corey Ford" href="mailto:corey@coreyford.name">
+    <link rel="match" href="column-contain-2-ref.html">
+    <meta name="assert" content="Sticky positioning where the containing-block element has multiple frames and border/padding should stay contained within the union of the content boxes of all frames">
+    <style>
+      #scroll {
+        overflow: hidden;
+        height: 200px;
+        line-height: 1;
+      }
+      #columns {
+        -moz-column-count: 2;
+        column-count: 2;
+        -moz-column-rule: 1px solid black;
+        column-rule: 1px solid black;
+        height: 200px;
+        width: 200px;
+      }
+      #contain {
+        padding-bottom: 10px;
+        border-bottom: 10px solid gray;
+      }
+      #fill {
+        height: 370px;
+        background: blue;
+      }
+      #sticky {
+        position: sticky;
+        top: 195px;
+        width: 10px;
+        height: 10px;
+        background: black;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll">
+      <div id="columns">
+        <div id="contain">
+          <div id="sticky"></div>
+          <div id="fill"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
