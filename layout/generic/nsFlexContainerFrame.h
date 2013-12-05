@@ -106,7 +106,7 @@ protected:
 
   nscoord ComputeFlexContainerCrossSize(const nsHTMLReflowState& aReflowState,
                                         const FlexboxAxisTracker& aAxisTracker,
-                                        nscoord aLineCrossSize,
+                                        const nsTArray<FlexLine>& aLines,
                                         nscoord aAvailableHeightForContent,
                                         bool* aIsDefinite,
                                         nsReflowStatus& aStatus);
