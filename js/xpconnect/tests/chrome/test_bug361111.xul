@@ -22,7 +22,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=361111
     SimpleTest.waitForExplicitFinish();
     document.documentElement.setAttribute("onclick", "%");
     is(1, 1, "Good, setting a bogus onclick did not throw.");
-    SimpleTest.finish();
+
+    // Bonus test - make sure that flushPrefEnv is appropriately
+    // called at the end of the test. It would be nice if there were
+    // somewhere in the harness that this could live, but there isn't.
+    SpecialPowers.pushPrefEnv({set: [['testing.some_arbitrary_pref', true]]},
+                              function() { SimpleTest.finish(); });
 
   ]]></script>
 </window>
