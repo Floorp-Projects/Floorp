@@ -3439,6 +3439,16 @@ nsComputedDOMStyle::DoGetFlexShrink()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetFlexWrap()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StylePosition()->mFlexWrap,
+                                   nsCSSProps::kFlexWrapKTable));
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetOrder()
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
