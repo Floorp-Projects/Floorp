@@ -326,6 +326,12 @@ protected:
     bool                       mStillWalking;
 
     /**
+     * These two values control where persistent attributes get applied.
+     */
+    bool                           mRestrictPersistence;
+    nsTHashtable<nsStringHashKey>  mPersistenceIds;
+
+    /**
      * An array of style sheets, that will be added (preserving order) to the
      * document after all of them are loaded (in DoneWalking).
      */

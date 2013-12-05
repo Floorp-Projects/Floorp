@@ -139,6 +139,14 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
         mMarginsPinned = pin;
     }
 
+    public boolean areMarginsShown() {
+        final ImmutableViewportMetrics metrics = mTarget.getViewportMetrics();
+        return metrics.marginLeft != 0  ||
+               metrics.marginRight != 0 ||
+               metrics.marginTop != 0   ||
+               metrics.marginBottom != 0;
+    }
+
     /**
      * This function will scroll a margin down to zero, or up to the maximum
      * specified margin size and return the left-over delta.

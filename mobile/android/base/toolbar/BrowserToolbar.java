@@ -53,7 +53,6 @@ import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
@@ -102,6 +101,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     public interface OnStopEditingListener {
         public void onStopEditing();
+    }
+
+    private enum ForwardButtonAnimation {
+        SHOW,
+        HIDE
     }
 
     private View mUrlDisplayContainer;
@@ -275,9 +279,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         mTabs = (ShapedButton) findViewById(R.id.tabs);
         mTabsCounter = (TabCounter) findViewById(R.id.tabs_counter);
+
         mBack = (ImageButton) findViewById(R.id.back);
+        setButtonEnabled(mBack, false);
         mForward = (ImageButton) findViewById(R.id.forward);
-        mForward.setEnabled(false); // initialize the forward button to not be enabled
+        setButtonEnabled(mForward, false);
 
         mFavicon = (ImageButton) findViewById(R.id.favicon);
         if (Build.VERSION.SDK_INT >= 11) {
@@ -564,8 +570,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     break;
 
                 case START:
-                    updateBackButton(canDoBack(tab));
-                    updateForwardButton(canDoForward(tab));
+                    updateBackButton(tab);
+                    updateForwardButton(tab);
                     if (tab.getState() == Tab.STATE_LOADING) {
                         setProgressVisibility(true);
                     }
@@ -574,8 +580,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     break;
 
                 case STOP:
-                    updateBackButton(canDoBack(tab));
-                    updateForwardButton(canDoForward(tab));
+                    updateBackButton(tab);
+                    updateForwardButton(tab);
                     setProgressVisibility(false);
                     // Reset the title in case we haven't navigated to a new page yet.
                     updateTitle();
@@ -593,8 +599,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
                 case CLOSED:
                 case ADDED:
-                    updateBackButton(canDoBack(tab));
-                    updateForwardButton(canDoForward(tab));
+                    updateBackButton(tab);
+                    updateForwardButton(tab);
                     break;
 
                 case FAVICON:
@@ -1119,6 +1125,15 @@ public class BrowserToolbar extends GeckoRelativeLayout
         if (tab != null) {
             setButtonEnabled(mBack, canDoBack(tab));
             setButtonEnabled(mForward, canDoForward(tab));
+
+            // Once the editing mode is finished, we have to ensure that the
+            // forward button slides away if necessary. This is because we might
+            // have only disabled it (without hiding it) when the toolbar entered
+            // editing mode.
+            if (!mIsEditing) {
+                animateForwardButton(canDoForward(tab) ?
+                                     ForwardButtonAnimation.SHOW : ForwardButtonAnimation.HIDE);
+            }
         }
     }
 
@@ -1372,20 +1387,26 @@ public class BrowserToolbar extends GeckoRelativeLayout
         button.setEnabled(enabled);
     }
 
-    public void updateBackButton(boolean enabled) {
-        setButtonEnabled(mBack, enabled);
+    public void updateBackButton(Tab tab) {
+        setButtonEnabled(mBack, canDoBack(tab));
     }
 
-    public void updateForwardButton(final boolean enabled) {
-        if (mForward.isEnabled() == enabled)
+    private void animateForwardButton(final ForwardButtonAnimation animation) {
+        // If the forward button is not visible, we must be
+        // in the phone UI.
+        if (mForward.getVisibility() != View.VISIBLE) {
             return;
+        }
 
-        // Save the state on the forward button so that we can skip animations
-        // when there's nothing to change
-        setButtonEnabled(mForward, enabled);
+        final boolean showing = (animation == ForwardButtonAnimation.SHOW);
 
-        if (mForward.getVisibility() != View.VISIBLE)
+        // if the forward button's margin is non-zero, this means it has already
+        // been animated to be visible¸ and vice-versa.
+        MarginLayoutParams fwdParams = (MarginLayoutParams) mForward.getLayoutParams();
+        if ((fwdParams.leftMargin > mDefaultForwardMargin && showing) ||
+            (fwdParams.leftMargin == mDefaultForwardMargin && !showing)) {
             return;
+        }
 
         // We want the forward button to show immediately when switching tabs
         mForwardAnim = new PropertyAnimator(mSwitchingTabs ? 10 : FORWARD_ANIMATION_DURATION);
@@ -1394,15 +1415,15 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mForwardAnim.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() {
-                if (!enabled) {
+                if (!showing) {
                     // Set the margin before the transition when hiding the forward button. We
                     // have to do this so that the favicon isn't clipped during the transition
-                    ViewGroup.MarginLayoutParams layoutParams =
-                        (ViewGroup.MarginLayoutParams)mUrlDisplayContainer.getLayoutParams();
+                    MarginLayoutParams layoutParams =
+                        (MarginLayoutParams) mUrlDisplayContainer.getLayoutParams();
                     layoutParams.leftMargin = 0;
 
                     // Do the same on the URL edit container
-                    layoutParams = (ViewGroup.MarginLayoutParams) mUrlEditLayout.getLayoutParams();
+                    layoutParams = (MarginLayoutParams) mUrlEditLayout.getLayoutParams();
                     layoutParams.leftMargin = 0;
 
                     requestLayout();
@@ -1414,12 +1435,12 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
             @Override
             public void onPropertyAnimationEnd() {
-                if (enabled) {
-                    ViewGroup.MarginLayoutParams layoutParams =
-                        (ViewGroup.MarginLayoutParams)mUrlDisplayContainer.getLayoutParams();
+                if (showing) {
+                    MarginLayoutParams layoutParams =
+                        (MarginLayoutParams) mUrlDisplayContainer.getLayoutParams();
                     layoutParams.leftMargin = mUrlBarViewOffset;
 
-                    layoutParams = (ViewGroup.MarginLayoutParams) mUrlEditLayout.getLayoutParams();
+                    layoutParams = (MarginLayoutParams) mUrlEditLayout.getLayoutParams();
                     layoutParams.leftMargin = mUrlBarViewOffset;
 
                     ViewHelper.setTranslationX(mTitle, 0);
@@ -1427,9 +1448,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     ViewHelper.setTranslationX(mSiteSecurity, 0);
                 }
 
-                ViewGroup.MarginLayoutParams layoutParams =
-                    (ViewGroup.MarginLayoutParams)mForward.getLayoutParams();
-                layoutParams.leftMargin = mDefaultForwardMargin + (mForward.isEnabled() ? width : 0);
+                MarginLayoutParams layoutParams = (MarginLayoutParams) mForward.getLayoutParams();
+                layoutParams.leftMargin = mDefaultForwardMargin + (showing ? width : 0);
                 ViewHelper.setTranslationX(mForward, 0);
 
                 requestLayout();
@@ -1437,12 +1457,23 @@ public class BrowserToolbar extends GeckoRelativeLayout
             }
         });
 
-        prepareForwardAnimation(mForwardAnim, enabled, width);
+        prepareForwardAnimation(mForwardAnim, animation, width);
         mForwardAnim.start();
     }
 
-    private void prepareForwardAnimation(PropertyAnimator anim, boolean enabled, int width) {
-        if (!enabled) {
+    public void updateForwardButton(Tab tab) {
+        final boolean enabled = canDoForward(tab);
+        if (mForward.isEnabled() == enabled)
+            return;
+
+        // Save the state on the forward button so that we can skip animations
+        // when there's nothing to change
+        setButtonEnabled(mForward, enabled);
+        animateForwardButton(enabled ? ForwardButtonAnimation.SHOW : ForwardButtonAnimation.HIDE);
+    }
+
+    private void prepareForwardAnimation(PropertyAnimator anim, ForwardButtonAnimation animation, int width) {
+        if (animation == ForwardButtonAnimation.HIDE) {
             anim.attach(mForward,
                       PropertyAnimator.Property.TRANSLATION_X,
                       -width);
@@ -1510,8 +1541,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
             setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
             setSecurityMode(tab.getSecurityMode());
             setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
-            updateBackButton(canDoBack(tab));
-            updateForwardButton(canDoForward(tab));
+            updateBackButton(tab);
+            updateForwardButton(tab);
 
             final boolean isPrivate = tab.isPrivate();
             setPrivateMode(isPrivate);

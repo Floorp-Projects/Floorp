@@ -502,6 +502,16 @@ Seer::EnsureInitStorage()
                          ");\n"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = mDB->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS host_id_origin_index "
+                         "ON moz_hosts (id, origin);"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDB->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS host_origin_index "
+                         "ON moz_hosts (origin);"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // And this is the table that keeps track of the hosts for subresources of a
   // pageload.
   rv = mDB->ExecuteSimpleSQL(
@@ -518,6 +528,11 @@ Seer::EnsureInitStorage()
   rv = mDB->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS subhost_hid_origin_index "
                          "ON moz_subhosts (hid, origin);"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDB->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS subhost_id_index "
+                         "ON moz_subhosts (id);"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Table to keep track of how many times we've started up, and when the last
@@ -593,6 +608,11 @@ Seer::EnsureInitStorage()
                          ");\n"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = mDB->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS startup_page_uri_index "
+                         "ON moz_startup_pages (uri);"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // This table is similar to moz_hosts above, but uses full URIs instead of
   // hosts so that we can get more specific predictions for URIs that people
   // visit often (such as their email or social network home pages).
@@ -603,6 +623,16 @@ Seer::EnsureInitStorage()
                          "  loads INTEGER DEFAULT 0,\n"
                          "  last_load INTEGER DEFAULT 0\n"
                          ");\n"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDB->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS page_id_uri_index "
+                         "ON moz_pages (id, uri);"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDB->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS page_uri_index "
+                         "ON moz_pages (uri);"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // This table is similar to moz_subhosts above, but is instead related to
@@ -623,6 +653,11 @@ Seer::EnsureInitStorage()
                          "ON moz_subresources (pid, uri);"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = mDB->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS subresource_id_index "
+                         "ON moz_subresources (id);"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // This table keeps track of URIs and what they end up finally redirecting to
   // so we can handle redirects in a sane fashion, as well.
   rv = mDB->ExecuteSimpleSQL(
@@ -635,6 +670,16 @@ Seer::EnsureInitStorage()
                          "  last_hit INTEGER DEFAULT 0,\n"
                          "  FOREIGN KEY(pid) REFERENCES moz_pages(id)\n"
                          ");\n"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDB->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS redirect_pid_uri_index "
+                         "ON moz_redirects (pid, uri);"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mDB->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS redirect_id_index "
+                         "ON moz_redirects (id);"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

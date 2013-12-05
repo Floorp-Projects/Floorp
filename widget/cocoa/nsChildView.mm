@@ -910,7 +910,7 @@ NS_IMETHODIMP nsChildView::SetCursor(imgIContainer* aCursor,
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsBaseWidget::SetCursor(aCursor, aHotspotX, aHotspotY);
-  return [[nsCursorManager sharedInstance] setCursorWithImage:aCursor hotSpotX:aHotspotX hotSpotY:aHotspotY];
+  return [[nsCursorManager sharedInstance] setCursorWithImage:aCursor hotSpotX:aHotspotX hotSpotY:aHotspotY scaleFactor:BackingScaleFactor()];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

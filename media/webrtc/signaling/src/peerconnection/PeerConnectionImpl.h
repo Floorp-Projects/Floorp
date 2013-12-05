@@ -346,6 +346,15 @@ public:
     rv = RemoveStream(aMediaStream);
   }
 
+  NS_IMETHODIMP GetFingerprint(char** fingerprint);
+  void GetFingerprint(nsAString& fingerprint)
+  {
+    char *tmp;
+    GetFingerprint(&tmp);
+    fingerprint.AssignASCII(tmp);
+    delete[] tmp;
+  }
+
   NS_IMETHODIMP GetLocalDescription(char** aSDP);
 
   void GetLocalDescription(nsAString& aSDP)

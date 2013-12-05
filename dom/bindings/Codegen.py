@@ -3743,7 +3743,7 @@ for (uint32_t i = 0; i < length; ++i) {
         assert not isOptional
 
         typeName = CGDictionary.makeDictionaryName(type.inner)
-        if not isMember:
+        if not isMember and not isCallbackReturnValue:
             # Since we're not a member and not nullable or optional, no one will
             # see our real type, so we can do the fast version of the dictionary
             # that doesn't pre-initialize members.
@@ -3783,7 +3783,11 @@ for (uint32_t i = 0; i < length; ++i) {
 
         # Dictionary arguments that might contain traceable things need to get
         # traced
-        if not isMember and typeNeedsRooting(type):
+        if not isMember and isCallbackReturnValue:
+            # Go ahead and just convert directly into our actual return value
+            declType = CGWrapper(declType, post="&")
+            declArgs = "retval"
+        elif not isMember and typeNeedsRooting(type):
             declType = CGTemplatedType("RootedDictionary", declType);
             declArgs = "cx"
         else:
@@ -9708,6 +9712,15 @@ class CGNativeMember(ClassMethod):
                 result = CGTemplatedType("Nullable", result)
             return (result.define(), "%s()" % result.define(),
                     "return ${declName};")
+        if type.isDictionary():
+            if isMember:
+                # Only the first member of the tuple matters here, but return
+                # bogus values for the others in case someone decides to use
+                # them.
+                return CGDictionary.makeDictionaryName(type.inner), None, None
+            # In this case we convert directly into our outparam to start with
+            return "void", "", ""
+
         raise TypeError("Don't know how to declare return value for %s" %
                         type)
 
@@ -9716,7 +9729,7 @@ class CGNativeMember(ClassMethod):
         # Now the outparams
         if returnType.isDOMString():
             args.append(Argument("nsString&", "retval"))
-        if returnType.isByteString():
+        elif returnType.isByteString():
             args.append(Argument("nsCString&", "retval"))
         elif returnType.isSequence():
             nullable = returnType.nullable()
@@ -9728,6 +9741,14 @@ class CGNativeMember(ClassMethod):
             if nullable:
                 type = CGTemplatedType("Nullable", type)
             args.append(Argument("%s&" % type.define(), "retval"))
+        elif returnType.isDictionary():
+            nullable = returnType.nullable()
+            if nullable:
+                returnType = returnType.inner
+            dictType = CGGeneric(CGDictionary.makeDictionaryName(returnType.inner))
+            if nullable:
+                dictType = CGTemplatedType("Nullable", dictType)
+            args.append(Argument("%s&" % dictType.define(), "retval"))
         # And the ErrorResult
         if not 'infallible' in self.extendedAttrs:
             # Use aRv so it won't conflict with local vars named "rv"

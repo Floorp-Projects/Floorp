@@ -9,8 +9,6 @@ STL_FLAGS =
 # must link statically with the CRT; nptest isn't Gecko code
 USE_STATIC_LIBS = 1
 
-VPATH += $(topsrcdir)/build
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 include $(topsrcdir)/config/config.mk
 CXXFLAGS        += $(MOZ_QT_CFLAGS)
