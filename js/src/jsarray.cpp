@@ -2673,20 +2673,18 @@ js::array_concat(JSContext *cx, unsigned argc, Value *vp)
 static bool
 array_slice(JSContext *cx, unsigned argc, Value *vp)
 {
-    uint32_t length, begin, end, slot;
-    bool hole;
-
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
+    uint32_t length;
     if (!GetLengthProperty(cx, obj, &length))
         return false;
-    begin = 0;
-    end = length;
 
+    uint32_t begin = 0;
+    uint32_t end = length;
     if (args.length() > 0) {
         double d;
         if (!ToInteger(cx, args[0], &d))
@@ -2734,13 +2732,23 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
+    if (js::SliceOp op = obj->getOps()->slice) {
+        if (!op(cx, obj, begin, end, narr))
+            return false;
+
+        args.rval().setObject(*narr);
+        return true;
+    }
+
     RootedValue value(cx);
-    for (slot = begin; slot < end; slot++) {
+    for (uint32_t slot = begin; slot < end; slot++) {
+        bool hole;
         if (!JS_CHECK_OPERATION_LIMIT(cx) ||
-            !GetElement(cx, obj, slot, &hole, &value)) {
+            !GetElement(cx, obj, slot, &hole, &value))
+        {
             return false;
         }
-        if (!hole && !SetArrayElement(cx, narr, slot - begin, value))
+        if (!hole && !JSObject::defineElement(cx, narr, slot - begin, value))
             return false;
     }
 
