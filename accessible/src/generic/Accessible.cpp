@@ -231,7 +231,7 @@ Accessible::Name(nsString& aName)
     // for processing, the user agent shall choose the first one.
     for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
          childElm = childElm->GetNextSibling()) {
-      if (childElm->IsSVG(nsGkAtoms::title)) {
+      if (childElm->IsSVG(nsGkAtoms::desc)) {
         nsTextEquivUtils::AppendTextEquivFromContent(this, childElm, &aName);
         return eNameFromTooltip;
       }
@@ -294,7 +294,7 @@ Accessible::Description(nsString& aDescription)
       } else if (mContent->IsSVG()) {
         for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
              childElm = childElm->GetNextSibling()) {
-          if (childElm->IsSVG(nsGkAtoms::title)) {
+          if (childElm->IsSVG(nsGkAtoms::desc)) {
             nsTextEquivUtils::AppendTextEquivFromContent(this, childElm,
                                                          &aDescription);
             break;
@@ -2489,7 +2489,7 @@ Accessible::NativeName(nsString& aName)
     // for processing, the user agent shall choose the first one.
     for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
          childElm = childElm->GetNextSibling()) {
-      if (childElm->IsSVG(nsGkAtoms::desc)) {
+      if (childElm->IsSVG(nsGkAtoms::title)) {
         nsTextEquivUtils::AppendTextEquivFromContent(this, childElm, &aName);
         return eNameOK;
       }
