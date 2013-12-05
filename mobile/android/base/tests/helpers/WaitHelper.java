@@ -80,11 +80,16 @@ public final class WaitHelper {
             verifier.storeState();
         }
 
-        // Wait for the page load event.
+        // Wait for the page load and title changed event.
         final EventExpecter contentEventExpecter = sActions.expectGeckoEvent("DOMContentLoaded");
+        final EventExpecter titleEventExpecter = sActions.expectGeckoEvent("DOMTitleChanged");
+
         initiatingAction.run();
+
         contentEventExpecter.blockForEventDataWithTimeout(PAGE_LOAD_WAIT_MS);
         contentEventExpecter.unregisterListener();
+        titleEventExpecter.blockForEventDataWithTimeout(PAGE_LOAD_WAIT_MS);
+        titleEventExpecter.unregisterListener();
 
         // Verify remaining state has changed.
         for (final ChangeVerifier verifier : pageLoadVerifiers) {
