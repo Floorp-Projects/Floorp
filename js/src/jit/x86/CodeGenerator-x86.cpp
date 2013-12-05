@@ -464,7 +464,7 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic 
 
     OutOfLineLoadTypedArrayOutOfBounds *ool = nullptr;
     if (!mir->fallible()) {
-        ool = new OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out));
+        ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out));
         if (!addOutOfLineCode(ool))
             return false;
     }
@@ -516,7 +516,7 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     if (mir->skipBoundsCheck())
         return loadViewTypeElement(vt, srcAddr, out);
 
-    OutOfLineLoadTypedArrayOutOfBounds *ool = new OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out));
+    OutOfLineLoadTypedArrayOutOfBounds *ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out));
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -823,7 +823,7 @@ CodeGeneratorX86::visitTruncateDToInt32(LTruncateDToInt32 *ins)
     FloatRegister input = ToFloatRegister(ins->input());
     Register output = ToRegister(ins->output());
 
-    OutOfLineTruncate *ool = new OutOfLineTruncate(ins);
+    OutOfLineTruncate *ool = new(alloc()) OutOfLineTruncate(ins);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -838,7 +838,7 @@ CodeGeneratorX86::visitTruncateFToInt32(LTruncateFToInt32 *ins)
     FloatRegister input = ToFloatRegister(ins->input());
     Register output = ToRegister(ins->output());
 
-    OutOfLineTruncateFloat32 *ool = new OutOfLineTruncateFloat32(ins);
+    OutOfLineTruncateFloat32 *ool = new(alloc()) OutOfLineTruncateFloat32(ins);
     if (!addOutOfLineCode(ool))
         return false;
 
