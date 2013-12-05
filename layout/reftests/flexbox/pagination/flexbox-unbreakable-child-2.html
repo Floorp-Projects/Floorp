@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!-- Testcase for how we fragment a flex container with several children in a
+     multi-line vertical flexbox.
+-->
+<html>
+  <head>
+    <style>
+    .multicol {
+      height: 40px;
+      width: 100px;
+      -moz-column-width: 60px;
+      -moz-column-fill: auto;
+      border: 2px solid purple;
+      margin-bottom: 15px; /* (just for spacing between testcases) */
+    }
+    .flexContainer {
+      display: flex;
+      flex-direction: column;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      background: yellow;
+      border: 1px dashed black;
+    }
+    .item {
+      width: 40px;
+      height: 15px;
+      border: 1px dotted teal;
+      margin: 1px;
+      font: 10px;
+    }
+    </style>
+  </head>
+  <body>
+    <!-- auto-height container: -->
+    <div class="multicol">
+      <div class="flexContainer">
+        <div class="item">1</div>
+        <div class="item">2</div>
+        <div class="item">3</div>
+      </div>
+    </div>
+
+    <!-- auto-height container, with enough children that our last flex line
+         overflows (in the cross axis) -->
+    <!-- XXXdholbert Ultimately (in bug 939897 probably) we should push the
+         overflowing flex line to a continuation of the flex container -->
+    <div class="multicol">
+      <div class="flexContainer">
+        <div class="item">1</div>
+        <div class="item">2</div>
+        <div class="item">3</div>
+        <div class="item">4</div>
+        <div class="item">5</div>
+      </div>
+    </div>
+
+    <!-- fixed-height container-->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 70px">
+        <div class="item">1</div>
+        <div class="item">2</div>
+        <div class="item">3</div>
+      </div>
+    </div>
+
+    <!-- fixed-height container, with enough children that our last flex line
+         overflows (in the cross axis) -->
+    <!-- XXXdholbert Ultimately (in bug 939897 probably) we should push the
+         overflowing flex line to a continuation of the flex container -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 70px">
+        <div class="item">1</div>
+        <div class="item">2</div>
+        <div class="item">3</div>
+        <div class="item">4</div>
+        <div class="item">5</div>
+      </div>
+    </div>
+  </body>
+</html>
