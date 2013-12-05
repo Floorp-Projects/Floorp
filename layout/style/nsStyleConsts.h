@@ -403,6 +403,14 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_DISPLAY_INLINE_FLEX            30
 
 // See nsStylePosition
+#define NS_STYLE_ALIGN_CONTENT_FLEX_START       0
+#define NS_STYLE_ALIGN_CONTENT_FLEX_END         1
+#define NS_STYLE_ALIGN_CONTENT_CENTER           2
+#define NS_STYLE_ALIGN_CONTENT_SPACE_BETWEEN    3
+#define NS_STYLE_ALIGN_CONTENT_SPACE_AROUND     4
+#define NS_STYLE_ALIGN_CONTENT_STRETCH          5
+
+// See nsStylePosition
 #define NS_STYLE_ALIGN_ITEMS_FLEX_START         0
 #define NS_STYLE_ALIGN_ITEMS_FLEX_END           1
 #define NS_STYLE_ALIGN_ITEMS_CENTER             2

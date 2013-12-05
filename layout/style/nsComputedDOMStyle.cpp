@@ -3356,6 +3356,16 @@ nsComputedDOMStyle::DoGetBorderImageRepeat()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetAlignContent()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StylePosition()->mAlignContent,
+                                   nsCSSProps::kAlignContentKTable));
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetAlignItems()
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;

@@ -39,6 +39,7 @@
  * Implementations of CSS styles *
 \* ***************************** */
 
+COMPUTED_STYLE_PROP(align_content,                   AlignContent)
 COMPUTED_STYLE_PROP(align_items,                   AlignItems)
 COMPUTED_STYLE_PROP(align_self,                    AlignSelf)
 //// COMPUTED_STYLE_PROP(animation,                Animation)
