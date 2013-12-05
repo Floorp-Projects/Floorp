@@ -80,7 +80,8 @@ public:
 
   virtual uint8_t* GetBuffer() const MOZ_OVERRIDE;
 
-  virtual bool AllocateForSurface(gfx::IntSize aSize) MOZ_OVERRIDE;
+  virtual bool AllocateForSurface(gfx::IntSize aSize,
+                                  TextureAllocationFlags aFlags = ALLOC_DEFAULT) MOZ_OVERRIDE;
 
   virtual bool AllocateForYCbCr(gfx::IntSize aYSize,
                                 gfx::IntSize aCbCrSize,
