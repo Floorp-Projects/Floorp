@@ -68,10 +68,9 @@
     let frame = document.getElementById("amFrame");
     frame.focus();
 
-    let aIsVerbose = true;
     let doc = frame.contentWindow.document;
     let verbosity = doc.getElementById("verbose");
-    verbosity.checked = aIsVerbose;
+    verbosity.checked = true;
 
     function getFilePath(aFilename) {
       let file = Cc["@mozilla.org/file/directory_service;1"]
