@@ -37,7 +37,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(5b4b2632-cee4-11e2-8e84-c7506188709b)]
+[scriptable, uuid(b733194f-6751-4876-a444-bca4ba3f2fcb)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -181,4 +181,9 @@ interface nsIHttpChannelInternal : nsISupports
      */
     attribute boolean loadUnblocked;
 
+    /**
+     * Get value of the URI passed to nsIHttpChannel.redirectTo() if any.
+     * May return null when redirectTo() has not been called.
+     */
+    readonly attribute nsIURI apiRedirectToURI;
 };
