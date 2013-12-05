@@ -939,7 +939,7 @@ num_toExponential_impl(JSContext *cx, CallArgs args)
 
     JSDToStrMode mode;
     int precision;
-    if (args.length() == 0) {
+    if (!args.hasDefined(0)) {
         mode = DTOSTR_STANDARD_EXPONENTIAL;
         precision = 0;
     } else {
@@ -975,18 +975,11 @@ num_toPrecision_impl(JSContext *cx, CallArgs args)
         return true;
     }
 
-    JSDToStrMode mode;
     int precision;
-    if (args.length() == 0) {
-        mode = DTOSTR_STANDARD;
-        precision = 0;
-    } else {
-        mode = DTOSTR_PRECISION;
-        if (!ComputePrecisionInRange(cx, 1, MAX_PRECISION, args[0], &precision))
-            return false;
-    }
+    if (!ComputePrecisionInRange(cx, 1, MAX_PRECISION, args[0], &precision))
+        return false;
 
-    return DToStrResult(cx, d, mode, precision, args);
+    return DToStrResult(cx, d, DTOSTR_PRECISION, precision, args);
 }
 
 static bool

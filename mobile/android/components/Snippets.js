@@ -14,8 +14,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm
 XPCOMUtils.defineLazyGetter(this, "gEncoder", function() { return new gChromeWin.TextEncoder(); });
 XPCOMUtils.defineLazyGetter(this, "gDecoder", function() { return new gChromeWin.TextDecoder(); });
 
-const SNIPPETS_ENABLED = Services.prefs.getBoolPref("browser.snippets.enabled");
-
 // URL to fetch snippets, in the urlFormatter service format.
 const SNIPPETS_UPDATE_URL_PREF = "browser.snippets.updateUrl";
 
@@ -300,7 +298,7 @@ Snippets.prototype = {
   classID: Components.ID("{a78d7e59-b558-4321-a3d6-dffe2f1e76dd}"),
 
   observe: function(subject, topic, data) {
-    if (!SNIPPETS_ENABLED) {
+    if (!Services.prefs.getBoolPref("browser.snippets.enabled")) {
       return;
     }
     switch(topic) {
@@ -312,7 +310,7 @@ Snippets.prototype = {
 
   // By default, this timer fires once every 24 hours. See the "browser.snippets.updateInterval" pref.
   notify: function(timer) {
-    if (!SNIPPETS_ENABLED) {
+    if (!Services.prefs.getBoolPref("browser.snippets.enabled")) {
       return;
     }
     update();

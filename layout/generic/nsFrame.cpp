@@ -993,6 +993,16 @@ nsIFrame::GetPaddingRect() const
   return GetPaddingRectRelativeToSelf() + GetPosition();
 }
 
+nsRect
+nsIFrame::GetMarginRectRelativeToSelf() const
+{
+  nsMargin m = GetUsedMargin();
+  ApplySkipSides(m);
+  nsRect r(0, 0, mRect.width, mRect.height);
+  r.Inflate(m);
+  return r;
+}
+
 bool
 nsIFrame::IsTransformed() const
 {

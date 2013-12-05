@@ -42,9 +42,13 @@ public:
                                 FrameMetrics& aMetrics);
 
     /* Applies the scroll parameters from the given FrameMetrics object to the subframe
-       corresponding to the given content object. */
+       corresponding to the given content object. If tiled thebes
+       layers are enabled, this will align the displayport to tile boundaries.
+       Setting the scroll position can cause some small adjustments to be made
+       to the actual scroll position. aMetrics' display port and scroll position
+       will be updated with any modifications made. */
     static void UpdateSubFrame(nsIContent* aContent,
-                               const FrameMetrics& aMetrics);
+                               FrameMetrics& aMetrics);
 
     /* Get the DOMWindowUtils for the window corresponding to the given document. */
     static already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(const nsIDocument* aDoc);

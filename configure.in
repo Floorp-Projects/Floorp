@@ -51,7 +51,7 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
-MOZPNG=10606
+MOZPNG=10607
 NSPR_VERSION=4
 NSS_VERSION=3
 
@@ -3785,6 +3785,8 @@ if test "$MOZ_LINKER" = 1 -a "$MOZ_NATIVE_ZLIB" != 1; then
     AC_MSG_ERROR([Custom dynamic linker requires --with-system-zlib])
 fi
 
+MOZ_PNG_ARM_NEON=
+
 if test -z "$SKIP_LIBRARY_CHECKS"; then
 dnl system BZIP2 Support
 dnl ========================================================
@@ -3859,13 +3861,9 @@ if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$MOZ_NATIVE_PNG" = 1; then
     MOZ_PNG_LIBS="-L${PNG_DIR}/lib ${MOZ_PNG_LIBS}"
 fi
 
-MOZ_PNG_ARM_NEON=
-if test "$MOZ_NATIVE_PNG" != 1 -a "$CPU_ARCH" = "arm" ; then
-    MOZ_PNG_ARM_NEON=1
-fi
-AC_SUBST(MOZ_PNG_ARM_NEON)
-
 fi # SKIP_LIBRARY_CHECKS
+
+AC_SUBST(MOZ_PNG_ARM_NEON)
 
 dnl system HunSpell Support
 dnl ========================================================
@@ -9127,6 +9125,9 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     AC_OUTPUT_SUBDIRS(nsprpub)
 
     # .. and restore them
+    unset CFLAGS
+    unset CPPFLAGS
+    unset LDFLAGS
     CFLAGS="$_SAVE_CFLAGS"
     CPPFLAGS="$_SAVE_CPPFLAGS"
     LDFLAGS="$_SAVE_LDFLAGS"

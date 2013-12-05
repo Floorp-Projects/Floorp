@@ -1297,8 +1297,7 @@ XrayToString(JSContext *cx, unsigned argc, Value *vp)
 
     result.AppendASCII(end);
 
-    JSString *str = JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>(result.get()),
-                                        result.Length());
+    JSString *str = JS_NewUCStringCopyN(cx, result.get(), result.Length());
     if (!str)
         return false;
 

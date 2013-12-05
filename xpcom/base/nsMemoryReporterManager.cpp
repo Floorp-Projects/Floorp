@@ -17,7 +17,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIGlobalObject.h"
-#if defined(XP_LINUX)
+#if defined(XP_LINUX) || defined(__FreeBSD__)
 #include "nsMemoryInfoDumper.h"
 #endif
 #include "mozilla/Attributes.h"
@@ -799,9 +799,7 @@ namespace dmd {
 class DMDReporter MOZ_FINAL : public MemoryMultiReporter
 {
 public:
-  DMDReporter()
-    : MemoryMultiReporter("dmd")
-  {}
+  DMDReporter() {}
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData)
@@ -900,7 +898,7 @@ nsMemoryReporterManager::Init()
     RegisterStrongReporter(new mozilla::dmd::DMDReporter());
 #endif
 
-#if defined(XP_LINUX)
+#if defined(XP_LINUX) || defined(__FreeBSD__)
     nsMemoryInfoDumper::Initialize();
 #endif
 

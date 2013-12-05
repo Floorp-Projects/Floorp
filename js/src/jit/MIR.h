@@ -389,7 +389,7 @@ class MDefinition : public MNode
     bool earlyAbortCheck();
 
     // Compute an absolute or symbolic range for the value of this node.
-    virtual void computeRange() {
+    virtual void computeRange(TempAllocator &alloc) {
     }
 
     // Collect information from the pre-truncated ranges.
@@ -991,7 +991,7 @@ class MConstant : public MNullaryInstruction
         return true;
     }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
     bool truncate();
 
     bool canProduceFloat32() const;
@@ -1512,14 +1512,18 @@ class MNewPar : public MUnaryInstruction
 {
     CompilerRootObject templateObject_;
 
-  public:
-    INSTRUCTION_HEADER(NewPar);
-
     MNewPar(MDefinition *slice, JSObject *templateObject)
       : MUnaryInstruction(slice),
         templateObject_(templateObject)
     {
         setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewPar);
+
+    static MNewPar *New(TempAllocator &alloc, MDefinition *slice, JSObject *templateObject) {
+        return new(alloc) MNewPar(slice, templateObject);
     }
 
     MDefinition *forkJoinSlice() const {
@@ -1552,9 +1556,6 @@ class MNewDerivedTypedObject
   private:
     TypeRepresentationSet set_;
 
-  public:
-    INSTRUCTION_HEADER(NewDerivedTypedObject);
-
     MNewDerivedTypedObject(TypeRepresentationSet set,
                            MDefinition *type,
                            MDefinition *owner,
@@ -1564,6 +1565,15 @@ class MNewDerivedTypedObject
     {
         setMovable();
         setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewDerivedTypedObject);
+
+    static MNewDerivedTypedObject *New(TempAllocator &alloc, TypeRepresentationSet set,
+                                       MDefinition *type, MDefinition *owner, MDefinition *offset)
+    {
+        return new(alloc) MNewDerivedTypedObject(set, type, owner, offset);
     }
 
     TypeRepresentationSet set() const {
@@ -1764,8 +1774,9 @@ class MPrepareCall : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(PrepareCall)
 
-    MPrepareCall()
-    { }
+    static MPrepareCall *New(TempAllocator &alloc) {
+        return new(alloc) MPrepareCall();
+    }
 
     // Get the vector size for the upcoming call by looking at the call.
     uint32_t argc() const;
@@ -2899,7 +2910,7 @@ class MToDouble
         return AliasSet::None();
     }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
     bool truncate();
     bool isOperandTruncated(size_t index) const;
 
@@ -2961,7 +2972,7 @@ class MToFloat32
         return AliasSet::None();
     }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 
     bool canConsumeFloat32() const { return true; }
     bool canProduceFloat32() const { return true; }
@@ -3068,7 +3079,7 @@ class MToInt32
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 
 #ifdef DEBUG
     bool isConsistentFloat32Use() const { return true; }
@@ -3104,7 +3115,7 @@ class MTruncateToInt32 : public MUnaryInstruction
         return AliasSet::None();
     }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
     bool isOperandTruncated(size_t index) const;
 # ifdef DEBUG
     bool isConsistentFloat32Use() const {
@@ -3173,7 +3184,7 @@ class MBitNot
             return AliasSet::Store(AliasSet::Any);
         return AliasSet::None();
     }
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 class MTypeOf
@@ -3300,7 +3311,7 @@ class MBitAnd : public MBinaryBitwiseInstruction
     MDefinition *foldIfEqual() {
         return getOperand(0); // x & x => x;
     }
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 class MBitOr : public MBinaryBitwiseInstruction
@@ -3323,7 +3334,7 @@ class MBitOr : public MBinaryBitwiseInstruction
     MDefinition *foldIfEqual() {
         return getOperand(0); // x | x => x
     }
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 class MBitXor : public MBinaryBitwiseInstruction
@@ -3346,7 +3357,7 @@ class MBitXor : public MBinaryBitwiseInstruction
     MDefinition *foldIfEqual() {
         return this;
     }
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 class MShiftInstruction
@@ -3384,7 +3395,7 @@ class MLsh : public MShiftInstruction
         return getOperand(0);
     }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 class MRsh : public MShiftInstruction
@@ -3403,7 +3414,7 @@ class MRsh : public MShiftInstruction
         // x >> 0 => x
         return getOperand(0);
     }
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 class MUrsh : public MShiftInstruction
@@ -3436,7 +3447,7 @@ class MUrsh : public MShiftInstruction
 
     bool fallible() const;
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
     void collectRangeInfoPreTrunc();
 };
 
@@ -3546,7 +3557,7 @@ class MMinMax
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 class MAbs
@@ -3590,7 +3601,7 @@ class MAbs
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
     bool isFloat32Commutative() const { return true; }
     void trySpecializeFloat32(TempAllocator &alloc);
 };
@@ -3630,7 +3641,7 @@ class MSqrt
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 
     bool isFloat32Commutative() const { return true; }
     void trySpecializeFloat32(TempAllocator &alloc);
@@ -3830,7 +3841,7 @@ class MRandom : public MNullaryInstruction
         return true;
     }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 class MMathFunction
@@ -3920,7 +3931,7 @@ class MMathFunction
                || function_ == ASin || function_ == ACos || function_ == Floor;
     }
     void trySpecializeFloat32(TempAllocator &alloc);
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 class MAdd : public MBinaryArithInstruction
@@ -3958,7 +3969,7 @@ class MAdd : public MBinaryArithInstruction
     }
 
     bool fallible() const;
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
     bool truncate();
     bool isOperandTruncated(size_t index) const;
 };
@@ -3994,7 +4005,7 @@ class MSub : public MBinaryArithInstruction
     bool isFloat32Commutative() const { return true; }
 
     bool fallible() const;
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
     bool truncate();
     bool isOperandTruncated(size_t index) const;
 };
@@ -4083,7 +4094,7 @@ class MMul : public MBinaryArithInstruction
 
     bool isFloat32Commutative() const { return true; }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
     bool truncate();
     bool isOperandTruncated(size_t index) const;
 
@@ -4095,6 +4106,7 @@ class MDiv : public MBinaryArithInstruction
     bool canBeNegativeZero_;
     bool canBeNegativeOverflow_;
     bool canBeDivideByZero_;
+    bool canBeNegativeDividend_;
     bool unsigned_;
 
     MDiv(MDefinition *left, MDefinition *right, MIRType type)
@@ -4102,6 +4114,7 @@ class MDiv : public MBinaryArithInstruction
         canBeNegativeZero_(true),
         canBeNegativeOverflow_(true),
         canBeDivideByZero_(true),
+        canBeNegativeDividend_(true),
         unsigned_(false)
     {
         if (type != MIRType_Value)
@@ -4150,15 +4163,20 @@ class MDiv : public MBinaryArithInstruction
         return canBeDivideByZero_;
     }
 
+    bool canBeNegativeDividend() const {
+        return canBeNegativeDividend_;
+    }
+
     bool isUnsigned() const {
         return unsigned_;
     }
 
     bool isFloat32Commutative() const { return true; }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
     bool fallible() const;
     bool truncate();
+    void collectRangeInfoPreTrunc();
 };
 
 class MMod : public MBinaryArithInstruction
@@ -4210,7 +4228,7 @@ class MMod : public MBinaryArithInstruction
 
     bool fallible() const;
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
     bool truncate();
     void collectRangeInfoPreTrunc();
 };
@@ -4309,7 +4327,7 @@ class MCharCodeAt
         return AliasSet::None();
     }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 class MFromCharCode
@@ -4520,7 +4538,7 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 
     MDefinition *operandIfRedundant() {
         // If this phi is redundant (e.g., phi(a,a) or b=phi(a,this)),
@@ -4582,7 +4600,7 @@ class MBeta : public MUnaryInstruction
         return AliasSet::None();
     }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 // MIR representation of a Value on the OSR StackFrame.
@@ -4689,21 +4707,29 @@ class MCheckOverRecursed : public MNullaryInstruction
 {
   public:
     INSTRUCTION_HEADER(CheckOverRecursed)
+
+    static MCheckOverRecursed *New(TempAllocator &alloc) {
+        return new(alloc) MCheckOverRecursed();
+    }
 };
 
 // Check the current frame for over-recursion past the global stack limit.
 // Uses the per-thread recursion limit.
 class MCheckOverRecursedPar : public MUnaryInstruction
 {
-  public:
-    INSTRUCTION_HEADER(CheckOverRecursedPar);
-
     MCheckOverRecursedPar(MDefinition *slice)
       : MUnaryInstruction(slice)
     {
         setResultType(MIRType_None);
         setGuard();
         setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(CheckOverRecursedPar);
+
+    static MCheckOverRecursedPar *New(TempAllocator &alloc, MDefinition *slice) {
+        return new(alloc) MCheckOverRecursedPar(slice);
     }
 
     MDefinition *forkJoinSlice() const {
@@ -4714,15 +4740,19 @@ class MCheckOverRecursedPar : public MUnaryInstruction
 // Check for an interrupt (or rendezvous) in parallel mode.
 class MCheckInterruptPar : public MUnaryInstruction
 {
-  public:
-    INSTRUCTION_HEADER(CheckInterruptPar);
-
     MCheckInterruptPar(MDefinition *slice)
       : MUnaryInstruction(slice)
     {
         setResultType(MIRType_None);
         setGuard();
         setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(CheckInterruptPar);
+
+    static MCheckInterruptPar *New(TempAllocator &alloc, MDefinition *slice) {
+        return new(alloc) MCheckInterruptPar(slice);
     }
 
     MDefinition *forkJoinSlice() const {
@@ -5227,7 +5257,7 @@ class MInitializedLength
         return AliasSet::Load(AliasSet::ObjectFields);
     }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 // Store to the initialized length in an elements header. Note the input is an
@@ -5262,7 +5292,6 @@ class MSetInitializedLength
 class MArrayLength
   : public MUnaryInstruction
 {
-  public:
     MArrayLength(MDefinition *elements)
       : MUnaryInstruction(elements)
     {
@@ -5270,7 +5299,12 @@ class MArrayLength
         setMovable();
     }
 
+  public:
     INSTRUCTION_HEADER(ArrayLength)
+
+    static MArrayLength *New(TempAllocator &alloc, MDefinition *elements) {
+        return new(alloc) MArrayLength(elements);
+    }
 
     MDefinition *elements() const {
         return getOperand(0);
@@ -5282,7 +5316,7 @@ class MArrayLength
         return AliasSet::Load(AliasSet::ObjectFields);
     }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 // Store to the length in an elements header. Note the input is an *index*, one
@@ -5347,7 +5381,7 @@ class MTypedArrayLength
         return AliasSet::None();
     }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 // Load a typed array's elements vector.
@@ -5539,7 +5573,7 @@ class MBoundsCheck
     virtual AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 // Bailout if index < minimum.
@@ -5898,7 +5932,7 @@ class MArrayPush
     AliasSet getAliasSet() const {
         return AliasSet::Store(AliasSet::Element | AliasSet::ObjectFields);
     }
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 // Array.prototype.concat on two dense arrays.
@@ -5990,7 +6024,7 @@ class MLoadTypedArrayElement
 
     void printOpcode(FILE *fp) const;
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 
     bool canProduceFloat32() const { return arrayType_ == ScalarTypeRepresentation::TYPE_FLOAT32; }
 };
@@ -6098,7 +6132,7 @@ class MLoadTypedArrayElementStatic
         return this;
     }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
     bool truncate();
     bool canProduceFloat32() const { return typedArray_->type() == ScalarTypeRepresentation::TYPE_FLOAT32; }
 };
@@ -6348,7 +6382,7 @@ class MClampToUint8
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 class MLoadFixedSlot
@@ -8008,7 +8042,7 @@ class MStringLength
         return AliasSet::None();
     }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 // Inlined version of Math.floor().
@@ -8016,7 +8050,6 @@ class MFloor
   : public MUnaryInstruction,
     public FloatingPointPolicy<0>
 {
-  public:
     MFloor(MDefinition *num)
       : MUnaryInstruction(num)
     {
@@ -8025,7 +8058,12 @@ class MFloor
         setMovable();
     }
 
+  public:
     INSTRUCTION_HEADER(Floor)
+
+    static MFloor *New(TempAllocator &alloc, MDefinition *num) {
+        return new(alloc) MFloor(num);
+    }
 
     MDefinition *num() const {
         return getOperand(0);
@@ -8052,7 +8090,6 @@ class MRound
   : public MUnaryInstruction,
     public DoublePolicy<0>
 {
-  public:
     MRound(MDefinition *num)
       : MUnaryInstruction(num)
     {
@@ -8060,7 +8097,12 @@ class MRound
         setMovable();
     }
 
+  public:
     INSTRUCTION_HEADER(Round)
+
+    static MRound *New(TempAllocator &alloc, MDefinition *num) {
+        return new(alloc) MRound(num);
+    }
 
     MDefinition *num() const {
         return getOperand(0);
@@ -8181,14 +8223,18 @@ class MIn
   : public MBinaryInstruction,
     public MixPolicy<BoxPolicy<0>, ObjectPolicy<1> >
 {
-  public:
     MIn(MDefinition *key, MDefinition *obj)
       : MBinaryInstruction(key, obj)
     {
         setResultType(MIRType_Boolean);
     }
 
+  public:
     INSTRUCTION_HEADER(In)
+
+    static MIn *New(TempAllocator &alloc, MDefinition *key, MDefinition *obj) {
+        return new(alloc) MIn(key, obj);
+    }
 
     TypePolicy *typePolicy() {
         return this;
@@ -8266,7 +8312,6 @@ class MInstanceOf
 {
     CompilerRootObject protoObj_;
 
-  public:
     MInstanceOf(MDefinition *obj, JSObject *proto)
       : MUnaryInstruction(obj),
         protoObj_(proto)
@@ -8274,7 +8319,12 @@ class MInstanceOf
         setResultType(MIRType_Boolean);
     }
 
+  public:
     INSTRUCTION_HEADER(InstanceOf)
+
+    static MInstanceOf *New(TempAllocator &alloc, MDefinition *obj, JSObject *proto) {
+        return new(alloc) MInstanceOf(obj, proto);
+    }
 
     TypePolicy *typePolicy() {
         return this;
@@ -8290,14 +8340,18 @@ class MCallInstanceOf
   : public MBinaryInstruction,
     public MixPolicy<BoxPolicy<0>, ObjectPolicy<1> >
 {
-  public:
     MCallInstanceOf(MDefinition *obj, MDefinition *proto)
       : MBinaryInstruction(obj, proto)
     {
         setResultType(MIRType_Boolean);
     }
 
+  public:
     INSTRUCTION_HEADER(CallInstanceOf)
+
+    static MCallInstanceOf *New(TempAllocator &alloc, MDefinition *obj, MDefinition *proto) {
+        return new(alloc) MCallInstanceOf(obj, proto);
+    }
 
     TypePolicy *typePolicy() {
         return this;
@@ -8327,7 +8381,7 @@ class MArgumentsLength : public MNullaryInstruction
         return AliasSet::None();
    }
 
-    void computeRange();
+    void computeRange(TempAllocator &alloc);
 };
 
 // This MIR instruction is used to get an argument from the actual arguments.
@@ -8908,14 +8962,20 @@ class MNewDenseArrayPar : public MBinaryInstruction
 {
     CompilerRootObject templateObject_;
 
-  public:
-    INSTRUCTION_HEADER(NewDenseArrayPar);
-
     MNewDenseArrayPar(MDefinition *slice, MDefinition *length, JSObject *templateObject)
       : MBinaryInstruction(slice, length),
         templateObject_(templateObject)
     {
         setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewDenseArrayPar);
+
+    static MNewDenseArrayPar *New(TempAllocator &alloc, MDefinition *slice, MDefinition *length,
+                                  JSObject *templateObject)
+    {
+        return new(alloc) MNewDenseArrayPar(slice, length, templateObject);
     }
 
     MDefinition *forkJoinSlice() const {
@@ -8938,7 +8998,7 @@ class MNewDenseArrayPar : public MBinaryInstruction
 // A resume point contains the information needed to reconstruct the interpreter
 // state from a position in the JIT. See the big comment near resumeAfter() in
 // IonBuilder.cpp.
-class MResumePoint : public MNode, public InlineForwardListNode<MResumePoint>
+class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResumePoint>
 {
   public:
     enum Mode {

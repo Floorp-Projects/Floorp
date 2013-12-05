@@ -127,7 +127,7 @@ Dump(JSContext *cx, unsigned argc, Value *vp)
 #endif
 #ifdef XP_WIN
     if (IsDebuggerPresent()) {
-      OutputDebugStringW(reinterpret_cast<const PRUnichar*>(chars));
+      OutputDebugStringW(reinterpret_cast<const wchar_t*>(chars));
     }
 #endif
     fputs(utf8str.get(), stdout);

@@ -3,18 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-VPATH = \
-  @srcdir@ \
-  @srcdir@/srtp \
-  @srcdir@/crypto \
-  @srcdir@/crypto/cipher \
-  @srcdir@/crypto/hash \
-  @srcdir@/crypto/kernel \
-  @srcdir@/crypto/math \
-  @srcdir@/crypto/replay \
-  @srcdir@/crypto/rng \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef GNU_CC
