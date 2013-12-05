@@ -1094,6 +1094,20 @@ protected:
   Decimal GetDefaultStep() const;
 
   /**
+   * Sets the aValue outparam to the value that this input would take if
+   * someone tries to step aStep steps and this input's value would change as
+   * a result. Leaves aValue untouched if this inputs value would not change
+   * (e.g. already at max, and asking for the next step up).
+   *
+   * Negative aStep means step down, positive means step up.
+   *
+   * Returns NS_OK or else the error values that should be thrown if this call
+   * was initiated by a stepUp()/stepDown() call from script under conditions
+   * that such a call should throw.
+   */
+  nsresult GetValueIfStepped(int32_t aStep, Decimal* aNextStep);
+
+  /**
    * Apply a step change from stepUp or stepDown by multiplying aStep by the
    * current step value.
    *
