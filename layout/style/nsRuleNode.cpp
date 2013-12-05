@@ -3109,6 +3109,8 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
       allowZoom = true;
     }
     aFont->EnableZoom(aPresContext, allowZoom);
+  } else {
+    allowZoom = true;
   }
 
   // mLanguage must be set before before any of the CalcLengthWith calls
@@ -3571,14 +3573,18 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
 
   nscoord fontSize = aFont->mSize;
 
-  // enforce the user' specified minimum font-size on the value that we expose
-  // (but don't change font-size:0, since that would unhide hidden text)
+  // Enforce the user's specified minimum font-size on the value that we
+  // expose (but don't change font-size:0, since that would unhide hidden
+  // text).
+  //
+  // We don't do this for SVG text, which we can tell from the value of
+  // -x-text-zoom.
   if (fontSize > 0) {
     nscoord minFontSize = aPresContext->MinFontSize(aFont->mLanguage);
     if (minFontSize < 0) {
       minFontSize = 0;
     }
-    if (fontSize < minFontSize && !aPresContext->IsChrome()) {
+    if (fontSize < minFontSize && !aPresContext->IsChrome() && allowZoom) {
       // override the minimum font-size constraint
       fontSize = minFontSize;
     }
