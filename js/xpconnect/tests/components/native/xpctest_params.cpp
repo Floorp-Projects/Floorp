@@ -167,7 +167,7 @@ NS_IMETHODIMP nsXPCTestParams::TestWstring(const PRUnichar * a, PRUnichar * *b, 
 
     // XPCOM ownership rules dictate that overwritten inout params must be callee-freed.
     // See https://developer.mozilla.org/en/XPIDL
-    NS_Free(const_cast<PRUnichar*>(bprime.get()));
+    NS_Free((void*)bprime.get());
 
     return NS_OK;
 }

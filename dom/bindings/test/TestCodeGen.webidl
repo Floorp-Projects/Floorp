@@ -297,6 +297,8 @@ interface TestInterface {
   // Sequence types
   [Cached, Pure]
   readonly attribute sequence<long> readonlySequence;
+  [Cached, Pure]
+  readonly attribute sequence<Dict> readonlySequenceOfDictionaries;
   sequence<long> receiveSequence();
   sequence<long>? receiveNullableSequence();
   sequence<long?> receiveSequenceOfNullableInts();

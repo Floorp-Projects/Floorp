@@ -20,9 +20,7 @@ GLBlitHelper::GLBlitHelper(GLContext* gl)
     , mTex2DRectBlit_FragShader(0)
     , mTex2DBlit_Program(0)
     , mTex2DRectBlit_Program(0)
-    , mTexBlit_UseDrawNotCopy(false)
 {
-    mTexBlit_UseDrawNotCopy = Preferences::GetBool("gl.blit-draw-not-copy", false);
 }
 
 GLBlitHelper::~GLBlitHelper()
@@ -489,15 +487,6 @@ GLBlitHelper::BlitTextureToTexture(GLuint srcTex, GLuint destTex,
 {
     MOZ_ASSERT(mGL->fIsTexture(srcTex));
     MOZ_ASSERT(mGL->fIsTexture(destTex));
-
-    if (mTexBlit_UseDrawNotCopy) {
-        // Draw is texture->framebuffer
-        ScopedFramebufferForTexture destWrapper(mGL, destTex, destTarget);
-
-        BlitTextureToFramebuffer(srcTex, destWrapper.FB(),
-                                 srcSize, destSize, srcTarget);
-        return;
-    }
 
     // Generally, just use the CopyTexSubImage path
     ScopedFramebufferForTexture srcWrapper(mGL, srcTex, srcTarget);

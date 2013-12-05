@@ -440,7 +440,7 @@ class CodeGeneratorShared : public LInstructionVisitor
 };
 
 // An out-of-line path is generated at the end of the function.
-class OutOfLineCode : public TempObject
+class OutOfLineCode : public OldTempObject
 {
     Label entry_;
     Label rejoin_;

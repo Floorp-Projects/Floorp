@@ -14,8 +14,6 @@
 
 include $(topsrcdir)/config/config.mk
 
-VPATH += $(srcdir)
-
 # Tree to build and analyze, defaulting to the current tree
 TARGET_JSOBJDIR ?= $(MOZ_BUILD_ROOT)
 

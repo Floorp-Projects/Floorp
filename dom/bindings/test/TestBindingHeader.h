@@ -341,6 +341,7 @@ public:
 
   // Sequence types
   void GetReadonlySequence(nsTArray<int32_t>&);
+  void GetReadonlySequenceOfDictionaries(JSContext*, nsTArray<Dict>&);
   void ReceiveSequence(nsTArray<int32_t>&);
   void ReceiveNullableSequence(Nullable< nsTArray<int32_t> >&);
   void ReceiveSequenceOfNullableInts(nsTArray< Nullable<int32_t> >&);

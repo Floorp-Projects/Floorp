@@ -596,7 +596,7 @@ bool
 ParallelSafetyVisitor::replaceWithNewPar(MInstruction *newInstruction,
                                          JSObject *templateObject)
 {
-    replace(newInstruction, new MNewPar(forkJoinSlice(), templateObject));
+    replace(newInstruction, MNewPar::New(alloc(), forkJoinSlice(), templateObject));
     return true;
 }
 
@@ -739,13 +739,13 @@ ParallelSafetyVisitor::visitCall(MCall *ins)
 bool
 ParallelSafetyVisitor::visitCheckOverRecursed(MCheckOverRecursed *ins)
 {
-    return replace(ins, new MCheckOverRecursedPar(forkJoinSlice()));
+    return replace(ins, MCheckOverRecursedPar::New(alloc(), forkJoinSlice()));
 }
 
 bool
 ParallelSafetyVisitor::visitInterruptCheck(MInterruptCheck *ins)
 {
-    return replace(ins, new MCheckInterruptPar(forkJoinSlice()));
+    return replace(ins, MCheckInterruptPar::New(alloc(), forkJoinSlice()));
 }
 
 /////////////////////////////////////////////////////////////////////////////
