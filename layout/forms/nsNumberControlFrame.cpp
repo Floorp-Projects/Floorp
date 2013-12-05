@@ -14,6 +14,7 @@
 #include "nsGkAtoms.h"
 #include "nsINodeInfo.h"
 #include "nsINameSpaceManager.h"
+#include "nsThemeConstants.h"
 #include "mozilla/BasicEvents.h"
 #include "nsContentUtils.h"
 #include "nsContentCreatorFunctions.h"
