@@ -148,7 +148,7 @@ LIRGeneratorX86Shared::lowerDivI(MDiv *div)
             LDivPowTwoI *lir;
             if (!div->canBeNegativeDividend()) {
                 // Numerator is unsigned, so does not need adjusting.
-                lir = new LDivPowTwoI(lhs, shift);
+                lir = new LDivPowTwoI(lhs, lhs, shift);
             } else {
                 // Numerator is signed, and needs adjusting, and an extra
                 // lhs copy register is needed.
