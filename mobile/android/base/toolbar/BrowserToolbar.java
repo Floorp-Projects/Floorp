@@ -1118,6 +1118,14 @@ public class BrowserToolbar extends GeckoRelativeLayout
         if (tab != null) {
             setButtonEnabled(mBack, canDoBack(tab));
             setButtonEnabled(mForward, canDoForward(tab));
+
+            // Once the editing mode is finished, we have to ensure that the
+            // forward button slides away if necessary. This is because we might
+            // have only disabled it (without hiding it) when the toolbar entered
+            // editing mode.
+            if (!mIsEditing) {
+                animateForwardButton(canDoForward(tab));
+            }
         }
     }
 
