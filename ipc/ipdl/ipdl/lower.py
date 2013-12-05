@@ -3812,6 +3812,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                                static=1))
             clonemanagees.addstmt(otherstmt)
 
+        # Keep track of types created with an INOUT ctor. We need to call
+        # Register() or RegisterID() for them depending on the side the managee
+        # is created.
+        inoutCtorTypes = []
+        for msg in p.messageDecls:
+            msgtype = msg.decl.type
+            if msgtype.isCtor() and msgtype.isInout():
+                inoutCtorTypes.append(msgtype.constructedType())
+
         actorvar = ExprVar('actor')
         for managee in p.managesStmts:
             block = StmtBlock()
@@ -3827,6 +3836,19 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 init=Param(Type.UINT32, ivar.name, ExprLiteral.ZERO),
                 cond=ExprBinary(ivar, '<', _callCxxArrayLength(kidsvar)),
                 update=ExprPrefixUnop(ivar, '++'))
+
+            registerstmt = StmtExpr(ExprCall(p.registerIDMethod(),
+                                    args=[actorvar, _actorId(actorvar)]))
+            # Implement if (actor id > 0) then Register() else RegisterID()
+            if manageeipdltype in inoutCtorTypes:
+                registerif = StmtIf(ExprBinary(_actorId(actorvar),
+                                               '>',
+                                               ExprLiteral.ZERO))
+                registerif.addifstmt(StmtExpr(ExprCall(p.registerMethod(),
+                                                       args=[actorvar])))
+                registerif.addelsestmt(registerstmt)
+                registerstmt = registerif
+
             forstmt.addstmts([
                 StmtExpr(ExprAssn(
                     actorvar,
@@ -3847,8 +3869,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     p.channelForSubactor())),
                 StmtExpr(ExprAssn(_actorState(actorvar), _actorState(ithkid))),
                 StmtExpr(_callCxxArrayInsertSorted(manageearray, actorvar)),
-                StmtExpr(ExprCall(p.registerIDMethod(),
-                                  args=[actorvar, _actorId(actorvar)])),
+                registerstmt,
                 StmtExpr(ExprCall(
                     ExprSelect(actorvar,
                                '->',
