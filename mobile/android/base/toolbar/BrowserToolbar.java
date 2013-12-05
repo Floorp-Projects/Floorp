@@ -274,9 +274,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         mTabs = (ShapedButton) findViewById(R.id.tabs);
         mTabsCounter = (TabCounter) findViewById(R.id.tabs_counter);
+
         mBack = (ImageButton) findViewById(R.id.back);
+        setButtonEnabled(mBack, false);
         mForward = (ImageButton) findViewById(R.id.forward);
-        mForward.setEnabled(false); // initialize the forward button to not be enabled
+        setButtonEnabled(mForward, false);
 
         mFavicon = (ImageButton) findViewById(R.id.favicon);
         if (Build.VERSION.SDK_INT >= 11) {
@@ -563,8 +565,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     break;
 
                 case START:
-                    updateBackButton(canDoBack(tab));
-                    updateForwardButton(canDoForward(tab));
+                    updateBackButton(tab);
+                    updateForwardButton(tab);
                     if (tab.getState() == Tab.STATE_LOADING) {
                         setProgressVisibility(true);
                     }
@@ -573,8 +575,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     break;
 
                 case STOP:
-                    updateBackButton(canDoBack(tab));
-                    updateForwardButton(canDoForward(tab));
+                    updateBackButton(tab);
+                    updateForwardButton(tab);
                     setProgressVisibility(false);
                     // Reset the title in case we haven't navigated to a new page yet.
                     updateTitle();
@@ -592,8 +594,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
                 case CLOSED:
                 case ADDED:
-                    updateBackButton(canDoBack(tab));
-                    updateForwardButton(canDoForward(tab));
+                    updateBackButton(tab);
+                    updateForwardButton(tab);
                     break;
 
                 case FAVICON:
@@ -1379,8 +1381,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
         button.setEnabled(enabled);
     }
 
-    public void updateBackButton(boolean enabled) {
-        setButtonEnabled(mBack, enabled);
+    public void updateBackButton(Tab tab) {
+        setButtonEnabled(mBack, canDoBack(tab));
     }
 
     private void animateForwardButton(final boolean visible) {
@@ -1448,7 +1450,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mForwardAnim.start();
     }
 
-    public void updateForwardButton(boolean enabled) {
+    public void updateForwardButton(Tab tab) {
+        final boolean enabled = canDoForward(tab);
         if (mForward.isEnabled() == enabled)
             return;
 
@@ -1527,8 +1530,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
             setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
             setSecurityMode(tab.getSecurityMode());
             setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
-            updateBackButton(canDoBack(tab));
-            updateForwardButton(canDoForward(tab));
+            updateBackButton(tab);
+            updateForwardButton(tab);
 
             final boolean isPrivate = tab.isPrivate();
             setPrivateMode(isPrivate);
