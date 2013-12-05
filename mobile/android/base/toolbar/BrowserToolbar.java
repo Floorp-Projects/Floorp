@@ -103,6 +103,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
         public void onStopEditing();
     }
 
+    private enum ForwardButtonAnimation {
+        SHOW,
+        HIDE
+    }
+
     private View mUrlDisplayContainer;
     private ToolbarEditLayout mUrlEditLayout;
     private View mUrlBarEntry;
@@ -1126,7 +1131,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
             // have only disabled it (without hiding it) when the toolbar entered
             // editing mode.
             if (!mIsEditing) {
-                animateForwardButton(canDoForward(tab));
+                animateForwardButton(canDoForward(tab) ?
+                                     ForwardButtonAnimation.SHOW : ForwardButtonAnimation.HIDE);
             }
         }
     }
@@ -1385,17 +1391,20 @@ public class BrowserToolbar extends GeckoRelativeLayout
         setButtonEnabled(mBack, canDoBack(tab));
     }
 
-    private void animateForwardButton(final boolean visible) {
+    private void animateForwardButton(final ForwardButtonAnimation animation) {
         // If the forward button is not visible, we must be
         // in the phone UI.
-        if (mForward.getVisibility() != View.VISIBLE)
+        if (mForward.getVisibility() != View.VISIBLE) {
             return;
+        }
+
+        final boolean showing = (animation == ForwardButtonAnimation.SHOW);
 
         // if the forward button's margin is non-zero, this means it has already
         // been animated to be visible¸ and vice-versa.
         MarginLayoutParams fwdParams = (MarginLayoutParams) mForward.getLayoutParams();
-        if ((fwdParams.leftMargin > mDefaultForwardMargin && visible) ||
-            (fwdParams.leftMargin == mDefaultForwardMargin && !visible)) {
+        if ((fwdParams.leftMargin > mDefaultForwardMargin && showing) ||
+            (fwdParams.leftMargin == mDefaultForwardMargin && !showing)) {
             return;
         }
 
@@ -1406,7 +1415,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mForwardAnim.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
             @Override
             public void onPropertyAnimationStart() {
-                if (!visible) {
+                if (!showing) {
                     // Set the margin before the transition when hiding the forward button. We
                     // have to do this so that the favicon isn't clipped during the transition
                     MarginLayoutParams layoutParams =
@@ -1426,7 +1435,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
             @Override
             public void onPropertyAnimationEnd() {
-                if (visible) {
+                if (showing) {
                     MarginLayoutParams layoutParams =
                         (MarginLayoutParams) mUrlDisplayContainer.getLayoutParams();
                     layoutParams.leftMargin = mUrlBarViewOffset;
@@ -1440,7 +1449,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 }
 
                 MarginLayoutParams layoutParams = (MarginLayoutParams) mForward.getLayoutParams();
-                layoutParams.leftMargin = mDefaultForwardMargin + (visible ? width : 0);
+                layoutParams.leftMargin = mDefaultForwardMargin + (showing ? width : 0);
                 ViewHelper.setTranslationX(mForward, 0);
 
                 requestLayout();
@@ -1448,7 +1457,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             }
         });
 
-        prepareForwardAnimation(mForwardAnim, visible, width);
+        prepareForwardAnimation(mForwardAnim, animation, width);
         mForwardAnim.start();
     }
 
@@ -1460,11 +1469,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
         // Save the state on the forward button so that we can skip animations
         // when there's nothing to change
         setButtonEnabled(mForward, enabled);
-        animateForwardButton(enabled);
+        animateForwardButton(enabled ? ForwardButtonAnimation.SHOW : ForwardButtonAnimation.HIDE);
     }
 
-    private void prepareForwardAnimation(PropertyAnimator anim, boolean enabled, int width) {
-        if (!enabled) {
+    private void prepareForwardAnimation(PropertyAnimator anim, ForwardButtonAnimation animation, int width) {
+        if (animation == ForwardButtonAnimation.HIDE) {
             anim.attach(mForward,
                       PropertyAnimator.Property.TRANSLATION_X,
                       -width);
