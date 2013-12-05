@@ -330,10 +330,29 @@ public:
 #endif
 
   /**
+   * Hints that can be used during Thebes layer creation to influence the type
+   * or properties of the layer created.
+   *
+   * NONE: No hint.
+   * SCROLLABLE: This layer may represent scrollable content.
+   */
+  enum ThebesLayerCreationHint {
+    NONE, SCROLLABLE
+  };
+
+  /**
    * CONSTRUCTION PHASE ONLY
    * Create a ThebesLayer for this manager's layer tree.
    */
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer() = 0;
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Create a ThebesLayer for this manager's layer tree, with a creation hint
+   * parameter to help optimise the type of layer created.
+   */
+  virtual already_AddRefed<ThebesLayer> CreateThebesLayerWithHint(ThebesLayerCreationHint) {
+    return CreateThebesLayer();
+  }
   /**
    * CONSTRUCTION PHASE ONLY
    * Create a ContainerLayer for this manager's layer tree.
