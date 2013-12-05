@@ -8,11 +8,6 @@
  * JS math package.
  */
 
-#if defined(XP_WIN)
-/* _CRT_RAND_S must be #defined before #including stdlib.h to get rand_s(). */
-#define _CRT_RAND_S
-#endif
-
 #include "jsmath.h"
 
 #include "mozilla/Constants.h"
