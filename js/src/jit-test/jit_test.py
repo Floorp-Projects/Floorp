@@ -15,7 +15,6 @@ def add_libdir_to_path():
 add_libdir_to_path()
 
 import jittests
-from tests import TBPL_FLAGS
 
 def main(argv):
 
@@ -162,8 +161,17 @@ def main(argv):
     job_list = []
     if options.tbpl:
         # Running all bits would take forever. Instead, we test a few interesting combinations.
+        flags = [
+            [], # no flags, normal baseline and ion
+            ['--ion-eager'], # implies --baseline-eager
+            ['--ion-eager', '--ion-check-range-analysis', '--no-sse3'],
+            ['--baseline-eager'],
+            ['--baseline-eager', '--no-ti', '--no-fpu'],
+            ['--no-baseline', '--no-ion'],
+            ['--no-baseline', '--no-ion', '--no-ti'],
+        ]
         for test in test_list:
-            for variant in TBPL_FLAGS:
+            for variant in flags:
                 new_test = test.copy()
                 new_test.jitflags.extend(variant)
                 job_list.append(new_test)
