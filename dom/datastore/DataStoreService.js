@@ -136,7 +136,10 @@ DataStoreService.prototype = {
         let request = aRevisionStore.openCursor(null, 'prev');
         request.onsuccess = function(aEvent) {
           let cursor = aEvent.target.result;
-          if (!cursor) {
+          if (cursor) {
+            ppmm.broadcastAsyncMessage('datastore-first-revision-created',
+                                       { name: aName, owner: aOwner });
+          } else {
             // If the revision doesn't exist, let's create the first one.
             db.addRevision(aRevisionStore, 0, REVISION_VOID, function() {
               debug("First revision created.");
