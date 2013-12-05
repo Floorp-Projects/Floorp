@@ -4,6 +4,50 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+:root {
+  font: message-box;
+}
+
+.devtools-monospace {
+%ifdef XP_MACOSX
+  font-family: Menlo, monospace;
+%endif
+%ifdef XP_LINUX
+  font-family: monospace;
+  font-size: 80%;
+%endif
+%ifdef XP_WIN
+  font-family: Consolas, monospace;
+%endif
+}
+
+/* Splitters */
+.devtools-horizontal-splitter {
+  -moz-appearance: none;
+  border-top: 1px solid black;
+  border-bottom-width: 0;
+  min-height: 3px;
+  height: 3px;
+  margin-bottom: -3px;
+  position: relative;
+}
+
+.devtools-side-splitter {
+  -moz-appearance: none;
+  border: 0;
+  -moz-border-start: 1px solid black;
+  min-width: 0;
+  width: 3px;
+  background-color: transparent;
+  -moz-margin-end: -3px;
+  position: relative;
+  cursor: e-resize;
+}
+
+.devtools-toolbox-side-iframe {
+  min-width: 465px;
+}
+
 /* Autocomplete Popup */
 /* Dark and light theme */
 

@@ -47,8 +47,7 @@
   background: #26394D;
 }
 
-.theme-bg-darker,
-.cm-s-mozilla .CodeMirror-gutters {
+.theme-bg-darker {
   background-color: rgba(0,0,0,0.5);
 }
 
@@ -220,6 +219,7 @@ div.CodeMirror span.eval-text {
 
 .cm-s-mozilla .CodeMirror-gutters { /* vertical line next to line numbers */
   border-right-color: #343c45;
+  background-color: #181d20;
 }
 
 .cm-s-markup-view pre {
@@ -279,3 +279,5 @@ div.CodeMirror span.eval-text {
 .theme-tooltip-panel .devtools-tooltip-simple-text:last-child {
   border-bottom: 0;
 }
+
+%include toolbars.inc.css
