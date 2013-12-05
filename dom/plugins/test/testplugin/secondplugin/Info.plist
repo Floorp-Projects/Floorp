@@ -24,7 +24,7 @@
 	<string>Second plug-in for testing purposes.</string>
 	<key>WebPluginMIMETypes</key>
 	<dict>
-		<key>application/x-Second-Test</key>
+		<key>application/x-second-test</key>
 		<dict>
 			<key>WebPluginExtensions</key>
 			<array>
