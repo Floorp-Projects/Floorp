@@ -32,7 +32,7 @@ public:
     }
 
 protected:
-    const FrameMetrics mFrameMetrics;
+    FrameMetrics mFrameMetrics;
 };
 
 void
