@@ -981,7 +981,6 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
         nullptr, /* getGeneric    */                                          \
         nullptr, /* getProperty    */                                         \
         nullptr, /* getElement    */                                          \
-        nullptr, /* getElementIfPresent */                                    \
         nullptr, /* getSpecial    */                                          \
         nullptr, /* setGeneric    */                                          \
         nullptr, /* setProperty    */                                         \
@@ -1010,7 +1009,6 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
         nullptr, /* getGeneric    */                                          \
         nullptr, /* getProperty    */                                         \
         nullptr, /* getElement    */                                          \
-        nullptr, /* getElementIfPresent */                                    \
         nullptr, /* getSpecial    */                                          \
         nullptr, /* setGeneric    */                                          \
         nullptr, /* setProperty    */                                         \

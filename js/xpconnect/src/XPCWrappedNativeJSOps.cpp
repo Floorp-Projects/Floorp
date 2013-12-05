@@ -720,7 +720,6 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
         nullptr, // getGeneric
         nullptr, // getProperty
         nullptr, // getElement
-        nullptr, // getElementIfPresent
         nullptr, // getSpecial
         nullptr, // setGeneric
         nullptr, // setProperty

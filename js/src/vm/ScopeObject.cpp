@@ -556,7 +556,6 @@ const Class WithObject::class_ = {
         with_GetGeneric,
         with_GetProperty,
         with_GetElement,
-        nullptr,             /* getElementIfPresent */
         with_GetSpecial,
         with_SetGeneric,
         with_SetProperty,

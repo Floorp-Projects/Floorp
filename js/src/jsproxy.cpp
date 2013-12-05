@@ -152,27 +152,6 @@ BaseProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
 }
 
 bool
-BaseProxyHandler::getElementIfPresent(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                                      uint32_t index, MutableHandleValue vp, bool *present)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
-        return false;
-
-    assertEnteredPolicy(cx, proxy, id);
-
-    if (!has(cx, proxy, id, present))
-        return false;
-
-    if (!*present) {
-        Debug_SetValueRangeToCrashOnTouch(vp.address(), 1);
-        return true;
-    }
-
-    return get(cx, proxy, receiver, id, vp);
-}
-
-bool
 BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
                       HandleId id, bool strict, MutableHandleValue vp)
 {
@@ -2519,41 +2498,6 @@ Proxy::callProp(JSContext *cx, HandleObject proxy, HandleObject receiver, Handle
     return true;
 }
 
-
-bool
-Proxy::getElementIfPresent(JSContext *cx, HandleObject proxy, HandleObject receiver, uint32_t index,
-                           MutableHandleValue vp, bool *present)
-{
-    JS_CHECK_RECURSION(cx, return false);
-
-    RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
-        return false;
-
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::GET, true);
-    if (!policy.allowed())
-        return policy.returnValue();
-
-    if (!handler->hasPrototype()) {
-        return handler->getElementIfPresent(cx, proxy, receiver, index,
-                                            vp, present);
-    }
-
-    bool hasOwn;
-    if (!handler->hasOwn(cx, proxy, id, &hasOwn))
-        return false;
-
-    if (hasOwn) {
-        *present = true;
-        return proxy->as<ProxyObject>().handler()->get(cx, proxy, receiver, id, vp);
-    }
-
-    *present = false;
-    INVOKE_ON_PROTOTYPE(cx, handler, proxy,
-                        JSObject::getElementIfPresent(cx, proto, receiver, index, vp, present));
-}
-
 bool
 Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id, bool strict,
            MutableHandleValue vp)
@@ -2892,13 +2836,6 @@ proxy_GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_
 }
 
 static bool
-proxy_GetElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
-                          MutableHandleValue vp, bool *present)
-{
-    return Proxy::getElementIfPresent(cx, obj, receiver, index, vp, present);
-}
-
-static bool
 proxy_GetSpecial(JSContext *cx, HandleObject obj, HandleObject receiver, HandleSpecialId sid,
                  MutableHandleValue vp)
 {
@@ -3128,7 +3065,6 @@ proxy_Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
         proxy_GetGeneric,                           \
         proxy_GetProperty,                          \
         proxy_GetElement,                           \
-        proxy_GetElementIfPresent,                  \
         proxy_GetSpecial,                           \
         proxy_SetGeneric,                           \
         proxy_SetProperty,                          \
@@ -3186,7 +3122,6 @@ const Class js::OuterWindowProxyObject::class_ = {
         proxy_GetGeneric,
         proxy_GetProperty,
         proxy_GetElement,
-        proxy_GetElementIfPresent,
         proxy_GetSpecial,
         proxy_SetGeneric,
         proxy_SetProperty,

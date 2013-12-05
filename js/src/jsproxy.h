@@ -166,8 +166,6 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g);
     virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
     virtual void finalize(JSFreeOp *fop, JSObject *proxy);
-    virtual bool getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                     uint32_t index, MutableHandleValue vp, bool *present);
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop);
 
     // These two hooks must be overridden, or not overridden, in tandem -- no
@@ -276,8 +274,6 @@ class Proxy
     static bool hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp);
     static bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
                     MutableHandleValue vp);
-    static bool getElementIfPresent(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                                    uint32_t index, MutableHandleValue vp, bool *present);
     static bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
                     bool strict, MutableHandleValue vp);
     static bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props);
