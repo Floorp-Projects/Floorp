@@ -31,6 +31,8 @@ interface TestExampleInterface {
   void passVariadicByte(byte... arg);
   [Cached, Pure]
   readonly attribute byte cachedByte;
+  [Cached, Pure]
+  attribute byte cachedWritableByte;
 
   readonly attribute short readonlyShort;
   attribute short writableShort;

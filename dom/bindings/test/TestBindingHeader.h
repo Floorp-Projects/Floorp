@@ -169,6 +169,8 @@ public:
   void PassOptionalNullableByte(const Optional< Nullable<int8_t> >&);
   void PassVariadicByte(const Sequence<int8_t>&);
   int8_t CachedByte();
+  int8_t CachedWritableByte();
+  void SetCachedWritableByte(int8_t);
 
   int16_t ReadonlyShort();
   int16_t WritableShort();
