@@ -50,6 +50,9 @@ browser.jar:
         skin/classic/browser/menuPanel-exit.png
         skin/classic/browser/menuPanel-help.png
         skin/classic/browser/menuPanel-small.png
+        skin/classic/browser/Metro_Glyph.png                        (Metro_Glyph-aero.png)
+        skin/classic/browser/Metro_Glyph-inverted.png
+        skin/classic/browser/Metro_Glyph-menuPanel.png
         skin/classic/browser/mixed-content-blocked-16.png
         skin/classic/browser/mixed-content-blocked-64.png
         skin/classic/browser/monitor.png
@@ -353,6 +356,9 @@ browser.jar:
         skin/classic/aero/browser/menuPanel-exit.png
         skin/classic/aero/browser/menuPanel-help.png
         skin/classic/aero/browser/menuPanel-small.png                (menuPanel-small-aero.png)
+        skin/classic/aero/browser/Metro_Glyph.png                    (Metro_Glyph-aero.png)
+        skin/classic/aero/browser/Metro_Glyph-inverted.png
+        skin/classic/aero/browser/Metro_Glyph-menuPanel.png
         skin/classic/aero/browser/mixed-content-blocked-16.png
         skin/classic/aero/browser/mixed-content-blocked-64.png
         skin/classic/aero/browser/monitor.png

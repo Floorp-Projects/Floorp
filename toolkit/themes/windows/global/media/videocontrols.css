@@ -59,6 +59,10 @@
   background-image: url(chrome://global/skin/media/noAudio.png);
 }
 
+.muteButton[noAudio] + .volumeStack {
+  display: none;
+}
+
 .fullscreenButton {
   background-image: -moz-image-rect(url("chrome://global/skin/media/fullscreenButton.png"), 0, 16, 16, 0);
 }
@@ -67,36 +71,35 @@
   background-image: -moz-image-rect(url("chrome://global/skin/media/fullscreenButton.png"), 0, 32, 16, 16);
 }
 
-.volumeStack {
-  width: 28px;
-  height: 70px;
-  background-color: rgba(35,31,32,.74);
-  /* use negative margin to place stack over the mute button to its left. */
-  margin: -70px 3px 28px -31px;
-  overflow: hidden; /* crop it when sliding down, don't grow the control bar */
-  position: relative; /* Trick to work around negative margin interfering with dragging the thumb. */
-  padding-top: 6px;
-}
-
 .volumeControl {
-  min-height: 64px;
+  width: 32px;
+  opacity: 0;
 }
 
-/* .scale-thumb is an element inside the <scale> implementation. */
+.volumeBackground,
+.volumeForeground {
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 32px;
+}
+
+.volumeBackground {
+  background-image: url(chrome://global/skin/media/volume-empty.png);
+}
+
+.volumeForeground {
+  background-image: url(chrome://global/skin/media/volume-full.png);
+  background-clip: content-box;
+}
+
+.controlBar[audio-only] > .volumeStack {
+  /* This value is duplicated in the videocontrols.xml adjustControlSize function. */
+  -moz-margin-end: 8px;
+}
+
 .volumeControl .scale-thumb {
-  /* Override the default thumb appearance with a custom image. */
-  -moz-appearance: none;
-  background: url(chrome://global/skin/media/volumeThumb.png) no-repeat center;
-  border: none;
-  min-width: 20px;
-  min-height: 10px;
-}
-
-.volumeBackgroundBar {
-  /* margin left/right: make bar 8px wide (control width = 28, minus 2 * 10 margin) */
-  margin: 0 10px;
-  background-color: rgba(255,255,255,.75);
-  border-radius: 2.5px;
+  min-width: 0;
+  opacity: 0;
 }
 
 .durationBox {
@@ -170,7 +173,8 @@
 }
 
 /* .scale-thumb is an element inside the <scale> implementation. */
-.scrubber .scale-thumb {
+.scrubber .scale-thumb,
+.volumeControl .scale-thumb {
   /* Override the default thumb appearance with a custom image. */
   -moz-appearance: none;
   background: transparent;
