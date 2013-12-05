@@ -2,7 +2,7 @@ package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.*;
 
-class StringHelper {
+public class StringHelper {
     // Note: DEFAULT_BOOKMARKS_TITLES.length == DEFAULT_BOOKMARKS_URLS.length
     public static final String[] DEFAULT_BOOKMARKS_TITLES = new String[] {
         "Firefox: About your browser",
@@ -20,22 +20,26 @@ class StringHelper {
     public static final String ABOUT_BLANK_URL = "about:blank";
     public static final String ABOUT_FIREFOX_URL = "about:firefox";
     public static final String ABOUT_DOWNLOADS_URL = "about:downloads";
+    public static final String ABOUT_HOME_URL = "about:home";
     public static final String ABOUT_ADDONS_URL = "about:addons";
     public static final String ABOUT_APPS_URL = "about:apps";
 
+    // About pages' titles
+    public static final String ABOUT_HOME_TITLE = "";
+
     // Context Menu menu items
     public static final String[] CONTEXT_MENU_ITEMS_IN_PRIVATE_TAB = new String[] {
-        "Open Link in Private Tab", 
-        "Copy Link", 
-        "Share Link", 
+        "Open Link in Private Tab",
+        "Copy Link",
+        "Share Link",
         "Bookmark Link"
     };
 
     public static final String[] CONTEXT_MENU_ITEMS_IN_NORMAL_TAB = new String[] {
         "Open Link in New Tab",
-        "Open Link in Private Tab", 
-        "Copy Link", 
-        "Share Link", 
+        "Open Link in Private Tab",
+        "Copy Link",
+        "Share Link",
         "Bookmark Link"
     };
 

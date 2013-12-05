@@ -170,7 +170,7 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
 
   _setContextActions: function bv__setContextActions(aItem) {
     let itemId = this._getBookmarkIdForItem(aItem);
-    aItem.setAttribute("data-contextactions", "delete," + (this._pinHelper.isPinned(itemId) ? "unpin" : "pin"));
+    aItem.setAttribute("data-contextactions", "delete," + (this._pinHelper.isPinned(itemId) ? "hide" : "pin"));
     if (aItem.refresh) aItem.refresh();
   },
 

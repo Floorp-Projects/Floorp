@@ -16,11 +16,6 @@
   -moz-image-region: rect(0, 72px, 18px, 54px);
 }
 
-#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
-#forward-button:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-
 #home-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 126px, 18px, 108px);
 }
@@ -47,10 +42,6 @@
 
 #add-ons-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 216px, 18px, 198px);
-}
-
-#switch-to-metro-button[cui-areatype="toolbar"] {
-  -moz-image-region: rect(0, 648px, 18px, 630px);
 }
 
 #open-file-button[cui-areatype="toolbar"] {

@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 915533 - Remove unused files under dom/bluetooth.
+Bug 585122 - New file added for xpcshell test not always being copied.

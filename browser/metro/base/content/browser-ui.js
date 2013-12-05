@@ -208,10 +208,6 @@ var BrowserUI = {
       DebuggerServer.init();
       DebuggerServer.addBrowserActors();
       DebuggerServer.addActors('chrome://browser/content/dbg-metro-actors.js');
-
-      // Add these globally for chrome, until per-window chrome debugging is supported (bug 928018):
-      DebuggerServer.addGlobalActor(DebuggerServer.tabActorFactories.inspectorActor, "inspectorActor");
-      DebuggerServer.addGlobalActor(DebuggerServer.tabActorFactories.styleEditorActor, "styleEditorActor");
     }
     DebuggerServer.openListener(port);
   },
