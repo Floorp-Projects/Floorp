@@ -1,6 +1,6 @@
-diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/event/async_wait.h src/event/async_wait.h
---- /Users/ekr/dev/mtransport-import-references/nrappkit/src/event/async_wait.h	2007-06-26 15:37:44.000000000 -0700
-+++ src/event/async_wait.h	2012-10-03 22:15:41.000000000 -0700
+diff --git a/media/mtransport/third_party/nrappkit/src/event/async_wait.h b/media/mtransport/third_party/nrappkit/src/event/async_wait.h
+--- a/media/mtransport/third_party/nrappkit/src/event/async_wait.h
++++ b/media/mtransport/third_party/nrappkit/src/event/async_wait.h
 @@ -38,21 +38,21 @@
  
  
@@ -24,12 +24,12 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/event/asyn
                              char *function,int line);
  int NR_async_cancel(NR_SOCKET sock,int how);
  int NR_async_schedule(NR_async_cb cb,void *arg,char *function,int line);
-diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/log/r_log.c src/log/r_log.c
---- /Users/ekr/dev/mtransport-import-references/nrappkit/src/log/r_log.c	2008-11-25 14:25:18.000000000 -0800
-+++ src/log/r_log.c	2012-10-03 22:15:41.000000000 -0700
-@@ -33,28 +33,40 @@
+diff --git a/media/mtransport/third_party/nrappkit/src/log/r_log.c b/media/mtransport/third_party/nrappkit/src/log/r_log.c
+--- a/media/mtransport/third_party/nrappkit/src/log/r_log.c
++++ b/media/mtransport/third_party/nrappkit/src/log/r_log.c
+@@ -33,28 +33,41 @@
     POSSIBILITY OF SUCH DAMAGE.
-    
+ 
  
     ekr@rtfm.com  Mon Dec  3 15:24:38 2001
   */
@@ -46,6 +46,7 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/log/r_log.
  #include "hex.h"
 +
  #include <string.h>
++#include <errno.h>
 +#ifndef _MSC_VER
 +#include <strings.h>
 +#include <syslog.h>
@@ -68,9 +69,9 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/log/r_log.
       "CRIT",
       "ERR",
       "WARNING",
-diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/darwin/include/csi_platform.h src/port/darwin/include/csi_platform.h
---- /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/darwin/include/csi_platform.h	2007-06-26 15:37:48.000000000 -0700
-+++ src/port/darwin/include/csi_platform.h	2012-10-03 22:15:41.000000000 -0700
+diff --git a/media/mtransport/third_party/nrappkit/src/port/darwin/include/csi_platform.h b/media/mtransport/third_party/nrappkit/src/port/darwin/include/csi_platform.h
+--- a/media/mtransport/third_party/nrappkit/src/port/darwin/include/csi_platform.h
++++ b/media/mtransport/third_party/nrappkit/src/port/darwin/include/csi_platform.h
 @@ -37,17 +37,21 @@
   */
  
@@ -93,9 +94,9 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/darwi
  
  #endif
  
-diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/linux/include/csi_platform.h src/port/linux/include/csi_platform.h
---- /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/linux/include/csi_platform.h	2007-06-26 15:37:49.000000000 -0700
-+++ src/port/linux/include/csi_platform.h	2012-10-03 22:15:41.000000000 -0700
+diff --git a/media/mtransport/third_party/nrappkit/src/port/linux/include/csi_platform.h b/media/mtransport/third_party/nrappkit/src/port/linux/include/csi_platform.h
+--- a/media/mtransport/third_party/nrappkit/src/port/linux/include/csi_platform.h
++++ b/media/mtransport/third_party/nrappkit/src/port/linux/include/csi_platform.h
 @@ -35,17 +35,21 @@
  
     ekr@rtfm.com  Mon Dec 13 17:26:51 2004
@@ -118,36 +119,13 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/linux
  
  #endif
  
-diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/linux/include/sys/queue.h src/port/linux/include/sys/queue.h
---- /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/linux/include/sys/queue.h	2012-10-03 18:04:13.000000000 -0700
-+++ src/port/linux/include/sys/queue.h	2012-10-03 17:49:05.000000000 -0700
-@@ -26,21 +26,21 @@
-  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-  * SUCH DAMAGE.
-  *
-  *	@(#)queue.h	8.5 (Berkeley) 8/20/94
-  * $FreeBSD: src/sys/sys/queue.h,v 1.58 2004/04/07 04:19:49 imp Exp $
-  */
- 
- #ifndef _SYS_QUEUE_H_
- #define	_SYS_QUEUE_H_
- 
--#include <stddef.h>
-+#include <linux/stddef.h>
- #define __offsetof offsetof
- 
- #include <sys/cdefs.h>
- 
- #define STAILQ_FOREACH_SAFE(var, head, field, tvar)                     \
-          for ((var) = STAILQ_FIRST((head));                              \
-              (var) && ((tvar) = STAILQ_NEXT((var), field), 1);           \
-              (var) = (tvar))
- 
- 
-diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/win32/include/csi_platform.h src/port/win32/include/csi_platform.h
---- /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/win32/include/csi_platform.h	2008-04-29 20:19:10.000000000 -0700
-+++ src/port/win32/include/csi_platform.h	2012-10-03 22:15:41.000000000 -0700
-@@ -47,43 +47,46 @@
+diff --git a/media/mtransport/third_party/nrappkit/src/port/win32/include/csi_platform.h b/media/mtransport/third_party/nrappkit/src/port/win32/include/csi_platform.h
+--- a/media/mtransport/third_party/nrappkit/src/port/win32/include/csi_platform.h
++++ b/media/mtransport/third_party/nrappkit/src/port/win32/include/csi_platform.h
+@@ -44,45 +44,51 @@
+ #define _WIN32_WINNT 0x0400  // This prevents weird "'TryEnterCriticalSection': identifier not found"
+                              // compiler errors when poco/win32_mutex.h is included
+ #endif
  
  #define UINT8 UBLAH_IGNORE_ME_PLEASE
  #define INT8 BLAH_IGNORE_ME_PLEASE
@@ -155,15 +133,13 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/win32
  #undef UINT8
  #undef INT8
  #include <r_types.h>
++#include <errno.h>
  
  #define strcasecmp _stricmp
  #define strncasecmp _strnicmp
 -#define snprintf _snprintf
  
  #define strcasestr stristr
- 
- /* Hack version of addr2ascii (in util/util.c) */
- char *addr2ascii(int af, const void *addrp, int len,char *buf);
  
  /* Hack version of strlcpy (in util/util.c) */
  size_t strlcat(char *dst, const char *src, size_t siz);
@@ -186,7 +162,9 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/win32
  #define NR_SOCKET_CLOSE(sock)            closesocket(sock)
 +#endif
  
++#ifndef EHOSTUNREACH
  #define EHOSTUNREACH    WSAEHOSTUNREACH
++#endif
  
  #define LOG_EMERG       0
  #define LOG_ALERT       1
@@ -195,15 +173,17 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/port/win32
  #define LOG_WARNING     4
  #define LOG_NOTICE      5
  #define LOG_INFO        6
-diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/registry/registry.c src/registry/registry.c
---- /Users/ekr/dev/mtransport-import-references/nrappkit/src/registry/registry.c	2007-11-20 16:09:12.000000000 -0800
-+++ src/registry/registry.c	2012-10-03 22:15:41.000000000 -0700
+ #define LOG_DEBUG       7
+ 
+diff --git a/media/mtransport/third_party/nrappkit/src/registry/registry.c b/media/mtransport/third_party/nrappkit/src/registry/registry.c
+--- a/media/mtransport/third_party/nrappkit/src/registry/registry.c
++++ b/media/mtransport/third_party/nrappkit/src/registry/registry.c
 @@ -37,21 +37,22 @@
-  *    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+  *    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
   *    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
   *    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   *    POSSIBILITY OF SUCH DAMAGE.
-  *    
+  *
   *
   */
  
@@ -222,9 +202,9 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/registry/r
  #include "registry.h"
  #include "registry_int.h"
  #include "registry_vtbl.h"
-diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libekr/r_crc32.c src/util/libekr/r_crc32.c
---- /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libekr/r_crc32.c	2008-11-25 19:22:02.000000000 -0800
-+++ src/util/libekr/r_crc32.c	2012-10-03 22:15:41.000000000 -0700
+diff --git a/media/mtransport/third_party/nrappkit/src/util/libekr/r_crc32.c b/media/mtransport/third_party/nrappkit/src/util/libekr/r_crc32.c
+--- a/media/mtransport/third_party/nrappkit/src/util/libekr/r_crc32.c
++++ b/media/mtransport/third_party/nrappkit/src/util/libekr/r_crc32.c
 @@ -58,20 +58,21 @@
   * the crc computation is finished.  The crc should be complemented
   * before transmission.
@@ -247,9 +227,9 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libek
  #define CRC(crc, ch)	 (crc = (crc >> 8) ^ crctab[(crc ^ (ch)) & 0xff])
  
  /* generated using the AUTODIN II polynomial
-diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libekr/r_macros.h src/util/libekr/r_macros.h
---- /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libekr/r_macros.h	2007-06-26 15:37:57.000000000 -0700
-+++ src/util/libekr/r_macros.h	2012-10-03 22:15:41.000000000 -0700
+diff --git a/media/mtransport/third_party/nrappkit/src/util/libekr/r_macros.h b/media/mtransport/third_party/nrappkit/src/util/libekr/r_macros.h
+--- a/media/mtransport/third_party/nrappkit/src/util/libekr/r_macros.h
++++ b/media/mtransport/third_party/nrappkit/src/util/libekr/r_macros.h
 @@ -118,20 +118,20 @@
  #ifndef MIN
  #define MIN(a,b) ((a)>(b))?(b):(a)
@@ -271,10 +251,10 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libek
  
  #include "r_memory.h"
  
- #endif 
-diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libekr/r_time.h src/util/libekr/r_time.h
---- /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libekr/r_time.h	2007-06-26 15:37:57.000000000 -0700
-+++ src/util/libekr/r_time.h	2012-10-03 22:15:46.000000000 -0700
+ #endif
+diff --git a/media/mtransport/third_party/nrappkit/src/util/libekr/r_time.h b/media/mtransport/third_party/nrappkit/src/util/libekr/r_time.h
+--- a/media/mtransport/third_party/nrappkit/src/util/libekr/r_time.h
++++ b/media/mtransport/third_party/nrappkit/src/util/libekr/r_time.h
 @@ -77,35 +77,25 @@
     $Id: r_time.h,v 1.4 2007/06/26 22:37:57 adamcain Exp $
  
@@ -315,11 +295,11 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/libek
  int r_int2timeval(UINT8 t,struct timeval *tv);
  UINT8 r_gettimeint(void);
  
-diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/util.c src/util/util.c
---- /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/util.c	2007-11-20 16:09:13.000000000 -0800
-+++ src/util/util.c	2012-10-03 22:15:41.000000000 -0700
-@@ -291,20 +291,22 @@
-     
+diff --git a/media/mtransport/third_party/nrappkit/src/util/util.c b/media/mtransport/third_party/nrappkit/src/util/util.c
+--- a/media/mtransport/third_party/nrappkit/src/util/util.c
++++ b/media/mtransport/third_party/nrappkit/src/util/util.c
+@@ -292,20 +292,22 @@ int nr_sha1_file(char *filename,UCHAR *o
+ 
      return(_status);
    }
  
@@ -340,13 +320,13 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/util.
      int failed=0;
      int _status;
      char *argv[2];
-     
-@@ -336,20 +338,21 @@
+ 
+@@ -337,20 +339,21 @@ int nr_rm_tree(char *path)
      }
  
      if(failed)
        ABORT(R_FAILED);
-     
+ 
      _status=0;
    abort:
      if(fts) fts_close(fts);
@@ -363,7 +343,7 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/util.
        ABORT(R_BAD_ARGS);
  
      unlink(pid_filename);
-@@ -541,12 +544,24 @@
+@@ -739,12 +742,24 @@ int gettimeofday(struct timeval *tv, voi
       * since the Epoch */
      SystemTimeToFileTime(&st, &ft);
      u.HighPart = ft.dwHighDateTime;
@@ -386,12 +366,12 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/util.
 +  return ret;
 +}
 +
- #endif 
+ #endif
  
-diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/util.h src/util/util.h
---- /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/util.h	2006-08-16 12:39:17.000000000 -0700
-+++ src/util/util.h	2012-10-03 22:15:41.000000000 -0700
-@@ -57,12 +57,16 @@
+diff --git a/media/mtransport/third_party/nrappkit/src/util/util.h b/media/mtransport/third_party/nrappkit/src/util/util.h
+--- a/media/mtransport/third_party/nrappkit/src/util/util.h
++++ b/media/mtransport/third_party/nrappkit/src/util/util.h
+@@ -57,12 +57,17 @@ int nr_drop_privileges(char *username);
  int nr_hex_ascii_dump(Data *data);
  int nr_fwrite_all(FILE *fp,UCHAR *buf,int len);
  int nr_sha1_file(char *filename,UCHAR *out);
@@ -404,7 +384,8 @@ diff -r -U10 /Users/ekr/dev/mtransport-import-references/nrappkit/src/util/util.
  
 +#ifdef WIN32
 +int snprintf(char *buffer, size_t n, const char *format, ...);
-+#endif
-+
++const char *inet_ntop(int af, const void *src, char *dst, size_t size);
  #endif
  
++#endif
++
