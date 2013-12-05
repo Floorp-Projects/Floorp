@@ -1001,6 +1001,13 @@ const int32_t nsCSSProps::kFlexDirectionKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const int32_t nsCSSProps::kFlexWrapKTable[] = {
+  eCSSKeyword_nowrap,       NS_STYLE_FLEX_WRAP_NOWRAP,
+  eCSSKeyword_wrap,         NS_STYLE_FLEX_WRAP_WRAP,
+  eCSSKeyword_wrap_reverse, NS_STYLE_FLEX_WRAP_WRAP_REVERSE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const int32_t nsCSSProps::kJustifyContentKTable[] = {
   eCSSKeyword_flex_start,    NS_STYLE_JUSTIFY_CONTENT_FLEX_START,
   eCSSKeyword_flex_end,      NS_STYLE_JUSTIFY_CONTENT_FLEX_END,

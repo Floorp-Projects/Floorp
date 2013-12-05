@@ -1678,6 +1678,16 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mFlexShrink),
     eStyleAnimType_float) // float, except animations to/from 0 shouldn't work
 CSS_PROP_POSITION(
+    flex-wrap,
+    flex_wrap,
+    FlexWrap,
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kFlexWrapKTable,
+    offsetof(nsStylePosition, mFlexWrap),
+    eStyleAnimType_EnumU8)
+CSS_PROP_POSITION(
     order,
     order,
     Order,

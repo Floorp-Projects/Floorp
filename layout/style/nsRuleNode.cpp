@@ -7041,6 +7041,13 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
             parentPos->mFlexShrink, 1.0f,
             SETFCT_UNSET_INITIAL);
 
+  // flex-wrap: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForFlexWrap(),
+              pos->mFlexWrap, canStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
+              parentPos->mFlexWrap,
+              NS_STYLE_FLEX_WRAP_NOWRAP, 0, 0, 0, 0);
+
   // order: integer, inherit, initial
   SetDiscrete(*aRuleData->ValueForOrder(),
               pos->mOrder, canStoreInRuleTree,
