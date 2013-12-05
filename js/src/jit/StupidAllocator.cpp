@@ -28,7 +28,7 @@ StupidAllocator::stackLocation(uint32_t vreg)
     if (def->policy() == LDefinition::PRESET && def->output()->isArgument())
         return def->output();
 
-    return new LStackSlot(DefaultStackSlot(vreg), def->type() == LDefinition::DOUBLE);
+    return new(alloc()) LStackSlot(DefaultStackSlot(vreg), def->type() == LDefinition::DOUBLE);
 }
 
 StupidAllocator::RegisterIndex
@@ -186,7 +186,7 @@ StupidAllocator::syncRegister(LInstruction *ins, RegisterIndex index)
 {
     if (registers[index].dirty) {
         LMoveGroup *input = getInputMoveGroup(ins->id());
-        LAllocation *source = new LAllocation(registers[index].reg);
+        LAllocation *source = new(alloc()) LAllocation(registers[index].reg);
 
         uint32_t existing = registers[index].vreg;
         LAllocation *dest = stackLocation(existing);
@@ -209,7 +209,7 @@ StupidAllocator::loadRegister(LInstruction *ins, uint32_t vreg, RegisterIndex in
     // Load a vreg from its stack location to a register.
     LMoveGroup *input = getInputMoveGroup(ins->id());
     LAllocation *source = stackLocation(vreg);
-    LAllocation *dest = new LAllocation(registers[index].reg);
+    LAllocation *dest = new(alloc()) LAllocation(registers[index].reg);
     input->addAfter(source, dest);
     registers[index].set(vreg, ins);
 }

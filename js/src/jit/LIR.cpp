@@ -129,7 +129,7 @@ LSnapshot::init(MIRGenerator *gen)
 LSnapshot *
 LSnapshot::New(MIRGenerator *gen, MResumePoint *mir, BailoutKind kind)
 {
-    LSnapshot *snapshot = new LSnapshot(mir, kind);
+    LSnapshot *snapshot = new(gen->alloc()) LSnapshot(mir, kind);
     if (!snapshot->init(gen))
         return nullptr;
 
@@ -357,7 +357,7 @@ void
 LInstruction::initSafepoint(TempAllocator &alloc)
 {
     JS_ASSERT(!safepoint_);
-    safepoint_ = new LSafepoint(alloc);
+    safepoint_ = new(alloc) LSafepoint(alloc);
     JS_ASSERT(safepoint_);
 }
 
