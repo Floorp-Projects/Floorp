@@ -30,7 +30,7 @@ enum AssertAppProcessType {
 };
 
 /**
- * Return true if the specified browser has the specified capability.
+ * Return true iff the specified browser has the specified capability.
  * If this returns false, the browser didn't have the capability and
  * will be killed.
  */
@@ -39,16 +39,12 @@ AssertAppProcess(mozilla::dom::PBrowserParent* aActor,
                  AssertAppProcessType aType,
                  const char* aCapability);
 
-/**
- * Return true if the specified app has the specified status.
- * If this returns false, the browser will be killed.
- */
 bool
 AssertAppStatus(mozilla::dom::PBrowserParent* aActor,
                 unsigned short aStatus);
 
 /**
- * Return true if any of the PBrowsers loaded in this content process
+ * Return true iff any of the PBrowsers loaded in this content process
  * has the specified capability.  If this returns false, the process
  * didn't have the capability and will be killed.
  */
@@ -57,11 +53,6 @@ AssertAppProcess(mozilla::dom::PContentParent* aActor,
                  AssertAppProcessType aType,
                  const char* aCapability);
 
-/**
- * Return true if any of the PBrowsers loaded in this content process
- * has an app with the specified status. If this returns false, the process
- * didn't have the status and will be killed.
- */
 bool
 AssertAppStatus(mozilla::dom::PContentParent* aActor,
                 unsigned short aStatus);

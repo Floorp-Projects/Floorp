@@ -313,9 +313,10 @@ this.DOMApplicationRegistry = {
 
     // Create or Update the DataStore for this app
     this._readManifests([{ id: aId }], (function(aResult) {
-      let app = this.webapps[aId];
-      this.updateDataStore(app.localId, app.origin, app.manifestURL,
-                           aResult[0].manifest, app.appStatus);
+      this.updateDataStore(this.webapps[aId].localId,
+                           this.webapps[aId].origin,
+                           this.webapps[aId].manifestURL,
+                           aResult[0].manifest);
     }).bind(this));
   },
 
@@ -587,15 +588,7 @@ this.DOMApplicationRegistry = {
     }).bind(this));
   },
 
-  updateDataStore: function(aId, aOrigin, aManifestURL, aManifest, aAppStatus) {
-    // Just Certified Apps can use DataStores
-    let prefName = "dom.testing.datastore_enabled_for_hosted_apps";
-    if (aAppStatus != Ci.nsIPrincipal.APP_STATUS_CERTIFIED &&
-        (Services.prefs.getPrefType(prefName) == Services.prefs.PREF_INVALID ||
-         !Services.prefs.getBoolPref(prefName))) {
-      return;
-    }
-
+  updateDataStore: function(aId, aOrigin, aManifestURL, aManifest) {
     if ('datastores-owned' in aManifest) {
       for (let name in aManifest['datastores-owned']) {
         let readonly = "access" in aManifest['datastores-owned'][name]
@@ -1484,7 +1477,7 @@ this.DOMApplicationRegistry = {
               true);
           }
           this.updateDataStore(this.webapps[id].localId, app.origin,
-                               app.manifestURL, aData, app.appStatus);
+                               app.manifestURL, aData);
           this.broadcastMessage("Webapps:UpdateState", {
             app: app,
             manifest: aData,
@@ -1658,7 +1651,7 @@ this.DOMApplicationRegistry = {
         }
 
         this.updateDataStore(this.webapps[id].localId, app.origin,
-                             app.manifestURL, app.manifest, app.appStatus);
+                             app.manifestURL, app.manifest);
 
         app.name = manifest.name;
         app.csp = manifest.csp || "";
@@ -2294,8 +2287,7 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
       }
 
       this.updateDataStore(this.webapps[id].localId,  this.webapps[id].origin,
-                           this.webapps[id].manifestURL, jsonManifest,
-                           this.webapps[id].appStatus);
+                           this.webapps[id].manifestURL, jsonManifest);
     }
 
     for each (let prop in ["installState", "downloadAvailable", "downloading",
@@ -2406,7 +2398,7 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
       }
 
       this.updateDataStore(this.webapps[aId].localId, aNewApp.origin,
-                           aNewApp.manifestURL, aManifest, aNewApp.appStatus);
+                           aNewApp.manifestURL, aManifest);
 
       this.broadcastMessage("Webapps:UpdateState", {
         app: app,
