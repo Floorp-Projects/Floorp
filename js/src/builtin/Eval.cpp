@@ -332,10 +332,10 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
 }
 
 bool
-js::DirectEvalFromIon(JSContext *cx,
-                      HandleObject scopeobj, HandleScript callerScript,
-                      HandleValue thisValue, HandleString str,
-                      jsbytecode *pc, MutableHandleValue vp)
+js::DirectEvalStringFromIon(JSContext *cx,
+                            HandleObject scopeobj, HandleScript callerScript,
+                            HandleValue thisValue, HandleString str,
+                            jsbytecode *pc, MutableHandleValue vp)
 {
     AssertInnerizedScopeChain(cx, *scopeobj);
 
@@ -398,6 +398,22 @@ js::DirectEvalFromIon(JSContext *cx,
 
     return ExecuteKernel(cx, esg.script(), *scopeobj, thisValue, ExecuteType(DIRECT_EVAL),
                          NullFramePtr() /* evalInFrame */, vp.address());
+}
+
+bool
+js::DirectEvalValueFromIon(JSContext *cx,
+                           HandleObject scopeobj, HandleScript callerScript,
+                           HandleValue thisValue, HandleValue evalArg,
+                           jsbytecode *pc, MutableHandleValue vp)
+{
+    // Act as identity on non-strings per ES5 15.1.2.1 step 1.
+    if (!evalArg.isString()) {
+        vp.set(evalArg);
+        return true;
+    }
+
+    RootedString string(cx, evalArg.toString());
+    return DirectEvalStringFromIon(cx, scopeobj, callerScript, thisValue, string, pc, vp);
 }
 
 bool

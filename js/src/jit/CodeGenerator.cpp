@@ -2371,12 +2371,9 @@ CodeGenerator::visitGetDynamicName(LGetDynamicName *lir)
 }
 
 bool
-CodeGenerator::visitFilterArgumentsOrEval(LFilterArgumentsOrEval *lir)
+CodeGenerator::emitFilterArgumentsOrEval(LInstruction *lir, Register string,
+                                         Register temp1, Register temp2)
 {
-    Register string = ToRegister(lir->getString());
-    Register temp1 = ToRegister(lir->temp1());
-    Register temp2 = ToRegister(lir->temp2());
-
     masm.loadJSContext(temp2);
 
     masm.setupUnalignedABICall(2, temp1);
@@ -2389,23 +2386,68 @@ CodeGenerator::visitFilterArgumentsOrEval(LFilterArgumentsOrEval *lir)
     return bailoutFrom(&bail, lir->snapshot());
 }
 
-typedef bool (*DirectEvalFn)(JSContext *, HandleObject, HandleScript, HandleValue, HandleString,
-                             jsbytecode *, MutableHandleValue);
-static const VMFunction DirectEvalInfo = FunctionInfo<DirectEvalFn>(DirectEvalFromIon);
+bool
+CodeGenerator::visitFilterArgumentsOrEvalS(LFilterArgumentsOrEvalS *lir)
+{
+    return emitFilterArgumentsOrEval(lir, ToRegister(lir->getString()),
+                                     ToRegister(lir->temp1()),
+                                     ToRegister(lir->temp2()));
+}
 
 bool
-CodeGenerator::visitCallDirectEval(LCallDirectEval *lir)
+CodeGenerator::visitFilterArgumentsOrEvalV(LFilterArgumentsOrEvalV *lir)
+{
+    ValueOperand input = ToValue(lir, LFilterArgumentsOrEvalV::Input);
+
+    // Act as nop on non-strings.
+    Label done;
+    masm.branchTestString(Assembler::NotEqual, input, &done);
+
+    if (!emitFilterArgumentsOrEval(lir, masm.extractString(input, ToRegister(lir->temp3())),
+                                   ToRegister(lir->temp1()), ToRegister(lir->temp2())))
+    {
+        return false;
+    }
+
+    masm.bind(&done);
+    return true;
+}
+
+typedef bool (*DirectEvalSFn)(JSContext *, HandleObject, HandleScript, HandleValue, HandleString,
+                              jsbytecode *, MutableHandleValue);
+static const VMFunction DirectEvalStringInfo = FunctionInfo<DirectEvalSFn>(DirectEvalStringFromIon);
+
+bool
+CodeGenerator::visitCallDirectEvalS(LCallDirectEvalS *lir)
 {
     Register scopeChain = ToRegister(lir->getScopeChain());
     Register string = ToRegister(lir->getString());
 
     pushArg(ImmPtr(lir->mir()->pc()));
     pushArg(string);
-    pushArg(ToValue(lir, LCallDirectEval::ThisValueInput));
+    pushArg(ToValue(lir, LCallDirectEvalS::ThisValue));
     pushArg(ImmGCPtr(gen->info().script()));
     pushArg(scopeChain);
 
-    return callVM(DirectEvalInfo, lir);
+    return callVM(DirectEvalStringInfo, lir);
+}
+
+typedef bool (*DirectEvalVFn)(JSContext *, HandleObject, HandleScript, HandleValue, HandleValue,
+                              jsbytecode *, MutableHandleValue);
+static const VMFunction DirectEvalValueInfo = FunctionInfo<DirectEvalVFn>(DirectEvalValueFromIon);
+
+bool
+CodeGenerator::visitCallDirectEvalV(LCallDirectEvalV *lir)
+{
+    Register scopeChain = ToRegister(lir->getScopeChain());
+
+    pushArg(ImmPtr(lir->mir()->pc()));
+    pushArg(ToValue(lir, LCallDirectEvalV::Argument));
+    pushArg(ToValue(lir, LCallDirectEvalV::ThisValue));
+    pushArg(ImmGCPtr(gen->info().script()));
+    pushArg(scopeChain);
+
+    return callVM(DirectEvalValueInfo, lir);
 }
 
 // Registers safe for use before generatePrologue().
