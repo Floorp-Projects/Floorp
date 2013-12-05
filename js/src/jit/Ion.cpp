@@ -2713,7 +2713,7 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
             if ((comp_ && comp_ == comp) ||
                 (zone_ && zone_ == comp->zone() && comp->principals))
             {
-                IonContext ictx(CompileRuntime::get(rt));
+                IonContext ictx(rt);
                 AutoFlushCache afc("AutoDebugModeInvalidation", rt->jitRuntime());
                 IonSpew(IonSpew_Invalidate, "Invalidating frames for debug mode toggle");
                 InvalidateActivation(fop, iter.jitTop(), true);
