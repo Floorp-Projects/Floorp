@@ -3,31 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-OSDIR		= os2
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-OSDIR		= win
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-OSDIR		= mac
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-OSDIR		= android
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-OSDIR		= gonk
-else
-OSDIR		= unix
-endif
-endif
-endif
-endif
-endif
-
-VPATH		:= $(srcdir) $(srcdir)/$(OSDIR)
-
-
 LOCAL_INCLUDES = -I$(srcdir)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/dom/base \

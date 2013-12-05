@@ -227,22 +227,23 @@ CertVerifier::VerifyCert(CERTCertificate * cert,
     // EV setup!
     // XXX 859872 The current flags are not quite correct. (use
     // of ocsp flags for crl preferences).
-    uint64_t revMethodFlags =
+    uint64_t ocspRevMethodFlags =
       CERT_REV_M_TEST_USING_THIS_METHOD
       | ((mOCSPDownloadEnabled && !localOnly) ?
           CERT_REV_M_ALLOW_NETWORK_FETCHING : CERT_REV_M_FORBID_NETWORK_FETCHING)
       | CERT_REV_M_ALLOW_IMPLICIT_DEFAULT_SOURCE
       | CERT_REV_M_REQUIRE_INFO_ON_MISSING_SOURCE
       | CERT_REV_M_IGNORE_MISSING_FRESH_INFO
-      | CERT_REV_M_STOP_TESTING_ON_FRESH_INFO;
- 
+      | CERT_REV_M_STOP_TESTING_ON_FRESH_INFO
+      | (mOCSPGETEnabled ? 0 : CERT_REV_M_FORCE_POST_METHOD_FOR_OCSP);
+
     rev.leafTests.cert_rev_flags_per_method[cert_revocation_method_crl] =
-    rev.chainTests.cert_rev_flags_per_method[cert_revocation_method_crl] = revMethodFlags;
+    rev.chainTests.cert_rev_flags_per_method[cert_revocation_method_crl]
+      = CERT_REV_M_DO_NOT_TEST_USING_THIS_METHOD;
 
     rev.leafTests.cert_rev_flags_per_method[cert_revocation_method_ocsp] =
     rev.chainTests.cert_rev_flags_per_method[cert_revocation_method_ocsp]
-      = revMethodFlags
-      | (mOCSPGETEnabled ? 0 : CERT_REV_M_FORCE_POST_METHOD_FOR_OCSP);
+      = ocspRevMethodFlags;
 
     rev.leafTests.cert_rev_method_independent_flags =
     rev.chainTests.cert_rev_method_independent_flags =

@@ -8,7 +8,8 @@ LIBRARY_NAME = 'gfxtest'
 
 UNIFIED_SOURCES += [
     'gfxSurfaceRefCountTest.cpp',
-    'gfxWordCacheTest.cpp',
+    # Disabled on suspicion of causing bug 904227
+    #'gfxWordCacheTest.cpp',
     'TestAsyncPanZoomController.cpp',
     'TestBufferRotation.cpp',
     'TestColorNames.cpp',

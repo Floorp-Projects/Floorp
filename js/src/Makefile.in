@@ -22,69 +22,7 @@ LIBS		= $(NSPR_LIBS)
 
 DIST_INSTALL = 1
 
-VPATH		+= \
-		$(srcdir) \
-		$(srcdir)/builtin \
-		$(srcdir)/devtools \
-		$(srcdir)/ds \
-		$(srcdir)/frontend \
-		$(srcdir)/gc \
-		$(srcdir)/vm \
-		$(NULL)
-
-######################################################
-# BEGIN include exported headers from the JS engine
-#
-#       Ultimately, after cleansing EXPORTS,
-#       these will be the ONLY headers exported by
-#       the js engine
-#
-VPATH		+= \
-		$(srcdir)/../public \
-		$(NULL)
-
-###############################################
-# BEGIN enable non-releasable features
-#
-# Ion
-ifdef ENABLE_ION
-VPATH +=	$(srcdir)/jit
-VPATH +=	$(srcdir)/jit/shared
-
-ifeq (86, $(findstring 86,$(TARGET_CPU)))
-ifeq (x86_64, $(TARGET_CPU))
-VPATH +=	$(srcdir)/jit/x64
-else
-VPATH +=	$(srcdir)/jit/x86
-endif
-endif
-ifeq (arm, $(findstring arm, $(TARGET_CPU)))
-VPATH +=	$(srcdir)/jit/arm
-endif
-endif #ENABLE_ION
-
-###############################################
-# BEGIN include sources for the Nitro assembler
-#
-
-VPATH += 	$(srcdir)/assembler \
-		$(srcdir)/assembler/wtf \
-		$(srcdir)/assembler/jit \
-		$(srcdir)/yarr \
-		$(NONE)
-
-ifneq (,$(ENABLE_ION)$(ENABLE_YARR_JIT))
-VPATH += 	$(srcdir)/assembler/assembler \
-		$(NONE)
-endif
-
-#
-# END include sources for the Nitro assembler
-#############################################
-
 ifdef JS_HAS_CTYPES
-VPATH += $(srcdir)/ctypes
-
 ifdef MOZ_NATIVE_FFI
 LOCAL_INCLUDES = $(MOZ_FFI_CFLAGS)
 else
@@ -106,12 +44,6 @@ endif
 endif
 
 endif # JS_HAS_CTYPES
-
-# PerfMeasurement is available regardless of low-level support for it;
-# it just doesn't necessarily do anything useful.  There is one
-# implementation source file per supported operating system, plus a stub
-# for unsupported OSes, plus the Javascript wrapper.
-VPATH += $(srcdir)/perf
 
 DASH_R		= -r
 
@@ -360,6 +292,11 @@ distclean::
 	$(RM) $(DIST_GARBAGE)
 
 INCLUDES	+= -I$(srcdir)
+
+ifneq (,$(filter WINNT,$(OS_ARCH)))
+# _CRT_RAND_S must be #defined before #including stdlib.h to get rand_s()
+DEFINES         += -D_CRT_RAND_S
+endif
 
 ifneq ($(findstring -L,$(NSPR_LIBS)),)
 NSPR_STATIC_PATH = $(subst -L,,$(findstring -L,$(NSPR_LIBS)))

@@ -3164,8 +3164,7 @@ TryAddTypeBarrierForWrite(TempAllocator &alloc, types::CompilerConstraintList *c
     if ((*pvalue)->type() != MIRType_Value)
         return false;
 
-    types::TemporaryTypeSet *types =
-        aggregateProperty.ref().maybeTypes()->clone(GetIonContext()->temp->lifoAlloc());
+    types::TemporaryTypeSet *types = aggregateProperty.ref().maybeTypes()->clone(alloc.lifoAlloc());
     if (!types)
         return false;
 
