@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test for DataStore - sync</title>
+  <title>Test DataStore for certifiedApp only</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -10,7 +10,7 @@
 <div id="container"></div>
   <script type="application/javascript;version=1.7">
 
-  var gHostedManifestURL = 'http://test/tests/dom/datastore/tests/file_app.sjs?testToken=file_sync.html';
+  var gHostedManifestURL = 'http://test/tests/dom/datastore/tests/file_app.sjs?testToken=file_certifiedApp.html';
   var gApp;
 
   function cbError() {
@@ -66,6 +66,11 @@
   }
 
   var tests = [
+    function() {
+      ok(!("getDataStores" in navigator), "getDataStores should not exist");
+      runTest();
+    },
+
     // Permissions
     function() {
       SpecialPowers.pushPermissions(
@@ -78,11 +83,11 @@
     function() {
       SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true],
                                          ["dom.datastore.enabled", true],
-                                         ["dom.testing.ignore_ipc_principal", true],
-                                         ["dom.testing.datastore_enabled_for_hosted_apps", true]]}, runTest);
+                                         ["dom.testing.ignore_ipc_principal", true]]}, runTest);
     },
 
     function() {
+      SpecialPowers.setAllAppsLaunchable(true);
       SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
       runTest();
     },
