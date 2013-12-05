@@ -549,6 +549,8 @@ MemoryTextureHost::MemoryTextureHost(uint64_t aID,
 MemoryTextureHost::~MemoryTextureHost()
 {
   DeallocateDeviceData();
+  NS_ASSERTION(!mBuffer || (mFlags & TEXTURE_DEALLOCATE_CLIENT),
+               "Leaking our buffer");
   MOZ_COUNT_DTOR(MemoryTextureHost);
 }
 
