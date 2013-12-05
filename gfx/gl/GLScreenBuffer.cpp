@@ -8,7 +8,6 @@
 #include <cstring>
 #include "gfxImageSurface.h"
 #include "GLContext.h"
-#include "GLBlitHelper.h"
 #include "SharedSurfaceGL.h"
 #include "SurfaceStream.h"
 #ifdef MOZ_WIDGET_GONK
@@ -548,8 +547,8 @@ DrawBuffer::Create(GLContext* const gl,
             pStencilRB = nullptr;
     }
 
-    CreateRenderbuffersForOffscreen(gl, formats, size, caps.antialias,
-                                    pColorMSRB, pDepthRB, pStencilRB);
+    gl->CreateRenderbuffersForOffscreen(formats, size, caps.antialias,
+                                        pColorMSRB, pDepthRB, pStencilRB);
 
     GLuint fb = 0;
     gl->fGenFramebuffers(1, &fb);
@@ -601,8 +600,8 @@ ReadBuffer::Create(GLContext* gl,
     GLuint* pDepthRB   = caps.depth   ? &depthRB   : nullptr;
     GLuint* pStencilRB = caps.stencil ? &stencilRB : nullptr;
 
-    CreateRenderbuffersForOffscreen(gl, formats, surf->Size(), caps.antialias,
-                                    nullptr, pDepthRB, pStencilRB);
+    gl->CreateRenderbuffersForOffscreen(formats, surf->Size(), caps.antialias,
+                                        nullptr, pDepthRB, pStencilRB);
 
     GLuint colorTex = 0;
     GLuint colorRB = 0;
