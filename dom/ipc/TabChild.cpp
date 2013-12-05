@@ -1637,12 +1637,12 @@ TabChild::RecvHandleSingleTap(const CSSIntPoint& aPoint)
     return true;
   }
 
-  DispatchMouseEvent(NS_LITERAL_STRING("mousemove"), aPoint, 0, 1, 0, false,
-                     nsIDOMMouseEvent::MOZ_SOURCE_TOUCH);
-  DispatchMouseEvent(NS_LITERAL_STRING("mousedown"), aPoint, 0, 1, 0, false,
-                     nsIDOMMouseEvent::MOZ_SOURCE_TOUCH);
-  DispatchMouseEvent(NS_LITERAL_STRING("mouseup"), aPoint, 0, 1, 0, false,
-                     nsIDOMMouseEvent::MOZ_SOURCE_TOUCH);
+  LayoutDevicePoint currentPoint = CSSPoint(aPoint) * mWidget->GetDefaultScale();;
+
+  int time = 0;
+  DispatchSynthesizedMouseEvent(NS_MOUSE_MOVE, time, currentPoint);
+  DispatchSynthesizedMouseEvent(NS_MOUSE_BUTTON_DOWN, time, currentPoint);
+  DispatchSynthesizedMouseEvent(NS_MOUSE_BUTTON_UP, time, currentPoint);
 
   return true;
 }
