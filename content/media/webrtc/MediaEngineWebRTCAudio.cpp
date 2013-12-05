@@ -284,13 +284,16 @@ MediaEngineWebRTCAudioSource::Init()
     return;
   }
 
+#ifndef MOZ_B2G
+  // Because of the permission mechanism of B2G, we need to skip the status
+  // check here.
   bool avail = false;
   ptrVoEHw->GetRecordingDeviceStatus(avail);
   ptrVoEHw->Release();
   if (!avail) {
     return;
   }
-
+#endif // MOZ_B2G
   // Set "codec" to PCM, 32kHz on 1 channel
   webrtc::VoECodec* ptrVoECodec;
   webrtc::CodecInst codec;
