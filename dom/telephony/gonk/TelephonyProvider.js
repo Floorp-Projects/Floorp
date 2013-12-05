@@ -496,14 +496,20 @@ TelephonyProvider.prototype = {
 
     this._updateCallAudioState(aCall, null);
 
-    this._notifyAllListeners("callStateChanged", [aClientId,
-                                                  aCall.callIndex,
-                                                  aCall.state,
-                                                  aCall.number,
-                                                  aCall.isActive,
-                                                  aCall.isOutgoing,
-                                                  aCall.isEmergency,
-                                                  aCall.isConference]);
+    if (!aCall.failCause ||
+        aCall.failCause === RIL.GECKO_CALL_ERROR_NORMAL_CALL_CLEARING) {
+      this._notifyAllListeners("callStateChanged", [aClientId,
+                                                    aCall.callIndex,
+                                                    aCall.state,
+                                                    aCall.number,
+                                                    aCall.isActive,
+                                                    aCall.isOutgoing,
+                                                    aCall.isEmergency,
+                                                    aCall.isConference]);
+      return;
+    }
+
+    this.notifyCallError(aClientId, aCall.callIndex, aCall.failCause);
   },
 
   /**
