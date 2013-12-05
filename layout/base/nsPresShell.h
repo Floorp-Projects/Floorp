@@ -666,7 +666,6 @@ protected:
                                            nsIWidget *aRootWidget);
 
   void FireResizeEvent();
-  void FireBeforeResizeEvent();
   static void AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell);
 
   virtual void SynthesizeMouseMove(bool aFromScroll) MOZ_OVERRIDE;
