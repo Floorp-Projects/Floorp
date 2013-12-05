@@ -74,7 +74,6 @@ gfxFontListPrefObserver::Observe(nsISupports     *aSubject,
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(FontListMallocSizeOf)
 
 gfxPlatformFontList::MemoryReporter::MemoryReporter()
-    : MemoryMultiReporter("font-list")
 {}
 
 NS_IMETHODIMP

@@ -954,9 +954,7 @@ protected:
     class MemoryReporter MOZ_FINAL : public mozilla::MemoryMultiReporter
     {
     public:
-        MemoryReporter()
-            : MemoryMultiReporter("font-cache")
-        {}
+        MemoryReporter() {}
 
         NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
                                   nsISupports* aClosure);

@@ -229,9 +229,7 @@ class GPUAdapterReporter : public MemoryMultiReporter
     }
 
 public:
-    GPUAdapterReporter()
-      : MemoryMultiReporter("gpu-adapter")
-    {}
+    GPUAdapterReporter() {}
 
     NS_IMETHOD
     CollectReports(nsIMemoryReporterCallback* aCb,

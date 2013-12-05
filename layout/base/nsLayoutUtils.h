@@ -872,12 +872,18 @@ public:
   static nsIFrame* GetContainingBlockForClientRect(nsIFrame* aFrame);
 
   enum {
-    RECTS_ACCOUNT_FOR_TRANSFORMS = 0x01
+    RECTS_ACCOUNT_FOR_TRANSFORMS = 0x01,
+    // Two bits for specifying which box type to use.
+    // With neither bit set (default), use the border box.
+    RECTS_USE_CONTENT_BOX = 0x02,
+    RECTS_USE_PADDING_BOX = 0x04,
+    RECTS_USE_MARGIN_BOX = 0x06, // both bits set
+    RECTS_WHICH_BOX_MASK = 0x06 // bitmask for these two bits
   };
   /**
-   * Collect all CSS border-boxes associated with aFrame and its
-   * continuations, "drilling down" through outer table frames and
-   * some anonymous blocks since they're not real CSS boxes.
+   * Collect all CSS boxes (content, padding, border, or margin) associated
+   * with aFrame and its continuations, "drilling down" through outer table
+   * frames and some anonymous blocks since they're not real CSS boxes.
    * The boxes are positioned relative to aRelativeTo (taking scrolling
    * into account) and passed to the callback in frame-tree order.
    * If aFrame is null, no boxes are returned.
@@ -885,6 +891,9 @@ public:
    * If aFlags includes RECTS_ACCOUNT_FOR_TRANSFORMS, then when converting
    * the boxes into aRelativeTo coordinates, transforms (including CSS
    * and SVG transforms) are taken into account.
+   * If aFlags includes one of RECTS_USE_CONTENT_BOX, RECTS_USE_PADDING_BOX,
+   * or RECTS_USE_MARGIN_BOX, the corresponding type of box is used.
+   * Otherwise (by default), the border box is used.
    */
   static void GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
                                 RectCallback* aCallback, uint32_t aFlags = 0);
@@ -895,6 +904,9 @@ public:
    * If aFlags includes RECTS_ACCOUNT_FOR_TRANSFORMS, then when converting
    * the boxes into aRelativeTo coordinates, transforms (including CSS
    * and SVG transforms) are taken into account.
+   * If aFlags includes one of RECTS_USE_CONTENT_BOX, RECTS_USE_PADDING_BOX,
+   * or RECTS_USE_MARGIN_BOX, the corresponding type of box is used.
+   * Otherwise (by default), the border box is used.
    */
   static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo,
                                        uint32_t aFlags = 0);

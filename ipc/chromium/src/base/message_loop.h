@@ -269,6 +269,20 @@ public:
   }
 #endif  // OS_WIN
 
+  // Set the timeouts for background hang monitoring.
+  // A value of 0 indicates there is no timeout.
+  void set_hang_timeouts(uint32_t transient_timeout_ms,
+                         uint32_t permanent_timeout_ms) {
+    transient_hang_timeout_ = transient_timeout_ms;
+    permanent_hang_timeout_ = permanent_timeout_ms;
+  }
+  uint32_t transient_hang_timeout() const {
+    return transient_hang_timeout_;
+  }
+  uint32_t permanent_hang_timeout() const {
+    return permanent_hang_timeout_;
+  }
+
   //----------------------------------------------------------------------------
  protected:
   struct RunState {
@@ -419,6 +433,10 @@ public:
   // which enter a modal message loop.
   bool os_modal_loop_;
 #endif
+
+  // Timeout values for hang monitoring
+  uint32_t transient_hang_timeout_;
+  uint32_t permanent_hang_timeout_;
 
   // The next sequence number to use for delayed tasks.
   int next_sequence_num_;

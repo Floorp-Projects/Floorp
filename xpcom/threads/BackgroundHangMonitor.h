@@ -106,6 +106,8 @@ private:
   RefPtr<BackgroundHangThread> mThread;
 
 public:
+  static const uint32_t kNoTimeout = 0;
+
   /**
    * ThreadHangStatsIterator is used to iterate through the ThreadHangStats
    * associated with each active monitored thread. Because of an internal

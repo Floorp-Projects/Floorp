@@ -759,7 +759,7 @@ nsEventListenerManager::RemoveEventHandler(nsIAtom* aName,
     mListeners.RemoveElementAt(uint32_t(ls - &mListeners.ElementAt(0)));
     mNoListenerForEvent = NS_EVENT_NULL;
     mNoListenerForEventAtom = nullptr;
-    if (mTarget) {
+    if (mTarget && aName) {
       mTarget->EventListenerRemoved(aName);
     }
   }

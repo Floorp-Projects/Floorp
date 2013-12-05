@@ -147,6 +147,8 @@ void Thread::ThreadMain() {
   thread_id_ = PlatformThread::CurrentId();
   PlatformThread::SetName(name_.c_str());
   message_loop.set_thread_name(name_);
+  message_loop.set_hang_timeouts(startup_data_->options.transient_hang_timeout,
+                                 startup_data_->options.permanent_hang_timeout);
   message_loop_ = &message_loop;
 
   // Let the thread do extra initialization.

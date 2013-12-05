@@ -12,7 +12,7 @@ EXPORTS += [
     'MPAPI.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'MediaPluginDecoder.cpp',
     'MediaPluginHost.cpp',
     'MediaPluginReader.cpp',
