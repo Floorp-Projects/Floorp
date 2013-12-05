@@ -2055,6 +2055,15 @@ bool
 TypedDatum::obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiver,
                              uint32_t index, MutableHandleValue vp)
 {
+    bool present;
+    return obj_getElementIfPresent(cx, obj, receiver, index, vp, &present);
+}
+
+bool
+TypedDatum::obj_getElementIfPresent(JSContext *cx, HandleObject obj,
+                                    HandleObject receiver, uint32_t index,
+                                    MutableHandleValue vp, bool *present)
+{
     RootedObject type(cx, GetType(*obj));
     TypeRepresentation *typeRepr = typeRepresentation(*type);
 
@@ -2066,6 +2075,7 @@ TypedDatum::obj_getElement(JSContext *cx, HandleObject obj, HandleObject receive
         break;
 
       case TypeRepresentation::Array: {
+        *present = true;
         ArrayTypeRepresentation *arrayTypeRepr = typeRepr->asArray();
 
         if (index >= arrayTypeRepr->length()) {
@@ -2081,11 +2091,12 @@ TypedDatum::obj_getElement(JSContext *cx, HandleObject obj, HandleObject receive
 
     RootedObject proto(cx, obj->getProto());
     if (!proto) {
+        *present = false;
         vp.setUndefined();
         return true;
     }
 
-    return JSObject::getElement(cx, proto, receiver, index, vp);
+    return JSObject::getElementIfPresent(cx, proto, receiver, index, vp, present);
 }
 
 bool
@@ -2450,6 +2461,7 @@ const Class TypedObject::class_ = {
         TypedDatum::obj_getGeneric,
         TypedDatum::obj_getProperty,
         TypedDatum::obj_getElement,
+        TypedDatum::obj_getElementIfPresent,
         TypedDatum::obj_getSpecial,
         TypedDatum::obj_setGeneric,
         TypedDatum::obj_setProperty,
@@ -2461,7 +2473,6 @@ const Class TypedObject::class_ = {
         TypedDatum::obj_deleteElement,
         TypedDatum::obj_deleteSpecial,
         nullptr, nullptr, // watch/unwatch
-        nullptr, // slice
         TypedDatum::obj_enumerate,
         nullptr, /* thisObject */
     }
@@ -2542,6 +2553,7 @@ const Class TypedHandle::class_ = {
         TypedDatum::obj_getGeneric,
         TypedDatum::obj_getProperty,
         TypedDatum::obj_getElement,
+        TypedDatum::obj_getElementIfPresent,
         TypedDatum::obj_getSpecial,
         TypedDatum::obj_setGeneric,
         TypedDatum::obj_setProperty,
@@ -2553,7 +2565,6 @@ const Class TypedHandle::class_ = {
         TypedDatum::obj_deleteElement,
         TypedDatum::obj_deleteSpecial,
         nullptr, nullptr, // watch/unwatch
-        nullptr, // slice
         TypedDatum::obj_enumerate,
         nullptr, /* thisObject */
     }

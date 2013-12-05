@@ -347,6 +347,9 @@ typedef bool
 (* ElementIdOp)(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, uint32_t index,
                 JS::MutableHandleValue vp);
 typedef bool
+(* ElementIfPresentOp)(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver,
+                       uint32_t index, JS::MutableHandleValue vp, bool* present);
+typedef bool
 (* SpecialIdOp)(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver,
                 HandleSpecialId sid, JS::MutableHandleValue vp);
 typedef bool
@@ -379,10 +382,6 @@ typedef bool
 
 typedef bool
 (* UnwatchOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
-
-typedef bool
-(* SliceOp)(JSContext *cx, JS::HandleObject obj, uint32_t begin, uint32_t end,
-            JS::HandleObject result); // result is actually preallocted.
 
 typedef JSObject *
 (* ObjectOp)(JSContext *cx, JS::HandleObject obj);
@@ -460,6 +459,7 @@ struct ObjectOps
     GenericIdOp         getGeneric;
     PropertyIdOp        getProperty;
     ElementIdOp         getElement;
+    ElementIfPresentOp  getElementIfPresent; /* can be null */
     SpecialIdOp         getSpecial;
     StrictGenericIdOp   setGeneric;
     StrictPropertyIdOp  setProperty;
@@ -472,7 +472,6 @@ struct ObjectOps
     DeleteSpecialOp     deleteSpecial;
     WatchOp             watch;
     UnwatchOp           unwatch;
-    SliceOp             slice; // Optimized slice, can be null.
 
     JSNewEnumerateOp    enumerate;
     ObjectOp            thisObject;
@@ -481,7 +480,7 @@ struct ObjectOps
 #define JS_NULL_OBJECT_OPS                                                    \
     {nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr, \
      nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr, \
-     nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr}
+     nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr}
 
 } // namespace js
 
