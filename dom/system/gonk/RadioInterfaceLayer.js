@@ -1258,6 +1258,10 @@ RadioInterface.prototype = {
       case "iccmbdn":
         this.handleIccMbdn(message);
         break;
+      case "iccmwis":
+        gMessageManager.sendVoicemailMessage("RIL:VoicemailNotification",
+                                             this.clientId, message.mwi);
+        break;
       case "USSDReceived":
         if (DEBUG) this.debug("USSDReceived " + JSON.stringify(message));
         this.handleUSSDReceived(message);
@@ -2103,11 +2107,6 @@ RadioInterface.prototype = {
                                    null);
       return true;
     }
-
-    // TODO: Bug #768441
-    // For now we don't store indicators persistently. When the mwi.discard
-    // flag is false, we'll need to persist the indicator to EFmwis.
-    // See TS 23.040 9.2.3.24.2
 
     let mwi = message.mwi;
     if (mwi) {
