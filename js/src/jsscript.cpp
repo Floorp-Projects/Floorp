@@ -2910,8 +2910,12 @@ JSScript::getBlockScope(jsbytecode *pc)
         const BlockScopeNote *note = &scopeArray->vector[n];
         if (note->start > offset)
             break;
-        if (offset <= note->start + note->length)
-            blockChain = getObject(note->index);
+        if (offset < note->start + note->length) {
+            if (note->index == BlockScopeNote::NoBlockScopeIndex)
+                blockChain = nullptr;
+            else
+                blockChain = getObject(note->index);
+        }
     }
 
     return blockChain;

@@ -63,6 +63,7 @@ struct CGBlockScopeList {
     CGBlockScopeList(ExclusiveContext *cx) : list(cx) {}
 
     bool append(uint32_t scopeObject, uint32_t offset);
+    uint32_t findEnclosingScope(uint32_t index);
     void recordEnd(uint32_t index, uint32_t offset);
     size_t length() const { return list.length(); }
     void finish(BlockScopeArray *array);
