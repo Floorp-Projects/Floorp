@@ -24,6 +24,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "PCOMContentPermissionRequestChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 class nsIPrincipal;
 
@@ -293,6 +294,9 @@ PositionError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 void
 PositionError::NotifyCallback(const GeoPositionErrorCallback& aCallback)
 {
+  // We need to be system here. See bug 452762.
+  AutoSystemCaller asc;
+
   nsAutoMicroTask mt;
   if (aCallback.HasWebIDLCallback()) {
     PositionErrorCallback* callback = aCallback.GetWebIDLCallback();
@@ -524,6 +528,8 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     Shutdown();
   }
 
+  // We need to be system here. See bug 452762.
+  AutoSystemCaller asc;
   nsAutoMicroTask mt;
   if (mCallback.HasWebIDLCallback()) {
     ErrorResult err;
