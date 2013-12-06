@@ -2728,6 +2728,10 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
                  KIND_HEAP, sizeInfo.mScopeAndMapSize,
                  "Memory used by XPConnect scopes.");
 
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/proto-iface-cache"),
+                 KIND_HEAP, sizeInfo.mProtoAndIfaceCacheSize,
+                 "Memory used for prototype and interface binding caches.");
+
     REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/js-component-loader"),
                  KIND_HEAP, jsComponentLoaderSize,
                  "Memory used by XPConnect's JS component loader.");
