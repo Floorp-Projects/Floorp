@@ -4,6 +4,9 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.mozglue.GeckoLoader;
+import org.mozilla.gecko.sqlite.SQLiteBridge;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -32,7 +35,6 @@ import static org.mozilla.gecko.FennecNativeDriver.LogLevel;
 public class FennecNativeActions implements Actions {
     private Solo mSolo;
     private Instrumentation mInstr;
-    private Activity mGeckoApp;
     private Assert mAsserter;
 
     // Objects for reflexive access of fennec classes.
@@ -47,7 +49,6 @@ public class FennecNativeActions implements Actions {
     private Method mPreferencesObserveEvent;
     private Method mPreferencesRemoveObserversEvent;
     private Method mSetDrawListener;
-    private Method mQuerySql;
     private Object mRobocopApi;
 
     private static final String LOGTAG = "FennecNativeActions";
@@ -55,8 +56,10 @@ public class FennecNativeActions implements Actions {
     public FennecNativeActions(Activity activity, Solo robocop, Instrumentation instrumentation, Assert asserter) {
         mSolo = robocop;
         mInstr = instrumentation;
-        mGeckoApp = activity;
         mAsserter = asserter;
+
+        GeckoLoader.loadSQLiteLibs(activity, activity.getApplication().getPackageResourcePath());
+
         // Set up reflexive access of java classes and methods.
         try {
             mClassLoader = activity.getClassLoader();
@@ -72,7 +75,6 @@ public class FennecNativeActions implements Actions {
             mPreferencesObserveEvent = mApiClass.getMethod("preferencesObserveEvent", Integer.TYPE, String[].class);
             mPreferencesRemoveObserversEvent = mApiClass.getMethod("preferencesRemoveObserversEvent", Integer.TYPE);
             mSetDrawListener = mApiClass.getMethod("setDrawListener", mDrawListenerClass);
-            mQuerySql = mApiClass.getMethod("querySql", String.class, String.class);
 
             mRobocopApi = mApiClass.getConstructor(Activity.class).newInstance(activity);
         } catch (Exception e) {
@@ -495,14 +497,7 @@ public class FennecNativeActions implements Actions {
         mSolo.drag(startingX, endingX, startingY, endingY, 10);
     }
 
-    public Cursor querySql(String dbPath, String sql) {
-        try {
-            return (Cursor)mQuerySql.invoke(mRobocopApi, dbPath, sql);
-        } catch(InvocationTargetException ex) {
-            Log.e(LOGTAG, "Error invoking method", ex);
-        } catch(IllegalAccessException ex) {
-            Log.e(LOGTAG, "Error using field", ex);
-        }
-        return null;
+    public Cursor querySql(final String dbPath, final String sql) {
+        return new SQLiteBridge(dbPath).rawQuery(sql, null);
     }
 }
