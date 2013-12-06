@@ -416,7 +416,7 @@ TEST(AsyncPanZoomController, OverScrollPanning) {
   apzc->SetFrameMetrics(TestFrameMetrics());
   apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
 
-  EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(3);
+  EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(4);
   EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
 
   // Pan sufficiently to hit overscroll behavior
