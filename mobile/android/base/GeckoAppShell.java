@@ -325,6 +325,7 @@ public class GeckoAppShell
         sLayerView = lv;
     }
 
+    @RobocopTarget
     public static LayerView getLayerView() {
         return sLayerView;
     }
