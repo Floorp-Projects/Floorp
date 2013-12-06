@@ -778,7 +778,7 @@ js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, bool lines,
             if (parser.isReachable(next))
                 Sprint(sp, "%05u ", parser.stackDepthAtPC(next));
             else
-                Sprint(sp, "      ", parser.stackDepthAtPC(next));
+                Sprint(sp, "      ");
         }
         len = js_Disassemble1(cx, script, next, script->pcToOffset(next), lines, sp);
         if (!len)
