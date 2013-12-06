@@ -49,7 +49,6 @@ function testParseHTMLAttribute() {
   let attrib = "color:red; font-size: 12px; background-image: " +
                "url(chrome://branding/content/about-logo.png)";
   let frag = parser.parseHTMLAttribute(attrib, {
-    colorSwatchClass: "test-colorswatch",
     urlClass: "theme-link"
   });
 
@@ -57,15 +56,31 @@ function testParseHTMLAttribute() {
   ok(target, "captain, we have the div");
   target.appendChild(frag);
 
-  let expected = 'color:<span style="background-color:red" ' +
-                 'class="test-colorswatch"></span>#F00; font-size: 12px; ' +
+  let expected = 'color:#F00; font-size: 12px; ' +
                  'background-image: url(\'<a href="chrome://branding/content/about-logo.png" ' +
                  'class="theme-link" ' +
                  'target="_blank">chrome://branding/content/about-logo.png</a>\')';
 
   is(target.innerHTML, expected, "HTML Attribute correctly parsed");
+  target.innerHTML = "";
+  testParseNonCssHTMLAttribute();
+}
+
+function testParseNonCssHTMLAttribute() {
+  let attrib = "someclass background someotherclass red";
+  let frag = parser.parseHTMLAttribute(attrib);
+
+  let target = doc.querySelector("div");
+  ok(target, "captain, we have the div");
+  target.appendChild(frag);
+
+  let expected = 'someclass background someotherclass red';
+
+  is(target.innerHTML, expected, "Non-CSS HTML Attribute correctly parsed");
+  target.innerHTML = "";
   finishUp();
 }
+
 
 function finishUp() {
   Services = Loader = OutputParser = parser = doc = null;
