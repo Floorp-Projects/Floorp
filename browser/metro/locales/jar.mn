@@ -22,9 +22,7 @@
   locale/browser/sync.properties          (%chrome/sync.properties)
   locale/browser/passwordmgr.properties   (%chrome/passwordmgr.properties)
   locale/browser/phishing.dtd             (%chrome/phishing.dtd)
-#ifdef MOZ_CRASHREPORTER
-  locale/browser/crashprompt.dtd          (%chrome/crashprompt.dtd)
-#endif
+  locale/browser/crashprompt.properties   (%chrome/crashprompt.properties)
   locale/browser/aboutAddons.dtd          (%chrome/aboutAddons.dtd)
 
 @AB_CD@.jar:
