@@ -25,8 +25,8 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/Util.h"
-#include "mozilla/dom/ScriptSettings.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsWrapperCache.h"
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"
@@ -153,16 +153,17 @@ protected:
     JSCompartment* mCompartment;
 
     // And now members whose construction/destruction order we need to control.
-    Maybe<AutoEntryScript> mAutoEntryScript;
+
+    nsCxPusher mCxPusher;
 
     // Constructed the rooter within the scope of mCxPusher above, so that it's
     // always within a request during its lifetime.
     Maybe<JS::Rooted<JSObject*> > mRootedCallable;
 
     // Can't construct a JSAutoCompartment without a JSContext either.  Also,
-    // Put mAc after mAutoEntryScript so that we exit the compartment before
-    // we pop the JSContext. Though in practice we'll often manually order
-    // those two things.
+    // Put mAc after mCxPusher so that we exit the compartment before we pop the
+    // JSContext.  Though in practice we'll often manually order those two
+    // things.
     Maybe<JSAutoCompartment> mAc;
 
     // An ErrorResult to possibly re-throw exceptions on and whether
