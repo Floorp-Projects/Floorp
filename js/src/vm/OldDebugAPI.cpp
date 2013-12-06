@@ -68,18 +68,19 @@ IsTopFrameConstructing(JSContext *cx, AbstractFramePtr frame)
 }
 
 JSTrapStatus
-js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
+js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
 {
     JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->interpreterFrame());
 
     if (!frame.script()->selfHosted()) {
+        JSAbstractFramePtr jsframe(frame.raw(), pc);
         if (frame.isFramePushedByExecute()) {
             if (JSInterpreterHook hook = cx->runtime()->debugHooks.executeHook)
-                frame.setHookData(hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame),
+                frame.setHookData(hook(cx, jsframe, IsTopFrameConstructing(cx, frame),
                                        true, 0, cx->runtime()->debugHooks.executeHookData));
         } else {
             if (JSInterpreterHook hook = cx->runtime()->debugHooks.callHook)
-                frame.setHookData(hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame),
+                frame.setHookData(hook(cx, jsframe, IsTopFrameConstructing(cx, frame),
                                        true, 0, cx->runtime()->debugHooks.callHookData));
         }
     }
@@ -105,7 +106,7 @@ js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
 }
 
 bool
-js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool okArg)
+js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc, bool okArg)
 {
     JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->interpreterFrame());
 
@@ -113,12 +114,13 @@ js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool okArg)
 
     // We don't add hook data for self-hosted scripts, so we don't need to check for them, here.
     if (void *hookData = frame.maybeHookData()) {
+        JSAbstractFramePtr jsframe(frame.raw(), pc);
         if (frame.isFramePushedByExecute()) {
             if (JSInterpreterHook hook = cx->runtime()->debugHooks.executeHook)
-                hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame), false, &ok, hookData);
+                hook(cx, jsframe, IsTopFrameConstructing(cx, frame), false, &ok, hookData);
         } else {
             if (JSInterpreterHook hook = cx->runtime()->debugHooks.callHook)
-                hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame), false, &ok, hookData);
+                hook(cx, jsframe, IsTopFrameConstructing(cx, frame), false, &ok, hookData);
         }
     }
 
@@ -1228,27 +1230,27 @@ JS::FormatStackDump(JSContext *cx, char *buf, bool showArgs, bool showLocals, bo
     return buf;
 }
 
-JSAbstractFramePtr::JSAbstractFramePtr(void *raw)
-  : ptr_(uintptr_t(raw))
+JSAbstractFramePtr::JSAbstractFramePtr(void *raw, jsbytecode *pc)
+  : ptr_(uintptr_t(raw)), pc_(pc)
 { }
 
 JSObject *
 JSAbstractFramePtr::scopeChain(JSContext *cx)
 {
-    AbstractFramePtr frame = Valueify(*this);
+    AbstractFramePtr frame(*this);
     RootedObject scopeChain(cx, frame.scopeChain());
     AutoCompartment ac(cx, scopeChain);
-    return GetDebugScopeForFrame(cx, frame);
+    return GetDebugScopeForFrame(cx, frame, pc());
 }
 
 JSObject *
 JSAbstractFramePtr::callObject(JSContext *cx)
 {
-    AbstractFramePtr frame = Valueify(*this);
+    AbstractFramePtr frame(*this);
     if (!frame.isFunctionFrame())
         return nullptr;
 
-    JSObject *o = GetDebugScopeForFrame(cx, frame);
+    JSObject *o = GetDebugScopeForFrame(cx, frame, pc());
 
     /*
      * Given that fp is a function frame and GetDebugScopeForFrame always fills
@@ -1270,21 +1272,21 @@ JSAbstractFramePtr::callObject(JSContext *cx)
 JSFunction *
 JSAbstractFramePtr::maybeFun()
 {
-    AbstractFramePtr frame = Valueify(*this);
+    AbstractFramePtr frame(*this);
     return frame.maybeFun();
 }
 
 JSScript *
 JSAbstractFramePtr::script()
 {
-    AbstractFramePtr frame = Valueify(*this);
+    AbstractFramePtr frame(*this);
     return frame.script();
 }
 
 bool
 JSAbstractFramePtr::getThisValue(JSContext *cx, MutableHandleValue thisv)
 {
-    AbstractFramePtr frame = Valueify(*this);
+    AbstractFramePtr frame(*this);
 
     RootedObject scopeChain(cx, frame.scopeChain());
     js::AutoCompartment ac(cx, scopeChain);
@@ -1298,7 +1300,7 @@ JSAbstractFramePtr::getThisValue(JSContext *cx, MutableHandleValue thisv)
 bool
 JSAbstractFramePtr::isDebuggerFrame()
 {
-    AbstractFramePtr frame = Valueify(*this);
+    AbstractFramePtr frame(*this);
     return frame.isDebuggerFrame();
 }
 
@@ -1340,7 +1342,7 @@ JSAbstractFramePtr::evaluateUCInStackFrame(JSContext *cx,
     if (!env)
         return false;
 
-    AbstractFramePtr frame = Valueify(*this);
+    AbstractFramePtr frame(*this);
     if (!ComputeThis(cx, frame))
         return false;
     RootedValue thisv(cx, frame.thisValue());
@@ -1382,7 +1384,7 @@ JSAbstractFramePtr
 JSBrokenFrameIterator::abstractFramePtr() const
 {
     NonBuiltinScriptFrameIter iter(*(ScriptFrameIter::Data *)data_);
-    return Jsvalify(iter.abstractFramePtr());
+    return JSAbstractFramePtr(iter.abstractFramePtr().raw(), iter.pc());
 }
 
 jsbytecode *
