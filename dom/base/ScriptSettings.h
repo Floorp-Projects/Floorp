@@ -27,6 +27,12 @@ namespace dom {
 void InitScriptSettings();
 void DestroyScriptSettings();
 
+// Note: We don't yet expose GetEntryGlobal, because in order for it to be
+// correct, we first need to replace a bunch of explicit cx pushing in the
+// browser with AutoEntryScript. But GetIncumbentGlobal is simpler, because it
+// can mostly be inferred from the JS stack.
+nsIGlobalObject* GetIncumbentGlobal();
+
 class ScriptSettingsStack;
 struct ScriptSettingsStackEntry {
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
@@ -86,6 +92,7 @@ public:
 private:
   dom::ScriptSettingsStack& mStack;
   dom::ScriptSettingsStackEntry mEntry;
+  JS::AutoHideScriptedCaller mCallerOverride;
 };
 
 /*
