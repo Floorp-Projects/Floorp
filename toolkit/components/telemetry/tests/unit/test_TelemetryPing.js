@@ -142,7 +142,7 @@ function decodeRequestPayload(request) {
     let observer = {
       buffer: "",
       onStreamComplete: function(loader, context, status, length, result) {
-	this.buffer = String.fromCharCode.apply(this, result);
+        this.buffer = String.fromCharCode.apply(this, result);
       }
     };
 
@@ -363,7 +363,7 @@ function runOldPingFileTest() {
   do_check_true(histogramsFile.exists());
 
   let mtime = histogramsFile.lastModifiedTime;
-  histogramsFile.lastModifiedTime = mtime - 8 * 24 * 60 * 60 * 1000; // 8 days.
+  histogramsFile.lastModifiedTime = mtime - 14 * 24 * 60 * 60 * 1000; // 14 days.
   TelemetryPing.testLoadHistograms(histogramsFile, true);
   do_check_false(histogramsFile.exists());
 }

@@ -22,8 +22,13 @@ const PR_EXCL = 0x80;
 const RW_OWNER = parseInt("0600", 8);
 const RWX_OWNER = parseInt("0700", 8);
 
-// Delete ping files that have been lying around for longer than this.
-const MAX_PING_FILE_AGE = 7 * 24 * 60 * 60 * 1000; // 1 week
+// Files that have been lying around for longer than MAX_PING_FILE_AGE are
+// deleted without being loaded.
+const MAX_PING_FILE_AGE = 14 * 24 * 60 * 60 * 1000; // 2 weeks
+
+// Files that are older than OVERDUE_PING_FILE_AGE, but younger than
+// MAX_PING_FILE_AGE indicate that we need to send all of our pings ASAP.
+const OVERDUE_PING_FILE_AGE = 7 * 24 * 60 * 60 * 1000; // 1 week
 
 // The number of outstanding saved pings that we have issued loading
 // requests for.
@@ -31,6 +36,14 @@ let pingsLoaded = 0;
 
 // The number of those requests that have actually completed.
 let pingLoadsCompleted = 0;
+
+// The number of pings that we have destroyed due to being older
+// than MAX_PING_FILE_AGE.
+let pingsDiscarded = 0;
+
+// The number of pings that are older than OVERDUE_PING_FILE_AGE
+// but younger than MAX_PING_FILE_AGE.
+let pingsOverdue = 0;
 
 // If |true|, send notifications "telemetry-test-save-complete"
 // and "telemetry-test-load-complete" once save/load is complete.
@@ -40,6 +53,14 @@ let shouldNotifyUponSave = false;
 let pendingPings = [];
 
 this.TelemetryFile = {
+
+  get MAX_PING_FILE_AGE() {
+    return MAX_PING_FILE_AGE;
+  },
+
+  get OVERDUE_PING_FILE_AGE() {
+    return OVERDUE_PING_FILE_AGE;
+  },
 
   /**
    * Save a single ping to a file.
@@ -142,7 +163,7 @@ this.TelemetryFile = {
    * ping. It is passed |true| in case of success, |false| in case of
    * format error.
    */
-  loadSavedPings: function(sync, onLoad = null) {
+  loadSavedPings: function(sync, onLoad = null, onDone = null) {
     let directory = ensurePingDirectory();
     let entries = directory.directoryEntries
                            .QueryInterface(Ci.nsIDirectoryEnumerator);
@@ -150,7 +171,7 @@ this.TelemetryFile = {
     pingLoadsCompleted = 0;
     try {
       while (entries.hasMoreElements()) {
-        this.loadHistograms(entries.nextFile, sync, onLoad);
+        this.loadHistograms(entries.nextFile, sync, onLoad, onDone);
       }
     } finally {
       entries.close();
@@ -169,12 +190,18 @@ this.TelemetryFile = {
    * ping. It is passed |true| in case of success, |false| in case of
    * format error.
    */
-  loadHistograms: function loadHistograms(file, sync, onLoad = null) {
-    let now = new Date();
+  loadHistograms: function loadHistograms(file, sync, onLoad = null, onDone = null) {
+    let now = Date.now();
     if (now - file.lastModifiedTime > MAX_PING_FILE_AGE) {
       // We haven't had much luck in sending this file; delete it.
       file.remove(true);
+      pingsDiscarded++;
       return;
+    }
+
+    // This file is a bit stale, and overdue for sending.
+    if (now - file.lastModifiedTime > OVERDUE_PING_FILE_AGE) {
+      pingsOverdue++;
     }
 
     pingsLoaded++;
@@ -182,7 +209,7 @@ this.TelemetryFile = {
       let stream = Cc["@mozilla.org/network/file-input-stream;1"]
                    .createInstance(Ci.nsIFileInputStream);
       stream.init(file, -1, -1, 0);
-      addToPendingPings(file, stream, onLoad);
+      addToPendingPings(file, stream, onLoad, onDone);
     } else {
       let channel = NetUtil.newChannel(file);
       channel.contentType = "application/json";
@@ -191,7 +218,7 @@ this.TelemetryFile = {
         if (!Components.isSuccessCode(result)) {
           return;
         }
-        addToPendingPings(file, stream, onLoad);
+        addToPendingPings(file, stream, onLoad, onDone);
       }).bind(this));
     }
   },
@@ -201,6 +228,22 @@ this.TelemetryFile = {
    */
   get pingsLoaded() {
     return pingsLoaded;
+  },
+
+  /**
+   * The number of pings loaded that are older than OVERDUE_PING_FILE_AGE
+   * but younger than MAX_PING_FILE_AGE.
+   */
+  get pingsOverdue() {
+    return pingsOverdue;
+  },
+
+  /**
+   * The number of pings that we just tossed out for being older than
+   * MAX_PING_FILE_AGE.
+   */
+  get pingsDiscarded() {
+    return pingsDiscarded;
   },
 
   /**
@@ -249,7 +292,7 @@ function ensurePingDirectory() {
   return directory;
 };
 
-function addToPendingPings(file, stream, onLoad) {
+function addToPendingPings(file, stream, onLoad, onDone) {
   let success = false;
 
   try {
@@ -263,18 +306,24 @@ function addToPendingPings(file, stream, onLoad) {
     }
     pingLoadsCompleted++;
     pendingPings.push(ping);
-    if (shouldNotifyUponSave &&
-        pingLoadsCompleted == pingsLoaded) {
-      Services.obs.notifyObservers(null, "telemetry-test-load-complete", null);
-    }
     success = true;
   } catch (e) {
     // An error reading the file, or an error parsing the contents.
     stream.close();           // close is idempotent.
     file.remove(true); // FIXME: Should be false, isn't it?
   }
+
   if (onLoad) {
     onLoad(success);
+  }
+
+  if (pingLoadsCompleted == pingsLoaded) {
+    if (onDone) {
+      onDone();
+    }
+    if (shouldNotifyUponSave) {
+      Services.obs.notifyObservers(null, "telemetry-test-load-complete", null);
+    }
   }
 };
 
