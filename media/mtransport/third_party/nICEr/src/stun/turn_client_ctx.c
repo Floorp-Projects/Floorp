@@ -353,25 +353,10 @@ nr_turn_client_ctx_destroy(nr_turn_client_ctx **ctxp)
   ctx=*ctxp;
   *ctxp = 0;
 
-  /* Cancel frees the rest of our data */
   RFREE(ctx->label);
   ctx->label = 0;
 
   nr_turn_client_cancel(ctx);
-
-  RFREE(ctx);
-
-  return(0);
-}
-
-int nr_turn_client_cancel(nr_turn_client_ctx *ctx)
-{
-  if (ctx->state == NR_TURN_CLIENT_STATE_CANCELLED ||
-      ctx->state == NR_TURN_CLIENT_STATE_FAILED)
-    return 0;
-
-  if (ctx->label)
-    r_log(NR_LOG_TURN, LOG_INFO, "TURN(%s): cancelling", ctx->label);
 
   /* Setting these values to 0 isn't strictly necessary, but
      it protects us in case we double cancel and for
@@ -396,6 +381,26 @@ int nr_turn_client_cancel(nr_turn_client_ctx *ctx)
     nr_turn_permission *perm = STAILQ_FIRST(&ctx->permissions);
     STAILQ_REMOVE_HEAD(&ctx->permissions, entry);
     nr_turn_permission_destroy(&perm);
+  }
+  RFREE(ctx);
+
+  return(0);
+}
+
+int nr_turn_client_cancel(nr_turn_client_ctx *ctx)
+{
+  if (ctx->state == NR_TURN_CLIENT_STATE_CANCELLED ||
+      ctx->state == NR_TURN_CLIENT_STATE_FAILED)
+    return 0;
+
+  if (ctx->label)
+    r_log(NR_LOG_TURN, LOG_INFO, "TURN(%s): cancelling", ctx->label);
+
+  /* Cancel the STUN client ctxs */
+  nr_turn_stun_ctx *stun = STAILQ_FIRST(&ctx->stun_ctxs);
+  while (stun) {
+    nr_stun_client_cancel(stun->stun);
+    stun = STAILQ_NEXT(stun, entry);
   }
 
   /* Cancel the timer, if not already cancelled */
