@@ -2633,7 +2633,8 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
 
     size_t xpconnect = xpcrt->SizeOfIncludingThis(JSMallocSizeOf);
 
-    size_t scopes = XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(JSMallocSizeOf);
+    XPCWrappedNativeScope::ScopeSizeInfo sizeInfo(JSMallocSizeOf);
+    XPCWrappedNativeScope::AddSizeOfAllScopesIncludingThis(&sizeInfo);
 
     mozJSComponentLoader* loader = mozJSComponentLoader::Get();
     size_t jsComponentLoaderSize = loader ? loader->SizeOfIncludingThis(JSMallocSizeOf) : 0;
@@ -2724,7 +2725,7 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
                  "Memory used by XPConnect runtime.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/scopes"),
-                 KIND_HEAP, scopes,
+                 KIND_HEAP, sizeInfo.mScopeAndMapSize,
                  "Memory used by XPConnect scopes.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/js-component-loader"),
