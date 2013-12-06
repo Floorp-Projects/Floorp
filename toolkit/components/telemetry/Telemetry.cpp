@@ -382,11 +382,9 @@ struct TelemetryHistogram {
   uint32_t bucketCount;
   uint32_t histogramType;
   uint32_t id_offset;
-  uint32_t comment_offset;
   bool extendedStatisticsOK;
 
   const char *id() const;
-  const char *comment() const;
 };
 
 #include "TelemetryHistogramData.inc"
@@ -396,12 +394,6 @@ const char *
 TelemetryHistogram::id() const
 {
   return &gHistogramStringTable[this->id_offset];
-}
-
-const char *
-TelemetryHistogram::comment() const
-{
-  return &gHistogramStringTable[this->comment_offset];
 }
 
 bool
