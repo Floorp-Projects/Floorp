@@ -609,8 +609,12 @@ var BrowserUI = {
     if (lastCrashID && lastCrashID.length) {
       if (Services.prefs.getBoolPref("app.crashreporter.autosubmit")) {
         Util.dumpLn("Submitting last crash id:", lastCrashID);
+        let params = {};
+        if (!Services.prefs.getBoolPref("app.crashreporter.submitURLs")) {
+          params['extraExtraKeyVals'] = { URL: '' };
+        }
         try {
-          this.CrashSubmit.submit(lastCrashID);
+          this.CrashSubmit.submit(lastCrashID, params);
         } catch (ex) {
           Util.dumpLn(ex);
         }
