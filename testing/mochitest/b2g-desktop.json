@@ -619,6 +619,7 @@
     "dom/plugins/test/mochitest/test_instance_unparent2.html": "Bug 931116, b2g desktop specific, initial triage",
     "dom/plugins/test/mochitest/test_instance_unparent3.html": "Bug 931116, b2g desktop specific, initial triage",
     "dom/plugins/test/mochitest/test_instantiation.html": "Bug 931116, b2g desktop specific, initial triage",
+    "dom/plugins/test/mochitest/test_mixed_case_mime.html": "Bug 931116, b2g desktop specific",
     "dom/plugins/test/mochitest/test_multipleinstanceobjects.html": "Bug 931116, b2g desktop specific, initial triage",
     "dom/plugins/test/mochitest/test_newstreamondestroy.html": "Bug 931116, b2g desktop specific, initial triage",
     "dom/plugins/test/mochitest/test_npn_asynccall.html": "Bug 931116, b2g desktop specific, initial triage",
