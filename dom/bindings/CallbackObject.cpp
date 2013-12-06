@@ -44,7 +44,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CallbackObject)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCallback)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
+CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
                                      ErrorResult& aRv,
                                      ExceptionHandling aExceptionHandling,
                                      JSCompartment* aCompartment)
@@ -64,7 +64,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   // callable.
 
   // First, find the real underlying callback.
-  JSObject* realCallback = js::UncheckedUnwrap(aCallback->CallbackPreserveColor());
+  JSObject* realCallback = js::UncheckedUnwrap(aCallback);
   JSContext* cx = nullptr;
   nsIGlobalObject* globalObject = nullptr;
 
@@ -102,8 +102,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
 
   mAutoEntryScript.construct(globalObject, mIsMainThread, cx);
 
-  // Unmark the callable (by invoking Callback() and not the CallbackPreserveColor()
-  // variant), and stick it in a Rooted before it can go gray again.
+  // Unmark the callable, and stick it in a Rooted before it can go gray again.
   // Nothing before us in this function can trigger a CC, so it's safe to wait
   // until here it do the unmark. This allows us to order the following two
   // operations _after_ the Push() above, which lets us take advantage of the
@@ -111,14 +110,15 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   //
   // We can do this even though we're not in the right compartment yet, because
   // Rooted<> does not care about compartments.
-  mRootedCallable.construct(cx, aCallback->Callback());
+  JS::ExposeObjectToActiveJS(aCallback);
+  mRootedCallable.construct(cx, aCallback);
 
   if (mIsMainThread) {
     // Check that it's ok to run this callback at all.
-    // Make sure to use realCallback to get the global of the callback object,
-    // not the wrapper.
+    // Make sure to unwrap aCallback before passing it in to get the global of
+    // the callback object, not the wrapper.
     bool allowed = nsContentUtils::GetSecurityManager()->
-      ScriptAllowed(js::GetGlobalForObjectCrossCompartment(realCallback));
+      ScriptAllowed(js::GetGlobalForObjectCrossCompartment(js::UncheckedUnwrap(aCallback)));
 
     if (!allowed) {
       return;
@@ -130,7 +130,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   // Note that if the callback is a wrapper, this will not be the same
   // compartment that we ended up in with mAutoEntryScript above, because the
   // entry point is based off of the unwrapped callback (realCallback).
-  mAc.construct(cx, mRootedCallable.ref());
+  mAc.construct(cx, aCallback);
 
   // And now we're ready to go.
   mCx = cx;
