@@ -23,8 +23,7 @@ function ifWebGLSupported() {
   // 1. Perform a simple navigation.
 
   navigate(target, MULTIPLE_CONTEXTS_URL);
-  let secondProgram = yield once(front, "program-linked");
-  let thirdProgram = yield once(front, "program-linked");
+  let [secondProgram, thirdProgram] = yield getPrograms(front, 2);
   let programs = yield front.getPrograms();
   is(programs.length, 2,
     "The second and third programs should be returned by a call to getPrograms().");
@@ -65,8 +64,7 @@ function ifWebGLSupported() {
   is(programs.length, 0,
     "There should be no cached program actors yet.");
 
-  yield once(front, "program-linked");
-  yield once(front, "program-linked");
+  yield getPrograms(front, 2);
   yield globalCreated;
   let programs = yield front.getPrograms();
   is(programs.length, 2,

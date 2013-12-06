@@ -9,8 +9,6 @@ const SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE = 1048576; // 1 MB in bytes
 const SOURCE_URL_DEFAULT_MAX_LENGTH = 64; // chars
 const STACK_FRAMES_SOURCE_URL_MAX_LENGTH = 15; // chars
 const STACK_FRAMES_SOURCE_URL_TRIM_SECTION = "center";
-const STACK_FRAMES_POPUP_SOURCE_URL_MAX_LENGTH = 32; // chars
-const STACK_FRAMES_POPUP_SOURCE_URL_TRIM_SECTION = "center";
 const STACK_FRAMES_SCROLL_DELAY = 100; // ms
 const BREAKPOINT_LINE_TOOLTIP_MAX_LENGTH = 1000; // chars
 const BREAKPOINT_CONDITIONAL_POPUP_POSITION = "before_start";
@@ -59,6 +57,7 @@ let DebuggerView = {
     this.FilteredFunctions.initialize();
     this.ChromeGlobals.initialize();
     this.StackFrames.initialize();
+    this.StackFramesClassicList.initialize();
     this.Sources.initialize();
     this.VariableBubble.initialize();
     this.WatchExpressions.initialize();
@@ -93,6 +92,7 @@ let DebuggerView = {
     this.FilteredFunctions.destroy();
     this.ChromeGlobals.destroy();
     this.StackFrames.destroy();
+    this.StackFramesClassicList.destroy();
     this.Sources.destroy();
     this.VariableBubble.destroy();
     this.WatchExpressions.destroy();
@@ -531,7 +531,7 @@ let DebuggerView = {
       animated: true,
       delayed: true,
       callback: aCallback
-    }, 0);
+    });
   },
 
   /**

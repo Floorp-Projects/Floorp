@@ -389,7 +389,8 @@ var SelectionHandler = {
         SelectionHandler.shareSelection();
       },
       showAsAction: function(aElement) {
-        return !(aElement instanceof HTMLInputElement && aElement.mozIsTextField(false))
+        return !((aElement instanceof HTMLInputElement && aElement.mozIsTextField(false)) ||
+                 (aElement instanceof HTMLTextAreaElement));
       },
       selector: ClipboardHelper.shareContext,
     },
@@ -401,7 +402,8 @@ var SelectionHandler = {
       id: "search_action",
       icon: "drawable://ic_url_bar_search",
       showAsAction: function(aElement) {
-        return !(aElement instanceof HTMLInputElement && aElement.mozIsTextField(false))
+        return !((aElement instanceof HTMLInputElement && aElement.mozIsTextField(false)) ||
+                 (aElement instanceof HTMLTextAreaElement));
       },
       action: function() {
         SelectionHandler.searchSelection();

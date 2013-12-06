@@ -434,6 +434,25 @@ nsGonkCameraControl::GetParameterDouble(uint32_t aKey)
   }
 }
 
+int32_t
+nsGonkCameraControl::GetParameterInt32(uint32_t aKey)
+{
+  if (aKey == CAMERA_PARAM_SENSORANGLE) {
+    if (!mCameraHw.get()) {
+      return 0;
+    }
+    return mCameraHw->GetSensorOrientation();
+  }
+
+  const char* key = getKeyText(aKey);
+  if (!key) {
+    return 0;
+  }
+
+  RwAutoLockRead lock(mRwLock);
+  return mParams.getInt(key);
+}
+
 void
 nsGonkCameraControl::GetParameter(uint32_t aKey,
                                   nsTArray<idl::CameraRegion>& aRegions)

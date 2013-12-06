@@ -13,7 +13,7 @@ Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
 const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
-const promise = require("sdk/core/promise");
+const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const EventEmitter = require("devtools/shared/event-emitter");
 const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 const Editor = require("devtools/sourceeditor/editor");
@@ -28,7 +28,13 @@ const EVENTS = {
   SOURCES_SHOWN: "ShaderEditor:SourcesShown",
 
   // When a shader's source was edited and compiled via the editor.
-  SHADER_COMPILED: "ShaderEditor:ShaderCompiled"
+  SHADER_COMPILED: "ShaderEditor:ShaderCompiled",
+
+  // When the UI is reset from tab navigation
+  UI_RESET: "ShaderEditor:UIReset",
+
+  // When the editor's error markers are all removed
+  EDITOR_ERROR_MARKERS_REMOVED: "ShaderEditor:EditorCleaned"
 };
 
 const STRINGS_URI = "chrome://browser/locale/devtools/shadereditor.properties"
@@ -114,15 +120,17 @@ let EventsHandler = {
   _onTabNavigated: function(event) {
     switch (event) {
       case "will-navigate": {
-        // Make sure the backend is prepared to handle WebGL contexts.
-        gFront.setup({ reload: false });
+        Task.spawn(function() {
+          // Make sure the backend is prepared to handle WebGL contexts.
+          gFront.setup({ reload: false });
 
-        // Reset UI.
-        ShadersListView.empty();
-        ShadersEditorsView.setText({ vs: "", fs: "" });
-        $("#reload-notice").hidden = true;
-        $("#waiting-notice").hidden = false;
-        $("#content").hidden = true;
+          // Reset UI.
+          ShadersListView.empty();
+          $("#reload-notice").hidden = true;
+          $("#waiting-notice").hidden = false;
+          yield ShadersEditorsView.setText({ vs: "", fs: "" });
+          $("#content").hidden = true;
+        }).then(() => window.emit(EVENTS.UI_RESET));
         break;
       }
       case "navigate": {
@@ -272,13 +280,16 @@ let ShadersListView = Heritage.extend(WidgetMethods, {
       ]);
     }
     function showSources([vertexShaderText, fragmentShaderText]) {
-      ShadersEditorsView.setText({
+      return ShadersEditorsView.setText({
         vs: vertexShaderText,
         fs: fragmentShaderText
       });
     }
 
-    getShaders().then(getSources).then(showSources).then(null, Cu.reportError);
+    getShaders()
+      .then(getSources)
+      .then(showSources)
+      .then(null, Cu.reportError);
   },
 
   /**
@@ -351,19 +362,24 @@ let ShadersEditorsView = {
    *        An object containing the following properties
    *          - vs: the vertex shader source code
    *          - fs: the fragment shader source code
+   * @return object
+   *        A promise resolving upon completion of text setting.
    */
   setText: function(sources) {
+    let view = this;
     function setTextAndClearHistory(editor, text) {
       editor.setText(text);
       editor.clearHistory();
     }
 
-    this._toggleListeners("off");
-    this._getEditor("vs").then(e => setTextAndClearHistory(e, sources.vs));
-    this._getEditor("fs").then(e => setTextAndClearHistory(e, sources.fs));
-    this._toggleListeners("on");
-
-    window.emit(EVENTS.SOURCES_SHOWN, sources);
+    return Task.spawn(function() {
+      yield view._toggleListeners("off");
+      yield promise.all([
+        view._getEditor("vs").then(e => setTextAndClearHistory(e, sources.vs)),
+        view._getEditor("fs").then(e => setTextAndClearHistory(e, sources.fs))
+      ]);
+      yield view._toggleListeners("on");
+    }).then(() => window.emit(EVENTS.SOURCES_SHOWN, sources));
   },
 
   /**
@@ -372,10 +388,12 @@ let ShadersEditorsView = {
    * @param string type
    *        Specifies for which shader type should an editor be retrieved,
    *        either are "vs" for a vertex, or "fs" for a fragment shader.
+   * @return object
+   *        Returns a promise that resolves to an editor instance
    */
   _getEditor: function(type) {
     if ($("#content").hidden) {
-      return promise.reject(null);
+      return promise.reject(new Error("Shader Editor is still waiting for a WebGL context to be created."));
     }
     if (this._editorPromises.has(type)) {
       return this._editorPromises.get(type);
@@ -399,14 +417,16 @@ let ShadersEditorsView = {
    *
    * @param string flag
    *        Either "on" to enable the event listeners, "off" to disable them.
+   * @return object
+   *        A promise resolving upon completion of toggling the listeners.
    */
   _toggleListeners: function(flag) {
-    ["vs", "fs"].forEach(type => {
-      this._getEditor(type).then(editor => {
+    return promise.all(["vs", "fs"].map(type => {
+      return this._getEditor(type).then(editor => {
         editor[flag]("focus", this["_" + type + "Focused"]);
         editor[flag]("change", this["_" + type + "Changed"]);
       });
-    });
+    }));
   },
 
   /**
@@ -486,7 +506,7 @@ let ShadersEditorsView = {
     }
     function sanitizeValidMatches(e) {
       return {
-        // Drivers might yield retarded line numbers under some obscure
+        // Drivers might yield confusing line numbers under some obscure
         // circumstances. Don't throw the errors away in those cases,
         // just display them on the currently edited line.
         line: e.lineMatch[0] > lineCount ? currentLine : e.lineMatch[0] - 1,
@@ -554,6 +574,7 @@ let ShadersEditorsView = {
       editor.removeAllMarkers("errors");
       this._errors[type].forEach(e => editor.removeLineClass(e.line));
       this._errors[type].length = 0;
+      window.emit(EVENTS.EDITOR_ERROR_MARKERS_REMOVED);
     });
   },
 

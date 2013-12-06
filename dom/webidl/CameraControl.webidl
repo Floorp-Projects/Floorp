@@ -152,6 +152,12 @@ interface CameraControl {
     [Throws]
     attribute any thumbnailSize;
 
+    /* the angle, in degrees, that the image sensor is mounted relative
+       to the display; e.g. if 'sensorAngle' is 270 degrees (or -90 degrees),
+       then the preview stream needs to be rotated +90 degrees to have the
+       same orientation as the real world. */
+    readonly attribute long sensorAngle;
+
     /* tell the camera to attempt to focus the image */
     [Throws]
     void autoFocus(CameraAutoFocusCallback onSuccess, optional CameraErrorCallback onError);

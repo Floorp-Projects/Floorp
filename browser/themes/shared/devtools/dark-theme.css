@@ -51,7 +51,8 @@
   background-color: rgba(0,0,0,0.5);
 }
 
-.theme-bg-contrast { /* contrast bg color to attract attention on a container */
+.theme-bg-contrast,
+.variable-or-property[changed] { /* contrast bg color to attract attention on a container */
   background: #a18650;
 }
 
@@ -73,7 +74,9 @@
 .theme-comment,
 .cm-s-mozilla .cm-meta,
 .cm-s-mozilla .cm-hr,
-.cm-s-mozilla .cm-comment { /* grey */
+.cm-s-mozilla .cm-comment,
+.variable-or-property .token-undefined,
+.variable-or-property .token-null { /* grey */
   color: #5c6773;
 }
 
@@ -88,7 +91,9 @@
 }
 
 .theme-fg-color1,
-.cm-s-mozilla .cm-number { /* green */
+.cm-s-mozilla .cm-number,
+.variable-or-property .token-number,
+.variable-or-property[return] > .title > .name { /* green */
   color: #5c9966;
 }
 
@@ -97,14 +102,18 @@
 .cm-s-mozilla .cm-variable,
 .cm-s-mozilla .cm-def,
 .cm-s-mozilla .cm-property,
-.cm-s-mozilla .cm-qualifier { /* blue */
+.cm-s-mozilla .cm-qualifier,
+.variables-view-variable > .title > .name,
+.variable-or-property[scope] > .title > .name { /* blue */
   color: #3689b2;
 }
 
 .theme-fg-color3,
 .cm-s-mozilla .cm-builtin,
 .cm-s-mozilla .cm-tag,
-.cm-s-mozilla .cm-header { /* pink/lavender */
+.cm-s-mozilla .cm-header,
+.variables-view-property > .title > .name,
+.variable-or-property[safe-getter] > .title > .name { /* pink/lavender */
   color: #a673bf;
 }
 
@@ -120,14 +129,17 @@
 
 .theme-fg-color6,
 .cm-s-mozilla .cm-string,
-.cm-s-mozilla .cm-string-2 { /* Orange */
+.cm-s-mozilla .cm-string-2,
+.variable-or-property .token-string { /* Orange */
   color: #b26b47;
 }
 
 .theme-fg-color7,
 .cm-s-mozilla .cm-atom,
 .cm-s-mozilla .cm-quote,
-.cm-s-mozilla .cm-error { /* Red */
+.cm-s-mozilla .cm-error,
+.variable-or-property .token-boolean,
+.variable-or-property[exception] > .title > .name { /* Red */
   color: #bf5656;
 }
 
@@ -146,6 +158,12 @@
 .computedview-colorswatch,
 .markupview-colorswatch {
   box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
+}
+
+.variables-view-scope:focus > .title,
+.variable-or-property:focus > .title {
+  background:  #3689b2; /* fg-color2 */
+  color: white;
 }
 
 /* CodeMirror specific styles.

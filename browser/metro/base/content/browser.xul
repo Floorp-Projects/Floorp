@@ -247,7 +247,7 @@ Desktop browser's sync prefs.
                      completeselectedindex="true"
                      placeholder="&urlbar.emptytext;"
                      tabscrolling="true"
-                     onclick="SelectionHelperUI.urlbarClick();"/>
+                     onclick="SelectionHelperUI.urlbarTextboxClick(this);"/>
 
             <toolbarbutton id="go-button" class="urlbar-button"
                            command="cmd_go"/>

@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 947080 - bug 937317 required clobber on windows (relanding).
+Bug 933585 - clobber required on windows

@@ -285,6 +285,14 @@ nsDOMCameraControl::GetExposureCompensation(ErrorResult& aRv)
   return compensation;
 }
 
+int32_t
+nsDOMCameraControl::SensorAngle()
+{
+  int32_t angle;
+  mCameraControl->Get(CAMERA_PARAM_SENSORANGLE, &angle);
+  return angle;
+}
+
 already_AddRefed<nsICameraShutterCallback>
 nsDOMCameraControl::GetOnShutter(ErrorResult& aRv)
 {

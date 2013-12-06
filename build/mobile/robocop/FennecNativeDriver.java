@@ -4,6 +4,10 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.gfx.PanningPerfAPI;
+import org.mozilla.gecko.util.GeckoEventListener;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -19,11 +23,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.InvocationHandler;
 
 import android.app.Activity;
 import android.opengl.GLSurfaceView;
@@ -45,18 +44,6 @@ public class FennecNativeDriver implements Driver {
 
     private static String mLogFile = null;
     private static LogLevel mLogLevel = LogLevel.INFO;
-
-    // Objects for reflexive access of fennec classes.
-    private ClassLoader mClassLoader;
-    private Class mApiClass;
-    private Class mEventListenerClass;
-    private Method mRegisterEventListener;
-    private Method mGetPixels;
-    private Method mStartFrameRecording;
-    private Method mStopFrameRecording;
-    private Method mStartCheckerboardRecording;
-    private Method mStopCheckerboardRecording;
-    private Object mRobocopApi;
 
     public enum LogLevel {
         DEBUG(1),
@@ -83,25 +70,6 @@ public class FennecNativeDriver implements Driver {
 
         // Set up table of fennec_ids.
         mLocators = convertTextToTable(getFile(mRootPath + "/fennec_ids.txt"));
-
-        // Set up reflexive access of java classes and methods.
-        try {
-            mClassLoader = activity.getClassLoader();
-
-            mApiClass = mClassLoader.loadClass("org.mozilla.gecko.RobocopAPI");
-            mEventListenerClass = mClassLoader.loadClass("org.mozilla.gecko.util.GeckoEventListener");
-
-            mRegisterEventListener = mApiClass.getMethod("registerEventListener", String.class, mEventListenerClass);
-            mGetPixels = mApiClass.getMethod("getViewPixels", View.class);
-            mStartFrameRecording = mApiClass.getDeclaredMethod("startFrameTimeRecording");
-            mStopFrameRecording = mApiClass.getDeclaredMethod("stopFrameTimeRecording");
-            mStartCheckerboardRecording = mApiClass.getDeclaredMethod("startCheckerboardRecording");
-            mStopCheckerboardRecording = mApiClass.getDeclaredMethod("stopCheckerboardRecording");
-
-            mRobocopApi = mApiClass.getConstructor(Activity.class).newInstance(activity);
-        } catch (Exception e) {
-            log(LogLevel.ERROR, e);
-        }
     }
 
     //Information on the location of the Gecko Frame.
@@ -172,99 +140,59 @@ public class FennecNativeDriver implements Driver {
     }
 
     public void startFrameRecording() {
-        try {
-            mStartFrameRecording.invoke(null);
-        } catch (IllegalAccessException e) {
-            log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            log(LogLevel.ERROR, e);
-        }
+        PanningPerfAPI.startFrameTimeRecording();
     }
 
     public int stopFrameRecording() {
-        try {
-            List<Long> frames = (List<Long>)mStopFrameRecording.invoke(null);
-            int badness = 0;
-            for (int i = 1; i < frames.size(); i++) {
-                long frameTime = frames.get(i) - frames.get(i - 1);
-                int delay = (int)(frameTime - FRAME_TIME_THRESHOLD);
-                // for each frame we miss, add the square of the delay. This
-                // makes large delays much worse than small delays.
-                if (delay > 0) {
-                    badness += delay * delay;
-                }
+        final List<Long> frames = PanningPerfAPI.stopFrameTimeRecording();
+        int badness = 0;
+        for (int i = 1; i < frames.size(); i++) {
+            long frameTime = frames.get(i) - frames.get(i - 1);
+            int delay = (int)(frameTime - FRAME_TIME_THRESHOLD);
+            // for each frame we miss, add the square of the delay. This
+            // makes large delays much worse than small delays.
+            if (delay > 0) {
+                badness += delay * delay;
             }
-            // Don't do any averaging of the numbers because really we want to
-            // know how bad the jank was at its worst
-            return badness;
-        } catch (IllegalAccessException e) {
-            log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            log(LogLevel.ERROR, e);
         }
 
-        // higher values are worse, and the test failing is the worst!
-        return Integer.MAX_VALUE;
+        // Don't do any averaging of the numbers because really we want to
+        // know how bad the jank was at its worst
+        return badness;
     }
 
     public void startCheckerboardRecording() {
-        try {
-            mStartCheckerboardRecording.invoke(null);
-        } catch (IllegalAccessException e) {
-            log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            log(LogLevel.ERROR, e);
-        }
+        PanningPerfAPI.startCheckerboardRecording();
     }
 
     public float stopCheckerboardRecording() {
-        try {
-            List<Float> checkerboard = (List<Float>)mStopCheckerboardRecording.invoke(null);
-            float total = 0;
-            for (float val : checkerboard) {
-                total += val;
-            }
-            return total * 100.0f;
-        } catch (IllegalAccessException e) {
-            log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            log(LogLevel.ERROR, e);
+        final List<Float> checkerboard = PanningPerfAPI.stopCheckerboardRecording();
+        float total = 0;
+        for (float val : checkerboard) {
+            total += val;
         }
-
-        return 0.0f;
+        return total * 100.0f;
     }
 
-    private View getSurfaceView() {
-        ArrayList<View> views = mSolo.getCurrentViews();
-        try {
-            Class c = Class.forName("org.mozilla.gecko.gfx.LayerView");
-            for (View v : views) {
-                if (c.isInstance(v)) {
-                    return v;
-                }
+    private LayerView getSurfaceView() {
+        final LayerView layerView = mSolo.getView(LayerView.class, 0);
+
+        if (layerView == null) {
+            log(LogLevel.WARN, "getSurfaceView could not find LayerView");
+            for (final View v : mSolo.getViews()) {
+                log(LogLevel.WARN, "  View: " + v);
             }
-        } catch (ClassNotFoundException e) {
-            log(LogLevel.ERROR, e);
         }
-        log(LogLevel.WARN, "getSurfaceView could not find LayerView");
-        for (View v : views) {
-            log(LogLevel.WARN, v.toString());
-        }
-        return null;
+        return layerView;
     }
 
     public PaintedSurface getPaintedSurface() {
-        View view = getSurfaceView();
+        final LayerView view = getSurfaceView();
         if (view == null) {
             return null;
         }
-        IntBuffer pixelBuffer;
-        try {
-            pixelBuffer = (IntBuffer)mGetPixels.invoke(mRobocopApi, view);
-        } catch (Exception e) {
-            log(LogLevel.ERROR, e);
-            return null;
-        }
+
+        final IntBuffer pixelBuffer = view.getPixels();
 
         // now we need to (1) flip the image, because GL likes to do things up-side-down,
         // and (2) rearrange the bits from AGBR-8888 to ARGB-8888.
@@ -312,27 +240,6 @@ public class FennecNativeDriver implements Driver {
     public int mScrollHeight=0;
     public int mPageHeight=10;
 
-    class scrollHandler implements InvocationHandler {
-        public scrollHandler(){};
-        public Object invoke(Object proxy, Method method, Object[] args) {
-            try {
-                // Disect the JSON object into the appropriate variables 
-                JSONObject jo = ((JSONObject)args[1]);
-                mScrollHeight = jo.getInt("y");
-                mHeight = jo.getInt("cheight");
-                // We don't want a height of 0. That means it's a bad response.
-                if (mHeight > 0) {
-                    mPageHeight = jo.getInt("height");
-                }
-
-            } catch( Throwable e) {
-                FennecNativeDriver.log(FennecNativeDriver.LogLevel.WARN, 
-                    "WARNING: ScrollReceived, but read wrong!");
-            }
-            return null;
-        }
-    }
-
     public int getScrollHeight() {
         return mScrollHeight;
     }
@@ -344,20 +251,23 @@ public class FennecNativeDriver implements Driver {
     }
 
     public void setupScrollHandling() {
-        //Setup scrollHandler to catch "robocop:scroll" events. 
-        try {
-            Class [] interfaces = new Class[1];
-            interfaces[0] = mEventListenerClass;
-            Object[] finalParams = new Object[2];
-            finalParams[0] = "robocop:scroll";
-            finalParams[1] = Proxy.newProxyInstance(mClassLoader, interfaces, new scrollHandler());
-            mRegisterEventListener.invoke(mRobocopApi, finalParams);
-        } catch (IllegalAccessException e) {
-            log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            log(LogLevel.ERROR, e);
-        }
-
+        GeckoAppShell.registerEventListener("robocop:scroll", new GeckoEventListener() {
+            @Override
+            public void handleMessage(final String event, final JSONObject message) {
+                try {
+                    mScrollHeight = message.getInt("y");
+                    mHeight = message.getInt("cheight");
+                    // We don't want a height of 0. That means it's a bad response.
+                    if (mHeight > 0) {
+                        mPageHeight = message.getInt("height");
+                    }
+                } catch (JSONException e) {
+                    FennecNativeDriver.log(FennecNativeDriver.LogLevel.WARN,
+                            "WARNING: ScrollReceived, but message does not contain " +
+                            "expected fields: " + e);
+                }
+            }
+        });
     }
 
     /**

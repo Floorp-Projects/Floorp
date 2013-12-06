@@ -9,6 +9,10 @@
   min-width: 50px;
 }
 
+#sources-pane > tabs {
+  -moz-border-end: 1px solid #222426; /* Match the sources list's dark margin. */
+}
+
 #sources-and-editor-splitter {
   -moz-border-start-color: transparent;
 }
@@ -20,7 +24,7 @@
   -moz-border-end: 1px solid #222426; /* Match the sources list's dark margin. */
 }
 
-#sources-toolbar .devtools-toolbarbutton {
+#sources-toolbar > #sources-controls > .devtools-toolbarbutton {
   min-width: 32px;
 }
 
@@ -87,13 +91,21 @@
   padding: 2px;
 }
 
-.list-widget-item:not(.selected):not(.empty):hover {
+.theme-light .list-widget-item:not(.selected):not(.empty):hover {
   background: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.85)), Highlight;
 }
 
-.list-widget-item.selected.light {
+.theme-light .list-widget-item.selected.light {
   background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.8)), Highlight;
   color: #000;
+}
+
+.theme-dark .list-widget-item:not(.selected):not(.empty):hover {
+  background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+}
+
+.theme-dark .list-widget-item.selected.light {
+  background: linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.025));
 }
 
 .list-widget-item.selected {
@@ -106,21 +118,52 @@
   padding: 2px;
 }
 
-/* Stack frames view */
+/* Breadcrumbs stack frames view */
+
+.breadcrumbs-widget-item {
+  max-width: none;
+}
 
 .dbg-stackframe-details {
   -moz-padding-start: 4px;
 }
 
-.dbg-stackframe-menuitem[checked] {
-  margin-top: 3px;
-  margin-bottom: 3px;
-  outline: 1px solid #eee;
-  font-weight: 600;
+/* Classic stack frames view */
+
+.dbg-classic-stackframe {
+  display: block;
+  padding: 4px;
 }
 
-.dbg-stackframe-menuitem-details {
-  -moz-padding-start: 16px;
+.dbg-classic-stackframe-title {
+  font-weight: 600;
+  color: #046;
+}
+
+.dbg-classic-stackframe-details:-moz-locale-dir(ltr) {
+  float: right;
+}
+
+.dbg-classic-stackframe-details:-moz-locale-dir(rtl) {
+  float: left;
+}
+
+.dbg-classic-stackframe-details-url {
+  max-width: 90%;
+  text-align: end;
+  color: #666;
+}
+
+.dbg-classic-stackframe-details-sep {
+  color: #aaa;
+}
+
+.dbg-classic-stackframe-details-line {
+  color: #58b;
+}
+
+#callstack-list .side-menu-widget-item.selected label {
+  color: #fff;
 }
 
 /* Sources and breakpoints view */
@@ -180,8 +223,9 @@
   padding: 0 !important;
 }
 
-#instruments-pane > tabpanels > tabpanel {
-  background: #fff;
+#instruments-pane .side-menu-widget-container,
+#instruments-pane .side-menu-widget-empty-notice-container {
+  box-shadow: none !important;
 }
 
 /* Watch expressions view */
@@ -203,6 +247,7 @@
 
 .dbg-expression-input {
   -moz-padding-start: 2px !important;
+  color: inherit;
 }
 
 /* Event listeners view */
@@ -225,6 +270,10 @@
 
 .dbg-event-listener-location {
   color: #666;
+}
+
+#event-listeners .side-menu-widget-item.selected {
+  background: none !important;
 }
 
 /* Searchbox and the search operations help panel */
@@ -380,6 +429,11 @@
 
 /* Toolbar controls */
 
+.devtools-sidebar-tabs > tabs > tab {
+  min-height: 25px !important;
+  padding: 0 !important;
+}
+
 #resumption-panel-desc {
   width: 200px;
 }
@@ -468,12 +522,17 @@
   max-height: 80vh;
 }
 
+#body[layout=vertical] #sources-pane > tabs {
+  -moz-border-end: none;
+}
+
 #body[layout=vertical] #instruments-pane {
   margin: 0 !important;
   /* To prevent all the margin hacks to hide the sidebar. */
 }
 
-#body[layout=vertical] .side-menu-widget-container {
+#body[layout=vertical] .side-menu-widget-container,
+#body[layout=vertical] .side-menu-widget-empty-notice-container {
   box-shadow: none !important;
 }
 
