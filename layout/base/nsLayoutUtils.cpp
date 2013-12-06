@@ -72,7 +72,6 @@
 #include "nsComputedDOMStyle.h"
 #include "ActiveLayerTracker.h"
 
-#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"
 
 #ifdef MOZ_XUL
@@ -4774,10 +4773,6 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
     forceCopy = true;
     wantImageSurface = true;
   }
-
-  // Force a system caller so that the below code doesn't think it's being
-  // called by JS. See bug 604262.
-  AutoSystemCaller asc;
 
   nsCOMPtr<imgIRequest> imgRequest;
   rv = aElement->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
