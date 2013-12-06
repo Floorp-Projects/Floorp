@@ -931,7 +931,7 @@
             <xul:menupopup anonid="menupopup"
                            xbl:inherits="oncommand=menucommand">
               <children/>
-              <xul:menuitem class="menuitem-iconic popup-notification-closeitem close-icon"
+              <xul:menuitem class="menuitem-iconic popup-notification-closeitem"
                             label="&closeNotificationItem.label;"
                             xbl:inherits="oncommand=closeitemcommand"/>
             </xul:menupopup>
@@ -940,7 +940,7 @@
       </xul:vbox>
       <xul:vbox pack="start">
         <xul:toolbarbutton anonid="closebutton"
-                           class="messageCloseButton close-icon popup-notification-closebutton tabbable"
+                           class="messageCloseButton popup-notification-closebutton tabbable"
                            xbl:inherits="oncommand=closebuttoncommand"
                            tooltiptext="&closeNotification.tooltip;"/>
       </xul:vbox>
@@ -1163,7 +1163,7 @@
             <xul:menupopup anonid="menupopup"
                            xbl:inherits="oncommand=menucommand">
               <children/>
-              <xul:menuitem class="menuitem-iconic popup-notification-closeitem close-icon"
+              <xul:menuitem class="menuitem-iconic popup-notification-closeitem"
                             label="&closeNotificationItem.label;"
                             xbl:inherits="oncommand=closeitemcommand"/>
             </xul:menupopup>
@@ -1172,7 +1172,7 @@
       </xul:vbox>
       <xul:vbox pack="start">
         <xul:toolbarbutton anonid="closebutton"
-                           class="messageCloseButton close-icon popup-notification-closebutton tabbable"
+                           class="messageCloseButton popup-notification-closebutton tabbable"
                            xbl:inherits="oncommand=closebuttoncommand"
                            tooltiptext="&closeNotification.tooltip;"/>
       </xul:vbox>
@@ -1502,7 +1502,7 @@
             <xul:label class="text-link click-to-play-plugins-notification-link" anonid="click-to-play-plugins-notification-link" />
           </xul:description>
           <xul:toolbarbutton anonid="closebutton"
-                             class="messageCloseButton popup-notification-closebutton tabbable close-icon"
+                             class="messageCloseButton popup-notification-closebutton tabbable"
                              xbl:inherits="oncommand=closebuttoncommand"
                              tooltiptext="&closeNotification.tooltip;"/>
         </xul:hbox>
@@ -2021,7 +2021,7 @@
                              onclick="document.getBindingParent(this).onLinkClick();"/>
           </xul:description>
         </xul:hbox>
-        <xul:toolbarbutton class="panel-promo-closebutton close-icon"
+        <xul:toolbarbutton class="panel-promo-closebutton"
                            oncommand="document.getBindingParent(this).onCloseButtonCommand();"
                            tooltiptext="&closeNotification.tooltip;"/>
       </xul:hbox>
