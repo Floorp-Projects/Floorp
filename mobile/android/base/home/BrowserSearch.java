@@ -340,6 +340,9 @@ public class BrowserSearch extends HomeFragment
             return;
         }
 
+        // Prefetch auto-completed domain since it's a likely target
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Prefetch", "http://" + autocompletion));
+
         mAutocompleteHandler.onAutocomplete(autocompletion);
         mAutocompleteHandler = null;
     }
@@ -396,6 +399,11 @@ public class BrowserSearch extends HomeFragment
 
         do {
             final String url = c.getString(urlIndex);
+
+            if (searchCount == 0) {
+                // Prefetch the first item in the list since it's weighted the highest
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Prefetch", url.toString()));
+            }
 
             // Does the completion match against the whole URL? This will match
             // about: pages, as well as user input including "http://...".
