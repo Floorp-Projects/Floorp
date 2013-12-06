@@ -37,6 +37,8 @@
 #include "nsPrintSession.h"
 #include "nsToolkitCompsCID.h"
 
+using namespace mozilla;
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCocoaWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
@@ -53,7 +55,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintDialogServiceX, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIdleServiceX, nsIdleServiceX::GetInstance)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(mozilla::OSXNotificationCenter, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(OSXNotificationCenter, Init)
 
 #include "nsMenuBarX.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeMenuServiceX)
