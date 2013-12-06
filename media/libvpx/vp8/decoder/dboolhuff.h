@@ -9,21 +9,30 @@
  */
 
 
-#ifndef DBOOLHUFF_H
-#define DBOOLHUFF_H
+#ifndef DBOOLHUFF_H_
+#define DBOOLHUFF_H_
+
 #include <stddef.h>
 #include <limits.h>
+
 #include "vpx_config.h"
 #include "vpx_ports/mem.h"
 #include "vpx/vpx_integer.h"
 
 typedef size_t VP8_BD_VALUE;
 
-# define VP8_BD_VALUE_SIZE ((int)sizeof(VP8_BD_VALUE)*CHAR_BIT)
+#define VP8_BD_VALUE_SIZE ((int)sizeof(VP8_BD_VALUE)*CHAR_BIT)
+
 /*This is meant to be a large, positive constant that can still be efficiently
    loaded as an immediate (on platforms like ARM, for example).
   Even relatively modest values like 100 would work fine.*/
-# define VP8_LOTS_OF_BITS (0x40000000)
+#define VP8_LOTS_OF_BITS (0x40000000)
+
+/*Decrypt n bytes of data from input -> output, using the decrypt_state
+   passed in VP8D_SET_DECRYPTOR.
+*/
+typedef void (vp8_decrypt_cb)(void *decrypt_state, const unsigned char *input,
+                              unsigned char *output, int count);
 
 typedef struct
 {
@@ -32,45 +41,19 @@ typedef struct
     VP8_BD_VALUE         value;
     int                  count;
     unsigned int         range;
+    vp8_decrypt_cb      *decrypt_cb;
+    void                *decrypt_state;
 } BOOL_DECODER;
 
 DECLARE_ALIGNED(16, extern const unsigned char, vp8_norm[256]);
 
 int vp8dx_start_decode(BOOL_DECODER *br,
                        const unsigned char *source,
-                       unsigned int source_sz);
+                       unsigned int source_sz,
+                       vp8_decrypt_cb *decrypt_cb,
+                       void *decrypt_state);
 
 void vp8dx_bool_decoder_fill(BOOL_DECODER *br);
-
-/*The refill loop is used in several places, so define it in a macro to make
-   sure they're all consistent.
-  An inline function would be cleaner, but has a significant penalty, because
-   multiple BOOL_DECODER fields must be modified, and the compiler is not smart
-   enough to eliminate the stores to those fields and the subsequent reloads
-   from them when inlining the function.*/
-#define VP8DX_BOOL_DECODER_FILL(_count,_value,_bufptr,_bufend) \
-    do \
-    { \
-        int shift = VP8_BD_VALUE_SIZE - 8 - ((_count) + 8); \
-        int loop_end, x; \
-        size_t bits_left = ((_bufend)-(_bufptr))*CHAR_BIT; \
-        \
-        x = (int)(shift + CHAR_BIT - bits_left); \
-        loop_end = 0; \
-        if(x >= 0) \
-        { \
-            (_count) += VP8_LOTS_OF_BITS; \
-            loop_end = x; \
-            if(!bits_left) break; \
-        } \
-        while(shift >= loop_end) \
-        { \
-            (_count) += CHAR_BIT; \
-            (_value) |= (VP8_BD_VALUE)*(_bufptr)++ << shift; \
-            shift -= CHAR_BIT; \
-        } \
-    } \
-    while(0) \
 
 
 static int vp8dx_decode_bool(BOOL_DECODER *br, int probability) {
@@ -151,4 +134,5 @@ static int vp8dx_bool_error(BOOL_DECODER *br)
     /* No error. */
     return 0;
 }
-#endif
+
+#endif  // DBOOLHUFF_H_

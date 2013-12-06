@@ -1010,12 +1010,6 @@ void nsNSSComponent::setValidationOptions()
   bool aiaDownloadEnabled = Preferences::GetBool("security.missing_cert_download.enabled",
                                                  false);
 
-  nsCString firstNetworkRevo =
-    Preferences::GetCString("security.first_network_revocation_method");
-  if (firstNetworkRevo.IsEmpty()) {
-    firstNetworkRevo = "ocsp";
-  }
-
   bool ocspStaplingEnabled = Preferences::GetBool("security.ssl.enable_ocsp_stapling",
                                                   true);
   if (!ocspEnabled) {
@@ -1051,7 +1045,6 @@ void nsNSSComponent::setValidationOptions()
         CertVerifier::ocsp_strict : CertVerifier::ocsp_relaxed,
       anyFreshRequired ?
         CertVerifier::any_revo_strict : CertVerifier::any_revo_relaxed,
-      firstNetworkRevo.get(),
       ocspGetEnabled ?
         CertVerifier::ocsp_get_enabled : CertVerifier::ocsp_get_disabled);
 
@@ -1124,7 +1117,7 @@ nsNSSComponent::SkipOcspOff()
 }
 
 nsresult
-nsNSSComponent::InitializeNSS(bool showWarningBox)
+nsNSSComponent::InitializeNSS()
 {
   // Can be called both during init and profile change.
   // Needs mutex protection.
@@ -1136,11 +1129,6 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
                 nsINSSErrorsService::NSS_SSL_ERROR_BASE == SSL_ERROR_BASE &&
                 nsINSSErrorsService::NSS_SSL_ERROR_LIMIT == SSL_ERROR_LIMIT,
                 "You must update the values in nsINSSErrorsService.idl");
-
-  // variables used for flow control within this function
-
-  enum { problem_none, problem_no_rw, problem_no_security_at_all }
-    which_nss_problem = problem_none;
 
   {
     MutexAutoLock lock(mutex);
@@ -1196,9 +1184,6 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
       Preferences::GetBool("security.use_libpkix_verification", false);
 #endif
 
-    bool suppressWarningPref =
-      Preferences::GetBool("security.suppress_nss_rw_impossible_warning", false);
-
     // init phase 2, init calls to NSS library
 
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization beginning\n"));
@@ -1223,13 +1208,6 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
     if (init_rv != SECSuccess) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init NSS r/w in %s\n", profileStr.get()));
 
-      if (suppressWarningPref) {
-        which_nss_problem = problem_none;
-      }
-      else {
-        which_nss_problem = problem_no_rw;
-      }
-
       // try to init r/o
       init_flags |= NSS_INIT_READONLY;
       init_rv = ::NSS_Initialize(profileStr.get(), "", "",
@@ -1237,7 +1215,6 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
 
       if (init_rv != SECSuccess) {
         PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can not init in r/o either\n"));
-        which_nss_problem = problem_no_security_at_all;
 
         init_rv = NSS_NoDB_Init(profileStr.get());
         if (init_rv != SECSuccess) {
@@ -1250,80 +1227,64 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
 
     // init phase 3, only if phase 2 was successful
 
-    if (problem_no_security_at_all != which_nss_problem) {
+    mNSSInitialized = true;
 
-      mNSSInitialized = true;
+    PK11_SetPasswordFunc(PK11PasswordPrompt);
 
-      PK11_SetPasswordFunc(PK11PasswordPrompt);
+    SharedSSLState::GlobalInit();
 
-      SharedSSLState::GlobalInit();
+    // Register an observer so we can inform NSS when these prefs change
+    Preferences::AddStrongObserver(this, "security.");
 
-      // Register an observer so we can inform NSS when these prefs change
-      Preferences::AddStrongObserver(this, "security.");
+    SSL_OptionSetDefault(SSL_ENABLE_SSL2, false);
+    SSL_OptionSetDefault(SSL_V2_COMPATIBLE_HELLO, false);
 
-      SSL_OptionSetDefault(SSL_ENABLE_SSL2, false);
-      SSL_OptionSetDefault(SSL_V2_COMPATIBLE_HELLO, false);
+    rv = setEnabledTLSVersions();
+    if (NS_FAILED(rv)) {
+      nsPSMInitPanic::SetPanic();
+      return NS_ERROR_UNEXPECTED;
+    }
 
-      rv = setEnabledTLSVersions();
-      if (NS_FAILED(rv)) {
-        nsPSMInitPanic::SetPanic();
-        return NS_ERROR_UNEXPECTED;
-      }
+    DisableMD5();
 
-      DisableMD5();
+    SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, true);
 
-      SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, true);
+    bool requireSafeNegotiation =
+      Preferences::GetBool("security.ssl.require_safe_negotiation",
+                           REQUIRE_SAFE_NEGOTIATION_DEFAULT);
+    SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION, requireSafeNegotiation);
 
-      bool requireSafeNegotiation =
-        Preferences::GetBool("security.ssl.require_safe_negotiation",
-                             REQUIRE_SAFE_NEGOTIATION_DEFAULT);
-      SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION, requireSafeNegotiation);
+    bool allowUnrestrictedRenego =
+      Preferences::GetBool("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref",
+                           ALLOW_UNRESTRICTED_RENEGO_DEFAULT);
+    SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION,
+                         allowUnrestrictedRenego ?
+                           SSL_RENEGOTIATE_UNRESTRICTED :
+                           SSL_RENEGOTIATE_REQUIRES_XTN);
 
-      bool allowUnrestrictedRenego =
-        Preferences::GetBool("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref",
-                             ALLOW_UNRESTRICTED_RENEGO_DEFAULT);
-      SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION,
-                           allowUnrestrictedRenego ?
-                             SSL_RENEGOTIATE_UNRESTRICTED :
-                             SSL_RENEGOTIATE_REQUIRES_XTN);
+    SSL_OptionSetDefault(SSL_ENABLE_FALSE_START,
+                         Preferences::GetBool("security.ssl.enable_false_start",
+                                              FALSE_START_ENABLED_DEFAULT));
 
-      SSL_OptionSetDefault(SSL_ENABLE_FALSE_START,
-                           Preferences::GetBool("security.ssl.enable_false_start",
-                                                FALSE_START_ENABLED_DEFAULT));
+    if (NS_FAILED(InitializeCipherSuite())) {
+      PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to initialize cipher suite settings\n"));
+      return NS_ERROR_FAILURE;
+    }
 
-      if (NS_FAILED(InitializeCipherSuite())) {
-        PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to initialize cipher suite settings\n"));
-        return NS_ERROR_FAILURE;
-      }
+    // dynamic options from prefs
+    setValidationOptions();
 
-      // dynamic options from prefs
-      setValidationOptions();
+    mHttpForNSS.initTable();
+    mHttpForNSS.registerHttpClient();
 
-      mHttpForNSS.initTable();
-      mHttpForNSS.registerHttpClient();
-
-      InstallLoadableRoots();
+    InstallLoadableRoots();
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
-      LaunchSmartCardThreads();
+    LaunchSmartCardThreads();
 #endif
 
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
-    }
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
   }
-
-  if (problem_none != which_nss_problem) {
-    nsPSMInitPanic::SetPanic();
-
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS problem, trying to bring up GUI error message\n"));
-
-    // We might want to use different messages, depending on what failed.
-    // For now, let's use the same message.
-    if (showWarningBox) {
-      ShowAlertFromStringBundle("NSSInitProblemX");
-    }
-  }
-
   return NS_OK;
 }
 
@@ -1412,7 +1373,7 @@ nsNSSComponent::Init()
   // Do that before NSS init, to make sure we won't get unloaded.
   RegisterObservers();
 
-  rv = InitializeNSS(true); // ok to show a warning box on failure
+  rv = InitializeNSS();
   if (NS_FAILED(rv)) {
     PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to Initialize NSS.\n"));
 
@@ -1652,9 +1613,9 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
         needsInit = false;
       }
     }
-    
+
     if (needsInit) {
-      if (NS_FAILED(InitializeNSS(false))) { // do not show a warning box on failure
+      if (NS_FAILED(InitializeNSS())) {
         PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to Initialize NSS after profile switch.\n"));
       }
     }
@@ -1706,7 +1667,6 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
                || prefName.Equals("security.CRL_download.enabled")
                || prefName.Equals("security.fresh_revocation_info.require")
                || prefName.Equals("security.missing_cert_download.enabled")
-               || prefName.Equals("security.first_network_revocation_method")
                || prefName.Equals("security.OCSP.require")
                || prefName.Equals("security.OCSP.GET.enabled")
                || prefName.Equals("security.ssl.enable_ocsp_stapling")) {

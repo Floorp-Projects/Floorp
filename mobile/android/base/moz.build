@@ -273,7 +273,6 @@ gbjar.sources += [
     'ReferrerReceiver.java',
     'RemoteTabs.java',
     'Restarter.java',
-    'RobocopAPI.java',
     'ScrollAnimator.java',
     'ServiceNotificationClient.java',
     'SessionParser.java',
