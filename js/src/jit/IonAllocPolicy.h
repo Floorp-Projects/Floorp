@@ -176,27 +176,24 @@ struct TempObject
     }
 };
 
-// Deprecated, don't use for (new) classes. Will be removed when all classes have
-// been converted to placement new/TempObject (bug 937540).
-struct OldTempObject
-  : public TempObject
-{
-    using TempObject::operator new;
-
-    inline void *operator new(size_t nbytes) {
-        return GetIonContext()->temp->allocateInfallible(nbytes);
-    }
-};
-
 template <typename T>
 class TempObjectPool
 {
+    TempAllocator *alloc_;
     InlineForwardList<T> freed_;
 
   public:
+    TempObjectPool()
+      : alloc_(nullptr)
+    {}
+    void setAllocator(TempAllocator &alloc) {
+        JS_ASSERT(freed_.empty());
+        alloc_ = &alloc;
+    }
     T *allocate() {
+        JS_ASSERT(alloc_);
         if (freed_.empty())
-            return new T();
+            return new(*alloc_) T();
         return freed_.popFront();
     }
     void free(T *obj) {
