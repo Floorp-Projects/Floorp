@@ -1432,30 +1432,6 @@ js_QuoteString(ExclusiveContext *cx, JSString *str, jschar quote)
 
 /************************************************************************/
 
-static JSObject *
-GetBlockChainAtPC(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    JS_ASSERT(script->containsPC(pc));
-    JS_ASSERT(pc >= script->main());
-
-    ptrdiff_t offset = pc - script->main();
-
-    if (!script->hasBlockScopes())
-        return nullptr;
-
-    BlockScopeArray *blockScopes = script->blockScopes();
-    JSObject *blockChain = nullptr;
-    for (uint32_t n = 0; n < blockScopes->length; n++) {
-        const BlockScopeNote *note = &blockScopes->vector[n];
-        if (note->start > offset)
-            break;
-        if (offset <= note->start + note->length)
-            blockChain = script->getObject(note->index);
-    }
-
-    return blockChain;
-}
-
 namespace {
 /*
  * The expression decompiler is invoked by error handling code to produce a
@@ -1716,7 +1692,7 @@ JSAtom *
 ExpressionDecompiler::findLetVar(jsbytecode *pc, unsigned depth)
 {
     if (script->hasObjects()) {
-        JSObject *chain = GetBlockChainAtPC(cx, script, pc);
+        JSObject *chain = script->getBlockScope(pc);
         if (!chain)
             return nullptr;
         JS_ASSERT(chain->is<BlockObject>());
