@@ -10,7 +10,7 @@
 
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 #include "vpx_ports/x86.h"
 #include "vp8/encoder/block.h"
 

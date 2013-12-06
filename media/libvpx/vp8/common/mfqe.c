@@ -20,7 +20,7 @@
 #include "postproc.h"
 #include "variance.h"
 #include "vpx_mem/vpx_mem.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 #include "vpx_scale/yv12config.h"
 
 #include <limits.h>
@@ -280,7 +280,7 @@ void vp8_multiframe_quality_enhance
 
     FRAME_TYPE frame_type = cm->frame_type;
     /* Point at base of Mb MODE_INFO list has motion vectors etc */
-    const MODE_INFO *mode_info_context = cm->mi;
+    const MODE_INFO *mode_info_context = cm->show_frame_mi;
     int mb_row;
     int mb_col;
     int totmap, map[4];

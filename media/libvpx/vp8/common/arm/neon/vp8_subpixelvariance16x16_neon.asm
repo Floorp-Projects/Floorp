@@ -9,9 +9,6 @@
 ;
 
 
-bilinear_taps_coeff
-    DCD     128, 0, 112, 16, 96, 32, 80, 48, 64, 64, 48, 80, 32, 96, 16, 112
-
 ;-----------------
 
     EXPORT  |vp8_sub_pixel_variance16x16_neon_func|
@@ -28,6 +25,9 @@ bilinear_taps_coeff
 ; stack(r5) int dst_pixels_per_line,
 ; stack(r6) unsigned int *sse
 ;note: most of the code is copied from bilinear_predict16x16_neon and vp8_variance16x16_neon.
+
+bilinear_taps_coeff
+    DCD     128, 0, 112, 16, 96, 32, 80, 48, 64, 64, 48, 80, 32, 96, 16, 112
 
 |vp8_sub_pixel_variance16x16_neon_func| PROC
     push            {r4-r6, lr}
