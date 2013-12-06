@@ -679,6 +679,12 @@ XPCWrappedNativeScope::AddSizeOfIncludingThis(ScopeSizeInfo* scopeSizeInfo)
     scopeSizeInfo->mScopeAndMapSize +=
         mWrappedNativeProtoMap->SizeOfIncludingThis(scopeSizeInfo->mMallocSizeOf);
 
+    if (dom::HasProtoAndIfaceArray(mGlobalJSObject)) {
+        dom::ProtoAndIfaceArray* cache = dom::GetProtoAndIfaceArray(mGlobalJSObject);
+        scopeSizeInfo->mProtoAndIfaceCacheSize +=
+            cache->SizeOfIncludingThis(scopeSizeInfo->mMallocSizeOf);
+    }
+
     // There are other XPCWrappedNativeScope members that could be measured;
     // the above ones have been seen by DMD to be worth measuring.  More stuff
     // may be added later.
