@@ -117,6 +117,18 @@ js_GetVariableBytecodeLength(jsbytecode *pc)
     }
 }
 
+static uint32_t
+NumBlockSlots(JSScript *script, jsbytecode *pc)
+{
+    JS_ASSERT(*pc == JSOP_ENTERBLOCK ||
+              *pc == JSOP_ENTERLET0 || *pc == JSOP_ENTERLET1 || *pc == JSOP_ENTERLET2);
+    JS_STATIC_ASSERT(JSOP_ENTERBLOCK_LENGTH == JSOP_ENTERLET0_LENGTH);
+    JS_STATIC_ASSERT(JSOP_ENTERBLOCK_LENGTH == JSOP_ENTERLET1_LENGTH);
+    JS_STATIC_ASSERT(JSOP_ENTERBLOCK_LENGTH == JSOP_ENTERLET2_LENGTH);
+
+    return script->getObject(GET_UINT32_INDEX(pc))->as<StaticBlockObject>().propertyCountForCompilation();
+}
+
 unsigned
 js::StackUses(JSScript *script, jsbytecode *pc)
 {
@@ -129,8 +141,16 @@ js::StackUses(JSScript *script, jsbytecode *pc)
     switch (op) {
       case JSOP_POPN:
         return GET_UINT16(pc);
-      case JSOP_POPNV:
+      case JSOP_LEAVEBLOCK:
+        return GET_UINT16(pc);
+      case JSOP_LEAVEBLOCKEXPR:
         return GET_UINT16(pc) + 1;
+      case JSOP_ENTERLET0:
+        return NumBlockSlots(script, pc);
+      case JSOP_ENTERLET1:
+        return NumBlockSlots(script, pc) + 1;
+      case JSOP_ENTERLET2:
+        return NumBlockSlots(script, pc) + 2;
       default:
         /* stack: fun, this, [argc arguments] */
         JS_ASSERT(op == JSOP_NEW || op == JSOP_CALL || op == JSOP_EVAL ||
@@ -144,8 +164,15 @@ js::StackDefs(JSScript *script, jsbytecode *pc)
 {
     JSOp op = (JSOp) *pc;
     const JSCodeSpec &cs = js_CodeSpec[op];
-    JS_ASSERT (cs.ndefs >= 0);
-    return cs.ndefs;
+    if (cs.ndefs >= 0)
+        return cs.ndefs;
+
+    uint32_t n = NumBlockSlots(script, pc);
+    if (op == JSOP_ENTERLET1)
+        return n + 1;
+    if (op == JSOP_ENTERLET2)
+        return n + 2;
+    return n;
 }
 
 static const char * const countBaseNames[] = {
@@ -754,7 +781,7 @@ js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, bool lines,
             if (parser.isReachable(next))
                 Sprint(sp, "%05u ", parser.stackDepthAtPC(next));
             else
-                Sprint(sp, "      ");
+                Sprint(sp, "      ", parser.stackDepthAtPC(next));
         }
         len = js_Disassemble1(cx, script, next, script->pcToOffset(next), lines, sp);
         if (!len)
@@ -1405,6 +1432,30 @@ js_QuoteString(ExclusiveContext *cx, JSString *str, jschar quote)
 
 /************************************************************************/
 
+static JSObject *
+GetBlockChainAtPC(JSContext *cx, JSScript *script, jsbytecode *pc)
+{
+    JS_ASSERT(script->containsPC(pc));
+    JS_ASSERT(pc >= script->main());
+
+    ptrdiff_t offset = pc - script->main();
+
+    if (!script->hasBlockScopes())
+        return nullptr;
+
+    BlockScopeArray *blockScopes = script->blockScopes();
+    JSObject *blockChain = nullptr;
+    for (uint32_t n = 0; n < blockScopes->length; n++) {
+        const BlockScopeNote *note = &blockScopes->vector[n];
+        if (note->start > offset)
+            break;
+        if (offset <= note->start + note->length)
+            blockChain = script->getObject(note->index);
+    }
+
+    return blockChain;
+}
+
 namespace {
 /*
  * The expression decompiler is invoked by error handling code to produce a
@@ -1664,17 +1715,24 @@ ExpressionDecompiler::loadAtom(jsbytecode *pc)
 JSAtom *
 ExpressionDecompiler::findLetVar(jsbytecode *pc, unsigned depth)
 {
-    for (JSObject *chain = script->getBlockScope(pc); chain; chain = chain->getParent()) {
-        StaticBlockObject &block = chain->as<StaticBlockObject>();
-        uint32_t blockDepth = block.stackDepth();
-        uint32_t blockCount = block.slotCount();
-        if (uint32_t(depth - blockDepth) < uint32_t(blockCount)) {
-            for (Shape::Range<NoGC> r(block.lastProperty()); !r.empty(); r.popFront()) {
-                const Shape &shape = r.front();
-                if (shape.shortid() == int(depth - blockDepth))
-                    return JSID_TO_ATOM(shape.propid());
+    if (script->hasObjects()) {
+        JSObject *chain = GetBlockChainAtPC(cx, script, pc);
+        if (!chain)
+            return nullptr;
+        JS_ASSERT(chain->is<BlockObject>());
+        do {
+            BlockObject &block = chain->as<BlockObject>();
+            uint32_t blockDepth = block.stackDepth();
+            uint32_t blockCount = block.slotCount();
+            if (uint32_t(depth - blockDepth) < uint32_t(blockCount)) {
+                for (Shape::Range<NoGC> r(block.lastProperty()); !r.empty(); r.popFront()) {
+                    const Shape &shape = r.front();
+                    if (shape.shortid() == int(depth - blockDepth))
+                        return JSID_TO_ATOM(shape.propid());
+                }
             }
-        }
+            chain = chain->getParent();
+        } while (chain && chain->is<BlockObject>());
     }
     return nullptr;
 }

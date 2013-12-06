@@ -18,8 +18,6 @@
 
 namespace js {
 
-class ScopeIter;
-
 /*
  * Announce to the debugger that the thread has entered a new JavaScript frame,
  * |frame|. Call whatever hooks have been registered to observe new frames, and
@@ -38,7 +36,7 @@ class ScopeIter;
  *   has set |frame|'s return value appropriately.
  */
 extern JSTrapStatus
-ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc);
+ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame);
 
 /*
  * Announce to the debugger that the thread has exited a JavaScript frame, |frame|.
@@ -56,7 +54,7 @@ ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc);
  * alternative path, containing its own call to ScriptDebugEpilogue.)
  */
 extern bool
-ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc, bool ok);
+ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool ok);
 
 /*
  * Announce to the debugger that an exception has been thrown and propagated
@@ -320,7 +318,7 @@ HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp);
 
 /* Unwind block and scope chains to match the given depth. */
 extern void
-UnwindScope(JSContext *cx, ScopeIter &si, uint32_t stackDepth);
+UnwindScope(JSContext *cx, AbstractFramePtr frame, uint32_t stackDepth);
 
 /*
  * Unwind for an uncatchable exception. This means not running finalizers, etc;

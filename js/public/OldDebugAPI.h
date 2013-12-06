@@ -339,18 +339,16 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda);
 class JS_PUBLIC_API(JSAbstractFramePtr)
 {
     uintptr_t ptr_;
-    jsbytecode *pc_;
 
   protected:
     JSAbstractFramePtr()
-      : ptr_(0), pc_(nullptr)
+      : ptr_(0)
     { }
 
   public:
-    JSAbstractFramePtr(void *raw, jsbytecode *pc);
+    explicit JSAbstractFramePtr(void *raw);
 
     uintptr_t raw() const { return ptr_; }
-    jsbytecode *pc() const { return pc_; }
 
     operator bool() const { return !!ptr_; }
 

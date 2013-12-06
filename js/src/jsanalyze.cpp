@@ -253,6 +253,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
           case JSOP_EVAL:
           case JSOP_SPREADEVAL:
+          case JSOP_ENTERLET2:
           case JSOP_ENTERWITH:
             canTrackVars = false;
             break;

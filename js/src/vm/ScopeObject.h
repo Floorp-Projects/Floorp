@@ -534,25 +534,29 @@ class ScopeIter
   public:
 
     /* Constructing from a copy of an existing ScopeIter. */
-    ScopeIter(const ScopeIter &si, JSContext *cx
-              MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    explicit ScopeIter(const ScopeIter &si, JSContext *cx
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /* Constructing from StackFrame places ScopeIter on the innermost scope. */
-    ScopeIter(AbstractFramePtr frame, jsbytecode *pc, JSContext *cx
-              MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    explicit ScopeIter(AbstractFramePtr frame, JSContext *cx
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /*
      * Without a StackFrame, the resulting ScopeIter is done() with
      * enclosingScope() as given.
      */
-    ScopeIter(JSObject &enclosingScope, JSContext *cx
+    explicit ScopeIter(JSObject &enclosingScope, JSContext *cx
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+
+    /*
+     * For the special case of generators, copy the given ScopeIter, with 'fp'
+     * as the StackFrame instead of si.fp(). Not for general use.
+     */
+    ScopeIter(const ScopeIter &si, AbstractFramePtr frame, JSContext *cx
               MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /* Like ScopeIter(StackFrame *) except start at 'scope'. */
-    ScopeIter(AbstractFramePtr frame, jsbytecode *pc, ScopeObject &scope, JSContext *cx
-              MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-
-    ScopeIter(const ScopeIterKey &key, JSContext *cx
+    ScopeIter(AbstractFramePtr frame, ScopeObject &scope, JSContext *cx
               MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     bool done() const { return !frame_; }
@@ -581,20 +585,15 @@ class ScopeIterKey
     JSObject *cur_;
     StaticBlockObject *block_;
     ScopeIter::Type type_;
-    bool hasScopeObject_;
 
   public:
     ScopeIterKey() : frame_(NullFramePtr()), cur_(nullptr), block_(nullptr), type_() {}
     ScopeIterKey(const ScopeIter &si)
-      : frame_(si.frame_), cur_(si.cur_), block_(si.block_), type_(si.type_),
-        hasScopeObject_(si.hasScopeObject_)
+      : frame_(si.frame_), cur_(si.cur_), block_(si.block_), type_(si.type_)
     {}
 
     AbstractFramePtr frame() const { return frame_; }
-    JSObject *cur() const { return cur_; }
-    StaticBlockObject *block() const { return block_; }
     ScopeIter::Type type() const { return type_; }
-    bool hasScopeObject() const { return hasScopeObject_; }
 
     /* For use as hash policy */
     typedef ScopeIterKey Lookup;
@@ -633,7 +632,7 @@ extern JSObject *
 GetDebugScopeForFunction(JSContext *cx, HandleFunction fun);
 
 extern JSObject *
-GetDebugScopeForFrame(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc);
+GetDebugScopeForFrame(JSContext *cx, AbstractFramePtr frame);
 
 /* Provides debugger access to a scope. */
 class DebugScopeObject : public ProxyObject
@@ -691,7 +690,7 @@ class DebugScopes
      * updates of liveScopes need only fill in the new scopes.
      */
     typedef HashMap<ScopeObject *,
-                    ScopeIterKey,
+                    AbstractFramePtr,
                     DefaultHasher<ScopeObject *>,
                     RuntimeAllocPolicy> LiveScopeMap;
     LiveScopeMap liveScopes;
@@ -718,15 +717,17 @@ class DebugScopes
     static bool addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject &debugScope);
 
     static bool updateLiveScopes(JSContext *cx);
-    static ScopeIterKey *hasLiveScope(ScopeObject &scope);
+    static AbstractFramePtr hasLiveFrame(ScopeObject &scope);
 
-    // In debug-mode, these must be called whenever exiting a scope that might
-    // have stack-allocated locals.
+    /*
+     * In debug-mode, these must be called whenever exiting a call/block or
+     * when activating/yielding a generator.
+     */
     static void onPopCall(AbstractFramePtr frame, JSContext *cx);
-    static void onPopBlock(JSContext *cx, const ScopeIter &si);
-    static void onPopBlock(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc);
+    static void onPopBlock(JSContext *cx, AbstractFramePtr frame);
     static void onPopWith(AbstractFramePtr frame);
     static void onPopStrictEvalScope(AbstractFramePtr frame);
+    static void onGeneratorFrameChange(AbstractFramePtr from, AbstractFramePtr to, JSContext *cx);
     static void onCompartmentLeaveDebugMode(JSCompartment *c);
 };
 
