@@ -96,14 +96,22 @@ AssertAppStatus(PBrowserParent* aActor,
   TabParent* tab = static_cast<TabParent*>(aActor);
   nsCOMPtr<mozIApplication> app = tab->GetOwnOrContainingApp();
 
+  bool valid = false;
+
   if (app) {
     unsigned short appStatus = 0;
     if (NS_SUCCEEDED(app->GetAppStatus(&appStatus))) {
-      return appStatus == aStatus;
+      valid = appStatus == aStatus;
     }
   }
 
-  return false;
+  if (!valid) {
+    printf_stderr("Security problem: Content process does not have `%d' status.  It will be killed.\n", aStatus);
+    ContentParent* process = tab->Manager();
+    process->KillHard();
+  }
+
+  return valid;
 }
 
 bool

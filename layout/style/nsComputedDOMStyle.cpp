@@ -3356,6 +3356,16 @@ nsComputedDOMStyle::DoGetBorderImageRepeat()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetAlignContent()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StylePosition()->mAlignContent,
+                                   nsCSSProps::kAlignContentKTable));
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetAlignItems()
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
@@ -3435,6 +3445,16 @@ nsComputedDOMStyle::DoGetFlexShrink()
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
   val->SetNumber(StylePosition()->mFlexShrink);
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetFlexWrap()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StylePosition()->mFlexWrap,
+                                   nsCSSProps::kFlexWrapKTable));
   return val;
 }
 

@@ -78,11 +78,9 @@
     function() {
       SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true],
                                          ["dom.datastore.enabled", true],
-                                         ["dom.testing.ignore_ipc_principal", true]]}, runTest);
-    },
-
-    function() {
-      SpecialPowers.pushPrefEnv({"set": [["dom.ipc.browser_frames.oop_by_default", true]]}, runTest);
+                                         ["dom.ipc.browser_frames.oop_by_default", true],
+                                         ["dom.testing.ignore_ipc_principal", true],
+                                         ["dom.testing.datastore_enabled_for_hosted_apps", true]]}, runTest);
     },
 
     function() {

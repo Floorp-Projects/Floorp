@@ -58,11 +58,18 @@ function runTest() {
   }
 
   try {
+    var alertName = "fiorello";
     SimpleTest.waitForExplicitFinish();
     notifier.showAlertNotification(null, "Notification test",
                                    "Surprise! I'm here to test notifications!",
-                                   false, "foobarcookie", observer);
+                                   false, "foobarcookie", observer, alertname);
     ok(true, "showAlertNotification() succeeded.  Waiting for notification...");
+    if (MAC) {
+      // Notifications are native on OS X 10.8 and later, and when they are they
+      // persist in the Notification Center. We need to close explicitly to avoid a hang.
+      // This also works for XUL notifications when running this test on OS X < 10.8.
+      notifier.closeAlert(alertName);
+    }
   } catch (ex) {
     todo(false, "showAlertNotification() failed.", ex);
     SimpleTest.finish();

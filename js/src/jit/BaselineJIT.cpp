@@ -356,15 +356,14 @@ jit::CanEnterBaselineMethod(JSContext *cx, RunState &state)
     return CanEnterBaselineJIT(cx, script, /* osr = */false);
 };
 
-// Be safe, align IC entry list to 8 in all cases.
-static const unsigned DataAlignment = sizeof(uintptr_t);
-
 BaselineScript *
 BaselineScript::New(JSContext *cx, uint32_t prologueOffset,
                     uint32_t spsPushToggleOffset, size_t icEntries,
                     size_t pcMappingIndexEntries, size_t pcMappingSize,
                     size_t bytecodeTypeMapEntries)
 {
+    static const unsigned DataAlignment = sizeof(uintptr_t);
+
     size_t paddedBaselineScriptSize = AlignBytes(sizeof(BaselineScript), DataAlignment);
 
     size_t icEntriesSize = icEntries * sizeof(ICEntry);

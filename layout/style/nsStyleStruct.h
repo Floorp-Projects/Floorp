@@ -1129,9 +1129,11 @@ struct nsStylePosition {
   nsStyleCoord  mMaxHeight;             // [reset] coord, percent, calc, none
   nsStyleCoord  mFlexBasis;             // [reset] coord, percent, enum, calc, auto
   uint8_t       mBoxSizing;             // [reset] see nsStyleConsts.h
+  uint8_t       mAlignContent;          // [reset] see nsStyleConsts.h
   uint8_t       mAlignItems;            // [reset] see nsStyleConsts.h
   uint8_t       mAlignSelf;             // [reset] see nsStyleConsts.h
   uint8_t       mFlexDirection;         // [reset] see nsStyleConsts.h
+  uint8_t       mFlexWrap;              // [reset] see nsStyleConsts.h
   uint8_t       mJustifyContent;        // [reset] see nsStyleConsts.h
   int32_t       mOrder;                 // [reset] integer
   float         mFlexGrow;              // [reset] float

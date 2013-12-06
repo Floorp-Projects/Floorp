@@ -155,9 +155,9 @@ static bool
 ExecuteSequentially(JSContext *cx, HandleValue funVal, bool *complete)
 {
     uint32_t numSlices = ForkJoinSlices(cx);
-    FastInvokeGuard fig(cx, funVal);
     bool allComplete = true;
     for (uint32_t i = 0; i < numSlices; i++) {
+        FastInvokeGuard fig(cx, funVal);
         InvokeArgs &args = fig.args();
         if (!args.init(3))
             return false;

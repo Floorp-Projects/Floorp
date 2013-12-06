@@ -472,9 +472,6 @@ MessageChannel::RPCCall(Message* aMsg, Message* aReply)
 
     MonitorAutoLock lock(*mMonitor);
 
-    // RPC calls must be the only thing on the stack.
-    IPC_ASSERT(!AwaitingInterruptReply(), "rpc calls cannot be issued within interrupts");
-
     AutoEnterRPCTransaction transact(this);
     aMsg->set_transaction_id(mCurrentRPCTransaction);
 
