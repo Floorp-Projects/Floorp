@@ -285,15 +285,17 @@
 
 /* SideMenuWidget container */
 
-.side-menu-widget-container[with-arrows=true]:-moz-locale-dir(ltr) {
+.side-menu-widget-container:-moz-locale-dir(ltr),
+.side-menu-widget-empty-notice-container:-moz-locale-dir(ltr) {
   box-shadow: inset -1px 0 0 #222426;
 }
 
-.side-menu-widget-container[with-arrows=true]:-moz-locale-dir(rtl) {
+.side-menu-widget-container:-moz-locale-dir(rtl),
+.side-menu-widget-empty-notice-container:-moz-locale-dir(rtl) {
   box-shadow: inset 1px 0 0 #222426;
 }
 
-.side-menu-widget-container[with-arrows=true] .side-menu-widget-group {
+.side-menu-widget-group {
   /* To allow visibility of the dark margin shadow. */
   -moz-margin-end: 1px;
 }
@@ -332,7 +334,9 @@
 
 .side-menu-widget-item[theme="light"] {
   border-top: 1px solid hsla(210,8%,75%,.25);
+  border-bottom: 1px solid hsla(210,16%,76%,.1);
   margin-top: -1px;
+  margin-bottom: -1px;
 }
 
 .side-menu-widget-item[theme="dark"]:last-of-type {
@@ -343,13 +347,9 @@
   box-shadow: inset 0 -1px 0 hsla(210,8%,75%,.25);
 }
 
-.side-menu-widget-item[theme="dark"].selected {
+.side-menu-widget-item.selected {
   background: linear-gradient(hsl(206,61%,40%), hsl(206,61%,31%)) repeat-x top left !important;
   box-shadow: inset 0 1px 0 hsla(210,40%,83%,.15);
-}
-
-.side-menu-widget-item[theme="light"].selected {
-  /* Nothing here yet */
 }
 
 .side-menu-widget-item.selected > .side-menu-widget-item-arrow {
@@ -429,10 +429,6 @@
 
 /* VariablesView */
 
-.variables-view-container {
-  background: #fff;
-}
-
 .variables-view-empty-notice {
   color: GrayText;
   padding: 2px;
@@ -440,11 +436,6 @@
 
 .variables-view-scope > .title {
   color: #fff;
-}
-
-.variables-view-scope:focus > .title {
-  background: Highlight;
-  color: HighlightText;
 }
 
 .variables-view-scope > .variables-view-element-details:not(:empty) {
@@ -455,25 +446,18 @@
 /* Generic traits applied to both variables and properties */
 
 .variable-or-property {
-  transition: background 1s ease-in-out;
-  color: #000;
+  transition: background 1s ease-in-out, color 1s ease-in-out;
 }
 
 .variable-or-property[changed] {
-  background: rgba(255,255,0,0.65);
-  transition-duration: 0.4s;
+  color: black;
+  transition-duration: .4s;
 }
 
 .variable-or-property > .title > .value {
   -moz-box-flex: 1;
   -moz-padding-start: 6px;
   -moz-padding-end: 4px;
-}
-
-.variable-or-property:focus > .title {
-  background: Highlight;
-  color: HighlightText;
-  border-radius: 4px;
 }
 
 .variable-or-property[editable] > .title > .value {
@@ -492,52 +476,22 @@
 }
 
 .variables-view-variable:not(:last-child) {
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(128, 128, 128, .15);
 }
 
 .variables-view-variable > .title > .name {
   font-weight: 600;
 }
 
-.variables-view-variable:not(:focus) > .title > .name {
-  color: #048;
-}
-
-.variables-view-property:not(:focus) > .title > .name {
-  color: #881090;
-}
-
-/* Token value colors */
-
-.variable-or-property:not(:focus) > .title > .token-undefined {
-  color: #bbb;
-}
-
-.variable-or-property:not(:focus) > .title > .token-null {
-  color: #999;
-}
-
-.variable-or-property:not(:focus) > .title > .token-boolean {
-  color: #10c;
-}
-
-.variable-or-property:not(:focus) > .title > .token-number {
-  color: #c00;
-}
-
-.variable-or-property:not(:focus) > .title > .token-string {
-  color: #282;
-}
-
-.variable-or-property:not(:focus) > .title > .token-other {
-  color: #333;
+.variable-or-property:focus > .title > label {
+  color: inherit !important;
 }
 
 /* Custom configurable/enumerable/writable or frozen/sealed/extensible
  * variables and properties */
 
 .variable-or-property[non-enumerable]:not([self]):not([exception]):not([return]):not([scope]) > .title > .name {
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 .variable-or-property[non-configurable] > .title > .name {
@@ -546,6 +500,10 @@
 
 .variable-or-property[non-writable] > .title > .name {
   border-bottom: 1px dashed #f99;
+}
+
+.variable-or-property[safe-getter] > .title > .name {
+  border-bottom: 1px dashed #8b0;
 }
 
 .variable-or-property-non-writable-icon {
@@ -572,27 +530,6 @@
 .variable-or-property:not(:focus) > .title > .variable-or-property-sealed-label,
 .variable-or-property:not(:focus) > .title > .variable-or-property-non-extensible-label {
   color: #666;
-}
-
-/* Special variables and properties */
-
-.variable-or-property[safe-getter] > .title > .name {
-  border-bottom: 1px dashed #8b0;
-}
-
-.variable-or-property[exception]:not(:focus) > .title > .name {
-  color: #a00;
-  text-shadow: 0 0 8px #fcc;
-}
-
-.variable-or-property[return]:not(:focus) > .title > .name {
-  color: #0a0;
-  text-shadow: 0 0 8px #cfc;
-}
-
-.variable-or-property[scope]:not(:focus) > .title > .name {
-  color: #00a;
-  text-shadow: 0 0 8px #ccf;
 }
 
 /* Aligned values */
@@ -677,14 +614,13 @@
 .element-name-input {
   -moz-margin-start: -2px !important;
   -moz-margin-end: 2px !important;
-  color: #048;
   font-weight: 600;
 }
 
 .element-value-input,
 .element-name-input {
-  border: 1px solid #999 !important;
-  box-shadow: 1px 2px 4px #aaa;
+  border: 1px solid rgba(128, 128, 128, .5) !important;
+  color: inherit;
 }
 
 /* Variables and properties searching */
