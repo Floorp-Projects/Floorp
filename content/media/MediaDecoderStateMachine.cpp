@@ -2369,10 +2369,14 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       }
 
       StopAudioThread();
-      if (mDecoder->GetState() == MediaDecoder::PLAY_STATE_PLAYING) {
+      // When we're decoding to a stream, the stream's main-thread finish signal
+      // will take care of calling MediaDecoder::PlaybackEnded.
+      if (mDecoder->GetState() == MediaDecoder::PLAY_STATE_PLAYING &&
+          !mDecoder->GetDecodedStream()) {
         int64_t videoTime = HasVideo() ? mVideoFrameEndTime : 0;
         int64_t clockTime = std::max(mEndTime, std::max(videoTime, GetAudioClock()));
         UpdatePlaybackPosition(clockTime);
+
         nsCOMPtr<nsIRunnable> event =
           NS_NewRunnableMethod(mDecoder, &MediaDecoder::PlaybackEnded);
         NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
