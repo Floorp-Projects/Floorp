@@ -172,8 +172,6 @@ class AbstractFramePtr
 
     operator bool() const { return !!ptr_; }
 
-    inline JSGenerator *maybeSuspendedGenerator(JSRuntime *rt) const;
-
     inline JSObject *scopeChain() const;
     inline CallObject &callObj() const;
     inline bool initFunctionScopeObjects(JSContext *cx);
@@ -862,8 +860,6 @@ class StackFrame
     template <TriggerPostBarriers doPostBarrier>
     void copyFrameAndValues(JSContext *cx, Value *vp, StackFrame *otherfp,
                             const Value *othervp, Value *othersp);
-
-    JSGenerator *maybeSuspendedGenerator(JSRuntime *rt);
 
     /*
      * js::Execute pushes both global and function frames (since eval() in a
