@@ -9,8 +9,7 @@ function ifWebGLSupported() {
   let [target, debuggee, front] = yield initBackend(MULTIPLE_CONTEXTS_URL);
   front.setup({ reload: true });
 
-  let firstProgramActor = yield once(front, "program-linked");
-  let secondProgramActor = yield once(front, "program-linked");
+  let [firstProgramActor, secondProgramActor] = yield getPrograms(front, 2);
 
   isnot(firstProgramActor, secondProgramActor,
     "Two distinct program actors were recevide from two separate contexts.");
