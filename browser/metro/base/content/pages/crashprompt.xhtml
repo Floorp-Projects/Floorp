@@ -53,6 +53,14 @@
       function onChoseSendReports() {
         Services.prefs.setBoolPref("app.crashreporter.prompted", true);
         Services.prefs.setBoolPref("app.crashreporter.autosubmit", true);
+
+        var includeURLCheckbox = document.getElementById("crashpromptIncludeURLCheckbox");
+        if (includeURLCheckbox.checked) {
+          Services.prefs.setBoolPref("app.crashreporter.submitURLs", true);
+        } else {
+          Services.prefs.setBoolPref("app.crashreporter.submitURLs", false);
+        }
+
         window.close();
       }
 
@@ -61,11 +69,17 @@
         Services.prefs.setBoolPref("app.crashreporter.autosubmit", false);
         window.close();
       }
+
+
+      function onLoad() {
+        document.getElementById("crashpromptIncludeURLCheckbox").checked =
+          Services.prefs.getBoolPref("app.crashreporter.submitURLs");
+      }
     ]]></script>
 
   </head>
 
-  <body id="crashPromptPage" dir="&locale.dir;">
+  <body id="crashPromptPage" dir="&locale.dir;" onload="onLoad();">
     <div id="crashPromptContainer">
       <h1 id="crashPromptTitle">&crashprompt.title;</h1>
       <hr id="crashPromptSeparator" />
@@ -95,6 +109,13 @@
           </label>
         </div>
       </p>
+      <div id="crashpromptURLCheckboxContainer">
+        <label id="crashpromptIncludeURLLabel">
+          <input type="checkbox"
+                 id="crashpromptIncludeURLCheckbox" />
+          &crashprompt.includeURLLabel;
+        </label>
+      </div>
       <div id="crashPromptButtonContainer">
         <button class="button-default"
                 onclick="onChoseSendReports();">
