@@ -150,7 +150,7 @@ template <typename T> class PersistentRooted;
 /* This is exposing internal state of the GC for inlining purposes. */
 JS_FRIEND_API(bool) isGCEnabled();
 
-#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+#if defined(JS_DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
 extern void
 CheckStackRoots(JSContext *cx);
 #endif
@@ -265,7 +265,7 @@ class Heap : public js::HeapBase<T>
     T ptr;
 };
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
 /*
  * For generational GC, assert that an object is in the tenured generation as
  * opposed to being in the nursery.
@@ -648,7 +648,7 @@ struct GCMethods<T *>
 #endif
 };
 
-#if defined(DEBUG)
+#if defined(JS_DEBUG)
 /* This helper allows us to assert that Rooted<T> is scoped within a request. */
 extern JS_PUBLIC_API(bool)
 IsInRequest(JSContext *cx);
@@ -798,7 +798,7 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
     Rooted<void*> **stack, *prev;
 #endif
 
-#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+#if defined(JS_DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
     /* Has the rooting analysis ever scanned this Rooted's stack location? */
     friend void JS::CheckStackRoots(JSContext*);
 #endif
@@ -836,7 +836,7 @@ namespace js {
  */
 class SkipRoot
 {
-#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+#if defined(JS_DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
 
     SkipRoot **stack, *prev;
     const uint8_t *start;
@@ -864,7 +864,7 @@ class SkipRoot
         return v >= start && v + len <= end;
     }
 
-#else /* DEBUG && JSGC_ROOT_ANALYSIS */
+#else /* JS_DEBUG && JSGC_ROOT_ANALYSIS */
 
     template <typename T>
     void init(js::ContextFriendFields *cx, const T *ptr, size_t count) {}
@@ -875,7 +875,7 @@ class SkipRoot
         // unused local variables of this type.
     }
 
-#endif /* DEBUG && JSGC_ROOT_ANALYSIS */
+#endif /* JS_DEBUG && JSGC_ROOT_ANALYSIS */
 
     template <typename T>
     SkipRoot(JSContext *cx, const T *ptr, size_t count = 1
@@ -1204,7 +1204,7 @@ namespace js {
  */
 inline void MaybeCheckStackRoots(JSContext *cx)
 {
-#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+#if defined(JS_DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
     JS::CheckStackRoots(cx);
 #endif
 }
