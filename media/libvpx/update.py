@@ -278,7 +278,10 @@ def prepare_upstream(prefix, commit=None):
         target_objdir = os.path.join(prefix, 'objdir', target)
         os.makedirs(target_objdir)
         os.chdir(target_objdir)
-        configure = ['../../configure', '--target=%s' % target, '--disable-examples', '--disable-install-docs']
+        configure = ['../../configure', '--target=%s' % target,
+            '--disable-examples', '--disable-install-docs',
+            '--enable-multi-res-encoding',
+        ]
 
         if 'darwin9' in target:
             configure += ['--enable-pic']
