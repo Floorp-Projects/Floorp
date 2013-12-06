@@ -80,7 +80,12 @@ this.UserAgentUpdates = {
   },
 
   _applyUpdate: function(update) {
-    this._callback(update);
+    // Check pref again in case it has changed
+    if (update && this._getPref(PREF_UPDATES_ENABLED, false)) {
+      this._callback(update);
+    } else {
+      this._callback(null);
+    }
   },
 
   _applySavedUpdate: function() {
