@@ -367,12 +367,12 @@
           <tab id="events-tab" label="&debuggerUI.tabs.events;"/>
         </tabs>
         <tabpanels flex="1">
-          <tabpanel id="variables-tabpanel">
+          <tabpanel id="variables-tabpanel" class="theme-body">
             <vbox id="expressions"/>
             <splitter class="devtools-horizontal-splitter"/>
             <vbox id="variables" flex="1"/>
           </tabpanel>
-          <tabpanel id="events-tabpanel">
+          <tabpanel id="events-tabpanel" class="theme-body">
             <vbox id="event-listeners" flex="1"/>
           </tabpanel>
         </tabpanels>
