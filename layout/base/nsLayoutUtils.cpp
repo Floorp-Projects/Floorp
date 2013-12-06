@@ -35,6 +35,7 @@
 #include "nsRenderingContext.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCSSRendering.h"
+#include "nsCxPusher.h"
 #include "nsThemeConstants.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
@@ -72,7 +73,6 @@
 #include "nsComputedDOMStyle.h"
 #include "ActiveLayerTracker.h"
 
-#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"
 
 #ifdef MOZ_XUL
@@ -4775,9 +4775,11 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
     wantImageSurface = true;
   }
 
-  // Force a system caller so that the below code doesn't think it's being
-  // called by JS. See bug 604262.
-  AutoSystemCaller asc;
+  // Push a null JSContext on the stack so that code that runs within
+  // the below code doesn't think it's being called by JS. See bug
+  // 604262.
+  nsCxPusher pusher;
+  pusher.PushNull();
 
   nsCOMPtr<imgIRequest> imgRequest;
   rv = aElement->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
