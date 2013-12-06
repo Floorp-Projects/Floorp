@@ -26,6 +26,7 @@
 #include "ImageContainer.h"
 #include "ImageLayers.h"
 #include "nsContentList.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -73,6 +74,9 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     element = NS_NewHTMLImageElement(nodeInfo.forget());
     mPosterImage = element;
     NS_ENSURE_TRUE(mPosterImage, NS_ERROR_OUT_OF_MEMORY);
+
+    // See bug 604262.
+    AutoSystemCaller asc;
 
     // Set the nsImageLoadingContent::ImageState() to 0. This means that the
     // image will always report its state as 0, so it will never be reframed
