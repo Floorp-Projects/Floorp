@@ -44,15 +44,16 @@ public:
   virtual void OnTestPartResult(const TestPartResult& aTestPartResult) MOZ_OVERRIDE {
     printf("TEST-%s | %s.%s | %s @ %s:%i\n",
            !aTestPartResult.failed() ? "PASS" : "UNEXPECTED-FAIL",
-           mTestInfo->test_case_name(), mTestInfo->name(),
+           mTestInfo ? mTestInfo->test_case_name() : "?", mTestInfo ? mTestInfo->name() : "?",
            aTestPartResult.summary(),
            aTestPartResult.file_name(), aTestPartResult.line_number());
   }
   virtual void OnTestEnd(const TestInfo& aTestInfo) MOZ_OVERRIDE {
     printf("TEST-%s | %s.%s | test completed (time: %llims)\n",
-           mTestInfo->result()->Passed() ? "PASS": "UNEXPECTED-FAIL",
-           mTestInfo->test_case_name(), mTestInfo->name(),
-           mTestInfo->result()->elapsed_time());
+           aTestInfo.result()->Passed() ? "PASS": "UNEXPECTED-FAIL",
+           aTestInfo.test_case_name(), aTestInfo.name(),
+           aTestInfo.result()->elapsed_time());
+    MOZ_ASSERT(&aTestInfo == mTestInfo);
     mTestInfo = nullptr;
   }
 
