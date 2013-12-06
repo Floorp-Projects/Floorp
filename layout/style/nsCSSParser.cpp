@@ -2789,9 +2789,9 @@ CSSParserImpl::ParseSupportsConditionInParens(bool& aConditionMet)
   }
 
   if (!(ExpectSymbol(')', true))) {
-    REPORT_UNEXPECTED_TOKEN(PESupportsConditionExpectedCloseParen);
     SkipUntil(')');
-    return false;
+    aConditionMet = false;
+    return true;
   }
 
   return true;
