@@ -229,7 +229,13 @@ Editor.prototype = {
       }, false);
 
       cm.on("focus", () => this.emit("focus"));
-      cm.on("change", () => this.emit("change"));
+      cm.on("change", () => {
+        this.emit("change");
+        if (!this._lastDirty) {
+          this._lastDirty = true;
+          this.emit("dirty-change");
+        }
+      });
       cm.on("gutterClick", (cm, line) => this.emit("gutterClick", line));
       cm.on("cursorActivity", (cm) => this.emit("cursorActivity"));
 
@@ -384,6 +390,8 @@ Editor.prototype = {
   setClean: function () {
     let cm = editors.get(this);
     this.version = cm.changeGeneration();
+    this._lastDirty = false;
+    this.emit("dirty-change");
     return this.version;
   },
 
