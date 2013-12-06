@@ -312,6 +312,10 @@ box.requests-menu-status[code^="5"] {
 
 /* SideMenuWidget */
 
+.side-menu-widget-container {
+  box-shadow: none !important;
+}
+
 .side-menu-widget-item[odd] {
   background: rgba(255,255,255,0.05);
 }
