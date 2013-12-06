@@ -94,6 +94,8 @@ void DestroyScriptSettings()
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
                                  bool aIsMainThread,
                                  JSContext* aCx)
+  : mStack(ScriptSettingsStack::Ref())
+  , mEntry(aGlobalObject, /* aCandidate = */ true)
 {
   MOZ_ASSERT(aGlobalObject);
   if (!aCx) {
@@ -114,18 +116,40 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
     mCxPusher.Push(aCx);
   }
   mAc.construct(aCx, aGlobalObject->GetGlobalJSObject());
+  mStack.Push(&mEntry);
+}
+
+AutoEntryScript::~AutoEntryScript()
+{
+  MOZ_ASSERT(mStack.Incumbent() == mEntry.mGlobalObject);
+  mStack.Pop();
 }
 
 AutoIncumbentScript::AutoIncumbentScript(nsIGlobalObject* aGlobalObject)
+  : mStack(ScriptSettingsStack::Ref())
+  , mEntry(aGlobalObject, /* aCandidate = */ false)
 {
-  MOZ_ASSERT(aGlobalObject);
+  mStack.Push(&mEntry);
+}
+
+AutoIncumbentScript::~AutoIncumbentScript()
+{
+  MOZ_ASSERT(mStack.Incumbent() == mEntry.mGlobalObject);
+  mStack.Pop();
 }
 
 AutoSystemCaller::AutoSystemCaller(bool aIsMainThread)
+  : mStack(ScriptSettingsStack::Ref())
 {
   if (aIsMainThread) {
     mCxPusher.PushNull();
   }
+  mStack.PushSystem();
+}
+
+AutoSystemCaller::~AutoSystemCaller()
+{
+  mStack.Pop();
 }
 
 } // namespace dom
