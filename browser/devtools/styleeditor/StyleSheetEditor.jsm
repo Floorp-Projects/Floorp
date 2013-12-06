@@ -237,7 +237,7 @@ StyleSheetEditor.prototype = {
       this.emit("source-editor-load");
     });
 
-    sourceEditor.on("change", this._onPropertyChange);
+    sourceEditor.on("dirty-change", this._onPropertyChange);
   },
 
   /**
