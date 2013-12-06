@@ -39,8 +39,6 @@ const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
 const TELEMETRY_INTERVAL = 60000;
 // Delay before intializing telemetry (ms)
 const TELEMETRY_DELAY = 60000;
-// Delay before initializing telemetry if we're testing (ms)
-const TELEMETRY_TEST_DELAY = 100;
 
 // Seconds of idle time before pinging.
 // On idle-daily a gather-telemetry notification is fired, during it probes can
@@ -218,8 +216,6 @@ TelemetryPing.prototype = {
     }
     if (!forSavedSession || hasPingBeenSent) {
       ret.savedPings = TelemetryFile.pingsLoaded;
-      ret.pingsOverdue = TelemetryFile.pingsOverdue;
-      ret.pingsDiscarded = TelemetryFile.pingsDiscarded;
     }
 
     return ret;
@@ -765,7 +761,7 @@ TelemetryPing.prototype = {
   /**
    * Initializes telemetry within a timer. If there is no PREF_SERVER set, don't turn on telemetry.
    */
-  setup: function setup(aTesting) {
+  setup: function setup() {
     // Initialize some probes that are kept in their own modules
     this._thirdPartyCookies = new ThirdPartyCookieProbe();
     this._thirdPartyCookies.init();
@@ -828,17 +824,7 @@ TelemetryPing.prototype = {
         {
           let success_histogram = Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS");
           success_histogram.add(success);
-        }), () =>
-        {
-          // If we have any TelemetryPings lying around, we'll be aggressive
-          // and try to send them all off ASAP.
-          if (TelemetryFile.pingsOverdue > 0) {
-            // It doesn't really matter what we pass to this.send as a reason,
-            // since it's never sent to the server. All that this.send does with
-            // the reason is check to make sure it's not a test-ping.
-            this.send("overdue-flush", this._server);
-          }
-        });
+        }));
       this.attachObservers();
       this.gatherMemory();
 
@@ -846,8 +832,7 @@ TelemetryPing.prototype = {
       });
       delete this._timer;
     }
-    this._timer.initWithCallback(timerCallback.bind(this),
-                                 aTesting ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY,
+    this._timer.initWithCallback(timerCallback.bind(this), TELEMETRY_DELAY,
                                  Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
