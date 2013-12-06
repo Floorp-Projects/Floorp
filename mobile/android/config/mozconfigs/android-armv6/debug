@@ -2,6 +2,7 @@
 
 # Global options
 ac_add_options --enable-debug
+ac_add_options --disable-unified-compilation
 
 # Build Fennec
 ac_add_options --enable-application=mobile/android
