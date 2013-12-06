@@ -310,11 +310,6 @@ CollectWindowReports(nsGlobalWindow *aWindow,
               "other 'dom/' numbers.");
   aWindowTotalSizes->mDOMOtherSize += windowSizes.mDOMOtherSize;
 
-  REPORT_SIZE("/proto-iface-cache", windowSizes.mProtoIfaceCacheSize,
-              "Memory used for prototype and interface binding caches "
-              "with a window.");
-  aWindowTotalSizes->mProtoIfaceCacheSize += windowSizes.mProtoIfaceCacheSize;
-
   REPORT_SIZE("/property-tables",
               windowSizes.mPropertyTablesSize,
               "Memory used for the property tables within a window.");
@@ -528,9 +523,6 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
 
   REPORT("window-objects/dom/other", windowTotalSizes.mDOMOtherSize,
          "This is the sum of all windows' 'dom/other' numbers.");
-
-  REPORT("window-objects/proto-iface-cache", windowTotalSizes.mProtoIfaceCacheSize,
-         "This is the sum of all windows' 'proto-iface-cache' numbers.");
 
   REPORT("window-objects/property-tables",
          windowTotalSizes.mPropertyTablesSize,
