@@ -160,7 +160,7 @@ nsresult SrtpFlow::UnprotectRtp(void *in, int in_len,
   err_status_t r = srtp_unprotect(session_, in, &len);
 
   if (r != err_status_ok) {
-    MOZ_MTLOG(ML_ERROR, "Error unprotecting SRTP packet");
+    MOZ_MTLOG(ML_ERROR, "Error unprotecting SRTP packet error=" << (int)r);
     return NS_ERROR_FAILURE;
   }
 
@@ -206,7 +206,7 @@ nsresult SrtpFlow::UnprotectRtcp(void *in, int in_len,
   err_status_t r = srtp_unprotect_rtcp(session_, in, &len);
 
   if (r != err_status_ok) {
-    MOZ_MTLOG(ML_ERROR, "Error unprotecting SRTCP packet");
+    MOZ_MTLOG(ML_ERROR, "Error unprotecting SRTCP packet error=" << (int)r);
     return NS_ERROR_FAILURE;
   }
 
