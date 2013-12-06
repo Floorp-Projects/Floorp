@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=942470
+-->
+<head>
+  <title>Test for Bug 942470</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=942470">Mozilla Bug 942470</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 942470 **/
+
+function getUA(host) {
+  var url = location.pathname;
+  url = host + url.slice(0, url.lastIndexOf('/')) + '/user_agent.sjs';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, false); // sync request
+  xhr.send();
+  is(xhr.status, 200, 'request failed');
+  is(typeof xhr.response, 'string', 'invalid response');
+  return xhr.response;
+}
+
+const UA_OVERRIDE = "DummyUserAgent";
+
+info("User agent is " + navigator.userAgent);
+isnot(navigator.userAgent, UA_OVERRIDE,
+  "navigator.userAgent is not reverted");
+isnot(getUA(location.origin), UA_OVERRIDE,
+  "User-Agent is not reverted");
+
+</script>
+</pre>
+</body>
+</html>
