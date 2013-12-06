@@ -85,6 +85,7 @@ var BrowserUI = {
     }
     Services.prefs.addObserver(debugServerStateChanged, this, false);
     Services.prefs.addObserver(debugServerPortChanged, this, false);
+    Services.prefs.addObserver("app.crashreporter.autosubmit", this, false);
 
     Services.obs.addObserver(this, "handle-xul-text-link", false);
 
@@ -264,59 +265,11 @@ var BrowserUI = {
     if (!CrashReporter.enabled) {
       return;
     }
-    let lastCrashID = this.lastCrashID;
 
-    if (!lastCrashID || !lastCrashID.length) {
-      return;
-    }
+    // Ensure that CrashReporter state matches pref
+    CrashReporter.submitReports = Services.prefs.getBoolPref("app.crashreporter.autosubmit");
 
-    let shouldReport = Services.prefs.getBoolPref("app.crashreporter.autosubmit");
-    let didPrompt = Services.prefs.getBoolPref("app.crashreporter.prompted");
-
-    if (!shouldReport && !didPrompt) {
-      let crashBundle = Services.strings.createBundle("chrome://browser/locale/crashprompt.properties");
-      let title = crashBundle.GetStringFromName("crashprompt.dialog.title");
-      let acceptbutton = crashBundle.GetStringFromName("crashprompt.dialog.acceptbutton");
-      let refusebutton = crashBundle.GetStringFromName("crashprompt.dialog.refusebutton");
-      let bodyText = crashBundle.GetStringFromName("crashprompt.dialog.statement1");
-
-      let buttonPressed =
-            Services.prompt.confirmEx(
-                null,
-                title,
-                bodyText,
-                Ci.nsIPrompt.BUTTON_POS_0 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING
-              + Ci.nsIPrompt.BUTTON_POS_1 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING
-              + Ci.nsIPrompt.BUTTON_POS_1_DEFAULT,
-                acceptbutton,
-                refusebutton,
-                null,
-                null,
-                { value: false });
-
-      Services.prefs.setBoolPref("app.crashreporter.prompted", true);
-
-      if (buttonPressed == 0) {
-        Services.prefs.setBoolPref('app.crashreporter.autosubmit', true);
-        BrowserUI.crashReportingPrefChanged(true);
-        shouldReport = true;
-      } else {
-        Services.prefs.setBoolPref('app.crashreporter.autosubmit', false);
-        BrowserUI.crashReportingPrefChanged(false);
-      }
-    }
-
-    // We've already prompted, return if the user doesn't want to report.
-    if (!shouldReport) {
-      return;
-    }
-
-    Util.dumpLn("Submitting last crash id:", lastCrashID);
-    try {
-      this.CrashSubmit.submit(lastCrashID);
-    } catch (ex) {
-      Util.dumpLn(ex);
-    }
+    BrowserUI.submitLastCrashReportOrShowPrompt();
 #endif
   },
 
@@ -632,10 +585,43 @@ var BrowserUI = {
           case debugServerPortChanged:
             this.changeDebugPort(Services.prefs.getIntPref(aData));
             break;
+          case "app.crashreporter.autosubmit":
+#ifdef MOZ_CRASHREPORTER
+            CrashReporter.submitReports = Services.prefs.getBoolPref(aData);
+
+            // The user explicitly set the autosubmit option, so there is no
+            // need to prompt them about crash reporting in the future
+            Services.prefs.setBoolPref("app.crashreporter.prompted", true);
+
+            BrowserUI.submitLastCrashReportOrShowPrompt;
+#endif
+            break;
+
+
         }
         break;
     }
   },
+
+  submitLastCrashReportOrShowPrompt: function() {
+#ifdef MOZ_CRASHREPORTER
+    let lastCrashID = this.lastCrashID;
+    if (lastCrashID && lastCrashID.length) {
+      if (Services.prefs.getBoolPref("app.crashreporter.autosubmit")) {
+        Util.dumpLn("Submitting last crash id:", lastCrashID);
+        try {
+          this.CrashSubmit.submit(lastCrashID);
+        } catch (ex) {
+          Util.dumpLn(ex);
+        }
+      } else if (!Services.prefs.getBoolPref("app.crashreporter.prompted")) {
+        BrowserUI.newTab("about:crashprompt", null);
+      }
+    }
+#endif
+  },
+
+
 
   /*********************************
    * Internal utils
@@ -1108,10 +1094,6 @@ var BrowserUI = {
       SanitizeUI.onSanitize();
     }
   },
-
-  crashReportingPrefChanged: function crashReportingPrefChanged(aState) {
-    CrashReporter.submitReports = aState;
-  }
 };
 
 var PanelUI = {
