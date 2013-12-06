@@ -398,11 +398,13 @@ INNER_BACKGROUND_TESTS_PACKAGE=echo 'Testing is disabled - No Android Background
 endif
 
 # Create geckoview_library/geckoview_{assets,library}.zip for third-party GeckoView consumers.
+ifdef NIGHTLY_BUILD
 ifndef MOZ_DISABLE_GECKOVIEW
 INNER_MAKE_GECKOVIEW_LIBRARY= \
   $(MAKE) -C ../mobile/android/geckoview_library package ABI_DIR=$(ABI_DIR)
 else
 INNER_MAKE_GECKOVIEW_LIBRARY=echo 'GeckoView library packaging is disabled'
+endif
 endif
 
 ifdef MOZ_OMX_PLUGIN
