@@ -437,26 +437,6 @@ protected:
                      EWordMovementType aWordMovementType = eDefaultBehavior);
 
   /**
-    * Used by FindOffset() to move backward/forward from a given point
-    * by word/line/etc.
-    *
-    * @param  aPresShell       the current presshell we're moving in
-    * @param  aFromFrame       the starting frame we're moving from
-    * @param  aFromOffset      the starting offset we're moving from
-    * @param  aFromAccessible  the starting accessible we're moving from
-    * @param  aAmount          how much are we moving (word/line/etc.) ?
-    * @param  aDirection       forward or backward?
-    * @param  aNeedsStart      for word and line cases, are we basing this on
-    *                          the start or end?
-    * @return                  the resulting offset into this hypertext
-    */
-  int32_t GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame,
-                            int32_t aFromOffset, Accessible* aFromAccessible,
-                            nsSelectionAmount aAmount, nsDirection aDirection,
-                            bool aNeedsStart,
-                            EWordMovementType aWordMovementType);
-
-  /**
     * Provides information for substring that is defined by the given start
     * and end offsets for this hyper text.
     *
