@@ -187,9 +187,9 @@ BluetoothProfileController::Next()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mDeviceAddress.IsEmpty());
-  MOZ_ASSERT(mProfilesIndex < mProfiles.Length());
+  MOZ_ASSERT(mProfilesIndex < (int)mProfiles.Length());
 
-  if (++mProfilesIndex < mProfiles.Length()) {
+  if (++mProfilesIndex < (int)mProfiles.Length()) {
     BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "");
 
     if (mConnect) {

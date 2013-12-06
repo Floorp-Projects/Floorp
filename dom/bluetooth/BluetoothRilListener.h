@@ -26,6 +26,7 @@ public:
   NS_DECL_NSIICCLISTENER
 
   IccListener() { }
+  virtual ~IccListener() { }
 
   bool Listen(bool aStart);
   void SetOwner(BluetoothRilListener *aOwner);
@@ -42,6 +43,7 @@ public:
 
   MobileConnectionListener(uint32_t aClientId)
   : mClientId(aClientId) { }
+  virtual ~MobileConnectionListener() { }
 
   bool Listen(bool aStart);
 
@@ -56,6 +58,7 @@ public:
   NS_DECL_NSITELEPHONYLISTENER
 
   TelephonyListener() { }
+  virtual ~TelephonyListener() { }
 
   bool Listen(bool aStart);
 };
