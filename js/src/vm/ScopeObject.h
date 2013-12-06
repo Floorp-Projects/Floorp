@@ -548,13 +548,6 @@ class ScopeIter
     explicit ScopeIter(JSObject &enclosingScope, JSContext *cx
                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
-    /*
-     * For the special case of generators, copy the given ScopeIter, with 'fp'
-     * as the StackFrame instead of si.fp(). Not for general use.
-     */
-    ScopeIter(const ScopeIter &si, AbstractFramePtr frame, JSContext *cx
-              MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-
     /* Like ScopeIter(StackFrame *) except start at 'scope'. */
     ScopeIter(AbstractFramePtr frame, ScopeObject &scope, JSContext *cx
               MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
@@ -719,15 +712,12 @@ class DebugScopes
     static bool updateLiveScopes(JSContext *cx);
     static AbstractFramePtr hasLiveFrame(ScopeObject &scope);
 
-    /*
-     * In debug-mode, these must be called whenever exiting a call/block or
-     * when activating/yielding a generator.
-     */
+    // In debug-mode, these must be called whenever exiting a scope that might
+    // have stack-allocated locals.
     static void onPopCall(AbstractFramePtr frame, JSContext *cx);
     static void onPopBlock(JSContext *cx, AbstractFramePtr frame);
     static void onPopWith(AbstractFramePtr frame);
     static void onPopStrictEvalScope(AbstractFramePtr frame);
-    static void onGeneratorFrameChange(AbstractFramePtr from, AbstractFramePtr to, JSContext *cx);
     static void onCompartmentLeaveDebugMode(JSCompartment *c);
 };
 

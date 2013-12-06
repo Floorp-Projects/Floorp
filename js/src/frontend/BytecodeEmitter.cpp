@@ -1024,9 +1024,14 @@ BytecodeEmitter::isAliasedName(ParseNode *pn)
         /*
          * There are two ways to alias a let variable: nested functions and
          * dynamic scope operations. (This is overly conservative since the
-         * bindingsAccessedDynamically flag is function-wide.)
+         * bindingsAccessedDynamically flag, checked by allLocalsAliased, is
+         * function-wide.)
+         *
+         * In addition all locals in generators are marked as aliased, to ensure
+         * that they are allocated on scope chains instead of on the stack.  See
+         * the definition of SharedContext::allLocalsAliased.
          */
-        return dn->isClosed() || sc->bindingsAccessedDynamically();
+        return dn->isClosed() || sc->allLocalsAliased();
       case Definition::ARG:
         /*
          * Consult the bindings, since they already record aliasing. We might
@@ -1035,12 +1040,13 @@ BytecodeEmitter::isAliasedName(ParseNode *pn)
          * a given name is aliased. This is necessary to avoid generating a
          * shape for the call object with with more than one name for a given
          * slot (which violates internal engine invariants). All this means that
-         * the '|| sc->bindingsAccessedDynamically' disjunct is incorrect since
-         * it will mark both parameters in function(x,x) as aliased.
+         * the '|| sc->allLocalsAliased()' disjunct is incorrect since it will
+         * mark both parameters in function(x,x) as aliased.
          */
         return script->formalIsAliased(pn->pn_cookie.slot());
       case Definition::VAR:
       case Definition::CONST:
+        JS_ASSERT_IF(sc->allLocalsAliased(), script->varIsAliased(pn->pn_cookie.slot()));
         return script->varIsAliased(pn->pn_cookie.slot());
       case Definition::PLACEHOLDER:
       case Definition::NAMED_LAMBDA:
@@ -1071,6 +1077,17 @@ AdjustBlockSlot(ExclusiveContext *cx, BytecodeEmitter *bce, int slot)
     }
     return slot;
 }
+
+#ifdef DEBUG
+static bool
+AllLocalsAliased(StaticBlockObject &obj)
+{
+    for (unsigned i = 0; i < obj.slotCount(); i++)
+        if (!obj.isAliased(i))
+            return false;
+    return true;
+}
+#endif
 
 static bool
 EmitEnterBlock(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
@@ -1108,7 +1125,7 @@ EmitEnterBlock(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp o
 
         /* Beware the empty destructuring dummy. */
         if (!dn) {
-            blockObj->setAliased(i, bce->sc->bindingsAccessedDynamically());
+            blockObj->setAliased(i, bce->sc->allLocalsAliased());
             continue;
         }
 
@@ -1128,6 +1145,8 @@ EmitEnterBlock(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp o
 
         blockObj->setAliased(i, bce->isAliasedName(dn));
     }
+
+    JS_ASSERT_IF(bce->sc->allLocalsAliased(), AllLocalsAliased(*blockObj));
 
     return true;
 }

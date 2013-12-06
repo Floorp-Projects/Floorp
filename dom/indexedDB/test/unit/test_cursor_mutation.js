@@ -35,11 +35,6 @@ function testSteps()
   let objectStore = db.createObjectStore("foo", { keyPath: "ss" });
   objectStore.createIndex("name", "name", { unique: true });
 
-  // This direct eval causes locals to be aliased, and thus allocated on
-  // the scope chain.  Comment it out (and the workarounds below) and
-  // the test passes.  Bug 943409.
-  eval('');
-
   for (let i = 0; i < objectStoreData.length - 1; i++) {
     objectStore.add(objectStoreData[i]);
   }
