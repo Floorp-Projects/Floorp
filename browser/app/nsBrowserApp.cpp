@@ -605,12 +605,13 @@ int main(int argc, char* argv[])
 #ifdef HAS_DLL_BLOCKLIST
   DllBlocklist_Initialize();
 
+#ifdef DEBUG
   // In order to be effective against AppInit DLLs, the blocklist must be
-  // initialized before user32.dll is loaded into the process. If this assert
-  // ever fires, then the fix for bug 932100 has been defeated and the
-  // blocklist will miss AppInit DLLs. You should use a delayload or reorder
-  // the code to prevent user32.dll from loading during early startup.
-  MOZ_ASSERT(!GetModuleHandleA("user32.dll"));
+  // initialized before user32.dll is loaded into the process (bug 932100).
+  if (GetModuleHandleA("user32.dll")) {
+    fprintf(stderr, "DLL blocklist was unable to intercept AppInit DLLs.\n");
+  }
+#endif
 #endif
 
   nsresult rv = InitXPCOMGlue(argv[0], &xreDirectory);
