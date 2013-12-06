@@ -22,10 +22,7 @@ CSRCS += cpu-features.c
 endif
 endif
 
-ASM_OFFSETS = vpx_scale_asm_offsets.asm
-ifdef MOZ_VP8_ENCODER
-ASM_OFFSETS += vp8_asm_enc_offsets.asm
-endif
+ASM_OFFSETS = vpx_scale_asm_offsets.asm vp8_asm_enc_offsets.asm
 
 
 ifdef VPX_AS_CONVERSION
@@ -54,11 +51,7 @@ VPX_OIE_FORMAT := gas
 endif
 
 GARBAGE += vpx_scale_asm_offsets.$(OBJ_SUFFIX) vpx_scale_asm_offsets.asm
-
-ifdef MOZ_VP8_ENCODER
-
 GARBAGE += vp8_asm_enc_offsets.$(OBJ_SUFFIX) vp8_asm_enc_offsets.asm
-endif
 
 else
 
@@ -82,8 +75,6 @@ vpx_scale_asm_offsets.asm: vpx_scale_asm_offsets.s
 
 GARBAGE += vpx_scale_asm_offsets.s vpx_scale_asm_offsets.asm
 
-ifdef MOZ_VP8_ENCODER
-
 vp8_asm_enc_offsets.s: CFLAGS += -DINLINE_ASM
 
 vp8_asm_enc_offsets.s: $(srcdir)/vp8/encoder/vp8_asm_enc_offsets.c
@@ -95,9 +86,6 @@ vp8_asm_enc_offsets.asm: vp8_asm_enc_offsets.s
 	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
 
 GARBAGE += vp8_asm_enc_offsets.s vp8_asm_enc_offsets.asm
-
-
-endif
 
 endif
 
@@ -122,7 +110,7 @@ ifdef VPX_NEED_OBJ_INT_EXTRACT
 
 # only for MSVC
 ifdef _MSC_VER
-NO_PROFILE_GUIDED_OPTIMIZE := vpx_scale_asm_offsets.c
+NO_PROFILE_GUIDED_OPTIMIZE := vpx_scale_asm_offsets.c vp8_asm_enc_offsets.c
 endif
 
 vpx_scale_asm_offsets.asm: vpx_scale_asm_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
@@ -133,12 +121,6 @@ vpx_scale_asm_offsets.asm: vpx_scale_asm_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
 # It was generated solely so it could be parsed by obj_int_extract.
 OBJS := $(filter-out vpx_scale_asm_offsets.$(OBJ_SUFFIX),$(OBJS))
 
-ifdef MOZ_VP8_ENCODER
-
-ifdef _MSC_VER
-NO_PROFILE_GUIDED_OPTIMIZE += vp8_asm_enc_offsets.c
-endif
-
 vp8_asm_enc_offsets.asm: vp8_asm_enc_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
 	./$(HOST_PROGRAM) $(VPX_OIE_FORMAT) $< \
 	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
@@ -147,7 +129,6 @@ vp8_asm_enc_offsets.asm: vp8_asm_enc_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
 # It was generated solely so it could be parsed by obj_int_extract.
 OBJS := $(filter-out vp8_asm_enc_offsets.$(OBJ_SUFFIX),$(OBJS))
 
-endif
 endif
 
 # Workaround a bug of Sun Studio (CR 6963410)
