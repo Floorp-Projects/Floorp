@@ -200,8 +200,6 @@ class SharedContext
     void setBindingsAccessedDynamically() { anyCxFlags.bindingsAccessedDynamically = true; }
     void setHasDebuggerStatement()        { anyCxFlags.hasDebuggerStatement        = true; }
 
-    inline bool allLocalsAliased();
-
     // JSOPTION_EXTRA_WARNINGS warnings or strict mode errors.
     bool needStrictChecks() {
         return strict || extraWarnings;
@@ -309,8 +307,7 @@ class FunctionBox : public ObjectBox, public SharedContext
         // Note: this should be kept in sync with JSFunction::isHeavyweight().
         return bindings.hasAnyAliasedBindings() ||
                hasExtensibleScope() ||
-               needsDeclEnvObject() ||
-               isGenerator();
+               needsDeclEnvObject();
     }
 };
 
@@ -320,18 +317,6 @@ SharedContext::asFunctionBox()
     JS_ASSERT(isFunctionBox());
     return static_cast<FunctionBox*>(this);
 }
-
-// In generators, we treat all locals as aliased so that they get stored on the
-// heap.  This way there is less information to copy off the stack when
-// suspending, and back on when resuming.  It also avoids the need to create and
-// invalidate DebugScope proxies for unaliased locals in a generator frame, as
-// the generator frame will be copied out to the heap and released only by GC.
-inline bool
-SharedContext::allLocalsAliased()
-{
-    return bindingsAccessedDynamically() || (isFunctionBox() && asFunctionBox()->isGenerator());
-}
-
 
 /*
  * NB: If you add a new type of statement that is a scope, add it between

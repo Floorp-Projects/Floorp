@@ -22,6 +22,11 @@ function testSteps()
   objectStore.add(Bob);
   yield undefined;
 
+  // This direct eval causes locals to be aliased, and thus allocated on
+  // the scope chain.  Comment it out (and the workarounds below) and
+  // the test passes.  Bug 943409.
+  eval('');
+
   db.transaction("foo", "readwrite").objectStore("foo")
     .index("name").openCursor().onsuccess = function(event) {
     event.target.transaction.oncomplete = continueToNextStep;

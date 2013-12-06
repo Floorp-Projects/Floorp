@@ -97,7 +97,7 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
     {
         JSAbstractFramePtr frame = iter.abstractFramePtr();
         JS::RootedScript script(cx, frame.script());
-        uintptr_t  pc = (uintptr_t)frame.pc();
+        uintptr_t  pc = (uintptr_t)iter.pc();
         JS::RootedValue dummyThis(cx);
 
         /*

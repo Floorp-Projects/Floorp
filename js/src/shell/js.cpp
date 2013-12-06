@@ -1512,7 +1512,7 @@ TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rvalArg,
     JS_ASSERT(!iter.done());
 
     /* Debug-mode currently disables Ion compilation. */
-    JSAbstractFramePtr frame(iter.abstractFramePtr().raw(), iter.pc());
+    JSAbstractFramePtr frame(Jsvalify(iter.abstractFramePtr()));
     RootedScript script(cx, iter.script());
 
     size_t length;
@@ -2590,7 +2590,7 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     if (!chars)
         return false;
 
-    JSAbstractFramePtr frame(fi.abstractFramePtr().raw(), fi.pc());
+    JSAbstractFramePtr frame(Jsvalify(fi.abstractFramePtr()));
     RootedScript fpscript(cx, frame.script());
     bool ok = !!frame.evaluateUCInStackFrame(cx, chars, length,
                                              fpscript->filename(),
