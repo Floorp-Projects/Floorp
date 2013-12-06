@@ -9,6 +9,8 @@
 #ifndef mtransport_test_utils_h__
 #define mtransport_test_utils_h__
 
+#include <iostream>
+
 #include "nspr.h"
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"

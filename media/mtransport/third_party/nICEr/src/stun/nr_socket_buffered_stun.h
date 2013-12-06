@@ -1,5 +1,6 @@
 /*
 Copyright (c) 2007, Adobe Systems, Incorporated
+Copyright (c) 2013, Mozilla
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -31,14 +32,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef _stun_hint_h
-#define _stun_hint_h
 
-int nr_is_stun_message(UCHAR *buf, int len);
-int nr_is_stun_request_message(UCHAR *buf, int len);
-int nr_is_stun_response_message(UCHAR *buf, int len);
-int nr_is_stun_indication_message(UCHAR *buf, int len);
-int nr_has_stun_cookie(UCHAR *buf, int len);
-int nr_stun_message_length(UCHAR *buf, int len, int *length);
+#ifndef _nr_socket_buffered_stun_h
+#define _nr_socket_buffered_stun_h
+
+#include "nr_socket.h"
+
+/* Wrapper socket which provides buffered STUN-oriented I/O
+
+   1. Writes don't block and are automatically flushed when needed.
+   2. All reads are in units of STUN messages
+
+   This socket takes ownership of the inner socket |sock|.
+ */
+int nr_socket_buffered_stun_create(nr_socket *inner, int max_pending,
+  nr_socket **sockp);
 
 #endif
+
