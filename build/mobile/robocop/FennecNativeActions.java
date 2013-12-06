@@ -7,15 +7,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.InvocationHandler;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.ArrayList;
+import org.mozilla.gecko.util.GeckoEventListener;
 
 import android.app.Activity;
 import android.app.Instrumentation;
@@ -28,6 +20,15 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.InvocationHandler;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import org.json.JSONObject;
 
 import com.jayway.android.robotium.solo.Solo;
 
@@ -43,7 +44,6 @@ public class FennecNativeActions implements Actions {
     private Class mApiClass;
     private Class mEventListenerClass;
     private Class mDrawListenerClass;
-    private Method mRegisterEventListener;
     private Method mUnregisterEventListener;
     private Method mSetDrawListener;
     private Object mRobocopApi;
@@ -65,7 +65,6 @@ public class FennecNativeActions implements Actions {
             mEventListenerClass = mClassLoader.loadClass("org.mozilla.gecko.util.GeckoEventListener");
             mDrawListenerClass = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoLayerClient$DrawListener");
 
-            mRegisterEventListener = mApiClass.getMethod("registerEventListener", String.class, mEventListenerClass);
             mUnregisterEventListener = mApiClass.getMethod("unregisterEventListener", String.class, mEventListenerClass);
             mSetDrawListener = mApiClass.getMethod("setDrawListener", mDrawListenerClass);
 
@@ -75,56 +74,40 @@ public class FennecNativeActions implements Actions {
         }
     }
 
-    class wakeInvocationHandler implements InvocationHandler {
-        private final GeckoEventExpecter mEventExpecter;
-
-        public wakeInvocationHandler(GeckoEventExpecter expecter) {
-            mEventExpecter = expecter;
-        }
-
-        public Object invoke(Object proxy, Method method, Object[] args) {
-            String methodName = method.getName();
-            //Depending on the method, return a completely different type.
-            if(methodName.equals("toString")) {
-                return this.toString();
-            }
-            if(methodName.equals("equals")) {
-                return
-                    args[0] == null ? false :
-                    this.toString().equals(args[0].toString());
-            }
-            if(methodName.equals("clone")) {
-                return this;
-            }
-            if(methodName.equals("hashCode")) {
-                return 314;
-            }
-            FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG, 
-                "Waking up on "+methodName);
-            mEventExpecter.notifyOfEvent(args);
-            return null;
-        }
-    }
-
     class GeckoEventExpecter implements RepeatedEventExpecter {
-        private final String mGeckoEvent;
-        private Object[] mRegistrationParams;
-        private boolean mEventEverReceived;
-        private String mEventData;
-        private BlockingQueue<String> mEventDataQueue;
         private static final int MAX_WAIT_MS = 90000;
 
-        GeckoEventExpecter(String geckoEvent, Object[] registrationParams) {
+        private volatile boolean mIsRegistered;
+
+        private final String mGeckoEvent;
+        private final GeckoEventListener mListener;
+
+        private volatile boolean mEventEverReceived;
+        private String mEventData;
+        private BlockingQueue<String> mEventDataQueue;
+
+        GeckoEventExpecter(final String geckoEvent) {
             if (TextUtils.isEmpty(geckoEvent)) {
                 throw new IllegalArgumentException("geckoEvent must not be empty");
             }
-            if (registrationParams == null || registrationParams.length == 0) {
-                throw new IllegalArgumentException("registrationParams must not be empty");
-            }
 
             mGeckoEvent = geckoEvent;
-            mRegistrationParams = registrationParams;
             mEventDataQueue = new LinkedBlockingQueue<String>();
+
+            final GeckoEventExpecter expecter = this;
+            mListener = new GeckoEventListener() {
+                @Override
+                public void handleMessage(final String event, final JSONObject message) {
+                    FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
+                            "handleMessage called for: " + event + "; expecting: " + mGeckoEvent);
+                    mAsserter.is(event, mGeckoEvent, "Given message occurred for registered event");
+
+                    expecter.notifyOfEvent(message);
+                }
+            };
+
+            GeckoAppShell.registerEventListener(mGeckoEvent, mListener);
+            mIsRegistered = true;
         }
 
         public void blockForEvent() {
@@ -132,9 +115,10 @@ public class FennecNativeActions implements Actions {
         }
 
         private void blockForEvent(long millis, boolean failOnTimeout) {
-            if (mRegistrationParams == null) {
+            if (!mIsRegistered) {
                 throw new IllegalStateException("listener not registered");
             }
+
             try {
                 mEventData = mEventDataQueue.poll(millis, TimeUnit.MILLISECONDS);
             } catch (InterruptedException ie) {
@@ -156,12 +140,13 @@ public class FennecNativeActions implements Actions {
         }
 
         public void blockUntilClear(long millis) {
-            if (mRegistrationParams == null) {
+            if (!mIsRegistered) {
                 throw new IllegalStateException("listener not registered");
             }
             if (millis <= 0) {
                 throw new IllegalArgumentException("millis must be > 0");
             }
+
             // wait for at least one event
             try {
                 mEventData = mEventDataQueue.poll(MAX_WAIT_MS, TimeUnit.MILLISECONDS);
@@ -200,13 +185,16 @@ public class FennecNativeActions implements Actions {
         }
 
         public void unregisterListener() {
-            if (mRegistrationParams == null) {
+            if (!mIsRegistered) {
                 throw new IllegalStateException("listener not registered");
             }
+
             try {
                 FennecNativeDriver.log(LogLevel.INFO, "EventExpecter: no longer listening for "+mGeckoEvent);
-                mUnregisterEventListener.invoke(mRobocopApi, mRegistrationParams);
-                mRegistrationParams = null;
+
+                mUnregisterEventListener.invoke(mRobocopApi,
+                        new Object[] { mGeckoEvent, mListener });
+                mIsRegistered = false;
             } catch (IllegalAccessException e) {
                 FennecNativeDriver.log(LogLevel.ERROR, e);
             } catch (InvocationTargetException e) {
@@ -214,45 +202,28 @@ public class FennecNativeActions implements Actions {
             }
         }
 
-        public synchronized boolean eventReceived() {
+        public boolean eventReceived() {
             return mEventEverReceived;
         }
 
-        void notifyOfEvent(Object[] args) {
+        void notifyOfEvent(final JSONObject message) {
             FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
-                "received event " + mGeckoEvent);
-            synchronized (this) {
-                mEventEverReceived = true;
-            }
+                    "received event " + mGeckoEvent);
+
+            mEventEverReceived = true;
+
             try {
-                mEventDataQueue.put(args[1].toString());
+                mEventDataQueue.put(message.toString());
             } catch (InterruptedException e) {
                 FennecNativeDriver.log(LogLevel.ERROR,
-                    "EventExpecter dropped event: "+args[1].toString());
-                FennecNativeDriver.log(LogLevel.ERROR, e);
+                    "EventExpecter dropped event: " + message.toString(), e);
             }
         }
     }
 
-    public RepeatedEventExpecter expectGeckoEvent(String geckoEvent) {
-        FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
-            "waiting for "+geckoEvent);
-        try {
-            Object[] finalParams = new Object[2];
-            finalParams[0] = geckoEvent;
-            GeckoEventExpecter expecter = new GeckoEventExpecter(geckoEvent, finalParams);
-            wakeInvocationHandler wIH = new wakeInvocationHandler(expecter);
-            Object proxy = Proxy.newProxyInstance(mClassLoader, new Class[] { mEventListenerClass }, wIH);
-            finalParams[1] = proxy;
-
-            mRegisterEventListener.invoke(mRobocopApi, finalParams);
-            return expecter;
-        } catch (IllegalAccessException e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
-        }
-        return null;
+    public RepeatedEventExpecter expectGeckoEvent(final String geckoEvent) {
+        FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG, "waiting for " + geckoEvent);
+        return new GeckoEventExpecter(geckoEvent);
     }
 
     public void sendGeckoEvent(final String geckoEvent, final String data) {
