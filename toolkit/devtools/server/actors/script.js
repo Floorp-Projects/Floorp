@@ -527,12 +527,13 @@ ThreadActor.prototype = {
     eventLoop.resolve();
   },
 
+  /**
+   * Remove all debuggees and clear out the thread's sources.
+   */
   clearDebuggees: function () {
     if (this.dbg) {
       this.dbg.removeAllDebuggees();
     }
-    this.conn.removeActorPool(this._threadLifetimePool || undefined);
-    this._threadLifetimePool = null;
     this._sources = null;
   },
 
@@ -636,6 +637,8 @@ ThreadActor.prototype = {
     this._state = "exited";
 
     this.clearDebuggees();
+    this.conn.removeActorPool(this._threadLifetimePool);
+    this._threadLifetimePool = null;
 
     if (this._prettyPrintWorker) {
       this._prettyPrintWorker.removeEventListener(
