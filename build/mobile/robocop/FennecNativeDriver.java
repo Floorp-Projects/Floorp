@@ -24,11 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.InvocationHandler;
-
 import android.app.Activity;
 import android.opengl.GLSurfaceView;
 import android.view.View;
@@ -49,11 +44,6 @@ public class FennecNativeDriver implements Driver {
 
     private static String mLogFile = null;
     private static LogLevel mLogLevel = LogLevel.INFO;
-
-    // Objects for reflexive access of fennec classes.
-    private ClassLoader mClassLoader;
-    private Class mApiClass;
-    private Object mRobocopApi;
 
     public enum LogLevel {
         DEBUG(1),
@@ -80,17 +70,6 @@ public class FennecNativeDriver implements Driver {
 
         // Set up table of fennec_ids.
         mLocators = convertTextToTable(getFile(mRootPath + "/fennec_ids.txt"));
-
-        // Set up reflexive access of java classes and methods.
-        try {
-            mClassLoader = activity.getClassLoader();
-
-            mApiClass = mClassLoader.loadClass("org.mozilla.gecko.RobocopAPI");
-
-            mRobocopApi = mApiClass.getConstructor(Activity.class).newInstance(activity);
-        } catch (Exception e) {
-            log(LogLevel.ERROR, e);
-        }
     }
 
     //Information on the location of the Gecko Frame.
