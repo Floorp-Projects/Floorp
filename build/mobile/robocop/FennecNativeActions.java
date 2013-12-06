@@ -5,6 +5,8 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.gfx.GeckoLayerClient;
+import org.mozilla.gecko.gfx.GeckoLayerClient.DrawListener;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -20,10 +22,6 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.InvocationHandler;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -35,18 +33,11 @@ import com.jayway.android.robotium.solo.Solo;
 import static org.mozilla.gecko.FennecNativeDriver.LogLevel;
 
 public class FennecNativeActions implements Actions {
+    private static final String LOGTAG = "FennecNativeActions";
+
     private Solo mSolo;
     private Instrumentation mInstr;
     private Assert mAsserter;
-
-    // Objects for reflexive access of fennec classes.
-    private ClassLoader mClassLoader;
-    private Class mApiClass;
-    private Class mDrawListenerClass;
-    private Method mSetDrawListener;
-    private Object mRobocopApi;
-
-    private static final String LOGTAG = "FennecNativeActions";
 
     public FennecNativeActions(Activity activity, Solo robocop, Instrumentation instrumentation, Assert asserter) {
         mSolo = robocop;
@@ -54,20 +45,6 @@ public class FennecNativeActions implements Actions {
         mAsserter = asserter;
 
         GeckoLoader.loadSQLiteLibs(activity, activity.getApplication().getPackageResourcePath());
-
-        // Set up reflexive access of java classes and methods.
-        try {
-            mClassLoader = activity.getClassLoader();
-
-            mApiClass = mClassLoader.loadClass("org.mozilla.gecko.RobocopAPI");
-            mDrawListenerClass = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoLayerClient$DrawListener");
-
-            mSetDrawListener = mApiClass.getMethod("setDrawListener", mDrawListenerClass);
-
-            mRobocopApi = mApiClass.getConstructor(Activity.class).newInstance(activity);
-        } catch (Exception e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
-        }
     }
 
     class GeckoEventExpecter implements RepeatedEventExpecter {
@@ -232,46 +209,31 @@ public class FennecNativeActions implements Actions {
         GeckoAppShell.sendEventToGecko(GeckoEvent.createPreferencesRemoveObserversEvent(requestId));
     }
 
-    class DrawListenerProxy implements InvocationHandler {
-        private final PaintExpecter mPaintExpecter;
-
-        DrawListenerProxy(PaintExpecter paintExpecter) {
-            mPaintExpecter = paintExpecter;
-        }
-
-        public Object invoke(Object proxy, Method method, Object[] args) {
-            String methodName = method.getName();
-            if ("drawFinished".equals(methodName)) {
-                FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
-                    "Received drawFinished notification");
-                mPaintExpecter.notifyOfEvent(args);
-            } else if ("toString".equals(methodName)) {
-                return "DrawListenerProxy";
-            } else if ("equals".equals(methodName)) {
-                return false;
-            } else if ("hashCode".equals(methodName)) {
-                return 0;
-            }
-            return null;
-        }
-    }
-
     class PaintExpecter implements RepeatedEventExpecter {
-        private boolean mPaintDone;
-        private boolean mListening;
         private static final int MAX_WAIT_MS = 90000;
 
-        PaintExpecter() throws IllegalAccessException, InvocationTargetException {
-            Object proxy = Proxy.newProxyInstance(mClassLoader, new Class[] { mDrawListenerClass }, new DrawListenerProxy(this));
-            mSetDrawListener.invoke(mRobocopApi, proxy);
+        private boolean mPaintDone;
+        private boolean mListening;
+
+        private final GeckoLayerClient mLayerClient;
+
+        PaintExpecter() {
+            final PaintExpecter expecter = this;
+            mLayerClient = GeckoAppShell.getLayerView().getLayerClient();
+            mLayerClient.setDrawListener(new DrawListener() {
+                @Override
+                public void drawFinished() {
+                    FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
+                            "Received drawFinished notification");
+                    expecter.notifyOfEvent();
+                }
+            });
             mListening = true;
         }
 
-        void notifyOfEvent(Object[] args) {
-            synchronized (this) {
-                mPaintDone = true;
-                this.notifyAll();
-            }
+        private synchronized void notifyOfEvent() {
+            mPaintDone = true;
+            this.notifyAll();
         }
 
         private synchronized void blockForEvent(long millis, boolean failOnTimeout) {
@@ -365,23 +327,16 @@ public class FennecNativeActions implements Actions {
             if (!mListening) {
                 throw new IllegalStateException("listener not registered");
             }
-            try {
-                FennecNativeDriver.log(LogLevel.INFO, "PaintExpecter: no longer listening for events");
-                mListening = false;
-                mSetDrawListener.invoke(mRobocopApi, (Object)null);
-            } catch (Exception e) {
-                FennecNativeDriver.log(LogLevel.ERROR, e);
-            }
+
+            FennecNativeDriver.log(LogLevel.INFO,
+                    "PaintExpecter: no longer listening for events");
+            mLayerClient.setDrawListener(null);
+            mListening = false;
         }
     }
 
     public RepeatedEventExpecter expectPaint() {
-        try {
-            return new PaintExpecter();
-        } catch (Exception e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
-            return null;
-        }
+        return new PaintExpecter();
     }
 
     public void sendSpecialKey(SpecialKey button) {
