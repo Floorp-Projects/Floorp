@@ -216,6 +216,7 @@ const OTHER_MOUSEUP_MONITORED_ITEMS = [
    "appmenu-button",
    "PlacesChevron",
    "PlacesToolbarItems",
+   "star-button",
 ];
 
 this.BrowserUITelemetry = {
@@ -303,6 +304,9 @@ this.BrowserUITelemetry = {
       case "PlacesChevron":
         this._PlacesChevronMouseUp(aEvent);
         break;
+      case "star-button":
+        this._starButtonMouseUp(aEvent);
+        break;
       default:
         this._checkForBuiltinItem(aEvent);
     }
@@ -371,6 +375,15 @@ this.BrowserUITelemetry = {
     let candidate = getIDBasedOnFirstIDedAncestor(item, toolbarID);
     if (ALL_BUILTIN_ITEMS.indexOf(candidate) != -1) {
       this._countEvent("click-builtin-item", candidate);
+    }
+  },
+
+  _starButtonMouseUp: function(aEvent) {
+    let starButton = aEvent.originalTarget;
+    if (starButton.hasAttribute("starred")) {
+      this._countEvent("click-star-button", "edit");
+    } else {
+      this._countEvent("click-star-button", "add");
     }
   },
 
