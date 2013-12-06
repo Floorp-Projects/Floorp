@@ -189,13 +189,22 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
         // Let this apzc be the parent of other controllers when we recurse downwards
         aParent = apzc;
 
-        if (newApzc && apzc->IsRootForLayersId()) {
-          // If we just created a new apzc that is the root for its layers ID, then
-          // we need to update its zoom constraints which might have arrived before this
-          // was created
+        if (newApzc) {
           bool allowZoom;
           CSSToScreenScale minZoom, maxZoom;
-          if (state->mController->GetRootZoomConstraints(&allowZoom, &minZoom, &maxZoom)) {
+          if (apzc->IsRootForLayersId()) {
+            // If we just created a new apzc that is the root for its layers ID, then
+            // we need to update its zoom constraints which might have arrived before this
+            // was created
+            if (state->mController->GetRootZoomConstraints(&allowZoom, &minZoom, &maxZoom)) {
+              apzc->UpdateZoomConstraints(allowZoom, minZoom, maxZoom);
+            }
+          } else {
+            // For an apzc that is not the root for its layers ID, we give it the
+            // same zoom constraints as its parent. This ensures that if e.g.
+            // user-scalable=no was specified, none of the APZCs allow double-tap
+            // to zoom.
+            apzc->GetParent()->GetZoomConstraints(&allowZoom, &minZoom, &maxZoom);
             apzc->UpdateZoomConstraints(allowZoom, minZoom, maxZoom);
           }
         }
@@ -585,8 +594,28 @@ APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
                                        const CSSToScreenScale& aMaxScale)
 {
   nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
-  if (apzc) {
-    apzc->UpdateZoomConstraints(aAllowZoom, aMinScale, aMaxScale);
+  // For a given layers id, non-root APZCs inherit the zoom constraints
+  // of their root.
+  if (apzc && apzc->IsRootForLayersId()) {
+    MonitorAutoLock lock(mTreeLock);
+    UpdateZoomConstraintsRecursively(apzc.get(), aAllowZoom, aMinScale, aMaxScale);
+  }
+}
+
+void
+APZCTreeManager::UpdateZoomConstraintsRecursively(AsyncPanZoomController* aApzc,
+                                                  bool aAllowZoom,
+                                                  const CSSToScreenScale& aMinScale,
+                                                  const CSSToScreenScale& aMaxScale)
+{
+  mTreeLock.AssertCurrentThreadOwns();
+
+  aApzc->UpdateZoomConstraints(aAllowZoom, aMinScale, aMaxScale);
+  for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
+    // We can have subtrees with their own layers id - leave those alone.
+    if (!child->IsRootForLayersId()) {
+      UpdateZoomConstraintsRecursively(child, aAllowZoom, aMinScale, aMaxScale);
+    }
   }
 }
 

@@ -661,7 +661,7 @@ MCall::New(TempAllocator &alloc, JSFunction *target, size_t maxArgc, size_t numA
 {
     JS_ASSERT(maxArgc >= numActualArgs);
     MCall *ins = new(alloc) MCall(target, numActualArgs, construct);
-    if (!ins->init(maxArgc + NumNonArgumentOperands))
+    if (!ins->init(alloc, maxArgc + NumNonArgumentOperands))
         return nullptr;
     return ins;
 }
@@ -2092,7 +2092,7 @@ MResumePoint::New(TempAllocator &alloc, MBasicBlock *block, jsbytecode *pc, MRes
                   Mode mode)
 {
     MResumePoint *resume = new(alloc) MResumePoint(block, pc, parent, mode);
-    if (!resume->init())
+    if (!resume->init(alloc))
         return nullptr;
     resume->inherit(block);
     return resume;

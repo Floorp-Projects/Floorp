@@ -412,6 +412,7 @@ KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
 
 // Menu
 KEY_MAP_WIN     (Menu, VK_APPS)
+KEY_MAP_COCOA   (Menu, kVK_PC_ContextMenu)
 KEY_MAP_GTK     (Menu, GDK_Menu)
 KEY_MAP_QT      (Menu, Qt::Key_Menu)
 KEY_MAP_ANDROID (Menu, AKEYCODE_MENU)

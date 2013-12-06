@@ -440,7 +440,7 @@ class CodeGeneratorShared : public LInstructionVisitor
 };
 
 // An out-of-line path is generated at the end of the function.
-class OutOfLineCode : public OldTempObject
+class OutOfLineCode : public TempObject
 {
     Label entry_;
     Label rejoin_;
@@ -676,7 +676,7 @@ inline OutOfLineCode *
 CodeGeneratorShared::oolCallVM(const VMFunction &fun, LInstruction *lir, const ArgSeq &args,
                                const StoreOutputTo &out)
 {
-    OutOfLineCode *ool = new OutOfLineCallVM<ArgSeq, StoreOutputTo>(lir, fun, args, out);
+    OutOfLineCode *ool = new(alloc()) OutOfLineCallVM<ArgSeq, StoreOutputTo>(lir, fun, args, out);
     if (!addOutOfLineCode(ool))
         return nullptr;
     return ool;

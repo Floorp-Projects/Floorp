@@ -472,8 +472,10 @@ protected:
   bool ParseCalcTerm(nsCSSValue& aValue, int32_t& aVariantMask);
   bool RequireWhitespace();
 
-  // For "flex" shorthand property, defined in CSS3 Flexbox
+  // For "flex" shorthand property, defined in CSS Flexbox spec
   bool ParseFlex();
+  // For "flex-flow" shorthand property, defined in CSS Flexbox spec
+  bool ParseFlexFlow();
 
   // for 'clip' and '-moz-image-region'
   bool ParseRect(nsCSSProperty aPropID);
@@ -5736,6 +5738,39 @@ CSSParserImpl::ParseFlex()
   return true;
 }
 
+// flex-flow: <flex-direction> || <flex-wrap>
+bool
+CSSParserImpl::ParseFlexFlow()
+{
+  static const nsCSSProperty kFlexFlowSubprops[] = {
+    eCSSProperty_flex_direction,
+    eCSSProperty_flex_wrap
+  };
+  const size_t numProps = NS_ARRAY_LENGTH(kFlexFlowSubprops);
+  nsCSSValue values[numProps];
+
+  int32_t found = ParseChoice(values, kFlexFlowSubprops, numProps);
+
+  // Bail if we didn't successfully parse anything, or if there's trailing junk.
+  if (found < 1 || !ExpectEndProperty()) {
+    return false;
+  }
+
+  // If either property didn't get an explicit value, use its initial value.
+  if ((found & 1) == 0) {
+    values[0].SetIntValue(NS_STYLE_FLEX_DIRECTION_ROW, eCSSUnit_Enumerated);
+  }
+  if ((found & 2) == 0) {
+    values[1].SetIntValue(NS_STYLE_FLEX_WRAP_NOWRAP, eCSSUnit_Enumerated);
+  }
+
+  // Store these values and declare success!
+  for (size_t i = 0; i < numProps; i++) {
+    AppendValue(kFlexFlowSubprops[i], values[i]);
+  }
+  return true;
+}
+
 // <color-stop> : <color> [ <percentage> | <length> ]?
 bool
 CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
@@ -6581,6 +6616,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseFilter();
   case eCSSProperty_flex:
     return ParseFlex();
+  case eCSSProperty_flex_flow:
+    return ParseFlexFlow();
   case eCSSProperty_font:
     return ParseFont();
   case eCSSProperty_image_region:

@@ -406,7 +406,7 @@ CodeGeneratorX86Shared::bailout(const T &binder, LSnapshot *snapshot)
     // We could not use a jump table, either because all bailout IDs were
     // reserved, or a jump table is not optimal for this frame size or
     // platform. Whatever, we will generate a lazy bailout.
-    OutOfLineBailout *ool = new OutOfLineBailout(snapshot);
+    OutOfLineBailout *ool = new(alloc()) OutOfLineBailout(snapshot);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -607,7 +607,7 @@ CodeGeneratorX86Shared::visitAddI(LAddI *ins)
 
     if (ins->snapshot()) {
         if (ins->recoversInput()) {
-            OutOfLineUndoALUOperation *ool = new OutOfLineUndoALUOperation(ins);
+            OutOfLineUndoALUOperation *ool = new(alloc()) OutOfLineUndoALUOperation(ins);
             if (!addOutOfLineCode(ool))
                 return false;
             masm.j(Assembler::Overflow, ool->entry());
@@ -629,7 +629,7 @@ CodeGeneratorX86Shared::visitSubI(LSubI *ins)
 
     if (ins->snapshot()) {
         if (ins->recoversInput()) {
-            OutOfLineUndoALUOperation *ool = new OutOfLineUndoALUOperation(ins);
+            OutOfLineUndoALUOperation *ool = new(alloc()) OutOfLineUndoALUOperation(ins);
             if (!addOutOfLineCode(ool))
                 return false;
             masm.j(Assembler::Overflow, ool->entry());
@@ -747,7 +747,7 @@ CodeGeneratorX86Shared::visitMulI(LMulI *ins)
 
         if (mul->canBeNegativeZero()) {
             // Jump to an OOL path if the result is 0.
-            MulNegativeZeroCheck *ool = new MulNegativeZeroCheck(ins);
+            MulNegativeZeroCheck *ool = new(alloc()) MulNegativeZeroCheck(ins);
             if (!addOutOfLineCode(ool))
                 return false;
 
@@ -801,7 +801,7 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod *ins)
         masm.testl(rhs, rhs);
         if (ins->mir()->isTruncated()) {
             if (!ool)
-                ool = new ReturnZero(output);
+                ool = new(alloc()) ReturnZero(output);
             masm.j(Assembler::Zero, ool->entry());
         } else {
             if (!bailoutIf(Assembler::Zero, ins->snapshot()))
@@ -937,7 +937,7 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
         if (mir->isTruncated()) {
             // Truncated division by zero is zero (Infinity|0 == 0)
             if (!ool)
-                ool = new ReturnZero(output);
+                ool = new(alloc()) ReturnZero(output);
             masm.j(Assembler::Zero, ool->entry());
         } else {
             JS_ASSERT(mir->fallible());
@@ -1127,7 +1127,7 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
         masm.testl(rhs, rhs);
         if (ins->mir()->isTruncated()) {
             if (!ool)
-                ool = new ReturnZero(edx);
+                ool = new(alloc()) ReturnZero(edx);
             masm.j(Assembler::Zero, ool->entry());
         } else {
             if (!bailoutIf(Assembler::Zero, ins->snapshot()))
@@ -1178,7 +1178,7 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
         // Prevent an integer overflow exception from -2147483648 % -1
         Label notmin;
         masm.cmpl(lhs, Imm32(INT32_MIN));
-        overflow = new ModOverflowCheck(ins, rhs);
+        overflow = new(alloc()) ModOverflowCheck(ins, rhs);
         masm.j(Assembler::Equal, overflow->entry());
         masm.bind(overflow->rejoin());
         masm.cdq();
@@ -1409,7 +1409,7 @@ CodeGeneratorX86Shared::emitTableSwitchDispatch(MTableSwitch *mir, const Registe
     // To fill in the CodeLabels for the case entries, we need to first
     // generate the case entries (we don't yet know their offsets in the
     // instruction stream).
-    OutOfLineTableSwitch *ool = new OutOfLineTableSwitch(mir);
+    OutOfLineTableSwitch *ool = new(alloc()) OutOfLineTableSwitch(mir);
     if (!addOutOfLineCode(ool))
         return false;
 

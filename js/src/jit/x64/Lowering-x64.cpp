@@ -65,9 +65,9 @@ LIRGeneratorX64::visitBox(MBox *box)
         return emitAtUses(box);
 
     if (opd->isConstant())
-        return define(new LValue(opd->toConstant()->value()), box, LDefinition(LDefinition::BOX));
+        return define(new(alloc()) LValue(opd->toConstant()->value()), box, LDefinition(LDefinition::BOX));
 
-    LBox *ins = new LBox(opd->type(), useRegister(opd));
+    LBox *ins = new(alloc()) LBox(opd->type(), useRegister(opd));
     return define(ins, box, LDefinition(LDefinition::BOX));
 }
 
@@ -77,9 +77,9 @@ LIRGeneratorX64::visitUnbox(MUnbox *unbox)
     MDefinition *box = unbox->getOperand(0);
     LUnboxBase *lir;
     if (IsFloatingPointType(unbox->type()))
-        lir = new LUnboxFloatingPoint(useRegisterAtStart(box), unbox->type());
+        lir = new(alloc()) LUnboxFloatingPoint(useRegisterAtStart(box), unbox->type());
     else
-        lir = new LUnbox(useRegisterAtStart(box));
+        lir = new(alloc()) LUnbox(useRegisterAtStart(box));
 
     if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
         return false;
@@ -93,7 +93,7 @@ LIRGeneratorX64::visitReturn(MReturn *ret)
     MDefinition *opd = ret->getOperand(0);
     JS_ASSERT(opd->type() == MIRType_Value);
 
-    LReturn *ins = new LReturn;
+    LReturn *ins = new(alloc()) LReturn;
     ins->setOperand(0, useFixed(opd, JSReturnReg));
     return add(ins);
 }
@@ -114,7 +114,7 @@ bool
 LIRGeneratorX64::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins)
 {
     JS_ASSERT(ins->input()->type() == MIRType_Int32);
-    LAsmJSUInt32ToDouble *lir = new LAsmJSUInt32ToDouble(useRegisterAtStart(ins->input()));
+    LAsmJSUInt32ToDouble *lir = new(alloc()) LAsmJSUInt32ToDouble(useRegisterAtStart(ins->input()));
     return define(lir, ins);
 }
 
@@ -122,7 +122,7 @@ bool
 LIRGeneratorX64::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32 *ins)
 {
     JS_ASSERT(ins->input()->type() == MIRType_Int32);
-    LAsmJSUInt32ToFloat32 *lir = new LAsmJSUInt32ToFloat32(useRegisterAtStart(ins->input()));
+    LAsmJSUInt32ToFloat32 *lir = new(alloc()) LAsmJSUInt32ToFloat32(useRegisterAtStart(ins->input()));
     return define(lir, ins);
 }
 
@@ -137,10 +137,10 @@ LIRGeneratorX64::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
     // negative offset encoded as an offset in the addressing mode would not wrap
     // back into the protected area reserved for the heap.
     if (ptr->isConstant() && ptr->toConstant()->value().toInt32() >= 0) {
-        LAsmJSLoadHeap *lir = new LAsmJSLoadHeap(LAllocation(ptr->toConstant()->vp()));
+        LAsmJSLoadHeap *lir = new(alloc()) LAsmJSLoadHeap(LAllocation(ptr->toConstant()->vp()));
         return define(lir, ins);
     }
-    return define(new LAsmJSLoadHeap(useRegisterAtStart(ptr)), ins);
+    return define(new(alloc()) LAsmJSLoadHeap(useRegisterAtStart(ptr)), ins);
 }
 
 bool
@@ -158,10 +158,10 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
       case ArrayBufferView::TYPE_INT8: case ArrayBufferView::TYPE_UINT8:
       case ArrayBufferView::TYPE_INT16: case ArrayBufferView::TYPE_UINT16:
       case ArrayBufferView::TYPE_INT32: case ArrayBufferView::TYPE_UINT32:
-        lir = new LAsmJSStoreHeap(ptrAlloc, useRegisterOrConstantAtStart(ins->value()));
+        lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterOrConstantAtStart(ins->value()));
         break;
       case ArrayBufferView::TYPE_FLOAT32: case ArrayBufferView::TYPE_FLOAT64:
-        lir = new LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value()));
+        lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value()));
         break;
       default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
@@ -172,7 +172,7 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
 bool
 LIRGeneratorX64::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins)
 {
-    return define(new LAsmJSLoadFuncPtr(useRegister(ins->index()), temp()), ins);
+    return define(new(alloc()) LAsmJSLoadFuncPtr(useRegister(ins->index()), temp()), ins);
 }
 
 bool

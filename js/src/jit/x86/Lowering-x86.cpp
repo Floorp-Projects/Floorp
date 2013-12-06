@@ -83,16 +83,16 @@ LIRGeneratorX86::visitBox(MBox *box)
 
     // If the box wrapped a double, it needs a new register.
     if (IsFloatingPointType(inner->type()))
-        return defineBox(new LBoxFloatingPoint(useRegisterAtStart(inner), tempCopy(inner, 0),
-                                               inner->type()), box);
+        return defineBox(new(alloc()) LBoxFloatingPoint(useRegisterAtStart(inner), tempCopy(inner, 0),
+                                                        inner->type()), box);
 
     if (box->canEmitAtUses())
         return emitAtUses(box);
 
     if (inner->isConstant())
-        return defineBox(new LValue(inner->toConstant()->value()), box);
+        return defineBox(new(alloc()) LValue(inner->toConstant()->value()), box);
 
-    LBox *lir = new LBox(use(inner), inner->type());
+    LBox *lir = new(alloc()) LBox(use(inner), inner->type());
 
     // Otherwise, we should not define a new register for the payload portion
     // of the output, so bypass defineBox().
@@ -125,7 +125,7 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
         return false;
 
     if (IsFloatingPointType(unbox->type())) {
-        LUnboxFloatingPoint *lir = new LUnboxFloatingPoint(unbox->type());
+        LUnboxFloatingPoint *lir = new(alloc()) LUnboxFloatingPoint(unbox->type());
         if (unbox->fallible() && !assignSnapshot(lir, unbox->bailoutKind()))
             return false;
         if (!useBox(lir, LUnboxFloatingPoint::Input, inner))
@@ -134,7 +134,7 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
     }
 
     // Swap the order we use the box pieces so we can re-use the payload register.
-    LUnbox *lir = new LUnbox;
+    LUnbox *lir = new(alloc()) LUnbox;
     lir->setOperand(0, usePayloadInRegisterAtStart(inner));
     lir->setOperand(1, useType(inner, LUse::ANY));
 
@@ -156,7 +156,7 @@ LIRGeneratorX86::visitReturn(MReturn *ret)
     MDefinition *opd = ret->getOperand(0);
     JS_ASSERT(opd->type() == MIRType_Value);
 
-    LReturn *ins = new LReturn;
+    LReturn *ins = new(alloc()) LReturn;
     ins->setOperand(0, LUse(JSReturnReg_Type));
     ins->setOperand(1, LUse(JSReturnReg_Data));
     return fillBoxUses(ins, 0, opd) && add(ins);
@@ -200,7 +200,7 @@ bool
 LIRGeneratorX86::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins)
 {
     JS_ASSERT(ins->input()->type() == MIRType_Int32);
-    LAsmJSUInt32ToDouble *lir = new LAsmJSUInt32ToDouble(useRegisterAtStart(ins->input()), temp());
+    LAsmJSUInt32ToDouble *lir = new(alloc()) LAsmJSUInt32ToDouble(useRegisterAtStart(ins->input()), temp());
     return define(lir, ins);
 }
 
@@ -208,7 +208,7 @@ bool
 LIRGeneratorX86::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32 *ins)
 {
     JS_ASSERT(ins->input()->type() == MIRType_Int32);
-    LAsmJSUInt32ToFloat32 *lir = new LAsmJSUInt32ToFloat32(useRegisterAtStart(ins->input()), temp());
+    LAsmJSUInt32ToFloat32 *lir = new(alloc()) LAsmJSUInt32ToFloat32(useRegisterAtStart(ins->input()), temp());
     return define(lir, ins);
 }
 
@@ -228,7 +228,7 @@ LIRGeneratorX86::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
     } else {
         ptrAlloc = useRegisterAtStart(ptr);
     }
-    LAsmJSLoadHeap *lir = new LAsmJSLoadHeap(ptrAlloc);
+    LAsmJSLoadHeap *lir = new(alloc()) LAsmJSLoadHeap(ptrAlloc);
     return define(lir, ins);
 }
 
@@ -246,13 +246,13 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
         switch (ins->viewType()) {
           case ArrayBufferView::TYPE_INT8: case ArrayBufferView::TYPE_UINT8:
             // See comment below.
-            lir = new LAsmJSStoreHeap(ptrAlloc, useFixed(ins->value(), eax));
+            lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useFixed(ins->value(), eax));
             break;
           case ArrayBufferView::TYPE_INT16: case ArrayBufferView::TYPE_UINT16:
           case ArrayBufferView::TYPE_INT32: case ArrayBufferView::TYPE_UINT32:
           case ArrayBufferView::TYPE_FLOAT32: case ArrayBufferView::TYPE_FLOAT64:
             // See comment below.
-            lir = new LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value()));
+            lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value()));
             break;
           default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
         }
@@ -262,14 +262,14 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
     switch (ins->viewType()) {
       case ArrayBufferView::TYPE_INT8: case ArrayBufferView::TYPE_UINT8:
         // See comment for LIRGeneratorX86::useByteOpRegister.
-        lir = new LAsmJSStoreHeap(useRegister(ins->ptr()), useFixed(ins->value(), eax));
+        lir = new(alloc()) LAsmJSStoreHeap(useRegister(ins->ptr()), useFixed(ins->value(), eax));
         break;
       case ArrayBufferView::TYPE_INT16: case ArrayBufferView::TYPE_UINT16:
       case ArrayBufferView::TYPE_INT32: case ArrayBufferView::TYPE_UINT32:
       case ArrayBufferView::TYPE_FLOAT32: case ArrayBufferView::TYPE_FLOAT64:
         // For now, don't allow constant values. The immediate operand
         // affects instruction layout which affects patching.
-        lir = new LAsmJSStoreHeap(useRegisterAtStart(ptr), useRegisterAtStart(ins->value()));
+        lir = new(alloc()) LAsmJSStoreHeap(useRegisterAtStart(ptr), useRegisterAtStart(ins->value()));
         break;
       default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
@@ -286,14 +286,14 @@ LIRGeneratorX86::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic
     switch (ins->viewType()) {
       case ArrayBufferView::TYPE_INT8: case ArrayBufferView::TYPE_UINT8:
       case ArrayBufferView::TYPE_UINT8_CLAMPED:
-        lir = new LStoreTypedArrayElementStatic(useRegister(ins->ptr()),
-                                                useFixed(ins->value(), eax));
+        lir = new(alloc()) LStoreTypedArrayElementStatic(useRegister(ins->ptr()),
+                                                         useFixed(ins->value(), eax));
         break;
       case ArrayBufferView::TYPE_INT16: case ArrayBufferView::TYPE_UINT16:
       case ArrayBufferView::TYPE_INT32: case ArrayBufferView::TYPE_UINT32:
       case ArrayBufferView::TYPE_FLOAT32: case ArrayBufferView::TYPE_FLOAT64:
-        lir = new LStoreTypedArrayElementStatic(useRegisterAtStart(ins->ptr()),
-                                                useRegisterAtStart(ins->value()));
+        lir = new(alloc()) LStoreTypedArrayElementStatic(useRegisterAtStart(ins->ptr()),
+                                                         useRegisterAtStart(ins->value()));
         break;
       default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
@@ -304,5 +304,5 @@ LIRGeneratorX86::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic
 bool
 LIRGeneratorX86::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins)
 {
-    return define(new LAsmJSLoadFuncPtr(useRegisterAtStart(ins->index())), ins);
+    return define(new(alloc()) LAsmJSLoadFuncPtr(useRegisterAtStart(ins->index())), ins);
 }

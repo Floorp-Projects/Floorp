@@ -403,6 +403,14 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_DISPLAY_INLINE_FLEX            30
 
 // See nsStylePosition
+#define NS_STYLE_ALIGN_CONTENT_FLEX_START       0
+#define NS_STYLE_ALIGN_CONTENT_FLEX_END         1
+#define NS_STYLE_ALIGN_CONTENT_CENTER           2
+#define NS_STYLE_ALIGN_CONTENT_SPACE_BETWEEN    3
+#define NS_STYLE_ALIGN_CONTENT_SPACE_AROUND     4
+#define NS_STYLE_ALIGN_CONTENT_STRETCH          5
+
+// See nsStylePosition
 #define NS_STYLE_ALIGN_ITEMS_FLEX_START         0
 #define NS_STYLE_ALIGN_ITEMS_FLEX_END           1
 #define NS_STYLE_ALIGN_ITEMS_CENTER             2
@@ -423,6 +431,11 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_FLEX_DIRECTION_ROW_REVERSE     1
 #define NS_STYLE_FLEX_DIRECTION_COLUMN          2
 #define NS_STYLE_FLEX_DIRECTION_COLUMN_REVERSE  3
+
+// See nsStylePosition
+#define NS_STYLE_FLEX_WRAP_NOWRAP               0
+#define NS_STYLE_FLEX_WRAP_WRAP                 1
+#define NS_STYLE_FLEX_WRAP_WRAP_REVERSE         2
 
 // See nsStylePosition
 // NOTE: This is the initial value of the integer-valued 'order' property

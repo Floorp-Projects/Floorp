@@ -5,9 +5,7 @@ function handleRequest(request, response)
        request.getHeader("Authorization") == "Basic dXNlciAxOnBhc3N3b3JkIDE=") ||
       (request.queryString == "test=user1_evtsrc" &&
        request.hasHeader("Authorization") &&
-       request.getHeader("Authorization") == "Basic dXNlciAxOnBhc3N3b3JkIDE=" &&
-       request.hasHeader("Cookie") &&
-       request.getHeader("Cookie") == "test=5c")) {
+       request.getHeader("Authorization") == "Basic dXNlciAxOnBhc3N3b3JkIDE=")) {
     response.setStatusLine(null, 200, "OK");
     response.setHeader("Content-Type", "text/event-stream", false);
     response.setHeader("Access-Control-Allow-Origin", "http://mochi.test:8888", false);

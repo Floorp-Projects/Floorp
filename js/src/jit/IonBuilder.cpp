@@ -3056,7 +3056,7 @@ IonBuilder::jsop_condswitch()
 
     // Allocate the current graph state.
     CFGState state = CFGState::CondSwitch(this, exitpc, defaultTarget);
-    if (!state.condswitch.bodies || !state.condswitch.bodies->init(nbBodies))
+    if (!state.condswitch.bodies || !state.condswitch.bodies->init(alloc(), nbBodies))
         return ControlStatus_Error;
 
     // We loop on case conditions with processCondSwitchCase.
@@ -5349,6 +5349,14 @@ IonBuilder::jsop_eval(uint32_t argc)
 
         MDefinition *scopeChain = current->scopeChain();
         MDefinition *string = callInfo.getArg(0);
+
+        // Direct eval acts as identity on non-string types according to
+        // ES5 15.1.2.1 step 1.
+        if (!string->mightBeType(MIRType_String)) {
+            current->push(string);
+            types::TemporaryTypeSet *types = bytecodeTypes(pc);
+            return pushTypeBarrier(string, types, true);
+        }
 
         current->pushSlot(info().thisSlot());
         MDefinition *thisValue = current->pop();

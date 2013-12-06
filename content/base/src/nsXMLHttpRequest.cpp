@@ -383,7 +383,7 @@ nsXMLHttpRequest::InitParameters(bool aAnon, bool aSystem)
 
   // Chrome is always allowed access, so do the permission check only
   // for non-chrome pages.
-  if (!IsSystemXHR()) {
+  if (!IsSystemXHR() && aSystem) {
     nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
     if (!doc) {
       return;

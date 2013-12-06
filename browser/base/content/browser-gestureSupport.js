@@ -203,10 +203,9 @@ let gGestureSupport = {
       }
       isVerticalSwipe = true;
     }
-    if (isVerticalSwipe && !gHistorySwipeAnimation.active) {
-      // Unlike horizontal swipes (which can navigate history even when
-      // swipe animations are turned off) vertical swipes should not be tracked
-      // if animations (bounce effect) aren't enabled.
+    if (isVerticalSwipe) {
+      // Vertical overscroll has been temporarily disabled until bug 939480 is
+      // fixed.
       return false;
     }
 

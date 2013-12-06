@@ -22,7 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=602962
 var scrollbox, sbo, content;
 var scrollX = 0, scrollY = 0;
 
-var mozBeforeResizeHasFired = false;
 var oldWidth = 0, oldHeight = 0;
 var win = null;
 
@@ -49,16 +48,9 @@ function doTest() {
 }
 
 function resize() {
-  win.addEventListener("MozBeforeResize", function() {
-    win.removeEventListener("MozBeforeResize", arguments.callee, false);
-    mozBeforeResizeHasFired = true;
-
-    let x = {}, y = {};
-    sbo.getPosition(x, y);
-    scrollX = x.value, scrollY = y.value;
-    is(scrollX, 200, "Scroll X should not have changed yet");
-    is(scrollY, 0, "Scroll Y should not have changed yet");
-  }, false);
+  let x = {}, y = {};
+  sbo.getPosition(x, y);
+  scrollX = x.value, scrollY = y.value;
 
   win.addEventListener("resize", function() {
     content.style.width = (oldWidth + 400) + "px";
@@ -79,7 +71,6 @@ function finish() {
     setTimeout(finish, 0);
     return;
   }
-  is(mozBeforeResizeHasFired, true, "The MozBeforeResize event should already have fired");
   sbo.scrollBy(scrollX, scrollY);
 
   let x = {}, y = {};

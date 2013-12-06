@@ -9,6 +9,7 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
+#include "nsNumberControlFrame.h"
 #include "nsPresContext.h"
 #include "nsEventStateManager.h"
 #include "nsString.h"
@@ -74,6 +75,16 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, uint8_t aWidgetType)
   nsEventStates flags;
   if (frameContent->IsElement()) {
     flags = frameContent->AsElement()->State();
+
+    // <input type=number> needs special handling since its nested native
+    // anonymous <input type=text> takes focus for it.
+    if (aWidgetType == NS_THEME_TEXTFIELD &&
+        frameContent->IsHTML(nsGkAtoms::input)) {
+      nsNumberControlFrame *numberControlFrame = do_QueryFrame(aFrame);
+      if (numberControlFrame && numberControlFrame->IsFocused()) {
+        flags |= NS_EVENT_STATE_FOCUS;
+      }
+    }
   }
   
   if (isXULCheckboxRadio && aWidgetType == NS_THEME_RADIO) {
@@ -310,6 +321,15 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
                       ? aFrame->GetParent() : aFrame);
     if (rangeFrame) {
       return !rangeFrame->ShouldUseNativeStyle();
+    }
+  }
+
+  if (aWidgetType == NS_THEME_SPINNER_UP_BUTTON ||
+      aWidgetType == NS_THEME_SPINNER_DOWN_BUTTON) {
+    nsNumberControlFrame* numberControlFrame =
+      nsNumberControlFrame::GetNumberControlFrameForSpinButton(aFrame);
+    if (numberControlFrame) {
+      return !numberControlFrame->ShouldUseNativeStyleForSpinner();
     }
   }
 

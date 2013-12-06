@@ -533,6 +533,8 @@ function runKeyEventTests()
             nsIDOMKeyEvent.DOM_VK_DELETE, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testKey({layout:"US", keyCode:MAC_VK_PC_Pause, chars:"\uF711", unmodifiedChars:"\uF711"},
             nsIDOMKeyEvent.DOM_VK_SCROLL_LOCK, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
+    testKey({layout:"US", keyCode:MAC_VK_PC_ContextMenu, chars:"\u0010", unmodifiedChars:"\u0010"},
+            nsIDOMKeyEvent.DOM_VK_CONTEXT_MENU, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
 
     testKey({layout:"US", keyCode:MAC_VK_F1, function:1, chars:"\uF704", unmodifiedChars:"\uF704"},
             nsIDOMKeyEvent.DOM_VK_F1, "", SHOULD_DELIVER_ALL, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
