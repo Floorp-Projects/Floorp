@@ -681,34 +681,34 @@ void MediaDecoderStateMachine::SendStreamData()
       nsAutoTArray<VideoData*,10> video;
       // It's OK to hold references to the VideoData only the decoder thread
       // pops from the queue.
-      mReader->VideoQueue().GetElementsAfter(stream->mNextVideoTime + mStartTime, &video);
+      mReader->VideoQueue().GetElementsAfter(stream->mNextVideoTime, &video);
       VideoSegment output;
       for (uint32_t i = 0; i < video.Length(); ++i) {
         VideoData* v = video[i];
-        if (stream->mNextVideoTime + mStartTime < v->mTime) {
-          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder writing last video to MediaStream %p for %lld ms",
+        if (stream->mNextVideoTime < v->mTime) {
+          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder writing last video to MediaStream %p for %lldus",
                                      mDecoder.get(), mediaStream,
-                                     v->mTime - (stream->mNextVideoTime + mStartTime)));
+                                     v->mTime - stream->mNextVideoTime));
           // Write last video frame to catch up. mLastVideoImage can be null here
           // which is fine, it just means there's no video.
           WriteVideoToMediaStream(stream->mLastVideoImage,
-            v->mTime - (stream->mNextVideoTime + mStartTime), stream->mLastVideoImageDisplaySize,
+            v->mTime - stream->mNextVideoTime, stream->mLastVideoImageDisplaySize,
               &output);
-          stream->mNextVideoTime = v->mTime - mStartTime;
+          stream->mNextVideoTime = v->mTime;
         }
-        if (stream->mNextVideoTime + mStartTime < v->GetEndTime()) {
-          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder writing video frame %lld to MediaStream %p for %lld ms",
+        if (stream->mNextVideoTime < v->GetEndTime()) {
+          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder writing video frame %lldus to MediaStream %p for %lldus",
                                      mDecoder.get(), v->mTime, mediaStream,
-                                     v->GetEndTime() - (stream->mNextVideoTime + mStartTime)));
+                                     v->GetEndTime() - stream->mNextVideoTime));
           WriteVideoToMediaStream(v->mImage,
-              v->GetEndTime() - (stream->mNextVideoTime + mStartTime), v->mDisplay,
+              v->GetEndTime() - stream->mNextVideoTime, v->mDisplay,
               &output);
-          stream->mNextVideoTime = v->GetEndTime() - mStartTime;
+          stream->mNextVideoTime = v->GetEndTime();
           stream->mLastVideoImage = v->mImage;
           stream->mLastVideoImageDisplaySize = v->mDisplay;
         } else {
-          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder skipping writing video frame %lld to MediaStream",
-                                     mDecoder.get(), v->mTime));
+          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder skipping writing video frame %lldus (end %lldus) to MediaStream",
+                                     mDecoder.get(), v->mTime, v->GetEndTime()));
         }
       }
       if (output.GetDuration() > 0) {
