@@ -1139,10 +1139,14 @@ public:
 
     struct ScopeSizeInfo {
         ScopeSizeInfo(mozilla::MallocSizeOf mallocSizeOf)
-            : mMallocSizeOf(mallocSizeOf), mScopeAndMapSize(0) {}
+            : mMallocSizeOf(mallocSizeOf),
+              mScopeAndMapSize(0),
+              mProtoAndIfaceCacheSize(0)
+        {}
 
         mozilla::MallocSizeOf mMallocSizeOf;
         size_t mScopeAndMapSize;
+        size_t mProtoAndIfaceCacheSize;
     };
 
     static void
