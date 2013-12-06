@@ -995,9 +995,6 @@ InitialFrameFlagsAreConstructing(InitialFrameFlags initial)
     return !!(initial & INITIAL_CONSTRUCT);
 }
 
-inline AbstractFramePtr Valueify(JSAbstractFramePtr frame) { return AbstractFramePtr(frame); }
-static inline JSAbstractFramePtr Jsvalify(AbstractFramePtr frame)   { return JSAbstractFramePtr(frame.raw()); }
-
 /*****************************************************************************/
 
 class FrameRegs

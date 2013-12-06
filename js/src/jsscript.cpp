@@ -2893,13 +2893,15 @@ LazyScript::finalize(FreeOp *fop)
         fop->free_(table_);
 }
 
-JSObject *
+StaticBlockObject *
 JSScript::getBlockScope(jsbytecode *pc)
 {
     JS_ASSERT(containsPC(pc));
-    JS_ASSERT(pc >= main());
 
     ptrdiff_t offset = pc - main();
+
+    if (offset < 0)
+        return nullptr;
 
     if (!hasBlockScopes())
         return nullptr;
@@ -2918,7 +2920,7 @@ JSScript::getBlockScope(jsbytecode *pc)
         }
     }
 
-    return blockChain;
+    return blockChain ? &blockChain->as<StaticBlockObject>() : nullptr;
 }
 
 void

@@ -1691,24 +1691,17 @@ ExpressionDecompiler::loadAtom(jsbytecode *pc)
 JSAtom *
 ExpressionDecompiler::findLetVar(jsbytecode *pc, unsigned depth)
 {
-    if (script->hasObjects()) {
-        JSObject *chain = script->getBlockScope(pc);
-        if (!chain)
-            return nullptr;
-        JS_ASSERT(chain->is<BlockObject>());
-        do {
-            BlockObject &block = chain->as<BlockObject>();
-            uint32_t blockDepth = block.stackDepth();
-            uint32_t blockCount = block.slotCount();
-            if (uint32_t(depth - blockDepth) < uint32_t(blockCount)) {
-                for (Shape::Range<NoGC> r(block.lastProperty()); !r.empty(); r.popFront()) {
-                    const Shape &shape = r.front();
-                    if (shape.shortid() == int(depth - blockDepth))
-                        return JSID_TO_ATOM(shape.propid());
-                }
+    for (JSObject *chain = script->getBlockScope(pc); chain; chain = chain->getParent()) {
+        StaticBlockObject &block = chain->as<StaticBlockObject>();
+        uint32_t blockDepth = block.stackDepth();
+        uint32_t blockCount = block.slotCount();
+        if (uint32_t(depth - blockDepth) < uint32_t(blockCount)) {
+            for (Shape::Range<NoGC> r(block.lastProperty()); !r.empty(); r.popFront()) {
+                const Shape &shape = r.front();
+                if (shape.shortid() == int(depth - blockDepth))
+                    return JSID_TO_ATOM(shape.propid());
             }
-            chain = chain->getParent();
-        } while (chain && chain->is<BlockObject>());
+        }
     }
     return nullptr;
 }
