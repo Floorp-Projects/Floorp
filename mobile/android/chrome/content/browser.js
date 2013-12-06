@@ -4395,7 +4395,7 @@ var BrowserEventHandler = {
             }
 
             // Was the element already focused before it was clicked?
-            let isFocused = (element == BrowserApp.getFocusedInput(BrowserApp.selectedBrowser, true));
+            let isFocused = (element == BrowserApp.getFocusedInput(BrowserApp.selectedBrowser));
 
             this._sendMouseEvent("mousemove", element, x, y);
             this._sendMouseEvent("mousedown", element, x, y);
