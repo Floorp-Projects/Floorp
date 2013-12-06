@@ -220,8 +220,9 @@ void RTSPSource::performPause() {
     for (size_t i = 0; i < mTracks.size(); ++i) {
       TrackInfo *info = &mTracks.editItemAt(i);
       info->mLatestPausedUnit = 0;
-      mLatestPausedUnit = 0;
     }
+    mLatestPausedUnit = 0;
+
     mState = PAUSING;
     mHandler->pause();
 }
@@ -242,8 +243,8 @@ void RTSPSource::performSeek(int64_t seekTimeUs) {
     for (size_t i = 0; i < mTracks.size(); ++i) {
       TrackInfo *info = &mTracks.editItemAt(i);
       info->mLatestPausedUnit = 0;
-      mLatestPausedUnit = 0;
     }
+    mLatestPausedUnit = 0;
 
     mState = SEEKING;
     mHandler->seek(seekTimeUs);
@@ -310,6 +311,14 @@ void RTSPSource::onMessageReceived(const sp<AMessage> &msg) {
         case RtspConnectionHandler::kWhatSeekDone:
         {
             mState = PLAYING;
+            // Even if we have reset mLatestPausedUnit in performSeek(),
+            // it's still possible that kWhatPausedDone event may arrive
+            // because of previous performPause() command.
+            for (size_t i = 0; i < mTracks.size(); ++i) {
+                TrackInfo *info = &mTracks.editItemAt(i);
+                info->mLatestPausedUnit = 0;
+            }
+            mLatestPausedUnit = 0;
             break;
         }
 
