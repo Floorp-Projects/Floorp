@@ -638,8 +638,8 @@ void PostGlobalWriteBarrier(JSRuntime *rt, JSObject *obj);
 
 uint32_t GetIndexFromString(JSString *str);
 
-bool DebugPrologue(JSContext *cx, BaselineFrame *frame, bool *mustReturn);
-bool DebugEpilogue(JSContext *cx, BaselineFrame *frame, bool ok);
+bool DebugPrologue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustReturn);
+bool DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok);
 
 bool StrictEvalPrologue(JSContext *cx, BaselineFrame *frame);
 bool HeavyweightFunPrologue(JSContext *cx, BaselineFrame *frame);
@@ -654,7 +654,7 @@ bool OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bo
 
 bool EnterBlock(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block);
 bool LeaveBlock(JSContext *cx, BaselineFrame *frame);
-bool DebugLeaveBlock(JSContext *cx, BaselineFrame *frame);
+bool DebugLeaveBlock(JSContext *cx, BaselineFrame *frame, jsbytecode *pc);
 
 bool InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame,
                              uint32_t numStackValues);

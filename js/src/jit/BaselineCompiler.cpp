@@ -508,7 +508,7 @@ BaselineCompiler::emitStackCheck(bool earlyCheck)
     return true;
 }
 
-typedef bool (*DebugPrologueFn)(JSContext *, BaselineFrame *, bool *);
+typedef bool (*DebugPrologueFn)(JSContext *, BaselineFrame *, jsbytecode *, bool *);
 static const VMFunction DebugPrologueInfo = FunctionInfo<DebugPrologueFn>(jit::DebugPrologue);
 
 bool
@@ -521,6 +521,7 @@ BaselineCompiler::emitDebugPrologue()
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
     prepareVMCall();
+    pushArg(ImmPtr(pc));
     pushArg(R0.scratchReg());
     if (!callVM(DebugPrologueInfo))
         return false;
@@ -2599,16 +2600,18 @@ BaselineCompiler::emit_JSOP_ENTERLET2()
     return emitEnterBlock();
 }
 
-typedef bool (*DebugLeaveBlockFn)(JSContext *, BaselineFrame *);
+typedef bool (*DebugLeaveBlockFn)(JSContext *, BaselineFrame *, jsbytecode *);
 static const VMFunction DebugLeaveBlockInfo = FunctionInfo<DebugLeaveBlockFn>(jit::DebugLeaveBlock);
 
 bool
 BaselineCompiler::emit_JSOP_DEBUGLEAVEBLOCK()
 {
-    // Call a stub to pop the block from the block chain.
-    prepareVMCall();
+    if (!debugMode_)
+        return true;
 
+    prepareVMCall();
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    pushArg(ImmPtr(pc));
     pushArg(R0.scratchReg());
 
     return callVM(DebugLeaveBlockInfo);
@@ -2707,7 +2710,7 @@ BaselineCompiler::emit_JSOP_DEBUGGER()
     return true;
 }
 
-typedef bool (*DebugEpilogueFn)(JSContext *, BaselineFrame *, bool);
+typedef bool (*DebugEpilogueFn)(JSContext *, BaselineFrame *, jsbytecode *, bool);
 static const VMFunction DebugEpilogueInfo = FunctionInfo<DebugEpilogueFn>(jit::DebugEpilogue);
 
 bool
@@ -2724,6 +2727,7 @@ BaselineCompiler::emitReturn()
 
         prepareVMCall();
         pushArg(Imm32(1));
+        pushArg(ImmPtr(pc));
         pushArg(R0.scratchReg());
         if (!callVM(DebugEpilogueInfo))
             return false;
