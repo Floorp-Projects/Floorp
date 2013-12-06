@@ -12,6 +12,8 @@ endif
 
 endif #if OS_ARCH == WINNT
 
+NO_PROFILE_GUIDED_OPTIMIZE = nsDebugImpl.cpp
+
 INSTALL_TARGETS += errorlist
 errorlist_FILES := \
   ErrorListCDefines.h \
