@@ -574,11 +574,7 @@ pref("browser.gesture.twist.left", "cmd_gestureRotateLeft");
 pref("browser.gesture.twist.end", "cmd_gestureRotateEnd");
 pref("browser.gesture.tap", "cmd_fullZoomReset");
 
-#ifndef RELEASE_BUILD
-pref("browser.snapshots.limit", 5);
-#else
 pref("browser.snapshots.limit", 0);
-#endif
 
 // 0: Nothing happens
 // 1: Scrolling contents
