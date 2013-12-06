@@ -111,6 +111,11 @@ BINPATH = bin
 endif
 DEFINES += -DBINPATH=$(BINPATH)
 
+DEFINES += -DMOZ_ICU_VERSION=$(MOZ_ICU_VERSION)
+ifdef MOZ_SHARED_ICU
+DEFINES += -DMOZ_SHARED_ICU
+endif
+
 libs::
 	$(MAKE) -C $(DEPTH)/browser/locales langpack
 
