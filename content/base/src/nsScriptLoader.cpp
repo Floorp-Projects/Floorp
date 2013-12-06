@@ -717,72 +717,70 @@ namespace {
 
 class NotifyOffThreadScriptLoadCompletedRunnable : public nsRunnable
 {
-    nsRefPtr<nsScriptLoader> mLoader;
-    void *mToken;
+  nsRefPtr<nsScriptLoadRequest> mRequest;
+  nsRefPtr<nsScriptLoader> mLoader;
+  void *mToken;
 
 public:
-    NotifyOffThreadScriptLoadCompletedRunnable(already_AddRefed<nsScriptLoader> aLoader,
-                                               void *aToken)
-      : mLoader(aLoader), mToken(aToken)
-    {}
+  NotifyOffThreadScriptLoadCompletedRunnable(nsScriptLoadRequest* aRequest,
+                                             nsScriptLoader* aLoader)
+    : mRequest(aRequest), mLoader(aLoader), mToken(NULL)
+  {}
 
-    NS_DECL_NSIRUNNABLE
+  void SetToken(void* aToken) {
+    MOZ_ASSERT(aToken && !mToken);
+    mToken = aToken;
+  }
+
+  NS_DECL_NSIRUNNABLE
 };
 
 } /* anonymous namespace */
 
 nsresult
-nsScriptLoader::ProcessOffThreadRequest(void **aOffThreadToken)
+nsScriptLoader::ProcessOffThreadRequest(nsScriptLoadRequest* aRequest, void **aOffThreadToken)
 {
-    nsCOMPtr<nsScriptLoadRequest> request = mOffThreadScriptRequest;
-    mOffThreadScriptRequest = nullptr;
-    nsresult rv = ProcessRequest(request, aOffThreadToken);
-    mDocument->UnblockOnload(false);
-    return rv;
+  nsresult rv = ProcessRequest(aRequest, aOffThreadToken);
+  mDocument->UnblockOnload(false);
+  return rv;
 }
 
 NS_IMETHODIMP
 NotifyOffThreadScriptLoadCompletedRunnable::Run()
 {
-    MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(NS_IsMainThread());
 
-    nsresult rv = mLoader->ProcessOffThreadRequest(&mToken);
+  nsresult rv = mLoader->ProcessOffThreadRequest(mRequest, &mToken);
 
-    if (mToken) {
-      // The result of the off thread parse was not actually needed to process
-      // the request (disappearing window, some other error, ...). Finish the
-      // request to avoid leaks in the JS engine.
-      nsCOMPtr<nsIJSRuntimeService> svc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
-      NS_ENSURE_TRUE(svc, NS_ERROR_FAILURE);
-      JSRuntime *rt;
-      svc->GetRuntime(&rt);
-      NS_ENSURE_TRUE(rt, NS_ERROR_FAILURE);
-      JS::FinishOffThreadScript(nullptr, rt, mToken);
-    }
+  if (mToken) {
+    // The result of the off thread parse was not actually needed to process
+    // the request (disappearing window, some other error, ...). Finish the
+    // request to avoid leaks in the JS engine.
+    nsCOMPtr<nsIJSRuntimeService> svc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
+    NS_ENSURE_TRUE(svc, NS_ERROR_FAILURE);
+    JSRuntime *rt;
+    svc->GetRuntime(&rt);
+    NS_ENSURE_TRUE(rt, NS_ERROR_FAILURE);
+    JS::FinishOffThreadScript(nullptr, rt, mToken);
+  }
 
-    return rv;
+  return rv;
 }
 
 static void
 OffThreadScriptLoaderCallback(void *aToken, void *aCallbackData)
 {
-    // Be careful not to adjust the refcount on the loader, as this callback
-    // may be invoked off the main thread.
-    nsScriptLoader* aLoader = static_cast<nsScriptLoader*>(aCallbackData);
-    nsRefPtr<NotifyOffThreadScriptLoadCompletedRunnable> notify =
-        new NotifyOffThreadScriptLoadCompletedRunnable(
-            already_AddRefed<nsScriptLoader>(aLoader), aToken);
-    NS_DispatchToMainThread(notify);
+  NotifyOffThreadScriptLoadCompletedRunnable* aRunnable =
+    static_cast<NotifyOffThreadScriptLoadCompletedRunnable*>(aCallbackData);
+  aRunnable->SetToken(aToken);
+  NS_DispatchToMainThread(aRunnable);
+  NS_RELEASE(aRunnable);
 }
 
 nsresult
 nsScriptLoader::AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest)
 {
   if (!aRequest->mElement->GetScriptAsync() || aRequest->mIsInline) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (mOffThreadScriptRequest) {
     return NS_ERROR_FAILURE;
   }
 
@@ -801,16 +799,18 @@ nsScriptLoader::AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest)
     return NS_ERROR_FAILURE;
   }
 
-  mOffThreadScriptRequest = aRequest;
+  NotifyOffThreadScriptLoadCompletedRunnable* runnable =
+    new NotifyOffThreadScriptLoadCompletedRunnable(aRequest, this);
+
+  // This reference will be consumed by OffThreadScriptLoaderCallback.
+  NS_ADDREF(runnable);
+
   if (!JS::CompileOffThread(cx, global, options,
                             aRequest->mScriptText.get(), aRequest->mScriptText.Length(),
                             OffThreadScriptLoaderCallback,
-                            static_cast<void*>(this))) {
+                            static_cast<void*>(runnable))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  // This reference will be consumed by the NotifyOffThreadScriptLoadCompletedRunnable.
-  NS_ADDREF(this);
 
   mDocument->BlockOnload();
 

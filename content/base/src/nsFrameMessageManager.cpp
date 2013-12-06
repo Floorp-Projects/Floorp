@@ -805,8 +805,8 @@ nsFrameMessageManager::AssertAppHasPermission(const nsAString& aPermission,
 }
 
 NS_IMETHODIMP
-nsFrameMessageManager::CheckAppHasStatus(unsigned short aStatus,
-                                         bool* aHasStatus)
+nsFrameMessageManager::AssertAppHasStatus(unsigned short aStatus,
+                                          bool* aHasStatus)
 {
   *aHasStatus = false;
 
@@ -1588,6 +1588,12 @@ public:
   }
 
   bool CheckAppHasPermission(const nsAString& aPermission)
+  {
+    // In a single-process scenario, the child always has all capabilities.
+    return true;
+  }
+
+  virtual bool CheckAppHasStatus(unsigned short aStatus)
   {
     // In a single-process scenario, the child always has all capabilities.
     return true;

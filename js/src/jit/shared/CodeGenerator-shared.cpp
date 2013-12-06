@@ -719,7 +719,7 @@ class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared>
 OutOfLineCode *
 CodeGeneratorShared::oolTruncateDouble(const FloatRegister &src, const Register &dest)
 {
-    OutOfLineTruncateSlow *ool = new OutOfLineTruncateSlow(src, dest);
+    OutOfLineTruncateSlow *ool = new(alloc()) OutOfLineTruncateSlow(src, dest);
     if (!addOutOfLineCode(ool))
         return nullptr;
     return ool;
@@ -740,7 +740,7 @@ CodeGeneratorShared::emitTruncateDouble(const FloatRegister &src, const Register
 bool
 CodeGeneratorShared::emitTruncateFloat32(const FloatRegister &src, const Register &dest)
 {
-    OutOfLineTruncateSlow *ool = new OutOfLineTruncateSlow(src, dest, true);
+    OutOfLineTruncateSlow *ool = new(alloc()) OutOfLineTruncateSlow(src, dest, true);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -818,7 +818,7 @@ OutOfLineAbortPar *
 CodeGeneratorShared::oolAbortPar(ParallelBailoutCause cause, MBasicBlock *basicBlock,
                                  jsbytecode *bytecode)
 {
-    OutOfLineAbortPar *ool = new OutOfLineAbortPar(cause, basicBlock, bytecode);
+    OutOfLineAbortPar *ool = new(alloc()) OutOfLineAbortPar(cause, basicBlock, bytecode);
     if (!ool || !addOutOfLineCode(ool))
         return nullptr;
     return ool;
@@ -842,7 +842,7 @@ CodeGeneratorShared::oolAbortPar(ParallelBailoutCause cause, LInstruction *lir)
 OutOfLinePropagateAbortPar *
 CodeGeneratorShared::oolPropagateAbortPar(LInstruction *lir)
 {
-    OutOfLinePropagateAbortPar *ool = new OutOfLinePropagateAbortPar(lir);
+    OutOfLinePropagateAbortPar *ool = new(alloc()) OutOfLinePropagateAbortPar(lir);
     if (!ool || !addOutOfLineCode(ool))
         return nullptr;
     return ool;

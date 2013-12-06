@@ -77,7 +77,7 @@ function testAddContact(type, pin2) {
 
   updateRequest.onerror = function onerror() {
     if (type === "fdn" && pin2 === undefined) {
-      ok(updateRequest.error.name === "pin2 is empty",
+      ok(updateRequest.error.name === "SimPin2",
          "expected error when pin2 is not provided");
     } else {
       ok(false, "Cannot add " + type + " contact: " + updateRequest.error.name);

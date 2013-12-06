@@ -109,8 +109,7 @@ enum nsEventStructType
 #define NS_OFFLINE                       (NS_WINDOW_START + 64)
 #define NS_ONLINE                        (NS_WINDOW_START + 65)
 
-// Indicates a resize will occur
-#define NS_BEFORERESIZE_EVENT            (NS_WINDOW_START + 66)
+// NS_BEFORERESIZE_EVENT used to be here (NS_WINDOW_START + 66)
 
 // Indicates that the user is either idle or active
 #define NS_MOZ_USER_IDLE                 (NS_WINDOW_START + 67)

@@ -19,7 +19,12 @@
 == flexbox-empty-2d.html flexbox-empty-2-ref.html
 
 # Tests for how we fragment a flex container with one unbreakable child
-== flexbox-unbreakable-child-1a.html flexbox-unbreakable-child-1-ref.html
-== flexbox-unbreakable-child-1b.html flexbox-unbreakable-child-1-ref.html
-== flexbox-unbreakable-child-1c.html flexbox-unbreakable-child-1-ref.html
-== flexbox-unbreakable-child-1d.html flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1a.html      flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1a-wrap.html flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1b.html      flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1b-wrap.html flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1c.html      flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1c-wrap.html flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1d.html      flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-1d-wrap.html flexbox-unbreakable-child-1-ref.html
+== flexbox-unbreakable-child-2.html       flexbox-unbreakable-child-2-ref.html

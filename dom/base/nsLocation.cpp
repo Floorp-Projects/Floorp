@@ -636,7 +636,7 @@ nsLocation::SetPort(const nsAString& aPort)
     const char *buf = portStr.get();
     int32_t port = -1;
 
-    if (buf) {
+    if (!portStr.IsEmpty() && buf) {
       if (*buf == ':') {
         port = atol(buf+1);
       }

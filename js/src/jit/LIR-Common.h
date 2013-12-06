@@ -96,12 +96,16 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
 {
     js::Vector<LMove, 2, IonAllocPolicy> moves_;
 
-  public:
-    LIR_HEADER(MoveGroup)
-
     LMoveGroup(TempAllocator &alloc)
       : moves_(alloc)
     { }
+
+  public:
+    LIR_HEADER(MoveGroup)
+
+    static LMoveGroup *New(TempAllocator &alloc) {
+        return new(alloc) LMoveGroup(alloc);
+    }
 
     void printOperands(FILE *fp);
 
@@ -460,17 +464,19 @@ class LNewCallObjectPar : public LInstructionHelper<1, 2, 2>
 public:
     LIR_HEADER(NewCallObjectPar);
 
-    static LNewCallObjectPar *NewWithSlots(const LAllocation &slice, const LAllocation &slots,
+    static LNewCallObjectPar *NewWithSlots(TempAllocator &alloc,
+                                           const LAllocation &slice, const LAllocation &slots,
                                            const LDefinition &temp1, const LDefinition &temp2)
     {
-        return new LNewCallObjectPar(slice, slots, temp1, temp2);
+        return new(alloc) LNewCallObjectPar(slice, slots, temp1, temp2);
     }
 
-    static LNewCallObjectPar *NewSansSlots(const LAllocation &slice,
+    static LNewCallObjectPar *NewSansSlots(TempAllocator &alloc,
+                                           const LAllocation &slice,
                                            const LDefinition &temp1, const LDefinition &temp2)
     {
         LAllocation slots = LConstantIndex::Bogus();
-        return new LNewCallObjectPar(slice, slots, temp1, temp2);
+        return new(alloc) LNewCallObjectPar(slice, slots, temp1, temp2);
     }
 
     const LAllocation *forkJoinSlice() {
@@ -1320,12 +1326,13 @@ class LGetDynamicName : public LCallInstructionHelper<BOX_PIECES, 2, 3>
     }
 };
 
-class LFilterArgumentsOrEval : public LCallInstructionHelper<0, 1, 2>
+class LFilterArgumentsOrEvalS : public LCallInstructionHelper<0, 1, 2>
 {
   public:
-    LIR_HEADER(FilterArgumentsOrEval)
+    LIR_HEADER(FilterArgumentsOrEvalS)
 
-    LFilterArgumentsOrEval(const LAllocation &string, const LDefinition &temp1, const LDefinition &temp2)
+    LFilterArgumentsOrEvalS(const LAllocation &string, const LDefinition &temp1,
+                            const LDefinition &temp2)
     {
         setOperand(0, string);
         setTemp(0, temp1);
@@ -1347,18 +1354,48 @@ class LFilterArgumentsOrEval : public LCallInstructionHelper<0, 1, 2>
     }
 };
 
-class LCallDirectEval : public LCallInstructionHelper<BOX_PIECES, 2 + BOX_PIECES, 0>
+class LFilterArgumentsOrEvalV : public LCallInstructionHelper<0, BOX_PIECES, 3>
 {
   public:
-    LIR_HEADER(CallDirectEval)
+    LIR_HEADER(FilterArgumentsOrEvalV)
 
-    LCallDirectEval(const LAllocation &scopeChain, const LAllocation &string)
+    LFilterArgumentsOrEvalV(const LDefinition &temp1, const LDefinition &temp2,
+                            const LDefinition &temp3)
+    {
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+        setTemp(2, temp3);
+    }
+
+    static const size_t Input = 0;
+
+    MFilterArgumentsOrEval *mir() const {
+        return mir_->toFilterArgumentsOrEval();
+    }
+
+    const LDefinition *temp1() {
+        return getTemp(0);
+    }
+    const LDefinition *temp2() {
+        return getTemp(1);
+    }
+    const LDefinition *temp3() {
+        return getTemp(2);
+    }
+};
+
+class LCallDirectEvalS : public LCallInstructionHelper<BOX_PIECES, 2 + BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(CallDirectEvalS)
+
+    LCallDirectEvalS(const LAllocation &scopeChain, const LAllocation &string)
     {
         setOperand(0, scopeChain);
         setOperand(1, string);
     }
 
-    static const size_t ThisValueInput = 2;
+    static const size_t ThisValue = 2;
 
     MCallDirectEval *mir() const {
         return mir_->toCallDirectEval();
@@ -1369,6 +1406,28 @@ class LCallDirectEval : public LCallInstructionHelper<BOX_PIECES, 2 + BOX_PIECES
     }
     const LAllocation *getString() {
         return getOperand(1);
+    }
+};
+
+class LCallDirectEvalV : public LCallInstructionHelper<BOX_PIECES, 1 + (2 * BOX_PIECES), 0>
+{
+  public:
+    LIR_HEADER(CallDirectEvalV)
+
+    LCallDirectEvalV(const LAllocation &scopeChain)
+    {
+        setOperand(0, scopeChain);
+    }
+
+    static const size_t Argument = 1;
+    static const size_t ThisValue = 1 + BOX_PIECES;
+
+    MCallDirectEval *mir() const {
+        return mir_->toCallDirectEval();
+    }
+
+    const LAllocation *getScopeChain() {
+        return getOperand(0);
     }
 };
 

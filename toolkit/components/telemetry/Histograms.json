@@ -1739,6 +1739,57 @@
     "n_values": 3,
     "description": "I want to be tracked, I do NOT want to be tracked, DNT unset"
   },
+  "SRV_EXPERIMENT_SUCCESS_DELTA": {
+      "kind": "linear",
+      "high": "2000",
+      "n_buckets": 200,
+      "description": "Time delta between A and SRV records when both succeed. This (srv time in ms - a time in ms) + 1000."
+  },
+  "SRV_EXPERIMENT_SRV_FAIL_DELTA": {
+      "kind": "linear",
+      "high": "2000",
+      "n_buckets": 200,
+      "description": "Time delta between A and SRV records when SRV only fails. This (srv time in ms - a time in ms) + 1000."
+  },
+  "SRV_EXPERIMENT_A_FAIL_DELTA": {
+      "kind": "linear",
+      "high": "2000",
+      "n_buckets": 200,
+      "description": "Time delta between A and SRV records when A only fails. This (srv time in ms - a time in ms) + 1000."
+  },
+  "SRV_EXPERIMENT_FAIL_DELTA": {
+      "kind": "linear",
+      "high": "2000",
+      "n_buckets": 200,
+      "description": "Time delta between A and SRV records when both fail. This (srv time in ms - a time in ms) + 1000."
+  },
+  "SRV_EXPERIMENT_STATUS": {
+      "kind": "enumerated",
+      "n_values": 4,
+      "description": "Status of SRV experiment (0 - both OK, 1 - SRV fail, 2 - A fail, 3 - both fail)"
+  },
+  "SRV_EXPERIMENT_SRV_TIME": {
+      "kind": "exponential",
+      "high": "60000",
+      "n_buckets": 50,
+      "extended_statistics_ok": true,
+      "description": "How long (in ms) it took to get a result for a SRV record"
+  },
+  "SRV_EXPERIMENT_A_TIME": {
+      "kind": "exponential",
+      "high": "60000",
+      "n_buckets": 50,
+      "extended_statistics_ok": true,
+      "description": "How long (in ms) it took to get a result for an A record"
+  },
+  "SRV_EXPERIMENT_A_CORRECT": {
+      "kind": "boolean",
+      "description": "Whether a successful A query returned the results we expected"
+  },
+  "SRV_EXPERIMENT_SRV_CORRECT": {
+      "kind": "boolean",
+      "description": "Whether a successful SRV query returned the results we expected"
+  },
   "DNS_LOOKUP_METHOD2": {
     "kind": "enumerated",
     "n_values": 16,

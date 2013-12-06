@@ -291,6 +291,15 @@ private:
     PRIntervalTime mLongIdleTimeout;
     PRIntervalTime mShortIdleTimeout;
 
+#if defined(XP_WIN)
+    // See bug 942317 in case you're all "WTF, mate?!"
+    void RunExperiment();
+    Mutex mExperimentLock;
+    bool mHasRunExperiment;
+    bool mNetworkExperimentsOK;
+    bool mDnsExperimentOK;
+#endif
+
 public:
     /*
      * Called by the networking dashboard via the DnsService2

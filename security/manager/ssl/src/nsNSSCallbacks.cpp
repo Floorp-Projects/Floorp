@@ -1129,11 +1129,6 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
   nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
 
-  // certificate validation sets IsFullHandshake, so if that flag
-  // is absent at handshake time we have a resumed session. Check this before
-  // PreliminaryHandshakeDone() because that function also sets that flag.
-  bool isResumedSession = !infoObject->IsFullHandshake();
-
   // Do the bookkeeping that needs to be done after the
   // server's ServerHello...ServerHelloDone have been processed, but that doesn't
   // need the handshake to be completed.

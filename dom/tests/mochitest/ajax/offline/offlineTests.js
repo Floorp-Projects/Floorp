@@ -23,15 +23,13 @@ QueryInterface: function(iid) {
     return this;
   },
 onCacheEntryAvailable: function(desc, accessGranted, status) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     if (!desc) {
       this.fetch(this.callback);
       return;
     }
 
     var stream = desc.QueryInterface(Ci.nsICacheEntryDescriptor).openInputStream(0);
-    var sstream = SpecialPowers.Cc["@mozilla.org/scriptableinputstream;1"]
+    var sstream = Cc["@mozilla.org/scriptableinputstream;1"]
                  .createInstance(SpecialPowers.Ci.nsIScriptableInputStream);
     sstream.init(stream);
     this.contents[desc.key] = sstream.read(sstream.available());
@@ -98,9 +96,8 @@ setup: function()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-  var prefBranch = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   try {
-    this._allowedByDefault = prefBranch.getBoolPref("offline-apps.allow_by_default");
+    this._allowedByDefault = SpecialPowers.getBoolPref("offline-apps.allow_by_default");
   } catch (e) {}
 
   if (this._allowedByDefault) {
@@ -117,19 +114,11 @@ setup: function()
     // enable the pref and spawn a new window to perform the actual
     // tests.  It will use this window to report successes and
     // failures.
-    var pm = Cc["@mozilla.org/permissionmanager;1"]
-      .getService(Ci.nsIPermissionManager);
-    var uri = Cc["@mozilla.org/network/io-service;1"]
-      .getService(Ci.nsIIOService)
-      .newURI(window.location.href, null, null);
-    var principal = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
-                      .getService(Ci.nsIScriptSecurityManager)
-                      .getNoAppCodebasePrincipal(uri);
 
-    if (pm.testPermissionFromPrincipal(principal, "offline-app") != 0) {
+    if (SpecialPowers.testPermission("offline-app", Ci.nsIPermissionManager.ALLOW_ACTION, document)) {
       ok(false, "Previous test failed to clear offline-app permission!  Expect failures.");
     }
-    pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+    SpecialPowers.addPermission("offline-app", Ci.nsIPermissionManager.ALLOW_ACTION, document);
 
     // Tests must run as toplevel windows.  Open a slave window to run
     // the test.
@@ -155,18 +144,7 @@ teardown: function(callback)
   this.waitForUpdates(function(self) {
     // Remove the offline-app permission we gave ourselves.
 
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-    var pm = Cc["@mozilla.org/permissionmanager;1"]
-             .getService(Ci.nsIPermissionManager);
-    var uri = Cc["@mozilla.org/network/io-service;1"]
-              .getService(Ci.nsIIOService)
-              .newURI(window.location.href, null, null);
-    var principal = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
-                      .getService(Ci.nsIScriptSecurityManager)
-                      .getNoAppCodebasePrincipal(uri);
-
-    pm.removeFromPrincipal(principal, "offline-app");
+    SpecialPowers.removePermission("offline-app", window.document);
 
     // Clear all overrides on the server
     for (override in self._pathOverrides)
@@ -227,8 +205,6 @@ clear: function()
 
 waitForUpdates: function(callback)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var self = this;
   var observer = {
     notified: false,
@@ -243,7 +219,7 @@ waitForUpdates: function(callback)
           return;
         }
 
-        var updateservice = SpecialPowers.Cc["@mozilla.org/offlinecacheupdate-service;1"]
+        var updateservice = Cc["@mozilla.org/offlinecacheupdate-service;1"]
                             .getService(SpecialPowers.Ci.nsIOfflineCacheUpdateService);
         var updatesPending = updateservice.numUpdates;
         if (updatesPending == 0) {
@@ -280,7 +256,6 @@ waitForAdd: function(url, onFinished) {
 
   var waitForAddListener = {
     onCacheEntryAvailable: function(entry, access, status) {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       if (entry) {
         entry.close();
         onFinished();
@@ -370,7 +345,6 @@ priv: function(func)
 {
   var self = this;
   return function() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     func(arguments);
   }
 },
@@ -391,7 +365,6 @@ checkCacheEntries: function(entries, callback)
 
 checkCache: function(url, expectEntry, callback)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var cacheSession = this.getActiveSession();
   this._checkCache(cacheSession, url, expectEntry, callback);
 },
@@ -410,7 +383,6 @@ _checkCache: function(cacheSession, url, expectEntry, callback)
 
   var _checkCacheListener = {
     onCacheEntryAvailable: function(entry, access, status) {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       if (entry) {
         if (expectEntry) {
           OfflineTest.ok(true, url + " should exist in the offline cache");

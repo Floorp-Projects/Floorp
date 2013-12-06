@@ -23,6 +23,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 #include "nsCycleCollector.h"
 #include "nsIXPConnect.h"
@@ -290,6 +291,10 @@ public:
 
   ~ProtoAndIfaceArray() {
     MOZ_COUNT_DTOR(ProtoAndIfaceArray);
+  }
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
+    return aMallocSizeOf(this);
   }
 };
 
