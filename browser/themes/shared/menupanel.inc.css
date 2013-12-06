@@ -30,6 +30,11 @@ toolbarpaletteitem[place="palette"] > #downloads-button {
   -moz-image-region: rect(0px, 256px, 32px, 224px);
 }
 
+#switch-to-metro-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #switch-to-metro-button {
+  -moz-image-region: rect(0px, 800px, 32px, 768px);
+}
+
 #add-ons-button[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #add-ons-button {
   -moz-image-region: rect(0px, 288px, 32px, 256px);
