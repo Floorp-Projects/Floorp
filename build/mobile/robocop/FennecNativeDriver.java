@@ -6,6 +6,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanningPerfAPI;
+import org.mozilla.gecko.util.GeckoEventListener;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -52,8 +53,6 @@ public class FennecNativeDriver implements Driver {
     // Objects for reflexive access of fennec classes.
     private ClassLoader mClassLoader;
     private Class mApiClass;
-    private Class mEventListenerClass;
-    private Method mRegisterEventListener;
     private Object mRobocopApi;
 
     public enum LogLevel {
@@ -87,9 +86,6 @@ public class FennecNativeDriver implements Driver {
             mClassLoader = activity.getClassLoader();
 
             mApiClass = mClassLoader.loadClass("org.mozilla.gecko.RobocopAPI");
-            mEventListenerClass = mClassLoader.loadClass("org.mozilla.gecko.util.GeckoEventListener");
-
-            mRegisterEventListener = mApiClass.getMethod("registerEventListener", String.class, mEventListenerClass);
 
             mRobocopApi = mApiClass.getConstructor(Activity.class).newInstance(activity);
         } catch (Exception e) {
@@ -257,27 +253,6 @@ public class FennecNativeDriver implements Driver {
     public int mScrollHeight=0;
     public int mPageHeight=10;
 
-    class scrollHandler implements InvocationHandler {
-        public scrollHandler(){};
-        public Object invoke(Object proxy, Method method, Object[] args) {
-            try {
-                // Disect the JSON object into the appropriate variables 
-                JSONObject jo = ((JSONObject)args[1]);
-                mScrollHeight = jo.getInt("y");
-                mHeight = jo.getInt("cheight");
-                // We don't want a height of 0. That means it's a bad response.
-                if (mHeight > 0) {
-                    mPageHeight = jo.getInt("height");
-                }
-
-            } catch( Throwable e) {
-                FennecNativeDriver.log(FennecNativeDriver.LogLevel.WARN, 
-                    "WARNING: ScrollReceived, but read wrong!");
-            }
-            return null;
-        }
-    }
-
     public int getScrollHeight() {
         return mScrollHeight;
     }
@@ -289,20 +264,23 @@ public class FennecNativeDriver implements Driver {
     }
 
     public void setupScrollHandling() {
-        //Setup scrollHandler to catch "robocop:scroll" events. 
-        try {
-            Class [] interfaces = new Class[1];
-            interfaces[0] = mEventListenerClass;
-            Object[] finalParams = new Object[2];
-            finalParams[0] = "robocop:scroll";
-            finalParams[1] = Proxy.newProxyInstance(mClassLoader, interfaces, new scrollHandler());
-            mRegisterEventListener.invoke(mRobocopApi, finalParams);
-        } catch (IllegalAccessException e) {
-            log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            log(LogLevel.ERROR, e);
-        }
-
+        GeckoAppShell.registerEventListener("robocop:scroll", new GeckoEventListener() {
+            @Override
+            public void handleMessage(final String event, final JSONObject message) {
+                try {
+                    mScrollHeight = message.getInt("y");
+                    mHeight = message.getInt("cheight");
+                    // We don't want a height of 0. That means it's a bad response.
+                    if (mHeight > 0) {
+                        mPageHeight = message.getInt("height");
+                    }
+                } catch (JSONException e) {
+                    FennecNativeDriver.log(FennecNativeDriver.LogLevel.WARN,
+                            "WARNING: ScrollReceived, but message does not contain " +
+                            "expected fields: " + e);
+                }
+            }
+        });
     }
 
     /**
