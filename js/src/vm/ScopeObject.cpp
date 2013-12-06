@@ -38,7 +38,7 @@ InnermostStaticScope(JSScript *script, jsbytecode *pc)
     JS_ASSERT(script->containsPC(pc));
     JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
 
-    StaticBlockObject *block = GetBlockChainAtPC(script, pc);
+    StaticBlockObject *block = script->getBlockScope(pc);
     if (block)
         return block;
     return script->function();
