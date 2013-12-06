@@ -73,22 +73,57 @@ namespace mozilla {
 
 MOZ_MTLOG_MODULE("mtransport")
 
+static bool ToNrIceAddr(nr_transport_addr &addr,
+                        NrIceAddr *out) {
+  int r;
+  char addrstring[INET6_ADDRSTRLEN + 1];
+
+  r = nr_transport_addr_get_addrstring(&addr, addrstring, sizeof(addrstring));
+  if (r)
+    return false;
+  out->host = addrstring;
+
+  int port;
+  r = nr_transport_addr_get_port(&addr, &port);
+  if (r)
+    return false;
+
+  out->port = port;
+
+  switch (addr.protocol) {
+    case IPPROTO_TCP:
+      out->transport = kNrIceTransportTcp;
+      break;
+    case IPPROTO_UDP:
+      out->transport = kNrIceTransportUdp;
+      break;
+    default:
+      MOZ_CRASH();
+      return false;
+  }
+
+  return true;
+}
+
 static bool ToNrIceCandidate(const nr_ice_candidate& candc,
                              NrIceCandidate* out) {
   MOZ_ASSERT(out);
   int r;
   // Const-cast because the internal nICEr code isn't const-correct.
   nr_ice_candidate *cand = const_cast<nr_ice_candidate *>(&candc);
-  char addr[INET6_ADDRSTRLEN + 1];
 
-  r = nr_transport_addr_get_addrstring(&cand->addr, addr, sizeof(addr));
-  if (r)
+  if (!ToNrIceAddr(cand->addr, &out->cand_addr))
     return false;
 
-  int port;
-  r = nr_transport_addr_get_port(&cand->addr, &port);
-  if (r)
-    return false;
+  if (cand->isock) {
+    nr_transport_addr addr;
+    r = nr_socket_getaddr(cand->isock->sock, &addr);
+    if (r)
+      return false;
+
+    if (!ToNrIceAddr(addr, &out->local_addr))
+      return false;
+  }
 
   NrIceCandidate::Type type;
 
@@ -109,8 +144,6 @@ static bool ToNrIceCandidate(const nr_ice_candidate& candc,
       return false;
   }
 
-  out->host = addr;
-  out->port = port;
   out->type = type;
   out->codeword = candc.codeword;
   return true;

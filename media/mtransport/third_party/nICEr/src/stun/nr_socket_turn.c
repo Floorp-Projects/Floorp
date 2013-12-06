@@ -64,11 +64,15 @@ static int nr_socket_turn_getaddr(void *obj, nr_transport_addr *addrp);
 static int nr_socket_turn_close(void *obj);
 
 static nr_socket_vtbl nr_socket_turn_vtbl={
+  1,
   nr_socket_turn_destroy,
   nr_socket_turn_sendto,
   nr_socket_turn_recvfrom,
   nr_socket_turn_getfd,
   nr_socket_turn_getaddr,
+  0,
+  0,
+  0,
   nr_socket_turn_close
 };
 
