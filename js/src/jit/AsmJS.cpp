@@ -5598,12 +5598,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
             masm.load32(src, iter->gpr());
             break;
           case ABIArg::FPU:
-#if defined(JS_CPU_ARM) and !defined(JS_CPU_ARM_HARDFP)
-            masm.ma_dataTransferN(IsLoad, 64, true, argv, Imm32(argOffset),
-                                  Register::FromCode(iter->fpu().code()*2));
-#else
             masm.loadDouble(src, iter->fpu());
-#endif
             break;
           case ABIArg::Stack:
             if (iter.mirType() == MIRType_Int32) {
@@ -5635,9 +5630,6 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
         masm.storeValue(JSVAL_TYPE_INT32, ReturnReg, Address(argv, 0));
         break;
       case RetType::Double:
-#if defined(JS_CPU_ARM) and !defined(JS_CPU_ARM_HARDFP)
-        masm.ma_vxfer(r0, r1, d0);
-#endif
         masm.canonicalizeDouble(ReturnFloatReg);
         masm.storeDouble(ReturnFloatReg, Address(argv, 0));
         break;
@@ -5770,11 +5762,6 @@ FillArgumentArray(ModuleCompiler &m, const VarTypeVector &argTypes,
             masm.storeValue(JSVAL_TYPE_INT32, i->gpr(), dstAddr);
             break;
           case ABIArg::FPU: {
-#if defined(JS_CPU_ARM) && !defined(JS_CPU_ARM_HARDFP)
-              FloatRegister fr = i->fpu();
-              int srcId = fr.code() * 2;
-              masm.ma_vxfer(Register::FromCode(srcId), Register::FromCode(srcId+1), fr);
-#endif
               masm.canonicalizeDouble(i->fpu());
               masm.storeDouble(i->fpu(), dstAddr);
               break;
@@ -5935,11 +5922,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
       case RetType::Double:
         masm.call(AsmJSImm_InvokeFromAsmJS_ToNumber);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
-#if defined(JS_CPU_ARM) && !defined(JS_CPU_ARM_HARDFP)
-        masm.loadValue(argv, softfpReturnOperand);
-#else
         masm.loadDouble(argv, ReturnFloatReg);
-#endif
         break;
     }
 
@@ -6005,11 +5988,7 @@ GenerateOOLConvert(ModuleCompiler &m, RetType retType, Label *throwLabel)
       case RetType::Double:
           masm.call(AsmJSImm_CoerceInPlace_ToNumber);
           masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
-#if defined(JS_CPU_ARM) && !defined(JS_CPU_ARM_HARDFP)
-          masm.loadValue(Address(StackPointer, offsetToArgv), softfpReturnOperand);
-#else
           masm.loadDouble(Address(StackPointer, offsetToArgv), ReturnFloatReg);
-#endif
           break;
       default:
           MOZ_ASSUME_UNREACHABLE("Unsupported convert type");
@@ -6148,9 +6127,6 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         break;
       case RetType::Double:
         masm.convertValueToDouble(JSReturnOperand, ReturnFloatReg, &oolConvert);
-#if defined(JS_CPU_ARM) && !defined(JS_CPU_ARM_HARDFP)
-        masm.boxDouble(ReturnFloatReg, softfpReturnOperand);
-#endif
         break;
     }
 
