@@ -92,7 +92,8 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     // And now have it update its internal state
     element->UpdateState(false);
 
-    UpdatePosterSource(false);
+    nsresult res = UpdatePosterSource(false);
+    NS_ENSURE_SUCCESS(res,res);
 
     if (!aElements.AppendElement(mPosterImage))
       return NS_ERROR_OUT_OF_MEMORY;
@@ -591,22 +592,20 @@ nsVideoFrame::GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext)
                 nsPresContext::CSSPixelsToAppUnits(size.height));
 }
 
-void
+nsresult
 nsVideoFrame::UpdatePosterSource(bool aNotify)
 {
   NS_ASSERTION(HasVideoElement(), "Only call this on <video> elements.");
   HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
 
-  if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::poster)) {
-    nsAutoString posterStr;
-    element->GetPoster(posterStr);
-    mPosterImage->SetAttr(kNameSpaceID_None,
-                          nsGkAtoms::src,
-                          posterStr,
-                          aNotify);
-  } else {
-    mPosterImage->UnsetAttr(kNameSpaceID_None, nsGkAtoms::poster, aNotify);
-  }
+  nsAutoString posterStr;
+  element->GetPoster(posterStr);
+  nsresult res = mPosterImage->SetAttr(kNameSpaceID_None,
+                                       nsGkAtoms::src,
+                                       posterStr,
+                                       aNotify);
+  NS_ENSURE_SUCCESS(res,res);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -615,7 +614,8 @@ nsVideoFrame::AttributeChanged(int32_t aNameSpaceID,
                                int32_t aModType)
 {
   if (aAttribute == nsGkAtoms::poster && HasVideoElement()) {
-    UpdatePosterSource(true);
+    nsresult res = UpdatePosterSource(true);
+    NS_ENSURE_SUCCESS(res,res);
   }
   return nsContainerFrame::AttributeChanged(aNameSpaceID,
                                             aAttribute,
