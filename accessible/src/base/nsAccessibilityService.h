@@ -178,7 +178,8 @@ private:
   void Shutdown();
 
   /**
-   * Create accessible for the element having XBL bindings.
+   * Create accessible for the element implementing nsIAccessibleProvider
+   * interface.
    */
   already_AddRefed<Accessible>
     CreateAccessibleByType(nsIContent* aContent, DocAccessible* aDoc);
