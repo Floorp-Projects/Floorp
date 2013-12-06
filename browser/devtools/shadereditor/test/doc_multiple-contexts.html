@@ -42,7 +42,7 @@
       window.onload = function() {
         for (let i = 0; i < 2; i++) {
           canvas[i] = document.querySelector("#canvas" + (i + 1));
-          gl[i] = canvas[i].getContext("webgl");
+          gl[i] = canvas[i].getContext("webgl", { preserveDrawingBuffer: true });
           gl[i].clearColor(0.0, 0.0, 0.0, 1.0);
 
           initProgram(i);

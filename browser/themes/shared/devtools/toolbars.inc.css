@@ -260,9 +260,13 @@
 }
 
 .devtools-sidebar-tabs > tabs > tab {
-  background-size: calc(100% - 2px) 100%, 1px 100%;
+  background-size: calc(100% - 1px) 100%, 1px 100%;
   background-repeat: no-repeat;
   background-position: 1px, 0;
+}
+
+.devtools-sidebar-tabs > tabs > tab:not(:last-of-type) {
+  background-size: calc(100% - 2px) 100%, 1px 100%;
 }
 
 .devtools-sidebar-tabs:-moz-locale-dir(rtl) > tabs > tab {
