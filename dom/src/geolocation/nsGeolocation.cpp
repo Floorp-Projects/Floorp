@@ -14,7 +14,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsIDocument.h"
 #include "nsIObserverService.h"
 #include "nsPIDOMWindow.h"
@@ -25,6 +24,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "PCOMContentPermissionRequestChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 class nsIPrincipal;
 
@@ -294,9 +294,8 @@ PositionError::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 void
 PositionError::NotifyCallback(const GeoPositionErrorCallback& aCallback)
 {
-  // Ensure that the proper context is on the stack (bug 452762)
-  nsCxPusher pusher;
-  pusher.PushNull();
+  // We need to be system here. See bug 452762.
+  AutoSystemCaller asc;
 
   nsAutoMicroTask mt;
   if (aCallback.HasWebIDLCallback()) {
@@ -529,9 +528,8 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     Shutdown();
   }
 
-  // Ensure that the proper context is on the stack (bug 452762)
-  nsCxPusher pusher;
-  pusher.PushNull();
+  // We need to be system here. See bug 452762.
+  AutoSystemCaller asc;
   nsAutoMicroTask mt;
   if (mCallback.HasWebIDLCallback()) {
     ErrorResult err;
