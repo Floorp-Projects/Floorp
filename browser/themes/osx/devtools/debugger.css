@@ -89,13 +89,21 @@
   padding: 2px;
 }
 
-.list-widget-item:not(.selected):not(.empty):hover {
+.theme-light .list-widget-item:not(.selected):not(.empty):hover {
   background: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.85)), Highlight;
 }
 
-.list-widget-item.selected.light {
+.theme-light .list-widget-item.selected.light {
   background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.8)), Highlight;
   color: #000;
+}
+
+.theme-dark .list-widget-item:not(.selected):not(.empty):hover {
+  background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+}
+
+.theme-dark .list-widget-item.selected.light {
+  background: linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.025));
 }
 
 .list-widget-item.selected {
@@ -182,10 +190,6 @@
   padding: 0 !important;
 }
 
-#instruments-pane > tabpanels > tabpanel {
-  background: #fff;
-}
-
 /* Watch expressions view */
 
 #expressions {
@@ -205,6 +209,7 @@
 
 .dbg-expression-input {
   -moz-padding-start: 2px !important;
+  color: inherit;
 }
 
 /* Event listeners view */

@@ -77,6 +77,7 @@ this.VariablesView = function VariablesView(aParentNode, aFlags = {}) {
 
   this._parent = aParentNode;
   this._parent.classList.add("variables-view-container");
+  this._parent.classList.add("theme-body");
   this._appendEmptyNotice();
 
   this._onSearchboxInput = this._onSearchboxInput.bind(this);
