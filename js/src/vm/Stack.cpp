@@ -123,9 +123,6 @@ StackFrame::copyFrameAndValues(JSContext *cx, Value *vp, StackFrame *otherfp,
         if (doPostBarrier)
             HeapValue::writeBarrierPost(*dst, dst);
     }
-
-    if (JS_UNLIKELY(cx->compartment()->debugMode()))
-        DebugScopes::onGeneratorFrameChange(otherfp, this, cx);
 }
 
 /* Note: explicit instantiation for js_NewGenerator located in jsiter.cpp. */
@@ -153,27 +150,6 @@ StackFrame::writeBarrierPost()
     }
     if (hasReturnValue())
         HeapValue::writeBarrierPost(rval_, &rval_);
-}
-
-JSGenerator *
-StackFrame::maybeSuspendedGenerator(JSRuntime *rt)
-{
-    /*
-     * A suspended generator's frame is embedded inside the JSGenerator object
-     * and is not currently running.
-     */
-    if (!isGeneratorFrame() || !isSuspended())
-        return nullptr;
-
-    /*
-     * Once we know we have a suspended generator frame, there is a static
-     * offset from the frame's snapshot to beginning of the JSGenerator.
-     */
-    char *vp = reinterpret_cast<char *>(generatorArgsSnapshotBegin());
-    char *p = vp - offsetof(JSGenerator, stackSnapshot);
-    JSGenerator *gen = reinterpret_cast<JSGenerator *>(p);
-    JS_ASSERT(gen->fp == this);
-    return gen;
 }
 
 bool

@@ -516,14 +516,6 @@ AbstractFramePtr::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing)
 #endif
 }
 
-inline JSGenerator *
-AbstractFramePtr::maybeSuspendedGenerator(JSRuntime *rt) const
-{
-    if (isStackFrame())
-        return asStackFrame()->maybeSuspendedGenerator(rt);
-    return nullptr;
-}
-
 inline StaticBlockObject *
 AbstractFramePtr::maybeBlockChain() const
 {

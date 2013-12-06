@@ -278,7 +278,7 @@ AppendPackedBindings(const ParseContext<ParseHandler> *pc, const DeclVector &vec
          */
         JS_ASSERT_IF(dn->isClosed(), pc->decls().lookupFirst(name) == dn);
         bool aliased = dn->isClosed() ||
-                       (pc->sc->bindingsAccessedDynamically() &&
+                       (pc->sc->allLocalsAliased() &&
                         pc->decls().lookupFirst(name) == dn);
 
         *dst = Binding(name, kind, aliased);
