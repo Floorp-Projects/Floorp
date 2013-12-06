@@ -43,6 +43,7 @@ class RegExpObject;
 struct SourceCompressionTask;
 class Shape;
 class WatchpointMap;
+class StaticBlockObject;
 
 namespace analyze {
     class ScriptAnalysis;
@@ -1267,6 +1268,8 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
         JS_ASSERT(index < arr->length);
         return arr->vector[index];
     }
+
+    js::StaticBlockObject *getBlockScope(jsbytecode *pc);
 
     /*
      * The isEmpty method tells whether this script has code that computes any
