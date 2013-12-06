@@ -100,7 +100,8 @@ class JSFunction : public JSObject
         // Note: this should be kept in sync with FunctionBox::isHeavyweight().
         return nonLazyScript()->bindings.hasAnyAliasedBindings() ||
                nonLazyScript()->funHasExtensibleScope() ||
-               nonLazyScript()->funNeedsDeclEnvObject();
+               nonLazyScript()->funNeedsDeclEnvObject() ||
+               isGenerator();
     }
 
     /* A function can be classified as either native (C++) or interpreted (JS): */
