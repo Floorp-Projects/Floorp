@@ -42,9 +42,7 @@ public class FennecNativeActions implements Actions {
     // Objects for reflexive access of fennec classes.
     private ClassLoader mClassLoader;
     private Class mApiClass;
-    private Class mEventListenerClass;
     private Class mDrawListenerClass;
-    private Method mUnregisterEventListener;
     private Method mSetDrawListener;
     private Object mRobocopApi;
 
@@ -62,10 +60,8 @@ public class FennecNativeActions implements Actions {
             mClassLoader = activity.getClassLoader();
 
             mApiClass = mClassLoader.loadClass("org.mozilla.gecko.RobocopAPI");
-            mEventListenerClass = mClassLoader.loadClass("org.mozilla.gecko.util.GeckoEventListener");
             mDrawListenerClass = mClassLoader.loadClass("org.mozilla.gecko.gfx.GeckoLayerClient$DrawListener");
 
-            mUnregisterEventListener = mApiClass.getMethod("unregisterEventListener", String.class, mEventListenerClass);
             mSetDrawListener = mApiClass.getMethod("setDrawListener", mDrawListenerClass);
 
             mRobocopApi = mApiClass.getConstructor(Activity.class).newInstance(activity);
@@ -189,17 +185,11 @@ public class FennecNativeActions implements Actions {
                 throw new IllegalStateException("listener not registered");
             }
 
-            try {
-                FennecNativeDriver.log(LogLevel.INFO, "EventExpecter: no longer listening for "+mGeckoEvent);
+            FennecNativeDriver.log(LogLevel.INFO,
+                    "EventExpecter: no longer listening for " + mGeckoEvent);
 
-                mUnregisterEventListener.invoke(mRobocopApi,
-                        new Object[] { mGeckoEvent, mListener });
-                mIsRegistered = false;
-            } catch (IllegalAccessException e) {
-                FennecNativeDriver.log(LogLevel.ERROR, e);
-            } catch (InvocationTargetException e) {
-                FennecNativeDriver.log(LogLevel.ERROR, e);
-            }
+            GeckoAppShell.unregisterEventListener(mGeckoEvent, mListener);
+            mIsRegistered = false;
         }
 
         public boolean eventReceived() {

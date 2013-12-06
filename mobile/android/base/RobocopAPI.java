@@ -41,10 +41,6 @@ public class RobocopAPI {
         mGeckoApp = (GeckoApp)activity;
     }
 
-    public void unregisterEventListener(String event, GeckoEventListener listener) {
-        GeckoAppShell.unregisterEventListener(event, listener);
-    }
-
     public void setDrawListener(GeckoLayerClient.DrawListener listener) {
         GeckoAppShell.getLayerView().getLayerClient().setDrawListener(listener);
     }
