@@ -1086,6 +1086,8 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
         return arr->vector[index];
     }
 
+    JSObject *getBlockScope(jsbytecode *pc);
+
     /*
      * The isEmpty method tells whether this script has code that computes any
      * result (not return value, result AKA normal completion value) other than
