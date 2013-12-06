@@ -46,9 +46,13 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CallbackObject)
 
-  explicit CallbackObject(JSObject* aCallback)
+  // The caller may pass a global object which will act as an override for the
+  // incumbent script settings object when the callback is invoked (overriding
+  // the entry point computed from aCallback). If no override is required, the
+  // caller should pass null.
+  explicit CallbackObject(JSObject* aCallback, nsIGlobalObject *aIncumbentGlobal)
   {
-    Init(aCallback);
+    Init(aCallback, aIncumbentGlobal);
   }
 
   virtual ~CallbackObject()
@@ -77,6 +81,11 @@ public:
     return JS::Handle<JSObject*>::fromMarkedLocation(mCallback.address());
   }
 
+  nsIGlobalObject* IncumbentGlobalOrNull() const
+  {
+    return mIncumbentGlobal;
+  }
+
   enum ExceptionHandling {
     // Report any exception and don't throw it to the caller code.
     eReportExceptions,
@@ -91,17 +100,19 @@ public:
 protected:
   explicit CallbackObject(CallbackObject* aCallbackObject)
   {
-    Init(aCallbackObject->mCallback);
+    Init(aCallbackObject->mCallback, aCallbackObject->mIncumbentGlobal);
   }
 
 private:
-  inline void Init(JSObject* aCallback)
+  inline void Init(JSObject* aCallback, nsIGlobalObject* aIncumbentGlobal)
   {
     MOZ_ASSERT(aCallback && !mCallback);
     // Set mCallback before we hold, on the off chance that a GC could somehow
     // happen in there... (which would be pretty odd, granted).
     mCallback = aCallback;
     mozilla::HoldJSObjects(this);
+
+    mIncumbentGlobal = aIncumbentGlobal;
   }
 
   CallbackObject(const CallbackObject&) MOZ_DELETE;
@@ -117,6 +128,7 @@ protected:
   }
 
   JS::Heap<JSObject*> mCallback;
+  nsCOMPtr<nsIGlobalObject> mIncumbentGlobal;
 
   class MOZ_STACK_CLASS CallSetup
   {
@@ -154,6 +166,7 @@ protected:
 
     // And now members whose construction/destruction order we need to control.
     Maybe<AutoEntryScript> mAutoEntryScript;
+    Maybe<AutoIncumbentScript> mAutoIncumbentScript;
 
     // Constructed the rooter within the scope of mCxPusher above, so that it's
     // always within a request during its lifetime.
@@ -356,7 +369,8 @@ public:
 
     JSAutoCompartment ac(cx, obj);
 
-    nsRefPtr<WebIDLCallbackT> newCallback = new WebIDLCallbackT(obj);
+    // XXXbholley - This goes away in the next patch.
+    nsRefPtr<WebIDLCallbackT> newCallback = new WebIDLCallbackT(obj, /* aIncumbentGlobal = */ nullptr);
     return newCallback.forget();
   }
 
