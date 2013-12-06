@@ -34,9 +34,6 @@ function testSteps()
 
   event.target.onsuccess = continueToNextStep;
 
-  // Bug 943409.
-  eval('');
-
   for (let objectStoreIndex in objectStoreData) {
     const objectStoreInfo = objectStoreData[objectStoreIndex];
     let objectStore = db.createObjectStore(objectStoreInfo.name,
