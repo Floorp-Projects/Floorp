@@ -908,6 +908,8 @@ MarkupView.prototype = {
   destroy: function() {
     gDevTools.off("pref-changed", this._handlePrefChange);
 
+    delete this._outputParser;
+
     this.htmlEditor.destroy();
     delete this.htmlEditor;
 
@@ -919,8 +921,6 @@ MarkupView.prototype = {
 
     this._frame.removeEventListener("focus", this._boundFocus, false);
     delete this._boundFocus;
-
-    delete this._outputParser;
 
     if (this._boundUpdatePreview) {
       this._frame.contentWindow.removeEventListener("scroll",
@@ -1099,6 +1099,9 @@ function MarkupContainer(aMarkupView, aNode, aInspector) {
   this._onMouseDown = this._onMouseDown.bind(this);
   this.elt.addEventListener("mousedown", this._onMouseDown, false);
 
+  this._onClick = this._onClick.bind(this);
+  this.elt.addEventListener("click", this._onClick, false);
+
   this.tooltip = null;
   this._attachTooltipIfNeeded();
 }
@@ -1226,9 +1229,23 @@ MarkupContainer.prototype = {
   },
 
   _onMouseDown: function(event) {
-    this.highlighted = false;
-    this.markup.navigate(this);
-    event.stopPropagation();
+    if (event.target.nodeName !== "a") {
+      this.highlighted = false;
+      this.markup.navigate(this);
+      event.stopPropagation();
+    }
+  },
+
+  _onClick: function(event) {
+    let target = event.target;
+
+    if (target.nodeName === "a") {
+      event.stopPropagation();
+      event.preventDefault();
+      let browserWin = this.markup._inspector.target
+                           .tab.ownerDocument.defaultView;
+      browserWin.openUILinkIn(target.href, "tab");
+    }
   },
 
   /**
@@ -1371,6 +1388,7 @@ MarkupContainer.prototype = {
     this.elt.removeEventListener("mouseover", this._onMouseOver, false);
     this.elt.removeEventListener("mouseout", this._onMouseOut, false);
     this.elt.removeEventListener("mousedown", this._onMouseDown, false);
+    this.elt.removeEventListener("click", this._onClick, false);
     this.expander.removeEventListener("click", this._onToggle, false);
 
     // Destroy my editor
@@ -1732,7 +1750,10 @@ ElementEditor.prototype = {
 
     if (typeof aAttr.value !== "undefined") {
       let outputParser = this.markup._outputParser;
-      let frag = outputParser.parseHTMLAttribute(aAttr.value);
+      let frag = outputParser.parseHTMLAttribute(aAttr.value, {
+        urlClass: "theme-link",
+        baseURI: this.node.baseURI
+      });
       frag = this._truncateFrag(frag);
       val.appendChild(frag);
     }
@@ -1752,8 +1773,13 @@ ElementEditor.prototype = {
    *         Truncated fragment.
    */
   _truncateFrag: function(frag) {
-    let chars = 0;
     let text = frag.textContent;
+
+    if (!text) {
+      return frag;
+    }
+
+    let chars = 0;
     let maxWidth = text.match(COLLAPSE_DATA_URL_REGEX) ?
                             COLLAPSE_DATA_URL_LENGTH : COLLAPSE_ATTRIBUTE_LENGTH;
     let overBy = text.length - maxWidth;
@@ -1782,7 +1808,15 @@ ElementEditor.prototype = {
 
       let numChars = text.length;
       if (chars + numChars > maxWidth / 2) {
-        node.textContent = text.substr(0, chars + numChars - maxWidth / 2) + "…";
+        let insertionPoint = maxWidth / 2 - chars;
+        let start = text.substr(0, insertionPoint) + "…";
+        let end = text.substr(insertionPoint);
+
+        if (end.length > maxWidth / 2) {
+          end = end.substr(end.length - maxWidth / 2);
+        }
+
+        node.textContent = start + end;
         croppedNode = node;
         break;
       } else {
