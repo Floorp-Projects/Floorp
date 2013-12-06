@@ -897,9 +897,6 @@ input[type=number]::-moz-number-wrapper {
   display: flex;
   float: none !important;
   position: static !important;
-  -moz-box-sizing: border-box;
-  width: 100%;
-  height: 100%;
 }
 
 input[type=number]::-moz-number-text {
@@ -922,18 +919,23 @@ input[type=number]::-moz-number-text {
 input[type=number]::-moz-number-spin-box {
   display: flex;
   flex-direction: column;
-  flex: 0 8px;
-  cursor: default;
-  padding: 1px;
+%ifdef XP_WIN
+  /* The Window's Theme's spin buttons have a very narrow minimum width, so
+   * make it something reasonable:
+   */
+  width: 16px;
+%endif
+  height: 0;
+  align-self: center;
+  justify-content: center;
 }
 
 input[type=number]::-moz-number-spin-up {
-  /* We should be "display:block" so that we don't get wrapped in an anonymous
-   * flex item that will prevent the setting of the "flex" property below from
-   * working.
-   */
-  display: block;
-  flex: 1;
+  -moz-appearance: spinner-upbutton;
+  display: block; /* bug 926670 */
+  flex: none;
+  cursor: default;
+  /* Style for when native theming is off: */
   background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="5"><path d="M1,4 L3,0 5,4" fill="dimgrey"/></svg>');
   background-repeat: no-repeat;
   background-position: center bottom;
@@ -944,12 +946,11 @@ input[type=number]::-moz-number-spin-up {
 }
 
 input[type=number]::-moz-number-spin-down {
-  /* We should be "display:block" so that we don't get wrapped in an anonymous
-   * flex item that will prevent the setting of the "flex" property below from
-   * working.
-   */
-  display: block;
-  flex: 1;
+  -moz-appearance: spinner-downbutton;
+  display: block; /* bug 926670 */
+  flex: none;
+  cursor: default;
+  /* Style for when native theming is off: */
   background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="5"><path d="M1,1 L3,5 5,1" fill="dimgrey"/></svg>');
   background-repeat: no-repeat;
   background-position: center top;

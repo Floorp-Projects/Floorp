@@ -540,6 +540,23 @@ template bool BoxPolicy<0>::staticAdjustInputs(TempAllocator &alloc, MInstructio
 template bool BoxPolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 template bool BoxPolicy<2>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 
+template <unsigned Op, MIRType Type>
+bool
+BoxExceptPolicy<Op, Type>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    MDefinition *in = ins->getOperand(Op);
+    if (in->type() == Type)
+        return true;
+    return BoxPolicy<Op>::staticAdjustInputs(alloc, ins);
+}
+
+template bool BoxExceptPolicy<0, MIRType_String>::staticAdjustInputs(TempAllocator &alloc,
+                                                                     MInstruction *ins);
+template bool BoxExceptPolicy<1, MIRType_String>::staticAdjustInputs(TempAllocator &alloc,
+                                                                     MInstruction *ins);
+template bool BoxExceptPolicy<2, MIRType_String>::staticAdjustInputs(TempAllocator &alloc,
+                                                                     MInstruction *ins);
+
 bool
 ToDoublePolicy::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
 {

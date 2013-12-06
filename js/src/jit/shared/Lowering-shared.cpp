@@ -18,13 +18,13 @@ LIRGeneratorShared::visitConstant(MConstant *ins)
     const Value &v = ins->value();
     switch (ins->type()) {
       case MIRType_Boolean:
-        return define(new LInteger(v.toBoolean()), ins);
+        return define(new(alloc()) LInteger(v.toBoolean()), ins);
       case MIRType_Int32:
-        return define(new LInteger(v.toInt32()), ins);
+        return define(new(alloc()) LInteger(v.toInt32()), ins);
       case MIRType_String:
-        return define(new LPointer(v.toString()), ins);
+        return define(new(alloc()) LPointer(v.toString()), ins);
       case MIRType_Object:
-        return define(new LPointer(&v.toObject()), ins);
+        return define(new(alloc()) LPointer(&v.toObject()), ins);
       default:
         // Constants of special types (undefined, null) should never flow into
         // here directly. Operations blindly consuming them require a Box.
@@ -190,7 +190,7 @@ LIRGeneratorShared::assignSafepoint(LInstruction *ins, MInstruction *mir)
     if (!postSnapshot)
         return false;
 
-    osiPoint_ = new LOsiPoint(ins->safepoint(), postSnapshot);
+    osiPoint_ = new(alloc()) LOsiPoint(ins->safepoint(), postSnapshot);
 
     return lirGraph_.noteNeedsSafepoint(ins);
 }

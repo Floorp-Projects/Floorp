@@ -1272,9 +1272,11 @@ nsStylePosition::nsStylePosition(void)
   mMaxHeight.SetNoneValue();
   mFlexBasis.SetAutoValue();
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
+  mAlignContent = NS_STYLE_ALIGN_CONTENT_STRETCH;
   mAlignItems = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
   mAlignSelf = NS_STYLE_ALIGN_SELF_AUTO;
   mFlexDirection = NS_STYLE_FLEX_DIRECTION_ROW;
+  mFlexWrap = NS_STYLE_FLEX_WRAP_NOWRAP;
   mJustifyContent = NS_STYLE_JUSTIFY_CONTENT_FLEX_START;
   mOrder = NS_STYLE_ORDER_INITIAL;
   mFlexGrow = 0.0f;
@@ -1327,19 +1329,35 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 
-  // Properties that apply to flexbox containers:
-
-  // flex-direction can swap a flexbox between vertical & horizontal.
-  // align-items can change the sizing of a flexbox & the positioning
-  // of its children.
+  // Properties that apply to flex containers:
+  // - flex-direction can swap a flex container between vertical & horizontal.
+  // - align-items can change the sizing of a flex container & the positioning
+  //   of its children.
+  // - flex-wrap changes whether a flex container's children are wrapped, which
+  //   impacts their sizing/positioning and hence impacts the container's size.
   if (mAlignItems != aOther.mAlignItems ||
-      mFlexDirection != aOther.mFlexDirection) {
+      mFlexDirection != aOther.mFlexDirection ||
+      mFlexWrap != aOther.mFlexWrap) {
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
+
 
   // Changing justify-content on a flexbox might affect the positioning of its
   // children, but it won't affect any sizing.
   if (mJustifyContent != aOther.mJustifyContent) {
+    NS_UpdateHint(hint, nsChangeHint_NeedReflow);
+  }
+
+  // Properties that apply only to multi-line flex containers:
+  // 'align-content' can change the positioning & sizing of a multi-line flex
+  // container's children when there's extra space in the cross axis, but it
+  // shouldn't affect the container's own sizing.
+  //
+  // NOTE: If we get here, we know that mFlexWrap == aOther.mFlexWrap
+  // (otherwise, we would've returned earlier). So it doesn't matter which one
+  // of those we check to see if we're multi-line.
+  if (mFlexWrap != NS_STYLE_FLEX_WRAP_NOWRAP &&
+      mAlignContent != aOther.mAlignContent) {
     NS_UpdateHint(hint, nsChangeHint_NeedReflow);
   }
 

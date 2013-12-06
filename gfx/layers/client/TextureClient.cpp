@@ -305,7 +305,7 @@ BufferTextureClient::GetAsSurface()
 }
 
 bool
-BufferTextureClient::AllocateForSurface(gfx::IntSize aSize)
+BufferTextureClient::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags aFlags)
 {
   MOZ_ASSERT(IsValid());
   MOZ_ASSERT(mFormat != gfx::FORMAT_YUV, "This textureClient cannot use YCbCr data");
@@ -315,10 +315,28 @@ BufferTextureClient::AllocateForSurface(gfx::IntSize aSize)
   if (!Allocate(bufSize)) {
     return false;
   }
+
+  if (aFlags & ALLOC_CLEAR_BUFFER) {
+    memset(GetBuffer(), 0, bufSize);
+  }
+
   ImageDataSerializer serializer(GetBuffer());
   serializer.InitializeBufferInfo(aSize, mFormat);
   mSize = aSize;
   return true;
+}
+
+TemporaryRef<gfx::DrawTarget>
+BufferTextureClient::GetAsDrawTarget()
+{
+  MOZ_ASSERT(IsValid());
+
+  ImageDataSerializer serializer(GetBuffer());
+  if (!serializer.IsValid()) {
+    return nullptr;
+  }
+
+  return serializer.GetAsDrawTarget();
 }
 
 bool

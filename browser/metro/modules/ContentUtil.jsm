@@ -6,6 +6,7 @@
 this.EXPORTED_SYMBOLS = ["ContentUtil"];
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
+const nsIDOMKeyEvent = Components.interfaces.nsIDOMKeyEvent;
 
 this.ContentUtil = {
   populateFragmentFromString: function populateFragmentFromString(fragment, str) {
@@ -87,6 +88,19 @@ this.ContentUtil = {
 
     // Return the modified object
     return target;
-  }
+  },
 
+  // Checks if a keycode is used for list navigation.
+  isNavigationKey: function (keyCode) {
+    let navigationKeys = [
+      nsIDOMKeyEvent.DOM_VK_DOWN,
+      nsIDOMKeyEvent.DOM_VK_UP,
+      nsIDOMKeyEvent.DOM_VK_LEFT,
+      nsIDOMKeyEvent.DOM_VK_RIGHT,
+      nsIDOMKeyEvent.DOM_VK_PAGE_UP,
+      nsIDOMKeyEvent.DOM_VK_PAGE_DOWN,
+      nsIDOMKeyEvent.DOM_VK_ESCAPE];
+
+    return navigationKeys.indexOf(keyCode) != -1;
+  }
 };
