@@ -9,7 +9,7 @@
  */
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 
 void vp8_idct_dequant_0_2x_sse2
             (short *q, short *dq ,

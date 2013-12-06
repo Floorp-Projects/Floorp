@@ -5474,7 +5474,7 @@ if test -n "$MOZ_VP8" -a -z "$MOZ_NATIVE_LIBVPX"; then
     ;;
     *:x86)
       if $CC -E -dM -</dev/null | grep -q __ELF__; then
-        VPX_ASFLAGS="-f elf32 -rnasm -pnasm"
+        VPX_ASFLAGS="-f elf32 -rnasm -pnasm -DPIC"
         VPX_X86_ASM=1
       fi
     ;;
