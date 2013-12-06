@@ -36,11 +36,9 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(CallbackObject)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CallbackObject)
   tmp->DropCallback();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIncumbentGlobal)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CallbackObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIncumbentGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CallbackObject)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCallback)
@@ -103,9 +101,6 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   }
 
   mAutoEntryScript.construct(globalObject, mIsMainThread, cx);
-  if (aCallback->IncumbentGlobalOrNull()) {
-    mAutoIncumbentScript.construct(aCallback->IncumbentGlobalOrNull());
-  }
 
   // Unmark the callable (by invoking Callback() and not the CallbackPreserveColor()
   // variant), and stick it in a Rooted before it can go gray again.
@@ -209,7 +204,6 @@ CallbackObject::CallSetup::~CallSetup()
   // But be careful: it might not have been constructed at all!
   mAc.destroyIfConstructed();
 
-  mAutoIncumbentScript.destroyIfConstructed();
   mAutoEntryScript.destroyIfConstructed();
 
   // It is important that this is the last thing we do, after leaving the
