@@ -14,7 +14,6 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm", tempScope);
 let FileUtils = tempScope.FileUtils;
 let NetUtil = tempScope.NetUtil;
 
-
 function test()
 {
   waitForExplicitFinish();
@@ -41,9 +40,22 @@ function test()
 
 function runTests(editor)
 {
+  editor.sourceEditor.once("dirty-change", () => {
+    is(editor.sourceEditor.isClean(), false, "Editor is dirty.");
+    ok(editor.summary.classList.contains("unsaved"),
+       "Star icon is present in the corresponding summary.");
+  });
+  let beginCursor = {line: 0, ch: 0};
+  editor.sourceEditor.replaceText("DIRTY TEXT", beginCursor, beginCursor);
+
+  editor.sourceEditor.once("dirty-change", () => {
+    is(editor.sourceEditor.isClean(), true, "Editor is clean.");
+    ok(!editor.summary.classList.contains("unsaved"),
+       "Star icon is not present in the corresponding summary.");
+    finish();
+  });
   editor.saveToFile(null, function (file) {
     ok(file, "file should get saved directly when using a file:// URI");
-    finish();
   });
 }
 
