@@ -48,8 +48,10 @@
     _(ApplyArgsGeneric)             \
     _(Bail)                         \
     _(GetDynamicName)               \
-    _(FilterArgumentsOrEval)        \
-    _(CallDirectEval)               \
+    _(FilterArgumentsOrEvalS)       \
+    _(FilterArgumentsOrEvalV)       \
+    _(CallDirectEvalS)              \
+    _(CallDirectEvalV)              \
     _(StackArgT)                    \
     _(StackArgV)                    \
     _(CreateThis)                   \

@@ -28,6 +28,8 @@ public:
     bool AnswerTest2_OutOfOrder() MOZ_OVERRIDE;
     bool RecvTest3_Start(uint32_t* aResult) MOZ_OVERRIDE;
     bool AnswerTest3_InnerEvent(uint32_t* aResult) MOZ_OVERRIDE;
+    bool AnswerTest4_Start(uint32_t* aResult) MOZ_OVERRIDE;
+    bool AnswerTest4_Inner(uint32_t* aResult) MOZ_OVERRIDE;
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
@@ -60,6 +62,7 @@ public:
     bool AnswerTest2_FirstUrgent() MOZ_OVERRIDE;
     bool AnswerTest2_SecondUrgent() MOZ_OVERRIDE;
     bool AnswerTest3_WakeUp(uint32_t* aResult) MOZ_OVERRIDE;
+    bool AnswerTest4_WakeUp(uint32_t* aResult) MOZ_OVERRIDE;
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {

@@ -213,6 +213,9 @@ public:
     bool SendMouseWheelEvent(mozilla::WidgetWheelEvent& event);
     bool SendRealKeyEvent(mozilla::WidgetKeyboardEvent& event);
     bool SendRealTouchEvent(WidgetTouchEvent& event);
+    bool SendHandleSingleTap(const CSSIntPoint& aPoint);
+    bool SendHandleLongTap(const CSSIntPoint& aPoint);
+    bool SendHandleDoubleTap(const CSSIntPoint& aPoint);
 
     virtual PDocumentRendererParent*
     AllocPDocumentRendererParent(const nsRect& documentRect, const gfxMatrix& transform,
@@ -339,6 +342,8 @@ private:
     layout::RenderFrameParent* GetRenderFrame();
     nsRefPtr<ContentParent> mManager;
     void TryCacheDPIAndScale();
+
+    CSSIntPoint AdjustTapToChildWidget(const CSSIntPoint& aPoint);
 
     // When true, we create a pan/zoom controller for our frame and
     // notify it of input events targeting us.
