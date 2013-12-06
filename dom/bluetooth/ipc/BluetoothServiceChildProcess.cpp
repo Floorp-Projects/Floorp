@@ -148,25 +148,6 @@ BluetoothServiceChildProcess::SetProperty(BluetoothObjectType aType,
   return NS_OK;
 }
 
-bool
-BluetoothServiceChildProcess::GetDevicePath(const nsAString& aAdapterPath,
-                                            const nsAString& aDeviceAddress,
-                                            nsAString& aDevicePath)
-{
-  // XXXbent Right now this is adapted from BluetoothDBusService's
-  //         GetObjectPathFromAddress. This is basically a sync call that cannot
-  //         be forwarded to the parent process without blocking. Hopefully this
-  //         can be reworked.
-  nsAutoString path(aAdapterPath);
-  path.AppendLiteral("/dev_");
-  path.Append(aDeviceAddress);
-  path.ReplaceChar(':', '_');
-
-  aDevicePath = path;
-
-  return true;
-}
-
 nsresult
 BluetoothServiceChildProcess::CreatePairedDeviceInternal(
                                               const nsAString& aAddress,
@@ -186,16 +167,6 @@ BluetoothServiceChildProcess::RemoveDeviceInternal(
   SendRequest(aRunnable,
               UnpairRequest(nsString(aObjectPath)));
   return NS_OK;
-}
-
-nsresult
-BluetoothServiceChildProcess::GetScoSocket(
-                                    const nsAString& aObjectPath,
-                                    bool aAuth,
-                                    bool aEncrypt,
-                                    mozilla::ipc::UnixSocketConsumer* aConsumer)
-{
-  MOZ_CRASH("This should never be called!");
 }
 
 nsresult

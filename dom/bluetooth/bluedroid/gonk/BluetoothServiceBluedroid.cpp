@@ -966,13 +966,6 @@ BluetoothServiceBluedroid::StopDiscoveryInternal(
 }
 
 nsresult
-BluetoothServiceBluedroid::GetDevicePropertiesInternal(
-  const BluetoothSignal& aSignal)
-{
-  return NS_OK;
-}
-
-nsresult
 BluetoothServiceBluedroid::SetProperty(BluetoothObjectType aType,
                                        const BluetoothNamedValue& aValue,
                                        BluetoothReplyRunnable* aRunnable)
@@ -1030,56 +1023,6 @@ BluetoothServiceBluedroid::SetProperty(BluetoothObjectType aType,
     ReplyStatusError(aRunnable, ret, NS_LITERAL_STRING("SetProperty"));
   }
 
-  return NS_OK;
-}
-
-bool
-BluetoothServiceBluedroid::GetDevicePath(const nsAString& aAdapterPath,
-                                         const nsAString& aDeviceAddress,
-                                         nsAString& aDevicePath)
-{
-  return true;
-}
-
-bool
-BluetoothServiceBluedroid::AddServiceRecords(const char* serviceName,
-                                             unsigned long long uuidMsb,
-                                             unsigned long long uuidLsb,
-                                             int channel)
-{
-  return true;
-}
-
-bool
-BluetoothServiceBluedroid::RemoveServiceRecords(const char* serviceName,
-                                                unsigned long long uuidMsb,
-                                                unsigned long long uuidLsb,
-                                                int channel)
-{
-  return true;
-}
-
-bool
-BluetoothServiceBluedroid::AddReservedServicesInternal(
-  const nsTArray<uint32_t>& aServices,
-  nsTArray<uint32_t>& aServiceHandlesContainer)
-{
-  return true;
-
-}
-
-bool
-BluetoothServiceBluedroid::RemoveReservedServicesInternal(
-  const nsTArray<uint32_t>& aServiceHandles)
-{
-  return true;
-}
-
-nsresult
-BluetoothServiceBluedroid::GetScoSocket(
-  const nsAString& aObjectPath, bool aAuth, bool aEncrypt,
-  mozilla::ipc::UnixSocketConsumer* aConsumer)
-{
   return NS_OK;
 }
 

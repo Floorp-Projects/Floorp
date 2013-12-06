@@ -95,7 +95,7 @@ GetAddressFromObjectPath(const nsAString& aObjectPath)
   nsString address(aObjectPath);
   int addressHead = address.RFind("/") + 5;
 
-  MOZ_ASSERT(addressHead + BLUETOOTH_ADDRESS_LENGTH == address.Length());
+  MOZ_ASSERT(addressHead + BLUETOOTH_ADDRESS_LENGTH == (int)address.Length());
 
   address.Cut(0, addressHead);
   address.ReplaceChar('_', ':');
