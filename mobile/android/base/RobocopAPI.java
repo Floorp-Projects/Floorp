@@ -41,10 +41,6 @@ public class RobocopAPI {
         mGeckoApp = (GeckoApp)activity;
     }
 
-    public void registerEventListener(String event, GeckoEventListener listener) {
-        GeckoAppShell.registerEventListener(event, listener);
-    }
-
     public void unregisterEventListener(String event, GeckoEventListener listener) {
         GeckoAppShell.unregisterEventListener(event, listener);
     }
