@@ -9,6 +9,7 @@
 #ifndef VPX_CONFIG_H
 #define VPX_CONFIG_H
 #define RESTRICT    
+#define INLINE      __inline__ __attribute__((always_inline))
 #define ARCH_ARM 0
 #define ARCH_MIPS 0
 #define ARCH_X86 1
@@ -26,6 +27,8 @@
 #define HAVE_SSE3 1
 #define HAVE_SSSE3 1
 #define HAVE_SSE4_1 1
+#define HAVE_AVX 1
+#define HAVE_AVX2 1
 #define HAVE_ALTIVEC 0
 #define HAVE_VPX_PORTS 1
 #define HAVE_STDINT_H 1
@@ -38,13 +41,14 @@
 #define CONFIG_INSTALL_BINS 1
 #define CONFIG_INSTALL_LIBS 1
 #define CONFIG_INSTALL_SRCS 0
+#define CONFIG_USE_X86INC 0
 #define CONFIG_DEBUG 0
 #define CONFIG_GPROF 0
 #define CONFIG_GCOV 0
 #define CONFIG_RVCT 0
 #define CONFIG_GCC 1
 #define CONFIG_MSVS 0
-#define CONFIG_PIC 0
+#define CONFIG_PIC 1
 #define CONFIG_BIG_ENDIAN 0
 #define CONFIG_CODEC_SRCS 0
 #define CONFIG_DEBUG_LIBS 0
@@ -57,11 +61,15 @@
 #define CONFIG_DC_RECON 0
 #define CONFIG_RUNTIME_CPU_DETECT 1
 #define CONFIG_POSTPROC 1
+#define CONFIG_VP9_POSTPROC 0
 #define CONFIG_MULTITHREAD 1
 #define CONFIG_INTERNAL_STATS 0
 #define CONFIG_VP8_ENCODER 1
 #define CONFIG_VP8_DECODER 1
+#define CONFIG_VP9_ENCODER 1
+#define CONFIG_VP9_DECODER 1
 #define CONFIG_VP8 1
+#define CONFIG_VP9 1
 #define CONFIG_ENCODERS 1
 #define CONFIG_DECODERS 1
 #define CONFIG_STATIC_MSVCRT 0
@@ -77,4 +85,9 @@
 #define CONFIG_UNIT_TESTS 1
 #define CONFIG_MULTI_RES_ENCODING 0
 #define CONFIG_TEMPORAL_DENOISING 1
+#define CONFIG_EXPERIMENTAL 0
+#define CONFIG_DECRYPT 0
+#define CONFIG_MULTIPLE_ARF 0
+#define CONFIG_NON420 0
+#define CONFIG_ALPHA 0
 #endif /* VPX_CONFIG_H */
