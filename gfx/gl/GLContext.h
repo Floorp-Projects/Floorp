@@ -2493,9 +2493,6 @@ public:
     void ApplyFilterToBoundTexture(GLuint aTarget,
                                    GraphicsFilter aFilter);
 
-    virtual bool BindExternalBuffer(GLuint texture, void* buffer) { return false; }
-    virtual bool UnbindExternalBuffer(GLuint texture) { return false; }
-
 #ifdef MOZ_WIDGET_GONK
     virtual EGLImage CreateEGLImageForNativeBuffer(void* buffer) = 0;
     virtual void DestroyEGLImage(EGLImage image) = 0;
