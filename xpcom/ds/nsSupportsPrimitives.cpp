@@ -98,7 +98,9 @@ NS_IMETHODIMP nsSupportsCStringImpl::ToString(char **_retval)
 
 NS_IMETHODIMP nsSupportsCStringImpl::SetData(const nsACString& aData)
 {
-    mData = aData;
+    bool ok = mData.Assign(aData, fallible_t());
+    if (!ok)
+        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
@@ -135,7 +137,9 @@ NS_IMETHODIMP nsSupportsStringImpl::ToString(PRUnichar **_retval)
 
 NS_IMETHODIMP nsSupportsStringImpl::SetData(const nsAString& aData)
 {
-    mData = aData;
+    bool ok = mData.Assign(aData, fallible_t());
+    if (!ok)
+        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
