@@ -392,6 +392,7 @@ public class GeckoAppShell
         } catch (NoSuchElementException e) {}
     }
 
+    @RobocopTarget
     public static void sendEventToGecko(GeckoEvent e) {
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             notifyGeckoOfEvent(e);

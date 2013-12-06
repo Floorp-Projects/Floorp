@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 
@@ -44,7 +45,6 @@ public class FennecNativeActions implements Actions {
     private Class mDrawListenerClass;
     private Method mRegisterEventListener;
     private Method mUnregisterEventListener;
-    private Method mBroadcastEvent;
     private Method mPreferencesGetEvent;
     private Method mPreferencesObserveEvent;
     private Method mPreferencesRemoveObserversEvent;
@@ -70,7 +70,6 @@ public class FennecNativeActions implements Actions {
 
             mRegisterEventListener = mApiClass.getMethod("registerEventListener", String.class, mEventListenerClass);
             mUnregisterEventListener = mApiClass.getMethod("unregisterEventListener", String.class, mEventListenerClass);
-            mBroadcastEvent = mApiClass.getMethod("broadcastEvent", String.class, String.class);
             mPreferencesGetEvent = mApiClass.getMethod("preferencesGetEvent", Integer.TYPE, String[].class);
             mPreferencesObserveEvent = mApiClass.getMethod("preferencesObserveEvent", Integer.TYPE, String[].class);
             mPreferencesRemoveObserversEvent = mApiClass.getMethod("preferencesRemoveObserversEvent", Integer.TYPE);
@@ -262,14 +261,8 @@ public class FennecNativeActions implements Actions {
         return null;
     }
 
-    public void sendGeckoEvent(String geckoEvent, String data) {
-        try {
-            mBroadcastEvent.invoke(mRobocopApi, geckoEvent, data);
-        } catch (IllegalAccessException e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
-        }
+    public void sendGeckoEvent(final String geckoEvent, final String data) {
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(geckoEvent, data));
     }
 
     private void sendPreferencesEvent(Method method, int requestId, String[] prefNames) {
