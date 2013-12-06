@@ -349,29 +349,7 @@ public:
       nsRefPtr<WebIDLCallbackT> callback = GetWebIDLCallback();
       return callback.forget();
     }
-
-    XPCOMCallbackT* callback = GetXPCOMCallback();
-    if (!callback) {
-      return nullptr;
-    }
-
-    nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = do_QueryInterface(callback);
-    if (!wrappedJS) {
-      return nullptr;
-    }
-
-    AutoSafeJSContext cx;
-
-    JS::Rooted<JSObject*> obj(cx, wrappedJS->GetJSObject());
-    if (!obj) {
-      return nullptr;
-    }
-
-    JSAutoCompartment ac(cx, obj);
-
-    // XXXbholley - This goes away in the next patch.
-    nsRefPtr<WebIDLCallbackT> newCallback = new WebIDLCallbackT(obj, /* aIncumbentGlobal = */ nullptr);
-    return newCallback.forget();
+    return nullptr;
   }
 
 private:
