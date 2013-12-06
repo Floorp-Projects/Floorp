@@ -1470,7 +1470,7 @@ js::NumberValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
     return sb.appendInflated(cstr, cstrlen);
 }
 
-static void
+static bool
 CharsToNumber(ThreadSafeContext *cx, const jschar *chars, size_t length, double *result)
 {
     if (length == 1) {
@@ -1481,7 +1481,7 @@ CharsToNumber(ThreadSafeContext *cx, const jschar *chars, size_t length, double 
             *result = 0.0;
         else
             *result = GenericNaN();
-        return;
+        return true;
     }
 
     const jschar *end = chars + length;
@@ -1504,7 +1504,7 @@ CharsToNumber(ThreadSafeContext *cx, const jschar *chars, size_t length, double 
         } else {
             *result = d;
         }
-        return;
+        return true;
     }
 
     /*
@@ -1516,10 +1516,17 @@ CharsToNumber(ThreadSafeContext *cx, const jschar *chars, size_t length, double 
      */
     const jschar *ep;
     double d;
-    if (!js_strtod(cx, bp, end, &ep, &d) || SkipSpace(ep, end) != end)
+    if (!js_strtod(cx, bp, end, &ep, &d)) {
+        *result = GenericNaN();
+        return false;
+    }
+
+    if (SkipSpace(ep, end) != end)
         *result = GenericNaN();
     else
         *result = d;
+
+    return true;
 }
 
 bool
@@ -1528,8 +1535,8 @@ js::StringToNumber(ThreadSafeContext *cx, JSString *str, double *result)
     ScopedThreadSafeStringInspector inspector(str);
     if (!inspector.ensureChars(cx))
         return false;
-    CharsToNumber(cx, inspector.chars(), str->length(), result);
-    return true;
+
+    return CharsToNumber(cx, inspector.chars(), str->length(), result);
 }
 
 bool
