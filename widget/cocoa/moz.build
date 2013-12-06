@@ -53,6 +53,7 @@ UNIFIED_SOURCES += [
     'nsToolkit.mm',
     'nsWidgetFactory.mm',
     'nsWindowMap.mm',
+    'OSXNotificationCenter.mm',
     'WidgetTraceEvent.mm',
 ]
 

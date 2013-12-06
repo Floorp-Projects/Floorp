@@ -51,7 +51,7 @@ function createDoc() {
 function xhrDoc(idx) {
   return function() {
     // Defy same-origin restrictions!
-    var xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
+    var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
     xhr.open("GET", docSources[idx], false);
     xhr.send();
     return xhr.responseXML;

@@ -646,44 +646,44 @@ function MediaTestManager() {
   // Starts the next batch of tests, or finishes if they're all done.
   // Don't call this directly, call finished(token) when you're done.
   this.nextTest = function() {
-    // Force a GC after every completed testcase. This ensures that any decoders
-    // with live threads waiting for the GC are killed promptly, to free up the
-    // thread stacks' address space.
-    SpecialPowers.forceGC();
+    // Force an exact  GC after every completed testcase. This ensures that any
+    // decoders with live threads waiting for the GC are killed promptly, to free
+    // up the thread stacks' address space, and destroy decoder resources.
+    SpecialPowers.exactGC(window, function(){
+      while (this.testNum < this.tests.length && this.tokens.length < PARALLEL_TESTS) {
+        var test = this.tests[this.testNum];
+        var token = (test.name ? (test.name + "-"): "") + this.testNum;
+        this.testNum++;
 
-    while (this.testNum < this.tests.length && this.tokens.length < PARALLEL_TESTS) {
-      var test = this.tests[this.testNum];
-      var token = (test.name ? (test.name + "-"): "") + this.testNum;
-      this.testNum++;
+        if (DEBUG_TEST_LOOP_FOREVER && this.testNum == this.tests.length) {
+          this.testNum = 0;
+        }
 
-      if (DEBUG_TEST_LOOP_FOREVER && this.testNum == this.tests.length) {
-        this.testNum = 0;
+        // Ensure we can play the resource type.
+        if (test.type && !document.createElement('video').canPlayType(test.type))
+          continue;
+
+        // Do the init. This should start the test.
+        this.startTest(test, token);
       }
 
-      // Ensure we can play the resource type.
-      if (test.type && !document.createElement('video').canPlayType(test.type))
-        continue;
-
-      // Do the init. This should start the test.
-      this.startTest(test, token);
-    }
-
-    if (this.testNum == this.tests.length &&
-        !DEBUG_TEST_LOOP_FOREVER &&
-        this.tokens.length == 0 &&
-        !this.isShutdown)
-    {
-      this.isShutdown = true;
-      if (this.onFinished) {
-        this.onFinished();
+      if (this.testNum == this.tests.length &&
+          !DEBUG_TEST_LOOP_FOREVER &&
+          this.tokens.length == 0 &&
+          !this.isShutdown)
+      {
+        this.isShutdown = true;
+        if (this.onFinished) {
+          this.onFinished();
+        }
+        mediaTestCleanup();
+        var end = new Date();
+        SimpleTest.info("Finished at " + end + " (" + (end.getTime() / 1000) + "s)");
+        SimpleTest.info("Running time: " + (end.getTime() - this.startTime.getTime())/1000 + "s");
+        SimpleTest.finish();
+        return;
       }
-      mediaTestCleanup();
-      var end = new Date();
-      SimpleTest.info("Finished at " + end + " (" + (end.getTime() / 1000) + "s)");
-      SimpleTest.info("Running time: " + (end.getTime() - this.startTime.getTime())/1000 + "s");
-      SimpleTest.finish();
-      return;
-    }
+    }.bind(this));
   }
 }
 

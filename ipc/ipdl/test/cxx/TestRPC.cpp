@@ -98,6 +98,22 @@ TestRPCParent::AnswerTest3_InnerEvent(uint32_t* aResult)
   return true;
 }
 
+bool
+TestRPCParent::AnswerTest4_Start(uint32_t* aResult)
+{
+  if (!CallTest4_WakeUp(aResult))
+    fail("CallTest4_WakeUp");
+
+  return true;
+}
+
+bool
+TestRPCParent::AnswerTest4_Inner(uint32_t* aResult)
+{
+  *aResult = 700;
+  return true;
+}
+
 //-----------------------------------------------------------------------------
 // child
 
@@ -132,6 +148,12 @@ TestRPCChild::RecvStart()
     fail("SendTest3_Start");
   if (result != 200)
     fail("Wrong result (expected 200)");
+
+  // See bug 937216 (RPC calls within interrupts).
+  if (!CallTest4_Start(&result))
+    fail("SendTest4_Start");
+  if (result != 700)
+    fail("Wrong result (expected 700)");
 
   Close();
   return true;
@@ -174,6 +196,15 @@ TestRPCChild::AnswerTest3_WakeUp(uint32_t* aResult)
 {
   if (!CallTest3_InnerEvent(aResult))
     fail("CallTest3_InnerEvent");
+
+  return true;
+}
+
+bool
+TestRPCChild::AnswerTest4_WakeUp(uint32_t* aResult)
+{
+  if (!CallTest4_Inner(aResult))
+    fail("CallTest4_Inner");
 
   return true;
 }

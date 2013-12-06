@@ -274,6 +274,8 @@
     "dom/browser-element/mochitest/test_browserElement_inproc_CloseFromOpener.html":"",
     "dom/browser-element/":"",
 
+    "dom/datastore/tests/test_certifiedApp.html":"",
+
     "dom/file/test/test_progress_events.html":"All of these fail fairly regularly with: UnknownError: The operation failed for reasons unrelated to the database itself and not covered by any other error code. at http://mochi.test:8888/tests/dom/file/test/helpers.js:126",
     "dom/file/test/test_request_readyState.html":"",
     "dom/file/test/test_stream_tracking.html":"",

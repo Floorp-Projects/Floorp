@@ -325,6 +325,7 @@ const MAC_VK_PC_ScrollLock              = 0x6A;
 const MAC_VK_F14                        = 0x6B;
 const MAC_VK_PC_Pause                   = 0x6B;
 const MAC_VK_F10                        = 0x6D;
+const MAC_VK_PC_ContextMenu             = 0x6E;
 const MAC_VK_F12                        = 0x6F;
 const MAC_VK_F15                        = 0x71;
 const MAC_VK_Help                       = 0x72;

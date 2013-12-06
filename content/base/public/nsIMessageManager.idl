@@ -383,12 +383,12 @@ interface nsIFrameScriptLoader : nsISupports
   nsIDOMDOMStringList getDelayedFrameScripts();
 };
 
-[scriptable, builtinclass, uuid(b37821ff-df79-44d4-821c-6d6ec4dfe1e9)]
+[scriptable, builtinclass, uuid(ad57800b-ff21-4e2f-91d3-e68615ae8afe)]
 interface nsIProcessChecker : nsISupports
 {
 
   /**
-   * Return true iff the "remote" process has |aPermission|.  This is
+   * Return true if the "remote" process has |aPermission|.  This is
    * intended to be used by JS implementations of cross-process DOM
    * APIs, like so
    *
@@ -409,7 +409,7 @@ interface nsIProcessChecker : nsISupports
   boolean assertPermission(in DOMString aPermission);
 
   /**
-   * Return true iff the "remote" process has |aManifestURL|.  This is
+   * Return true if the "remote" process has |aManifestURL|.  This is
    * intended to be used by JS implementations of cross-process DOM
    * APIs, like so
    *
@@ -432,14 +432,17 @@ interface nsIProcessChecker : nsISupports
   boolean assertAppHasPermission(in DOMString aPermission);
 
   /**
-   * Return true iff the "remote" process' principal has an appStatus equal to
+   * Return true if the "remote" process' principal has an appStatus equal to
    * |aStatus|.
    *
    * This interface only returns meaningful data when our content is
    * in a separate process.  If it shares the same OS process as us,
    * then applying this permission check doesn't add any security,
    * though it doesn't hurt anything either.
+   *
+   * Note: If the remote content process does *not* has the |aStatus|,
+   * it will be killed as a precaution.
    */
-  boolean checkAppHasStatus(in unsigned short aStatus);
+  boolean assertAppHasStatus(in unsigned short aStatus);
 
 };

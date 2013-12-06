@@ -78,6 +78,10 @@ public:
     return FromMilliseconds(aMicroseconds / 1000.0);
   }
 
+  static TimeDuration Forever() {
+    return FromTicks(INT64_MAX);
+  }
+
   TimeDuration operator+(const TimeDuration& aOther) const {
     return TimeDuration::FromTicks(mValue + aOther.mValue);
   }
@@ -114,7 +118,7 @@ public:
   TimeDuration operator/(const int64_t aDivisor) const {
     return TimeDuration::FromTicks(mValue / aDivisor);
   }
-  double operator/(const TimeDuration& aOther) {
+  double operator/(const TimeDuration& aOther) const {
     return static_cast<double>(mValue) / aOther.mValue;
   }
 

@@ -241,6 +241,17 @@ class BoxPolicy : public BoxInputsPolicy
     }
 };
 
+// Boxes everything except inputs of type Type.
+template <unsigned Op, MIRType Type>
+class BoxExceptPolicy : public TypePolicy
+{
+  public:
+    static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
+    bool adjustInputs(TempAllocator &alloc, MInstruction *ins) {
+        return staticAdjustInputs(alloc, ins);
+    }
+};
+
 // Combine multiple policies.
 template <class Lhs, class Rhs>
 class MixPolicy : public TypePolicy

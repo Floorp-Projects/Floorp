@@ -89,7 +89,67 @@ public:
   typedef RotatedContentBuffer::PaintState PaintState;
 
   ContentHostBase(const TextureInfo& aTextureInfo);
-  ~ContentHostBase();
+  virtual ~ContentHostBase();
+
+  virtual void Composite(EffectChain& aEffectChain,
+                         float aOpacity,
+                         const gfx::Matrix4x4& aTransform,
+                         const gfx::Filter& aFilter,
+                         const gfx::Rect& aClipRect,
+                         const nsIntRegion* aVisibleRegion = nullptr,
+                         TiledLayerProperties* aLayerProperties = nullptr);
+
+  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+
+#ifdef MOZ_DUMP_PAINTING
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
+
+  virtual void Dump(FILE* aFile=nullptr,
+                    const char* aPrefix="",
+                    bool aDumpHtml=false) MOZ_OVERRIDE;
+#endif
+
+  virtual void PrintInfo(nsACString& aTo, const char* aPrefix) MOZ_OVERRIDE;
+
+  virtual TextureHost* GetAsTextureHost() MOZ_OVERRIDE;
+
+  virtual void UseTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
+
+  virtual void RemoveTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
+
+  virtual void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
+
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
+
+protected:
+  virtual nsIntPoint GetOriginOffset()
+  {
+    return mBufferRect.TopLeft() - mBufferRotation;
+  }
+
+  bool PaintWillResample() { return mPaintWillResample; }
+
+  // These must be called before forgetting mTextureHost or mTextureHostOnWhite
+  void DestroyTextureHost();
+  void DestroyTextureHostOnWhite();
+
+  nsIntRect mBufferRect;
+  nsIntPoint mBufferRotation;
+  RefPtr<TextureHost> mTextureHost;
+  RefPtr<TextureHost> mTextureHostOnWhite;
+  bool mPaintWillResample;
+  bool mInitialised;
+};
+class DeprecatedContentHostBase : public ContentHost
+{
+public:
+  typedef RotatedContentBuffer::ContentType ContentType;
+  typedef RotatedContentBuffer::PaintState PaintState;
+
+  DeprecatedContentHostBase(const TextureInfo& aTextureInfo);
+  ~DeprecatedContentHostBase();
 
   virtual void Composite(EffectChain& aEffectChain,
                          float aOpacity,
@@ -153,7 +213,9 @@ protected:
 };
 
 /**
- * Double buffering is implemented by swapping the front and back DeprecatedTextureHosts.
+ * Double buffering is implemented by swapping the front and back TextureHosts.
+ * We assume that whenever we use double buffering, then we have
+ * render-to-texture and thus no texture upload to do.
  */
 class ContentHostDoubleBuffered : public ContentHostBase
 {
@@ -162,7 +224,27 @@ public:
     : ContentHostBase(aTextureInfo)
   {}
 
-  ~ContentHostDoubleBuffered();
+  virtual ~ContentHostDoubleBuffered() {}
+
+  virtual CompositableType GetType() { return COMPOSITABLE_CONTENT_DOUBLE; }
+
+  virtual void UpdateThebes(const ThebesBufferData& aData,
+                            const nsIntRegion& aUpdated,
+                            const nsIntRegion& aOldValidRegionBack,
+                            nsIntRegion* aUpdatedRegionBack);
+
+protected:
+  nsIntRegion mValidRegionForNextBackBuffer;
+};
+
+class DeprecatedContentHostDoubleBuffered : public DeprecatedContentHostBase
+{
+public:
+  DeprecatedContentHostDoubleBuffered(const TextureInfo& aTextureInfo)
+    : DeprecatedContentHostBase(aTextureInfo)
+  {}
+
+  ~DeprecatedContentHostDoubleBuffered();
 
   virtual CompositableType GetType() { return BUFFER_CONTENT_DIRECT; }
 
@@ -205,7 +287,23 @@ public:
   ContentHostSingleBuffered(const TextureInfo& aTextureInfo)
     : ContentHostBase(aTextureInfo)
   {}
-  virtual ~ContentHostSingleBuffered();
+  virtual ~ContentHostSingleBuffered() {}
+
+  virtual CompositableType GetType() { return COMPOSITABLE_CONTENT_SINGLE; }
+
+  virtual void UpdateThebes(const ThebesBufferData& aData,
+                            const nsIntRegion& aUpdated,
+                            const nsIntRegion& aOldValidRegionBack,
+                            nsIntRegion* aUpdatedRegionBack);
+};
+
+class DeprecatedContentHostSingleBuffered : public DeprecatedContentHostBase
+{
+public:
+  DeprecatedContentHostSingleBuffered(const TextureInfo& aTextureInfo)
+    : DeprecatedContentHostBase(aTextureInfo)
+  {}
+  virtual ~DeprecatedContentHostSingleBuffered();
 
   virtual CompositableType GetType() { return BUFFER_CONTENT; }
 
@@ -233,11 +331,11 @@ public:
  * Delays texture uploads until the next composite to
  * avoid blocking the main thread.
  */
-class ContentHostIncremental : public ContentHostBase
+class ContentHostIncremental : public DeprecatedContentHostBase
 {
 public:
   ContentHostIncremental(const TextureInfo& aTextureInfo)
-    : ContentHostBase(aTextureInfo)
+    : DeprecatedContentHostBase(aTextureInfo)
     , mDeAllocator(nullptr)
   {}
 
@@ -279,7 +377,7 @@ public:
   {
     ProcessTextureUpdates();
 
-    ContentHostBase::Composite(aEffectChain, aOpacity,
+    DeprecatedContentHostBase::Composite(aEffectChain, aOpacity,
                                aTransform, aFilter,
                                aClipRect, aVisibleRegion,
                                aLayerProperties);

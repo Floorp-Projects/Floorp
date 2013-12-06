@@ -1346,7 +1346,7 @@ window.addEventListener('ContentStart', function update_onContentStart() {
         break;
       case 'content-shutdown':
         // iterate through all the existing active processes
-        Object.keys(gRecordingActiveProcesses[processId]).foreach(function(requestURL) {
+        Object.keys(gRecordingActiveProcesses[processId]).forEach(function(requestURL) {
           commandHandler(requestURL, { type: aData,
                                        isAudio: true,
                                        isVideo: true});

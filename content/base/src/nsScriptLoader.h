@@ -211,7 +211,8 @@ public:
    * Process a request that was deferred so that the script could be compiled
    * off thread.
    */
-  nsresult ProcessOffThreadRequest(void **aOffThreadToken);
+  nsresult ProcessOffThreadRequest(nsScriptLoadRequest *aRequest,
+                                   void **aOffThreadToken);
 
 private:
   /**
@@ -316,7 +317,6 @@ private:
   };
   nsTArray<PreloadInfo> mPreloads;
 
-  nsCOMPtr<nsScriptLoadRequest> mOffThreadScriptRequest;
   nsCOMPtr<nsIScriptElement> mCurrentScript;
   nsCOMPtr<nsIScriptElement> mCurrentParserInsertedScript;
   // XXXbz do we want to cycle-collect these or something?  Not sure.

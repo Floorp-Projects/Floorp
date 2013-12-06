@@ -98,7 +98,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       MOZ_LAYERS_LOG(("[ParentSide] Created double buffer"));
       const OpDestroyThebesBuffer& op = aEdit.get_OpDestroyThebesBuffer();
       CompositableParent* compositableParent = static_cast<CompositableParent*>(op.compositableParent());
-      ContentHostBase* content = static_cast<ContentHostBase*>(compositableParent->GetCompositableHost());
+      DeprecatedContentHostBase* content = static_cast<DeprecatedContentHostBase*>(compositableParent->GetCompositableHost());
       content->DestroyTextures();
 
       break;
@@ -271,11 +271,12 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
       TextureFlags flags = texture->GetFlags();
 
-      if (!(flags & TEXTURE_DEALLOCATE_CLIENT)) {
+      if (!(flags & TEXTURE_DEALLOCATE_CLIENT) &&
+          !(flags & TEXTURE_DEALLOCATE_DEFERRED)) {
         texture->DeallocateSharedData();
       }
 
-      compositable->RemoveTextureHost(op.textureID());
+      compositable->RemoveTextureHost(texture);
 
       // if it is not the host that deallocates the shared data, then we need
       // to notfy the client side to tell when it is safe to deallocate or

@@ -53,12 +53,11 @@ function runTests() {
     }
     ok(xhr instanceof XMLHttpRequest, "passed " + JSON.stringify(value));
 
-    // If the page doesnt have privileges to create a system or anon XHR,
-    // these flags will always be false no matter what is passed.
-    let expectedAnon = false;
+    // If the page doesnt have privileges to create a system XHR,
+    // this flag will always be false no matter what is passed.
+    let expectedAnon = Boolean(value && value.mozAnon);
     let expectedSystem = false;
     if (havePrivileges) {
-      expectedAnon = Boolean(value && value.mozAnon);
       expectedSystem = Boolean(value && value.mozSystem);
     }
     is(xhr.mozAnon, expectedAnon, "testing mozAnon");
@@ -84,13 +83,12 @@ function runTests() {
 
   // ...and once with privileges.
   havePrivileges = true;
-  SpecialPowers.addPermission("systemXHR", true, document);
+  SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], function() {
+    validParameters.forEach(testValidParameter);
+    invalidParameters.forEach(testInvalidParameter);
 
-  validParameters.forEach(testValidParameter);
-  invalidParameters.forEach(testInvalidParameter);
-  SpecialPowers.removePermission("systemXHR", document);
-
-  SimpleTest.finish();
+    SimpleTest.finish();
+  });
 }
 
 </script>

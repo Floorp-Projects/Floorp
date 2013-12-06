@@ -9,33 +9,19 @@
 
 var gTestWin;
 
-var Cc = SpecialPowers.Cc;
-var Ci = SpecialPowers.Ci;
+SimpleTest.waitForExplicitFinish();
 
-// Enable the offline-app permission before loading the new window
-var pm = Cc["@mozilla.org/permissionmanager;1"]
-        .getService(Ci.nsIPermissionManager);
-var uri = Cc["@mozilla.org/network/io-service;1"]
-         .getService(Ci.nsIIOService)
-         .newURI(window.location.href, null, null);
-var principal = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
-                  .getService(Ci.nsIScriptSecurityManager)
-                  .getNoAppCodebasePrincipal(uri);
+SpecialPowers.pushPermissions([{'type': 'offline-app', 'allow': true, 'context': document}], startTest);
 
-pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+function startTest() {
+  // now this will properly load the manifest.
+  gTestWin = window.open("missing.html");
+}
 
-// now this will properly load the manifest.
-gTestWin = window.open("missing.html");
-
-function finish()
-{
-  pm.removeFromPrincipal(principal, "offline-app");
-
+function finish() {
   gTestWin.close();
   SimpleTest.finish();
 }
-
-SimpleTest.waitForExplicitFinish();
 
 </script>
 

@@ -155,6 +155,10 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
     virtual bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                 MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
 
+    virtual bool watch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
+                       JS::HandleObject callable) MOZ_OVERRIDE;
+    virtual bool unwatch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id) MOZ_OVERRIDE;
+
     /*
      * Allow our subclasses to select the superclass behavior they want without
      * needing to specify an exact superclass.

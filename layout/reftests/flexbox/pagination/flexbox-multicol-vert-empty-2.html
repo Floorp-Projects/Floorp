@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <style>
+    .flexContainer {
+      display: flex;
+      flex-direction: column;
+      border: 2px dotted black;
+      height: 298px;
+    }
+    .multicol {
+      height: 100px;
+      width: 200px;
+      -moz-column-width: 20px;
+      -moz-column-fill: auto;
+      border: 4px solid orange;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="multicol">
+      <div class="flexContainer">
+      </div>
+    </div>
+  </body>
+</html>

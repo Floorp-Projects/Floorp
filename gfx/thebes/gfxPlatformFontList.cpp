@@ -689,9 +689,12 @@ gfxPlatformFontList::InitLoader()
     mNumFamilies = mFontFamiliesToLoad.Length();
 }
 
+#define FONT_LOADER_MAX_TIMESLICE 100  // max time for one pass through RunLoader = 100ms
+
 bool
 gfxPlatformFontList::RunLoader()
 {
+    TimeStamp start = TimeStamp::Now();
     uint32_t i, endIndex = (mStartIndex + mIncrement < mNumFamilies ? mStartIndex + mIncrement : mNumFamilies);
     bool loadCmaps = !UsesSystemFallback() ||
         gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
@@ -720,6 +723,14 @@ gfxPlatformFontList::RunLoader()
 
         // check whether the family can be considered "simple" for style matching
         familyEntry->CheckForSimpleFamily();
+
+        // limit the time spent reading fonts in one pass
+        TimeDuration elapsed = TimeStamp::Now() - start;
+        if (elapsed.ToMilliseconds() > FONT_LOADER_MAX_TIMESLICE &&
+                i + 1 != endIndex) {
+            endIndex = i + 1;
+            break;
+        }
     }
 
     mStartIndex = endIndex;

@@ -142,6 +142,7 @@ GetKeyNameForNativeKeyCode(unsigned short aNativeKeyCode)
     case kVK_RightArrow:          return "RightArrow";
     case kVK_UpArrow:             return "UpArrow";
     case kVK_DownArrow:           return "DownArrow";
+    case kVK_PC_ContextMenu:      return "ContextMenu";
 
     case kVK_Function:            return "Function";
     case kVK_VolumeUp:            return "VolumeUp";
@@ -338,6 +339,12 @@ GetWindowLevelName(NSInteger aWindowLevel)
 }
 
 #endif // #ifdef PR_LOGGING
+
+static bool
+IsControlChar(uint32_t aCharCode)
+{
+  return aCharCode < ' ' || aCharCode == 0x7F;
+}
 
 static uint32_t gHandlerInstanceCount = 0;
 static TISInputSourceWrapper gCurrentInputSource;
@@ -884,6 +891,13 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     }
   }
 
+  // Remove control characters which shouldn't be inputted on editor.
+  // XXX Currently, we don't find any cases inserting control characters with
+  //     printable character.  So, just checking first character is enough.
+  if (!insertString.IsEmpty() && IsControlChar(insertString[0])) {
+    insertString.Truncate();
+  }
+
   aKeyEvent.keyCode =
     ComputeGeckoKeyCode(nativeKeyCode, kbType, aKeyEvent.IsMeta());
 
@@ -943,6 +957,8 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     InitKeyPressEvent(aNativeKeyEvent,
                       insertString.IsEmpty() ? 0 : insertString[0],
                       aKeyEvent, kbType);
+    MOZ_ASSERT(!aKeyEvent.charCode || !IsControlChar(aKeyEvent.charCode),
+               "charCode must not be a control character");
   } else {
     aKeyEvent.charCode = 0;
     aKeyEvent.isChar = false; // XXX not used in XP level
@@ -1256,6 +1272,8 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
     case kVK_UpArrow:           return NS_VK_UP;
     case kVK_DownArrow:         return NS_VK_DOWN;
 
+    case kVK_PC_ContextMenu:    return NS_VK_CONTEXT_MENU;
+
     case kVK_ANSI_1:            return NS_VK_1;
     case kVK_ANSI_2:            return NS_VK_2;
     case kVK_ANSI_3:            return NS_VK_3;
@@ -1467,6 +1485,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     }
 
     // If this is the context menu key command, send a context menu key event.
+    // XXX Should we dispatch context menu event at pressing kVK_PC_ContextMenu?
     NSUInteger modifierFlags =
       [aNativeEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
     if (modifierFlags == NSControlKeyMask &&
@@ -4444,6 +4463,7 @@ TextInputHandlerBase::IsSpecialGeckoKey(UInt32 aNativeKeyCode)
     case kVK_PC_Delete:
     case kVK_Tab:
     case kVK_PC_Backspace:
+    case kVK_PC_ContextMenu:
 
     case kVK_JIS_Eisu:
     case kVK_JIS_Kana:

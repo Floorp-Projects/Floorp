@@ -751,8 +751,6 @@ IonScript::IonScript()
 {
 }
 
-static const int DataAlignment = sizeof(void *);
-
 IonScript *
 IonScript::New(JSContext *cx, types::RecompileInfo recompileInfo,
                uint32_t frameSlots, uint32_t frameSize, size_t snapshotsSize,
@@ -760,6 +758,8 @@ IonScript::New(JSContext *cx, types::RecompileInfo recompileInfo,
                size_t osiIndices, size_t cacheEntries, size_t runtimeSize,
                size_t safepointsSize, size_t callTargetEntries, size_t backedgeEntries)
 {
+    static const int DataAlignment = sizeof(void *);
+
     if (snapshotsSize >= MAX_BUFFER_SIZE ||
         (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32_t)))
     {

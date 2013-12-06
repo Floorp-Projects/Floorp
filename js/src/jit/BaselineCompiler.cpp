@@ -36,13 +36,13 @@ BaselineCompiler::init()
     if (!analysis_.init(alloc_, cx->runtime()->gsnCache))
         return false;
 
-    if (!labels_.init(script->length()))
+    if (!labels_.init(alloc_, script->length()))
         return false;
 
     for (size_t i = 0; i < script->length(); i++)
         new (&labels_[i]) Label();
 
-    if (!frame.init())
+    if (!frame.init(alloc_))
         return false;
 
     return true;

@@ -44,7 +44,7 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
-  virtual bool IsLeaf() const MOZ_OVERRIDE { return true; }
+  virtual bool IsLeaf() const MOZ_OVERRIDE { return false; }
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -91,6 +91,18 @@ public:
 
   HTMLInputElement* GetAnonTextControl();
 
+  /**
+   * If the frame is the frame for an nsNumberControlFrame's anonymous text
+   * field, returns the nsNumberControlFrame. Else returns nullptr.
+   */
+  static nsNumberControlFrame* GetNumberControlFrameForTextField(nsIFrame* aFrame);
+
+  /**
+   * If the frame is the frame for an nsNumberControlFrame's up or down spin
+   * button, returns the nsNumberControlFrame. Else returns nullptr.
+   */
+  static nsNumberControlFrame* GetNumberControlFrameForSpinButton(nsIFrame* aFrame);
+
   enum SpinButtonEnum {
     eSpinButtonNone,
     eSpinButtonUp,
@@ -104,9 +116,18 @@ public:
    */
   int32_t GetSpinButtonForPointerEvent(WidgetGUIEvent* aEvent) const;
 
+  void SpinnerStateChanged() const;
+
+  bool SpinnerUpButtonIsDepressed() const;
+  bool SpinnerDownButtonIsDepressed() const;
+
+  bool IsFocused() const;
+
   void HandleFocusEvent(WidgetEvent* aEvent);
 
   virtual Element* GetPseudoElement(nsCSSPseudoElements::Type aType) MOZ_OVERRIDE;
+
+  bool ShouldUseNativeStyleForSpinner() const;
 
 private:
 
