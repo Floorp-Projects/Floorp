@@ -175,7 +175,15 @@ public class FennecNativeDriver implements Driver {
     }
 
     private LayerView getSurfaceView() {
-        return mSolo.getView(LayerView.class, 0);
+        final LayerView layerView = mSolo.getView(LayerView.class, 0);
+
+        if (layerView == null) {
+            log(LogLevel.WARN, "getSurfaceView could not find LayerView");
+            for (final View v : mSolo.getViews()) {
+                log(LogLevel.WARN, "  View: " + v);
+            }
+        }
+        return layerView;
     }
 
     public PaintedSurface getPaintedSurface() {
