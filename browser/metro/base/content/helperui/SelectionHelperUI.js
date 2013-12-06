@@ -344,9 +344,9 @@ var SelectionHelperUI = {
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
       case "attach_edit_session_to_content":
-        let event = aSubject;
-        this.attachEditSession(Browser.selectedTab.browser,
-                               event.clientX, event.clientY);
+        // We receive this from text input bindings when this module
+        // isn't accessible.
+        this.chromeTextboxClick(aSubject);
         break;
 
       case "apzc-transform-begin":
@@ -512,6 +512,40 @@ var SelectionHelperUI = {
     this._sendAsyncMessage("Browser:SelectionClose", {
       clearSelection: clearSelection
     });
+  },
+
+  /*
+   * Event handler on the navbar text input. Called from navbar bindings
+   * when focus is applied to the edit.
+   */
+  urlbarTextboxClick: function(aEdit) {
+    // workaround for bug 925457: taping browser chrome resets last tap
+    // co-ordinates to 'undefined' so that we know not to shift the browser
+    // when the keyboard is up in SelectionHandler's _calcNewContentPosition().
+    Browser.selectedTab.browser.messageManager.sendAsyncMessage("Browser:ResetLastPos", {
+      xPos: null,
+      yPos: null
+    });
+
+    if (InputSourceHelper.isPrecise || !aEdit.textLength) {
+      return;
+    }
+
+    // Enable selection when there's text in the control
+    let innerRect = aEdit.inputField.getBoundingClientRect();
+    this.attachEditSession(ChromeSelectionHandler,
+                           innerRect.left,
+                           innerRect.top);
+  },
+
+  /*
+   * Click handler for chrome pages loaded into the browser (about:config).
+   * Called from the text input bindings via the attach_edit_session_to_content
+   * observer.
+   */
+  chromeTextboxClick: function (aEvent) {
+    this.attachEditSession(Browser.selectedTab.browser,
+                           aEvent.clientX, aEvent.clientY);
   },
 
   /*
@@ -835,20 +869,10 @@ var SelectionHelperUI = {
    * Event handlers for document events
    */
 
-   urlbarClick: function() {
-    // Workaround for bug 925457: taping browser chrome resets last tap
-    // co-ordinates to 'undefined' so that we know not to shift the browser
-    // when the keyboard is up (in SelectionHandler._calcNewContentPosition())
-    Browser.selectedTab.browser.messageManager.sendAsyncMessage("Browser:ResetLastPos", {
-      xPos: null,
-      yPos: null
-    });
-   },
-
   /*
    * Handles taps that move the current caret around in text edits,
    * clear active selection and focus when neccessary, or change
-   * modes.
+   * modes. Only active afer SelectionHandlerUI is initialized.
    */
   _onClick: function(aEvent) {
     if (this.layerMode == kChromeLayer && this._targetIsEditable) {
