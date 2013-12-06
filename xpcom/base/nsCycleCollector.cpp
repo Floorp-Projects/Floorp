@@ -1131,6 +1131,8 @@ public:
     // This method assumes its argument is already canonicalized.
     void RemoveObjectFromGraph(void *aPtr);
 
+    void PrepareForGarbageCollection();
+
     bool Collect(ccType aCCType,
                  SliceBudget &aBudget,
                  nsICycleCollectorListener *aManualListener);
@@ -2894,6 +2896,24 @@ nsCycleCollector::Collect(ccType aCCType,
     return collectedAny;
 }
 
+// Any JS objects we have in the graph could die when we GC, but we
+// don't want to abandon the current CC, because the graph contains
+// information about purple roots. So we synchronously finish off
+// the current CC.
+void nsCycleCollector::PrepareForGarbageCollection()
+{
+    if (mIncrementalPhase == IdlePhase) {
+        MOZ_ASSERT(mGraph.IsEmpty(), "Non-empty graph when idle");
+        MOZ_ASSERT(!mBuilder, "Non-null builder when idle");
+        return;
+    }
+
+    SliceBudget unlimitedBudget;
+    PrintPhase("PrepareForGarbageCollection");
+    Collect(ScheduledCC, unlimitedBudget, nullptr);
+    MOZ_ASSERT(mIncrementalPhase == IdlePhase);
+}
+
 // Don't merge too many times in a row, and do at least a minimum
 // number of unmerged CCs in a row.
 static const uint32_t kMinConsecutiveUnmerged = 3;
@@ -3386,6 +3406,20 @@ nsCycleCollector_scheduledCollect()
     PROFILER_LABEL("CC", "nsCycleCollector_scheduledCollect");
     SliceBudget unlimitedBudget;
     data->mCollector->Collect(ScheduledCC, unlimitedBudget, nullptr);
+}
+
+void
+nsCycleCollector_prepareForGarbageCollection()
+{
+    CollectorData *data = sCollectorData.get();
+
+    MOZ_ASSERT(data);
+
+    if (!data->mCollector) {
+        return;
+    }
+
+    data->mCollector->PrepareForGarbageCollection();
 }
 
 void
