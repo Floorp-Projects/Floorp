@@ -5,7 +5,6 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.GeckoLayerClient;
-import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanningPerfAPI;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.RobocopTarget;
@@ -76,10 +75,6 @@ public class RobocopAPI {
     public Cursor querySql(String dbPath, String query) {
         GeckoLoader.loadSQLiteLibs(mGeckoApp, mGeckoApp.getApplication().getPackageResourcePath());
         return new SQLiteBridge(dbPath).rawQuery(query, null);
-    }
-
-    public IntBuffer getViewPixels(View view) {
-        return ((LayerView)view).getPixels();
     }
 
     // PanningPerfAPI.

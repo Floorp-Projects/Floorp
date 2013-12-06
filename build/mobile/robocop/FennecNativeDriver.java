@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.gfx.LayerView;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -51,7 +53,6 @@ public class FennecNativeDriver implements Driver {
     private Class mApiClass;
     private Class mEventListenerClass;
     private Method mRegisterEventListener;
-    private Method mGetPixels;
     private Method mStartFrameRecording;
     private Method mStopFrameRecording;
     private Method mStartCheckerboardRecording;
@@ -92,7 +93,6 @@ public class FennecNativeDriver implements Driver {
             mEventListenerClass = mClassLoader.loadClass("org.mozilla.gecko.util.GeckoEventListener");
 
             mRegisterEventListener = mApiClass.getMethod("registerEventListener", String.class, mEventListenerClass);
-            mGetPixels = mApiClass.getMethod("getViewPixels", View.class);
             mStartFrameRecording = mApiClass.getDeclaredMethod("startFrameTimeRecording");
             mStopFrameRecording = mApiClass.getDeclaredMethod("stopFrameTimeRecording");
             mStartCheckerboardRecording = mApiClass.getDeclaredMethod("startCheckerboardRecording");
@@ -234,37 +234,17 @@ public class FennecNativeDriver implements Driver {
         return 0.0f;
     }
 
-    private View getSurfaceView() {
-        ArrayList<View> views = mSolo.getCurrentViews();
-        try {
-            Class c = Class.forName("org.mozilla.gecko.gfx.LayerView");
-            for (View v : views) {
-                if (c.isInstance(v)) {
-                    return v;
-                }
-            }
-        } catch (ClassNotFoundException e) {
-            log(LogLevel.ERROR, e);
-        }
-        log(LogLevel.WARN, "getSurfaceView could not find LayerView");
-        for (View v : views) {
-            log(LogLevel.WARN, v.toString());
-        }
-        return null;
+    private LayerView getSurfaceView() {
+        return mSolo.getView(LayerView.class, 0);
     }
 
     public PaintedSurface getPaintedSurface() {
-        View view = getSurfaceView();
+        final LayerView view = getSurfaceView();
         if (view == null) {
             return null;
         }
-        IntBuffer pixelBuffer;
-        try {
-            pixelBuffer = (IntBuffer)mGetPixels.invoke(mRobocopApi, view);
-        } catch (Exception e) {
-            log(LogLevel.ERROR, e);
-            return null;
-        }
+
+        final IntBuffer pixelBuffer = view.getPixels();
 
         // now we need to (1) flip the image, because GL likes to do things up-side-down,
         // and (2) rearrange the bits from AGBR-8888 to ARGB-8888.
