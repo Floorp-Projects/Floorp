@@ -2051,7 +2051,7 @@ HTMLInputElement::GetStepBase() const
 }
 
 nsresult
-HTMLInputElement::ApplyStep(int32_t aStep)
+HTMLInputElement::GetValueIfStepped(int32_t aStep, Decimal* aNextStep)
 {
   if (!DoStepDownStepUpApply()) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -2131,9 +2131,23 @@ HTMLInputElement::ApplyStep(int32_t aStep)
     value = std::min(value, maximum);
   }
 
-  SetValue(value);
+  *aNextStep = value;
 
   return NS_OK;
+}
+
+nsresult
+HTMLInputElement::ApplyStep(int32_t aStep)
+{
+  Decimal nextStep = Decimal::nan(); // unchanged if value will not change
+
+  nsresult rv = GetValueIfStepped(aStep, &nextStep);
+
+  if (NS_SUCCEEDED(rv) && nextStep.isFinite()) {
+    SetValue(nextStep);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -2603,7 +2617,7 @@ HTMLInputElement::HandleNumberControlSpin(void* aData)
     // anything else.
     input->StopNumberControlSpinnerSpin();
   } else {
-    input->ApplyStep(input->mNumberControlSpinnerSpinsUp ? 1 : -1);
+    input->StepNumberControlForUserEvent(input->mNumberControlSpinnerSpinsUp ? 1 : -1);
   }
 }
 
@@ -3314,6 +3328,8 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
         nsNumberControlFrame* numberControlFrame =
           do_QueryFrame(GetPrimaryFrame());
         if (numberControlFrame) {
+          bool oldNumberControlSpinTimerSpinsUpValue =
+                 mNumberControlSpinnerSpinsUp;
           switch (numberControlFrame->GetSpinButtonForPointerEvent(
                     aVisitor.mEvent->AsMouseEvent())) {
           case nsNumberControlFrame::eSpinButtonUp:
@@ -3324,6 +3340,14 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
             mNumberControlSpinnerSpinsUp = false;
             stopSpin = false;
             break;
+          }
+          if (mNumberControlSpinnerSpinsUp !=
+                oldNumberControlSpinTimerSpinsUpValue) {
+            nsNumberControlFrame* numberControlFrame =
+              do_QueryFrame(GetPrimaryFrame());
+            if (numberControlFrame) {
+              numberControlFrame->SpinnerStateChanged();
+            }
           }
         }
         if (stopSpin) {
@@ -3346,6 +3370,27 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
             numberControlFrame->HandleFocusEvent(aVisitor.mEvent);
           }
         }
+        if (frame->IsThemed()) {
+          // Our frame's nested <input type=text> will be invalidated when it
+          // loses focus, but since we are also native themed we need to make
+          // sure that our entire area is repainted since any focus highlight
+          // from the theme should be removed from us (the repainting of the
+          // sub-area occupied by the anon text control is not enough to do
+          // that).
+          frame->InvalidateFrame();
+        }
+      }
+    } else if (aVisitor.mEvent->message == NS_KEY_UP) {
+      WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
+      if ((keyEvent->keyCode == NS_VK_UP || keyEvent->keyCode == NS_VK_DOWN) &&
+          !(keyEvent->IsShift() || keyEvent->IsControl() ||
+            keyEvent->IsAlt() || keyEvent->IsMeta() ||
+            keyEvent->IsAltGraph() || keyEvent->IsFn() ||
+            keyEvent->IsOS())) {
+        // The up/down arrow key events fire 'change' events when released
+        // so that at the end of a series of up/down arrow key repeat events
+        // the value is considered to be "commited" by the user.
+        FireChangeEventIfNeeded();
       }
     }
   }
@@ -3485,6 +3530,12 @@ HTMLInputElement::StartNumberControlSpinnerSpin()
   // Capture the mouse so that we can tell if the pointer moves from one
   // spin button to the other, or to some other element:
   nsIPresShell::SetCapturingContent(this, CAPTURE_IGNOREALLOWED);
+
+  nsNumberControlFrame* numberControlFrame =
+    do_QueryFrame(GetPrimaryFrame());
+  if (numberControlFrame) {
+    numberControlFrame->SpinnerStateChanged();
+  }
 }
 
 void
@@ -3498,7 +3549,36 @@ HTMLInputElement::StopNumberControlSpinnerSpin()
     nsRepeatService::GetInstance()->Stop(HandleNumberControlSpin, this);
 
     mNumberControlSpinnerIsSpinning = false;
+
+    FireChangeEventIfNeeded();
+
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      numberControlFrame->SpinnerStateChanged();
+    }
   }
+}
+
+void
+HTMLInputElement::StepNumberControlForUserEvent(int32_t aDirection)
+{
+  Decimal newValue = Decimal::nan(); // unchanged if value will not change
+
+  nsresult rv = GetValueIfStepped(aDirection, &newValue);
+
+  if (NS_FAILED(rv) || !newValue.isFinite()) {
+    return; // value should not or will not change
+  }
+
+  nsAutoString newVal;
+  ConvertNumberToString(newValue, newVal);
+  SetValueInternal(newVal, true, true);
+
+  nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
+                                       static_cast<nsIDOMHTMLInputElement*>(this),
+                                       NS_LITERAL_STRING("input"), true,
+                                       false);
 }
 
 static bool
@@ -3731,7 +3811,7 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // XXX we still need to allow script to call preventDefault() on the
       // event, but right now we can't tell the difference between the editor
       // on script doing that (bug 930374).
-      ApplyStep(keyEvent->keyCode == NS_VK_UP ? 1 : -1);
+      StepNumberControlForUserEvent(keyEvent->keyCode == NS_VK_UP ? 1 : -1);
       aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     } else if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
       switch (aVisitor.mEvent->message) {
@@ -3959,13 +4039,13 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                   switch (numberControlFrame->GetSpinButtonForPointerEvent(
                             aVisitor.mEvent->AsMouseEvent())) {
                   case nsNumberControlFrame::eSpinButtonUp:
-                    ApplyStep(1);
+                    StepNumberControlForUserEvent(1);
                     mNumberControlSpinnerSpinsUp = true;
                     StartNumberControlSpinnerSpin();
                     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
                     break;
                   case nsNumberControlFrame::eSpinButtonDown:
-                    ApplyStep(-1);
+                    StepNumberControlForUserEvent(-1);
                     mNumberControlSpinnerSpinsUp = false;
                     StartNumberControlSpinnerSpin();
                     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
