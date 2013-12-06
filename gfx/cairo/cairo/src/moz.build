@@ -13,7 +13,6 @@ EXPORTS.cairo += [
     'cairo-tee.h',
     'cairo-version.h',
     'cairo.h',
-    'pixman-rename.h',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('cocoa', 'uikit'):
