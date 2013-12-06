@@ -52,6 +52,9 @@ public:
     for (uint32_t i = 0; i < mInputs.Length(); ++i) {
       MediaStream* stream = mInputs[i]->GetSource();
       if (!stream->IsFinishedOnGraphThread()) {
+        // XXX we really should check whether 'stream' has finished within time aTo,
+        // not just that it's finishing when all its queued data eventually runs
+        // out.
         allFinished = false;
       }
       if (!stream->HasCurrentData()) {
