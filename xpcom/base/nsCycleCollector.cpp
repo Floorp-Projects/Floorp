@@ -1247,7 +1247,7 @@ GraphWalker<Visitor>::DoWalk(nsDeque &aQueue)
         PtrInfo *pi = static_cast<PtrInfo*>(aQueue.PopFront());
         CC_AbortIfNull(pi);
 
-        if (mVisitor.ShouldVisitNode(pi)) {
+        if (pi->mParticipant && mVisitor.ShouldVisitNode(pi)) {
             mVisitor.VisitNode(pi);
             for (EdgePool::Iterator child = pi->FirstChild(),
                                 child_end = pi->LastChild();
@@ -1853,6 +1853,10 @@ GCGraphBuilder::Traverse(PtrInfo* aPtrInfo)
 
     mCurrPi->SetFirstChild(mEdgeBuilder.Mark());
 
+    if (!aPtrInfo->mParticipant) {
+        return;
+    }
+
     nsresult rv = aPtrInfo->mParticipant->Traverse(aPtrInfo->mPointer, *this);
     if (NS_FAILED(rv)) {
         Fault("script pointer traversal failed", aPtrInfo);
@@ -2276,6 +2280,9 @@ nsCycleCollector::MarkRoots(SliceBudget &aBudget)
     while (!aBudget.isOverBudget() && !mCurrNode->IsDone()) {
         PtrInfo *pi = mCurrNode->GetNext();
         CC_AbortIfNull(pi);
+        // We need to call the builder's Traverse() method on deleted nodes, to
+        // set their firstChild() that may be read by a prior non-deleted
+        // neighbor.
         mBuilder->Traverse(pi);
         if (mCurrNode->AtBlockEnd()) {
             mBuilder->SetLastChild();
@@ -2448,6 +2455,9 @@ nsCycleCollector::ScanRoots()
         NodePool::Enumerator etor(mGraph.mNodes);
         while (!etor.IsDone()) {
             PtrInfo *pi = etor.GetNext();
+            if (!pi->mParticipant) {
+                continue;
+            }
             switch (pi->mColor) {
             case black:
                 if (pi->mRefCount > 0 && pi->mRefCount < UINT32_MAX &&
@@ -2507,7 +2517,7 @@ nsCycleCollector::CollectWhite()
     while (!etor.IsDone())
     {
         PtrInfo *pinfo = etor.GetNext();
-        if (pinfo->mColor == white) {
+        if (pinfo->mColor == white && pinfo->mParticipant) {
             whiteNodes.AppendElement(pinfo);
             pinfo->mParticipant->Root(pinfo->mPointer);
             if (pinfo->mRefCount == 0) {
@@ -2532,6 +2542,7 @@ nsCycleCollector::CollectWhite()
 
     for (uint32_t i = 0; i < count; ++i) {
         PtrInfo *pinfo = whiteNodes.ElementAt(i);
+        MOZ_ASSERT(pinfo->mParticipant, "Unlink shouldn't see objects removed from graph.");
         pinfo->mParticipant->Unlink(pinfo->mPointer);
 #ifdef DEBUG
         if (mJSRuntime) {
@@ -2543,6 +2554,7 @@ nsCycleCollector::CollectWhite()
 
     for (uint32_t i = 0; i < count; ++i) {
         PtrInfo *pinfo = whiteNodes.ElementAt(i);
+        MOZ_ASSERT(pinfo->mParticipant, "Unroot shouldn't see objects removed from graph.");
         pinfo->mParticipant->Unroot(pinfo->mPointer);
     }
     timeLog.Checkpoint("CollectWhite::Unroot");
