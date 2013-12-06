@@ -10866,7 +10866,9 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       nsCOMPtr<nsIDOMStorageManager> storageManager = do_QueryInterface(GetDocShell());
       if (storageManager) {
         rv = storageManager->CheckStorage(principal, changingStorage, &check);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
       }
 
       if (!check) {
