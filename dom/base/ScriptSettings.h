@@ -11,6 +11,7 @@
 
 #include "nsCxPusher.h"
 #include "MainThreadUtils.h"
+#include "nsIGlobalObject.h"
 
 #include "mozilla/Maybe.h"
 
@@ -18,6 +19,42 @@ class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
+
+/*
+ * System-wide setup/teardown routines. Init and Destroy should be invoked
+ * once each, at startup and shutdown (respectively).
+ */
+void InitScriptSettings();
+void DestroyScriptSettings();
+
+struct ScriptSettingsStackEntry {
+  nsCOMPtr<nsIGlobalObject> mGlobalObject;
+  bool mIsCandidateEntryPoint;
+
+  ScriptSettingsStackEntry(nsIGlobalObject *aGlobal, bool aCandidate)
+    : mGlobalObject(aGlobal)
+    , mIsCandidateEntryPoint(aCandidate)
+  {
+    MOZ_ASSERT(mGlobalObject);
+    MOZ_ASSERT(mGlobalObject->GetGlobalJSObject(),
+               "Must have an actual JS global for the duration on the stack");
+    MOZ_ASSERT(JS_IsGlobalObject(mGlobalObject->GetGlobalJSObject()),
+               "No outer windows allowed");
+  }
+
+  ~ScriptSettingsStackEntry() {
+    // We must have an actual JS global for the entire time this is on the stack.
+    MOZ_ASSERT_IF(mGlobalObject, mGlobalObject->GetGlobalJSObject());
+  }
+
+  bool IsSystemSingleton() { return this == &SystemSingleton; }
+  static ScriptSettingsStackEntry SystemSingleton;
+
+private:
+  ScriptSettingsStackEntry() : mGlobalObject(nullptr)
+                             , mIsCandidateEntryPoint(true)
+  {}
+};
 
 /*
  * A class that represents a new script entry point.
