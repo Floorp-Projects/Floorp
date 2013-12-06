@@ -150,13 +150,13 @@ static const char kBlockedDllsParameter[] = "BlockedDllList=";
 static const int kBlockedDllsParameterLen =
   sizeof(kBlockedDllsParameter) - 1;
 
-static const char kBlocklistInitFailedParameter[] = "BlocklistInitFailed=";
+static const char kBlocklistInitFailedParameter[] = "BlocklistInitFailed=1\n";
 static const int kBlocklistInitFailedParameterLen =
   sizeof(kBlocklistInitFailedParameter) - 1;
 
-static const char kUser32BeforeBlocklistParameter[] = "User32BeforeBlocklist=";
+static const char kUser32BeforeBlocklistParameter[] = "User32BeforeBlocklist=1\n";
 static const int kUser32BeforeBlocklistParameterLen =
-  sizeof(kUser32BeforeBlocklistParameterLen) - 1;
+  sizeof(kUser32BeforeBlocklistParameter) - 1;
 
 static DWORD sThreadLoadingXPCOMModule;
 static bool sBlocklistInitFailed;
@@ -643,12 +643,10 @@ DllBlocklist_WriteNotes(HANDLE file)
   if (sBlocklistInitFailed) {
     WriteFile(file, kBlocklistInitFailedParameter,
               kBlocklistInitFailedParameterLen, &nBytes, nullptr);
-    WriteFile(file, "1\n", 2, &nBytes, nullptr);
   }
 
   if (sUser32BeforeBlocklist) {
     WriteFile(file, kUser32BeforeBlocklistParameter,
               kUser32BeforeBlocklistParameterLen, &nBytes, nullptr);
-    WriteFile(file, "1\n", 2, &nBytes, nullptr);
   }
 }
