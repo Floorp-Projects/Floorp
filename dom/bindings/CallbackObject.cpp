@@ -19,6 +19,7 @@
 #include "xpcprivate.h"
 #include "WorkerPrivate.h"
 #include "nsGlobalWindow.h"
+#include "WorkerScope.h"
 
 namespace mozilla {
 namespace dom {
@@ -65,6 +66,7 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
   // First, find the real underlying callback.
   JSObject* realCallback = js::UncheckedUnwrap(aCallback);
   JSContext* cx = nullptr;
+  nsIGlobalObject* globalObject = nullptr;
 
   if (mIsMainThread) {
     // Now get the global and JSContext for this callback.
@@ -85,16 +87,20 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
                              // This happens - Removing it causes
                              // test_bug293235.xul to go orange.
                              : nsContentUtils::GetSafeJSContext();
+      globalObject = win;
     } else {
-      // No DOM Window. Use the SafeJSContext.
+      // No DOM Window. Store the global and use the SafeJSContext.
+      JSObject* glob = js::GetGlobalForObjectCrossCompartment(realCallback);
+      globalObject = xpc::GetNativeForGlobal(glob);
+      MOZ_ASSERT(globalObject);
       cx = nsContentUtils::GetSafeJSContext();
     }
-
-    // Make sure our JSContext is pushed on the stack.
-    mCxPusher.Push(cx);
   } else {
     cx = workers::GetCurrentThreadJSContext();
+    globalObject = workers::GetCurrentThreadWorkerPrivate()->GlobalScope();
   }
+
+  mAutoEntryScript.construct(globalObject, mIsMainThread, cx);
 
   // Unmark the callable, and stick it in a Rooted before it can go gray again.
   // Nothing before us in this function can trigger a CC, so it's safe to wait
@@ -120,6 +126,10 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
   }
 
   // Enter the compartment of our callback, so we can actually work with it.
+  //
+  // Note that if the callback is a wrapper, this will not be the same
+  // compartment that we ended up in with mAutoEntryScript above, because the
+  // entry point is based off of the unwrapped callback (realCallback).
   mAc.construct(cx, aCallback);
 
   // And now we're ready to go.
@@ -194,17 +204,10 @@ CallbackObject::CallSetup::~CallSetup()
   // But be careful: it might not have been constructed at all!
   mAc.destroyIfConstructed();
 
-  // XXXbz For that matter why do we need to manually call ScriptEvaluated at
-  // all?  nsCxPusher::Pop will do that nowadays if !mScriptIsRunning, so the
-  // concerns from bug 295983 don't seem relevant anymore.  Do we want to make
-  // sure it's still called when !mScriptIsRunning?  I guess play it safe for
-  // now and do what CallEventHandler did, which is call always.
-
-  // Popping an nsCxPusher is safe even if it never got pushed.
-  mCxPusher.Pop();
+  mAutoEntryScript.destroyIfConstructed();
 
   // It is important that this is the last thing we do, after leaving the
-  // compartment and popping the context.
+  // compartment and undoing all our entry/incumbent script changes
   if (mIsMainThread) {
     nsContentUtils::LeaveMicroTask();
   }
