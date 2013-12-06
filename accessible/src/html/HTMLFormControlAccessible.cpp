@@ -14,7 +14,6 @@
 #include "States.h"
 
 #include "nsContentList.h"
-#include "nsCxPusher.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsIAccessibleRelation.h"
 #include "nsIDOMNSEditableElement.h"
@@ -26,6 +25,7 @@
 #include "nsISelectionController.h"
 #include "nsIServiceManager.h"
 #include "nsITextControlFrame.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
@@ -470,8 +470,7 @@ HTMLTextFieldAccessible::GetEditor() const
   // nsGenericHTMLElement::GetEditor has a security check.
   // Make sure we're not restricted by the permissions of
   // whatever script is currently running.
-  nsCxPusher pusher;
-  pusher.PushNull();
+  mozilla::dom::AutoSystemCaller asc;
 
   nsCOMPtr<nsIEditor> editor;
   editableElt->GetEditor(getter_AddRefs(editor));
