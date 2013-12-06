@@ -113,6 +113,7 @@ OutputParser.prototype = {
    *         A document fragment. Colors will not be parsed.
    */
   parseHTMLAttribute: function(value, options={}) {
+    options.isHTMLAttribute = true;
     options = this._mergeOptions(options);
 
     return this._parse(value, options);
@@ -132,78 +133,128 @@ OutputParser.prototype = {
   _parse: function(text, options={}) {
     text = text.trim();
     this.parsed.length = 0;
-    let dirty = false;
-    let matched = null;
     let i = 0;
 
-    let trimMatchFromStart = function(match) {
-      text = text.substr(match.length);
-      dirty = true;
-      matched = null;
-    };
-
     while (text.length > 0) {
+      let matched = null;
+
+      // Prevent this loop from slowing down the browser with too
+      // many nodes being appended into output. In practice it is very unlikely
+      // that this will ever happen.
+      i++;
+      if (i > MAX_ITERATIONS) {
+        this._appendTextNode(text);
+        text = "";
+        break;
+      }
+
       matched = text.match(REGEX_QUOTES);
       if (matched) {
         let match = matched[0];
-        trimMatchFromStart(match);
+
+        text = this._trimMatchFromStart(text, match);
         this._appendTextNode(match);
+        continue;
       }
 
       matched = text.match(REGEX_WHITESPACE);
       if (matched) {
         let match = matched[0];
-        trimMatchFromStart(match);
+
+        text = this._trimMatchFromStart(text, match);
         this._appendTextNode(match);
+        continue;
       }
 
       matched = text.match(REGEX_URL);
       if (matched) {
         let [match, url] = matched;
-        trimMatchFromStart(match);
+
+        text = this._trimMatchFromStart(text, match);
         this._appendURL(match, url, options);
+        continue;
       }
 
       matched = text.match(REGEX_ALL_CSS_PROPERTIES);
       if (matched) {
         let [match] = matched;
-        trimMatchFromStart(match);
+
+        text = this._trimMatchFromStart(text, match);
         this._appendTextNode(match);
 
-        dirty = true;
+        if (options.isHTMLAttribute) {
+          [text] = this._appendColorOnMatch(text, options);
+        }
+        continue;
       }
 
-      matched = text.match(REGEX_ALL_COLORS);
+      if (!options.isHTMLAttribute) {
+        let dirty;
+
+        [text, dirty] = this._appendColorOnMatch(text, options);
+
+        if (dirty) {
+          continue;
+        }
+      }
+
+      // This test must always be last as it indicates use of an unknown
+      // character that needs to be removed to prevent infinite loops.
+      matched = text.match(REGEX_FIRST_WORD_OR_CHAR);
       if (matched) {
         let match = matched[0];
-        if (this._appendColor(match, options)) {
-          trimMatchFromStart(match);
-        }
-      }
 
-      if (!dirty) {
-        // This test must always be last as it indicates use of an unknown
-        // character that needs to be removed to prevent infinite loops.
-        matched = text.match(REGEX_FIRST_WORD_OR_CHAR);
-        if (matched) {
-          let match = matched[0];
-          trimMatchFromStart(match);
-          this._appendTextNode(match);
-        }
-      }
-
-      dirty = false;
-
-      // Prevent this loop from slowing down the browser with too
-      // many nodes being appended into output.
-      i++;
-      if (i > MAX_ITERATIONS) {
-        trimMatchFromStart(text);
-        this._appendTextNode(text);
+        text = this._trimMatchFromStart(text, match);
+        this._appendTextNode(match);
       }
     }
 
     return this._toDOM();
+  },
+
+  /**
+   * Convenience function to make the parser a little more readable.
+   *
+   * @param  {String} text
+   *         Main text
+   * @param  {String} match
+   *         Text to remove from the beginning
+   *
+   * @return {String}
+   *         The string passed as 'text' with 'match' stripped from the start.
+   */
+  _trimMatchFromStart: function(text, match) {
+    return text.substr(match.length);
+  },
+
+  /**
+   * Check if there is a color match and append it if it is valid.
+   *
+   * @param  {String} text
+   *         Main text
+   * @param  {Object} options
+   *         Options object. For valid options and default values see
+   *         _mergeOptions().
+   *
+   * @return {Array}
+   *         An array containing the remaining text and a dirty flag. This array
+   *         is designed for deconstruction using [text, dirty].
+   */
+  _appendColorOnMatch: function(text, options) {
+    let dirty;
+    let matched = text.match(REGEX_ALL_COLORS);
+
+    if (matched) {
+      let match = matched[0];
+      if (this._appendColor(match, options)) {
+        text = this._trimMatchFromStart(text, match);
+        dirty = true;
+      }
+    } else {
+      dirty = false;
+    }
+
+    return [text, dirty];
   },
 
   /**
@@ -332,7 +383,7 @@ OutputParser.prototype = {
   _appendTextNode: function(text) {
     let lastItem = this.parsed[this.parsed.length - 1];
     if (typeof lastItem === "string") {
-      this.parsed[this.parsed.length - 1] = lastItem + text
+      this.parsed[this.parsed.length - 1] = lastItem + text;
     } else {
       this.parsed.push(text);
     }
@@ -371,6 +422,13 @@ OutputParser.prototype = {
    *           - defaultColorType: true // Convert colors to the default type
    *                                    // selected in the options panel.
    *           - colorSwatchClass: ""   // The class to use for color swatches.
+   *           - isHTMLAttribute: false // This property indicates whether we
+   *                                    // are parsing an HTML attribute value.
+   *                                    // When the value is passed in from an
+   *                                    // HTML attribute we need to check that
+   *                                    // any CSS property values are supported
+   *                                    // by the property name before
+   *                                    // processing the property value.
    *           - urlClass: ""           // The class to be used for url() links.
    *           - baseURI: ""            // A string or nsIURI used to resolve
    *                                    // relative links.
@@ -381,6 +439,7 @@ OutputParser.prototype = {
     let defaults = {
       defaultColorType: true,
       colorSwatchClass: "",
+      isHTMLAttribute: false,
       urlClass: "",
       baseURI: ""
     };
