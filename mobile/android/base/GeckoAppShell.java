@@ -2290,6 +2290,7 @@ public class GeckoAppShell
      * any added listeners will not be invoked on the event currently being processed, but
      * will be invoked on future events of that type.
      */
+    @RobocopTarget
     public static void registerEventListener(String event, GeckoEventListener listener) {
         sEventDispatcher.registerEventListener(event, listener);
     }
