@@ -1010,12 +1010,6 @@ void nsNSSComponent::setValidationOptions()
   bool aiaDownloadEnabled = Preferences::GetBool("security.missing_cert_download.enabled",
                                                  false);
 
-  nsCString firstNetworkRevo =
-    Preferences::GetCString("security.first_network_revocation_method");
-  if (firstNetworkRevo.IsEmpty()) {
-    firstNetworkRevo = "ocsp";
-  }
-
   bool ocspStaplingEnabled = Preferences::GetBool("security.ssl.enable_ocsp_stapling",
                                                   true);
   if (!ocspEnabled) {
@@ -1051,7 +1045,6 @@ void nsNSSComponent::setValidationOptions()
         CertVerifier::ocsp_strict : CertVerifier::ocsp_relaxed,
       anyFreshRequired ?
         CertVerifier::any_revo_strict : CertVerifier::any_revo_relaxed,
-      firstNetworkRevo.get(),
       ocspGetEnabled ?
         CertVerifier::ocsp_get_enabled : CertVerifier::ocsp_get_disabled);
 
@@ -1674,7 +1667,6 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
                || prefName.Equals("security.CRL_download.enabled")
                || prefName.Equals("security.fresh_revocation_info.require")
                || prefName.Equals("security.missing_cert_download.enabled")
-               || prefName.Equals("security.first_network_revocation_method")
                || prefName.Equals("security.OCSP.require")
                || prefName.Equals("security.OCSP.GET.enabled")
                || prefName.Equals("security.ssl.enable_ocsp_stapling")) {
