@@ -49,10 +49,6 @@ public class RobocopAPI {
         GeckoAppShell.unregisterEventListener(event, listener);
     }
 
-    public void broadcastEvent(String subject, String data) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(subject, data));
-    }
-
     public void preferencesGetEvent(int requestId, String[] prefNames) {
         GeckoAppShell.sendEventToGecko(GeckoEvent.createPreferencesGetEvent(requestId, prefNames));
     }

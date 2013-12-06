@@ -10,6 +10,7 @@ import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.mozglue.generatorannotations.GeneratorOptions;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import android.content.res.Resources;
 import android.graphics.Point;
@@ -612,6 +613,7 @@ public class GeckoEvent {
         return event;
     }
 
+    @RobocopTarget
     public static GeckoEvent createBroadcastEvent(String subject, String data) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.BROADCAST);
         event.mCharacters = subject;
