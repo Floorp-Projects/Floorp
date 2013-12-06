@@ -278,6 +278,57 @@ GetFrameTime() {
   return sFrameTime;
 }
 
+class FlingAnimation: public AsyncPanZoomAnimation {
+public:
+  FlingAnimation(AxisX aX, AxisY aY)
+    : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(gFlingRepaintInterval))
+    , mX(aX)
+    , mY(aY)
+  {}
+  /**
+   * Advances a fling by an interpolated amount based on the passed in |aDelta|.
+   * This should be called whenever sampling the content transform for this
+   * frame. Returns true if the fling animation should be advanced by one frame,
+   * or false if there is no fling or the fling has ended.
+   */
+  virtual bool Sample(FrameMetrics& aFrameMetrics,
+                      const TimeDuration& aDelta);
+
+private:
+  AxisX mX;
+  AxisY mY;
+};
+
+class ZoomAnimation: public AsyncPanZoomAnimation {
+public:
+  ZoomAnimation(CSSPoint aStartOffset, CSSToScreenScale aStartZoom,
+                CSSPoint aEndOffset, CSSToScreenScale aEndZoom)
+    : mStartOffset(aStartOffset)
+    , mStartZoom(aStartZoom)
+    , mEndOffset(aEndOffset)
+    , mEndZoom(aEndZoom)
+  {}
+
+  virtual bool Sample(FrameMetrics& aFrameMetrics,
+                      const TimeDuration& aDelta);
+
+private:
+  TimeDuration mDuration;
+
+  // Old metrics from before we started a zoom animation. This is only valid
+  // when we are in the "ANIMATED_ZOOM" state. This is used so that we can
+  // interpolate between the start and end frames. We only use the
+  // |mViewportScrollOffset| and |mResolution| fields on this.
+  CSSPoint mStartOffset;
+  CSSToScreenScale mStartZoom;
+
+  // Target metrics for a zoom to animation. This is only valid when we are in
+  // the "ANIMATED_ZOOM" state. We only use the |mViewportScrollOffset| and
+  // |mResolution| fields on this.
+  CSSPoint mEndOffset;
+  CSSToScreenScale mEndZoom;
+};
+
 void
 AsyncPanZoomController::SetFrameTime(const TimeStamp& aTime) {
   sFrameTime = aTime;
@@ -597,12 +648,12 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
   case PANNING_LOCKED_Y:
     {
       ReentrantMonitorAutoEnter lock(mMonitor);
-      ScheduleComposite();
       RequestContentRepaint();
     }
     mX.EndTouch();
     mY.EndTouch();
     SetState(FLING);
+    StartAnimation(new FlingAnimation(mX, mY));
     return nsEventStatus_eConsumeNoDefault;
 
   case PINCHING:
@@ -999,18 +1050,12 @@ ScreenIntPoint& AsyncPanZoomController::GetFirstTouchScreenPoint(const MultiTouc
   return ((SingleTouchData&)aEvent.mTouches[0]).mScreenPoint;
 }
 
-bool AsyncPanZoomController::DoFling(const TimeDuration& aDelta) {
-  if (mState != FLING) {
-    return false;
-  }
-
+bool FlingAnimation::Sample(FrameMetrics& aFrameMetrics,
+                            const TimeDuration& aDelta) {
   bool shouldContinueFlingX = mX.FlingApplyFrictionOrCancel(aDelta),
        shouldContinueFlingY = mY.FlingApplyFrictionOrCancel(aDelta);
   // If we shouldn't continue the fling, let's just stop and repaint.
   if (!shouldContinueFlingX && !shouldContinueFlingY) {
-    SendAsyncScrollEvent();
-    RequestContentRepaint();
-    SetState(NOTHING);
     return false;
   }
 
@@ -1020,21 +1065,26 @@ bool AsyncPanZoomController::DoFling(const TimeDuration& aDelta) {
 
   // Inversely scale the offset by the resolution (when you're zoomed further in,
   // a larger swipe should move you a shorter distance).
-  CSSPoint cssOffset = offset / mFrameMetrics.mZoom;
-  ScrollBy(CSSPoint::FromUnknownPoint(gfx::Point(
+  CSSPoint cssOffset = offset / aFrameMetrics.mZoom;
+  aFrameMetrics.mScrollOffset += CSSPoint::FromUnknownPoint(gfx::Point(
     mX.AdjustDisplacement(cssOffset.x, overscroll.x),
     mY.AdjustDisplacement(cssOffset.y, overscroll.y)
-  )));
-  TimeDuration timePaintDelta = mPaintThrottler.TimeSinceLastRequest(GetFrameTime());
-  if (timePaintDelta.ToMilliseconds() > gFlingRepaintInterval) {
-    RequestContentRepaint();
-  }
+  ));
 
   return true;
 }
 
+void AsyncPanZoomController::StartAnimation(AsyncPanZoomAnimation* aAnimation)
+{
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  mAnimation = aAnimation;
+  mLastSampleTime = GetFrameTime();
+  ScheduleComposite();
+}
+
 void AsyncPanZoomController::CancelAnimation() {
   SetState(NOTHING);
+  mAnimation = nullptr;
 }
 
 void AsyncPanZoomController::SetCompositorParent(CompositorParent* aCompositorParent) {
@@ -1241,6 +1291,55 @@ AsyncPanZoomController::FireAsyncScrollOnTimeout()
   mAsyncScrollTimeoutTask = nullptr;
 }
 
+bool ZoomAnimation::Sample(FrameMetrics& aFrameMetrics,
+                           const TimeDuration& aDelta) {
+  mDuration += aDelta;
+  double animPosition = mDuration / ZOOM_TO_DURATION;
+
+  if (animPosition >= 1.0) {
+    aFrameMetrics.mZoom = mEndZoom;
+    aFrameMetrics.mScrollOffset = mEndOffset;
+    return false;
+  }
+
+  // Sample the zoom at the current time point.  The sampled zoom
+  // will affect the final computed resolution.
+  double sampledPosition = gComputedTimingFunction->GetValue(animPosition);
+
+  // We scale the scrollOffset linearly with sampledPosition, so the zoom
+  // needs to scale inversely to match.
+  aFrameMetrics.mZoom = CSSToScreenScale(1 /
+    (sampledPosition / mEndZoom.scale +
+    (1 - sampledPosition) / mStartZoom.scale));
+
+  aFrameMetrics.mScrollOffset = CSSPoint::FromUnknownPoint(gfx::Point(
+    mEndOffset.x * sampledPosition + mStartOffset.x * (1 - sampledPosition),
+    mEndOffset.y * sampledPosition + mStartOffset.y * (1 - sampledPosition)
+  ));
+
+  return true;
+}
+
+bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime)
+{
+  if (mAnimation) {
+    if (mAnimation->Sample(mFrameMetrics, aSampleTime - mLastSampleTime)) {
+      if (mPaintThrottler.TimeSinceLastRequest(aSampleTime) >
+          mAnimation->mRepaintInterval) {
+        RequestContentRepaint();
+      }
+    } else {
+      mAnimation = nullptr;
+      SetState(NOTHING);
+      SendAsyncScrollEvent();
+      RequestContentRepaint();
+    }
+    mLastSampleTime = aSampleTime;
+    return true;
+  }
+  return false;
+}
+
 bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSampleTime,
                                                             ViewTransform* aNewTransform,
                                                             ScreenPoint& aScrollOffset) {
@@ -1254,47 +1353,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
 
-    switch (mState) {
-    case FLING:
-      // If a fling is currently happening, apply it now. We can pull
-      // the updated metrics afterwards.
-      requestAnimationFrame |= DoFling(aSampleTime - mLastSampleTime);
-      break;
-    case ANIMATING_ZOOM: {
-      double animPosition = (aSampleTime - mAnimationStartTime) / ZOOM_TO_DURATION;
-      if (animPosition > 1.0) {
-        animPosition = 1.0;
-      }
-      // Sample the zoom at the current time point.  The sampled zoom
-      // will affect the final computed resolution.
-      double sampledPosition = gComputedTimingFunction->GetValue(animPosition);
-
-      // We scale the scrollOffset linearly with sampledPosition, so the zoom
-      // needs to scale inversely to match.
-      mFrameMetrics.mZoom = CSSToScreenScale(1 /
-        (sampledPosition / mEndZoomToMetrics.mZoom.scale +
-          (1 - sampledPosition) / mStartZoomToMetrics.mZoom.scale));
-
-      mFrameMetrics.mScrollOffset = CSSPoint::FromUnknownPoint(gfx::Point(
-        mEndZoomToMetrics.mScrollOffset.x * sampledPosition +
-          mStartZoomToMetrics.mScrollOffset.x * (1 - sampledPosition),
-        mEndZoomToMetrics.mScrollOffset.y * sampledPosition +
-          mStartZoomToMetrics.mScrollOffset.y * (1 - sampledPosition)
-      ));
-
-      requestAnimationFrame = true;
-
-      if (aSampleTime - mAnimationStartTime >= ZOOM_TO_DURATION) {
-        SetState(NOTHING);
-        SendAsyncScrollEvent();
-        RequestContentRepaint();
-      }
-
-      break;
-    }
-    default:
-      break;
-    }
+    requestAnimationFrame = UpdateAnimation(aSampleTime);
 
     aScrollOffset = mFrameMetrics.mScrollOffset * mFrameMetrics.mZoom;
     *aNewTransform = GetCurrentAsyncTransform();
@@ -1332,8 +1391,6 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
                                             mAsyncScrollTimeoutTask,
                                             gAsyncScrollTimeout);
   }
-
-  mLastSampleTime = aSampleTime;
 
   return requestAnimationFrame;
 }
@@ -1490,11 +1547,11 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
     }
 
     targetZoom.scale = clamped(targetZoom.scale, localMinZoom.scale, localMaxZoom.scale);
-    mEndZoomToMetrics = mFrameMetrics;
-    mEndZoomToMetrics.mZoom = targetZoom;
+    FrameMetrics endZoomToMetrics = mFrameMetrics;
+    endZoomToMetrics.mZoom = targetZoom;
 
     // Adjust the zoomToRect to a sensible position to prevent overscrolling.
-    CSSRect rectAfterZoom = mEndZoomToMetrics.CalculateCompositedRectInCssPixels();
+    CSSRect rectAfterZoom = endZoomToMetrics.CalculateCompositedRectInCssPixels();
 
     // If either of these conditions are met, the page will be
     // overscrolled after zoomed
@@ -1507,21 +1564,22 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
       aRect.x = aRect.x > 0 ? aRect.x : 0;
     }
 
-    mStartZoomToMetrics = mFrameMetrics;
-    mEndZoomToMetrics.mScrollOffset = aRect.TopLeft();
-    mEndZoomToMetrics.mDisplayPort =
-      CalculatePendingDisplayPort(mEndZoomToMetrics,
+    endZoomToMetrics.mScrollOffset = aRect.TopLeft();
+    endZoomToMetrics.mDisplayPort =
+      CalculatePendingDisplayPort(endZoomToMetrics,
                                   gfx::Point(0,0),
                                   gfx::Point(0,0),
                                   0);
 
-    mAnimationStartTime = GetFrameTime();
-
-    ScheduleComposite();
+    StartAnimation(new ZoomAnimation(
+        mFrameMetrics.mScrollOffset,
+        mFrameMetrics.mZoom,
+        endZoomToMetrics.mScrollOffset,
+        endZoomToMetrics.mZoom));
 
     // Schedule a repaint now, so the new displayport will be painted before the
     // animation finishes.
-    ScheduleContentRepaint(mEndZoomToMetrics);
+    ScheduleContentRepaint(endZoomToMetrics);
   }
 }
 
