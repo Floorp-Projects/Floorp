@@ -45,9 +45,6 @@ public class FennecNativeActions implements Actions {
     private Class mDrawListenerClass;
     private Method mRegisterEventListener;
     private Method mUnregisterEventListener;
-    private Method mPreferencesGetEvent;
-    private Method mPreferencesObserveEvent;
-    private Method mPreferencesRemoveObserversEvent;
     private Method mSetDrawListener;
     private Object mRobocopApi;
 
@@ -70,9 +67,6 @@ public class FennecNativeActions implements Actions {
 
             mRegisterEventListener = mApiClass.getMethod("registerEventListener", String.class, mEventListenerClass);
             mUnregisterEventListener = mApiClass.getMethod("unregisterEventListener", String.class, mEventListenerClass);
-            mPreferencesGetEvent = mApiClass.getMethod("preferencesGetEvent", Integer.TYPE, String[].class);
-            mPreferencesObserveEvent = mApiClass.getMethod("preferencesObserveEvent", Integer.TYPE, String[].class);
-            mPreferencesRemoveObserversEvent = mApiClass.getMethod("preferencesRemoveObserversEvent", Integer.TYPE);
             mSetDrawListener = mApiClass.getMethod("setDrawListener", mDrawListenerClass);
 
             mRobocopApi = mApiClass.getConstructor(Activity.class).newInstance(activity);
@@ -265,32 +259,16 @@ public class FennecNativeActions implements Actions {
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(geckoEvent, data));
     }
 
-    private void sendPreferencesEvent(Method method, int requestId, String[] prefNames) {
-        try {
-            method.invoke(mRobocopApi, requestId, prefNames);
-        } catch (IllegalAccessException e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
-        }
-    }
-
     public void sendPreferencesGetEvent(int requestId, String[] prefNames) {
-        sendPreferencesEvent(mPreferencesGetEvent, requestId, prefNames);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createPreferencesGetEvent(requestId, prefNames));
     }
 
     public void sendPreferencesObserveEvent(int requestId, String[] prefNames) {
-        sendPreferencesEvent(mPreferencesObserveEvent, requestId, prefNames);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createPreferencesObserveEvent(requestId, prefNames));
     }
 
     public void sendPreferencesRemoveObserversEvent(int requestId) {
-        try {
-            mPreferencesRemoveObserversEvent.invoke(mRobocopApi, requestId);
-        } catch (IllegalAccessException e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            FennecNativeDriver.log(LogLevel.ERROR, e);
-        } 
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createPreferencesRemoveObserversEvent(requestId));
     }
 
     class DrawListenerProxy implements InvocationHandler {

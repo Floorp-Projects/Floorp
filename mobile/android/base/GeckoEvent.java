@@ -704,6 +704,7 @@ public class GeckoEvent {
         return event;
     }
 
+    @RobocopTarget
     public static GeckoEvent createPreferencesObserveEvent(int requestId, String[] prefNames) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.PREFERENCES_OBSERVE);
         event.mCount = requestId;
@@ -711,6 +712,7 @@ public class GeckoEvent {
         return event;
     }
 
+    @RobocopTarget
     public static GeckoEvent createPreferencesGetEvent(int requestId, String[] prefNames) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.PREFERENCES_GET);
         event.mCount = requestId;
@@ -718,6 +720,7 @@ public class GeckoEvent {
         return event;
     }
 
+    @RobocopTarget
     public static GeckoEvent createPreferencesRemoveObserversEvent(int requestId) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.PREFERENCES_REMOVE_OBSERVERS);
         event.mCount = requestId;
