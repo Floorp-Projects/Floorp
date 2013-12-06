@@ -672,7 +672,7 @@ Desktop browser's sync prefs.
       </settings>
       <setting pref="signon.rememberSignons" title="&optionsHeader.privacy.passwords.label;" type="bool"/>
       <settings id="prefs-reporting" label="&optionsHeader.reporting.title;">
-        <setting pref="app.crashreporter.autosubmit" type="bool" title="&optionsHeader.reporting.crashes.label;" oncommand="BrowserUI.crashReportingPrefChanged(this.value);"/>
+        <setting pref="app.crashreporter.autosubmit" type="bool" title="&optionsHeader.reporting.crashes.label;" />
       </settings>
       <settings id="prefs-telemetry" label="&optionsHeader.telemetry.title;">
         <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;"/>
