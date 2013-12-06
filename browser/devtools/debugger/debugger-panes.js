@@ -686,9 +686,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     // The container is not empty and an actual item was selected.
     DebuggerView.setEditorLocation(sourceItem.value);
 
-    // Set window title.
-    let script = sourceItem.value.split(" -> ").pop();
-    document.title = L10N.getFormatStr("DebuggerWindowScriptTitle", script);
+    // Set window title. No need to split the url by " -> " here, because it was
+    // already sanitized when the source was added.
+    document.title = L10N.getFormatStr("DebuggerWindowScriptTitle", sourceItem.value);
 
     DebuggerView.maybeShowBlackBoxMessage();
     this.updateToolbarButtonsState();
@@ -1085,38 +1085,14 @@ let SourceUtils = {
 
     try {
       // Use an nsIURL to parse all the url path parts.
-      var uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
+      let url = aUrl.split(" -> ").pop();
+      var uri = Services.io.newURI(url, null, null).QueryInterface(Ci.nsIURL);
     } catch (e) {
       // This doesn't look like a url, or nsIURL can't handle it.
       return "";
     }
 
-    let { scheme, directory, fileName } = uri;
-    let hostPort;
-    // Add-on SDK jar: URLs will cause accessing hostPort to throw.
-    if (scheme != "jar") {
-      hostPort = uri.hostPort;
-    }
-    let lastDir = directory.split("/").reverse()[1];
-    let group = [];
-
-    // Only show interesting schemes, http is implicit.
-    if (scheme != "http") {
-      group.push(scheme);
-    }
-    // Hostnames don't always exist for files or some resource urls.
-    // e.g. file://foo/bar.js or resource:///foo/bar.js don't have a host.
-    if (hostPort) {
-      // If the hostname is a dot-separated identifier, show the first 2 parts.
-      group.push(hostPort.split(".").slice(0, 2).join("."));
-    }
-    // Append the last directory if the path leads to an actual file.
-    // e.g. http://foo.org/bar/ should only show "foo.org", not "foo.org bar"
-    if (fileName) {
-      group.push(lastDir);
-    }
-
-    let groupLabel = group.join(" ");
+    let groupLabel = uri.prePath;
     let unicodeLabel = NetworkHelper.convertToUnicode(unescape(groupLabel));
     this._groupsCache.set(aUrl, unicodeLabel)
     return unicodeLabel;
