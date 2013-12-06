@@ -68,12 +68,8 @@ static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 class ABIArgGenerator
 {
-#if defined(JS_CPU_ARM_HARDFP)
     unsigned intRegIndex_;
     unsigned floatRegIndex_;
-#else
-    unsigned argRegIndex_;
-#endif
     uint32_t stackOffset_;
     ABIArg current_;
 
