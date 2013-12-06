@@ -1420,7 +1420,7 @@ class LCallDirectEvalV : public LCallInstructionHelper<BOX_PIECES, 1 + (2 * BOX_
     }
 
     static const size_t Argument = 1;
-    static const size_t ThisValue = 2;
+    static const size_t ThisValue = 1 + BOX_PIECES;
 
     MCallDirectEval *mir() const {
         return mir_->toCallDirectEval();
