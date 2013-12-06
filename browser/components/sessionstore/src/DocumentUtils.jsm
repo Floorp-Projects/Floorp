@@ -55,7 +55,8 @@ this.DocumentUtils = {
       }
 
       if (node instanceof Ci.nsIDOMHTMLInputElement ||
-          node instanceof Ci.nsIDOMHTMLTextAreaElement) {
+          node instanceof Ci.nsIDOMHTMLTextAreaElement ||
+          node instanceof Ci.nsIDOMXULTextBoxElement) {
         switch (node.type) {
           case "checkbox":
           case "radio":
