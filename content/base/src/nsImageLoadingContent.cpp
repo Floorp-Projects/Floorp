@@ -54,7 +54,6 @@
 #endif
 
 using namespace mozilla;
-using mozilla::dom::AutoSystemCaller;
 
 #ifdef DEBUG_chb
 static void PrintReqURL(imgIRequest* req) {
@@ -1195,9 +1194,6 @@ nsImageLoadingContent::ClearPendingRequest(nsresult aReason,
   if (!mPendingRequest)
     return;
 
-  // See bug 604262.
-  AutoSystemCaller asc;
-
   // Deregister this image from the refresh driver so it no longer receives
   // notifications.
   nsLayoutUtils::DeregisterImageRequest(GetFramePresContext(), mPendingRequest,
@@ -1257,10 +1253,6 @@ nsImageLoadingContent::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   if (!aDocument)
     return;
 
-  // Make sure the callbacks triggered by the below code don't think they're
-  // being called from JS.
-  AutoSystemCaller asc;
-
   TrackImage(mCurrentRequest);
   TrackImage(mPendingRequest);
 
@@ -1275,10 +1267,6 @@ nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
   nsCOMPtr<nsIDocument> doc = GetOurCurrentDoc();
   if (!doc)
     return;
-
-  // Make sure the callbacks triggered by the below code don't think they're
-  // being called from JS.
-  AutoSystemCaller asc;
 
   UntrackImage(mCurrentRequest);
   UntrackImage(mPendingRequest);
