@@ -21,6 +21,9 @@
                     android:entryValues="@array/pref_titlebar_mode_values"
                     android:persistent="false" />
 
+    <CheckBoxPreference android:key="browser.chrome.dynamictoolbar"
+                        android:title="@string/pref_dynamic_toolbar" />
+
     <PreferenceCategory android:title="@string/pref_category_advanced">
 
         <CheckBoxPreference

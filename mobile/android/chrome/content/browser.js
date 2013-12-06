@@ -4283,7 +4283,9 @@ var BrowserEventHandler = {
     if (closest) {
       let uri = this._getLinkURI(closest);
       if (uri) {
-        Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null);
+        try {
+          Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null);
+        } catch (e) {}
       }
       this._doTapHighlight(closest);
     }
@@ -4393,7 +4395,7 @@ var BrowserEventHandler = {
             }
 
             // Was the element already focused before it was clicked?
-            let isFocused = (element == BrowserApp.getFocusedInput(BrowserApp.selectedBrowser, true));
+            let isFocused = (element == BrowserApp.getFocusedInput(BrowserApp.selectedBrowser));
 
             this._sendMouseEvent("mousemove", element, x, y);
             this._sendMouseEvent("mousedown", element, x, y);
@@ -6707,7 +6709,9 @@ var SearchEngines = {
     let searchURI = Services.search.defaultEngine.getSubmission("dummy").uri;
     let callbacks = window.QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsILoadContext);
-    connector.speculativeConnect(searchURI, callbacks);
+    try {
+      connector.speculativeConnect(searchURI, callbacks);
+    } catch (e) {}
   },
 
   _handleSearchEnginesGetAll: function _handleSearchEnginesGetAll(rv) {
@@ -8109,34 +8113,63 @@ var Distribution = {
 };
 
 var Tabs = {
-  // This object provides functions to manage a most-recently-used list
-  // of tabs. Each tab has a timestamp associated with it that indicates when
-  // it was last touched.
-
   _enableTabExpiration: false,
+  _domains: new Set(),
 
   init: function() {
-    // on low-memory platforms, always allow tab expiration. on high-mem
-    // platforms, allow it to be turned on once we hit a low-mem situation
+    // On low-memory platforms, always allow tab expiration. On high-mem
+    // platforms, allow it to be turned on once we hit a low-mem situation.
     if (BrowserApp.isOnLowMemoryPlatform) {
       this._enableTabExpiration = true;
     } else {
       Services.obs.addObserver(this, "memory-pressure", false);
     }
+
+    Services.obs.addObserver(this, "Session:Prefetch", false);
+
+    BrowserApp.deck.addEventListener("pageshow", this, false);
   },
 
   uninit: function() {
     if (!this._enableTabExpiration) {
-      // if _enableTabExpiration is true then we won't have this
+      // If _enableTabExpiration is true then we won't have this
       // observer registered any more.
       Services.obs.removeObserver(this, "memory-pressure");
     }
+
+    Services.obs.removeObserver(this, "Session:Prefetch");
+
+    BrowserApp.deck.removeEventListener("pageshow", this);
   },
 
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "memory-pressure" && aData != "heap-minimize") {
-      this._enableTabExpiration = true;
-      Services.obs.removeObserver(this, "memory-pressure");
+    switch (aTopic) {
+      case "memory-pressure":
+        if (aData != "heap-minimize") {
+          this._enableTabExpiration = true;
+          Services.obs.removeObserver(this, "memory-pressure");
+        }
+        break;
+      case "Session:Prefetch":
+        if (aData) {
+          let uri = Services.io.newURI(aData, null, null);
+          if (uri && !this._domains.has(uri.host)) {
+            try {
+              Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null);
+              this._domains.add(uri.host);
+            } catch (e) {}
+          }
+        }
+        break;
+    }
+  },
+
+  handleEvent: function(aEvent) {
+    switch (aEvent.type) {
+      case "pageshow":
+        // Clear the domain cache whenever a page get loaded into any browser.
+        this._domains.clear();
+        break;
     }
   },
 
@@ -8144,30 +8177,32 @@ var Tabs = {
     aTab.lastTouchedAt = Date.now();
   },
 
+  // Manage the most-recently-used list of tabs. Each tab has a timestamp
+  // associated with it that indicates when it was last touched.
   expireLruTab: function() {
     if (!this._enableTabExpiration) {
       return false;
     }
     let expireTimeMs = Services.prefs.getIntPref("browser.tabs.expireTime") * 1000;
     if (expireTimeMs < 0) {
-      // this behaviour is disabled
+      // This behaviour is disabled.
       return false;
     }
     let tabs = BrowserApp.tabs;
     let selected = BrowserApp.selectedTab;
     let lruTab = null;
-    // find the least recently used non-zombie tab
+    // Find the least recently used non-zombie tab.
     for (let i = 0; i < tabs.length; i++) {
       if (tabs[i] == selected || tabs[i].browser.__SS_restore) {
-        // this tab is selected or already a zombie, skip it
+        // This tab is selected or already a zombie, skip it.
         continue;
       }
       if (lruTab == null || tabs[i].lastTouchedAt < lruTab.lastTouchedAt) {
         lruTab = tabs[i];
       }
     }
-    // if the tab was last touched more than browser.tabs.expireTime seconds ago,
-    // zombify it
+    // If the tab was last touched more than browser.tabs.expireTime seconds ago,
+    // zombify it.
     if (lruTab) {
       let tabAgeMs = Date.now() - lruTab.lastTouchedAt;
       if (tabAgeMs > expireTimeMs) {
@@ -8179,7 +8214,7 @@ var Tabs = {
     return false;
   },
 
-  // for debugging
+  // For debugging
   dump: function(aPrefix) {
     let tabs = BrowserApp.tabs;
     for (let i = 0; i < tabs.length; i++) {

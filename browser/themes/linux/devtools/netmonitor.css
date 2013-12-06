@@ -312,6 +312,10 @@ box.requests-menu-status[code^="5"] {
 
 /* SideMenuWidget */
 
+.side-menu-widget-container {
+  box-shadow: none !important;
+}
+
 .side-menu-widget-item[odd] {
   background: rgba(255,255,255,0.05);
 }
@@ -361,10 +365,6 @@ box.requests-menu-status[code^="5"] {
 
 .tabpanel-summary-value {
   -moz-padding-start: 3px;
-}
-
-.variable-or-property:not(:focus) > .title > .token-string {
-  color: #10c !important;
 }
 
 /* Headers tabpanel */

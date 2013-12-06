@@ -10,6 +10,7 @@ import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.mozglue.generatorannotations.GeneratorOptions;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import android.content.res.Resources;
 import android.graphics.Point;
@@ -612,6 +613,7 @@ public class GeckoEvent {
         return event;
     }
 
+    @RobocopTarget
     public static GeckoEvent createBroadcastEvent(String subject, String data) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.BROADCAST);
         event.mCharacters = subject;
@@ -702,6 +704,7 @@ public class GeckoEvent {
         return event;
     }
 
+    @RobocopTarget
     public static GeckoEvent createPreferencesObserveEvent(int requestId, String[] prefNames) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.PREFERENCES_OBSERVE);
         event.mCount = requestId;
@@ -709,6 +712,7 @@ public class GeckoEvent {
         return event;
     }
 
+    @RobocopTarget
     public static GeckoEvent createPreferencesGetEvent(int requestId, String[] prefNames) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.PREFERENCES_GET);
         event.mCount = requestId;
@@ -716,6 +720,7 @@ public class GeckoEvent {
         return event;
     }
 
+    @RobocopTarget
     public static GeckoEvent createPreferencesRemoveObserversEvent(int requestId) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.PREFERENCES_REMOVE_OBSERVERS);
         event.mCount = requestId;

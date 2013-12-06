@@ -107,10 +107,16 @@ class DependencyLinker(Makefile):
             '$(DIST)': dist_value,
             '$(depth)': topobjdir_value, # normcase may lowercase variable refs when
             '$(dist)': dist_value,       # they are in the original dependency file
-            mozpath.relpath(topsrcdir, os.curdir): topsrcdir_value,
             mozpath.relpath(topobjdir, os.curdir): topobjdir_value,
             mozpath.relpath(dist, os.curdir): dist_value,
         }
+        try:
+            # mozpath.relpath(topsrcdir, os.curdir) fails when source directory
+            # and object directory are not on the same drive on Windows. In
+            # this case, the value is not useful in self._normpaths anyways.
+            self._normpaths[mozpath.relpath(topsrcdir, os.curdir)] = topsrcdir_value
+        except ValueError:
+            pass
 
         Makefile.__init__(self)
         self._group = group
