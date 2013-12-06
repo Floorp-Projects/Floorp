@@ -381,32 +381,8 @@ RootActor.prototype = {
       windowUtils.resumeTimeouts();
       windowUtils.suppressEventHandling(false);
     }
-  },
-
-  /* ChromeDebuggerActor hooks. */
-
-  /**
-   * Add the specified actor to the default actor pool connection, in order to
-   * keep it alive as long as the server is. This is used by breakpoints in the
-   * thread and chrome debugger actors.
-   *
-   * @param actor aActor
-   *        The actor object.
-   */
-  addToParentPool: function(aActor) {
-    this.conn.addActor(aActor);
-  },
-
-  /**
-   * Remove the specified actor from the default actor pool.
-   *
-   * @param BreakpointActor aActor
-   *        The actor object.
-   */
-  removeFromParentPool: function(aActor) {
-    this.conn.removeActor(aActor);
   }
-}
+};
 
 RootActor.prototype.requestTypes = {
   "listTabs": RootActor.prototype.onListTabs,
