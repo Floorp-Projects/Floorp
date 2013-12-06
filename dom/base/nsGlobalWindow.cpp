@@ -212,6 +212,7 @@
 #include "nsITabChild.h"
 #include "nsIDOMMediaQueryList.h"
 #include "mozilla/dom/DOMJSClass.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/SpeechSynthesis.h"
@@ -11203,18 +11204,18 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                                 aDialog, aNavigate, argv,
                                 getter_AddRefs(domReturn));
     } else {
-      // Push a null JSContext here so that the window watcher won't screw us
+      // Force a system caller here so that the window watcher won't screw us
       // up.  We do NOT want this case looking at the JS context on the stack
       // when searching.  Compare comments on
       // nsIDOMWindow::OpenWindow and nsIWindowWatcher::OpenWindow.
 
       // Note: Because nsWindowWatcher is so broken, it's actually important
-      // that we don't push a null cx here, because that screws it up when it
-      // tries to compute the caller principal to associate with dialog
+      // that we don't force a system caller here, because that screws it up
+      // when it tries to compute the caller principal to associate with dialog
       // arguments. That whole setup just really needs to be rewritten. :-(
-      nsCxPusher pusher;
+      Maybe<AutoSystemCaller> asc;
       if (!aContentModal) {
-        pusher.PushNull();
+        asc.construct();
       }
 
 
