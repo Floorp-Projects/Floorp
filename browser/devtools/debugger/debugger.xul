@@ -321,23 +321,35 @@
     <scrollbox id="globalsearch" orient="vertical" hidden="true"/>
     <splitter class="devtools-horizontal-splitter" hidden="true"/>
     <hbox id="debugger-widgets" flex="1">
-      <vbox id="sources-pane">
-        <vbox id="sources" flex="1"/>
-        <toolbar id="sources-toolbar" class="devtools-toolbar">
-          <hbox id="sources-controls">
-            <toolbarbutton id="black-box"
-                           tooltiptext="&debuggerUI.sources.blackBoxTooltip;"
-                           command="blackBoxCommand"
-                           class="devtools-toolbarbutton"/>
-            <toolbarbutton id="pretty-print"
-                           label="{}"
-                           tooltiptext="&debuggerUI.sources.prettyPrint;"
-                           class="devtools-toolbarbutton devtools-monospace"
-                           command="prettyPrintCommand"
-                           hidden="true"/>
-          </hbox>
-        </toolbar>
-      </vbox>
+      <tabbox id="sources-pane"
+              class="devtools-sidebar-tabs">
+        <tabs>
+          <tab id="sources-tab" label="&debuggerUI.tabs.sources;"/>
+          <tab id="callstack-tab" label="&debuggerUI.tabs.callstack;"/>
+        </tabs>
+        <tabpanels flex="1">
+          <tabpanel id="sources-tabpanel">
+            <vbox id="sources" flex="1"/>
+            <toolbar id="sources-toolbar" class="devtools-toolbar">
+              <hbox id="sources-controls">
+                <toolbarbutton id="black-box"
+                               tooltiptext="&debuggerUI.sources.blackBoxTooltip;"
+                               command="blackBoxCommand"
+                               class="devtools-toolbarbutton"/>
+                <toolbarbutton id="pretty-print"
+                               label="{}"
+                               tooltiptext="&debuggerUI.sources.prettyPrint;"
+                               class="devtools-toolbarbutton devtools-monospace"
+                               command="prettyPrintCommand"
+                               hidden="true"/>
+              </hbox>
+            </toolbar>
+          </tabpanel>
+          <tabpanel id="callstack-tabpanel">
+            <vbox id="callstack-list" flex="1"/>
+          </tabpanel>
+        </tabpanels>
+      </tabbox>
       <splitter id="sources-and-editor-splitter"
                 class="devtools-side-splitter"/>
       <deck id="editor-deck" flex="4">
@@ -367,12 +379,12 @@
           <tab id="events-tab" label="&debuggerUI.tabs.events;"/>
         </tabs>
         <tabpanels flex="1">
-          <tabpanel id="variables-tabpanel">
+          <tabpanel id="variables-tabpanel" class="theme-body">
             <vbox id="expressions"/>
             <splitter class="devtools-horizontal-splitter"/>
             <vbox id="variables" flex="1"/>
           </tabpanel>
-          <tabpanel id="events-tabpanel">
+          <tabpanel id="events-tabpanel" class="theme-body">
             <vbox id="event-listeners" flex="1"/>
           </tabpanel>
         </tabpanels>

@@ -7,10 +7,13 @@
 
 function ifWebGLSupported() {
   let [target, debuggee, panel] = yield initShaderEditor(SIMPLE_CANVAS_URL);
-  let { gFront, $, ShadersListView, ShadersEditorsView } = panel.panelWin;
+  let { gFront, $, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   reload(target);
-  yield once(gFront, "program-linked");
+  yield promise.all([
+    once(gFront, "program-linked"),
+    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
+  ]);
 
   is($("#reload-notice").hidden, true,
     "The 'reload this page' notice should be hidden after linking.");
@@ -39,6 +42,7 @@ function ifWebGLSupported() {
   navigate(target, "about:blank");
 
   yield navigating;
+  yield once(panel.panelWin, EVENTS.UI_RESET);
 
   is($("#reload-notice").hidden, true,
     "The 'reload this page' notice should be hidden while navigating.");
@@ -54,19 +58,17 @@ function ifWebGLSupported() {
   is(ShadersListView.selectedIndex, -1,
     "The shaders list has a negative index.");
 
-  try {
-    yield ShadersEditorsView._getEditor("vs");
+  yield ShadersEditorsView._getEditor("vs").then(() => {
     ok(false, "The promise for a vertex shader editor should be rejected.");
-  } catch (e) {
+  }, () => {
     ok(true, "The vertex shader editors wasn't initialized.");
-  }
+  });
 
-  try {
-    yield ShadersEditorsView._getEditor("fs");
+  yield ShadersEditorsView._getEditor("fs").then(() => {
     ok(false, "The promise for a fragment shader editor should be rejected.");
-  } catch (e) {
+  }, () => {
     ok(true, "The fragment shader editors wasn't initialized.");
-  }
+  });
 
   yield navigated;
 
