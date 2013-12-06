@@ -5,6 +5,9 @@
 #include "GLContext.h"
 #include "GLLibraryEGL.h"
 #include "GLSharedHandleHelpers.h"
+#ifdef MOZ_WIDGET_ANDROID
+#include "nsSurfaceTexture.h"
+#endif
 
 namespace mozilla {
 namespace gl {

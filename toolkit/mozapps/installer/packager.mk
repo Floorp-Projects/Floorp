@@ -477,7 +477,7 @@ INNER_UNMAKE_PACKAGE	= \
   test -n '$(MOZ_PKG_MAC_DSSTORE)' && \
     rsync -a '$(_ABS_DIST)/unpack.tmp/.DS_Store' '$(MOZ_PKG_MAC_DSSTORE)'; \
   test -n '$(MOZ_PKG_MAC_BACKGROUND)' && \
-    rsync -a '$(_ABS_DIST)/unpack.tmp/.background/`basename '$(MOZ_PKG_MAC_BACKGROUND)'`' '$(MOZ_PKG_MAC_BACKGROUND)'; \
+    rsync -a '$(_ABS_DIST)/unpack.tmp/.background/$(notdir $(MOZ_PKG_MAC_BACKGROUND))' '$(MOZ_PKG_MAC_BACKGROUND)'; \
   test -n '$(MOZ_PKG_MAC_ICON)' && \
     rsync -a '$(_ABS_DIST)/unpack.tmp/.VolumeIcon.icns' '$(MOZ_PKG_MAC_ICON)'; \
   rm -rf $(_ABS_DIST)/unpack.tmp; \
