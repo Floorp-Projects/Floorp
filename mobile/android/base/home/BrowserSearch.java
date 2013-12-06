@@ -327,7 +327,7 @@ public class BrowserSearch extends HomeFragment
     private void handleAutocomplete(String searchTerm, Cursor c) {
         if (c == null ||
             mAutocompleteHandler == null ||
-            TextUtils.isEmpty(mSearchTerm)) {
+            TextUtils.isEmpty(searchTerm)) {
             return;
         }
 
