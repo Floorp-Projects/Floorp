@@ -2307,6 +2307,7 @@ public class GeckoAppShell
      * any removed listeners will still be invoked on the event currently being processed, but
      * will not be invoked on future events of that type.
      */
+    @RobocopTarget
     public static void unregisterEventListener(String event, GeckoEventListener listener) {
         sEventDispatcher.unregisterEventListener(event, listener);
     }
