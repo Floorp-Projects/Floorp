@@ -2930,7 +2930,10 @@ JSScript::getBlockScope(jsbytecode *pc)
                 if (offset < checkNote->start + checkNote->length) {
                     // We found a matching block chain but there may be inner ones
                     // at a higher block chain index than mid. Continue the binary search.
-                    blockChain = &getObject(checkNote->index)->as<StaticBlockObject>();
+                    if (checkNote->index == BlockScopeNote::NoBlockScopeIndex)
+                        blockChain = nullptr;
+                    else
+                        blockChain = &getObject(checkNote->index)->as<StaticBlockObject>();
                     break;
                 }
                 if (checkNote->parent == UINT32_MAX)

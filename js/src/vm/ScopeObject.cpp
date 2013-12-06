@@ -50,6 +50,7 @@ js::ScopeCoordinateToStaticScopeShape(JSScript *script, jsbytecode *pc)
     StaticScopeIter<NoGC> ssi(InnermostStaticScope(script, pc));
     ScopeCoordinate sc(pc);
     while (true) {
+        JS_ASSERT(!ssi.done());
         if (ssi.hasDynamicScopeObject()) {
             if (!sc.hops)
                 break;
