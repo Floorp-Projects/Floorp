@@ -82,9 +82,27 @@ struct JSTryNote {
 
 namespace js {
 
+// A block scope has a range in bytecode: it is entered at some offset, and left
+// at some later offset.  Scopes can be nested.  Given an offset, the
+// BlockScopeNote containing that offset whose with the highest start value
+// indicates the block scope.  The block scope list is sorted by increasing
+// start value.
+//
+// It is possible to leave a scope nonlocally, for example via a "break"
+// statement, so there may be short bytecode ranges in a block scope in which we
+// are popping the block chain in preparation for a goto.  These exits are also
+// nested with respect to outer scopes.  The scopes in these exits are indicated
+// by the "index" field, just like any other block.  If a nonlocal exit pops the
+// last block scope, the index will be NoBlockScopeIndex.
+//
 struct BlockScopeNote {
-    uint32_t        index;      // Index of StaticScopeObject in the object array.
-    uint32_t        start;      // Bytecode offset at which this scope starts.
+    static const uint32_t NoBlockScopeIndex = UINT32_MAX;
+
+    uint32_t        index;      // Index of StaticScopeObject in the object
+                                // array, or NoBlockScopeIndex if there is no
+                                // block scope in this range.
+    uint32_t        start;      // Bytecode offset at which this scope starts,
+                                // from script->main().
     uint32_t        length;     // Bytecode length of scope.
     uint32_t        parent;     // Index of parent block scope in notes, or UINT32_MAX.
 };
