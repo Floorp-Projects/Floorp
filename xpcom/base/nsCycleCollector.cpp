@@ -286,6 +286,14 @@ public:
         mSentinelAndBlocks[1].block = nullptr;
     }
 
+#ifdef DEBUG
+    bool IsEmpty()
+    {
+        return !mSentinelAndBlocks[0].block &&
+               !mSentinelAndBlocks[1].block;
+    }
+#endif
+
 private:
     struct Block;
     union PtrInfoOrBlock {
@@ -521,6 +529,13 @@ public:
         mLast = nullptr;
     }
 
+#ifdef DEBUG
+    bool IsEmpty()
+    {
+        return !mBlocks && !mLast;
+    }
+#endif
+
     class Builder;
     friend class Builder;
     class Builder {
@@ -678,7 +693,7 @@ public:
 
     void Init()
     {
-        MOZ_ASSERT(!mPtrToNodeMap.ops, "Failed to clear mPtrToNodeMap");
+        MOZ_ASSERT(IsEmpty(), "Failed to call GCGraph::Clear");
         if (!PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nullptr,
                                sizeof(PtrToNodeEntry), 32768)) {
             MOZ_CRASH();
@@ -694,6 +709,15 @@ public:
         PL_DHashTableFinish(&mPtrToNodeMap);
         mPtrToNodeMap.ops = nullptr;
     }
+
+#ifdef DEBUG
+    bool IsEmpty()
+    {
+        return mNodes.IsEmpty() && mEdges.IsEmpty() &&
+            mWeakMaps.IsEmpty() && mRootCount == 0 &&
+            !mPtrToNodeMap.ops;
+    }
+#endif
 
     PtrInfo* FindNode(void *aPtr);
     PtrToNodeEntry* AddNodeToMap(void *aPtr);
