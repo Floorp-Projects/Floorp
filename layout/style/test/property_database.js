@@ -3696,6 +3696,20 @@ var gCSSProperties = {
 		other_values: [ "non-scaling-stroke" ],
 		invalid_values: []
 	},
+	"align-content": {
+		domProp: "alignContent",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "stretch" ],
+		other_values: [
+			"flex-start",
+			"flex-end",
+			"center",
+			"space-between",
+			"space-around"
+		],
+		invalid_values: [ "abc", "30px", "0", "auto" ]
+	},
 	"align-items": {
 		domProp: "alignItems",
 		inherited: false,
@@ -3828,6 +3842,46 @@ var gCSSProperties = {
 		other_values: [ "row-reverse", "column", "column-reverse" ],
 		invalid_values: [ "10px", "30%", "justify", "column wrap" ]
 	},
+	"flex-flow": {
+		domProp: "flexFlow",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [
+			"flex-direction",
+			"flex-wrap"
+		],
+		initial_values: [ "row nowrap", "nowrap row", "row", "nowrap" ],
+		other_values: [
+			// only specifying one property:
+			"column",
+			"wrap",
+			"wrap-reverse",
+			// specifying both properties, 'flex-direction' first:
+			"row wrap",
+			"row wrap-reverse",
+			"column wrap",
+			"column wrap-reverse",
+			// specifying both properties, 'flex-wrap' first:
+			"wrap row",
+			"wrap column",
+			"wrap-reverse row",
+			"wrap-reverse column",
+		],
+		invalid_values: [
+			// specifying flex-direction twice (invalid):
+			"row column",
+			"row column nowrap",
+			"row nowrap column",
+			"nowrap row column",
+			// specifying flex-wrap twice (invalid):
+			"nowrap wrap-reverse",
+			"nowrap wrap-reverse row",
+			"nowrap row wrap-reverse",
+			"row nowrap wrap-reverse",
+			// Invalid data-type / invalid keyword type:
+			"1px", "5%", "justify", "none"
+		]
+	},
 	"flex-grow": {
 		domProp: "flexGrow",
 		inherited: false,
@@ -3843,6 +3897,14 @@ var gCSSProperties = {
 		initial_values: [ "1" ],
 		other_values: [ "3", "0", "0.0", "2.5", "123" ],
 		invalid_values: [ "0px", "-5", "1%", "3em", "stretch", "auto" ]
+	},
+	"flex-wrap": {
+		domProp: "flexWrap",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "nowrap" ],
+		other_values: [ "wrap", "wrap-reverse" ],
+		invalid_values: [ "10px", "30%", "justify", "column wrap", "auto" ]
 	},
 	"order": {
 		domProp: "order",

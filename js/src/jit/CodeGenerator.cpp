@@ -110,7 +110,7 @@ CodeGeneratorShared::addCache(LInstruction *lir, size_t cacheIndex)
     else
         cache->setIdempotent();
 
-    OutOfLineUpdateCache *ool = new OutOfLineUpdateCache(lir, cacheIndex);
+    OutOfLineUpdateCache *ool = new(alloc()) OutOfLineUpdateCache(lir, cacheIndex);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -594,7 +594,7 @@ CodeGenerator::visitTestOAndBranch(LTestOAndBranch *lir)
     MOZ_ASSERT(lir->mir()->operandMightEmulateUndefined(),
                "Objects which can't emulate undefined should have been constant-folded");
 
-    OutOfLineTestObject *ool = new OutOfLineTestObject();
+    OutOfLineTestObject *ool = new(alloc()) OutOfLineTestObject();
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -612,7 +612,7 @@ CodeGenerator::visitTestVAndBranch(LTestVAndBranch *lir)
 {
     OutOfLineTestObject *ool = nullptr;
     if (lir->mir()->operandMightEmulateUndefined()) {
-        ool = new OutOfLineTestObject();
+        ool = new(alloc()) OutOfLineTestObject();
         if (!addOutOfLineCode(ool))
             return false;
     }
@@ -961,7 +961,7 @@ CodeGenerator::visitOutOfLineInterruptCheckImplicit(OutOfLineInterruptCheckImpli
 bool
 CodeGenerator::visitInterruptCheckImplicit(LInterruptCheckImplicit *lir)
 {
-    OutOfLineInterruptCheckImplicit *ool = new OutOfLineInterruptCheckImplicit(current, lir);
+    OutOfLineInterruptCheckImplicit *ool = new(alloc()) OutOfLineInterruptCheckImplicit(current, lir);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -1578,7 +1578,7 @@ bool
 CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
 {
 #ifdef JSGC_GENERATIONAL
-    OutOfLineCallPostWriteBarrier *ool = new OutOfLineCallPostWriteBarrier(lir, lir->object());
+    OutOfLineCallPostWriteBarrier *ool = new(alloc()) OutOfLineCallPostWriteBarrier(lir, lir->object());
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -1607,7 +1607,7 @@ bool
 CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
 {
 #ifdef JSGC_GENERATIONAL
-    OutOfLineCallPostWriteBarrier *ool = new OutOfLineCallPostWriteBarrier(lir, lir->object());
+    OutOfLineCallPostWriteBarrier *ool = new(alloc()) OutOfLineCallPostWriteBarrier(lir, lir->object());
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -1639,7 +1639,7 @@ bool
 CodeGenerator::visitPostWriteBarrierAllSlots(LPostWriteBarrierAllSlots *lir)
 {
 #ifdef JSGC_GENERATIONAL
-    OutOfLineCallPostWriteBarrier *ool = new OutOfLineCallPostWriteBarrier(lir, lir->object());
+    OutOfLineCallPostWriteBarrier *ool = new(alloc()) OutOfLineCallPostWriteBarrier(lir, lir->object());
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -2371,12 +2371,9 @@ CodeGenerator::visitGetDynamicName(LGetDynamicName *lir)
 }
 
 bool
-CodeGenerator::visitFilterArgumentsOrEval(LFilterArgumentsOrEval *lir)
+CodeGenerator::emitFilterArgumentsOrEval(LInstruction *lir, Register string,
+                                         Register temp1, Register temp2)
 {
-    Register string = ToRegister(lir->getString());
-    Register temp1 = ToRegister(lir->temp1());
-    Register temp2 = ToRegister(lir->temp2());
-
     masm.loadJSContext(temp2);
 
     masm.setupUnalignedABICall(2, temp1);
@@ -2389,23 +2386,68 @@ CodeGenerator::visitFilterArgumentsOrEval(LFilterArgumentsOrEval *lir)
     return bailoutFrom(&bail, lir->snapshot());
 }
 
-typedef bool (*DirectEvalFn)(JSContext *, HandleObject, HandleScript, HandleValue, HandleString,
-                             jsbytecode *, MutableHandleValue);
-static const VMFunction DirectEvalInfo = FunctionInfo<DirectEvalFn>(DirectEvalFromIon);
+bool
+CodeGenerator::visitFilterArgumentsOrEvalS(LFilterArgumentsOrEvalS *lir)
+{
+    return emitFilterArgumentsOrEval(lir, ToRegister(lir->getString()),
+                                     ToRegister(lir->temp1()),
+                                     ToRegister(lir->temp2()));
+}
 
 bool
-CodeGenerator::visitCallDirectEval(LCallDirectEval *lir)
+CodeGenerator::visitFilterArgumentsOrEvalV(LFilterArgumentsOrEvalV *lir)
+{
+    ValueOperand input = ToValue(lir, LFilterArgumentsOrEvalV::Input);
+
+    // Act as nop on non-strings.
+    Label done;
+    masm.branchTestString(Assembler::NotEqual, input, &done);
+
+    if (!emitFilterArgumentsOrEval(lir, masm.extractString(input, ToRegister(lir->temp3())),
+                                   ToRegister(lir->temp1()), ToRegister(lir->temp2())))
+    {
+        return false;
+    }
+
+    masm.bind(&done);
+    return true;
+}
+
+typedef bool (*DirectEvalSFn)(JSContext *, HandleObject, HandleScript, HandleValue, HandleString,
+                              jsbytecode *, MutableHandleValue);
+static const VMFunction DirectEvalStringInfo = FunctionInfo<DirectEvalSFn>(DirectEvalStringFromIon);
+
+bool
+CodeGenerator::visitCallDirectEvalS(LCallDirectEvalS *lir)
 {
     Register scopeChain = ToRegister(lir->getScopeChain());
     Register string = ToRegister(lir->getString());
 
     pushArg(ImmPtr(lir->mir()->pc()));
     pushArg(string);
-    pushArg(ToValue(lir, LCallDirectEval::ThisValueInput));
+    pushArg(ToValue(lir, LCallDirectEvalS::ThisValue));
     pushArg(ImmGCPtr(gen->info().script()));
     pushArg(scopeChain);
 
-    return callVM(DirectEvalInfo, lir);
+    return callVM(DirectEvalStringInfo, lir);
+}
+
+typedef bool (*DirectEvalVFn)(JSContext *, HandleObject, HandleScript, HandleValue, HandleValue,
+                              jsbytecode *, MutableHandleValue);
+static const VMFunction DirectEvalValueInfo = FunctionInfo<DirectEvalVFn>(DirectEvalValueFromIon);
+
+bool
+CodeGenerator::visitCallDirectEvalV(LCallDirectEvalV *lir)
+{
+    Register scopeChain = ToRegister(lir->getScopeChain());
+
+    pushArg(ImmPtr(lir->mir()->pc()));
+    pushArg(ToValue(lir, LCallDirectEvalV::Argument));
+    pushArg(ToValue(lir, LCallDirectEvalV::ThisValue));
+    pushArg(ImmGCPtr(gen->info().script()));
+    pushArg(scopeChain);
+
+    return callVM(DirectEvalValueInfo, lir);
 }
 
 // Registers safe for use before generatePrologue().
@@ -2501,7 +2543,7 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
     // dynamically set by JS_SetThreadStackLimit() and JS_SetNativeStackQuota().
     const void *limitAddr = GetIonContext()->runtime->addressOfIonStackLimit();
 
-    CheckOverRecursedFailure *ool = new CheckOverRecursedFailure(lir);
+    CheckOverRecursedFailure *ool = new(alloc()) CheckOverRecursedFailure(lir);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -2605,7 +2647,7 @@ CodeGenerator::visitCheckOverRecursedPar(LCheckOverRecursedPar *lir)
     masm.loadPtr(Address(tempReg, offsetof(PerThreadData, ionStackLimit)), tempReg);
 
     // Conditional forward (unlikely) branch to failure.
-    CheckOverRecursedFailurePar *ool = new CheckOverRecursedFailurePar(lir);
+    CheckOverRecursedFailurePar *ool = new(alloc()) CheckOverRecursedFailurePar(lir);
     if (!addOutOfLineCode(ool))
         return false;
     masm.branchPtr(Assembler::BelowOrEqual, StackPointer, tempReg, ool->entry());
@@ -2662,7 +2704,7 @@ bool
 CodeGenerator::visitCheckInterruptPar(LCheckInterruptPar *lir)
 {
     // First check for slice->shared->interrupt_.
-    OutOfLineCheckInterruptPar *ool = new OutOfLineCheckInterruptPar(lir);
+    OutOfLineCheckInterruptPar *ool = new(alloc()) OutOfLineCheckInterruptPar(lir);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -3066,7 +3108,7 @@ CodeGenerator::visitNewParallelArray(LNewParallelArray *lir)
     Register objReg = ToRegister(lir->output());
     JSObject *templateObject = lir->mir()->templateObject();
 
-    OutOfLineNewParallelArray *ool = new OutOfLineNewParallelArray(lir);
+    OutOfLineNewParallelArray *ool = new(alloc()) OutOfLineNewParallelArray(lir);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -3099,7 +3141,7 @@ CodeGenerator::visitNewArray(LNewArray *lir)
     if (lir->mir()->shouldUseVM())
         return visitNewArrayCallVM(lir);
 
-    OutOfLineNewArray *ool = new OutOfLineNewArray(lir);
+    OutOfLineNewArray *ool = new(alloc()) OutOfLineNewArray(lir);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -3185,7 +3227,7 @@ CodeGenerator::visitNewObject(LNewObject *lir)
     if (lir->mir()->shouldUseVM())
         return visitNewObjectVMCall(lir);
 
-    OutOfLineNewObject *ool = new OutOfLineNewObject(lir);
+    OutOfLineNewObject *ool = new(alloc()) OutOfLineNewObject(lir);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -3403,7 +3445,7 @@ CodeGenerator::emitAllocateGCThingPar(LInstruction *lir, const Register &objReg,
                                       const Register &tempReg2, JSObject *templateObj)
 {
     gc::AllocKind allocKind = templateObj->tenuredGetAllocKind();
-    OutOfLineNewGCThingPar *ool = new OutOfLineNewGCThingPar(lir, allocKind, objReg, sliceReg);
+    OutOfLineNewGCThingPar *ool = new(alloc()) OutOfLineNewGCThingPar(lir, allocKind, objReg, sliceReg);
     if (!ool || !addOutOfLineCode(ool))
         return false;
 
@@ -4206,7 +4248,7 @@ CodeGenerator::visitIsNullOrLikeUndefined(LIsNullOrLikeUndefined *lir)
         Label *nullOrLikeUndefined;
         Label *notNullOrLikeUndefined;
         if (lir->mir()->operandMightEmulateUndefined()) {
-            ool = new OutOfLineTestObjectWithLabels();
+            ool = new(alloc()) OutOfLineTestObjectWithLabels();
             if (!addOutOfLineCode(ool))
                 return false;
             nullOrLikeUndefined = ool->label1();
@@ -4291,7 +4333,7 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBran
 
         OutOfLineTestObject *ool = nullptr;
         if (lir->mir()->operandMightEmulateUndefined()) {
-            ool = new OutOfLineTestObject();
+            ool = new(alloc()) OutOfLineTestObject();
             if (!addOutOfLineCode(ool))
                 return false;
         }
@@ -4341,7 +4383,7 @@ CodeGenerator::visitEmulatesUndefined(LEmulatesUndefined *lir)
     JSOp op = lir->mir()->jsop();
     MOZ_ASSERT(op == JSOP_EQ || op == JSOP_NE, "Strict equality should have been folded");
 
-    OutOfLineTestObjectWithLabels *ool = new OutOfLineTestObjectWithLabels();
+    OutOfLineTestObjectWithLabels *ool = new(alloc()) OutOfLineTestObjectWithLabels();
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -4375,7 +4417,7 @@ CodeGenerator::visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir)
     JSOp op = lir->mir()->jsop();
     MOZ_ASSERT(op == JSOP_EQ || op == JSOP_NE, "Strict equality should have been folded");
 
-    OutOfLineTestObject *ool = new OutOfLineTestObject();
+    OutOfLineTestObject *ool = new(alloc()) OutOfLineTestObject();
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -4738,7 +4780,7 @@ CodeGenerator::visitNotO(LNotO *lir)
     MOZ_ASSERT(lir->mir()->operandMightEmulateUndefined(),
                "This should be constant-folded if the object can't emulate undefined.");
 
-    OutOfLineTestObjectWithLabels *ool = new OutOfLineTestObjectWithLabels();
+    OutOfLineTestObjectWithLabels *ool = new(alloc()) OutOfLineTestObjectWithLabels();
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -4772,7 +4814,7 @@ CodeGenerator::visitNotV(LNotV *lir)
 
     OutOfLineTestObjectWithLabels *ool = nullptr;
     if (lir->mir()->operandMightEmulateUndefined()) {
-        ool = new OutOfLineTestObjectWithLabels();
+        ool = new(alloc()) OutOfLineTestObjectWithLabels();
         if (!addOutOfLineCode(ool))
             return false;
         ifTruthy = ool->label1();
@@ -4965,7 +5007,7 @@ CodeGenerator::visitStoreElementV(LStoreElementV *lir)
 bool
 CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT *lir)
 {
-    OutOfLineStoreElementHole *ool = new OutOfLineStoreElementHole(lir);
+    OutOfLineStoreElementHole *ool = new(alloc()) OutOfLineStoreElementHole(lir);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -4990,7 +5032,7 @@ CodeGenerator::visitStoreElementHoleT(LStoreElementHoleT *lir)
 bool
 CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV *lir)
 {
-    OutOfLineStoreElementHole *ool = new OutOfLineStoreElementHole(lir);
+    OutOfLineStoreElementHole *ool = new(alloc()) OutOfLineStoreElementHole(lir);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -5977,7 +6019,7 @@ CodeGenerator::visitUnboxFloatingPoint(LUnboxFloatingPoint *lir)
 
     // Out-of-line path to convert int32 to double or bailout
     // if this instruction is fallible.
-    OutOfLineUnboxFloatingPoint *ool = new OutOfLineUnboxFloatingPoint(lir);
+    OutOfLineUnboxFloatingPoint *ool = new(alloc()) OutOfLineUnboxFloatingPoint(lir);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -6741,7 +6783,7 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     if (lir->mir()->inputMaybeCallableOrEmulatesUndefined()) {
         // The input may be a callable object (result is "function") or may
         // emulate undefined (result is "undefined"). Use an OOL path.
-        ool = new OutOfLineTypeOfV(lir);
+        ool = new(alloc()) OutOfLineTypeOfV(lir);
         if (!addOutOfLineCode(ool))
             return false;
 
