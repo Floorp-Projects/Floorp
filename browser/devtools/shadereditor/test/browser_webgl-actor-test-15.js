@@ -16,8 +16,7 @@ function ifWebGLSupported() {
   ok(true, "The cached programs behave correctly before the navigation.");
 
   navigate(target, MULTIPLE_CONTEXTS_URL);
-  let secondProgram = yield once(front, "program-linked");
-  let thirdProgram = yield once(front, "program-linked");
+  let [secondProgram, thirdProgram] = yield getPrograms(front, 2);
   yield checkSecondCachedPrograms(firstProgram, [secondProgram, thirdProgram]);
   yield checkHighlightingInTheSecondPage(secondProgram, thirdProgram);
   ok(true, "The cached programs behave correctly after the navigation.");

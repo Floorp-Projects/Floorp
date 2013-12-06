@@ -151,7 +151,19 @@ function networkInterfaceStatsFail(params) {
 function networkInterfaceStatsSuccess(params) {
   // Notify the main thread.
   params.txBytes = parseFloat(params.resultReason);
+  postMessage(params);
+  return true;
+}
 
+function networkInterfaceAlarmFail(params) {
+  // Notify the main thread.
+  postMessage(params);
+  return true;
+}
+
+function networkInterfaceAlarmSuccess(params) {
+  // Notify the main thread.
+  params.error = parseFloat(params.resultReason);
   postMessage(params);
   return true;
 }
@@ -607,6 +619,31 @@ function getTxBytes(params, callback) {
   return doCommand(command, callback);
 }
 
+function enableAlarm(params, callback) {
+  let command = "bandwidth enable";
+  return doCommand(command, callback);
+}
+
+function disableAlarm(params, callback) {
+  let command = "bandwidth disable";
+  return doCommand(command, callback);
+}
+
+function setQuota(params, callback) {
+  let command = "bandwidth setiquota " + params.ifname + " " + parseInt('0xffffffffffffffff');
+  return doCommand(command, callback);
+}
+
+function removeQuota(params, callback) {
+  let command = "bandwidth removeiquota " + params.ifname;
+  return doCommand(command, callback);
+}
+
+function setAlarm(params, callback) {
+  let command = "bandwidth setinterfacealert " + params.ifname + " " + params.threshold;
+  return doCommand(command, callback);
+}
+
 function escapeQuote(str) {
   str = str.replace(/\\/g, "\\\\");
   return str.replace(/"/g, "\\\"");
@@ -911,6 +948,39 @@ function getNetworkInterfaceStats(params) {
   params.date = new Date();
 
   chain(params, gNetworkInterfaceStatsChain, networkInterfaceStatsFail);
+  return true;
+}
+
+let gNetworkInterfaceEnableAlarmChain = [enableAlarm,
+                                         setQuota,
+                                         setAlarm,
+                                         networkInterfaceAlarmSuccess];
+
+function enableNetworkInterfaceAlarm(params) {
+  debug("enableNetworkInterfaceAlarms: " + params.ifname);
+
+  chain(params, gNetworkInterfaceEnableAlarmChain, networkInterfaceAlarmFail);
+  return true;
+}
+
+let gNetworkInterfaceDisableAlarmChain = [removeQuota,
+                                          disableAlarm,
+                                          networkInterfaceAlarmSuccess];
+
+function disableNetworkInterfaceAlarm(params) {
+  debug("disableNetworkInterfaceAlarms: " + params.ifname);
+
+  chain(params, gNetworkInterfaceDisableAlarmChain, networkInterfaceAlarmFail);
+  return true;
+}
+
+let gNetworkInterfaceSetAlarmChain = [setAlarm,
+                                      networkInterfaceAlarmSuccess];
+
+function setNetworkInterfaceAlarm(params) {
+  debug("setNetworkInterfaceAlarms: " + params.ifname);
+
+  chain(params, gNetworkInterfaceSetAlarmChain, networkInterfaceAlarmFail);
   return true;
 }
 

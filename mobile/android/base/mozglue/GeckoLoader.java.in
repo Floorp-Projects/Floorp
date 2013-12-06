@@ -217,6 +217,7 @@ public final class GeckoLoader {
 #endif
     }
 
+    @RobocopTarget
     public static void loadSQLiteLibs(Context context, String apkName) {
         synchronized (sLibLoadingLock) {
             if (sSQLiteLibsLoaded) {

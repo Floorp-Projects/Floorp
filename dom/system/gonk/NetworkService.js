@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 const NETWORKSERVICE_CONTRACTID = "@mozilla.org/network/service;1";
-const NETWORKSERVICE_CID = Components.ID("{a6c58260-46df-11e3-8f96-0800200c9a66}");
+const NETWORKSERVICE_CID = Components.ID("{c14cabaf-bb8e-470d-a2f1-2cb6de6c5e5c}");
 
 // 1xx - Requested action is proceeding
 const NETD_COMMAND_PROCEEDING   = 100;
@@ -117,10 +117,86 @@ NetworkService.prototype = {
     params.isAsync = true;
 
     this.controlMessage(params, function(result) {
-      let success = result.resultCode >= NETD_COMMAND_OKAY &&
-                    result.resultCode < NETD_COMMAND_ERROR;
+      let success = !isError(result.resultCode);
       callback.networkStatsAvailable(success, result.rxBytes,
                                      result.txBytes, result.date);
+    });
+  },
+
+  setNetworkInterfaceAlarm: function setNetworkInterfaceAlarm(networkName, threshold, callback) {
+    if (!networkName) {
+      callback.networkUsageAlarmResult(-1);
+      return;
+    }
+
+    if (threshold < 0) {
+      this._disableNetworkInterfaceAlarm(networkName, callback);
+      return;
+    }
+
+    this._setNetworkInterfaceAlarm(networkName, threshold, callback);
+  },
+
+  _setNetworkInterfaceAlarm: function _setNetworkInterfaceAlarm(networkName, threshold, callback) {
+    debug("setNetworkInterfaceAlarm for " + networkName + " at " + threshold + "bytes");
+
+    let params = {
+      cmd: "setNetworkInterfaceAlarm",
+      ifname: networkName,
+      threshold: threshold
+    };
+
+    params.report = true;
+    params.isAsync = true;
+
+    this.controlMessage(params, function(result) {
+      if (!isError(result.resultCode)) {
+        callback.networkUsageAlarmResult(null);
+        return;
+      }
+
+      this._enableNetworkInterfaceAlarm(networkName, threshold, callback);
+    });
+  },
+
+  _enableNetworkInterfaceAlarm: function _enableNetworkInterfaceAlarm(networkName, threshold, callback) {
+    debug("enableNetworkInterfaceAlarm for " + networkName + " at " + threshold + "bytes");
+
+    let params = {
+      cmd: "enableNetworkInterfaceAlarm",
+      ifname: networkName,
+      threshold: threshold
+    };
+
+    params.report = true;
+    params.isAsync = true;
+
+    this.controlMessage(params, function(result) {
+      if (!isError(result.resultCode)) {
+        callback.networkUsageAlarmResult(null);
+        return;
+      }
+      callback.networkUsageAlarmResult(result.reason);
+    });
+  },
+
+  _disableNetworkInterfaceAlarm: function _disableNetworkInterfaceAlarm(networkName, callback) {
+    debug("disableNetworkInterfaceAlarm for " + networkName);
+
+    let params = {
+      cmd: "disableNetworkInterfaceAlarm",
+      ifname: networkName,
+    };
+
+    params.report = true;
+    params.isAsync = true;
+
+    this.controlMessage(params, function(result) {
+      if (!isError(result.resultCode)) {
+        callback.networkUsageAlarmResult(null);
+        return;
+      }
+      callback.networkUsageAlarmResult(result.reason);
     });
   },
 

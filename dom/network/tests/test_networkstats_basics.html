@@ -13,10 +13,8 @@
 <script type="application/javascript">
 
 function test() {
-  ok('mozNetworkStats' in navigator, "navigator.mozMozNetworkStats should exist");
-  ok(navigator.mozNetworkStats, "navigator.mozNetworkStats returns an object");
-
-  netStats = navigator.mozNetworkStats;
+  netStats = window.navigator.mozNetworkStats;
+  ok(netStats, "mozNetworkStats exists");
 
   // Test IDL attributes
   ok('sampleRate' in netStats,
