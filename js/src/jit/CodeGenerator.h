@@ -120,8 +120,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitApplyArgsGeneric(LApplyArgsGeneric *apply);
     bool visitBail(LBail *lir);
     bool visitGetDynamicName(LGetDynamicName *lir);
-    bool visitFilterArgumentsOrEval(LFilterArgumentsOrEval *lir);
-    bool visitCallDirectEval(LCallDirectEval *lir);
+    bool visitFilterArgumentsOrEvalS(LFilterArgumentsOrEvalS *lir);
+    bool visitFilterArgumentsOrEvalV(LFilterArgumentsOrEvalV *lir);
+    bool visitCallDirectEvalS(LCallDirectEvalS *lir);
+    bool visitCallDirectEvalV(LCallDirectEvalV *lir);
     bool visitDoubleToInt32(LDoubleToInt32 *lir);
     bool visitFloat32ToInt32(LFloat32ToInt32 *lir);
     bool visitNewSlots(LNewSlots *lir);
@@ -364,6 +366,9 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     void emitLambdaInit(const Register &resultReg, const Register &scopeChainReg,
                         const LambdaFunctionInfo &info);
+
+    bool emitFilterArgumentsOrEval(LInstruction *lir, Register string, Register temp1,
+                                   Register temp2);
 
     IonScriptCounts *maybeCreateScriptCounts();
 
