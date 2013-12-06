@@ -34,10 +34,9 @@ var ChromeSelectionHandler = {
     this._domWinUtils = Util.getWindowUtils(window);
     this._contentWindow = window;
     this._targetElement = this._domWinUtils.elementFromPoint(aJson.xPos, aJson.yPos, true, false);
-
     this._targetIsEditable = this._targetElement instanceof Components.interfaces.nsIDOMXULTextBoxElement;
     if (!this._targetIsEditable) {
-      this._onFail("not an editable?");
+      this._onFail("not an editable?", this._targetElement);
       return;
     }
 

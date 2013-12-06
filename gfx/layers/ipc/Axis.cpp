@@ -31,7 +31,7 @@ static float gMaxEventAcceleration = 999.0f;
 /**
  * Amount of friction applied during flings.
  */
-static float gFlingFriction = 0.006f;
+static float gFlingFriction = 0.002f;
 
 /**
  * Threshold for velocity beneath which we turn off any acceleration we had

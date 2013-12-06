@@ -399,14 +399,6 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
   initialize: function() {
     dumpn("Initializing the StackFramesView");
 
-    let commandset = this._commandset = document.createElement("commandset");
-    let menupopup = this._menupopup = document.createElement("menupopup");
-    commandset.id = "stackframesCommandset";
-    menupopup.id = "stackframesMenupopup";
-
-    document.getElementById("debuggerPopupset").appendChild(menupopup);
-    document.getElementById("debuggerCommands").appendChild(commandset);
-
     this.widget = new BreadcrumbsWidget(document.getElementById("stackframes"));
     this.widget.addEventListener("select", this._onSelect, false);
     this.widget.addEventListener("scroll", this._onScroll, true);
@@ -414,6 +406,9 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
 
     this.autoFocusOnFirstItem = false;
     this.autoFocusOnSelection = false;
+
+    // This view's contents are also mirrored in a different container.
+    this._mirror = DebuggerView.StackFramesClassicList;
   },
 
   /**
@@ -453,24 +448,22 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
       this._prevBlackBoxedUrl = null;
     }
 
-    // Create the element node and menu entry for the stack frame item.
+    // Create the element node for the stack frame item.
     let frameView = this._createFrameView.apply(this, arguments);
-    let menuEntry = this._createMenuEntry.apply(this, arguments);
 
     // Append a stack frame item to this container.
     this.push([frameView, aTitle, aUrl], {
       index: 0, /* specifies on which position should the item be appended */
       attachment: {
-        popup: menuEntry,
         depth: aDepth
       },
-      attributes: [
-        ["contextmenu", "stackframesMenupopup"]
-      ],
       // Make sure that when the stack frame item is removed, the corresponding
-      // menuitem and command are also destroyed.
+      // mirrored item in the classic list is also removed.
       finalize: this._onStackframeRemoved
     });
+
+    // Mirror this newly inserted item inside the "Call Stack" tab.
+    this._mirror.addFrame(aTitle, aUrl, aLine, aDepth);
   },
 
   /**
@@ -543,65 +536,6 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Customization function for populating an item's context menu.
-   *
-   * @param string aTitle
-   *        The frame title to be displayed in the list.
-   * @param string aUrl
-   *        The frame source url.
-   * @param string aLine
-   *        The frame line number.
-   * @param number aDepth
-   *        The frame depth in the stack.
-   * @param boolean aIsBlackBoxed
-   *        Whether or not the frame is black boxed.
-   * @return object
-   *         An object containing the stack frame command and menu item.
-   */
-  _createMenuEntry: function(aTitle, aUrl, aLine, aDepth, aIsBlackBoxed) {
-    let frameDescription = SourceUtils.trimUrlLength(
-      SourceUtils.getSourceLabel(aUrl),
-      STACK_FRAMES_POPUP_SOURCE_URL_MAX_LENGTH,
-      STACK_FRAMES_POPUP_SOURCE_URL_TRIM_SECTION) +
-      SEARCH_LINE_FLAG + aLine;
-
-    let prefix = "sf-cMenu-"; // "stackframes context menu"
-    let commandId = prefix + aDepth + "-" + "-command";
-    let menuitemId = prefix + aDepth + "-" + "-menuitem";
-
-    let command = document.createElement("command");
-    command.id = commandId;
-    command.addEventListener("command", () => this.selectedDepth = aDepth, false);
-
-    let menuitem = document.createElement("menuitem");
-    menuitem.id = menuitemId;
-    menuitem.className = "dbg-stackframe-menuitem";
-    menuitem.setAttribute("type", "checkbox");
-    menuitem.setAttribute("command", commandId);
-    menuitem.setAttribute("tooltiptext", aUrl);
-
-    let labelNode = document.createElement("label");
-    labelNode.className = "plain dbg-stackframe-menuitem-title";
-    labelNode.setAttribute("value", aTitle);
-    labelNode.setAttribute("flex", "1");
-
-    let descriptionNode = document.createElement("label");
-    descriptionNode.className = "plain dbg-stackframe-menuitem-details";
-    descriptionNode.setAttribute("value", frameDescription);
-
-    menuitem.appendChild(labelNode);
-    menuitem.appendChild(descriptionNode);
-
-    this._commandset.appendChild(command);
-    this._menupopup.appendChild(menuitem);
-
-    return {
-      command: command,
-      menuitem: menuitem
-    };
-  },
-
-  /**
    * Function called each time a stack frame item is removed.
    *
    * @param object aItem
@@ -610,10 +544,9 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
   _onStackframeRemoved: function(aItem) {
     dumpn("Finalizing stackframe item: " + aItem);
 
-    // Destroy the context menu item for the stack frame.
-    let contextItem = aItem.attachment.popup;
-    contextItem.command.remove();
-    contextItem.menuitem.remove();
+    // Remove the mirrored item in the classic list.
+    let depth = aItem.attachment.depth;
+    this._mirror.remove(this._mirror.getItemForAttachment(e => e.depth == depth));
 
     // Forget the previously blackboxed stack frame url.
     this._prevBlackBoxedUrl = null;
@@ -626,17 +559,13 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     let stackframeItem = this.selectedItem;
     if (stackframeItem) {
       // The container is not empty and an actual item was selected.
-      DebuggerController.StackFrames.selectFrame(stackframeItem.attachment.depth);
+      let depth = stackframeItem.attachment.depth;
+      DebuggerController.StackFrames.selectFrame(depth);
 
-      // Update the context menu to show the currently selected stackframe item
-      // as a checked entry.
-      for (let otherItem of this) {
-        if (otherItem != stackframeItem) {
-          otherItem.attachment.popup.menuitem.removeAttribute("checked");
-        } else {
-          otherItem.attachment.popup.menuitem.setAttribute("checked", "");
-        }
-      }
+      // Mirror the selected item in the classic list.
+      this.suppressSelectionEvents = true;
+      this._mirror.selectedItem = e => e.attachment.depth == depth;
+      this.suppressSelectionEvents = false;
     }
   },
 
@@ -673,9 +602,140 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     }
   },
 
-  _commandset: null,
-  _menupopup: null,
+  _mirror: null,
   _prevBlackBoxedUrl: null
+});
+
+/*
+ * Functions handling the stackframes classic list UI.
+ * Controlled by the DebuggerView.StackFrames isntance.
+ */
+function StackFramesClassicListView() {
+  dumpn("StackFramesClassicListView was instantiated");
+
+  this._onSelect = this._onSelect.bind(this);
+}
+
+StackFramesClassicListView.prototype = Heritage.extend(WidgetMethods, {
+  /**
+   * Initialization function, called when the debugger is started.
+   */
+  initialize: function() {
+    dumpn("Initializing the StackFramesClassicListView");
+
+    this.widget = new SideMenuWidget(document.getElementById("callstack-list"), {
+      theme: "light"
+    });
+    this.widget.addEventListener("select", this._onSelect, false);
+
+    this.emptyText = L10N.getStr("noStackFramesText");
+    this.autoFocusOnFirstItem = false;
+    this.autoFocusOnSelection = false;
+
+    // This view's contents are also mirrored in a different container.
+    this._mirror = DebuggerView.StackFrames;
+
+    // Show an empty label by default.
+    this.empty();
+  },
+
+  /**
+   * Destruction function, called when the debugger is closed.
+   */
+  destroy: function() {
+    dumpn("Destroying the StackFramesClassicListView");
+
+    this.widget.removeEventListener("select", this._onSelect, false);
+  },
+
+  /**
+   * Adds a frame in this stackframes container.
+   *
+   * @param string aTitle
+   *        The frame title (function name).
+   * @param string aUrl
+   *        The frame source url.
+   * @param string aLine
+   *        The frame line number.
+   * @param number aDepth
+   *        The frame depth in the stack.
+   */
+  addFrame: function(aTitle, aUrl, aLine, aDepth) {
+    // Create the element node for the stack frame item.
+    let frameView = this._createFrameView.apply(this, arguments);
+
+    // Append a stack frame item to this container.
+    this.push([frameView, aUrl], {
+      attachment: {
+        depth: aDepth
+      }
+    });
+  },
+
+  /**
+   * Customization function for creating an item's UI.
+   *
+   * @param string aTitle
+   *        The frame title to be displayed in the list.
+   * @param string aUrl
+   *        The frame source url.
+   * @param string aLine
+   *        The frame line number.
+   * @param number aDepth
+   *        The frame depth in the stack.
+   * @return nsIDOMNode
+   *         The stack frame view.
+   */
+  _createFrameView: function(aTitle, aUrl, aLine, aDepth) {
+    let container = document.createElement("hbox");
+    container.id = "classic-stackframe-" + aDepth;
+    container.className = "dbg-classic-stackframe";
+    container.setAttribute("flex", "1");
+
+    let frameTitleNode = document.createElement("label");
+    frameTitleNode.className = "plain dbg-classic-stackframe-title";
+    frameTitleNode.setAttribute("value", aTitle);
+    frameTitleNode.setAttribute("crop", "center");
+
+    let frameDetailsNode = document.createElement("hbox");
+    frameDetailsNode.className = "plain dbg-classic-stackframe-details";
+
+    let frameUrlNode = document.createElement("label");
+    frameUrlNode.className = "plain dbg-classic-stackframe-details-url";
+    frameUrlNode.setAttribute("value", SourceUtils.getSourceLabel(aUrl));
+    frameUrlNode.setAttribute("crop", "center");
+    frameDetailsNode.appendChild(frameUrlNode);
+
+    let frameDetailsSeparator = document.createElement("label");
+    frameDetailsSeparator.className = "plain dbg-classic-stackframe-details-sep";
+    frameDetailsSeparator.setAttribute("value", SEARCH_LINE_FLAG);
+    frameDetailsNode.appendChild(frameDetailsSeparator);
+
+    let frameLineNode = document.createElement("label");
+    frameLineNode.className = "plain dbg-classic-stackframe-details-line";
+    frameLineNode.setAttribute("value", aLine);
+    frameDetailsNode.appendChild(frameLineNode);
+
+    container.appendChild(frameTitleNode);
+    container.appendChild(frameDetailsNode);
+
+    return container;
+  },
+
+  /**
+   * The select listener for the stackframes container.
+   */
+  _onSelect: function(e) {
+    let stackframeItem = this.selectedItem;
+    if (stackframeItem) {
+      // The container is not empty and an actual item was selected.
+      // Mirror the selected item in the breadcrumbs list.
+      let depth = stackframeItem.attachment.depth;
+      this._mirror.selectedItem = e => e.attachment.depth == depth;
+    }
+  },
+
+  _mirror: null
 });
 
 /**
@@ -1533,3 +1593,4 @@ DebuggerView.FilteredSources = new FilteredSourcesView();
 DebuggerView.FilteredFunctions = new FilteredFunctionsView();
 DebuggerView.ChromeGlobals = new ChromeGlobalsView();
 DebuggerView.StackFrames = new StackFramesView();
+DebuggerView.StackFramesClassicList = new StackFramesClassicListView();

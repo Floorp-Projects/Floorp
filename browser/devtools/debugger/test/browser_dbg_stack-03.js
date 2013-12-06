@@ -8,7 +8,7 @@
 const TAB_URL = EXAMPLE_URL + "doc_recursion-stack.html";
 
 let gTab, gDebuggee, gPanel, gDebugger;
-let gFrames, gFramesScrollingInterval;
+let gFrames, gClassicFrames, gFramesScrollingInterval;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
@@ -17,6 +17,7 @@ function test() {
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gFrames = gDebugger.DebuggerView.StackFrames;
+    gClassicFrames = gDebugger.DebuggerView.StackFramesClassicList;
 
     waitForSourceAndCaretAndScopes(gPanel, ".html", 26).then(performTest);
 
@@ -30,14 +31,20 @@ function performTest() {
     "Should only be getting stack frames while paused.");
   is(gFrames.itemCount, gDebugger.gCallStackPageSize,
     "Should have only the max limit of frames.");
+  is(gClassicFrames.itemCount, gDebugger.gCallStackPageSize,
+    "Should have only the max limit of frames in the mirrored view as well.")
 
   gDebugger.gThreadClient.addOneTimeListener("framesadded", () => {
     is(gFrames.itemCount, gDebugger.gCallStackPageSize * 2,
       "Should now have twice the max limit of frames.");
+    is(gClassicFrames.itemCount, gDebugger.gCallStackPageSize * 2,
+      "Should now have twice the max limit of frames in the mirrored view as well.");
 
     gDebugger.gThreadClient.addOneTimeListener("framesadded", () => {
       is(gFrames.itemCount, gDebuggee.gRecurseLimit,
         "Should have reached the recurse limit.");
+      is(gClassicFrames.itemCount, gDebuggee.gRecurseLimit,
+        "Should have reached the recurse limit in the mirrored view as well.");
 
       gDebugger.gThreadClient.resume(() => {
         window.clearInterval(gFramesScrollingInterval);
@@ -60,4 +67,5 @@ registerCleanupFunction(function() {
   gPanel = null;
   gDebugger = null;
   gFrames = null;
+  gClassicFrames = null;
 });

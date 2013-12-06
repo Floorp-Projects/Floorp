@@ -10,7 +10,7 @@
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
 let gTab, gDebuggee, gPanel, gDebugger;
-let gEditor, gSources, gFrames, gToolbar;
+let gEditor, gSources, gFrames, gClassicFrames, gToolbar;
 
 function test() {
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
@@ -21,6 +21,7 @@ function test() {
     gEditor = gDebugger.DebuggerView.editor;
     gSources = gDebugger.DebuggerView.Sources;
     gFrames = gDebugger.DebuggerView.StackFrames;
+    gClassicFrames = gDebugger.DebuggerView.StackFramesClassicList;
     gToolbar = gDebugger.DebuggerView.Toolbar;
 
     waitForSourceAndCaretAndScopes(gPanel, "-02.js", 6).then(performTest);
@@ -53,13 +54,15 @@ function performTest() {
 
   function selectBottomFrame() {
     let updated = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES);
-    gFrames.selectedIndex = 0;
+    gClassicFrames.selectedIndex = gClassicFrames.itemCount - 1;
     return updated.then(waitForTick);
   }
 
   function testBottomFrame(debugLocation) {
     is(gFrames.selectedIndex, 0,
       "Oldest frame should be selected after click.");
+    is(gClassicFrames.selectedIndex, gFrames.itemCount - 1,
+      "Oldest frame should also be selected in the mirrored view.");
     is(gSources.selectedIndex, 0,
       "The first source is now selected in the widget.");
     is(gEditor.getText().search(/firstCall/), 118,
@@ -82,6 +85,8 @@ function performTest() {
   function testTopFrame(frameIndex) {
     is(gFrames.selectedIndex, frameIndex,
       "Topmost frame should be selected after click.");
+    is(gClassicFrames.selectedIndex, gFrames.itemCount - frameIndex - 1,
+      "Topmost frame should also be selected in the mirrored view.");
     is(gSources.selectedIndex, 1,
       "The second source is now selected in the widget.");
     is(gEditor.getText().search(/firstCall/), -1,
@@ -99,5 +104,6 @@ registerCleanupFunction(function() {
   gEditor = null;
   gSources = null;
   gFrames = null;
+  gClassicFrames = null;
   gToolbar = null;
 });

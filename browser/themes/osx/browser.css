@@ -3594,11 +3594,16 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   #navigator-toolbox[inFullscreen]:not(:-moz-lwtheme)::before {
     height: calc(@tabHeight@ + 11px) !important;
   }
+  #main-window[inFullscreen][privatebrowsingmode=temporary],
   #main-window[inFullscreen]:-moz-lwtheme {
     /* This additional padding matches the change in height in the pseudo-element
-     * above. The rules combined force the top 22px of the background image to
-     * be hidden, so there image doesn't jump around with the loss of the titlebar */
+     * above. */
     padding-top: 11px;
+  }
+  #main-window[inFullscreen]:not([privatebrowsingmode=temporary]):-moz-lwtheme {
+    /* In combination with the previous rule, forces the top 22px of the
+     * background image to be hidden, so the image doesn't jump around with
+     * the loss of the titlebar. */
     background-position: right -11px;
   }
 }

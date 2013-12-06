@@ -46,7 +46,7 @@ function performTest() {
 
   is(gSources.widget.getAttribute("label"), "doc_recursion-stack.html",
     "The sources widget should have a correct label attribute.");
-  is(gSources.widget.getAttribute("tooltiptext"), "example.com test",
+  is(gSources.widget.getAttribute("tooltiptext"), "http://example.com",
     "The sources widget should have a correct tooltip text attribute.");
 
   is(gDebugger.document.querySelectorAll("#sources .side-menu-widget-empty-notice-container").length, 0,

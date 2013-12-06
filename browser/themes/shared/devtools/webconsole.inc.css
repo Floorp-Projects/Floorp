@@ -291,11 +291,11 @@ a {
 .inlined-variables-view iframe {
   display: block;
   flex: 1;
+  margin-top: 5px;
   margin-bottom: 15px;
   -moz-margin-end: 15px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-shadow: 0 0 12px #dfdfdf;
+  border: 1px solid rgba(128, 128, 128, .5);
+  border-radius: 3px;
 }
 
 #webconsole-sidebar > tabs {
@@ -354,6 +354,10 @@ a {
   background: #131c26; /* mainBackgroundColor */
 }
 
+.theme-dark .inlined-variables-view iframe {
+  border-color: #333;
+}
+
 .theme-light .jsterm-input-container {
   background-color: #fff; /* mainBackgroundColor */
   border-color: ThreeDShadow;
@@ -370,3 +374,8 @@ a {
 .theme-light .navigation-marker .url {
   background: #fff; /* mainBackgroundColor */
 }
+
+.theme-light .inlined-variables-view iframe {
+  border-color: #ccc;
+}
+

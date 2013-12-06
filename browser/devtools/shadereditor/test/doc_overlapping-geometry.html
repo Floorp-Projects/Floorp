@@ -48,7 +48,7 @@
 
       window.onload = function() {
         canvas = document.querySelector("canvas");
-        gl = canvas.getContext("webgl");
+        gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
         initProgram(0);
