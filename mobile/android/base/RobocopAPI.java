@@ -5,9 +5,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.GeckoLayerClient;
-import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.RobocopTarget;
-import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.util.GeckoEventListener;
 
 import android.app.Activity;
@@ -69,10 +67,5 @@ public class RobocopAPI {
 
     public void setDrawListener(GeckoLayerClient.DrawListener listener) {
         GeckoAppShell.getLayerView().getLayerClient().setDrawListener(listener);
-    }
-
-    public Cursor querySql(String dbPath, String query) {
-        GeckoLoader.loadSQLiteLibs(mGeckoApp, mGeckoApp.getApplication().getPackageResourcePath());
-        return new SQLiteBridge(dbPath).rawQuery(query, null);
     }
 }
