@@ -8,14 +8,6 @@
 # libstdc++-compat is not built yet.
 MOZ_LIBSTDCXX_HOST_VERSION =
 
-ifndef CROSS_COMPILE
-ifdef COMPILE_ENVIRONMENT
-ifdef USE_ELF_DYNSTR_GC
-export:: elf-dynstr-gc
-endif
-endif
-endif
-
 # IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have
 # a recursive rule for finding nsinstall and the Perl scripts.
 ifdef NSBUILDROOT
@@ -113,13 +105,6 @@ endif
 
 GARBAGE += \
   $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES) buildid $(srcdir)/*.pyc *.pyc
-
-ifndef CROSS_COMPILE
-ifdef USE_ELF_DYNSTR_GC
-elf-dynstr-gc: elf-dynstr-gc.c $(GLOBAL_DEPS) $(call mkdir_deps,$(MDDEPDIR))
-	$(CC) $(COMPILE_CFLAGS) $(GLIB_CFLAGS) -DELFDYNSTRGC_BUILD -o $@ $< $(LDFLAGS) $(GLIB_LIBS)
-endif
-endif
 
 FORCE:
 
