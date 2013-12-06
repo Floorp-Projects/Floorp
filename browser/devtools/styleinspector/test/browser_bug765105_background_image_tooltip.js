@@ -142,9 +142,8 @@ function testComputedView() {
 
   let panel = computedView.tooltip.panel;
   let {valueSpan} = getComputedViewProperty("background-image");
-  let uriSpan = valueSpan.querySelector(".theme-link");
 
-  assertTooltipShownOn(computedView.tooltip, uriSpan, () => {
+  assertTooltipShownOn(computedView.tooltip, valueSpan, () => {
     let images = panel.getElementsByTagName("image");
     is(images.length, 1, "Tooltip contains an image");
     ok(images[0].src === "chrome://global/skin/icons/warning-64.png");
