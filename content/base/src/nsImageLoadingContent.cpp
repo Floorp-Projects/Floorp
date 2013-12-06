@@ -39,6 +39,7 @@
 #include "nsIDOMNode.h"
 
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsLayoutUtils.h"
 #include "nsIContentPolicy.h"
 #include "nsEventDispatcher.h"
@@ -46,7 +47,6 @@
 
 #include "mozAutoDocUpdate.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/ScriptSettings.h"
 
 #if defined(XP_WIN)
 // Undefine LoadImage to prevent naming conflict with Windows.
@@ -54,7 +54,6 @@
 #endif
 
 using namespace mozilla;
-using mozilla::dom::AutoSystemCaller;
 
 #ifdef DEBUG_chb
 static void PrintReqURL(imgIRequest* req) {
@@ -1195,8 +1194,11 @@ nsImageLoadingContent::ClearPendingRequest(nsresult aReason,
   if (!mPendingRequest)
     return;
 
-  // See bug 604262.
-  AutoSystemCaller asc;
+  // Push a null JSContext on the stack so that code that runs within
+  // the below code doesn't think it's being called by JS. See bug
+  // 604262.
+  nsCxPusher pusher;
+  pusher.PushNull();
 
   // Deregister this image from the refresh driver so it no longer receives
   // notifications.
@@ -1257,9 +1259,10 @@ nsImageLoadingContent::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   if (!aDocument)
     return;
 
-  // Make sure the callbacks triggered by the below code don't think they're
-  // being called from JS.
-  AutoSystemCaller asc;
+  // Push a null JSContext on the stack so that callbacks triggered by the
+  // below code won't think they're being called from JS.
+  nsCxPusher pusher;
+  pusher.PushNull();
 
   TrackImage(mCurrentRequest);
   TrackImage(mPendingRequest);
@@ -1276,9 +1279,10 @@ nsImageLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
   if (!doc)
     return;
 
-  // Make sure the callbacks triggered by the below code don't think they're
-  // being called from JS.
-  AutoSystemCaller asc;
+  // Push a null JSContext on the stack so that callbacks triggered by the
+  // below code won't think they're being called from JS.
+  nsCxPusher pusher;
+  pusher.PushNull();
 
   UntrackImage(mCurrentRequest);
   UntrackImage(mPendingRequest);
