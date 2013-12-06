@@ -40,7 +40,6 @@ class nsWindowSizes {
   macro(Other, mLayoutTextRunsSize) \
   macro(Other, mLayoutPresContextSize) \
   macro(Other, mPropertyTablesSize) \
-  macro(Other, mProtoIfaceCacheSize) \
 
 public:
   nsWindowSizes(mozilla::MallocSizeOf aMallocSizeOf)
