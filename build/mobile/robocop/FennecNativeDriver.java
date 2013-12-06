@@ -5,6 +5,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.gfx.PanningPerfAPI;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -53,10 +54,6 @@ public class FennecNativeDriver implements Driver {
     private Class mApiClass;
     private Class mEventListenerClass;
     private Method mRegisterEventListener;
-    private Method mStartFrameRecording;
-    private Method mStopFrameRecording;
-    private Method mStartCheckerboardRecording;
-    private Method mStopCheckerboardRecording;
     private Object mRobocopApi;
 
     public enum LogLevel {
@@ -93,10 +90,6 @@ public class FennecNativeDriver implements Driver {
             mEventListenerClass = mClassLoader.loadClass("org.mozilla.gecko.util.GeckoEventListener");
 
             mRegisterEventListener = mApiClass.getMethod("registerEventListener", String.class, mEventListenerClass);
-            mStartFrameRecording = mApiClass.getDeclaredMethod("startFrameTimeRecording");
-            mStopFrameRecording = mApiClass.getDeclaredMethod("stopFrameTimeRecording");
-            mStartCheckerboardRecording = mApiClass.getDeclaredMethod("startCheckerboardRecording");
-            mStopCheckerboardRecording = mApiClass.getDeclaredMethod("stopCheckerboardRecording");
 
             mRobocopApi = mApiClass.getConstructor(Activity.class).newInstance(activity);
         } catch (Exception e) {
@@ -172,66 +165,38 @@ public class FennecNativeDriver implements Driver {
     }
 
     public void startFrameRecording() {
-        try {
-            mStartFrameRecording.invoke(null);
-        } catch (IllegalAccessException e) {
-            log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            log(LogLevel.ERROR, e);
-        }
+        PanningPerfAPI.startFrameTimeRecording();
     }
 
     public int stopFrameRecording() {
-        try {
-            List<Long> frames = (List<Long>)mStopFrameRecording.invoke(null);
-            int badness = 0;
-            for (int i = 1; i < frames.size(); i++) {
-                long frameTime = frames.get(i) - frames.get(i - 1);
-                int delay = (int)(frameTime - FRAME_TIME_THRESHOLD);
-                // for each frame we miss, add the square of the delay. This
-                // makes large delays much worse than small delays.
-                if (delay > 0) {
-                    badness += delay * delay;
-                }
+        final List<Long> frames = PanningPerfAPI.stopFrameTimeRecording();
+        int badness = 0;
+        for (int i = 1; i < frames.size(); i++) {
+            long frameTime = frames.get(i) - frames.get(i - 1);
+            int delay = (int)(frameTime - FRAME_TIME_THRESHOLD);
+            // for each frame we miss, add the square of the delay. This
+            // makes large delays much worse than small delays.
+            if (delay > 0) {
+                badness += delay * delay;
             }
-            // Don't do any averaging of the numbers because really we want to
-            // know how bad the jank was at its worst
-            return badness;
-        } catch (IllegalAccessException e) {
-            log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            log(LogLevel.ERROR, e);
         }
 
-        // higher values are worse, and the test failing is the worst!
-        return Integer.MAX_VALUE;
+        // Don't do any averaging of the numbers because really we want to
+        // know how bad the jank was at its worst
+        return badness;
     }
 
     public void startCheckerboardRecording() {
-        try {
-            mStartCheckerboardRecording.invoke(null);
-        } catch (IllegalAccessException e) {
-            log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            log(LogLevel.ERROR, e);
-        }
+        PanningPerfAPI.startCheckerboardRecording();
     }
 
     public float stopCheckerboardRecording() {
-        try {
-            List<Float> checkerboard = (List<Float>)mStopCheckerboardRecording.invoke(null);
-            float total = 0;
-            for (float val : checkerboard) {
-                total += val;
-            }
-            return total * 100.0f;
-        } catch (IllegalAccessException e) {
-            log(LogLevel.ERROR, e);
-        } catch (InvocationTargetException e) {
-            log(LogLevel.ERROR, e);
+        final List<Float> checkerboard = PanningPerfAPI.stopCheckerboardRecording();
+        float total = 0;
+        for (float val : checkerboard) {
+            total += val;
         }
-
-        return 0.0f;
+        return total * 100.0f;
     }
 
     private LayerView getSurfaceView() {
