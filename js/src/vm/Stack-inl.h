@@ -812,6 +812,7 @@ Activation::Activation(JSContext *cx, Kind kind)
     compartment_(cx->compartment()),
     prev_(cx->mainThread().activation_),
     savedFrameChain_(0),
+    hideScriptedCallerCount_(0),
     kind_(kind)
 {
     cx->mainThread().activation_ = this;
@@ -820,6 +821,7 @@ Activation::Activation(JSContext *cx, Kind kind)
 Activation::~Activation()
 {
     JS_ASSERT(cx_->mainThread().activation_ == this);
+    JS_ASSERT(hideScriptedCallerCount_ == 0);
     cx_->mainThread().activation_ = prev_;
 }
 
