@@ -4207,21 +4207,42 @@ dnl Settings for the implementation of the ECMAScript Internationalization API
 if test -n "$ENABLE_INTL_API"; then
     AC_DEFINE(ENABLE_INTL_API)
 
+    MOZ_CONFIG_ICU()
+
     if test -z "$MOZ_NATIVE_ICU"; then
         case "$OS_TARGET" in
             WINNT)
                 ICU_LIB_NAMES="icuin icuuc icudt"
+                if test "$DISABLE_SHARED_JS" != "1"; then
+                    DBG_SUFFIX=
+                    if test -n "$MOZ_DEBUG"; then
+                        DBG_SUFFIX=d
+                    fi
+                    MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(LIB_PREFIX)$(lib)$(DBG_SUFFIX).$(LIB_SUFFIX))'
+                fi
                 ;;
-            Darwin|Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
+            Darwin)
                 ICU_LIB_NAMES="icui18n icuuc icudata"
+                if test "$DISABLE_SHARED_JS" != "1"; then
+                   MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(DLL_PREFIX)$(lib).$(MOZ_ICU_VERSION)$(DLL_SUFFIX))'
+                fi
+                ;;
+            Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
+                ICU_LIB_NAMES="icui18n icuuc icudata"
+                if test "$DISABLE_SHARED_JS" != "1"; then
+                   MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(DLL_PREFIX)$(lib)$(DLL_SUFFIX).$(MOZ_ICU_VERSION))'
+                fi
                 ;;
             *)
                 AC_MSG_ERROR([ECMAScript Internationalization API is not yet supported on this platform])
         esac
-        MOZ_ICU_LIBS='$(call EXPAND_LIBNAME_PATH,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib)'
+        if test "$DISABLE_SHARED_JS" = "1"; then
+            MOZ_ICU_LIBS='$(call EXPAND_LIBNAME_PATH,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib)'
+        fi
     fi
 fi
 
+AC_SUBST(DBG_SUFFIX)
 AC_SUBST(ENABLE_INTL_API)
 AC_SUBST(ICU_LIB_NAMES)
 AC_SUBST(MOZ_ICU_LIBS)
@@ -4229,8 +4250,12 @@ AC_SUBST(MOZ_NATIVE_ICU)
 
 dnl Settings for ICU
 if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
-    dnl We build ICU as a static library.
-    AC_DEFINE(U_STATIC_IMPLEMENTATION)
+    dnl We build ICU as a static library for non-shared js builds and as a shared library for shared js builds.
+    if test "$DISABLE_SHARED_JS" = "1"; then
+        AC_DEFINE(U_STATIC_IMPLEMENTATION)
+    else
+        AC_DEFINE(U_COMBINED_IMPLEMENTATION)
+    fi
 
     dnl Source files that use ICU should have control over which parts of the ICU
     dnl namespace they want to use.
@@ -4322,8 +4347,12 @@ if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
         ICU_TARGET_OPT="--build=$target --host=$target"
     fi
 
-    # To reduce library size, use static linking
-    ICU_LINK_OPTS="--enable-static --disable-shared"
+    if test "$DISABLE_SHARED_JS" = "1"; then
+        # To reduce library size, use static linking
+        ICU_LINK_OPTS="--enable-static --disable-shared"
+    else
+        ICU_LINK_OPTS="--disable-static --enable-shared"
+    fi
     # Force the ICU static libraries to be position independent code
     ICU_CFLAGS="$DSO_PIC_CFLAGS $CFLAGS"
     ICU_CXXFLAGS="$DSO_PIC_CFLAGS $CXXFLAGS"
