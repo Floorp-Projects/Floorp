@@ -611,6 +611,10 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     if (argsObj)
         blFrame->initArgsObjUnchecked(*argsObj);
 
+    // Ion doesn't compile code with try/catch, so the block object will always be
+    // null.
+    blFrame->setBlockChainNull();
+
     if (fun) {
         // The unpacked thisv and arguments should overwrite the pushed args present
         // in the calling frame.
@@ -661,6 +665,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     bool resumeAfter = excInfo ? false : iter.resumeAfter();
 
     JSOp op = JSOp(*pc);
+    JS_ASSERT_IF(excInfo, op == JSOP_ENTERBLOCK);
 
     // Fixup inlined JSOP_FUNCALL, JSOP_FUNAPPLY, and accessors on the caller side.
     // On the caller side this must represent like the function wasn't inlined.

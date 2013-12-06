@@ -407,7 +407,7 @@ enum ParseNodeKind
  * PNK_NULL,
  * PNK_THIS
  *
- * PNK_LEXICALSCOPE name    pn_op: JSOP_POPN or JSOP_POPNV
+ * PNK_LEXICALSCOPE name    pn_op: JSOP_LEAVEBLOCK or JSOP_LEAVEBLOCKEXPR
  *                          pn_objbox: block object in ObjectBox holder
  *                          pn_expr: block body
  * PNK_ARRAYCOMP    list    pn_count: 1

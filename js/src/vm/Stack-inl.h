@@ -77,7 +77,7 @@ StackFrame::initCallFrame(JSContext *cx, StackFrame *prev, jsbytecode *prevpc, V
     JS_ASSERT(callee.nonLazyScript() == script);
 
     /* Initialize stack frame members. */
-    flags_ = FUNCTION | HAS_SCOPECHAIN | flagsArg;
+    flags_ = FUNCTION | HAS_SCOPECHAIN | HAS_BLOCKCHAIN | flagsArg;
     argv_ = argv;
     exec.fun = &callee;
     u.nactual = nactual;
@@ -85,6 +85,8 @@ StackFrame::initCallFrame(JSContext *cx, StackFrame *prev, jsbytecode *prevpc, V
     prev_ = prev;
     prevpc_ = prevpc;
     prevsp_ = prevsp;
+    blockChain_= nullptr;
+    JS_ASSERT(!hasBlockChain());
     JS_ASSERT(!hasHookData());
 
     initVarsToUndefined();
@@ -108,7 +110,7 @@ inline Value &
 StackFrame::unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing)
 {
 #ifdef DEBUG
-    CheckLocalUnaliased(checkAliasing, script(), i);
+    CheckLocalUnaliased(checkAliasing, script(), maybeBlockChain(), i);
 #endif
     return slots()[i];
 }
@@ -514,6 +516,25 @@ AbstractFramePtr::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing)
 #endif
 }
 
+inline JSGenerator *
+AbstractFramePtr::maybeSuspendedGenerator(JSRuntime *rt) const
+{
+    if (isStackFrame())
+        return asStackFrame()->maybeSuspendedGenerator(rt);
+    return nullptr;
+}
+
+inline StaticBlockObject *
+AbstractFramePtr::maybeBlockChain() const
+{
+    if (isStackFrame())
+        return asStackFrame()->maybeBlockChain();
+#ifdef JS_ION
+    return asBaselineFrame()->maybeBlockChain();
+#else
+    MOZ_ASSUME_UNREACHABLE("Invalid frame");
+#endif
+}
 inline bool
 AbstractFramePtr::hasCallObj() const
 {
