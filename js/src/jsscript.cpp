@@ -807,7 +807,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         BlockScopeNote *note = &script->blockScopes()->vector[i];
         if (!xdr->codeUint32(&note->index) ||
             !xdr->codeUint32(&note->start) ||
-            !xdr->codeUint32(&note->length))
+            !xdr->codeUint32(&note->length) ||
+            !xdr->codeUint32(&note->parent))
         {
             return false;
         }

@@ -22,7 +22,7 @@ AC_DEFUN([MOZ_CONFIG_ICU], [
     fi
     MOZ_ICU_VERSION="$version"
 
-    if test -n "${JS_SHARED_LIBRARY}${MOZ_NATIVE_ICU}"; then
+    if test -z "${JS_STANDALONE}" -a -n "${JS_SHARED_LIBRARY}${MOZ_NATIVE_ICU}"; then
         MOZ_SHARED_ICU=1
     fi
 
