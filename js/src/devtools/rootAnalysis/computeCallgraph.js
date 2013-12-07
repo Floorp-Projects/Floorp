@@ -152,7 +152,7 @@ function getCallees(edge)
                 // from this field call to each final callee. When the analysis
                 // is checking whether an edge can GC and it sees an unrooted
                 // pointer held live across this field call, it will know
-                // whether any of the direct callers can GC or not.
+                // whether any of the direct callees can GC or not.
                 var targets = [];
                 for (var name of functions) {
                     callees.push({'kind': "direct", 'name': name});
