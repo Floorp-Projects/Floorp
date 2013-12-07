@@ -224,6 +224,8 @@ browser.jar:
   skin/classic/browser/preferences/saveFile.png             (preferences/saveFile.png)
 * skin/classic/browser/preferences/preferences.css          (preferences/preferences.css)
 * skin/classic/browser/preferences/in-content/preferences.css (preferences/in-content/preferences.css)
+  skin/classic/browser/preferences/in-content/check.png     (preferences/in-content/check.png)
+  skin/classic/browser/preferences/in-content/check@2x.png  (preferences/in-content/check@2x.png)
   skin/classic/browser/preferences/in-content/icons.png     (preferences/in-content/icons.png)
   skin/classic/browser/preferences/in-content/icons@2x.png  (preferences/in-content/icons@2x.png)
   skin/classic/browser/preferences/applications.css         (preferences/applications.css)
