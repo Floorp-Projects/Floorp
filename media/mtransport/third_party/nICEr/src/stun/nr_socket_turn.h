@@ -35,6 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _nr_socket_turn_h
 #define _nr_socket_turn_h
 
+#include "nr_socket.h"
+
 /* This is a partial implementation of an nr_socket wrapped
    around TURN. It implements only the nr_socket features
    actually used by the ICE stack. You can't, for instance,

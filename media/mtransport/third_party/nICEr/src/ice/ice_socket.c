@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static char *RCSSTRING __UNUSED__="$Id: ice_socket.c,v 1.2 2008/04/28 17:59:01 ekr Exp $";
 
 #include <assert.h>
+#include <string.h>
 #include "nr_api.h"
 #include "ice_ctx.h"
 #include "stun.h"
@@ -62,7 +63,11 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
     NR_ASYNC_WAIT(s,how,nr_ice_socket_readable_cb,cb_arg);
 
     if(r=nr_socket_recvfrom(sock->sock,buf,sizeof(buf),&len_s,0,&addr)){
-      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): Error reading from socket",sock->ctx->label);
+      if (r != R_WOULDBLOCK && (sock->type != NR_ICE_SOCKET_TYPE_DGRAM)) {
+        /* Report this error upward. Bug 946423 */
+        r_log(LOG_ICE,LOG_ERR,"ICE(%s): Error on reliable socket. Abandoning.",sock->ctx->label);
+        NR_ASYNC_CANCEL(s, NR_ASYNC_WAIT_READ);
+      }
       return;
     }
 
@@ -189,7 +194,8 @@ int nr_ice_socket_create(nr_ice_ctx *ctx,nr_ice_component *comp, nr_socket *nsoc
   {
     nr_ice_socket *sock=0;
     NR_SOCKET fd;
-    int _status;
+    nr_transport_addr addr;
+    int r,_status;
 
     if(!(sock=RCALLOC(sizeof(nr_ice_socket))))
       ABORT(R_NO_MEMORY);
@@ -198,10 +204,23 @@ int nr_ice_socket_create(nr_ice_ctx *ctx,nr_ice_component *comp, nr_socket *nsoc
     sock->ctx=ctx;
     sock->component=comp;
 
+    if(r=nr_socket_getaddr(nsock, &addr))
+      ABORT(r);
+
+    if (addr.protocol == IPPROTO_UDP) {
+      sock->type = NR_ICE_SOCKET_TYPE_DGRAM;
+    }
+    else {
+      assert(addr.protocol == IPPROTO_TCP);
+      sock->type = NR_ICE_SOCKET_TYPE_STREAM;
+    }
+
     TAILQ_INIT(&sock->candidates);
     TAILQ_INIT(&sock->stun_ctxs);
 
-    nr_socket_getfd(nsock,&fd);
+    if(r=nr_socket_getfd(nsock,&fd))
+      ABORT(r);
+
     NR_ASYNC_WAIT(fd,NR_ASYNC_WAIT_READ,nr_ice_socket_readable_cb,sock);
 
     *sockp=sock;
