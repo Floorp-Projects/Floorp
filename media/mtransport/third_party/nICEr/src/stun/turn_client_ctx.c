@@ -389,7 +389,7 @@ nr_turn_client_ctx_destroy(nr_turn_client_ctx **ctxp)
 
 int nr_turn_client_cancel(nr_turn_client_ctx *ctx)
 {
-  nr_turn_stun_ctx *stun;
+  nr_turn_stun_ctx *stun = 0;
 
   if (ctx->state == NR_TURN_CLIENT_STATE_CANCELLED ||
       ctx->state == NR_TURN_CLIENT_STATE_FAILED)
