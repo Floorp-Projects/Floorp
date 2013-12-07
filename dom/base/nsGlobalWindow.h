@@ -978,6 +978,7 @@ protected:
 
   // Object Management
   virtual ~nsGlobalWindow();
+  void ClearDelayedEventsAndDropDocument();
   void CleanUp();
   void ClearControllers();
   nsresult FinalClose();
