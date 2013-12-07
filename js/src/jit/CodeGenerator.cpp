@@ -3839,7 +3839,7 @@ CodeGenerator::visitAbsI(LAbsI *ins)
 
     JS_ASSERT(input == ToRegister(ins->output()));
     masm.test32(input, input);
-    masm.j(Assembler::GreaterThanOrEqual, &positive);
+    masm.j(Assembler::NotSigned, &positive);
     masm.neg32(input);
     if (ins->snapshot() && !bailoutIf(Assembler::Overflow, ins->snapshot()))
         return false;
