@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {Cc, Cu, Ci} = require("chrome");
-const promise = require("sdk/core/promise");
 
 let ToolDefinitions = require("main").Tools;
 
@@ -16,8 +15,6 @@ loader.lazyGetter(this, "RuleView", () => require("devtools/styleinspector/rule-
 loader.lazyGetter(this, "ComputedView", () => require("devtools/styleinspector/computed-view"));
 loader.lazyGetter(this, "_strings", () => Services.strings
   .createBundle("chrome://global/locale/devtools/styleinspector.properties"));
-
-const PREF_ORIG_SOURCES = "devtools.styleeditor.source-maps-enabled";
 
 // This module doesn't currently export any symbols directly, it only
 // registers inspector tools.
@@ -45,30 +42,29 @@ function RuleViewTool(aInspector, aWindow, aIFrame)
 
   this._cssLinkHandler = (aEvent) => {
     let rule = aEvent.detail.rule;
+    let line = rule.line || 0;
+
+    // The style editor can only display stylesheets coming from content because
+    // chrome stylesheets are not listed in the editor's stylesheet selector.
+    //
+    // If the stylesheet is a content stylesheet we send it to the style
+    // editor else we display it in the view source window.
+    //
+    let href = rule.href;
     let sheet = rule.parentStyleSheet;
-
-    // Chrome stylesheets are not listed in the style editor, so show
-    // these sheets in the view source window instead.
-    if (!sheet || !rule.href || sheet.isSystem) {
-      let contentDoc = this.inspector.selection.document;
-      let viewSourceUtils = this.inspector.viewSourceUtils;
-      viewSourceUtils.viewSource(rule.href, null, contentDoc, rule.line || 0);
-      return;
-    }
-
-    let location = promise.resolve(rule.location);
-    if (Services.prefs.getBoolPref(PREF_ORIG_SOURCES)) {
-      location = rule.getOriginalLocation();
-    }
-    location.then(({ href, line, column }) => {
+    if (sheet && href && !sheet.isSystem) {
       let target = this.inspector.target;
       if (ToolDefinitions.styleEditor.isTargetSupported(target)) {
         gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
-          toolbox.getCurrentPanel().selectStyleSheet(href, line, column);
+          toolbox.getCurrentPanel().selectStyleSheet(href, line);
         });
       }
       return;
-    })
+    }
+
+    let contentDoc = this.inspector.selection.document;
+    let viewSourceUtils = this.inspector.viewSourceUtils;
+    viewSourceUtils.viewSource(href, null, contentDoc, line);
   }
 
   this.view.element.addEventListener("CssRuleViewCSSLinkClicked",

@@ -4,21 +4,14 @@
 
 "use strict";
 
-let { components, Cc, Ci, Cu } = require('chrome');
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/devtools/SourceMap.jsm");
-
-const promise = require("sdk/core/promise");
-const events = require("sdk/event/core");
-const protocol = require("devtools/server/protocol");
-const {Arg, Option, method, RetVal, types} = protocol;
-const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
-
-loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
 
 let TRANSITION_CLASS = "moz-styleeditor-transitioning";
 let TRANSITION_DURATION_MS = 500;
@@ -32,25 +25,34 @@ transition-property: all !important;\
 
 let LOAD_ERROR = "error-load";
 
-exports.register = function(handle) {
-  handle.addTabActor(StyleSheetsActor, "styleSheetsActor");
-  handle.addGlobalActor(StyleSheetsActor, "styleSheetsActor");
-};
-
-exports.unregister = function(handle) {
-  handle.removeTabActor(StyleSheetsActor);
-  handle.removeGlobalActor(StyleSheetsActor);
-};
-
-types.addActorType("stylesheet");
-types.addActorType("originalsource");
-
 /**
- * Creates a StyleSheetsActor. StyleSheetsActor provides remote access to the
- * stylesheets of a document.
+ * Creates a StyleEditorActor. StyleEditorActor provides remote access to the
+ * built-in style editor module.
  */
-let StyleSheetsActor = protocol.ActorClass({
-  typeName: "stylesheets",
+function StyleEditorActor(aConnection, aParentActor)
+{
+  this.conn = aConnection;
+  this._onDocumentLoaded = this._onDocumentLoaded.bind(this);
+  this._onSheetLoaded = this._onSheetLoaded.bind(this);
+  this.parentActor = aParentActor;
+
+  // keep a map of sheets-to-actors so we don't create two actors for one sheet
+  this._sheets = new Map();
+
+  this._actorPool = new ActorPool(this.conn);
+  this.conn.addActorPool(this._actorPool);
+}
+
+StyleEditorActor.prototype = {
+  /**
+   * Actor pool for all of the actors we send to the client.
+   */
+  _actorPool: null,
+
+  /**
+   * The debugger server connection instance.
+   */
+  conn: null,
 
   /**
    * The window we work with, taken from the parent actor.
@@ -62,72 +64,104 @@ let StyleSheetsActor = protocol.ActorClass({
    */
   get document() this.window.document,
 
+  actorPrefix: "styleEditor",
+
   form: function()
   {
     return { actor: this.actorID };
   },
 
-  initialize: function (conn, tabActor) {
-    protocol.Actor.prototype.initialize.call(this, null);
-
-    this.parentActor = tabActor;
-
-    // keep a map of sheets-to-actors so we don't create two actors for one sheet
-    this._sheets = new Map();
-  },
-
   /**
-   * Destroy the current StyleSheetsActor instance.
+   * Destroy the current StyleEditorActor instance.
    */
-  destroy: function()
+  disconnect: function()
   {
-    this._sheets.clear();
-  },
-
-  /**
-   * Protocol method for getting a list of StyleSheetActors representing
-   * all the style sheets in this document.
-   */
-  getStyleSheets: method(function() {
-    let deferred = promise.defer();
-
-    let window = this.window;
-    var domReady = () => {
-      window.removeEventListener("DOMContentLoaded", domReady, true);
-
-      let documents = [this.document];
-      let actors = [];
-      for (let doc of documents) {
-        let sheets = this._addStyleSheets(doc.styleSheets);
-        actors = actors.concat(sheets);
-        // Recursively handle style sheets of the documents in iframes.
-        for (let iframe of doc.getElementsByTagName("iframe")) {
-          documents.push(iframe.contentDocument);
-        }
-      }
-      deferred.resolve(actors);
-    };
-
-    if (window.document.readyState === "loading") {
-      window.addEventListener("DOMContentLoaded", domReady, true);
-    } else {
-      domReady();
+    if (this._observer) {
+      this._observer.disconnect();
+      delete this._observer;
     }
 
-    return deferred.promise;
-  }, {
-    request: {},
-    response: { styleSheets: RetVal("array:stylesheet") }
-  }),
+    this._sheets.clear();
+
+    this.conn.removeActorPool(this._actorPool);
+    this._actorPool = null;
+    this.conn = null;
+  },
 
   /**
-   * Add all the stylesheets to the map and create an actor for each one
-   * if not already created. Send event that there are new stylesheets.
+   * Release an actor from our actor pool.
+   */
+  releaseActor: function(actor)
+  {
+    if (this._actorPool) {
+      this._actorPool.removeActor(actor.actorID);
+    }
+  },
+
+  /**
+   * Get the BaseURI for the document.
+   *
+   * @return {object} JSON message to with BaseURI
+   */
+  onGetBaseURI: function() {
+    return { baseURI: this.document.baseURIObject.spec };
+  },
+
+  /**
+   * Called when target navigates to a new document.
+   * Adds load listeners to document.
+   */
+  onNewDocument: function() {
+    // delete previous document's actors
+    this._clearStyleSheetActors();
+
+    // Note: listening for load won't be necessary once
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=839103 is fixed
+    if (this.document.readyState == "complete") {
+      this._onDocumentLoaded();
+    }
+    else {
+      this.window.addEventListener("load", this._onDocumentLoaded, false);
+    }
+    return {};
+  },
+
+  /**
+   * Event handler for document loaded event. Add actor for each stylesheet
+   * and send an event notifying of the load
+   */
+  _onDocumentLoaded: function(event) {
+    if (event) {
+      this.window.removeEventListener("load", this._onDocumentLoaded, false);
+    }
+
+    let documents = [this.document];
+    var forms = [];
+    for (let doc of documents) {
+      let sheetForms = this._addStyleSheets(doc.styleSheets);
+      forms = forms.concat(sheetForms);
+      // Recursively handle style sheets of the documents in iframes.
+      for (let iframe of doc.getElementsByTagName("iframe")) {
+        documents.push(iframe.contentDocument);
+      }
+    }
+
+    this.conn.send({
+      from: this.actorID,
+      type: "documentLoad",
+      styleSheets: forms
+    });
+  },
+
+  /**
+   * Add all the stylesheets to the map and create an actor
+   * for each one if not already created. Send event that there
+   * are new stylesheets.
    *
    * @param {[DOMStyleSheet]} styleSheets
    *        Stylesheets to add
    * @return {[object]}
-   *         Array of actors for each StyleSheetActor created
+   *         Array of forms for each StyleSheetActor created
    */
   _addStyleSheets: function(styleSheets)
   {
@@ -140,9 +174,13 @@ let StyleSheetsActor = protocol.ActorClass({
       let imports = this._getImported(styleSheet);
       sheets = sheets.concat(imports);
     }
-    let actors = sheets.map(this._createStyleSheetActor.bind(this));
 
-    return actors;
+    let forms = sheets.map((sheet) => {
+      let actor = this._createStyleSheetActor(sheet);
+      return actor.form();
+    });
+
+    return forms;
   },
 
   /**
@@ -178,23 +216,22 @@ let StyleSheetsActor = protocol.ActorClass({
   },
 
   /**
-   * Create a new actor for a style sheet, if it hasn't already been created.
+   * Create a new actor for a style sheet, if it hasn't
+   * already been created, and return it.
    *
-   * @param  {DOMStyleSheet} styleSheet
+   * @param  {DOMStyleSheet} aStyleSheet
    *         The style sheet to create an actor for.
    * @return {StyleSheetActor}
    *         The actor for this style sheet
    */
-  _createStyleSheetActor: function(styleSheet)
+  _createStyleSheetActor: function(aStyleSheet)
   {
-    if (this._sheets.has(styleSheet)) {
-      return this._sheets.get(styleSheet);
+    if (this._sheets.has(aStyleSheet)) {
+      return this._sheets.get(aStyleSheet);
     }
-    let actor = new StyleSheetActor(styleSheet, this);
-
-    this.manage(actor);
-    this._sheets.set(styleSheet, actor);
-
+    let actor = new StyleSheetActor(aStyleSheet, this);
+    this._actorPool.addActor(actor);
+    this._sheets.set(aStyleSheet, actor);
     return actor;
   },
 
@@ -203,9 +240,33 @@ let StyleSheetsActor = protocol.ActorClass({
    */
   _clearStyleSheetActors: function() {
     for (let actor in this._sheets) {
-      this.unmanage(this._sheets[actor]);
+      this.releaseActor(this._sheets[actor]);
     }
     this._sheets.clear();
+  },
+
+  /**
+   * Get the actors of all the stylesheets in the current document.
+   *
+   * @return {object} JSON message with the stylesheet actors' forms
+   */
+  onGetStyleSheets: function() {
+    let forms = this._addStyleSheets(this.document.styleSheets);
+    return { "styleSheets": forms };
+  },
+
+  /**
+   * Handler for style sheet loading event. Add
+   * a new actor for the sheet and notify.
+   *
+   * @param  {Event} event
+   */
+  _onSheetLoaded: function(event) {
+    let style = event.target;
+    style.removeEventListener("load", this._onSheetLoaded, false);
+
+    let actor = this._createStyleSheetActor(style.sheet);
+    this._notifyStyleSheetsAdded([actor.form()]);
   },
 
   /**
@@ -217,75 +278,76 @@ let StyleSheetsActor = protocol.ActorClass({
    * @return {object}
    *         Object with 'styelSheet' property for form on new actor.
    */
-  addStyleSheet: method(function(text) {
+  onNewStyleSheet: function(request) {
     let parent = this.document.documentElement;
     let style = this.document.createElementNS("http://www.w3.org/1999/xhtml", "style");
     style.setAttribute("type", "text/css");
 
-    if (text) {
-      style.appendChild(this.document.createTextNode(text));
+    if (request.text) {
+      style.appendChild(this.document.createTextNode(request.text));
     }
     parent.appendChild(style);
 
     let actor = this._createStyleSheetActor(style.sheet);
-    return actor;
-  }, {
-    request: { text: Arg(0, "string") },
-    response: { styleSheet: RetVal("stylesheet") }
-  })
-});
-
-/**
- * The corresponding Front object for the StyleSheetsActor.
- */
-let StyleSheetsFront = protocol.FrontClass(StyleSheetsActor, {
-  initialize: function(client, tabForm) {
-    protocol.Front.prototype.initialize.call(this, client);
-    this.actorID = tabForm.styleSheetsActor;
-
-    client.addActorPool(this);
-    this.manage(this);
+    return { styleSheet: actor.form() };
   }
-});
+};
 
 /**
- * A StyleSheetActor represents a stylesheet on the server.
+ * The request types this actor can handle.
  */
-let StyleSheetActor = protocol.ActorClass({
-  typeName: "stylesheet",
+StyleEditorActor.prototype.requestTypes = {
+  "getStyleSheets": StyleEditorActor.prototype.onGetStyleSheets,
+  "newStyleSheet": StyleEditorActor.prototype.onNewStyleSheet,
+  "getBaseURI": StyleEditorActor.prototype.onGetBaseURI,
+  "newDocument": StyleEditorActor.prototype.onNewDocument
+};
 
-  events: {
-    "property-change" : {
-      type: "propertyChange",
-      property: Arg(0, "string"),
-      value: Arg(1, "json")
-    },
-    "style-applied" : {
-      type: "styleApplied"
-    }
-  },
 
-  /* List of original sources that generated this stylesheet */
-  _originalSources: null,
+function StyleSheetActor(aStyleSheet, aParentActor) {
+  this.styleSheet = aStyleSheet;
+  this.parentActor = aParentActor;
+
+  // text and index are unknown until source load
+  this.text = null;
+  this._styleSheetIndex = -1;
+
+  this._transitionRefCount = 0;
+
+  this._onSourceLoad = this._onSourceLoad.bind(this);
+
+  // if this sheet has an @import, then it's rules are loaded async
+  let ownerNode = this.styleSheet.ownerNode;
+  if (ownerNode) {
+    let onSheetLoaded = function(event) {
+      ownerNode.removeEventListener("load", onSheetLoaded, false);
+      this._notifyPropertyChanged("ruleCount");
+    }.bind(this);
+
+    ownerNode.addEventListener("load", onSheetLoaded, false);
+  }
+}
+
+StyleSheetActor.prototype = {
+  actorPrefix: "stylesheet",
 
   toString: function() {
     return "[StyleSheetActor " + this.actorID + "]";
   },
 
+  disconnect: function() {
+    this.parentActor.releaseActor(this);
+  },
+
   /**
    * Window of target
    */
-  get window() this._window || this.parentActor.window,
+  get window() this.parentActor.window,
 
   /**
    * Document of target.
    */
   get document() this.window.document,
-
-  /**
-   * URL of underlying stylesheet.
-   */
-  get href() this.rawSheet.href,
 
   /**
    * Retrieve the index (order) of stylesheet in the document.
@@ -296,40 +358,13 @@ let StyleSheetActor = protocol.ActorClass({
   {
     if (this._styleSheetIndex == -1) {
       for (let i = 0; i < this.document.styleSheets.length; i++) {
-        if (this.document.styleSheets[i] == this.rawSheet) {
+        if (this.document.styleSheets[i] == this.styleSheet) {
           this._styleSheetIndex = i;
           break;
         }
       }
     }
     return this._styleSheetIndex;
-  },
-
-  initialize: function(aStyleSheet, aParentActor, aWindow) {
-    protocol.Actor.prototype.initialize.call(this, null);
-
-    this.rawSheet = aStyleSheet;
-    this.parentActor = aParentActor;
-    this.conn = this.parentActor.conn;
-
-    this._window = aWindow;
-
-    // text and index are unknown until source load
-    this.text = null;
-    this._styleSheetIndex = -1;
-
-    this._transitionRefCount = 0;
-
-    // if this sheet has an @import, then it's rules are loaded async
-    let ownerNode = this.rawSheet.ownerNode;
-    if (ownerNode) {
-      let onSheetLoaded = function(event) {
-        ownerNode.removeEventListener("load", onSheetLoaded, false);
-        this._notifyPropertyChanged("ruleCount");
-      }.bind(this);
-
-      ownerNode.addEventListener("load", onSheetLoaded, false);
-    }
   },
 
   /**
@@ -339,43 +374,29 @@ let StyleSheetActor = protocol.ActorClass({
    *         With properties of the underlying stylesheet, plus 'text',
    *        'styleSheetIndex' and 'parentActor' if it's @imported
    */
-  form: function(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-
-    let docHref;
-    if (this.rawSheet.ownerNode) {
-      if (this.rawSheet.ownerNode instanceof Ci.nsIDOMHTMLDocument) {
-        docHref = this.rawSheet.ownerNode.location.href;
-      }
-      if (this.rawSheet.ownerNode.ownerDocument) {
-        docHref = this.rawSheet.ownerNode.ownerDocument.location.href;
-      }
-    }
-
+  form: function() {
     let form = {
       actor: this.actorID,  // actorID is set when this actor is added to a pool
-      href: this.href,
-      nodeHref: docHref,
-      disabled: this.rawSheet.disabled,
-      title: this.rawSheet.title,
-      system: !CssLogic.isContentStylesheet(this.rawSheet),
-      styleSheetIndex: this.styleSheetIndex
+      href: this.styleSheet.href,
+      disabled: this.styleSheet.disabled,
+      title: this.styleSheet.title,
+      styleSheetIndex: this.styleSheetIndex,
+      text: this.text
     }
 
     // get parent actor if this sheet was @imported
-    let parent = this.rawSheet.parentStyleSheet;
+    let parent = this.styleSheet.parentStyleSheet;
     if (parent) {
       form.parentActor = this.parentActor._sheets.get(parent).form();
     }
 
     try {
-      form.ruleCount = this.rawSheet.cssRules.length;
+      form.ruleCount = this.styleSheet.cssRules.length;
     }
     catch(e) {
       // stylesheet had an @import rule that wasn't loaded yet
     }
+
     return form;
   },
 
@@ -385,14 +406,12 @@ let StyleSheetActor = protocol.ActorClass({
    * @return {object}
    *         'disabled' - the disabled state after toggling.
    */
-  toggleDisabled: method(function() {
-    this.rawSheet.disabled = !this.rawSheet.disabled;
+  onToggleDisabled: function() {
+    this.styleSheet.disabled = !this.styleSheet.disabled;
     this._notifyPropertyChanged("disabled");
 
-    return this.rawSheet.disabled;
-  }, {
-    response: { disabled: RetVal("boolean")}
-  }),
+    return { disabled: this.styleSheet.disabled };
+  },
 
   /**
    * Send an event notifying that a property of the stylesheet
@@ -402,223 +421,89 @@ let StyleSheetActor = protocol.ActorClass({
    *         Name of the changed property
    */
   _notifyPropertyChanged: function(property) {
-    events.emit(this, "property-change", property, this.form()[property]);
-  },
-
-  /**
-   * Protocol method to get the text of this stylesheet.
-   */
-  getText: method(function() {
-    return this._getText().then((text) => {
-      return new LongStringActor(this.conn, text || "");
-    });
-  }, {
-    response: {
-      text: RetVal("longstring")
-    }
-  }),
-
-  /**
-   * Fetch the text for this stylesheet from the cache or network. Return
-   * cached text if it's already been fetched.
-   *
-   * @return {Promise}
-   *         Promise that resolves with a string text of the stylesheet.
-   */
-  _getText: function() {
-    if (this.text) {
-      return promise.resolve(this.text);
-    }
-
-    if (!this.href) {
-      // this is an inline <style> sheet
-      let content = this.rawSheet.ownerNode.textContent;
-      this.text = content;
-      return promise.resolve(content);
-    }
-
-    let options = {
-      window: this.window,
-      charset: this._getCSSCharset()
-    };
-
-    return fetch(this.href, options).then(({ content }) => {
-      this.text = content;
-      return content;
-    });
-  },
-
-  /**
-   * Protocol method to get the original source (actors) for this
-   * stylesheet if it has uses source maps.
-   */
-  getOriginalSources: method(function() {
-    if (this._originalSources) {
-      return promise.resolve(this._originalSources);
-    }
-    return this._fetchOriginalSources();
-  }, {
-    request: {},
-    response: {
-      originalSources: RetVal("nullable:array:originalsource")
-    }
-  }),
-
-  /**
-   * Fetch the original sources (actors) for this style sheet using its
-   * source map. If they've already been fetched, returns cached array.
-   *
-   * @return {Promise}
-   *         Promise that resolves with an array of OriginalSourceActors
-   */
-  _fetchOriginalSources: function() {
-    this._clearOriginalSources();
-    this._originalSources = [];
-
-    return this.getSourceMap().then((sourceMap) => {
-      if (!sourceMap) {
-        return;
-      }
-      for (let url of sourceMap.sources) {
-        let actor = new OriginalSourceActor(url, sourceMap, this);
-
-        this.manage(actor);
-        this._originalSources.push(actor);
-      }
-      return this._originalSources;
+    this.conn.send({
+      from: this.actorID,
+      type: "propertyChange",
+      property: property,
+      value: this.form()[property]
     })
   },
 
   /**
-   * Get the SourceMapConsumer for this stylesheet's source map, if
-   * it exists. Saves the consumer for later queries.
+   * Handler for event when the style sheet's full text has been
+   * loaded from its source.
    *
-   * @return {Promise}
-   *         A promise that resolves with a SourceMapConsumer, or null.
+   * @param  {string} error
+   *         Error from source load, null if no error
+   * @param  {string} source
+   *         Text of the style sheet
+   * @param  {[type]} charset
+   *         Optional charset of the source
    */
-  getSourceMap: function() {
-    if (this._sourceMap) {
-      return this._sourceMap;
+  _onSourceLoad: function(error, source, charset) {
+    let message = {
+      from: this.actorID,
+      type: "sourceLoad",
+    };
+
+    if (error) {
+      message.error = error;
     }
-    return this._fetchSourceMap();
-  },
-
-  /**
-   * Fetch the source map for this stylesheet.
-   *
-   * @return {Promise}
-   *         A promise that resolves with a SourceMapConsumer, or null.
-   */
-  _fetchSourceMap: function() {
-    let deferred = promise.defer();
-
-    this._getText().then((content) => {
-      let url = this._extractSourceMapUrl(content);
-      if (!url) {
-        // no source map for this stylesheet
-        return deferred.resolve(null);
-      };
-
-      url = normalize(url, this.href);
-
-      let map = fetch(url, { loadFromCache: false, window: this.window })
-        .then(({content}) => {
-          let map = new SourceMapConsumer(content);
-          this._setSourceMapRoot(map, url, this.href);
-          this._sourceMap = promise.resolve(map);
-
-          deferred.resolve(map);
-          return map;
-        }, deferred.reject);
-
-      this._sourceMap = map;
-    }, deferred.reject);
-
-    return deferred.promise;
-  },
-
-  /**
-   * Clear and unmanage the original source actors for this stylesheet.
-   */
-  _clearOriginalSources: function() {
-    for (actor in this._originalSources) {
-      this.unmanage(actor);
+    else {
+      this.text = this._decodeCSSCharset(source, charset || "");
+      message.source = this.text;
     }
-    this._originalSources = null;
+
+    this.conn.send(message);
   },
 
   /**
-   * Sets the source map's sourceRoot to be relative to the source map url.
+   * Fetch the source of the style sheet from its URL
    */
-  _setSourceMapRoot: function(aSourceMap, aAbsSourceMapURL, aScriptURL) {
-    const base = dirname(
-      aAbsSourceMapURL.indexOf("data:") === 0
-        ? aScriptURL
-        : aAbsSourceMapURL);
-    aSourceMap.sourceRoot = aSourceMap.sourceRoot
-      ? normalize(aSourceMap.sourceRoot, base)
-      : base;
-  },
-
-  /**
-   * Get the source map url specified in the text of a stylesheet.
-   *
-   * @param  {string} content
-   *         The text of the style sheet.
-   * @return {string}
-   *         Url of source map.
-   */
-  _extractSourceMapUrl: function(content) {
-    var matches = /sourceMappingURL\=([^\s\*]*)/.exec(content);
-    if (matches) {
-      return matches[1];
+  onFetchSource: function() {
+    if (!this.styleSheet.href) {
+      // this is an inline <style> sheet
+      let source = this.styleSheet.ownerNode.textContent;
+      this._onSourceLoad(null, source);
+      return {};
     }
+
+    let scheme = Services.io.extractScheme(this.styleSheet.href);
+    switch (scheme) {
+      case "file":
+        this._styleSheetFilePath = this.styleSheet.href;
+      case "chrome":
+      case "resource":
+        this._loadSourceFromFile(this.styleSheet.href);
+        break;
+      default:
+        this._loadSourceFromCache(this.styleSheet.href);
+        break;
+    }
+    return {};
   },
 
   /**
-   * Protocol method that gets the location in the original source of a
-   * line, column pair in this stylesheet, if its source mapped, otherwise
-   * a promise of the same location.
-   */
-  getOriginalLocation: method(function(line, column) {
-    return this.getSourceMap().then((sourceMap) => {
-      if (sourceMap) {
-        return sourceMap.originalPositionFor({ line: line, column: column });
-      }
-      return {
-        source: this.href,
-        line: line,
-        column: column
-      }
-    });
-  }, {
-    request: {
-      line: Arg(0, "number"),
-      column: Arg(1, "number")
-    },
-    response: RetVal(types.addDictType("originallocationresponse", {
-      source: "string",
-      line: "number",
-      column: "number"
-    }))
-  }),
-
-  /**
-   * Get the charset of the stylesheet according to the character set rules
+   * Decode a CSS source string to unicode according to the character set rules
    * defined in <http://www.w3.org/TR/CSS2/syndata.html#charset>.
    *
+   * @param string string
+   *        Source of a CSS stylesheet, loaded from file or cache.
    * @param string channelCharset
    *        Charset of the source string if set by the HTTP channel.
+   * @return string
+   *         The CSS string, in unicode.
    */
-  _getCSSCharset: function(channelCharset)
+  _decodeCSSCharset: function(string, channelCharset)
   {
     // StyleSheet's charset can be specified from multiple sources
-    if (channelCharset && channelCharset.length > 0) {
+
+    if (channelCharset.length > 0) {
       // step 1 of syndata.html: charset given in HTTP header.
-      return channelCharset;
+      return this._convertToUnicode(string, channelCharset);
     }
 
-    let sheet = this.rawSheet;
+    let sheet = this.styleSheet;
     if (sheet) {
       // Do we have a @charset rule in the stylesheet?
       // step 2 of syndata.html (without the BOM check).
@@ -626,7 +511,7 @@ let StyleSheetActor = protocol.ActorClass({
         let rules = sheet.cssRules;
         if (rules.length
             && rules.item(0).type == Ci.nsIDOMCSSRule.CHARSET_RULE) {
-          return rules.item(0).encoding;
+          return this._convertToUnicode(string, rules.item(0).encoding);
         }
       }
 
@@ -634,7 +519,7 @@ let StyleSheetActor = protocol.ActorClass({
       if (sheet.ownerNode && sheet.ownerNode.getAttribute) {
         let linkCharset = sheet.ownerNode.getAttribute("charset");
         if (linkCharset != null) {
-          return linkCharset;
+          return this._convertToUnicode(string, linkCharset);
         }
       }
 
@@ -642,45 +527,130 @@ let StyleSheetActor = protocol.ActorClass({
       let parentSheet = sheet.parentStyleSheet;
       if (parentSheet && parentSheet.cssRules &&
           parentSheet.cssRules[0].type == Ci.nsIDOMCSSRule.CHARSET_RULE) {
-        return parentSheet.cssRules[0].encoding;
+        return this._convertToUnicode(string,
+            parentSheet.cssRules[0].encoding);
       }
 
       // step 4 (2 of 2): charset of referring document.
       if (sheet.ownerNode && sheet.ownerNode.ownerDocument.characterSet) {
-        return sheet.ownerNode.ownerDocument.characterSet;
+        return this._convertToUnicode(string,
+            sheet.ownerNode.ownerDocument.characterSet);
       }
     }
 
     // step 5: default to utf-8.
-    return "UTF-8";
+    return this._convertToUnicode(string, "UTF-8");
   },
 
   /**
-   * Update the style sheet in place with new text.
+   * Convert a given string, encoded in a given character set, to unicode.
+   *
+   * @param string string
+   *        A string.
+   * @param string charset
+   *        A character set.
+   * @return string
+   *         A unicode string.
+   */
+  _convertToUnicode: function(string, charset) {
+    // Decoding primitives.
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+        .createInstance(Ci.nsIScriptableUnicodeConverter);
+
+    try {
+      converter.charset = charset;
+      return converter.ConvertToUnicode(string);
+    } catch(e) {
+      return string;
+    }
+  },
+
+  /**
+   * Load source from a file or file-like resource.
+   *
+   * @param string href
+   *        URL for the stylesheet.
+   */
+  _loadSourceFromFile: function(href)
+  {
+    try {
+      NetUtil.asyncFetch(href, (stream, status) => {
+        if (!Components.isSuccessCode(status)) {
+          this._onSourceLoad(LOAD_ERROR);
+          return;
+        }
+        let source = NetUtil.readInputStreamToString(stream, stream.available());
+        stream.close();
+        this._onSourceLoad(null, source);
+      });
+    } catch (ex) {
+      this._onSourceLoad(LOAD_ERROR);
+    }
+  },
+
+  /**
+   * Load source from the HTTP cache.
+   *
+   * @param string href
+   *        URL for the stylesheet.
+   */
+  _loadSourceFromCache: function(href)
+  {
+    let channel = Services.io.newChannel(href, null, null);
+    let chunks = [];
+    let channelCharset = "";
+    let streamListener = { // nsIStreamListener inherits nsIRequestObserver
+      onStartRequest: (aRequest, aContext, aStatusCode) => {
+        if (!Components.isSuccessCode(aStatusCode)) {
+          this._onSourceLoad(LOAD_ERROR);
+        }
+      },
+      onDataAvailable: (aRequest, aContext, aStream, aOffset, aCount) => {
+        let channel = aRequest.QueryInterface(Ci.nsIChannel);
+        if (!channelCharset) {
+          channelCharset = channel.contentCharset;
+        }
+        chunks.push(NetUtil.readInputStreamToString(aStream, aCount));
+      },
+      onStopRequest: (aRequest, aContext, aStatusCode) => {
+        if (!Components.isSuccessCode(aStatusCode)) {
+          this._onSourceLoad(LOAD_ERROR);
+          return;
+        }
+        let source = chunks.join("");
+        this._onSourceLoad(null, source, channelCharset);
+      }
+    };
+
+    channel.loadGroup = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIWebNavigation)
+                            .QueryInterface(Ci.nsIDocumentLoader)
+                            .loadGroup;
+    channel.loadFlags = channel.LOAD_FROM_CACHE;
+    channel.asyncOpen(streamListener, null);
+  },
+
+  /**
+   * Update the style sheet in place with new text
    *
    * @param  {object} request
    *         'text' - new text
    *         'transition' - whether to do CSS transition for change.
    */
-  update: method(function(text, transition) {
-    DOMUtils.parseStyleSheet(this.rawSheet, text);
-
-    this.text = text;
+  onUpdate: function(request) {
+    DOMUtils.parseStyleSheet(this.styleSheet, request.text);
 
     this._notifyPropertyChanged("ruleCount");
 
-    if (transition) {
+    if (request.transition) {
       this._insertTransistionRule();
     }
     else {
       this._notifyStyleApplied();
     }
-  }, {
-    request: {
-      text: Arg(0, "string"),
-      transition: Arg(1, "boolean")
-    }
-  }),
+
+    return {};
+  },
 
   /**
    * Insert a catch-all transition rule into the document. Set a timeout
@@ -689,9 +659,9 @@ let StyleSheetActor = protocol.ActorClass({
   _insertTransistionRule: function() {
     // Insert the global transition rule
     // Use a ref count to make sure we do not add it multiple times.. and remove
-    // it only when all pending StyleSheets-generated transitions ended.
+    // it only when all pending StyleEditor-generated transitions ended.
     if (this._transitionRefCount == 0) {
-      this.rawSheet.insertRule(TRANSITION_RULE, this.rawSheet.cssRules.length);
+      this.styleSheet.insertRule(TRANSITION_RULE, this.styleSheet.cssRules.length);
       this.document.documentElement.classList.add(TRANSITION_CLASS);
     }
 
@@ -711,280 +681,33 @@ let StyleSheetActor = protocol.ActorClass({
   {
     if (--this._transitionRefCount == 0) {
       this.document.documentElement.classList.remove(TRANSITION_CLASS);
-      this.rawSheet.deleteRule(this.rawSheet.cssRules.length - 1);
+      this.styleSheet.deleteRule(this.styleSheet.cssRules.length - 1);
     }
 
-    events.emit(this, "style-applied");
-  }
-})
-
-/**
- * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
- */
-var StyleSheetFront = protocol.FrontClass(StyleSheetActor, {
-  initialize: function(conn, form, ctx, detail) {
-    protocol.Front.prototype.initialize.call(this, conn, form, ctx, detail);
-
-    this._onPropertyChange = this._onPropertyChange.bind(this);
-    events.on(this, "property-change", this._onPropertyChange);
-  },
-
-  destroy: function() {
-    events.off(this, "property-change", this._onPropertyChange);
-
-    protocol.Front.prototype.destroy.call(this);
-  },
-
-  _onPropertyChange: function(property, value) {
-    this._form[property] = value;
-  },
-
-  form: function(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-    this.actorID = form.actor;
-    this._form = form;
-  },
-
-  get href() this._form.href,
-  get nodeHref() this._form.nodeHref,
-  get disabled() !!this._form.disabled,
-  get title() this._form.title,
-  get isSystem() this._form.system,
-  get styleSheetIndex() this._form.styleSheetIndex,
-  get ruleCount() this._form.ruleCount
-});
-
-/**
- * Actor representing an original source of a style sheet that was specified
- * in a source map.
- */
-let OriginalSourceActor = protocol.ActorClass({
-  typeName: "originalsource",
-
-  initialize: function(aUrl, aSourceMap, aParentActor) {
-    protocol.Actor.prototype.initialize.call(this, null);
-
-    this.url = aUrl;
-    this.sourceMap = aSourceMap;
-    this.parentActor = aParentActor;
-    this.conn = this.parentActor.conn;
-
-    this.text = null;
-  },
-
-  form: function() {
-    return {
-      actor: this.actorID, // actorID is set when it's added to a pool
-      url: this.url,
-      parentSource: this.parentActor.actorID
-    };
-  },
-
-  _getText: function() {
-    if (this.text) {
-      return promise.resolve(this.text);
-    }
-    return fetch(this.url, { window: this.window }).then(({content}) => {
-      this.text = content;
-      return content;
-    });
+    this._notifyStyleApplied();
   },
 
   /**
-   * Protocol method to get the text of this source.
+   * Send and event notifying that the new style has been applied fully.
    */
-  getText: method(function() {
-    return this._getText().then((text) => {
-      return new LongStringActor(this.conn, text || "");
-    });
-  }, {
-    response: {
-      text: RetVal("longstring")
-    }
-  })
-})
+  _notifyStyleApplied: function()
+  {
+    this.conn.send({
+      from: this.actorID,
+      type: "styleApplied"
+    })
+  }
+}
 
-/**
- * The client-side counterpart for an OriginalSourceActor.
- */
-let OriginalSourceFront = protocol.FrontClass(OriginalSourceActor, {
-  initialize: function(client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
+StyleSheetActor.prototype.requestTypes = {
+  "toggleDisabled": StyleSheetActor.prototype.onToggleDisabled,
+  "fetchSource": StyleSheetActor.prototype.onFetchSource,
+  "update": StyleSheetActor.prototype.onUpdate
+};
 
-    this.isOriginalSource = true;
-  },
-
-  form: function(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-    this.actorID = form.actor;
-    this._form = form;
-  },
-
-  get href() this._form.url,
-  get url() this._form.url
-});
-
+DebuggerServer.addTabActor(StyleEditorActor, "styleEditorActor");
+DebuggerServer.addGlobalActor(StyleEditorActor, "styleEditorActor");
 
 XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
-
-exports.StyleSheetsActor = StyleSheetsActor;
-exports.StyleSheetsFront = StyleSheetsFront;
-
-exports.StyleSheetActor = StyleSheetActor;
-exports.StyleSheetFront = StyleSheetFront;
-
-
-/**
- * Performs a request to load the desired URL and returns a promise.
- *
- * @param aURL String
- *        The URL we will request.
- * @returns Promise
- *        A promise of the document at that URL, as a string.
- */
-function fetch(aURL, aOptions={ loadFromCache: true, window: null,
-                                charset: null}) {
-  let deferred = promise.defer();
-  let scheme;
-  let url = aURL.split(" -> ").pop();
-  let charset;
-  let contentType;
-
-  try {
-    scheme = Services.io.extractScheme(url);
-  } catch (e) {
-    // In the xpcshell tests, the script url is the absolute path of the test
-    // file, which will make a malformed URI error be thrown. Add the file
-    // scheme prefix ourselves.
-    url = "file://" + url;
-    scheme = Services.io.extractScheme(url);
-  }
-
-  switch (scheme) {
-    case "file":
-    case "chrome":
-    case "resource":
-      try {
-        NetUtil.asyncFetch(url, function onFetch(aStream, aStatus, aRequest) {
-          if (!components.isSuccessCode(aStatus)) {
-            deferred.reject(new Error("Request failed with status code = "
-                                      + aStatus
-                                      + " after NetUtil.asyncFetch for url = "
-                                      + url));
-            return;
-          }
-
-          let source = NetUtil.readInputStreamToString(aStream, aStream.available());
-          contentType = aRequest.contentType;
-          deferred.resolve(source);
-          aStream.close();
-        });
-      } catch (ex) {
-        deferred.reject(ex);
-      }
-      break;
-
-    default:
-      let channel;
-      try {
-        channel = Services.io.newChannel(url, null, null);
-      } catch (e if e.name == "NS_ERROR_UNKNOWN_PROTOCOL") {
-        // On Windows xpcshell tests, c:/foo/bar can pass as a valid URL, but
-        // newChannel won't be able to handle it.
-        url = "file:///" + url;
-        channel = Services.io.newChannel(url, null, null);
-      }
-      let chunks = [];
-      let streamListener = {
-        onStartRequest: function(aRequest, aContext, aStatusCode) {
-          if (!components.isSuccessCode(aStatusCode)) {
-            deferred.reject(new Error("Request failed with status code = "
-                                      + aStatusCode
-                                      + " in onStartRequest handler for url = "
-                                      + url));
-          }
-        },
-        onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
-          chunks.push(NetUtil.readInputStreamToString(aStream, aCount));
-        },
-        onStopRequest: function(aRequest, aContext, aStatusCode) {
-          if (!components.isSuccessCode(aStatusCode)) {
-            deferred.reject(new Error("Request failed with status code = "
-                                      + aStatusCode
-                                      + " in onStopRequest handler for url = "
-                                      + url));
-            return;
-          }
-
-          charset = channel.contentCharset || charset;
-          contentType = channel.contentType;
-          deferred.resolve(chunks.join(""));
-        }
-      };
-
-      if (aOptions.window) {
-        // respect private browsing
-        channel.loadGroup = aOptions.window.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebNavigation)
-                              .QueryInterface(Ci.nsIDocumentLoader)
-                              .loadGroup;
-      }
-      channel.loadFlags = aOptions.loadFromCache
-        ? channel.LOAD_FROM_CACHE
-        : channel.LOAD_BYPASS_CACHE;
-      channel.asyncOpen(streamListener, null);
-      break;
-  }
-
-  return deferred.promise.then(source => {
-    return {
-      content: convertToUnicode(source, charset),
-      contentType: contentType
-    };
-  });
-}
-
-/**
- * Convert a given string, encoded in a given character set, to unicode.
- *
- * @param string aString
- *        A string.
- * @param string aCharset
- *        A character set.
- */
-function convertToUnicode(aString, aCharset=null) {
-  // Decoding primitives.
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-    .createInstance(Ci.nsIScriptableUnicodeConverter);
-  try {
-    converter.charset = aCharset || "UTF-8";
-    return converter.ConvertToUnicode(aString);
-  } catch(e) {
-    return aString;
-  }
-}
-
-/**
- * Normalize multiple relative paths towards the base paths on the right.
- */
-function normalize(...aURLs) {
-  let base = Services.io.newURI(aURLs.pop(), null, null);
-  let url;
-  while ((url = aURLs.pop())) {
-    base = Services.io.newURI(url, null, base);
-  }
-  return base.spec;
-}
-
-function dirname(aPath) {
-  return Services.io.newURI(
-    ".", null, Services.io.newURI(aPath, null, null)).spec;
-}

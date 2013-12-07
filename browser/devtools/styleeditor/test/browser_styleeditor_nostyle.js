@@ -15,7 +15,7 @@ function test()
   // it is loaded until the accompanying content page is loaded.
 
   addTabAndOpenStyleEditor(function(panel) {
-    panel.UI.once("stylesheets-reset", testDocumentLoad);
+    panel.UI.once("document-load", testDocumentLoad);
 
     content.location = TESTCASE_URI;
   });
