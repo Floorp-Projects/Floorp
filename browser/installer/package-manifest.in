@@ -101,6 +101,27 @@
 #endif
 #endif
 #endif
+#ifdef MOZ_SHARED_ICU
+#ifdef XP_WIN
+#ifdef MOZ_DEBUG
+@BINPATH@/icudtd@MOZ_ICU_VERSION@.dll
+@BINPATH@/icuind@MOZ_ICU_VERSION@.dll
+@BINPATH@/icuucd@MOZ_ICU_VERSION@.dll
+#else
+@BINPATH@/icudt@MOZ_ICU_VERSION@.dll
+@BINPATH@/icuin@MOZ_ICU_VERSION@.dll
+@BINPATH@/icuuc@MOZ_ICU_VERSION@.dll
+#endif
+#elif defined(XP_MACOSX)
+@BINPATH@/libicudata.@MOZ_ICU_VERSION@.dylib
+@BINPATH@/libicui18n.@MOZ_ICU_VERSION@.dylib
+@BINPATH@/libicuuc.@MOZ_ICU_VERSION@.dylib
+#elif defined(XP_UNIX)
+@BINPATH@/libicudata.so.@MOZ_ICU_VERSION@
+@BINPATH@/libicui18n.so.@MOZ_ICU_VERSION@
+@BINPATH@/libicuuc.so.@MOZ_ICU_VERSION@
+#endif
+#endif
 
 [browser]
 ; [Base Browser Files]

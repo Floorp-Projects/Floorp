@@ -271,7 +271,13 @@ sym(vp8_variance_and_sad_16x16_sse2):
 SECTION_RODATA
 align 16
 t128:
+%ifndef __NASM_VER__
     ddq 128
+%elif CONFIG_BIG_ENDIAN
+    dq  0, 128
+%else
+    dq  128, 0
+%endif
 align 16
 tMFQE: ; 1 << MFQE_PRECISION
     times 8 dw 0x10

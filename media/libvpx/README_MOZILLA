@@ -1,2 +1,11 @@
-Using the v1.2.0 release pulled from
-http://webm.googlecode.com/files/libvpx-v1.2.0.zip
+The source from this directory was copied from the libvpx
+git repository using the update.py script. The only changes
+made were those applied by update.py and the addition of
+moz.build and Makefile.in build files for the
+Mozilla build system.
+
+The libvpx git repository is:
+
+    https://gerrit.chromium.org/gerrit/webm/libvpx
+
+The git commit ID used was 2e88f2f2ec777259bda1714e72f1ecd2519bceb5

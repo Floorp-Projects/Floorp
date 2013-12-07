@@ -11,7 +11,7 @@
 
     EXPORT  |vp8_fast_quantize_b_armv6|
 
-    INCLUDE asm_enc_offsets.asm
+    INCLUDE vp8_asm_enc_offsets.asm
 
     ARM
     REQUIRE8

@@ -124,7 +124,7 @@ static int above_block_mv(const MODE_INFO *cur_mb, int b, int mi_stride)
         b += 16;
     }
 
-    return (cur_mb->bmi + b - 4)->mv.as_int;
+    return (cur_mb->bmi + (b - 4))->mv.as_int;
 }
 static B_PREDICTION_MODE left_block_mode(const MODE_INFO *cur_mb, int b)
 {

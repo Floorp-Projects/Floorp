@@ -5,5 +5,5 @@
 /* tree. An additional intellectual property rights grant can be found */
 /* in the file PATENTS.  All contributing project authors may */
 /* be found in the AUTHORS file in the root of the source tree. */
-static const char* const cfg = "--target=x86_64-linux-gcc --disable-examples --disable-install-docs --enable-pic";
+static const char* const cfg = "--target=x86_64-linux-gcc --disable-examples --disable-install-docs --enable-pic --disable-avx2";
 const char *vpx_codec_build_config(void) {return cfg;}

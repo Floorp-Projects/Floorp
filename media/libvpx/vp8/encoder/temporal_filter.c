@@ -17,7 +17,7 @@
 #include "mcomp.h"
 #include "firstpass.h"
 #include "psnr.h"
-#include "vpx_scale/vpxscale.h"
+#include "vpx_scale/vpx_scale.h"
 #include "vp8/common/extend.h"
 #include "ratectrl.h"
 #include "vp8/common/quant_common.h"

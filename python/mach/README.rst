@@ -87,7 +87,7 @@ Here is an example:
             self.build_path = build_path
 
         @Command('run_tests', conditions=[build_available])
-        def run_tests(self, force=False):
+        def run_tests(self):
             # Do stuff here.
 
 It is important to make sure that any state needed by the condition is
@@ -218,3 +218,30 @@ LoggingMixin:
              self.log(logging.INFO, 'foo_start', {'bar': True},
                  'Foo performed. Bar: {bar}')
 
+Entry Points
+============
+
+It is possible to use setuptools' entry points to load commands
+directly from python packages. A mach entry point is a function which
+returns a list of files or directories containing mach command
+providers.
+
+E.g:
+
+    def list_providers():
+        providers = []
+        here = os.path.abspath(os.path.dirname(__file__))
+        for p in os.listdir(here):
+            if p.endswith('.py'):
+                providers.append(os.path.join(here, p))
+        return providers
+
+See http://pythonhosted.org/setuptools/setuptools.html#dynamic-discovery-of-services-and-plugins
+for more information on creating an entry point. To search for entry
+point plugins, you can call *load_commands_from_entry_point*. This
+takes a single parameter called *group*. This is the name of the entry
+point group to load and defaults to "mach.providers".
+
+E.g:
+
+    mach.load_commands_from_entry_point("mach.external.providers")

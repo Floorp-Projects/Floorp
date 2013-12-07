@@ -233,10 +233,6 @@ FPSState::DrawFPS(TimeStamp aNow,
   DrawQuads(aContext, mVBOs, aProgram, rects);
 }
 
-#ifdef CHECK_CURRENT_PROGRAM
-int ShaderProgramOGL::sCurrentProgramKey = 0;
-#endif
-
 CompositorOGL::CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth,
                              int aSurfaceHeight, bool aUseExternalSurfaceSize)
   : mWidget(aWidget)

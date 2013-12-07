@@ -449,9 +449,7 @@ ShaderProgramOGL::Activate()
   }
   NS_ASSERTION(HasInitialized(), "Attempting to activate a program that's not in use!");
   mGL->fUseProgram(mProgram);
-#if CHECK_CURRENT_PROGRAM
-  mGL->SetUserData(&sCurrentProgramKey, this);
-#endif
+
   // check and set the projection matrix
   if (mIsProjectionMatrixStale) {
     SetProjectionMatrix(mProjectionMatrix);

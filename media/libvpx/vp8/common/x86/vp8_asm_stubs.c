@@ -10,7 +10,7 @@
 
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 #include "vpx_ports/mem.h"
 #include "filter_x86.h"
 
@@ -611,16 +611,12 @@ void vp8_sixtap_predict4x4_ssse3
 
           for (r = 0; r < 4; r++)
           {
-  #if !(CONFIG_FAST_UNALIGNED)
             dst_ptr[0]  = src_ptr[0];
             dst_ptr[1]  = src_ptr[1];
             dst_ptr[2]  = src_ptr[2];
             dst_ptr[3]  = src_ptr[3];
-  #else
-              *(uint32_t *)dst_ptr = *(uint32_t *)src_ptr ;
-  #endif
-              dst_ptr     += dst_pitch;
-              src_ptr     += src_pixels_per_line;
+            dst_ptr     += dst_pitch;
+            src_ptr     += src_pixels_per_line;
           }
       }
   }

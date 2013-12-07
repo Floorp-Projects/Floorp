@@ -10,7 +10,7 @@
 
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 #include "loopfilter.h"
 #include "onyxc_int.h"
 #include "vpx_mem/vpx_mem.h"
@@ -156,39 +156,38 @@ void vp8_loop_filter_frame_init(VP8_COMMON *cm,
             continue;
         }
 
-        lvl_ref = lvl_seg;
-
         /* INTRA_FRAME */
         ref = INTRA_FRAME;
 
         /* Apply delta for reference frame */
-        lvl_ref += mbd->ref_lf_deltas[ref];
+        lvl_ref = lvl_seg + mbd->ref_lf_deltas[ref];
 
         /* Apply delta for Intra modes */
         mode = 0; /* B_PRED */
         /* Only the split mode BPRED has a further special case */
-        lvl_mode = lvl_ref +  mbd->mode_lf_deltas[mode];
-        lvl_mode = (lvl_mode > 0) ? (lvl_mode > 63 ? 63 : lvl_mode) : 0; /* clamp */
+        lvl_mode = lvl_ref + mbd->mode_lf_deltas[mode];
+        /* clamp */
+        lvl_mode = (lvl_mode > 0) ? (lvl_mode > 63 ? 63 : lvl_mode) : 0;
 
         lfi->lvl[seg][ref][mode] = lvl_mode;
 
         mode = 1; /* all the rest of Intra modes */
-        lvl_mode = (lvl_ref > 0) ? (lvl_ref > 63 ? 63 : lvl_ref)  : 0; /* clamp */
+        /* clamp */
+        lvl_mode = (lvl_ref > 0) ? (lvl_ref > 63 ? 63 : lvl_ref) : 0;
         lfi->lvl[seg][ref][mode] = lvl_mode;
 
         /* LAST, GOLDEN, ALT */
         for(ref = 1; ref < MAX_REF_FRAMES; ref++)
         {
-            int lvl_ref = lvl_seg;
-
             /* Apply delta for reference frame */
-            lvl_ref += mbd->ref_lf_deltas[ref];
+            lvl_ref = lvl_seg + mbd->ref_lf_deltas[ref];
 
             /* Apply delta for Inter modes */
             for (mode = 1; mode < 4; mode++)
             {
                 lvl_mode = lvl_ref + mbd->mode_lf_deltas[mode];
-                lvl_mode = (lvl_mode > 0) ? (lvl_mode > 63 ? 63 : lvl_mode) : 0; /* clamp */
+                /* clamp */
+                lvl_mode = (lvl_mode > 0) ? (lvl_mode > 63 ? 63 : lvl_mode) : 0;
 
                 lfi->lvl[seg][ref][mode] = lvl_mode;
             }
@@ -567,45 +566,27 @@ void vp8_loop_filter_partial_frame
     int mb_cols = post->y_width >> 4;
     int mb_rows = post->y_height >> 4;
 
-    int linestocopy, i;
+    int linestocopy;
 
     loop_filter_info_n *lfi_n = &cm->lf_info;
     loop_filter_info lfi;
 
     int filter_level;
-    int alt_flt_enabled = mbd->segmentation_enabled;
     FRAME_TYPE frame_type = cm->frame_type;
 
     const MODE_INFO *mode_info_context;
 
-    int lvl_seg[MAX_MB_SEGMENTS];
+#if 0
+    if(default_filt_lvl == 0) /* no filter applied */
+        return;
+#endif
+
+    /* Initialize the loop filter for this frame. */
+    vp8_loop_filter_frame_init( cm, mbd, default_filt_lvl);
 
     /* number of MB rows to use in partial filtering */
     linestocopy = mb_rows / PARTIAL_FRAME_FRACTION;
     linestocopy = linestocopy ? linestocopy << 4 : 16;     /* 16 lines per MB */
-
-    /* Note the baseline filter values for each segment */
-    /* See vp8_loop_filter_frame_init. Rather than call that for each change
-     * to default_filt_lvl, copy the relevant calculation here.
-     */
-    if (alt_flt_enabled)
-    {
-        for (i = 0; i < MAX_MB_SEGMENTS; i++)
-        {    /* Abs value */
-            if (mbd->mb_segement_abs_delta == SEGMENT_ABSDATA)
-            {
-                lvl_seg[i] = mbd->segment_feature_data[MB_LVL_ALT_LF][i];
-            }
-            /* Delta Value */
-            else
-            {
-                lvl_seg[i] = default_filt_lvl
-                        + mbd->segment_feature_data[MB_LVL_ALT_LF][i];
-                lvl_seg[i] = (lvl_seg[i] > 0) ?
-                        ((lvl_seg[i] > 63) ? 63: lvl_seg[i]) : 0;
-            }
-        }
-    }
 
     /* Set up the buffer pointers; partial image starts at ~middle of frame */
     y_ptr = post->y_buffer + ((post->y_height >> 5) * 16) * post->y_stride;
@@ -620,10 +601,12 @@ void vp8_loop_filter_partial_frame
                            mode_info_context->mbmi.mode != SPLITMV &&
                            mode_info_context->mbmi.mb_skip_coeff);
 
-            if (alt_flt_enabled)
-                filter_level = lvl_seg[mode_info_context->mbmi.segment_id];
-            else
-                filter_level = default_filt_lvl;
+            const int mode_index =
+                lfi_n->mode_lf_lut[mode_info_context->mbmi.mode];
+            const int seg = mode_info_context->mbmi.segment_id;
+            const int ref_frame = mode_info_context->mbmi.ref_frame;
+
+            filter_level = lfi_n->lvl[seg][ref_frame][mode_index];
 
             if (filter_level)
             {

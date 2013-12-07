@@ -14,7 +14,7 @@
 #include <limits.h>
 #include <assert.h>
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 #include "vp8/common/pragmas.h"
 #include "tokenize.h"
 #include "treewriter.h"
@@ -341,7 +341,7 @@ void vp8_initialize_rd_consts(VP8_COMP *cpi, MACROBLOCK *x, int Qvalue)
 
 void vp8_auto_select_speed(VP8_COMP *cpi)
 {
-    int milliseconds_for_compress = (int)(1000000 / cpi->frame_rate);
+    int milliseconds_for_compress = (int)(1000000 / cpi->framerate);
 
     milliseconds_for_compress = milliseconds_for_compress * (16 - cpi->oxcf.cpu_used) / 16;
 
@@ -884,8 +884,8 @@ static void rd_pick_intra_mbuv_mode(MACROBLOCK *x, int *rate,
 
     for (mode = DC_PRED; mode <= TM_PRED; mode++)
     {
-        int rate;
-        int distortion;
+        int this_rate;
+        int this_distortion;
         int this_rd;
 
         xd->mode_info_context->mbmi.uv_mode = mode;
@@ -907,17 +907,17 @@ static void rd_pick_intra_mbuv_mode(MACROBLOCK *x, int *rate,
         vp8_quantize_mbuv(x);
 
         rate_to = rd_cost_mbuv(x);
-        rate = rate_to + x->intra_uv_mode_cost[xd->frame_type][xd->mode_info_context->mbmi.uv_mode];
+        this_rate = rate_to + x->intra_uv_mode_cost[xd->frame_type][xd->mode_info_context->mbmi.uv_mode];
 
-        distortion = vp8_mbuverror(x) / 4;
+        this_distortion = vp8_mbuverror(x) / 4;
 
-        this_rd = RDCOST(x->rdmult, x->rddiv, rate, distortion);
+        this_rd = RDCOST(x->rdmult, x->rddiv, this_rate, this_distortion);
 
         if (this_rd < best_rd)
         {
             best_rd = this_rd;
-            d = distortion;
-            r = rate;
+            d = this_distortion;
+            r = this_rate;
             *rate_tokenonly = rate_to;
             mode_selected = mode;
         }
@@ -935,7 +935,7 @@ int vp8_cost_mv_ref(MB_PREDICTION_MODE m, const int near_mv_ref_ct[4])
     assert(NEARESTMV <= m  &&  m <= SPLITMV);
     vp8_mv_ref_probs(p, near_mv_ref_ct);
     return vp8_cost_token(vp8_mv_ref_tree, p,
-                          vp8_mv_ref_encoding_array - NEARESTMV + m);
+                          vp8_mv_ref_encoding_array + (m - NEARESTMV));
 }
 
 void vp8_set_mbmode_and_mvs(MACROBLOCK *x, MB_PREDICTION_MODE mb, int_mv *mv)
@@ -1294,12 +1294,11 @@ static void rd_check_segment(VP8_COMP *cpi, MACROBLOCK *x,
 
                 if (bestsme < INT_MAX)
                 {
-                    int distortion;
+                    int disto;
                     unsigned int sse;
                     cpi->find_fractional_mv_step(x, c, e, &mode_mv[NEW4X4],
                         bsi->ref_mv, x->errorperbit, v_fn_ptr, x->mvcost,
-                        &distortion, &sse);
-
+                        &disto, &sse);
                 }
             } /* NEW4X4 */
 
@@ -1733,7 +1732,7 @@ void vp8_cal_sad(VP8_COMP *cpi, MACROBLOCKD *xd, MACROBLOCK *x, int recon_yoffse
     }
 }
 
-static void rd_update_mvcount(VP8_COMP *cpi, MACROBLOCK *x, int_mv *best_ref_mv)
+static void rd_update_mvcount(MACROBLOCK *x, int_mv *best_ref_mv)
 {
     if (x->e_mbd.mode_info_context->mbmi.mode == SPLITMV)
     {
@@ -2512,9 +2511,6 @@ void vp8_rd_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
                 x->rd_thresh_mult[best_mode_index];
     }
 
-    /* Note how often each mode chosen as best */
-    cpi->mode_chosen_counts[best_mode_index] ++;
-
 #if CONFIG_TEMPORAL_DENOISING
     if (cpi->oxcf.noise_sensitivity)
     {
@@ -2608,7 +2604,7 @@ void vp8_rd_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
         != cpi->common.ref_frame_sign_bias[xd->mode_info_context->mbmi.ref_frame])
         best_ref_mv.as_int = best_ref_mv_sb[!sign_bias].as_int;
 
-    rd_update_mvcount(cpi, x, &best_ref_mv);
+    rd_update_mvcount(x, &best_ref_mv);
 }
 
 void vp8_rd_pick_intra_mode(MACROBLOCK *x, int *rate_)

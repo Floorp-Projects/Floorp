@@ -34,6 +34,9 @@ function testSteps()
 
   event.target.onsuccess = continueToNextStep;
 
+  // Bug 943409.
+  eval('');
+
   for (let objectStoreIndex in objectStoreData) {
     const objectStoreInfo = objectStoreData[objectStoreIndex];
     let objectStore = db.createObjectStore(objectStoreInfo.name,
@@ -137,6 +140,8 @@ function testSteps()
         .objectStore(objectStoreName).clear()
         .onsuccess = continueToNextStep;
       yield undefined;
+
+      objectStore = index = null; // Bug 943409 workaround.
     }
   }
 

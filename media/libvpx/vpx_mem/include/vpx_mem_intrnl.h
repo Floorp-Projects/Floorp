@@ -11,7 +11,7 @@
 
 #ifndef __VPX_MEM_INTRNL_H__
 #define __VPX_MEM_INTRNL_H__
-#include "vpx_config.h"
+#include "./vpx_config.h"
 
 #ifndef CONFIG_MEM_MANAGER
 # if defined(VXWORKS)
@@ -47,22 +47,18 @@ vpx_memcpy, _memset, and _memmove*/
 #ifndef DEFAULT_ALIGNMENT
 # if defined(VXWORKS)
 #  define DEFAULT_ALIGNMENT        32        /*default addr alignment to use in
-                                               calls to vpx_* functions other
-                                               than vpx_memalign*/
+calls to vpx_* functions other
+than vpx_memalign*/
 # else
-#  define DEFAULT_ALIGNMENT        1
+#  define DEFAULT_ALIGNMENT        (2 * sizeof(void*))  /* NOLINT */
 # endif
-#endif
-
-#if DEFAULT_ALIGNMENT < 1
-# error "DEFAULT_ALIGNMENT must be >= 1!"
 #endif
 
 #if CONFIG_MEM_TRACKER
 # define TRY_BOUNDS_CHECK         1        /*when set to 1 pads each allocation,
-                                             integrity can be checked using
-                                             vpx_memory_tracker_check_integrity
-                                             or on free by defining*/
+integrity can be checked using
+vpx_memory_tracker_check_integrity
+or on free by defining*/
 /*TRY_BOUNDS_CHECK_ON_FREE*/
 #else
 # define TRY_BOUNDS_CHECK         0
@@ -70,13 +66,13 @@ vpx_memcpy, _memset, and _memmove*/
 
 #if TRY_BOUNDS_CHECK
 # define TRY_BOUNDS_CHECK_ON_FREE 0          /*checks mem integrity on every
-                                               free, very expensive*/
+free, very expensive*/
 # define BOUNDS_CHECK_VALUE       0xdeadbeef /*value stored before/after ea.
-                                               mem addr for bounds checking*/
+mem addr for bounds checking*/
 # define BOUNDS_CHECK_PAD_SIZE    32         /*size of the padding before and
-                                               after ea allocation to be filled
-                                               with BOUNDS_CHECK_VALUE.
-                                               this should be a multiple of 4*/
+after ea allocation to be filled
+with BOUNDS_CHECK_VALUE.
+this should be a multiple of 4*/
 #else
 # define BOUNDS_CHECK_VALUE       0
 # define BOUNDS_CHECK_PAD_SIZE    0

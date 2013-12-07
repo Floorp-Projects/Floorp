@@ -17,9 +17,24 @@
 #
 # Usage: cat inputfile | perl ads2gas.pl > outputfile
 #
+
+use FindBin;
+use lib $FindBin::Bin;
+use thumb;
+
+my $thumb = 0;
+
+foreach my $arg (@ARGV) {
+    $thumb = 1 if ($arg eq "-thumb");
+}
+
 print "@ This file was created from a .asm file\n";
 print "@  using the ads2gas.pl script.\n";
 print "\t.equ DO1STROUNDING, 0\n";
+if ($thumb) {
+    print "\t.syntax unified\n";
+    print "\t.thumb\n";
+}
 
 # Stack of procedure names.
 @proc_stack = ();
@@ -151,8 +166,13 @@ while (<STDIN>)
     # ALIGN directive
     s/\bALIGN\b/.balign/g;
 
-    # ARM code
-    s/\sARM/.arm/g;
+    if ($thumb) {
+        # ARM code - we force everything to thumb with the declaration in the header
+        s/\sARM//g;
+    } else {
+        # ARM code
+        s/\sARM/.arm/g;
+    }
 
     # push/pop
     s/(push\s+)(r\d+)/stmdb sp\!, \{$2\}/g;
@@ -161,6 +181,10 @@ while (<STDIN>)
     # NEON code
     s/(vld1.\d+\s+)(q\d+)/$1\{$2\}/g;
     s/(vtbl.\d+\s+[^,]+),([^,]+)/$1,\{$2\}/g;
+
+    if ($thumb) {
+        thumb::FixThumbInstructions($_, 0);
+    }
 
     # eabi_attributes numerical equivalents can be found in the
     # "ARM IHI 0045C" document.

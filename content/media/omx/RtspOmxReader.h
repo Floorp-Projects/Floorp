@@ -62,6 +62,15 @@ public:
     return NS_OK;
   }
 
+  // Override FindStartTime() to return null pointer.
+  // For Rtsp, we don't have the first video frame in DECODING_METADATA state.
+  // It will be available until player request Play() and media decoder enters
+  // DECODING state.
+  virtual VideoData* FindStartTime(int64_t& aOutStartTime)
+    MOZ_FINAL MOZ_OVERRIDE {
+    return nullptr;
+  }
+
 private:
   // A pointer to RtspMediaResource for calling the Rtsp specific function.
   // The lifetime of mRtspResource is controlled by MediaDecoder. MediaDecoder

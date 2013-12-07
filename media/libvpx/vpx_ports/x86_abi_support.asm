@@ -78,6 +78,17 @@
 %endif
 
 
+; LIBVPX_YASM_WIN64
+; Set LIBVPX_YASM_WIN64 if output is Windows 64bit so the code will work if x64
+; or win64 is defined on the Yasm command line.
+%ifidn __OUTPUT_FORMAT__,win64
+%define LIBVPX_YASM_WIN64 1
+%elifidn __OUTPUT_FORMAT__,x64
+%define LIBVPX_YASM_WIN64 1
+%else
+%define LIBVPX_YASM_WIN64 0
+%endif
+
 ; sym()
 ; Return the proper symbol name for the target ABI.
 ;
@@ -90,7 +101,7 @@
 %define sym(x) x
 %elifidn __OUTPUT_FORMAT__,elfx32
 %define sym(x) x
-%elifidn __OUTPUT_FORMAT__,x64
+%elif LIBVPX_YASM_WIN64
 %define sym(x) x
 %else
 %define sym(x) _ %+ x
@@ -114,7 +125,7 @@
     %define PRIVATE :hidden
   %elifidn __OUTPUT_FORMAT__,elfx32
     %define PRIVATE :hidden
-  %elifidn __OUTPUT_FORMAT__,x64
+  %elif LIBVPX_YASM_WIN64
     %define PRIVATE
   %else
     %define PRIVATE :private_extern
@@ -131,7 +142,7 @@
 %else
   ; 64 bit ABI passes arguments in registers. This is a workaround to get up
   ; and running quickly. Relies on SHADOW_ARGS_TO_STACK
-  %ifidn __OUTPUT_FORMAT__,x64
+  %if LIBVPX_YASM_WIN64
     %define arg(x) [rbp+16+8*x]
   %else
     %define arg(x) [rbp-8-8*x]
@@ -230,6 +241,12 @@
   %elifidn __OUTPUT_FORMAT__,elfx32
     %define WRT_PLT wrt ..plt
     %define HIDDEN_DATA(x) x:data hidden
+  %elifidn __OUTPUT_FORMAT__,macho64
+    %ifdef CHROMIUM
+      %define HIDDEN_DATA(x) x:private_extern
+    %else
+      %define HIDDEN_DATA(x) x
+    %endif
   %else
     %define HIDDEN_DATA(x) x
   %endif
@@ -251,7 +268,7 @@
   %endm
   %define UNSHADOW_ARGS
 %else
-%ifidn __OUTPUT_FORMAT__,x64
+%if LIBVPX_YASM_WIN64
   %macro SHADOW_ARGS_TO_STACK 1 ; argc
     %if %1 > 0
         mov arg(0),rcx
@@ -307,7 +324,7 @@
 ; Win64 ABI requires 16 byte stack alignment, but then pushes an 8 byte return
 ; value. Typically we follow this up with 'push rbp' - re-aligning the stack -
 ; but in some cases this is not done and unaligned movs must be used.
-%ifidn __OUTPUT_FORMAT__,x64
+%if LIBVPX_YASM_WIN64
 %macro SAVE_XMM 1-2 a
   %if %1 < 6
     %error Only xmm registers 6-15 must be preserved

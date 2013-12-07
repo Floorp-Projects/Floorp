@@ -5,7 +5,8 @@
 # This module provides functionality for the command-line build tool
 # (mach). It is packaged as a module because everything is a library.
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
+from collections import Iterable
 
 import argparse
 import codecs
@@ -94,6 +95,16 @@ command failed to meet the following conditions: %s
 Run |mach help| to show a list of all commands available to the current context.
 '''.lstrip()
 
+INVALID_ENTRY_POINT = r'''
+Entry points should return a list of command providers or directories
+containing command providers. The following entry point is invalid:
+
+    %s
+
+You are seeing this because there is an error in an external module attempting
+to implement a mach command. Please fix the error, or uninstall the module from
+your system.
+'''.lstrip()
 
 class ArgumentParser(argparse.ArgumentParser):
     """Custom implementation argument parser to make things look pretty."""
@@ -214,6 +225,35 @@ To see more help for a specific command, run:
             module_name = 'mach.commands.%s' % uuid.uuid1().get_hex()
 
         imp.load_source(module_name, path)
+
+    def load_commands_from_entry_point(self, group='mach.providers'):
+        """Scan installed packages for mach command provider entry points. An
+        entry point is a function that returns a list of paths to files or
+        directories containing command providers.
+
+        This takes an optional group argument which specifies the entry point
+        group to use. If not specified, it defaults to 'mach.providers'.
+        """
+        try:
+            import pkg_resources
+        except ImportError:
+            print("Could not find setuptools, ignoring command entry points",
+                  file=sys.stderr)
+            return
+
+        for entry in pkg_resources.iter_entry_points(group=group, name=None):
+            paths = entry.load()()
+            if not isinstance(paths, Iterable):
+                print(INVALID_ENTRY_POINT % entry)
+                sys.exit(1)
+
+            for path in paths:
+                if os.path.isfile(path):
+                    self.load_commands_from_file(path)
+                elif os.path.isdir(path):
+                    self.load_commands_from_directory(path)
+                else:
+                    print("command provider '%s' does not exist" % path)
 
     def define_category(self, name, title, description, priority=50):
         """Provide a description for a named command category."""

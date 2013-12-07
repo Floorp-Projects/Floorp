@@ -9,7 +9,7 @@
  */
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 
 
 void vp8_dequant_idct_add_y_block_v6(short *q, short *dq,

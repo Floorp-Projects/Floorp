@@ -15,7 +15,7 @@
 #include "block.h"
 #include "vp8/common/variance.h"
 
-#ifdef ENTROPY_STATS
+#ifdef VP8_ENTROPY_STATS
 extern void init_mv_ref_counts();
 extern void accum_mv_refs(MB_PREDICTION_MODE, const int near_mv_ref_cts[4]);
 #endif

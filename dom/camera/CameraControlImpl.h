@@ -75,6 +75,7 @@ public:
   nsresult Get(nsICameraPreviewStateChange** aOnPreviewStateChange);
   nsresult Set(uint32_t aKey, const idl::CameraSize& aSize);
   nsresult Get(uint32_t aKey, idl::CameraSize& aSize);
+  nsresult Get(uint32_t aKey, int32_t* aValue);
 
   nsresult SetFocusAreas(JSContext* aCx, const JS::Value& aValue)
   {
@@ -92,6 +93,7 @@ public:
   virtual const char* GetParameter(const char* aKey) = 0;
   virtual const char* GetParameterConstChar(uint32_t aKey) = 0;
   virtual double GetParameterDouble(uint32_t aKey) = 0;
+  virtual int32_t GetParameterInt32(uint32_t aKey) = 0;
   virtual void GetParameter(uint32_t aKey, nsTArray<idl::CameraRegion>& aRegions) = 0;
   virtual void GetParameter(uint32_t aKey, idl::CameraSize& aSize) = 0;
   virtual void SetParameter(const char* aKey, const char* aValue) = 0;

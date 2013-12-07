@@ -13,7 +13,7 @@
 #define __INC_VP8C_INT_H
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 #include "vpx/internal/vpx_codec_internal.h"
 #include "loopfilter.h"
 #include "entropymv.h"
@@ -72,7 +72,6 @@ typedef struct VP8Common
     int horiz_scale;
     int vert_scale;
 
-    YUV_TYPE clr_type;
     CLAMP_TYPE  clamp_type;
 
     YV12_BUFFER_CONFIG *frame_to_show;
@@ -115,9 +114,6 @@ typedef struct VP8Common
     int uvdc_delta_q;
     int uvac_delta_q;
 
-    unsigned int frames_since_golden;
-    unsigned int frames_till_alt_ref_frame;
-
     /* We allocate a MODE_INFO struct for each macroblock, together with
        an extra row on top and column on the left to simplify prediction. */
 
@@ -127,7 +123,8 @@ typedef struct VP8Common
     MODE_INFO *prev_mip; /* MODE_INFO array 'mip' from last decoded frame */
     MODE_INFO *prev_mi;  /* 'mi' from last frame (points into prev_mip) */
 #endif
-
+    MODE_INFO *show_frame_mi;  /* MODE_INFO for the last decoded frame
+                                  to show */
     LOOPFILTERTYPE filter_type;
 
     loop_filter_info_n lf_info;
@@ -156,7 +153,6 @@ typedef struct VP8Common
 
     unsigned int current_video_frame;
 
-    int near_boffset[3];
     int version;
 
     TOKEN_PARTITION multi_token_partition;
@@ -164,8 +160,10 @@ typedef struct VP8Common
 #ifdef PACKET_TESTING
     VP8_HEADER oh;
 #endif
+#if CONFIG_POSTPROC_VISUALIZER
     double bitrate;
     double framerate;
+#endif
 
 #if CONFIG_MULTITHREAD
     int processor_core_count;

@@ -9,7 +9,7 @@
 
 
 %include "vpx_ports/x86_abi_support.asm"
-%include "asm_enc_offsets.asm"
+%include "vp8_asm_enc_offsets.asm"
 
 
 ; void vp8_regular_quantize_b_sse4 | arg
@@ -31,7 +31,7 @@ sym(vp8_regular_quantize_b_sse4):
     %define stack_size 32
     sub         rsp, stack_size
 %else
-  %ifidn __OUTPUT_FORMAT__,x64
+  %if LIBVPX_YASM_WIN64
     SAVE_XMM 8, u
     push        rdi
     push        rsi
@@ -43,7 +43,7 @@ sym(vp8_regular_quantize_b_sse4):
     mov         rdi, arg(0)                 ; BLOCK *b
     mov         rsi, arg(1)                 ; BLOCKD *d
 %else
-  %ifidn __OUTPUT_FORMAT__,x64
+  %if LIBVPX_YASM_WIN64
     mov         rdi, rcx                    ; BLOCK *b
     mov         rsi, rdx                    ; BLOCKD *d
   %else
@@ -240,7 +240,7 @@ ZIGZAG_LOOP 15, 7, xmm3, xmm7, xmm8
     pop         rbp
 %else
   %undef xmm5
-  %ifidn __OUTPUT_FORMAT__,x64
+  %if LIBVPX_YASM_WIN64
     pop         rsi
     pop         rdi
     RESTORE_XMM

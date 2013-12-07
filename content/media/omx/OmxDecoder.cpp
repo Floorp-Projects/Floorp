@@ -421,6 +421,18 @@ bool OmxDecoder::TryLoad() {
 
   // read audio metadata
   if (mAudioSource.get()) {
+    // For RTSP, we don't read the audio source for now.
+    // The metadata of RTSP will be obtained through SDP at connection time.
+    if (mResource->GetRtspPointer()) {
+      sp<MetaData> meta = mAudioSource->getFormat();
+      if (!meta->findInt32(kKeyChannelCount, &mAudioChannels) ||
+          !meta->findInt32(kKeySampleRate, &mAudioSampleRate)) {
+        NS_WARNING("Couldn't get audio metadata from OMX decoder");
+        return false;
+      }
+      return true;
+    }
+
     // To reliably get the channel and sample rate data we need to read from the
     // audio source until we get a INFO_FORMAT_CHANGE status
     status_t err = mAudioSource->read(&mAudioBuffer);

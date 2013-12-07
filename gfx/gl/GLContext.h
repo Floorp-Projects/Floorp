@@ -2415,16 +2415,6 @@ public:
 
     virtual void ReleaseSurface() {}
 
-    void *GetUserData(void *aKey) {
-        void *result = nullptr;
-        mUserData.Get(aKey, &result);
-        return result;
-    }
-
-    void SetUserData(void *aKey, void *aValue) {
-        mUserData.Put(aKey, aValue);
-    }
-
     // Mark this context as destroyed.  This will nullptr out all
     // the GL function pointers!
     void MarkDestroyed();
@@ -2822,24 +2812,7 @@ public:
         return *mPixelFormat;
     }
 
-
-    GLuint CreateTextureForOffscreen(const GLFormats& formats,
-                                     const gfxIntSize& size);
-    GLuint CreateTexture(GLenum internalFormat,
-                         GLenum format, GLenum type,
-                         const gfxIntSize& size);
-    GLuint CreateRenderbuffer(GLenum format,
-                              GLsizei samples,
-                              const gfxIntSize& size);
     bool IsFramebufferComplete(GLuint fb, GLenum* status = nullptr);
-
-    // Pass null to an RB arg to disable its creation.
-    void CreateRenderbuffersForOffscreen(const GLFormats& formats,
-                                         const gfxIntSize& size,
-                                         bool multisample,
-                                         GLuint* colorMSRB,
-                                         GLuint* depthRB,
-                                         GLuint* stencilRB);
 
     // Does not check completeness.
     void AttachBuffersToFB(GLuint colorTex, GLuint colorRB,
@@ -2910,8 +2883,6 @@ public:
     bool IsOffscreenSizeAllowed(const gfxIntSize& aSize) const;
 
 protected:
-    nsDataHashtable<nsPtrHashKey<void>, void*> mUserData;
-
     GLuint mReadTextureImagePrograms[4];
 
     bool InitWithPrefix(const char *prefix, bool trygl);

@@ -9,8 +9,8 @@
  */
 
 
-#ifndef ERROR_CONCEALMENT_H
-#define ERROR_CONCEALMENT_H
+#ifndef ERROR_CONCEALMENT_H_
+#define ERROR_CONCEALMENT_H_
 
 #include "onyxd_int.h"
 #include "ec_types.h"
@@ -38,4 +38,4 @@ void vp8_interpolate_motion(MACROBLOCKD *mb,
  */
 void vp8_conceal_corrupt_mb(MACROBLOCKD *xd);
 
-#endif
+#endif  // ERROR_CONCEALMENT_H_

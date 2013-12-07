@@ -110,8 +110,8 @@ static int read_mvcomponent(vp8_reader *r, const MV_CONTEXT *mvc)
 
 static void read_mv(vp8_reader *r, MV *mv, const MV_CONTEXT *mvc)
 {
-    mv->row = (short)(read_mvcomponent(r,   mvc) << 1);
-    mv->col = (short)(read_mvcomponent(r, ++mvc) << 1);
+    mv->row = (short)(read_mvcomponent(r,   mvc) * 2);
+    mv->col = (short)(read_mvcomponent(r, ++mvc) * 2);
 }
 
 
@@ -292,9 +292,9 @@ static void decode_split_mv(vp8_reader *const bc, MODE_INFO *mi,
                 blockmv.as_int = 0;
                 if( vp8_read(bc, prob[2]) )
                 {
-                    blockmv.as_mv.row = read_mvcomponent(bc, &mvc[0]) << 1;
+                    blockmv.as_mv.row = read_mvcomponent(bc, &mvc[0]) * 2;
                     blockmv.as_mv.row += best_mv.as_mv.row;
-                    blockmv.as_mv.col = read_mvcomponent(bc, &mvc[1]) << 1;
+                    blockmv.as_mv.col = read_mvcomponent(bc, &mvc[1]) * 2;
                     blockmv.as_mv.col += best_mv.as_mv.col;
                 }
             }
@@ -512,15 +512,15 @@ static void read_mb_modes_mv(VP8D_COMP *pbi, MODE_INFO *mi, MB_MODE_INFO *mbmi)
                 else
                 {
                     mbmi->mode =  NEARMV;
-                    vp8_clamp_mv2(&near_mvs[CNT_NEAR], &pbi->mb);
                     mbmi->mv.as_int = near_mvs[CNT_NEAR].as_int;
+                    vp8_clamp_mv2(&mbmi->mv, &pbi->mb);
                 }
             }
             else
             {
                 mbmi->mode =  NEARESTMV;
-                vp8_clamp_mv2(&near_mvs[CNT_NEAREST], &pbi->mb);
                 mbmi->mv.as_int = near_mvs[CNT_NEAREST].as_int;
+                vp8_clamp_mv2(&mbmi->mv, &pbi->mb);
             }
         }
         else

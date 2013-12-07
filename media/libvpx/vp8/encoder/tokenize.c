@@ -20,7 +20,7 @@
 /* Global event counters used for accumulating statistics across several
    compressions, then generating context.c = initial stats. */
 
-#ifdef ENTROPY_STATS
+#ifdef VP8_ENTROPY_STATS
 _int64 context_counters[BLOCK_TYPES] [COEF_BANDS] [PREV_COEF_CONTEXTS] [MAX_ENTROPY_TOKENS];
 #endif
 void vp8_stuff_mb(VP8_COMP *cpi, MACROBLOCK *x, TOKENEXTRA **t) ;
@@ -413,7 +413,7 @@ void vp8_tokenize_mb(VP8_COMP *cpi, MACROBLOCK *x, TOKENEXTRA **t)
 }
 
 
-#ifdef ENTROPY_STATS
+#ifdef VP8_ENTROPY_STATS
 
 void init_context_counters(void)
 {

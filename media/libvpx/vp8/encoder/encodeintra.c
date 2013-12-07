@@ -10,7 +10,7 @@
 
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 #include "quantize.h"
 #include "vp8/common/reconintra4x4.h"
 #include "encodemb.h"
