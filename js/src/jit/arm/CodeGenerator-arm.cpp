@@ -1908,7 +1908,7 @@ CodeGeneratorARM::generateInvalidateEpilogue()
 
     // We should never reach this point in JIT code -- the invalidation thunk should
     // pop the invalidated JS frame and return directly to its caller.
-    masm.breakpoint();
+    masm.assume_unreachable("Should have returned directly to its caller instead of here.");
     return true;
 }
 

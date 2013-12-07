@@ -5507,7 +5507,7 @@ AssertStackAlignment(MacroAssembler &masm)
     Label ok;
     JS_ASSERT(IsPowerOfTwo(StackAlignment));
     masm.branchTestPtr(Assembler::Zero, StackPointer, Imm32(StackAlignment - 1), &ok);
-    masm.breakpoint();
+    masm.assume_unreachable("Stack should be aligned.");
     masm.bind(&ok);
 #endif
 }
@@ -5962,7 +5962,6 @@ GenerateOOLConvert(ModuleCompiler &m, RetType retType, Label *throwLabel)
     // passed to this FFI call.
     unsigned arraySize = sizeof(Value);
     unsigned stackDec = StackDecrementForCall(masm, callArgTypes, arraySize);
-    masm.setFramePushed(0);
     masm.reserveStack(stackDec);
 
     // Store value
@@ -5996,6 +5995,7 @@ GenerateOOLConvert(ModuleCompiler &m, RetType retType, Label *throwLabel)
     JS_ASSERT(i.done());
 
     // Call
+    AssertStackAlignment(masm);
     switch (retType.which()) {
       case RetType::Signed:
           masm.call(AsmJSImm_CoerceInPlace_ToInt32);
@@ -6138,6 +6138,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     masm.branchTestMagic(Assembler::Equal, JSReturnOperand, throwLabel);
 #endif
 
+    uint32_t oolConvertFramePushed = masm.framePushed();
     switch (exit.sig().retType().which()) {
       case RetType::Void:
         break;
@@ -6160,13 +6161,15 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     // oolConvert
     if (oolConvert.used()) {
         masm.bind(&oolConvert);
+        masm.setFramePushed(oolConvertFramePushed);
         GenerateOOLConvert(m, exit.sig().retType(), throwLabel);
+        masm.setFramePushed(0);
         masm.jump(&done);
     }
 
 #ifdef DEBUG
     masm.bind(&ionFailed);
-    masm.breakpoint();
+    masm.assume_unreachable("AsmJS to IonMonkey call failed.");
 #endif
 }
 
