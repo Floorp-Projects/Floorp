@@ -33,12 +33,7 @@ function test() {
   }
 
   function onEditorAdded(aEvent, aEditor) {
-    if (aEditor.sourceLoaded) {
-      checkCache();
-    }
-    else {
-      aEditor.on("source-load", checkCache);
-    }
+    aEditor.getSourceEditor().then(checkCache);
   }
 
   function testOnWindow(options, callback) {
