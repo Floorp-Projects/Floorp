@@ -10,9 +10,9 @@ var summary = 'objecttype';
 var T = TypedObject;
 
 function runTests() {
-  var Point = new T.ArrayType(T.float32, 3);
+  var Point = T.float32.array(3);
   var Line = new T.StructType({from: Point, to: Point});
-  var Lines = new T.ArrayType(Line, 3);
+  var Lines = Line.array(3);
 
   var lines = new Lines([
     {from: [1, 2, 3], to: [4, 5, 6]},
