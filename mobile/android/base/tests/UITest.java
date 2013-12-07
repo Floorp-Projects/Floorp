@@ -12,7 +12,6 @@ import org.mozilla.gecko.FennecMochitestAssert;
 import org.mozilla.gecko.FennecNativeActions;
 import org.mozilla.gecko.FennecNativeDriver;
 import org.mozilla.gecko.FennecTalosAssert;
-import org.mozilla.gecko.TestConstants;
 import org.mozilla.gecko.tests.components.*;
 import org.mozilla.gecko.tests.helpers.*;
 

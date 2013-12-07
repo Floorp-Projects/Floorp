@@ -183,6 +183,13 @@ Toolbox.prototype = {
   },
 
   /**
+   * Get the toggled state of the split console
+   */
+  get splitConsole() {
+    return this._splitConsole;
+  },
+
+  /**
    * Open the toolbox
    */
   open: function() {

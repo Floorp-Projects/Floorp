@@ -63,22 +63,24 @@ function test()
   function getCurrentUIState()
   {
     let win = toolbox.doc.defaultView;
-    let deck = toolbox.doc.getElementById("toolbox-deck");
-    let webconsolePanel = toolbox.doc.getElementById("toolbox-panel-webconsole");
-    let splitter = toolbox.doc.getElementById("toolbox-console-splitter");
+    let deck = toolbox.doc.querySelector("#toolbox-deck");
+    let webconsolePanel = toolbox.doc.querySelector("#toolbox-panel-webconsole");
+    let splitter = toolbox.doc.querySelector("#toolbox-console-splitter");
 
     let containerHeight = parseFloat(win.getComputedStyle(deck.parentNode).getPropertyValue("height"));
     let deckHeight = parseFloat(win.getComputedStyle(deck).getPropertyValue("height"));
     let webconsoleHeight = parseFloat(win.getComputedStyle(webconsolePanel).getPropertyValue("height"));
     let splitterVisibility = !splitter.getAttribute("hidden");
     let openedConsolePanel = toolbox.currentToolId === "webconsole";
+    let cmdButton = toolbox.doc.querySelector("#command-button-splitconsole");
 
     return {
       deckHeight: deckHeight,
       containerHeight: containerHeight,
       webconsoleHeight: webconsoleHeight,
       splitterVisibility: splitterVisibility,
-      openedConsolePanel: openedConsolePanel
+      openedConsolePanel: openedConsolePanel,
+      buttonSelected: cmdButton.hasAttribute("checked")
     };
   }
 
@@ -97,6 +99,7 @@ function test()
     ok (currentUIState.deckHeight > 0, "Deck has a height > 0 when console is split");
     ok (currentUIState.webconsoleHeight > 0, "Web console has a height > 0 when console is split");
     ok (!currentUIState.openedConsolePanel, "The console panel is not the current tool");
+    ok (currentUIState.buttonSelected, "The command button is selected");
 
     openPanel("webconsole").then(() => {
 
@@ -106,6 +109,7 @@ function test()
       is (currentUIState.deckHeight, 0, "Deck has a height == 0 when console is opened.");
       is (currentUIState.webconsoleHeight, currentUIState.containerHeight, "Web console is full height.");
       ok (currentUIState.openedConsolePanel, "The console panel is the current tool");
+      ok (currentUIState.buttonSelected, "The command button is still selected.");
 
       // Make sure splitting console does nothing while webconsole is opened
       toolbox.toggleSplitConsole();
@@ -116,6 +120,7 @@ function test()
       is (currentUIState.deckHeight, 0, "Deck has a height == 0 when console is opened.");
       is (currentUIState.webconsoleHeight, currentUIState.containerHeight, "Web console is full height.");
       ok (currentUIState.openedConsolePanel, "The console panel is the current tool");
+      ok (currentUIState.buttonSelected, "The command button is still selected.");
 
       // Make sure that split state is saved after opening another panel
       openPanel("inspector").then(() => {
@@ -124,6 +129,7 @@ function test()
         ok (currentUIState.deckHeight > 0, "Deck has a height > 0 when console is split");
         ok (currentUIState.webconsoleHeight > 0, "Web console has a height > 0 when console is split");
         ok (!currentUIState.openedConsolePanel, "The console panel is not the current tool");
+        ok (currentUIState.buttonSelected, "The command button is still selected.");
 
         toolbox.toggleSplitConsole();
         deferred.resolve();
@@ -163,6 +169,7 @@ function test()
     is (currentUIState.deckHeight, currentUIState.containerHeight, "Deck has a height > 0 by default");
     is (currentUIState.webconsoleHeight, 0, "Web console is collapsed by default");
     ok (!currentUIState.openedConsolePanel, "The console panel is not the current tool");
+    ok (!currentUIState.buttonSelected, "The command button is not selected.");
 
     toolbox.toggleSplitConsole();
 
@@ -175,6 +182,7 @@ function test()
           currentUIState.containerHeight,
         "Everything adds up to container height");
     ok (!currentUIState.openedConsolePanel, "The console panel is not the current tool");
+    ok (currentUIState.buttonSelected, "The command button is selected.");
 
     toolbox.toggleSplitConsole();
 
@@ -184,8 +192,8 @@ function test()
     is (currentUIState.deckHeight, currentUIState.containerHeight, "Deck has a height > 0 after toggling");
     is (currentUIState.webconsoleHeight, 0, "Web console is collapsed after toggling");
     ok (!currentUIState.openedConsolePanel, "The console panel is not the current tool");
+    ok (!currentUIState.buttonSelected, "The command button is not selected.");
   }
-
 
   function testBottomHost()
   {
