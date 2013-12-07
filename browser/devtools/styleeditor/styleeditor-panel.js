@@ -4,21 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
-this.EXPORTED_SYMBOLS = ["StyleEditorPanel"];
+const {Cc, Ci, Cu, Cr} = require("chrome");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
-Cu.import("resource:///modules/devtools/shared/event-emitter.js");
-Cu.import("resource:///modules/devtools/StyleEditorDebuggee.jsm");
+
+let promise = require("sdk/core/promise");
+let EventEmitter = require("devtools/shared/event-emitter");
+
 Cu.import("resource:///modules/devtools/StyleEditorUI.jsm");
 Cu.import("resource:///modules/devtools/StyleEditorUtil.jsm");
 
-
-XPCOMUtils.defineLazyModuleGetter(this, "StyleEditorChrome",
-                        "resource:///modules/devtools/StyleEditorChrome.jsm");
+loader.lazyGetter(this, "StyleSheetsFront",
+  () => require("devtools/server/actors/styleeditor").StyleSheetsFront);
 
 this.StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
   EventEmitter.decorate(this);
@@ -31,6 +29,8 @@ this.StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
   this.destroy = this.destroy.bind(this);
   this._showError = this._showError.bind(this);
 }
+
+exports.StyleEditorPanel = StyleEditorPanel;
 
 StyleEditorPanel.prototype = {
   get target() this._toolbox.target,
@@ -54,9 +54,9 @@ StyleEditorPanel.prototype = {
     targetPromise.then(() => {
       this.target.on("close", this.destroy);
 
-      this._debuggee = new StyleEditorDebuggee(this.target);
+      this._debuggee = StyleSheetsFront(this.target.client, this.target.form);
 
-      this.UI = new StyleEditorUI(this._debuggee, this._panelDoc);
+      this.UI = new StyleEditorUI(this._debuggee, this.target, this._panelDoc);
       this.UI.on("error", this._showError);
 
       this.isReady = true;
@@ -99,7 +99,6 @@ StyleEditorPanel.prototype = {
     if (!this._debuggee || !this.UI) {
       return;
     }
-    let stylesheet = this._debuggee.styleSheetFromHref(href);
     this.UI.selectStyleSheet(href, line - 1, col ? col - 1 : 0);
   },
 
