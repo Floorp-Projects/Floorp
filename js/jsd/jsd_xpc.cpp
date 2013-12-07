@@ -36,11 +36,10 @@
 #include "SandboxPrivate.h"
 #include "nsJSPrincipals.h"
 #include "nsContentUtils.h"
-#include "mozilla/dom/ScriptSettings.h"
+#include "nsCxPusher.h"
 
 using mozilla::AutoSafeJSContext;
 using mozilla::AutoPushJSContext;
-using mozilla::dom::AutoSystemCaller;
 
 /*
  * defining CAUTIOUS_SCRIPTHOOK makes jsds disable GC while calling out to the
@@ -3005,7 +3004,8 @@ jsdService::EnterNestedEventLoop (jsdINestCallback *callback, uint32_t *_rval)
     // Nesting event queues is a thing of the past.  Now, we just spin the
     // current event loop.
     nsresult rv = NS_OK;
-    AutoSystemCaller asc;
+    nsCxPusher pusher;
+    pusher.PushNull();
     uint32_t nestLevel = ++mNestedLoopLevel;
     nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
 
