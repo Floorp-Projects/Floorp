@@ -44,7 +44,7 @@ RunTest(JSRuntime* rt, JSContext* cx)
    */
   const int elements = 100;
   ArrayT* array = new ArrayT(elements / 2);
-  ASSERT_NE(nullptr, array);
+  ASSERT_TRUE(array != nullptr);
   JS_AddExtraGCRootsTracer(rt, TraceArray, array);
 
   /*
@@ -99,7 +99,7 @@ CreateGlobalAndRunTest(JSRuntime* rt, JSContext* cx)
   options.setVersion(JSVERSION_LATEST);
   JS::RootedObject global(cx);
   global = JS_NewGlobalObject(cx, &GlobalClass, nullptr, JS::FireOnNewGlobalHook, options);
-  ASSERT_NE(nullptr, global);
+  ASSERT_TRUE(global != nullptr);
 
   JS_AddNamedObjectRoot(cx, global.address(), "test-global");
   JSCompartment *oldCompartment = JS_EnterCompartment(cx, global);
@@ -112,12 +112,12 @@ CreateGlobalAndRunTest(JSRuntime* rt, JSContext* cx)
 
 TEST(GCPostBarriers, nsTArray) {
   CycleCollectedJSRuntime* ccrt = CycleCollectedJSRuntime::Get();
-  ASSERT_NE(nullptr, ccrt);
+  ASSERT_TRUE(ccrt != nullptr);
   JSRuntime* rt = ccrt->Runtime();
-  ASSERT_NE(nullptr, rt);
+  ASSERT_TRUE(rt != nullptr);
 
   JSContext *cx = JS_NewContext(rt, 8192);
-  ASSERT_NE(nullptr, cx);
+  ASSERT_TRUE(cx != nullptr);
   JS_BeginRequest(cx);
 
   CreateGlobalAndRunTest(rt, cx);
