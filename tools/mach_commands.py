@@ -290,9 +290,9 @@ class PastebinProvider(object):
 
 @CommandProvider
 class ReviewboardToolsProvider(MachCommandBase):
-    @Command('rbt', category='devenv',
+    @Command('rbt', category='devenv', allow_all_args=True,
         description='Run Reviewboard Tools')
-    @CommandArgument('args', nargs='*', help='Arguments to rbt tool')
+    @CommandArgument('args', nargs='...', help='Arguments to rbt tool')
     def rbt(self, args):
         if not args:
             args = ['help']

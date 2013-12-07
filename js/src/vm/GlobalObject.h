@@ -27,11 +27,12 @@ extern JSObject *
 js_InitTypedArrayClasses(JSContext *cx, js::HandleObject obj);
 
 extern JSObject *
-js_InitTypedObjectClass(JSContext *cx, js::HandleObject obj);
+js_InitTypedObjectModuleObject(JSContext *cx, js::HandleObject obj);
 
 namespace js {
 
 class Debugger;
+class TypedObjectModuleObject;
 
 /*
  * Global object slots are reserved as follows:
@@ -110,10 +111,9 @@ class GlobalObject : public JSObject
     static const unsigned RUNTIME_CODEGEN_ENABLED = WARNED_WATCH_DEPRECATED + 1;
     static const unsigned DEBUGGERS               = RUNTIME_CODEGEN_ENABLED + 1;
     static const unsigned INTRINSICS              = DEBUGGERS + 1;
-    static const unsigned ARRAY_TYPE              = INTRINSICS + 1;
 
     /* Total reserved-slot count for global objects. */
-    static const unsigned RESERVED_SLOTS = ARRAY_TYPE + 1;
+    static const unsigned RESERVED_SLOTS = INTRINSICS + 1;
 
     /*
      * The slot count must be in the public API for JSCLASS_GLOBAL_FLAGS, and
@@ -412,12 +412,11 @@ class GlobalObject : public JSObject
         return getOrCreateObject(cx, APPLICATION_SLOTS + JSProto_Intl, initIntlObject);
     }
 
-    JSObject &getTypedObject() {
-        Value v = getConstructor(JSProto_TypedObject);
-        // only gets called from contexts where TypedObject must be initialized
-        JS_ASSERT(v.isObject());
-        return v.toObject();
+    JSObject *getOrCreateTypedObjectModule(JSContext *cx) {
+        return getOrCreateObject(cx, APPLICATION_SLOTS + JSProto_TypedObject, initTypedObjectModule);
     }
+
+    TypedObjectModuleObject &getTypedObjectModule() const;
 
     JSObject *getIteratorPrototype() {
         return &getPrototype(JSProto_Iterator).toObject();
@@ -433,21 +432,6 @@ class GlobalObject : public JSObject
 
     JSObject *getOrCreateDateTimeFormatPrototype(JSContext *cx) {
         return getOrCreateObject(cx, DATE_TIME_FORMAT_PROTO, initDateTimeFormatProto);
-    }
-
-    JSObject *getArrayType(JSContext *cx) {
-        const Value &v = getReservedSlot(ARRAY_TYPE);
-
-        MOZ_ASSERT(v.isObject(),
-                   "GlobalObject::arrayType must only be called from "
-                   "TypedObject code that can assume TypedObject has "
-                   "been initialized");
-
-        return &v.toObject();
-    }
-
-    void setArrayType(JSObject *obj) {
-        initReservedSlot(ARRAY_TYPE, ObjectValue(*obj));
     }
 
   private:
@@ -609,6 +593,9 @@ class GlobalObject : public JSObject
     static bool initCollatorProto(JSContext *cx, Handle<GlobalObject*> global);
     static bool initNumberFormatProto(JSContext *cx, Handle<GlobalObject*> global);
     static bool initDateTimeFormatProto(JSContext *cx, Handle<GlobalObject*> global);
+
+    // Implemented in builtin/TypedObject.cpp
+    static bool initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global);
 
     static bool initStandardClasses(JSContext *cx, Handle<GlobalObject*> global);
 

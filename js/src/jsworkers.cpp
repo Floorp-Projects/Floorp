@@ -358,7 +358,15 @@ js::WaitForOffThreadParsingToFinish(JSRuntime *rt)
     }
 }
 
+#ifdef XP_WIN
+// The default stack size for new threads on Windows is 1MB, but specifying a
+// smaller explicit size to NSPR on thread creation causes our visible memory
+// usage to increase. Just use the default stack size on Windows.
+static const uint32_t WORKER_STACK_SIZE = 0;
+#else
 static const uint32_t WORKER_STACK_SIZE = 512 * 1024;
+#endif
+
 static const uint32_t WORKER_STACK_QUOTA = 450 * 1024;
 
 bool
