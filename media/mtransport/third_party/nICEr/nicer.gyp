@@ -87,6 +87,8 @@
                 "./src/stun/addrs.h",
                 "./src/stun/nr_socket_turn.c",
                 "./src/stun/nr_socket_turn.h",
+                "./src/stun/nr_socket_buffered_stun.c",
+                "./src/stun/nr_socket_buffered_stun.h",
                 "./src/stun/stun.h",
                 "./src/stun/stun_build.c",
                 "./src/stun/stun_build.h",
