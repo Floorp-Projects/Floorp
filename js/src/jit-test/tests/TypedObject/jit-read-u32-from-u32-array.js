@@ -6,7 +6,7 @@
 if (!this.hasOwnProperty("TypedObject"))
   quit();
 
-var Vec3u32Type = new TypedObject.ArrayType(TypedObject.uint32, 3);
+var Vec3u32Type = TypedObject.uint32.array(3);
 
 function foo_u32() {
   for (var i = 0; i < 30000; i += 3) {

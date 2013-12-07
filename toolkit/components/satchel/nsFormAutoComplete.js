@@ -19,6 +19,11 @@ function FormAutoComplete() {
     this.init();
 }
 
+/**
+ * FormAutoComplete
+ *
+ * Implements the nsIFormAutoComplete interface in the main process.
+ */
 FormAutoComplete.prototype = {
     classID          : Components.ID("{c11c21b2-71c9-4f87-a0f8-5e13f50495fd}"),
     QueryInterface   : XPCOMUtils.generateQI([Ci.nsIFormAutoComplete, Ci.nsISupportsWeakReference]),
@@ -304,8 +309,100 @@ FormAutoComplete.prototype = {
 
 }; // end of FormAutoComplete implementation
 
+/**
+ * FormAutoCompleteChild
+ *
+ * Implements the nsIFormAutoComplete interface in a child content process,
+ * and forwards the auto-complete requests to the parent process which
+ * also implements a nsIFormAutoComplete interface and has
+ * direct access to the FormHistory database.
+ */
+function FormAutoCompleteChild() {
+  this.init();
+}
 
+FormAutoCompleteChild.prototype = {
+    classID          : Components.ID("{c11c21b2-71c9-4f87-a0f8-5e13f50495fd}"),
+    QueryInterface   : XPCOMUtils.generateQI([Ci.nsIFormAutoComplete, Ci.nsISupportsWeakReference]),
 
+    _debug: false,
+    _enabled: true,
+
+    /*
+     * init
+     *
+     * Initializes the content-process side of the FormAutoComplete component,
+     * and add a listener for the message that the parent process sends when
+     * a result is produced.
+     */
+    init: function() {
+      this._debug    = Services.prefs.getBoolPref("browser.formfill.debug");
+      this._enabled  = Services.prefs.getBoolPref("browser.formfill.enable");
+      this.log("init");
+    },
+
+    /*
+     * log
+     *
+     * Internal function for logging debug messages
+     */
+    log : function (message) {
+      if (!this._debug)
+        return;
+      dump("FormAutoCompleteChild: " + message + "\n");
+    },
+
+    autoCompleteSearch : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult) {
+      // This function is deprecated
+    },
+
+    autoCompleteSearchAsync : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult, aListener) {
+      this.log("autoCompleteSearchAsync");
+
+      this._pendingListener = aListener;
+
+      let rect = aField.getBoundingClientRect();
+
+      let topLevelDocshell = aField.ownerDocument.defaultView
+                                   .QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIDocShell)
+                                   .sameTypeRootTreeItem
+                                   .QueryInterface(Ci.nsIDocShell);
+
+      let mm = topLevelDocshell.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIContentFrameMessageManager);
+
+      mm.sendAsyncMessage("FormHistory:AutoCompleteSearchAsync", {
+        inputName: aInputName,
+        untrimmedSearchString: aUntrimmedSearchString,
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height
+      });
+
+      mm.addMessageListener("FormAutoComplete:AutoCompleteSearchAsyncResult",
+        function searchFinished(message) {
+          mm.removeMessageListener("FormAutoComplete:AutoCompleteSearchAsyncResult", searchFinished);
+          let result = new FormAutoCompleteResult(
+            null,
+            [{text: res} for (res of message.data.results)],
+            null,
+            null
+          );
+          if (aListener) {
+            aListener.onSearchCompletion(result);
+          }
+        }
+      );
+
+      this.log("autoCompleteSearchAsync message was sent");
+    },
+
+    stopAutoCompleteSearch : function () {
+       this.log("stopAutoCompleteSearch");
+    },
+}; // end of FormAutoCompleteChild implementation
 
 // nsIAutoCompleteResult implementation
 function FormAutoCompleteResult (formHistory, entries, fieldName, searchString) {
@@ -390,5 +487,15 @@ FormAutoCompleteResult.prototype = {
     }
 };
 
-let component = [FormAutoComplete];
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
+
+if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT &&
+    Services.prefs.prefHasUserValue("browser.tabs.remote") &&
+    Services.prefs.getBoolPref("browser.tabs.remote")) {
+  // Register the stub FormAutoComplete module in the child which will
+  // forward messages to the parent through the process message manager.
+  let component = [FormAutoCompleteChild];
+  this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
+} else {
+  let component = [FormAutoComplete];
+  this.NSGetFactory = XPCOMUtils.generateNSGetFactory(component);
+}
