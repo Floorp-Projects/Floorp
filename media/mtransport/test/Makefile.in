@@ -34,6 +34,7 @@ LOCAL_INCLUDES += \
  -I$(topsrcdir)/media/mtransport/third_party/nICEr/src/stun \
  -I$(topsrcdir)/media/mtransport/third_party/nICEr/src/util \
  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/share \
+ -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/util/ \
  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/util/libekr \
  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/log \
  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/registry \
