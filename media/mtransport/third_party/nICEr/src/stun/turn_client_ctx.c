@@ -389,6 +389,8 @@ nr_turn_client_ctx_destroy(nr_turn_client_ctx **ctxp)
 
 int nr_turn_client_cancel(nr_turn_client_ctx *ctx)
 {
+  nr_turn_stun_ctx *stun;
+
   if (ctx->state == NR_TURN_CLIENT_STATE_CANCELLED ||
       ctx->state == NR_TURN_CLIENT_STATE_FAILED)
     return 0;
@@ -397,7 +399,7 @@ int nr_turn_client_cancel(nr_turn_client_ctx *ctx)
     r_log(NR_LOG_TURN, LOG_INFO, "TURN(%s): cancelling", ctx->label);
 
   /* Cancel the STUN client ctxs */
-  nr_turn_stun_ctx *stun = STAILQ_FIRST(&ctx->stun_ctxs);
+  stun = STAILQ_FIRST(&ctx->stun_ctxs);
   while (stun) {
     nr_stun_client_cancel(stun->stun);
     stun = STAILQ_NEXT(stun, entry);
