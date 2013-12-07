@@ -6,7 +6,7 @@
 if (!this.hasOwnProperty("TypedObject"))
   quit();
 
-var Vec3u16Type = new TypedObject.ArrayType(TypedObject.uint16, 3);
+var Vec3u16Type = TypedObject.uint16.array(3);
 var PairVec3u16Type = new TypedObject.StructType({fst: Vec3u16Type,
                                                   snd: Vec3u16Type});
 
