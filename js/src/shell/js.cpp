@@ -5750,8 +5750,13 @@ ProcessArgs(JSContext *cx, OptionParser *op)
             if (!JS::Evaluate(cx, opts, code, strlen(code), &rval))
                 return gExitCode ? gExitCode : EXITCODE_RUNTIME_ERROR;
             codeChunks.popFront();
+            if (gQuitting)
+                break;
         }
     }
+
+    if (gQuitting)
+        return gExitCode ? gExitCode : EXIT_SUCCESS;
 
     /* The |script| argument is processed after all options. */
     if (const char *path = op->getStringArg("script")) {
