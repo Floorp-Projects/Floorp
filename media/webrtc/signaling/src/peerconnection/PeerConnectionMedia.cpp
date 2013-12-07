@@ -245,6 +245,11 @@ PeerConnectionMedia::AddStream(nsIDOMMediaStream* aMediaStream, uint32_t *stream
 
   // Adding tracks here based on nsDOMMediaStream expectation settings
   uint32_t hints = stream->GetHintContents();
+#ifdef MOZILLA_INTERNAL_API
+  if (!Preferences::GetBool("media.peerconnection.video.enabled", true)) {
+    hints &= ~(DOMMediaStream::HINT_CONTENTS_VIDEO);
+  }
+#endif
 
   if (!(hints & (DOMMediaStream::HINT_CONTENTS_AUDIO |
         DOMMediaStream::HINT_CONTENTS_VIDEO))) {

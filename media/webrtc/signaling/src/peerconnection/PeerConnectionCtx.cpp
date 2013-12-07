@@ -26,6 +26,7 @@
 
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
+#include "mozilla/Preferences.h"
 #endif
 
 #include "nsIObserverService.h"
@@ -73,6 +74,10 @@ MediaConstraintsExternal::MediaConstraintsExternal(
 #ifdef MOZILLA_INTERNAL_API
   Apply(aSrc.mMandatory.mOfferToReceiveAudio, &c->offer_to_receive_audio, true);
   Apply(aSrc.mMandatory.mOfferToReceiveVideo, &c->offer_to_receive_video, true);
+  if (!Preferences::GetBool("media.peerconnection.video.enabled", true)) {
+    c->offer_to_receive_video.was_passed = true;
+    c->offer_to_receive_video.value = false;
+  }
   Apply(aSrc.mMandatory.mMozDontOfferDataChannel, &c->moz_dont_offer_datachannel,
         true);
   if (aSrc.mOptional.WasPassed()) {

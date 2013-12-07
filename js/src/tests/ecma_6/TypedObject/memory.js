@@ -23,7 +23,7 @@ var float64 = TypedObject.float64;
 function runTests() {
     print(BUGNUMBER + ": " + summary);
 
-    var AA = new ArrayType(new ArrayType(uint8, 5), 5);
+    var AA = uint8.array(5, 5);
     var aa = new AA();
     var aa0 = aa[0];
     aa[0] = [0,1,2,3,4];
@@ -36,7 +36,7 @@ function runTests() {
     for (var i = 0; i < aa0.length; i++)
         assertEq(aa0[i], i);
 
-    var AAA = new ArrayType(AA, 5);
+    var AAA = AA.array(5);
     var aaa = new AAA();
     var a0 = aaa[0][0];
 
@@ -53,9 +53,16 @@ function runTests() {
         assertEq(a0[i], i);
 
     var Color = new StructType({'r': uint8, 'g': uint8, 'b': uint8});
-    var Rainbow = new ArrayType(Color, 7);
+    var Rainbow = Color.array(7);
 
-    var theOneISawWasJustBlack = Rainbow.repeat({'r': 0, 'g': 0, 'b': 0});
+    var theOneISawWasJustBlack = new Rainbow([
+      {'r': 0, 'g': 0, 'b': 0},
+      {'r': 0, 'g': 0, 'b': 0},
+      {'r': 0, 'g': 0, 'b': 0},
+      {'r': 0, 'g': 0, 'b': 0},
+      {'r': 0, 'g': 0, 'b': 0},
+      {'r': 0, 'g': 0, 'b': 0},
+      {'r': 0, 'g': 0, 'b': 0}]);
 
     var middleBand = theOneISawWasJustBlack[3];
     theOneISawWasJustBlack = null;

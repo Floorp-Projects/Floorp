@@ -10,7 +10,7 @@ var PointType = new TypedObject.StructType({x: TypedObject.uint32,
                                             y: TypedObject.uint32,
                                             z: TypedObject.uint32});
 
-var VecPointType = new TypedObject.ArrayType(PointType, 3);
+var VecPointType = PointType.array(3);
 
 var PairVecType = new TypedObject.StructType({fst: VecPointType,
                                               snd: VecPointType});

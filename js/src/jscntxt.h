@@ -880,6 +880,19 @@ class AutoStringVector : public AutoVectorRooter<JSString *>
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+class AutoPropertyNameVector : public AutoVectorRooter<PropertyName *>
+{
+  public:
+    explicit AutoPropertyNameVector(JSContext *cx
+                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<PropertyName *>(cx, STRINGVECTOR)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 class AutoShapeVector : public AutoVectorRooter<Shape *>
 {
   public:

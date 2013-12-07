@@ -21,9 +21,11 @@ GARBAGE_DIRS = \
 
 ANDROID=$(ANDROID_SDK)/../../tools/android
 
+TARGET= $(notdir $(ANDROID_SDK))
+
 build.xml:
-	$(ANDROID) create project --name GeckoViewExample --target android-18 --path $(CURDIR) --activity GeckoViewExample --package org.mozilla.geckoviewexample
-	$(ANDROID) update project --target android-18 --path $(CURDIR) --library $(DEPTH)/mobile/android/geckoview_library
+	$(ANDROID) create project --name GeckoViewExample --target $(TARGET) --path $(CURDIR) --activity GeckoViewExample --package org.mozilla.geckoviewexample
+	$(ANDROID) update project --target $(TARGET) --path $(CURDIR) --library $(DEPTH)/mobile/android/geckoview_library
 	$(UNZIP) -o $(DIST)/geckoview_library/geckoview_assets.zip
 	$(NSINSTALL) $(srcdir)/main.xml res/layout/
 	$(NSINSTALL) $(srcdir)/AndroidManifest.xml .

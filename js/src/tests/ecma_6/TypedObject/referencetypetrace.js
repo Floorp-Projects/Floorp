@@ -39,8 +39,17 @@ function TestStructFields(RefType) {
 
 function TestArrayElements(RefType) {
   var rabbit = {};
-  var S1 = new ArrayType(RefType, 1);
+  var S1 = new ArrayType(RefType).dimension(1);
   var s1 = new S1([rabbit]);
+  assertCanReach(s1, rabbit);
+  s1[0] = null;
+  assertCannotReach(s1, rabbit);
+}
+
+function TestUnsizedArrayElements(RefType) {
+  var rabbit = {};
+  var S1 = new ArrayType(RefType);
+  var s1 = new S1(1, [rabbit]);
   assertCanReach(s1, rabbit);
   s1[0] = null;
   assertCannotReach(s1, rabbit);
@@ -49,7 +58,7 @@ function TestArrayElements(RefType) {
 function TestStructInArray(RefType) {
   var rabbit = {};
   var S2 = new StructType({f: RefType, g: RefType});
-  var S1 = new ArrayType(S2, 1);
+  var S1 = new ArrayType(S2).dimension(1);
   var s1 = new S1([{f: rabbit, g: {}}]);
   assertCanReach(s1, rabbit);
   s1[0].f = null;
@@ -81,6 +90,9 @@ function runTests()
 
   TestArrayElements(Object);
   TestArrayElements(Any);
+
+  TestUnsizedArrayElements(Object);
+  TestUnsizedArrayElements(Any);
 
   TestStructInArray(Object);
   TestStructInArray(Any);

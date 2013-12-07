@@ -12,6 +12,7 @@
 #include "jsnum.h"
 #include "jsutil.h"
 
+#include "builtin/TypedObject.h"
 #include "js/HashTable.h"
 #include "vm/Runtime.h"
 #include "vm/StringBuffer.h"
@@ -68,8 +69,13 @@ TypeRepresentationHasher::match(TypeRepresentation *key1,
       case TypeRepresentation::Struct:
         return matchStructs(key1->asStruct(), key2->asStruct());
 
-      case TypeRepresentation::Array:
-        return matchArrays(key1->asArray(), key2->asArray());
+      case TypeRepresentation::SizedArray:
+        return matchSizedArrays(key1->asSizedArray(),
+                                key2->asSizedArray());
+
+      case TypeRepresentation::UnsizedArray:
+        return matchUnsizedArrays(key1->asUnsizedArray(),
+                                  key2->asUnsizedArray());
     }
 
     MOZ_ASSUME_UNREACHABLE("Invalid kind");
@@ -104,7 +110,7 @@ TypeRepresentationHasher::matchStructs(StructTypeRepresentation *key1,
         return false;
 
     for (size_t i = 0; i < key1->fieldCount(); i++) {
-        if (key1->field(i).id != key2->field(i).id)
+        if (key1->field(i).propertyName != key2->field(i).propertyName)
             return false;
 
         if (key1->field(i).typeRepr != key2->field(i).typeRepr)
@@ -115,12 +121,20 @@ TypeRepresentationHasher::matchStructs(StructTypeRepresentation *key1,
 }
 
 bool
-TypeRepresentationHasher::matchArrays(ArrayTypeRepresentation *key1,
-                                      ArrayTypeRepresentation *key2)
+TypeRepresentationHasher::matchSizedArrays(SizedArrayTypeRepresentation *key1,
+                                           SizedArrayTypeRepresentation *key2)
 {
     // We assume that these pointers have been canonicalized:
     return key1->element() == key2->element() &&
            key1->length() == key2->length();
+}
+
+bool
+TypeRepresentationHasher::matchUnsizedArrays(UnsizedArrayTypeRepresentation *key1,
+                                             UnsizedArrayTypeRepresentation *key2)
+{
+    // We assume that these pointers have been canonicalized:
+    return key1->element() == key2->element();
 }
 
 HashNumber
@@ -138,8 +152,11 @@ TypeRepresentationHasher::hash(TypeRepresentation *key) {
       case TypeRepresentation::Struct:
         return hashStruct(key->asStruct());
 
-      case TypeRepresentation::Array:
-        return hashArray(key->asArray());
+      case TypeRepresentation::UnsizedArray:
+        return hashUnsizedArray(key->asUnsizedArray());
+
+      case TypeRepresentation::SizedArray:
+        return hashSizedArray(key->asSizedArray());
     }
 
     MOZ_ASSUME_UNREACHABLE("Invalid kind");
@@ -168,27 +185,37 @@ TypeRepresentationHasher::hashStruct(StructTypeRepresentation *key)
 {
     HashNumber hash = HashGeneric(key->kind());
     for (HashNumber i = 0; i < key->fieldCount(); i++) {
-        hash = AddToHash(hash, JSID_BITS(key->field(i).id.get()));
+        hash = AddToHash(hash, key->field(i).propertyName.get());
         hash = AddToHash(hash, key->field(i).typeRepr);
     }
     return hash;
 }
 
 HashNumber
-TypeRepresentationHasher::hashArray(ArrayTypeRepresentation *key)
+TypeRepresentationHasher::hashSizedArray(SizedArrayTypeRepresentation *key)
 {
     return HashGeneric(key->kind(), key->element(), key->length());
+}
+
+HashNumber
+TypeRepresentationHasher::hashUnsizedArray(UnsizedArrayTypeRepresentation *key)
+{
+    return HashGeneric(key->kind(), key->element());
 }
 
 ///////////////////////////////////////////////////////////////////////////
 // Constructors
 
-TypeRepresentation::TypeRepresentation(Kind kind, size_t size,
-                                       size_t align, bool opaque)
-  : size_(size),
-    alignment_(align),
-    kind_(kind),
+TypeRepresentation::TypeRepresentation(Kind kind, bool opaque)
+  : kind_(kind),
     opaque_(opaque)
+{}
+
+SizedTypeRepresentation::SizedTypeRepresentation(Kind kind, bool opaque,
+                                                 size_t size, size_t align)
+  : TypeRepresentation(kind, opaque),
+    size_(size),
+    alignment_(align)
 {}
 
 static size_t ScalarSizes[] = {
@@ -199,7 +226,7 @@ static size_t ScalarSizes[] = {
 };
 
 ScalarTypeRepresentation::ScalarTypeRepresentation(Type type)
-  : TypeRepresentation(Scalar, ScalarSizes[type], ScalarSizes[type], false),
+  : SizedTypeRepresentation(Scalar, false, ScalarSizes[type], ScalarSizes[type]),
     type_(type)
 {
 }
@@ -212,13 +239,13 @@ static size_t X4Sizes[] = {
 };
 
 X4TypeRepresentation::X4TypeRepresentation(Type type)
-  : TypeRepresentation(X4, X4Sizes[type], X4Sizes[type], false),
+  : SizedTypeRepresentation(X4, false, X4Sizes[type], X4Sizes[type]),
     type_(type)
 {
 }
 
 ReferenceTypeRepresentation::ReferenceTypeRepresentation(Type type)
-  : TypeRepresentation(Reference, 0, 1, true),
+  : SizedTypeRepresentation(Reference, true, 0, 1),
     type_(type)
 {
     switch (type) {
@@ -235,12 +262,18 @@ ReferenceTypeRepresentation::ReferenceTypeRepresentation(Type type)
     }
 }
 
-ArrayTypeRepresentation::ArrayTypeRepresentation(TypeRepresentation *element,
-                                                 size_t length)
-  : TypeRepresentation(Array, element->size() * length,
-                       element->alignment(), element->opaque()),
+SizedArrayTypeRepresentation::SizedArrayTypeRepresentation(SizedTypeRepresentation *element,
+                                                           size_t length)
+  : SizedTypeRepresentation(SizedArray, element->opaque(),
+                            element->size() * length, element->alignment()),
     element_(element),
     length_(length)
+{
+}
+
+UnsizedArrayTypeRepresentation::UnsizedArrayTypeRepresentation(SizedTypeRepresentation *element)
+  : TypeRepresentation(UnsizedArray, element->opaque()),
+    element_(element)
 {
 }
 
@@ -250,17 +283,17 @@ static inline size_t alignTo(size_t address, size_t align) {
 }
 
 StructField::StructField(size_t index,
-                         jsid &id,
-                         TypeRepresentation *typeRepr,
+                         PropertyName *propertyName,
+                         SizedTypeRepresentation *typeRepr,
                          size_t offset)
   : index(index),
-    id(id),
+    propertyName(propertyName),
     typeRepr(typeRepr),
     offset(offset)
 {}
 
 StructTypeRepresentation::StructTypeRepresentation()
-  : TypeRepresentation(Struct, 0, 1, false),
+  : SizedTypeRepresentation(Struct, false, 0, 1),
     fieldCount_(0) // see ::init() below!
 {
     // note: size_, alignment_, and opaque_ are computed in ::init() below
@@ -268,11 +301,11 @@ StructTypeRepresentation::StructTypeRepresentation()
 
 bool
 StructTypeRepresentation::init(JSContext *cx,
-                               AutoIdVector &ids,
+                               AutoPropertyNameVector &names,
                                AutoObjectVector &typeReprOwners)
 {
-    JS_ASSERT(ids.length() == typeReprOwners.length());
-    fieldCount_ = ids.length();
+    JS_ASSERT(names.length() == typeReprOwners.length());
+    fieldCount_ = names.length();
 
     // We compute alignment into the field `align_` directly in the
     // loop below, but not `size_` because we have to very careful
@@ -284,8 +317,9 @@ StructTypeRepresentation::init(JSContext *cx,
     alignment_ = 1;
     opaque_ = false;
 
-    for (size_t i = 0; i < ids.length(); i++) {
-        TypeRepresentation *fieldTypeRepr = fromOwnerObject(*typeReprOwners[i]);
+    for (size_t i = 0; i < names.length(); i++) {
+        SizedTypeRepresentation *fieldTypeRepr =
+            fromOwnerObject(*typeReprOwners[i])->asSized();
 
         if (fieldTypeRepr->opaque())
             opaque_ = true;
@@ -297,7 +331,8 @@ StructTypeRepresentation::init(JSContext *cx,
             return false;
         }
 
-        new(fields() + i) StructField(i, ids[i], fieldTypeRepr, alignedSize);
+        new(fields() + i) StructField(i, names[i],
+                                      fieldTypeRepr, alignedSize);
         alignment_ = js::Max(alignment_, fieldTypeRepr->alignment());
 
         uint32_t incrementedSize = alignedSize + fieldTypeRepr->size();
@@ -329,9 +364,25 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
                                      TypeRepresentationHash::AddPtr &p)
 {
     JS_ASSERT(!ownerObject_);
-
+    Rooted<GlobalObject*> global(cx, cx->global());
     JSCompartment *comp = cx->compartment();
 
+    // First, try to create the typed object to associate with this
+    // type representation. Since nothing is in the table yet, if this
+    // fails we can just return and pretend this whole endeavor was
+    // just a bad dream.
+    RootedObject proto(cx);
+    const Class *clasp;
+    if (!global->getTypedObjectModule().getSuitableClaspAndProto(cx, kind(),
+                                                                 &clasp, &proto))
+    {
+        return nullptr;
+    }
+    RootedTypeObject typeObject(cx, comp->types.newTypeObject(cx, clasp, proto));
+    if (!typeObject)
+        return nullptr;
+
+    // Next, attempt to add the type representation to the table.
     if (!comp->typeReprs.add(p, this)) {
         js_ReportOutOfMemory(cx);
         js_free(this); // do not finalize, not present in the table
@@ -356,13 +407,21 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
 
     // Assign the various reserved slots:
     ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_KIND, Int32Value(kind()));
-    ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_SIZE, Int32Value(size()));
-    ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_ALIGNMENT, Int32Value(alignment()));
+
+    if (isSized()) {
+        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_SIZE,
+                                      Int32Value(asSized()->size()));
+        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_ALIGNMENT,
+                                      Int32Value(asSized()->alignment()));
+    }
 
     switch (kind()) {
-      case Array:
+      case UnsizedArray:
+        break;
+
+      case SizedArray:
         ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_LENGTH,
-                                      Int32Value(asArray()->length()));
+                                      Int32Value(asSizedArray()->length()));
         break;
 
       case Scalar:
@@ -385,6 +444,7 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
     }
 
     ownerObject_.init(ownerObject);
+    typeObject_.init(typeObject);
     return &*ownerObject;
 }
 
@@ -452,9 +512,9 @@ ReferenceTypeRepresentation::Create(JSContext *cx,
 
 /*static*/
 JSObject *
-ArrayTypeRepresentation::Create(JSContext *cx,
-                                TypeRepresentation *element,
-                                size_t length)
+SizedArrayTypeRepresentation::Create(JSContext *cx,
+                                     SizedTypeRepresentation *element,
+                                     size_t length)
 {
     JSCompartment *comp = cx->compartment();
 
@@ -468,18 +528,42 @@ ArrayTypeRepresentation::Create(JSContext *cx,
         return nullptr;
     }
 
-    ArrayTypeRepresentation sample(element, length);
+    SizedArrayTypeRepresentation sample(element, length);
     TypeRepresentationHash::AddPtr p = comp->typeReprs.lookupForAdd(&sample);
     if (p)
         return (*p)->ownerObject();
 
     // Note: cannot use cx->new_ because constructor is private.
-    ArrayTypeRepresentation *ptr =
-        (ArrayTypeRepresentation *) cx->malloc_(
-            sizeof(ArrayTypeRepresentation));
+    SizedArrayTypeRepresentation *ptr =
+        (SizedArrayTypeRepresentation *) cx->malloc_(
+            sizeof(SizedArrayTypeRepresentation));
     if (!ptr)
         return nullptr;
-    new(ptr) ArrayTypeRepresentation(element, length);
+    new(ptr) SizedArrayTypeRepresentation(element, length);
+
+    return ptr->addToTableOrFree(cx, p);
+}
+
+
+/*static*/
+JSObject *
+UnsizedArrayTypeRepresentation::Create(JSContext *cx,
+                                       SizedTypeRepresentation *element)
+{
+    JSCompartment *comp = cx->compartment();
+
+    UnsizedArrayTypeRepresentation sample(element);
+    TypeRepresentationHash::AddPtr p = comp->typeReprs.lookupForAdd(&sample);
+    if (p)
+        return (*p)->ownerObject();
+
+    // Note: cannot use cx->new_ because constructor is private.
+    UnsizedArrayTypeRepresentation *ptr =
+        (UnsizedArrayTypeRepresentation *) cx->malloc_(
+            sizeof(UnsizedArrayTypeRepresentation));
+    if (!ptr)
+        return nullptr;
+    new(ptr) UnsizedArrayTypeRepresentation(element);
 
     return ptr->addToTableOrFree(cx, p);
 }
@@ -487,10 +571,10 @@ ArrayTypeRepresentation::Create(JSContext *cx,
 /*static*/
 JSObject *
 StructTypeRepresentation::Create(JSContext *cx,
-                                 AutoIdVector &ids,
+                                 AutoPropertyNameVector &names,
                                  AutoObjectVector &typeReprOwners)
 {
-    size_t count = ids.length();
+    size_t count = names.length();
     JSCompartment *comp = cx->compartment();
 
     // Note: cannot use cx->new_ because constructor is private.
@@ -498,7 +582,7 @@ StructTypeRepresentation::Create(JSContext *cx,
     StructTypeRepresentation *ptr =
         (StructTypeRepresentation *) cx->malloc_(size);
     new(ptr) StructTypeRepresentation();
-    if (!ptr->init(cx, ids, typeReprOwners))
+    if (!ptr->init(cx, names, typeReprOwners))
         return nullptr;
 
     TypeRepresentationHash::AddPtr p = comp->typeReprs.lookupForAdd(ptr);
@@ -521,6 +605,7 @@ TypeRepresentation::mark(JSTracer *trace)
     // contents. This is the typical scheme for marking objects.  See
     // gc/Marking.cpp for more details.
     gc::MarkObject(trace, &ownerObject_, "typeRepresentation_ownerObject");
+    gc::MarkTypeObject(trace, &typeObject_, "typeRepresentation_typeObject");
 }
 
 /*static*/ void
@@ -544,8 +629,12 @@ TypeRepresentation::traceFields(JSTracer *trace)
         asStruct()->traceStructFields(trace);
         break;
 
-      case Array:
-        asArray()->traceArrayFields(trace);
+      case SizedArray:
+        asSizedArray()->traceSizedArrayFields(trace);
+        break;
+
+      case UnsizedArray:
+        asUnsizedArray()->traceUnsizedArrayFields(trace);
         break;
     }
 }
@@ -554,13 +643,20 @@ void
 StructTypeRepresentation::traceStructFields(JSTracer *trace)
 {
     for (size_t i = 0; i < fieldCount(); i++) {
-        gc::MarkId(trace, &fields()[i].id, "typerepr_field_id");
+        gc::MarkString(trace, &fields()[i].propertyName, "typerepr_field_propertyName");
         fields()[i].typeRepr->mark(trace);
     }
 }
 
 void
-ArrayTypeRepresentation::traceArrayFields(JSTracer *trace)
+SizedArrayTypeRepresentation::traceSizedArrayFields(JSTracer *trace)
+{
+    this->mark(trace);
+    element_->mark(trace);
+}
+
+void
+UnsizedArrayTypeRepresentation::traceUnsizedArrayFields(JSTracer *trace)
 {
     this->mark(trace);
     element_->mark(trace);
@@ -594,8 +690,11 @@ TypeRepresentation::appendString(JSContext *cx, StringBuffer &contents)
       case X4:
         return asX4()->appendStringX4(cx, contents);
 
-      case Array:
-        return asArray()->appendStringArray(cx, contents);
+      case SizedArray:
+        return asSizedArray()->appendStringSizedArray(cx, contents);
+
+      case UnsizedArray:
+        return asUnsizedArray()->appendStringUnsizedArray(cx, contents);
 
       case Struct:
         return asStruct()->appendStringStruct(cx, contents);
@@ -662,21 +761,42 @@ X4TypeRepresentation::appendStringX4(JSContext *cx, StringBuffer &contents)
 }
 
 bool
-ArrayTypeRepresentation::appendStringArray(JSContext *cx, StringBuffer &contents)
+SizedArrayTypeRepresentation::appendStringSizedArray(JSContext *cx, StringBuffer &contents)
 {
-    if (!contents.append("ArrayType("))
+    SizedTypeRepresentation *elementType = element();
+    while (elementType->isSizedArray())
+        elementType = elementType->asSizedArray()->element();
+    if (!elementType->appendString(cx, contents))
         return false;
 
+    contents.append(".array(");
+    SizedArrayTypeRepresentation *arrayType = this;
+    while (arrayType != NULL) {
+        if (!NumberValueToStringBuffer(cx, NumberValue(length()), contents))
+            return false;
+
+        if (arrayType->element()->isSizedArray()) {
+            if (!contents.append(","))
+                return false;
+            arrayType = arrayType->element()->asSizedArray();
+        } else {
+            break;
+        }
+    }
+
+    if (!contents.append(")"))
+        return false;
+
+    return true;
+}
+
+bool
+UnsizedArrayTypeRepresentation::appendStringUnsizedArray(JSContext *cx, StringBuffer &contents)
+{
     if (!element()->appendString(cx, contents))
         return false;
 
-    if (!contents.append(", "))
-        return false;
-
-    if (!NumberValueToStringBuffer(cx, NumberValue(length()), contents))
-        return false;
-
-    if (!contents.append(")"))
+    if (!contents.append(".array()"))
         return false;
 
     return true;
@@ -694,7 +814,7 @@ StructTypeRepresentation::appendStringStruct(JSContext *cx, StringBuffer &conten
         if (i > 0)
             contents.append(", ");
 
-        RootedString idString(cx, IdToString(cx, fld.id));
+        RootedString idString(cx, fld.propertyName);
         if (!idString)
             return false;
 
@@ -719,7 +839,9 @@ StructTypeRepresentation::appendStringStruct(JSContext *cx, StringBuffer &conten
 
 template<typename V>
 static void
-visitReferences(TypeRepresentation *repr, uint8_t *mem, V& visitor)
+visitReferences(SizedTypeRepresentation *repr,
+                uint8_t *mem,
+                V& visitor)
 {
     if (repr->transparent())
         return;
@@ -733,15 +855,20 @@ visitReferences(TypeRepresentation *repr, uint8_t *mem, V& visitor)
         visitor.visitReference(repr->asReference(), mem);
         return;
 
-      case TypeRepresentation::Array:
+      case TypeRepresentation::SizedArray:
       {
-        ArrayTypeRepresentation *arrayRepr = repr->asArray();
-        TypeRepresentation *elementRepr = arrayRepr->element();
+        SizedArrayTypeRepresentation *arrayRepr = repr->asSizedArray();
+        SizedTypeRepresentation *elementRepr = arrayRepr->element();
         for (size_t i = 0; i < arrayRepr->length(); i++) {
             visitReferences(elementRepr, mem, visitor);
             mem += elementRepr->size();
         }
         return;
+      }
+
+      case TypeRepresentation::UnsizedArray:
+      {
+        MOZ_ASSUME_UNREACHABLE("Only Sized Type representations");
       }
 
       case TypeRepresentation::Struct:
@@ -806,12 +933,23 @@ js::MemoryInitVisitor::visitReference(ReferenceTypeRepresentation *repr, uint8_t
 }
 
 void
-TypeRepresentation::initInstance(const JSRuntime *rt, uint8_t *mem)
+SizedTypeRepresentation::initInstance(const JSRuntime *rt,
+                                      uint8_t *mem,
+                                      size_t length)
 {
     MemoryInitVisitor visitor(rt);
+
+    // Initialize the 0th instance
     memset(mem, 0, size());
     if (opaque())
         visitReferences(this, mem, visitor);
+
+    // Stamp out N copies of later instances
+    uint8_t *target = mem;
+    for (size_t i = 1; i < length; i++) {
+        target += size();
+        memcpy(target, mem, size());
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -865,10 +1003,16 @@ js::MemoryTracingVisitor::visitReference(ReferenceTypeRepresentation *repr, uint
 }
 
 void
-TypeRepresentation::traceInstance(JSTracer *trace, uint8_t *mem)
+SizedTypeRepresentation::traceInstance(JSTracer *trace,
+                                       uint8_t *mem,
+                                       size_t length)
 {
     MemoryTracingVisitor visitor(trace);
-    visitReferences(this, mem, visitor);
+
+    for (size_t i = 0; i < length; i++) {
+        visitReferences(this, mem, visitor);
+        mem += size();
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -877,8 +1021,18 @@ TypeRepresentation::traceInstance(JSTracer *trace, uint8_t *mem)
 const StructField *
 StructTypeRepresentation::fieldNamed(jsid id) const
 {
+    if (!JSID_IS_ATOM(id))
+        return nullptr;
+
+    uint32_t unused;
+    JSAtom *atom = JSID_TO_ATOM(id);
+    if (atom->isIndex(&unused))
+        return nullptr;
+
+    PropertyName *name = atom->asPropertyName();
+
     for (size_t i = 0; i < fieldCount(); i++) {
-        if (field(i).id.get() == id)
+        if (field(i).propertyName.get() == name)
             return &field(i);
     }
     return nullptr;

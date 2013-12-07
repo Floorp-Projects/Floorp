@@ -1253,11 +1253,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     accessible = new XULMenubarAccessible(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:menulist")) {
-      if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::droppable,
-                                nsGkAtoms::_false, eCaseMatters))
-      accessible = new XULTextFieldAccessible(aContent, aDoc);
-      else
-      accessible = new XULComboboxAccessible(aContent, aDoc);
+    accessible = new XULComboboxAccessible(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:menuitem")) {
     accessible = new XULMenuitemAccessibleWrap(aContent, aDoc);
