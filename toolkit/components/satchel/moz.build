@@ -35,6 +35,7 @@ EXTRA_PP_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'AutoCompleteE10S.jsm',
     'nsFormAutoCompleteResult.jsm',
 ]
 
