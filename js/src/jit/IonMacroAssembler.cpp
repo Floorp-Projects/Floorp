@@ -1205,6 +1205,43 @@ MacroAssembler::handleFailure(ExecutionMode executionMode)
         sps_->reenter(*this, InvalidReg);
 }
 
+#ifdef DEBUG
+static inline bool
+IsCompilingAsmJS()
+{
+    // asm.js compilation pushes an IonContext with a null JSCompartment.
+    IonContext *ictx = MaybeGetIonContext();
+    return ictx && ictx->compartment == nullptr;
+}
+#endif
+
+static void assume_unreachable_(const char *output) {
+    MOZ_ReportAssertionFailure(output, __FILE__, __LINE__);
+}
+
+void
+MacroAssembler::assume_unreachable(const char *output)
+{
+#ifdef DEBUG
+    // AsmJS forbids use of ImmPtr.
+    if (!IsCompilingAsmJS()) {
+        RegisterSet regs = RegisterSet::Volatile();
+        PushRegsInMask(regs);
+
+        Register temp = regs.takeGeneral();
+
+        setupUnalignedABICall(1, temp);
+        movePtr(ImmPtr(output), temp);
+        passABIArg(temp);
+        callWithABI(JS_FUNC_TO_DATA_PTR(void *, assume_unreachable_));
+
+        PopRegsInMask(RegisterSet::Volatile());
+    }
+#endif
+
+    breakpoint();
+}
+
 static void printf0_(const char *output) {
     printf("%s", output);
 }

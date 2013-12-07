@@ -595,12 +595,12 @@ LIRGenerator::visitCallDirectEval(MCallDirectEval *ins)
             return false;
     }
 
-    if (!useBoxAtStart(lir, (string->type() == MIRType_String
-                             ? LCallDirectEvalS::ThisValue
-                             : LCallDirectEvalV::ThisValue),
-                       thisValue))
-    {
-        return false;
+    if (string->type() == MIRType_String) {
+        if (!useBoxAtStart(lir, LCallDirectEvalS::ThisValue, thisValue))
+            return false;
+    } else {
+        if (!useBoxAtStart(lir, LCallDirectEvalV::ThisValue, thisValue))
+            return false;
     }
 
     return defineReturn(lir, ins) && assignSafepoint(lir, ins);
