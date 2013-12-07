@@ -160,6 +160,7 @@ UNIFIED_SOURCES += [
     'vm/CharacterEncoding.cpp',
     'vm/DateTime.cpp',
     'vm/Debugger.cpp',
+    'vm/ErrorObject.cpp',
     'vm/ForkJoin.cpp',
     'vm/GlobalObject.cpp',
     'vm/Id.cpp',
