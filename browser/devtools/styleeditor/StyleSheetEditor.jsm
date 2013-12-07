@@ -14,6 +14,7 @@ const Cu = Components.utils;
 const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 const Editor  = require("devtools/sourceeditor/editor");
 const promise = require("sdk/core/promise");
+const {CssLogic} = require("devtools/styleinspector/css-logic");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -21,6 +22,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 Cu.import("resource:///modules/devtools/StyleEditorUtil.jsm");
 
+const LOAD_ERROR = "error-load";
 const SAVE_ERROR = "error-save";
 
 // max update frequency in ms (avoid potential typing lag and/or flicker)
@@ -32,12 +34,12 @@ const UPDATE_STYLESHEET_THROTTLE_DELAY = 500;
  * object.
  *
  * Emits events:
- *   'source-load': The source of the stylesheet has been fetched
  *   'property-change': A property on the underlying stylesheet has changed
  *   'source-editor-load': The source editor for this editor has been loaded
  *   'error': An error has occured
  *
- * @param {StyleSheet}  styleSheet
+ * @param {StyleSheet|OriginalSource}  styleSheet
+ *        Stylesheet or original source to show
  * @param {DOMWindow}  win
  *        panel window for style editor
  * @param {nsIFile}  file
@@ -57,13 +59,19 @@ function StyleSheetEditor(styleSheet, win, file, isNew) {
 
   this.errorMessage = null;
 
+  let readOnly = false;
+  if (styleSheet.isOriginalSource) {
+    // live-preview won't work with sources that need compilation
+    readOnly = true;
+  }
+
   this._state = {   // state to use when inputElement attaches
     text: "",
     selection: {
       start: {line: 0, ch: 0},
       end: {line: 0, ch: 0}
     },
-    readOnly: false,
+    readOnly: readOnly,
     topIndex: 0,              // the first visible line
   };
 
@@ -73,30 +81,21 @@ function StyleSheetEditor(styleSheet, win, file, isNew) {
     this._styleSheetFilePath = this.styleSheet.href;
   }
 
-  this._onSourceLoad = this._onSourceLoad.bind(this);
   this._onPropertyChange = this._onPropertyChange.bind(this);
   this._onError = this._onError.bind(this);
 
   this._focusOnSourceEditorReady = false;
 
-  this.styleSheet.once("source-load", this._onSourceLoad);
   this.styleSheet.on("property-change", this._onPropertyChange);
   this.styleSheet.on("error", this._onError);
 }
 
 StyleSheetEditor.prototype = {
   /**
-   * This editor's source editor
-   */
-  get sourceEditor() {
-    return this._sourceEditor;
-  },
-
-  /**
    * Whether there are unsaved changes in the editor
    */
   get unsaved() {
-    return this._sourceEditor && !this._sourceEditor.isClean();
+    return this.sourceEditor && !this.sourceEditor.isClean();
   },
 
   /**
@@ -113,37 +112,23 @@ StyleSheetEditor.prototype = {
    * @return string
    */
   get friendlyName() {
-    if (this.savedFile) { // reuse the saved filename if any
+    if (this.savedFile) {
       return this.savedFile.leafName;
     }
 
     if (this._isNew) {
-      let index = this.styleSheet.styleSheetIndex + 1; // 0-indexing only works for devs
+      let index = this.styleSheet.styleSheetIndex + 1;
       return _("newStyleSheet", index);
     }
 
     if (!this.styleSheet.href) {
-      let index = this.styleSheet.styleSheetIndex + 1; // 0-indexing only works for devs
+      let index = this.styleSheet.styleSheetIndex + 1;
       return _("inlineStyleSheet", index);
     }
 
     if (!this._friendlyName) {
       let sheetURI = this.styleSheet.href;
-      let contentURI = this.styleSheet.debuggee.baseURI;
-      let contentURIScheme = contentURI.scheme;
-      let contentURILeafIndex = contentURI.specIgnoringRef.lastIndexOf("/");
-      contentURI = contentURI.specIgnoringRef;
-
-      // get content base URI without leaf name (if any)
-      if (contentURILeafIndex > contentURIScheme.length) {
-        contentURI = contentURI.substring(0, contentURILeafIndex + 1);
-      }
-
-      // avoid verbose repetition of absolute URI when the style sheet URI
-      // is relative to the content URI
-      this._friendlyName = (sheetURI.indexOf(contentURI) == 0)
-                           ? sheetURI.substring(contentURI.length)
-                           : sheetURI;
+      this._friendlyName = CssLogic.shortSource({ href: sheetURI });
       try {
         this._friendlyName = decodeURI(this._friendlyName);
       } catch (ex) {
@@ -155,22 +140,17 @@ StyleSheetEditor.prototype = {
   /**
    * Start fetching the full text source for this editor's sheet.
    */
-  fetchSource: function() {
-    this.styleSheet.fetchSource();
-  },
+  fetchSource: function(callback) {
+    this.styleSheet.getText().then((longStr) => {
+      longStr.string().then((source) => {
+        this._state.text = prettifyCSS(source);
+        this.sourceLoaded = true;
 
-  /**
-   * Handle source fetched event. Forward source-load event.
-   *
-   * @param  {string} event
-   *         Event type
-   * @param  {string} source
-   *         Full-text source of the stylesheet
-   */
-  _onSourceLoad: function(event, source) {
-    this._state.text = prettifyCSS(source);
-    this.sourceLoaded = true;
-    this.emit("source-load");
+        callback(source);
+      });
+    }, e => {
+      this.emit("error", LOAD_ERROR, this.styleSheet.href);
+    })
   },
 
   /**
@@ -181,8 +161,8 @@ StyleSheetEditor.prototype = {
    * @param  {string} property
    *         Property that has changed on sheet
    */
-  _onPropertyChange: function(event, property) {
-    this.emit("property-change", property);
+  _onPropertyChange: function(property, value) {
+    this.emit("property-change", property, value);
   },
 
   /**
@@ -220,7 +200,7 @@ StyleSheetEditor.prototype = {
         this.updateStyleSheet();
       });
 
-      this._sourceEditor = sourceEditor;
+      this.sourceEditor = sourceEditor;
 
       if (this._focusOnSourceEditorReady) {
         this._focusOnSourceEditorReady = false;
@@ -320,7 +300,7 @@ StyleSheetEditor.prototype = {
       this._state.text = this.sourceEditor.getText();
     }
 
-    this.styleSheet.update(this._state.text);
+    this.styleSheet.update(this._state.text, true);
   },
 
   /**
@@ -374,6 +354,8 @@ StyleSheetEditor.prototype = {
           callback(returnFile);
         }
         this.sourceEditor.setClean();
+
+        this.emit("property-change");
       }.bind(this));
     };
 
@@ -404,7 +386,6 @@ StyleSheetEditor.prototype = {
    * Clean up for this editor.
    */
   destroy: function() {
-    this.styleSheet.off("source-load", this._onSourceLoad);
     this.styleSheet.off("property-change", this._onPropertyChange);
     this.styleSheet.off("error", this._onError);
   }
