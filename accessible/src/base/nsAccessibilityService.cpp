@@ -1006,8 +1006,8 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       }
     }
 
-    // XBL bindings may use @role attribute to point the accessible type
-    // they belong to.
+    // Elements may implement nsIAccessibleProvider via XBL. This allows them to
+    // say what kind of accessible to create.
     newAcc = CreateAccessibleByType(content, document);
 
     // Any XUL box can be used as tabpanel, make sure we create a proper
