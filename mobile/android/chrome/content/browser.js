@@ -6631,7 +6631,27 @@ var SearchEngines = {
 
     let filter = {
       matches: function (aElement) {
-        return (aElement.form && NativeWindow.contextmenus.textContext.matches(aElement));
+        // Copied from body of isTargetAKeywordField function in nsContextMenu.js
+        if(!(aElement instanceof HTMLInputElement))
+          return false;
+        let form = aElement.form;
+        if (!form || aElement.type == "password")
+          return false;
+
+        let method = form.method.toUpperCase();
+
+        // These are the following types of forms we can create keywords for:
+        //
+        // method    encoding type        can create keyword
+        // GET       *                                   YES
+        //           *                                   YES
+        // POST      *                                   YES
+        // POST      application/x-www-form-urlencoded   YES
+        // POST      text/plain                          NO ( a little tricky to do)
+        // POST      multipart/form-data                 NO
+        // POST      everything else                     YES
+        return (method == "GET" || method == "") ||
+               (form.enctype != "text/plain") && (form.enctype != "multipart/form-data");
       }
     };
     SelectionHandler.actions.SEARCH_ADD = {
