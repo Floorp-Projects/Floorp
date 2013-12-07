@@ -32,7 +32,7 @@ SharedSurface_EGLImage::Create(GLContext* prodGL,
         return nullptr;
 
     MOZ_ALWAYS_TRUE(prodGL->MakeCurrent());
-    GLuint prodTex = prodGL->CreateTextureForOffscreen(formats, size);
+    GLuint prodTex = CreateTextureForOffscreen(prodGL, formats, size);
     if (!prodTex)
         return nullptr;
 
@@ -130,7 +130,7 @@ CreateTexturePipe(GLLibraryEGL* const egl, GLContext* const gl,
     *out_tex = 0;
     *out_image = 0;
 
-    GLuint tex = gl->CreateTextureForOffscreen(formats, size);
+    GLuint tex = CreateTextureForOffscreen(gl, formats, size);
     if (!tex)
         return false;
 

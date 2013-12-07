@@ -13,7 +13,7 @@
 #include "vp8/common/reconinter.h"
 #include "vpx/vpx_integer.h"
 #include "vpx_mem/vpx_mem.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 
 static const unsigned int NOISE_MOTION_THRESHOLD = 25 * 25;
 /* SSE_DIFF_THRESHOLD is selected as ~95% confidence assuming
@@ -206,8 +206,6 @@ void vp8_denoiser_denoise_mb(VP8_DENOISER *denoiser,
         MB_MODE_INFO saved_mbmi;
         MACROBLOCKD *filter_xd = &x->e_mbd;
         MB_MODE_INFO *mbmi = &filter_xd->mode_info_context->mbmi;
-        int mv_col;
-        int mv_row;
         int sse_diff = zero_mv_sse - best_sse;
 
         saved_mbmi = *mbmi;

@@ -11,7 +11,7 @@
 
 #include <limits.h>
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 #include "vpx/vpx_integer.h"
 #include "blockd.h"
 #include "reconinter.h"
@@ -138,14 +138,10 @@ void vp8_build_inter_predictors_b(BLOCKD *d, int pitch, unsigned char *base_pre,
     {
         for (r = 0; r < 4; r++)
         {
-#if !(CONFIG_FAST_UNALIGNED)
             pred_ptr[0]  = ptr[0];
             pred_ptr[1]  = ptr[1];
             pred_ptr[2]  = ptr[2];
             pred_ptr[3]  = ptr[3];
-#else
-            *(uint32_t *)pred_ptr = *(uint32_t *)ptr ;
-#endif
             pred_ptr     += pitch;
             ptr         += pre_stride;
         }
@@ -196,16 +192,12 @@ static void build_inter_predictors_b(BLOCKD *d, unsigned char *dst, int dst_stri
     {
         for (r = 0; r < 4; r++)
         {
-#if !(CONFIG_FAST_UNALIGNED)
           dst[0]  = ptr[0];
           dst[1]  = ptr[1];
           dst[2]  = ptr[2];
           dst[3]  = ptr[3];
-#else
-            *(uint32_t *)dst = *(uint32_t *)ptr ;
-#endif
-            dst     += dst_stride;
-            ptr     += pre_stride;
+          dst     += dst_stride;
+          ptr     += pre_stride;
         }
     }
 }
@@ -270,7 +262,7 @@ void vp8_build_inter4x4_predictors_mbuv(MACROBLOCKD *x)
                    + x->block[yoffset+4].bmi.mv.as_mv.row
                    + x->block[yoffset+5].bmi.mv.as_mv.row;
 
-            temp += 4 + ((temp >> (sizeof(int) * CHAR_BIT - 1)) << 3);
+            temp += 4 + ((temp >> (sizeof(temp) * CHAR_BIT - 1)) * 8);
 
             x->block[uoffset].bmi.mv.as_mv.row = (temp / 8) & x->fullpixel_mask;
 
@@ -279,7 +271,7 @@ void vp8_build_inter4x4_predictors_mbuv(MACROBLOCKD *x)
                    + x->block[yoffset+4].bmi.mv.as_mv.col
                    + x->block[yoffset+5].bmi.mv.as_mv.col;
 
-            temp += 4 + ((temp >> (sizeof(int) * CHAR_BIT - 1)) << 3);
+            temp += 4 + ((temp >> (sizeof(temp) * CHAR_BIT - 1)) * 8);
 
             x->block[uoffset].bmi.mv.as_mv.col = (temp / 8) & x->fullpixel_mask;
 
@@ -558,7 +550,7 @@ void build_4x4uvmvs(MACROBLOCKD *x)
                  + x->mode_info_context->bmi[yoffset + 4].mv.as_mv.row
                  + x->mode_info_context->bmi[yoffset + 5].mv.as_mv.row;
 
-            temp += 4 + ((temp >> (sizeof(int) * CHAR_BIT - 1)) << 3);
+            temp += 4 + ((temp >> (sizeof(temp) * CHAR_BIT - 1)) * 8);
 
             x->block[uoffset].bmi.mv.as_mv.row = (temp / 8) & x->fullpixel_mask;
 
@@ -567,7 +559,7 @@ void build_4x4uvmvs(MACROBLOCKD *x)
                  + x->mode_info_context->bmi[yoffset + 4].mv.as_mv.col
                  + x->mode_info_context->bmi[yoffset + 5].mv.as_mv.col;
 
-            temp += 4 + ((temp >> (sizeof(int) * CHAR_BIT - 1)) << 3);
+            temp += 4 + ((temp >> (sizeof(temp) * CHAR_BIT - 1)) * 8);
 
             x->block[uoffset].bmi.mv.as_mv.col = (temp / 8) & x->fullpixel_mask;
 

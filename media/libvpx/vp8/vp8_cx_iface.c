@@ -9,7 +9,7 @@
  */
 
 
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 #include "vpx/vpx_codec.h"
 #include "vpx/internal/vpx_codec_internal.h"
 #include "vpx_version.h"
@@ -153,7 +153,7 @@ static vpx_codec_err_t validate_config(vpx_codec_alg_priv_t      *ctx,
 #else
     RANGE_CHECK_HI(cfg, g_lag_in_frames,    25);
 #endif
-    RANGE_CHECK(cfg, rc_end_usage,          VPX_VBR, VPX_CQ);
+    RANGE_CHECK(cfg, rc_end_usage,          VPX_VBR, VPX_Q);
     RANGE_CHECK_HI(cfg, rc_undershoot_pct,  1000);
     RANGE_CHECK_HI(cfg, rc_overshoot_pct,   1000);
     RANGE_CHECK_HI(cfg, rc_2pass_vbr_bias_pct, 100);
@@ -204,7 +204,7 @@ static vpx_codec_err_t validate_config(vpx_codec_alg_priv_t      *ctx,
     RANGE_CHECK_HI(vp8_cfg, arnr_strength,   6);
     RANGE_CHECK(vp8_cfg, arnr_type,       1, 3);
     RANGE_CHECK(vp8_cfg, cq_level, 0, 63);
-    if(finalize && cfg->rc_end_usage == VPX_CQ)
+    if (finalize && (cfg->rc_end_usage == VPX_CQ || cfg->rc_end_usage == VPX_Q))
         RANGE_CHECK(vp8_cfg, cq_level,
                     cfg->rc_min_quantizer, cfg->rc_max_quantizer);
 
@@ -327,17 +327,14 @@ static vpx_codec_err_t set_vp8e_config(VP8_CONFIG *oxcf,
     oxcf->resample_up_water_mark   = cfg.rc_resize_up_thresh;
     oxcf->resample_down_water_mark = cfg.rc_resize_down_thresh;
 
-    if (cfg.rc_end_usage == VPX_VBR)
-    {
-        oxcf->end_usage = USAGE_LOCAL_FILE_PLAYBACK;
-    }
-    else if (cfg.rc_end_usage == VPX_CBR)
-    {
-        oxcf->end_usage = USAGE_STREAM_FROM_SERVER;
-    }
-    else if (cfg.rc_end_usage == VPX_CQ)
-    {
-        oxcf->end_usage = USAGE_CONSTRAINED_QUALITY;
+    if (cfg.rc_end_usage == VPX_VBR) {
+      oxcf->end_usage = USAGE_LOCAL_FILE_PLAYBACK;
+    } else if (cfg.rc_end_usage == VPX_CBR) {
+      oxcf->end_usage = USAGE_STREAM_FROM_SERVER;
+    } else if (cfg.rc_end_usage == VPX_CQ) {
+      oxcf->end_usage = USAGE_CONSTRAINED_QUALITY;
+    } else if (cfg.rc_end_usage == VPX_Q) {
+      oxcf->end_usage = USAGE_CONSTANT_QUALITY;
     }
 
     oxcf->target_bandwidth         = cfg.rc_target_bitrate;
@@ -582,7 +579,7 @@ static vpx_codec_err_t vp8e_init(vpx_codec_ctx_t *ctx,
 
     struct VP8_COMP *optr;
 
-    vpx_rtcd();
+    vp8_rtcd();
 
     if (!ctx->priv)
     {
@@ -684,6 +681,8 @@ static vpx_codec_err_t image2yuvconfig(const vpx_image_t   *img,
     yv12->u_buffer = img->planes[VPX_PLANE_U];
     yv12->v_buffer = img->planes[VPX_PLANE_V];
 
+    yv12->y_crop_width  = img->d_w;
+    yv12->y_crop_height = img->d_h;
     yv12->y_width  = img->d_w;
     yv12->y_height = img->d_h;
     yv12->uv_width = (1 + yv12->y_width) / 2;
@@ -693,7 +692,6 @@ static vpx_codec_err_t image2yuvconfig(const vpx_image_t   *img,
     yv12->uv_stride = img->stride[VPX_PLANE_U];
 
     yv12->border  = (img->stride[VPX_PLANE_Y] - img->w) / 2;
-    yv12->clrtype = (img->fmt == VPX_IMG_FMT_VPXI420 || img->fmt == VPX_IMG_FMT_VPXYV12);
     return res;
 }
 
@@ -1077,11 +1075,7 @@ static vpx_image_t *vp8e_get_preview(vpx_codec_alg_priv_t *ctx)
         ctx->preview_img.planes[VPX_PLANE_U] = sd.u_buffer;
         ctx->preview_img.planes[VPX_PLANE_V] = sd.v_buffer;
 
-        if (sd.clrtype == REG_YUV)
-            ctx->preview_img.fmt = VPX_IMG_FMT_I420;
-        else
-            ctx->preview_img.fmt = VPX_IMG_FMT_VPXI420;
-
+        ctx->preview_img.fmt = VPX_IMG_FMT_I420;
         ctx->preview_img.x_chroma_shift = 1;
         ctx->preview_img.y_chroma_shift = 1;
 
@@ -1178,7 +1172,9 @@ static vpx_codec_err_t vp8e_set_scalemode(vpx_codec_alg_priv_t *ctx,
     {
         int res;
         vpx_scaling_mode_t scalemode = *(vpx_scaling_mode_t *)data ;
-        res = vp8_set_internal_size(ctx->cpi, scalemode.h_scaling_mode, scalemode.v_scaling_mode);
+        res = vp8_set_internal_size(ctx->cpi,
+                                    (VPX_SCALING)scalemode.h_scaling_mode,
+                                    (VPX_SCALING)scalemode.v_scaling_mode);
 
         if (!res)
         {
@@ -1273,7 +1269,7 @@ static vpx_codec_enc_cfg_map_t vp8e_usage_cfg_map[] =
         1,                  /* g_delete_first_pass_file */
         "vp8.fpf"           /* first pass filename */
 #endif
-
+        VPX_SS_DEFAULT_LAYERS, /* ss_number_layers */
         1,                  /* ts_number_layers */
         {0},                /* ts_target_bitrate */
         {0},                /* ts_rate_decimator */

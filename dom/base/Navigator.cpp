@@ -1256,6 +1256,7 @@ Navigator::GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads,
   }
   NS_ENSURE_TRUE_VOID(mWindow->GetDocShell());
   nsGlobalWindow* win = static_cast<nsGlobalWindow*>(mWindow.get());
+  win->SetHasGamepadEventListener(true);
   win->GetGamepads(aGamepads);
 }
 #endif

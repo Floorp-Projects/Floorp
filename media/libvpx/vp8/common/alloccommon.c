@@ -173,7 +173,6 @@ void vp8_create_common(VP8_COMMON *oci)
     oci->use_bilinear_mc_filter = 0;
     oci->full_pixel = 0;
     oci->multi_token_partition = ONE_PARTITION;
-    oci->clr_type = REG_YUV;
     oci->clamp_type = RECON_CLAMP_REQUIRED;
 
     /* Initialize reference frame sign bias structure to defaults */

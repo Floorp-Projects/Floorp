@@ -53,6 +53,7 @@ public:
   const char* GetParameter(const char* aKey);
   const char* GetParameterConstChar(uint32_t aKey);
   double GetParameterDouble(uint32_t aKey);
+  int32_t GetParameterInt32(uint32_t aKey);
   void GetParameter(uint32_t aKey, nsTArray<idl::CameraRegion>& aRegions);
   void GetParameter(uint32_t aKey, nsTArray<idl::CameraSize>& aSizes);
   void GetParameter(uint32_t aKey, idl::CameraSize& aSize);

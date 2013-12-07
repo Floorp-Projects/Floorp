@@ -10,7 +10,7 @@
 
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 #if ARCH_ARM
 #include "vpx_ports/arm.h"
 #elif ARCH_X86 || ARCH_X86_64
@@ -82,6 +82,7 @@ static int get_cpu_count()
 }
 #endif
 
+void vp8_clear_system_state_c() {};
 
 void vp8_machine_specific_config(VP8_COMMON *ctx)
 {

@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <assert.h>
+
 #include "error_concealment.h"
 #include "onyxd_int.h"
 #include "decodemv.h"
 #include "vpx_mem/vpx_mem.h"
 #include "vp8/common/findnearmv.h"
-
-#include <assert.h>
 
 #define MIN(x,y) (((x)<(y))?(x):(y))
 #define MAX(x,y) (((x)>(y))?(x):(y))

@@ -232,7 +232,7 @@ enum
 typedef struct
 {
     /* Layer configuration */
-    double frame_rate;
+    double framerate;
     int target_bandwidth;
 
     /* Layer specific coding parameters */
@@ -282,17 +282,17 @@ typedef struct VP8_COMP
 {
 
     DECLARE_ALIGNED(16, short, Y1quant[QINDEX_RANGE][16]);
-    DECLARE_ALIGNED(16, unsigned char, Y1quant_shift[QINDEX_RANGE][16]);
+    DECLARE_ALIGNED(16, short, Y1quant_shift[QINDEX_RANGE][16]);
     DECLARE_ALIGNED(16, short, Y1zbin[QINDEX_RANGE][16]);
     DECLARE_ALIGNED(16, short, Y1round[QINDEX_RANGE][16]);
 
     DECLARE_ALIGNED(16, short, Y2quant[QINDEX_RANGE][16]);
-    DECLARE_ALIGNED(16, unsigned char, Y2quant_shift[QINDEX_RANGE][16]);
+    DECLARE_ALIGNED(16, short, Y2quant_shift[QINDEX_RANGE][16]);
     DECLARE_ALIGNED(16, short, Y2zbin[QINDEX_RANGE][16]);
     DECLARE_ALIGNED(16, short, Y2round[QINDEX_RANGE][16]);
 
     DECLARE_ALIGNED(16, short, UVquant[QINDEX_RANGE][16]);
-    DECLARE_ALIGNED(16, unsigned char, UVquant_shift[QINDEX_RANGE][16]);
+    DECLARE_ALIGNED(16, short, UVquant_shift[QINDEX_RANGE][16]);
     DECLARE_ALIGNED(16, short, UVzbin[QINDEX_RANGE][16]);
     DECLARE_ALIGNED(16, short, UVround[QINDEX_RANGE][16]);
 
@@ -320,6 +320,7 @@ typedef struct VP8_COMP
     YV12_BUFFER_CONFIG scaled_source;
     YV12_BUFFER_CONFIG *last_frame_unscaled_source;
 
+    unsigned int frames_till_alt_ref_frame;
     /* frame in src_buffers has been identified to be encoded as an alt ref */
     int source_alt_ref_pending;
     /* an alt ref frame has been encoded and is usable */
@@ -349,7 +350,6 @@ typedef struct VP8_COMP
     int ambient_err;
 
     unsigned int mode_check_freq[MAX_MODES];
-    unsigned int mode_chosen_counts[MAX_MODES];
 
     int rd_baseline_thresh[MAX_MODES];
 
@@ -370,6 +370,7 @@ typedef struct VP8_COMP
     double key_frame_rate_correction_factor;
     double gf_rate_correction_factor;
 
+    unsigned int frames_since_golden;
     /* Count down till next GF */
     int frames_till_gf_update_due;
 
@@ -402,7 +403,7 @@ typedef struct VP8_COMP
     /* Minimum allocation that should be used for any frame */
     int min_frame_bandwidth;
     int inter_frame_target;
-    double output_frame_rate;
+    double output_framerate;
     int64_t last_time_stamp_seen;
     int64_t last_end_time_stamp_seen;
     int64_t first_time_stamp_ever;
@@ -416,8 +417,8 @@ typedef struct VP8_COMP
 
     int buffered_mode;
 
-    double frame_rate;
-    double ref_frame_rate;
+    double framerate;
+    double ref_framerate;
     int64_t buffer_level;
     int64_t bits_off_target;
 
@@ -510,6 +511,10 @@ typedef struct VP8_COMP
     int cyclic_refresh_q;
     signed char *cyclic_refresh_map;
 
+    // Frame counter for the temporal pattern. Counter is rest when the temporal
+    // layers are changed dynamically (run-time change).
+    unsigned int temporal_pattern_counter;
+
 #if CONFIG_MULTITHREAD
     /* multithread data */
     int * mt_current_mb_col;
@@ -587,7 +592,7 @@ typedef struct VP8_COMP
         /* Error score of frames still to be coded in kf group */
         int64_t kf_group_error_left;
         /* Projected Bits available for a group including 1 GF or ARF */
-        int gf_group_bits;
+        int64_t gf_group_bits;
         /* Bits for the golden frame or ARF */
         int gf_bits;
         int alt_extra_bits;

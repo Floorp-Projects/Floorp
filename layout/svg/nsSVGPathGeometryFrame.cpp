@@ -245,7 +245,8 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 
   bool isHit = false;
 
-  nsRefPtr<gfxContext> tmpCtx = new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+  nsRefPtr<gfxContext> tmpCtx =
+    new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
   GeneratePath(tmpCtx, canvasTM);
   gfxPoint userSpacePoint =
@@ -407,7 +408,8 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
     return bbox;
   }
 
-  nsRefPtr<gfxContext> tmpCtx = new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+  nsRefPtr<gfxContext> tmpCtx =
+    new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
   GeneratePath(tmpCtx, aToBBoxUserspace);
   tmpCtx->IdentityMatrix();

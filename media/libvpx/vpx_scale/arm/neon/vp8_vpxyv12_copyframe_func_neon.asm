@@ -14,11 +14,11 @@
     REQUIRE8
     PRESERVE8
 
-    INCLUDE asm_com_offsets.asm
+    INCLUDE vpx_scale_asm_offsets.asm
 
     AREA ||.text||, CODE, READONLY, ALIGN=2
 
-;void vp8_yv12_copy_frame_func_neon(YV12_BUFFER_CONFIG *src_ybc,
+;void vp8_yv12_copy_frame_func_neon(const YV12_BUFFER_CONFIG *src_ybc,
 ;                                   YV12_BUFFER_CONFIG *dst_ybc);
 
 |vp8_yv12_copy_frame_func_neon| PROC

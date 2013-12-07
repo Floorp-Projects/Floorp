@@ -61,7 +61,7 @@ sym(vp8_mbpost_proc_down_mmx):
             mov         rcx,        8
 .init_borderd                                                    ; initialize borders
             lea         rdi,        [rdi + rax]
-            movq        [rdi],      xmm1
+            movq        [rdi],      mm1
 
             dec         rcx
             jne         .init_borderd
@@ -193,7 +193,6 @@ sym(vp8_mbpost_proc_down_mmx):
             movq        mm4,        [sym(vp8_rv) + rcx*2]
 %endif
             paddw       mm1,        mm4
-            ;paddw     xmm1,       eight8s
             psraw       mm1,        4
 
             packuswb    mm1,        mm0

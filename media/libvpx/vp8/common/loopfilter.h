@@ -14,7 +14,7 @@
 
 #include "vpx_ports/mem.h"
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 
 #define MAX_LOOP_FILTER             63
 /* fraction of total macroblock rows to be used in fast filter level picking */

@@ -34,7 +34,6 @@ extern "C"
         int     postprocess;
         int     max_threads;
         int     error_concealment;
-        int     input_fragments;
     } VP8D_CONFIG;
 
     typedef enum
@@ -55,10 +54,6 @@ extern "C"
 
     vpx_codec_err_t vp8dx_get_reference(struct VP8D_COMP* comp, enum vpx_ref_frame_type ref_frame_flag, YV12_BUFFER_CONFIG *sd);
     vpx_codec_err_t vp8dx_set_reference(struct VP8D_COMP* comp, enum vpx_ref_frame_type ref_frame_flag, YV12_BUFFER_CONFIG *sd);
-
-    struct VP8D_COMP* vp8dx_create_decompressor(VP8D_CONFIG *oxcf);
-
-    void vp8dx_remove_decompressor(struct VP8D_COMP* comp);
 
 #ifdef __cplusplus
 }

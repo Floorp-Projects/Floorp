@@ -113,7 +113,7 @@ unsigned int vp8_sub_pixel_variance16x16_ssse3
     }
 
     *sse = xxsum0;
-    return (xxsum0 - ((unsigned int)(xsum0 * xsum0) >> 8));
+    return (xxsum0 - (((unsigned int)xsum0 * xsum0) >> 8));
 }
 
 unsigned int vp8_sub_pixel_variance16x8_ssse3
@@ -162,5 +162,5 @@ unsigned int vp8_sub_pixel_variance16x8_ssse3
     }
 
     *sse = xxsum0;
-    return (xxsum0 - ((unsigned int)(xsum0 * xsum0) >> 7));
+    return (xxsum0 - (((unsigned int)xsum0 * xsum0) >> 7));
 }

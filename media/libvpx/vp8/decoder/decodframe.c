@@ -10,7 +10,8 @@
 
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
+#include "./vpx_scale_rtcd.h"
 #include "onyxd_int.h"
 #include "vp8/common/header.h"
 #include "vp8/common/reconintra4x4.h"
@@ -20,7 +21,7 @@
 #include "vp8/common/alloccommon.h"
 #include "vp8/common/entropymode.h"
 #include "vp8/common/quant_common.h"
-#include "vpx_scale/vpxscale.h"
+#include "vpx_scale/vpx_scale.h"
 #include "vp8/common/setupintrarecon.h"
 
 #include "decodemv.h"
@@ -210,7 +211,7 @@ static void decode_macroblock(VP8D_COMP *pbi, MACROBLOCKD *xd,
                             (b->qcoeff[0] * DQC[0],
                                 dst, dst_stride,
                                 dst, dst_stride);
-                        ((int *)b->qcoeff)[0] = 0;
+                        vpx_memset(b->qcoeff, 0, 2 * sizeof(b->qcoeff[0]));
                     }
                 }
             }
@@ -247,21 +248,14 @@ static void decode_macroblock(VP8D_COMP *pbi, MACROBLOCKD *xd,
 
                     vp8_short_inv_walsh4x4(&b->dqcoeff[0],
                         xd->qcoeff);
-                    ((int *)b->qcoeff)[0] = 0;
-                    ((int *)b->qcoeff)[1] = 0;
-                    ((int *)b->qcoeff)[2] = 0;
-                    ((int *)b->qcoeff)[3] = 0;
-                    ((int *)b->qcoeff)[4] = 0;
-                    ((int *)b->qcoeff)[5] = 0;
-                    ((int *)b->qcoeff)[6] = 0;
-                    ((int *)b->qcoeff)[7] = 0;
+                    vpx_memset(b->qcoeff, 0, 16 * sizeof(b->qcoeff[0]));
                 }
                 else
                 {
                     b->dqcoeff[0] = b->qcoeff[0] * xd->dequant_y2[0];
                     vp8_short_inv_walsh4x4_1(&b->dqcoeff[0],
                         xd->qcoeff);
-                    ((int *)b->qcoeff)[0] = 0;
+                    vpx_memset(b->qcoeff, 0, 2 * sizeof(b->qcoeff[0]));
                 }
 
                 /* override the dc dequant constant in order to preserve the
@@ -575,7 +569,7 @@ static void decode_mb_rows(VP8D_COMP *pbi)
 
         xd->left_available = 0;
 
-        xd->mb_to_top_edge = -((mb_row * 16)) << 3;
+        xd->mb_to_top_edge = -((mb_row * 16) << 3);
         xd->mb_to_bottom_edge = ((pc->mb_rows - 1 - mb_row) * 16) << 3;
 
         xd->recon_above[0] = dst_buffer[0] + recon_yoffset;
@@ -758,11 +752,16 @@ static void decode_mb_rows(VP8D_COMP *pbi)
 
 }
 
-static unsigned int read_partition_size(const unsigned char *cx_size)
+static unsigned int read_partition_size(VP8D_COMP *pbi,
+                                        const unsigned char *cx_size)
 {
-    const unsigned int size =
-        cx_size[0] + (cx_size[1] << 8) + (cx_size[2] << 16);
-    return size;
+    unsigned char temp[3];
+    if (pbi->decrypt_cb)
+    {
+        pbi->decrypt_cb(pbi->decrypt_state, cx_size, temp, 3);
+        cx_size = temp;
+    }
+    return cx_size[0] + (cx_size[1] << 8) + (cx_size[2] << 16);
 }
 
 static int read_is_valid(const unsigned char *start,
@@ -793,7 +792,7 @@ static unsigned int read_available_partition_size(
     if (i < num_part - 1)
     {
         if (read_is_valid(partition_size_ptr, 3, first_fragment_end))
-            partition_size = read_partition_size(partition_size_ptr);
+            partition_size = read_partition_size(pbi, partition_size_ptr);
         else if (pbi->ec_active)
             partition_size = (unsigned int)bytes_left;
         else
@@ -827,8 +826,8 @@ static void setup_token_decoder(VP8D_COMP *pbi,
     unsigned int partition_idx;
     unsigned int fragment_idx;
     unsigned int num_token_partitions;
-    const unsigned char *first_fragment_end = pbi->fragments[0] +
-                                          pbi->fragment_sizes[0];
+    const unsigned char *first_fragment_end = pbi->fragments.ptrs[0] +
+                                          pbi->fragments.sizes[0];
 
     TOKEN_PARTITION multi_token_partition =
             (TOKEN_PARTITION)vp8_read_literal(&pbi->mbc[8], 2);
@@ -838,10 +837,10 @@ static void setup_token_decoder(VP8D_COMP *pbi,
 
     /* Check for partitions within the fragments and unpack the fragments
      * so that each fragment pointer points to its corresponding partition. */
-    for (fragment_idx = 0; fragment_idx < pbi->num_fragments; ++fragment_idx)
+    for (fragment_idx = 0; fragment_idx < pbi->fragments.count; ++fragment_idx)
     {
-        unsigned int fragment_size = pbi->fragment_sizes[fragment_idx];
-        const unsigned char *fragment_end = pbi->fragments[fragment_idx] +
+        unsigned int fragment_size = pbi->fragments.sizes[fragment_idx];
+        const unsigned char *fragment_end = pbi->fragments.ptrs[fragment_idx] +
                                             fragment_size;
         /* Special case for handling the first partition since we have already
          * read its size. */
@@ -849,16 +848,16 @@ static void setup_token_decoder(VP8D_COMP *pbi,
         {
             /* Size of first partition + token partition sizes element */
             ptrdiff_t ext_first_part_size = token_part_sizes -
-                pbi->fragments[0] + 3 * (num_token_partitions - 1);
+                pbi->fragments.ptrs[0] + 3 * (num_token_partitions - 1);
             fragment_size -= (unsigned int)ext_first_part_size;
             if (fragment_size > 0)
             {
-                pbi->fragment_sizes[0] = (unsigned int)ext_first_part_size;
+                pbi->fragments.sizes[0] = (unsigned int)ext_first_part_size;
                 /* The fragment contains an additional partition. Move to
                  * next. */
                 fragment_idx++;
-                pbi->fragments[fragment_idx] = pbi->fragments[0] +
-                  pbi->fragment_sizes[0];
+                pbi->fragments.ptrs[fragment_idx] = pbi->fragments.ptrs[0] +
+                  pbi->fragments.sizes[0];
             }
         }
         /* Split the chunk into partitions read from the bitstream */
@@ -867,12 +866,12 @@ static void setup_token_decoder(VP8D_COMP *pbi,
             ptrdiff_t partition_size = read_available_partition_size(
                                                  pbi,
                                                  token_part_sizes,
-                                                 pbi->fragments[fragment_idx],
+                                                 pbi->fragments.ptrs[fragment_idx],
                                                  first_fragment_end,
                                                  fragment_end,
                                                  fragment_idx - 1,
                                                  num_token_partitions);
-            pbi->fragment_sizes[fragment_idx] = (unsigned int)partition_size;
+            pbi->fragments.sizes[fragment_idx] = (unsigned int)partition_size;
             fragment_size -= (unsigned int)partition_size;
             assert(fragment_idx <= num_token_partitions);
             if (fragment_size > 0)
@@ -880,19 +879,20 @@ static void setup_token_decoder(VP8D_COMP *pbi,
                 /* The fragment contains an additional partition.
                  * Move to next. */
                 fragment_idx++;
-                pbi->fragments[fragment_idx] =
-                    pbi->fragments[fragment_idx - 1] + partition_size;
+                pbi->fragments.ptrs[fragment_idx] =
+                    pbi->fragments.ptrs[fragment_idx - 1] + partition_size;
             }
         }
     }
 
-    pbi->num_fragments = num_token_partitions + 1;
+    pbi->fragments.count = num_token_partitions + 1;
 
-    for (partition_idx = 1; partition_idx < pbi->num_fragments; ++partition_idx)
+    for (partition_idx = 1; partition_idx < pbi->fragments.count; ++partition_idx)
     {
         if (vp8dx_start_decode(bool_decoder,
-                               pbi->fragments[partition_idx],
-                               pbi->fragment_sizes[partition_idx]))
+                               pbi->fragments.ptrs[partition_idx],
+                               pbi->fragments.sizes[partition_idx],
+                               pbi->decrypt_cb, pbi->decrypt_state))
             vpx_internal_error(&pbi->common.error, VPX_CODEC_MEM_ERROR,
                                "Failed to allocate bool decoder %d",
                                partition_idx);
@@ -979,11 +979,11 @@ static void init_frame(VP8D_COMP *pbi)
 
 int vp8_decode_frame(VP8D_COMP *pbi)
 {
-    vp8_reader *const bc = & pbi->mbc[8];
-    VP8_COMMON *const pc = & pbi->common;
-    MACROBLOCKD *const xd  = & pbi->mb;
-    const unsigned char *data = pbi->fragments[0];
-    const unsigned char *data_end =  data + pbi->fragment_sizes[0];
+    vp8_reader *const bc = &pbi->mbc[8];
+    VP8_COMMON *const pc = &pbi->common;
+    MACROBLOCKD *const xd  = &pbi->mb;
+    const unsigned char *data = pbi->fragments.ptrs[0];
+    const unsigned char *data_end =  data + pbi->fragments.sizes[0];
     ptrdiff_t first_partition_length_in_bytes;
 
     int i, j, k, l;
@@ -1015,18 +1015,30 @@ int vp8_decode_frame(VP8D_COMP *pbi)
     }
     else
     {
-        pc->frame_type = (FRAME_TYPE)(data[0] & 1);
-        pc->version = (data[0] >> 1) & 7;
-        pc->show_frame = (data[0] >> 4) & 1;
-        first_partition_length_in_bytes =
-            (data[0] | (data[1] << 8) | (data[2] << 16)) >> 5;
+        unsigned char clear_buffer[10];
+        const unsigned char *clear = data;
+        if (pbi->decrypt_cb)
+        {
+            int n = (int)(data_end - data);
+            if (n > 10) n = 10;
+            pbi->decrypt_cb(pbi->decrypt_state, data, clear_buffer, n);
+            clear = clear_buffer;
+        }
 
-        if (!pbi->ec_active && (data + first_partition_length_in_bytes > data_end
+        pc->frame_type = (FRAME_TYPE)(clear[0] & 1);
+        pc->version = (clear[0] >> 1) & 7;
+        pc->show_frame = (clear[0] >> 4) & 1;
+        first_partition_length_in_bytes =
+            (clear[0] | (clear[1] << 8) | (clear[2] << 16)) >> 5;
+
+        if (!pbi->ec_active &&
+            (data + first_partition_length_in_bytes > data_end
             || data + first_partition_length_in_bytes < data))
             vpx_internal_error(&pc->error, VPX_CODEC_CORRUPT_FRAME,
                                "Truncated packet or corrupt partition 0 length");
 
         data += 3;
+        clear += 3;
 
         vp8_setup_version(pc);
 
@@ -1039,7 +1051,7 @@ int vp8_decode_frame(VP8D_COMP *pbi)
              */
             if (!pbi->ec_active || data + 3 < data_end)
             {
-                if (data[0] != 0x9d || data[1] != 0x01 || data[2] != 0x2a)
+                if (clear[0] != 0x9d || clear[1] != 0x01 || clear[2] != 0x2a)
                     vpx_internal_error(&pc->error, VPX_CODEC_UNSUP_BITSTREAM,
                                    "Invalid frame sync code");
             }
@@ -1050,13 +1062,13 @@ int vp8_decode_frame(VP8D_COMP *pbi)
              */
             if (!pbi->ec_active || data + 6 < data_end)
             {
-                pc->Width = (data[3] | (data[4] << 8)) & 0x3fff;
-                pc->horiz_scale = data[4] >> 6;
-                pc->Height = (data[5] | (data[6] << 8)) & 0x3fff;
-                pc->vert_scale = data[6] >> 6;
+                pc->Width = (clear[3] | (clear[4] << 8)) & 0x3fff;
+                pc->horiz_scale = clear[4] >> 6;
+                pc->Height = (clear[5] | (clear[6] << 8)) & 0x3fff;
+                pc->vert_scale = clear[6] >> 6;
             }
             data += 7;
-
+            clear += 7;
         }
         else
         {
@@ -1071,11 +1083,12 @@ int vp8_decode_frame(VP8D_COMP *pbi)
 
     init_frame(pbi);
 
-    if (vp8dx_start_decode(bc, data, (unsigned int)(data_end - data)))
+    if (vp8dx_start_decode(bc, data, (unsigned int)(data_end - data),
+                           pbi->decrypt_cb, pbi->decrypt_state))
         vpx_internal_error(&pc->error, VPX_CODEC_MEM_ERROR,
                            "Failed to allocate bool decoder 0");
     if (pc->frame_type == KEY_FRAME) {
-        pc->clr_type    = (YUV_TYPE)vp8_read_bit(bc);
+        (void)vp8_read_bit(bc);  // colorspace
         pc->clamp_type  = (CLAMP_TYPE)vp8_read_bit(bc);
     }
 
@@ -1334,11 +1347,11 @@ int vp8_decode_frame(VP8D_COMP *pbi)
 #if CONFIG_MULTITHREAD
     if (pbi->b_multithreaded_rd && pc->multi_token_partition != ONE_PARTITION)
     {
-        unsigned int i;
+        unsigned int thread;
         vp8mt_decode_mb_rows(pbi, xd);
         vp8_yv12_extend_frame_borders(yv12_fb_new);
-        for (i = 0; i < pbi->decoding_thread_count; ++i)
-            corrupt_tokens |= pbi->mb_row_di[i].mbd.corrupted;
+        for (thread = 0; thread < pbi->decoding_thread_count; ++thread)
+            corrupt_tokens |= pbi->mb_row_di[thread].mbd.corrupted;
     }
     else
 #endif

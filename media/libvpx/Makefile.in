@@ -22,9 +22,9 @@ CSRCS += cpu-features.c
 endif
 endif
 
-ASM_OFFSETS = asm_com_offsets.asm
+ASM_OFFSETS = vpx_scale_asm_offsets.asm
 ifdef MOZ_VP8_ENCODER
-ASM_OFFSETS += asm_enc_offsets.asm
+ASM_OFFSETS += vp8_asm_enc_offsets.asm
 endif
 
 
@@ -53,11 +53,11 @@ else
 VPX_OIE_FORMAT := gas
 endif
 
-GARBAGE += asm_com_offsets.$(OBJ_SUFFIX) asm_com_offsets.asm
+GARBAGE += vpx_scale_asm_offsets.$(OBJ_SUFFIX) vpx_scale_asm_offsets.asm
 
 ifdef MOZ_VP8_ENCODER
 
-GARBAGE += asm_enc_offsets.$(OBJ_SUFFIX) asm_enc_offsets.asm
+GARBAGE += vp8_asm_enc_offsets.$(OBJ_SUFFIX) vp8_asm_enc_offsets.asm
 endif
 
 else
@@ -65,85 +65,87 @@ else
 # We can extract the asm offsets directly from generated assembly using inline
 # asm. This is the preferred method.
 
-asm_com_offsets.s: CFLAGS += -DINLINE_ASM
+vpx_scale_asm_offsets.s: CFLAGS += -DINLINE_ASM
 
 OFFSET_PATTERN := '^[a-zA-Z0-9_]* EQU'
 
-# This rule, as well as the rule for asm_enc_offsets.s further below are here
+# This rule, as well as the rule for vp8_asm_enc_offsets.s further below are here
 # because the generic rule in rules.mk was made to not be implicit, and we
 # can't put the C files in CSRCS.
-asm_com_offsets.s: $(srcdir)/vp8/common/asm_com_offsets.c
+vpx_scale_asm_offsets.s: $(srcdir)/vpx_scale/vpx_scale_asm_offsets.c
 	$(REPORT_BUILD)
 	$(CC) -S $(COMPILE_CFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
-asm_com_offsets.asm: asm_com_offsets.s
+vpx_scale_asm_offsets.asm: vpx_scale_asm_offsets.s
 	grep $(OFFSET_PATTERN) $< | sed -e 's/[$$\#]//g' \
 	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
 
-GARBAGE += asm_com_offsets.s asm_com_offsets.asm
+GARBAGE += vpx_scale_asm_offsets.s vpx_scale_asm_offsets.asm
 
 ifdef MOZ_VP8_ENCODER
 
-asm_enc_offsets.s: CFLAGS += -DINLINE_ASM
+vp8_asm_enc_offsets.s: CFLAGS += -DINLINE_ASM
 
-asm_enc_offsets.s: $(srcdir)/vp8/encoder/asm_enc_offsets.c
+vp8_asm_enc_offsets.s: $(srcdir)/vp8/encoder/vp8_asm_enc_offsets.c
 	$(REPORT_BUILD)
 	$(CC) -S $(COMPILE_CFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
-asm_enc_offsets.asm: asm_enc_offsets.s
+vp8_asm_enc_offsets.asm: vp8_asm_enc_offsets.s
 	grep $(OFFSET_PATTERN) $< | sed -e 's/[$$\#]//g' \
 	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
 
-GARBAGE += asm_enc_offsets.s asm_enc_offsets.asm
+GARBAGE += vp8_asm_enc_offsets.s vp8_asm_enc_offsets.asm
 
 
 endif
 
 endif
 
-EXTRA_MDDEPEND_FILES = asm_enc_offsets.s.pp asm_enc_offsets.$(OBJ_SUFFIX).pp asm_com_offsets.s.pp asm_com_offsets.$(OBJ_SUFFIX).pp
+EXTRA_MDDEPEND_FILES = vp8_asm_enc_offsets.s.pp vp8_asm_enc_offsets.$(OBJ_SUFFIX).pp vpx_scale_asm_offsets.s.pp vpx_scale_asm_offsets.$(OBJ_SUFFIX).pp
 
 include $(topsrcdir)/config/rules.mk
 
 # This must be after rules.mk in order to use $(OBJ_SUFFIX) outside a
 # recursively-expanded variable.
 
+# dont add for MSVC
 ifndef _MSC_VER
 %_sse2.$(OBJ_SUFFIX): CFLAGS += -msse2
+%_ssse3.$(OBJ_SUFFIX): CFLAGS += -mssse3
+%_avx2.$(OBJ_SUFFIX): CFLAGS += -mavx2
 endif
 
-quantize_sse2.$(OBJ_SUFFIX): asm_enc_offsets.asm
-quantize_sse4.$(OBJ_SUFFIX): asm_enc_offsets.asm
-quantize_ssse3.$(OBJ_SUFFIX): asm_enc_offsets.asm
+quantize_sse4.$(OBJ_SUFFIX): vp8_asm_enc_offsets.asm
+quantize_ssse3.$(OBJ_SUFFIX): vp8_asm_enc_offsets.asm
 
 ifdef VPX_NEED_OBJ_INT_EXTRACT
 
 # only for MSVC
 ifdef _MSC_VER
-NO_PROFILE_GUIDED_OPTIMIZE := asm_com_offsets.c
+NO_PROFILE_GUIDED_OPTIMIZE := vpx_scale_asm_offsets.c
 endif
 
-asm_com_offsets.asm: asm_com_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
+vpx_scale_asm_offsets.asm: vpx_scale_asm_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
 	./$(HOST_PROGRAM) $(VPX_OIE_FORMAT) $< \
 	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
 
 # Filter out this object, because we don't want to link against it.
 # It was generated solely so it could be parsed by obj_int_extract.
-OBJS := $(filter-out asm_com_offsets.$(OBJ_SUFFIX),$(OBJS))
+OBJS := $(filter-out vpx_scale_asm_offsets.$(OBJ_SUFFIX),$(OBJS))
 
 ifdef MOZ_VP8_ENCODER
 
 ifdef _MSC_VER
-NO_PROFILE_GUIDED_OPTIMIZE += asm_enc_offsets.c
+NO_PROFILE_GUIDED_OPTIMIZE += vp8_asm_enc_offsets.c
 endif
 
-asm_enc_offsets.asm: asm_enc_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
+vp8_asm_enc_offsets.asm: vp8_asm_enc_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
 	./$(HOST_PROGRAM) $(VPX_OIE_FORMAT) $< \
 	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
 
 # Filter out this object, because we don't want to link against it.
 # It was generated solely so it could be parsed by obj_int_extract.
-OBJS := $(filter-out asm_enc_offsets.$(OBJ_SUFFIX),$(OBJS))
+OBJS := $(filter-out vp8_asm_enc_offsets.$(OBJ_SUFFIX),$(OBJS))
 
 endif
 endif

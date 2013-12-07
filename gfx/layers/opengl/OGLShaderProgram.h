@@ -199,11 +199,14 @@ private:
 #define CHECK_CURRENT_PROGRAM 1
 #define ASSERT_THIS_PROGRAM                                             \
   do {                                                                  \
-    NS_ASSERTION(mGL->GetUserData(&sCurrentProgramKey) == this, \
+    GLuint currentProgram;                                              \
+    mGL->GetUIntegerv(LOCAL_GL_CURRENT_PROGRAM, &currentProgram);       \
+    NS_ASSERTION(currentProgram == mProgram,                            \
                  "SetUniform with wrong program active!");              \
   } while (0)
 #else
-#define ASSERT_THIS_PROGRAM
+#define ASSERT_THIS_PROGRAM                                             \
+  do { } while (0)
 #endif
 
 /**
@@ -385,9 +388,6 @@ protected:
   } mProgramState;
 
   GLint mTexCoordMultiplierUniformLocation;
-#ifdef CHECK_CURRENT_PROGRAM
-  static int sCurrentProgramKey;
-#endif
 
   void SetUniform(GLint aLocation, float aFloatValue);
   void SetUniform(GLint aLocation, const gfxRGBA& aColor);

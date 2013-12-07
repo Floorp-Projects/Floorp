@@ -10,11 +10,12 @@
 
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
+#include "vpx_scale_rtcd.h"
 #include "vpx_scale/yv12config.h"
 #include "postproc.h"
 #include "common.h"
-#include "vpx_scale/vpxscale.h"
+#include "vpx_scale/vpx_scale.h"
 #include "systemdependent.h"
 
 #include <limits.h>
@@ -333,7 +334,7 @@ void vp8_deblock(VP8_COMMON                 *cm,
     double level = 6.0e-05 * q * q * q - .0067 * q * q + .306 * q + .0065;
     int ppl = (int)(level + .5);
 
-    const MODE_INFO *mode_info_context = cm->mi;
+    const MODE_INFO *mode_info_context = cm->show_frame_mi;
     int mbr, mbc;
 
     /* The pixel thresholds are adjusted according to if or not the macroblock
@@ -438,29 +439,28 @@ static void fillrd(struct postproc_state *state, int q, int a)
     char char_dist[300];
 
     double sigma;
-    int ai = a, qi = q, i;
+    int i;
 
     vp8_clear_system_state();
 
 
-    sigma = ai + .5 + .6 * (63 - qi) / 63.0;
+    sigma = a + .5 + .6 * (63 - q) / 63.0;
 
     /* set up a lookup table of 256 entries that matches
      * a gaussian distribution with sigma determined by q.
      */
     {
-        double i;
         int next, j;
 
         next = 0;
 
         for (i = -32; i < 32; i++)
         {
-            int a = (int)(.5 + 256 * vp8_gaussian(sigma, 0, i));
+            const int v = (int)(.5 + 256 * vp8_gaussian(sigma, 0, i));
 
-            if (a)
+            if (v)
             {
-                for (j = 0; j < a; j++)
+                for (j = 0; j < v; j++)
                 {
                     char_dist[next+j] = (char) i;
                 }
@@ -543,12 +543,12 @@ void vp8_plane_add_noise_c(unsigned char *Start, char *noise,
  * filled with the same color block.
  */
 void vp8_blend_mb_inner_c (unsigned char *y, unsigned char *u, unsigned char *v,
-                        int y1, int u1, int v1, int alpha, int stride)
+                        int y_1, int u_1, int v_1, int alpha, int stride)
 {
     int i, j;
-    int y1_const = y1*((1<<16)-alpha);
-    int u1_const = u1*((1<<16)-alpha);
-    int v1_const = v1*((1<<16)-alpha);
+    int y1_const = y_1*((1<<16)-alpha);
+    int u1_const = u_1*((1<<16)-alpha);
+    int v1_const = v_1*((1<<16)-alpha);
 
     y += 2*stride + 2;
     for (i = 0; i < 12; i++)
@@ -581,12 +581,12 @@ void vp8_blend_mb_inner_c (unsigned char *y, unsigned char *u, unsigned char *v,
  * unblended to allow for other visualizations to be layered.
  */
 void vp8_blend_mb_outer_c (unsigned char *y, unsigned char *u, unsigned char *v,
-                        int y1, int u1, int v1, int alpha, int stride)
+                        int y_1, int u_1, int v_1, int alpha, int stride)
 {
     int i, j;
-    int y1_const = y1*((1<<16)-alpha);
-    int u1_const = u1*((1<<16)-alpha);
-    int v1_const = v1*((1<<16)-alpha);
+    int y1_const = y_1*((1<<16)-alpha);
+    int u1_const = u_1*((1<<16)-alpha);
+    int v1_const = v_1*((1<<16)-alpha);
 
     for (i = 0; i < 2; i++)
     {
@@ -645,12 +645,12 @@ void vp8_blend_mb_outer_c (unsigned char *y, unsigned char *u, unsigned char *v,
 }
 
 void vp8_blend_b_c (unsigned char *y, unsigned char *u, unsigned char *v,
-                        int y1, int u1, int v1, int alpha, int stride)
+                        int y_1, int u_1, int v_1, int alpha, int stride)
 {
     int i, j;
-    int y1_const = y1*((1<<16)-alpha);
-    int u1_const = u1*((1<<16)-alpha);
-    int v1_const = v1*((1<<16)-alpha);
+    int y1_const = y_1*((1<<16)-alpha);
+    int u1_const = u_1*((1<<16)-alpha);
+    int v1_const = v_1*((1<<16)-alpha);
 
     for (i = 0; i < 4; i++)
     {
@@ -675,46 +675,46 @@ void vp8_blend_b_c (unsigned char *y, unsigned char *u, unsigned char *v,
     }
 }
 
-static void constrain_line (int x0, int *x1, int y0, int *y1, int width, int height)
+static void constrain_line (int x_0, int *x_1, int y_0, int *y_1, int width, int height)
 {
     int dx;
     int dy;
 
-    if (*x1 > width)
+    if (*x_1 > width)
     {
-        dx = *x1 - x0;
-        dy = *y1 - y0;
+        dx = *x_1 - x_0;
+        dy = *y_1 - y_0;
 
-        *x1 = width;
+        *x_1 = width;
         if (dx)
-            *y1 = ((width-x0)*dy)/dx + y0;
+            *y_1 = ((width-x_0)*dy)/dx + y_0;
     }
-    if (*x1 < 0)
+    if (*x_1 < 0)
     {
-        dx = *x1 - x0;
-        dy = *y1 - y0;
+        dx = *x_1 - x_0;
+        dy = *y_1 - y_0;
 
-        *x1 = 0;
+        *x_1 = 0;
         if (dx)
-            *y1 = ((0-x0)*dy)/dx + y0;
+            *y_1 = ((0-x_0)*dy)/dx + y_0;
     }
-    if (*y1 > height)
+    if (*y_1 > height)
     {
-        dx = *x1 - x0;
-        dy = *y1 - y0;
+        dx = *x_1 - x_0;
+        dy = *y_1 - y_0;
 
-        *y1 = height;
+        *y_1 = height;
         if (dy)
-            *x1 = ((height-y0)*dx)/dy + x0;
+            *x_1 = ((height-y_0)*dx)/dy + x_0;
     }
-    if (*y1 < 0)
+    if (*y_1 < 0)
     {
-        dx = *x1 - x0;
-        dy = *y1 - y0;
+        dx = *x_1 - x_0;
+        dy = *y_1 - y_0;
 
-        *y1 = 0;
+        *y_1 = 0;
         if (dy)
-            *x1 = ((0-y0)*dx)/dy + x0;
+            *x_1 = ((0-y_0)*dx)/dy + x_0;
     }
 }
 
@@ -923,7 +923,7 @@ int vp8_post_proc_frame(VP8_COMMON *oci, YV12_BUFFER_CONFIG *dest, vp8_ppflags_t
     if (flags & VP8D_DEBUG_TXT_RATE_INFO)
     {
         char message[512];
-        sprintf(message, "Bitrate: %10.2f frame_rate: %10.2f ", oci->bitrate, oci->framerate);
+        sprintf(message, "Bitrate: %10.2f framerate: %10.2f ", oci->bitrate, oci->framerate);
         vp8_blit_text(message, oci->post_proc_buffer.y_buffer, oci->post_proc_buffer.y_stride);
     }
 

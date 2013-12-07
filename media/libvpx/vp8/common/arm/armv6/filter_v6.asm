@@ -394,7 +394,7 @@
     mov     r4, #0x40                       ; rounding factor (for smlad{x})
 
 |height_loop_2nd_4|
-    ldrd    r8, [r0, #-4]                   ; load the data
+    ldrd    r8, r9, [r0, #-4]               ; load the data
     orr     r7, r7, r3, lsr #1              ; loop counter
 
 |width_loop_2nd_4|

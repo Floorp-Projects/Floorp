@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "vpx_ports/mem.h"
+#include "vp8/common/x86/filter_x86.h"
 
 DECLARE_ALIGNED(16, const short, vp8_bilinear_filters_x86_4[8][8]) =
 {

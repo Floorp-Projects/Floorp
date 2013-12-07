@@ -13,7 +13,7 @@
 #define __INC_INVTRANS_H
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 #include "blockd.h"
 #include "onyxc_int.h"
 

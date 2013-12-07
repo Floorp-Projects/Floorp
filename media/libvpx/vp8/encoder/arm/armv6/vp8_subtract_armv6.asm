@@ -13,7 +13,7 @@
     EXPORT  |vp8_subtract_mbuv_armv6|
     EXPORT  |vp8_subtract_b_armv6|
 
-    INCLUDE asm_enc_offsets.asm
+    INCLUDE vp8_asm_enc_offsets.asm
 
     ARM
     REQUIRE8

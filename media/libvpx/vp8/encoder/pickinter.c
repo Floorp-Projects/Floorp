@@ -389,7 +389,7 @@ static void pick_intra_mbuv_mode(MACROBLOCK *mb)
 
 }
 
-static void update_mvcount(VP8_COMP *cpi, MACROBLOCK *x, int_mv *best_ref_mv)
+static void update_mvcount(MACROBLOCK *x, int_mv *best_ref_mv)
 {
     MACROBLOCKD *xd = &x->e_mbd;
     /* Split MV modes currently not supported when RD is nopt enabled,
@@ -594,6 +594,7 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
     unsigned int zero_mv_sse = INT_MAX, best_sse = INT_MAX;
 #endif
 
+    int sf_improved_mv_pred = cpi->sf.improved_mv_pred;
     int_mv mvp;
 
     int near_sadidx[8] = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -882,7 +883,7 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
                last frame motion info is not stored, then we can not
                use improved_mv_pred. */
             if (cpi->oxcf.mr_encoder_id && !parent_ref_valid)
-                cpi->sf.improved_mv_pred = 0;
+                sf_improved_mv_pred = 0;
 
             if (parent_ref_valid && parent_ref_frame)
             {
@@ -899,7 +900,7 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
             }else
 #endif
             {
-                if(cpi->sf.improved_mv_pred)
+                if(sf_improved_mv_pred)
                 {
                     if(!saddone)
                     {
@@ -1241,7 +1242,7 @@ void vp8_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
       != cpi->common.ref_frame_sign_bias[xd->mode_info_context->mbmi.ref_frame])
         best_ref_mv.as_int = best_ref_mv_sb[!sign_bias].as_int;
 
-    update_mvcount(cpi, x, &best_ref_mv);
+    update_mvcount(x, &best_ref_mv);
 }
 
 

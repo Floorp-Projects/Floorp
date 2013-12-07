@@ -1,0 +1,175 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for NetworkStats alarms</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+function test() {
+  ok(true, "Checking if no alarms are set.");
+
+  req = navigator.mozNetworkStats.getAllAlarms();
+
+  req.onsuccess = function () {
+    ok(true, "Succeeded to get alarms.");
+    ok(Array.isArray(req.result) && req.result.length == 0,
+       "There are no alarms set.");
+    next();
+  };
+
+  req.onerror = function () {
+    ok(false, "getAllAlarms() shouldn't fail!");
+  }
+}
+
+var req;
+var index = -1;
+
+var wifi = {'type': 0, 'id': '0'};
+var mobile = {'type': 1, 'id': '1'};
+
+var steps = [
+  function () {
+    ok(true, "Calling getAllAlarms() with invalid network.");
+
+    req = navigator.mozNetworkStats.getAllAlarms(mobile);
+
+    req.onsuccess = function () {
+      ok(false, "getAllAlarms() shouldn't succeed!");
+    };
+
+    req.onerror = function () {
+      ok(req.error.name == "InvalidInterface", "Get InvalidInterface error");
+      next();
+    }
+  },
+  function () {
+    ok(true, "Calling addAlarm() with invalid network or parameters.");
+
+    try {
+      navigator.mozNetworkStats.addAlarm();
+    } catch(ex) {
+      ok(ex.result == SpecialPowers.Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS,
+         "addAlarm() throws NS_ERROR_XPC_NOT_ENOUGH_ARGS exception when no parameters");
+    }
+
+    try {
+      navigator.mozNetworkStats.addAlarm(100000);
+    } catch(ex) {
+      ok(ex.result == SpecialPowers.Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS,
+         "addAlarm() throws NS_ERROR_XPC_NOT_ENOUGH_ARGS exception when no network");
+    }
+
+    try {
+      navigator.mozNetworkStats.addAlarm(wifi);
+    } catch(ex) {
+      ok(ex.result == SpecialPowers.Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS,
+         "addAlarm() throws NS_ERROR_XPC_NOT_ENOUGH_ARGS exception when no threshold");
+    }
+
+    req = navigator.mozNetworkStats.addAlarm(mobile, -100000);
+
+    req.onsuccess = function () {
+      ok(false, "addAlarm() shouldn't succeed with negative threshold.");
+    };
+
+    req.onerror = function () {
+      ok(req.error.name == "InvalidThresholdValue", "Get InvalidThresholdValue error");
+      next();
+    }
+  },
+  function () {
+    ok(true, "Calling addAlarm()");
+
+    req = navigator.mozNetworkStats.addAlarm(wifi, 1000000);
+
+    req.onsuccess = function () {
+      ok(true, "Succeeded to add alarm. AlarmId: " + req.result);
+      next();
+    };
+    req.onerror = function () {
+      ok(false, "addAlarm() shouldn't fail.");
+    };
+  },
+  function () {
+    ok(true, "Calling getAllAlarms()");
+
+    req = navigator.mozNetworkStats.getAllAlarms(wifi);
+
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Only one alarm");
+      ok(req.result[0].alarmId == 1, "Get correct alarmId");
+      next();
+    };
+
+    req.onerror = function () {
+      ok(false, "getAllAlarms() shouldn't fail.");
+    }
+  },
+  function () {
+    ok(true, "Calling removeAlarms() to remove alarms.");
+
+    req = navigator.mozNetworkStats.removeAlarms();
+
+    req.onsuccess = function () {
+      ok(req.result, "Succeeded to remove alarms.");
+      next();
+    };
+
+    req.onerror = function () {
+      ok(false, "removeAlarms() shouldn't fail.");
+    }
+  },
+  function () {
+    ok(true, "Checking if all alarms are removed.");
+
+    req = navigator.mozNetworkStats.getAllAlarms();
+
+    req.onsuccess = function () {
+      ok(Array.isArray(req.result) && req.result.length == 0,
+         "Succeeded to remove all alarms.");
+      next();
+    };
+
+    req.onerror = function () {
+      ok(false, "getAllAlarms() shouldn't fail.");
+    }
+  },
+  function () {
+    ok(true, "all done!\n");
+    SpecialPowers.removePermission("networkstats-manage", document);
+    SimpleTest.finish();
+    return;
+  }
+];
+
+function next() {
+  index += 1;
+  if (index >= steps.length) {
+    ok(false, "Shouldn't get here!");
+    return;
+  }
+  try {
+    steps[index]();
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.addPermission("networkstats-manage", true, document);
+SpecialPowers.pushPrefEnv({'set': [["dom.mozNetworkStats.enabled", true]]}, test);
+
+</script>
+</pre>
+</body>
+</html>

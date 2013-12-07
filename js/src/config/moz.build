@@ -24,3 +24,6 @@ if CONFIG['HOST_OS_ARCH'] != 'WINNT':
 # Force wrap zlib system header if building js as a shared library.
 if CONFIG['JS_SHARED_LIBRARY'] or CONFIG['MOZ_NATIVE_ZLIB']:
     DEFINES['MOZ_NATIVE_ZLIB'] = 1
+
+if CONFIG['MOZ_SHARED_ICU']:
+    DEFINES['MOZ_SHARED_ICU'] = True

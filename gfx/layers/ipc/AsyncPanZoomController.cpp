@@ -1218,6 +1218,21 @@ const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
     scrollOffset.y = scrollableRect.y;
   }
 
+  // FIXME/bug 936500: Make sure the displayport contains the composition
+  // bounds. This is to work around a layout bug that means if a display item's
+  // corresponding displayport doesn't contain its frame's bounds, it may get
+  // optimised out and the layer won't get created.
+  if (displayPort.x + displayPort.width < compositionBounds.width) {
+    displayPort.x = -(displayPort.width - compositionBounds.width);
+  } else if (displayPort.x > 0) {
+    displayPort.x = 0;
+  }
+  if (displayPort.y + displayPort.height < compositionBounds.height) {
+    displayPort.y = -(displayPort.height - compositionBounds.height);
+  } else if (displayPort.y > 0) {
+    displayPort.y = 0;
+  }
+
   CSSRect shiftedDisplayPort = displayPort + scrollOffset;
   return scrollableRect.ClampRect(shiftedDisplayPort) - scrollOffset;
 }

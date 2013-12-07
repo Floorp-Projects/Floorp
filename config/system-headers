@@ -1131,7 +1131,7 @@ kvm.h
 spawn.h
 err.h
 xlocale.h
-#if MOZ_NATIVE_ICU==1
+#ifdef MOZ_SHARED_ICU
 unicode/locid.h
 unicode/numsys.h
 unicode/ucal.h

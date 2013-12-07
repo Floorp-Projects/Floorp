@@ -268,6 +268,14 @@ CameraControlImpl::Get(uint32_t aKey, idl::CameraSize& aSize)
   return NS_OK;
 }
 
+nsresult
+CameraControlImpl::Get(uint32_t aKey, int32_t* aValue)
+{
+  MOZ_ASSERT(aValue);
+  *aValue = GetParameterInt32(aKey);
+  return NS_OK;
+}
+
 already_AddRefed<RecorderProfileManager>
 CameraControlImpl::GetRecorderProfileManager()
 {

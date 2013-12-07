@@ -10,7 +10,7 @@
 
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 #include "vpx_mem/vpx_mem.h"
 #include "blockd.h"
 
@@ -36,7 +36,6 @@ void vp8_build_intra_predictors_mby_s_c(MACROBLOCKD *x,
     case DC_PRED:
     {
         int expected_dc;
-        int i;
         int shift;
         int average = 0;
 
@@ -168,7 +167,6 @@ void vp8_build_intra_predictors_mbuv_s_c(MACROBLOCKD *x,
     {
         int expected_udc;
         int expected_vdc;
-        int i;
         int shift;
         int Uaverage = 0;
         int Vaverage = 0;
@@ -217,8 +215,6 @@ void vp8_build_intra_predictors_mbuv_s_c(MACROBLOCKD *x,
     break;
     case V_PRED:
     {
-        int i;
-
         for (i = 0; i < 8; i++)
         {
             vpx_memcpy(upred_ptr, uabove_row, 8);
@@ -231,8 +227,6 @@ void vp8_build_intra_predictors_mbuv_s_c(MACROBLOCKD *x,
     break;
     case H_PRED:
     {
-        int i;
-
         for (i = 0; i < 8; i++)
         {
             vpx_memset(upred_ptr, uleft_col[i], 8);
@@ -245,8 +239,6 @@ void vp8_build_intra_predictors_mbuv_s_c(MACROBLOCKD *x,
     break;
     case TM_PRED:
     {
-        int i;
-
         for (i = 0; i < 8; i++)
         {
             for (j = 0; j < 8; j++)

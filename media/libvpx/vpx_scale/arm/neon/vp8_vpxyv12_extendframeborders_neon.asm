@@ -14,7 +14,7 @@
     REQUIRE8
     PRESERVE8
 
-    INCLUDE asm_com_offsets.asm
+    INCLUDE vpx_scale_asm_offsets.asm
 
     AREA ||.text||, CODE, READONLY, ALIGN=2
 ;void vp8_yv12_extend_frame_borders_neon (YV12_BUFFER_CONFIG *ybf);
