@@ -104,12 +104,12 @@ protected:
   nscoord GetMainSizeFromReflowState(const nsHTMLReflowState& aReflowState,
                                      const FlexboxAxisTracker& aAxisTracker);
 
-  nscoord ComputeFlexContainerCrossSize(const nsHTMLReflowState& aReflowState,
-                                        const FlexboxAxisTracker& aAxisTracker,
-                                        const nsTArray<FlexLine>& aLines,
-                                        nscoord aAvailableHeightForContent,
-                                        bool* aIsDefinite,
-                                        nsReflowStatus& aStatus);
+  nscoord ComputeCrossSize(const nsHTMLReflowState& aReflowState,
+                           const FlexboxAxisTracker& aAxisTracker,
+                           const nsTArray<FlexLine>& aLines,
+                           nscoord aAvailableHeightForContent,
+                           bool* aIsDefinite,
+                           nsReflowStatus& aStatus);
 
   nsresult SizeItemInCrossAxis(nsPresContext* aPresContext,
                                const FlexboxAxisTracker& aAxisTracker,

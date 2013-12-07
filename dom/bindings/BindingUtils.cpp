@@ -27,6 +27,7 @@
 #include "nsPrintfCString.h"
 #include "prprf.h"
 
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/DOMErrorBinding.h"
 #include "mozilla/dom/HTMLObjectElement.h"
@@ -2015,12 +2016,12 @@ ConstructJSImplementation(JSContext* aCx, const char* aContractId,
     return nullptr;
   }
 
-  // Make sure to have nothing on the JS context stack while creating and
+  // Make sure to divorce ourselves from the calling JS while creating and
   // initializing the object, so exceptions from that will get reported
   // properly, since those are never exceptions that a spec wants to be thrown.
-  {  // Scope for the nsCxPusher
-    nsCxPusher pusher;
-    pusher.PushNull();
+  {
+    AutoSystemCaller asc;
+
     // Get the XPCOM component containing the JS implementation.
     nsCOMPtr<nsISupports> implISupports = do_CreateInstance(aContractId);
     if (!implISupports) {

@@ -3848,6 +3848,13 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto_, JSFunction 
 
         if (obj->is<StringObject>())
             AddTypeProperty(this, type, "length", Type::Int32Type());
+
+        if (obj->is<ErrorObject>()) {
+            AddTypeProperty(this, type, "fileName", types::Type::StringType());
+            AddTypeProperty(this, type, "lineNumber", types::Type::Int32Type());
+            AddTypeProperty(this, type, "columnNumber", types::Type::Int32Type());
+            AddTypeProperty(this, type, "stack", types::Type::StringType());
+        }
     }
 
     /*

@@ -616,6 +616,8 @@ class ArenaLists
     void *allocateFromArena(JS::Zone *zone, AllocKind thingKind);
     inline void *allocateFromArenaInline(JS::Zone *zone, AllocKind thingKind);
 
+    inline void normalizeBackgroundFinalizeState(AllocKind thingKind);
+
     friend class js::Nursery;
 };
 

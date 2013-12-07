@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=937317
+-->
+<window title="Mozilla Bug 937317"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=937317"
+     target="_blank">Mozilla Bug 937317</a>
+  </body>
+
+  <!-- test code goes here -->
+  <iframe></iframe>
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for the script settings stack. **/
+  SimpleTest.waitForExplicitFinish();
+  const Cu = Components.utils;
+  Cu.import("resource://gre/modules/Promise.jsm");
+  var iwin = window[0];
+
+  // Smoketest.
+  is(Cu.getIncumbentGlobal(), window, "smoketest");
+
+  // Calling a cross-compartment non-scripted function changes the
+  // compartment, but not the incumbent script settings object.
+  var sb = new Cu.Sandbox(window, { wantComponents: true });
+  is(sb.Components.utils.getIncumbentGlobal(), window, "cross-compartment sb non-scripted");
+  is(iwin.Components.utils.getIncumbentGlobal(), window, "cross-compartment win non-scripted");
+
+  // If we call a scripted function in the other compartment, that becomes
+  // the incumbent script.
+  function gib() { return Components.utils.getIncumbentGlobal(); };
+  Cu.evalInSandbox(gib.toSource(), sb);
+  iwin.eval(gib.toSource());
+  is(sb.gib(), sb, "cross-compartment sb scripted");
+  is(iwin.gib(), iwin, "cross-compartment win scripted");
+
+  // Eval-ing top-level script in another component makes that compartment the
+  // incumbent script.
+  is(Cu.evalInSandbox('Components.utils.getIncumbentGlobal()', sb), sb, 'eval sb');
+  is(iwin.eval('Components.utils.getIncumbentGlobal()'), iwin, 'eval iwin');
+
+  // Make sure that the callback mechanism works.
+  function makeCallback(expectedGlobal, deferred, kind) {
+    function cb(incumbentGlobal) {
+      is(incumbentGlobal, expectedGlobal, "Callback got the right incumbent global: " + kind);
+      if (deferred)
+        deferred.resolve();
+    }
+    info("Generated callback: " + kind);
+    return cb;
+  }
+
+  var bound = Cu.getIncumbentGlobal.bind(Cu, makeCallback(window, undefined, "simple bound"));
+  is(bound(), window, "Bound method returns the right global");
+
+  // Callbacks grab the incumbent script at the time of invocation.
+  //
+  // Note - We avoid calling the initial defer |d| so that it's not in-scope for everything below.
+  let initialDefer = Promise.defer();
+  setTimeout(Cu.getIncumbentGlobal.bind(Cu, makeCallback(window, initialDefer, "same-global setTimeout")), 0);
+  initialDefer.promise.then(function() {
+
+    // Try cross-global setTimeout where |window| is the incumbent script when the callback is created.
+    let d = Promise.defer();
+    iwin.setTimeout(Cu.getIncumbentGlobal.bind(Cu, makeCallback(window, d, "cross-global setTimeout by |window|")), 0);
+    return d.promise;
+  }).then(function() {
+
+    // Try cross-global setTimeout where |iwin| is the incumbent script when the callback is created.
+    let d = Promise.defer();
+    iwin.wrappedJSObject.timeoutFun = Cu.getIncumbentGlobal.bind(Cu, makeCallback(iwin, d, "cross-global setTimeout by |iwin|"));
+    iwin.eval('setTimeout(timeoutFun, 0);');
+    return d.promise;
+  }).then(function() {
+
+    // The incumbent script override doesn't take effect if the callback is scripted.
+    let d = Promise.defer();
+    iwin.wrappedJSObject.timeoutFun2 = Cu.getIncumbentGlobal.bind(Cu, makeCallback(iwin, d, "cross-global setTimeout of scripted function"));
+    iwin.eval('let timeoutFun2Wrapper = function() { timeoutFun2(); }');
+    setTimeout(iwin.wrappedJSObject.timeoutFun2Wrapper, 0);
+    return d.promise;
+  }).then(function() {
+
+    // Try event listeners.
+    let d = Promise.defer();
+    let body = iwin.document.body;
+    body.addEventListener('click', Cu.getIncumbentGlobal.bind(Cu, makeCallback(window, d, "cross-global event listener")));
+    body.dispatchEvent(new iwin.MouseEvent('click'));
+    return d.promise;
+
+  }).then(function() {
+
+    // Try an event handler set by |iwin|.
+    let d = Promise.defer();
+    let body = iwin.document.body;
+    iwin.wrappedJSObject.handler = Cu.getIncumbentGlobal.bind(Cu, makeCallback(iwin, d, "cross-global event handler"));
+    iwin.eval('document.body.onmousemove = handler');
+    body.dispatchEvent(new iwin.MouseEvent('mousemove'));
+    return d.promise;
+
+  }).then(function() {
+
+    // Try an event handler compiled by a content attribute.
+    let d = Promise.defer();
+    let body = iwin.document.body;
+    iwin.wrappedJSObject.innerHandler = Cu.getIncumbentGlobal.bind(Cu, makeCallback(iwin, d, "cross-global compiled event handler"));
+    iwin.eval("document.body.setAttribute('onmouseout', 'innerHandler()')");
+    body.dispatchEvent(new iwin.MouseEvent('mouseout'));
+    return d.promise;
+  }).then(function() {
+
+    SimpleTest.finish();
+  });
+
+  ]]>
+  </script>
+</window>

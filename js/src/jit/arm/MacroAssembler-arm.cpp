@@ -3662,13 +3662,24 @@ MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, Result result)
     if (secondScratchReg_ != lr)
         ma_mov(secondScratchReg_, lr);
 
-    if (result == DOUBLE) {
-#ifdef JS_CPU_ARM_HARDFP
-        as_vmov(ReturnFloatReg, d0);
-#else
+    switch (result) {
+      case DOUBLE:
+#ifndef JS_CPU_ARM_HARDFP
         // Move double from r0/r1 to ReturnFloatReg.
         as_vxfer(r0, r1, ReturnFloatReg, CoreToFloat);
+        break;
 #endif
+      case FLOAT:
+#ifndef JS_CPU_ARM_HARDFP
+        // Move float32 from r0 to ReturnFloatReg.
+        as_vxfer(r0, InvalidReg, VFPRegister(d0).singleOverlay(), CoreToFloat);
+        break;
+#endif
+      case GENERAL:
+        break;
+
+      default:
+        MOZ_ASSUME_UNREACHABLE("unexpected callWithABI result");
     }
 
     freeStack(stackAdjust);

@@ -506,6 +506,8 @@ private:
 
   void GetPref(nsIPrefBranch *aBranch, const char *aPref,
                const char *aData, int32_t *aVal);
+  void GetPrefBool(nsIPrefBranch *aBranch, const char *aPref,
+                   const char *aData, bool *aVal);
   void GetPrefs(nsIPrefBranch *aBranch, const char *aData);
 
   // Make private because we want only one instance of this class

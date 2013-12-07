@@ -62,6 +62,10 @@ typedef struct nr_ice_stun_ctx_ {
 
 
 typedef struct nr_ice_socket_ {
+  int type;
+#define NR_ICE_SOCKET_TYPE_DGRAM  1
+#define NR_ICE_SOCKET_TYPE_STREAM 2
+
   nr_socket *sock;
   nr_ice_ctx *ctx;
 

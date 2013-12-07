@@ -442,6 +442,7 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
   {
     int r,_status;
     int protocol=NR_RESOLVE_PROTOCOL_STUN;
+    int transport=IPPROTO_UDP;
     cand->done_cb=ready_cb;
     cand->cb_arg=cb_arg;
 
@@ -459,6 +460,7 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
 #ifdef USE_TURN
       case RELAYED:
         protocol=NR_RESOLVE_PROTOCOL_TURN;
+        transport=cand->u.relayed.server->transport;
         /* Fall through */
 #endif
       case SERVER_REFLEXIVE:
@@ -480,7 +482,7 @@ int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, vo
           resource.domain_name=cand->stun_server->u.dnsname.host;
           resource.port=cand->stun_server->u.dnsname.port;
           resource.stun_turn=protocol;
-          resource.transport_protocol=IPPROTO_UDP;  /* We don't support TCP yet */
+          resource.transport_protocol=transport;
 
           /* Try to resolve */
           if(!cand->ctx->resolver) {

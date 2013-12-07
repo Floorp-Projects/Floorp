@@ -34,7 +34,7 @@
  * We don't use this to build elfhack and elf-dynstr-gc since those builds happen
  * during the export tier.  Also, disable this when building assembly files too.
  */
-#if !defined(ELFHACK_BUILD) && !defined(ELFDYNSTRGC_BUILD) && !defined(__ASSEMBLER__)
+#if !defined(ELFHACK_BUILD) && !defined(__ASSEMBLER__)
 #include "mozilla/Char16.h"
 #endif
 

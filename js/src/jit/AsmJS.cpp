@@ -4981,6 +4981,13 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
 {
     int64_t before = PRMJ_Now();
 
+    // A single MacroAssembler is reused for all function compilations so
+    // that there is a single linear code segment for each module. To avoid
+    // spiking memory, a LifoAllocScope in the caller frees all MIR/LIR
+    // after each function is compiled. This method is responsible for cleaning
+    // out any dangling pointers that the MacroAssembler may have kept.
+    m.masm().resetForNewCodeGenerator(mir.alloc());
+
     m.masm().bind(func.code());
 
     ScopedJSDeletePtr<CodeGenerator> codegen(jit::GenerateCode(&mir, &lir, &m.masm()));
@@ -5010,13 +5017,6 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
             return false;
     }
 #endif
-
-    // A single MacroAssembler is reused for all function compilations so
-    // that there is a single linear code segment for each module. To avoid
-    // spiking memory, a LifoAllocScope in the caller frees all MIR/LIR
-    // after each function is compiled. This method is responsible for cleaning
-    // out any dangling pointers that the MacroAssembler may have kept.
-    m.masm().resetForNewCodeGenerator();
 
     // Align internal function headers.
     m.masm().align(CodeAlignment);
@@ -6401,6 +6401,8 @@ FinishModule(ModuleCompiler &m,
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
     IonContext ionContext(m.cx(), &alloc);
+
+    m.masm().resetForNewCodeGenerator(alloc);
 
     if (!GenerateStubs(m))
         return false;

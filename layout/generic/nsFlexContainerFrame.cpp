@@ -2352,13 +2352,12 @@ SumLineCrossSizes(const nsTArray<FlexLine>& aLines)
 }
 
 nscoord
-nsFlexContainerFrame::ComputeFlexContainerCrossSize(
-  const nsHTMLReflowState& aReflowState,
-  const FlexboxAxisTracker& aAxisTracker,
-  const nsTArray<FlexLine>& aLines,
-  nscoord aAvailableHeightForContent,
-  bool* aIsDefinite,
-  nsReflowStatus& aStatus)
+nsFlexContainerFrame::ComputeCrossSize(const nsHTMLReflowState& aReflowState,
+                                       const FlexboxAxisTracker& aAxisTracker,
+                                       const nsTArray<FlexLine>& aLines,
+                                       nscoord aAvailableHeightForContent,
+                                       bool* aIsDefinite,
+                                       nsReflowStatus& aStatus)
 {
   MOZ_ASSERT(aIsDefinite, "outparam pointer must be non-null"); 
 
@@ -2691,10 +2690,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   bool isCrossSizeDefinite;
   const nscoord contentBoxCrossSize =
-    ComputeFlexContainerCrossSize(aReflowState, axisTracker,
-                                  lines,
-                                  availableHeightForContent,
-                                  &isCrossSizeDefinite, aStatus);
+    ComputeCrossSize(aReflowState, axisTracker, lines,
+                     availableHeightForContent, &isCrossSizeDefinite, aStatus);
 
   // Set up state for cross-axis alignment, at a high level (outside the
   // scope of a particular flex line)

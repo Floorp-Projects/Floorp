@@ -253,7 +253,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     nsIDocument* ownerDoc = aNode->OwnerDoc();
     Element* elem = aNode->AsElement();
     ownerDoc->ClearBoxObjectFor(elem);
-    
+
     NS_ASSERTION(aNode->HasFlag(NODE_FORCE_XBL_BINDINGS) ||
                  !elem->GetXBLBinding(),
                  "Non-forced node has binding on destruction");
@@ -267,6 +267,8 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   }
 
   aNode->ReleaseWrapper(aNode);
+
+  FragmentOrElement::RemoveBlackMarkedNode(aNode);
 }
 
 struct MOZ_STACK_CLASS nsHandlerData

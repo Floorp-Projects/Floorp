@@ -183,13 +183,24 @@ static nr_ice_crypto_vtbl nr_ice_crypto_nss_vtbl = {
 
 
 
-nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server *server) const {
+nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server *server,
+                                            std::string transport) const {
   int r;
+  int transport_int;
 
   memset(server, 0, sizeof(nr_ice_stun_server));
+  if (transport == kNrIceTransportUdp) {
+    transport_int = IPPROTO_UDP;
+  } else if (transport == kNrIceTransportTcp) {
+    transport_int = IPPROTO_TCP;
+  } else {
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+  }
 
   if (has_addr_) {
-    r = nr_praddr_to_transport_addr(&addr_, &server->u.addr, 0);
+    r = nr_praddr_to_transport_addr(&addr_, &server->u.addr,
+                                    transport_int, 0);
     if (r) {
       return NS_ERROR_FAILURE;
     }
@@ -210,9 +221,18 @@ nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server *server) const {
 nsresult NrIceTurnServer::ToNicerTurnStruct(nr_ice_turn_server *server) const {
   memset(server, 0, sizeof(nr_ice_turn_server));
 
-  nsresult rv = ToNicerStunStruct(&server->turn_server);
+  nsresult rv = ToNicerStunStruct(&server->turn_server, transport_);
   if (NS_FAILED(rv))
     return rv;
+
+  if (transport_ == kNrIceTransportUdp) {
+    server->transport = IPPROTO_UDP;
+  } else if (transport_ == kNrIceTransportTcp) {
+    server->transport = IPPROTO_TCP;
+  } else {
+    MOZ_ASSERT(false);
+    return NS_ERROR_FAILURE;
+  }
 
   if (username_.empty())
     return NS_ERROR_INVALID_ARG;

@@ -12,7 +12,6 @@
 // Helper Classes
 #include "nsIServiceManager.h"
 #include "nsAutoPtr.h"
-#include "nsCxPusher.h"
 
 // Interfaces needed to be included
 #include "nsIDOMNode.h"
@@ -47,6 +46,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla;
 
@@ -945,8 +945,7 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
   *aWindowIsNew = (containerPref != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW);
 
   {
-    nsCxPusher pusher;
-    pusher.PushNull();
+    dom::AutoSystemCaller asc;
 
     // Get a new rendering area from the browserDOMWin.  We don't want
     // to be starting any loads here, so get it with a null URI.

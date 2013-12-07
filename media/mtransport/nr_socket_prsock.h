@@ -64,6 +64,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/RefPtr.h"
 
+// Stub declaration for nICEr type
+typedef struct nr_socket_vtbl_ nr_socket_vtbl;
+
 namespace mozilla {
 
 namespace net {
@@ -72,7 +75,7 @@ namespace net {
 
 class NrSocketBase {
 public:
-  NrSocketBase() : poll_flags_(0) {
+  NrSocketBase() : connect_invoked_(false), poll_flags_(0) {
     memset(cbs_, 0, sizeof(cbs_));
     memset(cb_args_, 0, sizeof(cb_args_));
     memset(&my_addr_, 0, sizeof(my_addr_));
@@ -88,6 +91,9 @@ public:
                        nr_transport_addr *from) = 0;
   virtual int getaddr(nr_transport_addr *addrp) = 0;
   virtual void close() = 0;
+  virtual int connect(nr_transport_addr *addr) = 0;
+  virtual int write(const void *msg, size_t len, size_t *written) = 0;
+  virtual int read(void* buf, size_t maxlen, size_t *len) = 0;
 
    // Implementations of the async_event APIs
   virtual int async_wait(int how, NR_async_cb cb, void *cb_arg,
@@ -102,8 +108,12 @@ public:
     return poll_flags_;
   }
 
+  virtual nr_socket_vtbl *vtbl();  // To access in test classes.
+
 protected:
   void fire_callback(int how);
+
+  bool connect_invoked_;
   nr_transport_addr my_addr_;
 
 private:
@@ -145,6 +155,9 @@ public:
                        nr_transport_addr *from);
   virtual int getaddr(nr_transport_addr *addrp);
   virtual void close();
+  virtual int connect(nr_transport_addr *addr);
+  virtual int write(const void *msg, size_t len, size_t *written);
+  virtual int read(void* buf, size_t maxlen, size_t *len);
 
 private:
   DISALLOW_COPY_ASSIGN(NrSocket);
@@ -194,6 +207,9 @@ public:
                        nr_transport_addr *from);
   virtual int getaddr(nr_transport_addr *addrp);
   virtual void close();
+  virtual int connect(nr_transport_addr *addr);
+  virtual int write(const void *msg, size_t len, size_t *written);
+  virtual int read(void* buf, size_t maxlen, size_t *len);
 
 private:
   DISALLOW_COPY_ASSIGN(NrSocketIpc);
@@ -216,9 +232,11 @@ private:
 };
 
 int nr_netaddr_to_transport_addr(const net::NetAddr *netaddr,
-                                 nr_transport_addr *addr);
+                                 nr_transport_addr *addr,
+                                 int protocol);
 int nr_praddr_to_transport_addr(const PRNetAddr *praddr,
-                                nr_transport_addr *addr, int keep);
+                                nr_transport_addr *addr,
+                                int protocol, int keep);
 int nr_transport_addr_get_addrstring_and_port(nr_transport_addr *addr,
                                               nsACString *host, int32_t *port);
 }  // close namespace
