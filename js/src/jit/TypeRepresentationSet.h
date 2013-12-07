@@ -113,13 +113,14 @@ class TypeRepresentationSet {
     TypeRepresentation *getTypeRepresentation();
 
     //////////////////////////////////////////////////////////////////////
-    // Array operations
+    // SizedArray operations
     //
-    // Only valid when `kind() == TypeRepresentation::Array`
+    // Only valid when `kind() == TypeRepresentation::SizedArray`
 
-    // Returns the length of the arrays in this set, or SIZE_MAX
-    // if they are not all the same.
-    size_t arrayLength();
+    // Determines whether all arrays in this set have the same,
+    // statically known, array length and return that length
+    // (via `*length`) if so. Otherwise returns false.
+    bool hasKnownArrayLength(size_t *length);
 
     // Returns a `TypeRepresentationSet` representing the element
     // types of the various array types in this set. The returned set
