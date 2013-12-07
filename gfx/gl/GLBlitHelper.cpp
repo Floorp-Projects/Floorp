@@ -12,6 +12,115 @@
 namespace mozilla {
 namespace gl {
 
+static void
+RenderbufferStorageBySamples(GLContext* aGL, GLsizei aSamples,
+                             GLenum aInternalFormat, const gfxIntSize& aSize)
+{
+    if (aSamples) {
+        aGL->fRenderbufferStorageMultisample(LOCAL_GL_RENDERBUFFER,
+                                             aSamples,
+                                             aInternalFormat,
+                                             aSize.width, aSize.height);
+    } else {
+        aGL->fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
+                                  aInternalFormat,
+                                  aSize.width, aSize.height);
+    }
+}
+
+
+GLuint
+CreateTexture(GLContext* aGL, GLenum aInternalFormat, GLenum aFormat,
+              GLenum aType, const gfxIntSize& aSize)
+{
+    GLuint tex = 0;
+    aGL->fGenTextures(1, &tex);
+    ScopedBindTexture autoTex(aGL, tex);
+
+    aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+    aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+    aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+    aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+
+    aGL->fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                     0,
+                     aInternalFormat,
+                     aSize.width, aSize.height,
+                     0,
+                     aFormat,
+                     aType,
+                     nullptr);
+
+    return tex;
+}
+
+
+GLuint
+CreateTextureForOffscreen(GLContext* aGL, const GLFormats& aFormats,
+                          const gfxIntSize& aSize)
+{
+    MOZ_ASSERT(aFormats.color_texInternalFormat);
+    MOZ_ASSERT(aFormats.color_texFormat);
+    MOZ_ASSERT(aFormats.color_texType);
+
+    return CreateTexture(aGL,
+                         aFormats.color_texInternalFormat,
+                         aFormats.color_texFormat,
+                         aFormats.color_texType,
+                         aSize);
+}
+
+
+GLuint
+CreateRenderbuffer(GLContext* aGL, GLenum aFormat, GLsizei aSamples,
+                   const gfxIntSize& aSize)
+{
+    GLuint rb = 0;
+    aGL->fGenRenderbuffers(1, &rb);
+    ScopedBindRenderbuffer autoRB(aGL, rb);
+
+    RenderbufferStorageBySamples(aGL, aSamples, aFormat, aSize);
+
+    return rb;
+}
+
+
+void
+CreateRenderbuffersForOffscreen(GLContext* aGL, const GLFormats& aFormats,
+                                const gfxIntSize& aSize, bool aMultisample,
+                                GLuint* aColorMSRB, GLuint* aDepthRB,
+                                GLuint* aStencilRB)
+{
+    GLsizei samples = aMultisample ? aFormats.samples : 0;
+    if (aColorMSRB) {
+        MOZ_ASSERT(aFormats.samples > 0);
+        MOZ_ASSERT(aFormats.color_rbFormat);
+
+        *aColorMSRB = CreateRenderbuffer(aGL, aFormats.color_rbFormat, samples, aSize);
+    }
+
+    if (aDepthRB &&
+        aStencilRB &&
+        aFormats.depthStencil)
+    {
+        *aDepthRB = CreateRenderbuffer(aGL, aFormats.depthStencil, samples, aSize);
+        *aStencilRB = *aDepthRB;
+    } else {
+        if (aDepthRB) {
+            MOZ_ASSERT(aFormats.depth);
+
+            *aDepthRB = CreateRenderbuffer(aGL, aFormats.depth, samples, aSize);
+        }
+
+        if (aStencilRB) {
+            MOZ_ASSERT(aFormats.stencil);
+
+            *aStencilRB = CreateRenderbuffer(aGL, aFormats.stencil, samples, aSize);
+        }
+    }
+}
+
+
 GLBlitHelper::GLBlitHelper(GLContext* gl)
     : mGL(gl)
     , mTexBlit_Buffer(0)
@@ -323,7 +432,7 @@ GLBlitHelper::BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
         return;
     }
 
-    GLuint tex = mGL->CreateTextureForOffscreen(srcFormats, srcSize);
+    GLuint tex = CreateTextureForOffscreen(mGL, srcFormats, srcSize);
     MOZ_ASSERT(tex);
 
     BlitFramebufferToTexture(srcFB, tex, srcSize, srcSize);

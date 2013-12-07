@@ -9,7 +9,8 @@
  */
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
+#include "vpx_mem/vpx_mem.h"
 
 void vp8_dequant_idct_add_c(short *input, short *dq,
                             unsigned char *dest, int stride);
@@ -32,7 +33,7 @@ void vp8_dequant_idct_add_y_block_c
             else
             {
                 vp8_dc_only_idct_add_c (q[0]*dq[0], dst, stride, dst, stride);
-                ((int *)q)[0] = 0;
+                vpx_memset(q, 0, 2 * sizeof(q[0]));
             }
 
             q   += 16;
@@ -58,7 +59,7 @@ void vp8_dequant_idct_add_uv_block_c
             else
             {
                 vp8_dc_only_idct_add_c (q[0]*dq[0], dstu, stride, dstu, stride);
-                ((int *)q)[0] = 0;
+                vpx_memset(q, 0, 2 * sizeof(q[0]));
             }
 
             q    += 16;
@@ -77,7 +78,7 @@ void vp8_dequant_idct_add_uv_block_c
             else
             {
                 vp8_dc_only_idct_add_c (q[0]*dq[0], dstv, stride, dstv, stride);
-                ((int *)q)[0] = 0;
+                vpx_memset(q, 0, 2 * sizeof(q[0]));
             }
 
             q    += 16;

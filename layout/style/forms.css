@@ -897,6 +897,7 @@ input[type=number]::-moz-number-wrapper {
   display: flex;
   float: none !important;
   position: static !important;
+  height: 100%;
 }
 
 input[type=number]::-moz-number-text {

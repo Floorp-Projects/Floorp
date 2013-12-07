@@ -221,6 +221,16 @@ static const char kIsGarbageCollectingParameter[] = "IsGarbageCollecting=";
 static const int kIsGarbageCollectingParameterLen =
   sizeof(kIsGarbageCollectingParameter)-1;
 
+#ifdef XP_WIN
+static const char kBreakpadReserveAddressParameter[] = "BreakpadReserveAddress=";
+static const int kBreakpadReserveAddressParameterLen =
+  sizeof(kBreakpadReserveAddressParameter)-1;
+
+static const char kBreakpadReserveSizeParameter[] = "BreakpadReserveSize=";
+static const int kBreakpadReserveSizeParameterLen =
+  sizeof(kBreakpadReserveSizeParameter)-1;
+#endif
+
 // this holds additional data sent via the API
 static Mutex* crashReporterAPILock;
 static Mutex* notesFieldLock;
@@ -322,6 +332,17 @@ patched_SetUnhandledExceptionFilter (LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExce
   // intercept attempts to change the filter
   return nullptr;
 }
+
+/**
+ * Reserve some VM space. In the event that we crash because VM space is
+ * being leaked without leaking memory, freeing this space before taking
+ * the minidump will allow us to collect a minidump.
+ *
+ * This size is bigger than xul.dll plus some extra for MinidumpWriteDump
+ * allocations.
+ */
+static const SIZE_T kReserveSize = 0x2400000; // 36 MB
+static void* gBreakpadReservedVM;
 #endif
 
 #ifdef XP_MACOSX
@@ -540,6 +561,20 @@ bool MinidumpCallback(
         WriteFile(hFile, "\n", 1, &nBytes, nullptr);
       }
 
+      char buffer[128];
+      int bufferLen;
+
+      if (gBreakpadReservedVM) {
+        WriteFile(hFile, kBreakpadReserveAddressParameter, kBreakpadReserveAddressParameterLen, &nBytes, nullptr);
+        _ui64toa(uintptr_t(gBreakpadReservedVM), buffer, 10);
+        WriteFile(hFile, buffer, strlen(buffer), &nBytes, nullptr);
+        WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+        WriteFile(hFile, kBreakpadReserveSizeParameter, kBreakpadReserveSizeParameterLen, &nBytes, nullptr);
+        _ui64toa(kReserveSize, buffer, 10);
+        WriteFile(hFile, buffer, strlen(buffer), &nBytes, nullptr);
+        WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+      }
+
 #ifdef HAS_DLL_BLOCKLIST
       DllBlocklist_WriteNotes(hFile);
 #endif
@@ -548,8 +583,6 @@ bool MinidumpCallback(
       MEMORYSTATUSEX statex;
       statex.dwLength = sizeof(statex);
       if (GlobalMemoryStatusEx(&statex)) {
-        char buffer[128];
-        int bufferLen;
 
 #define WRITE_STATEX_FIELD(field, paramName, conversionFunc)     \
         WriteFile(hFile, k##paramName##Parameter,                \
@@ -711,18 +744,6 @@ bool MinidumpCallback(
 }
 
 #ifdef XP_WIN
-static void* gBreakpadReservedVM;
-
-/**
- * Reserve some VM space. In the event that we crash because VM space is
- * being leaked without leaking memory, freeing this space before taking
- * the minidump will allow us to collect a minidump.
- *
- * This size is bigger than xul.dll plus some extra for MinidumpWriteDump
- * allocations.
- */
-static const SIZE_T kReserveSize = 0x2400000; // 36 MB
-
 static void
 ReserveBreakpadVM()
 {

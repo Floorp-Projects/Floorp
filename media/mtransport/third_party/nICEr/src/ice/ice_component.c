@@ -519,8 +519,7 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
           ABORT(R_BAD_DATA);
         }
         pcand->priority=attr->u.priority;
-        pcand->state=NR_ICE_CAND_PEER_CANDIDATE_PAIRED;;
-        TAILQ_INSERT_TAIL(&comp->candidates,pcand,entry_comp);
+        pcand->state=NR_ICE_CAND_PEER_CANDIDATE_PAIRED;
 
         if(r=nr_ice_candidate_pair_create(comp->stream->pctx,cand,pcand,
              &pair)) {
@@ -531,9 +530,12 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
 
         if(r=nr_ice_candidate_pair_insert(&comp->stream->check_list,pair)) {
           *error=(r==R_NO_MEMORY)?500:400;
+          nr_ice_candidate_pair_destroy(&pair);
           ABORT(r);
         }
 
+        /* Do this last, since any call to ABORT will destroy pcand */
+        TAILQ_INSERT_TAIL(&comp->candidates,pcand,entry_comp);
         pcand=0;
       }
       else{

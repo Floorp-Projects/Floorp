@@ -10,17 +10,17 @@
 
 
 #include "vpx_config.h"
-#include "vpx_rtcd.h"
+#include "vp8_rtcd.h"
 #include "blockd.h"
 
 void vp8_intra4x4_predict_c(unsigned char *Above,
                             unsigned char *yleft, int left_stride,
-                            B_PREDICTION_MODE b_mode,
+                            int           _b_mode,
                             unsigned char *dst, int dst_stride,
                             unsigned char top_left)
 {
     int i, r, c;
-
+    B_PREDICTION_MODE b_mode = (B_PREDICTION_MODE)_b_mode;
     unsigned char Left[4];
     Left[0] = yleft[0];
     Left[1] = yleft[left_stride];

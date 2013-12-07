@@ -8,7 +8,7 @@ LIBS = $(DEPTH)/$(LIB_PREFIX)js_static.$(LIB_SUFFIX) $(NSPR_LIBS) $(MOZ_ZLIB_LIB
 
 LOCAL_INCLUDES += -I$(topsrcdir) -I..
 
-ifdef MOZ_NATIVE_ICU
+ifdef MOZ_SHARED_ICU
 EXTRA_LIBS += $(MOZ_ICU_LIBS)
 endif
 

@@ -50,8 +50,8 @@ void vp8_fast_quantize_b_c(BLOCK *b, BLOCKD *d)
         if (x >= zbin)
         {
             x += round_ptr[rc];
-            y  = (((x * quant_ptr[rc]) >> 16) + x)
-                 >> quant_shift_ptr[rc];             /* quantize (x) */
+            y  = ((((x * quant_ptr[rc]) >> 16) + x)
+                 * quant_shift_ptr[rc]) >> 16;       /* quantize (x) */
             x  = (y ^ sz) - sz;                      /* get the sign back */
             qcoeff_ptr[rc] = x;                      /* write to destination */
             dqcoeff_ptr[rc] = x * dequant_ptr[rc];   /* dequantized value */
@@ -113,7 +113,7 @@ void vp8_regular_quantize_b_c(BLOCK *b, BLOCKD *d)
     short *zbin_ptr        = b->zbin;
     short *round_ptr       = b->round;
     short *quant_ptr       = b->quant;
-    unsigned char *quant_shift_ptr = b->quant_shift;
+    short *quant_shift_ptr = b->quant_shift;
     short *qcoeff_ptr      = d->qcoeff;
     short *dqcoeff_ptr     = d->dqcoeff;
     short *dequant_ptr     = d->dequant;
@@ -138,8 +138,8 @@ void vp8_regular_quantize_b_c(BLOCK *b, BLOCKD *d)
         if (x >= zbin)
         {
             x += round_ptr[rc];
-            y  = (((x * quant_ptr[rc]) >> 16) + x)
-                 >> quant_shift_ptr[rc];             /* quantize (x) */
+            y  = ((((x * quant_ptr[rc]) >> 16) + x)
+                 * quant_shift_ptr[rc]) >> 16;       /* quantize (x) */
             x  = (y ^ sz) - sz;                      /* get the sign back */
             qcoeff_ptr[rc]  = x;                     /* write to destination */
             dqcoeff_ptr[rc] = x * dequant_ptr[rc];   /* dequantized value */
@@ -167,7 +167,7 @@ void vp8_strict_quantize_b_c(BLOCK *b, BLOCKD *d)
     int sz;
     short *coeff_ptr;
     short *quant_ptr;
-    unsigned char *quant_shift_ptr;
+    short *quant_shift_ptr;
     short *qcoeff_ptr;
     short *dqcoeff_ptr;
     short *dequant_ptr;
@@ -184,21 +184,21 @@ void vp8_strict_quantize_b_c(BLOCK *b, BLOCKD *d)
     for (i = 0; i < 16; i++)
     {
         int dq;
-        int round;
+        int rounding;
 
         /*TODO: These arrays should be stored in zig-zag order.*/
         rc = vp8_default_zig_zag1d[i];
         z = coeff_ptr[rc];
         dq = dequant_ptr[rc];
-        round = dq >> 1;
+        rounding = dq >> 1;
         /* Sign of z. */
         sz = -(z < 0);
         x = (z + sz) ^ sz;
-        x += round;
+        x += rounding;
         if (x >= dq)
         {
             /* Quantize x. */
-            y  = (((x * quant_ptr[rc]) >> 16) + x) >> quant_shift_ptr[rc];
+            y  = ((((x * quant_ptr[rc]) >> 16) + x) * quant_shift_ptr[rc]) >> 16;
             /* Put the sign back. */
             x = (y + sz) ^ sz;
             /* Save the coefficient and its dequantized value. */
@@ -406,7 +406,7 @@ static const int qzbin_factors_y2[129] =
 #define EXACT_QUANT
 #ifdef EXACT_QUANT
 static void invert_quant(int improved_quant, short *quant,
-                               unsigned char *shift, short d)
+                         short *shift, short d)
 {
     if(improved_quant)
     {
@@ -418,11 +418,15 @@ static void invert_quant(int improved_quant, short *quant,
         t = 1 + (1<<(16+l))/d;
         *quant = (short)(t - (1<<16));
         *shift = l;
+        /* use multiplication and constant shift by 16 */
+        *shift = 1 << (16 - *shift);
     }
     else
     {
         *quant = (1 << 16) / d;
         *shift = 0;
+        /* use multiplication and constant shift by 16 */
+        *shift = 1 << (16 - *shift);
     }
 }
 
