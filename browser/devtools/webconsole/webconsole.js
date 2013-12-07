@@ -118,6 +118,7 @@ const MESSAGE_PREFERENCE_KEYS = [
 const LEVELS = {
   error: SEVERITY_ERROR,
   exception: SEVERITY_ERROR,
+  assert: SEVERITY_ERROR,
   warn: SEVERITY_WARNING,
   info: SEVERITY_INFO,
   log: SEVERITY_LOG,
@@ -1171,6 +1172,7 @@ WebConsoleFrame.prototype = {
       case "warn":
       case "error":
       case "exception":
+      case "assert":
       case "debug": {
         let msg = new Messages.ConsoleGeneric(aMessage);
         node = msg.init(this.output).render().element;
