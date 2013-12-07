@@ -4501,17 +4501,7 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
 JS_PUBLIC_API(bool)
 JS::CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options)
 {
-    if (!cx->runtime()->canUseParallelParsing())
-        return false;
-
-    // Off thread compilation can't occur during incremental collections on the
-    // atoms compartment, to avoid triggering barriers. Outside the atoms
-    // compartment, the compilation will use a new zone which doesn't require
-    // barriers itself.
-    if (cx->runtime()->activeGCInAtomsZone())
-        return false;
-
-    return true;
+    return cx->runtime()->canUseParallelParsing();
 }
 
 JS_PUBLIC_API(bool)
@@ -6108,11 +6098,43 @@ JS_DescribeScriptedCaller(JSContext *cx, MutableHandleScript script, unsigned *l
     if (i.done())
         return false;
 
+    // If the caller is hidden, the embedding wants us to return null here so
+    // that it can check its own stack.
+    if (i.activation()->scriptedCallerIsHidden())
+        return false;
+
     script.set(i.script());
     if (lineno)
         *lineno = js::PCToLineNumber(i.script(), i.pc());
     return true;
 }
+
+namespace JS {
+
+JS_PUBLIC_API(void)
+HideScriptedCaller(JSContext *cx)
+{
+    MOZ_ASSERT(cx);
+
+    // If there's no accessible activation on the stack, we'll return null from
+    // JS_DescribeScriptedCaller anyway, so there's no need to annotate
+    // anything.
+    Activation *act = cx->runtime()->mainThread.activation();
+    if (!act)
+        return;
+    act->hideScriptedCaller();
+}
+
+JS_PUBLIC_API(void)
+UnhideScriptedCaller(JSContext *cx)
+{
+    Activation *act = cx->runtime()->mainThread.activation();
+    if (!act)
+        return;
+    act->unhideScriptedCaller();
+}
+
+} /* namespace JS */
 
 #ifdef JS_THREADSAFE
 static PRStatus

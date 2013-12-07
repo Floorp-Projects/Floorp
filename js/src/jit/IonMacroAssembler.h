@@ -193,18 +193,20 @@ class MacroAssembler : public MacroAssemblerSpecific
         embedsNurseryPointers_(false),
         sps_(nullptr)
     {
-        JSContext *cx = GetIonContext()->cx;
+        IonContext *icx = GetIonContext();
+        JSContext *cx = icx->cx;
         if (cx)
             constructRoot(cx);
 
-        if (!GetIonContext()->temp) {
+        if (!icx->temp) {
             JS_ASSERT(cx);
             alloc_.construct(cx);
         }
 
+        moveResolver_.setAllocator(*icx->temp);
 #ifdef JS_CPU_ARM
         initWithAllocator();
-        m_buffer.id = GetIonContext()->getNextAssemblerId();
+        m_buffer.id = icx->getNextAssemblerId();
 #endif
     }
 
@@ -218,6 +220,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         constructRoot(cx);
         ionContext_.construct(cx, (js::jit::TempAllocator *)nullptr);
         alloc_.construct(cx);
+        moveResolver_.setAllocator(*ionContext_.ref().temp);
 #ifdef JS_CPU_ARM
         initWithAllocator();
         m_buffer.id = GetIonContext()->getNextAssemblerId();
@@ -237,28 +240,14 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
-    MacroAssembler(JSContext *cx, IonScript *ion)
-      : enoughMemory_(true),
-        embedsNurseryPointers_(false),
-        sps_(nullptr)
-    {
-        constructRoot(cx);
-         ionContext_.construct(cx, (js::jit::TempAllocator *)nullptr);
-         alloc_.construct(cx);
-#ifdef JS_CPU_ARM
-         initWithAllocator();
-         m_buffer.id = GetIonContext()->getNextAssemblerId();
-#endif
-        setFramePushed(ion->frameSize());
-    }
-
     void setInstrumentation(IonInstrumentation *sps) {
         sps_ = sps;
     }
 
-    void resetForNewCodeGenerator() {
+    void resetForNewCodeGenerator(TempAllocator &alloc) {
         setFramePushed(0);
         moveResolver_.clearTempObjectPool();
+        moveResolver_.setAllocator(alloc);
     }
 
     void constructRoot(JSContext *cx) {

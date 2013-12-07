@@ -560,7 +560,7 @@ CreateBlankProto(JSContext *cx, const Class *clasp, JSObject &proto, GlobalObjec
     JS_ASSERT(clasp != &JSFunction::class_);
 
     RootedObject blankProto(cx, NewObjectWithGivenProto(cx, clasp, &proto, &global, SingletonObject));
-    if (!blankProto)
+    if (!blankProto || !blankProto->setDelegate(cx))
         return nullptr;
 
     return blankProto;

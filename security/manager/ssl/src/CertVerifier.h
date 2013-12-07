@@ -25,6 +25,7 @@ public:
   // XXX: The localonly flag is ignored in the classic verification case
 
   // *evOidPolicy == SEC_OID_UNKNOWN means the cert is NOT EV
+  // Only one usage per verification is supported.
   SECStatus VerifyCert(CERTCertificate * cert,
                        const SECCertificateUsage usage,
                        const PRTime time,

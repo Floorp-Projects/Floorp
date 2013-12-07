@@ -248,6 +248,23 @@ MmsConnection.prototype = {
 
     this.connected = this.radioInterface.getDataCallStateByType("mms") ==
       Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
+    // If the MMS network is connected during the initialization, it means the
+    // MMS network must share the same APN with the mobile network by default.
+    // Under this case, |networkManager.active| should keep the mobile network,
+    // which is supposed be an instance of |nsIRilNetworkInterface| for sure.
+    if (this.connected) {
+      let networkManager =
+        Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
+      let activeNetwork = networkManager.active;
+      if (activeNetwork.serviceId != this.serviceId) {
+        return;
+      }
+
+      let rilNetwork = activeNetwork.QueryInterface(Ci.nsIRilNetworkInterface);
+      // Set up the MMS APN setting based on the connected MMS network,
+      // which is going to be used for the HTTP requests later.
+      this.setApnSetting(rilNetwork);
+    }
   },
 
   /**

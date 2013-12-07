@@ -35,7 +35,6 @@
 #include "nsRenderingContext.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCSSRendering.h"
-#include "nsCxPusher.h"
 #include "nsThemeConstants.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
@@ -4774,12 +4773,6 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
     forceCopy = true;
     wantImageSurface = true;
   }
-
-  // Push a null JSContext on the stack so that code that runs within
-  // the below code doesn't think it's being called by JS. See bug
-  // 604262.
-  nsCxPusher pusher;
-  pusher.PushNull();
 
   nsCOMPtr<imgIRequest> imgRequest;
   rv = aElement->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
