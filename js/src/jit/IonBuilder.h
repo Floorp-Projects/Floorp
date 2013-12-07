@@ -431,6 +431,9 @@ class IonBuilder : public MIRGenerator
     // binary data lookup helpers.
     bool lookupTypeRepresentationSet(MDefinition *typedObj,
                                      TypeRepresentationSet *out);
+    bool typeSetToTypeRepresentationSet(types::TemporaryTypeSet *types,
+                                        TypeRepresentationSet *out,
+                                        types::TypeTypedObject::Kind kind);
     bool lookupTypedObjectField(MDefinition *typedObj,
                                 PropertyName *name,
                                 int32_t *fieldOffset,
@@ -453,6 +456,11 @@ class IonBuilder : public MIRGenerator
                                      MDefinition *offset,
                                      ScalarTypeRepresentation *typeRepr,
                                      MDefinition *value);
+    bool checkTypedObjectIndexInBounds(size_t elemSize,
+                                       MDefinition *obj,
+                                       MDefinition *index,
+                                       MDefinition **indexAsByteOffset,
+                                       TypeRepresentationSet objTypeReprs);
 
     // jsop_setelem() helpers.
     bool setElemTryTyped(bool *emitted, MDefinition *object,

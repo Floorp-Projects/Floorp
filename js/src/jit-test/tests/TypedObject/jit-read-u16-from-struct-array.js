@@ -10,7 +10,7 @@ var PointType = new TypedObject.StructType({x: TypedObject.uint16,
                                             y: TypedObject.uint16,
                                             z: TypedObject.uint16});
 
-var VecPointType = new TypedObject.ArrayType(PointType, 3);
+var VecPointType = PointType.array(3);
 
 function foo() {
   for (var i = 0; i < 10000; i += 9) {

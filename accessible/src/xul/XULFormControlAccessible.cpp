@@ -693,21 +693,8 @@ XULTextFieldAccessible::NativeState()
   // the accessible state from. Doesn't add to cache into document cache.
   nsRefPtr<HTMLTextFieldAccessible> tempAccessible =
     new HTMLTextFieldAccessible(inputField, mDoc);
-  if (!tempAccessible)
-    return state;
-
-  state |= tempAccessible->NativeState();
-
-  nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mContent));
-  if (menuList) {
-    // <xul:menulist droppable="false">
-    if (!mContent->AttrValueIs(kNameSpaceID_None,
-                               nsGkAtoms::editable,
-                               nsGkAtoms::_true, eIgnoreCase)) {
-      state |= states::READONLY;
-    }
-  }
-
+  if (tempAccessible)
+    return state | tempAccessible->NativeState();
   return state;
 }
 
@@ -830,15 +817,8 @@ XULTextFieldAccessible::GetInputField() const
 {
   nsCOMPtr<nsIDOMNode> inputFieldDOMNode;
   nsCOMPtr<nsIDOMXULTextBoxElement> textBox = do_QueryInterface(mContent);
-  if (textBox) {
+  if (textBox)
     textBox->GetInputField(getter_AddRefs(inputFieldDOMNode));
-
-  } else {
-    // <xul:menulist droppable="false">
-    nsCOMPtr<nsIDOMXULMenuListElement> menuList = do_QueryInterface(mContent);
-    if (menuList)
-      menuList->GetInputField(getter_AddRefs(inputFieldDOMNode));
-  }
 
   NS_ASSERTION(inputFieldDOMNode, "No input field for XULTextFieldAccessible");
 

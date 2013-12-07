@@ -6,8 +6,9 @@
 if (!this.hasOwnProperty("TypedObject"))
   quit();
 
-var PointType = new TypedObject.ArrayType(TypedObject.uint16, 3);
-var VecPointType = new TypedObject.ArrayType(PointType, 3);
+var T = TypedObject;
+var PointType = T.uint16.array(3);
+var VecPointType = PointType.array(3);
 
 function foo() {
   for (var i = 0; i < 10000; i += 9) {

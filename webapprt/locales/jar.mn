@@ -8,5 +8,10 @@
     locale/webapprt/webapp.dtd                     (%webapprt/webapp.dtd)
     locale/webapprt/webapp.properties              (%webapprt/webapp.properties)
     locale/webapprt/getUserMediaDialog.dtd         (%webapprt/getUserMediaDialog.dtd)
+    locale/webapprt/appstrings.properties         (%webapprt/overrides/appstrings.properties)
+    locale/webapprt/dom.properties         (%webapprt/overrides/dom.properties)
 
 % locale branding @AB_CD@ resource://webappbranding/
+
+% override chrome://global/locale/appstrings.properties  chrome://webapprt/locale/appstrings.properties
+% override chrome://global/locale/dom/dom.properties  chrome://webapprt/locale/dom.properties

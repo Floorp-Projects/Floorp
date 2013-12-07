@@ -21,6 +21,7 @@
 #include "builtin/MapObject.h"
 #include "builtin/Object.h"
 #include "builtin/RegExp.h"
+#include "builtin/TypedObject.h"
 #include "vm/RegExpStatics.h"
 
 #include "jscompartmentinlines.h"
@@ -30,6 +31,17 @@
 #include "vm/ObjectImpl-inl.h"
 
 using namespace js;
+
+// This method is not in the header file to avoid having to include
+// TypedObject.h from GlobalObject.h. It is not generally perf
+// sensitive.
+TypedObjectModuleObject&
+js::GlobalObject::getTypedObjectModule() const {
+    Value v = getConstructor(JSProto_TypedObject);
+    // only gets called from contexts where TypedObject must be initialized
+    JS_ASSERT(v.isObject());
+    return v.toObject().as<TypedObjectModuleObject>();
+}
 
 JSObject *
 js_InitObjectClass(JSContext *cx, HandleObject obj)

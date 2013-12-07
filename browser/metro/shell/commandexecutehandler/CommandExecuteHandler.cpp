@@ -262,79 +262,50 @@ public:
   IFACEMETHODIMP GetValue(AHE_TYPE *aLaunchType)
   {
     Log(L"IExecuteCommandApplicationHostEnvironment::GetValue()");
-    *aLaunchType = AHE_DESKTOP;
-    mIsDesktopRequest = true;
+    *aLaunchType = GetLaunchType();
+    mIsDesktopRequest = (*aLaunchType == AHE_DESKTOP);
+    SetLastAHE(*aLaunchType);
+    return S_OK;
+  }
+
+  /**
+   * Choose the appropriate launch type based on the user's previously chosen
+   * host environment, along with system constraints.
+   */
+  AHE_TYPE GetLaunchType() {
+    AHE_TYPE ahe = GetLastAHE();
+    Log(L"Previous AHE: %d", ahe);
 
     if (!mIsRestartMetroRequest && IsProcessRunning(kFirefoxExe, false)) {
-      return S_OK;
+      Log(L"Returning AHE_DESKTOP because desktop is already running");
+      return AHE_DESKTOP;
     } else if (!mIsRestartDesktopRequest && IsProcessRunning(kMetroFirefoxExe, true)) {
-      *aLaunchType = AHE_IMMERSIVE;
-      mIsDesktopRequest = false;
-      return S_OK;
-    }
-
-    if (!mUnkSite) {
-      Log(L"No mUnkSite.");
-      return S_OK;
+      Log(L"Returning AHE_IMMERSIVE because Metro is already running");
+      return AHE_IMMERSIVE;
     }
 
     if (mIsRestartDesktopRequest) {
       Log(L"Restarting in desktop host environment.");
-      return S_OK;
+      return AHE_DESKTOP;
     }
 
-    HRESULT hr;
-    IServiceProvider* pSvcProvider = nullptr;
-    hr = mUnkSite->QueryInterface(IID_IServiceProvider, (void**)&pSvcProvider);
-    if (!pSvcProvider) {
-      Log(L"Couldn't get IServiceProvider service from explorer. (%X)", hr);
-      return S_OK;
+    if (mIsRestartMetroRequest) {
+      Log(L"Restarting in metro host environment.");
+      ahe = AHE_IMMERSIVE;
     }
 
-    IExecuteCommandHost* pHost = nullptr;
-    // If we can't get this it's a conventional desktop launch
-    hr = pSvcProvider->QueryService(SID_ExecuteCommandHost,
-                                    IID_IExecuteCommandHost, (void**)&pHost);
-    if (!pHost) {
-      Log(L"Couldn't get IExecuteCommandHost service from explorer. (%X)", hr);
-      SafeRelease(&pSvcProvider);
-      return S_OK;
-    }
-    SafeRelease(&pSvcProvider);
+    if (ahe == AHE_IMMERSIVE) {
+      if (!IsDefaultBrowser()) {
+        Log(L"returning AHE_DESKTOP because we are not the default browser");
+        return AHE_DESKTOP;
+      }
 
-    EC_HOST_UI_MODE mode;
-    if (FAILED(pHost->GetUIMode(&mode))) {
-      Log(L"GetUIMode failed.");
-      SafeRelease(&pHost);
-      return S_OK;
+      if (!IsDX10Available()) {
+        Log(L"returning AHE_DESKTOP because DX10 is not available");
+        return AHE_DESKTOP;
+      }
     }
-
-    // 0 - launched from desktop
-    // 1 - ?
-    // 2 - launched from tile interface
-    Log(L"GetUIMode: %d", mode);
-
-    if (!IsDefaultBrowser()) {
-      mode = ECHUIM_DESKTOP;
-    }
-
-    if (mode == ECHUIM_DESKTOP) {
-      Log(L"returning AHE_DESKTOP");
-      SafeRelease(&pHost);
-      return S_OK;
-    }
-    SafeRelease(&pHost);
-
-    if (!IsDX10Available()) {
-      Log(L"returning AHE_DESKTOP because DX10 is not available");
-      *aLaunchType = AHE_DESKTOP;
-      mIsDesktopRequest = true;
-    } else {
-      Log(L"returning AHE_IMMERSIVE");
-      *aLaunchType = AHE_IMMERSIVE;
-      mIsDesktopRequest = false;
-    }
-    return S_OK;
+    return ahe;
   }
 
   /*

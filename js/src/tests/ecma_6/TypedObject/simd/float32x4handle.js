@@ -15,7 +15,7 @@ var Handle = TypedObject.Handle;
 function test() {
   print(BUGNUMBER + ": " + summary);
 
-  var Array = new ArrayType(float32x4, 3);
+  var Array = float32x4.array(3);
   var array = new Array([float32x4(1, 2, 3, 4),
                          float32x4(5, 6, 7, 8),
                          float32x4(9, 10, 11, 12)]);
