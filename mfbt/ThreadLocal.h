@@ -54,10 +54,7 @@ typedef sig_atomic_t sig_safe_t;
  *
  * API usage:
  *
- * // Create a TLS item.
- * //
- * // Note that init() should be invoked exactly once, before any usage of set()
- * // or get().
+ * // Create a TLS item
  * mozilla::ThreadLocal<int> tlsKey;
  * if (!tlsKey.init()) {
  *   // deal with the error

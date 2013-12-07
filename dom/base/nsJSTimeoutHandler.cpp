@@ -360,7 +360,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
 
     mozilla::HoldJSObjects(this);
 
-    mFunction = new Function(funobj, GetIncumbentGlobal());
+    mFunction = new Function(funobj);
 
     // Create our arg array.  argc is the number of arguments passed
     // to setTimeout or setInterval; the first two are our callback

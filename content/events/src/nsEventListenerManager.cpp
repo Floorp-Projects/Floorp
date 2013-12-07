@@ -883,23 +883,19 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     JS::Rooted<JSObject*> scope(cx, listener->GetEventScope());
     context->BindCompiledEventHandler(mTarget, scope, handler, &boundHandler);
     aListenerStruct = nullptr;
-    // Note - We pass null for aIncumbentGlobal below. We could also pass the
-    // compilation global, but since the handler is guaranteed to be scripted,
-    // there's no need to use an override, since the JS engine will always give
-    // us the right answer.
     if (!boundHandler) {
       listener->ForgetHandler();
     } else if (listener->EventName() == nsGkAtoms::onerror && win) {
       nsRefPtr<OnErrorEventHandlerNonNull> handlerCallback =
-        new OnErrorEventHandlerNonNull(boundHandler, /* aIncumbentGlobal = */ nullptr);
+        new OnErrorEventHandlerNonNull(boundHandler);
       listener->SetHandler(handlerCallback);
     } else if (listener->EventName() == nsGkAtoms::onbeforeunload && win) {
       nsRefPtr<OnBeforeUnloadEventHandlerNonNull> handlerCallback =
-        new OnBeforeUnloadEventHandlerNonNull(boundHandler, /* aIncumbentGlobal = */ nullptr);
+        new OnBeforeUnloadEventHandlerNonNull(boundHandler);
       listener->SetHandler(handlerCallback);
     } else {
       nsRefPtr<EventHandlerNonNull> handlerCallback =
-        new EventHandlerNonNull(boundHandler, /* aIncumbentGlobal = */ nullptr);
+        new EventHandlerNonNull(boundHandler);
       listener->SetHandler(handlerCallback);
     }
   }

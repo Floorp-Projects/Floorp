@@ -8,10 +8,10 @@
 #include "nsIWindowWatcher.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
+#include "nsCxPusher.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "mozilla/dom/ScriptSettings.h"
 
 static const char kOpenDialogParam[] = "centerscreen,chrome,modal,titlebar";
 static const char kOpenWindowParam[] = "centerscreen,chrome,titlebar";
@@ -39,7 +39,8 @@ nsNSSDialogHelper::openDialog(
   // gets a system principal, otherwise we'll bork when trying to wrap the
   // nsIKeyGenThread |arguments| property into the unprivileged scoope.
   MOZ_ASSERT(!strncmp("chrome://", url, strlen("chrome://")));
-  mozilla::dom::AutoSystemCaller asc;
+  nsCxPusher pusher;
+  pusher.PushNull();
 
   nsCOMPtr<nsIDOMWindow> newWindow;
   rv = windowWatcher->OpenWindow(parent,

@@ -9,7 +9,6 @@
 #include "nsIDocument.h"
 #include "prprf.h"
 #include "nsGlobalWindow.h"
-#include "ScriptSettings.h"
 #include "mozilla/Likely.h"
 
 using namespace mozilla;
@@ -275,7 +274,7 @@ nsDOMEventTargetHelper::SetEventHandler(nsIAtom* aType,
   JSObject* callable;
   if (aValue.isObject() &&
       JS_ObjectIsCallable(aCx, callable = &aValue.toObject())) {
-    handler = new EventHandlerNonNull(callable, mozilla::dom::GetIncumbentGlobal());
+    handler = new EventHandlerNonNull(callable);
   }
   SetEventHandler(aType, EmptyString(), handler);
   return NS_OK;
