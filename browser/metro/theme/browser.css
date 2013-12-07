@@ -714,6 +714,7 @@ documenttab[selected] .documenttab-selection {
 /* Contextual toolbar controls */
 
 #toolbar-context-autocomplete,
+.hide-on-start,
 #toolbar-context-page {
   transition-property: opacity, visibility;
   transition-duration: @forward_transition_length@;
@@ -721,7 +722,7 @@ documenttab[selected] .documenttab-selection {
 }
 
 #toolbar-contextual:not([autocomplete]) #toolbar-context-autocomplete,
-#toolbar-contextual[startpage] #toolbar-context-page,
+#toolbar-contextual[startpage] .hide-on-start,
 #toolbar-contextual[autocomplete] #toolbar-context-page {
   opacity: 0;
   visibility: hidden;
