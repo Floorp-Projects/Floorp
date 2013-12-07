@@ -4946,6 +4946,12 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
          */
         repeat = (rt->gcPoke && rt->gcShouldCleanUpEverything) || wasReset;
     } while (repeat);
+
+    if (rt->gcIncrementalState == NO_INCREMENTAL) {
+#ifdef JS_WORKER_THREADS
+        EnqueuePendingParseTasksAfterGC(rt);
+#endif
+    }
 }
 
 void
@@ -5406,6 +5412,23 @@ js::PurgeJITCaches(Zone *zone)
 #endif
 }
 
+void
+ArenaLists::normalizeBackgroundFinalizeState(AllocKind thingKind)
+{
+    volatile uintptr_t *bfs = &backgroundFinalizeState[thingKind];
+    switch (*bfs) {
+      case BFS_DONE:
+        break;
+      case BFS_JUST_FINISHED:
+        // No allocations between end of last sweep and now.
+        // Transfering over arenas is a kind of allocation.
+        *bfs = BFS_DONE;
+        break;
+      default:
+        JS_ASSERT(!"Background finalization in progress, but it should not be.");
+        break;
+    }
+}
 
 void
 ArenaLists::adoptArenas(JSRuntime *rt, ArenaLists *fromArenaLists)
@@ -5422,21 +5445,9 @@ ArenaLists::adoptArenas(JSRuntime *rt, ArenaLists *fromArenaLists)
         // When we enter a parallel section, we join the background
         // thread, and we do not run GC while in the parallel section,
         // so no finalizer should be active!
-        volatile uintptr_t *bfs = &backgroundFinalizeState[thingKind];
-        switch (*bfs) {
-          case BFS_DONE:
-            break;
-          case BFS_JUST_FINISHED:
-            // No allocations between end of last sweep and now.
-            // Transfering over arenas is a kind of allocation.
-            *bfs = BFS_DONE;
-            break;
-          default:
-            JS_ASSERT(!"Background finalization in progress, but it should not be.");
-            break;
-        }
-#endif /* JS_THREADSAFE */
-
+        normalizeBackgroundFinalizeState(AllocKind(thingKind));
+        fromArenaLists->normalizeBackgroundFinalizeState(AllocKind(thingKind));
+#endif
         ArenaList *fromList = &fromArenaLists->arenaLists[thingKind];
         ArenaList *toList = &arenaLists[thingKind];
         while (fromList->head != nullptr) {

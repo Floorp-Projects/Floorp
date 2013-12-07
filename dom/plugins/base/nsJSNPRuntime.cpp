@@ -1007,11 +1007,8 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
     }
   }
 
-  nsJSObjWrapperKey key(obj, npp);
-
-  JSObjWrapperTable::AddPtr p = sJSObjWrappers.lookupForAdd(key);
-
-  if (p/* && p->value()*/) {
+  JSObjWrapperTable::Ptr p = sJSObjWrappers.lookupForAdd(nsJSObjWrapperKey(obj, npp));
+  if (p) {
     MOZ_ASSERT(p->value());
     // Found a live nsJSObjWrapper, return it.
 
@@ -1030,7 +1027,8 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
 
   wrapper->mJSObj = obj;
 
-  if (!sJSObjWrappers.add(p, key, wrapper)) {
+  nsJSObjWrapperKey key(obj, npp);
+  if (!sJSObjWrappers.putNew(key, wrapper)) {
     // Out of memory, free the wrapper we created.
     _releaseobject(wrapper);
     return nullptr;

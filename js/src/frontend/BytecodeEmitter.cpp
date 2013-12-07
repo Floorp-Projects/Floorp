@@ -5510,7 +5510,7 @@ EmitCallOrNew(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * will just cause the inner scripts to be repeatedly cloned.
          */
         JS_ASSERT(!bce->emittingRunOnceLambda);
-        if (bce->checkSingletonContext()) {
+        if (bce->checkSingletonContext() || (!bce->isInLoop() && bce->isRunOnceLambda())) {
             bce->emittingRunOnceLambda = true;
             if (!EmitTree(cx, bce, pn2))
                 return false;

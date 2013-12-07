@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(ef621cac-c818-464a-9fb1-9a35731a7f32)]
+[scriptable, uuid(e14f588b-63aa-4091-be82-a459a52f8ca6)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -506,6 +506,17 @@ interface nsIXPCComponents_Utils : nsISupports
      * names are supported.
      */
     nsIClassInfo getDOMClassInfo(in AString aClassName);
+
+    /**
+     * Gets the incument global for the execution of this function. For internal
+     * and testing use only.
+     *
+     * If |callback| is passed, it is invoked with the incumbent global as its
+     * sole argument. This allows the incumbent global to be measured in callback
+     * environments with no scripted frames on the stack.
+     */
+    [implicit_jscontext]
+    jsval getIncumbentGlobal([optional] in jsval callback);
 
     /**
       * Retrieve the last time, in microseconds since epoch, that a given

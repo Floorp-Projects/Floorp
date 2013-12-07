@@ -3488,6 +3488,33 @@ nsXPCComponents_Utils::GetDOMClassInfo(const nsAString& aClassName,
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::GetIncumbentGlobal(const Value &aCallback,
+                                          JSContext *aCx, Value *aOut)
+{
+    nsCOMPtr<nsIGlobalObject> global = mozilla::dom::GetIncumbentGlobal();
+    RootedValue globalVal(aCx);
+
+    if (!global) {
+        globalVal = NullValue();
+    } else {
+        // Note: We rely on the wrap call for outerization.
+        globalVal = ObjectValue(*global->GetGlobalJSObject());
+        if (!JS_WrapValue(aCx, &globalVal))
+            return NS_ERROR_FAILURE;
+    }
+
+    // Invoke the callback, if passed.
+    if (aCallback.isObject()) {
+        Value ignored;
+        if (!JS_CallFunctionValue(aCx, nullptr, aCallback, 1, globalVal.address(), &ignored))
+            return NS_ERROR_FAILURE;
+    }
+
+    *aOut = globalVal;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::GetWatchdogTimestamp(const nsAString& aCategory, PRTime *aOut)
 {
     WatchdogTimestampCategory category;

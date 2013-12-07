@@ -52,6 +52,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 typedef struct nr_socket_vtbl_ {
+  UINT4 version;   /* Currently 1 */
   int (*destroy)(void **obj);
   int (*ssendto)(void *obj,const void *msg, size_t len, int flags,
     nr_transport_addr *addr);
@@ -59,6 +60,9 @@ typedef struct nr_socket_vtbl_ {
     nr_transport_addr *addr);
   int (*getfd)(void *obj, NR_SOCKET *fd);
   int (*getaddr)(void *obj, nr_transport_addr *addrp);
+  int (*connect)(void *obj, nr_transport_addr *addr);
+  int (*swrite)(void *obj,const void *msg, size_t len, size_t *written);
+  int (*sread)(void *obj,void * restrict buf, size_t maxlen, size_t *len);
   int (*close)(void *obj);
 } nr_socket_vtbl;
 
@@ -78,6 +82,9 @@ int nr_socket_recvfrom(nr_socket *sock,void * restrict buf, size_t maxlen,
 int nr_socket_getfd(nr_socket *sock, NR_SOCKET *fd);
 int nr_socket_getaddr(nr_socket *sock, nr_transport_addr *addrp);
 int nr_socket_close(nr_socket *sock);
+int nr_socket_connect(nr_socket *sock, nr_transport_addr *addr);
+int nr_socket_write(nr_socket *sock,const void *msg, size_t len, size_t *written, int flags);
+int nr_socket_read(nr_socket *sock, void * restrict buf, size_t maxlen, size_t *len, int flags);
 
 #endif
 

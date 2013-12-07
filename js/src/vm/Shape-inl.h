@@ -9,6 +9,8 @@
 
 #include "vm/Shape.h"
 
+#include "mozilla/TypeTraits.h"
+
 #include "jsobj.h"
 
 #include "vm/Interpreter.h"
@@ -176,6 +178,39 @@ Shape::search(ExclusiveContext *cx, Shape *start, jsid id, Shape ***pspp, bool a
     }
 
     return nullptr;
+}
+
+template<class ObjectSubclass>
+/* static */ inline bool
+EmptyShape::ensureInitialCustomShape(ExclusiveContext *cx, Handle<ObjectSubclass*> obj)
+{
+    static_assert(mozilla::IsBaseOf<JSObject, ObjectSubclass>::value,
+                  "ObjectSubclass must be a subclass of JSObject");
+
+    // If the provided object has a non-empty shape, it was given the cached
+    // initial shape when created: nothing to do.
+    if (!obj->nativeEmpty())
+        return true;
+
+    // If no initial shape was assigned, do so.
+    RootedShape shape(cx, ObjectSubclass::assignInitialShape(cx, obj));
+    if (!shape)
+        return false;
+    MOZ_ASSERT(!obj->nativeEmpty());
+
+    // If the object is a standard prototype -- |RegExp.prototype|,
+    // |String.prototype|, |RangeError.prototype|, &c. -- GlobalObject.cpp's
+    // |CreateBlankProto| marked it as a delegate.  These are the only objects
+    // of this class that won't use the standard prototype, and there's no
+    // reason to pollute the initial shape cache with entries for them.
+    if (obj->isDelegate())
+        return true;
+
+    // Cache the initial shape for non-prototype objects, however, so that
+    // future instances will begin life with that shape.
+    RootedObject proto(cx, obj->getProto());
+    EmptyShape::insertInitialShape(cx, shape, proto);
+    return true;
 }
 
 inline

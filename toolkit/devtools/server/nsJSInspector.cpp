@@ -6,11 +6,11 @@
 #include "nsJSInspector.h"
 #include "nsIXPConnect.h"
 #include "nsThreadUtils.h"
-#include "nsCxPusher.h"
 #include "jsfriendapi.h"
 #include "js/OldDebugAPI.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsServiceManagerUtils.h"
 #include "nsMemory.h"
 #include "nsArray.h"
@@ -73,8 +73,7 @@ nsJSInspector::EnterNestedEventLoop(const JS::Value& requestor, uint32_t *out)
   mRequestors.AppendElement(requestor);
   mozilla::HoldJSObjects(this);
 
-  nsCxPusher pusher;
-  pusher.PushNull();
+  mozilla::dom::AutoSystemCaller asc;
 
   uint32_t nestLevel = ++mNestedLoopLevel;
   while (NS_SUCCEEDED(rv) && mNestedLoopLevel >= nestLevel) {

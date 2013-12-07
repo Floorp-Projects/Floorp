@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-
 static char *RCSSTRING __UNUSED__="$Id: stun_client_ctx.c,v 1.2 2008/04/28 18:21:30 ekr Exp $";
 
 #include <assert.h>
@@ -85,6 +84,14 @@ int nr_stun_client_ctx_create(char *label, nr_socket *sock, nr_transport_addr *p
 
     if (NR_reg_get_uint4(NR_STUN_REG_PREF_CLNT_FINAL_RETRANSMIT_BACKOFF, &ctx->final_retransmit_backoff_ms))
         ctx->final_retransmit_backoff_ms = 16 * ctx->rto_ms;
+
+    /* If we are doing TCP, compute the maximum timeout as if
+       we retransmitted and then set the maximum number of
+       transmits to 1 and the timeout to maximum timeout*/
+    if (ctx->my_addr.protocol == IPPROTO_TCP) {
+      ctx->timeout_ms = ctx->final_retransmit_backoff_ms;
+      ctx->maximum_transmits = 1;
+    }
 
     *ctxp=ctx;
 

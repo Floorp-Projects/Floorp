@@ -367,7 +367,7 @@ public:
     mLoadMonitor->Init(mLoadMonitor);
   }
 #else
-  MediaEngineWebRTC();
+  MediaEngineWebRTC(MediaEnginePrefs &aPrefs);
 #endif
   ~MediaEngineWebRTC() {
     Shutdown();

@@ -138,6 +138,21 @@ CertVerifier::VerifyCert(CERTCertificate * cert,
     *evOidPolicy = SEC_OID_UNKNOWN;
   }
 
+  switch(usage){
+    case certificateUsageSSLClient:
+    case certificateUsageSSLServer:
+    case certificateUsageSSLCA:
+    case certificateUsageEmailSigner:
+    case certificateUsageEmailRecipient:
+    case certificateUsageObjectSigner:
+    case certificateUsageStatusResponder:
+      break;
+    default:
+      NS_WARNING("Calling VerifyCert with invalid usage");
+      PORT_SetError(SEC_ERROR_INVALID_ARGS);
+      return SECFailure;
+  }
+
   ScopedCERTCertList trustAnchors;
   SECStatus rv;
   SECOidTag evPolicy = SEC_OID_UNKNOWN;

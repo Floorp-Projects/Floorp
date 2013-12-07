@@ -230,3 +230,20 @@ nr_has_stun_cookie(UCHAR *buf, int len)
    return 1;
 }
 
+int
+nr_stun_message_length(UCHAR *buf, int buf_len, int *msg_len)
+{
+  nr_stun_message_header *hdr;
+
+  if (!nr_is_stun_message(buf, buf_len))
+    return(R_BAD_DATA);
+
+  hdr = (nr_stun_message_header *)buf;
+
+  *msg_len = ntohs(hdr->length);
+
+  return(0);
+}
+
+
+

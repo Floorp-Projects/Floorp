@@ -9,6 +9,7 @@
 #define mozilla_a11y_IUnknownImpl_h_
 
 #include <windows.h>
+#undef CreateEvent // thank you windows you're such a helper
 #include "nsError.h"
 
 // Avoid warning C4509 like "nonstandard extension used:

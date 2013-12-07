@@ -4792,9 +4792,11 @@ IonBuilder::jsop_funcall(uint32_t argc)
     // Shimmy the slots down to remove the native 'call' function.
     current->shimmySlots(funcDepth - 1);
 
+    bool zeroArguments = (argc == 0);
+
     // If no |this| argument was provided, explicitly pass Undefined.
     // Pushing is safe here, since one stack slot has been removed.
-    if (argc == 0) {
+    if (zeroArguments) {
         MConstant *undef = MConstant::New(alloc(), UndefinedValue());
         current->add(undef);
         MPassArg *pass = MPassArg::New(alloc(), undef);
@@ -4810,7 +4812,7 @@ IonBuilder::jsop_funcall(uint32_t argc)
         return false;
 
     // Try to inline the call.
-    if (argc > 0) {
+    if (!zeroArguments) {
         InliningDecision decision = makeInliningDecision(target, callInfo);
         switch (decision) {
           case InliningDecision_Error:
