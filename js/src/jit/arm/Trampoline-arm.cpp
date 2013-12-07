@@ -801,7 +801,7 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         if (cx->runtime()->jitSupportsFloatingPoint)
             masm.loadDouble(Address(sp, 0), ReturnFloatReg);
         else
-            masm.breakpoint();
+            masm.assume_unreachable("Unable to load into float reg, with no FP support.");
         masm.freeStack(sizeof(double));
         break;
 

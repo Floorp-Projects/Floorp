@@ -5507,7 +5507,7 @@ AssertStackAlignment(MacroAssembler &masm)
     Label ok;
     JS_ASSERT(IsPowerOfTwo(StackAlignment));
     masm.branchTestPtr(Assembler::Zero, StackPointer, Imm32(StackAlignment - 1), &ok);
-    masm.breakpoint();
+    masm.assume_unreachable("Stack should be aligned.");
     masm.bind(&ok);
 #endif
 }
@@ -6166,7 +6166,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 
 #ifdef DEBUG
     masm.bind(&ionFailed);
-    masm.breakpoint();
+    masm.assume_unreachable("AsmJS to IonMonkey call failed.");
 #endif
 }
 
