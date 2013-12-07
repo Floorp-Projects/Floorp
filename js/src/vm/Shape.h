@@ -1382,6 +1382,19 @@ struct EmptyShape : public js::Shape
      * and the table entry is purged.
      */
     static void insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleObject proto);
+
+    /*
+     * Some object subclasses are allocated with a built-in set of properties.
+     * The first time such an object is created, these built-in properties must
+     * be set manually, to compute an initial shape.  Afterward, that initial
+     * shape can be reused for newly-created objects that use the subclass's
+     * standard prototype.  This method should be used in a post-allocation
+     * init method, to ensure that objects of such subclasses compute and cache
+     * the initial shape, if it hasn't already been computed.
+     */
+    template<class ObjectSubclass>
+    static inline bool
+    ensureInitialCustomShape(ExclusiveContext *cx, Handle<ObjectSubclass*> obj);
 };
 
 /*

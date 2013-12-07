@@ -11,6 +11,6 @@ dbg.onDebuggerStatement = function (frame) {
     throw new Error("deleteProperty should throw");
 };
 
-g.eval("function h(x) { debugger; }");
+g.eval("function h(obj) { debugger; }");
 g.eval("h(Proxy.create({delete: function () { throw Error.prototype; }}));");
 
