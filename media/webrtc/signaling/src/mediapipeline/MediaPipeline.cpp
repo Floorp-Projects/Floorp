@@ -51,7 +51,7 @@ static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
 
 MediaPipeline::~MediaPipeline() {
   MOZ_ASSERT(!stream_);  // Check that we have shut down already.
-  MOZ_MTLOG(ML_DEBUG, "Destroying MediaPipeline: " << description_);
+  MOZ_MTLOG(ML_INFO, "Destroying MediaPipeline: " << description_);
 }
 
 nsresult MediaPipeline::Init() {
@@ -134,7 +134,7 @@ void MediaPipeline::StateChange(TransportFlow *flow, TransportLayer::State state
   }
 
   if (state == TransportLayer::TS_OPEN) {
-    MOZ_MTLOG(ML_DEBUG, "Flow is ready");
+    MOZ_MTLOG(ML_INFO, "Flow is ready");
     TransportReady_s(flow);
   } else if (state == TransportLayer::TS_CLOSED ||
              state == TransportLayer::TS_ERROR) {
@@ -157,7 +157,7 @@ nsresult MediaPipeline::TransportReady_s(TransportFlow *flow) {
 
   nsresult res;
 
-  MOZ_MTLOG(ML_DEBUG, "Transport ready for pipeline " <<
+  MOZ_MTLOG(ML_INFO, "Transport ready for pipeline " <<
             static_cast<void *>(this) << " flow " << description_ << ": " <<
             (rtcp ? "rtcp" : "rtp"));
 
@@ -234,7 +234,7 @@ nsresult MediaPipeline::TransportReady_s(TransportFlow *flow) {
       rtcp_send_srtp_ = rtp_send_srtp_;
       rtcp_recv_srtp_ = rtp_recv_srtp_;
 
-      MOZ_MTLOG(ML_DEBUG, "Listening for packets received on " <<
+      MOZ_MTLOG(ML_INFO, "Listening for packets received on " <<
                 static_cast<void *>(dtls->downward()));
 
       dtls->downward()->SignalPacketReceived.connect(this,
@@ -242,7 +242,7 @@ nsresult MediaPipeline::TransportReady_s(TransportFlow *flow) {
                                                      PacketReceived);
       rtcp_state_ = MP_OPEN;
     } else {
-      MOZ_MTLOG(ML_DEBUG, "Listening for RTP packets received on " <<
+      MOZ_MTLOG(ML_INFO, "Listening for RTP packets received on " <<
                 static_cast<void *>(dtls->downward()));
 
       dtls->downward()->SignalPacketReceived.connect(this,
@@ -290,7 +290,7 @@ nsresult MediaPipeline::TransportFailed_s(TransportFlow *flow) {
   }
 
 
-  MOZ_MTLOG(ML_DEBUG, "Transport closed for flow " << (rtcp ? "rtcp" : "rtp"));
+  MOZ_MTLOG(ML_INFO, "Transport closed for flow " << (rtcp ? "rtcp" : "rtp"));
 
   NS_WARNING(
       "MediaPipeline Transport failed. This is not properly cleaned up yet");
@@ -412,9 +412,20 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
   int out_len;
   nsresult res = rtp_recv_srtp_->UnprotectRtp(inner_data,
                                               len, len, &out_len);
-  if (!NS_SUCCEEDED(res))
-    return;
+  if (!NS_SUCCEEDED(res)) {
+    char tmp[16];
 
+    PR_snprintf(tmp, sizeof(tmp), "%.2x %.2x %.2x %.2x",
+                inner_data[0],
+                inner_data[1],
+                inner_data[2],
+                inner_data[3]);
+
+    MOZ_MTLOG(ML_NOTICE, "Error unprotecting RTP in " << description_
+              << "len= " << len << "[" << tmp << "...]");
+
+    return;
+  }
   (void)conduit_->ReceivedRTPPacket(inner_data, out_len);  // Ignore error codes
 }
 
