@@ -94,7 +94,7 @@ struct IonOptions
     // asm.js programs.
     //
     // Default: true
-    bool assertGraphConsistency;
+    bool checkGraphConsistency;
 
     // Toggles whether Unreachable Code Elimination is performed.
     //
@@ -228,7 +228,7 @@ struct IonOptions
         rangeAnalysis(true),
         checkRangeAnalysis(false),
         checkThreadSafety(false),
-        assertGraphConsistency(true),
+        checkGraphConsistency(true),
         uce(true),
         eaa(true),
 #ifdef CHECK_OSIPOINT_REGISTERS
