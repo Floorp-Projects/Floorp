@@ -7,7 +7,6 @@
 PARALLEL_DIRS += [
     'about',
     'certerror',
-    'customizableui',
     'dirprovider',
     'downloads',
     'feeds',
