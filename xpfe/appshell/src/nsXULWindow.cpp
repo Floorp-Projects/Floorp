@@ -50,6 +50,7 @@
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsWebShellWindow.h" // get rid of this one, too...
 #include "nsDOMEvent.h"
 #include "nsGlobalWindow.h"
@@ -59,10 +60,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BarProps.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla;
-using dom::AutoSystemCaller;
 
 #define SIZEMODE_NORMAL     NS_LITERAL_STRING("normal")
 #define SIZEMODE_MAXIMIZED  NS_LITERAL_STRING("maximized")
@@ -359,7 +358,8 @@ NS_IMETHODIMP nsXULWindow::ShowModal()
   EnableParent(false);
 
   {
-    AutoSystemCaller asc;
+    nsCxPusher pusher;
+    pusher.PushNull();
     nsIThread *thread = NS_GetCurrentThread();
     while (mContinueModalLoop) {
       if (!NS_ProcessNextEvent(thread))
@@ -1767,16 +1767,16 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
 
   // We need to create a chrome window to contain the content window we're about
   // to pass back. The subject principal needs to be system while we're creating
-  // it to make things work right, so force a system caller. See bug 799348
-  // comment 13 for a description of what happens when we don't.
+  // it to make things work right, so push a null cx. See bug 799348 comment 13
+  // for a description of what happens when we don't.
+  nsCxPusher pusher;
+  pusher.PushNull();
   nsCOMPtr<nsIXULWindow> newWindow;
-  {
-    AutoSystemCaller asc;
-    appShell->CreateTopLevelWindow(this, uri,
-                                   aChromeFlags, 615, 480,
-                                   getter_AddRefs(newWindow));
-    NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
-  }
+  appShell->CreateTopLevelWindow(this, uri,
+                                 aChromeFlags, 615, 480,
+                                 getter_AddRefs(newWindow));
+  NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
+  pusher.Pop();
 
   // Specify that we want the window to remain locked until the chrome has loaded.
   nsXULWindow *xulWin = static_cast<nsXULWindow*>
@@ -1785,8 +1785,10 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
 
   xulWin->LockUntilChromeLoad();
 
+  // Push nullptr onto the JSContext stack before we dispatch a native event.
   {
-    AutoSystemCaller asc;
+    nsCxPusher pusher;
+    pusher.PushNull();
     nsIThread *thread = NS_GetCurrentThread();
     while (xulWin->IsLocked()) {
       if (!NS_ProcessNextEvent(thread))
