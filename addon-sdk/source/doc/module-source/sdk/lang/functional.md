@@ -13,15 +13,17 @@ When the method is invoked on an instance of the object, the original
 function is called. It is passed the object instance (i.e. `this`) as
 the first parameter, followed by any parameters passed into the method.
 
-    let { method } = require("sdk/lang/functional");
-    let myNumber = {
+    const { method } = require("sdk/lang/functional");
+
+    const times = (target, x) => target.number *= x;
+    const add = (target, x) => target.number += x;
+
+    const myNumber = {
       times: method(times),
       add: method(add),
       number: 0
     };
 
-    function times (target, x) { return target.number *= x; }
-    function add (target, x) { return target.number += x; }
 
     console.log(myNumber.number); // 0
     myNumber.add(10);      // 10
@@ -44,8 +46,8 @@ wait (i.e. `setTimeout(function () { ... }, 0)`), except that the wrapped functi
 may be reused and does not need to be repeated each time. This also enables you
 to use these functions as event listeners.
 
-    let { defer } = require("sdk/lang/functional");
-    let fn = defer(function myEvent (event, value) {
+    const { defer } = require("sdk/lang/functional");
+    const fn = defer((event, value) => {
       console.log(event + " : " + value);
     });
 
@@ -74,15 +76,10 @@ An alias for [defer](modules/sdk/lang/functional.html#defer(fn)).
 Invokes `callee`, passing `params` as an argument and `self` as `this`.
 Returns the value that is returned by `callee`.
 
-    let { invoke } = require("sdk/lang/functional");
+    const { invoke } = require("sdk/lang/functional");
 
+    const sum = (...args) => args.reduce((a, b) => a + b);
     invoke(sum, [1,2,3,4,5], null); // 15
-
-    function sum () {
-      return Array.slice(arguments).reduce(function (a, b) {
-        return a + b;
-      });
-    }
 
 @param callee {function}
   Function to invoke.
@@ -98,9 +95,9 @@ Returns the value that is returned by `callee`.
 @function
 Takes a function and bind values to one or more arguments, returning a new function of smaller arity.
 
-    let { partial } = require("sdk/lang/functional");
-    let add = function add (x, y) { return x + y; }
-    let addOne = partial(add, 1);
+    const { partial } = require("sdk/lang/functional");
+    const add = (x, y) => x + y;
+    const addOne = partial(add, 1);
 
     addOne(5); // 6
     addOne(10); // 11
@@ -122,14 +119,16 @@ Returns the [composition](http://en.wikipedia.org/wiki/Function_composition_(com
 return value of the function that follows. In math terms, composing the functions
 `f()`, `g()`, and `h()` produces `f(g(h()))`.
 
-    let { compose } = require("sdk/lang/functional");
+    const { compose } = require("sdk/lang/functional");
 
-    let welcome = compose(exclaim, greet);
+    const square = x => x * x;
+    const increment = x => x + 1;
 
-    welcome('moe'); // "hi: moe!";
+    const f1 = compose(increment, square);
+    f1(5); // => 26
 
-    function greet (name) { return "hi: " + name; }
-    function exclaim (statement) { return statement + "!"; }
+    const f2 = compose(square, increment);
+    f2(5); // => 36
 
 @param fn... {function}
   Takes a variable number of functions as arguments and composes them from right to left.
@@ -144,15 +143,13 @@ Returns the first function passed as an argument to the second,
 allowing you to adjust arguments, run code before and after, and
 conditionally execute the original function.
 
-    let { wrap } = require("sdk/lang/functional");
+    const { wrap } = require("sdk/lang/functional");
 
-    let wrappedHello = wrap(hello, function (fn, name) {
-      return "before, " + fn(name) + "after";
-    });
+    const hello = name => "hello: " + name;
+    const wrappedHello = wrap(hello, (fn, name) =>
+      "before, " + fn(name) + "after");
 
     wrappedHello("moe"); // "before, hello: moe, after"
-
-    function hello (name) { return "hello: " + name; }
 
 @param fn {function}
   The function to be passed into the `wrapper` function.
@@ -170,8 +167,8 @@ conditionally execute the original function.
 @function
 Returns the same value that is used as the argument. In math: f(x) = x.
 
-    let { identity } = require("sdk/lang/functional");
-    let x = 5;
+    const { identity } = require("sdk/lang/functional");
+    const x = 5;
     identity(x); // 5
 
 @param value {mixed}
@@ -190,15 +187,15 @@ storing the result, based on the arguments to the original function. The
 default `hashFunction` just uses the first argument to the memoized function as
 the key.
 
-    let { memoize } = require("sdk/lang/functional");
+    const { memoize } = require("sdk/lang/functional");
 
-    let memoizedFn = memoize(primeFactorization);
+    const memoizedFn = memoize(primeFactorization);
 
     memoizedFn(50); // Returns [2, 5, 5], had to compute
     memoizedFn(100); // Returns [2, 2, 5, 5], had to compute
     memoizedFn(50); // Returns [2, 5, 5] again, but pulled from cache
 
-    function primeFactorization (x) {
+    const primeFactorization = x => {
       // Some tricky stuff
     }
 
@@ -209,16 +206,14 @@ the key.
     // function will just parse the last name, as our naive
     // implementation assumes that they will share the same lineage
 
-    let getLineage = memoize(function (name) {
+    const getLineage = memoize(name => {
       // computes lineage
       return data;
     }, hasher);
 
     // Hashing function takes a string of first and last name
     // and returns the last name.
-    function hasher (input) {
-      return input.split(" ")[1];
-    }
+    const hasher = input => input.split(" ")[1];
 
     getLineage("homer simpson"); // Computes and returns information for "simpson"
     getLineage("lisa simpson"); // Returns cached for "simpson"
@@ -240,12 +235,11 @@ Much like `setTimeout`, `delay` invokes a function after waiting a set number of
 milliseconds. If you pass additional, optional, arguments, they will be forwarded
 on to the function when it is invoked.
 
-    let { delay } = require("sdk/lang/functional");
+    const { delay } = require("sdk/lang/functional");
 
+    const printAdd = (a, b) console.log(a + "+" + b + "=" + (a+b));
     delay(printAdd, 2000, 5, 10);
-
     // Prints "5+10=15" in two seconds (2000ms)
-    function printAdd (a, b) { console.log(a + "+" + b + "=" + (a+b)); }
 
 @param fn {function}
   A function to be delayed.
@@ -264,8 +258,8 @@ Repeated calls to the modified function will have no effect, returning
 the value from the original call. Useful for initialization functions, instead
 of having to set a boolean flag and checking it later.
 
-    let { once } = require("sdk/lang/functional");
-    let setup = once(function (env) {
+    const { once } = require("sdk/lang/functional");
+    const setup = once(env => {
       // initializing important things
       console.log("successfully initialized " + env);
       return 1; // Assume success and return 1
@@ -273,7 +267,7 @@ of having to set a boolean flag and checking it later.
 
     setup('dev'); // returns 1
     // prints "successfully initialized dev"
-    
+
     // Future attempts to call this function just return the cached
     // value that was returned previously
     setup('production'); // Returns 1
@@ -286,16 +280,156 @@ of having to set a boolean flag and checking it later.
   The wrapped `fn` that can only be executed once.
 </api>
 
-<api name="chain">
+<api name="cache">
+@function
+An alias for [once](modules/sdk/lang/functional.html#once(fn)).
+</api>
+
+<api name="complement">
+@function
+Takes a `f` function and returns a function that takes the same
+arguments as `f`, has the same effects, if any, and returns the
+opposite truth value.
+
+    const { complement } = require("sdk/lang/functional");
+
+    let isOdd = x => Boolean(x % 2);
+
+    isOdd(1)     // => true
+    isOdd(2)     // => false
+
+    let isEven = complement(isOdd);
+
+    isEven(1)     // => false
+    isEven(2)     // => true
+
+@param lambda {function}
+  The function to compose from
+
+@returns {boolean}
+  `!lambda(...)`
+</api>
+
+<api name="constant">
+@function
+Constructs function that returns `x` no matter what is it
+invoked with.
+
+    const { constant } = require("sdk/lang/functional");
+
+    const one = constant(1);
+
+    one();              // => 1
+    one(2);             // => 1
+    one.apply({}, 3);   // => 1
+
+@param x {object}
+  Value that will be returned by composed function
+
+@returns {function}
+</api>
+
+
+<api name="apply">
+@function
+Apply function that behaves like `apply` in other functional
+languages:
+
+    const { apply } = require("sdk/lang/functional");
+
+    const dashify = (...args) => args.join("-");
+
+    apply(dashify, 1, [2, 3]);        // => "1-2-3"
+    apply(dashify, "a");              // => "a"
+    apply(dashify, ["a", "b"]);       // => "a-b"
+    apply(dashify, ["a", "b"], "c");  // => "a,b-c"
+    apply(dashify, [1, 2], [3, 4]);   // => "1,2-3-4"
+
+@param f {function}
+  function to be invoked
+</api>
+
+<api name="flip">
+@function
+Returns function identical to given `f` but with flipped order
+of arguments.
+
+    const { flip } = require("sdk/lang/functional");
+
+    const append = (left, right) => left + " " + right;
+    const prepend = flip(append);
+
+    append("hello", "world")       // => "hello world"
+    prepend("hello", "world")      // => "world hello"
+
+@param f {function}
+  function whose arguments should to be flipped
+
+@returns {function}
+  function with flipped arguments
+</api>
+
+<api name="when">
+@function
+Takes `p` predicate, `consequent` function and an optional
+`alternate` function and composes function that returns
+application of arguments over `consequent` if application over
+`p` is `true` otherwise returns application over `alternate`.
+If `alternate` is not a function returns `undefined`.
+
+    const { when } = require("sdk/lang/functional");
+
+    function Point(x, y) {
+      this.x = x
+      this.y = y
+    }
+
+    const isPoint = x => x instanceof Point;
+
+    const inc = when(isPoint, ({x, y}) => new Point(x + 1, y + 1));
+
+    inc({});                 // => undefined
+    inc(new Point(0, 0));    // => { x: 1, y: 1 }
+
+    const axis = when(isPoint,
+                      ({ x, y }) => [x, y],
+                      _ => [0, 0]);
+
+    axis(new Point(1, 4));   // => [1, 4]
+    axis({ foo: "bar" });    // => [0, 0]
+
+@param p {function}
+  predicate function whose return value determines to which
+  function be delegated control.
+
+@param consequent {function}
+  function to which arguments are applied if `predicate` returned
+  `true`.
+
+@param alternate {function}
+  function to which arguments are applied if `predicate` returned
+  `false`.
+
+@returns {object|string|number|function}
+  Return value from `consequent` if `p` returned `true` or return
+  value from `alternate` if `p` returned `false`. If `alternate`
+  is not provided and `p` returned `false` then `undefined` is
+  returned.
+</api>
+
+
+<api name="chainable">
 @function
 Creates a version of the input function that will return `this`.
 
-    let { chain } = require("sdk/lang/functional");
+    const { chainable } = require("sdk/lang/functional");
 
     function Person (age) { this.age = age; }
-    Person.prototype.happyBirthday = chain(function () this.age++);
+    Person.prototype.happyBirthday = chainable(function() {
+      return this.age++
+    });
 
-    let person = new Person(30);
+    const person = new Person(30);
 
     person
       .happyBirthday()
@@ -311,7 +445,126 @@ Creates a version of the input function that will return `this`.
   The wrapped function that executes `fn` and returns `this`.
 </api>
 
-<api name="cache">
+<api name="field">
 @function
-An alias for [once](modules/sdk/lang/functional.html#once(fn)).
+
+Takes field `name` and `target` and returns value of that field.
+If `target` is `null` or `undefined` it would be returned back
+instead of attempt to access it's field. Function is implicitly
+curried, this allows accessor function generation by calling it
+with only `name` argument.
+
+    const { field } = require("sdk/lang/functional");
+
+    field("x", { x: 1, y: 2});     // => 1
+    field("x")({ x: 1 });          // => 1
+    field("x", { y: 2 });          // => undefiend
+
+    const getX = field("x");
+    getX({ x: 1 });               // => 1
+    getX({ y: 1 });               // => undefined
+    getX(null);                   // => null
+
+@param name {string}
+  Name of the field to be returned
+
+@param target {object}
+  Target to get a field by the given `name` from
+
+@returns {object|function|string|number|boolean}
+  Field value
+</api>
+
+<api name="query">
+@function
+
+Takes `.` delimited string representing `path` to a nested field
+and a `target` to get it from. For convinience function is
+implicitly curried, there for accessors can be created by invoking
+it with just a `path` argument.
+
+    const { query } = require("sdk/lang/functional");
+
+    query("x", { x: 1, y: 2});           // => 1
+    query("top.x", { x: 1 });            // => undefiend
+    query("top.x", { top: { x: 2 } });   // => 2
+
+    const topX = query("top.x");
+    topX({ top: { x: 1 } });             // => 1
+    topX({ y: 1 });                      // => undefined
+    topX(null);                          // => null
+
+@param path {string}
+  `.` delimited path to a field
+
+@param target {object}
+  Target to get a field by the given `name` from
+
+@returns {object|function|string|number|boolean}
+  Field value
+</api>
+
+<api name="isInstance">
+@function
+
+Takes `Type` (constructor function) and a `value` and returns
+`true` if `value` is instance of the given `Type`. Function is
+implicitly curried this allows predicate generation by calling
+function with just first argument.
+
+    const { isInstance } = require("sdk/lang/functional");
+
+    function X() {}
+    function Y() {}
+    let isX = isInstance(X);
+
+    isInstance(X, new X);     // true
+    isInstance(X)(new X);     // true
+    isInstance(X, new Y);     // false
+    isInstance(X)(new Y);     // false
+
+    isX(new X);               // true
+    isX(new Y);               // false
+
+@param Type {function}
+  Type (constructor function)
+
+@param instance {object}
+  Instance to test
+
+@returns {boolean}
+</api>
+
+<api name="is">
+@function
+
+Functions takes `expected` and `actual` values and returns `true` if
+`expected === actual`. If invoked with just one argument returns pratially
+applied function, which can be invoked to provide a second argument, this
+is handy with `map`, `filter` and other high order functions:
+
+    const { is } = require("sdk/util/oops");
+    [ 1, 0, 1, 0, 1 ].map(is(1)) // => [ true, false, true, false, true ]
+
+@param expected {object|string|number|boolean}
+@param actual {object|string|number|boolean}
+
+@returns {boolean}
+</api>
+
+<api name="isnt">
+@function
+
+Functions takes `expected` and `actual` values and returns `true` if
+`expected !== actual`. If invoked with just one argument returns pratially
+applied function, which can be invoked with a second argument, which is
+handy with `map`, `filter` and other high order functions:
+
+    const { isnt } = require("sdk/util/oops");
+    [ 1, 0, 1, 0, 1 ].map(isnt(0)) // => [ true, false, true, false, true ]
+
+@param expected {object|string|number|boolean}
+@param actual {object|string|number|boolean}
+
+@returns {boolean}
 </api>

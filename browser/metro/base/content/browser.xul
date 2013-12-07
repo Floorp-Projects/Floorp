@@ -265,10 +265,10 @@ Desktop browser's sync prefs.
             <hbox id="toolbar-context-page" pack="end">
               <circularprogressindicator id="download-progress" class="appbar-primary"
                                      oncommand="MetroDownloadsView.onDownloadButton()"/>
-              <toolbarbutton id="star-button" class="appbar-primary"
+              <toolbarbutton id="star-button" class="appbar-primary hide-on-start"
                              type="checkbox"
                              oncommand="Appbar.onStarButton()"/>
-              <toolbarbutton id="pin-button" class="appbar-primary"
+              <toolbarbutton id="pin-button" class="appbar-primary hide-on-start"
                              type="checkbox"
                              oncommand="Appbar.onPinButton()"/>
               <toolbarbutton id="menu-button" class="appbar-primary"

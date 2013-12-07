@@ -5,6 +5,7 @@ content/PdfJs.jsm
 content/PdfJsTelemetry.jsm
 content/build/pdf.js
 content/build/pdf.worker.js
+content/default_preferences.js
 content/network.js
 content/web/debugger.js
 content/web/images/annotation-check.svg
