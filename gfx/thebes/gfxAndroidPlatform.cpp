@@ -31,12 +31,12 @@ using namespace mozilla::gfx;
 
 static FT_Library gPlatformFTLibrary = nullptr;
 
-class FreetypeReporter MOZ_FINAL : public MemoryUniReporter
+class FreetypeReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
+    NS_DECL_ISUPPORTS
+
     FreetypeReporter()
-      : MemoryUniReporter("explicit/freetype", KIND_HEAP, UNITS_BYTES,
-                          "Memory used by Freetype.")
     {
 #ifdef DEBUG
         // There must be only one instance of this class, due to |sAmount|
@@ -46,6 +46,9 @@ public:
         hasRun = true;
 #endif
     }
+
+    MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(MallocSizeOfOnAlloc)
+    MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(MallocSizeOfOnFree)
 
     static void* CountingAlloc(FT_Memory, long size)
     {
@@ -74,11 +77,19 @@ public:
         return pnew;
     }
 
-private:
-    int64_t Amount() MOZ_OVERRIDE { return sAmount; }
+    NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                              nsISupports* aData)
+    {
+        return MOZ_COLLECT_REPORT(
+            "explicit/freetype", KIND_HEAP, UNITS_BYTES, sAmount,
+            "Memory used by Freetype.");
+    }
 
+private:
     static int64_t sAmount;
 };
+
+NS_IMPL_ISUPPORTS1(FreetypeReporter, nsIMemoryReporter)
 
 int64_t FreetypeReporter::sAmount = 0;
 

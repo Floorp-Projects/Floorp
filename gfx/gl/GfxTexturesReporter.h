@@ -13,12 +13,12 @@
 namespace mozilla {
 namespace gl {
 
-class GfxTexturesReporter MOZ_FINAL : public MemoryUniReporter
+class GfxTexturesReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
+    NS_DECL_ISUPPORTS
+
     GfxTexturesReporter()
-      : MemoryUniReporter("gfx-textures", KIND_OTHER, UNITS_BYTES,
-                          "Memory used for storing GL textures.")
     {
 #ifdef DEBUG
         // There must be only one instance of this class, due to |sAmount|
@@ -41,9 +41,15 @@ public:
     static void UpdateAmount(MemoryUse action, GLenum format, GLenum type,
                              uint16_t tileSize);
 
-private:
-    int64_t Amount() MOZ_OVERRIDE { return sAmount; }
+    NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                              nsISupports* aData)
+    {
+        return MOZ_COLLECT_REPORT(
+            "gfx-textures", KIND_OTHER, UNITS_BYTES, sAmount,
+            "Memory used for storing GL textures.");
+    }
 
+private:
     static int64_t sAmount;
 };
 
