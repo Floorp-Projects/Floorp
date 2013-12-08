@@ -201,7 +201,8 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
         masm.bind(oolDouble->rejoin());
     } else {
         masm.convertValueToInt32(operand, input, temp, output, &fails,
-                                 lir->mirNormal()->canBeNegativeZero());
+                                 lir->mirNormal()->canBeNegativeZero(),
+                                 lir->mirNormal()->conversion());
     }
 
     return bailoutFrom(&fails, lir->snapshot());

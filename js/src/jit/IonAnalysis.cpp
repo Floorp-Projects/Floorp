@@ -1449,7 +1449,7 @@ jit::ExtractLinearInequality(MTest *test, BranchDirection direction,
     MDefinition *rhs = compare->getOperand(1);
 
     // TODO: optimize Compare_UInt32
-    if (compare->compareType() != MCompare::Compare_Int32)
+    if (!compare->isInt32Comparison())
         return false;
 
     JS_ASSERT(lhs->type() == MIRType_Int32);
