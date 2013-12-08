@@ -166,6 +166,12 @@ public:
 
   virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
 
+  // Element
+private:
+  virtual void AddStates(nsEventStates aStates);
+  virtual void RemoveStates(nsEventStates aStates);
+public:
+
   // nsITextControlElement
   NS_IMETHOD SetValueChanged(bool aValueChanged) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) IsSingleLineTextControl() const MOZ_OVERRIDE;
