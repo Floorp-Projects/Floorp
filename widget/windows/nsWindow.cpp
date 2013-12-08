@@ -3514,8 +3514,8 @@ mozilla::TemporaryRef<mozilla::gfx::DrawTarget>
 nsWindow::StartRemoteDrawing()
 {
   MOZ_ASSERT(!mCompositeDC);
-  NS_ASSERTION(IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)) ||
-               IsRenderMode(gfxWindowsPlatform::RENDER_GDI)),
+  NS_ASSERTION(IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D) ||
+               IsRenderMode(gfxWindowsPlatform::RENDER_GDI),
                "Unexpected render mode for remote drawing");
 
   HDC dc = (HDC)GetNativeData(NS_NATIVE_GRAPHIC);
@@ -3557,7 +3557,7 @@ void
 nsWindow::EndRemoteDrawing()
 {
   if (mTransparencyMode == eTransparencyTransparent) {
-    MOZ_ASSERT(IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D))
+    MOZ_ASSERT(IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)
                || mTransparentSurface);
     UpdateTranslucentWindow();
   }
