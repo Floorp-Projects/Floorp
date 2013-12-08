@@ -58,6 +58,8 @@ public:
   typedef typename KeyClass::KeyType KeyType;
   typedef nsBaseHashtableET<KeyClass,DataType> EntryType;
 
+  using nsTHashtable<EntryType>::Contains;
+
   nsBaseHashtable()
   {
   }
