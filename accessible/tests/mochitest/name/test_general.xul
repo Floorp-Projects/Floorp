@@ -33,7 +33,7 @@
 
       //////////////////////////////////////////////////////////////////////////
       // aria-labelledby
-      
+
       // Single relation. The value of 'aria-labelledby' contains the ID of
       // an element. Gets the name from text node of that element.
       testName("btn_labelledby_text", "text");
