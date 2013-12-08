@@ -2126,14 +2126,16 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
     for (unsigned slot = JSSLOT_DEBUG_PROTO_START; slot < JSSLOT_DEBUG_PROTO_STOP; slot++)
         obj->setReservedSlot(slot, proto->getReservedSlot(slot));
 
+    /* Construct the underlying C++ object. */
     Debugger *dbg = cx->new_<Debugger>(cx, obj.get());
     if (!dbg)
         return false;
-    obj->setPrivate(dbg);
     if (!dbg->init(cx)) {
         js_delete(dbg);
         return false;
     }
+    obj->setPrivate(dbg);
+    /* Now the JSObject owns the js::Debugger instance, so we needn't delete it. */
 
     /* Add the initial debuggees, if any. */
     for (unsigned i = 0; i < argc; i++) {
