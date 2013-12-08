@@ -85,7 +85,7 @@ WebGLMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(WebGLMemoryTracker, MemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(WebGLMemoryTracker, nsIMemoryReporter)
 
 StaticRefPtr<WebGLMemoryTracker> WebGLMemoryTracker::sUniqueInstance;
 

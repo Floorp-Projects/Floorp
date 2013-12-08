@@ -564,36 +564,6 @@ protected:
   const nsCString mDescription;
 };
 
-// The following base class reduces the amount of boilerplate code required for
-// memory multi-reporters.  You just need to provide the following.
-// - The constant value: name.  It is an argument to the MemoryMultiReporter
-//   constructor.  The name of each multi-reporter should be unique.
-// - A public CollectReports() method.  It can use the MallocSizeOf method if
-//   necessary.  (There is also MallocSizeOfOn{Alloc,Free}, which can be
-//   useful.)
-//
-// The class name of subclasses should match the name, with "Reporter" at
-// the end.  For example:
-// - name == "foo" --> FooMultiReporter
-//
-class MemoryMultiReporter : public nsIMemoryReporter
-{
-public:
-  MemoryMultiReporter() {}
-
-  virtual ~MemoryMultiReporter() {}
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-
-  NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
-                            nsISupports* aClosure) = 0;
-
-protected:
-  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
-  MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(MallocSizeOfOnAlloc)
-  MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(MallocSizeOfOnFree)
-};
-
 } // namespace mozilla
 
 %}

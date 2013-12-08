@@ -645,10 +645,10 @@ nsDOMMemoryFile::DataOwner::sMemoryReporterRegistered;
 MOZ_DEFINE_MALLOC_SIZE_OF(DOMMemoryFileDataOwnerMallocSizeOf)
 
 class nsDOMMemoryFileDataOwnerMemoryReporter MOZ_FINAL
-  : public MemoryMultiReporter
+  : public nsIMemoryReporter
 {
 public:
-  nsDOMMemoryFileDataOwnerMemoryReporter() {}
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCallback,
                             nsISupports *aClosure)
@@ -722,6 +722,8 @@ public:
     return NS_OK;
   }
 };
+
+NS_IMPL_ISUPPORTS1(nsDOMMemoryFileDataOwnerMemoryReporter, nsIMemoryReporter)
 
 /* static */ void
 nsDOMMemoryFile::DataOwner::EnsureMemoryReporterRegistered()
