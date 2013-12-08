@@ -25,7 +25,6 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/PeerConnectionImplEnumsBinding.h"
-#include "StreamBuffer.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/TimeStamp.h"
@@ -529,17 +528,12 @@ private:
 
 #ifdef MOZILLA_INTERNAL_API
   // Fills in an RTCStatsReportInternal. Must be run on STS.
-  void GetStats_s(mozilla::TrackID trackId,
+  void GetStats_s(uint32_t trackId,
                   bool internalStats,
                   DOMHighResTimeStamp now);
 
-  nsresult GetStatsImpl_s(mozilla::TrackID trackId,
-                          bool internalStats,
-                          DOMHighResTimeStamp now,
-                          mozilla::dom::RTCStatsReportInternal *report);
-
   // Sends an RTCStatsReport to JS. Must run on main thread.
-  void OnStatsReport_m(mozilla::TrackID trackId,
+  void OnStatsReport_m(uint32_t trackId,
                        nsresult result,
                        nsAutoPtr<mozilla::dom::RTCStatsReportInternal> report);
 

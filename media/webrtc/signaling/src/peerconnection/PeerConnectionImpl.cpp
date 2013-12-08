@@ -63,8 +63,6 @@
 #include "mozilla/dom/DataChannelBinding.h"
 #include "MediaStreamList.h"
 #include "MediaStreamTrack.h"
-#include "AudioStreamTrack.h"
-#include "VideoStreamTrack.h"
 #include "nsIScriptGlobalObject.h"
 #include "DOMMediaStream.h"
 #include "rlogringbuffer.h"
@@ -1798,51 +1796,26 @@ PeerConnectionImpl::IceGatheringStateChange_m(PCImplIceGatheringState aState)
 }
 
 #ifdef MOZILLA_INTERNAL_API
-class RTCStatsReportInternalConstruct : public RTCStatsReportInternal {
-public:
-  RTCStatsReportInternalConstruct(const nsString &pcid, DOMHighResTimeStamp now) {
-    mPcid = pcid;
-    mInboundRTPStreamStats.Construct();
-    mOutboundRTPStreamStats.Construct();
-    mMediaStreamTrackStats.Construct();
-    mMediaStreamStats.Construct();
-    mTransportStats.Construct();
-    mIceComponentStats.Construct();
-    mIceCandidatePairStats.Construct();
-    mIceCandidateStats.Construct();
-    mCodecStats.Construct();
-  }
-};
-
-nsresult PeerConnectionImpl::GetStatsImpl_s(
-    TrackID trackId,
+void PeerConnectionImpl::GetStats_s(
+    uint32_t trackId,
     bool internalStats,
-    DOMHighResTimeStamp now,
-    RTCStatsReportInternal *report) {
+    DOMHighResTimeStamp now) {
+
+  nsresult result = NS_OK;
+  nsAutoPtr<RTCStatsReportInternal> report(new RTCStatsReportInternal);
+  if (!report) {
+    result = NS_ERROR_FAILURE;
+  }
+
+  report->mPcid.Construct(NS_ConvertASCIItoUTF16(mHandle.c_str()));
   if (mMedia) {
-    nsresult rv;
-
-    // Gather stats from media pipeline (can't touch stream itself on STS)
-
-    for (int i = 0, len = mMedia->LocalStreamsLength(); i < len; i++) {
-      rv = mMedia->GetLocalStream(i)->GetPipelineStats(now, trackId,
-          &report->mInboundRTPStreamStats.Value(),
-          &report->mOutboundRTPStreamStats.Value());
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    for (int i = 0, len = mMedia->RemoteStreamsLength(); i < len; i++) {
-      rv = mMedia->GetRemoteStream(i)->GetPipelineStats(now, trackId,
-          &report->mInboundRTPStreamStats.Value(),
-          &report->mOutboundRTPStreamStats.Value());
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    // Gather stats from ICE
-
-    RefPtr<NrIceMediaStream> mediaStream(mMedia->ice_media_stream(trackId));
+    RefPtr<NrIceMediaStream> mediaStream(
+        mMedia->ice_media_stream(trackId));
     if (mediaStream) {
       std::vector<NrIceCandidatePair> candPairs;
       mediaStream->GetCandidatePairs(&candPairs);
+      report->mIceCandidatePairStats.Construct();
+      report->mIceCandidateStats.Construct();
       NS_ConvertASCIItoUTF16 componentId(mediaStream->name().c_str());
       for (auto p = candPairs.begin(); p != candPairs.end(); ++p) {
         NS_ConvertASCIItoUTF16 codeword(p->codeword.c_str());
@@ -1896,32 +1869,19 @@ nsresult PeerConnectionImpl::GetStatsImpl_s(
       }
     }
   }
-  return NS_OK;
-}
-
-void PeerConnectionImpl::GetStats_s(
-    TrackID trackId,
-    bool internalStats,
-    DOMHighResTimeStamp now) {
-
-  nsAutoPtr<RTCStatsReportInternal> report(new RTCStatsReportInternalConstruct(
-      NS_ConvertASCIItoUTF16(mHandle.c_str()), now));
-
-  nsresult rv = report ? GetStatsImpl_s(trackId, internalStats, now, report)
-                       : NS_ERROR_UNEXPECTED;
 
   nsRefPtr<PeerConnectionImpl> pc(this);
   RUN_ON_THREAD(mThread,
                 WrapRunnable(pc,
                              &PeerConnectionImpl::OnStatsReport_m,
                              trackId,
-                             rv,
+                             result,
                              report),
                 NS_DISPATCH_NORMAL);
 }
 
 void PeerConnectionImpl::OnStatsReport_m(
-    TrackID trackId,
+    uint32_t trackId,
     nsresult result,
     nsAutoPtr<RTCStatsReportInternal> report) {
   nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);

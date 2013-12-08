@@ -329,16 +329,14 @@ nsresult MediaPipeline::SendPacket(TransportFlow *flow, const void *data,
   return NS_OK;
 }
 
-void MediaPipeline::increment_rtp_packets_sent(int32_t bytes) {
+void MediaPipeline::increment_rtp_packets_sent() {
   ++rtp_packets_sent_;
-  rtp_bytes_sent_ += bytes;
 
   if (!(rtp_packets_sent_ % 100)) {
     MOZ_MTLOG(ML_INFO, "RTP sent packet count for " << description_
               << " Pipeline " << static_cast<void *>(this)
               << " Flow : " << static_cast<void *>(rtp_transport_)
-              << ": " << rtp_packets_sent_
-              << " (" << rtp_bytes_sent_ << " bytes)");
+              << ": " << rtp_packets_sent_);
   }
 }
 
@@ -352,15 +350,13 @@ void MediaPipeline::increment_rtcp_packets_sent() {
   }
 }
 
-void MediaPipeline::increment_rtp_packets_received(int32_t bytes) {
+void MediaPipeline::increment_rtp_packets_received() {
   ++rtp_packets_received_;
-  rtp_bytes_received_ += bytes;
   if (!(rtp_packets_received_ % 100)) {
     MOZ_MTLOG(ML_INFO, "RTP received packet count for " << description_
               << " Pipeline " << static_cast<void *>(this)
               << " Flow : " << static_cast<void *>(rtp_transport_)
-              << ": " << rtp_packets_received_
-              << " (" << rtp_bytes_received_ << " bytes)");
+              << ": " << rtp_packets_received_);
   }
 }
 
@@ -407,12 +403,13 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
 
   // TODO(ekr@rtfm.com): filter for DTLS here and in RtcpPacketReceived
   // TODO(ekr@rtfm.com): filter on SSRC for bundle
+  increment_rtp_packets_received();
 
   // Make a copy rather than cast away constness
   ScopedDeletePtr<unsigned char> inner_data(
       new unsigned char[len]);
   memcpy(inner_data, data, len);
-  int out_len = 0;
+  int out_len;
   nsresult res = rtp_recv_srtp_->UnprotectRtp(inner_data,
                                               len, len, &out_len);
   if (!NS_SUCCEEDED(res)) {
@@ -429,8 +426,6 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
 
     return;
   }
-  increment_rtp_packets_received(out_len);
-
   (void)conduit_->ReceivedRTPPacket(inner_data, out_len);  // Ignore error codes
 }
 
@@ -617,7 +612,7 @@ nsresult MediaPipeline::PipelineTransport::SendRtpPacket_s(
   if (!NS_SUCCEEDED(res))
     return res;
 
-  pipeline_->increment_rtp_packets_sent(out_len);
+  pipeline_->increment_rtp_packets_sent();
   return pipeline_->SendPacket(pipeline_->rtp_transport_, inner_data,
                                out_len);
 }
