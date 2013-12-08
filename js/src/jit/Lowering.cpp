@@ -769,20 +769,17 @@ LIRGenerator::visitTest(MTest *test)
         }
 
         // Compare and branch Int32 or Object pointers.
-        if (comp->compareType() == MCompare::Compare_Int32 ||
+        if (comp->isInt32Comparison() ||
             comp->compareType() == MCompare::Compare_UInt32 ||
             comp->compareType() == MCompare::Compare_Object)
         {
             JSOp op = ReorderComparison(comp->jsop(), &left, &right);
             LAllocation lhs = useRegister(left);
             LAllocation rhs;
-            if (comp->compareType() == MCompare::Compare_Int32 ||
-                comp->compareType() == MCompare::Compare_UInt32)
-            {
+            if (comp->isInt32Comparison() || comp->compareType() == MCompare::Compare_UInt32)
                 rhs = useAnyOrConstant(right);
-            } else {
+            else
                 rhs = useRegister(right);
-            }
             LCompareAndBranch *lir = new(alloc()) LCompareAndBranch(op, lhs, rhs, ifTrue, ifFalse);
             return add(lir, comp);
         }
@@ -958,14 +955,14 @@ LIRGenerator::visitCompare(MCompare *comp)
     }
 
     // Compare Int32 or Object pointers.
-    if (comp->compareType() == MCompare::Compare_Int32 ||
+    if (comp->isInt32Comparison() ||
         comp->compareType() == MCompare::Compare_UInt32 ||
         comp->compareType() == MCompare::Compare_Object)
     {
         JSOp op = ReorderComparison(comp->jsop(), &left, &right);
         LAllocation lhs = useRegister(left);
         LAllocation rhs;
-        if (comp->compareType() == MCompare::Compare_Int32 ||
+        if (comp->isInt32Comparison() ||
             comp->compareType() == MCompare::Compare_UInt32)
         {
             rhs = useAnyOrConstant(right);
