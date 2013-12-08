@@ -462,13 +462,11 @@
 
 .devtools-tabbar {
   -moz-appearance: none;
-  background-image: url("background-noise-toolbar.png"),
-                    linear-gradient(#303840, #2d3640);
-  border-color: #060a0d;
+  background: #252c33;
+  border-color: #434a51;
   border-style: solid;
   border-width: 1px 0;
-  box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset,
-              0 -1px 0 hsla(206,37%,4%,.1) inset;
+  box-shadow: 0 -2px 0 rgba(0,0,0,.25) inset;
   min-height: 32px;
   padding: 0;
 }
@@ -490,13 +488,16 @@
   color: #b6babf;
   margin: 0;
   padding: 0;
-  background-image: linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
-                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1));
-  background-size: 1px 100%;
-  background-repeat: no-repeat;
-  background-position: left, right;
-  border-right: 1px solid hsla(206,37%,4%,.45);
+  border-left: 1px solid #42484f;
   -moz-box-align: center;
+}
+
+.devtools-tab:first-child {
+  border-left-width: 0;
+}
+
+.devtools-tab:last-child {
+  border-right: 1px solid #5a6169;
 }
 
 .devtools-tab > image {
@@ -526,62 +527,37 @@
 }
 
 .devtools-tab:hover {
-  background-image: linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
-                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
-                    linear-gradient(hsla(206,37%,4%,.1), hsla(206,37%,4%,.2));
-  background-size: 1px 100%,
-                   1px 100%,
-                   100%;
-  background-repeat: no-repeat,
-                     no-repeat,
-                     repeat-x;
-  background-position: left, right;
+  background-color: hsla(206,37%,4%,.2);
   color: #ced3d9;
 }
+
 .devtools-tab:hover:active {
-  background-color: hsla(206,37%,4%,.2);
+  background-color: hsla(206,37%,4%,.4);
   color: #f5f7fa;
 }
 
-.devtools-tab[selected=true] {
+#toolbox-tabs .devtools-tab[selected=true] {
   color: #f5f7fa;
-  background-image: radial-gradient(farthest-corner at center top, #9fdfff, hsla(200,100%,70%,.3)),
-                    radial-gradient(farthest-side at center top, hsla(200,100%,70%,.4), hsla(200,100%,70%,0)),
-                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
-                    linear-gradient(hsla(204,45%,98%,.02), hsla(204,45%,98%,.04)),
-                    linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.3));
-  background-size: 100% 1px,
-                   100% 5px,
-                   1px 100%,
-                   1px 100%,
-                   100%;
-  background-repeat: no-repeat,
-                     no-repeat,
-                     no-repeat,
-                     no-repeat,
-                     repeat-x;
-  background-position: top right, top left, left, right;
-  box-shadow: 1px -1px 0 hsla(206,37%,4%,.2) inset;
+  background-color: #1a4666;
+  border-width: 0;
+  box-shadow: 0 2px 0 #d7f1ff inset,
+              0 8px 3px -5px #2b82bf inset,
+              0 -2px 0 rgba(0,0,0,.2) inset;
+}
+
+.devtools-tab[selected=true]:not(:first-child) {
+  padding-left: 1px;
+}
+
+.devtools-tab[selected=true] + .devtools-tab {
+  border-left-width: 0;
+  padding-left: 1px;
 }
 
 .devtools-tab:not([selected=true]).highlighted {
   color: #f5f7fa;
-  background-image: radial-gradient(farthest-corner at center top, #c0ff40, hsla(80,100%,63%,.5) 70%, hsla(80,100%,63%,.3) 97%),
-                    radial-gradient(farthest-side at center top, hsla(80,100%,35%,.5), hsla(80,100%,35%,0)),
-                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
-                    linear-gradient(hsla(204,45%,98%,.05), hsla(204,45%,98%,.1)),
-                    linear-gradient(hsla(99,100%,14%,.2), hsla(99,100%,14%,.2));
-  background-size: 100% 1px,
-                   100% 5px,
-                   1px 100%,
-                   1px 100%,
-                   100%;
-  background-repeat: no-repeat,
-                     no-repeat,
-                     no-repeat,
-                     no-repeat,
-                     repeat-x;
-  background-position: top right, top left, left, right;
+  background-color: hsla(99,100%,14%,.2);
+  box-shadow: 0 2px 0 #7bc107 inset;
 }
 
 .devtools-tab:not(.highlighted) > .highlighted-icon,
