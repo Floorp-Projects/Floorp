@@ -24,11 +24,12 @@ class Loader;
 }
 
 class nsLayoutStylesheetCache MOZ_FINAL
- : public mozilla::MemoryUniReporter
- , public nsIObserver
+ : public nsIObserver
+ , public nsIMemoryReporter
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIMEMORYREPORTER
 
   static nsCSSStyleSheet* ScrollbarsSheet();
   static nsCSSStyleSheet* FormsSheet();
@@ -40,7 +41,6 @@ class nsLayoutStylesheetCache MOZ_FINAL
 
   static void Shutdown();
 
-  int64_t Amount() MOZ_OVERRIDE;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:

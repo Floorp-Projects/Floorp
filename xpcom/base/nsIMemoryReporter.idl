@@ -506,75 +506,11 @@ void RunReportersForThisProcess();
       return moz_malloc_size_of(aPtr);                                        \
   }
 
-namespace mozilla {
-
-// The following base class reduces the amount of boilerplate code required for
-// memory uni-reporters.  You just need to provide the following.
-// - The constant values: path, kind, units, and description.  They are
-//   arguments to the MemoryUniReporter constructor.
-// - A private Amount() or public GetAmount() method.  It can use the
-//   MallocSizeOf method if necessary.  (There is also
-//   MallocSizeOfOn{Alloc,Free}, which can be useful.)  Use Amount() if the
-//   reporter is infallible, and GetAmount() otherwise.  (If you fail to
-//   provide one or the other, you'll get assertion failures when the memory
-//   reporter runs.)
-//
-// The class name of subclasses should match the path, minus the "explicit" (if
-// present), and with "Reporter" at the end.  For example:
-// - path == "explicit/dom/xyzzy"     --> DOMXyzzyReporter
-// - path == "js-compartments/system" --> JSCompartmentsSystemReporter
-//
-class MemoryUniReporter : public nsIMemoryReporter
-{
-public:
-  MemoryUniReporter(const char* aPath, int32_t aKind, int32_t aUnits,
-                    const char* aDescription)
-    : mPath(aPath)
-    , mKind(aKind)
-    , mUnits(aUnits)
-    , mDescription(aDescription)
-  {}
-
-  virtual ~MemoryUniReporter() {}
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-
-  NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCallback,
-                            nsISupports* aData)
-  {
-    int64_t amount;
-    nsresult rv = GetAmount(&amount);
-    if (NS_WARN_IF(NS_FAILED(rv)))
-      return rv;
-
-    return aCallback->Callback(EmptyCString(), mPath, mKind, mUnits,
-                               amount, mDescription, aData);
-  }
-
-protected:
-  NS_IMETHOD GetAmount(int64_t* aAmount)
-  {
-    *aAmount = Amount();
-    return NS_OK;
-  }
-
-  virtual int64_t Amount()
-  {
-    // We only reach here if neither GetAmount() nor Amount() was overridden.
-    MOZ_ASSERT(false);
-    return 0;
-  }
-
-  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
-  MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(MallocSizeOfOnAlloc)
-  MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(MallocSizeOfOnFree)
-
-  const nsCString mPath;
-  const int32_t   mKind;
-  const int32_t   mUnits;
-  const nsCString mDescription;
-};
-
-} // namespace mozilla
+// This macro assumes the presence of appropriate |aHandleReport| and |aData|
+// variables.
+#define MOZ_COLLECT_REPORT(path, kind, units, amount, description)            \
+  aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(path),           \
+                          kind, units, amount,                                \
+                          NS_LITERAL_CSTRING(description), aData)
 
 %}

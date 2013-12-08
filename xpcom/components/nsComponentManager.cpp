@@ -297,10 +297,7 @@ nsComponentManagerImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResul
 static const int CONTRACTID_HASHTABLE_INITIAL_SIZE = 2048;
 
 nsComponentManagerImpl::nsComponentManagerImpl()
-    : MemoryUniReporter("explicit/xpcom/component-manager",
-                        KIND_HEAP, UNITS_BYTES,
-                        "Memory used for the XPCOM component manager.")
-    , mFactories(CONTRACTID_HASHTABLE_INITIAL_SIZE)
+    : mFactories(CONTRACTID_HASHTABLE_INITIAL_SIZE)
     , mContractIDs(CONTRACTID_HASHTABLE_INITIAL_SIZE)
     , mLock("nsComponentManagerImpl.mLock")
     , mStatus(NOT_INITIALIZED)
@@ -818,14 +815,14 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsComponentManager: Destroyed."));
 }
 
-NS_IMPL_ISUPPORTS_INHERITED5(
+NS_IMPL_ISUPPORTS6(
     nsComponentManagerImpl,
-    MemoryUniReporter,
     nsIComponentManager,
     nsIServiceManager,
     nsIComponentRegistrar,
     nsISupportsWeakReference,
-    nsIInterfaceRequestor)
+    nsIInterfaceRequestor,
+    nsIMemoryReporter)
 
 nsresult
 nsComponentManagerImpl::GetInterface(const nsIID & uuid, void **result)
@@ -1690,10 +1687,16 @@ SizeOfContractIDsEntryExcludingThis(nsCStringHashKey::KeyType aKey,
     return aKey.SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
 }
 
-int64_t
-nsComponentManagerImpl::Amount()
+MOZ_DEFINE_MALLOC_SIZE_OF(ComponentManagerMallocSizeOf)
+
+NS_IMETHODIMP
+nsComponentManagerImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                       nsISupports* aData)
 {
-    return SizeOfIncludingThis(MallocSizeOf);
+    return MOZ_COLLECT_REPORT(
+        "explicit/xpcom/component-manager", KIND_HEAP, UNITS_BYTES,
+        SizeOfIncludingThis(ComponentManagerMallocSizeOf),
+        "Memory used for the XPCOM component manager.");
 }
 
 size_t
