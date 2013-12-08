@@ -29,15 +29,11 @@
 #include "VideoUtils.h"
 #include "ImageLayers.h"
 #include "VideoSegment.h"
-#endif
-
+#else
 namespace mozilla {
-class DataChannel;
-namespace dom {
-class RTCInboundRTPStreamStats;
-class RTCOutboundRTPStreamStats;
+  class DataChannel;
 }
-}
+#endif
 
 #include "nricectx.h"
 #include "nriceresolver.h"
@@ -185,9 +181,7 @@ public:
   }
 
   mozilla::RefPtr<mozilla::MediaPipeline> GetPipeline(int aTrack);
-  nsresult GetPipelineStats(DOMHighResTimeStamp now, int aTrack,
-    mozilla::dom::Sequence<mozilla::dom::RTCInboundRTPStreamStats > *inbound,
-    mozilla::dom::Sequence<mozilla::dom::RTCOutboundRTPStreamStats > *outbound);
+
 protected:
   std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> > mPipelines;
   nsRefPtr<DOMMediaStream> mMediaStream;
