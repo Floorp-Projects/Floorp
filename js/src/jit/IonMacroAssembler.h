@@ -1174,6 +1174,11 @@ class MacroAssembler : public MacroAssemblerSpecific
         IntConversion_ClampToUint8,
     };
 
+    enum IntConversionInputKind {
+        IntConversion_NumbersOnly,
+        IntConversion_Any
+    };
+
     //
     // Functions for converting values to int.
     //
@@ -1188,7 +1193,8 @@ class MacroAssembler : public MacroAssemblerSpecific
                            Label *handleStringEntry, Label *handleStringRejoin,
                            Label *truncateDoubleSlow,
                            Register stringReg, FloatRegister temp, Register output,
-                           Label *fail, IntConversionBehavior behavior);
+                           Label *fail, IntConversionBehavior behavior,
+                           IntConversionInputKind conversion = IntConversion_Any);
     void convertValueToInt(ValueOperand value, FloatRegister temp, Register output, Label *fail,
                            IntConversionBehavior behavior)
     {
@@ -1214,12 +1220,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     void convertValueToInt32(ValueOperand value, MDefinition *input,
                              FloatRegister temp, Register output, Label *fail,
-                             bool negativeZeroCheck)
+                             bool negativeZeroCheck, IntConversionInputKind conversion = IntConversion_Any)
     {
         convertValueToInt(value, input, nullptr, nullptr, nullptr, InvalidReg, temp, output, fail,
                           negativeZeroCheck
                           ? IntConversion_NegativeZeroCheck
-                          : IntConversion_Normal);
+                          : IntConversion_Normal,
+                          conversion);
     }
     bool convertValueToInt32(JSContext *cx, const Value &v, Register output, Label *fail,
                              bool negativeZeroCheck)

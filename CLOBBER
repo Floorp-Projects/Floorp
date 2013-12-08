@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 937317 required a clobber on Windows landing, backout probably will too
+Bug 908695 required a clobber on Windows because bug 928195
