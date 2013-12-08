@@ -574,7 +574,8 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
         // copy the converted value out
         as_vxfer(output, InvalidReg, ScratchFloatReg, FloatToCore);
         as_vmrs(pc);
-        ma_b(&outOfRange, Overflow);
+        ma_mov(Imm32(0), output, NoSetCond, Overflow);  // NaN => 0
+        ma_b(&outOfRange, Overflow);  // NaN
         ma_cmp(output, Imm32(0xff));
         ma_mov(Imm32(0xff), output, NoSetCond, Above);
         ma_b(&outOfRange, Above);
