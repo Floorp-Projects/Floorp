@@ -1629,21 +1629,24 @@ JSMainRuntimeCompartmentsUserDistinguishedAmount()
     return JS::UserCompartmentCount(rt);
 }
 
-class JSMainRuntimeTemporaryPeakReporter MOZ_FINAL : public MemoryUniReporter
+class JSMainRuntimeTemporaryPeakReporter MOZ_FINAL : public nsIMemoryReporter
 {
-public:
-    JSMainRuntimeTemporaryPeakReporter()
-      : MemoryUniReporter("js-main-runtime-temporary-peak",
-                           KIND_OTHER, UNITS_BYTES,
-"The peak size of the transient storage in the main JSRuntime (the current "
-"size of which is reported as 'explicit/js-non-window/runtime/temporary').")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE
+  public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                              nsISupports* aData)
     {
-        return JSMainRuntimeTemporaryPeakDistinguishedAmount();
+        return MOZ_COLLECT_REPORT(
+            "js-main-runtime-temporary-peak", KIND_OTHER, UNITS_BYTES,
+            JSMainRuntimeTemporaryPeakDistinguishedAmount(),
+            "The peak size of the transient storage in the main JSRuntime "
+            "(the current size of which is reported as "
+            "'explicit/js-non-window/runtime/temporary').");
     }
 };
+
+NS_IMPL_ISUPPORTS1(JSMainRuntimeTemporaryPeakReporter, nsIMemoryReporter)
 
 // The REPORT* macros do an unconditional report.  The ZCREPORT* macros are for
 // compartments and zones; they aggregate any entries smaller than

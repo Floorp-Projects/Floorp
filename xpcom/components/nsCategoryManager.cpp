@@ -400,7 +400,7 @@ CategoryEnumerator::enumfunc_createenumerator(const char* aStr, CategoryNode* aN
 // nsCategoryManager implementations
 //
 
-NS_IMPL_QUERY_INTERFACE_INHERITED1(nsCategoryManager, MemoryUniReporter, nsICategoryManager)
+NS_IMPL_QUERY_INTERFACE2(nsCategoryManager, nsICategoryManager, nsIMemoryReporter)
 
 NS_IMETHODIMP_(nsrefcnt)
 nsCategoryManager::AddRef()
@@ -441,10 +441,7 @@ nsCategoryManager::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 }
 
 nsCategoryManager::nsCategoryManager()
-  : MemoryUniReporter("explicit/xpcom/category-manager",
-                       KIND_HEAP, UNITS_BYTES,
-                       "Memory used for the XPCOM category manager.")
-  , mLock("nsCategoryManager")
+  : mLock("nsCategoryManager")
   , mSuppressNotifications(false)
 {
   PL_INIT_ARENA_POOL(&mArena, "CategoryManagerArena",
@@ -478,10 +475,16 @@ nsCategoryManager::get_category(const char* aName) {
   return node;
 }
 
-int64_t
-nsCategoryManager::Amount()
+MOZ_DEFINE_MALLOC_SIZE_OF(CategoryManagerMallocSizeOf)
+
+NS_IMETHODIMP
+nsCategoryManager::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                  nsISupports* aData)
 {
-    return SizeOfIncludingThis(MallocSizeOf);
+  return MOZ_COLLECT_REPORT(
+    "explicit/xpcom/category-manager", KIND_HEAP, UNITS_BYTES,
+    SizeOfIncludingThis(CategoryManagerMallocSizeOf),
+    "Memory used for the XPCOM category manager.");
 }
 
 static size_t

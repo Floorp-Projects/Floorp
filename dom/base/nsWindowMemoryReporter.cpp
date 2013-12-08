@@ -800,6 +800,9 @@ nsWindowMemoryReporter::CheckForGhostWindows(
                              &ghostEnumData);
 }
 
+NS_IMPL_ISUPPORTS1(nsWindowMemoryReporter::GhostWindowsReporter,
+                   nsIMemoryReporter)
+
 /* static */ int64_t
 nsWindowMemoryReporter::GhostWindowsReporter::DistinguishedAmount()
 {

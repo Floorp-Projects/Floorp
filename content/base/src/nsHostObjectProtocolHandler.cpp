@@ -29,21 +29,23 @@ static nsClassHashtable<nsCStringHashKey, DataInfo>* gDataTable;
 // Memory reporting for the hash table.
 namespace mozilla {
 
-class HostObjectURLsReporter MOZ_FINAL : public MemoryUniReporter
+class HostObjectURLsReporter MOZ_FINAL : public nsIMemoryReporter
 {
  public:
-  HostObjectURLsReporter()
-    : MemoryUniReporter("host-object-urls",
-                        KIND_OTHER, UNITS_COUNT,
-                        "The number of host objects stored for access via URLs "
-                        "(e.g. blobs passed to URL.createObjectURL).")
-    {}
- private:
-  int64_t Amount() MOZ_OVERRIDE
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData)
   {
-    return gDataTable ? gDataTable->Count() : 0;
+    return MOZ_COLLECT_REPORT(
+      "host-object-urls", KIND_OTHER, UNITS_COUNT,
+      gDataTable ? gDataTable->Count() : 0,
+      "The number of host objects stored for access via URLs "
+      "(e.g. blobs passed to URL.createObjectURL).");
   }
 };
+
+NS_IMPL_ISUPPORTS1(HostObjectURLsReporter, nsIMemoryReporter)
 
 }
 
