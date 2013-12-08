@@ -94,7 +94,7 @@ using mozilla::AutoSafeJSContext;
 USING_WORKERS_NAMESPACE
 using namespace mozilla::dom;
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsWorkerMallocSizeOf)
+MOZ_DEFINE_MALLOC_SIZE_OF(JsWorkerMallocSizeOf)
 
 namespace {
 
