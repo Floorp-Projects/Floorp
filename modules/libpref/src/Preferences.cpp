@@ -223,13 +223,11 @@ Preferences::SizeOfIncludingThisAndOtherStuff(mozilla::MallocSizeOf aMallocSizeO
   return n;
 }
 
-class PreferenceServiceReporter MOZ_FINAL : public MemoryMultiReporter
+class PreferenceServiceReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-  PreferenceServiceReporter() {}
-
-  NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCallback,
-                            nsISupports* aData);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
 
 protected:
   static const uint32_t kSuspectReferentCount = 1000;
@@ -237,6 +235,8 @@ protected:
                                         nsAutoPtr<PrefCallback>& aCallback,
                                         void* aClosure);
 };
+
+NS_IMPL_ISUPPORTS1(PreferenceServiceReporter, nsIMemoryReporter)
 
 struct PreferencesReferentCount {
   PreferencesReferentCount() : numStrong(0), numWeakAlive(0), numWeakDead(0) {}
@@ -285,6 +285,8 @@ PreferenceServiceReporter::CountReferents(PrefCallback* aKey,
   return PL_DHASH_NEXT;
 }
 
+MOZ_DEFINE_MALLOC_SIZE_OF(PreferenceServiceMallocSizeOf)
+
 NS_IMETHODIMP
 PreferenceServiceReporter::CollectReports(nsIMemoryReporterCallback* aCb,
                                           nsISupports* aClosure)
@@ -300,7 +302,7 @@ PreferenceServiceReporter::CollectReports(nsIMemoryReporterCallback* aCb,
 
   REPORT(NS_LITERAL_CSTRING("explicit/preferences"),
          nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
-         Preferences::SizeOfIncludingThisAndOtherStuff(MallocSizeOf),
+         Preferences::SizeOfIncludingThisAndOtherStuff(PreferenceServiceMallocSizeOf),
          "Memory used by the preferences system.");
 
   nsPrefBranch* rootBranch =

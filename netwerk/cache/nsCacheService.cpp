@@ -1071,8 +1071,8 @@ private:
  *****************************************************************************/
 nsCacheService *   nsCacheService::gService = nullptr;
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsCacheService, MemoryMultiReporter,
-                             nsICacheService, nsICacheServiceInternal)
+NS_IMPL_ISUPPORTS3(nsCacheService, nsICacheService, nsICacheServiceInternal,
+                   nsIMemoryReporter)
 
 nsCacheService::nsCacheService()
     : mObserver(nullptr),
@@ -3184,6 +3184,8 @@ nsCacheService::LeavePrivateBrowsing()
     }
 }
 
+MOZ_DEFINE_MALLOC_SIZE_OF(DiskCacheDeviceMallocSizeOf)
+
 NS_IMETHODIMP
 nsCacheService::CollectReports(nsIHandleReportCallback* aHandleReport,
                                nsISupports* aData)
@@ -3192,7 +3194,7 @@ nsCacheService::CollectReports(nsIHandleReportCallback* aHandleReport,
     if (mDiskDevice) {
         nsCacheServiceAutoLock
             lock(LOCK_TELEM(NSCACHESERVICE_DISKDEVICEHEAPSIZE));
-        disk = mDiskDevice->SizeOfIncludingThis(MallocSizeOf);
+        disk = mDiskDevice->SizeOfIncludingThis(DiskCacheDeviceMallocSizeOf);
     }
 
     size_t memory = mMemoryDevice ? mMemoryDevice->TotalSize() : 0;
