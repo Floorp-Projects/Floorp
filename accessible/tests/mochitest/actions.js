@@ -91,6 +91,23 @@ function testActions(aArray)
   gActionsQueue.invoke();
 }
 
+/**
+ * Test action names and descriptions.
+ */
+function testActionNames(aID, aActions)
+{
+  var actions = (typeof aActions == "string") ?
+    [ aActions ] : (aActions || []);
+
+  var acc = getAccessible(aID);
+  is(acc.actionCount, actions.length, "Wong number of actions.");
+  for (var i = 0; i < actions.length; i++ ) {
+    is(acc.getActionName(i), actions[i], "Wrong action name at " + i + " index.");
+    is(acc.getActionDescription(0), gActionDescrMap[actions[i]],
+       "Wrong action description at " + i + "index.");
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Private
 
@@ -151,3 +168,20 @@ function checkerOfActionInvoker(aType, aTarget, aActionObj)
       aActionObj.checkOnClickEvent(aEvent);
   }
 }
+
+var gActionDescrMap =
+{
+  jump: "Jump",
+  press: "Press",
+  check: "Check",
+  uncheck: "Uncheck",
+  select: "Select",
+  open: "Open",
+  close: "Close",
+  switch: "Switch",
+  click: "Click",
+  collapse: "Collapse",
+  expand: "Expand",
+  activate: "Activate",
+  cycle: "Cycle"
+};

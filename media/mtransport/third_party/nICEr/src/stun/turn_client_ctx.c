@@ -380,6 +380,28 @@ nr_turn_client_ctx_destroy(nr_turn_client_ctx **ctxp)
 
   nr_turn_client_cancel(ctx);
 
+  RFREE(ctx->username);
+  ctx->username = 0;
+  r_data_destroy(&ctx->password);
+  RFREE(ctx->nonce);
+  ctx->nonce = 0;
+  RFREE(ctx->realm);
+  ctx->realm = 0;
+
+  /* Destroy the STUN client ctxs */
+  while (!STAILQ_EMPTY(&ctx->stun_ctxs)) {
+    nr_turn_stun_ctx *stun = STAILQ_FIRST(&ctx->stun_ctxs);
+    STAILQ_REMOVE_HEAD(&ctx->stun_ctxs, entry);
+    nr_turn_stun_ctx_destroy(&stun);
+  }
+
+  /* Destroy the permissions */
+  while (!STAILQ_EMPTY(&ctx->permissions)) {
+    nr_turn_permission *perm = STAILQ_FIRST(&ctx->permissions);
+    STAILQ_REMOVE_HEAD(&ctx->permissions, entry);
+    nr_turn_permission_destroy(&perm);
+  }
+
   RFREE(ctx);
 
   return(0);
@@ -457,6 +479,8 @@ abort:
 
 int nr_turn_client_cancel(nr_turn_client_ctx *ctx)
 {
+  nr_turn_stun_ctx *stun = 0;
+
   if (ctx->state == NR_TURN_CLIENT_STATE_CANCELLED ||
       ctx->state == NR_TURN_CLIENT_STATE_FAILED)
     return 0;
@@ -482,29 +506,11 @@ int nr_turn_client_cancel(nr_turn_client_ctx *ctx)
     }
   }
 
-  /* Setting these values to 0 isn't strictly necessary, but
-     it protects us in case we double cancel and for
-     some reason bungle the states above in future.*/
-  RFREE(ctx->username);
-  ctx->username = 0;
-  r_data_destroy(&ctx->password);
-  RFREE(ctx->nonce);
-  ctx->nonce = 0;
-  RFREE(ctx->realm);
-  ctx->realm = 0;
-
-  /* Destroy the STUN client ctxs */
-  while (!STAILQ_EMPTY(&ctx->stun_ctxs)) {
-    nr_turn_stun_ctx *stun = STAILQ_FIRST(&ctx->stun_ctxs);
-    STAILQ_REMOVE_HEAD(&ctx->stun_ctxs, entry);
-    nr_turn_stun_ctx_destroy(&stun);
-  }
-
-  /* Destroy the permissions */
-  while (!STAILQ_EMPTY(&ctx->permissions)) {
-    nr_turn_permission *perm = STAILQ_FIRST(&ctx->permissions);
-    STAILQ_REMOVE_HEAD(&ctx->permissions, entry);
-    nr_turn_permission_destroy(&perm);
+  /* Cancel the STUN client ctxs */
+  stun = STAILQ_FIRST(&ctx->stun_ctxs);
+  while (stun) {
+    nr_stun_client_cancel(stun->stun);
+    stun = STAILQ_NEXT(stun, entry);
   }
 
   /* Cancel the timers, if not already cancelled */

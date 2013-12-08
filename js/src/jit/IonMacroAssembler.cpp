@@ -1563,7 +1563,8 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition *maybeInput,
                                   Label *handleStringEntry, Label *handleStringRejoin,
                                   Label *truncateDoubleSlow,
                                   Register stringReg, FloatRegister temp, Register output,
-                                  Label *fail, IntConversionBehavior behavior)
+                                  Label *fail, IntConversionBehavior behavior,
+                                  IntConversionInputKind conversion)
 {
     Register tag = splitTagForTest(value);
     bool handleStrings = (behavior == IntConversion_Truncate ||
@@ -1572,29 +1573,36 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition *maybeInput,
                          handleStringRejoin;
     bool zeroObjects = behavior == IntConversion_ClampToUint8;
 
+    JS_ASSERT_IF(handleStrings || zeroObjects, conversion == IntConversion_Any);
+
     Label done, isInt32, isBool, isDouble, isNull, isString;
 
     branchEqualTypeIfNeeded(MIRType_Int32, maybeInput, tag, &isInt32);
-    branchEqualTypeIfNeeded(MIRType_Boolean, maybeInput, tag, &isBool);
+    if (conversion == IntConversion_Any)
+        branchEqualTypeIfNeeded(MIRType_Boolean, maybeInput, tag, &isBool);
     branchEqualTypeIfNeeded(MIRType_Double, maybeInput, tag, &isDouble);
 
-    // If we are not truncating, we fail for anything that's not
-    // null. Otherwise we might be able to handle strings and objects.
-    switch (behavior) {
-      case IntConversion_Normal:
-      case IntConversion_NegativeZeroCheck:
-        branchTestNull(Assembler::NotEqual, tag, fail);
-        break;
+    if (conversion == IntConversion_Any) {
+        // If we are not truncating, we fail for anything that's not
+        // null. Otherwise we might be able to handle strings and objects.
+        switch (behavior) {
+          case IntConversion_Normal:
+          case IntConversion_NegativeZeroCheck:
+            branchTestNull(Assembler::NotEqual, tag, fail);
+            break;
 
-      case IntConversion_Truncate:
-      case IntConversion_ClampToUint8:
-        branchEqualTypeIfNeeded(MIRType_Null, maybeInput, tag, &isNull);
-        if (handleStrings)
-            branchEqualTypeIfNeeded(MIRType_String, maybeInput, tag, &isString);
-        if (zeroObjects)
-            branchEqualTypeIfNeeded(MIRType_Object, maybeInput, tag, &isNull);
-        branchTestUndefined(Assembler::NotEqual, tag, fail);
-        break;
+          case IntConversion_Truncate:
+          case IntConversion_ClampToUint8:
+            branchEqualTypeIfNeeded(MIRType_Null, maybeInput, tag, &isNull);
+            if (handleStrings)
+                branchEqualTypeIfNeeded(MIRType_String, maybeInput, tag, &isString);
+            if (zeroObjects)
+                branchEqualTypeIfNeeded(MIRType_Object, maybeInput, tag, &isNull);
+            branchTestUndefined(Assembler::NotEqual, tag, fail);
+            break;
+        }
+    } else {
+        jump(fail);
     }
 
     // The value is null or undefined in truncation contexts - just emit 0.
