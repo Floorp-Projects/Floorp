@@ -455,7 +455,7 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
         masm.ma_dataTransferN(IsStore, 64, true, sp, Imm32(-8), r4, PreIndex);
 
         masm.ma_sub(r8, Imm32(1), r8, SetCond);
-        masm.ma_b(&copyLoopTop, Assembler::Unsigned);
+        masm.ma_b(&copyLoopTop, Assembler::NotSigned);
     }
 
     // translate the framesize from values into bytes
