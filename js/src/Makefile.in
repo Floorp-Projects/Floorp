@@ -125,6 +125,7 @@ include $(topsrcdir)/config/config.mk
 # Ensure that this happens before including rules.mk
 ifdef ENABLE_INTL_API
 ifndef MOZ_NATIVE_ICU
+ifdef MOZ_SHARED_ICU
 ifeq ($(OS_ARCH),WINNT)
   # Library names: On Windows, ICU uses modified library names for static
   # and debug libraries.
@@ -153,6 +154,7 @@ ifdef ICU_FILES
   INSTALL_TARGETS += ICU
   $(ICU_FILES): buildicu
   ICU_TARGET := $(if $(MOZ_PSEUDO_DERECURSE),compile,export)
+endif
 endif
 endif
 endif
