@@ -177,16 +177,6 @@ function test() {
     expectedVal = expectedValAfterKeyEvent(key, elem);
     synthesizeKey(key, {});
     is(elem.value, expectedVal, "Test repeat of " + key + " for number control");
-
-    // Test preventDefault():
-    elem.addEventListener("keypress", function(evt) {
-      evt.preventDefault();
-      elem.removeEventListener("keypress", arguments.callee, false);
-    }, false);
-    oldVal = elem.value = 0;
-    expectedVal = 0;
-    synthesizeKey(key, {});
-    is(elem.value, expectedVal, "Test " + key + " for number control where scripted preventDefault() should prevent the value changing");
   }
 }
 
