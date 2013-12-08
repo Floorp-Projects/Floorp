@@ -200,11 +200,11 @@ Service::CollectReports(nsIHandleReportCallback *aHandleReport,
 ////////////////////////////////////////////////////////////////////////////////
 //// Service
 
-NS_IMPL_ISUPPORTS_INHERITED2(
+NS_IMPL_ISUPPORTS3(
   Service,
-  MemoryMultiReporter,
   mozIStorageService,
-  nsIObserver
+  nsIObserver,
+  nsIMemoryReporter
 )
 
 Service *Service::gService = nullptr;
