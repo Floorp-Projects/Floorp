@@ -38,11 +38,10 @@ InnermostStaticScope(JSScript *script, jsbytecode *pc)
     JS_ASSERT(script->containsPC(pc));
     JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
 
-    uint32_t blockIndex = GET_UINT32_INDEX(pc + 2 * sizeof(uint16_t));
-
-    if (blockIndex == UINT32_MAX)
-        return script->function();
-    return &script->getObject(blockIndex)->as<StaticBlockObject>();
+    StaticBlockObject *block = GetBlockChainAtPC(script, pc);
+    if (block)
+        return block;
+    return script->function();
 }
 
 Shape *
