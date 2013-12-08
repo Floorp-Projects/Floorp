@@ -92,8 +92,6 @@ class MediaPipeline : public sigslot::has_slots<> {
         rtcp_packets_sent_(0),
         rtp_packets_received_(0),
         rtcp_packets_received_(0),
-        rtp_bytes_sent_(0),
-        rtp_bytes_received_(0),
         pc_(pc),
         description_() {
       // To indicate rtcp-mux rtcp_transport should be nullptr.
@@ -125,20 +123,17 @@ class MediaPipeline : public sigslot::has_slots<> {
   virtual nsresult Init();
 
   virtual Direction direction() const { return direction_; }
-  virtual TrackID trackid() const { return track_id_; }
 
   bool IsDoingRtcpMux() const {
     return (rtp_transport_ == rtcp_transport_);
   }
 
-  int32_t rtp_packets_sent() const { return rtp_packets_sent_; }
-  int64_t rtp_bytes_sent() const { return rtp_bytes_sent_; }
-  int32_t rtcp_packets_sent() const { return rtcp_packets_sent_; }
-  int32_t rtp_packets_received() const { return rtp_packets_received_; }
-  int64_t rtp_bytes_received() const { return rtp_bytes_received_; }
-  int32_t rtcp_packets_received() const { return rtcp_packets_received_; }
+  int rtp_packets_sent() const { return rtp_packets_sent_; }
+  int rtcp_packets_sent() const { return rtcp_packets_sent_; }
+  int rtp_packets_received() const { return rtp_packets_received_; }
+  int rtcp_packets_received() const { return rtcp_packets_received_; }
 
-  MediaSessionConduit *Conduit() const { return conduit_; }
+  MediaSessionConduit *Conduit() { return conduit_; }
 
   // Thread counting
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaPipeline)
@@ -172,9 +167,9 @@ class MediaPipeline : public sigslot::has_slots<> {
   virtual nsresult TransportFailed_s(TransportFlow *flow);  // The transport is down
   virtual nsresult TransportReady_s(TransportFlow *flow);   // The transport is ready
 
-  void increment_rtp_packets_sent(int bytes);
+  void increment_rtp_packets_sent();
   void increment_rtcp_packets_sent();
-  void increment_rtp_packets_received(int bytes);
+  void increment_rtp_packets_received();
   void increment_rtcp_packets_received();
 
   virtual nsresult SendPacket(TransportFlow *flow, const void* data, int len);
@@ -221,12 +216,10 @@ class MediaPipeline : public sigslot::has_slots<> {
   // Written only on STS thread. May be read on other
   // threads but since there is no mutex, the values
   // will only be approximate.
-  int32_t rtp_packets_sent_;
-  int32_t rtcp_packets_sent_;
-  int32_t rtp_packets_received_;
-  int32_t rtcp_packets_received_;
-  int64_t rtp_bytes_sent_;
-  int64_t rtp_bytes_received_;
+  int rtp_packets_sent_;
+  int rtcp_packets_sent_;
+  int rtp_packets_received_;
+  int rtcp_packets_received_;
 
   // Written on Init. Read on STS thread.
   std::string pc_;
