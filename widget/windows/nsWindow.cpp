@@ -3514,36 +3514,19 @@ mozilla::TemporaryRef<mozilla::gfx::DrawTarget>
 nsWindow::StartRemoteDrawing()
 {
   MOZ_ASSERT(!mCompositeDC);
-  NS_ASSERTION(IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D) ||
-               IsRenderMode(gfxWindowsPlatform::RENDER_GDI),
-               "Unexpected render mode for remote drawing");
 
   HDC dc = (HDC)GetNativeData(NS_NATIVE_GRAPHIC);
-  nsRefPtr<gfxASurface> surf;
-
-  if (mTransparencyMode == eTransparencyTransparent) {
-    if (!mTransparentSurface) {
-      SetupTranslucentWindowMemoryBitmap(mTransparencyMode);
-    }
-    if (mTransparentSurface) {
-      surf = mTransparentSurface;
-    }
-  } 
-  
-  if (!surf) {
-    if (!dc) {
-      return nullptr;
-    }
-    uint32_t flags = (mTransparencyMode == eTransparencyOpaque) ? 0 :
-        gfxWindowsSurface::FLAG_IS_TRANSPARENT;
-    surf = new gfxWindowsSurface(dc, flags);
+  if (!dc) {
+    return nullptr;
   }
+
+  uint32_t flags = (mTransparencyMode == eTransparencyOpaque) ? 0 :
+      gfxWindowsSurface::FLAG_IS_TRANSPARENT;
+  nsRefPtr<gfxASurface> surf = new gfxWindowsSurface(dc, flags);
 
   mozilla::gfx::IntSize size(surf->GetSize().width, surf->GetSize().height);
   if (size.width <= 0 || size.height <= 0) {
-    if (dc) {
-      FreeNativeData(dc, NS_NATIVE_GRAPHIC);
-    }
+    FreeNativeData(dc, NS_NATIVE_GRAPHIC);
     return nullptr;
   }
 
@@ -3556,14 +3539,9 @@ nsWindow::StartRemoteDrawing()
 void
 nsWindow::EndRemoteDrawing()
 {
-  if (mTransparencyMode == eTransparencyTransparent) {
-    MOZ_ASSERT(IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)
-               || mTransparentSurface);
-    UpdateTranslucentWindow();
-  }
-  if (mCompositeDC) {
-    FreeNativeData(mCompositeDC, NS_NATIVE_GRAPHIC);
-  }
+  MOZ_ASSERT(mCompositeDC);
+  UpdateTranslucentWindow();
+  FreeNativeData(mCompositeDC, NS_NATIVE_GRAPHIC);
   mCompositeDC = nullptr;
 }
 
