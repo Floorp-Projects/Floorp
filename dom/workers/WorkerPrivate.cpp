@@ -1211,7 +1211,8 @@ public:
         bool preventDefaultCalled;
         nsIScriptGlobalObject* sgo;
 
-        if (aWorkerPrivate) {
+        if (aWorkerPrivate ||
+            !(sgo = nsJSUtils::GetStaticScriptGlobal(target))) {
           WorkerGlobalScope* globalTarget = aWorkerPrivate->GlobalScope();
           MOZ_ASSERT(target == globalTarget->GetWrapperPreserveColor());
 
@@ -1232,7 +1233,7 @@ public:
 
           preventDefaultCalled = status == nsEventStatus_eConsumeNoDefault;
         }
-        else if (sgo = nsJSUtils::GetStaticScriptGlobal(target)) {
+        else {
           // Icky, we have to fire an InternalScriptErrorEvent...
           InternalScriptErrorEvent event(true, NS_LOAD_ERROR);
           event.lineNr = aLineNumber;
