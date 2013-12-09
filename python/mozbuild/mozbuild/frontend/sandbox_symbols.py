@@ -21,6 +21,7 @@ from collections import OrderedDict
 from mozbuild.util import (
     HierarchicalStringList,
     StrictOrderingOnAppendList,
+    StrictOrderingOnAppendListWithFlagsFactory,
 )
 from .sandbox import SandboxDerivedValue
 from types import StringTypes
@@ -74,7 +75,7 @@ VARIABLES = {
         directory and merge into an APK file.
         """, 'export'),
 
-    'SOURCES': (StrictOrderingOnAppendList, list,
+    'SOURCES': (StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool}), list,
         """Source code files.
 
         This variable contains a list of source code files to compile.
@@ -296,7 +297,11 @@ VARIABLES = {
         """, None),
 
     'MSVC_ENABLE_PGO': (bool, bool,
-        """Whether profile-guided optimization is enabled in this directory.
+        """Whether profile-guided optimization is enabled for MSVC in this directory.
+        """, None),
+
+    'NO_PGO': (bool, bool,
+        """Whether profile-guided optimization is disable in this directory.
         """, None),
 
     'NO_VISIBILITY_FLAGS': (bool, bool,
