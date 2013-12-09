@@ -8,8 +8,8 @@
 
 #include "jsreflect.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Util.h"
 
 #include <stdlib.h>
 

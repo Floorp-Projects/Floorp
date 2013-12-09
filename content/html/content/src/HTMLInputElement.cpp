@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/HTMLInputElement.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Date.h"
 #include "nsAsyncDOMEvent.h"
@@ -94,7 +95,6 @@
 #include "nsTextEditorState.h"
 
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/Util.h" // DebugOnly
 #include "mozilla/Preferences.h"
 #include "mozilla/MathAlgorithms.h"
 
@@ -3835,11 +3835,10 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // the editor's handling of up/down keypress events. For that reason we
       // just ignore aVisitor.mEventStatus here and go ahead and handle the
       // event to increase/decrease the value of the number control.
-      // XXX we still need to allow script to call preventDefault() on the
-      // event, but right now we can't tell the difference between the editor
-      // on script doing that (bug 930374).
-      StepNumberControlForUserEvent(keyEvent->keyCode == NS_VK_UP ? 1 : -1);
-      aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+      if (!aVisitor.mEvent->mFlags.mDefaultPreventedByContent) {
+        StepNumberControlForUserEvent(keyEvent->keyCode == NS_VK_UP ? 1 : -1);
+        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+      }
     } else if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
       switch (aVisitor.mEvent->message) {
 

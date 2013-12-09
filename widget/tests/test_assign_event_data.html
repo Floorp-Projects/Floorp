@@ -2,11 +2,10 @@
 <html>
 <head>
   <title>Testing ns*Event::Assign*EventData()</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/NativeKeyCodes.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
   <style>
     #a {
       background-color: transparent;
@@ -50,16 +49,19 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var gUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
 const kIsMac = (navigator.platform.indexOf("Mac") == 0);
 const kIsWin = (navigator.platform.indexOf("Win") == 0);
 
 var gEvent = null;
 var gCopiedEvent = [];
 var gCallback = null;
+var gCallPreventDefault = false;
 
 function onEvent(aEvent)
 {
+  if (gCallPreventDefault) {
+    aEvent.preventDefault();
+  }
   gEvent = aEvent;
   for (var attr in aEvent) {
     if (!attr.match(/^[A-Z0-9_]+$/) && // ignore const attributes
@@ -70,13 +72,6 @@ function onEvent(aEvent)
   }
   setTimeout(gCallback, 0);
 }
-
-const WIN_KL_US = 0x409;
-const MAC_KL_US = 0;
-
-const NATIVE_SHIFT_LEFT    = 0x0100;
-const NATIVE_CONTROL_RIGHT = 0x0800;
-const NATIVE_META_RIGHT    = 0x8000;
 
 const kTests = [
   { description: "InternalScriptErrorEvent",
@@ -137,11 +132,8 @@ const kTests = [
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
-      if (kIsWin) {
-        gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_A, 0, "a", "a");
-      } else if (kIsMac) {
-        gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_A, 0, "a", "a");
-      }
+      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, kIsWin ? WIN_VK_A : MAC_VK_ANSI_A,
+                          {}, "a", "a");
     },
     canRun: function () {
       return (kIsMac || kIsWin);
@@ -153,11 +145,8 @@ const kTests = [
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
-      if (kIsWin) {
-        gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_A, 0, "a", "a");
-      } else if (kIsMac) {
-        gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_A, 0, "a", "a");
-      }
+      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, kIsWin ? WIN_VK_A : MAC_VK_ANSI_A,
+                          {}, "a", "a");
     },
     canRun: function () {
       return (kIsMac || kIsWin);
@@ -169,34 +158,26 @@ const kTests = [
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
-      if (kIsWin) {
-        gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_B, NATIVE_SHIFT_LEFT, "B", "B");
-      } else if (kIsMac) {
-        gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_B, NATIVE_SHIFT_LEFT, "B", "B");
-      }
+      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, kIsWin ? WIN_VK_B : MAC_VK_ANSI_B,
+                          { shiftKey: true }, "B", "B");
     },
     canRun: function () {
       return (kIsMac || kIsWin);
     },
-    // "defaultPrevented" becomes true because the editor consumes the keypress event.
-    todoMismatch: [ "defaultPrevented" ],
+    todoMismatch: [],
   },
   { description: "WidgetKeyboardEvent (keypress of 'c' key with Accel)",
     targetID: "input-text", eventType: "keypress",
     dispatchEvent: function () {
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
-      if (kIsWin) {
-        gUtils.sendNativeKeyEvent(WIN_KL_US, WIN_VK_C, NATIVE_CONTROL_RIGHT, "\u0003", "c");
-      } else if (kIsMac) {
-        gUtils.sendNativeKeyEvent(MAC_KL_US, MAC_VK_ANSI_C, NATIVE_META_RIGHT, "c", "c");
-      }
+      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, kIsWin ? WIN_VK_C : MAC_VK_ANSI_C,
+                          { accelKey: true }, kIsWin ? "\u0003" : "c", "c");
     },
     canRun: function () {
       return (kIsMac || kIsWin);
     },
-    // "defaultPrevented" becomes true because the editor consumes the keypress event.
-    todoMismatch: [ "defaultPrevented" ],
+    todoMismatch: [],
   },
   { description: "WidgetMouseEvent (mousedown of left button without modifier)",
     targetID: "button", eventType: "mousedown",
@@ -539,21 +520,22 @@ function doTest(aTest)
   var target = aTest.target ? aTest.target() : document.getElementById(aTest.targetID);
   target.addEventListener(aTest.eventType, onEvent, true);
   gCallback = function () {
+    var description = aTest.description + " (gCallPreventDefault=" + gCallPreventDefault + ")";
     target.removeEventListener(aTest.eventType, onEvent, true);
-    ok(gEvent !== null, aTest.description + ": failed to get duplicated event");
-    ok(gCopiedEvent.length > 0, aTest.description + ": count of attribute of the event must be larger than 0");
+    ok(gEvent !== null, description + ": failed to get duplicated event");
+    ok(gCopiedEvent.length > 0, description + ": count of attribute of the event must be larger than 0");
     for (var i = 0; i < gCopiedEvent.length; ++i) {
       var name = gCopiedEvent[i].name;
       if (name == "rangeOffset") {
-        todo(false, aTest.description + ": " + name + " attribute value is never reset (" + gEvent[name] + ")");
+        todo(false, description + ": " + name + " attribute value is never reset (" + gEvent[name] + ")");
       } else if (name == "eventPhase") {
-        is(gEvent[name], 0, aTest.description + ": mismatch with fixed value (" + name + ")");
+        is(gEvent[name], 0, description + ": mismatch with fixed value (" + name + ")");
       } else if (name == "rangeParent" || name == "currentTarget") {
-        is(gEvent[name], null, aTest.description + ": mismatch with fixed value (" + name + ")");
+        is(gEvent[name], null, description + ": mismatch with fixed value (" + name + ")");
       } else if (aTest.todoMismatch.indexOf(name) >= 0) {
-        todo_is(gEvent[name], gCopiedEvent[i].value, aTest.description + ": mismatch (" + name + ")");
+        todo_is(gEvent[name], gCopiedEvent[i].value, description + ": mismatch (" + name + ")");
       } else {
-        is(gEvent[name], gCopiedEvent[i].value, aTest.description + ": mismatch (" + name + ")");
+        is(gEvent[name], gCopiedEvent[i].value, description + ": mismatch (" + name + ")");
       }
     }
     runNextTest();
@@ -565,7 +547,27 @@ var gIndex = -1;
 function runNextTest()
 {
   if (++gIndex == kTests.length) {
-    finish();
+    if (gCallPreventDefault) {
+      finish();
+      return;
+    }
+    // Test with a call of preventDefault() of the events.
+    gCallPreventDefault = true;
+    gIndex = -1;
+    // Restoring the initial state of all elements.
+    document.getElementById("scrollable-div").style.height = "30px";
+    document.getElementById("scrollable-div").style.width = "30px";
+    document.getElementById("scrolled-div").style.height = "10px";
+    document.getElementById("scrolled-div").style.width = "10px";
+    document.getElementById("input-text").value = "";
+    document.getElementById("animated-div").className = "";
+    document.getElementById("animated-div").removeAttribute("x-data");
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
+    window.requestAnimationFrame(function () {
+      setTimeout(runNextTest, 0);
+    });
     return;
   }
   doTest(kTests[gIndex]);
