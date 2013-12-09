@@ -2510,6 +2510,47 @@ class CGClearCachedValueMethod(CGAbstractMethod):
                 % (declObj, noopRetval, saveMember, slotIndex, regetMember)
                 )).define()
 
+class CGIsPermittedMethod(CGAbstractMethod):
+    """
+    crossOriginGetters/Setters/Methods are sets of names of the relevant members.
+    """
+    def __init__(self, descriptor, crossOriginGetters, crossOriginSetters,
+                 crossOriginMethods):
+        self.crossOriginGetters = crossOriginGetters
+        self.crossOriginSetters = crossOriginSetters
+        self.crossOriginMethods = crossOriginMethods
+        args = [Argument("JSFlatString*", "prop"),
+                Argument("jschar", "propFirstChar"),
+                Argument("bool", "set")]
+        CGAbstractMethod.__init__(self, descriptor, "IsPermitted", "bool", args,
+                                  inline=True)
+
+    def definition_body(self):
+        allNames = self.crossOriginGetters | self.crossOriginSetters | self.crossOriginMethods
+        readwrite = self.crossOriginGetters & self.crossOriginSetters
+        readonly = (self.crossOriginGetters - self.crossOriginSetters) | self.crossOriginMethods
+        writeonly = self.crossOriginSetters - self.crossOriginGetters
+        cases = {}
+        for name in sorted(allNames):
+            cond = 'JS_FlatStringEqualsAscii(prop, "%s")' % name
+            if name in readonly:
+                cond = "!set && %s" % cond
+            elif name in writeonly:
+                cond = "set && %s" % cond
+            else:
+                assert name in readwrite
+            firstLetter = name[0]
+            case = cases.get(firstLetter, CGList([], "\n"))
+            case.append(CGGeneric("if (%s) {\n"
+                                  "  return true;\n"
+                                  "}"% cond))
+            cases[firstLetter] = case
+        caseList = []
+        for firstLetter in sorted(cases.keys()):
+            caseList.append(CGCase("'%s'" % firstLetter, cases[firstLetter]))
+        switch = CGSwitch("propFirstChar", caseList)
+        return CGIndenter(CGList([switch, CGGeneric("return false;")], "\n\n")).define()
+
 builtinNames = {
     IDLType.Tags.bool: 'bool',
     IDLType.Tags.int8: 'int8_t',
@@ -8428,6 +8469,7 @@ class CGDescriptor(CGThing):
         # method/getter/setter or jsonifier exist on the interface.
         (hasMethod, hasGetter, hasLenientGetter, hasSetter, hasJsonifier,
             hasLenientSetter) = False, False, False, False, False, False
+        crossOriginMethods, crossOriginGetters, crossOriginSetters = set(), set(), set()
         for n in descriptor.interface.namedConstructors:
             cgThings.append(CGClassConstructor(descriptor, n,
                                                NamedConstructorName(n)))
@@ -8446,6 +8488,8 @@ class CGDescriptor(CGThing):
                 elif descriptor.interface.hasInterfacePrototypeObject():
                     cgThings.append(CGSpecializedMethod(descriptor, m))
                     cgThings.append(CGMemberJITInfo(descriptor, m))
+                    if m.getExtendedAttribute("CrossOriginCallable"):
+                        crossOriginMethods.add(m.identifier.name)
                     hasMethod = True
             elif m.isAttr():
                 if m.isStatic():
@@ -8456,6 +8500,8 @@ class CGDescriptor(CGThing):
                     if m.hasLenientThis():
                         hasLenientGetter = True
                     else:
+                        if m.getExtendedAttribute("CrossOriginReadable"):
+                            crossOriginGetters.add(m.identifier.name)
                         hasGetter = True
                 if not m.readonly:
                     if m.isStatic():
@@ -8466,9 +8512,13 @@ class CGDescriptor(CGThing):
                         if m.hasLenientThis():
                             hasLenientSetter = True
                         else:
+                            if m.getExtendedAttribute("CrossOriginWritable"):
+                                crossOriginSetters.add(m.identifier.name)
                             hasSetter = True
                 elif m.getExtendedAttribute("PutForwards"):
                     cgThings.append(CGSpecializedForwardingSetter(descriptor, m))
+                    if m.getExtendedAttribute("CrossOriginWritable"):
+                        crossOriginSetters.add(m.identifier.name)
                     hasSetter = True
                 elif m.getExtendedAttribute("Replaceable"):
                     cgThings.append(CGSpecializedReplaceableSetter(descriptor, m))
@@ -8616,6 +8666,14 @@ class CGDescriptor(CGThing):
             cgThings.append(CGGetProtoObjectMethod(descriptor))
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGGetConstructorObjectMethod(descriptor))
+
+        # See whether we need we need to generate an IsPermitted method
+        if (len(crossOriginGetters) or len(crossOriginSetters) or
+            len(crossOriginMethods)):
+            cgThings.append(CGIsPermittedMethod(descriptor,
+                                                crossOriginGetters,
+                                                crossOriginSetters,
+                                                crossOriginMethods))
 
         cgThings = CGList((CGIndenter(t, declareOnly=True) for t in cgThings), "\n")
         cgThings = CGWrapper(cgThings, pre='\n', post='\n')
