@@ -549,9 +549,9 @@ public:
   virtual gfxASurface* GetThebesSurface();
   virtual void PrepareWindowEffects() MOZ_OVERRIDE;
   virtual void CleanupWindowEffects() MOZ_OVERRIDE;
-  virtual bool PreRender(LayerManager* aManager) MOZ_OVERRIDE;
-  virtual void PostRender(LayerManager* aManager) MOZ_OVERRIDE;
-  virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) MOZ_OVERRIDE;
+  virtual bool PreRender(LayerManagerComposite* aManager) MOZ_OVERRIDE;
+  virtual void PostRender(LayerManagerComposite* aManager) MOZ_OVERRIDE;
+  virtual void DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect) MOZ_OVERRIDE;
 
   virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries);
 

@@ -213,6 +213,8 @@ public:
    */
   static const LayerTreeState* GetIndirectShadowTree(uint64_t aId);
 
+  float ComputeRenderIntegrity();
+
   /**
    * Tell all CompositorParents to update their last refresh to aTime and sample
    * animations at this time stamp.  If aIsTesting is true, the
