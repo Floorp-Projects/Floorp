@@ -1489,7 +1489,6 @@ CASE(JSOP_UNUSED102)
 CASE(JSOP_UNUSED103)
 CASE(JSOP_UNUSED104)
 CASE(JSOP_UNUSED107)
-CASE(JSOP_UNUSED124)
 CASE(JSOP_UNUSED125)
 CASE(JSOP_UNUSED126)
 CASE(JSOP_UNUSED132)
@@ -1536,8 +1535,7 @@ CASE(JSOP_UNUSED194)
 CASE(JSOP_UNUSED196)
 CASE(JSOP_UNUSED200)
 CASE(JSOP_UNUSED201)
-CASE(JSOP_UNUSED205)
-CASE(JSOP_UNUSED206)
+CASE(JSOP_GETFUNNS)
 CASE(JSOP_UNUSED208)
 CASE(JSOP_UNUSED209)
 CASE(JSOP_UNUSED210)
@@ -1882,6 +1880,26 @@ CASE(JSOP_SETCONST)
         goto error;
 }
 END_CASE(JSOP_SETCONST);
+
+#if JS_HAS_DESTRUCTURING
+CASE(JSOP_ENUMCONSTELEM)
+{
+    RootedValue &rval = rootValue0;
+    rval = REGS.sp[-3];
+
+    RootedObject &obj = rootObject0;
+    FETCH_OBJECT(cx, -2, obj);
+    RootedId &id = rootId0;
+    FETCH_ELEMENT_ID(-1, id);
+    if (!JSObject::defineGeneric(cx, obj, id, rval,
+                                 JS_PropertyStub, JS_StrictPropertyStub,
+                                 JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
+        goto error;
+    }
+    REGS.sp -= 3;
+}
+END_CASE(JSOP_ENUMCONSTELEM)
+#endif
 
 CASE(JSOP_BINDGNAME)
     PUSH_OBJECT(REGS.fp()->global());
@@ -2346,6 +2364,22 @@ CASE(JSOP_SETELEM)
     REGS.sp -= 2;
 }
 END_CASE(JSOP_SETELEM)
+
+CASE(JSOP_ENUMELEM)
+{
+    RootedObject &obj = rootObject0;
+    RootedValue &rval = rootValue0;
+
+    /* Funky: the value to set is under the [obj, id] pair. */
+    FETCH_OBJECT(cx, -2, obj);
+    RootedId &id = rootId0;
+    FETCH_ELEMENT_ID(-1, id);
+    rval = REGS.sp[-3];
+    if (!JSObject::setGeneric(cx, obj, obj, id, &rval, script->strict))
+        goto error;
+    REGS.sp -= 3;
+}
+END_CASE(JSOP_ENUMELEM)
 
 CASE(JSOP_EVAL)
 {

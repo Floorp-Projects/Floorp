@@ -1717,6 +1717,25 @@ BaselineCompiler::emit_JSOP_SETELEM()
     return true;
 }
 
+bool
+BaselineCompiler::emit_JSOP_ENUMELEM()
+{
+    // ENUMELEM is a SETELEM with a different stack arrangement.
+    // Instead of:   OBJ ID RHS
+    // The stack is: RHS OBJ ID
+
+    // Keep object and index in R0 and R1, and keep RHS on the stack.
+    frame.popRegsAndSync(2);
+
+    // Call IC.
+    ICSetElem_Fallback::Compiler stubCompiler(cx);
+    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
+        return false;
+
+    frame.pop();
+    return true;
+}
+
 typedef bool (*DeleteElementFn)(JSContext *, HandleValue, HandleValue, bool *);
 static const VMFunction DeleteElementStrictInfo = FunctionInfo<DeleteElementFn>(DeleteElement<true>);
 static const VMFunction DeleteElementNonStrictInfo = FunctionInfo<DeleteElementFn>(DeleteElement<false>);
