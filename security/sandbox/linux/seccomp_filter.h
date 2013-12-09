@@ -81,6 +81,8 @@
   ALLOW_SYSCALL(fstat64), \
   ALLOW_SYSCALL(stat64), \
   ALLOW_SYSCALL(lstat64), \
+  ALLOW_SYSCALL(socketpair), \
+  ALLOW_SYSCALL(sendmsg), \
   ALLOW_SYSCALL(sigprocmask),
 #elif defined(__i386__)
 #define SECCOMP_WHITELIST_ARCH_TOREMOVE \
@@ -89,7 +91,9 @@
   ALLOW_SYSCALL(lstat64), \
   ALLOW_SYSCALL(sigprocmask),
 #else
-#define SECCOMP_WHITELIST_ARCH_TOREMOVE
+#define SECCOMP_WHITELIST_ARCH_TOREMOVE \
+  ALLOW_SYSCALL(socketpair), \
+  ALLOW_SYSCALL(sendmsg),
 #endif
 
 /* Architecture-specific syscalls for desktop linux */
@@ -252,8 +256,6 @@
   ALLOW_SYSCALL(access), \
   ALLOW_SYSCALL(unlink), \
   ALLOW_SYSCALL(fsync), \
-  ALLOW_SYSCALL(socketpair), \
-  ALLOW_SYSCALL(sendmsg), \
   /* Should remove all of the following in the future, if possible */ \
   ALLOW_SYSCALL(getpriority), \
   ALLOW_SYSCALL(setpriority), \

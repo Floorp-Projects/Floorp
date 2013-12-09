@@ -174,7 +174,7 @@ static const char* sBluetoothDBusSignals[] =
 static nsRefPtr<RawDBusConnection> gThreadConnection;
 
 // Only A2DP and HID are authorized.
-static nsTArray<uint32_t> sAuthorizedServiceClass;
+static nsTArray<BluetoothServiceClass> sAuthorizedServiceClass;
 
 // The object path of adpater which should be updated after switching Bluetooth.
 static nsString sAdapterPath;
@@ -2366,7 +2366,7 @@ BluetoothDBusService::SetProperty(BluetoothObjectType aType,
     return NS_OK;
   }
 
-  MOZ_ASSERT(aType < ArrayLength(sBluetoothDBusIfaces));
+  MOZ_ASSERT(aType < (int)ArrayLength(sBluetoothDBusIfaces));
   MOZ_ASSERT(!sAdapterPath.IsEmpty());
   const char* interface = sBluetoothDBusIfaces[aType];
 
@@ -2437,15 +2437,6 @@ BluetoothDBusService::SetProperty(BluetoothObjectType aType,
   }
   runnable.forget();
   return NS_OK;
-}
-
-bool
-BluetoothDBusService::GetDevicePath(const nsAString& aAdapterPath,
-                                    const nsAString& aDeviceAddress,
-                                    nsAString& aDevicePath)
-{
-  aDevicePath = GetObjectPathFromAddress(aAdapterPath, aDeviceAddress);
-  return true;
 }
 
 nsresult
@@ -2977,32 +2968,6 @@ BluetoothDBusService::UpdateSdpRecords(const nsAString& aDeviceAddress,
                                     "DiscoverServices",
                                     DBUS_TYPE_STRING, &EmptyCString(),
                                     DBUS_TYPE_INVALID);
-}
-
-nsresult
-BluetoothDBusService::GetScoSocket(const nsAString& aAddress,
-                                   bool aAuth,
-                                   bool aEncrypt,
-                                   mozilla::ipc::UnixSocketConsumer* aConsumer)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mConnection || !gThreadConnection) {
-    NS_ERROR("Bluetooth service not started yet!");
-    return NS_ERROR_FAILURE;
-  }
-
-  BluetoothUnixSocketConnector* c =
-    new BluetoothUnixSocketConnector(BluetoothSocketType::SCO, -1,
-                                     aAuth, aEncrypt);
-
-  if (!aConsumer->ConnectSocket(c, NS_ConvertUTF16toUTF8(aAddress).get())) {
-    nsAutoString replyError;
-    replyError.AssignLiteral("SocketConnectionError");
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
 }
 
 void
