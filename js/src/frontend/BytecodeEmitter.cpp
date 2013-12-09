@@ -2144,42 +2144,13 @@ EmitNameIncDec(ExclusiveContext *cx, ParseNode *pn, BytecodeEmitter *bce)
 static bool
 EmitElemOperands(ExclusiveContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
-    ParseNode *left, *right;
-
-    if (pn->isArity(PN_NAME)) {
-        /*
-         * Set left and right so pn appears to be a PNK_ELEM node, instead of
-         * a PNK_DOT node. See the PNK_FOR/IN case in EmitTree, and
-         * EmitDestructuringOps nearer below. In the destructuring case, the
-         * base expression (pn_expr) of the name may be null, which means we
-         * have to emit a JSOP_BINDNAME.
-         */
-        left = pn->maybeExpr();
-        if (!left) {
-            left = bce->parser->handler.new_<NullaryNode>(
-                PNK_STRING, JSOP_BINDNAME, pn->pn_pos, pn->pn_atom);
-            if (!left)
-                return false;
-        }
-        right = bce->parser->handler.new_<NullaryNode>(
-            PNK_STRING, JSOP_STRING, pn->pn_pos, pn->pn_atom);
-        if (!right)
-            return false;
-    } else {
-        JS_ASSERT(pn->isArity(PN_BINARY));
-        left = pn->pn_left;
-        right = pn->pn_right;
-    }
-
-    if (!EmitTree(cx, bce, left))
+    JS_ASSERT(pn->isArity(PN_BINARY));
+    if (!EmitTree(cx, bce, pn->pn_left))
         return false;
-
     if (op == JSOP_CALLELEM && Emit1(cx, bce, JSOP_DUP) < 0)
         return false;
-
-    if (!EmitTree(cx, bce, right))
+    if (!EmitTree(cx, bce, pn->pn_right))
         return false;
-
     return true;
 }
 
@@ -2890,6 +2861,7 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
             switch (pn->getOp()) {
               case JSOP_SETNAME:
               case JSOP_SETGNAME:
+              case JSOP_SETCONST: {
                 // This is like ordinary assignment, but with one difference.
                 //
                 // In `a = b`, we first determine a binding for `a` (using
@@ -2899,20 +2871,25 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
                 // In `[a] = [b]`, per spec, `b` is evaluated first, then we
                 // determine a binding for `a`. Then we need to do assignment--
                 // but the operands are on the stack in the wrong order for
-                // JSOP_SETPROP, so we use JSOP_ENUMELEM instead.
-                //
-                // EmitElemOp ordinarily works with PNK_ELEM nodes, naturally,
-                // but it has special code to handle PNK_NAME nodes in this one
-                // case.
-                if (!EmitElemOp(cx, pn, JSOP_ENUMELEM, bce))
+                // JSOP_SETPROP, so we have to add a JSOP_SWAP.
+                jsatomid atomIndex;
+                if (!bce->makeAtomIndex(pn->pn_atom, &atomIndex))
                     return false;
-                break;
 
-              case JSOP_SETCONST:
-                // As above.
-                if (!EmitElemOp(cx, pn, JSOP_ENUMCONSTELEM, bce))
+                if (!pn->isOp(JSOP_SETCONST)) {
+                    JSOp bindOp = pn->isOp(JSOP_SETNAME) ? JSOP_BINDNAME : JSOP_BINDGNAME;
+                    if (!EmitIndex32(cx, bindOp, atomIndex, bce))
+                        return false;
+                    if (Emit1(cx, bce, JSOP_SWAP) < 0)
+                        return false;
+                }
+
+                if (!EmitIndexOp(cx, pn->getOp(), atomIndex, bce))
+                    return false;
+                if (Emit1(cx, bce, JSOP_POP) < 0)
                     return false;
                 break;
+              }
 
               case JSOP_SETLOCAL:
               case JSOP_SETARG:
@@ -2928,7 +2905,6 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
             break;
 
           case PNK_DOT:
-          case PNK_ELEM:
             // See the (PNK_NAME, JSOP_SETNAME) case above.
             //
             // In `a.x = b`, `a` is evaluated first, then `b`, then a
@@ -2936,10 +2912,22 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
             //
             // In `[a.x] = [b]`, per spec, `b` is evaluated before `a`. Then we
             // need a property set -- but the operands are on the stack in the
-            // wrong order for JSOP_SETPROP, so we use JSOP_ENUMELEM instead.
-            //
-            // EmitElemOp has special code to handle PNK_DOT nodes in this one
-            // case.
+            // wrong order for JSOP_SETPROP, so we have to add a JSOP_SWAP.
+            if (!EmitTree(cx, bce, pn->pn_expr))
+                return false;
+            if (Emit1(cx, bce, JSOP_SWAP) < 0)
+                return false;
+            if (!EmitAtomOp(cx, pn, JSOP_SETPROP, bce))
+                return false;
+            if (Emit1(cx, bce, JSOP_POP) < 0)
+                return false;
+            break;
+
+          case PNK_ELEM:
+            // See the comment at `case PNK_DOT:` above. This case,
+            // `[a[x]] = [b]`, is handled much the same way, but no JSOP_SWAP
+            // is necessary because there is a specialized opcode for that,
+            // JSOP_ENUMELEM.
             if (!EmitElemOp(cx, pn, JSOP_ENUMELEM, bce))
                 return false;
             break;
