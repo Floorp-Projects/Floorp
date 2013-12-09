@@ -62,6 +62,7 @@ namespace layers {
 
 CompositorParent::LayerTreeState::LayerTreeState()
   : mParent(nullptr)
+  , mLayerManager(nullptr)
 {
 }
 
@@ -263,6 +264,7 @@ CompositorParent::RecvWillStop()
       LayerTreeState* lts = &it->second;
       if (lts->mParent == this) {
         mLayerManager->ClearCachedResources(lts->mRoot);
+        lts->mLayerManager = nullptr;
       }
     }
     mLayerManager->Destroy();
@@ -371,6 +373,7 @@ CompositorParent::ActorDestroy(ActorDestroyReason why)
   if (mLayerManager) {
     mLayerManager->Destroy();
     mLayerManager = nullptr;
+    sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = nullptr;
     mCompositionManager = nullptr;
   }
 }
@@ -503,7 +506,7 @@ CompositorParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint)
     AutoResolveRefLayers resolve(mCompositionManager);
     mApzcTreeManager->UpdatePanZoomControllerTree(this, mLayerManager->GetRoot(), aIsFirstPaint, aId);
 
-    mLayerManager->AsLayerManagerComposite()->NotifyShadowTreeTransaction();
+    mLayerManager->NotifyShadowTreeTransaction();
   }
   ScheduleComposition();
 }
@@ -734,6 +737,7 @@ CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackend
 
     if (layerManager->Initialize()) {
       mLayerManager = layerManager;
+      sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = layerManager;
       return;
     }
   }
@@ -851,6 +855,7 @@ void
 CompositorParent::NotifyChildCreated(uint64_t aChild)
 {
   sIndirectLayerTrees[aChild].mParent = this;
+  sIndirectLayerTrees[aChild].mLayerManager = mLayerManager;
 }
 
 /*static*/ uint64_t
@@ -1071,8 +1076,8 @@ CrossProcessCompositorParent::AllocPLayerTransactionParent(const nsTArray<Layers
 {
   MOZ_ASSERT(aId != 0);
 
-  if (sIndirectLayerTrees[aId].mParent) {
-    LayerManagerComposite* lm = sIndirectLayerTrees[aId].mParent->GetLayerManager();
+  if (sIndirectLayerTrees[aId].mLayerManager) {
+    LayerManagerComposite* lm = sIndirectLayerTrees[aId].mLayerManager;
     *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
     *aSuccess = true;
     LayerTransactionParent* p = new LayerTransactionParent(lm, this, aId);
