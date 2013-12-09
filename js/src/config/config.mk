@@ -440,10 +440,6 @@ ifdef USE_EXTENSION_MANIFEST
 MAKE_JARS_FLAGS += -e
 endif
 
-ifdef BOTH_MANIFESTS
-MAKE_JARS_FLAGS += --both-manifests
-endif
-
 TAR_CREATE_FLAGS = -chf
 
 ifeq ($(OS_ARCH),OS2)
