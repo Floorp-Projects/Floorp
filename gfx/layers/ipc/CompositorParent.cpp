@@ -238,6 +238,7 @@ CompositorParent::Destroy()
 
   // Ensure that the layer manager is destructed on the compositor thread.
   mLayerManager = nullptr;
+  mCompositor = nullptr;
   mCompositionManager = nullptr;
   mApzcTreeManager->ClearTree();
   mApzcTreeManager = nullptr;
@@ -269,6 +270,7 @@ CompositorParent::RecvWillStop()
     }
     mLayerManager->Destroy();
     mLayerManager = nullptr;
+    mCompositor = nullptr;
     mCompositionManager = nullptr;
   }
 
@@ -375,6 +377,7 @@ CompositorParent::ActorDestroy(ActorDestroyReason why)
     mLayerManager = nullptr;
     sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = nullptr;
     mCompositionManager = nullptr;
+    mCompositor = nullptr;
   }
 }
 
@@ -397,7 +400,7 @@ CompositorParent::PauseComposition()
   if (!mPaused) {
     mPaused = true;
 
-    mLayerManager->GetCompositor()->Pause();
+    mCompositor->Pause();
   }
 
   // if anyone's waiting to make sure that composition really got paused, tell them
@@ -412,7 +415,7 @@ CompositorParent::ResumeComposition()
 
   MonitorAutoLock lock(mResumeCompositionMonitor);
 
-  if (!mLayerManager->GetCompositor()->Resume()) {
+  if (!mCompositor->Resume()) {
 #ifdef MOZ_WIDGET_ANDROID
     // We can't get a surface. This could be because the activity changed between
     // the time resume was scheduled and now.
@@ -443,8 +446,8 @@ CompositorParent::SetEGLSurfaceSize(int width, int height)
 {
   NS_ASSERTION(mUseExternalSurfaceSize, "Compositor created without UseExternalSurfaceSize provided");
   mEGLSurfaceSize.SizeTo(width, height);
-  if (mLayerManager) {
-    mLayerManager->GetCompositor()->SetDestinationSurfaceSize(gfx::IntSize(mEGLSurfaceSize.width, mEGLSurfaceSize.height));
+  if (mCompositor) {
+    mCompositor->SetDestinationSurfaceSize(gfx::IntSize(mEGLSurfaceSize.width, mEGLSurfaceSize.height));
   }
 }
 
@@ -709,34 +712,31 @@ CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackend
   NS_ASSERTION(!mLayerManager, "Already initialised mLayerManager");
 
   for (size_t i = 0; i < aBackendHints.Length(); ++i) {
-    RefPtr<LayerManagerComposite> layerManager;
+    RefPtr<Compositor> compositor;
     if (aBackendHints[i] == LAYERS_OPENGL) {
-      layerManager =
-        new LayerManagerComposite(new CompositorOGL(mWidget,
-                                                    mEGLSurfaceSize.width,
-                                                    mEGLSurfaceSize.height,
-                                                    mUseExternalSurfaceSize));
+      compositor = new CompositorOGL(mWidget,
+                                     mEGLSurfaceSize.width,
+                                     mEGLSurfaceSize.height,
+                                     mUseExternalSurfaceSize);
     } else if (aBackendHints[i] == LAYERS_BASIC) {
-      layerManager =
-        new LayerManagerComposite(new BasicCompositor(mWidget));
+      compositor = new BasicCompositor(mWidget);
 #ifdef XP_WIN
     } else if (aBackendHints[i] == LAYERS_D3D11) {
-      layerManager =
-        new LayerManagerComposite(new CompositorD3D11(mWidget));
+      compositor = new CompositorD3D11(mWidget);
     } else if (aBackendHints[i] == LAYERS_D3D9) {
-      layerManager =
-        new LayerManagerComposite(new CompositorD3D9(this, mWidget));
+      compositor = new CompositorD3D9(this, mWidget);
 #endif
     }
 
-    if (!layerManager) {
-      continue;
-    }
+    MOZ_ASSERT(compositor, "Passed invalid backend hint");
 
+    RefPtr<LayerManagerComposite> layerManager = new LayerManagerComposite(compositor);
     layerManager->SetCompositorID(mCompositorID);
 
     if (layerManager->Initialize()) {
       mLayerManager = layerManager;
+      MOZ_ASSERT(compositor);
+      mCompositor = compositor;
       sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = layerManager;
       return;
     }
