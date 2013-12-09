@@ -34,6 +34,12 @@ from mozbuild.util import (
 )
 
 
+class SandboxDerivedValue(object):
+    """Classes deriving from this one receive a special treatment in a
+    sandbox GlobalNamespace. See GlobalNamespace documentation.
+    """
+
+
 def alphabetical_sorted(iterable, cmp=None, key=lambda x: x.lower(),
                         reverse=False):
     """sorted() replacement for the sandbox, ordering alphabetically by
@@ -61,10 +67,17 @@ class GlobalNamespace(dict):
 
     When variables are read, we first try to read the existing value. If a
     value is not found and it is defined in the allowed variables set, we
-    return the default value for it. We don't assign default values until
-    they are accessed because this makes debugging the end-result much
-    simpler. Instead of a data structure with lots of empty/default values,
-    you have a data structure with only the values that were read or touched.
+    return a new instance of the class for that variable. We don't assign
+    default instances until they are accessed because this makes debugging
+    the end-result much simpler. Instead of a data structure with lots of
+    empty/default values, you have a data structure with only the values
+    that were read or touched.
+
+    Instances of variables classes are created by invoking class_name(),
+    except when class_name derives from SandboxDerivedValue, in which
+    case class_name(instance_of_the_global_namespace) is invoked.
+    A value is added to those calls when instances are created during
+    assignment (setitem).
 
     Instantiators of this class are given a backdoor to perform setting of
     arbitrary values. e.g.
@@ -111,6 +124,8 @@ class GlobalNamespace(dict):
 
         self._allow_all_writes = False
 
+        self._allow_one_mutation = set()
+
     def __getitem__(self, name):
         try:
             return dict.__getitem__(self, name)
@@ -126,22 +141,37 @@ class GlobalNamespace(dict):
         # If the default is specifically a lambda (or, rather, any function--but
         # not a class that can be called), then it is actually a rule to
         # generate the default that should be used.
-        default_rule = default[2]
-        if isinstance(default_rule, type(lambda: None)):
-            default_rule = default_rule(self)
+        default = default[0]
+        if issubclass(default, SandboxDerivedValue):
+            value = default(self)
+        else:
+            value = default()
 
-        dict.__setitem__(self, name, copy.deepcopy(default_rule))
+        dict.__setitem__(self, name, value)
         return dict.__getitem__(self, name)
 
     def __setitem__(self, name, value):
         if self._allow_all_writes:
             dict.__setitem__(self, name, value)
+            self._allow_one_mutation.add(name)
             return
+
+        # Forbid assigning over a previously set value. Interestingly, when
+        # doing FOO += ['bar'], python actually does something like:
+        #   foo = namespace.__getitem__('FOO')
+        #   foo.__iadd__(['bar'])
+        #   namespace.__setitem__('FOO', foo)
+        # This means __setitem__ is called with the value that is already
+        # in the dict, when doing +=, which is permitted.
+        if name in self._allow_one_mutation:
+            self._allow_one_mutation.remove(name)
+        elif name in self and dict.__getitem__(self, name) is not value:
+            raise Exception('Reassigning %s is forbidden' % name)
 
         # We don't need to check for name.isupper() here because LocalNamespace
         # only sends variables our way if isupper() is True.
-        stored_type, input_type, default, docs, tier = \
-            self._allowed_variables.get(name, (None, None, None, None, None))
+        stored_type, input_type, docs, tier = \
+            self._allowed_variables.get(name, (None, None, None, None))
 
         # Variable is unknown.
         if stored_type is None:
@@ -160,7 +190,10 @@ class GlobalNamespace(dict):
                     value, input_type)
                 raise self.last_name_error
 
-            value = stored_type(value)
+            if issubclass(stored_type, SandboxDerivedValue):
+                value = stored_type(self, value)
+            else:
+                value = stored_type(value)
 
         dict.__setitem__(self, name, value)
 
@@ -176,6 +209,11 @@ class GlobalNamespace(dict):
         self._allow_all_writes = True
         yield self
         self._allow_all_writes = False
+
+    # dict.update doesn't call our __setitem__, so we have to override it.
+    def update(self, other):
+        for name, value in other.items():
+            self.__setitem__(name, value)
 
 
 class LocalNamespace(dict):
@@ -382,6 +420,6 @@ class Sandbox(object):
         return self._globals.get(key, default)
 
     def get_affected_tiers(self):
-        tiers = (self._allowed_variables[key][4] for key in self
+        tiers = (self._allowed_variables[key][3] for key in self
                  if key in self._allowed_variables)
         return set(tier for tier in tiers if tier)

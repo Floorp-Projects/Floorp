@@ -76,9 +76,22 @@ class TestGlobalNamespace(unittest.TestCase):
             self.assertTrue(d['foo'])
 
         with self.assertRaises(KeyError) as ke:
-            ns['foo'] = False
+            ns['bar'] = False
 
         self.assertEqual(ke.exception.args[1], 'set_unknown')
+
+        ns['DIRS'] = []
+        with self.assertRaisesRegexp(Exception, 'Reassigning .* is forbidden') as ke:
+            ns['DIRS'] = []
+
+        with ns.allow_all_writes() as d:
+            d['DIST_SUBDIR'] = 'foo'
+
+        self.assertEqual(ns['DIST_SUBDIR'], 'foo')
+        ns['DIST_SUBDIR'] = 'bar'
+        self.assertEqual(ns['DIST_SUBDIR'], 'bar')
+        with self.assertRaisesRegexp(Exception, 'Reassigning .* is forbidden') as ke:
+            ns['DIST_SUBDIR'] = 'baz'
 
         self.assertTrue(d['foo'])
 
