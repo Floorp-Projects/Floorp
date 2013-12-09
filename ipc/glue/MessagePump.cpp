@@ -18,6 +18,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
+#include "nsTimerImpl.h"
 #include "nsXULAppAPI.h"
 #include "prthread.h"
 
@@ -31,6 +32,8 @@
 
 using base::TimeTicks;
 using namespace mozilla::ipc;
+
+NS_DEFINE_NAMED_CID(NS_TIMER_CID);
 
 static mozilla::DebugOnly<MessagePump::Delegate*> gFirstDelegate;
 
@@ -81,7 +84,7 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
   mThread = NS_GetCurrentThread();
   MOZ_ASSERT(mThread);
 
-  mDelayedWorkTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  mDelayedWorkTimer = do_CreateInstance(kNS_TIMER_CID);
   MOZ_ASSERT(mDelayedWorkTimer);
 
   base::ScopedNSAutoreleasePool autoReleasePool;
@@ -172,7 +175,7 @@ MessagePump::ScheduleDelayedWork(const base::TimeTicks& aDelayedTime)
 #endif
 
   if (!mDelayedWorkTimer) {
-    mDelayedWorkTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    mDelayedWorkTimer = do_CreateInstance(kNS_TIMER_CID);
     if (!mDelayedWorkTimer) {
         // Called before XPCOM has started up? We can't do this correctly.
         NS_WARNING("Delayed task might not run!");
@@ -287,7 +290,7 @@ MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate* aDelegate)
   mThread = NS_GetCurrentThread();
   MOZ_ASSERT(mThread);
 
-  mDelayedWorkTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+  mDelayedWorkTimer = do_CreateInstance(kNS_TIMER_CID);
   MOZ_ASSERT(mDelayedWorkTimer);
 
   if (NS_FAILED(mDelayedWorkTimer->SetTarget(mThread))) {
