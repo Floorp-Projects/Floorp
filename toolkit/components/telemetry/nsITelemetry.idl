@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(3bdb3c83-1ac0-482a-9c3d-b15141174af4)]
+[scriptable, uuid(6c31f68d-4a54-4dca-b6c8-ddb264d5a154)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -239,4 +239,14 @@ interface nsITelemetry : nsISupports
    * writes in lateWrites.
    */
   void asyncFetchTelemetryData(in nsIFetchTelemetryDataCallback aCallback);
+
+  /**
+   * Get statistics of file IO reports, null, if not recorded.
+   *
+   * The statistics are returned as an object whose propoerties are the names
+   * of the files that have been accessed and whose corresponding values are
+   * arrays of the form [total_time, #creates, #reads, #writes, #fsyncs, #stats]
+   */
+  [implicit_jscontext]
+  readonly attribute jsval fileIOReports;
 };
