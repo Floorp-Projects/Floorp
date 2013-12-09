@@ -461,7 +461,7 @@
   cursor: text;
 }
 
-.variable-or-property:not([non-header]) > .variables-view-element-details {
+.variable-or-property:not([untitled]) > .variables-view-element-details {
   -moz-margin-start: 10px;
 }
 
@@ -626,7 +626,7 @@
   min-height: 24px;
 }
 
-.variable-or-property[non-match] {
+.variable-or-property[unmatched] {
   border: none;
   margin: 0;
 }
