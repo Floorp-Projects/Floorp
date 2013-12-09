@@ -343,7 +343,7 @@ MediaStreamGraphImpl::UpdateCurrentTime()
                MediaTimeToSeconds(mStateComputedTime)));
   } else {
     prevCurrentTime = mCurrentTime;
-    nextCurrentTime = mCurrentTime + MEDIA_GRAPH_TARGET_PERIOD_MS;
+    nextCurrentTime = mCurrentTime + MillisecondsToMediaTime(MEDIA_GRAPH_TARGET_PERIOD_MS);
     STREAM_LOG(PR_LOG_DEBUG+1, ("Updating offline current time to %f (mStateComputedTime %f)",
                MediaTimeToSeconds(nextCurrentTime),
                MediaTimeToSeconds(mStateComputedTime)));
