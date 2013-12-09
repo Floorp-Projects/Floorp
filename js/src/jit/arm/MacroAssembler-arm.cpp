@@ -1872,6 +1872,12 @@ MacroAssemblerARMCompat::addPtr(const Address &src, Register dest)
 }
 
 void
+MacroAssemblerARMCompat::not32(Register reg)
+{
+    ma_mvn(reg, reg);
+}
+
+void
 MacroAssemblerARMCompat::and32(Imm32 imm, const Address &dest)
 {
     load32(dest, ScratchRegister);

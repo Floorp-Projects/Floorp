@@ -6003,7 +6003,7 @@ ClassHasResolveHook(CompileCompartment *comp, const Class *clasp, PropertyName *
     // properties are not reflected in type information, so pretend there is a
     // resolve hook for this property.
     if (clasp == &ArrayObject::class_)
-        return name = comp->runtime()->names().length;
+        return name == comp->runtime()->names().length;
 
     if (clasp->resolve == JS_ResolveStub)
         return false;

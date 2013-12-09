@@ -484,22 +484,22 @@ function testOriginalRawDataIntegrity(arr, obj) {
 function testAnonymousHeaders(fooScope, anonymousVar, anonymousScope, barVar, bazProperty) {
   is(fooScope.header, true,
     "A named scope should have a header visible.");
-  is(fooScope.target.hasAttribute("non-header"), false,
+  is(fooScope.target.hasAttribute("untitled"), false,
     "The non-header attribute should not be applied to scopes with headers.");
 
   is(anonymousScope.header, false,
     "An anonymous scope should have a header visible.");
-  is(anonymousScope.target.hasAttribute("non-header"), true,
+  is(anonymousScope.target.hasAttribute("untitled"), true,
     "The non-header attribute should not be applied to scopes without headers.");
 
   is(barVar.header, true,
     "A named variable should have a header visible.");
-  is(barVar.target.hasAttribute("non-header"), false,
+  is(barVar.target.hasAttribute("untitled"), false,
     "The non-header attribute should not be applied to variables with headers.");
 
   is(anonymousVar.header, false,
     "An anonymous variable should have a header visible.");
-  is(anonymousVar.target.hasAttribute("non-header"), true,
+  is(anonymousVar.target.hasAttribute("untitled"), true,
     "The non-header attribute should not be applied to variables without headers.");
 }
 

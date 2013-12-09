@@ -58,20 +58,20 @@ function testVariablesAndPropertiesFiltering() {
     is(globalScope.expanded, true,
       "The globalScope should be expanded.");
 
-    is(localScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length, 1,
+    is(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length, 1,
       "There should be 1 variable displayed in the local scope.");
-    is(withScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length, 0,
+    is(withScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length, 0,
       "There should be 0 variables displayed in the with scope.");
-    is(functionScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length, 0,
+    is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length, 0,
       "There should be 0 variables displayed in the function scope.");
 
-    is(localScope.target.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
+    is(localScope.target.querySelectorAll(".variables-view-property:not([unmatched])").length, 0,
       "There should be 0 properties displayed in the local scope.");
-    is(withScope.target.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
+    is(withScope.target.querySelectorAll(".variables-view-property:not([unmatched])").length, 0,
       "There should be 0 properties displayed in the with scope.");
-    is(functionScope.target.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
+    is(functionScope.target.querySelectorAll(".variables-view-property:not([unmatched])").length, 0,
       "There should be 0 properties displayed in the function scope.");
-    is(globalScope.target.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
+    is(globalScope.target.querySelectorAll(".variables-view-property:not([unmatched])").length, 0,
       "There should be 0 properties displayed in the global scope.");
   }
 
@@ -79,9 +79,9 @@ function testVariablesAndPropertiesFiltering() {
     typeText(gSearchBox, "*one");
     testFiltered("one");
 
-    isnot(globalScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length, 0,
+    isnot(globalScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length, 0,
       "There should be some variables displayed in the global scope.");
-    is(localScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
+    is(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[0].getAttribute("value"),
       "one", "The only inner variable displayed should be 'one'");
   }
 
@@ -104,9 +104,9 @@ function testVariablesAndPropertiesFiltering() {
     typeText(gSearchBox, "*two");
     testFiltered("two");
 
-    is(globalScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length, 0,
+    is(globalScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length, 0,
       "There should be no variables displayed in the global scope.");
-    is(localScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
+    is(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[0].getAttribute("value"),
       "two", "The only inner variable displayed should be 'two'");
   }
 

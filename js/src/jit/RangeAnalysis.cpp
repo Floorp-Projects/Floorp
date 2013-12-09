@@ -996,7 +996,7 @@ MPhi::computeRange(TempAllocator &alloc)
     Range *range = nullptr;
     JS_ASSERT(getOperand(0)->op() != MDefinition::Op_OsrValue);
     for (size_t i = 0, e = numOperands(); i < e; i++) {
-        if (getOperand(i)->block()->earlyAbort()) {
+        if (getOperand(i)->block()->unreachable()) {
             IonSpew(IonSpew_Range, "Ignoring unreachable input %d", getOperand(i)->id());
             continue;
         }
@@ -1028,8 +1028,8 @@ MBeta::computeRange(TempAllocator &alloc)
     Range opRange(getOperand(0));
     Range *range = Range::intersect(alloc, &opRange, comparison_, &emptyRange);
     if (emptyRange) {
-        IonSpew(IonSpew_Range, "Marking block for inst %d unexitable", id());
-        block()->setEarlyAbort();
+        IonSpew(IonSpew_Range, "Marking block for inst %d unreachable", id());
+        block()->setUnreachable();
     } else {
         setRange(range);
     }
@@ -1991,6 +1991,9 @@ RangeAnalysis::analyze()
     for (ReversePostorderIterator iter(graph_.rpoBegin()); iter != graph_.rpoEnd(); iter++) {
         MBasicBlock *block = *iter;
 
+        if (block->unreachable())
+            continue;
+
         for (MDefinitionIterator iter(block); iter; iter++) {
             MDefinition *def = *iter;
 
@@ -2324,16 +2327,45 @@ MStoreTypedArrayElementStatic::isOperandTruncated(size_t index) const
     return index == 1 && !isFloatArray();
 }
 
+bool
+MCompare::truncate()
+{
+    if (!isDoubleComparison())
+        return false;
+
+    // If both operands are naturally in the int32 range, we can convert from
+    // a double comparison to being an int32 comparison.
+    if (!Range(lhs()).isInt32() || !Range(rhs()).isInt32())
+        return false;
+
+    compareType_ = Compare_Int32;
+    return true;
+}
+
+bool
+MCompare::isOperandTruncated(size_t index) const
+{
+    return compareType() == Compare_Int32;
+}
+
 // Ensure that all observables uses can work with a truncated
 // version of the |candidate|'s result.
 static bool
 AllUsesTruncate(MInstruction *candidate)
 {
+    // If the value naturally produces an int32 value (before bailout checks)
+    // that needs no conversion, we don't have to worry about resume points
+    // seeing truncated values.
+    bool needsConversion = !candidate->range() || !candidate->range()->isInt32();
+
     for (MUseIterator use(candidate->usesBegin()); use != candidate->usesEnd(); use++) {
         if (!use->consumer()->isDefinition()) {
-            // We can only skip testing resume points, if all original uses are still present.
-            // Only than testing all uses is enough to guarantee the truncation isn't observerable.
-            if (candidate->isUseRemoved())
+            // We can only skip testing resume points, if all original uses are
+            // still present, or if the value does not need conversion.
+            // Otherwise a branch removed by UCE might rely on the non-truncated
+            // value, and any bailout with a truncated value might lead an
+            // incorrect value.
+            if (candidate->isUseRemoved() && needsConversion)
                 return false;
             continue;
         }
@@ -2345,9 +2377,40 @@ AllUsesTruncate(MInstruction *candidate)
     return true;
 }
 
+static bool
+CanTruncate(MInstruction *candidate)
+{
+    // Compare operations might coerce its inputs to int32 if the ranges are
+    // correct.  So we do not need to check if all uses are coerced.
+    if (candidate->isCompare())
+        return true;
+
+    // Set truncated flag if range analysis ensure that it has no
+    // rounding errors and no fractional part. Note that we can't use
+    // the MDefinition Range constructor, because we need to know if
+    // the value will have rounding errors before any bailout checks.
+    const Range *r = candidate->range();
+    bool canHaveRoundingErrors = !r || r->canHaveRoundingErrors();
+
+    // Special case integer division: the result of a/b can be infinite
+    // but cannot actually have rounding errors induced by truncation.
+    if (candidate->isDiv() && candidate->toDiv()->specialization() == MIRType_Int32)
+        canHaveRoundingErrors = false;
+
+    if (canHaveRoundingErrors)
+        return false;
+
+    // Ensure all observable uses are truncated.
+    return AllUsesTruncate(candidate);
+}
+
 static void
 RemoveTruncatesOnOutput(MInstruction *truncated)
 {
+    // Compare returns a boolean so it doen't have any output truncates.
+    if (truncated->isCompare())
+        return;
+
     JS_ASSERT(truncated->type() == MIRType_Int32);
     JS_ASSERT(Range(truncated).isInt32());
 
@@ -2367,12 +2430,19 @@ AdjustTruncatedInputs(TempAllocator &alloc, MInstruction *truncated)
     for (size_t i = 0, e = truncated->numOperands(); i < e; i++) {
         if (!truncated->isOperandTruncated(i))
             continue;
-        if (truncated->getOperand(i)->type() == MIRType_Int32)
+
+        MDefinition *input = truncated->getOperand(i);
+        if (input->type() == MIRType_Int32)
             continue;
 
-        MTruncateToInt32 *op = MTruncateToInt32::New(alloc, truncated->getOperand(i));
-        block->insertBefore(truncated, op);
-        truncated->replaceOperand(i, op);
+        if (input->isToDouble() && input->getOperand(0)->type() == MIRType_Int32) {
+            JS_ASSERT(input->range()->isInt32());
+            truncated->replaceOperand(i, input->getOperand(0));
+        } else {
+            MTruncateToInt32 *op = MTruncateToInt32::New(alloc, truncated->getOperand(i));
+            block->insertBefore(truncated, op);
+            truncated->replaceOperand(i, op);
+        }
     }
 
     if (truncated->isToDouble()) {
@@ -2418,23 +2488,7 @@ RangeAnalysis::truncate()
               default:;
             }
 
-            // Set truncated flag if range analysis ensure that it has no
-            // rounding errors and no fractional part. Note that we can't use
-            // the MDefinition Range constructor, because we need to know if
-            // the value will have rounding errors before any bailout checks.
-            const Range *r = iter->range();
-            bool canHaveRoundingErrors = !r || r->canHaveRoundingErrors();
-
-            // Special case integer division: the result of a/b can be infinite
-            // but cannot actually have rounding errors induced by truncation.
-            if (iter->isDiv() && iter->toDiv()->specialization() == MIRType_Int32)
-                canHaveRoundingErrors = false;
-
-            if (canHaveRoundingErrors)
-                continue;
-
-            // Ensure all observable uses are truncated.
-            if (!AllUsesTruncate(*iter))
+            if (!CanTruncate(*iter))
                 continue;
 
             // Truncate this instruction if possible.
@@ -2554,4 +2608,41 @@ MUrsh::collectRangeInfoPreTrunc()
     // we can optimize by disabling bailout checks for enforcing an int32 range.
     if (lhsRange.lower() >= 0 || rhsRange.lower() >= 1)
         bailoutsDisabled_ = true;
+}
+
+bool
+RangeAnalysis::prepareForUCE(bool *shouldRemoveDeadCode)
+{
+    *shouldRemoveDeadCode = false;
+
+    for (ReversePostorderIterator iter(graph_.rpoBegin()); iter != graph_.rpoEnd(); iter++) {
+        MBasicBlock *block = *iter;
+
+        if (!block->unreachable())
+            continue;
+
+        MControlInstruction *cond = block->getPredecessor(0)->lastIns();
+        if (!cond->isTest())
+            continue;
+
+        // Replace the condition of the test control instruction by a constant
+        // chosen based which of the successors has the unreachable flag which is
+        // added by MBeta::computeRange on its own block.
+        MTest *test = cond->toTest();
+        MConstant *constant = nullptr;
+        if (block == test->ifTrue()) {
+            constant = MConstant::New(alloc(), BooleanValue(false));
+        } else {
+            JS_ASSERT(block == test->ifFalse());
+            constant = MConstant::New(alloc(), BooleanValue(true));
+        }
+        test->block()->insertBefore(test, constant);
+        test->replaceOperand(0, constant);
+        IonSpew(IonSpew_Range, "Update condition of %d to reflect unreachable branches.",
+                test->id());
+
+        *shouldRemoveDeadCode = true;
+    }
+
+    return true;
 }

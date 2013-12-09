@@ -7,7 +7,6 @@
 #define mozilla_dom_HTMLParagraphElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Util.h"
 
 #include "nsIDOMHTMLParagraphElement.h"
 #include "nsGenericHTMLElement.h"

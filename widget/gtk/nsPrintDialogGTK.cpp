@@ -11,7 +11,7 @@
 #endif
 #include <stdlib.h>
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "mozcontainer.h"
 #include "nsIPrintSettings.h"

@@ -547,10 +547,10 @@ int mar_read(MarFile *mar, const MarItem *item, int offset, char *buf,
  */
 int get_mar_file_info(const char *path, 
                       int *hasSignatureBlock,
-                      int *numSignatures,
+                      uint32_t *numSignatures,
                       int *hasAdditionalBlocks,
-                      int *offsetAdditionalBlocks,
-                      int *numAdditionalBlocks)
+                      uint32_t *offsetAdditionalBlocks,
+                      uint32_t *numAdditionalBlocks)
 {
   int rv;
   FILE *fp = fopen(path, "rb");
