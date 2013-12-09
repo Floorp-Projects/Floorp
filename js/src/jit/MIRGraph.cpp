@@ -913,6 +913,15 @@ MBasicBlock::dominates(MBasicBlock *other)
     return other->domIndex() >= low && other->domIndex() <= high;
 }
 
+void
+MBasicBlock::setUnreachable()
+{
+    unreachable_ = true;
+    size_t numDom = numImmediatelyDominatedBlocks();
+    for (size_t d = 0; d < numDom; d++)
+        getImmediatelyDominatedBlock(d)->unreachable_ = true;
+}
+
 AbortReason
 MBasicBlock::setBackedge(MBasicBlock *pred)
 {
