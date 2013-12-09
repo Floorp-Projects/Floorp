@@ -4888,6 +4888,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
     FallbackICSpew(cx, stub, "SetElem(%s)", js_CodeName[JSOp(*pc)]);
 
     JS_ASSERT(op == JSOP_SETELEM ||
+              op == JSOP_ENUMELEM ||
               op == JSOP_INITELEM ||
               op == JSOP_INITELEM_ARRAY);
 
