@@ -88,12 +88,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void setId(uint32_t id) {
         id_ = id;
     }
-    void setUnreachable() {
-        unreachable_ = true;
-    }
-    void clearUnreachable() {
-        unreachable_ = false;
-    }
+
+    // Mark the current block and all dominated blocks as unreachable.
+    void setUnreachable();
     bool unreachable() {
         return unreachable_;
     }
