@@ -315,7 +315,7 @@ class IDLUnresolvedIdentifier(IDLObject):
 
         assert len(name) > 0
 
-        if name[:2] == "__" and not allowDoubleUnderscore:
+        if name[:2] == "__" and name != "__content" and not allowDoubleUnderscore:
             raise WebIDLError("Identifiers beginning with __ are reserved",
                               [location])
         if name[0] == '_' and not allowDoubleUnderscore:
@@ -2712,6 +2712,14 @@ class IDLAttribute(IDLInterfaceMember):
             if self.isStatic():
                 raise WebIDLError("[LenientThis] is only allowed on non-static "
                                   "attributes", [attr.location, self.location])
+            if self.getExtendedAttribute("CrossOriginReadable"):
+                raise WebIDLError("[LenientThis] is not allowed in combination "
+                                  "with [CrossOriginReadable]",
+                                  [attr.location, self.location])
+            if self.getExtendedAttribute("CrossOriginWritable"):
+                raise WebIDLError("[LenientThis] is not allowed in combination "
+                                  "with [CrossOriginWritable]",
+                                  [attr.location, self.location])
             self.lenientThis = True
         elif identifier == "Unforgeable":
             if not self.readonly:
@@ -2773,6 +2781,19 @@ class IDLAttribute(IDLInterfaceMember):
             if self.getExtendedAttribute("StoreInSlot"):
                 raise WebIDLError("[Cached] and [StoreInSlot] must not be "
                                   "specified on the same attribute",
+                                  [attr.location, self.location])
+        elif (identifier == "CrossOriginReadable" or
+              identifier == "CrossOriginWritable"):
+            if not attr.noArguments():
+                raise WebIDLError("[%s] must take no arguments" % identifier,
+                                  [attr.location])
+            if self.isStatic():
+                raise WebIDLError("[%s] is only allowed on non-static "
+                                  "attributes" % identifier,
+                                  [attr.location, self.location])
+            if self.getExtendedAttribute("LenientThis"):
+                raise WebIDLError("[LenientThis] is not allowed in combination "
+                                  "with [%s]" % identifier,
                                   [attr.location, self.location])
         elif (identifier == "Pref" or
               identifier == "SetterThrows" or
@@ -3322,6 +3343,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "Pref" or
               identifier == "Func" or
               identifier == "Pure" or
+              identifier == "CrossOriginCallable" or
               identifier == "WebGLHandlesContextLoss"):
             # Known attributes that we don't need to do anything with here
             pass

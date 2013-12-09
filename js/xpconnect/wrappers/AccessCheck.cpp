@@ -16,6 +16,7 @@
 
 #include "jsfriendapi.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/WindowBinding.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -146,16 +147,10 @@ IsPermitted(const char *name, JSFlatString *prop, bool set)
         NAME('L', "Location",
              PROP('h', W("href"))
              PROP('r', R("replace")))
-        NAME('W', "Window",
-             PROP('b', R("blur"))
-             PROP('c', R("close") R("closed"))
-             PROP('f', R("focus") R("frames"))
-             PROP('l', RW("location") R("length"))
-             PROP('o', R("opener"))
-             PROP('p', R("parent") R("postMessage"))
-             PROP('s', R("self"))
-             PROP('t', R("top"))
-             PROP('w', R("window")))
+        case 'W':
+            if (!strcmp(name, "Window"))
+                return dom::WindowBinding::IsPermitted(prop, propChars[0], set);
+            break;
     }
     return false;
 }
