@@ -285,9 +285,7 @@ class InstallManifest(object):
 
                 for path in paths:
                     source = mozpath.join(base, path)
-                    dest = mozpath.join(dest, path)
-
-                    registry.add(dest, cls(source))
+                    registry.add(mozpath.join(dest, path), cls(source))
 
                 continue
 
