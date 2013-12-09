@@ -108,7 +108,7 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
             JSTryNote *tn = script_->trynotes()->vector;
             JSTryNote *tnlimit = tn + script_->trynotes()->length;
             for (; tn < tnlimit; tn++) {
-                unsigned startOffset = script_->mainOffset + tn->start;
+                unsigned startOffset = script_->mainOffset() + tn->start;
                 if (startOffset == offset + 1) {
                     unsigned catchOffset = startOffset + tn->length;
 

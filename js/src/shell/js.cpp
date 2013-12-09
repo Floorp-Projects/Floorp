@@ -1522,7 +1522,7 @@ TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rvalArg,
 
     if (!frame.evaluateUCInStackFrame(cx, chars, length,
                                       script->filename(),
-                                      script->lineno,
+                                      script->lineno(),
                                       &rval))
     {
         *rvalArg = rval;
@@ -1706,7 +1706,7 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
     Sprint(sp, "---- ---- ----- ------ -------- ------\n");
     unsigned offset = 0;
     unsigned colspan = 0;
-    unsigned lineno = script->lineno;
+    unsigned lineno = script->lineno();
     jssrcnote *notes = script->notes();
     unsigned switchTableEnd = 0, switchTableStart = 0;
     for (jssrcnote *sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {

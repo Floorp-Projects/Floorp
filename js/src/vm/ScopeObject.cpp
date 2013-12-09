@@ -610,7 +610,7 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Abst
      * any fixup since the initial value is 'undefined'.
      */
     unsigned nslots = block->slotCount();
-    unsigned base = frame.script()->nfixed + block->stackDepth();
+    unsigned base = frame.script()->nfixed() + block->stackDepth();
     for (unsigned i = 0; i < nslots; ++i) {
         if (block->isAliased(i))
             obj->as<ClonedBlockObject>().setVar(i, frame.unaliasedLocal(base + i));
@@ -625,7 +625,7 @@ void
 ClonedBlockObject::copyUnaliasedValues(AbstractFramePtr frame)
 {
     StaticBlockObject &block = staticBlock();
-    unsigned base = frame.script()->nfixed + block.stackDepth();
+    unsigned base = frame.script()->nfixed() + block.stackDepth();
     for (unsigned i = 0; i < slotCount(); ++i) {
         if (!block.isAliased(i))
             setVar(i, frame.unaliasedLocal(base + i), DONT_CHECK_ALIASING);
@@ -2241,14 +2241,14 @@ AnalyzeEntrainedVariablesInScript(JSContext *cx, HandleScript script, HandleScri
             buf.printf(" ");
         }
 
-        buf.printf("(%s:%d) has variables entrained by ", script->filename(), script->lineno);
+        buf.printf("(%s:%d) has variables entrained by ", script->filename(), script->lineno());
 
         if (JSAtom *name = innerScript->function()->displayAtom()) {
             buf.putString(name);
             buf.printf(" ");
         }
 
-        buf.printf("(%s:%d) ::", innerScript->filename(), innerScript->lineno);
+        buf.printf("(%s:%d) ::", innerScript->filename(), innerScript->lineno());
 
         for (PropertyNameSet::Range r = remainingNames.all(); !r.empty(); r.popFront()) {
             buf.printf(" ");
