@@ -49,6 +49,23 @@ Preferences.
 ===================
 '''.strip()
 
+EXCESSIVE_SWAP_MESSAGE = '''
+===================
+PERFORMANCE WARNING
+
+Your machine experienced a lot of swap activity during the build. This is
+possibly a sign that your machine doesn't have enough physical memory or
+not enough available memory to perform the build. It's also possible some
+other system activity during the build is to blame.
+
+If you feel this message is not appropriate for your machine configuration,
+please file a Core :: Build Config bug at
+https://bugzilla.mozilla.org/enter_bug.cgi?product=Core&component=Build%20Config
+and tell us about your machine and build configuration so we can adjust the
+warning heuristic.
+===================
+'''
+
 
 class TerminalLoggingHandler(logging.Handler):
     """Custom logging handler that works with terminal window dressing.
@@ -424,6 +441,10 @@ class Build(MachCommandBase):
             print('Your build was successful!')
 
         if monitor.have_resource_usage:
+            excessive, swap_in, swap_out = monitor.have_excessive_swapping()
+            if excessive:
+                print(EXCESSIVE_SWAP_MESSAGE)
+
             print('To view resource usage of the build, run |mach '
                 'resource-usage|.')
 
