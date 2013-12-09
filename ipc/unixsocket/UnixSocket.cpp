@@ -19,7 +19,6 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/FileUtils.h"
 #include "nsString.h"
-#include "nsThreadUtils.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 
@@ -43,13 +42,15 @@ class UnixSocketImpl : public MessageLoopForIO::Watcher
 {
 public:
   UnixSocketImpl(UnixSocketConsumer* aConsumer, UnixSocketConnector* aConnector,
-                 const nsACString& aAddress)
+                 const nsACString& aAddress,
+                 SocketConnectionStatus aConnectionStatus)
     : mConsumer(aConsumer)
     , mIOLoop(nullptr)
     , mConnector(aConnector)
     , mShuttingDownOnIOThread(false)
     , mAddress(aAddress)
     , mDelayedConnectTask(nullptr)
+    , mConnectionStatus(aConnectionStatus)
   {
   }
 
@@ -245,6 +246,12 @@ private:
    * Task member for delayed connect task. Should only be access on main thread.
    */
   CancelableTask* mDelayedConnectTask;
+
+  /**
+   * Socket connection status. Duplicate from UnixSocketConsumer. Should only
+   * be accessed on I/O thread.
+   */
+  SocketConnectionStatus mConnectionStatus;
 };
 
 template<class T>
@@ -525,6 +532,7 @@ UnixSocketImpl::Accept()
       nsRefPtr<OnSocketEventTask> t =
         new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
       NS_DispatchToMainThread(t);
+      mConnectionStatus = SOCKET_DISCONNECTED;
       return;
     }
 
@@ -562,6 +570,7 @@ UnixSocketImpl::Connect()
     nsRefPtr<OnSocketEventTask> t =
       new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
     NS_DispatchToMainThread(t);
+    mConnectionStatus = SOCKET_DISCONNECTED;
     return;
   }
 
@@ -578,6 +587,7 @@ UnixSocketImpl::Connect()
         nsRefPtr<OnSocketEventTask> t =
           new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
         NS_DispatchToMainThread(t);
+        mConnectionStatus = SOCKET_DISCONNECTED;
         return;
       }
       if (-1 == fcntl(mFd.get(), F_SETFL, current_opts & ~O_NONBLOCK)) {
@@ -586,6 +596,7 @@ UnixSocketImpl::Connect()
         nsRefPtr<OnSocketEventTask> t =
           new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
         NS_DispatchToMainThread(t);
+        mConnectionStatus = SOCKET_DISCONNECTED;
         return;
       }
 
@@ -609,6 +620,7 @@ UnixSocketImpl::Connect()
     nsRefPtr<OnSocketEventTask> t =
       new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
     NS_DispatchToMainThread(t);
+    mConnectionStatus = SOCKET_DISCONNECTED;
     return;
   }
 
@@ -624,6 +636,7 @@ UnixSocketImpl::Connect()
   nsRefPtr<OnSocketEventTask> t =
     new OnSocketEventTask(this, OnSocketEventTask::CONNECT_SUCCESS);
   NS_DispatchToMainThread(t);
+  mConnectionStatus = SOCKET_CONNECTED;
 
   SetUpIO();
 }
@@ -720,8 +733,7 @@ UnixSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!mShuttingDownOnIOThread);
 
-  SocketConnectionStatus status = mConsumer->GetConnectionStatus();
-  if (status == SOCKET_CONNECTED) {
+  if (mConnectionStatus == SOCKET_CONNECTED) {
     // Read all of the incoming data.
     while (true) {
       nsAutoPtr<UnixSocketRawData> incoming(new UnixSocketRawData(MAX_READ_SIZE));
@@ -764,9 +776,7 @@ UnixSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
     }
 
     MOZ_CRASH("We returned early");
-  }
-
-  if (status == SOCKET_LISTENING) {
+  } else if (mConnectionStatus == SOCKET_LISTENING) {
     int client_fd = accept(mFd.get(), (struct sockaddr*)&mAddr, &mAddrSize);
 
     if (client_fd < 0) {
@@ -791,6 +801,7 @@ UnixSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
     nsRefPtr<OnSocketEventTask> t =
       new OnSocketEventTask(this, OnSocketEventTask::CONNECT_SUCCESS);
     NS_DispatchToMainThread(t);
+    mConnectionStatus = SOCKET_CONNECTED;
 
     SetUpIO();
   }
@@ -803,8 +814,7 @@ UnixSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
   MOZ_ASSERT(!mShuttingDownOnIOThread);
 
   MOZ_ASSERT(aFd >= 0);
-  SocketConnectionStatus status = mConsumer->GetConnectionStatus();
-  if (status == SOCKET_CONNECTED) {
+  if (mConnectionStatus == SOCKET_CONNECTED) {
     // Try to write the bytes of mCurrentRilRawData.  If all were written, continue.
     //
     // Otherwise, save the byte position of the next byte to write
@@ -845,7 +855,7 @@ UnixSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
       mOutgoingQ.RemoveElementAt(0);
       delete data;
     }
-  } else if (status == SOCKET_CONNECTING) {
+  } else if (mConnectionStatus == SOCKET_CONNECTING) {
     int error, ret;
     socklen_t len = sizeof(error);
     ret = getsockopt(mFd.get(), SOL_SOCKET, SO_ERROR, &error, &len);
@@ -856,6 +866,7 @@ UnixSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
       nsRefPtr<OnSocketEventTask> t =
         new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
       NS_DispatchToMainThread(t);
+      mConnectionStatus = SOCKET_DISCONNECTED;
       return;
     }
 
@@ -864,6 +875,7 @@ UnixSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
       nsRefPtr<OnSocketEventTask> t =
         new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
       NS_DispatchToMainThread(t);
+      mConnectionStatus = SOCKET_DISCONNECTED;
       return;
     }
 
@@ -873,12 +885,14 @@ UnixSocketImpl::OnFileCanWriteWithoutBlocking(int aFd)
       nsRefPtr<OnSocketEventTask> t =
         new OnSocketEventTask(this, OnSocketEventTask::CONNECT_ERROR);
       NS_DispatchToMainThread(t);
+      mConnectionStatus = SOCKET_DISCONNECTED;
       return;
     }
 
     nsRefPtr<OnSocketEventTask> t =
       new OnSocketEventTask(this, OnSocketEventTask::CONNECT_SUCCESS);
     NS_DispatchToMainThread(t);
+    mConnectionStatus = SOCKET_CONNECTED;
 
     SetUpIO();
   }
@@ -935,7 +949,7 @@ UnixSocketConsumer::ConnectSocket(UnixSocketConnector* aConnector,
   }
 
   nsCString addr(aAddress);
-  mImpl = new UnixSocketImpl(this, connector.forget(), addr);
+  mImpl = new UnixSocketImpl(this, connector.forget(), addr, SOCKET_CONNECTING);
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   mConnectionStatus = SOCKET_CONNECTING;
   if (aDelayMs > 0) {
@@ -961,7 +975,8 @@ UnixSocketConsumer::ListenSocket(UnixSocketConnector* aConnector)
     return false;
   }
 
-  mImpl = new UnixSocketImpl(this, connector.forget(), EmptyCString());
+  mImpl = new UnixSocketImpl(this, connector.forget(), EmptyCString(),
+                             SOCKET_LISTENING);
   mConnectionStatus = SOCKET_LISTENING;
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                    new SocketAcceptTask(mImpl));
