@@ -336,6 +336,8 @@ partial interface Window {
                                                any... extraArguments);
 
   [Replaceable, Throws] readonly attribute object? content;
+
+  [ChromeOnly, Throws] readonly attribute object? __content;
 };
 
 Window implements TouchEventHandlers;
