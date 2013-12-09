@@ -509,7 +509,7 @@ CompositorParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint)
     AutoResolveRefLayers resolve(mCompositionManager);
     mApzcTreeManager->UpdatePanZoomControllerTree(this, mLayerManager->GetRoot(), aIsFirstPaint, aId);
 
-    mLayerManager->NotifyShadowTreeTransaction();
+    mCompositor->NotifyLayersTransaction();
   }
   ScheduleComposition();
 }
@@ -703,7 +703,7 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
     }
   }
   ScheduleComposition();
-  mLayerManager->NotifyShadowTreeTransaction();
+  mCompositor->NotifyLayersTransaction();
 }
 
 void
@@ -730,8 +730,8 @@ CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackend
 
     MOZ_ASSERT(compositor, "Passed invalid backend hint");
 
+    compositor->SetCompositorID(mCompositorID);
     RefPtr<LayerManagerComposite> layerManager = new LayerManagerComposite(compositor);
-    layerManager->SetCompositorID(mCompositorID);
 
     if (layerManager->Initialize()) {
       mLayerManager = layerManager;
@@ -769,7 +769,7 @@ CompositorParent::AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aB
   mCompositionManager = new AsyncCompositionManager(mLayerManager);
   *aSuccess = true;
 
-  *aTextureFactoryIdentifier = mLayerManager->GetTextureFactoryIdentifier();
+  *aTextureFactoryIdentifier = mCompositor->GetTextureFactoryIdentifier();
   LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, 0);
   p->AddIPDLReference();
   return p;
@@ -1077,7 +1077,7 @@ CrossProcessCompositorParent::AllocPLayerTransactionParent(const nsTArray<Layers
 
   if (sIndirectLayerTrees[aId].mLayerManager) {
     LayerManagerComposite* lm = sIndirectLayerTrees[aId].mLayerManager;
-    *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
+    *aTextureFactoryIdentifier = lm->GetCompositor()->GetTextureFactoryIdentifier();
     *aSuccess = true;
     LayerTransactionParent* p = new LayerTransactionParent(lm, this, aId);
     p->AddIPDLReference();

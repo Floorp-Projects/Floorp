@@ -786,36 +786,11 @@ LayerComposite::Destroy()
   }
 }
 
-void
-LayerManagerComposite::SetCompositorID(uint32_t aID)
-{
-  NS_ASSERTION(mCompositor, "No compositor");
-  mCompositor->SetCompositorID(aID);
-}
-
-void
-LayerManagerComposite::NotifyShadowTreeTransaction()
-{
-  mCompositor->NotifyLayersTransaction();
-}
-
 bool
 LayerManagerComposite::CanUseCanvasLayerForSize(const gfxIntSize &aSize)
 {
   return mCompositor->CanUseCanvasLayerForSize(gfx::IntSize(aSize.width,
                                                             aSize.height));
-}
-
-TextureFactoryIdentifier
-LayerManagerComposite::GetTextureFactoryIdentifier()
-{
-  return mCompositor->GetTextureFactoryIdentifier();
-}
-
-int32_t
-LayerManagerComposite::GetMaxTextureSize() const
-{
-  return mCompositor->GetMaxTextureSize();
 }
 
 #ifndef MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
