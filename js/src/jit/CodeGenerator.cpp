@@ -4307,8 +4307,8 @@ CodeGenerator::visitIsNullOrLikeUndefined(LIsNullOrLikeUndefined *lir)
 bool
 CodeGenerator::visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBranch *lir)
 {
-    JSOp op = lir->mir()->jsop();
-    MCompare::CompareType compareType = lir->mir()->compareType();
+    JSOp op = lir->cmpMir()->jsop();
+    MCompare::CompareType compareType = lir->cmpMir()->compareType();
     JS_ASSERT(compareType == MCompare::Compare_Undefined ||
               compareType == MCompare::Compare_Null);
 
@@ -4328,12 +4328,12 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBran
             op = JSOP_EQ;
         }
 
-        MOZ_ASSERT(lir->mir()->lhs()->type() != MIRType_Object ||
-                   lir->mir()->operandMightEmulateUndefined(),
+        MOZ_ASSERT(lir->cmpMir()->lhs()->type() != MIRType_Object ||
+                   lir->cmpMir()->operandMightEmulateUndefined(),
                    "Operands which can't emulate undefined should have been folded");
 
         OutOfLineTestObject *ool = nullptr;
-        if (lir->mir()->operandMightEmulateUndefined()) {
+        if (lir->cmpMir()->operandMightEmulateUndefined()) {
             ool = new(alloc()) OutOfLineTestObject();
             if (!addOutOfLineCode(ool))
                 return false;
@@ -4410,12 +4410,12 @@ CodeGenerator::visitEmulatesUndefined(LEmulatesUndefined *lir)
 bool
 CodeGenerator::visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir)
 {
-    MOZ_ASSERT(lir->mir()->compareType() == MCompare::Compare_Undefined ||
-               lir->mir()->compareType() == MCompare::Compare_Null);
-    MOZ_ASSERT(lir->mir()->operandMightEmulateUndefined(),
+    MOZ_ASSERT(lir->cmpMir()->compareType() == MCompare::Compare_Undefined ||
+               lir->cmpMir()->compareType() == MCompare::Compare_Null);
+    MOZ_ASSERT(lir->cmpMir()->operandMightEmulateUndefined(),
                "Operands which can't emulate undefined should have been folded");
 
-    JSOp op = lir->mir()->jsop();
+    JSOp op = lir->cmpMir()->jsop();
     MOZ_ASSERT(op == JSOP_EQ || op == JSOP_NE, "Strict equality should have been folded");
 
     OutOfLineTestObject *ool = new(alloc()) OutOfLineTestObject();
