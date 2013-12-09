@@ -9,7 +9,6 @@
 #define mozilla_throw_gcc_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Util.h"
 
 #include <stdio.h>              // snprintf
 #include <string.h>             // strerror

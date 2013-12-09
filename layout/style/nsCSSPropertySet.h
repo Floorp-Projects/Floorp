@@ -7,7 +7,7 @@
 #ifndef nsCSSPropertySet_h__
 #define nsCSSPropertySet_h__
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nsCSSProperty.h"
 #include <limits.h> // for CHAR_BIT

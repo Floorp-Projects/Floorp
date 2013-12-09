@@ -345,8 +345,7 @@ block start/end as needed.  The contents of these blocks should not be indented.
 
 Add new functionality to new headers unless an existing header makes sense.
 Err on the side of more headers rather than fewer, as this helps to minimize
-dependencies.  Don't add anything to Util.h, which will be split into multiple
-headers at some point (bug 713082).
+dependencies.
 
 Don't use bool for argument types unless the method is a "set" or "enable"-style
 method where the method name and bool value together indicate the sense of its

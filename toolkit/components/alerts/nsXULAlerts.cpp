@@ -13,6 +13,8 @@
 #include "nsPIDOMWindow.h"
 #include "nsIWindowWatcher.h"
 
+using namespace mozilla;
+
 #define ALERT_CHROME_URL "chrome://global/content/alerts/alert.xul"
 
 NS_IMPL_ISUPPORTS1(nsXULAlertObserver, nsIObserver)

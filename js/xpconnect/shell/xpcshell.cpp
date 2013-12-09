@@ -9,7 +9,6 @@
 
 #include <stdio.h>
 
-#include "mozilla/Util.h"
 #include "mozilla/WindowsDllBlocklist.h"
 
 #include "nsXULAppAPI.h"

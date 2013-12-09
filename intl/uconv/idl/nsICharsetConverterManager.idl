@@ -14,7 +14,6 @@
 #define NS_ICHARSETCONVERTERMANAGER_CID \
   {0x3c1c0163, 0x9bd0, 0x11d3, { 0x9d, 0x9, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2}}
 
-// XXX change to NS_CHARSETCONVERTERMANAGER_PID
 #define NS_CHARSETCONVERTERMANAGER_CONTRACTID "@mozilla.org/charset-converter-manager;1"
 %}
 

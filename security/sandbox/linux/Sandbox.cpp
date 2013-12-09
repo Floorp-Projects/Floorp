@@ -11,8 +11,8 @@
 #include <signal.h>
 #include <string.h>
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/NullPtr.h"
-#include "mozilla/Util.h"
 #if defined(ANDROID)
 #include "android_ucontext.h"
 #include <android/log.h>

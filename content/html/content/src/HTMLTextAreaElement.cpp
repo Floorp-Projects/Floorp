@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/HTMLTextAreaElementBinding.h"
 #include "mozilla/MouseEvents.h"
-#include "mozilla/Util.h"
 #include "nsAttrValueInlines.h"
 #include "nsContentCID.h"
 #include "nsContentCreatorFunctions.h"

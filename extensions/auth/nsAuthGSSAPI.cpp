@@ -14,7 +14,7 @@
 //
 //
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "prlink.h"
 #include "nsCOMPtr.h"

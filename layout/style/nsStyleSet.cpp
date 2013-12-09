@@ -9,8 +9,8 @@
  * potentially re-creating) style contexts
  */
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
 
 #include "nsStyleSet.h"
 #include "nsCSSStyleSheet.h"

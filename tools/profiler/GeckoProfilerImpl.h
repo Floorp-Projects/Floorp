@@ -13,7 +13,6 @@
 #include <algorithm>
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Util.h"
 #include "nsAlgorithm.h"
 #include "nscore.h"
 #include "GeckoProfilerFunc.h"

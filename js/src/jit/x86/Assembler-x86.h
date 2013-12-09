@@ -7,7 +7,7 @@
 #ifndef jit_x86_Assembler_x86_h
 #define jit_x86_Assembler_x86_h
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "assembler/assembler/X86Assembler.h"
 #include "jit/CompactBuffer.h"

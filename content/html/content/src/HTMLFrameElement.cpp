@@ -5,7 +5,6 @@
 
 #include "mozilla/dom/HTMLFrameElement.h"
 #include "mozilla/dom/HTMLFrameElementBinding.h"
-#include "mozilla/Util.h"
 
 class nsIDOMDocument;
 

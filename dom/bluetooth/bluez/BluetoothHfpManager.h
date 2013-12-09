@@ -222,7 +222,7 @@ private:
   nsRefPtr<BluetoothSocket> mHandsfreeSocket;
   nsRefPtr<BluetoothSocket> mHeadsetSocket;
   nsRefPtr<BluetoothSocket> mScoSocket;
-  SocketConnectionStatus mScoSocketStatus;
+  mozilla::ipc::SocketConnectionStatus mScoSocketStatus;
 
 #ifdef MOZ_B2G_RIL
   // CDMA-specific variable

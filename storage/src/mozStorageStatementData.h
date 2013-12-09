@@ -12,7 +12,6 @@
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "nsIEventTarget.h"
-#include "mozilla/Util.h"
 #include "MainThreadUtils.h"
 
 #include "mozStorageBindingParamsArray.h"

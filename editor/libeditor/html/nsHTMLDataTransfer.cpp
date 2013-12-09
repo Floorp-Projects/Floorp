@@ -7,11 +7,11 @@
 #include <string.h>
 
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Base64.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Selection.h"
-#include "mozilla/Util.h"
 #include "nsAString.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"

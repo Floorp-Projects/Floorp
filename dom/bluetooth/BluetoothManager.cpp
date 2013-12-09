@@ -16,7 +16,6 @@
 #include "nsDOMClassInfo.h"
 #include "nsIPermissionManager.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Util.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/BluetoothManagerBinding.h"
 

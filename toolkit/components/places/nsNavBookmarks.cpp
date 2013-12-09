@@ -16,7 +16,6 @@
 #include "nsPrintfCString.h"
 #include "prprf.h"
 #include "mozilla/storage.h"
-#include "mozilla/Util.h"
 
 #include "GeckoProfiler.h"
 

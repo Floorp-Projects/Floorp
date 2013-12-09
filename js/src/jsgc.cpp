@@ -173,10 +173,10 @@
 
 #include "jsgcinlines.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
-#include "mozilla/Util.h"
 
 #include <string.h>     /* for memset used when DEBUG */
 #ifndef XP_WIN

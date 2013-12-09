@@ -5,9 +5,9 @@
 
 #include "mozilla/dom/EventSource.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/EventSourceBinding.h"
-#include "mozilla/Util.h"
 
 #include "js/OldDebugAPI.h"
 #include "nsNetUtil.h"

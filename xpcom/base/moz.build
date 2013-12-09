@@ -94,6 +94,7 @@ UNIFIED_SOURCES += [
     'nsConsoleMessage.cpp',
     'nsConsoleService.cpp',
     'nsCycleCollector.cpp',
+    'nsDebugImpl.cpp',
     'nsErrorService.cpp',
     'nsGZFileWriter.cpp',
     'nsInterfaceRequestorAgg.cpp',
@@ -123,8 +124,7 @@ UNIFIED_SOURCES += [
     'nsErrorAssertsC.c',
 ]
 
-SOURCES += ['nsDebugImpl.cpp']
-SOURCES['nsDebugImpl.cpp'].no_pgo = True
+
 
 MSVC_ENABLE_PGO = True
 

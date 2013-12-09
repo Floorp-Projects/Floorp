@@ -16,7 +16,7 @@
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxPoint.h"                   // for gfxPoint
 #include "gfxUtils.h"                   // for gfxUtils
-#include "mozilla/Util.h"               // for ArrayLength
+#include "mozilla/ArrayUtils.h"         // for ArrayLength
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/gfx/BaseRect.h"       // for BaseRect
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize

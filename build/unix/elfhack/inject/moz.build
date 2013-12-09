@@ -18,5 +18,3 @@ GENERATED_SOURCES += [
 ]
 
 DEFINES['ELFHACK_BUILD'] = True
-
-NO_PGO = True

@@ -24,7 +24,7 @@
 
 using namespace mozilla::dom::network;
 
-class MobileConnection::Listener : public nsIMobileConnectionListener
+class MobileConnection::Listener MOZ_FINAL : public nsIMobileConnectionListener
 {
   MobileConnection* mMobileConnection;
 

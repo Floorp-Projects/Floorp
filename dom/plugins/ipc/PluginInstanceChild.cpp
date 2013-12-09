@@ -27,7 +27,7 @@ using mozilla::gfx::SharedDIBSurface;
 #include "gfxUtils.h"
 #include "gfxAlphaRecovery.h"
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/AutoRestore.h"
 #include "ImageContainer.h"
