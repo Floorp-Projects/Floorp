@@ -1101,6 +1101,18 @@ MediaStreamGraphImpl::ProduceDataForStreamsBlockByBlock(uint32_t aStreamIndex,
   NS_ASSERTION(t == aTo, "Something went wrong with rounding to block boundaries");
 }
 
+bool
+MediaStreamGraphImpl::AllFinishedStreamsNotified()
+{
+  for (uint32_t i = 0; i < mStreams.Length(); ++i) {
+    MediaStream* s = mStreams[i];
+    if (s->mFinished && !s->mNotifiedFinished) {
+      return false;
+    }
+  }
+  return true;
+}
+
 void
 MediaStreamGraphImpl::RunThread()
 {
@@ -1223,17 +1235,6 @@ MediaStreamGraphImpl::RunThread()
         allBlockedForever = false;
       }
     }
-    if (!mRealtime) {
-      // Terminate processing if we've produce enough non-realtime ticks.
-      if (!mForceShutDown && ticksProcessed >= mNonRealtimeTicksToProcess) {
-        // Wait indefinitely when we've processed enough non-realtime ticks.
-        // We'll be woken up when the graph shuts down.
-        MonitorAutoLock lock(mMonitor);
-        PrepareUpdatesToMainThreadState(true);
-        mWaitState = WAITSTATE_WAITING_INDEFINITELY;
-        mMonitor.Wait(PR_INTERVAL_NO_TIMEOUT);
-      }
-    }
     if (ensureNextIteration || !allBlockedForever || audioStreamsActive > 0) {
       EnsureNextIteration();
     }
@@ -1242,8 +1243,9 @@ MediaStreamGraphImpl::RunThread()
     // iteration.
     {
       MonitorAutoLock lock(mMonitor);
-      bool finalUpdate = (mForceShutDown ||
-                          (IsEmpty() && mMessageQueue.IsEmpty()));
+      bool finalUpdate = mForceShutDown ||
+        (mCurrentTime >= mEndTime && AllFinishedStreamsNotified()) ||
+        (IsEmpty() && mMessageQueue.IsEmpty());
       PrepareUpdatesToMainThreadState(finalUpdate);
       if (finalUpdate) {
         // Enter shutdown mode. The stable-state handler will detect this
@@ -2398,7 +2400,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime)
   , mMonitor("MediaStreamGraphImpl")
   , mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED)
   , mWaitState(WAITSTATE_RUNNING)
-  , mNonRealtimeTicksToProcess(0)
+  , mEndTime(GRAPH_TIME_MAX)
   , mNeedAnotherIteration(false)
   , mForceShutDown(false)
   , mPostedRunInStableStateEvent(false)
@@ -2477,7 +2479,7 @@ MediaStreamGraph::DestroyNonRealtimeInstance(MediaStreamGraph* aGraph)
 
   if (!graph->mNonRealtimeProcessing) {
     // Start the graph, but don't produce anything
-    graph->StartNonRealtimeProcessing(0);
+    graph->StartNonRealtimeProcessing(1, 0);
   }
   graph->ForceShutDown();
 }
@@ -2548,7 +2550,7 @@ MediaStreamGraph::IsNonRealtime() const
 }
 
 void
-MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
+MediaStreamGraph::StartNonRealtimeProcessing(TrackRate aRate, uint32_t aTicksToProcess)
 {
   NS_ASSERTION(NS_IsMainThread(), "main thread only");
 
@@ -2557,7 +2559,7 @@ MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
 
   if (graph->mNonRealtimeProcessing)
     return;
-  graph->mNonRealtimeTicksToProcess = aTicksToProcess;
+  graph->mEndTime = graph->mCurrentTime + TicksToTimeRoundUp(aRate, aTicksToProcess);
   graph->mNonRealtimeProcessing = true;
   graph->EnsureRunInStableState();
 }
