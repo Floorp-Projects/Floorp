@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/HTMLInputElement.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Date.h"
 #include "nsAsyncDOMEvent.h"
@@ -94,7 +95,6 @@
 #include "nsTextEditorState.h"
 
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/Util.h" // DebugOnly
 #include "mozilla/Preferences.h"
 #include "mozilla/MathAlgorithms.h"
 

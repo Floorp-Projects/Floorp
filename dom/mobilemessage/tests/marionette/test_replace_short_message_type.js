@@ -14,7 +14,7 @@ const SENDER_0 = "+1234567890";
 const SENDER_1 = "+1234567891";
 
 const PDU_PID_NORMAL = "00";
-const PDU_PIDS = ["00", "41", "42", "43", "44", "45", "46", "47"];
+const PDU_PIDS = ["00", "41", "42", "43", "44", "45", "46", "47", "5F"];
 
 const PDU_DCS_NORMAL = "00";
 

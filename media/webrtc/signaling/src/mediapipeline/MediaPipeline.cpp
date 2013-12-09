@@ -758,9 +758,11 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
   if (chunk.mBuffer) {
     switch (chunk.mBufferFormat) {
       case AUDIO_FORMAT_FLOAT32:
-        MOZ_MTLOG(ML_ERROR, "Can't process audio except in 16-bit PCM yet");
-        MOZ_ASSERT(PR_FALSE);
-        return;
+        {
+          const float* buf = static_cast<const float *>(chunk.mChannelData[0]);
+          ConvertAudioSamplesWithScale(buf, static_cast<int16_t*>(samples),
+                                       chunk.mDuration, chunk.mVolume);
+        }
         break;
       case AUDIO_FORMAT_S16:
         {

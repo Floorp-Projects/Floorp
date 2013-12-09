@@ -23,13 +23,13 @@
 #endif
 #include "prlog.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
-#include "mozilla/Util.h"
 #include <algorithm>
 
 #ifdef XP_WIN

@@ -7,7 +7,7 @@
 
 /* Data conversion between native and JavaScript types. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "xpcprivate.h"
 #include "nsIAtom.h"

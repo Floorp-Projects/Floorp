@@ -398,14 +398,14 @@ Debugger::Debugger(JSContext *cx, JSObject *dbg)
 
 Debugger::~Debugger()
 {
-    JS_ASSERT(debuggees.empty());
-
-    /* This always happens in the GC thread, so no locking is required. */
-    JS_ASSERT(object->runtimeFromMainThread()->isHeapBusy());
+    JS_ASSERT_IF(debuggees.initialized(), debuggees.empty());
 
     /*
      * Since the inactive state for this link is a singleton cycle, it's always
      * safe to apply JS_REMOVE_LINK to it, regardless of whether we're in the list or not.
+     *
+     * We don't have to worry about locking here since Debugger is not
+     * background finalized.
      */
     JS_REMOVE_LINK(&onNewGlobalObjectWatchersLink);
 }
@@ -1684,7 +1684,6 @@ Debugger::finalize(FreeOp *fop, JSObject *obj)
     Debugger *dbg = fromJSObject(obj);
     if (!dbg)
         return;
-    JS_ASSERT(dbg->debuggees.empty());
     fop->delete_(dbg);
 }
 
@@ -2127,14 +2126,16 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
     for (unsigned slot = JSSLOT_DEBUG_PROTO_START; slot < JSSLOT_DEBUG_PROTO_STOP; slot++)
         obj->setReservedSlot(slot, proto->getReservedSlot(slot));
 
+    /* Construct the underlying C++ object. */
     Debugger *dbg = cx->new_<Debugger>(cx, obj.get());
     if (!dbg)
         return false;
-    obj->setPrivate(dbg);
     if (!dbg->init(cx)) {
         js_delete(dbg);
         return false;
     }
+    obj->setPrivate(dbg);
+    /* Now the JSObject owns the js::Debugger instance, so we needn't delete it. */
 
     /* Add the initial debuggees, if any. */
     for (unsigned i = 0; i < argc; i++) {

@@ -11,8 +11,8 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Util.h"
 
 #include "nsIControllerCommandTable.h"
 #include "nsICommandParams.h"

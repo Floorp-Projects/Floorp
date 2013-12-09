@@ -5,20 +5,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Miscellaneous uncategorized functionality.  Please add new functionality to
- * new headers, or to other appropriate existing headers, not here.
+ * Implements various helper functions related to arrays.
  */
 
-#ifndef mozilla_Util_h
-#define mozilla_Util_h
+#ifndef mozilla_ArrayUtils_h
+#define mozilla_ArrayUtils_h
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Types.h"
+
+#include <stddef.h>
 
 #ifdef __cplusplus
 
-#include "mozilla/Alignment.h"
 #include "mozilla/Array.h"
 
 namespace mozilla {
@@ -98,4 +97,4 @@ ArrayEnd(const Array<T, N>& arr)
 #  define MOZ_ARRAY_LENGTH(array)   (sizeof(array)/sizeof((array)[0]))
 #endif
 
-#endif /* mozilla_Util_h */
+#endif /* mozilla_ArrayUtils_h */

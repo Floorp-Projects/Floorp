@@ -8,7 +8,7 @@
  * values they accept
  */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"

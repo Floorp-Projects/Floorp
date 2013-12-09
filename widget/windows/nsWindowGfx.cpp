@@ -100,8 +100,8 @@ static IconMetrics sIconMetrics[] = {
  **************************************************************
  **************************************************************/
 
-static bool
-IsRenderMode(gfxWindowsPlatform::RenderMode rmode)
+/* static */ bool
+nsWindow::IsRenderMode(gfxWindowsPlatform::RenderMode rmode)
 {
   return gfxWindowsPlatform::GetPlatform()->GetRenderMode() == rmode;
 }

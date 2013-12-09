@@ -10,10 +10,10 @@
  * utility methods for subclasses, and so forth.
  */
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/Util.h"
 
 #include "mozilla/dom/FragmentOrElement.h"
 

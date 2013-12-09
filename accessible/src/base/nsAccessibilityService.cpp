@@ -63,9 +63,9 @@
 #include "nsTreeUtils.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsXBLBinding.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/Util.h"
 #include "nsDeckFrame.h"
 
 #ifdef MOZ_XUL

@@ -5,6 +5,8 @@
 
 INTERNAL_TOOLS = 1
 
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+
 VPATH += $(topsrcdir)/build
 
 OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions

@@ -22,13 +22,11 @@ using namespace js::jit;
 
 using mozilla::CountLeadingZeroes32;
 
+// Note this is used for inter-AsmJS calls and may pass arguments and results
+// in floating point registers even if the system ABI does not.
 ABIArgGenerator::ABIArgGenerator() :
-#if defined(JS_CPU_ARM_HARDFP)
     intRegIndex_(0),
     floatRegIndex_(0),
-#else
-    argRegIndex_(0),
-#endif
     stackOffset_(0),
     current_()
 {}
@@ -36,7 +34,6 @@ ABIArgGenerator::ABIArgGenerator() :
 ABIArg
 ABIArgGenerator::next(MIRType type)
 {
-#if defined(JS_CPU_ARM_HARDFP)
     switch (type) {
       case MIRType_Int32:
       case MIRType_Pointer:
@@ -62,40 +59,8 @@ ABIArgGenerator::next(MIRType type)
       default:
         MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
     }
-    return current_;
-#else
-    switch (type) {
-      case MIRType_Int32:
-      case MIRType_Pointer:
-        if (argRegIndex_ == NumIntArgRegs) {
-            current_ = ABIArg(stackOffset_);
-            stackOffset_ += sizeof(uint32_t);
-            break;
-        }
-        current_ = ABIArg(Register::FromCode(argRegIndex_));
-        argRegIndex_++;
-        break;
-      case MIRType_Double: {
-        unsigned alignedArgRegIndex_ = (argRegIndex_ + 1) & ~1;
-        if (alignedArgRegIndex_ + 1 > NumIntArgRegs) {
-            static const int align = sizeof(double) - 1;
-            stackOffset_ = (stackOffset_ + align) & ~align;
-            current_ = ABIArg(stackOffset_);
-            stackOffset_ += sizeof(uint64_t);
-            argRegIndex_ = NumIntArgRegs;
-            break;
-        }
-        argRegIndex_ = alignedArgRegIndex_;
-        current_ = ABIArg(FloatRegister::FromCode(argRegIndex_ >> 1));
 
-        argRegIndex_+=2;
-      }
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
-    }
     return current_;
-#endif
 }
 const Register ABIArgGenerator::NonArgReturnVolatileReg0 = r4;
 const Register ABIArgGenerator::NonArgReturnVolatileReg1 = r5;

@@ -11,8 +11,8 @@
   by Alex Musil
  */
 
+#include "mozilla/ArrayUtils.h" // ArrayLength
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Util.h" // ArrayLength
 
 #include "nsPluginsDir.h"
 #include "prlink.h"

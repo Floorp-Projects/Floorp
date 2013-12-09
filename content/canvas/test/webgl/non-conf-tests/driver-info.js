@@ -18,9 +18,15 @@ DriverInfo = (function() {
   // ---------------------------------------------------------------------------
   // OS and driver identification
   //   Stolen from content/canvas/test/webgl/test_webgl_conformance_test_suite.html
-  const Cc = SpecialPowers.Cc;
-  const Ci = SpecialPowers.Ci;
   function detectDriverInfo() {
+    try {
+      var cc = SpecialPowers.Cc;
+    } catch (e) {
+      throw 'No SpecialPowers!';
+    }
+
+    const Cc = SpecialPowers.Cc;
+    const Ci = SpecialPowers.Ci;
     var doc = Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser).parseFromString("<html/>", "text/html");
 
     var canvas = doc.createElement("canvas");
@@ -46,6 +52,51 @@ DriverInfo = (function() {
     return [webglVendor, webglRenderer];
   }
 
+  function detectOSInfo() {
+    try {
+      var cc = SpecialPowers.Cc;
+    } catch (e) {
+      throw 'No SpecialPowers!';
+    }
+
+    const Cc = SpecialPowers.Cc;
+    const Ci = SpecialPowers.Ci;
+
+    // From reftest.js:
+    var runtime = Cc['@mozilla.org/xre/app-info;1'].getService(Ci.nsIXULRuntime);
+
+    var os = null;
+    var version = null;
+    if (navigator.platform.indexOf('Win') == 0) {
+      os = OS.WINDOWS;
+
+      // code borrowed from browser/modules/test/browser_taskbar_preview.js
+      version = SpecialPowers.Services.sysinfo.getProperty('version');
+      version = parseFloat(version);
+      // Version 6.0 is Vista, 6.1 is 7.
+
+    } else if (navigator.platform.indexOf('Mac') == 0) {
+      os = OS.MAC;
+
+      var versionMatch = /Mac OS X (\d+.\d+)/.exec(navigator.userAgent);
+      version = versionMatch ? parseFloat(versionMatch[1]) : null;
+
+    } else if (runtime.widgetToolkit == 'gonk') {
+      os = OS.B2G;
+
+    } else if (navigator.appVersion.indexOf('Android') != -1) {
+      os = OS.ANDROID;
+      // From layout/tools/reftest/reftest.js:
+      version = SpecialPowers.Services.sysinfo.getProperty('version');
+
+    } else if (navigator.platform.indexOf('Linux') == 0) {
+      // Must be checked after android, as android also has a 'Linux' platform string.
+      os = OS.LINUX;
+    }
+
+    return [os, version];
+  }
+
   var OS = {
     WINDOWS: 'windows',
     MAC: 'mac',
@@ -65,34 +116,10 @@ DriverInfo = (function() {
   var kOSVersion = null;
   var kDriver = null;
 
-  // From reftest.js:
-  var runtime = Cc['@mozilla.org/xre/app-info;1'].getService(Ci.nsIXULRuntime);
-
-  if (navigator.platform.indexOf('Win') == 0) {
-    kOS = OS.WINDOWS;
-
-    // code borrowed from browser/modules/test/browser_taskbar_preview.js
-    var version = SpecialPowers.Services.sysinfo.getProperty('version');
-    kOSVersion = parseFloat(version);
-    // Version 6.0 is Vista, 6.1 is 7.
-
-  } else if (navigator.platform.indexOf('Mac') == 0) {
-    kOS = OS.MAC;
-
-    var versionMatch = /Mac OS X (\d+.\d+)/.exec(navigator.userAgent);
-    kOSVersion = versionMatch ? parseFloat(versionMatch[1]) : null;
-
-  } else if (runtime.widgetToolkit == 'gonk') {
-    kOS = OS.B2G;
-
-  } else if (navigator.appVersion.indexOf('Android') != -1) {
-    kOS = OS.ANDROID;
-    // From layout/tools/reftest/reftest.js:
-    kOSVersion = SpecialPowers.Services.sysinfo.getProperty('version');
-
-  } else if (navigator.platform.indexOf('Linux') == 0) {
-    // Must be checked after android, as android also has a 'Linux' platform string.
-    kOS = OS.LINUX;
+  try {
+    [kOS, kOSVersion] = detectOSInfo();
+  } catch (e) {
+    // Generally just fails when we don't have SpecialPowers.
   }
 
   try {

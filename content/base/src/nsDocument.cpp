@@ -10,10 +10,10 @@
 
 #include "nsDocument.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
 #include "mozilla/Likely.h"
 #include <algorithm>
 

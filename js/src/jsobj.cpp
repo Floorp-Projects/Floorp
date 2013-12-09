@@ -10,10 +10,10 @@
 
 #include "jsobjinlines.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TemplateLib.h"
-#include "mozilla/Util.h"
 
 #include <string.h>
 

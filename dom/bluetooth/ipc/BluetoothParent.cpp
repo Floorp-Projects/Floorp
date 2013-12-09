@@ -10,7 +10,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/unused.h"
-#include "mozilla/Util.h"
 #include "nsDebug.h"
 #include "nsThreadUtils.h"
 #include "nsTraceRefcnt.h"

@@ -19,7 +19,6 @@
 #include "nsIServiceManager.h"
 
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Util.h"
 #include "mozilla/Services.h"
 
 #if defined(ANDROID) || defined(LINUX) || defined(XP_MACOSX)

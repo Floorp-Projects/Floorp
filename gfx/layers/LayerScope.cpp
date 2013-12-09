@@ -6,8 +6,6 @@
 /* This must occur *after* layers/PLayers.h to avoid typedefs conflicts. */
 #include "LayerScope.h"
 
-#include "mozilla/Util.h"
-
 #include "Composer2D.h"
 #include "Effects.h"
 #include "mozilla/TimeStamp.h"

@@ -6,9 +6,9 @@
 
 #include "nsXMLHttpRequest.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
 #include "nsDOMBlobBuilder.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMProgressEvent.h"

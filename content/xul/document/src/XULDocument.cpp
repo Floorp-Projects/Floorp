@@ -21,7 +21,7 @@
 
 */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 // Note the ALPHABETICAL ORDERING
 #include "XULDocument.h"

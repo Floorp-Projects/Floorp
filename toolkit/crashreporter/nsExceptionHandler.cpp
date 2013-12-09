@@ -5,11 +5,11 @@
 
 #include "nsExceptionHandler.h"
 #include "nsDataHashtable.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/CrashReporterChild.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "mozilla/unused.h"
-#include "mozilla/Util.h"
 
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"

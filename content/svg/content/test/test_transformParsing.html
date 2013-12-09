@@ -65,23 +65,23 @@ function checkParseOk(spec, expected) {
 function checkTransform(transform, expected, spec, index) {
   var typeMapping = {
     "unknown": SVGTransform.SVG_TRANSFORM_UNKNOWN,
-    "matrix": SVGTransform.SVG_TRANSFORM_UNKNOWN,
-    "translate": SVGTransform.SVG_TRANSFORM_UNKNOWN,
-    "scale": SVGTransform.SVG_TRANSFORM_UNKNOWN,
-    "rotate": SVGTransform.SVG_TRANSFORM_UNKNOWN,
-    "skewx": SVGTransform.SVG_TRANSFORM_UNKNOWN,
-    "skewy": SVGTransform.SVG_TRANSFORM_UNKNOWN
+    "matrix": SVGTransform.SVG_TRANSFORM_MATRIX,
+    "translate": SVGTransform.SVG_TRANSFORM_TRANSLATE,
+    "scale": SVGTransform.SVG_TRANSFORM_SCALE,
+    "rotate": SVGTransform.SVG_TRANSFORM_ROTATE,
+    "skewx": SVGTransform.SVG_TRANSFORM_SKEWX,
+    "skewy": SVGTransform.SVG_TRANSFORM_SKEWY
   };
   var name = "Item " + index + " of '" + spec + "'";
 
   // Compare type
-  if (typeof spec.type != "undefined") {
-    ise(transform.type, typeMapping[spec.type], name + " - transform type");
+  if (typeof expected.type != "undefined") {
+    ise(transform.type, typeMapping[expected.type], name + " - transform type");
   }
 
   // Compare angle
-  if (typeof spec.angle != "undefined") {
-    ise(transform.angle, spec.angle, name + " - angle");
+  if (typeof expected.angle != "undefined") {
+    ise(transform.angle, expected.angle, name + " - angle");
   }
 
   // Compare matrix values (roughly)

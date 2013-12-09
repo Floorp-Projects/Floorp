@@ -6,8 +6,8 @@
 
 #include "nsIIPCSerializableURI.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Util.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
 #include "nsID.h"

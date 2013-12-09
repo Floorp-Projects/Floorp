@@ -5,8 +5,8 @@
 #ifndef _CCAPI_H_
 #define _CCAPI_H_
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Util.h"
 
 #if defined(__cplusplus) && __cplusplus >= 201103L
 typedef struct Timecard Timecard;

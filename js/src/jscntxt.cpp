@@ -10,9 +10,9 @@
 
 #include "jscntxtinlines.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
 
 #include <ctype.h>
 #include <stdarg.h>

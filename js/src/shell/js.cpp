@@ -5,11 +5,11 @@
 
 /* JS shell. */
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/Util.h"
 
 #ifdef XP_WIN
 # include <direct.h>

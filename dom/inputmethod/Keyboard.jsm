@@ -9,7 +9,6 @@ this.EXPORTED_SYMBOLS = ['Keyboard'];
 const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-const kFormsFrameScript = 'chrome://global/content/forms.js';
 
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -80,16 +79,6 @@ this.Keyboard = {
     mm.addMessageListener('Forms:GetContext:Result:OK', this);
     mm.addMessageListener('Forms:SetComposition:Result:OK', this);
     mm.addMessageListener('Forms:EndComposition:Result:OK', this);
-
-    // When not running apps OOP, we need to load forms.js here since this
-    // won't happen from dom/ipc/preload.js
-    try {
-      if (Services.prefs.getBoolPref("dom.ipc.tabs.disabled") === true) {
-        mm.loadFrameScript(kFormsFrameScript, true);
-      }
-    } catch (e) {
-      dump('Error loading ' + kFormsFrameScript + ' as frame script: ' + e + '\n');
-    }
   },
 
   receiveMessage: function keyboardReceiveMessage(msg) {
