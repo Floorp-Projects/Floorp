@@ -273,7 +273,11 @@ OPDEF(JSOP_DEFAULT,   122,"default",    NULL,         5,  1,  0,  JOF_JUMP)
  */
 OPDEF(JSOP_EVAL,      123,"eval",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET)
 
-OPDEF(JSOP_UNUSED124,  124, "unused124", NULL,      1,  0,  0,  JOF_BYTE)
+/*
+ * ECMA-compliant helper for 'for (x[i] in o)' loops.
+ */
+OPDEF(JSOP_ENUMELEM,  124,"enumelem",   NULL,         1,  3,  0,  JOF_BYTE |JOF_SET|JOF_TMPSLOT)
+
 OPDEF(JSOP_UNUSED125,  125, "unused125", NULL,      1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED126,  126, "unused126", NULL,      1,  0,  0,  JOF_BYTE)
 
@@ -446,8 +450,15 @@ OPDEF(JSOP_GENERATOR,     202,"generator",   NULL,    1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_YIELD,         203,"yield",       NULL,    1,  1,  1,  JOF_BYTE)
 OPDEF(JSOP_ARRAYPUSH,     204,"arraypush",   NULL,    3,  1,  0,  JOF_LOCAL)
 
-OPDEF(JSOP_UNUSED205,     205, "unused205",    NULL,  1,  0,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED206,     206, "unused206",    NULL,  1,  0,  0,  JOF_BYTE)
+/*
+ * Get the built-in function::foo namespace and push it.
+ */
+OPDEF(JSOP_GETFUNNS,      205,"getfunns",   NULL,     1,  0,  1,  JOF_BYTE)
+
+/*
+ * Variant of JSOP_ENUMELEM for destructuring const (const [a, b] = ...).
+ */
+OPDEF(JSOP_ENUMCONSTELEM, 206,"enumconstelem",NULL,   1,  3,  0,  JOF_BYTE|JOF_SET)
 
 /*
  * Variant of JSOP_LEAVEBLOCK has a result on the stack above the locals,
