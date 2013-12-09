@@ -1305,6 +1305,7 @@ Tab.prototype = {
     }
     browser.addEventListener("pageshow", onPageShowEvent, true);
     browser.addEventListener("DOMWindowCreated", this, false);
+    browser.addEventListener("StartUIChange", this, false);
     Elements.browsers.addEventListener("SizeChanged", this, false);
 
     browser.messageManager.addMessageListener("Content:StateChange", this);
@@ -1316,12 +1317,19 @@ Tab.prototype = {
 
   updateViewport: function (aEvent) {
     // <meta name=viewport> is not yet supported; just use the browser size.
-    this.browser.setWindowSize(this.browser.clientWidth, this.browser.clientHeight);
+    let browser = this.browser;
+
+    // On the start page we add padding to keep the browser above the navbar.
+    let paddingBottom = parseInt(getComputedStyle(browser).paddingBottom, 10);
+    let height = browser.clientHeight - paddingBottom;
+
+    browser.setWindowSize(browser.clientWidth, height);
   },
 
   handleEvent: function (aEvent) {
     switch (aEvent.type) {
       case "DOMWindowCreated":
+      case "StartUIChange":
         this.updateViewport();
         break;
       case "SizeChanged":
@@ -1354,6 +1362,7 @@ Tab.prototype = {
   destroy: function destroy() {
     this._browser.messageManager.removeMessageListener("Content:StateChange", this);
     this._browser.removeEventListener("DOMWindowCreated", this, false);
+    this._browser.removeEventListener("StartUIChange", this, false);
     Elements.browsers.removeEventListener("SizeChanged", this, false);
     clearTimeout(this._updateThumbnailTimeout);
 
