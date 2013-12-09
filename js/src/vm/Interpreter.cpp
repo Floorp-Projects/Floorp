@@ -1603,6 +1603,7 @@ CASE(JSOP_UNUSED103)
 CASE(JSOP_UNUSED104)
 CASE(JSOP_UNUSED105)
 CASE(JSOP_UNUSED107)
+CASE(JSOP_UNUSED124)
 CASE(JSOP_UNUSED125)
 CASE(JSOP_UNUSED126)
 CASE(JSOP_UNUSED132)
@@ -2476,22 +2477,6 @@ CASE(JSOP_SETELEM)
     REGS.sp -= 2;
 }
 END_CASE(JSOP_SETELEM)
-
-CASE(JSOP_ENUMELEM)
-{
-    RootedObject &obj = rootObject0;
-    RootedValue &rval = rootValue0;
-
-    /* Funky: the value to set is under the [obj, id] pair. */
-    FETCH_OBJECT(cx, -2, obj);
-    RootedId &id = rootId0;
-    FETCH_ELEMENT_ID(-1, id);
-    rval = REGS.sp[-3];
-    if (!JSObject::setGeneric(cx, obj, obj, id, &rval, script->strict()))
-        goto error;
-    REGS.sp -= 3;
-}
-END_CASE(JSOP_ENUMELEM)
 
 CASE(JSOP_EVAL)
 {
