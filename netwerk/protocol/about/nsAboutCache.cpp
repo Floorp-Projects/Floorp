@@ -10,24 +10,9 @@
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
 #include "nsEscape.h"
+#include "nsAboutProtocolUtils.h"
 
 #include "nsICacheService.h"
-
-static PRTime SecondsToPRTime(uint32_t t_sec)
-{
-    PRTime t_usec, usec_per_sec;
-    t_usec = t_sec;
-    usec_per_sec = PR_USEC_PER_SEC;
-    return t_usec *= usec_per_sec;
-}
-static void PrintTimeString(char *buf, uint32_t bufsize, uint32_t t_sec)
-{
-    PRExplodedTime et;
-    PRTime t_usec = SecondsToPRTime(t_sec);
-    PR_ExplodeTime(t_usec, PR_LocalTimeParameters, &et);
-    PR_FormatTime(buf, bufsize, "%Y-%m-%d %H:%M:%S", &et);
-}
-
 
 NS_IMPL_ISUPPORTS2(nsAboutCache, nsIAboutModule, nsICacheVisitor)
 

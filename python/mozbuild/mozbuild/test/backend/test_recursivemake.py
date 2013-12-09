@@ -382,6 +382,18 @@ class TestRecursiveMakeBackend(BackendTester):
 
             self.assertEqual(len(o['xpcshell.js']), 1)
 
+    def test_test_manifest_pattern_matches_recorded(self):
+        """Pattern matches in test manifests' support-files should be recorded."""
+        env = self._consume('test-manifests-written', RecursiveMakeBackend)
+        m = InstallManifest(path=os.path.join(env.topobjdir,
+            '_build_manifests', 'install', 'tests'))
+
+        # This is not the most robust test in the world, but it gets the job
+        # done.
+        entries = [e for e in m._dests.keys() if '**' in e]
+        self.assertEqual(len(entries), 1)
+        self.assertIn('support/**', entries[0])
+
     def test_xpidl_generation(self):
         """Ensure xpidl files and directories are written out."""
         env = self._consume('xpidl', RecursiveMakeBackend)

@@ -583,7 +583,6 @@ bool nsDOMClassInfo::sIsInitialized = false;
 
 jsid nsDOMClassInfo::sLocation_id        = JSID_VOID;
 jsid nsDOMClassInfo::sConstructor_id     = JSID_VOID;
-jsid nsDOMClassInfo::s_content_id        = JSID_VOID;
 jsid nsDOMClassInfo::sLength_id          = JSID_VOID;
 jsid nsDOMClassInfo::sItem_id            = JSID_VOID;
 jsid nsDOMClassInfo::sNamedItem_id       = JSID_VOID;
@@ -716,7 +715,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
 
   SET_JSID_TO_STRING(sLocation_id,        cx, "location");
   SET_JSID_TO_STRING(sConstructor_id,     cx, "constructor");
-  SET_JSID_TO_STRING(s_content_id,        cx, "_content");
   SET_JSID_TO_STRING(sLength_id,          cx, "length");
   SET_JSID_TO_STRING(sItem_id,            cx, "item");
   SET_JSID_TO_STRING(sNamedItem_id,       cx, "namedItem");
@@ -1965,7 +1963,6 @@ nsDOMClassInfo::ShutDown()
 
   sLocation_id        = JSID_VOID;
   sConstructor_id     = JSID_VOID;
-  s_content_id        = JSID_VOID;
   sLength_id          = JSID_VOID;
   sItem_id            = JSID_VOID;
   sEnumerate_id       = JSID_VOID;
@@ -3256,21 +3253,6 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   return rv;
 }
 
-// Native code for window._content getter, this simply maps
-// window._content to window.content for backwards compatibility only.
-static bool
-ContentWindowGetter(JSContext *cx, unsigned argc, jsval *vp)
-{
-  JSObject *obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj)
-    return false;
-
-  JS::Rooted<JS::Value> value(cx);
-  bool result = ::JS_GetProperty(cx, obj, "content", &value);
-  *vp = value;
-  return result;
-}
-
 template<class Interface>
 static nsresult
 LocationSetterGuts(JSContext *cx, JSObject *obj, JS::MutableHandle<JS::Value> vp)
@@ -3505,13 +3487,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
-  // We want this code to be before the child frame lookup code
-  // below so that a child frame named 'constructor' doesn't
-  // shadow the window's constructor property.
-  if (sConstructor_id == id) {
-    return ResolveConstructor(cx, obj, objp);
-  }
-
   if (!my_context || !my_context->IsContextInitialized()) {
     // The context is not yet initialized so there's nothing we can do
     // here yet.
@@ -3581,35 +3556,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   if (did_resolve) {
     *objp = obj;
-    return NS_OK;
-  }
-
-  // NB: By accident, we previously didn't support this over Xrays. This is a
-  // deprecated non-standard feature, so there's no reason to start doing so
-  // now.
-  if ((s_content_id == id) && !xpc::WrapperFactory::IsXrayWrapper(obj)) {
-    // Map window._content to window.content for backwards
-    // compatibility, this should spit out an message on the JS
-    // console.
-    JS::Rooted<JSObject*> funObj(cx);
-    JSFunction *fun = ::JS_NewFunction(cx, ContentWindowGetter, 0, 0,
-                                       obj, "_content");
-    if (!fun) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    funObj = ::JS_GetFunctionObject(fun);
-
-    if (!JS_WrapObject(cx, &funObj) ||
-        !JS_DefinePropertyById(cx, obj, id, JSVAL_VOID,
-                               JS_DATA_TO_FUNC_PTR(JSPropertyOp, funObj.get()),
-                               JS_StrictPropertyStub,
-                               JSPROP_ENUMERATE | JSPROP_GETTER |
-                               JSPROP_SHARED)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    *objp = obj;
-
     return NS_OK;
   }
 

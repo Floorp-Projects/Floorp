@@ -386,8 +386,6 @@ class MDefinition : public MNode
     virtual bool truncate();
     virtual bool isOperandTruncated(size_t index) const;
 
-    bool earlyAbortCheck();
-
     // Compute an absolute or symbolic range for the value of this node.
     virtual void computeRange(TempAllocator &alloc) {
     }
@@ -1279,6 +1277,9 @@ class MTest
     static MTest *New(TempAllocator &alloc, MDefinition *ins,
                       MBasicBlock *ifTrue, MBasicBlock *ifFalse);
 
+    MDefinition *input() const {
+        return getOperand(0);
+    }
     MBasicBlock *ifTrue() const {
         return getSuccessor(0);
     }
@@ -2310,6 +2311,8 @@ class MCompare
 
     void trySpecializeFloat32(TempAllocator &alloc);
     bool isFloat32Commutative() const { return true; }
+    bool truncate();
+    bool isOperandTruncated(size_t index) const;
 
 # ifdef DEBUG
     bool isConsistentFloat32Use() const {

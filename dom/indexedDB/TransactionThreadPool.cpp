@@ -26,7 +26,7 @@ const uint32_t kThreadLimit = 20;
 const uint32_t kIdleThreadLimit = 5;
 const uint32_t kIdleThreadTimeoutMs = 30000;
 
-TransactionThreadPool* gInstance = nullptr;
+TransactionThreadPool* gThreadPool = nullptr;
 bool gShutdown = false;
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
@@ -67,37 +67,37 @@ END_INDEXEDDB_NAMESPACE
 TransactionThreadPool::TransactionThreadPool()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!gInstance, "More than one instance!");
+  NS_ASSERTION(!gThreadPool, "More than one instance!");
 }
 
 TransactionThreadPool::~TransactionThreadPool()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(gInstance == this, "Different instances!");
-  gInstance = nullptr;
+  NS_ASSERTION(gThreadPool == this, "Different instances!");
+  gThreadPool = nullptr;
 }
 
 // static
 TransactionThreadPool*
 TransactionThreadPool::GetOrCreate()
 {
-  if (!gInstance && !gShutdown) {
+  if (!gThreadPool && !gShutdown) {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     nsAutoPtr<TransactionThreadPool> pool(new TransactionThreadPool());
 
     nsresult rv = pool->Init();
     NS_ENSURE_SUCCESS(rv, nullptr);
 
-    gInstance = pool.forget();
+    gThreadPool = pool.forget();
   }
-  return gInstance;
+  return gThreadPool;
 }
 
 // static
 TransactionThreadPool*
 TransactionThreadPool::Get()
 {
-  return gInstance;
+  return gThreadPool;
 }
 
 // static
@@ -108,12 +108,12 @@ TransactionThreadPool::Shutdown()
 
   gShutdown = true;
 
-  if (gInstance) {
-    if (NS_FAILED(gInstance->Cleanup())) {
+  if (gThreadPool) {
+    if (NS_FAILED(gThreadPool->Cleanup())) {
       NS_WARNING("Failed to shutdown thread pool!");
     }
-    delete gInstance;
-    gInstance = nullptr;
+    delete gThreadPool;
+    gThreadPool = nullptr;
   }
 }
 
@@ -646,12 +646,12 @@ FinishTransactionRunnable::Run()
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB", "FinishTransactionRunnable::Run");
 
-  if (!gInstance) {
+  if (!gThreadPool) {
     NS_ERROR("Running after shutdown!");
     return NS_ERROR_FAILURE;
   }
 
-  gInstance->FinishTransaction(mTransaction);
+  gThreadPool->FinishTransaction(mTransaction);
 
   if (mFinishRunnable) {
     mFinishRunnable->Run();

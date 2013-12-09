@@ -180,7 +180,7 @@ CodeGeneratorX86Shared::visitCompare(LCompare *comp)
 bool
 CodeGeneratorX86Shared::visitCompareAndBranch(LCompareAndBranch *comp)
 {
-    MCompare *mir = comp->mir();
+    MCompare *mir = comp->cmpMir();
     emitCompare(mir->compareType(), comp->left(), comp->right());
     Assembler::Condition cond = JSOpToCondition(mir->compareType(), comp->jsop());
     emitBranch(cond, comp->ifTrue(), comp->ifFalse());
@@ -269,10 +269,10 @@ CodeGeneratorX86Shared::visitCompareDAndBranch(LCompareDAndBranch *comp)
     FloatRegister lhs = ToFloatRegister(comp->left());
     FloatRegister rhs = ToFloatRegister(comp->right());
 
-    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->cmpMir()->jsop());
 
     Assembler::NaNCond nanCond = Assembler::NaNCondFromDoubleCondition(cond);
-    if (comp->mir()->operandsAreNeverNaN())
+    if (comp->cmpMir()->operandsAreNeverNaN())
         nanCond = Assembler::NaN_HandledByCond;
 
     masm.compareDouble(cond, lhs, rhs);
@@ -286,10 +286,10 @@ CodeGeneratorX86Shared::visitCompareFAndBranch(LCompareFAndBranch *comp)
     FloatRegister lhs = ToFloatRegister(comp->left());
     FloatRegister rhs = ToFloatRegister(comp->right());
 
-    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->cmpMir()->jsop());
 
     Assembler::NaNCond nanCond = Assembler::NaNCondFromDoubleCondition(cond);
-    if (comp->mir()->operandsAreNeverNaN())
+    if (comp->cmpMir()->operandsAreNeverNaN())
         nanCond = Assembler::NaN_HandledByCond;
 
     masm.compareFloat(cond, lhs, rhs);
@@ -1771,7 +1771,7 @@ CodeGeneratorX86Shared::generateInvalidateEpilogue()
 
     // We should never reach this point in JIT code -- the invalidation thunk should
     // pop the invalidated JS frame and return directly to its caller.
-    masm.assume_unreachable("Should have returned directly to its caller instead of here.");
+    masm.assumeUnreachable("Should have returned directly to its caller instead of here.");
     return true;
 }
 
