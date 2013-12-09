@@ -245,7 +245,6 @@ platform_files = [
     'vp8_rtcd.h',
     'vp9_rtcd.h',
     'vpx_config.asm',
-    'vpx_config.c',
     'vpx_config.h',
     'vpx_scale_rtcd.h',
 ]
