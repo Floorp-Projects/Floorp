@@ -45,6 +45,8 @@ public:
 private:
   ~MobileConnectionArray();
 
+  void DropConnections();
+
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsTArray<nsRefPtr<MobileConnection>> mMobileConnections;
 };
