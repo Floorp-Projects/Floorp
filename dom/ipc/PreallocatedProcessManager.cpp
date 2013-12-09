@@ -88,6 +88,7 @@ private:
   void ObserveProcessShutdown(nsISupports* aSubject);
 
   bool mEnabled;
+  bool mShutdown;
   nsRefPtr<ContentParent> mPreallocatedAppProcess;
 };
 
@@ -114,6 +115,7 @@ PreallocatedProcessManagerImpl::PreallocatedProcessManagerImpl()
   , mPreallocateAppProcessTask(nullptr)
   , mIsNuwaReady(false)
 #endif
+  , mShutdown(false)
 {}
 
 void
@@ -123,6 +125,8 @@ PreallocatedProcessManagerImpl::Init()
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
     os->AddObserver(this, "ipc:content-shutdown",
+                    /* weakRef = */ false);
+    os->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
                     /* weakRef = */ false);
   }
   RereadPrefs();
@@ -138,6 +142,8 @@ PreallocatedProcessManagerImpl::Observe(nsISupports* aSubject,
   } else if (!strcmp("nsPref:changed", aTopic)) {
     // The only other observer we registered was for our prefs.
     RereadPrefs();
+  } else if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic)) {
+    mShutdown = true;
   } else {
     MOZ_ASSERT(false);
   }
@@ -240,7 +246,7 @@ PreallocatedProcessManagerImpl::DelayedNuwaFork()
   mPreallocateAppProcessTask = nullptr;
 
   if (!mIsNuwaReady) {
-    if (!mPreallocatedAppProcess) {
+    if (!mPreallocatedAppProcess && !mShutdown) {
       mPreallocatedAppProcess = ContentParent::RunNuwaProcess();
     }
     // else mPreallocatedAppProcess is starting. It will NuwaFork() when ready.
