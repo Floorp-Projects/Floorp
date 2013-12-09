@@ -5790,7 +5790,7 @@ CodeGenerator::generate()
 {
     IonSpew(IonSpew_Codegen, "# Emitting code for script %s:%d",
             gen->info().script()->filename(),
-            gen->info().script()->lineno);
+            gen->info().script()->lineno());
 
     if (!safepoints_.init(gen->alloc(), graph.totalSlotCount()))
         return false;

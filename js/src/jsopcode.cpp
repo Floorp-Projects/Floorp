@@ -437,11 +437,11 @@ class BytecodeParser
     }
 
     uint32_t numSlots() {
-        return 1 + (script_->function() ? script_->function()->nargs : 0) + script_->nfixed;
+        return 1 + (script_->function() ? script_->function()->nargs : 0) + script_->nfixed();
     }
 
     uint32_t maximumStackDepth() {
-        return script_->nslots - script_->nfixed;
+        return script_->nslots() - script_->nfixed();
     }
 
     Bytecode& getCode(uint32_t offset) {
@@ -640,7 +640,7 @@ BytecodeParser::parse()
             JSTryNote *tn = script_->trynotes()->vector;
             JSTryNote *tnlimit = tn + script_->trynotes()->length;
             for (; tn < tnlimit; tn++) {
-                uint32_t startOffset = script_->mainOffset + tn->start;
+                uint32_t startOffset = script_->mainOffset() + tn->start;
                 if (startOffset == offset + 1) {
                     uint32_t catchOffset = startOffset + tn->length;
                     if (tn->kind != JSTRY_ITER && tn->kind != JSTRY_LOOP) {
@@ -730,7 +730,7 @@ js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, bool lines,
         return false;
 
     if (showAll)
-        Sprint(sp, "%s:%u\n", script->filename(), script->lineno);
+        Sprint(sp, "%s:%u\n", script->filename(), script->lineno());
 
     if (pc != nullptr)
         sp->put("    ");
@@ -1601,8 +1601,8 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       case JSOP_CALLLOCAL: {
         unsigned i = GET_SLOTNO(pc);
         JSAtom *atom;
-        if (i >= script->nfixed) {
-            i -= script->nfixed;
+        if (i >= script->nfixed()) {
+            i -= script->nfixed();
             JS_ASSERT(i < unsigned(parser.stackDepthAtPC(pc)));
             atom = findLetVar(pc, i);
             if (!atom)
@@ -2119,7 +2119,7 @@ js::GetPCCountScriptSummary(JSContext *cx, size_t index)
     buf.append(str);
 
     AppendJSONProperty(buf, "line");
-    NumberValueToStringBuffer(cx, Int32Value(script->lineno), buf);
+    NumberValueToStringBuffer(cx, Int32Value(script->lineno()), buf);
 
     if (script->function()) {
         JSAtom *atom = script->function()->displayAtom();
@@ -2218,13 +2218,13 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
     buf.append(str);
 
     AppendJSONProperty(buf, "line");
-    NumberValueToStringBuffer(cx, Int32Value(script->lineno), buf);
+    NumberValueToStringBuffer(cx, Int32Value(script->lineno()), buf);
 
     AppendJSONProperty(buf, "opcodes");
     buf.append('[');
     bool comma = false;
 
-    SrcNoteLineScanner scanner(script->notes(), script->lineno);
+    SrcNoteLineScanner scanner(script->notes(), script->lineno());
 
     for (jsbytecode *pc = script->code(); pc < script->codeEnd(); pc += GetBytecodeLength(pc)) {
         size_t offset = script->pcToOffset(pc);
