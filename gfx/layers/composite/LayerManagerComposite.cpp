@@ -203,6 +203,7 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
                                       EndTransactionFlags aFlags)
 {
   NS_ASSERTION(mInTransaction, "Didn't call BeginTransaction?");
+  NS_ASSERTION(!aCallback && !aCallbackData, "Not expecting callbacks here");
   mInTransaction = false;
 
   if (!mIsCompositorReady) {
@@ -240,13 +241,7 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
     // so we don't need to pass any global transform here.
     mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
 
-    mThebesLayerCallback = aCallback;
-    mThebesLayerCallbackData = aCallbackData;
-
     Render();
-
-    mThebesLayerCallback = nullptr;
-    mThebesLayerCallbackData = nullptr;
   }
 
   mCompositor->SetTargetContext(nullptr);
