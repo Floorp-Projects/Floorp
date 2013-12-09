@@ -107,8 +107,6 @@ public:
   void ForceIsFirstPaint();
   void Destroy();
 
-  LayerManagerComposite* GetLayerManager() { return mLayerManager; }
-
   void NotifyChildCreated(uint64_t aChild);
 
   void AsyncRender();
@@ -203,6 +201,7 @@ public:
     nsRefPtr<Layer> mRoot;
     nsRefPtr<GeckoContentController> mController;
     CompositorParent* mParent;
+    LayerManagerComposite* mLayerManager;
     TargetConfig mTargetConfig;
   };
 
