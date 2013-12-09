@@ -2771,9 +2771,6 @@ CodeGenerator::maybeCreateScriptCounts()
         return nullptr;
     }
 
-    if (script)
-        script->addIonCounts(counts);
-
     for (size_t i = 0; i < graph.numBlocks(); i++) {
         MBasicBlock *block = graph.getBlock(i)->mir();
 
@@ -2785,16 +2782,20 @@ CodeGenerator::maybeCreateScriptCounts()
             MResumePoint *resume = block->entryResumePoint();
             while (resume->caller())
                 resume = resume->caller();
-            JS_ASSERT(script->containsPC(resume->pc()));
+            offset = script->pcToOffset(resume->pc());
         }
 
-        if (!counts->block(i).init(block->id(), offset, block->numSuccessors()))
+        if (!counts->block(i).init(block->id(), offset, block->numSuccessors())) {
+            js_delete(counts);
             return nullptr;
+        }
         for (size_t j = 0; j < block->numSuccessors(); j++)
             counts->block(i).setSuccessor(j, block->getSuccessor(j)->id());
     }
 
-    if (!script) {
+    if (script) {
+        script->addIonCounts(counts);
+    } else {
         // Compiling code for Asm.js. Leave the counts on the CodeGenerator to
         // be picked up by the AsmJSModule after generation finishes.
         unassociatedScriptCounts_ = counts;
