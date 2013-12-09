@@ -98,7 +98,6 @@ UNIFIED_SOURCES += [
     'builtin/Object.cpp',
     'builtin/ParallelArray.cpp',
     'builtin/Profilers.cpp',
-    'builtin/RegExp.cpp',
     'builtin/TestingFunctions.cpp',
     'builtin/TypedObject.cpp',
     'builtin/TypeRepresentation.cpp',
@@ -197,6 +196,8 @@ UNIFIED_SOURCES += [
 
 # jsarray.cpp and jsatom.cpp cannot be built in unified mode because
 # xpcshell is broken during packaging when compiled with gcc-4.8.2
+# builtin/RegExp.cpp cannot be built in unified mode because it is built
+# without PGO
 # frontend/Parser.cpp cannot be built in unified mode because of explicit
 # template instantiations.
 # jsmath.cpp cannot be built in unified mode because it needs to pull rand_s
@@ -204,6 +205,7 @@ UNIFIED_SOURCES += [
 # jsutil.cpp cannot be built in unified mode because it is needed for
 # check-vanilla-allocations.
 SOURCES += [
+    'builtin/RegExp.cpp',
     'frontend/Parser.cpp',
     'jsarray.cpp',
     'jsatom.cpp',
@@ -423,3 +425,9 @@ if CONFIG['JS_HAS_CTYPES']:
 
 if CONFIG['MOZ_LINKER']:
     DEFINES['MOZ_LINKER'] = True
+
+if CONFIG['_MSC_VER']:
+    if CONFIG['CPU_ARCH'] == 'x86':
+        SOURCES['builtin/RegExp.cpp'].no_pgo = True # Bug 772303
+    elif CONFIG['CPU_ARCH'] == 'x86_64':
+        SOURCES['ctypes/CTypes.cpp'].no_pgo = True # Bug 810661
