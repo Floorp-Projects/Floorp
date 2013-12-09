@@ -2308,6 +2308,8 @@ class MCompare
 
     void trySpecializeFloat32(TempAllocator &alloc);
     bool isFloat32Commutative() const { return true; }
+    bool truncate();
+    bool isOperandTruncated(size_t index) const;
 
 # ifdef DEBUG
     bool isConsistentFloat32Use() const {
