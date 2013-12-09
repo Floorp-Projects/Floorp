@@ -313,7 +313,7 @@ CodeGeneratorX64::visitCompareB(LCompareB *lir)
 bool
 CodeGeneratorX64::visitCompareBAndBranch(LCompareBAndBranch *lir)
 {
-    MCompare *mir = lir->mir();
+    MCompare *mir = lir->cmpMir();
 
     const ValueOperand lhs = ToValue(lir, LCompareBAndBranch::Lhs);
     const LAllocation *rhs = lir->rhs();
@@ -349,7 +349,7 @@ CodeGeneratorX64::visitCompareV(LCompareV *lir)
 bool
 CodeGeneratorX64::visitCompareVAndBranch(LCompareVAndBranch *lir)
 {
-    MCompare *mir = lir->mir();
+    MCompare *mir = lir->cmpMir();
 
     const ValueOperand lhs = ToValue(lir, LCompareVAndBranch::LhsInput);
     const ValueOperand rhs = ToValue(lir, LCompareVAndBranch::RhsInput);

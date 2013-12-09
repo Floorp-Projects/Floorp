@@ -1277,6 +1277,9 @@ class MTest
     static MTest *New(TempAllocator &alloc, MDefinition *ins,
                       MBasicBlock *ifTrue, MBasicBlock *ifFalse);
 
+    MDefinition *input() const {
+        return getOperand(0);
+    }
     MBasicBlock *ifTrue() const {
         return getSuccessor(0);
     }

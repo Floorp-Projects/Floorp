@@ -310,7 +310,7 @@ CodeGeneratorX86::visitCompareB(LCompareB *lir)
 bool
 CodeGeneratorX86::visitCompareBAndBranch(LCompareBAndBranch *lir)
 {
-    MCompare *mir = lir->mir();
+    MCompare *mir = lir->cmpMir();
     const ValueOperand lhs = ToValue(lir, LCompareBAndBranch::Lhs);
     const LAllocation *rhs = lir->rhs();
 
@@ -358,7 +358,7 @@ CodeGeneratorX86::visitCompareV(LCompareV *lir)
 bool
 CodeGeneratorX86::visitCompareVAndBranch(LCompareVAndBranch *lir)
 {
-    MCompare *mir = lir->mir();
+    MCompare *mir = lir->cmpMir();
     Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
     const ValueOperand lhs = ToValue(lir, LCompareVAndBranch::LhsInput);
     const ValueOperand rhs = ToValue(lir, LCompareVAndBranch::RhsInput);
