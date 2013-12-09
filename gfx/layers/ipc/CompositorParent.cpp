@@ -926,6 +926,17 @@ CompositorParent::GetAPZCTreeManager(uint64_t aLayersId)
   return nullptr;
 }
 
+float
+CompositorParent::ComputeRenderIntegrity()
+{
+  if (mLayerManager) {
+    return mLayerManager->ComputeRenderIntegrity();
+  }
+
+  return 1.0f;
+}
+
+
 /**
  * This class handles layer updates pushed directly from child
  * processes to the compositor thread.  It's associated with a
