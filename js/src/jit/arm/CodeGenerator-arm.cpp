@@ -134,7 +134,7 @@ CodeGeneratorARM::visitCompare(LCompare *comp)
 bool
 CodeGeneratorARM::visitCompareAndBranch(LCompareAndBranch *comp)
 {
-    Assembler::Condition cond = JSOpToCondition(comp->mir()->compareType(), comp->jsop());
+    Assembler::Condition cond = JSOpToCondition(comp->cmpMir()->compareType(), comp->jsop());
     if (comp->right()->isConstant())
         masm.ma_cmp(ToRegister(comp->left()), Imm32(ToInt32(comp->right())));
     else
@@ -1460,7 +1460,7 @@ CodeGeneratorARM::visitCompareDAndBranch(LCompareDAndBranch *comp)
     FloatRegister lhs = ToFloatRegister(comp->left());
     FloatRegister rhs = ToFloatRegister(comp->right());
 
-    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->cmpMir()->jsop());
     masm.compareDouble(lhs, rhs);
     emitBranch(Assembler::ConditionFromDoubleCondition(cond), comp->ifTrue(), comp->ifFalse());
     return true;
@@ -1472,7 +1472,7 @@ CodeGeneratorARM::visitCompareFAndBranch(LCompareFAndBranch *comp)
     FloatRegister lhs = ToFloatRegister(comp->left());
     FloatRegister rhs = ToFloatRegister(comp->right());
 
-    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->cmpMir()->jsop());
     masm.compareFloat(lhs, rhs);
     emitBranch(Assembler::ConditionFromDoubleCondition(cond), comp->ifTrue(), comp->ifFalse());
     return true;
@@ -1512,7 +1512,7 @@ CodeGeneratorARM::visitCompareB(LCompareB *lir)
 bool
 CodeGeneratorARM::visitCompareBAndBranch(LCompareBAndBranch *lir)
 {
-    MCompare *mir = lir->mir();
+    MCompare *mir = lir->cmpMir();
     const ValueOperand lhs = ToValue(lir, LCompareBAndBranch::Lhs);
     const LAllocation *rhs = lir->rhs();
 
@@ -1561,7 +1561,7 @@ CodeGeneratorARM::visitCompareV(LCompareV *lir)
 bool
 CodeGeneratorARM::visitCompareVAndBranch(LCompareVAndBranch *lir)
 {
-    MCompare *mir = lir->mir();
+    MCompare *mir = lir->cmpMir();
     Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
     const ValueOperand lhs = ToValue(lir, LCompareVAndBranch::LhsInput);
     const ValueOperand rhs = ToValue(lir, LCompareVAndBranch::RhsInput);
@@ -1908,7 +1908,7 @@ CodeGeneratorARM::generateInvalidateEpilogue()
 
     // We should never reach this point in JIT code -- the invalidation thunk should
     // pop the invalidated JS frame and return directly to its caller.
-    masm.assume_unreachable("Should have returned directly to its caller instead of here.");
+    masm.assumeUnreachable("Should have returned directly to its caller instead of here.");
     return true;
 }
 

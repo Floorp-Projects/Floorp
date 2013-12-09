@@ -6,7 +6,7 @@
 
 LIBRARY_NAME = 'verifymar'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'cryptox.c',
     'mar_verify.c',
 ]

@@ -6,6 +6,7 @@
 #ifndef PROFILER_PSEUDO_STACK_H_
 #define PROFILER_PSEUDO_STACK_H_
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/NullPtr.h"
 #include <stdint.h>
 #include "js/ProfilingStack.h"

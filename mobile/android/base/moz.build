@@ -117,6 +117,7 @@ gbjar.sources += [
     'db/LocalBrowserDB.java',
     'db/PasswordsProvider.java',
     'db/PerProfileContentProvider.java',
+    'db/PerProfileDatabases.java',
     'db/TabsProvider.java',
     'Distribution.java',
     'DoorHanger.java',
