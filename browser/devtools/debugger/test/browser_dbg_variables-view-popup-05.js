@@ -19,9 +19,9 @@ function test() {
       is(tooltip.querySelectorAll(".variables-view-container").length, 1,
         "There should be one variables view container added to the tooltip.");
 
-      is(tooltip.querySelectorAll(".variables-view-scope[non-header]").length, 1,
+      is(tooltip.querySelectorAll(".variables-view-scope[untitled]").length, 1,
         "There should be one scope with no header displayed.");
-      is(tooltip.querySelectorAll(".variables-view-variable[non-header]").length, 1,
+      is(tooltip.querySelectorAll(".variables-view-variable[untitled]").length, 1,
         "There should be one variable with no header displayed.");
 
       is(tooltip.querySelectorAll(".variables-view-property").length, 2,
