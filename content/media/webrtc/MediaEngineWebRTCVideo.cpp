@@ -312,7 +312,6 @@ nsresult
 MediaEngineWebRTCVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 {
   LOG((__FUNCTION__));
-  int error = 0;
   if (!mInitDone || !aStream) {
     return NS_ERROR_FAILURE;
   }
@@ -341,7 +340,7 @@ MediaEngineWebRTCVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   }
 #else
   mState = kStarted;
-  error = mViERender->AddRenderer(mCaptureIndex, webrtc::kVideoI420, (webrtc::ExternalRenderer*)this);
+  int error = mViERender->AddRenderer(mCaptureIndex, webrtc::kVideoI420, (webrtc::ExternalRenderer*)this);
   if (error == -1) {
     return NS_ERROR_FAILURE;
   }
@@ -492,12 +491,9 @@ void
 MediaEngineWebRTCVideoSource::AllocImpl() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mDOMCameraControl = new nsDOMCameraControl(mCaptureIndex,
-                                             mCameraThread,
-                                             this,
-                                             this,
-                                             nsGlobalWindow::GetInnerWindowWithId(mWindowId));
-  mCameraManager->Register(mDOMCameraControl);
+  ErrorResult rv;
+  mDOMCameraControl = mCameraManager->GetCameraControl(mCaptureIndex,
+                                                       this, this, rv);
 }
 
 void
@@ -506,6 +502,7 @@ MediaEngineWebRTCVideoSource::DeallocImpl() {
 
   mNativeCameraControl->ReleaseHardware(this, this);
   mNativeCameraControl = nullptr;
+  mDOMCameraControl = nullptr;
 }
 
 void

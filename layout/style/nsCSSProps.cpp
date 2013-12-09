@@ -529,6 +529,7 @@ const int32_t nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_button_arrow_previous,  NS_THEME_BUTTON_ARROW_PREVIOUS,
   eCSSKeyword_meterbar,               NS_THEME_METERBAR,
   eCSSKeyword_meterchunk,             NS_THEME_METERBAR_CHUNK,
+  eCSSKeyword_number_input,           NS_THEME_NUMBER_INPUT,
   eCSSKeyword_separator,              NS_THEME_TOOLBAR_SEPARATOR,
   eCSSKeyword_splitter,               NS_THEME_SPLITTER,
   eCSSKeyword_statusbar,              NS_THEME_STATUSBAR,

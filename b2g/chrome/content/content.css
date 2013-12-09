@@ -284,6 +284,7 @@ textarea:active {
   background-color: rgba(141, 184, 216, 0.5);
 }
 
+input[type=number] > div > div, /* work around bug 946184 */
 input[type=number]::-moz-number-spin-box {
   display: none;
 }

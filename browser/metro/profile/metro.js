@@ -18,9 +18,11 @@ pref("devtools.chrome.enabled", false);
 // Automatically submit crash reports
 #ifdef RELEASE_BUILD
 pref("app.crashreporter.autosubmit", false);
+pref("app.crashreporter.submitURLs", false);
 #else
 // For Nightly and Aurora we turn this on by default
 pref("app.crashreporter.autosubmit", true);
+pref("app.crashreporter.submitURLs", false);
 #endif
 // Has the user been prompted about crash reporting?
 pref("app.crashreporter.prompted", false);

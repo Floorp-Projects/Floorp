@@ -85,7 +85,7 @@ struct BlockScopeNote {
     uint32_t        index;      // Index of StaticScopeObject in the object array.
     uint32_t        start;      // Bytecode offset at which this scope starts.
     uint32_t        length;     // Bytecode length of scope.
-    uint32_t        padding;    // Pad to 64-bit boundary.
+    uint32_t        parent;     // Index of parent block scope in notes, or UINT32_MAX.
 };
 
 struct ConstArray {

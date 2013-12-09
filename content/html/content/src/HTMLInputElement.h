@@ -166,6 +166,12 @@ public:
 
   virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
 
+  // Element
+private:
+  virtual void AddStates(nsEventStates aStates);
+  virtual void RemoveStates(nsEventStates aStates);
+public:
+
   // nsITextControlElement
   NS_IMETHOD SetValueChanged(bool aValueChanged) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) IsSingleLineTextControl() const MOZ_OVERRIDE;
@@ -202,6 +208,9 @@ public:
 
   void SetFiles(const nsTArray<nsCOMPtr<nsIDOMFile> >& aFiles, bool aSetValueChanged);
   void SetFiles(nsIDOMFileList* aFiles, bool aSetValueChanged);
+
+  // Called when a nsIFilePicker or a nsIColorPicker terminate.
+  void PickerClosed();
 
   void SetCheckedChangedInternal(bool aCheckedChanged);
   bool GetCheckedChanged() const {
@@ -1267,6 +1276,7 @@ protected:
   bool                     mProgressTimerIsActive : 1;
   bool                     mNumberControlSpinnerIsSpinning : 1;
   bool                     mNumberControlSpinnerSpinsUp : 1;
+  bool                     mPickerRunning : 1;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,

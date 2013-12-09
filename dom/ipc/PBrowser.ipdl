@@ -16,6 +16,7 @@ include protocol PIndexedDB;
 include DOMTypes;
 include JavaScriptTypes;
 include URIParams;
+include PContentPermission;
 
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
@@ -206,10 +207,8 @@ parent:
      * Initiates an asynchronous request for permission for the
      * provided principal.
      *
-     * @param aType
-     *   The type of permission to request.
-     * @param aAccess
-     *   Access type. "read" for example.
+     * @param aRequests
+     *   The array of permissions to request.
      * @param aPrincipal
      *   The principal of the request.
      *
@@ -217,7 +216,7 @@ parent:
      *       principals that can live in the content process should
      *       provided.
      */
-    PContentPermissionRequest(nsCString aType, nsCString aAccess, Principal principal);
+    PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal);
 
     PContentDialog(uint32_t aType, nsCString aName, nsCString aFeatures,
                    int32_t[] aIntParams, nsString[] aStringParams);

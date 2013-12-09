@@ -36,10 +36,11 @@
       // Test focus events.
       gQueue = new eventQueue();
 
+      var textbox = getNode("textbox").inputField;
       gQueue.push(new synthClick("tab1", new focusChecker("tab1")));
       gQueue.push(new synthTab("tab1", new focusChecker("checkbox1")));
       gQueue.push(new synthKey("tab1", "VK_TAB", { ctrlKey: true },
-                               new focusChecker("textbox")));
+                               new focusChecker(textbox)));
       gQueue.push(new synthKey("tab2", "VK_TAB", { ctrlKey: true },
                                new focusChecker("tab3")));
       gQueue.push(new synthKey("tab3", "VK_TAB", { ctrlKey: true },

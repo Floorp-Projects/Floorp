@@ -27,7 +27,7 @@ dictionary RTCStats {
 dictionary RTCRTPStreamStats : RTCStats {
   DOMString ssrc;
   DOMString remoteId;
-  boolean isRemote;
+  boolean isRemote = false;
   DOMString mediaTrackId;
   DOMString transportId;
   DOMString codecId;
@@ -124,7 +124,7 @@ callback RTCStatsReportCallback = void (RTCStatsReport obj);
 // to be received from c++
 
 dictionary RTCStatsReportInternal {
-  DOMString                           pcid;
+  DOMString                           pcid = "";
   sequence<RTCRTPStreamStats>         rtpStreamStats;
   sequence<RTCInboundRTPStreamStats>  inboundRTPStreamStats;
   sequence<RTCOutboundRTPStreamStats> outboundRTPStreamStats;

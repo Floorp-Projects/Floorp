@@ -1124,9 +1124,9 @@ CodeGeneratorARM::emitTableSwitchDispatch(MTableSwitch *mir, const Register &ind
     int32_t cases = mir->numCases();
     // Lower value with low value
     masm.ma_sub(index, Imm32(mir->low()), index, SetCond);
-    masm.ma_rsb(index, Imm32(cases - 1), index, SetCond, Assembler::Unsigned);
+    masm.ma_rsb(index, Imm32(cases - 1), index, SetCond, Assembler::NotSigned);
     AutoForbidPools afp(&masm);
-    masm.ma_ldr(DTRAddr(pc, DtrRegImmShift(index, LSL, 2)), pc, Offset, Assembler::Unsigned);
+    masm.ma_ldr(DTRAddr(pc, DtrRegImmShift(index, LSL, 2)), pc, Offset, Assembler::NotSigned);
     masm.ma_b(defaultcase);
 
     // To fill in the CodeLabels for the case entries, we need to first
@@ -1908,7 +1908,7 @@ CodeGeneratorARM::generateInvalidateEpilogue()
 
     // We should never reach this point in JIT code -- the invalidation thunk should
     // pop the invalidated JS frame and return directly to its caller.
-    masm.breakpoint();
+    masm.assume_unreachable("Should have returned directly to its caller instead of here.");
     return true;
 }
 

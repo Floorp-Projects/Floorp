@@ -6,6 +6,9 @@ contract @mozilla.org/network/protocol/about;1?what=firefox {433d2d75-5923-49b0-
 contract @mozilla.org/network/protocol/about;1?what=rights {433d2d75-5923-49b0-854d-f37267b03dc7}
 contract @mozilla.org/network/protocol/about;1?what=certerror {433d2d75-5923-49b0-854d-f37267b03dc7}
 contract @mozilla.org/network/protocol/about;1?what=home {433d2d75-5923-49b0-854d-f37267b03dc7}
+#ifdef MOZ_CRASHREPORTER
+contract @mozilla.org/network/protocol/about;1?what=crashprompt {433d2d75-5923-49b0-854d-f37267b03dc7}
+#endif
 #ifdef MOZ_SAFE_BROWSING
 contract @mozilla.org/network/protocol/about;1?what=blocked {433d2d75-5923-49b0-854d-f37267b03dc7}
 #endif
