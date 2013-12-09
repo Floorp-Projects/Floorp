@@ -4641,8 +4641,9 @@ env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, Mutab
     int rv;
 
     RootedValue idvalue(cx, IdToValue(id));
+    RootedString idstring(cx, ToString(cx, idvalue));
     JSAutoByteString idstr;
-    if (!idstr.encodeLatin1(cx, idvalue.toString()))
+    if (!idstr.encodeLatin1(cx, idstring))
         return false;
 
     RootedString value(cx, ToString(cx, vp));
@@ -4716,8 +4717,9 @@ env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             MutableHandleObject objp)
 {
     RootedValue idvalue(cx, IdToValue(id));
+    RootedString idstring(cx, ToString(cx, idvalue));
     JSAutoByteString idstr;
-    if (!idstr.encodeLatin1(cx, idvalue.toString()))
+    if (!idstr.encodeLatin1(cx, idstring))
         return false;
 
     const char *name = idstr.ptr();
