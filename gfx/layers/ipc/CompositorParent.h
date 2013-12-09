@@ -47,6 +47,7 @@ namespace layers {
 
 class APZCTreeManager;
 class AsyncCompositionManager;
+class Compositor;
 class LayerManagerComposite;
 class LayerTransactionParent;
 
@@ -294,6 +295,7 @@ private:
   bool CanComposite();
 
   nsRefPtr<LayerManagerComposite> mLayerManager;
+  nsRefPtr<Compositor> mCompositor;
   RefPtr<AsyncCompositionManager> mCompositionManager;
   nsIWidget* mWidget;
   CancelableTask *mCurrentCompositeTask;
