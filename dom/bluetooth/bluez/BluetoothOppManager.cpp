@@ -331,7 +331,7 @@ BluetoothOppManager::StartSendingNextFile()
 
   MOZ_ASSERT(!IsConnected());
   MOZ_ASSERT(!mBatches.IsEmpty());
-  MOZ_ASSERT(mBatches[0].mBlobs.Length() > mCurrentBlobIndex + 1);
+  MOZ_ASSERT((int)mBatches[0].mBlobs.Length() > mCurrentBlobIndex + 1);
 
   mBlob = mBatches[0].mBlobs[++mCurrentBlobIndex];
 
