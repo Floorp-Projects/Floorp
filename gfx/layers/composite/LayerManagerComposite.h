@@ -198,8 +198,6 @@ public:
     CreateDrawTarget(const mozilla::gfx::IntSize &aSize,
                      mozilla::gfx::SurfaceFormat aFormat) MOZ_OVERRIDE;
 
-  const nsIntSize& GetWidgetSize();
-
   /**
    * Calculates the 'completeness' of the rendering that intersected with the
    * screen on the last render. This is only useful when progressive tile
