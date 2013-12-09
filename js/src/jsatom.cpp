@@ -10,8 +10,8 @@
 
 #include "jsatominlines.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/RangedPtr.h"
-#include "mozilla/Util.h"
 
 #include <string.h>
 

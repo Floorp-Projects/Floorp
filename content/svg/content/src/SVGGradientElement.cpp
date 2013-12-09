@@ -5,10 +5,10 @@
 
 #include "mozilla/dom/SVGGradientElement.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/SVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGRadialGradientElementBinding.h"
 #include "mozilla/dom/SVGLinearGradientElementBinding.h"
-#include "mozilla/Util.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 #include "nsSVGElement.h"
