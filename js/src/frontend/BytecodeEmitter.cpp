@@ -1978,22 +1978,6 @@ EmitNameOp(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callC
     return true;
 }
 
-static inline bool
-EmitElemOpBase(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)
-{
-    if (Emit1(cx, bce, op) < 0)
-        return false;
-    CheckTypeSet(cx, bce, op);
-
-    if (op == JSOP_CALLELEM) {
-        if (Emit1(cx, bce, JSOP_SWAP) < 0)
-            return false;
-        if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
-            return false;
-    }
-    return true;
-}
-
 static bool
 EmitPropLHS(ExclusiveContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
@@ -2141,6 +2125,11 @@ EmitNameIncDec(ExclusiveContext *cx, ParseNode *pn, BytecodeEmitter *bce)
     return true;
 }
 
+/*
+ * Emit bytecode to put operands for a JSOP_GETELEM/CALLELEM/SETELEM/DELELEM
+ * opcode onto the stack in the right order. In the case of SETELEM, the
+ * value to be assigned must already be pushed.
+ */
 static bool
 EmitElemOperands(ExclusiveContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
@@ -2151,6 +2140,24 @@ EmitElemOperands(ExclusiveContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *
         return false;
     if (!EmitTree(cx, bce, pn->pn_right))
         return false;
+    if (op == JSOP_SETELEM && Emit2(cx, bce, JSOP_PICK, (jsbytecode)2) < 0)
+        return false;
+    return true;
+}
+
+static inline bool
+EmitElemOpBase(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)
+{
+    if (Emit1(cx, bce, op) < 0)
+        return false;
+    CheckTypeSet(cx, bce, op);
+
+    if (op == JSOP_CALLELEM) {
+        if (Emit1(cx, bce, JSOP_SWAP) < 0)
+            return false;
+        if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
+            return false;
+    }
     return true;
 }
 
@@ -2824,20 +2831,16 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
 {
     JS_ASSERT(emitOption != DefineVars);
 
-    /*
-     * Now emit the lvalue opcode sequence.  If the lvalue is a nested
-     * destructuring initialiser-form, call ourselves to handle it, then
-     * pop the matched value.  Otherwise emit an lvalue bytecode sequence
-     * ending with a JSOP_ENUMELEM or equivalent op.
-     */
+    // Now emit the lvalue opcode sequence. If the lvalue is a nested
+    // destructuring initialiser-form, call ourselves to handle it, then pop
+    // the matched value. Otherwise emit an lvalue bytecode sequence followed
+    // by an assignment op.
     if (pn->isKind(PNK_ARRAY) || pn->isKind(PNK_OBJECT)) {
         if (!EmitDestructuringOpsHelper(cx, bce, pn, emitOption))
             return false;
         if (emitOption == InitializeVars) {
-            /*
-             * Per its post-condition, EmitDestructuringOpsHelper has left the
-             * to-be-destructured value on top of the stack.
-             */
+            // Per its post-condition, EmitDestructuringOpsHelper has left the
+            // to-be-destructured value on top of the stack.
             if (Emit1(cx, bce, JSOP_POP) < 0)
                 return false;
         }
@@ -2847,8 +2850,6 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
         JS_ASSERT(pn->getOp() == JSOP_GETLOCAL);
         JS_ASSERT(pn->pn_dflags & PND_BOUND);
     } else {
-        // All paths below must pop after assigning to the lhs.
-
         switch (pn->getKind()) {
           case PNK_NAME:
             if (!BindNameToSlot(cx, bce, pn))
@@ -2886,16 +2887,12 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
 
                 if (!EmitIndexOp(cx, pn->getOp(), atomIndex, bce))
                     return false;
-                if (Emit1(cx, bce, JSOP_POP) < 0)
-                    return false;
                 break;
               }
 
               case JSOP_SETLOCAL:
               case JSOP_SETARG:
                 if (!EmitVarOp(cx, pn, pn->getOp(), bce))
-                    return false;
-                if (Emit1(cx, bce, JSOP_POP) < 0)
                     return false;
                 break;
 
@@ -2919,16 +2916,13 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
                 return false;
             if (!EmitAtomOp(cx, pn, JSOP_SETPROP, bce))
                 return false;
-            if (Emit1(cx, bce, JSOP_POP) < 0)
-                return false;
             break;
 
           case PNK_ELEM:
             // See the comment at `case PNK_DOT:` above. This case,
-            // `[a[x]] = [b]`, is handled much the same way, but no JSOP_SWAP
-            // is necessary because there is a specialized opcode for that,
-            // JSOP_ENUMELEM.
-            if (!EmitElemOp(cx, pn, JSOP_ENUMELEM, bce))
+            // `[a[x]] = [b]`, is handled much the same way. The JSOP_SWAP
+            // is emitted by EmitElemOperands.
+            if (!EmitElemOp(cx, pn, JSOP_SETELEM, bce))
                 return false;
             break;
 
@@ -2937,13 +2931,11 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
             if (!EmitTree(cx, bce, pn))
                 return false;
 
-            // Pop the call return value and the RHS, presumably for the
-            // benefit of bytecode analysis. (The interpreter will never reach
-            // these instructions since we just emitted JSOP_SETCALL, which
-            // always throws. It's possible no analyses actually depend on this
-            // either.)
-            if (Emit1(cx, bce, JSOP_POP) < 0)
-                return false;
+            // Pop the call return value. Below, we pop the RHS too, balancing
+            // the stack --- presumably for the benefit of bytecode
+            // analysis. (The interpreter will never reach these instructions
+            // since we just emitted JSOP_SETCALL, which always throws. It's
+            // possible no analyses actually depend on this either.)
             if (Emit1(cx, bce, JSOP_POP) < 0)
                 return false;
             break;
@@ -2951,6 +2943,10 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
           default:
             MOZ_ASSUME_UNREACHABLE("EmitDestructuringLHS: bad lhs kind");
         }
+
+        // Pop the assigned value.
+        if (Emit1(cx, bce, JSOP_POP) < 0)
+            return false;
     }
 
     return true;

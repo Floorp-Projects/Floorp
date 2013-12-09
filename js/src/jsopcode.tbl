@@ -273,11 +273,7 @@ OPDEF(JSOP_DEFAULT,   122,"default",    NULL,         5,  1,  0,  JOF_JUMP)
  */
 OPDEF(JSOP_EVAL,      123,"eval",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET)
 
-/*
- * ECMA-compliant helper for 'for (x[i] in o)' loops.
- */
-OPDEF(JSOP_ENUMELEM,  124,"enumelem",   NULL,         1,  3,  0,  JOF_BYTE |JOF_SET|JOF_TMPSLOT)
-
+OPDEF(JSOP_UNUSED124,  124, "unused124", NULL,      1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED125,  125, "unused125", NULL,      1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED126,  126, "unused126", NULL,      1,  0,  0,  JOF_BYTE)
 
