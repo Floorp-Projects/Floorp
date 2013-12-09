@@ -996,7 +996,7 @@ MPhi::computeRange(TempAllocator &alloc)
     Range *range = nullptr;
     JS_ASSERT(getOperand(0)->op() != MDefinition::Op_OsrValue);
     for (size_t i = 0, e = numOperands(); i < e; i++) {
-        if (getOperand(i)->block()->earlyAbort()) {
+        if (getOperand(i)->block()->unreachable()) {
             IonSpew(IonSpew_Range, "Ignoring unreachable input %d", getOperand(i)->id());
             continue;
         }
@@ -1028,8 +1028,8 @@ MBeta::computeRange(TempAllocator &alloc)
     Range opRange(getOperand(0));
     Range *range = Range::intersect(alloc, &opRange, comparison_, &emptyRange);
     if (emptyRange) {
-        IonSpew(IonSpew_Range, "Marking block for inst %d unexitable", id());
-        block()->setEarlyAbort();
+        IonSpew(IonSpew_Range, "Marking block for inst %d unreachable", id());
+        block()->setUnreachable();
     } else {
         setRange(range);
     }
@@ -2554,4 +2554,41 @@ MUrsh::collectRangeInfoPreTrunc()
     // we can optimize by disabling bailout checks for enforcing an int32 range.
     if (lhsRange.lower() >= 0 || rhsRange.lower() >= 1)
         bailoutsDisabled_ = true;
+}
+
+bool
+RangeAnalysis::prepareForUCE(bool *shouldRemoveDeadCode)
+{
+    *shouldRemoveDeadCode = false;
+
+    for (ReversePostorderIterator iter(graph_.rpoBegin()); iter != graph_.rpoEnd(); iter++) {
+        MBasicBlock *block = *iter;
+
+        if (!block->unreachable())
+            continue;
+
+        MControlInstruction *cond = block->getPredecessor(0)->lastIns();
+        if (!cond->isTest())
+            continue;
+
+        // Replace the condition of the test control instruction by a constant
+        // chosen based which of the successors has the unreachable flag which is
+        // added by MBeta::computeRange on its own block.
+        MTest *test = cond->toTest();
+        MConstant *constant = nullptr;
+        if (block == test->ifTrue()) {
+            constant = MConstant::New(alloc(), BooleanValue(false));
+        } else {
+            JS_ASSERT(block == test->ifFalse());
+            constant = MConstant::New(alloc(), BooleanValue(true));
+        }
+        test->block()->insertBefore(test, constant);
+        test->replaceOperand(0, constant);
+        IonSpew(IonSpew_Range, "Update condition of %d to reflect unreachable branches.",
+                test->id());
+
+        *shouldRemoveDeadCode = true;
+    }
+
+    return true;
 }
