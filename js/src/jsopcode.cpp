@@ -10,8 +10,6 @@
 
 #include "jsopcodeinlines.h"
 
-#include "mozilla/Util.h"
-
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -49,7 +47,6 @@ using namespace js;
 using namespace js::gc;
 
 using js::frontend::IsIdentifier;
-using mozilla::ArrayLength;
 
 /*
  * Index limit must stay within 32 bits.
