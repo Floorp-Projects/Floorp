@@ -8,7 +8,7 @@
 #include "prlog.h"
 #endif
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "gfxFontUtils.h"
 

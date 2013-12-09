@@ -11,7 +11,8 @@
 
 #include <stdio.h>
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
+
 #include "nspr.h"
 #include "nss.h"
 #include "plarenas.h"

@@ -8,8 +8,8 @@
 
 #include "nsComputedDOMStyle.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Util.h"
 
 #include "nsError.h"
 #include "nsDOMString.h"

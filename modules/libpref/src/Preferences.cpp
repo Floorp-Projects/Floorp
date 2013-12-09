@@ -7,8 +7,8 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/ContentChild.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Util.h"
 #include "mozilla/HashFunctions.h"
 
 #include "nsXULAppAPI.h"

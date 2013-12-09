@@ -6,10 +6,10 @@
 
 #include "jsarray.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Util.h"
 
 #include "jsapi.h"
 #include "jsatom.h"

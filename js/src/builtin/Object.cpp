@@ -6,7 +6,7 @@
 
 #include "builtin/Object.h"
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "jscntxt.h"
 

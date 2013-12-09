@@ -6,7 +6,7 @@
 #include "base/basictypes.h"
 
 /* This must occur *after* layers/PLayerTransaction.h to avoid typedefs conflicts. */
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "pratom.h"
 #include "prmem.h"

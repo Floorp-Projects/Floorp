@@ -17,8 +17,8 @@
 
 #include "jsdate.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/Util.h"
 
 #include <ctype.h>
 #include <math.h>

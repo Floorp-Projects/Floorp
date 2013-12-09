@@ -5,8 +5,9 @@
 #ifndef nsCodingStateMachine_h__
 #define nsCodingStateMachine_h__
 
+#include "mozilla/ArrayUtils.h"
+ 
 #include "nsPkgInt.h"
-#include "mozilla/Util.h"
 
 typedef enum {
    eStart = 0,

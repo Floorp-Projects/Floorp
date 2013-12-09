@@ -9,12 +9,10 @@
 #include "nsCSSScanner.h"
 #include "nsStyleUtil.h"
 #include "nsTraceRefcnt.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/css/ErrorReporter.h"
 #include "mozilla/Likely.h"
-#include "mozilla/Util.h"
 #include <algorithm>
-
-using mozilla::ArrayLength;
 
 /* Character class tables and related helper functions. */
 

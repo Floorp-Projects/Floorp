@@ -7,6 +7,7 @@
 #include "PoisonIOInterposer.h"
 #include "mach_override.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IOInterposer.h"
@@ -14,7 +15,6 @@
 #include "mozilla/ProcessedStack.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Util.h"
 #include "nsPrintfCString.h"
 #include "nsStackWalk.h"
 #include "nsTraceRefcntImpl.h"

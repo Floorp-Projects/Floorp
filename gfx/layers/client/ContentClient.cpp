@@ -13,7 +13,7 @@
 #include "gfxTeeSurface.h"              // for gfxTeeSurface
 #include "gfxUtils.h"                   // for gfxUtils
 #include "ipc/ShadowLayers.h"           // for ShadowLayerForwarder
-#include "mozilla/Util.h"               // for ArrayLength
+#include "mozilla/ArrayUtils.h"         // for ArrayLength
 #include "mozilla/gfx/2D.h"             // for DrawTarget, Factory
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize

@@ -8,9 +8,9 @@
 
 #include "jsiter.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/Util.h"
 
 #include "jsarray.h"
 #include "jsatom.h"

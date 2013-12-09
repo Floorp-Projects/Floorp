@@ -12,10 +12,12 @@
 #ifndef mozilla_RangedPtr_h
 #define mozilla_RangedPtr_h
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/NullPtr.h"
-#include "mozilla/Util.h"
+
+#include <stdint.h>
 
 namespace mozilla {
 

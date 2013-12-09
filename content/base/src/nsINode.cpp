@@ -18,7 +18,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/MutationEvent.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Util.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsAttrValueOrString.h"
 #include "nsBindingManager.h"

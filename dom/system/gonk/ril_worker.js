@@ -6965,17 +6965,6 @@ let GsmPDUHelper = {
           case PDU_PID_ANSI_136_R_DATA:
           case PDU_PID_USIM_DATA_DOWNLOAD:
             return;
-          case PDU_PID_RETURN_CALL_MESSAGE:
-            // Level 1 of message waiting indication:
-            // Only a return call message is provided
-            let mwi = msg.mwi = {};
-
-            // TODO: When should we de-activate the level 1 indicator?
-            mwi.active = true;
-            mwi.discard = false;
-            mwi.msgCount = GECKO_VOICEMAIL_MESSAGE_COUNT_UNKNOWN;
-            if (DEBUG) debug("TP-PID got return call message: " + msg.sender);
-            return;
         }
         break;
     }

@@ -11,7 +11,7 @@
  *****************************************************************************
  */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"

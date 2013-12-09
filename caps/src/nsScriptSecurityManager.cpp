@@ -6,7 +6,7 @@
 
 #include "nsScriptSecurityManager.h"
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "js/OldDebugAPI.h"
 #include "xpcprivate.h"
