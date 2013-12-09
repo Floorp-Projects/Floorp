@@ -5885,8 +5885,10 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
                      cacheList_.length(), runtimeData_.length(),
                      safepoints_.size(), callTargets.length(),
                      patchableBackedges_.length());
-    if (!ionScript)
+    if (!ionScript) {
+        recompileInfo.compilerOutput(cx->compartment()->types)->invalidate();
         return false;
+    }
 
     // Lock the runtime against operation callbacks during the link.
     // We don't want an operation callback to protect the code for the script
@@ -5909,6 +5911,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         // Use js_free instead of IonScript::Destroy: the cache list and
         // backedge list are still uninitialized.
         js_free(ionScript);
+        recompileInfo.compilerOutput(cx->compartment()->types)->invalidate();
         return false;
     }
 
@@ -5929,6 +5932,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
                         /* resetUses */ false, /* cancelOffThread*/ false))
         {
             js_free(ionScript);
+            recompileInfo.compilerOutput(cx->compartment()->types)->invalidate();
             return false;
         }
     }
