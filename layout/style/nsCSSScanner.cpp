@@ -14,8 +14,6 @@
 #include "mozilla/Util.h"
 #include <algorithm>
 
-using mozilla::ArrayLength;
-
 /* Character class tables and related helper functions. */
 
 static const uint8_t IS_HEX_DIGIT  = 0x01;

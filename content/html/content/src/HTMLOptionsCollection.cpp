@@ -12,7 +12,6 @@
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLOptionsCollectionBinding.h"
 #include "mozilla/dom/HTMLSelectElement.h"
-#include "mozilla/Util.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
 #include "nsEventDispatcher.h"
