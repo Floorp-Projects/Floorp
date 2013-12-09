@@ -674,19 +674,24 @@ GetNativeForGlobal(JSObject *obj)
     if (!MaybeGetObjectScope(obj))
         return nullptr;
 
-    // Every global needs to hold a native as its private.
-    MOZ_ASSERT(GetObjectClass(obj)->flags & (JSCLASS_PRIVATE_IS_NSISUPPORTS |
-                                             JSCLASS_HAS_PRIVATE));
-    nsISupports *native =
-        static_cast<nsISupports *>(js::GetObjectPrivate(obj));
-    MOZ_ASSERT(native);
+    // Every global needs to hold a native as its private or be a
+    // WebIDL object with an nsISupports DOM object.
+    MOZ_ASSERT((GetObjectClass(obj)->flags & (JSCLASS_PRIVATE_IS_NSISUPPORTS |
+                                             JSCLASS_HAS_PRIVATE)) ||
+               dom::UnwrapDOMObjectToISupports(obj));
 
-    // In some cases (like for windows) it is a wrapped native,
-    // in other cases (sandboxes, backstage passes) it's just
-    // a direct pointer to the native. If it's a wrapped native
-    // let's unwrap it first.
-    if (nsCOMPtr<nsIXPConnectWrappedNative> wn = do_QueryInterface(native)) {
-        native = wn->Native();
+    nsISupports *native = dom::UnwrapDOMObjectToISupports(obj);
+    if (!native) {
+        native = static_cast<nsISupports *>(js::GetObjectPrivate(obj));
+        MOZ_ASSERT(native);
+
+        // In some cases (like for windows) it is a wrapped native,
+        // in other cases (sandboxes, backstage passes) it's just
+        // a direct pointer to the native. If it's a wrapped native
+        // let's unwrap it first.
+        if (nsCOMPtr<nsIXPConnectWrappedNative> wn = do_QueryInterface(native)) {
+            native = wn->Native();
+        }
     }
 
     nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(native);
