@@ -487,12 +487,36 @@ GeneratorKindFromBits(unsigned val) {
     return static_cast<GeneratorKind>(val);
 }
 
+/*
+ * NB: after a successful XDR_DECODE, XDRScript callers must do any required
+ * subsequent set-up of owning function or script object and then call
+ * js_CallNewScriptHook.
+ */
+template<XDRMode mode>
+bool
+XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enclosingScript,
+          HandleFunction fun, MutableHandleScript scriptp);
+
+JSScript *
+CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script,
+            NewObjectKind newKind = GenericObject);
+
 } /* namespace js */
 
 class JSScript : public js::gc::BarrieredCell<JSScript>
 {
     static const uint32_t stepFlagMask = 0x80000000U;
     static const uint32_t stepCountMask = 0x7fffffffU;
+
+    template <js::XDRMode mode>
+    friend
+    bool
+    js::XDRScript(js::XDRState<mode> *xdr, js::HandleObject enclosingScope, js::HandleScript enclosingScript,
+                  js::HandleFunction fun, js::MutableHandleScript scriptp);
+
+    friend JSScript *
+    js::CloneScript(JSContext *cx, js::HandleObject enclosingScope, js::HandleFunction fun, js::HandleScript src,
+                    js::NewObjectKind newKind);
 
   public:
     //
@@ -551,22 +575,20 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     // 32-bit fields.
 
     uint32_t        length_;    /* length of code vector */
-  public:
-    uint32_t        dataSize;   /* size of the used part of the data array */
+    uint32_t        dataSize_;  /* size of the used part of the data array */
 
-    uint32_t        lineno;     /* base line number of script */
-    uint32_t        column;     /* base column of script, optionally set */
+    uint32_t        lineno_;    /* base line number of script */
+    uint32_t        column_;    /* base column of script, optionally set */
 
-    uint32_t        mainOffset; /* offset of main entry point from code, after
+    uint32_t        mainOffset_;/* offset of main entry point from code, after
                                    predef'ing prolog */
 
-    uint32_t        natoms;     /* length of atoms array */
+    uint32_t        natoms_;    /* length of atoms array */
 
     /* Range of characters in scriptSource which contains this script's source. */
-    uint32_t        sourceStart;
-    uint32_t        sourceEnd;
+    uint32_t        sourceStart_;
+    uint32_t        sourceEnd_;
 
-  private:
     uint32_t        useCount;   /* Number of times the script has been called
                                  * or has had backedges taken. Reset if the
                                  * script's JIT code is forcibly discarded. */
@@ -575,27 +597,24 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     // Unique identifier within the compartment for this script, used for
     // printing analysis information.
     uint32_t        id_;
-  private:
     uint32_t        idpad;
 #endif
 
     // 16-bit fields.
 
-  private:
     uint16_t        PADDING16;
     uint16_t        version;    /* JS version under which script was compiled */
 
-  public:
-    uint16_t        funLength;  /* ES6 function length */
+    uint16_t        funLength_; /* ES6 function length */
 
-    uint16_t        nfixed;     /* number of slots besides stack operands in
+    uint16_t        nfixed_;    /* number of slots besides stack operands in
                                    slot array */
 
-    uint16_t        nTypeSets;  /* number of type sets used in this script for
+    uint16_t        nTypeSets_; /* number of type sets used in this script for
                                    dynamic type monitoring */
 
-    uint16_t        nslots;     /* vars plus maximum stack depth */
-    uint16_t        staticLevel;/* static level for display maintenance */
+    uint16_t        nslots_;    /* vars plus maximum stack depth */
+    uint16_t        staticLevel_;/* static level for display maintenance */
 
     // Bit fields.
 
@@ -746,6 +765,58 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     jsbytecode *offsetToPC(size_t offset) const {
         JS_ASSERT(offset < length());
         return code() + offset;
+    }
+
+    size_t mainOffset() const {
+        js::AutoThreadSafeAccess ts(this);
+        return mainOffset_;
+    }
+
+    size_t lineno() const {
+        js::AutoThreadSafeAccess ts(this);
+        return lineno_;
+    }
+
+    size_t column() const {
+        js::AutoThreadSafeAccess ts(this);
+        return column_;
+    }
+
+    void setColumn(size_t column) { column_ = column; }
+
+    size_t nfixed() const {
+        js::AutoThreadSafeAccess ts(this);
+        return nfixed_;
+    }
+
+    size_t nslots() const {
+        js::AutoThreadSafeAccess ts(this);
+        return nslots_;
+    }
+
+    size_t staticLevel() const {
+        js::AutoThreadSafeAccess ts(this);
+        return staticLevel_;
+    }
+
+    size_t nTypeSets() const {
+        js::AutoThreadSafeAccess ts(this);
+        return nTypeSets_;
+    }
+
+    size_t funLength() const {
+        js::AutoThreadSafeAccess ts(this);
+        return funLength_;
+    }
+
+    size_t sourceStart() const {
+        js::AutoThreadSafeAccess ts(this);
+        return sourceStart_;
+    }
+
+    size_t sourceEnd() const {
+        js::AutoThreadSafeAccess ts(this);
+        return sourceEnd_;
     }
 
     /* See ContextFlags::funArgumentsHasLocalBinding comment. */
@@ -973,7 +1044,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     void destroyScriptCounts(js::FreeOp *fop);
 
     jsbytecode *main() {
-        return code() + mainOffset;
+        return code() + mainOffset();
     }
 
     /*
@@ -1008,6 +1079,8 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     size_t trynotesOffset()   { return OFF(regexpsOffset,    hasRegexps,    js::ObjectArray);     }
     size_t blockScopesOffset(){ return OFF(trynotesOffset,   hasTrynotes,   js::TryNoteArray);    }
 
+    size_t dataSize() const { return dataSize_; }
+
     js::ConstArray *consts() {
         JS_ASSERT(hasConsts());
         return reinterpret_cast<js::ConstArray *>(data + constsOffset());
@@ -1035,8 +1108,10 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
 
     bool hasLoops();
 
+    size_t natoms() const { return natoms_; }
+
     js::HeapPtrAtom &getAtom(size_t index) const {
-        JS_ASSERT(index < natoms);
+        JS_ASSERT(index < natoms());
         return atoms[index];
     }
 
@@ -1563,10 +1638,6 @@ extern void
 CurrentScriptFileLineOrigin(JSContext *cx, const char **file, unsigned *linenop,
                             JSPrincipals **origin, LineOption opt = NOT_CALLED_FROM_JSOP_EVAL);
 
-extern JSScript *
-CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script,
-            NewObjectKind newKind = GenericObject);
-
 bool
 CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone,
                     NewObjectKind newKind = GenericObject);
@@ -1583,16 +1654,6 @@ NormalizeOriginPrincipals(JSPrincipals *principals, JSPrincipals *originPrincipa
 {
     return originPrincipals ? originPrincipals : principals;
 }
-
-/*
- * NB: after a successful XDR_DECODE, XDRScript callers must do any required
- * subsequent set-up of owning function or script object and then call
- * js_CallNewScriptHook.
- */
-template<XDRMode mode>
-bool
-XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enclosingScript,
-          HandleFunction fun, MutableHandleScript scriptp);
 
 } /* namespace js */
 

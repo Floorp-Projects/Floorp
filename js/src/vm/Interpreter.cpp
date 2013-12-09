@@ -1349,7 +1349,7 @@ Interpret(JSContext *cx, RunState &state)
 
     if (JS_UNLIKELY(REGS.fp()->isGeneratorFrame())) {
         JS_ASSERT(script->containsPC(REGS.pc));
-        JS_ASSERT(REGS.stackDepth() <= script->nslots);
+        JS_ASSERT(REGS.stackDepth() <= script->nslots());
 
         /*
          * To support generator_throw and to catch ignored exceptions,
@@ -3231,7 +3231,7 @@ CASE(JSOP_ENTERLET2)
 
     if (*REGS.pc == JSOP_ENTERBLOCK) {
         JS_ASSERT(REGS.stackDepth() == blockObj.stackDepth());
-        JS_ASSERT(REGS.stackDepth() + blockObj.slotCount() <= script->nslots);
+        JS_ASSERT(REGS.stackDepth() + blockObj.slotCount() <= script->nslots());
         Value *vp = REGS.sp + blockObj.slotCount();
         SetValueRangeToUndefined(REGS.sp, vp);
         REGS.sp = vp;
@@ -3302,8 +3302,8 @@ CASE(JSOP_YIELD)
 CASE(JSOP_ARRAYPUSH)
 {
     uint32_t slot = GET_UINT16(REGS.pc);
-    JS_ASSERT(script->nfixed <= slot);
-    JS_ASSERT(slot < script->nslots);
+    JS_ASSERT(script->nfixed() <= slot);
+    JS_ASSERT(slot < script->nslots());
     RootedObject &obj = rootObject0;
     obj = &REGS.fp()->unaliasedLocal(slot).toObject();
     if (!js_NewbornArrayPush(cx, obj, REGS.sp[-1]))

@@ -290,7 +290,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             JSTryNote *tn = script_->trynotes()->vector;
             JSTryNote *tnlimit = tn + script_->trynotes()->length;
             for (; tn < tnlimit; tn++) {
-                unsigned startOffset = script_->mainOffset + tn->start;
+                unsigned startOffset = script_->mainOffset() + tn->start;
                 if (startOffset == offset + 1) {
                     unsigned catchOffset = startOffset + tn->length;
 
@@ -317,7 +317,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             jsbytecode *next = pc + JSOP_GETLOCAL_LENGTH;
             if (JSOp(*next) != JSOP_POP || jumpTarget(next)) {
                 uint32_t local = GET_SLOTNO(pc);
-                if (local >= script_->nfixed) {
+                if (local >= script_->nfixed()) {
                     localsAliasStack_ = true;
                     break;
                 }
@@ -328,7 +328,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_CALLLOCAL:
           case JSOP_SETLOCAL: {
             uint32_t local = GET_SLOTNO(pc);
-            if (local >= script_->nfixed) {
+            if (local >= script_->nfixed()) {
                 localsAliasStack_ = true;
                 break;
             }
@@ -478,7 +478,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
             JSTryNote *tn = script_->trynotes()->vector;
             JSTryNote *tnlimit = tn + script_->trynotes()->length;
             for (; tn < tnlimit; tn++) {
-                unsigned startOffset = script_->mainOffset + tn->start;
+                unsigned startOffset = script_->mainOffset() + tn->start;
                 if (startOffset + tn->length == offset) {
                     /*
                      * Extend all live variables at exception entry to the start of
@@ -877,7 +877,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
     }
 
     LifoAlloc &alloc = cx->typeLifoAlloc();
-    unsigned maxDepth = script_->nslots - script_->nfixed;
+    unsigned maxDepth = script_->nslots() - script_->nfixed();
 
     /*
      * Current value of each variable and stack value. Empty for missing or
@@ -1210,7 +1210,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             JSTryNote *tn = script_->trynotes()->vector;
             JSTryNote *tnlimit = tn + script_->trynotes()->length;
             for (; tn < tnlimit; tn++) {
-                unsigned startOffset = script_->mainOffset + tn->start;
+                unsigned startOffset = script_->mainOffset() + tn->start;
                 if (startOffset == offset + 1) {
                     unsigned catchOffset = startOffset + tn->length;
 

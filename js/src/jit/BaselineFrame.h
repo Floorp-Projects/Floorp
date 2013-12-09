@@ -152,7 +152,7 @@ class BaselineFrame
 
     Value &unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
         JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
-        JS_ASSERT(i < script()->nfixed);
+        JS_ASSERT(i < script()->nfixed());
         return *valueSlot(i);
     }
 
@@ -334,7 +334,7 @@ class BaselineFrame
         return isEvalFrame() && !script()->strict;
     }
     bool isDirectEvalFrame() const {
-        return isEvalFrame() && script()->staticLevel > 0;
+        return isEvalFrame() && script()->staticLevel() > 0;
     }
     bool isNonStrictDirectEvalFrame() const {
         return isNonStrictEvalFrame() && isDirectEvalFrame();

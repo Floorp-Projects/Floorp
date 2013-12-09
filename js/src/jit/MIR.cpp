@@ -499,8 +499,8 @@ MConstant::printOpcode(FILE *fp) const
             }
             if (fun->hasScript()) {
                 JSScript *script = fun->nonLazyScript();
-                fprintf(fp, " (%s:%u)",
-                        script->filename() ? script->filename() : "", script->lineno);
+                fprintf(fp, " (%s:%d)",
+                        script->filename() ? script->filename() : "", (int) script->lineno());
             }
             fprintf(fp, " at %p", (void *) fun);
             break;
