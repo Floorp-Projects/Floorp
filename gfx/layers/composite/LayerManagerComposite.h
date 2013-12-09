@@ -153,12 +153,6 @@ public:
     CreateOptimalMaskSurface(const gfxIntSize &aSize) MOZ_OVERRIDE;
 
 
-  DrawThebesLayerCallback GetThebesLayerCallback() const
-  { return mThebesLayerCallback; }
-
-  void* GetThebesLayerCallbackData() const
-  { return mThebesLayerCallbackData; }
-
   virtual const char* Name() const MOZ_OVERRIDE { return ""; }
 
   enum WorldTransforPolicy {
@@ -271,10 +265,6 @@ private:
   /** Our more efficient but less powerful alter ego, if one is available. */
   nsRefPtr<Composer2D> mComposer2D;
 
-  /* Thebes layer callbacks; valid at the end of a transaciton,
-   * while rendering */
-  DrawThebesLayerCallback mThebesLayerCallback;
-  void *mThebesLayerCallbackData;
   gfxMatrix mWorldMatrix;
 
   bool mInTransaction;
