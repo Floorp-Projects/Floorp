@@ -2,11 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsAboutProtocolUtils_h
+#define nsAboutProtocolUtils_h
+
 #include "nsIURI.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIAboutModule.h"
 #include "nsServiceManagerUtils.h"
+#include "prtime.h"
 
 inline nsresult
 NS_GetAboutModuleName(nsIURI *aAboutURI, nsCString& aModule)
@@ -47,3 +51,21 @@ NS_GetAboutModule(nsIURI *aAboutURI, nsIAboutModule** aModule)
 
   return CallGetService(contractID.get(), aModule);
 }
+
+inline PRTime SecondsToPRTime(uint32_t t_sec)
+{
+    PRTime t_usec, usec_per_sec;
+    t_usec = t_sec;
+    usec_per_sec = PR_USEC_PER_SEC;
+    return t_usec *= usec_per_sec;
+}
+inline void PrintTimeString(char *buf, uint32_t bufsize, uint32_t t_sec)
+{
+    PRExplodedTime et;
+    PRTime t_usec = SecondsToPRTime(t_sec);
+    PR_ExplodeTime(t_usec, PR_LocalTimeParameters, &et);
+    PR_FormatTime(buf, bufsize, "%Y-%m-%d %H:%M:%S", &et);
+}
+
+
+#endif
