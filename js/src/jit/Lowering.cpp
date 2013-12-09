@@ -110,7 +110,7 @@ LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed *ins)
 {
     LCheckOverRecursed *lir = new(alloc()) LCheckOverRecursed();
 
-    if (!add(lir))
+    if (!add(lir, ins))
         return false;
     if (!assignSafepoint(lir, ins))
         return false;
@@ -736,8 +736,9 @@ LIRGenerator::visitTest(MTest *test)
                            "MCompare::tryFold should handle the never-emulates-undefined case");
 
                 LEmulatesUndefinedAndBranch *lir =
-                    new(alloc()) LEmulatesUndefinedAndBranch(useRegister(left), ifTrue, ifFalse, temp());
-                return add(lir, comp);
+                    new(alloc()) LEmulatesUndefinedAndBranch(comp, useRegister(left),
+                                                             ifTrue, ifFalse, temp());
+                return add(lir, test);
             }
 
             LDefinition tmp, tmpToUnbox;
@@ -750,10 +751,11 @@ LIRGenerator::visitTest(MTest *test)
             }
 
             LIsNullOrLikeUndefinedAndBranch *lir =
-                new(alloc()) LIsNullOrLikeUndefinedAndBranch(ifTrue, ifFalse, tmp, tmpToUnbox);
+                new(alloc()) LIsNullOrLikeUndefinedAndBranch(comp, ifTrue, ifFalse,
+                                                             tmp, tmpToUnbox);
             if (!useBox(lir, LIsNullOrLikeUndefinedAndBranch::Value, left))
                 return false;
-            return add(lir, comp);
+            return add(lir, test);
         }
 
         // Compare and branch booleans.
@@ -762,10 +764,10 @@ LIRGenerator::visitTest(MTest *test)
             JS_ASSERT(right->type() == MIRType_Boolean);
 
             LAllocation rhs = useRegisterOrConstant(right);
-            LCompareBAndBranch *lir = new(alloc()) LCompareBAndBranch(rhs, ifTrue, ifFalse);
+            LCompareBAndBranch *lir = new(alloc()) LCompareBAndBranch(comp, rhs, ifTrue, ifFalse);
             if (!useBox(lir, LCompareBAndBranch::Lhs, left))
                 return false;
-            return add(lir, comp);
+            return add(lir, test);
         }
 
         // Compare and branch Int32 or Object pointers.
@@ -780,34 +782,37 @@ LIRGenerator::visitTest(MTest *test)
                 rhs = useAnyOrConstant(right);
             else
                 rhs = useRegister(right);
-            LCompareAndBranch *lir = new(alloc()) LCompareAndBranch(op, lhs, rhs, ifTrue, ifFalse);
-            return add(lir, comp);
+            LCompareAndBranch *lir = new(alloc()) LCompareAndBranch(comp, op, lhs, rhs,
+                                                                    ifTrue, ifFalse);
+            return add(lir, test);
         }
 
         // Compare and branch doubles.
         if (comp->isDoubleComparison()) {
             LAllocation lhs = useRegister(left);
             LAllocation rhs = useRegister(right);
-            LCompareDAndBranch *lir = new(alloc()) LCompareDAndBranch(lhs, rhs, ifTrue, ifFalse);
-            return add(lir, comp);
+            LCompareDAndBranch *lir = new(alloc()) LCompareDAndBranch(comp, lhs, rhs,
+                                                                      ifTrue, ifFalse);
+            return add(lir, test);
         }
 
         // Compare and branch floats.
         if (comp->isFloat32Comparison()) {
             LAllocation lhs = useRegister(left);
             LAllocation rhs = useRegister(right);
-            LCompareFAndBranch *lir = new(alloc()) LCompareFAndBranch(lhs, rhs, ifTrue, ifFalse);
-            return add(lir, comp);
+            LCompareFAndBranch *lir = new(alloc()) LCompareFAndBranch(comp, lhs, rhs,
+                                                                      ifTrue, ifFalse);
+            return add(lir, test);
         }
 
         // Compare values.
         if (comp->compareType() == MCompare::Compare_Value) {
-            LCompareVAndBranch *lir = new(alloc()) LCompareVAndBranch(ifTrue, ifFalse);
+            LCompareVAndBranch *lir = new(alloc()) LCompareVAndBranch(comp, ifTrue, ifFalse);
             if (!useBoxAtStart(lir, LCompareVAndBranch::LhsInput, left))
                 return false;
             if (!useBoxAtStart(lir, LCompareVAndBranch::RhsInput, right))
                 return false;
-            return add(lir, comp);
+            return add(lir, test);
         }
     }
 
@@ -2080,12 +2085,12 @@ LIRGenerator::visitInterruptCheck(MInterruptCheck *ins)
 #ifndef JS_CPU_ARM
     if (GetIonContext()->runtime->signalHandlersInstalled()) {
         LInterruptCheckImplicit *lir = new(alloc()) LInterruptCheckImplicit();
-        return add(lir) && assignSafepoint(lir, ins);
+        return add(lir, ins) && assignSafepoint(lir, ins);
     }
 #endif
 
     LInterruptCheck *lir = new(alloc()) LInterruptCheck();
-    return add(lir) && assignSafepoint(lir, ins);
+    return add(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
