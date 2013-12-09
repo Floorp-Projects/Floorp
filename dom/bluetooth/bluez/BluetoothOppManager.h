@@ -45,7 +45,7 @@ public:
   static const int DEFAULT_OPP_CHANNEL = 10;
   static const int MAX_PACKET_LENGTH = 0xFFFE;
 
-  ~BluetoothOppManager();
+  virtual ~BluetoothOppManager();
   static BluetoothOppManager* Get();
   void ClientDataHandler(mozilla::ipc::UnixSocketRawData* aMessage);
   void ServerDataHandler(mozilla::ipc::UnixSocketRawData* aMessage);
@@ -115,7 +115,8 @@ private:
    *         false if the received length exceeds/not reaches the expected
    *         length.
    */
-  bool ComposePacket(uint8_t aOpCode, UnixSocketRawData* aMessage);
+  bool ComposePacket(uint8_t aOpCode,
+                     mozilla::ipc::UnixSocketRawData* aMessage);
 
   /**
    * OBEX session status.

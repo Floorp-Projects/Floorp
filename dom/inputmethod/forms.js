@@ -26,7 +26,6 @@ XPCOMUtils.defineLazyGetter(this, "domWindowUtils", function () {
 const RESIZE_SCROLL_DELAY = 20;
 
 let HTMLDocument = Ci.nsIDOMHTMLDocument;
-let HTMLElement = Ci.nsIDOMHTMLElement;
 let HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
 let HTMLBodyElement = Ci.nsIDOMHTMLBodyElement;
 let HTMLIFrameElement = Ci.nsIDOMHTMLIFrameElement;
@@ -343,12 +342,6 @@ let FormAssistant = {
         }
 
         if (!target) {
-          break;
-        }
-
-        // Only handle the event from our descendants
-        if (target instanceof HTMLElement &&
-            content.window != target.ownerDocument.defaultView.top) {
           break;
         }
 

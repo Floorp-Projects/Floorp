@@ -48,10 +48,10 @@
 #include "nsStyleSet.h"
 #include "mozilla/dom/Element.h"
 #include "nsNthIndexCache.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Likely.h"
-#include "mozilla/Util.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

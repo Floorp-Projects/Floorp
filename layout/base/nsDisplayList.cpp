@@ -2548,10 +2548,30 @@ nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
 nsRect
 nsDisplayBorder::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
-  nsRect borderBounds(ToReferenceFrame(), mFrame->GetSize());
-  borderBounds.Inflate(mFrame->StyleBorder()->GetImageOutset());
   *aSnap = true;
-  return borderBounds;
+  const nsStyleBorder *styleBorder = mFrame->StyleBorder();
+  nsRect borderBounds(ToReferenceFrame(), mFrame->GetSize());
+  if (styleBorder->IsBorderImageLoaded()) {
+    borderBounds.Inflate(mFrame->StyleBorder()->GetImageOutset());
+    return borderBounds;
+  } else {
+    nsMargin border = styleBorder->GetComputedBorder();
+    nsRect result;
+    if (border.top > 0) {
+      result = nsRect(borderBounds.X(), borderBounds.Y(), borderBounds.Width(), border.top);
+    }
+    if (border.right > 0) {
+      result.UnionRect(result, nsRect(borderBounds.XMost() - border.right, borderBounds.Y(), border.right, borderBounds.Height()));
+    }
+    if (border.bottom > 0) {
+      result.UnionRect(result, nsRect(borderBounds.X(), borderBounds.YMost() - border.bottom, borderBounds.Width(), border.bottom));
+    }
+    if (border.left > 0) {
+      result.UnionRect(result, nsRect(borderBounds.X(), borderBounds.Y(), border.left, borderBounds.Height()));
+    }
+
+    return result;
+  }
 }
 
 // Given a region, compute a conservative approximation to it as a list
