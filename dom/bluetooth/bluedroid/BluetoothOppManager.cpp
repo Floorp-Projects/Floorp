@@ -261,7 +261,7 @@ BluetoothOppManager::ConnectInternal(const nsAString& aDeviceAddress)
   }
 
   mSocket =
-    new BluetoothSocket(this, BluetoothSocketType::RFCOMM, true, true);
+    new BluetoothSocket(this, BluetoothSocketType::RFCOMM, false, true);
   mSocket->Connect(aDeviceAddress, -1);
 }
 
@@ -295,7 +295,7 @@ BluetoothOppManager::Listen()
   }
 
   mServerSocket =
-    new BluetoothSocket(this, BluetoothSocketType::RFCOMM, true, true);
+    new BluetoothSocket(this, BluetoothSocketType::RFCOMM, false, true);
 
   if (!mServerSocket->Listen(BluetoothReservedChannels::CHANNEL_OPUSH)) {
     BT_WARNING("[OPP] Can't listen on RFCOMM socket!");
@@ -315,7 +315,7 @@ BluetoothOppManager::StartSendingNextFile()
 
   MOZ_ASSERT(!IsConnected());
   MOZ_ASSERT(!mBatches.IsEmpty());
-  MOZ_ASSERT(mBatches[0].mBlobs.Length() > mCurrentBlobIndex + 1);
+  MOZ_ASSERT((int)mBatches[0].mBlobs.Length() > mCurrentBlobIndex + 1);
 
   mBlob = mBatches[0].mBlobs[++mCurrentBlobIndex];
 

@@ -84,7 +84,7 @@ public:
   }
 
   static BluetoothHfpManager* Get();
-  ~BluetoothHfpManager();
+  virtual ~BluetoothHfpManager();
 
   bool ConnectSco();
   bool DisconnectSco();

@@ -1215,12 +1215,13 @@ IsCompilingAsmJS()
 }
 #endif
 
-static void assume_unreachable_(const char *output) {
+static void
+AssumeUnreachable_(const char *output) {
     MOZ_ReportAssertionFailure(output, __FILE__, __LINE__);
 }
 
 void
-MacroAssembler::assume_unreachable(const char *output)
+MacroAssembler::assumeUnreachable(const char *output)
 {
 #ifdef DEBUG
     // AsmJS forbids use of ImmPtr.
@@ -1233,7 +1234,7 @@ MacroAssembler::assume_unreachable(const char *output)
         setupUnalignedABICall(1, temp);
         movePtr(ImmPtr(output), temp);
         passABIArg(temp);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void *, assume_unreachable_));
+        callWithABI(JS_FUNC_TO_DATA_PTR(void *, AssumeUnreachable_));
 
         PopRegsInMask(RegisterSet::Volatile());
     }
@@ -1242,7 +1243,8 @@ MacroAssembler::assume_unreachable(const char *output)
     breakpoint();
 }
 
-static void printf0_(const char *output) {
+static void
+Printf0_(const char *output) {
     printf("%s", output);
 }
 
@@ -1257,12 +1259,13 @@ MacroAssembler::printf(const char *output)
     setupUnalignedABICall(1, temp);
     movePtr(ImmPtr(output), temp);
     passABIArg(temp);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void *, printf0_));
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, Printf0_));
 
     PopRegsInMask(RegisterSet::Volatile());
 }
 
-static void printf1_(const char *output, uintptr_t value) {
+static void
+Printf1_(const char *output, uintptr_t value) {
     char *line = JS_sprintf_append(nullptr, output, value);
     printf("%s", line);
     js_free(line);
@@ -1282,7 +1285,7 @@ MacroAssembler::printf(const char *output, Register value)
     movePtr(ImmPtr(output), temp);
     passABIArg(temp);
     passABIArg(value);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void *, printf1_));
+    callWithABI(JS_FUNC_TO_DATA_PTR(void *, Printf1_));
 
     PopRegsInMask(RegisterSet::Volatile());
 }

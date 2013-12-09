@@ -5,8 +5,8 @@
 
 /* Utilities for animation of computed style values */
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Util.h"
 
 #include "nsStyleAnimation.h"
 #include "nsStyleTransformMatrix.h"
@@ -2267,7 +2267,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
         if (list2) {
           list2 = list2->mNext;
         }
-      };
+      }
       NS_ABORT_IF_FALSE(!*resultTail,
                         "resultTail isn't pointing to the tail (may leak)");
 

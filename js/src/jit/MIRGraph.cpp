@@ -275,7 +275,7 @@ MBasicBlock::NewAsmJS(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred, Kin
 }
 
 MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kind kind)
-  : earlyAbort_(false),
+  : unreachable_(false),
     graph_(graph),
     info_(info),
     predecessors_(graph.alloc()),
@@ -911,6 +911,15 @@ MBasicBlock::dominates(MBasicBlock *other)
     uint32_t high = domIndex() + numDominated();
     uint32_t low  = domIndex();
     return other->domIndex() >= low && other->domIndex() <= high;
+}
+
+void
+MBasicBlock::setUnreachable()
+{
+    unreachable_ = true;
+    size_t numDom = numImmediatelyDominatedBlocks();
+    for (size_t d = 0; d < numDom; d++)
+        getImmediatelyDominatedBlock(d)->unreachable_ = true;
 }
 
 AbortReason

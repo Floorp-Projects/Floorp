@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=929236
   code += "var g42 = f();\n";
   code += "ok(jsFuns.isAsmJSFunction(g42), 'g42 is an asm.js function')\n";
   code += "ok(g42() === 42, 'g42 returns the correct result')\n";
-  code += "finishedEvalAsync();";
+  code += "finishedEvalAsync(f);";
   ok(code.length > 10000);
 
   function evalAsync(code) {
@@ -41,13 +41,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=929236
   }
 
   var state = 0;
-  function finishedEvalAsync() {
+  function finishedEvalAsync(module) {
     switch (state) {
       case 0:
         state++;
         evalAsync(code);
         break;
       case 1:
+        ok(jsFuns.isAsmJSModuleLoadedFromCache(module), 'module loaded from cache');
         SimpleTest.finish();
         break;
       default:

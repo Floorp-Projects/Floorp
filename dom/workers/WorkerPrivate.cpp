@@ -44,7 +44,6 @@
 #include "mozilla/dom/MessagePortList.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Util.h"
 #include "nsAlgorithm.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"

@@ -92,6 +92,7 @@ class RangeAnalysis
     bool analyze();
     bool addRangeAssertions();
     bool removeBetaNodes();
+    bool prepareForUCE(bool *shouldRemoveDeadCode);
     bool truncate();
 
   private:
