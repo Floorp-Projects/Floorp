@@ -41,8 +41,6 @@ public:
 
   virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return LOCAL_GL_CLAMP_TO_EDGE; }
 
-  virtual void UnbindTexture() MOZ_OVERRIDE {}
-
   // MacIOSurfaceTextureSourceOGL doesn't own any gl texture
   virtual void DeallocateDeviceData() {}
 

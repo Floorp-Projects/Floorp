@@ -32,8 +32,6 @@ public:
 
   virtual void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE;
 
-  virtual void UnbindTexture() MOZ_OVERRIDE {}
-
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
 
   virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE { return this; }

@@ -127,8 +127,6 @@ public:
 
   virtual void BindTexture(GLenum aTextureUnit) = 0;
 
-  virtual void UnbindTexture() = 0;
-
   virtual gfx::IntSize GetSize() const = 0;
 
   virtual GLenum GetTextureTarget() const { return LOCAL_GL_TEXTURE_2D; }
@@ -186,11 +184,6 @@ public:
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
 
   virtual bool IsValid() const MOZ_OVERRIDE { return !!mTexImage; }
-
-  virtual void UnbindTexture() MOZ_OVERRIDE
-  {
-    mTexImage->ReleaseTexture();
-  }
 
   virtual GLenum GetWrapMode() const MOZ_OVERRIDE
   {
@@ -268,8 +261,6 @@ public:
   virtual GLenum GetTextureTarget() const { return mTextureTarget; }
 
   virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return mWrapMode; }
-
-  virtual void UnbindTexture() MOZ_OVERRIDE {}
 
   // SharedTextureSource doesn't own any gl texture
   virtual void DeallocateDeviceData() {}
@@ -406,11 +397,6 @@ public:
     mTexture->BindTexture(aTextureUnit);
   }
 
-  void UnbindTexture() MOZ_OVERRIDE
-  {
-    mTexture->ReleaseTexture();
-  }
-
   gfx::IntSize GetSize() const MOZ_OVERRIDE;
 
   GLenum GetWrapMode() const MOZ_OVERRIDE
@@ -527,10 +513,6 @@ public:
     void BindTexture(GLenum aUnit) MOZ_OVERRIDE
     {
       mTexImage->BindTexture(aUnit);
-    }
-    void UnbindTexture() MOZ_OVERRIDE
-    {
-      mTexImage->ReleaseTexture();
     }
     virtual bool IsValid() const MOZ_OVERRIDE
     {
@@ -650,7 +632,6 @@ public:
     // Lock already bound us!
     MOZ_ASSERT(activetex == LOCAL_GL_TEXTURE0);
   }
-  void UnbindTexture() MOZ_OVERRIDE {}
   GLuint GetTextureID() { return mTextureHandle; }
   ContentType GetContentType()
   {
@@ -731,8 +712,6 @@ public:
 
   void BindTexture(GLenum activetex) MOZ_OVERRIDE;
 
-  void UnbindTexture() MOZ_OVERRIDE {}
-
   GLuint GetTextureID() { return mTextureHandle; }
   ContentType GetContentType() {
     return (mFormat == gfx::FORMAT_B8G8R8A8) ?
@@ -792,7 +771,6 @@ public:
   virtual bool IsValid() const MOZ_OVERRIDE { return true; }
   virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return LOCAL_GL_CLAMP_TO_EDGE; }
   virtual void BindTexture(GLenum aTextureUnit);
-  virtual void UnbindTexture() MOZ_OVERRIDE {}
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE
   {
     return mSize;
@@ -875,7 +853,6 @@ public:
   virtual const char* Name() { return "GrallocDeprecatedTextureHostOGL"; }
 
   void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE;
-  void UnbindTexture() MOZ_OVERRIDE {}
 
   virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE
   {

@@ -2482,17 +2482,6 @@ public:
      */
     virtual bool ReleaseTexImage() { return false; }
 
-    /**
-     * Applies aFilter to the texture currently bound to GL_TEXTURE_2D.
-     */
-    void ApplyFilterToBoundTexture(GraphicsFilter aFilter);
-
-    /**
-     * Applies aFilter to the texture currently bound to aTarget.
-     */
-    void ApplyFilterToBoundTexture(GLuint aTarget,
-                                   GraphicsFilter aFilter);
-
     // Before reads from offscreen texture
     void GuaranteeResolve();
 
