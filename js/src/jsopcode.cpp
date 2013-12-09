@@ -1464,7 +1464,7 @@ js::GetBlockChainAtPC(JSScript *script, jsbytecode *pc)
             while (check >= bottom) {
                 const BlockScopeNote *checkNote = &blockScopes->vector[check];
                 JS_ASSERT(checkNote->start <= offset);
-                if (offset <= checkNote->start + checkNote->length) {
+                if (offset < checkNote->start + checkNote->length) {
                     // We found a matching block chain but there may be inner ones
                     // at a higher block chain index than mid. Continue the binary search.
                     blockChain = &script->getObject(checkNote->index)->as<StaticBlockObject>();
