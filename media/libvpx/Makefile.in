@@ -108,11 +108,6 @@ quantize_ssse3.$(OBJ_SUFFIX): vp8_asm_enc_offsets.asm
 
 ifdef VPX_NEED_OBJ_INT_EXTRACT
 
-# only for MSVC
-ifdef _MSC_VER
-NO_PROFILE_GUIDED_OPTIMIZE := vpx_scale_asm_offsets.c vp8_asm_enc_offsets.c
-endif
-
 vpx_scale_asm_offsets.asm: vpx_scale_asm_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
 	./$(HOST_PROGRAM) $(VPX_OIE_FORMAT) $< \
 	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
