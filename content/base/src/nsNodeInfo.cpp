@@ -10,7 +10,7 @@
  * prefix, namespace, and localName.
  */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Likely.h"
 
 #include "nscore.h"
