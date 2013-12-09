@@ -2317,6 +2317,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     }
 
     case NS_THEME_TEXTFIELD:
+    case NS_THEME_NUMBER_INPUT:
       // HIThemeSetFill is not available on 10.3
       CGContextSetRGBFillColor(cgContext, 1.0, 1.0, 1.0, 1.0);
       CGContextFillRect(cgContext, macRect);
@@ -2662,6 +2663,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
       *aResult = RTLAwareMargin(kAquaComboboxBorder, aFrame);
       break;
 
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     {
       SInt32 frameOutset = 0;
@@ -2775,6 +2777,7 @@ nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFram
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
     case NS_THEME_TOOLBAR_BUTTON:
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_SEARCHFIELD:
@@ -2871,7 +2874,8 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
       aResult->SizeTo(0, popupHeight);
       break;
     }
- 
+
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_SEARCHFIELD:
@@ -3212,6 +3216,7 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_TOOLBAR:
     case NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR:
     case NS_THEME_STATUSBAR:
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_SEARCHFIELD:
@@ -3337,6 +3342,7 @@ nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType)
     case NS_THEME_SPINNER_DOWN_BUTTON:
     case NS_THEME_TOOLBAR_SEPARATOR:
     case NS_THEME_TOOLBOX:
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TREEVIEW:
     case NS_THEME_TREEVIEW_LINE:
