@@ -5,6 +5,8 @@
 
 MOZILLA_INTERNAL_API =1
 
+NO_PROFILE_GUIDED_OPTIMIZE = nsDebugImpl.cpp
+
 INSTALL_TARGETS += errorlist
 errorlist_FILES := \
   ErrorListCDefines.h \
