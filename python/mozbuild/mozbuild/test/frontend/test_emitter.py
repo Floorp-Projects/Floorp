@@ -248,10 +248,8 @@ class TestEmitterBasic(unittest.TestCase):
                 'installs': {
                     'a11y.ini',
                     'test_a11y.js',
-                    # From ** wildcard.
-                    'a11y-support/foo',
-                    'a11y-support/dir1/bar',
                 },
+                'pattern-installs': 1,
             },
             'browser.ini': {
                 'flavor': 'browser-chrome',
@@ -318,6 +316,9 @@ class TestEmitterBasic(unittest.TestCase):
                 path = path[len(o.directory)+1:]
 
                 self.assertIn(path, m['installs'])
+
+            if 'pattern-installs' in m:
+                self.assertEqual(len(o.pattern_installs), m['pattern-installs'])
 
     def test_test_manifest_unmatched_generated(self):
         reader = self.reader('test-manifest-unmatched-generated')

@@ -54,24 +54,6 @@ if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['OS_TEST'] == 'x86_64':
         'xptcstubs_amd64_openbsd.cpp'
     ]
 
-if CONFIG['OS_TARGET'] == 'NTO':
-    if CONFIG['OS_TEST'] == 'x86':
-        SOURCES += [
-            'xptcinvoke_gcc_x86_unix.cpp',
-            'xptcstubs_gcc_x86_unix.cpp',
-        ]
-    elif CONFIG['CPU_ARCH'] == 'arm':
-        SOURCES += [
-            'xptcinvoke_nto_arm.cpp',
-            'xptcstubs_nto_arm.cpp',
-        ]
-    elif CONFIG['OS_TEST'] == 'sh':
-        SOURCES += [
-            'xptcinvoke_nto_shle.cpp',
-            'xptcstubs_asm_shle.s',
-            'xptcstubs_nto_shle.cpp'
-        ]
-
 if CONFIG['OS_ARCH'] == 'SunOS':
     if CONFIG['OS_TEST'] == 'x86_64':
         if CONFIG['GNU_CC']:
