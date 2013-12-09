@@ -11,13 +11,13 @@ from abc import (
 
 import errno
 import os
-import sys
 import time
 
 from contextlib import contextmanager
 
 from mach.mixin.logging import LoggingMixin
 
+from ..pythonutil import iter_modules_in_path
 from ..util import FileAvoidWrite
 from ..frontend.data import (
     ReaderSummary,
@@ -135,27 +135,10 @@ class BuildBackend(LoggingMixin):
             self._backend_output_list.update(open(self._backend_output_list_file) \
                                                .read().split('\n'))
 
-        # Pull in Python files for this package as dependencies so backend
-        # regeneration occurs if any of the code affecting it changes.
-        for name, module in sys.modules.items():
-            if not module or not name.startswith('mozbuild'):
-                continue
-
-            p = module.__file__
-
-            # We need to look at the actual source files as opposed to derived
-            # because there may be nothing loading these modules at build time.
-            # Assuming each .pyc comes from a .py file in the same directory is
-            # not a safe assumption. Hence the assert to catch future changes
-            # in behavior. A better solution likely involves loading all
-            # mozbuild modules at the top of the build to force .pyc
-            # generation.
-            if p.endswith('.pyc'):
-                p = p[0:-1]
-
-            assert os.path.exists(p)
-
-            self.backend_input_files.add((os.path.abspath(p)))
+        # Pull in all loaded Python as dependencies so any Python changes that
+        # could influence our output result in a rescan.
+        self.backend_input_files |= set(iter_modules_in_path(environment.topsrcdir))
+        self.backend_input_files |= set(iter_modules_in_path(environment.topobjdir))
 
         self._environments = {}
         self._environments[environment.topobjdir] = environment
