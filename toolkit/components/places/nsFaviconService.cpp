@@ -25,8 +25,8 @@
 #include "nsStringStream.h"
 #include "plbase64.h"
 #include "nsIClassInfoImpl.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Util.h"
 
 // For large favicons optimization.
 #include "imgITools.h"
