@@ -26,3 +26,8 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
     DEFINES['MOZ_REPLACE_MALLOC'] = True
 
 DEFINES['MOZ_JEMALLOC_IMPL'] = True
+
+#XXX: PGO on Linux causes problems here
+# See bug 419470
+if CONFIG['OS_TARGET'] == 'Linux':
+    NO_PGO = True

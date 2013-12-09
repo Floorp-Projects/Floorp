@@ -35,3 +35,8 @@ else:
         ]
 
 FINAL_LIBRARY = 'xpcom_core'
+
+if CONFIG['TARGET_CPU'] != 'x86_64':
+    if not CONFIG['GNU_CXX']:
+        # FIXME: bug 413019
+        NO_PGO = True

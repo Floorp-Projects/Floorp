@@ -7,14 +7,6 @@ MOZILLA_INTERNAL_API = 1
 
 LOCAL_INCLUDES += -I$(srcdir)/../../../../xptinfo/src
 
-
-ifneq ($(TARGET_CPU),x86_64)
-ifndef GNU_CXX
-# FIXME: bug 413019
-NO_PROFILE_GUIDED_OPTIMIZE = 1
-endif #!GNU_CXX
-endif #!x86_64
-
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	+= -I$(srcdir)/../..
