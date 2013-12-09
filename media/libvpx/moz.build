@@ -15,8 +15,7 @@ if CONFIG['VPX_NEED_OBJ_INT_EXTRACT']:
 
     HOST_PROGRAM = 'host_obj_int_extract'
 
-SOURCES += files['COMMON']
-SOURCES += files['ENCODER']
+SOURCES += files['SOURCES']
 
 if CONFIG['MOZ_VPX_ERROR_CONCEALMENT']:
     SOURCES += files['ERROR_CONCEALMENT']
@@ -29,11 +28,9 @@ if CONFIG['VPX_X86_ASM'] and CONFIG['OS_TARGET'] == 'WINNT':
 
 if CONFIG['VPX_X86_ASM']:
     SOURCES += files['X86_ASM']
-    SOURCES += files['X86_ASM_ENCODER']
 
     if '64' in CONFIG['OS_TEST']:
         SOURCES += files['X86-64_ASM']
-        SOURCES += files['X86-64_ASM_ENCODER']
 
     # AVX2 only supported on
     # Darwin toolchain right now
@@ -46,7 +43,6 @@ if CONFIG['VPX_X86_ASM']:
 arm_asm_files = []
 if CONFIG['VPX_ARM_ASM']:
     arm_asm_files += files['ARM_ASM']
-    arm_asm_files += files['ARM_ASM_ENCODER']
 
     if CONFIG['VPX_AS_CONVERSION']:
         GENERATED_SOURCES += [ "%s.%s" % (f, CONFIG['VPX_ASM_SUFFIX'])
