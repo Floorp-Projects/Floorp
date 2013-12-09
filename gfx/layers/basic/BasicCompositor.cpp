@@ -220,6 +220,7 @@ CreateBasicDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
 
 BasicCompositor::BasicCompositor(nsIWidget *aWidget)
   : mWidget(aWidget)
+  , mWidgetSize(-1, -1)
 {
   MOZ_COUNT_CTOR(BasicCompositor);
   sBackend = LAYERS_BASIC;
@@ -539,6 +540,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   nsIntRect intRect;
   mWidget->GetClientBounds(intRect);
   Rect rect = Rect(0, 0, intRect.width, intRect.height);
+  mWidgetSize = intRect.Size();
 
   nsIntRect invalidRect = aInvalidRegion.GetBounds();
   mInvalidRect = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);

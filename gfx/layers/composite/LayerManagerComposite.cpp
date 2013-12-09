@@ -203,7 +203,6 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
                                       EndTransactionFlags aFlags)
 {
   NS_ASSERTION(mInTransaction, "Didn't call BeginTransaction?");
-  NS_ASSERTION(!aCallback && !aCallbackData, "Not expecting callbacks here");
   mInTransaction = false;
 
   if (!mIsCompositorReady) {
@@ -241,7 +240,13 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
     // so we don't need to pass any global transform here.
     mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
 
+    mThebesLayerCallback = aCallback;
+    mThebesLayerCallbackData = aCallbackData;
+
     Render();
+
+    mThebesLayerCallback = nullptr;
+    mThebesLayerCallbackData = nullptr;
   }
 
   mCompositor->SetTargetContext(nullptr);
@@ -302,7 +307,7 @@ LayerManagerComposite::RootLayer() const
     return nullptr;
   }
 
-  return ToLayerComposite(mRoot);
+  return static_cast<LayerComposite*>(mRoot->ImplData());
 }
 
 static uint16_t sFrameCount = 0;
@@ -718,7 +723,7 @@ LayerManagerComposite::AutoAddMaskEffect::AutoAddMaskEffect(Layer* aMaskLayer,
     return;
   }
 
-  mCompositable = ToLayerComposite(aMaskLayer)->GetCompositableHost();
+  mCompositable = static_cast<LayerComposite*>(aMaskLayer->ImplData())->GetCompositableHost();
   if (!mCompositable) {
     NS_WARNING("Mask layer with no compositable host");
     return;
@@ -781,11 +786,42 @@ LayerComposite::Destroy()
   }
 }
 
+const nsIntSize&
+LayerManagerComposite::GetWidgetSize()
+{
+  return mCompositor->GetWidgetSize();
+}
+
+void
+LayerManagerComposite::SetCompositorID(uint32_t aID)
+{
+  NS_ASSERTION(mCompositor, "No compositor");
+  mCompositor->SetCompositorID(aID);
+}
+
+void
+LayerManagerComposite::NotifyShadowTreeTransaction()
+{
+  mCompositor->NotifyLayersTransaction();
+}
+
 bool
 LayerManagerComposite::CanUseCanvasLayerForSize(const gfxIntSize &aSize)
 {
   return mCompositor->CanUseCanvasLayerForSize(gfx::IntSize(aSize.width,
                                                             aSize.height));
+}
+
+TextureFactoryIdentifier
+LayerManagerComposite::GetTextureFactoryIdentifier()
+{
+  return mCompositor->GetTextureFactoryIdentifier();
+}
+
+int32_t
+LayerManagerComposite::GetMaxTextureSize() const
+{
+  return mCompositor->GetMaxTextureSize();
 }
 
 #ifndef MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
