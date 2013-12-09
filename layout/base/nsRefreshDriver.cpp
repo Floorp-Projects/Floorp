@@ -25,7 +25,7 @@
 #include "WinUtils.h"
 #endif
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "nsRefreshDriver.h"
 #include "nsITimer.h"

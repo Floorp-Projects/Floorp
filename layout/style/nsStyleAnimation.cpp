@@ -5,8 +5,8 @@
 
 /* Utilities for animation of computed style values */
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Util.h"
 
 #include "nsStyleAnimation.h"
 #include "nsStyleTransformMatrix.h"
