@@ -380,22 +380,6 @@ endif
 ifdef _MSC_VER
 # XXX We should add this to CXXFLAGS, too?
 CFLAGS += -fp:precise
-
-ifeq ($(CPU_ARCH),x86)
-# Workaround compiler bug on PGO (Bug 721284)
-NO_PROFILE_GUIDED_OPTIMIZE := \
-  MonoIC.cpp \
-  Compiler.cpp \
-  $(NULL)
-# Ditto (Bug 772303)
-NO_PROFILE_GUIDED_OPTIMIZE += RegExp.cpp
-endif
-# Ditto (Bug 810661)
-ifeq ($(CPU_ARCH),x86_64)
-NO_PROFILE_GUIDED_OPTIMIZE := \
-  CTypes.cpp \
-  $(NULL)
-endif
 endif # _MSC_VER
 
 ifeq ($(OS_ARCH),FreeBSD)

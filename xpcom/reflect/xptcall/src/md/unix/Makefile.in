@@ -3,20 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-NO_PROFILE_GUIDED_OPTIMIZE = 1
-
 MOZILLA_INTERNAL_API = 1
-
-#
-# The default is this buildable, but non-functioning code.
-#
-ifeq ($(OS_ARCH),SunOS)
-ifneq (86,$(findstring 86,$(OS_TEST)))
-# disable PGO for this directory with Sun Studio on SPARC because
-# compiling with xprofile=collect will insert code into nsXPTCStubBase::Stub##n
-NO_PROFILE_GUIDED_OPTIMIZE = 1
-endif
-endif
 
 ######################################################################
 # ARM

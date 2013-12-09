@@ -22,6 +22,7 @@ from mozbuild.util import (
     MozbuildDeletionError,
     HierarchicalStringList,
     StrictOrderingOnAppendList,
+    StrictOrderingOnAppendListWithFlagsFactory,
     UnsortedError,
 )
 
@@ -283,6 +284,40 @@ class TestStrictOrderingOnAppendList(unittest.TestCase):
             l += ['b', 'a']
 
         self.assertEqual(len(l), 2)
+
+
+class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
+    def test_strict_ordering_on_append_list_with_flags_factory(self):
+        cls = StrictOrderingOnAppendListWithFlagsFactory({
+            'foo': bool,
+            'bar': int,
+        })
+
+        l = cls()
+        l += ['a', 'b']
+
+        with self.assertRaises(Exception):
+            l['a'] = 'foo'
+
+        with self.assertRaises(Exception):
+            c = l['c']
+
+        self.assertEqual(l['a'].foo, False)
+        l['a'].foo = True
+        self.assertEqual(l['a'].foo, True)
+
+        with self.assertRaises(TypeError):
+            l['a'].bar = 'bar'
+
+        self.assertEqual(l['a'].bar, 0)
+        l['a'].bar = 42
+        self.assertEqual(l['a'].bar, 42)
+
+        l['b'].foo = True
+        self.assertEqual(l['b'].foo, True)
+
+        with self.assertRaises(AttributeError):
+            l['b'].baz = False
 
 
 if __name__ == '__main__':

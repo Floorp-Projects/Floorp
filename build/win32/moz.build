@@ -14,3 +14,5 @@ if CONFIG['ENABLE_TESTS']:
     SOURCES += [
         'crashinject.cpp',
     ]
+
+NO_PGO = True

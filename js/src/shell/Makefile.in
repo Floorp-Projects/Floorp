@@ -4,13 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifdef _MSC_VER
-# unnecessary PGO for js shell.  But gcc cannot turn off pgo because it is
-# necessary to link PGO lib on gcc when a object/static lib are compiled
-# for PGO.
-NO_PROFILE_GUIDED_OPTIMIZE := 1
-endif
-
 LIBS      = $(NSPR_LIBS) $(EDITLINE_LIBS) $(DEPTH)/$(LIB_PREFIX)js_static.$(LIB_SUFFIX) $(MOZ_ZLIB_LIBS)
 ifdef MOZ_NATIVE_FFI
 EXTRA_LIBS += $(MOZ_FFI_LIBS)

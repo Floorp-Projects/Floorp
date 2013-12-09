@@ -4,7 +4,6 @@
 
 STL_FLAGS =
 NO_EXPAND_LIBS = 1
-NO_PROFILE_GUIDED_OPTIMIZE = 1
 
 include $(topsrcdir)/config/rules.mk
 
