@@ -68,7 +68,7 @@ EqualValues(bool useGVN, MDefinition *left, MDefinition *right)
     if (useGVN)
         return left->valueNumber() == right->valueNumber();
 
-    return left->id() == right->id();
+    return left == right;
 }
 
 static MConstant *
