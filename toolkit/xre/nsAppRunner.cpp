@@ -3442,6 +3442,20 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
 
   SetShutdownChecks();
 
+
+  // Enable Telemetry IO Reporting on DEBUG, nightly and local builds
+#ifdef DEBUG
+  mozilla::Telemetry::InitIOReporting(gAppData->xreDirectory);
+#else
+  {
+    const char* releaseChannel = NS_STRINGIFY(MOZ_UPDATE_CHANNEL);
+    if (strcmp(releaseChannel, "nightly") == 0 ||
+        strcmp(releaseChannel, "default") == 0) {
+      mozilla::Telemetry::InitIOReporting(gAppData->xreDirectory);
+    }
+  }
+#endif /* DEBUG */
+
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_ENABLE_XREMOTE)
   // Stash DESKTOP_STARTUP_ID in malloc'ed memory because gtk_init will clear it.
 #define HAVE_DESKTOP_STARTUP_ID
@@ -3723,6 +3737,8 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   NS_ENSURE_SUCCESS(rv, 1);
 
   //////////////////////// NOW WE HAVE A PROFILE ////////////////////////
+
+  mozilla::Telemetry::SetProfileDir(mProfD);
 
 #ifdef MOZ_CRASHREPORTER
   if (mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER)
