@@ -1010,9 +1010,7 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
       update->mStream = stream;
       update->mNextMainThreadCurrentTime =
         GraphTimeToStreamTime(stream, mCurrentTime);
-      update->mNextMainThreadFinished =
-        stream->mFinished &&
-        StreamTimeToGraphTime(stream, stream->GetBufferEnd()) <= mCurrentTime;
+      update->mNextMainThreadFinished = stream->mNotifiedFinished;
     }
     if (!mPendingUpdateRunnables.IsEmpty()) {
       mUpdateRunnables.MoveElementsFrom(mPendingUpdateRunnables);
