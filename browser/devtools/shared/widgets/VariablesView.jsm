@@ -1476,7 +1476,7 @@ Scope.prototype = {
     if (this._isHeaderVisible || !this._nameString) {
       return;
     }
-    this._target.removeAttribute("non-header");
+    this._target.removeAttribute("untitled");
     this._isHeaderVisible = true;
   },
 
@@ -1489,7 +1489,7 @@ Scope.prototype = {
       return;
     }
     this.expand();
-    this._target.setAttribute("non-header", "");
+    this._target.setAttribute("untitled", "");
     this._isHeaderVisible = false;
   },
 
@@ -1928,10 +1928,10 @@ Scope.prototype = {
     }
     if (aStatus) {
       this._isMatch = true;
-      this.target.removeAttribute("non-match");
+      this.target.removeAttribute("unmatched");
     } else {
       this._isMatch = false;
-      this.target.setAttribute("non-match", "");
+      this.target.setAttribute("unmatched", "");
     }
   },
 

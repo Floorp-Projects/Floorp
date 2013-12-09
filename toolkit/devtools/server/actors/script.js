@@ -261,19 +261,22 @@ BreakpointStore.prototype = {
  * @param nsIJSInspector inspector
  *        The underlying JS inspector we use to enter and exit nested event
  *        loops.
+ * @param ThreadActor thread
+ *        The thread actor instance that owns this EventLoopStack.
+ * @param DebuggerServerConnection connection
+ *        The remote protocol connection associated with this event loop stack.
  * @param Object hooks
  *        An object with the following properties:
  *          - url: The URL string of the debuggee we are spinning an event loop
  *                 for.
  *          - preNest: function called before entering a nested event loop
  *          - postNest: function called after exiting a nested event loop
- * @param ThreadActor thread
- *        The thread actor instance that owns this EventLoopStack.
  */
-function EventLoopStack({ inspector, thread, hooks }) {
+function EventLoopStack({ inspector, thread, connection, hooks }) {
   this._inspector = inspector;
   this._hooks = hooks;
   this._thread = thread;
+  this._connection = connection;
 }
 
 EventLoopStack.prototype = {
@@ -302,6 +305,14 @@ EventLoopStack.prototype = {
   },
 
   /**
+   * The DebuggerServerConnection of the debugger who pushed the event loop on
+   * top of the stack
+   */
+  get lastConnection() {
+    return this._inspector.lastNestRequestor._connection;
+  },
+
+  /**
    * Push a new nested event loop onto the stack.
    *
    * @returns EventLoop
@@ -310,6 +321,7 @@ EventLoopStack.prototype = {
     return new EventLoop({
       inspector: this._inspector,
       thread: this._thread,
+      connection: this._connection,
       hooks: this._hooks
     });
   }
@@ -323,14 +335,17 @@ EventLoopStack.prototype = {
  *        The JS Inspector that runs nested event loops.
  * @param ThreadActor thread
  *        The thread actor that is creating this nested event loop.
+ * @param DebuggerServerConnection connection
+ *        The remote protocol connection associated with this event loop.
  * @param Object hooks
  *        The same hooks object passed into EventLoopStack during its
  *        initialization.
  */
-function EventLoop({ inspector, thread, hooks }) {
+function EventLoop({ inspector, thread, connection, hooks }) {
   this._inspector = inspector;
   this._thread = thread;
   this._hooks = hooks;
+  this._connection = connection;
 
   this.enter = this.enter.bind(this);
   this.resolve = this.resolve.bind(this);
@@ -414,11 +429,6 @@ function ThreadActor(aHooks, aGlobal)
   this._frameActors = [];
   this._hooks = aHooks;
   this.global = aGlobal;
-  this._nestedEventLoops = new EventLoopStack({
-    inspector: DebuggerServer.xpcInspector,
-    hooks: aHooks,
-    thread: this
-  });
   // A map of actorID -> actor for breakpoints created and managed by the server.
   this._hiddenBreakpoints = new Map();
 
@@ -674,6 +684,15 @@ ThreadActor.prototype = {
     this._state = "attached";
 
     update(this._options, aRequest.options || {});
+
+    // Initialize an event loop stack. This can't be done in the constructor,
+    // because this.conn is not yet initialized by the actor pool at that time.
+    this._nestedEventLoops = new EventLoopStack({
+      inspector: DebuggerServer.xpcInspector,
+      hooks: this._hooks,
+      connection: this.conn,
+      thread: this
+    });
 
     if (!this.dbg) {
       this._initDebugger();
@@ -992,7 +1011,8 @@ ThreadActor.prototype = {
     // different tabs or multiple debugger clients connected to the same tab)
     // only allow resumption in a LIFO order.
     if (this._nestedEventLoops.size && this._nestedEventLoops.lastPausedUrl
-        && this._nestedEventLoops.lastPausedUrl !== this._hooks.url) {
+        && (this._nestedEventLoops.lastPausedUrl !== this._hooks.url
+        || this._nestedEventLoops.lastConnection !== this.conn)) {
       return {
         error: "wrongOrder",
         message: "trying to resume in the wrong order.",

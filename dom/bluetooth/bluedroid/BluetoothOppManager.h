@@ -45,7 +45,7 @@ public:
   static const int DEFAULT_OPP_CHANNEL = 10;
   static const int MAX_PACKET_LENGTH = 0xFFFE;
 
-  ~BluetoothOppManager();
+  virtual ~BluetoothOppManager();
   static BluetoothOppManager* Get();
   void ClientDataHandler(mozilla::ipc::UnixSocketRawData* aMessage);
   void ServerDataHandler(mozilla::ipc::UnixSocketRawData* aMessage);
