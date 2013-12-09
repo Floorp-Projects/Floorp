@@ -311,12 +311,6 @@ TextureImageEGL::DestroyEGLSurface(void)
     mSurface = nullptr;
 }
 
-void
-TextureImageEGL::ApplyFilter()
-{
-    mGLContext->ApplyFilterToBoundTexture(mFilter);
-}
-
 already_AddRefed<TextureImage>
 CreateTextureImageEGL(GLContext *gl,
                       const nsIntSize& aSize,
