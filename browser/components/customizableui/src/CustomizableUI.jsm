@@ -1056,11 +1056,6 @@ let CustomizableUIInternal = {
         }
       }
 
-      if (aWidget.id == "switch-to-metro-button") {
-        let brandBundle = aDocument.getElementById("bundle_brand");
-        let brandShortName = brandBundle.getString("brandShortName");
-        additionalTooltipArguments = [brandShortName];
-      }
       let tooltip = this.getLocalizedProperty(aWidget, "tooltiptext", additionalTooltipArguments);
       node.setAttribute("tooltiptext", tooltip);
       node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
@@ -1750,10 +1745,6 @@ let CustomizableUIInternal = {
     if (typeof aData.id != "string" || !/^[a-z0-9-_]{1,}$/i.test(aData.id)) {
       ERROR("Given an illegal id in normalizeWidget: " + aData.id);
       return null;
-    }
-
-    if (aData.id == "switch-to-metro-button") {
-      widget.showInPrivateBrowsing = false;
     }
 
     delete widget.implementation.currentArea;
