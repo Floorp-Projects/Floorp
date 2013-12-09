@@ -62,7 +62,6 @@ namespace layers {
 
 CompositorParent::LayerTreeState::LayerTreeState()
   : mParent(nullptr)
-  , mLayerManager(nullptr)
 {
 }
 
@@ -238,7 +237,6 @@ CompositorParent::Destroy()
 
   // Ensure that the layer manager is destructed on the compositor thread.
   mLayerManager = nullptr;
-  mCompositor = nullptr;
   mCompositionManager = nullptr;
   mApzcTreeManager->ClearTree();
   mApzcTreeManager = nullptr;
@@ -265,12 +263,10 @@ CompositorParent::RecvWillStop()
       LayerTreeState* lts = &it->second;
       if (lts->mParent == this) {
         mLayerManager->ClearCachedResources(lts->mRoot);
-        lts->mLayerManager = nullptr;
       }
     }
     mLayerManager->Destroy();
     mLayerManager = nullptr;
-    mCompositor = nullptr;
     mCompositionManager = nullptr;
   }
 
@@ -375,9 +371,7 @@ CompositorParent::ActorDestroy(ActorDestroyReason why)
   if (mLayerManager) {
     mLayerManager->Destroy();
     mLayerManager = nullptr;
-    sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = nullptr;
     mCompositionManager = nullptr;
-    mCompositor = nullptr;
   }
 }
 
@@ -400,7 +394,7 @@ CompositorParent::PauseComposition()
   if (!mPaused) {
     mPaused = true;
 
-    mCompositor->Pause();
+    mLayerManager->GetCompositor()->Pause();
   }
 
   // if anyone's waiting to make sure that composition really got paused, tell them
@@ -415,7 +409,7 @@ CompositorParent::ResumeComposition()
 
   MonitorAutoLock lock(mResumeCompositionMonitor);
 
-  if (!mCompositor->Resume()) {
+  if (!mLayerManager->GetCompositor()->Resume()) {
 #ifdef MOZ_WIDGET_ANDROID
     // We can't get a surface. This could be because the activity changed between
     // the time resume was scheduled and now.
@@ -446,8 +440,8 @@ CompositorParent::SetEGLSurfaceSize(int width, int height)
 {
   NS_ASSERTION(mUseExternalSurfaceSize, "Compositor created without UseExternalSurfaceSize provided");
   mEGLSurfaceSize.SizeTo(width, height);
-  if (mCompositor) {
-    mCompositor->SetDestinationSurfaceSize(gfx::IntSize(mEGLSurfaceSize.width, mEGLSurfaceSize.height));
+  if (mLayerManager) {
+    mLayerManager->GetCompositor()->SetDestinationSurfaceSize(gfx::IntSize(mEGLSurfaceSize.width, mEGLSurfaceSize.height));
   }
 }
 
@@ -509,7 +503,7 @@ CompositorParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint)
     AutoResolveRefLayers resolve(mCompositionManager);
     mApzcTreeManager->UpdatePanZoomControllerTree(this, mLayerManager->GetRoot(), aIsFirstPaint, aId);
 
-    mCompositor->NotifyLayersTransaction();
+    mLayerManager->AsLayerManagerComposite()->NotifyShadowTreeTransaction();
   }
   ScheduleComposition();
 }
@@ -703,7 +697,7 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
     }
   }
   ScheduleComposition();
-  mCompositor->NotifyLayersTransaction();
+  mLayerManager->NotifyShadowTreeTransaction();
 }
 
 void
@@ -712,32 +706,34 @@ CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackend
   NS_ASSERTION(!mLayerManager, "Already initialised mLayerManager");
 
   for (size_t i = 0; i < aBackendHints.Length(); ++i) {
-    RefPtr<Compositor> compositor;
+    RefPtr<LayerManagerComposite> layerManager;
     if (aBackendHints[i] == LAYERS_OPENGL) {
-      compositor = new CompositorOGL(mWidget,
-                                     mEGLSurfaceSize.width,
-                                     mEGLSurfaceSize.height,
-                                     mUseExternalSurfaceSize);
+      layerManager =
+        new LayerManagerComposite(new CompositorOGL(mWidget,
+                                                    mEGLSurfaceSize.width,
+                                                    mEGLSurfaceSize.height,
+                                                    mUseExternalSurfaceSize));
     } else if (aBackendHints[i] == LAYERS_BASIC) {
-      compositor = new BasicCompositor(mWidget);
+      layerManager =
+        new LayerManagerComposite(new BasicCompositor(mWidget));
 #ifdef XP_WIN
     } else if (aBackendHints[i] == LAYERS_D3D11) {
-      compositor = new CompositorD3D11(mWidget);
+      layerManager =
+        new LayerManagerComposite(new CompositorD3D11(mWidget));
     } else if (aBackendHints[i] == LAYERS_D3D9) {
-      compositor = new CompositorD3D9(this, mWidget);
+      layerManager =
+        new LayerManagerComposite(new CompositorD3D9(this, mWidget));
 #endif
     }
 
-    MOZ_ASSERT(compositor, "Passed invalid backend hint");
+    if (!layerManager) {
+      continue;
+    }
 
-    compositor->SetCompositorID(mCompositorID);
-    RefPtr<LayerManagerComposite> layerManager = new LayerManagerComposite(compositor);
+    layerManager->SetCompositorID(mCompositorID);
 
     if (layerManager->Initialize()) {
       mLayerManager = layerManager;
-      MOZ_ASSERT(compositor);
-      mCompositor = compositor;
-      sIndirectLayerTrees[mRootLayerTreeID].mLayerManager = layerManager;
       return;
     }
   }
@@ -769,7 +765,7 @@ CompositorParent::AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aB
   mCompositionManager = new AsyncCompositionManager(mLayerManager);
   *aSuccess = true;
 
-  *aTextureFactoryIdentifier = mCompositor->GetTextureFactoryIdentifier();
+  *aTextureFactoryIdentifier = mLayerManager->GetTextureFactoryIdentifier();
   LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, 0);
   p->AddIPDLReference();
   return p;
@@ -925,17 +921,6 @@ CompositorParent::GetAPZCTreeManager(uint64_t aLayersId)
   return nullptr;
 }
 
-float
-CompositorParent::ComputeRenderIntegrity()
-{
-  if (mLayerManager) {
-    return mLayerManager->ComputeRenderIntegrity();
-  }
-
-  return 1.0f;
-}
-
-
 /**
  * This class handles layer updates pushed directly from child
  * processes to the compositor thread.  It's associated with a
@@ -1086,9 +1071,9 @@ CrossProcessCompositorParent::AllocPLayerTransactionParent(const nsTArray<Layers
 {
   MOZ_ASSERT(aId != 0);
 
-  if (sIndirectLayerTrees[aId].mLayerManager) {
-    LayerManagerComposite* lm = sIndirectLayerTrees[aId].mLayerManager;
-    *aTextureFactoryIdentifier = lm->GetCompositor()->GetTextureFactoryIdentifier();
+  if (sIndirectLayerTrees[aId].mParent) {
+    LayerManagerComposite* lm = sIndirectLayerTrees[aId].mParent->GetLayerManager();
+    *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
     *aSuccess = true;
     LayerTransactionParent* p = new LayerTransactionParent(lm, this, aId);
     p->AddIPDLReference();
