@@ -110,8 +110,6 @@ public:
   }
   void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget);
 
-  void NotifyShadowTreeTransaction();
-
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) MOZ_OVERRIDE;
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData,
@@ -119,11 +117,14 @@ public:
 
   virtual void SetRoot(Layer* aLayer) MOZ_OVERRIDE { mRoot = aLayer; }
 
+  // XXX[nrc]: never called, we should move this logic to ClientLayerManager
+  // (bug 946926).
   virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) MOZ_OVERRIDE;
 
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() MOZ_OVERRIDE;
-
-  virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE;
+  virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE
+  {
+    MOZ_CRASH("Call on compositor, not LayerManagerComposite");
+  }
 
   virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;
 
@@ -145,8 +146,7 @@ public:
   }
   virtual void GetBackendName(nsAString& name) MOZ_OVERRIDE
   {
-    MOZ_ASSERT(false, "Shouldn't be called for composited layer manager");
-    name.AssignLiteral("Composite");
+    MOZ_CRASH("Shouldn't be called for composited layer manager");
   }
 
   virtual already_AddRefed<gfxASurface>
@@ -214,8 +214,6 @@ public:
   static bool SupportsDirectTexturing();
 
   static void PlatformSyncBeforeReplyUpdate();
-
-  void SetCompositorID(uint32_t aID);
 
   void AddInvalidRegion(const nsIntRegion& aRegion)
   {
