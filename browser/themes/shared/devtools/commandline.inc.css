@@ -7,6 +7,7 @@
 /* Developer toolbar */
 
 #developer-toolbar {
+  -moz-appearance: none;
   padding: 0;
   min-height: 32px;
   background-image: url(devtools/background-noise-toolbar.png), linear-gradient(#303840, #2d3640);
@@ -14,7 +15,7 @@
   box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset, 0 -1px 0 hsla(206,37%,4%,.1) inset;
 }
 
-.developer-toolbar-button {
+#developer-toolbar > toolbarbutton {
   -moz-appearance: none;
   border: none;
   background: transparent;
@@ -46,6 +47,34 @@
 
 #developer-toolbar-toolbox-button[checked=true] {
   -moz-image-region: rect(0px, 64px, 16px, 48px);
+}
+
+#developer-toolbar-closebutton {
+  list-style-image: url("chrome://browser/skin/devtools/close.png");
+  -moz-appearance: none;
+  border: none;
+  margin: 0 4px;
+  min-width: 16px;
+  width: 16px;
+  opacity: 0.6;
+}
+
+#developer-toolbar-closebutton > .toolbarbutton-icon {
+  /* XXX Buttons have padding in widget/ that we don't want here but can't override with good CSS, so we must
+     use evil CSS to give the impression of smaller content */
+  margin: -4px;
+}
+
+#developer-toolbar-closebutton > .toolbarbutton-text {
+  display: none;
+}
+
+#developer-toolbar-closebutton:hover {
+  opacity: 0.8;
+}
+
+#developer-toolbar-closebutton:hover:active {
+  opacity: 1;
 }
 
 /* GCLI */
