@@ -3505,13 +3505,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
-  // We want this code to be before the child frame lookup code
-  // below so that a child frame named 'constructor' doesn't
-  // shadow the window's constructor property.
-  if (sConstructor_id == id) {
-    return ResolveConstructor(cx, obj, objp);
-  }
-
   if (!my_context || !my_context->IsContextInitialized()) {
     // The context is not yet initialized so there's nothing we can do
     // here yet.
