@@ -6,6 +6,7 @@ function test() {
 
   let ruleView;
   let inspector;
+  let mgr = ResponsiveUI.ResponsiveUIManager;
 
   waitForExplicitFinish();
 
@@ -78,14 +79,22 @@ function test() {
     ruleView.element.addEventListener("CssRuleViewRefreshed", function refresh() {
       ruleView.element.removeEventListener("CssRuleViewRefreshed", refresh, false);
       is(numberOfRules(), 2, "Should have two rules after growing.");
-      finishUp();
+      testEscapeCloses();
     }, false);
 
     instance.setSize(500, 500);
   }
 
+  function testEscapeCloses() {
+    is(document.getElementById("Tools:ResponsiveUI").getAttribute("checked"), "true", "menu checked");
+    ok(!inspector._toolbox._splitConsole, "Console is not split.");
+
+    mgr.once("off", function() {executeSoon(finishUp)});
+    EventUtils.synthesizeKey("VK_ESCAPE", {});
+  }
+
   function finishUp() {
-    document.getElementById("Tools:ResponsiveUI").doCommand();
+    ok(!inspector._toolbox._splitConsole, "Console is still not split after pressing escape.");
 
     // Menus are correctly updated?
     is(document.getElementById("Tools:ResponsiveUI").getAttribute("checked"), "false", "menu unchecked");
