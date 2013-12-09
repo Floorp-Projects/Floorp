@@ -5732,6 +5732,38 @@ HTMLInputElement::IntrinsicState() const
   return state;
 }
 
+void
+HTMLInputElement::AddStates(nsEventStates aStates)
+{
+  if (mType == NS_FORM_INPUT_TEXT) {
+    nsEventStates focusStates(aStates & (NS_EVENT_STATE_FOCUS |
+                                         NS_EVENT_STATE_FOCUSRING));
+    if (!focusStates.IsEmpty()) {
+      HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
+      if (ownerNumberControl) {
+        ownerNumberControl->AddStates(focusStates);
+      }
+    }
+  }
+  nsGenericHTMLFormElementWithState::AddStates(aStates);                          
+}
+
+void
+HTMLInputElement::RemoveStates(nsEventStates aStates)
+{
+  if (mType == NS_FORM_INPUT_TEXT) {
+    nsEventStates focusStates(aStates & (NS_EVENT_STATE_FOCUS |
+                                         NS_EVENT_STATE_FOCUSRING));
+    if (!focusStates.IsEmpty()) {
+      HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
+      if (ownerNumberControl) {
+        ownerNumberControl->RemoveStates(focusStates);
+      }
+    }
+  }
+  nsGenericHTMLFormElementWithState::RemoveStates(aStates);
+}
+
 bool
 HTMLInputElement::RestoreState(nsPresState* aState)
 {
