@@ -63,7 +63,6 @@
 #include "GLContext.h"
 #include "GLUploadHelpers.h"
 #include "mozilla/layers/GLManager.h"
-#include "mozilla/layers/CompositorCocoaWidgetHelper.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/BasicCompositor.h"
 #include "gfxUtils.h"
