@@ -1095,7 +1095,7 @@ ICProfiler_PushFunction::Compiler::generateStubCode(MacroAssembler &masm)
     Label spsEnabled;
     uint32_t *enabledAddr = cx->runtime()->spsProfiler.addressOfEnabled();
     masm.branch32(Assembler::NotEqual, AbsoluteAddress(enabledAddr), Imm32(0), &spsEnabled);
-    masm.assume_unreachable("Profiling should have been enabled.");
+    masm.assumeUnreachable("Profiling should have been enabled.");
     masm.bind(&spsEnabled);
 #endif
 
@@ -5152,7 +5152,7 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     if (cx->runtime()->jitSupportsFloatingPoint)
         masm.convertInt32ValueToDouble(valueAddr, regs.getAny(), &dontConvertDoubles);
     else
-        masm.assume_unreachable("There shouldn't be double arrays when there is no FP support.");
+        masm.assumeUnreachable("There shouldn't be double arrays when there is no FP support.");
     masm.bind(&dontConvertDoubles);
 
     // Don't overwrite R0 becuase |obj| might overlap with it, and it's needed
@@ -5340,7 +5340,7 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
     if (cx->runtime()->jitSupportsFloatingPoint)
         masm.convertInt32ValueToDouble(valueAddr, regs.getAny(), &dontConvertDoubles);
     else
-        masm.assume_unreachable("There shouldn't be double arrays when there is no FP support.");
+        masm.assumeUnreachable("There shouldn't be double arrays when there is no FP support.");
     masm.bind(&dontConvertDoubles);
 
     // Write the value.  No need for pre-barrier since we're not overwriting an old value.
@@ -8303,7 +8303,7 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
     masm.moveValue(R1, R0);
 #ifdef DEBUG
     masm.branchTestObject(Assembler::Equal, JSReturnOperand, &skipThisReplace);
-    masm.assume_unreachable("Failed to return object in constructing call.");
+    masm.assumeUnreachable("Failed to return object in constructing call.");
 #endif
     masm.bind(&skipThisReplace);
 
@@ -8412,7 +8412,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
 #ifdef DEBUG
         Label createdThisIsObject;
         masm.branchTestObject(Assembler::Equal, JSReturnOperand, &createdThisIsObject);
-        masm.assume_unreachable("The return of CreateThis must be an object.");
+        masm.assumeUnreachable("The return of CreateThis must be an object.");
         masm.bind(&createdThisIsObject);
 #endif
 
@@ -8553,7 +8553,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
         masm.loadValue(reloadThisSlot, JSReturnOperand);
 #ifdef DEBUG
         masm.branchTestObject(Assembler::Equal, JSReturnOperand, &skipThisReplace);
-        masm.assume_unreachable("Return of constructing call should be an object.");
+        masm.assumeUnreachable("Return of constructing call should be an object.");
 #endif
         masm.bind(&skipThisReplace);
     }

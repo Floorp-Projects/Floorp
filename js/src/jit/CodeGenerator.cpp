@@ -2499,7 +2499,7 @@ CodeGenerator::generateArgumentsChecks(bool bailout)
             Label success;
             masm.jump(&success);
             masm.bind(&miss);
-            masm.assume_unreachable("Argument check fail.");
+            masm.assumeUnreachable("Argument check fail.");
             masm.bind(&success);
         }
     }
@@ -3673,7 +3673,7 @@ CodeGenerator::visitGetArgumentsObjectArg(LGetArgumentsObjectArg *lir)
 #ifdef DEBUG
     Label success;
     masm.branchTestMagic(Assembler::NotEqual, out, &success);
-    masm.assume_unreachable("Result from ArgumentObject shouldn't be MIRType_Magic.");
+    masm.assumeUnreachable("Result from ArgumentObject shouldn't be MIRType_Magic.");
     masm.bind(&success);
 #endif
     return true;
@@ -3692,7 +3692,7 @@ CodeGenerator::visitSetArgumentsObjectArg(LSetArgumentsObjectArg *lir)
 #ifdef DEBUG
     Label success;
     masm.branchTestMagic(Assembler::NotEqual, argAddr, &success);
-    masm.assume_unreachable("Result in ArgumentObject shouldn't be MIRType_Magic.");
+    masm.assumeUnreachable("Result in ArgumentObject shouldn't be MIRType_Magic.");
     masm.bind(&success);
 #endif
     masm.storeValue(value, argAddr);
@@ -4521,7 +4521,7 @@ CopyStringChars(MacroAssembler &masm, Register to, Register from, Register len, 
 #ifdef DEBUG
     Label ok;
     masm.branch32(Assembler::GreaterThan, len, Imm32(0), &ok);
-    masm.assume_unreachable("Length should be greater than 0.");
+    masm.assumeUnreachable("Length should be greater than 0.");
     masm.bind(&ok);
 #endif
 
@@ -7705,7 +7705,7 @@ CodeGenerator::visitAsmJSCall(LAsmJSCall *ins)
     Label ok;
     JS_ASSERT(IsPowerOfTwo(StackAlignment));
     masm.branchTestPtr(Assembler::Zero, StackPointer, Imm32(StackAlignment - 1), &ok);
-    masm.assume_unreachable("Stack should be aligned.");
+    masm.assumeUnreachable("Stack should be aligned.");
     masm.bind(&ok);
 #endif
 
@@ -7770,7 +7770,7 @@ CodeGenerator::emitAssertRangeI(const Range *r, Register input)
     if (r->hasInt32LowerBound() && r->lower() > INT32_MIN) {
         Label success;
         masm.branch32(Assembler::GreaterThanOrEqual, input, Imm32(r->lower()), &success);
-        masm.assume_unreachable("Integer input should be equal or higher than Lowerbound.");
+        masm.assumeUnreachable("Integer input should be equal or higher than Lowerbound.");
         masm.bind(&success);
     }
 
@@ -7778,7 +7778,7 @@ CodeGenerator::emitAssertRangeI(const Range *r, Register input)
     if (r->hasInt32UpperBound() && r->upper() < INT32_MAX) {
         Label success;
         masm.branch32(Assembler::LessThanOrEqual, input, Imm32(r->upper()), &success);
-        masm.assume_unreachable("Integer input should be lower or equal than Upperbound.");
+        masm.assumeUnreachable("Integer input should be lower or equal than Upperbound.");
         masm.bind(&success);
     }
 
@@ -7799,7 +7799,7 @@ CodeGenerator::emitAssertRangeD(const Range *r, FloatRegister input, FloatRegist
         if (r->canBeNaN())
             masm.branchDouble(Assembler::DoubleUnordered, input, input, &success);
         masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input, temp, &success);
-        masm.assume_unreachable("Double input should be equal or higher than Lowerbound.");
+        masm.assumeUnreachable("Double input should be equal or higher than Lowerbound.");
         masm.bind(&success);
     }
     // Check the upper bound.
@@ -7809,7 +7809,7 @@ CodeGenerator::emitAssertRangeD(const Range *r, FloatRegister input, FloatRegist
         if (r->canBeNaN())
             masm.branchDouble(Assembler::DoubleUnordered, input, input, &success);
         masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, temp, &success);
-        masm.assume_unreachable("Double input should be lower or equal than Upperbound.");
+        masm.assumeUnreachable("Double input should be lower or equal than Upperbound.");
         masm.bind(&success);
     }
 
@@ -7822,20 +7822,20 @@ CodeGenerator::emitAssertRangeD(const Range *r, FloatRegister input, FloatRegist
         masm.loadConstantDouble(pow(2.0, r->exponent() + 1), temp);
         masm.branchDouble(Assembler::DoubleUnordered, input, input, &exponentLoOk);
         masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, temp, &exponentLoOk);
-        masm.assume_unreachable("Check for exponent failed.");
+        masm.assumeUnreachable("Check for exponent failed.");
         masm.bind(&exponentLoOk);
 
         Label exponentHiOk;
         masm.loadConstantDouble(-pow(2.0, r->exponent() + 1), temp);
         masm.branchDouble(Assembler::DoubleUnordered, input, input, &exponentHiOk);
         masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input, temp, &exponentHiOk);
-        masm.assume_unreachable("Check for exponent failed.");
+        masm.assumeUnreachable("Check for exponent failed.");
         masm.bind(&exponentHiOk);
     } else if (!r->hasInt32Bounds() && !r->canBeNaN()) {
         // If we think the value can't be NaN, check that it isn't.
         Label notnan;
         masm.branchDouble(Assembler::DoubleOrdered, input, input, &notnan);
-        masm.assume_unreachable("Input shouldn't be NaN.");
+        masm.assumeUnreachable("Input shouldn't be NaN.");
         masm.bind(&notnan);
 
         // If we think the value also can't be an infinity, check that it isn't.
@@ -7843,13 +7843,13 @@ CodeGenerator::emitAssertRangeD(const Range *r, FloatRegister input, FloatRegist
             Label notposinf;
             masm.loadConstantDouble(PositiveInfinity(), temp);
             masm.branchDouble(Assembler::DoubleLessThan, input, temp, &notposinf);
-            masm.assume_unreachable("Input shouldn't be +Inf.");
+            masm.assumeUnreachable("Input shouldn't be +Inf.");
             masm.bind(&notposinf);
 
             Label notneginf;
             masm.loadConstantDouble(NegativeInfinity(), temp);
             masm.branchDouble(Assembler::DoubleGreaterThan, input, temp, &notneginf);
-            masm.assume_unreachable("Input shouldn't be -Inf.");
+            masm.assumeUnreachable("Input shouldn't be -Inf.");
             masm.bind(&notneginf);
         }
     }
@@ -7918,7 +7918,7 @@ CodeGenerator::visitAssertRangeV(LAssertRangeV *ins)
         masm.bind(&isNotDouble);
     }
 
-    masm.assume_unreachable("Incorrect range for Value.");
+    masm.assumeUnreachable("Incorrect range for Value.");
     masm.bind(&done);
     return true;
 }
