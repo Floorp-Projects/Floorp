@@ -477,7 +477,7 @@ let CustomizableUIInternal = {
 
         this.insertWidgetBefore(node, currentNode, container, aArea);
         if (gResetting) {
-          this.notifyListeners("onWidgetReset", id, aArea);
+          this.notifyListeners("onWidgetReset", node, container);
         }
       }
 
@@ -527,7 +527,7 @@ let CustomizableUIInternal = {
       }
 
       if (gResetting) {
-        this.notifyListeners("onAreaReset", aArea);
+        this.notifyListeners("onAreaReset", aArea, container);
       }
     } finally {
       this.endBatchUpdate();
@@ -668,6 +668,8 @@ let CustomizableUIInternal = {
     }
 
     let area = gAreas.get(aArea);
+    let isToolbar = area.get("type") == CustomizableUI.TYPE_TOOLBAR;
+    let isOverflowable = isToolbar && area.get("overflowable");
     let showInPrivateBrowsing = gPalette.has(aWidgetId)
                               ? gPalette.get(aWidgetId).showInPrivateBrowsing
                               : true;
@@ -679,11 +681,14 @@ let CustomizableUIInternal = {
         continue;
       }
 
-      let container = areaNode.customizationTarget;
-      let widgetNode = container.ownerDocument.getElementById(aWidgetId);
+      let widgetNode = window.document.getElementById(aWidgetId);
       if (!widgetNode) {
         ERROR("Widget not found, unable to remove");
         continue;
+      }
+      let container = areaNode.customizationTarget;
+      if (isOverflowable) {
+        container = areaNode.overflowable.getContainerFor(widgetNode);
       }
 
       this.notifyListeners("onWidgetBeforeDOMChange", widgetNode, null, container, true);
@@ -702,7 +707,7 @@ let CustomizableUIInternal = {
       }
       this.notifyListeners("onWidgetAfterDOMChange", widgetNode, null, container, true);
 
-      if (area.get("type") == CustomizableUI.TYPE_TOOLBAR) {
+      if (isToolbar) {
         areaNode.setAttribute("currentset", gPlacements.get(aArea).join(','));
       }
 
@@ -2765,7 +2770,14 @@ OverflowableToolbar.prototype = {
       return [this._target, null];
     }
     return [this._list, nextNode];
-  }
+  },
+
+  getContainerFor: function(aNode) {
+    if (aNode.classList.contains("overflowedItem")) {
+      return this._list;
+    }
+    return this._target;
+  },
 };
 
 // When IDs contain special characters, we need to escape them for use with querySelector:
