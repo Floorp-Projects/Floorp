@@ -1318,6 +1318,29 @@ OptimizeMIR(MIRGenerator *mir)
         if (mir->shouldCancel("RA De-Beta"))
             return false;
 
+        if (js_IonOptions.uce) {
+            bool shouldRunUCE = false;
+            if (!r.prepareForUCE(&shouldRunUCE))
+                return false;
+            IonSpewPass("RA check UCE");
+            AssertExtendedGraphCoherency(graph);
+
+            if (mir->shouldCancel("RA check UCE"))
+                return false;
+
+            if (shouldRunUCE) {
+                UnreachableCodeElimination uce(mir, graph);
+                uce.disableAliasAnalysis();
+                if (!uce.analyze())
+                    return false;
+                IonSpewPass("UCE After RA");
+                AssertExtendedGraphCoherency(graph);
+
+                if (mir->shouldCancel("UCE After RA"))
+                    return false;
+            }
+        }
+
         if (!r.truncate())
             return false;
         IonSpewPass("Truncate Doubles");

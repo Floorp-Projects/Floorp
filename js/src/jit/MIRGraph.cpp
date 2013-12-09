@@ -275,7 +275,7 @@ MBasicBlock::NewAsmJS(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred, Kin
 }
 
 MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kind kind)
-  : earlyAbort_(false),
+  : unreachable_(false),
     graph_(graph),
     info_(info),
     predecessors_(graph.alloc()),
