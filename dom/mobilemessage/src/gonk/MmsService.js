@@ -256,11 +256,13 @@ MmsConnection.prototype = {
       let networkManager =
         Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
       let activeNetwork = networkManager.active;
-      if (activeNetwork.serviceId != this.serviceId) {
+
+      let rilNetwork = activeNetwork.QueryInterface(Ci.nsIRilNetworkInterface);
+      if (rilNetwork.serviceId != this.serviceId) {
+        if (DEBUG) debug("Sevice ID between active/MMS network doesn't match.");
         return;
       }
 
-      let rilNetwork = activeNetwork.QueryInterface(Ci.nsIRilNetworkInterface);
       // Set up the MMS APN setting based on the connected MMS network,
       // which is going to be used for the HTTP requests later.
       this.setApnSetting(rilNetwork);
