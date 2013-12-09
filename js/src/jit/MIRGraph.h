@@ -50,8 +50,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool inheritResumePoint(MBasicBlock *pred);
     void assertUsesAreNotWithin(MUseIterator use, MUseIterator end);
 
-    // Does this block do something that forces it to terminate early?
-    bool earlyAbort_;
+    // This block cannot be reached by any means.
+    bool unreachable_;
 
     // Pushes a copy of a local variable or argument.
     void pushVariable(uint32_t slot);
@@ -88,14 +88,14 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void setId(uint32_t id) {
         id_ = id;
     }
-    void setEarlyAbort() {
-        earlyAbort_ = true;
+    void setUnreachable() {
+        unreachable_ = true;
     }
-    void clearEarlyAbort() {
-        earlyAbort_ = false;
+    void clearUnreachable() {
+        unreachable_ = false;
     }
-    bool earlyAbort() {
-        return earlyAbort_;
+    bool unreachable() {
+        return unreachable_;
     }
     // Move the definition to the top of the stack.
     void pick(int32_t depth);
