@@ -18,7 +18,7 @@ fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63
 == show-value.html show-value-ref.html
 
 # focus
-fails-if(B2G) needs-focus == focus-handling.html focus-handling-ref.html # bug 940760
+needs-focus == focus-handling.html focus-handling-ref.html
 
 # pseudo-elements not usable from content:
 == number-pseudo-elements.html number-pseudo-elements-ref.html

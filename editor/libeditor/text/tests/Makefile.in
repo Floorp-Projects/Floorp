@@ -6,7 +6,7 @@
 # disables the key handling test on gtk because gtk overrides some key events
 # on our editor, and the combinations depend on the system.
 ifndef MOZ_WIDGET_GTK
-MOCHITEST_FILES += \
+MOCHITEST_CHROME_FILES += \
 		test_texteditor_keyevent_handling.html \
 		$(NULL)
 endif

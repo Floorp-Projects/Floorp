@@ -318,12 +318,10 @@ OPDEF(JSOP_FINALLY,     135,"finally",    NULL,       1,  0,  2,  JOF_BYTE)
  *                containing the variable being accessed
  *  uint16 slot:  the slot containing the variable in the ScopeObject (this
  *                'slot' does not include RESERVED_SLOTS).
- *  uint32 block: the index (into the script object table) of the block chain
- *                at the point of the variable access.
  */
-OPDEF(JSOP_GETALIASEDVAR, 136,"getaliasedvar",NULL,   9,  0,  1, JOF_SCOPECOORD|JOF_NAME|JOF_TYPESET)
-OPDEF(JSOP_CALLALIASEDVAR,137,"callaliasedvar",NULL,  9,  0,  1, JOF_SCOPECOORD|JOF_NAME|JOF_TYPESET)
-OPDEF(JSOP_SETALIASEDVAR, 138,"setaliasedvar",NULL,   9,  1,  1, JOF_SCOPECOORD|JOF_NAME|JOF_SET|JOF_DETECTING)
+OPDEF(JSOP_GETALIASEDVAR, 136,"getaliasedvar",NULL,   5,  0,  1, JOF_SCOPECOORD|JOF_NAME|JOF_TYPESET)
+OPDEF(JSOP_CALLALIASEDVAR,137,"callaliasedvar",NULL,  5,  0,  1, JOF_SCOPECOORD|JOF_NAME|JOF_TYPESET)
+OPDEF(JSOP_SETALIASEDVAR, 138,"setaliasedvar",NULL,   5,  1,  1, JOF_SCOPECOORD|JOF_NAME|JOF_SET|JOF_DETECTING)
 
 OPDEF(JSOP_UNUSED139,  139, "unused139",   NULL,         1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED140,  140, "unused140",   NULL,         1,  0,  0,  JOF_BYTE)

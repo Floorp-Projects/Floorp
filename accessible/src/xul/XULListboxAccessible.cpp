@@ -635,7 +635,7 @@ XULListitemAccessible::NativeName(nsString& aName)
     }
   }
 
-  return GetXULName(aName);
+  return Accessible::NativeName(aName);
 }
 
 role

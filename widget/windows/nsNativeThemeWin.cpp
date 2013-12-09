@@ -732,6 +732,7 @@ nsNativeThemeWin::GetTheme(uint8_t aWidgetType)
     case NS_THEME_CHECKBOX:
     case NS_THEME_GROUPBOX:
       return nsUXThemeData::GetTheme(eUXButton);
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
       return nsUXThemeData::GetTheme(eUXEdit);
@@ -938,6 +939,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       // same as GBS_NORMAL don't bother supporting GBS_DISABLED.
       return NS_OK;
     }
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE: {
       nsEventStates eventState = GetContentState(aFrame, aWidgetType);
@@ -2014,7 +2016,9 @@ nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext,
       aResult->left = 0;
   }
 
-  if (aFrame && (aWidgetType == NS_THEME_TEXTFIELD || aWidgetType == NS_THEME_TEXTFIELD_MULTILINE)) {
+  if (aFrame && (aWidgetType == NS_THEME_NUMBER_INPUT ||
+                 aWidgetType == NS_THEME_TEXTFIELD ||
+                 aWidgetType == NS_THEME_TEXTFIELD_MULTILINE)) {
     nsIContent* content = aFrame->GetContent();
     if (content && content->IsHTML()) {
       // We need to pad textfields by 1 pixel, since the caret will draw
@@ -2088,7 +2092,8 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
   }
 
   if (IsVistaOrLater()) {
-    if (aWidgetType == NS_THEME_TEXTFIELD ||
+    if (aWidgetType == NS_THEME_NUMBER_INPUT ||
+        aWidgetType == NS_THEME_TEXTFIELD ||
         aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
         aWidgetType == NS_THEME_DROPDOWN)
     {
@@ -2103,7 +2108,9 @@ nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
      * contents look too small.  Instead, we add 2px padding for the
      * contents and fix this. (Used to be 1px added, see bug 430212)
      */
-    if (aWidgetType == NS_THEME_TEXTFIELD || aWidgetType == NS_THEME_TEXTFIELD_MULTILINE) {
+    if (aWidgetType == NS_THEME_NUMBER_INPUT ||
+        aWidgetType == NS_THEME_TEXTFIELD ||
+        aWidgetType == NS_THEME_TEXTFIELD_MULTILINE) {
       aResult->top = aResult->bottom = 2;
       aResult->left = aResult->right = 2;
       return true;
@@ -2217,6 +2224,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* a
 
   switch (aWidgetType) {
     case NS_THEME_GROUPBOX:
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TOOLBOX:
     case NS_THEME_WIN_MEDIA_TOOLBOX:
@@ -2683,6 +2691,7 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
       if (!nsUXThemeData::sFlatMenus)
         return false;
     case NS_THEME_BUTTON:
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_CHECKBOX:
@@ -2765,6 +2774,7 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext,
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_TEXTFIELD:
     case NS_THEME_TAB:
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
       (*aResult).top = (*aResult).left = (*aResult).bottom = (*aResult).right = 2;
@@ -2910,6 +2920,7 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsRenderingContext* aContext, nsIF
     case NS_THEME_GROUPBOX:
     case NS_THEME_LISTBOX:
     case NS_THEME_TREEVIEW:
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_DROPDOWN_TEXTFIELD:      
@@ -3150,6 +3161,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, uint8_t
     }
     case NS_THEME_LISTBOX:
     case NS_THEME_TREEVIEW:
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_DROPDOWN:
@@ -3583,6 +3595,7 @@ RENDER_AGAIN:
       break;
     }
     // Draw controls with 2px 3D inset border
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
     case NS_THEME_LISTBOX:
@@ -3949,6 +3962,7 @@ nsNativeThemeWin::GetWidgetNativeDrawingFlags(uint8_t aWidgetType)
 {
   switch (aWidgetType) {
     case NS_THEME_BUTTON:
+    case NS_THEME_NUMBER_INPUT:
     case NS_THEME_TEXTFIELD:
     case NS_THEME_TEXTFIELD_MULTILINE:
 

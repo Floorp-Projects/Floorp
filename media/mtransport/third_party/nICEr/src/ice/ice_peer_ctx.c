@@ -336,6 +336,10 @@ int nr_ice_peer_ctx_pair_candidates(nr_ice_peer_ctx *pctx)
         ABORT(R_FAILED);
     }
 
+    /* Set this first; if we fail partway through, we do not want to end
+     * up in UNPAIRED after creating some pairs. */
+    pctx->state = NR_ICE_PEER_STATE_PAIRED;
+
     stream=STAILQ_FIRST(&pctx->peer_streams);
     while(stream){
       if(r=nr_ice_media_stream_pair_candidates(pctx, stream->local_stream,
@@ -345,7 +349,6 @@ int nr_ice_peer_ctx_pair_candidates(nr_ice_peer_ctx *pctx)
       stream=STAILQ_NEXT(stream,entry);
     }
 
-    pctx->state = NR_ICE_PEER_STATE_PAIRED;
 
     _status=0;
   abort:

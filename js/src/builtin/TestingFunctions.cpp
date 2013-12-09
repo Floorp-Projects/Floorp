@@ -1119,11 +1119,11 @@ SetJitCompilerOption(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-SetIonAssertGraphCoherency(JSContext *cx, unsigned argc, jsval *vp)
+SetIonCheckGraphCoherency(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef JS_ION
-    jit::js_IonOptions.assertGraphConsistency = ToBoolean(args.get(0));
+    jit::js_IonOptions.checkGraphConsistency = ToBoolean(args.get(0));
 #endif
     args.rval().setUndefined();
     return true;
@@ -1577,8 +1577,8 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "setCompilerOption(<option>, <number>)",
 "  Set a compiler option indexed in JSCompileOption enum to a number.\n"),
 
-    JS_FN_HELP("setIonAssertGraphCoherency", SetIonAssertGraphCoherency, 1, 0,
-"setIonAssertGraphCoherency(bool)",
+    JS_FN_HELP("setIonCheckGraphCoherency", SetIonCheckGraphCoherency, 1, 0,
+"setIonCheckGraphCoherency(bool)",
 "  Set whether Ion should perform graph consistency (DEBUG-only) assertions. These assertions\n"
 "  are valuable and should be generally enabled, however they can be very expensive for large\n"
 "  (asm.js) programs."),

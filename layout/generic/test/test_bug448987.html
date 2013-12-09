@@ -30,6 +30,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448987
 /** Test for Bug 448987 **/
 SimpleTest.waitForExplicitFinish();
 
+SpecialPowers.setIntPref("accessibility.tabfocus", 7);
+
 var f1 = document.getElementById("f1");
 var f2 = document.getElementById("f2");
 var f3 = document.getElementById("f3");
@@ -56,6 +58,12 @@ function thirdIframeLoaded() {
   ok(compareSnapshots(snapshotf1,
                       snapshotWindow(f3.contentWindow), false)[0],
      "file_bug448987.html should render focus outline, file_bug448987_notref.html should not");
+  finish();
+}
+
+function finish()
+{
+  SpecialPowers.clearUserPref("accessibility.tabfocus");
   SimpleTest.finish();
 }
 </script>

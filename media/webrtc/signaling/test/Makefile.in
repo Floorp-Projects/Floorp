@@ -7,6 +7,7 @@ LIBS = \
   $(NSPR_LIBS) \
   $(NSS_LIBS) \
   $(REALTIME_LIBS) \
+  $(MOZ_JS_LIBS) \
   $(DEPTH)/xpcom/glue/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
   $(DEPTH)/media/mtransport/standalone/$(LIB_PREFIX)mtransport_s.$(LIB_SUFFIX) \
   $(DEPTH)/media/webrtc/signalingtest/signaling_ecc/$(LIB_PREFIX)ecc.$(LIB_SUFFIX) \

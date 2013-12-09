@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=938772
+-->
+<title>Test for Bug 938772</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=938772">Mozilla Bug 938772</a>
+<p id="display"></p>
+<iframe id="i"></iframe>
+<pre id="test">
+<script>
+SimpleTest.waitForExplicitFinish();
+
+i.onload = function() {
+  ok(!i.contentDocument.getElementById("v").failed,
+     "Check whether an error was reported");
+  SimpleTest.finish();
+};
+i.src = "data:text/html,<base href='http://basetag/basetag'><video id='v' onerror='v.failed=true'></video>";
+</script>
+

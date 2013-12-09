@@ -11,8 +11,7 @@ const Cc = Components.classes;
 
 const CONTRACT_ID = "@mozilla.org/xre/runtime;1";
 
-var gAppInfoClassID, gIncOldFactory;
-
+var gAppInfoClassID, gIncOldFactory, gOldCrashSubmit, gCrashesSubmitted;
 var gMockAppInfoQueried = false;
 
 function MockAppInfo() {
@@ -30,7 +29,6 @@ var newFactory = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
 };
 
-let oldPrompt;
 function initMockAppInfo() {
   var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
   gAppInfoClassID = registrar.contractIDToCID(CONTRACT_ID);
@@ -40,7 +38,13 @@ function initMockAppInfo() {
   registrar.registerFactory(gAppInfoClassID, "", CONTRACT_ID, newFactory);
   gIncOldFactory = Cm.getClassObject(Cc[CONTRACT_ID], Ci.nsIFactory);
 
-  oldPrompt = Services.prompt;
+  gCrashesSubmitted = 0;
+  gOldCrashSubmit = BrowserUI.CrashSubmit;
+  BrowserUI.CrashSubmit = {
+    submit: function() {
+      gCrashesSubmitted++;
+    }
+  };
 }
 
 function cleanupMockAppInfo() {
@@ -50,8 +54,7 @@ function cleanupMockAppInfo() {
     registrar.registerFactory(gAppInfoClassID, "", CONTRACT_ID, gIncOldFactory);
   }
   gIncOldFactory = null;
-
-  Services.prompt = oldPrompt;
+  BrowserUI.CrashSubmit = gOldCrashSubmit;
 }
 
 MockAppInfo.prototype = {
@@ -62,89 +65,151 @@ MockAppInfo.prototype = {
   },
 }
 
+function GetAutoSubmitPref() {
+  return Services.prefs.getBoolPref("app.crashreporter.autosubmit");
+}
+
+function SetAutoSubmitPref(aValue) {
+  Services.prefs.setBoolPref('app.crashreporter.autosubmit', aValue);
+}
+
+function GetPromptedPref() {
+  return Services.prefs.getBoolPref("app.crashreporter.prompted");
+}
+
+function SetPromptedPref(aValue) {
+  Services.prefs.setBoolPref('app.crashreporter.prompted', aValue);
+}
+
 gTests.push({
-  desc: "Test Crash Prompt",
+  desc: "Pressing 'cancel' button on the crash reporter prompt",
   setUp: initMockAppInfo,
   tearDown: cleanupMockAppInfo,
 
-  get autosubmitPref() {
-    return Services.prefs.getBoolPref("app.crashreporter.autosubmit");
-  },
-  set autosubmitPref(aValue) {
-    Services.prefs.setBoolPref('app.crashreporter.autosubmit', aValue);
-  },
-  get promptedPref() {
-    return Services.prefs.getBoolPref("app.crashreporter.prompted");
-  },
-  set promptedPref(aValue) {
-    Services.prefs.setBoolPref('app.crashreporter.prompted', aValue);
-  },
+  run: function() {
+    MockAppInfo.crashid = "testid";
+    SetAutoSubmitPref(false);
+    SetPromptedPref(false);
+
+    BrowserUI.startupCrashCheck();
+    yield waitForCondition2(function () {
+      return Browser.selectedBrowser.currentURI.spec == "about:crashprompt";
+    }, "Loading crash prompt");
+
+    yield Browser.selectedTab.pageShowPromise;
+    ok(true, "Loaded crash prompt");
+
+    EventUtils.sendMouseEvent({type: "click"},
+                              "refuseButton",
+                              Browser.selectedBrowser
+                                     .contentDocument
+                                     .defaultView);
+    yield waitForCondition2(function () {
+      return Browser.selectedBrowser.currentURI.spec == "about:blank";
+    }, "Crash prompt dismissed");
+
+    ok(!GetAutoSubmitPref(), "auto-submit pref should still be false");
+    ok(GetPromptedPref(), "prompted pref should now be true");
+    is(gCrashesSubmitted, 0, "did not submit crash report");
+  }
+});
+
+gTests.push({
+  desc: "Pressing 'Send Reports' button on the crash reporter prompt",
+  setUp: initMockAppInfo,
+  tearDown: cleanupMockAppInfo,
 
   run: function() {
     MockAppInfo.crashid = "testid";
-
-    // For the first set of tests, we want to be able to simulate that a
-    // specific button of the crash reporter prompt was pressed
-    Services.prompt = {
-      confirmEx: function() {
-        return this.retVal;
-      }
-    };
-
-    // Test 1:
-    // Pressing cancel button on the crash reporter prompt
-
-    // Set the crash reporter prefs to indicate that the prompt should appear
-    this.autosubmitPref = false;
-    this.promptedPref = false;
-
-    // We will simulate that "button 1" (which should be the cancel button)
-    // was pressed
-    Services.prompt.retVal = 1;
+    SetAutoSubmitPref(false);
+    SetPromptedPref(false);
 
     BrowserUI.startupCrashCheck();
-    ok(!this.autosubmitPref, "auto submit disabled?");
-    ok(this.promptedPref, "prompted should be true");
+    yield waitForCondition2(function () {
+      return Browser.selectedBrowser.currentURI.spec == "about:crashprompt";
+    }, "Loading crash prompt");
 
+    yield Browser.selectedTab.pageShowPromise;
+    ok(true, "Loaded crash prompt");
 
-    // Test 2:
-    // Pressing 'ok' button on the crash reporter prompt
+    EventUtils.sendMouseEvent({type: "click"},
+                              "sendReportsButton",
+                              Browser.selectedBrowser
+                                     .contentDocument
+                                     .defaultView);
+    yield waitForCondition2(function () {
+      return Browser.selectedBrowser.currentURI.spec == "about:blank";
+    }, "Crash prompt dismissed");
 
-    // Set the crash reporter prefs to indicate that the prompt should appear
-    this.autosubmitPref = false;
-    this.promptedPref = false;
+    ok(GetAutoSubmitPref(), "auto-submit pref should now be true");
+    ok(GetPromptedPref(), "prompted pref should now be true");
+    // TODO: We don't submit a crash report when the user selects
+    // 'Send Reports' but eventually we want to.
+    // is(gCrashesSubmitted, 1, "submitted 1 crash report");
+  }
+});
 
-    // should query on the first call to startupCrashCheck
-    gMockAppInfoQueried = false;
+gTests.push({
+  desc: "Already prompted, crash reporting disabled",
+  setUp: initMockAppInfo,
+  tearDown: cleanupMockAppInfo,
 
-    // We will simulate that "button 0" (which should be the OK button)
-    // was pressed
-    Services.prompt.retVal = 0;
+  run: function() {
+    MockAppInfo.crashid = "testid";
+    SetAutoSubmitPref(false);
+    SetPromptedPref(true);
 
     BrowserUI.startupCrashCheck();
-    ok(gMockAppInfoQueried, "id queried");
-    ok(this.autosubmitPref, "auto submit enabled?");
-    ok(this.promptedPref, "prompted should be true");
+    is(Browser.selectedBrowser.currentURI.spec,
+       "about:blank",
+       "Not loading crash prompt");
 
+    ok(!GetAutoSubmitPref(), "auto-submit pref should still be false");
+    ok(GetPromptedPref(), "prompted pref should still be true");
+    is(gCrashesSubmitted, 0, "did not submit crash report");
+  }
+});
 
-    // For the remaining tests, attempting to launch the crash reporter
-    // prompt would be incorrect behavior
-    Services.prompt.confirmEx = function() {
-      ok(false, "Should not attempt to launch crash reporter prompt");
-    };
+gTests.push({
+  desc: "Already prompted, crash reporting enabled",
+  setUp: initMockAppInfo,
+  tearDown: cleanupMockAppInfo,
 
-    // Test 3:
-    // Prompt should not appear if pref indicates that user has already
-    // been prompted
-    this.autosubmitPref = false;
-    this.promptedPref = true;
+  run: function() {
+    MockAppInfo.crashid = "testid";
+    SetAutoSubmitPref(true);
+    SetPromptedPref(true);
+
     BrowserUI.startupCrashCheck();
+    is(Browser.selectedBrowser.currentURI.spec,
+       "about:blank",
+       "Not loading crash prompt");
 
-    // Test 4:
-    // Prompt should not appear if pref indicates that autosubmit is on
-    this.autosubmitPref = true;
-    this.promptedPref = false;
+    ok(GetAutoSubmitPref(), "auto-submit pref should still be true");
+    ok(GetPromptedPref(), "prompted pref should still be true");
+    is(gCrashesSubmitted, 1, "submitted 1 crash report");
+  }
+});
+
+gTests.push({
+  desc: "Crash reporting enabled, not prompted",
+  setUp: initMockAppInfo,
+  tearDown: cleanupMockAppInfo,
+
+  run: function() {
+    MockAppInfo.crashid = "testid";
+    SetAutoSubmitPref(true);
+    SetPromptedPref(false);
+
     BrowserUI.startupCrashCheck();
+    is(Browser.selectedBrowser.currentURI.spec,
+       "about:blank",
+       "Not loading crash prompt");
+
+    ok(GetAutoSubmitPref(), "auto-submit pref should still be true");
+    // We don't check the "prompted" pref; it's equally correct for
+    // the pref to be true or false at this point
+    is(gCrashesSubmitted, 1, "submitted 1 crash report");
   }
 });
 

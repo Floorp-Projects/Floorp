@@ -38,8 +38,10 @@
       // Test focus events.
       gQueue = new eventQueue();
 
-      gQueue.push(new synthFocus("textbox"));
-      gQueue.push(new synthFocus("textbox_multiline"));
+      gQueue.push(new synthFocus("textbox",
+                                 new focusChecker(getNode("textbox").inputField)));
+      gQueue.push(new synthFocus("textbox_multiline",
+                                 new focusChecker(getNode("textbox_multiline").inputField)));
       gQueue.push(new synthFocus("scale"));
       gQueue.push(new synthFocusOnFrame("editabledoc"));
       gQueue.push(new synthFocus("radioclothes",

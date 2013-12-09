@@ -32,8 +32,9 @@ function focus_area() {
     // working directly after page load, hence it is retried 10 times, see bug bug 922524
     timer = setInterval(function() {
       if (counter > 10) {
+        clearInterval(timer);
         parent.ok(false, "Too often tried to focus image map, giving up");
-        parent.Simpletest.finish();
+        parent.finish();
         return;
       }
       synthesizeKey("VK_TAB", { shiftKey: shiftKeyOn }, window); 

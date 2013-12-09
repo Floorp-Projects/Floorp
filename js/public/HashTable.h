@@ -1523,6 +1523,7 @@ class HashTable : private AllocPolicy
         p.mutationCount = mutationCount;
         {
             mozilla::ReentrancyGuard g(*this);
+            JS_ASSERT(prepareHash(l) == p.keyHash); // l has not been destroyed
             p.entry_ = &lookup(l, p.keyHash, sCollisionBit);
         }
         return p.found() || add(p, mozilla::Forward<U>(u));
