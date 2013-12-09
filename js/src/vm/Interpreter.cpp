@@ -1535,7 +1535,8 @@ CASE(JSOP_UNUSED194)
 CASE(JSOP_UNUSED196)
 CASE(JSOP_UNUSED200)
 CASE(JSOP_UNUSED201)
-CASE(JSOP_GETFUNNS)
+CASE(JSOP_UNUSED205)
+CASE(JSOP_UNUSED206)
 CASE(JSOP_UNUSED208)
 CASE(JSOP_UNUSED209)
 CASE(JSOP_UNUSED210)
@@ -1880,26 +1881,6 @@ CASE(JSOP_SETCONST)
         goto error;
 }
 END_CASE(JSOP_SETCONST);
-
-#if JS_HAS_DESTRUCTURING
-CASE(JSOP_ENUMCONSTELEM)
-{
-    RootedValue &rval = rootValue0;
-    rval = REGS.sp[-3];
-
-    RootedObject &obj = rootObject0;
-    FETCH_OBJECT(cx, -2, obj);
-    RootedId &id = rootId0;
-    FETCH_ELEMENT_ID(-1, id);
-    if (!JSObject::defineGeneric(cx, obj, id, rval,
-                                 JS_PropertyStub, JS_StrictPropertyStub,
-                                 JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
-        goto error;
-    }
-    REGS.sp -= 3;
-}
-END_CASE(JSOP_ENUMCONSTELEM)
-#endif
 
 CASE(JSOP_BINDGNAME)
     PUSH_OBJECT(REGS.fp()->global());
