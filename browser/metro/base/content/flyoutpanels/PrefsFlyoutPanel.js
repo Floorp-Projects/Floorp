@@ -44,6 +44,12 @@ let PrefsFlyoutPanel = {
       Services.prefs.addObserver("privacy.donottrackheader.enabled",
                                  this._prefObserver,
                                  false);
+      Services.prefs.addObserver("app.crashreporter.autosubmit",
+                                 this._prefObserver,
+                                 false);
+      Services.prefs.addObserver("app.crashreporter.submitURLs",
+                                 this._prefObserver,
+                                 false);
     }
 
     this._topmostElement.show();
@@ -81,6 +87,29 @@ let PrefsFlyoutPanel = {
           Services.prefs.setIntPref('privacy.donottrackheader.value', -1);
         }
         break;
+
+      case "app.crashreporter.autosubmit":
+        let autosubmit = Services.prefs.getBoolPref("app.crashreporter.autosubmit");
+        if (!autosubmit) {
+          // If the user has selected not to submit crash reports, the UI
+          // should reflect also that URLs will not be included.
+          // TODO: Ideally we would grey out the text and the toggle for
+          // the "include URLs" pref, but the |setting| binding doesn't
+          // appear to support enabling/disabling. In the meantime, we just
+          // set the "include URLs" pref to false if the "send crash reports"
+          // pref has been set to false.
+          Services.prefs.setBoolPref('app.crashreporter.submitURLs', false);
+        }
+        break;
+
+      case "app.crashreporter.submitURLs":
+        let submitURLs = Services.prefs.getBoolPref("app.crashreporter.submitURLs");
+        if (submitURLs) {
+          // If the user has selected to submit URLs, they are implicitly also
+          // selecting to submit crash reports. Let's update the autosubmit pref
+          Services.prefs.setBoolPref('app.crashreporter.autosubmit', true);
+        }
+      break;
     }
   },
 };

@@ -94,7 +94,7 @@ struct IonOptions
     // asm.js programs.
     //
     // Default: true
-    bool assertGraphConsistency;
+    bool checkGraphConsistency;
 
     // Toggles whether Unreachable Code Elimination is performed.
     //
@@ -228,7 +228,7 @@ struct IonOptions
         rangeAnalysis(true),
         checkRangeAnalysis(false),
         checkThreadSafety(false),
-        assertGraphConsistency(true),
+        checkGraphConsistency(true),
         uce(true),
         eaa(true),
 #ifdef CHECK_OSIPOINT_REGISTERS
@@ -330,6 +330,10 @@ MethodStatus CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_
 
 MethodStatus CanEnterInParallel(JSContext *cx, HandleScript script);
 
+MethodStatus
+Recompile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode *osrPc,
+          bool constructing);
+
 enum IonExecStatus
 {
     // The method call had to be aborted due to a stack limit check. This
@@ -361,10 +365,14 @@ IonExecStatus FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args);
 
 // Walk the stack and invalidate active Ion frames for the invalid scripts.
 void Invalidate(types::TypeCompartment &types, FreeOp *fop,
-                const Vector<types::RecompileInfo> &invalid, bool resetUses = true);
-void Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses = true);
-bool Invalidate(JSContext *cx, JSScript *script, ExecutionMode mode, bool resetUses = true);
-bool Invalidate(JSContext *cx, JSScript *script, bool resetUses = true);
+                const Vector<types::RecompileInfo> &invalid, bool resetUses = true,
+                bool cancelOffThread = true);
+void Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses = true,
+                bool cancelOffThread = true);
+bool Invalidate(JSContext *cx, JSScript *script, ExecutionMode mode, bool resetUses = true,
+                bool cancelOffThread = true);
+bool Invalidate(JSContext *cx, JSScript *script, bool resetUses = true,
+                bool cancelOffThread = true);
 
 void MarkValueFromIon(JSRuntime *rt, Value *vp);
 void MarkShapeFromIon(JSRuntime *rt, Shape **shapep);

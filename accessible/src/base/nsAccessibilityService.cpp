@@ -1310,7 +1310,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     accessible = new XULLabelAccessible(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:textbox")) {
-    accessible = new XULTextFieldAccessible(aContent, aDoc);
+    accessible = new EnumRoleAccessible(aContent, aDoc, roles::SECTION);
 
   } else if (role.EqualsLiteral("xul:thumb")) {
     accessible = new XULThumbAccessible(aContent, aDoc);

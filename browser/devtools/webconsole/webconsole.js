@@ -118,6 +118,7 @@ const MESSAGE_PREFERENCE_KEYS = [
 const LEVELS = {
   error: SEVERITY_ERROR,
   exception: SEVERITY_ERROR,
+  assert: SEVERITY_ERROR,
   warn: SEVERITY_WARNING,
   info: SEVERITY_INFO,
   log: SEVERITY_LOG,
@@ -745,7 +746,7 @@ WebConsoleFrame.prototype = {
    * Calculates the width and height of a single character of the input box.
    * This will be used in opening the popup at the correct offset.
    *
-   * @private 
+   * @private
    */
   _updateCharSize: function WCF__updateCharSize()
   {
@@ -1171,6 +1172,7 @@ WebConsoleFrame.prototype = {
       case "warn":
       case "error":
       case "exception":
+      case "assert":
       case "debug": {
         let msg = new Messages.ConsoleGeneric(aMessage);
         node = msg.init(this.output).render().element;
@@ -2912,6 +2914,7 @@ function JSTerm(aWebConsoleFrame)
   this._inputEventHandler = this._inputEventHandler.bind(this);
   this._focusEventHandler = this._focusEventHandler.bind(this);
   this._onKeypressInVariablesView = this._onKeypressInVariablesView.bind(this);
+  this._blurEventHandler = this._blurEventHandler.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -3033,7 +3036,6 @@ JSTerm.prototype = {
    */
   init: function JST_init()
   {
-    let chromeDocument = this.hud.owner.chromeWindow.document;
     let autocompleteOptions = {
       onSelect: this.onAutocompleteSelect.bind(this),
       onClick: this.acceptProposedCompletion.bind(this),
@@ -3044,7 +3046,7 @@ JSTerm.prototype = {
       direction: "ltr",
       autoSelect: true
     };
-    this.autocompletePopup = new AutocompletePopup(chromeDocument,
+    this.autocompletePopup = new AutocompletePopup(this.hud.document,
                                                    autocompleteOptions);
 
     let doc = this.hud.document;
@@ -3054,6 +3056,7 @@ JSTerm.prototype = {
     this.inputNode.addEventListener("input", this._inputEventHandler, false);
     this.inputNode.addEventListener("keyup", this._inputEventHandler, false);
     this.inputNode.addEventListener("focus", this._focusEventHandler, false);
+    this.hud.window.addEventListener("blur", this._blurEventHandler, false);
 
     this.lastInputValue && this.setInputValue(this.lastInputValue);
   },
@@ -3743,6 +3746,17 @@ JSTerm.prototype = {
   },
 
   /**
+   * The window "blur" event handler.
+   * @private
+   */
+  _blurEventHandler: function JST__blurEventHandler()
+  {
+    if (this.autocompletePopup) {
+      this.clearCompletion();
+    }
+  },
+
+  /**
    * The inputNode "keypress" event handler.
    *
    * @private
@@ -4373,6 +4387,7 @@ JSTerm.prototype = {
     this.inputNode.removeEventListener("input", this._inputEventHandler, false);
     this.inputNode.removeEventListener("keyup", this._inputEventHandler, false);
     this.inputNode.removeEventListener("focus", this._focusEventHandler, false);
+    this.hud.window.removeEventListener("blur", this._blurEventHandler, false);
 
     this.hud = null;
   },

@@ -309,6 +309,7 @@ xul|menulist:active {
   background-color: @color_background_highlight_overlay@;
 }
 
+input[type=number] > div > div, /* work around bug 946184 */
 input[type=number]::-moz-number-spin-box {
   display: none;
 }

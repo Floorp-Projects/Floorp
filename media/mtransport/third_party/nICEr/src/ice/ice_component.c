@@ -436,15 +436,21 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
     return(_status);
   }
 
+static int nr_ice_any_peer_paired(nr_ice_candidate* cand) {
+  nr_ice_peer_ctx* pctx=STAILQ_FIRST(&cand->ctx->peers);
+  while(pctx && pctx->state == NR_ICE_PEER_STATE_UNPAIRED){
+    /* Is it worth actually looking through the check lists? Probably not. */
+    pctx=STAILQ_NEXT(pctx,entry);
+  }
+  return pctx != NULL;
+}
+
 /*
   Compare this newly initialized candidate against the other initialized
   candidates and discard the lower-priority one if they are redundant.
 
    This algorithm combined with the other algorithms, favors
    host > srflx > relay
-
-   This actually won't prune relayed in the very rare
-   case that relayed is the same. Not relevant in practice.
  */
 int nr_ice_component_maybe_prune_candidate(nr_ice_ctx *ctx, nr_ice_component *comp, nr_ice_candidate *c1, int *was_pruned)
   {
@@ -463,12 +469,13 @@ int nr_ice_component_maybe_prune_candidate(nr_ice_ctx *ctx, nr_ice_component *co
            (c2->type==HOST && c1->type == SERVER_REFLEXIVE)){
 
           /*
-             These are redundant. Remove the lower pri one.
+             These are redundant. Remove the lower pri one, or if pairing has
+             already occurred, remove the newest one.
 
              Since this algorithmis run whenever a new candidate
              is initialized, there should at most one duplicate.
            */
-          if (c1->priority < c2->priority) {
+          if ((c1->priority <= c2->priority) || nr_ice_any_peer_paired(c2)) {
             tmp = c1;
             *was_pruned = 1;
           }

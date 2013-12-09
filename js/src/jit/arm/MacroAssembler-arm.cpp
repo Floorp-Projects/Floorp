@@ -958,7 +958,7 @@ MacroAssemblerARM::ma_mod_mask(Register src, Register dest, Register hold, int32
     // Do a trial subtraction, this is the same operation as cmp, but we store the dest
     ma_sub(dest, Imm32(mask), secondScratchReg_, SetCond);
     // If (sum - C) > 0, store sum - C back into sum, thus performing a modulus.
-    ma_mov(secondScratchReg_, dest, NoSetCond, Unsigned);
+    ma_mov(secondScratchReg_, dest, NoSetCond, NotSigned);
     // Get rid of the bits that we extracted before, and set the condition codes
     as_mov(ScratchRegister, lsr(ScratchRegister, shift), SetCond);
     // If the shift produced zero, finish, otherwise, continue in the loop.
@@ -3884,7 +3884,7 @@ MacroAssemblerARMCompat::floor(FloatRegister input, Register output, Label *bail
     // the int range, and special handling is required.
     // zero is also caught by this case, but floor of a negative number
     // should never be zero.
-    ma_b(bail, Unsigned);
+    ma_b(bail, NotSigned);
 
     bind(&fin);
 }
@@ -3936,7 +3936,7 @@ MacroAssemblerARMCompat::floorf(FloatRegister input, Register output, Label *bai
     // the int range, and special handling is required.
     // zero is also caught by this case, but floor of a negative number
     // should never be zero.
-    ma_b(bail, Unsigned);
+    ma_b(bail, NotSigned);
 
     bind(&fin);
 }
@@ -4023,7 +4023,7 @@ MacroAssemblerARMCompat::round(FloatRegister input, Register output, Label *bail
     // If the result looks non-negative, then this value didn't actually fit into
     // the int range, and special handling is required, or it was zero, which means
     // the result is actually -0.0 which also requires special handling.
-    ma_b(bail, Unsigned);
+    ma_b(bail, NotSigned);
 
     bind(&fin);
 }

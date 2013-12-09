@@ -179,13 +179,9 @@ public:
   // Returns the maximum number of channels supported by the audio hardware.
   static int MaxNumberOfChannels();
 
-  static void InitPreferredSampleRate();
   // Returns the samplerate the systems prefer, because it is the
   // samplerate the hardware/mixer supports.
-  static int PreferredSampleRate() {
-    MOZ_ASSERT(sPreferredSampleRate);
-    return sPreferredSampleRate;
-  }
+  static int PreferredSampleRate();
 
   AudioStream();
   ~AudioStream();
@@ -377,13 +373,13 @@ private:
 
   StreamState mState;
 
+  // This mutex protects the static members below.
+  static StaticMutex sMutex;
+  static cubeb* sCubebContext;
+
   // Prefered samplerate, in Hz (characteristic of the
   // hardware/mixer/platform/API used).
   static uint32_t sPreferredSampleRate;
-
-  // This mutex protects the static members below
-  static StaticMutex sMutex;
-  static cubeb* sCubebContext;
 
   static double sVolumeScale;
   static uint32_t sCubebLatency;

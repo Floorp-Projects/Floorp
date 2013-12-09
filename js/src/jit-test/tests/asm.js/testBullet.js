@@ -9,9 +9,9 @@ if (!isAsmJSCompilationAvailable())
 // bullet.js and not the nestedShell() call, so try first commenting out
 // nestedShell() (and the loadedFromCache assertion) to see if the error
 // reproduces.
-var code = "setIonAssertGraphCoherency(false); load('" + libdir + "bullet.js'); runBullet()";
+var code = "setIonCheckGraphCoherency(false); load('" + libdir + "bullet.js'); runBullet()";
 nestedShell("--js-cache", "--execute=" + code);
-setIonAssertGraphCoherency(false);
+setIonCheckGraphCoherency(false);
 load(libdir + 'bullet.js');
 var results = runBullet();
 assertEq(results.asmJSValidated, true);

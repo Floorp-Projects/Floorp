@@ -23,64 +23,68 @@
 
     function doTest()
     {
-      ////////////////////
-      // textbox
-      ////////////////////
-      var accTree = {
-        role: ROLE_ENTRY,
-        children: [
-          {
-            role: ROLE_TEXT_LEAF,
-            children: []
-          }
-        ]
-      };
+      //////////////////////////////////////////////////////////////////////////
+      // textboxes
+
+      var accTree =
+        { SECTION: [
+          { ENTRY: [ { TEXT_LEAF: [] } ] },
+          { MENUPOPUP: [] }
+        ] };
 
       // default textbox
-      testAccessibleTree("txc1", accTree);
+      testAccessibleTree("txc", accTree);
 
-      // number textbox
-      testAccessibleTree("txc2", accTree);
+      // multiline
+      testAccessibleTree("txc_multiline", accTree);
 
+      //////////////////////////////////////////////////////////////////////////
       // search textbox
-      testAccessibleTree("txc3", accTree);
 
-      // timed textbox
-      testAccessibleTree("txc4_deprecated", accTree);
+      if (MAC) {
+        accTree =
+          { SECTION: [
+            { ENTRY: [ { TEXT_LEAF: [] } ] },
+            { MENUPOPUP: [] }
+          ] };
+      } else {
+        accTree =
+          { SECTION: [
+            { ENTRY: [ { TEXT_LEAF: [] } ] },
+            { PUSHBUTTON: [] },
+            { MENUPOPUP: [] }
+          ] };
+      }
 
-      ////////////////////
+      testAccessibleTree("txc_search", accTree);
+
+      //////////////////////////////////////////////////////////////////////////
+      // number textbox
+
+      accTree =
+        { SECTION: [
+          { ENTRY: [ { TEXT_LEAF: [] } ] },
+          { MENUPOPUP: [] },
+          { PUSHBUTTON: [] },
+          { PUSHBUTTON: [] }
+        ] };
+
+      testAccessibleTree("txc_number", accTree);
+
+      //////////////////////////////////////////////////////////////////////////
       // password textbox
-      ////////////////////
-      accTree = {
-        role: ROLE_PASSWORD_TEXT,
-        children: [
-          {
-            role: ROLE_TEXT_LEAF,
-            children: []
-          }
-        ]
-      };
 
-      testAccessibleTree("txc5", accTree);
+      accTree =
+        { SECTION: [
+          { PASSWORD_TEXT: [ { TEXT_LEAF: [] } ] },
+          { MENUPOPUP: [] }
+        ] };
 
-      ////////////////////
-      // multiline textbox
-      ////////////////////
-      accTree = {
-        role: ROLE_ENTRY,
-        children: [
-          {
-            role: ROLE_TEXT_LEAF,
-            children: []
-          }
-        ]
-      };
+      testAccessibleTree("txc_password", accTree);
 
-      testAccessibleTree("txc6", accTree);
-
-      ////////////////////
+      //////////////////////////////////////////////////////////////////////////
       // autocomplete textbox
-      ////////////////////
+
       accTree = {
         // textbox
         role: ROLE_AUTOCOMPLETE,
@@ -104,14 +108,14 @@
         ]
       };
 
-      function test_txc7() {
-        testAccessibleTree("txc7", accTree);
+      function test_AutocompleteControl() {
+        testAccessibleTree("txc_autocomplete", accTree);
         SimpleTest.finish();
       }
 
       // XPFE and Toolkit autocomplete widgets differ.
-      var txc7 = document.getElementById("txc7");
-      if ("clearResults" in txc7) {
+      var txc = document.getElementById("txc_autocomplete");
+      if ("clearResults" in txc) {
         SimpleTest.ok(true, "Testing (Old) XPFE autocomplete widget.");
 
         // Popup is always created. (See code below.)
@@ -141,14 +145,14 @@
             ]
           }
         );
-        test_txc7();
+        test_AutocompleteControl();
 
       } else {
         SimpleTest.ok(true, "Testing (New) Toolkit autocomplete widget.");
 
         // Dumb access to trigger popup lazy creation.
-        waitForEvent(EVENT_REORDER, txc7, test_txc7);
-        txc7.popup;
+        waitForEvent(EVENT_REORDER, txc, test_AutocompleteControl);
+        txc.popup;
 
         accTree.children.push(
           {
@@ -189,15 +193,12 @@
     </body>
 
     <vbox flex="1">
-      <textbox id="txc1" value="hello"/>
-      <textbox id="txc2" type="number" value="44"/>
-      <textbox id="txc3" type="search" value="hello"/>
-      <!-- This textbox triggers "Warning: Timed textboxes are deprecated. Consider using type="search" instead.".
-           Yet let's test it too as long as it's (still) supported. -->
-      <textbox id="txc4_deprecated" type="timed" value="hello"/>
-      <textbox id="txc5" type="password" value="hello"/>
-      <textbox id="txc6" multiline="true" value="hello"/>
-      <textbox id="txc7" type="autocomplete" value="hello"/>
+      <textbox id="txc" value="hello"/>
+      <textbox id="txc_search" type="search" value="hello"/>
+      <textbox id="txc_number" type="number" value="44"/>
+      <textbox id="txc_password" type="password" value="hello"/>
+      <textbox id="txc_multiline" multiline="true" value="hello"/>
+      <textbox id="txc_autocomplete" type="autocomplete" value="hello"/>
     </vbox>
   </hbox>
 

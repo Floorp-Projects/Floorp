@@ -280,6 +280,12 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     fm->SetFocus(element, 0);
   }
 
+  if (StyleDisplay()->mAppearance == NS_THEME_TEXTFIELD) {
+    // The author has elected to hide the spinner by setting this
+    // -moz-appearance. We will reframe if it changes.
+    return rv;
+  }
+
   // Create the ::-moz-number-spin-box pseudo-element:
   rv = MakeAnonymousElement(getter_AddRefs(mSpinBox),
                             outerWrapperCI.mChildren,
@@ -368,6 +374,10 @@ nsNumberControlFrame::GetSpinButtonForPointerEvent(WidgetGUIEvent* aEvent) const
   MOZ_ASSERT(aEvent->eventStructType == NS_MOUSE_EVENT,
              "Unexpected event type");
 
+  if (!mSpinBox) {
+    // we don't have a spinner
+    return eSpinButtonNone;
+  }
   if (aEvent->originalTarget == mSpinUp) {
     return eSpinButtonUp;
   }
@@ -398,6 +408,9 @@ nsNumberControlFrame::GetSpinButtonForPointerEvent(WidgetGUIEvent* aEvent) const
 void
 nsNumberControlFrame::SpinnerStateChanged() const
 {
+  MOZ_ASSERT(mSpinUp && mSpinDown,
+             "We should not be called when we have no spinner");
+
   nsIFrame* spinUpFrame = mSpinUp->GetPrimaryFrame();
   if (spinUpFrame && spinUpFrame->IsThemed()) {
     spinUpFrame->InvalidateFrame();
@@ -449,6 +462,9 @@ nsNumberControlFrame::HandleFocusEvent(WidgetEvent* aEvent)
 bool
 nsNumberControlFrame::ShouldUseNativeStyleForSpinner() const
 {
+  MOZ_ASSERT(mSpinUp && mSpinDown,
+             "We should not be called when we have no spinner");
+
   nsIFrame* spinUpFrame = mSpinUp->GetPrimaryFrame();
   nsIFrame* spinDownFrame = mSpinDown->GetPrimaryFrame();
 
@@ -504,14 +520,17 @@ nsNumberControlFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
   }
 
   if (aType == nsCSSPseudoElements::ePseudo_mozNumberSpinBox) {
+    MOZ_ASSERT(mSpinBox);
     return mSpinBox;
   }
 
   if (aType == nsCSSPseudoElements::ePseudo_mozNumberSpinUp) {
+    MOZ_ASSERT(mSpinUp);
     return mSpinUp;
   }
 
   if (aType == nsCSSPseudoElements::ePseudo_mozNumberSpinDown) {
+    MOZ_ASSERT(mSpinDown);
     return mSpinDown;
   }
 

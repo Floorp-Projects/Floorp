@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=930374
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 930374</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=930374">Mozilla Bug 930374</a>
+<div id="display">
+  <input id="input-text">
+</div>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+  <script type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    var gKeyPress = null;
+    function onKeyPress(aEvent)
+    {
+      gKeyPress = aEvent;
+      is(aEvent.target, document.getElementById("input-text"), "input element should have focus");
+      ok(!aEvent.defaultPrevented, "keypress event should be consumed before keypress event handler");
+    }
+
+    function runTests()
+    {
+      document.addEventListener("keypress", onKeyPress, false);
+      var input = document.getElementById("input-text");
+      input.focus();
+
+      input.addEventListener("input", function (aEvent) {
+          input.removeEventListener("input", arguments.callee, false);
+          ok(gKeyPress,
+             "Test1: keypress event must be fired before an input event");
+          ok(gKeyPress.defaultPrevented,
+             "Test1: keypress event's defaultPrevented should be true in chrome even if it's consumed by default action handler of editor");
+          setTimeout(function () {
+            ok(gKeyPress.defaultPrevented,
+               "Test2: keypress event's defaultPrevented should be true after event dispatching finished");
+            SimpleTest.finish();
+          }, 0);
+        }, false);
+
+      sendChar("a");
+    }
+
+    SimpleTest.waitForFocus(runTests);
+  </script>
+</pre>
+</body>
+</html>

@@ -665,7 +665,7 @@ struct nsTArray_CopyChooser {
 //
 template <class E>
 struct nsTArray_CopyChooser<JS::Heap<E> > {
-  typedef nsTArray_CopyWithConstructors<E> Type;
+  typedef nsTArray_CopyWithConstructors<JS::Heap<E> > Type;
 };
 
 template<>

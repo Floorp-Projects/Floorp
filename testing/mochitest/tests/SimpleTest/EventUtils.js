@@ -9,6 +9,7 @@
  *  synthesizeMouseAtCenter
  *  synthesizeWheel
  *  synthesizeKey
+ *  synthesizeNativeKey
  *  synthesizeMouseExpectEvent
  *  synthesizeKeyExpectEvent
  *
@@ -566,6 +567,114 @@ function synthesizeKey(aKey, aEvent, aWindow)
       utils.sendKeyEvent(aEvent.type, keyCode, 0, modifiers, flags);
     }
   }
+}
+
+function _parseNativeModifiers(aModifiers)
+{
+  var modifiers;
+  if (aModifiers.capsLockKey) {
+    modifiers |= 0x00000001;
+  }
+  if (aModifiers.numLockKey) {
+    modifiers |= 0x00000002;
+  }
+  if (aModifiers.shiftKey) {
+    modifiers |= 0x00000100;
+  }
+  if (aModifiers.shiftRightKey) {
+    modifiers |= 0x00000200;
+  }
+  if (aModifiers.ctrlKey) {
+    modifiers |= 0x00000400;
+  }
+  if (aModifiers.ctrlRightKey) {
+    modifiers |= 0x00000800;
+  }
+  if (aModifiers.altKey) {
+    modifiers |= 0x00001000;
+  }
+  if (aModifiers.altRightKey) {
+    modifiers |= 0x00002000;
+  }
+  if (aModifiers.metaKey) {
+    modifiers |= 0x00004000;
+  }
+  if (aModifiers.metaRightKey) {
+    modifiers |= 0x00008000;
+  }
+  if (aModifiers.helpKey) {
+    modifiers |= 0x00010000;
+  }
+  if (aModifiers.fnKey) {
+    modifiers |= 0x00100000;
+  }
+  if (aModifiers.numericKeyPadKey) {
+    modifiers |= 0x01000000;
+  }
+
+  if (aModifiers.accelKey) {
+    modifiers |=
+      (navigator.platform.indexOf("Mac") == 0) ? 0x00004000 : 0x00000400;
+  }
+  if (aModifiers.accelRightKey) {
+    modifiers |=
+      (navigator.platform.indexOf("Mac") == 0) ? 0x00008000 : 0x00000800;
+  }
+  return modifiers;
+}
+
+const KEYBOARD_LAYOUT_EN_US = 0;
+
+/**
+ * synthesizeNativeKey() dispatches native key event on active window.
+ * This is implemented only on Windows and Mac.
+ *
+ * @param aKeyboardLayout       One of KEYBOARD_LAYOUT_* defined above.
+ * @param aNativeKeyCode        A native keycode value defined in
+ *                              NativeKeyCodes.js.
+ * @param aModifiers            Modifier keys.  If no modifire key is pressed,
+ *                              this must be {}.  Otherwise, one or more items
+ *                              referred in _parseNativeModifiers() must be
+ *                              true.
+ * @param aChars                Specify characters which should be generated
+ *                              by the key event.
+ * @param aUnmodifiedChars      Specify characters of unmodified (except Shift)
+ *                              aChar value.
+ * @return                      True if this function succeed dispatching
+ *                              native key event.  Otherwise, false.
+ */
+
+function synthesizeNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers,
+                             aChars, aUnmodifiedChars)
+{
+  var utils = _getDOMWindowUtils(window);
+  if (!utils) {
+    return false;
+  }
+  var nativeKeyboardLayout;
+  if (navigator.platform.indexOf("Mac") == 0) {
+    switch (aKeyboardLayout) {
+      case KEYBOARD_LAYOUT_EN_US:
+        nativeKeyboardLayout = 0;
+        break;
+      default:
+        return false;
+    }
+  } else if (navigator.platform.indexOf("Win") == 0) {
+    switch (aKeyboardLayout) {
+      case KEYBOARD_LAYOUT_EN_US:
+        nativeKeyboardLayout = 0x409;
+        break;
+      default:
+        return false;
+    }
+  } else {
+    return false;
+  }
+  utils.sendNativeKeyEvent(nativeKeyboardLayout, aNativeKeyCode,
+                           _parseNativeModifiers(aModifiers),
+                           aChars, aUnmodifiedChars);
+  return true;
 }
 
 var _gSeenEvent = false;

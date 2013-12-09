@@ -678,13 +678,20 @@ static bool
 PushBlockScopeBCE(BytecodeEmitter *bce, StmtInfoBCE *stmt, ObjectBox *objbox,
                   ptrdiff_t top)
 {
+    uint32_t parent = UINT32_MAX;
+    if (bce->blockChain) {
+        StmtInfoBCE *stmt = bce->topScopeStmt;
+        for (; stmt->blockObj != bce->blockChain; stmt = stmt->down) {}
+        parent = stmt->blockScopeIndex;
+    }
+
     StaticBlockObject &blockObj = objbox->object->as<StaticBlockObject>();
 
     PushStatementBCE(bce, stmt, STMT_BLOCK, top);
 
     unsigned scopeObjectIndex = bce->objectList.add(objbox);
     stmt->blockScopeIndex = bce->blockScopeList.length();
-    if (!bce->blockScopeList.append(scopeObjectIndex, bce->offset()))
+    if (!bce->blockScopeList.append(scopeObjectIndex, bce->offset(), parent))
         return false;
 
     blockObj.initEnclosingStaticScope(EnclosingStaticScope(bce));
@@ -814,11 +821,7 @@ EmitAliasedVarOp(ExclusiveContext *cx, JSOp op, ScopeCoordinate sc, BytecodeEmit
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_SCOPECOORD);
 
-    uint32_t maybeBlockIndex = UINT32_MAX;
-    if (bce->blockChain)
-        maybeBlockIndex = bce->objectList.indexOf(bce->blockChain);
-
-    unsigned n = 2 * sizeof(uint16_t) + sizeof(uint32_t);
+    unsigned n = 2 * sizeof(uint16_t);
     JS_ASSERT(int(n) + 1 /* op */ == js_CodeSpec[op].length);
 
     ptrdiff_t off = EmitN(cx, bce, op, n);
@@ -830,7 +833,6 @@ EmitAliasedVarOp(ExclusiveContext *cx, JSOp op, ScopeCoordinate sc, BytecodeEmit
     pc += sizeof(uint16_t);
     SET_UINT16(pc, sc.slot);
     pc += sizeof(uint16_t);
-    SET_UINT32_INDEX(pc, maybeBlockIndex);
     CheckTypeSet(cx, bce, op);
     return true;
 }
@@ -6879,13 +6881,14 @@ CGTryNoteList::finish(TryNoteArray *array)
 }
 
 bool
-CGBlockScopeList::append(uint32_t scopeObject, uint32_t offset)
+CGBlockScopeList::append(uint32_t scopeObject, uint32_t offset, uint32_t parent)
 {
     BlockScopeNote note;
     mozilla::PodZero(&note);
 
     note.index = scopeObject;
     note.start = offset;
+    note.parent = parent;
 
     return list.append(note);
 }

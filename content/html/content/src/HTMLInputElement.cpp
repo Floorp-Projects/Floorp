@@ -614,6 +614,8 @@ private:
 NS_IMETHODIMP
 HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
 {
+  mInput->PickerClosed();
+
   if (aResult == nsIFilePicker::returnCancel) {
     return NS_OK;
   }
@@ -796,6 +798,8 @@ nsColorPickerShownCallback::Done(const nsAString& aColor)
    */
   nsresult rv = NS_OK;
 
+  mInput->PickerClosed();
+
   if (!aColor.IsEmpty()) {
     UpdateInternal(aColor, false);
   }
@@ -839,6 +843,11 @@ HTMLInputElement::IsPopupBlocked() const
 nsresult
 HTMLInputElement::InitColorPicker()
 {
+  if (mPickerRunning) {
+    NS_WARNING("Just one nsIColorPicker is allowed");
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIDocument> doc = OwnerDoc();
 
   nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
@@ -869,12 +878,22 @@ HTMLInputElement::InitColorPicker()
   nsCOMPtr<nsIColorPickerShownCallback> callback =
     new nsColorPickerShownCallback(this, colorPicker);
 
-  return colorPicker->Open(callback);
+  rv = colorPicker->Open(callback);
+  if (NS_SUCCEEDED(rv)) {
+    mPickerRunning = true;
+  }
+
+  return rv;
 }
 
 nsresult
 HTMLInputElement::InitFilePicker(FilePickerType aType)
 {
+  if (mPickerRunning) {
+    NS_WARNING("Just one nsIFilePicker is allowed");
+    return NS_ERROR_FAILURE;
+  }
+
   // Get parent nsPIDOMWindow object.
   nsCOMPtr<nsIDocument> doc = OwnerDoc();
 
@@ -955,10 +974,16 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
       }
     }
 
-    return filePicker->Open(callback);
+    rv = filePicker->Open(callback);
+    if (NS_SUCCEEDED(rv)) {
+      mPickerRunning = true;
+    }
+
+    return rv;
   }
 
   HTMLInputElement::gUploadLastDir->FetchDirectoryAndDisplayPicker(doc, filePicker, callback);
+  mPickerRunning = true;
   return NS_OK;
 }
 
@@ -1094,6 +1119,8 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   , mIsDraggingRange(false)
   , mProgressTimerIsActive(false)
   , mNumberControlSpinnerIsSpinning(false)
+  , mNumberControlSpinnerSpinsUp(false)
+  , mPickerRunning(false)
 {
   // We are in a type=text so we now we currenty need a nsTextEditorState.
   mInputData.mState = new nsTextEditorState(this);
@@ -3808,11 +3835,10 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // the editor's handling of up/down keypress events. For that reason we
       // just ignore aVisitor.mEventStatus here and go ahead and handle the
       // event to increase/decrease the value of the number control.
-      // XXX we still need to allow script to call preventDefault() on the
-      // event, but right now we can't tell the difference between the editor
-      // on script doing that (bug 930374).
-      StepNumberControlForUserEvent(keyEvent->keyCode == NS_VK_UP ? 1 : -1);
-      aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+      if (!aVisitor.mEvent->mFlags.mDefaultPreventedByContent) {
+        StepNumberControlForUserEvent(keyEvent->keyCode == NS_VK_UP ? 1 : -1);
+        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+      }
     } else if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
       switch (aVisitor.mEvent->message) {
 
@@ -5705,6 +5731,38 @@ HTMLInputElement::IntrinsicState() const
   return state;
 }
 
+void
+HTMLInputElement::AddStates(nsEventStates aStates)
+{
+  if (mType == NS_FORM_INPUT_TEXT) {
+    nsEventStates focusStates(aStates & (NS_EVENT_STATE_FOCUS |
+                                         NS_EVENT_STATE_FOCUSRING));
+    if (!focusStates.IsEmpty()) {
+      HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
+      if (ownerNumberControl) {
+        ownerNumberControl->AddStates(focusStates);
+      }
+    }
+  }
+  nsGenericHTMLFormElementWithState::AddStates(aStates);                          
+}
+
+void
+HTMLInputElement::RemoveStates(nsEventStates aStates)
+{
+  if (mType == NS_FORM_INPUT_TEXT) {
+    nsEventStates focusStates(aStates & (NS_EVENT_STATE_FOCUS |
+                                         NS_EVENT_STATE_FOCUSRING));
+    if (!focusStates.IsEmpty()) {
+      HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
+      if (ownerNumberControl) {
+        ownerNumberControl->RemoveStates(focusStates);
+      }
+    }
+  }
+  nsGenericHTMLFormElementWithState::RemoveStates(aStates);
+}
+
 bool
 HTMLInputElement::RestoreState(nsPresState* aState)
 {
@@ -7176,6 +7234,12 @@ HTMLInputElement::UpdateHasRange()
     mHasRange = true;
     return;
   }
+}
+
+void
+HTMLInputElement::PickerClosed()
+{
+  mPickerRunning = false;
 }
 
 JSObject*
