@@ -451,6 +451,31 @@ this.DOMApplicationRegistry = {
 #endif
   },
 
+  // For hosted apps, uninstall an app served from http:// if we have
+  // one installed from the same url with an https:// scheme.
+  removeIfHttpsDuplicate: function(aId) {
+#ifdef MOZ_WIDGET_GONK
+    let app = this.webapps[aId];
+    if (!app || !app.origin.startsWith("http://")) {
+      return;
+    }
+
+    let httpsManifestURL =
+      "https://" + app.manifestURL.substring("http://".length);
+
+    // This will uninstall the http apps and remove any data hold by this
+    // app. Bug 948105 tracks data migration from http to https apps.
+    for (let id in this.webapps) {
+       if (this.webapps[id].manifestURL === httpsManifestURL) {
+         debug("Found a http/https match: " + app.manifestURL + " / " +
+               this.webapps[id].manifestURL);
+         this.uninstall(app.manifestURL, function() {}, function() {});
+         return;
+       }
+    }
+#endif
+  },
+
   // Implements the core of bug 787439
   // if at first run, go through these steps:
   //   a. load the core apps registry.
@@ -555,6 +580,7 @@ this.DOMApplicationRegistry = {
         // At first run, install preloaded apps and set up their permissions.
         for (let id in this.webapps) {
           this.installPreinstalledApp(id);
+          this.removeIfHttpsDuplicate(id);
           if (!this.webapps[id]) {
             continue;
           }
