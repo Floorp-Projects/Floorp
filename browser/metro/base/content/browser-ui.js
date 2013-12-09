@@ -308,16 +308,24 @@ var BrowserUI = {
 
   isStartURI: function isStartURI(aURI) {
     aURI = aURI || Browser.selectedBrowser.currentURI.spec;
-    return aURI == kStartURI;
+    return aURI == kStartURI || aURI == "about:home";
   },
 
   updateStartURIAttributes: function (aURI) {
+    let wasStart = Elements.windowState.hasAttribute("startpage");
     aURI = aURI || Browser.selectedBrowser.currentURI.spec;
     if (this.isStartURI(aURI)) {
       ContextUI.displayNavbar();
       Elements.windowState.setAttribute("startpage", "true");
     } else if (aURI != "about:blank") { // about:blank is loaded briefly for new tabs; ignore it
       Elements.windowState.removeAttribute("startpage");
+    }
+
+    let isStart = Elements.windowState.hasAttribute("startpage");
+    if (wasStart != isStart) {
+      let event = document.createEvent("Events");
+      event.initEvent("StartUIChange", true, true);
+      Browser.selectedBrowser.dispatchEvent(event);
     }
   },
 
