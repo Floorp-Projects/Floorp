@@ -786,12 +786,6 @@ LayerComposite::Destroy()
   }
 }
 
-const nsIntSize&
-LayerManagerComposite::GetWidgetSize()
-{
-  return mCompositor->GetWidgetSize();
-}
-
 void
 LayerManagerComposite::SetCompositorID(uint32_t aID)
 {
