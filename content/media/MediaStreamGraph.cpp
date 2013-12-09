@@ -284,6 +284,9 @@ MediaStreamGraphImpl::StreamTimeToGraphTime(MediaStream* aStream,
 
   GraphTime t = mCurrentTime;
   while (t < GRAPH_TIME_MAX) {
+    if (!(aFlags & INCLUDE_TRAILING_BLOCKED_INTERVAL) && streamAmount == 0) {
+      return t;
+    }
     bool blocked;
     GraphTime end;
     if (t < mStateComputedTime) {
