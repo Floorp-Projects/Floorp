@@ -2099,47 +2099,330 @@ this.CustomizableUI = {
   get WIDE_PANEL_CLASS() "panel-wide-item",
   get PANEL_COLUMN_COUNT() 3,
 
+  /**
+   * Add a listener object that will get fired for various events regarding
+   * customization.
+   *
+   * @param aListener the listener object to add
+   *
+   * Not all event handler methods need to be defined.
+   * CustomizableUI will catch exceptions. Events are dispatched
+   * synchronously on the UI thread, so if you can delay any/some of your
+   * processing, that is advisable. The following event handlers are supported:
+   *   - onWidgetAdded(aWidgetId, aArea, aPosition)
+   *     Fired when a widget is added to an area. aWidgetId is the widget that
+   *     was added, aArea the area it was added to, and aPosition the position
+   *     in which it was added.
+   *   - onWidgetMoved(aWidgetId, aArea, aOldPosition, aNewPosition)
+   *     Fired when a widget is moved within its area. aWidgetId is the widget
+   *     that was moved, aArea the area it was moved in, aOldPosition its old
+   *     position, and aNewPosition its new position.
+   *   - onWidgetRemoved(aWidgetId, aArea)
+   *     Fired when a widget is removed from its area. aWidgetId is the widget
+   *     that was removed, aArea the area it was removed from.
+   *
+   *   - onWidgetBeforeDOMChange(aNode, aNextNode, aContainer, aIsRemoval)
+   *     Fired *before* a widget's DOM node is acted upon by CustomizableUI
+   *     (to add, move or remove it). aNode is the DOM node changed, aNextNode
+   *     the DOM node (if any) before which a widget will be inserted,
+   *     aContainer the *actual* DOM container (could be an overflow panel in
+   *     case of an overflowable toolbar), and aWasRemoval is true iff the
+   *     action about to happen is the removal of the DOM node.
+   *   - onWidgetAfterDOMChange(aNode, aNextNode, aContainer, aWasRemoval)
+   *     Like onWidgetBeforeDOMChange, but fired after the change to the DOM
+   *     node of the widget.
+   *
+   *   - onWidgetReset(aNode, aContainer)
+   *     Fired after a reset to default placements moves a widget's node to a
+   *     different location. aNode is the widget's node, aContainer is the
+   *     area it was moved into (NB: it might already have been there and been
+   *     moved to a different position!)
+   *   - onAreaReset(aArea, aContainer)
+   *     Fired after a reset to default placements is complete on an area's
+   *     DOM node. Note that this is fired for each DOM node. aArea is the area
+   *     that was reset, aContainer the DOM node that was reset.
+   *
+   *   - onWidgetCreated(aWidgetId)
+   *     Fired when a widget with id aWidgetId has been created, but before it
+   *     is added to any placements or any DOM nodes have been constructed.
+   *     Only fired for API-based widgets.
+   *   - onWidgetAfterCreation(aWidgetId, aArea)
+   *     Fired after a widget with id aWidgetId has been created, and has been
+   *     added to either its default area or the area in which it was placed
+   *     previously. If the widget has no default area and/or it has never
+   *     been placed anywhere, aArea may be null. Only fired for API-based
+   *     widgets.
+   *   - onWidgetDestroyed(aWidgetId)
+   *     Fired when widgets are destroyed. aWidgetId is the widget that is
+   *     being destroyed. Only fired for API-based widgets.
+   *   - onWidgetInstanceRemoved(aWidgetId, aDocument)
+   *     Fired when a window is unloaded and a widget's instance is destroyed
+   *     because of this. Only fired for API-based widgets.
+   *
+   *   - onWidgetDrag(aWidgetId, aArea)
+   *     Fired both when and after customize mode drag handling system tries
+   *     to determine the width and height of widget aWidgetId when dragged to a
+   *     different area. aArea will be the area the item is dragged to, or
+   *     undefined after the measurements have been done and the node has been
+   *     moved back to its 'regular' area.
+   *
+   *   - onCustomizeStart(aWindow)
+   *     Fired when opening customize mode in aWindow.
+   *   - onCustomizeEnd(aWindow)
+   *     Fired when exiting customize mode in aWindow.
+   */
   addListener: function(aListener) {
     CustomizableUIInternal.addListener(aListener);
   },
+  /**
+   * Remove a listener added with addListener
+   * @param aListener the listener object to remove
+   */
   removeListener: function(aListener) {
     CustomizableUIInternal.removeListener(aListener);
   },
+
+  /**
+   * Register a customizable area with CustomizableUI.
+   * @param aName   the name of the area to register. Can only contain
+   *                alphanumeric characters, dashes (-) and underscores (_).
+   * @param aProps  the properties of the area. The following properties are
+   *                recognized:
+   *                - type:   the type of area. Either TYPE_TOOLBAR (default) or
+   *                          TYPE_MENU_PANEL;
+   *                - anchor: for a menu panel or overflowable toolbar, the
+   *                          anchoring node for the panel.
+   *                - legacy: set to true if you want customizableui to
+   *                          automatically migrate the currentset attribute
+   *                - overflowable: set to true if your toolbar is overflowable.
+   *                                This requires an anchor, and only has an
+   *                                effect for toolbars.
+   *                - defaultPlacements: an array of widget IDs making up the
+   *                                     default contents of the area
+   */
   registerArea: function(aName, aProperties) {
     CustomizableUIInternal.registerArea(aName, aProperties);
   },
+  /**
+   * Register a concrete node for a registered area. This method is automatically
+   * called from any toolbar in the main browser window that has its
+   * "customizable" attribute set to true. There should normally be no need to
+   * call it yourself.
+   *
+   * Note that ideally, you should register your toolbar using registerArea
+   * before any of the toolbars have their XBL bindings constructed (which
+   * will happen when they're added to the DOM and are not hidden). If you
+   * don't, and your toolbar has a defaultset attribute, CustomizableUI will
+   * register it automatically. If your toolbar does not have a defaultset
+   * attribute, the node will be saved for processing when you call
+   * registerArea. Note that CustomizableUI won't restore state in the area,
+   * allow the user to customize it in customize mode, or otherwise deal
+   * with it, until the area has been registered.
+   */
   registerToolbarNode: function(aToolbar, aExistingChildren) {
     CustomizableUIInternal.registerToolbarNode(aToolbar, aExistingChildren);
   },
+  /**
+   * Register the menu panel node. This method should not be called by anyone
+   * apart from the built-in PanelUI.
+   * @param aPanel the panel DOM node being registered.
+   */
   registerMenuPanel: function(aPanel) {
     CustomizableUIInternal.registerMenuPanel(aPanel);
   },
+  /**
+   * Unregister a customizable area. The inverse of registerArea.
+   *
+   * Unregistering an area will remove all the (removable) widgets in the
+   * area, which will return to the panel, and destroy all other traces
+   * of the area within CustomizableUI. Note that this means the *contents*
+   * of the area's DOM nodes will be moved to the panel or removed, but
+   * the area's DOM nodes *themselves* will stay.
+   *
+   * Furthermore, by default the placements of the area will be kept in the
+   * saved state (!) and restored if you re-register the area at a later
+   * point. This is useful for e.g. add-ons that get disabled and then
+   * re-enabled (e.g. when they update).
+   *
+   * You can override this last behaviour (and destroy the placements
+   * information in the saved state) by passing true for aDestroyPlacements.
+   *
+   * @param aName              the name of the area to unregister
+   * @param aDestroyPlacements whether to destroy the placements information
+   *                           for the area, too.
+   */
   unregisterArea: function(aName, aDestroyPlacements) {
     CustomizableUIInternal.unregisterArea(aName, aDestroyPlacements);
   },
+  /**
+   * Add a widget to an area.
+   * If the area to which you try to add is not known to CustomizableUI,
+   * this will throw.
+   * If the area to which you try to add has not yet been restored from its
+   * legacy state, this will postpone the addition.
+   * If the area to which you try to add is the same as the area in which
+   * the widget is currently placed, this will do the same as
+   * moveWidgetWithinArea.
+   * If the widget cannot be removed from its original location, this will
+   * no-op.
+   *
+   * This will fire an onWidgetAdded notification,
+   * and an onWidgetBeforeDOMChange and onWidgetAfterDOMChange notification
+   * for each window CustomizableUI knows about.
+   *
+   * @param aWidgetId the widget to add
+   * @param aArea     the area to add the widget to
+   * @param aPosition the position at which to add the widget. If you do not
+   *                  pass a position, the widget will be added to the end
+   *                  of the area.
+   */
   addWidgetToArea: function(aWidgetId, aArea, aPosition) {
     CustomizableUIInternal.addWidgetToArea(aWidgetId, aArea, aPosition);
   },
+  /**
+   * Remove a widget from its area. If the widget cannot be removed from its
+   * area, or is not in any area, this will no-op. Otherwise, this will fire an
+   * onWidgetRemoved notification, and an onWidgetBeforeDOMChange and
+   * onWidgetAfterDOMChange notification for each window CustomizableUI knows
+   * about.
+   *
+   * @param aWidgetId the widget to remove
+   */
   removeWidgetFromArea: function(aWidgetId) {
     CustomizableUIInternal.removeWidgetFromArea(aWidgetId);
   },
+  /**
+   * Move a widget within an area.
+   * If the widget is not in any area, this will no-op.
+   * If the widget is already at the indicated position, this will no-op.
+   *
+   * Otherwise, this will move the widget and fire an onWidgetMoved notification,
+   * and an onWidgetBeforeDOMChange and onWidgetAfterDOMChange notification for
+   * each window CustomizableUI knows about.
+   *
+   * @param aWidgetid the widget to move
+   * @param aPosition the position to move the widget to.
+   *                  Negative values or values greater than the number of
+   *                  widgets will be interpreted to mean moving the widget to
+   *                  respectively the first or last position.
+   */
   moveWidgetWithinArea: function(aWidgetId, aPosition) {
     CustomizableUIInternal.moveWidgetWithinArea(aWidgetId, aPosition);
   },
+  /**
+   * Ensure a XUL-based widget created in a window after areas were
+   * initialized moves to its correct position.
+   * This is roughly equivalent to manually looking up the position and using
+   * insertItem in the old API, but a lot less work for consumers.
+   * Always prefer this over using toolbar.insertItem (which might no-op
+   * because it delegates to addWidgetToArea) or, worse, moving items in the
+   * DOM yourself.
+   *
+   * @param aWidgetId the widget that was just created
+   * @param aWindow the window in which you want to ensure it was added.
+   *
+   * NB: why is this API per-window, you wonder? Because if you need this,
+   * presumably you yourself need to create the widget in all the windows
+   * and need to loop through them anyway.
+   */
   ensureWidgetPlacedInWindow: function(aWidgetId, aWindow) {
     return CustomizableUIInternal.ensureWidgetPlacedInWindow(aWidgetId, aWindow);
   },
+  /**
+   * Start a batch update of items.
+   * During a batch update, the customization state is not saved to the user's
+   * preferences file, in order to reduce (possibly sync) IO.
+   * Calls to begin/endBatchUpdate may be nested.
+   *
+   * Callers should ensure that NO MATTER WHAT they call endBatchUpdate once
+   * for each call to endBatchUpdate, even if there are exceptions in the
+   * code in the batch update. Otherwise, for the duration of the
+   * Firefox session, customization state is never saved. Typically, you
+   * would do this using a try...finally block.
+   */
   beginBatchUpdate: function() {
     CustomizableUIInternal.beginBatchUpdate();
   },
+  /**
+   * End a batch update. See the documentation for beginBatchUpdate above.
+   *
+   * State is not saved if we believe it is identical to the last known
+   * saved state. State is only ever saved when all batch updates have
+   * finished (ie there has been 1 endBatchUpdate call for each
+   * beginBatchUpdate call). If any of the endBatchUpdate calls pass
+   * aForceDirty=true, we will flush to the prefs file.
+   *
+   * @param aForceDirty force CustomizableUI to flush to the prefs file when
+   *                    all batch updates have finished.
+   */
   endBatchUpdate: function(aForceDirty) {
     CustomizableUIInternal.endBatchUpdate(aForceDirty);
   },
+  /**
+   * Create a widget.
+   *
+   * To create a widget, you should pass an object with its desired
+   * properties. The following properties are supported:
+   *
+   * - id:            the ID of the widget (required).
+   * - type:          a string indicating the type of widget. Possible types
+   *                  are:
+   *                  'button' - for simple button widgets (the default)
+   *                  'view'   - for buttons that open a panel or subview,
+   *                             depending on where they are placed.
+   *                  'custom' - for fine-grained control over the creation
+   *                             of the widget.
+   * - viewId:        Only useful for views (and required there): the id of the
+   *                  <panelview> that should be shown when clicking the widget.
+   * - onBuild(aDoc): Only useful for custom widgets (and required there); a
+   *                  function that will be invoked with the document in which
+   *                  to build a widget. Should return the DOM node that has
+   *                  been constructed.
+   * - onCreated(aNode): Attached to all widgets; a function that will be invoked
+   *                  whenever the widget has a DOM node constructed, passing the
+   *                  constructed node as an argument.
+   * - onCommand(aEvt): Only useful for button widgets; a function that will be
+   *                    invoked when the user activates the button.
+   * - onClick(aEvt): Attached to all widgets; a function that will be invoked
+   *                  when the user clicks the widget.
+   * - onViewShowing(aEvt): Only useful for views; a function that will be
+   *                  invoked when a user shows your view.
+   * - onViewHiding(aEvt): Only useful for views; a function that will be
+   *                  invoked when a user hides your view.
+   * - tooltiptext:   string to use for the tooltip of the widget
+   * - label:         string to use for the label of the widget
+   * - removable:     whether the widget is removable (optional, default: false)
+   * - overflows:     whether widget can overflow when in an overflowable
+   *                  toolbar (optional, default: true)
+   * - defaultArea:   default area to add the widget to
+   *                  (optional, default: none)
+   * - shortcutId:    id of an element that has a shortcut for this widget
+   *                  (optional, default: null). This is only used to display
+   *                  the shortcut as part of the tooltip for builtin widgets
+   *                  (which have strings inside
+   *                  customizableWidgets.properties). If you're in an add-on,
+   *                  you should not set this property.
+   * - showInPrivateBrowsing: whether to show the widget in private browsing
+   *                          mode (optional, default: true)
+   *
+   * @param aProperties the specifications for the widget.
+   */
   createWidget: function(aProperties) {
     return CustomizableUIInternal.wrapWidget(
       CustomizableUIInternal.createWidget(aProperties)
     );
   },
+  /**
+   * Destroy a widget
+   *
+   * If the widget is part of the default placements in an area, this will
+   * remove it from there. It will also remove any DOM instances. However,
+   * it will keep the widget in the placements for whatever area it was
+   * in at the time. You can remove it from there yourself by calling
+   * CustomizableUI.removeWidgetFromArea(aWidgetId).
+   *
+   * @param aWidgetId the widget to destroy
+   */
   destroyWidget: function(aWidgetId) {
     CustomizableUIInternal.destroyWidget(aWidgetId);
   },
