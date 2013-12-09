@@ -258,6 +258,16 @@ class TreeMetadataEmitter(LoggingMixin):
                     l = passthru.variables.setdefault('GARBAGE', [])
                     l.append(f)
 
+        no_pgo = sandbox.get('NO_PGO')
+        sources = sandbox.get('SOURCES', [])
+        no_pgo_sources = [f for f in sources if sources[f].no_pgo]
+        if no_pgo:
+            if no_pgo_sources:
+                raise SandboxValidationError('NO_PGO and SOURCES[...].no_pgo cannot be set at the same time')
+            passthru.variables['NO_PROFILE_GUIDED_OPTIMIZE'] = no_pgo
+        if no_pgo_sources:
+            passthru.variables['NO_PROFILE_GUIDED_OPTIMIZE'] = no_pgo_sources
+
         exports = sandbox.get('EXPORTS')
         if exports:
             yield Exports(sandbox, exports,

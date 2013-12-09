@@ -185,9 +185,9 @@ class MozbuildSandbox(Sandbox):
             for name, func in FUNCTIONS.items():
                 d[name] = getattr(self, func[0])
 
-        # Initialize the exports that we need in the global.
-        extra_vars = self.metadata.get('exports', dict())
-        self._globals.update(extra_vars)
+            # Initialize the exports that we need in the global.
+            extra_vars = self.metadata.get('exports', dict())
+            self._globals.update(extra_vars)
 
     def exec_file(self, path, filesystem_absolute=False):
         """Override exec_file to normalize paths and restrict file loading.

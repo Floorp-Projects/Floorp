@@ -146,9 +146,9 @@ class TestSandbox(unittest.TestCase):
         sandbox = self.sandbox()
 
         sandbox.exec_source('DIRS = ["foo"]', 'foo.py')
-        sandbox.exec_source('DIRS = ["bar"]', 'foo.py')
+        sandbox.exec_source('DIRS += ["bar"]', 'foo.py')
 
-        self.assertEqual(sandbox['DIRS'], ['bar'])
+        self.assertEqual(sandbox['DIRS'], ['foo', 'bar'])
 
     def test_exec_source_illegal_key_set(self):
         sandbox = self.sandbox()

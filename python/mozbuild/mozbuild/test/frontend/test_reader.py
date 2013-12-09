@@ -262,7 +262,7 @@ class TestBuildReader(unittest.TestCase):
         self.assertEqual([sandbox['RELATIVEDIR'] for sandbox in sandboxes],
             ['', 'foo', 'foo/baz', 'bar'])
         self.assertEqual([sandbox['XPIDL_MODULE'] for sandbox in sandboxes],
-            ['foobar', 'foobar', 'foobar', 'bazbar'])
+            ['foobar', 'foobar', 'foobar', 'foobar'])
 
 if __name__ == '__main__':
     main()
