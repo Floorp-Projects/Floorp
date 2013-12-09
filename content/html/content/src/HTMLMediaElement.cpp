@@ -1763,7 +1763,29 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded)
   }
 
   OutputMediaStream* out = mOutputStreams.AppendElement();
+#ifdef DEBUG
+  // Estimate hints based on the type of the media element
+  // under the preference media.capturestream_hints for the
+  // debug builds only. This allows WebRTC Peer Connection
+  // to behave appropriately when media streams generated
+  // via mozCaptureStream*() are added to the Peer Connection.
+  // This functionality is planned to be used as part of Audio
+  // Quality Performance testing for WebRTC.
+  // Bug932845: Revisit this once hints mechanism is dealt with
+  // holistically.
+  uint8_t hints = 0;
+  if (Preferences::GetBool("media.capturestream_hints.enabled")) {
+    nsCOMPtr<nsIDOMHTMLVideoElement> video = do_QueryObject(this);
+    if (video && GetVideoFrameContainer()) {
+      hints = DOMMediaStream::HINT_CONTENTS_VIDEO | DOMMediaStream::HINT_CONTENTS_AUDIO;
+    } else {
+      hints = DOMMediaStream::HINT_CONTENTS_AUDIO;
+    }
+  }
+  out->mStream = DOMMediaStream::CreateTrackUnionStream(window, hints);
+#else
   out->mStream = DOMMediaStream::CreateTrackUnionStream(window);
+#endif
   nsRefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
   out->mStream->CombineWithPrincipal(principal);
   out->mFinishWhenEnded = aFinishWhenEnded;
