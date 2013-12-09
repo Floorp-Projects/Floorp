@@ -153,9 +153,20 @@ public:
   // xpidl implementation
   // void PreventDefault();
 
+  // You MUST NOT call PreventDefaultJ(JSContext*) from C++ code.  A call of
+  // this method always sets Event.defaultPrevented true for web contents.
+  // If default action handler calls this, web applications meet wrong
+  // defaultPrevented value.
+  void PreventDefault(JSContext* aCx);
+
+  // You MUST NOT call DefaultPrevented(JSContext*) from C++ code.  This may
+  // return false even if PreventDefault() has been called.
+  // See comments in its implementation for the detail.
+  bool DefaultPrevented(JSContext* aCx) const;
+
   bool DefaultPrevented() const
   {
-    return mEvent && mEvent->mFlags.mDefaultPrevented;
+    return mEvent->mFlags.mDefaultPrevented;
   }
 
   bool MultipleActionsPrevented() const
@@ -189,6 +200,20 @@ protected:
   // Internal helper functions
   void SetEventType(const nsAString& aEventTypeArg);
   already_AddRefed<nsIContent> GetTargetFromFrame();
+
+  /**
+   * IsChrome() returns true if aCx is chrome context or the event is created
+   * in chrome's thread.  Otherwise, false.
+   */
+  bool IsChrome(JSContext* aCx) const;
+
+  /**
+   * @param aCalledByDefaultHandler     Should be true when this is called by
+   *                                    C++ or Chrome.  Otherwise, e.g., called
+   *                                    by a call of Event.preventDefault() in
+   *                                    content script, false.
+   */
+  void PreventDefaultInternal(bool aCalledByDefaultHandler);
 
   mozilla::WidgetEvent*       mEvent;
   nsRefPtr<nsPresContext>     mPresContext;
