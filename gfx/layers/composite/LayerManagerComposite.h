@@ -142,7 +142,7 @@ public:
 
   virtual LayersBackend GetBackendType() MOZ_OVERRIDE
   {
-    return LAYERS_NONE;
+    MOZ_CRASH("Shouldn't be called for composited layer manager");
   }
   virtual void GetBackendName(nsAString& name) MOZ_OVERRIDE
   {
@@ -151,7 +151,6 @@ public:
 
   virtual already_AddRefed<gfxASurface>
     CreateOptimalMaskSurface(const gfxIntSize &aSize) MOZ_OVERRIDE;
-
 
   virtual const char* Name() const MOZ_OVERRIDE { return ""; }
 
@@ -189,7 +188,7 @@ public:
    * layermanager.
    */
   virtual TemporaryRef<mozilla::gfx::DrawTarget>
-    CreateDrawTarget(const mozilla::gfx::IntSize &aSize,
+    CreateDrawTarget(const mozilla::gfx::IntSize& aSize,
                      mozilla::gfx::SurfaceFormat aFormat) MOZ_OVERRIDE;
 
   /**
@@ -235,7 +234,7 @@ private:
   nsIntRect mRenderBounds;
 
   /** Current root layer. */
-  LayerComposite *RootLayer() const;
+  LayerComposite* RootLayer() const;
 
   /**
    * Recursive helper method for use by ComputeRenderIntegrity. Subtracts

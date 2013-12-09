@@ -302,7 +302,7 @@ LayerManagerComposite::RootLayer() const
     return nullptr;
   }
 
-  return static_cast<LayerComposite*>(mRoot->ImplData());
+  return ToLayerComposite(mRoot);
 }
 
 static uint16_t sFrameCount = 0;
@@ -718,7 +718,7 @@ LayerManagerComposite::AutoAddMaskEffect::AutoAddMaskEffect(Layer* aMaskLayer,
     return;
   }
 
-  mCompositable = static_cast<LayerComposite*>(aMaskLayer->ImplData())->GetCompositableHost();
+  mCompositable = ToLayerComposite(aMaskLayer)->GetCompositableHost();
   if (!mCompositable) {
     NS_WARNING("Mask layer with no compositable host");
     return;
