@@ -2575,16 +2575,22 @@ public:
    * nsDisplayOwnLayer constructor flags
    */
   enum {
-    GENERATE_SUBDOC_INVALIDATIONS = 0x01
+    GENERATE_SUBDOC_INVALIDATIONS = 0x01,
+    VERTICAL_SCROLLBAR = 0x02,
+    HORIZONTAL_SCROLLBAR = 0x04
   };
 
   /**
    * @param aFlags GENERATE_SUBDOC_INVALIDATIONS :
    * Add UserData to the created ContainerLayer, so that invalidations
    * for this layer are send to our nsPresContext.
+   * @param aScrollTarget when VERTICAL_SCROLLBAR or HORIZONTAL_SCROLLBAR
+   * is set in the flags, this parameter should be the ViewID of the
+   * scrollable content this scrollbar is for.
    */
   nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                    nsDisplayList* aList, uint32_t aFlags = 0);
+                    nsDisplayList* aList, uint32_t aFlags = 0,
+                    ViewID aScrollTarget = mozilla::layers::FrameMetrics::NULL_SCROLL_ID);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOwnLayer();
 #endif
@@ -2606,6 +2612,7 @@ public:
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
 private:
   uint32_t mFlags;
+  ViewID mScrollTarget;
 };
 
 /**
