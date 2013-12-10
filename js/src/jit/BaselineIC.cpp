@@ -1815,7 +1815,7 @@ DoCompareFallback(JSContext *cx, BaselineFrame *frame, ICCompare_Fallback *stub,
                     rhs.isUndefined() ? "Undefined" : "Number");
         ICCompare_NumberWithUndefined::Compiler compiler(cx, op, lhs.isUndefined());
         ICStub *doubleStub = compiler.getStub(compiler.getStubSpace(script));
-        if (!stub)
+        if (!doubleStub)
             return false;
 
         stub->addNewStub(doubleStub);
