@@ -61,8 +61,8 @@ class CompileInfo
         nimplicit_ = StartArgSlot(script)                   /* scope chain and argument obj */
                    + (fun ? 1 : 0);                         /* this */
         nargs_ = fun ? fun->nargs : 0;
-        nlocals_ = script->nfixed;
-        nstack_ = script->nslots - script->nfixed;
+        nlocals_ = script->nfixed();
+        nstack_ = script->nslots() - script->nfixed();
         nslots_ = nimplicit_ + nargs_ + nlocals_ + nstack_;
     }
 
@@ -107,7 +107,7 @@ class CompileInfo
     }
 
     unsigned lineno() const {
-        return script_->lineno;
+        return script_->lineno();
     }
     unsigned lineno(jsbytecode *pc) const {
         return PCToLineNumber(script_, pc);

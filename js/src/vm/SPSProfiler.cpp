@@ -228,7 +228,7 @@ SPSProfiler::allocProfileString(JSContext *cx, JSScript *script, JSFunction *may
     }
     if (!buf.append(":"))
         return nullptr;
-    if (!NumberValueToStringBuffer(cx, NumberValue(script->lineno), buf))
+    if (!NumberValueToStringBuffer(cx, NumberValue(script->lineno()), buf))
         return nullptr;
     if (hasAtom && !buf.append(")"))
         return nullptr;

@@ -20,7 +20,7 @@
 
 #include "js/TypeDecls.h"
 
-#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING) || defined(DEBUG)
+#if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING) || defined(JS_DEBUG)
 # define JSGC_TRACK_EXACT_ROOTS
 #endif
 
@@ -365,7 +365,7 @@ struct ContextFriendFields
 #ifdef JSGC_TRACK_EXACT_ROOTS
         mozilla::PodArrayZero(thingGCRooters);
 #endif
-#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+#if defined(JS_DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
         skipGCRooters = nullptr;
 #endif
     }
@@ -386,7 +386,7 @@ struct ContextFriendFields
     JS::Rooted<void*> *thingGCRooters[THING_ROOT_LIMIT];
 #endif
 
-#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+#if defined(JS_DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
     /*
      * Stack allocated list of stack locations which hold non-relocatable
      * GC heap pointers (where the target is rooted somewhere else) or integer
@@ -447,7 +447,7 @@ struct PerThreadDataFriendFields
         struct PerThreadDummy {
             void *field1;
             uintptr_t field2;
-#ifdef DEBUG
+#ifdef JS_DEBUG
             uint64_t field3;
 #endif
         } mainThread;
@@ -465,7 +465,7 @@ struct PerThreadDataFriendFields
     JS::Rooted<void*> *thingGCRooters[THING_ROOT_LIMIT];
 #endif
 
-#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+#if defined(JS_DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
     /*
      * Stack allocated list of stack locations which hold non-relocatable
      * GC heap pointers (where the target is rooted somewhere else) or integer

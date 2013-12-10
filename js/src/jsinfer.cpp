@@ -210,7 +210,7 @@ unsigned JSScript::id() {
     if (!id_) {
         id_ = ++compartment()->types.scriptCount;
         InferSpew(ISpewOps, "script #%u: %p %s:%d",
-                  id_, this, filename() ? filename() : "<null>", lineno);
+                  id_, this, filename() ? filename() : "<null>", lineno());
     }
     return id_;
 }
@@ -961,7 +961,7 @@ types::FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode execu
             if (!CheckFrozenTypeSet(cx, &entry.argTypes[i], types::TypeScript::ArgTypes(entry.script, i)))
                 succeeded = false;
         }
-        for (size_t i = 0; i < entry.script->nTypeSets; i++) {
+        for (size_t i = 0; i < entry.script->nTypeSets(); i++) {
             if (!CheckFrozenTypeSet(cx, &entry.bytecodeTypes[i], &entry.script->types->typeArray()[i]))
                 succeeded = false;
         }
@@ -1954,7 +1954,7 @@ types::UseNewTypeForInitializer(JSScript *script, jsbytecode *pc, JSProtoKey key
         if (tn->kind != JSTRY_ITER && tn->kind != JSTRY_LOOP)
             continue;
 
-        unsigned startOffset = script->mainOffset + tn->start;
+        unsigned startOffset = script->mainOffset() + tn->start;
         unsigned endOffset = startOffset + tn->length;
 
         if (offset >= startOffset && offset < endOffset)
@@ -2140,7 +2140,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
     }
 
     InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%d",
-              co->script(), co->script()->filename(), co->script()->lineno);
+              co->script(), co->script()->filename(), co->script()->lineno());
 
     co->setPendingInvalidation();
 }
@@ -3439,8 +3439,8 @@ types::UseNewTypeForClone(JSFunction *fun)
     if (fun->hasScript()) {
         if (!fun->nonLazyScript()->usesArgumentsAndApply)
             return false;
-        begin = fun->nonLazyScript()->sourceStart;
-        end = fun->nonLazyScript()->sourceEnd;
+        begin = fun->nonLazyScript()->sourceStart();
+        end = fun->nonLazyScript()->sourceEnd();
     } else {
         if (!fun->lazyScript()->usesArgumentsAndApply())
             return false;
@@ -3487,7 +3487,7 @@ JSScript::makeTypes(JSContext *cx)
         new (&typeArray[i]) StackTypeSet();
 
 #ifdef DEBUG
-    for (unsigned i = 0; i < nTypeSets; i++)
+    for (unsigned i = 0; i < nTypeSets(); i++)
         InferSpew(ISpewOps, "typeSet: %sT%p%s bytecode%u #%u",
                   InferSpewColor(&typeArray[i]), &typeArray[i], InferSpewColorReset(),
                   i, id());
@@ -4376,7 +4376,7 @@ TypeScript::printTypes(JSContext *cx, HandleScript script) const
         fprintf(stderr, "Eval");
     else
         fprintf(stderr, "Main");
-    fprintf(stderr, " #%u %s:%d ", script->id(), script->filename(), script->lineno);
+    fprintf(stderr, " #%u %s:%d ", script->id(), script->filename(), (int) script->lineno());
 
     if (script->function()) {
         if (js::PropertyName *name = script->function()->name()) {

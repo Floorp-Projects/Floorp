@@ -2581,7 +2581,7 @@ class Debugger::ScriptQuery {
                 return;
         }
         if (hasLine) {
-            if (line < script->lineno || script->lineno + js_GetScriptLineExtent(script) < line)
+            if (line < script->lineno() || script->lineno() + js_GetScriptLineExtent(script) < line)
                 return;
         }
         if (innermost) {
@@ -2601,7 +2601,7 @@ class Debugger::ScriptQuery {
             if (p) {
                 /* Is our newly found script deeper than the last one we found? */
                 JSScript *incumbent = p->value();
-                if (script->staticLevel > incumbent->staticLevel)
+                if (script->staticLevel() > incumbent->staticLevel())
                     p->value() = script;
             } else {
                 /*
@@ -2884,7 +2884,7 @@ static bool
 DebuggerScript_getStartLine(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get startLine)", args, obj, script);
-    args.rval().setNumber(script->lineno);
+    args.rval().setNumber(uint32_t(script->lineno()));
     return true;
 }
 
@@ -2917,7 +2917,7 @@ static bool
 DebuggerScript_getSourceStart(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get sourceStart)", args, obj, script);
-    args.rval().setNumber(script->sourceStart);
+    args.rval().setNumber(uint32_t(script->sourceStart()));
     return true;
 }
 
@@ -2925,7 +2925,7 @@ static bool
 DebuggerScript_getSourceLength(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get sourceEnd)", args, obj, script);
-    args.rval().setNumber(script->sourceEnd - script->sourceStart);
+    args.rval().setNumber(uint32_t(script->sourceEnd() - script->sourceStart()));
     return true;
 }
 
@@ -2933,7 +2933,7 @@ static bool
 DebuggerScript_getStaticLevel(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get staticLevel)", args, obj, script);
-    args.rval().setNumber(uint32_t(script->staticLevel));
+    args.rval().setNumber(uint32_t(script->staticLevel()));
     return true;
 }
 
@@ -3037,7 +3037,7 @@ class BytecodeRangeWithPosition : private BytecodeRange
     using BytecodeRange::frontOffset;
 
     BytecodeRangeWithPosition(JSContext *cx, JSScript *script)
-      : BytecodeRange(cx, script), lineno(script->lineno), column(0),
+      : BytecodeRange(cx, script), lineno(script->lineno()), column(0),
         sn(script->notes()), snpc(script->code())
     {
         if (!SN_IS_TERMINATOR(sn))
@@ -3202,7 +3202,7 @@ class FlowGraphSummary {
         for (size_t i = mainOffset + 1; i < script->length(); i++)
             entries_[i] = Entry::createWithNoEdges();
 
-        size_t prevLineno = script->lineno;
+        size_t prevLineno = script->lineno();
         size_t prevColumn = 0;
         JSOp prevOp = JSOP_NOP;
         for (BytecodeRangeWithPosition r(cx, script); !r.empty(); r.popFront()) {
@@ -3582,7 +3582,7 @@ DebuggerScript_isInCatchScope(JSContext *cx, unsigned argc, Value* vp)
      * Try note ranges are relative to the mainOffset of the script, so adjust
      * offset accordingly.
      */
-    offset -= script->mainOffset;
+    offset -= script->mainOffset();
 
     args.rval().setBoolean(false);
     if (script->hasTrynotes()) {
