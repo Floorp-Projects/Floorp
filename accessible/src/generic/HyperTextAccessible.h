@@ -366,9 +366,9 @@ protected:
    * Return an offset corresponding to the given direction and selection amount
    * relative the given offset. A helper used to find word or line boundaries.
    */
-  int32_t FindOffset(int32_t aOffset, nsDirection aDirection,
-                     nsSelectionAmount aAmount,
-                     EWordMovementType aWordMovementType = eDefaultBehavior);
+  virtual int32_t FindOffset(int32_t aOffset, nsDirection aDirection,
+                             nsSelectionAmount aAmount,
+                             EWordMovementType aWordMovementType = eDefaultBehavior);
 
   /**
     * Used by FindOffset() to move backward/forward from a given point
