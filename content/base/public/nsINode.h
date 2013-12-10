@@ -311,11 +311,6 @@ public:
   friend class nsAttrAndChildArray;
 
 #ifdef MOZILLA_INTERNAL_API
-#ifdef _MSC_VER
-#pragma warning(push)
-// Disable annoying warning about 'this' in initializers.
-#pragma warning(disable:4355)
-#endif
   nsINode(already_AddRefed<nsINodeInfo> aNodeInfo)
   : mNodeInfo(aNodeInfo),
     mParent(nullptr),
@@ -323,15 +318,11 @@ public:
     mNextSibling(nullptr),
     mPreviousSibling(nullptr),
     mFirstChild(nullptr),
-    mSubtreeRoot(this),
+    mSubtreeRoot(MOZ_THIS_IN_INITIALIZER_LIST()),
     mSlots(nullptr)
   {
     SetIsDOMBinding();
   }
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 #endif
 
   virtual ~nsINode();
