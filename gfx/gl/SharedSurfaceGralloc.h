@@ -26,7 +26,7 @@ class SharedSurface_Gralloc
 public:
     static SharedSurface_Gralloc* Create(GLContext* prodGL,
                                          const GLFormats& formats,
-                                         const gfxIntSize& size,
+                                         const gfx::IntSize& size,
                                          bool hasAlpha,
                                          layers::ISurfaceAllocator* allocator);
 
@@ -52,7 +52,7 @@ protected:
     const GLuint mProdTex;
 
     SharedSurface_Gralloc(GLContext* prodGL,
-                          const gfxIntSize& size,
+                          const gfx::IntSize& size,
                           bool hasAlpha,
                           GLLibraryEGL* egl,
                           layers::ISurfaceAllocator* allocator,
@@ -100,7 +100,7 @@ public:
                            const SurfaceCaps& caps,
                            layers::ISurfaceAllocator* allocator = nullptr);
 
-    virtual SharedSurface* CreateShared(const gfxIntSize& size) {
+    virtual SharedSurface* CreateShared(const gfx::IntSize& size) {
         bool hasAlpha = mReadCaps.alpha;
         if (!mAllocator) {
             return nullptr;

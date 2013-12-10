@@ -48,7 +48,7 @@ public:
     MacIOSurface* GetIOSurface() { return mSurface; }
 
 private:
-    SharedSurface_IOSurface(MacIOSurface* surface, GLContext* gl, const gfxIntSize& size, bool hasAlpha);
+    SharedSurface_IOSurface(MacIOSurface* surface, GLContext* gl, const gfx::IntSize& size, bool hasAlpha);
 
     RefPtr<MacIOSurface> mSurface;
     nsRefPtr<gfxImageSurface> mImageSurface;
@@ -65,7 +65,7 @@ public:
     }
 
 protected:
-    virtual SharedSurface* CreateShared(const gfxIntSize& size) MOZ_OVERRIDE;
+    virtual SharedSurface* CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE;
 };
 
 } /* namespace gfx */

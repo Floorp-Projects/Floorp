@@ -89,11 +89,11 @@ UploadSurfaceToTexture(GLContext* gl,
                        gfx::DataSourceSurface *aSurface,
                        const nsIntRegion& aDstRegion,
                        GLuint& aTexture,
-                       bool aOverwrite,
-                       const nsIntPoint& aSrcPoint,
-                       bool aPixelBuffer,
-                       GLenum aTextureUnit,
-                       GLenum aTextureTarget);
+                       bool aOverwrite = false,
+                       const nsIntPoint& aSrcPoint = nsIntPoint(0, 0),
+                       bool aPixelBuffer = false,
+                       GLenum aTextureUnit = LOCAL_GL_TEXTURE0,
+                       GLenum aTextureTarget = LOCAL_GL_TEXTURE_2D);
 
 bool CanUploadSubTextures(GLContext* gl);
 bool CanUploadNonPowerOfTwo(GLContext* gl);

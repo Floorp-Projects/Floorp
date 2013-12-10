@@ -100,22 +100,28 @@ CanvasLayerD3D9::UpdateSurface()
     }
 
     D3DLOCKED_RECT rect = textureLock.GetLockRect();
-
-    gfxImageSurface* frameData = shareSurf->GetData();
+    
+    DataSourceSurface* frameData = shareSurf->GetData();
     // Scope for gfxContext, so it's destroyed early.
     {
-      nsRefPtr<gfxImageSurface> mapSurf =
-          new gfxImageSurface((uint8_t*)rect.pBits,
-                              shareSurf->Size(),
-                              rect.Pitch,
-                              gfxImageFormatARGB32);
+      RefPtr<DrawTarget> mapDt = Factory::CreateDrawTargetForData(BACKEND_CAIRO,
+                                                                  (uint8_t*)rect.pBits,
+                                                                  shareSurf->Size(),
+                                                                  rect.Pitch,
+                                                                  FORMAT_B8G8R8A8);
 
-      gfxContext ctx(mapSurf);
-      ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-      ctx.SetSource(frameData);
-      ctx.Paint();
+      nsRefPtr<gfxImageSurface> thebesFrameData =
+          new gfxImageSurface(frameData->GetData(),
+                              ThebesIntSize(frameData->GetSize()),
+                              frameData->Stride(),
+                              SurfaceFormatToImageFormat(frameData->GetFormat()));
 
-      mapSurf->Flush();
+      nsRefPtr<gfxContext> ctx = new gfxContext(mapDt);
+      ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+      ctx->SetSource(thebesFrameData);
+      ctx->Paint();
+
+      mapDt->Flush();
     }
   } else {
     RECT r;

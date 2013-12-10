@@ -771,7 +771,8 @@ SurfaceStreamHostOGL::Lock()
 
   mSize = IntSize(sharedSurf->Size().width, sharedSurf->Size().height);
 
-  gfxImageSurface* toUpload = nullptr;
+  gfxImageSurface* deprecatedToUpload = nullptr;
+  DataSourceSurface* toUpload = nullptr;
   switch (sharedSurf->Type()) {
     case SharedSurfaceType::GLTextureShare: {
       SharedSurface_GLTexture* glTexSurf = SharedSurface_GLTexture::Cast(sharedSurf);
@@ -790,8 +791,8 @@ SurfaceStreamHostOGL::Lock()
       mTextureHandle = eglImageSurf->AcquireConsumerTexture(mGL);
       mTextureTarget = eglImageSurf->TextureTarget();
       if (!mTextureHandle) {
-        toUpload = eglImageSurf->GetPixels();
-        MOZ_ASSERT(toUpload);
+        deprecatedToUpload = eglImageSurf->GetPixels();
+        MOZ_ASSERT(deprecatedToUpload);
       } else {
         mFormat = sharedSurf->HasAlpha() ? FORMAT_R8G8B8A8
                                          : FORMAT_R8G8B8X8;
@@ -818,9 +819,23 @@ SurfaceStreamHostOGL::Lock()
       MOZ_CRASH("Invalid SharedSurface type.");
   }
 
+  if (deprecatedToUpload) {
+    // FIXME Remove this whole block when deprecatedToUpload gets deleted
+    // mBounds seems to end up as (0,0,0,0) a lot, so don't use it?
+    nsIntSize size(deprecatedToUpload->GetSize());
+    nsIntRect rect(nsIntPoint(0,0), size);
+    nsIntRegion bounds(rect);
+    mFormat = UploadSurfaceToTexture(mGL,
+                                     deprecatedToUpload,
+                                     bounds,
+                                     mUploadTexture,
+                                     true);
+    mTextureHandle = mUploadTexture;
+    mTextureTarget = LOCAL_GL_TEXTURE_2D;
+  }
   if (toUpload) {
     // mBounds seems to end up as (0,0,0,0) a lot, so don't use it?
-    nsIntSize size(toUpload->GetSize());
+    nsIntSize size(ThebesIntSize(toUpload->GetSize()));
     nsIntRect rect(nsIntPoint(0,0), size);
     nsIntRegion bounds(rect);
     mFormat = UploadSurfaceToTexture(mGL,
