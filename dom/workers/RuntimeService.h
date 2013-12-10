@@ -293,7 +293,7 @@ private:
   static void
   ShutdownIdleThreads(nsITimer* aTimer, void* aClosure);
 
-  static int
+  static void
   WorkerPrefChanged(const char* aPrefName, void* aClosure);
 };
 

@@ -4740,7 +4740,7 @@ XULDocument::ResetDocumentDirection()
     DocumentStatesChanged(NS_DOCUMENT_STATE_RTL_LOCALE);
 }
 
-int
+void
 XULDocument::DirectionChanged(const char* aPrefName, void* aData)
 {
   // Reset the direction and restyle the document if necessary.
@@ -4748,8 +4748,6 @@ XULDocument::DirectionChanged(const char* aPrefName, void* aData)
   if (doc) {
       doc->ResetDocumentDirection();
   }
-
-  return 0;
 }
 
 int

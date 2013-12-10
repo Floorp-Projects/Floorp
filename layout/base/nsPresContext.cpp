@@ -140,7 +140,7 @@ nsPresContext::IsDOMPaintEventPending()
   return false;
 }
 
-int
+void
 nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
 {
   nsRefPtr<nsPresContext>  presContext =
@@ -150,7 +150,6 @@ nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
   if (nullptr != presContext) {
     presContext->PreferenceChanged(aPrefName);
   }
-  return 0;  // PREF_OK
 }
 
 

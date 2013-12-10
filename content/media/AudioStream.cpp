@@ -42,7 +42,7 @@ double AudioStream::sVolumeScale;
 uint32_t AudioStream::sCubebLatency;
 bool AudioStream::sCubebLatencyPrefSet;
 
-/*static*/ int AudioStream::PrefChanged(const char* aPref, void* aClosure)
+/*static*/ void AudioStream::PrefChanged(const char* aPref, void* aClosure)
 {
   if (strcmp(aPref, PREF_VOLUME_SCALE) == 0) {
     nsAdoptingString value = Preferences::GetString(aPref);
@@ -62,7 +62,6 @@ bool AudioStream::sCubebLatencyPrefSet;
     StaticMutexAutoLock lock(sMutex);
     sCubebLatency = std::min<uint32_t>(std::max<uint32_t>(value, 1), 1000);
   }
-  return 0;
 }
 
 /*static*/ double AudioStream::GetVolumeScale()

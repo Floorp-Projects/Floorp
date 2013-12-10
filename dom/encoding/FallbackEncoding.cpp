@@ -101,13 +101,12 @@ FallbackEncoding::FromLocale(nsACString& aFallback)
 }
 
 // PrefChangedFunc
-int
+void
 FallbackEncoding::PrefChanged(const char*, void*)
 {
   MOZ_ASSERT(FallbackEncoding::sInstance,
              "Pref callback called with null fallback cache.");
   FallbackEncoding::sInstance->Invalidate();
-  return 0;
 }
 
 void
