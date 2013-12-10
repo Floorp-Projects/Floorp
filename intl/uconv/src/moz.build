@@ -233,3 +233,5 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+JAR_MANIFESTS += ['jar.mn']

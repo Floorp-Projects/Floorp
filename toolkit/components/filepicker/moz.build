@@ -23,3 +23,5 @@ if CONFIG['MOZ_XUL'] and \
             'test',
         ]
         FINAL_LIBRARY = 'xul'
+
+JAR_MANIFESTS += ['jar.mn']

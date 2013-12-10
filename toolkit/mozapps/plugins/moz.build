@@ -9,3 +9,5 @@ TEST_DIRS += ['tests']
 EXTRA_COMPONENTS += [
     'pluginGlue.manifest',
 ]
+
+JAR_MANIFESTS += ['jar.mn']
