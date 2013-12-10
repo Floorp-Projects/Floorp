@@ -278,11 +278,13 @@ public:
 #ifdef DEBUG
     virtual PContentPermissionRequestChild*
     SendPContentPermissionRequestConstructor(PContentPermissionRequestChild* aActor,
-                                             const InfallibleTArray<PermissionRequest>& aRequests,
+                                             const nsCString& aType,
+                                             const nsCString& aAccess,
                                              const IPC::Principal& aPrincipal);
 #endif /* DEBUG */
 
-    virtual PContentPermissionRequestChild* AllocPContentPermissionRequestChild(const InfallibleTArray<PermissionRequest>& aRequests,
+    virtual PContentPermissionRequestChild* AllocPContentPermissionRequestChild(const nsCString& aType,
+                                                                                const nsCString& aAccess,
                                                                                 const IPC::Principal& aPrincipal);
     virtual bool DeallocPContentPermissionRequestChild(PContentPermissionRequestChild* actor);
 
