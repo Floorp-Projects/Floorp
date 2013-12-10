@@ -21,7 +21,7 @@ SurfaceFactory::~SurfaceFactory()
 }
 
 SharedSurface*
-SurfaceFactory::NewSharedSurface(const gfxIntSize& size)
+SurfaceFactory::NewSharedSurface(const gfx::IntSize& size)
 {
     // Attempt to reuse an old surface.
     while (!mScraps.empty()) {
