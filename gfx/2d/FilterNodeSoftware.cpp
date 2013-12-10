@@ -2652,7 +2652,12 @@ FilterNodeCompositeSoftware::GetOutputRectInRect(const IntRect& aRect)
 {
   IntRect rect;
   for (size_t inputIndex = 0; inputIndex < NumberOfSetInputs(); inputIndex++) {
-    rect = rect.Union(GetInputRectInRect(IN_COMPOSITE_IN_START + inputIndex, aRect));
+    IntRect inputRect = GetInputRectInRect(IN_COMPOSITE_IN_START + inputIndex, aRect);
+    if (mOperator == COMPOSITE_OPERATOR_IN && inputIndex > 0) {
+      rect = rect.Intersect(inputRect);
+    } else {
+      rect = rect.Union(inputRect);
+    }
   }
   return rect;
 }
