@@ -2467,7 +2467,7 @@ GLContext::OffscreenSize() const
 }
 
 bool
-GLContext::CreateScreenBufferImpl(const gfxIntSize& size, const SurfaceCaps& caps)
+GLContext::CreateScreenBufferImpl(const IntSize& size, const SurfaceCaps& caps)
 {
     GLScreenBuffer* newScreen = GLScreenBuffer::Create(this, size, caps);
     if (!newScreen)
@@ -2490,7 +2490,7 @@ GLContext::CreateScreenBufferImpl(const gfxIntSize& size, const SurfaceCaps& cap
 }
 
 bool
-GLContext::ResizeScreenBuffer(const gfxIntSize& size)
+GLContext::ResizeScreenBuffer(const IntSize& size)
 {
     if (!IsOffscreenSizeAllowed(size))
         return false;
@@ -2533,7 +2533,7 @@ GLContext::EmptyTexGarbageBin()
 }
 
 bool
-GLContext::IsOffscreenSizeAllowed(const gfxIntSize& aSize) const {
+GLContext::IsOffscreenSizeAllowed(const IntSize& aSize) const {
   int32_t biggerDimension = std::max(aSize.width, aSize.height);
   int32_t maxAllowed = std::min(mMaxRenderbufferSize, mMaxTextureSize);
   return biggerDimension <= maxAllowed;
