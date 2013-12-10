@@ -131,8 +131,7 @@ int main(int argc, char **argv)
   arr.PrependElementUnlessExists(7);
   DO_TEST(ForwardIterator, test19Expected, { /* nothing */ });
 
-  // Commented out because it fails; bug 474369 will fix
-  /*  DO_TEST(ForwardIterator, test19Expected,
+  DO_TEST(ForwardIterator, test19Expected,
           if (count == 1) {
             arr.PrependElementUnlessExists(9);
           }
@@ -140,7 +139,45 @@ int main(int argc, char **argv)
 
   static int test22Expected[] = { 9, 3, 4, 7, 2, 8 };
   DO_TEST(ForwardIterator, test22Expected, { });
-  */
-  
+
+  // BackwardIterator
+  static int test23Expected[] = { 8, 2, 7, 4, 3, 9 };
+  DO_TEST(BackwardIterator, test23Expected, );
+
+  // Removals
+  static int test24Expected[] = { 8, 2, 7, 4, 9 };
+  DO_TEST(BackwardIterator, test24Expected,
+          if (count == 1) arr.RemoveElementAt(1);
+          );
+
+  // Appends
+  DO_TEST(BackwardIterator, test24Expected,
+          if (count == 1) arr.AppendElement(1);
+          );
+
+  static int test26Expected[] = { 1, 8, 2, 7, 4, 9 };
+  DO_TEST(BackwardIterator, test26Expected, );
+
+  // Prepends
+  static int test27Expected[] = { 1, 8, 2, 7, 4, 9, 3 };
+  DO_TEST(BackwardIterator, test27Expected,
+          if (count == 1) arr.PrependElementUnlessExists(3);
+          );
+
+  // Removal using Iterator
+  DO_TEST(BackwardIterator, test27Expected,
+          if (count == 1) iter.Remove();
+          );
+
+  static int test28Expected[] = { 1, 8, 2, 7, 4, 3 };
+  DO_TEST(BackwardIterator, test28Expected, );
+
+  /**
+   * Note: _code is executed before the call to GetNext(), it can therefore not
+   * test the case of prepending when the BackwardIterator already returned the
+   * first element.
+   * In that case BackwardIterator does not traverse the newly prepended Element
+   */
+
   return rv;
 }
