@@ -66,6 +66,16 @@ static inline IntSize ns2gfxSize(const nsIntSize& s) {
   return IntSize(s.width, s.height);
 }
 
+static void
+BindMaskForProgram(ShaderProgramOGL* aProgram, TextureSourceOGL* aSourceMask,
+                   GLenum aTexUnit, const gfx::Matrix4x4& aTransform)
+{
+  MOZ_ASSERT(LOCAL_GL_TEXTURE0 <= aTexUnit && aTexUnit <= LOCAL_GL_TEXTURE31);
+  aSourceMask->BindTexture(aTexUnit);
+  aProgram->SetMaskTextureUnit(aTexUnit - LOCAL_GL_TEXTURE0);
+  aProgram->SetMaskLayerTransform(aTransform);
+}
+
 // Draw the given quads with the already selected shader. Texture coordinates
 // are supplied if the shader requires them.
 static void
@@ -991,28 +1001,20 @@ public:
   explicit AutoBindTexture(GLContext* aGL)
     : ScopedGLWrapper<AutoBindTexture>(aGL)
     , mTexUnit(0)
-    , mOldTexId((GLuint) -1)
+    , mOldTexId(GLuint(-1))
   { }
 
   AutoBindTexture(GLContext* aGL, TextureSourceOGL* aTexture,
                   GLenum aTexUnit = LOCAL_GL_TEXTURE0)
     : ScopedGLWrapper<AutoBindTexture>(aGL)
     , mTexUnit(0)
-    , mOldTexId((GLuint) -1)
+    , mOldTexId(GLuint(-1))
   {
-    Bind(aTexture, aTexUnit);
-  }
-
-  void Bind(TextureSourceOGL* aTexture,
-            GLenum aTexUnit = LOCAL_GL_TEXTURE0)
-  {
-    if (!aTexture)
-      return;
-
-    MOZ_ASSERT(mOldTexId == (GLuint) -1);
+    MOZ_ASSERT(aTexture);
+    MOZ_ASSERT(mOldTexId == GLuint(-1));
     mTexUnit = aTexUnit;
 
-    ScopedBindTextureUnit savedTexUnit(mGL, aTexUnit);
+    ScopedBindTextureUnit autoBindTexUnit(mGL, aTexUnit);
 
     mGL->GetUIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, &mOldTexId);
     aTexture->BindTexture(mTexUnit);
@@ -1021,9 +1023,36 @@ public:
 protected:
   void UnwrapImpl()
   {
-    if (mOldTexId == (GLuint) -1)
+    if (mOldTexId == GLuint(-1))
       return;
 
+    ScopedBindTextureUnit autoBindTexUnit(mGL, mTexUnit);
+    mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mOldTexId);
+  }
+};
+
+struct MOZ_STACK_CLASS AutoSaveTexture
+  : public ScopedGLWrapper<AutoSaveTexture>
+{
+  friend struct ScopedGLWrapper<AutoSaveTexture>;
+
+protected:
+  GLenum mTexUnit;
+  GLuint mOldTexId;
+
+public:
+  AutoSaveTexture(GLContext* aGL, GLenum aTexUnit = LOCAL_GL_TEXTURE0)
+    : ScopedGLWrapper<AutoSaveTexture>(aGL)
+    , mTexUnit(aTexUnit)
+    , mOldTexId(GLuint(-1))
+  {
+    ScopedBindTextureUnit savedTexUnit(mGL, mTexUnit);
+    mGL->GetUIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, &mOldTexId);
+  }
+
+protected:
+  void UnwrapImpl()
+  {
     ScopedBindTextureUnit savedTexUnit(mGL, mTexUnit);
     mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mOldTexId);
   }
@@ -1156,11 +1185,9 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
 
       program->SetRenderColor(color);
 
-      AutoBindTexture bindMask(mGLContext);
+      AutoSaveTexture bindMask(mGLContext, LOCAL_GL_TEXTURE0);
       if (maskType != MaskNone) {
-        bindMask.Bind(sourceMask, LOCAL_GL_TEXTURE0);
-        program->SetMaskTextureUnit(0);
-        program->SetMaskLayerTransform(maskQuadTransform);
+        BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE0, maskQuadTransform);
       }
 
       BindAndDrawQuad(program, false, aDrawMode);
@@ -1205,12 +1232,9 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
       program->SetTextureUnit(0);
       program->SetLayerOpacity(aOpacity);
 
-      AutoBindTexture bindMask(mGLContext);
+      AutoSaveTexture bindMask(mGLContext, LOCAL_GL_TEXTURE1);
       if (maskType != MaskNone) {
-        mGLContext->fActiveTexture(LOCAL_GL_TEXTURE1);
-        bindMask.Bind(sourceMask, LOCAL_GL_TEXTURE1);
-        program->SetMaskTextureUnit(1);
-        program->SetMaskLayerTransform(maskQuadTransform);
+        BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE1, maskQuadTransform);
       }
 
       BindAndDrawQuadWithTextureRect(program, texturedEffect->mTextureCoords, source);
@@ -1248,11 +1272,9 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
       program->SetLayerOpacity(aOpacity);
       program->SetTextureTransform(gfx3DMatrix());
 
-      AutoBindTexture bindMask(mGLContext);
+      AutoSaveTexture bindMask(mGLContext, LOCAL_GL_TEXTURE3);
       if (maskType != MaskNone) {
-        bindMask.Bind(sourceMask, LOCAL_GL_TEXTURE3);
-        program->SetMaskTextureUnit(3);
-        program->SetMaskLayerTransform(maskQuadTransform);
+        BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE3, maskQuadTransform);
       }
       BindAndDrawQuadWithTextureRect(program, effectYCbCr->mTextureCoords, sourceYCbCr->GetSubSource(Y));
     }
@@ -1272,9 +1294,9 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
       program->SetLayerOpacity(aOpacity);
       program->SetTextureTransform(gfx3DMatrix());
 
-      AutoBindTexture bindMask(mGLContext);
+      AutoSaveTexture bindMask(mGLContext, LOCAL_GL_TEXTURE1);
       if (maskType != MaskNone) {
-        bindMask.Bind(sourceMask, LOCAL_GL_TEXTURE1);
+        sourceMask->BindTexture(LOCAL_GL_TEXTURE1);
         program->SetMaskTextureUnit(1);
         program->SetMaskLayerTransform(maskQuadTransform);
       }
@@ -1332,11 +1354,9 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
         program->SetTextureTransform(gfx3DMatrix());
         program->SetRenderOffset(offset.x, offset.y);
         program->SetLayerQuadRect(aRect);
-        AutoBindTexture bindMask(mGLContext);
+        AutoSaveTexture bindMask(mGLContext, LOCAL_GL_TEXTURE2);
         if (maskType != MaskNone) {
-          bindMask.Bind(sourceMask, LOCAL_GL_TEXTURE2);
-          program->SetMaskTextureUnit(2);
-          program->SetMaskLayerTransform(maskQuadTransform);
+          BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE2, maskQuadTransform);
         }
 
         BindAndDrawQuadWithTextureRect(program, effectComponentAlpha->mTextureCoords, effectComponentAlpha->mOnBlack);
