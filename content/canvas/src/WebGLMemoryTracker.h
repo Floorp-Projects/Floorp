@@ -19,9 +19,10 @@
 
 namespace mozilla {
 
-class WebGLMemoryTracker : public MemoryMultiReporter
+class WebGLMemoryTracker : public nsIMemoryReporter
 {
-    NS_DECL_ISUPPORTS
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSIMEMORYREPORTER
 
     WebGLMemoryTracker();
     virtual ~WebGLMemoryTracker();
@@ -54,9 +55,6 @@ class WebGLMemoryTracker : public MemoryMultiReporter
             sUniqueInstance = nullptr;
         }
     }
-
-    NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                              nsISupports* aData);
 
   private:
     static int64_t GetTextureMemoryUsed() {
