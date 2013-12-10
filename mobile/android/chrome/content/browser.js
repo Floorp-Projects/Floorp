@@ -338,7 +338,6 @@ var BrowserApp = {
     DesktopUserAgent.init();
     Distribution.init();
     Tabs.init();
-    UITelemetry.init();
 #ifdef ACCESSIBILITY
     AccessFu.attach(window);
 #endif
@@ -1528,6 +1527,10 @@ var BrowserApp = {
   // nsIAndroidBrowserApp
   getBrowserTab: function(tabId) {
     return this.getTabForId(tabId);
+  },
+
+  getUITelemetryObserver: function() {
+    return UITelemetry;
   },
 
   getPreferences: function getPreferences(requestId, prefNames, count) {

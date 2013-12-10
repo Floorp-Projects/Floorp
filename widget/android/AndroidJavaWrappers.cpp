@@ -564,6 +564,27 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case TELEMETRY_UI_SESSION_START: {
+            ReadCharactersField(jenv);
+            mTime = jenv->GetLongField(jobj, jTimeField);
+            break;
+        }
+
+        case TELEMETRY_UI_SESSION_STOP: {
+            ReadCharactersField(jenv);
+            ReadCharactersExtraField(jenv);
+            mTime = jenv->GetLongField(jobj, jTimeField);
+            break;
+        }
+
+        case TELEMETRY_UI_EVENT: {
+            ReadCharactersField(jenv);
+            ReadCharactersExtraField(jenv);
+            ReadDataField(jenv);
+            mTime = jenv->GetLongField(jobj, jTimeField);
+            break;
+        }
+
         case PREFERENCES_OBSERVE:
         case PREFERENCES_GET: {
             ReadStringArray(mPrefNames, jenv, jPrefNamesField);
