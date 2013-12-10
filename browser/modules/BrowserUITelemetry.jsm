@@ -93,6 +93,7 @@ const APPMENU_WHITELIST = [
   "appmenu_fullScreen",
   "sync-setup-appmenu",
   "sync-syncnowitem-appmenu",
+  "switch-to-metro",
   "appmenu-quit",
 
   "appmenu_bookmarks:child",
