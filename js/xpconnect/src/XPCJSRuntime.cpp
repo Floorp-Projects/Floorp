@@ -2630,9 +2630,9 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
     if (!JS::CollectRuntimeStats(xpcrt->Runtime(), &rtStats, &orphanReporter))
         return NS_ERROR_FAILURE;
 
-    size_t xpconnect =
-        xpcrt->SizeOfIncludingThis(JSMallocSizeOf) +
-        XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(JSMallocSizeOf);
+    size_t xpconnect = xpcrt->SizeOfIncludingThis(JSMallocSizeOf);
+
+    size_t scopes = XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(JSMallocSizeOf);
 
     // This is the second step (see above).  First we report stuff in the
     // "explicit" tree, then we report other stuff.
@@ -2711,13 +2711,17 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
                  KIND_OTHER,
                  rtStats.gcHeapGCThings,
                  "Memory on the garbage-collected JavaScript heap that holds GC things such "
-                 "as objects, strings, scripts, etc.")
+                 "as objects, strings, scripts, etc.");
 
     // Report xpconnect.
 
-    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect"),
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/runtime"),
                  KIND_HEAP, xpconnect,
-                 "Memory used by XPConnect.");
+                 "Memory used by XPConnect runtime.");
+
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/scopes"),
+                 KIND_HEAP, scopes,
+                 "Memory used by XPConnect scopes.");
 
     return NS_OK;
 }
