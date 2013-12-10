@@ -14,10 +14,14 @@ function test() {
       win.removeEventListener("load", onLoad, false);
       executeSoon(function() {
         info("The second private window got loaded");
-        let newTab = win.gBrowser.addTab("about:home");
+        let newTab = win.gBrowser.addTab();
         win.gBrowser.selectedTab = newTab;
         let tabBrowser = win.gBrowser.getBrowserForTab(newTab);
         tabBrowser.addEventListener("load", function tabLoadListener() {
+          if (win.content.location != "about:home") {
+            win.content.location = "about:home";
+            return;
+          }
           tabBrowser.removeEventListener("load", tabLoadListener, true);
           executeSoon(function() {
             info("about:home got loaded");
