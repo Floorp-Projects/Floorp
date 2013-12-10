@@ -193,14 +193,14 @@ MemoryReportRequestParent::~MemoryReportRequestParent()
 }
 
 // A memory reporter for ContentParent objects themselves.
-class ContentParentsMemoryReporter MOZ_FINAL : public MemoryMultiReporter
+class ContentParentsMemoryReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-    ContentParentsMemoryReporter() {}
-
-    NS_IMETHOD CollectReports(nsIMemoryReporterCallback* cb,
-                              nsISupports* aClosure);
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIMEMORYREPORTER
 };
+
+NS_IMPL_ISUPPORTS1(ContentParentsMemoryReporter, nsIMemoryReporter)
 
 NS_IMETHODIMP
 ContentParentsMemoryReporter::CollectReports(nsIMemoryReporterCallback* cb,

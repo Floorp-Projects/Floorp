@@ -1056,11 +1056,6 @@ let CustomizableUIInternal = {
         }
       }
 
-      if (aWidget.id == "switch-to-metro-button") {
-        let brandBundle = aDocument.getElementById("bundle_brand");
-        let brandShortName = brandBundle.getString("brandShortName");
-        additionalTooltipArguments = [brandShortName];
-      }
       let tooltip = this.getLocalizedProperty(aWidget, "tooltiptext", additionalTooltipArguments);
       node.setAttribute("tooltiptext", tooltip);
       node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
@@ -1072,9 +1067,8 @@ let CustomizableUIInternal = {
 
       // If the widget has a view, and has view showing / hiding listeners,
       // hook those up to this widget.
-      if (aWidget.type == "view" &&
-          (aWidget.onViewShowing || aWidget.onViewHiding)) {
-        LOG("Widget " + aWidget.id + " has a view with showing and hiding events. Auto-registering event handlers.");
+      if (aWidget.type == "view") {
+        LOG("Widget " + aWidget.id + " has a view. Auto-registering event handlers.");
         let viewNode = aDocument.getElementById(aWidget.viewId);
 
         if (viewNode) {
@@ -1753,10 +1747,6 @@ let CustomizableUIInternal = {
       return null;
     }
 
-    if (aData.id == "switch-to-metro-button") {
-      widget.showInPrivateBrowsing = false;
-    }
-
     delete widget.implementation.currentArea;
     widget.implementation.__defineGetter__("currentArea", function() widget.currentArea);
 
@@ -2270,8 +2260,8 @@ this.CustomizableUI = {
    * and an onWidgetBeforeDOMChange and onWidgetAfterDOMChange notification
    * for each window CustomizableUI knows about.
    *
-   * @param aWidgetId the widget to add
-   * @param aArea     the area to add the widget to
+   * @param aWidgetId the ID of the widget to add
+   * @param aArea     the ID of the area to add the widget to
    * @param aPosition the position at which to add the widget. If you do not
    *                  pass a position, the widget will be added to the end
    *                  of the area.
@@ -2286,7 +2276,7 @@ this.CustomizableUI = {
    * onWidgetAfterDOMChange notification for each window CustomizableUI knows
    * about.
    *
-   * @param aWidgetId the widget to remove
+   * @param aWidgetId the ID of the widget to remove
    */
   removeWidgetFromArea: function(aWidgetId) {
     CustomizableUIInternal.removeWidgetFromArea(aWidgetId);
@@ -2300,7 +2290,7 @@ this.CustomizableUI = {
    * and an onWidgetBeforeDOMChange and onWidgetAfterDOMChange notification for
    * each window CustomizableUI knows about.
    *
-   * @param aWidgetid the widget to move
+   * @param aWidgetId the ID of the widget to move
    * @param aPosition the position to move the widget to.
    *                  Negative values or values greater than the number of
    *                  widgets will be interpreted to mean moving the widget to
@@ -2318,7 +2308,7 @@ this.CustomizableUI = {
    * because it delegates to addWidgetToArea) or, worse, moving items in the
    * DOM yourself.
    *
-   * @param aWidgetId the widget that was just created
+   * @param aWidgetId the ID of the widget that was just created
    * @param aWindow the window in which you want to ensure it was added.
    *
    * NB: why is this API per-window, you wonder? Because if you need this,
@@ -2335,7 +2325,7 @@ this.CustomizableUI = {
    * Calls to begin/endBatchUpdate may be nested.
    *
    * Callers should ensure that NO MATTER WHAT they call endBatchUpdate once
-   * for each call to endBatchUpdate, even if there are exceptions in the
+   * for each call to beginBatchUpdate, even if there are exceptions in the
    * code in the batch update. Otherwise, for the duration of the
    * Firefox session, customization state is never saved. Typically, you
    * would do this using a try...finally block.
@@ -2406,6 +2396,7 @@ this.CustomizableUI = {
    *                          mode (optional, default: true)
    *
    * @param aProperties the specifications for the widget.
+   * @return a wrapper around the created widget (see getWidget)
    */
   createWidget: function(aProperties) {
     return CustomizableUIInternal.wrapWidget(
@@ -2421,20 +2412,105 @@ this.CustomizableUI = {
    * in at the time. You can remove it from there yourself by calling
    * CustomizableUI.removeWidgetFromArea(aWidgetId).
    *
-   * @param aWidgetId the widget to destroy
+   * @param aWidgetId the ID of the widget to destroy
    */
   destroyWidget: function(aWidgetId) {
     CustomizableUIInternal.destroyWidget(aWidgetId);
   },
+  /**
+   * Get a wrapper object with information about the widget.
+   * The object provides the following properties
+   * (all read-only unless otherwise indicated):
+   *
+   * - id:            the widget's ID;
+   * - type:          the type of widget (button, view, custom). For
+   *                  XUL-provided widgets, this is always 'custom';
+   * - provider:      the provider type of the widget, id est one of
+   *                  PROVIDER_API or PROVIDER_XUL;
+   * - forWindow(w):  a method to obtain a single window wrapper for a widget,
+   *                  in the window w passed as the only argument;
+   * - instances:     an array of all instances (single window wrappers)
+   *                  of the widget. This array is NOT live;
+   * - areaType:      the type of the widget's current area
+   * - isGroup:       true; will be false for wrappers around single widget nodes;
+   * - source:        for API-provided widgets, whether they are built-in to
+   *                  Firefox or add-on-provided;
+   * - disabled:      for API-provided widgets, whether the widget is currently
+   *                  disabled. NB: this property is writable, and will toggle
+   *                  all the widgets' disabled state;
+   * - label:         for API-provied widgets, the label of the widget;
+   * - tooltiptext:   for API-provided widgets, the tooltip of the widget;
+   * - showInPrivateBrowsing: for API-provided widgets, whether the widget is
+   *                          visible in private browsing;
+   *
+   * Single window wrappers obtained through forWindow(someWindow) or from the
+   * instances array have the following properties
+   * (all read-only unless otherwise indicated):
+   *
+   * - id:            the widget's ID;
+   * - type:          the type of widget (button, view, custom). For
+   *                  XUL-provided widgets, this is always 'custom';
+   * - provider:      the provider type of the widget, id est one of
+   *                  PROVIDER_API or PROVIDER_XUL;
+   * - node:          reference to the corresponding DOM node;
+   * - anchor:        the anchor on which to anchor panels opened from this
+   *                  node. This will point to the overflow chevron on
+   *                  overflowable toolbars if and only if your widget node
+   *                  is overflowed, to the anchor for the panel menu
+   *                  if your widget is inside the panel menu, and to the
+   *                  node itself in all other cases;
+   * - overflowed:    boolean indicating whether the node is currently in the
+   *                  overflow panel of the toolbar;
+   * - isGroup:       false; will be true for the group widget;
+   * - label:         for API-provided widgets, convenience getter for the
+   *                  label attribute of the DOM node;
+   * - tooltiptext:   for API-provided widgets, convenience getter for the
+   *                  tooltiptext attribute of the DOM node;
+   * - disabled:      for API-provided widgets, convenience getter *and setter*
+   *                  for the disabled state of this single widget. Note that
+   *                  you may prefer to use the group wrapper's getter/setter
+   *                  instead.
+   *
+   * @param aWidgetId the ID of the widget whose information you need
+   * @return a wrapper around the widget as described above, or null if the
+   *         widget is known not to exist (anymore). NB: non-null return
+   *         is no guarantee the widget exists because we cannot know in
+   *         advance if a XUL widget exists or not.
+   */
   getWidget: function(aWidgetId) {
     return CustomizableUIInternal.wrapWidget(aWidgetId);
   },
+  /**
+   * Get an array of widget wrappers (see getWidget) for all the widgets
+   * which are currently not in any area (so which are in the palette).
+   *
+   * @param aWindowPalette the palette (and by extension, the window) in which
+   *                       CustomizableUI should look. This matters because of
+   *                       course XUL-provided widgets could be available in
+   *                       some windows but not others, and likewise
+   *                       API-provided widgets might not exist in a private
+   *                       window (because of the showInPrivateBrowsing
+   *                       property).
+   *
+   * @return an array of widget wrappers (see getWidget)
+   */
   getUnusedWidgets: function(aWindowPalette) {
     return CustomizableUIInternal.getUnusedWidgets(aWindowPalette).map(
       CustomizableUIInternal.wrapWidget,
       CustomizableUIInternal
     );
   },
+  /**
+   * Get an array of all the widget IDs placed in an area. This is roughly
+   * equivalent to fetching the currentset attribute and splitting by commas
+   * in the legacy APIs. Modifying the array will not affect CustomizableUI.
+   *
+   * @param aArea the ID of the area whose placements you want to obtain.
+   * @return an array containing the widget IDs that are in the area.
+   *
+   * NB: will throw if called too early (before placements have been fetched)
+   *     or if the area is not currently known to CustomizableUI.
+   */
   getWidgetIdsInArea: function(aArea) {
     if (!gAreas.has(aArea)) {
       throw new Error("Unknown customization area: " + aArea);
@@ -2446,67 +2522,261 @@ this.CustomizableUI = {
     // We need to clone this, as we don't want to let consumers muck with placements
     return [...gPlacements.get(aArea)];
   },
+  /**
+   * Get an array of widget wrappers for all the widgets in an area. This is
+   * the same as calling getWidgetIdsInArea and .map() ing the result through
+   * CustomizableUI.getWidget. Careful: this means that if there are IDs in there
+   * which don't have corresponding DOM nodes (like in the old-style currentset
+   * attribute), there might be nulls in this array, or items for which
+   * wrapper.forWindow(win) will return null.
+   *
+   * @param aArea the ID of the area whose widgets you want to obtain.
+   * @return an array of widget wrappers and/or null values for the widget IDs
+   *         placed in an area.
+   *
+   * NB: will throw if called too early (before placements have been fetched)
+   *     or if the area is not currently known to CustomizableUI.
+   */
   getWidgetsInArea: function(aArea) {
     return this.getWidgetIdsInArea(aArea).map(
       CustomizableUIInternal.wrapWidget,
       CustomizableUIInternal
     );
   },
+  /**
+   * Obtain an array of all the area IDs known to CustomizableUI.
+   * This array is created for you, so is modifiable without CustomizableUI
+   * being affected.
+   */
   get areas() {
     return [area for ([area, props] of gAreas)];
   },
+  /**
+   * Check what kind of area (toolbar or menu panel) an area is. This is
+   * useful if you have a widget that needs to behave differently depending
+   * on its location. Note that widget wrappers have a convenience getter
+   * property (areaType) for this purpose.
+   *
+   * @param aArea the ID of the area whose type you want to know
+   * @return TYPE_TOOLBAR or TYPE_MENU_PANEL depending on the area, null if
+   *         the area is unknown.
+   */
   getAreaType: function(aArea) {
     let area = gAreas.get(aArea);
     return area ? area.get("type") : null;
   },
+  /**
+   * Obtain the DOM node that is the customize target for an area in a
+   * specific window.
+   *
+   * Areas can have a customization target that does not correspond to the
+   * node itself. In particular, toolbars that have a customizationtarget
+   * attribute set will have their customization target set to that node.
+   * This means widgets will end up in the customization target, not in the
+   * DOM node with the ID that corresponds to the area ID. This is useful
+   * because it lets you have fixed content in a toolbar (e.g. the panel
+   * menu item in the navbar) and have all the customizable widgets use
+   * the customization target.
+   *
+   * Using this API yourself is discouraged; you should generally not need
+   * to be asking for the DOM container node used for a particular area.
+   * In particular, if you're wanting to check it in relation to a widget's
+   * node, your DOM node might not be a direct child of the customize target
+   * in a window if, for instance, the window is in customization mode, or if
+   * this is an overflowable toolbar and the widget has been overflowed.
+   *
+   * @param aArea   the ID of the area whose customize target you want to have
+   * @param aWindow the window where you want to fetch the DOM node.
+   * @return the customize target DOM node for aArea in aWindow
+   */
   getCustomizeTargetForArea: function(aArea, aWindow) {
     return CustomizableUIInternal.getCustomizeTargetForArea(aArea, aWindow);
   },
+  /**
+   * Reset the customization state back to its default.
+   *
+   * This is the nuclear option. You should never call this except if the user
+   * explicitly requests it. Firefox does this when the user clicks the
+   * "Restore Defaults" button in customize mode.
+   */
   reset: function() {
     CustomizableUIInternal.reset();
   },
+  /**
+   * Get the placement of a widget. This is by far the best way to obtain
+   * information about what the state of your widget is. The internals of
+   * this call are cheap (no DOM necessary) and you will know where the user
+   * has put your widget.
+   *
+   * @param aWidgetId the ID of the widget whose placement you want to know
+   * @return
+   *   {
+   *     area: "somearea", // The ID of the area where the widget is placed
+   *     position: 42 // the index in the placements array corresponding to
+   *                  // your widget.
+   *   }
+   *
+   *   OR
+   *
+   *   null // if the widget is not placed anywhere (ie in the palette)
+   */
   getPlacementOfWidget: function(aWidgetId) {
     return CustomizableUIInternal.getPlacementOfWidget(aWidgetId, true);
   },
+  /**
+   * Check if a widget can be removed from the area it's in.
+   *
+   * Note that if you're wanting to move the widget somewhere, you should
+   * generally be checking canWidgetMoveToArea, because that will return
+   * true if the widget is already in the area where you want to move it (!).
+   *
+   * NB: oh, also, this method might lie if the widget in question is a
+   *     XUL-provided widget and there are no windows open, because it
+   *     can obviously not check anything in this case. It will return
+   *     true. You will be able to move the widget elsewhere. However,
+   *     once the user reopens a window, the widget will move back to its
+   *     'proper' area automagically.
+   *
+   * @param aWidgetId a widget ID or DOM node to check
+   * @return true if the widget can be removed from its area,
+   *          false otherwise.
+   */
   isWidgetRemovable: function(aWidgetId) {
     return CustomizableUIInternal.isWidgetRemovable(aWidgetId);
   },
+  /**
+   * Check if a widget can be moved to a particular area. Like
+   * isWidgetRemovable but better, because it'll return true if the widget
+   * is already in the right area.
+   *
+   * @param aWidgetId the widget ID or DOM node you want to move somewhere
+   * @param aArea     the area ID you want to move it to.
+   * @return true if this is possible, false if it is not. Same caveats as
+   *              for isWidgetRemovable apply, however, if no windows are open.
+   */
   canWidgetMoveToArea: function(aWidgetId, aArea) {
     return CustomizableUIInternal.canWidgetMoveToArea(aWidgetId, aArea);
   },
+  /**
+   * Whether we're in a default state.
+   *
+   * NB: this is a property with a getter. The getter is NOT cheap, because
+   * it does smart things with non-removable non-default items, non-existent
+   * items, and so forth. Please don't call unless necessary.
+   */
   get inDefaultState() {
     return CustomizableUIInternal.inDefaultState;
   },
+  /**
+   * Get a localized property off a (widget?) object.
+   *
+   * NB: this is unlikely to be useful unless you're in Firefox code, because
+   *     this code uses the builtin widget stringbundle, and can't be told
+   *     to use add-on-provided strings. It's mainly here as convenience for
+   *     custom builtin widgets that build their own DOM but use the same
+   *     stringbundle as the other builtin widgets.
+   *
+   * @param aWidget     the object whose property we should use to fetch a
+   *                    localizable string;
+   * @param aProp       the property on the object to use for the fetching;
+   * @param aFormatArgs (optional) any extra arguments to use for a formatted
+   *                    string;
+   * @param aDef        (optional) the default to return if we don't find the
+   *                    string in the stringbundle;
+   *
+   * @return the localized string, or aDef if the string isn't in the bundle.
+   *         If no default is provided,
+   *           if aProp exists on aWidget, we'll return that,
+   *           otherwise we'll return the empty string
+   *
+   */
   getLocalizedProperty: function(aWidget, aProp, aFormatArgs, aDef) {
     return CustomizableUIInternal.getLocalizedProperty(aWidget, aProp,
       aFormatArgs, aDef);
   },
+  /**
+   * Given a node, walk up to the first panel in its ancestor chain, and
+   * close it.
+   *
+   * @param aNode a node whose panel should be closed;
+   */
   hidePanelForNode: function(aNode) {
     CustomizableUIInternal.hidePanelForNode(aNode);
   },
+  /**
+   * Check if a widget is a "special" widget: a spring, spacer or separator.
+   *
+   * @param aWidgetId the widget ID to check.
+   */
   isSpecialWidget: function(aWidgetId) {
     return CustomizableUIInternal.isSpecialWidget(aWidgetId);
   },
+  /**
+   * Add listeners to a panel that will close it. For use from PanelUI and
+   * the overflowable toolbars, unlikely to be useful for consumers.
+   *
+   * @param aPanel the panel to which listeners should be attached.
+   */
   addPanelCloseListeners: function(aPanel) {
     CustomizableUIInternal.addPanelCloseListeners(aPanel);
   },
+  /**
+   * Remove close listeners that have been added to a panel with
+   * addPanelCloseListeners. For use from PanelUI and the overflowable
+   * toolbars, unlikely to be useful for consumers.
+   *
+   * @param aPanel the panel from which listeners should be removed.
+   */
   removePanelCloseListeners: function(aPanel) {
     CustomizableUIInternal.removePanelCloseListeners(aPanel);
   },
+  /**
+   * Notify listeners a widget is about to be dragged to an area. For use from
+   * Customize Mode only, do not use otherwise.
+   *
+   * @param aWidgetId the ID of the widget that is being dragged to an area.
+   * @param aArea     the ID of the area to which the widget is being dragged.
+   */
   onWidgetDrag: function(aWidgetId, aArea) {
     CustomizableUIInternal.notifyListeners("onWidgetDrag", aWidgetId, aArea);
   },
+  /**
+   * Notify listeners that a window is entering customize mode. For use from
+   * Customize Mode only, do not use otherwise.
+   * @param aWindow the window entering customize mode
+   */
   notifyStartCustomizing: function(aWindow) {
     CustomizableUIInternal.notifyListeners("onCustomizeStart", aWindow);
   },
+  /**
+   * Notify listeners that a window is exiting customize mode. For use from
+   * Customize Mode only, do not use otherwise.
+   * @param aWindow the window exiting customize mode
+   */
   notifyEndCustomizing: function(aWindow) {
     CustomizableUIInternal.notifyListeners("onCustomizeEnd", aWindow);
   },
+  /**
+   * Check whether an area is overflowable.
+   *
+   * @param aAreaId the ID of an area to check for overflowable-ness
+   * @return true if the area is overflowable, false otherwise.
+   */
   isAreaOverflowable: function(aAreaId) {
     let area = gAreas.get(aAreaId);
     return area ? area.get("type") == this.TYPE_TOOLBAR && area.get("overflowable")
                 : false;
   },
+  /**
+   * Obtain a string indicating the place of an element. This is intended
+   * for use from customize mode; You should generally use getPlacementOfWidget
+   * instead, which is cheaper because it does not use the DOM.
+   *
+   * @param aElement the DOM node whose place we need to check
+   * @return "toolbar" if the node is in a toolbar, "panel" if it is in the
+   *         menu panel, "palette" if it is in the (visible!) customization
+   *         palette, undefined otherwise.
+   */
   getPlaceForItem: function(aElement) {
     let place;
     let node = aElement;

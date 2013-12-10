@@ -438,12 +438,6 @@ public:
   virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) { return true; }
 
   /**
-   * Returns a TextureFactoryIdentifier which describes properties of the backend
-   * used to decide what kind of texture and buffer clients to create
-   */
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier();
-
-  /**
    * returns the maximum texture size on this layer backend, or INT32_MAX
    * if there is no maximum
    */

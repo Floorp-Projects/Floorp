@@ -411,10 +411,13 @@ public class Tabs implements GeckoEventListener {
                                           message.getInt("parentId"),
                                           message.getString("title"),
                                           message.getBoolean("isPrivate"));
+
+                    // If we added the tab as a stub, we should have already
+                    // selected it, so ignore this flag for stubbed tabs.
+                    if (message.getBoolean("selected"))
+                        selectTab(id);
                 }
 
-                if (message.getBoolean("selected"))
-                    selectTab(id);
                 if (message.getBoolean("delayLoad"))
                     tab.setState(Tab.STATE_DELAYED);
                 if (message.getBoolean("desktopMode"))

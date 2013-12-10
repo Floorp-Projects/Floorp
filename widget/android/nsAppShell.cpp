@@ -259,8 +259,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         NativeEventCallback();
         break;
 
-    case AndroidGeckoEvent::SENSOR_EVENT:
-      {
+    case AndroidGeckoEvent::SENSOR_EVENT: {
         InfallibleTArray<float> values;
         mozilla::hal::SensorType type = (mozilla::hal::SensorType) curEvent->Flags();
 
@@ -371,7 +370,6 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
     case AndroidGeckoEvent::VIEWPORT:
     case AndroidGeckoEvent::BROADCAST: {
-
         if (curEvent->Characters().Length() == 0)
             break;
 
@@ -382,6 +380,57 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         const nsPromiseFlatString& data = PromiseFlatString(curEvent->CharactersExtra());
 
         obsServ->NotifyObservers(nullptr, topic.get(), data.get());
+        break;
+    }
+
+    case AndroidGeckoEvent::TELEMETRY_UI_SESSION_STOP: {
+        if (curEvent->Characters().Length() == 0)
+            break;
+
+        nsCOMPtr<nsIUITelemetryObserver> obs;
+        mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
+        if (!obs)
+            break;
+
+        obs->StopSession(
+                nsString(curEvent->Characters()).get(),
+                nsString(curEvent->CharactersExtra()).get(),
+                curEvent->Time()
+                );
+        break;
+    }
+
+    case AndroidGeckoEvent::TELEMETRY_UI_SESSION_START: {
+        if (curEvent->Characters().Length() == 0)
+            break;
+
+        nsCOMPtr<nsIUITelemetryObserver> obs;
+        mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
+        if (!obs)
+            break;
+
+        obs->StartSession(
+                nsString(curEvent->Characters()).get(),
+                curEvent->Time()
+                );
+        break;
+    }
+
+    case AndroidGeckoEvent::TELEMETRY_UI_EVENT: {
+        if (curEvent->Characters().Length() == 0)
+            break;
+
+        nsCOMPtr<nsIUITelemetryObserver> obs;
+        mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
+        if (!obs)
+            break;
+
+        obs->AddEvent(
+                nsString(curEvent->Data()).get(),
+                nsString(curEvent->Characters()).get(),
+                curEvent->Time(),
+                nsString(curEvent->CharactersExtra()).get()
+                );
         break;
     }
 

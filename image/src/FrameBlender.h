@@ -59,6 +59,20 @@ public:
   /* The total number of frames in this image. */
   uint32_t GetNumFrames() const;
 
+  /*
+   * Returns the frame's adjusted timeout. If the animation loops and the timeout
+   * falls in between a certain range then the timeout is adjusted so that
+   * it's never 0. If the animation does not loop then no adjustments are made.
+   */
+  int32_t GetTimeoutForFrame(uint32_t framenum) const;
+
+  /*
+   * Set number of times to loop the image.
+   * @note -1 means loop forever.
+   */
+  void SetLoopCount(int32_t aLoopCount);
+  int32_t GetLoopCount() const;
+
   void Discard();
 
   void SetSize(nsIntSize aSize) { mSize = aSize; }
@@ -169,6 +183,7 @@ private: // data
   nsRefPtr<FrameSequence> mFrames;
   nsIntSize mSize;
   Anim* mAnim;
+  int32_t mLoopCount;
 };
 
 } // namespace image

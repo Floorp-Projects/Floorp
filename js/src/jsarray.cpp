@@ -134,7 +134,7 @@ js::StringIsArrayIndex(JSLinearString *str, uint32_t *indexp)
 }
 
 static bool
-DoubleIndexToId(JSContext *cx, double index, MutableHandleId id)
+ToId(JSContext *cx, double index, MutableHandleId id)
 {
     if (index == uint32_t(index))
         return IndexToId(cx, uint32_t(index), id.address());
@@ -143,18 +143,26 @@ DoubleIndexToId(JSContext *cx, double index, MutableHandleId id)
     return ValueToId<CanGC>(cx, HandleValue::fromMarkedLocation(&tmp), id);
 }
 
+static bool
+ToId(JSContext *cx, uint32_t index, MutableHandleId id)
+{
+    return IndexToId(cx, index, id.address());
+}
+
 /*
  * If the property at the given index exists, get its value into location
  * pointed by vp and set *hole to false. Otherwise set *hole to true and *vp
  * to JSVAL_VOID. This function assumes that the location pointed by vp is
  * properly rooted and can be used as GC-protected storage for temporaries.
  */
+template<typename IndexType>
 static inline bool
-DoGetElement(JSContext *cx, HandleObject obj, double index, bool *hole, MutableHandleValue vp)
+DoGetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
+             IndexType index, bool *hole, MutableHandleValue vp)
 {
     RootedId id(cx);
 
-    if (!DoubleIndexToId(cx, index, &id))
+    if (!ToId(cx, index, &id))
         return false;
 
     RootedObject obj2(cx);
@@ -166,24 +174,10 @@ DoGetElement(JSContext *cx, HandleObject obj, double index, bool *hole, MutableH
         vp.setUndefined();
         *hole = true;
     } else {
-        if (!JSObject::getGeneric(cx, obj, obj, id, vp))
+        if (!JSObject::getGeneric(cx, obj, receiver, id, vp))
             return false;
         *hole = false;
     }
-    return true;
-}
-
-static inline bool
-DoGetElement(JSContext *cx, HandleObject obj, uint32_t index, bool *hole, MutableHandleValue vp)
-{
-    bool present;
-    if (!JSObject::getElementIfPresent(cx, obj, obj, index, vp, &present))
-        return false;
-
-    *hole = !present;
-    if (*hole)
-        vp.setUndefined();
-
     return true;
 }
 
@@ -203,7 +197,8 @@ AssertGreaterThanZero(uint32_t index)
 
 template<typename IndexType>
 static bool
-GetElement(JSContext *cx, HandleObject obj, IndexType index, bool *hole, MutableHandleValue vp)
+GetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
+           IndexType index, bool *hole, MutableHandleValue vp)
 {
     AssertGreaterThanZero(index);
     if (obj->isNative() && index < obj->getDenseInitializedLength()) {
@@ -220,7 +215,14 @@ GetElement(JSContext *cx, HandleObject obj, IndexType index, bool *hole, Mutable
         }
     }
 
-    return DoGetElement(cx, obj, index, hole, vp);
+    return DoGetElement(cx, obj, receiver, index, hole, vp);
+}
+
+template<typename IndexType>
+static inline bool
+GetElement(JSContext *cx, HandleObject obj, IndexType index, bool *hole, MutableHandleValue vp)
+{
+    return GetElement(cx, obj, obj, index, hole, vp);
 }
 
 static bool
@@ -296,7 +298,7 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, HandleValue v)
     }
 
     RootedId id(cx);
-    if (!DoubleIndexToId(cx, index, &id))
+    if (!ToId(cx, index, &id))
         return false;
 
     RootedValue tmp(cx, v);
@@ -2680,20 +2682,18 @@ js::array_concat(JSContext *cx, unsigned argc, Value *vp)
 static bool
 array_slice(JSContext *cx, unsigned argc, Value *vp)
 {
-    uint32_t length, begin, end, slot;
-    bool hole;
-
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
+    uint32_t length;
     if (!GetLengthProperty(cx, obj, &length))
         return false;
-    begin = 0;
-    end = length;
 
+    uint32_t begin = 0;
+    uint32_t end = length;
     if (args.length() > 0) {
         double d;
         if (!ToInteger(cx, args[0], &d))
@@ -2741,17 +2741,47 @@ array_slice(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    RootedValue value(cx);
-    for (slot = begin; slot < end; slot++) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx) ||
-            !GetElement(cx, obj, slot, &hole, &value)) {
-            return false;
+    if (js::SliceOp op = obj->getOps()->slice) {
+        // Ensure that we have dense elements, so that DOM can use js::UnsafeDefineElement.
+        JSObject::EnsureDenseResult result = narr->ensureDenseElements(cx, 0, end - begin);
+        if (result == JSObject::ED_FAILED)
+             return false;
+
+        if (result == JSObject::ED_OK) {
+            if (!op(cx, obj, begin, end, narr))
+                return false;
+
+            args.rval().setObject(*narr);
+            return true;
         }
-        if (!hole && !SetArrayElement(cx, narr, slot - begin, value))
-            return false;
+
+        // Fallthrough
+        JS_ASSERT(result == JSObject::ED_SPARSE);
     }
 
+
+    if (!SliceSlowly(cx, obj, obj, begin, end, narr))
+        return false;
+
     args.rval().setObject(*narr);
+    return true;
+}
+
+JS_FRIEND_API(bool)
+js::SliceSlowly(JSContext* cx, HandleObject obj, HandleObject receiver,
+                uint32_t begin, uint32_t end, HandleObject result)
+{
+    RootedValue value(cx);
+    for (uint32_t slot = begin; slot < end; slot++) {
+        bool hole;
+        if (!JS_CHECK_OPERATION_LIMIT(cx) ||
+            !GetElement(cx, obj, receiver, slot, &hole, &value))
+        {
+            return false;
+        }
+        if (!hole && !JSObject::defineElement(cx, result, slot - begin, value))
+            return false;
+    }
     return true;
 }
 

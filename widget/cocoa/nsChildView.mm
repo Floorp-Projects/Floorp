@@ -63,7 +63,6 @@
 #include "GLContext.h"
 #include "GLUploadHelpers.h"
 #include "mozilla/layers/GLManager.h"
-#include "mozilla/layers/CompositorCocoaWidgetHelper.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/BasicCompositor.h"
 #include "gfxUtils.h"
@@ -2047,7 +2046,7 @@ nsChildView::CleanupWindowEffects()
 }
 
 bool
-nsChildView::PreRender(LayerManager* aManager)
+nsChildView::PreRender(LayerManagerComposite* aManager)
 {
   nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
   if (!manager) {
@@ -2069,7 +2068,7 @@ nsChildView::PreRender(LayerManager* aManager)
 }
 
 void
-nsChildView::PostRender(LayerManager* aManager)
+nsChildView::PostRender(LayerManagerComposite* aManager)
 {
   nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
   if (!manager) {
@@ -2081,7 +2080,7 @@ nsChildView::PostRender(LayerManager* aManager)
 }
 
 void
-nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
+nsChildView::DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect)
 {
   nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
   if (manager) {
