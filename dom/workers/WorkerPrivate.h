@@ -377,7 +377,6 @@ private:
                       ErrorResult& aRv);
 
 public:
-
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
@@ -694,6 +693,14 @@ public:
   {
     mozilla::MutexAutoLock lock(mMutex);
     aSettings = mJSSettings;
+  }
+
+  void
+  CopyJSCompartmentOptions(JS::CompartmentOptions& aOptions)
+  {
+    mozilla::MutexAutoLock lock(mMutex);
+    aOptions = IsChromeWorker() ? mJSSettings.chrome.compartmentOptions
+                                : mJSSettings.content.compartmentOptions;
   }
 
   // The ability to be a chrome worker is orthogonal to the type of

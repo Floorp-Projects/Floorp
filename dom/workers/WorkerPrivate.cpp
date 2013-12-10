@@ -2816,16 +2816,17 @@ WorkerPrivateParent<Derived>::GetInnerWindowId()
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdateJSContextOptions(JSContext* aCx,
-                                                     const JS::ContextOptions& aContentOptions,
-                                                     const JS::ContextOptions& aChromeOptions)
+WorkerPrivateParent<Derived>::UpdateJSContextOptions(
+                                      JSContext* aCx,
+                                      const JS::ContextOptions& aContentOptions,
+                                      const JS::ContextOptions& aChromeOptions)
 {
   AssertIsOnParentThread();
 
   {
     MutexAutoLock lock(mMutex);
-    mJSSettings.content.options = aContentOptions;
-    mJSSettings.chrome.options = aChromeOptions;
+    mJSSettings.content.contextOptions = aContentOptions;
+    mJSSettings.chrome.contextOptions = aChromeOptions;
   }
 
   nsRefPtr<UpdateJSContextOptionsRunnable> runnable =
@@ -5449,14 +5450,7 @@ WorkerPrivate::CreateGlobalScope(JSContext* aCx)
     globalScope = new DedicatedWorkerGlobalScope(this);
   }
 
-  JS::CompartmentOptions options;
-  if (IsChromeWorker()) {
-    options.setVersion(JSVERSION_LATEST);
-  }
-
-  JS::Rooted<JSObject*> global(aCx,
-                               globalScope->WrapGlobalObject(aCx, options,
-                                                             GetWorkerPrincipal()));
+  JS::Rooted<JSObject*> global(aCx, globalScope->WrapGlobalObject(aCx));
   NS_ENSURE_TRUE(global, nullptr);
 
   JSAutoCompartment ac(aCx, global);
