@@ -43,7 +43,7 @@ public class GeckoEvent {
     private static final String LOGTAG = "GeckoEvent";
 
     // Make sure to keep these values in sync with the enum in
-    // AndroidGeckoEvent in widget/android/AndroidJavaWrapper.h
+    // AndroidGeckoEvent in widget/android/AndroidJavaWrappers.h
     @JNITarget
     private enum NativeGeckoEvent {
         NATIVE_POKE(0),
@@ -76,13 +76,16 @@ public class GeckoEvent {
         TELEMETRY_HISTOGRAM_ADD(37),
         PREFERENCES_OBSERVE(39),
         PREFERENCES_GET(40),
-        PREFERENCES_REMOVE_OBSERVERS(41);
+        PREFERENCES_REMOVE_OBSERVERS(41),
+        TELEMETRY_UI_SESSION_START(42),
+        TELEMETRY_UI_SESSION_STOP(43),
+        TELEMETRY_UI_EVENT(44);
 
         public final int value;
 
         private NativeGeckoEvent(int value) {
             this.value = value;
-         }
+        }
     }
 
     /**
@@ -744,6 +747,30 @@ public class GeckoEvent {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.TELEMETRY_HISTOGRAM_ADD);
         event.mCharacters = histogram;
         event.mCount = value;
+        return event;
+    }
+
+    public static GeckoEvent createTelemetryUISessionStartEvent(String session, long timestamp) {
+        GeckoEvent event = new GeckoEvent(NativeGeckoEvent.TELEMETRY_UI_SESSION_START);
+        event.mCharacters = session;
+        event.mTime = timestamp;
+        return event;
+    }
+
+    public static GeckoEvent createTelemetryUISessionStopEvent(String session, String reason, long timestamp) {
+        GeckoEvent event = new GeckoEvent(NativeGeckoEvent.TELEMETRY_UI_SESSION_STOP);
+        event.mCharacters = session;
+        event.mCharactersExtra = reason;
+        event.mTime = timestamp;
+        return event;
+    }
+
+    public static GeckoEvent createTelemetryUIEvent(String action, String method, long timestamp, String extras) {
+        GeckoEvent event = new GeckoEvent(NativeGeckoEvent.TELEMETRY_UI_EVENT);
+        event.mData = action;
+        event.mCharacters = method;
+        event.mCharactersExtra = extras;
+        event.mTime = timestamp;
         return event;
     }
 
