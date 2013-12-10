@@ -81,8 +81,8 @@ public:
    * the apzc is modifying the view, including panning, zooming, and
    * fling.
    */
-  virtual void NotifyTransformBegin() {}
-  virtual void NotifyTransformEnd() {}
+  virtual void NotifyTransformBegin(const ScrollableLayerGuid& aGuid) {}
+  virtual void NotifyTransformEnd(const ScrollableLayerGuid& aGuid) {}
 
   GeckoContentController() {}
   virtual ~GeckoContentController() {}
