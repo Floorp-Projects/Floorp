@@ -10,9 +10,7 @@
 #include "jsprf.h"
 #include "nsCxPusher.h"
 #include "nsContentUtils.h"
-#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
-#include "nsTextFormatter.h"
 
 using namespace mozilla;
 
