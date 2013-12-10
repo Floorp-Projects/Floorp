@@ -521,6 +521,20 @@ void TabParent::HandleLongTap(const CSSIntPoint& aPoint, int32_t aModifiers)
   }
 }
 
+void TabParent::NotifyTransformBegin(ViewID aViewId)
+{
+  if (!mIsDestroyed) {
+    unused << SendNotifyTransformBegin(aViewId);
+  }
+}
+
+void TabParent::NotifyTransformEnd(ViewID aViewId)
+{
+  if (!mIsDestroyed) {
+    unused << SendNotifyTransformEnd(aViewId);
+  }
+}
+
 void
 TabParent::Activate()
 {
