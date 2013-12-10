@@ -2571,8 +2571,22 @@ FilterNodeArithmeticCombineSoftware::RequestFromInputsForRect(const IntRect &aRe
 IntRect
 FilterNodeArithmeticCombineSoftware::GetOutputRectInRect(const IntRect& aRect)
 {
-  return GetInputRectInRect(IN_ARITHMETIC_COMBINE_IN, aRect).Union(
-    GetInputRectInRect(IN_ARITHMETIC_COMBINE_IN2, aRect)).Intersect(aRect);
+  if (mK4 > 0.0f) {
+    return aRect;
+  }
+  IntRect rectFrom1 = GetInputRectInRect(IN_ARITHMETIC_COMBINE_IN, aRect).Intersect(aRect);
+  IntRect rectFrom2 = GetInputRectInRect(IN_ARITHMETIC_COMBINE_IN2, aRect).Intersect(aRect);
+  IntRect result;
+  if (mK1 > 0.0f) {
+    result = rectFrom1.Intersect(rectFrom2);
+  }
+  if (mK2 > 0.0f) {
+    result = result.Union(rectFrom1);
+  }
+  if (mK3 > 0.0f) {
+    result = result.Union(rectFrom2);
+  }
+  return result;
 }
 
 FilterNodeCompositeSoftware::FilterNodeCompositeSoftware()
