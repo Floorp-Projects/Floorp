@@ -2157,19 +2157,19 @@ GLContext::ReadPixelsIntoImageSurface(gfxImageSurface* dest)
         if (DebugMode()) {
             NS_WARNING("Needing intermediary surface for ReadPixels. This will be slow!");
         }
-        ImageFormat readFormatGFX;
+        SurfaceFormat readFormatGFX;
 
         switch (readFormat) {
             case LOCAL_GL_RGBA:
             case LOCAL_GL_BGRA: {
-                readFormatGFX = hasAlpha ? gfxImageFormatARGB32
-                                         : gfxImageFormatRGB24;
+                readFormatGFX = hasAlpha ? FORMAT_B8G8R8A8
+                                         : FORMAT_B8G8R8X8;
                 break;
             }
             case LOCAL_GL_RGB: {
                 MOZ_ASSERT(readPixelSize == 2);
                 MOZ_ASSERT(readType == LOCAL_GL_UNSIGNED_SHORT_5_6_5_REV);
-                readFormatGFX = gfxImageFormatRGB16_565;
+                readFormatGFX = FORMAT_R5G6B5;
                 break;
             }
             default: {
@@ -2198,7 +2198,9 @@ GLContext::ReadPixelsIntoImageSurface(gfxImageSurface* dest)
             }
         }
 
-        tempSurf = new gfxImageSurface(dest->GetSize(), readFormatGFX, false);
+        tempSurf = new gfxImageSurface(dest->GetSize(),
+                                       gfxImageFormat(readFormatGFX),
+                                       false);
         readSurf = tempSurf;
     } else {
         readPixelSize = destPixelSize;
