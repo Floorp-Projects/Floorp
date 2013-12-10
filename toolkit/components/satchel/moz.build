@@ -44,3 +44,5 @@ EXTRA_PP_JS_MODULES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+JAR_MANIFESTS += ['jar.mn']

@@ -10,3 +10,5 @@ JS_MODULES_PATH  = 'modules/tabview'
 BROWSER_CHROME_MANIFESTS += [
     'test/browser.ini',
 ]
+
+JAR_MANIFESTS += ['jar.mn']

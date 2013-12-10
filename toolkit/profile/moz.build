@@ -28,3 +28,5 @@ LOCAL_INCLUDES += [
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xulapp_s'
+
+JAR_MANIFESTS += ['jar.mn']

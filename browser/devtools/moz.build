@@ -30,3 +30,5 @@ EXTRA_COMPONENTS += [
     'devtools-clhandler.js',
     'devtools-clhandler.manifest',
 ]
+
+JAR_MANIFESTS += ['jar.mn']

@@ -24,3 +24,4 @@ EXTRA_PP_JS_MODULES += [
     'DownloadTaskbarProgress.jsm',
 ]
 
+JAR_MANIFESTS += ['jar.mn']
