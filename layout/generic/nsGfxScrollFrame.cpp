@@ -2058,13 +2058,15 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange)
 
 static void
 AppendToTop(nsDisplayListBuilder* aBuilder, nsDisplayList* aDest,
-            nsDisplayList* aSource, nsIFrame* aSourceFrame, bool aOwnLayer)
+            nsDisplayList* aSource, nsIFrame* aSourceFrame, bool aOwnLayer,
+            uint32_t aFlags, mozilla::layers::FrameMetrics::ViewID aScrollTargetId)
 {
   if (aSource->IsEmpty())
     return;
   if (aOwnLayer) {
     aDest->AppendNewToTop(
-        new (aBuilder) nsDisplayOwnLayer(aBuilder, aSourceFrame, aSource));
+        new (aBuilder) nsDisplayOwnLayer(aBuilder, aSourceFrame, aSource,
+                                         aFlags, aScrollTargetId));
   } else {
     aDest->AppendToTop(aSource);
   }
@@ -2113,6 +2115,10 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     scrollParts.AppendElement(kid);
   }
 
+  mozilla::layers::FrameMetrics::ViewID scrollTargetId = aCreateLayer
+    ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
+    : mozilla::layers::FrameMetrics::NULL_SCROLL_ID;
+
   scrollParts.Sort(HoveredStateComparator());
 
   for (uint32_t i = 0; i < scrollParts.Length(); ++i) {
@@ -2129,11 +2135,19 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     nsDisplayList* dest = appendToPositioned ?
       aLists.PositionedDescendants() : aLists.BorderBackground();
 
+    uint32_t flags = 0;
+    if (scrollParts[i] == mVScrollbarBox) {
+      flags |= nsDisplayOwnLayer::VERTICAL_SCROLLBAR;
+    }
+    if (scrollParts[i] == mHScrollbarBox) {
+      flags |= nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR;
+    }
+
     // DISPLAY_CHILD_FORCE_STACKING_CONTEXT put everything into
     // partList.PositionedDescendants().
     ::AppendToTop(aBuilder, dest,
                   partList.PositionedDescendants(), scrollParts[i],
-                  aCreateLayer);
+                  aCreateLayer, flags, scrollTargetId);
   }
 }
 
