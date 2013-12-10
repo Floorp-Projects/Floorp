@@ -174,7 +174,7 @@ jit::EnterBaselineAtBranch(JSContext *cx, StackFrame *fp, jsbytecode *pc)
         data.jitcode += MacroAssembler::ToggledCallSize();
 
     data.osrFrame = fp;
-    data.osrNumStackValues = fp->script()->nfixed + cx->interpreterRegs().stackDepth();
+    data.osrNumStackValues = fp->script()->nfixed() + cx->interpreterRegs().stackDepth();
 
     RootedValue thisv(cx);
 
@@ -247,7 +247,7 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, bool osr)
 {
     // Limit the locals on a given script so that stack check on baseline frames        
     // doesn't overflow a uint32_t value.
-    static_assert(sizeof(script->nslots) == sizeof(uint16_t), "script->nslots may get too large!");
+    JS_ASSERT(script->nslots() <= UINT16_MAX);
 
     JS_ASSERT(jit::IsBaselineEnabled(cx));
 
@@ -747,7 +747,7 @@ BaselineScript::toggleDebugTraps(JSScript *script, jsbytecode *pc)
     if (!debugMode())
         return;
 
-    SrcNoteLineScanner scanner(script->notes(), script->lineno);
+    SrcNoteLineScanner scanner(script->notes(), script->lineno());
 
     JSRuntime *rt = script->runtimeFromMainThread();
     IonContext ictx(CompileRuntime::get(rt),

@@ -892,7 +892,7 @@ EmitAliasedVarOp(ExclusiveContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *
         }
     } else {
         JS_ASSERT(pn->isDefn());
-        JS_ASSERT(pn->pn_cookie.level() == bce->script->staticLevel);
+        JS_ASSERT(pn->pn_cookie.level() == bce->script->staticLevel());
     }
 
     ScopeCoordinate sc;
@@ -939,7 +939,7 @@ EmitVarOp(ExclusiveContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
     if (!bce->isAliasedName(pn)) {
         JS_ASSERT(pn->isUsed() || pn->isDefn());
         JS_ASSERT_IF(pn->isUsed(), pn->pn_cookie.level() == 0);
-        JS_ASSERT_IF(pn->isDefn(), pn->pn_cookie.level() == bce->script->staticLevel);
+        JS_ASSERT_IF(pn->isDefn(), pn->pn_cookie.level() == bce->script->staticLevel());
         return EmitUnaliasedVarOp(cx, op, pn->pn_cookie.slot(), bce);
     }
 
@@ -1012,7 +1012,7 @@ BytecodeEmitter::isAliasedName(ParseNode *pn)
     JS_ASSERT(dn->isBound());
 
     /* If dn is in an enclosing function, it is definitely aliased. */
-    if (dn->pn_cookie.level() != script->staticLevel)
+    if (dn->pn_cookie.level() != script->staticLevel())
         return true;
 
     switch (dn->kind()) {
@@ -1428,7 +1428,7 @@ BindNameToSlotHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * Currently, the ALIASEDVAR ops do not support accessing the
          * callee of a DeclEnvObject, so use NAME.
          */
-        if (dn->pn_cookie.level() != bce->script->staticLevel)
+        if (dn->pn_cookie.level() != bce->script->staticLevel())
             return true;
 
         DebugOnly<JSFunction *> fun = bce->sc->asFunctionBox()->function();
@@ -1481,7 +1481,7 @@ BindNameToSlotHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * the definition is the number of function scopes between the current
      * scope and dn's scope.
      */
-    unsigned skip = bce->script->staticLevel - dn->pn_cookie.level();
+    unsigned skip = bce->script->staticLevel() - dn->pn_cookie.level();
     JS_ASSERT_IF(skip, dn->isClosed());
 
     /*
@@ -4817,7 +4817,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             Rooted<JSObject*> enclosingScope(cx, EnclosingStaticScope(bce));
             Rooted<JSObject*> sourceObject(cx, bce->script->sourceObject());
             Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false, options,
-                                                          parent->staticLevel + 1,
+                                                          parent->staticLevel() + 1,
                                                           sourceObject,
                                                           funbox->bufStart, funbox->bufEnd));
             if (!script)

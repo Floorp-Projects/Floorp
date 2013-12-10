@@ -89,7 +89,7 @@ probes::StartExecution(JSScript *script)
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_EXECUTE_START_ENABLED())
         JAVASCRIPT_EXECUTE_START((script->filename() ? (char *)script->filename() : nullName),
-                                 script->lineno);
+                                 script->lineno());
 #endif
 
     return ok;
@@ -103,7 +103,7 @@ probes::StopExecution(JSScript *script)
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_EXECUTE_DONE_ENABLED())
         JAVASCRIPT_EXECUTE_DONE((script->filename() ? (char *)script->filename() : nullName),
-                                script->lineno);
+                                script->lineno());
 #endif
 
     return ok;
