@@ -1,0 +1,77 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for JSVersion in workers - Bug 487070</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" language="javascript">
+
+  var gExpectedError = false;
+  var gLatestVersion = false;
+
+  onerror = function(evt) {
+    ok(gExpectedError, "Error expected!");
+    runTest();
+  }
+
+  function doMagic() {
+    var worker = new Worker('jsversion_worker.js');
+    worker.onmessage = function(evt) {
+      ok(evt.data, 'All the tests passed');
+      runTest();
+    }
+    worker.postMessage(1);
+  }
+
+  var tests = [
+    // No custom version
+    function() {
+      gExpectedError = true;
+      doMagic(true);
+    },
+
+    // Enable latest JS Version
+    function() {
+      gExpectedError = false;
+      try {
+        gLatestVersion = SpecialPowers.getBoolPref('dom.workers.latestJSVersion');
+      } catch(e) {}
+
+      SpecialPowers.setBoolPref('dom.workers.latestJSVersion', true);
+      doMagic(false);
+    },
+
+    function() {
+      SpecialPowers.setBoolPref('dom.workers.latestJSVersion', gLatestVersion);
+      runTest();
+    }
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTest();
+
+</script>
+</pre>
+</body>
+</html>
