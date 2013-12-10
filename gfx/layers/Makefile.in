@@ -24,7 +24,7 @@ CXXFLAGS += \
         -I$(ANDROID_SOURCE)/frameworks/native/include/media/openmax \
         $(NULL)
 
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) $(TK_CFLAGS)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 
 ifdef _MSC_VER
 ifeq ($(CPU_ARCH),x86_64)

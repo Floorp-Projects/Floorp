@@ -6,4 +6,4 @@
 include $(topsrcdir)/config/rules.mk
 
 # Because imgFrame.cpp includes "cairo.h"
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS)

@@ -6,8 +6,7 @@
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS          += $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
-CXXFLAGS        += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) \
-		               $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
+CXXFLAGS        += $(MOZ_CAIRO_CFLAGS) $(MOZ_STARTUP_NOTIFICATION_CFLAGS)
 
 CFLAGS          += $(TK_CFLAGS)
 CXXFLAGS        += $(TK_CFLAGS)
