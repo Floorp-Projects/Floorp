@@ -1269,6 +1269,9 @@ PostFilterExtentsForPrimitive(const FilterPrimitiveDescription& aDescription,
           return ThebesIntRect(aDescription.PrimitiveSubregion());
         }
       }
+      if (op == SVG_FECOMPOSITE_OPERATOR_IN) {
+        return aInputExtents[0].Intersect(aInputExtents[1]);
+      }
       return ResultChangeRegionForPrimitive(aDescription, aInputExtents);
     }
 
