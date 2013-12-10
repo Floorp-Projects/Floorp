@@ -410,7 +410,7 @@ IonCache::linkAndAttachStub(JSContext *cx, MacroAssembler &masm, StubAttacher &a
 
     if (pc_) {
         IonSpew(IonSpew_InlineCaches, "Cache %p(%s:%d/%d) generated %s %s stub at %p",
-                this, script_->filename(), script_->lineno, script_->pcToOffset(pc_),
+                this, script_->filename(), script_->lineno(), script_->pcToOffset(pc_),
                 attachKind, CacheName(kind()), code->raw());
     } else {
         IonSpew(IonSpew_InlineCaches, "Cache %p generated %s %s stub at %p",
@@ -1744,7 +1744,7 @@ GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
         //    be complicated since (due to GVN) there can be multiple pc's
         //    associated with a single idempotent cache.
         IonSpew(IonSpew_InlineCaches, "Invalidating from idempotent cache %s:%d",
-                topScript->filename(), topScript->lineno);
+                topScript->filename(), topScript->lineno());
 
         topScript->invalidatedIdempotentCache = true;
 

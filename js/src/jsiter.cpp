@@ -1562,7 +1562,7 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
                    (-1 + /* one Value included in JSGenerator */
                     vplen +
                     VALUES_PER_STACK_FRAME +
-                    stackfp->script()->nslots) * sizeof(HeapValue);
+                    stackfp->script()->nslots()) * sizeof(HeapValue);
 
     JS_ASSERT(nbytes % sizeof(Value) == 0);
     JS_STATIC_ASSERT(sizeof(StackFrame) % sizeof(HeapValue) == 0);

@@ -40,6 +40,8 @@ jit::SplitCriticalEdges(MIRGraph &graph)
 
             // Create a new block inheriting from the predecessor.
             MBasicBlock *split = MBasicBlock::NewSplitEdge(graph, block->info(), *block);
+            if (!split)
+                return false;
             split->setLoopDepth(block->loopDepth());
             graph.insertBlockAfter(*block, split);
             split->end(MGoto::New(graph.alloc(), target));

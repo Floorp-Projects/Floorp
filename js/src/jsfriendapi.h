@@ -155,7 +155,7 @@ js_AddObjectRoot(JSRuntime *rt, JSObject **objp);
 JS_FRIEND_API(void)
 js_RemoveObjectRoot(JSRuntime *rt, JSObject **objp);
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
 
 /*
  * Routines to print out values during debugging.  These are FRIEND_API to help
@@ -492,7 +492,7 @@ GetGlobalForObjectCrossCompartment(JSObject *obj);
 JS_FRIEND_API(void)
 AssertSameCompartment(JSContext *cx, JSObject *obj);
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
 JS_FRIEND_API(void)
 AssertSameCompartment(JSObject *objA, JSObject *objB);
 #else
@@ -799,7 +799,7 @@ CastToJSFreeOp(FreeOp *fop)
 extern JS_FRIEND_API(const jschar*)
 GetErrorTypeName(JSRuntime* rt, int16_t exnType);
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
 extern JS_FRIEND_API(unsigned)
 GetEnterCompartmentDepth(JSContext* cx);
 #endif
@@ -1712,7 +1712,7 @@ class JS_FRIEND_API(AutoCTypesActivityCallback) {
     }
 };
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
 extern JS_FRIEND_API(void)
 assertEnteredPolicy(JSContext *cx, JSObject *obj, jsid id);
 #else
