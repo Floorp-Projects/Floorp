@@ -40,7 +40,8 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   virtual JSObject*
-  WrapGlobalObject(JSContext* aCx) = 0;
+  WrapGlobalObject(JSContext* aCx, JS::CompartmentOptions& aOptions,
+                   JSPrincipals* aPrincipal) = 0;
 
   virtual JSObject*
   GetGlobalJSObject(void) MOZ_OVERRIDE
@@ -114,7 +115,8 @@ public:
   Visible(JSContext* aCx, JSObject* aObj);
 
   virtual JSObject*
-  WrapGlobalObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapGlobalObject(JSContext* aCx, JS::CompartmentOptions& aOptions,
+                   JSPrincipals* aPrincipal) MOZ_OVERRIDE;
 
   void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
@@ -137,7 +139,8 @@ public:
   Visible(JSContext* aCx, JSObject* aObj);
 
   virtual JSObject*
-  WrapGlobalObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapGlobalObject(JSContext* aCx, JS::CompartmentOptions& aOptions,
+                   JSPrincipals* aPrincipal) MOZ_OVERRIDE;
 
   void GetName(DOMString& aName) const {
     aName.AsAString() = mName;
