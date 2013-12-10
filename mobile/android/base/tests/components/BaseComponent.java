@@ -19,7 +19,7 @@ import android.app.Activity;
  * (e.g. clicking the toolbar, entering a url, and waiting for page load).
  */
 public abstract class BaseComponent {
-    private final UITestContext mTestContext;
+    protected final UITestContext mTestContext;
     protected final Activity mActivity;
     protected final Solo mSolo;
     protected final Actions mActions;
@@ -29,9 +29,5 @@ public abstract class BaseComponent {
         mActivity = mTestContext.getActivity();
         mSolo = mTestContext.getSolo();
         mActions = mTestContext.getActions();
-    }
-
-    protected UITestContext getTestContext() {
-        return mTestContext;
     }
 }
