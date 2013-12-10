@@ -681,7 +681,7 @@ NS_IMETHODIMP nsPrefBranch::Observe(nsISupports *aSubject, const char *aTopic, c
 }
 
 /* static */
-void nsPrefBranch::NotifyObserver(const char *newpref, void *data)
+nsresult nsPrefBranch::NotifyObserver(const char *newpref, void *data)
 {
   PrefCallback *pCallback = (PrefCallback *)data;
 
@@ -689,7 +689,7 @@ void nsPrefBranch::NotifyObserver(const char *newpref, void *data)
   if (!observer) {
     // The observer has expired.  Let's remove this callback.
     pCallback->GetPrefBranch()->RemoveExpiredCallback(pCallback);
-    return;
+    return NS_OK;
   }
 
   // remove any root this string may contain so as to not confuse the observer
@@ -700,6 +700,7 @@ void nsPrefBranch::NotifyObserver(const char *newpref, void *data)
   observer->Observe(static_cast<nsIPrefBranch *>(pCallback->GetPrefBranch()),
                     NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
                     NS_ConvertASCIItoUTF16(suffix).get());
+  return NS_OK;
 }
 
 PLDHashOperator
