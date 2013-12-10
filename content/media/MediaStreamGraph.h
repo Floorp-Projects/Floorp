@@ -959,7 +959,9 @@ public:
    * Also, we've produced output for all streams up to this one. If this stream
    * is not in a cycle, then all its source streams have produced data.
    * Generate output from aFrom to aTo.
-   * This is called only on streams that have not finished.
+   * This will be called on streams that have finished. Most stream types should
+   * just return immediately if IsFinishedOnGraphThread(), but some may wish to
+   * update internal state (see AudioNodeStream).
    * ProduceOutput is allowed to call FinishOnGraphThread only if ALLOW_FINISH
    * is in aFlags. (This flag will be set when aTo >= mStateComputedTime, i.e.
    * when we've producing the last block of data we need to produce.) Otherwise

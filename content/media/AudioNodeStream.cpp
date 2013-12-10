@@ -269,8 +269,7 @@ AudioNodeStream::ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex)
     MediaStream* s = mInputs[i]->GetSource();
     AudioNodeStream* a = static_cast<AudioNodeStream*>(s);
     MOZ_ASSERT(a == s->AsAudioNodeStream());
-    if (a->IsFinishedOnGraphThread() ||
-        a->IsAudioParamStream()) {
+    if (a->IsAudioParamStream()) {
       continue;
     }
 
@@ -408,7 +407,7 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
   uint16_t outputCount = std::max(uint16_t(1), mEngine->OutputCount());
   mLastChunks.SetLength(outputCount);
 
-  if (mMuted) {
+  if (mMuted || IsFinishedOnGraphThread()) {
     for (uint16_t i = 0; i < outputCount; ++i) {
       mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
     }

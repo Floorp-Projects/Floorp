@@ -41,6 +41,9 @@ public:
   }
   virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) MOZ_OVERRIDE
   {
+    if (IsFinishedOnGraphThread()) {
+      return;
+    }
     nsAutoTArray<bool,8> mappedTracksFinished;
     nsAutoTArray<bool,8> mappedTracksWithMatchingInputTracks;
     for (uint32_t i = 0; i < mTrackMap.Length(); ++i) {
