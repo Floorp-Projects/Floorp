@@ -3458,6 +3458,13 @@ MOZ_ARG_ENABLE_BOOL(vtune,
     MOZ_VTUNE= )
 
 dnl ========================================================
+dnl Debug (see Bug 939505)
+dnl ========================================================
+if test -n "$MOZ_DEBUG"; then
+    AC_DEFINE(JS_DEBUG)
+fi
+
+dnl ========================================================
 dnl Profiling
 dnl ========================================================
 if test -n "$MOZ_PROFILING"; then

@@ -99,7 +99,7 @@ StackFrame::copyFrameAndValues(JSContext *cx, Value *vp, StackFrame *otherfp,
 {
     JS_ASSERT(othervp == otherfp->generatorArgsSnapshotBegin());
     JS_ASSERT(othersp >= otherfp->slots());
-    JS_ASSERT(othersp <= otherfp->generatorSlotsSnapshotBegin() + otherfp->script()->nslots);
+    JS_ASSERT(othersp <= otherfp->generatorSlotsSnapshotBegin() + otherfp->script()->nslots());
 
     /* Copy args, StackFrame, and slots. */
     const Value *srcend = otherfp->generatorArgsSnapshotEnd();
@@ -179,10 +179,10 @@ StackFrame::maybeSuspendedGenerator(JSRuntime *rt)
 bool
 StackFrame::copyRawFrameSlots(AutoValueVector *vec)
 {
-    if (!vec->resize(numFormalArgs() + script()->nfixed))
+    if (!vec->resize(numFormalArgs() + script()->nfixed()))
         return false;
     PodCopy(vec->begin(), argv(), numFormalArgs());
-    PodCopy(vec->begin() + numFormalArgs(), slots(), script()->nfixed);
+    PodCopy(vec->begin() + numFormalArgs(), slots(), script()->nfixed());
     return true;
 }
 
@@ -497,7 +497,7 @@ InterpreterStack::pushExecuteFrame(JSContext *cx, HandleScript script, const Val
 {
     LifoAlloc::Mark mark = allocator_.mark();
 
-    unsigned nvars = 2 /* callee, this */ + script->nslots;
+    unsigned nvars = 2 /* callee, this */ + script->nslots();
     uint8_t *buffer = allocateFrame(cx, sizeof(StackFrame) + nvars * sizeof(Value));
     if (!buffer)
         return nullptr;
@@ -1206,9 +1206,9 @@ ScriptFrameIter::numFrameSlots() const
      case JIT: {
 #ifdef JS_ION
         if (data_.ionFrames_.isOptimizedJS())
-            return ionInlineFrames_.snapshotIterator().slots() - ionInlineFrames_.script()->nfixed;
+            return ionInlineFrames_.snapshotIterator().slots() - ionInlineFrames_.script()->nfixed();
         jit::BaselineFrame *frame = data_.ionFrames_.baselineFrame();
-        return frame->numValueSlots() - data_.ionFrames_.script()->nfixed;
+        return frame->numValueSlots() - data_.ionFrames_.script()->nfixed();
 #else
         break;
 #endif
@@ -1230,11 +1230,11 @@ ScriptFrameIter::frameSlotValue(size_t index) const
 #ifdef JS_ION
         if (data_.ionFrames_.isOptimizedJS()) {
             jit::SnapshotIterator si(ionInlineFrames_.snapshotIterator());
-            index += ionInlineFrames_.script()->nfixed;
+            index += ionInlineFrames_.script()->nfixed();
             return si.maybeReadSlotByIndex(index);
         }
 
-        index += data_.ionFrames_.script()->nfixed;
+        index += data_.ionFrames_.script()->nfixed();
         return *data_.ionFrames_.baselineFrame()->valueSlot(index);
 #else
         break;
@@ -1290,11 +1290,11 @@ js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script,
     if (!checkAliasing)
         return;
 
-    JS_ASSERT(i < script->nslots);
-    if (i < script->nfixed) {
+    JS_ASSERT(i < script->nslots());
+    if (i < script->nfixed()) {
         JS_ASSERT(!script->varIsAliased(i));
     } else {
-        unsigned depth = i - script->nfixed;
+        unsigned depth = i - script->nfixed();
         for (StaticBlockObject *b = maybeBlock; b; b = b->enclosingBlock()) {
             if (b->containsVarAtDepth(depth)) {
                 JS_ASSERT(!b->isAliased(depth - b->stackDepth()));

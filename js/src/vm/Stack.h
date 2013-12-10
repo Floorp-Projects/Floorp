@@ -380,7 +380,7 @@ class StackFrame
      */
   public:
     Value *slots() const { return (Value *)(this + 1); }
-    Value *base() const { return slots() + script()->nfixed; }
+    Value *base() const { return slots() + script()->nfixed(); }
     Value *argv() const { return argv_; }
 
   private:
@@ -483,7 +483,7 @@ class StackFrame
     }
 
     bool isDirectEvalFrame() const {
-        return isEvalFrame() && script()->staticLevel > 0;
+        return isEvalFrame() && script()->staticLevel() > 0;
     }
 
     bool isNonStrictDirectEvalFrame() const {
@@ -1021,7 +1021,7 @@ class FrameRegs
     }
 
     Value *spForStackDepth(unsigned depth) const {
-        JS_ASSERT(fp_->script()->nfixed + depth <= fp_->script()->nslots);
+        JS_ASSERT(fp_->script()->nfixed() + depth <= fp_->script()->nslots());
         return fp_->base() + depth;
     }
 
@@ -1041,7 +1041,7 @@ class FrameRegs
     }
     void prepareToRun(StackFrame &fp, JSScript *script) {
         pc = script->code();
-        sp = fp.slots() + script->nfixed;
+        sp = fp.slots() + script->nfixed();
         fp_ = &fp;
     }
 
