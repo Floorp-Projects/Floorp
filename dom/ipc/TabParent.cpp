@@ -15,7 +15,6 @@
 #include "mozilla/BrowserElementParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/Hal.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -522,6 +521,20 @@ void TabParent::HandleLongTap(const CSSIntPoint& aPoint, int32_t aModifiers)
   }
 }
 
+void TabParent::NotifyTransformBegin(ViewID aViewId)
+{
+  if (!mIsDestroyed) {
+    unused << SendNotifyTransformBegin(aViewId);
+  }
+}
+
+void TabParent::NotifyTransformEnd(ViewID aViewId)
+{
+  if (!mIsDestroyed) {
+    unused << SendNotifyTransformEnd(aViewId);
+  }
+}
+
 void
 TabParent::Activate()
 {
@@ -580,10 +593,9 @@ TabParent::DeallocPDocumentRendererParent(PDocumentRendererParent* actor)
 }
 
 PContentPermissionRequestParent*
-TabParent::AllocPContentPermissionRequestParent(const InfallibleTArray<PermissionRequest>& aRequests,
-                                                const IPC::Principal& aPrincipal)
+TabParent::AllocPContentPermissionRequestParent(const nsCString& type, const nsCString& access, const IPC::Principal& principal)
 {
-  return CreateContentPermissionRequestParent(aRequests, mFrameElement, aPrincipal);
+  return new ContentPermissionRequestParent(type, access, mFrameElement, principal);
 }
 
 bool

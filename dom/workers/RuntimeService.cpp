@@ -27,6 +27,7 @@
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/AtomList.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ErrorEventBinding.h"
@@ -766,6 +767,53 @@ CTypesActivityCallback(JSContext* aCx,
   }
 }
 
+static nsIPrincipal*
+GetPrincipalForAsmJSCacheOp()
+{
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  if (!workerPrivate) {
+    return nullptr;
+  }
+
+  // asmjscache::OpenEntryForX guarnatee to only access the given nsIPrincipal
+  // from the main thread.
+  return workerPrivate->GetPrincipalDontAssertMainThread();
+}
+
+static bool
+AsmJSCacheOpenEntryForRead(JS::Handle<JSObject*> aGlobal,
+                           const jschar* aBegin,
+                           const jschar* aLimit,
+                           size_t* aSize,
+                           const uint8_t** aMemory,
+                           intptr_t *aHandle)
+{
+  nsIPrincipal* principal = GetPrincipalForAsmJSCacheOp();
+  if (!principal) {
+    return false;
+  }
+
+  return asmjscache::OpenEntryForRead(principal, aBegin, aLimit, aSize, aMemory,
+                                      aHandle);
+}
+
+static bool
+AsmJSCacheOpenEntryForWrite(JS::Handle<JSObject*> aGlobal,
+                            const jschar* aBegin,
+                            const jschar* aEnd,
+                            size_t aSize,
+                            uint8_t** aMemory,
+                            intptr_t* aHandle)
+{
+  nsIPrincipal* principal = GetPrincipalForAsmJSCacheOp();
+  if (!principal) {
+    return false;
+  }
+
+  return asmjscache::OpenEntryForWrite(principal, aBegin, aEnd, aSize, aMemory,
+                                       aHandle);
+}
+
 struct WorkerThreadRuntimePrivate : public PerThreadAtomCache
 {
   WorkerPrivate* mWorkerPrivate;
@@ -807,6 +855,16 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     InstanceClassHasProtoAtDepth
   };
   SetDOMCallbacks(aRuntime, &DOMCallbacks);
+
+  // Set up the asm.js cache callbacks
+  static JS::AsmJSCacheOps asmJSCacheOps = {
+    AsmJSCacheOpenEntryForRead,
+    asmjscache::CloseEntryForRead,
+    AsmJSCacheOpenEntryForWrite,
+    asmjscache::CloseEntryForWrite,
+    asmjscache::GetBuildId
+  };
+  JS::SetAsmJSCacheOps(aRuntime, &asmJSCacheOps);
 
   JSContext* workerCx = JS_NewContext(aRuntime, 0);
   if (!workerCx) {

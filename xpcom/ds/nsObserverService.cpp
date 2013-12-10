@@ -168,11 +168,11 @@ nsObserverService::CollectReports(nsIHandleReportCallback* aHandleReport,
 // nsObserverService Implementation
 
 
-NS_IMPL_ISUPPORTS_INHERITED2(
+NS_IMPL_ISUPPORTS3(
     nsObserverService,
-    MemoryMultiReporter,
     nsIObserverService,
-    nsObserverService)
+    nsObserverService,
+    nsIMemoryReporter)
 
 nsObserverService::nsObserverService() :
     mShuttingDown(false)

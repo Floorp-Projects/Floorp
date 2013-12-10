@@ -94,7 +94,7 @@ using mozilla::AutoSafeJSContext;
 USING_WORKERS_NAMESPACE
 using namespace mozilla::dom;
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsWorkerMallocSizeOf)
+MOZ_DEFINE_MALLOC_SIZE_OF(JsWorkerMallocSizeOf)
 
 namespace {
 
@@ -2006,8 +2006,10 @@ struct WorkerPrivate::TimeoutInfo
   bool mCanceled;
 };
 
-class WorkerPrivate::MemoryReporter MOZ_FINAL : public MemoryMultiReporter
+class WorkerPrivate::MemoryReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  NS_DECL_THREADSAFE_ISUPPORTS
+
   friend class WorkerPrivate;
 
   SharedMutex mMutex;
@@ -2118,6 +2120,8 @@ private:
     mRtPath.Insert(addonId, explicitLength);
   }
 };
+
+NS_IMPL_ISUPPORTS1(WorkerPrivate::MemoryReporter, nsIMemoryReporter)
 
 template <class Derived>
 WorkerPrivateParent<Derived>::WorkerPrivateParent(

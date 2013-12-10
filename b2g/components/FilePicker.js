@@ -47,8 +47,8 @@ FilePicker.prototype = {
   /* members */
 
   mParent: undefined,
-  mExtraProps: {},
-  mFilterTypes: [],
+  mExtraProps: undefined,
+  mFilterTypes: undefined,
   mFileEnumerator: undefined,
   mFilePickerShownCallback: undefined,
 
@@ -56,6 +56,8 @@ FilePicker.prototype = {
 
   init: function(parent, title, mode) {
     this.mParent = parent;
+    this.mExtraProps = {};
+    this.mFilterTypes = [];
     this.mMode = mode;
 
     if (mode != Ci.nsIFilePicker.modeOpen &&
@@ -177,12 +179,13 @@ FilePicker.prototype = {
       return;
     }
 
-    var mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-    var mimeInfo = mimeSvc.getFromTypeAndExtension(data.result.blob.type, '');
-
     var name = 'blob';
-    if (mimeInfo) {
-      name += '.' + mimeInfo.primaryExtension;
+    if (data.result.blob.type) {
+      let mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+      let mimeInfo = mimeSvc.getFromTypeAndExtension(data.result.blob.type, '');
+      if (mimeInfo) {
+        name += '.' + mimeInfo.primaryExtension;
+      }
     }
 
     let file = new this.mParent.File(data.result.blob,
