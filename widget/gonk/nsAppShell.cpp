@@ -233,6 +233,7 @@ private:
 
     uint32_t mDOMKeyCode;
     KeyNameIndex mDOMKeyNameIndex;
+    PRUnichar mDOMPrintableKeyValue;
 
     bool IsKeyPress() const
     {
@@ -244,6 +245,7 @@ private:
     }
 
     uint32_t CharCode() const;
+    PRUnichar PrintableKeyValue() const;
 
     void DispatchKeyDownEvent();
     void DispatchKeyUpEvent();
@@ -254,9 +256,12 @@ KeyEventDispatcher::KeyEventDispatcher(const UserInputData& aData,
                                        KeyCharacterMap* aKeyCharMap) :
     mData(aData), mKeyCharMap(aKeyCharMap)
 {
+    // XXX Printable key's keyCode value should be computed with actual
+    //     input character.
     mDOMKeyCode = (mData.key.keyCode < ArrayLength(kKeyMapping)) ?
         kKeyMapping[mData.key.keyCode] : 0;
     mDOMKeyNameIndex = GetKeyNameIndex(mData.key.keyCode);
+    mDOMPrintableKeyValue = PrintableKeyValue();
 }
 
 uint32_t
@@ -265,8 +270,31 @@ KeyEventDispatcher::CharCode() const
     if (!mKeyCharMap.get()) {
         return 0;
     }
+    // XXX If the charCode is not a printable character, the charCode should be
+    //     computed without Ctrl/Alt/Meta modifiers.
     char16_t ch = mKeyCharMap->getCharacter(mData.key.keyCode, mData.metaState);
     return (ch >= ' ') ? static_cast<uint32_t>(ch) : 0;
+}
+
+PRUnichar
+KeyEventDispatcher::PrintableKeyValue() const
+{
+    if (mDOMKeyNameIndex != KEY_NAME_INDEX_USE_STRING || !mKeyCharMap.get()) {
+        return 0;
+    }
+    char16_t ch = mKeyCharMap->getCharacter(mData.key.keyCode, mData.metaState);
+    if (ch >= ' ') {
+        return static_cast<PRUnichar>(ch);
+    }
+    int32_t unmodifiedMetaState = mData.metaState &
+        ~(AMETA_ALT_ON | AMETA_ALT_LEFT_ON | AMETA_ALT_RIGHT_ON |
+          AMETA_CTRL_ON | AMETA_CTRL_LEFT_ON | AMETA_CTRL_RIGHT_ON |
+          AMETA_META_ON | AMETA_META_LEFT_ON | AMETA_META_RIGHT_ON);
+    if (unmodifiedMetaState == mData.metaState) {
+        return 0;
+    }
+    ch = mKeyCharMap->getCharacter(mData.key.keyCode, unmodifiedMetaState);
+    return (ch >= ' ') ? static_cast<PRUnichar>(ch) : 0;
 }
 
 nsEventStatus
@@ -282,6 +310,9 @@ KeyEventDispatcher::DispatchKeyEventInternal(uint32_t aEventMessage)
     event.isChar = !!event.charCode;
     event.mIsRepeat = IsRepeat();
     event.mKeyNameIndex = mDOMKeyNameIndex;
+    if (mDOMPrintableKeyValue) {
+        event.mKeyValue = mDOMPrintableKeyValue;
+    }
     event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
     event.time = mData.timeMs;
     return nsWindow::DispatchInputEvent(event);
@@ -290,6 +321,9 @@ KeyEventDispatcher::DispatchKeyEventInternal(uint32_t aEventMessage)
 void
 KeyEventDispatcher::Dispatch()
 {
+    // XXX Even if unknown key is pressed, DOM key event should be
+    //     dispatched since Gecko for the other platforms are implemented
+    //     as so.
     if (!mDOMKeyCode && mDOMKeyNameIndex == KEY_NAME_INDEX_Unidentified) {
         VERBOSE_LOG("Got unknown key event code. "
                     "type 0x%04x code 0x%04x value %d",
