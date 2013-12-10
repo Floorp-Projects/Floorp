@@ -146,7 +146,7 @@ NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc,
 static int32_t sNewlineHandlingPref = -1,
                sCaretStylePref = -1;
 
-static int
+static void
 EditorPrefsChangedCallback(const char *aPrefName, void *)
 {
   if (nsCRT::strcmp(aPrefName, "editor.singleLine.pasteNewlines") == 0) {
@@ -163,7 +163,6 @@ EditorPrefsChangedCallback(const char *aPrefName, void *)
                                                  0);
 #endif
   }
-  return 0;
 }
 
 // static

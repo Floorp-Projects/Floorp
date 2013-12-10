@@ -287,7 +287,7 @@ private:
 #endif
     void CleanupFromTimeout(const bool aByHangUI);
     void SetChildTimeout(const int32_t aChildTimeout);
-    static int TimeoutChanged(const char* aPref, void* aModule);
+    static void TimeoutChanged(const char* aPref, void* aModule);
     void NotifyPluginCrashed();
 
 #ifdef MOZ_ENABLE_PROFILER_SPS

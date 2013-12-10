@@ -66,7 +66,7 @@ protected:
   nsresult GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip);
 
   static nsXULTooltipListener* mInstance;
-  static int ToolbarTipsPrefChanged(const char *aPref, void *aClosure);
+  static void ToolbarTipsPrefChanged(const char *aPref, void *aClosure);
 
   nsWeakPtr mSourceNode;
   nsWeakPtr mTargetNode;

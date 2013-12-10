@@ -5205,11 +5205,10 @@ nsComputedDOMStyle::DoGetAnimationPlayState()
   return valueList;
 }
 
-static int
+static void
 MarkComputedStyleMapDirty(const char* aPref, void* aData)
 {
   static_cast<nsComputedStyleMap*>(aData)->MarkDirty();
-  return 0;
 }
 
 /* static */ nsComputedStyleMap*
