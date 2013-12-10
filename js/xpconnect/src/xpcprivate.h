@@ -3461,6 +3461,19 @@ public:
     JS::RootedId defineAs;
 };
 
+class MOZ_STACK_CLASS ExportOptions : public OptionsBase {
+public:
+    ExportOptions(JSContext *cx = xpc_GetSafeJSContext(),
+                  JSObject* options = nullptr)
+        : OptionsBase(cx, options)
+        , defineAs(cx, JSID_VOID)
+    { }
+
+    virtual bool Parse() { return ParseId("defineAs", &defineAs); };
+
+    JS::RootedId defineAs;
+};
+
 JSObject *
 CreateGlobalObject(JSContext *cx, const JSClass *clasp, nsIPrincipal *principal,
                    JS::CompartmentOptions& aOptions);
