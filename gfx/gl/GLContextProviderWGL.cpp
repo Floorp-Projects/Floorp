@@ -393,7 +393,7 @@ public:
         }
     }
 
-    bool ResizeOffscreen(const gfxIntSize& aNewSize);
+    bool ResizeOffscreen(const gfx::IntSize& aNewSize);
 
     HGLRC Context() { return mContext; }
 
@@ -443,9 +443,9 @@ IsValidSizeForFormat(HDC hDC, int format,
 }
 
 bool
-GLContextWGL::ResizeOffscreen(const gfxIntSize& aNewSize)
+GLContextWGL::ResizeOffscreen(const gfx::IntSize& aNewSize)
 {
-    return ResizeScreenBuffer(aNewSize);
+    return ResizeScreenBuffer(ThebesIntSize(aNewSize));
 }
 
 static GLContextWGL *

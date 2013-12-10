@@ -41,6 +41,7 @@
 #include "GLContextSymbols.h"
 #include "mozilla/GenericRefCounted.h"
 #include "mozilla/Scoped.h"
+#include "gfx2DGlue.h"
 
 #ifdef DEBUG
 #define MOZ_ENABLE_GL_TRACKING 1
@@ -2492,8 +2493,8 @@ public:
      *
      * Only valid if IsOffscreen() returns true.
      */
-    virtual bool ResizeOffscreen(const gfxIntSize& size) {
-        return ResizeScreenBuffer(size);
+    virtual bool ResizeOffscreen(const gfx::IntSize& size) {
+        return ResizeScreenBuffer(ThebesIntSize(size));
     }
 
     /*

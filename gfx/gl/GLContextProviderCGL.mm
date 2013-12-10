@@ -188,16 +188,16 @@ public:
       return true;
     }
 
-    bool ResizeOffscreen(const gfxIntSize& aNewSize);
+    bool ResizeOffscreen(const gfx::IntSize& aNewSize);
 
     NSOpenGLContext *mContext;
     GLuint mTempTextureName;
 };
 
 bool
-GLContextCGL::ResizeOffscreen(const gfxIntSize& aNewSize)
+GLContextCGL::ResizeOffscreen(const gfx::IntSize& aNewSize)
 {
-    return ResizeScreenBuffer(aNewSize);
+    return ResizeScreenBuffer(ThebesIntSize(aNewSize));
 }
 
 static GLContextCGL *
