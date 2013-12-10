@@ -39,7 +39,7 @@ class StupidAllocator : public RegisterAllocator
     };
 
     // Active allocation for the current code position.
-    AllocatedRegister registers[MAX_REGISTERS];
+    mozilla::Array<AllocatedRegister, MAX_REGISTERS> registers;
     uint32_t registerCount;
 
     // Type indicating an index into registers.
