@@ -5,11 +5,18 @@
 function test() {
   waitForExplicitFinish();
 
+  const page1 = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/' +
+                'browser_privatebrowsing_localStorage_page1.html'
+
   function checkLocalStorage(aWindow, aCallback) {
     executeSoon(function() {
       let tab = aWindow.gBrowser.selectedTab = aWindow.gBrowser.addTab();
       let browser = aWindow.gBrowser.selectedBrowser;
       browser.addEventListener('load', function() {
+        if (browser.contentWindow.location != page1) {
+          browser.loadURI(page1);
+          return;
+        }
         browser.removeEventListener('load', arguments.callee, true);
         let tab2 = aWindow.gBrowser.selectedTab = aWindow.gBrowser.addTab();
         browser.contentWindow.location = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/' +
@@ -20,9 +27,6 @@ function test() {
           aCallback();
         }, true);
       }, true);
-
-      browser.loadURI('http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/' +
-                      'browser_privatebrowsing_localStorage_page1.html');
     });
   }
 
