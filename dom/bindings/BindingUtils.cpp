@@ -1134,7 +1134,8 @@ ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
   {
     JSAutoCompartment ac(cx, global);
     ProtoAndIfaceArray& protoAndIfaceArray = *GetProtoAndIfaceArray(global);
-    JSObject* protoOrIface = protoAndIfaceArray[protoAndIfaceArrayIndex];
+    JSObject* protoOrIface =
+      protoAndIfaceArray.EntrySlotIfExists(protoAndIfaceArrayIndex);
     if (!protoOrIface) {
       return false;
     }
