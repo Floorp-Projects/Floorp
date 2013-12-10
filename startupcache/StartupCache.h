@@ -97,14 +97,15 @@ class StartupCacheListener MOZ_FINAL : public nsIObserver
   NS_DECL_NSIOBSERVER
 };
 
-class StartupCache : public mozilla::MemoryMultiReporter
+class StartupCache : public nsIMemoryReporter
 {
 
 friend class StartupCacheListener;
 friend class StartupCacheWrapper;
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
 
   // StartupCache methods. See above comments for a more detailed description.
 
@@ -129,9 +130,6 @@ public:
 
   static StartupCache* GetSingleton();
   static void DeleteSingleton();
-
-  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData);
 
   // This measures all the heap memory used by the StartupCache, i.e. it
   // excludes the mapping.

@@ -575,6 +575,22 @@ class MarionetteTestRunner(object):
 
         if not self.marionette:
             self.start_marionette()
+            if self.emulator:
+                self.marionette.emulator.wait_for_homescreen(self.marionette)
+
+        testargs = {}
+        if self.type is not None:
+            testtypes = self.type.replace('+', ' +').replace('-', ' -').split()
+            for atype in testtypes:
+                if atype.startswith('+'):
+                    testargs.update({ atype[1:]: 'true' })
+                elif atype.startswith('-'):
+                    testargs.update({ atype[1:]: 'false' })
+                else:
+                    testargs.update({ atype: 'true' })
+        oop = testargs.get('oop', False)
+        if isinstance(oop, basestring):
+            oop = False if oop == 'false' else 'true'
 
         filepath = os.path.abspath(test)
 
@@ -597,22 +613,12 @@ class MarionetteTestRunner(object):
         suite = unittest.TestSuite()
 
         if file_ext == '.ini':
-            testargs = {}
-            if self.type is not None:
-                testtypes = self.type.replace('+', ' +').replace('-', ' -').split()
-                for atype in testtypes:
-                    if atype.startswith('+'):
-                        testargs.update({ atype[1:]: 'true' })
-                    elif atype.startswith('-'):
-                        testargs.update({ atype[1:]: 'false' })
-                    else:
-                        testargs.update({ atype: 'true' })
-
             manifest = TestManifest()
             manifest.read(filepath)
 
-            all_tests = manifest.active_tests(disabled=False)
-            manifest_tests = manifest.active_tests(disabled=False,
+            all_tests = manifest.active_tests(exists=False, disabled=False)
+            manifest_tests = manifest.active_tests(exists=False,
+                                                   disabled=False,
                                                    device=self.device,
                                                    app=self.appName)
             skip_tests = list(set([x['path'] for x in all_tests]) -
@@ -633,9 +639,10 @@ class MarionetteTestRunner(object):
                     return
             return
 
-        self.logger.info('TEST-START %s' % os.path.basename(test))
+            self.logger.info('TEST-START %s' % os.path.basename(test))
 
         self.test_kwargs['expected'] = expected
+        self.test_kwargs['oop'] = oop
         for handler in self.test_handlers:
             if handler.match(os.path.basename(test)):
                 handler.add_tests_to_suite(mod_name,

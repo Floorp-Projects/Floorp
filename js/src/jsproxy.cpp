@@ -152,27 +152,6 @@ BaseProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
 }
 
 bool
-BaseProxyHandler::getElementIfPresent(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                                      uint32_t index, MutableHandleValue vp, bool *present)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
-        return false;
-
-    assertEnteredPolicy(cx, proxy, id);
-
-    if (!has(cx, proxy, id, present))
-        return false;
-
-    if (!*present) {
-        Debug_SetValueRangeToCrashOnTouch(vp.address(), 1);
-        return true;
-    }
-
-    return get(cx, proxy, receiver, id, vp);
-}
-
-bool
 BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
                       HandleId id, bool strict, MutableHandleValue vp)
 {
@@ -382,6 +361,34 @@ BaseProxyHandler::watch(JSContext *cx, HandleObject proxy, HandleId id, HandleOb
 bool
 BaseProxyHandler::unwatch(JSContext *cx, HandleObject proxy, HandleId id)
 {
+    return true;
+}
+
+bool
+BaseProxyHandler::slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
+                        HandleObject result)
+{
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
+
+    RootedId id(cx);
+    RootedValue value(cx);
+    for (uint32_t index = begin; index < end; index++) {
+        if (!IndexToId(cx, index, id.address()))
+            return false;
+
+        bool present;
+        if (!Proxy::has(cx, proxy, id, &present))
+            return false;
+
+        if (present) {
+            if (!Proxy::get(cx, proxy, proxy, id, &value))
+                return false;
+
+            if (!JSObject::defineElement(cx, result, index - begin, value))
+                return false;
+        }
+    }
+
     return true;
 }
 
@@ -2519,41 +2526,6 @@ Proxy::callProp(JSContext *cx, HandleObject proxy, HandleObject receiver, Handle
     return true;
 }
 
-
-bool
-Proxy::getElementIfPresent(JSContext *cx, HandleObject proxy, HandleObject receiver, uint32_t index,
-                           MutableHandleValue vp, bool *present)
-{
-    JS_CHECK_RECURSION(cx, return false);
-
-    RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
-        return false;
-
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::GET, true);
-    if (!policy.allowed())
-        return policy.returnValue();
-
-    if (!handler->hasPrototype()) {
-        return handler->getElementIfPresent(cx, proxy, receiver, index,
-                                            vp, present);
-    }
-
-    bool hasOwn;
-    if (!handler->hasOwn(cx, proxy, id, &hasOwn))
-        return false;
-
-    if (hasOwn) {
-        *present = true;
-        return proxy->as<ProxyObject>().handler()->get(cx, proxy, receiver, id, vp);
-    }
-
-    *present = false;
-    INVOKE_ON_PROTOTYPE(cx, handler, proxy,
-                        JSObject::getElementIfPresent(cx, proto, receiver, index, vp, present));
-}
-
 bool
 Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id, bool strict,
            MutableHandleValue vp)
@@ -2776,6 +2748,18 @@ Proxy::unwatch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id)
     return proxy->as<ProxyObject>().handler()->unwatch(cx, proxy, id);
 }
 
+/* static */ bool
+Proxy::slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
+             HandleObject result)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
+    if (!policy.allowed())
+        return policy.returnValue();
+    return handler->slice(cx, proxy, begin, end, result);
+}
+
 static JSObject *
 proxy_innerObject(JSContext *cx, HandleObject obj)
 {
@@ -2889,13 +2873,6 @@ proxy_GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_
     if (!IndexToId(cx, index, id.address()))
         return false;
     return proxy_GetGeneric(cx, obj, receiver, id, vp);
-}
-
-static bool
-proxy_GetElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
-                          MutableHandleValue vp, bool *present)
-{
-    return Proxy::getElementIfPresent(cx, obj, receiver, index, vp, present);
 }
 
 static bool
@@ -3076,15 +3053,22 @@ proxy_Construct(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
-proxy_Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable)
+proxy_Watch(JSContext *cx, HandleObject obj, HandleId id, HandleObject callable)
 {
     return Proxy::watch(cx, obj, id, callable);
 }
 
 static bool
-proxy_Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
+proxy_Unwatch(JSContext *cx, HandleObject obj, HandleId id)
 {
     return Proxy::unwatch(cx, obj, id);
+}
+
+static bool
+proxy_Slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
+            HandleObject result)
+{
+    return Proxy::slice(cx, proxy, begin, end, result);
 }
 
 #define PROXY_CLASS_EXT                             \
@@ -3128,7 +3112,6 @@ proxy_Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
         proxy_GetGeneric,                           \
         proxy_GetProperty,                          \
         proxy_GetElement,                           \
-        proxy_GetElementIfPresent,                  \
         proxy_GetSpecial,                           \
         proxy_SetGeneric,                           \
         proxy_SetProperty,                          \
@@ -3140,6 +3123,7 @@ proxy_Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id)
         proxy_DeleteElement,                        \
         proxy_DeleteSpecial,                        \
         proxy_Watch, proxy_Unwatch,                 \
+        proxy_Slice,                                \
         nullptr,             /* enumerate       */  \
         nullptr,             /* thisObject      */  \
     }                                               \
@@ -3186,7 +3170,6 @@ const Class js::OuterWindowProxyObject::class_ = {
         proxy_GetGeneric,
         proxy_GetProperty,
         proxy_GetElement,
-        proxy_GetElementIfPresent,
         proxy_GetSpecial,
         proxy_SetGeneric,
         proxy_SetProperty,
@@ -3198,6 +3181,7 @@ const Class js::OuterWindowProxyObject::class_ = {
         proxy_DeleteElement,
         proxy_DeleteSpecial,
         proxy_Watch, proxy_Unwatch,
+        proxy_Slice,
         nullptr,             /* enumerate       */
         nullptr,             /* thisObject      */
     }

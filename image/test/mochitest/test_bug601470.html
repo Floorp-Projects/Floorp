@@ -30,11 +30,7 @@ window.onload = function() {
     amount += aAmount;
   }
 
-  var e = mgr.enumerateReporters();
-  while (e.hasMoreElements()) {
-    var mr = e.getNext().QueryInterface(SpecialPowers.Ci.nsIMemoryReporter);
-    mr.collectReports(handleReport, null);
-  }
+  mgr.getReportsForThisProcess(handleReport, null);
 
   ok(amount > 0, "we should be using a nonzero amount of memory");
   ok(true, "yay, didn't crash!");

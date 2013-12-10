@@ -25,9 +25,9 @@ namespace mozilla {
 namespace storage {
 
 class Connection;
-class Service : public MemoryMultiReporter
-              , public mozIStorageService
+class Service : public mozIStorageService
               , public nsIObserver
+              , public nsIMemoryReporter
 {
 public:
   /**
@@ -57,9 +57,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGESERVICE
   NS_DECL_NSIOBSERVER
-
-  NS_IMETHOD CollectReports(nsIHandleReportCallback *aHandleReport,
-                            nsISupports *aData);
+  NS_DECL_NSIMEMORYREPORTER
 
   /**
    * Obtains an already AddRefed pointer to XPConnect.  This is used by

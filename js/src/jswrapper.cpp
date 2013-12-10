@@ -838,14 +838,6 @@ DeadObjectProxy::defaultValue(JSContext *cx, HandleObject obj, JSType hint, Muta
 }
 
 bool
-DeadObjectProxy::getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                     uint32_t index, MutableHandleValue vp, bool *present)
-{
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
-    return false;
-}
-
-bool
 DeadObjectProxy::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop)
 {
     protop.set(nullptr);

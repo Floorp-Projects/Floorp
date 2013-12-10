@@ -16,7 +16,6 @@ include protocol PIndexedDB;
 include DOMTypes;
 include JavaScriptTypes;
 include URIParams;
-include PContentPermission;
 
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
@@ -207,8 +206,10 @@ parent:
      * Initiates an asynchronous request for permission for the
      * provided principal.
      *
-     * @param aRequests
-     *   The array of permissions to request.
+     * @param aType
+     *   The type of permission to request.
+     * @param aAccess
+     *   Access type. "read" for example.
      * @param aPrincipal
      *   The principal of the request.
      *
@@ -216,7 +217,7 @@ parent:
      *       principals that can live in the content process should
      *       provided.
      */
-    PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal);
+    PContentPermissionRequest(nsCString aType, nsCString aAccess, Principal principal);
 
     PContentDialog(uint32_t aType, nsCString aName, nsCString aFeatures,
                    int32_t[] aIntParams, nsString[] aStringParams);
@@ -344,6 +345,13 @@ child:
      * events at this point.
      */
     HandleLongTap(CSSIntPoint point);
+
+    /**
+     * Notifies the child that the parent has begun or finished transforming
+     * the visible child content area. Useful for showing/hiding scrollbars.
+     */
+    NotifyTransformBegin(ViewID aViewId);
+    NotifyTransformEnd(ViewID aViewId);
 
     /**
      * Sending an activate message moves focus to the child.
