@@ -11,7 +11,20 @@ interface nsIBrowserTab : nsISupports {
   readonly attribute float scale;
 };
 
-[scriptable, uuid(7508b826-4129-40a0-91da-2a6bba33681f)]
+[scriptable, uuid(08426a73-e70b-4680-9282-630932e2b2bb)]
+interface nsIUITelemetryObserver : nsISupports {
+  void startSession(in wstring name,
+                    in unsigned long timestamp);
+  void stopSession(in wstring name,
+                   in wstring reason,
+                   in unsigned long timestamp);
+  void addEvent(in wstring action,
+                in wstring method,
+                in unsigned long timestamp,
+                in wstring extras);
+};
+
+[scriptable, uuid(c31331d2-afad-460f-9c66-728b8c838cec)]
 interface nsIAndroidBrowserApp : nsISupports {
   nsIBrowserTab getBrowserTab(in int32_t tabId);
   void getPreferences(in int32_t requestId,
@@ -21,7 +34,9 @@ interface nsIAndroidBrowserApp : nsISupports {
                           [array, size_is(count)] in wstring prefNames,
                           in unsigned long count);
   void removePreferenceObservers(in int32_t requestId);
+  nsIUITelemetryObserver getUITelemetryObserver();
 };
+
 [scriptable, uuid(59cfcb35-69b7-47b2-8155-32b193272666)]
 interface nsIAndroidViewport : nsISupports {
   readonly attribute float x;
