@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(ef621cac-c818-464a-9fb1-9a35731a7f32)]
+[scriptable, uuid(8dd4680f-4f06-4760-a147-292cb307662f)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -338,12 +338,13 @@ interface nsIXPCComponents_Utils : nsISupports
      * algorithm.
      * The return value is the new forwarder function, wrapped into
      * the caller's compartment.
-     * The 3rd argument is the name of the property that will
-     * be set on the target scope, with the forwarder function as
-     * the value.
+     * The 3rd argument is an optional options object:
+     * - defineAs: the name of the property that will
+     *             be set on the target scope, with
+     *             the forwarder function as the value.
      */
     [implicit_jscontext]
-    jsval exportFunction(in jsval vfunction, in jsval vscope, in jsval vname);
+    jsval exportFunction(in jsval vfunction, in jsval vscope, [optional] in jsval voptions);
 
     /*
      * To be called from JS only.

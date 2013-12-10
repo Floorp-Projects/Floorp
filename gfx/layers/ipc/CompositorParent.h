@@ -47,6 +47,7 @@ namespace layers {
 
 class APZCTreeManager;
 class AsyncCompositionManager;
+class Compositor;
 class LayerManagerComposite;
 class LayerTransactionParent;
 
@@ -106,8 +107,6 @@ public:
    */
   void ForceIsFirstPaint();
   void Destroy();
-
-  LayerManagerComposite* GetLayerManager() { return mLayerManager; }
 
   void NotifyChildCreated(uint64_t aChild);
 
@@ -203,6 +202,7 @@ public:
     nsRefPtr<Layer> mRoot;
     nsRefPtr<GeckoContentController> mController;
     CompositorParent* mParent;
+    LayerManagerComposite* mLayerManager;
     TargetConfig mTargetConfig;
   };
 
@@ -212,6 +212,8 @@ public:
    * the compositor thread.
    */
   static const LayerTreeState* GetIndirectShadowTree(uint64_t aId);
+
+  float ComputeRenderIntegrity();
 
   /**
    * Tell all CompositorParents to update their last refresh to aTime and sample
@@ -295,6 +297,7 @@ private:
   bool CanComposite();
 
   nsRefPtr<LayerManagerComposite> mLayerManager;
+  nsRefPtr<Compositor> mCompositor;
   RefPtr<AsyncCompositionManager> mCompositionManager;
   nsIWidget* mWidget;
   CancelableTask *mCurrentCompositeTask;

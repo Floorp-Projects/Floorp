@@ -438,12 +438,6 @@ public:
   virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) { return true; }
 
   /**
-   * Returns a TextureFactoryIdentifier which describes properties of the backend
-   * used to decide what kind of texture and buffer clients to create
-   */
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier();
-
-  /**
    * returns the maximum texture size on this layer backend, or INT32_MAX
    * if there is no maximum
    */
@@ -972,6 +966,29 @@ public:
     }
   }
 
+  enum ScrollDirection {
+    VERTICAL,
+    HORIZONTAL
+  };
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * If a layer is a scrollbar layer, |aScrollId| holds the scroll identifier
+   * of the scrollable content that the scrollbar is for.
+   */
+  void SetScrollbarData(FrameMetrics::ViewID aScrollId, ScrollDirection aDir)
+  {
+    if (mIsScrollbar ||
+        mScrollbarTargetId != aScrollId ||
+        mScrollbarDirection != aDir) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ScrollbarData", this));
+      mIsScrollbar = true;
+      mScrollbarTargetId = aScrollId;
+      mScrollbarDirection = aDir;
+      Mutated();
+    }
+  }
+
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
   gfxContext::GraphicsOperator GetMixBlendMode() const { return mMixBlendMode; }
@@ -996,6 +1013,9 @@ public:
   FrameMetrics::ViewID GetStickyScrollContainerId() { return mStickyPositionData->mScrollId; }
   const LayerRect& GetStickyScrollRangeOuter() { return mStickyPositionData->mOuter; }
   const LayerRect& GetStickyScrollRangeInner() { return mStickyPositionData->mInner; }
+  bool GetIsScrollbar() { return mIsScrollbar; }
+  FrameMetrics::ViewID GetScrollbarTargetContainerId() { return mScrollbarTargetId; }
+  ScrollDirection GetScrollbarDirection() { return mScrollbarDirection; }
   Layer* GetMaskLayer() const { return mMaskLayer; }
 
   // Note that all lengths in animation data are either in CSS pixels or app
@@ -1367,6 +1387,9 @@ protected:
     LayerRect mInner;
   };
   nsAutoPtr<StickyPositionData> mStickyPositionData;
+  bool mIsScrollbar;
+  FrameMetrics::ViewID mScrollbarTargetId;
+  ScrollDirection mScrollbarDirection;
   DebugOnly<uint32_t> mDebugColorIndex;
   // If this layer is used for OMTA, then this counter is used to ensure we
   // stay in sync with the animation manager

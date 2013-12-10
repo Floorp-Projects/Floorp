@@ -796,10 +796,10 @@ private:
 namespace mozilla {
 namespace dmd {
 
-class DMDReporter MOZ_FINAL : public MemoryMultiReporter
+class DMDReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-  DMDReporter() {}
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData)
@@ -841,6 +841,8 @@ public:
     return NS_OK;
   }
 };
+
+NS_IMPL_ISUPPORTS1(DMDReporter, nsIMemoryReporter)
 
 } // namespace dmd
 } // namespace mozilla
@@ -1003,23 +1005,6 @@ nsMemoryReporterManager::~nsMemoryReporterManager()
     NS_ASSERTION(!mSavedWeakReporters, "failed to restore weak reporters");
 }
 
-NS_IMETHODIMP
-nsMemoryReporterManager::EnumerateReporters(nsISimpleEnumerator** aResult)
-{
-    // Memory reporters are not necessarily threadsafe, so this function must
-    // be called from the main thread.
-    if (!NS_IsMainThread()) {
-        MOZ_CRASH();
-    }
-
-    mozilla::MutexAutoLock autoLock(mMutex);
-
-    nsRefPtr<ReporterEnumerator> enumerator =
-        new ReporterEnumerator(mStrongReporters, mWeakReporters);
-    enumerator.forget(aResult);
-    return NS_OK;
-}
-
 //#define DEBUG_CHILD_PROCESS_MEMORY_REPORTING 1
 
 #ifdef DEBUG_CHILD_PROCESS_MEMORY_REPORTING
@@ -1108,19 +1093,38 @@ nsMemoryReporterManager::GetReports(
     }
 
     // Get reports for this process.
+    GetReportsForThisProcess(aHandleReport, aHandleReportData);
+
+    // If there are no child processes, we can finish up immediately.
+    return (mNumChildProcesses == 0)
+         ? aFinishReporting->Callback(aFinishReportingData)
+         : NS_OK;
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::GetReportsForThisProcess(
+    nsIHandleReportCallback* aHandleReport,
+    nsISupports* aHandleReportData)
+{
+    // Memory reporters are not necessarily threadsafe, so this function must
+    // be called from the main thread.
+    if (!NS_IsMainThread()) {
+        MOZ_CRASH();
+    }
+
+    nsRefPtr<ReporterEnumerator> e;
+    {
+        mozilla::MutexAutoLock autoLock(mMutex);
+        e = new ReporterEnumerator(mStrongReporters, mWeakReporters);
+    }
     bool more;
-    nsCOMPtr<nsISimpleEnumerator> e;
-    EnumerateReporters(getter_AddRefs(e));
     while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
         nsCOMPtr<nsIMemoryReporter> r;
         e->GetNext(getter_AddRefs(r));
         r->CollectReports(aHandleReport, aHandleReportData);
     }
 
-    // If there are no child processes, we can finish up immediately.
-    return (mNumChildProcesses == 0)
-         ? aFinishReporting->Callback(aFinishReportingData)
-         : NS_OK;
+    return NS_OK;
 }
 
 // This function has no return value.  If something goes wrong, there's no
@@ -1370,6 +1374,7 @@ public:
     Int64Wrapper() : mValue(0) { }
     int64_t mValue;
 };
+
 NS_IMPL_ISUPPORTS0(Int64Wrapper)
 
 class ExplicitCallback MOZ_FINAL : public nsIHandleReportCallback
@@ -1399,6 +1404,7 @@ public:
         return NS_OK;
     }
 };
+
 NS_IMPL_ISUPPORTS1(ExplicitCallback, nsIHandleReportCallback)
 
 NS_IMETHODIMP
@@ -1421,13 +1427,7 @@ nsMemoryReporterManager::GetExplicit(int64_t* aAmount)
     nsRefPtr<ExplicitCallback> handleReport = new ExplicitCallback();
     nsRefPtr<Int64Wrapper> wrappedExplicitSize = new Int64Wrapper();
 
-    nsCOMPtr<nsISimpleEnumerator> e;
-    EnumerateReporters(getter_AddRefs(e));
-    while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
-        nsCOMPtr<nsIMemoryReporter> r;
-        e->GetNext(getter_AddRefs(r));
-        r->CollectReports(handleReport, wrappedExplicitSize);
-    }
+    GetReportsForThisProcess(handleReport, wrappedExplicitSize);
 
     *aAmount = wrappedExplicitSize->mValue;
 
@@ -1737,7 +1737,6 @@ nsMemoryReporterManager::SizeOfTab(nsIDOMWindow* aTopWindow,
 // thread-safe just to be safe.  Memory reporters are created and destroyed
 // infrequently enough that the performance cost should be negligible.
 NS_IMPL_ISUPPORTS1(MemoryUniReporter, nsIMemoryReporter)
-NS_IMPL_ISUPPORTS1(MemoryMultiReporter, nsIMemoryReporter)
 
 namespace mozilla {
 
@@ -1853,27 +1852,18 @@ public:
         return NS_OK;
     }
 };
-NS_IMPL_ISUPPORTS1(
-  DoNothingCallback
-, nsIHandleReportCallback
-)
+
+NS_IMPL_ISUPPORTS1(DoNothingCallback, nsIHandleReportCallback)
 
 void
-RunReporters()
+RunReportersForThisProcess()
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr =
         do_GetService("@mozilla.org/memory-reporter-manager;1");
 
     nsRefPtr<DoNothingCallback> doNothing = new DoNothingCallback();
 
-    bool more;
-    nsCOMPtr<nsISimpleEnumerator> e;
-    mgr->EnumerateReporters(getter_AddRefs(e));
-    while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
-        nsCOMPtr<nsIMemoryReporter> r;
-        e->GetNext(getter_AddRefs(r));
-        r->CollectReports(doNothing, nullptr);
-    }
+    mgr->GetReportsForThisProcess(doNothing, nullptr);
 }
 
 } // namespace dmd

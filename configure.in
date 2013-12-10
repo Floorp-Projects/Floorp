@@ -3983,7 +3983,6 @@ LIBJPEG_TURBO_ASFLAGS=
 LIBJPEG_TURBO_X86_ASM=
 LIBJPEG_TURBO_X64_ASM=
 LIBJPEG_TURBO_ARM_ASM=
-MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
 MOZ_SOCIAL=1
@@ -4732,33 +4731,15 @@ AC_SUBST(MOZ_DISTRIBUTION_ID)
 
 
 dnl ========================================================
-dnl complex text support off by default
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(pango,
-[  --disable-pango         Disable usage of Pango ],
-    MOZ_PANGO=,
-    MOZ_PANGO=1)
-
-dnl ========================================================
 dnl = Pango
 dnl ========================================================
 if test "$MOZ_ENABLE_GTK" -o "$MOZ_ENABLE_QT"
 then
-    AC_SUBST(MOZ_PANGO)
+    PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
 
-    if test "$MOZ_PANGO"
-    then
-        PKG_CHECK_MODULES(_PANGOCHK, pango >= $PANGO_VERSION)
-
-        PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION pangocairo >= $PANGO_VERSION)
-        AC_SUBST(MOZ_PANGO_CFLAGS)
-        AC_SUBST(MOZ_PANGO_LIBS)
-        AC_DEFINE(MOZ_PANGO)
-    else
-        PKG_CHECK_MODULES(FT2, freetype2 > 6.1.0)
-        AC_SUBST(FT2_CFLAGS)
-        AC_SUBST(FT2_LIBS)
-    fi
+    PKG_CHECK_MODULES(MOZ_PANGO, pango >= $PANGO_VERSION pangoft2 >= $PANGO_VERSION pangocairo >= $PANGO_VERSION)
+    AC_SUBST(MOZ_PANGO_CFLAGS)
+    AC_SUBST(MOZ_PANGO_LIBS)
 fi
 
 dnl ========================================================
