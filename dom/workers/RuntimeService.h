@@ -194,8 +194,8 @@ public:
                              const JS::ContextOptions& aChromeOptions)
   {
     AssertIsOnMainThread();
-    sDefaultJSSettings.content.options = aContentOptions;
-    sDefaultJSSettings.chrome.options = aChromeOptions;
+    sDefaultJSSettings.content.contextOptions = aContentOptions;
+    sDefaultJSSettings.chrome.contextOptions = aChromeOptions;
   }
 
   void
@@ -295,6 +295,9 @@ private:
 
   static void
   WorkerPrefChanged(const char* aPrefName, void* aClosure);
+
+  static void
+  JSVersionChanged(const char* aPrefName, void* aClosure);
 };
 
 END_WORKERS_NAMESPACE
