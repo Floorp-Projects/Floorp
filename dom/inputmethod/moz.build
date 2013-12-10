@@ -18,3 +18,5 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES += [
     'Keyboard.jsm',
 ]
+
+JAR_MANIFESTS += ['jar.mn']

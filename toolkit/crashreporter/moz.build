@@ -94,3 +94,5 @@ if CONFIG['OS_ARCH'] == 'SunOS':
 
 DEFINES['UNICODE'] = True
 DEFINES['_UNICODE'] = True
+
+JAR_MANIFESTS += ['jar.mn']
