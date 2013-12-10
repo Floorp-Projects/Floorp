@@ -141,7 +141,7 @@ public:
                                 JS::MutableHandle<JSObject*> aClassObject,
                                 bool* aNew);
 
-  bool AllowScripts();
+  bool AllowScripts();  // XXX make const
 
   mozilla::dom::XBLChildrenElement* FindInsertionPointFor(nsIContent* aChild);
 

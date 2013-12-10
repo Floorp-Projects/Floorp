@@ -1082,7 +1082,28 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
 bool
 nsXBLBinding::AllowScripts()
 {
-  return mPrototypeBinding->GetAllowScripts();
+  if (!mPrototypeBinding->GetAllowScripts())
+    return false;
+
+  // Nasty hack.  Use the JSContext of the bound node, since the
+  // security manager API expects to get the docshell type from
+  // that.  But use the nsIPrincipal of our document.
+  nsIScriptSecurityManager* mgr = nsContentUtils::GetSecurityManager();
+  if (!mgr) {
+    return false;
+  }
+
+  nsIDocument* doc = mBoundElement ? mBoundElement->OwnerDoc() : nullptr;
+  if (!doc) {
+    return false;
+  }
+
+  nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(doc->GetInnerWindow());
+  if (!global || !global->GetGlobalJSObject()) {
+    return false;
+  }
+
+  return mgr->ScriptAllowed(global->GetGlobalJSObject());
 }
 
 nsXBLBinding*

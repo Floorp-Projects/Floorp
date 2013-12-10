@@ -214,7 +214,7 @@ nsXBLPrototypeBinding::SetBindingElement(nsIContent* aElement)
 }
 
 bool
-nsXBLPrototypeBinding::GetAllowScripts() const
+nsXBLPrototypeBinding::GetAllowScripts()
 {
   return mXBLDocInfoWeak->GetScriptAccess();
 }
