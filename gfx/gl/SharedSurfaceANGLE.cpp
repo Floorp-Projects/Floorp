@@ -176,7 +176,7 @@ ChooseConfig(GLContext* gl,
 static EGLSurface CreatePBufferSurface(GLLibraryEGL* egl,
                                        EGLDisplay display,
                                        EGLConfig config,
-                                       const gfxIntSize& size)
+                                       const gfx::IntSize& size)
 {
     EGLint attribs[] = {
         LOCAL_EGL_WIDTH, size.width,
@@ -192,7 +192,7 @@ static EGLSurface CreatePBufferSurface(GLLibraryEGL* egl,
 SharedSurface_ANGLEShareHandle*
 SharedSurface_ANGLEShareHandle::Create(GLContext* gl, ID3D10Device1* d3d,
                                        EGLContext context, EGLConfig config,
-                                       const gfxIntSize& size, bool hasAlpha)
+                                       const gfx::IntSize& size, bool hasAlpha)
 {
     GLLibraryEGL* egl = gl->GetLibraryEGL();
     MOZ_ASSERT(egl);
