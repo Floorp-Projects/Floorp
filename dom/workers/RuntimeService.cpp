@@ -132,6 +132,14 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define PREF_JIT_HARDENING "jit_hardening"
 #define PREF_GCZEAL "gcZeal"
 
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+#define DUMP_CONTROLLED_BY_PREF 1
+#define PREF_DOM_WINDOW_DUMP_ENABLED "browser.dom.window.dump.enabled"
+#endif
+
+#define PREF_PROMISE_ENABLED "dom.promise.enabled"
+#define PREF_WORKERS_LATEST_JS_VERSION "dom.workers.latestJSVersion"
+
 namespace {
 
 const uint32_t kNoIndex = uint32_t(-1);
@@ -174,13 +182,6 @@ const char* gStringChars[] = {
 
 static_assert(NS_ARRAY_LENGTH(gStringChars) == ID_COUNT,
               "gStringChars should have the right length.");
-
-#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-#define DUMP_CONTROLLED_BY_PREF 1
-#define PREF_DOM_WINDOW_DUMP_ENABLED "browser.dom.window.dump.enabled"
-#endif
-
-#define PREF_PROMISE_ENABLED "dom.promise.enabled"
 
 class LiteralRebindingCString : public nsDependentCString
 {
@@ -875,9 +876,9 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
 
   js::SetCTypesActivityCallback(aRuntime, CTypesActivityCallback);
 
-  JS::ContextOptionsRef(workerCx) = aWorkerPrivate->IsChromeWorker()
-                                  ? settings.chrome.options
-                                  : settings.content.options;
+  JS::ContextOptionsRef(workerCx) =
+    aWorkerPrivate->IsChromeWorker() ? settings.chrome.contextOptions
+                                     : settings.content.contextOptions;
 
   JS_SetJitHardening(aRuntime, settings.jitHardening);
 
@@ -1593,9 +1594,10 @@ RuntimeService::Init()
 
   // Initialize JSSettings.
   if (!sDefaultJSSettings.gcSettings[0].IsSet()) {
-    sDefaultJSSettings.chrome.options = kRequiredJSContextOptions;
+    sDefaultJSSettings.chrome.contextOptions = kRequiredJSContextOptions;
     sDefaultJSSettings.chrome.maxScriptRuntime = -1;
-    sDefaultJSSettings.content.options = kRequiredJSContextOptions;
+    sDefaultJSSettings.chrome.compartmentOptions.setVersion(JSVERSION_LATEST);
+    sDefaultJSSettings.content.contextOptions = kRequiredJSContextOptions;
     sDefaultJSSettings.content.maxScriptRuntime = MAX_SCRIPT_RUN_TIME_SEC;
 #ifdef JS_GC_ZEAL
     sDefaultJSSettings.gcZealFrequency = JS_DEFAULT_ZEAL_FREQ;
@@ -1670,21 +1672,25 @@ RuntimeService::Init()
 #endif
 #if DUMP_CONTROLLED_BY_PREF
       NS_FAILED(Preferences::RegisterCallbackAndCall(
-                                              WorkerPrefChanged,
-                                              PREF_DOM_WINDOW_DUMP_ENABLED,
-                                              reinterpret_cast<void *>(WORKERPREF_DUMP))) ||
+                                  WorkerPrefChanged,
+                                  PREF_DOM_WINDOW_DUMP_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_DUMP))) ||
 #endif
       NS_FAILED(Preferences::RegisterCallbackAndCall(
-                                              WorkerPrefChanged,
-                                              PREF_PROMISE_ENABLED,
-                                              reinterpret_cast<void *>(WORKERPREF_PROMISE))) ||
+                               WorkerPrefChanged,
+                               PREF_PROMISE_ENABLED,
+                               reinterpret_cast<void *>(WORKERPREF_PROMISE))) ||
       NS_FAILED(Preferences::RegisterCallback(LoadJSContextOptions,
                                               PREF_JS_OPTIONS_PREFIX,
                                               nullptr)) ||
       NS_FAILED(Preferences::RegisterCallbackAndCall(
                                                     LoadJSContextOptions,
                                                     PREF_WORKERS_OPTIONS_PREFIX,
-                                                    nullptr))) {
+                                                    nullptr)) ||
+      NS_FAILED(Preferences::RegisterCallbackAndCall(
+                                                 JSVersionChanged,
+                                                 PREF_WORKERS_LATEST_JS_VERSION,
+                                                 nullptr))) {
     NS_WARNING("Failed to register pref callbacks!");
   }
 
@@ -1834,19 +1840,24 @@ RuntimeService::Cleanup()
   NS_ASSERTION(!mWindowMap.Count(), "All windows should have been released!");
 
   if (mObserved) {
-    if (NS_FAILED(Preferences::UnregisterCallback(LoadJSContextOptions,
+    if (NS_FAILED(Preferences::UnregisterCallback(JSVersionChanged,
+                                                  PREF_WORKERS_LATEST_JS_VERSION,
+                                                  nullptr)) ||
+        NS_FAILED(Preferences::UnregisterCallback(LoadJSContextOptions,
                                                   PREF_JS_OPTIONS_PREFIX,
                                                   nullptr)) ||
         NS_FAILED(Preferences::UnregisterCallback(LoadJSContextOptions,
                                                   PREF_WORKERS_OPTIONS_PREFIX,
                                                   nullptr)) ||
-        NS_FAILED(Preferences::UnregisterCallback(WorkerPrefChanged,
-                                                  PREF_PROMISE_ENABLED,
-                                                  reinterpret_cast<void *>(WORKERPREF_PROMISE))) ||
+        NS_FAILED(Preferences::UnregisterCallback(
+                               WorkerPrefChanged,
+                               PREF_PROMISE_ENABLED,
+                               reinterpret_cast<void *>(WORKERPREF_PROMISE))) ||
 #if DUMP_CONTROLLED_BY_PREF
-        NS_FAILED(Preferences::UnregisterCallback(WorkerPrefChanged,
-                                                  PREF_DOM_WINDOW_DUMP_ENABLED,
-                                                  reinterpret_cast<void *>(WORKERPREF_DUMP))) ||
+        NS_FAILED(Preferences::UnregisterCallback(
+                                  WorkerPrefChanged,
+                                  PREF_DOM_WINDOW_DUMP_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_DUMP))) ||
 #endif
 #ifdef JS_GC_ZEAL
         NS_FAILED(Preferences::UnregisterCallback(
@@ -2224,8 +2235,8 @@ void
 RuntimeService::UpdateAllWorkerJSContextOptions()
 {
   BROADCAST_ALL_WORKERS(UpdateJSContextOptions,
-                        sDefaultJSSettings.content.options,
-                        sDefaultJSSettings.chrome.options);
+                        sDefaultJSSettings.content.contextOptions,
+                        sDefaultJSSettings.chrome.contextOptions);
 }
 
 void
@@ -2332,4 +2343,14 @@ RuntimeService::WorkerPrefChanged(const char* aPrefName, void* aClosure)
   if (rts) {
     rts->UpdateAllWorkerPreference(key, sDefaultPreferences[key]);
   }
+}
+
+void
+RuntimeService::JSVersionChanged(const char* /* aPrefName */, void* /* aClosure */)
+{
+  AssertIsOnMainThread();
+
+  bool useLatest = Preferences::GetBool(PREF_WORKERS_LATEST_JS_VERSION, false);
+  JS::CompartmentOptions& options = sDefaultJSSettings.content.compartmentOptions;
+  options.setVersion(useLatest ? JSVERSION_LATEST : JSVERSION_DEFAULT);
 }
