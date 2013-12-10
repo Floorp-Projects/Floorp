@@ -29,14 +29,6 @@ const kWidePanelItemClass = "panel-wide-item";
 let gModuleName = "[CustomizableWidgets]";
 #include logging.js
 
-function isWin8OrHigher() {
-  let osName = Services.sysinfo.getProperty("name");
-  let version = Services.sysinfo.getProperty("version");
-
-  // Windows 8 is version >= 6.2
-  return osName == "Windows_NT" && Services.vc.compare(version, "6.2") >= 0;
-}
-
 function setAttributes(aNode, aAttrs) {
   for (let [name, value] of Iterator(aAttrs)) {
     if (!value) {
@@ -800,7 +792,7 @@ const CustomizableWidgets = [{
 
 #ifdef XP_WIN
 #ifdef MOZ_METRO
-if (isWin8OrHigher()) {
+if (Services.sysinfo.getProperty("hasWindowsTouchInterface")) {
   let widgetArgs = {tooltiptext: "switch-to-metro-button2.tooltiptext"};
   let brandShortName = BrandBundle.GetStringFromName("brandShortName");
   let metroTooltip = CustomizableUI.getLocalizedProperty(widgetArgs, "tooltiptext",
