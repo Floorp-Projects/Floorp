@@ -207,13 +207,13 @@ struct Pool
 template <int SliceSize, int InstBaseSize>
 struct BufferSliceTail : public BufferSlice<SliceSize> {
     Pool *data;
-    uint8_t isBranch[(SliceSize + (InstBaseSize * 8 - 1)) / (InstBaseSize * 8)];
+    mozilla::Array<uint8_t, (SliceSize + (InstBaseSize * 8 - 1)) / (InstBaseSize * 8)> isBranch;
     bool isNatural : 1;
     BufferSliceTail *getNext() {
         return (BufferSliceTail *)this->next;
     }
     BufferSliceTail() : data(nullptr), isNatural(true) {
-        memset(isBranch, 0, sizeof(isBranch));
+        memset(&isBranch[0], 0, sizeof(isBranch));
     }
     void markNextAsBranch() {
         int idx = this->nodeSize / InstBaseSize;
@@ -282,7 +282,7 @@ static void spewEntry(uint8_t *ptr, int length) {
 template <int SliceSize, int InstBaseSize, class Inst, class Asm, int poolKindBits>
 struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst> {
   private:
-    int entryCount[1 << poolKindBits];
+    mozilla::Array<int, 1 << poolKindBits> entryCount;
     static const int offsetBits = 32 - poolKindBits;
   public:
 
@@ -405,14 +405,14 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         for (int idx = 0; idx < numPoolKinds; idx++) {
             JS_ASSERT(pools[idx].numEntries == 0 && pools[idx].other->numEntries == 0);
         }
-        typedef uint8_t Chunk[InstBaseSize];
+        typedef mozilla::Array<uint8_t, InstBaseSize> Chunk;
         mozilla::DebugOnly<Chunk *> start = (Chunk*)dest_;
         Chunk *dest = (Chunk*)(((uint32_t)dest_ + instBufferAlign - 1) & ~(instBufferAlign -1));
         int curIndex = 0;
         int curInstOffset = 0;
         JS_ASSERT(start == dest);
         for (BufferSlice * cur = *getHead(); cur != nullptr; cur = cur->getNext()) {
-            Chunk *src = (Chunk*)cur->instructions;
+            Chunk *src = (Chunk*)&cur->instructions;
             for (unsigned int idx = 0; idx <cur->size()/InstBaseSize;
                  idx++, curInstOffset += InstBaseSize) {
                 // Is the current instruction a branch?
@@ -705,8 +705,8 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             poolOffset=pools[poolIdx].align(poolOffset);
             poolOffset+=pools[poolIdx].numEntries * pools[poolIdx].immSize;
         }
-        LoadOffsets outcasts[1 << poolKindBits];
-        uint8_t *outcastEntries[1 << poolKindBits];
+        mozilla::Array<LoadOffsets, 1 << poolKindBits> outcasts;
+        mozilla::Array<uint8_t *, 1 << poolKindBits> outcastEntries;
         // All of the pool loads referred to by this code are going to
         // need fixing up here.
         int skippedBytes = 0;
