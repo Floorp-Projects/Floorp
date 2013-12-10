@@ -51,6 +51,8 @@
 namespace mozilla {
 namespace scache {
 
+MOZ_DEFINE_MALLOC_SIZE_OF(StartupCacheMallocSizeOf)
+
 NS_IMETHODIMP
 StartupCache::CollectReports(nsIHandleReportCallback* aHandleReport,
                              nsISupports* aData)
@@ -71,7 +73,7 @@ StartupCache::CollectReports(nsIHandleReportCallback* aHandleReport,
          "This memory is likely to be swapped out shortly after start-up.");
 
   REPORT("explicit/startup-cache/data", KIND_HEAP,
-         HeapSizeOfIncludingThis(MallocSizeOf),
+         HeapSizeOfIncludingThis(StartupCacheMallocSizeOf),
          "Memory used by the startup cache for things other than the file "
          "mapping.");
 
@@ -123,7 +125,7 @@ bool StartupCache::gShutdownInitiated;
 bool StartupCache::gIgnoreDiskCache;
 enum StartupCache::TelemetrifyAge StartupCache::gPostFlushAgeAction = StartupCache::IGNORE_AGE;
 
-NS_IMPL_ISUPPORTS_INHERITED0(StartupCache, MemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(StartupCache, nsIMemoryReporter)
 
 StartupCache::StartupCache()
   : mArchive(nullptr), mStartupWriteInitiated(false), mWriteThread(nullptr)

@@ -208,9 +208,6 @@ class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
     virtual bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g) MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint,
                               MutableHandleValue vp) MOZ_OVERRIDE;
-    virtual bool getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                     uint32_t index, MutableHandleValue vp,
-                                     bool *present) MOZ_OVERRIDE;
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
                                 MutableHandleObject protop) MOZ_OVERRIDE;
 

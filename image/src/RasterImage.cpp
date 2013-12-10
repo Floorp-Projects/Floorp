@@ -814,7 +814,7 @@ RasterImage::GetFirstFrameDelay()
   if (NS_FAILED(GetAnimated(&animated)) || !animated)
     return -1;
 
-  return mFrameBlender.GetFrame(0)->GetTimeout();
+  return mFrameBlender.GetTimeoutForFrame(0);
 }
 
 nsresult
@@ -1439,7 +1439,7 @@ RasterImage::StartAnimation()
 
   imgFrame* currentFrame = GetCurrentImgFrame();
   // A timeout of -1 means we should display this frame forever.
-  if (currentFrame && currentFrame->GetTimeout() < 0) {
+  if (currentFrame && mFrameBlender.GetTimeoutForFrame(GetCurrentImgFrameIndex()) < 0) {
     mAnimationFinished = true;
     return NS_ERROR_ABORT;
   }
@@ -1536,7 +1536,8 @@ RasterImage::SetLoopCount(int32_t aLoopCount)
     return;
 
   if (mAnim) {
-    mAnim->SetLoopCount(aLoopCount);
+    // No need to set this if we're not an animation
+    mFrameBlender.SetLoopCount(aLoopCount);
   }
 }
 

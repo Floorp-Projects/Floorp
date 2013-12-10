@@ -6,11 +6,11 @@ from __future__ import unicode_literals
 
 from contextlib import contextmanager
 
-from .copier import FilePurger
 from .files import (
     AbsoluteSymlinkFile,
     ExistingFile,
     File,
+    FileFinder,
 )
 import mozpack.path as mozpath
 
@@ -63,8 +63,15 @@ class InstallManifest(object):
           the FileCopier. No error is raised if the destination path does not
           exist.
 
-    Versions 1 and 2 of the manifest format are similar. Version 2 added
-    optional path support.
+      patternsymlink -- Paths matched by the expression in the source path
+          will be symlinked to the destination directory.
+
+      patterncopy -- Similar to patternsymlink except files are copied, not
+          symlinked.
+
+    Version 1 of the manifest was the initial version.
+    Version 2 added optional path support
+    Version 3 added support for pattern entries.
     """
     FIELD_SEPARATOR = '\x1f'
 
@@ -72,6 +79,8 @@ class InstallManifest(object):
     COPY = 2
     REQUIRED_EXISTS = 3
     OPTIONAL_EXISTS = 4
+    PATTERN_SYMLINK = 5
+    PATTERN_COPY = 6
 
     def __init__(self, path=None, fileobj=None):
         """Create a new InstallManifest entry.
@@ -94,7 +103,7 @@ class InstallManifest(object):
 
     def _load_from_fileobj(self, fileobj):
         version = fileobj.readline().rstrip()
-        if version not in ('1', '2'):
+        if version not in ('1', '2', '3'):
             raise UnreadableInstallManifest('Unknown manifest version: ' %
                 version)
 
@@ -106,7 +115,7 @@ class InstallManifest(object):
             record_type = int(fields[0])
 
             if record_type == self.SYMLINK:
-                dest, source= fields[1:]
+                dest, source = fields[1:]
                 self.add_symlink(source, dest)
                 continue
 
@@ -123,6 +132,16 @@ class InstallManifest(object):
             if record_type == self.OPTIONAL_EXISTS:
                 _, path = fields
                 self.add_optional_exists(path)
+                continue
+
+            if record_type == self.PATTERN_SYMLINK:
+                _, base, pattern, dest = fields[1:]
+                self.add_pattern_symlink(base, pattern, dest)
+                continue
+
+            if record_type == self.PATTERN_COPY:
+                _, base, pattern, dest = fields[1:]
+                self.add_pattern_copy(base, pattern, dest)
                 continue
 
             raise UnreadableInstallManifest('Unknown record type: %d' %
@@ -158,7 +177,7 @@ class InstallManifest(object):
         It is an error if both are specified.
         """
         with _auto_fileobj(path, fileobj, 'wb') as fh:
-            fh.write('2\n')
+            fh.write('3\n')
 
             for dest in sorted(self._dests):
                 entry = self._dests[dest]
@@ -198,6 +217,29 @@ class InstallManifest(object):
         """
         self._add_entry(dest, (self.OPTIONAL_EXISTS,))
 
+    def add_pattern_symlink(self, base, pattern, dest):
+        """Add a pattern match that results in symlinks being created.
+
+        A ``FileFinder`` will be created with its base set to ``base``
+        and ``FileFinder.find()`` will be called with ``pattern`` to discover
+        source files. Each source file will be symlinked under ``dest``.
+
+        Filenames under ``dest`` are constructed by taking the path fragment
+        after ``base`` and concatenating it with ``dest``. e.g.
+
+           <base>/foo/bar.h -> <dest>/foo/bar.h
+        """
+        self._add_entry(mozpath.join(base, pattern, dest),
+            (self.PATTERN_SYMLINK, base, pattern, dest))
+
+    def add_pattern_copy(self, base, pattern, dest):
+        """Add a pattern match that results in copies.
+
+        See ``add_pattern_symlink()`` for usage.
+        """
+        self._add_entry(mozpath.join(base, pattern, dest),
+            (self.PATTERN_COPY, base, pattern, dest))
+
     def _add_entry(self, dest, entry):
         if dest in self._dests:
             raise ValueError('Item already in manifest: %s' % dest)
@@ -229,6 +271,22 @@ class InstallManifest(object):
 
             if install_type == self.OPTIONAL_EXISTS:
                 registry.add(dest, ExistingFile(required=False))
+                continue
+
+            if install_type in (self.PATTERN_SYMLINK, self.PATTERN_COPY):
+                _, base, pattern, dest = entry
+                finder = FileFinder(base, find_executables=False)
+                paths = [f[0] for f in finder.find(pattern)]
+
+                if install_type == self.PATTERN_SYMLINK:
+                    cls = AbsoluteSymlinkFile
+                else:
+                    cls = File
+
+                for path in paths:
+                    source = mozpath.join(base, path)
+                    registry.add(mozpath.join(dest, path), cls(source))
+
                 continue
 
             raise Exception('Unknown install type defined in manifest: %d' %

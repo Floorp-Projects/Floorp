@@ -3394,25 +3394,6 @@ JS_ForwardGetElementTo(JSContext *cx, JSObject *objArg, uint32_t index, JSObject
 }
 
 JS_PUBLIC_API(bool)
-JS_GetElementIfPresent(JSContext *cx, JSObject *objArg, uint32_t index, JSObject *onBehalfOfArg,
-                       MutableHandleValue vp, bool* present)
-{
-    RootedObject obj(cx, objArg);
-    RootedObject onBehalfOf(cx, onBehalfOfArg);
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-    JSAutoResolveFlags rf(cx, 0);
-
-    bool isPresent;
-    if (!JSObject::getElementIfPresent(cx, obj, onBehalfOf, index, vp, &isPresent))
-        return false;
-
-    *present = isPresent;
-    return true;
-}
-
-JS_PUBLIC_API(bool)
 JS_GetProperty(JSContext *cx, JSObject *objArg, const char *name, MutableHandleValue vp)
 {
     RootedObject obj(cx, objArg);
