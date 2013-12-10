@@ -338,7 +338,6 @@ var BrowserApp = {
     DesktopUserAgent.init();
     Distribution.init();
     Tabs.init();
-    UITelemetry.init();
 #ifdef ACCESSIBILITY
     AccessFu.attach(window);
 #endif
@@ -1530,6 +1529,10 @@ var BrowserApp = {
     return this.getTabForId(tabId);
   },
 
+  getUITelemetryObserver: function() {
+    return UITelemetry;
+  },
+
   getPreferences: function getPreferences(requestId, prefNames, count) {
     this.handlePreferencesRequest(requestId, prefNames, false);
   },
@@ -2671,8 +2674,9 @@ Tab.prototype = {
 
     // When the tab is stubbed from Java, there's a window between the stub
     // creation and the tab creation in Gecko where the stub could be removed
-    // (which is easiest to hit during startup).  We need to differentiate
-    // between tab stubs from Java and new tabs from Gecko to prevent breakage.
+    // or the selected tab can change (which is easiest to hit during startup).
+    // To prevent these races, we need to differentiate between tab stubs from
+    // Java and new tabs from Gecko.
     let stub = false;
 
     if (!aParams.zombifying) {
