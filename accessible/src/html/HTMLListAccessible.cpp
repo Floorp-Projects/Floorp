@@ -7,6 +7,7 @@
 #include "HTMLListAccessible.h"
 
 #include "DocAccessible.h"
+#include "nsAccUtils.h"
 #include "Role.h"
 #include "States.h"
 
@@ -95,6 +96,33 @@ HTMLLIAccessible::GetBounds(int32_t* aX, int32_t* aY,
   *aWidth += *aX - bulletX;
   *aX = bulletX; // Move x coordinate of list item over to cover bullet as well
   return NS_OK;
+}
+
+int32_t
+HTMLLIAccessible::FindOffset(int32_t aOffset, nsDirection aDirection,
+                             nsSelectionAmount aAmount,
+                             EWordMovementType aWordMovementType)
+{
+  Accessible* child = GetChildAtOffset(aOffset);
+  if (!child)
+    return -1;
+
+  if (child != mBullet) {
+    if (aDirection == eDirPrevious &&
+        (aAmount == eSelectBeginLine || aAmount == eSelectLine))
+      return 0;
+
+    return HyperTextAccessible::FindOffset(aOffset, aDirection,
+                                           aAmount, aWordMovementType);
+  }
+
+  if (aDirection == eDirPrevious)
+    return 0;
+
+  if (aAmount == eSelectEndLine || aAmount == eSelectLine)
+    return CharacterCount();
+
+  return nsAccUtils::TextLength(child);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

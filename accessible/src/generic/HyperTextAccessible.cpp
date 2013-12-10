@@ -658,30 +658,15 @@ HyperTextAccessible::FindOffset(int32_t aOffset, nsDirection aDirection,
   // Turn the resulting node and offset into a hyperTextOffset
   // If finalAccessible is nullptr, then DOMPointToHypertextOffset() searched
   // through the hypertext children without finding the node/offset position.
-  int32_t hyperTextOffset;
+  int32_t hyperTextOffset = 0;
   Accessible* finalAccessible =
     DOMPointToHypertextOffset(pos.mResultContent, pos.mContentOffset,
                               &hyperTextOffset, aDirection == eDirNext);
 
-  if (!finalAccessible && aDirection == eDirPrevious) {
-    // If we reached the end during search, this means we didn't find the DOM point
-    // and we're actually at the start of the paragraph
-    hyperTextOffset = 0;
-  }  
-  else if (aAmount == eSelectBeginLine) {
-    Accessible* firstChild = mChildren.SafeElementAt(0, nullptr);
-    // For line selection with needsStart, set start of line exactly to line break
-    if (pos.mContentOffset == 0 && firstChild &&
-        firstChild->Role() == roles::STATICTEXT &&
-        static_cast<int32_t>(nsAccUtils::TextLength(firstChild)) == hyperTextOffset) {
-      // XXX Bullet hack -- we should remove this once list bullets use anonymous content
-      hyperTextOffset = 0;
-    }
-    if (aWordMovementType != eStartWord && aAmount != eSelectBeginLine &&
-        hyperTextOffset > 0) {
-      -- hyperTextOffset;
-    }
-  }
+  // If we reached the end during search, this means we didn't find the DOM point
+  // and we're actually at the start of the paragraph
+  if (!finalAccessible && aDirection == eDirPrevious)
+    return 0;
 
   return hyperTextOffset;
 }
