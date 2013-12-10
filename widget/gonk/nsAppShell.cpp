@@ -220,40 +220,103 @@ sendTouchEvent(UserInputData& data, bool* captured)
     return nsWindow::DispatchInputEvent(event, captured);
 }
 
-static nsEventStatus
-sendKeyEventWithMsg(uint32_t keyCode,
-                    int16_t charCode,
-                    KeyNameIndex keyNameIndex,
-                    uint32_t msg,
-                    uint64_t timeMs,
-                    bool isRepeat)
+class MOZ_STACK_CLASS KeyEventDispatcher
 {
-    WidgetKeyboardEvent event(true, msg, nullptr);
-    if (msg == NS_KEY_PRESS && charCode >= ' ') {
-        event.charCode = charCode;
-    } else {
-        event.keyCode = keyCode;
+public:
+    KeyEventDispatcher(const UserInputData& aData,
+                       KeyCharacterMap* aKeyCharMap);
+    void Dispatch();
+
+private:
+    const UserInputData& mData;
+    sp<KeyCharacterMap> mKeyCharMap;
+
+    uint32_t mDOMKeyCode;
+    KeyNameIndex mDOMKeyNameIndex;
+
+    bool IsKeyPress() const
+    {
+        return mData.action == AKEY_EVENT_ACTION_DOWN;
+    }
+    bool IsRepeat() const
+    {
+        return IsKeyPress() && (mData.flags & AKEY_EVENT_FLAG_LONG_PRESS);
+    }
+
+    uint32_t CharCode() const;
+
+    void DispatchKeyDownEvent();
+    void DispatchKeyUpEvent();
+    nsEventStatus DispatchKeyEventInternal(uint32_t aEventMessage);
+};
+
+KeyEventDispatcher::KeyEventDispatcher(const UserInputData& aData,
+                                       KeyCharacterMap* aKeyCharMap) :
+    mData(aData), mKeyCharMap(aKeyCharMap)
+{
+    mDOMKeyCode = (mData.key.keyCode < ArrayLength(kKeyMapping)) ?
+        kKeyMapping[mData.key.keyCode] : 0;
+    mDOMKeyNameIndex = GetKeyNameIndex(mData.key.keyCode);
+}
+
+uint32_t
+KeyEventDispatcher::CharCode() const
+{
+    if (!mKeyCharMap.get()) {
+        return 0;
+    }
+    char16_t ch = mKeyCharMap->getCharacter(mData.key.keyCode, mData.metaState);
+    return (ch >= ' ') ? static_cast<uint32_t>(ch) : 0;
+}
+
+nsEventStatus
+KeyEventDispatcher::DispatchKeyEventInternal(uint32_t aEventMessage)
+{
+    WidgetKeyboardEvent event(true, aEventMessage, nullptr);
+    if (aEventMessage == NS_KEY_PRESS) {
+        event.charCode = CharCode();
+    }
+    if (!event.charCode) {
+        event.keyCode = mDOMKeyCode;
     }
     event.isChar = !!event.charCode;
-    event.mIsRepeat = isRepeat;
-    event.mKeyNameIndex = keyNameIndex;
+    event.mIsRepeat = IsRepeat();
+    event.mKeyNameIndex = mDOMKeyNameIndex;
     event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
-    event.time = timeMs;
+    event.time = mData.timeMs;
     return nsWindow::DispatchInputEvent(event);
 }
 
-static void
-sendKeyEvent(uint32_t keyCode, int16_t charCode, KeyNameIndex keyNameIndex,
-             bool down, uint64_t timeMs, bool isRepeat)
+void
+KeyEventDispatcher::Dispatch()
 {
-    EventFlags extraFlags;
-    nsEventStatus status =
-        sendKeyEventWithMsg(keyCode, charCode, keyNameIndex,
-                            down ? NS_KEY_DOWN : NS_KEY_UP, timeMs, isRepeat);
-    if (down && status != nsEventStatus_eConsumeNoDefault) {
-        sendKeyEventWithMsg(keyCode, charCode, keyNameIndex, NS_KEY_PRESS,
-                            timeMs, isRepeat);
+    if (!mDOMKeyCode && mDOMKeyNameIndex == KEY_NAME_INDEX_Unidentified) {
+        VERBOSE_LOG("Got unknown key event code. "
+                    "type 0x%04x code 0x%04x value %d",
+                    mData.action, mData.key.keyCode, IsKeyPress());
+        return;
     }
+
+    if (IsKeyPress()) {
+        DispatchKeyDownEvent();
+    } else {
+        DispatchKeyUpEvent();
+    }
+}
+
+void
+KeyEventDispatcher::DispatchKeyDownEvent()
+{
+    nsEventStatus status = DispatchKeyEventInternal(NS_KEY_DOWN);
+    if (status != nsEventStatus_eConsumeNoDefault) {
+        DispatchKeyEventInternal(NS_KEY_PRESS);
+    }
+}
+
+void
+KeyEventDispatcher::DispatchKeyUpEvent()
+{
+    DispatchKeyEventInternal(NS_KEY_UP);
 }
 
 class SwitchEventRunnable : public nsRunnable {
@@ -545,34 +608,13 @@ GeckoInputDispatcher::dispatchOnce()
         break;
     }
     case UserInputData::KEY_DATA: {
-        uint32_t DOMKeyCode =
-            (data.key.keyCode < ArrayLength(kKeyMapping)) ?
-            kKeyMapping[data.key.keyCode] : 0;
-        KeyNameIndex DOMKeyNameIndex = GetKeyNameIndex(data.key.keyCode);
-        if (!DOMKeyCode && DOMKeyNameIndex == KEY_NAME_INDEX_Unidentified) {
-            VERBOSE_LOG("Got unknown key event code. "
-                        "type 0x%04x code 0x%04x value %d",
-                        keyCode, pressed);
-            break;
-        }
-
-        bool isPress = data.action == AKEY_EVENT_ACTION_DOWN;
-        bool isRepeat = isPress && (data.flags & AKEY_EVENT_FLAG_LONG_PRESS);
-        int16_t charCode = 0;
         sp<KeyCharacterMap> kcm = mEventHub->getKeyCharacterMap(data.deviceId);
-        if (kcm.get())
-            charCode = kcm->getCharacter(data.key.keyCode, data.metaState);
-        sendKeyEvent(DOMKeyCode,
-                     charCode,
-                     DOMKeyNameIndex,
-                     isPress,
-                     data.timeMs,
-                     isRepeat);
+        KeyEventDispatcher dispatcher(data, kcm.get());
+        dispatcher.Dispatch();
         break;
     }
     }
 }
-
 
 void
 GeckoInputDispatcher::notifyConfigurationChanged(const NotifyConfigurationChangedArgs*)
