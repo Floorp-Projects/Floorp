@@ -4,16 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-UNIFIED_SOURCES += [
+SOURCES += [
     'nsPrefBranch.cpp',
     'nsPrefsFactory.cpp',
+    'prefapi.cpp',
     'Preferences.cpp',
     'prefread.cpp',
-]
-
-# prefapi.cpp cannot be built in unified mode because it uses plarena.h
-SOURCES += [
-    'prefapi.cpp',
 ]
 
 MSVC_ENABLE_PGO = True
