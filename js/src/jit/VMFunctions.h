@@ -260,7 +260,7 @@ struct VMFunctionsModal
         funs_[info.executionMode].init(info);
     }
 
-    VMFunction funs_[NumExecutionModes];
+    mozilla::Array<VMFunction, NumExecutionModes> funs_;
 };
 
 template <class> struct TypeToDataType { /* Unexpected return type for a VMFunction. */ };

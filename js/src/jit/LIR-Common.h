@@ -246,7 +246,7 @@ class LCallee : public LInstructionHelper<1, 0, 0>
 template <size_t Succs, size_t Operands, size_t Temps>
 class LControlInstructionHelper : public LInstructionHelper<0, Operands, Temps> {
 
-    MBasicBlock *successors_[Succs];
+    mozilla::Array<MBasicBlock *, Succs> successors_;
 
   public:
     virtual size_t numSuccessors() const MOZ_FINAL MOZ_OVERRIDE { return Succs; }
