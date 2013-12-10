@@ -66,19 +66,28 @@ class BackendConsumeSummary(object):
         # the read and execute time. It does not cover consume time.
         self.mozbuild_execution_time = 0.0
 
+        # The total wall time spent emitting objects from sandboxes.
+        self.emitter_execution_time = 0.0
+
         # The total wall time spent in the backend. This counts the time the
         # backend writes out files, etc.
         self.backend_execution_time = 0.0
 
         # How much wall time the system spent doing other things. This is
-        # wall_time - mozbuild_execution_time - backend_execution_time.
+        # wall_time - mozbuild_execution_time - emitter_execution_time -
+        # backend_execution_time.
         self.other_time = 0.0
 
     @property
     def reader_summary(self):
-        return 'Finished reading {:d} moz.build files into {:d} descriptors in {:.2f}s'.format(
-            self.mozbuild_count, self.object_count,
+        return 'Finished reading {:d} moz.build files in {:.2f}s'.format(
+            self.mozbuild_count,
             self.mozbuild_execution_time)
+
+    @property
+    def emitter_summary(self):
+        return 'Processed into {:d} build config descriptors in {:.2f}s'.format(
+            self.object_count, self.emitter_execution_time)
 
     @property
     def backend_summary(self):
@@ -91,11 +100,14 @@ class BackendConsumeSummary(object):
     @property
     def total_summary(self):
         efficiency_value = self.cpu_time / self.wall_time if self.wall_time else 100
-        return 'Total wall time: {:.2f}s; CPU time: {:.2f}s; Efficiency: {:.0%}'.format(
-            self.wall_time, self.cpu_time, efficiency_value)
+        return 'Total wall time: {:.2f}s; CPU time: {:.2f}s; Efficiency: ' \
+            '{:.0%}; Untracked: {:.2f}s'.format(
+                self.wall_time, self.cpu_time, efficiency_value,
+                self.other_time)
 
     def summaries(self):
         yield self.reader_summary
+        yield self.emitter_summary
         yield self.backend_summary
 
         detailed = self.backend_detailed_summary()
@@ -197,7 +209,8 @@ class BuildBackend(LoggingMixin):
 
             if isinstance(obj, ReaderSummary):
                 self.summary.mozbuild_count = obj.total_file_count
-                self.summary.mozbuild_execution_time = obj.total_execution_time
+                self.summary.mozbuild_execution_time = obj.total_sandbox_execution_time
+                self.summary.emitter_execution_time = obj.total_emitter_execution_time
 
         finished_start = time.time()
         self.consume_finished()
@@ -232,6 +245,7 @@ class BuildBackend(LoggingMixin):
         self.summary.backend_execution_time = backend_time
         self.summary.other_time = self.summary.wall_time - \
             self.summary.mozbuild_execution_time - \
+            self.summary.emitter_execution_time - \
             self.summary.backend_execution_time
 
         return self.summary
