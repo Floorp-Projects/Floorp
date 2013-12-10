@@ -312,11 +312,66 @@ function bgCaptureIfMissing(aURL, aOptions) {
 }
 
 function bgCaptureWithMethod(aMethodName, aURL, aOptions = {}) {
-  aOptions.onDone = next;
+  if (!aOptions.onDone)
+    aOptions.onDone = next;
   BackgroundPageThumbs[aMethodName](aURL, aOptions);
 }
 
 function bgTestPageURL(aOpts = {}) {
   let TEST_PAGE_URL = "http://mochi.test:8888/browser/toolkit/components/thumbnails/test/thumbnails_background.sjs";
   return TEST_PAGE_URL + "?" + encodeURIComponent(JSON.stringify(aOpts));
+}
+
+function bgAddCrashObserver() {
+  let crashed = false;
+  Services.obs.addObserver(function crashObserver(subject, topic, data) {
+    is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
+    ok(subject instanceof Components.interfaces.nsIPropertyBag2,
+       'Subject implements nsIPropertyBag2.');
+    // we might see this called as the process terminates due to previous tests.
+    // We are only looking for "abnormal" exits...
+    if (!subject.hasKey("abnormal")) {
+      info("This is a normal termination and isn't the one we are looking for...");
+      return;
+    }
+    Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');
+    crashed = true;
+
+    var dumpID;
+    if ('nsICrashReporter' in Components.interfaces) {
+      dumpID = subject.getPropertyAsAString('dumpID');
+      ok(dumpID, "dumpID is present and not an empty string");
+    }
+
+    if (dumpID) {
+      var minidumpDirectory = getMinidumpDirectory();
+      removeFile(minidumpDirectory, dumpID + '.dmp');
+      removeFile(minidumpDirectory, dumpID + '.extra');
+    }
+  }, 'ipc:content-shutdown', false);
+  return {
+    get crashed() crashed
+  };
+}
+
+function bgInjectCrashContentScript() {
+  const TEST_CONTENT_HELPER = "chrome://mochitests/content/browser/toolkit/components/thumbnails/test/thumbnails_crash_content_helper.js";
+  let thumbnailBrowser = BackgroundPageThumbs._thumbBrowser;
+  let mm = thumbnailBrowser.messageManager;
+  mm.loadFrameScript(TEST_CONTENT_HELPER, false);
+  return mm;
+}
+
+function getMinidumpDirectory() {
+  var dir = Services.dirsvc.get('ProfD', Components.interfaces.nsIFile);
+  dir.append("minidumps");
+  return dir;
+}
+
+function removeFile(directory, filename) {
+  var file = directory.clone();
+  file.append(filename);
+  if (file.exists()) {
+    file.remove(false);
+  }
 }
