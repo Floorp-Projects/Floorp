@@ -1278,7 +1278,7 @@ class Assembler
     // dest parameter, a this object is still needed.  dummy always happens
     // to be null, but we shouldn't be looking at it in any case.
     static Assembler *dummy;
-    mozilla::Array<Pool, 4> pools_;
+    Pool pools_[4];
     Pool *int32Pool;
     Pool *doublePool;
 
@@ -2247,7 +2247,7 @@ class DoubleEncoder {
         { }
     };
 
-    mozilla::Array<DoubleEntry, 256> table;
+    DoubleEntry table[256];
 
   public:
     DoubleEncoder()
