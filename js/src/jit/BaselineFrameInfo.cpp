@@ -17,7 +17,7 @@ bool
 FrameInfo::init(TempAllocator &alloc)
 {
     // One slot is always needed for this/arguments type checks.
-    size_t nstack = Max(script->nslots - script->nfixed, 1);
+    size_t nstack = Max(script->nslots() - script->nfixed(), size_t(1));
     if (!stack.init(alloc, nstack))
         return false;
 

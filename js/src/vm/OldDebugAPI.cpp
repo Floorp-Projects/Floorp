@@ -410,7 +410,7 @@ JS_GetLinePCs(JSContext *cx, JSScript *script,
         return false;
     }
 
-    unsigned lineno = script->lineno;
+    unsigned lineno = script->lineno();
     unsigned offset = 0;
     unsigned i = 0;
     for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
@@ -578,7 +578,7 @@ JS_GetScriptSourceMap(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(unsigned)
 JS_GetScriptBaseLineNumber(JSContext *cx, JSScript *script)
 {
-    return script->lineno;
+    return script->lineno();
 }
 
 JS_PUBLIC_API(unsigned)
@@ -837,10 +837,10 @@ JS_DumpBytecode(JSContext *cx, JSScript *scriptArg)
     if (!sprinter.init())
         return;
 
-    fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename(), script->lineno);
+    fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename(), (int) script->lineno());
     js_Disassemble(cx, script, true, &sprinter);
     fputs(sprinter.string(), stdout);
-    fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename(), script->lineno);
+    fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename(), (int) script->lineno());
 #endif
 }
 
@@ -854,10 +854,10 @@ JS_DumpPCCounts(JSContext *cx, JSScript *scriptArg)
     if (!sprinter.init())
         return;
 
-    fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename(), script->lineno);
+    fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename(), (int) script->lineno());
     js_DumpPCCounts(cx, script, &sprinter);
     fputs(sprinter.string(), stdout);
-    fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename(), script->lineno);
+    fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename(), (int) script->lineno());
 }
 
 namespace {

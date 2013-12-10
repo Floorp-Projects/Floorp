@@ -426,7 +426,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
     typedef BaseProxyHandler::Action Action;
     AutoEnterPolicy(JSContext *cx, BaseProxyHandler *handler,
                     HandleObject wrapper, HandleId id, Action act, bool mayThrow)
-#ifdef DEBUG
+#ifdef JS_DEBUG
         : context(nullptr)
 #endif
     {
@@ -449,7 +449,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
   protected:
     // no-op constructor for subclass
     AutoEnterPolicy()
-#ifdef DEBUG
+#ifdef JS_DEBUG
         : context(nullptr)
 #endif
         {};
@@ -457,7 +457,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
     bool allow;
     bool rv;
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
     JSContext *context;
     mozilla::Maybe<HandleObject> enteredProxy;
     mozilla::Maybe<HandleId> enteredId;
@@ -476,7 +476,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
 
 };
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
 class JS_FRIEND_API(AutoWaivePolicy) : public AutoEnterPolicy {
 public:
     AutoWaivePolicy(JSContext *cx, HandleObject proxy, HandleId id)

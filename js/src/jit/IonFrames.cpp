@@ -313,7 +313,7 @@ CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32_t loca
     SnapshotIterator si = frame.snapshotIterator();
 
     // Skip stack slots until we reach the iterator object.
-    uint32_t base = CountArgSlots(frame.script(), frame.maybeCallee()) + frame.script()->nfixed;
+    uint32_t base = CountArgSlots(frame.script(), frame.maybeCallee()) + frame.script()->nfixed();
     uint32_t skipSlots = base + localSlot - 1;
 
     for (unsigned i = 0; i < skipSlots; i++)
@@ -465,8 +465,8 @@ HandleExceptionBaseline(JSContext *cx, const IonFrameIterator &frame, ResumeFrom
 
         // Skip if the try note's stack depth exceeds the frame's stack depth.
         // See the big comment in TryNoteIter::settle for more info.
-        JS_ASSERT(frame.baselineFrame()->numValueSlots() >= script->nfixed);
-        size_t stackDepth = frame.baselineFrame()->numValueSlots() - script->nfixed;
+        JS_ASSERT(frame.baselineFrame()->numValueSlots() >= script->nfixed());
+        size_t stackDepth = frame.baselineFrame()->numValueSlots() - script->nfixed();
         if (tn->stackDepth > stackDepth)
             continue;
 
@@ -477,7 +477,7 @@ HandleExceptionBaseline(JSContext *cx, const IonFrameIterator &frame, ResumeFrom
         // Compute base pointer and stack pointer.
         rfe->framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
         rfe->stackPointer = rfe->framePointer - BaselineFrame::Size() -
-            (script->nfixed + tn->stackDepth) * sizeof(Value);
+            (script->nfixed() + tn->stackDepth) * sizeof(Value);
 
         switch (tn->kind) {
           case JSTRY_CATCH:
@@ -1590,7 +1590,7 @@ IonFrameIterator::dumpBaseline() const
     }
 
     fprintf(stderr, "  file %s line %u\n",
-            script()->filename(), (unsigned) script()->lineno);
+            script()->filename(), (unsigned) script()->lineno());
 
     JSContext *cx = GetIonContext()->cx;
     RootedScript script(cx);
@@ -1638,7 +1638,7 @@ InlineFrameIteratorMaybeGC<allowGC>::dump() const
     }
 
     fprintf(stderr, "  file %s line %u\n",
-            script()->filename(), (unsigned) script()->lineno);
+            script()->filename(), (unsigned) script()->lineno());
 
     fprintf(stderr, "  script = %p, pc = %p\n", (void*) script(), pc());
     fprintf(stderr, "  current op: %s\n", js_CodeName[*pc()]);

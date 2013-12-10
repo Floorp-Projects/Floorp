@@ -975,8 +975,7 @@ CodeGeneratorShared::jumpToBlock(MBasicBlock *mir)
         CodeOffsetJump backedge = masm.jumpWithPatch(&rejoin);
         masm.bind(&rejoin);
 
-        if (!patchableBackedges_.append(PatchableBackedgeInfo(backedge, mir->lir()->label(), oolEntry)))
-            MOZ_CRASH();
+        masm.propagateOOM(patchableBackedges_.append(PatchableBackedgeInfo(backedge, mir->lir()->label(), oolEntry)));
     } else {
         masm.jump(mir->lir()->label());
     }
@@ -992,8 +991,7 @@ CodeGeneratorShared::jumpToBlock(MBasicBlock *mir, Assembler::Condition cond)
         CodeOffsetJump backedge = masm.jumpWithPatch(&rejoin, cond);
         masm.bind(&rejoin);
 
-        if (!patchableBackedges_.append(PatchableBackedgeInfo(backedge, mir->lir()->label(), oolEntry)))
-            MOZ_CRASH();
+        masm.propagateOOM(patchableBackedges_.append(PatchableBackedgeInfo(backedge, mir->lir()->label(), oolEntry)));
     } else {
         masm.j(cond, mir->lir()->label());
     }
