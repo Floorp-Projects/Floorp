@@ -293,9 +293,6 @@ class TypedDatum : public JSObject
     static bool obj_getSpecial(JSContext *cx, HandleObject obj, HandleObject receiver,
                                HandleSpecialId sid, MutableHandleValue vp);
 
-    static bool obj_getElementIfPresent(JSContext *cx, HandleObject obj,
-                                        HandleObject receiver, uint32_t index,
-                                        MutableHandleValue vp, bool *present);
     static bool obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                MutableHandleValue vp, bool strict);
     static bool obj_setProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,

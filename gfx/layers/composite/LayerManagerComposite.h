@@ -110,8 +110,6 @@ public:
   }
   void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget);
 
-  void NotifyShadowTreeTransaction();
-
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) MOZ_OVERRIDE;
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData,
@@ -119,11 +117,14 @@ public:
 
   virtual void SetRoot(Layer* aLayer) MOZ_OVERRIDE { mRoot = aLayer; }
 
+  // XXX[nrc]: never called, we should move this logic to ClientLayerManager
+  // (bug 946926).
   virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) MOZ_OVERRIDE;
 
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() MOZ_OVERRIDE;
-
-  virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE;
+  virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE
+  {
+    MOZ_CRASH("Call on compositor, not LayerManagerComposite");
+  }
 
   virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;
 
@@ -141,23 +142,15 @@ public:
 
   virtual LayersBackend GetBackendType() MOZ_OVERRIDE
   {
-    return LAYERS_NONE;
+    MOZ_CRASH("Shouldn't be called for composited layer manager");
   }
   virtual void GetBackendName(nsAString& name) MOZ_OVERRIDE
   {
-    MOZ_ASSERT(false, "Shouldn't be called for composited layer manager");
-    name.AssignLiteral("Composite");
+    MOZ_CRASH("Shouldn't be called for composited layer manager");
   }
 
   virtual already_AddRefed<gfxASurface>
     CreateOptimalMaskSurface(const gfxIntSize &aSize) MOZ_OVERRIDE;
-
-
-  DrawThebesLayerCallback GetThebesLayerCallback() const
-  { return mThebesLayerCallback; }
-
-  void* GetThebesLayerCallbackData() const
-  { return mThebesLayerCallbackData; }
 
   virtual const char* Name() const MOZ_OVERRIDE { return ""; }
 
@@ -195,10 +188,8 @@ public:
    * layermanager.
    */
   virtual TemporaryRef<mozilla::gfx::DrawTarget>
-    CreateDrawTarget(const mozilla::gfx::IntSize &aSize,
+    CreateDrawTarget(const mozilla::gfx::IntSize& aSize,
                      mozilla::gfx::SurfaceFormat aFormat) MOZ_OVERRIDE;
-
-  const nsIntSize& GetWidgetSize();
 
   /**
    * Calculates the 'completeness' of the rendering that intersected with the
@@ -216,8 +207,6 @@ public:
   static bool SupportsDirectTexturing();
 
   static void PlatformSyncBeforeReplyUpdate();
-
-  void SetCompositorID(uint32_t aID);
 
   void AddInvalidRegion(const nsIntRegion& aRegion)
   {
@@ -245,7 +234,7 @@ private:
   nsIntRect mRenderBounds;
 
   /** Current root layer. */
-  LayerComposite *RootLayer() const;
+  LayerComposite* RootLayer() const;
 
   /**
    * Recursive helper method for use by ComputeRenderIntegrity. Subtracts
@@ -275,10 +264,6 @@ private:
   /** Our more efficient but less powerful alter ego, if one is available. */
   nsRefPtr<Composer2D> mComposer2D;
 
-  /* Thebes layer callbacks; valid at the end of a transaciton,
-   * while rendering */
-  DrawThebesLayerCallback mThebesLayerCallback;
-  void *mThebesLayerCallbackData;
   gfxMatrix mWorldMatrix;
 
   bool mInTransaction;

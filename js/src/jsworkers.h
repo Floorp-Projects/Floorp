@@ -95,6 +95,7 @@ class WorkerThreadState
 
     void wait(CondVar which, uint32_t timeoutMillis = 0);
     void notifyAll(CondVar which);
+    void notifyOne(CondVar which);
 
     bool canStartAsmJSCompile();
     bool canStartIonCompile();

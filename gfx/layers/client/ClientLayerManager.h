@@ -73,7 +73,7 @@ public:
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
   virtual already_AddRefed<RefLayer> CreateRefLayer();
 
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() MOZ_OVERRIDE
+  TextureFactoryIdentifier GetTextureFactoryIdentifier()
   {
     return mForwarder->GetTextureFactoryIdentifier();
   }

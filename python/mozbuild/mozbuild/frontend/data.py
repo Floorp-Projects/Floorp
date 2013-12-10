@@ -361,6 +361,10 @@ class TestManifest(SandboxDerived):
         # path is relative from the tests root directory.
         'installs',
 
+        # A list of pattern matching installs to perform. Entries are
+        # (base, pattern, dest).
+        'pattern_installs',
+
         # Where all files for this manifest flavor are installed in the unified
         # test package directory.
         'install_prefix',
@@ -400,6 +404,7 @@ class TestManifest(SandboxDerived):
         self.manifest_relpath = relpath
         self.dupe_manifest = dupe_manifest
         self.installs = {}
+        self.pattern_installs = []
         self.tests = []
         self.external_installs = set()
 

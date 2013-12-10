@@ -158,9 +158,6 @@ public:
   virtual bool Resume() MOZ_OVERRIDE;
 
   virtual nsIWidget* GetWidget() const MOZ_OVERRIDE { return mWidget; }
-  virtual const nsIntSize& GetWidgetSize() MOZ_OVERRIDE {
-    return mWidgetSize;
-  }
 
   GLContext* gl() const { return mGLContext; }
   ShaderProgramType GetFBOLayerProgramType() const {

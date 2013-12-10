@@ -6,7 +6,6 @@
 #include "GLManager.h"
 #include "CompositorOGL.h"              // for CompositorOGL
 #include "GLContext.h"                  // for GLContext
-#include "Layers.h"                     // for LayerManager
 #include "mozilla/Assertions.h"         // for MOZ_CRASH
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr
@@ -15,7 +14,6 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsISupportsImpl.h"            // for LayerManager::AddRef, etc
 
 using namespace mozilla::gl;
 
@@ -49,21 +47,14 @@ private:
 };
 
 /* static */ GLManager*
-GLManager::CreateGLManager(LayerManager* aManager)
+GLManager::CreateGLManager(LayerManagerComposite* aManager)
 {
-  if (!aManager) {
-    return nullptr;
+  if (aManager &&
+      Compositor::GetBackend() == LAYERS_OPENGL) {
+    return new GLManagerCompositor(static_cast<CompositorOGL*>(
+      aManager->GetCompositor()));
   }
-  if (aManager->GetBackendType() == LAYERS_NONE) {
-    if (Compositor::GetBackend() == LAYERS_OPENGL) {
-      return new GLManagerCompositor(static_cast<CompositorOGL*>(
-        static_cast<LayerManagerComposite*>(aManager)->GetCompositor()));
-    } else {
-      return nullptr;
-    }
-  }
-
-  MOZ_CRASH("Cannot create GLManager for non-GL layer manager");
+  return nullptr;
 }
 
 }
