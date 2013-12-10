@@ -339,7 +339,7 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
                                nsISupports* aOuter)
     : mJSObj(aJSObj),
       mClass(aClass),
-      mRoot(root ? root : this),
+      mRoot(root ? root : MOZ_THIS_IN_INITIALIZER_LIST()),
       mNext(nullptr),
       mOuter(root ? nullptr : aOuter)
 {
