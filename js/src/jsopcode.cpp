@@ -697,16 +697,16 @@ BytecodeParser::parse()
 #ifdef DEBUG
 
 bool
-js::ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc, uint32_t *depth)
+js::ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc, uint32_t *depth, bool *reachablePC)
 {
     BytecodeParser parser(cx, script);
     if (!parser.parse())
         return false;
 
-    if (!parser.isReachable(pc))
-        return false;
+    *reachablePC = parser.isReachable(pc);
 
-    *depth = parser.stackDepthAtPC(pc);
+    if (*reachablePC)
+        *depth = parser.stackDepthAtPC(pc);
 
     return true;
 }
