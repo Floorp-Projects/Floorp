@@ -86,13 +86,6 @@ let TextAndScrollDataInternal = {
     let scrollX = {}, scrollY = {};
     domWindowUtils.getScrollXY(false, scrollX, scrollY);
     entry.scroll = scrollX.value + "," + scrollY.value;
-
-    if (topURL == "about:config") {
-      entry.formdata = {
-        id: { "textbox": content.top.document.getElementById("textbox").value },
-        xpath: {}
-      };
-    }
   },
 
   isAboutSessionRestore: function (url) {

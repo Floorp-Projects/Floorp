@@ -95,14 +95,14 @@ StackFrame::initCallFrame(JSContext *cx, StackFrame *prev, jsbytecode *prevpc, V
 inline void
 StackFrame::initVarsToUndefined()
 {
-    SetValueRangeToUndefined(slots(), script()->nfixed);
+    SetValueRangeToUndefined(slots(), script()->nfixed());
 }
 
 inline Value &
 StackFrame::unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing)
 {
     JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
-    JS_ASSERT(i < script()->nfixed);
+    JS_ASSERT(i < script()->nfixed());
     return slots()[i];
 }
 
@@ -256,7 +256,7 @@ InterpreterStack::getCallFrame(JSContext *cx, const CallArgs &args, HandleScript
 
     JS_ASSERT(fun->nonLazyScript() == script);
     unsigned nformal = fun->nargs;
-    unsigned nvals = script->nslots;
+    unsigned nvals = script->nslots();
 
     if (args.length() >= nformal) {
         *pargv = args.array();

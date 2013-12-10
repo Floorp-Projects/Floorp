@@ -190,7 +190,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
     // early stack check.
     static const unsigned EARLY_STACK_CHECK_SLOT_COUNT = 128;
     bool needsEarlyStackCheck() const {
-        return script->nslots > EARLY_STACK_CHECK_SLOT_COUNT;
+        return script->nslots() > EARLY_STACK_CHECK_SLOT_COUNT;
     }
 
   public:
