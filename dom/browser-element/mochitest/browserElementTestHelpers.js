@@ -212,10 +212,8 @@ function expectPriorityWithBackgroundLRUSet(childID, expectedBackgroundLRU) {
     'process-priority-with-background-LRU-set',
     function(subject, topic, data) {
 
-      dump("browserElementTestHelpers got notify: topic "+ topic + ", data " + data +"\n");
       [id, priority, cpuPriority, backgroundLRU] = data.split(":");
       if (id != childID) {
-        dump("id(" + id + ") != childID(" + childID + ")\n");
         return;
       }
 
