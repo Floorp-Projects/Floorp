@@ -2816,9 +2816,6 @@ nsWindow::OnButtonReleaseEvent(GdkEventButton *aEvent)
 void
 nsWindow::OnContainerFocusInEvent(GdkEventFocus *aEvent)
 {
-    NS_ASSERTION(mWindowType != eWindowType_popup,
-                 "Unexpected focus on a popup window");
-
     LOGFOCUS(("OnContainerFocusInEvent [%p]\n", (void *)this));
 
     // Unset the urgency hint, if possible
