@@ -263,7 +263,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
     RootedValue thisv(cx);
     if (evalType == DIRECT_EVAL) {
         JS_ASSERT_IF(caller.isStackFrame(), !caller.asStackFrame()->runningInJit());
-        staticLevel = caller.script()->staticLevel + 1;
+        staticLevel = caller.script()->staticLevel() + 1;
 
         // Direct calls to eval are supposed to see the caller's |this|. If we
         // haven't wrapped that yet, do so now, before we make a copy of it for
@@ -347,7 +347,7 @@ js::DirectEvalStringFromIon(JSContext *cx,
 
     // ES5 15.1.2.1 steps 2-8.
 
-    unsigned staticLevel = callerScript->staticLevel + 1;
+    unsigned staticLevel = callerScript->staticLevel() + 1;
 
     Rooted<JSStableString*> stableStr(cx, str->ensureStable(cx));
     if (!stableStr)

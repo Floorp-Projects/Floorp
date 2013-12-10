@@ -20,6 +20,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "js-config.h"
+
 struct JSContext;
 class JSFunction;
 class JSObject;
@@ -40,7 +42,7 @@ class JSString;
 // oblivious to the change. This feature can be explicitly disabled in debug
 // builds by defining JS_NO_JSVAL_JSID_STRUCT_TYPES.
 //
-#if defined(DEBUG) && !defined(JS_NO_JSVAL_JSID_STRUCT_TYPES)
+#if defined(JS_DEBUG) && !defined(JS_NO_JSVAL_JSID_STRUCT_TYPES)
 # define JS_USE_JSID_STRUCT_TYPES
 #endif
 

@@ -69,10 +69,10 @@ MethodStatus
 BaselineCompiler::compile()
 {
     IonSpew(IonSpew_BaselineScripts, "Baseline compiling script %s:%d (%p)",
-            script->filename(), script->lineno, script.get());
+            script->filename(), script->lineno(), script.get());
 
     IonSpew(IonSpew_Codegen, "# Emitting baseline code for script %s:%d",
-            script->filename(), script->lineno);
+            script->filename(), script->lineno());
 
     if (cx->typeInferenceEnabled() && !script->ensureHasTypes(cx))
         return Method_Error;
@@ -172,7 +172,7 @@ BaselineCompiler::compile()
     spsPushToggleOffset_.fixup(&masm);
 
     // Note: There is an extra entry in the bytecode type map for the search hint, see below.
-    size_t bytecodeTypeMapEntries = cx->typeInferenceEnabled() ? script->nTypeSets + 1 : 0;
+    size_t bytecodeTypeMapEntries = cx->typeInferenceEnabled() ? script->nTypeSets() + 1 : 0;
 
     BaselineScript *baselineScript = BaselineScript::New(cx, prologueOffset_.offset(),
                                                          spsPushToggleOffset_.offset(),
@@ -190,7 +190,7 @@ BaselineCompiler::compile()
 
     IonSpew(IonSpew_BaselineScripts, "Created BaselineScript %p (raw %p) for %s:%d",
             (void *) script->baselineScript(), (void *) code->raw(),
-            script->filename(), script->lineno);
+            script->filename(), script->lineno());
 
 #ifdef JS_ION_PERF
     writePerfSpewerBaselineProfile(script, code);
@@ -239,16 +239,16 @@ BaselineCompiler::compile()
             JSOp op = JSOp(*pc);
             if (js_CodeSpec[op].format & JOF_TYPESET) {
                 bytecodeMap[added++] = script->pcToOffset(pc);
-                if (added == script->nTypeSets)
+                if (added == script->nTypeSets())
                     break;
             }
         }
 
-        JS_ASSERT(added == script->nTypeSets);
+        JS_ASSERT(added == script->nTypeSets());
 
         // The last entry in the last index found, and is used to avoid binary
         // searches for the sought entry when queries are in linear order.
-        bytecodeMap[script->nTypeSets] = 0;
+        bytecodeMap[script->nTypeSets()] = 0;
     }
 
     if (script->compartment()->debugMode())
@@ -456,7 +456,7 @@ BaselineCompiler::emitStackCheck(bool earlyCheck)
 {
     Label skipCall;
     uintptr_t *limitAddr = &cx->runtime()->mainThread.ionStackLimit;
-    uint32_t slotsSize = script->nslots * sizeof(Value);
+    uint32_t slotsSize = script->nslots() * sizeof(Value);
     uint32_t tolerance = earlyCheck ? slotsSize : 0;
 
     masm.movePtr(BaselineStackReg, R1.scratchReg());
