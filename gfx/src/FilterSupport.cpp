@@ -1290,6 +1290,13 @@ PostFilterExtentsForPrimitive(const FilterPrimitiveDescription& aDescription,
     }
 
     case FilterPrimitiveDescription::eFlood:
+    {
+      if (atts.GetColor(eFloodColor).a == 0.0f) {
+        return nsIntRect();
+      }
+      return ThebesIntRect(aDescription.PrimitiveSubregion());
+    }
+
     case FilterPrimitiveDescription::eTurbulence:
     case FilterPrimitiveDescription::eImage:
     {
