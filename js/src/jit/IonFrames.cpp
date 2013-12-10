@@ -1463,8 +1463,8 @@ template bool InlineFrameIteratorMaybeGC<NoGC>::isFunctionFrame() const;
 template bool InlineFrameIteratorMaybeGC<CanGC>::isFunctionFrame() const;
 
 MachineState
-MachineState::FromBailout(uintptr_t regs[Registers::Total],
-                          double fpregs[FloatRegisters::Total])
+MachineState::FromBailout(mozilla::Array<uintptr_t, Registers::Total> &regs,
+                          mozilla::Array<double, FloatRegisters::Total> &fpregs)
 {
     MachineState machine;
 
