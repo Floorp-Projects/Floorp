@@ -2929,37 +2929,13 @@ const BrowserSearch = {
       return;
     }
 #endif
-    let openSearchPageIfFieldIsNotActive = function(aSearchBar) {
-      if (!aSearchBar || document.activeElement != aSearchBar.textbox.inputField)
-        openUILinkIn(Services.search.defaultEngine.searchForm, "current");
-    };
-
-    let searchBar = this.searchBar;
-    let placement = CustomizableUI.getPlacementOfWidget("search-container");
-    if (placement && placement.area == CustomizableUI.AREA_PANEL) {
-      PanelUI.show().then(() => {
-        // The panel is not constructed until the first time it is shown.
-        searchBar = this.searchBar;
-        searchBar.select();
-        openSearchPageIfFieldIsNotActive(searchBar);
-      });
-      return;
-    } else if (placement.area == CustomizableUI.AREA_NAVBAR && searchBar &&
-               searchBar.parentNode.classList.contains("overflowedItem")) {
-      let navBar = document.getElementById(CustomizableUI.AREA_NAVBAR);
-      navBar.overflowable.show().then(() => {
-        // The searchBar gets moved when the overflow panel opens.
-        searchBar = this.searchBar;
-        searchBar.select();
-        openSearchPageIfFieldIsNotActive(searchBar);
-      });
-      return;
-    }
-    if (searchBar && window.fullScreen) {
+    var searchBar = this.searchBar;
+    if (searchBar && window.fullScreen)
       FullScreen.mouseoverToggle(true);
+    if (searchBar)
       searchBar.select();
-    }
-    openSearchPageIfFieldIsNotActive(searchBar);
+    if (!searchBar || document.activeElement != searchBar.textbox.inputField)
+      openUILinkIn(Services.search.defaultEngine.searchForm, "current");
   },
 
   /**
