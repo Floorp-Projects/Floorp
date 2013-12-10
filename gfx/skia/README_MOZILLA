@@ -2,4 +2,14 @@ The source from this directory was copied from the skia subversion trunk
 using the update.sh script. The changes made were those applied by update.sh,
 the addition/update of Makefile.in files for the Mozilla build system.
 
-The subversion revision used was r8495.
+The subversion revision used was r13424.
+
+To update to a new version of Skia:
+
+- Copy the entire trunk/ directory from a Skia clone to mozilla-central/gfx/skia
+- cd gfx/skia && ./gyp_mozbuild
+
+Once that's done, use git status to view the files that have changed. Keep an eye on GrUserConfig.h
+and SkUserConfig.h as those probably don't want to be overwritten by upstream versions.
+
+This process will be made more automatic in the future.
