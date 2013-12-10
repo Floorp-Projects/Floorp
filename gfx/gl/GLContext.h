@@ -2377,7 +2377,6 @@ protected:
 
     typedef class gfx::SharedSurface SharedSurface;
     typedef gfx::SharedSurfaceType SharedSurfaceType;
-    typedef gfxImageFormat ImageFormat;
     typedef gfx::SurfaceFormat SurfaceFormat;
 
 public:
