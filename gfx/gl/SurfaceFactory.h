@@ -30,7 +30,7 @@ public:
     virtual ~SurfaceFactory();
 
 protected:
-    virtual SharedSurface* CreateShared(const gfxIntSize& size) = 0;
+    virtual SharedSurface* CreateShared(const gfx::IntSize& size) = 0;
 
     std::queue<SharedSurface*> mScraps;
 

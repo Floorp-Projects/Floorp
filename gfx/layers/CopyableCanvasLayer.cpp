@@ -16,6 +16,7 @@
 #include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxUtils.h"                   // for gfxUtils
+#include "gfx2DGlue.h"                  // for ThebesIntSize, etc
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
@@ -97,6 +98,7 @@ CopyableCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
 
   if (mGLContext) {
     nsRefPtr<gfxImageSurface> readSurf;
+    RefPtr<DataSourceSurface> readDSurf;
     nsRefPtr<gfxASurface> resultSurf;
 
     SharedSurface* sharedSurf = mGLContext->RequestFrame();
@@ -105,7 +107,7 @@ CopyableCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
       return;
     }
 
-    gfxIntSize readSize(sharedSurf->Size());
+    gfxIntSize readSize(ThebesIntSize(sharedSurf->Size()));
     gfxImageFormat format = (GetContentFlags() & CONTENT_OPAQUE)
                             ? gfxImageFormatRGB24
                             : gfxImageFormatARGB32;
@@ -125,8 +127,14 @@ CopyableCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
     SharedSurface_GL* surfGL = SharedSurface_GL::Cast(sharedSurf);
 
     if (surfGL->Type() == SharedSurfaceType::Basic) {
+      // sharedSurf_Basic->mData must outlive readSurf and readDSurf. Alas,
+      // readSurf and readDSurf may not leave the scope they were declared in.
       SharedSurface_Basic* sharedSurf_Basic = SharedSurface_Basic::Cast(surfGL);
-      readSurf = sharedSurf_Basic->GetData();
+      readDSurf = sharedSurf_Basic->GetData();
+      readSurf = new gfxImageSurface(readDSurf->GetData(),
+                                     ThebesIntSize(readDSurf->GetSize()),
+                                     readDSurf->Stride(),
+                                     SurfaceFormatToImageFormat(readDSurf->GetFormat()));
     } else {
       if (resultSurf->GetSize() != readSize ||
           !(readSurf = resultSurf->GetAsImageSurface()) ||

@@ -339,7 +339,7 @@ GLScreenBuffer::AssureBlitted()
         MOZ_ASSERT(drawFB != 0);
         MOZ_ASSERT(drawFB != readFB);
         MOZ_ASSERT(mGL->IsSupported(GLFeature::framebuffer_blit));
-        MOZ_ASSERT(mDraw->Size() == mRead->Size());
+        MOZ_ASSERT(ToIntSize(mDraw->Size()) == mRead->Size());
 
         ScopedBindFramebuffer boundFB(mGL);
         ScopedGLState scissor(mGL, LOCAL_GL_SCISSOR_TEST, false);
@@ -347,8 +347,8 @@ GLScreenBuffer::AssureBlitted()
         BindReadFB_Internal(drawFB);
         BindDrawFB_Internal(readFB);
 
-        const gfxIntSize&  srcSize = mDraw->Size();
-        const gfxIntSize& destSize = mRead->Size();
+        const gfxIntSize&    srcSize = mDraw->Size();
+        const gfx::IntSize& destSize = mRead->Size();
 
         mGL->raw_fBlitFramebuffer(0, 0,  srcSize.width,  srcSize.height,
                                   0, 0, destSize.width, destSize.height,
@@ -393,7 +393,7 @@ GLScreenBuffer::Attach(SharedSurface* surface, const gfxIntSize& size)
 
     if (mRead &&
         surf->AttachType() == SharedSurf()->AttachType() &&
-        size == Size())
+        ToIntSize(size) == Size())
     {
         // Same size, same type, ready for reuse!
         mRead->Attach(surf);
@@ -482,7 +482,7 @@ void
 GLScreenBuffer::Readback(SharedSurface_GL* src, gfxImageSurface* dest)
 {
     MOZ_ASSERT(src && dest);
-    MOZ_ASSERT(dest->GetSize() == src->Size());
+    MOZ_ASSERT(ToIntSize(dest->GetSize()) == src->Size());
     MOZ_ASSERT(dest->Format() == (src->HasAlpha() ? gfxImageFormatARGB32
                                                   : gfxImageFormatRGB24));
 
@@ -681,7 +681,7 @@ ReadBuffer::Attach(SharedSurface_GL* surf)
     mSurf = surf;
 }
 
-const gfxIntSize&
+const gfx::IntSize&
 ReadBuffer::Size() const
 {
     return mSurf->Size();
