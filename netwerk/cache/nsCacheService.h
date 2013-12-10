@@ -62,13 +62,14 @@ private:
  *  nsCacheService
  ******************************************************************************/
 
-class nsCacheService : public mozilla::MemoryMultiReporter,
-                       public nsICacheServiceInternal
+class nsCacheService : public nsICacheServiceInternal,
+                       public nsIMemoryReporter
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSICACHESERVICE
     NS_DECL_NSICACHESERVICEINTERNAL
+    NS_DECL_NSIMEMORYREPORTER
 
     nsCacheService();
     virtual ~nsCacheService();
@@ -222,9 +223,6 @@ public:
     bool             IsDoomListEmpty();
 
     typedef bool (*DoomCheckFn)(nsCacheEntry* entry);
-
-    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                             nsISupports* aData);
 
 private:
     friend class nsCacheServiceAutoLock;

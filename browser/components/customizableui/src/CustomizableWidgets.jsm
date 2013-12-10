@@ -17,6 +17,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentlyClosedTabsAndWindowsMenuUtils",
 XPCOMUtils.defineLazyServiceGetter(this, "CharsetManager",
                                    "@mozilla.org/charset-converter-manager;1",
                                    "nsICharsetConverterManager");
+XPCOMUtils.defineLazyGetter(this, "BrandBundle", function() {
+  const kBrandBundle = "chrome://branding/locale/brand.properties";
+  return Services.strings.createBundle(kBrandBundle);
+});
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
@@ -24,14 +28,6 @@ const kWidePanelItemClass = "panel-wide-item";
 
 let gModuleName = "[CustomizableWidgets]";
 #include logging.js
-
-function isWin8OrHigher() {
-  let osName = Services.sysinfo.getProperty("name");
-  let version = Services.sysinfo.getProperty("version");
-
-  // Windows 8 is version >= 6.2
-  return osName == "Windows_NT" && Services.vc.compare(version, "6.2") >= 0;
-}
 
 function setAttributes(aNode, aAttrs) {
   for (let [name, value] of Iterator(aAttrs)) {
@@ -796,17 +792,20 @@ const CustomizableWidgets = [{
 
 #ifdef XP_WIN
 #ifdef MOZ_METRO
-if (isWin8OrHigher()) {
+if (Services.sysinfo.getProperty("hasWindowsTouchInterface")) {
+  let widgetArgs = {tooltiptext: "switch-to-metro-button2.tooltiptext"};
+  let brandShortName = BrandBundle.GetStringFromName("brandShortName");
+  let metroTooltip = CustomizableUI.getLocalizedProperty(widgetArgs, "tooltiptext",
+                                                         [brandShortName]);
   CustomizableWidgets.push({
     id: "switch-to-metro-button",
     label: "switch-to-metro-button2.label",
-    tooltiptext: "switch-to-metro-button2.tooltiptext",
+    tooltiptext: metroTooltip,
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
+    showInPrivateBrowsing: false, /* See bug 928068 */
     onCommand: function(aEvent) {
-      let win = aEvent.target &&
-        aEvent.target.ownerDocument &&
-        aEvent.target.ownerDocument.defaultView;
+      let win = aEvent.view;
       if (win && typeof win.SwitchToMetro == "function") {
         win.SwitchToMetro();
       }

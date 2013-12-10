@@ -223,7 +223,7 @@ IdToTypeId(jsid id)
     if (JSID_IS_STRING(id)) {
         JSFlatString *str = JSID_TO_FLAT_STRING(id);
         JS::TwoByteChars cp = str->range();
-        if (JS7_ISDEC(cp[0]) || cp[0] == '-') {
+        if (cp.length() > 0 && (JS7_ISDEC(cp[0]) || cp[0] == '-')) {
             for (size_t i = 1; i < cp.length(); ++i) {
                 if (!JS7_ISDEC(cp[i]))
                     return id;

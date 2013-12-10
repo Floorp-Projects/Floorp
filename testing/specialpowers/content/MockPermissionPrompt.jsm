@@ -34,18 +34,9 @@ this.MockPermissionPrompt = {
   init: function() {
     this.reset();
     if (!registrar.isCIDRegistered(newClassID)) {
-      try {
-        oldClassID = registrar.contractIDToCID(CONTRACT_ID);
-        oldFactory = Cm.getClassObject(Cc[CONTRACT_ID], Ci.nsIFactory);
-      } catch (ex) {
-        oldClassID = "";
-        oldFactory = null;
-        dump("TEST-INFO | can't get permission prompt registered component, " +
-            "assuming there is none");
-      }
-      if (oldFactory) {
-        registrar.unregisterFactory(oldClassID, oldFactory);
-      }
+      oldClassID = registrar.contractIDToCID(CONTRACT_ID);
+      oldFactory = Cm.getClassObject(Cc[CONTRACT_ID], Ci.nsIFactory);
+      registrar.unregisterFactory(oldClassID, oldFactory);
       registrar.registerFactory(newClassID, "", CONTRACT_ID, newFactory);
     }
   },
@@ -70,17 +61,14 @@ MockPermissionPromptInstance.prototype = {
 
   prompt: function(request) {
 
-    let perms = request.types.QueryInterface(Ci.nsIArray);
-    for (let idx = 0; idx < perms.length; idx++) {
-      let perm = perms.queryElementAt(idx, Ci.nsIContentPermissionType);
-      if (Services.perms.testExactPermissionFromPrincipal(
-           request.principal, perm.type) != Ci.nsIPermissionManager.ALLOW_ACTION) {
-        request.cancel();
-        return;
-      }
+    this.promptResult = Services.perms.testExactPermissionFromPrincipal(request.principal,
+                                                                        request.type);
+    if (this.promptResult == Ci.nsIPermissionManager.ALLOW_ACTION) {
+      request.allow();
     }
-
-    request.allow();
+    else {
+      request.cancel();
+    }
   }
 };
 

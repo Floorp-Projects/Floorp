@@ -6,7 +6,7 @@ package org.mozilla.gecko;
 
 
 public class FennecTalosAssert implements Assert {
-    
+
     public FennecTalosAssert() { }
 
     /**
@@ -38,14 +38,14 @@ public class FennecTalosAssert implements Assert {
         }
     }
 
-    public void is(Object a, Object b, String name) {
-        boolean pass = (a == null ? b == null : a.equals(b));
-        ok(pass, name, "got " + a + ", expected " + b);
+    public void is(Object actual, Object expected, String name) {
+        boolean pass = (actual == null ? expected == null : actual.equals(expected));
+        ok(pass, name, "got " + actual + ", expected " + expected);
     }
-    
-    public void isnot(Object a, Object b, String name) {
-        boolean fail = (a == null ? b == null : a.equals(b));
-        ok(!fail, name, "got " + a + ", expected not " + b);
+
+    public void isnot(Object actual, Object notExpected, String name) {
+        boolean fail = (actual == null ? notExpected == null : actual.equals(notExpected));
+        ok(!fail, name, "got " + actual + ", expected not " + notExpected);
     }
 
     public void ispixel(int actual, int r, int g, int b, String name) {
@@ -60,11 +60,11 @@ public class FennecTalosAssert implements Assert {
         throw new UnsupportedOperationException();
     }
 
-    public void todo_is(Object a, Object b, String name) {
+    public void todo_is(Object actual, Object expected, String name) {
         throw new UnsupportedOperationException();
     }
     
-    public void todo_isnot(Object a, Object b, String name) {
+    public void todo_isnot(Object actual, Object notExpected, String name) {
         throw new UnsupportedOperationException();
     }
 

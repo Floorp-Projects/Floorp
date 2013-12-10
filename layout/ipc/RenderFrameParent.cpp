@@ -677,7 +677,8 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
   nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
   // Perhaps the document containing this frame currently has no presentation?
   if (lm && lm->GetBackendType() == LAYERS_CLIENT) {
-    *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
+    *aTextureFactoryIdentifier =
+      static_cast<ClientLayerManager*>(lm.get())->GetTextureFactoryIdentifier();
   } else {
     *aTextureFactoryIdentifier = TextureFactoryIdentifier();
   }

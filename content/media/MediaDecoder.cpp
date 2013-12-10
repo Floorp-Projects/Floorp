@@ -54,9 +54,10 @@ PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(type, msg)
 #endif
 
-class MediaMemoryTracker : public MemoryMultiReporter
+class MediaMemoryTracker : public nsIMemoryReporter
 {
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
 
   MediaMemoryTracker();
   virtual ~MediaMemoryTracker();
@@ -93,14 +94,11 @@ public:
       sUniqueInstance = nullptr;
     }
   }
-
-  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData);
 };
 
 StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 
-NS_IMPL_ISUPPORTS_INHERITED0(MediaMemoryTracker, MemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(MediaMemoryTracker, nsIMemoryReporter)
 
 NS_IMPL_ISUPPORTS1(MediaDecoder, nsIObserver)
 
