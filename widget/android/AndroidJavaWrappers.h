@@ -686,11 +686,14 @@ public:
         PREFERENCES_OBSERVE = 39,
         PREFERENCES_GET = 40,
         PREFERENCES_REMOVE_OBSERVERS = 41,
+        TELEMETRY_UI_SESSION_START = 42,
+        TELEMETRY_UI_SESSION_STOP = 43,
+        TELEMETRY_UI_EVENT = 44,
         dummy_java_enum_list_end
     };
 
     enum {
-        // Memory pressue levels, keep in sync with those in MemoryMonitor.java
+        // Memory pressure levels. Keep these in sync with those in MemoryMonitor.java.
         MEMORY_PRESSURE_NONE = 0,
         MEMORY_PRESSURE_CLEANUP = 1,
         MEMORY_PRESSURE_LOW = 2,
