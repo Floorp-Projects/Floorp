@@ -52,7 +52,6 @@
 #include "ImageContainer.h"
 #include "nsGlobalWindow.h"
 #include "prprf.h"
-#include "nsProxyRelease.h"
 #endif
 
 #include "NullTransport.h"
@@ -74,7 +73,7 @@ class GetCameraNameRunnable;
  *   mSources, mImageContainer, mSources, mState, mImage, mLastCapture
  *
  * MainThread:
- *   mDOMCameraControl, mCaptureIndex, mCameraThread, mCameraManager,
+ *   mDOMCameraControl, mCaptureIndex, mCameraThread, mWindowId, mCameraManager,
  *   mNativeCameraControl, mPreviewStream, mState, mLastCapture, mWidth, mHeight
  *
  * Where mWidth, mHeight, mImage are protected by mMonitor
@@ -97,10 +96,11 @@ class MediaEngineWebRTCVideoSource : public MediaEngineVideoSource
 public:
 #ifdef MOZ_B2G_CAMERA
   MediaEngineWebRTCVideoSource(nsDOMCameraManager* aCameraManager,
-    int aIndex)
+    int aIndex, uint64_t aWindowId)
     : mCameraManager(aCameraManager)
     , mNativeCameraControl(nullptr)
     , mPreviewStream(nullptr)
+    , mWindowId(aWindowId)
     , mCallbackMonitor("WebRTCCamera.CallbackMonitor")
     , mCaptureIndex(aIndex)
     , mMonitor("WebRTCCamera.Monitor")
@@ -223,6 +223,7 @@ private:
   nsRefPtr<nsDOMCameraControl> mDOMCameraControl;
   nsRefPtr<nsGonkCameraControl> mNativeCameraControl;
   nsRefPtr<DOMCameraPreview> mPreviewStream;
+  uint64_t mWindowId;
   mozilla::ReentrantMonitor mCallbackMonitor; // Monitor for camera callback handling
   nsRefPtr<nsIThread> mCameraThread;
   nsRefPtr<nsIDOMFile> mLastCapture;
@@ -351,14 +352,15 @@ class MediaEngineWebRTC : public MediaEngine
 {
 public:
 #ifdef MOZ_B2G_CAMERA
-  MediaEngineWebRTC(nsDOMCameraManager* aCameraManager)
+  MediaEngineWebRTC(nsDOMCameraManager* aCameraManager, uint64_t aWindowId)
     : mMutex("mozilla::MediaEngineWebRTC")
     , mVideoEngine(nullptr)
     , mVoiceEngine(nullptr)
     , mVideoEngineInit(false)
     , mAudioEngineInit(false)
-    , mHasTabVideoSource(false)
     , mCameraManager(aCameraManager)
+    , mWindowId(aWindowId)
+    , mHasTabVideoSource(false)
   {
     AsyncLatencyLogger::Get(true)->AddRef();
     mLoadMonitor = new LoadMonitor();
@@ -399,8 +401,6 @@ private:
   nsRefPtrHashtable<nsStringHashKey, MediaEngineWebRTCAudioSource > mAudioSources;
 
 #ifdef MOZ_B2G_CAMERA
-  // XXX Should use nsMainThreadPtrHandle/etc
-
   // MediaEngine hold this DOM object, and the MediaEngine is hold by Navigator
   // Their life time is always much longer than this object. Use a raw-pointer
   // here should be safe.
@@ -409,6 +409,7 @@ private:
   // avoid any bad thing do to addref/release DOM-object on other thread, we use
   // raw-pointer for now.
   nsDOMCameraManager* mCameraManager;
+  uint64_t mWindowId;
 #endif
 
    nsRefPtr<LoadMonitor> mLoadMonitor;
