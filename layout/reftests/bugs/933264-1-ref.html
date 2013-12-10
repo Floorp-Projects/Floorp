@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+ <head>
+  <title>The Grid in an overflowing div</title>
+  <style type="text/css">
+    html {
+        padding: 0;
+        border: 0;
+        margin: 0;
+    }
+    body {
+        padding: 0;
+        border: 0;
+        margin: 0;
+    }
+    table {
+        padding: 0;
+        margin: 0;
+        border-top: none;
+        border-left: none;
+        border-right: 1px solid black;
+        border-bottom: 1px solid black;
+    }
+    tr {
+        padding: 0;
+        border: 0;
+        margin: 0;
+    }
+    td {
+        /* top border counts as part of height, but
+           left border doesn't count as part of width.
+           go figure.
+        */
+        min-height: 99px;
+        height: 99px;
+        max-height: 99px;
+        min-width: 99px;
+        width: 99px;
+        max-width: 99px;
+        padding: 0;
+        border-left: 1px solid black;
+        border-top: 1px solid black;
+        border-right: none;
+        border-bottom: none;
+        margin: 0;
+        font-size: 12px;
+        text-align: left;
+        vertical-align: top;
+        font-family: monospace;
+    }
+  </style>
+  <script type="text/javascript">
+    var val = 900;
+    function scroll() {
+        var div = document.getElementById('nest');
+        div.scrollLeft = val;
+        div.scrollTop = val;
+        document.documentElement.removeAttribute('class');
+    }
+
+    window.onload = scroll;
+  </script>
+ </head>
+ <body>
+  <div style="color: red">this text is above the scrolling div. the div below is 300x400</div>
+  <div id="nest" style="overflow: scroll; height: 400px; width: 300px; border: solid 1px black">
+    <div style="background: blue; width: 5000px; height: 5000px;"></div>
+  </div>
+  <div style="color: red">this text is below the scrolling div</div>
+ </body>
+</html>
