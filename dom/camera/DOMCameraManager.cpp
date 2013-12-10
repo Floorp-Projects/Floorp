@@ -105,31 +105,6 @@ nsDOMCameraManager::CreateInstance(nsPIDOMWindow* aWindow)
   return cameraManager.forget();
 }
 
-nsDOMCameraControl*
-nsDOMCameraManager::GetCameraControl(uint32_t aDeviceNum,
-                                     nsICameraGetCameraCallback* onSuccess,
-                                     nsICameraErrorCallback* onError,
-                                     ErrorResult& aRv)
-{
-  aRv = NS_OK;
-
-  // reuse the same camera thread to conserve resources
-  if (!mCameraThread) {
-    aRv = NS_NewThread(getter_AddRefs(mCameraThread));
-    if (aRv.Failed()) {
-      return nullptr;
-    }
-  }
-
-  // Creating this object will trigger the onSuccess handler
-  nsDOMCameraControl* cameraControl =  new nsDOMCameraControl(aDeviceNum, mCameraThread,
-                                                              onSuccess, onError, mWindow);
-  if (cameraControl) {
-    Register(cameraControl);
-  }
-  return cameraControl;
-}
-
 void
 nsDOMCameraManager::GetCamera(const CameraSelector& aOptions,
                               nsICameraGetCameraCallback* onSuccess,
@@ -141,10 +116,22 @@ nsDOMCameraManager::GetCamera(const CameraSelector& aOptions,
     cameraId = 1;
   }
 
+  // reuse the same camera thread to conserve resources
+  if (!mCameraThread) {
+    aRv = NS_NewThread(getter_AddRefs(mCameraThread));
+    if (aRv.Failed()) {
+      return;
+    }
+  }
+
   DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
 
+  // Creating this object will trigger the onSuccess handler
   nsRefPtr<nsDOMCameraControl> cameraControl =
-    GetCameraControl(cameraId, onSuccess, onError.WasPassed() ? onError.Value() : nullptr, aRv);
+    new nsDOMCameraControl(cameraId, mCameraThread,
+                           onSuccess, onError.WasPassed() ? onError.Value() : nullptr, mWindow);
+
+  Register(cameraControl);
 }
 
 void

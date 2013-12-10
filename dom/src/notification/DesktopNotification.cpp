@@ -15,7 +15,6 @@
 #include "PCOMContentPermissionRequestChild.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
-#include "PermissionMessageUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -180,12 +179,9 @@ DesktopNotification::Init()
     // Corresponding release occurs in DeallocPContentPermissionRequest.
     nsRefPtr<DesktopNotificationRequest> copy = request;
 
-    nsTArray<PermissionRequest> permArray;
-    permArray.AppendElement(PermissionRequest(
-                            NS_LITERAL_CSTRING("desktop-notification"),
-                            NS_LITERAL_CSTRING("unused")));
     child->SendPContentPermissionRequestConstructor(copy.forget().get(),
-                                                    permArray,
+                                                    NS_LITERAL_CSTRING("desktop-notification"),
+                                                    NS_LITERAL_CSTRING("unused"),
                                                     IPC::Principal(mPrincipal));
 
     request->Sendprompt();
@@ -357,11 +353,17 @@ DesktopNotificationRequest::Allow()
 }
 
 NS_IMETHODIMP
-DesktopNotificationRequest::GetTypes(nsIArray** aTypes)
+DesktopNotificationRequest::GetType(nsACString & aType)
 {
-  return CreatePermissionArray(NS_LITERAL_CSTRING("desktop-notification"),
-                               NS_LITERAL_CSTRING("unused"),
-                               aTypes);
+  aType = "desktop-notification";
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DesktopNotificationRequest::GetAccess(nsACString & aAccess)
+{
+  aAccess = "unused";
+  return NS_OK;
 }
 
 } // namespace dom

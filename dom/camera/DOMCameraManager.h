@@ -49,11 +49,6 @@ public:
     CreateInstance(nsPIDOMWindow* aWindow);
   static bool IsWindowStillActive(uint64_t aWindowId);
 
-  // Build us an nsDOMCameraControl
-  mozilla::nsDOMCameraControl* GetCameraControl(uint32_t aDeviceNum,
-                                                nsICameraGetCameraCallback* onSuccess,
-                                                nsICameraErrorCallback* onError,
-                                                mozilla::ErrorResult& aRv);
   void Register(mozilla::nsDOMCameraControl* aDOMCameraControl);
   void OnNavigation(uint64_t aWindowId);
 
