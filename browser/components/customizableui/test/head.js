@@ -196,31 +196,49 @@ function openAndLoadWindow(aOptions, aWaitForDelayedStartup=false) {
 
 function promisePanelShown(win) {
   let panelEl = win.PanelUI.panel;
+  return promisePanelElementShown(win, panelEl);
+}
+
+function promiseOverflowShown(win) {
+  let panelEl = win.document.getElementById("widget-overflow");
+  return promisePanelElementShown(win, panelEl);
+}
+
+function promisePanelElementShown(win, aPanel) {
   let deferred = Promise.defer();
   let timeoutId = win.setTimeout(() => {
     deferred.reject("Panel did not show within 20 seconds.");
   }, 20000);
   function onPanelOpen(e) {
-    panelEl.removeEventListener("popupshown", onPanelOpen);
+    aPanel.removeEventListener("popupshown", onPanelOpen);
     win.clearTimeout(timeoutId);
     deferred.resolve();
   };
-  panelEl.addEventListener("popupshown", onPanelOpen);
+  aPanel.addEventListener("popupshown", onPanelOpen);
   return deferred.promise;
 }
 
 function promisePanelHidden(win) {
   let panelEl = win.PanelUI.panel;
+  return promisePanelElementHidden(win, panelEl);
+}
+
+function promiseOverflowHidden(win) {
+  let panelEl = document.getElementById("widget-overflow");
+  return promisePanelElementHidden(win, panelEl);
+}
+
+function promisePanelElementHidden(win, aPanel) {
   let deferred = Promise.defer();
   let timeoutId = win.setTimeout(() => {
     deferred.reject("Panel did not hide within 20 seconds.");
   }, 20000);
   function onPanelClose(e) {
-    panelEl.removeEventListener("popuphidden", onPanelClose);
+    aPanel.removeEventListener("popuphidden", onPanelClose);
     win.clearTimeout(timeoutId);
     deferred.resolve();
   }
-  panelEl.addEventListener("popuphidden", onPanelClose);
+  aPanel.addEventListener("popuphidden", onPanelClose);
   return deferred.promise;
 }
 
