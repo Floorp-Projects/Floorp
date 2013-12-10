@@ -15,8 +15,6 @@ from mach.mixin.logging import LoggingMixin
 import mozpack.path as mozpath
 import manifestparser
 
-from mozpack.files import FileFinder
-
 from .data import (
     ConfigFileSubstitution,
     Defines,
@@ -405,8 +403,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
             out_dir = mozpath.join(install_prefix, manifest_reldir)
 
-            finder = FileFinder(base=manifest_dir, find_executables=False)
-
             # "head" and "tail" lists.
             # All manifests support support-files.
             #
@@ -431,22 +427,9 @@ class TreeMetadataEmitter(LoggingMixin):
                     for pattern in value.split():
                         # We only support globbing on support-files because
                         # the harness doesn't support * for head and tail.
-                        #
-                        # While we could feed everything through the finder, we
-                        # don't because we want explicitly listed files that
-                        # no longer exist to raise an error. The finder is also
-                        # slower than simple lookup.
                         if '*' in pattern and thing == 'support-files':
-                            paths = [f[0] for f in finder.find(pattern)]
-                            if not paths:
-                                raise SandboxValidationError('%s support-files '
-                                    'wildcard in %s returns no results.' % (
-                                    pattern, path))
-
-                            for f in paths:
-                                full = mozpath.normpath(mozpath.join(manifest_dir, f))
-                                obj.installs[full] = mozpath.join(out_dir, f)
-
+                            obj.pattern_installs.append(
+                                (manifest_dir, pattern, out_dir))
                         else:
                             full = mozpath.normpath(mozpath.join(manifest_dir,
                                 pattern))

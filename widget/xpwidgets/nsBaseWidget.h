@@ -136,10 +136,10 @@ public:
   virtual void            CreateCompositor(int aWidth, int aHeight);
   virtual void            PrepareWindowEffects() {}
   virtual void            CleanupWindowEffects() {}
-  virtual bool            PreRender(LayerManager* aManager) { return true; }
-  virtual void            PostRender(LayerManager* aManager) {}
-  virtual void            DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) {}
-  virtual void            DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {}
+  virtual bool            PreRender(LayerManagerComposite* aManager) { return true; }
+  virtual void            PostRender(LayerManagerComposite* aManager) {}
+  virtual void            DrawWindowUnderlay(LayerManagerComposite* aManager, nsIntRect aRect) {}
+  virtual void            DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect) {}
   virtual mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing();
   virtual void            EndRemoteDrawing() { };
   virtual void            CleanupRemoteDrawing() { };

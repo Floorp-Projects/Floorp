@@ -1,9 +1,9 @@
 function run_test() {
   var Cu = Components.utils;
   var epsb = new Cu.Sandbox(["http://example.com", "http://example.org"], { wantExportHelpers: true });
-  subsb = new Cu.Sandbox("http://example.com", { wantGlobalProperties: ["XMLHttpRequest"] });
-  subsb2 = new Cu.Sandbox("http://example.com", { wantGlobalProperties: ["XMLHttpRequest"] });
-  xorigsb = new Cu.Sandbox("http://test.com");
+  var subsb = new Cu.Sandbox("http://example.com", { wantGlobalProperties: ["XMLHttpRequest"] });
+  var subsb2 = new Cu.Sandbox("http://example.com", { wantGlobalProperties: ["XMLHttpRequest"] });
+  var xorigsb = new Cu.Sandbox("http://test.com");
 
   epsb.subsb = subsb;
   epsb.xorigsb = xorigsb;
@@ -32,7 +32,7 @@ function run_test() {
       do_check_true(wasCalled);
       wasCalled = false;
     }
-    exportFunction(funToExport, subsb, "imported");
+    exportFunction(funToExport, subsb, { defineAs: "imported" });
   }.toSource() + ")()", epsb);
 
   subsb.xrayed = Cu.evalInSandbox("(" + function () {
@@ -64,7 +64,7 @@ function run_test() {
   // not subsume the principal of the target.
   Cu.evalInSandbox("(" + function() {
     try{
-      exportFunction(function(){}, this.xorigsb, "denied");
+      exportFunction(function() {}, this.xorigsb, { defineAs: "denied" });
       do_check_true(false);
     } catch (e) {
       do_check_true(e.toString().indexOf('Permission denied') > -1);
@@ -74,8 +74,8 @@ function run_test() {
   // Let's create an object in the target scope and add privileged
   // function to it as a property.
   Cu.evalInSandbox("(" + function() {
-    var newContentObject = createObjectIn(subsb, {defineAs:"importedObject"});
-    exportFunction(funToExport, newContentObject, "privMethod");
+    var newContentObject = createObjectIn(subsb, { defineAs: "importedObject" });
+    exportFunction(funToExport, newContentObject, { defineAs: "privMethod" });
   }.toSource() + ")()", epsb);
 
   Cu.evalInSandbox("(" + function () {
@@ -87,13 +87,27 @@ function run_test() {
   }.toSource() + ")()", epsb);
 
   // exportFunction and createObjectIn should be available from Cu too.
-  var newContentObject = Cu.createObjectIn(subsb, {defineAs:"importedObject2"});
+  var newContentObject = Cu.createObjectIn(subsb, { defineAs: "importedObject2" });
   var wasCalled = false;
-  Cu.exportFunction(function(arg){wasCalled = arg.wasCalled;}, newContentObject, "privMethod");
+  Cu.exportFunction(function(arg) { wasCalled = arg.wasCalled; },
+                    newContentObject, { defineAs: "privMethod" });
 
   Cu.evalInSandbox("(" + function () {
     importedObject2.privMethod({wasCalled: true});
   }.toSource() + ")()", subsb);
+
+  // 3rd argument of exportFunction should be optional.
+  Cu.evalInSandbox("(" + function() {
+    subsb.imported2 = exportFunction(funToExport, subsb);
+  }.toSource() + ")()", epsb);
+
+  Cu.evalInSandbox("(" + function () {
+    imported2(42, tobecloned, native, mixed);
+  }.toSource() + ")()", subsb);
+
+  Cu.evalInSandbox("(" + function() {
+    checkIfCalled();
+  }.toSource() + ")()", epsb);
 
   do_check_true(wasCalled, true);
 }
