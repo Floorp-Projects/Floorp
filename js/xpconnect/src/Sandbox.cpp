@@ -243,17 +243,20 @@ IsProxy(JSContext *cx, unsigned argc, jsval *vp)
 namespace xpc {
 
 bool
-ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleValue vname,
+ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleValue voptions,
                MutableHandleValue rval)
 {
-    if (!vscope.isObject() || !vfunction.isObject() || !vname.isString()) {
+    bool hasOptions = !voptions.isUndefined();
+    if (!vscope.isObject() || !vfunction.isObject() || (hasOptions && !voptions.isObject())) {
         JS_ReportError(cx, "Invalid argument");
         return false;
     }
 
     RootedObject funObj(cx, &vfunction.toObject());
     RootedObject targetScope(cx, &vscope.toObject());
-    RootedString funName(cx, vname.toString());
+    ExportOptions options(cx, hasOptions ? &voptions.toObject() : nullptr);
+    if (hasOptions && !options.Parse())
+        return false;
 
     // We can only export functions to scopes those are transparent for us,
     // so if there is a security wrapper around targetScope we must throw.
@@ -265,11 +268,6 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
 
     if (js::IsScriptedProxy(targetScope)) {
         JS_ReportError(cx, "Defining property on proxy object is not allowed");
-        return false;
-    }
-
-    if (JS_GetStringLength(funName) == 0) {
-        JS_ReportError(cx, "3rd argument should be a non-empty string");
         return false;
     }
 
@@ -285,14 +283,26 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
             return false;
         }
 
+        RootedId id(cx, options.defineAs);
+        if (JSID_IS_VOID(id)) {
+            // If there wasn't any function name specified,
+            // copy the name from the function being imported.
+            JSFunction *fun = JS_GetObjectFunction(funObj);
+            RootedString funName(cx, JS_GetFunctionId(fun));
+            if (!funName)
+                funName = JS_InternString(cx, "");
+
+            RootedValue vname(cx);
+            vname.setString(funName);
+            if (!JS_ValueToId(cx, vname, id.address()))
+                return false;
+        }
+        MOZ_ASSERT(JSID_IS_STRING(id));
+
         // The function forwarder will live in the target compartment. Since
         // this function will be referenced from its private slot, to avoid a
         // GC hazard, we must wrap it to the same compartment.
         if (!JS_WrapObject(cx, &funObj))
-            return false;
-
-        RootedId id(cx);
-        if (!JS_ValueToId(cx, vname, id.address()))
             return false;
 
         // And now, let's create the forwarder function in the target compartment
@@ -302,12 +312,16 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
             return false;
         }
 
-        // We have the forwarder function in the target compartment, now
-        // we have to add it to the target scope as a property.
-        if (!JS_DefinePropertyById(cx, targetScope, id, rval,
-                                   JS_PropertyStub, JS_StrictPropertyStub,
-                                   JSPROP_ENUMERATE))
-            return false;
+        // We have the forwarder function in the target compartment. If
+        // defineAs was set, we also need to define it as a property on
+        // the target.
+        if (!JSID_IS_VOID(options.defineAs)) {
+            if (!JS_DefinePropertyById(cx, targetScope, id, rval,
+                                       JS_PropertyStub, JS_StrictPropertyStub,
+                                       JSPROP_ENUMERATE)) {
+                return false;
+            }
+        }
     }
 
     // Finally we have to re-wrap the exported function back to the caller compartment.
@@ -321,19 +335,19 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
  * Expected type of the arguments and the return value:
  * function exportFunction(function funToExport,
  *                         object targetScope,
- *                         string name)
+ *                         [optional] object options)
  */
 static bool
 ExportFunction(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 3) {
-        JS_ReportError(cx, "Function requires at least 3 arguments");
+    if (args.length() < 2) {
+        JS_ReportError(cx, "Function requires at least 2 arguments");
         return false;
     }
 
-    return ExportFunction(cx, args[0], args[1],
-                          args[2], args.rval());
+    RootedValue options(cx, args.length() > 2 ? args[2] : UndefinedValue());
+    return ExportFunction(cx, args[0], args[1], options, args.rval());
 }
 } /* namespace xpc */
 
