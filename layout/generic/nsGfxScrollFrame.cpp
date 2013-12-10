@@ -2439,6 +2439,12 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   scrolledContent.MoveTo(aLists);
 
   // Now display overlay scrollbars and the resizer, if we have one.
+#ifdef MOZ_WIDGET_GONK
+  // TODO: only layerize the overlay scrollbars if this scrollframe can be
+  // panned asynchronously. For now just always layerize on B2G because.
+  // that's where we want the layerized scrollbars
+  createLayersForScrollbars = true;
+#endif
   AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, createLayersForScrollbars,
                       true);
 }
