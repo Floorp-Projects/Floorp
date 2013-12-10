@@ -23,6 +23,24 @@ import android.view.View;
  * A class representing any interactions that take place on the Awesomescreen.
  */
 public class AboutHomeComponent extends BaseComponent {
+    // TODO: Having a specific ordering of pages is prone to fail and thus temporary.
+    // Hopefully the work in bug 940565 will alleviate the need for these enums.
+    // Explicit ordering of HomePager pages on a phone.
+    private enum PhonePage {
+        HISTORY,
+        TOP_SITES,
+        BOOKMARKS,
+        READING_LIST
+    }
+
+    // Explicit ordering of HomePager pages on a tablet.
+    private enum TabletPage {
+        TOP_SITES,
+        BOOKMARKS,
+        READING_LIST,
+        HISTORY
+    }
+
     public AboutHomeComponent(final UITestContext testContext) {
         super(testContext);
     }
@@ -34,17 +52,7 @@ public class AboutHomeComponent extends BaseComponent {
     public AboutHomeComponent assertCurrentPage(final Page expectedPage) {
         assertVisible();
 
-        // TODO: A "PhonePage" and "TabletPage" enum should be set explicitly or decided
-        // dynamically, likely with the work done in bug 940565. The current solution should only
-        // be temporary.
-        int expectedPageIndex = expectedPage.ordinal();
-        if (DeviceHelper.isTablet()) {
-            // Left circular shift Page enum since the History tab is moved to the rightmost.
-            expectedPageIndex -= 1;
-            expectedPageIndex =
-                    (expectedPageIndex >= 0) ? expectedPageIndex : Page.values().length - 1;
-        }
-
+        final int expectedPageIndex = getPageIndexForDevice(expectedPage.ordinal());
         assertEquals("The current HomePager page is " + expectedPage,
                      expectedPageIndex, getHomePagerView().getCurrentItem());
         return this;
@@ -64,11 +72,13 @@ public class AboutHomeComponent extends BaseComponent {
 
     // TODO: Take specific page as parameter rather than swipe in a direction?
     public AboutHomeComponent swipeToPageOnRight() {
+        mTestContext.dumpLog("Swiping to the page on the right.");
         swipe(Solo.LEFT);
         return this;
     }
 
     public AboutHomeComponent swipeToPageOnLeft() {
+        mTestContext.dumpLog("Swiping to the page on the left.");
         swipe(Solo.RIGHT);
         return this;
     }
@@ -94,12 +104,29 @@ public class AboutHomeComponent extends BaseComponent {
     }
 
     private void waitForPageIndex(final int expectedIndex) {
-        final String pageName = Page.values()[expectedIndex].toString();
+        final String pageName;
+        if (DeviceHelper.isTablet()) {
+            pageName = TabletPage.values()[expectedIndex].name();
+        } else {
+            pageName = PhonePage.values()[expectedIndex].name();
+        }
+
         WaitHelper.waitFor("HomePager " + pageName + " page", new Condition() {
             @Override
             public boolean isSatisfied() {
                 return (getHomePagerView().getCurrentItem() == expectedIndex);
             }
         });
+    }
+
+    /**
+     * Gets the page index in the device specific Page enum for the given index in the
+     * HomePager.Page enum.
+     */
+    private int getPageIndexForDevice(final int pageIndex) {
+        final String pageName = Page.values()[pageIndex].name();
+        final Class devicePageEnum =
+                DeviceHelper.isTablet() ? TabletPage.class : PhonePage.class;
+        return Enum.valueOf(devicePageEnum, pageName).ordinal();
     }
 }
