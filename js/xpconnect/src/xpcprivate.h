@@ -2502,6 +2502,7 @@ public:
     nsXPCWrappedJS* Find(REFNSIID aIID);
     nsXPCWrappedJS* FindInherited(REFNSIID aIID);
 
+    bool IsRootWrapper() const {return mRoot == this;}
     bool IsValid() const {return mJSObj != nullptr;}
     void SystemIsBeingShutDown();
 
