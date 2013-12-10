@@ -396,7 +396,6 @@ let FormAssistant = {
         range = getSelectionRange(this.focusedElement);
         if (range[0] !== this.selectionStart ||
             range[1] !== this.selectionEnd) {
-          this.sendKeyboardState(this.focusedElement);
           this.updateSelection();
         }
         break;

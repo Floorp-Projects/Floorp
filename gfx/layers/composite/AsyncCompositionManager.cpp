@@ -501,9 +501,9 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     mLayerManager->GetCompositor()->SetScreenRenderOffset(offset);
 
     gfx3DMatrix transform(gfx3DMatrix(treeTransform) * aLayer->GetTransform());
-    // The transform already takes the resolution scale into account.  Since we
-    // will apply the resolution scale again when computing the effective
-    // transform, we must apply the inverse resolution scale here.
+    // GetTransform already takes the pre- and post-scale into account.  Since we
+    // will apply the pre- and post-scale again when computing the effective
+    // transform, we must apply the inverses here.
     transform.Scale(1.0f/container->GetPreXScale(),
                     1.0f/container->GetPreYScale(),
                     1);
@@ -524,7 +524,67 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     appliedTransform = true;
   }
 
+  if (container->GetIsScrollbar()) {
+    ApplyAsyncTransformToScrollbar(container);
+  }
   return appliedTransform;
+}
+
+void
+AsyncCompositionManager::ApplyAsyncTransformToScrollbar(ContainerLayer* aLayer)
+{
+  // If this layer corresponds to a scrollbar, then search backwards through the
+  // siblings until we find the container layer with the right ViewID; this is
+  // the content that this scrollbar is for. Pick up the transient async transform
+  // from that layer and use it to update the scrollbar position.
+  // Note that it is possible that the content layer is no longer there; in
+  // this case we don't need to do anything because there can't be an async
+  // transform on the content.
+  for (Layer* scrollTarget = aLayer->GetPrevSibling();
+       scrollTarget;
+       scrollTarget = scrollTarget->GetPrevSibling()) {
+    if (!scrollTarget->AsContainerLayer()) {
+      continue;
+    }
+    AsyncPanZoomController* apzc = scrollTarget->AsContainerLayer()->GetAsyncPanZoomController();
+    if (!apzc) {
+      continue;
+    }
+    const FrameMetrics& metrics = scrollTarget->AsContainerLayer()->GetFrameMetrics();
+    if (metrics.mScrollId != aLayer->GetScrollbarTargetContainerId()) {
+      continue;
+    }
+
+    gfx3DMatrix asyncTransform = gfx3DMatrix(apzc->GetCurrentAsyncTransform());
+    gfx3DMatrix nontransientTransform = apzc->GetNontransientAsyncTransform();
+    gfx3DMatrix transientTransform = asyncTransform * nontransientTransform.Inverse();
+
+    gfx3DMatrix scrollbarTransform;
+    if (aLayer->GetScrollbarDirection() == Layer::VERTICAL) {
+      float scale = metrics.CalculateCompositedRectInCssPixels().height / metrics.mScrollableRect.height;
+      scrollbarTransform.ScalePost(1.f, 1.f / transientTransform.GetYScale(), 1.f);
+      scrollbarTransform.TranslatePost(gfxPoint3D(0, -transientTransform._42 * scale, 0));
+    }
+    if (aLayer->GetScrollbarDirection() == Layer::HORIZONTAL) {
+      float scale = metrics.CalculateCompositedRectInCssPixels().width / metrics.mScrollableRect.width;
+      scrollbarTransform.ScalePost(1.f / transientTransform.GetXScale(), 1.f, 1.f);
+      scrollbarTransform.TranslatePost(gfxPoint3D(-transientTransform._41 * scale, 0, 0));
+    }
+
+    gfx3DMatrix transform = scrollbarTransform * aLayer->GetTransform();
+    // GetTransform already takes the pre- and post-scale into account.  Since we
+    // will apply the pre- and post-scale again when computing the effective
+    // transform, we must apply the inverses here.
+    transform.Scale(1.0f/aLayer->GetPreXScale(),
+                    1.0f/aLayer->GetPreYScale(),
+                    1);
+    transform.ScalePost(1.0f/aLayer->GetPostXScale(),
+                        1.0f/aLayer->GetPostYScale(),
+                        1);
+    aLayer->AsLayerComposite()->SetShadowTransform(transform);
+
+    return;
+  }
 }
 
 void
