@@ -2030,21 +2030,13 @@ ContentPermissionPrompt.prototype = {
 
   prompt: function CPP_prompt(request) {
 
-    // Only allow exactly one permission rquest here.
-    let types = request.types.QueryInterface(Ci.nsIArray);
-    if (types.length != 1) {
-      request.cancel();
-      return;
-    }
-    let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
-
     const kFeatureKeys = { "geolocation" : "geo",
                            "desktop-notification" : "desktop-notification",
                            "pointerLock" : "pointerLock",
                          };
 
     // Make sure that we support the request.
-    if (!(perm.type in kFeatureKeys)) {
+    if (!(request.type in kFeatureKeys)) {
         return;
     }
 
@@ -2056,7 +2048,7 @@ ContentPermissionPrompt.prototype = {
       return;
 
     var autoAllow = false;
-    var permissionKey = kFeatureKeys[perm.type];
+    var permissionKey = kFeatureKeys[request.type];
     var result = Services.perms.testExactPermissionFromPrincipal(requestingPrincipal, permissionKey);
 
     if (result == Ci.nsIPermissionManager.DENY_ACTION) {
@@ -2067,7 +2059,7 @@ ContentPermissionPrompt.prototype = {
     if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
       autoAllow = true;
       // For pointerLock, we still want to show a warning prompt.
-      if (perm.type != "pointerLock") {
+      if (request.type != "pointerLock") {
         request.allow();
         return;
       }
@@ -2081,7 +2073,7 @@ ContentPermissionPrompt.prototype = {
       return;
 
     // Show the prompt.
-    switch (perm.type) {
+    switch (request.type) {
     case "geolocation":
       this._promptGeo(request);
       break;
