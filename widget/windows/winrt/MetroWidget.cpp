@@ -717,8 +717,10 @@ MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLPara
   } else if (WM_SETTINGCHANGE == aMsg) {
     if (aLParam && !wcsicmp(L"ConvertibleSlateMode", (wchar_t*)aLParam)) {
       // If we're switching away from slate mode, switch to Desktop for
-      // hardware that supports this feature.
-      if (GetSystemMetrics(SM_CONVERTIBLESLATEMODE) != 0) {
+      // hardware that supports this feature if the pref is set.
+      if (GetSystemMetrics(SM_CONVERTIBLESLATEMODE) != 0 &&
+          Preferences::GetBool("browser.shell.metro-auto-switch-enabled",
+                               false)) {
         nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
         if (appStartup) {
           appStartup->Quit(nsIAppStartup::eForceQuit | nsIAppStartup::eRestart);
