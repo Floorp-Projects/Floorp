@@ -568,9 +568,13 @@ FilterNodeSoftware::Draw(DrawTarget* aDrawTarget,
                         int32_t(renderRect.width), int32_t(renderRect.height));
   IntRect outputRect = renderIntRect.Intersect(GetOutputRectInRect(renderIntRect));
 
-  // Render.
-  RefPtr<DataSourceSurface> result = GetOutput(outputRect);
+  RefPtr<DataSourceSurface> result;
+  if (!outputRect.IsEmpty()) {
+    result = GetOutput(outputRect);
+  }
+
   if (!result) {
+    // Null results are allowed and treated as transparent. Don't draw anything.
 #ifdef DEBUG_DUMP_SURFACES
     printf("output returned null\n");
     printf("</pre>\n");
@@ -603,10 +607,6 @@ FilterNodeSoftware::Draw(DrawTarget* aDrawTarget,
 TemporaryRef<DataSourceSurface>
 FilterNodeSoftware::GetOutput(const IntRect &aRect)
 {
-  if (aRect.IsEmpty()) {
-    return nullptr;
-  }
-
   MOZ_ASSERT(GetOutputRectInRect(aRect).Contains(aRect));
   if (!mCachedRect.Contains(aRect)) {
     RequestRect(aRect);
@@ -670,6 +670,10 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
   int32_t inputIndex = InputIndex(aInputEnumIndex);
   if (inputIndex < 0 || (uint32_t)inputIndex >= NumberOfSetInputs()) {
     MOZ_CRASH();
+    return nullptr;
+  }
+
+  if (aRect.IsEmpty()) {
     return nullptr;
   }
 
@@ -887,11 +891,23 @@ FilterNodeBlendSoftware::Render(const IntRect& aRect)
     GetInputDataSourceSurface(IN_BLEND_IN, aRect, NEED_COLOR_CHANNELS);
   RefPtr<DataSourceSurface> input2 =
     GetInputDataSourceSurface(IN_BLEND_IN2, aRect, NEED_COLOR_CHANNELS);
-  if (!input1 || !input2) {
+
+  // Null inputs need to be treated as transparent.
+
+  // First case: both are transparent.
+  if (!input1 && !input2) {
+    // Then the result is transparent, too.
     return nullptr;
   }
 
-  return FilterProcessing::ApplyBlending(input1, input2, mBlendMode);
+  // Second case: both are non-transparent.
+  if (input1 && input2) {
+    // Apply normal filtering.
+    return FilterProcessing::ApplyBlending(input1, input2, mBlendMode);
+  }
+
+  // Third case: one of them is transparent. Return the non-transparent one.
+  return input1 ? input1 : input2;
 }
 
 void
@@ -940,6 +956,10 @@ FilterNodeTransformSoftware::SetAttribute(uint32_t aIndex, const Matrix &aMatrix
 IntRect
 FilterNodeTransformSoftware::SourceRectForOutputRect(const IntRect &aRect)
 {
+  if (aRect.IsEmpty()) {
+    return IntRect();
+  }
+
   Matrix inverted(mMatrix);
   if (!inverted.Invert()) {
     return IntRect();
@@ -993,6 +1013,10 @@ IntRect
 FilterNodeTransformSoftware::GetOutputRectInRect(const IntRect& aRect)
 {
   IntRect srcRect = SourceRectForOutputRect(aRect);
+  if (srcRect.IsEmpty()) {
+    return IntRect();
+  }
+
   Rect outRect = mMatrix.TransformBounds(Rect(srcRect));
   outRect.RoundOut();
   return RoundedToInt(outRect).Intersect(aRect);
@@ -2244,6 +2268,10 @@ FilterNodeConvolveMatrixSoftware::RequestFromInputsForRect(const IntRect &aRect)
 IntRect
 FilterNodeConvolveMatrixSoftware::InflatedSourceRect(const IntRect &aDestRect)
 {
+  if (aDestRect.IsEmpty()) {
+    return IntRect();
+  }
+
   IntMargin margin;
   margin.left = ceil(mTarget.x * mKernelUnitLength.width);
   margin.top = ceil(mTarget.y * mKernelUnitLength.height);
@@ -2258,6 +2286,10 @@ FilterNodeConvolveMatrixSoftware::InflatedSourceRect(const IntRect &aDestRect)
 IntRect
 FilterNodeConvolveMatrixSoftware::InflatedDestRect(const IntRect &aSourceRect)
 {
+  if (aSourceRect.IsEmpty()) {
+    return IntRect();
+  }
+
   IntMargin margin;
   margin.left = ceil((mKernelSize.width - mTarget.x - 1) * mKernelUnitLength.width);
   margin.top = ceil((mKernelSize.height - mTarget.y - 1) * mKernelUnitLength.height);
@@ -2513,11 +2545,25 @@ FilterNodeArithmeticCombineSoftware::Render(const IntRect& aRect)
     GetInputDataSourceSurface(IN_ARITHMETIC_COMBINE_IN, aRect, NEED_COLOR_CHANNELS);
   RefPtr<DataSourceSurface> input2 =
     GetInputDataSourceSurface(IN_ARITHMETIC_COMBINE_IN2, aRect, NEED_COLOR_CHANNELS);
-  if (!input1 || !input2) {
+  if (!input1 && !input2) {
     return nullptr;
   }
 
-  return FilterProcessing::ApplyArithmeticCombine(input1, input2, mK1, mK2, mK3, mK4);
+  // If one input is null, treat it as transparent by adjusting the factors.
+  Float k1 = mK1, k2 = mK2, k3 = mK3, k4 = mK4;
+  if (!input1) {
+    k1 = 0.0f;
+    k2 = 0.0f;
+    input1 = input2;
+  }
+
+  if (!input2) {
+    k1 = 0.0f;
+    k3 = 0.0f;
+    input2 = input1;
+  }
+
+  return FilterProcessing::ApplyArithmeticCombine(input1, input2, k1, k2, k3, k4);
 }
 
 void
@@ -2559,17 +2605,41 @@ FilterNodeCompositeSoftware::Render(const IntRect& aRect)
     GetInputDataSourceSurface(IN_COMPOSITE_IN_START, aRect, NEED_COLOR_CHANNELS);
   RefPtr<DataSourceSurface> dest =
     Factory::CreateDataSourceSurface(aRect.Size(), FORMAT_B8G8R8A8);
-  if (!start || !dest) {
+  if (!dest) {
     return nullptr;
   }
-  CopyRect(start, dest, aRect - aRect.TopLeft(), IntPoint());
+
+  if (start) {
+    CopyRect(start, dest, aRect - aRect.TopLeft(), IntPoint());
+  } else {
+    ClearDataSourceSurface(dest);
+  }
+
   for (size_t inputIndex = 1; inputIndex < NumberOfSetInputs(); inputIndex++) {
     RefPtr<DataSourceSurface> input =
       GetInputDataSourceSurface(IN_COMPOSITE_IN_START + inputIndex, aRect, NEED_COLOR_CHANNELS);
-    if (!input) {
-      return nullptr;
+    if (input) {
+      FilterProcessing::ApplyComposition(input, dest, mOperator);
+    } else {
+      // We need to treat input as transparent. Depending on the composite
+      // operator, different things happen to dest.
+      switch (mOperator) {
+        case COMPOSITE_OPERATOR_OVER:
+        case COMPOSITE_OPERATOR_ATOP:
+        case COMPOSITE_OPERATOR_XOR:
+          // dest is unchanged.
+          break;
+        case COMPOSITE_OPERATOR_OUT:
+          // dest is now transparent, but it can become non-transparent again
+          // when compositing additional inputs.
+          ClearDataSourceSurface(dest);
+          break;
+        case COMPOSITE_OPERATOR_IN:
+          // Transparency always wins. We're completely transparent now and
+          // no additional input can get rid of that transparency.
+          return nullptr;
+      }
     }
-    FilterProcessing::ApplyComposition(input, dest, mOperator);
   }
   return dest;
 }
@@ -3122,13 +3192,17 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
     GetInputDataSourceSurface(IN_LIGHTING_IN, srcRect, CAN_HANDLE_A8,
                               EDGE_MODE_DUPLICATE);
 
+  if (!input) {
+    return nullptr;
+  }
+
   if (input->GetFormat() != FORMAT_A8) {
     input = FilterProcessing::ExtractAlpha(input);
   }
 
   RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(size, FORMAT_B8G8R8A8);
-  if (!input || !target) {
+  if (!target) {
     return nullptr;
   }
 
