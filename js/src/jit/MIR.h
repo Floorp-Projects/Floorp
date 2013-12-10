@@ -9484,8 +9484,10 @@ class MAsmJSCall MOZ_FINAL : public MInstruction
     };
 
     Callee callee_;
-    FixedList<MUse> operands_;
-    FixedList<AnyRegister> argRegs_;
+    size_t numOperands_;
+    MUse *operands_;
+    size_t numArgs_;
+    AnyRegister *argRegs_;
     size_t spIncrement_;
 
   protected:
@@ -9511,17 +9513,17 @@ class MAsmJSCall MOZ_FINAL : public MInstruction
                            MIRType resultType, size_t spIncrement);
 
     size_t numOperands() const {
-        return operands_.length();
+        return numOperands_;
     }
     MDefinition *getOperand(size_t index) const {
-        JS_ASSERT(index < numOperands());
+        JS_ASSERT(index < numOperands_);
         return operands_[index].producer();
     }
     size_t numArgs() const {
-        return argRegs_.length();
+        return numArgs_;
     }
     AnyRegister registerForArg(size_t index) const {
-        JS_ASSERT(index < numArgs());
+        JS_ASSERT(index < numArgs_);
         return argRegs_[index];
     }
     Callee callee() const {
@@ -9529,8 +9531,8 @@ class MAsmJSCall MOZ_FINAL : public MInstruction
     }
     size_t dynamicCalleeOperandIndex() const {
         JS_ASSERT(callee_.which() == Callee::Dynamic);
-        JS_ASSERT(numArgs() == numOperands() - 1);
-        return numArgs();
+        JS_ASSERT(numArgs_ == numOperands_ - 1);
+        return numArgs_;
     }
     size_t spIncrement() const {
         return spIncrement_;

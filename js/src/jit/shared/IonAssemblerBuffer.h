@@ -68,7 +68,7 @@ struct BufferSlice {
         next_->prev = this;
     }
 
-    mozilla::Array<uint8_t, SliceSize> instructions;
+    uint8_t instructions [SliceSize];
     unsigned int size() {
         return nodeSize;
     }
