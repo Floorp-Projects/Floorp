@@ -474,7 +474,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     if (excInfo)
         exprStackSlots = excInfo->numExprSlots;
     else
-        exprStackSlots = iter.slots() - (script->nfixed + CountArgSlots(script, fun));
+        exprStackSlots = iter.slots() - (script->nfixed() + CountArgSlots(script, fun));
 
     builder.resetFramePushed();
 
@@ -502,7 +502,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     // |  ReturnAddr   | <-- return into main jitcode after IC
     // +===============+
 
-    IonSpew(IonSpew_BaselineBailouts, "      Unpacking %s:%d", script->filename(), script->lineno);
+    IonSpew(IonSpew_BaselineBailouts, "      Unpacking %s:%d", script->filename(), script->lineno());
     IonSpew(IonSpew_BaselineBailouts, "      [BASELINE-JS FRAME]");
 
     // Calculate and write the previous frame pointer value.
@@ -521,7 +521,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
     // Initialize BaselineFrame::frameSize
     uint32_t frameSize = BaselineFrame::Size() + BaselineFrame::FramePointerOffset +
-                         (sizeof(Value) * (script->nfixed + exprStackSlots));
+                         (sizeof(Value) * (script->nfixed() + exprStackSlots));
     IonSpew(IonSpew_BaselineBailouts, "      FrameSize=%d", (int) frameSize);
     blFrame->setFrameSize(frameSize);
 
@@ -627,7 +627,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
         JS_ASSERT(iter.slots() >= CountArgSlots(script, fun));
         IonSpew(IonSpew_BaselineBailouts, "      frame slots %u, nargs %u, nfixed %u",
-                iter.slots(), fun->nargs, script->nfixed);
+                iter.slots(), fun->nargs, script->nfixed());
 
         if (!callerPC) {
             // This is the first frame. Store the formals in a Vector until we
@@ -653,7 +653,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         }
     }
 
-    for (uint32_t i = 0; i < script->nfixed; i++) {
+    for (uint32_t i = 0; i < script->nfixed(); i++) {
         Value slot = iter.read();
         if (!builder.writeValue(slot, "FixedValue"))
             return false;
@@ -825,7 +825,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
     IonSpew(IonSpew_BaselineBailouts, "      Resuming %s pc offset %d (op %s) (line %d) of %s:%d",
                 resumeAfter ? "after" : "at", (int) pcOff, js_CodeName[op],
-                PCToLineNumber(script, pc), script->filename(), (int) script->lineno);
+                PCToLineNumber(script, pc), script->filename(), (int) script->lineno());
     IonSpew(IonSpew_BaselineBailouts, "      Bailout kind: %s",
             BailoutKindString(bailoutKind));
 #endif
@@ -959,7 +959,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                     if (caller && bailoutKind == Bailout_ArgumentCheck) {
                         IonSpew(IonSpew_BaselineBailouts, "      Setting PCidx on innermost "
                                 "inlined frame's parent's SPS entry (%s:%d) (pcIdx=%d)!",
-                                caller->filename(), caller->lineno, caller->pcToOffset(callerPC));
+                                caller->filename(), caller->lineno(), caller->pcToOffset(callerPC));
                         cx->runtime()->spsProfiler.updatePC(caller, callerPC);
                     } else if (bailoutKind != Bailout_ArgumentCheck) {
                         IonSpew(IonSpew_BaselineBailouts,
@@ -1057,7 +1057,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
         JS_ASSERT(actualArgc + 2 <= exprStackSlots);
         for (unsigned i = 0; i < actualArgc + 1; i++) {
-            size_t argSlot = (script->nfixed + exprStackSlots) - (i + 1);
+            size_t argSlot = (script->nfixed() + exprStackSlots) - (i + 1);
             if (!builder.writeValue(*blFrame->valueSlot(argSlot), "ArgVal"))
                 return false;
         }
@@ -1236,7 +1236,7 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     //      +---------------+
 
     IonSpew(IonSpew_BaselineBailouts, "Bailing to baseline %s:%u (IonScript=%p) (FrameType=%d)",
-            iter.script()->filename(), iter.script()->lineno, (void *) iter.ionScript(),
+            iter.script()->filename(), iter.script()->lineno(), (void *) iter.ionScript(),
             (int) prevFrameType);
 
     if (excInfo)
@@ -1260,7 +1260,7 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     RootedFunction callee(cx, iter.maybeCallee());
     if (callee) {
         IonSpew(IonSpew_BaselineBailouts, "  Callee function (%s:%u)",
-                callee->existingScript()->filename(), callee->existingScript()->lineno);
+                callee->existingScript()->filename(), callee->existingScript()->lineno());
     } else {
         IonSpew(IonSpew_BaselineBailouts, "  No callee!");
     }
@@ -1351,8 +1351,8 @@ static bool
 HandleBoundsCheckFailure(JSContext *cx, HandleScript outerScript, HandleScript innerScript)
 {
     IonSpew(IonSpew_Bailouts, "Bounds check failure %s:%d, inlined into %s:%d",
-            innerScript->filename(), innerScript->lineno,
-            outerScript->filename(), outerScript->lineno);
+            innerScript->filename(), innerScript->lineno(),
+            outerScript->filename(), outerScript->lineno());
 
     JS_ASSERT(!outerScript->ionScript()->invalidated());
 
@@ -1370,8 +1370,8 @@ static bool
 HandleShapeGuardFailure(JSContext *cx, HandleScript outerScript, HandleScript innerScript)
 {
     IonSpew(IonSpew_Bailouts, "Shape guard failure %s:%d, inlined into %s:%d",
-            innerScript->filename(), innerScript->lineno,
-            outerScript->filename(), outerScript->lineno);
+            innerScript->filename(), innerScript->lineno(),
+            outerScript->filename(), outerScript->lineno());
 
     JS_ASSERT(!outerScript->ionScript()->invalidated());
 
@@ -1387,8 +1387,8 @@ static bool
 HandleBaselineInfoBailout(JSContext *cx, JSScript *outerScript, JSScript *innerScript)
 {
     IonSpew(IonSpew_Bailouts, "Baseline info failure %s:%d, inlined into %s:%d",
-            innerScript->filename(), innerScript->lineno,
-            outerScript->filename(), outerScript->lineno);
+            innerScript->filename(), innerScript->lineno(),
+            outerScript->filename(), outerScript->lineno());
 
     JS_ASSERT(!outerScript->ionScript()->invalidated());
 
@@ -1480,8 +1480,8 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
     JS_ASSERT(outerScript);
     IonSpew(IonSpew_BaselineBailouts,
             "  Restored outerScript=(%s:%u,%u) innerScript=(%s:%u,%u) (bailoutKind=%u)",
-            outerScript->filename(), outerScript->lineno, outerScript->getUseCount(),
-            innerScript->filename(), innerScript->lineno, innerScript->getUseCount(),
+            outerScript->filename(), outerScript->lineno(), outerScript->getUseCount(),
+            innerScript->filename(), innerScript->lineno(), innerScript->getUseCount(),
             (unsigned) bailoutKind);
 
     switch (bailoutKind) {
