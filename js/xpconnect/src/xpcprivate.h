@@ -248,11 +248,6 @@ inline JSObject* GetWNExpandoChain(JSObject *obj)
     return JS_GetReservedSlot(obj, WN_XRAYEXPANDOCHAIN_SLOT).toObjectOrNull();
 }
 
-// We PROMISE to never screw this up.
-#ifdef _MSC_VER
-#pragma warning(disable : 4355) // OK to pass "this" in member initializer
-#endif
-
 /***************************************************************************
 ****************************************************************************
 *
