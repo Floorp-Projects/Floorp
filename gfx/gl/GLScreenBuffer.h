@@ -18,7 +18,7 @@
 #include "SurfaceTypes.h"
 #include "GLContextTypes.h"
 #include "GLDefs.h"
-#include "gfxPoint.h"
+#include "gfx2DGlue.h"
 
 // Forwards:
 class gfxImageSurface;
@@ -124,7 +124,7 @@ public:
     // Cannot attach a surf of a different AttachType or Size than before.
     void Attach(SharedSurface_GL* surf);
 
-    const gfxIntSize& Size() const;
+    const gfx::IntSize& Size() const;
 
     GLuint FB() const {
         return mFB;
@@ -231,9 +231,9 @@ public:
 
     void DeletingFB(GLuint fb);
 
-    const gfxIntSize& Size() const {
+    const gfx::IntSize& Size() const {
         MOZ_ASSERT(mRead);
-        MOZ_ASSERT(!mDraw || mDraw->Size() == mRead->Size());
+        MOZ_ASSERT(!mDraw || ToIntSize(mDraw->Size()) == mRead->Size());
         return mRead->Size();
     }
 
