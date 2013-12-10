@@ -1338,6 +1338,9 @@ FilterNodeFloodSoftware::GetOutput(const IntRect& aRect)
 IntRect
 FilterNodeFloodSoftware::GetOutputRectInRect(const IntRect& aRect)
 {
+  if (mColor.a == 0.0f) {
+    return IntRect();
+  }
   return aRect;
 }
 
