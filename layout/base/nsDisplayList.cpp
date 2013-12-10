@@ -3567,10 +3567,33 @@ nsDisplayScrollLayer::TryMerge(nsDisplayListBuilder* aBuilder,
   return true;
 }
 
+void
+PropagateClip(nsDisplayListBuilder* aBuilder, const DisplayItemClip& aClip,
+              nsDisplayList* aList)
+{
+  for (nsDisplayItem* i = aList->GetBottom(); i != nullptr; i = i->GetAbove()) {
+    DisplayItemClip clip(i->GetClip());
+    clip.IntersectWith(aClip);
+    i->SetClip(aBuilder, clip);
+    nsDisplayList* list = i->GetSameCoordinateSystemChildren();
+    if (list) {
+      PropagateClip(aBuilder, aClip, list);
+    }
+  }
+}
+
 bool
 nsDisplayScrollLayer::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
 {
-  return GetScrollLayerCount() > 1;
+  if (GetScrollLayerCount() > 1) {
+    // Propagate our clip to our children. The clip for the scroll frame is
+    // on this item, but not our child items so that they can draw non-visible
+    // parts of the display port. But if we are flattening we failed and can't
+    // draw the extra content, so it needs to be clipped.
+    PropagateClip(aBuilder, GetClip(), &mList);
+    return true;
+  }
+  return false;
 }
 
 intptr_t
