@@ -18,7 +18,6 @@
 
 #ifdef DEBUG_DUMP_SURFACES
 #include "gfxImageSurface.h"
-#include "gfx2DGlue.h"
 namespace mozilla {
 namespace gfx {
 static void
@@ -28,7 +27,8 @@ DumpAsPNG(SourceSurface* aSurface)
   IntSize size = dataSource->GetSize();
   nsRefPtr<gfxImageSurface> imageSurface =
     new gfxImageSurface(dataSource->GetData(), gfxIntSize(size.width, size.height),
-                        dataSource->Stride(), SurfaceFormatToImageFormat(aSurface->GetFormat()));
+                        dataSource->Stride(),
+                        aSurface->GetFormat() == FORMAT_A8 ? gfxImageFormatA8 : gfxImageFormatARGB32);
   imageSurface->PrintAsDataURL();
 }
 } // namespace gfx
@@ -559,7 +559,7 @@ FilterNodeSoftware::Draw(DrawTarget* aDrawTarget,
                          const DrawOptions &aOptions)
 {
 #ifdef DEBUG_DUMP_SURFACES
-  printf("<pre>\nRendering...\n");
+  printf("<style>section{margin:10px;}</style><pre>\nRendering filter %s...\n", GetName());
 #endif
 
   Rect renderRect = aSourceRect;
@@ -583,7 +583,7 @@ FilterNodeSoftware::Draw(DrawTarget* aDrawTarget,
   }
 
 #ifdef DEBUG_DUMP_SURFACES
-  printf("output:\n");
+  printf("output from %s:\n", GetName());
   printf("<img src='"); DumpAsPNG(result); printf("'>\n");
   printf("</pre>\n");
 #endif
@@ -656,7 +656,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
                                               const IntRect *aTransparencyPaddedSourceRect)
 {
 #ifdef DEBUG_DUMP_SURFACES
-  printf("<h1>GetInputDataSourceSurface with aRect: %d, %d, %d, %d</h1>\n",
+  printf("<section><h1>GetInputDataSourceSurface with aRect: %d, %d, %d, %d</h1>\n",
          aRect.x, aRect.y, aRect.width, aRect.height);
 #endif
   int32_t inputIndex = InputIndex(aInputEnumIndex);
@@ -671,34 +671,42 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
 
   RefPtr<SourceSurface> surface;
   IntRect surfaceRect;
+
   if (mInputSurfaces[inputIndex]) {
+    // Input from input surface
     surface = mInputSurfaces[inputIndex];
 #ifdef DEBUG_DUMP_SURFACES
     printf("input from input surface:\n");
-    printf("<img src='"); DumpAsPNG(surface); printf("'>\n");
 #endif
     surfaceRect = IntRect(IntPoint(0, 0), surface->GetSize());
   } else {
+    // Input from input filter
+#ifdef DEBUG_DUMP_SURFACES
+    printf("getting input from input filter %s...\n", mInputFilters[inputIndex]->GetName());
+#endif
     RefPtr<FilterNodeSoftware> filter = mInputFilters[inputIndex];
     MOZ_ASSERT(filter, "missing input");
     IntRect inputFilterOutput = filter->GetOutputRectInRect(aRect);
     if (!inputFilterOutput.IsEmpty()) {
       surface = filter->GetOutput(inputFilterOutput);
     }
+#ifdef DEBUG_DUMP_SURFACES
+    printf("input from input filter %s:\n", mInputFilters[inputIndex]->GetName());
+#endif
     surfaceRect = inputFilterOutput;
     MOZ_ASSERT(!surface || surfaceRect.Size() == surface->GetSize());
   }
 
   if (surface && surface->GetFormat() == FORMAT_UNKNOWN) {
 #ifdef DEBUG_DUMP_SURFACES
-    printf("wrong input format\n\n");
+    printf("wrong input format</section>\n\n");
 #endif
     return nullptr;
   }
 
   if (!surfaceRect.IsEmpty() && !surface) {
 #ifdef DEBUG_DUMP_SURFACES
-    printf(" -- no input --\n\n");
+    printf(" -- no input --</section>\n\n");
 #endif
     return nullptr;
   }
@@ -714,7 +722,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
 
   if (!result) {
 #ifdef DEBUG_DUMP_SURFACES
-    printf(" -- no input --\n\n");
+    printf(" -- no input --</section>\n\n");
 #endif
     return nullptr;
   }
@@ -732,8 +740,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
   }
 
 #ifdef DEBUG_DUMP_SURFACES
-  printf("input:\n");
-  printf("<img src='"); DumpAsPNG(result); printf("'>\n");
+  printf("<img src='"); DumpAsPNG(result); printf("'></section>");
 #endif
 
   MOZ_ASSERT(!result || result->GetSize() == aRect.Size(), "wrong surface size");
