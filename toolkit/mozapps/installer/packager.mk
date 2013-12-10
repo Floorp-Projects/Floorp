@@ -405,6 +405,8 @@ INNER_MAKE_GECKOVIEW_LIBRARY= \
 else
 INNER_MAKE_GECKOVIEW_LIBRARY=echo 'GeckoView library packaging is disabled'
 endif
+else
+INNER_MAKE_GECKOVIEW_LIBRARY=echo 'GeckoView library packaging is only enabled on Nightly'
 endif
 
 ifdef MOZ_OMX_PLUGIN
