@@ -28,6 +28,7 @@ UNIFIED_SOURCES += [
     'ProtocolParser.cpp',
 ]
 
+# define conflicting LOG() macros
 SOURCES += [
     'nsUrlClassifierPrefixSet.cpp',
     'nsUrlClassifierStreamUpdater.cpp',
