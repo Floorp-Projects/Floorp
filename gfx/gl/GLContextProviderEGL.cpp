@@ -408,25 +408,6 @@ public:
         return true;
     }
 
-#ifdef MOZ_WIDGET_GONK
-    EGLImage CreateEGLImageForNativeBuffer(void* buffer) MOZ_OVERRIDE
-    {
-        EGLint attrs[] = {
-            LOCAL_EGL_IMAGE_PRESERVED, LOCAL_EGL_TRUE,
-            LOCAL_EGL_NONE, LOCAL_EGL_NONE
-        };
-        return sEGLLibrary.fCreateImage(EGL_DISPLAY(),
-                                        EGL_NO_CONTEXT,
-                                        LOCAL_EGL_NATIVE_BUFFER_ANDROID,
-                                        buffer, attrs);
-    }
-
-    void DestroyEGLImage(EGLImage image) MOZ_OVERRIDE
-    {
-        sEGLLibrary.fDestroyImage(EGL_DISPLAY(), image);
-    }
-#endif
-
     virtual void SetEGLSurfaceOverride(EGLSurface surf) MOZ_OVERRIDE {
         if (Screen()) {
             /* Blit `draw` to `read` if we need to, before we potentially juggle

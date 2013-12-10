@@ -2493,11 +2493,6 @@ public:
     void ApplyFilterToBoundTexture(GLuint aTarget,
                                    GraphicsFilter aFilter);
 
-#ifdef MOZ_WIDGET_GONK
-    virtual EGLImage CreateEGLImageForNativeBuffer(void* buffer) = 0;
-    virtual void DestroyEGLImage(EGLImage image) = 0;
-#endif
-
     // Before reads from offscreen texture
     void GuaranteeResolve();
 
