@@ -67,6 +67,13 @@ private:
       return front;
     }
 
+    // Empties the buffer queue.
+    void Clear()
+    {
+      mMutex.AssertCurrentThreadOwns();
+      mBufferList.clear();
+    }
+
   private:
     typedef std::deque<AudioChunk> BufferList;
 
@@ -167,6 +174,18 @@ public:
     return mDelaySoFar == TRACK_TICKS_MAX ? 0 : mDelaySoFar;
   }
 
+  void Reset()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+    mDelaySoFar = TRACK_TICKS_MAX;
+    mLatency = 0.0f;
+    {
+      MutexAutoLock lock(mOutputQueue.Lock());
+      mOutputQueue.Clear();
+    }
+    mLastEventTime = TimeStamp();
+  }
+
 private:
   OutputQueue mOutputQueue;
   // How much delay we've seen so far.  This measures the amount of delay
@@ -221,6 +240,18 @@ public:
     // If our node is dead, just output silence.
     if (!Node()) {
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+      return;
+    }
+
+    // This node is not connected to anything. Per spec, we don't fire the
+    // onaudioprocess event. We also want to clear out the input and output
+    // buffer queue, and output a null buffer.
+    if (!(aStream->ConsumerCount() ||
+          aStream->AsProcessedStream()->InputPortCount())) {
+      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+      mSharedBuffers->Reset();
+      mSeenNonSilenceInput = false;
+      mInputWriteIndex = 0;
       return;
     }
 
