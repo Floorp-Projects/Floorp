@@ -24,6 +24,7 @@
 #include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
 #ifdef MOZ_WIDGET_GONK
 # include "GrallocImages.h"  // for GrallocImage
+# include "EGLImageHelpers.h"
 #endif
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
@@ -44,7 +45,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-class Compositor; 
+class Compositor;
 
 TemporaryRef<CompositableBackendSpecificData>
 CreateCompositableBackendSpecificDataOGL()
@@ -1154,9 +1155,9 @@ GrallocDeprecatedTextureHostOGL::DeleteTextures()
 {
   if (mEGLImage) {
     if (gl()->MakeCurrent()) {
-      gl()->DestroyEGLImage(mEGLImage);
+      EGLImageDestroy(gl(), mEGLImage);
     }
-    mEGLImage = 0;
+    mEGLImage = EGL_NO_IMAGE;
   }
 }
 
@@ -1212,7 +1213,7 @@ GrallocDeprecatedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImag
   // create new EGLImage
   // create EGLImage during buffer swap could reduce the graphic driver's task
   // during rendering.
-  mEGLImage = gl()->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
+  mEGLImage = EGLImageCreateFromNativeBuffer(gl(), mGraphicBuffer->getNativeBuffer());
   gl()->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
 
 }
@@ -1385,7 +1386,7 @@ GrallocDeprecatedTextureHostOGL::GetAsSurface() {
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(mTextureTarget, tex);
   if (!mEGLImage) {
-    mEGLImage = gl()->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
+    mEGLImage = EGLImageCreateFromNativeBuffer(gl(), mGraphicBuffer->getNativeBuffer());
   }
   gl()->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
 
