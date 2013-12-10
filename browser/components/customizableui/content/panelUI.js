@@ -6,6 +6,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScrollbarSampler",
                                   "resource:///modules/ScrollbarSampler.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                  "resource://gre/modules/Promise.jsm");
 /**
  * Maintains the state and dispatches events for the main menu panel.
  */
@@ -116,9 +118,11 @@ const PanelUI = {
    * @param aEvent the event (if any) that triggers showing the menu.
    */
   show: function(aEvent) {
-    if (this.panel.state == "open" || this.panel.state == "showing" ||
+    let deferred = Promise.defer();
+    if (this.panel.state == "open" ||
         document.documentElement.hasAttribute("customizing")) {
-      return;
+      deferred.resolve();
+      return deferred.promise;
     }
 
     this.ensureReady().then(() => {
@@ -144,7 +148,14 @@ const PanelUI = {
                            aEvent.sourceEvent.target.localName == "key";
       this.panel.setAttribute("noautofocus", !keyboardOpened);
       this.panel.openPopup(iconAnchor || anchor, "bottomcenter topright");
+
+      this.panel.addEventListener("popupshown", function onPopupShown() {
+        this.removeEventListener("popupshown", onPopupShown);
+        deferred.resolve();
+      });
     });
+
+    return deferred.promise;
   },
 
   /**
