@@ -2843,13 +2843,7 @@ FilterNodeCropSoftware::SetAttribute(uint32_t aIndex,
 TemporaryRef<DataSourceSurface>
 FilterNodeCropSoftware::Render(const IntRect& aRect)
 {
-  IntRect sourceRect = aRect.Intersect(mCropRect);
-  RefPtr<DataSourceSurface> input =
-    GetInputDataSourceSurface(IN_CROP_IN, sourceRect);
-  if (!input) {
-    return nullptr;
-  }
-  return GetDataSurfaceInRect(input, sourceRect, aRect, EDGE_MODE_NONE);
+  return GetInputDataSourceSurface(IN_CROP_IN, aRect.Intersect(mCropRect));
 }
 
 void
