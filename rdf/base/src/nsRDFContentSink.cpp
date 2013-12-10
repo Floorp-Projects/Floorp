@@ -270,7 +270,8 @@ RDFContentSinkImpl::RDFContentSinkImpl()
       mDocumentURL(nullptr)
 {
     if (gRefCnt++ == 0) {
-        nsresult rv = CallGetService(NS_RDFSERVICE_CID, &gRDFService);
+        NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+        nsresult rv = CallGetService(kRDFServiceCID, &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_SUCCEEDED(rv)) {
@@ -288,8 +289,8 @@ RDFContentSinkImpl::RDFContentSinkImpl()
                                           &kRDF_nextVal);
         }
 
-
-        rv = CallGetService(NS_RDFCONTAINERUTILS_CID, &gRDFContainerUtils);
+        NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
+        rv = CallGetService(kRDFContainerUtilsCID, &gRDFContainerUtils);
 
         NS_RegisterStaticAtoms(rdf_atoms);
     }
@@ -379,7 +380,7 @@ RDFContentSinkImpl::QueryInterface(REFNSIID iid, void** result)
     if (iid.Equals(kIRDFContentSinkIID) ||
         iid.Equals(kIXMLContentSinkIID) ||
         iid.Equals(kIContentSinkIID) ||
-        iid.Equals(NS_GET_IID(nsISupports))) {
+        iid.Equals(kISupportsIID)) {
         *result = static_cast<nsIXMLContentSink*>(this);
         AddRef();
         return NS_OK;
