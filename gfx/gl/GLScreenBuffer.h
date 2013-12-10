@@ -18,7 +18,7 @@
 #include "SurfaceTypes.h"
 #include "GLContextTypes.h"
 #include "GLDefs.h"
-#include "gfx2DGlue.h"
+#include "mozilla/gfx/Point.h"
 
 // Forwards:
 class gfxImageSurface;
@@ -48,18 +48,18 @@ public:
     static DrawBuffer* Create(GLContext* const gl,
                               const SurfaceCaps& caps,
                               const GLFormats& formats,
-                              const gfxIntSize& size);
+                              const gfx::IntSize& size);
 
 protected:
     GLContext* const mGL;
-    const gfxIntSize mSize;
+    const gfx::IntSize mSize;
     const GLuint mFB;
     const GLuint mColorMSRB;
     const GLuint mDepthRB;
     const GLuint mStencilRB;
 
     DrawBuffer(GLContext* gl,
-               const gfxIntSize& size,
+               const gfx::IntSize& size,
                GLuint fb,
                GLuint colorMSRB,
                GLuint depthRB,
@@ -75,7 +75,7 @@ protected:
 public:
     virtual ~DrawBuffer();
 
-    const gfxIntSize& Size() const {
+    const gfx::IntSize& Size() const {
         return mSize;
     }
 
@@ -148,7 +148,7 @@ protected:
 public:
     // Infallible.
     static GLScreenBuffer* Create(GLContext* gl,
-                                  const gfxIntSize& size,
+                                  const gfx::IntSize& size,
                                   const SurfaceCaps& caps);
 
 protected:
@@ -233,7 +233,7 @@ public:
 
     const gfx::IntSize& Size() const {
         MOZ_ASSERT(mRead);
-        MOZ_ASSERT(!mDraw || ToIntSize(mDraw->Size()) == mRead->Size());
+        MOZ_ASSERT(!mDraw || mDraw->Size() == mRead->Size());
         return mRead->Size();
     }
 
@@ -270,19 +270,19 @@ public:
 
 protected:
     // Returns false on error or inability to resize.
-    bool Swap(const gfxIntSize& size);
+    bool Swap(const gfx::IntSize& size);
 
 public:
-    bool PublishFrame(const gfxIntSize& size);
+    bool PublishFrame(const gfx::IntSize& size);
 
-    bool Resize(const gfxIntSize& size);
+    bool Resize(const gfx::IntSize& size);
 
     void Readback(SharedSurface_GL* src, gfxImageSurface* dest);
 
 protected:
-    void Attach(SharedSurface* surface, const gfxIntSize& size);
+    void Attach(SharedSurface* surface, const gfx::IntSize& size);
 
-    DrawBuffer* CreateDraw(const gfxIntSize& size);
+    DrawBuffer* CreateDraw(const gfx::IntSize& size);
     ReadBuffer* CreateRead(SharedSurface_GL* surf);
 
 public:

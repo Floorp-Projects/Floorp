@@ -35,7 +35,7 @@ protected:
     std::queue<SharedSurface*> mScraps;
 
 public:
-    SharedSurface* NewSharedSurface(const gfxIntSize& size);
+    SharedSurface* NewSharedSurface(const gfx::IntSize& size);
 
     // Auto-deletes surfs of the wrong type.
     void Recycle(SharedSurface*& surf);

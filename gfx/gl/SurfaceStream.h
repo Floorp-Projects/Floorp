@@ -10,7 +10,7 @@
 #include <set>
 #include "mozilla/Monitor.h"
 #include "mozilla/Attributes.h"
-#include "gfxPoint.h"
+#include "mozilla/gfx/Point.h"
 #include "SurfaceTypes.h"
 
 namespace mozilla {
@@ -89,7 +89,7 @@ protected:
         from = nullptr;
     }
 
-    void New(SurfaceFactory* factory, const gfxIntSize& size,
+    void New(SurfaceFactory* factory, const gfx::IntSize& size,
              SharedSurface*& surf);
     void Delete(SharedSurface*& surf);
     void Recycle(SurfaceFactory* factory, SharedSurface*& surf);
@@ -117,9 +117,9 @@ public:
      * One common failure is asking for a too-large |size|.
      */
     virtual SharedSurface* SwapProducer(SurfaceFactory* factory,
-                                        const gfxIntSize& size) = 0;
+                                        const gfx::IntSize& size) = 0;
 
-    virtual SharedSurface* Resize(SurfaceFactory* factory, const gfxIntSize& size);
+    virtual SharedSurface* Resize(SurfaceFactory* factory, const gfx::IntSize& size);
 
 protected:
     // SwapCons will return the same surface more than once,
@@ -148,7 +148,7 @@ public:
      * SwapCons being called in Render.
      */
     virtual SharedSurface* SwapProducer(SurfaceFactory* factory,
-                                        const gfxIntSize& size);
+                                        const gfx::IntSize& size);
 
     virtual SharedSurface* SwapConsumer_NoWait();
 
@@ -168,7 +168,7 @@ public:
     virtual ~SurfaceStream_TripleBuffer_Copy();
 
     virtual SharedSurface* SwapProducer(SurfaceFactory* factory,
-                                        const gfxIntSize& size);
+                                        const gfx::IntSize& size);
 
     virtual SharedSurface* SwapConsumer_NoWait();
 
@@ -200,7 +200,7 @@ private:
 public:
     // Done writing to prod, swap prod and staging
     virtual SharedSurface* SwapProducer(SurfaceFactory* factory,
-                                        const gfxIntSize& size);
+                                        const gfx::IntSize& size);
 
     virtual SharedSurface* SwapConsumer_NoWait();
 
