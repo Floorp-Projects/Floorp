@@ -4313,6 +4313,61 @@ let RIL = {
   },
 
   /**
+   * Helper for processing CDMA SMS WAP Push Message
+   *
+   * @param message
+   *        decoded WAP message from CdmaPDUHelper.
+   *
+   * @return A failure cause defined in 3GPP 23.040 clause 9.2.3.22.
+   */
+  _processCdmaSmsWapPush: function _processCdmaSmsWapPush(message) {
+    if (!message.data) {
+      if (DEBUG) debug("no data inside WAP Push message.");
+      return PDU_FCS_OK;
+    }
+
+    // See 6.5. MAPPING OF WDP TO CDMA SMS in WAP-295-WDP.
+    //
+    // Field             | Length (bits)
+    // -----------------------------------------
+    // MSG_TYPE          | 8
+    // TOTAL_SEGMENTS    | 8
+    // SEGMENT_NUMBER    | 8
+    // DATAGRAM          | (NUM_FIELDS – 3) * 8
+    let index = 0;
+    if (message.data[index++] !== 0) {
+     if (DEBUG) debug("Ignore a WAP Message which is not WDP.");
+      return PDU_FCS_OK;
+    }
+
+    // 1. Originator Address in SMS-TL + Message_Id in SMS-TS are used to identify a unique WDP datagram.
+    // 2. TOTAL_SEGMENTS, SEGMENT_NUMBER are used to verify that a complete
+    //    datagram has been received and is ready to be passed to a higher layer.
+    message.header = {
+      segmentRef:     message.msgId,
+      segmentMaxSeq:  message.data[index++],
+      segmentSeq:     message.data[index++] + 1 // It's zero-based in CDMA WAP Push.
+    };
+
+    if (message.header.segmentSeq > message.header.segmentMaxSeq) {
+     if (DEBUG) debug("Wrong WDP segment info.");
+      return PDU_FCS_OK;
+    }
+
+    // Ports are only specified in 1st segment.
+    if (message.header.segmentSeq == 1) {
+      message.header.originatorPort = message.data[index++] << 8;
+      message.header.originatorPort |= message.data[index++];
+      message.header.destinationPort = message.data[index++] << 8;
+      message.header.destinationPort |= message.data[index++];
+    }
+
+    message.data = message.data.subarray(index);
+
+    return this._processSmsMultipart(message);
+  },
+
+  /**
    * Helper for processing received multipart SMS.
    *
    * @return null for handled segments, and an object containing full message
@@ -4347,6 +4402,22 @@ let RIL = {
       delete original.body;
     }
     options.receivedSegments++;
+
+    // The port information is only available in 1st segment for CDMA WAP Push.
+    // If the segments of a WAP Push are not received in sequence
+    // (e.g., SMS with seq == 1 is not the 1st segment received by the device),
+    // we have to retrieve the port information from 1st segment and
+    // save it into the cached options.header.
+    if (original.teleservice === PDU_CDMA_MSG_TELESERIVCIE_ID_WAP && seq === 1) {
+      if (!options.header.originatorPort && original.header.originatorPort) {
+        options.header.originatorPort = original.header.originatorPort;
+      }
+
+      if (!options.header.destinationPort && original.header.destinationPort) {
+        options.header.destinationPort = original.header.destinationPort;
+      }
+    }
+
     if (options.receivedSegments < options.segmentMaxSeq) {
       if (DEBUG) {
         debug("Got segment no." + seq + " of a multipart SMS: "
@@ -6215,7 +6286,9 @@ RIL[UNSOLICITED_RESPONSE_CDMA_NEW_SMS] = function UNSOLICITED_RESPONSE_CDMA_NEW_
   let [message, result] = CdmaPDUHelper.processReceivedSms(length);
 
   if (message) {
-    if (message.subMsgType === PDU_CDMA_MSG_TYPE_DELIVER_ACK) {
+    if (message.teleservice === PDU_CDMA_MSG_TELESERIVCIE_ID_WAP) {
+      result = this._processCdmaSmsWapPush(message);
+    } else if (message.subMsgType === PDU_CDMA_MSG_TYPE_DELIVER_ACK) {
       result = this._processCdmaSmsStatusReport(message);
     } else {
       result = this._processSmsMultipart(message);
@@ -7997,6 +8070,25 @@ let BitBufferHelper = {
     return result;
   },
 
+  backwardReadPilot: function backwardReadPilot(length) {
+    if (length <= 0) {
+      return;
+    }
+
+    // Zero-based position.
+    let bitIndexToRead = this.readIndex * 8 - this.readCacheSize - length;
+
+    if (bitIndexToRead < 0) {
+      return;
+    }
+
+    // Update readIndex, readCache, readCacheSize accordingly.
+    let readBits = bitIndexToRead % 8;
+    this.readIndex = Math.floor(bitIndexToRead / 8) + ((readBits) ? 1 : 0);
+    this.readCache = (readBits) ? this.readBuffer[this.readIndex - 1] : 0;
+    this.readCacheSize = (readBits) ? (8 - readBits) : 0;
+  },
+
   writeBits: function writeBits(value, length) {
     if (length <= 0 || length > 32) {
       return;
@@ -8463,17 +8555,17 @@ let CdmaPDUHelper = {
 
     // Bearer Data Sub-Parameter: User Data
     let userData = message[PDU_CDMA_MSG_USERDATA_BODY];
-    [message.header, message.body, message.encoding] =
-      (userData)? [userData.header, userData.body, userData.encoding]
-                : [null, null, null];
+    [message.header, message.body, message.encoding, message.data] =
+      (userData) ? [userData.header, userData.body, userData.encoding, userData.data]
+                 : [null, null, null, null];
 
     // Bearer Data Sub-Parameter: Message Status
     // Success Delivery (0) if both Message Status and User Data are absent.
     // Message Status absent (-1) if only User Data is available.
     let msgStatus = message[PDU_CDMA_MSG_USER_DATA_MSG_STATUS];
     [message.errorClass, message.msgStatus] =
-      (msgStatus)? [msgStatus.errorClass, msgStatus.msgStatus]
-                 : ((message.body)? [-1, -1]: [0, 0]);
+      (msgStatus) ? [msgStatus.errorClass, msgStatus.msgStatus]
+                  : ((message.body) ? [-1, -1] : [0, 0]);
 
     // Transform message to GSM msg
     let msg = {
@@ -8489,7 +8581,7 @@ let CdmaPDUHelper = {
       replace:          false,
       header:           message.header,
       body:             message.body,
-      data:             null,
+      data:             message.data,
       timestamp:        message[PDU_CDMA_MSG_USERDATA_TIMESTAMP],
       language:         message[PDU_CDMA_LANGUAGE_INDICATOR],
       status:           null,
@@ -8502,7 +8594,8 @@ let CdmaPDUHelper = {
       subMsgType:       message[PDU_CDMA_MSG_USERDATA_MSG_ID].msgType,
       msgId:            message[PDU_CDMA_MSG_USERDATA_MSG_ID].msgId,
       errorClass:       message.errorClass,
-      msgStatus:        message.msgStatus
+      msgStatus:        message.msgStatus,
+      teleservice:      message.teleservice
     };
 
     return msg;
@@ -8937,6 +9030,15 @@ let CdmaPDUHelper = {
       result.header = this.decodeUserDataHeader(result.encoding);
       // header size is included in body size, they are decoded
       msgBodySize -= result.header.length;
+    }
+
+    // Store original payload if enconding is OCTET for further handling of WAP Push, etc.
+    if (encoding === PDU_CDMA_MSG_CODING_OCTET && msgBodySize > 0) {
+      result.data = new Uint8Array(msgBodySize);
+      for (let i = 0; i < msgBodySize; i++) {
+        result.data[i] = BitBufferHelper.readBits(8);
+      }
+      BitBufferHelper.backwardReadPilot(8 * msgBodySize);
     }
 
     // Decode sms content
