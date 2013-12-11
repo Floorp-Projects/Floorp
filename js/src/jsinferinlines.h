@@ -104,29 +104,17 @@ CompilerOutput::ion() const
 }
 
 inline CompilerOutput*
-RecompileInfo::compilerOutput(TypeZone &types) const
+RecompileInfo::compilerOutput(TypeCompartment &types) const
 {
-    if (!types.compilerOutputs || outputIndex >= types.compilerOutputs->length())
+    if (!types.constrainedOutputs || outputIndex >= types.constrainedOutputs->length())
         return nullptr;
-    return &(*types.compilerOutputs)[outputIndex];
+    return &(*types.constrainedOutputs)[outputIndex];
 }
 
 inline CompilerOutput*
 RecompileInfo::compilerOutput(JSContext *cx) const
 {
-    return compilerOutput(cx->zone()->types);
-}
-
-inline bool
-RecompileInfo::shouldSweep(TypeZone &types)
-{
-    CompilerOutput *output = compilerOutput(types);
-    if (!output || !output->isValid())
-        return true;
-
-    // Update this info for the output's new index in the zone's compiler outputs.
-    outputIndex = output->sweepIndex();
-    return false;
+    return compilerOutput(cx->compartment()->types);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -300,13 +288,14 @@ struct AutoEnterAnalysis
          * If there are no more type inference activations on the stack,
          * process any triggered recompilations. Note that we should not be
          * invoking any scripted code while type inference is running.
+         * :TODO: assert this.
          */
         if (!compartment->activeAnalysis) {
-            TypeZone &types = compartment->zone()->types;
-            if (types.pendingNukeTypes)
-                types.nukeTypes(freeOp);
-            else if (types.pendingRecompiles)
-                types.processPendingRecompiles(freeOp);
+            TypeCompartment *types = &compartment->types;
+            if (compartment->zone()->types.pendingNukeTypes)
+                compartment->zone()->types.nukeTypes(freeOp);
+            else if (types->pendingRecompiles)
+                types->processPendingRecompiles(freeOp);
         }
     }
 
@@ -863,6 +852,50 @@ TypeCompartment::compartment()
     return (JSCompartment *)((char *)this - offsetof(JSCompartment, types));
 }
 
+inline void
+TypeCompartment::addPending(JSContext *cx, TypeConstraint *constraint,
+                            ConstraintTypeSet *source, Type type)
+{
+    JS_ASSERT(this == &cx->compartment()->types);
+    JS_ASSERT(!cx->runtime()->isHeapBusy());
+
+    InferSpew(ISpewOps, "pending: %sC%p%s %s",
+              InferSpewColor(constraint), constraint, InferSpewColorReset(),
+              TypeString(type));
+
+    if ((pendingCount == pendingCapacity) && !growPendingArray(cx))
+        return;
+
+    PendingWork &pending = pendingArray[pendingCount++];
+    pending.constraint = constraint;
+    pending.source = source;
+    pending.type = type;
+}
+
+inline void
+TypeCompartment::resolvePending(JSContext *cx)
+{
+    JS_ASSERT(this == &cx->compartment()->types);
+
+    if (resolving) {
+        /* There is an active call further up resolving the worklist. */
+        return;
+    }
+
+    resolving = true;
+
+    /* Handle all pending type registrations. */
+    while (pendingCount) {
+        const PendingWork &pending = pendingArray[--pendingCount];
+        InferSpew(ISpewOps, "resolve: %sC%p%s %s",
+                  InferSpewColor(pending.constraint), pending.constraint,
+                  InferSpewColorReset(), TypeString(pending.type));
+        pending.constraint->newType(cx, pending.source, pending.type);
+    }
+
+    resolving = false;
+}
+
 /////////////////////////////////////////////////////////////////////
 // TypeSet
 /////////////////////////////////////////////////////////////////////
@@ -1186,9 +1219,10 @@ ConstraintTypeSet::addType(ExclusiveContext *cxArg, Type type)
     if (JSContext *cx = cxArg->maybeJSContext()) {
         TypeConstraint *constraint = constraintList;
         while (constraint) {
-            constraint->newType(cx, this, type);
+            cx->compartment()->types.addPending(cx, constraint, this, type);
             constraint = constraint->next;
         }
+        cx->compartment()->types.resolvePending(cx);
     } else {
         JS_ASSERT(!constraintList);
     }
