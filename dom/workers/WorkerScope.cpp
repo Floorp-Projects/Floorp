@@ -6,6 +6,11 @@
 
 #include "WorkerScope.h"
 
+#include "Location.h"
+#include "Navigator.h"
+#include "ScriptLoader.h"
+#include "WorkerPrivate.h"
+
 #include "jsapi.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/DedicatedWorkerGlobalScopeBinding.h"
@@ -15,12 +20,7 @@
 #include <android/log.h>
 #endif
 
-#include "Location.h"
-#include "Navigator.h"
-#include "Principal.h"
-#include "RuntimeService.h"
-#include "ScriptLoader.h"
-#include "WorkerPrivate.h"
+#include "RuntimeService.h" // For WorkersDumpEnabled().
 
 #define UNWRAP_WORKER_OBJECT(Interface, obj, value)                           \
   UnwrapObject<prototypes::id::Interface##_workers,                           \
@@ -261,20 +261,19 @@ DedicatedWorkerGlobalScope::Visible(JSContext* aCx, JSObject* aObj)
 }
 
 JSObject*
-DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
+DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
+                                             JS::CompartmentOptions& aOptions,
+                                             JSPrincipals* aPrincipal)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(!mWorkerPrivate->IsSharedWorker());
-
-  JS::CompartmentOptions options;
-  mWorkerPrivate->CopyJSCompartmentOptions(options);
 
   // We're wrapping the global, so the scope is undefined.
   JS::Rooted<JSObject*> scope(aCx);
 
   return DedicatedWorkerGlobalScopeBinding_workers::Wrap(aCx, scope, this,
-                                                         this, options,
-                                                         GetWorkerPrincipal());
+                                                         this, aOptions,
+                                                         aPrincipal);
 }
 
 void
@@ -302,20 +301,18 @@ SharedWorkerGlobalScope::Visible(JSContext* aCx, JSObject* aObj)
 }
 
 JSObject*
-SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
+SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
+                                          JS::CompartmentOptions& aOptions,
+                                          JSPrincipals* aPrincipal)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(mWorkerPrivate->IsSharedWorker());
-
-  JS::CompartmentOptions options;
-  mWorkerPrivate->CopyJSCompartmentOptions(options);
 
   // We're wrapping the global, so the scope is undefined.
   JS::Rooted<JSObject*> scope(aCx);
 
   return SharedWorkerGlobalScopeBinding_workers::Wrap(aCx, scope, this, this,
-                                                      options,
-                                                      GetWorkerPrincipal());
+                                                      aOptions, aPrincipal);
 }
 
 bool
