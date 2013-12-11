@@ -721,6 +721,7 @@ void
 DrawTargetD2D::ClearRect(const Rect &aRect)
 {
   MarkChanged();
+  PushClipRect(aRect);
 
   FlushTransformToRT();
   PopAllClips();
@@ -729,19 +730,8 @@ DrawTargetD2D::ClearRect(const Rect &aRect)
 
   restoreClippedOut.Save();
 
-  bool needsClip = false;
-
-  needsClip = aRect.x > 0 || aRect.y > 0 ||
-              aRect.XMost() < mSize.width ||
-              aRect.YMost() < mSize.height;
-
-  if (needsClip) {
-    mRT->PushAxisAlignedClip(D2DRect(aRect), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
-  }
   mRT->Clear(D2D1::ColorF(0, 0.0f));
-  if (needsClip) {
-    mRT->PopAxisAlignedClip();
-  }
+  PopClip();
   return;
 }
 
