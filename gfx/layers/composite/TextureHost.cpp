@@ -430,6 +430,12 @@ BufferTextureHost::MaybeUpload(nsIntRegion *aRegion)
 bool
 BufferTextureHost::Upload(nsIntRegion *aRegion)
 {
+  if (!GetBuffer()) {
+    // We don't have a buffer; a possible cause is that the IPDL actor
+    // is already dead. This inevitably happens as IPDL actors can die
+    // at any time, so we want to silently return in this case.
+    return false;
+  }
   if (!mCompositor) {
     NS_WARNING("Tried to upload without a compositor. Skipping texture upload...");
     // If we are in this situation it means we should have called SetCompositor
