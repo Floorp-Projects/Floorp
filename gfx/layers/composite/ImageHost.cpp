@@ -38,6 +38,7 @@ ImageHost::~ImageHost() {}
 void
 ImageHost::UseTextureHost(TextureHost* aTexture)
 {
+  CompositableHost::UseTextureHost(aTexture);
   mFrontBuffer = aTexture;
 }
 
@@ -74,6 +75,10 @@ ImageHost::Composite(EffectChain& aEffectChain,
   if (!mFrontBuffer) {
     return;
   }
+
+  // Make sure the front buffer has a compositor
+  mFrontBuffer->SetCompositor(GetCompositor());
+
   if (!mFrontBuffer->Lock()) {
     NS_WARNING("failed to lock front buffer");
     return;
