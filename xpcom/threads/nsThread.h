@@ -15,6 +15,7 @@
 #include "nsString.h"
 #include "nsTObserverArray.h"
 #include "mozilla/Attributes.h"
+#include "nsAutoPtr.h"
 
 // A native thread
 class nsThread MOZ_FINAL : public nsIThreadInternal,
@@ -56,6 +57,11 @@ public:
 private:
   static nsIThreadObserver* sMainThreadObserver;
 
+  class nsChainedEventQueue;
+
+  class nsNestedEventTarget;
+  friend class nsNestedEventTarget;
+
   friend class nsThreadShutdownEvent;
 
   ~nsThread();
@@ -73,9 +79,56 @@ private:
 
   // Wrappers for event queue methods:
   bool GetEvent(bool mayWait, nsIRunnable **event) {
-    return mEvents.GetEvent(mayWait, event);
+    return mEvents->GetEvent(mayWait, event);
   }
-  nsresult PutEvent(nsIRunnable *event);
+  nsresult PutEvent(nsIRunnable *event, nsNestedEventTarget *target);
+
+  nsresult DispatchInternal(nsIRunnable *event, uint32_t flags,
+                            nsNestedEventTarget *target);
+
+  // Wrapper for nsEventQueue that supports chaining.
+  class nsChainedEventQueue {
+  public:
+    nsChainedEventQueue()
+      : mNext(nullptr) {
+    }
+
+    bool GetEvent(bool mayWait, nsIRunnable **event) {
+      return mQueue.GetEvent(mayWait, event);
+    }
+
+    bool PutEvent(nsIRunnable *event) {
+      return mQueue.PutEvent(event);
+    }
+
+    bool HasPendingEvent() {
+      return mQueue.HasPendingEvent();
+    }
+
+    nsChainedEventQueue *mNext;
+    nsRefPtr<nsNestedEventTarget> mEventTarget;
+
+  private:
+    nsEventQueue mQueue;
+  };
+
+  class nsNestedEventTarget MOZ_FINAL : public nsIEventTarget {
+  public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSIEVENTTARGET
+
+    nsNestedEventTarget(nsThread *thread, nsChainedEventQueue *queue)
+      : mThread(thread), mQueue(queue) {
+    }
+
+    nsRefPtr<nsThread> mThread;
+
+    // This is protected by mThread->mLock.
+    nsChainedEventQueue* mQueue;
+
+  private:
+    ~nsNestedEventTarget() {}
+  };
 
   // This lock protects access to mObserver, mEvents and mEventsAreDoomed.
   // All of those fields are only modified on the thread itself (never from
@@ -89,7 +142,8 @@ private:
   // Only accessed on the target thread.
   nsAutoTObserverArray<nsCOMPtr<nsIThreadObserver>, 2> mEventObservers;
 
-  nsEventQueue  mEvents;
+  nsChainedEventQueue *mEvents;   // never null
+  nsChainedEventQueue  mEventsRoot;
 
   int32_t   mPriority;
   PRThread *mThread;
