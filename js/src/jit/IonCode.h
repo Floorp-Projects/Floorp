@@ -526,9 +526,6 @@ struct IonScript
     const types::RecompileInfo& recompileInfo() const {
         return recompileInfo_;
     }
-    types::RecompileInfo& recompileInfoRef() {
-        return recompileInfo_;
-    }
     uint32_t incrOsrPcMismatchCounter() {
         return ++osrPcMismatchCounter_;
     }

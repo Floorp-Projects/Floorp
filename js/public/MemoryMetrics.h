@@ -393,6 +393,7 @@ struct CompartmentStats
     macro(Other,   NotLiveGCThing, baselineStubsOptimized) \
     macro(Other,   NotLiveGCThing, ionData) \
     macro(Other,   NotLiveGCThing, typeInferenceTypeScripts) \
+    macro(Other,   NotLiveGCThing, typeInferencePendingArrays) \
     macro(Other,   NotLiveGCThing, typeInferenceAllocationSiteTables) \
     macro(Other,   NotLiveGCThing, typeInferenceArrayTypeTables) \
     macro(Other,   NotLiveGCThing, typeInferenceObjectTypeTables) \
