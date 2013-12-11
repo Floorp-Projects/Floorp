@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from optparse import OptionParser
 from datetime import datetime
 import logging
-from optparse import OptionParser
 import os
 import unittest
 import socket
@@ -17,10 +17,8 @@ import xml.dom.minidom as dom
 
 from manifestparser import TestManifest
 from mozhttpd import MozHttpd
-
 from marionette import Marionette
 from moztest.results import TestResultCollection, TestResult, relevant_line
-from marionette_test import MarionetteJSTestCase, MarionetteTestCase
 
 
 class MarionetteTest(TestResult):
@@ -45,6 +43,7 @@ class MarionetteTestResult(unittest._TextTestResult, TestResultCollection):
         unittest._TextTestResult.__init__(self, *args, **kwargs)
         self.passed = 0
         self.testsRun = 0
+        self.result_modifiers = [] # used by mixins to modify the result
 
     @property
     def skipped(self):
@@ -111,6 +110,9 @@ class MarionetteTestResult(unittest._TextTestResult, TestResultCollection):
         t = self.resultClass(name=name, test_class=test_class,
                        time_start=test.start_time, result_expected=result_expected,
                        context=context, **kwargs)
+        # call any registered result modifiers
+        for modifier in self.result_modifiers:
+            modifier(t, result_expected, result_actual, output, context)
         t.finish(result_actual,
                  time_end=time.time() if test.start_time else 0,
                  reason=relevant_line(output),
@@ -306,7 +308,182 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
         return result
 
 
-class MarionetteTestRunner(object):
+class BaseMarionetteOptions(OptionParser):
+    def __init__(self, **kwargs):
+        OptionParser.__init__(self, **kwargs)
+        self.parse_args_handlers = [] # Used by mixins
+        self.verify_usage_handlers = [] # Used by mixins
+        self.add_option('--autolog',
+                        action='store_true',
+                        dest='autolog',
+                        default=False,
+                        help='send test results to autolog')
+        self.add_option('--revision',
+                        action='store',
+                        dest='revision',
+                        help='git revision for autolog submissions')
+        self.add_option('--testgroup',
+                        action='store',
+                        dest='testgroup',
+                        help='testgroup names for autolog submissions')
+        self.add_option('--emulator',
+                        action='store',
+                        dest='emulator',
+                        choices=['x86', 'arm'],
+                        help='if no --address is given, then the harness will launch a B2G emulator on which to run '
+                             'emulator tests. if --address is given, then the harness assumes you are running an '
+                             'emulator already, and will run the emulator tests using that emulator. you need to '
+                             'specify which architecture to emulate for both cases')
+        self.add_option('--emulator-binary',
+                        action='store',
+                        dest='emulatorBinary',
+                        help='launch a specific emulator binary rather than launching from the B2G built emulator')
+        self.add_option('--emulator-img',
+                        action='store',
+                        dest='emulatorImg',
+                        help='use a specific image file instead of a fresh one')
+        self.add_option('--emulator-res',
+                        action='store',
+                        dest='emulator_res',
+                        type='str',
+                        help='set a custom resolution for the emulator'
+                             'Example: "480x800"')
+        self.add_option('--sdcard',
+                        action='store',
+                        dest='sdcard',
+                        help='size of sdcard to create for the emulator')
+        self.add_option('--no-window',
+                        action='store_true',
+                        dest='noWindow',
+                        default=False,
+                        help='when Marionette launches an emulator, start it with the -no-window argument')
+        self.add_option('--logcat-dir',
+                        dest='logcat_dir',
+                        action='store',
+                        help='directory to store logcat dump files')
+        self.add_option('--address',
+                        dest='address',
+                        action='store',
+                        help='host:port of running Gecko instance to connect to')
+        self.add_option('--device',
+                        dest='device_serial',
+                        action='store',
+                        help='serial ID of a device to use for adb / fastboot')
+        self.add_option('--type',
+                        dest='type',
+                        action='store',
+                        default='browser+b2g',
+                        help="the type of test to run, can be a combination of values defined in the manifest file; "
+                             "individual values are combined with '+' or '-' characters. for example: 'browser+b2g' "
+                             "means the set of tests which are compatible with both browser and b2g; 'b2g-qemu' means "
+                             "the set of tests which are compatible with b2g but do not require an emulator. this "
+                             "argument is only used when loading tests from manifest files")
+        self.add_option('--homedir',
+                        dest='homedir',
+                        action='store',
+                        help='home directory of emulator files')
+        self.add_option('--app',
+                        dest='app',
+                        action='store',
+                        help='application to use')
+        self.add_option('--app-arg',
+                        dest='app_args',
+                        action='append',
+                        default=[],
+                        help='specify a command line argument to be passed onto the application')
+        self.add_option('--binary',
+                        dest='bin',
+                        action='store',
+                        help='gecko executable to launch before running the test')
+        self.add_option('--profile',
+                        dest='profile',
+                        action='store',
+                        help='profile to use when launching the gecko process. if not passed, then a profile will be '
+                             'constructed and used')
+        self.add_option('--repeat',
+                        dest='repeat',
+                        action='store',
+                        type=int,
+                        default=0,
+                        help='number of times to repeat the test(s)')
+        self.add_option('-x', '--xml-output',
+                        action='store',
+                        dest='xml_output',
+                        help='xml output')
+        self.add_option('--gecko-path',
+                        dest='gecko_path',
+                        action='store',
+                        help='path to b2g gecko binaries that should be installed on the device or emulator')
+        self.add_option('--testvars',
+                        dest='testvars',
+                        action='store',
+                        help='path to a json file with any test data required')
+        self.add_option('--tree',
+                        dest='tree',
+                        action='store',
+                        default='b2g',
+                        help='the tree that the revision parameter refers to')
+        self.add_option('--symbols-path',
+                        dest='symbols_path',
+                        action='store',
+                        help='absolute path to directory containing breakpad symbols, or the url of a zip file containing symbols')
+        self.add_option('--timeout',
+                        dest='timeout',
+                        type=int,
+                        help='if a --timeout value is given, it will set the default page load timeout, search timeout and script timeout to the given value. If not passed in, it will use the default values of 30000ms for page load, 0ms for search timeout and 10000ms for script timeout')
+        self.add_option('--es-server',
+                        dest='es_servers',
+                        action='append',
+                        help='the ElasticSearch server to use for autolog submission')
+        self.add_option('--shuffle',
+                        action='store_true',
+                        dest='shuffle',
+                        default=False,
+                        help='run tests in a random order')
+
+    def parse_args(self, args=None, values=None):
+        options, tests = OptionParser.parse_args(self, args, values)
+        for handler in self.parse_args_handlers:
+            handler(options, tests, args, values)
+
+        return (options, tests)
+
+    def verify_usage(self, options, tests):
+        if not tests:
+            print 'must specify one or more test files, manifests, or directories'
+            sys.exit(1)
+
+        if not options.emulator and not options.address and not options.bin:
+            print 'must specify --binary, --emulator or --address'
+            sys.exit(1)
+
+        if not options.es_servers:
+            options.es_servers = ['elasticsearch-zlb.dev.vlan81.phx.mozilla.com:9200',
+                                  'elasticsearch-zlb.webapp.scl3.mozilla.com:9200']
+
+        # default to storing logcat output for emulator runs
+        if options.emulator and not options.logcat_dir:
+            options.logcat_dir = 'logcat'
+
+        # check for valid resolution string, strip whitespaces
+        try:
+            if options.emulator_res:
+                dims = options.emulator_res.split('x')
+                assert len(dims) == 2
+                width = str(int(dims[0]))
+                height = str(int(dims[1]))
+                options.emulator_res = 'x'.join([width, height])
+        except:
+            raise ValueError('Invalid emulator resolution format. '
+                             'Should be like "480x800".')
+
+        for handler in self.verify_usage_handlers:
+            handler(options, tests)
+
+        return (options, tests)
+
+
+class BaseMarionetteTestRunner(object):
 
     textrunnerclass = MarionetteTextTestRunner
 
@@ -353,6 +530,7 @@ class MarionetteTestRunner(object):
         self.es_servers = es_servers
         self.shuffle = shuffle
         self.sdcard = sdcard
+        self.mixin_run_tests = []
 
         if testvars:
             if not os.path.exists(testvars):
@@ -364,7 +542,6 @@ class MarionetteTestRunner(object):
 
         # set up test handlers
         self.test_handlers = []
-        self.register_handlers()
 
         self.reset_test_stats()
 
@@ -380,7 +557,7 @@ class MarionetteTestRunner(object):
         # for XML output
         self.testvars['xml_output'] = self.xml_output
         self.results = []
-
+ 
     @property
     def capabilities(self):
         if self._capabilities:
@@ -417,7 +594,7 @@ class MarionetteTestRunner(object):
         host = moznetwork.get_ip()
         self.httpd = MozHttpd(host=host,
                               port=0,
-                              docroot=os.path.join(os.path.dirname(__file__), 'www'))
+                              docroot=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'www'))
         self.httpd.start()
         self.baseurl = 'http://%s:%d/' % (host, self.httpd.httpd.server_port)
         self.logger.info('running webserver on %s' % self.baseurl)
@@ -567,6 +744,8 @@ class MarionetteTestRunner(object):
             self.marionette.instance.close()
             self.marionette.instance = None
         del self.marionette
+        for run_tests in self.mixin_run_tests:
+            run_tests(tests)
 
     def run_test(self, test, expected='pass'):
         if not self.httpd:
@@ -616,9 +795,8 @@ class MarionetteTestRunner(object):
             manifest = TestManifest()
             manifest.read(filepath)
 
-            all_tests = manifest.active_tests(exists=False, disabled=False)
-            manifest_tests = manifest.active_tests(exists=False,
-                                                   disabled=False,
+            all_tests = manifest.active_tests(disabled=False)
+            manifest_tests = manifest.active_tests(disabled=False,
                                                    device=self.device,
                                                    app=self.appName)
             skip_tests = list(set([x['path'] for x in all_tests]) -
@@ -672,9 +850,6 @@ class MarionetteTestRunner(object):
                     self.failures.append((results.getInfo(failure), 'TEST-UNEXPECTED-PASS'))
             if hasattr(results, 'expectedFailures'):
                 self.passed += len(results.expectedFailures)
-
-    def register_handlers(self):
-        self.test_handlers.extend([MarionetteTestCase, MarionetteJSTestCase])
 
     def cleanup(self):
         if self.httpd:
@@ -745,188 +920,4 @@ class MarionetteTestRunner(object):
 
         doc.appendChild(testsuite)
         return doc.toprettyxml(encoding='utf-8')
-
-
-class MarionetteTestOptions(OptionParser):
-
-    def __init__(self, **kwargs):
-        OptionParser.__init__(self, **kwargs)
-
-        self.add_option('--autolog',
-                        action='store_true',
-                        dest='autolog',
-                        default=False,
-                        help='send test results to autolog')
-        self.add_option('--revision',
-                        action='store',
-                        dest='revision',
-                        help='git revision for autolog submissions')
-        self.add_option('--testgroup',
-                        action='store',
-                        dest='testgroup',
-                        help='testgroup names for autolog submissions')
-        self.add_option('--emulator',
-                        action='store',
-                        dest='emulator',
-                        choices=['x86', 'arm'],
-                        help='if no --address is given, then the harness will launch a B2G emulator on which to run '
-                             'emulator tests. if --address is given, then the harness assumes you are running an '
-                             'emulator already, and will run the emulator tests using that emulator. you need to '
-                             'specify which architecture to emulate for both cases')
-        self.add_option('--emulator-binary',
-                        action='store',
-                        dest='emulatorBinary',
-                        help='launch a specific emulator binary rather than launching from the B2G built emulator')
-        self.add_option('--emulator-img',
-                        action='store',
-                        dest='emulatorImg',
-                        help='use a specific image file instead of a fresh one')
-        self.add_option('--emulator-res',
-                        action='store',
-                        dest='emulator_res',
-                        type='str',
-                        help='set a custom resolution for the emulator'
-                             'Example: "480x800"')
-        self.add_option('--sdcard',
-                        action='store',
-                        dest='sdcard',
-                        help='size of sdcard to create for the emulator')
-        self.add_option('--no-window',
-                        action='store_true',
-                        dest='noWindow',
-                        default=False,
-                        help='when Marionette launches an emulator, start it with the -no-window argument')
-        self.add_option('--logcat-dir',
-                        dest='logcat_dir',
-                        action='store',
-                        help='directory to store logcat dump files')
-        self.add_option('--address',
-                        dest='address',
-                        action='store',
-                        help='host:port of running Gecko instance to connect to')
-        self.add_option('--device',
-                        dest='device_serial',
-                        action='store',
-                        help='serial ID of a device to use for adb / fastboot')
-        self.add_option('--type',
-                        dest='type',
-                        action='store',
-                        default='browser+b2g',
-                        help="the type of test to run, can be a combination of values defined in the manifest file; "
-                             "individual values are combined with '+' or '-' characters. for example: 'browser+b2g' "
-                             "means the set of tests which are compatible with both browser and b2g; 'b2g-qemu' means "
-                             "the set of tests which are compatible with b2g but do not require an emulator. this "
-                             "argument is only used when loading tests from manifest files")
-        self.add_option('--homedir',
-                        dest='homedir',
-                        action='store',
-                        help='home directory of emulator files')
-        self.add_option('--app',
-                        dest='app',
-                        action='store',
-                        help='application to use')
-        self.add_option('--app-arg',
-                        dest='app_args',
-                        action='append',
-                        default=[],
-                        help='specify a command line argument to be passed onto the application')
-        self.add_option('--binary',
-                        dest='bin',
-                        action='store',
-                        help='gecko executable to launch before running the test')
-        self.add_option('--profile',
-                        dest='profile',
-                        action='store',
-                        help='profile to use when launching the gecko process. if not passed, then a profile will be '
-                             'constructed and used')
-        self.add_option('--repeat',
-                        dest='repeat',
-                        action='store',
-                        type=int,
-                        default=0,
-                        help='number of times to repeat the test(s)')
-        self.add_option('-x', '--xml-output',
-                        action='store',
-                        dest='xml_output',
-                        help='xml output')
-        self.add_option('--gecko-path',
-                        dest='gecko_path',
-                        action='store',
-                        help='path to b2g gecko binaries that should be installed on the device or emulator')
-        self.add_option('--testvars',
-                        dest='testvars',
-                        action='store',
-                        help='path to a json file with any test data required')
-        self.add_option('--tree',
-                        dest='tree',
-                        action='store',
-                        default='b2g',
-                        help='the tree that the revision parameter refers to')
-        self.add_option('--symbols-path',
-                        dest='symbols_path',
-                        action='store',
-                        help='absolute path to directory containing breakpad symbols, or the url of a zip file containing symbols')
-        self.add_option('--timeout',
-                        dest='timeout',
-                        type=int,
-                        help='if a --timeout value is given, it will set the default page load timeout, search timeout and script timeout to the given value. If not passed in, it will use the default values of 30000ms for page load, 0ms for search timeout and 10000ms for script timeout')
-        self.add_option('--es-server',
-                        dest='es_servers',
-                        action='append',
-                        help='the ElasticSearch server to use for autolog submission')
-        self.add_option('--shuffle',
-                        action='store_true',
-                        dest='shuffle',
-                        default=False,
-                        help='run tests in a random order')
-
-    def verify_usage(self, options, tests):
-        if not tests:
-            print 'must specify one or more test files, manifests, or directories'
-            sys.exit(1)
-
-        if not options.emulator and not options.address and not options.bin:
-            print 'must specify --binary, --emulator or --address'
-            sys.exit(1)
-
-        if not options.es_servers:
-            options.es_servers = ['elasticsearch-zlb.dev.vlan81.phx.mozilla.com:9200',
-                                  'elasticsearch-zlb.webapp.scl3.mozilla.com:9200']
-
-        # default to storing logcat output for emulator runs
-        if options.emulator and not options.logcat_dir:
-            options.logcat_dir = 'logcat'
-
-        # check for valid resolution string, strip whitespaces
-        try:
-            if options.emulator_res:
-                dims = options.emulator_res.split('x')
-                assert len(dims) == 2
-                width = str(int(dims[0]))
-                height = str(int(dims[1]))
-                options.emulator_res = 'x'.join([width, height])
-        except:
-            raise ValueError('Invalid emulator resolution format. '
-                             'Should be like "480x800".')
-
-        return (options, tests)
-
-
-def startTestRunner(runner_class, options, tests):
-    runner = runner_class(**vars(options))
-    runner.run_tests(tests)
-    return runner
-
-
-def cli(runner_class=MarionetteTestRunner, parser_class=BaseMarionetteOptions):
-    parser = parser_class(usage='%prog [options] test_file_or_dir <test_file_or_dir> ...')
-    options, tests = parser.parse_args()
-    parser.verify_usage(options, tests)
-
-    runner = startTestRunner(runner_class, options, tests)
-    if runner.failed > 0:
-        sys.exit(10)
-
-if __name__ == "__main__":
-    cli()
 
