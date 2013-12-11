@@ -6,6 +6,4 @@
 
 DIRS += ['components']
 
-MODULE = 'simple'
-
 XPI_NAME = 'simple'

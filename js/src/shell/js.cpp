@@ -388,12 +388,12 @@ RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, 
 
     {
         JS::AutoSaveContextOptions asco(cx);
-        JS::ContextOptionsRef(cx).setCompileAndGo(true)
-                                 .setNoScriptRval(true);
+        JS::ContextOptionsRef(cx).setNoScriptRval(true);
 
         CompileOptions options(cx);
         options.setUTF8(true)
-               .setFileAndLine(filename, 1);
+               .setFileAndLine(filename, 1)
+               .setCompileAndGo(true);
 
         gGotError = false;
         script = JS::Compile(cx, obj, options, file);
@@ -1007,13 +1007,13 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
 
         {
             JS::AutoSaveContextOptions asco(cx);
-            JS::ContextOptionsRef(cx).setCompileAndGo(compileAndGo)
-                                 .setNoScriptRval(noScriptRval);
+            JS::ContextOptionsRef(cx).setNoScriptRval(noScriptRval);
 
             CompileOptions options(cx);
             options.setFileAndLine(fileName, lineNumber)
                    .setElement(element)
-                   .setSourcePolicy(sourcePolicy);
+                   .setSourcePolicy(sourcePolicy)
+                   .setCompileAndGo(compileAndGo);
 
             script = JS::Compile(cx, global, options, codeChars, codeLength);
             if (!script)
@@ -1170,10 +1170,12 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
     int64_t startClock = PRMJ_Now();
     {
         JS::AutoSaveContextOptions asco(cx);
-        JS::ContextOptionsRef(cx).setCompileAndGo(true)
-                                 .setNoScriptRval(true);
+        JS::ContextOptionsRef(cx).setNoScriptRval(true);
 
-        script = JS_CompileUCScript(cx, thisobj, ucbuf, buflen, filename.ptr(), 1);
+        JS::CompileOptions options(cx);
+        options.setFileAndLine(filename.ptr(), 1)
+               .setCompileAndGo(true);
+        script = JS_CompileUCScript(cx, thisobj, ucbuf, buflen, options);
         if (!script)
             return false;
     }
@@ -1709,8 +1711,6 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
           case SRC_BREAK2LABEL:
           case SRC_SWITCHBREAK:
           case SRC_ASSIGNOP:
-          case SRC_HIDDEN:
-          case SRC_CATCH:
           case SRC_XDELTA:
             break;
 
@@ -2007,12 +2007,12 @@ DisassFile(JSContext *cx, unsigned argc, jsval *vp)
 
     {
         JS::AutoSaveContextOptions asco(cx);
-        JS::ContextOptionsRef(cx).setCompileAndGo(true)
-                                 .setNoScriptRval(true);
+        JS::ContextOptionsRef(cx).setNoScriptRval(true);
 
         CompileOptions options(cx);
         options.setUTF8(true)
-               .setFileAndLine(filename.ptr(), 1);
+               .setFileAndLine(filename.ptr(), 1)
+               .setCompileAndGo(true);
 
         script = JS::Compile(cx, thisobj, options, filename.ptr());
         if (!script)
@@ -3083,10 +3083,12 @@ Compile(JSContext *cx, unsigned argc, jsval *vp)
     RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
     JSString *scriptContents = JSVAL_TO_STRING(arg0);
     JS::AutoSaveContextOptions asco(cx);
-    JS::ContextOptionsRef(cx).setCompileAndGo(true)
-                              .setNoScriptRval(true);
+    JS::ContextOptionsRef(cx).setNoScriptRval(true);
+    JS::CompileOptions options(cx);
+    options.setFileAndLine("<string>", 1)
+           .setCompileAndGo(true);
     bool ok = JS_CompileUCScript(cx, global, JS_GetStringCharsZ(cx, scriptContents),
-                                 JS_GetStringLength(scriptContents), "<string>", 1);
+                                 JS_GetStringLength(scriptContents), options);
     JS_SET_RVAL(cx, vp, UndefinedValue());
     return ok;
 }
@@ -3602,7 +3604,7 @@ NestedShell(JSContext *cx, unsigned argc, jsval *vp)
 
         // As a special case, if the caller passes "--js-cache", replace that
         // with "--js-cache=$(jsCacheDir)"
-        if (!strcmp(argv.back(), "--js-cache")) {
+        if (!strcmp(argv.back(), "--js-cache") && jsCacheDir) {
             char *newArg = JS_smprintf("--js-cache=%s", jsCacheDir);
             if (!newArg)
                 return false;

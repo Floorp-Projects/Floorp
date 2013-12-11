@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-MODULE = 'nativewindow'
-
 EXPORTS += [
     'GonkNativeWindow.h',
     'GonkNativeWindowClient.h',
@@ -48,11 +46,14 @@ if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER']:
             'GonkNativeWindowICS.cpp',
         ]
 
+if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER']:
+    if CONFIG['ANDROID_VERSION'] >= '18':
+        SOURCES += [
+            'FakeSurfaceComposer.cpp',
+        ]
+
 FAIL_ON_WARNINGS = True
-
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'nativewindow'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'xul'

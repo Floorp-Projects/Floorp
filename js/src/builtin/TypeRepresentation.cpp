@@ -59,6 +59,12 @@ TypeRepresentationHasher::match(TypeRepresentation *key1,
       case TypeRepresentation::Scalar:
         return matchScalars(key1->asScalar(), key2->asScalar());
 
+      case TypeRepresentation::Reference:
+        return matchReferences(key1->asReference(), key2->asReference());
+
+      case TypeRepresentation::X4:
+        return matchX4s(key1->asX4(), key2->asX4());
+
       case TypeRepresentation::Struct:
         return matchStructs(key1->asStruct(), key2->asStruct());
 
@@ -72,6 +78,20 @@ TypeRepresentationHasher::match(TypeRepresentation *key1,
 bool
 TypeRepresentationHasher::matchScalars(ScalarTypeRepresentation *key1,
                                        ScalarTypeRepresentation *key2)
+{
+    return key1->type() == key2->type();
+}
+
+bool
+TypeRepresentationHasher::matchReferences(ReferenceTypeRepresentation *key1,
+                                          ReferenceTypeRepresentation *key2)
+{
+    return key1->type() == key2->type();
+}
+
+bool
+TypeRepresentationHasher::matchX4s(X4TypeRepresentation *key1,
+                                   X4TypeRepresentation *key2)
 {
     return key1->type() == key2->type();
 }
@@ -109,6 +129,12 @@ TypeRepresentationHasher::hash(TypeRepresentation *key) {
       case TypeRepresentation::Scalar:
         return hashScalar(key->asScalar());
 
+      case TypeRepresentation::Reference:
+        return hashReference(key->asReference());
+
+      case TypeRepresentation::X4:
+        return hashX4(key->asX4());
+
       case TypeRepresentation::Struct:
         return hashStruct(key->asStruct());
 
@@ -121,6 +147,18 @@ TypeRepresentationHasher::hash(TypeRepresentation *key) {
 
 HashNumber
 TypeRepresentationHasher::hashScalar(ScalarTypeRepresentation *key)
+{
+    return HashGeneric(key->kind(), key->type());
+}
+
+HashNumber
+TypeRepresentationHasher::hashReference(ReferenceTypeRepresentation *key)
+{
+    return HashGeneric(key->kind(), key->type());
+}
+
+HashNumber
+TypeRepresentationHasher::hashX4(X4TypeRepresentation *key)
 {
     return HashGeneric(key->kind(), key->type());
 }
@@ -145,43 +183,62 @@ TypeRepresentationHasher::hashArray(ArrayTypeRepresentation *key)
 ///////////////////////////////////////////////////////////////////////////
 // Constructors
 
-TypeRepresentation::TypeRepresentation(Kind kind, size_t size, size_t align)
+TypeRepresentation::TypeRepresentation(Kind kind, size_t size,
+                                       size_t align, bool opaque)
   : size_(size),
     alignment_(align),
-    kind_(kind)
+    kind_(kind),
+    opaque_(opaque)
 {}
 
+static size_t ScalarSizes[] = {
+#define SCALAR_SIZE(_kind, _type, _name)                        \
+    sizeof(_type),
+    JS_FOR_EACH_SCALAR_TYPE_REPR(SCALAR_SIZE) 0
+#undef SCALAR_SIZE
+};
+
 ScalarTypeRepresentation::ScalarTypeRepresentation(Type type)
-  : TypeRepresentation(Scalar, 0, 1),
+  : TypeRepresentation(Scalar, ScalarSizes[type], ScalarSizes[type], false),
+    type_(type)
+{
+}
+
+static size_t X4Sizes[] = {
+#define X4_SIZE(_kind, _type, _name)                        \
+    sizeof(_type) * 4,
+    JS_FOR_EACH_X4_TYPE_REPR(X4_SIZE) 0
+#undef X4_SIZE
+};
+
+X4TypeRepresentation::X4TypeRepresentation(Type type)
+  : TypeRepresentation(X4, X4Sizes[type], X4Sizes[type], false),
+    type_(type)
+{
+}
+
+ReferenceTypeRepresentation::ReferenceTypeRepresentation(Type type)
+  : TypeRepresentation(Reference, 0, 1, true),
     type_(type)
 {
     switch (type) {
-      case TYPE_INT8:
-      case TYPE_UINT8:
-      case TYPE_UINT8_CLAMPED:
-        size_ = alignment_ = 1;
+      case TYPE_ANY:
+        size_ = sizeof(js::HeapValue);
+        alignment_ = MOZ_ALIGNOF(js::HeapValue);
         break;
 
-      case TYPE_INT16:
-      case TYPE_UINT16:
-        size_ = alignment_ = 2;
-        break;
-
-      case TYPE_INT32:
-      case TYPE_UINT32:
-      case TYPE_FLOAT32:
-        size_ = alignment_ = 4;
-        break;
-
-      case TYPE_FLOAT64:
-        size_ = alignment_ = 8;
+      case TYPE_OBJECT:
+      case TYPE_STRING:
+        size_ = sizeof(js::HeapPtrObject);
+        alignment_ = MOZ_ALIGNOF(js::HeapPtrObject);
         break;
     }
 }
 
 ArrayTypeRepresentation::ArrayTypeRepresentation(TypeRepresentation *element,
                                                  size_t length)
-  : TypeRepresentation(Array, element->size() * length, element->alignment()),
+  : TypeRepresentation(Array, element->size() * length,
+                       element->alignment(), element->opaque()),
     element_(element),
     length_(length)
 {
@@ -203,9 +260,10 @@ StructField::StructField(size_t index,
 {}
 
 StructTypeRepresentation::StructTypeRepresentation()
-  : TypeRepresentation(Struct, 0, 1),
+  : TypeRepresentation(Struct, 0, 1, false),
     fieldCount_(0) // see ::init() below!
 {
+    // note: size_, alignment_, and opaque_ are computed in ::init() below
 }
 
 bool
@@ -222,8 +280,15 @@ StructTypeRepresentation::init(JSContext *cx,
     // consistency across build environments.
     uint32_t totalSize = 0;
 
+    // These will be adjusted in the loop below:
+    alignment_ = 1;
+    opaque_ = false;
+
     for (size_t i = 0; i < ids.length(); i++) {
         TypeRepresentation *fieldTypeRepr = fromOwnerObject(*typeReprOwners[i]);
+
+        if (fieldTypeRepr->opaque())
+            opaque_ = true;
 
         uint32_t alignedSize = alignTo(totalSize, fieldTypeRepr->alignment());
         if (alignedSize < totalSize) {
@@ -305,6 +370,16 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
                                       Int32Value(asScalar()->type()));
         break;
 
+      case Reference:
+        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_TYPE,
+                                      Int32Value(asReference()->type()));
+        break;
+
+      case X4:
+        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_TYPE,
+                                      Int32Value(asX4()->type()));
+        break;
+
       case Struct:
         break;
     }
@@ -313,25 +388,64 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
     return &*ownerObject;
 }
 
+namespace js {
+class TypeRepresentationHelper {
+  public:
+    template<typename T>
+    static JSObject *CreateSimple(JSContext *cx, typename T::Type type) {
+        JSCompartment *comp = cx->compartment();
+
+        T sample(type);
+        TypeRepresentationHash::AddPtr p = comp->typeReprs.lookupForAdd(&sample);
+        if (p)
+            return (*p)->ownerObject();
+
+        // Note: cannot use cx->new_ because constructor is private.
+        T *ptr = (T *) cx->malloc_(sizeof(T));
+        if (!ptr)
+            return nullptr;
+        new(ptr) T(type);
+
+        return ptr->addToTableOrFree(cx, p);
+    }
+};
+} // namespace js
+
 /*static*/
 JSObject *
 ScalarTypeRepresentation::Create(JSContext *cx,
                                  ScalarTypeRepresentation::Type type)
 {
+    return TypeRepresentationHelper::CreateSimple<ScalarTypeRepresentation>(cx, type);
+}
+
+/*static*/
+JSObject *
+X4TypeRepresentation::Create(JSContext *cx,
+                             X4TypeRepresentation::Type type)
+{
+    return TypeRepresentationHelper::CreateSimple<X4TypeRepresentation>(cx, type);
+}
+
+/*static*/
+JSObject *
+ReferenceTypeRepresentation::Create(JSContext *cx,
+                                    ReferenceTypeRepresentation::Type type)
+{
     JSCompartment *comp = cx->compartment();
 
-    ScalarTypeRepresentation sample(type);
+    ReferenceTypeRepresentation sample(type);
     TypeRepresentationHash::AddPtr p = comp->typeReprs.lookupForAdd(&sample);
     if (p)
         return (*p)->ownerObject();
 
     // Note: cannot use cx->new_ because constructor is private.
-    ScalarTypeRepresentation *ptr =
-        (ScalarTypeRepresentation *) cx->malloc_(
-            sizeof(ScalarTypeRepresentation));
+    ReferenceTypeRepresentation *ptr =
+        (ReferenceTypeRepresentation *) cx->malloc_(
+            sizeof(ReferenceTypeRepresentation));
     if (!ptr)
         return nullptr;
-    new(ptr) ScalarTypeRepresentation(type);
+    new(ptr) ReferenceTypeRepresentation(type);
 
     return ptr->addToTableOrFree(cx, p);
 }
@@ -422,6 +536,8 @@ TypeRepresentation::traceFields(JSTracer *trace)
 
     switch (kind()) {
       case Scalar:
+      case Reference:
+      case X4:
         break;
 
       case Struct:
@@ -472,6 +588,12 @@ TypeRepresentation::appendString(JSContext *cx, StringBuffer &contents)
       case Scalar:
         return asScalar()->appendStringScalar(cx, contents);
 
+      case Reference:
+        return asReference()->appendStringReference(cx, contents);
+
+      case X4:
+        return asX4()->appendStringX4(cx, contents);
+
       case Array:
         return asArray()->appendStringArray(cx, contents);
 
@@ -501,6 +623,40 @@ ScalarTypeRepresentation::appendStringScalar(JSContext *cx, StringBuffer &conten
 #define NUMERIC_TYPE_APPEND_STRING(constant_, type_, name_)                   \
         case constant_: return contents.append(#name_);
         JS_FOR_EACH_SCALAR_TYPE_REPR(NUMERIC_TYPE_APPEND_STRING)
+    }
+    MOZ_ASSUME_UNREACHABLE("Invalid type");
+}
+
+/*static*/ const char *
+ReferenceTypeRepresentation::typeName(Type type)
+{
+    switch (type) {
+#define NUMERIC_TYPE_TO_STRING(constant_, type_, name_) \
+        case constant_: return #name_;
+        JS_FOR_EACH_REFERENCE_TYPE_REPR(NUMERIC_TYPE_TO_STRING)
+    }
+    MOZ_ASSUME_UNREACHABLE("Invalid type");
+}
+
+bool
+ReferenceTypeRepresentation::appendStringReference(JSContext *cx, StringBuffer &contents)
+{
+    switch (type()) {
+#define NUMERIC_TYPE_APPEND_STRING(constant_, type_, name_)                   \
+        case constant_: return contents.append(#name_);
+        JS_FOR_EACH_REFERENCE_TYPE_REPR(NUMERIC_TYPE_APPEND_STRING)
+    }
+    MOZ_ASSUME_UNREACHABLE("Invalid type");
+}
+
+bool
+X4TypeRepresentation::appendStringX4(JSContext *cx, StringBuffer &contents)
+{
+    switch (type()) {
+      case TYPE_FLOAT32:
+        return contents.append("float32x4");
+      case TYPE_INT32:
+        return contents.append("int32x4");
     }
     MOZ_ASSUME_UNREACHABLE("Invalid type");
 }
@@ -556,6 +712,163 @@ StructTypeRepresentation::appendStringStruct(JSContext *cx, StringBuffer &conten
         return false;
 
     return true;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Walking memory
+
+template<typename V>
+static void
+visitReferences(TypeRepresentation *repr, uint8_t *mem, V& visitor)
+{
+    if (repr->transparent())
+        return;
+
+    switch (repr->kind()) {
+      case TypeRepresentation::Scalar:
+      case TypeRepresentation::X4:
+        return;
+
+      case TypeRepresentation::Reference:
+        visitor.visitReference(repr->asReference(), mem);
+        return;
+
+      case TypeRepresentation::Array:
+      {
+        ArrayTypeRepresentation *arrayRepr = repr->asArray();
+        TypeRepresentation *elementRepr = arrayRepr->element();
+        for (size_t i = 0; i < arrayRepr->length(); i++) {
+            visitReferences(elementRepr, mem, visitor);
+            mem += elementRepr->size();
+        }
+        return;
+      }
+
+      case TypeRepresentation::Struct:
+      {
+        StructTypeRepresentation *structRepr = repr->asStruct();
+        for (size_t i = 0; i < structRepr->fieldCount(); i++) {
+            const StructField &f = structRepr->field(i);
+            visitReferences(f.typeRepr, mem + f.offset, visitor);
+        }
+        return;
+      }
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Invalid type repr kind");
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Initializing instances
+
+namespace js {
+class MemoryInitVisitor {
+    const JSRuntime *rt_;
+
+  public:
+    MemoryInitVisitor(const JSRuntime *rt)
+      : rt_(rt)
+    {}
+
+    void visitReference(ReferenceTypeRepresentation *repr, uint8_t *mem);
+};
+} // namespace js
+
+void
+js::MemoryInitVisitor::visitReference(ReferenceTypeRepresentation *repr, uint8_t *mem)
+{
+    switch (repr->type()) {
+      case ReferenceTypeRepresentation::TYPE_ANY:
+      {
+        js::HeapValue *heapValue = reinterpret_cast<js::HeapValue *>(mem);
+        heapValue->init(UndefinedValue());
+        return;
+      }
+
+      case ReferenceTypeRepresentation::TYPE_OBJECT:
+      {
+        js::HeapPtrObject *objectPtr =
+            reinterpret_cast<js::HeapPtrObject *>(mem);
+        objectPtr->init(nullptr);
+        return;
+      }
+
+      case ReferenceTypeRepresentation::TYPE_STRING:
+      {
+        js::HeapPtrString *stringPtr =
+            reinterpret_cast<js::HeapPtrString *>(mem);
+        stringPtr->init(rt_->emptyString);
+        return;
+      }
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Invalid kind");
+}
+
+void
+TypeRepresentation::initInstance(const JSRuntime *rt, uint8_t *mem)
+{
+    MemoryInitVisitor visitor(rt);
+    memset(mem, 0, size());
+    if (opaque())
+        visitReferences(this, mem, visitor);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Tracing instances
+
+namespace js {
+class MemoryTracingVisitor {
+    JSTracer *trace_;
+
+  public:
+
+    MemoryTracingVisitor(JSTracer *trace)
+      : trace_(trace)
+    {}
+
+    void visitReference(ReferenceTypeRepresentation *repr, uint8_t *mem);
+};
+} // namespace js
+
+void
+js::MemoryTracingVisitor::visitReference(ReferenceTypeRepresentation *repr, uint8_t *mem)
+{
+    switch (repr->type()) {
+      case ReferenceTypeRepresentation::TYPE_ANY:
+      {
+        js::HeapValue *heapValue = reinterpret_cast<js::HeapValue *>(mem);
+        gc::MarkValue(trace_, heapValue, "reference-val");
+        return;
+      }
+
+      case ReferenceTypeRepresentation::TYPE_OBJECT:
+      {
+        js::HeapPtrObject *objectPtr =
+            reinterpret_cast<js::HeapPtrObject *>(mem);
+        if (*objectPtr)
+            gc::MarkObject(trace_, objectPtr, "reference-obj");
+        return;
+      }
+
+      case ReferenceTypeRepresentation::TYPE_STRING:
+      {
+        js::HeapPtrString *stringPtr =
+            reinterpret_cast<js::HeapPtrString *>(mem);
+        if (*stringPtr)
+            gc::MarkString(trace_, stringPtr, "reference-str");
+        return;
+      }
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Invalid kind");
+}
+
+void
+TypeRepresentation::traceInstance(JSTracer *trace, uint8_t *mem)
+{
+    MemoryTracingVisitor visitor(trace);
+    visitReferences(this, mem, visitor);
 }
 
 ///////////////////////////////////////////////////////////////////////////

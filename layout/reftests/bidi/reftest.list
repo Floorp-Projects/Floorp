@@ -13,8 +13,8 @@ random-if(cocoaWidget) == bidi-006.html bidi-006-ref.html # bug 734313
 random-if(cocoaWidget) == bidi-006-j.html bidi-006-ref.html # bug 734313
 == bidiSVG-01.svg bidiSVG-01-ref.svg
 == bidiSVG-02.svg bidiSVG-02-ref.svg
-pref(svg.text.css-frames.enabled,true) == bidiSVG-03.svg bidiSVG-03-ref.svg
-pref(svg.text.css-frames.enabled,true) == bidiSVG-04.svg bidiSVG-04-ref.svg
+== bidiSVG-03.svg bidiSVG-03-ref.svg
+== bidiSVG-04.svg bidiSVG-04-ref.svg
 == bidiSVG-05.svg bidiSVG-05-ref.svg
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) == bidiMirroring.svg bidiMirroring-ref.svg
 fuzzy-if(Android,9,134) random-if(layersGPUAccelerated) == visualmarquee.html marquee-ref.html
@@ -138,5 +138,6 @@ skip-if(B2G) == 726420-1.html 726420-1-ref.html
 == 746987-4.html 746987-4-ref.html
 == 779003-1.html 779003-1-ref.html
 == 779003-1-dynamic.html 779003-1-ref.html
+== 869833-1.xul 869833-1-ref.xul
 == 922530-1.html 922530-1-ref.html
 == 922550-1.html 922550-1-ref.html

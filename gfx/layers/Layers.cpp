@@ -37,8 +37,7 @@ using namespace mozilla::gfx;
 
 typedef FrameMetrics::ViewID ViewID;
 const ViewID FrameMetrics::NULL_SCROLL_ID = 0;
-const ViewID FrameMetrics::ROOT_SCROLL_ID = 1;
-const ViewID FrameMetrics::START_SCROLL_ID = 2;
+const ViewID FrameMetrics::START_SCROLL_ID = 1;
 
 uint8_t gLayerManagerLayerBuilder;
 
@@ -1262,6 +1261,12 @@ Layer::LogSelf(const char* aPrefix)
   nsAutoCString str;
   PrintInfo(str, aPrefix);
   MOZ_LAYERS_LOG(("%s", str.get()));
+
+  if (mMaskLayer) {
+    nsAutoCString pfx(aPrefix);
+    pfx += "   \\ MaskLayer ";
+    mMaskLayer->LogSelf(pfx.get());
+  }
 }
 
 nsACString&
@@ -1305,6 +1310,9 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
                      mStickyPositionData->mOuter.width, mStickyPositionData->mOuter.height,
                      mStickyPositionData->mInner.x, mStickyPositionData->mInner.y,
                      mStickyPositionData->mInner.width, mStickyPositionData->mInner.height);
+  }
+  if (mMaskLayer) {
+    aTo.AppendPrintf(" [mMaskLayer=%p]", mMaskLayer.get());
   }
 
   return aTo;

@@ -150,7 +150,8 @@ ObserverServiceReporter::CollectReports(nsIMemoryReporterCallback* cb,
                                "respect to the number of windows."),
             aClosure);
 
-        NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv)))
+          return rv;
     }
 
     rv = cb->Callback(/* process */ EmptyCString(),
@@ -162,7 +163,8 @@ ObserverServiceReporter::CollectReports(nsIMemoryReporterCallback* cb,
                            "observer service."),
         aClosure);
 
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     rv = cb->Callback(/* process */ EmptyCString(),
         NS_LITERAL_CSTRING("observer-service/referent/weak/alive"),
@@ -173,7 +175,8 @@ ObserverServiceReporter::CollectReports(nsIMemoryReporterCallback* cb,
                            "observer service that are still alive."),
         aClosure);
 
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     rv = cb->Callback(/* process */ EmptyCString(),
         NS_LITERAL_CSTRING("observer-service/referent/weak/dead"),
@@ -184,7 +187,8 @@ ObserverServiceReporter::CollectReports(nsIMemoryReporterCallback* cb,
                            "observer service that are dead."),
         aClosure);
 
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     return NS_OK;
 }
@@ -266,7 +270,8 @@ nsObserverService::AddObserver(nsIObserver* anObserver, const char* aTopic,
          (void*) anObserver, aTopic));
 
     NS_ENSURE_VALIDCALL
-    NS_ENSURE_ARG(anObserver && aTopic);
+    if (NS_WARN_IF(!anObserver) || NS_WARN_IF(!aTopic))
+        return NS_ERROR_INVALID_ARG;
 
     if (mozilla::net::IsNeckoChild() && !strncmp(aTopic, "http-on-", 8)) {
       return NS_ERROR_NOT_IMPLEMENTED;
@@ -285,7 +290,8 @@ nsObserverService::RemoveObserver(nsIObserver* anObserver, const char* aTopic)
     LOG(("nsObserverService::RemoveObserver(%p: %s)",
          (void*) anObserver, aTopic));
     NS_ENSURE_VALIDCALL
-    NS_ENSURE_ARG(anObserver && aTopic);
+    if (NS_WARN_IF(!anObserver) || NS_WARN_IF(!aTopic))
+        return NS_ERROR_INVALID_ARG;
 
     nsObserverList *observerList = mObserverTopicTable.GetEntry(aTopic);
     if (!observerList)
@@ -302,7 +308,8 @@ nsObserverService::EnumerateObservers(const char* aTopic,
                                       nsISimpleEnumerator** anEnumerator)
 {
     NS_ENSURE_VALIDCALL
-    NS_ENSURE_ARG(aTopic && anEnumerator);
+    if (NS_WARN_IF(!anEnumerator) || NS_WARN_IF(!aTopic))
+        return NS_ERROR_INVALID_ARG;
 
     nsObserverList *observerList = mObserverTopicTable.GetEntry(aTopic);
     if (!observerList)
@@ -319,7 +326,8 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports *aSubject,
     LOG(("nsObserverService::NotifyObservers(%s)", aTopic));
 
     NS_ENSURE_VALIDCALL
-    NS_ENSURE_ARG(aTopic);
+    if (NS_WARN_IF(!aTopic))
+        return NS_ERROR_INVALID_ARG;
 
     nsObserverList *observerList = mObserverTopicTable.GetEntry(aTopic);
     if (observerList)

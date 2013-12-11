@@ -21,5 +21,3 @@ PARALLEL_DIRS += [
 
 TEST_TOOL_DIRS += ['test']
 
-MODULE = 'content'
-

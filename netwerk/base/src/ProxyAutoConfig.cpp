@@ -346,7 +346,9 @@ ProxyAutoConfig::ResolveAddress(const nsCString &aHostName,
 
   nsRefPtr<PACResolver> helper = new PACResolver();
 
-  if (NS_FAILED(dns->AsyncResolve(aHostName, 0, helper,
+  if (NS_FAILED(dns->AsyncResolve(aHostName,
+                                  nsIDNSService::RESOLVE_PRIORITY_MEDIUM,
+                                  helper,
                                   NS_GetCurrentThread(),
                                   getter_AddRefs(helper->mRequest))))
     return false;
@@ -616,10 +618,12 @@ ProxyAutoConfig::SetupJS()
   bool isDataURI = nsDependentCSubstring(mPACURI, 0, 5).LowerCaseEqualsASCII("data:", 5);
 
   sRunning = this;
-  JSScript *script = JS_CompileScript(mJSRuntime->Context(),
-                                      mJSRuntime->Global(),
+  JS::Rooted<JSObject *> global(mJSRuntime->Context(), mJSRuntime->Global());
+  JS::CompileOptions options(mJSRuntime->Context());
+  options.setFileAndLine(mPACURI.get(), 1);
+  JSScript *script = JS_CompileScript(mJSRuntime->Context(), global,
                                       mPACScript.get(), mPACScript.Length(),
-                                      mPACURI.get(), 1);
+                                      options);
   if (!script ||
       !JS_ExecuteScript(mJSRuntime->Context(), mJSRuntime->Global(), script, nullptr)) {
     nsString alertMessage(NS_LITERAL_STRING("PAC file failed to install from "));

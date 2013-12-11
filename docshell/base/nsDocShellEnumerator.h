@@ -4,12 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsDocShellEnumerator_h___
+#define nsDocShellEnumerator_h___
+
 #include "nsISimpleEnumerator.h"
 #include "nsTArray.h"
 #include "nsIWeakReferenceUtils.h"
 
 class nsIDocShellTreeItem;
-
 
 /*
 // {13cbc281-35ae-11d5-be5b-bde0edece43c}
@@ -105,5 +107,6 @@ public:
 protected:
 
   virtual nsresult            BuildArrayRecursive(nsIDocShellTreeItem* inItem, nsTArray<nsWeakPtr>& inItemArray);
-
 };
+
+#endif // nsDocShellEnumerator_h___

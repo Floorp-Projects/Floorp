@@ -305,7 +305,7 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary, bool* aResult)
   Accessible* root = GetActiveRoot();
   while (true) {
     Accessible* curPosition = tempPosition;
-    HyperTextAccessible* text;
+    HyperTextAccessible* text = nullptr;
     // Find the nearest text node using a preorder traversal starting from
     // the current node.
     if (!(text = tempPosition->AsHyperText())) {
@@ -370,9 +370,8 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary, bool* aResult)
 
     nsAutoString unusedText;
     int32_t newStart = 0, newEnd = 0, currentEnd = tempEnd;
-    text->GetTextAtOffset(tempEnd, endBoundary, &newStart, &tempEnd, unusedText);
-    text->GetTextBeforeOffset(tempEnd, startBoundary, &newStart, &newEnd,
-                              unusedText);
+    text->TextAtOffset(tempEnd, endBoundary, &newStart, &tempEnd, unusedText);
+    text->TextBeforeOffset(tempEnd, startBoundary, &newStart, &newEnd, unusedText);
     int32_t potentialStart = newEnd == tempEnd ? newStart : newEnd;
     tempStart = potentialStart > tempStart ? potentialStart : currentEnd;
 
@@ -494,15 +493,14 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary, bool* aResult)
 
     nsAutoString unusedText;
     int32_t newStart = 0, newEnd = 0, currentStart = tempStart, potentialEnd = 0;
-    text->GetTextBeforeOffset(tempStart, startBoundary, &newStart, &newEnd,
-                              unusedText);
+    text->TextBeforeOffset(tempStart, startBoundary, &newStart, &newEnd, unusedText);
     if (newStart < tempStart)
       tempStart = newEnd >= currentStart ? newStart : newEnd;
     else // XXX: In certain odd cases newStart is equal to tempStart
-      text->GetTextBeforeOffset(tempStart - 1, startBoundary, &newStart,
-                                &tempStart, unusedText);
-    text->GetTextAtOffset(tempStart, endBoundary, &newStart, &potentialEnd,
-                          unusedText);
+      text->TextBeforeOffset(tempStart - 1, startBoundary, &newStart,
+                             &tempStart, unusedText);
+    text->TextAtOffset(tempStart, endBoundary, &newStart, &potentialEnd,
+                       unusedText);
     tempEnd = potentialEnd < tempEnd ? potentialEnd : currentStart;
 
     // The offset range we've obtained might have embedded characters in it,

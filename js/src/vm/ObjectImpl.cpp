@@ -334,6 +334,25 @@ js::ObjectImpl::nativeLookupPure(jsid id)
     return Shape::searchNoHashify(lastProperty(), id);
 }
 
+uint32_t
+js::ObjectImpl::numFixedSlotsForCompilation() const
+{
+    // This is an alternative method for getting the number of fixed slots
+    // in an object. It requires more logic and memory accesses than
+    // numFixedSlots() but is safe to be called from the compilation thread,
+    // even if the main thread is actively mutating the VM.
+    if (static_cast<const JSObject *>(this)->is<ArrayObject>())
+        return 0;
+#ifdef JSGC_GENERATIONAL
+    // The compiler does not have access to nursery things, so if this object
+    // is in the nursery we can fall back to numFixedSlots().
+    if (IsInsideNursery(GetGCThingRuntime(this), this))
+        return numFixedSlots();
+#endif
+    gc::AllocKind kind = tenuredGetAllocKind();
+    return gc::GetGCKindSlots(kind, getClass());
+}
+
 void
 js::ObjectImpl::markChildren(JSTracer *trc)
 {

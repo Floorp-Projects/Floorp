@@ -245,14 +245,14 @@ LinearScanAllocator::resolveControlFlow()
                 LiveInterval *from = vregs[input].intervalFor(outputOf(predecessor->lastId()));
                 JS_ASSERT(from);
 
-                LMoveGroup *moves = predecessor->getExitMoveGroup();
+                LMoveGroup *moves = predecessor->getExitMoveGroup(alloc());
                 if (!addMove(moves, from, to))
                     return false;
             }
 
             if (vreg->mustSpillAtDefinition() && !to->isSpill()) {
                 // Make sure this phi is spilled at the loop header.
-                LMoveGroup *moves = successor->getEntryMoveGroup();
+                LMoveGroup *moves = successor->getEntryMoveGroup(alloc());
                 if (!moves->add(to->getAllocation(), vregs[to->vreg()].canonicalSpill()))
                     return false;
             }
@@ -284,11 +284,11 @@ LinearScanAllocator::resolveControlFlow()
 
                 if (mSuccessor->numPredecessors() > 1) {
                     JS_ASSERT(predecessor->mir()->numSuccessors() == 1);
-                    LMoveGroup *moves = predecessor->getExitMoveGroup();
+                    LMoveGroup *moves = predecessor->getExitMoveGroup(alloc());
                     if (!addMove(moves, from, to))
                         return false;
                 } else {
-                    LMoveGroup *moves = successor->getEntryMoveGroup();
+                    LMoveGroup *moves = successor->getEntryMoveGroup(alloc());
                     if (!addMove(moves, from, to))
                         return false;
                 }
@@ -650,7 +650,7 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
     JS_ASSERT(reg);
 
     // Do the split.
-    LiveInterval *newInterval = new(alloc()) LiveInterval(interval->vreg(), interval->index() + 1);
+    LiveInterval *newInterval = LiveInterval::New(alloc(), interval->vreg(), interval->index() + 1);
     if (!interval->splitFrom(pos, newInterval))
         return false;
 

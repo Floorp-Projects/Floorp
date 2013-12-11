@@ -12,12 +12,6 @@
 
 static uint32_t column = 0;
 
-static void
-my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
-{
-    column = report->column;
-}
-
 BEGIN_TEST(testErrorCopying_columnCopied)
 {
         //0         1         2
@@ -30,4 +24,11 @@ BEGIN_TEST(testErrorCopying_columnCopied)
     CHECK(column == 27);
     return true;
 }
+
+static void
+my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
+{
+    column = report->column;
+}
+
 END_TEST(testErrorCopying_columnCopied)

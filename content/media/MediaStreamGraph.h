@@ -1057,7 +1057,7 @@ protected:
   {
     MOZ_COUNT_CTOR(MediaStreamGraph);
   }
-  ~MediaStreamGraph()
+  virtual ~MediaStreamGraph()
   {
     MOZ_COUNT_DTOR(MediaStreamGraph);
   }

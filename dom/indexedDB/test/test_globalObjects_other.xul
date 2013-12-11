@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Mozilla Bug 832883"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTest();">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript;version=1.7">
+  <![CDATA[
+  function testSteps() {
+    // Test for IDBKeyRange and indexedDB availability in bootstrap files.
+    let test = Cc["@mozilla.org/dom/indexeddb/GlobalObjectsComponent;1"].
+               createInstance(Ci.nsISupports).wrappedJSObject;
+    test.ok = ok;
+    test.finishTest = continueToNextStep;
+    test.runTest();
+    yield undefined;
+
+    Cu.import("resource://gre/modules/AddonManager.jsm");
+    AddonManager.getAddonByID("indexedDB-test@mozilla.org",
+                              grabEventAndContinueHandler);
+    let addon = yield undefined;
+    addon.uninstall();
+
+    Cu.import("resource://gre/modules/Services.jsm");
+    for each (var stage in [ "install", "startup", "shutdown", "uninstall" ]) {
+      for each (var symbol in [ "IDBKeyRange", "indexedDB" ]) {
+        let pref;
+        try {
+          pref = Services.prefs.getBoolPref("indexeddbtest.bootstrap." + stage +
+                                            "." + symbol);
+        }
+        catch(ex) {
+          pref = false;
+        }
+        ok(pref, "Symbol '" + symbol + "' present during '" + stage + "'");
+      }
+    }
+
+    finishTest();
+    yield undefined;
+  }
+
+  window.runTest = function() {
+    SimpleTest.waitForExplicitFinish();
+
+    testGenerator.next();
+  }
+  ]]>
+  </script>
+
+  <script type="text/javascript;version=1.7" src="chromeHelpers.js"></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=832883"
+     target="_blank">Mozilla Bug 832883</a>
+  </body>
+</window>

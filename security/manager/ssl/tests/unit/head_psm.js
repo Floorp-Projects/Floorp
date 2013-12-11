@@ -31,6 +31,20 @@ const SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE              = SEC_ERROR_BASE + 130;
 const SEC_ERROR_OCSP_OLD_RESPONSE                       = SEC_ERROR_BASE + 132;
 const SEC_ERROR_OCSP_INVALID_SIGNING_CERT               = SEC_ERROR_BASE + 144;
 
+// Certificate Usages
+const certificateUsageSSLClient              = 0x0001;
+const certificateUsageSSLServer              = 0x0002;
+const certificateUsageSSLServerWithStepUp    = 0x0004;
+const certificateUsageSSLCA                  = 0x0008;
+const certificateUsageEmailSigner            = 0x0010;
+const certificateUsageEmailRecipient         = 0x0020;
+const certificateUsageObjectSigner           = 0x0040;
+const certificateUsageUserCertImport         = 0x0080;
+const certificateUsageVerifyCA               = 0x0100;
+const certificateUsageProtectedObjectSigner  = 0x0200;
+const certificateUsageStatusResponder        = 0x0400;
+const certificateUsageAnyCA                  = 0x0800;
+
 function readFile(file) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
                   .createInstance(Ci.nsIFileInputStream);

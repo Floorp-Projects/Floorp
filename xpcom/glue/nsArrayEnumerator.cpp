@@ -180,7 +180,6 @@ nsCOMArrayEnumerator::operator new (size_t size, const nsCOMArray_base& aArray)
     // do the actual allocation
     nsCOMArrayEnumerator * result =
         static_cast<nsCOMArrayEnumerator*>(::operator new(size));
-    NS_ENSURE_TRUE(result, nullptr);
 
     // now need to copy over the values, and addref each one
     // now this might seem like a lot of work, but we're actually just

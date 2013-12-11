@@ -18,8 +18,6 @@ if not CONFIG['JS_DISABLE_SHELL']:
 
 TEST_DIRS += ['jsapi-tests', 'tests', 'gdb']
 
-MODULE = 'js'
-
 mfbt_root = '../../mfbt'
 LOCAL_INCLUDES += ['%s/double-conversion' % mfbt_root]
 
@@ -212,7 +210,7 @@ if CONFIG['ENABLE_TRACE_LOGGING']:
     ]
 
 if CONFIG['ENABLE_ION']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'jit/AliasAnalysis.cpp',
         'jit/AsmJS.cpp',
         'jit/AsmJSLink.cpp',
@@ -231,6 +229,7 @@ if CONFIG['ENABLE_ION']:
         'jit/BytecodeAnalysis.cpp',
         'jit/C1Spewer.cpp',
         'jit/CodeGenerator.cpp',
+        'jit/CompileWrappers.cpp',
         'jit/EdgeCaseAnalysis.cpp',
         'jit/EffectiveAddressAnalysis.cpp',
         'jit/Ion.cpp',
@@ -268,7 +267,7 @@ if CONFIG['ENABLE_ION']:
         'jit/VMFunctions.cpp',
     ]
     if CONFIG['TARGET_CPU'].find('86') != -1:
-        SOURCES += [
+        UNIFIED_SOURCES += [
             'jit/shared/Assembler-x86-shared.cpp',
             'jit/shared/BaselineCompiler-x86-shared.cpp',
             'jit/shared/BaselineIC-x86-shared.cpp',
@@ -278,7 +277,7 @@ if CONFIG['ENABLE_ION']:
             'jit/shared/MoveEmitter-x86-shared.cpp',
         ]
         if CONFIG['TARGET_CPU'] == 'x86_64':
-            SOURCES += [
+            UNIFIED_SOURCES += [
                 'jit/x64/Assembler-x64.cpp',
                 'jit/x64/Bailouts-x64.cpp',
                 'jit/x64/BaselineCompiler-x64.cpp',
@@ -289,7 +288,7 @@ if CONFIG['ENABLE_ION']:
                 'jit/x64/Trampoline-x64.cpp',
             ]
         else:
-            SOURCES += [
+            UNIFIED_SOURCES += [
                 'jit/x86/Assembler-x86.cpp',
                 'jit/x86/Bailouts-x86.cpp',
                 'jit/x86/BaselineCompiler-x86.cpp',
@@ -300,7 +299,7 @@ if CONFIG['ENABLE_ION']:
                 'jit/x86/Trampoline-x86.cpp',
             ]
     elif CONFIG['TARGET_CPU'].find('arm') != -1:
-        SOURCES += [
+        UNIFIED_SOURCES += [
             'jit/arm/Architecture-arm.cpp',
             'jit/arm/Assembler-arm.cpp',
             'jit/arm/Bailouts-arm.cpp',
@@ -372,5 +371,16 @@ HOST_SOURCES += [
 HOST_SIMPLE_PROGRAMS += [
     'host_%s' % f.replace('.cpp', '') for f in HOST_SOURCES
 ]
+
+# JavaScript must be built shared, even for static builds, as it is used by
+# other modules which are always built shared. Failure to do so results in
+# the js code getting copied into xpinstall and jsd as well as mozilla-bin,
+# and then the static data cells used for locking no longer work.
+#
+# In fact, we now build both a static and a shared library, as the
+# JS shell would like to link to the static library.
+
+if CONFIG['JS_SHARED_LIBRARY']:
+    FORCE_SHARED_LIB = True
 
 FORCE_STATIC_LIB = True

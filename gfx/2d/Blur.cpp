@@ -701,7 +701,7 @@ AlphaBoxBlur::BoxBlur_C(uint8_t* aData,
       uint32_t value = bottomRight - topRight - bottomLeft;
       value += topLeft;
 
-      data[stride * y + x] = (uint64_t(reciprocal) * value) >> 32;
+      data[stride * y + x] = (uint64_t(reciprocal) * value + (uint64_t(1) << 31)) >> 32;
     }
   }
 }

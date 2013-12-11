@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-MODULE_NAME = omxplugin
-FORCE_SHARED_LIB = 1
-
 # Don't use STL wrappers; this isn't Gecko code
 STL_FLAGS =
 

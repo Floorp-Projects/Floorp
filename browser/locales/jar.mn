@@ -40,7 +40,6 @@
     locale/browser/devtools/scratchpad.dtd            (%chrome/browser/devtools/scratchpad.dtd)
     locale/browser/devtools/styleeditor.properties    (%chrome/browser/devtools/styleeditor.properties)
     locale/browser/devtools/styleeditor.dtd           (%chrome/browser/devtools/styleeditor.dtd)
-    locale/browser/devtools/styleinspector.properties (%chrome/browser/devtools/styleinspector.properties)
     locale/browser/devtools/styleinspector.dtd        (%chrome/browser/devtools/styleinspector.dtd)
     locale/browser/devtools/webConsole.dtd            (%chrome/browser/devtools/webConsole.dtd)
     locale/browser/devtools/VariablesView.dtd         (%chrome/browser/devtools/VariablesView.dtd)

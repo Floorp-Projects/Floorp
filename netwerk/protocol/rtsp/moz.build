@@ -5,8 +5,6 @@
 
 XPIDL_MODULE = 'necko_rtsp'
 
-MODULE = 'necko'
-
 EXPORTS.mozilla.net += [
     'controller/RtspController.h',
     'controller/RtspControllerChild.h',
@@ -17,11 +15,17 @@ EXPORTS.mozilla.net += [
     'RtspHandler.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'controller/RtspController.cpp',
     'controller/RtspControllerChild.cpp',
     'controller/RtspControllerParent.cpp',
     'controller/RtspMetaData.cpp',
+    'RtspChannel.cpp',
+    'RtspHandler.cpp',
+]
+
+# Android sources
+SOURCES += [
     'rtsp/AAMRAssembler.cpp',
     'rtsp/AAVCAssembler.cpp',
     'rtsp/AH263Assembler.cpp',
@@ -36,16 +40,12 @@ SOURCES += [
     'rtsp/ARTSPConnection.cpp',
     'rtsp/ASessionDescription.cpp',
     'rtsp/RTSPSource.cpp',
-    'RtspChannel.cpp',
-    'RtspHandler.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
 
-LIBRARY_NAME = 'nkrtsp_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'necko'

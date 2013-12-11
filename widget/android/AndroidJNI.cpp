@@ -850,7 +850,8 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation(JNIEnv* env, j
 {
     APZCTreeManager *controller = nsWindow::GetAPZCTreeManager();
     if (controller) {
-        controller->CancelAnimation(ScrollableLayerGuid(nsWindow::RootLayerTreeId()));
+        // TODO: Pass in correct values for presShellId and viewId.
+        controller->CancelAnimation(ScrollableLayerGuid(nsWindow::RootLayerTreeId(), 0, 0));
     }
 }
 
@@ -861,10 +862,10 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_init(JNIEnv* env, jobject ins
         return;
     }
 
-    jobject oldRef = AndroidBridge::Bridge()->SetNativePanZoomController(env->NewGlobalRef(instance));
-    if (oldRef) {
+    NativePanZoomController* oldRef = AndroidBridge::Bridge()->SetNativePanZoomController(instance);
+    if (oldRef && !oldRef->isNull()) {
         MOZ_ASSERT(false, "Registering a new NPZC when we already have one");
-        env->DeleteGlobalRef(oldRef);
+        delete oldRef;
     }
 }
 
@@ -905,11 +906,11 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(JNIEnv* env, jobject 
         return;
     }
 
-    jobject oldRef = AndroidBridge::Bridge()->SetNativePanZoomController(nullptr);
-    if (!oldRef) {
+    NativePanZoomController* oldRef = AndroidBridge::Bridge()->SetNativePanZoomController(NULL);
+    if (!oldRef || oldRef->isNull()) {
         MOZ_ASSERT(false, "Clearing a non-existent NPZC");
     } else {
-        env->DeleteGlobalRef(oldRef);
+        delete oldRef;
     }
 }
 
@@ -918,7 +919,8 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_notifyDefaultActionPrevented(
 {
     APZCTreeManager *controller = nsWindow::GetAPZCTreeManager();
     if (controller) {
-        controller->ContentReceivedTouch(ScrollableLayerGuid(nsWindow::RootLayerTreeId()), prevented);
+        // TODO: Pass in correct values for presShellId and viewId.
+        controller->ContentReceivedTouch(ScrollableLayerGuid(nsWindow::RootLayerTreeId(), 0, 0), prevented);
     }
 }
 
@@ -947,7 +949,8 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_updateScrollOffset(JNIEnv* en
 {
     APZCTreeManager *controller = nsWindow::GetAPZCTreeManager();
     if (controller) {
-        controller->UpdateScrollOffset(ScrollableLayerGuid(nsWindow::RootLayerTreeId()), CSSPoint(cssX, cssY));
+        // TODO: Pass in correct values for presShellId and viewId.
+        controller->UpdateScrollOffset(ScrollableLayerGuid(nsWindow::RootLayerTreeId(), 0, 0), CSSPoint(cssX, cssY));
     }
 }
 

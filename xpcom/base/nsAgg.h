@@ -285,9 +285,9 @@ static nsresult                                                             \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,             \
                             void **aResult)                                 \
 {                                                                           \
-    *aResult = nullptr;                                                      \
-                                                                            \
-    NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);                             \
+    *aResult = nullptr;                                                     \
+    if (NS_WARN_IF(aOuter && !aIID.Equals(NS_GET_IID(nsISupports))))        \
+        return NS_ERROR_INVALID_ARG;                                        \
                                                                             \
     _InstanceClass* inst = new _InstanceClass(aOuter);                      \
     if (!inst) {                                                            \
@@ -308,9 +308,9 @@ static nsresult                                                             \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,             \
                             void **aResult)                                 \
 {                                                                           \
-    *aResult = nullptr;                                                      \
-                                                                            \
-    NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);                             \
+    *aResult = nullptr;                                                     \
+    if (NS_WARN_IF(aOuter && !aIID.Equals(NS_GET_IID(nsISupports))))        \
+        return NS_ERROR_INVALID_ARG;                                        \
                                                                             \
     _InstanceClass* inst = new _InstanceClass(aOuter);                      \
     if (!inst) {                                                            \

@@ -35,6 +35,9 @@ if CONFIG['MOZ_MEDIA_PLUGINS']:
 if CONFIG['MOZ_WMF']:
     PARALLEL_DIRS += ['wmf']
 
+if CONFIG['MOZ_FMP4']:
+    PARALLEL_DIRS += ['fmp4']
+
 if CONFIG['MOZ_APPLEMEDIA']:
     PARALLEL_DIRS += ['apple']
 
@@ -47,8 +50,6 @@ if CONFIG['MOZ_OMX_DECODER']:
 PARALLEL_DIRS += ['webspeech']
 
 TEST_DIRS += ['test']
-
-MODULE = 'content'
 
 EXPORTS += [
     'AbstractMediaDecoder.h',
@@ -103,7 +104,7 @@ EXPORTS.mozilla.dom += [
     'VideoStreamTrack.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AudioAvailableEventManager.cpp',
     'AudioChannelFormat.cpp',
     'AudioNodeEngine.cpp',
@@ -113,7 +114,6 @@ SOURCES += [
     'AudioStream.cpp',
     'AudioStreamTrack.cpp',
     'BufferDecoder.cpp',
-    'DecoderTraits.cpp',
     'DOMMediaStream.cpp',
     'EncodedBufferCache.cpp',
     'FileBlockCache.cpp',
@@ -143,6 +143,11 @@ SOURCES += [
     'WebVTTListener.cpp',
 ]
 
+# DecoderTraits.cpp needs to be built separately because of Mac OS X headers.
+SOURCES += [
+    'DecoderTraits.cpp',
+]
+
 FAIL_ON_WARNINGS = True
 
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
@@ -150,14 +155,11 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
         'AudioNodeEngineNEON.cpp',
     ]
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-LIBRARY_NAME = 'gkconmedia_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/layout/generic',

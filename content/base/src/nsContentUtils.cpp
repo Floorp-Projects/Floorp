@@ -74,6 +74,7 @@
 #include "nsEventStateManager.h"
 #include "nsFocusManager.h"
 #include "nsGenericHTMLElement.h"
+#include "nsGenericHTMLFrameElement.h"
 #include "nsGkAtoms.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsHtml5Module.h"
@@ -378,6 +379,9 @@ nsContentUtils::Init()
     return NS_ERROR_FAILURE;
   NS_ADDREF(sSecurityManager);
 
+  // Getting the first context can trigger GC, so do this non-lazily.
+  sXPConnect->InitSafeJSContext();
+
   rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
   if (NS_FAILED(rv)) {
     // This makes life easier, but we can live without it.
@@ -387,7 +391,7 @@ nsContentUtils::Init()
 
   rv = CallGetService(NS_LBRK_CONTRACTID, &sLineBreaker);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   rv = CallGetService(NS_WBRK_CONTRACTID, &sWordBreaker);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -395,7 +399,7 @@ nsContentUtils::Init()
     return NS_ERROR_FAILURE;
 
   if (!sEventListenerManagersHash.ops) {
-    static PLDHashTableOps hash_table_ops =
+    static const PLDHashTableOps hash_table_ops =
     {
       PL_DHashAllocTable,
       PL_DHashFreeTable,
@@ -2622,10 +2626,7 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
   uint32_t appType = nsIDocShell::APP_TYPE_UNKNOWN;
 
   {
-    nsCOMPtr<nsISupports> container = aLoadingDocument->GetContainer();
-    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-      do_QueryInterface(container);
-
+    nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = aLoadingDocument->GetDocShell();
     if (docShellTreeItem) {
       nsCOMPtr<nsIDocShellTreeItem> root;
       docShellTreeItem->GetRootTreeItem(getter_AddRefs(root));
@@ -3153,8 +3154,7 @@ nsContentUtils::IsChromeDoc(nsIDocument *aDocument)
 bool
 nsContentUtils::IsChildOfSameType(nsIDocument* aDoc)
 {
-  nsCOMPtr<nsISupports> container = aDoc->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(container));
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(aDoc->GetDocShell());
   nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
   if (docShellAsItem) {
     docShellAsItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
@@ -3235,8 +3235,7 @@ nsContentUtils::IsInChromeDocshell(nsIDocument *aDocument)
     return IsInChromeDocshell(aDocument->GetDisplayDocument());
   }
 
-  nsCOMPtr<nsISupports> docContainer = aDocument->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(docContainer));
+  nsCOMPtr<nsIDocShellTreeItem> docShell(aDocument->GetDocShell());
   int32_t itemType = nsIDocShellTreeItem::typeContent;
   if (docShell) {
     docShell->GetItemType(&itemType);
@@ -4976,8 +4975,7 @@ nsContentUtils::HidePopupsInDocument(nsIDocument* aDocument)
 #ifdef MOZ_XUL
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && aDocument) {
-    nsCOMPtr<nsISupports> container = aDocument->GetContainer();
-    nsCOMPtr<nsIDocShellTreeItem> docShellToHide = do_QueryInterface(container);
+    nsCOMPtr<nsIDocShellTreeItem> docShellToHide = aDocument->GetDocShell();
     if (docShellToHide)
       pm->HidePopupsInDocShell(docShellToHide);
   }
@@ -5877,8 +5875,7 @@ nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent)
     return false;
   }
 
-  nsCOMPtr<nsISupports> container = subDoc->GetContainer();
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShell> docShell = subDoc->GetDocShell();
   if (!docShell) {
     return false;
   }
@@ -5896,6 +5893,30 @@ nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent)
   // means the current document is a zombie document.
   // Only navigate into the subdocument if it's not a zombie.
   return !zombieViewer;
+}
+
+bool
+nsContentUtils::IsUserFocusIgnored(nsINode* aNode)
+{
+  if (!nsGenericHTMLFrameElement::BrowserFramesEnabled()) {
+    return false;
+  }
+
+  // Check if our mozbrowser iframe ancestors has ignoreuserfocus attribute.
+  while (aNode) {
+    nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(aNode);
+    if (browserFrame &&
+        aNode->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::ignoreuserfocus) &&
+        browserFrame->GetReallyIsBrowserOrApp()) {
+      return true;
+    }
+    nsPIDOMWindow* win = aNode->OwnerDoc()->GetWindow();
+    if (win) {
+      aNode = win->GetFrameElementInternal();
+    }
+  }
+
+  return false;
 }
 
 void
@@ -5988,8 +6009,7 @@ nsContentUtils::FindPresShellForDocument(const nsIDocument* aDoc)
     return shell;
   }
 
-  nsCOMPtr<nsISupports> container = doc->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = doc->GetDocShell();
   while (docShellTreeItem) {
     // We may be in a display:none subdocument, or we may not have a presshell
     // created yet.

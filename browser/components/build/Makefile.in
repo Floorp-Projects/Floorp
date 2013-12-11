@@ -2,10 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SHORT_LIBNAME = brwsrcmp
-MODULE_NAME = nsBrowserCompsModule
-FORCE_SHARED_LIB = 1
-
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32 shlwapi)
 endif
@@ -21,19 +17,8 @@ ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,version)
 endif
 
-SHARED_LIBRARY_LIBS = \
-	../feeds/src/$(LIB_PREFIX)browser_feeds_s.$(LIB_SUFFIX) \
-	../about/$(LIB_PREFIX)browserabout_s.$(LIB_SUFFIX) \
-	../dirprovider/$(LIB_PREFIX)browserdir_s.$(LIB_SUFFIX) \
-	$(NULL)
-
-ifneq (,$(filter windows cocoa gtk2 gtk3, $(MOZ_WIDGET_TOOLKIT)))
-SHARED_LIBRARY_LIBS += ../shell/src/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX)
-endif
-
 EXTRA_DSO_LDOPTS += \
-	$(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib) \
-	$(XPCOM_STATICRUNTIME_GLUE_LDOPTS) \
+	$(XPCOM_GLUE_LDOPTS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
 
@@ -42,7 +27,6 @@ EXTRA_DSO_LDOPTS += $(MOZ_JS_LIBS)
 endif
 
 LOCAL_INCLUDES += -I$(srcdir)/../migration/src
-SHARED_LIBRARY_LIBS += ../migration/src/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX)
 
 # Mac: Need to link with CoreFoundation for Mac Migrators (PList reading code)
 # GTK2: Need to link with glib for GNOME shell service

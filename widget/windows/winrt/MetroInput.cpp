@@ -896,6 +896,9 @@ MetroInput::OnTapped(UI::Input::IGestureRecognizer* aSender,
   Devices::Input::PointerDeviceType deviceType;
   aArgs->get_PointerDeviceType(&deviceType);
 
+  unsigned int tapCount;
+  aArgs->get_TapCount(&tapCount);
+
   // For mouse and pen input, we send mousedown/mouseup/mousemove
   // events as soon as we detect the input event.  For touch input, a set of
   // mousedown/mouseup events will be sent only once a tap has been detected.
@@ -905,7 +908,7 @@ MetroInput::OnTapped(UI::Input::IGestureRecognizer* aSender,
 
   Foundation::Point position;
   aArgs->get_Position(&position);
-  HandleSingleTap(position);
+  HandleTap(position, tapCount);
   return S_OK;
 }
 
@@ -932,7 +935,7 @@ MetroInput::OnRightTapped(UI::Input::IGestureRecognizer* aSender,
 }
 
 void
-MetroInput::HandleSingleTap(const Foundation::Point& aPoint)
+MetroInput::HandleTap(const Foundation::Point& aPoint, unsigned int aTapCount)
 {
 #ifdef DEBUG_INPUT
   LogFunction();
@@ -946,7 +949,7 @@ MetroInput::HandleSingleTap(const Foundation::Point& aPoint)
     new WidgetMouseEvent(true, NS_MOUSE_MOVE, mWidget.Get(),
                          WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
   mouseEvent->refPoint = refPoint;
-  mouseEvent->clickCount = 1;
+  mouseEvent->clickCount = aTapCount;
   mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   DispatchAsyncEventIgnoreStatus(mouseEvent);
 
@@ -955,7 +958,7 @@ MetroInput::HandleSingleTap(const Foundation::Point& aPoint)
     new WidgetMouseEvent(true, NS_MOUSE_BUTTON_DOWN, mWidget.Get(),
                          WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
   mouseEvent->refPoint = refPoint;
-  mouseEvent->clickCount = 1;
+  mouseEvent->clickCount = aTapCount;
   mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   mouseEvent->button = WidgetMouseEvent::buttonType::eLeftButton;
   DispatchAsyncEventIgnoreStatus(mouseEvent);
@@ -964,7 +967,7 @@ MetroInput::HandleSingleTap(const Foundation::Point& aPoint)
     new WidgetMouseEvent(true, NS_MOUSE_BUTTON_UP, mWidget.Get(),
                          WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
   mouseEvent->refPoint = refPoint;
-  mouseEvent->clickCount = 1;
+  mouseEvent->clickCount = aTapCount;
   mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   mouseEvent->button = WidgetMouseEvent::buttonType::eLeftButton;
   DispatchAsyncEventIgnoreStatus(mouseEvent);
@@ -980,11 +983,10 @@ MetroInput::HandleSingleTap(const Foundation::Point& aPoint)
       new WidgetMouseEvent(true, NS_MOUSE_MOVE, mWidget.Get(),
                            WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
     mouseEvent->refPoint = LayoutDeviceIntPoint(point.x, point.y);
-    mouseEvent->clickCount = 1;
+    mouseEvent->clickCount = aTapCount;
     mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
     DispatchAsyncEventIgnoreStatus(mouseEvent);
   }
-
 }
 
 void

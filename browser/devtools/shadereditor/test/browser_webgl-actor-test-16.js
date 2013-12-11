@@ -10,12 +10,30 @@ function ifWebGLSupported() {
   let [target, debuggee, front] = yield initBackend(SIMPLE_CANVAS_URL);
   front.setup({ reload: false });
 
+  // 0. Perform the initial reload.
+
   reload(target);
   let firstProgram = yield once(front, "program-linked");
+  let programs = yield front.getPrograms();
+  is(programs.length, 1,
+    "The first program should be returned by a call to getPrograms().");
+  is(programs[0], firstProgram,
+    "The first programs was correctly retrieved from the cache.");
+
+  // 1. Perform a simple navigation.
 
   navigate(target, MULTIPLE_CONTEXTS_URL);
   let secondProgram = yield once(front, "program-linked");
   let thirdProgram = yield once(front, "program-linked");
+  let programs = yield front.getPrograms();
+  is(programs.length, 2,
+    "The second and third programs should be returned by a call to getPrograms().");
+  is(programs[0], secondProgram,
+    "The second programs was correctly retrieved from the cache.");
+  is(programs[1], thirdProgram,
+    "The third programs was correctly retrieved from the cache.");
+
+  // 2. Perform a bfcache navigation.
 
   yield navigateInHistory(target, "back");
   let globalDestroyed = observe("inner-window-destroyed");
@@ -34,6 +52,8 @@ function ifWebGLSupported() {
 
   yield checkHighlightingInTheFirstPage(programs[0]);
   ok(true, "The cached programs behave correctly after navigating back and reloading.");
+
+  // 3. Perform a bfcache navigation and a page reload.
 
   yield navigateInHistory(target, "forward");
   let globalDestroyed = observe("inner-window-destroyed");

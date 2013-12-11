@@ -253,6 +253,7 @@ var SelectionHelperUI = {
   _endMark: null,
   _caretMark: null,
   _target: null,
+  _showAfterUpdate: false,
   _movement: { active: false, x:0, y: 0 },
   _activeSelectionRect: null,
   _selectionMarkIds: [],
@@ -350,13 +351,29 @@ var SelectionHelperUI = {
    */
 
   observe: function (aSubject, aTopic, aData) {
-  switch (aTopic) {
-    case "attach_edit_session_to_content":
-      let event = aSubject;
-      SelectionHelperUI.attachEditSession(Browser.selectedTab.browser,
-                                          event.clientX, event.clientY);
-      break;
-    }
+    switch (aTopic) {
+      case "attach_edit_session_to_content":
+        let event = aSubject;
+        this.attachEditSession(Browser.selectedTab.browser,
+                               event.clientX, event.clientY);
+        break;
+
+      case "apzc-handle-pan-begin":
+        if (this.isActive && this.layerMode == kContentLayer) {
+          this._hideMonocles();
+        }
+        break;
+
+      case "apzc-handle-pan-end":
+        // The selection range callback will check to see if the new
+        // position is off the screen, in which case it shuts down and
+        // clears the selection.
+        if (this.isActive && this.layerMode == kContentLayer) {
+          this._showAfterUpdate = true;
+          this._sendAsyncMessage("Browser:SelectionUpdate", {});
+        }
+        break;
+      }
   },
 
   /*
@@ -530,7 +547,10 @@ var SelectionHelperUI = {
    */
 
   init: function () {
-    Services.obs.addObserver(this, "attach_edit_session_to_content", false);
+    let os = Services.obs;
+    os.addObserver(this, "attach_edit_session_to_content", false);
+    os.addObserver(this, "apzc-handle-pan-begin", false);
+    os.addObserver(this, "apzc-handle-pan-end", false);
   },
 
   _init: function _init(aMsgTarget) {
@@ -567,7 +587,6 @@ var SelectionHelperUI = {
 
     Elements.browsers.addEventListener("URLChanged", this, true);
     Elements.browsers.addEventListener("SizeChanged", this, true);
-    Elements.browsers.addEventListener("ZoomChanged", this, true);
 
     Elements.navbar.addEventListener("transitionend", this, true);
     Elements.navbar.addEventListener("MozAppbarDismissing", this, true);
@@ -595,7 +614,6 @@ var SelectionHelperUI = {
 
     Elements.browsers.removeEventListener("URLChanged", this, true);
     Elements.browsers.removeEventListener("SizeChanged", this, true);
-    Elements.browsers.removeEventListener("ZoomChanged", this, true);
 
     Elements.navbar.removeEventListener("transitionend", this, true);
     Elements.navbar.removeEventListener("MozAppbarDismissing", this, true);
@@ -908,6 +926,16 @@ var SelectionHelperUI = {
     this._shutdown();
   },
 
+  _checkMonocleVisibility: function(aX, aY) {
+    if (aX < 0 || aY < 0 ||
+        aX > ContentAreaObserver.viewableWidth ||
+        aY > ContentAreaObserver.viewableHeight) {
+      this.closeEditSession(true);
+      return false;
+    }
+    return true;
+  },
+
   /*
    * Message handlers
    */
@@ -920,24 +948,41 @@ var SelectionHelperUI = {
     let haveSelectionRect = true;
 
     if (json.updateStart) {
-      this.startMark.position(this._msgTarget.btocx(json.start.xPos, true),
-                              this._msgTarget.btocy(json.start.yPos, true));
+      let x = this._msgTarget.btocx(json.start.xPos, true);
+      let y = this._msgTarget.btocx(json.start.yPos, true);
+      if (!this._checkMonocleVisibility(x, y)) {
+        return;
+      }
+      this.startMark.position(x, y);
     }
     if (json.updateEnd) {
-      this.endMark.position(this._msgTarget.btocx(json.end.xPos, true),
-                            this._msgTarget.btocy(json.end.yPos, true));
+      let x = this._msgTarget.btocx(json.end.xPos, true);
+      let y = this._msgTarget.btocx(json.end.yPos, true);
+      if (!this._checkMonocleVisibility(x, y)) {
+        return;
+      }
+      this.endMark.position(x, y);
     }
 
     if (json.updateCaret) {
+      let x = this._msgTarget.btocx(json.caret.xPos, true);
+      let y = this._msgTarget.btocx(json.caret.yPos, true);
+      if (!this._checkMonocleVisibility(x, y)) {
+        return;
+      }
       // If selectionRangeFound is set SelectionHelper found a range we can
       // attach to. If not, there's no text in the control, and hence no caret
       // position information we can use.
       haveSelectionRect = json.selectionRangeFound;
       if (json.selectionRangeFound) {
-        this.caretMark.position(this._msgTarget.btocx(json.caret.xPos, true),
-                                this._msgTarget.btocy(json.caret.yPos, true));
+        this.caretMark.position(x, y);
         this.caretMark.show();
       }
+    }
+
+    if (this._showAfterUpdate) {
+      this._showAfterUpdate = false;
+      this._showMonocles(!json.updateCaret);
     }
 
     this._targetIsEditable = json.targetIsEditable;
@@ -1033,7 +1078,6 @@ var SelectionHelperUI = {
         this._shutdown();
         break;
 
-      case "ZoomChanged":
       case "MozPrecisePointer":
         this.closeEditSession(true);
         break;

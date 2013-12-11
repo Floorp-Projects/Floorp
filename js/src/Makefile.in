@@ -20,17 +20,6 @@ run_for_side_effects := $(shell echo "MAKE: $(MAKE)")
 STATIC_LIBRARY_NAME = js_static
 LIBS		= $(NSPR_LIBS)
 
-# JavaScript must be built shared, even for static builds, as it is used by
-# other modules which are always built shared. Failure to do so results in
-# the js code getting copied into xpinstall and jsd as well as mozilla-bin,
-# and then the static data cells used for locking no longer work.
-#
-# In fact, we now build both a static and a shared library, as the
-# JS shell would like to link to the static library.
-
-ifdef JS_SHARED_LIBRARY
-FORCE_SHARED_LIB = 1
-endif
 DIST_INSTALL = 1
 
 VPATH		+= \
@@ -159,6 +148,17 @@ endif
 MOZILLA_DTRACE_SRC = $(srcdir)/devtools/javascript-trace.d
 endif
 
+backend.RecursiveMakeBackend:
+	@echo "Build configuration changed. Regenerating backend."
+	$(PYTHON) config.status
+
+Makefile: backend.RecursiveMakeBackend
+	@$(TOUCH) $@
+
+include backend.RecursiveMakeBackend.pp
+
+default:: backend.RecursiveMakeBackend
+
 default::
 	$(call py_action,process_install_manifest,--no-remove $(DIST)/include _build_manifests/install/dist_include)
 
@@ -268,14 +268,18 @@ endif
 #############################################
 
 
-# The "find any vanilla new/new[] calls" script is tailored to Linux, so
-# only run it there.  That should be enough to catch any such calls that
-# creep in.
-check-vanilla-new:
-	$(srcdir)/config/find_vanilla_new_calls $(LIBRARY)
+# check_vanilla_allocations.py is tailored to Linux, so only run it there.
+# That should be enough to catch any problems.
+check-vanilla-allocations:
+	$(PYTHON) $(srcdir)/config/check_vanilla_allocations.py $(REAL_LIBRARY)
+
+# The "aggressive" variant will likely fail on some compiler/platform
+# combinations, but is worth running by hand every once in a while.
+check-vanilla-allocations-aggressive:
+	$(PYTHON) $(srcdir)/config/check_vanilla_allocations.py --aggressive $(REAL_LIBRARY)
 
 ifeq ($(OS_ARCH),Linux)
-check:: check-vanilla-new
+check:: check-vanilla-allocations
 endif
 
 # Help ensure that the number of OOM errors in SpiderMonkey doesn't increase.

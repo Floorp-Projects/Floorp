@@ -673,7 +673,7 @@ MozInputContext.prototype = {
   },
 
   set onsurroundingtextchange(handler) {
-    this.__DOM_IMPL__.setEventHandler("onsurroundingtextchange");
+    this.__DOM_IMPL__.setEventHandler("onsurroundingtextchange", handler);
   },
 
   get onselectionchange() {
@@ -681,7 +681,7 @@ MozInputContext.prototype = {
   },
 
   set onselectionchange(handler) {
-    this.__DOM_IMPL__.setEventHandler("onselectionchange");
+    this.__DOM_IMPL__.setEventHandler("onselectionchange", handler);
   },
 
   replaceSurroundingText: function ic_replaceSurrText(text, offset, length) {

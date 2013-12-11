@@ -10,8 +10,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'xulapp_setup'
 
-MODULE = 'xulrunner'
-
 EXTRA_COMPONENTS += [
     'nsXULAppInstall.manifest',
 ]

@@ -55,6 +55,7 @@ using namespace mozilla::dom;
 using namespace mozilla::dom::indexedDB::ipc;
 using mozilla::dom::quota::FileOutputStream;
 using mozilla::ErrorResult;
+using mozilla::fallible_t;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -1220,6 +1221,8 @@ IDBObjectStore::GetStructuredCloneReadInfoFromStatement(
   const char* compressed = reinterpret_cast<const char*>(blobData);
   size_t compressedLength = size_t(blobDataLength);
 
+  static const fallible_t fallible = fallible_t();
+
   size_t uncompressedLength;
   if (!snappy::GetUncompressedLength(compressed, compressedLength,
                                      &uncompressedLength)) {
@@ -1227,7 +1230,8 @@ IDBObjectStore::GetStructuredCloneReadInfoFromStatement(
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  nsAutoArrayPtr<char> uncompressed(new char[uncompressedLength]);
+  nsAutoArrayPtr<char> uncompressed(new (fallible) char[uncompressedLength]);
+  NS_ENSURE_TRUE(uncompressed, NS_ERROR_OUT_OF_MEMORY);
 
   if (!snappy::RawUncompress(compressed, compressedLength,
                              uncompressed.get())) {
@@ -1409,7 +1413,7 @@ StructuredCloneReadString(JSStructuredCloneReader* aReader,
   }
   length = SwapBytes(length);
 
-  if (!aString.SetLength(length, mozilla::fallible_t())) {
+  if (!aString.SetLength(length, fallible_t())) {
     NS_WARNING("Out of memory?");
     return false;
   }
@@ -1588,7 +1592,7 @@ IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
   FileManager* fileManager = transaction->Database()->Manager();
 
   file::FileHandle* fileHandle = nullptr;
-  if (NS_SUCCEEDED(UNWRAP_OBJECT(FileHandle, aCx, aObj, fileHandle))) {
+  if (NS_SUCCEEDED(UNWRAP_OBJECT(FileHandle, aObj, fileHandle))) {
     nsRefPtr<FileInfo> fileInfo = fileHandle->GetFileInfo();
 
     // Throw when trying to store non IDB file handles or IDB file handles
@@ -3213,10 +3217,12 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     reinterpret_cast<const char*>(mCloneWriteInfo.mCloneBuffer.data());
   size_t uncompressedLength = mCloneWriteInfo.mCloneBuffer.nbytes();
 
+  static const fallible_t fallible = fallible_t();
   size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
   // This will hold our compressed data until the end of the method. The
   // BindBlobByName function will copy it.
-  nsAutoArrayPtr<char> compressed(new char[compressedLength]);
+  nsAutoArrayPtr<char> compressed(new (fallible) char[compressedLength]);
+  NS_ENSURE_TRUE(compressed, NS_ERROR_OUT_OF_MEMORY);
 
   snappy::RawCompress(uncompressed, uncompressedLength, compressed.get(),
                       &compressedLength);

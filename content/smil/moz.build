@@ -6,8 +6,6 @@
 
 TEST_TOOL_DIRS += ['test']
 
-MODULE = 'content'
-
 EXPORTS += [
     'nsDOMTimeEvent.h',
     'nsISMILAttr.h',
@@ -34,7 +32,7 @@ EXPORTS += [
     'nsSMILValue.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsDOMTimeEvent.cpp',
     'nsSMILAnimationController.cpp',
     'nsSMILAnimationFunction.cpp',
@@ -63,12 +61,10 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'gkconsmil_s'
-
 LOCAL_INCLUDES += [
     '../base/src',
     '../events/src',
     '/layout/style',
 ]
+
+FINAL_LIBRARY = 'gklayout'

@@ -4,19 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'mozglue'
-
 # Build mozglue as a shared lib on Windows, OSX and Android.
 # If this is ever changed, update MOZ_SHARED_MOZGLUE in browser/installer/Makefile.in
 if CONFIG['OS_TARGET'] in ('WINNT', 'Darwin', 'Android'):
-    # TODO: These should be the all-caps variables when FORCE_SHARED_LIB and
-    # FORCE_STATIC_LIB are ported over
-    force_shared_lib = 1
+    FORCE_SHARED_LIB = True
 else:
-    force_shared_lib = 0
+    FORCE_SHARED_LIB = False
     FORCE_STATIC_LIB = True
 
-if CONFIG['MOZ_MEMORY'] and (CONFIG['MOZ_NATIVE_JEMALLOC'] or force_shared_lib):
+if CONFIG['MOZ_MEMORY'] and (CONFIG['MOZ_NATIVE_JEMALLOC'] or FORCE_SHARED_LIB):
     pass
     # TODO: SHARED_LIBRARY_LIBS go here
 else:

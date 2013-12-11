@@ -28,6 +28,7 @@
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   #include "AndroidBridge.h"
+  using namespace mozilla::widget::android;
 #endif
 
 mozilla::ThreadLocal<PseudoStack *> tlsPseudoStack;
@@ -675,7 +676,7 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
     if (javaInterval < 10) {
       aInterval = 10;
     }
-    mozilla::AndroidBridge::Bridge()->StartJavaProfiling(javaInterval, 1000);
+    GeckoJavaSampler::StartJavaProfiling(javaInterval, 1000);
   }
 #endif
 

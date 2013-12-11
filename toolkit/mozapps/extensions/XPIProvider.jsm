@@ -1461,30 +1461,33 @@ function recursiveRemove(aFile) {
  * Returns the timestamp and leaf file name of the most recently modified
  * entry in a directory,
  * or simply the file's own timestamp if it is not a directory.
+ * Also returns the total number of items (directories and files) visited in the scan
  *
  * @param  aFile
  *         A non-null nsIFile object
- * @return [File Name, Epoch time], as described above.
+ * @return [File Name, Epoch time, items visited], as described above.
  */
 function recursiveLastModifiedTime(aFile) {
   try {
     let modTime = aFile.lastModifiedTime;
     let fileName = aFile.leafName;
     if (aFile.isFile())
-      return [fileName, modTime];
+      return [fileName, modTime, 1];
 
     if (aFile.isDirectory()) {
       let entries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
       let entry;
+      let totalItems = 1;
       while ((entry = entries.nextFile)) {
-        let [subName, subTime] = recursiveLastModifiedTime(entry);
+        let [subName, subTime, items] = recursiveLastModifiedTime(entry);
+        totalItems += items;
         if (subTime > modTime) {
           modTime = subTime;
           fileName = subName;
         }
       }
       entries.close();
-      return [fileName, modTime];
+      return [fileName, modTime, totalItems];
     }
   }
   catch (e) {
@@ -1492,7 +1495,7 @@ function recursiveLastModifiedTime(aFile) {
   }
 
   // If the file is something else, just ignore it.
-  return ["", 0];
+  return ["", 0, 0];
 }
 
 /**
@@ -1637,6 +1640,49 @@ var Prefs = {
       Services.prefs.clearUserPref(aName);
   }
 }
+
+// Helper function to compare JSON saved version of the directory state
+// with the new state returned by getInstallLocationStates()
+// Structure is: ordered array of {'name':?, 'addons': {addonID: {'descriptor':?, 'mtime':?} ...}}
+function directoryStateDiffers(aState, aCache)
+{
+  // check equality of an object full of addons; fortunately we can destroy the 'aOld' object
+  function addonsMismatch(aNew, aOld) {
+    for (let [id, val] of aNew) {
+      if (!id in aOld)
+        return true;
+      if (val.descriptor != aOld[id].descriptor ||
+          val.mtime != aOld[id].mtime)
+        return true;
+      delete aOld[id];
+    }
+    // make sure aOld doesn't have any extra entries
+    for (let id in aOld)
+      return true;
+    return false;
+  }
+
+  if (!aCache)
+    return true;
+  try {
+    let old = JSON.parse(aCache);
+    if (aState.length != old.length)
+      return true;
+    for (let i = 0; i < aState.length; i++) {
+      // conveniently, any missing fields would require a 'true' return, which is
+      // handled by our catch wrapper
+      if (aState[i].name != old[i].name)
+        return true;
+      if (addonsMismatch(aState[i].addons, old[i].addons))
+        return true;
+    }
+  }
+  catch (e) {
+    return true;
+  }
+  return false;
+}
+
 
 var XPIProvider = {
   // An array of known install locations
@@ -2178,9 +2224,10 @@ var XPIProvider = {
   getAddonStates: function XPI_getAddonStates(aLocation) {
     let addonStates = {};
     for (let file of aLocation.addonLocations) {
+      let scanStarted = Date.now();
       let id = aLocation.getIDForLocation(file);
       let unpacked = 0;
-      let [modFile, modTime] = recursiveLastModifiedTime(file);
+      let [modFile, modTime, items] = recursiveLastModifiedTime(file);
       addonStates[id] = {
         descriptor: file.persistentDescriptor,
         mtime: modTime
@@ -2196,6 +2243,8 @@ var XPIProvider = {
       this._mostRecentlyModifiedFile[id] = modFile;
       this.setTelemetry(id, "unpacked", unpacked);
       this.setTelemetry(id, "location", aLocation.name);
+      this.setTelemetry(id, "scan_MS", Date.now() - scanStarted);
+      this.setTelemetry(id, "scan_items", items);
     }
 
     return addonStates;
@@ -3259,7 +3308,7 @@ var XPIProvider = {
         locMigrateData = XPIDatabase.migrateData[installLocation.name];
       for (let id in addonStates) {
         changed = addMetadata(installLocation, id, addonStates[id],
-                              locMigrateData[id]) || changed;
+                              locMigrateData[id] || null) || changed;
       }
     }
 
@@ -3372,8 +3421,15 @@ var XPIProvider = {
 
     // If the install directory state has changed then we must update the database
     let cache = Prefs.getCharPref(PREF_INSTALL_CACHE, null);
+    // For a little while, gather telemetry on whether the deep comparison
+    // makes a difference
     if (cache != JSON.stringify(state)) {
-      updateReasons.push("directoryState");
+      if (directoryStateDiffers(state, cache)) {
+        updateReasons.push("directoryState");
+      }
+      else {
+        AddonManagerPrivate.recordSimpleMeasure("XPIDB_startup_state_badCompare", 1);
+      }
     }
 
     // If the database doesn't exist and there are add-ons installed then we
@@ -5500,7 +5556,9 @@ AddonInstall.prototype = {
         // Update the metadata in the database
         this.addon._sourceBundle = file;
         this.addon._installLocation = this.installLocation;
-        let [mFile, mTime] = recursiveLastModifiedTime(file);
+        let scanStarted = Date.now();
+        let [, mTime, scanItems] = recursiveLastModifiedTime(file);
+        let scanTime = Date.now() - scanStarted;
         this.addon.updateDate = mTime;
         this.addon.visible = true;
         if (isUpgrade) {
@@ -5547,6 +5605,8 @@ AddonInstall.prototype = {
         }
         XPIProvider.setTelemetry(this.addon.id, "unpacked", installedUnpacked);
         XPIProvider.setTelemetry(this.addon.id, "location", this.installLocation.name);
+        XPIProvider.setTelemetry(this.addon.id, "scan_MS", scanTime);
+        XPIProvider.setTelemetry(this.addon.id, "scan_items", scanItems);
         let loc = this.addon.defaultLocale;
         if (loc) {
           XPIProvider.setTelemetry(this.addon.id, "name", loc.name);
@@ -6863,7 +6923,7 @@ DirectoryInstallLocation.prototype = {
       recursiveRemove(file);
     }
 
-    if (this.stagingDirLock > 0)
+    if (this._stagingDirLock > 0)
       return;
 
     let dirEntries = dir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);

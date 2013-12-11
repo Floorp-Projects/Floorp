@@ -30,9 +30,9 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(WebVTTListener)
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gTextTrackLog;
-# define LOG(...) PR_LOG(gTextTrackLog, PR_LOG_DEBUG, (__VA_ARGS__))
+# define VTT_LOG(...) PR_LOG(gTextTrackLog, PR_LOG_DEBUG, (__VA_ARGS__))
 #else
-# define LOG(msg)
+# define VTT_LOG(msg)
 #endif
 
 WebVTTListener::WebVTTListener(HTMLTrackElement* aElement)
@@ -44,12 +44,12 @@ WebVTTListener::WebVTTListener(HTMLTrackElement* aElement)
     gTextTrackLog = PR_NewLogModule("TextTrack");
   }
 #endif
-  LOG("WebVTTListener created.");
+  VTT_LOG("WebVTTListener created.");
 }
 
 WebVTTListener::~WebVTTListener()
 {
-  LOG("WebVTTListener destroyed.");
+  VTT_LOG("WebVTTListener destroyed.");
 }
 
 NS_IMETHODIMP
@@ -124,7 +124,7 @@ WebVTTListener::ParseChunk(nsIInputStream* aInStream, void* aClosure,
   WebVTTListener* listener = static_cast<WebVTTListener*>(aClosure);
 
   if (NS_FAILED(listener->mParserWrapper->Parse(buffer))) {
-    LOG("Unable to parse chunk of WEBVTT text. Aborting.");
+    VTT_LOG("Unable to parse chunk of WEBVTT text. Aborting.");
     *aWriteCount = 0;
     return NS_ERROR_FAILURE;
   }
@@ -162,7 +162,7 @@ WebVTTListener::OnCue(const JS::Value &aCue, JSContext* aCx)
   }
 
   TextTrackCue* cue;
-  nsresult rv = UNWRAP_OBJECT(VTTCue, aCx, &aCue.toObject(), cue);
+  nsresult rv = UNWRAP_OBJECT(VTTCue, &aCue.toObject(), cue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   cue->SetTrackElement(mElement);
@@ -180,8 +180,7 @@ WebVTTListener::OnRegion(const JS::Value &aRegion, JSContext* aCx)
   }
 
   TextTrackRegion* region;
-  nsresult rv = UNWRAP_OBJECT(VTTRegion, aCx, &aRegion.toObject(),
-                              region);
+  nsresult rv = UNWRAP_OBJECT(VTTRegion, &aRegion.toObject(), region);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mElement->mTrack->AddRegion(*region);

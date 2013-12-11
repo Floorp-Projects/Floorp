@@ -475,8 +475,7 @@ function openCacheEntry(key, cb)
     },
     onCacheEntryAvailable: function(entry, isNew, appCache, status) {
       cb(entry);
-    },
-    get mainThreadOnly() { return true; }
+    }
   };
   diskStorage.asyncOpenURI(Services.io.newURI(key, null, null), "", nsICacheStorage.OPEN_READONLY, checkCacheListener);
 }

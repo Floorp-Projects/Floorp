@@ -471,7 +471,7 @@ class Automation(object):
     os.unlink(pwfilePath)
     return 0
 
-  def environment(self, env = None, xrePath = None, crashreporter = True):
+  def environment(self, env=None, xrePath=None, crashreporter=True, debugger=False):
     if xrePath == None:
       xrePath = self.DIST_BIN
     if env == None:
@@ -490,7 +490,7 @@ class Automation(object):
     elif self.IS_WIN32:
       env["PATH"] = env["PATH"] + ";" + str(ldLibraryPath)
 
-    if crashreporter:
+    if crashreporter and not debugger:
       env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
       env['MOZ_CRASHREPORTER'] = '1'
     else:
@@ -521,19 +521,12 @@ class Automation(object):
       try:
         totalMemory = int(os.popen("free").readlines()[1].split()[1])
 
-        # Only 2 GB RAM or less available? Use custom ASan options to reduce
+        # Only 4 GB RAM or less available? Use custom ASan options to reduce
         # the amount of resources required to do the tests. Standard options 
         # will otherwise lead to OOM conditions on the current test slaves.
-        # 
-        # If we have more than 2 GB or RAM but still less than 4 GB, we need
-        # another set of options to prevent OOM in some memory-intensive
-        # tests.
-        if totalMemory <= 1024 * 1024 * 2:
+        if totalMemory <= 1024 * 1024 * 4:
           self.log.info("INFO | automation.py | ASan running in low-memory configuration")
-          env["ASAN_OPTIONS"] = "quarantine_size=50331648:redzone=64"
-        elif totalMemory <= 1024 * 1024 * 4:
-          self.log.info("INFO | automation.py | ASan running in mid-memory configuration")
-          env["ASAN_OPTIONS"] = "quarantine_size=100663296:redzone=64"
+          env["ASAN_OPTIONS"] = "quarantine_size=50331648"
         else:
           self.log.info("INFO | automation.py | ASan running in default memory configuration")
       except OSError,err:
@@ -847,7 +840,8 @@ class Automation(object):
              runSSLTunnel = False, utilityPath = None,
              xrePath = None, certPath = None,
              debuggerInfo = None, symbolsPath = None,
-             timeout = -1, maxTime = None, onLaunch = None):
+             timeout = -1, maxTime = None, onLaunch = None,
+             webapprtChrome = False):
     """
     Run the app, log the duration it took to execute, return the status code.
     Kills the app if it runs for longer than |maxTime| seconds, or outputs nothing for |timeout| seconds.

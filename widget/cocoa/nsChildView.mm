@@ -2198,7 +2198,8 @@ nsChildView::UpdateTitlebarImageBuffer()
   if (dirtyTitlebarRegion.IsEmpty())
     return;
 
-  ClearRegion(mTitlebarImageBuffer, dirtyTitlebarRegion);
+  gfxUtils::ClipToRegion(mTitlebarImageBuffer, dirtyTitlebarRegion);
+  mTitlebarImageBuffer->ClearRect(gfx::Rect(0, 0, titlebarBufferSize.width, titlebarBufferSize.height));
 
   gfx::BorrowedCGContext borrow(mTitlebarImageBuffer);
   CGContextRef ctx = borrow.cg;
@@ -2222,9 +2223,7 @@ nsChildView::UpdateTitlebarImageBuffer()
   for (id view in [window titlebarControls]) {
     NSRect viewFrame = [view frame];
     nsIntRect viewRect = CocoaPointsToDevPixels([mView convertRect:viewFrame fromView:frameView]);
-    nsIntRegion intersection;
-    intersection.And(dirtyTitlebarRegion, viewRect);
-    if (intersection.IsEmpty()) {
+    if (!dirtyTitlebarRegion.Intersects(viewRect)) {
       continue;
     }
     // All of the titlebar controls we're interested in are subclasses of
@@ -2249,8 +2248,7 @@ nsChildView::UpdateTitlebarImageBuffer()
 
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:[view isFlipped]]];
 
-    NSRect intersectRect = DevPixelsToCocoaPoints(intersection.GetBounds());
-    [cell drawWithFrame:[view convertRect:intersectRect fromView:mView] inView:button];
+    [cell drawWithFrame:[button bounds] inView:button];
 
     [NSGraphicsContext setCurrentContext:context];
     CGContextRestoreGState(ctx);
@@ -2263,6 +2261,8 @@ nsChildView::UpdateTitlebarImageBuffer()
 
   [NSGraphicsContext setCurrentContext:oldContext];
   borrow.Finish();
+
+  mTitlebarImageBuffer->PopClip();
 
   mUpdatedTitlebarRegion.Or(mUpdatedTitlebarRegion, dirtyTitlebarRegion);
 }

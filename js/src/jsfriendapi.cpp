@@ -73,6 +73,12 @@ JS_GetAnonymousString(JSRuntime *rt)
     return rt->atomState.anonymous;
 }
 
+JS_FRIEND_API(void)
+JS_SetIsWorkerRuntime(JSRuntime *rt)
+{
+    rt->setIsWorkerRuntime();
+}
+
 JS_FRIEND_API(JSObject *)
 JS_FindCompilationScope(JSContext *cx, JSObject *objArg)
 {
@@ -901,7 +907,7 @@ JS::NotifyDidPaint(JSRuntime *rt)
 JS_FRIEND_API(bool)
 JS::IsIncrementalGCEnabled(JSRuntime *rt)
 {
-    return rt->gcIncrementalEnabled && rt->gcMode == JSGC_MODE_INCREMENTAL;
+    return rt->gcIncrementalEnabled && rt->gcMode() == JSGC_MODE_INCREMENTAL;
 }
 
 JS_FRIEND_API(bool)

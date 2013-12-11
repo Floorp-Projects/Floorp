@@ -325,6 +325,30 @@ class HostSimpleProgram(BaseProgram):
     """Sandbox container object for each program in HOST_SIMPLE_PROGRAMS"""
 
 
+class LibraryDefinition(SandboxDerived):
+    """Partial definition for a library
+
+    The static_libraries member tracks the list of relative directory and
+    library names of static libraries that are meant to be linked into
+    the library defined by an instance of this class.
+    """
+    __slots__ = (
+        'basename',
+        'static_libraries',
+        'refcount',
+    )
+
+    def __init__(self, sandbox, basename):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.basename = basename
+        self.refcount = 0
+        self.static_libraries = []
+
+    def link_static_lib(self, objdir, basename):
+        self.static_libraries.append((objdir, basename))
+
+
 class TestManifest(SandboxDerived):
     """Represents a manifest file containing information about tests."""
 

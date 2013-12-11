@@ -4,38 +4,42 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-let icc;
 let connection;
 let outgoing;
 
-function changeSetting(key, value, callback) {
-  let obj = {};
-  obj[key] = value;
-
-  let setReq = navigator.mozSettings.createLock().set(obj);
-  setReq.addEventListener("success", function onSetSuccess() {
-    ok(true, "set '" + key + "' to " + obj[key]);
-    setReq.removeEventListener("success", onSetSuccess);
-    callback();
-  });
-  setReq.addEventListener("error", function onSetError() {
-    ok(false, "cannot set '" + key + "'");
-    cleanUp();
-  });
+function receivedPending(received, pending, nextAction) {
+  let index = pending.indexOf(received);
+  if (index != -1) {
+    pending.splice(index, 1);
+  }
+  if (pending.length === 0) {
+    nextAction();
+  }
 }
 
 function setRadioEnabled(enabled, callback) {
-  changeSetting("ril.radio.disabled", !enabled, function() {
-    icc.addEventListener("cardstatechange", function handler() {
-      // Wait until card state changes to "ready" after turning on radio.
-      // Wait until card state changes to "not-ready" after turning off radio.
-      if ((enabled && icc.cardState == "ready") ||
-          (!enabled && icc.cardState != "ready")) {
-        icc.removeEventListener("cardstatechange", handler);
-        callback();
-      }
-    });
-  });
+  let request  = connection.setRadioEnabled(enabled);
+  let desiredRadioState = enabled ? 'enabled' : 'disabled';
+
+  let pending = ['onradiostatechange', 'onsuccess'];
+  let done = callback;
+
+  connection.onradiostatechange = function() {
+    let state = connection.radioState;
+    log("Received 'radiostatechange' event, radioState: " + state);
+
+    if (state == desiredRadioState) {
+      receivedPending('onradiostatechange', pending, done);
+    }
+  };
+
+  request.onsuccess = function onsuccess() {
+    receivedPending('onsuccess', pending, done);
+  };
+
+  request.onerror = function onerror() {
+    ok(false, "setRadioEnabled should be ok");
+  };
 }
 
 function dial(number) {
@@ -75,18 +79,10 @@ function cleanUp() {
   finish();
 }
 
-let permissions = [
-  "mobileconnection",
-  "settings-write"
-];
-
-startTestWithPermissions(permissions, function() {
+startTestWithPermissions(['mobileconnection'], function() {
   connection = navigator.mozMobileConnections[0];
   ok(connection instanceof MozMobileConnection,
      "connection is instanceof " + connection.constructor);
-
-  icc = navigator.mozIccManager;
-  ok(icc instanceof MozIccManager, "icc is instanceof " + icc.constructor);
 
   setRadioEnabled(false, function() {
     dial("0912345678");

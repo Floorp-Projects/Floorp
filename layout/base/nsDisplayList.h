@@ -291,12 +291,6 @@ public:
   bool AllowMergingAndFlattening() { return mAllowMergingAndFlattening; }
   void SetAllowMergingAndFlattening(bool aAllow) { mAllowMergingAndFlattening = aAllow; }
 
-  /**
-   * @return Returns if the builder is currently building an
-   * nsDisplayFixedPosition sub-tree.
-   */
-  bool IsInFixedPosition() const { return mIsInFixedPosition; }
-
   bool SetIsCompositingCheap(bool aCompositingCheap) { 
     bool temp = mIsCompositingCheap; 
     mIsCompositingCheap = aCompositingCheap;
@@ -355,30 +349,16 @@ public:
   void SetInTransform(bool aInTransform) { mInTransform = aInTransform; }
 
   /**
-   * Call this if using display port for scrolling.
-   */
-  void SetDisplayPort(const nsRect& aDisplayPort);
-  const nsRect* GetDisplayPort() { return mHasDisplayPort ? &mDisplayPort : nullptr; }
-
-  /**
-   * Call this if ReferenceFrame() is a viewport frame with fixed-position
-   * children, or when we construct an item which will return true from
-   * ShouldFixToViewport()
-   */
-  void SetHasFixedItems() { mHasFixedItems = true; }
-  bool GetHasFixedItems() { return mHasFixedItems; }
-
-  /**
    * Determines if this item is scrolled by content-document display-port
-   * scrolling. aActiveScrolledRoot will be set to the active scrolled root
-   * of the item. This may not necessarily correspond to the active scrolled
+   * scrolling. aAnimatedGeometryRoot will be set to the animated geometry root
+   * of the item. This may not necessarily correspond to the animated geometry
    * root of the item's underlying frame.
-   * If specified, aOverrideActiveScrolledRoot will be treated as the active
+   * If specified, aOverrideAnimatedGeometryRoot will be treated as the active
    * scrolled root.
    */
   bool IsFixedItem(nsDisplayItem* aItem,
-                   const nsIFrame** aActiveScrolledRoot = nullptr,
-                   const nsIFrame* aOverrideActiveScrolledRoot = nullptr);
+                   const nsIFrame** aAnimatedGeometryRoot = nullptr,
+                   const nsIFrame* aOverrideAnimatedGeometryScrolledRoot = nullptr);
 
   /**
    * @return true if images have been set to decode synchronously.
@@ -491,7 +471,7 @@ public:
 
   /**
    * A helper class to temporarily set the value of
-   * mIsAtRootOfPseudoStackingContext and mIsInFixedPosition, and temporarily
+   * mIsAtRootOfPseudoStackingContext, and temporarily
    * update mCachedOffsetFrame/mCachedOffset from a frame to its child.
    * Also saves and restores mClipState.
    */
@@ -508,14 +488,13 @@ public:
       aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
     }
     AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder,
-                            nsIFrame* aForChild, bool aIsRoot,
-                            bool aIsInFixedPosition)
+                            nsIFrame* aForChild, bool aIsRoot)
       : mBuilder(aBuilder),
         mPrevCachedOffsetFrame(aBuilder->mCachedOffsetFrame),
         mPrevCachedReferenceFrame(aBuilder->mCachedReferenceFrame),
         mPrevCachedOffset(aBuilder->mCachedOffset),
-        mPrevIsAtRootOfPseudoStackingContext(aBuilder->mIsAtRootOfPseudoStackingContext),
-        mPrevIsInFixedPosition(aBuilder->mIsInFixedPosition) {
+        mPrevIsAtRootOfPseudoStackingContext(aBuilder->mIsAtRootOfPseudoStackingContext)
+    {
       if (aForChild->IsTransformed()) {
         aBuilder->mCachedOffset = nsPoint();
         aBuilder->mCachedReferenceFrame = aForChild;
@@ -526,16 +505,12 @@ public:
       }
       aBuilder->mCachedOffsetFrame = aForChild;
       aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
-      if (aIsInFixedPosition) {
-        aBuilder->mIsInFixedPosition = aIsInFixedPosition;
-      }
     }
     ~AutoBuildingDisplayList() {
       mBuilder->mCachedOffsetFrame = mPrevCachedOffsetFrame;
       mBuilder->mCachedReferenceFrame = mPrevCachedReferenceFrame;
       mBuilder->mCachedOffset = mPrevCachedOffset;
       mBuilder->mIsAtRootOfPseudoStackingContext = mPrevIsAtRootOfPseudoStackingContext;
-      mBuilder->mIsInFixedPosition = mPrevIsInFixedPosition;
     }
   private:
     nsDisplayListBuilder* mBuilder;
@@ -543,7 +518,6 @@ public:
     const nsIFrame*       mPrevCachedReferenceFrame;
     nsPoint               mPrevCachedOffset;
     bool                  mPrevIsAtRootOfPseudoStackingContext;
-    bool                  mPrevIsInFixedPosition;
   };
 
   /**
@@ -663,7 +637,6 @@ private:
   const nsIFrame*                mCachedOffsetFrame;
   const nsIFrame*                mCachedReferenceFrame;
   nsPoint                        mCachedOffset;
-  nsRect                         mDisplayPort;
   nsRegion                       mExcludedGlassRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
@@ -683,9 +656,6 @@ private:
   bool                           mInTransform;
   bool                           mSyncDecodeImages;
   bool                           mIsPaintingToWindow;
-  bool                           mHasDisplayPort;
-  bool                           mHasFixedItems;
-  bool                           mIsInFixedPosition;
   bool                           mIsCompositingCheap;
   bool                           mContainsPluginItem;
   bool                           mContainsBlendMode;
@@ -725,7 +695,7 @@ protected:
  */
 class nsDisplayItem : public nsDisplayItemLink {
 public:
-  typedef mozilla::FrameLayerBuilder::ContainerParameters ContainerParameters;
+  typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::DisplayItemClip DisplayItemClip;
   typedef mozilla::layers::FrameMetrics::ViewID ViewID;
   typedef mozilla::layers::Layer Layer;
@@ -1039,7 +1009,7 @@ public:
    */
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerParameters& aParameters)
+                                   const ContainerLayerParameters& aParameters)
   { return mozilla::LAYER_NONE; }
   /**
    * Return true to indicate the layer should be constructed even if it's
@@ -1082,7 +1052,7 @@ public:
    */
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
-                                             const ContainerParameters& aContainerParameters)
+                                             const ContainerLayerParameters& aContainerParameters)
   { return nullptr; }
 
   /**
@@ -1159,6 +1129,12 @@ public:
    * has happened.
    */
   const nsRect& GetVisibleRect() { return mVisibleRect; }
+
+  /**
+   * Stores the given opacity value to be applied when drawing. Returns
+   * false if this isn't supported for this display item.
+   */
+  virtual bool ApplyOpacity(float aOpacity) { return false; }
   
 #ifdef MOZ_DUMP_PAINTING
   /**
@@ -2001,11 +1977,11 @@ public:
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerParameters& aParameters) MOZ_OVERRIDE;
+                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE;
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
-                                             const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+                                             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
 
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) MOZ_OVERRIDE;
@@ -2079,9 +2055,6 @@ protected:
   /* Bounds of this display item */
   nsRect mBounds;
   uint32_t mLayer;
-
-  /* true if this item represents the bottom-most background layer */
-  bool mIsBottommostLayer;
 };
 
 
@@ -2200,7 +2173,8 @@ protected:
 class nsDisplayBoxShadowOuter : public nsDisplayItem {
 public:
   nsDisplayBoxShadowOuter(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-    : nsDisplayItem(aBuilder, aFrame) {
+    : nsDisplayItem(aBuilder, aFrame)
+    , mOpacity(1.0) {
     MOZ_COUNT_CTOR(nsDisplayBoxShadowOuter);
     mBounds = GetBoundsInternal();
   }
@@ -2220,12 +2194,19 @@ public:
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion);
+  
+  virtual bool ApplyOpacity(float aOpacity)
+  {
+    mOpacity = aOpacity;
+    return true;
+  }
 
   nsRect GetBoundsInternal();
 
 private:
   nsRegion mVisibleRegion;
   nsRect mBounds;
+  float mOpacity;
 };
 
 /**
@@ -2417,13 +2398,13 @@ public:
   /**
    * Returns true if all descendant display items can be placed in the same
    * ThebesLayer --- GetLayerState returns LAYER_INACTIVE or LAYER_NONE,
-   * and they all have the given aActiveScrolledRoot.
+   * and they all have the given aAnimatedGeometryRoot.
    */
   static LayerState RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
                                                   LayerManager* aManager,
-                                                  const ContainerParameters& aParameters,
+                                                  const ContainerLayerParameters& aParameters,
                                                   const nsDisplayList& aList,
-                                                  nsIFrame* aActiveScrolledRoot);
+                                                  nsIFrame* aItemFrame);
 
 protected:
   nsDisplayWrapList() {}
@@ -2489,10 +2470,10 @@ public:
                                    bool* aSnap) MOZ_OVERRIDE;
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
-                                             const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+                                             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerParameters& aParameters) MOZ_OVERRIDE;
+                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;  
@@ -2503,6 +2484,8 @@ public:
   {
     // We don't need to compute an invalidation region since we have LayerTreeInvalidation
   }
+  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
+  bool NeedsActiveLayer();
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
 #ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(FILE *aOutput) MOZ_OVERRIDE {
@@ -2525,7 +2508,7 @@ public:
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
-                                             const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+                                             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) MOZ_OVERRIDE
@@ -2534,7 +2517,7 @@ public:
   }
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerParameters& aParameters) MOZ_OVERRIDE
+                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE
   {
     return mozilla::LAYER_INACTIVE;
   }
@@ -2555,10 +2538,10 @@ public:
     
     virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                                LayerManager* aManager,
-                                               const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+                                               const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
     virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
-                                     const ContainerParameters& aParameters) MOZ_OVERRIDE
+                                     const ContainerLayerParameters& aParameters) MOZ_OVERRIDE
     {
         return mozilla::LAYER_INACTIVE;
     }
@@ -2593,10 +2576,10 @@ public:
   
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
-                                             const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+                                             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerParameters& aParameters) MOZ_OVERRIDE
+                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE
   {
     return mozilla::LAYER_ACTIVE_FORCE;
   }
@@ -2625,41 +2608,8 @@ public:
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
-                                             const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+                                             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
   NS_DISPLAY_DECL_NAME("Resolution", TYPE_RESOLUTION)
-};
-
-/**
- * A display item used to represent fixed position elements. This will ensure
- * the contents gets its own layer, and that the built layer will have
- * position-related metadata set on it.
- */
-class nsDisplayFixedPosition : public nsDisplayOwnLayer {
-public:
-  nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                         nsIFrame* aFixedPosFrame, nsDisplayList* aList);
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayFixedPosition();
-#endif
-
-  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
-                                             LayerManager* aManager,
-                                             const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
-  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager,
-                                   const ContainerParameters& aParameters) MOZ_OVERRIDE
-  {
-    return mozilla::LAYER_ACTIVE;
-  }
-  virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) MOZ_OVERRIDE;
-
-  NS_DISPLAY_DECL_NAME("FixedPosition", TYPE_FIXED_POSITION)
-
-protected:
-  void SetFixedPositionLayerData(Layer* const aLayer, nsIFrame* aViewportFrame,
-                                 nsSize aViewportSize, nsPresContext* aPresContext,
-                                 const ContainerParameters& aContainerParameters);
-  nsIFrame* mFixedPosFrame;
 };
 
 /**
@@ -2667,7 +2617,7 @@ protected:
  * gets its own layer and creates a stacking context, and the layer will have
  * position-related metadata set on it.
  */
-class nsDisplayStickyPosition : public nsDisplayFixedPosition {
+class nsDisplayStickyPosition : public nsDisplayOwnLayer {
 public:
   nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                           nsIFrame* aStickyPosFrame, nsDisplayList* aList);
@@ -2677,7 +2627,18 @@ public:
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
-                                             const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+                                             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
+  NS_DISPLAY_DECL_NAME("StickyPosition", TYPE_STICKY_POSITION)
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager,
+                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE
+  {
+    return mozilla::LAYER_ACTIVE;
+  }
+  virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) MOZ_OVERRIDE;
+
+protected:
+  nsIFrame* mStickyPosFrame;
 };
 
 /**
@@ -2728,7 +2689,7 @@ public:
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
-                                             const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+                                             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
 
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
@@ -2736,7 +2697,7 @@ public:
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerParameters& aParameters) MOZ_OVERRIDE;
+                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE;
 
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder,
                           nsDisplayItem* aItem) MOZ_OVERRIDE;
@@ -2777,7 +2738,7 @@ public:
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerParameters& aParameters) MOZ_OVERRIDE;
+                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE;
   virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE
   { return true; }
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder,
@@ -2819,7 +2780,7 @@ public:
                                    const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerParameters& aParameters) MOZ_OVERRIDE
+                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE
   {
     return mozilla::LAYER_ACTIVE;
   }
@@ -2862,11 +2823,11 @@ public:
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerParameters& aParameters);
+                                   const ContainerLayerParameters& aParameters);
  
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
-                                             const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+                                             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
   
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
@@ -2948,10 +2909,10 @@ public:
   virtual bool IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor) MOZ_OVERRIDE;
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerParameters& aParameters) MOZ_OVERRIDE;
+                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE;
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
-                                             const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+                                             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
   virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
   virtual bool ComputeVisibility(nsDisplayListBuilder *aBuilder,
                                    nsRegion *aVisibleRegion,

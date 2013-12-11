@@ -10,6 +10,8 @@
 
 #include "AndroidBridge.h"
 
+using namespace mozilla::widget::android;
+
 NS_IMPL_ISUPPORTS1(nsAndroidNetworkLinkService,
                    nsINetworkLinkService)
 
@@ -31,7 +33,7 @@ nsAndroidNetworkLinkService::GetIsLinkUp(bool *aIsUp)
     return NS_OK;
   }
 
-  *aIsUp = mozilla::AndroidBridge::Bridge()->IsNetworkLinkUp();
+  *aIsUp = GeckoAppShell::IsNetworkLinkUp();
   return NS_OK;
 }
 
@@ -40,7 +42,7 @@ nsAndroidNetworkLinkService::GetLinkStatusKnown(bool *aIsKnown)
 {
   NS_ENSURE_TRUE(mozilla::AndroidBridge::Bridge(), NS_ERROR_NOT_IMPLEMENTED);
 
-  *aIsKnown = mozilla::AndroidBridge::Bridge()->IsNetworkLinkKnown();
+  *aIsKnown = GeckoAppShell::IsNetworkLinkKnown();
   return NS_OK;
 }
 
@@ -49,7 +51,13 @@ nsAndroidNetworkLinkService::GetLinkType(uint32_t *aLinkType)
 {
   NS_ENSURE_ARG_POINTER(aLinkType);
 
-  // XXX This function has not yet been implemented for this platform
-  *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
+  if (!mozilla::AndroidBridge::Bridge()) {
+    // Fail soft here and assume a connection exists
+    NS_WARNING("GetLinkType is not supported without a bridge connection");
+    *aLinkType = nsINetworkLinkService::LINK_TYPE_UNKNOWN;
+    return NS_OK;
+  }
+
+  *aLinkType = GeckoAppShell::NetworkLinkType();
   return NS_OK;
 }

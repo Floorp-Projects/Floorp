@@ -37,6 +37,7 @@
 #include "mozilla/dom/GeneratedAtomList.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/WindowBinding.h"
 #include "mozilla/Attributes.h"
 #include "AccessCheck.h"
 #include "nsGlobalWindow.h"
@@ -384,6 +385,20 @@ EnsureCompartmentPrivate(JSCompartment *c)
     return priv;
 }
 
+XPCWrappedNativeScope*
+MaybeGetObjectScope(JSObject *obj)
+{
+    MOZ_ASSERT(obj);
+    JSCompartment *compartment = js::GetObjectCompartment(obj);
+
+    MOZ_ASSERT(compartment);
+    CompartmentPrivate *priv = GetCompartmentPrivate(compartment);
+    if (!priv)
+        return nullptr;
+
+    return priv->scope;
+}
+
 static bool
 PrincipalImmuneToScriptPolicy(nsIPrincipal* aPrincipal)
 {
@@ -566,6 +581,28 @@ GetJunkScopeGlobal()
     return GetNativeForGlobal(junkScope);
 }
 
+nsGlobalWindow*
+WindowGlobalOrNull(JSObject *aObj)
+{
+    MOZ_ASSERT(aObj);
+    JSObject *glob = js::GetGlobalForObjectCrossCompartment(aObj);
+    MOZ_ASSERT(glob);
+
+    // This will always return null until we have Window on WebIDL bindings,
+    // at which point it will do the right thing.
+    if (!IS_WN_CLASS(js::GetObjectClass(glob))) {
+        nsGlobalWindow* win = nullptr;
+        UNWRAP_OBJECT(Window, glob, win);
+        return win;
+    }
+
+    nsISupports* supports = XPCWrappedNative::Get(glob)->GetIdentityObject();
+    nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(supports);
+    if (!piWin)
+        return nullptr;
+    return static_cast<nsGlobalWindow*>(piWin.get());
+}
+
 }
 
 static void
@@ -711,12 +748,20 @@ XPCJSRuntime::PrepareForForgetSkippable()
 }
 
 void
-XPCJSRuntime::PrepareForCollection()
+XPCJSRuntime::BeginCycleCollectionCallback()
 {
+    nsJSContext::BeginCycleCollectionCallback();
+
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
         obs->NotifyObservers(nullptr, "cycle-collector-begin", nullptr);
     }
+}
+
+void
+XPCJSRuntime::EndCycleCollectionCallback(CycleCollectorResults &aResults)
+{
+    nsJSContext::EndCycleCollectionCallback(aResults);
 }
 
 void

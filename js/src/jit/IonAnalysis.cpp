@@ -1107,7 +1107,7 @@ jit::BuildDominatorTree(MIRGraph &graph)
     // Now, iterate through the dominator tree and annotate every
     // block with its index in the pre-order traversal of the
     // dominator tree.
-    Vector<MBasicBlock *, 1, IonAllocPolicy> worklist;
+    Vector<MBasicBlock *, 1, IonAllocPolicy> worklist(graph.alloc());
 
     // The index of the current block in the CFG traversal.
     size_t index = 0;
@@ -1576,11 +1576,16 @@ TryEliminateTypeBarrierFromTest(MTypeBarrier *barrier, bool filtersNull, bool fi
 
     // Disregard the possible unbox added before the Typebarrier for checking.
     MDefinition *input = barrier->input();
-    if (input->isUnbox() && input->toUnbox()->mode() == MUnbox::TypeBarrier)
-        input = input->toUnbox()->input();
+    MUnbox *inputUnbox = nullptr;
+    if (input->isUnbox() && input->toUnbox()->mode() != MUnbox::Fallible) {
+        inputUnbox = input->toUnbox();
+        input = inputUnbox->input();
+    }
 
     if (test->getOperand(0) == input && direction == TRUE_BRANCH) {
         *eliminated = true;
+        if (inputUnbox)
+            inputUnbox->makeInfallible();
         barrier->replaceAllUsesWith(barrier->input());
         return;
     }
@@ -1614,6 +1619,8 @@ TryEliminateTypeBarrierFromTest(MTypeBarrier *barrier, bool filtersNull, bool fi
     }
 
     *eliminated = true;
+    if (inputUnbox)
+        inputUnbox->makeInfallible();
     barrier->replaceAllUsesWith(barrier->input());
 }
 
@@ -1626,11 +1633,8 @@ TryEliminateTypeBarrier(MTypeBarrier *barrier, bool *eliminated)
     const types::TemporaryTypeSet *inputTypes = barrier->input()->resultTypeSet();
 
     // Disregard the possible unbox added before the Typebarrier.
-    if (barrier->input()->isUnbox() &&
-        barrier->input()->toUnbox()->mode() == MUnbox::TypeBarrier)
-    {
+    if (barrier->input()->isUnbox() && barrier->input()->toUnbox()->mode() != MUnbox::Fallible)
         inputTypes = barrier->input()->toUnbox()->input()->resultTypeSet();
-    }
 
     if (!barrierTypes || !inputTypes)
         return true;
@@ -1676,13 +1680,13 @@ TryEliminateTypeBarrier(MTypeBarrier *barrier, bool *eliminated)
 bool
 jit::EliminateRedundantChecks(MIRGraph &graph)
 {
-    BoundsCheckMap checks;
+    BoundsCheckMap checks(graph.alloc());
 
     if (!checks.init())
         return false;
 
     // Stack for pre-order CFG traversal.
-    Vector<MBasicBlock *, 1, IonAllocPolicy> worklist;
+    Vector<MBasicBlock *, 1, IonAllocPolicy> worklist(graph.alloc());
 
     // The index of the current block in the CFG traversal.
     size_t index = 0;
@@ -2107,9 +2111,9 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, HandleFunction fun,
 
     AutoTempAllocatorRooter root(cx, &temp);
 
-    types::CompilerConstraintList *constraints = types::NewCompilerConstraintList();
+    types::CompilerConstraintList *constraints = types::NewCompilerConstraintList(temp);
     BaselineInspector inspector(script);
-    IonBuilder builder(cx, cx->compartment(), &temp, &graph, constraints,
+    IonBuilder builder(cx, CompileCompartment::get(cx->compartment()), &temp, &graph, constraints,
                        &inspector, &info, /* baselineFrame = */ nullptr);
 
     if (!builder.build()) {

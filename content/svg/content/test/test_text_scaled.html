@@ -111,10 +111,10 @@ function runTest()
   
   // character 12 should be on the bottom side
   is(text2.getStartPositionOfChar(12).y, 860, "text2 char 12 start offset");
-  is(text2.getEndPositionOfChar(12).y, 860, "text2 char 12 end offset");
+  isfuzzy(text2.getEndPositionOfChar(12).y, 860, 0.001, "text2 char 12 end offset");
   ok(text2.getExtentOfChar(12).y < 860, "text2 char 12 extent y");
   ok(ymost(text2.getExtentOfChar(12)) > 860, "text2 char 12 extent height");
-  is(text2.getRotationOfChar(12), 180, "text2 char 12 rotation");
+  isfuzzy(text2.getRotationOfChar(12), 180, 0.001, "text2 char 12 rotation");
   p.x = text2.getExtentOfChar(12).x + 0.1;
   p.y = ymost(text2.getExtentOfChar(12)) - 0.1;
   is(text2.getCharNumAtPosition(p), 12, "text2 finding char 12");

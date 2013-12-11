@@ -219,7 +219,8 @@ nsThreadManagerGetSingleton(nsISupports* outer,
                             void* *aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr, "null outptr");
-    NS_ENSURE_TRUE(!outer, NS_ERROR_NO_AGGREGATION);
+    if (NS_WARN_IF(outer))
+        return NS_ERROR_NO_AGGREGATION;
 
     return nsThreadManager::get()->QueryInterface(aIID, aInstancePtr);
 }
@@ -232,7 +233,8 @@ nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
                                        void* *aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr, "null outptr");
-    NS_ENSURE_TRUE(!outer, NS_ERROR_NO_AGGREGATION);
+    if (NS_WARN_IF(outer))
+        return NS_ERROR_NO_AGGREGATION;
 
     nsCOMPtr<nsIInterfaceInfoManager> iim
         (XPTInterfaceInfoManager::GetSingleton());
@@ -313,16 +315,16 @@ static nsIDebug* gDebug = nullptr;
 EXPORT_XPCOM_API(nsresult)
 NS_GetDebug(nsIDebug** result)
 {
-    return nsDebugImpl::Create(nullptr, 
-                               NS_GET_IID(nsIDebug), 
+    return nsDebugImpl::Create(nullptr,
+                               NS_GET_IID(nsIDebug),
                                (void**) result);
 }
 
 EXPORT_XPCOM_API(nsresult)
 NS_GetTraceRefcnt(nsITraceRefcnt** result)
 {
-    return nsTraceRefcntImpl::Create(nullptr, 
-                                     NS_GET_IID(nsITraceRefcnt), 
+    return nsTraceRefcntImpl::Create(nullptr,
+                                     NS_GET_IID(nsITraceRefcnt),
                                      (void**) result);
 }
 
@@ -411,38 +413,38 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 
     if (!AtExitManager::AlreadyRegistered()) {
         sExitManager = new AtExitManager();
-        NS_ENSURE_STATE(sExitManager);
     }
 
     if (!MessageLoop::current()) {
         sMessageLoop = new MessageLoopForUI(MessageLoop::TYPE_MOZILLA_UI);
-        NS_ENSURE_STATE(sMessageLoop);
     }
 
     if (XRE_GetProcessType() == GeckoProcessType_Default &&
         !BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO)) {
         scoped_ptr<BrowserProcessSubThread> ioThread(
             new BrowserProcessSubThread(BrowserProcessSubThread::IO));
-        NS_ENSURE_TRUE(ioThread.get(), NS_ERROR_OUT_OF_MEMORY);
 
         base::Thread::Options options;
         options.message_loop_type = MessageLoop::TYPE_IO;
-        NS_ENSURE_TRUE(ioThread->StartWithOptions(options), NS_ERROR_FAILURE);
+        if (NS_WARN_IF(!ioThread->StartWithOptions(options)))
+            return NS_ERROR_FAILURE;
 
         sIOThread = ioThread.release();
     }
 
     // Establish the main thread here.
     rv = nsThreadManager::get()->Init();
-    if (NS_FAILED(rv)) return rv;
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     // Set up the timer globals/timer thread
     rv = nsTimerImpl::Startup();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
 #ifndef ANDROID
     // If the locale hasn't already been setup by our embedder,
-    // get us out of the "C" locale and into the system 
+    // get us out of the "C" locale and into the system
     if (strcmp(setlocale(LC_ALL, nullptr), "C") == 0)
         setlocale(LC_ALL, "");
 #endif
@@ -493,18 +495,21 @@ NS_InitXPCOM2(nsIServiceManager* *result,
         CommandLine::Init(0, nullptr);
 #else
         nsCOMPtr<nsIFile> binaryFile;
-        nsDirectoryService::gService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, 
-                                          NS_GET_IID(nsIFile), 
+        nsDirectoryService::gService->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
+                                          NS_GET_IID(nsIFile),
                                           getter_AddRefs(binaryFile));
-        NS_ENSURE_STATE(binaryFile);
-        
+        if (NS_WARN_IF(!binaryFile))
+            return NS_ERROR_FAILURE;
+
         rv = binaryFile->AppendNative(NS_LITERAL_CSTRING("nonexistent-executable"));
-        NS_ENSURE_SUCCESS(rv, rv);
-        
+        if (NS_WARN_IF(NS_FAILED(rv)))
+            return rv;
+
         nsCString binaryPath;
         rv = binaryFile->GetNativePath(binaryPath);
-        NS_ENSURE_SUCCESS(rv, rv);
-        
+        if (NS_WARN_IF(NS_FAILED(rv)))
+            return rv;
+
         static char const *const argv = { strdup(binaryPath.get()) };
         CommandLine::Init(1, &argv);
 #endif
@@ -568,7 +573,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     mozilla::AvailableMemoryTracker::Activate();
 
     // Notify observers of xpcom autoregistration start
-    NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_CATEGORY, 
+    NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_CATEGORY,
                                   nullptr,
                                   NS_XPCOM_STARTUP_OBSERVER_ID);
 #ifdef XP_WIN
@@ -626,7 +631,9 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     // Make sure the hang monitor is enabled for shutdown.
     HangMonitor::NotifyActivity();
 
-    NS_ENSURE_STATE(NS_IsMainThread());
+    if (!NS_IsMainThread()) {
+        NS_RUNTIMEABORT("Shutdown on wrong thread");
+    }
 
     nsresult rv;
     nsCOMPtr<nsISimpleEnumerator> moduleLoaders;
@@ -637,7 +644,8 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
         // servicemanager shutdown
 
         nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
-        NS_ENSURE_STATE(thread);
+        if (NS_WARN_IF(!thread))
+            return NS_ERROR_UNEXPECTED;
 
         nsRefPtr<nsObserverService> observerService;
         CallGetService("@mozilla.org/observer-service;1",

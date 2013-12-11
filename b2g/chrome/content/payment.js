@@ -191,21 +191,22 @@ let PaymentProvider = {
   },
 
 #ifdef MOZ_B2G_RIL
-  // Until bug 814629 is done, we only have support for a single SIM, so we
-  // can only provide information for a single ICC. However, we return an array
-  // so the payment provider facing API won't need to change once we support
-  // multiple SIMs.
+  // Bug 938993. Support Multi-SIM for Payments.
+  get iccInfo() {
+    delete this.iccInfo;
+    return this.iccInfo = iccProvider.getIccInfo(0);
+  },
 
   get iccIds() {
-    return [iccProvider.iccInfo.iccid];
+    return [this.iccInfo.iccid];
   },
 
   get mcc() {
-    return [iccProvider.iccInfo.mcc];
+    return [this.iccInfo.mcc];
   },
 
   get mnc() {
-    return [iccProvider.iccInfo.mnc];
+    return [this.iccInfo.mnc];
   },
 
   _silentNumbers: null,

@@ -51,6 +51,53 @@ public:
   bool mIsInfinite;
 };
 
+struct ContainerLayerParameters {
+  ContainerLayerParameters() :
+    mXScale(1), mYScale(1), mAncestorClipRect(nullptr),
+    mInTransformedSubtree(false), mInActiveTransformedSubtree(false),
+    mDisableSubpixelAntialiasingInDescendants(false)
+  {}
+  ContainerLayerParameters(float aXScale, float aYScale) :
+    mXScale(aXScale), mYScale(aYScale), mAncestorClipRect(nullptr),
+    mInTransformedSubtree(false), mInActiveTransformedSubtree(false),
+    mDisableSubpixelAntialiasingInDescendants(false)
+  {}
+  ContainerLayerParameters(float aXScale, float aYScale,
+                           const nsIntPoint& aOffset,
+                           const ContainerLayerParameters& aParent) :
+    mXScale(aXScale), mYScale(aYScale), mAncestorClipRect(nullptr),
+    mOffset(aOffset),
+    mInTransformedSubtree(aParent.mInTransformedSubtree),
+    mInActiveTransformedSubtree(aParent.mInActiveTransformedSubtree),
+    mDisableSubpixelAntialiasingInDescendants(aParent.mDisableSubpixelAntialiasingInDescendants)
+  {}
+  float mXScale, mYScale;
+  /**
+   * An ancestor clip rect that can be applied to restrict the visibility
+   * of this container. Null if none available.
+   */
+  const nsIntRect* mAncestorClipRect;
+  /**
+   * An offset to append to the transform set on all child layers created.
+   */
+  nsIntPoint mOffset;
+
+  bool mInTransformedSubtree;
+  bool mInActiveTransformedSubtree;
+  bool mDisableSubpixelAntialiasingInDescendants;
+  /**
+   * When this is false, ThebesLayer coordinates are drawn to with an integer
+   * translation and the scale in mXScale/mYScale.
+   */
+  bool AllowResidualTranslation()
+  {
+    // If we're in a transformed subtree, but no ancestor transform is actively
+    // changing, we'll use the residual translation when drawing into the
+    // ThebesLayer to ensure that snapping exactly matches the ideal transform.
+    return mInTransformedSubtree && !mInActiveTransformedSubtree;
+  }
+};
+
 /**
  * The FrameLayerBuilder is responsible for converting display lists 
  * into layer trees. Every LayerManager needs a unique FrameLayerBuilder
@@ -76,7 +123,7 @@ public:
  * return it as a candidate for recycling.
  * 
  * FrameLayerBuilder sets up ThebesLayers so that 0,0 in the Thebes layer
- * corresponds to the (pixel-snapped) top-left of the aActiveScrolledRoot.
+ * corresponds to the (pixel-snapped) top-left of the aAnimatedGeometryRoot.
  * It sets up ContainerLayers so that 0,0 in the container layer
  * corresponds to the snapped top-left of the display item reference frame.
  *
@@ -132,52 +179,6 @@ public:
    */
   void DidEndTransaction();
 
-  struct ContainerParameters {
-    ContainerParameters() :
-      mXScale(1), mYScale(1), mAncestorClipRect(nullptr),
-      mInTransformedSubtree(false), mInActiveTransformedSubtree(false),
-      mDisableSubpixelAntialiasingInDescendants(false)
-    {}
-    ContainerParameters(float aXScale, float aYScale) :
-      mXScale(aXScale), mYScale(aYScale), mAncestorClipRect(nullptr),
-      mInTransformedSubtree(false), mInActiveTransformedSubtree(false),
-      mDisableSubpixelAntialiasingInDescendants(false)
-    {}
-    ContainerParameters(float aXScale, float aYScale,
-                        const nsIntPoint& aOffset,
-                        const ContainerParameters& aParent) :
-      mXScale(aXScale), mYScale(aYScale), mAncestorClipRect(nullptr),
-      mOffset(aOffset),
-      mInTransformedSubtree(aParent.mInTransformedSubtree),
-      mInActiveTransformedSubtree(aParent.mInActiveTransformedSubtree),
-      mDisableSubpixelAntialiasingInDescendants(aParent.mDisableSubpixelAntialiasingInDescendants)
-    {}
-    float mXScale, mYScale;
-    /**
-     * An ancestor clip rect that can be applied to restrict the visibility
-     * of this container. Null if none available.
-     */
-    const nsIntRect* mAncestorClipRect;
-    /**
-     * An offset to append to the transform set on all child layers created.
-     */
-    nsIntPoint mOffset;
-
-    bool mInTransformedSubtree;
-    bool mInActiveTransformedSubtree;
-    bool mDisableSubpixelAntialiasingInDescendants;
-    /**
-     * When this is false, ThebesLayer coordinates are drawn to with an integer
-     * translation and the scale in mXScale/mYScale.
-     */
-    bool AllowResidualTranslation()
-    {
-      // If we're in a transformed subtree, but no ancestor transform is actively
-      // changing, we'll use the residual translation when drawing into the
-      // ThebesLayer to ensure that snapping exactly matches the ideal transform.
-      return mInTransformedSubtree && !mInActiveTransformedSubtree;
-    }
-  };
   enum {
     CONTAINER_NOT_CLIPPED_BY_ANCESTORS = 0x01
   };
@@ -204,7 +205,7 @@ public:
                          nsIFrame* aContainerFrame,
                          nsDisplayItem* aContainerItem,
                          const nsDisplayList& aChildren,
-                         const ContainerParameters& aContainerParameters,
+                         const ContainerLayerParameters& aContainerParameters,
                          const gfx3DMatrix* aTransform,
                          uint32_t aFlags = 0);
 

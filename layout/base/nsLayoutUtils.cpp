@@ -528,22 +528,12 @@ nsLayoutUtils::FindIDFor(const nsIContent* aContent, ViewID* aOutViewId)
 }
 
 ViewID
-nsLayoutUtils::FindOrCreateIDFor(nsIContent* aContent, bool aRoot)
+nsLayoutUtils::FindOrCreateIDFor(nsIContent* aContent)
 {
   ViewID scrollId;
 
   if (!FindIDFor(aContent, &scrollId)) {
-    scrollId = aRoot ? FrameMetrics::ROOT_SCROLL_ID : sScrollIdCounter++;
-    if (aRoot) {
-      // We are possibly replacing the old ROOT_SCROLL_ID content with a new one, so
-      // we should clear the property on the old content if there is one. Otherwise when
-      // that content is destroyed it will clear its property list and clobber ROOT_SCROLL_ID.
-      nsIContent* oldRoot;
-      bool oldExists = GetContentMap().Get(scrollId, &oldRoot);
-      if (oldExists) {
-        oldRoot->DeleteProperty(nsGkAtoms::RemoteId);
-      }
-    }
+    scrollId = sScrollIdCounter++;
     aContent->SetProperty(nsGkAtoms::RemoteId, new ViewID(scrollId),
                           DestroyViewID);
     GetContentMap().Put(scrollId, aContent);
@@ -1198,9 +1188,101 @@ nsLayoutUtils::GetScrollableFrameFor(const nsIFrame *aScrolledFrame)
   return sf;
 }
 
+/* static */ void
+nsLayoutUtils::SetFixedPositionLayerData(Layer* aLayer,
+                                         const nsIFrame* aViewportFrame,
+                                         nsSize aViewportSize,
+                                         const nsIFrame* aFixedPosFrame,
+                                         const nsIFrame* aReferenceFrame,
+                                         nsPresContext* aPresContext,
+                                         const ContainerLayerParameters& aContainerParameters) {
+  // Find out the rect of the viewport frame relative to the reference frame.
+  // This, in conjunction with the container scale, will correspond to the
+  // coordinate-space of the built layer.
+  float factor = aPresContext->AppUnitsPerDevPixel();
+  nsPoint origin = aViewportFrame->GetOffsetToCrossDoc(aReferenceFrame);
+  LayerRect anchorRect(NSAppUnitsToFloatPixels(origin.x, factor) *
+                         aContainerParameters.mXScale,
+                       NSAppUnitsToFloatPixels(origin.y, factor) *
+                         aContainerParameters.mYScale,
+                       NSAppUnitsToFloatPixels(aViewportSize.width, factor) *
+                         aContainerParameters.mXScale,
+                       NSAppUnitsToFloatPixels(aViewportSize.height, factor) *
+                         aContainerParameters.mYScale);
+
+  // Work out the anchor point for this fixed position layer. We assume that
+  // any positioning set (left/top/right/bottom) indicates that the
+  // corresponding side of its container should be the anchor point,
+  // defaulting to top-left.
+  LayerPoint anchor = anchorRect.TopLeft();
+
+  const nsStylePosition* position = aFixedPosFrame->StylePosition();
+  if (position->mOffset.GetRightUnit() != eStyleUnit_Auto) {
+    if (position->mOffset.GetLeftUnit() != eStyleUnit_Auto) {
+      anchor.x = anchorRect.x + anchorRect.width / 2.f;
+    } else {
+      anchor.x = anchorRect.XMost();
+    }
+  }
+  if (position->mOffset.GetBottomUnit() != eStyleUnit_Auto) {
+    if (position->mOffset.GetTopUnit() != eStyleUnit_Auto) {
+      anchor.y = anchorRect.y + anchorRect.height / 2.f;
+    } else {
+      anchor.y = anchorRect.YMost();
+    }
+  }
+
+  aLayer->SetFixedPositionAnchor(anchor);
+
+  // Also make sure the layer is aware of any fixed position margins that have
+  // been set.
+  nsMargin fixedMargins = aPresContext->PresShell()->GetContentDocumentFixedPositionMargins();
+  LayerMargin fixedLayerMargins(NSAppUnitsToFloatPixels(fixedMargins.top, factor) *
+                                  aContainerParameters.mYScale,
+                                NSAppUnitsToFloatPixels(fixedMargins.right, factor) *
+                                  aContainerParameters.mXScale,
+                                NSAppUnitsToFloatPixels(fixedMargins.bottom, factor) *
+                                  aContainerParameters.mYScale,
+                                NSAppUnitsToFloatPixels(fixedMargins.left, factor) *
+                                  aContainerParameters.mXScale);
+
+  // If the frame is auto-positioned on either axis, set the top/left layer
+  // margins to -1, to indicate to the compositor that this layer is
+  // unaffected by fixed margins.
+  if (position->mOffset.GetLeftUnit() == eStyleUnit_Auto &&
+      position->mOffset.GetRightUnit() == eStyleUnit_Auto) {
+    fixedLayerMargins.left = -1;
+  }
+  if (position->mOffset.GetTopUnit() == eStyleUnit_Auto &&
+      position->mOffset.GetBottomUnit() == eStyleUnit_Auto) {
+    fixedLayerMargins.top = -1;
+  }
+
+  aLayer->SetFixedPositionMargins(fixedLayerMargins);
+}
+
+bool
+nsLayoutUtils::IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame, nsRect* aDisplayPort)
+{
+  // Fixed-pos frames are parented by the viewport frame or the page content frame.
+  // We'll assume that printing/print preview don't have displayports for their
+  // pages!
+  nsIFrame* parent = aFrame->GetParent();
+  if (!parent || parent->GetParent() ||
+      aFrame->StyleDisplay()->mPosition != NS_STYLE_POSITION_FIXED) {
+    return false;
+  }
+  nsIFrame* rootScrollFrame =
+    aFrame->PresContext()->PresShell()->GetRootScrollFrame();
+  // Treat a fixed-pos frame as an animated geometry root if it belongs to
+  // a viewport which has a scrollframe and a displayport.
+  return rootScrollFrame &&
+    nsLayoutUtils::GetDisplayPort(rootScrollFrame->GetContent(), aDisplayPort);
+}
+
 nsIFrame*
-nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
-                                        const nsIFrame* aStopAtAncestor)
+nsLayoutUtils::GetAnimatedGeometryRootFor(nsIFrame* aFrame,
+                                          const nsIFrame* aStopAtAncestor)
 {
   nsIFrame* f = aFrame;
   nsIFrame* stickyFrame = nullptr;
@@ -1239,24 +1321,28 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
         stickyFrame = nullptr;
       }
     }
+    // Fixed-pos frames are parented by the viewport frame, which has no parent
+    if (IsFixedPosFrameInDisplayPort(f)) {
+      return f;
+    }
     f = parent;
   }
   return f;
 }
 
 nsIFrame*
-nsLayoutUtils::GetActiveScrolledRootFor(nsDisplayItem* aItem,
-                                        nsDisplayListBuilder* aBuilder,
-                                        bool* aShouldFixToViewport)
+nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
+                                          nsDisplayListBuilder* aBuilder)
 {
   nsIFrame* f = aItem->Frame();
-  if (aShouldFixToViewport) {
-    *aShouldFixToViewport = false;
+  if (aItem->GetType() == nsDisplayItem::TYPE_SCROLL_LAYER) {
+    nsDisplayScrollLayer* scrollLayerItem =
+      static_cast<nsDisplayScrollLayer*>(aItem);
+    nsIFrame* scrolledFrame = scrollLayerItem->GetScrolledFrame();
+    return nsLayoutUtils::GetAnimatedGeometryRootFor(scrolledFrame,
+        aBuilder->FindReferenceFrameFor(scrolledFrame));
   }
   if (aItem->ShouldFixToViewport(aBuilder)) {
-    if (aShouldFixToViewport) {
-      *aShouldFixToViewport = true;
-    }
     // Make its active scrolled root be the active scrolled root of
     // the enclosing viewport, since it shouldn't be scrolled by scrolled
     // frames in its document. InvalidateFixedBackgroundFramesFromList in
@@ -1264,25 +1350,10 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsDisplayItem* aItem,
     nsIFrame* viewportFrame =
       nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame);
     NS_ASSERTION(viewportFrame, "no viewport???");
-    return nsLayoutUtils::GetActiveScrolledRootFor(viewportFrame, aBuilder->FindReferenceFrameFor(viewportFrame));
-  } else {
-    return nsLayoutUtils::GetActiveScrolledRootFor(f, aItem->ReferenceFrame());
+    return nsLayoutUtils::GetAnimatedGeometryRootFor(viewportFrame,
+        aBuilder->FindReferenceFrameFor(viewportFrame));
   }
-}
-
-bool
-nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(const nsIFrame* aActiveScrolledRoot,
-                                                                   nsDisplayListBuilder* aBuilder)
-{
-  nsPresContext* presContext = aActiveScrolledRoot->PresContext()->
-          GetToplevelContentDocumentPresContext();
-  if (!presContext)
-    return false;
-
-  nsIFrame* rootScrollFrame = presContext->GetPresShell()->GetRootScrollFrame();
-  if (!rootScrollFrame || !nsLayoutUtils::GetDisplayPort(rootScrollFrame->GetContent(), nullptr))
-    return false;
-  return nsLayoutUtils::IsAncestorFrameCrossDoc(rootScrollFrame, aActiveScrolledRoot);
+  return nsLayoutUtils::GetAnimatedGeometryRootFor(f, aItem->ReferenceFrame());
 }
 
 // static
@@ -1398,6 +1469,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const WidgetEvent* aEvent,
                   aEvent->eventStructType != NS_WHEEL_EVENT &&
                   aEvent->eventStructType != NS_DRAG_EVENT &&
                   aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT &&
+                  aEvent->eventStructType != NS_POINTER_EVENT &&
                   aEvent->eventStructType != NS_GESTURENOTIFY_EVENT &&
                   aEvent->eventStructType != NS_TOUCH_EVENT &&
                   aEvent->eventStructType != NS_QUERY_CONTENT_EVENT))
@@ -2082,9 +2154,6 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
   nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::PAINTING,
 		                       !(aFlags & PAINT_HIDE_CARET));
-  if (usingDisplayPort) {
-    builder.SetDisplayPort(displayport);
-  }
 
   nsDisplayList list;
   if (aFlags & PAINT_IN_TRANSFORM) {
@@ -3651,24 +3720,21 @@ nsLayoutUtils::GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
 }
 
 void
-nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
-                          nsRenderingContext* aContext,
-                          const PRUnichar*     aString,
-                          int32_t              aLength,
-                          nsPoint              aPoint,
-                          uint8_t              aDirection)
+nsLayoutUtils::DrawString(const nsIFrame*       aFrame,
+                          nsRenderingContext*   aContext,
+                          const PRUnichar*      aString,
+                          int32_t               aLength,
+                          nsPoint               aPoint,
+                          nsStyleContext*       aStyleContext)
 {
 #ifdef IBMBIDI
   nsresult rv = NS_ERROR_FAILURE;
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
-    if (aDirection == NS_STYLE_DIRECTION_INHERIT) {
-      aDirection = aFrame->StyleVisibility()->mDirection;
-    }
-    nsBidiDirection direction =
-      (NS_STYLE_DIRECTION_RTL == aDirection) ?
-      NSBIDI_RTL : NSBIDI_LTR;
-    rv = nsBidiPresUtils::RenderText(aString, aLength, direction,
+    nsBidiLevel level =
+      nsBidiPresUtils::BidiLevelFromStyle(aStyleContext ?
+                                          aStyleContext : aFrame->StyleContext());
+    rv = nsBidiPresUtils::RenderText(aString, aLength, level,
                                      presContext, *aContext, *aContext,
                                      aPoint.x, aPoint.y);
   }
@@ -3689,12 +3755,10 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
 #ifdef IBMBIDI
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
-    const nsStyleVisibility* vis = aFrame->StyleVisibility();
-    nsBidiDirection direction =
-      (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
-      NSBIDI_RTL : NSBIDI_LTR;
+    nsBidiLevel level =
+      nsBidiPresUtils::BidiLevelFromStyle(aFrame->StyleContext());
     return nsBidiPresUtils::MeasureTextWidth(aString, aLength,
-                                             direction, presContext, *aContext);
+                                             level, presContext, *aContext);
   }
 #endif // IBMBIDI
   aContext->SetTextRunRTL(false);

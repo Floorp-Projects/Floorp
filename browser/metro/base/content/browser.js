@@ -781,33 +781,6 @@ var Browser = {
     Bookmarks.isURIBookmarked(uri, callback);
   },
 
-  /** Rect should be in browser coordinates. */
-  _getZoomLevelForRect: function _getZoomLevelForRect(rect) {
-    const margin = 15;
-    return this.selectedTab.clampZoomLevel(ContentAreaObserver.width / (rect.width + margin * 2));
-  },
-
-  /**
-   * Find a good zoom rectangle for point that is specified in browser coordinates.
-   * @return Rect in viewport coordinates
-   */
-  _getZoomRectForPoint: function _getZoomRectForPoint(x, y, zoomLevel) {
-    let browser = getBrowser();
-    x = x * browser.scale;
-    y = y * browser.scale;
-
-    zoomLevel = Math.min(ZoomManager.MAX, zoomLevel);
-    let oldScale = browser.scale;
-    let zoomRatio = zoomLevel / oldScale;
-    let browserRect = browser.getBoundingClientRect();
-    let newVisW = browserRect.width / zoomRatio, newVisH = browserRect.height / zoomRatio;
-    let result = new Rect(x - newVisW / 2, y - newVisH / 2, newVisW, newVisH);
-
-    // Make sure rectangle doesn't poke out of viewport
-    return result.translateInside(new Rect(0, 0, browser.contentDocumentWidth * oldScale,
-                                                 browser.contentDocumentHeight * oldScale));
-  },
-
   /**
    * Convenience function for getting the scrollbox position off of a
    * scrollBoxObject interface.  Returns the actual values instead of the
@@ -1307,10 +1280,6 @@ Tab.prototype = {
   },
 
   endLoading: function endLoading() {
-    if (!this._loading) {
-      let stack = new Error().stack;
-      throw "Not Loading!\n" + stack;
-    }
     this._loading = false;
     this.updateFavicon();
   },
@@ -1494,14 +1463,6 @@ Tab.prototype = {
 
       Elements.browsers.removeChild(notification);
     }
-  },
-
-  /**
-   * Takes a scale and restricts it based on this tab's zoom limits.
-   * @param aScale The original scale.
-   */
-  clampZoomLevel: function clampZoomLevel(aScale) {
-    return Util.clamp(aScale, ZoomManager.MIN, ZoomManager.MAX);
   },
 
   updateThumbnail: function updateThumbnail() {

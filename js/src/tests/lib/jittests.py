@@ -659,7 +659,7 @@ def run_tests_remote(tests, prefix, options):
     dm.chmodDir(options.remote_test_root)
 
     Test.CacheDir = posixpath.join(options.remote_test_root, '.js-cache')
-    dm.mkDirs(Test.CacheDir)
+    dm.mkDir(Test.CacheDir)
 
     dm.pushDir(ECMA6_DIR, posixpath.join(jit_tests_dir, 'tests', 'ecma_6'), timeout=600)
     dm.pushDir(os.path.dirname(TEST_DIR), options.remote_test_root, timeout=600)

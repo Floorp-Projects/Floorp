@@ -283,6 +283,7 @@ private:
     } OneByteOpcodeID;
 
     typedef enum {
+        OP2_UD2             = 0x0B,
         OP2_MOVSD_VsdWsd    = 0x10,
         OP2_MOVSD_WsdVsd    = 0x11,
         OP2_UNPCKLPS_VsdWsd = 0x14,
@@ -3023,6 +3024,12 @@ public:
     {
         spew("int3");
         m_formatter.oneByteOp(OP_INT3);
+    }
+
+    void ud2()
+    {
+        spew("ud2");
+        m_formatter.twoByteOp(OP2_UD2);
     }
 
     void ret()

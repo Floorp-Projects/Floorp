@@ -9,7 +9,7 @@ XPIDL_SOURCES += [
     'nsILayoutRegressionTester.idl',
 ]
 
-MODULE = 'layout_debug'
+XPIDL_MODULE = 'layout_debug'
 
 EXPORTS += [
     'nsLayoutDebugCIID.h',
@@ -22,11 +22,6 @@ UNIFIED_SOURCES += [
     'nsRegressionTester.cpp',
 ]
 
-LIBRARY_NAME = 'gkdebug'
-
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

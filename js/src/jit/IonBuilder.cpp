@@ -37,9 +37,73 @@ using namespace js::jit;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 
-IonBuilder::IonBuilder(JSContext *analysisContext, JSCompartment *comp, TempAllocator *temp, MIRGraph *graph,
+class jit::BaselineFrameInspector
+{
+  public:
+    types::Type thisType;
+    JSObject *singletonScopeChain;
+
+    Vector<types::Type, 4, IonAllocPolicy> argTypes;
+    Vector<types::Type, 4, IonAllocPolicy> varTypes;
+
+    BaselineFrameInspector(TempAllocator *temp)
+      : thisType(types::Type::UndefinedType()),
+        singletonScopeChain(nullptr),
+        argTypes(*temp),
+        varTypes(*temp)
+    {}
+};
+
+BaselineFrameInspector *
+jit::NewBaselineFrameInspector(TempAllocator *temp, BaselineFrame *frame)
+{
+    JS_ASSERT(frame);
+
+    BaselineFrameInspector *inspector = temp->lifoAlloc()->new_<BaselineFrameInspector>(temp);
+    if (!inspector)
+        return nullptr;
+
+    // Note: copying the actual values into a temporary structure for use
+    // during compilation could capture nursery pointers, so the values' types
+    // are recorded instead.
+
+    inspector->thisType = types::GetValueType(frame->thisValue());
+
+    if (frame->scopeChain()->hasSingletonType())
+        inspector->singletonScopeChain = frame->scopeChain();
+
+    JSScript *script = frame->script();
+
+    if (script->function()) {
+        if (!inspector->argTypes.reserve(frame->numFormalArgs()))
+            return nullptr;
+        for (size_t i = 0; i < frame->numFormalArgs(); i++) {
+            if (script->formalIsAliased(i))
+                inspector->argTypes.infallibleAppend(types::Type::UndefinedType());
+            else if (!script->argsObjAliasesFormals())
+                inspector->argTypes.infallibleAppend(types::GetValueType(frame->unaliasedFormal(i)));
+            else if (frame->hasArgsObj())
+                inspector->argTypes.infallibleAppend(types::GetValueType(frame->argsObj().arg(i)));
+            else
+                inspector->argTypes.infallibleAppend(types::Type::UndefinedType());
+        }
+    }
+
+    if (!inspector->varTypes.reserve(frame->script()->nfixed))
+        return nullptr;
+    for (size_t i = 0; i < frame->script()->nfixed; i++) {
+        if (script->varIsAliased(i))
+            inspector->varTypes.infallibleAppend(types::Type::UndefinedType());
+        else
+            inspector->varTypes.infallibleAppend(types::GetValueType(frame->unaliasedVar(i)));
+    }
+
+    return inspector;
+}
+
+IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp, TempAllocator *temp, MIRGraph *graph,
                        types::CompilerConstraintList *constraints,
-                       BaselineInspector *inspector, CompileInfo *info, BaselineFrame *baselineFrame,
+                       BaselineInspector *inspector, CompileInfo *info, BaselineFrameInspector *baselineFrame,
                        size_t inliningDepth, uint32_t loopDepth)
   : MIRGenerator(comp, temp, graph, info),
     backgroundCodegen_(nullptr),
@@ -48,7 +112,7 @@ IonBuilder::IonBuilder(JSContext *analysisContext, JSCompartment *comp, TempAllo
     abortReason_(AbortReason_Disable),
     reprSetHash_(nullptr),
     constraints_(constraints),
-    analysis_(info->script()),
+    analysis_(*temp, info->script()),
     thisTypes(nullptr),
     argTypes(nullptr),
     typeArray(nullptr),
@@ -56,6 +120,12 @@ IonBuilder::IonBuilder(JSContext *analysisContext, JSCompartment *comp, TempAllo
     loopDepth_(loopDepth),
     callerResumePoint_(nullptr),
     callerBuilder_(nullptr),
+    cfgStack_(*temp),
+    loops_(*temp),
+    switches_(*temp),
+    labels_(*temp),
+    iterators_(*temp),
+    loopHeaders_(*temp),
     inspector(inspector),
     inliningDepth_(inliningDepth),
     numLoopRestarts_(0),
@@ -272,11 +342,6 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
 {
     if (!target->isInterpreted()) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to non-interpreted");
-        return false;
-    }
-
-    if (target->getParent() != &script()->global()) {
-        IonSpew(IonSpew_Inlining, "Cannot inline due to scope mismatch");
         return false;
     }
 
@@ -542,7 +607,7 @@ IonBuilder::init()
         return false;
     }
 
-    if (!analysis().init(gsn))
+    if (!analysis().init(alloc(), gsn))
         return false;
 
     return true;
@@ -858,7 +923,7 @@ IonBuilder::initParameters()
     // frame to determine possible initial types for 'this' and parameters.
 
     if (thisTypes->empty() && baselineFrame_) {
-        if (!thisTypes->addType(types::GetValueType(baselineFrame_->thisValue()), alloc_->lifoAlloc()))
+        if (!thisTypes->addType(baselineFrame_->thisType, alloc_->lifoAlloc()))
             return false;
     }
 
@@ -871,7 +936,7 @@ IonBuilder::initParameters()
         if (types->empty() && baselineFrame_ &&
             !script_->baselineScript()->modifiesArguments())
         {
-            if (!types->addType(types::GetValueType(baselineFrame_->argv()[i]), alloc_->lifoAlloc()))
+            if (!types->addType(baselineFrame_->argTypes[i], alloc_->lifoAlloc()))
                 return false;
         }
 
@@ -1179,8 +1244,8 @@ IonBuilder::traverseBytecode()
         //
         // This is used to catch problems where IonBuilder pops a value without
         // adding any SSA uses and doesn't call setFoldedUnchecked on it.
-        Vector<MDefinition *, 4, IonAllocPolicy> popped;
-        Vector<size_t, 4, IonAllocPolicy> poppedUses;
+        Vector<MDefinition *, 4, IonAllocPolicy> popped(alloc());
+        Vector<size_t, 4, IonAllocPolicy> poppedUses(alloc());
         unsigned nuses = GetUseCount(script_, pc - script_->code);
 
         for (unsigned i = 0; i < nuses; i++) {
@@ -3802,7 +3867,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     if (!info)
         return false;
 
-    MIRGraphExits saveExits;
+    MIRGraphExits saveExits(alloc());
     AutoAccumulateExits aae(graph(), saveExits);
 
     // Build the graph.
@@ -4156,7 +4221,7 @@ IonBuilder::inlineCallsite(ObjectVector &targets, ObjectVector &originals,
     }
 
     // Choose a subset of the targets for polymorphic inlining.
-    BoolVector choiceSet;
+    BoolVector choiceSet(alloc());
     uint32_t numInlined = selectInliningTargets(targets, callInfo, choiceSet);
     if (numInlined == 0)
         return InliningStatus_NotInlined;
@@ -4178,7 +4243,7 @@ IonBuilder::inlineGenericFallback(JSFunction *target, CallInfo &callInfo, MBasic
         return false;
 
     // Create a new CallInfo to track modified state within this block.
-    CallInfo fallbackInfo(callInfo.constructing());
+    CallInfo fallbackInfo(alloc(), callInfo.constructing());
     if (!fallbackInfo.init(callInfo))
         return false;
     fallbackInfo.popFormals(fallbackBlock);
@@ -4216,7 +4281,7 @@ IonBuilder::inlineTypeObjectFallback(CallInfo &callInfo, MBasicBlock *dispatchBl
     // We now move the MGetPropertyCache and friends into a fallback path.
 
     // Create a new CallInfo to track modified state within the fallback path.
-    CallInfo fallbackInfo(callInfo.constructing());
+    CallInfo fallbackInfo(alloc(), callInfo.constructing());
     if (!fallbackInfo.init(callInfo))
         return false;
 
@@ -4398,7 +4463,7 @@ IonBuilder::inlineCalls(CallInfo &callInfo, ObjectVector &targets,
         inlineBlock->rewriteSlot(funIndex, funcDef);
 
         // Create a new CallInfo to track modified state within the inline block.
-        CallInfo inlineInfo(callInfo.constructing());
+        CallInfo inlineInfo(alloc(), callInfo.constructing());
         if (!inlineInfo.init(callInfo))
             return false;
         inlineInfo.popFormals(inlineBlock);
@@ -4556,8 +4621,8 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
     // If the CallObject needs dynamic slots, allocate those now.
     MInstruction *slots;
     if (templateObj->hasDynamicSlots()) {
-        size_t nslots = JSObject::dynamicSlotsCount(templateObj->numFixedSlots(),
-                                                    templateObj->slotSpan());
+        size_t nslots = JSObject::dynamicSlotsCount(templateObj->numFixedSlotsForCompilation(),
+                                                    templateObj->lastProperty()->slotSpan(templateObj->getClass()));
         slots = MNewSlots::New(alloc(), nslots);
     } else {
         slots = MConstant::New(alloc(), NullValue());
@@ -4586,8 +4651,8 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
         unsigned slot = i.scopeSlot();
         unsigned formal = i.frameIndex();
         MDefinition *param = current->getSlot(info().argSlotUnchecked(formal));
-        if (slot >= templateObj->numFixedSlots())
-            current->add(MStoreSlot::New(alloc(), slots, slot - templateObj->numFixedSlots(), param));
+        if (slot >= templateObj->numFixedSlotsForCompilation())
+            current->add(MStoreSlot::New(alloc(), slots, slot - templateObj->numFixedSlotsForCompilation(), param));
         else
             current->add(MStoreFixedSlot::New(alloc(), callObj, slot, param));
     }
@@ -4652,15 +4717,14 @@ IonBuilder::createThisScriptedSingleton(JSFunction *target, MDefinition *callee)
     if (!proto)
         return nullptr;
 
-    if (!target->nonLazyScript()->types)
-        return nullptr;
-
     JSObject *templateObject = inspector->getTemplateObject(pc);
     if (!templateObject || !templateObject->is<JSObject>())
         return nullptr;
     if (templateObject->getProto() != proto)
         return nullptr;
 
+    if (!target->nonLazyScript()->types)
+        return nullptr;
     if (!types::TypeScript::ThisTypes(target->nonLazyScript())->hasType(types::Type::ObjectType(templateObject)))
         return nullptr;
 
@@ -4730,7 +4794,7 @@ IonBuilder::jsop_funcall(uint32_t argc)
     types::TemporaryTypeSet *calleeTypes = current->peek(calleeDepth)->resultTypeSet();
     JSFunction *native = getSingleCallTarget(calleeTypes);
     if (!native || !native->isNative() || native->native() != &js_fun_call) {
-        CallInfo callInfo(false);
+        CallInfo callInfo(alloc(), false);
         if (!callInfo.init(current, argc))
             return false;
         return makeCall(native, callInfo, false);
@@ -4765,7 +4829,7 @@ IonBuilder::jsop_funcall(uint32_t argc)
         argc -= 1;
     }
 
-    CallInfo callInfo(false);
+    CallInfo callInfo(alloc(), false);
     if (!callInfo.init(current, argc))
         return false;
 
@@ -4785,7 +4849,7 @@ IonBuilder::jsop_funapply(uint32_t argc)
     types::TemporaryTypeSet *calleeTypes = current->peek(calleeDepth)->resultTypeSet();
     JSFunction *native = getSingleCallTarget(calleeTypes);
     if (argc != 2) {
-        CallInfo callInfo(false);
+        CallInfo callInfo(alloc(), false);
         if (!callInfo.init(current, argc))
             return false;
         return makeCall(native, callInfo, false);
@@ -4803,7 +4867,7 @@ IonBuilder::jsop_funapply(uint32_t argc)
 
     // Fallback to regular call if arg 2 is not definitely |arguments|.
     if (argument->type() != MIRType_Magic) {
-        CallInfo callInfo(false);
+        CallInfo callInfo(alloc(), false);
         if (!callInfo.init(current, argc))
             return false;
         return makeCall(native, callInfo, false);
@@ -4881,7 +4945,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
     // can inline the apply() target and don't care about the actual arguments
     // that were passed in.
 
-    CallInfo callInfo(false);
+    CallInfo callInfo(alloc(), false);
 
     // Vp
     MPassArg *passVp = current->pop()->toPassArg();
@@ -4890,7 +4954,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
     passVp->block()->discard(passVp);
 
     // Arguments
-    MDefinitionVector args;
+    MDefinitionVector args(alloc());
     if (inliningDepth_) {
         if (!args.append(inlineCallInfo_->argv().begin(), inlineCallInfo_->argv().end()))
             return false;
@@ -4945,7 +5009,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     int calleeDepth = -((int)argc + 2);
 
     // Acquire known call target if existent.
-    ObjectVector originals;
+    ObjectVector originals(alloc());
     bool gotLambda = false;
     types::TemporaryTypeSet *calleeTypes = current->peek(calleeDepth)->resultTypeSet();
     if (calleeTypes) {
@@ -4957,11 +5021,11 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     // If any call targets need to be cloned, look for existing clones to use.
     // Keep track of the originals as we need to case on them for poly inline.
     bool hasClones = false;
-    ObjectVector targets;
+    ObjectVector targets(alloc());
     for (uint32_t i = 0; i < originals.length(); i++) {
         JSFunction *fun = &originals[i]->as<JSFunction>();
         if (fun->hasScript() && fun->nonLazyScript()->shouldCloneAtCallsite) {
-            if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment, fun, script(), pc)) {
+            if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment->callsiteClones(), fun, script(), pc)) {
                 fun = clone;
                 hasClones = true;
             }
@@ -4970,7 +5034,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
             return false;
     }
 
-    CallInfo callInfo(constructing);
+    CallInfo callInfo(alloc(), constructing);
     if (!callInfo.init(current, argc))
         return false;
 
@@ -5022,7 +5086,7 @@ IonBuilder::testShouldDOMCall(types::TypeSet *inTypes,
     // property, we can bake in a call to the bottom half of the DOM
     // accessor
     DOMInstanceClassMatchesProto instanceChecker =
-        GetDOMCallbacks(compartment->runtimeFromAnyThread())->instanceClassMatchesProto;
+        compartment->runtime()->DOMcallbacks()->instanceClassMatchesProto;
 
     const JSJitInfo *jinfo = func->jitInfo();
     if (jinfo->type != opType)
@@ -5245,21 +5309,10 @@ IonBuilder::makeCall(JSFunction *target, CallInfo &callInfo, bool cloneAtCallsit
 
     types::TemporaryTypeSet *types = bytecodeTypes(pc);
 
-    bool barrier = true;
-    MDefinition *replace = call;
-    if (call->isDOMFunction()) {
-        JSFunction* target = call->getSingleTarget();
-        JS_ASSERT(target && target->isNative() && target->jitInfo());
-        const JSJitInfo *jitinfo = target->jitInfo();
-        barrier = DOMCallNeedsBarrier(jitinfo, types);
-        replace = ensureDefiniteType(call, jitinfo->returnType);
-        if (replace != call) {
-            current->pop();
-            current->push(replace);
-        }
-    }
+    if (call->isDOMFunction())
+        return pushDOMTypeBarrier(call, types, call->getSingleTarget());
 
-    return pushTypeBarrier(replace, types, barrier);
+    return pushTypeBarrier(call, types, true);
 }
 
 bool
@@ -5292,7 +5345,7 @@ IonBuilder::jsop_eval(uint32_t argc)
         if (type != JSVAL_TYPE_OBJECT && type != JSVAL_TYPE_NULL && type != JSVAL_TYPE_UNDEFINED)
             return abort("Direct eval from script with maybe-primitive 'this'");
 
-        CallInfo callInfo(/* constructing = */ false);
+        CallInfo callInfo(alloc(), /* constructing = */ false);
         if (!callInfo.init(current, argc))
             return false;
         callInfo.unwrapArgs();
@@ -5312,9 +5365,9 @@ IonBuilder::jsop_eval(uint32_t argc)
             string->getOperand(1)->isConstant() &&
             string->getOperand(1)->toConstant()->value().isString())
         {
-            JSString *str = string->getOperand(1)->toConstant()->value().toString();
+            JSAtom *atom = &string->getOperand(1)->toConstant()->value().toString()->asAtom();
 
-            if (str->isLinear() && StringEqualsAscii(&str->asLinear(), "()")) {
+            if (StringEqualsAscii(atom, "()")) {
                 MDefinition *name = string->getOperand(0);
                 MInstruction *dynamicName = MGetDynamicName::New(alloc(), scopeChain, name);
                 current->add(dynamicName);
@@ -5325,7 +5378,7 @@ IonBuilder::jsop_eval(uint32_t argc)
                 current->push(dynamicName);
                 current->push(thisv);
 
-                CallInfo evalCallInfo(/* constructing = */ false);
+                CallInfo evalCallInfo(alloc(), /* constructing = */ false);
                 if (!evalCallInfo.init(current, /* argc = */ 0))
                     return false;
 
@@ -5492,7 +5545,7 @@ IonBuilder::jsop_initprop(PropertyName *name)
 
     JSObject *templateObject = obj->toNewObject()->templateObject();
 
-    Shape *shape = templateObject->nativeLookupPure(name);
+    Shape *shape = templateObject->lastProperty()->searchLinear(NameToId(name));
 
     if (!shape) {
         // JSOP_NEWINIT becomes an MNewObject without preconfigured properties.
@@ -5825,30 +5878,23 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool 
 
             MPhi *phi = block->getSlot(i)->toPhi();
 
-            // Get the value from the baseline frame.
-            Value existingValue;
+            // Get the type from the baseline frame.
+            types::Type existingType = types::Type::UndefinedType();
             uint32_t arg = i - info().firstArgSlot();
             uint32_t var = i - info().firstLocalSlot();
-            if (info().fun() && i == info().thisSlot()) {
-                existingValue = baselineFrame_->thisValue();
-            } else if (arg < info().nargs()) {
-                if (info().needsArgsObj())
-                    existingValue = baselineFrame_->argsObj().arg(arg);
-                else
-                    existingValue = baselineFrame_->unaliasedFormal(arg);
-            } else {
-                existingValue = baselineFrame_->unaliasedVar(var);
-            }
+            if (info().fun() && i == info().thisSlot())
+                existingType = baselineFrame_->thisType;
+            else if (arg < info().nargs())
+                existingType = baselineFrame_->argTypes[arg];
+            else
+                existingType = baselineFrame_->varTypes[var];
 
             // Extract typeset from value.
-            MIRType type = existingValue.isDouble()
-                         ? MIRType_Double
-                         : MIRTypeFromValueType(existingValue.extractNonDoubleType());
-            types::Type ntype = types::GetValueType(existingValue);
             types::TemporaryTypeSet *typeSet =
-                alloc_->lifoAlloc()->new_<types::TemporaryTypeSet>(ntype);
+                alloc_->lifoAlloc()->new_<types::TemporaryTypeSet>(existingType);
             if (!typeSet)
                 return nullptr;
+            MIRType type = MIRTypeFromValueType(typeSet->getKnownTypeTag());
             phi->addBackedgeType(type, typeSet);
         }
     }
@@ -5928,13 +5974,19 @@ IonBuilder::maybeInsertResume()
 }
 
 static bool
-ClassHasEffectlessLookup(const Class *clasp)
+ClassHasEffectlessLookup(const Class *clasp, PropertyName *name)
 {
+    if (IsTypedArrayClass(clasp)) {
+        // Typed arrays have a lookupGeneric hook, but it only handles
+        // integers, not names.
+        JS_ASSERT(name);
+        return true;
+    }
     return clasp->isNative() && !clasp->ops.lookupGeneric;
 }
 
 static bool
-ClassHasResolveHook(JSCompartment *comp, const Class *clasp, PropertyName *name)
+ClassHasResolveHook(CompileCompartment *comp, const Class *clasp, PropertyName *name)
 {
     if (clasp->resolve == JS_ResolveStub)
         return false;
@@ -5945,7 +5997,7 @@ ClassHasResolveHook(JSCompartment *comp, const Class *clasp, PropertyName *name)
     }
 
     if (clasp->resolve == (JSResolveOp)fun_resolve)
-        return FunctionHasResolveHook(comp->runtimeFromAnyThread(), name);
+        return FunctionHasResolveHook(comp->runtime()->names(), name);
 
     return true;
 }
@@ -5968,7 +6020,7 @@ IonBuilder::testSingletonProperty(JSObject *obj, PropertyName *name)
     // property will change and trigger invalidation.
 
     while (obj) {
-        if (!ClassHasEffectlessLookup(obj->getClass()))
+        if (!ClassHasEffectlessLookup(obj->getClass(), name))
             return nullptr;
 
         types::TypeObjectKey *objType = types::TypeObjectKey::get(obj);
@@ -6135,6 +6187,38 @@ IonBuilder::pushTypeBarrier(MDefinition *def, types::TemporaryTypeSet *observed,
     return true;
 }
 
+bool
+IonBuilder::pushDOMTypeBarrier(MInstruction *ins, types::TemporaryTypeSet *observed, JSFunction* func)
+{
+    JS_ASSERT(func && func->isNative() && func->jitInfo());
+
+    const JSJitInfo *jitinfo = func->jitInfo();
+    bool barrier = DOMCallNeedsBarrier(jitinfo, observed);
+    // Need to be a bit careful: if jitinfo->returnType is JSVAL_TYPE_DOUBLE but
+    // types->getKnownTypeTag() is JSVAL_TYPE_INT32, then don't unconditionally
+    // unbox as a double.  Instead, go ahead and barrier on having an int type,
+    // since we know we need a barrier anyway due to the type mismatch.  This is
+    // the only situation in which TI actually has more information about the
+    // JSValueType than codegen can, short of jitinfo->returnType just being
+    // JSVAL_TYPE_UNKNOWN.
+    MDefinition* replace = ins;
+    if (jitinfo->returnType != JSVAL_TYPE_DOUBLE ||
+        observed->getKnownTypeTag() != JSVAL_TYPE_INT32) {
+        JS_ASSERT(jitinfo->returnType == JSVAL_TYPE_UNKNOWN ||
+                  observed->getKnownTypeTag() == JSVAL_TYPE_UNKNOWN ||
+                  jitinfo->returnType == observed->getKnownTypeTag());
+        replace = ensureDefiniteType(ins, jitinfo->returnType);
+        if (replace != ins) {
+            current->pop();
+            current->push(replace);
+        }
+    } else {
+        JS_ASSERT(barrier);
+    }
+
+    return pushTypeBarrier(replace, observed, barrier);
+}
+
 MDefinition *
 IonBuilder::ensureDefiniteType(MDefinition *def, JSValueType definiteType)
 {
@@ -6194,9 +6278,9 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
         if (name == names().undefined)
             return pushConstant(UndefinedValue());
         if (name == names().NaN)
-            return pushConstant(compartment->runtimeFromAnyThread()->NaNValue);
+            return pushConstant(compartment->runtime()->NaNValue());
         if (name == names().Infinity)
-            return pushConstant(compartment->runtimeFromAnyThread()->positiveInfinityValue);
+            return pushConstant(compartment->runtime()->positiveInfinityValue());
     }
 
     types::TypeObjectKey *staticType = types::TypeObjectKey::get(staticObject);
@@ -6293,9 +6377,6 @@ IonBuilder::setStaticName(JSObject *staticObject, PropertyName *name)
     JS_ASSERT(staticObject->is<GlobalObject>() || staticObject->is<CallObject>());
 
     MDefinition *value = current->peek(-1);
-
-    if (staticObject->watched())
-        return jsop_setprop(name);
 
     types::TypeObjectKey *staticType = types::TypeObjectKey::get(staticObject);
     if (staticType->unknownProperties())
@@ -6500,21 +6581,28 @@ IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *
         return true;
 
     switch (elemTypeReprs.kind()) {
-    case TypeRepresentation::Struct:
-    case TypeRepresentation::Array:
+      case TypeRepresentation::X4:
+        // FIXME (bug 894104): load into a MIRType_float32x4 etc
+        return true;
+
+      case TypeRepresentation::Struct:
+      case TypeRepresentation::Array:
         return getElemTryComplexElemOfTypedObject(emitted,
                                                   obj,
                                                   index,
                                                   objTypeReprs,
                                                   elemTypeReprs,
                                                   elemSize);
-    case TypeRepresentation::Scalar:
+      case TypeRepresentation::Scalar:
         return getElemTryScalarElemOfTypedObject(emitted,
                                                  obj,
                                                  index,
                                                  objTypeReprs,
                                                  elemTypeReprs,
                                                  elemSize);
+
+      case TypeRepresentation::Reference:
+        return true;
     }
 
     MOZ_ASSUME_UNREACHABLE("Bad kind");
@@ -6694,7 +6782,7 @@ IonBuilder::getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *
         return true;
 
     TypedArrayObject *tarr = &tarrObj->as<TypedArrayObject>();
-    ArrayBufferView::ViewType viewType = JS_GetArrayBufferViewType(tarr);
+    ArrayBufferView::ViewType viewType = (ArrayBufferView::ViewType) tarr->type();
 
     // LoadTypedArrayElementStatic currently treats uint32 arrays as int32.
     if (viewType == ArrayBufferView::TYPE_UINT32)
@@ -7251,7 +7339,7 @@ IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
         return true;
 
     TypedArrayObject *tarr = &tarrObj->as<TypedArrayObject>();
-    ArrayBufferView::ViewType viewType = JS_GetArrayBufferViewType(tarr);
+    ArrayBufferView::ViewType viewType = (ArrayBufferView::ViewType) tarr->type();
 
     MDefinition *ptr = convertShiftToMaskForStaticTypedArray(index, viewType);
     if (!ptr)
@@ -7776,12 +7864,13 @@ IonBuilder::objectsHaveCommonPrototype(types::TemporaryTypeSet *types, PropertyN
                 return false;
 
             const Class *clasp = type->clasp();
-            if (!ClassHasEffectlessLookup(clasp) || ClassHasResolveHook(compartment, clasp, name))
+            if (!ClassHasEffectlessLookup(clasp, name) || ClassHasResolveHook(compartment, clasp, name))
                 return false;
 
             // Look for a getter/setter on the class itself which may need
-            // to be called.
-            if (isGetter && clasp->ops.getGeneric)
+            // to be called. Ignore the getGeneric hook for typed arrays, it
+            // only handles integers and forwards names to the prototype.
+            if (isGetter && clasp->ops.getGeneric && !IsTypedArrayClass(clasp))
                 return false;
             if (!isGetter && clasp->ops.setGeneric)
                 return false;
@@ -7990,9 +8079,6 @@ bool
 IonBuilder::loadSlot(MDefinition *obj, Shape *shape, MIRType rvalType,
                      bool barrier, types::TemporaryTypeSet *types)
 {
-    JS_ASSERT(shape->hasDefaultGetter());
-    JS_ASSERT(shape->hasSlot());
-
     return loadSlot(obj, shape->slot(), shape->numFixedSlots(), rvalType, barrier, types);
 }
 
@@ -8027,10 +8113,7 @@ bool
 IonBuilder::storeSlot(MDefinition *obj, Shape *shape, MDefinition *value, bool needsBarrier,
                       MIRType slotType /* = MIRType_None */)
 {
-    JS_ASSERT(shape->hasDefaultSetter());
     JS_ASSERT(shape->writable());
-    JS_ASSERT(shape->hasSlot());
-
     return storeSlot(obj, shape->slot(), shape->numFixedSlots(), value, needsBarrier, slotType);
 }
 
@@ -8168,6 +8251,13 @@ IonBuilder::getPropTryTypedObject(bool *emitted, PropertyName *name,
         return true;
 
     switch (fieldTypeReprs.kind()) {
+      case TypeRepresentation::Reference:
+        return true;
+
+      case TypeRepresentation::X4:
+        // FIXME (bug 894104): load into a MIRType_float32x4 etc
+        return true;
+
       case TypeRepresentation::Struct:
       case TypeRepresentation::Array:
         return getPropTryComplexPropOfTypedObject(emitted,
@@ -8322,13 +8412,8 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, PropertyName *name,
 
         if (get->isEffectful() && !resumeAfter(get))
             return false;
-        bool barrier = DOMCallNeedsBarrier(jitinfo, types);
-        MDefinition *replace = ensureDefiniteType(get, jitinfo->returnType);
-        if (replace != get) {
-            current->pop();
-            current->push(replace);
-        }
-        if (!pushTypeBarrier(replace, types, barrier))
+
+        if (!pushDOMTypeBarrier(get, types, commonGetter))
             return false;
 
         *emitted = true;
@@ -8349,7 +8434,7 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, PropertyName *name,
     current->add(wrapper);
     current->push(wrapper);
 
-    CallInfo callInfo(false);
+    CallInfo callInfo(alloc(), false);
     if (!callInfo.init(current, 0))
         return false;
 
@@ -8389,7 +8474,7 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, PropertyName *name,
     if (current->peek(-1)->type() != MIRType_Object)
         return true;
 
-    BaselineInspector::ShapeVector shapes;
+    BaselineInspector::ShapeVector shapes(alloc());
     if (!inspector->maybeShapesForPropertyOp(pc, shapes))
         return false;
 
@@ -8636,7 +8721,7 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
 
     // Call the setter. Note that we have to push the original value, not
     // the setter's return value.
-    CallInfo callInfo(false);
+    CallInfo callInfo(alloc(), false);
     if (!callInfo.init(current, 1))
         return false;
 
@@ -8706,6 +8791,11 @@ IonBuilder::setPropTryTypedObject(bool *emitted, MDefinition *obj,
         return true;
 
     switch (fieldTypeReprs.kind()) {
+      case TypeRepresentation::X4:
+        // FIXME (bug 894104): store into a MIRType_float32x4 etc
+        return true;
+
+      case TypeRepresentation::Reference:
       case TypeRepresentation::Struct:
       case TypeRepresentation::Array:
         // For now, only optimize storing scalars.
@@ -8782,7 +8872,7 @@ IonBuilder::setPropTryInlineAccess(bool *emitted, MDefinition *obj,
     if (barrier)
         return true;
 
-    BaselineInspector::ShapeVector shapes;
+    BaselineInspector::ShapeVector shapes(alloc());
     if (!inspector->maybeShapesForPropertyOp(pc, shapes))
         return false;
 
@@ -8887,11 +8977,6 @@ IonBuilder::jsop_delelem()
 bool
 IonBuilder::jsop_regexp(RegExpObject *reobj)
 {
-    JSObject *prototype = reobj->getProto();
-    JS_ASSERT(prototype == script()->global().maybeGetRegExpPrototype());
-
-    JS_ASSERT(&reobj->JSObject::global() == &script()->global());
-
     // JS semantics require regular expression literals to create different
     // objects every time they execute. We only need to do this cloning if the
     // script could actually observe the effect of such cloning, for instance
@@ -8913,6 +8998,8 @@ IonBuilder::jsop_regexp(RegExpObject *reobj)
         if (!reobj->global() && !reobj->sticky())
             mustClone = false;
     }
+
+    JSObject *prototype = reobj->getProto();
 
     MRegExp *regexp = MRegExp::New(alloc(), reobj, prototype, mustClone);
     current->add(regexp);
@@ -9080,7 +9167,7 @@ IonBuilder::jsop_this()
     }
 
     if (thisTypes->getKnownTypeTag() == JSVAL_TYPE_OBJECT ||
-        (thisTypes->empty() && baselineFrame_ && baselineFrame_->thisValue().isObject()))
+        (thisTypes->empty() && baselineFrame_ && baselineFrame_->thisType.isSomeObject()))
     {
         // This is safe, because if the entry type of |this| is an object, it
         // will necessarily be an object throughout the entire function. OSR
@@ -9264,12 +9351,13 @@ IonBuilder::hasStaticScopeObject(ScopeCoordinate sc, JSObject **pcall)
     // entering the Ion code a different call object will be created.
 
     if (script() == outerScript && baselineFrame_ && info().osrPc()) {
-        JSObject *scope = baselineFrame_->scopeChain();
-        if (scope->is<CallObject>() &&
-            scope->as<CallObject>().callee().nonLazyScript() == outerScript)
+        JSObject *singletonScope = baselineFrame_->singletonScopeChain;
+        if (singletonScope &&
+            singletonScope->is<CallObject>() &&
+            singletonScope->as<CallObject>().callee().nonLazyScript() == outerScript)
         {
-            JS_ASSERT(scope->hasSingletonType());
-            *pcall = scope;
+            JS_ASSERT(singletonScope->hasSingletonType());
+            *pcall = singletonScope;
             return true;
         }
     }
@@ -9501,7 +9589,8 @@ TypeRepresentationSetHash *
 IonBuilder::getOrCreateReprSetHash()
 {
     if (!reprSetHash_) {
-        TypeRepresentationSetHash *hash = alloc_->lifoAlloc()->new_<TypeRepresentationSetHash>();
+        TypeRepresentationSetHash *hash =
+            alloc_->lifoAlloc()->new_<TypeRepresentationSetHash>(alloc());
         if (!hash || !hash->init())
             return nullptr;
 

@@ -61,6 +61,10 @@
 #include "AppleDecoder.h"
 #include "AppleMP3Reader.h"
 #endif
+#ifdef MOZ_FMP4
+#include "MP4Reader.h"
+#include "MP4Decoder.h"
+#endif
 
 namespace mozilla
 {
@@ -298,6 +302,15 @@ IsDirectShowSupportedType(const nsACString& aType)
 }
 #endif
 
+#ifdef MOZ_FMP4
+static bool
+IsMP4SupportedType(const nsACString& aType)
+{
+  return Preferences::GetBool("media.fragmented-mp4.exposed", false) &&
+         MP4Decoder::GetSupportedCodecs(aType, nullptr);
+}
+#endif
+
 #ifdef MOZ_APPLEMEDIA
 static const char * const gAppleMP3Types[] = {
   "audio/mp3",
@@ -445,30 +458,35 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
   return CANPLAY_YES;
 }
 
-/* static */
+// Instantiates but does not initialize decoder.
+static
 already_AddRefed<MediaDecoder>
-DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
+InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
 {
   nsRefPtr<MediaDecoder> decoder;
 
 #ifdef MOZ_GSTREAMER
   if (IsGStreamerSupportedType(aType)) {
     decoder = new GStreamerDecoder();
+    return decoder.forget();
   }
 #endif
 #ifdef MOZ_RAW
   if (IsRawType(aType)) {
     decoder = new RawDecoder();
+    return decoder.forget();
   }
 #endif
 #ifdef MOZ_OGG
   if (IsOggType(aType)) {
     decoder = new OggDecoder();
+    return decoder.forget();
   }
 #endif
 #ifdef MOZ_WAVE
   if (IsWaveType(aType)) {
     decoder = new WaveDecoder();
+    return decoder.forget();
   }
 #endif
 #ifdef MOZ_OMX_DECODER
@@ -476,7 +494,7 @@ DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
     // AMR audio is enabled for MMS, but we are discouraging Web and App
     // developers from using AMR, thus we only allow AMR to be played on WebApps.
     if (aType.EqualsASCII("audio/amr")) {
-      HTMLMediaElement* element = aOwner->GetMediaElement();
+      dom::HTMLMediaElement* element = aOwner->GetMediaElement();
       if (!element) {
         return nullptr;
       }
@@ -489,22 +507,26 @@ DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
       }
     }
     decoder = new MediaOmxDecoder();
+    return decoder.forget();
   }
 #endif
 #ifdef NECKO_PROTOCOL_rtsp
   if (IsRtspSupportedType(aType)) {
     decoder = new RtspOmxDecoder();
+    return decoder.forget();
   }
 #endif
 #ifdef MOZ_MEDIA_PLUGINS
   if (MediaDecoder::IsMediaPluginsEnabled() &&
       GetMediaPluginHost()->FindDecoder(aType, nullptr)) {
     decoder = new MediaPluginDecoder(aType);
+    return decoder.forget();
   }
 #endif
 #ifdef MOZ_WEBM
   if (IsWebMType(aType)) {
     decoder = new WebMDecoder();
+    return decoder.forget();
   }
 #endif
 #ifdef MOZ_DIRECTSHOW
@@ -512,19 +534,38 @@ DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
   // "media.directshow.preferred" won't be honored.
   if (IsDirectShowSupportedType(aType)) {
     decoder = new DirectShowDecoder();
+    return decoder.forget();
+  }
+#endif
+#ifdef MOZ_FMP4
+  if (IsMP4SupportedType(aType)) {
+    decoder = new MP4Decoder();
+    return decoder.forget();
   }
 #endif
 #ifdef MOZ_WMF
   if (IsWMFSupportedType(aType)) {
     decoder = new WMFDecoder();
+    return decoder.forget();
   }
 #endif
 #ifdef MOZ_APPLEMEDIA
   if (IsAppleMediaSupportedType(aType)) {
     decoder = new AppleDecoder();
+    return decoder.forget();
   }
 #endif
 
+  NS_ENSURE_TRUE(decoder != nullptr, nullptr);
+  NS_ENSURE_TRUE(decoder->Init(aOwner), nullptr);
+  return nullptr;
+}
+
+/* static */
+already_AddRefed<MediaDecoder>
+DecoderTraits::CreateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
+{
+  nsRefPtr<MediaDecoder> decoder(InstantiateDecoder(aType, aOwner));
   NS_ENSURE_TRUE(decoder != nullptr, nullptr);
   NS_ENSURE_TRUE(decoder->Init(aOwner), nullptr);
 
@@ -579,6 +620,11 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
     decoderReader = new DirectShowReader(aDecoder);
   } else
 #endif
+#ifdef MOZ_FMP4
+  if (IsMP4SupportedType(aType)) {
+    decoderReader = new MP4Reader(aDecoder);
+  } else
+#endif
 #ifdef MOZ_WMF
   if (IsWMFSupportedType(aType)) {
     decoderReader = new WMFReader(aDecoder);
@@ -614,6 +660,9 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
 #endif
 #ifdef MOZ_MEDIA_PLUGINS
     (MediaDecoder::IsMediaPluginsEnabled() && IsMediaPluginsType(aType)) ||
+#endif
+#ifdef MOZ_FMP4
+    IsMP4SupportedType(aType) ||
 #endif
 #ifdef MOZ_WMF
     (IsWMFSupportedType(aType) &&

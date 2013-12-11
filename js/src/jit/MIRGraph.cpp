@@ -16,7 +16,7 @@
 using namespace js;
 using namespace js::jit;
 
-MIRGenerator::MIRGenerator(JSCompartment *compartment,
+MIRGenerator::MIRGenerator(CompileCompartment *compartment,
                            TempAllocator *alloc, MIRGraph *graph, CompileInfo *info)
   : compartment(compartment),
     info_(info),
@@ -26,6 +26,8 @@ MIRGenerator::MIRGenerator(JSCompartment *compartment,
     cancelBuild_(0),
     maxAsmJSStackArgBytes_(0),
     performsAsmJSCall_(false),
+    asmJSHeapAccesses_(*alloc),
+    asmJSGlobalAccesses_(*alloc),
     minAsmJSHeapLength_(AsmJSAllocationGranularity)
 { }
 
@@ -273,9 +275,10 @@ MBasicBlock::NewAsmJS(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred, Kin
 }
 
 MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kind kind)
-    : earlyAbort_(false),
+  : earlyAbort_(false),
     graph_(graph),
     info_(info),
+    predecessors_(graph.alloc()),
     stackPosition_(info_.firstStackSlot()),
     lastIns_(nullptr),
     pc_(pc),
@@ -287,6 +290,7 @@ MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kin
     kind_(kind),
     loopDepth_(0),
     mark_(false),
+    immediatelyDominated_(graph.alloc()),
     immediateDominator_(nullptr),
     numDominated_(0),
     loopHeader_(nullptr),

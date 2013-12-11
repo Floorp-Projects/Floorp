@@ -57,7 +57,7 @@ const CM_IFRAME   =
   "    <style>" +
   "      html, body { height: 100%; }" +
   "      body { margin: 0; overflow: hidden; }" +
-  "      .CodeMirror { width: 100%; height: 100% !important; }" +
+  "      .CodeMirror { width: 100%; height: 100% !important; line-height: normal!important}" +
   "    </style>" +
 [ "    <link rel='stylesheet' href='" + style + "'>" for (style of CM_STYLES) ].join("\n") +
   "  </head>" +
@@ -78,12 +78,8 @@ const CM_MAPPING = [
   "clearHistory",
   "openDialog",
   "cursorCoords",
+  "markText",
   "refresh"
-];
-
-const CM_JUMP_DIALOG = [
-  L10N.GetStringFromName("gotoLineCmd.promptTitle")
-    + " <input type=text style='width: 10em'/>"
 ];
 
 const { cssProperties, cssValues, cssColors } = getCSSKeywords();
@@ -139,7 +135,7 @@ function Editor(config) {
   };
 
   // Additional shortcuts.
-  this.config.extraKeys[Editor.keyFor("jumpToLine")] = (cm) => this.jumpToLine();
+  this.config.extraKeys[Editor.keyFor("jumpToLine")] = (cm) => this.jumpToLine(cm);
   this.config.extraKeys[Editor.keyFor("toggleComment")] = "toggleComment";
 
   // Disable ctrl-[ and ctrl-] because toolbox uses those shortcuts.
@@ -185,15 +181,19 @@ Editor.prototype = {
 
   /**
    * Appends the current Editor instance to the element specified by
-   * the only argument 'el'. This method actually creates and loads
-   * CodeMirror and all its dependencies.
+   * 'el'. You can also provide your won iframe to host the editor as
+   * an optional second parameter. This method actually creates and
+   * loads CodeMirror and all its dependencies.
    *
    * This method is asynchronous and returns a promise.
    */
-  appendTo: function (el) {
+  appendTo: function (el, env) {
     let def = promise.defer();
     let cm  = editors.get(this);
-    let env = el.ownerDocument.createElement("iframe");
+
+    if (!env)
+      env = el.ownerDocument.createElementNS(XUL_NS, "iframe");
+
     env.flex = 1;
 
     if (cm)
@@ -502,10 +502,11 @@ Editor.prototype = {
   hasLineClass: function (line, className) {
     let cm = editors.get(this);
     let info = cm.lineInfo(line);
-    if (!info)
+
+    if (!info || !info.wrapClass)
       return false;
 
-    return info.wrapClass == className;
+    return info.wrapClass.split(" ").indexOf(className) != -1;
   },
 
   /**
@@ -619,9 +620,20 @@ Editor.prototype = {
    * This method opens an in-editor dialog asking for a line to
    * jump to. Once given, it changes cursor to that line.
    */
-  jumpToLine: function () {
-    this.openDialog(CM_JUMP_DIALOG, (line) =>
-      this.setCursor({ line: line - 1, ch: 0 }));
+  jumpToLine: function (cm) {
+    let doc = cm.getWrapperElement().ownerDocument;
+    let div = doc.createElement("div");
+    let inp = doc.createElement("input");
+    let txt = doc.createTextNode(L10N.GetStringFromName("gotoLineCmd.promptTitle"));
+
+    inp.type = "text";
+    inp.style.width = "10em";
+    inp.style.MozMarginStart = "1em";
+
+    div.appendChild(txt);
+    div.appendChild(inp);
+
+    this.openDialog(div, (line) => this.setCursor({ line: line - 1, ch: 0 }));
   },
 
   /**
@@ -677,9 +689,14 @@ CM_MAPPING.forEach(function (name) {
  * Returns a string representation of a shortcut 'key' with
  * a OS specific modifier. Cmd- for Macs, Ctrl- for other
  * platforms. Useful with extraKeys configuration option.
+ *
+ * CodeMirror defines all keys with modifiers in the following
+ * order: Shift - Ctrl/Cmd - Alt - Key
  */
-Editor.accel = function (key) {
-  return (Services.appinfo.OS == "Darwin" ? "Cmd-" : "Ctrl-") + key;
+Editor.accel = function (key, modifiers={}) {
+  return (modifiers.shift ? "Shift-" : "") +
+         (Services.appinfo.OS == "Darwin" ? "Cmd-" : "Ctrl-") +
+         (modifiers.alt ? "Alt-" : "") + key;
 };
 
 /**

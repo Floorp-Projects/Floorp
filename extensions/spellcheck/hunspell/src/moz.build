@@ -4,9 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'hunspell'
-
-SOURCES += [
+UNIFIED_SOURCES += [
     'mozHunspell.cpp',
     'mozHunspellDirProvider.cpp',
 ]
@@ -26,7 +24,4 @@ if not CONFIG['MOZ_NATIVE_HUNSPELL']:
         'suggestmgr.cpp',
     ]
 
-LIBRARY_NAME = 'hunspell_s'
-
-LIBXUL_LIBRARY = True
-
+FINAL_LIBRARY = 'spellchecker'

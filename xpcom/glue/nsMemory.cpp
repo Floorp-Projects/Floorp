@@ -19,7 +19,8 @@ nsMemory::HeapMinimize(bool aImmediate)
 {
     nsCOMPtr<nsIMemory> mem;
     nsresult rv = NS_GetMemoryManager(getter_AddRefs(mem));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
 
     return mem->HeapMinimize(aImmediate);
 }

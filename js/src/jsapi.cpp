@@ -1174,7 +1174,7 @@ typedef struct JSStdName {
 static Handle<PropertyName*>
 StdNameToPropertyName(JSContext *cx, const JSStdName *stdn)
 {
-    return OFFSET_TO_NAME(cx->runtime(), stdn->atomOffset);
+    return AtomStateOffsetToName(cx->runtime()->atomState, stdn->atomOffset);
 }
 
 /*
@@ -1334,7 +1334,7 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
     stdnm = nullptr;
     for (i = 0; standard_class_atoms[i].init; i++) {
         JS_ASSERT(standard_class_atoms[i].clasp);
-        atom = OFFSET_TO_NAME(rt, standard_class_atoms[i].atomOffset);
+        atom = AtomStateOffsetToName(rt->atomState, standard_class_atoms[i].atomOffset);
         if (idstr == atom) {
             stdnm = &standard_class_atoms[i];
             break;
@@ -2067,10 +2067,10 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
         break;
       default:
         JS_ASSERT(key == JSGC_MODE);
-        rt->gcMode = JSGCMode(value);
-        JS_ASSERT(rt->gcMode == JSGC_MODE_GLOBAL ||
-                  rt->gcMode == JSGC_MODE_COMPARTMENT ||
-                  rt->gcMode == JSGC_MODE_INCREMENTAL);
+        rt->setGCMode(JSGCMode(value));
+        JS_ASSERT(rt->gcMode() == JSGC_MODE_GLOBAL ||
+                  rt->gcMode() == JSGC_MODE_COMPARTMENT ||
+                  rt->gcMode() == JSGC_MODE_INCREMENTAL);
         return;
     }
 }
@@ -2086,7 +2086,7 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
       case JSGC_BYTES:
         return uint32_t(rt->gcBytes);
       case JSGC_MODE:
-        return uint32_t(rt->gcMode);
+        return uint32_t(rt->gcMode());
       case JSGC_UNUSED_CHUNKS:
         return uint32_t(rt->gcChunkPool.getEmptyCount());
       case JSGC_TOTAL_CHUNKS:
@@ -2094,7 +2094,7 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
       case JSGC_SLICE_TIME_BUDGET:
         return uint32_t(rt->gcSliceBudget > 0 ? rt->gcSliceBudget / PRMJ_USEC_PER_MSEC : 0);
       case JSGC_MARK_STACK_LIMIT:
-        return rt->gcMarker.sizeLimit();
+        return rt->gcMarker.maxCapacity();
       case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
         return rt->gcHighFrequencyTimeThreshold;
       case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
@@ -3085,10 +3085,10 @@ DefineProperty(JSContext *cx, HandleObject obj, const char *name, const Value &v
     RootedValue value(cx, value_);
     AutoRooterGetterSetter gsRoot(cx, attrs, const_cast<JSPropertyOp *>(&getter.op),
                                   const_cast<JSStrictPropertyOp *>(&setter.op));
-    RootedId id(cx);
 
+    RootedId id(cx);
     if (attrs & JSPROP_INDEX) {
-        id = INT_TO_JSID(intptr_t(name));
+        id.set(INT_TO_JSID(intptr_t(name)));
         attrs &= ~JSPROP_INDEX;
     } else {
         JSAtom *atom = Atomize(cx, name, strlen(name));
@@ -3098,6 +3098,57 @@ DefineProperty(JSContext *cx, HandleObject obj, const char *name, const Value &v
     }
 
     return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, flags, tinyid);
+}
+
+
+static bool
+DefineSelfHostedProperty(JSContext *cx,
+                         HandleObject obj,
+                         const char *name,
+                         const char *getterName,
+                         const char *setterName,
+                         unsigned attrs,
+                         unsigned flags,
+                         int tinyid)
+{
+    RootedAtom nameAtom(cx, Atomize(cx, name, strlen(name)));
+    if (!nameAtom)
+        return false;
+
+    RootedAtom getterNameAtom(cx, Atomize(cx, getterName, strlen(getterName)));
+    if (!getterNameAtom)
+        return false;
+
+    RootedValue getterValue(cx);
+    if (!cx->global()->getSelfHostedFunction(cx, getterNameAtom, nameAtom,
+                                             0, &getterValue))
+    {
+        return false;
+    }
+    JS_ASSERT(getterValue.isObject() && getterValue.toObject().is<JSFunction>());
+    RootedFunction getterFunc(cx, &getterValue.toObject().as<JSFunction>());
+    JSPropertyOp getterOp = JS_DATA_TO_FUNC_PTR(PropertyOp, getterFunc.get());
+
+    RootedFunction setterFunc(cx);
+    if (setterName) {
+        RootedAtom setterNameAtom(cx, Atomize(cx, setterName, strlen(setterName)));
+        if (!setterNameAtom)
+            return false;
+
+        RootedValue setterValue(cx);
+        if (!cx->global()->getSelfHostedFunction(cx, setterNameAtom, nameAtom,
+                                                 0, &setterValue))
+        {
+            return false;
+        }
+        JS_ASSERT(setterValue.isObject() && setterValue.toObject().is<JSFunction>());
+        setterFunc = &getterValue.toObject().as<JSFunction>();
+    }
+    JSStrictPropertyOp setterOp = JS_DATA_TO_FUNC_PTR(StrictPropertyOp, setterFunc.get());
+
+    return DefineProperty(cx, obj, name, UndefinedValue(),
+                          GetterWrapper(getterOp), SetterWrapper(setterOp),
+                          attrs, flags, tinyid);
 }
 
 JS_PUBLIC_API(bool)
@@ -3224,8 +3275,25 @@ JS_DefineProperties(JSContext *cx, JSObject *objArg, const JSPropertySpec *ps)
     RootedObject obj(cx, objArg);
     bool ok;
     for (ok = true; ps->name; ps++) {
-        ok = DefineProperty(cx, obj, ps->name, UndefinedValue(), ps->getter, ps->setter,
-                            ps->flags, Shape::HAS_SHORTID, ps->tinyid);
+        if (ps->selfHostedGetter) {
+            // If you have self-hosted getter/setter, you can't have a
+            // native one.
+            JS_ASSERT(!ps->getter.op && !ps->setter.op);
+
+            ok = DefineSelfHostedProperty(cx, obj, ps->name,
+                                          ps->selfHostedGetter,
+                                          ps->selfHostedSetter,
+                                          ps->flags, Shape::HAS_SHORTID,
+                                          ps->tinyid);
+        } else {
+            // If you do not have a self-hosted getter, you should
+            // have a native getter; and you should not have a
+            // self-hosted setter.
+            JS_ASSERT(ps->getter.op && !ps->selfHostedSetter);
+
+            ok = DefineProperty(cx, obj, ps->name, UndefinedValue(), ps->getter, ps->setter,
+                                ps->flags, Shape::HAS_SHORTID, ps->tinyid);
+        }
         if (!ok)
             break;
     }
@@ -4399,7 +4467,7 @@ JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
 {
     this->version = (version != JSVERSION_UNKNOWN) ? version : cx->findVersion();
 
-    compileAndGo = cx->options().compileAndGo();
+    compileAndGo = false;
     noScriptRval = cx->options().noScriptRval();
     strictOption = cx->options().strictMode();
     extraWarningsOption = cx->options().extraWarnings();
@@ -4514,52 +4582,17 @@ JS::FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token)
 }
 
 JS_PUBLIC_API(JSScript *)
-JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *objArg, JSPrincipals *principals,
-                                const jschar *chars, size_t length,
-                                const char *filename, unsigned lineno)
+JS_CompileScript(JSContext *cx, JS::HandleObject obj, const char *ascii,
+                 size_t length, const JS::CompileOptions &options)
 {
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setFileAndLine(filename, lineno);
-
-    return Compile(cx, obj, options, chars, length);
-}
-
-JS_PUBLIC_API(JSScript *)
-JS_CompileUCScript(JSContext *cx, JSObject *objArg, const jschar *chars, size_t length,
-                   const char *filename, unsigned lineno)
-{
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
-
-    return Compile(cx, obj, options, chars, length);
-}
-
-JS_PUBLIC_API(JSScript *)
-JS_CompileScriptForPrincipals(JSContext *cx, JSObject *objArg,
-                              JSPrincipals *principals,
-                              const char *ascii, size_t length,
-                              const char *filename, unsigned lineno)
-{
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setFileAndLine(filename, lineno);
-
     return Compile(cx, obj, options, ascii, length);
 }
 
 JS_PUBLIC_API(JSScript *)
-JS_CompileScript(JSContext *cx, JSObject *objArg, const char *ascii, size_t length,
-                 const char *filename, unsigned lineno)
+JS_CompileUCScript(JSContext *cx, JS::HandleObject obj, const jschar *chars,
+                   size_t length, const JS::CompileOptions &options)
 {
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
-
-    return Compile(cx, obj, options, ascii, length);
+    return Compile(cx, obj, options, chars, length);
 }
 
 JS_PUBLIC_API(bool)
@@ -4675,43 +4708,20 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
 }
 
 JS_PUBLIC_API(JSFunction *)
-JS_CompileUCFunction(JSContext *cx, JSObject *objArg, const char *name,
+JS_CompileUCFunction(JSContext *cx, JS::HandleObject obj, const char *name,
                      unsigned nargs, const char *const *argnames,
                      const jschar *chars, size_t length,
-                     const char *filename, unsigned lineno)
+                     const CompileOptions &options)
 {
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
-
     return CompileFunction(cx, obj, options, name, nargs, argnames, chars, length);
 }
 
 JS_PUBLIC_API(JSFunction *)
-JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *objArg,
-                                JSPrincipals *principals, const char *name,
-                                unsigned nargs, const char *const *argnames,
-                                const char *ascii, size_t length,
-                                const char *filename, unsigned lineno)
-{
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setFileAndLine(filename, lineno);
-
-    return CompileFunction(cx, obj, options, name, nargs, argnames, ascii, length);
-}
-
-JS_PUBLIC_API(JSFunction *)
-JS_CompileFunction(JSContext *cx, JSObject *objArg, const char *name,
+JS_CompileFunction(JSContext *cx, JS::HandleObject obj, const char *name,
                    unsigned nargs, const char *const *argnames,
                    const char *ascii, size_t length,
-                   const char *filename, unsigned lineno)
+                   const JS::CompileOptions &options)
 {
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
-
     return CompileFunction(cx, obj, options, name, nargs, argnames, ascii, length);
 }
 

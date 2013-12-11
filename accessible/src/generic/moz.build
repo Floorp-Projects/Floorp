@@ -4,15 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'accessibility'
-
 EXPORTS.mozilla.a11y += [
     'Accessible.h',
     'DocAccessible.h',
     'HyperTextAccessible.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'Accessible.cpp',
     'ApplicationAccessible.cpp',
     'ARIAGridAccessible.cpp',
@@ -26,10 +24,6 @@ SOURCES += [
     'TableCellAccessible.cpp',
     'TextLeafAccessible.cpp',
 ]
-
-LIBRARY_NAME = 'accessibility_generic_s'
-
-LIBXUL_LIBRARY = True
 
 LOCAL_INCLUDES += [
     '../../../layout/generic',
@@ -56,3 +50,5 @@ else:
     LOCAL_INCLUDES += [
         '../other',
     ]
+
+FINAL_LIBRARY = 'xul'

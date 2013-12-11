@@ -13,6 +13,7 @@
 
 #define FOR_EACH_COMMON_PROPERTYNAME(macro) \
     macro(anonymous, anonymous, "anonymous") \
+    macro(Any, Any, "Any") \
     macro(apply, apply, "apply") \
     macro(arguments, arguments, "arguments") \
     macro(as, as, "as") \
@@ -68,6 +69,7 @@
     macro(FillTypedArrayWithValue, FillTypedArrayWithValue, "FillTypedArrayWithValue") \
     macro(fix, fix, "fix") \
     macro(float32, float32, "float32") \
+    macro(float32x4, float32x4, "float32x4") \
     macro(float64, float64, "float64") \
     macro(format, format, "format") \
     macro(from, from, "from") \
@@ -89,6 +91,7 @@
     macro(InitializeNumberFormat, InitializeNumberFormat, "InitializeNumberFormat") \
     macro(innermost, innermost, "innermost") \
     macro(input, input, "input") \
+    macro(int32x4, int32x4, "int32x4") \
     macro(isFinite, isFinite, "isFinite") \
     macro(isNaN, isNaN, "isNaN") \
     macro(isPrototypeOf, isPrototypeOf, "isPrototypeOf") \
@@ -176,7 +179,11 @@
     macro(void0, void0, "(void 0)") \
     macro(watch, watch, "watch") \
     macro(writable, writable, "writable") \
+    macro(w, w, "w") \
+    macro(x, x, "x") \
+    macro(y, y, "y") \
     macro(yield, yield, "yield") \
+    macro(z, z, "z") \
     /* Type names must be contiguous and ordered; see js::TypeName. */ \
     macro(undefined, undefined, "undefined") \
     macro(object, object, "object") \

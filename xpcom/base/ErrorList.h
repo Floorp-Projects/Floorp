@@ -16,8 +16,6 @@
   /* Returned when a given interface is not supported. */
   ERROR(NS_NOINTERFACE,                         0x80004002),
   ERROR(NS_ERROR_NO_INTERFACE,                  NS_NOINTERFACE),
-  ERROR(NS_ERROR_INVALID_POINTER,               0x80004003),
-  ERROR(NS_ERROR_NULL_POINTER,                  NS_ERROR_INVALID_POINTER),
   /* Returned when a function aborts */
   ERROR(NS_ERROR_ABORT,                         0x80004004),
   /* Returned when a function fails */
@@ -29,6 +27,8 @@
   /* Returned when an illegal value is passed */
   ERROR(NS_ERROR_ILLEGAL_VALUE,                 0x80070057),
   ERROR(NS_ERROR_INVALID_ARG,                   NS_ERROR_ILLEGAL_VALUE),
+  ERROR(NS_ERROR_INVALID_POINTER,               NS_ERROR_INVALID_ARG),
+  ERROR(NS_ERROR_NULL_POINTER,                  NS_ERROR_INVALID_ARG),
   /* Returned when a class doesn't allow aggregation */
   ERROR(NS_ERROR_NO_AGGREGATION,                0x80040110),
   /* Returned when an operation can't complete due to an unavailable resource */
@@ -863,8 +863,6 @@
   /* raised when current pivot's position is needed but it's not in the tree */
   ERROR(NS_ERROR_NOT_IN_TREE,  FAILURE(38)),
 
-  /* see Accessible::GetAttrValue */
-  ERROR(NS_OK_NO_ARIA_VALUE,           SUCCESS(33)),
   /* see nsTextEquivUtils */
   ERROR(NS_OK_NO_NAME_CLAUSE_HANDLED,  SUCCESS(34))
 #undef MODULE

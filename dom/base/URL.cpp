@@ -409,5 +409,13 @@ URL::SetHash(const nsAString& aHash)
   mURI->SetRef(NS_ConvertUTF16toUTF8(aHash));
 }
 
+bool IsChromeURI(nsIURI* aURI)
+{
+  bool isChrome = false;
+  if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)))
+      return isChrome;
+  return false;
+}
+
 }
 }

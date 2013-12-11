@@ -20,6 +20,10 @@
           android:title="@string/bookmark"
           android:showAsAction="always"/>
 
+    <item android:id="@+id/share"
+          android:icon="@drawable/ic_menu_share"
+          android:title="@string/share" />
+
     <item android:id="@+id/new_tab"
           android:icon="@drawable/ic_menu_new_tab"
           android:title="@string/new_tab"/>
@@ -27,10 +31,6 @@
     <item android:id="@+id/new_private_tab"
           android:icon="@drawable/ic_menu_new_private_tab"
           android:title="@string/new_private_tab"/>
-
-    <item android:id="@+id/share"
-          android:icon="@drawable/ic_menu_share"
-          android:title="@string/share" />
 
     <item android:id="@+id/find_in_page"
           android:icon="@drawable/ic_menu_find_in_page"

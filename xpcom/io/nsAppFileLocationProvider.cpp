@@ -87,10 +87,12 @@ NS_IMPL_ISUPPORTS2(nsAppFileLocationProvider, nsIDirectoryServiceProvider, nsIDi
 NS_IMETHODIMP
 nsAppFileLocationProvider::GetFile(const char *prop, bool *persistent, nsIFile **_retval)
 {
+    if (NS_WARN_IF(!prop))
+        return NS_ERROR_INVALID_ARG;
+
     nsCOMPtr<nsIFile>  localFile;
     nsresult rv = NS_ERROR_FAILURE;
 
-    NS_ENSURE_ARG(prop);
     *_retval = nullptr;
     *persistent = true;
 
@@ -250,7 +252,8 @@ nsAppFileLocationProvider::GetFile(const char *prop, bool *persistent, nsIFile *
 
 NS_METHOD nsAppFileLocationProvider::CloneMozBinDirectory(nsIFile **aLocalFile)
 {
-    NS_ENSURE_ARG_POINTER(aLocalFile);
+    if (NS_WARN_IF(!aLocalFile))
+        return NS_ERROR_INVALID_ARG;
     nsresult rv;
 
     if (!mMozBinDirectory)
@@ -291,7 +294,8 @@ NS_METHOD nsAppFileLocationProvider::CloneMozBinDirectory(nsIFile **aLocalFile)
 //----------------------------------------------------------------------------------------
 NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsIFile **aLocalFile, bool aLocal)
 {
-    NS_ENSURE_ARG_POINTER(aLocalFile);
+    if (NS_WARN_IF(!aLocalFile))
+        return NS_ERROR_INVALID_ARG;
 
     nsresult rv;
     bool exists;
@@ -352,7 +356,8 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsIFile **aLocalFile, b
 //----------------------------------------------------------------------------------------
 NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsIFile **aLocalFile, bool aLocal)
 {
-    NS_ENSURE_ARG_POINTER(aLocalFile);
+    if (NS_WARN_IF(!aLocalFile))
+        return NS_ERROR_INVALID_ARG;
 
     nsresult rv;
     nsCOMPtr<nsIFile> localDir;
@@ -416,7 +421,8 @@ class nsAppDirectoryEnumerator : public nsISimpleEnumerator
 
     NS_IMETHOD GetNext(nsISupports **result) 
     {
-        NS_ENSURE_ARG_POINTER(result);
+        if (NS_WARN_IF(!result))
+            return NS_ERROR_INVALID_ARG;
         *result = nullptr;
 
         bool hasMore;
@@ -511,7 +517,8 @@ class nsPathsDirectoryEnumerator : public nsAppDirectoryEnumerator
 NS_IMETHODIMP
 nsAppFileLocationProvider::GetFiles(const char *prop, nsISimpleEnumerator **_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
     *_retval = nullptr;
     nsresult rv = NS_ERROR_FAILURE;
     

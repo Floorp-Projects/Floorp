@@ -82,7 +82,7 @@ public:
   void DestroyPrintingData();
 
   nsresult Initialize(nsIDocumentViewerPrint* aDocViewerPrint, 
-                      nsIWeakReference*       aContainer,
+                      nsIDocShell*            aContainer,
                       nsIDocument*            aDocument,
                       float                   aScreenDPI,
                       FILE*                   aDebugFile);

@@ -49,7 +49,7 @@ WrapperFactory::IsCOW(JSObject *obj)
 }
 
 JSObject *
-WrapperFactory::GetXrayWaiver(JSObject *obj)
+WrapperFactory::GetXrayWaiver(HandleObject obj)
 {
     // Object should come fully unwrapped but outerized.
     MOZ_ASSERT(obj == UncheckedUnwrap(obj));

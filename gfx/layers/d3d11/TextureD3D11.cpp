@@ -496,7 +496,7 @@ DeprecatedTextureHostYCbCrD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
   initData.pSysMem = yuvDeserializer.GetYData();
   initData.SysMemPitch = yuvDeserializer.GetYStride();
 
-  CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_R8_UNORM, size.width, size.height,
+  CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_A8_UNORM, size.width, size.height,
                              1, 1, D3D11_BIND_SHADER_RESOURCE,
                              D3D11_USAGE_IMMUTABLE);
 

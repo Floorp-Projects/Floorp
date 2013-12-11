@@ -306,4 +306,54 @@
       </handler>
     </handlers>
   </binding>
+
+  <binding id="line-wrap-label" extends="chrome://global/content/bindings/text.xml#text-label">
+    <implementation>
+      <constructor>
+        <![CDATA[
+          if (this.hasAttribute("value")) {
+            this.textContent = this.getAttribute("value");
+            this.removeAttribute("value");
+          }
+        ]]>
+      </constructor>
+      <property name="value">
+        <getter>
+          <![CDATA[
+            return this.textContent;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            return (this.textContent = val);
+          ]]>
+        </setter>
+      </property>
+    </implementation>
+  </binding>
+  <binding id="line-wrap-text-link" extends="chrome://global/content/bindings/text.xml#text-link">
+    <implementation>
+      <constructor>
+        <![CDATA[
+          if (this.hasAttribute("value")) {
+            this.textContent = this.getAttribute("value");
+            this.removeAttribute("value");
+          }
+        ]]>
+      </constructor>
+      <property name="value">
+        <getter>
+          <![CDATA[
+            return this.textContent;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            return (this.textContent = val);
+          ]]>
+        </setter>
+      </property>
+    </implementation>
+  </binding>
+
 </bindings>

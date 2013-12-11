@@ -48,9 +48,9 @@ static const int64_t CAN_PLAY_THROUGH_MARGIN = 1;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaDecoderLog;
-#define LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
+#define DECODER_LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
 #else
-#define LOG(type, msg)
+#define DECODER_LOG(type, msg)
 #endif
 
 class MediaMemoryTracker
@@ -251,8 +251,8 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs)
 {
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
-  LOG(PR_LOG_DEBUG, ("MediaDecoder::RecreateDecodedStream this=%p aStartTimeUSecs=%lld!",
-                     this, (long long)aStartTimeUSecs));
+  DECODER_LOG(PR_LOG_DEBUG, ("MediaDecoder::RecreateDecodedStream this=%p aStartTimeUSecs=%lld!",
+                             this, (long long)aStartTimeUSecs));
 
   DestroyDecodedStream();
 
@@ -296,8 +296,8 @@ void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
                                    bool aFinishWhenEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  LOG(PR_LOG_DEBUG, ("MediaDecoder::AddOutputStream this=%p aStream=%p!",
-                     this, aStream));
+  DECODER_LOG(PR_LOG_DEBUG, ("MediaDecoder::AddOutputStream this=%p aStream=%p!",
+                             this, aStream));
 
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
@@ -459,7 +459,7 @@ nsresult MediaDecoder::OpenResource(nsIStreamListener** aStreamListener)
 
     nsresult rv = mResource->Open(aStreamListener);
     if (NS_FAILED(rv)) {
-      LOG(PR_LOG_DEBUG, ("%p Failed to open stream!", this));
+      DECODER_LOG(PR_LOG_DEBUG, ("%p Failed to open stream!", this));
       return rv;
     }
   }
@@ -476,7 +476,7 @@ nsresult MediaDecoder::Load(nsIStreamListener** aStreamListener,
 
   mDecoderStateMachine = CreateStateMachine();
   if (!mDecoderStateMachine) {
-    LOG(PR_LOG_DEBUG, ("%p Failed to create state machine!", this));
+    DECODER_LOG(PR_LOG_DEBUG, ("%p Failed to create state machine!", this));
     return NS_ERROR_FAILURE;
   }
 
@@ -491,7 +491,7 @@ nsresult MediaDecoder::InitializeStateMachine(MediaDecoder* aCloneDonor)
   MediaDecoder* cloneDonor = static_cast<MediaDecoder*>(aCloneDonor);
   if (NS_FAILED(mDecoderStateMachine->Init(cloneDonor ?
                                            cloneDonor->mDecoderStateMachine : nullptr))) {
-    LOG(PR_LOG_DEBUG, ("%p Failed to init state machine!", this));
+    DECODER_LOG(PR_LOG_DEBUG, ("%p Failed to init state machine!", this));
     return NS_ERROR_FAILURE;
   }
   {
@@ -570,7 +570,7 @@ nsresult MediaDecoder::Play()
  * (and can be -1 if aValue is before aRanges.Start(0)).
  */
 static bool
-IsInRanges(TimeRanges& aRanges, double aValue, int32_t& aIntervalIndex)
+IsInRanges(dom::TimeRanges& aRanges, double aValue, int32_t& aIntervalIndex)
 {
   uint32_t length;
   aRanges.GetLength(&length);
@@ -598,7 +598,7 @@ nsresult MediaDecoder::Seek(double aTime)
 
   NS_ABORT_IF_FALSE(aTime >= 0.0, "Cannot seek to a negative value.");
 
-  TimeRanges seekable;
+  dom::TimeRanges seekable;
   nsresult res;
   uint32_t length = 0;
   res = GetSeekable(&seekable);
@@ -814,6 +814,23 @@ void MediaDecoder::ResourceLoaded()
   }
 }
 
+void MediaDecoder::ResetConnectionState()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mShuttingDown)
+    return;
+
+  if (mOwner) {
+    // Notify the media element that connection gets lost.
+    mOwner->ResetConnectionState();
+  }
+
+  // Since we have notified the media element the connection
+  // lost event, the decoder will be reloaded when user tries
+  // to play the Rtsp streaming next time.
+  Shutdown();
+}
+
 void MediaDecoder::NetworkError()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -961,7 +978,7 @@ MediaDecoder::GetStatistics()
 double MediaDecoder::ComputePlaybackRate(bool* aReliable)
 {
   GetReentrantMonitor().AssertCurrentThreadIn();
-  MOZ_ASSERT(NS_IsMainThread() || OnStateMachineThread());
+  MOZ_ASSERT(NS_IsMainThread() || OnStateMachineThread() || OnDecodeThread());
 
   int64_t length = mResource ? mResource->GetLength() : -1;
   if (mDuration >= 0 && length >= 0) {
@@ -1252,7 +1269,7 @@ void MediaDecoder::DurationChanged()
   UpdatePlaybackRate();
 
   if (mOwner && oldDuration != mDuration && !IsInfinite()) {
-    LOG(PR_LOG_DEBUG, ("%p duration changed to %lld", this, mDuration));
+    DECODER_LOG(PR_LOG_DEBUG, ("%p duration changed to %lld", this, mDuration));
     mOwner->DispatchEvent(NS_LITERAL_STRING("durationchange"));
   }
 }
@@ -1326,7 +1343,7 @@ bool MediaDecoder::IsMediaSeekable()
   return mMediaSeekable;
 }
 
-nsresult MediaDecoder::GetSeekable(TimeRanges* aSeekable)
+nsresult MediaDecoder::GetSeekable(dom::TimeRanges* aSeekable)
 {
   double initialTime = 0.0;
 
@@ -1492,7 +1509,7 @@ void MediaDecoder::Invalidate()
 
 // Constructs the time ranges representing what segments of the media
 // are buffered and playable.
-nsresult MediaDecoder::GetBuffered(TimeRanges* aBuffered) {
+nsresult MediaDecoder::GetBuffered(dom::TimeRanges* aBuffered) {
   if (mDecoderStateMachine) {
     return mDecoderStateMachine->GetBuffered(aBuffered);
   }

@@ -1,11 +1,12 @@
 package org.mozilla.gecko.tests;
 
+import org.mozilla.gecko.db.BrowserContract.FormHistory;
+
 import android.content.ContentValues;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import java.io.File;
-import java.lang.ClassLoader;
 
 /**
  * A basic form history contentprovider test.
@@ -36,29 +37,15 @@ public class testFormHistory extends BaseTest {
         int numUpdated;
         int numDeleted;
 
-        try {
-            ClassLoader classLoader = getActivity().getClassLoader();
-            Class fh = classLoader.loadClass("org.mozilla.gecko.db.BrowserContract$FormHistory");
-      
-            cvs[0].put("fieldname", "fieldname");
-            cvs[0].put("value", "value");
-            cvs[0].put("timesUsed", "0");
-            cvs[0].put("guid", "guid");
-    
-            // Attempt to insert into the db
-            formHistoryUri = (Uri)fh.getField("CONTENT_URI").get(null);
-            Uri.Builder builder = formHistoryUri.buildUpon();
-            formHistoryUri = builder.appendQueryParameter("profilePath", mProfile).build();
-        } catch(ClassNotFoundException ex) {
-            mAsserter.is(false, true, "Error getting class");
-            return;
-        } catch(NoSuchFieldException ex) {
-            mAsserter.is(false, true, "Error getting field");
-            return;
-        } catch(IllegalAccessException ex) {
-            mAsserter.is(false, true, "Error using field");
-            return;
-        }
+        cvs[0].put("fieldname", "fieldname");
+        cvs[0].put("value", "value");
+        cvs[0].put("timesUsed", "0");
+        cvs[0].put("guid", "guid");
+
+        // Attempt to insert into the db
+        formHistoryUri = FormHistory.CONTENT_URI;
+        Uri.Builder builder = formHistoryUri.buildUpon();
+        formHistoryUri = builder.appendQueryParameter("profilePath", mProfile).build();
 
         insertUri = cr.insert(formHistoryUri, cvs[0]);
         expectedUri = formHistoryUri.buildUpon().appendPath("1").build();

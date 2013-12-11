@@ -6,8 +6,6 @@
 
 XPIDL_MODULE = 'necko_sctp'
 
-MODULE = 'necko'
-
 EXPORTS.mozilla.net += [
     'usrsctp.h',
 ]
@@ -45,9 +43,8 @@ if CONFIG['OS_TARGET'] == 'Android':
         'ifaddrs_android.cpp',
     ]
 
-LIBXUL_LIBRARY = True
-
 LIBRARY_NAME = 'nksctp_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'necko'

@@ -63,11 +63,36 @@ MakeSchemaVersion(uint32_t aMajorSchemaVersion,
 const int32_t kSQLiteSchemaVersion = int32_t((kMajorSchemaVersion << 4) +
                                              kMinorSchemaVersion);
 
+const uint32_t kGoldenRatioU32 = 0x9E3779B9U;
+
+inline
+uint32_t
+RotateBitsLeft32(uint32_t value, uint8_t bits)
+{
+  MOZ_ASSERT(bits < 32);
+  return (value << bits) | (value >> (32 - bits));
+}
+
+inline
+uint32_t
+HashName(const nsAString& aName)
+{
+  const char16_t* str = aName.BeginReading();
+  size_t length = aName.Length();
+
+  uint32_t hash = 0;
+  for (size_t i = 0; i < length; i++) {
+    hash = kGoldenRatioU32 * (RotateBitsLeft32(hash, 5) ^ str[i]);
+  }
+
+  return hash;
+}
+
 nsresult
 GetDatabaseFilename(const nsAString& aName,
                     nsAString& aDatabaseFilename)
 {
-  aDatabaseFilename.AppendInt(HashString(aName));
+  aDatabaseFilename.AppendInt(HashName(aName));
 
   nsCString escapedName;
   if (!NS_Escape(NS_ConvertUTF16toUTF8(aName), escapedName, url_XPAlphas)) {
@@ -881,8 +906,10 @@ public:
     rv = aArguments->GetSharedBlob(0, &uncompressedLength, &uncompressed);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    static const fallible_t fallible = fallible_t();
     size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
-    nsAutoArrayPtr<char> compressed(new char[compressedLength]);
+    nsAutoArrayPtr<char> compressed(new (fallible) char[compressedLength]);
+    NS_ENSURE_TRUE(compressed, NS_ERROR_OUT_OF_MEMORY);
 
     snappy::RawCompress(reinterpret_cast<const char*>(uncompressed),
                         uncompressedLength, compressed.get(),

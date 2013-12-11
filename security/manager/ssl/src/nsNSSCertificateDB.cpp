@@ -1639,7 +1639,7 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
 
   // nsNSSCertList 1) adopts certList, and 2) handles the nullptr case fine.
   // (returns an empty list) 
-  nssCertList = new nsNSSCertList(certList, true);
+  nssCertList = new nsNSSCertList(certList, locker);
 
   *_retval = nssCertList;
   NS_ADDREF(*_retval);
@@ -1666,5 +1666,80 @@ nsNSSCertificateDB::GetRecentBadCerts(bool isPrivate, nsIRecentBadCerts** result
     }
     NS_ADDREF(*result = mPublicRecentBadCerts);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificateDB::VerifyCertNow(nsIX509Cert* aCert,
+                                  int64_t /*SECCertificateUsage*/ aUsage,
+                                  bool aLocalOnly,
+                                  nsIX509CertList** verifiedChain,
+                                  bool* aHasEVPolicy,
+                                  int32_t* /*PRErrorCode*/ _retval )
+{
+  NS_ENSURE_ARG_POINTER(aCert);
+  NS_ENSURE_ARG_POINTER(aHasEVPolicy);
+  NS_ENSURE_ARG_POINTER(verifiedChain);
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *verifiedChain = nullptr;
+  *aHasEVPolicy = false;
+  *_retval = PR_UNKNOWN_ERROR;
+
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsresult rv;
+#ifndef NSS_NO_LIBPKIX
+  nsCOMPtr<nsINSSComponent> inss = do_GetService(PSM_COMPONENT_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  inss->EnsureIdentityInfoLoaded();
+#endif
+
+  nsCOMPtr<nsIX509Cert2> x509Cert = do_QueryInterface(aCert);
+  if (!x509Cert) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  ScopedCERTCertificate nssCert(x509Cert->GetCert());
+
+  RefPtr<CertVerifier> certVerifier(GetDefaultCertVerifier());
+  NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
+
+  CertVerifier::Flags flags = aLocalOnly ? CertVerifier::FLAG_LOCAL_ONLY : 0;
+  CERTCertList* resultChain = nullptr;
+  SECOidTag evOidPolicy;
+  SECStatus srv;
+
+  srv = certVerifier->VerifyCert(nssCert,
+                                 aUsage, PR_Now(),
+                                 nullptr, // Assume no context
+                                 flags,
+                                 &resultChain,
+                                 &evOidPolicy,
+                                 nullptr);
+
+  PRErrorCode error = PR_GetError();
+
+  nsCOMPtr<nsIX509CertList> nssCertList;
+  // This adopts the list
+  nssCertList = new nsNSSCertList(resultChain, locker);
+  NS_ENSURE_TRUE(nssCertList, NS_ERROR_FAILURE);
+
+  if (srv == SECSuccess) {
+    if (evOidPolicy != SEC_OID_UNKNOWN) {
+      *aHasEVPolicy = true;
+    }
+    *_retval = 0;
+  } else {
+    NS_ENSURE_TRUE(evOidPolicy == SEC_OID_UNKNOWN, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(error != 0, NS_ERROR_FAILURE);
+    *_retval = error;
+  }
+  nssCertList.forget(verifiedChain);
+
   return NS_OK;
 }

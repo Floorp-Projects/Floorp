@@ -43,17 +43,28 @@
 #endif
 
 #if defined(MOZ_B2G_BT)
-# if defined(MOZ_BLUETOOTH_GONK)
-#ifdef MOZ_B2G_BT_BLUEZ
+#if defined(MOZ_B2G_BT_BLUEZ)
+/**
+ * B2G blueZ:
+ *   MOZ_B2G_BT and MOZ_B2G_BT_BLUEZ are both defined.
+ */
 #include "BluetoothGonkService.h"
-#else
+#elif defined(MOZ_B2G_BT_BLUEDROID)
+/**
+ * B2G bluedroid:
+ *   MOZ_B2G_BT and MOZ_B2G_BT_BLUEDROID are both defined;
+ *   MOZ_B2G_BLUEZ is not defined.
+ */
 #include "BluetoothServiceBluedroid.h"
 #endif
-# elif defined(MOZ_BLUETOOTH_DBUS)
-#  include "BluetoothDBusService.h"
-# else
-#  error No_suitable_backend_for_bluetooth!
-# endif
+#elif defined(MOZ_BLUETOOTH_DBUS)
+/**
+ * Desktop bluetooth:
+ *   MOZ_B2G_BT is not defined; MOZ_BLUETOOTH_DBUS is defined.
+ */
+#include "BluetoothDBusService.h"
+#else
+#error No backend
 #endif
 
 #define MOZSETTINGS_CHANGED_ID      "mozsettings-changed"
@@ -135,28 +146,22 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (!gBluetoothService) {
-      return NS_OK;
-    }
-
-    if (!gInShutdown) {
-      gBluetoothService->SetEnabled(mEnabled);
-
-      nsAutoString signalName, signalPath;
-      BluetoothValue v = true;
-      if (mEnabled) {
-        signalName = NS_LITERAL_STRING("Enabled");
-      } else {
-        signalName = NS_LITERAL_STRING("Disabled");
-      }
-      signalPath = NS_LITERAL_STRING(KEY_MANAGER);
-      BluetoothSignal signal(signalName, signalPath, v);
-      gBluetoothService->DistributeSignal(signal);
-    }
+    NS_ENSURE_TRUE(gBluetoothService, NS_OK);
 
     if (gInShutdown) {
       gBluetoothService = nullptr;
+      return NS_OK;
     }
+
+    // Update mEnabled of BluetoothService object since
+    // StartInternal/StopInternal have been already done.
+    gBluetoothService->SetEnabled(mEnabled);
+
+    nsAutoString signalName;
+    signalName = mEnabled ? NS_LITERAL_STRING("Enabled")
+                          : NS_LITERAL_STRING("Disabled");
+    BluetoothSignal signal(signalName, NS_LITERAL_STRING(KEY_MANAGER), true);
+    gBluetoothService->DistributeSignal(signal);
 
     return NS_OK;
   }
@@ -305,19 +310,16 @@ BluetoothService::Create()
   if (!IsMainProcess()) {
     return BluetoothServiceChildProcess::Create();
   }
-#endif
 
-#if defined(MOZ_BLUETOOTH_GONK)
-#ifdef MOZ_B2G_BT_BLUEDROID
-  return new BluetoothServiceBluedroid();
-#else
+#if defined(MOZ_B2G_BT_BLUEZ)
   return new BluetoothGonkService();
+#elif defined(MOZ_B2G_BT_BLUEDROID)
+  return new BluetoothServiceBluedroid();
 #endif
 #elif defined(MOZ_BLUETOOTH_DBUS)
-#ifdef MOZ_B2G_BT_BLUEZ
   return new BluetoothDBusService();
 #endif
-#endif
+
   BT_WARNING("No platform support for bluetooth!");
   return nullptr;
 }

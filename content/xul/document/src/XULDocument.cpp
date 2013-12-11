@@ -38,7 +38,7 @@
 #include "nsIRDFService.h"
 #include "nsIStreamListener.h"
 #include "nsITimer.h"
-#include "nsIDocShell.h"
+#include "nsDocShell.h"
 #include "nsGkAtoms.h"
 #include "nsXMLContentSink.h"
 #include "nsXULContentSink.h"
@@ -90,6 +90,7 @@
 #include "mozilla/Preferences.h"
 #include "nsTextNode.h"
 #include "nsJSUtils.h"
+#include "mozilla/dom/URL.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -100,14 +101,6 @@ using namespace mozilla::dom;
 //
 
 static NS_DEFINE_CID(kParserCID,                 NS_PARSER_CID);
-
-static bool IsChromeURI(nsIURI* aURI)
-{
-    bool isChrome = false;
-    if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome)
-        return true;
-    return false;
-}
 
 static bool IsOverlayAllowed(nsIURI* aURI)
 {
@@ -780,7 +773,7 @@ XULDocument::AddBroadcastListenerFor(Element& aBroadcaster, Element& aListener,
         return;
     }
 
-    static PLDHashTableOps gOps = {
+    static const PLDHashTableOps gOps = {
         PL_DHashAllocTable,
         PL_DHashFreeTable,
         PL_DHashVoidPtrKeyStub,
@@ -3187,8 +3180,7 @@ XULDocument::DoneWalking()
         // Before starting layout, check whether we're a toplevel chrome
         // window.  If we are, set our chrome flags now, so that we don't have
         // to restyle the whole frame tree after StartLayout.
-        nsCOMPtr<nsISupports> container = GetContainer();
-        nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(container);
+        nsCOMPtr<nsIDocShellTreeItem> item = GetDocShell();
         if (item) {
             nsCOMPtr<nsIDocShellTreeOwner> owner;
             item->GetTreeOwner(getter_AddRefs(owner));
@@ -3196,7 +3188,7 @@ XULDocument::DoneWalking()
             if (xulWin) {
                 nsCOMPtr<nsIDocShell> xulWinShell;
                 xulWin->GetDocShell(getter_AddRefs(xulWinShell));
-                if (SameCOMIdentity(xulWinShell, container)) {
+                if (SameCOMIdentity(xulWinShell, item)) {
                     // We're the chrome document!  Apply our chrome flags now.
                     xulWin->ApplyChromeFlags();
                 }
@@ -4667,7 +4659,7 @@ XULDocument::ParserObserver::OnStopRequest(nsIRequest *request,
 already_AddRefed<nsPIWindowRoot>
 XULDocument::GetWindowRoot()
 {
-    nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryReferent(mDocumentContainer);
+    nsCOMPtr<nsIInterfaceRequestor> ir(mDocumentContainer);
     nsCOMPtr<nsIDOMWindow> window(do_GetInterface(ir));
     nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(window));
     return piWin ? piWin->GetTopWindowRoot() : nullptr;

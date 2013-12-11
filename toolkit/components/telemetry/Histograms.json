@@ -255,6 +255,14 @@
     "extended_statistics_ok": true,
     "description": "Virtual memory size (KB)"
   },
+  "MEMORY_VSIZE_MAX_CONTIGUOUS": {
+    "kind": "exponential",
+    "low": "32 * 1024",
+    "high": "16 * 1024 * 1024",
+    "n_buckets": 100,
+    "extended_statistics_ok": true,
+    "description": "Maximum-sized block of contiguous virtual memory (KB)"
+  },
   "MEMORY_JS_COMPARTMENTS_SYSTEM": {
     "kind": "exponential",
     "high": "1000",
@@ -2804,13 +2812,6 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time to read the session data from the file on disk (ms)"
   },
-  "FX_SESSION_RESTORE_SYNC_READ_FILE_MS": {
-    "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Session restore: Time to read the session data from the file on disk, using the synchronous fallback (ms)"
-  },
   "FX_SESSION_RESTORE_WRITE_FILE_MS": {
     "kind": "exponential",
     "high": "3000",
@@ -3670,6 +3671,18 @@
     "kind": "enumerated",
     "n_values": 3,
     "description": "User actions taken in the plugin notification: 0: allownow 1: allowalways 2: block"
+  },
+  "PLUGINS_INFOBAR_SHOWN": {
+    "kind": "boolean",
+    "description": "Count of when the hidden-plugin infobar was displayed."
+  },
+  "PLUGINS_INFOBAR_BLOCK": {
+    "kind": "boolean",
+    "description": "Count the number of times the user clicked 'block' on the hidden-plugin infobar."
+  },
+  "PLUGINS_INFOBAR_ALLOW": {
+    "kind": "boolean",
+    "description": "Count the number of times the user clicked 'allow' on the hidden-plugin infobar."
   },
   "POPUP_NOTIFICATION_MAINACTION_TRIGGERED_MS": {
     "kind": "linear",

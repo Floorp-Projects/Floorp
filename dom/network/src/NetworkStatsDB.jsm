@@ -13,6 +13,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
+Cu.importGlobalProperties(["indexedDB"]);
 
 const DB_NAME = "net_stats";
 const DB_VERSION = 3;
@@ -471,6 +472,41 @@ NetworkStatsDB.prototype = {
                    txBytes: undefined,
                    date: new Date(aData[aData.length - 1].date.getTime() + SAMPLE_RATE) });
     }
+  },
+
+  getAvailableNetworks: function getAvailableNetworks(aResultCb) {
+    this.dbNewTxn("readonly", function(aTxn, aStore) {
+      if (!aTxn.result) {
+        aTxn.result = [];
+      }
+
+      let request = aStore.index("network").openKeyCursor(null, "nextunique");
+      request.onsuccess = function onsuccess(event) {
+        let cursor = event.target.result;
+        if (cursor) {
+          aTxn.result.push({ id: cursor.key[0],
+                             type: cursor.key[1] });
+          cursor.continue();
+          return;
+        }
+      };
+    }, aResultCb);
+  },
+
+  isNetworkAvailable: function isNetworkAvailable(aNetwork, aResultCb) {
+    this.dbNewTxn("readonly", function(aTxn, aStore) {
+      if (!aTxn.result) {
+        aTxn.result = false;
+      }
+
+      var network = [aNetwork.id, aNetwork.type];
+      let request = aStore.index("network").openKeyCursor(IDBKeyRange.only(network));
+      request.onsuccess = function onsuccess(event) {
+        if (event.target.result) {
+          aTxn.result = true;
+        }
+      };
+    }, aResultCb);
   },
 
   get sampleRate () {

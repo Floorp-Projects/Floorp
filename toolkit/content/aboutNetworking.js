@@ -40,14 +40,14 @@ function displayHttp(data) {
   let new_cont = document.createElement('tbody');
   new_cont.setAttribute('id', 'http_content');
 
-  for (let i = 0; i < data.host.length; i++) {
+  for (let i = 0; i < data.connections.length; i++) {
     let row = document.createElement('tr');
-    row.appendChild(col(data.host[i]));
-    row.appendChild(col(data.port[i]));
-    row.appendChild(col(data.spdy[i]));
-    row.appendChild(col(data.ssl[i]));
-    row.appendChild(col(data.active[i].rtt.length));
-    row.appendChild(col(data.idle[i].rtt.length));
+    row.appendChild(col(data.connections[i].host));
+    row.appendChild(col(data.connections[i].port));
+    row.appendChild(col(data.connections[i].spdy));
+    row.appendChild(col(data.connections[i].ssl));
+    row.appendChild(col(data.connections[i].active.length));
+    row.appendChild(col(data.connections[i].idle.length));
     new_cont.appendChild(row);
   }
 
@@ -60,14 +60,14 @@ function displaySockets(data) {
   let new_cont = document.createElement('tbody');
   new_cont.setAttribute('id', 'sockets_content');
 
-  for (let i = 0; i < data.host.length; i++) {
+  for (let i = 0; i < data.sockets.length; i++) {
     let row = document.createElement('tr');
-    row.appendChild(col(data.host[i]));
-    row.appendChild(col(data.port[i]));
-    row.appendChild(col(data.tcp[i]));
-    row.appendChild(col(data.active[i]));
-    row.appendChild(col(data.socksent[i]));
-    row.appendChild(col(data.sockreceived[i]));
+    row.appendChild(col(data.sockets[i].host));
+    row.appendChild(col(data.sockets[i].port));
+    row.appendChild(col(data.sockets[i].tcp));
+    row.appendChild(col(data.sockets[i].active));
+    row.appendChild(col(data.sockets[i].sent));
+    row.appendChild(col(data.sockets[i].received));
     new_cont.appendChild(row);
   }
 
@@ -80,19 +80,19 @@ function displayDns(data) {
   let new_cont = document.createElement('tbody');
   new_cont.setAttribute('id', 'dns_content');
 
-  for (let i = 0; i < data.hostname.length; i++) {
+  for (let i = 0; i < data.entries.length; i++) {
     let row = document.createElement('tr');
-    row.appendChild(col(data.hostname[i]));
-    row.appendChild(col(data.family[i]));
+    row.appendChild(col(data.entries[i].hostname));
+    row.appendChild(col(data.entries[i].family));
     let column = document.createElement('td');
 
-    for (let j = 0; j< data.hostaddr[i].length; j++) {
-      column.appendChild(document.createTextNode(data.hostaddr[i][j]));
+    for (let j = 0; j < data.entries[i].hostaddr.length; j++) {
+      column.appendChild(document.createTextNode(data.entries[i].hostaddr[j]));
       column.appendChild(document.createElement('br'));
     }
 
     row.appendChild(column);
-    row.appendChild(col(data.expiration[i]));
+    row.appendChild(col(data.entries[i].expiration));
     new_cont.appendChild(row);
   }
 
@@ -105,14 +105,14 @@ function displayWebsockets(data) {
   let new_cont = document.createElement('tbody');
   new_cont.setAttribute('id', 'websockets_content');
 
-  for (let i = 0; i < data.hostport.length; i++) {
+  for (let i = 0; i < data.websockets.length; i++) {
     let row = document.createElement('tr');
-    row.appendChild(col(data.hostport[i]));
-    row.appendChild(col(data.encrypted[i]));
-    row.appendChild(col(data.msgsent[i]));
-    row.appendChild(col(data.msgreceived[i]));
-    row.appendChild(col(data.sentsize[i]));
-    row.appendChild(col(data.receivedsize[i]));
+    row.appendChild(col(data.websockets[i].hostport));
+    row.appendChild(col(data.websockets[i].encrypted));
+    row.appendChild(col(data.websockets[i].msgsent));
+    row.appendChild(col(data.websockets[i].msgreceived));
+    row.appendChild(col(data.websockets[i].sentsize));
+    row.appendChild(col(data.websockets[i].receivedsize));
     new_cont.appendChild(row);
   }
 

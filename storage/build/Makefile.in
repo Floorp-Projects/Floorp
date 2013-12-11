@@ -6,7 +6,3 @@
 LOCAL_INCLUDES = \
 	$(SQLITE_CFLAGS) \
 	-I$(srcdir)/../src
-
-SHARED_LIBRARY_LIBS = \
-	../src/$(LIB_PREFIX)storage_s.$(LIB_SUFFIX) \
-	$(NULL)

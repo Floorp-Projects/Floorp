@@ -189,11 +189,12 @@ let DebuggerView = {
     dumpn("Initializing the DebuggerView editor");
 
     let extraKeys = {};
-    let searchKey = document.getElementById("tokenSearchKey").getAttribute("key");
-    extraKeys[Editor.accel(searchKey)] = (cm) => {
-      DebuggerView.Filtering._doTokenSearch();
-    };
-
+    let tokenSearch = document.getElementById("tokenSearchKey").getAttribute("key");
+    let globalSearch = document.getElementById("globalSearchKey").getAttribute("key");
+    let tokenSearchShortcut = Editor.accel(tokenSearch);
+    let globalSearchShortcut = Editor.accel(globalSearch, { alt: true });
+    extraKeys[tokenSearchShortcut] = () => this.Filtering._doTokenSearch();
+    extraKeys[globalSearchShortcut] = () => this.Filtering._doGlobalSearch();
     extraKeys[Editor.keyFor("jumpToLine")] = false;
 
     this.editor = new Editor({

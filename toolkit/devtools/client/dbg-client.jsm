@@ -1828,6 +1828,17 @@ ObjectClient.prototype = {
   get isSealed() this._grip.sealed,
   get isExtensible() this._grip.extensible,
 
+  getDefinitionSite: DebuggerClient.requester({
+    type: "definitionSite"
+  }, {
+    before: function (aPacket) {
+      if (this._grip.class != "Function") {
+        throw new Error("getDefinitionSite is only valid for function grips.");
+      }
+      return aPacket;
+    }
+  }),
+
   /**
    * Request the names of a function's formal parameters.
    *

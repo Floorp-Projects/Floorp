@@ -1032,9 +1032,22 @@ JSScript::sourceData(JSContext *cx)
     return scriptSource()->substring(cx, sourceStart, sourceEnd);
 }
 
-JSStableString *
-SourceDataCache::lookup(ScriptSource *ss)
+SourceDataCache::AutoSuppressPurge::AutoSuppressPurge(JSContext *cx)
+ : cache_(cx->runtime()->sourceDataCache)
 {
+    oldValue_ = cache_.numSuppressPurges_++;
+}
+
+SourceDataCache::AutoSuppressPurge::~AutoSuppressPurge()
+{
+    cache_.numSuppressPurges_--;
+    JS_ASSERT(cache_.numSuppressPurges_ == oldValue_);
+}
+
+const jschar *
+SourceDataCache::lookup(ScriptSource *ss, const AutoSuppressPurge &asp)
+{
+    JS_ASSERT(this == &asp.cache());
     if (!map_)
         return nullptr;
     if (Map::Ptr p = map_->lookup(ss))
@@ -1042,31 +1055,41 @@ SourceDataCache::lookup(ScriptSource *ss)
     return nullptr;
 }
 
-void
-SourceDataCache::put(ScriptSource *ss, JSStableString *str)
+bool
+SourceDataCache::put(ScriptSource *ss, const jschar *str, const AutoSuppressPurge &asp)
 {
+    JS_ASSERT(this == &asp.cache());
+
     if (!map_) {
         map_ = js_new<Map>();
         if (!map_)
-            return;
+            return false;
+
         if (!map_->init()) {
-            purge();
-            return;
+            js_delete(map_);
+            map_ = nullptr;
+            return false;
         }
     }
 
-    (void) map_->put(ss, str);
+    return map_->put(ss, str);
 }
 
 void
 SourceDataCache::purge()
 {
+    if (!map_ || numSuppressPurges_ > 0)
+        return;
+
+    for (Map::Range r = map_->all(); !r.empty(); r.popFront())
+        js_delete(const_cast<jschar*>(r.front().value));
+
     js_delete(map_);
     map_ = nullptr;
 }
 
 const jschar *
-ScriptSource::chars(JSContext *cx)
+ScriptSource::chars(JSContext *cx, const SourceDataCache::AutoSuppressPurge &asp)
 {
     if (const jschar *chars = getOffThreadCompressionChars(cx))
         return chars;
@@ -1074,27 +1097,30 @@ ScriptSource::chars(JSContext *cx)
 
 #ifdef USE_ZLIB
     if (compressed()) {
-        JSStableString *cached = cx->runtime()->sourceDataCache.lookup(this);
-        if (!cached) {
-            const size_t nbytes = sizeof(jschar) * (length_ + 1);
-            jschar *decompressed = static_cast<jschar *>(js_malloc(nbytes));
-            if (!decompressed)
-                return nullptr;
-            if (!DecompressString(data.compressed, compressedLength_,
-                                  reinterpret_cast<unsigned char *>(decompressed), nbytes)) {
-                JS_ReportOutOfMemory(cx);
-                js_free(decompressed);
-                return nullptr;
-            }
-            decompressed[length_] = 0;
-            cached = js_NewString<CanGC>(cx, decompressed, length_);
-            if (!cached) {
-                js_free(decompressed);
-                return nullptr;
-            }
-            cx->runtime()->sourceDataCache.put(this, cached);
+        if (const jschar *decompressed = cx->runtime()->sourceDataCache.lookup(this, asp))
+            return decompressed;
+      
+        const size_t nbytes = sizeof(jschar) * (length_ + 1);
+        jschar *decompressed = static_cast<jschar *>(js_malloc(nbytes));
+        if (!decompressed)
+            return nullptr;
+
+        if (!DecompressString(data.compressed, compressedLength_,
+                              reinterpret_cast<unsigned char *>(decompressed), nbytes)) {
+            JS_ReportOutOfMemory(cx);
+            js_free(decompressed);
+            return nullptr;
         }
-        return cached->chars().get();
+
+        decompressed[length_] = 0;
+
+        if (!cx->runtime()->sourceDataCache.put(this, decompressed, asp)) {
+            JS_ReportOutOfMemory(cx);
+            js_free(decompressed);
+            return nullptr;
+        }
+
+        return decompressed;
     }
 #endif
     return data.source;
@@ -1104,7 +1130,8 @@ JSStableString *
 ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 {
     JS_ASSERT(start <= stop);
-    const jschar *chars = this->chars(cx);
+    SourceDataCache::AutoSuppressPurge asp(cx);
+    const jschar *chars = this->chars(cx, asp);
     if (!chars)
         return nullptr;
     JSFlatString *flatStr = js_NewStringCopyN<CanGC>(cx, chars + start, stop - start);
@@ -2247,29 +2274,19 @@ JS_FRIEND_API(unsigned)
 js_GetScriptLineExtent(JSScript *script)
 {
     unsigned lineno = script->lineno;
-    unsigned maxLineNo = 0;
-    bool counting = true;
+    unsigned maxLineNo = lineno;
     for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
         SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
-        if (type == SRC_SETLINE) {
-            if (maxLineNo < lineno)
-                maxLineNo = lineno;
+        if (type == SRC_SETLINE)
             lineno = (unsigned) js_GetSrcNoteOffset(sn, 0);
-            counting = true;
-            if (maxLineNo < lineno)
-                maxLineNo = lineno;
-            else
-                counting = false;
-        } else if (type == SRC_NEWLINE) {
-            if (counting)
-                lineno++;
-        }
+        else if (type == SRC_NEWLINE)
+            lineno++;
+
+        if (maxLineNo < lineno)
+            maxLineNo = lineno;
     }
 
-    if (maxLineNo > lineno)
-        lineno = maxLineNo;
-
-    return 1 + lineno - script->lineno;
+    return 1 + maxLineNo - script->lineno;
 }
 
 void
@@ -3149,14 +3166,13 @@ LazyScriptHashPolicy::match(JSScript *script, const Lookup &lookup)
         return false;
     }
 
-    // GC activity may destroy the character pointers being compared below.
-    AutoSuppressGC suppress(cx);
+    SourceDataCache::AutoSuppressPurge asp(cx);
 
-    const jschar *scriptChars = script->scriptSource()->chars(cx);
+    const jschar *scriptChars = script->scriptSource()->chars(cx, asp);
     if (!scriptChars)
         return false;
 
-    const jschar *lazyChars = lazy->source()->chars(cx);
+    const jschar *lazyChars = lazy->source()->chars(cx, asp);
     if (!lazyChars)
         return false;
 

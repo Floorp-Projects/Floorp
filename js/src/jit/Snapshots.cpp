@@ -306,7 +306,7 @@ SnapshotWriter::startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, ui
     // +4 to account for scope chain, return value, this value and maybe arguments_object.
     JS_ASSERT(CountArgSlots(script, fun) < SNAPSHOT_MAX_NARGS + 4);
 
-    uint32_t implicit = StartArgSlot(script, fun);
+    uint32_t implicit = StartArgSlot(script);
     uint32_t formalArgs = CountArgSlots(script, fun);
 
     nslots_ = formalArgs + script->nfixed + exprStack;

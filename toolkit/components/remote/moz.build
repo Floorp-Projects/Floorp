@@ -10,8 +10,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'toolkitremote'
 
-MODULE = 'toolkitcomps'
-
 SOURCES += [
     'nsXRemoteService.cpp',
 ]
@@ -25,9 +23,4 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
         'nsQtRemoteService.cpp',
     ]
 
-LIBRARY_NAME = 'remoteservice'
-
-LIBXUL_LIBRARY = True
-
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

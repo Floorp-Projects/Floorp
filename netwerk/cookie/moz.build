@@ -16,13 +16,8 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'necko_cookie'
 
-MODULE = 'necko'
-
 if CONFIG['NECKO_COOKIES']:
-    LIBXUL_LIBRARY = True
     MSVC_ENABLE_PGO = True
-
-    LIBRARY_NAME = 'neckocookie_s'
 
     EXPORTS.mozilla.net = [
         'CookieServiceChild.h',
@@ -50,3 +45,4 @@ FAIL_ON_WARNINGS = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'necko'

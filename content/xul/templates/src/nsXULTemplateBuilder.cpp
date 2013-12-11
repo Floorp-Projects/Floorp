@@ -74,11 +74,6 @@ using namespace mozilla::dom;
 using namespace mozilla;
 
 //----------------------------------------------------------------------
-
-static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
-static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
-
-//----------------------------------------------------------------------
 //
 // nsXULTemplateBuilder
 //
@@ -107,6 +102,7 @@ nsXULTemplateBuilder::nsXULTemplateBuilder(void)
       mTop(nullptr),
       mObservedDocument(nullptr)
 {
+    MOZ_COUNT_CTOR(nsXULTemplateBuilder);
 }
 
 static PLDHashOperator
@@ -133,6 +129,8 @@ nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
         NS_IF_RELEASE(gScriptSecurityManager);
         NS_IF_RELEASE(gObserverService);
     }
+
+    MOZ_COUNT_DTOR(nsXULTemplateBuilder);
 }
 
 
@@ -144,10 +142,12 @@ nsXULTemplateBuilder::InitGlobals()
     if (gRefCnt++ == 0) {
         // Initialize the global shared reference to the service
         // manager and get some shared resource objects.
+        NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
         rv = CallGetService(kRDFServiceCID, &gRDFService);
         if (NS_FAILED(rv))
             return rv;
 
+        NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
         rv = CallGetService(kRDFContainerUtilsCID, &gRDFContainerUtils);
         if (NS_FAILED(rv))
             return rv;
@@ -175,6 +175,23 @@ nsXULTemplateBuilder::InitGlobals()
 }
 
 void
+nsXULTemplateBuilder::StartObserving(nsIDocument* aDocument)
+{
+    aDocument->AddObserver(this);
+    mObservedDocument = aDocument;
+    gObserverService->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC, false);
+}
+
+void
+nsXULTemplateBuilder::StopObserving()
+{
+    MOZ_ASSERT(mObservedDocument);
+    mObservedDocument->RemoveObserver(this);
+    mObservedDocument = nullptr;
+    gObserverService->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
+}
+
+void
 nsXULTemplateBuilder::CleanUp(bool aIsFinal)
 {
     for (int32_t q = mQuerySets.Length() - 1; q >= 0; q--) {
@@ -196,10 +213,7 @@ void
 nsXULTemplateBuilder::Uninit(bool aIsFinal)
 {
     if (mObservedDocument && aIsFinal) {
-        gObserverService->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
-        gObserverService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-        mObservedDocument->RemoveObserver(this);
-        mObservedDocument = nullptr;
+        StopObserving();
     }
 
     if (mQueryProcessor)
@@ -431,14 +445,7 @@ nsXULTemplateBuilder::Init(nsIContent* aElement)
     nsresult rv = LoadDataSources(doc, &shouldDelay);
 
     if (NS_SUCCEEDED(rv)) {
-        // Add ourselves as a document observer
-        doc->AddObserver(this);
-
-        mObservedDocument = doc;
-        gObserverService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                      false);
-        gObserverService->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC,
-                                      false);
+        StartObserving(doc);
     }
 
     return rv;
@@ -1076,8 +1083,6 @@ nsXULTemplateBuilder::Observe(nsISupports* aSubject,
             if (doc && doc == mObservedDocument)
                 NodeWillBeDestroyed(doc);
         }
-    } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-        UninitTrue();
     }
     return NS_OK;
 }
@@ -1127,7 +1132,8 @@ nsXULTemplateBuilder::ContentRemoved(nsIDocument* aDocument,
         nsContentUtils::AddScriptRunner(
             NS_NewRunnableMethod(this, &nsXULTemplateBuilder::UninitFalse));
 
-        aDocument->RemoveObserver(this);
+        MOZ_ASSERT(aDocument == mObservedDocument);
+        StopObserving();
 
         nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(aDocument);
         if (xuldoc)

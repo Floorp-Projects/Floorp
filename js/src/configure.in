@@ -672,15 +672,12 @@ dnl ========================================================
 dnl = Mac OS X SDK support
 dnl ========================================================
 MACOS_SDK_DIR=
-NEXT_ROOT=
 MOZ_ARG_WITH_STRING(macos-sdk,
 [  --with-macos-sdk=dir    Location of platform SDK to use (Mac OS X only)],
     MACOS_SDK_DIR=$withval)
 
 dnl MACOS_SDK_DIR will be set to the SDK location whenever one is in use.
-dnl NEXT_ROOT will be set and exported only if it's needed.
 AC_SUBST(MACOS_SDK_DIR)
-AC_SUBST(NEXT_ROOT)
 
 if test "$MACOS_SDK_DIR"; then
   dnl Sync this section with the ones in NSPR and NSS.
@@ -2554,6 +2551,9 @@ AC_CACHE_CHECK(
             #ifdef linux
             #define _BSD_SOURCE 1
             #endif
+            #include <sys/types.h>
+            #include <netinet/in.h>
+            #include <arpa/nameser.h>
             #include <resolv.h>
             ],
             [int foo = res_ninit(&_res);],

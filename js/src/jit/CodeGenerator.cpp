@@ -712,7 +712,7 @@ CodeGenerator::visitIntToString(LIntToString *lir)
     masm.branch32(Assembler::AboveOrEqual, input, Imm32(StaticStrings::INT_STATIC_LIMIT),
                   ool->entry());
 
-    masm.movePtr(ImmPtr(&GetIonContext()->runtime->staticStrings.intStaticTable), output);
+    masm.movePtr(ImmPtr(&GetIonContext()->runtime->staticStrings().intStaticTable), output);
     masm.loadPtr(BaseIndex(output, input, ScalePointer), output);
 
     masm.bind(ool->rejoin());
@@ -741,7 +741,7 @@ CodeGenerator::visitDoubleToString(LDoubleToString *lir)
     masm.branch32(Assembler::AboveOrEqual, temp, Imm32(StaticStrings::INT_STATIC_LIMIT),
                   ool->entry());
 
-    masm.movePtr(ImmPtr(&GetIonContext()->runtime->staticStrings.intStaticTable), output);
+    masm.movePtr(ImmPtr(&GetIonContext()->runtime->staticStrings().intStaticTable), output);
     masm.loadPtr(BaseIndex(output, temp, ScalePointer), output);
 
     masm.bind(ool->rejoin());
@@ -798,7 +798,6 @@ CodeGenerator::visitLambda(LLambda *lir)
     if (!ool)
         return false;
 
-    JS_ASSERT(gen->compartment == info.fun->compartment());
     JS_ASSERT(!info.singletonType);
 
     masm.newGCThing(output, info.fun, ool->entry());
@@ -1584,7 +1583,7 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    Nursery &nursery = GetIonContext()->runtime->gcNursery;
+    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
 
     if (lir->object()->isConstant()) {
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
@@ -1616,7 +1615,7 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
     ValueOperand value = ToValue(lir, LPostWriteBarrierV::Input);
     masm.branchTestObject(Assembler::NotEqual, value, ool->rejoin());
 
-    Nursery &nursery = GetIonContext()->runtime->gcNursery;
+    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
 
     if (lir->object()->isConstant()) {
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
@@ -1645,7 +1644,7 @@ CodeGenerator::visitPostWriteBarrierAllSlots(LPostWriteBarrierAllSlots *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    Nursery &nursery = GetIonContext()->runtime->gcNursery;
+    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
 
     if (lir->object()->isConstant()) {
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
@@ -2499,11 +2498,9 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
     // Ion may legally place frames very close to the limit. Calling additional
     // C functions may then violate the limit without any checking.
 
-    JSRuntime *rt = GetIonContext()->runtime;
-
     // Since Ion frames exist on the C stack, the stack limit may be
     // dynamically set by JS_SetThreadStackLimit() and JS_SetNativeStackQuota().
-    uintptr_t *limitAddr = &rt->mainThread.ionStackLimit;
+    const void *limitAddr = GetIonContext()->runtime->addressOfIonStackLimit();
 
     CheckOverRecursedFailure *ool = new CheckOverRecursedFailure(lir);
     if (!addOutOfLineCode(ool))
@@ -3866,7 +3863,7 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
     FloatRegister input = ToFloatRegister(ins->input());
     JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
 
-    MathCache *mathCache = ins->mir()->cache();
+    const MathCache *mathCache = ins->mir()->cache();
 
     masm.setupUnalignedABICall(mathCache ? 2 : 1, temp);
     if (mathCache) {
@@ -4420,7 +4417,7 @@ CodeGenerator::emitConcat(LInstruction *lir, Register lhs, Register rhs, Registe
         return false;
 
     ExecutionMode mode = gen->info().executionMode();
-    IonCode *stringConcatStub = gen->jitCompartment()->stringConcatStub(mode);
+    IonCode *stringConcatStub = gen->compartment->jitCompartment()->stringConcatStub(mode);
     masm.call(stringConcatStub);
     masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
 
@@ -4690,7 +4687,7 @@ CodeGenerator::visitFromCharCode(LFromCharCode *lir)
     masm.branch32(Assembler::AboveOrEqual, code, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
                   ool->entry());
 
-    masm.movePtr(ImmPtr(&GetIonContext()->runtime->staticStrings.unitStaticTable), output);
+    masm.movePtr(ImmPtr(&GetIonContext()->runtime->staticStrings().unitStaticTable), output);
     masm.loadPtr(BaseIndex(output, code, ScalePointer), output);
 
     masm.bind(ool->rejoin());
@@ -5345,7 +5342,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     JS_ASSERT(flags == JSITER_ENUMERATE);
 
     // Fetch the most recent iterator and ensure it's not nullptr.
-    masm.loadPtr(AbsoluteAddress(&GetIonContext()->runtime->nativeIterCache.last), output);
+    masm.loadPtr(AbsoluteAddress(GetIonContext()->runtime->addressOfLastCachedNativeIterator()), output);
     masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
 
     // Load NativeIterator.
@@ -5406,7 +5403,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     masm.or32(Imm32(JSITER_ACTIVE), Address(niTemp, offsetof(NativeIterator, flags)));
 
     // Chain onto the active iterator stack.
-    masm.loadPtr(AbsoluteAddress(&gen->compartment->enumerators), temp1);
+    masm.loadPtr(AbsoluteAddress(gen->compartment->addressOfEnumerators()), temp1);
 
     // ni->next = list
     masm.storePtr(temp1, Address(niTemp, NativeIterator::offsetOfNext()));
@@ -5829,7 +5826,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 
     // List of possible scripts that this graph may call. Currently this is
     // only tracked when compiling for parallel execution.
-    CallTargetVector callTargets;
+    CallTargetVector callTargets(alloc());
     if (executionMode == ParallelExecution)
         AddPossibleCallees(cx, graph.mir(), callTargets);
 
@@ -6733,7 +6730,7 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     Register output = ToRegister(lir->output());
     Register tag = masm.splitTagForTest(value);
 
-    JSRuntime *rt = GetIonContext()->runtime;
+    const JSAtomState &names = GetIonContext()->runtime->names();
     Label done;
 
     OutOfLineTypeOfV *ool = nullptr;
@@ -6750,36 +6747,36 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
         // it's an object the result is always "object".
         Label notObject;
         masm.branchTestObject(Assembler::NotEqual, tag, &notObject);
-        masm.movePtr(ImmGCPtr(rt->atomState.object), output);
+        masm.movePtr(ImmGCPtr(names.object), output);
         masm.jump(&done);
         masm.bind(&notObject);
     }
 
     Label notNumber;
     masm.branchTestNumber(Assembler::NotEqual, tag, &notNumber);
-    masm.movePtr(ImmGCPtr(rt->atomState.number), output);
+    masm.movePtr(ImmGCPtr(names.number), output);
     masm.jump(&done);
     masm.bind(&notNumber);
 
     Label notUndefined;
     masm.branchTestUndefined(Assembler::NotEqual, tag, &notUndefined);
-    masm.movePtr(ImmGCPtr(rt->atomState.undefined), output);
+    masm.movePtr(ImmGCPtr(names.undefined), output);
     masm.jump(&done);
     masm.bind(&notUndefined);
 
     Label notNull;
     masm.branchTestNull(Assembler::NotEqual, tag, &notNull);
-    masm.movePtr(ImmGCPtr(rt->atomState.object), output);
+    masm.movePtr(ImmGCPtr(names.object), output);
     masm.jump(&done);
     masm.bind(&notNull);
 
     Label notBoolean;
     masm.branchTestBoolean(Assembler::NotEqual, tag, &notBoolean);
-    masm.movePtr(ImmGCPtr(rt->atomState.boolean), output);
+    masm.movePtr(ImmGCPtr(names.boolean), output);
     masm.jump(&done);
     masm.bind(&notBoolean);
 
-    masm.movePtr(ImmGCPtr(rt->atomState.string), output);
+    masm.movePtr(ImmGCPtr(names.string), output);
 
     masm.bind(&done);
     if (ool)

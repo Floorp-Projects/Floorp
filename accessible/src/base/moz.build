@@ -6,8 +6,6 @@
 
 include('../shared.mozbuild')
 
-MODULE = 'accessibility'
-
 EXPORTS += [
     'AccEvent.h',
     'nsAccessibilityService.h'
@@ -29,7 +27,7 @@ if CONFIG['MOZ_DEBUG']:
         'Logging.h',
     ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AccCollector.cpp',
     'AccEvent.cpp',
     'AccGroupInfo.cpp',
@@ -56,13 +54,9 @@ SOURCES += [
 ]
 
 if a11y_log:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'Logging.cpp',
     ]
-
-LIBRARY_NAME = 'accessibility_base_s'
-
-LIBXUL_LIBRARY = True
 
 LOCAL_INCLUDES += [
     '../../../content/xbl/src',
@@ -95,3 +89,5 @@ else:
     LOCAL_INCLUDES += [
         '../other',
     ]
+
+FINAL_LIBRARY = 'xul'
