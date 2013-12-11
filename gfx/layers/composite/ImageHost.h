@@ -57,6 +57,8 @@ public:
 
   virtual TextureHost* GetAsTextureHost() MOZ_OVERRIDE;
 
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+
   virtual void SetPictureRect(const nsIntRect& aPictureRect) MOZ_OVERRIDE
   {
     mPictureRect = aPictureRect;
