@@ -456,12 +456,13 @@ this.UITour = {
       highlighter.style.height = targetRect.height + "px";
       highlighter.style.width = targetRect.width + "px";
 
-      let highlighterRect = highlighter.getBoundingClientRect();
-
-      let top = targetRect.top + (targetRect.height / 2) - (highlighterRect.height / 2);
-      highlighter.style.top = top + "px";
-      let left = targetRect.left + (targetRect.width / 2) - (highlighterRect.width / 2);
-      highlighter.style.left = left + "px";
+      // Close a previous highlight so we can relocate the panel.
+      if (highlighter.parentElement.state == "open") {
+        highlighter.parentElement.hidePopup();
+      }
+      /* -4 offsets come from the padding in CSS for UITourHighlightContainer
+         for the wobble animation */
+      highlighter.parentElement.openPopup(aTargetEl, "overlap", -4, -4);
     }
 
     this._setAppMenuStateForAnnotation(aTarget.node.ownerDocument.defaultView, "highlight",
@@ -475,6 +476,7 @@ this.UITour = {
       this.removePinnedTab(aWindow);
 
     let highlighter = aWindow.document.getElementById("UITourHighlight");
+    highlighter.parentElement.hidePopup();
     highlighter.removeAttribute("active");
 
     this._setAppMenuStateForAnnotation(aWindow, "highlight", false);
@@ -496,7 +498,9 @@ this.UITour = {
 
       let alignment = "bottomcenter topright";
 
-      tooltip.hidden = false;
+      if (tooltip.state == "open") {
+        tooltip.hidePopup();
+      }
       tooltip.openPopup(aAnchorEl, alignment);
     }
 

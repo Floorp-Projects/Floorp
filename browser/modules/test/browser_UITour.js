@@ -14,6 +14,8 @@ function is_hidden(element) {
     return true;
   if (style.visibility != "visible")
     return true;
+  if (style.display == "-moz-popup")
+    return ["hiding","closed"].indexOf(element.state) != -1;
 
   // Hiding a parent element will hide all its children
   if (element.parentNode != element.ownerDocument)
@@ -93,11 +95,11 @@ function test() {
       gBrowser.removeTab(gTestTab);
     gTestTab = null;
 
-    let highlight = document.getElementById("UITourHighlight");
-    is_element_hidden(highlight, "Highlight should be hidden after UITour tab is closed");
+    let highlight = document.getElementById("UITourHighlightContainer");
+    is_element_hidden(highlight, "Highlight should be closed/hidden after UITour tab is closed");
 
-    let popup = document.getElementById("UITourTooltip");
-    isnot(["hidding","closed"].indexOf(popup.state), -1, "Popup should be closed/hidding after UITour tab is closed");
+    let tooltip = document.getElementById("UITourTooltip");
+    is_element_hidden(tooltip, "Tooltip should be closed/hidden after UITour tab is closed");
 
     ok(!PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should have been cleaned up");
 
@@ -112,7 +114,7 @@ function test() {
       return;
     }
     let test = tests.shift();
-
+    info("Starting " + test.name);
     loadTestPage(function() {
       test(done);
     });
