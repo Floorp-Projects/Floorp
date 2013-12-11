@@ -14,6 +14,7 @@ function test_parser(rawDataArray, contentType, expectResult) {
   let msg = CP.PduHelper.parse(data, contentType);
   do_check_eq(msg.contentType, expectResult.contentType);
   do_check_eq(msg.content, expectResult.content);
+  do_check_eq(msg.content.length, expectResult.content.length);
 }
 
 function test_hmac(rawDataArray, mac, key, expectResult) {
@@ -21,7 +22,7 @@ function test_hmac(rawDataArray, mac, key, expectResult) {
     return key;
   });
   do_check_eq(authInfo.data, rawDataArray);
-  do_check_eq(authInfo.dataLength, rawDataArray.length);
+  do_check_eq(authInfo.data.length, rawDataArray.length);
   do_check_eq(authInfo.checked, expectResult.checked);
   do_check_eq(authInfo.pass, expectResult.pass);
 }
