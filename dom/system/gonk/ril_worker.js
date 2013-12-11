@@ -1112,8 +1112,8 @@ let RIL = {
   /**
    * Get the preferred network type.
    */
-  getPreferredNetworkType: function getPreferredNetworkType() {
-    Buf.simpleRequest(REQUEST_GET_PREFERRED_NETWORK_TYPE);
+  getPreferredNetworkType: function getPreferredNetworkType(options) {
+    Buf.simpleRequest(REQUEST_GET_PREFERRED_NETWORK_TYPE, options);
   },
 
   /**
@@ -5886,13 +5886,11 @@ RIL[REQUEST_GET_PREFERRED_NETWORK_TYPE] = function REQUEST_GET_PREFERRED_NETWORK
     if (responseLen) {
       this.preferredNetworkType = networkType = Buf.readInt32();
     }
+    options.networkType = networkType;
   }
 
-  this.sendChromeMessage({
-    rilMessageType: "getPreferredNetworkType",
-    networkType: networkType,
-    success: options.rilRequestError == ERROR_SUCCESS
-  });
+  options.success = (options.rilRequestError == ERROR_SUCCESS);
+  this.sendChromeMessage(options);
 };
 RIL[REQUEST_GET_NEIGHBORING_CELL_IDS] = null;
 RIL[REQUEST_SET_LOCATION_UPDATES] = null;
