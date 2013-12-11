@@ -477,23 +477,23 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         nTypeSets = script->nTypeSets();
         funLength = script->funLength();
 
-        if (script->noScriptRval)
+        if (script->noScriptRval())
             scriptBits |= (1 << NoScriptRval);
-        if (script->savedCallerFun)
+        if (script->savedCallerFun())
             scriptBits |= (1 << SavedCallerFun);
-        if (script->strict)
+        if (script->strict())
             scriptBits |= (1 << Strict);
-        if (script->explicitUseStrict)
+        if (script->explicitUseStrict())
             scriptBits |= (1 << ExplicitUseStrict);
-        if (script->selfHosted)
+        if (script->selfHosted())
             scriptBits |= (1 << SelfHosted);
-        if (script->bindingsAccessedDynamically)
+        if (script->bindingsAccessedDynamically())
             scriptBits |= (1 << ContainsDynamicNameAccess);
-        if (script->funHasExtensibleScope)
+        if (script->funHasExtensibleScope())
             scriptBits |= (1 << FunHasExtensibleScope);
-        if (script->funNeedsDeclEnvObject)
+        if (script->funNeedsDeclEnvObject())
             scriptBits |= (1 << FunNeedsDeclEnvObject);
-        if (script->funHasAnyAliasedFormal)
+        if (script->funHasAnyAliasedFormal())
             scriptBits |= (1 << FunHasAnyAliasedFormal);
         if (script->argumentsHasVarBinding())
             scriptBits |= (1 << ArgumentsHasVarBinding);
@@ -501,15 +501,15 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             scriptBits |= (1 << NeedsArgsObj);
         if (!enclosingScript || enclosingScript->scriptSource() != script->scriptSource())
             scriptBits |= (1 << OwnSource);
-        if (script->isGeneratorExp)
+        if (script->isGeneratorExp())
             scriptBits |= (1 << IsGeneratorExp);
         if (script->isLegacyGenerator())
             scriptBits |= (1 << IsLegacyGenerator);
         if (script->isStarGenerator())
             scriptBits |= (1 << IsStarGenerator);
 
-        JS_ASSERT(!script->compileAndGo);
-        JS_ASSERT(!script->hasSingletons);
+        JS_ASSERT(!script->compileAndGo());
+        JS_ASSERT(!script->hasSingletons());
     }
 
     if (!xdr->codeUint32(&prologLength))
@@ -599,23 +599,23 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         scriptp.set(script);
 
         if (scriptBits & (1 << Strict))
-            script->strict = true;
+            script->strict_ = true;
         if (scriptBits & (1 << ExplicitUseStrict))
-            script->explicitUseStrict = true;
+            script->explicitUseStrict_ = true;
         if (scriptBits & (1 << ContainsDynamicNameAccess))
-            script->bindingsAccessedDynamically = true;
+            script->bindingsAccessedDynamically_ = true;
         if (scriptBits & (1 << FunHasExtensibleScope))
-            script->funHasExtensibleScope = true;
+            script->funHasExtensibleScope_ = true;
         if (scriptBits & (1 << FunNeedsDeclEnvObject))
-            script->funNeedsDeclEnvObject = true;
+            script->funNeedsDeclEnvObject_ = true;
         if (scriptBits & (1 << FunHasAnyAliasedFormal))
-            script->funHasAnyAliasedFormal = true;
+            script->funHasAnyAliasedFormal_ = true;
         if (scriptBits & (1 << ArgumentsHasVarBinding))
             script->setArgumentsHasVarBinding();
         if (scriptBits & (1 << NeedsArgsObj))
             script->setNeedsArgsObj(true);
         if (scriptBits & (1 << IsGeneratorExp))
-            script->isGeneratorExp = true;
+            script->isGeneratorExp_ = true;
 
         if (scriptBits & (1 << IsLegacyGenerator)) {
             JS_ASSERT(!(scriptBits & (1 << IsStarGenerator)));
@@ -843,7 +843,7 @@ JSScript::scriptSource() const {
 bool
 JSScript::initScriptCounts(JSContext *cx)
 {
-    JS_ASSERT(!hasScriptCounts);
+    JS_ASSERT(!hasScriptCounts());
 
     size_t n = 0;
 
@@ -887,7 +887,7 @@ JSScript::initScriptCounts(JSContext *cx)
         js_free(base);
         return false;
     }
-    hasScriptCounts = true; // safe to set this;  we can't fail after this point
+    hasScriptCounts_ = true; // safe to set this;  we can't fail after this point
 
     JS_ASSERT(size_t(cursor - base) == bytes);
 
@@ -902,7 +902,7 @@ JSScript::initScriptCounts(JSContext *cx)
 
 static inline ScriptCountsMap::Ptr GetScriptCountsMapEntry(JSScript *script)
 {
-    JS_ASSERT(script->hasScriptCounts);
+    JS_ASSERT(script->hasScriptCounts());
     ScriptCountsMap *map = script->compartment()->scriptCountsMap;
     ScriptCountsMap::Ptr p = map->lookup(script);
     JS_ASSERT(p);
@@ -938,14 +938,14 @@ JSScript::releaseScriptCounts()
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
     ScriptCounts counts = p->value();
     compartment()->scriptCountsMap->remove(p);
-    hasScriptCounts = false;
+    hasScriptCounts_ = false;
     return counts;
 }
 
 void
 JSScript::destroyScriptCounts(FreeOp *fop)
 {
-    if (hasScriptCounts) {
+    if (hasScriptCounts()) {
         ScriptCounts scriptCounts = releaseScriptCounts();
         scriptCounts.destroy(fop);
     }
@@ -1784,12 +1784,12 @@ JSScript::Create(ExclusiveContext *cx, HandleObject enclosingScope, bool savedCa
     new (&script->bindings) Bindings;
 
     script->enclosingScopeOrOriginalFunction_ = enclosingScope;
-    script->savedCallerFun = savedCallerFun;
+    script->savedCallerFun_ = savedCallerFun;
     script->initCompartment(cx);
 
-    script->compileAndGo = options.compileAndGo;
-    script->selfHosted = options.selfHostingMode;
-    script->noScriptRval = options.noScriptRval;
+    script->compileAndGo_ = options.compileAndGo;
+    script->selfHosted_ = options.selfHostingMode;
+    script->noScriptRval_ = options.noScriptRval;
 
     script->version = options.version;
     JS_ASSERT(script->getVersion() == options.version);     // assert that no overflow occurred
@@ -1990,12 +1990,12 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
         bce->tryNoteList.finish(script->trynotes());
     if (bce->blockScopeList.length() != 0)
         bce->blockScopeList.finish(script->blockScopes());
-    script->strict = bce->sc->strict;
-    script->explicitUseStrict = bce->sc->hasExplicitUseStrict();
-    script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
-    script->funHasExtensibleScope = funbox ? funbox->hasExtensibleScope() : false;
-    script->funNeedsDeclEnvObject = funbox ? funbox->needsDeclEnvObject() : false;
-    script->hasSingletons = bce->hasSingletons;
+    script->strict_ = bce->sc->strict;
+    script->explicitUseStrict_ = bce->sc->hasExplicitUseStrict();
+    script->bindingsAccessedDynamically_ = bce->sc->bindingsAccessedDynamically();
+    script->funHasExtensibleScope_ = funbox ? funbox->hasExtensibleScope() : false;
+    script->funNeedsDeclEnvObject_ = funbox ? funbox->needsDeclEnvObject() : false;
+    script->hasSingletons_ = bce->hasSingletons;
 
     if (funbox) {
         if (funbox->argumentsHasLocalBinding()) {
@@ -2012,15 +2012,15 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
 
     RootedFunction fun(cx, nullptr);
     if (funbox) {
-        JS_ASSERT(!bce->script->noScriptRval);
-        script->isGeneratorExp = funbox->inGenexpLambda;
+        JS_ASSERT(!bce->script->noScriptRval());
+        script->isGeneratorExp_ = funbox->inGenexpLambda;
         script->setGeneratorKind(funbox->generatorKind());
         script->setFunction(funbox->function());
     }
 
     for (unsigned i = 0, n = script->bindings.numArgs(); i < n; ++i) {
         if (script->formalIsAliased(i)) {
-            script->funHasAnyAliasedFormal = true;
+            script->funHasAnyAliasedFormal_ = true;
             break;
         }
     }
@@ -2093,10 +2093,10 @@ JSScript::enclosingScriptsCompiledSuccessfully() const
 void
 js::CallNewScriptHook(JSContext *cx, HandleScript script, HandleFunction fun)
 {
-    if (script->selfHosted)
+    if (script->selfHosted())
         return;
 
-    JS_ASSERT(!script->isActiveEval);
+    JS_ASSERT(!script->isActiveEval());
     if (JSNewScriptHook hook = cx->runtime()->debugHooks.newScriptHook) {
         AutoKeepAtoms keepAtoms(cx->perThreadData);
         hook(cx, script->filename(), script->lineno(), script, fun,
@@ -2107,7 +2107,7 @@ js::CallNewScriptHook(JSContext *cx, HandleScript script, HandleFunction fun)
 void
 js::CallDestroyScriptHook(FreeOp *fop, JSScript *script)
 {
-    if (script->selfHosted)
+    if (script->selfHosted())
         return;
 
     // The hook will only call into JS if a GC is not running.
@@ -2473,12 +2473,12 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     CompileOptions options(cx);
     options.setPrincipals(cx->compartment()->principals)
            .setOriginPrincipals(src->originPrincipals())
-           .setCompileAndGo(src->compileAndGo)
-           .setSelfHostingMode(src->selfHosted)
-           .setNoScriptRval(src->noScriptRval)
+           .setCompileAndGo(src->compileAndGo())
+           .setSelfHostingMode(src->selfHosted())
+           .setNoScriptRval(src->noScriptRval())
            .setVersion(src->getVersion());
 
-    RootedScript dst(cx, JSScript::Create(cx, enclosingScope, src->savedCallerFun,
+    RootedScript dst(cx, JSScript::Create(cx, enclosingScope, src->savedCallerFun(),
                                           options, src->staticLevel(),
                                           sourceObject, src->sourceStart(), src->sourceEnd()));
     if (!dst) {
@@ -2511,21 +2511,21 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
             dst->setNeedsArgsObj(src->needsArgsObj());
     }
     dst->cloneHasArray(src);
-    dst->strict = src->strict;
-    dst->explicitUseStrict = src->explicitUseStrict;
-    dst->bindingsAccessedDynamically = src->bindingsAccessedDynamically;
-    dst->funHasExtensibleScope = src->funHasExtensibleScope;
-    dst->funNeedsDeclEnvObject = src->funNeedsDeclEnvObject;
-    dst->funHasAnyAliasedFormal = src->funHasAnyAliasedFormal;
-    dst->hasSingletons = src->hasSingletons;
-    dst->treatAsRunOnce = src->treatAsRunOnce;
-    dst->isGeneratorExp = src->isGeneratorExp;
+    dst->strict_ = src->strict();
+    dst->explicitUseStrict_ = src->explicitUseStrict();
+    dst->bindingsAccessedDynamically_ = src->bindingsAccessedDynamically();
+    dst->funHasExtensibleScope_ = src->funHasExtensibleScope();
+    dst->funNeedsDeclEnvObject_ = src->funNeedsDeclEnvObject();
+    dst->funHasAnyAliasedFormal_ = src->funHasAnyAliasedFormal();
+    dst->hasSingletons_ = src->hasSingletons();
+    dst->treatAsRunOnce_ = src->treatAsRunOnce();
+    dst->isGeneratorExp_ = src->isGeneratorExp();
     dst->setGeneratorKind(src->generatorKind());
 
     /* Copy over hints. */
-    dst->shouldInline = src->shouldInline;
-    dst->shouldCloneAtCallsite = src->shouldCloneAtCallsite;
-    dst->isCallsiteClone = src->isCallsiteClone;
+    dst->shouldInline_ = src->shouldInline();
+    dst->shouldCloneAtCallsite_ = src->shouldCloneAtCallsite();
+    dst->isCallsiteClone_ = src->isCallsiteClone();
 
     if (nconsts != 0) {
         HeapValue *vector = Rebase<HeapValue>(dst, src, src->consts()->vector);
@@ -2578,7 +2578,7 @@ js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction c
 
     script = clone->nonLazyScript();
     CallNewScriptHook(cx, script, clone);
-    RootedGlobalObject global(cx, script->compileAndGo ? &script->global() : nullptr);
+    RootedGlobalObject global(cx, script->compileAndGo() ? &script->global() : nullptr);
     Debugger::onNewScript(cx, script, global);
 
     return true;
@@ -2587,7 +2587,7 @@ js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction c
 DebugScript *
 JSScript::debugScript()
 {
-    JS_ASSERT(hasDebugScript);
+    JS_ASSERT(hasDebugScript_);
     DebugScriptMap *map = compartment()->debugScriptMap;
     JS_ASSERT(map);
     DebugScriptMap::Ptr p = map->lookup(this);
@@ -2598,21 +2598,21 @@ JSScript::debugScript()
 DebugScript *
 JSScript::releaseDebugScript()
 {
-    JS_ASSERT(hasDebugScript);
+    JS_ASSERT(hasDebugScript_);
     DebugScriptMap *map = compartment()->debugScriptMap;
     JS_ASSERT(map);
     DebugScriptMap::Ptr p = map->lookup(this);
     JS_ASSERT(p);
     DebugScript *debug = p->value();
     map->remove(p);
-    hasDebugScript = false;
+    hasDebugScript_ = false;
     return debug;
 }
 
 void
 JSScript::destroyDebugScript(FreeOp *fop)
 {
-    if (hasDebugScript) {
+    if (hasDebugScript_) {
         for (jsbytecode *pc = code(); pc < codeEnd(); pc++) {
             if (BreakpointSite *site = getBreakpointSite(pc)) {
                 /* Breakpoints are swept before finalization. */
@@ -2628,7 +2628,7 @@ JSScript::destroyDebugScript(FreeOp *fop)
 bool
 JSScript::ensureHasDebugScript(JSContext *cx)
 {
-    if (hasDebugScript)
+    if (hasDebugScript_)
         return true;
 
     size_t nbytes = offsetof(DebugScript, breakpoints) + length() * sizeof(BreakpointSite*);
@@ -2652,7 +2652,7 @@ JSScript::ensureHasDebugScript(JSContext *cx)
         js_free(debug);
         return false;
     }
-    hasDebugScript = true; // safe to set this;  we can't fail after this point
+    hasDebugScript_ = true; // safe to set this;  we can't fail after this point
 
     /*
      * Ensure that any Interpret() instances running on this script have
@@ -2679,7 +2679,7 @@ JSScript::recompileForStepMode(FreeOp *fop)
 bool
 JSScript::tryNewStepMode(JSContext *cx, uint32_t newValue)
 {
-    JS_ASSERT(hasDebugScript);
+    JS_ASSERT(hasDebugScript_);
 
     DebugScript *debug = debugScript();
     uint32_t prior = debug->stepMode;

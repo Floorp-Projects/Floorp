@@ -17,9 +17,20 @@ fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63
 # dynamic value changes:
 == show-value.html show-value-ref.html
 
+# disabled
+== number-disabled.html number-disabled-ref.html
+
 # focus
 needs-focus == focus-handling.html focus-handling-ref.html
 
+# select
+== number-selected.html number-selected-ref.html
+
 # pseudo-elements not usable from content:
 == number-pseudo-elements.html number-pseudo-elements-ref.html
+
+# check that if the anonymous text control is reframed, we reframe the whole
+# number control (the fuzzy is for the top-right and bottom-left of the border
+# bevel which gets slightly different antialiasing after invalidation):
+fuzzy(128,4) == number-reframe-anon-text-field.html number-reframe-anon-text-field-ref.html
 

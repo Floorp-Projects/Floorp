@@ -1019,7 +1019,7 @@ protected:
   NS_HIDDEN_(void) GetDocumentColorPreferences();
 
   NS_HIDDEN_(void) PreferenceChanged(const char* aPrefName);
-  static NS_HIDDEN_(int) PrefChangedCallback(const char*, void*);
+  static NS_HIDDEN_(void) PrefChangedCallback(const char*, void*);
 
   NS_HIDDEN_(void) UpdateAfterPreferencesChanged();
   static NS_HIDDEN_(void) PrefChangedUpdateTimerCallback(nsITimer *aTimer, void *aClosure);

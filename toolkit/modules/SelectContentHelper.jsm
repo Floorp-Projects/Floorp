@@ -74,7 +74,13 @@ this.SelectContentHelper.prototype = {
   receiveMessage: function(message) {
     switch (message.name) {
       case "Forms:SelectDropDownItem":
-        this.element.selectedIndex = message.data.value;
+        if (this.element.selectedIndex != message.data.value) {
+          this.element.selectedIndex = message.data.value;
+
+          let event = this.element.ownerDocument.createEvent("Events");
+          event.initEvent("change", true, true);
+          this.element.dispatchEvent(event);
+        }
 
         //intentional fall-through
       case "Forms:DismissedDropDown":

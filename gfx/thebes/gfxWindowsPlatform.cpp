@@ -1118,7 +1118,7 @@ gfxWindowsPlatform::UseClearTypeAlways()
 }
 
 void 
-gfxWindowsPlatform::GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion)
+gfxWindowsPlatform::GetDLLVersion(char16ptr_t aDLLPath, nsAString& aVersion)
 {
     DWORD versInfoSize, vers[4] = {0};
     // version info not available case

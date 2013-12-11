@@ -86,9 +86,9 @@ this.BrowserUITelemetry = {
   },
 
   _countableEvents: {},
-  _countMouseUpEvent: function(aCategory, aAction, aMouseUpEvent) {
+  _countMouseUpEvent: function(aCategory, aAction, aButton) {
     const BUTTONS = ["left", "middle", "right"];
-    let buttonKey = BUTTONS[aMouseUpEvent.button];
+    let buttonKey = BUTTONS[aButton];
     if (buttonKey) {
       let countObject =
         this._ensureObjectChain([aCategory, aAction, buttonKey], 0);
@@ -134,7 +134,7 @@ this.BrowserUITelemetry = {
     if (ALL_BUILTIN_ITEMS.indexOf(item.id) != -1) {
       // Base case - we clicked directly on one of our built-in items,
       // and we can go ahead and register that click.
-      this._countMouseUpEvent("click-builtin-item", item.id, aEvent);
+      this._countMouseUpEvent("click-builtin-item", item.id, aEvent.button);
     }
   },
 

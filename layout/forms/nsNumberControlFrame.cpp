@@ -22,6 +22,10 @@
 #include "nsStyleSet.h"
 #include "nsIDOMMutationEvent.h"
 
+#ifdef ACCESSIBILITY
+#include "mozilla/a11y/AccTypes.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -150,11 +154,24 @@ nsNumberControlFrame::
                            xoffset, yoffset, 0);
 }
 
+void
+nsNumberControlFrame::SyncDisabledState()
+{
+  nsEventStates eventStates = mContent->AsElement()->State();
+  if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
+    mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, EmptyString(),
+                        true);
+  } else {
+    mTextField->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
+  }
+}
+
 NS_IMETHODIMP
 nsNumberControlFrame::AttributeChanged(int32_t  aNameSpaceID,
                                        nsIAtom* aAttribute,
                                        int32_t  aModType)
 {
+  // nsGkAtoms::disabled is handled by SyncDisabledState
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::placeholder ||
         aAttribute == nsGkAtoms::readonly ||
@@ -173,6 +190,14 @@ nsNumberControlFrame::AttributeChanged(int32_t  aNameSpaceID,
 
   return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                             aModType);
+}
+
+void
+nsNumberControlFrame::ContentStatesChanged(nsEventStates aStates)
+{
+  if (aStates.HasState(NS_EVENT_STATE_DISABLED)) {
+    nsContentUtils::AddScriptRunner(new SyncDisabledStateEvent(this));
+  }
 }
 
 nsresult
@@ -201,6 +226,12 @@ nsNumberControlFrame::MakeAnonymousElement(Element** aResult,
 
   if (!aElements.AppendElement(ContentInfo(resultElement, newStyleContext))) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberSpinDown ||
+      aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberSpinUp) {
+    resultElement->SetAttr(kNameSpaceID_None, nsGkAtoms::role,
+                           NS_LITERAL_STRING("button"), false);
   }
 
   resultElement.forget(aResult);
@@ -310,6 +341,9 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
                             nsGkAtoms::div,
                             nsCSSPseudoElements::ePseudo_mozNumberSpinDown,
                             spinBoxCI.mStyleContext);
+
+  SyncDisabledState();
+
   return rv;
 }
 
@@ -454,6 +488,12 @@ nsNumberControlFrame::HandleFocusEvent(WidgetEvent* aEvent)
   }
 }
 
+nsresult
+nsNumberControlFrame::HandleSelectCall()
+{
+  return HTMLInputElement::FromContent(mTextField)->Select();
+}
+
 #define STYLES_DISABLING_NATIVE_THEMING \
   NS_AUTHOR_SPECIFIED_BACKGROUND | \
   NS_AUTHOR_SPECIFIED_PADDING | \
@@ -536,3 +576,11 @@ nsNumberControlFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
 
   return nsContainerFrame::GetPseudoElement(aType);
 }
+
+#ifdef ACCESSIBILITY
+a11y::AccType
+nsNumberControlFrame::AccessibleType()
+{
+  return a11y::eHTMLSpinnerType;
+}
+#endif

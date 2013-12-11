@@ -1672,12 +1672,11 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
   return NS_OK;
 }
 
-static int BoolVarChanged(const char* aPref, void* aClosure)
+static void BoolVarChanged(const char* aPref, void* aClosure)
 {
   CacheData* cache = static_cast<CacheData*>(aClosure);
   *((bool*)cache->cacheLocation) =
     Preferences::GetBool(aPref, cache->defaultValueBool);
-  return 0;
 }
 
 // static
@@ -1695,12 +1694,11 @@ Preferences::AddBoolVarCache(bool* aCache,
   return RegisterCallback(BoolVarChanged, aPref, data);
 }
 
-static int IntVarChanged(const char* aPref, void* aClosure)
+static void IntVarChanged(const char* aPref, void* aClosure)
 {
   CacheData* cache = static_cast<CacheData*>(aClosure);
   *((int32_t*)cache->cacheLocation) =
     Preferences::GetInt(aPref, cache->defaultValueInt);
-  return 0;
 }
 
 // static
@@ -1718,12 +1716,11 @@ Preferences::AddIntVarCache(int32_t* aCache,
   return RegisterCallback(IntVarChanged, aPref, data);
 }
 
-static int UintVarChanged(const char* aPref, void* aClosure)
+static void UintVarChanged(const char* aPref, void* aClosure)
 {
   CacheData* cache = static_cast<CacheData*>(aClosure);
   *((uint32_t*)cache->cacheLocation) =
     Preferences::GetUint(aPref, cache->defaultValueUint);
-  return 0;
 }
 
 // static
@@ -1741,12 +1738,11 @@ Preferences::AddUintVarCache(uint32_t* aCache,
   return RegisterCallback(UintVarChanged, aPref, data);
 }
 
-static int FloatVarChanged(const char* aPref, void* aClosure)
+static void FloatVarChanged(const char* aPref, void* aClosure)
 {
   CacheData* cache = static_cast<CacheData*>(aClosure);
   *((float*)cache->cacheLocation) =
     Preferences::GetFloat(aPref, cache->defaultValueFloat);
-  return 0;
 }
 
 // static

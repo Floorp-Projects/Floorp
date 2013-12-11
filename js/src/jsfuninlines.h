@@ -44,9 +44,9 @@ CanReuseFunctionForClone(JSContext *cx, HandleFunction fun)
         lazy->setHasBeenCloned();
     } else {
         JSScript *script = fun->nonLazyScript();
-        if (script->hasBeenCloned)
+        if (script->hasBeenCloned())
             return false;
-        script->hasBeenCloned = true;
+        script->setHasBeenCloned();
     }
     return true;
 }

@@ -998,9 +998,11 @@ class ICStubCompiler
 
 
   protected:
-    mozilla::DebugOnly<bool> entersStubFrame_;
     JSContext *cx;
     ICStub::Kind kind;
+#ifdef DEBUG
+    bool entersStubFrame_;
+#endif
 
     // By default the stubcode key is just the kind.
     virtual int32_t getKey() const {
@@ -1014,7 +1016,10 @@ class ICStubCompiler
     IonCode *getStubCode();
 
     ICStubCompiler(JSContext *cx, ICStub::Kind kind)
-      : suppressGC(cx), entersStubFrame_(false), cx(cx), kind(kind)
+      : suppressGC(cx), cx(cx), kind(kind)
+#ifdef DEBUG
+      , entersStubFrame_(false)
+#endif
     {}
 
     // Emits a tail call to a VMFunction wrapper.
@@ -3560,7 +3565,7 @@ class ICSetElem_DenseAddImpl : public ICSetElem_DenseAdd
     friend class ICStubSpace;
 
     static const size_t NumShapes = ProtoChainDepth + 1;
-    HeapPtrShape shapes_[NumShapes];
+    mozilla::Array<HeapPtrShape, NumShapes> shapes_;
 
     ICSetElem_DenseAddImpl(IonCode *stubCode, types::TypeObject *type,
                            const AutoShapeVector *shapes)
@@ -3817,7 +3822,7 @@ class ICGetName_Scope : public ICMonitoredStub
 
     static const size_t MAX_HOPS = 6;
 
-    HeapPtrShape shapes_[NumHops + 1];
+    mozilla::Array<HeapPtrShape, NumHops + 1> shapes_;
     uint32_t offset_;
 
     ICGetName_Scope(IonCode *stubCode, ICStub *firstMonitorStub,
@@ -4959,7 +4964,7 @@ class ICSetProp_NativeAddImpl : public ICSetProp_NativeAdd
     friend class ICStubSpace;
 
     static const size_t NumShapes = ProtoChainDepth + 1;
-    HeapPtrShape shapes_[NumShapes];
+    mozilla::Array<HeapPtrShape, NumShapes> shapes_;
 
     ICSetProp_NativeAddImpl(IonCode *stubCode, HandleTypeObject type,
                             const AutoShapeVector *shapes,

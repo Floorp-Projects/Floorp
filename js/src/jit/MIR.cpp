@@ -2767,21 +2767,17 @@ MAsmJSCall::New(TempAllocator &alloc, Callee callee, const Args &args, MIRType r
     call->callee_ = callee;
     call->setResultType(resultType);
 
-    call->numArgs_ = args.length();
-    call->argRegs_ = (AnyRegister *)GetIonContext()->temp->allocate(call->numArgs_ * sizeof(AnyRegister));
-    if (!call->argRegs_)
+    if (!call->argRegs_.init(alloc, args.length()))
         return nullptr;
-    for (size_t i = 0; i < call->numArgs_; i++)
+    for (size_t i = 0; i < call->argRegs_.length(); i++)
         call->argRegs_[i] = args[i].reg;
 
-    call->numOperands_ = call->numArgs_ + (callee.which() == Callee::Dynamic ? 1 : 0);
-    call->operands_ = (MUse *)GetIonContext()->temp->allocate(call->numOperands_ * sizeof(MUse));
-    if (!call->operands_)
+    if (!call->operands_.init(alloc, call->argRegs_.length() + (callee.which() == Callee::Dynamic ? 1 : 0)))
         return nullptr;
-    for (size_t i = 0; i < call->numArgs_; i++)
+    for (size_t i = 0; i < call->argRegs_.length(); i++)
         call->setOperand(i, args[i].def);
     if (callee.which() == Callee::Dynamic)
-        call->setOperand(call->numArgs_, callee.dynamic());
+        call->setOperand(call->argRegs_.length(), callee.dynamic());
 
     return call;
 }

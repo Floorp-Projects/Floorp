@@ -22,6 +22,7 @@ function test()
     let count = 0;
     gUI.on("editor-added", function editorAdded(event, editor) {
       if (++count == 2) {
+        info("all editors added to UI");
         gUI.off("editor-added", editorAdded);
         gUI.editors[0].getSourceEditor().then(runTests);
       }
@@ -41,6 +42,7 @@ function runTests()
 
       gUI.on("editor-added", function editorAdded(event, editor) {
         if (++count == 2) {
+          info("all editors added after reload");
           gUI.off("editor-added", editorAdded);
           gUI.editors[1].getSourceEditor().then(testRemembered);
         }
@@ -67,6 +69,7 @@ function testNewPage()
   gUI.on("editor-added", function editorAdded(event, editor) {
     info("editor added here")
     if (++count == 2) {
+      info("all editors added after navigating page");
       gUI.off("editor-added", editorAdded);
       gUI.editors[0].getSourceEditor().then(testNotRemembered);
     }

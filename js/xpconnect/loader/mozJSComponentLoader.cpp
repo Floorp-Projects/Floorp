@@ -570,6 +570,37 @@ mozJSComponentLoader::NoteSubScript(HandleScript aScript, HandleObject aThisObje
   mThisObjects.Put(aScript, aThisObject);
 }
 
+/* static */ size_t
+mozJSComponentLoader::DataEntrySizeOfExcludingThis(const nsACString& aKey,
+                                                   ModuleEntry* const& aData,
+                                                   MallocSizeOf aMallocSizeOf, void*)
+{
+    return aKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
+        aData->SizeOfIncludingThis(aMallocSizeOf);
+}
+
+/* static */ size_t
+mozJSComponentLoader::ClassEntrySizeOfExcludingThis(const nsACString& aKey,
+                                                    const nsAutoPtr<ModuleEntry>& aData,
+                                                    MallocSizeOf aMallocSizeOf, void*)
+{
+    return aKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
+        aData->SizeOfIncludingThis(aMallocSizeOf);
+}
+
+size_t
+mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
+{
+    size_t amount = aMallocSizeOf(this);
+
+    amount += mModules.SizeOfExcludingThis(DataEntrySizeOfExcludingThis, aMallocSizeOf);
+    amount += mImports.SizeOfExcludingThis(ClassEntrySizeOfExcludingThis, aMallocSizeOf);
+    amount += mInProgressImports.SizeOfExcludingThis(DataEntrySizeOfExcludingThis, aMallocSizeOf);
+    amount += mThisObjects.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+
+    return amount;
+}
+
 // Some stack based classes for cleaning up on early return
 #ifdef HAVE_PR_MEMMAP
 class FileAutoCloser
@@ -1351,6 +1382,15 @@ mozJSComponentLoader::Observe(nsISupports *subject, const char *topic,
     }
 
     return NS_OK;
+}
+
+size_t
+mozJSComponentLoader::ModuleEntry::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+    size_t n = aMallocSizeOf(this);
+    n += aMallocSizeOf(location);
+
+    return n;
 }
 
 /* static */ already_AddRefed<nsIFactory>

@@ -154,7 +154,7 @@ nsresult PREF_ClearAllUserPrefs();
 ** compilers were having problems with multiple definitions.
 */
 #ifndef have_PrefChangedFunc_typedef
-typedef nsresult (*PrefChangedFunc) (const char *, void *); 
+typedef void (*PrefChangedFunc) (const char *, void *);
 #define have_PrefChangedFunc_typedef
 #endif
 
