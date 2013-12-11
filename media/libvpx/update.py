@@ -206,12 +206,10 @@ files = {
         'vpx/vpx_image.h',
         'vpx/vpx_integer.h',
     ],
-    'X86-64_ASM_ENCODER': [
-        'vp9/encoder/x86/vp9_quantize_ssse3.asm',
-    ],
     'X86-64_ASM': [
         'third_party/x86inc/x86inc.asm',
         'vp8/common/x86/loopfilter_block_sse2.asm',
+        'vp9/encoder/x86/vp9_quantize_ssse3.asm',
     ],
     'SOURCES': [
         'vp8/common/rtcd.c',
