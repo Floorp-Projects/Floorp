@@ -32,6 +32,11 @@ static const int kOpusSamplingRate = 48000;
 // The duration of an Opus frame, and it must be 2.5, 5, 10, 20, 40 or 60 ms.
 static const int kFrameDurationMs  = 20;
 
+// The supported sampling rate of input signal (Hz),
+// must be one of the following. Will resampled to 48kHz otherwise.
+static const int kOpusSupportedInputSamplingRates[5] =
+                   {8000, 12000, 16000, 24000, 48000};
+
 namespace {
 
 // An endian-neutral serialization of integers. Serializing T in little endian
@@ -146,12 +151,14 @@ OpusTrackEncoder::Init(int aChannels, int aSamplingRate)
   if (aChannels <= 0) {
     return NS_ERROR_FAILURE;
   }
-  // The granule position is required to be incremented at a rate of 48KHz, and
-  // it is simply calculated as |granulepos = samples * (48000/source_rate)|,
-  // that is, the source sampling rate must divide 48000 evenly.
-  // If this constraint is not satisfied, we resample the input to 48kHz.
-  if (!((aSamplingRate >= 8000) && (kOpusSamplingRate / aSamplingRate) *
-         aSamplingRate == kOpusSamplingRate)) {
+
+  // According to www.opus-codec.org, creating an opus encoder requires the
+  // sampling rate of source signal be one of 8000, 12000, 16000, 24000, or
+  // 48000. If this constraint is not satisfied, we resample the input to 48kHz.
+  nsTArray<int> supportedSamplingRates;
+  supportedSamplingRates.AppendElements(kOpusSupportedInputSamplingRates,
+                         MOZ_ARRAY_LENGTH(kOpusSupportedInputSamplingRates));
+  if (!supportedSamplingRates.Contains(aSamplingRate)) {
     int error;
     mResampler = speex_resampler_init(mChannels,
                                       aSamplingRate,
