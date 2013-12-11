@@ -185,9 +185,9 @@ this.Authenticator = {
       checked: false,
       sec: AUTH_SEC_TYPE[sec],
       mac: mac.toUpperCase(),
-      dataLength: wbxml.length,
       data: wbxml
     };
+    authInfo.data.length = wbxml.length;
 
     switch (authInfo.sec) {
       case "NETWPIN":
