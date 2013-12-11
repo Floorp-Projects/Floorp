@@ -272,6 +272,39 @@ MobileConnection::SelectNetworkAutomatically(nsIDOMDOMRequest** aRequest)
 }
 
 NS_IMETHODIMP
+MobileConnection::SetPreferredNetworkType(const nsAString& aType,
+                                          nsIDOMDOMRequest** aDomRequest)
+{
+  *aDomRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SetPreferredNetworkType(mClientId, GetOwner(), aType, aDomRequest);
+}
+
+NS_IMETHODIMP
+MobileConnection::GetPreferredNetworkType(nsIDOMDOMRequest** aDomRequest)
+{
+  *aDomRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->GetPreferredNetworkType(mClientId, GetOwner(), aDomRequest);
+}
+
+NS_IMETHODIMP
 MobileConnection::SetRoamingPreference(const nsAString& aMode, nsIDOMDOMRequest** aDomRequest)
 {
   *aDomRequest = nullptr;
