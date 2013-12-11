@@ -108,12 +108,6 @@ public:
     mBackendData = aBackendData;
   }
 
-  /**
-   * Our IPDL actor is being destroyed, get rid of any shmem resources now and
-   * don't worry about compositing anymore.
-   */
-  virtual void OnActorDestroy() {};
-
   // If base class overrides, it should still call the parent implementation
   virtual void SetCompositor(Compositor* aCompositor);
 
