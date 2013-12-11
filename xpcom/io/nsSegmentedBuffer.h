@@ -13,13 +13,12 @@ class nsSegmentedBuffer
 public:
     nsSegmentedBuffer()
         : mSegmentSize(0), mMaxSize(0), 
-          mSegAllocator(nullptr), mSegmentArray(nullptr),
+          mSegmentArray(nullptr),
           mSegmentArrayCount(0),
           mFirstSegmentIndex(0), mLastSegmentIndex(0) {}
 
     ~nsSegmentedBuffer() {
         Empty();
-        NS_IF_RELEASE(mSegAllocator);
     }
 
 
@@ -72,7 +71,6 @@ protected:
 protected:
     uint32_t            mSegmentSize;
     uint32_t            mMaxSize;
-    nsIMemory*       mSegAllocator;
     char**              mSegmentArray;
     uint32_t            mSegmentArrayCount;
     int32_t             mFirstSegmentIndex;
