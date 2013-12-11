@@ -43,7 +43,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
-
+  virtual void ContentStatesChanged(nsEventStates aStates);
   virtual bool IsLeaf() const MOZ_OVERRIDE { return false; }
 
 #ifdef ACCESSIBILITY
@@ -145,6 +145,34 @@ private:
                                   nsHTMLReflowMetrics& aWrappersDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsIFrame* aOuterWrapperFrame);
+
+  class SyncDisabledStateEvent;
+  friend class SyncDisabledStateEvent;
+  class SyncDisabledStateEvent : public nsRunnable
+  {
+  public:
+    SyncDisabledStateEvent(nsNumberControlFrame* aFrame)
+    : mFrame(aFrame)
+    {}
+
+    NS_IMETHOD Run() MOZ_OVERRIDE
+    {
+      nsNumberControlFrame* frame =
+        static_cast<nsNumberControlFrame*>(mFrame.GetFrame());
+      NS_ENSURE_STATE(frame);
+
+      frame->SyncDisabledState();
+      return NS_OK;
+    }
+
+  private:
+    nsWeakFrame mFrame;
+  };
+
+  /**
+   * Sync the disabled state of the anonymous children up with our content's.
+   */
+  void SyncDisabledState();
 
   /**
    * The text field used to edit and show the number.
