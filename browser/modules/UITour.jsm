@@ -30,7 +30,7 @@ this.UITour = {
   urlbarCapture: new WeakMap(),
   appMenuOpenForAnnotation: new Set(),
 
-  highlightEffects: ["wobble", "zoom", "color"],
+  highlightEffects: ["random", "wobble", "zoom", "color"],
   targets: new Map([
     ["addons",      {query: "#add-ons-button"}],
     ["appMenu",     {query: "#PanelUI-menu-button"}],
@@ -104,7 +104,11 @@ this.UITour = {
             Cu.reportError("UITour: Target could not be resolved: " + data.target);
             return;
           }
-          this.showHighlight(target);
+          let effect = undefined;
+          if (this.highlightEffects.indexOf(data.effect) !== -1) {
+            effect = data.effect;
+          }
+          this.showHighlight(target, effect);
         }).then(null, Cu.reportError);
         break;
       }
@@ -442,14 +446,24 @@ this.UITour = {
       aWindow.gBrowser.removeTab(tabInfo.tab);
   },
 
-  showHighlight: function(aTarget) {
+  /**
+   * @param aTarget    The element to highlight.
+   * @param aEffect    (optional) The effect to use from UITour.highlightEffects or "none".
+   * @see UITour.highlightEffects
+   */
+  showHighlight: function(aTarget, aEffect = "none") {
     function showHighlightPanel(aTargetEl) {
       let highlighter = aTargetEl.ownerDocument.getElementById("UITourHighlight");
 
-      let randomEffect = Math.floor(Math.random() * this.highlightEffects.length);
-      if (randomEffect == this.highlightEffects.length)
-        randomEffect--; // On the order of 1 in 2^62 chance of this happening.
-      highlighter.setAttribute("active", this.highlightEffects[randomEffect]);
+      let effect = aEffect;
+      if (effect == "random") {
+        // Exclude "random" from the randomly selected effects.
+        let randomEffect = 1 + Math.floor(Math.random() * (this.highlightEffects.length - 1));
+        if (randomEffect == this.highlightEffects.length)
+          randomEffect--; // On the order of 1 in 2^62 chance of this happening.
+        effect = this.highlightEffects[randomEffect];
+      }
+      highlighter.setAttribute("active", effect);
 
       let targetRect = aTargetEl.getBoundingClientRect();
 
