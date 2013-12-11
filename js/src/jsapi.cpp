@@ -3966,7 +3966,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSObject *parentArg)
             return nullptr;
     }
     if (fun->isInterpreted() && (fun->nonLazyScript()->enclosingStaticScope() ||
-        (fun->nonLazyScript()->compileAndGo && !parent->is<GlobalObject>())))
+        (fun->nonLazyScript()->compileAndGo() && !parent->is<GlobalObject>())))
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
         return nullptr;
@@ -4570,7 +4570,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *objArg, const char *utf8, siz
 JS_PUBLIC_API(JSObject *)
 JS_GetGlobalFromScript(JSScript *script)
 {
-    JS_ASSERT(!script->isCachedEval);
+    JS_ASSERT(!script->isCachedEval());
     return &script->global();
 }
 

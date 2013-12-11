@@ -4222,7 +4222,7 @@ GetPropertyHelperInline(JSContext *cx,
                 return true;
 
             /* Don't warn repeatedly for the same script. */
-            if (!script || script->warnedAboutUndefinedProp)
+            if (!script || script->warnedAboutUndefinedProp())
                 return true;
 
             /* We may just be checking if that object has an iterator. */
@@ -4237,7 +4237,7 @@ GetPropertyHelperInline(JSContext *cx,
             }
 
             unsigned flags = JSREPORT_WARNING | JSREPORT_STRICT;
-            script->warnedAboutUndefinedProp = true;
+            script->setWarnedAboutUndefinedProp();
 
             /* Ok, bad undefined property reference: whine about it. */
             RootedValue val(cx, IdToValue(id));
@@ -4484,7 +4484,7 @@ MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 
         // If the code is not strict and extra warnings aren't enabled, then no
         // check is needed.
-        if (!script->strict && !cx->options().extraWarnings())
+        if (!script->strict() && !cx->options().extraWarnings())
             return true;
     }
 
@@ -4508,7 +4508,7 @@ js::ReportIfUndeclaredVarAssignment(JSContext *cx, HandleString propname)
 
         // If the code is not strict and extra warnings aren't enabled, then no
         // check is needed.
-        if (!script->strict && !cx->options().extraWarnings())
+        if (!script->strict() && !cx->options().extraWarnings())
             return true;
 
         /*

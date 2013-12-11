@@ -2293,7 +2293,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
     }
     if (funobj->compartment() != cx->compartment()) {
         JSFunction *fun = &funobj->as<JSFunction>();
-        if (fun->hasScript() && fun->nonLazyScript()->compileAndGo) {
+        if (fun->hasScript() && fun->nonLazyScript()->compileAndGo()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
                                  "function", "compile-and-go");
             return false;

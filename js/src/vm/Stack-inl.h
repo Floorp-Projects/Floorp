@@ -137,7 +137,7 @@ template <class Op>
 inline void
 StackFrame::forEachUnaliasedActual(Op op)
 {
-    JS_ASSERT(!script()->funHasAnyAliasedFormal);
+    JS_ASSERT(!script()->funHasAnyAliasedFormal());
     JS_ASSERT(!script()->needsArgsObj());
 
     const Value *argsEnd = argv() + numActualArgs();
@@ -860,7 +860,7 @@ InterpreterActivation::InterpreterActivation(RunState &state, JSContext *cx, Sta
         regs_ = state.asGenerator()->gen()->regs;
     }
 
-    JS_ASSERT_IF(entryFrame_->isEvalFrame(), state_.script()->isActiveEval);
+    JS_ASSERT_IF(entryFrame_->isEvalFrame(), state_.script()->isActiveEval());
 }
 
 InterpreterActivation::~InterpreterActivation()

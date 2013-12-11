@@ -1746,7 +1746,7 @@ GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
         IonSpew(IonSpew_InlineCaches, "Invalidating from idempotent cache %s:%d",
                 topScript->filename(), topScript->lineno());
 
-        topScript->invalidatedIdempotentCache = true;
+        topScript->setInvalidatedIdempotentCache();
 
         // Do not re-invalidate if the lookup already caused invalidation.
         if (!topScript->hasIonScript())
@@ -4033,7 +4033,7 @@ GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
         if (!callObj->isForEval()) {
             JSFunction *fun = &callObj->callee();
             JSScript *script = fun->nonLazyScript();
-            if (!script->funHasExtensibleScope)
+            if (!script->funHasExtensibleScope())
                 return;
         }
     } else if (scopeObj->is<GlobalObject>()) {
@@ -4336,7 +4336,7 @@ CallsiteCloneIC::update(JSContext *cx, size_t cacheIndex, HandleObject callee)
     // Act as the identity for functions that are not clone-at-callsite, as we
     // generate this cache as long as some callees are clone-at-callsite.
     RootedFunction fun(cx, &callee->as<JSFunction>());
-    if (!fun->hasScript() || !fun->nonLazyScript()->shouldCloneAtCallsite)
+    if (!fun->hasScript() || !fun->nonLazyScript()->shouldCloneAtCallsite())
         return fun;
 
     IonScript *ion = GetTopIonJSScript(cx)->ionScript();

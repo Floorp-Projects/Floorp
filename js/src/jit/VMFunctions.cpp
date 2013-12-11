@@ -63,7 +63,7 @@ InvokeFunction(JSContext *cx, HandleObject obj0, uint32_t argc, Value *argv, Val
                 return false;
 
             // Clone function at call site if needed.
-            if (fun->nonLazyScript()->shouldCloneAtCallsite) {
+            if (fun->nonLazyScript()->shouldCloneAtCallsite()) {
                 jsbytecode *pc;
                 RootedScript script(cx, cx->currentScript(&pc));
                 fun = CloneFunctionAtCallsite(cx, fun, script, pc);
