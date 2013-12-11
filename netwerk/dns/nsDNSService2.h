@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -30,6 +32,8 @@ public:
     nsDNSService();
     ~nsDNSService();
 
+    static nsIDNSService* GetXPCOMSingleton();
+
     int64_t Amount() MOZ_OVERRIDE
     {
         return SizeOfIncludingThis(MallocSizeOf);
@@ -37,6 +41,8 @@ public:
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 private:
+    static nsDNSService* GetSingleton();
+
     uint16_t GetAFForLookup(const nsACString &host, uint32_t flags);
 
     nsRefPtr<nsHostResolver>  mResolver;

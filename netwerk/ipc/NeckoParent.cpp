@@ -16,6 +16,7 @@
 #ifdef NECKO_PROTOCOL_rtsp
 #include "mozilla/net/RtspControllerParent.h"
 #endif
+#include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/RemoteOpenFileParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
@@ -424,6 +425,32 @@ bool
 NeckoParent::DeallocPUDPSocketParent(PUDPSocketParent* actor)
 {
   UDPSocketParent* p = static_cast<UDPSocketParent*>(actor);
+  p->Release();
+  return true;
+}
+
+PDNSRequestParent*
+NeckoParent::AllocPDNSRequestParent(const nsCString& aHost,
+                                    const uint32_t& aFlags)
+{
+  DNSRequestParent *p = new DNSRequestParent();
+  p->AddRef();
+  return p;
+}
+
+bool
+NeckoParent::RecvPDNSRequestConstructor(PDNSRequestParent* aActor,
+                                        const nsCString& aHost,
+                                        const uint32_t& aFlags)
+{
+  static_cast<DNSRequestParent*>(aActor)->DoAsyncResolve(aHost, aFlags);
+  return true;
+}
+
+bool
+NeckoParent::DeallocPDNSRequestParent(PDNSRequestParent* aParent)
+{
+  DNSRequestParent *p = static_cast<DNSRequestParent*>(aParent);
   p->Release();
   return true;
 }
