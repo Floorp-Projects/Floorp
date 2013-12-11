@@ -1369,7 +1369,6 @@ MToDouble::computeRange(TempAllocator &alloc)
 void
 MToFloat32::computeRange(TempAllocator &alloc)
 {
-    setRange(new(alloc) Range(getOperand(0)));
 }
 
 void
