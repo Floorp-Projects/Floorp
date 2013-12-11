@@ -47,8 +47,6 @@
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4100) /* Silence unreferenced formal parameter warnings */
-#pragma warning(push)
-#pragma warning(disable:4355) /* Silence warning about "this" used in base member initializer list */
 #endif
 
 namespace js {
@@ -2071,7 +2069,6 @@ class AutoProtectHeapForCompilation
 } /* namespace js */
 
 #ifdef _MSC_VER
-#pragma warning(pop)
 #pragma warning(pop)
 #endif
 

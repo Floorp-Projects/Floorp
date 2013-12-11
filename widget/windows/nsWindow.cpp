@@ -5495,8 +5495,10 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       if (IsWin8OrLater() && lParam &&
           !wcsicmp(L"ConvertibleSlateMode", (wchar_t*)lParam)) {
         // If we're switching into slate mode, switch to Metro for hardware
-        // that supports this feature.
-        if (GetSystemMetrics(SM_CONVERTIBLESLATEMODE) == 0) {
+        // that supports this feature if the pref is set.
+        if (GetSystemMetrics(SM_CONVERTIBLESLATEMODE) == 0 &&
+            Preferences::GetBool("browser.shell.desktop-auto-switch-enabled",
+                                 false)) {
           nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
           if (appStartup) {
             appStartup->Quit(nsIAppStartup::eForceQuit |
