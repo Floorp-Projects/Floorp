@@ -279,7 +279,7 @@ protected:
 
     already_AddRefed<nsPIWindowRoot> GetWindowRoot();
 
-    static NS_HIDDEN_(int) DirectionChanged(const char* aPrefName, void* aData);
+    static NS_HIDDEN_(void) DirectionChanged(const char* aPrefName, void* aData);
 
     // pseudo constants
     static int32_t gRefCnt;
@@ -324,6 +324,12 @@ protected:
      * called in this situation.
      */
     bool                       mStillWalking;
+
+    /**
+     * These two values control where persistent attributes get applied.
+     */
+    bool                           mRestrictPersistence;
+    nsTHashtable<nsStringHashKey>  mPersistenceIds;
 
     /**
      * An array of style sheets, that will be added (preserving order) to the

@@ -50,6 +50,8 @@
 #include "TimeManager.h"
 #include "DeviceStorage.h"
 #include "nsIDOMNavigatorSystemMessages.h"
+#include "nsIAppsService.h"
+#include "mozIApplication.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "MediaManager.h"
@@ -102,8 +104,7 @@ Navigator::Init()
 Navigator::Navigator(nsPIDOMWindow* aWindow)
   : mWindow(aWindow)
 {
-  NS_ASSERTION(aWindow->IsInnerWindow(),
-               "Navigator must get an inner window!");
+  MOZ_ASSERT(aWindow->IsInnerWindow(), "Navigator must get an inner window!");
   SetIsDOMBinding();
 }
 
@@ -1255,6 +1256,7 @@ Navigator::GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads,
   }
   NS_ENSURE_TRUE_VOID(mWindow->GetDocShell());
   nsGlobalWindow* win = static_cast<nsGlobalWindow*>(mWindow.get());
+  win->SetHasGamepadEventListener(true);
   win->GetGamepads(aGamepads);
 }
 #endif
@@ -1532,6 +1534,13 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
         bool hasPermission = CheckPermission("settings-read") ||
                              CheckPermission("settings-write");
         if (!hasPermission) {
+          aValue.setNull();
+          return true;
+        }
+      }
+
+      if (name.EqualsLiteral("mozDownloadManager")) {
+        if (!CheckPermission("downloads")) {
           aValue.setNull();
           return true;
         }
@@ -1841,6 +1850,38 @@ bool Navigator::HasInputMethodSupport(JSContext* /* unused */,
   return Preferences::GetBool("dom.mozInputMethod.testing", false) ||
          (Preferences::GetBool("dom.mozInputMethod.enabled", false) &&
           win && CheckPermission(win, "input"));
+}
+
+/* static */
+bool
+Navigator::HasDataStoreSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  // First of all, the general pref has to be turned on.
+  bool enabled = false;
+  Preferences::GetBool("dom.datastore.enabled", &enabled);
+  NS_ENSURE_TRUE(enabled, false);
+
+  // Just for testing, we can enable DataStore for any kind of app.
+  if (Preferences::GetBool("dom.testing.datastore_enabled_for_hosted_apps", false)) {
+    return true;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  if (!win) {
+    return false;
+  }
+
+  nsIDocument* doc = win->GetExtantDoc();
+  if (!doc || !doc->NodePrincipal()) {
+    return false;
+  }
+
+  uint16_t status;
+  if (NS_FAILED(doc->NodePrincipal()->GetAppStatus(&status))) {
+    return false;
+  }
+
+  return status == nsIPrincipal::APP_STATUS_CERTIFIED;
 }
 
 /* static */

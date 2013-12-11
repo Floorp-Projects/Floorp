@@ -2610,10 +2610,13 @@ nsEventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
 
   nsWeakFrame targetFrame(aTargetFrame);
 
-  nsEventStatus statusX = *aStatus;
-  nsEventStatus statusY = *aStatus;
+  MOZ_ASSERT(*aStatus != nsEventStatus_eConsumeNoDefault &&
+             !aEvent->mFlags.mDefaultPrevented,
+             "If you make legacy events dispatched for default prevented wheel "
+             "event, you need to initialize stateX and stateY");
+  EventState stateX, stateY;
   if (scrollDeltaY) {
-    SendLineScrollEvent(aTargetFrame, aEvent, &statusY,
+    SendLineScrollEvent(aTargetFrame, aEvent, stateY,
                         scrollDeltaY, DELTA_DIRECTION_Y);
     if (!targetFrame.IsAlive()) {
       *aStatus = nsEventStatus_eConsumeNoDefault;
@@ -2622,7 +2625,7 @@ nsEventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
   }
 
   if (pixelDeltaY) {
-    SendPixelScrollEvent(aTargetFrame, aEvent, &statusY,
+    SendPixelScrollEvent(aTargetFrame, aEvent, stateY,
                          pixelDeltaY, DELTA_DIRECTION_Y);
     if (!targetFrame.IsAlive()) {
       *aStatus = nsEventStatus_eConsumeNoDefault;
@@ -2631,7 +2634,7 @@ nsEventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
   }
 
   if (scrollDeltaX) {
-    SendLineScrollEvent(aTargetFrame, aEvent, &statusX,
+    SendLineScrollEvent(aTargetFrame, aEvent, stateX,
                         scrollDeltaX, DELTA_DIRECTION_X);
     if (!targetFrame.IsAlive()) {
       *aStatus = nsEventStatus_eConsumeNoDefault;
@@ -2640,7 +2643,7 @@ nsEventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
   }
 
   if (pixelDeltaX) {
-    SendPixelScrollEvent(aTargetFrame, aEvent, &statusX,
+    SendPixelScrollEvent(aTargetFrame, aEvent, stateX,
                          pixelDeltaX, DELTA_DIRECTION_X);
     if (!targetFrame.IsAlive()) {
       *aStatus = nsEventStatus_eConsumeNoDefault;
@@ -2648,21 +2651,18 @@ nsEventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
     }
   }
 
-  if (statusY == nsEventStatus_eConsumeNoDefault ||
-      statusX == nsEventStatus_eConsumeNoDefault) {
+  if (stateY.mDefaultPrevented || stateX.mDefaultPrevented) {
     *aStatus = nsEventStatus_eConsumeNoDefault;
-    return;
-  }
-  if (statusY == nsEventStatus_eConsumeDoDefault ||
-      statusX == nsEventStatus_eConsumeDoDefault) {
-    *aStatus = nsEventStatus_eConsumeDoDefault;
+    aEvent->mFlags.mDefaultPrevented = true;
+    aEvent->mFlags.mDefaultPreventedByContent |=
+      stateY.mDefaultPreventedByContent || stateX.mDefaultPreventedByContent;
   }
 }
 
 void
 nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
                                          WidgetWheelEvent* aEvent,
-                                         nsEventStatus* aStatus,
+                                         EventState& aState,
                                          int32_t aDelta,
                                          DeltaDirection aDeltaDirection)
 {
@@ -2678,9 +2678,8 @@ nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
 
   WidgetMouseScrollEvent event(aEvent->mFlags.mIsTrusted, NS_MOUSE_SCROLL,
                                aEvent->widget);
-  if (*aStatus == nsEventStatus_eConsumeNoDefault) {
-    event.mFlags.mDefaultPrevented = true;
-  }
+  event.mFlags.mDefaultPrevented = aState.mDefaultPrevented;
+  event.mFlags.mDefaultPreventedByContent = aState.mDefaultPreventedByContent;
   event.refPoint = aEvent->refPoint;
   event.widget = aEvent->widget;
   event.time = aEvent->time;
@@ -2690,14 +2689,18 @@ nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.delta = aDelta;
   event.inputSource = aEvent->inputSource;
 
+  nsEventStatus status = nsEventStatus_eIgnore;
   nsEventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(),
-                              &event, nullptr, aStatus);
+                              &event, nullptr, &status);
+  aState.mDefaultPrevented =
+    event.mFlags.mDefaultPrevented || status == nsEventStatus_eConsumeNoDefault;
+  aState.mDefaultPreventedByContent = event.mFlags.mDefaultPreventedByContent;
 }
 
 void
 nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
                                           WidgetWheelEvent* aEvent,
-                                          nsEventStatus* aStatus,
+                                          EventState& aState,
                                           int32_t aPixelDelta,
                                           DeltaDirection aDeltaDirection)
 {
@@ -2714,9 +2717,8 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
 
   WidgetMouseScrollEvent event(aEvent->mFlags.mIsTrusted, NS_MOUSE_PIXEL_SCROLL,
                                aEvent->widget);
-  if (*aStatus == nsEventStatus_eConsumeNoDefault) {
-    event.mFlags.mDefaultPrevented = true;
-  }
+  event.mFlags.mDefaultPrevented = aState.mDefaultPrevented;
+  event.mFlags.mDefaultPreventedByContent = aState.mDefaultPreventedByContent;
   event.refPoint = aEvent->refPoint;
   event.widget = aEvent->widget;
   event.time = aEvent->time;
@@ -2726,8 +2728,12 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.delta = aPixelDelta;
   event.inputSource = aEvent->inputSource;
 
+  nsEventStatus status = nsEventStatus_eIgnore;
   nsEventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(),
-                              &event, nullptr, aStatus);
+                              &event, nullptr, &status);
+  aState.mDefaultPrevented =
+    event.mFlags.mDefaultPrevented || status == nsEventStatus_eConsumeNoDefault;
+  aState.mDefaultPreventedByContent = event.mFlags.mDefaultPreventedByContent;
 }
 
 nsIScrollableFrame*
@@ -5505,14 +5511,13 @@ nsEventStateManager::WheelPrefs::Shutdown()
 }
 
 // static
-int
+void
 nsEventStateManager::WheelPrefs::OnPrefChanged(const char* aPrefName,
                                                void* aClosure)
 {
   // forget all prefs, it's not problem for performance.
   sInstance->Reset();
   DeltaAccumulator::GetInstance()->Reset();
-  return 0;
 }
 
 nsEventStateManager::WheelPrefs::WheelPrefs()
@@ -5794,14 +5799,13 @@ nsEventStateManager::Prefs::Init()
 }
 
 // static
-int
+void
 nsEventStateManager::Prefs::OnChange(const char* aPrefName, void*)
 {
   nsDependentCString prefName(aPrefName);
   if (prefName.EqualsLiteral("dom.popup_allowed_events")) {
     nsDOMEvent::PopupAllowedEventsChanged();
   }
-  return 0;
 }
 
 // static

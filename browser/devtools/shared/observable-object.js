@@ -97,7 +97,7 @@ Handler.prototype = {
     if (desc) {
       if ("value" in desc) {
         let [wrapped, path] = this.wrap(target, key, desc.value);
-        desc.value = wrapped
+        desc.value = wrapped;
         this._emitter.emit("get", path, desc.value);
       } else {
         if ("get" in desc) {
@@ -112,7 +112,8 @@ Handler.prototype = {
   },
   defineProperty: function(target, key, desc) {
     if ("value" in desc) {
-      [desc.value, path] = this.unwrap(target, key, desc.value);
+      let [unwrapped, path] = this.unwrap(target, key, desc.value);
+      desc.value = unwrapped;
       Object.defineProperty(target, key, desc);
       this._emitter.emit("set", path, desc.value);
     } else {

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-MARIONETTE_TIMEOUT = 60000;
+MARIONETTE_TIMEOUT = 120000;
 MARIONETTE_HEAD_JS = 'head.js';
 
 const PDU_SMSC_NONE = "00"; // no SMSC Address
@@ -14,7 +14,7 @@ const SENDER_0 = "+1234567890";
 const SENDER_1 = "+1234567891";
 
 const PDU_PID_NORMAL = "00";
-const PDU_PIDS = ["00", "41", "42", "43", "44", "45", "46", "47"];
+const PDU_PIDS = ["00", "41", "42", "43", "44", "45", "46", "47", "5F"];
 
 const PDU_DCS_NORMAL = "00";
 

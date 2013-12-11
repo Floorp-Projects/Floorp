@@ -19,7 +19,7 @@
   %define     end_ptr       rcx
   %define     ret_var       rbx
   %define     result_ptr    arg(4)
-  %define     max_err       arg(4)
+  %define     max_sad       arg(4)
   %define     height        dword ptr arg(4)
     push        rbp
     mov         rbp,        rsp
@@ -33,7 +33,7 @@
     movsxd      rax,        dword ptr arg(1)    ; src_stride
     movsxd      rdx,        dword ptr arg(3)    ; ref_stride
 %else
-  %ifidn __OUTPUT_FORMAT__,x64
+  %if LIBVPX_YASM_WIN64
     SAVE_XMM 7, u
     %define     src_ptr     rcx
     %define     src_stride  rdx
@@ -42,7 +42,7 @@
     %define     end_ptr     r10
     %define     ret_var     r11
     %define     result_ptr  [rsp+xmm_stack_space+8+4*8]
-    %define     max_err     [rsp+xmm_stack_space+8+4*8]
+    %define     max_sad     [rsp+xmm_stack_space+8+4*8]
     %define     height      dword ptr [rsp+xmm_stack_space+8+4*8]
   %else
     %define     src_ptr     rdi
@@ -52,7 +52,7 @@
     %define     end_ptr     r9
     %define     ret_var     r10
     %define     result_ptr  r8
-    %define     max_err     r8
+    %define     max_sad     r8
     %define     height      r8
   %endif
 %endif
@@ -67,7 +67,7 @@
   %define     end_ptr
   %define     ret_var
   %define     result_ptr
-  %define     max_err
+  %define     max_sad
   %define     height
 
 %if ABI_IS_32BIT
@@ -76,7 +76,7 @@
     pop         rsi
     pop         rbp
 %else
-  %ifidn __OUTPUT_FORMAT__,x64
+  %if LIBVPX_YASM_WIN64
     RESTORE_XMM
   %endif
 %endif
@@ -111,7 +111,7 @@
 
     xchg        rbx,        rax
 %else
-  %ifidn __OUTPUT_FORMAT__,x64
+  %if LIBVPX_YASM_WIN64
     SAVE_XMM 7, u
     %define     src_ptr     rcx
     %define     src_stride  rdx
@@ -156,7 +156,7 @@
     pop         rsi
     pop         rbp
 %else
-  %ifidn __OUTPUT_FORMAT__,x64
+  %if LIBVPX_YASM_WIN64
     pop         rsi
     RESTORE_XMM
   %endif
@@ -380,7 +380,7 @@
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride,
 ;    int  *results)
-global sym(vp8_sad16x16x3_sse3)
+global sym(vp8_sad16x16x3_sse3) PRIVATE
 sym(vp8_sad16x16x3_sse3):
 
     STACK_FRAME_CREATE_X3
@@ -422,7 +422,7 @@ sym(vp8_sad16x16x3_sse3):
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride,
 ;    int  *results)
-global sym(vp8_sad16x8x3_sse3)
+global sym(vp8_sad16x8x3_sse3) PRIVATE
 sym(vp8_sad16x8x3_sse3):
 
     STACK_FRAME_CREATE_X3
@@ -460,7 +460,7 @@ sym(vp8_sad16x8x3_sse3):
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride,
 ;    int  *results)
-global sym(vp8_sad8x16x3_sse3)
+global sym(vp8_sad8x16x3_sse3) PRIVATE
 sym(vp8_sad8x16x3_sse3):
 
     STACK_FRAME_CREATE_X3
@@ -489,7 +489,7 @@ sym(vp8_sad8x16x3_sse3):
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride,
 ;    int  *results)
-global sym(vp8_sad8x8x3_sse3)
+global sym(vp8_sad8x8x3_sse3) PRIVATE
 sym(vp8_sad8x8x3_sse3):
 
     STACK_FRAME_CREATE_X3
@@ -514,7 +514,7 @@ sym(vp8_sad8x8x3_sse3):
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride,
 ;    int  *results)
-global sym(vp8_sad4x4x3_sse3)
+global sym(vp8_sad4x4x3_sse3) PRIVATE
 sym(vp8_sad4x4x3_sse3):
 
     STACK_FRAME_CREATE_X3
@@ -587,9 +587,9 @@ sym(vp8_sad4x4x3_sse3):
 ;    int  src_stride,
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride,
-;    int  max_err)
+;    int  max_sad)
 ;%define lddqu movdqu
-global sym(vp8_sad16x16_sse3)
+global sym(vp8_sad16x16_sse3) PRIVATE
 sym(vp8_sad16x16_sse3):
 
     STACK_FRAME_CREATE_X3
@@ -642,7 +642,7 @@ sym(vp8_sad16x16_sse3):
 ;    unsigned char *dst_ptr,
 ;    int  dst_stride,
 ;    int height);
-global sym(vp8_copy32xn_sse3)
+global sym(vp8_copy32xn_sse3) PRIVATE
 sym(vp8_copy32xn_sse3):
 
     STACK_FRAME_CREATE_X3
@@ -703,7 +703,7 @@ sym(vp8_copy32xn_sse3):
 ;    unsigned char *ref_ptr_base,
 ;    int  ref_stride,
 ;    int  *results)
-global sym(vp8_sad16x16x4d_sse3)
+global sym(vp8_sad16x16x4d_sse3) PRIVATE
 sym(vp8_sad16x16x4d_sse3):
 
     STACK_FRAME_CREATE_X4
@@ -754,7 +754,7 @@ sym(vp8_sad16x16x4d_sse3):
 ;    unsigned char *ref_ptr_base,
 ;    int  ref_stride,
 ;    int  *results)
-global sym(vp8_sad16x8x4d_sse3)
+global sym(vp8_sad16x8x4d_sse3) PRIVATE
 sym(vp8_sad16x8x4d_sse3):
 
     STACK_FRAME_CREATE_X4
@@ -801,7 +801,7 @@ sym(vp8_sad16x8x4d_sse3):
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride,
 ;    int  *results)
-global sym(vp8_sad8x16x4d_sse3)
+global sym(vp8_sad8x16x4d_sse3) PRIVATE
 sym(vp8_sad8x16x4d_sse3):
 
     STACK_FRAME_CREATE_X4
@@ -834,7 +834,7 @@ sym(vp8_sad8x16x4d_sse3):
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride,
 ;    int  *results)
-global sym(vp8_sad8x8x4d_sse3)
+global sym(vp8_sad8x8x4d_sse3) PRIVATE
 sym(vp8_sad8x8x4d_sse3):
 
     STACK_FRAME_CREATE_X4
@@ -863,7 +863,7 @@ sym(vp8_sad8x8x4d_sse3):
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride,
 ;    int  *results)
-global sym(vp8_sad4x4x4d_sse3)
+global sym(vp8_sad4x4x4d_sse3) PRIVATE
 sym(vp8_sad4x4x4d_sse3):
 
     STACK_FRAME_CREATE_X4

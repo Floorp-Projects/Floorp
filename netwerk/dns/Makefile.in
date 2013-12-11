@@ -3,20 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# need to include etld_data.inc
-LOCAL_INCLUDES = \
-  -I$(srcdir)/../base/src \
-  -I. \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 # Generate the include file containing compact, static definitions
 # for effective TLD data.
-nsEffectiveTLDService.$(OBJ_SUFFIX): etld_data.inc
-nsEffectiveTLDService.h: etld_data.inc
-
 etld_data.inc: $(srcdir)/prepare_tlds.py $(srcdir)/effective_tld_names.dat
 	$(PYTHON) $(srcdir)/prepare_tlds.py $(srcdir)/effective_tld_names.dat > etld_data.inc
-
-GARBAGE += etld_data.inc

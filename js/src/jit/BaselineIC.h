@@ -237,7 +237,7 @@ class ICEntry
     }
 
     jsbytecode *pc(JSScript *script) const {
-        return script->code + pcOffset_;
+        return script->offsetToPC(pcOffset_);
     }
 
     bool isForOp() const {
@@ -362,7 +362,7 @@ class ICEntry
     _(GetProp_Fallback)         \
     _(GetProp_ArrayLength)      \
     _(GetProp_TypedArrayLength) \
-    _(GetProp_String)           \
+    _(GetProp_Primitive)        \
     _(GetProp_StringLength)     \
     _(GetProp_Native)           \
     _(GetProp_NativePrototype)  \
@@ -998,9 +998,11 @@ class ICStubCompiler
 
 
   protected:
-    mozilla::DebugOnly<bool> entersStubFrame_;
     JSContext *cx;
     ICStub::Kind kind;
+#ifdef DEBUG
+    bool entersStubFrame_;
+#endif
 
     // By default the stubcode key is just the kind.
     virtual int32_t getKey() const {
@@ -1014,7 +1016,10 @@ class ICStubCompiler
     IonCode *getStubCode();
 
     ICStubCompiler(JSContext *cx, ICStub::Kind kind)
-      : suppressGC(cx), entersStubFrame_(false), cx(cx), kind(kind)
+      : suppressGC(cx), cx(cx), kind(kind)
+#ifdef DEBUG
+      , entersStubFrame_(false)
+#endif
     {}
 
     // Emits a tail call to a VMFunction wrapper.
@@ -3560,7 +3565,7 @@ class ICSetElem_DenseAddImpl : public ICSetElem_DenseAdd
     friend class ICStubSpace;
 
     static const size_t NumShapes = ProtoChainDepth + 1;
-    HeapPtrShape shapes_[NumShapes];
+    mozilla::Array<HeapPtrShape, NumShapes> shapes_;
 
     ICSetElem_DenseAddImpl(IonCode *stubCode, types::TypeObject *type,
                            const AutoShapeVector *shapes)
@@ -3817,7 +3822,7 @@ class ICGetName_Scope : public ICMonitoredStub
 
     static const size_t MAX_HOPS = 6;
 
-    HeapPtrShape shapes_[NumHops + 1];
+    mozilla::Array<HeapPtrShape, NumHops + 1> shapes_;
     uint32_t offset_;
 
     ICGetName_Scope(IonCode *stubCode, ICStub *firstMonitorStub,
@@ -4105,44 +4110,45 @@ class ICGetProp_TypedArrayLength : public ICStub
     };
 };
 
-// Stub for accessing a string's length.
-class ICGetProp_String : public ICMonitoredStub
+// Stub for accessing a property on a primitive's prototype.
+class ICGetProp_Primitive : public ICMonitoredStub
 {
     friend class ICStubSpace;
 
   protected: // Protected to silence Clang warning.
-    // Shape of String.prototype to check for.
-    HeapPtrShape stringProtoShape_;
+    // Shape of String.prototype/Number.prototype to check for.
+    HeapPtrShape protoShape_;
 
     // Fixed or dynamic slot offset.
     uint32_t offset_;
 
-    ICGetProp_String(IonCode *stubCode, ICStub *firstMonitorStub,
-                     HandleShape stringProtoShape, uint32_t offset);
+    ICGetProp_Primitive(IonCode *stubCode, ICStub *firstMonitorStub,
+                        HandleShape protoShape, uint32_t offset);
 
   public:
-    static inline ICGetProp_String *New(ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
-                                        HandleShape stringProtoShape, uint32_t offset)
+    static inline ICGetProp_Primitive *New(ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
+                                           HandleShape protoShape, uint32_t offset)
     {
         if (!code)
             return nullptr;
-        return space->allocate<ICGetProp_String>(code, firstMonitorStub, stringProtoShape, offset);
+        return space->allocate<ICGetProp_Primitive>(code, firstMonitorStub, protoShape, offset);
     }
 
-    HeapPtrShape &stringProtoShape() {
-        return stringProtoShape_;
+    HeapPtrShape &protoShape() {
+        return protoShape_;
     }
-    static size_t offsetOfStringProtoShape() {
-        return offsetof(ICGetProp_String, stringProtoShape_);
+    static size_t offsetOfProtoShape() {
+        return offsetof(ICGetProp_Primitive, protoShape_);
     }
 
     static size_t offsetOfOffset() {
-        return offsetof(ICGetProp_String, offset_);
+        return offsetof(ICGetProp_Primitive, offset_);
     }
 
     class Compiler : public ICStubCompiler {
         ICStub *firstMonitorStub_;
-        RootedObject stringPrototype_;
+        JSValueType primitiveType_;
+        RootedObject prototype_;
         bool isFixedSlot_;
         uint32_t offset_;
 
@@ -4150,23 +4156,27 @@ class ICGetProp_String : public ICMonitoredStub
 
       protected:
         virtual int32_t getKey() const {
-            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isFixedSlot_) << 16);
+            static_assert(sizeof(JSValueType) == 1, "JSValueType should fit in one byte");
+            return static_cast<int32_t>(kind)
+                | (static_cast<int32_t>(isFixedSlot_) << 16)
+                | (static_cast<int32_t>(primitiveType_) << 24);
         }
 
       public:
-        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleObject stringPrototype,
-                 bool isFixedSlot, uint32_t offset)
-          : ICStubCompiler(cx, ICStub::GetProp_String),
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, JSValueType primitiveType,
+                 HandleObject prototype, bool isFixedSlot, uint32_t offset)
+          : ICStubCompiler(cx, ICStub::GetProp_Primitive),
             firstMonitorStub_(firstMonitorStub),
-            stringPrototype_(cx, stringPrototype),
+            primitiveType_(primitiveType),
+            prototype_(cx, prototype),
             isFixedSlot_(isFixedSlot),
             offset_(offset)
         {}
 
         ICStub *getStub(ICStubSpace *space) {
-            RootedShape stringProtoShape(cx, stringPrototype_->lastProperty());
-            return ICGetProp_String::New(space, getStubCode(), firstMonitorStub_,
-                                         stringProtoShape, offset_);
+            RootedShape protoShape(cx, prototype_->lastProperty());
+            return ICGetProp_Primitive::New(space, getStubCode(), firstMonitorStub_,
+                                            protoShape, offset_);
         }
     };
 };
@@ -4954,7 +4964,7 @@ class ICSetProp_NativeAddImpl : public ICSetProp_NativeAdd
     friend class ICStubSpace;
 
     static const size_t NumShapes = ProtoChainDepth + 1;
-    HeapPtrShape shapes_[NumShapes];
+    mozilla::Array<HeapPtrShape, NumShapes> shapes_;
 
     ICSetProp_NativeAddImpl(IonCode *stubCode, HandleTypeObject type,
                             const AutoShapeVector *shapes,

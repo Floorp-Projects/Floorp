@@ -7,38 +7,38 @@
 
 <script type="text/javascript">
 
-window.Services = SpecialPowers.Services;
+SimpleTest.waitForExplicitFinish();
 
 // Set cookies behavior to "always reject".
-Services.prefs.setIntPref("network.cookie.cookieBehavior", 2);
-try {
-  localStorage.setItem("contentkey", "test-value");
-  ok(false, "Setting localStorageItem should throw a security exception");
-}
-catch(ex) {
-  is(ex.name, "SecurityError");
+SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 2]]},
+                          test1);
+
+function test1() {
+  try {
+    localStorage.setItem("contentkey", "test-value");
+    ok(false, "Setting localStorageItem should throw a security exception");
+  }
+  catch(ex) {
+    is(ex.name, "SecurityError");
+  }
+
+  // Set cookies behavior to "ask every time".
+  SpecialPowers.pushPrefEnv({"set": [["network.cookie.lifetimePolicy", 1]],
+                             "clear": [["network.cookie.cookieBehavior"]]},
+                            test2);
 }
 
-try {
-  Services.prefs.clearUserPref("network.cookie.cookieBehavior");
-}
-catch (ex) {}
+function test2() {
+  try {
+    localStorage.setItem("contentkey", "test-value");
+    ok(false, "Setting localStorageItem should throw a security exception");
+  }
+  catch(ex) {
+    is(ex.name, "SecurityError");
+  }
 
-
-// Set cookies behavior to "ask every time".
-Services.prefs.setIntPref("network.cookie.lifetimePolicy", 1);
-try {
-  localStorage.setItem("contentkey", "test-value");
-  ok(false, "Setting localStorageItem should throw a security exception");
+  SimpleTest.finish();
 }
-catch(ex) {
-  is(ex.name, "SecurityError");
-}
-
-try {
-  Services.prefs.clearUserPref("network.cookie.lifetimePolicy");
-}
-catch (ex) {}
 
 </script>
 </head>

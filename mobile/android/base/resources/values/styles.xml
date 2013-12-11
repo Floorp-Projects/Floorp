@@ -540,4 +540,36 @@
         <item name="android:layout_gravity">center_vertical</item>
     </style>
 
+    <style name="GeckoActionBar">
+        <item name="android:background">@drawable/ab_stacked_transparent_light_holo</item>
+    </style>
+
+    <style name="GeckoActionBar.Title">
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textAppearance">@style/TextAppearance.Medium</item>
+        <item name="android:drawableLeft">@drawable/ab_done</item>
+        <item name="android:paddingLeft">15dp</item>
+        <item name="android:paddingRight">15dp</item>
+        <item name="android:contentDescription">@string/actionbar_done</item>
+    </style>
+
+    <style name="GeckoActionBar.Button" parent="Widget.MenuItemActionBar">
+        <item name="android:padding">8dp</item>
+    </style>
+
+    <style name="GeckoActionBar.Button.MenuButton">
+        <item name="android:scaleType">center</item>
+        <item name="android:src">@drawable/menu_light</item>
+        <item name="android:contentDescription">@string/actionbar_menu</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="GeckoActionBar.Buttons">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textColor">@color/text_color_primary</item>
+        <item name="android:gravity">right</item>
+    </style>
+
 </resources>

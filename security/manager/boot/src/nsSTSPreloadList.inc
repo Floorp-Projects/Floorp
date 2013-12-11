@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1394881586089000);
+const PRTime gPreloadListExpirationTime = INT64_C(1397301006735000);
 
 class nsSTSPreload
 {
@@ -32,6 +32,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "blog.torproject.org", false },
   { "blueseed.co", false },
   { "bugzilla.mozilla.org", true },
+  { "business.lookout.com", false },
   { "business.medbank.com.mt", true },
   { "carezone.com", false },
   { "check.torproject.org", false },
@@ -57,10 +58,13 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "ebanking.indovinabank.com.vn", false },
   { "ecosystem.atlassian.net", true },
   { "entropia.de", false },
+  { "errors.zenpayroll.com", false },
   { "espra.com", true },
   { "factor.cc", false },
+  { "faq.lookout.com", false },
   { "forum.linode.com", false },
   { "forum.quantifiedself.com", true },
+  { "gernert-server.de", true },
   { "getlantern.org", true },
   { "grc.com", false },
   { "haste.ch", true },
@@ -70,6 +74,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "intercom.io", false },
   { "itriskltd.com", true },
   { "keyerror.com", true },
+  { "kinsights.com", false },
   { "lastpass.com", false },
   { "launchkey.com", true },
   { "library.linode.com", false },
@@ -84,6 +89,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "lumi.do", false },
   { "luneta.nearbuysystems.com", false },
   { "makeyourlaws.org", false },
+  { "manage.zenpayroll.com", false },
   { "manager.linode.com", false },
   { "mattmccutchen.net", true },
   { "mediacru.sh", true },
@@ -101,7 +107,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "pastebin.linode.com", false },
   { "pay.gigahost.dk", true },
   { "paymill.com", true },
-  { "paymill.de", true },
+  { "paymill.de", false },
   { "piratenlogin.de", true },
   { "pixi.me", true },
   { "riseup.net", true },
@@ -110,7 +116,9 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "securityheaders.com", true },
   { "shodan.io", true },
   { "silentcircle.com", false },
+  { "simbolo.co.uk", false },
   { "simple.com", false },
+  { "skydrive.live.com", false },
   { "squareup.com", false },
   { "stocktrade.de", false },
   { "stripe.com", true },
@@ -141,8 +149,11 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.mydigipass.com", false },
   { "www.mylookout.com", false },
   { "www.noisebridge.net", false },
+  { "www.simbolo.co.uk", false },
   { "www.simple.com", false },
   { "www.therapynotes.com", false },
   { "www.torproject.org", false },
   { "www.twitter.com", false },
+  { "www.zenpayroll.com", false },
+  { "zenpayroll.com", false },
 };

@@ -237,7 +237,6 @@ class IonBuilder : public MIRGenerator
     JSFunction *getSingleCallTarget(types::TemporaryTypeSet *calleeTypes);
     bool getPolyCallTargets(types::TemporaryTypeSet *calleeTypes, bool constructing,
                             ObjectVector &targets, uint32_t maxTargets, bool *gotLambda);
-    bool canInlineTarget(JSFunction *target, CallInfo &callInfo);
 
     void popCfgStack();
     DeferredEdge *filterDeadDeferredEdges(DeferredEdge *edge);
@@ -432,6 +431,9 @@ class IonBuilder : public MIRGenerator
     // binary data lookup helpers.
     bool lookupTypeRepresentationSet(MDefinition *typedObj,
                                      TypeRepresentationSet *out);
+    bool typeSetToTypeRepresentationSet(types::TemporaryTypeSet *types,
+                                        TypeRepresentationSet *out,
+                                        types::TypeTypedObject::Kind kind);
     bool lookupTypedObjectField(MDefinition *typedObj,
                                 PropertyName *name,
                                 int32_t *fieldOffset,
@@ -454,6 +456,11 @@ class IonBuilder : public MIRGenerator
                                      MDefinition *offset,
                                      ScalarTypeRepresentation *typeRepr,
                                      MDefinition *value);
+    bool checkTypedObjectIndexInBounds(size_t elemSize,
+                                       MDefinition *obj,
+                                       MDefinition *index,
+                                       MDefinition **indexAsByteOffset,
+                                       TypeRepresentationSet objTypeReprs);
 
     // jsop_setelem() helpers.
     bool setElemTryTyped(bool *emitted, MDefinition *object,
@@ -576,11 +583,20 @@ class IonBuilder : public MIRGenerator
         InliningStatus_Inlined
     };
 
+    enum InliningDecision
+    {
+        InliningDecision_Error,
+        InliningDecision_Inline,
+        InliningDecision_DontInline
+    };
+
+    static InliningDecision DontInline(JSScript *targetScript, const char *reason);
+
     // Oracles.
-    bool canEnterInlinedFunction(JSFunction *target);
-    bool makeInliningDecision(JSFunction *target, CallInfo &callInfo);
-    uint32_t selectInliningTargets(ObjectVector &targets, CallInfo &callInfo,
-                                   BoolVector &choiceSet);
+    InliningDecision canInlineTarget(JSFunction *target, CallInfo &callInfo);
+    InliningDecision makeInliningDecision(JSFunction *target, CallInfo &callInfo);
+    bool selectInliningTargets(ObjectVector &targets, CallInfo &callInfo,
+                               BoolVector &choiceSet, uint32_t *numInlineable);
 
     // Native inlining helpers.
     types::TemporaryTypeSet *getInlineReturnTypeSet();
@@ -675,7 +691,8 @@ class IonBuilder : public MIRGenerator
     bool makeCall(JSFunction *target, CallInfo &callInfo, bool cloneAtCallsite);
 
     MDefinition *patchInlinedReturn(CallInfo &callInfo, MBasicBlock *exit, MBasicBlock *bottom);
-    MDefinition *patchInlinedReturns(CallInfo &callInfo, MIRGraphExits &exits, MBasicBlock *bottom);
+    MDefinition *patchInlinedReturns(CallInfo &callInfo, MIRGraphReturns &returns,
+                                     MBasicBlock *bottom);
 
     bool objectsHaveCommonPrototype(types::TemporaryTypeSet *types, PropertyName *name,
                                     bool isGetter, JSObject *foundProto);
@@ -768,6 +785,7 @@ class IonBuilder : public MIRGenerator
     uint32_t typeArrayHint;
 
     GSNCache gsn;
+    ScopeCoordinateNameCache scopeCoordinateNameCache;
 
     jsbytecode *pc;
     MBasicBlock *current;

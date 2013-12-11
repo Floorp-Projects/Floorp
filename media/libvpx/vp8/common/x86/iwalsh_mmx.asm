@@ -12,7 +12,7 @@
 %include "vpx_ports/x86_abi_support.asm"
 
 ;void vp8_short_inv_walsh4x4_mmx(short *input, short *output)
-global sym(vp8_short_inv_walsh4x4_mmx)
+global sym(vp8_short_inv_walsh4x4_mmx) PRIVATE
 sym(vp8_short_inv_walsh4x4_mmx):
     push        rbp
     mov         rbp, rsp
@@ -24,7 +24,7 @@ sym(vp8_short_inv_walsh4x4_mmx):
 
     movq        mm0, [rdx + 0]    ;ip[0]
     movq        mm1, [rdx + 8]    ;ip[4]
-    movd        mm7, rax
+    movq        mm7, rax
 
     movq        mm2, [rdx + 16]   ;ip[8]
     movq        mm3, [rdx + 24]   ;ip[12]

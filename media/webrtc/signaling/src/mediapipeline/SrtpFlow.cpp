@@ -33,18 +33,18 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
                                            size_t key_len) {
   nsresult res = Init();
   if (!NS_SUCCEEDED(res))
-    return NULL;
+    return nullptr;
 
   RefPtr<SrtpFlow> flow = new SrtpFlow();
 
   if (!key) {
     MOZ_MTLOG(ML_ERROR, "Null SRTP key specified");
-    return NULL;
+    return nullptr;
   }
 
   if (key_len != SRTP_TOTAL_KEY_LENGTH) {
     MOZ_MTLOG(ML_ERROR, "Invalid SRTP key length");
-    return NULL;
+    return nullptr;
   }
 
   srtp_policy_t policy;
@@ -67,7 +67,7 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
       break;                                                   // S 4.1.2.
     default:
       MOZ_MTLOG(ML_ERROR, "Request to set unknown SRTP cipher suite");
-      return NULL;
+      return nullptr;
   }
   // This key is copied into the srtp_t object, so we don't
   // need to keep it.
@@ -75,16 +75,16 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
       static_cast<const unsigned char *>(key));
   policy.ssrc.type = inbound ? ssrc_any_inbound : ssrc_any_outbound;
   policy.ssrc.value = 0;
-  policy.ekt = NULL;
+  policy.ekt = nullptr;
   policy.window_size = 1024;   // Use the Chrome value.  Needs to be revisited.  Default is 128
   policy.allow_repeat_tx = 1;  // Use Chrome value; needed for NACK mode to work
-  policy.next = NULL;
+  policy.next = nullptr;
 
   // Now make the session
   err_status_t r = srtp_create(&flow->session_, &policy);
   if (r != err_status_ok) {
     MOZ_MTLOG(ML_ERROR, "Error creating srtp session");
-    return NULL;
+    return nullptr;
   }
 
   return flow;
@@ -160,7 +160,7 @@ nsresult SrtpFlow::UnprotectRtp(void *in, int in_len,
   err_status_t r = srtp_unprotect(session_, in, &len);
 
   if (r != err_status_ok) {
-    MOZ_MTLOG(ML_ERROR, "Error unprotecting SRTP packet");
+    MOZ_MTLOG(ML_ERROR, "Error unprotecting SRTP packet error=" << (int)r);
     return NS_ERROR_FAILURE;
   }
 
@@ -206,7 +206,7 @@ nsresult SrtpFlow::UnprotectRtcp(void *in, int in_len,
   err_status_t r = srtp_unprotect_rtcp(session_, in, &len);
 
   if (r != err_status_ok) {
-    MOZ_MTLOG(ML_ERROR, "Error unprotecting SRTCP packet");
+    MOZ_MTLOG(ML_ERROR, "Error unprotecting SRTCP packet error=" << (int)r);
     return NS_ERROR_FAILURE;
   }
 

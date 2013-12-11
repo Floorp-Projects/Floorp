@@ -8,6 +8,8 @@ TEST_DIRS += ['test']
 
 EXTRA_JS_MODULES += [
     'BrowserNewTabPreloader.jsm',
+    'BrowserUITelemetry.jsm',
+    'CharsetMenu.jsm',
     'ContentClick.jsm',
     'NetworkPrioritizer.jsm',
     'offlineAppCache.jsm',
@@ -33,3 +35,5 @@ EXTRA_PP_JS_MODULES += [
     'RecentWindow.jsm',
 ]
 
+if CONFIG['MOZILLA_OFFICIAL']:
+    DEFINES['MOZILLA_OFFICIAL'] = 1

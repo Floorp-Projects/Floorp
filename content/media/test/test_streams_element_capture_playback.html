@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that capturing a stream doesn't stop the underlying element from firing events</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<audio id="a"></audio>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var a = document.getElementById('a');
+var validTimeUpdate = false;
+
+function startTest() {
+  a.src = "big.wav";
+  var context = new AudioContext();
+  var node = context.createMediaElementSource(a);
+  node.connect(context.destination);
+  a.addEventListener("timeupdate", function() {
+    if (a.currentTime > 0.0 && a.currentTime < 5.0 && !validTimeUpdate) {
+      validTimeUpdate = true;
+      ok(true, "Received reasonable currentTime in a timeupdate");
+      SimpleTest.finish();
+    }
+  });
+  a.addEventListener("ended", function() {
+    if (!validTimeUpdate) {
+      ok(false, "Received reasonable currentTime in a timeupdate");
+      SimpleTest.finish();
+    }
+  });
+  a.play();
+}
+
+if (a.canPlayType("audio/wave")) {
+  startTest();
+} else {
+  todo(false, "No playable audio");
+}
+</script>
+</pre>
+</body>
+</html>

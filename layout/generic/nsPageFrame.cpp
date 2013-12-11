@@ -575,6 +575,7 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
   nsRefPtr<nsFontMetrics> fontMet;
   pc->DeviceContext()->GetMetricsFor(mPD->mHeadFootFont, nullptr,
                                      pc->GetUserFontSet(),
+                                     pc->GetTextPerfMetrics(),
                                      *getter_AddRefs(fontMet));
 
   aRenderingContext.SetFont(fontMet);

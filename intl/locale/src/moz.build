@@ -17,7 +17,7 @@ EXPORTS += [
     'nsCollation.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsCharsetAlias.cpp',
     'nsCollation.cpp',
     'nsLanguageAtomService.cpp',
@@ -34,3 +34,11 @@ EXTRA_JS_MODULES += [
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'i18n'
+
+GENERATED_FILES = [
+    'charsetalias.properties.h',
+]
+
+LOCAL_INCLUDES += [
+    '/intl/uconv/src',
+]

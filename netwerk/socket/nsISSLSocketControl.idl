@@ -14,7 +14,7 @@ class nsCString;
 %}
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 
-[scriptable, builtinclass, uuid(c5eb9af4-238c-4fc6-bdec-d5ab5e7dce68)]
+[scriptable, builtinclass, uuid(5fe25c47-5462-4b85-b946-fc2e20c07cdf)]
 interface nsISSLSocketControl : nsISupports {
     attribute nsIInterfaceRequestor     notificationCallbacks;
 
@@ -52,21 +52,18 @@ interface nsISSLSocketControl : nsISupports {
       in ACString hostname,
       in long port);
 
-    /* The Key Exchange Algorithm and Symmetric Cipher
-       is used when determining whether or not to do false start.
-       After a handshake is complete it can be read from *Used,
-       before a handshake is started it may be set through *Expected.
-       The values correspond to the SSLKEAType and SSLCipherAlgorithm
-       enums in NSS or the *_UNKNOWN constant defined below.
+    /* The Key Exchange Algorithm is used when determining whether or
+       not to do false start.
+       After a handshake is complete it can be read from KEAUsed,
+       before a handshake is started it may be set through KEAExpected.
+       The values correspond to the SSLKEAType enum in NSS or the
+       KEY_EXCHANGE_UNKNOWN constant defined below.
     */
 
     [infallible] readonly attribute short KEAUsed;
     [infallible] attribute short KEAExpected;
-    [infallible] readonly attribute short SymmetricCipherUsed;
-    [infallible] attribute short SymmetricCipherExpected;
 
     const short KEY_EXCHANGE_UNKNOWN = -1;
-    const short SYMMETRIC_CIPHER_UNKNOWN = -1;
 
     /*
      * The original flags from the socket provider.

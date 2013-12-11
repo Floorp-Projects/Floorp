@@ -66,6 +66,10 @@
             this.classList.remove("flyoutpanel-slide-in");
             this.setAttribute("isSlidingOut", true);
             this.removeAttribute("isSlidIn");
+
+            let event = document.createEvent("Events");
+            event.initEvent("MozFlyoutPanelHiding", true, false);
+            this.dispatchEvent(event);
           ]]>
         </body>
       </method>

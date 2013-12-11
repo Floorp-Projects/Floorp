@@ -28,12 +28,14 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'BackgroundHangMonitor.h',
     'HangMonitor.h',
     'LazyIdleThread.h',
     'SyncRunnable.h',
 ]
 
 UNIFIED_SOURCES += [
+    'BackgroundHangMonitor.cpp',
     'HangMonitor.cpp',
     'LazyIdleThread.cpp',
     'nsEnvironment.cpp',
@@ -44,6 +46,7 @@ UNIFIED_SOURCES += [
     'nsThreadManager.cpp',
     'nsThreadPool.cpp',
     'nsTimerImpl.cpp',
+    'ThreadStackHelper.cpp',
     'TimerThread.cpp',
 ]
 
@@ -54,3 +57,5 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = 'xpcom_core'
+
+include('/ipc/chromium/chromium-config.mozbuild')

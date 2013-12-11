@@ -23,6 +23,8 @@
     locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
+    locale/browser/charsetMenu.properties          (%chrome/browser/charsetMenu.properties)
+    locale/browser/charsetMenu.dtd                 (%chrome/browser/charsetMenu.dtd)
     locale/browser/customizableui/customizableWidgets.properties (%chrome/browser/customizableui/customizableWidgets.properties)
     locale/browser/devtools/appcacheutils.properties  (%chrome/browser/devtools/appcacheutils.properties)
     locale/browser/devtools/debugger.dtd              (%chrome/browser/devtools/debugger.dtd)

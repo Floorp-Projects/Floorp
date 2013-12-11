@@ -630,10 +630,6 @@ NON_IDL_EVENT(MozMousePixelScroll,
               EventNameType_HTMLXUL,
               NS_MOUSE_SCROLL_EVENT)
                                                 
-NON_IDL_EVENT(MozBeforeResize,
-              NS_BEFORERESIZE_EVENT,
-              EventNameType_None,
-              NS_EVENT)
 NON_IDL_EVENT(open,
               NS_OPEN,
               EventNameType_None,
@@ -651,6 +647,11 @@ NON_IDL_EVENT(stop,
 
 NON_IDL_EVENT(warning,
               NS_MEDIARECORDER_WARNING,
+              EventNameType_None,
+              NS_EVENT)
+
+NON_IDL_EVENT(speakerforcedchange,
+              NS_SPEAKERMANAGER_SPEAKERFORCEDCHANGE,
               EventNameType_None,
               NS_EVENT)
 

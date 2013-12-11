@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "gfxWindowsPlatform.h"
 
@@ -14,6 +14,7 @@
 #include "nsUnicharUtils.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/WindowsVersion.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 
@@ -29,6 +30,7 @@
 #include "gfxGDIFontList.h"
 #include "gfxGDIFont.h"
 
+#include "mozilla/layers/CompositorParent.h"   // for CompositorParent::IsInCompositorThread
 #include "DeviceManagerD3D9.h"
 
 #ifdef CAIRO_HAS_DWRITE_FONT
@@ -207,7 +209,7 @@ typedef HRESULT (WINAPI*D3D11CreateDeviceFunc)(
   ID3D11DeviceContext *ppImmediateContext
 );
 
-class GPUAdapterReporter : public MemoryMultiReporter
+class GPUAdapterReporter : public nsIMemoryReporter
 {
     // Callers must Release the DXGIAdapter after use or risk mem-leak
     static bool GetDXGIAdapter(IDXGIAdapter **DXGIAdapter)
@@ -227,15 +229,12 @@ class GPUAdapterReporter : public MemoryMultiReporter
     }
 
 public:
-    GPUAdapterReporter()
-      : MemoryMultiReporter("gpu-adapter")
-    {}
+    NS_DECL_ISUPPORTS
 
     NS_IMETHOD
     CollectReports(nsIMemoryReporterCallback* aCb,
                    nsISupports* aClosure)
     {
-        int32_t winVers, buildNum;
         HANDLE ProcessHandle = GetCurrentProcess();
 
         int64_t dedicatedBytesUsed = 0;
@@ -246,10 +245,8 @@ public:
         HMODULE gdi32Handle;
         PFND3DKMTQS queryD3DKMTStatistics;
 
-        winVers = gfxWindowsPlatform::WindowsOSVersion(&buildNum);
-
         // GPU memory reporting is not available before Windows 7
-        if (winVers < gfxWindowsPlatform::kWindows7)
+        if (!IsWin7OrLater()) 
             return NS_OK;
 
         if (gdi32Handle = LoadLibrary(TEXT("gdi32.dll")))
@@ -289,7 +286,7 @@ public:
                         bool aperture;
 
                         // SegmentInformation has a different definition in Win7 than later versions
-                        if (winVers < gfxWindowsPlatform::kWindows8)
+                        if (!IsWin8OrLater())
                             aperture = queryStatistics.QueryResult.SegmentInfoWin7.Aperture;
                         else
                             aperture = queryStatistics.QueryResult.SegmentInfoWin8.Aperture;
@@ -342,6 +339,8 @@ public:
     }
 };
 
+NS_IMPL_ISUPPORTS1(GPUAdapterReporter, nsIMemoryReporter)
+
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)
 {
@@ -351,8 +350,7 @@ BuildKeyNameFromFontName(nsAString &aName)
 }
 
 gfxWindowsPlatform::gfxWindowsPlatform()
-  : mD3D9DeviceInitialized(false)
-  , mD3D11DeviceInitialized(false)
+  : mD3D11DeviceInitialized(false)
   , mPrefFonts(50)
 {
     mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
@@ -368,26 +366,22 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     mScreenDC = GetDC(nullptr);
 
 #ifdef CAIRO_HAS_D2D_SURFACE
-    NS_RegisterMemoryReporter(new GfxD2DSurfaceCacheReporter());
-    NS_RegisterMemoryReporter(new GfxD2DSurfaceVramReporter());
+    RegisterStrongMemoryReporter(new GfxD2DSurfaceCacheReporter());
+    RegisterStrongMemoryReporter(new GfxD2DSurfaceVramReporter());
     mD2DDevice = nullptr;
 #endif
-    NS_RegisterMemoryReporter(new GfxD2DVramDrawTargetReporter());
-    NS_RegisterMemoryReporter(new GfxD2DVramSourceSurfaceReporter());
+    RegisterStrongMemoryReporter(new GfxD2DVramDrawTargetReporter());
+    RegisterStrongMemoryReporter(new GfxD2DVramSourceSurfaceReporter());
 
     UpdateRenderMode();
 
     // This reporter is disabled because it frequently gives bogus values.  See
     // bug 917496.
-    //mGPUAdapterReporter = new GPUAdapterReporter();
-    //NS_RegisterMemoryReporter(mGPUAdapterReporter);
-    mGPUAdapterReporter = nullptr;
+    //RegisterStrongMemoryReporter(new GPUAdapterReporter());
 }
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
 {
-    //NS_UnregisterMemoryReporter(mGPUAdapterReporter);
-
     mDeviceManager = nullptr;
 
     ::ReleaseDC(nullptr, mScreenDC);
@@ -415,10 +409,7 @@ gfxWindowsPlatform::UpdateRenderMode()
  */
     mRenderMode = RENDER_GDI;
 
-    OSVERSIONINFOA versionInfo;
-    versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
-    ::GetVersionExA(&versionInfo);
-    bool isVistaOrHigher = versionInfo.dwMajorVersion >= 6;
+    bool isVistaOrHigher = IsVistaOrLater();
 
     bool safeMode = false;
     nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
@@ -621,36 +612,13 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
 #endif
 }
 
-// bug 630201 - older pre-RTM versions of Direct2D/DirectWrite cause odd
-// crashers so blacklist them altogether
-
-#ifdef CAIRO_HAS_DWRITE_FONT
-#define WINDOWS7_RTM_BUILD 7600
-
-static bool
-AllowDirectWrite()
-{
-    int32_t winVers, buildNum;
-
-    winVers = gfxWindowsPlatform::WindowsOSVersion(&buildNum);
-    if (winVers == gfxWindowsPlatform::kWindows7 &&
-        buildNum < WINDOWS7_RTM_BUILD)
-    {
-        // don't use Direct2D/DirectWrite on older versions of Windows 7
-        return false;
-    }
-
-    return true;
-}
-#endif
-
 gfxPlatformFontList*
 gfxWindowsPlatform::CreatePlatformFontList()
 {
     mUsingGDIFonts = false;
     gfxPlatformFontList *pfl;
 #ifdef CAIRO_HAS_DWRITE_FONT
-    if (AllowDirectWrite() && GetDWriteFactory()) {
+    if (GetDWriteFactory()) {
         pfl = new gfxDWriteFontList();
         if (NS_SUCCEEDED(pfl->InitFontList())) {
             return pfl;
@@ -1149,34 +1117,8 @@ gfxWindowsPlatform::UseClearTypeAlways()
     return mUseClearTypeAlways;
 }
 
-int32_t
-gfxWindowsPlatform::WindowsOSVersion(int32_t *aBuildNum)
-{
-    static int32_t winVersion = UNINITIALIZED_VALUE;
-    static int32_t buildNum = UNINITIALIZED_VALUE;
-
-    OSVERSIONINFO vinfo;
-
-    if (winVersion == UNINITIALIZED_VALUE) {
-        vinfo.dwOSVersionInfoSize = sizeof (vinfo);
-        if (!GetVersionEx(&vinfo)) {
-            winVersion = kWindowsUnknown;
-            buildNum = 0;
-        } else {
-            winVersion = int32_t(vinfo.dwMajorVersion << 16) + vinfo.dwMinorVersion;
-            buildNum = int32_t(vinfo.dwBuildNumber);
-        }
-    }
-
-    if (aBuildNum) {
-        *aBuildNum = buildNum;
-    }
-
-    return winVersion;
-}
-
 void 
-gfxWindowsPlatform::GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion)
+gfxWindowsPlatform::GetDLLVersion(char16ptr_t aDLLPath, nsAString& aVersion)
 {
     DWORD versInfoSize, vers[4] = {0};
     // version info not available case
@@ -1456,6 +1398,14 @@ gfxWindowsPlatform::SetupClearTypeParams()
 #endif
 }
 
+void
+gfxWindowsPlatform::OnDeviceManagerDestroy(DeviceManagerD3D9* aDeviceManager)
+{
+  if (aDeviceManager == mDeviceManager) {
+    mDeviceManager = nullptr;
+  }
+}
+
 IDirect3DDevice9*
 gfxWindowsPlatform::GetD3D9Device()
 {
@@ -1466,12 +1416,14 @@ gfxWindowsPlatform::GetD3D9Device()
 DeviceManagerD3D9*
 gfxWindowsPlatform::GetD3D9DeviceManager()
 {
-  if (!mD3D9DeviceInitialized) {
-    mD3D9DeviceInitialized = true;
-
+  // We should only create the d3d9 device on the compositor thread
+  // or we don't have a compositor thread.
+  if (!mDeviceManager &&
+      (CompositorParent::IsInCompositorThread() ||
+       !CompositorParent::CompositorLoop())) {
     mDeviceManager = new DeviceManagerD3D9();
     if (!mDeviceManager->Init()) {
-      NS_WARNING("Could not initialise devive manager");
+      NS_WARNING("Could not initialise device manager");
       mDeviceManager = nullptr;
     }
   }
@@ -1497,7 +1449,7 @@ gfxWindowsPlatform::GetD3D11Device()
   }
 
   nsTArray<D3D_FEATURE_LEVEL> featureLevels;
-  if (gfxWindowsPlatform::WindowsOSVersion() >= gfxWindowsPlatform::kWindows8) {
+  if (IsWin8OrLater()) {
     featureLevels.AppendElement(D3D_FEATURE_LEVEL_11_1);
   }
   featureLevels.AppendElement(D3D_FEATURE_LEVEL_11_0);

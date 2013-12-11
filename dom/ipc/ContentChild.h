@@ -165,6 +165,13 @@ public:
     virtual PFMRadioChild* AllocPFMRadioChild();
     virtual bool DeallocPFMRadioChild(PFMRadioChild* aActor);
 
+    virtual PAsmJSCacheEntryChild* AllocPAsmJSCacheEntryChild(
+                                 const asmjscache::OpenMode& aOpenMode,
+                                 const int64_t& aSizeToWrite,
+                                 const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
+    virtual bool DeallocPAsmJSCacheEntryChild(
+                                    PAsmJSCacheEntryChild* aActor) MOZ_OVERRIDE;
+
     virtual PSpeechSynthesisChild* AllocPSpeechSynthesisChild();
     virtual bool DeallocPSpeechSynthesisChild(PSpeechSynthesisChild* aActor);
 
@@ -177,6 +184,8 @@ public:
     virtual bool DeallocPJavaScriptChild(mozilla::jsipc::PJavaScriptChild*);
 
     virtual bool RecvSetOffline(const bool& offline);
+
+    virtual bool RecvSpeakerManagerNotify();
 
     virtual bool RecvNotifyVisited(const URIParams& aURI);
     // auto remove when alertfinished is received.
@@ -218,7 +227,8 @@ public:
                                       const int32_t& aState,
                                       const int32_t& aMountGeneration,
                                       const bool& aIsMediaPresent,
-                                      const bool& aIsSharing);
+                                      const bool& aIsSharing,
+                                      const bool& aIsFormatting);
 
     virtual bool RecvNuwaFork() MOZ_OVERRIDE;
 

@@ -1305,10 +1305,10 @@ Tab.prototype = {
     }
     browser.addEventListener("pageshow", onPageShowEvent, true);
     browser.addEventListener("DOMWindowCreated", this, false);
+    browser.addEventListener("StartUIChange", this, false);
     Elements.browsers.addEventListener("SizeChanged", this, false);
 
     browser.messageManager.addMessageListener("Content:StateChange", this);
-    Services.obs.addObserver(this, "metro_viewstate_changed", false);
 
     if (aOwner)
       this._copyHistoryFrom(aOwner);
@@ -1317,14 +1317,24 @@ Tab.prototype = {
 
   updateViewport: function (aEvent) {
     // <meta name=viewport> is not yet supported; just use the browser size.
-    this.browser.setWindowSize(this.browser.clientWidth, this.browser.clientHeight);
+    let browser = this.browser;
+
+    // On the start page we add padding to keep the browser above the navbar.
+    let paddingBottom = parseInt(getComputedStyle(browser).paddingBottom, 10);
+    let height = browser.clientHeight - paddingBottom;
+
+    browser.setWindowSize(browser.clientWidth, height);
   },
 
   handleEvent: function (aEvent) {
     switch (aEvent.type) {
       case "DOMWindowCreated":
+      case "StartUIChange":
+        this.updateViewport();
+        break;
       case "SizeChanged":
         this.updateViewport();
+        this._delayUpdateThumbnail();
         break;
     }
   },
@@ -1336,30 +1346,24 @@ Tab.prototype = {
         this.updateThumbnail();
         // ...and in a little while to capture page after load.
         if (aMessage.json.stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-          clearTimeout(this._updateThumbnailTimeout);
-          this._updateThumbnailTimeout = setTimeout(() => {
-            this.updateThumbnail();
-          }, kTabThumbnailDelayCapture);
+          this._delayUpdateThumbnail();
         }
         break;
     }
   },
 
-  observe: function BrowserUI_observe(aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "metro_viewstate_changed":
-        if (aData !== "snapped") {
-          this.updateThumbnail();
-        }
-        break;
-    }
+  _delayUpdateThumbnail: function() {
+    clearTimeout(this._updateThumbnailTimeout);
+    this._updateThumbnailTimeout = setTimeout(() => {
+      this.updateThumbnail();
+    }, kTabThumbnailDelayCapture);
   },
 
   destroy: function destroy() {
     this._browser.messageManager.removeMessageListener("Content:StateChange", this);
     this._browser.removeEventListener("DOMWindowCreated", this, false);
+    this._browser.removeEventListener("StartUIChange", this, false);
     Elements.browsers.removeEventListener("SizeChanged", this, false);
-    Services.obs.removeObserver(this, "metro_viewstate_changed", false);
     clearTimeout(this._updateThumbnailTimeout);
 
     Elements.tabList.removeTab(this._chromeTab);

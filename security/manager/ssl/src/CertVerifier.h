@@ -25,6 +25,7 @@ public:
   // XXX: The localonly flag is ignored in the classic verification case
 
   // *evOidPolicy == SEC_OID_UNKNOWN means the cert is NOT EV
+  // Only one usage per verification is supported.
   SECStatus VerifyCert(CERTCertificate * cert,
                        const SECCertificateUsage usage,
                        const PRTime time,
@@ -47,7 +48,6 @@ private:
   CertVerifier(missing_cert_download_config ac, crl_download_config cdc,
                ocsp_download_config odc, ocsp_strict_config osc,
                any_revo_fresh_config arfc,
-               const char *firstNetworkRevocationMethod,
                ocsp_get_config ogc);
   ~CertVerifier();
 
@@ -56,7 +56,6 @@ private:
   const bool mOCSPDownloadEnabled;
   const bool mOCSPStrict;
   const bool mRequireRevocationInfo;
-  const bool mCRLFirst;
   const bool mOCSPGETEnabled;
   friend class ::nsNSSComponent;
 };

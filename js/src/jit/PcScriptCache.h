@@ -32,7 +32,7 @@ struct PcScriptCache
     uint64_t gcNumber;
 
     // List of cache entries.
-    PcScriptCacheEntry entries[Length];
+    mozilla::Array<PcScriptCacheEntry, Length> entries;
 
     void clear(uint64_t gcNumber) {
         for (uint32_t i = 0; i < Length; i++)

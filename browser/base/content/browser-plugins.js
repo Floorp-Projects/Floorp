@@ -731,6 +731,7 @@ var gPluginHandler = {
       let principal = contentWindow.document.nodePrincipal;
       Services.perms.addFromPrincipal(principal, aPluginInfo.permissionString,
                                       permission, expireType, expireTime);
+      aPluginInfo.pluginPermissionType = expireType;
     }
 
     // Manually activate the plugins that would have been automatically
@@ -767,6 +768,8 @@ var gPluginHandler = {
     if (aNewState != "block" && !pluginFound) {
       browser.reload();
     }
+
+    this._setPluginNotificationIcon(browser);
   },
 
   _showClickToPlayNotification: function PH_showClickToPlayNotification(aBrowser, aPlugin, aShowNow) {

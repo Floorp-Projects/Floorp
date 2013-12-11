@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PAsmJSCacheEntry;
 include protocol PBlob;
 include protocol PBluetooth;
 include protocol PBrowser;
@@ -40,6 +41,7 @@ using struct IPC::Permission from "mozilla/net/NeckoMessageUtils.h";
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+using mozilla::dom::asmjscache::OpenMode from "mozilla/dom/asmjscache/AsmJSCache.h";
 using mozilla::dom::AudioChannelType from "AudioChannelCommon.h";
 using mozilla::dom::AudioChannelState from "AudioChannelCommon.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
@@ -72,6 +74,12 @@ struct DeviceStorageUsedSpaceParams
 };
 
 struct DeviceStorageAvailableParams
+{
+  nsString type;
+  nsString storageName;
+};
+
+struct DeviceStorageFormatParams
 {
   nsString type;
   nsString storageName;
@@ -117,6 +125,7 @@ union DeviceStorageParams
   DeviceStorageFreeSpaceParams;
   DeviceStorageUsedSpaceParams;
   DeviceStorageAvailableParams;
+  DeviceStorageFormatParams;
 };
 
 struct FMRadioRequestEnableParams
@@ -175,6 +184,7 @@ intr protocol PContent
     parent opens PCompositor;
     parent opens PImageBridge;
 
+    manages PAsmJSCacheEntry;
     manages PBlob;
     manages PBluetooth;
     manages PBrowser;
@@ -238,6 +248,8 @@ child:
      */
     async AudioChannelNotify();
 
+    async SpeakerManagerNotify();
+
     /**
      * Do a memory info dump to a file in our temp directory.
      *
@@ -247,7 +259,6 @@ child:
     async DumpMemoryInfoToTempDir(nsString identifier,
                                   bool minimizeMemoryUsage,
                                   bool dumpChildProcesses);
-
     /**
      * Dump this process's GC and CC logs.
      *
@@ -298,7 +309,7 @@ child:
 
     FileSystemUpdate(nsString fsName, nsString mountPoint, int32_t fsState,
                      int32_t mountGeneration, bool isMediaPresent,
-                     bool isSharing);
+                     bool isSharing, bool isFormatting);
 
     // Ask the Nuwa process to create a new child process.
     NuwaFork();
@@ -355,6 +366,9 @@ parent:
     PBluetooth();
 
     PFMRadio();
+
+    PAsmJSCacheEntry(OpenMode openMode, int64_t sizeToWrite,
+                     Principal principal);
 
     // Services remoting
 
@@ -470,6 +484,23 @@ parent:
 
     sync KeywordToURI(nsCString keyword)
         returns (OptionalInputStreamParams postData, OptionalURIParams uri);
+
+    sync SpeakerManagerForceSpeaker(bool aEnable);
+
+    sync SpeakerManagerGetSpeakerStatus()
+        returns (bool value);
+
+    /**
+     * Notifies the parent about a recording device is starting or shutdown.
+     * @param recordingStatus starting or shutdown
+     * @param pageURL URL that request that changing the recording status
+     * @param isAudio recording start with microphone
+     * @param isVideo recording start with camera
+     */
+    async RecordingDeviceEvents(nsString recordingStatus,
+                                nsString pageURL,
+                                bool isAudio,
+                                bool isVideo);
 
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,

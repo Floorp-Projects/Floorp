@@ -33,11 +33,12 @@ function newUint8Worker() {
 }
 
 /**
- * Verify GsmPDUHelper#readICCUCS2String()
+ * Verify ICCPDUHelper#readICCUCS2String()
  */
 add_test(function test_read_icc_ucs2_string() {
   let worker = newUint8Worker();
   let helper = worker.GsmPDUHelper;
+  let iccHelper = worker.ICCPDUHelper;
 
   // 0x80
   let text = "TEST";
@@ -47,7 +48,7 @@ add_test(function test_read_icc_ucs2_string() {
   for (let i = 0; i < ffLen; i++) {
     helper.writeHexOctet(0xff);
   }
-  do_check_eq(helper.readICCUCS2String(0x80, (2 * text.length) + ffLen), text);
+  do_check_eq(iccHelper.readICCUCS2String(0x80, (2 * text.length) + ffLen), text);
 
   // 0x81
   let array = [0x08, 0xd2, 0x4d, 0x6f, 0x7a, 0x69, 0x6c, 0x6c, 0x61, 0xca,
@@ -56,7 +57,7 @@ add_test(function test_read_icc_ucs2_string() {
   for (let i = 0; i < len; i++) {
     helper.writeHexOctet(array[i]);
   }
-  do_check_eq(helper.readICCUCS2String(0x81, len), "Mozilla\u694a");
+  do_check_eq(iccHelper.readICCUCS2String(0x81, len), "Mozilla\u694a");
 
   // 0x82
   let array2 = [0x08, 0x69, 0x00, 0x4d, 0x6f, 0x7a, 0x69, 0x6c, 0x6c, 0x61,
@@ -65,17 +66,18 @@ add_test(function test_read_icc_ucs2_string() {
   for (let i = 0; i < len2; i++) {
     helper.writeHexOctet(array2[i]);
   }
-  do_check_eq(helper.readICCUCS2String(0x82, len2), "Mozilla\u694a");
+  do_check_eq(iccHelper.readICCUCS2String(0x82, len2), "Mozilla\u694a");
 
   run_next_test();
 });
 
 /**
- * Verify GsmPDUHelper#readDiallingNumber
+ * Verify ICCPDUHelper#readDiallingNumber
  */
 add_test(function test_read_dialling_number() {
   let worker = newUint8Worker();
   let helper = worker.GsmPDUHelper;
+  let iccHelper = worker.ICCPDUHelper;
   let str = "123456789";
 
   helper.readHexOctet = function () {
@@ -88,18 +90,19 @@ add_test(function test_read_dialling_number() {
 
   for (let i = 0; i < str.length; i++) {
     do_check_eq(str.substring(0, i - 1), // -1 for the TON
-                helper.readDiallingNumber(i));
+                iccHelper.readDiallingNumber(i));
   }
 
   run_next_test();
 });
 
 /**
- * Verify GsmPDUHelper#read8BitUnpackedToString
+ * Verify ICCPDUHelper#read8BitUnpackedToString
  */
 add_test(function test_read_8bit_unpacked_to_string() {
   let worker = newUint8Worker();
   let helper = worker.GsmPDUHelper;
+  let iccHelper = worker.ICCPDUHelper;
   const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
   const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
 
@@ -123,10 +126,10 @@ add_test(function test_read_8bit_unpacked_to_string() {
     helper.writeHexOctet(0xff);
   }
 
-  do_check_eq(helper.read8BitUnpackedToString(PDU_NL_EXTENDED_ESCAPE),
+  do_check_eq(iccHelper.read8BitUnpackedToString(PDU_NL_EXTENDED_ESCAPE),
               langTable.substring(0, PDU_NL_EXTENDED_ESCAPE));
-  do_check_eq(helper.read8BitUnpackedToString(2), " ");
-  do_check_eq(helper.read8BitUnpackedToString(langTable.length -
+  do_check_eq(iccHelper.read8BitUnpackedToString(2), " ");
+  do_check_eq(iccHelper.read8BitUnpackedToString(langTable.length -
                                               PDU_NL_EXTENDED_ESCAPE - 1 + ffLen),
               langTable.substring(PDU_NL_EXTENDED_ESCAPE + 1));
 
@@ -137,19 +140,19 @@ add_test(function test_read_8bit_unpacked_to_string() {
   }
 
   // Read string before RESERVED_CONTROL.
-  do_check_eq(helper.read8BitUnpackedToString(PDU_NL_RESERVED_CONTROL  * 2),
+  do_check_eq(iccHelper.read8BitUnpackedToString(PDU_NL_RESERVED_CONTROL  * 2),
               langShiftTable.substring(0, PDU_NL_RESERVED_CONTROL));
   // ESCAPE + RESERVED_CONTROL will become ' '.
-  do_check_eq(helper.read8BitUnpackedToString(2), " ");
+  do_check_eq(iccHelper.read8BitUnpackedToString(2), " ");
   // Read string between RESERVED_CONTROL and EXTENDED_ESCAPE.
-  do_check_eq(helper.read8BitUnpackedToString(
+  do_check_eq(iccHelper.read8BitUnpackedToString(
                 (PDU_NL_EXTENDED_ESCAPE - PDU_NL_RESERVED_CONTROL - 1)  * 2),
               langShiftTable.substring(PDU_NL_RESERVED_CONTROL + 1,
                                        PDU_NL_EXTENDED_ESCAPE));
   // ESCAPE + ESCAPE will become ' '.
-  do_check_eq(helper.read8BitUnpackedToString(2), " ");
+  do_check_eq(iccHelper.read8BitUnpackedToString(2), " ");
   // Read remaining string.
-  do_check_eq(helper.read8BitUnpackedToString(
+  do_check_eq(iccHelper.read8BitUnpackedToString(
                 (langShiftTable.length - PDU_NL_EXTENDED_ESCAPE - 1)  * 2),
               langShiftTable.substring(PDU_NL_EXTENDED_ESCAPE + 1));
 
@@ -157,13 +160,14 @@ add_test(function test_read_8bit_unpacked_to_string() {
 });
 
 /**
- * Verify GsmPDUHelper#writeStringTo8BitUnpacked.
+ * Verify ICCPDUHelper#writeStringTo8BitUnpacked.
  *
  * Test writing GSM 8 bit alphabets.
  */
 add_test(function test_write_string_to_8bit_unpacked() {
   let worker = newUint8Worker();
   let helper = worker.GsmPDUHelper;
+  let iccHelper = worker.ICCPDUHelper;
   const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
   const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
   // Length of trailing 0xff.
@@ -171,7 +175,7 @@ add_test(function test_write_string_to_8bit_unpacked() {
   let str;
 
   // Test 1, write GSM alphabets.
-  helper.writeStringTo8BitUnpacked(langTable.length + ffLen, langTable);
+  iccHelper.writeStringTo8BitUnpacked(langTable.length + ffLen, langTable);
 
   for (let i = 0; i < langTable.length; i++) {
     do_check_eq(helper.readHexOctet(), i);
@@ -183,9 +187,9 @@ add_test(function test_write_string_to_8bit_unpacked() {
 
   // Test 2, write GSM extended alphabets.
   str = "\u000c\u20ac";
-  helper.writeStringTo8BitUnpacked(4, str);
+  iccHelper.writeStringTo8BitUnpacked(4, str);
 
-  do_check_eq(helper.read8BitUnpackedToString(4), str);
+  do_check_eq(iccHelper.read8BitUnpackedToString(4), str);
 
   // Test 3, write GSM and GSM extended alphabets.
   // \u000c, \u20ac are from gsm extended alphabets.
@@ -196,25 +200,26 @@ add_test(function test_write_string_to_8bit_unpacked() {
   // 1 octet for 1 gsm alphabet,
   // 2 octes for trailing 0xff.
   // "Totally 7 octets are to be written."
-  helper.writeStringTo8BitUnpacked(7, str);
+  iccHelper.writeStringTo8BitUnpacked(7, str);
 
-  do_check_eq(helper.read8BitUnpackedToString(7), str);
+  do_check_eq(iccHelper.read8BitUnpackedToString(7), str);
 
   run_next_test();
 });
 
 /**
- * Verify GsmPDUHelper#writeStringTo8BitUnpacked with maximum octets written.
+ * Verify ICCPDUHelper#writeStringTo8BitUnpacked with maximum octets written.
  */
 add_test(function test_write_string_to_8bit_unpacked_with_max_octets_written() {
   let worker = newUint8Worker();
   let helper = worker.GsmPDUHelper;
+  let iccHelper = worker.ICCPDUHelper;
   const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
   const langShiftTable = PDU_NL_SINGLE_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
 
   // The maximum of the number of octets that can be written is 3.
   // Only 3 characters shall be written even the length of the string is 4.
-  helper.writeStringTo8BitUnpacked(3, langTable.substring(0, 4));
+  iccHelper.writeStringTo8BitUnpacked(3, langTable.substring(0, 4));
   helper.writeHexOctet(0xff); // dummy octet.
   for (let i = 0; i < 3; i++) {
     do_check_eq(helper.readHexOctet(), i);
@@ -224,74 +229,159 @@ add_test(function test_write_string_to_8bit_unpacked_with_max_octets_written() {
   // \u000c is GSM extended alphabet, 2 octets.
   // \u00a3 is GSM alphabet, 1 octet.
   let str = "\u000c\u00a3";
-  helper.writeStringTo8BitUnpacked(3, str);
-  do_check_eq(helper.read8BitUnpackedToString(3), str);
+  iccHelper.writeStringTo8BitUnpacked(3, str);
+  do_check_eq(iccHelper.read8BitUnpackedToString(3), str);
 
   str = "\u00a3\u000c";
-  helper.writeStringTo8BitUnpacked(3, str);
-  do_check_eq(helper.read8BitUnpackedToString(3), str);
+  iccHelper.writeStringTo8BitUnpacked(3, str);
+  do_check_eq(iccHelper.read8BitUnpackedToString(3), str);
 
   // 2 GSM extended alphabets cost 4 octets, but maximum is 3, so only the 1st
   // alphabet can be written.
   str = "\u000c\u000c";
-  helper.writeStringTo8BitUnpacked(3, str);
+  iccHelper.writeStringTo8BitUnpacked(3, str);
   helper.writeHexOctet(0xff); // dummy octet.
-  do_check_eq(helper.read8BitUnpackedToString(4), str.substring(0, 1));
+  do_check_eq(iccHelper.read8BitUnpackedToString(4), str.substring(0, 1));
 
   run_next_test();
 });
 
 /**
- * Verify GsmPDUHelper.writeAlphaIdentifier
+ * Verify ICCPDUHelper.readAlphaIdentifier
+ */
+add_test(function test_read_alpha_identifier() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let iccHelper = worker.ICCPDUHelper;
+
+  // UCS2: 0x80
+  let text = "TEST";
+  helper.writeHexOctet(0x80);
+  helper.writeUCS2String(text);
+  // Also write two unused octets.
+  let ffLen = 2;
+  for (let i = 0; i < ffLen; i++) {
+    helper.writeHexOctet(0xff);
+  }
+  do_check_eq(iccHelper.readAlphaIdentifier(1 + (2 * text.length) + ffLen), text);
+
+  // UCS2: 0x81
+  let array = [0x81, 0x08, 0xd2, 0x4d, 0x6f, 0x7a, 0x69, 0x6c, 0x6c, 0x61, 0xca, 0xff, 0xff];
+  for (let i = 0; i < array.length; i++) {
+    helper.writeHexOctet(array[i]);
+  }
+  do_check_eq(iccHelper.readAlphaIdentifier(array.length), "Mozilla\u694a");
+
+  // UCS2: 0x82
+  let array2 = [0x82, 0x08, 0x69, 0x00, 0x4d, 0x6f, 0x7a, 0x69, 0x6c, 0x6c, 0x61, 0xca, 0xff, 0xff];
+  for (let i = 0; i < array2.length; i++) {
+    helper.writeHexOctet(array2[i]);
+  }
+  do_check_eq(iccHelper.readAlphaIdentifier(array2.length), "Mozilla\u694a");
+
+  // GSM 8 Bit Unpacked
+  const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
+  for (let i = 0; i < PDU_NL_EXTENDED_ESCAPE; i++) {
+    helper.writeHexOctet(i);
+  }
+  do_check_eq(iccHelper.readAlphaIdentifier(PDU_NL_EXTENDED_ESCAPE),
+              langTable.substring(0, PDU_NL_EXTENDED_ESCAPE));
+
+  run_next_test();
+});
+
+/**
+ * Verify ICCPDUHelper.writeAlphaIdentifier
  */
 add_test(function test_write_alpha_identifier() {
   let worker = newUint8Worker();
   let helper = worker.GsmPDUHelper;
+  let iccHelper = worker.ICCPDUHelper;
   // Length of trailing 0xff.
   let ffLen = 2;
 
   // Removal
-  helper.writeAlphaIdentifier(10, null);
-  do_check_eq(helper.readAlphaIdentifier(10), "");
+  iccHelper.writeAlphaIdentifier(10, null);
+  do_check_eq(iccHelper.readAlphaIdentifier(10), "");
 
   // GSM 8 bit
   let str = "Mozilla";
-  helper.writeAlphaIdentifier(str.length + ffLen, str);
-  do_check_eq(helper.readAlphaIdentifier(str.length + ffLen), str);
+  iccHelper.writeAlphaIdentifier(str.length + ffLen, str);
+  do_check_eq(iccHelper.readAlphaIdentifier(str.length + ffLen), str);
 
   // UCS2
   str = "Mozilla\u694a";
-  helper.writeAlphaIdentifier(str.length * 2 + ffLen, str);
+  iccHelper.writeAlphaIdentifier(str.length * 2 + ffLen, str);
   // * 2 for each character will be encoded to UCS2 alphabets.
-  do_check_eq(helper.readAlphaIdentifier(str.length * 2 + ffLen), str);
+  do_check_eq(iccHelper.readAlphaIdentifier(str.length * 2 + ffLen), str);
 
   // Test with maximum octets written.
   // 1 coding scheme (0x80) and 1 UCS2 character, total 3 octets.
   str = "\u694a";
-  helper.writeAlphaIdentifier(3, str);
-  do_check_eq(helper.readAlphaIdentifier(3), str);
+  iccHelper.writeAlphaIdentifier(3, str);
+  do_check_eq(iccHelper.readAlphaIdentifier(3), str);
 
   // 1 coding scheme (0x80) and 2 UCS2 characters, total 5 octets.
   // numOctets is limited to 4, so only 1 UCS2 character can be written.
   str = "\u694a\u694a";
-  helper.writeAlphaIdentifier(4, str);
+  iccHelper.writeAlphaIdentifier(4, str);
   helper.writeHexOctet(0xff); // dummy octet.
-  do_check_eq(helper.readAlphaIdentifier(5), str.substring(0, 1));
+  do_check_eq(iccHelper.readAlphaIdentifier(5), str.substring(0, 1));
 
   // Write 0 octet.
-  helper.writeAlphaIdentifier(0, "1");
+  iccHelper.writeAlphaIdentifier(0, "1");
   helper.writeHexOctet(0xff); // dummy octet.
-  do_check_eq(helper.readAlphaIdentifier(1), "");
+  do_check_eq(iccHelper.readAlphaIdentifier(1), "");
 
   run_next_test();
 });
 
 /**
- * Verify GsmPDUHelper.writeAlphaIdDiallingNumber
+ * Verify ICCPDUHelper.readAlphaIdDiallingNumber
+ */
+add_test(function test_read_alpha_id_dialling_number() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let iccHelper = worker.ICCPDUHelper;
+  let buf = worker.Buf;
+  const recordSize = 32;
+
+  function testReadAlphaIdDiallingNumber(contact) {
+    iccHelper.readAlphaIdentifier = function () {
+      return contact.alphaId;
+    };
+
+    iccHelper.readNumberWithLength = function () {
+      return contact.number;
+    };
+
+    let strLen = recordSize * 2;
+    buf.writeInt32(strLen);     // fake length
+    helper.writeHexOctet(0xff); // fake CCP
+    helper.writeHexOctet(0xff); // fake EXT1
+    buf.writeStringDelimiter(strLen);
+
+    let contactR = iccHelper.readAlphaIdDiallingNumber(recordSize);
+    if (contact.alphaId == "" && contact.number == "") {
+      do_check_eq(contactR, null);
+    } else {
+      do_check_eq(contactR.alphaId, contact.alphaId);
+      do_check_eq(contactR.number, contact.number);
+    }
+  }
+
+  testReadAlphaIdDiallingNumber({alphaId: "AlphaId", number: "0987654321"});
+  testReadAlphaIdDiallingNumber({alphaId: "", number: ""});
+
+  run_next_test();
+});
+
+/**
+ * Verify ICCPDUHelper.writeAlphaIdDiallingNumber
  */
 add_test(function test_write_alpha_id_dialling_number() {
   let worker = newUint8Worker();
-  let helper = worker.GsmPDUHelper;
+  let helper = worker.ICCPDUHelper;
   const recordSize = 32;
 
   // Write a normal contact.
@@ -349,11 +439,11 @@ add_test(function test_write_alpha_id_dialling_number() {
 });
 
 /**
- * Verify GsmPDUHelper.writeDiallingNumber
+ * Verify ICCPDUHelper.writeDiallingNumber
  */
 add_test(function test_write_dialling_number() {
   let worker = newUint8Worker();
-  let helper = worker.GsmPDUHelper;
+  let helper = worker.ICCPDUHelper;
 
   // with +
   let number = "+123456";
@@ -371,6 +461,65 @@ add_test(function test_write_dialling_number() {
   len = 5;
   helper.writeDiallingNumber(number);
   do_check_eq(helper.readDiallingNumber(len), number);
+
+  run_next_test();
+});
+
+/**
+ * Verify ICCPDUHelper.readNumberWithLength
+ */
+add_test(function test_read_number_with_length() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let iccHelper = worker.ICCPDUHelper;
+  let number = "123456789";
+
+  iccHelper.readDiallingNumber = function (numLen) {
+    return number.substring(0, numLen);
+  };
+
+  helper.writeHexOctet(number.length + 1);
+  helper.writeHexOctet(PDU_TOA_ISDN);
+  do_check_eq(iccHelper.readNumberWithLength(), number);
+
+  helper.writeHexOctet(0xff);
+  do_check_eq(iccHelper.readNumberWithLength(), null);
+
+  run_next_test();
+});
+
+/**
+ * Verify ICCPDUHelper.writeNumberWithLength
+ */
+add_test(function test_write_number_with_length() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let iccHelper = worker.ICCPDUHelper;
+
+  // without +
+  let number_1 = "123456789";
+  iccHelper.writeNumberWithLength(number_1);
+  let numLen = helper.readHexOctet();
+  do_check_eq(number_1, iccHelper.readDiallingNumber(numLen));
+  for (let i = 0; i < (ADN_MAX_BCD_NUMBER_BYTES - numLen); i++) {
+    do_check_eq(0xff, helper.readHexOctet());
+  }
+
+  // with +
+  let number_2 = "+987654321";
+  iccHelper.writeNumberWithLength(number_2);
+  numLen = helper.readHexOctet();
+  do_check_eq(number_2, iccHelper.readDiallingNumber(numLen));
+  for (let i = 0; i < (ADN_MAX_BCD_NUMBER_BYTES - numLen); i++) {
+    do_check_eq(0xff, helper.readHexOctet());
+  }
+
+  // null
+  let number_3;
+  iccHelper.writeNumberWithLength(number_3);
+  for (let i = 0; i < (ADN_MAX_BCD_NUMBER_BYTES + 1); i++) {
+    do_check_eq(0xff, helper.readHexOctet());
+  }
 
   run_next_test();
 });
@@ -648,7 +797,6 @@ add_test(function test_path_id_for_spid_and_spn() {
 add_test(function test_parse_pbr_tlvs() {
   let worker = newUint8Worker();
   let buf = worker.Buf;
-  let pduHelper = worker.GsmPDUHelper;
 
   let pbrTlvs = [
     {tag: ICC_USIM_TYPE1_TAG,
@@ -753,7 +901,7 @@ add_test(function test_read_pbr() {
   let buf    = worker.Buf;
   let io     = worker.ICCIOHelper;
 
-  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options)  {
+  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
     let pbr_1 = [
       0xa8, 0x05, 0xc0, 0x03, 0x4f, 0x3a, 0x01
     ];
@@ -789,16 +937,24 @@ add_test(function test_read_pbr() {
   let successCb = function successCb(pbrs) {
     do_check_eq(pbrs[0].adn.fileId, 0x4f3a);
     do_check_eq(pbrs.length, 1);
-    run_next_test();
   };
 
   let errorCb = function errorCb(errorMsg) {
     do_print("Reading EF_PBR failed, msg = " + errorMsg);
     do_check_true(false);
-    run_next_test();
   };
 
   record.readPBR(successCb, errorCb);
+
+  // Check cache pbrs when 2nd call
+  let ifLoadEF = false;
+  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options)  {
+    ifLoadEF = true;
+  }
+  record.readPBR(successCb, errorCb);
+  do_check_false(ifLoadEF);
+
+  run_next_test();
 });
 
 /**
@@ -864,6 +1020,7 @@ add_test(function test_update_email() {
   const NUM_TESTS = 2;
   let worker = newUint8Worker();
   let pduHelper = worker.GsmPDUHelper;
+  let iccHelper = worker.ICCPDUHelper;
   let ril = worker.RIL;
   ril.appType = CARD_APPTYPE_USIM;
   let recordHelper = worker.ICCRecordHelper;
@@ -916,9 +1073,9 @@ add_test(function test_update_email() {
       let strLen = this.readInt32();
       let email;
       if (pbr.email.fileType === ICC_USIM_TYPE1_TAG) {
-        email = pduHelper.read8BitUnpackedToString(recordSize);
+        email = iccHelper.read8BitUnpackedToString(recordSize);
       } else {
-        email = pduHelper.read8BitUnpackedToString(recordSize - 2);
+        email = iccHelper.read8BitUnpackedToString(recordSize - 2);
         do_check_eq(pduHelper.readHexOctet(), pbr.adn.sfi);
         do_check_eq(pduHelper.readHexOctet(), expectedAdnRecordId);
       }
@@ -1005,6 +1162,7 @@ add_test(function test_update_anr() {
   const NUM_TESTS = 2;
   let worker = newUint8Worker();
   let pduHelper = worker.GsmPDUHelper;
+  let iccHelper = worker.ICCPDUHelper;
   let ril = worker.RIL;
   ril.appType = CARD_APPTYPE_USIM;
   let recordHelper = worker.ICCRecordHelper;
@@ -1057,7 +1215,7 @@ add_test(function test_update_anr() {
       let strLen = this.readInt32();
       // EF_AAS, ignore.
       pduHelper.readHexOctet();
-      do_check_eq(pduHelper.readNumberWithLength(), expectedANR);
+      do_check_eq(iccHelper.readNumberWithLength(), expectedANR);
       // EF_CCP, ignore.
       pduHelper.readHexOctet();
       // EF_EXT1, ignore.
@@ -1227,7 +1385,7 @@ add_test(function test_update_adn_like() {
   let ril = worker.RIL;
   let record = worker.ICCRecordHelper;
   let io = worker.ICCIOHelper;
-  let pdu = worker.GsmPDUHelper;
+  let pdu = worker.ICCPDUHelper;
   let buf = worker.Buf;
 
   ril.appType = CARD_APPTYPE_SIM;
@@ -1715,6 +1873,104 @@ add_test(function test_find_free_icc_contact_usim() {
   run_next_test();
 });
 
+/**
+ * Test error message returned in onerror for readICCContacts.
+ */
+add_test(function test_error_message_read_icc_contact () {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+
+  function do_test(options, expectedErrorMsg) {
+    ril.sendChromeMessage = function (message) {
+      do_check_eq(message.errorMsg, expectedErrorMsg);
+    }
+    ril.readICCContacts(options);
+  }
+
+  // Error 1, didn't specify correct contactType.
+  do_test({}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
+
+  // Error 2, specifying a non-supported contactType.
+  ril.appType = CARD_APPTYPE_USIM;
+  do_test({contactType: "sdn"}, CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
+
+  // Error 3, suppose we update the supported PBR fields in USIM_PBR_FIELDS,
+  // but forget to add implemenetations for it.
+  USIM_PBR_FIELDS.push("pbc");
+  do_test({contactType: "adn"}, CONTACT_ERR_FIELD_NOT_SUPPORTED);
+
+  run_next_test();
+});
+
+/**
+ * Test error message returned in onerror for updateICCContact.
+ */
+add_test(function test_error_message_update_icc_contact() {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+
+  const ICCID = "123456789";
+  ril.iccInfo.iccid = ICCID;
+
+  function do_test(options, expectedErrorMsg) {
+    ril.sendChromeMessage = function (message) {
+      do_check_eq(message.errorMsg, expectedErrorMsg);
+    }
+    ril.updateICCContact(options);
+  }
+
+  // Error 1, didn't specify correct contactType.
+  do_test({}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
+
+  // Error 2, specifying a correct contactType, but without providing 'contact'.
+  do_test({contactType: "adn"}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
+
+  // Error 3, specifying a non-supported contactType.
+  ril.appType = CARD_APPTYPE_USIM;
+  do_test({contactType: "sdn", contact: {}}, CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
+
+  // Error 4, without supplying pin2.
+  do_test({contactType: "fdn", contact: {contactId: ICCID + "1"}}, GECKO_ERROR_SIM_PIN2);
+
+  // Error 5, No free record found in EF_ADN.
+  let record = worker.ICCRecordHelper;
+  record.readPBR = function (onsuccess, onerror) {
+    onsuccess([{adn: {fileId: 0x4f3a}}]);
+  };
+
+  let io = worker.ICCIOHelper;
+  io.loadLinearFixedEF = function (options) {
+    options.totalRecords = 1;
+    options.p1 = 1;
+    options.callback(options);
+  };
+
+  do_test({contactType: "adn", contact: {}}, CONTACT_ERR_NO_FREE_RECORD_FOUND);
+
+  // Error 6, ICC IO Error.
+  io.loadLinearFixedEF = function (options) {
+    ril[REQUEST_SIM_IO](0, {rilRequestError: ERROR_GENERIC_FAILURE});
+  };
+  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+          GECKO_ERROR_GENERIC_FAILURE);
+
+  // Error 7, suppose we update the supported PBR fields in USIM_PBR_FIELDS,
+  // but forget to add implemenetations for it.
+  USIM_PBR_FIELDS.push("pbc");
+  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+          CONTACT_ERR_FIELD_NOT_SUPPORTED);
+
+  // Error 8, EF_PBR doesn't exist.
+  record.readPBR = function (onsuccess, onerror) {
+    onsuccess([]);
+  };
+
+  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+          CONTACT_ERR_CANNOT_ACCESS_PHONEBOOK);
+
+  run_next_test();
+});
+
 add_test(function test_personalization_state() {
   let worker = newUint8Worker();
   let ril = worker.RIL;
@@ -1981,7 +2237,7 @@ add_test(function test_mcc_mnc_parsing() {
   */
 add_test(function test_reading_ad_and_parsing_mcc_mnc() {
   let worker = newUint8Worker();
-  let record = worker.ICCRecordHelper;
+  let record = worker.SimRecordHelper;
   let helper = worker.GsmPDUHelper;
   let ril    = worker.RIL;
   let buf    = worker.Buf;
@@ -2028,7 +2284,7 @@ add_test(function test_reading_ad_and_parsing_mcc_mnc() {
 
 add_test(function test_reading_optional_efs() {
   let worker = newUint8Worker();
-  let record = worker.ICCRecordHelper;
+  let record = worker.SimRecordHelper;
   let gsmPdu = worker.GsmPDUHelper;
   let ril    = worker.RIL;
   let buf    = worker.Buf;
@@ -2105,6 +2361,77 @@ add_test(function test_reading_optional_efs() {
   do_test(buildSST(supportedEf), supportedEf);
   ril.appType = CARD_APPTYPE_USIM;
   do_test(buildSST(supportedEf), supportedEf);
+
+  run_next_test();
+});
+
+/**
+ * Verify fetchSimRecords.
+ */
+add_test(function test_fetch_sim_recodes() {
+  let worker = newWorker();
+  let RIL = worker.RIL;
+  let iccRecord = worker.ICCRecordHelper;
+  let simRecord = worker.SimRecordHelper;
+
+  function testFetchSimRecordes(expectCalled) {
+    let ifCalled = [];
+
+    RIL.getIMSI = function () {
+      ifCalled.push("getIMSI");
+    };
+
+    simRecord.readAD = function () {
+      ifCalled.push("readAD");
+    };
+
+    simRecord.readSST = function () {
+      ifCalled.push("readSST");
+    };
+
+    simRecord.fetchSimRecords();
+
+    for (let i = 0; i < expectCalled.length; i++ ) {
+      if (ifCalled[i] != expectCalled[i]) {
+        do_print(expectCalled[i] + " is not called.");
+        do_check_true(false);
+      }
+    }
+  }
+
+  let expectCalled = ["getIMSI", "readAD", "readSST"];
+  testFetchSimRecordes(expectCalled);
+
+  run_next_test();
+});
+
+add_test(function test_fetch_icc_recodes() {
+  let worker = newWorker();
+  let RIL = worker.RIL;
+  let iccRecord = worker.ICCRecordHelper;
+  let simRecord = worker.SimRecordHelper;
+  let ruimRecord = worker.RuimRecordHelper;
+  let fetchTag = 0x00;
+
+  simRecord.fetchSimRecords = function () {
+    fetchTag = 0x01;
+  };
+
+  ruimRecord.fetchRuimRecords = function () {
+    fetchTag = 0x02;
+  };
+
+  RIL.appType = CARD_APPTYPE_SIM;
+  iccRecord.fetchICCRecords();
+  do_check_eq(fetchTag, 0x01);
+
+  RIL.appType = CARD_APPTYPE_RUIM;
+  iccRecord.fetchICCRecords();
+  do_check_eq(fetchTag, 0x02);
+
+  RIL.appType = CARD_APPTYPE_USIM;
+  iccRecord.fetchICCRecords();
+  do_check_eq(fetchTag, 0x01);
 
   run_next_test();
 });

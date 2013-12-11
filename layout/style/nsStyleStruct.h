@@ -101,6 +101,8 @@ public:
 
   // MathML scriptlevel support
   int8_t  mScriptLevel;          // [inherited]
+  // MathML  mathvariant support
+  uint8_t mMathVariant;          // [inherited]
 
   // was mLanguage set based on a lang attribute in the document?
   bool mExplicitLanguage;        // [inherited]
@@ -1127,9 +1129,11 @@ struct nsStylePosition {
   nsStyleCoord  mMaxHeight;             // [reset] coord, percent, calc, none
   nsStyleCoord  mFlexBasis;             // [reset] coord, percent, enum, calc, auto
   uint8_t       mBoxSizing;             // [reset] see nsStyleConsts.h
+  uint8_t       mAlignContent;          // [reset] see nsStyleConsts.h
   uint8_t       mAlignItems;            // [reset] see nsStyleConsts.h
   uint8_t       mAlignSelf;             // [reset] see nsStyleConsts.h
   uint8_t       mFlexDirection;         // [reset] see nsStyleConsts.h
+  uint8_t       mFlexWrap;              // [reset] see nsStyleConsts.h
   uint8_t       mJustifyContent;        // [reset] see nsStyleConsts.h
   int32_t       mOrder;                 // [reset] integer
   float         mFlexGrow;              // [reset] float
@@ -2386,6 +2390,22 @@ struct nsStyleSVG {
 
   bool HasMarker() const {
     return mMarkerStart || mMarkerMid || mMarkerEnd;
+  }
+
+  /**
+   * Returns true if the stroke is not "none" and the stroke-opacity is greater
+   * than zero. This ignores stroke-widths as that depends on the context.
+   */
+  bool HasStroke() const {
+    return mStroke.mType != eStyleSVGPaintType_None && mStrokeOpacity > 0;
+  }
+
+  /**
+   * Returns true if the fill is not "none" and the fill-opacity is greater
+   * than zero.
+   */
+  bool HasFill() const {
+    return mFill.mType != eStyleSVGPaintType_None && mFillOpacity > 0;
   }
 };
 

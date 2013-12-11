@@ -8,8 +8,6 @@ SDK_LIBRARY = $(REAL_LIBRARY)
 DIST_INSTALL = 1
 endif
 
-DEFINES += -DMOZ_MEMORY_IMPL
-
 ifdef MOZ_JEMALLOC3
 LOCAL_INCLUDES += -I../jemalloc/src/include
 ifdef _MSC_VER
@@ -24,8 +22,6 @@ SHARED_LIBRARY_LIBS += $(call EXPAND_LIBNAME_PATH,jemalloc,$(DEPTH)/memory/mozje
 endif
 
 ifdef MOZ_REPLACE_MALLOC
-DEFINES += -DMOZ_REPLACE_MALLOC
-
 # The zone allocator for OSX needs some jemalloc internal functions
 ifeq (Darwin,$(OS_TARGET))
 LOCAL_INCLUDES += -I$(topsrcdir)/memory/jemalloc/src/include

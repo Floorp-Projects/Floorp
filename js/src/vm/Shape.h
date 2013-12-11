@@ -899,6 +899,7 @@ class Shape : public gc::BarrieredCell<Shape>
     JS_ENUM_HEADER(SlotInfo, uint32_t)
     {
         /* Number of fixed slots in objects with this shape. */
+        // FIXED_SLOTS_MAX is the biggest count of fixed slots a Shape can store
         FIXED_SLOTS_MAX        = 0x1f,
         FIXED_SLOTS_SHIFT      = 27,
         FIXED_SLOTS_MASK       = uint32_t(FIXED_SLOTS_MAX << FIXED_SLOTS_SHIFT),
@@ -1311,6 +1312,8 @@ class Shape : public gc::BarrieredCell<Shape>
         JS_STATIC_ASSERT(offsetof(Shape, base_) == offsetof(js::shadow::Shape, base));
         JS_STATIC_ASSERT(offsetof(Shape, slotInfo) == offsetof(js::shadow::Shape, slotInfo));
         JS_STATIC_ASSERT(FIXED_SLOTS_SHIFT == js::shadow::Shape::FIXED_SLOTS_SHIFT);
+        static_assert(js::shadow::Object::MAX_FIXED_SLOTS <= FIXED_SLOTS_MAX,
+                      "verify numFixedSlots() bitfield is big enough");
     }
 };
 
@@ -1379,6 +1382,19 @@ struct EmptyShape : public js::Shape
      * and the table entry is purged.
      */
     static void insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleObject proto);
+
+    /*
+     * Some object subclasses are allocated with a built-in set of properties.
+     * The first time such an object is created, these built-in properties must
+     * be set manually, to compute an initial shape.  Afterward, that initial
+     * shape can be reused for newly-created objects that use the subclass's
+     * standard prototype.  This method should be used in a post-allocation
+     * init method, to ensure that objects of such subclasses compute and cache
+     * the initial shape, if it hasn't already been computed.
+     */
+    template<class ObjectSubclass>
+    static inline bool
+    ensureInitialCustomShape(ExclusiveContext *cx, Handle<ObjectSubclass*> obj);
 };
 
 /*

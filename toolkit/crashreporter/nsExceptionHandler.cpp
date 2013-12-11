@@ -5,11 +5,11 @@
 
 #include "nsExceptionHandler.h"
 #include "nsDataHashtable.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/CrashReporterChild.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "mozilla/unused.h"
-#include "mozilla/Util.h"
 
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
@@ -106,7 +106,6 @@ namespace CrashReporter {
 #ifdef XP_WIN32
 typedef wchar_t XP_CHAR;
 typedef std::wstring xpstring;
-#define CONVERT_UTF16_TO_XP_CHAR(x) x
 #define CONVERT_XP_CHAR_TO_UTF16(x) x
 #define XP_STRLEN(x) wcslen(x)
 #define my_strlen strlen
@@ -126,7 +125,6 @@ typedef std::wstring xpstring;
 #else
 typedef char XP_CHAR;
 typedef std::string xpstring;
-#define CONVERT_UTF16_TO_XP_CHAR(x) NS_ConvertUTF16toUTF8(x)
 #define CONVERT_XP_CHAR_TO_UTF16(x) NS_ConvertUTF8toUTF16(x)
 #define CRASH_REPORTER_FILENAME "crashreporter"
 #define PATH_SEPARATOR "/"
@@ -222,6 +220,16 @@ static const int kAvailablePhysicalMemoryParameterLen =
 static const char kIsGarbageCollectingParameter[] = "IsGarbageCollecting=";
 static const int kIsGarbageCollectingParameterLen =
   sizeof(kIsGarbageCollectingParameter)-1;
+
+#ifdef XP_WIN
+static const char kBreakpadReserveAddressParameter[] = "BreakpadReserveAddress=";
+static const int kBreakpadReserveAddressParameterLen =
+  sizeof(kBreakpadReserveAddressParameter)-1;
+
+static const char kBreakpadReserveSizeParameter[] = "BreakpadReserveSize=";
+static const int kBreakpadReserveSizeParameterLen =
+  sizeof(kBreakpadReserveSizeParameter)-1;
+#endif
 
 // this holds additional data sent via the API
 static Mutex* crashReporterAPILock;
@@ -324,6 +332,17 @@ patched_SetUnhandledExceptionFilter (LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExce
   // intercept attempts to change the filter
   return nullptr;
 }
+
+/**
+ * Reserve some VM space. In the event that we crash because VM space is
+ * being leaked without leaking memory, freeing this space before taking
+ * the minidump will allow us to collect a minidump.
+ *
+ * This size is bigger than xul.dll plus some extra for MinidumpWriteDump
+ * allocations.
+ */
+static const SIZE_T kReserveSize = 0x2400000; // 36 MB
+static void* gBreakpadReservedVM;
 #endif
 
 #ifdef XP_MACOSX
@@ -542,6 +561,20 @@ bool MinidumpCallback(
         WriteFile(hFile, "\n", 1, &nBytes, nullptr);
       }
 
+      char buffer[128];
+      int bufferLen;
+
+      if (gBreakpadReservedVM) {
+        WriteFile(hFile, kBreakpadReserveAddressParameter, kBreakpadReserveAddressParameterLen, &nBytes, nullptr);
+        _ui64toa(uintptr_t(gBreakpadReservedVM), buffer, 10);
+        WriteFile(hFile, buffer, strlen(buffer), &nBytes, nullptr);
+        WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+        WriteFile(hFile, kBreakpadReserveSizeParameter, kBreakpadReserveSizeParameterLen, &nBytes, nullptr);
+        _ui64toa(kReserveSize, buffer, 10);
+        WriteFile(hFile, buffer, strlen(buffer), &nBytes, nullptr);
+        WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+      }
+
 #ifdef HAS_DLL_BLOCKLIST
       DllBlocklist_WriteNotes(hFile);
 #endif
@@ -550,8 +583,6 @@ bool MinidumpCallback(
       MEMORYSTATUSEX statex;
       statex.dwLength = sizeof(statex);
       if (GlobalMemoryStatusEx(&statex)) {
-        char buffer[128];
-        int bufferLen;
 
 #define WRITE_STATEX_FIELD(field, paramName, conversionFunc)     \
         WriteFile(hFile, k##paramName##Parameter,                \
@@ -713,20 +744,12 @@ bool MinidumpCallback(
 }
 
 #ifdef XP_WIN
-static void* gBreakpadReservedVM;
-
-/**
- * Reserve some VM space. In the event that we crash because VM space is
- * being leaked without leaking memory, freeing this space before taking
- * the minidump will allow us to collect a minidump.
- */
-static const SIZE_T kReserveSize = 0xc00000; // 12 MB
-
 static void
 ReserveBreakpadVM()
 {
   if (!gBreakpadReservedVM) {
-    gBreakpadReservedVM = VirtualAlloc(nullptr, kReserveSize, MEM_RESERVE, 0);
+    gBreakpadReservedVM = VirtualAlloc(nullptr, kReserveSize, MEM_RESERVE,
+                                       PAGE_NOACCESS);
   }
 }
 
@@ -734,7 +757,7 @@ static void
 FreeBreakpadVM()
 {
   if (gBreakpadReservedVM) {
-    VirtualFree(gBreakpadReservedVM, kReserveSize, MEM_RELEASE);
+    VirtualFree(gBreakpadReservedVM, 0, MEM_RELEASE);
   }
 }
 
@@ -801,17 +824,19 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
   if (gExceptionHandler)
     return NS_ERROR_ALREADY_INITIALIZED;
 
-#if defined(DEBUG)
+#if !defined(DEBUG) || defined(MOZ_WIDGET_GONK)
+  // In non-debug builds, enable the crash reporter by default, and allow
+  // disabling it with the MOZ_CRASHREPORTER_DISABLE environment variable.
+  // Also enable it by default in debug gonk builds as it is difficult to
+  // set environment on startup.
+  const char *envvar = PR_GetEnv("MOZ_CRASHREPORTER_DISABLE");
+  if (envvar && *envvar && !force)
+    return NS_OK;
+#else
   // In debug builds, disable the crash reporter by default, and allow to
   // enable it with the MOZ_CRASHREPORTER environment variable.
   const char *envvar = PR_GetEnv("MOZ_CRASHREPORTER");
   if ((!envvar || !*envvar) && !force)
-    return NS_OK;
-#else
-  // In non-debug builds, enable the crash reporter by default, and allow
-  // to disable it with the MOZ_CRASHREPORTER_DISABLE environment variable.
-  const char *envvar = PR_GetEnv("MOZ_CRASHREPORTER_DISABLE");
-  if (envvar && *envvar && !force)
     return NS_OK;
 #endif
 
@@ -865,7 +890,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
     nsString crashReporterPath_temp;
 
     exePath->GetPath(crashReporterPath_temp);
-    crashReporterPath = ToNewUnicode(crashReporterPath_temp);
+    crashReporterPath = reinterpret_cast<wchar_t*>(ToNewUnicode(crashReporterPath_temp));
 #elif !defined(__ANDROID__)
     nsCString crashReporterPath_temp;
 
@@ -1090,12 +1115,13 @@ nsresult SetMinidumpPath(const nsAString& aPath)
   if (!gExceptionHandler)
     return NS_ERROR_NOT_INITIALIZED;
 
-#ifndef XP_LINUX
-  gExceptionHandler->set_dump_path(
-      CONVERT_UTF16_TO_XP_CHAR(aPath).BeginReading());
-#else
+#ifdef XP_WIN32
+  gExceptionHandler->set_dump_path(char16ptr_t(aPath.BeginReading()));
+#elif defined(XP_LINUX)
   gExceptionHandler->set_minidump_descriptor(
-      MinidumpDescriptor(CONVERT_UTF16_TO_XP_CHAR(aPath).BeginReading()));
+      MinidumpDescriptor(NS_ConvertUTF16toUTF8(aPath).BeginReading()));
+#else
+  gExceptionHandler->set_dump_path(NS_ConvertUTF16toUTF8(aPath).BeginReading());
 #endif
   return NS_OK;
 }
@@ -1916,7 +1942,7 @@ FindPendingDir()
 #ifdef XP_WIN
     nsString path;
     pendingDir->GetPath(path);
-    pendingDirectory = ToNewUnicode(path);
+    pendingDirectory = reinterpret_cast<wchar_t*>(ToNewUnicode(path));
 #else
     nsCString path;
     pendingDir->GetNativePath(path);
@@ -2497,7 +2523,7 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
                      nullptr,    // no callback context
                      google_breakpad::ExceptionHandler::HANDLER_ALL,
                      MiniDumpNormal,
-                     NS_ConvertASCIItoUTF16(crashPipe).BeginReading(),
+                     NS_ConvertASCIItoUTF16(crashPipe).get(),
                      nullptr);
 #ifdef XP_WIN
   gExceptionHandler->set_handle_debug_exceptions(true);

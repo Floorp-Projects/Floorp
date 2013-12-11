@@ -37,35 +37,7 @@ extra_export_files_FILES := \
 extra_export_files_DEST = $(DIST)/include
 extra_export_files_TARGET := export
 
-# XPCShellImpl.cpp requires hardcoded vendor/profile/appname stuff on Windows
-# This sucks, bug 921148 tracks this.
-ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-  ifdef MOZ_APP_PROFILE
-    DEFINES += -DMOZ_APP_PROFILE='"$(MOZ_APP_PROFILE)"'
-  else
-    ifdef MOZ_APP_VENDOR
-      DEFINES += -DMOZ_APP_VENDOR='"$(MOZ_APP_VENDOR)"'
-    endif
-    ifdef MOZ_APP_BASENAME
-      DEFINES += -DMOZ_APP_BASENAME='"$(MOZ_APP_BASENAME)"'
-    endif
-    DEFINES += -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"'
-  endif
-endif
-
 include $(topsrcdir)/config/rules.mk
-
-DEFINES += \
-  -DJS_THREADSAFE \
-  $(NULL)
-
-ifdef MOZ_JSDEBUGGER
-DEFINES += -DMOZ_JSDEBUGGER
-endif
-
-nsXPConnect.$(OBJ_SUFFIX): dom_quickstubs.h
-
-XPCJSRuntime.$(OBJ_SUFFIX): dom_quickstubs.h
 
 dom_quickstubs.h: dom_quickstubs.cpp
 
@@ -84,8 +56,6 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
 	  $(ENABLE_TRACEABLE_FLAGS) \
 	  $(srcdir)/dom_quickstubs.qsconf
 
-DictionaryHelpers.$(OBJ_SUFFIX): DictionaryHelpers.cpp
-
 DictionaryHelpers.h: DictionaryHelpers.cpp
 
 DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
@@ -103,9 +73,6 @@ DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
 	  --makedepend-output $(MDDEPDIR)/dictionary_helper_gen.pp \
 	  $(srcdir)/dictionary_helper_gen.conf \
 	  event_impl_gen.conf
-
-GeneratedEvents.$(OBJ_SUFFIX): GeneratedEvents.h \
-                               GeneratedEvents.cpp
 
 event_impl_gen.conf : $(srcdir)/event_impl_gen.conf.in
 	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $^ -o event_impl_gen.conf)
@@ -154,13 +121,6 @@ GeneratedEvents-webidl: event_impl_gen.conf
 	  event_impl_gen.conf
 
 GARBAGE += \
-		dom_quickstubs.h \
-		dom_quickstubs.cpp \
-		DictionaryHelpers.h \
-		DictionaryHelpers.cpp \
-		GeneratedEvents.h \
-		GeneratedEvents.cpp \
-		GeneratedEventClasses.h \
 		event_impl_gen.conf \
 		xpidl_debug \
 		$(MDDEPDIR)/dom_qsgen.pp \

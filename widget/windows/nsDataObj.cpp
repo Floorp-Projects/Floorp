@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include <ole2.h>
 #include <shlobj.h>
@@ -32,6 +32,7 @@
 
 #include "WinUtils.h"
 #include "mozilla/LazyIdleThread.h"
+#include "mozilla/WindowsVersion.h"
 #include <algorithm>
 
 
@@ -1115,7 +1116,7 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   int totalLen;
   nsCString path;
   if (!Preferences::GetBool(kShellIconPref, true) ||
-      WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION) {
+      !IsVistaOrLater()) {
     shortcutFormatStr = "[InternetShortcut]\r\nURL=%s\r\n";
     const int formatLen = strlen(shortcutFormatStr) - 2;  // don't include %s
     totalLen = formatLen + asciiUrl.Length();  // don't include null character

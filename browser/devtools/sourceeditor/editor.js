@@ -16,7 +16,7 @@ const XUL_NS      = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.x
 // while shifting to a line which was initially out of view.
 const MAX_VERTICAL_OFFSET = 3;
 
-const promise = require("sdk/core/promise");
+const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const events  = require("devtools/shared/event-emitter");
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -77,8 +77,6 @@ const CM_MAPPING = [
   "redo",
   "clearHistory",
   "openDialog",
-  "cursorCoords",
-  "markText",
   "refresh"
 ];
 
@@ -122,20 +120,23 @@ function Editor(config) {
 
   this.version = null;
   this.config = {
-    value:           "",
-    mode:            Editor.modes.text,
-    indentUnit:      tabSize,
-    tabSize:         tabSize,
-    contextMenu:     null,
-    matchBrackets:   true,
-    extraKeys:       {},
-    indentWithTabs:  useTabs,
-    styleActiveLine: true,
-    theme: "mozilla"
+    value:             "",
+    mode:              Editor.modes.text,
+    indentUnit:        tabSize,
+    tabSize:           tabSize,
+    contextMenu:       null,
+    matchBrackets:     true,
+    extraKeys:         {},
+    indentWithTabs:    useTabs,
+    styleActiveLine:   true,
+    autoCloseBrackets: true,
+    theme:             "mozilla"
   };
 
   // Additional shortcuts.
   this.config.extraKeys[Editor.keyFor("jumpToLine")] = (cm) => this.jumpToLine(cm);
+  this.config.extraKeys[Editor.keyFor("moveLineUp")] = (cm) => this.moveLineUp();
+  this.config.extraKeys[Editor.keyFor("moveLineDown")] = (cm) => this.moveLineDown();
   this.config.extraKeys[Editor.keyFor("toggleComment")] = "toggleComment";
 
   // Disable ctrl-[ and ctrl-] because toolbox uses those shortcuts.
@@ -234,9 +235,26 @@ Editor.prototype = {
       }, false);
 
       cm.on("focus", () => this.emit("focus"));
-      cm.on("change", () => this.emit("change"));
-      cm.on("gutterClick", (cm, line) => this.emit("gutterClick", line));
+      cm.on("scroll", () => this.emit("scroll"));
+      cm.on("change", () => {
+        this.emit("change");
+        if (!this._lastDirty) {
+          this._lastDirty = true;
+          this.emit("dirty-change");
+        }
+      });
       cm.on("cursorActivity", (cm) => this.emit("cursorActivity"));
+
+      cm.on("gutterClick", (cm, line, gutter, ev) => {
+        let head = { line: line, ch: 0 };
+        let tail = { line: line, ch: this.getText(line).length };
+
+        // Shift-click on a gutter selects the whole line.
+        if (ev.shiftKey)
+          return void cm.setSelection(head, tail);
+
+        this.emit("gutterClick", line);
+      });
 
       win.CodeMirror.defineExtension("l10n", (name) => {
         return L10N.GetStringFromName(name);
@@ -526,6 +544,17 @@ Editor.prototype = {
   },
 
   /**
+   * Mark a range of text inside the two {line, ch} bounds. Since the range may
+   * be modified, for example, when typing text, this method returns a function
+   * that can be used to remove the mark.
+   */
+  markText: function(from, to, className = "marked-text") {
+    let cm = editors.get(this);
+    let mark = cm.markText(from, to, { className: className });
+    return { clear: () => mark.clear() };
+  },
+
+  /**
    * Calculates and returns one or more {line, ch} objects for
    * a zero-based index who's value is relative to the start of
    * the editor's text.
@@ -554,9 +583,18 @@ Editor.prototype = {
    * Returns a {line, ch} object that corresponds to the
    * left, top coordinates.
    */
-  getPositionFromCoords: function (left, top) {
+  getPositionFromCoords: function ({left, top}) {
     let cm = editors.get(this);
     return cm.coordsChar({ left: left, top: top });
+  },
+
+  /**
+   * The reverse of getPositionFromCoords. Similarly, returns a {left, top}
+   * object that corresponds to the specified line and character number.
+   */
+  getCoordsFromPosition: function ({line, ch}) {
+    let cm = editors.get(this);
+    return cm.charCoords({ line: ~~line, ch: ~~ch });
   },
 
   /**
@@ -582,6 +620,8 @@ Editor.prototype = {
   setClean: function () {
     let cm = editors.get(this);
     this.version = cm.changeGeneration();
+    this._lastDirty = false;
+    this.emit("dirty-change");
     return this.version;
   },
 
@@ -634,6 +674,65 @@ Editor.prototype = {
     div.appendChild(inp);
 
     this.openDialog(div, (line) => this.setCursor({ line: line - 1, ch: 0 }));
+  },
+
+  /**
+   * Moves the content of the current line or the lines selected up a line.
+   */
+  moveLineUp: function () {
+    let cm = editors.get(this);
+    let start = cm.getCursor("start");
+    let end = cm.getCursor("end");
+
+    if (start.line === 0)
+      return;
+
+    // Get the text in the lines selected or the current line of the cursor
+    // and append the text of the previous line.
+    let value;
+    if (start.line !== end.line) {
+      value = cm.getRange({ line: start.line, ch: 0 },
+        { line: end.line, ch: cm.getLine(end.line).length }) + "\n";
+    } else {
+      value = cm.getLine(start.line) + "\n";
+    }
+    value += cm.getLine(start.line - 1);
+
+    // Replace the previous line and the currently selected lines with the new
+    // value and maintain the selection of the text.
+    cm.replaceRange(value, { line: start.line - 1, ch: 0 },
+      { line: end.line, ch: cm.getLine(end.line).length });
+    cm.setSelection({ line: start.line - 1, ch: start.ch },
+      { line: end.line - 1, ch: end.ch });
+  },
+
+  /**
+   * Moves the content of the current line or the lines selected down a line.
+   */
+  moveLineDown: function () {
+    let cm = editors.get(this);
+    let start = cm.getCursor("start");
+    let end = cm.getCursor("end");
+
+    if (end.line + 1 === cm.lineCount())
+      return;
+
+    // Get the text of next line and append the text in the lines selected
+    // or the current line of the cursor.
+    let value = cm.getLine(end.line + 1) + "\n";
+    if (start.line !== end.line) {
+      value += cm.getRange({ line: start.line, ch: 0 },
+        { line: end.line, ch: cm.getLine(end.line).length });
+    } else {
+      value += cm.getLine(start.line);
+    }
+
+    // Replace the currently selected lines and the next line with the new
+    // value and maintain the selection of the text.
+    cm.replaceRange(value, { line: start.line, ch: 0 },
+      { line: end.line + 1, ch: cm.getLine(end.line + 1).length});
+    cm.setSelection({ line: start.line + 1, ch: start.ch },
+      { line: end.line + 1, ch: end.ch });
   },
 
   /**

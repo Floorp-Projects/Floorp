@@ -48,13 +48,18 @@ UNIFIED_SOURCES += xpcom_gluens_src_cppsrcs
 UNIFIED_SOURCES += xpcom_glue_src_cppsrcs
 
 UNIFIED_SOURCES += [
-    'FileLocation.cpp',
     'FrozenFunctions.cpp',
     'LateWriteChecks.cpp',
     'nsXPComInit.cpp',
     'nsXPCOMStrings.cpp',
-    'Omnijar.cpp',
     'Services.cpp',
+]
+
+# FileLocation.cpp and Omnijar.cpp cannot be built in unified mode because they
+# use plarena.h.
+SOURCES += [
+    'FileLocation.cpp',
+    'Omnijar.cpp',
 ]
 
 MSVC_ENABLE_PGO = True
@@ -64,3 +69,9 @@ LIBRARY_NAME = 'xpcom_core'
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+DEFINES['_IMPL_NS_STRINGAPI'] = True
+DEFINES['OMNIJAR_NAME'] = CONFIG['OMNIJAR_NAME']
+
+if CONFIG['TARGET_XPCOM_ABI']:
+    DEFINES['TARGET_XPCOM_ABI'] = '"%s"' % CONFIG['TARGET_XPCOM_ABI']

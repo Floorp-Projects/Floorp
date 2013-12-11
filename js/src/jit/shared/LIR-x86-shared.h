@@ -114,6 +114,25 @@ class LModI : public LBinaryMath<1>
     }
 };
 
+// Modulo of a number by itself. Returns 0 unless the number is zero.
+class LModSelfI : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(ModSelfI)
+
+    LModSelfI(const LAllocation &op) {
+        setOperand(0, op);
+    }
+
+    const LAllocation *op() {
+        return getOperand(0);
+    }
+
+    MMod *mir() const {
+        return mir_->toMod();
+    }
+};
+
 // This class performs a simple x86 'div', yielding either a quotient or remainder depending on
 // whether this instruction is defined to output eax (quotient) or edx (remainder).
 class LUDivOrMod : public LBinaryMath<1>
@@ -129,6 +148,21 @@ class LUDivOrMod : public LBinaryMath<1>
 
     const LDefinition *remainder() {
         return getTemp(0);
+    }
+
+    const char *extraName() const {
+        return mir()->isTruncated() ? "Truncated" : nullptr;
+    }
+
+    MBinaryArithInstruction *mir() const {
+        JS_ASSERT(mir_->isDiv() || mir_->isMod());
+        return static_cast<MBinaryArithInstruction *>(mir_);
+    }
+
+    bool canBeDivideByZero() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeDivideByZero();
+        return mir_->toDiv()->canBeDivideByZero();
     }
 };
 

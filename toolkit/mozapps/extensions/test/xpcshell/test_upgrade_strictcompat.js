@@ -182,9 +182,7 @@ function run_test_3() {
 
   // Simulates a simple Build ID change, the platform deletes extensions.ini
   // whenever the application is changed.
-  var file = gProfD.clone();
-  file.append("extensions.ini");
-  file.remove(true);
+  gExtensionsINI.remove(true);
   restartManager();
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",

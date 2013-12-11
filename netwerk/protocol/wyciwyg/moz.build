@@ -15,7 +15,9 @@ EXPORTS.mozilla.net += [
     'WyciwygChannelParent.h',
 ]
 
-UNIFIED_SOURCES += [
+# These files cannot be built in unified mode because they want to force NSPR
+# logging.
+SOURCES += [
     'nsWyciwyg.cpp',
     'nsWyciwygChannel.cpp',
     'nsWyciwygProtocolHandler.cpp',
@@ -32,3 +34,7 @@ FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'necko'
+
+LOCAL_INCLUDES += [
+    '../../base/src',
+]

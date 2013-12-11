@@ -11,14 +11,14 @@
 #include "nsZipArchive.h"
 #include "nsIStartupCache.h"
 #include "nsITimer.h"
+#include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsIOutputStream.h"
 #include "nsIFile.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
-
-class nsIMemoryReporter;
+#include "mozilla/StaticPtr.h"
 
 /**
  * The StartupCache is a persistent cache of simple key-value pairs,
@@ -67,9 +67,10 @@ class nsIMemoryReporter;
  */
 
 namespace mozilla {
+
 namespace scache {
 
-struct CacheEntry 
+struct CacheEntry
 {
   nsAutoArrayPtr<char> data;
   uint32_t size;
@@ -96,17 +97,19 @@ class StartupCacheListener MOZ_FINAL : public nsIObserver
   NS_DECL_NSIOBSERVER
 };
 
-class StartupCache
+class StartupCache : public nsIMemoryReporter
 {
 
 friend class StartupCacheListener;
 friend class StartupCacheWrapper;
-                                
+
 public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
 
   // StartupCache methods. See above comments for a more detailed description.
 
-  // Returns a buffer that was previously stored, caller takes ownership. 
+  // Returns a buffer that was previously stored, caller takes ownership.
   nsresult GetBuffer(const char* id, char** outbuf, uint32_t* length);
 
   // Stores a buffer. Caller keeps ownership, we make a copy.
@@ -136,7 +139,7 @@ public:
 
 private:
   StartupCache();
-  ~StartupCache();
+  virtual ~StartupCache();
 
   enum TelemetrifyAge {
     IGNORE_AGE = 0,
@@ -162,23 +165,20 @@ private:
   nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
   nsRefPtr<nsZipArchive> mArchive;
   nsCOMPtr<nsIFile> mFile;
-  
+
   nsCOMPtr<nsIObserverService> mObserverService;
   nsRefPtr<StartupCacheListener> mListener;
   nsCOMPtr<nsITimer> mTimer;
 
   bool mStartupWriteInitiated;
 
-  static StartupCache *gStartupCache;
+  static StaticRefPtr<StartupCache> gStartupCache;
   static bool gShutdownInitiated;
   static bool gIgnoreDiskCache;
   PRThread *mWriteThread;
 #ifdef DEBUG
   nsTHashtable<nsISupportsHashKey> mWriteObjectMap;
 #endif
-
-  nsCOMPtr<nsIMemoryReporter> mMappingReporter;
-  nsCOMPtr<nsIMemoryReporter> mDataReporter;
 };
 
 // This debug outputstream attempts to detect if clients are writing multiple

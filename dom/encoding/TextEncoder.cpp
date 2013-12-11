@@ -5,8 +5,6 @@
 #include "mozilla/dom/TextEncoder.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "nsContentUtils.h"
-#include "nsICharsetConverterManager.h"
-#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -33,18 +31,7 @@ TextEncoder::Init(const nsAString& aEncoding, ErrorResult& aRv)
   }
 
   // Create an encoder object for mEncoding.
-  nsCOMPtr<nsICharsetConverterManager> ccm =
-    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
-  if (!ccm) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  ccm->GetUnicodeEncoderRaw(mEncoding.get(), getter_AddRefs(mEncoder));
-  if (!mEncoder) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
+  mEncoder = EncodingUtils::EncoderForEncoding(mEncoding);
 }
 
 JSObject*

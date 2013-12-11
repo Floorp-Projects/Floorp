@@ -2,11 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_DSO_LDOPTS += $(MOZALLOC_LIB)
-
-# Use abort() instead of exception in SoundTouch.
-DEFINES += -DST_NO_EXCEPTION_HANDLING=1
-
 include $(topsrcdir)/config/rules.mk
 
 ifneq (,$(INTEL_ARCHITECTURE))

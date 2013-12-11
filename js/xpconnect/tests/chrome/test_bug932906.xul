@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=932906
+-->
+<window title="Mozilla Bug 932906"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=932906"
+     target="_blank">Mozilla Bug 932906</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  const Cu = Components.utils;
+  Cu.import('resource://gre/modules/Services.jsm');
+
+  /** Test for Bug 932906 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function passToContent(shouldThrow) {
+    try {
+      $('ifr').contentWindow.obs = Services.obs;
+      ok(!shouldThrow, "Didn't throw when passing non-DOM XPCWN to content");
+    } catch (e) {
+      ok(shouldThrow, "Threw when passing non-DOM XPCWN to content");
+      ok(/denied/.test(e), "Threw correct exception: " + e);
+    }
+  }
+
+  var gLoadCount = 0;
+  function loaded() {
+    ++gLoadCount;
+    if (gLoadCount == 1)
+      part1();
+    else if (gLoadCount == 2)
+      part2();
+    else
+      ok(false, "Didn't expect three loads");
+  }
+
+  function part1() {
+
+    // Make sure that the pref is what we expect for mochitests.
+    is(Services.prefs.getBoolPref('dom.use_xbl_scopes_for_remote_xul'), true,
+       "Test harness set up like we expect");
+
+
+    // First, test that we can't normally pass non-DOM XPCWNs to content.
+    passToContent(/* shouldThrow = */ true);
+
+    // Now, make sure we _can_ for the remote xul case. We use SpecialPowers
+    // for the pref munging because it cleans up after us.
+    SpecialPowers.pushPrefEnv({set: [['dom.use_xbl_scopes_for_remote_xul', false]]}, function() {
+      $('ifr').contentWindow.location.reload();
+    });
+  }
+
+  function part2() {
+      passToContent(/* shouldThrow = */ false);
+      SimpleTest.finish();
+  }
+
+  ]]>
+  </script>
+  <iframe id="ifr" onload="loaded();" type="content" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</window>

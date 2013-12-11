@@ -57,7 +57,8 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase,
 {
 public:
   nsGenericHTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-    : nsGenericHTMLElementBase(aNodeInfo)
+    : nsGenericHTMLElementBase(aNodeInfo),
+      mScrollgrab(false)
   {
     NS_ASSERTION(mNodeInfo->NamespaceID() == kNameSpaceID_XHTML,
                  "Unexpected namespace");
@@ -158,7 +159,7 @@ public:
     SetHTMLIntAttr(nsGkAtoms::tabindex, aTabIndex, aError);
   }
   virtual void Focus(mozilla::ErrorResult& aError);
-  void Blur(mozilla::ErrorResult& aError);
+  virtual void Blur(mozilla::ErrorResult& aError);
   void GetAccessKey(nsString& aAccessKey)
   {
     GetHTMLAttr(nsGkAtoms::accesskey, aAccessKey);
@@ -225,6 +226,14 @@ public:
                 aSpellcheck ? NS_LITERAL_STRING("true")
                             : NS_LITERAL_STRING("false"),
                 aError);
+  }
+  bool Scrollgrab() const
+  {
+    return mScrollgrab;
+  }
+  void SetScrollgrab(bool aValue)
+  {
+    mScrollgrab = aValue;
   }
 
   /**
@@ -930,6 +939,9 @@ public:
            tag == nsGkAtoms::object;
   }
 
+  static bool
+  IsScrollGrabAllowed(JSContext*, JSObject*);
+
 protected:
   /**
    * Add/remove this element to the documents name cache
@@ -1226,6 +1238,8 @@ protected:
 
 private:
   void ChangeEditableState(int32_t aChange);
+
+  bool mScrollgrab;
 };
 
 namespace mozilla {
@@ -1737,6 +1751,7 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(BR)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Body)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Button)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Canvas)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(Content)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Mod)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Data)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(DataList)

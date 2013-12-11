@@ -76,11 +76,10 @@
 
     // Preferences
     function() {
-      SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, runTest);
-    },
-
-    function() {
-      SpecialPowers.pushPrefEnv({"set": [["dom.datastore.enabled", true]]}, runTest);
+      SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true],
+                                         ["dom.datastore.enabled", true],
+                                         ["dom.testing.ignore_ipc_principal", true],
+                                         ["dom.testing.datastore_enabled_for_hosted_apps", true]]}, runTest);
     },
 
     function() {

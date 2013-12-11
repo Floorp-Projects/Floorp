@@ -10,6 +10,7 @@
 #include "KeyboardLayout.h"
 #include "nsIDOMMouseEvent.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/WindowsVersion.h"
 
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG /* Allow logging in the release build */
@@ -34,6 +35,9 @@
 #include "nsIThread.h"
 #include "MainThreadUtils.h"
 #include "gfxColor.h"
+#ifdef MOZ_METRO
+#include "winrt/MetroInput.h"
+#endif // MOZ_METRO
 
 #ifdef NS_ENABLE_TSF
 #include <textstor.h>
@@ -65,9 +69,9 @@ WinUtils::SHGetKnownFolderPathPtr WinUtils::sGetKnownFolderPath = nullptr;
 
 // We just leak these DLL HMODULEs. There's no point in calling FreeLibrary
 // on them during shutdown anyway.
-static const PRUnichar kShellLibraryName[] =  L"shell32.dll";
+static const wchar_t kShellLibraryName[] =  L"shell32.dll";
 static HMODULE sShellDll = nullptr;
-static const PRUnichar kDwmLibraryName[] = L"dwmapi.dll";
+static const wchar_t kDwmLibraryName[] = L"dwmapi.dll";
 static HMODULE sDwmDll = nullptr;
 
 WinUtils::DwmExtendFrameIntoClientAreaProc WinUtils::dwmExtendFrameIntoClientAreaPtr = nullptr;
@@ -89,7 +93,7 @@ WinUtils::Initialize()
     gWindowsLog = PR_NewLogModule("Widget");
   }
 #endif
-  if (!sDwmDll && WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
+  if (!sDwmDll && IsVistaOrLater()) {
     sDwmDll = ::LoadLibraryW(kDwmLibraryName);
 
     if (sDwmDll) {
@@ -104,42 +108,6 @@ WinUtils::Initialize()
       dwmGetCompositionTimingInfoPtr = (DwmGetCompositionTimingInfoProc)::GetProcAddress(sDwmDll, "DwmGetCompositionTimingInfo");
     }
   }
-}
-
-/* static */ 
-WinUtils::WinVersion
-WinUtils::GetWindowsVersion()
-{
-  static int32_t version = 0;
-
-  if (version) {
-    return static_cast<WinVersion>(version);
-  }
-
-  OSVERSIONINFOEX osInfo;
-  osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-  // This cast is safe and supposed to be here, don't worry
-  ::GetVersionEx((OSVERSIONINFO*)&osInfo);
-  version =
-    (osInfo.dwMajorVersion & 0xff) << 8 | (osInfo.dwMinorVersion & 0xff);
-  return static_cast<WinVersion>(version);
-}
-
-/* static */
-bool
-WinUtils::GetWindowsServicePackVersion(UINT& aOutMajor, UINT& aOutMinor)
-{
-  OSVERSIONINFOEX osInfo;
-  osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-  // This cast is safe and supposed to be here, don't worry
-  if (!::GetVersionEx((OSVERSIONINFO*)&osInfo)) {
-    return false;
-  }
-  
-  aOutMajor = osInfo.wServicePackMajor;
-  aOutMinor = osInfo.wServicePackMinor;
-
-  return true;
 }
 
 // static
@@ -278,9 +246,9 @@ WinUtils::WaitForMessage()
 /* static */
 bool
 WinUtils::GetRegistryKey(HKEY aRoot,
-                         const PRUnichar* aKeyName,
-                         const PRUnichar* aValueName,
-                         PRUnichar* aBuffer,
+                         char16ptr_t aKeyName,
+                         char16ptr_t aValueName,
+                         wchar_t* aBuffer,
                          DWORD aBufferLength)
 {
   NS_PRECONDITION(aKeyName, "The key name is NULL");
@@ -312,7 +280,7 @@ WinUtils::GetRegistryKey(HKEY aRoot,
 
 /* static */
 bool
-WinUtils::HasRegistryKey(HKEY aRoot, const PRUnichar* aKeyName)
+WinUtils::HasRegistryKey(HKEY aRoot, char16ptr_t aKeyName)
 {
   MOZ_ASSERT(aRoot, "aRoot must not be NULL");
   MOZ_ASSERT(aKeyName, "aKeyName must not be NULL");
@@ -364,10 +332,10 @@ WinUtils::GetTopLevelHWND(HWND aWnd,
   return topWnd;
 }
 
-static PRUnichar*
+static const wchar_t*
 GetNSWindowPropName()
 {
-  static PRUnichar sPropName[40] = L"";
+  static wchar_t sPropName[40] = L"";
   if (!*sPropName) {
     _snwprintf(sPropName, 39, L"MozillansIWidgetPtr%p",
                ::GetCurrentProcessId());
@@ -1212,6 +1180,17 @@ WinUtils::SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray,
   }
 }
 
+/* static */
+bool
+WinUtils::ShouldHideScrollbars()
+{
+#ifdef MOZ_METRO
+  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
+    return widget::winrt::MetroInput::IsInputModeImprecise();
+  }
+#endif // MOZ_METRO
+  return false;
+}
 
 } // namespace widget
 } // namespace mozilla

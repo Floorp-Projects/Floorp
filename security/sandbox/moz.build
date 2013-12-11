@@ -117,3 +117,6 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'win/src/Wow64.cc',
     ]
 
+    for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM', 'SANDBOX_EXPORTS',
+                'NOMINMAX', '_CRT_RAND_S'):
+        DEFINES[var] = True

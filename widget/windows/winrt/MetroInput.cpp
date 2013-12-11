@@ -207,11 +207,13 @@ namespace mozilla {
 namespace widget {
 namespace winrt {
 
+MetroInput::InputPrecisionLevel MetroInput::sCurrentInputLevel =
+  MetroInput::InputPrecisionLevel::LEVEL_IMPRECISE;
+
 MetroInput::MetroInput(MetroWidget* aWidget,
                        UI::Core::ICoreWindow* aWindow)
               : mWidget(aWidget),
                 mChromeHitTestCacheForTouch(false),
-                mCurrentInputLevel(LEVEL_IMPRECISE),
                 mWindow(aWindow)
 {
   LogFunction();
@@ -244,6 +246,11 @@ MetroInput::~MetroInput()
   UnregisterInputEvents();
 }
 
+/* static */
+bool MetroInput::IsInputModeImprecise()
+{
+  return sCurrentInputLevel == LEVEL_IMPRECISE;
+}
 
 /**
  * Tracks the current input level (precise/imprecise) and fires an observer
@@ -256,9 +263,9 @@ MetroInput::UpdateInputLevel(InputPrecisionLevel aInputLevel)
   if (aInputLevel == LEVEL_PRECISE && mTouches.Count() > 0) {
     return;
   }
-  if (mCurrentInputLevel != aInputLevel) {
-    mCurrentInputLevel = aInputLevel;
-    MetroUtils::FireObserver(mCurrentInputLevel == LEVEL_PRECISE ?
+  if (sCurrentInputLevel != aInputLevel) {
+    sCurrentInputLevel = aInputLevel;
+    MetroUtils::FireObserver(sCurrentInputLevel == LEVEL_PRECISE ?
                                "metro_precise_input" : "metro_imprecise_input");
   }
 }
@@ -496,6 +503,8 @@ MetroInput::OnPointerPressed(UI::Core::ICoreWindow* aSender,
     mRecognizerWantsEvents = true;
     mCancelable = true;
     mCanceledIds.Clear();
+  } else {
+    mCancelable = false;
   }
 
   InitTouchEventTouchList(touchEvent);
@@ -663,7 +672,10 @@ MetroInput::HitTestChrome(const LayoutDeviceIntPoint& pt)
   return (status == nsEventStatus_eConsumeNoDefault);
 }
 
-void
+/**
+ * Returns true if the position is in chrome, false otherwise.
+ */
+bool
 MetroInput::TransformRefPoint(const Foundation::Point& aPosition, LayoutDeviceIntPoint& aRefPointOut)
 {
   // If this event is destined for content we need to transform our ref point through
@@ -675,10 +687,14 @@ MetroInput::TransformRefPoint(const Foundation::Point& aPosition, LayoutDeviceIn
   // This is currently a general contained rect hit test, it may produce a false positive for
   // overlay chrome elements.
   bool apzIntersect = mWidget->ApzHitTest(spt);
-  if (apzIntersect && HitTestChrome(aRefPointOut)) {
-    return;
+  if (!apzIntersect) {
+    return true;
+  }
+  if (HitTestChrome(aRefPointOut)) {
+    return true;
   }
   mWidget->ApzTransformGeckoCoordinate(spt, &aRefPointOut);
+  return false;
 }
 
 void
@@ -940,9 +956,13 @@ MetroInput::HandleTap(const Foundation::Point& aPoint, unsigned int aTapCount)
 #ifdef DEBUG_INPUT
   LogFunction();
 #endif
-  
+
   LayoutDeviceIntPoint refPoint;
-  TransformRefPoint(aPoint, refPoint);
+  bool hitTestChrome = TransformRefPoint(aPoint, refPoint);
+  if (!hitTestChrome) {
+    // Let APZC handle tap/doubletap detection for content.
+    return;
+  }
 
   // send mousemove
   WidgetMouseEvent* mouseEvent =
@@ -1139,9 +1159,20 @@ MetroInput::DeliverNextQueuedTouchEvent()
 
   // If this event is destined for chrome, deliver it directly there bypassing
   // the apz.
-  if (!mCancelable && mChromeHitTestCacheForTouch) {
+  if (mChromeHitTestCacheForTouch) {
     DUMP_TOUCH_IDS("DOM(1)", event);
     mWidget->DispatchEvent(event, status);
+    if (mCancelable) {
+      // Disable gesture based events (taps, swipes, rotation) if
+      // preventDefault is called on touchstart.
+      if (nsEventStatus_eConsumeNoDefault == status) {
+        mRecognizerWantsEvents = false;
+        mGestureRecognizer->CompleteGesture();
+      }
+      if (event->message == NS_TOUCH_MOVE) {
+        mCancelable = false;
+      }
+    }
     return;
   }
 
@@ -1153,7 +1184,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
     DUMP_TOUCH_IDS("APZC(1)", event);
     mWidget->ApzReceiveInputEvent(event, &mTargetAPZCGuid, &transformedEvent);
     DUMP_TOUCH_IDS("DOM(2)", event);
-    mWidget->DispatchEvent(mChromeHitTestCacheForTouch ? event : &transformedEvent, status);
+    mWidget->DispatchEvent(&transformedEvent, status);
     if (event->message == NS_TOUCH_START) {
       mContentConsumingTouch = (nsEventStatus_eConsumeNoDefault == status);
       // If we know content wants touch here, we can bail early on mCancelable
@@ -1196,9 +1227,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
   if (mContentConsumingTouch) {
     // Only translate if we're dealing with web content that's transformed
     // by the apzc.
-    if (!mChromeHitTestCacheForTouch) {
-      TransformTouchEvent(event);
-    }
+    TransformTouchEvent(event);
     DUMP_TOUCH_IDS("DOM(3)", event);
     mWidget->DispatchEvent(event, status);
     return;
@@ -1214,9 +1243,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
       DispatchTouchCancel(event);
       return;
     }
-    if (!mChromeHitTestCacheForTouch) {
-      TransformTouchEvent(event);
-    }
+    TransformTouchEvent(event);
     DUMP_TOUCH_IDS("DOM(4)", event);
     mWidget->DispatchEvent(event, status);
   }

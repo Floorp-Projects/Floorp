@@ -11,7 +11,6 @@
 #include "npapi.h"
 #include "nsCOMPtr.h"
 #include "nsIPluginInstanceOwner.h"
-#include "nsIPluginTagInfo.h"
 #include "nsIPrivacyTransitionObserver.h"
 #include "nsIDOMEventListener.h"
 #include "nsPluginHost.h"
@@ -46,7 +45,6 @@ class gfxXlibSurface;
 #endif
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
-                              public nsIPluginTagInfo,
                               public nsIDOMEventListener,
                               public nsIPrivacyTransitionObserver,
                               public nsSupportsWeakReference
@@ -75,8 +73,65 @@ public:
   virtual NPError FinalizeAsyncSurface(NPAsyncSurface *surface) MOZ_OVERRIDE;
   virtual void SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *changed) MOZ_OVERRIDE;
 
-  //nsIPluginTagInfo interface
-  NS_DECL_NSIPLUGINTAGINFO
+  /**
+   * Get the type of the HTML tag that was used ot instantiate this
+   * plugin.  Currently supported tags are EMBED, OBJECT and APPLET.
+   */
+  NS_IMETHOD GetTagType(nsPluginTagType *aResult);
+
+  /**
+   * Get a ptr to the paired list of parameter names and values,
+   * returns the length of the array.
+   *
+   * Each name or value is a null-terminated string.
+   */
+  NS_IMETHOD GetParameters(uint16_t& aCount,
+                           const char*const*& aNames,
+                           const char*const*& aValues);
+
+  /**
+   * Get the value for the named parameter.  Returns null
+   * if the parameter was not set.
+   *
+   * @param aName   - name of the parameter
+   * @param aResult - parameter value
+   * @result        - NS_OK if this operation was successful
+   */
+  NS_IMETHOD GetParameter(const char* aName, const char* *aResult);
+
+  /**
+   * QueryInterface on nsIPluginInstancePeer to get this.
+   *
+   * (Corresponds to NPP_New's argc, argn, and argv arguments.)
+   * Get a ptr to the paired list of attribute names and values,
+   * returns the length of the array.
+   *
+   * Each name or value is a null-terminated string.
+   */
+  NS_IMETHOD GetAttributes(uint16_t& aCount,
+                           const char*const*& aNames,
+                           const char*const*& aValues);
+
+
+  /**
+   * Gets the value for the named attribute.
+   *
+   * @param aName   - the name of the attribute to find
+   * @param aResult - the resulting attribute
+   * @result - NS_OK if this operation was successful, NS_ERROR_FAILURE if
+   * this operation failed. result is set to NULL if the attribute is not found
+   * else to the found value.
+   */
+  NS_IMETHOD GetAttribute(const char* aName, const char* *aResult);
+
+  /**
+   * Returns the DOM element corresponding to the tag which references
+   * this plugin in the document.
+   *
+   * @param aDOMElement - resulting DOM element
+   * @result - NS_OK if this operation was successful
+   */
+  NS_IMETHOD GetDOMElement(nsIDOMElement* * aResult);
   
   // nsIDOMEventListener interfaces 
   NS_DECL_NSIDOMEVENTLISTENER

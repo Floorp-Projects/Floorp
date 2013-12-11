@@ -11,7 +11,6 @@
 #include "chrome/common/ipc_message_utils.h"
 #include "ipc/IPCMessageUtils.h"
 
-#include "mozilla/Util.h"
 #include <stdint.h>
 
 #include "gfx3DMatrix.h"
@@ -585,6 +584,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mMayHaveTouchListeners);
     WriteParam(aMsg, aParam.mPresShellId);
     WriteParam(aMsg, aParam.mIsRoot);
+    WriteParam(aMsg, aParam.mHasScrollgrab);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
@@ -602,7 +602,8 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mDevPixelsPerCSSPixel) &&
             ReadParam(aMsg, aIter, &aResult->mMayHaveTouchListeners) &&
             ReadParam(aMsg, aIter, &aResult->mPresShellId) &&
-            ReadParam(aMsg, aIter, &aResult->mIsRoot));
+            ReadParam(aMsg, aIter, &aResult->mIsRoot) &&
+            ReadParam(aMsg, aIter, &aResult->mHasScrollgrab));
   }
 };
 

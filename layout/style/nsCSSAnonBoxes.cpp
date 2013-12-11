@@ -5,7 +5,7 @@
 
 /* atom list for CSS anonymous boxes */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nsCSSAnonBoxes.h"
 #include "nsAtomListUtils.h"

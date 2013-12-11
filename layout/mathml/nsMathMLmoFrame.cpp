@@ -916,6 +916,7 @@ nsMathMLmoFrame::InheritAutomaticData(nsIFrame* aParent)
   // retain our native direction, it only changes if our text content changes
   nsStretchDirection direction = mEmbellishData.direction;
   nsMathMLTokenFrame::InheritAutomaticData(aParent);
+  ProcessTextData();
   mEmbellishData.direction = direction;
   return NS_OK;
 }
@@ -929,6 +930,19 @@ nsMathMLmoFrame::TransmitAutomaticData()
   mEmbellishData.coreFrame = nullptr;
   ProcessOperatorData();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMathMLmoFrame::SetInitialChildList(ChildListID     aListID,
+                                     nsFrameList&    aChildList)
+{
+  // First, let the parent class do its work
+  nsresult rv = nsMathMLTokenFrame::SetInitialChildList(aListID, aChildList);
+  if (NS_FAILED(rv))
+    return rv;
+
+  ProcessTextData();
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -986,28 +1000,36 @@ nsMathMLmoFrame::MarkIntrinsicWidthsDirty()
   nsMathMLContainerFrame::MarkIntrinsicWidthsDirty();
 }
 
-/* virtual */ nscoord
-nsMathMLmoFrame::GetIntrinsicWidth(nsRenderingContext *aRenderingContext)
+/* virtual */ void
+nsMathMLmoFrame::GetIntrinsicWidthMetrics(nsRenderingContext *aRenderingContext, nsHTMLReflowMetrics& aDesiredSize)
 {
   ProcessOperatorData();
-  nscoord width;
   if (UseMathMLChar()) {
     uint32_t stretchHint = GetStretchHint(mFlags, mPresentationData, true);
-    width = mMathMLChar.
+    aDesiredSize.width = mMathMLChar.
       GetMaxWidth(PresContext(), *aRenderingContext,
                   stretchHint, mMaxSize,
                   NS_MATHML_OPERATOR_MAXSIZE_IS_ABSOLUTE(mFlags));
   }
   else {
-    width = nsMathMLTokenFrame::GetIntrinsicWidth(aRenderingContext);
+    nsMathMLTokenFrame::GetIntrinsicWidthMetrics(aRenderingContext,
+                                                 aDesiredSize);
   }
 
   // leadingSpace and trailingSpace are actually applied to the outermost
   // embellished container but for determining total intrinsic width it should
   // be safe to include it for the core here instead.
-  width += mEmbellishData.leadingSpace + mEmbellishData.trailingSpace;
-
-  return width;
+  bool isRTL = StyleVisibility()->mDirection;
+  aDesiredSize.width +=
+    mEmbellishData.leadingSpace + mEmbellishData.trailingSpace;
+  aDesiredSize.mBoundingMetrics.width = aDesiredSize.width;
+  if (isRTL) {
+    aDesiredSize.mBoundingMetrics.leftBearing += mEmbellishData.trailingSpace;
+    aDesiredSize.mBoundingMetrics.rightBearing += mEmbellishData.trailingSpace;
+  } else {
+    aDesiredSize.mBoundingMetrics.leftBearing += mEmbellishData.leadingSpace;
+    aDesiredSize.mBoundingMetrics.rightBearing += mEmbellishData.leadingSpace;
+  }
 }
 
 NS_IMETHODIMP

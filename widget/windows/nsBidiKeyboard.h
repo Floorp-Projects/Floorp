@@ -25,9 +25,9 @@ protected:
 
   bool mInitialized;
   bool mHaveBidiKeyboards;
-  PRUnichar  mLTRKeyboard[KL_NAMELENGTH];
-  PRUnichar  mRTLKeyboard[KL_NAMELENGTH];
-  PRUnichar  mCurrentLocaleName[KL_NAMELENGTH];
+  wchar_t  mLTRKeyboard[KL_NAMELENGTH];
+  wchar_t  mRTLKeyboard[KL_NAMELENGTH];
+  wchar_t  mCurrentLocaleName[KL_NAMELENGTH];
 };
 
 

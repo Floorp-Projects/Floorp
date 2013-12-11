@@ -50,6 +50,7 @@ PARALLEL_DIRS += [
     'encoding',
     'file',
     'fmradio',
+    'asmjscache',
     'media',
     'messages',
     'power',
@@ -81,7 +82,10 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     PARALLEL_DIRS += ['plugins/ipc/hangui']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    PARALLEL_DIRS += ['wifi']
+    PARALLEL_DIRS += [
+        'speakermanager',
+        'wifi',
+    ]
 
 if CONFIG['MOZ_B2G_RIL']:
     PARALLEL_DIRS += [
@@ -99,6 +103,9 @@ if CONFIG['MOZ_GAMEPAD']:
 
 if CONFIG['MOZ_NFC']:
     PARALLEL_DIRS += ['nfc']
+
+if CONFIG['MOZ_B2G']:
+    PARALLEL_DIRS += ['downloads']
 
 # bindings/test is here, because it needs to build after bindings/, and
 # we build subdirectories before ourselves.

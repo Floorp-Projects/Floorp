@@ -122,7 +122,7 @@ class WebGLContext :
 {
     friend class WebGLContextUserData;
     friend class WebGLMemoryPressureObserver;
-    friend class WebGLMemoryReporterWrapper;
+    friend class WebGLMemoryTracker;
     friend class WebGLExtensionLoseContext;
     friend class WebGLExtensionCompressedTextureS3TC;
     friend class WebGLExtensionCompressedTextureATC;
@@ -371,7 +371,7 @@ public:
         return GetTexParameter(target, pname);
     }
     JS::Value GetUniform(JSContext* cx, WebGLProgram *prog,
-                         WebGLUniformLocation *location, ErrorResult& rv);
+                         WebGLUniformLocation *location);
     already_AddRefed<WebGLUniformLocation>
       GetUniformLocation(WebGLProgram *prog, const nsAString& name);
     void Hint(GLenum target, GLenum mode);
@@ -425,7 +425,7 @@ public:
         nsLayoutUtils::SurfaceFromElementResult res = SurfaceFromElement(elt);
         rv = SurfaceFromElementResultToImageSurface(res, getter_AddRefs(isurf),
                                                     &srcFormat);
-        if (rv.Failed())
+        if (rv.Failed() || !isurf)
             return;
 
         uint32_t byteLength = isurf->Stride() * isurf->Height();
@@ -464,7 +464,7 @@ public:
         nsLayoutUtils::SurfaceFromElementResult res = SurfaceFromElement(elt);
         rv = SurfaceFromElementResultToImageSurface(res, getter_AddRefs(isurf),
                                                     &srcFormat);
-        if (rv.Failed())
+        if (rv.Failed() || !isurf)
             return;
 
         uint32_t byteLength = isurf->Stride() * isurf->Height();

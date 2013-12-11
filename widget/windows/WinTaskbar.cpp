@@ -28,12 +28,13 @@
 #include "nsPIDOMWindow.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/WindowsVersion.h"
 #include <io.h>
 #include <propvarutil.h>
 #include <propkey.h>
 #include <shellapi.h>
 
-const PRUnichar kShellLibraryName[] =  L"shell32.dll";
+const wchar_t kShellLibraryName[] =  L"shell32.dll";
 
 static NS_DEFINE_CID(kJumpListBuilderCID, NS_WIN_JUMPLISTBUILDER_CID);
 
@@ -290,14 +291,14 @@ WinTaskbar::GetAppUserModelID(nsAString & aDefaultGroupId) {
 
   WCHAR path[MAX_PATH];
   if (GetModuleFileNameW(nullptr, path, MAX_PATH)) {
-    PRUnichar* slash = wcsrchr(path, '\\');
+    wchar_t* slash = wcsrchr(path, '\\');
     if (!slash)
       return false;
     *slash = '\0'; // no trailing slash
 
     // The hash is short, but users may customize this, so use a respectable
     // string buffer.
-    PRUnichar buf[256];
+    wchar_t buf[256];
     if (WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
                                  regKey.get(),
                                  path,
@@ -330,7 +331,7 @@ WinTaskbar::GetDefaultGroupId(nsAString & aDefaultGroupId) {
 // (static) Called from AppShell
 bool
 WinTaskbar::RegisterAppUserModelID() {
-  if (WinUtils::GetWindowsVersion() < WinUtils::WIN7_VERSION)
+  if (!IsWin7OrLater())
     return false;
 
   if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
@@ -365,9 +366,7 @@ WinTaskbar::RegisterAppUserModelID() {
 
 NS_IMETHODIMP
 WinTaskbar::GetAvailable(bool *aAvailable) {
-  *aAvailable = 
-    WinUtils::GetWindowsVersion() < WinUtils::WIN7_VERSION ?
-    false : true;
+  *aAvailable = IsWin7OrLater();
 
   return NS_OK;
 }

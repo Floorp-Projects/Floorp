@@ -163,9 +163,7 @@ function onStateRestored(aSubject, aTopic, aData) {
   newWin.addEventListener("load", function(aEvent) {
     newWin.removeEventListener("load", arguments.callee, false);
 
-    newWin.gBrowser.selectedBrowser.addEventListener("load", function() {
-      newWin.gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-
+    whenBrowserLoaded(newWin.gBrowser.selectedBrowser, function() {
       // pin this tab
       if (shouldPinTab)
         newWin.gBrowser.pinTab(newWin.gBrowser.selectedTab);
@@ -197,7 +195,7 @@ function onStateRestored(aSubject, aTopic, aData) {
       else {
         newWin.BrowserTryToCloseWindow();
       }
-    }, true);
+    });
   }, false);
 }
 

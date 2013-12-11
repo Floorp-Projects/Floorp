@@ -223,7 +223,7 @@ IdToTypeId(jsid id)
     if (JSID_IS_STRING(id)) {
         JSFlatString *str = JSID_TO_FLAT_STRING(id);
         JS::TwoByteChars cp = str->range();
-        if (JS7_ISDEC(cp[0]) || cp[0] == '-') {
+        if (cp.length() > 0 && (JS7_ISDEC(cp[0]) || cp[0] == '-')) {
             for (size_t i = 1; i < cp.length(); ++i) {
                 if (!JS7_ISDEC(cp[i]))
                     return id;
@@ -431,6 +431,7 @@ EnsureTrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
         AutoEnterAnalysis enter(cx);
         if (obj->hasLazyType() && !obj->getType(cx)) {
             cx->compartment()->types.setPendingNukeTypes(cx);
+            cx->clearPendingException();
             return;
         }
         if (!obj->type()->unknownProperties())
@@ -591,13 +592,13 @@ extern void TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc,
 /* static */ inline unsigned
 TypeScript::NumTypeSets(JSScript *script)
 {
-    return script->nTypeSets + analyze::LocalSlot(script, 0);
+    return script->nTypeSets() + analyze::LocalSlot(script, 0);
 }
 
 /* static */ inline StackTypeSet *
 TypeScript::ThisTypes(JSScript *script)
 {
-    return script->types->typeArray() + script->nTypeSets + js::analyze::ThisSlot();
+    return script->types->typeArray() + script->nTypeSets() + js::analyze::ThisSlot();
 }
 
 /*
@@ -610,7 +611,7 @@ TypeScript::ThisTypes(JSScript *script)
 TypeScript::ArgTypes(JSScript *script, unsigned i)
 {
     JS_ASSERT(i < script->function()->nargs);
-    return script->types->typeArray() + script->nTypeSets + js::analyze::ArgSlot(i);
+    return script->types->typeArray() + script->nTypeSets() + js::analyze::ArgSlot(i);
 }
 
 template <typename TYPESET>
@@ -624,11 +625,10 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc, uint32_t *hint, TYPE
     uint32_t *bytecodeMap = nullptr;
     MOZ_CRASH();
 #endif
-    uint32_t offset = pc - script->code;
-    JS_ASSERT(offset < script->length);
+    uint32_t offset = script->pcToOffset(pc);
 
     // See if this pc is the next typeset opcode after the last one looked up.
-    if (bytecodeMap[*hint + 1] == offset && (*hint + 1) < script->nTypeSets) {
+    if (bytecodeMap[*hint + 1] == offset && (*hint + 1) < script->nTypeSets()) {
         (*hint)++;
         return typeArray + *hint;
     }
@@ -639,7 +639,7 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc, uint32_t *hint, TYPE
 
     // Fall back to a binary search.
     size_t bottom = 0;
-    size_t top = script->nTypeSets - 1;
+    size_t top = script->nTypeSets() - 1;
     size_t mid = bottom + (top - bottom) / 2;
     while (mid < top) {
         if (bytecodeMap[mid] < offset)
@@ -665,7 +665,7 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(CurrentThreadCanAccessRuntime(script->runtimeFromMainThread()));
 #ifdef JS_ION
-    uint32_t *hint = script->baselineScript()->bytecodeTypeMap() + script->nTypeSets;
+    uint32_t *hint = script->baselineScript()->bytecodeTypeMap() + script->nTypeSets();
 #else
     uint32_t *hint = nullptr;
     MOZ_CRASH();
@@ -684,7 +684,7 @@ struct AllocationSiteKey : public DefaultHasher<AllocationSiteKey> {
     AllocationSiteKey() { mozilla::PodZero(this); }
 
     static inline uint32_t hash(AllocationSiteKey key) {
-        return uint32_t(size_t(key.script->code + key.offset)) ^ key.kind;
+        return uint32_t(size_t(key.script->offsetToPC(key.offset)) ^ key.kind);
     }
 
     static inline bool match(const AllocationSiteKey &a, const AllocationSiteKey &b) {
@@ -705,9 +705,9 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoK
     JS_ASSERT(!UseNewTypeForInitializer(script, pc, kind));
 
     /* :XXX: Limit script->length so we don't need to check the offset up front? */
-    uint32_t offset = pc - script->code;
+    uint32_t offset = script->pcToOffset(pc);
 
-    if (!cx->typeInferenceEnabled() || !script->compileAndGo || offset >= AllocationSiteKey::OFFSET_LIMIT)
+    if (!cx->typeInferenceEnabled() || !script->compileAndGo() || offset >= AllocationSiteKey::OFFSET_LIMIT)
         return GetTypeNewObject(cx, kind);
 
     AllocationSiteKey key;
@@ -721,7 +721,7 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoK
     AllocationSiteTable::Ptr p = cx->compartment()->types.allocationSiteTable->lookup(key);
 
     if (p)
-        return p->value;
+        return p->value();
     return cx->compartment()->types.addAllocationSiteTypeObject(cx, key);
 }
 

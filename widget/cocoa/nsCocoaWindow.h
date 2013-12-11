@@ -97,6 +97,7 @@ typedef struct _nsCocoaWindowList {
 - (void)updateTrackingArea;
 - (NSView*)trackingAreaView;
 
+- (void)setBeingShown:(BOOL)aValue;
 - (BOOL)isVisibleOrBeingShown;
 
 - (ChildView*)mainChildView;

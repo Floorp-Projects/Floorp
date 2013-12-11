@@ -21,6 +21,7 @@
 #include "builtin/MapObject.h"
 #include "builtin/Object.h"
 #include "builtin/RegExp.h"
+#include "builtin/TypedObject.h"
 #include "vm/RegExpStatics.h"
 
 #include "jscompartmentinlines.h"
@@ -30,6 +31,17 @@
 #include "vm/ObjectImpl-inl.h"
 
 using namespace js;
+
+// This method is not in the header file to avoid having to include
+// TypedObject.h from GlobalObject.h. It is not generally perf
+// sensitive.
+TypedObjectModuleObject&
+js::GlobalObject::getTypedObjectModule() const {
+    Value v = getConstructor(JSProto_TypedObject);
+    // only gets called from contexts where TypedObject must be initialized
+    JS_ASSERT(v.isObject());
+    return v.toObject().as<TypedObjectModuleObject>();
+}
 
 JSObject *
 js_InitObjectClass(JSContext *cx, HandleObject obj)
@@ -236,14 +248,13 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
             js_free(source);
             return nullptr;
         }
-        RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
-        if (!sourceObject)
-            return nullptr;
         ss->setSource(source, sourceLen);
-
         CompileOptions options(cx);
         options.setNoScriptRval(true)
                .setVersion(JSVERSION_DEFAULT);
+        RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss, options));
+        if (!sourceObject)
+            return nullptr;
 
         RootedScript script(cx, JSScript::Create(cx,
                                                  /* enclosingScope = */ NullPtr(),
@@ -388,7 +399,11 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     if (cx->runtime()->isSelfHostingGlobal(self)) {
         intrinsicsHolder = self;
     } else {
-        intrinsicsHolder = NewObjectWithClassProto(cx, &JSObject::class_, nullptr, self, TenuredObject);
+        RootedObject proto(cx, self->getOrCreateObjectPrototype(cx));
+        if (!proto)
+            return nullptr;
+        intrinsicsHolder = NewObjectWithGivenProto(cx, &JSObject::class_, proto, self,
+                                                   TenuredObject);
         if (!intrinsicsHolder)
             return nullptr;
     }
@@ -451,6 +466,23 @@ GlobalObject::create(JSContext *cx, const Class *clasp)
 }
 
 /* static */ bool
+GlobalObject::getOrCreateEval(JSContext *cx, Handle<GlobalObject*> global,
+                              MutableHandleObject eval)
+{
+    if (!global->getOrCreateObjectPrototype(cx))
+        return false;
+    eval.set(&global->getSlotRefForCompilation(EVAL).toObject());
+    return true;
+}
+
+bool
+GlobalObject::valueIsEval(Value val)
+{
+    HeapSlot &eval = getSlotRef(EVAL);
+    return eval.isObject() && eval.get() == val;
+}
+
+/* static */ bool
 GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
 {
     /* Define a top-level property 'undefined' with the undefined value. */
@@ -485,6 +517,9 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
 #if EXPOSE_INTL_API
            js_InitIntlClass(cx, global) &&
 #endif
+#if ENABLE_PARALLEL_JS
+           js_InitParallelArrayClass(cx, global) &&
+#endif
            true;
 }
 
@@ -511,7 +546,7 @@ GlobalObject::warnOnceAboutWatch(JSContext *cx, HandleObject obj)
     HeapSlot &v = global->getSlotRef(WARNED_WATCH_DEPRECATED);
     if (v.isUndefined()) {
         // Warn only once per global object.
-        if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage, NULL,
+        if (!JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage, nullptr,
                                           JSMSG_OBJECT_WATCH_DEPRECATED))
         {
             return false;
@@ -537,7 +572,7 @@ CreateBlankProto(JSContext *cx, const Class *clasp, JSObject &proto, GlobalObjec
     JS_ASSERT(clasp != &JSFunction::class_);
 
     RootedObject blankProto(cx, NewObjectWithGivenProto(cx, clasp, &proto, &global, SingletonObject));
-    if (!blankProto)
+    if (!blankProto || !blankProto->setDelegate(cx))
         return nullptr;
 
     return blankProto;

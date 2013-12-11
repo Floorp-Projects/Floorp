@@ -46,14 +46,14 @@ static int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
   UINT  num = 0;          // number of image encoders
   UINT  size = 0;         // size of the image encoder array in bytes
 
-  ImageCodecInfo* pImageCodecInfo = NULL;
+  ImageCodecInfo* pImageCodecInfo = nullptr;
 
   GetImageEncodersSize(&num, &size);
   if(size == 0)
     return -1;  // Failure
 
   pImageCodecInfo = (ImageCodecInfo*)(malloc(size));
-  if(pImageCodecInfo == NULL)
+  if(pImageCodecInfo == nullptr)
     return -1;  // Failure
 
   GetImageEncoders(num, size, pImageCodecInfo);
@@ -79,7 +79,7 @@ int wmain(int argc, wchar_t** argv)
 {
   GdiplusStartupInput gdiplusStartupInput;
   ULONG_PTR gdiplusToken;
-  GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+  GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, nullptr);
 
   HWND desktop = GetDesktopWindow();
   HDC desktopdc = GetDC(desktop);
@@ -92,11 +92,11 @@ int wmain(int argc, wchar_t** argv)
   SelectObject(mydc, oldbmp);
 
   const wchar_t* filename = (argc > 1) ? argv[1] : L"screenshot.png";
-  Bitmap* b = Bitmap::FromHBITMAP(mybmp, NULL);
+  Bitmap* b = Bitmap::FromHBITMAP(mybmp, nullptr);
   CLSID  encoderClsid;
   Status stat = GenericError;
   if (b && GetEncoderClsid(L"image/png", &encoderClsid) != -1) {
-    stat = b->Save(filename, &encoderClsid, NULL);
+    stat = b->Save(filename, &encoderClsid, nullptr);
   }
   if (b)
     delete b;

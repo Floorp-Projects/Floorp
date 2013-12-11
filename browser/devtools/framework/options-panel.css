@@ -1,0 +1,59 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#options-panel-container {
+  overflow: auto;
+}
+
+#options-panel {
+  overflow-y: auto;
+  display: block;
+}
+
+.options-vertical-pane {
+  display: inline;
+  float: left;
+}
+
+.options-vertical-pane > label {
+  display: block;
+}
+
+.options-vertical-pane {
+  margin: 5px;
+  width: calc(50% - 30px);
+  min-width: 400px;
+  -moz-padding-start: 5px;
+}
+
+.options-vertical-pane > label {
+  padding: 2px 0;
+  font-size: 1.4rem;
+}
+
+.options-groupbox {
+  -moz-margin-start: 15px;
+  padding: 2px;
+}
+
+.options-groupbox > * {
+  padding: 2px;
+}
+
+.options-citation-label {
+  font-size: 1rem !important;
+  /* !important is required otherwise font-size will still be 1.4rem */
+  font-style: italic;
+  padding: 4px 0 0; /* To align it with the checkbox */
+}
+
+.options-citation-label + label {
+  padding: 3px 0 0 !important; /* To align it with the checkbox */
+  font-style: italic;
+}
+
+.hidden-labels-box:not(.visible) > label,
+.hidden-labels-box.visible ~ .hidden-labels-box > label:last-child {
+  display: none;
+}

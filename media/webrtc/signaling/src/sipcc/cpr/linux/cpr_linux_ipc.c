@@ -278,15 +278,12 @@ cprMoveMsgToQueue(cpr_msg_queue_t *msgq);
 cprMsgQueue_t
 cprCreateMessageQueue (const char *name, uint16_t depth)
 {
-    static const char fname[] = "cprCreateMessageQueue";
     cpr_msg_queue_t *msgq;
-    key_t key;
-    static int key_id = 100; /* arbitrary starting number */
     struct msqid_ds buf;
 
     msgq =(cpr_msg_queue_t *)cpr_calloc(1, sizeof(cpr_msg_queue_t));
     if (msgq == NULL) {
-        CPR_ERROR("%s: Malloc failed: %s\n", fname,
+        CPR_ERROR("%s: Malloc failed: %s\n", __FUNCTION__,
                   name ? name : unnamed_string);
         errno = ENOMEM;
         return NULL;
@@ -295,44 +292,12 @@ cprCreateMessageQueue (const char *name, uint16_t depth)
     msgq->name = name ? name : unnamed_string;
 
     /*
-     * Find a unique key
-     */
-    key = ftok("/proc/self", key_id++);
-    CSFLogDebug(logTag, "key = %x\n", key);
-
-    if (key == -1) {
-        CPR_ERROR("%s: Key generation failed: %d\n", fname, errno);
-        cpr_free(msgq);
-        return NULL;
-    }
-
-    /*
      * Set creation flag so that OS will create the message queue
      */
-    msgq->queueId = msgget(key, (IPC_EXCL | IPC_CREAT | 0666));
-    if (msgq->queueId == -1) {
-        if (errno == EEXIST) {
-            CSFLogDebug(logTag, "Q exists so first remove it and then create again\n");
-                /* Remove message queue */
-            msgq->queueId = msgget(key, (IPC_CREAT | 0666));
-            if (msgctl(msgq->queueId, IPC_RMID, &buf) == -1) {
-
-                CPR_ERROR("%s: Destruction failed: %s: %d\n", fname,
-                          msgq->name, errno);
-
-                return NULL;
-            }
-            msgq->queueId = msgget(key, (IPC_CREAT | 0666));
-        }
-    } else {
-        CSFLogDebug(logTag, "there was no preexisting q..\n");
-
-    }
-
-
+    msgq->queueId = msgget(IPC_PRIVATE, (IPC_EXCL | IPC_CREAT | 0666));
 
     if (msgq->queueId == -1) {
-        CPR_ERROR("%s: Creation failed: %s: %d\n", fname, name, errno);
+        CPR_ERROR("%s: Creation failed: %s: %d\n", __FUNCTION__, name, errno);
         if (errno == EEXIST) {
 
         }
@@ -349,7 +314,7 @@ cprCreateMessageQueue (const char *name, uint16_t depth)
      */
     if (pthread_mutex_init(&msgq->mutex, NULL) != 0) {
         CPR_ERROR("%s: Failed to create msg queue (%s) mutex: %d\n",
-                  fname, name, errno);
+                  __FUNCTION__, name, errno);
         (void) msgctl(msgq->queueId, IPC_RMID, &buf);
         cpr_free(msgq);
         return NULL;
@@ -359,14 +324,14 @@ cprCreateMessageQueue (const char *name, uint16_t depth)
      * Set the extended message queue depth (within bounds)
      */
     if (depth > CPR_MAX_MSG_Q_DEPTH) {
-        CPR_INFO("%s: Depth too large (%d) reset to %d\n", fname, depth,
+        CPR_INFO("%s: Depth too large (%d) reset to %d\n", __FUNCTION__, depth,
                  CPR_MAX_MSG_Q_DEPTH);
         depth = CPR_MAX_MSG_Q_DEPTH;
     }
 
     if (depth < OS_MSGTQL) {
         if (depth) {
-            CPR_INFO("%s: Depth too small (%d) reset to %d\n", fname, depth, OS_MSGTQL);
+            CPR_INFO("%s: Depth too small (%d) reset to %d\n", __FUNCTION__, depth, OS_MSGTQL);
         }
         depth = OS_MSGTQL;
     }

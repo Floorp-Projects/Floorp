@@ -115,6 +115,14 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_SetProperty(cx, info, "threadsafe", value))
         return false;
 
+#ifdef JS_WORKER_THREADS
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "worker-threads", value))
+        return false;
+
 #ifdef JS_MORE_DETERMINISTIC
     value = BooleanValue(true);
 #else
@@ -251,7 +259,7 @@ MinorGC(JSContext *cx, unsigned argc, jsval *vp)
     if (args.get(0) == BooleanValue(true))
         cx->runtime()->gcStoreBuffer.setAboutToOverflow();
 
-    MinorGC(cx->runtime(), gcreason::API);
+    MinorGC(cx, gcreason::API);
 #endif
     return true;
 }
@@ -703,7 +711,7 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
 
     RootedValue traceValue(cx);
     int32_t traceKind = -1;
-    void *traceThing = NULL;
+    void *traceThing = nullptr;
     if (args.length() > 1) {
         JSString *str = ToString(cx, args[1]);
         if (!str)
@@ -872,15 +880,17 @@ DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
     if (argc > i) {
         Value v = args[i];
         if (v.isString()) {
-            JSString *str = v.toString();
-            JSAutoByteString fileNameBytes;
-            if (!fileNameBytes.encodeLatin1(cx, str))
-                return false;
-            const char *fileName = fileNameBytes.ptr();
-            dumpFile = fopen(fileName, "w");
-            if (!dumpFile) {
-                JS_ReportError(cx, "can't open %s", fileName);
-                return false;
+            if (!fuzzingSafe) {
+                JSString *str = v.toString();
+                JSAutoByteString fileNameBytes;
+                if (!fileNameBytes.encodeLatin1(cx, str))
+                    return false;
+                const char *fileName = fileNameBytes.ptr();
+                dumpFile = fopen(fileName, "w");
+                if (!dumpFile) {
+                    JS_ReportError(cx, "can't open %s", fileName);
+                    return false;
+                }
             }
             ++i;
         }
@@ -903,6 +913,12 @@ DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 Terminate(JSContext *cx, unsigned arg, jsval *vp)
 {
+#ifdef JS_MORE_DETERMINISTIC
+    // Print a message to stderr in more-deterministic builds to help jsfunfuzz
+    // find uncatchable-exception bugs.
+    fprintf(stderr, "terminate called\n");
+#endif
+
     JS_ClearPendingException(cx);
     return false;
 }
@@ -1105,11 +1121,11 @@ SetJitCompilerOption(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-SetIonAssertGraphCoherency(JSContext *cx, unsigned argc, jsval *vp)
+SetIonCheckGraphCoherency(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef JS_ION
-    jit::js_IonOptions.assertGraphConsistency = ToBoolean(args.get(0));
+    jit::js_IonOptions.checkGraphConsistency = ToBoolean(args.get(0));
 #endif
     args.rval().setUndefined();
     return true;
@@ -1355,6 +1371,14 @@ Neuter(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static bool
+WorkerThreadCount(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setNumber(static_cast<double>(cx->runtime()->workerThreadCount()));
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -1555,8 +1579,8 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "setCompilerOption(<option>, <number>)",
 "  Set a compiler option indexed in JSCompileOption enum to a number.\n"),
 
-    JS_FN_HELP("setIonAssertGraphCoherency", SetIonAssertGraphCoherency, 1, 0,
-"setIonAssertGraphCoherency(bool)",
+    JS_FN_HELP("setIonCheckGraphCoherency", SetIonCheckGraphCoherency, 1, 0,
+"setIonCheckGraphCoherency(bool)",
 "  Set whether Ion should perform graph consistency (DEBUG-only) assertions. These assertions\n"
 "  are valuable and should be generally enabled, however they can be very expensive for large\n"
 "  (asm.js) programs."),
@@ -1573,6 +1597,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("neuter", Neuter, 1, 0,
 "neuter(buffer)",
 "  Neuter the given ArrayBuffer object as if it had been transferred to a WebWorker."),
+
+    JS_FN_HELP("workerThreadCount", WorkerThreadCount, 0, 0,
+"workerThreadCount()",
+"  Returns the number of worker threads available for off-main-thread tasks."),
 
     JS_FS_HELP_END
 };

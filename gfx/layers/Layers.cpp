@@ -17,7 +17,6 @@
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxUtils.h"                   // for gfxUtils, etc
 #include "mozilla/DebugOnly.h"          // for DebugOnly
-#include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/Telemetry.h"          // for Accumulate
 #include "mozilla/TelemetryHistogramEnums.h"
 #include "mozilla/gfx/2D.h"             // for DrawTarget
@@ -37,7 +36,6 @@ using namespace mozilla::gfx;
 
 typedef FrameMetrics::ViewID ViewID;
 const ViewID FrameMetrics::NULL_SCROLL_ID = 0;
-const ViewID FrameMetrics::START_SCROLL_ID = 1;
 
 uint8_t gLayerManagerLayerBuilder;
 
@@ -135,15 +133,6 @@ LayerManager::CreateDrawTarget(const IntSize &aSize,
     CreateOffscreenCanvasDrawTarget(aSize, aFormat);
 }
 
-TextureFactoryIdentifier
-LayerManager::GetTextureFactoryIdentifier()
-{
-  //TODO[nrc] make pure virtual when all layer managers use Compositor
-  NS_ERROR("Should have been overridden");
-  return TextureFactoryIdentifier();
-}
-
-
 #ifdef DEBUG
 void
 LayerManager::Mutated(Layer* aLayer)
@@ -186,6 +175,7 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mIsFixedPosition(false),
   mMargins(0, 0, 0, 0),
   mStickyPositionData(nullptr),
+  mIsScrollbar(false),
   mDebugColorIndex(0),
   mAnimationGeneration(0)
 {}
@@ -998,16 +988,14 @@ RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 
 /** 
  * StartFrameTimeRecording, together with StopFrameTimeRecording
- * enable recording of frame intrvals and paint times.
- * (Paint start time is set from the refresh driver right before starting
- * flush/paint and ends at PostPresent. Intervals are measured at PostPresent).
+ * enable recording of frame intervals.
  *
- * To allow concurrent consumers, 2 cyclic arrays are used (for intervals, paints)
- * which serve all consumers, practically stateless with regard to consumers.
+ * To allow concurrent consumers, a cyclic array is used which serves all
+ * consumers, practically stateless with regard to consumers.
  *
- * To save resources, the buffers are allocated on first call to StartFrameTimeRecording
+ * To save resources, the buffer is allocated on first call to StartFrameTimeRecording
  * and recording is paused if no consumer which called StartFrameTimeRecording is able
- * to get valid results (because the cyclic buffers were overwritten since that call).
+ * to get valid results (because the cyclic buffer was overwritten since that call).
  *
  * To determine availability of the data upon StopFrameTimeRecording:
  * - mRecording.mNextIndex increases on each PostPresent, and never resets.
@@ -1025,29 +1013,20 @@ RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
  *   older than this, it means that some frames were not recorded, so data is invalid.
  */
 uint32_t
-LayerManager::StartFrameTimeRecording()
+LayerManager::StartFrameTimeRecording(int32_t aBufferSize)
 {
   if (mRecording.mIsPaused) {
     mRecording.mIsPaused = false;
 
     if (!mRecording.mIntervals.Length()) { // Initialize recording buffers
-      const uint32_t kRecordingMinSize = 60 * 10; // 10 seconds @60 fps.
-      const uint32_t kRecordingMaxSize = 60 * 60 * 60; // One hour
-      uint32_t bufferSize = Preferences::GetUint("toolkit.framesRecording.bufferSize",
-                                                 kRecordingMinSize);
-      bufferSize = std::min(bufferSize, kRecordingMaxSize);
-      bufferSize = std::max(bufferSize, kRecordingMinSize);
-
-      if (!mRecording.mIntervals.SetLength(bufferSize) || !mRecording.mPaints.SetLength(bufferSize)) {
+      if (!mRecording.mIntervals.SetLength(aBufferSize)) {
         mRecording.mIsPaused = true; // OOM
         mRecording.mIntervals.Clear();
-        mRecording.mPaints.Clear();
       }
     }
 
     // After being paused, recent values got invalid. Update them to now.
     mRecording.mLastFrameTime = TimeStamp::Now();
-    mRecording.mPaintStartTime = mRecording.mLastFrameTime;
 
     // Any recording which started before this is invalid, since we were paused.
     mRecording.mCurrentRunStartIndex = mRecording.mNextIndex;
@@ -1060,22 +1039,12 @@ LayerManager::StartFrameTimeRecording()
 }
 
 void
-LayerManager::SetPaintStartTime(TimeStamp& aTime)
-{
-  if (!mRecording.mIsPaused) {
-    mRecording.mPaintStartTime = aTime;
-  }
-}
-
-void
-LayerManager::PostPresent()
+LayerManager::RecordFrame()
 {
   if (!mRecording.mIsPaused) {
     TimeStamp now = TimeStamp::Now();
     uint32_t i = mRecording.mNextIndex % mRecording.mIntervals.Length();
     mRecording.mIntervals[i] = static_cast<float>((now - mRecording.mLastFrameTime)
-                                                  .ToMilliseconds());
-    mRecording.mPaints[i]    = static_cast<float>((now - mRecording.mPaintStartTime)
                                                   .ToMilliseconds());
     mRecording.mNextIndex++;
     mRecording.mLastFrameTime = now;
@@ -1085,6 +1054,11 @@ LayerManager::PostPresent()
       mRecording.mIsPaused = true;
     }
   }
+}
+
+void
+LayerManager::PostPresent()
+{
   if (!mTabSwitchStart.IsNull()) {
     Telemetry::Accumulate(Telemetry::FX_TAB_SWITCH_TOTAL_MS,
                           uint32_t((TimeStamp::Now() - mTabSwitchStart).ToMilliseconds()));
@@ -1094,8 +1068,7 @@ LayerManager::PostPresent()
 
 void
 LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
-                                     nsTArray<float>& aFrameIntervals,
-                                     nsTArray<float>& aPaintTimes)
+                                     nsTArray<float>& aFrameIntervals)
 {
   uint32_t bufferSize = mRecording.mIntervals.Length();
   uint32_t length = mRecording.mNextIndex - aStartIndex;
@@ -1106,9 +1079,8 @@ LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
   }
 
   // Set length in advance to avoid possibly repeated reallocations (and OOM checks).
-  if (!length || !aFrameIntervals.SetLength(length) || !aPaintTimes.SetLength(length)) {
+  if (!length || !aFrameIntervals.SetLength(length)) {
     aFrameIntervals.Clear();
-    aPaintTimes.Clear();
     return; // empty recording or OOM, return empty arrays.
   }
 
@@ -1118,7 +1090,6 @@ LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
       cyclicPos = 0;
     }
     aFrameIntervals[i] = mRecording.mIntervals[cyclicPos];
-    aPaintTimes[i]     = mRecording.mPaints[cyclicPos];
   }
 }
 
@@ -1140,7 +1111,7 @@ void WriteSnapshotLinkToDumpFile(T* aObj, FILE* aFile)
   nsCString string(aObj->Name());
   string.Append("-");
   string.AppendInt((uint64_t)aObj);
-  fprintf(aFile, "href=\"javascript:ViewImage('%s')\"", string.BeginReading());
+  fprintf_stderr(aFile, "href=\"javascript:ViewImage('%s')\"", string.BeginReading());
 }
 
 template <typename T>
@@ -1149,11 +1120,13 @@ void WriteSnapshotToDumpFile_internal(T* aObj, gfxASurface* aSurf)
   nsCString string(aObj->Name());
   string.Append("-");
   string.AppendInt((uint64_t)aObj);
-  if (gfxUtils::sDumpPaintFile)
-    fprintf(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());
+  if (gfxUtils::sDumpPaintFile) {
+    fprintf_stderr(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());
+  }
   aSurf->DumpAsDataURL(gfxUtils::sDumpPaintFile);
-  if (gfxUtils::sDumpPaintFile)
-    fprintf(gfxUtils::sDumpPaintFile, "\";");
+  if (gfxUtils::sDumpPaintFile) {
+    fprintf_stderr(gfxUtils::sDumpPaintFile, "\";");
+  }
 }
 
 void WriteSnapshotToDumpFile(Layer* aLayer, gfxASurface* aSurf)
@@ -1177,13 +1150,13 @@ void
 Layer::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
 {
   if (aDumpHtml) {
-    fprintf(aFile, "<li><a id=\"%p\" ", this);
+    fprintf_stderr(aFile, "<li><a id=\"%p\" ", this);
 #ifdef MOZ_DUMP_PAINTING
     if (GetType() == TYPE_CONTAINER || GetType() == TYPE_THEBES) {
       WriteSnapshotLinkToDumpFile(this, aFile);
     }
 #endif
-    fprintf(aFile, ">");
+    fprintf_stderr(aFile, ">");
   }
   DumpSelf(aFile, aPrefix);
 
@@ -1194,12 +1167,13 @@ Layer::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
 #endif
 
   if (aDumpHtml) {
-    fprintf(aFile, "</a>");
+    fprintf_stderr(aFile, "</a>");
   }
 
   if (Layer* mask = GetMaskLayer()) {
+    fprintf_stderr(aFile, "%s  Mask layer:\n", aPrefix);
     nsAutoCString pfx(aPrefix);
-    pfx += "  Mask layer: ";
+    pfx += "    ";
     mask->Dump(aFile, pfx.get(), aDumpHtml);
   }
 
@@ -1207,16 +1181,16 @@ Layer::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
     if (aDumpHtml) {
-      fprintf(aFile, "<ul>");
+      fprintf_stderr(aFile, "<ul>");
     }
     kid->Dump(aFile, pfx.get(), aDumpHtml);
     if (aDumpHtml) {
-      fprintf(aFile, "</ul>");
+      fprintf_stderr(aFile, "</ul>");
     }
   }
 
   if (aDumpHtml) {
-    fprintf(aFile, "</li>");
+    fprintf_stderr(aFile, "</li>");
   }
   if (Layer* next = GetNextSibling())
     next->Dump(aFile, aPrefix, aDumpHtml);
@@ -1227,11 +1201,7 @@ Layer::DumpSelf(FILE* aFile, const char* aPrefix)
 {
   nsAutoCString str;
   PrintInfo(str, aPrefix);
-  if (!aFile || aFile == stderr) {
-    printf_stderr("%s\n", str.get());
-  } else {
-    fprintf(aFile, "%s\n", str.get());
-  }
+  fprintf_stderr(aFile, "%s\n", str.get());
 }
 
 void
@@ -1299,6 +1269,13 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   }
   if (GetContentFlags() & CONTENT_COMPONENT_ALPHA) {
     aTo += " [componentAlpha]";
+  }
+  if (GetIsScrollbar()) {
+    if (GetScrollbarDirection() == VERTICAL) {
+      aTo.AppendPrintf(" [vscrollbar=%lld]", GetScrollbarTargetContainerId());
+    } else {
+      aTo.AppendPrintf(" [hscrollbar=%lld]", GetScrollbarTargetContainerId());
+    }
   }
   if (GetIsFixedPosition()) {
     aTo.AppendPrintf(" [isFixedPosition anchor=%f,%f]", mAnchor.x, mAnchor.y);
@@ -1408,36 +1385,36 @@ LayerManager::Dump(FILE* aFile, const char* aPrefix, bool aDumpHtml)
 
 #ifdef MOZ_DUMP_PAINTING
   if (aDumpHtml) {
-    fprintf(file, "<ul><li><a ");
+    fprintf_stderr(file, "<ul><li><a ");
     WriteSnapshotLinkToDumpFile(this, file);
-    fprintf(file, ">");
+    fprintf_stderr(file, ">");
   }
 #endif
   DumpSelf(file, aPrefix);
 #ifdef MOZ_DUMP_PAINTING
   if (aDumpHtml) {
-    fprintf(file, "</a>");
+    fprintf_stderr(file, "</a>");
   }
 #endif
 
   nsAutoCString pfx(aPrefix);
   pfx += "  ";
   if (!GetRoot()) {
-    fprintf(file, "%s(null)", pfx.get());
+    fprintf_stderr(file, "%s(null)", pfx.get());
     if (aDumpHtml) {
-      fprintf(file, "</li></ul>");
+      fprintf_stderr(file, "</li></ul>");
     }
     return;
   }
 
   if (aDumpHtml) {
-    fprintf(file, "<ul>");
+    fprintf_stderr(file, "<ul>");
   }
   GetRoot()->Dump(file, pfx.get(), aDumpHtml);
   if (aDumpHtml) {
-    fprintf(file, "</ul></li></ul>");
+    fprintf_stderr(file, "</ul></li></ul>");
   }
-  fputc('\n', file);
+  fprintf_stderr(file, "\n");
 }
 
 void
@@ -1445,7 +1422,7 @@ LayerManager::DumpSelf(FILE* aFile, const char* aPrefix)
 {
   nsAutoCString str;
   PrintInfo(str, aPrefix);
-  fprintf(FILEOrDefault(aFile), "%s\n", str.get());
+  fprintf_stderr(FILEOrDefault(aFile), "%s\n", str.get());
 }
 
 void

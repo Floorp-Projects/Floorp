@@ -4,6 +4,7 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BasicCompositor.h"
+#include "TextureHostBasic.h"
 #include "ipc/AutoOpenSurface.h"
 #include "mozilla/layers/Effects.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
@@ -21,16 +22,6 @@ namespace mozilla {
 using namespace mozilla::gfx;
 
 namespace layers {
-
-/**
- * A texture source interface that can be used by the software Compositor.
- */
-class TextureSourceBasic
-{
-public:
-  virtual ~TextureSourceBasic() {}
-  virtual gfx::SourceSurface* GetSurface() = 0;
-};
 
 class DataTextureSourceBasic : public DataTextureSource
                              , public TextureSourceBasic
@@ -89,7 +80,7 @@ public:
 
   virtual TextureSourceBasic* AsSourceBasic() MOZ_OVERRIDE { return this; }
 
-  SourceSurface *GetSurface() { return mSurface; }
+  SourceSurface *GetSurface() MOZ_OVERRIDE { return mSurface; }
 
   virtual void SetCompositor(Compositor* aCompositor)
   {
@@ -104,40 +95,33 @@ protected:
                           nsIntPoint*) MOZ_OVERRIDE
   {
     AutoOpenSurface surf(OPEN_READ_ONLY, aImage);
-    mThebesSurface = ShadowLayerForwarder::OpenDescriptor(OPEN_READ_ONLY, aImage);
-    mThebesImage = mThebesSurface->GetAsImageSurface();
-    MOZ_ASSERT(mThebesImage);
-    mFormat = ImageFormatToSurfaceFormat(mThebesImage->Format());
-    mSurface = nullptr;
-    mSize = IntSize(mThebesImage->Width(), mThebesImage->Height());
+    nsRefPtr<gfxASurface> surface = ShadowLayerForwarder::OpenDescriptor(OPEN_READ_ONLY, aImage);
+    nsRefPtr<gfxImageSurface> image = surface->GetAsImageSurface();
+    mFormat = ImageFormatToSurfaceFormat(image->Format());
+    mSize = IntSize(image->Width(), image->Height());
+    mSurface = Factory::CreateWrappingDataSourceSurface(image->Data(),
+                                                        image->Stride(),
+                                                        mSize,
+                                                        mFormat);
   }
 
-  virtual void EnsureSurface() { }
-
-  virtual bool Lock() MOZ_OVERRIDE
-  {
-    EnsureSurface();
-    if (!mSurface) {
-      mSurface = Factory::CreateWrappingDataSourceSurface(mThebesImage->Data(),
-                                                          mThebesImage->Stride(),
-                                                          mSize,
-                                                          mFormat);
-    }
+  virtual bool EnsureSurface() {
     return true;
   }
 
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE {
-    if (!mThebesImage) {
-      mThebesImage = mThebesSurface->GetAsImageSurface();
+  virtual bool Lock() MOZ_OVERRIDE {
+    return EnsureSurface();
+  }
+
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE {
+    if (!mSurface) {
+        return nullptr;
     }
-    nsRefPtr<gfxImageSurface> result = mThebesImage;
-    return result.forget();
+    return mSurface->GetDataSurface();
   }
 
   BasicCompositor *mCompositor;
   RefPtr<SourceSurface> mSurface;
-  nsRefPtr<gfxImageSurface> mThebesImage;
-  nsRefPtr<gfxASurface> mThebesSurface;
   IntSize mSize;
   SurfaceFormat mFormat;
 };
@@ -174,15 +158,18 @@ public:
     mSurface = nullptr;
   }
 
-  virtual void EnsureSurface() MOZ_OVERRIDE
+  virtual bool EnsureSurface() MOZ_OVERRIDE
   {
-    if (!mBuffer) {
-      return;
+    if (mSurface) {
+      return true;
     }
-    ConvertImageToRGB(*mBuffer);
+    if (!mBuffer) {
+      return false;
+    }
+    return ConvertImageToRGB(*mBuffer);
   }
 
-  void ConvertImageToRGB(const SurfaceDescriptor& aImage)
+  bool ConvertImageToRGB(const SurfaceDescriptor& aImage)
   {
     YCbCrImageDataDeserializer deserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
     PlanarYCbCrData data;
@@ -194,22 +181,22 @@ public:
     if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
         size.height > PlanarYCbCrImage::MAX_DIMENSION) {
       NS_ERROR("Illegal image dest width or height");
-      return;
+      return false;
     }
 
-    mThebesSurface = mThebesImage =
-      new gfxImageSurface(size, format);
+    mSize = ToIntSize(size);
+    mFormat = (format == gfxImageFormatRGB24)
+              ? FORMAT_B8G8R8X8
+              : FORMAT_B8G8R8A8;
 
+    RefPtr<DataSourceSurface> surface = Factory::CreateDataSourceSurface(mSize, mFormat);
     gfxUtils::ConvertYCbCrToRGB(data, format, size,
-                                mThebesImage->Data(),
-                                mThebesImage->Stride());
+                                surface->GetData(),
+                                surface->Stride());
 
-    mSize = IntSize(size.width, size.height);
-    mFormat =
-      (format == gfxImageFormatARGB32) ? FORMAT_B8G8R8A8 :
-                                                   FORMAT_B8G8R8X8;
+    mSurface = surface;
+    return true;
   }
-
 };
 
 TemporaryRef<DeprecatedTextureHost>
@@ -233,7 +220,6 @@ CreateBasicDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
 
 BasicCompositor::BasicCompositor(nsIWidget *aWidget)
   : mWidget(aWidget)
-  , mWidgetSize(-1, -1)
 {
   MOZ_COUNT_CTOR(BasicCompositor);
   sBackend = LAYERS_BASIC;
@@ -466,7 +452,6 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
   Matrix maskTransform;
   if (aEffectChain.mSecondaryEffects[EFFECT_MASK]) {
     EffectMask *effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EFFECT_MASK].get());
-    static_cast<DeprecatedTextureHost*>(effectMask->mMaskTexture)->Lock();
     sourceMask = effectMask->mMaskTexture->AsSourceBasic()->GetSurface();
     MOZ_ASSERT(effectMask->mMaskTransform.Is2D(), "How did we end up with a 3D transform here?!");
     MOZ_ASSERT(!effectMask->mIs3D);
@@ -540,11 +525,6 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     buffer->DrawSurface(temp, transformBounds, transformBounds);
   }
 
-  if (aEffectChain.mSecondaryEffects[EFFECT_MASK]) {
-    EffectMask *effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EFFECT_MASK].get());
-    static_cast<DeprecatedTextureHost*>(effectMask->mMaskTexture)->Unlock();
-  }
-
   buffer->PopClip();
 }
 
@@ -559,7 +539,6 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   nsIntRect intRect;
   mWidget->GetClientBounds(intRect);
   Rect rect = Rect(0, 0, intRect.width, intRect.height);
-  mWidgetSize = intRect.Size();
 
   nsIntRect invalidRect = aInvalidRegion.GetBounds();
   mInvalidRect = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);

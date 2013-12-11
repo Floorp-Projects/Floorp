@@ -27,7 +27,7 @@ fuzzy-if(d2d,1,10000) == feComposite-2.svg feComposite-2-ref.svg
 fuzzy-if(d2d,1,6400) == feFlood-1.svg feFlood-1-ref.svg
 skip-if(d2d) == feFlood-2.svg feFlood-2-ref.svg
 
-fuzzy-if(d2d,1,6400) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
+fuzzy(1,6400) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
 == feGaussianBlur-2.svg feGaussianBlur-2-ref.svg
 # != feGaussianBlur-3.svg feGaussianBlur-3-ref.svg
 == feGaussianBlur-4.svg feGaussianBlur-4-ref.svg
@@ -75,15 +75,15 @@ fails == filter-marked-line-01.svg pass.svg # bug 477704
 == feComponentTransfer-03.svg pass.svg
 == feComponentTransfer-04.svg pass.svg
 == feComposite-arguments-01.svg pass.svg
-skip-if(B2G) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
-== feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg
+skip-if(B2G) fuzzy(1,26732) == feComposite-paint-01.svg feComposite-paint-01-ref.svg
+fuzzy(1,10000) == feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg
 == feConvolveMatrix-order-01.svg feConvolveMatrix-order-01-ref.svg
 
 == feDisplacementMap-alpha-01.svg pass.svg
-== feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
+fuzzy(2,500) == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
 skip-if(B2G) == feDisplacementMap-scale-01.svg pass.svg
 
-skip-if(B2G) fuzzy-if(cocoaWidget&&layersGPUAccelerated,4,93) == feDistantLight-filterRes-01.svg feDistantLight-filterRes-01-ref.svg
+skip-if(B2G) fuzzy-if(cocoaWidget,4,184) == feDistantLight-filterRes-01.svg feDistantLight-filterRes-01-ref.svg
 
 == feMorphology-radius-negative-01.svg pass.svg
 == feMorphology-radius-negative-02.svg pass.svg
@@ -94,7 +94,7 @@ skip-if(B2G) fuzzy-if(cocoaWidget&&layersGPUAccelerated,4,93) == feDistantLight-
 == feTile-large-02.svg feTile-large-02-ref.svg
 == feTile-outside-01.svg feTile-outside-01-ref.svg
 
-== feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
+fuzzy(1,119) == feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
 
-== feSpecularLighting-1.svg feSpecularLighting-1-ref.svg
+skip-if(d2d) == feSpecularLighting-1.svg feSpecularLighting-1-ref.svg
 

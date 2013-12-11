@@ -352,11 +352,8 @@ class SPSInstrumentation
      * corresponding reenter() actually emits instrumentation.
      */
     void leave(jsbytecode *pc, Assembler &masm, Register scratch) {
-        if (enabled() && frame->script && frame->left++ == 0) {
-            JS_ASSERT(frame->script->code <= pc &&
-                      pc < frame->script->code + frame->script->length);
-            masm.spsUpdatePCIdx(profiler_, pc - frame->script->code, scratch);
-        }
+        if (enabled() && frame->script && frame->left++ == 0)
+            masm.spsUpdatePCIdx(profiler_, frame->script->pcToOffset(pc), scratch);
     }
 
     /*

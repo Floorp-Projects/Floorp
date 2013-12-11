@@ -41,6 +41,7 @@ interface Node : EventTarget {
   readonly attribute Node? parentNode;
   [Pure]
   readonly attribute Element? parentElement;
+  [Pure]
   boolean hasChildNodes();
   [SameObject]
   readonly attribute NodeList childNodes;
@@ -71,6 +72,7 @@ interface Node : EventTarget {
   Node cloneNode();
   [Throws]
   Node cloneNode(boolean deep);
+  [Pure]
   boolean isEqualNode(Node? node);
 
   const unsigned short DOCUMENT_POSITION_DISCONNECTED = 0x01;
@@ -79,11 +81,16 @@ interface Node : EventTarget {
   const unsigned short DOCUMENT_POSITION_CONTAINS = 0x08;
   const unsigned short DOCUMENT_POSITION_CONTAINED_BY = 0x10;
   const unsigned short DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20; // historical
+  [Pure]
   unsigned short compareDocumentPosition(Node other);
+  [Pure]
   boolean contains(Node? other);
 
+  [Pure]
   DOMString? lookupPrefix(DOMString? namespace);
+  [Pure]
   DOMString? lookupNamespaceURI(DOMString? prefix);
+  [Pure]
   boolean isDefaultNamespace(DOMString? namespace);
 
   // Mozilla-specific stuff
@@ -97,6 +104,7 @@ interface Node : EventTarget {
   [Constant]
   readonly attribute DOMString? localName;
 
+  [Pure]
   boolean hasAttributes();
   [Throws, Func="IsChromeOrXBL"]
   any setUserData(DOMString key, any data, UserDataHandler? handler);

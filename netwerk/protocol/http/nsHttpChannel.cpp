@@ -412,7 +412,7 @@ nsHttpChannel::SpeculativeConnect()
 
     gHttpHandler->SpeculativeConnect(
         mConnectionInfo, callbacks,
-        mCaps & (NS_HTTP_ALLOW_RSA_FALSESTART | NS_HTTP_ALLOW_RC4_FALSESTART | NS_HTTP_DISALLOW_SPDY));
+        mCaps & (NS_HTTP_ALLOW_RSA_FALSESTART | NS_HTTP_DISALLOW_SPDY));
 }
 
 void
@@ -599,12 +599,6 @@ nsHttpChannel::RetrieveSSLOptions()
         LOG(("nsHttpChannel::RetrieveSSLOptions [this=%p] "
              "falsestart-rsa permission found\n", this));
         mCaps |= NS_HTTP_ALLOW_RSA_FALSESTART;
-    }
-    rv = permMgr->TestPermissionFromPrincipal(principal, "falsestart-rc4", &perm);
-    if (NS_SUCCEEDED(rv) && perm == nsIPermissionManager::ALLOW_ACTION) {
-        LOG(("nsHttpChannel::RetrieveSSLOptions [this=%p] "
-             "falsestart-rc4 permission found\n", this));
-        mCaps |= NS_HTTP_ALLOW_RC4_FALSESTART;
     }
 }
 
@@ -1101,7 +1095,6 @@ nsHttpChannel::ProcessSSLInformation()
     // If this is HTTPS, record any use of RSA so that Key Exchange Algorithm
     // can be whitelisted for TLS False Start in future sessions. We could
     // do the same for DH but its rarity doesn't justify the lookup.
-    // Also do the same for RC4 symmetric ciphers.
 
     if (mCanceled || NS_FAILED(mStatus) || !mSecurityInfo ||
         !IsHTTPS() || mPrivateBrowsing)
@@ -1128,7 +1121,6 @@ nsHttpChannel::ProcessSSLInformation()
         return;
 
     int16_t kea = ssl->GetKEAUsed();
-    int16_t symcipher = ssl->GetSymmetricCipherUsed();
 
     nsIPrincipal *principal = GetPrincipal();
     if (!principal)
@@ -1155,17 +1147,6 @@ nsHttpChannel::ProcessSSLInformation()
              "falsestart-rsa permission granted for this host\n", this));
     } else {
         permMgr->RemoveFromPrincipal(principal, "falsestart-rsa");
-    }
-
-    if (symcipher == ssl_calg_rc4) {
-        permMgr->AddFromPrincipal(principal, "falsestart-rc4",
-                                  nsIPermissionManager::ALLOW_ACTION,
-                                  nsIPermissionManager::EXPIRE_TIME,
-                                  expireTime);
-        LOG(("nsHttpChannel::ProcessSSLInformation [this=%p] "
-             "falsestart-rc4 permission granted for this host\n", this));
-    } else {
-        permMgr->RemoveFromPrincipal(principal, "falsestart-rc4");
     }
 }
 
@@ -4321,6 +4302,8 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsITimedChannel)
     NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
     NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
+    NS_INTERFACE_MAP_ENTRY(nsIDNSListener)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 //-----------------------------------------------------------------------------
@@ -4536,6 +4519,9 @@ nsHttpChannel::BeginConnect()
     // if this somehow fails we can go on without it
     gHttpHandler->AddConnectionHeader(&mRequestHead.Headers(), mCaps);
 
+    if (mLoadFlags & VALIDATE_ALWAYS || BYPASS_LOCAL_CACHE(mLoadFlags))
+        mCaps |= NS_HTTP_REFRESH_DNS;
+
     if (!mConnectionInfo->UsingHttpProxy()) {
         // Start a DNS lookup very early in case the real open is queued the DNS can
         // happen in parallel. Do not do so in the presence of an HTTP proxy as
@@ -4548,8 +4534,10 @@ nsHttpChannel::BeginConnect()
         // be correct, and even when it isn't, the timing still represents _a_
         // valid DNS lookup timing for the site, even if it is not _the_
         // timing we used.
-        mDNSPrefetch = new nsDNSPrefetch(mURI, mTimingEnabled);
-        mDNSPrefetch->PrefetchHigh();
+        LOG(("nsHttpChannel::BeginConnect [this=%p] prefetching%s\n",
+             this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : ""));
+        mDNSPrefetch = new nsDNSPrefetch(mURI, this, mTimingEnabled);
+        mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
     }
 
     // Adjust mCaps according to our request headers:
@@ -4557,10 +4545,6 @@ nsHttpChannel::BeginConnect()
     //    trying to establish a keep-alive connection.
     if (mRequestHead.HasHeaderValue(nsHttp::Connection, "close"))
         mCaps &= ~(NS_HTTP_ALLOW_KEEPALIVE | NS_HTTP_ALLOW_PIPELINING);
-
-    if ((mLoadFlags & VALIDATE_ALWAYS) ||
-        (BYPASS_LOCAL_CACHE(mLoadFlags)))
-        mCaps |= NS_HTTP_REFRESH_DNS;
 
     if (gHttpHandler->CriticalRequestPrioritization()) {
         if (mLoadAsBlocking)
@@ -4668,9 +4652,16 @@ nsHttpChannel::OnProxyAvailable(nsICancelable *request, nsIURI *uri,
 
     if (NS_FAILED(rv)) {
         Cancel(rv);
-        DoNotifyListener();
+        // Calling OnStart/OnStop synchronously here would mean doing it before
+        // returning from AsyncOpen which is a contract violation. Do it async.
+        nsRefPtr<nsRunnableMethod<HttpBaseChannel> > event =
+            NS_NewRunnableMethod(this, &nsHttpChannel::DoNotifyListener);
+        rv = NS_DispatchToCurrentThread(event);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("Failed To Dispatch DoNotifyListener");
+        }
     }
-    return NS_OK;
+    return rv;
 }
 
 //-----------------------------------------------------------------------------
@@ -5937,6 +5928,42 @@ nsHttpChannel::PopRedirectAsyncFunc(nsContinueRedirectionFunc func)
     mRedirectFuncStack.TruncateLength(mRedirectFuncStack.Length() - 1);
 }
 
+//-----------------------------------------------------------------------------
+// nsIDNSListener functions
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::OnLookupComplete(nsICancelable *request,
+                                nsIDNSRecord  *rec,
+                                nsresult       status)
+{
+    MOZ_ASSERT(NS_IsMainThread(), "Expecting DNS callback on main thread.");
+
+    LOG(("nsHttpChannel::OnLookupComplete [this=%p] prefetch complete%s: "
+         "%s status[0x%x]\n",
+         this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : "",
+         NS_SUCCEEDED(status) ? "success" : "failure", status));
+
+    // We no longer need the dns prefetch object. Note: mDNSPrefetch could be
+    // validly null if OnStopRequest has already been called.
+    if (mDNSPrefetch && mDNSPrefetch->TimingsValid()) {
+        mTransactionTimings.domainLookupStart =
+            mDNSPrefetch->StartTimestamp();
+        mTransactionTimings.domainLookupEnd =
+            mDNSPrefetch->EndTimestamp();
+    }
+    mDNSPrefetch = nullptr;
+
+    // Unset DNS cache refresh if it was requested,
+    if (mCaps & NS_HTTP_REFRESH_DNS) {
+        mCaps &= ~NS_HTTP_REFRESH_DNS;
+        if (mTransaction) {
+            mTransaction->SetDNSWasRefreshed();
+        }
+    }
+
+    return NS_OK;
+}
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel internal functions

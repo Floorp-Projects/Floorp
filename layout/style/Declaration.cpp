@@ -8,8 +8,8 @@
  * stylesheet
  */
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
 
 #include "mozilla/css/Declaration.h"
 #include "nsPrintfCString.h"
@@ -848,6 +848,18 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       AppendValueToString(subprops[1], aValue);
       aValue.Append(PRUnichar(' '));
       AppendValueToString(subprops[2], aValue);
+      break;
+    }
+    case eCSSProperty_flex_flow: {
+      // flex-direction, flex-wrap, separated by single space
+      const nsCSSProperty* subprops =
+        nsCSSProps::SubpropertyEntryFor(aProperty);
+      NS_ABORT_IF_FALSE(subprops[2] == eCSSProperty_UNKNOWN,
+                        "must have exactly two subproperties");
+
+      AppendValueToString(subprops[0], aValue);
+      aValue.Append(PRUnichar(' '));
+      AppendValueToString(subprops[1], aValue);
       break;
     }
     case eCSSProperty__moz_transform: {

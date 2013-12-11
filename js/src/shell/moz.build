@@ -6,8 +6,13 @@
 
 PROGRAM = CONFIG['JS_SHELL_NAME']
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'js.cpp',
     'jsheaptools.cpp',
     'jsoptparse.cpp',
 ]
+
+# Building against js_static requires that we declare mfbt sybols "exported"
+# on its behalf.
+for var in ('EXPORT_JS_API', 'IMPL_MFBT'):
+    DEFINES[var] = True

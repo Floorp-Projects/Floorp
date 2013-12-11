@@ -4,6 +4,7 @@ import org.mozilla.gecko.*;
 import android.view.View;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.ImageView;
 import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -68,10 +69,11 @@ public class testAddSearchEngine extends AboutHomeTest {
         mAsserter.dumpLog("Long Clicking at width = " + String.valueOf(width) + " and height = " + String.valueOf(height));
         mSolo.clickLongOnScreen(width,height);
 
-        mAsserter.ok(waitForText(ADD_SEARCHENGINE_OPTION_TEXT), "Waiting for the context menu to be opened", "The context menu was opened");
+        ImageView view = waitForViewWithDescription(ImageView.class, ADD_SEARCHENGINE_OPTION_TEXT);
+        mAsserter.isnot(view, null, "The action mode was opened");
 
         // Add the search engine
-        mSolo.clickOnText(ADD_SEARCHENGINE_OPTION_TEXT);
+        mSolo.clickOnView(view);
         waitForText("Cancel");
         clickOnButton("OK");
         mAsserter.ok(!mSolo.searchText(ADD_SEARCHENGINE_OPTION_TEXT), "Adding the Search Engine", "The add Search Engine pop-up has been closed");

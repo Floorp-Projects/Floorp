@@ -5,40 +5,178 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * This code implements a mark-and-sweep garbage collector. The mark phase is
- * incremental. Most sweeping is done on a background thread. A GC is divided
- * into slices as follows:
+ * This code implements an incremental mark-and-sweep garbage collector, with
+ * most sweeping carried out in the background on a parallel thread.
  *
- * Slice 1: Roots pushed onto the mark stack. The mark stack is processed by
- * popping an element, marking it, and pushing its children.
- *   ... JS code runs ...
- * Slice 2: More mark stack processing.
- *   ... JS code runs ...
- * Slice n-1: More mark stack processing.
- *   ... JS code runs ...
- * Slice n: Mark stack is completely drained. Some sweeping is done.
- *   ... JS code runs, remaining sweeping done on background thread ...
+ * Full vs. zone GC
+ * ----------------
+ *
+ * The collector can collect all zones at once, or a subset. These types of
+ * collection are referred to as a full GC and a zone GC respectively.
+ *
+ * The atoms zone is only collected in a full GC since objects in any zone may
+ * have pointers to atoms, and these are not recorded in the cross compartment
+ * pointer map. Also, the atoms zone is not collected if any thread has an
+ * AutoKeepAtoms instance on the stack, or there are any exclusive threads using
+ * the runtime.
+ *
+ * It is possible for an incremental collection that started out as a full GC to
+ * become a zone GC if new zones are created during the course of the
+ * collection.
+ *
+ * Incremental collection
+ * ----------------------
+ *
+ * For a collection to be carried out incrementally the following conditions
+ * must be met:
+ *  - the collection must be run by calling js::GCSlice() rather than js::GC()
+ *  - the GC mode must have been set to JSGC_MODE_INCREMENTAL with
+ *    JS_SetGCParameter()
+ *  - no thread may have an AutoKeepAtoms instance on the stack
+ *  - all native objects that have their own trace hook must indicate that they
+ *    implement read and write barriers with the JSCLASS_IMPLEMENTS_BARRIERS
+ *    flag
+ *
+ * The last condition is an engine-internal mechanism to ensure that incremental
+ * collection is not carried out without the correct barriers being implemented.
+ * For more information see 'Incremental marking' below.
+ *
+ * If the collection is not incremental, all foreground activity happens inside
+ * a single call to GC() or GCSlice(). However the collection is not complete
+ * until the background sweeping activity has finished.
+ *
+ * An incremental collection proceeds as a series of slices, interleaved with
+ * mutator activity, i.e. running JavaScript code. Slices are limited by a time
+ * budget. The slice finishes as soon as possible after the requested time has
+ * passed.
+ *
+ * Collector states
+ * ----------------
+ *
+ * The collector proceeds through the following states, the current state being
+ * held in JSRuntime::gcIncrementalState:
+ *
+ *  - MARK_ROOTS - marks the stack and other roots
+ *  - MARK       - incrementally marks reachable things
+ *  - SWEEP      - sweeps zones in groups and continues marking unswept zones
+ *
+ * The MARK_ROOTS activity always takes place in the first slice. The next two
+ * states can take place over one or more slices.
+ *
+ * In other words an incremental collection proceeds like this:
+ *
+ * Slice 1:   MARK_ROOTS: Roots pushed onto the mark stack.
+ *            MARK:       The mark stack is processed by popping an element,
+ *                        marking it, and pushing its children.
+ *
+ *          ... JS code runs ...
+ *
+ * Slice 2:   MARK:       More mark stack processing.
+ *
+ *          ... JS code runs ...
+ *
+ * Slice n-1: MARK:       More mark stack processing.
+ *
+ *          ... JS code runs ...
+ *
+ * Slice n:   MARK:       Mark stack is completely drained.
+ *            SWEEP:      Select first group of zones to sweep and sweep them.
+ *
+ *          ... JS code runs ...
+ *
+ * Slice n+1: SWEEP:      Mark objects in unswept zones that were newly
+ *                        identified as alive (see below). Then sweep more zone
+ *                        groups.
+ *
+ *          ... JS code runs ...
+ *
+ * Slice n+2: SWEEP:      Mark objects in unswept zones that were newly
+ *                        identified as alive. Then sweep more zone groups.
+ *
+ *          ... JS code runs ...
+ *
+ * Slice m:   SWEEP:      Sweeping is finished, and background sweeping
+ *                        started on the helper thread.
+ *
+ *          ... JS code runs, remaining sweeping done on background thread ...
  *
  * When background sweeping finishes the GC is complete.
  *
- * Incremental GC requires close collaboration with the mutator (i.e., JS code):
+ * Incremental marking
+ * -------------------
  *
- * 1. During an incremental GC, if a memory location (except a root) is written
- * to, then the value it previously held must be marked. Write barriers ensure
- * this.
- * 2. Any object that is allocated during incremental GC must start out marked.
- * 3. Roots are special memory locations that don't need write
- * barriers. However, they must be marked in the first slice. Roots are things
- * like the C stack and the VM stack, since it would be too expensive to put
- * barriers on them.
+ * Incremental collection requires close collaboration with the mutator (i.e.,
+ * JS code) to guarantee correctness.
+ *
+ *  - During an incremental GC, if a memory location (except a root) is written
+ *    to, then the value it previously held must be marked. Write barriers
+ *    ensure this.
+ *
+ *  - Any object that is allocated during incremental GC must start out marked.
+ *
+ *  - Roots are marked in the first slice and hence don't need write barriers.
+ *    Roots are things like the C stack and the VM stack.
+ *
+ * The problem that write barriers solve is that between slices the mutator can
+ * change the object graph. We must ensure that it cannot do this in such a way
+ * that makes us fail to mark a reachable object (marking an unreachable object
+ * is tolerable).
+ *
+ * We use a snapshot-at-the-beginning algorithm to do this. This means that we
+ * promise to mark at least everything that is reachable at the beginning of
+ * collection. To implement it we mark the old contents of every non-root memory
+ * location written to by the mutator while the collection is in progress, using
+ * write barriers. This is described in gc/Barrier.h.
+ *
+ * Incremental sweeping
+ * --------------------
+ *
+ * Sweeping is difficult to do incrementally because object finalizers must be
+ * run at the start of sweeping, before any mutator code runs. The reason is
+ * that some objects use their finalizers to remove themselves from caches. If
+ * mutator code was allowed to run after the start of sweeping, it could observe
+ * the state of the cache and create a new reference to an object that was just
+ * about to be destroyed.
+ *
+ * Sweeping all finalizable objects in one go would introduce long pauses, so
+ * instead sweeping broken up into groups of zones. Zones which are not yet
+ * being swept are still marked, so the issue above does not apply.
+ *
+ * The order of sweeping is restricted by cross compartment pointers - for
+ * example say that object |a| from zone A points to object |b| in zone B and
+ * neither object was marked when we transitioned to the SWEEP phase. Imagine we
+ * sweep B first and then return to the mutator. It's possible that the mutator
+ * could cause |a| to become alive through a read barrier (perhaps it was a
+ * shape that was accessed via a shape table). Then we would need to mark |b|,
+ * which |a| points to, but |b| has already been swept.
+ *
+ * So if there is such a pointer then marking of zone B must not finish before
+ * marking of zone A.  Pointers which form a cycle between zones therefore
+ * restrict those zones to being swept at the same time, and these are found
+ * using Tarjan's algorithm for finding the strongly connected components of a
+ * graph.
+ *
+ * GC things without finalizers, and things with finalizers that are able to run
+ * in the background, are swept on the background thread. This accounts for most
+ * of the sweeping work.
+ *
+ * Reset
+ * -----
+ *
+ * During incremental collection it is possible, although unlikely, for
+ * conditions to change such that incremental collection is no longer safe. In
+ * this case, the collection is 'reset' by ResetIncrementalGC(). If we are in
+ * the mark state, this just stops marking, but if we have started sweeping
+ * already, we continue until we have swept the current zone group. Following a
+ * reset, a new non-incremental collection is started.
  */
 
 #include "jsgcinlines.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
-#include "mozilla/Util.h"
 
 #include <string.h>     /* for memset used when DEBUG */
 #ifndef XP_WIN
@@ -71,6 +209,7 @@
 # include "jit/BaselineJIT.h"
 #endif
 #include "jit/IonCode.h"
+#include "js/SliceBudget.h"
 #include "vm/Debugger.h"
 #include "vm/ForkJoin.h"
 #include "vm/ProxyObject.h"
@@ -1530,7 +1669,7 @@ ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
                  cx->asJSContext()->runtime()->gcIncrementalState != NO_INCREMENTAL &&
                  zone->gcBytes > zone->gcTriggerBytes;
 
-#ifdef JS_THREADSAFE
+#ifdef JS_WORKER_THREADS
     JS_ASSERT_IF(cx->isJSContext() && allowGC,
                  !cx->asJSContext()->runtime()->currentThreadHasExclusiveAccess());
 #endif
@@ -1562,14 +1701,19 @@ ArenaLists::refillFreeList(ThreadSafeContext *cx, AllocKind thingKind)
         } else {
 #ifdef JS_WORKER_THREADS
             /*
-             * If we're off the main thread, we try to allocate once and return
-             * whatever value we get. First, though, we need to ensure the main
-             * thread is not in a GC session.
+             * If we're off the main thread, we try to allocate once and
+             * return whatever value we get. If we aren't in a ForkJoin
+             * session (i.e. we are in a worker thread async with the main
+             * thread), we need to first ensure the main thread is not in a GC
+             * session.
              */
+            mozilla::Maybe<AutoLockWorkerThreadState> lock;
             JSRuntime *rt = zone->runtimeFromAnyThread();
-            AutoLockWorkerThreadState lock(*rt->workerThreadState);
-            while (rt->isHeapBusy())
-                rt->workerThreadState->wait(WorkerThreadState::PRODUCER);
+            if (rt->exclusiveThreadsPresent()) {
+                lock.construct<WorkerThreadState &>(*rt->workerThreadState);
+                while (rt->isHeapBusy())
+                    rt->workerThreadState->wait(WorkerThreadState::PRODUCER);
+            }
 
             void *thing = cx->allocator()->arenas.allocateFromArenaInline(zone, thingKind);
             if (thing)
@@ -1670,7 +1814,7 @@ GCMarker::GCMarker(JSRuntime *rt)
     started(false),
     unmarkedArenaStackTop(nullptr),
     markLaterArenas(0),
-    grayFailed(false)
+    grayBufferState(GRAY_BUFFER_UNUSED)
 {
     InitTracer(this, rt, nullptr);
 }
@@ -1713,6 +1857,7 @@ GCMarker::stop()
     stack.reset();
 
     resetBufferedGrayRoots();
+    grayBufferState = GRAY_BUFFER_UNUSED;
 }
 
 void
@@ -1841,13 +1986,14 @@ GCMarker::checkZone(void *p)
 bool
 GCMarker::hasBufferedGrayRoots() const
 {
-    return !grayFailed;
+    return grayBufferState == GRAY_BUFFER_OK;
 }
 
 void
 GCMarker::startBufferingGrayRoots()
 {
-    JS_ASSERT(!grayFailed);
+    JS_ASSERT(grayBufferState == GRAY_BUFFER_UNUSED);
+    grayBufferState = GRAY_BUFFER_OK;
     for (GCZonesIter zone(runtime); !zone.done(); zone.next())
         JS_ASSERT(zone->gcGrayRoots.empty());
 
@@ -1862,6 +2008,8 @@ GCMarker::endBufferingGrayRoots()
     JS_ASSERT(callback == GrayCallback);
     callback = nullptr;
     JS_ASSERT(IS_GC_MARKING_TRACER(this));
+    JS_ASSERT(grayBufferState == GRAY_BUFFER_OK ||
+              grayBufferState == GRAY_BUFFER_FAILED);
 }
 
 void
@@ -1869,13 +2017,12 @@ GCMarker::resetBufferedGrayRoots()
 {
     for (GCZonesIter zone(runtime); !zone.done(); zone.next())
         zone->gcGrayRoots.clearAndFree();
-    grayFailed = false;
 }
 
 void
 GCMarker::markBufferedGrayRoots(JS::Zone *zone)
 {
-    JS_ASSERT(!grayFailed);
+    JS_ASSERT(grayBufferState == GRAY_BUFFER_OK);
     JS_ASSERT(zone->isGCMarkingGray());
 
     for (GrayRoot *elem = zone->gcGrayRoots.begin(); elem != zone->gcGrayRoots.end(); elem++) {
@@ -1896,7 +2043,7 @@ GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
 {
     JS_ASSERT(started);
 
-    if (grayFailed)
+    if (grayBufferState == GRAY_BUFFER_FAILED)
         return;
 
     GrayRoot root(thing, kind);
@@ -1910,8 +2057,8 @@ GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
     if (zone->isCollecting()) {
         zone->maybeAlive = true;
         if (!zone->gcGrayRoots.append(root)) {
-            grayFailed = true;
             resetBufferedGrayRoots();
+            grayBufferState = GRAY_BUFFER_FAILED;
         }
     }
 }
@@ -1919,6 +2066,8 @@ GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
 void
 GCMarker::GrayCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
+    JS_ASSERT(thingp);
+    JS_ASSERT(*thingp);
     GCMarker *gcmarker = static_cast<GCMarker *>(trc);
     gcmarker->appendGrayRoot(*thingp, kind);
 }
@@ -2686,6 +2835,7 @@ PurgeRuntime(JSRuntime *rt)
     rt->interpreterStack().purge(rt);
 
     rt->gsnCache.purge();
+    rt->scopeCoordinateNameCache.purge();
     rt->newObjectCache.purge();
     rt->nativeIterCache.purge();
     rt->sourceDataCache.purge();
@@ -2731,7 +2881,7 @@ InCrossCompartmentMap(JSObject *src, Cell *dst, JSGCTraceKind dstKind)
     if (dstKind == JSTRACE_OBJECT) {
         Value key = ObjectValue(*static_cast<JSObject *>(dst));
         if (WrapperMap::Ptr p = srccomp->lookupWrapper(key)) {
-            if (*p->value.unsafeGet() == ObjectValue(*src))
+            if (*p->value().unsafeGet() == ObjectValue(*src))
                 return true;
         }
     }
@@ -2741,7 +2891,7 @@ InCrossCompartmentMap(JSObject *src, Cell *dst, JSGCTraceKind dstKind)
      * know the right hashtable key, so we have to iterate.
      */
     for (JSCompartment::WrapperEnum e(srccomp); !e.empty(); e.popFront()) {
-        if (e.front().key.wrapped == dst && ToMarkable(e.front().value) == src)
+        if (e.front().key().wrapped == dst && ToMarkable(e.front().value()) == src)
             return true;
     }
 
@@ -2938,7 +3088,8 @@ BeginMarkPhase(JSRuntime *rt)
         UnmarkScriptData(rt);
 
     MarkRuntime(gcmarker);
-    BufferGrayRoots(gcmarker);
+    if (rt->gcIsIncremental)
+        BufferGrayRoots(gcmarker);
 
     /*
      * This code ensures that if a zone is "dead", then it will be
@@ -2973,7 +3124,7 @@ BeginMarkPhase(JSRuntime *rt)
     /* Set the maybeAlive flag based on cross-compartment edges. */
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
-            Cell *dst = e.front().key.wrapped;
+            Cell *dst = e.front().key().wrapped;
             dst->tenuredZone()->maybeAlive = true;
         }
     }
@@ -3101,7 +3252,7 @@ js::gc::MarkingValidator::~MarkingValidator()
         return;
 
     for (BitmapMap::Range r(map.all()); !r.empty(); r.popFront())
-        js_delete(r.front().value);
+        js_delete(r.front().value());
 }
 
 void
@@ -3207,7 +3358,7 @@ js::gc::MarkingValidator::nonIncrementalMark()
     for (GCChunkSet::Range r(runtime->gcChunkSet.all()); !r.empty(); r.popFront()) {
         Chunk *chunk = r.front();
         ChunkBitmap *bitmap = &chunk->bitmap;
-        ChunkBitmap *entry = map.lookup(chunk)->value;
+        ChunkBitmap *entry = map.lookup(chunk)->value();
         Swap(*entry, *bitmap);
     }
 
@@ -3239,7 +3390,7 @@ js::gc::MarkingValidator::validate()
         if (!ptr)
             continue;  /* Allocated after we did the non-incremental mark. */
 
-        ChunkBitmap *bitmap = ptr->value;
+        ChunkBitmap *bitmap = ptr->value();
         ChunkBitmap *incBitmap = &chunk->bitmap;
 
         for (size_t i = 0; i < ArenasPerChunk; i++) {
@@ -3331,7 +3482,7 @@ DropStringWrappers(JSRuntime *rt)
      */
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
-            if (e.front().key.kind == CrossCompartmentKey::StringWrapper)
+            if (e.front().key().kind == CrossCompartmentKey::StringWrapper)
                 e.removeFront();
         }
     }
@@ -3356,9 +3507,9 @@ void
 JSCompartment::findOutgoingEdges(ComponentFinder<JS::Zone> &finder)
 {
     for (js::WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        CrossCompartmentKey::Kind kind = e.front().key.kind;
+        CrossCompartmentKey::Kind kind = e.front().key().kind;
         JS_ASSERT(kind != CrossCompartmentKey::StringWrapper);
-        Cell *other = e.front().key.wrapped;
+        Cell *other = e.front().key().wrapped;
         if (kind == CrossCompartmentKey::ObjectWrapper) {
             /*
              * Add edge to wrapped object compartment if wrapped object is not
@@ -3418,6 +3569,7 @@ FindZoneGroups(JSRuntime *rt)
     rt->gcZoneGroups = finder.getResultsList();
     rt->gcCurrentZoneGroup = rt->gcZoneGroups;
     rt->gcZoneGroupIndex = 0;
+    JS_ASSERT_IF(!rt->gcIsIncremental, !rt->gcCurrentZoneGroup->nextGroup());
 }
 
 static void
@@ -3881,8 +4033,8 @@ BeginSweepPhase(JSRuntime *rt, bool lastGC)
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         JS_ASSERT(!c->gcIncomingGrayPointers);
         for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
-            if (e.front().key.kind != CrossCompartmentKey::StringWrapper)
-                AssertNotOnGrayList(&e.front().value.get().toObject());
+            if (e.front().key().kind != CrossCompartmentKey::StringWrapper)
+                AssertNotOnGrayList(&e.front().value().get().toObject());
         }
     }
 #endif
@@ -4104,8 +4256,8 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
         JS_ASSERT(!c->gcLiveArrayBuffers);
 
         for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
-            if (e.front().key.kind != CrossCompartmentKey::StringWrapper)
-                AssertNotOnGrayList(&e.front().value.get().toObject());
+            if (e.front().key().kind != CrossCompartmentKey::StringWrapper)
+                AssertNotOnGrayList(&e.front().value().get().toObject());
         }
     }
 #endif
@@ -4460,15 +4612,17 @@ IncrementalCollectSlice(JSRuntime *rt,
 
         rt->gcIncrementalState = MARK;
 
-        if (zeal == ZealIncrementalRootsThenFinish)
+        if (rt->gcIsIncremental && zeal == ZealIncrementalRootsThenFinish)
             break;
 
         /* fall through */
 
       case MARK: {
         /* If we needed delayed marking for gray roots, then collect until done. */
-        if (!rt->gcMarker.hasBufferedGrayRoots())
+        if (!rt->gcMarker.hasBufferedGrayRoots()) {
             sliceBudget.reset();
+            rt->gcIsIncremental = false;
+        }
 
         bool finished = DrainMarkStack(rt, sliceBudget, gcstats::PHASE_MARK);
         if (!finished)
@@ -4476,8 +4630,8 @@ IncrementalCollectSlice(JSRuntime *rt,
 
         JS_ASSERT(rt->gcMarker.isDrained());
 
-        if (!rt->gcLastMarkSlice &&
-            ((initialState == MARK && budget != SliceBudget::Unlimited) ||
+        if (!rt->gcLastMarkSlice && rt->gcIsIncremental &&
+            ((initialState == MARK && zeal != ZealIncrementalRootsThenFinish) ||
              zeal == ZealIncrementalMarkAllThenFinish))
         {
             /*
@@ -4503,7 +4657,7 @@ IncrementalCollectSlice(JSRuntime *rt,
          * Always yield here when running in incremental multi-slice zeal
          * mode, so RunDebugGC can reset the slice buget.
          */
-        if (zeal == ZealIncrementalMultipleSlices)
+        if (rt->gcIsIncremental && zeal == ZealIncrementalMultipleSlices)
             break;
 
         /* fall through */
@@ -4792,6 +4946,12 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
          */
         repeat = (rt->gcPoke && rt->gcShouldCleanUpEverything) || wasReset;
     } while (repeat);
+
+    if (rt->gcIncrementalState == NO_INCREMENTAL) {
+#ifdef JS_WORKER_THREADS
+        EnqueuePendingParseTasksAfterGC(rt);
+#endif
+    }
 }
 
 void
@@ -4872,7 +5032,27 @@ js::MinorGC(JSRuntime *rt, JS::gcreason::Reason reason)
                         TraceLogging::MINOR_GC_START,
                         TraceLogging::MINOR_GC_STOP);
 #endif
-    rt->gcNursery.collect(rt, reason);
+    rt->gcNursery.collect(rt, reason, nullptr);
+#endif
+}
+
+void
+js::MinorGC(JSContext *cx, JS::gcreason::Reason reason)
+{
+    // Alternate to the runtime-taking form above which allows marking type
+    // objects as needing pretenuring.
+#ifdef JSGC_GENERATIONAL
+#if JS_TRACE_LOGGING
+    AutoTraceLog logger(TraceLogging::defaultLogger(),
+                        TraceLogging::MINOR_GC_START,
+                        TraceLogging::MINOR_GC_STOP);
+#endif
+    Nursery::TypeObjectList pretenureTypes;
+    cx->runtime()->gcNursery.collect(cx->runtime(), reason, &pretenureTypes);
+    for (size_t i = 0; i < pretenureTypes.length(); i++) {
+        if (pretenureTypes[i]->canPreTenure())
+            pretenureTypes[i]->setShouldPreTenure(cx);
+    }
 #endif
 }
 
@@ -5193,7 +5373,7 @@ js::StopPCCountProfiling(JSContext *cx)
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         for (CellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
-            if (script->hasScriptCounts && script->types) {
+            if (script->hasScriptCounts() && script->types) {
                 ScriptAndCounts sac;
                 sac.script = script;
                 sac.scriptCounts.set(script->releaseScriptCounts());
@@ -5232,6 +5412,23 @@ js::PurgeJITCaches(Zone *zone)
 #endif
 }
 
+void
+ArenaLists::normalizeBackgroundFinalizeState(AllocKind thingKind)
+{
+    volatile uintptr_t *bfs = &backgroundFinalizeState[thingKind];
+    switch (*bfs) {
+      case BFS_DONE:
+        break;
+      case BFS_JUST_FINISHED:
+        // No allocations between end of last sweep and now.
+        // Transfering over arenas is a kind of allocation.
+        *bfs = BFS_DONE;
+        break;
+      default:
+        JS_ASSERT(!"Background finalization in progress, but it should not be.");
+        break;
+    }
+}
 
 void
 ArenaLists::adoptArenas(JSRuntime *rt, ArenaLists *fromArenaLists)
@@ -5248,21 +5445,9 @@ ArenaLists::adoptArenas(JSRuntime *rt, ArenaLists *fromArenaLists)
         // When we enter a parallel section, we join the background
         // thread, and we do not run GC while in the parallel section,
         // so no finalizer should be active!
-        volatile uintptr_t *bfs = &backgroundFinalizeState[thingKind];
-        switch (*bfs) {
-          case BFS_DONE:
-            break;
-          case BFS_JUST_FINISHED:
-            // No allocations between end of last sweep and now.
-            // Transfering over arenas is a kind of allocation.
-            *bfs = BFS_DONE;
-            break;
-          default:
-            JS_ASSERT(!"Background finalization in progress, but it should not be.");
-            break;
-        }
-#endif /* JS_THREADSAFE */
-
+        normalizeBackgroundFinalizeState(AllocKind(thingKind));
+        fromArenaLists->normalizeBackgroundFinalizeState(AllocKind(thingKind));
+#endif
         ArenaList *fromList = &fromArenaLists->arenaLists[thingKind];
         ArenaList *toList = &arenaLists[thingKind];
         while (fromList->head != nullptr) {

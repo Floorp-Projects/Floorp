@@ -53,10 +53,10 @@ let emulator = (function() {
 (function() {
   function checkInitialState() {
     log("Verify initial state.");
-    ok(telephony, 'telephony');
-    is(telephony.active, null, 'telephony.active');
-    ok(telephony.calls, 'telephony.calls');
-    is(telephony.calls.length, 0, 'telephony.calls.length');
+    ok(telephony, "telephony");
+    is(telephony.active, null, "telephony.active");
+    ok(telephony.calls, "telephony.calls");
+    is(telephony.calls.length, 0, "telephony.calls.length");
   }
 
   /**
@@ -104,7 +104,7 @@ function _startTest(permissions, test) {
   }
 
   function setUp() {
-    log('== Test SetUp ==');
+    log("== Test SetUp ==");
     permissionSetUp();
     // Make sure that we get the telephony after adding permission.
     telephony = window.navigator.mozTelephony;
@@ -117,7 +117,7 @@ function _startTest(permissions, test) {
     let originalFinish = finish;
 
     function tearDown() {
-      log('== Test TearDown ==');
+      log("== Test TearDown ==");
       emulator.waitFinish()
         .then(permissionTearDown)
         .then(function() {
@@ -131,11 +131,11 @@ function _startTest(permissions, test) {
   function mainTest() {
     setUp()
       .then(function onSuccess() {
-        log('== Test Start ==');
+        log("== Test Start ==");
         test();
       }, function onError(error) {
         SpecialPowers.Cu.reportError(error);
-        ok(false, 'SetUp error');
+        ok(false, "SetUp error");
       });
   }
 
@@ -143,9 +143,26 @@ function _startTest(permissions, test) {
 }
 
 function startTest(test) {
-  _startTest(['telephony'], test);
+  _startTest(["telephony"], test);
 }
 
 function startTestWithPermissions(permissions, test) {
-  _startTest(permissions.concat('telephony'), test);
+  _startTest(permissions.concat("telephony"), test);
+}
+
+function startDSDSTest(test) {
+  let numRIL;
+  try {
+    numRIL = SpecialPowers.getIntPref("ril.numRadioInterfaces");
+  } catch (ex) {
+    numRIL = 1;  // Pref not set.
+  }
+
+  if (numRIL > 1) {
+    startTest(test);
+  } else {
+    log("Not a DSDS environment. Test is skipped.");
+    ok(true);  // We should run at least one test.
+    finish();
+  }
 }

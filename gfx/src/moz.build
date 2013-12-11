@@ -12,6 +12,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'gfx'
 
 EXPORTS += [
+    'FilterSupport.h',
     'gfxCore.h',
     'gfxCrashReporterUtils.h',
     'nsBoundingMetrics.h',
@@ -44,10 +45,10 @@ if CONFIG['MOZ_X11']:
         'X11Util.cpp',
     ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
+    'FilterSupport.cpp',
     'gfxCrashReporterUtils.cpp',
     'nsColor.cpp',
-    'nsDeviceContext.cpp',
     'nsFont.cpp',
     'nsFontMetrics.cpp',
     'nsRect.cpp',
@@ -57,6 +58,11 @@ SOURCES += [
     'nsThebesFontEnumerator.cpp',
     'nsThebesGfxFactory.cpp',
     'nsTransform2D.cpp',
+]
+
+# nsDeviceContext.cpp cannot be built in unified mode because it pulls in OS X system headers.
+SOURCES += [
+    'nsDeviceContext.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

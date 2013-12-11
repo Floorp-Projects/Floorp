@@ -310,7 +310,7 @@ CodeGeneratorX86::visitCompareB(LCompareB *lir)
 bool
 CodeGeneratorX86::visitCompareBAndBranch(LCompareBAndBranch *lir)
 {
-    MCompare *mir = lir->mir();
+    MCompare *mir = lir->cmpMir();
     const ValueOperand lhs = ToValue(lir, LCompareBAndBranch::Lhs);
     const LAllocation *rhs = lir->rhs();
 
@@ -358,7 +358,7 @@ CodeGeneratorX86::visitCompareV(LCompareV *lir)
 bool
 CodeGeneratorX86::visitCompareVAndBranch(LCompareVAndBranch *lir)
 {
-    MCompare *mir = lir->mir();
+    MCompare *mir = lir->cmpMir();
     Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
     const ValueOperand lhs = ToValue(lir, LCompareVAndBranch::LhsInput);
     const ValueOperand rhs = ToValue(lir, LCompareVAndBranch::RhsInput);
@@ -464,7 +464,7 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic 
 
     OutOfLineLoadTypedArrayOutOfBounds *ool = nullptr;
     if (!mir->fallible()) {
-        ool = new OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out));
+        ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out));
         if (!addOutOfLineCode(ool))
             return false;
     }
@@ -516,7 +516,7 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     if (mir->skipBoundsCheck())
         return loadViewTypeElement(vt, srcAddr, out);
 
-    OutOfLineLoadTypedArrayOutOfBounds *ool = new OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out));
+    OutOfLineLoadTypedArrayOutOfBounds *ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out));
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -823,7 +823,7 @@ CodeGeneratorX86::visitTruncateDToInt32(LTruncateDToInt32 *ins)
     FloatRegister input = ToFloatRegister(ins->input());
     Register output = ToRegister(ins->output());
 
-    OutOfLineTruncate *ool = new OutOfLineTruncate(ins);
+    OutOfLineTruncate *ool = new(alloc()) OutOfLineTruncate(ins);
     if (!addOutOfLineCode(ool))
         return false;
 
@@ -838,7 +838,7 @@ CodeGeneratorX86::visitTruncateFToInt32(LTruncateFToInt32 *ins)
     FloatRegister input = ToFloatRegister(ins->input());
     Register output = ToRegister(ins->output());
 
-    OutOfLineTruncateFloat32 *ool = new OutOfLineTruncateFloat32(ins);
+    OutOfLineTruncateFloat32 *ool = new(alloc()) OutOfLineTruncateFloat32(ins);
     if (!addOutOfLineCode(ool))
         return false;
 

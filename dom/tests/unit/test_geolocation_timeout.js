@@ -59,7 +59,7 @@ function run_test()
     prefs.setBoolPref("geo.wifi.scan", false);
     prefs.setCharPref("geo.wifi.uri", "http://localhost:" +
                       httpserver.identity.primaryPort + "/geo");
-    prefs.setBoolPref("geo.testing.ignore_ipc_principal", true);
+    prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
   }
 
   geolocation = Cc["@mozilla.org/geolocation;1"].getService(Ci.nsISupports);

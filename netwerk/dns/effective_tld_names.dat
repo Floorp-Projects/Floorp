@@ -400,7 +400,7 @@ mil.bo
 tv.bo
 
 // br : http://registro.br/dominio/dpn.html
-// Updated by registry <fneves@registro.br> 2011-03-01
+// Submitted by registry <fneves@registro.br> 2011-03-01
 br
 adm.br
 adv.br
@@ -885,13 +885,12 @@ pvt.ge
 // gf : http://en.wikipedia.org/wiki/.gf
 gf
 
-// gg : http://www.channelisles.net/applic/avextn.shtml
+// gg : http://www.channelisles.net/register-domains/
+// Confirmed by registry <nigel@channelisles.net> 2013-11-28
 gg
 co.gg
-org.gg
 net.gg
-sch.gg
-gov.gg
+org.gg
 
 // gh : http://en.wikipedia.org/wiki/.gh
 // see also: http://www.nic.gh/reg_now.php
@@ -1462,13 +1461,12 @@ vi.it
 viterbo.it
 vt.it
 
-// je : http://www.channelisles.net/applic/avextn.shtml
+// je : http://www.channelisles.net/register-domains/
+// Confirmed by registry <nigel@channelisles.net> 2013-11-28
 je
 co.je
-org.je
 net.je
-sch.je
-gov.je
+org.je
 
 // jm : http://www.com.jm/register.html
 *.jm
@@ -1489,7 +1487,7 @@ jobs
 
 // jp : http://en.wikipedia.org/wiki/.jp
 // http://jprs.co.jp/en/jpdomain.html
-// Updated by registry <info@jprs.jp> 2012-05-28
+// Submitted by registry <info@jprs.jp> 2012-05-28
 jp
 // jp organizational type names
 ac.jp
@@ -3563,8 +3561,13 @@ gov.mr
 // ms : http://en.wikipedia.org/wiki/.ms
 ms
 
-// mt : https://www.nic.org.mt/dotmt/
-*.mt
+// mt : https://www.nic.org.mt/go/policy
+// Submitted by registry <help@nic.org.mt> 2013-11-19
+mt
+com.mt
+edu.mt
+net.mt
+org.mt
 
 // mu : http://en.wikipedia.org/wiki/.mu
 mu
@@ -6133,7 +6136,7 @@ k12.de.us
 k12.fl.us
 k12.ga.us
 k12.gu.us
-// k12.hi.us  Hawaii has a state-wide DOE login: bug 614565
+// k12.hi.us  Bug 614565 - Hawaii has a state-wide DOE login
 k12.ia.us
 k12.id.us
 k12.il.us
@@ -6164,7 +6167,7 @@ k12.pa.us
 k12.pr.us
 k12.ri.us
 k12.sc.us
-// k12.sd.us  Bug 934131 - South Dakota has a centralized hosting
+// k12.sd.us  Bug 934131 - Removed at request of James Booze <James.Booze@k12.sd.us>
 k12.tn.us
 k12.tx.us
 k12.ut.us
@@ -6285,7 +6288,7 @@ lib.vt.us
 lib.va.us
 lib.wa.us
 lib.wi.us
-lib.wv.us
+// lib.wv.us  Bug 941670 - Removed at request of Larry W Arnold <arnold@wvlc.lib.wv.us>
 lib.wy.us
 
 // k12.ma.us contains school districts in Massachusetts. The 4LDs are
@@ -6952,11 +6955,11 @@ moe
 // ===BEGIN PRIVATE DOMAINS===
 
 // Amazon CloudFront : https://aws.amazon.com/cloudfront/
-// Requested by Donavan Miller <donavanm@amazon.com> 2013-03-22
+// Submitted by Donavan Miller <donavanm@amazon.com> 2013-03-22
 cloudfront.net
 
 // Amazon Elastic Compute Cloud: https://aws.amazon.com/ec2/
-// Requested by Osman Surkatty <osmans@amazon.com> 2013-04-02
+// Submitted by Osman Surkatty <osmans@amazon.com> 2013-04-02
 compute.amazonaws.com
 us-east-1.amazonaws.com
 compute-1.amazonaws.com
@@ -6972,15 +6975,15 @@ us-west-1.compute.amazonaws.com
 us-west-2.compute.amazonaws.com
 
 // Amazon Elastic Beanstalk : https://aws.amazon.com/elasticbeanstalk/
-// Requested by Adam Stein <astein@amazon.com> 2013-04-02
+// Submitted by Adam Stein <astein@amazon.com> 2013-04-02
 elasticbeanstalk.com
 
 // Amazon Elastic Load Balancing : https://aws.amazon.com/elasticloadbalancing/
-// Requested by Scott Vidmar <svidmar@amazon.com> 2013-03-27
+// Submitted by Scott Vidmar <svidmar@amazon.com> 2013-03-27
 elb.amazonaws.com
 
 // Amazon S3 : https://aws.amazon.com/s3/
-// Requested by Courtney Eckhardt <coec@amazon.com> 2013-03-22
+// Submitted by Courtney Eckhardt <coec@amazon.com> 2013-03-22
 s3.amazonaws.com
 s3-us-west-2.amazonaws.com
 s3-us-west-1.amazonaws.com
@@ -7002,11 +7005,11 @@ s3-website-sa-east-1.amazonaws.com
 s3-website-us-gov-west-1.amazonaws.com
 
 // BetaInABox
-// Requested by adrian@betainabox.com 2012-09-13
+// Submitted by adrian@betainabox.com 2012-09-13
 betainabox.com
 
 // CentralNic : http://www.centralnic.com/names/domains
-// Requested by registry <gavin.brown@centralnic.com> 2012-09-27
+// Submitted by registry <gavin.brown@centralnic.com> 2012-09-27
 ae.org
 ar.com
 br.com
@@ -7039,7 +7042,7 @@ za.com
 c.la
 
 // cloudControl : https://www.cloudcontrol.com/
-// Requested by Tobias Wilken <tw@cloudcontrol.com> 2013-07-23
+// Submitted by Tobias Wilken <tw@cloudcontrol.com> 2013-07-23
 cloudcontrolled.com
 cloudcontrolapp.com
 
@@ -7051,11 +7054,11 @@ co.nl
 co.no
 
 // Cupcake : https://cupcake.io/
-// Requested by Jonathan Rudenberg <jonathan@cupcake.io> 2013-10-08
+// Submitted by Jonathan Rudenberg <jonathan@cupcake.io> 2013-10-08
 cupcake.is
 
 // DreamHost : http://www.dreamhost.com/
-// Requested by Andrew Farmer <andrew.farmer@dreamhost.com> 2012-10-02
+// Submitted by Andrew Farmer <andrew.farmer@dreamhost.com> 2012-10-02
 dreamhosters.com
 
 // DynDNS.com : http://www.dyndns.com/services/dns/dyndns/
@@ -7340,7 +7343,7 @@ worse-than.tv
 writesthisblog.com
 
 // Fastly Inc. http://www.fastly.com/
-// Requested by Vladimir Vuksan <vladimir@fastly.com> 2013-05-31
+// Submitted by Vladimir Vuksan <vladimir@fastly.com> 2013-05-31
 a.ssl.fastly.net
 b.ssl.fastly.net
 global.ssl.fastly.net
@@ -7348,15 +7351,15 @@ a.prod.fastly.net
 global.prod.fastly.net
 
 // GitHub, Inc.
-// Requested by Ben Toews <btoews@github.com> 2013-04-18
+// Submitted by Ben Toews <btoews@github.com> 2013-04-18
 github.io
 
 // GlobeHosting, Inc.
-// Requested by Zoltan Egresi <egresi@globehosting.com> 2013-07-12
+// Submitted by Zoltan Egresi <egresi@globehosting.com> 2013-07-12
 ro.com
 
 // Google, Inc.
-// Requested by Eduardo Vela <evn@google.com> 2012-10-24
+// Submitted by Eduardo Vela <evn@google.com> 2012-10-24
 appspot.com
 blogspot.be
 blogspot.bj
@@ -7403,12 +7406,12 @@ googleapis.com
 googlecode.com
 
 // Heroku : https://www.heroku.com/
-// Requested by Tom Maher <tmaher@heroku.com> 2013-05-02
+// Submitted by Tom Maher <tmaher@heroku.com> 2013-05-02
 herokuapp.com
 herokussl.com
 
 // iki.fi
-// Requested by Hannu Aronsson <haa@iki.fi> 2009-11-05
+// Submitted by Hannu Aronsson <haa@iki.fi> 2009-11-05
 iki.fi
 
 // info.at : http://www.info.at/
@@ -7419,23 +7422,23 @@ info.at
 co.pl
 
 // NYC.mn : http://www.information.nyc.mn
-// Requested by Matthew Brown <mattbrown@nyc.mn> 2013-03-11
+// Submitted by Matthew Brown <mattbrown@nyc.mn> 2013-03-11
 nyc.mn
 
 // Opera Software, A.S.A.
-// Requested by Yngve Pettersen <yngve@opera.com> 2009-11-26
+// Submitted by Yngve Pettersen <yngve@opera.com> 2009-11-26
 operaunite.com
 
 // Red Hat, Inc. OpenShift : https://openshift.redhat.com/
-// Requested by Tim Kramer <tkramer@rhcloud.com> 2012-10-24
+// Submitted by Tim Kramer <tkramer@rhcloud.com> 2012-10-24
 rhcloud.com
 
 // priv.at : http://www.nic.priv.at/
-// Requested by registry <lendl@nic.at> 2008-06-09
+// Submitted by registry <lendl@nic.at> 2008-06-09
 priv.at
 
 // ZaNiC : http://www.za.net/
-// Requested by registry <hostmaster@nic.za.net> 2009-10-03
+// Submitted by registry <hostmaster@nic.za.net> 2009-10-03
 za.net
 za.org
 

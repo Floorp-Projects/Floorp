@@ -16,11 +16,6 @@
   -moz-image-region: rect(0, 72px, 18px, 54px);
 }
 
-#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
-#forward-button:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-
 #home-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 126px, 18px, 108px);
 }
@@ -67,6 +62,12 @@
 
 #social-share-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0px, 306px, 18px, 288px);
+}
+
+#email-link-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 306px, 18px, 288px);
+  /* This is temporary until we have an email-link icon (Bug 932235) */
+  transform: scale(-1, -1);
 }
 
 #characterencoding-button[cui-areatype="toolbar"]{

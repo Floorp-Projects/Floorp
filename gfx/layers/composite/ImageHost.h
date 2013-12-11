@@ -21,8 +21,7 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsRect.h"                     // for nsIntRect
 #include "nscore.h"                     // for nsACString
- 
-class gfxImageSurface;
+
 class nsIntRegion;
 
 namespace mozilla {
@@ -56,9 +55,9 @@ public:
 
   virtual void UseTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
 
-  virtual void RemoveTextureHost(uint64_t aTextureID) MOZ_OVERRIDE;
+  virtual void RemoveTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
 
-  virtual TextureHost* GetTextureHost() MOZ_OVERRIDE;
+  virtual TextureHost* GetAsTextureHost() MOZ_OVERRIDE;
 
   virtual void SetPictureRect(const nsIntRect& aPictureRect) MOZ_OVERRIDE
   {
@@ -82,7 +81,7 @@ public:
                     const char* aPrefix="",
                     bool aDumpHtml=false) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
 #endif
 
 protected:
@@ -149,7 +148,7 @@ public:
                     const char* aPrefix="",
                     bool aDumpHtml=false) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
 #endif
 
 protected:

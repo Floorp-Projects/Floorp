@@ -2279,6 +2279,8 @@ this.AddonManager = {
   UPDATE_STATUS_UNKNOWN_FORMAT: -4,
   // The update information was not correctly signed or there was an SSL error.
   UPDATE_STATUS_SECURITY_ERROR: -5,
+  // The update was cancelled.
+  UPDATE_STATUS_CANCELLED: -6,
 
   // Constants to indicate why an update check is being performed
   // Update check has been requested by the user.

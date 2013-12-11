@@ -15,6 +15,7 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.TouchEventInterceptor;
 import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.EventDispatcher;
 
 import android.content.Context;
@@ -118,6 +119,22 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         Tabs.registerOnTabsChangedListener(this);
     }
 
+    public LayerView(Context context) {
+        super(context);
+
+        mGLController = GLController.getInstance(this);
+        mPaintState = PAINT_START;
+        mBackgroundColor = Color.WHITE;
+
+        mTouchInterceptors = new ArrayList<TouchEventInterceptor>();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            mOverscroll = new OverscrollEdgeEffect(this);
+        } else {
+            mOverscroll = null;
+        }
+        Tabs.registerOnTabsChangedListener(this);
+    }
+
     public void initializeView(EventDispatcher eventDispatcher) {
         mLayerClient = new GeckoLayerClient(getContext(), this, eventDispatcher);
         if (mOverscroll != null) {
@@ -198,12 +215,12 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         });
     }
 
-    public void show() {
+    public void showSurface() {
         // Fix this if TextureView support is turned back on above
         mSurfaceView.setVisibility(View.VISIBLE);
     }
 
-    public void hide() {
+    public void hideSurface() {
         // Fix this if TextureView support is turned back on above
         mSurfaceView.setVisibility(View.INVISIBLE);
     }
@@ -324,6 +341,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         }
     }
 
+    @RobocopTarget
     public GeckoLayerClient getLayerClient() { return mLayerClient; }
     public PanZoomController getPanZoomController() { return mPanZoomController; }
     public LayerMarginsAnimator getLayerMarginsAnimator() { return mMarginsAnimator; }
@@ -456,6 +474,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
     }
 
     /** Used by robocop for testing purposes. Not for production use! */
+    @RobocopTarget
     public IntBuffer getPixels() {
         return mRenderer.getPixels();
     }

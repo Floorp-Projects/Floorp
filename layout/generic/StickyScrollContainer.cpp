@@ -64,6 +64,41 @@ StickyScrollContainer::GetStickyScrollContainerForFrame(nsIFrame* aFrame)
 }
 
 // static
+void
+StickyScrollContainer::NotifyReparentedFrameAcrossScrollFrameBoundary(nsIFrame* aFrame,
+                                                                      nsIFrame* aOldParent)
+{
+  nsIScrollableFrame* oldScrollFrame =
+    nsLayoutUtils::GetNearestScrollableFrame(aOldParent,
+      nsLayoutUtils::SCROLLABLE_SAME_DOC |
+      nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+  if (!oldScrollFrame) {
+    // XXX maybe aFrame has sticky descendants that can be sticky now, but
+    // we aren't going to handle that.
+    return;
+  }
+  FrameProperties props = static_cast<nsIFrame*>(do_QueryFrame(oldScrollFrame))->
+    Properties();
+  StickyScrollContainer* oldSSC = static_cast<StickyScrollContainer*>
+    (props.Get(StickyScrollContainerProperty()));
+  if (!oldSSC) {
+    // aOldParent had no sticky descendants, so aFrame doesn't have any sticky
+    // descendants, and we're done here.
+    return;
+  }
+
+  auto i = oldSSC->mFrames.Length();
+  while (i-- > 0) {
+    nsIFrame* f = oldSSC->mFrames[i];
+    StickyScrollContainer* newSSC = GetStickyScrollContainerForFrame(f);
+    if (newSSC != oldSSC) {
+      oldSSC->RemoveFrame(f);
+      newSSC->AddFrame(f);
+    }
+  }
+}
+
+// static
 StickyScrollContainer*
 StickyScrollContainer::GetStickyScrollContainerForScrollFrame(nsIFrame* aFrame)
 {
@@ -157,16 +192,25 @@ StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame, nsRect* aStick,
   nsRect rect =
     nsLayoutUtils::GetAllInFlowRectsUnion(aFrame, aFrame->GetParent());
 
-  // Containing block limits
+  // Containing block limits for the position of aFrame relative to its parent.
+  // The margin box of the sticky element stays within the content box of the
+  // contaning-block element.
   if (cbFrame != scrolledFrame) {
-    *aContain = nsLayoutUtils::GetAllInFlowRectsUnion(cbFrame, cbFrame);
-    aContain->MoveBy(-aFrame->GetParent()->GetOffsetTo(cbFrame));
-    // FIXME (Bug 920688): GetUsedBorderAndPadding / GetUsedMargin
-    // consider skip-sides, which doesn't quite mesh with the use of
-    // GetAllInFlowRectsUnion here.  This probably needs to do that
-    // computation *inside* the accumuation function over the in-flows.
-    aContain->Deflate(cbFrame->GetUsedBorderAndPadding());
-    aContain->Deflate(aFrame->GetUsedMargin());
+    *aContain = nsLayoutUtils::
+      GetAllInFlowRectsUnion(cbFrame, aFrame->GetParent(),
+                             nsLayoutUtils::RECTS_USE_CONTENT_BOX);
+    nsRect marginRect = nsLayoutUtils::
+      GetAllInFlowRectsUnion(aFrame, aFrame->GetParent(),
+                             nsLayoutUtils::RECTS_USE_MARGIN_BOX);
+
+    // Deflate aContain by the difference between the union of aFrame's
+    // continuations' margin boxes and the union of their border boxes, so that
+    // by keeping aFrame within aContain, we keep the union of the margin boxes
+    // within the containing block's content box.
+    aContain->Deflate(marginRect - rect);
+
+    // Deflate aContain by the border-box size, to form a constraint on the
+    // upper-left corner of aFrame and continuations.
     aContain->Deflate(nsMargin(0, rect.width, rect.height, 0));
   }
 
@@ -211,7 +255,9 @@ StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame, nsRect* aStick,
 
   // These limits are for the bounding box of aFrame's continuations. Convert
   // to limits for aFrame itself.
-  aStick->MoveBy(aFrame->GetPosition() - rect.TopLeft());
+  nsPoint frameOffset = aFrame->GetPosition() - rect.TopLeft();
+  aStick->MoveBy(frameOffset);
+  aContain->MoveBy(frameOffset);
 }
 
 nsPoint

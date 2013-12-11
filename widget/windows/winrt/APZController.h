@@ -32,13 +32,13 @@ public:
 
   // GeckoContentController interface
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics);
-  virtual void HandleDoubleTap(const mozilla::CSSIntPoint& aPoint);
-  virtual void HandleSingleTap(const mozilla::CSSIntPoint& aPoint);
-  virtual void HandleLongTap(const mozilla::CSSIntPoint& aPoint);
+  virtual void HandleDoubleTap(const mozilla::CSSIntPoint& aPoint, int32_t aModifiers);
+  virtual void HandleSingleTap(const mozilla::CSSIntPoint& aPoint, int32_t aModifiers);
+  virtual void HandleLongTap(const mozilla::CSSIntPoint& aPoint, int32_t aModifiers);
   virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect, const mozilla::CSSSize &aScrollableSize);
   virtual void PostDelayedTask(Task* aTask, int aDelayMs);
-  virtual void HandlePanBegin();
-  virtual void HandlePanEnd();
+  virtual void NotifyTransformBegin(const ScrollableLayerGuid& aGuid);
+  virtual void NotifyTransformEnd(const ScrollableLayerGuid& aGuid);
   
   void SetWidgetListener(nsIWidgetListener* aWidgetListener);
   void UpdateScrollOffset(const mozilla::layers::ScrollableLayerGuid& aScrollLayerId, CSSIntPoint& aScrollOffset);

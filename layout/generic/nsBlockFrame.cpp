@@ -12,7 +12,6 @@
 #include "nsBlockFrame.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Util.h"
 
 #include "nsCOMPtr.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -784,6 +783,67 @@ nsBlockFrame::ComputeTightBounds(gfxContext* aContext) const
     return GetVisualOverflowRect();
   }
   return ComputeSimpleTightBounds(aContext);
+}
+
+/* virtual */ nsresult
+nsBlockFrame::GetPrefWidthTightBounds(nsRenderingContext* aRenderingContext,
+                                      nscoord* aX,
+                                      nscoord* aXMost)
+{
+  nsIFrame* firstInFlow = FirstContinuation();
+  if (firstInFlow != this) {
+    return firstInFlow->GetPrefWidthTightBounds(aRenderingContext, aX, aXMost);
+  }
+
+  *aX = 0;
+  *aXMost = 0;
+
+  nsresult rv;
+  InlinePrefWidthData data;
+  for (nsBlockFrame* curFrame = this; curFrame;
+       curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
+    for (line_iterator line = curFrame->begin_lines(), line_end = curFrame->end_lines();
+         line != line_end; ++line)
+    {
+      nscoord childX, childXMost;
+      if (line->IsBlock()) {
+        data.ForceBreak(aRenderingContext);
+        rv = line->mFirstChild->GetPrefWidthTightBounds(aRenderingContext,
+                                                        &childX, &childXMost);
+        NS_ENSURE_SUCCESS(rv, rv);
+        *aX = std::min(*aX, childX);
+        *aXMost = std::max(*aXMost, childXMost);
+      } else {
+        if (!curFrame->GetPrevContinuation() &&
+            line == curFrame->begin_lines()) {
+          // Only add text-indent if it has no percentages; using a
+          // percentage basis of 0 unconditionally would give strange
+          // behavior for calc(10%-3px).
+          const nsStyleCoord &indent = StyleText()->mTextIndent;
+          if (indent.ConvertsToLength()) {
+            data.currentLine += nsRuleNode::ComputeCoordPercentCalc(indent, 0);
+          }
+        }
+        // XXX Bug NNNNNN Should probably handle percentage text-indent.
+
+        data.line = &line;
+        data.lineContainer = curFrame;
+        nsIFrame *kid = line->mFirstChild;
+        for (int32_t i = 0, i_end = line->GetChildCount(); i != i_end;
+             ++i, kid = kid->GetNextSibling()) {
+          rv = kid->GetPrefWidthTightBounds(aRenderingContext, &childX,
+                                            &childXMost);
+          NS_ENSURE_SUCCESS(rv, rv);
+          *aX = std::min(*aX, data.currentLine + childX);
+          *aXMost = std::max(*aXMost, data.currentLine + childXMost);
+          kid->AddInlinePrefWidth(aRenderingContext, &data);
+        }
+      }
+    }
+  }
+  data.ForceBreak(aRenderingContext);
+
+  return NS_OK;
 }
 
 static bool
@@ -6489,7 +6549,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
           nsCSSPseudoElements::GetPseudoAtom(pseudoType))->StyleContext();
       nsRefPtr<nsStyleContext> kidSC = shell->StyleSet()->
         ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
-                                  parentStyle);
+                                  parentStyle, nullptr);
 
       // Create bullet frame
       nsBulletFrame* bullet = new (shell) nsBulletFrame(kidSC);

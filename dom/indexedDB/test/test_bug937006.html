@@ -1,0 +1,29 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bug 937006 - "Hit MOZ_CRASH(Failed to get caller.)" using setTimeout on IndexedDB call</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+</head>
+<body onload="runTest();">
+  <script type="text/javascript;version=1.7">
+
+  function runTest() {
+    // doing this IDBRequest should not be able to retrieve the filename and
+    // line number.
+    setTimeout(indexedDB.deleteDatabase.bind(indexedDB), 0, 'x');
+    setTimeout(function() {
+      ok(true, "Still alive");
+      SimpleTest.finish();
+    }, 10);
+  }
+
+  </script>
+</body>
+</html>

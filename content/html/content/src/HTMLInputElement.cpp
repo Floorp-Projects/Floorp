@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/HTMLInputElement.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Date.h"
 #include "nsAsyncDOMEvent.h"
@@ -19,7 +20,9 @@
 #include "nsIControllers.h"
 #include "nsIStringBundle.h"
 #include "nsFocusManager.h"
+#include "nsNumberControlFrame.h"
 #include "nsPIDOMWindow.h"
+#include "nsRepeatService.h"
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -92,7 +95,6 @@
 #include "nsTextEditorState.h"
 
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/Util.h" // DebugOnly
 #include "mozilla/Preferences.h"
 #include "mozilla/MathAlgorithms.h"
 
@@ -612,6 +614,8 @@ private:
 NS_IMETHODIMP
 HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
 {
+  mInput->PickerClosed();
+
   if (aResult == nsIFilePicker::returnCancel) {
     return NS_OK;
   }
@@ -794,6 +798,8 @@ nsColorPickerShownCallback::Done(const nsAString& aColor)
    */
   nsresult rv = NS_OK;
 
+  mInput->PickerClosed();
+
   if (!aColor.IsEmpty()) {
     UpdateInternal(aColor, false);
   }
@@ -837,6 +843,11 @@ HTMLInputElement::IsPopupBlocked() const
 nsresult
 HTMLInputElement::InitColorPicker()
 {
+  if (mPickerRunning) {
+    NS_WARNING("Just one nsIColorPicker is allowed");
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIDocument> doc = OwnerDoc();
 
   nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
@@ -867,12 +878,22 @@ HTMLInputElement::InitColorPicker()
   nsCOMPtr<nsIColorPickerShownCallback> callback =
     new nsColorPickerShownCallback(this, colorPicker);
 
-  return colorPicker->Open(callback);
+  rv = colorPicker->Open(callback);
+  if (NS_SUCCEEDED(rv)) {
+    mPickerRunning = true;
+  }
+
+  return rv;
 }
 
 nsresult
 HTMLInputElement::InitFilePicker(FilePickerType aType)
 {
+  if (mPickerRunning) {
+    NS_WARNING("Just one nsIFilePicker is allowed");
+    return NS_ERROR_FAILURE;
+  }
+
   // Get parent nsPIDOMWindow object.
   nsCOMPtr<nsIDocument> doc = OwnerDoc();
 
@@ -953,10 +974,16 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
       }
     }
 
-    return filePicker->Open(callback);
+    rv = filePicker->Open(callback);
+    if (NS_SUCCEEDED(rv)) {
+      mPickerRunning = true;
+    }
+
+    return rv;
   }
 
   HTMLInputElement::gUploadLastDir->FetchDirectoryAndDisplayPicker(doc, filePicker, callback);
+  mPickerRunning = true;
   return NS_OK;
 }
 
@@ -1091,6 +1118,9 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<nsINodeInfo> aNodeInfo,
   , mHasRange(false)
   , mIsDraggingRange(false)
   , mProgressTimerIsActive(false)
+  , mNumberControlSpinnerIsSpinning(false)
+  , mNumberControlSpinnerSpinsUp(false)
+  , mPickerRunning(false)
 {
   // We are in a type=text so we now we currenty need a nsTextEditorState.
   mInputData.mState = new nsTextEditorState(this);
@@ -1112,6 +1142,9 @@ HTMLInputElement::~HTMLInputElement()
 {
   if (mFileList) {
     mFileList->Disconnect();
+  }
+  if (mNumberControlSpinnerIsSpinning) {
+    StopNumberControlSpinnerSpin();
   }
   DestroyImageLoadingContent();
   FreeData();
@@ -2045,7 +2078,7 @@ HTMLInputElement::GetStepBase() const
 }
 
 nsresult
-HTMLInputElement::ApplyStep(int32_t aStep)
+HTMLInputElement::GetValueIfStepped(int32_t aStep, Decimal* aNextStep)
 {
   if (!DoStepDownStepUpApply()) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -2125,9 +2158,23 @@ HTMLInputElement::ApplyStep(int32_t aStep)
     value = std::min(value, maximum);
   }
 
-  SetValue(value);
+  *aNextStep = value;
 
   return NS_OK;
+}
+
+nsresult
+HTMLInputElement::ApplyStep(int32_t aStep)
+{
+  Decimal nextStep = Decimal::nan(); // unchanged if value will not change
+
+  nsresult rv = GetValueIfStepped(aStep, &nextStep);
+
+  if (NS_SUCCEEDED(rv) && nextStep.isFinite()) {
+    SetValue(nextStep);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -2140,6 +2187,14 @@ NS_IMETHODIMP
 HTMLInputElement::StepUp(int32_t n, uint8_t optional_argc)
 {
   return ApplyStep(optional_argc ? n : 1);
+}
+
+void
+HTMLInputElement::FlushFrames()
+{
+  if (GetCurrentDoc()) {
+    GetCurrentDoc()->FlushPendingNotifications(Flush_Frames);
+  }
 }
 
 void
@@ -2233,7 +2288,7 @@ HTMLInputElement::MozSetFileNameArray(const PRUnichar** aFileNames, uint32_t aLe
 bool
 HTMLInputElement::MozIsTextField(bool aExcludePassword)
 {
-  // TODO: temporary until bug 635240 and 773205 are fixed.
+  // TODO: temporary until bug 773205 is fixed.
   if (IsExperimentalMobileType(mType)) {
     return false;
   }
@@ -2361,7 +2416,7 @@ HTMLInputElement::GetRootEditorNode()
   return nullptr;
 }
 
-NS_IMETHODIMP_(nsIContent*)
+NS_IMETHODIMP_(Element*)
 HTMLInputElement::CreatePlaceholderNode()
 {
   nsTextEditorState* state = GetEditorState();
@@ -2372,7 +2427,7 @@ HTMLInputElement::CreatePlaceholderNode()
   return nullptr;
 }
 
-NS_IMETHODIMP_(nsIContent*)
+NS_IMETHODIMP_(Element*)
 HTMLInputElement::GetPlaceholderNode()
 {
   nsTextEditorState* state = GetEditorState();
@@ -2573,6 +2628,26 @@ HTMLInputElement::Notify(nsITimer* aTimer)
   return NS_ERROR_INVALID_POINTER;
 }
 
+/* static */ void
+HTMLInputElement::HandleNumberControlSpin(void* aData)
+{
+  HTMLInputElement* input = static_cast<HTMLInputElement*>(aData);
+
+  NS_ASSERTION(input->mNumberControlSpinnerIsSpinning,
+               "Should have called nsRepeatService::Stop()");
+
+  nsNumberControlFrame* numberControlFrame =
+    do_QueryFrame(input->GetPrimaryFrame());
+  if (input->mType != NS_FORM_INPUT_NUMBER || !numberControlFrame) {
+    // Type has changed (and possibly our frame type hasn't been updated yet)
+    // or else we've lost our frame. Either way, stop the timer and don't do
+    // anything else.
+    input->StopNumberControlSpinnerSpin();
+  } else {
+    input->StepNumberControlForUserEvent(input->mNumberControlSpinnerSpinsUp ? 1 : -1);
+  }
+}
+
 void
 HTMLInputElement::MaybeDispatchProgressEvent(bool aFinalProgress)
 {
@@ -2687,6 +2762,14 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
           SetValueChanged(true);
         }
         OnValueChanged(!mParserCreating);
+
+        if (mType == NS_FORM_INPUT_NUMBER) {
+          nsNumberControlFrame* numberControlFrame =
+            do_QueryFrame(GetPrimaryFrame());
+          if (numberControlFrame) {
+            numberControlFrame->UpdateForValueChange(value);
+          }
+        }
       }
 
       // Call parent's SetAttr for color input so its control frame is notified
@@ -2953,8 +3036,40 @@ HTMLInputElement::SetCheckedInternal(bool aChecked, bool aNotify)
 }
 
 void
+HTMLInputElement::Blur(ErrorResult& aError)
+{
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    // Blur our anonymous text control, if we have one. (DOM 'change' event
+    // firing and other things depend on this.)
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      HTMLInputElement* textControl = numberControlFrame->GetAnonTextControl();
+      if (textControl) {
+        textControl->Blur(aError);
+        return;
+      }
+    }
+  }
+  nsGenericHTMLElement::Blur(aError);
+}
+
+void
 HTMLInputElement::Focus(ErrorResult& aError)
 {
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    // Focus our anonymous text control, if we have one.
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      HTMLInputElement* textControl = numberControlFrame->GetAnonTextControl();
+      if (textControl) {
+        textControl->Focus(aError);
+        return;
+      }
+    }
+  }
+
   if (mType != NS_FORM_INPUT_FILE) {
     nsGenericHTMLElement::Focus(aError);
     return;
@@ -2986,6 +3101,15 @@ HTMLInputElement::Focus(ErrorResult& aError)
 NS_IMETHODIMP
 HTMLInputElement::Select()
 {
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      return numberControlFrame->HandleSelectCall();
+    }
+    return NS_OK;
+  }
+
   if (!IsSingleLineTextControl(false)) {
     return NS_OK;
   }
@@ -3225,7 +3349,127 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
-  return nsGenericHTMLFormElementWithState::PreHandleEvent(aVisitor);
+  if (mType == NS_FORM_INPUT_NUMBER &&
+      aVisitor.mEvent->mFlags.mIsTrusted) {
+    if (mNumberControlSpinnerIsSpinning) {
+      // If the timer is running the user has depressed the mouse on one of the
+      // spin buttons. If the mouse exits the button we either want to reverse
+      // the direction of spin if it has moved over the other button, or else
+      // we want to end the spin. We do this here (rather than in
+      // PostHandleEvent) because we don't want to let content preventDefault()
+      // the end of the spin.
+      if (aVisitor.mEvent->message == NS_MOUSE_MOVE) {
+        // Be aggressive about stopping the spin:
+        bool stopSpin = true;
+        nsNumberControlFrame* numberControlFrame =
+          do_QueryFrame(GetPrimaryFrame());
+        if (numberControlFrame) {
+          bool oldNumberControlSpinTimerSpinsUpValue =
+                 mNumberControlSpinnerSpinsUp;
+          switch (numberControlFrame->GetSpinButtonForPointerEvent(
+                    aVisitor.mEvent->AsMouseEvent())) {
+          case nsNumberControlFrame::eSpinButtonUp:
+            mNumberControlSpinnerSpinsUp = true;
+            stopSpin = false;
+            break;
+          case nsNumberControlFrame::eSpinButtonDown:
+            mNumberControlSpinnerSpinsUp = false;
+            stopSpin = false;
+            break;
+          }
+          if (mNumberControlSpinnerSpinsUp !=
+                oldNumberControlSpinTimerSpinsUpValue) {
+            nsNumberControlFrame* numberControlFrame =
+              do_QueryFrame(GetPrimaryFrame());
+            if (numberControlFrame) {
+              numberControlFrame->SpinnerStateChanged();
+            }
+          }
+        }
+        if (stopSpin) {
+          StopNumberControlSpinnerSpin();
+        }
+      } else if (aVisitor.mEvent->message == NS_MOUSE_BUTTON_UP) {
+        StopNumberControlSpinnerSpin();
+      }
+    }
+    if (aVisitor.mEvent->message == NS_FOCUS_CONTENT ||
+        aVisitor.mEvent->message == NS_BLUR_CONTENT) {
+      nsIFrame* frame = GetPrimaryFrame();
+      if (frame) {
+        if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
+          // Tell our frame it's getting focus so that it can make sure focus
+          // is moved to our anonymous text control.
+          nsNumberControlFrame* numberControlFrame =
+            do_QueryFrame(GetPrimaryFrame());
+          if (numberControlFrame) {
+            numberControlFrame->HandleFocusEvent(aVisitor.mEvent);
+          }
+        }
+        if (frame->IsThemed()) {
+          // Our frame's nested <input type=text> will be invalidated when it
+          // loses focus, but since we are also native themed we need to make
+          // sure that our entire area is repainted since any focus highlight
+          // from the theme should be removed from us (the repainting of the
+          // sub-area occupied by the anon text control is not enough to do
+          // that).
+          frame->InvalidateFrame();
+        }
+      }
+    } else if (aVisitor.mEvent->message == NS_KEY_UP) {
+      WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
+      if ((keyEvent->keyCode == NS_VK_UP || keyEvent->keyCode == NS_VK_DOWN) &&
+          !(keyEvent->IsShift() || keyEvent->IsControl() ||
+            keyEvent->IsAlt() || keyEvent->IsMeta() ||
+            keyEvent->IsAltGraph() || keyEvent->IsFn() ||
+            keyEvent->IsOS())) {
+        // The up/down arrow key events fire 'change' events when released
+        // so that at the end of a series of up/down arrow key repeat events
+        // the value is considered to be "commited" by the user.
+        FireChangeEventIfNeeded();
+      }
+    }
+  }
+
+  nsresult rv = nsGenericHTMLFormElementWithState::PreHandleEvent(aVisitor);
+
+  // We do this after calling the base class' PreHandleEvent so that
+  // nsIContent::PreHandleEvent doesn't reset any change we make to mCanHandle.
+  if (mType == NS_FORM_INPUT_NUMBER &&
+      aVisitor.mEvent->mFlags.mIsTrusted  &&
+      aVisitor.mEvent->originalTarget != this) {
+    // <input type=number> has an anonymous <input type=text> descendant. If
+    // 'input' or 'change' events are fired at that text control then we need
+    // to do some special handling here.
+    HTMLInputElement* textControl = nullptr;
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      textControl = numberControlFrame->GetAnonTextControl();
+    }
+    if (textControl && aVisitor.mEvent->originalTarget == textControl) {
+      if (aVisitor.mEvent->message == NS_FORM_INPUT) {
+        // Propogate the anon text control's new value to our HTMLInputElement:
+        numberControlFrame->HandlingInputEvent(true);
+        nsAutoString value;
+        textControl->GetValue(value);
+        SetValueInternal(value, false, true);
+        numberControlFrame->HandlingInputEvent(false);
+      }
+      else if (aVisitor.mEvent->message == NS_FORM_CHANGE) {
+        // We cancel the DOM 'change' event that is fired for any change to our
+        // anonymous text control since we fire our own 'change' events and
+        // content shouldn't be seeing two 'change' events. Besides that we
+        // (as a number) control have tighter restrictions on when our internal
+        // value changes than our anon text control does, so in some cases
+        // (if our text control's value doesn't parse as a number) we don't
+        // want to fire a 'change' event at all.
+        aVisitor.mCanHandle = false;
+      }
+    }
+  }
+
+  return rv;
 }
 
 void
@@ -3233,8 +3477,9 @@ HTMLInputElement::StartRangeThumbDrag(WidgetGUIEvent* aEvent)
 {
   mIsDraggingRange = true;
   mRangeThumbDragStartValue = GetValueAsDecimal();
-  nsIPresShell::SetCapturingContent(this, CAPTURE_IGNOREALLOWED |
-                                          CAPTURE_RETARGETTOELEMENT);
+  // Don't use CAPTURE_RETARGETTOELEMENT, as that breaks pseudo-class styling
+  // of the thumb.
+  nsIPresShell::SetCapturingContent(this, CAPTURE_IGNOREALLOWED);
   nsRangeFrame* rangeFrame = do_QueryFrame(GetPrimaryFrame());
 
   // Before we change the value, record the current value so that we'll
@@ -3303,6 +3548,69 @@ HTMLInputElement::SetValueOfRangeForUserEvent(Decimal aValue)
   if (frame) {
     frame->UpdateForValueChange();
   }
+  nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
+                                       static_cast<nsIDOMHTMLInputElement*>(this),
+                                       NS_LITERAL_STRING("input"), true,
+                                       false);
+}
+
+void
+HTMLInputElement::StartNumberControlSpinnerSpin()
+{
+  MOZ_ASSERT(!mNumberControlSpinnerIsSpinning);
+
+  mNumberControlSpinnerIsSpinning = true;
+
+  nsRepeatService::GetInstance()->Start(HandleNumberControlSpin, this);
+
+  // Capture the mouse so that we can tell if the pointer moves from one
+  // spin button to the other, or to some other element:
+  nsIPresShell::SetCapturingContent(this, CAPTURE_IGNOREALLOWED);
+
+  nsNumberControlFrame* numberControlFrame =
+    do_QueryFrame(GetPrimaryFrame());
+  if (numberControlFrame) {
+    numberControlFrame->SpinnerStateChanged();
+  }
+}
+
+void
+HTMLInputElement::StopNumberControlSpinnerSpin()
+{
+  if (mNumberControlSpinnerIsSpinning) {
+    if (nsIPresShell::GetCapturingContent() == this) {
+      nsIPresShell::SetCapturingContent(nullptr, 0); // cancel capture
+    }
+
+    nsRepeatService::GetInstance()->Stop(HandleNumberControlSpin, this);
+
+    mNumberControlSpinnerIsSpinning = false;
+
+    FireChangeEventIfNeeded();
+
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      numberControlFrame->SpinnerStateChanged();
+    }
+  }
+}
+
+void
+HTMLInputElement::StepNumberControlForUserEvent(int32_t aDirection)
+{
+  Decimal newValue = Decimal::nan(); // unchanged if value will not change
+
+  nsresult rv = GetValueIfStepped(aDirection, &newValue);
+
+  if (NS_FAILED(rv) || !newValue.isFinite()) {
+    return; // value should not or will not change
+  }
+
+  nsAutoString newVal;
+  ConvertNumberToString(newValue, newVal);
+  SetValueInternal(newVal, true, true);
+
   nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
                                        static_cast<nsIDOMHTMLInputElement*>(this),
                                        NS_LITERAL_STRING("input"), true,
@@ -3396,9 +3704,12 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       GetValueInternal(mFocusedValue);
     }
 
-    if (mIsDraggingRange &&
-        aVisitor.mEvent->message == NS_BLUR_CONTENT) {
-      FinishRangeThumbDrag();
+    if (aVisitor.mEvent->message == NS_BLUR_CONTENT) {
+      if (mIsDraggingRange) {
+        FinishRangeThumbDrag();
+      } else if (mNumberControlSpinnerIsSpinning) {
+        StopNumberControlSpinnerSpin();
+      }
     }
 
     UpdateValidityUIBits(aVisitor.mEvent->message == NS_FOCUS_CONTENT);
@@ -3421,7 +3732,8 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   // the click event handling, and allow cancellation of DOMActivate to cancel
   // the click.
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault &&
-      !IsSingleLineTextControl(true)) {
+      !IsSingleLineTextControl(true) &&
+      mType != NS_FORM_INPUT_NUMBER) {
     WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
     if (mouseEvent && mouseEvent->IsLeftClickEvent() &&
         !ShouldPreventDOMActivateDispatch(aVisitor.mEvent->originalTarget)) {
@@ -3512,7 +3824,31 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
   }
 
   if (NS_SUCCEEDED(rv)) {
-    if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
+    WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
+    if (mType ==  NS_FORM_INPUT_NUMBER &&
+        keyEvent && keyEvent->message == NS_KEY_PRESS &&
+        aVisitor.mEvent->mFlags.mIsTrusted &&
+        (keyEvent->keyCode == NS_VK_UP || keyEvent->keyCode == NS_VK_DOWN) &&
+        !(keyEvent->IsShift() || keyEvent->IsControl() ||
+          keyEvent->IsAlt() || keyEvent->IsMeta() ||
+          keyEvent->IsAltGraph() || keyEvent->IsFn() ||
+          keyEvent->IsOS())) {
+      // We handle the up/down arrow keys specially for <input type=number>.
+      // On some platforms the editor for the nested text control will
+      // process these keys to send the cursor to the start/end of the text
+      // control and as a result aVisitor.mEventStatus will already have been
+      // set to nsEventStatus_eConsumeNoDefault. However, we know that
+      // whenever the up/down arrow keys cause the value of the number
+      // control to change the string in the text control will change, and
+      // the cursor will be moved to the end of the text control, overwriting
+      // the editor's handling of up/down keypress events. For that reason we
+      // just ignore aVisitor.mEventStatus here and go ahead and handle the
+      // event to increase/decrease the value of the number control.
+      if (!aVisitor.mEvent->mFlags.mDefaultPreventedByContent) {
+        StepNumberControlForUserEvent(keyEvent->keyCode == NS_VK_UP ? 1 : -1);
+        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+      }
+    } else if (nsEventStatus_eIgnore == aVisitor.mEventStatus) {
       switch (aVisitor.mEvent->message) {
 
         case NS_FOCUS_CONTENT:
@@ -3723,7 +4059,43 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                 rv = NS_ERROR_FAILURE;
               }
             }
-
+          }
+          if (mType == NS_FORM_INPUT_NUMBER &&
+              aVisitor.mEvent->mFlags.mIsTrusted) {
+            if (mouseEvent->button == WidgetMouseEvent::eLeftButton &&
+                !(mouseEvent->IsShift() || mouseEvent->IsControl() ||
+                  mouseEvent->IsAlt() || mouseEvent->IsMeta() ||
+                  mouseEvent->IsAltGraph() || mouseEvent->IsFn() ||
+                  mouseEvent->IsOS())) {
+              nsNumberControlFrame* numberControlFrame =
+                do_QueryFrame(GetPrimaryFrame());
+              if (numberControlFrame) {
+                if (aVisitor.mEvent->message == NS_MOUSE_BUTTON_DOWN) {
+                  switch (numberControlFrame->GetSpinButtonForPointerEvent(
+                            aVisitor.mEvent->AsMouseEvent())) {
+                  case nsNumberControlFrame::eSpinButtonUp:
+                    StepNumberControlForUserEvent(1);
+                    mNumberControlSpinnerSpinsUp = true;
+                    StartNumberControlSpinnerSpin();
+                    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+                    break;
+                  case nsNumberControlFrame::eSpinButtonDown:
+                    StepNumberControlForUserEvent(-1);
+                    mNumberControlSpinnerSpinsUp = false;
+                    StartNumberControlSpinnerSpin();
+                    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+                    break;
+                  }
+                }
+              }
+            }
+            if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
+              // We didn't handle this to step up/down. Whatever this was, be
+              // aggressive about stopping the spin. (And don't set
+              // nsEventStatus_eConsumeNoDefault after doing so, since that
+              // might prevent, say, the context menu from opening.)
+              StopNumberControlSpinnerSpin();
+            }
           }
           break;
         }
@@ -4082,9 +4454,9 @@ HTMLInputElement::SanitizeValue(nsAString& aValue)
       break;
     case NS_FORM_INPUT_NUMBER:
       {
-        nsresult ec;
-        double val = PromiseFlatString(aValue).ToDouble(&ec);
-        if (NS_FAILED(ec) || !IsFinite(val)) {
+        Decimal value;
+        bool ok = ConvertStringToNumber(aValue, value);
+        if (!ok) {
           aValue.Truncate();
         }
       }
@@ -5368,6 +5740,38 @@ HTMLInputElement::IntrinsicState() const
   return state;
 }
 
+void
+HTMLInputElement::AddStates(nsEventStates aStates)
+{
+  if (mType == NS_FORM_INPUT_TEXT) {
+    nsEventStates focusStates(aStates & (NS_EVENT_STATE_FOCUS |
+                                         NS_EVENT_STATE_FOCUSRING));
+    if (!focusStates.IsEmpty()) {
+      HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
+      if (ownerNumberControl) {
+        ownerNumberControl->AddStates(focusStates);
+      }
+    }
+  }
+  nsGenericHTMLFormElementWithState::AddStates(aStates);                          
+}
+
+void
+HTMLInputElement::RemoveStates(nsEventStates aStates)
+{
+  if (mType == NS_FORM_INPUT_TEXT) {
+    nsEventStates focusStates(aStates & (NS_EVENT_STATE_FOCUS |
+                                         NS_EVENT_STATE_FOCUSRING));
+    if (!focusStates.IsEmpty()) {
+      HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
+      if (ownerNumberControl) {
+        ownerNumberControl->RemoveStates(focusStates);
+      }
+    }
+  }
+  nsGenericHTMLFormElementWithState::RemoveStates(aStates);
+}
+
 bool
 HTMLInputElement::RestoreState(nsPresState* aState)
 {
@@ -5527,11 +5931,17 @@ HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable, int32_t* 
   const bool defaultFocusable = true;
 #endif
 
-  if (mType == NS_FORM_INPUT_FILE) {
+  if (mType == NS_FORM_INPUT_FILE ||
+      mType == NS_FORM_INPUT_NUMBER) {
     if (aTabIndex) {
+      // We only want our native anonymous child to be tabable to, not ourself.
       *aTabIndex = -1;
     }
-    *aIsFocusable = defaultFocusable;
+    if (mType == NS_FORM_INPUT_NUMBER) {
+      *aIsFocusable = true;
+    } else {
+      *aIsFocusable = defaultFocusable;
+    }
     return true;
   }
 
@@ -5727,7 +6137,7 @@ HTMLInputElement::PlaceholderApplies() const
 bool
 HTMLInputElement::DoesPatternApply() const
 {
-  // TODO: temporary until bug 635240 and bug 773205 are fixed.
+  // TODO: temporary until bug 773205 is fixed.
   if (IsExperimentalMobileType(mType)) {
     return false;
   }
@@ -6833,6 +7243,12 @@ HTMLInputElement::UpdateHasRange()
     mHasRange = true;
     return;
   }
+}
+
+void
+HTMLInputElement::PickerClosed()
+{
+  mPickerRunning = false;
 }
 
 JSObject*

@@ -8,7 +8,7 @@
 
 #include "GLContextTypes.h"             // for GLContext, etc
 #include "GLDefs.h"                     // for GLuint, LOCAL_GL_TEXTURE_2D, etc
-#include "LayerManagerOGLProgram.h"     // for ShaderProgramOGL, etc
+#include "OGLShaderProgram.h"           // for ShaderProgramOGL, etc
 #include "Units.h"                      // for ScreenPoint
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE, MOZ_FINAL
@@ -98,7 +98,18 @@ public:
                         const gfx::Rect& aClipRect,
                         const EffectChain &aEffectChain,
                         gfx::Float aOpacity,
-                        const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE;
+                        const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE
+  {
+    DrawQuadInternal(aRect, aClipRect, aEffectChain,
+                     aOpacity, aTransform, LOCAL_GL_TRIANGLE_STRIP);
+  }
+
+  virtual void DrawLines(const std::vector<gfx::Point>& aLines,
+                         const gfx::Rect& aClipRect,
+                         const gfx::Color& aColor,
+                         gfx::Float aOpacity,
+                         const gfx::Matrix4x4 &aTransform) MOZ_OVERRIDE;
+
 
   virtual void EndFrame() MOZ_OVERRIDE;
   virtual void EndFrameForExternalComposition(const gfxMatrix& aTransform) MOZ_OVERRIDE;
@@ -147,9 +158,6 @@ public:
   virtual bool Resume() MOZ_OVERRIDE;
 
   virtual nsIWidget* GetWidget() const MOZ_OVERRIDE { return mWidget; }
-  virtual const nsIntSize& GetWidgetSize() MOZ_OVERRIDE {
-    return mWidgetSize;
-  }
 
   GLContext* gl() const { return mGLContext; }
   ShaderProgramType GetFBOLayerProgramType() const {
@@ -171,6 +179,13 @@ public:
    */
   GLuint GetTemporaryTexture(GLenum aUnit);
 private:
+  virtual void DrawQuadInternal(const gfx::Rect& aRect,
+                                const gfx::Rect& aClipRect,
+                                const EffectChain &aEffectChain,
+                                gfx::Float aOpacity,
+                                const gfx::Matrix4x4 &aTransformi,
+                                GLuint aDrawMode);
+
   /** 
    * Context target, nullptr when drawing directly to our swap chain.
    */
@@ -291,9 +306,11 @@ private:
   void QuadVBOFlippedTexCoordsAttrib(GLuint aAttribIndex);
   void BindAndDrawQuad(GLuint aVertAttribIndex,
                        GLuint aTexCoordAttribIndex,
-                       bool aFlipped = false);
+                       bool aFlipped = false,
+                       GLuint aDrawMode = LOCAL_GL_TRIANGLE_STRIP);
   void BindAndDrawQuad(ShaderProgramOGL *aProg,
-                       bool aFlipped = false);
+                       bool aFlipped = false,
+                       GLuint aDrawMode = LOCAL_GL_TRIANGLE_STRIP);
   void BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
                                       const gfx::Rect& aTexCoordRect,
                                       TextureSource *aTexture);

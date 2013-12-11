@@ -95,6 +95,15 @@
         * @param aIgnoreScale ignore current scale factor.
         * @return { x: converted x coordinate, y: converted y coordinate }
         *
+        * rectClientToBrowser
+        *  Convert a client Rect() in device pixels to page-relative
+        *  coordinates in CSS pixels.
+        *
+        * @param aRect - client Rect to convert.
+        * @param aIgnoreScroll ignore root frame scroll.
+        * @param aIgnoreScale ignore current scale factor.
+        * @return converted Rect()
+        *
         * ctobx, ctoby
         *  Convert individual x and y coordinates.
         *
@@ -165,9 +174,43 @@
             }
 
             return {
-              x: (aClientX + scrollX - bcr.left) / scale,
-              y: (aClientY + scrollY - bcr.top) / scale
+              x: (aClientX - bcr.left) / scale + scrollX,
+              y: (aClientY - bcr.top) / scale + scrollY
             };
+          ]]>
+        </body>
+      </method>
+
+      <method name="rectClientToBrowser">
+        <parameter name="aClientRect"/>
+        <parameter name="aIgnoreScroll"/>
+        <parameter name="aIgnoreScale"/>
+        <body>
+          <![CDATA[
+            let ignoreScroll = aIgnoreScroll || false;
+            let ignoreScale = aIgnoreScale || false;
+
+            let scrollX = 0;
+            let scrollY = 0;
+            if (!ignoreScroll) {
+              let scroll = this.getRootView().getPosition();
+              scrollX = scroll.x;
+              scrollY = scroll.y;
+            }
+
+            let scale = 1;
+            if (!ignoreScale) {
+              scale = this.scale;
+            }
+
+            let bcr = this.getBoundingClientRect();
+            let clientRect = Rect.fromRect(aClientRect);
+            return new Rect(
+              (clientRect.x - bcr.left) / scale + scrollX,
+              (clientRect.y - bcr.top) / scale + scrollY,
+              clientRect.width / scale,
+              clientRect.height / scale
+            );
           ]]>
         </body>
       </method>
@@ -597,6 +640,18 @@
       <field name="_frameLoader">null</field>
       <field name="_contentViewManager">null</field>
 
+      <!--
+       * Returns the current content viewport bounds in browser coordinates
+       * taking into account zoom and scroll.
+       *
+       * @return Rect()
+      -->
+      <property name="contentViewportBounds">
+        <getter><![CDATA[
+          return this.rectClientToBrowser(this.getBoundingClientRect());
+        ]]></getter>
+      </property>
+
       <!-- Dimensions of content window -->
       <field name="_contentWindowWidth">0</field>
       <field name="_contentWindowHeight">0</field>
@@ -798,9 +853,19 @@
                 onget="return this._contentTitle;"
                 readonly="true"/>
 
-      <property name="webNavigation"
-                onget="return this._remoteWebNavigation;"
-                readonly="true"/>
+      <field name="_remoteWebNavigation">null</field>
+      <property name="webNavigation" readonly="true">
+        <getter>
+          <![CDATA[
+            if (!this._remoteWebNavigation) {
+              let jsm = "resource://gre/modules/RemoteWebNavigation.jsm";
+              let RemoteWebNavigation = Components.utils.import(jsm, {}).RemoteWebNavigation;
+              this._remoteWebNavigation = new RemoteWebNavigation(this);
+            }
+            return this._remoteWebNavigation;
+          ]]>
+        </getter>
+      </property>
 
       <property name="contentWindow"
                 readonly="true"

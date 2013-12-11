@@ -97,6 +97,7 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer,
     // region are copied back to the destination. Remember if we've already
     // clipped precisely to the visible region.
     *aNeedsClipToVisibleRegion = !didCompleteClip || aRegion.GetNumRects() > 1;
+    MOZ_ASSERT(!aContext->IsCairo());
     result = PushGroupWithCachedSurface(aContext, GFX_CONTENT_COLOR);
   } else {
     *aNeedsClipToVisibleRegion = false;
@@ -628,7 +629,8 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
       FlashWidgetUpdateArea(mTarget);
     }
     RenderDebugOverlay();
-    LayerManager::PostPresent();
+    RecordFrame();
+    PostPresent();
 
     if (!mTransactionIncomplete) {
       // Clear out target if we have a complete transaction.
@@ -714,9 +716,9 @@ BasicLayerManager_Matrix3DToPixman(const gfx3DMatrix& aMatrix)
 }
 
 static void
-PixmanTransform(const gfxImageSurface *aDest, 
-                const gfxImageSurface *aSrc, 
-                const gfx3DMatrix& aTransform, 
+PixmanTransform(const gfxImageSurface* aDest,
+                RefPtr<DataSourceSurface> aSrc,
+                const gfx3DMatrix& aTransform,
                 gfxPoint aDestOffset)
 {
   gfxIntSize destSize = aDest->GetSize();
@@ -726,11 +728,11 @@ PixmanTransform(const gfxImageSurface *aDest,
                                                   (uint32_t*)aDest->Data(),
                                                   aDest->Stride());
 
-  gfxIntSize srcSize = aSrc->GetSize();
-  pixman_image_t* src = pixman_image_create_bits(aSrc->Format() == gfxImageFormatARGB32 ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
+  IntSize srcSize = aSrc->GetSize();
+  pixman_image_t* src = pixman_image_create_bits(aSrc->GetFormat() == FORMAT_B8G8R8A8 ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
                                                  srcSize.width,
                                                  srcSize.height,
-                                                 (uint32_t*)aSrc->Data(),
+                                                 (uint32_t*)aSrc->GetData(),
                                                  aSrc->Stride());
 
   NS_ABORT_IF_FALSE(src && dest, "Failed to create pixman images?");
@@ -772,25 +774,15 @@ PixmanTransform(const gfxImageSurface *aDest,
  * @param aDestRect     Output: rectangle in which to draw returned surface on aDest
  *                      (same size as aDest). Only filled in if this returns
  *                      a surface.
- * @param aDontBlit     Never draw to aDest if this is true.
- * @return              Transformed surface, or nullptr if it has been drawn to aDest.
+ * @return              Transformed surface
  */
-static already_AddRefed<gfxASurface> 
-Transform3D(gfxASurface* aSource, gfxContext* aDest, 
-            const gfxRect& aBounds, const gfx3DMatrix& aTransform, 
-            gfxRect& aDestRect, bool aDontBlit)
+static already_AddRefed<gfxASurface>
+Transform3D(RefPtr<SourceSurface> aSource,
+            gfxContext* aDest,
+            const gfxRect& aBounds,
+            const gfx3DMatrix& aTransform,
+            gfxRect& aDestRect)
 {
-  nsRefPtr<gfxImageSurface> sourceImage = aSource->GetAsImageSurface();
-  if (!sourceImage) {
-    sourceImage = new gfxImageSurface(gfxIntSize(aBounds.width, aBounds.height), gfxPlatform::GetPlatform()->OptimalFormatForContent(aSource->GetContentType()));
-    nsRefPtr<gfxContext> ctx = new gfxContext(sourceImage);
-
-    aSource->SetDeviceOffset(gfxPoint(0, 0));
-    ctx->SetSource(aSource);
-    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx->Paint();
-  }
-
   // Find the transformed rectangle of our layer.
   gfxRect offsetRect = aTransform.TransformBounds(aBounds);
 
@@ -802,32 +794,20 @@ Transform3D(gfxASurface* aSource, gfxContext* aDest,
 
   // Create a surface the size of the transformed object.
   nsRefPtr<gfxASurface> dest = aDest->CurrentSurface();
-  nsRefPtr<gfxImageSurface> destImage;
-  gfxPoint offset;
-  bool blitComplete;
-  if (!destImage || aDontBlit || !aDest->ClipContainsRect(aDestRect)) {
-    destImage = new gfxImageSurface(gfxIntSize(aDestRect.width, aDestRect.height),
-                                    gfxImageFormatARGB32);
-    offset = aDestRect.TopLeft();
-    blitComplete = false;
-  } else {
-    offset = -dest->GetDeviceOffset();
-    blitComplete = true;
-  }
+  nsRefPtr<gfxImageSurface> destImage = new gfxImageSurface(gfxIntSize(aDestRect.width,
+                                                                       aDestRect.height),
+                                                            gfxImageFormatARGB32);
+  gfxPoint offset = aDestRect.TopLeft();
 
   // Include a translation to the correct origin.
   gfx3DMatrix translation = gfx3DMatrix::Translation(aBounds.x, aBounds.y, 0);
 
   // Transform the content and offset it such that the content begins at the origin.
-  PixmanTransform(destImage, sourceImage, translation * aTransform, offset);
-
-  if (blitComplete) {
-    return nullptr;
-  }
+  PixmanTransform(destImage, aSource->GetDataSurface(), translation * aTransform, offset);
 
   // If we haven't actually drawn to aDest then return our temporary image so
   // that the caller can do this.
-  return destImage.forget(); 
+  return destImage.forget();
 }
 
 void
@@ -972,24 +952,23 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     }
   } else {
     const nsIntRect& bounds = visibleRegion.GetBounds();
-    nsRefPtr<gfxASurface> untransformedSurface =
-      gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(bounds.width, bounds.height),
-                                                         GFX_CONTENT_COLOR_ALPHA);
-    if (!untransformedSurface) {
+    RefPtr<DrawTarget> untransformedDT =
+      gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(bounds.width, bounds.height),
+                                                                   FORMAT_B8G8R8A8);
+    if (!untransformedDT) {
       return;
     }
-    untransformedSurface->SetDeviceOffset(gfxPoint(-bounds.x, -bounds.y));
-    nsRefPtr<gfxContext> groupTarget = new gfxContext(untransformedSurface);
+
+    nsRefPtr<gfxContext> groupTarget = new gfxContext(untransformedDT);
+    groupTarget->Translate(gfxPoint(-bounds.x, -bounds.y));
 
     PaintSelfOrChildren(paintLayerContext, groupTarget);
 
     // Temporary fast fix for bug 725886
     // Revert these changes when 725886 is ready
-    NS_ABORT_IF_FALSE(untransformedSurface,
+    NS_ABORT_IF_FALSE(untransformedDT,
                       "We should always allocate an untransformed surface with 3d transforms!");
     gfxRect destRect;
-    bool dontBlit = needsClipToVisibleRegion || mTransactionIncomplete ||
-                      aLayer->GetEffectiveOpacity() != 1.0f;
 #ifdef DEBUG
     if (aLayer->GetDebugColorIndex() != 0) {
       gfxRGBA  color((aLayer->GetDebugColorIndex() & 1) ? 1.0 : 0.0,
@@ -997,15 +976,16 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
                      (aLayer->GetDebugColorIndex() & 4) ? 1.0 : 0.0,
                      1.0);
 
-      nsRefPtr<gfxContext> temp = new gfxContext(untransformedSurface);
+      nsRefPtr<gfxContext> temp = new gfxContext(untransformedDT);
+      temp->Translate(gfxPoint(-bounds.x, -bounds.y));
       temp->SetColor(color);
       temp->Paint();
     }
 #endif
     const gfx3DMatrix& effectiveTransform = aLayer->GetEffectiveTransform();
     nsRefPtr<gfxASurface> result =
-      Transform3D(untransformedSurface, aTarget, bounds,
-                  effectiveTransform, destRect, dontBlit);
+      Transform3D(untransformedDT->Snapshot(), aTarget, bounds,
+                  effectiveTransform, destRect);
 
     if (result) {
       aTarget->SetSource(result, destRect.TopLeft());

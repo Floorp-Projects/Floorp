@@ -11,7 +11,7 @@
 // not include it into any file other than Decimal.cpp.
 
 #include "../double-conversion/double-conversion.h"
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/NullPtr.h"

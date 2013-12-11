@@ -217,6 +217,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(GuardClass)
     SAFE_OP(AssertRange)
     SAFE_OP(ArrayLength)
+    WRITE_GUARDED_OP(SetArrayLength, elements)
     SAFE_OP(TypedArrayLength)
     SAFE_OP(TypedArrayElements)
     SAFE_OP(TypedObjectElements)
@@ -274,6 +275,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(AbortPar)
     UNSAFE_OP(ArrayConcat)
     UNSAFE_OP(GetDOMProperty)
+    UNSAFE_OP(GetDOMMember)
     UNSAFE_OP(SetDOMProperty)
     UNSAFE_OP(NewStringObject)
     UNSAFE_OP(Random)
@@ -297,8 +299,6 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(AsmJSUnsignedToDouble)
     UNSAFE_OP(AsmJSUnsignedToFloat32)
     UNSAFE_OP(AsmJSNeg)
-    UNSAFE_OP(AsmJSUDiv)
-    UNSAFE_OP(AsmJSUMod)
     UNSAFE_OP(AsmJSLoadHeap)
     UNSAFE_OP(AsmJSStoreHeap)
     UNSAFE_OP(AsmJSLoadGlobalVar)
@@ -596,7 +596,7 @@ bool
 ParallelSafetyVisitor::replaceWithNewPar(MInstruction *newInstruction,
                                          JSObject *templateObject)
 {
-    replace(newInstruction, new MNewPar(forkJoinSlice(), templateObject));
+    replace(newInstruction, MNewPar::New(alloc(), forkJoinSlice(), templateObject));
     return true;
 }
 
@@ -739,13 +739,13 @@ ParallelSafetyVisitor::visitCall(MCall *ins)
 bool
 ParallelSafetyVisitor::visitCheckOverRecursed(MCheckOverRecursed *ins)
 {
-    return replace(ins, new MCheckOverRecursedPar(forkJoinSlice()));
+    return replace(ins, MCheckOverRecursedPar::New(alloc(), forkJoinSlice()));
 }
 
 bool
 ParallelSafetyVisitor::visitInterruptCheck(MInterruptCheck *ins)
 {
-    return replace(ins, new MCheckInterruptPar(forkJoinSlice()));
+    return replace(ins, MCheckInterruptPar::New(alloc(), forkJoinSlice()));
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -872,7 +872,7 @@ GetPossibleCallees(JSContext *cx,
         if (!rootedScript)
             return false;
 
-        if (rootedScript->shouldCloneAtCallsite) {
+        if (rootedScript->shouldCloneAtCallsite()) {
             rootedFun = CloneFunctionAtCallsite(cx, rootedFun, script, pc);
             if (!rootedFun)
                 return false;

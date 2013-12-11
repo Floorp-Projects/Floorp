@@ -32,12 +32,14 @@ function test_object_grip()
 
     let objClient = gThreadClient.pauseGrip(args[0]);
     objClient.getOwnPropertyNames(function(aResponse) {
-      do_check_eq(aResponse.ownPropertyNames.length, 5);
-      do_check_eq(aResponse.ownPropertyNames[0], "message");
-      do_check_eq(aResponse.ownPropertyNames[1], "stack");
-      do_check_eq(aResponse.ownPropertyNames[2], "fileName");
-      do_check_eq(aResponse.ownPropertyNames[3], "lineNumber");
-      do_check_eq(aResponse.ownPropertyNames[4], "columnNumber");
+      var opn = aResponse.ownPropertyNames;
+      do_check_eq(opn.length, 5);
+      opn.sort();
+      do_check_eq(opn[0], "columnNumber");
+      do_check_eq(opn[1], "fileName");
+      do_check_eq(opn[2], "lineNumber");
+      do_check_eq(opn[3], "message");
+      do_check_eq(opn[4], "stack");
 
       gThreadClient.resume(function() {
         finishClient(gClient);

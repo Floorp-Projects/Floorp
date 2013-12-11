@@ -14,10 +14,14 @@ Cu.import("resource://gre/modules/Task.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
   "resource:///modules/sessionstore/Messenger.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
+  "resource:///modules/sessionstore/PrivacyLevel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabAttributes",
   "resource:///modules/sessionstore/TabAttributes.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+  "resource:///modules/sessionstore/Utils.jsm");
 
 /**
  * Module that contains tab state collection methods.
@@ -27,8 +31,20 @@ this.TabState = Object.freeze({
     TabStateInternal.setSyncHandler(browser, handler);
   },
 
-  onSwapDocShells: function (browser, otherBrowser) {
-    TabStateInternal.onSwapDocShells(browser, otherBrowser);
+  onBrowserContentsSwapped: function (browser, otherBrowser) {
+    TabStateInternal.onBrowserContentsSwapped(browser, otherBrowser);
+  },
+
+  update: function (browser, data) {
+    TabStateInternal.update(browser, data);
+  },
+
+  flush: function (browser) {
+    TabStateInternal.flush(browser);
+  },
+
+  flushWindow: function (window) {
+    TabStateInternal.flushWindow(window);
   },
 
   collect: function (tab) {
@@ -58,11 +74,48 @@ let TabStateInternal = {
   // See SyncHandler in content-sessionStore.js.
   _syncHandlers: new WeakMap(),
 
+  // A map (xul:browser -> int) that maps a browser to the
+  // last "SessionStore:update" message ID we received for it.
+  _latestMessageID: new WeakMap(),
+
   /**
    * Install the sync handler object from a given tab.
    */
   setSyncHandler: function (browser, handler) {
     this._syncHandlers.set(browser, handler);
+    this._latestMessageID.set(browser, 0);
+  },
+
+  /**
+   * Processes a data update sent by the content script.
+   */
+  update: function (browser, {id, data}) {
+    // Only ever process messages that have an ID higher than the last one we
+    // saw. This ensures we don't use stale data that has already been received
+    // synchronously.
+    if (id > this._latestMessageID.get(browser)) {
+      this._latestMessageID.set(browser, id);
+      TabStateCache.updatePersistent(browser, data);
+    }
+  },
+
+  /**
+   * Flushes all data currently queued in the given browser's content script.
+   */
+  flush: function (browser) {
+    if (this._syncHandlers.has(browser)) {
+      let lastID = this._latestMessageID.get(browser);
+      this._syncHandlers.get(browser).flush(lastID);
+    }
+  },
+
+  /**
+   * Flushes queued content script data for all browsers of a given window.
+   */
+  flushWindow: function (window) {
+    for (let browser of window.gBrowser.browsers) {
+      this.flush(browser);
+    }
   },
 
   /**
@@ -71,33 +124,16 @@ let TabStateInternal = {
    * global. In this case, the sync handler for the element needs to
    * be swapped just like the docshell.
    */
-  onSwapDocShells: function (browser, otherBrowser) {
+  onBrowserContentsSwapped: function (browser, otherBrowser) {
     // Data collected while docShells have been swapped should not go into
     // the TabStateCache. Collections will most probably time out but we want
     // to make sure.
     this.dropPendingCollections(browser);
     this.dropPendingCollections(otherBrowser);
 
-    // Make sure that one or the other of these has a sync handler,
-    // and let it be |browser|.
-    if (!this._syncHandlers.has(browser)) {
-      [browser, otherBrowser] = [otherBrowser, browser];
-      if (!this._syncHandlers.has(browser)) {
-        return;
-      }
-    }
-
-    // At this point, browser is guaranteed to have a sync handler,
-    // although otherBrowser may not. Perform the swap.
-    let handler = this._syncHandlers.get(browser);
-    if (this._syncHandlers.has(otherBrowser)) {
-      let otherHandler = this._syncHandlers.get(otherBrowser);
-      this._syncHandlers.set(browser, otherHandler);
-      this._syncHandlers.set(otherBrowser, handler);
-    } else {
-      this._syncHandlers.set(otherBrowser, handler);
-      this._syncHandlers.delete(browser);
-    }
+    // Swap data stored per-browser.
+    [this._syncHandlers, this._latestMessageID]
+      .forEach(map => Utils.swapMapEntries(map, browser, otherBrowser));
   },
 
   /**
@@ -132,13 +168,10 @@ let TabStateInternal = {
       // text and scroll data.
       let history = yield Messenger.send(tab, "SessionStore:collectSessionHistory");
 
-      // Collected session storage data asynchronously.
-      let storage = yield Messenger.send(tab, "SessionStore:collectSessionStorage");
-
-      // Collect docShell capabilities asynchronously.
-      let disallow = yield Messenger.send(tab, "SessionStore:collectDocShellCapabilities");
-
-      let pageStyle = yield Messenger.send(tab, "SessionStore:collectPageStyle");
+      // The tab could have been closed while waiting for a response.
+      if (!tab.linkedBrowser) {
+        return;
+      }
 
       // Collect basic tab data, without session history and storage.
       let tabData = this._collectBaseTabData(tab);
@@ -149,17 +182,8 @@ let TabStateInternal = {
         tabData.index = history.index;
       }
 
-      if (Object.keys(storage).length) {
-        tabData.storage = storage;
-      }
-
-      if (disallow.length > 0) {
-        tabData.disallow = disallow.join(",");
-      }
-
-      if (pageStyle) {
-        tabData.pageStyle = pageStyle;
-      }
+      // Copy data from the persistent cache.
+      this._copyFromPersistentCache(tab, tabData);
 
       // If we're still the latest async collection for the given tab and
       // the cache hasn't been filled by collect() in the meantime, let's
@@ -267,12 +291,9 @@ let TabStateInternal = {
 
     let includePrivateData = options && options.includePrivateData;
 
-    let history, storage, disallow, pageStyle;
+    let history;
     try {
       history = syncHandler.collectSessionHistory(includePrivateData);
-      storage = syncHandler.collectSessionStorage();
-      disallow = syncHandler.collectDocShellCapabilities();
-      pageStyle = syncHandler.collectPageStyle();
     } catch (e) {
       // This may happen if the tab has crashed.
       Cu.reportError(e);
@@ -284,19 +305,49 @@ let TabStateInternal = {
       tabData.index = history.index;
     }
 
-    if (Object.keys(storage).length) {
-      tabData.storage = storage;
-    }
-
-    if (disallow.length > 0) {
-      tabData.disallow = disallow.join(",");
-    }
-
-    if (pageStyle) {
-      tabData.pageStyle = pageStyle;
-    }
+    // Copy data from the persistent cache.
+    this._copyFromPersistentCache(tab, tabData, options);
 
     return tabData;
+  },
+
+  /**
+   * Copy tab data for the given |tab| from the persistent cache to |tabData|.
+   *
+   * @param tab (xul:tab)
+   *        The tab belonging to the given |tabData| object.
+   * @param tabData (object)
+   *        The tab data belonging to the given |tab|.
+   * @param options (object)
+   *        {includePrivateData: true} to always include private data
+   */
+  _copyFromPersistentCache: function (tab, tabData, options = {}) {
+    let data = TabStateCache.getPersistent(tab.linkedBrowser);
+
+    // Nothing to do without any cached data.
+    if (!data) {
+      return;
+    }
+
+    let includePrivateData = options && options.includePrivateData;
+
+    for (let key of Object.keys(data)) {
+      if (key != "storage" || includePrivateData) {
+        tabData[key] = data[key];
+      } else {
+        tabData.storage = {};
+        let isPinned = tab.pinned;
+
+        // If we're not allowed to include private data, let's filter out hosts
+        // based on the given tab's pinned state and the privacy level.
+        for (let host of Object.keys(data.storage)) {
+          let isHttps = host.startsWith("https:");
+          if (PrivacyLevel.canSave({isHttps: isHttps, isPinned: isPinned})) {
+            tabData.storage[host] = data.storage[host];
+          }
+        }
+      }
+    }
   },
 
   /*
@@ -313,8 +364,7 @@ let TabStateInternal = {
    * restored.
    */
   _tabIsRestoring: function (tab) {
-    let browser = tab.linkedBrowser;
-    return (browser.__SS_data && browser.__SS_tabStillLoading);
+    return !!tab.linkedBrowser.__SS_data;
   },
 
   /**
@@ -378,7 +428,7 @@ let TabStateInternal = {
       // can happen when calling this function right after .addTab()
       return tabData;
     }
-    if (browser.__SS_data && browser.__SS_tabStillLoading) {
+    if (browser.__SS_data) {
       // Use the data to be restored when the tab hasn't been
       // completely loaded. We clone the data, since we're updating it
       // here and the caller may update it further.

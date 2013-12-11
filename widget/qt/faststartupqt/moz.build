@@ -20,3 +20,18 @@ SOURCES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '/widget/qt',
+    '/xpcom/build',
+]
+
+
+DEFINES['LIBRARY_FILENAME'] = '%s%s%s' % (
+    CONFIG['DLL_PREFIX'],
+    LIBRARY_NAME,
+    CONFIG['DLL_SUFFIX']
+)
+
+DEFINES['MOZ_NO_MOZALLOC'] = True
+DEFINES['XPCOM_GLUE'] = True

@@ -688,6 +688,11 @@ menuitem.bookmark-item {
   transition: none;
 }
 
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#forward-button:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
 .unified-nav-forward[_moz-menuactive]:-moz-locale-dir(rtl) {
   list-style-image: url("chrome://browser/skin/menu-back.png") !important;
@@ -940,7 +945,6 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   background: transparent;
 }
 
-#urlbar-search-splitter + #urlbar-container > #urlbar-wrapper > #urlbar,
 #urlbar-search-splitter + #search-container > #searchbar > .searchbar-textbox {
   -moz-margin-start: 0;
 }
@@ -955,6 +959,10 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   margin-bottom: 0;
   -moz-margin-start: 0;
   color: GrayText;
+}
+
+#search-container {
+  min-width: calc(54px + 11ch);
 }
 
 /* identity box */
@@ -2215,6 +2223,19 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #social-provider-button > .toolbarbutton-menu-dropmarker {
   display: none;
+}
+
+#switch-to-metro-button[cui-areatype="toolbar"] {
+  list-style-image: url(chrome://browser/skin/Metro_Glyph.png);
+}
+
+#switch-to-metro-button[cui-areatype="toolbar"]:-moz-lwtheme-brighttext {
+  list-style-image: url(chrome://browser/skin/Metro_Glyph-inverted.png);
+}
+
+#switch-to-metro-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #switch-to-metro-button {
+  list-style-image: url(chrome://browser/skin/Metro_Glyph-menuPanel.png);
 }
 
 .toolbarbutton-badge-container {

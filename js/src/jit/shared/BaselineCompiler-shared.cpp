@@ -15,7 +15,7 @@ using namespace js::jit;
 BaselineCompilerShared::BaselineCompilerShared(JSContext *cx, TempAllocator &alloc, HandleScript script)
   : cx(cx),
     script(cx, script),
-    pc(script->code),
+    pc(script->code()),
     ionCompileable_(jit::IsIonEnabled(cx) && CanIonCompileScript(cx, script, false)),
     ionOSRCompileable_(jit::IsIonEnabled(cx) && CanIonCompileScript(cx, script, true)),
     debugMode_(cx->compartment()->debugMode()),
@@ -96,7 +96,7 @@ BaselineCompilerShared::callVM(const VMFunction &fun, CallVMPhase phase)
 
     // Add a fake ICEntry (without stubs), so that the return offset to
     // pc mapping works.
-    ICEntry entry(pc - script->code, false);
+    ICEntry entry(script->pcToOffset(pc), false);
     entry.setReturnOffset(callOffset);
 
     return icEntries_.append(entry);

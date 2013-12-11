@@ -330,10 +330,29 @@ public:
 #endif
 
   /**
+   * Hints that can be used during Thebes layer creation to influence the type
+   * or properties of the layer created.
+   *
+   * NONE: No hint.
+   * SCROLLABLE: This layer may represent scrollable content.
+   */
+  enum ThebesLayerCreationHint {
+    NONE, SCROLLABLE
+  };
+
+  /**
    * CONSTRUCTION PHASE ONLY
    * Create a ThebesLayer for this manager's layer tree.
    */
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer() = 0;
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Create a ThebesLayer for this manager's layer tree, with a creation hint
+   * parameter to help optimise the type of layer created.
+   */
+  virtual already_AddRefed<ThebesLayer> CreateThebesLayerWithHint(ThebesLayerCreationHint) {
+    return CreateThebesLayer();
+  }
   /**
    * CONSTRUCTION PHASE ONLY
    * Create a ContainerLayer for this manager's layer tree.
@@ -417,12 +436,6 @@ public:
                      mozilla::gfx::SurfaceFormat aFormat);
 
   virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) { return true; }
-
-  /**
-   * Returns a TextureFactoryIdentifier which describes properties of the backend
-   * used to decide what kind of texture and buffer clients to create
-   */
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier();
 
   /**
    * returns the maximum texture size on this layer backend, or INT32_MAX
@@ -544,18 +557,17 @@ public:
   /**
    * Returns a handle which represents current recording start position.
    */
-  uint32_t StartFrameTimeRecording();
+  virtual uint32_t StartFrameTimeRecording(int32_t aBufferSize);
 
   /**
-   *  Clears, then populates 2 arraye with the recorded frames timing data.
-   *  The arrays will be empty if data was overwritten since aStartIndex was obtained.
+   *  Clears, then populates aFrameIntervals with the recorded frame timing
+   *  data. The array will be empty if data was overwritten since
+   *  aStartIndex was obtained.
    */
-  void StopFrameTimeRecording(uint32_t         aStartIndex,
-                              nsTArray<float>& aFrameIntervals,
-                              nsTArray<float>& aPaintTimes);
+  virtual void StopFrameTimeRecording(uint32_t         aStartIndex,
+                                      nsTArray<float>& aFrameIntervals);
 
-  void SetPaintStartTime(TimeStamp& aTime);
-
+  void RecordFrame();
   void PostPresent();
 
   void BeginTabSwitch();
@@ -600,9 +612,7 @@ private:
     bool mIsPaused;
     uint32_t mNextIndex;
     TimeStamp mLastFrameTime;
-    TimeStamp mPaintStartTime;
     nsTArray<float> mIntervals;
-    nsTArray<float> mPaints;
     uint32_t mLatestStartIndex;
     uint32_t mCurrentRunStartIndex;
   };
@@ -956,6 +966,29 @@ public:
     }
   }
 
+  enum ScrollDirection {
+    VERTICAL,
+    HORIZONTAL
+  };
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * If a layer is a scrollbar layer, |aScrollId| holds the scroll identifier
+   * of the scrollable content that the scrollbar is for.
+   */
+  void SetScrollbarData(FrameMetrics::ViewID aScrollId, ScrollDirection aDir)
+  {
+    if (mIsScrollbar ||
+        mScrollbarTargetId != aScrollId ||
+        mScrollbarDirection != aDir) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ScrollbarData", this));
+      mIsScrollbar = true;
+      mScrollbarTargetId = aScrollId;
+      mScrollbarDirection = aDir;
+      Mutated();
+    }
+  }
+
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
   gfxContext::GraphicsOperator GetMixBlendMode() const { return mMixBlendMode; }
@@ -980,6 +1013,9 @@ public:
   FrameMetrics::ViewID GetStickyScrollContainerId() { return mStickyPositionData->mScrollId; }
   const LayerRect& GetStickyScrollRangeOuter() { return mStickyPositionData->mOuter; }
   const LayerRect& GetStickyScrollRangeInner() { return mStickyPositionData->mInner; }
+  bool GetIsScrollbar() { return mIsScrollbar; }
+  FrameMetrics::ViewID GetScrollbarTargetContainerId() { return mScrollbarTargetId; }
+  ScrollDirection GetScrollbarDirection() { return mScrollbarDirection; }
   Layer* GetMaskLayer() const { return mMaskLayer; }
 
   // Note that all lengths in animation data are either in CSS pixels or app
@@ -1351,6 +1387,9 @@ protected:
     LayerRect mInner;
   };
   nsAutoPtr<StickyPositionData> mStickyPositionData;
+  bool mIsScrollbar;
+  FrameMetrics::ViewID mScrollbarTargetId;
+  ScrollDirection mScrollbarDirection;
   DebugOnly<uint32_t> mDebugColorIndex;
   // If this layer is used for OMTA, then this counter is used to ensure we
   // stay in sync with the animation manager
@@ -1735,6 +1774,11 @@ public:
    * This must only be called once.
    */
   virtual void Initialize(const Data& aData) = 0;
+
+  /**
+   * Check the data is owned by this layer is still valid for rendering
+   */
+  virtual bool IsDataValid(const Data& aData) { return true; }
 
   /**
    * Notify this CanvasLayer that the canvas surface contents have

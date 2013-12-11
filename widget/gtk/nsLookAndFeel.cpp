@@ -13,10 +13,8 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
-#ifdef MOZ_PANGO
 #include <pango/pango.h>
 #include <pango/pango-fontmap.h>
-#endif
 
 #include <fontconfig/fontconfig.h>
 #include "gfxPlatformGtk.h"
@@ -700,7 +698,6 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
     return res;
 }
 
-#ifdef MOZ_PANGO
 static void
 GetSystemFontInfo(GtkWidget *aWidget,
                   nsString *aFontName,
@@ -803,24 +800,6 @@ GetSystemFontInfo(LookAndFeel::FontID aID,
         g_object_unref(menu);
     }
 }
-
-#else // not MOZ_PANGO
-
-static void
-GetSystemFontInfo(LookAndFeel::FontID /*unused */,
-                  nsString *aFontName,
-                  gfxFontStyle *aFontStyle)
-{
-    /* FIXME: DFB FT2 Hardcoding the system font info for now. */
-    aFontStyle->style      = NS_FONT_STYLE_NORMAL;
-    aFontStyle->weight     = NS_FONT_WEIGHT_NORMAL;
-    aFontStyle->size       = 40/3;
-    aFontStyle->stretch    = NS_FONT_STRETCH_NORMAL;
-    aFontStyle->systemFont = true;
-    aFontName->AssignLiteral("\"Sans\"");
-}
-
-#endif // not MOZ_PANGO
 
 bool
 nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,

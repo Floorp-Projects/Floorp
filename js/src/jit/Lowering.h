@@ -183,6 +183,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitMonitorTypes(MMonitorTypes *ins);
     bool visitPostWriteBarrier(MPostWriteBarrier *ins);
     bool visitArrayLength(MArrayLength *ins);
+    bool visitSetArrayLength(MSetArrayLength *ins);
     bool visitTypedArrayLength(MTypedArrayLength *ins);
     bool visitTypedArrayElements(MTypedArrayElements *ins);
     bool visitTypedObjectElements(MTypedObjectElements *ins);
@@ -259,6 +260,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitAsmJSCheckOverRecursed(MAsmJSCheckOverRecursed *ins);
     bool visitSetDOMProperty(MSetDOMProperty *ins);
     bool visitGetDOMProperty(MGetDOMProperty *ins);
+    bool visitGetDOMMember(MGetDOMMember *ins);
 };
 
 } // namespace jit

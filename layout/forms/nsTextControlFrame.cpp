@@ -357,7 +357,8 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
     nsRefPtr<nsStyleContext> placeholderStyleContext =
       PresContext()->StyleSet()->ResolvePseudoElementStyle(
-          mContent->AsElement(), pseudoType, StyleContext());
+          mContent->AsElement(), pseudoType, StyleContext(),
+          placeholderNode->AsElement());
 
     if (!aElements.AppendElement(ContentInfo(placeholderNode,
                                  placeholderStyleContext))) {
@@ -1429,6 +1430,17 @@ nsTextControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
     kid = kid->GetNextSibling();
   }
+}
+
+mozilla::dom::Element*
+nsTextControlFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
+{
+  if (aType == nsCSSPseudoElements::ePseudo_mozPlaceholder) {
+    nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
+    return txtCtrl->GetPlaceholderNode();
+  }
+
+  return nsContainerFrame::GetPseudoElement(aType);
 }
 
 NS_IMETHODIMP

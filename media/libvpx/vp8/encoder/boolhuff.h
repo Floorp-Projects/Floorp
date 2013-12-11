@@ -26,14 +26,13 @@ typedef struct
 {
     unsigned int lowvalue;
     unsigned int range;
-    unsigned int value;
     int count;
     unsigned int pos;
     unsigned char *buffer;
     unsigned char *buffer_end;
     struct vpx_internal_error_info *error;
 
-    // Variables used to track bit costs without outputing to the bitstream
+    /* Variables used to track bit costs without outputing to the bitstream */
     unsigned int  measure_cost;
     unsigned long bit_counter;
 } BOOL_CODER;
@@ -68,7 +67,7 @@ static void vp8_encode_bool(BOOL_CODER *br, int bit, int probability)
     unsigned int lowvalue = br->lowvalue;
     register unsigned int shift;
 
-#ifdef ENTROPY_STATS
+#ifdef VP8_ENTROPY_STATS
 #if defined(SECTIONBITS_OUTPUT)
 
     if (bit)

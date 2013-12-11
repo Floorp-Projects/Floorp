@@ -5,8 +5,11 @@
 
 #include "mozilla/dom/SVGFEPointLightElement.h"
 #include "mozilla/dom/SVGFEPointLightElementBinding.h"
+#include "nsSVGFilterInstance.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEPointLight)
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace dom {
@@ -43,6 +46,18 @@ SVGFEPointLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
 }
 
 //----------------------------------------------------------------------
+
+AttributeMap
+SVGFEPointLightElement::ComputeLightAttributes(nsSVGFilterInstance* aInstance)
+{
+  Point3D lightPos;
+  GetAnimatedNumberValues(&lightPos.x, &lightPos.y, &lightPos.z, nullptr);
+  
+  AttributeMap map;
+  map.Set(eLightType, (uint32_t)eLightTypePoint);
+  map.Set(ePointLightPosition, aInstance->ConvertLocation(lightPos));
+  return map;
+}
 
 already_AddRefed<SVGAnimatedNumber>
 SVGFEPointLightElement::X()

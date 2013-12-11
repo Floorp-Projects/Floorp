@@ -1683,6 +1683,24 @@ function directoryStateDiffers(aState, aCache)
   return false;
 }
 
+/**
+ * Wraps a function in an exception handler to protect against exceptions inside callbacks
+ * @param aFunction function(args...)
+ * @return function(args...), a function that takes the same arguments as aFunction
+ *         and returns the same result unless aFunction throws, in which case it logs
+ *         a warning and returns undefined.
+ */
+function makeSafe(aFunction) {
+  return function(...aArgs) {
+    try {
+      return aFunction(...aArgs);
+    }
+    catch(ex) {
+      WARN("XPIProvider callback failed", ex);
+    }
+    return undefined;
+  }
+}
 
 var XPIProvider = {
   // An array of known install locations
@@ -1709,7 +1727,8 @@ var XPIProvider = {
   bootstrapScopes: {},
   // True if the platform could have activated extensions
   extensionsActive: false,
-
+  // File / directory state of installed add-ons
+  installStates: [],
   // True if all of the add-ons found during startup were installed in the
   // application install location
   allAppGlobal: true,
@@ -1732,6 +1751,32 @@ var XPIProvider = {
     if (!this._telemetryDetails[aId])
       this._telemetryDetails[aId] = {};
     this._telemetryDetails[aId][aName] = aValue;
+  },
+
+  // Keep track of in-progress operations that support cancel()
+  _inProgress: new Set(),
+
+  doing: function XPI_doing(aCancellable) {
+    this._inProgress.add(aCancellable);
+  },
+
+  done: function XPI_done(aCancellable) {
+    return this._inProgress.delete(aCancellable);
+  },
+
+  cancelAll: function XPI_cancelAll() {
+    // Cancelling one may alter _inProgress, so restart the iterator after each
+    while (this._inProgress.size > 0) {
+      for (let c of this._inProgress) {
+        try {
+          c.cancel();
+        }
+        catch (e) {
+          WARN("Cancel failed", e);
+        }
+        this._inProgress.delete(c);
+      }
+    }
   },
 
   /**
@@ -2075,6 +2120,9 @@ var XPIProvider = {
    */
   shutdown: function XPI_shutdown() {
     LOG("shutdown");
+
+    // Stop anything we were doing asynchronously
+    this.cancelAll();
 
     this.bootstrappedAddons = {};
     this.bootstrapScopes = {};
@@ -3308,7 +3356,7 @@ var XPIProvider = {
         locMigrateData = XPIDatabase.migrateData[installLocation.name];
       for (let id in addonStates) {
         changed = addMetadata(installLocation, id, addonStates[id],
-                              locMigrateData[id] || null) || changed;
+                              (locMigrateData[id] || null)) || changed;
       }
     }
 
@@ -3324,7 +3372,8 @@ var XPIProvider = {
     }
 
     // Cache the new install location states
-    let cache = JSON.stringify(this.getInstallLocationStates());
+    this.installStates = this.getInstallLocationStates();
+    let cache = JSON.stringify(this.installStates);
     Services.prefs.setCharPref(PREF_INSTALL_CACHE, cache);
     this.persistBootstrappedAddons();
 
@@ -3398,11 +3447,6 @@ var XPIProvider = {
       updateReasons.push("hasPendingChanges");
     }
 
-    // If the schema appears to have changed then we should update the database
-    if (DB_SCHEMA != Prefs.getIntPref(PREF_DB_SCHEMA, 0)) {
-      updateReasons.push("schemaChanged");
-    }
-
     // If the application has changed then check for new distribution add-ons
     if (aAppChanged !== false &&
         Prefs.getBoolPref(PREF_INSTALL_DISTRO_ADDONS, true))
@@ -3415,16 +3459,18 @@ var XPIProvider = {
 
     // Telemetry probe added around getInstallLocationStates() to check perf
     let telemetryCaptureTime = Date.now();
-    let state = this.getInstallLocationStates();
+    this.installStates = this.getInstallLocationStates();
     let telemetry = Services.telemetry;
     telemetry.getHistogramById("CHECK_ADDONS_MODIFIED_MS").add(Date.now() - telemetryCaptureTime);
 
     // If the install directory state has changed then we must update the database
-    let cache = Prefs.getCharPref(PREF_INSTALL_CACHE, null);
+    let cache = Prefs.getCharPref(PREF_INSTALL_CACHE, "[]");
     // For a little while, gather telemetry on whether the deep comparison
     // makes a difference
-    if (cache != JSON.stringify(state)) {
-      if (directoryStateDiffers(state, cache)) {
+    let newState = JSON.stringify(this.installStates);
+    if (cache != newState) {
+      LOG("Directory state JSON differs: cache " + cache + " state " + newState);
+      if (directoryStateDiffers(this.installStates, cache)) {
         updateReasons.push("directoryState");
       }
       else {
@@ -3432,11 +3478,24 @@ var XPIProvider = {
       }
     }
 
+    // If the schema appears to have changed then we should update the database
+    if (DB_SCHEMA != Prefs.getIntPref(PREF_DB_SCHEMA, 0)) {
+      // If we don't have any add-ons, just update the pref, since we don't need to
+      // write the database
+      if (this.installStates.length == 0) {
+        LOG("Empty XPI database, setting schema version preference to " + DB_SCHEMA);
+        Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
+      }
+      else {
+        updateReasons.push("schemaChanged");
+      }
+    }
+
     // If the database doesn't exist and there are add-ons installed then we
     // must update the database however if there are no add-ons then there is
     // no need to update the database.
     let dbFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
-    if (!dbFile.exists() && state.length > 0) {
+    if (!dbFile.exists() && this.installStates.length > 0) {
       updateReasons.push("needNewDatabase");
     }
 
@@ -3444,7 +3503,7 @@ var XPIProvider = {
       let bootstrapDescriptors = [this.bootstrappedAddons[b].descriptor
                                   for (b in this.bootstrappedAddons)];
 
-      state.forEach(function(aInstallLocationState) {
+      this.installStates.forEach(function(aInstallLocationState) {
         for (let id in aInstallLocationState.addons) {
           let pos = bootstrapDescriptors.indexOf(aInstallLocationState.addons[id].descriptor);
           if (pos != -1)
@@ -3467,7 +3526,7 @@ var XPIProvider = {
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_startup_load_reasons", updateReasons);
         XPIDatabase.syncLoadDB(false);
         try {
-          extensionListChanged = this.processFileChanges(state, manifests,
+          extensionListChanged = this.processFileChanges(this.installStates, manifests,
                                                          aAppChanged,
                                                          aOldAppVersion,
                                                          aOldPlatformVersion);
@@ -3519,7 +3578,7 @@ var XPIProvider = {
     // Check that the add-ons list still exists
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
-    if (addonsList.exists() == (state.length == 0)) {
+    if (addonsList.exists() == (this.installStates.length == 0)) {
       LOG("Add-ons list is invalid, rebuilding");
       XPIDatabase.writeAddonsList();
     }
@@ -3642,10 +3701,7 @@ var XPIProvider = {
    */
   getAddonByID: function XPI_getAddonByID(aId, aCallback) {
     XPIDatabase.getVisibleAddonForID (aId, function getAddonByID_getVisibleAddonForID(aAddon) {
-      if (aAddon)
-        aCallback(createWrapper(aAddon));
-      else
-        aCallback(null);
+      aCallback(createWrapper(aAddon));
     });
   },
 
@@ -3673,10 +3729,7 @@ var XPIProvider = {
    */
   getAddonBySyncGUID: function XPI_getAddonBySyncGUID(aGUID, aCallback) {
     XPIDatabase.getAddonBySyncGUID(aGUID, function getAddonBySyncGUID_getAddonBySyncGUID(aAddon) {
-      if (aAddon)
-        aCallback(createWrapper(aAddon));
-      else
-        aCallback(null);
+      aCallback(createWrapper(aAddon));
     });
   },
 
@@ -4382,6 +4435,11 @@ var XPIProvider = {
     if ("_hasResourceCache" in aAddon)
       aAddon._hasResourceCache = new Map();
 
+    if (aAddon._updateCheck) {
+      LOG("Cancel in-progress update check for " + aAddon.id);
+      aAddon._updateCheck.cancel();
+    }
+
     // Inactive add-ons don't require a restart to uninstall
     let requiresRestart = this.uninstallRequiresRestart(aAddon);
 
@@ -4631,6 +4689,7 @@ AddonInstall.prototype = {
    *         The callback to pass the initialised AddonInstall to
    */
   initLocalInstall: function AI_initLocalInstall(aCallback) {
+    aCallback = makeSafe(aCallback);
     this.file = this.sourceURI.QueryInterface(Ci.nsIFileURL).file;
 
     if (!this.file.exists()) {
@@ -4746,7 +4805,7 @@ AddonInstall.prototype = {
     AddonManagerPrivate.callInstallListeners("onNewInstall", this.listeners,
                                              this.wrapper);
 
-    aCallback(this);
+    makeSafe(aCallback)(this);
   },
 
   /**
@@ -4946,7 +5005,7 @@ AddonInstall.prototype = {
 
     if (!addon) {
       // No valid add-on was found
-      aCallback();
+      makeSafe(aCallback)();
       return;
     }
 
@@ -4995,7 +5054,7 @@ AddonInstall.prototype = {
       }, this);
     }
     else {
-      aCallback();
+      makeSafe(aCallback)();
     }
   },
 
@@ -5009,6 +5068,7 @@ AddonInstall.prototype = {
    *         XPI is incorrectly signed
    */
   loadManifest: function AI_loadManifest(aCallback) {
+    aCallback = makeSafe(aCallback);
     let self = this;
     function addRepositoryData(aAddon) {
       // Try to load from the existing cache first
@@ -5680,7 +5740,7 @@ AddonInstall.createInstall = function AI_createInstall(aCallback, aFile) {
   }
   catch(e) {
     ERROR("Error creating install", e);
-    aCallback(null);
+    makeSafe(aCallback)(null);
   }
 };
 
@@ -5819,6 +5879,8 @@ function UpdateChecker(aAddon, aListener, aReason, aAppVersion, aPlatformVersion
   Components.utils.import("resource://gre/modules/AddonUpdateChecker.jsm");
 
   this.addon = aAddon;
+  aAddon._updateCheck = this;
+  XPIProvider.doing(this);
   this.listener = aListener;
   this.appVersion = aAppVersion;
   this.platformVersion = aPlatformVersion;
@@ -5842,8 +5904,8 @@ function UpdateChecker(aAddon, aListener, aReason, aAppVersion, aPlatformVersion
     aReason |= UPDATE_TYPE_NEWVERSION;
 
   let url = escapeAddonURI(aAddon, updateURL, aReason, aAppVersion);
-  AddonUpdateChecker.checkForUpdates(aAddon.id, aAddon.updateKey,
-                                     url, this);
+  this._parser = AddonUpdateChecker.checkForUpdates(aAddon.id, aAddon.updateKey,
+                                                    url, this);
 }
 
 UpdateChecker.prototype = {
@@ -5868,7 +5930,7 @@ UpdateChecker.prototype = {
       this.listener[aMethod].apply(this.listener, aArgs);
     }
     catch (e) {
-      LOG("Exception calling UpdateListener method " + aMethod + ": " + e);
+      WARN("Exception calling UpdateListener method " + aMethod, e);
     }
   },
 
@@ -5879,6 +5941,8 @@ UpdateChecker.prototype = {
    *         The list of update details for the add-on
    */
   onUpdateCheckComplete: function UC_onUpdateCheckComplete(aUpdates) {
+    XPIProvider.done(this.addon._updateCheck);
+    this.addon._updateCheck = null;
     let AUC = AddonUpdateChecker;
 
     let ignoreMaxVersion = false;
@@ -5979,9 +6043,23 @@ UpdateChecker.prototype = {
    *         An error status
    */
   onUpdateCheckError: function UC_onUpdateCheckError(aError) {
+    XPIProvider.done(this.addon._updateCheck);
+    this.addon._updateCheck = null;
     this.callListener("onNoCompatibilityUpdateAvailable", createWrapper(this.addon));
     this.callListener("onNoUpdateAvailable", createWrapper(this.addon));
     this.callListener("onUpdateFinished", createWrapper(this.addon), aError);
+  },
+
+  /**
+   * Called to cancel an in-progress update check
+   */
+  cancel: function UC_cancel() {
+    let parser = this._parser;
+    if (parser) {
+      this._parser = null;
+      // This will call back to onUpdateCheckError with a CANCELLED error
+      parser.cancel();
+    }
   }
 };
 
@@ -6633,6 +6711,15 @@ function AddonWrapper(aAddon) {
 
   this.findUpdates = function AddonWrapper_findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
     new UpdateChecker(aAddon, aListener, aReason, aAppVersion, aPlatformVersion);
+  };
+
+  // Returns true if there was an update in progress, false if there was no update to cancel
+  this.cancelUpdate = function AddonWrapper_cancelUpdate() {
+    if (aAddon._updateCheck) {
+      aAddon._updateCheck.cancel();
+      return true;
+    }
+    return false;
   };
 
   this.hasResource = function AddonWrapper_hasResource(aPath) {

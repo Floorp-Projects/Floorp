@@ -34,9 +34,6 @@
 
 #include "nsAppShellService.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIPlatformCharset.h"
-#include "nsICharsetConverterManager.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsIChromeRegistry.h"
 #include "nsILoadContext.h"
 #include "nsIWebNavigation.h"

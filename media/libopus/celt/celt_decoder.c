@@ -175,7 +175,7 @@ void opus_custom_decoder_destroy(CELTDecoder *st)
 }
 #endif /* CUSTOM_MODES */
 
-static inline opus_val16 SIG2WORD16(celt_sig x)
+static OPUS_INLINE opus_val16 SIG2WORD16(celt_sig x)
 {
 #ifdef FIXED_POINT
    x = PSHR32(x, SIG_SHIFT);
@@ -213,7 +213,7 @@ void deemphasis(celt_sig *in[], opus_val16 *pcm, int N, int C, int downsample, c
          opus_val16 coef3 = coef[3];
          for (j=0;j<N;j++)
          {
-            celt_sig tmp = x[j] + m;
+            celt_sig tmp = x[j] + m + VERY_SMALL;
             m = MULT16_32_Q15(coef0, tmp)
                           - MULT16_32_Q15(coef1, x[j]);
             tmp = SHL32(MULT16_32_Q15(coef3, tmp), 2);
@@ -227,7 +227,7 @@ void deemphasis(celt_sig *in[], opus_val16 *pcm, int N, int C, int downsample, c
          /* Shortcut for the standard (non-custom modes) case */
          for (j=0;j<N;j++)
          {
-            celt_sig tmp = x[j] + m;
+            celt_sig tmp = x[j] + m + VERY_SMALL;
             m = MULT16_32_Q15(coef0, tmp);
             scratch[j] = tmp;
          }
@@ -447,10 +447,11 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, opus_val16 * OPUS_R
       {
          VARDECL( opus_val16, lp_pitch_buf );
          ALLOC( lp_pitch_buf, DECODE_BUFFER_SIZE>>1, opus_val16 );
-         pitch_downsample(decode_mem, lp_pitch_buf, DECODE_BUFFER_SIZE, C);
+         pitch_downsample(decode_mem, lp_pitch_buf,
+               DECODE_BUFFER_SIZE, C, st->arch);
          pitch_search(lp_pitch_buf+(PLC_PITCH_LAG_MAX>>1), lp_pitch_buf,
                DECODE_BUFFER_SIZE-PLC_PITCH_LAG_MAX,
-               PLC_PITCH_LAG_MAX-PLC_PITCH_LAG_MIN, &pitch_index);
+               PLC_PITCH_LAG_MAX-PLC_PITCH_LAG_MIN, &pitch_index, st->arch);
          pitch_index = PLC_PITCH_LAG_MAX-pitch_index;
          st->last_pitch_index = pitch_index;
       } else {
@@ -481,7 +482,8 @@ static void celt_decode_lost(CELTDecoder * OPUS_RESTRICT st, opus_val16 * OPUS_R
             opus_val32 ac[LPC_ORDER+1];
             /* Compute LPC coefficients for the last MAX_PERIOD samples before
                the first loss so we can work in the excitation-filter domain. */
-            _celt_autocorr(exc, ac, window, overlap, LPC_ORDER, MAX_PERIOD);
+            _celt_autocorr(exc, ac, window, overlap,
+                   LPC_ORDER, MAX_PERIOD, st->arch);
             /* Add a noise floor of -40 dB. */
 #ifdef FIXED_POINT
             ac[0] += SHR32(ac[0],13);
@@ -665,7 +667,6 @@ int celt_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *dat
    VARDECL(int, fine_priority);
    VARDECL(int, tf_res);
    VARDECL(unsigned char, collapse_masks);
-   celt_sig *out_mem[2];
    celt_sig *decode_mem[2];
    celt_sig *out_syn[2];
    opus_val16 *lpc;
@@ -706,7 +707,6 @@ int celt_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *dat
 
    c=0; do {
       decode_mem[c] = st->_decode_mem + c*(DECODE_BUFFER_SIZE+overlap);
-      out_mem[c] = decode_mem[c]+DECODE_BUFFER_SIZE-MAX_PERIOD;
    } while (++c<CC);
    lpc = (opus_val16*)(st->_decode_mem+(DECODE_BUFFER_SIZE+overlap)*CC);
    oldBandE = lpc+CC*LPC_ORDER;
@@ -936,7 +936,7 @@ int celt_decode_with_ec(CELTDecoder * OPUS_RESTRICT st, const unsigned char *dat
    } while (++c<C);
 
    c=0; do {
-      out_syn[c] = out_mem[c]+MAX_PERIOD-N;
+      out_syn[c] = decode_mem[c]+DECODE_BUFFER_SIZE-N;
    } while (++c<CC);
 
    if (CC==2&&C==1)

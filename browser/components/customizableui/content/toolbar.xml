@@ -8,18 +8,12 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="toolbar">
+  <binding id="toolbar" role="xul:toolbar">
     <resources>
       <stylesheet src="chrome://global/skin/toolbar.css"/>
     </resources>
-    <implementation implements="nsIAccessibleProvider">
+    <implementation>
       <field name="overflowedDuringConstruction">null</field>
-
-      <property name="accessibleType" readonly="true">
-        <getter>
-          return Components.interfaces.nsIAccessibleProvider.XULToolbar;
-        </getter>
-      </property>
 
       <constructor><![CDATA[
           let scope = {};
@@ -193,29 +187,32 @@
           // Get a list of items only in the new list
           let newIds = [id for (id of newVal) if (oldIds.indexOf(id) == -1)];
           CustomizableUI.beginBatchUpdate();
-          for (let newId of newIds) {
-            oldIds = CustomizableUI.getWidgetIdsInArea(this.id);
-            let nextId = newId;
-            let pos;
-            do {
-              // Get the next item
-              nextId = newVal[newVal.indexOf(nextId) + 1];
-              // Figure out where it is in the old list
-              pos = oldIds.indexOf(nextId);
-              // If it's not in the old list, repeat:
-            } while (pos == -1 && nextId);
-            if (pos == -1) {
-              pos = null; // We didn't find anything, insert at the end
+          try {
+            for (let newId of newIds) {
+              oldIds = CustomizableUI.getWidgetIdsInArea(this.id);
+              let nextId = newId;
+              let pos;
+              do {
+                // Get the next item
+                nextId = newVal[newVal.indexOf(nextId) + 1];
+                // Figure out where it is in the old list
+                pos = oldIds.indexOf(nextId);
+                // If it's not in the old list, repeat:
+              } while (pos == -1 && nextId);
+              if (pos == -1) {
+                pos = null; // We didn't find anything, insert at the end
+              }
+              CustomizableUI.addWidgetToArea(newId, this.id, pos);
             }
-            CustomizableUI.addWidgetToArea(newId, this.id, pos);
-          }
 
-          let currentIds = this.currentSet.split(',');
-          let removedIds = [id for (id of currentIds) if (newIds.indexOf(id) == -1 && newVal.indexOf(id) == -1)];
-          for (let removedId of removedIds) {
-            CustomizableUI.removeWidgetFromArea(removedId);
+            let currentIds = this.currentSet.split(',');
+            let removedIds = [id for (id of currentIds) if (newIds.indexOf(id) == -1 && newVal.indexOf(id) == -1)];
+            for (let removedId of removedIds) {
+              CustomizableUI.removeWidgetFromArea(removedId);
+            }
+          } finally {
+            CustomizableUI.endBatchUpdate();
           }
-          CustomizableUI.endBatchUpdate();
         ]]></setter>
       </property>
 
@@ -378,6 +375,7 @@
       <constructor><![CDATA[
           // Reading these immediately so nobody messes with them anymore:
           this._delegatingToolbar = this.getAttribute("toolbar-delegate");
+          this._wasCollapsed = this.getAttribute("collapsed");
           // Leaving those in here to unbreak some code:
           if (document.readyState == "complete") {
             this._init();
@@ -409,9 +407,22 @@
           }
 
           // pass the current set of children for comparison with placements:
-          let children = [node.id for (node of this.childNodes)
-                          if (node.getAttribute("skipintoolbarset") != "true" && node.id)];
+          let children = [];
+          for (let node of this.childNodes) {
+            if (node.getAttribute("skipintoolbarset") != "true" && node.id) {
+              // Force everything to be removable so that buildArea can chuck stuff
+              // out if the user has customized things / we've been here before:
+              if (!this._whiteListed.has(node.id)) {
+                node.setAttribute("removable", "true");
+              }
+              children.push(node);
+            }
+          }
           CustomizableUI.registerToolbarNode(this, children);
+          let existingMigratedItems = (this.getAttribute("migratedset") || "").split(',');
+          for (let migratedItem of existingMigratedItems.filter((x) => !!x)) {
+            this._currentSetMigrated.add(migratedItem);
+          }
           this.evictNodes();
           // We can't easily use |this| or strong bindings for the observer fn here
           // because that creates leaky circular references when the node goes away,
@@ -444,6 +455,7 @@
             }
           }
           this._isModifying = false;
+          this._updateMigratedSet();
         ]]></body>
       </method>
       <method name="evictNode">
@@ -455,20 +467,29 @@
           }
           const kItemMaxWidth = 100;
           let oldParent = aNode.parentNode;
+          aNode.setAttribute("removable", "true");
+          this._currentSetMigrated.add(aNode.id);
 
-          try {
-            aNode.setAttribute("removable", "true");
-
-            let nodeWidth = aNode.getBoundingClientRect().width;
-            if (nodeWidth == 0 || nodeWidth > kItemMaxWidth) {
-              throw new Error(aNode.id + " is too big (" + nodeWidth +
-                              "px wide), moving to the palette");
+          let movedOut = false;
+          if (!this._wasCollapsed) {
+            try {
+              let nodeWidth = aNode.getBoundingClientRect().width;
+              if (nodeWidth == 0 || nodeWidth > kItemMaxWidth) {
+                throw new Error(aNode.id + " is too big (" + nodeWidth +
+                                "px wide), moving to the palette");
+              }
+              CustomizableUI.addWidgetToArea(aNode.id, this._delegatingToolbar);
+              movedOut = true;
+            } catch (ex) {
+              // This will throw if the node is too big, or can't be moved there for
+              // some reason. Report this:
+              Cu.reportError(ex);
             }
-            CustomizableUI.addWidgetToArea(aNode.id, this._delegatingToolbar);
-          } catch (ex) {
-            Cu.reportError(ex);
-            // This will throw if the node is too big, or can't be moved there for
-            // some reason. Try to remove it anyway:
+          }
+
+          /* We won't have moved the widget if either the add-on bar was collapsed,
+           * or if it was too wide to be inserted into the navbar. */
+          if (!movedOut) {
             try {
               CustomizableUI.removeWidgetFromArea(aNode.id);
             } catch (ex) {
@@ -510,12 +531,27 @@
           this.appendChild(node);
           this.evictNode(node);
           this._isModifying = false;
+          this._updateMigratedSet();
           // We will now have moved stuff around; kick off an aftercustomization event
           // so add-ons know we've just moved their stuff:
           if (window.gCustomizeMode) {
             window.gCustomizeMode.dispatchToolboxEvent("aftercustomization");
           }
           return node;
+        ]]></body>
+      </method>
+      <method name="getMigratedItems">
+        <body><![CDATA[
+          return [... this._currentSetMigrated];
+        ]]></body>
+      </method>
+      <method name="_updateMigratedSet">
+        <body><![CDATA[
+          let newMigratedItems = this.getMigratedItems().join(',');
+          if (this.getAttribute("migratedset") != newMigratedItems) {
+            this.setAttribute("migratedset", newMigratedItems);
+            this.ownerDocument.persist(this.id, "migratedset");
+          }
         ]]></body>
       </method>
       <property name="customizationTarget" readonly="true">
@@ -532,10 +568,11 @@
           let newButtons = v.filter(x => x && (!this._whiteListed.has(x) &&
                                                !CustomizableUI.isSpecialWidget(x) &&
                                                !this._currentSetMigrated.has(x)));
-          for (x of newButtons) {
-            this._currentSetMigrated.add(x);
-            this.insertItem(x);
+          for (let newButton of newButtons) {
+            this._currentSetMigrated.add(newButton);
+            this.insertItem(newButton);
           }
+          this._updateMigratedSet();
         ]]></setter>
       </property>
       <property name="toolbox" readonly="true">

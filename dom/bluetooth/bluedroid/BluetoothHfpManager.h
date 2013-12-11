@@ -84,7 +84,7 @@ public:
   }
 
   static BluetoothHfpManager* Get();
-  ~BluetoothHfpManager();
+  virtual ~BluetoothHfpManager();
 
   bool ConnectSco();
   bool DisconnectSco();
@@ -96,8 +96,8 @@ public:
   void HandleCallStateChanged(uint32_t aCallIndex, uint16_t aCallState,
                               const nsAString& aError, const nsAString& aNumber,
                               const bool aIsOutgoing, bool aSend);
-  void HandleIccInfoChanged();
-  void HandleVoiceConnectionChanged();
+  void HandleIccInfoChanged(uint32_t aClientId);
+  void HandleVoiceConnectionChanged(uint32_t aClientId);
 
   // Bluedroid hfp callback handlers
   void ProcessConnectionState(bthf_connection_state_t aState, bt_bdaddr_t* aBdAddress);

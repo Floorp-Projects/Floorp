@@ -3028,6 +3028,13 @@ xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &opti
         return false;
     }
 
+    bool define = !JSID_IS_VOID(options.defineAs);
+
+    if (define && js::IsScriptedProxy(scope)) {
+        JS_ReportError(cx, "Defining property on proxy object is not allowed");
+        return false;
+    }
+
     RootedObject obj(cx);
     {
         JSAutoCompartment ac(cx, scope);
@@ -3035,11 +3042,12 @@ xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &opti
         if (!obj)
             return false;
 
-        if (!JSID_IS_VOID(options.defineAs) &&
-            !JS_DefinePropertyById(cx, scope, options.defineAs, ObjectValue(*obj),
-                                   JS_PropertyStub, JS_StrictPropertyStub,
-                                   JSPROP_ENUMERATE))
-            return false;
+        if (define) {
+            if (!JS_DefinePropertyById(cx, scope, options.defineAs, ObjectValue(*obj),
+                                       JS_PropertyStub, JS_StrictPropertyStub,
+                                       JSPROP_ENUMERATE))
+                return false;
+        }
     }
 
     rval.setObject(*obj);
@@ -3047,6 +3055,23 @@ xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &opti
         return false;
 
     return true;
+}
+
+/* boolean isProxy(in value vobj); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::IsProxy(const Value &vobj, JSContext *cx, bool *rval)
+{
+    if (!vobj.isObject()) {
+        *rval = false;
+        return NS_OK;
+    }
+
+    RootedObject obj(cx, &vobj.toObject());
+    obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
+    NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
+
+    *rval = js::IsScriptedProxy(obj);
+    return NS_OK;
 }
 
 /* jsval evalInWindow(in string source, in jsval window); */
@@ -3069,13 +3094,13 @@ nsXPCComponents_Utils::EvalInWindow(const nsAString &source, const Value &window
 /* jsval exportFunction(in jsval vfunction, in jsval vscope, in jsval vname); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::ExportFunction(const Value &vfunction, const Value &vscope,
-                                      const Value &vname, JSContext *cx, Value *rval)
+                                      const Value &voptions, JSContext *cx, Value *rval)
 {
     RootedValue rfunction(cx, vfunction);
     RootedValue rscope(cx, vscope);
-    RootedValue rname(cx, vname);
+    RootedValue roptions(cx, voptions);
     RootedValue res(cx);
-    if (!xpc::ExportFunction(cx, rfunction, rscope, rname, &res))
+    if (!xpc::ExportFunction(cx, rfunction, rscope, roptions, &res))
         return NS_ERROR_FAILURE;
     *rval = res;
     return NS_OK;

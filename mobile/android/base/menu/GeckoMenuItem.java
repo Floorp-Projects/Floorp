@@ -286,6 +286,10 @@ public class GeckoMenuItem implements MenuItem {
 
     @Override
     public void setShowAsAction(int actionEnum) {
+        setShowAsAction(actionEnum, 0);
+    }
+
+    public void setShowAsAction(int actionEnum, int style) {
         if (mShowAsActionChangedListener == null)
             return;
 
@@ -297,7 +301,12 @@ public class GeckoMenuItem implements MenuItem {
                 return;
 
             // Change the type to just an icon
-            MenuItemActionBar actionView = new MenuItemActionBar(mMenu.getContext(), null);
+            MenuItemActionBar actionView;
+            if (style != 0) {
+                actionView = new MenuItemActionBar(mMenu.getContext(), null, style);
+            } else {
+                actionView = new MenuItemActionBar(mMenu.getContext());
+            }
             actionView.initialize(this);
             mActionView = actionView;
 

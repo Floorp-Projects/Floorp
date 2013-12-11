@@ -6,6 +6,7 @@
 const { Loader } = require('sdk/content/loader');
 const self = require("sdk/self");
 const fixtures = require("./fixtures");
+const { URL } = require('sdk/url');
 
 exports['test:contentURL'] = function(assert) {
   let loader = Loader(),
@@ -203,6 +204,28 @@ exports['test:contentScriptFile'] = function(assert) {
       e.message
     );
   }
+
+  let data = 'data:text/html,test';
+  try {
+    loader.contentScriptFile = [ { toString: () => data } ];
+    test.fail('must throw when non-URL object is set');
+  } catch(e) {
+    assert.equal(
+      'The `contentScriptFile` option must be a local URL or an array of URLs.',
+      e.message
+    );
+  }
+
+  loader.contentScriptFile = new URL(data);
+  assert.ok(
+    loader.contentScriptFile instanceof URL,
+    'must be able to set `contentScriptFile` to an instance of URL'
+  );
+  assert.equal(
+    data, 
+    loader.contentScriptFile.toString(),
+    'setting `contentScriptFile` to an instance of URL should preserve the url'
+  );
 
   loader.contentScriptFile = undefined;
   assert.equal(

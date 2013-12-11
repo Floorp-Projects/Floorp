@@ -5,13 +5,6 @@
 # Avoid recursive make to avoid having to add files to the gtest/ subdirectory
 # (which is third-party code), and to make the build faster.
 
-VPATH = \
-  $(srcdir) \
-  $(srcdir)/gtest/src \
-  $(srcdir)/mozilla \
-  $(srcdir)/gmock/src \
-  $(NULL)
-
 LOCAL_INCLUDES += \
   -I$(srcdir)/gtest \
   -I$(srcdir)/gtest/include \

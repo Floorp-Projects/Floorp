@@ -14,8 +14,6 @@ SHARED_LIBRARY_NAME=XUL
 MAKE_FRAMEWORK=1
 endif
 
-VPATH += $(topsrcdir)/build/
-
 ifdef MOZ_CONTENT_SANDBOX
 ifeq ($(OS_ARCH),WINNT)
   LOCAL_INCLUDES += -I$(srcdir)/../sandboxbroker
@@ -62,7 +60,7 @@ EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
 
 symverscript: symverscript.in
 	$(call py_action,preprocessor, \
-		-DVERSION="$(LIBRARY_NAME)$(MOZILLA_SYMBOLVERSION)" $< -o $@)
+		-DVERSION='$(LIBRARY_NAME)$(MOZILLA_SYMBOLVERSION)' $< -o $@)
 
 EXTRA_DEPS += symverscript
 endif
@@ -129,6 +127,27 @@ EXTRA_DSO_LDOPTS += \
   $(SQLITE_LIBS) \
   $(NULL)
 
+ifdef ENABLE_INTL_API
+ifdef JS_SHARED_LIBRARY
+EXTRA_DSO_LDOPTS += $(MOZ_ICU_LIBS)
+ifdef _MSC_VER
+ifdef MOZ_DEBUG
+EXTRA_DSO_LDOPTS += \
+  -DELAYLOAD:icudtd$(MOZ_ICU_VERSION).dll \
+  -DELAYLOAD:icuind$(MOZ_ICU_VERSION).dll \
+  -DELAYLOAD:icuucd$(MOZ_ICU_VERSION).dll \
+  $(NULL)
+else
+EXTRA_DSO_LDOPTS += \
+  -DELAYLOAD:icudt$(MOZ_ICU_VERSION).dll \
+  -DELAYLOAD:icuin$(MOZ_ICU_VERSION).dll \
+  -DELAYLOAD:icuuc$(MOZ_ICU_VERSION).dll \
+  $(NULL)
+endif
+endif
+endif
+endif
+
 ifdef MOZ_NATIVE_JPEG
 EXTRA_DSO_LDOPTS += $(MOZ_JPEG_LIBS)
 endif
@@ -137,7 +156,7 @@ ifdef MOZ_NATIVE_PNG
 EXTRA_DSO_LDOPTS += $(MOZ_PNG_LIBS)
 endif
 
-ifneq (WINNT,$(OS_ARCH))
+ifndef ZLIB_IN_MOZGLUE
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 endif
 
@@ -173,17 +192,15 @@ endif
 
 ifeq (WINNT,$(OS_TARGET))
 EXTRA_DSO_LDOPTS += \
-  -LIBPATH:"$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)" \
+  -LIBPATH:'$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)' \
   $(NULL)
 OS_LIBS += $(call EXPAND_LIBNAME,secur32 crypt32 iphlpapi strmiids dmoguids wmcodecdspuuid amstrmid msdmo wininet)
 endif
 endif
 
 
-ifdef MOZ_CUBEB
 ifdef MOZ_ALSA
 EXTRA_DSO_LDOPTS += $(MOZ_ALSA_LIBS)
-endif
 endif
 
 ifdef HAVE_CLOCK_MONOTONIC
@@ -247,9 +264,7 @@ OS_LIBS += \
 endif
 
 ifeq (OpenBSD,$(OS_ARCH))
-ifdef MOZ_CUBEB
 EXTRA_DSO_LDOPTS += -lsndio
-endif
 endif
 
 ifdef MOZ_ENABLE_DBUS
@@ -291,6 +306,10 @@ ifneq (,$(filter DragonFly FreeBSD NetBSD OpenBSD,$(OS_ARCH)))
 OS_LIBS += $(call EXPAND_LIBNAME,kvm)
 # keep `environ' unresolved, see bug 14426 for binutils
 EXTRA_DSO_LDOPTS += -Wl,--warn-unresolved-symbols
+endif
+
+ifeq ($(OS_ARCH),FreeBSD)
+OS_LIBS += $(call EXPAND_LIBNAME,util)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -337,8 +356,8 @@ ifdef MOZ_GAMEPAD
 ifndef GNU_CC
 DXSDK := $(subst \,/,$(MOZ_DIRECTX_SDK_PATH))/Lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)
 OS_LIBS += \
-  "$(DXSDK)/dxguid.lib" \
-  "$(DXSDK)/dinput8.lib" \
+  '$(DXSDK)/dxguid.lib' \
+  '$(DXSDK)/dinput8.lib' \
   $(NULL)
 else
 OS_LIBS += $(call EXPAND_LIBNAME,dxguid dinput8)
@@ -392,10 +411,6 @@ LOCAL_INCLUDES += \
 
 OS_LIBS += $(LIBICONV)
 
-DEFINES += \
-  -DIMPL_LIBXUL \
-  $(NULL)
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 oleaut32)
 endif
@@ -420,7 +435,7 @@ endif
 .PHONY: gtestxul
 
 $(FINAL_TARGET)/dependentlibs.list.gtest: $(FINAL_TARGET)/dependentlibs.list
-	sed -e "s|$(SHARED_LIBRARY)|gtest/$(SHARED_LIBRARY)|" $< > $@
+	sed -e 's|$(SHARED_LIBRARY)|gtest/$(SHARED_LIBRARY)|' $< > $@
 
 # Remove this target when actually linking gtest to prevent redefining
 # the implicit rules.mk target
@@ -439,6 +454,7 @@ COMPONENT_LIBS += \
   gtest \
   gfxtest \
   ssltest \
+  xpcom_glue_gtest \
   $(NULL)
 endif
 

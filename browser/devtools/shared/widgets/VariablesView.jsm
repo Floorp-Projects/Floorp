@@ -77,6 +77,7 @@ this.VariablesView = function VariablesView(aParentNode, aFlags = {}) {
 
   this._parent = aParentNode;
   this._parent.classList.add("variables-view-container");
+  this._parent.classList.add("theme-body");
   this._appendEmptyNotice();
 
   this._onSearchboxInput = this._onSearchboxInput.bind(this);
@@ -90,7 +91,6 @@ this.VariablesView = function VariablesView(aParentNode, aFlags = {}) {
   this._list.addEventListener("keypress", this._onViewKeyPress, false);
   this._list.addEventListener("keydown", this._onViewKeyDown, false);
   this._parent.appendChild(this._list);
-  this._boxObject = this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
 
   for (let name in aFlags) {
     this[name] = aFlags[name];
@@ -196,7 +196,6 @@ VariablesView.prototype = {
 
       this._parent.removeChild(prevList);
       this._parent.appendChild(currList);
-      this._boxObject = currList.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
 
       if (!this._store.length) {
         this._appendEmptyNotice();
@@ -266,10 +265,19 @@ VariablesView.prototype = {
   delete: null,
 
   /**
+   * Function called each time a property is added via user interaction. If
+   * null, then property additions are disabled.
+   *
+   * This property is applied recursively onto each scope in this view and
+   * affects only the child nodes when they're created.
+   */
+  new: null,
+
+  /**
    * Specifies if after an eval or switch operation, the variable or property
    * which has been edited should be disabled.
    */
-  preventDisableOnChage: false,
+  preventDisableOnChange: false,
 
   /**
    * Specifies if, whenever a variable or property descriptor is available,
@@ -414,7 +422,7 @@ VariablesView.prototype = {
       return;
     }
     let document = this.document;
-    let ownerView = this._parent.parentNode;
+    let ownerNode = this._parent.parentNode;
 
     let container = this._searchboxContainer = document.createElement("hbox");
     container.className = "devtools-toolbar";
@@ -432,7 +440,7 @@ VariablesView.prototype = {
     searchbox.addEventListener("keypress", this._onSearchboxKeyPress, false);
 
     container.appendChild(searchbox);
-    ownerView.insertBefore(container, this._parent);
+    ownerNode.insertBefore(container, this._parent);
   },
 
   /**
@@ -740,7 +748,7 @@ VariablesView.prototype = {
       aItem.collapse();
     }
     aItem._target.focus();
-    this._boxObject.ensureElementIsVisible(aItem._arrow);
+    this.boxObject.ensureElementIsVisible(aItem._arrow);
     return true;
   },
 
@@ -826,6 +834,10 @@ VariablesView.prototype = {
         if (item instanceof Variable) {
           item._onDelete(e);
         }
+        return;
+
+      case e.DOM_VK_INSERT:
+        item._onAddProperty(e);
         return;
     }
   },
@@ -914,17 +926,33 @@ VariablesView.prototype = {
   },
 
   /**
+   * Gets if action buttons (like delete) should be placed at the beginning or
+   * end of a line.
+   * @return boolean
+   */
+  get actionsFirst() {
+    return this._actionsFirst;
+  },
+
+  /**
    * Sets if action buttons (like delete) should be placed at the beginning or
    * end of a line.
    * @param boolean aFlag
    */
   set actionsFirst(aFlag) {
+    this._actionsFirst = aFlag;
     if (aFlag) {
       this._parent.setAttribute("actions-first", "");
     } else {
       this._parent.removeAttribute("actions-first");
     }
   },
+
+  /**
+   * Gets the parent node holding this view.
+   * @return nsIDOMNode
+   */
+  get boxObject() this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject),
 
   /**
    * Gets the parent node holding this view.
@@ -952,9 +980,10 @@ VariablesView.prototype = {
   _currHierarchy: null,
   _enumVisible: true,
   _nonEnumVisible: true,
+  _alignedValues: false,
+  _actionsFirst: false,
   _parent: null,
   _list: null,
-  _boxObject: null,
   _searchboxNode: null,
   _searchboxContainer: null,
   _searchboxPlaceholder: "",
@@ -1056,7 +1085,8 @@ VariablesView.getterOrSetterEvalMacro = function(aItem, aCurrentString, aPrefix 
       // morph it into a plain value.
       if ((type == "set" && propertyObject.getter.type == "undefined") ||
           (type == "get" && propertyObject.setter.type == "undefined")) {
-        // Make sure the right getter/setter to value override macro is applied to the target object.
+        // Make sure the right getter/setter to value override macro is applied
+        // to the target object.
         return propertyObject.evaluationMacro(propertyObject, "undefined", aPrefix);
       }
 
@@ -1148,7 +1178,8 @@ function Scope(aView, aName, aFlags = {}) {
   this.eval = aView.eval;
   this.switch = aView.switch;
   this.delete = aView.delete;
-  this.preventDisableOnChage = aView.preventDisableOnChage;
+  this.new = aView.new;
+  this.preventDisableOnChange = aView.preventDisableOnChange;
   this.preventDescriptorModifiers = aView.preventDescriptorModifiers;
   this.editableNameTooltip = aView.editableNameTooltip;
   this.editableValueTooltip = aView.editableValueTooltip;
@@ -1252,6 +1283,20 @@ Scope.prototype = {
       if (aOptions.callback) {
         aOptions.callback(item, descriptor.value);
       }
+    }
+  },
+
+  /**
+   * Remove this Scope from its parent and remove all children recursively.
+   */
+  remove: function() {
+    let view = this._variablesView;
+    view._store.splice(view._store.indexOf(this), 1);
+    view._itemsByElement.delete(this._target);
+    view._currHierarchy.delete(this._nameString);
+    this._target.remove();
+    for (let variable of this._store.values()) {
+      variable.remove();
     }
   },
 
@@ -1431,7 +1476,7 @@ Scope.prototype = {
     if (this._isHeaderVisible || !this._nameString) {
       return;
     }
-    this._target.removeAttribute("non-header");
+    this._target.removeAttribute("untitled");
     this._isHeaderVisible = true;
   },
 
@@ -1444,7 +1489,7 @@ Scope.prototype = {
       return;
     }
     this.expand();
-    this._target.setAttribute("non-header", "");
+    this._target.setAttribute("untitled", "");
     this._isHeaderVisible = false;
   },
 
@@ -1679,7 +1724,6 @@ Scope.prototype = {
    */
   _onClick: function(e) {
     if (e.button != 0 ||
-        e.target == this._inputNode ||
         e.target == this._editNode ||
         e.target == this._deleteNode) {
       return;
@@ -1884,10 +1928,10 @@ Scope.prototype = {
     }
     if (aStatus) {
       this._isMatch = true;
-      this.target.removeAttribute("non-match");
+      this.target.removeAttribute("unmatched");
     } else {
       this._isMatch = false;
-      this.target.setAttribute("non-match", "");
+      this.target.setAttribute("unmatched", "");
     }
   },
 
@@ -2033,6 +2077,7 @@ Scope.prototype = {
   eval: null,
   switch: null,
   delete: null,
+  new: null,
   editableValueTooltip: "",
   editableNameTooltip: "",
   editButtonTooltip: "",
@@ -2124,6 +2169,19 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
    */
   _createChild: function(aName, aDescriptor) {
     return new Property(this, aName, aDescriptor);
+  },
+
+  /**
+   * Remove this Variable from its parent and remove all children recursively.
+   */
+  remove: function() {
+    this.ownerView._store.delete(this._nameString);
+    this._variablesView._itemsByElement.delete(this._target);
+    this._variablesView._currHierarchy.delete(this._absoluteName);
+    this._target.remove();
+    for (let property of this._store.values()) {
+      property.remove();
+    }
   },
 
   /**
@@ -2309,14 +2367,11 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     this._idString = generateId(this._nameString = aName);
     this._displayScope(aName, "variables-view-variable variable-or-property");
 
-    // Don't allow displaying variable information there's no name available.
-    if (this._nameString) {
-      this._displayVariable();
-      this._customizeVariable();
-      this._prepareTooltips();
-      this._setAttributes();
-      this._addEventListeners();
-    }
+    this._displayVariable();
+    this._customizeVariable();
+    this._prepareTooltips();
+    this._setAttributes();
+    this._addEventListeners();
 
     this._onInit(this.ownerView._store.size < LAZY_APPEND_BATCH);
   },
@@ -2417,12 +2472,25 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
       editNode.addEventListener("mousedown", this._onEdit.bind(this), false);
       this._title.insertBefore(editNode, this._spacer);
     }
+
     if (ownerView.delete) {
       let deleteNode = this._deleteNode = this.document.createElement("toolbarbutton");
       deleteNode.className = "plain variables-view-delete";
       deleteNode.addEventListener("click", this._onDelete.bind(this), false);
       this._title.appendChild(deleteNode);
     }
+
+    let { actionsFirst } = this._variablesView;
+    if (ownerView.new || actionsFirst) {
+      let addPropertyNode = this._addPropertyNode = this.document.createElement("toolbarbutton");
+      addPropertyNode.className = "plain variables-view-add-property";
+      addPropertyNode.addEventListener("mousedown", this._onAddProperty.bind(this), false);
+      if (actionsFirst && VariablesView.isPrimitive(descriptor)) {
+        addPropertyNode.setAttribute("invisible", "");
+      }
+      this._title.appendChild(addPropertyNode);
+    }
+
     if (ownerView.contextMenuId) {
       this._title.setAttribute("context", ownerView.contextMenuId);
     }
@@ -2579,148 +2647,42 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
   },
 
   /**
-   * Creates a textbox node in place of a label.
-   *
-   * @param nsIDOMNode aLabel
-   *        The label to be replaced with a textbox.
-   * @param string aClassName
-   *        The class to be applied to the textbox.
-   * @param object aCallbacks
-   *        An object containing the onKeypress and onBlur callbacks.
-   */
-  _activateInput: function(aLabel, aClassName, aCallbacks) {
-    let initialString = aLabel.getAttribute("value");
-
-    // Create a texbox input element which will be shown in the current
-    // element's specified label location.
-    let input = this.document.createElement("textbox");
-    input.className = "plain " + aClassName;
-    input.setAttribute("value", initialString);
-    if (!this._variablesView.alignedValues) {
-      input.setAttribute("flex", "1");
-    }
-
-    // Replace the specified label with a textbox input element.
-    aLabel.parentNode.replaceChild(input, aLabel);
-    this._variablesView._boxObject.ensureElementIsVisible(input);
-    input.select();
-
-    // When the value is a string (displayed as "value"), then we probably want
-    // to change it to another string in the textbox, so to avoid typing the ""
-    // again, tackle with the selection bounds just a bit.
-    if (aLabel.getAttribute("value").match(/^".+"$/)) {
-      input.selectionEnd--;
-      input.selectionStart++;
-    }
-
-    input.addEventListener("keypress", aCallbacks.onKeypress, false);
-    input.addEventListener("blur", aCallbacks.onBlur, false);
-
-    this._prevExpandable = this.twisty;
-    this._prevExpanded = this.expanded;
-    this.collapse();
-    this.hideArrow();
-    this._locked = true;
-
-    this._inputNode = input;
-    this._stopThrobber();
-  },
-
-  /**
-   * Removes the textbox node in place of a label.
-   *
-   * @param nsIDOMNode aLabel
-   *        The label which was replaced with a textbox.
-   * @param object aCallbacks
-   *        An object containing the onKeypress and onBlur callbacks.
-   */
-  _deactivateInput: function(aLabel, aInput, aCallbacks) {
-    aInput.parentNode.replaceChild(aLabel, aInput);
-    this._variablesView._boxObject.scrollBy(-this._target.clientWidth, 0);
-
-    aInput.removeEventListener("keypress", aCallbacks.onKeypress, false);
-    aInput.removeEventListener("blur", aCallbacks.onBlur, false);
-
-    this._locked = false;
-    this.twisty = this._prevExpandable;
-    this.expanded = this._prevExpanded;
-
-    this._inputNode = null;
-    this._stopThrobber();
-  },
-
-  /**
    * Makes this variable's name editable.
    */
   _activateNameInput: function(e) {
-    if (e && e.button != 0) {
-      // Only allow left-click to trigger this event.
-      return;
-    }
-    if (!this.ownerView.switch) {
-      return;
-    }
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
+    if (!this._variablesView.alignedValues) {
+      this._separatorLabel.hidden = true;
+      this._valueLabel.hidden = true;
     }
 
-    this._onNameInputKeyPress = this._onNameInputKeyPress.bind(this);
-    this._deactivateNameInput = this._deactivateNameInput.bind(this);
-
-    this._activateInput(this._name, "element-name-input", {
-      onKeypress: this._onNameInputKeyPress,
-      onBlur: this._deactivateNameInput
-    });
-    this._separatorLabel.hidden = true;
-    this._valueLabel.hidden = true;
-  },
-
-  /**
-   * Deactivates this variable's editable name mode.
-   */
-  _deactivateNameInput: function(e) {
-    this._deactivateInput(this._name, e.target, {
-      onKeypress: this._onNameInputKeyPress,
-      onBlur: this._deactivateNameInput
-    });
-    this._separatorLabel.hidden = false;
-    this._valueLabel.hidden = false;
+    EditableName.create(this, {
+      onSave: aKey => {
+        if (!this._variablesView.preventDisableOnChange) {
+          this._disable();
+        }
+        this.ownerView.switch(this, aKey);
+      },
+      onCleanup: () => {
+        if (!this._variablesView.alignedValues) {
+          this._separatorLabel.hidden = false;
+          this._valueLabel.hidden = false;
+        }
+      }
+    }, e);
   },
 
   /**
    * Makes this variable's value editable.
    */
   _activateValueInput: function(e) {
-    if (e && e.button != 0) {
-      // Only allow left-click to trigger this event.
-      return;
-    }
-    if (!this.ownerView.eval) {
-      return;
-    }
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    this._onValueInputKeyPress = this._onValueInputKeyPress.bind(this);
-    this._deactivateValueInput = this._deactivateValueInput.bind(this);
-
-    this._activateInput(this._valueLabel, "element-value-input", {
-      onKeypress: this._onValueInputKeyPress,
-      onBlur: this._deactivateValueInput
-    });
-  },
-
-  /**
-   * Deactivates this variable's editable value mode.
-   */
-  _deactivateValueInput: function(e) {
-    this._deactivateInput(this._valueLabel, e.target, {
-      onKeypress: this._onValueInputKeyPress,
-      onBlur: this._deactivateValueInput
-    });
+    EditableValue.create(this, {
+      onSave: aString => {
+        if (!this._variablesView.preventDisableOnChange) {
+          this._disable();
+        }
+        this.ownerView.eval(this.evaluationMacro(this, aString));
+      }
+    }, e);
   },
 
   /**
@@ -2739,83 +2701,10 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
   },
 
   /**
-   * Deactivates this variable's editable mode and callbacks the new name.
-   */
-  _saveNameInput: function(e) {
-    let input = e.target;
-    let initialString = this._name.getAttribute("value");
-    let currentString = input.value.trim();
-    this._deactivateNameInput(e);
-
-    if (initialString != currentString) {
-      if (!this._variablesView.preventDisableOnChage) {
-        this._disable();
-        this._name.value = currentString;
-      }
-      this.ownerView.switch(this, currentString);
-    }
-  },
-
-  /**
-   * Deactivates this variable's editable mode and evaluates the new value.
-   */
-  _saveValueInput: function(e) {
-    let input = e.target;
-    let initialString = this._valueLabel.getAttribute("value");
-    let currentString = input.value.trim();
-    this._deactivateValueInput(e);
-
-    if (initialString != currentString) {
-      if (!this._variablesView.preventDisableOnChage) {
-        this._disable();
-      }
-      this.ownerView.eval(this.evaluationMacro(this, currentString.trim()));
-    }
-  },
-
-  /**
    * The current macro used to generate the string evaluated when performing
    * a variable or property value change.
    */
   evaluationMacro: VariablesView.simpleValueEvalMacro,
-
-  /**
-   * The key press listener for this variable's editable name textbox.
-   */
-  _onNameInputKeyPress: function(e) {
-    e.stopPropagation();
-
-    switch(e.keyCode) {
-      case e.DOM_VK_RETURN:
-      case e.DOM_VK_ENTER:
-        this._saveNameInput(e);
-        this.focus();
-        return;
-      case e.DOM_VK_ESCAPE:
-        this._deactivateNameInput(e);
-        this.focus();
-        return;
-    }
-  },
-
-  /**
-   * The key press listener for this variable's editable value textbox.
-   */
-  _onValueInputKeyPress: function(e) {
-    e.stopPropagation();
-
-    switch(e.keyCode) {
-      case e.DOM_VK_RETURN:
-      case e.DOM_VK_ENTER:
-        this._saveValueInput(e);
-        this.focus();
-        return;
-      case e.DOM_VK_ESCAPE:
-        this._deactivateValueInput(e);
-        this.focus();
-        return;
-    }
-  },
 
   /**
    * The click listener for the edit button.
@@ -2848,15 +2737,48 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     }
   },
 
+  /**
+   * The click listener for the add property button.
+   */
+  _onAddProperty: function(e) {
+    if ("button" in e && e.button != 0) {
+      return;
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    this.expanded = true;
+
+    let item = this.addItem(" ", {
+      value: undefined,
+      configurable: true,
+      enumerable: true,
+      writable: true
+    }, true);
+
+    // Force showing the separator.
+    item._separatorLabel.hidden = false;
+
+    EditableNameAndValue.create(item, {
+      onSave: ([aKey, aValue]) => {
+        if (!this._variablesView.preventDisableOnChange) {
+          this._disable();
+        }
+        this.ownerView.new(this, aKey, aValue);
+      }
+    }, e);
+  },
+
   _symbolicName: "",
   _absoluteName: "",
   _initialDescriptor: null,
   _separatorLabel: null,
   _spacer: null,
   _valueLabel: null,
-  _inputNode: null,
   _editNode: null,
   _deleteNode: null,
+  _addPropertyNode: null,
   _tooltip: null,
   _valueGrip: null,
   _valueString: "",
@@ -2891,18 +2813,15 @@ Property.prototype = Heritage.extend(Variable.prototype, {
    * @param object aDescriptor
    *        The property's descriptor.
    */
-  _init: function(aName, aDescriptor) {
+  _init: function(aName = "", aDescriptor) {
     this._idString = generateId(this._nameString = aName);
     this._displayScope(aName, "variables-view-property variable-or-property");
 
-    // Don't allow displaying property information there's no name available.
-    if (this._nameString) {
-      this._displayVariable();
-      this._customizeVariable();
-      this._prepareTooltips();
-      this._setAttributes();
-      this._addEventListeners();
-    }
+    this._displayVariable();
+    this._customizeVariable();
+    this._prepareTooltips();
+    this._setAttributes();
+    this._addEventListeners();
 
     this._onInit(this.ownerView._store.size < LAZY_APPEND_BATCH);
   },
@@ -3259,3 +3178,262 @@ let generateId = (function() {
     return aName.toLowerCase().trim().replace(/\s+/g, "-") + (++count);
   };
 })();
+
+
+/**
+ * An Editable encapsulates the UI of an edit box that overlays a label,
+ * allowing the user to edit the value.
+ *
+ * @param Variable aVariable
+ *        The Variable or Property to make editable.
+ * @param object aOptions
+ *        - onSave
+ *          The callback to call with the value when editing is complete.
+ *        - onCleanup
+ *          The callback to call when the editable is removed for any reason.
+ */
+function Editable(aVariable, aOptions) {
+  this._variable = aVariable;
+  this._onSave = aOptions.onSave;
+  this._onCleanup = aOptions.onCleanup;
+}
+
+Editable.create = function(aVariable, aOptions, aEvent) {
+  let editable = new this(aVariable, aOptions);
+  editable.activate(aEvent);
+  return editable;
+};
+
+Editable.prototype = {
+  /**
+   * The class name for targeting this Editable type's label element. Overridden
+   * by inheriting classes.
+   */
+  className: null,
+
+  /**
+   * Boolean indicating whether this Editable should activate. Overridden by
+   * inheriting classes.
+   */
+  shouldActivate: null,
+
+  /**
+   * The label element for this Editable. Overridden by inheriting classes.
+   */
+  label: null,
+
+  /**
+   * Activate this editable by replacing the input box it overlays and
+   * initialize the handlers.
+   *
+   * @param Event e [optional]
+   *        Optionally, the Event object that was used to activate the Editable.
+   */
+  activate: function(e) {
+    if (!this.shouldActivate) {
+      return;
+    }
+
+    let { label } = this;
+    let initialString = label.getAttribute("value");
+
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // Create a texbox input element which will be shown in the current
+    // element's specified label location.
+    let input = this._input = this._variable.document.createElement("textbox");
+    input.className = "plain " + this.className;
+    input.setAttribute("value", initialString);
+    if (!this._variable._variablesView.alignedValues) {
+      input.setAttribute("flex", "1");
+    }
+
+    // Replace the specified label with a textbox input element.
+    label.parentNode.replaceChild(input, label);
+    this._variable._variablesView.boxObject.ensureElementIsVisible(input);
+    input.select();
+
+    // When the value is a string (displayed as "value"), then we probably want
+    // to change it to another string in the textbox, so to avoid typing the ""
+    // again, tackle with the selection bounds just a bit.
+    if (initialString.match(/^".+"$/)) {
+      input.selectionEnd--;
+      input.selectionStart++;
+    }
+
+    this._onKeypress = this._onKeypress.bind(this);
+    this._onBlur = this._onBlur.bind(this);
+    input.addEventListener("keypress", this._onKeypress);
+    input.addEventListener("blur", this._onBlur);
+
+    this._prevExpandable = this._variable.twisty;
+    this._prevExpanded = this._variable.expanded;
+    this._variable.collapse();
+    this._variable.hideArrow();
+    this._variable.locked = true;
+    this._variable._stopThrobber();
+  },
+
+  /**
+   * Remove the input box and restore the Variable or Property to its previous
+   * state.
+   */
+  deactivate: function() {
+    this._input.removeEventListener("keypress", this._onKeypress);
+    this._input.removeEventListener("blur", this.deactivate);
+    this._input.parentNode.replaceChild(this.label, this._input);
+    this._input = null;
+
+    let { boxObject } = this._variable._variablesView;
+    boxObject.scrollBy(-this._variable._target, 0);
+    this._variable.locked = false;
+    this._variable.twisty = this._prevExpandable;
+    this._variable.expanded = this._prevExpanded;
+    this._variable._stopThrobber();
+  },
+
+  /**
+   * Save the current value and deactivate the Editable.
+   */
+  _save: function() {
+    let initial = this.label.getAttribute("value");
+    let current = this._input.value.trim();
+    this.deactivate();
+    if (initial != current) {
+      this._onSave(current);
+    }
+  },
+
+  /**
+   * Called when tab is pressed, allowing subclasses to link different
+   * behavior to tabbing if desired.
+   */
+  _next: function() {
+    this._save();
+  },
+
+  /**
+   * Called when escape is pressed, indicating a cancelling of editing without
+   * saving.
+   */
+  _reset: function() {
+    this.deactivate();
+    this._variable.focus();
+  },
+
+  /**
+   * Event handler for when the input loses focus.
+   */
+  _onBlur: function() {
+    this.deactivate();
+  },
+
+  /**
+   * Event handler for when the input receives a key press.
+   */
+  _onKeypress: function(e) {
+    e.stopPropagation();
+
+    switch (e.keyCode) {
+      case e.DOM_VK_TAB:
+        this._next();
+        break;
+      case e.DOM_VK_RETURN:
+      case e.DOM_VK_ENTER:
+        this._save();
+        break;
+      case e.DOM_VK_ESCAPE:
+        this._reset();
+        break;
+    }
+  },
+};
+
+
+/**
+ * An Editable specific to editing the name of a Variable or Property.
+ */
+function EditableName(aVariable, aOptions) {
+  Editable.call(this, aVariable, aOptions);
+}
+
+EditableName.create = Editable.create;
+
+EditableName.prototype = Heritage.extend(Editable.prototype, {
+  className: "element-name-input",
+
+  get label() {
+    return this._variable._name;
+  },
+
+  get shouldActivate() {
+    return !!this._variable.ownerView.switch;
+  },
+});
+
+
+/**
+ * An Editable specific to editing the value of a Variable or Property.
+ */
+function EditableValue(aVariable, aOptions) {
+  Editable.call(this, aVariable, aOptions);
+}
+
+EditableValue.create = Editable.create;
+
+EditableValue.prototype = Heritage.extend(Editable.prototype, {
+  className: "element-value-input",
+
+  get label() {
+    return this._variable._valueLabel;
+  },
+
+  get shouldActivate() {
+    return !!this._variable.ownerView.eval;
+  },
+});
+
+
+/**
+ * An Editable specific to editing the key and value of a new property.
+ */
+function EditableNameAndValue(aVariable, aOptions) {
+  EditableName.call(this, aVariable, aOptions);
+}
+
+EditableNameAndValue.create = Editable.create;
+
+EditableNameAndValue.prototype = Heritage.extend(EditableName.prototype, {
+  _reset: function(e) {
+    // Hide the Varible or Property if the user presses escape.
+    this._variable.remove();
+    this.deactivate();
+  },
+
+  _next: function(e) {
+    // Override _next so as to set both key and value at the same time.
+    let key = this._input.value;
+    this.label.setAttribute("value", key);
+
+    let valueEditable = EditableValue.create(this._variable, {
+      onSave: aValue => {
+        this._onSave([key, aValue]);
+      },
+      onCleanup: () => {
+        this._onCleanup();
+      }
+    });
+    valueEditable._reset = () => {
+      this._variable.remove();
+      valueEditable.deactivate();
+    };
+  },
+
+  _save: function(e) {
+    // Both _save and _next activate the value edit box.
+    this._next(e);
+  }
+});

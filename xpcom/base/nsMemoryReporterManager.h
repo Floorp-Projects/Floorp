@@ -36,6 +36,9 @@ public:
     return static_cast<nsMemoryReporterManager*>(imgr.get());
   }
 
+  typedef nsTHashtable<nsISupportsHashKey>         StrongReportersTable;
+  typedef nsTHashtable<nsPtrHashKey<nsISupports> > WeakReportersTable;
+
   void IncrementNumChildProcesses();
   void DecrementNumChildProcesses();
 
@@ -146,14 +149,21 @@ public:
   SizeOfTabFns mSizeOfTabFns;
 
 private:
-  nsresult RegisterReporterHelper(nsIMemoryReporter* aReporter, bool aForce);
+  nsresult RegisterReporterHelper(nsIMemoryReporter* aReporter,
+                                  bool aForce, bool aStrongRef);
 
   static void TimeoutCallback(nsITimer* aTimer, void* aData);
   static const uint32_t kTimeoutLengthMS = 5000;
 
-  nsTHashtable<nsISupportsHashKey> mReporters;
   Mutex mMutex;
   bool mIsRegistrationBlocked;
+
+  StrongReportersTable* mStrongReporters;
+  WeakReportersTable* mWeakReporters;
+
+  // These two are only used for testing purposes.
+  StrongReportersTable* mSavedStrongReporters;
+  WeakReportersTable* mSavedWeakReporters;
 
   uint32_t mNumChildProcesses;
   uint32_t mNextGeneration;

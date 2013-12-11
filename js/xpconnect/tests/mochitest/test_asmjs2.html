@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=929236
+-->
+<head>
+  <meta charset="utf-8">
+  <title>asm.js browser tests</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=929236">asm.js browser tests</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+
+  <script>
+  var jsFuns = SpecialPowers.Cu.getJSTestingFunctions();
+  ok(jsFuns.isAsmJSCompilationAvailable());
+
+  // generate a big ol asm.js module and compile it async so that we can hit
+  // the asm.js cache.
+
+  var code = "function f() { 'use asm';\n";
+  for (var i = 0; i < 1000; i++)
+    code += "function g" + i + "() { return " + i + "}\n";
+  code += "return g42 }\n";
+  code += "ok(jsFuns.isAsmJSModule(f), 'f is an asm.js module')\n";
+  code += "var g42 = f();\n";
+  code += "ok(jsFuns.isAsmJSFunction(g42), 'g42 is an asm.js function')\n";
+  code += "ok(g42() === 42, 'g42 returns the correct result')\n";
+  code += "finishedEvalAsync(f);";
+  ok(code.length > 10000);
+
+  function evalAsync(code) {
+    var blob = new Blob([code], {type:"application/javascript"});
+    var script = document.createElement('script');
+    script.src = URL.createObjectURL(blob);
+    document.body.appendChild(script);
+  }
+
+  var state = 0;
+  function finishedEvalAsync(module) {
+    switch (state) {
+      case 0:
+        state++;
+        evalAsync(code);
+        break;
+      case 1:
+        ok(jsFuns.isAsmJSModuleLoadedFromCache(module), 'module loaded from cache');
+        SimpleTest.finish();
+        break;
+      default:
+        throw "huh?";
+    }
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  evalAsync(code);
+  </script>
+
+</body>
+</html>

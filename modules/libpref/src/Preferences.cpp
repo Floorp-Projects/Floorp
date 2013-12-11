@@ -7,8 +7,8 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/ContentChild.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Util.h"
 #include "mozilla/HashFunctions.h"
 
 #include "nsXULAppAPI.h"
@@ -47,6 +47,21 @@
 #include "nsRefPtrHashtable.h"
 #include "nsIMemoryReporter.h"
 #include "nsThreadUtils.h"
+
+#ifdef DEBUG
+#define ENSURE_MAIN_PROCESS(message, pref) do {                                \
+  if (MOZ_UNLIKELY(XRE_GetProcessType() != GeckoProcessType_Default)) {        \
+    nsPrintfCString msg("ENSURE_MAIN_PROCESS failed. %s %s", message, pref);   \
+    NS_WARNING(msg.get());                                                     \
+    return NS_ERROR_NOT_AVAILABLE;                                             \
+  }                                                                            \
+} while (0);
+#else
+#define ENSURE_MAIN_PROCESS(message, pref)                                     \
+  if (MOZ_UNLIKELY(XRE_GetProcessType() != GeckoProcessType_Default)) {        \
+    return NS_ERROR_NOT_AVAILABLE;                                             \
+  }
+#endif
 
 class PrefCallback;
 
@@ -208,15 +223,11 @@ Preferences::SizeOfIncludingThisAndOtherStuff(mozilla::MallocSizeOf aMallocSizeO
   return n;
 }
 
-class PreferenceServiceReporter MOZ_FINAL : public MemoryMultiReporter
+class PreferenceServiceReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-  PreferenceServiceReporter()
-    : MemoryMultiReporter("preference-service")
-  {}
-
-  NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCallback,
-                            nsISupports* aData);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
 
 protected:
   static const uint32_t kSuspectReferentCount = 1000;
@@ -224,6 +235,8 @@ protected:
                                         nsAutoPtr<PrefCallback>& aCallback,
                                         void* aClosure);
 };
+
+NS_IMPL_ISUPPORTS1(PreferenceServiceReporter, nsIMemoryReporter)
 
 struct PreferencesReferentCount {
   PreferencesReferentCount() : numStrong(0), numWeakAlive(0), numWeakDead(0) {}
@@ -272,6 +285,8 @@ PreferenceServiceReporter::CountReferents(PrefCallback* aKey,
   return PL_DHASH_NEXT;
 }
 
+MOZ_DEFINE_MALLOC_SIZE_OF(PreferenceServiceMallocSizeOf)
+
 NS_IMETHODIMP
 PreferenceServiceReporter::CollectReports(nsIMemoryReporterCallback* aCb,
                                           nsISupports* aClosure)
@@ -287,7 +302,7 @@ PreferenceServiceReporter::CollectReports(nsIMemoryReporterCallback* aCb,
 
   REPORT(NS_LITERAL_CSTRING("explicit/preferences"),
          nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
-         Preferences::SizeOfIncludingThisAndOtherStuff(MallocSizeOf),
+         Preferences::SizeOfIncludingThisAndOtherStuff(PreferenceServiceMallocSizeOf),
          "Memory used by the preferences system.");
 
   nsPrefBranch* rootBranch =
@@ -341,7 +356,7 @@ class AddPreferencesMemoryReporterRunnable : public nsRunnable
 {
   NS_IMETHOD Run()
   {
-    return NS_RegisterMemoryReporter(new PreferenceServiceReporter());
+    return RegisterStrongMemoryReporter(new PreferenceServiceReporter());
   }
 };
 } // anonymous namespace
@@ -376,9 +391,9 @@ Preferences::GetInstanceForService()
   gObserverTable = new nsRefPtrHashtable<ValueObserverHashKey, ValueObserver>();
 
   // Preferences::GetInstanceForService() can be called from GetService(), and
-  // NS_RegisterMemoryReporter calls GetService(nsIMemoryReporter).  To avoid a
-  // potential recursive GetService() call, we can't register the memory
-  // reporter here; instead, do it off a runnable.
+  // RegisterStrongMemoryReporter calls GetService(nsIMemoryReporter).  To
+  // avoid a potential recursive GetService() call, we can't register the
+  // memory reporter here; instead, do it off a runnable.
   nsRefPtr<AddPreferencesMemoryReporterRunnable> runnable =
     new AddPreferencesMemoryReporterRunnable();
   NS_DispatchToMainThread(runnable);
@@ -586,7 +601,7 @@ NS_IMETHODIMP
 Preferences::ResetPrefs()
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    NS_ERROR("cannot set prefs from content process");
+    NS_ERROR("cannot reset prefs from content process");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -603,7 +618,7 @@ NS_IMETHODIMP
 Preferences::ResetUserPrefs()
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    NS_ERROR("cannot set prefs from content process");
+    NS_ERROR("cannot reset user prefs from content process");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -615,7 +630,7 @@ NS_IMETHODIMP
 Preferences::SavePrefFile(nsIFile *aFile)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    NS_ERROR("cannot save prefs from content process");
+    NS_ERROR("cannot save pref file from content process");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -1437,7 +1452,7 @@ Preferences::GetComplex(const char* aPref, const nsIID &aType, void** aResult)
 nsresult
 Preferences::SetCString(const char* aPref, const char* aValue)
 {
-  NS_ENSURE_TRUE(XRE_GetProcessType() == GeckoProcessType_Default, NS_ERROR_NOT_AVAILABLE);
+  ENSURE_MAIN_PROCESS("Cannot SetCString from content process:", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_SetCharPref(aPref, aValue, false);
 }
@@ -1446,7 +1461,7 @@ Preferences::SetCString(const char* aPref, const char* aValue)
 nsresult
 Preferences::SetCString(const char* aPref, const nsACString &aValue)
 {
-  NS_ENSURE_TRUE(XRE_GetProcessType() == GeckoProcessType_Default, NS_ERROR_NOT_AVAILABLE);
+  ENSURE_MAIN_PROCESS("Cannot SetCString from content process:", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_SetCharPref(aPref, PromiseFlatCString(aValue).get(), false);
 }
@@ -1455,7 +1470,7 @@ Preferences::SetCString(const char* aPref, const nsACString &aValue)
 nsresult
 Preferences::SetString(const char* aPref, const PRUnichar* aValue)
 {
-  NS_ENSURE_TRUE(XRE_GetProcessType() == GeckoProcessType_Default, NS_ERROR_NOT_AVAILABLE);
+  ENSURE_MAIN_PROCESS("Cannot SetString from content process:", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_SetCharPref(aPref, NS_ConvertUTF16toUTF8(aValue).get(), false);
 }
@@ -1464,7 +1479,7 @@ Preferences::SetString(const char* aPref, const PRUnichar* aValue)
 nsresult
 Preferences::SetString(const char* aPref, const nsAString &aValue)
 {
-  NS_ENSURE_TRUE(XRE_GetProcessType() == GeckoProcessType_Default, NS_ERROR_NOT_AVAILABLE);
+  ENSURE_MAIN_PROCESS("Cannot SetString from content process:", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_SetCharPref(aPref, NS_ConvertUTF16toUTF8(aValue).get(), false);
 }
@@ -1473,7 +1488,7 @@ Preferences::SetString(const char* aPref, const nsAString &aValue)
 nsresult
 Preferences::SetBool(const char* aPref, bool aValue)
 {
-  NS_ENSURE_TRUE(XRE_GetProcessType() == GeckoProcessType_Default, NS_ERROR_NOT_AVAILABLE);
+  ENSURE_MAIN_PROCESS("Cannot SetBool from content process:", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_SetBoolPref(aPref, aValue, false);
 }
@@ -1482,7 +1497,7 @@ Preferences::SetBool(const char* aPref, bool aValue)
 nsresult
 Preferences::SetInt(const char* aPref, int32_t aValue)
 {
-  NS_ENSURE_TRUE(XRE_GetProcessType() == GeckoProcessType_Default, NS_ERROR_NOT_AVAILABLE);
+  ENSURE_MAIN_PROCESS("Cannot SetInt from content process:", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_SetIntPref(aPref, aValue, false);
 }
@@ -1500,7 +1515,7 @@ Preferences::SetComplex(const char* aPref, const nsIID &aType,
 nsresult
 Preferences::ClearUser(const char* aPref)
 {
-  NS_ENSURE_TRUE(XRE_GetProcessType() == GeckoProcessType_Default, NS_ERROR_NOT_AVAILABLE);
+  ENSURE_MAIN_PROCESS("Cannot ClearUser from content process:", aPref);
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
   return PREF_ClearUserPref(aPref);
 }
@@ -1657,12 +1672,11 @@ Preferences::UnregisterCallback(PrefChangedFunc aCallback,
   return NS_OK;
 }
 
-static int BoolVarChanged(const char* aPref, void* aClosure)
+static void BoolVarChanged(const char* aPref, void* aClosure)
 {
   CacheData* cache = static_cast<CacheData*>(aClosure);
   *((bool*)cache->cacheLocation) =
     Preferences::GetBool(aPref, cache->defaultValueBool);
-  return 0;
 }
 
 // static
@@ -1680,12 +1694,11 @@ Preferences::AddBoolVarCache(bool* aCache,
   return RegisterCallback(BoolVarChanged, aPref, data);
 }
 
-static int IntVarChanged(const char* aPref, void* aClosure)
+static void IntVarChanged(const char* aPref, void* aClosure)
 {
   CacheData* cache = static_cast<CacheData*>(aClosure);
   *((int32_t*)cache->cacheLocation) =
     Preferences::GetInt(aPref, cache->defaultValueInt);
-  return 0;
 }
 
 // static
@@ -1703,12 +1716,11 @@ Preferences::AddIntVarCache(int32_t* aCache,
   return RegisterCallback(IntVarChanged, aPref, data);
 }
 
-static int UintVarChanged(const char* aPref, void* aClosure)
+static void UintVarChanged(const char* aPref, void* aClosure)
 {
   CacheData* cache = static_cast<CacheData*>(aClosure);
   *((uint32_t*)cache->cacheLocation) =
     Preferences::GetUint(aPref, cache->defaultValueUint);
-  return 0;
 }
 
 // static
@@ -1726,12 +1738,11 @@ Preferences::AddUintVarCache(uint32_t* aCache,
   return RegisterCallback(UintVarChanged, aPref, data);
 }
 
-static int FloatVarChanged(const char* aPref, void* aClosure)
+static void FloatVarChanged(const char* aPref, void* aClosure)
 {
   CacheData* cache = static_cast<CacheData*>(aClosure);
   *((float*)cache->cacheLocation) =
     Preferences::GetFloat(aPref, cache->defaultValueFloat);
-  return 0;
 }
 
 // static
@@ -1882,3 +1893,5 @@ Preferences::GetDefaultType(const char* aPref)
 }
 
 } // namespace mozilla
+
+#undef ENSURE_MAIN_PROCESS

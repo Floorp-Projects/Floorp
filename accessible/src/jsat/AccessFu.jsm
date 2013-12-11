@@ -496,7 +496,9 @@ var Output = {
   },
 
   speechHelper: {
-    EARCONS: ['chrome://global/content/accessibility/tick.wav'],
+    EARCONS: ['virtual_cursor_move.ogg',
+              'virtual_cursor_key.ogg',
+              'clicked.ogg'],
 
     earconBuffers: {},
 
@@ -509,9 +511,10 @@ var Output = {
       this.webspeechEnabled = !!window.speechSynthesis;
 
       for (let earcon of this.EARCONS) {
-        let earconName = /.*\/(.*)\..*$/.exec(earcon)[1];
+        let earconName = /(^.*)\..*$/.exec(earcon)[1];
         this.earconBuffers[earconName] = new WeakMap();
-        this.earconBuffers[earconName].set(window, new window.Audio(earcon));
+        this.earconBuffers[earconName].set(
+          window, new window.Audio('chrome://global/content/accessibility/' + earcon));
       }
 
       this.inited = true;
@@ -741,6 +744,7 @@ var Input = {
         this.contextAction('forward');
         break;
       case 'exploreend1':
+      case 'dwellend1':
         this.activateCurrent(null, true);
         break;
       case 'swiperight2':

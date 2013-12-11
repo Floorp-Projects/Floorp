@@ -133,18 +133,12 @@ private:
   static nsIRDFDataSource * mInner;
 
   bool mInitialized;
-  bool mBrowserMenuInitialized;
   bool mMailviewMenuInitialized;
   bool mComposerMenuInitialized;
   bool mMaileditMenuInitialized;
   bool mSecondaryTiersInitialized;
   bool mAutoDetectInitialized;
   bool mOthersInitialized;
-
-  nsTArray<nsMenuEntry*> mBrowserMenu;
-  int32_t                mBrowserCacheStart;
-  int32_t                mBrowserCacheSize;
-  int32_t                mBrowserMenuRDFPosition;
 
   nsTArray<nsMenuEntry*> mMailviewMenu;
   int32_t                mMailviewCacheStart;
@@ -248,14 +242,12 @@ public:
   virtual ~nsCharsetMenu();
 
   nsresult Init();
-  nsresult InitBrowserMenu();
   nsresult InitMaileditMenu();
   nsresult InitMailviewMenu();
   nsresult InitComposerMenu();
   nsresult InitOthers();
   nsresult InitSecondaryTiers();
   nsresult InitAutodetMenu();
-  nsresult RefreshBrowserMenu();
   nsresult RefreshMailviewMenu();
   nsresult RefreshMaileditMenu();
   nsresult RefreshComposerMenu();
@@ -385,9 +377,6 @@ NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *
   if (!nsCRT::strcmp(aTopic, "charsetmenu-selected")) {
     nsDependentString nodeName(someData);
     rv = mCharsetMenu->Init();
-    if (nodeName.EqualsLiteral("browser")) {
-      rv = mCharsetMenu->InitBrowserMenu();
-    }
     if (nodeName.EqualsLiteral("composer")) {
       rv = mCharsetMenu->InitComposerMenu();
     }
@@ -414,8 +403,6 @@ NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *
 
     if (prefName.EqualsLiteral(kBrowserStaticPrefKey)) {
       // refresh menus which share this pref
-      rv = mCharsetMenu->RefreshBrowserMenu();
-      NS_ENSURE_SUCCESS(rv, rv);
       rv = mCharsetMenu->RefreshMailviewMenu();
       NS_ENSURE_SUCCESS(rv, rv);
       rv = mCharsetMenu->RefreshComposerMenu();
@@ -467,7 +454,6 @@ nsIRDFResource * nsCharsetMenu::kRDF_type = nullptr;
 
 nsCharsetMenu::nsCharsetMenu() 
 : mInitialized(false), 
-  mBrowserMenuInitialized(false),
   mMailviewMenuInitialized(false),
   mComposerMenuInitialized(false),
   mMaileditMenuInitialized(false),
@@ -517,51 +503,10 @@ nsCharsetMenu::~nsCharsetMenu()
 {
   Done();
 
-  FreeMenuItemArray(&mBrowserMenu);
   FreeMenuItemArray(&mMailviewMenu);
   FreeMenuItemArray(&mComposerMenu);
 
   FreeResources();
-}
-
-// XXX collapse these 2 in one
-
-nsresult nsCharsetMenu::RefreshBrowserMenu()
-{
-  nsresult res = NS_OK;
-
-  nsCOMPtr<nsIRDFContainer> container;
-  res = NewRDFContainer(mInner, kNC_BrowserCharsetMenuRoot, getter_AddRefs(container));
-  if (NS_FAILED(res)) return res;
-
-  // clean the menu
-  res = ClearMenu(container, &mBrowserMenu);
-  if (NS_FAILED(res)) return res;
-
-  // rebuild the menu
-  nsCOMPtr<nsIUTF8StringEnumerator> decoders;
-  res = mCCManager->GetDecoderList(getter_AddRefs(decoders));
-  if (NS_FAILED(res)) return res;
-
-  nsTArray<nsCString> decs;
-  SetArrayFromEnumerator(decoders, decs);
-  
-  res = AddFromPrefsToMenu(&mBrowserMenu, container, kBrowserStaticPrefKey, 
-                           decs, "charset.");
-  NS_ASSERTION(NS_SUCCEEDED(res), "error initializing static charset menu from prefs");
-
-  // mark the end of the static area, the rest is cache
-  mBrowserCacheStart = mBrowserMenu.Length();
-
-  // Remove "notForBrowser" entries before populating cache menu
-  res = RemoveFlaggedCharsets(decs, NS_LITERAL_STRING(".notForBrowser"));
-  NS_ASSERTION(NS_SUCCEEDED(res), "error removing flagged charsets");
-
-  res = InitCacheMenu(decs, kNC_BrowserCharsetMenuRoot, kBrowserCachePrefKey, 
-                      &mBrowserMenu);
-  NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser cache charset menu");
-
-  return res;
 }
 
 nsresult nsCharsetMenu::RefreshMailviewMenu()
@@ -796,49 +741,6 @@ nsresult nsCharsetMenu::FreeResources()
   mRDFService = nullptr;
   mCCManager  = nullptr;
   mPrefs      = nullptr;
-
-  return res;
-}
-
-nsresult nsCharsetMenu::InitBrowserMenu() 
-{
-  nsresult res = NS_OK;
-
-  if (!mBrowserMenuInitialized)  {
-    nsCOMPtr<nsIRDFContainer> container;
-    res = NewRDFContainer(mInner, kNC_BrowserCharsetMenuRoot, getter_AddRefs(container));
-    if (NS_FAILED(res)) return res;
-
-    nsTArray<nsCString> browserDecoderList(mDecoderList);
-
-    res = InitStaticMenu(browserDecoderList, kNC_BrowserCharsetMenuRoot, 
-                         kBrowserStaticPrefKey, &mBrowserMenu);
-    NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser static charset menu");
-
-    // mark the end of the static area, the rest is cache
-    mBrowserCacheStart = mBrowserMenu.Length();
-    mPrefs->GetIntPref(kBrowserCacheSizePrefKey, &mBrowserCacheSize);
-
-    // compute the position of the menu in the RDF container
-    res = container->GetCount(&mBrowserMenuRDFPosition);
-    if (NS_FAILED(res)) return res;
-    // this "1" here is a correction necessary because the RDF container 
-    // elements are numbered from 1 (why god, WHY?!?!?!)
-    mBrowserMenuRDFPosition -= mBrowserCacheStart - 1;
-
-    // Remove "notForBrowser" entries before populating cache menu
-    res = RemoveFlaggedCharsets(browserDecoderList, NS_LITERAL_STRING(".notForBrowser"));
-    NS_ASSERTION(NS_SUCCEEDED(res), "error initializing static charset menu from prefs");
-
-    res = InitCacheMenu(browserDecoderList, kNC_BrowserCharsetMenuRoot, kBrowserCachePrefKey, 
-      &mBrowserMenu);
-    NS_ASSERTION(NS_SUCCEEDED(res), "error initializing browser cache charset menu");
-
-    // register prefs callback
-    mPrefs->AddObserver(kBrowserStaticPrefKey, mCharsetMenuObserver, false);
-  }
-
-  mBrowserMenuInitialized = NS_SUCCEEDED(res);
 
   return res;
 }
@@ -1685,31 +1587,7 @@ nsresult nsCharsetMenu::GetCollation(nsICollation ** aCollation)
 
 NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const PRUnichar * aCharset)
 {
-  nsresult res = NS_OK;
-
-  if (mBrowserMenuInitialized) {
-    // Don't add item to the cache if it's marked "notForBrowser"
-    nsAutoString str;
-    res = mCCManager->GetCharsetData(NS_LossyConvertUTF16toASCII(aCharset).get(),
-                                     NS_LITERAL_STRING(".notForBrowser").get(), str);
-    if (NS_SUCCEEDED(res)) // succeeded means attribute exists
-      return res; // don't throw
-
-    res = AddCharsetToCache(NS_LossyConvertUTF16toASCII(aCharset),
-                            &mBrowserMenu, kNC_BrowserCharsetMenuRoot, 
-                            mBrowserCacheStart, mBrowserCacheSize,
-                            mBrowserMenuRDFPosition);
-    if (NS_FAILED(res)) {
-        return res;
-    }
-
-    res = WriteCacheToPrefs(&mBrowserMenu, mBrowserCacheStart, 
-      kBrowserCachePrefKey);
-  } else {
-    res = UpdateCachePrefs(kBrowserCachePrefKey, kBrowserCacheSizePrefKey, 
-                           kBrowserStaticPrefKey, aCharset);
-  }
-  return res;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsCharsetMenu::SetCurrentMailCharset(const PRUnichar * aCharset)

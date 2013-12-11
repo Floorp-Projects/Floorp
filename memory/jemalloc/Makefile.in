@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-VPATH		= $(srcdir) $(srcdir)/src/src
-
 ifdef MOZ_GLUE_PROGRAM_LDFLAGS
 SDK_LIBRARY = $(REAL_LIBRARY)
 DIST_INSTALL = 1
@@ -18,17 +16,8 @@ LOCAL_INCLUDES += \
 
 ifdef _MSC_VER
 LOCAL_INCLUDES += -I$(srcdir)/src/include/msvc_compat
-
-DEFINES += -DDLLEXPORT
-endif
-
-ifeq ($(OS_TARGET),Linux)
-# For mremap
-DEFINES += -D_GNU_SOURCE
 endif
 
 ifdef GNU_CC
 CFLAGS += -std=gnu99
 endif
-
-DEFINES += -Dabort=moz_abort

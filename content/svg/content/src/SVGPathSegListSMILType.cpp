@@ -24,7 +24,7 @@ void
 SVGPathSegListSMILType::Init(nsSMILValue &aValue) const
 {
   NS_ABORT_IF_FALSE(aValue.IsNull(), "Unexpected value type");
-  aValue.mU.mPtr = new SVGPathDataAndOwner();
+  aValue.mU.mPtr = new SVGPathDataAndInfo();
   aValue.mType = this;
 }
 
@@ -32,7 +32,7 @@ void
 SVGPathSegListSMILType::Destroy(nsSMILValue& aValue) const
 {
   NS_PRECONDITION(aValue.mType == this, "Unexpected SMIL value type");
-  delete static_cast<SVGPathDataAndOwner*>(aValue.mU.mPtr);
+  delete static_cast<SVGPathDataAndInfo*>(aValue.mU.mPtr);
   aValue.mU.mPtr = nullptr;
   aValue.mType = nsSMILNullType::Singleton();
 }
@@ -44,10 +44,10 @@ SVGPathSegListSMILType::Assign(nsSMILValue& aDest,
   NS_PRECONDITION(aDest.mType == aSrc.mType, "Incompatible SMIL types");
   NS_PRECONDITION(aDest.mType == this, "Unexpected SMIL value");
 
-  const SVGPathDataAndOwner* src =
-    static_cast<const SVGPathDataAndOwner*>(aSrc.mU.mPtr);
-  SVGPathDataAndOwner* dest =
-    static_cast<SVGPathDataAndOwner*>(aDest.mU.mPtr);
+  const SVGPathDataAndInfo* src =
+    static_cast<const SVGPathDataAndInfo*>(aSrc.mU.mPtr);
+  SVGPathDataAndInfo* dest =
+    static_cast<SVGPathDataAndInfo*>(aDest.mU.mPtr);
 
   return dest->CopyFrom(*src);
 }
@@ -59,13 +59,13 @@ SVGPathSegListSMILType::IsEqual(const nsSMILValue& aLeft,
   NS_PRECONDITION(aLeft.mType == aRight.mType, "Incompatible SMIL types");
   NS_PRECONDITION(aLeft.mType == this, "Unexpected type for SMIL value");
 
-  return *static_cast<const SVGPathDataAndOwner*>(aLeft.mU.mPtr) ==
-         *static_cast<const SVGPathDataAndOwner*>(aRight.mU.mPtr);
+  return *static_cast<const SVGPathDataAndInfo*>(aLeft.mU.mPtr) ==
+         *static_cast<const SVGPathDataAndInfo*>(aRight.mU.mPtr);
 }
 
 static bool
-ArcFlagsDiffer(SVGPathDataAndOwner::const_iterator aPathData1,
-               SVGPathDataAndOwner::const_iterator aPathData2)
+ArcFlagsDiffer(SVGPathDataAndInfo::const_iterator aPathData1,
+               SVGPathDataAndInfo::const_iterator aPathData2)
 {
   NS_ABORT_IF_FALSE
     (SVGPathSegUtils::IsArcType(SVGPathSegUtils::DecodeType(aPathData1[0])),
@@ -85,8 +85,8 @@ enum PathInterpolationResult {
 };
 
 static PathInterpolationResult
-CanInterpolate(const SVGPathDataAndOwner& aStart,
-               const SVGPathDataAndOwner& aEnd)
+CanInterpolate(const SVGPathDataAndInfo& aStart,
+               const SVGPathDataAndInfo& aEnd)
 {
   if (aStart.IsIdentity()) {
     return eCanInterpolate;
@@ -98,10 +98,10 @@ CanInterpolate(const SVGPathDataAndOwner& aStart,
 
   PathInterpolationResult result = eCanInterpolate;
 
-  SVGPathDataAndOwner::const_iterator pStart = aStart.begin();
-  SVGPathDataAndOwner::const_iterator pEnd = aEnd.begin();
-  SVGPathDataAndOwner::const_iterator pStartDataEnd = aStart.end();
-  SVGPathDataAndOwner::const_iterator pEndDataEnd = aEnd.end();
+  SVGPathDataAndInfo::const_iterator pStart = aStart.begin();
+  SVGPathDataAndInfo::const_iterator pEnd = aEnd.begin();
+  SVGPathDataAndInfo::const_iterator pStartDataEnd = aStart.end();
+  SVGPathDataAndInfo::const_iterator pEndDataEnd = aEnd.end();
 
   while (pStart < pStartDataEnd && pEnd < pEndDataEnd) {
     uint32_t startType = SVGPathSegUtils::DecodeType(*pStart);
@@ -142,7 +142,7 @@ enum RelativenessAdjustmentType {
 
 static inline void
 AdjustSegmentForRelativeness(RelativenessAdjustmentType aAdjustmentType,
-                             const SVGPathDataAndOwner::iterator& aSegmentToAdjust,
+                             const SVGPathDataAndInfo::iterator& aSegmentToAdjust,
                              const SVGPathTraversalState& aState)
 {
   if (aAdjustmentType == eAbsoluteToRelative) {
@@ -171,10 +171,10 @@ AdjustSegmentForRelativeness(RelativenessAdjustmentType aAdjustmentType,
  */
 static inline void
 AddWeightedPathSegs(double aCoeff1,
-                    SVGPathDataAndOwner::const_iterator& aSeg1,
+                    SVGPathDataAndInfo::const_iterator& aSeg1,
                     double aCoeff2,
-                    SVGPathDataAndOwner::const_iterator& aSeg2,
-                    SVGPathDataAndOwner::iterator& aResultSeg)
+                    SVGPathDataAndInfo::const_iterator& aSeg2,
+                    SVGPathDataAndInfo::iterator& aResultSeg)
 {
   NS_ABORT_IF_FALSE(aSeg2, "2nd segment must be non-null");
   NS_ABORT_IF_FALSE(aResultSeg, "result segment must be non-null");
@@ -233,9 +233,9 @@ AddWeightedPathSegs(double aCoeff1,
  *                         size. Also allowed to be the same list as aList1.
  */
 static void
-AddWeightedPathSegLists(double aCoeff1, const SVGPathDataAndOwner& aList1,
-                        double aCoeff2, const SVGPathDataAndOwner& aList2,
-                        SVGPathDataAndOwner& aResult)
+AddWeightedPathSegLists(double aCoeff1, const SVGPathDataAndInfo& aList1,
+                        double aCoeff2, const SVGPathDataAndInfo& aList2,
+                        SVGPathDataAndInfo& aResult)
 {
   NS_ABORT_IF_FALSE(aCoeff1 >= 0.0 && aCoeff2 >= 0.0,
                     "expecting non-negative coefficients");
@@ -248,15 +248,15 @@ AddWeightedPathSegLists(double aCoeff1, const SVGPathDataAndOwner& aList1,
                     "expecting result list to be identity or to have same "
                     "length as 2nd list");
 
-  SVGPathDataAndOwner::const_iterator iter1, end1;
+  SVGPathDataAndInfo::const_iterator iter1, end1;
   if (aList1.IsIdentity()) {
     iter1 = end1 = nullptr; // indicate that this is an identity list
   } else {
     iter1 = aList1.begin();
     end1 = aList1.end();
   }
-  SVGPathDataAndOwner::const_iterator iter2 = aList2.begin();
-  SVGPathDataAndOwner::const_iterator end2 = aList2.end();
+  SVGPathDataAndInfo::const_iterator iter2 = aList2.begin();
+  SVGPathDataAndInfo::const_iterator end2 = aList2.end();
 
   // Grow |aResult| if necessary. (NOTE: It's possible that aResult and aList1
   // are the same list, so this may implicitly resize aList1. That's fine,
@@ -268,7 +268,7 @@ AddWeightedPathSegLists(double aCoeff1, const SVGPathDataAndOwner& aList1,
     aResult.SetElement(aList2.Element()); // propagate target element info!
   }
 
-  SVGPathDataAndOwner::iterator resultIter = aResult.begin();
+  SVGPathDataAndInfo::iterator resultIter = aResult.begin();
 
   while ((!iter1 || iter1 != end1) &&
          iter2 != end2) {
@@ -283,9 +283,9 @@ AddWeightedPathSegLists(double aCoeff1, const SVGPathDataAndOwner& aList1,
 }
 
 static void
-ConvertPathSegmentData(SVGPathDataAndOwner::const_iterator& aStart,
-                       SVGPathDataAndOwner::const_iterator& aEnd,
-                       SVGPathDataAndOwner::iterator& aResult,
+ConvertPathSegmentData(SVGPathDataAndInfo::const_iterator& aStart,
+                       SVGPathDataAndInfo::const_iterator& aEnd,
+                       SVGPathDataAndInfo::iterator& aResult,
                        SVGPathTraversalState& aState)
 {
   uint32_t startType = SVGPathSegUtils::DecodeType(*aStart);
@@ -294,7 +294,7 @@ ConvertPathSegmentData(SVGPathDataAndOwner::const_iterator& aStart,
   uint32_t segmentLengthIncludingType =
       1 + SVGPathSegUtils::ArgCountForType(startType);
 
-  SVGPathDataAndOwner::const_iterator pResultSegmentBegin = aResult;
+  SVGPathDataAndInfo::const_iterator pResultSegmentBegin = aResult;
 
   if (startType == endType) {
     // No conversion need, just directly copy aStart.
@@ -377,11 +377,11 @@ ConvertPathSegmentData(SVGPathDataAndOwner::const_iterator& aStart,
 }
 
 static void
-ConvertAllPathSegmentData(SVGPathDataAndOwner::const_iterator aStart,
-                          SVGPathDataAndOwner::const_iterator aStartDataEnd,
-                          SVGPathDataAndOwner::const_iterator aEnd,
-                          SVGPathDataAndOwner::const_iterator aEndDataEnd,
-                          SVGPathDataAndOwner::iterator aResult)
+ConvertAllPathSegmentData(SVGPathDataAndInfo::const_iterator aStart,
+                          SVGPathDataAndInfo::const_iterator aStartDataEnd,
+                          SVGPathDataAndInfo::const_iterator aEnd,
+                          SVGPathDataAndInfo::const_iterator aEndDataEnd,
+                          SVGPathDataAndInfo::iterator aResult)
 {
   SVGPathTraversalState state;
   state.mode = SVGPathTraversalState::eUpdateOnlyStartAndCurrentPos;
@@ -400,10 +400,10 @@ SVGPathSegListSMILType::Add(nsSMILValue& aDest,
   NS_PRECONDITION(aDest.mType == this, "Unexpected SMIL type");
   NS_PRECONDITION(aValueToAdd.mType == this, "Incompatible SMIL type");
 
-  SVGPathDataAndOwner& dest =
-    *static_cast<SVGPathDataAndOwner*>(aDest.mU.mPtr);
-  const SVGPathDataAndOwner& valueToAdd =
-    *static_cast<const SVGPathDataAndOwner*>(aValueToAdd.mU.mPtr);
+  SVGPathDataAndInfo& dest =
+    *static_cast<SVGPathDataAndInfo*>(aDest.mU.mPtr);
+  const SVGPathDataAndInfo& valueToAdd =
+    *static_cast<const SVGPathDataAndInfo*>(aValueToAdd.mU.mPtr);
 
   if (valueToAdd.IsIdentity()) { // Adding identity value - no-op
     return NS_OK;
@@ -460,12 +460,12 @@ SVGPathSegListSMILType::Interpolate(const nsSMILValue& aStartVal,
                   "Unexpected types for interpolation");
   NS_PRECONDITION(aResult.mType == this, "Unexpected result type");
 
-  const SVGPathDataAndOwner& start =
-    *static_cast<const SVGPathDataAndOwner*>(aStartVal.mU.mPtr);
-  const SVGPathDataAndOwner& end =
-    *static_cast<const SVGPathDataAndOwner*>(aEndVal.mU.mPtr);
-  SVGPathDataAndOwner& result =
-    *static_cast<SVGPathDataAndOwner*>(aResult.mU.mPtr);
+  const SVGPathDataAndInfo& start =
+    *static_cast<const SVGPathDataAndInfo*>(aStartVal.mU.mPtr);
+  const SVGPathDataAndInfo& end =
+    *static_cast<const SVGPathDataAndInfo*>(aEndVal.mU.mPtr);
+  SVGPathDataAndInfo& result =
+    *static_cast<SVGPathDataAndInfo*>(aResult.mU.mPtr);
   NS_ABORT_IF_FALSE(result.IsIdentity(),
                     "expecting outparam to start out as identity");
 
@@ -478,7 +478,7 @@ SVGPathSegListSMILType::Interpolate(const nsSMILValue& aStartVal,
     return NS_ERROR_FAILURE;
   }
 
-  const SVGPathDataAndOwner* startListToUse = &start;
+  const SVGPathDataAndInfo* startListToUse = &start;
   if (check == eRequiresConversion) {
     // Can't convert |start| in-place, since it's const. Instead, we copy it
     // into |result|, converting the types as we go, and use that as our start.

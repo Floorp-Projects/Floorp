@@ -85,9 +85,10 @@
 #include "mozilla/gfx/Tools.h"
 
 using namespace mozilla;
+using namespace mozilla::css;
+using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
-using namespace mozilla::css;
 
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
@@ -992,6 +993,16 @@ nsIFrame::GetPaddingRect() const
   return GetPaddingRectRelativeToSelf() + GetPosition();
 }
 
+nsRect
+nsIFrame::GetMarginRectRelativeToSelf() const
+{
+  nsMargin m = GetUsedMargin();
+  ApplySkipSides(m);
+  nsRect r(0, 0, mRect.width, mRect.height);
+  r.Inflate(m);
+  return r;
+}
+
 bool
 nsIFrame::IsTransformed() const
 {
@@ -1812,31 +1823,31 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   aBuilder->SetContainsBlendMode(false);
  
   if (isTransformed) {
+    const nsRect overflow = GetVisualOverflowRectRelativeToSelf();
     if (aBuilder->IsForPainting() &&
         nsDisplayTransform::ShouldPrerenderTransformedContent(aBuilder, this)) {
-      dirtyRect = GetVisualOverflowRectRelativeToSelf();
+      dirtyRect = overflow;
     } else {
-      // Trying to  back-transform arbitrary rects gives us really weird results. I believe 
-      // this is from points that lie beyond the vanishing point. As a workaround we transform t
-      // he overflow rect into screen space and compare in that coordinate system.
+      if (overflow.IsEmpty() && !Preserves3DChildren()) {
+        return;
+      }
+      // Trying to back-transform arbitrary rects gives us really weird results. I believe 
+      // this is from points that lie beyond the vanishing point. As a workaround we transform
+      // the overflow rect into screen space and compare in that coordinate system.
 
-      // Transform the overflow rect into screen space
-      nsRect overflow = GetVisualOverflowRectRelativeToSelf();
+      // Transform the overflow rect into screen space.
       nsPoint offset = aBuilder->ToReferenceFrame(this);
-      overflow += offset;
-      overflow = nsDisplayTransform::TransformRect(overflow, this, offset);
-
+      nsRect trans = nsDisplayTransform::TransformRect(overflow + offset, this, offset);
       dirtyRect += offset;
-
-      if (dirtyRect.Intersects(overflow)) {
+      if (dirtyRect.Intersects(trans)) {
         // If they intersect, we take our whole overflow rect. We could instead take the intersection
         // and then reverse transform it but I doubt this extra work is worthwhile.
-        dirtyRect = GetVisualOverflowRectRelativeToSelf();
+        dirtyRect = overflow;
       } else {
+        if (!Preserves3DChildren()) {
+          return;
+        }
         dirtyRect.SetEmpty();
-      }
-      if (!Preserves3DChildren() && !dirtyRect.Intersects(GetVisualOverflowRectRelativeToSelf())) {
-        return;
       }
     }
     inTransform = true;
@@ -2016,6 +2027,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       resultList.AppendNewToTop(
         new (aBuilder) nsDisplayBlendContainer(aBuilder, this, &resultList));
   }
+
+  CreateOwnLayerIfNeeded(aBuilder, &resultList);
 
   aList->AppendToTop(&resultList);
 }
@@ -4047,6 +4060,14 @@ nsFrame::ComputeSimpleTightBounds(gfxContext* aContext) const
   return r;
 }
 
+/* virtual */ nsresult
+nsIFrame::GetPrefWidthTightBounds(nsRenderingContext* aContext,
+                                  nscoord* aX,
+                                  nscoord* aXMost)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* virtual */ nsSize
 nsFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                          nsSize aCBSize, nscoord aAvailableWidth,
@@ -5284,6 +5305,9 @@ nsIFrame::ListGeneric(FILE* out, int32_t aIndent, uint32_t aFlags) const
       nsAutoString atomString;
       pseudoTag->ToString(atomString);
       fprintf(out, "%s", NS_LossyConvertUTF16toASCII(atomString).get());
+    }
+    if (mParent && mStyleContext->GetParent() != mParent->StyleContext()) {
+      fprintf(out, ",parent=%p", mStyleContext->GetParent());
     }
   }
   fputs("]", out);
@@ -8054,7 +8078,9 @@ void
 nsIFrame::CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder, 
                                  nsDisplayList* aList)
 {
-  if (GetContent()->HasAttr(kNameSpaceID_None, nsGkAtoms::layer)) {
+  if (GetContent() &&
+      GetContent()->IsXUL() &&
+      GetContent()->HasAttr(kNameSpaceID_None, nsGkAtoms::layer)) {
     aList->AppendNewToTop(new (aBuilder) 
         nsDisplayOwnLayer(aBuilder, this, aList));
   }
@@ -8091,6 +8117,27 @@ nsIFrame::IsPseudoStackingContextFromStyle() {
   return disp->mOpacity != 1.0f ||
          disp->IsPositioned(this) ||
          disp->IsFloating(this);
+}
+
+Element*
+nsIFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
+{
+  nsIFrame* frame = nullptr;
+
+  if (aType == nsCSSPseudoElements::ePseudo_before) {
+    frame = nsLayoutUtils::GetBeforeFrame(this);
+  } else if (aType == nsCSSPseudoElements::ePseudo_after) {
+    frame = nsLayoutUtils::GetAfterFrame(this);
+  }
+
+  if (frame) {
+    nsIContent* content = frame->GetContent();
+    if (content->IsElement()) {
+      return content->AsElement();
+    }
+  }
+  
+  return nullptr;
 }
 
 nsIFrame::ContentOffsets::ContentOffsets()

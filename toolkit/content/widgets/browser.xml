@@ -673,8 +673,17 @@
       </field>
 
       <property name="userTypedValue"
-                onget="return this._userTypedValue;"
-                onset="this.userTypedClear = 0; return this._userTypedValue = val;"/>
+                onget="return this._userTypedValue;">
+        <setter><![CDATA[
+          this.userTypedClear = 0;
+          this._userTypedValue = val;
+
+          let event = new CustomEvent("UserTypedValueChanged");
+          this.dispatchEvent(event);
+
+          return val;
+        ]]></setter>
+      </property>
 
       <field name="mFormFillAttached">
         false

@@ -500,28 +500,6 @@ BrowserTabActor.prototype = {
 
   _pendingNavigation: null,
 
-  /**
-   * Add the specified actor to the default actor pool connection, in order to
-   * keep it alive as long as the server is. This is used by breakpoints in the
-   * thread actor.
-   *
-   * @param actor aActor
-   *        The actor object.
-   */
-  addToParentPool: function BTA_addToParentPool(aActor) {
-    this.conn.addActor(aActor);
-  },
-
-  /**
-   * Remove the specified actor from the default actor pool.
-   *
-   * @param BreakpointActor aActor
-   *        The actor object.
-   */
-  removeFromParentPool: function BTA_removeFromParentPool(aActor) {
-    this.conn.removeActor(aActor);
-  },
-
   // A constant prefix that will be used to form the actor ID by the server.
   actorPrefix: "tab",
 

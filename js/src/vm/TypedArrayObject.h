@@ -107,8 +107,6 @@ class ArrayBufferObject : public JSObject
 
     static bool obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiver,
                                uint32_t index, MutableHandleValue vp);
-    static bool obj_getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                        uint32_t index, MutableHandleValue vp, bool *present);
 
     static bool obj_getSpecial(JSContext *cx, HandleObject obj, HandleObject receiver,
                                HandleSpecialId sid, MutableHandleValue vp);
@@ -198,7 +196,7 @@ class ArrayBufferObject : public JSObject
     /*
      * Neuter all views of an ArrayBuffer.
      */
-    bool neuterViews(JSContext *cx);
+    static bool neuterViews(JSContext *cx, Handle<ArrayBufferObject*> buffer);
 
     inline uint8_t * dataPointer() const {
         return (uint8_t *) elements;

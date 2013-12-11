@@ -35,7 +35,6 @@
 #include "gfxPlatform.h"
 #include "qcms.h"
 
-#include "mozilla/AutoRestore.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
@@ -693,6 +692,8 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
   if (!mSheetNeedsShow && !bState && ![mWindow isVisible])
     return NS_OK;
 
+  [mWindow setBeingShown:bState];
+
   nsIWidget* parentWidget = mParent;
   nsCOMPtr<nsPIWidgetCocoa> piParentWidget(do_QueryInterface(parentWidget));
   NSWindow* nativeParentWindow = (parentWidget) ?
@@ -911,6 +912,8 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
   
   if (mPopupContentView)
       mPopupContentView->Show(bState);
+
+  [mWindow setBeingShown:NO];
 
   return NS_OK;
 
@@ -2632,23 +2635,14 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
   return self;
 }
 
+- (void)setBeingShown:(BOOL)aValue
+{
+  mBeingShown = aValue;
+}
+
 - (BOOL)isVisibleOrBeingShown
 {
   return [super isVisible] || mBeingShown;
-}
-
-- (void)orderFront:(id)sender
-{
-  AutoRestore<BOOL> saveBeingShown(mBeingShown);
-  mBeingShown = YES;
-  [super orderFront:sender];
-}
-
-- (void)makeKeyAndOrderFront:(id)sender
-{
-  AutoRestore<BOOL> saveBeingShown(mBeingShown);
-  mBeingShown = YES;
-  [super makeKeyAndOrderFront:sender];
 }
 
 - (void)dealloc

@@ -12,13 +12,10 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothDevice.cpp',
         'BluetoothHidManager.cpp',
         'BluetoothManager.cpp',
-        'BluetoothOppManager.cpp',
         'BluetoothProfileController.cpp',
         'BluetoothPropertyContainer.cpp',
         'BluetoothReplyRunnable.cpp',
         'BluetoothService.cpp',
-        'BluetoothSocket.cpp',
-        'BluetoothUnixSocketConnector.cpp',
         'BluetoothUtils.cpp',
         'BluetoothUuid.cpp',
         'ipc/BluetoothChild.cpp',
@@ -37,6 +34,9 @@ if CONFIG['MOZ_B2G_BT']:
             SOURCES += [
                 'bluez/BluetoothA2dpManager.cpp',
                 'bluez/BluetoothHfpManager.cpp',
+                'bluez/BluetoothOppManager.cpp',
+                'bluez/BluetoothSocket.cpp',
+                'bluez/BluetoothUnixSocketConnector.cpp',
                 'bluez/gonk/BluetoothGonkService.cpp',
                 'bluez/linux/BluetoothDBusService.cpp',
             ]
@@ -45,16 +45,20 @@ if CONFIG['MOZ_B2G_BT']:
                 'bluez/gonk',
                 'bluez/linux',
             ]
+            DEFINES['MOZ_B2G_BT_BLUEZ'] = True
         elif CONFIG['MOZ_B2G_BT_BLUEDROID']:
             SOURCES += [
                 'bluedroid/BluetoothA2dpManager.cpp',
                 'bluedroid/BluetoothHfpManager.cpp',
+                'bluedroid/BluetoothOppManager.cpp',
+                'bluedroid/BluetoothSocket.cpp',
                 'bluedroid/gonk/BluetoothServiceBluedroid.cpp',
             ]
             LOCAL_INCLUDES += [
                 'bluedroid',
                 'bluedroid/gonk',
             ]
+            DEFINES['MOZ_B2G_BT_BLUEDROID'] = True
     elif CONFIG['MOZ_ENABLE_DBUS']:
         SOURCES += [
             'bluez/BluetoothHfpManager.cpp',
@@ -64,8 +68,13 @@ if CONFIG['MOZ_B2G_BT']:
             'bluez',
             'bluez/linux',
         ]
+        DEFINES['MOZ_BLUETOOTH_DBUS'] = True
 
     FINAL_LIBRARY = 'gklayout'
+
+    LOCAL_INCLUDES += [
+        'ipc',
+    ]
 
 EXPORTS.mozilla.dom.bluetooth.ipc += [
     'ipc/BluetoothMessageUtils.h',

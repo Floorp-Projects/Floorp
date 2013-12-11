@@ -14,11 +14,15 @@
  */
 
 #include <android/log.h>
+#include <cutils/properties.h>
 
 #include "AudioChannelService.h"
 #include "AudioManager.h"
 
 #include "nsIObserverService.h"
+#ifdef MOZ_B2G_RIL
+#include "nsIRadioInterfaceLayer.h"
+#endif
 #include "nsISettingsService.h"
 #include "nsPrintfCString.h"
 
@@ -368,8 +372,12 @@ public:
   }
 };
 
-AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
-                 mObserver(new HeadphoneSwitchObserver())
+AudioManager::AudioManager()
+  : mPhoneState(PHONE_STATE_CURRENT)
+  , mObserver(new HeadphoneSwitchObserver())
+#ifdef MOZ_B2G_RIL
+  , mMuteCallToRIL(false)
+#endif
 {
   RegisterSwitchObserver(SWITCH_HEADPHONES, mObserver);
 
@@ -419,6 +427,14 @@ AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
   if (NS_FAILED(obs->AddObserver(this, MOZ_SETTINGS_CHANGE_ID, false))) {
     NS_WARNING("Failed to add mozsettings-changed observer!");
   }
+
+#ifdef MOZ_B2G_RIL
+  char value[PROPERTY_VALUE_MAX];
+  property_get("ro.moz.mute.call.to_ril", value, "false");
+  if (!strcmp(value, "true")) {
+    mMuteCallToRIL = true;
+  }
+#endif
 }
 
 AudioManager::~AudioManager() {
@@ -443,6 +459,14 @@ AudioManager::~AudioManager() {
 NS_IMETHODIMP
 AudioManager::GetMicrophoneMuted(bool* aMicrophoneMuted)
 {
+#ifdef MOZ_B2G_RIL
+  if (mMuteCallToRIL) {
+    // Simply return cached mIsMicMuted if mute call go via RIL.
+    *aMicrophoneMuted = mIsMicMuted;
+    return NS_OK;
+  }
+#endif
+
   if (AudioSystem::isMicrophoneMuted(aMicrophoneMuted)) {
     return NS_ERROR_FAILURE;
   }
@@ -452,10 +476,19 @@ AudioManager::GetMicrophoneMuted(bool* aMicrophoneMuted)
 NS_IMETHODIMP
 AudioManager::SetMicrophoneMuted(bool aMicrophoneMuted)
 {
-  if (AudioSystem::muteMicrophone(aMicrophoneMuted)) {
-    return NS_ERROR_FAILURE;
+  if (!AudioSystem::muteMicrophone(aMicrophoneMuted)) {
+#ifdef MOZ_B2G_RIL
+    if (mMuteCallToRIL) {
+      // Extra mute request to RIL for specific platform.
+      nsCOMPtr<nsIRadioInterfaceLayer> ril = do_GetService("@mozilla.org/ril;1");
+      NS_ENSURE_TRUE(ril, NS_ERROR_FAILURE);
+      ril->SetMicrophoneMuted(aMicrophoneMuted);
+      mIsMicMuted = aMicrophoneMuted;
+    }
+#endif
+    return NS_OK;
   }
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -574,20 +607,23 @@ AudioManager::SetFmRadioAudioEnabled(bool aFmRadioAudioEnabled)
 
 NS_IMETHODIMP
 AudioManager::SetAudioChannelVolume(int32_t aChannel, int32_t aIndex) {
-  status_t status;
+  nsresult status;
 
   switch (aChannel) {
     case AUDIO_CHANNEL_CONTENT:
-      status = SetStreamVolumeIndex(AUDIO_STREAM_MUSIC, aIndex);
-      status += SetStreamVolumeIndex(AUDIO_STREAM_SYSTEM, aIndex);
       // sync FMRadio's volume with content channel.
       if (IsDeviceOn(AUDIO_DEVICE_OUT_FM)) {
-        status += SetStreamVolumeIndex(AUDIO_STREAM_FM, aIndex);
+        status = SetStreamVolumeIndex(AUDIO_STREAM_FM, aIndex);
+        NS_ENSURE_SUCCESS(status, status);
       }
+      status = SetStreamVolumeIndex(AUDIO_STREAM_MUSIC, aIndex);
+      NS_ENSURE_SUCCESS(status, status);
+      status = SetStreamVolumeIndex(AUDIO_STREAM_SYSTEM, aIndex);
       break;
     case AUDIO_CHANNEL_NOTIFICATION:
       status = SetStreamVolumeIndex(AUDIO_STREAM_NOTIFICATION, aIndex);
-      status += SetStreamVolumeIndex(AUDIO_STREAM_RING, aIndex);
+      NS_ENSURE_SUCCESS(status, status);
+      status = SetStreamVolumeIndex(AUDIO_STREAM_RING, aIndex);
       break;
     case AUDIO_CHANNEL_ALARM:
       status = SetStreamVolumeIndex(AUDIO_STREAM_ALARM, aIndex);
@@ -599,7 +635,7 @@ AudioManager::SetAudioChannelVolume(int32_t aChannel, int32_t aIndex) {
       return NS_ERROR_INVALID_ARG;
   }
 
-  return status ? NS_ERROR_FAILURE : NS_OK;
+  return status;
 }
 
 NS_IMETHODIMP
@@ -664,17 +700,19 @@ AudioManager::GetMaxAudioChannelVolume(int32_t aChannel, int32_t* aMaxIndex) {
    return NS_OK;
 }
 
-status_t
+nsresult
 AudioManager::SetStreamVolumeIndex(int32_t aStream, int32_t aIndex) {
   if (aIndex < 0 || aIndex > sMaxStreamVolumeTbl[aStream]) {
-    return BAD_VALUE;
+    return NS_ERROR_INVALID_ARG;
   }
 
   mCurrentStreamVolumeTbl[aStream] = aIndex;
+  status_t status;
 #if ANDROID_VERSION < 17
-  return AudioSystem::setStreamVolumeIndex(
-           static_cast<audio_stream_type_t>(aStream),
-           aIndex);
+   status = AudioSystem::setStreamVolumeIndex(
+              static_cast<audio_stream_type_t>(aStream),
+              aIndex);
+   return status ? NS_ERROR_FAILURE : NS_OK;
 #else
   int device = 0;
 
@@ -685,16 +723,21 @@ AudioManager::SetStreamVolumeIndex(int32_t aStream, int32_t aIndex) {
   }
 
   if (device != 0) {
-    return AudioSystem::setStreamVolumeIndex(
-             static_cast<audio_stream_type_t>(aStream),
-             aIndex,
-             device);
+    status = AudioSystem::setStreamVolumeIndex(
+               static_cast<audio_stream_type_t>(aStream),
+               aIndex,
+               device);
+    return status ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  status_t status = AudioSystem::setStreamVolumeIndex(
-                      static_cast<audio_stream_type_t>(aStream),
-                      aIndex,
-                      AUDIO_DEVICE_OUT_SPEAKER);
+  status = AudioSystem::setStreamVolumeIndex(
+             static_cast<audio_stream_type_t>(aStream),
+             aIndex,
+             AUDIO_DEVICE_OUT_BLUETOOTH_A2DP);
+  status += AudioSystem::setStreamVolumeIndex(
+              static_cast<audio_stream_type_t>(aStream),
+              aIndex,
+              AUDIO_DEVICE_OUT_SPEAKER);
   status += AudioSystem::setStreamVolumeIndex(
               static_cast<audio_stream_type_t>(aStream),
               aIndex,
@@ -707,21 +750,21 @@ AudioManager::SetStreamVolumeIndex(int32_t aStream, int32_t aIndex) {
               static_cast<audio_stream_type_t>(aStream),
               aIndex,
               AUDIO_DEVICE_OUT_EARPIECE);
-  return status;
+  return status ? NS_ERROR_FAILURE : NS_OK;
 #endif
 }
 
-status_t
+nsresult
 AudioManager::GetStreamVolumeIndex(int32_t aStream, int32_t *aIndex) {
   if (!aIndex) {
-    return BAD_VALUE;
+    return NS_ERROR_INVALID_ARG;
   }
 
   if (aStream <= AUDIO_STREAM_DEFAULT || aStream >= AUDIO_STREAM_MAX) {
-    return BAD_VALUE;
+    return NS_ERROR_INVALID_ARG;
   }
 
   *aIndex = mCurrentStreamVolumeTbl[aStream];
 
-  return NO_ERROR;
+  return NS_OK;
 }

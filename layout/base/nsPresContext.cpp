@@ -140,7 +140,7 @@ nsPresContext::IsDOMPaintEventPending()
   return false;
 }
 
-int
+void
 nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
 {
   nsRefPtr<nsPresContext>  presContext =
@@ -150,7 +150,6 @@ nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
   if (nullptr != presContext) {
     presContext->PreferenceChanged(aPrefName);
   }
-  return 0;  // PREF_OK
 }
 
 
@@ -234,6 +233,12 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   NS_ASSERTION(mDocument, "Null document");
   mUserFontSet = nullptr;
   mUserFontSetDirty = true;
+
+  // if text perf logging enabled, init stats struct
+  PRLogModuleInfo *log = gfxPlatform::GetLog(eGfxLog_textperf);
+  if (log && PR_LOG_TEST(log, PR_LOG_WARNING)) {
+    mTextPerf = new gfxTextPerfMetrics();
+  }
 
   PR_INIT_CLIST(&mDOMMediaQueryLists);
 }

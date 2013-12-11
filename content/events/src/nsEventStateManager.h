@@ -227,7 +227,7 @@ protected:
     static int32_t ContentAccessModifierMask();
 
     static void Init();
-    static int OnChange(const char* aPrefName, void*);
+    static void OnChange(const char* aPrefName, void*);
     static void Shutdown();
 
   private:
@@ -409,7 +409,7 @@ protected:
     WheelPrefs();
     ~WheelPrefs();
 
-    static int OnPrefChanged(const char* aPrefName, void* aClosure);
+    static void OnPrefChanged(const char* aPrefName, void* aClosure);
 
     enum Index
     {
@@ -481,6 +481,17 @@ protected:
     DELTA_DIRECTION_Y
   };
 
+  struct MOZ_STACK_CLASS EventState
+  {
+    bool mDefaultPrevented;
+    bool mDefaultPreventedByContent;
+
+    EventState() :
+      mDefaultPrevented(false), mDefaultPreventedByContent(false)
+    {
+    }
+  };
+
   /**
    * SendLineScrollEvent() dispatches a DOMMouseScroll event for the
    * WidgetWheelEvent.  This method shouldn't be called for non-trusted
@@ -488,14 +499,15 @@ protected:
    *
    * @param aTargetFrame        The event target of wheel event.
    * @param aEvent              The original Wheel event.
-   * @param aStatus             The event status, must not be
-   *                            nsEventStatus_eConsumeNoDefault.
+   * @param aState              The event which should be set to the dispatching
+   *                            event.  This also returns the dispatched event
+   *                            state.
    * @param aDelta              The delta value of the event.
    * @param aDeltaDirection     The X/Y direction of dispatching event.
    */
   void SendLineScrollEvent(nsIFrame* aTargetFrame,
                            mozilla::WidgetWheelEvent* aEvent,
-                           nsEventStatus* aStatus,
+                           EventState& aState,
                            int32_t aDelta,
                            DeltaDirection aDeltaDirection);
 
@@ -506,14 +518,15 @@ protected:
    *
    * @param aTargetFrame        The event target of wheel event.
    * @param aEvent              The original Wheel event.
-   * @param aStatus             The event status, must not be
-   *                            nsEventStatus_eConsumeNoDefault.
+   * @param aState              The event which should be set to the dispatching
+   *                            event.  This also returns the dispatched event
+   *                            state.
    * @param aPixelDelta         The delta value of the event.
    * @param aDeltaDirection     The X/Y direction of dispatching event.
    */
   void SendPixelScrollEvent(nsIFrame* aTargetFrame,
                             mozilla::WidgetWheelEvent* aEvent,
-                            nsEventStatus* aStatus,
+                            EventState& aState,
                             int32_t aPixelDelta,
                             DeltaDirection aDeltaDirection);
 

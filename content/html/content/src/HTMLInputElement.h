@@ -108,6 +108,7 @@ public:
 
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
   using nsGenericHTMLElement::Focus;
+  virtual void Blur(ErrorResult& aError) MOZ_OVERRIDE;
   virtual void Focus(ErrorResult& aError) MOZ_OVERRIDE;
 
   // nsIDOMHTMLInputElement
@@ -165,6 +166,12 @@ public:
 
   virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
 
+  // Element
+private:
+  virtual void AddStates(nsEventStates aStates);
+  virtual void RemoveStates(nsEventStates aStates);
+public:
+
   // nsITextControlElement
   NS_IMETHOD SetValueChanged(bool aValueChanged) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) IsSingleLineTextControl() const MOZ_OVERRIDE;
@@ -184,8 +191,8 @@ public:
   NS_IMETHOD_(void) UnbindFromFrame(nsTextControlFrame* aFrame) MOZ_OVERRIDE;
   NS_IMETHOD CreateEditor() MOZ_OVERRIDE;
   NS_IMETHOD_(nsIContent*) GetRootEditorNode() MOZ_OVERRIDE;
-  NS_IMETHOD_(nsIContent*) CreatePlaceholderNode() MOZ_OVERRIDE;
-  NS_IMETHOD_(nsIContent*) GetPlaceholderNode() MOZ_OVERRIDE;
+  NS_IMETHOD_(Element*) CreatePlaceholderNode() MOZ_OVERRIDE;
+  NS_IMETHOD_(Element*) GetPlaceholderNode() MOZ_OVERRIDE;
   NS_IMETHOD_(void) UpdatePlaceholderVisibility(bool aNotify) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) GetPlaceholderVisibility() MOZ_OVERRIDE;
   NS_IMETHOD_(void) InitializeKeyboardEventListeners() MOZ_OVERRIDE;
@@ -201,6 +208,9 @@ public:
 
   void SetFiles(const nsTArray<nsCOMPtr<nsIDOMFile> >& aFiles, bool aSetValueChanged);
   void SetFiles(nsIDOMFileList* aFiles, bool aSetValueChanged);
+
+  // Called when a nsIFilePicker or a nsIColorPicker terminate.
+  void PickerClosed();
 
   void SetCheckedChangedInternal(bool aCheckedChanged);
   bool GetCheckedChanged() const {
@@ -574,6 +584,13 @@ public:
   void SetType(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::type, aValue, aRv);
+    if (aValue.Equals(NS_LITERAL_STRING("number"))) {
+      // For NS_FORM_INPUT_NUMBER we rely on having frames to process key
+      // events. Make sure we have them in case someone changes the type of
+      // this element to "number" and then expects to be able to send key
+      // events to it (type changes are rare, so not a big perf issue):
+      FlushFrames();
+    }
   }
 
   // XPCOM GetDefaultValue() is OK
@@ -669,6 +686,26 @@ public:
   void MozSetFileNameArray(const Sequence< nsString >& aFileNames);
 
   HTMLInputElement* GetOwnerNumberControl();
+
+  void StartNumberControlSpinnerSpin();
+  void StopNumberControlSpinnerSpin();
+  void StepNumberControlForUserEvent(int32_t aDirection);
+
+  /**
+   * The callback function used by the nsRepeatService that we use to spin the
+   * spinner for <input type=number>.
+   */
+  static void HandleNumberControlSpin(void* aData);
+
+  bool NumberSpinnerUpButtonIsDepressed() const
+  {
+    return mNumberControlSpinnerIsSpinning && mNumberControlSpinnerSpinsUp;
+  }
+
+  bool NumberSpinnerDownButtonIsDepressed() const
+  {
+    return mNumberControlSpinnerIsSpinning && !mNumberControlSpinnerSpinsUp;
+  }
 
   bool MozIsTextField(bool aExcludePassword);
 
@@ -1076,6 +1113,20 @@ protected:
   Decimal GetDefaultStep() const;
 
   /**
+   * Sets the aValue outparam to the value that this input would take if
+   * someone tries to step aStep steps and this input's value would change as
+   * a result. Leaves aValue untouched if this inputs value would not change
+   * (e.g. already at max, and asking for the next step up).
+   *
+   * Negative aStep means step down, positive means step up.
+   *
+   * Returns NS_OK or else the error values that should be thrown if this call
+   * was initiated by a stepUp()/stepDown() call from script under conditions
+   * that such a call should throw.
+   */
+  nsresult GetValueIfStepped(int32_t aStep, Decimal* aNextStep);
+
+  /**
    * Apply a step change from stepUp or stepDown by multiplying aStep by the
    * current step value.
    *
@@ -1088,9 +1139,13 @@ protected:
    */
   static bool IsExperimentalMobileType(uint8_t aType)
   {
-    return aType == NS_FORM_INPUT_NUMBER || aType == NS_FORM_INPUT_DATE ||
-           aType == NS_FORM_INPUT_TIME;
+    return aType == NS_FORM_INPUT_DATE || aType == NS_FORM_INPUT_TIME;
   }
+
+  /**
+   * Flushes the layout frame tree to make sure we have up-to-date frames.
+   */
+  void FlushFrames();
 
   /**
    * Returns true if the element should prevent dispatching another DOMActivate.
@@ -1219,6 +1274,9 @@ protected:
   bool                     mHasRange            : 1;
   bool                     mIsDraggingRange     : 1;
   bool                     mProgressTimerIsActive : 1;
+  bool                     mNumberControlSpinnerIsSpinning : 1;
+  bool                     mNumberControlSpinnerSpinsUp : 1;
+  bool                     mPickerRunning : 1;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
@@ -1243,7 +1301,8 @@ private:
 
   static bool MayFireChangeOnBlur(uint8_t aType) {
     return IsSingleLineTextControl(false, aType) ||
-           aType == NS_FORM_INPUT_RANGE;
+           aType == NS_FORM_INPUT_RANGE ||
+           aType == NS_FORM_INPUT_NUMBER;
   }
 
   struct nsFilePickerFilter {

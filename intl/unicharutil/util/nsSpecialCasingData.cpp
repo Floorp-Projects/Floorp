@@ -6,7 +6,7 @@
    by genSpecialCasingData.pl - do not edit! */
 
 #include "nsSpecialCasingData.h"
-#include "mozilla/Util.h" // for ArrayLength
+#include "mozilla/ArrayUtils.h" // for ArrayLength
 #include <stdlib.h>       // for bsearch
 
 /* SpecialCasing-6.1.0.txt */

@@ -15,7 +15,10 @@
 #include "mozilla/layers/TextureD3D9.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "gfxWindowsPlatform.h"
+#include "gfx2DGlue.h"
 #endif
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
@@ -147,7 +150,14 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
     }
     if (parentBackend == LAYERS_D3D9 &&
         !GetForwarder()->ForwardsToDifferentProcess()) {
-      if (aContentType == GFX_CONTENT_COLOR_ALPHA) {
+      // We can't use a d3d9 texture for an RGBA surface because we cannot get a DC for
+      // for a gfxWindowsSurface.
+      // We have to wait for the compositor thread to create a d3d9 device before we
+      // can create d3d9 textures on the main thread (because we need to reset on the
+      // compositor thread, and the d3d9 device must be reset on the same thread it was
+      // created on).
+      if (aContentType == GFX_CONTENT_COLOR_ALPHA ||
+          !gfxWindowsPlatform::GetPlatform()->GetD3D9Device()) {
         result = new DeprecatedTextureClientDIB(GetForwarder(), GetTextureInfo());
       } else {
         result = new DeprecatedTextureClientD3D9(GetForwarder(), GetTextureInfo());
@@ -186,8 +196,8 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
 }
 
 TemporaryRef<BufferTextureClient>
-CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
-                                              uint32_t aTextureFlags)
+CompositableClient::CreateBufferTextureClient(SurfaceFormat aFormat,
+                                              TextureFlags aTextureFlags)
 {
 // XXX - Once bug 908196 is fixed, we can use gralloc textures here which will
 // improve performances of videos using SharedPlanarYCbCrImage on b2g.
@@ -207,15 +217,56 @@ CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
   return result.forget();
 }
 
-bool
-CompositableClient::AddTextureClient(TextureClient* aClient)
+TemporaryRef<TextureClient>
+CompositableClient::CreateTextureClientForDrawing(SurfaceFormat aFormat,
+                                                  TextureFlags aTextureFlags)
+{
+  RefPtr<TextureClient> result;
+
+#ifdef XP_WIN
+  LayersBackend parentBackend = GetForwarder()->GetCompositorBackendType();
+  // XXX[nrc] uncomment once we have new texture clients for windows
+  if (parentBackend == LAYERS_D3D11 && gfxWindowsPlatform::GetPlatform()->GetD2DDevice() &&
+      !(aTextureFlags & TEXTURE_ALLOC_FALLBACK)) {
+    //result = new TextureClientD3D11(GetForwarder(), GetTextureInfo());
+  }
+  if (parentBackend == LAYERS_D3D9 &&
+      !GetForwarder()->ForwardsToDifferentProcess() &&
+      !(aTextureFlags & TEXTURE_ALLOC_FALLBACK)) {
+    // non-DIB textures don't work with alpha, see notes in TextureD3D9.
+    if (ContentForFormat(aFormat) == GFX_CONTENT_COLOR_ALPHA) {
+      //result = new TextureClientDIB(GetForwarder(), GetTextureInfo());
+    } else {
+      //result = new TextureClientD3D9(GetForwarder(), GetTextureInfo());
+    }
+  }
+#endif
+  // Can't do any better than a buffer texture client.
+  if (!result) {
+    result = CreateBufferTextureClient(aFormat, aTextureFlags);
+  }
+
+  MOZ_ASSERT(!result || result->AsTextureClientDrawTarget(),
+             "Not a TextureClientDrawTarget?");
+  return result;
+}
+
+uint64_t
+CompositableClient::NextTextureID()
 {
   ++mNextTextureID;
   // 0 is always an invalid ID
   if (mNextTextureID == 0) {
     ++mNextTextureID;
   }
-  aClient->SetID(mNextTextureID);
+
+  return mNextTextureID;
+}
+
+bool
+CompositableClient::AddTextureClient(TextureClient* aClient)
+{
+  aClient->SetID(NextTextureID());
   return mForwarder->AddTexture(this, aClient);
 }
 

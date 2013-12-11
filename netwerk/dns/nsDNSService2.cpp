@@ -268,6 +268,8 @@ public:
     // particular hostname and nsIDNSListener
     bool EqualsAsyncListener(nsIDNSListener *aListener);
 
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf) const;
+
     nsRefPtr<nsHostResolver> mResolver;
     nsCString                mHost; // hostname we're resolving
     nsCOMPtr<nsIDNSListener> mListener;
@@ -307,6 +309,19 @@ nsDNSAsyncRequest::EqualsAsyncListener(nsIDNSListener *aListener)
     return (aListener == mListener);
 }
 
+size_t
+nsDNSAsyncRequest::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
+{
+    size_t n = mallocSizeOf(this);
+
+    // The following fields aren't measured.
+    // - mHost, because it's a non-owning pointer
+    // - mResolver, because it's a non-owning pointer
+    // - mListener, because it's a non-owning pointer
+
+    return n;
+}
+
 NS_IMPL_ISUPPORTS1(nsDNSAsyncRequest, nsICancelable)
 
 NS_IMETHODIMP
@@ -330,6 +345,7 @@ public:
 
     void OnLookupComplete(nsHostResolver *, nsHostRecord *, nsresult);
     bool EqualsAsyncListener(nsIDNSListener *aListener);
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf) const;
 
     bool                   mDone;
     nsresult               mStatus;
@@ -360,10 +376,28 @@ nsDNSSyncRequest::EqualsAsyncListener(nsIDNSListener *aListener)
     return false;
 }
 
+size_t
+nsDNSSyncRequest::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
+{
+    size_t n = mallocSizeOf(this);
+
+    // The following fields aren't measured.
+    // - mHostRecord, because it's a non-owning pointer
+
+    // Measurement of the following members may be added later if DMD finds it
+    // is worthwhile:
+    // - mMonitor
+
+    return n;
+}
+
 //-----------------------------------------------------------------------------
 
 nsDNSService::nsDNSService()
-    : mLock("nsDNSServer.mLock")
+    : MemoryUniReporter("explicit/network/dns-service",
+                        KIND_HEAP, UNITS_BYTES,
+                        "Memory used for the DNS service.")
+    , mLock("nsDNSServer.mLock")
     , mFirstTime(true)
     , mOffline(false)
 {
@@ -373,8 +407,8 @@ nsDNSService::~nsDNSService()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsDNSService, nsIDNSService, nsPIDNSService,
-                              nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED3(nsDNSService, MemoryUniReporter, nsIDNSService,
+                             nsPIDNSService, nsIObserver)
 
 NS_IMETHODIMP
 nsDNSService::Init()
@@ -390,7 +424,7 @@ nsDNSService::Init()
     bool     disableIPv6      = false;
     bool     disablePrefetch  = false;
     int      proxyType        = nsIProtocolProxyService::PROXYCONFIG_DIRECT;
-    
+
     nsAdoptingCString ipv4OnlyDomains;
     nsAdoptingCString localDomains;
 
@@ -472,19 +506,24 @@ nsDNSService::Init()
             domains.AssignASCII(nsDependentCString(localDomains).get());
             nsCharSeparatedTokenizer tokenizer(domains, ',',
                                                nsCharSeparatedTokenizerTemplate<>::SEPARATOR_OPTIONAL);
- 
+
             while (tokenizer.hasMoreTokens()) {
                 const nsSubstring& domain = tokenizer.nextToken();
                 mLocalDomains.PutEntry(nsDependentCString(NS_ConvertUTF16toUTF8(domain).get()));
             }
         }
     }
+
+    RegisterWeakMemoryReporter(this);
+
     return rv;
 }
 
 NS_IMETHODIMP
 nsDNSService::Shutdown()
 {
+    UnregisterWeakMemoryReporter(this);
+
     nsRefPtr<nsHostResolver> res;
     {
         MutexAutoLock lock(mLock);
@@ -872,4 +911,27 @@ nsDNSService::GetDNSCacheEntries(nsTArray<mozilla::net::DNSCacheEntries> *args)
     NS_ENSURE_TRUE(mResolver, NS_ERROR_NOT_INITIALIZED);
     mResolver->GetDNSCacheEntries(args);
     return NS_OK;
+}
+
+static size_t
+SizeOfLocalDomainsEntryExcludingThis(nsCStringHashKey* entry,
+                                     MallocSizeOf mallocSizeOf, void*)
+{
+    return entry->GetKey().SizeOfExcludingThisMustBeUnshared(mallocSizeOf);
+}
+
+size_t
+nsDNSService::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    // Measurement of the following members may be added later if DMD finds it
+    // is worthwhile:
+    // - mIDN
+    // - mLock
+
+    size_t n = mallocSizeOf(this);
+    n += mResolver->SizeOfIncludingThis(mallocSizeOf);
+    n += mIPv4OnlyDomains.SizeOfExcludingThisMustBeUnshared(mallocSizeOf);
+    n += mLocalDomains.SizeOfExcludingThis(SizeOfLocalDomainsEntryExcludingThis,
+                                           mallocSizeOf);
+    return n;
 }

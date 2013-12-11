@@ -44,7 +44,7 @@ else:
     EXPORTS.mozilla.ipc += [
         'Transport_posix.h',
     ]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'CrossProcessMutex_unimplemented.cpp',
         'SharedMemory_posix.cpp',
         'Transport_posix.cpp',
@@ -55,18 +55,18 @@ else:
 # impl.
 if CONFIG['OS_TARGET'] == 'Android':
     EXPORTS.mozilla.ipc += ['SharedMemoryBasic_android.h']
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'SharedMemoryBasic_android.cpp',
     ]
 else:
     EXPORTS.mozilla.ipc += ['SharedMemoryBasic_chromium.h']
 
 if CONFIG['OS_ARCH'] == 'Linux':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'ProcessUtils_linux.cpp',
     ]
 else:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'ProcessUtils_none.cpp',
     ]
 
@@ -74,11 +74,10 @@ EXPORTS.ipc += [
     'IPCMessageUtils.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'BrowserProcessSubThread.cpp',
     'FileDescriptor.cpp',
     'FileDescriptorUtils.cpp',
-    'GeckoChildProcessHost.cpp',
     'InputStreamUtils.cpp',
     'MessageChannel.cpp',
     'MessageLink.cpp',
@@ -89,6 +88,12 @@ SOURCES += [
     'SharedMemory.cpp',
     'Shmem.cpp',
     'StringUtil.cpp',
+]
+
+# GeckoChildProcessHost.cpp cannot be built in unified mode because it uses plarena.h.
+# URIUtils.cpp cannot be built in unified mode because of name clashes on strdup.
+SOURCES += [
+    'GeckoChildProcessHost.cpp',
     'URIUtils.cpp',
 ]
 
@@ -98,6 +103,14 @@ IPDL_SOURCES = [
     'URIParams.ipdlh',
 ]
 
+
+LOCAL_INCLUDES += [
+    '/xpcom/threads',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+for var in ('MOZ_CHILD_PROCESS_NAME', 'MOZ_CHILD_PROCESS_BUNDLE'):
+    DEFINES[var] = '"%s"' % CONFIG[var]

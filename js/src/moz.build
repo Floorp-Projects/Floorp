@@ -81,6 +81,7 @@ EXPORTS.js += [
     '../public/PropertyKey.h',
     '../public/RequiredDefines.h',
     '../public/RootingAPI.h',
+    '../public/SliceBudget.h',
     '../public/StructuredClone.h',
     '../public/Tracer.h',
     '../public/TypeDecls.h',
@@ -89,7 +90,7 @@ EXPORTS.js += [
     '../public/Vector.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'assembler/jit/ExecutableAllocator.cpp',
     'builtin/Eval.cpp',
     'builtin/Intl.cpp',
@@ -109,7 +110,6 @@ SOURCES += [
     'frontend/NameFunctions.cpp',
     'frontend/ParseMaps.cpp',
     'frontend/ParseNode.cpp',
-    'frontend/Parser.cpp',
     'frontend/TokenStream.cpp',
     'gc/Barrier.cpp',
     'gc/Iteration.cpp',
@@ -125,8 +125,6 @@ SOURCES += [
     'jsalloc.cpp',
     'jsanalyze.cpp',
     'jsapi.cpp',
-    'jsarray.cpp',
-    'jsatom.cpp',
     'jsbool.cpp',
     'jscntxt.cpp',
     'jscompartment.cpp',
@@ -139,7 +137,6 @@ SOURCES += [
     'jsgc.cpp',
     'jsinfer.cpp',
     'jsiter.cpp',
-    'jsmath.cpp',
     'jsnativestack.cpp',
     'jsnum.cpp',
     'jsobj.cpp',
@@ -152,7 +149,6 @@ SOURCES += [
     'jsreflect.cpp',
     'jsscript.cpp',
     'jsstr.cpp',
-    'jsutil.cpp',
     'jswatchpoint.cpp',
     'jsweakmap.cpp',
     'jsworkers.cpp',
@@ -164,6 +160,7 @@ SOURCES += [
     'vm/CharacterEncoding.cpp',
     'vm/DateTime.cpp',
     'vm/Debugger.cpp',
+    'vm/ErrorObject.cpp',
     'vm/ForkJoin.cpp',
     'vm/GlobalObject.cpp',
     'vm/Id.cpp',
@@ -172,7 +169,6 @@ SOURCES += [
     'vm/Monitor.cpp',
     'vm/ObjectImpl.cpp',
     'vm/OldDebugAPI.cpp',
-    'vm/PosixNSPR.cpp',
     'vm/Probes.cpp',
     'vm/PropertyKey.cpp',
     'vm/ProxyObject.cpp',
@@ -198,6 +194,27 @@ SOURCES += [
     'yarr/YarrPattern.cpp',
     'yarr/YarrSyntaxChecker.cpp',
 ]
+
+# jsarray.cpp and jsatom.cpp cannot be built in unified mode because
+# xpcshell is broken during packaging when compiled with gcc-4.8.2
+# frontend/Parser.cpp cannot be built in unified mode because of explicit
+# template instantiations.
+# jsmath.cpp cannot be built in unified mode because it needs to pull rand_s
+# from <stdlib.h> on Windows through a preprocessor define.
+# jsutil.cpp cannot be built in unified mode because it is needed for
+# check-vanilla-allocations.
+SOURCES += [
+    'frontend/Parser.cpp',
+    'jsarray.cpp',
+    'jsatom.cpp',
+    'jsmath.cpp',
+    'jsutil.cpp',
+]
+
+if CONFIG['JS_POSIX_NSPR']:
+    UNIFIED_SOURCES += [
+        'vm/PosixNSPR.cpp',
+    ]
 
 if CONFIG['MOZ_INSTRUMENTS']:
     SOURCES += [
@@ -384,3 +401,25 @@ if CONFIG['JS_SHARED_LIBRARY']:
     FORCE_SHARED_LIB = True
 
 FORCE_STATIC_LIB = True
+
+if CONFIG['MOZ_ETW']:
+    GENERATED_FILES = [
+        'ETWProvider.h',
+    ]
+
+if CONFIG['NIGHTLY_BUILD']:
+    DEFINES['ENABLE_PARALLEL_JS'] = True
+    DEFINES['ENABLE_BINARYDATA'] = True
+
+DEFINES['EXPORT_JS_API'] = True
+
+if CONFIG['JS_THREADSAFE']:
+    DEFINES['JS_THREADSAFE'] = True
+
+if CONFIG['JS_HAS_CTYPES']:
+    DEFINES['JS_HAS_CTYPES'] = True
+    for var in ('DLL_PREFIX', 'DLL_SUFFIX'):
+        DEFINES[var] = '"%s"' % CONFIG[var]
+
+if CONFIG['MOZ_LINKER']:
+    DEFINES['MOZ_LINKER'] = True

@@ -21,9 +21,12 @@ dictionary MmsDeliveryInfo
   DOMString? deliveryStatus;
   jsval      deliveryTimestamp; // Date object; null if not available (e.g.,
                                 // |delivery| = "received" or not yet delivered).
+  DOMString? readStatus;
+  jsval      readTimestamp; // Date object. null if not available (e.g.,
+                            // |delivery| = "received" or not yet read).
 };
 
-[scriptable, builtinclass, uuid(3593c914-420a-11e3-a297-a3bdd768257f)]
+[scriptable, builtinclass, uuid(82ca2465-f967-4107-a4da-65b7a15d5dba)]
 interface nsIDOMMozMmsMessage : nsISupports
 {
   /**
@@ -71,5 +74,5 @@ interface nsIDOMMozMmsMessage : nsISupports
                                                // manually downloaded.
 
   // Request read report from sender or not.
-  readonly attribute boolean   isReadReportRequested;
+  readonly attribute boolean   readReportRequested;
 };

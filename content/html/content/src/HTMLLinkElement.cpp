@@ -131,8 +131,9 @@ HTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  if (aDocument) {
+
+  // Link must be inert in ShadowRoot.
+  if (aDocument && !GetContainingShadow()) {
     aDocument->RegisterPendingLinkUpdate(this);
   }
 
@@ -166,12 +167,19 @@ HTMLLinkElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // Once we have XPCOMGC we shouldn't need to call UnbindFromTree during Unlink
   // and so this messy event dispatch can go away.
   nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
-  if (oldDoc) {
+
+  // Check for a ShadowRoot because link elements are inert in a
+  // ShadowRoot.
+  ShadowRoot* oldShadowRoot = GetBindingParent() ?
+    GetBindingParent()->GetShadowRoot() : nullptr;
+
+  if (oldDoc && !oldShadowRoot) {
     oldDoc->UnregisterPendingLinkUpdate(this);
   }
   CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMLinkRemoved"));
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
-  UpdateStyleSheetInternal(oldDoc);
+
+  UpdateStyleSheetInternal(oldDoc, oldShadowRoot);
 }
 
 bool
@@ -248,7 +256,7 @@ HTMLLinkElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       dropSheet = !(linkTypes & STYLESHEET);          
     }
     
-    UpdateStyleSheetInternal(nullptr,
+    UpdateStyleSheetInternal(nullptr, nullptr,
                              dropSheet ||
                              (aName == nsGkAtoms::title ||
                               aName == nsGkAtoms::media ||
@@ -272,7 +280,7 @@ HTMLLinkElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
        aAttribute == nsGkAtoms::title ||
        aAttribute == nsGkAtoms::media ||
        aAttribute == nsGkAtoms::type)) {
-    UpdateStyleSheetInternal(nullptr, true);
+    UpdateStyleSheetInternal(nullptr, nullptr, true);
   }
 
   // The ordering of the parent class's UnsetAttr call and Link::ResetLinkState

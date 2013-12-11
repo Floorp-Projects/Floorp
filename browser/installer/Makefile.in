@@ -75,6 +75,10 @@ ifdef NECKO_WIFI
 DEFINES += -DNECKO_WIFI
 endif
 
+ifdef GKMEDIAS_SHARED_LIBRARY
+DEFINES += -DGKMEDIAS_SHARED_LIBRARY
+endif
+
 ifdef MOZ_PKG_MANIFEST_P
 MOZ_PKG_MANIFEST = package-manifest
 
@@ -88,7 +92,7 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 MOZ_PKG_MAC_DSSTORE=branding/dsstore
 MOZ_PKG_MAC_BACKGROUND=branding/background.png
 MOZ_PKG_MAC_ICON=branding/disk.icns
-MOZ_PKG_MAC_EXTRA=--symlink "/Applications:/ "
+MOZ_PKG_MAC_EXTRA=--symlink '/Applications:/ '
 endif
 
 ifndef LIBXUL_SDK
@@ -107,6 +111,14 @@ BINPATH = bin
 endif
 DEFINES += -DBINPATH=$(BINPATH)
 
+DEFINES += -DMOZ_ICU_VERSION=$(MOZ_ICU_VERSION)
+ifdef MOZ_NATIVE_ICU
+DEFINES += -DMOZ_NATIVE_ICU
+endif
+ifdef MOZ_SHARED_ICU
+DEFINES += -DMOZ_SHARED_ICU
+endif
+
 libs::
 	$(MAKE) -C $(DEPTH)/browser/locales langpack
 
@@ -124,7 +136,7 @@ endif
 package-compare:: $(MOZ_PKG_MANIFEST)
 ifdef MOZ_PKG_MANIFEST_P
 	cd $(DIST); find $(PKGCOMP_FIND_OPTS) $(FINDPATH) -type f | sort > bin-list.txt
-	grep "^$(BINPATH)" $(MOZ_PKG_MANIFEST) | sed -e 's/^\///' | sort > $(DIST)/pack-list.txt
+	grep '^$(BINPATH)' $(MOZ_PKG_MANIFEST) | sed -e 's/^\///' | sort > $(DIST)/pack-list.txt
 	-diff -u $(DIST)/pack-list.txt $(DIST)/bin-list.txt
 	rm -f $(DIST)/pack-list.txt $(DIST)/bin-list.txt
 endif

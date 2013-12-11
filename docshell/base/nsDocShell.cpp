@@ -8,6 +8,7 @@
 
 #include <algorithm>
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Casting.h"
@@ -19,7 +20,6 @@
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
-#include "mozilla/Util.h"
 #include "mozilla/VisualEventTracer.h"
 
 #ifdef MOZ_LOGGING
@@ -186,6 +186,7 @@
 #include "nsIURILoader.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWidget.h"
+#include "mozilla/dom/EncodingUtils.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -197,6 +198,8 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #ifdef XP_WIN
 #include <process.h>
 #define getpid _getpid
+#else
+#include <unistd.h> // for getpid()
 #endif
 
 using namespace mozilla;
@@ -1968,14 +1971,25 @@ NS_IMETHODIMP
 nsDocShell::SetCharset(const nsACString& aCharset)
 {
     // set the charset override
-    SetForcedCharset(aCharset);
-
-    return NS_OK;
+    return SetForcedCharset(aCharset);
 }
 
 NS_IMETHODIMP nsDocShell::SetForcedCharset(const nsACString& aCharset)
 {
-  mForcedCharset = aCharset;
+  if (aCharset.IsEmpty()) {
+    mForcedCharset.Truncate();
+    return NS_OK;
+  }
+  nsAutoCString encoding;
+  if (!EncodingUtils::FindEncodingForLabel(aCharset, encoding)) {
+    // Reject unknown labels
+    return NS_ERROR_INVALID_ARG;
+  }
+  if (!EncodingUtils::IsAsciiCompatible(encoding)) {
+    // Reject XSS hazards
+    return NS_ERROR_INVALID_ARG;
+  }
+  mForcedCharset = encoding;
   return NS_OK;
 }
 
@@ -4196,9 +4210,6 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
         uint32_t fixupFlags = 0;
         if (aLoadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
           fixupFlags |= nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-        }
-        if (aLoadFlags & LOAD_FLAGS_URI_IS_UTF8) {
-          fixupFlags |= nsIURIFixup::FIXUP_FLAG_USE_UTF8;
         }
         nsCOMPtr<nsIInputStream> fixupStream;
         rv = sURIFixup->CreateFixupURI(uriString, fixupFlags,

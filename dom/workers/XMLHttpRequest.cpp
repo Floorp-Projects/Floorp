@@ -1502,7 +1502,10 @@ XMLHttpRequest::Constructor(const GlobalObject& aGlobal,
   nsRefPtr<XMLHttpRequest> xhr = new XMLHttpRequest(workerPrivate);
 
   if (workerPrivate->XHRParamsAllowed()) {
-    xhr->mMozAnon = aParams.mMozAnon;
+    if (aParams.mMozSystem)
+      xhr->mMozAnon = true;
+    else
+      xhr->mMozAnon = aParams.mMozAnon;
     xhr->mMozSystem = aParams.mMozSystem;
   }
 
@@ -1965,8 +1968,12 @@ XMLHttpRequest::Send(const nsAString& aBody, ErrorResult& aRv)
 void
 XMLHttpRequest::Send(JSObject* aBody, ErrorResult& aRv)
 {
-  mWorkerPrivate->AssertIsOnWorkerThread();
+  JSContext* cx = mWorkerPrivate->GetJSContext();
+
   MOZ_ASSERT(aBody);
+  JS::Rooted<JSObject*> body(cx, aBody);
+
+  mWorkerPrivate->AssertIsOnWorkerThread();
 
   if (mCanceled) {
     aRv.Throw(UNCATCHABLE_EXCEPTION);
@@ -1978,15 +1985,13 @@ XMLHttpRequest::Send(JSObject* aBody, ErrorResult& aRv)
     return;
   }
 
-  JSContext* cx = mWorkerPrivate->GetJSContext();
-
   JS::Rooted<JS::Value> valToClone(cx);
-  if (JS_IsArrayBufferObject(aBody) || JS_IsArrayBufferViewObject(aBody) ||
-      file::GetDOMBlobFromJSObject(aBody)) {
-    valToClone.setObject(*aBody);
+  if (JS_IsArrayBufferObject(body) || JS_IsArrayBufferViewObject(body) ||
+      file::GetDOMBlobFromJSObject(body)) {
+    valToClone.setObject(*body);
   }
   else {
-    JS::Rooted<JS::Value> obj(cx, JS::ObjectValue(*aBody));
+    JS::Rooted<JS::Value> obj(cx, JS::ObjectValue(*body));
     JSString* bodyStr = JS::ToString(cx, obj);
     if (!bodyStr) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);

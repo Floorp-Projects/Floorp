@@ -301,6 +301,74 @@ class StrictOrderingOnAppendList(list):
 class MozbuildDeletionError(Exception):
     pass
 
+
+def StrictOrderingOnAppendListWithFlagsFactory(flags):
+    """Returns a StrictOrderingOnAppendList-like object, with optional
+    flags on each item.
+
+    The flags are defined in the dict given as argument, where keys are
+    the flag names, and values the type used for the value of that flag.
+
+    Example:
+        FooList = StrictOrderingOnAppendListWithFlagsFactory({
+            'foo': bool, 'bar': unicode
+        })
+        foo = FooList(['a', 'b', 'c'])
+        foo['a'].foo = True
+        foo['b'].bar = 'bar'
+    """
+
+    assert isinstance(flags, dict)
+    assert all(isinstance(v, type) for v in flags.values())
+
+    class Flags(object):
+        __slots__ = flags.keys()
+        _flags = flags
+
+        def __getattr__(self, name):
+            if name not in self.__slots__:
+                raise AttributeError("'%s' object has no attribute '%s'" %
+                                     (self.__class__.__name__, name))
+            try:
+                return object.__getattr__(self, name)
+            except AttributeError:
+                value = self._flags[name]()
+                self.__setattr__(name, value)
+                return value
+
+        def __setattr__(self, name, value):
+            if name not in self.__slots__:
+                raise AttributeError("'%s' object has no attribute '%s'" %
+                                     (self.__class__.__name__, name))
+            if not isinstance(value, self._flags[name]):
+                raise TypeError("'%s' attribute of class '%s' must be '%s'" %
+                                (name, self.__class__.__name__,
+                                 self._flags[name].__name__))
+            return object.__setattr__(self, name, value)
+
+        def __delattr__(self, name):
+            raise MozbuildDeletionError('Unable to delete attributes for this object')
+
+    class StrictOrderingOnAppendListWithFlags(StrictOrderingOnAppendList):
+        def __init__(self, iterable=[]):
+            StrictOrderingOnAppendList.__init__(self, iterable)
+            self._flags_type = Flags
+            self._flags = dict()
+
+        def __getitem__(self, name):
+            if name not in self._flags:
+                if name not in self:
+                    raise KeyError("'%s'" % name)
+                self._flags[name] = self._flags_type()
+            return self._flags[name]
+
+        def __setitem__(self, name, value):
+            raise TypeError("'%s' object does not support item assignment" %
+                            self.__class__.__name__)
+
+    return StrictOrderingOnAppendListWithFlags
+
+
 class HierarchicalStringList(object):
     """A hierarchy of lists of strings.
 
@@ -490,3 +558,18 @@ class PushbackIter(object):
 
     def pushback(self, item):
         self.pushed_back.append(item)
+
+
+def shell_quote(s):
+    '''Given a string, returns a version enclosed with single quotes for use
+    in a shell command line.
+
+    As a special case, if given an int, returns a string containing the int,
+    not enclosed in quotes.
+    '''
+    if type(s) == int:
+        return '%d' % s
+    # Single quoted strings can contain any characters unescaped except the
+    # single quote itself, which can't even be escaped, so the string needs to
+    # be closed, an escaped single quote added, and reopened.
+    return "'%s'" % s.replace("'", "'\\''")

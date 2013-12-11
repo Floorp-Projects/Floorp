@@ -1048,10 +1048,15 @@
     "extended_statistics_ok": true,
     "description": "ms elapsed time of OCSP etc.. that failed"
   },
-  "SSL_KEY_EXCHANGE_ALGORITHM": {
+  "SSL_KEY_EXCHANGE_ALGORITHM_FULL": {
     "kind": "enumerated",
     "n_values": 16,
-    "description": "SSL Handshake Key Exchange Algorithm (null=0, rsa=1, dh=2, fortezza=3, ecdh=4)"
+    "description": "SSL Handshake Key Exchange Algorithm for full handshake (null=0, rsa=1, dh=2, fortezza=3, ecdh=4)"
+  },
+  "SSL_KEY_EXCHANGE_ALGORITHM_RESUMED": {
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "SSL Handshake Key Exchange Algorithm for resumed handshake (null=0, rsa=1, dh=2, fortezza=3, ecdh=4)"
   },
   "WEBSOCKETS_HANDSHAKE_TYPE": {
     "kind": "enumerated",
@@ -1733,6 +1738,57 @@
     "kind": "enumerated",
     "n_values": 3,
     "description": "I want to be tracked, I do NOT want to be tracked, DNT unset"
+  },
+  "SRV_EXPERIMENT_SUCCESS_DELTA": {
+      "kind": "linear",
+      "high": "2000",
+      "n_buckets": 200,
+      "description": "Time delta between A and SRV records when both succeed. This (srv time in ms - a time in ms) + 1000."
+  },
+  "SRV_EXPERIMENT_SRV_FAIL_DELTA": {
+      "kind": "linear",
+      "high": "2000",
+      "n_buckets": 200,
+      "description": "Time delta between A and SRV records when SRV only fails. This (srv time in ms - a time in ms) + 1000."
+  },
+  "SRV_EXPERIMENT_A_FAIL_DELTA": {
+      "kind": "linear",
+      "high": "2000",
+      "n_buckets": 200,
+      "description": "Time delta between A and SRV records when A only fails. This (srv time in ms - a time in ms) + 1000."
+  },
+  "SRV_EXPERIMENT_FAIL_DELTA": {
+      "kind": "linear",
+      "high": "2000",
+      "n_buckets": 200,
+      "description": "Time delta between A and SRV records when both fail. This (srv time in ms - a time in ms) + 1000."
+  },
+  "SRV_EXPERIMENT_STATUS": {
+      "kind": "enumerated",
+      "n_values": 4,
+      "description": "Status of SRV experiment (0 - both OK, 1 - SRV fail, 2 - A fail, 3 - both fail)"
+  },
+  "SRV_EXPERIMENT_SRV_TIME": {
+      "kind": "exponential",
+      "high": "60000",
+      "n_buckets": 50,
+      "extended_statistics_ok": true,
+      "description": "How long (in ms) it took to get a result for a SRV record"
+  },
+  "SRV_EXPERIMENT_A_TIME": {
+      "kind": "exponential",
+      "high": "60000",
+      "n_buckets": 50,
+      "extended_statistics_ok": true,
+      "description": "How long (in ms) it took to get a result for an A record"
+  },
+  "SRV_EXPERIMENT_A_CORRECT": {
+      "kind": "boolean",
+      "description": "Whether a successful A query returned the results we expected"
+  },
+  "SRV_EXPERIMENT_SRV_CORRECT": {
+      "kind": "boolean",
+      "description": "Whether a successful SRV query returned the results we expected"
   },
   "DNS_LOOKUP_METHOD2": {
     "kind": "enumerated",
@@ -2672,24 +2728,12 @@
     "n_buckets": 50,
     "description": "Average frame interval during tab open animation of about:newtab (preview=on), when other tabs are unaffected"
   },
-  "FX_TAB_ANIM_OPEN_PREVIEW_FRAME_PAINT_MS": {
-    "kind": "exponential",
-    "high": "500",
-    "n_buckets": 30,
-    "description": "Average paint duration during tab open animation of about:newtab (preview=on), when other tabs are unaffected"
-  },
   "FX_TAB_ANIM_OPEN_FRAME_INTERVAL_MS": {
     "kind": "exponential",
     "low" : 7,
     "high": "500",
     "n_buckets": 50,
     "description": "Average frame interval during tab open animation of about:newtab (preview=off), when other tabs are unaffected"
-  },
-  "FX_TAB_ANIM_OPEN_FRAME_PAINT_MS": {
-    "kind": "exponential",
-    "high": "500",
-    "n_buckets": 30,
-    "description": "Average paint duration during tab open animation of about:newtab (preview=off), when other tabs are unaffected"
   },
   "FX_TAB_ANIM_ANY_FRAME_INTERVAL_MS": {
     "kind": "exponential",
@@ -2825,6 +2869,13 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Session restore: Duration of the longest uninterruptible operation while writing session data (ms)"
+  },
+  "FX_SESSION_RESTORE_FILE_SIZE_BYTES": {
+    "kind": "exponential",
+    "high": 50000000,
+    "n_buckets": 30,
+    "extended_statistics_ok": true,
+    "description": "Session restore: The size of file sessionstore.js (bytes)"
   },
   "FX_SESSION_RESTORE_CORRUPT_FILE": {
     "kind": "boolean",
@@ -2997,17 +3048,21 @@
     "n_buckets": 10,
     "description": "XUL reflows in background windows (ms)"
   },
-  "HTML_FOREGROUND_REFLOW_MS": {
+  "HTML_FOREGROUND_REFLOW_MS_2": {
     "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
+    "high": "10000",
+    "n_buckets": 20,
     "description": "HTML reflows in foreground windows (ms)"
   },
-  "HTML_BACKGROUND_REFLOW_MS": {
+  "HTML_BACKGROUND_REFLOW_MS_2": {
     "kind": "exponential",
-    "high": "3000",
-    "n_buckets": 10,
+    "high": "10000",
+    "n_buckets": 20,
     "description": "HTML reflows in background windows (ms)"
+  },
+  "LONG_REFLOW_INTERRUPTIBLE": {
+    "kind": "boolean",
+    "description": "Long running reflow, interruptible or not"
   },
   "XUL_INITIAL_FRAME_CONSTRUCTION": {
     "kind": "exponential",
@@ -3492,6 +3547,13 @@
     "n_buckets": 15,
     "extended_statistics_ok": true,
     "description": "Time (ms) spent to initialize Firefox Health Report service."
+  },
+  "HEALTHREPORT_SHUTDOWN_DELAY_MS": {
+    "kind": "exponential",
+    "high": "20000",
+    "n_buckets": 15,
+    "extended_statistics_ok": true,
+    "description": "Time (ms) that Firefox Health Report delays application shutdown by."
   },
   "HEALTHREPORT_GENERATE_JSON_PAYLOAD_MS": {
     "kind": "exponential",
@@ -4549,49 +4611,69 @@
     "n_values": 64,
     "description": "detected symptom of SSL 3.0 intolerance, after considering historical info"
   },
-  "SSL_CIPHER_SUITE": {
+  "SSL_CIPHER_SUITE_FULL": {
     "kind": "enumerated",
     "n_values": 128,
-    "description": "Negotiated cipher suite (see key in HandshakeCallback in nsNSSCallbacks.cpp)"
+    "description": "Negotiated cipher suite in full handshake (see key in HandshakeCallback in nsNSSCallbacks.cpp)"
   },
-  "SSL_KEA_RSA_KEY_SIZE": {
+  "SSL_CIPHER_SUITE_RESUMED": {
+    "kind": "enumerated",
+    "n_values": 128,
+    "description": "Negotiated cipher suite in resumed handshake (see key in HandshakeCallback in nsNSSCallbacks.cpp)"
+  },
+  "SSL_KEA_RSA_KEY_SIZE_FULL": {
     "kind": "enumerated",
     "n_values": 24,
-    "description": "RSA KEA (TLS_RSA_*) key size"
+    "description": "RSA KEA (TLS_RSA_*) key size in full handshake"
   },
-  "SSL_KEA_DHE_KEY_SIZE": {
+  "SSL_KEA_DHE_KEY_SIZE_FULL": {
     "kind": "enumerated",
     "n_values": 24,
-    "description": "DHE KEA (TLS_DHE_*) key size"
+    "description": "DHE KEA (TLS_DHE_*) key size in full handshake"
   },
-  "SSL_KEA_ECDHE_CURVE": {
+  "SSL_KEA_ECDHE_CURVE_FULL": {
     "kind": "enumerated",
     "n_values": "36",
-    "description": "ECDHE KEA (TLS_ECDHE_*) curve (1=P-256, 2=P-384, 3=P-521)"
+    "description": "ECDHE KEA (TLS_ECDHE_*) curve (1=P-256, 2=P-384, 3=P-521) in full handshake"
   },
-  "SSL_AUTH_ALGORITHM": {
+  "SSL_AUTH_ALGORITHM_FULL": {
     "kind": "enumerated",
     "n_values": 16,
-    "description": "SSL Authentication Algorithm (null=0, rsa=1, dsa=2, ecdsa=4)"
+    "description": "SSL Authentication Algorithm (null=0, rsa=1, dsa=2, ecdsa=4) in full handshake"
   },
-  "SSL_AUTH_RSA_KEY_SIZE": {
+  "SSL_AUTH_RSA_KEY_SIZE_FULL": {
     "kind": "enumerated",
     "n_values": 24,
-    "description": "RSA signature key size for TLS_*_RSA_*"
+    "description": "RSA signature key size for TLS_*_RSA_* in full handshake"
   },
-  "SSL_AUTH_DSA_KEY_SIZE": {
+  "SSL_AUTH_DSA_KEY_SIZE_FULL": {
     "kind": "enumerated",
     "n_values": 24,
-    "description": "DSA signature key size for TLS_*_DSS_*"
+    "description": "DSA signature key size for TLS_*_DSS_* in full handshake"
   },
-  "SSL_AUTH_ECDSA_CURVE": {
+  "SSL_AUTH_ECDSA_CURVE_FULL": {
     "kind": "enumerated",
     "n_values": "36",
-    "description": "ECDSA signature curve for TLS_*_ECDSA_* (1=P-256, 2=P-384, 3=P-521)"
+    "description": "ECDSA signature curve for TLS_*_ECDSA_* in full handshake (1=P-256, 2=P-384, 3=P-521)"
   },
-  "SSL_SYMMETRIC_CIPHER": {
+  "SSL_SYMMETRIC_CIPHER_FULL": {
     "kind": "enumerated",
     "n_values": 32,
-    "description": "Symmetric cipher used (null=0, rc4=1, 3des=4, aes-cbc=7, camellia=8, seed=9, aes-gcm=10)"
+    "description": "Symmetric cipher used in full handshake (null=0, rc4=1, 3des=4, aes-cbc=7, camellia=8, seed=9, aes-gcm=10)"
+  },
+  "SSL_SYMMETRIC_CIPHER_RESUMED": {
+    "kind": "enumerated",
+    "n_values": 32,
+    "description": "Symmetric cipher used in resumed handshake (null=0, rc4=1, 3des=4, aes-cbc=7, camellia=8, seed=9, aes-gcm=10)"
+  },
+  "SSL_REASONS_FOR_NOT_FALSE_STARTING": {
+    "kind": "enumerated",
+    "n_values": 512,
+    "description": "Bitmask of reasons we did not false start when libssl would have let us (see key in nsNSSCallbacks.cpp)"
+  },
+  "SSL_HANDSHAKE_TYPE": { 
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "Type of handshake (1=resumption, 2=false started, 3=chose not to false start, 4=not allowed to false start)"
   }
 }

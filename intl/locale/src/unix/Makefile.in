@@ -5,22 +5,5 @@
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(srcdir)/..
-
-# CODESET is not automatically defined on some older versions of Redhat.
-# Define _XOPEN_SOURCE so CODESET will get defined and thus allow
-# nl_langinfo(CODESET) to compile on these systems.
-ifeq ($(OS_ARCH), Linux)
-DEFINES		+= -D_XOPEN_SOURCE=500
-endif
-
-DEFINES += -DOSTYPE=\"$(OS_CONFIG)\"
-
-nsUNIXCharset.$(OBJ_SUFFIX): unixcharset.properties.h
-
 unixcharset.properties.h: $(srcdir)/../props2arrays.py unixcharset.properties
 	$(PYTHON) $^ $@
-
-GARBAGE += \
-	unixcharset.properties.h \
-	$(NULL)

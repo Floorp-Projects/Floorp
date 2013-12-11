@@ -6,6 +6,7 @@
 NO_DIST_INSTALL = True
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini', 'unit_ipc/xpcshell.ini']
+BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
 
 SOURCES += [
     '../google-breakpad/src/common/logging.cc',
@@ -23,3 +24,11 @@ EXTRA_JS_MODULES += [
 ]
 
 FORCE_SHARED_LIB = True
+
+DEFINES['SHARED_LIBRARY'] = '%s%s%s' % (
+    CONFIG['DLL_PREFIX'],
+    LIBRARY_NAME,
+    CONFIG['DLL_SUFFIX']
+)
+
+DEFINES['NOMINMAX'] = True

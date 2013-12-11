@@ -103,6 +103,7 @@ elif CONFIG['MOZ_WIDGET_GTK']:
     EXPORTS += [
         'gfxFT2FontBase.h',
         'gfxGdkNativeRenderer.h',
+        'gfxPangoFonts.h',
         'gfxPDFSurface.h',
         'gfxPlatformGtk.h',
         'gfxPSSurface.h',
@@ -113,6 +114,7 @@ elif CONFIG['MOZ_WIDGET_GTK']:
         'gfxFT2FontBase.cpp',
         'gfxFT2Utils.cpp',
         'gfxGdkNativeRenderer.cpp',
+        'gfxPangoFonts.cpp',
         'gfxPDFSurface.cpp',
         'gfxPlatformGtk.cpp',
         'gfxPSSurface.cpp',
@@ -129,16 +131,6 @@ elif CONFIG['MOZ_WIDGET_GTK']:
             'gfxXlibSurface.cpp',
         ]
 
-    if CONFIG['MOZ_PANGO']:
-        EXPORTS += ['gfxPangoFonts.h']
-        SOURCES += [
-            'gfxPangoFonts.cpp',
-        ]
-    else:
-        EXPORTS += ['gfxFT2Fonts.h']
-        SOURCES += [
-            'gfxPangoFonts.cpp',
-        ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
     EXPORTS += [
         'gfxOS2Fonts.h',
@@ -157,6 +149,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS += [
         'gfxFT2FontBase.h',
+        'gfxPangoFonts.h',
         'gfxPDFSurface.h',
         'gfxQPainterSurface.h',
         'gfxQtNativeRenderer.h',
@@ -166,6 +159,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
         'gfxFontconfigUtils.cpp',
         'gfxFT2FontBase.cpp',
         'gfxFT2Utils.cpp',
+        'gfxPangoFonts.cpp',
         'gfxPDFSurface.cpp',
         'gfxQPainterSurface.cpp',
         'gfxQtPlatform.cpp',
@@ -181,16 +175,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
             'gfxXlibSurface.cpp',
         ]
 
-    if CONFIG['MOZ_PANGO']:
-        EXPORTS += ['gfxPangoFonts.h']
-        SOURCES += [
-            'gfxPangoFonts.cpp',
-        ]
-    else:
-        EXPORTS += ['gfxFT2Fonts.h']
-        SOURCES += [
-            'gfxFT2Fonts.cpp',
-        ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += [
         'gfxD2DSurface.h',
@@ -203,6 +187,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'gfxWindowsPlatform.h',
         'gfxWindowsSurface.h',
     ]
+    # gfxGDIFontList.cpp and gfxGDIShaper.cpp force NSPR logging, so they cannot be built in unified mode.
     SOURCES += [
         'gfxGDIFont.cpp',
         'gfxGDIFontList.cpp',
@@ -215,6 +200,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'nsUnicodeRange.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DWRITE_FONT']:
+        # gfxDWriteFontList.cpp forces NSPR logging, so it cannot be built in unified mode.
         SOURCES += [
             'gfxD2DSurface.cpp',
             'gfxDWriteCommon.cpp',
@@ -231,19 +217,35 @@ if CONFIG['INTEL_ARCHITECTURE']:
     ]
 
 SOURCES += [
+    # Includes mac system header conflicting with point/size,
+    # and includes glxXlibSurface.h which drags in Xrender.h
+    'gfxASurface.cpp',
+    # on X11, gfxDrawable.cpp includes X headers for an old workaround which
+    # we could consider removing soon (affects Ubuntus older than 10.04 LTS)
+    # which currently prevent it from joining UNIFIED_SOURCES.
+    'gfxDrawable.cpp',
+    # Uses FORCE_PR_LOG
+    'gfxFont.cpp',
+    # Uses FORCE_PR_LOG
+    'gfxFontUtils.cpp',
+    # Includes mac system header conflicting with point/size, and also uses FORCE_PR_LOG
+    'gfxPlatform.cpp',
+    # Uses FORCE_PR_LOG
+    'gfxPlatformFontList.cpp',
+    # Uses FORCE_PR_LOG
+    'gfxUserFontSet.cpp',
+]
+
+UNIFIED_SOURCES += [
     'gfx3DMatrix.cpp',
     'gfxAlphaRecovery.cpp',
-    'gfxASurface.cpp',
     'gfxBaseSharedMemorySurface.cpp',
     'gfxBlur.cpp',
     'gfxCachedTempSurface.cpp',
     'gfxContext.cpp',
-    'gfxDrawable.cpp',
-    'gfxFont.cpp',
     'gfxFontFeatures.cpp',
     'gfxFontMissingGlyphs.cpp',
     'gfxFontTest.cpp',
-    'gfxFontUtils.cpp',
     'gfxGradientCache.cpp',
     'gfxGraphiteShaper.cpp',
     'gfxHarfBuzzShaper.cpp',
@@ -251,8 +253,6 @@ SOURCES += [
     'gfxMatrix.cpp',
     'gfxPath.cpp',
     'gfxPattern.cpp',
-    'gfxPlatform.cpp',
-    'gfxPlatformFontList.cpp',
     'gfxRect.cpp',
     'gfxReusableImageSurfaceWrapper.cpp',
     'gfxReusableSharedImageSurfaceWrapper.cpp',
@@ -260,12 +260,12 @@ SOURCES += [
     'gfxSkipChars.cpp',
     'gfxSVGGlyphs.cpp',
     'gfxTeeSurface.cpp',
-    'gfxUserFontSet.cpp',
     'gfxUtils.cpp',
     'nsSurfaceTexture.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    # gfxMacPlatformFontList.mm forces NSPR logging so it cannot be built in unified mode.
     SOURCES += [
         'gfxMacPlatformFontList.mm',
     ]
@@ -279,3 +279,30 @@ LIBRARY_NAME = 'thebes'
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+GENERATED_FILES = [
+    'PremultiplyTables.h',
+]
+
+LOCAL_INCLUDES += [
+    '/content/xml/document/src',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk', 'qt'):
+    DEFINES['MOZ_ENABLE_FREETYPE'] = True
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    for var in ('MOZ_ENABLE_D3D9_LAYER', 'MOZ_ENABLE_D3D10_LAYER'):
+        if CONFIG[var]:
+            DEFINES[var] = True
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    # This is set for "normal Android", that is, when Gecko is running on
+    # top of the android java runtime.
+    DEFINES['MOZ_USING_ANDROID_JAVA_WIDGETS'] = True
+
+DEFINES['MOZ_OTS_REPORT_ERRORS'] = True
+DEFINES['GRAPHITE2_STATIC'] = True
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFINES['OTS_DLL'] = True

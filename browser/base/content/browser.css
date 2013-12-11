@@ -123,13 +123,14 @@ tabbrowser {
   /* Explicitly set the visibility to override the value (collapsed)
    * we inherit from #TabsToolbar[collapsed] upon opening a browser window. */
   visibility: visible;
-  /* This transition is only applied when opening a new tab. Closing tabs
-   * are just hidden so we don't need to adjust the delay for that. */
+  /* The transition is only delayed for opening tabs. */
   transition: visibility 0ms 25ms;
 }
 
-.tab-background[selected]:not([fadein]):not([pinned]) {
+.tab-background:not([fadein]):not([pinned]) {
   visibility: hidden;
+  /* Closing tabs are hidden without a delay. */
+  transition-delay: 0ms;
 }
 
 .tab-throbber:not([fadein]):not([pinned]),
@@ -860,6 +861,84 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
   -moz-image-region: auto;
 }
 
+/* Customize mode */
+#tab-view-deck {
+  transition-property: padding;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+#tab-view-deck[fastcustomizeanimation] {
+  transition-duration: 1ms;
+  transition-timing-function: linear;
+}
+
+#PanelUI-contents > .panel-customization-placeholder > .panel-customization-placeholder-child {
+  list-style-image: none;
+}
+
+#customization-panelHolder {
+  overflow-y: hidden;
+}
+
+#customization-panelWrapper,
+#customization-panelWrapper > .panel-arrowcontent {
+  -moz-box-flex: 1;
+}
+
+#customization-panelWrapper > .panel-arrowcontent {
+  padding: 0 !important;
+}
+
+#customization-panelHolder > #PanelUI-mainView {
+  display: flex;
+  flex-direction: column;
+  /* Hack alert - by manually setting the preferred height to 0, we convince
+     #PanelUI-mainView to shrink when the window gets smaller in customization
+     mode. Not sure why that is - might have to do with our intermingling of
+     XUL flex, and CSS3 Flexbox. */
+  height: 0;
+}
+
+#customization-panelHolder > #PanelUI-mainView > #PanelUI-contents-scroller {
+  display: flex;
+  flex: auto;
+  flex-direction: column;
+}
+
+#customization-panel-container {
+  overflow-y: auto;
+}
+
+toolbarpaletteitem[dragover] {
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+#customization-palette:not([hidden]) {
+  display: block;
+  overflow: auto;
+  min-height: 3em;
+}
+
+toolbarpaletteitem[place="palette"] {
+  width: 110px;
+  height: 94px;
+  overflow: hidden;
+  display: inline-block;
+}
+
+toolbarpaletteitem[place="palette"][hidden] {
+  display: none;
+}
+
+#customization-palette .toolbarpaletteitem-box {
+  -moz-box-pack: center;
+  -moz-box-flex: 1;
+  width: 110px;
+  max-width: 110px;
+}
+
 /* UI Tour */
 
 @keyframes uitour-wobble {
@@ -873,13 +952,13 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 
 @keyframes uitour-zoom {
   from {
-    transform: scale(0.9);
+    transform: scale(0.8);
   }
   50% {
-    transform: scale(1.1);
+    transform: scale(1.0);
   }
   to {
-    transform: scale(0.9);
+    transform: scale(0.8);
   }
 }
 
@@ -895,29 +974,27 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
   }
 }
 
-html|div#UITourHighlight {
-  display: none;
-  position: absolute;
-  z-index: 10000000000;
+#UITourHighlightContainer,
+#UITourHighlight {
+  pointer-events: none;
 }
 
-html|div#UITourHighlight[active] {
+#UITourHighlight[active] {
   animation-delay: 2s;
   animation-fill-mode: forwards;
   animation-iteration-count: infinite;
   animation-timing-function: linear;
-  display: block;
 }
 
-html|div#UITourHighlight[active="wobble"] {
+#UITourHighlight[active="wobble"] {
   animation-name: uitour-wobble;
   animation-duration: 1s;
 }
-html|div#UITourHighlight[active="zoom"] {
+#UITourHighlight[active="zoom"] {
   animation-name: uitour-zoom;
   animation-duration: 1s;
 }
-html|div#UITourHighlight[active="color"] {
+#UITourHighlight[active="color"] {
   animation-name: uitour-color;
   animation-duration: 2s;
 }

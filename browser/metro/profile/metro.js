@@ -18,15 +18,16 @@ pref("devtools.chrome.enabled", false);
 // Automatically submit crash reports
 #ifdef RELEASE_BUILD
 pref("app.crashreporter.autosubmit", false);
+pref("app.crashreporter.submitURLs", false);
 #else
 // For Nightly and Aurora we turn this on by default
 pref("app.crashreporter.autosubmit", true);
+pref("app.crashreporter.submitURLs", false);
 #endif
 // Has the user been prompted about crash reporting?
 pref("app.crashreporter.prompted", false);
 
 // Debug prefs, see input.js
-pref("metro.debug.treatmouseastouch", false);
 pref("metro.debug.colorizeInputOverlay", false);
 pref("metro.debug.selection.displayRanges", false);
 pref("metro.debug.selection.dumpRanges", false);
@@ -45,7 +46,6 @@ pref("layers.componentalpha.enabled", false);
 pref("apz.touch_start_tolerance", "0.1"); // dpi * tolerance = pixel threshold
 pref("apz.pan_repaint_interval", 50);   // prefer 20 fps
 pref("apz.fling_repaint_interval", 50); // prefer 20 fps
-pref("apz.fling_friction", "0.002");
 pref("apz.fling_stopped_threshold", "0.2");
 
 // 0 = free, 1 = standard, 2 = sticky

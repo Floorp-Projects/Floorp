@@ -1,0 +1,16 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<!ENTITY crashprompt.title           "Would you like to send Mozilla crash reports?">
+<!ENTITY crashprompt.message         "We are sorry, &brandShortName; just recovered from a crash. Sending crash reports will help Mozilla make &brandShortName; more stable and secure. You can always change your preference in Settings/Options.">
+<!ENTITY crashprompt.detailsLink     "What's in a crash report?">
+<!ENTITY crashprompt.detailedMessage.firstParagraph "A crash report contains some details about the crash, your machine, as well as a snapshot of the state of your browser when it crashed.">
+<!ENTITY crashprompt.detailedMessage.secondParagraph "This may include things like open pages, text typed into forms and the content of open messages, recent browsing history, or geolocation shared with a site.">
+<!ENTITY crashprompt.detailedMessage.thirdParagraph "We use crash reports to try to fix problems and improve our products. We handle your information as we describe in our ">
+<!ENTITY crashprompt.privacyPolicyLink "&brandShortName; privacy policy">
+<!ENTITY crashprompt.includeURLLabel "Include the address of the page I was on">
+<!ENTITY crashprompt.acceptbutton    "Send reports">
+<!ENTITY crashprompt.refusebutton    "Don't send">
+<!ENTITY crashprompt.privacyPolicy.title "&brandShortName; privacy policy">

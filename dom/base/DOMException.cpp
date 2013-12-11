@@ -7,8 +7,8 @@
 
 #include "jsprf.h"
 #include "js/OldDebugAPI.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/HoldDropJSObjects.h"
-#include "mozilla/Util.h"
 #include "mozilla/dom/Exceptions.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"

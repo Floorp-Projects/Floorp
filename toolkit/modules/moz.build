@@ -52,6 +52,7 @@ EXTRA_PP_JS_MODULES += [
     'Troubleshoot.jsm',
     'UpdateChannel.jsm',
     'WindowDraggingUtils.jsm',
+    'WindowsPrefSync.jsm',
 ]
 
 if 'Android' != CONFIG['OS_TARGET']:
@@ -59,3 +60,8 @@ if 'Android' != CONFIG['OS_TARGET']:
         'LightweightThemeConsumer.jsm',
     ]
 
+DEFINES['MOZ_APP_NAME'] = CONFIG['MOZ_APP_NAME']
+DEFINES['MOZ_BUILD_APP'] = CONFIG['MOZ_BUILD_APP']
+
+if CONFIG['MOZ_TOOLKIT_SEARCH']:
+    DEFINES['MOZ_TOOLKIT_SEARCH'] = True

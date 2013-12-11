@@ -6,6 +6,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Compiler.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/DebugOnly.h"
@@ -23,6 +24,14 @@
 #include "nsUnicharUtils.h"
 
 using namespace mozilla;
+
+#if defined(__clang__)
+#  pragma GCC diagnostic ignored "-Wdelete-non-virtual-dtor"
+#elif MOZ_IS_GCC
+#  if MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
+#    pragma GCC diagnostic ignored "-Wdelete-non-virtual-dtor"
+#  endif
+#endif
 
 /**
  * The shared hash table for atom lookups.
@@ -494,12 +503,6 @@ NS_SizeOfAtomTablesIncludingThis(MallocSizeOf aMallocSizeOf) {
 
 #define ATOM_HASHTABLE_INITIAL_SIZE  4096
 
-static void HandleOOM()
-{
-  fputs("Out of memory allocating atom hashtable.\n", stderr);
-  MOZ_CRASH();
-}
-
 static inline void
 EnsureTableExists()
 {
@@ -507,7 +510,7 @@ EnsureTableExists()
       !PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
                          sizeof(AtomTableEntry), ATOM_HASHTABLE_INITIAL_SIZE)) {
     // Initialization failed.
-    HandleOOM();
+    NS_ABORT_OOM(ATOM_HASHTABLE_INITIAL_SIZE * sizeof(AtomTableEntry));
   }
 }
 
@@ -521,7 +524,7 @@ GetAtomHashEntry(const char* aString, uint32_t aLength, uint32_t& aHash)
     static_cast<AtomTableEntry*>
                (PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
   if (!e) {
-    HandleOOM();
+    NS_ABORT_OOM(gAtomTable.entryCount * gAtomTable.entrySize);
   }
   return e;
 }
@@ -536,7 +539,7 @@ GetAtomHashEntry(const PRUnichar* aString, uint32_t aLength, uint32_t& aHash)
     static_cast<AtomTableEntry*>
                (PL_DHashTableOperate(&gAtomTable, &key, PL_DHASH_ADD));
   if (!e) {
-    HandleOOM();
+    NS_ABORT_OOM(gAtomTable.entryCount * gAtomTable.entrySize);
   }
   return e;
 }

@@ -953,9 +953,7 @@ static nsresult pref_DoCallback(const char* changed_pref)
                         node->domain,
                         strlen(node->domain)) == 0 )
         {
-            nsresult rv2 = (*node->func) (changed_pref, node->data);
-            if (NS_FAILED(rv2))
-                rv = rv2;
+            (*node->func) (changed_pref, node->data);
         }
     }
 

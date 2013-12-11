@@ -1360,7 +1360,9 @@ gfxFontFamily::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
  * shaped-word caches to free up memory.
  */
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(FontCacheMallocSizeOf)
+MOZ_DEFINE_MALLOC_SIZE_OF(FontCacheMallocSizeOf)
+
+NS_IMPL_ISUPPORTS1(gfxFontCache::MemoryReporter, nsIMemoryReporter)
 
 NS_IMETHODIMP
 gfxFontCache::MemoryReporter::CollectReports
@@ -1415,7 +1417,7 @@ gfxFontCache::Init()
     if (!gGlobalCache) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    NS_RegisterMemoryReporter(new MemoryReporter);
+    RegisterStrongMemoryReporter(new MemoryReporter());
     return NS_OK;
 }
 
@@ -3083,6 +3085,12 @@ HashMix(uint32_t aHash, PRUnichar aCh)
     return (aHash >> 28) ^ (aHash << 4) ^ aCh;
 }
 
+#ifdef __GNUC__
+#define GFX_MAYBE_UNUSED __attribute__((unused))
+#else
+#define GFX_MAYBE_UNUSED
+#endif
+
 template<typename T>
 gfxShapedWord*
 gfxFont::GetShapedWord(gfxContext *aContext,
@@ -3091,7 +3099,8 @@ gfxFont::GetShapedWord(gfxContext *aContext,
                        uint32_t    aHash,
                        int32_t     aRunScript,
                        int32_t     aAppUnitsPerDevUnit,
-                       uint32_t    aFlags)
+                       uint32_t    aFlags,
+                       gfxTextPerfMetrics *aTextPerf GFX_MAYBE_UNUSED)
 {
     // if the cache is getting too big, flush it and start over
     uint32_t wordCacheMaxEntries =
@@ -3121,12 +3130,23 @@ gfxFont::GetShapedWord(gfxContext *aContext,
         Telemetry::Accumulate((isContent ? Telemetry::WORD_CACHE_HITS_CONTENT :
                                    Telemetry::WORD_CACHE_HITS_CHROME),
                               aLength);
+#ifndef RELEASE_BUILD
+        if (aTextPerf) {
+            aTextPerf->current.wordCacheHit++;
+        }
+#endif
         return sw;
     }
 
     Telemetry::Accumulate((isContent ? Telemetry::WORD_CACHE_MISSES_CONTENT :
                                Telemetry::WORD_CACHE_MISSES_CHROME),
                           aLength);
+#ifndef RELEASE_BUILD
+    if (aTextPerf) {
+        aTextPerf->current.wordCacheMiss++;
+    }
+#endif
+
     sw = entry->mShapedWord = gfxShapedWord::Create(aText, aLength,
                                                     aRunScript,
                                                     aAppUnitsPerDevUnit,
@@ -3311,6 +3331,17 @@ gfxFont::ShapeFragmentWithoutWordCache(gfxContext *aContext,
     return ok;
 }
 
+// Check if aCh is an unhandled control character that should be displayed
+// as a hexbox rather than rendered by some random font on the system.
+// We exclude \r as stray &#13;s are rather common (bug 941940).
+// Note that \n and \t don't come through here, as they have specific
+// meanings that have already been handled.
+static bool
+IsInvalidControlChar(uint32_t aCh)
+{
+    return aCh != '\r' && ((aCh & 0x7f) < 0x20 || aCh == 0x7f);
+}
+
 template<typename T>
 bool
 gfxFont::ShapeTextWithoutWordCache(gfxContext *aContext,
@@ -3350,7 +3381,7 @@ gfxFont::ShapeTextWithoutWordCache(gfxContext *aContext,
             aTextRun->SetIsTab(aOffset + i);
         } else if (ch == '\n') {
             aTextRun->SetIsNewline(aOffset + i);
-        } else if ((ch & 0x7f) < 0x20 || ch == 0x7f) {
+        } else if (IsInvalidControlChar(ch)) {
             aTextRun->SetMissingGlyph(aOffset + i, ch, this);
         }
         fragStart = i + 1;
@@ -3359,6 +3390,12 @@ gfxFont::ShapeTextWithoutWordCache(gfxContext *aContext,
     NS_WARN_IF_FALSE(ok, "failed to shape text - expect garbled text");
     return ok;
 }
+
+#ifndef RELEASE_BUILD
+#define TEXT_PERF_INCR(tp, m) (tp ? (tp)->current.m++ : 0)
+#else
+#define TEXT_PERF_INCR(tp, m)
+#endif
 
 inline static bool IsChar8Bit(uint8_t /*aCh*/) { return true; }
 inline static bool IsChar8Bit(PRUnichar aCh) { return aCh < 0x100; }
@@ -3376,7 +3413,25 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
         return true;
     }
 
+    gfxTextPerfMetrics *tp = nullptr;
+
+#ifndef RELEASE_BUILD
+    tp = aTextRun->GetFontGroup()->GetTextPerfMetrics();
+    if (tp) {
+        if (mStyle.systemFont) {
+            tp->current.numChromeTextRuns++;
+        } else {
+            tp->current.numContentTextRuns++;
+        }
+        tp->current.numChars += aRunLength;
+        if (aRunLength > tp->current.maxTextRunLen) {
+            tp->current.maxTextRunLen = aRunLength;
+        }
+    }
+#endif
+
     if (BypassShapedWordCache(aRunScript)) {
+        TEXT_PERF_INCR(tp, wordCacheSpaceRules);
         return ShapeTextWithoutWordCache(aContext, aString + aRunStart,
                                          aRunStart, aRunLength, aRunScript,
                                          aTextRun);
@@ -3425,6 +3480,7 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
         // For words longer than the limit, we don't use the
         // font's word cache but just shape directly into the textrun.
         if (length > wordCacheCharLimit) {
+            TEXT_PERF_INCR(tp, wordCacheLong);
             bool ok = ShapeFragmentWithoutWordCache(aContext,
                                                     text + wordStart,
                                                     aRunStart + wordStart,
@@ -3448,7 +3504,7 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
                                               text + wordStart, length,
                                               hash, aRunScript,
                                               appUnitsPerDevUnit,
-                                              wordFlags);
+                                              wordFlags, tp);
             if (sw) {
                 aTextRun->CopyGlyphDataFrom(sw, aRunStart + wordStart);
             } else {
@@ -3467,7 +3523,7 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
                                   &space, 1,
                                   HashMix(0, ' '), aRunScript,
                                   appUnitsPerDevUnit,
-                                  flags | gfxTextRunFactory::TEXT_IS_8BIT);
+                                  flags | gfxTextRunFactory::TEXT_IS_8BIT, tp);
                 if (sw) {
                     aTextRun->CopyGlyphDataFrom(sw, aRunStart + i);
                 } else {
@@ -3494,7 +3550,7 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
             aTextRun->SetIsTab(aRunStart + i);
         } else if (ch == '\n') {
             aTextRun->SetIsNewline(aRunStart + i);
-        } else if ((ch & 0x7f) < 0x20 || ch == 0x7f) {
+        } else if (IsInvalidControlChar(ch)) {
             aTextRun->SetMissingGlyph(aRunStart + i, ch, this);
         }
 
@@ -3999,8 +4055,14 @@ gfxGlyphExtents::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle, gfxUserFontSet *aUserFontSet)
-    : mFamilies(aFamilies), mStyle(*aStyle), mUnderlineOffset(UNDERLINE_OFFSET_NOT_SET)
+gfxFontGroup::gfxFontGroup(const nsAString& aFamilies,
+                           const gfxFontStyle *aStyle,
+                           gfxUserFontSet *aUserFontSet)
+    : mFamilies(aFamilies)
+    , mStyle(*aStyle)
+    , mUnderlineOffset(UNDERLINE_OFFSET_NOT_SET)
+    , mHyphenWidth(-1)
+    , mTextPerf(nullptr)
 {
     mUserFontSet = nullptr;
     SetUserFontSet(aUserFontSet);
@@ -4161,7 +4223,9 @@ gfxFontGroup::~gfxFontGroup()
 gfxFontGroup *
 gfxFontGroup::Copy(const gfxFontStyle *aStyle)
 {
-    return new gfxFontGroup(mFamilies, aStyle, mUserFontSet);
+    gfxFontGroup *fg = new gfxFontGroup(mFamilies, aStyle, mUserFontSet);
+    fg->SetTextPerfMetrics(mTextPerf);
+    return fg;
 }
 
 bool 
@@ -4434,6 +4498,36 @@ gfxFontGroup::MakeBlankTextRun(uint32_t aLength,
 
     textRun->AddGlyphRun(GetFontAt(0), gfxTextRange::kFontGroup, 0, false);
     return textRun;
+}
+
+gfxTextRun *
+gfxFontGroup::MakeHyphenTextRun(gfxContext *aCtx, uint32_t aAppUnitsPerDevUnit)
+{
+    // only use U+2010 if it is supported by the first font in the group;
+    // it's better to use ASCII '-' from the primary font than to fall back to
+    // U+2010 from some other, possibly poorly-matching face
+    static const PRUnichar hyphen = 0x2010;
+    gfxFont *font = GetFontAt(0);
+    if (font && font->HasCharacter(hyphen)) {
+        return MakeTextRun(&hyphen, 1, aCtx, aAppUnitsPerDevUnit,
+                           gfxFontGroup::TEXT_IS_PERSISTENT);
+    }
+
+    static const uint8_t dash = '-';
+    return MakeTextRun(&dash, 1, aCtx, aAppUnitsPerDevUnit,
+                       gfxFontGroup::TEXT_IS_PERSISTENT);
+}
+
+gfxFloat
+gfxFontGroup::GetHyphenWidth(gfxContext *aCtx, uint32_t aAppUnitsPerDevUnit)
+{
+    if (mHyphenWidth < 0) {
+        nsAutoPtr<gfxTextRun> hyphRun(MakeHyphenTextRun(aCtx,
+                                                        aAppUnitsPerDevUnit));
+        mHyphenWidth = hyphRun.get() ?
+            hyphRun->GetAdvanceWidth(0, hyphRun->GetLength(), nullptr) : 0;
+    }
+    return mHyphenWidth;
 }
 
 gfxTextRun *
@@ -4966,6 +5060,16 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
         // find the font for this char
         nsRefPtr<gfxFont> font =
             FindFontForChar(ch, prevCh, aRunScript, prevFont, &matchType);
+
+#ifndef RELEASE_BUILD
+        if (MOZ_UNLIKELY(mTextPerf)) {
+            if (matchType == gfxTextRange::kPrefsFallback) {
+                mTextPerf->current.fallbackPrefs++;
+            } else if (matchType == gfxTextRange::kSystemFallback) {
+                mTextPerf->current.fallbackSystem++;
+            }
+        }
+#endif
 
         prevCh = ch;
 
@@ -5523,6 +5627,13 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams,
     MOZ_COUNT_CTOR(gfxTextRun);
     NS_ADDREF(mFontGroup);
 
+#ifndef RELEASE_BUILD
+    gfxTextPerfMetrics *tp = aFontGroup->GetTextPerfMetrics();
+    if (tp) {
+        tp->current.textrunConst++;
+    }
+#endif
+
     mCharacterGlyphs = reinterpret_cast<CompressedGlyph*>(this + 1);
 
     if (aParams->mSkipChars) {
@@ -5550,6 +5661,12 @@ gfxTextRun::~gfxTextRun()
     // been told to release its reference to the group, so we mustn't do that
     // again here.
     if (!mReleasedFontGroup) {
+#ifndef RELEASE_BUILD
+        gfxTextPerfMetrics *tp = mFontGroup->GetTextPerfMetrics();
+        if (tp) {
+            tp->current.textrunDestr++;
+        }
+#endif
         NS_RELEASE(mFontGroup);
     }
 
@@ -6602,7 +6719,8 @@ gfxTextRun::SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext,
                                              mAppUnitsPerDevUnit,
                                              gfxTextRunFactory::TEXT_IS_8BIT |
                                              gfxTextRunFactory::TEXT_IS_ASCII |
-                                             gfxTextRunFactory::TEXT_IS_PERSISTENT);
+                                             gfxTextRunFactory::TEXT_IS_PERSISTENT,
+                                             nullptr);
     if (sw) {
         AddGlyphRun(aFont, gfxTextRange::kFontGroup, aCharIndex, false);
         CopyGlyphDataFrom(sw, aCharIndex);

@@ -7,6 +7,7 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include "mozilla/Endian.h"
 #include "mozilla/Telemetry.h"
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
@@ -338,12 +339,11 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
   mTxInlineFrame[3] = SpdySession3::CONTROL_TYPE_SYN_STREAM;
   // 4 to 7 are length and flags, we'll fill that in later
 
-  uint32_t networkOrderID = PR_htonl(mStreamID);
-  memcpy(mTxInlineFrame + 8, &networkOrderID, 4);
+  NetworkEndian::writeUint32(mTxInlineFrame + 8, mStreamID);
 
   // this is the associated-to field, which is not used sending
   // from the client in the http binding
-  memset (mTxInlineFrame + 12, 0, 4);
+  memset(mTxInlineFrame + 12, 0, 4);
 
   // Priority flags are the E0 mask of byte 16.
   // 0 is highest priority, 7 is lowest.
@@ -469,8 +469,8 @@ SpdyStream3::ParseHttpRequestHeaders(const char *buf,
   CompressFlushFrame();
 
   // 4 to 7 are length and flags, which we can now fill in
-  (reinterpret_cast<uint32_t *>(mTxInlineFrame.get()))[1] =
-    PR_htonl(mTxInlineFrameUsed - 8);
+  NetworkEndian::writeUint32(mTxInlineFrame + 1 * sizeof(uint32_t),
+                             mTxInlineFrameUsed - 8);
 
   MOZ_ASSERT(!mTxInlineFrame[4], "Size greater than 24 bits");
 
@@ -768,9 +768,8 @@ SpdyStream3::GenerateDataFrameHeader(uint32_t dataLength, bool lastFrame)
   MOZ_ASSERT(!mTxStreamFrameSize, "stream frame not empty");
   MOZ_ASSERT(!(dataLength & 0xff000000), "datalength > 24 bits");
 
-  (reinterpret_cast<uint32_t *>(mTxInlineFrame.get()))[0] = PR_htonl(mStreamID);
-  (reinterpret_cast<uint32_t *>(mTxInlineFrame.get()))[1] =
-    PR_htonl(dataLength);
+  NetworkEndian::writeUint32(mTxInlineFrame, mStreamID);
+  NetworkEndian::writeUint32(mTxInlineFrame + 1 * sizeof(uint32_t), dataLength);
 
   MOZ_ASSERT(!(mTxInlineFrame[0] & 0x80), "control bit set unexpectedly");
   MOZ_ASSERT(!mTxInlineFrame[4], "flag bits set unexpectedly");
@@ -1065,7 +1064,7 @@ SpdyStream3::FindHeader(nsCString name,
     return NS_ERROR_ILLEGAL_VALUE;
 
   do {
-    uint32_t numPairs = PR_ntohl(reinterpret_cast<const uint32_t *>(nvpair)[-1]);
+    uint32_t numPairs = NetworkEndian::readUint32(nvpair - 1 * sizeof(uint32_t));
 
     for (uint32_t index = 0; index < numPairs; ++index) {
       if (lastHeaderByte < nvpair + 4)
@@ -1147,7 +1146,7 @@ SpdyStream3::ConvertHeaders(nsACString &aHeadersOut)
     return NS_ERROR_ILLEGAL_VALUE;
 
   do {
-    uint32_t numPairs = PR_ntohl(reinterpret_cast<const uint32_t *>(nvpair)[-1]);
+    uint32_t numPairs = NetworkEndian::readUint32(nvpair - 1 * sizeof(uint32_t));
 
     for (uint32_t index = 0; index < numPairs; ++index) {
       if (lastHeaderByte < nvpair + 4)
@@ -1285,10 +1284,11 @@ SpdyStream3::CompressToFrame(uint32_t data)
 {
   // convert the data to 4 byte network byte order and write that
   // to the compressed stream
-  data = PR_htonl(data);
+  unsigned char databuf[sizeof(data)];
+  NetworkEndian::writeUint32(databuf, data);
 
-  mZlib->next_in = reinterpret_cast<unsigned char *> (&data);
-  mZlib->avail_in = 4;
+  mZlib->next_in = databuf;
+  mZlib->avail_in = sizeof(databuf);
   ExecuteCompress(Z_NO_FLUSH);
 }
 
@@ -1299,11 +1299,12 @@ SpdyStream3::CompressToFrame(const char *data, uint32_t len)
   // Format calls for a network ordered 32 bit length
   // followed by the utf8 string
 
-  uint32_t networkLen = PR_htonl(len);
+  unsigned char lenbuf[sizeof(len)];
+  NetworkEndian::writeUint32(lenbuf, len);
 
   // write out the length
-  mZlib->next_in = reinterpret_cast<unsigned char *> (&networkLen);
-  mZlib->avail_in = 4;
+  mZlib->next_in = lenbuf;
+  mZlib->avail_in = sizeof(lenbuf);
   ExecuteCompress(Z_NO_FLUSH);
 
   // write out the data

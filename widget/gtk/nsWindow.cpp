@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
-#include "mozilla/Util.h"
 #include <algorithm>
 
 #include "prlink.h"
@@ -106,7 +106,6 @@ extern "C" {
 #include "gfxImageSurface.h"
 #include "gfxUtils.h"
 #include "Layers.h"
-#include "LayerManagerOGL.h"
 #include "GLContextProvider.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -127,7 +126,6 @@ using namespace mozilla::gfx;
 using namespace mozilla::widget;
 using namespace mozilla::layers;
 using mozilla::gl::GLContext;
-using mozilla::layers::LayerManagerOGL;
 
 // Don't put more than this many rects in the dirty region, just fluff
 // out to the bounding-box if there are more
@@ -602,17 +600,7 @@ nsWindow::Destroy(void)
 
     /** Need to clean our LayerManager up while still alive */
     if (mLayerManager) {
-        nsRefPtr<GLContext> gl = nullptr;
-        if (mLayerManager->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {
-            LayerManagerOGL *ogllm = static_cast<LayerManagerOGL*>(mLayerManager.get());
-            gl = ogllm->gl();
-        }
-
         mLayerManager->Destroy();
-
-        if (gl) {
-            gl->MarkDestroyed();
-        }
     }
     mLayerManager = nullptr;
 
@@ -2009,6 +1997,7 @@ struct ExposeRegion
     }
     bool Init(cairo_t* cr)
     {
+        mRects = cairo_copy_clip_rectangle_list(cr);
         if (mRects->status != CAIRO_STATUS_SUCCESS) {
             NS_WARNING("Failed to obtain cairo rectangle list.");
             return false;
@@ -2143,13 +2132,6 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
     // If this widget uses OMTC...
     if (GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
-        listener->PaintWindow(this, region);
-        listener->DidPaintWindow();
-        return TRUE;
-    } else if (GetLayerManager()->GetBackendType() == mozilla::layers::LAYERS_OPENGL) {
-        LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
-        manager->SetClippingRegion(region);
-
         listener->PaintWindow(this, region);
         listener->DidPaintWindow();
         return TRUE;
@@ -2834,9 +2816,6 @@ nsWindow::OnButtonReleaseEvent(GdkEventButton *aEvent)
 void
 nsWindow::OnContainerFocusInEvent(GdkEventFocus *aEvent)
 {
-    NS_ASSERTION(mWindowType != eWindowType_popup,
-                 "Unexpected focus on a popup window");
-
     LOGFOCUS(("OnContainerFocusInEvent [%p]\n", (void *)this));
 
     // Unset the urgency hint, if possible
@@ -4774,7 +4753,7 @@ nsWindow::CheckForRollup(gdouble aMouseX, gdouble aMouseY,
         bool rollup = true;
         if (aIsWheel) {
             rollup = rollupListener->ShouldRollupOnMouseWheelEvent();
-            retVal = true;
+            retVal = rollupListener->ShouldConsumeOnMouseWheelEvent();
         }
         // if we're dealing with menus, we probably have submenus and
         // we don't want to rollup if the click is in a parent menu of
@@ -5995,7 +5974,12 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
 TemporaryRef<DrawTarget>
 nsWindow::StartRemoteDrawing()
 {
+#if (MOZ_WIDGET_GTK == 2)
   gfxASurface *surf = GetThebesSurface();
+#else
+  // TODO GTK3
+  gfxASurface *surf = nullptr;
+#endif
   if (!surf) {
     return nullptr;
   }

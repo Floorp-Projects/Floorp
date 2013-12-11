@@ -38,6 +38,10 @@ public:
                            const Rect &aSource,
                            const DrawSurfaceOptions &aSurfOptions = DrawSurfaceOptions(),
                            const DrawOptions &aOptions = DrawOptions());
+  virtual void DrawFilter(FilterNode *aNode,
+                          const Rect &aSourceRect,
+                          const Point &aDestPoint,
+                          const DrawOptions &aOptions = DrawOptions());
   virtual void DrawSurfaceWithShadow(SourceSurface *aSurface,
                                      const Point &aDest,
                                      const Color &aColor,
@@ -78,7 +82,7 @@ public:
   virtual void MaskSurface(const Pattern &aSource,
                            SourceSurface *aMask,
                            Point aOffset,
-                           const DrawOptions &aOptions = DrawOptions()) { MOZ_ASSERT(0); };
+                           const DrawOptions &aOptions = DrawOptions());
   virtual void PushClip(const Path *aPath);
   virtual void PushClipRect(const Rect& aRect);
   virtual void PopClip();
@@ -93,6 +97,7 @@ public:
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const;
   virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FILL_WINDING) const;
   virtual TemporaryRef<GradientStops> CreateGradientStops(GradientStop *aStops, uint32_t aNumStops, ExtendMode aExtendMode = EXTEND_CLAMP) const;
+  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType);
   virtual void SetTransform(const Matrix &aTransform);
 
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
@@ -106,11 +111,11 @@ public:
                                          SurfaceFormat aFormat) MOZ_OVERRIDE;
 
   void SetCacheLimits(int aCount, int aSizeInBytes);
-  void PurgeCache();
+  void PurgeCaches();
 
   static void SetGlobalCacheLimits(int aCount, int aSizeInBytes);
   static void RebalanceCacheLimits();
-  static void PurgeTextureCaches();
+  static void PurgeAllCaches();
 #endif
 
   operator std::string() const {
@@ -124,6 +129,8 @@ private:
   void SnapshotDestroyed();
 
   void MarkChanged();
+
+  SkRect SkRectCoveringWholeSurface() const;
 
 #ifdef USE_SKIA_GPU
   /*

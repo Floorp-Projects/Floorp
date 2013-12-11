@@ -11,6 +11,11 @@
 
 /* Typography & General Styling -------------------------------------------- */
 
+::-moz-selection {
+  color: white;
+  background-color: @metro_orange@;
+}
+
 :root {
   font-family: "Segoe UI", sans-serif !important;
   font-size: @font_normal@;
@@ -631,6 +636,10 @@ tabmodalprompt:not([promptType="promptUserAndPass"]) .infoContainer {
 
 .meta {
   background-color: @panel_light_color@;
+  background-image: url("chrome://browser/skin/images/firefox-watermark.png");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
 }
 
 /* needs to observe the viewstate */
@@ -783,8 +792,8 @@ appbar toolbar[labelled] toolbarbutton > .toolbarbutton-text {
 
 /* Sprites */
 
-.appbar-primary > .toolbarbutton-icon,
-.appbar-secondary > .toolbarbutton-icon {
+.appbar-primary .toolbarbutton-icon,
+.appbar-secondary .toolbarbutton-icon {
   width: 40px;
   height: 40px;
 }

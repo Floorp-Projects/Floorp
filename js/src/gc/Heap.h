@@ -1114,6 +1114,32 @@ InFreeList(ArenaHeader *aheader, void *thing)
 }
 
 } /* namespace gc */
+
+// Ion compilation mainly occurs off the main thread, and may run while the
+// main thread is performing arbitrary VM operations, excepting GC activity.
+// The below class is used to mark functions and other operations which can
+// safely be performed off thread without racing. When running with thread
+// safety checking on, any access to a GC thing outside of AutoThreadSafeAccess
+// will cause an access violation.
+class AutoThreadSafeAccess
+{
+public:
+#if defined(DEBUG) && !defined(XP_WIN)
+    JSRuntime *runtime;
+    gc::ArenaHeader *arena;
+
+    AutoThreadSafeAccess(const gc::Cell *cell MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoThreadSafeAccess();
+#else
+    AutoThreadSafeAccess(const gc::Cell *cell MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    ~AutoThreadSafeAccess() {}
+#endif
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 } /* namespace js */
 
 #endif /* gc_Heap_h */

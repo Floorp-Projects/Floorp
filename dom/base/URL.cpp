@@ -319,9 +319,14 @@ URL::SetPort(const nsAString& aPort)
 {
   nsresult rv;
   nsAutoString portStr(aPort);
-  int32_t port = portStr.ToInteger(&rv);
-  if (NS_FAILED(rv)) {
-    return;
+  int32_t port = -1;
+
+  // nsIURI uses -1 as default value.
+  if (!portStr.IsEmpty()) {
+    port = portStr.ToInteger(&rv);
+    if (NS_FAILED(rv)) {
+      return;
+    }
   }
 
   mURI->SetPort(port);

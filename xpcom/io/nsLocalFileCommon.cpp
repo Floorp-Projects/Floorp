@@ -223,7 +223,7 @@ nsLocalFile::GetRelativeDescriptor(nsIFile *fromFile, nsACString& _retval)
     
     for (nodeIndex = 0; nodeIndex < thisNodeCnt && nodeIndex < fromNodeCnt; ++nodeIndex) {
 #ifdef XP_WIN
-      if (_wcsicmp(thisNodes[nodeIndex], fromNodes[nodeIndex]))
+      if (_wcsicmp(char16ptr_t(thisNodes[nodeIndex]), char16ptr_t(fromNodes[nodeIndex])))
         break;
 #else
       if (nsCRT::strcmp(thisNodes[nodeIndex], fromNodes[nodeIndex]))

@@ -63,8 +63,10 @@ const ContentPanning = {
 
     addMessageListener("Viewport:Change", this._recvViewportChange.bind(this));
     addMessageListener("Gesture:DoubleTap", this._recvDoubleTap.bind(this));
-    addEventListener("visibilitychange", this._recvVisibilityChange.bind(this));
+    addEventListener("visibilitychange", this._handleVisibilityChange.bind(this));
     Services.obs.addObserver(this, "BEC:ShownModalPrompt", false);
+    Services.obs.addObserver(this, "Activity:Success", false);
+    Services.obs.addObserver(this, "Activity:Error", false);
   },
 
   handleEvent: function cp_handleEvent(evt) {
@@ -113,9 +115,7 @@ const ContentPanning = {
   },
 
   observe: function cp_observe(subject, topic, data) {
-    if (topic === 'BEC:ShownModalPrompt') {
-      this._resetHover();
-    }
+    this._resetHover();
   },
 
   position: new Point(0 , 0),
@@ -408,6 +408,7 @@ const ContentPanning = {
 
     function scroll(delta) {
       current = root;
+      firstScroll = true;
       while (current) {
         if (doScroll(current, delta)) {
           firstScroll = false;
@@ -461,8 +462,10 @@ const ContentPanning = {
 
   _resetHover: function cp_resetHover() {
     const kStateHover = 0x00000004;
-    let element = content.document.createElement('foo');
-    this._domUtils.setContentState(element, kStateHover);
+    try {
+      let element = content.document.createElement('foo');
+      this._domUtils.setContentState(element, kStateHover);
+    } catch(e) {}
   },
 
   _setActive: function cp_setActive(elt) {
@@ -546,7 +549,7 @@ const ContentPanning = {
     }
   },
 
-  _recvVisibilityChange: function(evt) {
+  _handleVisibilityChange: function(evt) {
     if (!evt.target.hidden)
       return;
 
@@ -596,8 +599,6 @@ const ContentPanning = {
     }
   }
 };
-
-ContentPanning.init();
 
 // Min/max velocity of kinetic panning. This is in pixels/millisecond.
 const kMinVelocity = 0.2;

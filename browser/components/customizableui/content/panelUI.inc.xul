@@ -5,11 +5,10 @@
 <panel id="PanelUI-popup"
        role="group"
        type="arrow"
-       level="top"
        hidden="true"
        noautofocus="true">
   <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">
-    <panelview id="PanelUI-mainView" contextmenu="customizationPanelContextMenu">
+    <panelview id="PanelUI-mainView" context="customizationPanelContextMenu">
       <vbox id="PanelUI-contents-scroller">
         <vbox id="PanelUI-contents"/>
       </vbox>
@@ -17,15 +16,19 @@
       <footer id="PanelUI-footer">
         <!-- The parentNode is used so that the footer is presented as the anchor
              instead of just the button being the anchor. -->
-        <toolbarbutton id="PanelUI-help" label="&helpMenu.label;" tabindex="0"
-                       oncommand="PanelUI.showHelpView(this.parentNode);"/>
-        <toolbarbutton id="PanelUI-customize" label="&appMenuCustomize.label;" tabindex="0"
+        <toolbarbutton id="PanelUI-customize" label="&appMenuCustomize.label;"
+                       exitLabel="&appMenuCustomizeExit.label;" tabindex="0"
                        oncommand="gCustomizeMode.toggle();"/>
+        <toolbarbutton id="PanelUI-help" label="&helpMenu.label;" tabindex="0"
+                       tooltiptext="&helpMenu.label;"
+                       oncommand="PanelUI.showHelpView(this.parentNode);"/>
         <toolbarbutton id="PanelUI-quit" tabindex="0"
 #ifdef XP_WIN
                        label="&quitApplicationCmdWin.label;"
+                       tooltiptext="&quitApplicationCmdWin.label;"
 #else
                        label="&quitApplicationCmd.label;"
+                       tooltiptext="&quitApplicationCmd.label;"
 #endif
                        command="cmd_quitApplication"/>
       </footer>
@@ -106,8 +109,6 @@
 
     <panelview id="PanelUI-characterEncodingView" flex="1">
       <label value="&charsetMenu.label;"/>
-      <toolbarbutton label="&charsetCustomize.label;"
-                     oncommand="PanelUI.onCharsetCustomizeCommand();"/>
 
       <vbox id="PanelUI-characterEncodingView-customlist"
             class="PanelUI-characterEncodingView-list"/>
@@ -119,26 +120,40 @@
     </panelview>
 
   </panelmultiview>
-  <popupset id="customizationContextMenus">
-    <menupopup id="customizationContextMenu">
-      <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
-                accesskey="&customizeMenu.addToToolbar.accesskey;"
-                label="&customizeMenu.addToToolbar.label;"/>
-      <menuitem oncommand="gCustomizeMode.removeFromPanel(document.popupNode)"
-                accesskey="&customizeMenu.removeFromMenu.accesskey;"
-                label="&customizeMenu.removeFromMenu.label;"/>
-      <menuseparator/>
-      <menuitem command="cmd_CustomizeToolbars"
-                accesskey="&viewCustomizeToolbar.accesskey;"
-                label="&viewCustomizeToolbar.label;"/>
-    </menupopup>
+  <!-- These menupopups are located here to prevent flickering,
+       see bug 492960 comment 20. -->
+  <menupopup id="customizationPanelItemContextMenu">
+    <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
+              class="customize-context-addToToolbar"
+              accesskey="&customizeMenu.addToToolbar.accesskey;"
+              label="&customizeMenu.addToToolbar.label;"/>
+    <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
+              class="customize-context-removeFromPanel"
+              accesskey="&customizeMenu.removeFromMenu.accesskey;"
+              label="&customizeMenu.removeFromMenu.label;"/>
+    <menuseparator/>
+    <menuitem command="cmd_CustomizeToolbars"
+              class="viewCustomizeToolbar"
+              accesskey="&viewCustomizeToolbar.accesskey;"
+              label="&viewCustomizeToolbar.label;"/>
+  </menupopup>
 
-    <menupopup id="customizationPanelContextMenu">
-      <menuitem command="cmd_CustomizeToolbars"
-                accesskey="&customizeMenu.addMoreItems.accesskey;"
-                label="&customizeMenu.addMoreItems.label;"/>
-    </menupopup>
-  </popupset>
+  <menupopup id="customizationPaletteItemContextMenu">
+    <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
+              class="customize-context-addToToolbar"
+              accesskey="&customizeMenu.addToToolbar.accesskey;"
+              label="&customizeMenu.addToToolbar.label;"/>
+    <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
+              class="customize-context-addToPanel"
+              accesskey="&customizeMenu.addToPanel.accesskey;"
+              label="&customizeMenu.addToPanel.label;"/>
+  </menupopup>
+
+  <menupopup id="customizationPanelContextMenu">
+    <menuitem command="cmd_CustomizeToolbars"
+              accesskey="&customizeMenu.addMoreItems.accesskey;"
+              label="&customizeMenu.addMoreItems.label;"/>
+  </menupopup>
 </panel>
 
 <panel id="widget-overflow"

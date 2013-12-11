@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script>
+    function tweak() {
+      // div with style "border: 10px solid green"
+      var shadowDiv = document.createElement("div");
+      shadowDiv.style.border = "10px solid green";
+
+      var insertionPoint = document.createElement("content");
+      shadowDiv.appendChild(insertionPoint);
+
+      var shadowRoot = document.getElementById('outer').createShadowRoot();
+      shadowRoot.appendChild(shadowDiv);
+    }
+  </script>
+</head>
+<body onload="tweak()">
+<div id="outer">Hello</div>
+</body>
+</html>

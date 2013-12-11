@@ -326,10 +326,6 @@ PlacesViewBase.prototype = {
           popup.setAttribute("placespopup", "true");
         }
 
-#ifdef XP_MACOSX
-        // No context menu on mac.
-        popup.setAttribute("context", "placesContext");
-#endif
         element.appendChild(popup);
         element.className = "menu-iconic bookmark-item";
 
@@ -988,9 +984,7 @@ PlacesToolbar.prototype = {
         popup.setAttribute("placespopup", "true");
         button.appendChild(popup);
         popup._placesNode = PlacesUtils.asContainer(aChild);
-#ifndef XP_MACOSX
         popup.setAttribute("context", "placesContext");
-#endif
 
         this._domNodes.set(aChild, popup);
       }
@@ -1043,32 +1037,14 @@ PlacesToolbar.prototype = {
         this.updateChevron();
         break;
       case "overflow":
-        if (aEvent.target != aEvent.currentTarget)
+        if (!this._isOverflowStateEventRelevant(aEvent))
           return;
-
-        // Ignore purely vertical overflows.
-        if (aEvent.detail == 0)
-          return;
-
-        // Attach the popup binding to the chevron popup if it has not yet
-        // been initialized.
-        if (!this._chevronPopup.hasAttribute("type")) {
-          this._chevronPopup.setAttribute("place", this.place);
-          this._chevronPopup.setAttribute("type", "places");
-        }
-        this._chevron.collapsed = false;
-        this.updateChevron();
+        this._onOverflow();
         break;
       case "underflow":
-        if (aEvent.target != aEvent.currentTarget)
+        if (!this._isOverflowStateEventRelevant(aEvent))
           return;
-
-        // Ignore purely vertical underflows.
-        if (aEvent.detail == 0)
-          return;
-
-        this.updateChevron();
-        this._chevron.collapsed = true;
+        this._onUnderflow();
         break;
       case "TabOpen":
       case "TabClose":
@@ -1107,6 +1083,35 @@ PlacesToolbar.prototype = {
       default:
         throw "Trying to handle unexpected event.";
     }
+  },
+
+  updateOverflowStatus: function() {
+    if (this._rootElt.scrollLeftMax > 0) {
+      this._onOverflow();
+    } else {
+      this._onUnderflow();
+    }
+  },
+
+  _isOverflowStateEventRelevant: function PT_isOverflowStateEventRelevant(aEvent) {
+    // Ignore events not aimed at ourselves, as well as purely vertical ones:
+    return aEvent.target == aEvent.currentTarget && aEvent.detail > 0;
+  },
+
+  _onOverflow: function PT_onOverflow() {
+    // Attach the popup binding to the chevron popup if it has not yet
+    // been initialized.
+    if (!this._chevronPopup.hasAttribute("type")) {
+      this._chevronPopup.setAttribute("place", this.place);
+      this._chevronPopup.setAttribute("type", "places");
+    }
+    this._chevron.collapsed = false;
+    this.updateChevron();
+  },
+
+  _onUnderflow: function PT_onUnderflow() {
+    this.updateChevron();
+    this._chevron.collapsed = true;
   },
 
   updateChevron: function PT_updateChevron() {

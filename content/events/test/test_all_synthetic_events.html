@@ -48,6 +48,10 @@ const kEventConstructors = {
                                                           return new BluetoothDeviceEvent(aName, aProps);
                                                        },
                                              },
+  BluetoothDiscoveryStateChangedEvent:       { create: function (aName, aProps) {
+                                                          return new BluetoothDiscoveryStateChangedEvent(aName, aProps);
+                                                       },
+                                             },
   BluetoothStatusChangedEvent:               { create: function (aName, aProps) {
                                                           return new BluetoothStatusChangedEvent(aName, aProps);
                                                        },
@@ -126,6 +130,10 @@ const kEventConstructors = {
                                              },
   DeviceStorageChangeEvent:                  { create: function (aName, aProps) {
                                                          return new DeviceStorageChangeEvent(aName, aProps);
+                                                       },
+                                             },
+  DownloadEvent:                             { create: function (aName, aProps) {
+                                                         return new DownloadEvent(aName, aProps);
                                                        },
                                              },
   DOMTransactionEvent:                       { create: function (aName, aProps) {
@@ -296,6 +304,10 @@ const kEventConstructors = {
                                              },
   PageTransitionEvent:                       { create: function (aName, aProps) {
                                                          return new PageTransitionEvent(aName, aProps);
+                                                       },
+                                             },
+  PointerEvent:                              { create: function (aName, aProps) {
+                                                         return new PointerEvent(aName, aProps);
                                                        },
                                              },
   PopStateEvent:                             { create: function (aName, aProps) {

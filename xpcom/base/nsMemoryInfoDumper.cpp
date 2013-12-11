@@ -6,7 +6,7 @@
 
 #include "mozilla/nsMemoryInfoDumper.h"
 
-#ifdef XP_LINUX
+#if defined(XP_LINUX) || defined(__FreeBSD__)
 #include "mozilla/Preferences.h"
 #endif
 #include "mozilla/unused.h"
@@ -31,7 +31,7 @@
 #include <unistd.h>
 #endif
 
-#ifdef XP_LINUX
+#if defined(XP_LINUX) || defined(__FreeBSD__)
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -110,7 +110,7 @@ private:
 
 } // anonymous namespace
 
-#ifdef XP_LINUX // {
+#if defined(XP_LINUX) || defined(__FreeBSD__) // {
 namespace {
 
 /*
@@ -552,7 +552,7 @@ nsMemoryInfoDumper::~nsMemoryInfoDumper()
 /* static */ void
 nsMemoryInfoDumper::Initialize()
 {
-#ifdef XP_LINUX
+#if defined(XP_LINUX) || defined(__FreeBSD__)
   SignalPipeWatcher::Create();
   FifoWatcher::MaybeCreate();
 #endif
@@ -613,88 +613,82 @@ namespace mozilla {
       return rv; \
   } while (0)
 
-static nsresult
-DumpReport(nsIGZFileWriter *aWriter, bool aIsFirst,
-  const nsACString &aProcess, const nsACString &aPath, int32_t aKind,
-  int32_t aUnits, int64_t aAmount, const nsACString &aDescription)
-{
-  DUMP(aWriter, aIsFirst ? "[" : ",");
-
-  nsAutoCString process;
-  if (aProcess.IsEmpty()) {
-    // If the process is empty, the report originated with the process doing
-    // the dumping.  In that case, generate the process identifier, which is of
-    // the form "$PROCESS_NAME (pid $PID)", or just "(pid $PID)" if we don't
-    // have a process name.  If we're the main process, we let $PROCESS_NAME be
-    // "Main Process".
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
-      // We're the main process.
-      process.AssignLiteral("Main Process");
-    } else if (ContentChild *cc = ContentChild::GetSingleton()) {
-      // Try to get the process name from ContentChild.
-      cc->GetProcessName(process);
-    }
-    ContentChild::AppendProcessId(process);
-
-  } else {
-    // Otherwise, the report originated with another process and already has a
-    // process name.  Just use that.
-    process = aProcess;
-  }
-
-  DUMP(aWriter, "\n    {\"process\": \"");
-  DUMP(aWriter, process);
-
-  DUMP(aWriter, "\", \"path\": \"");
-  nsCString path(aPath);
-  path.ReplaceSubstring("\\", "\\\\");    /* <backslash> --> \\ */
-  path.ReplaceSubstring("\"", "\\\"");    // " --> \"
-  DUMP(aWriter, path);
-
-  DUMP(aWriter, "\", \"kind\": ");
-  DUMP(aWriter, nsPrintfCString("%d", aKind));
-
-  DUMP(aWriter, ", \"units\": ");
-  DUMP(aWriter, nsPrintfCString("%d", aUnits));
-
-  DUMP(aWriter, ", \"amount\": ");
-  DUMP(aWriter, nsPrintfCString("%lld", aAmount));
-
-  nsCString description(aDescription);
-  description.ReplaceSubstring("\\", "\\\\");    /* <backslash> --> \\ */
-  description.ReplaceSubstring("\"", "\\\"");    // " --> \"
-  description.ReplaceSubstring("\n", "\\n");     // <newline> --> \n
-  DUMP(aWriter, ", \"description\": \"");
-  DUMP(aWriter, description);
-  DUMP(aWriter, "\"}");
-
-  return NS_OK;
-}
-
 class DumpReportCallback MOZ_FINAL : public nsIHandleReportCallback
 {
 public:
   NS_DECL_ISUPPORTS
 
-  DumpReportCallback() : mIsFirst(true) {}
+  DumpReportCallback(nsGZFileWriter* aWriter)
+    : mIsFirst(true)
+    , mWriter(aWriter)
+  {}
 
   NS_IMETHOD Callback(const nsACString &aProcess, const nsACString &aPath,
       int32_t aKind, int32_t aUnits, int64_t aAmount,
       const nsACString &aDescription,
       nsISupports *aData)
   {
-    nsCOMPtr<nsIGZFileWriter> writer = do_QueryInterface(aData);
-    if (NS_WARN_IF(!writer))
-      return NS_ERROR_FAILURE;
+    if (mIsFirst) {
+      DUMP(mWriter, "[");
+      mIsFirst = false;
+    } else {
+      DUMP(mWriter, ",");
+    }
 
-    nsresult rv = DumpReport(writer, mIsFirst, aProcess, aPath, aKind, aUnits,
-                             aAmount, aDescription);
-    mIsFirst = false;
-    return rv;
+    nsAutoCString process;
+    if (aProcess.IsEmpty()) {
+      // If the process is empty, the report originated with the process doing
+      // the dumping.  In that case, generate the process identifier, which is of
+      // the form "$PROCESS_NAME (pid $PID)", or just "(pid $PID)" if we don't
+      // have a process name.  If we're the main process, we let $PROCESS_NAME be
+      // "Main Process".
+      if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        // We're the main process.
+        process.AssignLiteral("Main Process");
+      } else if (ContentChild *cc = ContentChild::GetSingleton()) {
+        // Try to get the process name from ContentChild.
+        cc->GetProcessName(process);
+      }
+      ContentChild::AppendProcessId(process);
+
+    } else {
+      // Otherwise, the report originated with another process and already has a
+      // process name.  Just use that.
+      process = aProcess;
+    }
+
+    DUMP(mWriter, "\n    {\"process\": \"");
+    DUMP(mWriter, process);
+
+    DUMP(mWriter, "\", \"path\": \"");
+    nsCString path(aPath);
+    path.ReplaceSubstring("\\", "\\\\");    /* <backslash> --> \\ */
+    path.ReplaceSubstring("\"", "\\\"");    // " --> \"
+    DUMP(mWriter, path);
+
+    DUMP(mWriter, "\", \"kind\": ");
+    DUMP(mWriter, nsPrintfCString("%d", aKind));
+
+    DUMP(mWriter, ", \"units\": ");
+    DUMP(mWriter, nsPrintfCString("%d", aUnits));
+
+    DUMP(mWriter, ", \"amount\": ");
+    DUMP(mWriter, nsPrintfCString("%lld", aAmount));
+
+    nsCString description(aDescription);
+    description.ReplaceSubstring("\\", "\\\\");    /* <backslash> --> \\ */
+    description.ReplaceSubstring("\"", "\\\"");    // " --> \"
+    description.ReplaceSubstring("\n", "\\n");     // <newline> --> \n
+    DUMP(mWriter, ", \"description\": \"");
+    DUMP(mWriter, description);
+    DUMP(mWriter, "\"}");
+
+    return NS_OK;
   }
 
 private:
   bool mIsFirst;
+  nsRefPtr<nsGZFileWriter> mWriter;
 };
 
 NS_IMPL_ISUPPORTS1(DumpReportCallback, nsIHandleReportCallback)
@@ -831,23 +825,16 @@ DumpFooter(nsIGZFileWriter* aWriter)
 }
 
 static nsresult
-DumpProcessMemoryReportsToGZFileWriter(nsIGZFileWriter* aWriter)
+DumpProcessMemoryReportsToGZFileWriter(nsGZFileWriter* aWriter)
 {
   nsresult rv = DumpHeader(aWriter);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Process reporters.
-  bool more;
-  nsCOMPtr<nsISimpleEnumerator> e;
   nsCOMPtr<nsIMemoryReporterManager> mgr =
     do_GetService("@mozilla.org/memory-reporter-manager;1");
-  mgr->EnumerateReporters(getter_AddRefs(e));
-  nsRefPtr<DumpReportCallback> dumpReport = new DumpReportCallback();
-  while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
-    nsCOMPtr<nsIMemoryReporter> r;
-    e->GetNext(getter_AddRefs(r));
-    r->CollectReports(dumpReport, aWriter);
-  }
+  nsRefPtr<DumpReportCallback> dumpReport = new DumpReportCallback(aWriter);
+  mgr->GetReportsForThisProcess(dumpReport, nullptr);
 
   return DumpFooter(aWriter);
 }
@@ -884,7 +871,8 @@ DumpProcessMemoryInfoToTempDir(const nsAString& aIdentifier)
   rv = nsMemoryInfoDumper::OpenTempFile(NS_LITERAL_CSTRING("incomplete-") +
                                         mrFilename,
                                         getter_AddRefs(mrTmpFile));
-  if (NS_WARN_IF(NS_FAILED(rv)))    return rv;
+  if (NS_WARN_IF(NS_FAILED(rv)))
+    return rv;
 
   nsRefPtr<nsGZFileWriter> mrWriter = new nsGZFileWriter();
   rv = mrWriter->Init(mrTmpFile);
@@ -1047,6 +1035,10 @@ public:
     rv = writer->Finish();
     NS_ENSURE_SUCCESS(rv, rv);
 
+    if (!mFinishDumping) {
+      return NS_OK;
+    }
+
     return mFinishDumping->Callback(mFinishDumpingData);
   }
 
@@ -1099,12 +1091,12 @@ nsMemoryInfoDumper::DumpMemoryReportsToNamedFile(
     return rv;
 
   // Process reports and finish up.
-  nsRefPtr<DumpReportCallback> dumpReport = new DumpReportCallback();
+  nsRefPtr<DumpReportCallback> dumpReport = new DumpReportCallback(mrWriter);
   nsRefPtr<FinishReportingCallback> finishReporting =
     new FinishReportingCallback(aFinishDumping, aFinishDumpingData);
   nsCOMPtr<nsIMemoryReporterManager> mgr =
     do_GetService("@mozilla.org/memory-reporter-manager;1");
-  return mgr->GetReports(dumpReport, mrWriter, finishReporting, mrWriter);
+  return mgr->GetReports(dumpReport, nullptr, finishReporting, mrWriter);
 }
 
 #undef DUMP

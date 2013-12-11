@@ -97,7 +97,7 @@ load 413180-1.html
 load 416845-1.xhtml
 load 416845-2.xhtml
 load 416845-3.html   
-asserts(12) load 420654-1.xhtml # Bug 575011
+asserts(8) load 420654-1.xhtml # bug 458238, bug 436123, bug 457397
 load 423514-1.xhtml
 load 430374.html
 load 444431-1.html

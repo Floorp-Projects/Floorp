@@ -6,7 +6,7 @@
 #include "base/basictypes.h"
 
 /* This must occur *after* layers/PLayerTransaction.h to avoid typedefs conflicts. */
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "pratom.h"
 #include "prmem.h"
@@ -685,8 +685,7 @@ doGetIdentifier(JSContext *cx, const NPUTF8* name)
 {
   NS_ConvertUTF8toUTF16 utf16name(name);
 
-  JSString *str = ::JS_InternUCStringN(cx, (jschar *)utf16name.get(),
-                                       utf16name.Length());
+  JSString *str = ::JS_InternUCStringN(cx, utf16name.get(), utf16name.Length());
 
   if (!str)
     return nullptr;
@@ -2678,15 +2677,12 @@ _setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
       if (NS_FAILED(rv))
         return NPERR_GENERIC_ERROR;
 
-      nsCOMPtr<nsIPrompt> prompt;
-      nsPluginHost::GetPrompt(nullptr, getter_AddRefs(prompt));
-
       nsCOMPtr<nsIChannel> channel = GetChannelFromNPP(instance);
 
       char *cookie = (char*)value;
       char c = cookie[len];
       cookie[len] = '\0';
-      rv = cookieService->SetCookieString(uriIn, prompt, cookie, channel);
+      rv = cookieService->SetCookieString(uriIn, nullptr, cookie, channel);
       cookie[len] = c;
       if (NS_SUCCEEDED(rv))
         return NPERR_NO_ERROR;

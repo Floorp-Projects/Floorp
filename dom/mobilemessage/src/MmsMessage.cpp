@@ -16,6 +16,7 @@
 #include "mozilla/dom/mobilemessage/SmsTypes.h"
 #include "nsDOMFile.h"
 #include "nsCxPusher.h"
+#include "MessageUtils.h"
 
 using namespace mozilla::idl;
 using namespace mozilla::dom::mobilemessage;
@@ -47,7 +48,7 @@ MmsMessage::MmsMessage(int32_t                          aId,
                        const nsAString&                 aSmil,
                        const nsTArray<MmsAttachment>&   aAttachments,
                        uint64_t                         aExpiryDate,
-                       bool                             aIsReadReportRequested)
+                       bool                             aReadReportRequested)
   : mId(aId),
     mThreadId(aThreadId),
     mIccId(aIccId),
@@ -61,7 +62,7 @@ MmsMessage::MmsMessage(int32_t                          aId,
     mSmil(aSmil),
     mAttachments(aAttachments),
     mExpiryDate(aExpiryDate),
-    mIsReadReportRequested(aIsReadReportRequested)
+    mReadReportRequested(aReadReportRequested)
 {
 }
 
@@ -77,7 +78,7 @@ MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
   , mSubject(aData.subject())
   , mSmil(aData.smil())
   , mExpiryDate(aData.expiryDate())
-  , mIsReadReportRequested(aData.isReadReportRequested())
+  , mReadReportRequested(aData.readReportRequested())
 {
   uint32_t len = aData.attachments().Length();
   mAttachments.SetCapacity(len);
@@ -145,41 +146,42 @@ MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
       }
     }
 
+    // Prepare |info.readStatus|.
+    nsString statusReadString;
+    switch(infoData.readStatus()) {
+      case eReadStatus_NotApplicable:
+        statusReadString = READ_STATUS_NOT_APPLICABLE;
+        break;
+      case eReadStatus_Success:
+        statusReadString = READ_STATUS_SUCCESS;
+        break;
+      case eReadStatus_Pending:
+        statusReadString = READ_STATUS_PENDING;
+        break;
+      case eReadStatus_Error:
+        statusReadString = READ_STATUS_ERROR;
+        break;
+      case eReadStatus_EndGuard:
+      default:
+        MOZ_CRASH("We shouldn't get any other read status!");
+    }
+    info.readStatus = statusReadString;
+
+    // Prepare |info.readTimestamp|.
+    info.readTimestamp = JSVAL_NULL;
+    if (infoData.readTimestamp() != 0) {
+      AutoJSContext cx;
+      JS::Rooted<JSObject*>
+        dateObj(cx, JS_NewDateObjectMsec(cx, infoData.readTimestamp()));
+      if (!dateObj) {
+        NS_WARNING("MmsMessage: Unable to create Data for readTimestamp.");
+      } else {
+        info.readTimestamp = OBJECT_TO_JSVAL(dateObj);
+      }
+    }
+
     mDeliveryInfo.AppendElement(info);
   }
-}
-
-/**
- * A helper function to convert the JS value to an integer value for time.
- *
- * @params aCx
- *         The JS context.
- * @params aTime
- *         Can be an object or a number.
- * @params aReturn
- *         The integer value to return.
- * @return NS_OK if the convertion succeeds.
- */
-static nsresult
-convertTimeToInt(JSContext* aCx, const JS::Value& aTime, uint64_t& aReturn)
-{
-  if (aTime.isObject()) {
-    JS::Rooted<JSObject*> timestampObj(aCx, &aTime.toObject());
-    if (!JS_ObjectIsDate(aCx, timestampObj)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    aReturn = js_DateGetMsecSinceEpoch(timestampObj);
-  } else {
-    if (!aTime.isNumber()) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    double number = aTime.toNumber();
-    if (static_cast<uint64_t>(number) != number) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    aReturn = static_cast<uint64_t>(number);
-  }
-  return NS_OK;
 }
 
 /* static */ nsresult
@@ -339,7 +341,7 @@ MmsMessage::GetData(ContentParent* aParent,
   aData.subject() = mSubject;
   aData.smil() = mSmil;
   aData.expiryDate() = mExpiryDate;
-  aData.isReadReportRequested() = mIsReadReportRequested;
+  aData.readReportRequested() = mReadReportRequested;
 
   aData.deliveryInfo().SetCapacity(mDeliveryInfo.Length());
   for (uint32_t i = 0; i < mDeliveryInfo.Length(); i++) {
@@ -374,6 +376,29 @@ MmsMessage::GetData(ContentParent* aParent,
     } else {
       AutoJSContext cx;
       convertTimeToInt(cx, info.deliveryTimestamp, infoData.deliveryTimestamp());
+    }
+
+    // Prepare |infoData.readStatus|.
+    ReadStatus readStatus;
+    if (info.readStatus.Equals(READ_STATUS_NOT_APPLICABLE)) {
+      readStatus = eReadStatus_NotApplicable;
+    } else if (info.readStatus.Equals(READ_STATUS_SUCCESS)) {
+      readStatus = eReadStatus_Success;
+    } else if (info.readStatus.Equals(READ_STATUS_PENDING)) {
+      readStatus = eReadStatus_Pending;
+    } else if (info.readStatus.Equals(READ_STATUS_ERROR)) {
+      readStatus = eReadStatus_Error;
+    } else {
+      return false;
+    }
+    infoData.readStatus() = readStatus;
+
+    // Prepare |infoData.readTimestamp|.
+    if (info.readTimestamp == JSVAL_NULL) {
+      infoData.readTimestamp() = 0;
+    } else {
+      AutoJSContext cx;
+      convertTimeToInt(cx, info.readTimestamp, infoData.readTimestamp());
     }
 
     aData.deliveryInfo().AppendElement(infoData);
@@ -521,6 +546,24 @@ MmsMessage::GetDeliveryInfo(JSContext* aCx, JS::Value* aDeliveryInfo)
       return NS_ERROR_FAILURE;
     }
 
+    // Get |info.readStatus|.
+    tmpJsStr = JS_NewUCStringCopyN(aCx,
+                                   info.readStatus.get(),
+                                   info.readStatus.Length());
+    NS_ENSURE_TRUE(tmpJsStr, NS_ERROR_OUT_OF_MEMORY);
+
+    tmpJsVal.setString(tmpJsStr);
+    if (!JS_DefineProperty(aCx, infoJsObj, "readStatus", tmpJsVal,
+                           NULL, NULL, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Get |info.readTimestamp|.
+    if (!JS_DefineProperty(aCx, infoJsObj, "readTimestamp", info.readTimestamp,
+                           NULL, NULL, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
+
     tmpJsVal = OBJECT_TO_JSVAL(infoJsObj);
     if (!JS_SetElement(aCx, deliveryInfo, i, &tmpJsVal)) {
       return NS_ERROR_FAILURE;
@@ -658,9 +701,9 @@ MmsMessage::GetExpiryDate(JSContext* cx, JS::Value* aDate)
 }
 
 NS_IMETHODIMP
-MmsMessage::GetIsReadReportRequested(bool* aIsReadReportRequested)
+MmsMessage::GetReadReportRequested(bool* aReadReportRequested)
 {
-  *aIsReadReportRequested = mIsReadReportRequested;
+  *aReadReportRequested = mReadReportRequested;
   return NS_OK;
 }
 

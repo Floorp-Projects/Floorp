@@ -44,6 +44,7 @@ static const WCHAR* kFirefoxExe = L"firefox.exe";
 static const WCHAR* kMetroFirefoxExe = L"firefox.exe";
 static const WCHAR* kDefaultMetroBrowserIDPathKey = L"FirefoxURL";
 static const WCHAR* kMetroRestartCmdLine = L"--metro-restart";
+static const WCHAR* kDesktopRestartCmdLine = L"--desktop-restart";
 
 static bool GetDefaultBrowserPath(CStringW& aPathBuffer);
 
@@ -104,7 +105,9 @@ public:
     mTargetIsBrowser(false),
     mIsDesktopRequest(true),
     mIsRestartMetroRequest(false),
-    mRequestMet(false)
+    mIsRestartDesktopRequest(false),
+    mRequestMet(false),
+    mVerb(L"open")
   {
   }
 
@@ -152,6 +155,8 @@ public:
 
     if (_wcsicmp(aParameters, kMetroRestartCmdLine) == 0) {
       mIsRestartMetroRequest = true;
+    } else if (_wcsicmp(aParameters, kDesktopRestartCmdLine) == 0) {
+      mIsRestartDesktopRequest = true;
     } else {
       mParameters = aParameters;
     }
@@ -257,66 +262,50 @@ public:
   IFACEMETHODIMP GetValue(AHE_TYPE *aLaunchType)
   {
     Log(L"IExecuteCommandApplicationHostEnvironment::GetValue()");
-    *aLaunchType = AHE_DESKTOP;
-    mIsDesktopRequest = true;
-
-    if (!mUnkSite) {
-      Log(L"No mUnkSite.");
-      return S_OK;
-    }
-
-    HRESULT hr;
-    IServiceProvider* pSvcProvider = nullptr;
-    hr = mUnkSite->QueryInterface(IID_IServiceProvider, (void**)&pSvcProvider);
-    if (!pSvcProvider) {
-      Log(L"Couldn't get IServiceProvider service from explorer. (%X)", hr);
-      return S_OK;
-    }
-
-    IExecuteCommandHost* pHost = nullptr;
-    // If we can't get this it's a conventional desktop launch
-    hr = pSvcProvider->QueryService(SID_ExecuteCommandHost,
-                                    IID_IExecuteCommandHost, (void**)&pHost);
-    if (!pHost) {
-      Log(L"Couldn't get IExecuteCommandHost service from explorer. (%X)", hr);
-      SafeRelease(&pSvcProvider);
-      return S_OK;
-    }
-    SafeRelease(&pSvcProvider);
-
-    EC_HOST_UI_MODE mode;
-    if (FAILED(pHost->GetUIMode(&mode))) {
-      Log(L"GetUIMode failed.");
-      SafeRelease(&pHost);
-      return S_OK;
-    }
-
-    // 0 - launched from desktop
-    // 1 - ?
-    // 2 - launched from tile interface
-    Log(L"GetUIMode: %d", mode);
-
-    if (!IsDefaultBrowser()) {
-      mode = ECHUIM_DESKTOP;
-    }
-
-    if (mode == ECHUIM_DESKTOP) {
-      Log(L"returning AHE_DESKTOP");
-      SafeRelease(&pHost);
-      return S_OK;
-    }
-    SafeRelease(&pHost);
-
-    if (!IsDX10Available()) {
-      Log(L"returning AHE_DESKTOP because DX10 is not available");
-      *aLaunchType = AHE_DESKTOP;
-      mIsDesktopRequest = true;
-    } else {
-      Log(L"returning AHE_IMMERSIVE");
-      *aLaunchType = AHE_IMMERSIVE;
-      mIsDesktopRequest = false;
-    }
+    *aLaunchType = GetLaunchType();
+    mIsDesktopRequest = (*aLaunchType == AHE_DESKTOP);
+    SetLastAHE(*aLaunchType);
     return S_OK;
+  }
+
+  /**
+   * Choose the appropriate launch type based on the user's previously chosen
+   * host environment, along with system constraints.
+   */
+  AHE_TYPE GetLaunchType() {
+    AHE_TYPE ahe = GetLastAHE();
+    Log(L"Previous AHE: %d", ahe);
+
+    if (!mIsRestartMetroRequest && IsProcessRunning(kFirefoxExe, false)) {
+      Log(L"Returning AHE_DESKTOP because desktop is already running");
+      return AHE_DESKTOP;
+    } else if (!mIsRestartDesktopRequest && IsProcessRunning(kMetroFirefoxExe, true)) {
+      Log(L"Returning AHE_IMMERSIVE because Metro is already running");
+      return AHE_IMMERSIVE;
+    }
+
+    if (mIsRestartDesktopRequest) {
+      Log(L"Restarting in desktop host environment.");
+      return AHE_DESKTOP;
+    }
+
+    if (mIsRestartMetroRequest) {
+      Log(L"Restarting in metro host environment.");
+      ahe = AHE_IMMERSIVE;
+    }
+
+    if (ahe == AHE_IMMERSIVE) {
+      if (!IsDefaultBrowser()) {
+        Log(L"returning AHE_DESKTOP because we are not the default browser");
+        return AHE_DESKTOP;
+      }
+
+      if (!IsDX10Available()) {
+        Log(L"returning AHE_DESKTOP because DX10 is not available");
+        return AHE_DESKTOP;
+      }
+    }
+    return ahe;
   }
 
   /*
@@ -416,6 +405,7 @@ private:
   DWORD mKeyState;
   bool mIsDesktopRequest;
   bool mIsRestartMetroRequest;
+  bool mIsRestartDesktopRequest;
   bool mRequestMet;
 };
 
@@ -574,6 +564,48 @@ bool CExecuteCommandVerb::SetTargetPath(IShellItem* aItem)
  * Desktop launch - Launch the destop browser to display the current
  * target using shellexecute.
  */
+void LaunchDesktopBrowserWithParams(CStringW& aBrowserPath, CStringW& aVerb, CStringW& aTarget, CStringW& aParameters,
+                                    bool aTargetIsDefaultBrowser, bool aTargetIsBrowser)
+{
+  // If a taskbar shortcut, link or local file is clicked, the target will
+  // be the browser exe or file.  Don't pass in -url for the target if the
+  // target is known to be a browser.  Otherwise, one instance of Firefox
+  // will try to open another instance.
+  CStringW params;
+  if (!aTargetIsDefaultBrowser && !aTargetIsBrowser && !aTarget.IsEmpty()) {
+    // Fallback to the module path if it failed to get the default browser.
+    GetDefaultBrowserPath(aBrowserPath);
+    params += "-url ";
+    params += "\"";
+    params += aTarget;
+    params += "\"";
+  }
+
+  // Tack on any extra parameters we received (for example -profilemanager)
+  if (!aParameters.IsEmpty()) {
+    params += " ";
+    params += aParameters;
+  }
+
+  Log(L"Desktop Launch: verb:%s exe:%s params:%s", aVerb, aBrowserPath, params);
+
+  SHELLEXECUTEINFOW seinfo;
+  memset(&seinfo, 0, sizeof(seinfo));
+  seinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
+  seinfo.fMask  = SEE_MASK_FLAG_LOG_USAGE;
+  seinfo.lpVerb = aVerb;
+  seinfo.lpFile = aBrowserPath;
+  seinfo.nShow  = SW_SHOWNORMAL;
+
+  // Relaunch in Desktop mode uses a special URL to trick Windows into
+  // switching environments. We shouldn't actually try to open this URL
+  if (_wcsicmp(aTarget, L"http://-desktop/") != 0) {
+    seinfo.lpParameters = params;
+  }
+
+  ShellExecuteEx(&seinfo);
+}
+
 void CExecuteCommandVerb::LaunchDesktopBrowser()
 {
   CStringW browserPath;
@@ -581,40 +613,7 @@ void CExecuteCommandVerb::LaunchDesktopBrowser()
     return;
   }
 
-  // If a taskbar shortcut, link or local file is clicked, the target will
-  // be the browser exe or file.  Don't pass in -url for the target if the
-  // target is known to be a browser.  Otherwise, one instance of Firefox
-  // will try to open another instance.
-  CStringW params;
-  if (!mTargetIsDefaultBrowser && !mTargetIsBrowser && !mTarget.IsEmpty()) {
-    // Fallback to the module path if it failed to get the default browser.
-    GetDefaultBrowserPath(browserPath);
-    params += "-url ";
-    params += "\"";
-    params += mTarget;
-    params += "\"";
-  }
-
-  // Tack on any extra parameters we received (for example -profilemanager)
-  if (!mParameters.IsEmpty()) {
-    params += " ";
-    params += mParameters;
-  }
-
-  Log(L"Desktop Launch: verb:%s exe:%s params:%s", mVerb, browserPath, params); 
-
-  SHELLEXECUTEINFOW seinfo;
-  memset(&seinfo, 0, sizeof(seinfo));
-  seinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
-  seinfo.fMask  = 0;
-  seinfo.hwnd   = nullptr;
-  seinfo.lpVerb = nullptr;
-  seinfo.lpFile = browserPath;
-  seinfo.lpParameters =  params;
-  seinfo.lpDirectory  = nullptr;
-  seinfo.nShow  = SW_SHOWNORMAL;
-        
-  ShellExecuteExW(&seinfo);
+  LaunchDesktopBrowserWithParams(browserPath, mVerb, mTarget, mParameters, mTargetIsDefaultBrowser, mTargetIsBrowser);
 }
 
 class AutoSetRequestMet
@@ -664,7 +663,7 @@ DelayedExecuteThread(LPVOID param)
 
   size_t currentWaitTime = 0;
   while(currentWaitTime < RESTART_WAIT_TIMEOUT) {
-    if (!IsImmersiveProcessRunning(kMetroFirefoxExe))
+    if (!IsProcessRunning(kMetroFirefoxExe, true))
       break;
     currentWaitTime += RESTART_WAIT_PER_RETRY;
     Sleep(RESTART_WAIT_PER_RETRY);
@@ -705,6 +704,21 @@ IFACEMETHODIMP CExecuteCommandVerb::Execute()
     return S_OK;
   }
 
+  if (mIsRestartDesktopRequest) {
+    CStringW browserPath;
+    if (!GetDesktopBrowserPath(browserPath)) {
+      return E_FAIL;
+    }
+
+    LaunchDesktopBrowserWithParams(browserPath,
+                                   mVerb,
+                                   mTarget,
+                                   mParameters,
+                                   mTargetIsDefaultBrowser,
+                                   mTargetIsBrowser);
+    return S_OK;
+  }
+
   // We shut down when this flips to true
   AutoSetRequestMet asrm(&mRequestMet);
 
@@ -728,8 +742,7 @@ IFACEMETHODIMP CExecuteCommandVerb::Execute()
     return S_OK;
   }
 
-  Log(L"Metro Launch: verb:%s appid:%s params:%s", mVerb, appModelID, mTarget); 
-
+  Log(L"Metro Launch: verb:%s appid:%s params:%s", mVerb, appModelID, mTarget);
 
   // shortcuts to the application
   DWORD processID;

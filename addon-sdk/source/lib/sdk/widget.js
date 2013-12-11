@@ -26,12 +26,19 @@ const ERR_CONTENT = "No content or contentURL property found. Widgets must "
                "position.",
       ERR_DESTROYED = "The widget has been destroyed and can no longer be used.";
 
+const INSERTION_PREF_ROOT = "extensions.sdk-widget-inserted.";
+
 // Supported events, mapping from DOM event names to our event names
 const EVENTS = {
   "click": "click",
   "mouseover": "mouseover",
   "mouseout": "mouseout",
 };
+
+// In the Australis menu panel, normally widgets should be treated like
+// normal toolbarbuttons. If they're any wider than this margin, we'll
+// treat them as wide widgets instead, which fill up the width of the panel:
+const AUSTRALIS_PANEL_WIDE_WIDGET_CUTOFF = 70;
 
 const { validateOptions } = require("./deprecated/api-utils");
 const panels = require("./panel");
@@ -45,8 +52,8 @@ const { WindowTracker } = require("./deprecated/window-utils");
 const { isBrowser } = require("./window/utils");
 const { setTimeout } = require("./timers");
 const unload = require("./system/unload");
-const { uuid } = require("./util/uuid");
 const { getNodeView } = require("./view/core");
+const prefs = require('./preferences/service');
 
 // Data types definition
 const valid = {
@@ -215,6 +222,13 @@ let model = {
 
 };
 
+function saveInserted(widgetId) {
+  prefs.set(INSERTION_PREF_ROOT + widgetId, true);
+}
+
+function haveInserted(widgetId) {
+  return prefs.has(INSERTION_PREF_ROOT + widgetId);
+}
 
 /**
  * Main Widget class: entry point of the widget API
@@ -555,6 +569,9 @@ let browserManager = {
     let idx = this.items.indexOf(item);
     if (idx > -1)
       this.items.splice(idx, 1);
+  },
+  propagateCurrentset: function browserManager_propagateCurrentset(id, currentset) {
+    this.windows.forEach(function (w) w.doc.getElementById(id).setAttribute("currentset", currentset));
   }
 };
 
@@ -605,36 +622,14 @@ BrowserWindow.prototype = {
     if (this.window.CustomizableUI) {
       let placement = this.window.CustomizableUI.getPlacementOfWidget(node.id);
       if (!placement) {
+        if (haveInserted(node.id)) {
+          return;
+        }
         placement = {area: 'nav-bar', position: undefined};
+        saveInserted(node.id);
       }
       this.window.CustomizableUI.addWidgetToArea(node.id, placement.area, placement.position);
-
-      // Depending on when this gets called, we might be in the right place now. In that case,
-      // don't run the following code.
-      if (node.parentNode != palette) {
-        return;
-      }
-      // Otherwise, insert:
-      let container = this.doc.getElementById(placement.area);
-      if (container.customizationTarget) {
-        container = container.customizationTarget;
-      }
-
-      if (placement.position !== undefined) {
-        // Find a position:
-        let items = this.window.CustomizableUI.getWidgetIdsInArea(placement.area);
-        let itemIndex = placement.position;
-        for (let l = items.length; itemIndex < l; itemIndex++) {
-          let realItems = container.getElementsByAttribute("id", items[itemIndex]);
-          if (realItems[0]) {
-            container.insertBefore(node, realItems[0]);
-            break;
-          }
-        }
-      }
-      if (node.parentNode != container) {
-        container.appendChild(node);
-      }
+      this.window.CustomizableUI.ensureWidgetPlacedInWindow(node.id, this.window);
       return;
     }
 
@@ -650,10 +645,14 @@ BrowserWindow.prototype = {
     }
 
     // if widget isn't in any toolbar, add it to the addon-bar
-    // TODO: we may want some "first-launch" module to do this only on very
-    // first execution
+    let needToPropagateCurrentset = false;
     if (!container) {
+      if (haveInserted(node.id)) {
+        return;
+      }
       container = this.doc.getElementById("addon-bar");
+      saveInserted(node.id);
+      needToPropagateCurrentset = true;
       // TODO: find a way to make the following code work when we use "cfx run":
       // http://mxr.mozilla.org/mozilla-central/source/browser/base/content/browser.js#8586
       // until then, force display of addon bar directly from sdk code
@@ -684,9 +683,11 @@ BrowserWindow.prototype = {
     // Otherwise, this code will collide with other instance of Widget module
     // during Firefox startup. See bug 685929.
     if (ids.indexOf(id) == -1) {
-      container.setAttribute("currentset", container.currentSet);
+      let set = container.currentSet;
+      container.setAttribute("currentset", set);
       // Save DOM attribute in order to save position on new window opened
       this.window.document.persist(container.id, "currentset");
+      browserManager.propagateCurrentset(container.id, set);
     }
   }
 }
@@ -736,7 +737,6 @@ WidgetChrome.prototype.update = function WC_update(updatedItem, property, value)
 WidgetChrome.prototype._createNode = function WC__createNode() {
   // XUL element container for widget
   let node = this._doc.createElement("toolbaritem");
-  let guid = String(uuid());
 
   // Temporary work around require("self") failing on unit-test execution ...
   let jetpackID = "testID";
@@ -752,6 +752,14 @@ WidgetChrome.prototype._createNode = function WC__createNode() {
   node.setAttribute("align", "center");
   // Bug 626326: Prevent customize toolbar context menu to appear
   node.setAttribute("context", "");
+
+  // For use in styling by the browser
+  node.setAttribute("sdkstylewidget", "true");
+  // Mark wide widgets as such:
+  if (this.window.CustomizableUI &&
+      this._widget.width > AUSTRALIS_PANEL_WIDE_WIDGET_CUTOFF) {
+    node.classList.add("panel-wide-item");
+  }
 
   // TODO move into a stylesheet, configurable by consumers.
   // Either widget.style, exposing the style object, or a URL
@@ -783,6 +791,13 @@ WidgetChrome.prototype.fill = function WC_fill() {
   // Do this early, because things like contentWindow are null
   // until the node is attached to a document.
   this.node.appendChild(iframe);
+
+  var label = this._doc.createElement("label");
+  label.setAttribute("value", this._widget.label);
+  label.className = "toolbarbutton-text";
+  label.setAttribute("crop", "right");
+  label.setAttribute("flex", "1");
+  this.node.appendChild(label);
 
   // add event handlers
   this.addEventHandlers();

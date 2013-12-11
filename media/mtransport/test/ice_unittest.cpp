@@ -37,6 +37,8 @@
 // TODO(bcampen@mozilla.com): Big fat hack since the build system doesn't give
 // us a clean way to add object files to a single executable.
 #include "stunserver.cpp"
+#include "stun_udp_socket_filter.h"
+#include "mozilla/net/DNS.h"
 
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
@@ -85,24 +87,21 @@ bool ContainsSucceededPair(const std::vector<NrIceCandidatePair>& pairs) {
 // so we can use stl containers/algorithms that need a comparator
 bool operator<(const NrIceCandidate& lhs,
                const NrIceCandidate& rhs) {
-  if (lhs.host == rhs.host) {
-    if (lhs.port == rhs.port) {
-      if (lhs.type == rhs.type) {
-        return lhs.codeword < rhs.codeword;
+  if (lhs.cand_addr.host == rhs.cand_addr.host) {
+    if (lhs.cand_addr.port == rhs.cand_addr.port) {
+      if (lhs.cand_addr.transport == rhs.cand_addr.transport) {
+        return lhs.type < rhs.type;
       }
-      return lhs.type < rhs.type;
+      return lhs.cand_addr.transport < rhs.cand_addr.transport;
     }
-    return lhs.port < rhs.port;
+    return lhs.cand_addr.port < rhs.cand_addr.port;
   }
-  return lhs.host < rhs.host;
+  return lhs.cand_addr.host < rhs.cand_addr.host;
 }
 
 bool operator==(const NrIceCandidate& lhs,
                 const NrIceCandidate& rhs) {
-  return lhs.host == rhs.host &&
-         lhs.port == rhs.port &&
-         lhs.type == rhs.type &&
-         lhs.codeword == rhs.codeword;
+  return !((lhs < rhs) || (rhs < lhs));
 }
 
 class IceCandidatePairCompare {
@@ -140,12 +139,16 @@ class IceTestPeer : public sigslot::has_slots<> {
       remote_(nullptr),
       candidate_filter_(nullptr),
       expected_local_type_(NrIceCandidate::ICE_HOST),
+      expected_local_transport_(kNrIceTransportUdp),
       expected_remote_type_(NrIceCandidate::ICE_HOST),
       trickle_mode_(TRICKLE_NONE),
       trickled_(0) {
-    ice_ctx_->SignalGatheringCompleted.connect(this,
-                                               &IceTestPeer::GatheringComplete);
-    ice_ctx_->SignalCompleted.connect(this, &IceTestPeer::IceCompleted);
+    ice_ctx_->SignalGatheringStateChange.connect(
+        this,
+        &IceTestPeer::GatheringStateChange);
+    ice_ctx_->SignalConnectionStateChange.connect(
+        this,
+        &IceTestPeer::ConnectionStateChange);
   }
 
   ~IceTestPeer() {
@@ -184,20 +187,26 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void SetTurnServer(const std::string addr, uint16_t port,
                      const std::string username,
-                     const std::string password) {
+                     const std::string password,
+                     const std::string transport) {
     std::vector<unsigned char> password_vec(password.begin(), password.end());
-    SetTurnServer(addr, port, username, password_vec);
+    SetTurnServer(addr, port, username, password_vec, transport);
   }
 
 
   void SetTurnServer(const std::string addr, uint16_t port,
                      const std::string username,
-                     const std::vector<unsigned char> password) {
+                     const std::vector<unsigned char> password,
+                     const std::string transport) {
     std::vector<NrIceTurnServer> turn_servers;
     ScopedDeletePtr<NrIceTurnServer> server(NrIceTurnServer::Create(
-        addr, port, username, password));
+        addr, port, username, password, transport));
     turn_servers.push_back(*server);
     ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetTurnServers(turn_servers)));
+  }
+
+  void SetTurnServers(const std::vector<NrIceTurnServer> servers) {
+    ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetTurnServers(servers)));
   }
 
   void SetFakeResolver() {
@@ -265,8 +274,10 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void SetExpectedTypes(NrIceCandidate::Type local,
-                        NrIceCandidate::Type remote) {
+                        NrIceCandidate::Type remote,
+                        std::string local_transport = kNrIceTransportUdp) {
     expected_local_type_ = local;
+    expected_local_transport_ = local_transport;
     expected_remote_type_ = remote;
   }
 
@@ -363,6 +374,9 @@ class IceTestPeer : public sigslot::has_slots<> {
         break;
       case NrIceCandidate::ICE_RELAYED:
         type = "relay";
+        if (which.find("Local") != std::string::npos) {
+          type += "(" + cand.local_addr.transport + ")";
+        }
         break;
       default:
         FAIL();
@@ -372,15 +386,15 @@ class IceTestPeer : public sigslot::has_slots<> {
               << " --> "
               << type
               << " "
-              << cand.host
+              << cand.local_addr.host
               << ":"
-              << cand.port
+              << cand.local_addr.port
               << " codeword="
               << cand.codeword
               << std::endl;
   }
 
-  void DumpAndCheckActiveCandidates() {
+  void DumpAndCheckActiveCandidates_s() {
     std::cerr << "Active candidates:" << std::endl;
     for (size_t i=0; i < streams_.size(); ++i) {
       for (int j=0; j < streams_[i]->components(); ++j) {
@@ -396,6 +410,7 @@ class IceTestPeer : public sigslot::has_slots<> {
           ASSERT_TRUE(NS_SUCCEEDED(res));
           DumpCandidate("Local  ", *local);
           ASSERT_EQ(expected_local_type_, local->type);
+          ASSERT_EQ(expected_local_transport_, local->local_addr.transport);
           DumpCandidate("Remote ", *remote);
           ASSERT_EQ(expected_remote_type_, remote->type);
           delete local;
@@ -403,6 +418,12 @@ class IceTestPeer : public sigslot::has_slots<> {
         }
       }
     }
+  }
+
+  void DumpAndCheckActiveCandidates() {
+    test_utils->sts_target()->Dispatch(
+      WrapRunnable(this, &IceTestPeer::DumpAndCheckActiveCandidates_s),
+      NS_DISPATCH_SYNC);
   }
 
   void Close() {
@@ -426,7 +447,13 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   // Handle events
-  void GatheringComplete(NrIceCtx *ctx) {
+  void GatheringStateChange(NrIceCtx* ctx,
+                            NrIceCtx::GatheringState state) {
+    (void)ctx;
+    if (state != NrIceCtx::ICE_CTX_GATHER_COMPLETE) {
+      return;
+    }
+
     std::cerr << "Gathering complete for " <<  name_ << std::endl;
     gathering_complete_ = true;
 
@@ -598,7 +625,12 @@ class IceTestPeer : public sigslot::has_slots<> {
     DumpCandidatePairs(stream);
   }
 
-  void IceCompleted(NrIceCtx *ctx) {
+  void ConnectionStateChange(NrIceCtx* ctx,
+                             NrIceCtx::ConnectionState state) {
+    (void)ctx;
+    if (state != NrIceCtx::ICE_CTX_OPEN) {
+      return;
+    }
     std::cerr << "ICE completed " << name_ << std::endl;
     ice_complete_ = true;
   }
@@ -652,6 +684,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   IceTestPeer *remote_;
   CandidateFilter candidate_filter_;
   NrIceCandidate::Type expected_local_type_;
+  std::string expected_local_transport_;
   NrIceCandidate::Type expected_remote_type_;
   TrickleMode trickle_mode_;
   int trickled_;
@@ -748,9 +781,15 @@ class IceConnectTest : public ::testing::Test {
 
   void SetTurnServer(const std::string addr, uint16_t port,
                      const std::string username,
-                     const std::string password) {
-    p1_->SetTurnServer(addr, port, username, password);
-    p2_->SetTurnServer(addr, port, username, password);
+                     const std::string password,
+                     const std::string transport = kNrIceTransportUdp) {
+    p1_->SetTurnServer(addr, port, username, password, transport);
+    p2_->SetTurnServer(addr, port, username, password, transport);
+  }
+
+  void SetTurnServers(const std::vector<NrIceTurnServer>& servers) {
+    p1_->SetTurnServers(servers);
+    p2_->SetTurnServers(servers);
   }
 
   void SetCandidateFilter(CandidateFilter filter, bool both=true) {
@@ -771,9 +810,10 @@ class IceConnectTest : public ::testing::Test {
     p2_->DumpAndCheckActiveCandidates();
   }
 
-  void SetExpectedTypes(NrIceCandidate::Type local, NrIceCandidate::Type remote) {
-    p1_->SetExpectedTypes(local, remote);
-    p2_->SetExpectedTypes(local, remote);
+  void SetExpectedTypes(NrIceCandidate::Type local, NrIceCandidate::Type remote,
+                        std::string transport = kNrIceTransportUdp) {
+    p1_->SetExpectedTypes(local, remote, transport);
+    p2_->SetExpectedTypes(local, remote, transport);
   }
 
   void SetExpectedTypes(NrIceCandidate::Type local1, NrIceCandidate::Type remote1,
@@ -906,6 +946,52 @@ class PrioritizerTest : public ::testing::Test {
   nr_interface_prioritizer *prioritizer_;
 };
 
+class PacketFilterTest : public ::testing::Test {
+ public:
+  PacketFilterTest(): filter_(nullptr) {}
+
+  void SetUp() {
+    nsCOMPtr<nsIUDPSocketFilterHandler> handler =
+      do_GetService(NS_STUN_UDP_SOCKET_FILTER_HANDLER_CONTRACTID);
+    handler->NewFilter(getter_AddRefs(filter_));
+  }
+
+  void TestIncoming(const uint8_t* data, uint32_t len,
+                    uint8_t from_addr, int from_port,
+                    bool expected_result) {
+    mozilla::net::NetAddr addr;
+    MakeNetAddr(&addr, from_addr, from_port);
+    bool result;
+    nsresult rv = filter_->FilterPacket(&addr, data, len,
+                                        nsIUDPSocketFilter::SF_INCOMING,
+                                        &result);
+    ASSERT_EQ(NS_OK, rv);
+    ASSERT_EQ(expected_result, result);
+  }
+
+  void TestOutgoing(const uint8_t* data, uint32_t len,
+                    uint8_t to_addr, int to_port,
+                    bool expected_result) {
+    mozilla::net::NetAddr addr;
+    MakeNetAddr(&addr, to_addr, to_port);
+    bool result;
+    nsresult rv = filter_->FilterPacket(&addr, data, len,
+                                        nsIUDPSocketFilter::SF_OUTGOING,
+                                        &result);
+    ASSERT_EQ(NS_OK, rv);
+    ASSERT_EQ(expected_result, result);
+  }
+
+ private:
+  void MakeNetAddr(mozilla::net::NetAddr* net_addr,
+                   uint8_t last_digit, uint16_t port) {
+    net_addr->inet.family = AF_INET;
+    net_addr->inet.ip = 192 << 24 | 168 << 16 | 1 << 8 | last_digit;
+    net_addr->inet.port = port;
+  }
+
+  nsCOMPtr<nsIUDPSocketFilter> filter_;
+};
 }  // end namespace
 
 TEST_F(IceGatherTest, TestGatherFakeStunServerHostnameNoResolver) {
@@ -954,7 +1040,15 @@ TEST_F(IceGatherTest, TestGatherTurn) {
   if (g_turn_server.empty())
     return;
   peer_->SetTurnServer(g_turn_server, kDefaultStunServerPort,
-                       g_turn_user, g_turn_password);
+                       g_turn_user, g_turn_password, kNrIceTransportUdp);
+  Gather();
+}
+
+TEST_F(IceGatherTest, TestGatherTurnTcp) {
+  if (g_turn_server.empty())
+    return;
+  peer_->SetTurnServer(g_turn_server, kDefaultStunServerPort,
+                       g_turn_user, g_turn_password, kNrIceTransportTcp);
   Gather();
 }
 
@@ -1136,6 +1230,17 @@ TEST_F(IceConnectTest, TestConnectTurn) {
   Connect();
 }
 
+TEST_F(IceConnectTest, TestConnectTurnTcp) {
+  if (g_turn_server.empty())
+    return;
+
+  AddStream("first", 1);
+  SetTurnServer(g_turn_server, kDefaultStunServerPort,
+                g_turn_user, g_turn_password, kNrIceTransportTcp);
+  ASSERT_TRUE(Gather(true));
+  Connect();
+}
+
 TEST_F(IceConnectTest, TestConnectTurnOnly) {
   if (g_turn_server.empty())
     return;
@@ -1150,6 +1255,21 @@ TEST_F(IceConnectTest, TestConnectTurnOnly) {
   Connect();
 }
 
+TEST_F(IceConnectTest, TestConnectTurnTcpOnly) {
+  if (g_turn_server.empty())
+    return;
+
+  AddStream("first", 1);
+  SetTurnServer(g_turn_server, kDefaultStunServerPort,
+                g_turn_user, g_turn_password, kNrIceTransportTcp);
+  ASSERT_TRUE(Gather(true));
+  SetCandidateFilter(IsRelayCandidate);
+  SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
+                   NrIceCandidate::Type::ICE_RELAYED,
+                   kNrIceTransportTcp);
+  Connect();
+}
+
 TEST_F(IceConnectTest, TestSendReceiveTurnOnly) {
   if (g_turn_server.empty())
     return;
@@ -1161,6 +1281,47 @@ TEST_F(IceConnectTest, TestSendReceiveTurnOnly) {
   SetCandidateFilter(IsRelayCandidate);
   SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
                    NrIceCandidate::Type::ICE_RELAYED);
+  Connect();
+  SendReceive();
+}
+
+TEST_F(IceConnectTest, TestSendReceiveTurnTcpOnly) {
+  if (g_turn_server.empty())
+    return;
+
+  AddStream("first", 1);
+  SetTurnServer(g_turn_server, kDefaultStunServerPort,
+                g_turn_user, g_turn_password, kNrIceTransportTcp);
+  ASSERT_TRUE(Gather(true));
+  SetCandidateFilter(IsRelayCandidate);
+  SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
+                   NrIceCandidate::Type::ICE_RELAYED,
+                   kNrIceTransportTcp);
+  Connect();
+  SendReceive();
+}
+
+TEST_F(IceConnectTest, TestSendReceiveTurnBothOnly) {
+  if (g_turn_server.empty())
+    return;
+
+  AddStream("first", 1);
+  std::vector<NrIceTurnServer> turn_servers;
+  std::vector<unsigned char> password_vec(g_turn_password.begin(),
+                                          g_turn_password.end());
+  turn_servers.push_back(*NrIceTurnServer::Create(
+                           g_turn_server, kDefaultStunServerPort,
+                           g_turn_user, password_vec, kNrIceTransportTcp));
+  turn_servers.push_back(*NrIceTurnServer::Create(
+                           g_turn_server, kDefaultStunServerPort,
+                           g_turn_user, password_vec, kNrIceTransportUdp));
+  SetTurnServers(turn_servers);
+  ASSERT_TRUE(Gather(true));
+  SetCandidateFilter(IsRelayCandidate);
+  // UDP is preferred.
+  SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
+                   NrIceCandidate::Type::ICE_RELAYED,
+                   kNrIceTransportUdp);
   Connect();
   SendReceive();
 }
@@ -1307,6 +1468,117 @@ TEST_F(PrioritizerTest, TestPrioritizer) {
   HasLowerPreference("7", "1");
   HasLowerPreference("1", "5");
   HasLowerPreference("5", "4");
+}
+
+TEST_F(PacketFilterTest, TestSendNonStunPacket) {
+  const unsigned char data[] = "12345abcde";
+  TestOutgoing(data, sizeof(data), 123, 45, false);
+}
+
+TEST_F(PacketFilterTest, TestRecvNonStunPacket) {
+  const unsigned char data[] = "12345abcde";
+  TestIncoming(data, sizeof(data), 123, 45, false);
+}
+
+TEST_F(PacketFilterTest, TestSendStunPacket) {
+  nr_stun_message *msg;
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+  msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+  ASSERT_EQ(0, nr_stun_message_destroy(&msg));
+}
+
+TEST_F(PacketFilterTest, TestRecvStunPacketWithoutAPendingId) {
+  nr_stun_message *msg;
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+
+  msg->header.id.octet[0] = 1;
+  msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+
+  msg->header.id.octet[0] = 0;
+  msg->header.type = NR_STUN_MSG_BINDING_RESPONSE;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestIncoming(msg->buffer, msg->length, 123, 45, true);
+
+  ASSERT_EQ(0, nr_stun_message_destroy(&msg));
+}
+
+TEST_F(PacketFilterTest, TestRecvStunPacketWithoutAPendingAddress) {
+  nr_stun_message *msg;
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+
+  msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+
+  msg->header.type = NR_STUN_MSG_BINDING_RESPONSE;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestIncoming(msg->buffer, msg->length, 123, 46, false);
+  TestIncoming(msg->buffer, msg->length, 124, 45, false);
+
+  ASSERT_EQ(0, nr_stun_message_destroy(&msg));
+}
+
+TEST_F(PacketFilterTest, TestRecvStunPacketWithPendingIdAndAddress) {
+  nr_stun_message *msg;
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+
+  msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+
+  msg->header.type = NR_STUN_MSG_BINDING_RESPONSE;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestIncoming(msg->buffer, msg->length, 123, 45, true);
+
+  // Test whitelist by filtering non-stun packets.
+  const unsigned char data[] = "12345abcde";
+
+  // 123:45 is white-listed.
+  TestOutgoing(data, sizeof(data), 123, 45, true);
+  TestIncoming(data, sizeof(data), 123, 45, true);
+
+  // Indications pass as well.
+  msg->header.type = NR_STUN_MSG_BINDING_INDICATION;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+  TestIncoming(msg->buffer, msg->length, 123, 45, true);
+
+  // Packets from and to other address are still disallowed.
+  TestOutgoing(data, sizeof(data), 123, 46, false);
+  TestIncoming(data, sizeof(data), 123, 46, false);
+  TestOutgoing(data, sizeof(data), 124, 45, false);
+  TestIncoming(data, sizeof(data), 124, 45, false);
+
+  ASSERT_EQ(0, nr_stun_message_destroy(&msg));
+}
+
+TEST_F(PacketFilterTest, TestSendNonRequestStunPacket) {
+  nr_stun_message *msg;
+  ASSERT_EQ(0, nr_stun_build_req_no_auth(NULL, &msg));
+
+  msg->header.type = NR_STUN_MSG_BINDING_RESPONSE;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, false);
+
+  // Send a packet so we allow the incoming request.
+  msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+
+  // This packet makes us able to send a response.
+  msg->header.type = NR_STUN_MSG_BINDING_REQUEST;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestIncoming(msg->buffer, msg->length, 123, 45, true);
+
+  msg->header.type = NR_STUN_MSG_BINDING_RESPONSE;
+  ASSERT_EQ(0, nr_stun_encode_message(msg));
+  TestOutgoing(msg->buffer, msg->length, 123, 45, true);
+
+  ASSERT_EQ(0, nr_stun_message_destroy(&msg));
 }
 
 static std::string get_environment(const char *name) {

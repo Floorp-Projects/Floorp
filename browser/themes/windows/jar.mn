@@ -50,6 +50,9 @@ browser.jar:
         skin/classic/browser/menuPanel-exit.png
         skin/classic/browser/menuPanel-help.png
         skin/classic/browser/menuPanel-small.png
+        skin/classic/browser/Metro_Glyph.png                        (Metro_Glyph-aero.png)
+        skin/classic/browser/Metro_Glyph-inverted.png
+        skin/classic/browser/Metro_Glyph-menuPanel.png
         skin/classic/browser/mixed-content-blocked-16.png
         skin/classic/browser/mixed-content-blocked-64.png
         skin/classic/browser/monitor.png
@@ -170,9 +173,9 @@ browser.jar:
         skin/classic/browser/tabview/tabview.png                    (tabview/tabview.png)
         skin/classic/browser/tabview/tabview-inverted.png           (tabview/tabview-inverted.png)
         skin/classic/browser/tabview/tabview.css                    (tabview/tabview.css)
-*       skin/classic/browser/devtools/common.css                    (devtools/common.css)
-        skin/classic/browser/devtools/dark-theme.css                (../shared/devtools/dark-theme.css)
-        skin/classic/browser/devtools/light-theme.css               (../shared/devtools/light-theme.css)
+*       skin/classic/browser/devtools/common.css                    (../shared/devtools/common.css)
+*       skin/classic/browser/devtools/dark-theme.css                (../shared/devtools/dark-theme.css)
+*       skin/classic/browser/devtools/light-theme.css               (../shared/devtools/light-theme.css)
         skin/classic/browser/devtools/controls.png                  (../shared/devtools/controls.png)
 *       skin/classic/browser/devtools/widgets.css                   (devtools/widgets.css)
         skin/classic/browser/devtools/commandline-icon.png          (devtools/commandline-icon.png)
@@ -183,6 +186,7 @@ browser.jar:
         skin/classic/browser/devtools/command-responsivemode.png    (devtools/command-responsivemode.png)
         skin/classic/browser/devtools/command-scratchpad.png        (devtools/command-scratchpad.png)
         skin/classic/browser/devtools/command-tilt.png              (devtools/command-tilt.png)
+        skin/classic/browser/devtools/command-console.png           (devtools/command-console.png)
         skin/classic/browser/devtools/markup-view.css               (../shared/devtools/markup-view.css)
         skin/classic/browser/devtools/editor-error.png               (devtools/editor-error.png)
         skin/classic/browser/devtools/editor-breakpoint.png          (devtools/editor-breakpoint.png)
@@ -225,7 +229,6 @@ browser.jar:
         skin/classic/browser/devtools/magnifying-glass.png          (devtools/magnifying-glass.png)
         skin/classic/browser/devtools/option-icon.png               (devtools/option-icon.png)
         skin/classic/browser/devtools/itemToggle.png                (devtools/itemToggle.png)
-        skin/classic/browser/devtools/blackBoxMessageEye.png        (devtools/blackBoxMessageEye.png)
         skin/classic/browser/devtools/itemArrow-rtl.png             (devtools/itemArrow-rtl.png)
         skin/classic/browser/devtools/itemArrow-ltr.png             (devtools/itemArrow-ltr.png)
         skin/classic/browser/devtools/background-noise-toolbar.png  (devtools/background-noise-toolbar.png)
@@ -242,6 +245,8 @@ browser.jar:
         skin/classic/browser/devtools/debugger-step-out.png         (devtools/debugger-step-out.png)
         skin/classic/browser/devtools/debugger-step-over.png        (devtools/debugger-step-over.png)
         skin/classic/browser/devtools/debugger-blackbox.png         (devtools/debugger-blackbox.png)
+        skin/classic/browser/devtools/debugger-blackboxMessageEye.png (devtools/debugger-blackboxMessageEye.png)
+        skin/classic/browser/devtools/debugger-toggleBreakpoints.png (devtools/debugger-toggleBreakpoints.png)
         skin/classic/browser/devtools/responsive-se-resizer.png     (devtools/responsive-se-resizer.png)
         skin/classic/browser/devtools/responsive-vertical-resizer.png (devtools/responsive-vertical-resizer.png)
         skin/classic/browser/devtools/responsive-horizontal-resizer.png (devtools/responsive-horizontal-resizer.png)
@@ -253,7 +258,6 @@ browser.jar:
         skin/classic/browser/devtools/floating-scrollbars-light.css (devtools/floating-scrollbars-light.css)
         skin/classic/browser/devtools/inspector.css                 (devtools/inspector.css)
         skin/classic/browser/devtools/profiler-stopwatch.png        (devtools/profiler-stopwatch.png)
-        skin/classic/browser/devtools/toolbox.css                   (devtools/toolbox.css)
         skin/classic/browser/devtools/tool-options.png              (devtools/tool-options.png)
         skin/classic/browser/devtools/tool-webconsole.png           (devtools/tool-webconsole.png)
         skin/classic/browser/devtools/tool-debugger.png             (devtools/tool-debugger.png)
@@ -282,6 +286,7 @@ browser.jar:
         skin/classic/browser/devtools/app-manager/error.svg                 (../shared/devtools/app-manager/images/error.svg)
         skin/classic/browser/devtools/app-manager/plus.svg                  (../shared/devtools/app-manager/images/plus.svg)
         skin/classic/browser/devtools/app-manager/remove.svg                (../shared/devtools/app-manager/images/remove.svg)
+        skin/classic/browser/devtools/app-manager/add.svg                   (../shared/devtools/app-manager/images/add.svg)
         skin/classic/browser/devtools/app-manager/index-icons.svg           (../shared/devtools/app-manager/images/index-icons.svg)
         skin/classic/browser/devtools/app-manager/rocket.svg                (../shared/devtools/app-manager/images/rocket.svg)
         skin/classic/browser/devtools/app-manager/noise.png                 (../shared/devtools/app-manager/images/noise.png)
@@ -296,6 +301,14 @@ browser.jar:
         skin/classic/browser/sync-notification-24.png
         skin/classic/browser/syncProgress.css
 #endif
+        skin/classic/browser/devtools/tooltip/arrow-horizontal-dark.png   (../shared/devtools/tooltip/arrow-horizontal-dark.png)
+        skin/classic/browser/devtools/tooltip/arrow-horizontal-dark@2x.png   (../shared/devtools/tooltip/arrow-horizontal-dark@2x.png)
+        skin/classic/browser/devtools/tooltip/arrow-vertical-dark.png   (../shared/devtools/tooltip/arrow-vertical-dark.png)
+        skin/classic/browser/devtools/tooltip/arrow-vertical-dark@2x.png   (../shared/devtools/tooltip/arrow-vertical-dark@2x.png)
+        skin/classic/browser/devtools/tooltip/arrow-horizontal-light.png   (../shared/devtools/tooltip/arrow-horizontal-light.png)
+        skin/classic/browser/devtools/tooltip/arrow-horizontal-light@2x.png   (../shared/devtools/tooltip/arrow-horizontal-light@2x.png)
+        skin/classic/browser/devtools/tooltip/arrow-vertical-light.png   (../shared/devtools/tooltip/arrow-vertical-light.png)
+        skin/classic/browser/devtools/tooltip/arrow-vertical-light@2x.png   (../shared/devtools/tooltip/arrow-vertical-light@2x.png)
 
 #ifdef XP_WIN
 browser.jar:
@@ -342,6 +355,9 @@ browser.jar:
         skin/classic/aero/browser/menuPanel-exit.png
         skin/classic/aero/browser/menuPanel-help.png
         skin/classic/aero/browser/menuPanel-small.png                (menuPanel-small-aero.png)
+        skin/classic/aero/browser/Metro_Glyph.png                    (Metro_Glyph-aero.png)
+        skin/classic/aero/browser/Metro_Glyph-inverted.png
+        skin/classic/aero/browser/Metro_Glyph-menuPanel.png
         skin/classic/aero/browser/mixed-content-blocked-16.png
         skin/classic/aero/browser/mixed-content-blocked-64.png
         skin/classic/aero/browser/monitor.png
@@ -460,9 +476,9 @@ browser.jar:
         skin/classic/aero/browser/tabview/tabview.png                (tabview/tabview.png)
         skin/classic/aero/browser/tabview/tabview-inverted.png       (tabview/tabview-inverted.png)
         skin/classic/aero/browser/tabview/tabview.css                (tabview/tabview.css)
-*       skin/classic/aero/browser/devtools/common.css                (devtools/common.css)
-        skin/classic/aero/browser/devtools/dark-theme.css            (../shared/devtools/dark-theme.css)
-        skin/classic/aero/browser/devtools/light-theme.css           (../shared/devtools/light-theme.css)
+*       skin/classic/aero/browser/devtools/common.css                (../shared/devtools/common.css)
+*       skin/classic/aero/browser/devtools/dark-theme.css            (../shared/devtools/dark-theme.css)
+*       skin/classic/aero/browser/devtools/light-theme.css           (../shared/devtools/light-theme.css)
         skin/classic/aero/browser/devtools/controls.png              (../shared/devtools/controls.png)
 *       skin/classic/aero/browser/devtools/widgets.css               (devtools/widgets.css)
         skin/classic/aero/browser/devtools/commandline-icon.png      (devtools/commandline-icon.png)
@@ -470,6 +486,7 @@ browser.jar:
         skin/classic/aero/browser/devtools/command-responsivemode.png (devtools/command-responsivemode.png)
         skin/classic/aero/browser/devtools/command-scratchpad.png    (devtools/command-scratchpad.png)
         skin/classic/aero/browser/devtools/command-tilt.png          (devtools/command-tilt.png)
+        skin/classic/aero/browser/devtools/command-console.png       (devtools/command-console.png)
         skin/classic/aero/browser/devtools/alerticon-warning.png     (devtools/alerticon-warning.png)
         skin/classic/aero/browser/devtools/ruleview.css              (devtools/ruleview.css)
         skin/classic/aero/browser/devtools/commandline.css           (devtools/commandline.css)
@@ -515,7 +532,6 @@ browser.jar:
         skin/classic/aero/browser/devtools/magnifying-glass.png      (devtools/magnifying-glass.png)
         skin/classic/aero/browser/devtools/option-icon.png           (devtools/option-icon.png)
         skin/classic/aero/browser/devtools/itemToggle.png            (devtools/itemToggle.png)
-        skin/classic/aero/browser/devtools/blackBoxMessageEye.png    (devtools/blackBoxMessageEye.png)
         skin/classic/aero/browser/devtools/itemArrow-rtl.png         (devtools/itemArrow-rtl.png)
         skin/classic/aero/browser/devtools/background-noise-toolbar.png (devtools/background-noise-toolbar.png)
         skin/classic/aero/browser/devtools/noise.png                 (devtools/noise.png)
@@ -532,6 +548,8 @@ browser.jar:
         skin/classic/aero/browser/devtools/debugger-step-out.png     (devtools/debugger-step-out.png)
         skin/classic/aero/browser/devtools/debugger-step-over.png    (devtools/debugger-step-over.png)
         skin/classic/aero/browser/devtools/debugger-blackbox.png     (devtools/debugger-blackbox.png)
+        skin/classic/aero/browser/devtools/debugger-blackboxMessageEye.png (devtools/debugger-blackboxMessageEye.png)
+        skin/classic/aero/browser/devtools/debugger-toggleBreakpoints.png (devtools/debugger-toggleBreakpoints.png)
         skin/classic/aero/browser/devtools/responsive-se-resizer.png (devtools/responsive-se-resizer.png)
         skin/classic/aero/browser/devtools/responsive-vertical-resizer.png (devtools/responsive-vertical-resizer.png)
         skin/classic/aero/browser/devtools/responsive-horizontal-resizer.png (devtools/responsive-horizontal-resizer.png)
@@ -543,7 +561,6 @@ browser.jar:
         skin/classic/aero/browser/devtools/floating-scrollbars-light.css (devtools/floating-scrollbars-light.css)
         skin/classic/aero/browser/devtools/inspector.css             (devtools/inspector.css)
         skin/classic/aero/browser/devtools/profiler-stopwatch.png    (devtools/profiler-stopwatch.png)
-        skin/classic/aero/browser/devtools/toolbox.css               (devtools/toolbox.css)
         skin/classic/aero/browser/devtools/tool-options.png          (devtools/tool-options.png)
         skin/classic/aero/browser/devtools/tool-webconsole.png       (devtools/tool-webconsole.png)
         skin/classic/aero/browser/devtools/tool-debugger.png         (devtools/tool-debugger.png)
@@ -572,6 +589,7 @@ browser.jar:
         skin/classic/aero/browser/devtools/app-manager/error.svg                 (../shared/devtools/app-manager/images/error.svg)
         skin/classic/aero/browser/devtools/app-manager/plus.svg                  (../shared/devtools/app-manager/images/plus.svg)
         skin/classic/aero/browser/devtools/app-manager/remove.svg                (../shared/devtools/app-manager/images/remove.svg)
+        skin/classic/aero/browser/devtools/app-manager/add.svg                   (../shared/devtools/app-manager/images/add.svg)
         skin/classic/aero/browser/devtools/app-manager/index-icons.svg           (../shared/devtools/app-manager/images/index-icons.svg)
         skin/classic/aero/browser/devtools/app-manager/rocket.svg                (../shared/devtools/app-manager/images/rocket.svg)
         skin/classic/aero/browser/devtools/app-manager/noise.png                 (../shared/devtools/app-manager/images/noise.png)
@@ -587,11 +605,11 @@ browser.jar:
         skin/classic/aero/browser/syncProgress.css
 #endif
 #endif
-        skin/classic/browser/devtools/tooltip/arrow-horizontal-dark.png   (../shared/devtools/tooltip/arrow-horizontal-dark.png)
-        skin/classic/browser/devtools/tooltip/arrow-horizontal-dark@2x.png   (../shared/devtools/tooltip/arrow-horizontal-dark@2x.png)
-        skin/classic/browser/devtools/tooltip/arrow-vertical-dark.png   (../shared/devtools/tooltip/arrow-vertical-dark.png)
-        skin/classic/browser/devtools/tooltip/arrow-vertical-dark@2x.png   (../shared/devtools/tooltip/arrow-vertical-dark@2x.png)
-        skin/classic/browser/devtools/tooltip/arrow-horizontal-light.png   (../shared/devtools/tooltip/arrow-horizontal-light.png)
-        skin/classic/browser/devtools/tooltip/arrow-horizontal-light@2x.png   (../shared/devtools/tooltip/arrow-horizontal-light@2x.png)
-        skin/classic/browser/devtools/tooltip/arrow-vertical-light.png   (../shared/devtools/tooltip/arrow-vertical-light.png)
-        skin/classic/browser/devtools/tooltip/arrow-vertical-light@2x.png   (../shared/devtools/tooltip/arrow-vertical-light@2x.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-horizontal-dark.png   (../shared/devtools/tooltip/arrow-horizontal-dark.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-horizontal-dark@2x.png   (../shared/devtools/tooltip/arrow-horizontal-dark@2x.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-vertical-dark.png   (../shared/devtools/tooltip/arrow-vertical-dark.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-vertical-dark@2x.png   (../shared/devtools/tooltip/arrow-vertical-dark@2x.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-horizontal-light.png   (../shared/devtools/tooltip/arrow-horizontal-light.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-horizontal-light@2x.png   (../shared/devtools/tooltip/arrow-horizontal-light@2x.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-vertical-light.png   (../shared/devtools/tooltip/arrow-vertical-light.png)
+        skin/classic/aero/browser/devtools/tooltip/arrow-vertical-light@2x.png   (../shared/devtools/tooltip/arrow-vertical-light@2x.png)

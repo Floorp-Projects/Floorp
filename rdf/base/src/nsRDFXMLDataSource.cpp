@@ -98,15 +98,6 @@
 #include "rdfIDataSource.h"
 
 //----------------------------------------------------------------------
-
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
-static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
-
-#ifdef PR_LOGGING
-static PRLogModuleInfo* gLog;
-#endif
-
-//----------------------------------------------------------------------
 //
 // RDFXMLDataSourceImpl
 //
@@ -140,6 +131,10 @@ protected:
     // pseudo-constants
     static int32_t gRefCnt;
     static nsIRDFService* gRDFService;
+
+#ifdef PR_LOGGING
+    static PRLogModuleInfo* gLog;
+#endif
 
     nsresult Init();
     RDFXMLDataSourceImpl(void);
@@ -363,6 +358,10 @@ protected:
 int32_t         RDFXMLDataSourceImpl::gRefCnt = 0;
 nsIRDFService*  RDFXMLDataSourceImpl::gRDFService;
 
+#ifdef PR_LOGGING
+PRLogModuleInfo* RDFXMLDataSourceImpl::gLog;
+#endif
+
 static const char kFileURIPrefix[] = "file:";
 static const char kResourceURIPrefix[] = "resource:";
 
@@ -410,10 +409,12 @@ nsresult
 RDFXMLDataSourceImpl::Init()
 {
     nsresult rv;
+    NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
     mInner = do_CreateInstance(kRDFInMemoryDataSourceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     if (gRefCnt++ == 0) {
+        NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
         rv = CallGetService(kRDFServiceCID, &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
@@ -742,6 +743,7 @@ RDFXMLDataSourceImpl::rdfXMLFlush(nsIURI *aURI)
         // we are, we're screwed: it's too late to serialize because
         // many of the services that we'll need to acquire to properly
         // write the file will be unaquirable.
+        NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
         nsCOMPtr<nsIRDFService> dummy = do_GetService(kRDFServiceCID, &rv);
         if (NS_FAILED(rv)) {
             NS_WARNING("unable to Flush() dirty datasource during XPCOM shutdown");

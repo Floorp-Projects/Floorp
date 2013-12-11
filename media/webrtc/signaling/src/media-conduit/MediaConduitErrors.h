@@ -18,12 +18,12 @@ kMediaConduitCaptureError,             // WebRTC capture APIs failed
 kMediaConduitInvalidSendCodec,         // Wrong Send codec
 kMediaConduitInvalidReceiveCodec,      // Wrong Recv Codec
 kMediaConduitCodecInUse,               // Already applied Codec
-kMediaConduitInvalidRenderer,          // NULL or Wrong Renderer object
+kMediaConduitInvalidRenderer,          // Null or Wrong Renderer object
 kMediaConduitRendererFail,             // Add Render called multiple times
 kMediaConduitSendingAlready,           // Engine already trasmitting
 kMediaConduitReceivingAlready,         // Engine already receiving
-kMediaConduitTransportRegistrationFail,// NULL or wrong transport interface
-kMediaConduitInvalidTransport,         // NULL or wrong transport interface
+kMediaConduitTransportRegistrationFail,// Null or wrong transport interface
+kMediaConduitInvalidTransport,         // Null or wrong transport interface
 kMediaConduitChannelError,             // Configuration Error
 kMediaConduitSocketError,              // Media Engine transport socket error
 kMediaConduitRTPRTCPModuleError,       // Couldn't start RTP/RTCP processing

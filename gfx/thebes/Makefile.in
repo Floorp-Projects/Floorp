@@ -2,48 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LOCAL_INCLUDES += \
-	-I$(topsrcdir)/content/xml/document/src \
-	$(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gtk2 gtk3 gonk qt))
-DEFINES += -DMOZ_ENABLE_FREETYPE
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-
-ifdef MOZ_ENABLE_D3D9_LAYER
-DEFINES +=	-DMOZ_ENABLE_D3D9_LAYER
-endif
-
-ifdef MOZ_ENABLE_D3D10_LAYER
-DEFINES +=	-DMOZ_ENABLE_D3D10_LAYER
-endif
-
 ACDEFINES +=	-UWIN32_LEAN_AND_MEAN
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-# This is set for "normal Android", that is, when Gecko is running on
-# top of the android java runtime.
-DEFINES +=	-DMOZ_USING_ANDROID_JAVA_WIDGETS
-endif
-
-DEFINES += \
-	-DMOZ_OTS_REPORT_ERRORS \
-	-DGRAPHITE2_STATIC \
-	$(NULL)
-
-ifeq (WINNT,$(OS_TARGET))
-DEFINES += -DOTS_DLL
 endif
 
 include $(topsrcdir)/config/rules.mk
 
 DEFINES := $(filter-out -DUNICODE,$(DEFINES))
 
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) $(TK_CFLAGS)
-CFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) $(TK_CFLAGS)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
+CFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 CXXFLAGS += $(CAIRO_FT_CFLAGS)
@@ -79,5 +47,3 @@ endif
 
 PremultiplyTables.h: $(srcdir)/genTables.py
 	$(PYTHON) $(srcdir)/genTables.py
-
-gfxUtils.$(OBJ_SUFFIX): PremultiplyTables.h

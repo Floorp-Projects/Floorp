@@ -342,7 +342,7 @@ public:
 
   // nsIScriptGlobalObject
   virtual nsIScriptContext *GetContext();
-  JSObject *FastGetGlobalJSObject()
+  JSObject *FastGetGlobalJSObject() const
   {
     return mJSObject;
   }
@@ -355,7 +355,7 @@ public:
   void PoisonOuterWindowProxy(JSObject *aObject);
   virtual void OnFinalize(JSObject* aObject);
 
-  virtual bool IsBlackForCC();
+  virtual bool IsBlackForCC(bool aTracingNeeded = true);
 
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal();
@@ -411,9 +411,12 @@ public:
 
   // nsPIDOMWindow
   virtual NS_HIDDEN_(nsPIDOMWindow*) GetPrivateRoot();
+
+  // Outer windows only.
   virtual NS_HIDDEN_(void) ActivateOrDeactivate(bool aActivate);
   virtual NS_HIDDEN_(void) SetActive(bool aActive);
   virtual NS_HIDDEN_(void) SetIsBackground(bool aIsBackground);
+
   virtual NS_HIDDEN_(void) SetChromeEventHandler(mozilla::dom::EventTarget* aChromeEventHandler);
 
   virtual NS_HIDDEN_(void) SetInitialPrincipalToSubject();
@@ -445,6 +448,7 @@ public:
   void DispatchDOMWindowCreated();
   virtual NS_HIDDEN_(void) SetOpenerWindow(nsIDOMWindow* aOpener,
                                            bool aOriginalOpener);
+
   // Outer windows only.
   virtual NS_HIDDEN_(void) EnsureSizeUpToDate();
 
@@ -520,7 +524,9 @@ public:
   // ShouldPromptToBlockDialogs is implemented in terms of
   // DialogsAreBeingAbused, and will get the scriptable top inner window
   // automatically.
+  // Outer windows only.
   bool ShouldPromptToBlockDialogs();
+  // Inner windows only.
   bool DialogsAreBeingAbused();
 
   // Ask the user if further dialogs should be blocked, if dialogs are currently
@@ -534,6 +540,7 @@ public:
   void DisableDialogs();
   bool AreDialogsEnabled();
 
+  // Inner windows only.
   virtual void SetHasAudioAvailableEventListeners();
 
   nsIScriptContext *GetContextInternal()
@@ -588,6 +595,7 @@ public:
   nsresult Observe(nsISupports* aSubject, const char* aTopic,
                    const PRUnichar* aData);
 
+  // Outer windows only.
   void UnblockScriptedClosing();
 
   static void Init();
@@ -616,6 +624,7 @@ public:
   virtual nsresult DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI);
   virtual nsresult DispatchSyncPopState();
 
+  // Inner windows only.
   virtual void EnableDeviceSensor(uint32_t aType);
   virtual void DisableDeviceSensor(uint32_t aType);
 
@@ -623,6 +632,7 @@ public:
   virtual void DisableTimeChangeNotifications();
 
 #ifdef MOZ_B2G
+  // Inner windows only.
   virtual void EnableNetworkEvent(uint32_t aType);
   virtual void DisableNetworkEvent(uint32_t aType);
 #endif // MOZ_B2G
@@ -934,6 +944,10 @@ public:
                                             const mozilla::dom::Sequence<JS::Value>& aExtraArgument,
                                             mozilla::ErrorResult& aError);
   JSObject* GetContent(JSContext* aCx, mozilla::ErrorResult& aError);
+  JSObject* Get_content(JSContext* aCx, mozilla::ErrorResult& aError)
+  {
+    return GetContent(aCx, aError);
+  }
 
 protected:
   // Array of idle observers that are notified of idle events.
@@ -968,6 +982,7 @@ protected:
 
   // Object Management
   virtual ~nsGlobalWindow();
+  void ClearDelayedEventsAndDropDocument();
   void CleanUp();
   void ClearControllers();
   nsresult FinalClose();
@@ -1136,6 +1151,7 @@ protected:
                            const nsAString &aPopupWindowFeatures);
   void FireOfflineStatusEvent();
 
+  // Inner windows only.
   nsresult ScheduleNextIdleObserverCallback();
   uint32_t GetFuzzTimeMS();
   nsresult ScheduleActiveTimerCallback();
@@ -1145,13 +1161,17 @@ protected:
                                       int32_t* aRemoveElementIndex);
   virtual nsresult UnregisterIdleObserver(nsIIdleObserver* aIdleObserverPtr);
 
+  // Inner windows only.
   nsresult FireHashchange(const nsAString &aOldURL, const nsAString &aNewURL);
 
   void FlushPendingNotifications(mozFlushType aType);
+
+  // Outer windows only.
   void EnsureReflowFlushAndPaint();
   void CheckSecurityWidthAndHeight(int32_t* width, int32_t* height);
   void CheckSecurityLeftAndTop(int32_t* left, int32_t* top);
 
+  // Outer windows only.
   // Arguments to this function should have values in app units
   void SetCSSViewportWidthAndHeight(nscoord width, nscoord height);
   // Arguments to this function should have values in device pixels
@@ -1161,9 +1181,8 @@ protected:
 
   static void MakeScriptDialogTitle(nsAString &aOutTitle);
 
+  // Outer windows only.
   bool CanMoveResizeWindows();
-
-  bool     GetBlurSuppression();
 
   // If aDoFlush is true, we'll flush our own layout; otherwise we'll try to
   // just flush our parent and only flush ourselves if we think we need to.
@@ -1174,7 +1193,6 @@ protected:
 
   // Outer windows only.
   nsresult GetInnerSize(mozilla::CSSIntSize& aSize);
-
   nsIntSize GetOuterSize(mozilla::ErrorResult& aError);
   void SetOuterSize(int32_t aLengthCSSPixels, bool aIsWidth,
                     mozilla::ErrorResult& aError);
@@ -1187,6 +1205,7 @@ protected:
     return GetParentInternal() != nullptr;
   }
 
+  // Outer windows only.
   // If aLookForCallerOnJSStack is true, this method will look at the JS stack
   // to determine who the caller is.  If it's false, it'll use |this| as the
   // caller.
@@ -1231,6 +1250,7 @@ protected:
   virtual void GetKeyboardIndicators(bool* aShowAccelerators,
                                      bool* aShowFocusRings);
 
+  // Inner windows only.
   void UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewContent);
 
 public:
@@ -1247,6 +1267,7 @@ protected:
 
   virtual void UpdateParentTarget();
 
+  // Outer windows only.
   bool GetIsTabModalPromptAllowed();
 
   inline int32_t DOMMinTimeoutValue() const;
@@ -1275,7 +1296,7 @@ protected:
 
   void PreloadLocalStorage();
 
-  // Returns device pixels.
+  // Returns device pixels.  Outer windows only.
   nsIntPoint GetScreenXY(mozilla::ErrorResult& aError);
 
   int32_t RequestAnimationFrame(const nsIDocument::FrameRequestCallbackHolder& aCallback,
@@ -1398,7 +1419,7 @@ protected:
   nsRefPtr<nsDOMWindowUtils>    mWindowUtils;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
-  nsGlobalWindowObserver*       mObserver;
+  nsGlobalWindowObserver*       mObserver; // Inner windows only.
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
 
   nsCOMPtr<nsIDOMStorage>      mLocalStorage;

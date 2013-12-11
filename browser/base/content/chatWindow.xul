@@ -18,7 +18,7 @@
         windowtype="Social:Chat"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
+        title="&mainWindow.title;"
         onload="gChatWindow.onLoad();"
         onunload="gChatWindow.onUnload();"
         macanimationtype="document"
@@ -57,11 +57,14 @@ var gChatWindow = {
                          'key_selectTab7', 'key_selectTab8', 'key_selectLastTab',
                          'viewHistorySidebar', 'viewBookmarksSidebar',
                          'Browser:AddBookmarkAs', 'Browser:BookmarkAllTabs',
-                         'Browser:ToggleTabView', 'Browser:ToggleAddonBar'];
+                         'Browser:ToggleTabView'];
 
     for (let disabledItem of disabledItems) {
       document.getElementById(disabledItem).setAttribute("disabled", "true");
     }
+
+    window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow =
+      new chatBrowserAccess();
 
     // initialise the offline listener
     BrowserOffline.init();
@@ -71,9 +74,6 @@ var gChatWindow = {
     BrowserOffline.uninit();
   }
 }
-
-__defineGetter__("content", function()
-  document.getElementById("chatter").contentWindow);
 
 // define a popupnotifications handler for this window.  we don't use
 // an iconbox here, and only support the browser frame for chat.
@@ -89,6 +89,49 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
     return null;
   }
 });
+
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
+                                  "resource:///modules/RecentWindow.jsm");
+
+function chatBrowserAccess() { }
+
+chatBrowserAccess.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow, Ci.nsISupports]),
+
+  _openURIInNewTab: function(aURI, aWhere) {
+    if (aWhere != Ci.nsIBrowserDOMWindow.OPEN_NEWTAB)
+      return null;
+
+    let win = RecentWindow.getMostRecentBrowserWindow();
+    if (!win) {
+      // We couldn't find a suitable window, a new one needs to be opened.
+      return null;
+    }
+
+    let loadInBackground =
+      Services.prefs.getBoolPref("browser.tabs.loadDivertedInBackground");
+    let tab = win.gBrowser.loadOneTab(aURI ? aURI.spec : "about:blank",
+                                      {inBackground: loadInBackground});
+    let browser = win.gBrowser.getBrowserForTab(tab);
+    win.focus();
+
+    return browser;
+  },
+
+  openURI: function (aURI, aOpener, aWhere, aContext) {
+    let browser = this._openURIInNewTab(aURI, aWhere);
+    return browser ? browser.contentWindow : null;
+  },
+
+  openURIInFrame: function browser_openURIInFrame(aURI, aOpener, aWhere, aContext) {
+    let browser = this._openURIInNewTab(aURI, aWhere);
+    return browser ? browser.QueryInterface(Ci.nsIFrameLoaderOwner) : null;
+  },
+
+  isTabContentWindow: function (aWindow) this.contentWindow == aWindow,
+
+  get contentWindow() document.getElementById("chatter").contentWindow
+};
 
 </script>
 

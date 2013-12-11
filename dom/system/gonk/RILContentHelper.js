@@ -71,6 +71,8 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:NetworkSelectionModeChanged",
   "RIL:SelectNetwork",
   "RIL:SelectNetworkAuto",
+  "RIL:SetPreferredNetworkType",
+  "RIL:GetPreferredNetworkType",
   "RIL:EmergencyCbModeChanged",
   "RIL:VoicemailNotification",
   "RIL:VoicemailInfoChanged",
@@ -769,6 +771,43 @@ RILContentHelper.prototype = {
     return request;
   },
 
+  setPreferredNetworkType: function setPreferredNetworkType(clientId, window, type) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:SetPreferredNetworkType", {
+      clientId: clientId,
+      data: {
+        requestId: requestId,
+        type: type
+      }
+    });
+    return request;
+  },
+
+  getPreferredNetworkType: function getPreferredNetworkType(clientId, window) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:GetPreferredNetworkType", {
+      clientId: clientId,
+      data: {
+        requestId: requestId
+      }
+    });
+    return request;
+  },
+
   setRoamingPreference: function setRoamingPreference(clientId, window, mode) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
@@ -1102,6 +1141,7 @@ RILContentHelper.prototype = {
 
     let request = Services.DOMRequest.createRequest(window);
     let requestId = this.getRequestId(request);
+    this._windowsMap[requestId] = window;
 
     // Parsing nsDOMContact to Icc Contact format
     let iccContact = {};
@@ -1662,6 +1702,12 @@ RILContentHelper.prototype = {
         this.handleSelectNetwork(clientId, data,
                                  RIL.GECKO_NETWORK_SELECTION_AUTOMATIC);
         break;
+      case "RIL:SetPreferredNetworkType":
+        this.handleSimpleRequest(data.requestId, data.errorMsg, null);
+        break;
+      case "RIL:GetPreferredNetworkType":
+        this.handleSimpleRequest(data.requestId, data.errorMsg, data.type);
+        break;
       case "RIL:VoicemailNotification":
         this.handleVoicemailNotification(clientId, data);
         break;
@@ -1728,7 +1774,7 @@ RILContentHelper.prototype = {
         this.handleReadIccContacts(data);
         break;
       case "RIL:UpdateIccContact":
-        this.handleSimpleRequest(data.requestId, data.errorMsg, null);
+        this.handleUpdateIccContact(data);
         break;
       case "RIL:DataError":
         this.updateConnectionInfo(data, this.rilContexts[clientId].dataConnectionInfo);
@@ -1892,6 +1938,32 @@ RILContentHelper.prototype = {
     });
 
     this.fireRequestSuccess(message.requestId, result);
+  },
+
+  handleUpdateIccContact: function handleUpdateIccContact(message) {
+    if (message.errorMsg) {
+      this.fireRequestError(message.requestId, message.errorMsg);
+      return;
+    }
+
+    let window = this._windowsMap[message.requestId];
+    delete this._windowsMap[message.requestId];
+    let iccContact = message.contact;
+    let prop = {name: [iccContact.alphaId], tel: [{value: iccContact.number}]};
+    if (iccContact.email) {
+      prop.email = [{value: iccContact.email}];
+    }
+
+    // ANR - Additional Number
+    let anrLen = iccContact.anr ? iccContact.anr.length : 0;
+    for (let i = 0; i < anrLen; i++) {
+      prop.tel.push({value: iccContact.anr[i]});
+    }
+
+    let contact = new window.mozContact(prop);
+    contact.id = iccContact.contactId;
+
+    this.fireRequestSuccess(message.requestId, contact);
   },
 
   handleVoicemailNotification: function handleVoicemailNotification(clientId,

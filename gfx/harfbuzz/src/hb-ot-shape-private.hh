@@ -66,7 +66,7 @@ struct hb_ot_shape_planner_t
   hb_ot_map_builder_t map;
 
   hb_ot_shape_planner_t (const hb_shape_plan_t *master_plan) :
-			 face (master_plan->face),
+			 face (master_plan->face_unsafe),
 			 props (master_plan->props),
 			 shaper (NULL),
 			 map (face, &props) {}

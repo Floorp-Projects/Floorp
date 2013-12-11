@@ -41,53 +41,23 @@ function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref("social.allowMultipleWorkers", true);
-  let toolbar = document.getElementById("nav-bar");
-  let currentsetAtStart = toolbar.currentSet;
-  info("tb0 "+currentsetAtStart);
   runSocialTestWithProvider(manifest, function () {
     runSocialTests(tests, undefined, undefined, function () {
       Services.prefs.clearUserPref("social.remote-install.enabled");
       // just in case the tests failed, clear these here as well
       Services.prefs.clearUserPref("social.allowMultipleWorkers");
       Services.prefs.clearUserPref("social.whitelist");
-      
-      // This post-test test ensures that a new window maintains the same
-      // toolbar button set as when we started. That means our insert/removal of
-      // persistent id's is working correctly
-      is(currentsetAtStart, toolbar.currentSet, "toolbar currentset unchanged");
-      openWindowAndWaitForInit(function(w1) {
-        checkSocialUI(w1);
-        // Sometimes the new window adds other buttons to currentSet that are
-        // outside the scope of what we're checking. So we verify that all
-        // buttons from startup are in currentSet for a new window, and that the
-        // provider buttons are properly removed. (e.g on try, window-controls
-        // was not present in currentsetAtStart, but present on the second
-        // window)
-        let tb1 = w1.document.getElementById("nav-bar");
-        info("tb0 "+toolbar.currentSet);
-        info("tb1 "+tb1.currentSet);
-        let startupSet = Set(toolbar.currentSet.split(','));
-        let newSet = Set(tb1.currentSet.split(','));
-        let intersect = Set([x for (x of startupSet) if (newSet.has(x))]);
-        info("intersect "+intersect);
-        let difference = Set([x for (x of newSet) if (!startupSet.has(x))]);
-        info("difference "+difference);
-        is(startupSet.size, intersect.size, "new window toolbar same as old");
-        // verify that our provider buttons are not in difference
-        let id = SocialStatus._toolbarHelper.idFromOrgin(manifest2.origin);
-        ok(!difference.has(id), "status button not persisted at end");
-        w1.close();
-        finish();
-      });
+      ok(CustomizableUI.inDefaultState, "Should be in the default state when we finish");
+      CustomizableUI.reset();
+      finish();
     });
   });
 }
 
 var tests = {
-  testNoButtonOnInstall: function(next) {
+  testNoButtonOnEnable: function(next) {
     // we expect the addon install dialog to appear, we need to accept the
     // install from the dialog.
-    info("Waiting for install dialog");
     let panel = document.getElementById("servicesInstall-notification");
     PopupNotifications.panel.addEventListener("popupshown", function onpopupshown() {
       PopupNotifications.panel.removeEventListener("popupshown", onpopupshown);
@@ -95,20 +65,16 @@ var tests = {
       panel.button.click();
     })
 
-    let id = "social-status-button-" + manifest3.origin;
-    let toolbar = document.getElementById("nav-bar");
-    let currentset = toolbar.getAttribute("currentset").split(',');
-    ok(currentset.indexOf(id) < 0, "button is not part of currentset at start");
-
     let activationURL = manifest3.origin + "/browser/browser/base/content/test/social/social_activate.html"
     addTab(activationURL, function(tab) {
       let doc = tab.linkedBrowser.contentDocument;
       Social.installProvider(doc, manifest3, function(addonManifest) {
         // enable the provider so we know the button would have appeared
         SocialService.addBuiltinProvider(manifest3.origin, function(provider) {
-          ok(provider, "provider is installed");
-          currentset = toolbar.getAttribute("currentset").split(',');
-          ok(currentset.indexOf(id) < 0, "button was not added to currentset");
+          is(provider.origin, manifest3.origin, "provider is installed");
+          let id = SocialStatus._toolbarHelper.idFromOrigin(provider.origin);
+          let widget = CustomizableUI.getWidget(id);
+          ok(!widget || !widget.forWindow(window).node, "no button added to widget set");
           Social.uninstallProvider(manifest3.origin, function() {
             gBrowser.removeTab(tab);
             next();
@@ -117,44 +83,29 @@ var tests = {
       });
     });
   },
-  testButtonOnInstall: function(next) {
-    // we expect the addon install dialog to appear, we need to accept the
-    // install from the dialog.
-    info("Waiting for install dialog");
+  testButtonOnEnable: function(next) {
     let panel = document.getElementById("servicesInstall-notification");
     PopupNotifications.panel.addEventListener("popupshown", function onpopupshown() {
       PopupNotifications.panel.removeEventListener("popupshown", onpopupshown);
       info("servicesInstall-notification panel opened");
       panel.button.click();
-    })
+    });
 
+    // enable the provider now
     let activationURL = manifest2.origin + "/browser/browser/base/content/test/social/social_activate.html"
     addTab(activationURL, function(tab) {
       let doc = tab.linkedBrowser.contentDocument;
       Social.installProvider(doc, manifest2, function(addonManifest) {
-          // at this point, we should have a button id in the currentset for our provider
-          let id = "social-status-button-" + manifest2.origin;
-          let toolbar = document.getElementById("nav-bar");
-
-          waitForCondition(function() {
-                             let currentset = toolbar.getAttribute("currentset").split(',');
-                             return currentset.indexOf(id) >= 0;
-                           },
-                           function() {
-                             // no longer need the tab
-                             gBrowser.removeTab(tab);
-                             next();
-                           }, "status button added to currentset");
+        SocialService.addBuiltinProvider(manifest2.origin, function(provider) {
+          is(provider.origin, manifest2.origin, "provider is installed");
+          let id = SocialStatus._toolbarHelper.idFromOrigin(manifest2.origin);
+          let widget = CustomizableUI.getWidget(id).forWindow(window);
+          ok(widget.node, "button added to widget set");
+          checkSocialUI(window);
+          gBrowser.removeTab(tab);
+          next();
+        });
       });
-    });
-  },
-  testButtonOnEnable: function(next) {
-    // enable the provider now
-    SocialService.addBuiltinProvider(manifest2.origin, function(provider) {
-      ok(provider, "provider is installed");
-      let id = "social-status-button-" + manifest2.origin;
-      waitForCondition(function() { return document.getElementById(id) },
-                       next, "button exists after enabling social");
     });
   },
   testStatusPanel: function(next) {
@@ -165,8 +116,9 @@ var tests = {
     };
     // click on panel to open and wait for visibility
     let provider = Social._getProviderFromOrigin(manifest2.origin);
-    let id = "social-status-button-" + provider.origin;
-    let btn = document.getElementById(id)
+    let id = SocialStatus._toolbarHelper.idFromOrigin(manifest2.origin);
+    let widget = CustomizableUI.getWidget(id);
+    let btn = widget.forWindow(window).node;
     ok(btn, "got a status button");
     let port = provider.getWorkerPort();
 
@@ -188,7 +140,7 @@ var tests = {
             port.close();
             waitForCondition(function() { return btn.getAttribute("badge"); },
                        function() {
-                         is(btn.style.listStyleImage, "url(\"" + icon.iconURL + "\")", "notification icon updated");
+                         is(btn.getAttribute("image"), icon.iconURL, "notification icon updated");
                          next();
                        }, "button updated by notification");
           }
@@ -202,19 +154,11 @@ var tests = {
     let provider = Social._getProviderFromOrigin(manifest2.origin);
     ok(provider, "provider is installed");
     SocialService.removeProvider(manifest2.origin, function() {
-      let id = "social-status-button-" + manifest2.origin;
+      let id = SocialStatus._toolbarHelper.idFromOrigin(manifest2.origin);
       waitForCondition(function() { return !document.getElementById(id) },
-                       next, "button does not exist after disabling the provider");
-    });
-  },
-  testButtonOnUninstall: function(next) {
-    Social.uninstallProvider(manifest2.origin, function() {
-      // test that the button is no longer persisted
-      let id = "social-status-button-" + manifest2.origin;
-      let toolbar = document.getElementById("nav-bar");
-      let currentset = toolbar.getAttribute("currentset").split(',');
-      is(currentset.indexOf(id), -1, "button no longer in currentset");
-      next();
+                       function() {
+                        Social.uninstallProvider(manifest2.origin, next);
+                       }, "button does not exist after disabling the provider");
     });
   }
 }

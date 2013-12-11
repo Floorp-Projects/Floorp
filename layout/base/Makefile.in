@@ -5,25 +5,4 @@
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += \
-		-I$(srcdir) \
-		-I$(srcdir)/../style \
-		-I$(srcdir)/../generic \
-		-I$(srcdir)/../forms \
-		-I$(srcdir)/../tables \
-		-I$(srcdir)/../printing \
-		-I$(srcdir)/../xul/base/src \
-		-I$(srcdir)/../xul/tree/ \
-		-I$(srcdir)/../../content/base/src \
-		-I$(srcdir)/../../content/events/src \
-		-I$(srcdir)/../../content/xbl/src \
-		-I$(srcdir)/../../view/src \
-		-I$(srcdir)/../../dom/base \
-		-I$(srcdir)/../../content/html/content/src \
-		-I$(srcdir)/../../content/svg/content/src \
-		-I$(topsrcdir)/xpcom/ds \
-		-I$(srcdir)/../svg \
-		-I$(srcdir)/../mathml \
-		$(NULL)
-
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS)

@@ -19,6 +19,7 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.os.Handler;
 import android.util.AttributeSet;
@@ -30,10 +31,16 @@ import java.util.List;
 public class GeckoView extends LayerView
     implements GeckoEventListener, ContextGetter {
 
+    private static final String DEFAULT_SHARED_PREFERENCES_FILE = "GeckoView";
     private static final String LOGTAG = "GeckoView";
 
     private ChromeDelegate mChromeDelegate;
     private ContentDelegate mContentDelegate;
+
+    public GeckoView(Context context) {
+        super(context);
+        init(context, null, true);
+    }
 
     public GeckoView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -41,7 +48,10 @@ public class GeckoView extends LayerView
         String url = a.getString(R.styleable.GeckoView_url);
         boolean doInit = a.getBoolean(R.styleable.GeckoView_doinit, true);
         a.recycle();
+        init(context, url, doInit);
+    }
 
+    private void init(Context context, String url, boolean doInit) {
         // TODO: Fennec currently takes care of its own initialization, so this
         // flag is a hack used in Fennec to prevent GeckoView initialization.
         // This should go away once Fennec also uses GeckoView for
@@ -303,6 +313,14 @@ public class GeckoView extends LayerView
 
     public static GeckoAppShell.GeckoInterface getGeckoInterface() {
         return GeckoAppShell.getGeckoInterface();
+    }
+
+    protected String getSharedPreferencesFile() {
+        return DEFAULT_SHARED_PREFERENCES_FILE;
+    }
+
+    public SharedPreferences getSharedPreferences() {
+        return getContext().getSharedPreferences(getSharedPreferencesFile(), 0);
     }
 
     /**

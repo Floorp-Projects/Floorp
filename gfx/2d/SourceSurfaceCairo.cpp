@@ -6,6 +6,7 @@
 #include "SourceSurfaceCairo.h"
 #include "DrawTargetCairo.h"
 #include "HelpersCairo.h"
+#include "DataSourceSurfaceWrapper.h"
 
 #include "cairo.h"
 
@@ -60,7 +61,7 @@ SourceSurfaceCairo::GetFormat() const
 TemporaryRef<DataSourceSurface>
 SourceSurfaceCairo::GetDataSurface()
 {
-  RefPtr<DataSourceSurfaceCairo> dataSurf;
+  RefPtr<DataSourceSurface> dataSurf;
 
   if (cairo_surface_get_type(mSurface) == CAIRO_SURFACE_TYPE_IMAGE) {
     dataSurf = new DataSourceSurfaceCairo(mSurface);
@@ -77,6 +78,10 @@ SourceSurfaceCairo::GetDataSurface()
     dataSurf = new DataSourceSurfaceCairo(imageSurf);
     cairo_surface_destroy(imageSurf);
   }
+
+  // We also need to make sure that the returned surface has
+  // surface->GetType() == SURFACE_DATA.
+  dataSurf = new DataSourceSurfaceWrapper(dataSurf);
 
   return dataSurf;
 }

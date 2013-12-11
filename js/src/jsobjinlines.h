@@ -583,38 +583,6 @@ JSObject::getElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
     return getGenericNoGC(cx, obj, receiver, id, vp);
 }
 
-/* static */ inline bool
-JSObject::getElementIfPresent(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                              uint32_t index, js::MutableHandleValue vp,
-                              bool *present)
-{
-    js::ElementIfPresentOp op = obj->getOps()->getElementIfPresent;
-    if (op)
-        return op(cx, obj, receiver, index, vp, present);
-
-    /*
-     * For now, do the index-to-id conversion just once, then use
-     * lookupGeneric/getGeneric.  Once lookupElement and getElement stop both
-     * doing index-to-id conversions, we can use those here.
-     */
-    JS::RootedId id(cx);
-    if (!js::IndexToId(cx, index, id.address()))
-        return false;
-
-    JS::RootedObject obj2(cx);
-    js::RootedShape prop(cx);
-    if (!lookupGeneric(cx, obj, id, &obj2, &prop))
-        return false;
-
-    if (!prop) {
-        *present = false;
-        return true;
-    }
-
-    *present = true;
-    return getGeneric(cx, obj, receiver, id, vp);
-}
-
 inline js::GlobalObject &
 JSObject::global() const
 {

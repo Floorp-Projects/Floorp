@@ -10,7 +10,7 @@
 #include "nsTArray.h"
 #include "nsPIDOMWindow.h"
 #include "nsITimer.h"
-#include "nsIPluginTagInfo.h"
+#include "nsIPluginInstanceOwner.h"
 #include "nsIURI.h"
 #include "nsIChannel.h"
 #include "nsInterfaceHashtable.h"

@@ -23,7 +23,7 @@ egetname(const struct ename *index, int event)
 {
     const struct ename *ename;
 
-    for (ename = index; !(ename->v == 0 && ename->name == NULL); ename++) {
+    for (ename = index; !(ename->v == 0 && ename->name == nullptr); ename++) {
         if (event == ename->v)
             return ename->name;
     }
@@ -46,7 +46,7 @@ egetname(const struct ename *index, int event)
 #define DEFINE_TYPE_NAME_FUNCTION_HELPER(tokenPrepend, typeName, eventOrType, ...)\
   static struct ename tokenPrepend##typeName##_names[] = {\
     __VA_ARGS__, \
-    { 0, NULL } \
+    { 0, nullptr } \
   };\
   \
   ECC_API cc_string_t typeName##_getname(tokenPrepend##typeName##eventOrType ev) \

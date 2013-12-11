@@ -94,6 +94,8 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
+  virtual mozilla::dom::Element* GetPseudoElement(nsCSSPseudoElements::Type aType) MOZ_OVERRIDE;
+
 //==== BEGIN NSIFORMCONTROLFRAME
   virtual void SetFocus(bool aOn , bool aRepaint) MOZ_OVERRIDE; 
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) MOZ_OVERRIDE;

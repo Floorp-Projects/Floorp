@@ -185,7 +185,7 @@ JSONSpewer::beginFunction(JSScript *script)
 
     beginObject();
     if (script)
-        stringProperty("name", "%s:%d", script->filename(), script->lineno);
+        stringProperty("name", "%s:%d", script->filename(), script->lineno());
     else
         stringProperty("name", "asm.js compilation");
     beginListProperty("passes");
@@ -344,7 +344,7 @@ JSONSpewer::spewLIns(LInstruction *ins)
 
     property("opcode");
     fprintf(fp_, "\"");
-    ins->print(fp_);
+    ins->dump(fp_);
     fprintf(fp_, "\"");
 
     beginListProperty("defs");

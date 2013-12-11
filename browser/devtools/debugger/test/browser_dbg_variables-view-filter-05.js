@@ -58,7 +58,7 @@ function testVariablesAndPropertiesFiltering() {
       assertScopeExpansion([true, true, true, true]);
       assertVariablesCountAtLeast([0, 0, 1, 0]);
 
-      is(functionScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
+      is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[0].getAttribute("value"),
         "arguments", "The arguments pseudoarray should be visible.");
       is(functionScope.get("arguments").expanded, false,
         "The arguments pseudoarray in functionScope should not be expanded.");
@@ -69,12 +69,12 @@ function testVariablesAndPropertiesFiltering() {
       assertScopeExpansion([true, true, true, true]);
       assertVariablesCountAtLeast([0, 0, 1, 1]);
 
-      is(functionScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
+      is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[0].getAttribute("value"),
         "arguments", "The arguments pseudoarray should be visible.");
       is(functionScope.get("arguments").expanded, false,
         "The arguments pseudoarray in functionScope should not be expanded.");
 
-      is(globalScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
+      is(globalScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[0].getAttribute("value"),
         "EventTarget", "The EventTarget object should be visible.");
       is(globalScope.get("EventTarget").expanded, false,
         "The EventTarget object in globalScope should not be expanded.");
@@ -85,17 +85,17 @@ function testVariablesAndPropertiesFiltering() {
       assertScopeExpansion([true, true, true, true]);
       assertVariablesCountAtLeast([0, 1, 3, 1]);
 
-      is(functionScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
+      is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[0].getAttribute("value"),
         "aNumber", "The aNumber param should be visible.");
       is(functionScope.get("aNumber").expanded, false,
         "The aNumber param in functionScope should not be expanded.");
 
-      is(functionScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[1].getAttribute("value"),
+      is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[1].getAttribute("value"),
         "a", "The a variable should be visible.");
       is(functionScope.get("a").expanded, false,
         "The a variable in functionScope should not be expanded.");
 
-      is(functionScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[2].getAttribute("value"),
+      is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[2].getAttribute("value"),
         "arguments", "The arguments pseudoarray should be visible.");
       is(functionScope.get("arguments").expanded, false,
         "The arguments pseudoarray in functionScope should not be expanded.");
@@ -106,37 +106,37 @@ function testVariablesAndPropertiesFiltering() {
       assertScopeExpansion([true, true, true, true]);
       assertVariablesCountAtLeast([4, 1, 3, 1]);
 
-      is(localScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
+      is(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[0].getAttribute("value"),
         "this", "The this reference should be visible.");
       is(localScope.get("this").expanded, false,
         "The this reference in localScope should not be expanded.");
 
-      is(localScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[1].getAttribute("value"),
+      is(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[1].getAttribute("value"),
         "one", "The one variable should be visible.");
       is(localScope.get("one").expanded, false,
         "The one variable in localScope should not be expanded.");
 
-      is(localScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[2].getAttribute("value"),
+      is(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[2].getAttribute("value"),
         "two", "The two variable should be visible.");
       is(localScope.get("two").expanded, false,
         "The two variable in localScope should not be expanded.");
 
-      is(localScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[3].getAttribute("value"),
+      is(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[3].getAttribute("value"),
         "__proto__", "The __proto__ reference should be visible.");
       is(localScope.get("__proto__").expanded, false,
         "The __proto__ reference in localScope should not be expanded.");
 
-      is(functionScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
+      is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[0].getAttribute("value"),
         "aNumber", "The aNumber param should be visible.");
       is(functionScope.get("aNumber").expanded, false,
         "The aNumber param in functionScope should not be expanded.");
 
-      is(functionScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[1].getAttribute("value"),
+      is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[1].getAttribute("value"),
         "a", "The a variable should be visible.");
       is(functionScope.get("a").expanded, false,
         "The a variable in functionScope should not be expanded.");
 
-      is(functionScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[2].getAttribute("value"),
+      is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[2].getAttribute("value"),
         "arguments", "The arguments pseudoarray should be visible.");
       is(functionScope.get("arguments").expanded, false,
         "The arguments pseudoarray in functionScope should not be expanded.");
@@ -162,19 +162,19 @@ function testVariablesAndPropertiesFiltering() {
   }
 
   function assertVariablesCountAtLeast(aCounts) {
-    ok(localScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length >= aCounts[0],
+    ok(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length >= aCounts[0],
       "There should be " + aCounts[0] +
       " variable displayed in the local scope (" + step + ").");
 
-    ok(withScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length >= aCounts[1],
+    ok(withScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length >= aCounts[1],
       "There should be " + aCounts[1] +
       " variable displayed in the with scope (" + step + ").");
 
-    ok(functionScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length >= aCounts[2],
+    ok(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length >= aCounts[2],
       "There should be " + aCounts[2] +
       " variable displayed in the function scope (" + step + ").");
 
-    ok(globalScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length >= aCounts[3],
+    ok(globalScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length >= aCounts[3],
       "There should be " + aCounts[3] +
       " variable displayed in the global scope (" + step + ").");
 

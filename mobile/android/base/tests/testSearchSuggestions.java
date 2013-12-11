@@ -106,14 +106,10 @@ public class testSearchSuggestions extends BaseTest {
             ClassLoader classLoader = getActivity().getApplicationContext().getClassLoader();
             Class suggestClass = classLoader.loadClass("org.mozilla.gecko.home.SuggestClient");
             Constructor suggestConstructor = suggestClass.getConstructor(
-                    new Class[] { Context.class, String.class, int.class, int.class });
+                    new Class[] { Context.class, String.class, int.class });
             String suggestTemplate = getAbsoluteRawUrl(SUGGESTION_TEMPLATE);
-            Object client = suggestConstructor.newInstance(activity, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
 
-            // enable offline HTTP requests for testing
-            final Field checkNetworkField = suggestClass.getDeclaredField("mCheckNetwork");
-            checkNetworkField.setAccessible(true);
-            checkNetworkField.setBoolean(client, false);
+            Object client = suggestConstructor.newInstance(activity, suggestTemplate, SUGGESTION_TIMEOUT);
 
             // replace mSuggestClient with test client
             final Class browserSearchClass = classLoader.loadClass("org.mozilla.gecko.home.BrowserSearch");

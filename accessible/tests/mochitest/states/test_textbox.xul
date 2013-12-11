@@ -18,11 +18,16 @@
 
   <script type="application/javascript">
   <![CDATA[
+    function getInput(aID)
+    {
+      return getNode(aID).inputField;
+    }
+
     function doTest()
     {
       //////////////////////////////////////////////////////////////////////////
       // Ordinary textbox
-      testStates("textbox",
+      testStates(getInput("textbox"),
                  STATE_FOCUSABLE,
                  EXT_STATE_EDITABLE,
                  STATE_PROTECTED | STATE_UNAVAILABLE,
@@ -31,7 +36,7 @@
 
       //////////////////////////////////////////////////////////////////////////
       // Password textbox
-      testStates("password",
+      testStates(getInput("password"),
                  STATE_FOCUSABLE | STATE_PROTECTED,
                  EXT_STATE_EDITABLE,
                  STATE_UNAVAILABLE,
@@ -40,7 +45,7 @@
 
       //////////////////////////////////////////////////////////////////////////
       // Textarea
-      testStates("textarea",
+      testStates(getInput("textarea"),
                  STATE_FOCUSABLE,
                  EXT_STATE_EDITABLE | EXT_STATE_MULTI_LINE,
                  STATE_PROTECTED | STATE_UNAVAILABLE,
@@ -49,7 +54,7 @@
 
       //////////////////////////////////////////////////////////////////////////
       // Readonly textbox
-      testStates("readonly_textbox",
+      testStates(getInput("readonly_textbox"),
                  STATE_FOCUSABLE | STATE_READONLY,
                  EXT_STATE_EDITABLE,
                  STATE_PROTECTED | STATE_UNAVAILABLE,
@@ -58,7 +63,7 @@
 
       //////////////////////////////////////////////////////////////////////////
       // Disabled textbox
-      testStates("disabled_textbox",
+      testStates(getInput("disabled_textbox"),
                  STATE_UNAVAILABLE,
                  EXT_STATE_EDITABLE,
                  STATE_FOCUSABLE | STATE_PROTECTED,
@@ -67,7 +72,7 @@
 
       //////////////////////////////////////////////////////////////////////////
       // Readonly textarea
-      testStates("readonly_textarea",
+      testStates(getInput("readonly_textarea"),
                  STATE_FOCUSABLE | STATE_READONLY,
                  EXT_STATE_EDITABLE | EXT_STATE_MULTI_LINE,
                  STATE_PROTECTED | STATE_UNAVAILABLE,
@@ -76,7 +81,7 @@
 
       //////////////////////////////////////////////////////////////////////////
       // Disabled textarea
-      testStates("disabled_textarea",
+      testStates(getInput("disabled_textarea"),
                  STATE_UNAVAILABLE,
                  EXT_STATE_EDITABLE| EXT_STATE_MULTI_LINE,
                  STATE_PROTECTED | STATE_FOCUSABLE,
@@ -86,7 +91,7 @@
       //////////////////////////////////////////////////////////////////////////
       // Search textbox without search button, searches as you type and filters
       // a separate control.
-      testStates("searchbox",
+      testStates(getInput("searchbox"),
                  STATE_FOCUSABLE,
                  EXT_STATE_EDITABLE | EXT_STATE_SUPPORTS_AUTOCOMPLETION,
                  STATE_PROTECTED | STATE_UNAVAILABLE,
@@ -95,7 +100,7 @@
 
       //////////////////////////////////////////////////////////////////////////
       // Search textbox with search button, does not support autoCompletion.
-      testStates("searchfield",
+      testStates(getInput("searchfield"),
                  STATE_FOCUSABLE,
                  EXT_STATE_EDITABLE,
                  STATE_PROTECTED | STATE_UNAVAILABLE,

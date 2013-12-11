@@ -8,7 +8,7 @@
  * values they accept
  */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
@@ -529,6 +529,7 @@ const int32_t nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_button_arrow_previous,  NS_THEME_BUTTON_ARROW_PREVIOUS,
   eCSSKeyword_meterbar,               NS_THEME_METERBAR,
   eCSSKeyword_meterchunk,             NS_THEME_METERBAR_CHUNK,
+  eCSSKeyword_number_input,           NS_THEME_NUMBER_INPUT,
   eCSSKeyword_separator,              NS_THEME_TOOLBAR_SEPARATOR,
   eCSSKeyword_splitter,               NS_THEME_SPLITTER,
   eCSSKeyword_statusbar,              NS_THEME_STATUSBAR,
@@ -973,6 +974,16 @@ const int32_t nsCSSProps::kEmptyCellsKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const int32_t nsCSSProps::kAlignContentKTable[] = {
+  eCSSKeyword_flex_start,    NS_STYLE_ALIGN_CONTENT_FLEX_START,
+  eCSSKeyword_flex_end,      NS_STYLE_ALIGN_CONTENT_FLEX_END,
+  eCSSKeyword_center,        NS_STYLE_ALIGN_CONTENT_CENTER,
+  eCSSKeyword_space_between, NS_STYLE_ALIGN_CONTENT_SPACE_BETWEEN,
+  eCSSKeyword_space_around,  NS_STYLE_ALIGN_CONTENT_SPACE_AROUND,
+  eCSSKeyword_stretch,       NS_STYLE_ALIGN_CONTENT_STRETCH,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const int32_t nsCSSProps::kAlignItemsKTable[] = {
   eCSSKeyword_flex_start, NS_STYLE_ALIGN_ITEMS_FLEX_START,
   eCSSKeyword_flex_end,   NS_STYLE_ALIGN_ITEMS_FLEX_END,
@@ -998,6 +1009,13 @@ const int32_t nsCSSProps::kFlexDirectionKTable[] = {
   eCSSKeyword_row_reverse,    NS_STYLE_FLEX_DIRECTION_ROW_REVERSE,
   eCSSKeyword_column,         NS_STYLE_FLEX_DIRECTION_COLUMN,
   eCSSKeyword_column_reverse, NS_STYLE_FLEX_DIRECTION_COLUMN_REVERSE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const int32_t nsCSSProps::kFlexWrapKTable[] = {
+  eCSSKeyword_nowrap,       NS_STYLE_FLEX_WRAP_NOWRAP,
+  eCSSKeyword_wrap,         NS_STYLE_FLEX_WRAP_WRAP,
+  eCSSKeyword_wrap_reverse, NS_STYLE_FLEX_WRAP_WRAP_REVERSE,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1231,11 +1249,21 @@ const int32_t nsCSSProps::kListStyleKTable[] = {
   eCSSKeyword_hebrew, NS_STYLE_LIST_STYLE_HEBREW,
   eCSSKeyword_armenian, NS_STYLE_LIST_STYLE_ARMENIAN,
   eCSSKeyword_georgian, NS_STYLE_LIST_STYLE_GEORGIAN,
+  eCSSKeyword_cjk_decimal, NS_STYLE_LIST_STYLE_CJK_DECIMAL,
   eCSSKeyword_cjk_ideographic, NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC,
   eCSSKeyword_hiragana, NS_STYLE_LIST_STYLE_HIRAGANA,
   eCSSKeyword_katakana, NS_STYLE_LIST_STYLE_KATAKANA,
   eCSSKeyword_hiragana_iroha, NS_STYLE_LIST_STYLE_HIRAGANA_IROHA,
   eCSSKeyword_katakana_iroha, NS_STYLE_LIST_STYLE_KATAKANA_IROHA,
+  eCSSKeyword_japanese_informal, NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL,
+  eCSSKeyword_japanese_formal, NS_STYLE_LIST_STYLE_JAPANESE_FORMAL,
+  eCSSKeyword_korean_hangul_formal, NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL,
+  eCSSKeyword_korean_hanja_informal, NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL,
+  eCSSKeyword_korean_hanja_formal, NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL,
+  eCSSKeyword_simp_chinese_informal, NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL,
+  eCSSKeyword_simp_chinese_formal, NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL,
+  eCSSKeyword_trad_chinese_informal, NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL,
+  eCSSKeyword_trad_chinese_formal, NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL,
   eCSSKeyword__moz_cjk_heavenly_stem, NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM,
   eCSSKeyword__moz_cjk_earthly_branch, NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH,
   eCSSKeyword__moz_trad_chinese_informal, NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL,
@@ -1267,6 +1295,29 @@ const int32_t nsCSSProps::kListStyleKTable[] = {
   eCSSKeyword__moz_ethiopic_halehame_am, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM,
   eCSSKeyword__moz_ethiopic_halehame_ti_er, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER,
   eCSSKeyword__moz_ethiopic_halehame_ti_et, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const int32_t nsCSSProps::kMathVariantKTable[] = {
+  eCSSKeyword_none, NS_MATHML_MATHVARIANT_NONE,
+  eCSSKeyword_normal, NS_MATHML_MATHVARIANT_NORMAL,
+  eCSSKeyword_bold, NS_MATHML_MATHVARIANT_BOLD,
+  eCSSKeyword_italic, NS_MATHML_MATHVARIANT_ITALIC,
+  eCSSKeyword_bold_italic, NS_MATHML_MATHVARIANT_BOLD_ITALIC,
+  eCSSKeyword_script, NS_MATHML_MATHVARIANT_SCRIPT,
+  eCSSKeyword_bold_script, NS_MATHML_MATHVARIANT_BOLD_SCRIPT,
+  eCSSKeyword_fraktur, NS_MATHML_MATHVARIANT_FRAKTUR,
+  eCSSKeyword_double_struck, NS_MATHML_MATHVARIANT_DOUBLE_STRUCK,
+  eCSSKeyword_bold_fraktur, NS_MATHML_MATHVARIANT_BOLD_FRAKTUR,
+  eCSSKeyword_sans_serif, NS_MATHML_MATHVARIANT_SANS_SERIF,
+  eCSSKeyword_bold_sans_serif, NS_MATHML_MATHVARIANT_BOLD_SANS_SERIF,
+  eCSSKeyword_sans_serif_italic, NS_MATHML_MATHVARIANT_SANS_SERIF_ITALIC,
+  eCSSKeyword_sans_serif_bold_italic, NS_MATHML_MATHVARIANT_SANS_SERIF_BOLD_ITALIC,
+  eCSSKeyword_monospace, NS_MATHML_MATHVARIANT_MONOSPACE,
+  eCSSKeyword_initial, NS_MATHML_MATHVARIANT_INITIAL,
+  eCSSKeyword_tailed, NS_MATHML_MATHVARIANT_TAILED,
+  eCSSKeyword_looped, NS_MATHML_MATHVARIANT_LOOPED,
+  eCSSKeyword_stretched, NS_MATHML_MATHVARIANT_STRETCHED,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -2368,6 +2419,12 @@ static const nsCSSProperty gFlexSubpropTable[] = {
   eCSSProperty_flex_grow,
   eCSSProperty_flex_shrink,
   eCSSProperty_flex_basis,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gFlexFlowSubpropTable[] = {
+  eCSSProperty_flex_direction,
+  eCSSProperty_flex_wrap,
   eCSSProperty_UNKNOWN
 };
 

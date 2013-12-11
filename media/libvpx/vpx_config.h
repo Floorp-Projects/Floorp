@@ -30,13 +30,8 @@
 
 #elif defined(VPX_ARM_ASM)
 
-#if defined(__linux__) && defined(__GNUC__)
-/* ARM Linux */
-#include "vpx_config_arm-linux-gcc.h"
-
-#else
-#error VPX_ARM_ASM is defined, but assembly not supported on this platform!
-#endif
+/* Android */
+#include "vpx_config_armv7-android-gcc.h"
 
 #else
 /* Assume generic GNU/GCC configuration. */
@@ -45,17 +40,7 @@
 
 /* Control error-concealment support using our own #define rather than
    hard-coding it. */
-#if defined(MOZ_VP8_ERROR_CONCEALMENT)
+#if defined(MOZ_VPX_ERROR_CONCEALMENT)
 #undef CONFIG_ERROR_CONCEALMENT
 #define CONFIG_ERROR_CONCEALMENT 1
-#endif
-
-/* Control encoder support using our own #define rather than hard-coding it. */
-#if defined(MOZ_VP8_ENCODER)
-#undef CONFIG_VP8_ENCODER
-#undef CONFIG_ENCODERS
-#undef CONFIG_MULTI_RES_ENCODING
-#define CONFIG_VP8_ENCODER 1
-#define CONFIG_ENCODERS 1
-#define CONFIG_MULTI_RES_ENCODING 1
 #endif

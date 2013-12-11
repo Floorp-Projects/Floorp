@@ -356,6 +356,7 @@ class LiveInterval
     bool splitFrom(CodePosition pos, LiveInterval *after);
 
     void addUse(UsePosition *use);
+    void addUseAtEnd(UsePosition *use);
     UsePosition *nextUseAfter(CodePosition pos);
     CodePosition nextUsePosAfter(CodePosition pos);
     CodePosition firstIncompatibleUse(LAllocation alloc);
@@ -368,6 +369,10 @@ class LiveInterval
         return uses_.end();
     }
 
+    bool usesEmpty() const {
+        return uses_.empty();
+    }
+
     UsePosition *usesBack() {
         return uses_.back();
     }
@@ -375,6 +380,12 @@ class LiveInterval
 #ifdef DEBUG
     void validateRanges();
 #endif
+
+    // Return a string describing the ranges in this LiveInterval. This is
+    // not re-entrant!
+    const char *rangesToString() const;
+
+    void dump();
 };
 
 /*
@@ -396,7 +407,7 @@ class VirtualRegister
     VirtualRegister(const VirtualRegister &) MOZ_DELETE;
 
   protected:
-    VirtualRegister(TempAllocator &alloc)
+    explicit VirtualRegister(TempAllocator &alloc)
       : intervals_(alloc)
     {}
 
@@ -548,8 +559,13 @@ IsTraceable(VirtualRegister *reg)
 typedef InlineList<LiveInterval>::iterator IntervalIterator;
 typedef InlineList<LiveInterval>::reverse_iterator IntervalReverseIterator;
 
-template <typename VREG>
-class LiveRangeAllocator : public RegisterAllocator
+// The forLSRA parameter indicates whether the underlying allocator is LSRA.
+// This changes the generated live ranges in various ways: inserting additional
+// fixed uses of registers, and shifting the boundaries of live ranges by small
+// amounts. This exists because different allocators handle live ranges
+// differently; ideally, they would all treat live ranges in the same way.
+template <typename VREG, bool forLSRA>
+class LiveRangeAllocator : protected RegisterAllocator
 {
   protected:
     // Computed inforamtion
@@ -561,21 +577,13 @@ class LiveRangeAllocator : public RegisterAllocator
     // whether an interval intersects with a fixed register.
     LiveInterval *fixedIntervalsUnion;
 
-    // Whether the underlying allocator is LSRA. This changes the generated
-    // live ranges in various ways: inserting additional fixed uses of
-    // registers, and shifting the boundaries of live ranges by small amounts.
-    // This exists because different allocators handle live ranges differently;
-    // ideally, they would all treat live ranges in the same way.
-    bool forLSRA;
-
     // Allocation state
     StackSlotAllocator stackSlotAllocator;
 
-    LiveRangeAllocator(MIRGenerator *mir, LIRGenerator *lir, LIRGraph &graph, bool forLSRA)
+    LiveRangeAllocator(MIRGenerator *mir, LIRGenerator *lir, LIRGraph &graph)
       : RegisterAllocator(mir, lir, graph),
         liveIn(nullptr),
-        fixedIntervalsUnion(nullptr),
-        forLSRA(forLSRA)
+        fixedIntervalsUnion(nullptr)
     {
     }
 
@@ -592,7 +600,7 @@ class LiveRangeAllocator : public RegisterAllocator
     void validateVirtualRegisters()
     {
 #ifdef DEBUG
-        if (!js_IonOptions.assertGraphConsistency)
+        if (!js_IonOptions.checkGraphConsistency)
             return;
 
         for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
@@ -626,18 +634,35 @@ class LiveRangeAllocator : public RegisterAllocator
 #endif
 
     bool addMove(LMoveGroup *moves, LiveInterval *from, LiveInterval *to) {
-        if (*from->getAllocation() == *to->getAllocation())
-            return true;
+        JS_ASSERT(*from->getAllocation() != *to->getAllocation());
         return moves->add(from->getAllocation(), to->getAllocation());
     }
 
     bool moveInput(CodePosition pos, LiveInterval *from, LiveInterval *to) {
+        if (*from->getAllocation() == *to->getAllocation())
+            return true;
         LMoveGroup *moves = getInputMoveGroup(pos);
         return addMove(moves, from, to);
     }
 
     bool moveAfter(CodePosition pos, LiveInterval *from, LiveInterval *to) {
+        if (*from->getAllocation() == *to->getAllocation())
+            return true;
         LMoveGroup *moves = getMoveGroupAfter(pos);
+        return addMove(moves, from, to);
+    }
+
+    bool moveAtExit(LBlock *block, LiveInterval *from, LiveInterval *to) {
+        if (*from->getAllocation() == *to->getAllocation())
+            return true;
+        LMoveGroup *moves = block->getExitMoveGroup(alloc());
+        return addMove(moves, from, to);
+    }
+
+    bool moveAtEntry(LBlock *block, LiveInterval *from, LiveInterval *to) {
+        if (*from->getAllocation() == *to->getAllocation())
+            return true;
+        LMoveGroup *moves = block->getEntryMoveGroup(alloc());
         return addMove(moves, from, to);
     }
 
@@ -646,7 +671,7 @@ class LiveRangeAllocator : public RegisterAllocator
         size_t i = 0;
         for (; i < graph.numNonCallSafepoints(); i++) {
             const LInstruction *ins = graph.getNonCallSafepoint(i);
-            if (from <= (forLSRA ? inputOf(ins) : outputOf(ins)))
+            if (from <= inputOf(ins))
                 break;
         }
         return i;
@@ -667,11 +692,11 @@ class LiveRangeAllocator : public RegisterAllocator
         size_t i = findFirstNonCallSafepoint(start);
         for (; i < graph.numNonCallSafepoints(); i++) {
             LInstruction *ins = graph.getNonCallSafepoint(i);
-            CodePosition pos = forLSRA ? inputOf(ins) : outputOf(ins);
+            CodePosition pos = inputOf(ins);
 
             // Safepoints are sorted, so we can shortcut out of this loop
             // if we go out of range.
-            if (interval->end() < pos)
+            if (interval->end() <= pos)
                 break;
 
             if (!interval->covers(pos))

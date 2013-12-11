@@ -9,7 +9,6 @@
 #include "mozilla/Preferences.h"
 #include "sqlite3.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Util.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"

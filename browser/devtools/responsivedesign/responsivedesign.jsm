@@ -203,7 +203,7 @@ function ResponsiveUI(aWindow, aTab)
 
   // Touch events support
   this.touchEnableBefore = false;
-  this.touchEventHandler = new TouchEventHandler(this.browser.contentWindow);
+  this.touchEventHandler = new TouchEventHandler(this.browser);
 
   this.browser.addEventListener("load", this.bound_onPageLoad, true);
   this.browser.addEventListener("unload", this.bound_onPageUnload, true);
@@ -232,7 +232,7 @@ ResponsiveUI.prototype = {
    * Window onload / onunload
    */
    onPageLoad: function() {
-     this.touchEventHandler = new TouchEventHandler(this.browser.contentWindow);
+     this.touchEventHandler = new TouchEventHandler(this.browser);
      if (this.touchEnableBefore) {
        this.enableTouch();
      }

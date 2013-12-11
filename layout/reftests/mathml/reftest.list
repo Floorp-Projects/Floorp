@@ -39,6 +39,8 @@ skip-if(B2G) == quotes-1.xhtml quotes-1-ref.xhtml
 != stretchy-underbar-1.xhtml stretchy-underbar-1-ref.xhtml 
 == table-width-1.xhtml table-width-1-ref.xhtml
 == table-width-2.html table-width-2-ref.html
+fails-if(OSX||/^Windows\x20NT\x206\.[^0]/.test(http.oscpu)||Android) == table-width-3.html table-width-3-ref.html
+fails-if((OSX&&(OSX<10.8))||/^Windows\x20NT\x206\.[^0]/.test(http.oscpu)||Android) == table-width-4.html table-width-4-ref.html
 == underbar-width-1.xhtml underbar-width-1-ref.xhtml
 == mathml-type-supported.xhtml mathml-type-supported-ref.xml
 == mtable-align-negative-rownumber.html mtable-align-negative-rownumber-ref.html
@@ -129,3 +131,12 @@ fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
 != menclose-1.html menclose-1-ref.html
+== mmultiscript-align.html mmultiscript-align-ref.html
+== mathvariant-1a.html mathvariant-1a-ref.html
+== mathvariant-1b.html mathvariant-1b-ref.html
+== mathvariant-1c.html mathvariant-1c-ref.html
+== mathvariant-1d.html mathvariant-1d-ref.html
+== mathvariant-2.html mathvariant-2-ref.html
+== mathvariant-3.html mathvariant-3-ref.html
+== mathvariant-4.html mathvariant-4-ref.html
+== mathvariant-5.html mathvariant-5-ref.html

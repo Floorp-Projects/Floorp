@@ -1,0 +1,196 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=935506
+-->
+<head>
+  <title>Test key events for number control</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta charset="UTF-8">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=935506">Mozilla Bug 935506</a>
+<p id="display"></p>
+<div id="content">
+  <input id="input" type="number">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/**
+ * Test for Bug 935506
+ * This test checks how the value of <input type=number> changes in response to
+ * key events while it is in various states.
+ **/
+SimpleTest.waitForExplicitFinish();
+
+// Turn off Spatial Navigation because it hijacks arrow keydown events:
+SpecialPowers.setBoolPref("snav.enabled", false);
+
+SimpleTest.waitForFocus(function() {
+  test();
+  SimpleTest.finish();
+});
+
+const defaultMinimum = "NaN";
+const defaultMaximum = "NaN";
+const defaultStep = 1;
+
+// Helpers:
+// For the sake of simplicity, we do not currently support fractional value,
+// step, etc.
+
+function getMinimum(element) {
+  return Number(element.min || defaultMinimum);
+}
+
+function getMaximum(element) {
+  return Number(element.max || defaultMaximum);
+}
+
+function getDefaultValue(element) {
+  return 0;
+}
+
+function getValue(element) {
+  return Number(element.value || getDefaultValue(element));
+}
+
+function getStep(element) {
+  if (element.step == "any") {
+    return "any";
+  }
+  var step = Number(element.step || defaultStep);
+  return step <= 0 ? defaultStep : step;
+}
+
+function getStepBase(element) {
+  return Number(element.getAttribute("min") || "NaN") ||
+         Number(element.getAttribute("value") || "NaN") || 0;
+}
+
+function floorModulo(x, y) {
+  return (x - y * Math.floor(x / y));
+}
+
+function expectedValueAfterStepUpOrDown(stepFactor, element) {
+  var value = getValue(element);
+  if (isNaN(value)) {
+    value = 0;
+  }
+  var step = getStep(element);
+  if (step == "any") {
+    return value;
+  }
+
+  var minimum = getMinimum(element);
+  var maximum = getMaximum(element);
+  if (!isNaN(maximum)) {
+    // "max - (max - stepBase) % step" is the nearest valid value to max.
+    maximum = maximum - floorModulo(maximum - getStepBase(element), step);
+  }
+
+  // Cases where we are clearly going in the wrong way.
+  // We don't use ValidityState because we can be higher than the maximal
+  // allowed value and still not suffer from range overflow in the case of
+  // of the value specified in @max isn't in the step.
+  if ((value <= minimum && stepFactor < 0) ||
+      (value >= maximum && stepFactor > 0)) {
+    return value;
+  }
+
+  if (element.validity.stepMismatch &&
+      value != minimum && value != maximum) {
+    if (stepFactor > 0) {
+      value -= floorModulo(value - getStepBase(element), step);
+    } else if (stepFactor < 0) {
+      value -= floorModulo(value - getStepBase(element), step);
+      value += step;
+    }
+  }
+
+  value += step * stepFactor;
+
+  // When stepUp() is called and the value is below minimum, we should clamp on
+  // minimum unless stepUp() moves us higher than minimum.
+  if (element.validity.rangeUnderflow && stepFactor > 0 &&
+      value <= minimum) {
+    value = minimum;
+  } else if (element.validity.rangeOverflow && stepFactor < 0 &&
+             value >= maximum) {
+    value = maximum;
+  } else if (stepFactor < 0 && !isNaN(minimum)) {
+    value = Math.max(value, minimum);
+  } else if (stepFactor > 0 && !isNaN(maximum)) {
+    value = Math.min(value, maximum);
+  }
+
+  return value;
+}
+
+function expectedValAfterKeyEvent(key, element) {
+  return expectedValueAfterStepUpOrDown(key == "VK_UP" ? 1 : -1, element);
+}
+
+function test() {
+  var elem = document.getElementById("input");
+  elem.focus();
+
+  elem.min = -3;
+  elem.max = 3;
+  elem.step = 2;
+  var defaultValue = 0;
+  var oldVal, expectedVal;
+
+  for (key of ["VK_UP", "VK_DOWN"]) {
+    // Start at middle:
+    oldVal = elem.value = 0;
+    expectedVal = expectedValAfterKeyEvent(key, elem);
+    synthesizeKey(key, {});
+    is(elem.value, expectedVal, "Test " + key + " for number control with value set to the midpoint (" + oldVal + ")");
+
+    // Same again:
+    expectedVal = expectedValAfterKeyEvent(key, elem);
+    synthesizeKey(key, {});
+    is(elem.value, expectedVal, "Test repeat of " + key + " for number control");
+
+    // Start at maximum:
+    oldVal = elem.value = elem.max;
+    expectedVal = expectedValAfterKeyEvent(key, elem);
+    synthesizeKey(key, {});
+    is(elem.value, expectedVal, "Test " + key + " for number control with value set to the maximum (" + oldVal + ")");
+
+    // Same again:
+    expectedVal = expectedValAfterKeyEvent(key, elem);
+    synthesizeKey(key, {});
+    is(elem.value, expectedVal, "Test repeat of " + key + " for number control");
+
+    // Start at minimum:
+    oldVal = elem.value = elem.min;
+    expectedVal = expectedValAfterKeyEvent(key, elem);
+    synthesizeKey(key, {});
+    is(elem.value, expectedVal, "Test " + key + " for number control with value set to the minimum (" + oldVal + ")");
+
+    // Same again:
+    expectedVal = expectedValAfterKeyEvent(key, elem);
+    synthesizeKey(key, {});
+    is(elem.value, expectedVal, "Test repeat of " + key + " for number control");
+
+    // Test preventDefault():
+    elem.addEventListener("keypress", function(evt) {
+      evt.preventDefault();
+      elem.removeEventListener("keypress", arguments.callee, false);
+    }, false);
+    oldVal = elem.value = 0;
+    expectedVal = 0;
+    synthesizeKey(key, {});
+    is(elem.value, expectedVal, "Test " + key + " for number control where scripted preventDefault() should prevent the value changing");
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>

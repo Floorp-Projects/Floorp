@@ -7,6 +7,7 @@ package org.mozilla.gecko.db;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import android.content.ContentResolver;
 import android.database.ContentObserver;
@@ -19,7 +20,6 @@ import android.util.SparseArray;
 import java.util.List;
 
 public class BrowserDB {
-    public static String ABOUT_PAGES_URL_FILTER = "about:%";
     private static boolean sAreContentProvidersEnabled = true;
 
     public static interface URLColumns {
@@ -37,6 +37,7 @@ public class BrowserDB {
     public interface BrowserDBIface {
         public void invalidateCachedState();
 
+        @RobocopTarget
         public Cursor filter(ContentResolver cr, CharSequence constraint, int limit);
 
         // This should onlyl return frecent sites, BrowserDB.getTopSites will do the
@@ -50,6 +51,7 @@ public class BrowserDB {
         public void updateHistoryEntry(ContentResolver cr, String uri, String title,
                                        long date, int visits);
 
+        @RobocopTarget
         public Cursor getAllVisitedHistory(ContentResolver cr);
 
         public Cursor getRecentHistory(ContentResolver cr, int limit);
@@ -58,28 +60,34 @@ public class BrowserDB {
 
         public void removeHistoryEntry(ContentResolver cr, int id);
 
+        @RobocopTarget
         public void removeHistoryEntry(ContentResolver cr, String url);
 
         public void clearHistory(ContentResolver cr);
 
+        @RobocopTarget
         public Cursor getBookmarksInFolder(ContentResolver cr, long folderId);
 
         public boolean isVisited(ContentResolver cr, String uri);
 
         public int getReadingListCount(ContentResolver cr);
 
+        @RobocopTarget
         public boolean isBookmark(ContentResolver cr, String uri);
 
         public boolean isReadingListItem(ContentResolver cr, String uri);
 
         public String getUrlForKeyword(ContentResolver cr, String keyword);
 
+        @RobocopTarget
         public void addBookmark(ContentResolver cr, String title, String uri);
 
         public void removeBookmark(ContentResolver cr, int id);
 
+        @RobocopTarget
         public void removeBookmarksWithURL(ContentResolver cr, String uri);
 
+        @RobocopTarget
         public void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword);
 
         public void addReadingListItem(ContentResolver cr, String title, String uri);
@@ -94,10 +102,12 @@ public class BrowserDB {
 
         public void updateThumbnailForUrl(ContentResolver cr, String uri, BitmapDrawable thumbnail);
 
+        @RobocopTarget
         public byte[] getThumbnailForUrl(ContentResolver cr, String uri);
 
         public Cursor getThumbnailsForUrls(ContentResolver cr, List<String> urls);
 
+        @RobocopTarget
         public void removeThumbnails(ContentResolver cr);
 
         public void registerBookmarkObserver(ContentResolver cr, ContentObserver observer);
@@ -114,6 +124,7 @@ public class BrowserDB {
 
         public Cursor getPinnedSites(ContentResolver cr, int limit);
 
+        @RobocopTarget
         public Cursor getBookmarkForUrl(ContentResolver cr, String url);
     }
 
@@ -130,6 +141,7 @@ public class BrowserDB {
         sDb.invalidateCachedState();
     }
 
+    @RobocopTarget
     public static Cursor filter(ContentResolver cr, CharSequence constraint, int limit) {
         return sDb.filter(cr, constraint, limit);
     }
@@ -161,6 +173,7 @@ public class BrowserDB {
         }
     }
 
+    @RobocopTarget
     public static Cursor getAllVisitedHistory(ContentResolver cr) {
         return (sAreContentProvidersEnabled ? sDb.getAllVisitedHistory(cr) : null);
     }
@@ -182,14 +195,17 @@ public class BrowserDB {
         sDb.removeHistoryEntry(cr, id);
     }
 
+    @RobocopTarget
     public static void removeHistoryEntry(ContentResolver cr, String url) {
         sDb.removeHistoryEntry(cr, url);
     }
 
+    @RobocopTarget
     public static void clearHistory(ContentResolver cr) {
         sDb.clearHistory(cr);
     }
 
+    @RobocopTarget
     public static Cursor getBookmarksInFolder(ContentResolver cr, long folderId) {
         return sDb.getBookmarksInFolder(cr, folderId);
     }
@@ -206,6 +222,7 @@ public class BrowserDB {
         return sDb.getReadingListCount(cr);
     }
 
+    @RobocopTarget
     public static boolean isBookmark(ContentResolver cr, String uri) {
         return (sAreContentProvidersEnabled && sDb.isBookmark(cr, uri));
     }
@@ -222,10 +239,12 @@ public class BrowserDB {
         sDb.removeBookmark(cr, id);
     }
 
+    @RobocopTarget
     public static void removeBookmarksWithURL(ContentResolver cr, String uri) {
         sDb.removeBookmarksWithURL(cr, uri);
     }
 
+    @RobocopTarget
     public static void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword) {
         sDb.updateBookmark(cr, id, uri, title, keyword);
     }
@@ -254,6 +273,7 @@ public class BrowserDB {
         sDb.updateThumbnailForUrl(cr, uri, thumbnail);
     }
 
+    @RobocopTarget
     public static byte[] getThumbnailForUrl(ContentResolver cr, String uri) {
         return sDb.getThumbnailForUrl(cr, uri);
     }
@@ -262,6 +282,7 @@ public class BrowserDB {
         return sDb.getThumbnailsForUrls(cr, urls);
     }
 
+    @RobocopTarget
     public static void removeThumbnails(ContentResolver cr) {
         sDb.removeThumbnails(cr);
     }
@@ -298,6 +319,7 @@ public class BrowserDB {
         return sDb.getPinnedSites(cr, limit);
     }
 
+    @RobocopTarget
     public static Cursor getBookmarkForUrl(ContentResolver cr, String url) {
         return sDb.getBookmarkForUrl(cr, url);
     }

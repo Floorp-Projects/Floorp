@@ -15,8 +15,6 @@ from mach.mixin.logging import LoggingMixin
 import mozpack.path as mozpath
 import manifestparser
 
-from mozpack.files import FileFinder
-
 from .data import (
     ConfigFileSubstitution,
     Defines,
@@ -65,7 +63,7 @@ class TreeMetadataEmitter(LoggingMixin):
         self.config = config
 
         # TODO add mozinfo into config or somewhere else.
-        mozinfo_path = os.path.join(config.topobjdir, 'mozinfo.json')
+        mozinfo_path = mozpath.join(config.topobjdir, 'mozinfo.json')
         if os.path.exists(mozinfo_path):
             self.mozinfo = json.load(open(mozinfo_path, 'rt'))
         else:
@@ -174,9 +172,9 @@ class TreeMetadataEmitter(LoggingMixin):
             yield XPIDLFile(sandbox, mozpath.join(sandbox['SRCDIR'], idl),
                 xpidl_module)
 
-        for symbol in ('SOURCES', 'GTEST_SOURCES', 'HOST_SOURCES', 'UNIFIED_SOURCES'):
+        for symbol in ('SOURCES', 'HOST_SOURCES', 'UNIFIED_SOURCES'):
             for src in (sandbox[symbol] or []):
-                if not os.path.exists(os.path.join(sandbox['SRCDIR'], src)):
+                if not os.path.exists(mozpath.join(sandbox['SRCDIR'], src)):
                     raise SandboxValidationError('Reference to a file that '
                         'doesn\'t exist in %s (%s) in %s'
                         % (symbol, src, sandbox['RELATIVEDIR']))
@@ -199,8 +197,10 @@ class TreeMetadataEmitter(LoggingMixin):
             EXTRA_PP_COMPONENTS='EXTRA_PP_COMPONENTS',
             EXTRA_PP_JS_MODULES='EXTRA_PP_JS_MODULES',
             FAIL_ON_WARNINGS='FAIL_ON_WARNINGS',
+            FILES_PER_UNIFIED_FILE='FILES_PER_UNIFIED_FILE',
             FORCE_SHARED_LIB='FORCE_SHARED_LIB',
             FORCE_STATIC_LIB='FORCE_STATIC_LIB',
+            GENERATED_FILES='GENERATED_FILES',
             HOST_LIBRARY_NAME='HOST_LIBRARY_NAME',
             IS_COMPONENT='IS_COMPONENT',
             JS_MODULES_PATH='JS_MODULES_PATH',
@@ -236,12 +236,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 '.cc': 'HOST_CPPSRCS',
                 '.cpp': 'HOST_CPPSRCS',
             },
-            GTEST_SOURCES={
-                '.c': 'GTEST_CSRCS',
-                '.mm': 'GTEST_CMMSRCS',
-                '.cc': 'GTEST_CPPSRCS',
-                '.cpp': 'GTEST_CPPSRCS',
-            },
             UNIFIED_SOURCES={
                 '.c': 'UNIFIED_CSRCS',
                 '.mm': 'UNIFIED_CMMSRCS',
@@ -253,7 +247,7 @@ class TreeMetadataEmitter(LoggingMixin):
                            if k in ('SOURCES', 'UNIFIED_SOURCES')))
         for variable, mapping in varmap.items():
             for f in sandbox[variable]:
-                ext = os.path.splitext(f)[1]
+                ext = mozpath.splitext(f)[1]
                 if ext not in mapping:
                     raise SandboxValidationError('%s has an unknown file type in %s' % (f, sandbox['RELATIVEDIR']))
                 l = passthru.variables.setdefault(mapping[ext], [])
@@ -261,6 +255,16 @@ class TreeMetadataEmitter(LoggingMixin):
                 if variable.startswith('GENERATED_'):
                     l = passthru.variables.setdefault('GARBAGE', [])
                     l.append(f)
+
+        no_pgo = sandbox.get('NO_PGO')
+        sources = sandbox.get('SOURCES', [])
+        no_pgo_sources = [f for f in sources if sources[f].no_pgo]
+        if no_pgo:
+            if no_pgo_sources:
+                raise SandboxValidationError('NO_PGO and SOURCES[...].no_pgo cannot be set at the same time')
+            passthru.variables['NO_PROFILE_GUIDED_OPTIMIZE'] = no_pgo
+        if no_pgo_sources:
+            passthru.variables['NO_PROFILE_GUIDED_OPTIMIZE'] = no_pgo_sources
 
         exports = sandbox.get('EXPORTS')
         if exports:
@@ -365,8 +369,8 @@ class TreeMetadataEmitter(LoggingMixin):
             path = path[1:]
 
         sub = cls(sandbox)
-        sub.input_path = os.path.join(sandbox['SRCDIR'], '%s.in' % path)
-        sub.output_path = os.path.join(sandbox['OBJDIR'], path)
+        sub.input_path = mozpath.join(sandbox['SRCDIR'], '%s.in' % path)
+        sub.output_path = mozpath.join(sandbox['OBJDIR'], path)
         sub.relpath = path
 
         return sub
@@ -374,7 +378,7 @@ class TreeMetadataEmitter(LoggingMixin):
     def _process_test_manifest(self, sandbox, info, manifest_path):
         flavor, install_prefix, filter_inactive = info
 
-        manifest_path = os.path.normpath(manifest_path)
+        manifest_path = mozpath.normpath(manifest_path)
         path = mozpath.normpath(mozpath.join(sandbox['SRCDIR'], manifest_path))
         manifest_dir = mozpath.dirname(path)
         manifest_reldir = mozpath.dirname(mozpath.relpath(path,
@@ -398,8 +402,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 filtered = m.active_tests(disabled=False, **self.mozinfo)
 
             out_dir = mozpath.join(install_prefix, manifest_reldir)
-
-            finder = FileFinder(base=manifest_dir, find_executables=False)
 
             # "head" and "tail" lists.
             # All manifests support support-files.
@@ -425,22 +427,9 @@ class TreeMetadataEmitter(LoggingMixin):
                     for pattern in value.split():
                         # We only support globbing on support-files because
                         # the harness doesn't support * for head and tail.
-                        #
-                        # While we could feed everything through the finder, we
-                        # don't because we want explicitly listed files that
-                        # no longer exist to raise an error. The finder is also
-                        # slower than simple lookup.
                         if '*' in pattern and thing == 'support-files':
-                            paths = [f[0] for f in finder.find(pattern)]
-                            if not paths:
-                                raise SandboxValidationError('%s support-files '
-                                    'wildcard in %s returns no results.' % (
-                                    pattern, path))
-
-                            for f in paths:
-                                full = mozpath.normpath(mozpath.join(manifest_dir, f))
-                                obj.installs[full] = mozpath.join(out_dir, f)
-
+                            obj.pattern_installs.append(
+                                (manifest_dir, pattern, out_dir))
                         else:
                             full = mozpath.normpath(mozpath.join(manifest_dir,
                                 pattern))
@@ -452,7 +441,7 @@ class TreeMetadataEmitter(LoggingMixin):
                             obj.installs[full] = mozpath.join(out_dir, pattern)
 
             # We also copy the manifest into the output directory.
-            out_path = mozpath.join(out_dir, os.path.basename(manifest_path))
+            out_path = mozpath.join(out_dir, mozpath.basename(manifest_path))
             obj.installs[path] = out_path
 
             # Some manifests reference files that are auto generated as

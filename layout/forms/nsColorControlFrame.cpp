@@ -12,7 +12,10 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNode.h"
+#include "nsIFormControl.h"
 #include "nsStyleSet.h"
+
+using mozilla::dom::Element;
 
 nsColorControlFrame::nsColorControlFrame(nsStyleContext* aContext):
   nsColorControlFrameSuper(aContext)
@@ -59,20 +62,12 @@ nsresult
 nsColorControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   nsCOMPtr<nsIDocument> doc = mContent->GetCurrentDoc();
-  nsCOMPtr<nsINodeInfo> nodeInfo =
-      doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nullptr,
-        kNameSpaceID_XHTML,
-        nsIDOMNode::ELEMENT_NODE);
-
-  nsresult rv = NS_NewHTMLElement(getter_AddRefs(mColorContent),
-                                  nodeInfo.forget(),
-                                  mozilla::dom::NOT_FROM_PARSER);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mColorContent = doc->CreateHTMLElement(nsGkAtoms::div);
 
   // Mark the element to be native anonymous before setting any attributes.
   mColorContent->SetIsNativeAnonymousRoot();
 
-  rv = UpdateColor();
+  nsresult rv = UpdateColor();
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCSSPseudoElements::Type pseudoType = nsCSSPseudoElements::ePseudo_mozColorSwatch;
@@ -117,8 +112,12 @@ nsColorControlFrame::AttributeChanged(int32_t  aNameSpaceID,
 {
   NS_ASSERTION(mColorContent, "The color div must exist");
 
-  // If the value attribute is set, update the color box
-  if (aNameSpaceID == kNameSpaceID_None && nsGkAtoms::value == aAttribute) {
+  // If the value attribute is set, update the color box, but only if we're
+  // still a color control, which might not be the case if the type attribute
+  // was removed/changed.
+  nsCOMPtr<nsIFormControl> fctrl = do_QueryInterface(GetContent());
+  if (fctrl->GetType() == NS_FORM_INPUT_COLOR &&
+      aNameSpaceID == kNameSpaceID_None && nsGkAtoms::value == aAttribute) {
     UpdateColor();
   }
   return nsColorControlFrameSuper::AttributeChanged(aNameSpaceID, aAttribute,
@@ -129,4 +128,14 @@ nsIFrame*
 nsColorControlFrame::GetContentInsertionFrame()
 {
   return this;
+}
+
+Element*
+nsColorControlFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
+{
+  if (aType == nsCSSPseudoElements::ePseudo_mozColorSwatch) {
+    return mColorContent;
+  }
+
+  return nsContainerFrame::GetPseudoElement(aType);
 }

@@ -15,6 +15,7 @@
 
 #include "builtin/RegExp.h"
 #include "js/Vector.h"
+#include "vm/ErrorObject.h"
 
 extern JSObject *
 js_InitObjectClass(JSContext *cx, js::HandleObject obj);
@@ -26,11 +27,12 @@ extern JSObject *
 js_InitTypedArrayClasses(JSContext *cx, js::HandleObject obj);
 
 extern JSObject *
-js_InitTypedObjectClass(JSContext *cx, js::HandleObject obj);
+js_InitTypedObjectModuleObject(JSContext *cx, js::HandleObject obj);
 
 namespace js {
 
 class Debugger;
+class TypedObjectModuleObject;
 
 /*
  * Global object slots are reserved as follows:
@@ -109,10 +111,9 @@ class GlobalObject : public JSObject
     static const unsigned RUNTIME_CODEGEN_ENABLED = WARNED_WATCH_DEPRECATED + 1;
     static const unsigned DEBUGGERS               = RUNTIME_CODEGEN_ENABLED + 1;
     static const unsigned INTRINSICS              = DEBUGGERS + 1;
-    static const unsigned ARRAY_TYPE              = INTRINSICS + 1;
 
     /* Total reserved-slot count for global objects. */
-    static const unsigned RESERVED_SLOTS = ARRAY_TYPE + 1;
+    static const unsigned RESERVED_SLOTS = INTRINSICS + 1;
 
     /*
      * The slot count must be in the public API for JSCLASS_GLOBAL_FLAGS, and
@@ -200,27 +201,20 @@ class GlobalObject : public JSObject
     /*
      * Lazy standard classes need a way to indicate they have been initialized.
      * Otherwise, when we delete them, we might accidentally recreate them via
-     * a lazy initialization. We use the presence of a ctor or proto in the
-     * global object's slot to indicate that they've been constructed, but this
-     * only works for classes which have a proto and ctor. Classes which don't
-     * have one can call markStandardClassInitializedNoProto(), and we can
-     * always check whether a class is initialized by calling
-     * isStandardClassResolved().
+     * a lazy initialization. We use the presence of an object in the
+     * getConstructor(key) reserved slot to indicate that they've been
+     * initialized.
+     *
+     * Note: A few builtin objects, like JSON and Math, are not constructors,
+     * so getConstructor is a bit of a misnomer.
      */
     bool isStandardClassResolved(const js::Class *clasp) const {
         JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
 
         // If the constructor is undefined, then it hasn't been initialized.
+        MOZ_ASSERT(getConstructor(key).isUndefined() ||
+                   getConstructor(key).isObject());
         return !getConstructor(key).isUndefined();
-    }
-
-    void markStandardClassInitializedNoProto(const js::Class *clasp) {
-        JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
-
-        // We use true so that it's obvious what we're doing (instead of, say,
-        // null, which might be miscontrued as an error in setting Undefined).
-        if (getConstructor(key).isUndefined())
-            setConstructor(key, BooleanValue(true));
     }
 
   private:
@@ -404,7 +398,7 @@ class GlobalObject : public JSObject
         return &self->getPrototype(JSProto_ArrayBuffer).toObject();
     }
 
-    JSObject *getOrCreateCustomErrorPrototype(JSContext *cx, int exnType) {
+    JSObject *getOrCreateCustomErrorPrototype(JSContext *cx, JSExnType exnType) {
         JSProtoKey key = GetExceptionProtoKey(exnType);
         if (errorClassesInitialized())
             return &getPrototype(key).toObject();
@@ -418,12 +412,11 @@ class GlobalObject : public JSObject
         return getOrCreateObject(cx, APPLICATION_SLOTS + JSProto_Intl, initIntlObject);
     }
 
-    JSObject &getTypedObject() {
-        Value v = getConstructor(JSProto_TypedObject);
-        // only gets called from contexts where TypedObject must be initialized
-        JS_ASSERT(v.isObject());
-        return v.toObject();
+    JSObject *getOrCreateTypedObjectModule(JSContext *cx) {
+        return getOrCreateObject(cx, APPLICATION_SLOTS + JSProto_TypedObject, initTypedObjectModule);
     }
+
+    TypedObjectModuleObject &getTypedObjectModule() const;
 
     JSObject *getIteratorPrototype() {
         return &getPrototype(JSProto_Iterator).toObject();
@@ -439,21 +432,6 @@ class GlobalObject : public JSObject
 
     JSObject *getOrCreateDateTimeFormatPrototype(JSContext *cx) {
         return getOrCreateObject(cx, DATE_TIME_FORMAT_PROTO, initDateTimeFormatProto);
-    }
-
-    JSObject *getArrayType(JSContext *cx) {
-        const Value &v = getReservedSlot(ARRAY_TYPE);
-
-        MOZ_ASSERT(v.isObject(),
-                   "GlobalObject::arrayType must only be called from "
-                   "TypedObject code that can assume TypedObject has "
-                   "been initialized");
-
-        return &v.toObject();
-    }
-
-    void setArrayType(JSObject *obj) {
-        initReservedSlot(ARRAY_TYPE, ObjectValue(*obj));
     }
 
   private:
@@ -597,10 +575,11 @@ class GlobalObject : public JSObject
     // in which |obj| was created, if no prior warning was given.
     static bool warnOnceAboutWatch(JSContext *cx, HandleObject obj);
 
-    Value getOriginalEval() const {
-        JS_ASSERT(getSlotRefForCompilation(EVAL).isObject());
-        return getSlotRefForCompilation(EVAL);
-    }
+    static bool getOrCreateEval(JSContext *cx, Handle<GlobalObject*> global,
+                                MutableHandleObject eval);
+
+    // Infallibly test whether the given value is the eval function for this global.
+    bool valueIsEval(Value val);
 
     // Implemented in jsiter.cpp.
     static bool initIteratorClasses(JSContext *cx, Handle<GlobalObject*> global);
@@ -614,6 +593,9 @@ class GlobalObject : public JSObject
     static bool initCollatorProto(JSContext *cx, Handle<GlobalObject*> global);
     static bool initNumberFormatProto(JSContext *cx, Handle<GlobalObject*> global);
     static bool initDateTimeFormatProto(JSContext *cx, Handle<GlobalObject*> global);
+
+    // Implemented in builtin/TypedObject.cpp
+    static bool initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global);
 
     static bool initStandardClasses(JSContext *cx, Handle<GlobalObject*> global);
 

@@ -37,7 +37,11 @@ EXPORTS.mozilla.net += [
     'PSpdyPush.h',
 ]
 
-UNIFIED_SOURCES += [
+# ASpdySession.cpp and nsHttpAuthCache cannot be built in unified mode because
+# they use plarena.h.
+# The rest of these files cannot be built in unified mode because they want to
+# force NSPR logging.
+SOURCES += [
     'ASpdySession.cpp',
     'ConnectionDiagnostics.cpp',
     'HttpBaseChannel.cpp',
@@ -98,3 +102,10 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'necko'
+
+LOCAL_INCLUDES += [
+    '../../base/src',
+    '/content/base/src',
+    '/content/events/src',
+    '/xpcom/ds',
+]

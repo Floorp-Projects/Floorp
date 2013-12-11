@@ -48,6 +48,7 @@ void celt_iir(const opus_val32 *x,
          int ord,
          opus_val16 *mem);
 
-int _celt_autocorr(const opus_val16 *x, opus_val32 *ac, const opus_val16 *window, int overlap, int lag, int n);
+int _celt_autocorr(const opus_val16 *x, opus_val32 *ac,
+         const opus_val16 *window, int overlap, int lag, int n, int arch);
 
 #endif /* PLC_H */
