@@ -166,6 +166,30 @@ public:
 
 
 /**
+ * Used for HTML input@type="number".
+ */
+class HTMLSpinnerAccessible : public AccessibleWrap
+{
+public:
+  HTMLSpinnerAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+    AccessibleWrap(aContent, aDoc)
+  {
+    mStateFlags |= eHasNumericValue;
+}
+
+  // Accessible
+  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
+
+  virtual double MaxValue() const MOZ_OVERRIDE;
+  virtual double MinValue() const MOZ_OVERRIDE;
+  virtual double CurValue() const MOZ_OVERRIDE;
+  virtual double Step() const MOZ_OVERRIDE;
+  virtual bool SetCurValue(double aValue) MOZ_OVERRIDE;
+};
+
+
+/**
   * Used for input@type="range" element.
   */
 class HTMLRangeAccessible : public LeafAccessible

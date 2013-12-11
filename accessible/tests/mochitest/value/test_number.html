@@ -1,0 +1,59 @@
+<html>
+
+<head>
+  <title>nsIAccessible value testing for input@type=range element</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../value.js"></script>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // HTML5 number element tests
+      testValue("number", "", 0, 0, 0, 1);
+      testValue("number_value", "1", 1, 0, 0, 1);
+      testValue("number_step", "", 0, 0, 0, 1);
+      testValue("number_min42", "", 0, 42, 0, 1);
+      testValue("number_max42", "", 0, 0, 42, 1);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=559761"
+     title="make HTML5 input@type=number element accessible">
+    Bug 559761
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <pre id="test">
+  </pre>
+
+  <!-- HTML5 input@type=number element -->
+  <input type="number" id="number">
+  <input type="number" id="number_value" value="1">
+  <input type="number" id="number_step" step="1">
+  <input type="number" id="number_min42" min="42">
+  <input type="number" id="number_max42" max="42">
+</body>
+</html>
