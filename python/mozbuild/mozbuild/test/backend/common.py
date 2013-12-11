@@ -100,6 +100,16 @@ CONFIGS = {
         'non_global_defines': [],
         'substs': [],
     },
+    'test_config': {
+        'defines': [
+            ('foo', 'baz qux'),
+            ('baz', 1)
+        ],
+        'non_global_defines': [],
+        'substs': [
+            ('foo', 'bar baz'),
+        ],
+    },
 }
 
 
