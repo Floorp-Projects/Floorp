@@ -281,7 +281,7 @@ GetKeyUsagesString(CERTCertificate *cert, nsINSSComponent *nssComponent,
   unsigned char keyUsage = keyUsageItem.data[0];
   nsAutoString local;
   nsresult rv;
-  const PRUnichar *comma = NS_LITERAL_STRING(",").get();
+  const char16_t comma = ',';
 
   if (keyUsage & KU_DIGITAL_SIGNATURE) {
     rv = nssComponent->GetPIPNSSBundleString("CertDumpKUSign", local);

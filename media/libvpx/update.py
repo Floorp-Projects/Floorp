@@ -40,50 +40,7 @@ mk_files = [
 extensions = ['.asm', '.c', '.h']
 
 MODULES = {
-    'ENCODER': [
-        'API_DOC_SRCS-$(CONFIG_VP8_ENCODER)',
-        'API_SRCS-$(BUILD_LIBVPX)',
-        'API_SRCS-$(CONFIG_VP8_ENCODER)',
-        'API_SRCS-$(CONFIG_VP9_ENCODER)',
-        'VP8_CX_EXPORTS',
-        'VP8_CX_SRCS-$(CONFIG_MULTI_RES_ENCODING)',
-        'VP8_CX_SRCS-$(CONFIG_MULTITHREAD)',
-        'VP8_CX_SRCS-$(CONFIG_TEMPORAL_DENOISING)',
-        'VP8_CX_SRCS-no',
-        'VP8_CX_SRCS_REMOVE-no',
-        'VP8_CX_SRCS_REMOVE-yes',
-        'VP8_CX_SRCS-yes',
-        'VP9_CX_EXPORTS',
-        'VP9_CX_SRCS-no',
-        'VP9_CX_SRCS_REMOVE-no',
-        'VP9_CX_SRCS_REMOVE-yes',
-        'VP9_CX_SRCS-yes',
-    ],
-    'X86_ASM_ENCODER': [
-        'VP8_CX_SRCS-$(ARCH_X86)$(ARCH_X86_64)',
-        'VP8_CX_SRCS-$(HAVE_MMX)',
-        'VP8_CX_SRCS-$(HAVE_SSE2)',
-        'VP8_CX_SRCS-$(HAVE_SSE4_1)',
-        'VP8_CX_SRCS-$(HAVE_SSSE3)',
-        'VP8_CX_SRCS_REMOVE-$(HAVE_SSE2)',
-        'VP9_CX_SRCS-$(ARCH_X86)$(ARCH_X86_64)',
-        'VP9_CX_SRCS-$(HAVE_MMX)',
-        'VP9_CX_SRCS-$(HAVE_SSE2)',
-        'VP9_CX_SRCS-$(HAVE_SSE3)',
-        'VP9_CX_SRCS-$(HAVE_SSE4_1)',
-        'VP9_CX_SRCS-$(HAVE_SSSE3)',
-    ],
-    'X86-64_ASM_ENCODER': [
-        'VP8_CX_SRCS-$(ARCH_X86_64)',
-        'VP9_CX_SRCS-$(ARCH_X86_64)',
-    ],
-    'ARM_ASM_ENCODER': [
-        'VP8_CX_SRCS-$(ARCH_ARM)',
-        'VP8_CX_SRCS-$(HAVE_EDSP)',
-        'VP8_CX_SRCS-$(HAVE_MEDIA)',
-        'VP8_CX_SRCS-$(HAVE_NEON)',
-    ],
-    'COMMON': [
+    'SOURCES': [
         'API_DOC_SRCS-$(CONFIG_VP8_DECODER)',
         'API_DOC_SRCS-yes',
         'API_EXPORTS',
@@ -107,12 +64,23 @@ MODULES = {
         'VP9_DX_SRCS_REMOVE-no',
         'VP9_DX_SRCS_REMOVE-yes',
         'VP9_DX_SRCS-yes',
-    ],
-    'ERROR_CONCEALMENT': [
-        'VP8_DX_SRCS-$(CONFIG_ERROR_CONCEALMENT)',
-    ],
-    'AVX2': [
-        'VP9_COMMON_SRCS-$(HAVE_AVX2)',
+        'API_DOC_SRCS-$(CONFIG_VP8_ENCODER)',
+        'API_SRCS-$(BUILD_LIBVPX)',
+        'API_SRCS-$(CONFIG_VP8_ENCODER)',
+        'API_SRCS-$(CONFIG_VP9_ENCODER)',
+        'VP8_CX_EXPORTS',
+        'VP8_CX_SRCS-$(CONFIG_MULTI_RES_ENCODING)',
+        'VP8_CX_SRCS-$(CONFIG_MULTITHREAD)',
+        'VP8_CX_SRCS-$(CONFIG_TEMPORAL_DENOISING)',
+        'VP8_CX_SRCS-no',
+        'VP8_CX_SRCS_REMOVE-no',
+        'VP8_CX_SRCS_REMOVE-yes',
+        'VP8_CX_SRCS-yes',
+        'VP9_CX_EXPORTS',
+        'VP9_CX_SRCS-no',
+        'VP9_CX_SRCS_REMOVE-no',
+        'VP9_CX_SRCS_REMOVE-yes',
+        'VP9_CX_SRCS-yes',
     ],
     'X86_ASM': [
         'PORTS_SRCS-$(BUILD_LIBVPX)',
@@ -126,8 +94,22 @@ MODULES = {
         'VP9_COMMON_SRCS-$(HAVE_MMX)',
         'VP9_COMMON_SRCS-$(HAVE_SSE2)',
         'VP9_COMMON_SRCS-$(HAVE_SSSE3)',
+        'VP8_CX_SRCS-$(ARCH_X86)$(ARCH_X86_64)',
+        'VP8_CX_SRCS-$(HAVE_MMX)',
+        'VP8_CX_SRCS-$(HAVE_SSE2)',
+        'VP8_CX_SRCS-$(HAVE_SSE4_1)',
+        'VP8_CX_SRCS-$(HAVE_SSSE3)',
+        'VP8_CX_SRCS_REMOVE-$(HAVE_SSE2)',
+        'VP9_CX_SRCS-$(ARCH_X86)$(ARCH_X86_64)',
+        'VP9_CX_SRCS-$(HAVE_MMX)',
+        'VP9_CX_SRCS-$(HAVE_SSE2)',
+        'VP9_CX_SRCS-$(HAVE_SSE3)',
+        'VP9_CX_SRCS-$(HAVE_SSE4_1)',
+        'VP9_CX_SRCS-$(HAVE_SSSE3)',
     ],
     'X86-64_ASM': [
+        'VP8_CX_SRCS-$(ARCH_X86_64)',
+        'VP9_CX_SRCS-$(ARCH_X86_64)',
     ],
     'ARM_ASM': [
         'PORTS_SRCS-$(ARCH_ARM)',
@@ -136,6 +118,16 @@ MODULES = {
         'VP8_COMMON_SRCS-$(HAVE_MEDIA)',
         'VP8_COMMON_SRCS-$(HAVE_NEON)',
         'VP9_COMMON_SRCS-$(HAVE_NEON)',
+        'VP8_CX_SRCS-$(ARCH_ARM)',
+        'VP8_CX_SRCS-$(HAVE_EDSP)',
+        'VP8_CX_SRCS-$(HAVE_MEDIA)',
+        'VP8_CX_SRCS-$(HAVE_NEON)',
+    ],
+    'ERROR_CONCEALMENT': [
+        'VP8_DX_SRCS-$(CONFIG_ERROR_CONCEALMENT)',
+    ],
+    'AVX2': [
+        'VP9_COMMON_SRCS-$(HAVE_AVX2)',
     ],
     'VP8_POSTPROC': [
         'VP8_COMMON_SRCS-$(CONFIG_POSTPROC)',
@@ -253,7 +245,6 @@ platform_files = [
     'vp8_rtcd.h',
     'vp9_rtcd.h',
     'vpx_config.asm',
-    'vpx_config.c',
     'vpx_config.h',
     'vpx_scale_rtcd.h',
 ]
@@ -278,7 +269,10 @@ def prepare_upstream(prefix, commit=None):
         target_objdir = os.path.join(prefix, 'objdir', target)
         os.makedirs(target_objdir)
         os.chdir(target_objdir)
-        configure = ['../../configure', '--target=%s' % target, '--disable-examples', '--disable-install-docs']
+        configure = ['../../configure', '--target=%s' % target,
+            '--disable-examples', '--disable-install-docs',
+            '--enable-multi-res-encoding',
+        ]
 
         if 'darwin9' in target:
             configure += ['--enable-pic']

@@ -3967,9 +3967,8 @@ MOZ_SCTP=
 MOZ_MEDIA_PLUGINS=
 MOZ_MEDIA_NAVIGATOR=
 MOZ_OMX_PLUGIN=
-MOZ_VP8=
-MOZ_VP8_ERROR_CONCEALMENT=
-MOZ_VP8_ENCODER=1
+MOZ_VPX=
+MOZ_VPX_ERROR_CONCEALMENT=
 MOZ_WEBSPEECH=1
 VPX_AS=
 VPX_ASFLAGS=
@@ -5114,8 +5113,8 @@ if test -n "$MOZ_WEBRTC"; then
     dnl opt/production builds (via MOZ_CRASH())
     AC_DEFINE(MOZ_WEBRTC_ASSERT_ALWAYS)
     MOZ_RAW=1
-    MOZ_VP8=1
-    MOZ_VP8_ERROR_CONCEALMENT=1
+    MOZ_VPX=1
+    MOZ_VPX_ERROR_CONCEALMENT=1
 
 dnl enable once Signaling lands
     MOZ_WEBRTC_SIGNALING=1
@@ -5228,7 +5227,7 @@ MOZ_ARG_DISABLE_BOOL(webm,
 
 if test -n "$MOZ_WEBM"; then
     AC_DEFINE(MOZ_WEBM)
-    MOZ_VP8=1
+    MOZ_VPX=1
 fi;
 
 dnl ========================================================
@@ -5364,13 +5363,10 @@ MOZ_ARG_WITH_BOOL(system-libvpx,
 MOZ_LIBVPX_CFLAGS=
 MOZ_LIBVPX_LIBS=
 
-if test -n "$MOZ_VP8"; then
-    AC_DEFINE(MOZ_VP8)
-    if test -n "$MOZ_VP8_ERROR_CONCEALMENT" ; then
-        AC_DEFINE(MOZ_VP8_ERROR_CONCEALMENT)
-    fi
-    if test -n "$MOZ_VP8_ENCODER" ; then
-        AC_DEFINE(MOZ_VP8_ENCODER)
+if test -n "$MOZ_VPX"; then
+    AC_DEFINE(MOZ_VPX)
+    if test -n "$MOZ_VPX_ERROR_CONCEALMENT" ; then
+        AC_DEFINE(MOZ_VPX_ERROR_CONCEALMENT)
     fi
 
     if test -n "$MOZ_NATIVE_LIBVPX"; then
@@ -5402,7 +5398,7 @@ if test "$MOZ_WEBM" -o "$MOZ_OGG"; then
     fi
 fi
 
-if test -n "$MOZ_VP8" -a -z "$MOZ_NATIVE_LIBVPX"; then
+if test -n "$MOZ_VPX" -a -z "$MOZ_NATIVE_LIBVPX"; then
 
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
     dnl We currently require yasm on all x86 platforms and require yasm 1.1.0 on Win32.
@@ -5467,8 +5463,7 @@ if test -n "$MOZ_VP8" -a -z "$MOZ_NATIVE_LIBVPX"; then
       AC_MSG_ERROR([yasm is a required build tool for this architecture when webm is enabled. You may either install yasm or --disable-webm (which disables the WebM video format). See https://developer.mozilla.org/en/YASM for more details.])
     fi
 
-    if test -n "$MOZ_VP8_ENCODER" -a \
-            -z "$GNU_CC" -a -z "$INTEL_CC" -a -z "$CLANG_CC" ; then
+    if test -z "$GNU_CC" -a -z "$INTEL_CC" -a -z "$CLANG_CC" ; then
       dnl We prefer to get asm offsets using inline assembler, which the above
       dnl compilers can do. When we're not using one of those, we have to fall
       dnl back to obj_int_extract, which reads them from a compiled object
@@ -8620,9 +8615,8 @@ AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_MEDIA_PLUGINS)
 AC_SUBST(MOZ_APPLEMEDIA)
 AC_SUBST(MOZ_OMX_PLUGIN)
-AC_SUBST(MOZ_VP8_ERROR_CONCEALMENT)
-AC_SUBST(MOZ_VP8_ENCODER)
-AC_SUBST(MOZ_VP8)
+AC_SUBST(MOZ_VPX_ERROR_CONCEALMENT)
+AC_SUBST(MOZ_VPX)
 AC_SUBST(MOZ_OGG)
 AC_SUBST(VPX_AS)
 AC_SUBST(VPX_ASFLAGS)
