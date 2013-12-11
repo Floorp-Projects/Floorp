@@ -209,7 +209,7 @@
            noautofocus="true"
            noautohide="true"
            consumeoutsideclicks="false">
-      <html:div id="UITourHighlight"></html:div>
+      <box id="UITourHighlight"></box>
     </panel>
 
     <panel id="socialActivatedNotification"
