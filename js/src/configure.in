@@ -2347,11 +2347,6 @@ case $target in
     ;;
 esac
 
-_SAVE_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -D_GNU_SOURCE"
-AC_CHECK_FUNCS(dladdr)
-CFLAGS="$_SAVE_CFLAGS"
-
 if test ! "$GNU_CXX"; then
 
     case $target in
@@ -2504,15 +2499,13 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS([fchmod flockfile getc_unlocked _getc_nolock getpagesize \
-                lchown localtime_r lstat64 memmove random sbrk snprintf \
-                stat64 statvfs statvfs64 strerror strtok_r truncate64])
+AC_CHECK_FUNCS([getc_unlocked _getc_nolock localtime_r])
 
 
 dnl Checks for math functions.
 dnl ========================================================
 AC_CHECK_LIB(m, sin)
-AC_CHECK_FUNCS([log2 log1p expm1 sqrt1pm1 acosh asinh atanh hypot trunc cbrt])
+AC_CHECK_FUNCS([log2 log1p expm1 sqrt1pm1 acosh asinh atanh trunc cbrt])
 
 
 dnl check for wcrtomb/mbrtowc
@@ -3636,13 +3629,6 @@ if test "$HAVE_DEMANGLE" && test "$MOZ_DEBUG" -o "$NS_TRACE_MALLOC" -o "$MOZ_DMD
     AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
 fi
 AC_SUBST(MOZ_DEMANGLE_SYMBOLS)
-
-dnl ========================================================
-dnl = Support for gcc stack unwinding (from gcc 3.3)
-dnl ========================================================
-if test -z "$SKIP_LIBRARY_CHECKS"; then
-    MOZ_CHECK_HEADER(unwind.h, AC_CHECK_FUNCS(_Unwind_Backtrace))
-fi
 
 dnl ========================================================
 dnl JIT observers
