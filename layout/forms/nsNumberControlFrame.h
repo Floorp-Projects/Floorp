@@ -129,6 +129,11 @@ public:
 
   void HandleFocusEvent(WidgetEvent* aEvent);
 
+  /**
+   * Our element had HTMLInputElement::Select() called on it.
+   */
+  nsresult HandleSelectCall();
+
   virtual Element* GetPseudoElement(nsCSSPseudoElements::Type aType) MOZ_OVERRIDE;
 
   bool ShouldUseNativeStyleForSpinner() const;
