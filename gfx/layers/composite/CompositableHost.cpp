@@ -136,13 +136,11 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
 {
   RefPtr<TextureSource> source;
   RefPtr<DeprecatedTextureHost> oldHost = GetDeprecatedTextureHost();
-  if (oldHost) {
-    oldHost->Lock();
+  if (oldHost && oldHost->Lock()) {
     source = oldHost;
   } else {
     RefPtr<TextureHost> host = GetAsTextureHost();
-    if (host) {
-      host->Lock();
+    if (host && host->Lock()) {
       source = host->GetTextureSources();
     }
   }
