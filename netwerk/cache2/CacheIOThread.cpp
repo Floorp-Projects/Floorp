@@ -241,7 +241,8 @@ NS_IMETHODIMP CacheIOThread::OnProcessNextEvent(nsIThreadInternal *thread, bool 
   return NS_OK;
 }
 
-NS_IMETHODIMP CacheIOThread::AfterProcessNextEvent(nsIThreadInternal *thread, uint32_t recursionDepth)
+NS_IMETHODIMP CacheIOThread::AfterProcessNextEvent(nsIThreadInternal *thread, uint32_t recursionDepth,
+                                                   bool eventWasProcessed)
 {
   return NS_OK;
 }

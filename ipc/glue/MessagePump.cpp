@@ -4,15 +4,23 @@
 
 #include "MessagePump.h"
 
+#include "nsIRunnable.h"
+#include "nsIThread.h"
+#include "nsITimer.h"
+
+#include "base/basictypes.h"
+#include "base/logging.h"
+#include "base/scoped_nsautorelease_pool.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/DebugOnly.h"
 #include "nsComponentManagerUtils.h"
+#include "nsDebug.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
+#include "nsTimerImpl.h"
 #include "nsXULAppAPI.h"
 #include "prthread.h"
-
-#include "base/logging.h"
-#include "base/scoped_nsautorelease_pool.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
@@ -22,42 +30,39 @@
 #include "ipc/Nuwa.h"
 #endif
 
-using mozilla::ipc::DoWorkRunnable;
-using mozilla::ipc::MessagePump;
-using mozilla::ipc::MessagePumpForChildProcess;
 using base::TimeTicks;
+using namespace mozilla::ipc;
 
-NS_IMPL_ISUPPORTS2(DoWorkRunnable, nsIRunnable, nsITimerCallback)
+NS_DEFINE_NAMED_CID(NS_TIMER_CID);
 
-NS_IMETHODIMP
-DoWorkRunnable::Run()
+static mozilla::DebugOnly<MessagePump::Delegate*> gFirstDelegate;
+
+namespace mozilla {
+namespace ipc {
+
+class DoWorkRunnable MOZ_FINAL : public nsIRunnable,
+                                 public nsITimerCallback
 {
-  MessageLoop* loop = MessageLoop::current();
-  NS_ASSERTION(loop, "Shouldn't be null!");
-  if (loop) {
-    bool nestableTasksAllowed = loop->NestableTasksAllowed();
-
-    // MessageLoop::RunTask() disallows nesting, but our Frankenventloop
-    // will always dispatch DoWork() below from what looks to
-    // MessageLoop like a nested context.  So we unconditionally allow
-    // nesting here.
-    loop->SetNestableTasksAllowed(true);
-    loop->DoWork();
-    loop->SetNestableTasksAllowed(nestableTasksAllowed);
+public:
+  DoWorkRunnable(MessagePump* aPump)
+  : mPump(aPump)
+  {
+    MOZ_ASSERT(aPump);
   }
-  return NS_OK;
-}
 
-NS_IMETHODIMP
-DoWorkRunnable::Notify(nsITimer* aTimer)
-{
-  MessageLoop* loop = MessageLoop::current();
-  NS_ASSERTION(loop, "Shouldn't be null!");
-  if (loop) {
-    mPump->DoDelayedWork(loop);
-  }
-  return NS_OK;
-}
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSITIMERCALLBACK
+
+private:
+  ~DoWorkRunnable()
+  { }
+
+  MessagePump* mPump;
+};
+
+} /* namespace ipc */
+} /* namespace mozilla */
 
 MessagePump::MessagePump()
 : mThread(nullptr)
@@ -65,17 +70,22 @@ MessagePump::MessagePump()
   mDoWorkEvent = new DoWorkRunnable(this);
 }
 
+MessagePump::~MessagePump()
+{
+}
+
 void
 MessagePump::Run(MessagePump::Delegate* aDelegate)
 {
-  NS_ASSERTION(keep_running_, "Quit must have been called outside of Run!");
-  NS_ASSERTION(NS_IsMainThread(), "Called Run on the wrong thread!");
+  MOZ_ASSERT(keep_running_);
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Use mozilla::ipc::MessagePumpForNonMainThreads instead!");
 
   mThread = NS_GetCurrentThread();
-  NS_ASSERTION(mThread, "This should never be null!");
+  MOZ_ASSERT(mThread);
 
-  mDelayedWorkTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-  NS_ASSERTION(mDelayedWorkTimer, "Failed to create timer!");
+  mDelayedWorkTimer = do_CreateInstance(kNS_TIMER_CID);
+  MOZ_ASSERT(mDelayedWorkTimer);
 
   base::ScopedNSAutoreleasePool autoReleasePool;
 
@@ -165,7 +175,7 @@ MessagePump::ScheduleDelayedWork(const base::TimeTicks& aDelayedTime)
 #endif
 
   if (!mDelayedWorkTimer) {
-    mDelayedWorkTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    mDelayedWorkTimer = do_CreateInstance(kNS_TIMER_CID);
     if (!mDelayedWorkTimer) {
         // Called before XPCOM has started up? We can't do this correctly.
         NS_WARNING("Delayed task might not run!");
@@ -199,34 +209,56 @@ MessagePump::DoDelayedWork(base::MessagePump::Delegate* aDelegate)
   }
 }
 
-#ifdef DEBUG
-namespace {
-MessagePump::Delegate* gFirstDelegate = nullptr;
+NS_IMPL_ISUPPORTS2(DoWorkRunnable, nsIRunnable, nsITimerCallback)
+
+NS_IMETHODIMP
+DoWorkRunnable::Run()
+{
+  MessageLoop* loop = MessageLoop::current();
+  MOZ_ASSERT(loop);
+
+  bool nestableTasksAllowed = loop->NestableTasksAllowed();
+
+  // MessageLoop::RunTask() disallows nesting, but our Frankenventloop will
+  // always dispatch DoWork() below from what looks to MessageLoop like a nested
+  // context.  So we unconditionally allow nesting here.
+  loop->SetNestableTasksAllowed(true);
+  loop->DoWork();
+  loop->SetNestableTasksAllowed(nestableTasksAllowed);
+
+  return NS_OK;
 }
-#endif
+
+NS_IMETHODIMP
+DoWorkRunnable::Notify(nsITimer* aTimer)
+{
+  MessageLoop* loop = MessageLoop::current();
+  MOZ_ASSERT(loop);
+
+  mPump->DoDelayedWork(loop);
+
+  return NS_OK;
+}
 
 void
-MessagePumpForChildProcess::Run(MessagePump::Delegate* aDelegate)
+MessagePumpForChildProcess::Run(base::MessagePump::Delegate* aDelegate)
 {
   if (mFirstRun) {
-#ifdef DEBUG
-    NS_ASSERTION(aDelegate && gFirstDelegate == nullptr, "Huh?!");
+    MOZ_ASSERT(aDelegate && !gFirstDelegate);
     gFirstDelegate = aDelegate;
-#endif
+
     mFirstRun = false;
     if (NS_FAILED(XRE_RunAppShell())) {
         NS_WARNING("Failed to run app shell?!");
     }
-#ifdef DEBUG
-    NS_ASSERTION(aDelegate && aDelegate == gFirstDelegate, "Huh?!");
+
+    MOZ_ASSERT(aDelegate && aDelegate == gFirstDelegate);
     gFirstDelegate = nullptr;
-#endif
+
     return;
   }
 
-#ifdef DEBUG
-  NS_ASSERTION(aDelegate && aDelegate == gFirstDelegate, "Huh?!");
-#endif
+  MOZ_ASSERT(aDelegate && aDelegate == gFirstDelegate);
 
   // We can get to this point in startup with Tasks in our loop's
   // incoming_queue_ or pending_queue_, but without a matching
@@ -245,7 +277,60 @@ MessagePumpForChildProcess::Run(MessagePump::Delegate* aDelegate)
 
   loop->SetNestableTasksAllowed(nestableTasksAllowed);
 
-
   // Really run.
   mozilla::ipc::MessagePump::Run(aDelegate);
+}
+
+void
+MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate* aDelegate)
+{
+  MOZ_ASSERT(keep_running_);
+  MOZ_ASSERT(!NS_IsMainThread(), "Use mozilla::ipc::MessagePump instead!");
+
+  mThread = NS_GetCurrentThread();
+  MOZ_ASSERT(mThread);
+
+  mDelayedWorkTimer = do_CreateInstance(kNS_TIMER_CID);
+  MOZ_ASSERT(mDelayedWorkTimer);
+
+  if (NS_FAILED(mDelayedWorkTimer->SetTarget(mThread))) {
+    MOZ_CRASH("Failed to set timer target!");
+  }
+
+  for (;;) {
+    bool didWork = NS_ProcessNextEvent(mThread, false) ? true : false;
+    if (!keep_running_) {
+      break;
+    }
+
+    didWork |= aDelegate->DoDelayedWork(&delayed_work_time_);
+
+    if (didWork && delayed_work_time_.is_null()) {
+      mDelayedWorkTimer->Cancel();
+    }
+
+    if (!keep_running_) {
+      break;
+    }
+
+    if (didWork) {
+      continue;
+    }
+
+    didWork = aDelegate->DoIdleWork();
+    if (!keep_running_) {
+      break;
+    }
+
+    if (didWork) {
+      continue;
+    }
+
+    // This will either sleep or process an event.
+    NS_ProcessNextEvent(mThread, true);
+  }
+
+  mDelayedWorkTimer->Cancel();
+
+  keep_running_ = true;
 }

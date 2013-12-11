@@ -46,6 +46,7 @@ function setPortraitViewstate() {
 
   ContentAreaObserver._updateViewState("portrait");
   ContentAreaObserver._dispatchBrowserEvent("SizeChanged");
+  yield waitForMessage("Content:SetWindowSize:Complete", browser.messageManager);
 
   // Make sure it renders the new mode properly
   yield waitForMs(0);
@@ -54,6 +55,7 @@ function setPortraitViewstate() {
 function restoreViewstate() {
   ContentAreaObserver._updateViewState("landscape");
   ContentAreaObserver._dispatchBrowserEvent("SizeChanged");
+  yield waitForMessage("Content:SetWindowSize:Complete", Browser.selectedBrowser.messageManager);
 
   ok(isLandscapeMode(), "restoreViewstate should restore landscape mode.");
 

@@ -1,3 +1,4 @@
+include protocol PTestBridgeMainSub;
 
 namespace mozilla {
 namespace _ipdltest {

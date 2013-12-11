@@ -26,20 +26,28 @@
   -moz-border-end: 1px solid #222426; /* Match the sources list's dark margin. */
 }
 
-#sources-toolbar > #sources-controls > .devtools-toolbarbutton {
+#sources-toolbar > .devtools-toolbarbutton,
+#sources-controls > .devtools-toolbarbutton {
   min-width: 32px;
+}
+
+#black-box {
+  list-style-image: url(debugger-blackbox.png);
 }
 
 #pretty-print {
   font-weight: bold;
 }
 
-#black-box {
-  list-style-image: url(debugger-blackbox.png);
+#toggle-breakpoints {
+  list-style-image: url(debugger-toggleBreakpoints.png);
+}
+
+#sources-toolbar .devtools-toolbarbutton:not([label]) {
   -moz-image-region: rect(0px,16px,16px,0px);
 }
 
-#black-box[checked] {
+#sources-toolbar .devtools-toolbarbutton:not([label])[checked] {
   -moz-image-region: rect(0px,32px,16px,16px);
 }
 
