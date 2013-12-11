@@ -169,6 +169,7 @@ public class GeckoEvent {
     private int mKeyCode;
     private int mUnicodeChar;
     private int mBaseUnicodeChar; // mUnicodeChar without meta states applied
+    private int mDOMPrintableKeyValue;
     private int mRepeatCount;
     private int mCount;
     private int mStart;
@@ -256,6 +257,17 @@ public class GeckoEvent {
         mBaseUnicodeChar = k.getUnicodeChar(0);
         mRepeatCount = k.getRepeatCount();
         mCharacters = k.getCharacters();
+        if (mUnicodeChar >= ' ') {
+            mDOMPrintableKeyValue = mUnicodeChar;
+        } else {
+            int unmodifiedMetaState =
+                mMetaState & ~(KeyEvent.META_ALT_MASK |
+                               KeyEvent.META_CTRL_MASK |
+                               KeyEvent.META_META_MASK);
+            if (unmodifiedMetaState != mMetaState) {
+                mDOMPrintableKeyValue = k.getUnicodeChar(unmodifiedMetaState);
+            }
+        }
         mDomKeyLocation = isJoystickButton(mKeyCode) ? DomKeyLocation.DOM_KEY_LOCATION_JOYSTICK
                                                      : DomKeyLocation.DOM_KEY_LOCATION_MOBILE;
     }

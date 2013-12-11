@@ -511,6 +511,7 @@ public:
     int Flags() { return mFlags; }
     int UnicodeChar() { return mUnicodeChar; }
     int BaseUnicodeChar() { return mBaseUnicodeChar; }
+    int DOMPrintableKeyValue() { return mDOMPrintableKeyValue; }
     int RepeatCount() const { return mRepeatCount; }
     int Count() { return mCount; }
     int Start() { return mStart; }
@@ -552,7 +553,7 @@ protected:
     nsIntRect mRect;
     int mFlags, mMetaState;
     uint32_t mDomKeyLocation;
-    int mKeyCode, mUnicodeChar, mBaseUnicodeChar;
+    int mKeyCode, mUnicodeChar, mBaseUnicodeChar, mDOMPrintableKeyValue;
     int mRepeatCount;
     int mCount;
     int mStart, mEnd;
@@ -616,6 +617,7 @@ protected:
     static jfieldID jCharactersField;
     static jfieldID jCharactersExtraField;
     static jfieldID jDataField;
+    static jfieldID jDOMPrintableKeyValueField;
     static jfieldID jKeyCodeField;
     static jfieldID jMetaStateField;
     static jfieldID jDomKeyLocationField;
