@@ -206,6 +206,7 @@ ResidentFastDistinguishedAmount(int64_t* aN)
 
 #ifdef __FreeBSD__
 #include <libutil.h>
+#include <algorithm>
 
 static nsresult
 GetKinfoVmentrySelf(int64_t* prss, uint64_t* maxreg)
