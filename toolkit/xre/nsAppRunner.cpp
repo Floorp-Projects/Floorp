@@ -2998,11 +2998,6 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   if ((mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER) &&
       NS_SUCCEEDED(
          CrashReporter::SetExceptionHandler(mAppData->xreDirectory))) {
-
-    // Do the OOP initialization here instead of lazily to prevent race
-    // conditions when accessing nsICrashReporter functions early on.
-    CrashReporter::OOPInit();
-
     if (mAppData->crashReporterURL)
       CrashReporter::SetServerURL(nsDependentCString(mAppData->crashReporterURL));
 
