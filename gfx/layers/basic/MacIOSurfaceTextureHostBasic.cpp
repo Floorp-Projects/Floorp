@@ -35,10 +35,11 @@ MacIOSurfaceTextureSourceBasic::GetFormat() const
 }
 
 MacIOSurfaceTextureHostBasic::MacIOSurfaceTextureHostBasic(
+    uint64_t aID,
     TextureFlags aFlags,
     const SurfaceDescriptorMacIOSurface& aDescriptor
 )
-  : TextureHost(aFlags)
+  : TextureHost(aID, aFlags)
 {
   mSurface = MacIOSurface::LookupSurface(aDescriptor.surface(),
                                          aDescriptor.scaleFactor(),

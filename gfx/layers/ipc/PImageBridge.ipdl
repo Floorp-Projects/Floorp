@@ -7,7 +7,6 @@ include LayersSurfaces;
 include LayersMessages;
 include protocol PGrallocBuffer;
 include protocol PCompositable;
-include protocol PTexture;
 include ProtocolTypes;
 
 include "mozilla/GfxMessageUtils.h";
@@ -26,7 +25,6 @@ intr protocol PImageBridge
 {
   manages PCompositable;
   manages PGrallocBuffer;
-  manages PTexture;
 
 parent:
 
@@ -51,7 +49,6 @@ parent:
   sync Stop();
 
   sync PCompositable(TextureInfo aInfo) returns (uint64_t id);
-  async PTexture();
 };
 
 

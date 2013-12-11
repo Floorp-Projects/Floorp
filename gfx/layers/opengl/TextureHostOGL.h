@@ -298,7 +298,8 @@ protected:
 class SharedTextureHostOGL : public TextureHost
 {
 public:
-  SharedTextureHostOGL(TextureFlags aFlags,
+  SharedTextureHostOGL(uint64_t aID,
+                       TextureFlags aFlags,
                        gl::SharedTextureShareType aShareType,
                        gl::SharedTextureHandle aSharedhandle,
                        gfx::IntSize aSize,

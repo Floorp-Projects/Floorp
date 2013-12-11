@@ -159,6 +159,8 @@ public:
   {
     MOZ_CRASH("Should not be called on non-remote ContentClient");
   }
+
+  virtual void OnActorDestroy() MOZ_OVERRIDE {}
 };
 
 /**
@@ -235,6 +237,8 @@ public:
   {
     return mTextureInfo;
   }
+
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
 
 protected:
   void DestroyBuffers();
@@ -336,6 +340,8 @@ public:
     return mTextureInfo;
   }
 
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
+
 protected:
   void DestroyBuffers();
 
@@ -396,6 +402,8 @@ public:
 
   virtual void SyncFrontBufferToBackBuffer() MOZ_OVERRIDE;
 
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
+
 protected:
   virtual void CreateFrontBuffer(const nsIntRect& aBufferRect) MOZ_OVERRIDE;
   virtual void DestroyFrontBuffer() MOZ_OVERRIDE;
@@ -432,6 +440,8 @@ public:
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) MOZ_OVERRIDE;
 
   virtual void SyncFrontBufferToBackBuffer() MOZ_OVERRIDE;
+
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
 
 protected:
   virtual void CreateFrontBufferAndNotify(const nsIntRect& aBufferRect) MOZ_OVERRIDE;
@@ -538,6 +548,8 @@ public:
       mForwarder->DestroySharedSurface(&mUpdateDescriptorOnWhite);
     }
   }
+
+  virtual void OnActorDestroy() MOZ_OVERRIDE {}
 
 private:
 

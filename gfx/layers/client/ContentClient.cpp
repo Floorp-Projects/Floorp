@@ -148,6 +148,9 @@ ContentClientRemoteBuffer::EndPaint()
   // decided we didn't need one yet because the region to draw was empty.
   SetBufferProvider(nullptr);
   SetBufferProviderOnWhite(nullptr);
+  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
+    RemoveTextureClient(mOldTextures[i]);
+  }
   mOldTextures.Clear();
 
   if (mTextureClient) {
@@ -293,6 +296,20 @@ ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 {
   MOZ_ASSERT(mTextureClient);
   mFrontAndBackBufferDiffer = true;
+}
+
+void
+ContentClientRemoteBuffer::OnActorDestroy()
+{
+  if (mTextureClient) {
+    mTextureClient->OnActorDestroy();
+  }
+  if (mTextureClientOnWhite) {
+    mTextureClientOnWhite->OnActorDestroy();
+  }
+  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
+    mOldTextures[i]->OnActorDestroy();
+  }
 }
 
 void
@@ -480,6 +497,21 @@ DeprecatedContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdate
   }
 }
 
+
+void
+DeprecatedContentClientRemoteBuffer::OnActorDestroy()
+{
+  if (mDeprecatedTextureClient) {
+    mDeprecatedTextureClient->OnActorDestroy();
+  }
+  if (mDeprecatedTextureClientOnWhite) {
+    mDeprecatedTextureClientOnWhite->OnActorDestroy();
+  }
+  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
+    mOldTextures[i]->OnActorDestroy();
+  }
+}
+ 
 void
 ContentClientDoubleBuffered::CreateFrontBuffer(const nsIntRect& aBufferRect)
 {
@@ -634,6 +666,26 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
   }
 }
 
+void
+ContentClientDoubleBuffered::OnActorDestroy()
+{
+  if (mTextureClient) {
+    mTextureClient->OnActorDestroy();
+  }
+  if (mTextureClientOnWhite) {
+    mTextureClientOnWhite->OnActorDestroy();
+  }
+  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
+    mOldTextures[i]->OnActorDestroy();
+  }
+  if (mFrontClient) {
+    mFrontClient->OnActorDestroy();
+  }
+  if (mFrontClientOnWhite) {
+    mFrontClientOnWhite->OnActorDestroy();
+  }
+}
+
 DeprecatedContentClientDoubleBuffered::~DeprecatedContentClientDoubleBuffered()
 {
   if (mDeprecatedTextureClient) {
@@ -732,6 +784,26 @@ DeprecatedContentClientDoubleBuffered::SwapBuffers(const nsIntRegion& aFrontUpda
   }
 
   DeprecatedContentClientRemoteBuffer::SwapBuffers(aFrontUpdatedRegion);
+}
+
+void
+DeprecatedContentClientDoubleBuffered::OnActorDestroy()
+{
+  if (mDeprecatedTextureClient) {
+    mDeprecatedTextureClient->OnActorDestroy();
+  }
+  if (mDeprecatedTextureClientOnWhite) {
+    mDeprecatedTextureClientOnWhite->OnActorDestroy();
+  }
+  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
+    mOldTextures[i]->OnActorDestroy();
+  }
+  if (mFrontClient) {
+    mFrontClient->OnActorDestroy();
+  }
+  if (mFrontClientOnWhite) {
+    mFrontClientOnWhite->OnActorDestroy();
+  }
 }
 
 struct AutoDeprecatedTextureClient {
