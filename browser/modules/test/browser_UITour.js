@@ -225,6 +225,62 @@ let tests = [
       }, "Highlight should move to the appMenu button");
     }, "Highlight should be shown after showHighlight() for fixed panel items");
   },
+  function test_highlight_effect(done) {
+    function waitForHighlightWithEffect(highlightEl, effect, next, error) {
+      return waitForCondition(() => highlightEl.getAttribute("active") == effect,
+                              next,
+                              error);
+    }
+    function checkDefaultEffect() {
+      is(highlight.getAttribute("active"), "none", "The default should be no effect");
+
+      gContentAPI.showHighlight("urlbar", "none");
+      waitForHighlightWithEffect(highlight, "none", checkZoomEffect, "There should be no effect");
+    }
+    function checkZoomEffect() {
+      gContentAPI.showHighlight("urlbar", "zoom");
+      waitForHighlightWithEffect(highlight, "zoom", () => {
+        let style = window.getComputedStyle(highlight);
+        is(style.animationName, "uitour-zoom", "The animation-name should be uitour-zoom");
+        checkRandomEffect();
+      }, "There should be a zoom effect");
+    }
+    function checkRandomEffect() {
+      function waitForActiveHighlight(highlightEl, next, error) {
+        return waitForCondition(() => highlightEl.hasAttribute("active"),
+                                next,
+                                error);
+      }
+
+      gContentAPI.hideHighlight();
+      gContentAPI.showHighlight("urlbar", "random");
+      waitForActiveHighlight(highlight, () => {
+        ok(highlight.hasAttribute("active"), "The highlight should be active");
+        isnot(highlight.getAttribute("active"), "none", "A random effect other than none should have been chosen");
+        isnot(highlight.getAttribute("active"), "random", "The random effect shouldn't be 'random'");
+        isnot(UITour.highlightEffects.indexOf(highlight.getAttribute("active")), -1, "Check that a supported effect was randomly chosen");
+        done();
+      }, "There should be an active highlight with a random effect");
+    }
+
+    let highlight = document.getElementById("UITourHighlight");
+    is_element_hidden(highlight, "Highlight should initially be hidden");
+
+    gContentAPI.showHighlight("urlbar");
+    waitForElementToBeVisible(highlight, checkDefaultEffect, "Highlight should be shown after showHighlight()");
+  },
+  function test_highlight_effect_unsupported(done) {
+    function checkUnsupportedEffect() {
+      is(highlight.getAttribute("active"), "none", "No effect should be used when an unsupported effect is requested");
+      done();
+    }
+
+    let highlight = document.getElementById("UITourHighlight");
+    is_element_hidden(highlight, "Highlight should initially be hidden");
+
+    gContentAPI.showHighlight("urlbar", "__UNSUPPORTED__");
+    waitForElementToBeVisible(highlight, checkUnsupportedEffect, "Highlight should be shown after showHighlight()");
+  },
   function test_info_1(done) {
     let popup = document.getElementById("UITourTooltip");
     let title = document.getElementById("UITourTooltipTitle");
