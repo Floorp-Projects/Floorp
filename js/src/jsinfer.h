@@ -177,7 +177,7 @@ namespace analyze {
 
 namespace types {
 
-class TypeCompartment;
+class TypeZone;
 class TypeSet;
 class TypeObjectKey;
 
@@ -278,28 +278,10 @@ inline Type GetValueType(const Value &val);
  * Type information about the values observed within scripts and about the
  * contents of the heap is accumulated as the program executes. Compilation
  * accumulates constraints relating type information on the heap with the
- * compilations that should be invalidated when those types change. This data
- * is periodically cleared to reduce memory usage.
- *
- * GCs may clear both analysis information and jitcode. Sometimes GCs will
- * preserve all information and code, and will not collect any scripts, type
- * objects or singleton JS objects.
- *
- * The following data is cleared by all non-preserving GCs:
- *
- * - The ScriptAnalysis for each analyzed script and data from each analysis
- *   pass performed.
- *
- * - Property type sets for singleton JS objects.
- *
- * - Type constraints and dead references in all type sets.
- *
- * The following data is occasionally cleared by non-preserving GCs:
- *
- * - TypeScripts and their type sets are occasionally destroyed, per a timer.
- *
- * - When a JSScript or TypeObject is swept, type information for its contents
- *   is destroyed.
+ * compilations that should be invalidated when those types change. Type
+ * information and constraints are allocated in the zone's typeLifoAlloc,
+ * and on GC all data referring to live things is copied into a new allocator.
+ * Thus, type set and constraints only hold weak references.
  */
 
 /*
@@ -334,6 +316,12 @@ public:
      * state.
      */
     virtual void newObjectState(JSContext *cx, TypeObject *object) {}
+
+    /*
+     * If the data this constraint refers to is still live, copy it into the
+     * zone's new allocator. Type constraints only hold weak references.
+     */
+    virtual TypeConstraint *sweep(TypeZone &zone) = 0;
 };
 
 /* Flags and other state stored in TypeSet::flags */
@@ -393,13 +381,6 @@ enum {
 
     /* If set, addendum information should not be installed on this object. */
     OBJECT_FLAG_ADDENDUM_CLEARED      = 0x2,
-
-    /*
-     * If set, type constraints covering the correctness of the newScript
-     * definite properties need to be regenerated before compiling any jitcode
-     * which depends on this information.
-     */
-    OBJECT_FLAG_NEW_SCRIPT_REGENERATE = 0x4,
 
     /*
      * Whether we have ensured all type sets in the compartment contain
@@ -869,12 +850,6 @@ struct TypeTypedObject : public TypeObjectAddendum
  * information is sensitive to changes in the property's type. Future changes
  * to the property (whether those uncovered by analysis or those occurring
  * in the VM) will treat these properties like those of any other type object.
- *
- * When a GC occurs, we wipe out all analysis information for all the
- * compartment's scripts, so can destroy all properties on singleton type
- * objects at the same time. If there is no reference on the stack to the
- * type object itself, the type object is also destroyed, and the JS object
- * reverts to having a lazy type.
  */
 
 /* Type information about an object accessed by a script. */
@@ -1316,7 +1291,7 @@ class HeapTypeSetKey
 
     void freeze(CompilerConstraintList *constraints);
     JSValueType knownTypeTag(CompilerConstraintList *constraints);
-    bool configured(CompilerConstraintList *constraints, TypeObjectKey *type);
+    bool configured(CompilerConstraintList *constraints);
     bool isOwnProperty(CompilerConstraintList *constraints);
     bool knownSubset(CompilerConstraintList *constraints, const HeapTypeSetKey &other);
     JSObject *singleton(CompilerConstraintList *constraints);
@@ -1338,6 +1313,10 @@ class CompilerOutput
 
     // Whether this compilation is about to be invalidated.
     bool pendingInvalidation_ : 1;
+
+    // During sweeping, the list of compiler outputs is compacted and invalidated
+    // outputs are removed. This gives the new index for a valid compiler output.
+    uint32_t sweepIndex_ : 29;
 
   public:
     CompilerOutput()
@@ -1366,6 +1345,15 @@ class CompilerOutput
     bool pendingInvalidation() {
         return pendingInvalidation_;
     }
+
+    void setSweepIndex(uint32_t index) {
+        if (index >= 1 << 29)
+            MOZ_CRASH();
+        sweepIndex_ = index;
+    }
+    uint32_t sweepIndex() {
+        return sweepIndex_;
+    }
 };
 
 class RecompileInfo
@@ -1380,8 +1368,9 @@ class RecompileInfo
     bool operator == (const RecompileInfo &o) const {
         return outputIndex == o.outputIndex;
     }
-    CompilerOutput *compilerOutput(TypeCompartment &types) const;
+    CompilerOutput *compilerOutput(TypeZone &types) const;
     CompilerOutput *compilerOutput(JSContext *cx) const;
+    bool shouldSweep(TypeZone &types);
 };
 
 /* Type information for a compartment. */
@@ -1389,31 +1378,8 @@ struct TypeCompartment
 {
     /* Constraint solving worklist structures. */
 
-    /*
-     * Worklist of types which need to be propagated to constraints. We use a
-     * worklist to avoid blowing the native stack.
-     */
-    struct PendingWork
-    {
-        TypeConstraint *constraint;
-        ConstraintTypeSet *source;
-        Type type;
-    };
-    PendingWork *pendingArray;
-    unsigned pendingCount;
-    unsigned pendingCapacity;
-
-    /* Whether we are currently resolving the pending worklist. */
-    bool resolving;
-
     /* Number of scripts in this compartment. */
     unsigned scriptCount;
-
-    /* Valid & Invalid script referenced by type constraints. */
-    Vector<CompilerOutput> *constrainedOutputs;
-
-    /* Pending recompilations to perform before execution of JIT code can resume. */
-    Vector<RecompileInfo> *pendingRecompiles;
 
     /* Table for referencing types of objects keyed to an allocation site. */
     AllocationSiteTable *allocationSiteTable;
@@ -1438,14 +1404,6 @@ struct TypeCompartment
 
     inline JSCompartment *compartment();
 
-    /* Add a type to register with a list of constraints. */
-    inline void addPending(JSContext *cx, TypeConstraint *constraint,
-                           ConstraintTypeSet *source, Type type);
-    bool growPendingArray(JSContext *cx);
-
-    /* Resolve pending type registrations, excluding delayed ones. */
-    inline void resolvePending(JSContext *cx);
-
     /* Prints results of this compartment if spew is enabled or force is set. */
     void print(JSContext *cx, bool force);
 
@@ -1461,26 +1419,16 @@ struct TypeCompartment
     /* Get or make an object for an allocation site, and add to the allocation site table. */
     TypeObject *addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey key);
 
-    void processPendingRecompiles(FreeOp *fop);
-
     /* Mark all types as needing destruction once inference has 'finished'. */
     void setPendingNukeTypes(ExclusiveContext *cx);
-
-    /* Mark a script as needing recompilation once inference has finished. */
-    void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
-    void addPendingRecompile(JSContext *cx, JSScript *script);
 
     /* Mark any type set containing obj as having a generic object type. */
     void markSetsUnknown(JSContext *cx, TypeObject *obj);
 
     void sweep(FreeOp *fop);
-    void sweepShapes(FreeOp *fop);
-    void clearCompilerOutputs(FreeOp *fop);
-
     void finalizeObjects();
 
     void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                                size_t *pendingArrays,
                                 size_t *allocationSiteTables,
                                 size_t *arrayTypeTables,
                                 size_t *objectTypeTables);
@@ -1495,6 +1443,16 @@ struct TypeZone
     /* Pool for type information in this zone. */
     static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 8 * 1024;
     js::LifoAlloc                typeLifoAlloc;
+
+    /*
+     * All Ion compilations that have occured in this zone, for indexing via
+     * RecompileInfo. This includes both valid and invalid compilations, though
+     * invalidated compilations are swept on GC.
+     */
+    Vector<CompilerOutput> *compilerOutputs;
+
+    /* Pending recompilations to perform before execution of JIT code can resume. */
+    Vector<RecompileInfo> *pendingRecompiles;
 
     /*
      * Bit set if all current types must be marked as unknown, and all scripts
@@ -1515,6 +1473,12 @@ struct TypeZone
 
     /* Mark all types as needing destruction once inference has 'finished'. */
     void setPendingNukeTypes();
+
+    /* Mark a script as needing recompilation once inference has finished. */
+    void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
+    void addPendingRecompile(JSContext *cx, JSScript *script);
+
+    void processPendingRecompiles(FreeOp *fop);
 
     void nukeTypes(FreeOp *fop);
 };
