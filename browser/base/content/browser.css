@@ -952,13 +952,13 @@ toolbarpaletteitem[place="palette"][hidden] {
 
 @keyframes uitour-zoom {
   from {
-    transform: scale(0.9);
+    transform: scale(0.8);
   }
   50% {
-    transform: scale(1.1);
+    transform: scale(1.0);
   }
   to {
-    transform: scale(0.9);
+    transform: scale(0.8);
   }
 }
 
@@ -974,29 +974,27 @@ toolbarpaletteitem[place="palette"][hidden] {
   }
 }
 
-html|div#UITourHighlight {
-  display: none;
-  position: absolute;
-  z-index: 10000000000;
+#UITourHighlightContainer,
+#UITourHighlight {
+  pointer-events: none;
 }
 
-html|div#UITourHighlight[active] {
+#UITourHighlight[active] {
   animation-delay: 2s;
   animation-fill-mode: forwards;
   animation-iteration-count: infinite;
   animation-timing-function: linear;
-  display: block;
 }
 
-html|div#UITourHighlight[active="wobble"] {
+#UITourHighlight[active="wobble"] {
   animation-name: uitour-wobble;
   animation-duration: 1s;
 }
-html|div#UITourHighlight[active="zoom"] {
+#UITourHighlight[active="zoom"] {
   animation-name: uitour-zoom;
   animation-duration: 1s;
 }
-html|div#UITourHighlight[active="color"] {
+#UITourHighlight[active="color"] {
   animation-name: uitour-color;
   animation-duration: 2s;
 }

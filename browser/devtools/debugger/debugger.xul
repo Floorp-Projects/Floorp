@@ -32,12 +32,14 @@
   <commandset id="editMenuCommands"/>
 
   <commandset id="debuggerCommands">
-    <command id="prettyPrintCommand"
-             oncommand="DebuggerView.Sources.togglePrettyPrint()"/>
     <command id="blackBoxCommand"
              oncommand="DebuggerView.Sources.toggleBlackBoxing()"/>
     <command id="unBlackBoxButton"
              oncommand="DebuggerView.Sources._onStopBlackBoxing()"/>
+    <command id="prettyPrintCommand"
+             oncommand="DebuggerView.Sources.togglePrettyPrint()"/>
+    <command id="toggleBreakpointsCommand"
+             oncommand="DebuggerView.Sources.toggleBreakpoints()"/>
     <command id="nextSourceCommand"
              oncommand="DebuggerView.Sources.selectNextItem()"/>
     <command id="prevSourceCommand"
@@ -333,16 +335,20 @@
             <toolbar id="sources-toolbar" class="devtools-toolbar">
               <hbox id="sources-controls">
                 <toolbarbutton id="black-box"
+                               class="devtools-toolbarbutton"
                                tooltiptext="&debuggerUI.sources.blackBoxTooltip;"
-                               command="blackBoxCommand"
-                               class="devtools-toolbarbutton"/>
+                               command="blackBoxCommand"/>
                 <toolbarbutton id="pretty-print"
+                               class="devtools-toolbarbutton devtools-monospace"
                                label="{}"
                                tooltiptext="&debuggerUI.sources.prettyPrint;"
-                               class="devtools-toolbarbutton devtools-monospace"
                                command="prettyPrintCommand"
                                hidden="true"/>
               </hbox>
+              <toolbarbutton id="toggle-breakpoints"
+                             class="devtools-toolbarbutton"
+                             tooltiptext="&debuggerUI.sources.toggleBreakpoints;"
+                             command="toggleBreakpointsCommand"/>
             </toolbar>
           </tabpanel>
           <tabpanel id="callstack-tabpanel">
@@ -361,7 +367,7 @@
           <button id="black-boxed-message-button"
                   class="devtools-toolbarbutton"
                   label="&debuggerUI.blackBoxMessage.unBlackBoxButton;"
-                  image="chrome://browser/skin/devtools/blackBoxMessageEye.png"
+                  image="chrome://browser/skin/devtools/debugger-blackboxMessageEye.png"
                   command="unBlackBoxCommand"/>
         </vbox>
         <vbox id="source-progress-container" align="center" pack="center">
