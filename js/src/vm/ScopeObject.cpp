@@ -146,12 +146,12 @@ CallObject::create(JSContext *cx, HandleScript script, HandleShape shape, Handle
     JS_ASSERT(CanBeFinalizedInBackground(kind, &CallObject::class_));
     kind = gc::GetBackgroundAllocKind(kind);
 
-    gc::InitialHeap heap = script->treatAsRunOnce ? gc::TenuredHeap : gc::DefaultHeap;
+    gc::InitialHeap heap = script->treatAsRunOnce() ? gc::TenuredHeap : gc::DefaultHeap;
     JSObject *obj = JSObject::create(cx, kind, heap, shape, type, slots);
     if (!obj)
         return nullptr;
 
-    if (script->treatAsRunOnce) {
+    if (script->treatAsRunOnce()) {
         RootedObject nobj(cx, obj);
         if (!JSObject::setSingletonType(cx, nobj))
             return nullptr;
@@ -196,7 +196,7 @@ CallObject::createTemplateObject(JSContext *cx, HandleScript script, gc::Initial
 CallObject *
 CallObject::create(JSContext *cx, HandleScript script, HandleObject enclosing, HandleFunction callee)
 {
-    gc::InitialHeap heap = script->treatAsRunOnce ? gc::TenuredHeap : gc::DefaultHeap;
+    gc::InitialHeap heap = script->treatAsRunOnce() ? gc::TenuredHeap : gc::DefaultHeap;
     CallObject *callobj = CallObject::createTemplateObject(cx, script, heap);
     if (!callobj)
         return nullptr;
@@ -204,7 +204,7 @@ CallObject::create(JSContext *cx, HandleScript script, HandleObject enclosing, H
     callobj->as<ScopeObject>().setEnclosingScope(enclosing);
     callobj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
 
-    if (script->treatAsRunOnce) {
+    if (script->treatAsRunOnce()) {
         Rooted<CallObject*> ncallobj(cx, callobj);
         if (!JSObject::setSingletonType(cx, ncallobj))
             return nullptr;

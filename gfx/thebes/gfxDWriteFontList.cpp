@@ -58,6 +58,94 @@ gfxDWriteFontFamily::~gfxDWriteFontFamily()
 {
 }
 
+static HRESULT
+GetDirectWriteFontName(IDWriteFont *aFont, nsAString& aFontName)
+{
+    HRESULT hr;
+
+    nsRefPtr<IDWriteLocalizedStrings> names;
+    hr = aFont->GetFaceNames(getter_AddRefs(names));
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    BOOL exists;
+    nsAutoTArray<wchar_t,32> faceName;
+    UINT32 englishIdx = 0;
+    hr = names->FindLocaleName(L"en-us", &englishIdx, &exists);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    if (!exists) {
+        // No english found, use whatever is first in the list.
+        englishIdx = 0;
+    }
+    UINT32 length;
+    hr = names->GetStringLength(englishIdx, &length);
+    if (FAILED(hr)) {
+        return hr;
+    }
+    faceName.SetLength(length + 1);
+    hr = names->GetString(englishIdx, faceName.Elements(), length + 1);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    aFontName.Assign(faceName.Elements());
+    return S_OK;
+}
+
+// These strings are only defined in Win SDK 8+, so use #ifdef for now
+#if MOZ_WINSDK_TARGETVER > 0x08000000
+#define FULLNAME_ID   DWRITE_INFORMATIONAL_STRING_FULL_NAME
+#define PSNAME_ID     DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME
+#else
+#define FULLNAME_ID   DWRITE_INFORMATIONAL_STRING_ID(DWRITE_INFORMATIONAL_STRING_SAMPLE_TEXT + 1)
+#define PSNAME_ID     DWRITE_INFORMATIONAL_STRING_ID(DWRITE_INFORMATIONAL_STRING_SAMPLE_TEXT + 2)
+#endif
+
+// for use in reading postscript or fullname
+static HRESULT
+GetDirectWriteFaceName(IDWriteFont *aFont,
+                       DWRITE_INFORMATIONAL_STRING_ID aWhichName,
+                       nsAString& aFontName)
+{
+    HRESULT hr;
+
+    BOOL exists;
+    nsRefPtr<IDWriteLocalizedStrings> infostrings;
+    hr = aFont->GetInformationalStrings(aWhichName, getter_AddRefs(infostrings), &exists);
+    if (FAILED(hr) || !exists) {
+        return E_FAIL;
+    }
+
+    nsAutoTArray<wchar_t,32> faceName;
+    UINT32 englishIdx = 0;
+    hr = infostrings->FindLocaleName(L"en-us", &englishIdx, &exists);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    if (!exists) {
+        // No english found, use whatever is first in the list.
+        englishIdx = 0;
+    }
+    UINT32 length;
+    hr = infostrings->GetStringLength(englishIdx, &length);
+    if (FAILED(hr)) {
+        return hr;
+    }
+    faceName.SetLength(length + 1);
+    hr = infostrings->GetString(englishIdx, faceName.Elements(), length + 1);
+    if (FAILED(hr)) {
+        return hr;
+    }
+
+    aFontName.Assign(faceName.Elements());
+    return S_OK;
+}
+
 void
 gfxDWriteFontFamily::FindStyleVariations()
 {
@@ -66,6 +154,11 @@ gfxDWriteFontFamily::FindStyleVariations()
         return;
     }
     mHasStyles = true;
+
+    gfxPlatformFontList *fp = gfxPlatformFontList::PlatformFontList();
+
+    bool skipFaceNames = mFaceNamesInitialized ||
+                         !fp->NeedFullnamePostscriptNames();
 
     for (UINT32 i = 0; i < mDWFamily->GetFontCount(); i++) {
         nsRefPtr<IDWriteFont> font;
@@ -81,62 +174,55 @@ gfxDWriteFontFamily::FindStyleVariations()
             continue;
         }
 
-        nsRefPtr<IDWriteLocalizedStrings> names;
-        hr = font->GetFaceNames(getter_AddRefs(names));
-        if (FAILED(hr)) {
-            continue;
-        }
-        
-        BOOL exists;
-        nsAutoTArray<WCHAR,32> faceName;
-        UINT32 englishIdx = 0;
-        hr = names->FindLocaleName(L"en-us", &englishIdx, &exists);
-        if (FAILED(hr)) {
-            continue;
-        }
-
-        if (!exists) {
-            // No english found, use whatever is first in the list.
-            englishIdx = 0;
-        }
-        UINT32 length;
-        hr = names->GetStringLength(englishIdx, &length);
-        if (FAILED(hr)) {
-            continue;
-        }
-        if (!faceName.SetLength(length + 1)) {
-            // Eeep - running out of memory. Unlikely to end well.
-            continue;
-        }
-
-        hr = names->GetString(englishIdx, faceName.Elements(), length + 1);
-        if (FAILED(hr)) {
-            continue;
-        }
-
+        // name
         nsString fullID(mName);
+        nsAutoString faceName;
+        hr = GetDirectWriteFontName(font, faceName);
+        if (FAILED(hr)) {
+            continue;
+        }
         fullID.Append(NS_LITERAL_STRING(" "));
-        fullID.Append(faceName.Elements());
+        fullID.Append(faceName);
 
-        /**
-         * Faces do not have a localized name so we just put the en-us name in
-         * here.
-         */
-        gfxDWriteFontEntry *fe = 
-            new gfxDWriteFontEntry(fullID, font);
+        gfxDWriteFontEntry *fe = new gfxDWriteFontEntry(fullID, font);
         fe->SetForceGDIClassic(mForceGDIClassic);
         AddFontEntry(fe);
+
+        // postscript/fullname if needed
+        nsAutoString psname, fullname;
+        if (!skipFaceNames) {
+            hr = GetDirectWriteFaceName(font, PSNAME_ID, psname);
+            if (FAILED(hr)) {
+                skipFaceNames = true;
+            } else if (psname.Length() > 0) {
+                fp->AddPostscriptName(fe, psname);
+            }
+
+            hr = GetDirectWriteFaceName(font, FULLNAME_ID, fullname);
+            if (FAILED(hr)) {
+                skipFaceNames = true;
+            } else if (fullname.Length() > 0) {
+                fp->AddFullname(fe, fullname);
+            }
+        }
 
 #ifdef PR_LOGGING
         if (LOG_FONTLIST_ENABLED()) {
             LOG_FONTLIST(("(fontlist) added (%s) to family (%s)"
-                 " with style: %s weight: %d stretch: %d",
+                 " with style: %s weight: %d stretch: %d psname: %s fullname: %s",
                  NS_ConvertUTF16toUTF8(fe->Name()).get(),
                  NS_ConvertUTF16toUTF8(Name()).get(),
                  (fe->IsItalic()) ? "italic" : "normal",
-                 fe->Weight(), fe->Stretch()));
+                 fe->Weight(), fe->Stretch(),
+                 NS_ConvertUTF16toUTF8(psname).get(),
+                 NS_ConvertUTF16toUTF8(fullname).get()));
         }
 #endif
+    }
+
+    // assume that if no error, all postscript/fullnames were initialized
+    if (!skipFaceNames) {
+        mFaceNamesInitialized = true;
     }
 
     if (!mAvailableFonts.Length()) {
@@ -145,6 +231,27 @@ gfxDWriteFontFamily::FindStyleVariations()
 
     if (mIsBadUnderlineFamily) {
         SetBadUnderlineFonts();
+    }
+}
+
+void
+gfxDWriteFontFamily::ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
+                                   bool aNeedFullnamePostscriptNames)
+{
+    // if all needed names have already been read, skip
+    if (mOtherFamilyNamesInitialized &&
+        (mFaceNamesInitialized || !aNeedFullnamePostscriptNames)) {
+        return;
+    }
+
+    // DirectWrite version of this will try to read
+    // postscript/fullnames via DirectWrite API
+    FindStyleVariations();
+
+    // fallback to looking up via name table
+    if (!mOtherFamilyNamesInitialized || !mFaceNamesInitialized) {
+        gfxFontFamily::ReadFaceNames(aPlatformFontList,
+                                     aNeedFullnamePostscriptNames);
     }
 }
 
@@ -175,7 +282,7 @@ gfxDWriteFontFamily::LocalizedName(nsAString &aLocalizedName)
     }
     UINT32 idx = 0;
     BOOL exists;
-    hr = names->FindLocaleName(localeName.BeginReading(),
+    hr = names->FindLocaleName(localeName.get(),
                                &idx,
                                &exists);
     if (FAILED(hr)) {

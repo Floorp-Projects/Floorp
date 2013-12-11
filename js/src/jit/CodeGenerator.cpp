@@ -2762,7 +2762,7 @@ CodeGenerator::maybeCreateScriptCounts()
     CompileInfo *outerInfo = &gen->info();
     JSScript *script = outerInfo->script();
 
-    if (script && !script->hasScriptCounts && !script->initScriptCounts(cx))
+    if (script && !script->hasScriptCounts() && !script->initScriptCounts(cx))
         return nullptr;
 
     counts = js_new<IonScriptCounts>();
@@ -6615,7 +6615,7 @@ CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty *lir)
     pushArg(ImmGCPtr(lir->mir()->name()));
     pushArg(ToValue(lir, LCallDeleteProperty::Value));
 
-    if (lir->mir()->block()->info().script()->strict)
+    if (lir->mir()->block()->info().script()->strict())
         return callVM(DeletePropertyStrictInfo, lir);
 
     return callVM(DeletePropertyNonStrictInfo, lir);
@@ -6633,7 +6633,7 @@ CodeGenerator::visitCallDeleteElement(LCallDeleteElement *lir)
     pushArg(ToValue(lir, LCallDeleteElement::Index));
     pushArg(ToValue(lir, LCallDeleteElement::Value));
 
-    if (lir->mir()->block()->info().script()->strict)
+    if (lir->mir()->block()->info().script()->strict())
         return callVM(DeleteElementStrictInfo, lir);
 
     return callVM(DeleteElementNonStrictInfo, lir);

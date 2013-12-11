@@ -2126,7 +2126,7 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, HandleFunction fun,
 
     RootedScript script(cx, fun->nonLazyScript());
 
-    if (!script->compileAndGo || !script->canBaselineCompile())
+    if (!script->compileAndGo() || !script->canBaselineCompile())
         return true;
 
     Vector<PropertyName *> accessedProperties(cx);

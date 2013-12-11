@@ -250,13 +250,15 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
                                      size,
                                      gfx::ContentForFormat(aSurface->GetFormat()),
                                      WrapMode(mGL, aFlags & TEXTURE_ALLOW_REPEAT),
-                                     FlagsToGLFlags(aFlags));
+                                     FlagsToGLFlags(aFlags),
+                                     SurfaceFormatToImageFormat(aSurface->GetFormat()));
     } else {
       mTexImage = CreateBasicTextureImage(mGL,
                                           size,
                                           gfx::ContentForFormat(aSurface->GetFormat()),
                                           WrapMode(mGL, aFlags & TEXTURE_ALLOW_REPEAT),
-                                          FlagsToGLFlags(aFlags));
+                                          FlagsToGLFlags(aFlags),
+                                          SurfaceFormatToImageFormat(aSurface->GetFormat()));
     }
   }
 

@@ -331,12 +331,12 @@ SetPropertyOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleV
     RootedId id(cx, NameToId(script->getName(pc)));
     if (JS_LIKELY(!obj->getOps()->setProperty)) {
         if (!baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, 0,
-                                                             &rref, script->strict))
+                                                             &rref, script->strict()))
         {
             return false;
         }
     } else {
-        if (!JSObject::setGeneric(cx, obj, obj, id, &rref, script->strict))
+        if (!JSObject::setGeneric(cx, obj, obj, id, &rref, script->strict()))
             return false;
     }
 
@@ -1298,14 +1298,14 @@ Interpret(JSContext *cx, RunState &state)
 #define SET_SCRIPT(s)                                                         \
     JS_BEGIN_MACRO                                                            \
         script = (s);                                                         \
-        if (script->hasAnyBreakpointsOrStepMode() || script->hasScriptCounts) \
+        if (script->hasAnyBreakpointsOrStepMode() || script->hasScriptCounts()) \
             activation.enableInterruptsUnconditionally();                     \
     JS_END_MACRO
 
 #define SANITY_CHECKS()                                                       \
     JS_BEGIN_MACRO                                                            \
         js::gc::MaybeVerifyBarriers(cx);                                      \
-        JS_ASSERT_IF(script->hasScriptCounts,                                 \
+        JS_ASSERT_IF(script->hasScriptCounts(),                               \
                      activation.opMask() == EnableInterruptsPseudoOpcode);    \
     JS_END_MACRO
 
@@ -1401,12 +1401,12 @@ CASE(EnableInterruptsPseudoOpcode)
     jsbytecode op = *REGS.pc;
 
     if (cx->runtime()->profilingScripts) {
-        if (!script->hasScriptCounts)
+        if (!script->hasScriptCounts())
             script->initScriptCounts(cx);
         moreInterrupts = true;
     }
 
-    if (script->hasScriptCounts) {
+    if (script->hasScriptCounts()) {
         PCCounts counts = script->getPCCounts(REGS.pc);
         counts.get(PCCounts::BASE_INTERP)++;
         moreInterrupts = true;
@@ -2176,7 +2176,7 @@ END_CASE(JSOP_POS)
 CASE(JSOP_DELNAME)
 {
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
-    JS_ASSERT(!script->strict);
+    JS_ASSERT(!script->strict());
 
     RootedPropertyName &name = rootName0;
     name = script->getName(REGS.pc);
@@ -2202,7 +2202,7 @@ CASE(JSOP_DELPROP)
     bool succeeded;
     if (!JSObject::deleteProperty(cx, obj, name, &succeeded))
         goto error;
-    if (!succeeded && script->strict) {
+    if (!succeeded && script->strict()) {
         obj->reportNotConfigurable(cx, NameToId(name));
         goto error;
     }
@@ -2223,7 +2223,7 @@ CASE(JSOP_DELELEM)
     bool succeeded;
     if (!JSObject::deleteByValue(cx, obj, propval, &succeeded))
         goto error;
-    if (!succeeded && script->strict) {
+    if (!succeeded && script->strict()) {
         // XXX This observably calls ToString(propval).  We should convert to
         //     PropertyKey and use that to delete, and to report an error if
         //     necessary!
@@ -2358,7 +2358,7 @@ CASE(JSOP_SETELEM)
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(-2, id);
     Value &value = REGS.sp[-1];
-    if (!SetObjectElementOperation(cx, obj, id, value, script->strict))
+    if (!SetObjectElementOperation(cx, obj, id, value, script->strict()))
         goto error;
     REGS.sp[-3] = value;
     REGS.sp -= 2;
@@ -2375,7 +2375,7 @@ CASE(JSOP_ENUMELEM)
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(-1, id);
     rval = REGS.sp[-3];
-    if (!JSObject::setGeneric(cx, obj, obj, id, &rval, script->strict))
+    if (!JSObject::setGeneric(cx, obj, obj, id, &rval, script->strict()))
         goto error;
     REGS.sp -= 3;
 }
@@ -2488,7 +2488,7 @@ CASE(JSOP_FUNCALL)
         funScript = fun->getOrCreateScript(cx);
         if (!funScript)
             goto error;
-        if (cx->typeInferenceEnabled() && funScript->shouldCloneAtCallsite) {
+        if (cx->typeInferenceEnabled() && funScript->shouldCloneAtCallsite()) {
             fun = CloneFunctionAtCallsite(cx, fun, script, REGS.pc);
             if (!fun)
                 goto error;
@@ -3022,7 +3022,7 @@ CASE(JSOP_INITPROP)
 
     if (JS_UNLIKELY(name == cx->names().proto)
         ? !baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, 0, &rval,
-                                                           script->strict)
+                                                           script->strict())
         : !DefineNativeProperty(cx, obj, id, rval, nullptr, nullptr,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
         goto error;
@@ -3596,7 +3596,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
         if (!fun)
             return false;
     } else {
-        JS_ASSERT(script->compileAndGo);
+        JS_ASSERT(script->compileAndGo());
         JS_ASSERT(!script->function());
     }
 
@@ -3623,7 +3623,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
      * ECMA requires functions defined when entering Eval code to be
      * impermanent.
      */
-    unsigned attrs = script->isActiveEval
+    unsigned attrs = script->isActiveEval()
                      ? JSPROP_ENUMERATE
                      : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
@@ -3660,7 +3660,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
      */
 
     /* Step 5f. */
-    return JSObject::setProperty(cx, parent, parent, name, &rval, script->strict);
+    return JSObject::setProperty(cx, parent, parent, name, &rval, script->strict());
 }
 
 bool
@@ -3853,10 +3853,10 @@ js::ImplicitThisOperation(JSContext *cx, HandleObject scopeObj, HandlePropertyNa
 bool
 js::RunOnceScriptPrologue(JSContext *cx, HandleScript script)
 {
-    JS_ASSERT(script->treatAsRunOnce);
+    JS_ASSERT(script->treatAsRunOnce());
 
-    if (!script->hasRunOnce) {
-        script->hasRunOnce = true;
+    if (!script->hasRunOnce()) {
+        script->setHasRunOnce();
         return true;
     }
 

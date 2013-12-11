@@ -32,6 +32,9 @@ const PREF_DEBUG_SLOW_SQL = "toolkit.telemetry.debugSlowSql";
 const PREF_SYMBOL_SERVER_URI = "profiler.symbolicationUrl";
 const DEFAULT_SYMBOL_SERVER_URI = "http://symbolapi.mozilla.org";
 
+// ms idle before applying the filter (allow uninterrupted typing)
+const FILTER_IDLE_TIMEOUT = 500;
+
 #ifdef XP_WIN
 const EOL = "\r\n";
 #else
@@ -133,9 +136,10 @@ let SlowSQL = {
     let mainThreadCount = Object.keys(mainThread).length;
     let otherThreadCount = Object.keys(otherThreads).length;
     if (mainThreadCount == 0 && otherThreadCount == 0) {
-      showEmptySectionMessage("slow-sql-section");
       return;
     }
+
+    setHasData("slow-sql-section", true);
 
     if (debugSlowSql) {
       document.getElementById("sql-warning").classList.remove("hidden");
@@ -282,9 +286,10 @@ let StackRenderer = {
     }
 
     if (aStacks.length == 0) {
-      showEmptySectionMessage(aPrefix + '-section');
       return;
     }
+
+    setHasData(aPrefix + '-section', true);
 
     this.renderMemoryMap(div, aMemoryMap);
 
@@ -556,6 +561,72 @@ let Histogram = {
     }
 
     return text.substr(EOL.length); // Trim the EOL before the first line
+  },
+
+  /**
+   * Helper function for filtering histogram elements by their id
+   * Adds the "filter-blocked" class to histogram nodes whose IDs don't match the filter.
+   *
+   * @param aContainerNode Container node containing the histogram class nodes to filter
+   * @param aFilterText either text or /RegEx/. If text, case-insensitive and AND words
+   */
+  filterHistograms: function _filterHistograms(aContainerNode, aFilterText) {
+    let filter = aFilterText.toString();
+
+    // Pass if: all non-empty array items match (case-sensitive)
+    function isPassText(subject, filter) {
+      for (let item of filter) {
+        if (item.length && subject.indexOf(item) < 0) {
+          return false; // mismatch and not a spurious space
+        }
+      }
+      return true;
+    }
+
+    function isPassRegex(subject, filter) {
+      return filter.test(subject);
+    }
+
+    // Setup normalized filter string (trimmed, lower cased and split on spaces if not RegEx)
+    let isPassFunc; // filter function, set once, then applied to all elements
+    filter = filter.trim();
+    if (filter[0] != "/") { // Plain text: case insensitive, AND if multi-string
+      isPassFunc = isPassText;
+      filter = filter.toLowerCase().split(" ");
+    } else {
+      isPassFunc = isPassRegex;
+      var r = filter.match(/^\/(.*)\/(i?)$/);
+      try {
+        filter = RegExp(r[1], r[2]);
+      }
+      catch (e) { // Incomplete or bad RegExp - always no match
+        isPassFunc = function() {
+          return false;
+        };
+      }
+    }
+
+    let needLower = (isPassFunc === isPassText);
+
+    let histograms = aContainerNode.getElementsByClassName("histogram");
+    for (let hist of histograms) {
+      hist.classList[isPassFunc((needLower ? hist.id.toLowerCase() : hist.id), filter) ? "remove" : "add"]("filter-blocked");
+    }
+  },
+
+  /**
+   * Event handler for change at histograms filter input
+   *
+   * When invoked, 'this' is expected to be the filter HTML node.
+   */
+  histogramFilterChanged: function _histogramFilterChanged() {
+    if (this.idleTimeout) {
+      clearTimeout(this.idleTimeout);
+    }
+
+    this.idleTimeout = setTimeout( () => {
+      Histogram.filterHistograms(document.getElementById(this.getAttribute("target_id")), this.value);
+    }, FILTER_IDLE_TIMEOUT);
   }
 };
 
@@ -674,34 +745,14 @@ let AddonDetails = {
 };
 
 /**
- * Helper function for showing "No data collected" message for a section
+ * Helper function for showing either the toggle element or "No data collected" message for a section
  *
  * @param aSectionID ID of the section element that needs to be changed
+ * @param aHasData true (default) indicates that toggle should be displayed
  */
-function showEmptySectionMessage(aSectionID) {
+function setHasData(aSectionID, aHasData) {
   let sectionElement = document.getElementById(aSectionID);
-
-  // Hide toggle captions
-  let toggleElements = sectionElement.getElementsByClassName("toggle-caption");
-  toggleElements[0].classList.add("hidden");
-  toggleElements[1].classList.add("hidden");
-
-  // Show "No data collected" message
-  let messageElement = sectionElement.getElementsByClassName("empty-caption")[0];
-  messageElement.classList.remove("hidden");
-
-  // Don't allow section to be expanded by clicking on the header text
-  let sectionHeaders = sectionElement.getElementsByClassName("section-name");
-  for (let sectionHeader of sectionHeaders) {
-    sectionHeader.removeEventListener("click", toggleSection);
-    sectionHeader.style.cursor = "auto";
-  }
-
-  // Don't allow section to be expanded by clicking on the toggle text
-  let toggleLinks = sectionElement.getElementsByClassName("toggle-caption");
-  for (let toggleLink of toggleLinks) {
-    toggleLink.removeEventListener("click", toggleSection);
-  }
+  sectionElement.classList[aHasData ? "add" : "remove"]("has-data");
 }
 
 /**
@@ -710,12 +761,15 @@ function showEmptySectionMessage(aSectionID) {
  */
 function toggleSection(aEvent) {
   let parentElement = aEvent.target.parentElement;
-  let sectionDiv = parentElement.getElementsByTagName("div")[0];
-  sectionDiv.classList.toggle("hidden");
+  if (!parentElement.classList.contains("has-data")) {
+    return; // nothing to toggle
+  }
 
-  let toggleLinks = parentElement.getElementsByClassName("toggle-caption");
-  toggleLinks[0].classList.toggle("hidden");
-  toggleLinks[1].classList.toggle("hidden");
+  parentElement.classList.toggle("expanded");
+
+  // Store section opened/closed state in a hidden checkbox (which is then used on reload)
+  let statebox = parentElement.getElementsByClassName("statebox")[0];
+  statebox.checked = parentElement.classList.contains("expanded");
 }
 
 /**
@@ -789,12 +843,13 @@ function setupListeners() {
     sectionHeader.addEventListener("click", toggleSection, false);
   }
 
-  // Clicking on the "collapse"/"expand" text will also toggle section's state
+  // Clicking on the "toggle" text will also toggle section's state
   let toggleLinks = document.getElementsByClassName("toggle-caption");
   for (let toggleLink of toggleLinks) {
     toggleLink.addEventListener("click", toggleSection, false);
   }
 }
+
 
 function onLoad() {
   window.removeEventListener("load", onLoad);
@@ -818,8 +873,14 @@ function onLoad() {
     for (let [name, hgram] of Iterator(histograms)) {
       Histogram.render(hgramDiv, name, hgram);
     }
-  } else {
-    showEmptySectionMessage("histograms-section");
+
+    let filterBox = document.getElementById("histograms-filter");
+    filterBox.addEventListener("input", Histogram.histogramFilterChanged, false);
+    if (filterBox.value.trim() != "") { // on load, no need to filter if empty
+      Histogram.filterHistograms(hgramDiv, filterBox.value);
+    }
+
+    setHasData("histograms-section", true);
   }
 
   // Show addon histogram data
@@ -833,13 +894,21 @@ function onLoad() {
     }
   }
 
-  if (!addonHistogramsRendered) {
-    showEmptySectionMessage("addon-histograms-section");
+  if (addonHistogramsRendered) {
+   setHasData("addon-histograms-section", true);
   }
 
   // Get the Telemetry Ping payload
   Telemetry.asyncFetchTelemetryData(displayPingData);
-};
+
+  // Restore sections states
+  let stateboxes = document.getElementsByClassName("statebox");
+  for (let box of stateboxes) {
+    if (box.checked) { // Was open. Will still display as empty if not has-data
+        box.parentElement.classList.add("expanded");
+    }
+  }
+}
 
 let LateWritesSingleton = {
   renderHeader: function LateWritesSingleton_renderHeader(aIndex) {
@@ -911,8 +980,7 @@ function displayPingData() {
     let simpleSection = document.getElementById("simple-measurements");
     simpleSection.appendChild(KeyValueTable.render(simpleMeasurements,
                                                    keysHeader, valuesHeader));
-  } else {
-    showEmptySectionMessage("simple-measurements-section");
+    setHasData("simple-measurements-section", true);
   }
 
   LateWritesSingleton.renderLateWrites(ping.lateWrites);
@@ -922,15 +990,13 @@ function displayPingData() {
     let infoSection = document.getElementById("system-info");
     infoSection.appendChild(KeyValueTable.render(ping.info,
                                                  keysHeader, valuesHeader));
-  } else {
-    showEmptySectionMessage("system-info-section");
+    setHasData("system-info-section", true);
   }
 
   let addonDetails = ping.addonDetails;
   if (Object.keys(addonDetails).length) {
     AddonDetails.render(addonDetails);
-  } else {
-    showEmptySectionMessage("addon-details-section");
+    setHasData("addon-details-section", true);
   }
 }
 

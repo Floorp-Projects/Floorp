@@ -3034,10 +3034,7 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS(random strerror lchown fchmod snprintf memmove stat64 lstat64 truncate64 setbuf isatty)
-AC_CHECK_FUNCS(statvfs64 statvfs statfs64 statfs)
-AC_CHECK_FUNCS(flockfile getpagesize)
-AC_CHECK_FUNCS(localtime_r strtok_r)
+AC_CHECK_FUNCS(stat64 lstat64 truncate64 statvfs64 statvfs statfs64 statfs getpagesize localtime_r)
 
 dnl check for clock_gettime(), the CLOCK_MONOTONIC clock
 AC_CACHE_CHECK(for clock_gettime(CLOCK_MONOTONIC),
@@ -7818,7 +7815,7 @@ if test "$USE_FC_FREETYPE"; then
                                $HAVE_FT_BITMAP_SIZE_Y_PPEM,
                                [FT_Bitmap_Size structure includes y_ppem field])
 
-            AC_CHECK_FUNCS(FT_GlyphSlot_Embolden FT_Load_Sfnt_Table FT_Select_Size)
+            AC_CHECK_FUNCS(FT_GlyphSlot_Embolden FT_Load_Sfnt_Table)
 
             LIBS="$_SAVE_LIBS"
             CFLAGS="$_SAVE_CFLAGS"

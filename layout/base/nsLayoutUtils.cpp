@@ -128,7 +128,7 @@ static ContentMap& GetContentMap() {
 // When the pref "layout.css.sticky.enabled" changes, this function is invoked
 // to let us update kPositionKTable, to selectively disable or restore the
 // entry for "sticky" in that table.
-static int
+static void
 StickyEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 {
   MOZ_ASSERT(strncmp(aPrefName, STICKY_ENABLED_PREF_NAME,
@@ -156,14 +156,12 @@ StickyEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
   // depending on whether the sticky pref is enabled vs. disabled.
   nsCSSProps::kPositionKTable[sIndexOfStickyInPositionTable] =
     isStickyEnabled ? eCSSKeyword_sticky : eCSSKeyword_UNKNOWN;
-
-  return 0;
 }
 
 // When the pref "layout.css.text-align-true-value.enabled" changes, this
 // function is called to let us update kTextAlignKTable & kTextAlignLastKTable,
 // to selectively disable or restore the entries for "true" in those tables.
-static int
+static void
 TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 {
   NS_ASSERTION(strcmp(aPrefName, TEXT_ALIGN_TRUE_ENABLED_PREF_NAME) == 0,
@@ -195,8 +193,6 @@ TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
   MOZ_ASSERT(sIndexOfTrueInTextAlignLastTable >= 0);
   nsCSSProps::kTextAlignLastKTable[sIndexOfTrueInTextAlignLastTable] =
     isTextAlignTrueEnabled ? eCSSKeyword_true : eCSSKeyword_UNKNOWN;
-
-  return 0;
 }
 
 template <class AnimationsOrTransitions>

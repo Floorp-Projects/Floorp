@@ -1108,12 +1108,12 @@ AddNewScriptRecipients(GlobalObject::DebuggerVector *src, AutoValueVector *dest)
 void
 Debugger::slowPathOnNewScript(JSContext *cx, HandleScript script, GlobalObject *compileAndGoGlobal_)
 {
-    if (script->selfHosted)
+    if (script->selfHosted())
         return;
 
     Rooted<GlobalObject*> compileAndGoGlobal(cx, compileAndGoGlobal_);
 
-    JS_ASSERT(script->compileAndGo == !!compileAndGoGlobal);
+    JS_ASSERT(script->compileAndGo() == !!compileAndGoGlobal);
 
     /*
      * Build the list of recipients. For compile-and-go scripts, this is the
@@ -1122,7 +1122,7 @@ Debugger::slowPathOnNewScript(JSContext *cx, HandleScript script, GlobalObject *
      * debugger observing any global in the script's compartment.
      */
     AutoValueVector triggered(cx);
-    if (script->compileAndGo) {
+    if (script->compileAndGo()) {
         if (GlobalObject::DebuggerVector *debuggers = compileAndGoGlobal->getDebuggers()) {
             if (!AddNewScriptRecipients(debuggers, &triggered))
                 return;
@@ -1277,7 +1277,7 @@ Debugger::onSingleStep(JSContext *cx, MutableHandleValue vp)
                 }
             }
         }
-        if (trappingScript->compileAndGo)
+        if (trappingScript->compileAndGo())
             JS_ASSERT(stepperCount == trappingScript->stepModeCount());
         else
             JS_ASSERT(stepperCount <= trappingScript->stepModeCount());
@@ -2571,7 +2571,7 @@ class Debugger::ScriptQuery {
      * condition occurred.
      */
     void consider(JSScript *script) {
-        if (oom || script->selfHosted)
+        if (oom || script->selfHosted())
             return;
         JSCompartment *compartment = script->compartment();
         if (!compartments.has(compartment))
@@ -3438,7 +3438,7 @@ Debugger::observesScript(JSScript *script) const
 {
     if (!enabled)
         return false;
-    return observesGlobal(&script->global()) && !script->selfHosted;
+    return observesGlobal(&script->global()) && !script->selfHosted();
 }
 
 /* static */ bool
@@ -4347,7 +4347,7 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFr
     if (!script)
         return false;
 
-    script->isActiveEval = true;
+    script->setActiveEval();
     ExecuteType type = !frame ? EXECUTE_DEBUG_GLOBAL : EXECUTE_DEBUG;
     return ExecuteKernel(cx, script, *env, thisv, type, frame, rval.address());
 }

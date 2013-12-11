@@ -277,7 +277,7 @@ js::DumpIonScriptCounts(Sprinter *sp, jit::IonScriptCounts *ionCounts)
 void
 js_DumpPCCounts(JSContext *cx, HandleScript script, js::Sprinter *sp)
 {
-    JS_ASSERT(script->hasScriptCounts);
+    JS_ASSERT(script->hasScriptCounts());
 
 #ifdef DEBUG
     jsbytecode *pc = script->code();
@@ -2365,7 +2365,7 @@ js::GetPCCountScriptContents(JSContext *cx, size_t index)
 
     StringBuffer buf(cx);
 
-    if (!script->function() && !script->compileAndGo)
+    if (!script->function() && !script->compileAndGo())
         return buf.finishString();
 
     {

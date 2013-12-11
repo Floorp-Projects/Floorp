@@ -233,13 +233,13 @@ intrinsic_SetScriptHints(JSContext *cx, unsigned argc, Value *vp)
     if (!JSObject::getGeneric(cx, flags, flags, id, &propv))
         return false;
     if (ToBoolean(propv))
-        funScript->shouldCloneAtCallsite = true;
+        funScript->setShouldCloneAtCallsite();
 
     id = AtomToId(Atomize(cx, "inline", strlen("inline")));
     if (!JSObject::getGeneric(cx, flags, flags, id, &propv))
         return false;
     if (ToBoolean(propv))
-        funScript->shouldInline = true;
+        funScript->setShouldInline();
 
     args.rval().setUndefined();
     return true;

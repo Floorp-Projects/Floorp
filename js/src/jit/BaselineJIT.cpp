@@ -280,7 +280,7 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, bool osr)
         return Method_Skipped;
     }
 
-    if (script->isCallsiteClone) {
+    if (script->isCallsiteClone()) {
         // Ensure the original function is compiled too, so that bailouts from
         // Ion code have a BaselineScript to resume into.
         RootedScript original(cx, script->originalFunction()->nonLazyScript());

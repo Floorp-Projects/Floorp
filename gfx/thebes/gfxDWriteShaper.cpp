@@ -44,8 +44,9 @@ gfxDWriteShaper::ShapeText(gfxContext      *aContext,
      * in a single call, so we cannot exceed that limit.
      */
     UINT32 length = aLength;
+    char16ptr_t text = aText;
 
-    TextAnalysis analysis(aText, length, nullptr, readingDirection);
+    TextAnalysis analysis(text, length, nullptr, readingDirection);
     TextAnalysis::Run *runHead;
     hr = analysis.GenerateResults(analyzer, &runHead);
 
@@ -80,7 +81,7 @@ trymoreglyphs:
 
     UINT32 actualGlyphs;
 
-    hr = analyzer->GetGlyphs(aText, length,
+    hr = analyzer->GetGlyphs(text, length,
             font->GetFontFace(), FALSE, 
             readingDirection == DWRITE_READING_DIRECTION_RIGHT_TO_LEFT,
             &runHead->mScript, nullptr, nullptr, nullptr, nullptr, 0,
@@ -107,7 +108,7 @@ trymoreglyphs:
 
     if (!static_cast<gfxDWriteFont*>(mFont)->mUseSubpixelPositions) {
         hr = analyzer->GetGdiCompatibleGlyphPlacements(
-                                          aText,
+                                          text,
                                           clusters.Elements(),
                                           textProperties.Elements(),
                                           length,
@@ -129,7 +130,7 @@ trymoreglyphs:
                                           advances.Elements(),
                                           glyphOffsets.Elements());
     } else {
-        hr = analyzer->GetGlyphPlacements(aText,
+        hr = analyzer->GetGlyphPlacements(text,
                                           clusters.Elements(),
                                           textProperties.Elements(),
                                           length,

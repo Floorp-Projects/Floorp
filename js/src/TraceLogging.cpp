@@ -181,7 +181,7 @@ TraceLogging::log(Type type, const JS::ReadOnlyCompileOptions &options)
 void
 TraceLogging::log(Type type, JSScript* script)
 {
-    this->log(type, script->filename(), script->lineno);
+    this->log(type, script->filename(), script->lineno());
 }
 
 void

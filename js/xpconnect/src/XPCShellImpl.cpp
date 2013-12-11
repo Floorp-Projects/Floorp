@@ -885,10 +885,7 @@ ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, FILE
 
     if (forceTTY) {
         file = stdin;
-    } else
-#ifdef HAVE_ISATTY
-    if (!isatty(fileno(file)))
-#endif
+    } else if (!isatty(fileno(file)))
     {
         /*
          * It's not interactive - just execute it.

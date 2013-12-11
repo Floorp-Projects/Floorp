@@ -259,7 +259,7 @@ public:
   nsresult SetPreservesPitch(bool aPreservesPitch);
 
 private:
-  static int PrefChanged(const char* aPref, void* aClosure);
+  static void PrefChanged(const char* aPref, void* aClosure);
   static double GetVolumeScale();
   static cubeb* GetCubebContext();
   static cubeb* GetCubebContextUnlocked();

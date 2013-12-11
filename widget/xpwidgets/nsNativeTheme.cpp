@@ -85,6 +85,14 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, uint8_t aWidgetType)
         flags |= NS_EVENT_STATE_FOCUS;
       }
     }
+
+    nsNumberControlFrame* numberControlFrame =
+      nsNumberControlFrame::GetNumberControlFrameForSpinButton(aFrame);
+    if (numberControlFrame &&
+        numberControlFrame->GetContent()->AsElement()->State().
+          HasState(NS_EVENT_STATE_DISABLED)) {
+      flags |= NS_EVENT_STATE_DISABLED;
+    }
   }
   
   if (isXULCheckboxRadio && aWidgetType == NS_THEME_RADIO) {
