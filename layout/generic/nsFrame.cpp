@@ -5306,6 +5306,9 @@ nsIFrame::ListGeneric(FILE* out, int32_t aIndent, uint32_t aFlags) const
       pseudoTag->ToString(atomString);
       fprintf(out, "%s", NS_LossyConvertUTF16toASCII(atomString).get());
     }
+    if (mParent && mStyleContext->GetParent() != mParent->StyleContext()) {
+      fprintf(out, ",parent=%p", mStyleContext->GetParent());
+    }
   }
   fputs("]", out);
 }
