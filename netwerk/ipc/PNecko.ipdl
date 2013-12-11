@@ -16,7 +16,6 @@ include protocol PTCPSocket;
 include protocol PTCPServerSocket;
 include protocol PUDPSocket;
 include protocol PRemoteOpenFile;
-include protocol PDNSRequest;
 include protocol PBlob; //FIXME: bug #792908
 
 include protocol PRtspController;
@@ -42,7 +41,6 @@ sync protocol PNecko
   manages PTCPSocket;
   manages PTCPServerSocket;
   manages PUDPSocket;
-  manages PDNSRequest;
   manages PRemoteOpenFile;
   manages PRtspController;
 
@@ -60,8 +58,6 @@ parent:
   PWebSocket(PBrowser browser, SerializedLoadContext loadContext);
   PTCPServerSocket(uint16_t localPort, uint16_t backlog, nsString binaryType);
   PUDPSocket(nsCString host, uint16_t port, nsCString filter);
-
-  PDNSRequest(nsCString hostName, uint32_t flags);
 
   PRemoteOpenFile(URIParams fileuri, OptionalURIParams appuri);
 

@@ -10,7 +10,6 @@
 #include "nscore.h"
 #include "prio.h"
 #include "prnetdb.h"
-#include "plstr.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 
@@ -113,8 +112,6 @@ union NetAddr {
 #endif
   } local;
 #endif
-  // introduced to support nsTArray<NetAddr> (for DNSRequestParent.cpp)
-  bool operator == (const NetAddr& other) const;
 };
 
 // This class wraps a NetAddr union to provide C++ linked list
