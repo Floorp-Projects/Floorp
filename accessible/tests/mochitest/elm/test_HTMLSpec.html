@@ -683,6 +683,34 @@
       // HTML:input@type="number" and etc
 
       obj = {
+        role: ROLE_SPINBUTTON,
+        interfaces: [ nsIAccessibleValue ],
+        children: [
+          {
+            role: ROLE_ENTRY,
+            extraStates: EXT_STATE_EDITABLE | EXT_STATE_SINGLE_LINE,
+            actions: "activate",
+            interfaces: [ nsIAccessibleText, nsIAccessibleEditableText ],
+            children: [
+              { role: ROLE_TEXT_LEAF }
+            ]
+          },
+          {
+            role: ROLE_PUSHBUTTON,
+            actions: "press"
+          },
+          {
+            role: ROLE_PUSHBUTTON,
+            actions: "press"
+          }
+        ]
+      };
+      testElm("input_number", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:input@type="text" and etc
+
+      obj = {
         role: ROLE_ENTRY,
         extraStates: EXT_STATE_EDITABLE | EXT_STATE_SINGLE_LINE,
         actions: "activate",
@@ -691,7 +719,6 @@
           { role: ROLE_TEXT_LEAF }
         ]
       };
-      // TODO: re-enable in bug 559761 testElm("input_number", obj);
       testElm("input_email", obj);
       testElm("input_search", obj);
       testElm("input_tel", obj);

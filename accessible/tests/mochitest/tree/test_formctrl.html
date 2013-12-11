@@ -63,6 +63,15 @@
       accTree = { SLIDER: [ ] };
       testAccessibleTree("range", accTree);
 
+      // input@type="number"
+      accTree =
+        { SPINBUTTON: [
+          { ENTRY: [ ] },
+          { PUSHBUTTON: [ ] },
+          { PUSHBUTTON: [ ] }
+        ] };
+      testAccessibleTree("number", accTree);
+
       // output
       accTree = {
         role: ROLE_SECTION,
@@ -116,6 +125,7 @@
   <input type="submit" id="submit">
   <input type="image" id="image_submit">
   <input type="range" id="range">
+  <input type="number" id="number">
   <output id="output">1337</output>
 
 </body>
