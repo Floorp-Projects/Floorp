@@ -212,8 +212,7 @@ TextureHost::SetCompositableBackendSpecificData(CompositableBackendSpecificData*
 
 
 TextureHost::TextureHost(TextureFlags aFlags)
-    : mRefCount(0)
-    , mFlags(aFlags)
+    : mFlags(aFlags)
 {}
 
 TextureHost::~TextureHost()
