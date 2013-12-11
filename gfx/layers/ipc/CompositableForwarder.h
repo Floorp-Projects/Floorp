@@ -163,11 +163,7 @@ public:
    * Tell the compositor side to delete the TextureHost corresponding to the
    * TextureClient passed in parameter.
    */
-  virtual void RemoveTexture(TextureClient* aTexture)
-  {
-    // XXX - this part is incomplete. The removing textures is implemented
-    // in a subsequent patch of the same bug (897452).
-  }
+  virtual void RemoveTexture(TextureClient* aTexture) = 0;
 
   /**
    * Tell the CompositableHost on the compositor side what texture to use for

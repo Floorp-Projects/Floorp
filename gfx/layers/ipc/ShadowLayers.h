@@ -279,6 +279,8 @@ public:
                              TextureIdentifier aTextureId,
                              SurfaceDescriptor* aDescriptor) MOZ_OVERRIDE;
 
+  virtual void RemoveTexture(TextureClient* aTexture) MOZ_OVERRIDE;
+
   /**
    * Same as above, but performs an asynchronous layer transaction
    */

@@ -101,7 +101,7 @@ void
 ImageClientSingle::FlushAllImages(bool aExceptFront)
 {
   if (!aExceptFront && mFrontBuffer) {
-    RemoveTextureClient(mFrontBuffer);
+    mFrontBuffer->ForceRemove();
     mFrontBuffer = nullptr;
   }
 }
@@ -110,11 +110,11 @@ void
 ImageClientBuffered::FlushAllImages(bool aExceptFront)
 {
   if (!aExceptFront && mFrontBuffer) {
-    RemoveTextureClient(mFrontBuffer);
+    mFrontBuffer->ForceRemove();
     mFrontBuffer = nullptr;
   }
   if (mBackBuffer) {
-    RemoveTextureClient(mBackBuffer);
+    mBackBuffer->ForceRemove();
     mBackBuffer = nullptr;
   }
 }
@@ -145,7 +145,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     }
 
     if (mFrontBuffer) {
-      RemoveTextureClient(mFrontBuffer);
+      mFrontBuffer->ForceRemove();
     }
     mFrontBuffer = texture;
     if (!AddTextureClient(texture)) {
@@ -162,7 +162,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     }
 
     if (mFrontBuffer && mFrontBuffer->IsImmutable()) {
-      RemoveTextureClient(mFrontBuffer);
+      mFrontBuffer->ForceRemove();
       mFrontBuffer = nullptr;
     }
 
@@ -205,7 +205,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     gfx::IntSize size = gfx::IntSize(image->GetSize().width, image->GetSize().height);
 
     if (mFrontBuffer) {
-      RemoveTextureClient(mFrontBuffer);
+      mFrontBuffer->ForceRemove();
       mFrontBuffer = nullptr;
     }
 
@@ -226,7 +226,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
 
     if (mFrontBuffer &&
         (mFrontBuffer->IsImmutable() || mFrontBuffer->GetSize() != size)) {
-      RemoveTextureClient(mFrontBuffer);
+      mFrontBuffer->ForceRemove();
       mFrontBuffer = nullptr;
     }
 
