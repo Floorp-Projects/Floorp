@@ -229,6 +229,9 @@ public:
   // Block until buffered audio data has been consumed.
   void Drain();
 
+  // Break any blocking operation and set the stream to shutdown.
+  void Cancel();
+
   // Start the stream.
   void Start();
 
