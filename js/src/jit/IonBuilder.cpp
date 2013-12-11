@@ -9111,7 +9111,10 @@ IonBuilder::jsop_setarg(uint32_t arg)
     // If an arguments object is in use, and it aliases formals, then all SETARGs
     // must go through the arguments object.
     if (info().argsObjAliasesFormals()) {
-        current->add(MSetArgumentsObjectArg::New(alloc(), current->argumentsObject(), GET_SLOTNO(pc), val));
+        if (NeedsPostBarrier(info(), val))
+            current->add(MPostWriteBarrier::New(alloc(), current->argumentsObject(), val));
+        current->add(MSetArgumentsObjectArg::New(alloc(), current->argumentsObject(),
+                                                 GET_SLOTNO(pc), val));
         return true;
     }
 

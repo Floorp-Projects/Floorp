@@ -142,10 +142,10 @@
   -moz-column-gap: inherit;
   -moz-column-rule: inherit;
   /* CSS3 flexbox properties that apply to the flex container: */
-  /* align-content: inherit; FIXME: not yet supported (bug 702508) */
+  align-content: inherit;
   align-items: inherit;
   flex-direction: inherit;
-  /* flex-wrap: inherit; FIXME: not yet supported (bug 702508) */
+  flex-wrap: inherit;
   justify-content: inherit;
   /* Do not change these. nsCSSFrameConstructor depends on them to create a good
      frame tree. */
