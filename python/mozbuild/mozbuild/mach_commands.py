@@ -779,8 +779,8 @@ class DebugProgram(MachCommandBase):
         help='Do not pass the -no-remote argument by default')
     @CommandArgument('+background', '+b', action='store_true',
         help='Do not pass the -foreground argument by default on Mac')
-    @CommandArgument('+gdbparams', default=None, metavar='params', type=str,
-        help='Command-line arguments to pass to GDB itself; split as the Bourne shell would.')
+    @CommandArgument('+debugparams', default=None, metavar='params', type=str,
+        help='Command-line arguments to pass to GDB or LLDB itself; split as the Bourne shell would.')
     # Bug 933807 introduced JS_DISABLE_SLOW_SCRIPT_SIGNALS to avoid clever
     # segfaults induced by the slow-script-detecting logic for Ion/Odin JITted
     # code.  If we don't pass this, the user will need to periodically type
@@ -788,31 +788,45 @@ class DebugProgram(MachCommandBase):
     # automatic resuming; see the bug.
     @CommandArgument('+slowscript', action='store_true',
         help='Do not set the JS_DISABLE_SLOW_SCRIPT_SIGNALS env variable; when not set, recoverable but misleading SIGSEGV instances may occur in Ion/Odin JIT code')
-    def debug(self, params, remote, background, gdbparams, slowscript):
+    def debug(self, params, remote, background, debugparams, slowscript):
         import which
+        use_lldb = False
         try:
             debugger = which.which('gdb')
-        except Exception as e:
-            print("You don't have gdb in your PATH")
-            print(e)
-            return 1
+        except Exception:
+            try:
+                debugger = which.which('lldb')
+                use_lldb = True
+            except Exception as e:
+                print("You don't have gdb or lldb in your PATH")
+                print(e)
+                return 1
         args = [debugger]
         extra_env = {}
-        if gdbparams:
+        if debugparams:
             import pymake.process
-            (argv, badchar) = pymake.process.clinetoargv(gdbparams, os.getcwd())
+            argv, badchar = pymake.process.clinetoargv(debugparams, os.getcwd())
             if badchar:
-                print("The +gdbparams you passed require a real shell to parse them.")
+                print("The +debugparams you passed require a real shell to parse them.")
                 print("(We can't handle the %r character.)" % (badchar,))
                 return 1
             args.extend(argv)
+
+        binpath = None
+
         try:
-            args.extend(['--args', self.get_binary_path('app')])
+            binpath = self.get_binary_path('app')
         except Exception as e:
             print("It looks like your program isn't built.",
                 "You can run |mach build| to build it.")
             print(e)
             return 1
+
+        if not use_lldb:
+            args.extend(['--args', binpath])
+        else:
+            args.extend(['--', binpath])
+
         if not remote:
             args.append('-no-remote')
         if not background and sys.platform == 'darwin':
