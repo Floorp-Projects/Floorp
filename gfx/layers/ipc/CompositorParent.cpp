@@ -710,6 +710,7 @@ void
 CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackendHints)
 {
   NS_ASSERTION(!mLayerManager, "Already initialised mLayerManager");
+  NS_ASSERTION(!mCompositor,   "Already initialised mCompositor");
 
   for (size_t i = 0; i < aBackendHints.Length(); ++i) {
     RefPtr<Compositor> compositor;
@@ -728,7 +729,11 @@ CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackend
 #endif
     }
 
-    MOZ_ASSERT(compositor, "Passed invalid backend hint");
+    if (!compositor) {
+      // We passed a backend hint for which we can't create a compositor.
+      // For example, we sometime pass LAYERS_NONE as filler in aBackendHints.
+      continue;
+    }
 
     compositor->SetCompositorID(mCompositorID);
     RefPtr<LayerManagerComposite> layerManager = new LayerManagerComposite(compositor);
