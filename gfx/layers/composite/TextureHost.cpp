@@ -18,67 +18,11 @@
 #include "nsAString.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsPrintfCString.h"            // for nsPrintfCString
-#include "mozilla/layers/PTextureParent.h"
 
 struct nsIntPoint;
 
 namespace mozilla {
 namespace layers {
-
-/**
- * TextureParent is the host-side IPDL glue between TextureClient and TextureHost.
- * It is an IPDL actor just like LayerParent, CompositableParent, etc.
- */
-class TextureParent : public PTextureParent
-{
-public:
-  TextureParent(ISurfaceAllocator* aAllocator);
-
-  ~TextureParent();
-
-  bool RecvInit(const SurfaceDescriptor& aSharedData,
-                const TextureFlags& aFlags) MOZ_OVERRIDE;
-
-  virtual bool RecvRemoveTexture() MOZ_OVERRIDE;
-
-  virtual bool RecvRemoveTextureSync() MOZ_OVERRIDE;
-
-  TextureHost* GetTextureHost() { return mTextureHost; }
-
-  void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
-
-  ISurfaceAllocator* mAllocator;
-  RefPtr<TextureHost> mTextureHost;
-};
-
-// static
-PTextureParent*
-TextureHost::CreateIPDLActor(ISurfaceAllocator* aAllocator)
-{
-  return new TextureParent(aAllocator);
-}
-
-// static
-bool
-TextureHost::DestroyIPDLActor(PTextureParent* actor)
-{
-  delete actor;
-  return true;
-}
-
-// static
-bool
-TextureHost::SendDeleteIPDLActor(PTextureParent* actor)
-{
-  return PTextureParent::Send__delete__(actor);
-}
-
-// static
-TextureHost*
-TextureHost::AsTextureHost(PTextureParent* actor)
-{
-  return actor? static_cast<TextureParent*>(actor)->mTextureHost : nullptr;
-}
 
 // implemented in TextureOGL.cpp
 TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,
@@ -137,32 +81,35 @@ DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptorType aDescri
 }
 
 // implemented in TextureHostOGL.cpp
-TemporaryRef<TextureHost> CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
+TemporaryRef<TextureHost> CreateTextureHostOGL(uint64_t aID,
+                                               const SurfaceDescriptor& aDesc,
                                                ISurfaceAllocator* aDeallocator,
                                                TextureFlags aFlags);
 
 // implemented in TextureHostBasic.cpp
-TemporaryRef<TextureHost> CreateTextureHostBasic(const SurfaceDescriptor& aDesc,
-                                                 ISurfaceAllocator* aDeallocator,
-                                                 TextureFlags aFlags);
+TemporaryRef<TextureHost> CreateTextureHostBasic(uint64_t aID,
+                                               const SurfaceDescriptor& aDesc,
+                                               ISurfaceAllocator* aDeallocator,
+                                               TextureFlags aFlags);
 
 // static
 TemporaryRef<TextureHost>
-TextureHost::Create(const SurfaceDescriptor& aDesc,
+TextureHost::Create(uint64_t aID,
+                    const SurfaceDescriptor& aDesc,
                     ISurfaceAllocator* aDeallocator,
                     TextureFlags aFlags)
 {
   switch (Compositor::GetBackend()) {
     case LAYERS_OPENGL:
-      return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
+      return CreateTextureHostOGL(aID, aDesc, aDeallocator, aFlags);
     case LAYERS_BASIC:
-      return CreateTextureHostBasic(aDesc, aDeallocator, aFlags);
+      return CreateTextureHostBasic(aID, aDesc, aDeallocator, aFlags);
 #ifdef MOZ_WIDGET_GONK
     case LAYERS_NONE:
       // Power on video reqests to allocate TextureHost,
       // when Compositor is still not present. This is a very hacky workaround.
       // See Bug 944420.
-      return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
+      return CreateTextureHostOGL(aID, aDesc, aDeallocator, aFlags);
 #endif
 #ifdef XP_WIN
     case LAYERS_D3D11:
@@ -176,7 +123,8 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
 }
 
 TemporaryRef<TextureHost>
-CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
+CreateBackendIndependentTextureHost(uint64_t aID,
+                                    const SurfaceDescriptor& aDesc,
                                     ISurfaceAllocator* aDeallocator,
                                     TextureFlags aFlags)
 {
@@ -184,7 +132,8 @@ CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorShmem: {
       const SurfaceDescriptorShmem& descriptor = aDesc.get_SurfaceDescriptorShmem();
-      result = new ShmemTextureHost(descriptor.data(),
+      result = new ShmemTextureHost(aID,
+                                    descriptor.data(),
                                     descriptor.format(),
                                     aDeallocator,
                                     aFlags);
@@ -192,7 +141,8 @@ CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
     }
     case SurfaceDescriptor::TSurfaceDescriptorMemory: {
       const SurfaceDescriptorMemory& descriptor = aDesc.get_SurfaceDescriptorMemory();
-      result = new MemoryTextureHost(reinterpret_cast<uint8_t*>(descriptor.data()),
+      result = new MemoryTextureHost(aID,
+                                     reinterpret_cast<uint8_t*>(descriptor.data()),
                                      descriptor.format(),
                                      aFlags);
       break;
@@ -211,21 +161,15 @@ TextureHost::SetCompositableBackendSpecificData(CompositableBackendSpecificData*
 }
 
 
-TextureHost::TextureHost(TextureFlags aFlags)
-    : mFlags(aFlags)
+TextureHost::TextureHost(uint64_t aID,
+                         TextureFlags aFlags)
+    : mID(aID)
+    , mNextTexture(nullptr)
+    , mFlags(aFlags)
 {}
 
 TextureHost::~TextureHost()
 {
-}
-
-void TextureHost::Finalize()
-{
-  if (GetFlags() & TEXTURE_DEALLOCATE_DEFERRED) {
-    MOZ_ASSERT(!(GetFlags() & TEXTURE_DEALLOCATE_CLIENT));
-    DeallocateSharedData();
-    DeallocateDeviceData();
-  }
 }
 
 void
@@ -309,7 +253,7 @@ DeprecatedTextureHost::SwapTextures(const SurfaceDescriptor& aImage,
 }
 
 void
-DeprecatedTextureHost::OnShutdown()
+DeprecatedTextureHost::OnActorDestroy()
 {
   if (ISurfaceAllocator::IsShmem(mBuffer)) {
     *mBuffer = SurfaceDescriptor();
@@ -335,9 +279,10 @@ DeprecatedTextureHost::SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* 
   mDeAllocator = aAllocator;
 }
 
-BufferTextureHost::BufferTextureHost(gfx::SurfaceFormat aFormat,
+BufferTextureHost::BufferTextureHost(uint64_t aID,
+                                     gfx::SurfaceFormat aFormat,
                                      TextureFlags aFlags)
-: TextureHost(aFlags)
+: TextureHost(aID, aFlags)
 , mCompositor(nullptr)
 , mFormat(aFormat)
 , mUpdateSerial(1)
@@ -439,19 +384,6 @@ BufferTextureHost::MaybeUpload(nsIntRegion *aRegion)
 bool
 BufferTextureHost::Upload(nsIntRegion *aRegion)
 {
-  if (!GetBuffer()) {
-    // We don't have a buffer; a possible cause is that the IPDL actor
-    // is already dead. This inevitably happens as IPDL actors can die
-    // at any time, so we want to silently return in this case.
-    return false;
-  }
-  if (!mCompositor) {
-    NS_WARNING("Tried to upload without a compositor. Skipping texture upload...");
-    // If we are in this situation it means we should have called SetCompositor
-    // earlier. It is conceivable that on certain rare conditions with async-video
-    // we may end up here for the first frame, but this should not happen repeatedly.
-    return false;
-  }
   if (mFormat == gfx::FORMAT_UNKNOWN) {
     NS_WARNING("BufferTextureHost: unsupported format!");
     return false;
@@ -562,11 +494,12 @@ BufferTextureHost::GetAsSurface()
   return result.forget();
 }
 
-ShmemTextureHost::ShmemTextureHost(const ipc::Shmem& aShmem,
+ShmemTextureHost::ShmemTextureHost(uint64_t aID,
+                                   const ipc::Shmem& aShmem,
                                    gfx::SurfaceFormat aFormat,
                                    ISurfaceAllocator* aDeallocator,
                                    TextureFlags aFlags)
-: BufferTextureHost(aFormat, aFlags)
+: BufferTextureHost(aID, aFormat, aFlags)
 , mShmem(new ipc::Shmem(aShmem))
 , mDeallocator(aDeallocator)
 {
@@ -587,22 +520,12 @@ ShmemTextureHost::DeallocateSharedData()
     MOZ_ASSERT(mDeallocator,
                "Shared memory would leak without a ISurfaceAllocator");
     mDeallocator->DeallocShmem(*mShmem);
-    delete mShmem;
     mShmem = nullptr;
   }
 }
 
 void
-ShmemTextureHost::ForgetSharedData()
-{
-  if (mShmem) {
-    delete mShmem;
-    mShmem = nullptr;
-  }
-}
-
-void
-ShmemTextureHost::OnShutdown()
+ShmemTextureHost::OnActorDestroy()
 {
   delete mShmem;
   mShmem = nullptr;
@@ -613,10 +536,11 @@ uint8_t* ShmemTextureHost::GetBuffer()
   return mShmem ? mShmem->get<uint8_t>() : nullptr;
 }
 
-MemoryTextureHost::MemoryTextureHost(uint8_t* aBuffer,
+MemoryTextureHost::MemoryTextureHost(uint64_t aID,
+                                     uint8_t* aBuffer,
                                      gfx::SurfaceFormat aFormat,
                                      TextureFlags aFlags)
-: BufferTextureHost(aFormat, aFlags)
+: BufferTextureHost(aID, aFormat, aFlags)
 , mBuffer(aBuffer)
 {
   MOZ_COUNT_CTOR(MemoryTextureHost);
@@ -640,81 +564,9 @@ MemoryTextureHost::DeallocateSharedData()
   mBuffer = nullptr;
 }
 
-void
-MemoryTextureHost::ForgetSharedData()
-{
-  mBuffer = nullptr;
-}
-
 uint8_t* MemoryTextureHost::GetBuffer()
 {
   return mBuffer;
-}
-
-TextureParent::TextureParent(ISurfaceAllocator* aAllocator)
-: mAllocator(aAllocator)
-{
-  MOZ_COUNT_CTOR(TextureParent);
-}
-
-TextureParent::~TextureParent()
-{
-  MOZ_COUNT_DTOR(TextureParent);
-  mTextureHost = nullptr;
-}
-
-bool
-TextureParent::RecvInit(const SurfaceDescriptor& aSharedData,
-                        const TextureFlags& aFlags)
-{
-  mTextureHost = TextureHost::Create(aSharedData,
-                                     mAllocator,
-                                     aFlags);
-  return !!mTextureHost;
-}
-
-bool
-TextureParent::RecvRemoveTexture()
-{
-  return PTextureParent::Send__delete__(this);
-}
-
-bool
-TextureParent::RecvRemoveTextureSync()
-{
-  // we don't need to send a reply in the synchronous case since the child side
-  // has the guarantee that this message has been handled synchronously.
-  return PTextureParent::Send__delete__(this);
-}
-
-void
-TextureParent::ActorDestroy(ActorDestroyReason why)
-{
-  if (!mTextureHost) {
-    return;
-  }
-
-  switch (why) {
-  case AncestorDeletion:
-    NS_WARNING("PTexture deleted after ancestor");
-    // fall-through to deletion path
-  case Deletion:
-    if (!(mTextureHost->GetFlags() & TEXTURE_DEALLOCATE_CLIENT) &&
-        !(mTextureHost->GetFlags() & TEXTURE_DEALLOCATE_DEFERRED)) {
-      mTextureHost->DeallocateSharedData();
-    }
-    break;
-
-  case NormalShutdown:
-  case AbnormalShutdown:
-    mTextureHost->OnShutdown();
-    break;
-
-  case FailedConstructor:
-    NS_RUNTIMEABORT("FailedConstructor isn't possible in PTexture");
-  }
-  mTextureHost->ForgetSharedData();
-  mTextureHost = nullptr;
 }
 
 } // namespace

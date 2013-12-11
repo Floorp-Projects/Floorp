@@ -30,7 +30,6 @@
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl
 #include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
 #include "nsXULAppAPI.h"                // for XRE_GetIOMessageLoop
-#include "mozilla/layers/TextureHost.h"
 
 using namespace base;
 using namespace mozilla::ipc;
@@ -128,16 +127,6 @@ ImageBridgeParent::Create(Transport* aTransport, ProcessId aOtherProcess)
 
 bool ImageBridgeParent::RecvStop()
 {
-  // If there is any texture still alive we have to force it to deallocate the
-  // device data (GL textures, etc.) now because shortly after SenStop() returns
-  // on the child side the widget will be destroyed along with it's associated
-  // GL context.
-  InfallibleTArray<PTextureParent*> textures;
-  ManagedPTextureParent(textures);
-  for (unsigned int i = 0; i < textures.Length(); ++i) {
-    RefPtr<TextureHost> tex = TextureHost::AsTextureHost(textures[i]);
-    tex->DeallocateDeviceData();
-  }
   return true;
 }
 
@@ -187,18 +176,6 @@ bool ImageBridgeParent::DeallocPCompositableParent(PCompositableParent* aActor)
 {
   delete aActor;
   return true;
-}
-
-PTextureParent*
-ImageBridgeParent::AllocPTextureParent()
-{
-  return TextureHost::CreateIPDLActor(this);
-}
-
-bool
-ImageBridgeParent::DeallocPTextureParent(PTextureParent* actor)
-{
-  return TextureHost::DestroyIPDLActor(actor);
 }
 
 MessageLoop * ImageBridgeParent::GetMessageLoop() {

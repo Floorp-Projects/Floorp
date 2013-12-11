@@ -56,8 +56,9 @@ protected:
 class MacIOSurfaceTextureHostBasic : public TextureHost
 {
 public:
-  MacIOSurfaceTextureHostBasic(TextureFlags aFlags,
-                               const SurfaceDescriptorMacIOSurface& aDescriptor);
+  MacIOSurfaceTextureHostBasic(uint64_t aID,
+                             TextureFlags aFlags,
+                             const SurfaceDescriptorMacIOSurface& aDescriptor);
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 

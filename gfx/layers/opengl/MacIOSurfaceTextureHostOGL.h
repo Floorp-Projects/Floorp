@@ -65,7 +65,8 @@ protected:
 class MacIOSurfaceTextureHostOGL : public TextureHost
 {
 public:
-  MacIOSurfaceTextureHostOGL(TextureFlags aFlags,
+  MacIOSurfaceTextureHostOGL(uint64_t aID,
+                             TextureFlags aFlags,
                              const SurfaceDescriptorMacIOSurface& aDescriptor);
 
   // SharedTextureHostOGL doesn't own any GL texture

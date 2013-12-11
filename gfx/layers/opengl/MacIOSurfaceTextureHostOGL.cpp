@@ -34,9 +34,10 @@ MacIOSurfaceTextureSourceOGL::GetFormat() const
   return mSurface->HasAlpha() ? gfx::FORMAT_R8G8B8A8 : gfx::FORMAT_B8G8R8X8;
 }
 
-MacIOSurfaceTextureHostOGL::MacIOSurfaceTextureHostOGL(TextureFlags aFlags,
+MacIOSurfaceTextureHostOGL::MacIOSurfaceTextureHostOGL(uint64_t aID,
+                                                       TextureFlags aFlags,
                                                        const SurfaceDescriptorMacIOSurface& aDescriptor)
-  : TextureHost(aFlags)
+  : TextureHost(aID, aFlags)
 {
   mSurface = MacIOSurface::LookupSurface(aDescriptor.surface(),
                                          aDescriptor.scaleFactor(),

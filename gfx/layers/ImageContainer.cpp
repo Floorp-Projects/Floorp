@@ -217,7 +217,6 @@ ImageContainer::ClearAllImages()
     ImageBridgeChild::FlushAllImages(mImageClient, this, false);
     return;
   }
-
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   SetCurrentImageInternal(nullptr);
 }
