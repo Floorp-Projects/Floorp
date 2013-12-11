@@ -72,7 +72,7 @@ js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
 {
     JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->interpreterFrame());
 
-    if (!frame.script()->selfHosted) {
+    if (!frame.script()->selfHosted()) {
         if (frame.isFramePushedByExecute()) {
             if (JSInterpreterHook hook = cx->runtime()->debugHooks.executeHook)
                 frame.setHookData(hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame),
@@ -596,7 +596,7 @@ JS_GetScriptVersion(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(bool)
 JS_GetScriptIsSelfHosted(JSScript *script)
 {
-    return script->selfHosted;
+    return script->selfHosted();
 }
 
 /***************************************************************************/
@@ -848,7 +848,7 @@ extern JS_PUBLIC_API(void)
 JS_DumpPCCounts(JSContext *cx, JSScript *scriptArg)
 {
     Rooted<JSScript*> script(cx, scriptArg);
-    JS_ASSERT(script->hasScriptCounts);
+    JS_ASSERT(script->hasScriptCounts());
 
     Sprinter sprinter(cx);
     if (!sprinter.init())
@@ -892,7 +892,7 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
         if (script->compartment() != cx->compartment())
             continue;
 
-        if (script->hasScriptCounts && script->enclosingScriptsCompiledSuccessfully())
+        if (script->hasScriptCounts() && script->enclosingScriptsCompiledSuccessfully())
             JS_DumpPCCounts(cx, script);
     }
 

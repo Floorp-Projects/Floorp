@@ -227,7 +227,7 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
     JS_ASSERT(*pc == JSOP_SETNAME || *pc == JSOP_SETGNAME);
     JS_ASSERT_IF(*pc == JSOP_SETGNAME, scope == cx->global());
 
-    bool strict = script->strict;
+    bool strict = script->strict();
     RootedPropertyName name(cx, script->getName(pc));
     RootedValue valCopy(cx, val);
 

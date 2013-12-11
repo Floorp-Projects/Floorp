@@ -41,8 +41,8 @@ IsEvalCacheCandidate(JSScript *script)
     // Make sure there are no inner objects which might use the wrong parent
     // and/or call scope by reusing the previous eval's script. Skip the
     // script's first object, which entrains the eval's scope.
-    return script->savedCallerFun &&
-           !script->hasSingletons &&
+    return script->savedCallerFun() &&
+           !script->hasSingletons() &&
            script->objects()->length == 1 &&
            !script->hasRegexps();
 }
@@ -99,8 +99,7 @@ class EvalScriptGuard
     ~EvalScriptGuard() {
         if (script_) {
             CallDestroyScriptHook(cx_->runtime()->defaultFreeOp(), script_);
-            script_->isActiveEval = false;
-            script_->isCachedEval = true;
+            script_->cacheForEval();
             EvalCacheEntry cacheEntry = {script_, lookup_.callerScript, lookup_.pc};
             lookup_.str = lookupStr_;
             if (lookup_.str && IsEvalCacheCandidate(script_))
@@ -120,8 +119,7 @@ class EvalScriptGuard
             script_ = p_->script;
             cx_->runtime()->evalCache.remove(p_);
             CallNewScriptHook(cx_, script_, NullPtr());
-            script_->isCachedEval = false;
-            script_->isActiveEval = true;
+            script_->uncacheForEval();
         }
     }
 
@@ -129,7 +127,7 @@ class EvalScriptGuard
         // JSScript::initFromEmitter has already called js_CallNewScriptHook.
         JS_ASSERT(!script_ && script);
         script_ = script;
-        script_->isActiveEval = true;
+        script_->setActiveEval();
     }
 
     bool foundScript() {
@@ -164,7 +162,7 @@ TryEvalJSON(JSContext *cx, JSScript *callerScript,
     if (length > 2 &&
         ((chars[0] == '[' && chars[length - 1] == ']') ||
         (chars[0] == '(' && chars[length - 1] == ')')) &&
-         (!callerScript || !callerScript->strict))
+        (!callerScript || !callerScript->strict()))
     {
         // Remarkably, JavaScript syntax is not a superset of JSON syntax:
         // strings in JavaScript cannot contain the Unicode line and paragraph
@@ -210,7 +208,7 @@ MarkFunctionsWithinEvalScript(JSScript *script)
         if (obj->is<JSFunction>()) {
             JSFunction *fun = &obj->as<JSFunction>();
             if (fun->hasScript())
-                fun->nonLazyScript()->directlyInsideEval = true;
+                fun->nonLazyScript()->setDirectlyInsideEval();
             else if (fun->isInterpretedLazy())
                 fun->lazyScript()->setDirectlyInsideEval();
         }

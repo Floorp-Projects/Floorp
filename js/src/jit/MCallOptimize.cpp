@@ -1265,7 +1265,7 @@ IonBuilder::inlineNewParallelArray(CallInfo &callInfo)
     JSFunction *target = nullptr;
     if (targetObj && targetObj->is<JSFunction>())
         target = &targetObj->as<JSFunction>();
-    if (target && target->isInterpreted() && target->nonLazyScript()->shouldCloneAtCallsite) {
+    if (target && target->isInterpreted() && target->nonLazyScript()->shouldCloneAtCallsite()) {
         if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment->callsiteClones(), target, script(), pc))
             target = clone;
     }
@@ -1290,7 +1290,7 @@ IonBuilder::inlineParallelArray(CallInfo &callInfo)
     if (!target)
         return InliningStatus_NotInlined;
 
-    JS_ASSERT(target->nonLazyScript()->shouldCloneAtCallsite);
+    JS_ASSERT(target->nonLazyScript()->shouldCloneAtCallsite());
     if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment->callsiteClones(), target, script(), pc))
         target = clone;
 
