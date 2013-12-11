@@ -5,22 +5,24 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    'Icc.h',
     'IccManager.h',
 ]
 
 SOURCES += [
+    'Icc.cpp',
+    'IccListener.cpp',
     'IccManager.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'dom_icc_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
+
 LOCAL_INCLUDES += [
+    '../../system/gonk',
     '/content/events/src',
 ]
 

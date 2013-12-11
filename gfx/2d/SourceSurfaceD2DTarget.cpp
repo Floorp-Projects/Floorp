@@ -138,15 +138,13 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
     return nullptr;
   }
 
-  D2D1_BITMAP_PROPERTIES props =
-    D2D1::BitmapProperties(D2D1::PixelFormat(DXGIFormat(mFormat), AlphaMode(mFormat)));
+  D2D1_BITMAP_PROPERTIES props = D2D1::BitmapProperties(D2DPixelFormat(mFormat));
   hr = aRT->CreateSharedBitmap(IID_IDXGISurface, surf, &props, byRef(mBitmap));
 
   if (FAILED(hr)) {
     // This seems to happen for FORMAT_A8 sometimes...
     aRT->CreateBitmap(D2D1::SizeU(desc.Width, desc.Height),
-                      D2D1::BitmapProperties(D2D1::PixelFormat(DXGIFormat(mFormat),
-                                             AlphaMode(mFormat))),
+                      D2D1::BitmapProperties(D2DPixelFormat(mFormat)),
                       byRef(mBitmap));
 
     RefPtr<ID2D1RenderTarget> rt;
@@ -169,7 +167,7 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
       }
 
       D2D1_RENDER_TARGET_PROPERTIES props =
-        D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT, D2D1::PixelFormat(DXGIFormat(mFormat), AlphaMode(mFormat)));
+        D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT, D2DPixelFormat(mFormat));
       hr = DrawTargetD2D::factory()->CreateDxgiSurfaceRenderTarget(surface, props, byRef(rt));
 
       if (FAILED(hr)) {

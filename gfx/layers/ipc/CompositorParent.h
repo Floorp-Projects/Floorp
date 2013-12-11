@@ -88,6 +88,8 @@ public:
                                 SurfaceDescriptor* aOutSnapshot);
   virtual bool RecvFlushRendering() MOZ_OVERRIDE;
 
+  virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) MOZ_OVERRIDE;
+
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
@@ -230,7 +232,8 @@ protected:
                                  bool* aSuccess);
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers);
   virtual void ScheduleTask(CancelableTask*, int);
-  virtual void Composite();
+  void Composite();
+  void CompositeInTransaction();
   virtual void ComposeToTarget(gfx::DrawTarget* aTarget);
 
   void SetEGLSurfaceSize(int width, int height);

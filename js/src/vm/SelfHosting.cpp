@@ -658,15 +658,27 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FNINFO("Memcpy",
               JSNativeThreadSafeWrapper<js::Memcpy>,
               &js::MemcpyJitInfo, 5, 0),
+    JS_FN("StandardTypeObjectDescriptors",
+          js::StandardTypeObjectDescriptors,
+          0, 0),
 
-#define LOAD_AND_STORE_FN_DECLS(_constant, _type, _name)                      \
+#define LOAD_AND_STORE_SCALAR_FN_DECLS(_constant, _type, _name)               \
     JS_FNINFO("Store_" #_name,                                                \
               JSNativeThreadSafeWrapper<js::StoreScalar##_type::Func>,        \
               &js::StoreScalar##_type::JitInfo, 3, 0),                        \
     JS_FNINFO("Load_" #_name,                                                 \
               JSNativeThreadSafeWrapper<js::LoadScalar##_type::Func>,         \
               &js::LoadScalar##_type::JitInfo, 3, 0),
-    JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(LOAD_AND_STORE_FN_DECLS)
+    JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(LOAD_AND_STORE_SCALAR_FN_DECLS)
+
+#define LOAD_AND_STORE_REFERENCE_FN_DECLS(_constant, _type, _name)              \
+    JS_FNINFO("Store_" #_name,                                                  \
+              JSNativeThreadSafeWrapper<js::StoreReference##_type::Func>,       \
+              &js::StoreReference##_type::JitInfo, 3, 0),                       \
+    JS_FNINFO("Load_" #_name,                                                   \
+              JSNativeThreadSafeWrapper<js::LoadReference##_type::Func>,        \
+              &js::LoadReference##_type::JitInfo, 3, 0),
+    JS_FOR_EACH_REFERENCE_TYPE_REPR(LOAD_AND_STORE_REFERENCE_FN_DECLS)
 
     // See builtin/Intl.h for descriptions of the intl_* functions.
     JS_FN("intl_availableCalendars", intl_availableCalendars, 1,0),

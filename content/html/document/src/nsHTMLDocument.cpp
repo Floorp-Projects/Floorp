@@ -32,7 +32,7 @@
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsIDocShell.h"
+#include "nsDocShell.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
@@ -1362,7 +1362,7 @@ nsHTMLDocument::Open(JSContext* cx,
   }
 
   // check whether we're in the middle of unload.  If so, ignore this call.
-  nsCOMPtr<nsIDocShell> shell = do_QueryReferent(mDocumentContainer);
+  nsCOMPtr<nsIDocShell> shell(mDocumentContainer);
   if (!shell) {
     // We won't be able to create a parser anyway.
     nsCOMPtr<nsIDocument> ret = this;

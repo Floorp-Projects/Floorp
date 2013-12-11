@@ -33,8 +33,10 @@ BEGIN_TEST(test_cloneScript)
     {
         JSAutoCompartment a(cx, A);
         JSFunction *fun;
-        CHECK(fun = JS_CompileFunction(cx, A, "f", 0, nullptr, source, strlen(source),
-                                       __FILE__, 1));
+        JS::CompileOptions options(cx);
+        options.setFileAndLine(__FILE__, 1);
+        CHECK(fun = JS_CompileFunction(cx, A, "f", 0, nullptr, source,
+                                       strlen(source), options));
         CHECK(obj = JS_GetFunctionObject(fun));
     }
 
@@ -48,7 +50,7 @@ BEGIN_TEST(test_cloneScript)
 }
 END_TEST(test_cloneScript)
 
-void
+static void
 DestroyPrincipals(JSPrincipals *principals)
 {
     delete principals;
@@ -104,9 +106,12 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
     // Compile in A
     {
         JSAutoCompartment a(cx, A);
-        JS::RootedFunction fun(cx, JS_CompileFunctionForPrincipals(cx, A, principalsA, "f",
-                                                               mozilla::ArrayLength(argnames), argnames,
-                                                               source, strlen(source), __FILE__, 1));
+        JS::CompileOptions options(cx);
+        options.setFileAndLine(__FILE__, 1)
+               .setPrincipals(principalsA);
+        JS::RootedFunction fun(cx, JS_CompileFunction(cx, A, "f",
+                mozilla::ArrayLength(argnames), argnames, source,
+                strlen(source), options));
         CHECK(fun);
 
         JSScript *script;

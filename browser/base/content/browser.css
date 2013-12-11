@@ -119,6 +119,19 @@ tabbrowser {
               max-width 230ms ease-out;
 }
 
+.tab-background {
+  /* Explicitly set the visibility to override the value (collapsed)
+   * we inherit from #TabsToolbar[collapsed] upon opening a browser window. */
+  visibility: visible;
+  /* This transition is only applied when opening a new tab. Closing tabs
+   * are just hidden so we don't need to adjust the delay for that. */
+  transition: visibility 0ms 25ms;
+}
+
+.tab-background[selected]:not([fadein]):not([pinned]) {
+  visibility: hidden;
+}
+
 .tab-throbber:not([fadein]):not([pinned]),
 .tab-label:not([fadein]):not([pinned]),
 .tab-icon-image:not([fadein]):not([pinned]),
@@ -184,6 +197,36 @@ toolbar[customizing] > .overflow-button {
 %ifdef XP_MACOSX
 #titlebar-fullscreen-button {
   -moz-appearance: -moz-mac-fullscreen-button;
+}
+
+/* Because these buttons don't move, they should always be aligned the same,
+ * left and right were deprecated, so we have to do work to get it to mean that: */
+#titlebar-buttonbox-container:-moz-locale-dir(ltr) {
+  -moz-box-align: start;
+}
+
+#titlebar-buttonbox-container:-moz-locale-dir(rtl) {
+  -moz-box-align: end;
+}
+
+/* Fullscreen and caption buttons don't move with RTL on OS X so override the automatic ordering. */
+#titlebar-fullscreen-button:-moz-locale-dir(ltr),
+#titlebar-buttonbox-container:-moz-locale-dir(rtl),
+.titlebar-placeholder[type="fullscreen-button"]:-moz-locale-dir(ltr),
+.titlebar-placeholder[type="caption-buttons"]:-moz-locale-dir(rtl) {
+  -moz-box-ordinal-group: 1000;
+}
+
+#titlebar-fullscreen-button:-moz-locale-dir(rtl),
+#titlebar-buttonbox-container:-moz-locale-dir(ltr),
+.titlebar-placeholder[type="caption-buttons"]:-moz-locale-dir(ltr),
+.titlebar-placeholder[type="fullscreen-button"]:-moz-locale-dir(rtl) {
+  -moz-box-ordinal-group: 0;
+}
+%else
+/* On non-OSX, these should be start-aligned */
+#titlebar-buttonbox-container {
+  -moz-box-align: start;
 }
 %endif
 

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!-- Testcase for how we fragment an empty fixed-height flex container, with
+     margin/border/padding that are larger than the available height,
+     and with the flex container having "flex-direction: column".
+-->
+<html>
+  <head>
+    <style>
+    .multicol {
+      height: 10px;
+      width: 100px;
+      -moz-column-width: 20px;
+      -moz-column-fill: auto;
+      border: 2px solid orange;
+      margin-bottom: 2px;
+    }
+    .flexContainer {
+      display: flex;
+      flex-direction: column;
+      background: teal;
+      /* border-width is 0 by default; some sub-testcases will increase it. */
+      border: 0 dashed black;
+    }
+    </style>
+  </head>
+  <body>
+    <!-- MARGIN LARGER THAN AVAILABLE HEIGHT -->
+    <!-- =================================== -->
+    <!-- margin-top is the available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        margin-top: 10px"></div>
+    </div>
+
+    <!-- margin-top is larger than available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        margin-top: 11px"></div>
+    </div>
+
+    <!-- margin-bottom is exactly the available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        margin-bottom: 10px"></div>
+    </div>
+
+    <!-- margin-bottom is larger than available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        margin-bottom: 11px"></div>
+    </div>
+
+    <!-- BORDER LARGER THAN AVAILABLE HEIGHT -->
+    <!-- =================================== -->
+    <!-- border-top-width is the available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        border-top-width: 10px"></div>
+    </div>
+
+    <!-- border-top-width is larger than available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        border-top-width: 11px"></div>
+    </div>
+
+    <!-- border-bottom-width is exactly the available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        border-bottom-width: 10px"></div>
+    </div>
+
+    <!-- border-bottom-width is larger than available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        border-bottom-width: 11px"></div>
+    </div>
+
+    <!-- PADDING LARGER THAN AVAILABLE HEIGHT -->
+    <!-- ==================================== -->
+    <!-- padding-top is the available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        padding-top: 10px"></div>
+    </div>
+
+    <!-- padding-top is larger than available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        padding-top: 11px"></div>
+    </div>
+
+    <!-- padding-bottom is exactly the available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        padding-bottom: 10px"></div>
+    </div>
+
+    <!-- padding-bottom is larger than available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        padding-bottom: 11px"></div>
+    </div>
+
+    <!-- BORDER+PADDING LARGER THAN AVAILABLE HEIGHT -->
+    <!-- =========================================== -->
+    <!-- border+padding-top is the available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        border-top: 5px;
+                                        padding-top: 5px"></div>
+    </div>
+
+    <!-- padding-top is larger than available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        border-top: 6px;
+                                        padding-top: 6px"></div>
+    </div>
+
+    <!-- padding-bottom is exactly the available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        border-bottom: 5px;
+                                        padding-bottom: 5px"></div>
+    </div>
+
+    <!-- padding-bottom is larger than available height: -->
+    <div class="multicol">
+      <div class="flexContainer" style="height: 8px;
+                                        border-bottom: 6px;
+                                        padding-bottom: 6px"></div>
+    </div>
+
+  </body>
+</html>

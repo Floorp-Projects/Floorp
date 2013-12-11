@@ -154,6 +154,18 @@ partial interface HTMLInputElement {
   [ChromeOnly]
   void mozSetFileNameArray(sequence<DOMString> fileNames);
 
+  // Number controls (<input type=number>) have an anonymous text control
+  // (<input type=text>) in the anonymous shadow tree that they contain. On
+  // such an anonymous text control this property provides access to the
+  // number control that owns the text control. This is useful, for example,
+  // in code that looks at the currently focused element to make decisions
+  // about which IME to bring up. Such code needs to be able to check for any
+  // owning number control since it probably wants to bring up a number pad
+  // instead of the standard keyboard, even when the anonymous text control has
+  // focus.
+  [ChromeOnly]
+  readonly attribute HTMLInputElement? ownerNumberControl;
+
   boolean mozIsTextField(boolean aExcludePassword);
 };
 

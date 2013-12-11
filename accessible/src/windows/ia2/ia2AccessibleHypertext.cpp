@@ -30,7 +30,7 @@ ia2AccessibleHypertext::get_nHyperlinks(long* aHyperlinkCount)
   if (hyperText->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  *aHyperlinkCount = hyperText->GetLinkCount();
+  *aHyperlinkCount = hyperText->LinkCount();
   return S_OK;
 
   A11Y_TRYBLOCK_END
@@ -51,7 +51,7 @@ ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
   if (hyperText->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  Accessible* hyperLink = hyperText->GetLinkAt(aLinkIndex);
+  Accessible* hyperLink = hyperText->LinkAt(aLinkIndex);
   if (!hyperLink)
     return E_FAIL;
 
@@ -77,7 +77,7 @@ ia2AccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long* aHyperlinkInde
   if (hyperAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  *aHyperlinkIndex = hyperAcc->GetLinkIndexAtOffset(aCharIndex);
+  *aHyperlinkIndex = hyperAcc->LinkIndexAtOffset(aCharIndex);
   return S_OK;
 
   A11Y_TRYBLOCK_END

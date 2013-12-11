@@ -3,18 +3,93 @@
 // annotations on Java methods. To update, change the annotations on the corresponding Java
 // methods and rerun the build. Manually updating this file will cause your build to fail.
 
+#include "GeneratedJNIWrappers.h"
+#include "AndroidBridgeUtilities.h"
 #include "nsXPCOMStrings.h"
 #include "AndroidBridge.h"
-#include "AndroidBridgeUtilities.h"
 
-#ifdef DEBUG
-#define ALOG_BRIDGE(args...) ALOG(args)
-#else
-#define ALOG_BRIDGE(args...) ((void)0)
-#endif
-
-using namespace mozilla;
-void AndroidBridge::InitStubs(JNIEnv *jEnv) {
+namespace mozilla {
+namespace widget {
+namespace android {
+jclass GeckoAppShell::mGeckoAppShellClass = 0;
+jmethodID GeckoAppShell::jAcknowledgeEvent = 0;
+jmethodID GeckoAppShell::jAddPluginViewWrapper = 0;
+jmethodID GeckoAppShell::jAlertsProgressListener_OnProgress = 0;
+jmethodID GeckoAppShell::jCancelVibrate = 0;
+jmethodID GeckoAppShell::jCheckURIVisited = 0;
+jmethodID GeckoAppShell::jClearMessageList = 0;
+jmethodID GeckoAppShell::jCloseCamera = 0;
+jmethodID GeckoAppShell::jCloseNotification = 0;
+jmethodID GeckoAppShell::jCreateMessageListWrapper = 0;
+jmethodID GeckoAppShell::jCreateShortcut = 0;
+jmethodID GeckoAppShell::jDeleteMessageWrapper = 0;
+jmethodID GeckoAppShell::jDisableBatteryNotifications = 0;
+jmethodID GeckoAppShell::jDisableNetworkNotifications = 0;
+jmethodID GeckoAppShell::jDisableScreenOrientationNotifications = 0;
+jmethodID GeckoAppShell::jDisableSensor = 0;
+jmethodID GeckoAppShell::jEnableBatteryNotifications = 0;
+jmethodID GeckoAppShell::jEnableLocation = 0;
+jmethodID GeckoAppShell::jEnableLocationHighAccuracy = 0;
+jmethodID GeckoAppShell::jEnableNetworkNotifications = 0;
+jmethodID GeckoAppShell::jEnableScreenOrientationNotifications = 0;
+jmethodID GeckoAppShell::jEnableSensor = 0;
+jmethodID GeckoAppShell::jGetContext = 0;
+jmethodID GeckoAppShell::jGetCurrentBatteryInformationWrapper = 0;
+jmethodID GeckoAppShell::jGetCurrentNetworkInformationWrapper = 0;
+jmethodID GeckoAppShell::jGetDensity = 0;
+jmethodID GeckoAppShell::jGetDpiWrapper = 0;
+jmethodID GeckoAppShell::jGetExtensionFromMimeTypeWrapper = 0;
+jmethodID GeckoAppShell::jGetHandlersForMimeTypeWrapper = 0;
+jmethodID GeckoAppShell::jGetHandlersForURLWrapper = 0;
+jmethodID GeckoAppShell::jGetIconForExtensionWrapper = 0;
+jmethodID GeckoAppShell::jGetMessageWrapper = 0;
+jmethodID GeckoAppShell::jGetMimeTypeFromExtensionsWrapper = 0;
+jmethodID GeckoAppShell::jGetNextMessageInListWrapper = 0;
+jmethodID GeckoAppShell::jGetProxyForURIWrapper = 0;
+jmethodID GeckoAppShell::jGetScreenDepthWrapper = 0;
+jmethodID GeckoAppShell::jGetScreenOrientationWrapper = 0;
+jmethodID GeckoAppShell::jGetShowPasswordSetting = 0;
+jmethodID GeckoAppShell::jGetSystemColoursWrapper = 0;
+jmethodID GeckoAppShell::jHandleGeckoMessageWrapper = 0;
+jmethodID GeckoAppShell::jHideProgressDialog = 0;
+jmethodID GeckoAppShell::jInitCameraWrapper = 0;
+jmethodID GeckoAppShell::jIsNetworkLinkKnown = 0;
+jmethodID GeckoAppShell::jIsNetworkLinkUp = 0;
+jmethodID GeckoAppShell::jIsTablet = 0;
+jmethodID GeckoAppShell::jKillAnyZombies = 0;
+jmethodID GeckoAppShell::jLockScreenOrientation = 0;
+jmethodID GeckoAppShell::jMarkURIVisited = 0;
+jmethodID GeckoAppShell::jMoveTaskToBack = 0;
+jmethodID GeckoAppShell::jNetworkLinkType = 0;
+jmethodID GeckoAppShell::jNotifyDefaultPrevented = 0;
+jmethodID GeckoAppShell::jNotifyIME = 0;
+jmethodID GeckoAppShell::jNotifyIMEChange = 0;
+jmethodID GeckoAppShell::jNotifyIMEContext = 0;
+jmethodID GeckoAppShell::jNotifyWakeLockChanged = 0;
+jmethodID GeckoAppShell::jNotifyXreExit = 0;
+jmethodID GeckoAppShell::jOpenUriExternal = 0;
+jmethodID GeckoAppShell::jPerformHapticFeedback = 0;
+jmethodID GeckoAppShell::jPumpMessageLoop = 0;
+jmethodID GeckoAppShell::jRegisterSurfaceTextureFrameListener = 0;
+jmethodID GeckoAppShell::jRemovePluginView = 0;
+jmethodID GeckoAppShell::jScanMedia = 0;
+jmethodID GeckoAppShell::jScheduleRestart = 0;
+jmethodID GeckoAppShell::jSendMessageWrapper = 0;
+jmethodID GeckoAppShell::jSetFullScreen = 0;
+jmethodID GeckoAppShell::jSetKeepScreenOn = 0;
+jmethodID GeckoAppShell::jSetSelectedLocale = 0;
+jmethodID GeckoAppShell::jSetURITitle = 0;
+jmethodID GeckoAppShell::jShowAlertNotificationWrapper = 0;
+jmethodID GeckoAppShell::jShowFilePickerAsyncWrapper = 0;
+jmethodID GeckoAppShell::jShowFilePickerForExtensionsWrapper = 0;
+jmethodID GeckoAppShell::jShowFilePickerForMimeTypeWrapper = 0;
+jmethodID GeckoAppShell::jShowInputMethodPicker = 0;
+jmethodID GeckoAppShell::jUnlockProfile = 0;
+jmethodID GeckoAppShell::jUnlockScreenOrientation = 0;
+jmethodID GeckoAppShell::jUnregisterSurfaceTextureFrameListener = 0;
+jmethodID GeckoAppShell::jVibrate1 = 0;
+jmethodID GeckoAppShell::jVibrateA = 0;
+void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     initInit();
 
     mGeckoAppShellClass = getClassGlobalRef("org/mozilla/gecko/GeckoAppShell");
@@ -66,6 +141,7 @@ void AndroidBridge::InitStubs(JNIEnv *jEnv) {
     jLockScreenOrientation = getStaticMethod("lockScreenOrientation", "(I)V");
     jMarkURIVisited = getStaticMethod("markUriVisited", "(Ljava/lang/String;)V");
     jMoveTaskToBack = getStaticMethod("moveTaskToBack", "()V");
+    jNetworkLinkType = getStaticMethod("networkLinkType", "()I");
     jNotifyDefaultPrevented = getStaticMethod("notifyDefaultPrevented", "(Z)V");
     jNotifyIME = getStaticMethod("notifyIME", "(I)V");
     jNotifyIMEChange = getStaticMethod("notifyIMEChange", "(Ljava/lang/String;III)V");
@@ -94,36 +170,23 @@ void AndroidBridge::InitStubs(JNIEnv *jEnv) {
     jUnregisterSurfaceTextureFrameListener = getStaticMethod("unregisterSurfaceTextureFrameListener", "(Ljava/lang/Object;)V");
     jVibrate1 = getStaticMethod("vibrate", "(J)V");
     jVibrateA = getStaticMethod("vibrate", "([JI)V");
-
-    mGeckoJavaSamplerClass = getClassGlobalRef("org/mozilla/gecko/GeckoJavaSampler");
-    jGetFrameNameJavaProfilingWrapper = getStaticMethod("getFrameName", "(III)Ljava/lang/String;");
-    jGetSampleTimeJavaProfiling = getStaticMethod("getSampleTime", "(II)D");
-    jGetThreadNameJavaProfilingWrapper = getStaticMethod("getThreadName", "(I)Ljava/lang/String;");
-    jPauseJavaProfiling = getStaticMethod("pause", "()V");
-    jStartJavaProfiling = getStaticMethod("start", "(II)V");
-    jStopJavaProfiling = getStaticMethod("stop", "()V");
-    jUnpauseJavaProfiling = getStaticMethod("unpause", "()V");
-
-    mThumbnailHelperClass = getClassGlobalRef("org/mozilla/gecko/ThumbnailHelper");
-    jSendThumbnail = getStaticMethod("notifyThumbnail", "(Ljava/nio/ByteBuffer;IZ)V");
-
-    mGLControllerClass = getClassGlobalRef("org/mozilla/gecko/gfx/GLController");
-    jCreateEGLSurfaceForCompositorWrapper = getMethod("createEGLSurfaceForCompositor", "()Ljavax/microedition/khronos/egl/EGLSurface;");
-
-    mLayerViewClass = getClassGlobalRef("org/mozilla/gecko/gfx/LayerView");
-    jRegisterCompositorWrapper = getStaticMethod("registerCxxCompositor", "()Lorg/mozilla/gecko/gfx/GLController;");
-
-    mNativePanZoomControllerClass = getClassGlobalRef("org/mozilla/gecko/gfx/NativePanZoomController");
-    jPostDelayedCallbackWrapper = getMethod("postDelayedCallback", "(J)V");
-    jRequestContentRepaintWrapper = getMethod("requestContentRepaint", "(FFFFF)V");
-
-    mClipboardClass = getClassGlobalRef("org/mozilla/gecko/util/Clipboard");
-    jGetClipboardTextWrapper = getStaticMethod("getText", "()Ljava/lang/String;");
-    jSetClipboardText = getStaticMethod("setText", "(Ljava/lang/CharSequence;)V");
 }
 
-void AndroidBridge::AcknowledgeEvent() {
-    JNIEnv *env = GetJNIEnv();
+GeckoAppShell* GeckoAppShell::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    GeckoAppShell* ret = new GeckoAppShell(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+void GeckoAppShell::AcknowledgeEvent() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -145,11 +208,12 @@ void AndroidBridge::AcknowledgeEvent() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::AddPluginViewWrapper(jobject a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, bool a5) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::AddPluginViewWrapper(jobject a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, bool a5) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -179,11 +243,12 @@ void AndroidBridge::AddPluginViewWrapper(jobject a0, jfloat a1, jfloat a2, jfloa
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::AlertsProgressListener_OnProgress(const nsAString& a0, int64_t a1, int64_t a2, const nsAString& a3) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::AlertsProgressListener_OnProgress(const nsAString& a0, int64_t a1, int64_t a2, const nsAString& a3) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -197,10 +262,10 @@ void AndroidBridge::AlertsProgressListener_OnProgress(const nsAString& a0, int64
     }
 
     jvalue args[4];
-    args[0].l = NewJavaString(env, a0);
+    args[0].l = AndroidBridge::NewJavaString(env, a0);
     args[1].j = a1;
     args[2].j = a2;
-    args[3].l = NewJavaString(env, a3);
+    args[3].l = AndroidBridge::NewJavaString(env, a3);
 
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jAlertsProgressListener_OnProgress, args);
 
@@ -211,11 +276,12 @@ void AndroidBridge::AlertsProgressListener_OnProgress(const nsAString& a0, int64
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::CancelVibrate() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::CancelVibrate() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -237,11 +303,12 @@ void AndroidBridge::CancelVibrate() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::CheckURIVisited(const nsAString& a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::CheckURIVisited(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -254,7 +321,7 @@ void AndroidBridge::CheckURIVisited(const nsAString& a0) {
         return;
     }
 
-    jstring j0 = NewJavaString(env, a0);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jCheckURIVisited, j0);
 
@@ -265,11 +332,12 @@ void AndroidBridge::CheckURIVisited(const nsAString& a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::ClearMessageList(int32_t a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::ClearMessageList(int32_t a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -291,11 +359,12 @@ void AndroidBridge::ClearMessageList(int32_t a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::CloseCamera() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::CloseCamera() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -317,11 +386,12 @@ void AndroidBridge::CloseCamera() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::CloseNotification(const nsAString& a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::CloseNotification(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -334,7 +404,7 @@ void AndroidBridge::CloseNotification(const nsAString& a0) {
         return;
     }
 
-    jstring j0 = NewJavaString(env, a0);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jCloseNotification, j0);
 
@@ -345,11 +415,12 @@ void AndroidBridge::CloseNotification(const nsAString& a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::CreateMessageListWrapper(int64_t a0, int64_t a1, jobjectArray a2, int32_t a3, int32_t a4, bool a5, int32_t a6) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::CreateMessageListWrapper(int64_t a0, int64_t a1, jobjectArray a2, int32_t a3, int32_t a4, bool a5, int32_t a6) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -380,11 +451,12 @@ void AndroidBridge::CreateMessageListWrapper(int64_t a0, int64_t a1, jobjectArra
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::CreateShortcut(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::CreateShortcut(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -398,10 +470,10 @@ void AndroidBridge::CreateShortcut(const nsAString& a0, const nsAString& a1, con
     }
 
     jvalue args[4];
-    args[0].l = NewJavaString(env, a0);
-    args[1].l = NewJavaString(env, a1);
-    args[2].l = NewJavaString(env, a2);
-    args[3].l = NewJavaString(env, a3);
+    args[0].l = AndroidBridge::NewJavaString(env, a0);
+    args[1].l = AndroidBridge::NewJavaString(env, a1);
+    args[2].l = AndroidBridge::NewJavaString(env, a2);
+    args[3].l = AndroidBridge::NewJavaString(env, a3);
 
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jCreateShortcut, args);
 
@@ -412,11 +484,12 @@ void AndroidBridge::CreateShortcut(const nsAString& a0, const nsAString& a1, con
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::DeleteMessageWrapper(int32_t a0, int32_t a1) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::DeleteMessageWrapper(int32_t a0, int32_t a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -438,11 +511,12 @@ void AndroidBridge::DeleteMessageWrapper(int32_t a0, int32_t a1) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::DisableBatteryNotifications() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::DisableBatteryNotifications() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -464,11 +538,12 @@ void AndroidBridge::DisableBatteryNotifications() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::DisableNetworkNotifications() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::DisableNetworkNotifications() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -490,11 +565,12 @@ void AndroidBridge::DisableNetworkNotifications() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::DisableScreenOrientationNotifications() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::DisableScreenOrientationNotifications() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -516,11 +592,12 @@ void AndroidBridge::DisableScreenOrientationNotifications() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::DisableSensor(int32_t a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::DisableSensor(int32_t a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -542,11 +619,12 @@ void AndroidBridge::DisableSensor(int32_t a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::EnableBatteryNotifications() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::EnableBatteryNotifications() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -568,11 +646,12 @@ void AndroidBridge::EnableBatteryNotifications() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::EnableLocation(bool a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::EnableLocation(bool a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -594,11 +673,12 @@ void AndroidBridge::EnableLocation(bool a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::EnableLocationHighAccuracy(bool a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::EnableLocationHighAccuracy(bool a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -620,11 +700,12 @@ void AndroidBridge::EnableLocationHighAccuracy(bool a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::EnableNetworkNotifications() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::EnableNetworkNotifications() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -646,11 +727,12 @@ void AndroidBridge::EnableNetworkNotifications() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::EnableScreenOrientationNotifications() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::EnableScreenOrientationNotifications() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -672,11 +754,12 @@ void AndroidBridge::EnableScreenOrientationNotifications() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::EnableSensor(int32_t a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::EnableSensor(int32_t a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -698,10 +781,11 @@ void AndroidBridge::EnableSensor(int32_t a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-jobject AndroidBridge::GetContext() {
+jobject GeckoAppShell::GetContext() {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -724,12 +808,13 @@ jobject AndroidBridge::GetContext() {
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
     return ret;
 }
 
-jdoubleArray AndroidBridge::GetCurrentBatteryInformationWrapper() {
-    JNIEnv *env = GetJNIEnv();
+jdoubleArray GeckoAppShell::GetCurrentBatteryInformationWrapper() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -751,12 +836,13 @@ jdoubleArray AndroidBridge::GetCurrentBatteryInformationWrapper() {
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jdoubleArray ret = static_cast<jdoubleArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
-jdoubleArray AndroidBridge::GetCurrentNetworkInformationWrapper() {
-    JNIEnv *env = GetJNIEnv();
+jdoubleArray GeckoAppShell::GetCurrentNetworkInformationWrapper() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -778,12 +864,13 @@ jdoubleArray AndroidBridge::GetCurrentNetworkInformationWrapper() {
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jdoubleArray ret = static_cast<jdoubleArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
-jfloat AndroidBridge::GetDensity() {
-    JNIEnv *env = GetJNIEnv();
+jfloat GeckoAppShell::GetDensity() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return 0.0;
@@ -805,12 +892,13 @@ jfloat AndroidBridge::GetDensity() {
         env->PopLocalFrame(NULL);
         return 0.0;
     }
+
     env->PopLocalFrame(NULL);
     return temp;
 }
 
-int32_t AndroidBridge::GetDpiWrapper() {
-    JNIEnv *env = GetJNIEnv();
+int32_t GeckoAppShell::GetDpiWrapper() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return 0;
@@ -832,12 +920,13 @@ int32_t AndroidBridge::GetDpiWrapper() {
         env->PopLocalFrame(NULL);
         return 0;
     }
+
     env->PopLocalFrame(NULL);
     return temp;
 }
 
-jstring AndroidBridge::GetExtensionFromMimeTypeWrapper(const nsAString& a0) {
-    JNIEnv *env = GetJNIEnv();
+jstring GeckoAppShell::GetExtensionFromMimeTypeWrapper(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -850,7 +939,7 @@ jstring AndroidBridge::GetExtensionFromMimeTypeWrapper(const nsAString& a0) {
         return nullptr;
     }
 
-    jstring j0 = NewJavaString(env, a0);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetExtensionFromMimeTypeWrapper, j0);
 
@@ -861,12 +950,13 @@ jstring AndroidBridge::GetExtensionFromMimeTypeWrapper(const nsAString& a0) {
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
-jobjectArray AndroidBridge::GetHandlersForMimeTypeWrapper(const nsAString& a0, const nsAString& a1) {
-    JNIEnv *env = GetJNIEnv();
+jobjectArray GeckoAppShell::GetHandlersForMimeTypeWrapper(const nsAString& a0, const nsAString& a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -879,8 +969,8 @@ jobjectArray AndroidBridge::GetHandlersForMimeTypeWrapper(const nsAString& a0, c
         return nullptr;
     }
 
-    jstring j0 = NewJavaString(env, a0);
-    jstring j1 = NewJavaString(env, a1);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
+    jstring j1 = AndroidBridge::NewJavaString(env, a1);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetHandlersForMimeTypeWrapper, j0, j1);
 
@@ -891,12 +981,13 @@ jobjectArray AndroidBridge::GetHandlersForMimeTypeWrapper(const nsAString& a0, c
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jobjectArray ret = static_cast<jobjectArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
-jobjectArray AndroidBridge::GetHandlersForURLWrapper(const nsAString& a0, const nsAString& a1) {
-    JNIEnv *env = GetJNIEnv();
+jobjectArray GeckoAppShell::GetHandlersForURLWrapper(const nsAString& a0, const nsAString& a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -909,8 +1000,8 @@ jobjectArray AndroidBridge::GetHandlersForURLWrapper(const nsAString& a0, const 
         return nullptr;
     }
 
-    jstring j0 = NewJavaString(env, a0);
-    jstring j1 = NewJavaString(env, a1);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
+    jstring j1 = AndroidBridge::NewJavaString(env, a1);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetHandlersForURLWrapper, j0, j1);
 
@@ -921,12 +1012,13 @@ jobjectArray AndroidBridge::GetHandlersForURLWrapper(const nsAString& a0, const 
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jobjectArray ret = static_cast<jobjectArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
-jbyteArray AndroidBridge::GetIconForExtensionWrapper(const nsAString& a0, int32_t a1) {
-    JNIEnv *env = GetJNIEnv();
+jbyteArray GeckoAppShell::GetIconForExtensionWrapper(const nsAString& a0, int32_t a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -939,7 +1031,7 @@ jbyteArray AndroidBridge::GetIconForExtensionWrapper(const nsAString& a0, int32_
         return nullptr;
     }
 
-    jstring j0 = NewJavaString(env, a0);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetIconForExtensionWrapper, j0, a1);
 
@@ -950,12 +1042,13 @@ jbyteArray AndroidBridge::GetIconForExtensionWrapper(const nsAString& a0, int32_
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jbyteArray ret = static_cast<jbyteArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
-void AndroidBridge::GetMessageWrapper(int32_t a0, int32_t a1) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::GetMessageWrapper(int32_t a0, int32_t a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -977,11 +1070,12 @@ void AndroidBridge::GetMessageWrapper(int32_t a0, int32_t a1) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-jstring AndroidBridge::GetMimeTypeFromExtensionsWrapper(const nsAString& a0) {
-    JNIEnv *env = GetJNIEnv();
+jstring GeckoAppShell::GetMimeTypeFromExtensionsWrapper(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -994,7 +1088,7 @@ jstring AndroidBridge::GetMimeTypeFromExtensionsWrapper(const nsAString& a0) {
         return nullptr;
     }
 
-    jstring j0 = NewJavaString(env, a0);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jGetMimeTypeFromExtensionsWrapper, j0);
 
@@ -1005,12 +1099,13 @@ jstring AndroidBridge::GetMimeTypeFromExtensionsWrapper(const nsAString& a0) {
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
-void AndroidBridge::GetNextMessageInListWrapper(int32_t a0, int32_t a1) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::GetNextMessageInListWrapper(int32_t a0, int32_t a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1032,11 +1127,12 @@ void AndroidBridge::GetNextMessageInListWrapper(int32_t a0, int32_t a1) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-jstring AndroidBridge::GetProxyForURIWrapper(const nsAString& a0, const nsAString& a1, const nsAString& a2, int32_t a3) {
-    JNIEnv *env = GetJNIEnv();
+jstring GeckoAppShell::GetProxyForURIWrapper(const nsAString& a0, const nsAString& a1, const nsAString& a2, int32_t a3) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -1050,9 +1146,9 @@ jstring AndroidBridge::GetProxyForURIWrapper(const nsAString& a0, const nsAStrin
     }
 
     jvalue args[4];
-    args[0].l = NewJavaString(env, a0);
-    args[1].l = NewJavaString(env, a1);
-    args[2].l = NewJavaString(env, a2);
+    args[0].l = AndroidBridge::NewJavaString(env, a0);
+    args[1].l = AndroidBridge::NewJavaString(env, a1);
+    args[2].l = AndroidBridge::NewJavaString(env, a2);
     args[3].i = a3;
 
     jobject temp = env->CallStaticObjectMethodA(mGeckoAppShellClass, jGetProxyForURIWrapper, args);
@@ -1064,12 +1160,13 @@ jstring AndroidBridge::GetProxyForURIWrapper(const nsAString& a0, const nsAStrin
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
-int32_t AndroidBridge::GetScreenDepthWrapper() {
-    JNIEnv *env = GetJNIEnv();
+int32_t GeckoAppShell::GetScreenDepthWrapper() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return 0;
@@ -1091,12 +1188,13 @@ int32_t AndroidBridge::GetScreenDepthWrapper() {
         env->PopLocalFrame(NULL);
         return 0;
     }
+
     env->PopLocalFrame(NULL);
     return temp;
 }
 
-int16_t AndroidBridge::GetScreenOrientationWrapper() {
-    JNIEnv *env = GetJNIEnv();
+int16_t GeckoAppShell::GetScreenOrientationWrapper() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return 0;
@@ -1118,12 +1216,13 @@ int16_t AndroidBridge::GetScreenOrientationWrapper() {
         env->PopLocalFrame(NULL);
         return 0;
     }
+
     env->PopLocalFrame(NULL);
     return temp;
 }
 
-bool AndroidBridge::GetShowPasswordSetting() {
-    JNIEnv *env = GetJNIEnv();
+bool GeckoAppShell::GetShowPasswordSetting() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return false;
@@ -1145,12 +1244,13 @@ bool AndroidBridge::GetShowPasswordSetting() {
         env->PopLocalFrame(NULL);
         return false;
     }
+
     env->PopLocalFrame(NULL);
     return temp;
 }
 
-jintArray AndroidBridge::GetSystemColoursWrapper() {
-    JNIEnv *env = GetJNIEnv();
+jintArray GeckoAppShell::GetSystemColoursWrapper() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -1172,12 +1272,13 @@ jintArray AndroidBridge::GetSystemColoursWrapper() {
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jintArray ret = static_cast<jintArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
-jstring AndroidBridge::HandleGeckoMessageWrapper(const nsAString& a0) {
-    JNIEnv *env = GetJNIEnv();
+jstring GeckoAppShell::HandleGeckoMessageWrapper(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -1190,7 +1291,7 @@ jstring AndroidBridge::HandleGeckoMessageWrapper(const nsAString& a0) {
         return nullptr;
     }
 
-    jstring j0 = NewJavaString(env, a0);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jHandleGeckoMessageWrapper, j0);
 
@@ -1201,12 +1302,13 @@ jstring AndroidBridge::HandleGeckoMessageWrapper(const nsAString& a0) {
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
-void AndroidBridge::HideProgressDialog() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::HideProgressDialog() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1228,11 +1330,12 @@ void AndroidBridge::HideProgressDialog() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-jintArray AndroidBridge::InitCameraWrapper(const nsAString& a0, int32_t a1, int32_t a2, int32_t a3) {
-    JNIEnv *env = GetJNIEnv();
+jintArray GeckoAppShell::InitCameraWrapper(const nsAString& a0, int32_t a1, int32_t a2, int32_t a3) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -1246,7 +1349,7 @@ jintArray AndroidBridge::InitCameraWrapper(const nsAString& a0, int32_t a1, int3
     }
 
     jvalue args[4];
-    args[0].l = NewJavaString(env, a0);
+    args[0].l = AndroidBridge::NewJavaString(env, a0);
     args[1].i = a1;
     args[2].i = a2;
     args[3].i = a3;
@@ -1260,12 +1363,13 @@ jintArray AndroidBridge::InitCameraWrapper(const nsAString& a0, int32_t a1, int3
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jintArray ret = static_cast<jintArray>(env->PopLocalFrame(temp));
     return ret;
 }
 
-bool AndroidBridge::IsNetworkLinkKnown() {
-    JNIEnv *env = GetJNIEnv();
+bool GeckoAppShell::IsNetworkLinkKnown() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return false;
@@ -1287,12 +1391,13 @@ bool AndroidBridge::IsNetworkLinkKnown() {
         env->PopLocalFrame(NULL);
         return false;
     }
+
     env->PopLocalFrame(NULL);
     return temp;
 }
 
-bool AndroidBridge::IsNetworkLinkUp() {
-    JNIEnv *env = GetJNIEnv();
+bool GeckoAppShell::IsNetworkLinkUp() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return false;
@@ -1314,12 +1419,13 @@ bool AndroidBridge::IsNetworkLinkUp() {
         env->PopLocalFrame(NULL);
         return false;
     }
+
     env->PopLocalFrame(NULL);
     return temp;
 }
 
-bool AndroidBridge::IsTablet() {
-    JNIEnv *env = GetJNIEnv();
+bool GeckoAppShell::IsTablet() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return false;
@@ -1341,12 +1447,13 @@ bool AndroidBridge::IsTablet() {
         env->PopLocalFrame(NULL);
         return false;
     }
+
     env->PopLocalFrame(NULL);
     return temp;
 }
 
-void AndroidBridge::KillAnyZombies() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::KillAnyZombies() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1368,11 +1475,12 @@ void AndroidBridge::KillAnyZombies() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::LockScreenOrientation(int32_t a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::LockScreenOrientation(int32_t a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1394,11 +1502,12 @@ void AndroidBridge::LockScreenOrientation(int32_t a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::MarkURIVisited(const nsAString& a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::MarkURIVisited(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1411,7 +1520,7 @@ void AndroidBridge::MarkURIVisited(const nsAString& a0) {
         return;
     }
 
-    jstring j0 = NewJavaString(env, a0);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jMarkURIVisited, j0);
 
@@ -1422,11 +1531,12 @@ void AndroidBridge::MarkURIVisited(const nsAString& a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::MoveTaskToBack() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::MoveTaskToBack() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1448,11 +1558,40 @@ void AndroidBridge::MoveTaskToBack() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::NotifyDefaultPrevented(bool a0) {
-    JNIEnv *env = GetJNIEnv();
+int32_t GeckoAppShell::NetworkLinkType() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return 0;
+    }
+
+    int32_t temp = env->CallStaticIntMethod(mGeckoAppShellClass, jNetworkLinkType);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return 0;
+    }
+
+    env->PopLocalFrame(NULL);
+    return temp;
+}
+
+void GeckoAppShell::NotifyDefaultPrevented(bool a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1474,16 +1613,12 @@ void AndroidBridge::NotifyDefaultPrevented(bool a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::NotifyIME(int32_t a0) {
-    if (!sBridge) {
-        ALOG_BRIDGE("Aborted: No sBridge - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::NotifyIME(int32_t a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1496,7 +1631,7 @@ void AndroidBridge::NotifyIME(int32_t a0) {
         return;
     }
 
-    env->CallStaticVoidMethod(sBridge->mGeckoAppShellClass, sBridge->jNotifyIME, a0);
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyIME, a0);
 
     if (env->ExceptionCheck()) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
@@ -1505,16 +1640,12 @@ void AndroidBridge::NotifyIME(int32_t a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::NotifyIMEChange(const nsAString& a0, int32_t a1, int32_t a2, int32_t a3) {
-    if (!sBridge) {
-        ALOG_BRIDGE("Aborted: No sBridge - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::NotifyIMEChange(const nsAString& a0, int32_t a1, int32_t a2, int32_t a3) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1528,12 +1659,12 @@ void AndroidBridge::NotifyIMEChange(const nsAString& a0, int32_t a1, int32_t a2,
     }
 
     jvalue args[4];
-    args[0].l = NewJavaString(env, a0);
+    args[0].l = AndroidBridge::NewJavaString(env, a0);
     args[1].i = a1;
     args[2].i = a2;
     args[3].i = a3;
 
-    env->CallStaticVoidMethodA(sBridge->mGeckoAppShellClass, sBridge->jNotifyIMEChange, args);
+    env->CallStaticVoidMethodA(mGeckoAppShellClass, jNotifyIMEChange, args);
 
     if (env->ExceptionCheck()) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
@@ -1542,16 +1673,12 @@ void AndroidBridge::NotifyIMEChange(const nsAString& a0, int32_t a1, int32_t a2,
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::NotifyIMEContext(int32_t a0, const nsAString& a1, const nsAString& a2, const nsAString& a3) {
-    if (!sBridge) {
-        ALOG_BRIDGE("Aborted: No sBridge - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::NotifyIMEContext(int32_t a0, const nsAString& a1, const nsAString& a2, const nsAString& a3) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1566,11 +1693,11 @@ void AndroidBridge::NotifyIMEContext(int32_t a0, const nsAString& a1, const nsAS
 
     jvalue args[4];
     args[0].i = a0;
-    args[1].l = NewJavaString(env, a1);
-    args[2].l = NewJavaString(env, a2);
-    args[3].l = NewJavaString(env, a3);
+    args[1].l = AndroidBridge::NewJavaString(env, a1);
+    args[2].l = AndroidBridge::NewJavaString(env, a2);
+    args[3].l = AndroidBridge::NewJavaString(env, a3);
 
-    env->CallStaticVoidMethodA(sBridge->mGeckoAppShellClass, sBridge->jNotifyIMEContext, args);
+    env->CallStaticVoidMethodA(mGeckoAppShellClass, jNotifyIMEContext, args);
 
     if (env->ExceptionCheck()) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
@@ -1579,11 +1706,12 @@ void AndroidBridge::NotifyIMEContext(int32_t a0, const nsAString& a1, const nsAS
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::NotifyWakeLockChanged(const nsAString& a0, const nsAString& a1) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::NotifyWakeLockChanged(const nsAString& a0, const nsAString& a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1596,8 +1724,8 @@ void AndroidBridge::NotifyWakeLockChanged(const nsAString& a0, const nsAString& 
         return;
     }
 
-    jstring j0 = NewJavaString(env, a0);
-    jstring j1 = NewJavaString(env, a1);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
+    jstring j1 = AndroidBridge::NewJavaString(env, a1);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyWakeLockChanged, j0, j1);
 
@@ -1608,11 +1736,12 @@ void AndroidBridge::NotifyWakeLockChanged(const nsAString& a0, const nsAString& 
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::NotifyXreExit() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::NotifyXreExit() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1634,11 +1763,12 @@ void AndroidBridge::NotifyXreExit() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-bool AndroidBridge::OpenUriExternal(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3, const nsAString& a4, const nsAString& a5) {
-    JNIEnv *env = GetJNIEnv();
+bool GeckoAppShell::OpenUriExternal(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3, const nsAString& a4, const nsAString& a5) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return false;
@@ -1652,12 +1782,12 @@ bool AndroidBridge::OpenUriExternal(const nsAString& a0, const nsAString& a1, co
     }
 
     jvalue args[6];
-    args[0].l = NewJavaString(env, a0);
-    args[1].l = NewJavaString(env, a1);
-    args[2].l = NewJavaString(env, a2);
-    args[3].l = NewJavaString(env, a3);
-    args[4].l = NewJavaString(env, a4);
-    args[5].l = NewJavaString(env, a5);
+    args[0].l = AndroidBridge::NewJavaString(env, a0);
+    args[1].l = AndroidBridge::NewJavaString(env, a1);
+    args[2].l = AndroidBridge::NewJavaString(env, a2);
+    args[3].l = AndroidBridge::NewJavaString(env, a3);
+    args[4].l = AndroidBridge::NewJavaString(env, a4);
+    args[5].l = AndroidBridge::NewJavaString(env, a5);
 
     bool temp = env->CallStaticBooleanMethodA(mGeckoAppShellClass, jOpenUriExternal, args);
 
@@ -1668,12 +1798,13 @@ bool AndroidBridge::OpenUriExternal(const nsAString& a0, const nsAString& a1, co
         env->PopLocalFrame(NULL);
         return false;
     }
+
     env->PopLocalFrame(NULL);
     return temp;
 }
 
-void AndroidBridge::PerformHapticFeedback(bool a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::PerformHapticFeedback(bool a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1695,11 +1826,12 @@ void AndroidBridge::PerformHapticFeedback(bool a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-bool AndroidBridge::PumpMessageLoop() {
-    JNIEnv *env = GetJNIEnv();
+bool GeckoAppShell::PumpMessageLoop() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return false;
@@ -1721,12 +1853,13 @@ bool AndroidBridge::PumpMessageLoop() {
         env->PopLocalFrame(NULL);
         return false;
     }
+
     env->PopLocalFrame(NULL);
     return temp;
 }
 
-void AndroidBridge::RegisterSurfaceTextureFrameListener(jobject a0, int32_t a1) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::RegisterSurfaceTextureFrameListener(jobject a0, int32_t a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1748,11 +1881,12 @@ void AndroidBridge::RegisterSurfaceTextureFrameListener(jobject a0, int32_t a1) 
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::RemovePluginView(jobject a0, bool a1) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::RemovePluginView(jobject a0, bool a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1774,11 +1908,12 @@ void AndroidBridge::RemovePluginView(jobject a0, bool a1) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::ScanMedia(const nsAString& a0, const nsAString& a1) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::ScanMedia(const nsAString& a0, const nsAString& a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1791,8 +1926,8 @@ void AndroidBridge::ScanMedia(const nsAString& a0, const nsAString& a1) {
         return;
     }
 
-    jstring j0 = NewJavaString(env, a0);
-    jstring j1 = NewJavaString(env, a1);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
+    jstring j1 = AndroidBridge::NewJavaString(env, a1);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jScanMedia, j0, j1);
 
@@ -1803,11 +1938,12 @@ void AndroidBridge::ScanMedia(const nsAString& a0, const nsAString& a1) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::ScheduleRestart() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::ScheduleRestart() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1829,11 +1965,12 @@ void AndroidBridge::ScheduleRestart() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::SendMessageWrapper(const nsAString& a0, const nsAString& a1, int32_t a2) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::SendMessageWrapper(const nsAString& a0, const nsAString& a1, int32_t a2) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1847,8 +1984,8 @@ void AndroidBridge::SendMessageWrapper(const nsAString& a0, const nsAString& a1,
     }
 
     jvalue args[3];
-    args[0].l = NewJavaString(env, a0);
-    args[1].l = NewJavaString(env, a1);
+    args[0].l = AndroidBridge::NewJavaString(env, a0);
+    args[1].l = AndroidBridge::NewJavaString(env, a1);
     args[2].i = a2;
 
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jSendMessageWrapper, args);
@@ -1860,11 +1997,12 @@ void AndroidBridge::SendMessageWrapper(const nsAString& a0, const nsAString& a1,
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::SetFullScreen(bool a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::SetFullScreen(bool a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1886,11 +2024,12 @@ void AndroidBridge::SetFullScreen(bool a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::SetKeepScreenOn(bool a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::SetKeepScreenOn(bool a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1912,11 +2051,12 @@ void AndroidBridge::SetKeepScreenOn(bool a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::SetSelectedLocale(const nsAString& a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::SetSelectedLocale(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1929,7 +2069,7 @@ void AndroidBridge::SetSelectedLocale(const nsAString& a0) {
         return;
     }
 
-    jstring j0 = NewJavaString(env, a0);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jSetSelectedLocale, j0);
 
@@ -1940,11 +2080,12 @@ void AndroidBridge::SetSelectedLocale(const nsAString& a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::SetURITitle(const nsAString& a0, const nsAString& a1) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::SetURITitle(const nsAString& a0, const nsAString& a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1957,8 +2098,8 @@ void AndroidBridge::SetURITitle(const nsAString& a0, const nsAString& a1) {
         return;
     }
 
-    jstring j0 = NewJavaString(env, a0);
-    jstring j1 = NewJavaString(env, a1);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
+    jstring j1 = AndroidBridge::NewJavaString(env, a1);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jSetURITitle, j0, j1);
 
@@ -1969,11 +2110,12 @@ void AndroidBridge::SetURITitle(const nsAString& a0, const nsAString& a1) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::ShowAlertNotificationWrapper(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3, const nsAString& a4) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::ShowAlertNotificationWrapper(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3, const nsAString& a4) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -1987,11 +2129,11 @@ void AndroidBridge::ShowAlertNotificationWrapper(const nsAString& a0, const nsAS
     }
 
     jvalue args[5];
-    args[0].l = NewJavaString(env, a0);
-    args[1].l = NewJavaString(env, a1);
-    args[2].l = NewJavaString(env, a2);
-    args[3].l = NewJavaString(env, a3);
-    args[4].l = NewJavaString(env, a4);
+    args[0].l = AndroidBridge::NewJavaString(env, a0);
+    args[1].l = AndroidBridge::NewJavaString(env, a1);
+    args[2].l = AndroidBridge::NewJavaString(env, a2);
+    args[3].l = AndroidBridge::NewJavaString(env, a3);
+    args[4].l = AndroidBridge::NewJavaString(env, a4);
 
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jShowAlertNotificationWrapper, args);
 
@@ -2002,11 +2144,12 @@ void AndroidBridge::ShowAlertNotificationWrapper(const nsAString& a0, const nsAS
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::ShowFilePickerAsyncWrapper(const nsAString& a0, int64_t a1) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::ShowFilePickerAsyncWrapper(const nsAString& a0, int64_t a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -2019,7 +2162,7 @@ void AndroidBridge::ShowFilePickerAsyncWrapper(const nsAString& a0, int64_t a1) 
         return;
     }
 
-    jstring j0 = NewJavaString(env, a0);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jShowFilePickerAsyncWrapper, j0, a1);
 
@@ -2030,11 +2173,12 @@ void AndroidBridge::ShowFilePickerAsyncWrapper(const nsAString& a0, int64_t a1) 
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-jstring AndroidBridge::ShowFilePickerForExtensionsWrapper(const nsAString& a0) {
-    JNIEnv *env = GetJNIEnv();
+jstring GeckoAppShell::ShowFilePickerForExtensionsWrapper(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -2047,7 +2191,7 @@ jstring AndroidBridge::ShowFilePickerForExtensionsWrapper(const nsAString& a0) {
         return nullptr;
     }
 
-    jstring j0 = NewJavaString(env, a0);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jShowFilePickerForExtensionsWrapper, j0);
 
@@ -2058,12 +2202,13 @@ jstring AndroidBridge::ShowFilePickerForExtensionsWrapper(const nsAString& a0) {
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
-jstring AndroidBridge::ShowFilePickerForMimeTypeWrapper(const nsAString& a0) {
-    JNIEnv *env = GetJNIEnv();
+jstring GeckoAppShell::ShowFilePickerForMimeTypeWrapper(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -2076,7 +2221,7 @@ jstring AndroidBridge::ShowFilePickerForMimeTypeWrapper(const nsAString& a0) {
         return nullptr;
     }
 
-    jstring j0 = NewJavaString(env, a0);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jShowFilePickerForMimeTypeWrapper, j0);
 
@@ -2087,12 +2232,13 @@ jstring AndroidBridge::ShowFilePickerForMimeTypeWrapper(const nsAString& a0) {
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
-void AndroidBridge::ShowInputMethodPicker() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::ShowInputMethodPicker() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -2114,11 +2260,12 @@ void AndroidBridge::ShowInputMethodPicker() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-bool AndroidBridge::UnlockProfile() {
-    JNIEnv *env = GetJNIEnv();
+bool GeckoAppShell::UnlockProfile() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return false;
@@ -2140,12 +2287,13 @@ bool AndroidBridge::UnlockProfile() {
         env->PopLocalFrame(NULL);
         return false;
     }
+
     env->PopLocalFrame(NULL);
     return temp;
 }
 
-void AndroidBridge::UnlockScreenOrientation() {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::UnlockScreenOrientation() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -2167,10 +2315,11 @@ void AndroidBridge::UnlockScreenOrientation() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::UnregisterSurfaceTextureFrameListener(jobject a0) {
+void GeckoAppShell::UnregisterSurfaceTextureFrameListener(jobject a0) {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -2193,11 +2342,12 @@ void AndroidBridge::UnregisterSurfaceTextureFrameListener(jobject a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::Vibrate1(int64_t a0) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::Vibrate1(int64_t a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -2219,11 +2369,12 @@ void AndroidBridge::Vibrate1(int64_t a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::VibrateA(jlongArray a0, int32_t a1) {
-    JNIEnv *env = GetJNIEnv();
+void GeckoAppShell::VibrateA(jlongArray a0, int32_t a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -2245,10 +2396,209 @@ void AndroidBridge::VibrateA(jlongArray a0, int32_t a1) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
+jclass JavaDomKeyLocation::mDomKeyLocationClass = 0;
+jmethodID JavaDomKeyLocation::jvalueOf = 0;
+jmethodID JavaDomKeyLocation::jvalues = 0;
+jfieldID JavaDomKeyLocation::jDOM_KEY_LOCATION_JOYSTICK = 0;
+jfieldID JavaDomKeyLocation::jDOM_KEY_LOCATION_LEFT = 0;
+jfieldID JavaDomKeyLocation::jDOM_KEY_LOCATION_MOBILE = 0;
+jfieldID JavaDomKeyLocation::jDOM_KEY_LOCATION_NUMPAD = 0;
+jfieldID JavaDomKeyLocation::jDOM_KEY_LOCATION_RIGHT = 0;
+jfieldID JavaDomKeyLocation::jDOM_KEY_LOCATION_STANDARD = 0;
+jfieldID JavaDomKeyLocation::jvalue = 0;
+void JavaDomKeyLocation::InitStubs(JNIEnv *jEnv) {
+    initInit();
 
-jstring AndroidBridge::GetFrameNameJavaProfilingWrapper(int32_t a0, int32_t a1, int32_t a2) {
+    mDomKeyLocationClass = getClassGlobalRef("org/mozilla/gecko/GeckoEvent$DomKeyLocation");
+    jvalueOf = getStaticMethod("valueOf", "(Ljava/lang/String;)Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
+    jvalues = getStaticMethod("values", "()[Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
+    jDOM_KEY_LOCATION_JOYSTICK = getStaticField("DOM_KEY_LOCATION_JOYSTICK", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
+    jDOM_KEY_LOCATION_LEFT = getStaticField("DOM_KEY_LOCATION_LEFT", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
+    jDOM_KEY_LOCATION_MOBILE = getStaticField("DOM_KEY_LOCATION_MOBILE", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
+    jDOM_KEY_LOCATION_NUMPAD = getStaticField("DOM_KEY_LOCATION_NUMPAD", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
+    jDOM_KEY_LOCATION_RIGHT = getStaticField("DOM_KEY_LOCATION_RIGHT", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
+    jDOM_KEY_LOCATION_STANDARD = getStaticField("DOM_KEY_LOCATION_STANDARD", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
+    jvalue = getField("value", "I");
+}
+
+JavaDomKeyLocation* JavaDomKeyLocation::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    JavaDomKeyLocation* ret = new JavaDomKeyLocation(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+jobject JavaDomKeyLocation::valueOf(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    if (env->PushLocalFrame(2) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return nullptr;
+    }
+
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
+
+    jobject temp = env->CallStaticObjectMethod(mDomKeyLocationClass, jvalueOf, j0);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return nullptr;
+    }
+
+    jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
+    return ret;
+}
+
+jobjectArray JavaDomKeyLocation::values() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    if (env->PushLocalFrame(1) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return nullptr;
+    }
+
+    jobject temp = env->CallStaticObjectMethod(mDomKeyLocationClass, jvalues);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return nullptr;
+    }
+
+    jobjectArray ret = static_cast<jobjectArray>(env->PopLocalFrame(temp));
+    return ret;
+}
+
+jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_JOYSTICK() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_JOYSTICK));
+}
+
+jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_LEFT() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_LEFT));
+}
+
+jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_MOBILE() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_MOBILE));
+}
+
+jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_NUMPAD() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_NUMPAD));
+}
+
+jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_RIGHT() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_RIGHT));
+}
+
+jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_STANDARD() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_STANDARD));
+}
+
+int32_t JavaDomKeyLocation::getvalue() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0;
+    }
+
+    return env->GetIntField(wrapped_obj, jvalue);
+}
+jclass GeckoJavaSampler::mGeckoJavaSamplerClass = 0;
+jmethodID GeckoJavaSampler::jGetFrameNameJavaProfilingWrapper = 0;
+jmethodID GeckoJavaSampler::jGetSampleTimeJavaProfiling = 0;
+jmethodID GeckoJavaSampler::jGetThreadNameJavaProfilingWrapper = 0;
+jmethodID GeckoJavaSampler::jPauseJavaProfiling = 0;
+jmethodID GeckoJavaSampler::jStartJavaProfiling = 0;
+jmethodID GeckoJavaSampler::jStopJavaProfiling = 0;
+jmethodID GeckoJavaSampler::jUnpauseJavaProfiling = 0;
+void GeckoJavaSampler::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mGeckoJavaSamplerClass = getClassGlobalRef("org/mozilla/gecko/GeckoJavaSampler");
+    jGetFrameNameJavaProfilingWrapper = getStaticMethod("getFrameName", "(III)Ljava/lang/String;");
+    jGetSampleTimeJavaProfiling = getStaticMethod("getSampleTime", "(II)D");
+    jGetThreadNameJavaProfilingWrapper = getStaticMethod("getThreadName", "(I)Ljava/lang/String;");
+    jPauseJavaProfiling = getStaticMethod("pause", "()V");
+    jStartJavaProfiling = getStaticMethod("start", "(II)V");
+    jStopJavaProfiling = getStaticMethod("stop", "()V");
+    jUnpauseJavaProfiling = getStaticMethod("unpause", "()V");
+}
+
+GeckoJavaSampler* GeckoJavaSampler::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    GeckoJavaSampler* ret = new GeckoJavaSampler(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+jstring GeckoJavaSampler::GetFrameNameJavaProfilingWrapper(int32_t a0, int32_t a1, int32_t a2) {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -2276,11 +2626,12 @@ jstring AndroidBridge::GetFrameNameJavaProfilingWrapper(int32_t a0, int32_t a1, 
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
-jdouble AndroidBridge::GetSampleTimeJavaProfiling(int32_t a0, int32_t a1) {
+jdouble GeckoJavaSampler::GetSampleTimeJavaProfiling(int32_t a0, int32_t a1) {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -2303,11 +2654,12 @@ jdouble AndroidBridge::GetSampleTimeJavaProfiling(int32_t a0, int32_t a1) {
         env->PopLocalFrame(NULL);
         return 0.0;
     }
+
     env->PopLocalFrame(NULL);
     return temp;
 }
 
-jstring AndroidBridge::GetThreadNameJavaProfilingWrapper(int32_t a0) {
+jstring GeckoJavaSampler::GetThreadNameJavaProfilingWrapper(int32_t a0) {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -2330,11 +2682,12 @@ jstring AndroidBridge::GetThreadNameJavaProfilingWrapper(int32_t a0) {
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
-void AndroidBridge::PauseJavaProfiling() {
+void GeckoJavaSampler::PauseJavaProfiling() {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -2357,10 +2710,11 @@ void AndroidBridge::PauseJavaProfiling() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::StartJavaProfiling(int32_t a0, int32_t a1) {
+void GeckoJavaSampler::StartJavaProfiling(int32_t a0, int32_t a1) {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -2383,10 +2737,11 @@ void AndroidBridge::StartJavaProfiling(int32_t a0, int32_t a1) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::StopJavaProfiling() {
+void GeckoJavaSampler::StopJavaProfiling() {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -2409,10 +2764,11 @@ void AndroidBridge::StopJavaProfiling() {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::UnpauseJavaProfiling() {
+void GeckoJavaSampler::UnpauseJavaProfiling() {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -2435,11 +2791,160 @@ void AndroidBridge::UnpauseJavaProfiling() {
         env->PopLocalFrame(NULL);
         return;
     }
+
+    env->PopLocalFrame(NULL);
+}
+jclass SurfaceBits::mSurfaceBitsClass = 0;
+jmethodID SurfaceBits::jSurfaceBits = 0;
+jfieldID SurfaceBits::jbuffer = 0;
+jfieldID SurfaceBits::jformat = 0;
+jfieldID SurfaceBits::jheight = 0;
+jfieldID SurfaceBits::jwidth = 0;
+void SurfaceBits::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mSurfaceBitsClass = getClassGlobalRef("org/mozilla/gecko/SurfaceBits");
+    jSurfaceBits = getMethod("<init>", "()V");
+    jbuffer = getField("buffer", "Ljava/nio/ByteBuffer;");
+    jformat = getField("format", "I");
+    jheight = getField("height", "I");
+    jwidth = getField("width", "I");
+}
+
+SurfaceBits* SurfaceBits::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    SurfaceBits* ret = new SurfaceBits(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+SurfaceBits::SurfaceBits() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    Init(env->NewObject(mSurfaceBitsClass, jSurfaceBits), env);
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::SendThumbnail(jobject a0, int32_t a1, bool a2) {
-    JNIEnv *env = GetJNIEnv();
+jobject SurfaceBits::getbuffer() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    return static_cast<jobject>(env->GetObjectField(wrapped_obj, jbuffer));
+}
+
+void SurfaceBits::setbuffer(jobject a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetObjectField(wrapped_obj, jbuffer, a0);
+}
+
+int32_t SurfaceBits::getformat() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0;
+    }
+
+    return env->GetIntField(wrapped_obj, jformat);
+}
+
+void SurfaceBits::setformat(int32_t a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetIntField(wrapped_obj, jformat, a0);
+}
+
+int32_t SurfaceBits::getheight() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0;
+    }
+
+    return env->GetIntField(wrapped_obj, jheight);
+}
+
+void SurfaceBits::setheight(int32_t a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetIntField(wrapped_obj, jheight, a0);
+}
+
+int32_t SurfaceBits::getwidth() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0;
+    }
+
+    return env->GetIntField(wrapped_obj, jwidth);
+}
+
+void SurfaceBits::setwidth(int32_t a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetIntField(wrapped_obj, jwidth, a0);
+}
+jclass ThumbnailHelper::mThumbnailHelperClass = 0;
+jmethodID ThumbnailHelper::jSendThumbnail = 0;
+void ThumbnailHelper::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mThumbnailHelperClass = getClassGlobalRef("org/mozilla/gecko/ThumbnailHelper");
+    jSendThumbnail = getStaticMethod("notifyThumbnail", "(Ljava/nio/ByteBuffer;IZ)V");
+}
+
+ThumbnailHelper* ThumbnailHelper::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    ThumbnailHelper* ret = new ThumbnailHelper(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+void ThumbnailHelper::SendThumbnail(jobject a0, int32_t a1, bool a2) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -2466,10 +2971,102 @@ void AndroidBridge::SendThumbnail(jobject a0, int32_t a1, bool a2) {
         env->PopLocalFrame(NULL);
         return;
     }
+
+    env->PopLocalFrame(NULL);
+}
+jclass DisplayPortMetrics::mDisplayPortMetricsClass = 0;
+jmethodID DisplayPortMetrics::jDisplayPortMetrics = 0;
+jfieldID DisplayPortMetrics::jMPosition = 0;
+jfieldID DisplayPortMetrics::jResolution = 0;
+void DisplayPortMetrics::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mDisplayPortMetricsClass = getClassGlobalRef("org/mozilla/gecko/gfx/DisplayPortMetrics");
+    jDisplayPortMetrics = getMethod("<init>", "(FFFFF)V");
+    jMPosition = getField("mPosition", "Landroid/graphics/RectF;");
+    jResolution = getField("resolution", "F");
+}
+
+DisplayPortMetrics* DisplayPortMetrics::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    DisplayPortMetrics* ret = new DisplayPortMetrics(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+DisplayPortMetrics::DisplayPortMetrics(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    jvalue args[5];
+    args[0].f = a0;
+    args[1].f = a1;
+    args[2].f = a2;
+    args[3].f = a3;
+    args[4].f = a4;
+
+    Init(env->NewObjectA(mDisplayPortMetricsClass, jDisplayPortMetrics, args), env);
     env->PopLocalFrame(NULL);
 }
 
-jobject AndroidBridge::CreateEGLSurfaceForCompositorWrapper(jobject aTarget) {
+jobject DisplayPortMetrics::getMPosition() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    return static_cast<jobject>(env->GetObjectField(wrapped_obj, jMPosition));
+}
+
+jfloat DisplayPortMetrics::getResolution() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, jResolution);
+}
+jclass GLController::mGLControllerClass = 0;
+jmethodID GLController::jCreateEGLSurfaceForCompositorWrapper = 0;
+void GLController::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mGLControllerClass = getClassGlobalRef("org/mozilla/gecko/gfx/GLController");
+    jCreateEGLSurfaceForCompositorWrapper = getMethod("createEGLSurfaceForCompositor", "()Ljavax/microedition/khronos/egl/EGLSurface;");
+}
+
+GLController* GLController::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    GLController* ret = new GLController(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+jobject GLController::CreateEGLSurfaceForCompositorWrapper() {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -2483,7 +3080,7 @@ jobject AndroidBridge::CreateEGLSurfaceForCompositorWrapper(jobject aTarget) {
         return nullptr;
     }
 
-    jobject temp = env->CallObjectMethod(aTarget, jCreateEGLSurfaceForCompositorWrapper);
+    jobject temp = env->CallObjectMethod(wrapped_obj, jCreateEGLSurfaceForCompositorWrapper);
 
     if (env->ExceptionCheck()) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
@@ -2492,11 +3089,485 @@ jobject AndroidBridge::CreateEGLSurfaceForCompositorWrapper(jobject aTarget) {
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
+    jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
+    return ret;
+}
+jclass GeckoLayerClient::mGeckoLayerClientClass = 0;
+jmethodID GeckoLayerClient::jActivateProgram = 0;
+jmethodID GeckoLayerClient::jContentDocumentChanged = 0;
+jmethodID GeckoLayerClient::jCreateFrame = 0;
+jmethodID GeckoLayerClient::jDeactivateProgram = 0;
+jmethodID GeckoLayerClient::jGetDisplayPort = 0;
+jmethodID GeckoLayerClient::jIsContentDocumentDisplayed = 0;
+jmethodID GeckoLayerClient::jProgressiveUpdateCallback = 0;
+jmethodID GeckoLayerClient::jSetFirstPaintViewport = 0;
+jmethodID GeckoLayerClient::jSetPageRect = 0;
+jmethodID GeckoLayerClient::jSyncFrameMetrics = 0;
+jmethodID GeckoLayerClient::jSyncViewportInfo = 0;
+void GeckoLayerClient::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mGeckoLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoLayerClient");
+    jActivateProgram = getMethod("activateProgram", "()V");
+    jContentDocumentChanged = getMethod("contentDocumentChanged", "()V");
+    jCreateFrame = getMethod("createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
+    jDeactivateProgram = getMethod("deactivateProgram", "()V");
+    jGetDisplayPort = getMethod("getDisplayPort", "(ZZILorg/mozilla/gecko/gfx/ImmutableViewportMetrics;)Lorg/mozilla/gecko/gfx/DisplayPortMetrics;");
+    jIsContentDocumentDisplayed = getMethod("isContentDocumentDisplayed", "()Z");
+    jProgressiveUpdateCallback = getMethod("progressiveUpdateCallback", "(ZFFFFFZ)Lorg/mozilla/gecko/gfx/ProgressiveUpdateData;");
+    jSetFirstPaintViewport = getMethod("setFirstPaintViewport", "(FFFFFFF)V");
+    jSetPageRect = getMethod("setPageRect", "(FFFF)V");
+    jSyncFrameMetrics = getMethod("syncFrameMetrics", "(FFFFFFFZIIIIFZ)Lorg/mozilla/gecko/gfx/ViewTransform;");
+    jSyncViewportInfo = getMethod("syncViewportInfo", "(IIIIFZ)Lorg/mozilla/gecko/gfx/ViewTransform;");
+}
+
+GeckoLayerClient* GeckoLayerClient::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    GeckoLayerClient* ret = new GeckoLayerClient(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+void GeckoLayerClient::ActivateProgram() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    env->CallVoidMethod(wrapped_obj, jActivateProgram);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return;
+    }
+
+    env->PopLocalFrame(NULL);
+}
+
+void GeckoLayerClient::ContentDocumentChanged() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    env->CallVoidMethod(wrapped_obj, jContentDocumentChanged);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return;
+    }
+
+    env->PopLocalFrame(NULL);
+}
+
+jobject GeckoLayerClient::CreateFrame() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    if (env->PushLocalFrame(1) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return nullptr;
+    }
+
+    jobject temp = env->CallObjectMethod(wrapped_obj, jCreateFrame);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return nullptr;
+    }
+
     jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
     return ret;
 }
 
-jobject AndroidBridge::RegisterCompositorWrapper() {
+void GeckoLayerClient::DeactivateProgram() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    env->CallVoidMethod(wrapped_obj, jDeactivateProgram);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return;
+    }
+
+    env->PopLocalFrame(NULL);
+}
+
+jobject GeckoLayerClient::GetDisplayPort(bool a0, bool a1, int32_t a2, jobject a3) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    if (env->PushLocalFrame(2) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return nullptr;
+    }
+
+    jvalue args[4];
+    args[0].z = a0;
+    args[1].z = a1;
+    args[2].i = a2;
+    args[3].l = a3;
+
+    jobject temp = env->CallObjectMethodA(wrapped_obj, jGetDisplayPort, args);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return nullptr;
+    }
+
+    jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
+    return ret;
+}
+
+bool GeckoLayerClient::IsContentDocumentDisplayed() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return false;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return false;
+    }
+
+    bool temp = env->CallBooleanMethod(wrapped_obj, jIsContentDocumentDisplayed);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return false;
+    }
+
+    env->PopLocalFrame(NULL);
+    return temp;
+}
+
+jobject GeckoLayerClient::ProgressiveUpdateCallback(bool a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, jfloat a5, bool a6) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    if (env->PushLocalFrame(1) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return nullptr;
+    }
+
+    jvalue args[7];
+    args[0].z = a0;
+    args[1].f = a1;
+    args[2].f = a2;
+    args[3].f = a3;
+    args[4].f = a4;
+    args[5].f = a5;
+    args[6].z = a6;
+
+    jobject temp = env->CallObjectMethodA(wrapped_obj, jProgressiveUpdateCallback, args);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return nullptr;
+    }
+
+    jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
+    return ret;
+}
+
+void GeckoLayerClient::SetFirstPaintViewport(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, jfloat a5, jfloat a6) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    jvalue args[7];
+    args[0].f = a0;
+    args[1].f = a1;
+    args[2].f = a2;
+    args[3].f = a3;
+    args[4].f = a4;
+    args[5].f = a5;
+    args[6].f = a6;
+
+    env->CallVoidMethodA(wrapped_obj, jSetFirstPaintViewport, args);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return;
+    }
+
+    env->PopLocalFrame(NULL);
+}
+
+void GeckoLayerClient::SetPageRect(jfloat a0, jfloat a1, jfloat a2, jfloat a3) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    jvalue args[4];
+    args[0].f = a0;
+    args[1].f = a1;
+    args[2].f = a2;
+    args[3].f = a3;
+
+    env->CallVoidMethodA(wrapped_obj, jSetPageRect, args);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return;
+    }
+
+    env->PopLocalFrame(NULL);
+}
+
+jobject GeckoLayerClient::SyncFrameMetrics(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, jfloat a5, jfloat a6, bool a7, int32_t a8, int32_t a9, int32_t a10, int32_t a11, jfloat a12, bool a13) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    if (env->PushLocalFrame(1) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return nullptr;
+    }
+
+    jvalue args[14];
+    args[0].f = a0;
+    args[1].f = a1;
+    args[2].f = a2;
+    args[3].f = a3;
+    args[4].f = a4;
+    args[5].f = a5;
+    args[6].f = a6;
+    args[7].z = a7;
+    args[8].i = a8;
+    args[9].i = a9;
+    args[10].i = a10;
+    args[11].i = a11;
+    args[12].f = a12;
+    args[13].z = a13;
+
+    jobject temp = env->CallObjectMethodA(wrapped_obj, jSyncFrameMetrics, args);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return nullptr;
+    }
+
+    jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
+    return ret;
+}
+
+jobject GeckoLayerClient::SyncViewportInfo(int32_t a0, int32_t a1, int32_t a2, int32_t a3, jfloat a4, bool a5) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    if (env->PushLocalFrame(1) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return nullptr;
+    }
+
+    jvalue args[6];
+    args[0].i = a0;
+    args[1].i = a1;
+    args[2].i = a2;
+    args[3].i = a3;
+    args[4].f = a4;
+    args[5].z = a5;
+
+    jobject temp = env->CallObjectMethodA(wrapped_obj, jSyncViewportInfo, args);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return nullptr;
+    }
+
+    jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
+    return ret;
+}
+jclass ImmutableViewportMetrics::mImmutableViewportMetricsClass = 0;
+jmethodID ImmutableViewportMetrics::jImmutableViewportMetrics = 0;
+void ImmutableViewportMetrics::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mImmutableViewportMetricsClass = getClassGlobalRef("org/mozilla/gecko/gfx/ImmutableViewportMetrics");
+    jImmutableViewportMetrics = getMethod("<init>", "(FFFFFFFFFFFFF)V");
+}
+
+ImmutableViewportMetrics* ImmutableViewportMetrics::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    ImmutableViewportMetrics* ret = new ImmutableViewportMetrics(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+ImmutableViewportMetrics::ImmutableViewportMetrics(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, jfloat a5, jfloat a6, jfloat a7, jfloat a8, jfloat a9, jfloat a10, jfloat a11, jfloat a12) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    jvalue args[13];
+    args[0].f = a0;
+    args[1].f = a1;
+    args[2].f = a2;
+    args[3].f = a3;
+    args[4].f = a4;
+    args[5].f = a5;
+    args[6].f = a6;
+    args[7].f = a7;
+    args[8].f = a8;
+    args[9].f = a9;
+    args[10].f = a10;
+    args[11].f = a11;
+    args[12].f = a12;
+
+    Init(env->NewObjectA(mImmutableViewportMetricsClass, jImmutableViewportMetrics, args), env);
+    env->PopLocalFrame(NULL);
+}
+jclass LayerView::mLayerViewClass = 0;
+jmethodID LayerView::jRegisterCompositorWrapper = 0;
+void LayerView::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mLayerViewClass = getClassGlobalRef("org/mozilla/gecko/gfx/LayerView");
+    jRegisterCompositorWrapper = getStaticMethod("registerCxxCompositor", "()Lorg/mozilla/gecko/gfx/GLController;");
+}
+
+LayerView* LayerView::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    LayerView* ret = new LayerView(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+jobject LayerView::RegisterCompositorWrapper() {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -2519,11 +3590,35 @@ jobject AndroidBridge::RegisterCompositorWrapper() {
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
     return ret;
 }
+jclass NativePanZoomController::mNativePanZoomControllerClass = 0;
+jmethodID NativePanZoomController::jPostDelayedCallbackWrapper = 0;
+jmethodID NativePanZoomController::jRequestContentRepaintWrapper = 0;
+void NativePanZoomController::InitStubs(JNIEnv *jEnv) {
+    initInit();
 
-void AndroidBridge::PostDelayedCallbackWrapper(jobject aTarget, int64_t a0) {
+    mNativePanZoomControllerClass = getClassGlobalRef("org/mozilla/gecko/gfx/NativePanZoomController");
+    jPostDelayedCallbackWrapper = getMethod("postDelayedCallback", "(J)V");
+    jRequestContentRepaintWrapper = getMethod("requestContentRepaint", "(FFFFF)V");
+}
+
+NativePanZoomController* NativePanZoomController::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    NativePanZoomController* ret = new NativePanZoomController(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+void NativePanZoomController::PostDelayedCallbackWrapper(int64_t a0) {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -2537,7 +3632,7 @@ void AndroidBridge::PostDelayedCallbackWrapper(jobject aTarget, int64_t a0) {
         return;
     }
 
-    env->CallVoidMethod(aTarget, jPostDelayedCallbackWrapper, a0);
+    env->CallVoidMethod(wrapped_obj, jPostDelayedCallbackWrapper, a0);
 
     if (env->ExceptionCheck()) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
@@ -2546,10 +3641,11 @@ void AndroidBridge::PostDelayedCallbackWrapper(jobject aTarget, int64_t a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
 
-void AndroidBridge::RequestContentRepaintWrapper(jobject aTarget, jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4) {
+void NativePanZoomController::RequestContentRepaintWrapper(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4) {
     JNIEnv *env = GetJNIForThread();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
@@ -2570,7 +3666,7 @@ void AndroidBridge::RequestContentRepaintWrapper(jobject aTarget, jfloat a0, jfl
     args[3].f = a3;
     args[4].f = a4;
 
-    env->CallVoidMethodA(aTarget, jRequestContentRepaintWrapper, args);
+    env->CallVoidMethodA(wrapped_obj, jRequestContentRepaintWrapper, args);
 
     if (env->ExceptionCheck()) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
@@ -2579,11 +3675,776 @@ void AndroidBridge::RequestContentRepaintWrapper(jobject aTarget, jfloat a0, jfl
         env->PopLocalFrame(NULL);
         return;
     }
+
+    env->PopLocalFrame(NULL);
+}
+jclass ProgressiveUpdateData::mProgressiveUpdateDataClass = 0;
+jmethodID ProgressiveUpdateData::jProgressiveUpdateData = 0;
+jmethodID ProgressiveUpdateData::jsetViewport = 0;
+jfieldID ProgressiveUpdateData::jabort = 0;
+jfieldID ProgressiveUpdateData::jheight = 0;
+jfieldID ProgressiveUpdateData::jscale = 0;
+jfieldID ProgressiveUpdateData::jwidth = 0;
+jfieldID ProgressiveUpdateData::jx = 0;
+jfieldID ProgressiveUpdateData::jy = 0;
+void ProgressiveUpdateData::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mProgressiveUpdateDataClass = getClassGlobalRef("org/mozilla/gecko/gfx/ProgressiveUpdateData");
+    jProgressiveUpdateData = getMethod("<init>", "()V");
+    jsetViewport = getMethod("setViewport", "(Lorg/mozilla/gecko/gfx/ImmutableViewportMetrics;)V");
+    jabort = getField("abort", "Z");
+    jheight = getField("height", "F");
+    jscale = getField("scale", "F");
+    jwidth = getField("width", "F");
+    jx = getField("x", "F");
+    jy = getField("y", "F");
+}
+
+ProgressiveUpdateData* ProgressiveUpdateData::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    ProgressiveUpdateData* ret = new ProgressiveUpdateData(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+ProgressiveUpdateData::ProgressiveUpdateData() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    Init(env->NewObject(mProgressiveUpdateDataClass, jProgressiveUpdateData), env);
     env->PopLocalFrame(NULL);
 }
 
-jstring AndroidBridge::GetClipboardTextWrapper() {
-    JNIEnv *env = GetJNIEnv();
+void ProgressiveUpdateData::setViewport(jobject a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(1) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    env->CallVoidMethod(wrapped_obj, jsetViewport, a0);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return;
+    }
+
+    env->PopLocalFrame(NULL);
+}
+
+bool ProgressiveUpdateData::getabort() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return false;
+    }
+
+    return env->GetBooleanField(wrapped_obj, jabort);
+}
+
+void ProgressiveUpdateData::setabort(bool a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetBooleanField(wrapped_obj, jabort, a0);
+}
+
+jfloat ProgressiveUpdateData::getheight() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, jheight);
+}
+
+void ProgressiveUpdateData::setheight(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, jheight, a0);
+}
+
+jfloat ProgressiveUpdateData::getscale() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, jscale);
+}
+
+void ProgressiveUpdateData::setscale(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, jscale, a0);
+}
+
+jfloat ProgressiveUpdateData::getwidth() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, jwidth);
+}
+
+void ProgressiveUpdateData::setwidth(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, jwidth, a0);
+}
+
+jfloat ProgressiveUpdateData::getx() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, jx);
+}
+
+void ProgressiveUpdateData::setx(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, jx, a0);
+}
+
+jfloat ProgressiveUpdateData::gety() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, jy);
+}
+
+void ProgressiveUpdateData::sety(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, jy, a0);
+}
+jclass ViewTransform::mViewTransformClass = 0;
+jmethodID ViewTransform::jViewTransform = 0;
+jfieldID ViewTransform::jfixedLayerMarginBottom = 0;
+jfieldID ViewTransform::jfixedLayerMarginLeft = 0;
+jfieldID ViewTransform::jfixedLayerMarginRight = 0;
+jfieldID ViewTransform::jfixedLayerMarginTop = 0;
+jfieldID ViewTransform::joffsetX = 0;
+jfieldID ViewTransform::joffsetY = 0;
+jfieldID ViewTransform::jscale = 0;
+jfieldID ViewTransform::jx = 0;
+jfieldID ViewTransform::jy = 0;
+void ViewTransform::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mViewTransformClass = getClassGlobalRef("org/mozilla/gecko/gfx/ViewTransform");
+    jViewTransform = getMethod("<init>", "(FFF)V");
+    jfixedLayerMarginBottom = getField("fixedLayerMarginBottom", "F");
+    jfixedLayerMarginLeft = getField("fixedLayerMarginLeft", "F");
+    jfixedLayerMarginRight = getField("fixedLayerMarginRight", "F");
+    jfixedLayerMarginTop = getField("fixedLayerMarginTop", "F");
+    joffsetX = getField("offsetX", "F");
+    joffsetY = getField("offsetY", "F");
+    jscale = getField("scale", "F");
+    jx = getField("x", "F");
+    jy = getField("y", "F");
+}
+
+ViewTransform* ViewTransform::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    ViewTransform* ret = new ViewTransform(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+ViewTransform::ViewTransform(jfloat a0, jfloat a1, jfloat a2) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    jvalue args[3];
+    args[0].f = a0;
+    args[1].f = a1;
+    args[2].f = a2;
+
+    Init(env->NewObjectA(mViewTransformClass, jViewTransform, args), env);
+    env->PopLocalFrame(NULL);
+}
+
+jfloat ViewTransform::getfixedLayerMarginBottom() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, jfixedLayerMarginBottom);
+}
+
+void ViewTransform::setfixedLayerMarginBottom(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, jfixedLayerMarginBottom, a0);
+}
+
+jfloat ViewTransform::getfixedLayerMarginLeft() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, jfixedLayerMarginLeft);
+}
+
+void ViewTransform::setfixedLayerMarginLeft(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, jfixedLayerMarginLeft, a0);
+}
+
+jfloat ViewTransform::getfixedLayerMarginRight() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, jfixedLayerMarginRight);
+}
+
+void ViewTransform::setfixedLayerMarginRight(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, jfixedLayerMarginRight, a0);
+}
+
+jfloat ViewTransform::getfixedLayerMarginTop() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, jfixedLayerMarginTop);
+}
+
+void ViewTransform::setfixedLayerMarginTop(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, jfixedLayerMarginTop, a0);
+}
+
+jfloat ViewTransform::getoffsetX() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, joffsetX);
+}
+
+void ViewTransform::setoffsetX(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, joffsetX, a0);
+}
+
+jfloat ViewTransform::getoffsetY() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, joffsetY);
+}
+
+void ViewTransform::setoffsetY(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, joffsetY, a0);
+}
+
+jfloat ViewTransform::getscale() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, jscale);
+}
+
+void ViewTransform::setscale(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, jscale, a0);
+}
+
+jfloat ViewTransform::getx() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, jx);
+}
+
+void ViewTransform::setx(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, jx, a0);
+}
+
+jfloat ViewTransform::gety() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0.0;
+    }
+
+    return env->GetFloatField(wrapped_obj, jy);
+}
+
+void ViewTransform::sety(jfloat a0) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    env->SetFloatField(wrapped_obj, jy, a0);
+}
+jclass NativeZip::mNativeZipClass = 0;
+jmethodID NativeZip::jCreateInputStream = 0;
+void NativeZip::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mNativeZipClass = getClassGlobalRef("org/mozilla/gecko/mozglue/NativeZip");
+    jCreateInputStream = getMethod("createInputStream", "(Ljava/nio/ByteBuffer;I)Ljava/io/InputStream;");
+}
+
+NativeZip* NativeZip::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    NativeZip* ret = new NativeZip(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+jobject NativeZip::CreateInputStream(jobject a0, int32_t a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    if (env->PushLocalFrame(2) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return nullptr;
+    }
+
+    jobject temp = env->CallObjectMethod(wrapped_obj, jCreateInputStream, a0, a1);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return nullptr;
+    }
+
+    jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
+    return ret;
+}
+jclass MatrixBlobCursor::mMatrixBlobCursorClass = 0;
+jmethodID MatrixBlobCursor::jMatrixBlobCursor = 0;
+jmethodID MatrixBlobCursor::jMatrixBlobCursor0 = 0;
+jmethodID MatrixBlobCursor::jAddRow = 0;
+jmethodID MatrixBlobCursor::jAddRow1 = 0;
+jmethodID MatrixBlobCursor::jAddRow2 = 0;
+void MatrixBlobCursor::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mMatrixBlobCursorClass = getClassGlobalRef("org/mozilla/gecko/sqlite/MatrixBlobCursor");
+    jMatrixBlobCursor = getMethod("<init>", "([Ljava/lang/String;)V");
+    jMatrixBlobCursor0 = getMethod("<init>", "([Ljava/lang/String;I)V");
+    jAddRow = getMethod("addRow", "(Ljava/lang/Iterable;)V");
+    jAddRow1 = getMethod("addRow", "(Ljava/util/ArrayList;I)V");
+    jAddRow2 = getMethod("addRow", "([Ljava/lang/Object;)V");
+}
+
+MatrixBlobCursor* MatrixBlobCursor::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    MatrixBlobCursor* ret = new MatrixBlobCursor(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+MatrixBlobCursor::MatrixBlobCursor(jobjectArray a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(1) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    Init(env->NewObject(mMatrixBlobCursorClass, jMatrixBlobCursor, a0), env);
+    env->PopLocalFrame(NULL);
+}
+
+MatrixBlobCursor::MatrixBlobCursor(jobjectArray a0, int32_t a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(1) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    Init(env->NewObject(mMatrixBlobCursorClass, jMatrixBlobCursor0, a0, a1), env);
+    env->PopLocalFrame(NULL);
+}
+
+void MatrixBlobCursor::AddRow(jobject a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(1) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    env->CallVoidMethod(wrapped_obj, jAddRow, a0);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return;
+    }
+
+    env->PopLocalFrame(NULL);
+}
+
+void MatrixBlobCursor::AddRow(jobject a0, int32_t a1) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(1) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    env->CallVoidMethod(wrapped_obj, jAddRow1, a0, a1);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return;
+    }
+
+    env->PopLocalFrame(NULL);
+}
+
+void MatrixBlobCursor::AddRow(jobjectArray a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(1) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    env->CallVoidMethod(wrapped_obj, jAddRow2, a0);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return;
+    }
+
+    env->PopLocalFrame(NULL);
+}
+jclass SQLiteBridgeException::mSQLiteBridgeExceptionClass = 0;
+jmethodID SQLiteBridgeException::jSQLiteBridgeException = 0;
+jmethodID SQLiteBridgeException::jSQLiteBridgeException0 = 0;
+jfieldID SQLiteBridgeException::jserialVersionUID = 0;
+void SQLiteBridgeException::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mSQLiteBridgeExceptionClass = getClassGlobalRef("org/mozilla/gecko/sqlite/SQLiteBridgeException");
+    jSQLiteBridgeException = getMethod("<init>", "()V");
+    jSQLiteBridgeException0 = getMethod("<init>", "(Ljava/lang/String;)V");
+    jserialVersionUID = getStaticField("serialVersionUID", "J");
+}
+
+SQLiteBridgeException* SQLiteBridgeException::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    SQLiteBridgeException* ret = new SQLiteBridgeException(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+SQLiteBridgeException::SQLiteBridgeException() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    Init(env->NewObject(mSQLiteBridgeExceptionClass, jSQLiteBridgeException), env);
+    env->PopLocalFrame(NULL);
+}
+
+SQLiteBridgeException::SQLiteBridgeException(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(1) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
+
+    Init(env->NewObject(mSQLiteBridgeExceptionClass, jSQLiteBridgeException0, j0), env);
+    env->PopLocalFrame(NULL);
+}
+
+int64_t SQLiteBridgeException::getserialVersionUID() {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return 0;
+    }
+
+    return env->GetStaticLongField(mSQLiteBridgeExceptionClass, jserialVersionUID);
+}
+jclass Clipboard::mClipboardClass = 0;
+jmethodID Clipboard::jClearText = 0;
+jmethodID Clipboard::jGetClipboardTextWrapper = 0;
+jmethodID Clipboard::jHasText = 0;
+jmethodID Clipboard::jSetClipboardText = 0;
+void Clipboard::InitStubs(JNIEnv *jEnv) {
+    initInit();
+
+    mClipboardClass = getClassGlobalRef("org/mozilla/gecko/util/Clipboard");
+    jClearText = getStaticMethod("clearText", "()V");
+    jGetClipboardTextWrapper = getStaticMethod("getText", "()Ljava/lang/String;");
+    jHasText = getStaticMethod("hasText", "()Z");
+    jSetClipboardText = getStaticMethod("setText", "(Ljava/lang/CharSequence;)V");
+}
+
+Clipboard* Clipboard::Wrap(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+
+    Clipboard* ret = new Clipboard(obj, env);
+    env->DeleteLocalRef(obj);
+    return ret;
+}
+
+void Clipboard::ClearText() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return;
+    }
+
+    env->CallStaticVoidMethod(mClipboardClass, jClearText);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return;
+    }
+
+    env->PopLocalFrame(NULL);
+}
+
+jstring Clipboard::GetClipboardTextWrapper() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return nullptr;
@@ -2605,12 +4466,41 @@ jstring AndroidBridge::GetClipboardTextWrapper() {
         env->PopLocalFrame(NULL);
         return nullptr;
     }
+
     jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
     return ret;
 }
 
-void AndroidBridge::SetClipboardText(const nsAString& a0) {
-    JNIEnv *env = GetJNIEnv();
+bool Clipboard::HasText() {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return false;
+    }
+
+    if (env->PushLocalFrame(0) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return false;
+    }
+
+    bool temp = env->CallStaticBooleanMethod(mClipboardClass, jHasText);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return false;
+    }
+
+    env->PopLocalFrame(NULL);
+    return temp;
+}
+
+void Clipboard::SetClipboardText(const nsAString& a0) {
+    JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
         return;
@@ -2623,7 +4513,7 @@ void AndroidBridge::SetClipboardText(const nsAString& a0) {
         return;
     }
 
-    jstring j0 = NewJavaString(env, a0);
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     env->CallStaticVoidMethod(mClipboardClass, jSetClipboardText, j0);
 
@@ -2634,5 +4524,29 @@ void AndroidBridge::SetClipboardText(const nsAString& a0) {
         env->PopLocalFrame(NULL);
         return;
     }
+
     env->PopLocalFrame(NULL);
 }
+
+void InitStubs(JNIEnv *jEnv) {
+    GeckoAppShell::InitStubs(jEnv);
+    JavaDomKeyLocation::InitStubs(jEnv);
+    GeckoJavaSampler::InitStubs(jEnv);
+    SurfaceBits::InitStubs(jEnv);
+    ThumbnailHelper::InitStubs(jEnv);
+    DisplayPortMetrics::InitStubs(jEnv);
+    GLController::InitStubs(jEnv);
+    GeckoLayerClient::InitStubs(jEnv);
+    ImmutableViewportMetrics::InitStubs(jEnv);
+    LayerView::InitStubs(jEnv);
+    NativePanZoomController::InitStubs(jEnv);
+    ProgressiveUpdateData::InitStubs(jEnv);
+    ViewTransform::InitStubs(jEnv);
+    NativeZip::InitStubs(jEnv);
+    MatrixBlobCursor::InitStubs(jEnv);
+    SQLiteBridgeException::InitStubs(jEnv);
+    Clipboard::InitStubs(jEnv);
+}
+} /* android */
+} /* widget */
+} /* mozilla */

@@ -2,69 +2,48 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 30000;
+MARIONETTE_HEAD_JS = "icc_header.js";
 
-SpecialPowers.addPermission("mobileconnection", true, document);
-SpecialPowers.addPermission("settings-write", true, document);
+function setRadioEnabled(enabled) {
+  let connection = navigator.mozMobileConnections[0];
+  ok(connection);
 
-// Permission changes can't change existing Navigator.prototype
-// objects, so grab our objects from a new Navigator
-let ifr = document.createElement("iframe");
-let icc;
-ifr.onload = function() {
-  icc = ifr.contentWindow.navigator.mozIccManager;
+  let request  = connection.setRadioEnabled(enabled);
 
-  ok(icc instanceof ifr.contentWindow.MozIccManager,
-     "icc is instanceof " + icc.constructor);
-
-  is(icc.cardState, "ready");
-
-  // Enable Airplane mode, expect got cardstatechange to null
-  testCardStateChange(true, null,
-    // Disable Airplane mode, expect got cardstatechange to 'ready'
-    testCardStateChange.bind(window, false, "ready", cleanUp)
-  );
-};
-document.body.appendChild(ifr);
-
-function setAirplaneModeEnabled(enabled) {
-  let settings = ifr.contentWindow.navigator.mozSettings;
-  let setLock = settings.createLock();
-  let obj = {
-    "ril.radio.disabled": enabled
+  request.onsuccess = function onsuccess() {
+    log('setRadioEnabled: ' + enabled);
   };
-  let setReq = setLock.set(obj);
 
-  log("set airplane mode to " + enabled);
-
-  setReq.addEventListener("success", function onSetSuccess() {
-    log("set 'ril.radio.disabled' to " + enabled);
-  });
-
-  setReq.addEventListener("error", function onSetError() {
-    ok(false, "cannot set 'ril.radio.disabled' to " + enabled);
-  });
+  request.onerror = function onerror() {
+    ok(false, "setRadioEnabled should be ok");
+  };
 }
 
-function waitCardStateChangedEvent(expectedCardState, callback) {
+/* Basic test */
+taskHelper.push(function basicTest() {
+  is(icc.cardState, "ready", "card state is " + icc.cardState);
+  taskHelper.runNext();
+});
+
+/* Test cardstatechange event by switching radio off */
+taskHelper.push(function testCardStateChange() {
+  // Turn off radio.
+  setRadioEnabled(false);
   icc.addEventListener("cardstatechange", function oncardstatechange() {
     log("card state changes to " + icc.cardState);
-    if (icc.cardState === expectedCardState) {
-      log("got expected card state: " + icc.cardState);
+    // Expect to get card state changing to null.
+    if (icc.cardState === null) {
       icc.removeEventListener("cardstatechange", oncardstatechange);
-      callback();
+      // We should restore radio status and expect to get iccdetected event.
+      setRadioEnabled(true);
+      iccManager.addEventListener("iccdetected", function oniccdetected(evt) {
+        log("icc iccdetected: " + evt.iccId);
+        iccManager.removeEventListener("iccdetected", oniccdetected);
+        taskHelper.runNext();
+      });
     }
   });
-}
+});
 
-// Test cardstatechange event by switching airplane mode
-function testCardStateChange(airplaneMode, expectedCardState, callback) {
-  setAirplaneModeEnabled(airplaneMode);
-  waitCardStateChangedEvent(expectedCardState, callback);
-}
-
-function cleanUp() {
-  SpecialPowers.removePermission("mobileconnection", document);
-  SpecialPowers.removePermission("settings-write", document);
-
-  finish();
-}
+// Start test
+taskHelper.runNext();

@@ -70,7 +70,7 @@ private:
         Item *mItems;
     };
 
-    static PLDHashTableOps HashTableOps;
+    static const PLDHashTableOps HashTableOps;
 
     static PLDHashNumber
         HashTableHashKey(PLDHashTable *table, const void *key);

@@ -1,0 +1,34 @@
+include $(topsrcdir)/config/rules.mk
+
+GARBAGE = \
+	AndroidManifest.xml \
+	proguard-project.txt \
+	project.properties \
+	ant.properties \
+	build.xml \
+	local.properties \
+	$(NULL)
+
+GARBAGE_DIRS = \
+	assets \
+	geckoview_library \
+	gen \
+	bin \
+	libs \
+	res \
+	src \
+	$(NULL)
+
+ANDROID=$(ANDROID_SDK)/../../tools/android
+
+build.xml:
+	$(ANDROID) create project --name GeckoViewExample --target android-18 --path $(CURDIR) --activity GeckoViewExample --package org.mozilla.geckoviewexample
+	$(ANDROID) update project --target android-18 --path $(CURDIR) --library $(DEPTH)/mobile/android/geckoview_library
+	$(UNZIP) -o $(DIST)/geckoview_library/geckoview_assets.zip
+	$(NSINSTALL) $(srcdir)/main.xml res/layout/
+	$(NSINSTALL) $(srcdir)/AndroidManifest.xml .
+	$(NSINSTALL) $(srcdir)/GeckoViewExample.java src/org/mozilla/geckoviewexample/
+	echo jar.libs.dir=libs >> project.properties
+
+package: build.xml
+	ant debug

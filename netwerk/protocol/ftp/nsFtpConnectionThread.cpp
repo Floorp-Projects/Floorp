@@ -1556,12 +1556,12 @@ nsFtpState::R_pasv() {
 // nsIRequest methods:
 
 static inline
-uint32_t NowInSeconds()
+uint32_t GetFtpTime()
 {
     return uint32_t(PR_Now() / PR_USEC_PER_SEC);
 }
 
-uint32_t nsFtpState::mSessionStartTime = NowInSeconds();
+uint32_t nsFtpState::mSessionStartTime = GetFtpTime();
 
 /* Is this cache entry valid to use for reading?
  * Since we make up an expiration time for ftp, use the following rules:
@@ -1620,7 +1620,7 @@ nsFtpState::CanReadCacheEntry()
     if (NS_FAILED(rv))
         return false;
 
-    return (NowInSeconds() <= time);
+    return (GetFtpTime() <= time);
 }
 
 nsresult
@@ -1690,6 +1690,10 @@ nsFtpState::Init(nsFtpChannel *channel)
 
     // initialize counter for network metering
     mCountRecv = 0;
+
+#ifdef MOZ_WIDGET_GONK
+    NS_GetActiveNetworkInterface(mActiveNetwork);
+#endif
 
     mKeepRunning = true;
     mSuppliedEntityID = channel->EntityID();
@@ -2199,22 +2203,6 @@ nsresult
 nsFtpState::SaveNetworkStats(bool enforce)
 {
 #ifdef MOZ_WIDGET_GONK
-    MOZ_ASSERT(NS_IsMainThread());
-
-    // Obtain active network
-    nsresult rv;
-    if (!mActiveNetwork) {
-        nsCOMPtr<nsINetworkManager> networkManager =
-            do_GetService("@mozilla.org/network/manager;1", &rv);
-
-        if (NS_FAILED(rv) || !networkManager) {
-            mActiveNetwork = nullptr;
-            return rv;
-        }
-
-        networkManager->GetActive(getter_AddRefs(mActiveNetwork));
-    }
-
     // Obtain app id
     uint32_t appId;
     bool isInBrowser;
@@ -2237,6 +2225,7 @@ nsFtpState::SaveNetworkStats(bool enforce)
         return NS_OK;
     }
 
+    nsresult rv;
     nsCOMPtr<nsINetworkStatsServiceProxy> networkStatsServiceProxy =
         do_GetService("@mozilla.org/networkstatsServiceProxy;1", &rv);
     if (NS_FAILED(rv)) {

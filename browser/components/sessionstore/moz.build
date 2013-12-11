@@ -11,7 +11,7 @@ XPIDL_SOURCES += [
     'nsISessionStore.idl',
 ]
 
-MODULE = 'sessionstore'
+XPIDL_MODULE = 'sessionstore'
 
 XPCSHELL_TESTS_MANIFESTS += [
     'test/unit/xpcshell.ini',

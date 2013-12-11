@@ -4,6 +4,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIDocShell;
 interface nsIDOMDocument;
 interface nsISHEntry;
 interface nsIPrintSettings;
@@ -34,7 +35,7 @@ interface nsIContentViewer : nsISupports
   [noscript] void init(in nsIWidgetPtr aParentWidget,
                        [const] in nsIntRectRef aBounds);
 
-  attribute nsISupports container;
+  attribute nsIDocShell container;
 
   void loadStart(in nsISupports aDoc);
   void loadComplete(in nsresult aStatus);

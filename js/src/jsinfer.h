@@ -168,6 +168,7 @@ template <> struct ExecutionModeTraits<ParallelExecution>
 namespace jit {
     struct IonScript;
     class IonAllocPolicy;
+    class TempAllocator;
 }
 
 namespace analyze {
@@ -206,6 +207,10 @@ class Type
     JSValueType primitive() const {
         JS_ASSERT(isPrimitive());
         return (JSValueType) data;
+    }
+
+    bool isSomeObject() const {
+        return data == JSVAL_TYPE_OBJECT || data > JSVAL_TYPE_UNKNOWN;
     }
 
     bool isAnyObject() const {
@@ -618,7 +623,7 @@ class HeapTypeSet : public ConstraintTypeSet
 class CompilerConstraintList;
 
 CompilerConstraintList *
-NewCompilerConstraintList();
+NewCompilerConstraintList(jit::TempAllocator &alloc);
 
 class TemporaryTypeSet : public TypeSet
 {

@@ -39,11 +39,24 @@ public:
 
   FMRadioRequest(nsPIDOMWindow* aWindow, FMRadio* aFMRadio)
     : DOMRequest(aWindow)
+    , mType(FMRadioRequestArgs::T__None)
   {
     // |FMRadio| inherits from |nsIDOMEventTarget| and |nsISupportsWeakReference|
     // which both inherits from nsISupports, so |nsISupports| is an ambiguous
     // base of |FMRadio|, we have to cast |aFMRadio| to one of the base classes.
     mFMRadio = do_GetWeakReference(static_cast<nsIDOMEventTarget*>(aFMRadio));
+  }
+
+  FMRadioRequest(nsPIDOMWindow* aWindow, FMRadio* aFMRadio,
+    FMRadioRequestArgs::Type aType)
+    : DOMRequest(aWindow)
+  {
+    MOZ_ASSERT(aType >= FMRadioRequestArgs::T__None &&
+               aType <= FMRadioRequestArgs::T__Last,
+               "Wrong FMRadioRequestArgs in FMRadioRequest");
+
+    mFMRadio = do_GetWeakReference(static_cast<nsIDOMEventTarget*>(aFMRadio));
+    mType = aType;
   }
 
   ~FMRadioRequest() { }
@@ -70,6 +83,10 @@ public:
         FireError(mResponseType.get_ErrorResponse().error());
         break;
       case FMRadioResponseType::TSuccessResponse:
+        if (mType == FMRadioRequestArgs::TEnableRequestArgs) {
+          fmRadio->EnableAudioChannelAgent();
+        }
+
         FireSuccess(JS::UndefinedHandleValue);
         break;
       default:
@@ -80,6 +97,7 @@ public:
   }
 
 private:
+  FMRadioRequestArgs::Type mType;
   nsWeakPtr mFMRadio;
 };
 
@@ -87,6 +105,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(FMRadioRequest, DOMRequest)
 
 FMRadio::FMRadio()
   : mHeadphoneState(SWITCH_STATE_OFF)
+  , mAudioChannelAgentEnabled(false)
   , mHasInternalAntenna(false)
   , mIsShutdown(false)
 {
@@ -121,20 +140,29 @@ FMRadio::Init(nsPIDOMWindow *aWindow)
                                  /* useCapture = */ true,
                                  /* wantsUntrusted = */ false);
 
-  mAudioChannelAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1");
-  if (!mAudioChannelAgent) {
-    return;
-  }
 
-  mAudioChannelAgent->InitWithWeakCallback(nsIAudioChannelAgent::AUDIO_AGENT_CHANNEL_CONTENT,
-                                           this);
+  // All of the codes below are for AudioChannel. We can directly return here
+  // if preferences doesn't enable AudioChannelService.
+  NS_ENSURE_TRUE_VOID(Preferences::GetBool("media.useAudioChannelService"));
+
+  nsCOMPtr<nsIAudioChannelAgent> audioChannelAgent =
+    do_CreateInstance("@mozilla.org/audiochannelagent;1");
+  NS_ENSURE_TRUE_VOID(audioChannelAgent);
+
+  audioChannelAgent->InitWithWeakCallback(
+    nsIAudioChannelAgent::AUDIO_AGENT_CHANNEL_CONTENT,
+    this);
 
   nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
-  if (docshell) {
-    bool isActive = false;
-    docshell->GetIsActive(&isActive);
-    mAudioChannelAgent->SetVisibilityState(isActive);
-  }
+  NS_ENSURE_TRUE_VOID(docshell);
+
+  bool isActive = false;
+  docshell->GetIsActive(&isActive);
+  audioChannelAgent->SetVisibilityState(isActive);
+
+  // Once all necessary resources are got successfully, we just enabled
+  // mAudioChannelAgent.
+  mAudioChannelAgent = audioChannelAgent;
 }
 
 void
@@ -181,13 +209,12 @@ FMRadio::Notify(const FMRadioEventType& aType)
       break;
     case EnabledChanged:
       if (Enabled()) {
-        int32_t playingState = 0;
-        mAudioChannelAgent->StartPlaying(&playingState);
-        SetCanPlay(playingState == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
-
         DispatchTrustedEvent(NS_LITERAL_STRING("enabled"));
       } else {
-        mAudioChannelAgent->StopPlaying();
+        if (mAudioChannelAgentEnabled) {
+          mAudioChannelAgent->StopPlaying();
+          mAudioChannelAgentEnabled = false;
+        }
 
         DispatchTrustedEvent(NS_LITERAL_STRING("disabled"));
       }
@@ -244,7 +271,8 @@ FMRadio::Enable(double aFrequency)
     return nullptr;
   }
 
-  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
+  nsRefPtr<FMRadioRequest> r =
+    new FMRadioRequest(win, this, FMRadioRequestArgs::TEnableRequestArgs);
   IFMRadioService::Singleton()->Enable(aFrequency, r);
 
   return r.forget();
@@ -338,6 +366,18 @@ FMRadio::HandleEvent(nsIDOMEvent* aEvent)
 
   mAudioChannelAgent->SetVisibilityState(isActive);
   return NS_OK;
+}
+
+void
+FMRadio::EnableAudioChannelAgent()
+{
+  NS_ENSURE_TRUE_VOID(mAudioChannelAgent);
+
+  int32_t playingState = 0;
+  mAudioChannelAgent->StartPlaying(&playingState);
+  SetCanPlay(playingState == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
+
+  mAudioChannelAgentEnabled = true;
 }
 
 NS_IMETHODIMP

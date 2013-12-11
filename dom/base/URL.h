@@ -130,6 +130,8 @@ private:
   friend class mozilla::dom::workers::URLProxy;
 };
 
+bool IsChromeURI(nsIURI* aURI);
+
 }
 }
 

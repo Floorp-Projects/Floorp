@@ -39,6 +39,14 @@
   object, and the finalizer of the owner object removes the pointer
   from the table and then frees the pointer.
 
+  # Opacity
+
+  A type representation is considered "opaque" if it contains
+  references (strings, objects, any). In those cases we have to be
+  more limited with respect to aliasing etc to preserve portability
+  across engines (for example, we don't want to expose sizeof(Any))
+  and memory safety.
+
   # Future plans:
 
   The owner object will eventually be exposed to self-hosted script
@@ -59,6 +67,8 @@ namespace js {
 
 class TypeRepresentation;
 class ScalarTypeRepresentation;
+class ReferenceTypeRepresentation;
+class X4TypeRepresentation;
 class ArrayTypeRepresentation;
 class StructTypeRepresentation;
 
@@ -73,11 +83,17 @@ struct TypeRepresentationHasher
 
   private:
     static HashNumber hashScalar(ScalarTypeRepresentation *key);
+    static HashNumber hashReference(ReferenceTypeRepresentation *key);
+    static HashNumber hashX4(X4TypeRepresentation *key);
     static HashNumber hashStruct(StructTypeRepresentation *key);
     static HashNumber hashArray(ArrayTypeRepresentation *key);
 
     static bool matchScalars(ScalarTypeRepresentation *key1,
                              ScalarTypeRepresentation *key2);
+    static bool matchReferences(ReferenceTypeRepresentation *key1,
+                                ReferenceTypeRepresentation *key2);
+    static bool matchX4s(X4TypeRepresentation *key1,
+                         X4TypeRepresentation *key2);
     static bool matchStructs(StructTypeRepresentation *key1,
                              StructTypeRepresentation *key2);
     static bool matchArrays(ArrayTypeRepresentation *key1,
@@ -88,20 +104,28 @@ typedef js::HashSet<TypeRepresentation *,
                     TypeRepresentationHasher,
                     RuntimeAllocPolicy> TypeRepresentationHash;
 
+class TypeRepresentationHelper;
+
 class TypeRepresentation {
   public:
     enum Kind {
         Scalar = JS_TYPEREPR_SCALAR_KIND,
+        Reference = JS_TYPEREPR_REFERENCE_KIND,
+        X4 = JS_TYPEREPR_X4_KIND,
         Struct = JS_TYPEREPR_STRUCT_KIND,
         Array = JS_TYPEREPR_ARRAY_KIND
     };
 
   protected:
-    TypeRepresentation(Kind kind, size_t size, size_t align);
+    TypeRepresentation(Kind kind, size_t size, size_t align, bool opaque);
+
+    // in order to call addToTableOrFree()
+    friend class TypeRepresentationHelper;
 
     size_t size_;
     size_t alignment_;
     Kind kind_;
+    bool opaque_;
 
     JSObject *addToTableOrFree(JSContext *cx, TypeRepresentationHash::AddPtr &p);
 
@@ -117,11 +141,20 @@ class TypeRepresentation {
     size_t size() const { return size_; }
     size_t alignment() const { return alignment_; }
     Kind kind() const { return kind_; }
+    bool opaque() const { return opaque_; }
+    bool transparent() const { return !opaque_; }
     JSObject *ownerObject() const { return ownerObject_.get(); }
 
     // Appends a stringified form of this type representation onto
     // buffer, for use in error messages and the like.
     bool appendString(JSContext *cx, StringBuffer &buffer);
+
+    // Initializes memory that contains an instance of this type
+    // with appropriate default values (typically 0).
+    void initInstance(const JSRuntime *rt, uint8_t *mem);
+
+    // Traces memory that contains an instance of this type.
+    void traceInstance(JSTracer *trace, uint8_t *mem);
 
     static bool isOwnerObject(JSObject &obj);
     static TypeRepresentation *fromOwnerObject(JSObject &obj);
@@ -133,6 +166,24 @@ class TypeRepresentation {
     ScalarTypeRepresentation *asScalar() {
         JS_ASSERT(isScalar());
         return (ScalarTypeRepresentation*) this;
+    }
+
+    bool isReference() const {
+        return kind() == Reference;
+    }
+
+    ReferenceTypeRepresentation *asReference() {
+        JS_ASSERT(isReference());
+        return (ReferenceTypeRepresentation*) this;
+    }
+
+    bool isX4() const {
+        return kind() == X4;
+    }
+
+    X4TypeRepresentation *asX4() {
+        JS_ASSERT(isX4());
+        return (X4TypeRepresentation*) this;
     }
 
     bool isArray() const {
@@ -181,7 +232,10 @@ class ScalarTypeRepresentation : public TypeRepresentation {
     // so TypeRepresentation can call appendStringScalar() etc
     friend class TypeRepresentation;
 
-    Type type_;
+    // in order to call constructor
+    friend class TypeRepresentationHelper;
+
+    const Type type_;
 
     explicit ScalarTypeRepresentation(Type type);
 
@@ -193,7 +247,9 @@ class ScalarTypeRepresentation : public TypeRepresentation {
         return type_;
     }
 
-    bool convertValue(JSContext *cx, HandleValue value, MutableHandleValue vp);
+    const char *typeName() const {
+        return typeName(type());
+    }
 
     static const char *typeName(Type type);
     static JSObject *Create(JSContext *cx, Type type);
@@ -216,6 +272,79 @@ class ScalarTypeRepresentation : public TypeRepresentation {
 #define JS_FOR_EACH_SCALAR_TYPE_REPR(macro_)                                    \
     JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(macro_)                           \
     macro_(ScalarTypeRepresentation::TYPE_UINT8_CLAMPED, uint8_t, uint8Clamped)
+
+class ReferenceTypeRepresentation : public TypeRepresentation {
+  public:
+    // Must match order of JS_FOR_EACH_REFERENCE_TYPE_REPR below
+    enum Type {
+        TYPE_ANY = JS_REFERENCETYPEREPR_ANY,
+        TYPE_OBJECT = JS_REFERENCETYPEREPR_OBJECT,
+        TYPE_STRING = JS_REFERENCETYPEREPR_STRING,
+    };
+    static const int32_t TYPE_MAX = TYPE_STRING + 1;
+
+  private:
+    // so TypeRepresentation can call appendStringScalar() etc
+    friend class TypeRepresentation;
+
+    Type type_;
+
+    explicit ReferenceTypeRepresentation(Type type);
+
+    // See TypeRepresentation::appendString()
+    bool appendStringReference(JSContext *cx, StringBuffer &buffer);
+
+  public:
+    Type type() const {
+        return type_;
+    }
+
+    const char *typeName() const {
+        return typeName(type());
+    }
+
+    static const char *typeName(Type type);
+    static JSObject *Create(JSContext *cx, Type type);
+};
+
+#define JS_FOR_EACH_REFERENCE_TYPE_REPR(macro_)                             \
+    macro_(ReferenceTypeRepresentation::TYPE_ANY,    HeapValue, Any)        \
+    macro_(ReferenceTypeRepresentation::TYPE_OBJECT, HeapPtrObject, Object) \
+    macro_(ReferenceTypeRepresentation::TYPE_STRING, HeapPtrString, string)
+
+class X4TypeRepresentation : public TypeRepresentation {
+  public:
+    enum Type {
+        TYPE_INT32 = JS_X4TYPEREPR_INT32,
+        TYPE_FLOAT32 = JS_X4TYPEREPR_FLOAT32,
+    };
+
+  private:
+    // so TypeRepresentation can call appendStringScalar() etc
+    friend class TypeRepresentation;
+
+    // in order to call constructor
+    friend class TypeRepresentationHelper;
+
+    const Type type_;
+
+    explicit X4TypeRepresentation(Type type);
+
+    // See TypeRepresentation::appendString()
+    bool appendStringX4(JSContext *cx, StringBuffer &buffer);
+
+  public:
+    Type type() const {
+        return type_;
+    }
+
+    static JSObject *Create(JSContext *cx, Type type);
+};
+
+// Must be in same order as the enum ScalarTypeRepresentation::Type:
+#define JS_FOR_EACH_X4_TYPE_REPR(macro_)                                      \
+    macro_(X4TypeRepresentation::TYPE_INT32, int32_t, int32)                  \
+    macro_(X4TypeRepresentation::TYPE_FLOAT32, float, float32)
 
 class ArrayTypeRepresentation : public TypeRepresentation {
   private:

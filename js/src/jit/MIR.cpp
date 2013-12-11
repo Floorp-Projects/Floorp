@@ -713,7 +713,7 @@ MCompare::NewAsmJS(TempAllocator &alloc, MDefinition *left, MDefinition *right, 
 MTableSwitch *
 MTableSwitch::New(TempAllocator &alloc, MDefinition *ins, int32_t low, int32_t high)
 {
-    return new(alloc) MTableSwitch(ins, low, high);
+    return new(alloc) MTableSwitch(alloc, ins, low, high);
 }
 
 MGoto *
@@ -1966,8 +1966,7 @@ MTypeOf::foldsTo(TempAllocator &alloc, bool useValueNumbers)
         return this;
     }
 
-    JSRuntime *rt = GetIonContext()->runtime;
-    return MConstant::New(alloc, StringValue(TypeName(type, rt)));
+    return MConstant::New(alloc, StringValue(TypeName(type, GetIonContext()->runtime->names())));
 }
 
 void
@@ -2320,10 +2319,8 @@ MCompare::evaluateConstantOperands(bool *result)
     // Fold away some String equality comparisons.
     if (lhs.isString() && rhs.isString()) {
         int32_t comp = 0; // Default to equal.
-        if (left != right) {
-            if (!CompareStrings(GetIonContext()->cx, lhs.toString(), rhs.toString(), &comp))
-                return false;
-        }
+        if (left != right)
+            comp = CompareAtoms(&lhs.toString()->asAtom(), &rhs.toString()->asAtom());
         
         switch (jsop_) {
           case JSOP_LT:
@@ -2929,7 +2926,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
         JSObject *obj = object->singleton() ? object->singleton() : object->proto().toObjectOrNull();
 
         while (obj) {
-            if (!obj->isNative())
+            if (!obj->getClass()->isNative())
                 break;
 
             types::TypeObjectKey *typeObj = types::TypeObjectKey::get(obj);

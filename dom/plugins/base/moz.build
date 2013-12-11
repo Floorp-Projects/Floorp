@@ -18,7 +18,7 @@ XPIDL_SOURCES += [
     'nspluginroot.idl',
 ]
 
-MODULE = 'plugin'
+XPIDL_MODULE = 'plugin'
 
 EXPORTS += [
     'npapi.h',
@@ -95,13 +95,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     # Therefore, enable FAIL_ON_WARNINGS only on non-Android platforms.
     FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-LIBRARY_NAME = 'gkplugin'
-
-EXPORT_LIBRARY = True
 
 LOCAL_INCLUDES += [
     '/content/base/src',
@@ -129,3 +123,4 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 DEFINES['SK_BUILD_FOR_ANDROID_NDK'] = True
 
+FINAL_LIBRARY = 'xul'

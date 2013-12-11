@@ -15,19 +15,18 @@
 #include "nsIContent.h"
 #include "nsStubMutationObserver.h"
 #include "nsSVGPaintServerFrame.h"
-#include "nsSVGTextContainerFrame.h"
 
 class nsDisplaySVGText;
 class nsRenderingContext;
 class nsSVGTextFrame2;
 class nsTextFrame;
-class gfxPath;
 
 typedef nsSVGDisplayContainerFrame nsSVGTextFrame2Base;
 
 namespace mozilla {
 
 class CharIterator;
+class nsISVGPoint;
 class TextFrameIterator;
 class TextNodeCorrespondenceRecorder;
 struct TextRenderedRun;

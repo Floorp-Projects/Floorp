@@ -231,6 +231,7 @@ abstract class ContentProviderTest extends BaseTest {
         throw new Exception("You should call setUp(providerClassName, authorityUriField) instead");
     }
 
+    // TODO: Take the actual class as an arg.
     public void setUp(String providerClassName, String authorityUriField) throws Exception {
         super.setUp();
 

@@ -23,8 +23,6 @@ if CONFIG['MOZ_DEBUG']:
 
 XPIDL_MODULE = 'layout_base'
 
-MODULE = 'layout'
-
 EXPORTS += [
     'ActiveLayerTracker.h',
     'DisplayItemClip.h',
@@ -109,11 +107,11 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-LIBRARY_NAME = 'gkbase_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    '/docshell/base',
+]
+FINAL_LIBRARY = 'gklayout'

@@ -386,3 +386,13 @@ Line 1 Col 19 Expected closing tag. Unexpected end of file.
 |     <button>
 |       <p>
 |     <button>
+
+#data
+<!DOCTYPE html><html><frameset></frameset></html></frameset>
+#errors
+60: Stray end tag “frameset”.
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <frameset>

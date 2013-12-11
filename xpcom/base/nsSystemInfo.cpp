@@ -26,6 +26,7 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
+using namespace mozilla::widget::android;
 #endif
 
 #ifdef MOZ_WIDGET_GONK
@@ -165,7 +166,8 @@ nsSystemInfo::Init()
       if (PR_GetSystemInfo(items[i].cmd, buf, sizeof(buf)) == PR_SUCCESS) {
         rv = SetPropertyAsACString(NS_ConvertASCIItoUTF16(items[i].name),
                                    nsDependentCString(buf));
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv)))
+          return rv;
       }
       else {
         NS_WARNING("PR_GetSystemInfo failed");
@@ -182,7 +184,8 @@ nsSystemInfo::Init()
     for (uint32_t i = 0; i < ArrayLength(cpuPropItems); i++) {
         rv = SetPropertyAsBool(NS_ConvertASCIItoUTF16(cpuPropItems[i].name),
                                cpuPropItems[i].propfun());
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_WARN_IF(NS_FAILED(rv)))
+          return rv;
     }
 
 #ifdef XP_WIN
@@ -191,7 +194,8 @@ nsSystemInfo::Init()
     NS_WARN_IF_FALSE(gotWow64Value, "IsWow64Process failed");
     if (gotWow64Value) {
       rv = SetPropertyAsBool(NS_LITERAL_STRING("isWow64"), !!isWow64);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
     }
     nsAutoCString hddModel, hddRevision;
     if (NS_SUCCEEDED(GetProfileHDDInfo(hddModel, hddRevision))) {
@@ -210,7 +214,8 @@ nsSystemInfo::Init()
       rv = SetPropertyAsACString(NS_LITERAL_STRING("secondaryLibrary"),
                                  nsDependentCString(gtkver));
       PR_smprintf_free(gtkver);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_WARN_IF(NS_FAILED(rv)))
+        return rv;
     }
 #endif
 
@@ -229,7 +234,7 @@ nsSystemInfo::Init()
         android_sdk_version = version;
         if (version >= 8 && mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build", "HARDWARE", str))
             SetPropertyAsAString(NS_LITERAL_STRING("hardware"), str);
-        bool isTablet = mozilla::AndroidBridge::Bridge()->IsTablet();
+        bool isTablet = GeckoAppShell::IsTablet();
         SetPropertyAsBool(NS_LITERAL_STRING("tablet"), isTablet);
         // NSPR "version" is the kernel version. For Android we want the Android version.
         // Rename SDK version to version and put the kernel version into kernel_version.

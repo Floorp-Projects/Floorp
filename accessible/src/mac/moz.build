@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'accessibility'
-
 EXPORTS += [
     'mozAccessibleProtocol.h',
 ]
@@ -15,9 +13,7 @@ EXPORTS.mozilla.a11y += [
     'HyperTextAccessibleWrap.h',
 ]
 
-LIBRARY_NAME = 'accessibility_toolkit_s'
-
-SOURCES += [
+UNIFIED_SOURCES += [
     'AccessibleWrap.mm',
     'DocAccessibleWrap.mm',
     'MacUtils.mm',
@@ -30,8 +26,6 @@ SOURCES += [
     'RootAccessibleWrap.mm',
 ]
 
-LIBXUL_LIBRARY = True
-
 LOCAL_INCLUDES += [
     '../base',
     '../generic',
@@ -43,3 +37,4 @@ LOCAL_INCLUDES += [
     '/widget/xpwidgets',
 ]
 
+FINAL_LIBRARY = 'xul'

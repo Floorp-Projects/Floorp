@@ -162,7 +162,7 @@ static inline DXGI_FORMAT DXGIFormat(SurfaceFormat aFormat)
   }
 }
 
-static inline D2D1_ALPHA_MODE AlphaMode(SurfaceFormat aFormat)
+static inline D2D1_ALPHA_MODE D2DAlphaModeForFormat(SurfaceFormat aFormat)
 {
   switch (aFormat) {
   case FORMAT_B8G8R8X8:
@@ -174,7 +174,7 @@ static inline D2D1_ALPHA_MODE AlphaMode(SurfaceFormat aFormat)
 
 static inline D2D1_PIXEL_FORMAT D2DPixelFormat(SurfaceFormat aFormat)
 {
-  return D2D1::PixelFormat(DXGIFormat(aFormat), AlphaMode(aFormat));
+  return D2D1::PixelFormat(DXGIFormat(aFormat), D2DAlphaModeForFormat(aFormat));
 }
 
 #ifdef USE_D2D1_1

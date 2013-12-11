@@ -515,19 +515,12 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     MOZ_ASSERT(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL);
 
     // Init WebIDL binding constructors wanted on all XPConnect globals.
-    // Additional bindings may be created lazily, see BackstagePass::NewResolve.
     //
     // XXX Please do not add any additional classes here without the approval of
     //     the XPConnect module owner.
     if (!TextDecoderBinding::GetConstructorObject(aJSContext, global) ||
         !TextEncoderBinding::GetConstructorObject(aJSContext, global) ||
         !DOMErrorBinding::GetConstructorObject(aJSContext, global)) {
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-    }
-
-    if (nsContentUtils::IsSystemPrincipal(aPrincipal) &&
-        !IndexedDatabaseManager::DefineIndexedDBLazyGetter(aJSContext,
-                                                           global)) {
         return UnexpectedFailure(NS_ERROR_FAILURE);
     }
 
@@ -1285,6 +1278,13 @@ JSContext*
 nsXPConnect::GetCurrentJSContext()
 {
     return GetRuntime()->GetJSContextStack()->Peek();
+}
+
+/* virtual */
+JSContext*
+nsXPConnect::InitSafeJSContext()
+{
+    return GetRuntime()->GetJSContextStack()->InitSafeJSContext();
 }
 
 /* virtual */

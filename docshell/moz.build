@@ -13,5 +13,3 @@ DIRS += [
 
 TEST_DIRS += ['test']
 
-MODULE = 'docshell'
-

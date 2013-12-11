@@ -13,8 +13,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_wifi'
 
-MODULE = 'dom'
-
 EXTRA_COMPONENTS += [
     'DOMWifiManager.js',
     'DOMWifiManager.manifest',
@@ -34,9 +32,4 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'WifiUtils.cpp',
     ]
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'domwifi_s'
-
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

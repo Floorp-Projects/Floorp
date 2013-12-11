@@ -3166,7 +3166,7 @@ JSTerm.prototype = {
       panelId: "webConsole_autocompletePopup",
       listBoxId: "webConsole_autocompletePopupListBox",
       position: "before_start",
-      theme: "light",
+      theme: "auto",
       direction: "ltr",
       autoSelect: true
     };

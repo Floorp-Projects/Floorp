@@ -1516,6 +1516,7 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
       case e.DOM_VK_RETURN:
       case e.DOM_VK_ENTER:
       case e.DOM_VK_ESCAPE:
+        e.stopPropagation();
         DebuggerView.editor.focus();
         return;
     }

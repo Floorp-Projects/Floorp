@@ -108,24 +108,29 @@ DataReportingService.prototype = Object.freeze({
 
       case "profile-after-change":
         this._os.removeObserver(this, "profile-after-change");
-        this._os.addObserver(this, "sessionstore-windows-restored", true);
 
-        this._prefs = new Preferences(HEALTHREPORT_BRANCH);
+        try {
+          this._prefs = new Preferences(HEALTHREPORT_BRANCH);
 
-        // We don't initialize the sessions recorder unless Health Report is
-        // around to provide pruning of data.
-        //
-        // FUTURE consider having the SessionsRecorder always enabled and/or
-        // living in its own XPCOM service.
-        if (this._prefs.get("service.enabled", true)) {
-          this.sessionRecorder = new SessionRecorder(SESSIONS_BRANCH);
-          this.sessionRecorder.onStartup();
+          // We don't initialize the sessions recorder unless Health Report is
+          // around to provide pruning of data.
+          //
+          // FUTURE consider having the SessionsRecorder always enabled and/or
+          // living in its own XPCOM service.
+          if (this._prefs.get("service.enabled", true)) {
+            this.sessionRecorder = new SessionRecorder(SESSIONS_BRANCH);
+            this.sessionRecorder.onStartup();
+          }
+
+          // We can't interact with prefs until after the profile is present.
+          let policyPrefs = new Preferences(POLICY_BRANCH);
+          this.policy = new DataReportingPolicy(policyPrefs, this._prefs, this);
+
+          this._os.addObserver(this, "sessionstore-windows-restored", true);
+        } catch (ex) {
+          Cu.reportError("Exception when initializing data reporting service: " +
+                         CommonUtils.exceptionStr(ex));
         }
-
-        // We can't interact with prefs until after the profile is present.
-        let policyPrefs = new Preferences(POLICY_BRANCH);
-        this.policy = new DataReportingPolicy(policyPrefs, this._prefs, this);
-
         break;
 
       case "sessionstore-windows-restored":
@@ -187,7 +192,9 @@ DataReportingService.prototype = Object.freeze({
           this.timer.cancel();
         }
 
-        this.policy.stopPolling();
+        if (this.policy) {
+          this.policy.stopPolling();
+        }
         break;
     }
   },
@@ -212,12 +219,19 @@ DataReportingService.prototype = Object.freeze({
       this._loadHealthReporter();
     } catch (ex) {
       this._healthReporter = null;
+      Cu.reportError("Exception when obtaining health reporter: " +
+                     CommonUtils.exceptionStr(ex));
     }
 
     return this._healthReporter;
   },
 
   _loadHealthReporter: function () {
+    // This should never happen. It was added to help trace down bug 924307.
+    if (!this.policy) {
+      throw new Error("this.policy not set.");
+    }
+
     let ns = {};
     // Lazy import so application startup isn't adversely affected.
 

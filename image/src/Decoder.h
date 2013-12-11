@@ -94,11 +94,6 @@ public:
     mSizeDecode = aSizeDecode;
   }
 
-  void SetSynchronous(bool aSynchronous)
-  {
-    mSynchronous = aSynchronous;
-  }
-
   bool IsSynchronous() const
   {
     return mSynchronous;
@@ -246,6 +241,17 @@ protected:
   bool mDataError;
 
 private:
+  // Decode in synchronous mode. This is unsafe off-main-thread since it may
+  // attempt to allocate frames. To ensure that we never accidentally leave the
+  // decoder in synchronous mode, this should only be called by
+  // AutoSetSyncDecode.
+  void SetSynchronous(bool aSynchronous)
+  {
+    mSynchronous = aSynchronous;
+  }
+
+  friend class AutoSetSyncDecode;
+
   uint32_t mFrameCount; // Number of frames, including anything in-progress
 
   nsIntRect mInvalidRect; // Tracks an invalidation region in the current frame.
@@ -283,6 +289,34 @@ private:
   bool mInFrame;
   bool mIsAnimated;
   bool mSynchronous;
+};
+
+// A RAII helper class to automatically pair a call to SetSynchronous(true)
+// with a call to SetSynchronous(false), since failing to do so can lead us
+// to try to allocate frames off-main-thread, which is unsafe. Synchronous
+// decoding may only happen within the scope of an AutoSetSyncDecode. Nested
+// AutoSetSyncDecode's are OK.
+class AutoSetSyncDecode
+{
+public:
+  AutoSetSyncDecode(Decoder* aDecoder)
+    : mDecoder(aDecoder)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mDecoder);
+
+    mOriginalValue = mDecoder->IsSynchronous();
+    mDecoder->SetSynchronous(true);
+  }
+
+  ~AutoSetSyncDecode()
+  {
+    mDecoder->SetSynchronous(mOriginalValue);
+  }
+
+private:
+  nsRefPtr<Decoder> mDecoder;
+  bool              mOriginalValue;
 };
 
 } // namespace image

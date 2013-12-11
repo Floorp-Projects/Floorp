@@ -6,7 +6,10 @@
 
 #include "CacheStorageService.h"
 #include "CacheFileIOManager.h"
+#include "LoadContextInfo.h"
+#include "nsICacheStorage.h"
 #include "nsIObserverService.h"
+#include "mozIApplicationClearPrivateDataParams.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "nsServiceManagerUtils.h"
@@ -46,6 +49,7 @@ CacheObserver::Init()
   obs->AddObserver(sSelf, "profile-before-change", true);
   obs->AddObserver(sSelf, "xpcom-shutdown", true);
   obs->AddObserver(sSelf, "last-pb-context-exited", true);
+  obs->AddObserver(sSelf, "webapps-clear-data", true);
   obs->AddObserver(sSelf, "memory-pressure", true);
 
   return NS_OK;
@@ -91,6 +95,83 @@ bool const CacheObserver::UseNewCache()
   return true;
 }
 
+namespace { // anon
+
+class CacheStorageEvictHelper
+{
+public:
+  nsresult Run(mozIApplicationClearPrivateDataParams* aParams);
+
+private:
+  uint32_t mAppId;
+  nsresult ClearStorage(bool const aPrivate,
+                        bool const aInBrowser,
+                        bool const aAnonymous);
+};
+
+nsresult
+CacheStorageEvictHelper::Run(mozIApplicationClearPrivateDataParams* aParams)
+{
+  nsresult rv;
+
+  rv = aParams->GetAppId(&mAppId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool aBrowserOnly;
+  rv = aParams->GetBrowserOnly(&aBrowserOnly);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  MOZ_ASSERT(mAppId != nsILoadContextInfo::UNKNOWN_APP_ID);
+
+  // Clear all [private X anonymous] combinations
+  rv = ClearStorage(false, aBrowserOnly, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = ClearStorage(false, aBrowserOnly, true);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = ClearStorage(true, aBrowserOnly, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = ClearStorage(true, aBrowserOnly, true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+CacheStorageEvictHelper::ClearStorage(bool const aPrivate,
+                                      bool const aInBrowser,
+                                      bool const aAnonymous)
+{
+  nsresult rv;
+
+  nsRefPtr<LoadContextInfo> info = GetLoadContextInfo(
+    aPrivate, mAppId, aInBrowser, aAnonymous);
+
+  nsCOMPtr<nsICacheStorage> storage;
+  nsRefPtr<CacheStorageService> service = CacheStorageService::Self();
+  NS_ENSURE_TRUE(service, NS_ERROR_FAILURE);
+
+  // Clear disk storage
+  rv = service->DiskCacheStorage(info, false, getter_AddRefs(storage));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = storage->AsyncEvictStorage(nullptr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clear memory storage
+  rv = service->MemoryCacheStorage(info, getter_AddRefs(storage));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = storage->AsyncEvictStorage(nullptr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!aInBrowser) {
+    rv = ClearStorage(aPrivate, true, aAnonymous);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+} // anon
+
 NS_IMETHODIMP
 CacheObserver::Observe(nsISupports* aSubject,
                        const char* aTopic,
@@ -129,6 +210,21 @@ CacheObserver::Observe(nsISupports* aSubject,
     nsRefPtr<CacheStorageService> service = CacheStorageService::Self();
     if (service)
       service->DropPrivateBrowsingEntries();
+
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, "webapps-clear-data")) {
+    nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
+            do_QueryInterface(aSubject);
+    if (!params) {
+      NS_ERROR("'webapps-clear-data' notification's subject should be a mozIApplicationClearPrivateDataParams");
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    CacheStorageEvictHelper helper;
+    nsresult rv = helper.Run(params);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }

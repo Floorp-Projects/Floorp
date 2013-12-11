@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIMEStateManager.h"
+
+#include "HTMLInputElement.h"
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
 #include "nsISupports.h"
@@ -35,6 +37,7 @@
 #include "nsAsyncDOMEvent.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::widget;
 
 // nsTextStateManager notifies widget of any text and selection changes
@@ -457,8 +460,22 @@ nsIMEStateManager::SetIMEState(const IMEState &aState,
       (aContent->Tag() == nsGkAtoms::input ||
        aContent->Tag() == nsGkAtoms::textarea)) {
     if (aContent->Tag() != nsGkAtoms::textarea) {
-      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                        context.mHTMLInputType);
+      // <input type=number> has an anonymous <input type=text> descendant
+      // that gets focus whenever anyone tries to focus the number control. We
+      // need to check if aContent is one of those anonymous text controls and,
+      // if so, use the number control instead:
+      nsIContent* content = aContent;
+      HTMLInputElement* inputElement =
+        HTMLInputElement::FromContentOrNull(aContent);
+      if (inputElement) {
+        HTMLInputElement* ownerNumberControl =
+          inputElement->GetOwnerNumberControl();
+        if (ownerNumberControl) {
+          content = ownerNumberControl; // an <input type=number>
+        }
+      }
+      content->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
+                       context.mHTMLInputType);
     } else {
       context.mHTMLInputType.Assign(nsGkAtoms::textarea->GetUTF16String());
     }

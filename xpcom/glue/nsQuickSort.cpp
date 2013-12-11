@@ -56,10 +56,10 @@ static INLINE void	swapfunc(char *, char *, int, int);
  */
 #define swapcode(TYPE, parmi, parmj, n) { 		\
 	long i = (n) / sizeof (TYPE); 			\
-	register TYPE *pi = (TYPE *) (parmi); 		\
-	register TYPE *pj = (TYPE *) (parmj); 		\
+	TYPE *pi = (TYPE *) (parmi); 			\
+	TYPE *pj = (TYPE *) (parmj); 			\
 	do { 						\
-		register TYPE	t = *pi;		\
+		TYPE	t = *pi;			\
 		*pi++ = *pj;				\
 		*pj++ = t;				\
         } while (--i > 0);				\
@@ -179,3 +179,9 @@ loop:	SWAPINIT(a, es);
 }
 
 }
+
+#undef INLINE
+#undef swapcode
+#undef SWAPINIT
+#undef swap
+#undef vecswap

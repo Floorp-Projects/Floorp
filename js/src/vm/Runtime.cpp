@@ -168,7 +168,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcNextFullGCTime(0),
     gcLastGCTime(0),
     gcJitReleaseTime(0),
-    gcMode(JSGC_MODE_GLOBAL),
     gcAllocationThreshold(30 * 1024 * 1024),
     gcHighFrequencyGC(false),
     gcHighFrequencyTimeThreshold(1000),
@@ -287,12 +286,15 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     useHelperThreads_(useHelperThreads),
     requestedHelperThreadCount(-1),
     useHelperThreadsForIonCompilation_(true),
-    useHelperThreadsForParsing_(true)
+    useHelperThreadsForParsing_(true),
+    isWorkerRuntime_(false)
 #ifdef DEBUG
     , enteredPolicy(nullptr)
 #endif
 {
     liveRuntimesCount++;
+
+    setGCMode(JSGC_MODE_GLOBAL);
 
     /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     JS_INIT_CLIST(&onNewGlobalObjectWatchers);
@@ -355,7 +357,7 @@ JSRuntime::init(uint32_t maxbytes)
     if (!js_InitGC(this, maxbytes))
         return false;
 
-    if (!gcMarker.init())
+    if (!gcMarker.init(gcMode()))
         return false;
 
     const char *size = getenv("JSGC_MARK_STACK_LIMIT");
@@ -589,6 +591,14 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
         rtSizes->scriptData += mallocSizeOf(r.front());
 }
 
+static bool
+SignalBasedTriggersDisabled()
+{
+  // Don't bother trying to cache the getenv lookup; this should be called
+  // infrequently.
+  return !!getenv("JS_DISABLE_SLOW_SCRIPT_SIGNALS");
+}
+
 void
 JSRuntime::triggerOperationCallback(OperationCallbackTrigger trigger)
 {
@@ -609,8 +619,10 @@ JSRuntime::triggerOperationCallback(OperationCallbackTrigger trigger)
      * asm.js and, optionally, normal Ion code use memory protection and signal
      * handlers to halt running code.
      */
-    TriggerOperationCallbackForAsmJSCode(this);
-    jit::TriggerOperationCallbackForIonCode(this, trigger);
+    if (!SignalBasedTriggersDisabled()) {
+        TriggerOperationCallbackForAsmJSCode(this);
+        jit::TriggerOperationCallbackForIonCode(this, trigger);
+    }
 #endif
 }
 
@@ -845,7 +857,7 @@ js::CurrentThreadCanAccessZone(Zone *zone)
 void
 JSRuntime::assertCanLock(RuntimeLock which)
 {
-#ifdef JS_THREADSAFE
+#ifdef JS_WORKER_THREADS
     // In the switch below, each case falls through to the one below it. None
     // of the runtime locks are reentrant, and when multiple locks are acquired
     // it must be done in the order below.

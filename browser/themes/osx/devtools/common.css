@@ -12,7 +12,7 @@
 }
 
 .devtools-monospace {
-  font-family: monospace;
+  font-family: Menlo, monospace;
   font-size: 108%;
 }
 
@@ -21,6 +21,8 @@
 .devtools-toolbar {
   -moz-appearance: none;
   padding: 4px 3px;
+  color: hsl(210,30%,85%);
+  background-color: #343c45;
   border-bottom-width: 1px;
 }
 
@@ -251,11 +253,10 @@
   -moz-appearance: none;
   font: inherit;
   position: static;
-  color: hsl(210,30%,85%);
+  color: #b6babf;
   margin-bottom: 0;
   padding: 0;
-  background-image: url(background-noise-toolbar.png), linear-gradient(#3e4750, #3e4750);
-  box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset, -1px 0 0 hsla(204,45%,98%,.05) inset, 0 -1px 0 hsla(204,45%,98%,.05) inset;
+  background-color: #343c45;
   border-width: 0 0 1px 0;
   border-color: hsla(210,8%,5%,.6);
   border-style: solid;
@@ -299,21 +300,21 @@
 }
 
 .devtools-sidebar-tabs > tabs > tab {
-  background-size: 100% 100%, 1px 100%, 1px 100%, 1px 100%;
+  background-size: calc(100% - 2px) 100%, 1px 100%;
   background-repeat: no-repeat;
-  background-position: 2px, 0, 1px, 2px;
+  background-position: 1px, 0;
 }
 
 .devtools-sidebar-tabs:-moz-locale-dir(rtl) > tabs > tab {
-  background-position: calc(100% - 3px), 100%, calc(100% - 1px), calc(100% - 2px);
+  background-position: calc(100% - 1px), 100%;
 }
 
 .devtools-sidebar-tabs > tabs > tab:last-of-type {
   -moz-border-end-width: 0;
 }
 
-%define smallSeparator linear-gradient(hsla(204,45%,98%,0), hsla(204,45%,98%,.1), hsla(204,45%,98%,0)), linear-gradient(hsla(206,37%,4%,0), hsla(206,37%,4%,.6), hsla(206,37%,4%,0)), linear-gradient(hsla(204,45%,98%,0), hsla(204,45%,98%,.1), hsla(204,45%,98%,0))
-%define solidSeparator linear-gradient(transparent, transparent), linear-gradient(hsla(206,37%,4%,.6), hsla(206,37%,4%,.7)), linear-gradient(hsla(204,45%,98%,.1), hsla(204,45%,98%,.1))
+%define smallSeparator linear-gradient(transparent 15%, #5a6169 15%, #5a6169 85%, transparent 85%)
+%define solidSeparator linear-gradient(#2d5b7d, #2d5b7d)
 
 .devtools-sidebar-tabs > tabs > tab {
   background-image: linear-gradient(transparent, transparent), @smallSeparator@;
@@ -341,18 +342,15 @@
 
 .devtools-sidebar-tabs > tabs > tab[selected=true] {
   color: #f5f7fa;
-  background-image: linear-gradient(#2f607b, #294d68), @solidSeparator@;
-  box-shadow: 0 1px 0 hsla(0,0%,100%,.1) inset, 0 -2px 0 hsla(206,37%,4%,.05) inset, 0 -1px 1px hsla(206,37%,4%,.1) inset;
+  background-image: linear-gradient(#1d4f73, #1d4f73), @solidSeparator@;
 }
 
 .devtools-sidebar-tabs > tabs > tab[selected=true]:hover {
-  background-image: linear-gradient(#274f64, #224056), @solidSeparator@;
-  box-shadow: 0 1px 0 hsla(0,0%,100%,.05) inset, 0 -2px 0 hsla(206,37%,4%,.05) inset, 0 -1px 1px hsla(206,37%,4%,.1) inset;
+  background-image: linear-gradient(#274f64, #274f64), @solidSeparator@;
 }
 
 .devtools-sidebar-tabs > tabs > tab[selected=true]:hover:active {
-  background-image: linear-gradient(#1f3e4f, #1b3243), @solidSeparator@;
-  box-shadow: 0 1px 0 hsla(0,0%,100%,.05) inset, 0 -2px 0 hsla(206,37%,4%,.05) inset, 0 -1px 1px hsla(206,37%,4%,.1) inset;
+  background-image: linear-gradient(#1f3e4f, #1f3e4f), @solidSeparator@;
 }
 
 %include ../../shared/devtools/common.inc.css

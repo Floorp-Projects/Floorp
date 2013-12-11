@@ -53,6 +53,23 @@ ContentHostBase::DestroyFrontHost()
 }
 
 void
+ContentHostBase::OnActorDestroy()
+{
+  if (mDeprecatedTextureHost) {
+    mDeprecatedTextureHost->OnActorDestroy();
+  }
+  if (mDeprecatedTextureHostOnWhite) {
+    mDeprecatedTextureHostOnWhite->OnActorDestroy();
+  }
+  if (mNewFrontHost) {
+    mNewFrontHost->OnActorDestroy();
+  }
+  if (mNewFrontHostOnWhite) {
+    mNewFrontHostOnWhite->OnActorDestroy();
+  }
+}
+
+void
 ContentHostBase::Composite(EffectChain& aEffectChain,
                            float aOpacity,
                            const gfx::Matrix4x4& aTransform,
@@ -409,19 +426,16 @@ ContentHostDoubleBuffered::DestroyTextures()
                "We won't be able to destroy our SurfaceDescriptor");
     mNewFrontHost = nullptr;
   }
-
   if (mNewFrontHostOnWhite) {
     MOZ_ASSERT(mNewFrontHostOnWhite->GetDeAllocator(),
                "We won't be able to destroy our SurfaceDescriptor");
     mNewFrontHostOnWhite = nullptr;
   }
-
   if (mBackHost) {
     MOZ_ASSERT(mBackHost->GetDeAllocator(),
                "We won't be able to destroy our SurfaceDescriptor");
     mBackHost = nullptr;
   }
-
   if (mBackHostOnWhite) {
     MOZ_ASSERT(mBackHostOnWhite->GetDeAllocator(),
                "We won't be able to destroy our SurfaceDescriptor");
@@ -429,6 +443,29 @@ ContentHostDoubleBuffered::DestroyTextures()
   }
 
   // don't touch mDeprecatedTextureHost, we might need it for compositing
+}
+
+void
+ContentHostDoubleBuffered::OnActorDestroy()
+{
+  if (mDeprecatedTextureHost) {
+    mDeprecatedTextureHost->OnActorDestroy();
+  }
+  if (mDeprecatedTextureHostOnWhite) {
+    mDeprecatedTextureHostOnWhite->OnActorDestroy();
+  }
+  if (mNewFrontHost) {
+    mNewFrontHost->OnActorDestroy();
+  }
+  if (mNewFrontHostOnWhite) {
+    mNewFrontHostOnWhite->OnActorDestroy();
+  }
+  if (mBackHost) {
+    mBackHost->OnActorDestroy();
+  }
+  if (mBackHostOnWhite) {
+    mBackHostOnWhite->OnActorDestroy();
+  }
 }
 
 void

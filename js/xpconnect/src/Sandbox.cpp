@@ -108,6 +108,9 @@ SandboxDump(JSContext *cx, unsigned argc, jsval *vp)
         c++;
     }
 #endif
+#ifdef ANDROID
+    __android_log_write(ANDROID_LOG_INFO, "GeckoDump", cstr);
+#endif
 
     fputs(cstr, stdout);
     fflush(stdout);
@@ -945,8 +948,7 @@ bool
 xpc::GlobalProperties::Define(JSContext *cx, JS::HandleObject obj)
 {
     if (indexedDB && AccessCheck::isChrome(obj) &&
-        (!IndexedDatabaseManager::DefineConstructors(cx, obj) ||
-         !IndexedDatabaseManager::DefineIndexedDBGetter(cx, obj)))
+        !IndexedDatabaseManager::DefineIndexedDB(cx, obj))
         return false;
 
     if (XMLHttpRequest &&

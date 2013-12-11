@@ -24,8 +24,8 @@
 using namespace js;
 using namespace js::jit;
 
-BaselineCompiler::BaselineCompiler(JSContext *cx, HandleScript script)
-  : BaselineCompilerSpecific(cx, script),
+BaselineCompiler::BaselineCompiler(JSContext *cx, TempAllocator &alloc, HandleScript script)
+  : BaselineCompilerSpecific(cx, alloc, script),
     modifiesArguments_(false)
 {
 }
@@ -33,7 +33,7 @@ BaselineCompiler::BaselineCompiler(JSContext *cx, HandleScript script)
 bool
 BaselineCompiler::init()
 {
-    if (!analysis_.init(cx->runtime()->gsnCache))
+    if (!analysis_.init(alloc_, cx->runtime()->gsnCache))
         return false;
 
     if (!labels_.init(script->length))
@@ -250,6 +250,9 @@ BaselineCompiler::compile()
         // searches for the sought entry when queries are in linear order.
         bytecodeMap[script->nTypeSets] = 0;
     }
+
+    if (script->compartment()->debugMode())
+        baselineScript->setDebugMode();
 
     return Method_Compiled;
 }

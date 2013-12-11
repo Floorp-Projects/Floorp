@@ -9,8 +9,6 @@ if CONFIG['OS_ARCH'] == 'Linux':
     DIRS += ['linux']
 
 elif CONFIG['OS_ARCH'] == 'WINNT':
-
-    MODULE = 'sandbox'
     LIBRARY_NAME = 'sandbox_s'
     EXPORT_LIBRARY = True
     FORCE_STATIC_LIB = True

@@ -278,7 +278,7 @@ let RIL = {
     /**
      * Card state
      */
-    this.cardState = GECKO_CARDSTATE_UNKNOWN;
+    this.cardState = GECKO_CARDSTATE_UNDETECTED;
 
     /**
      * Strings
@@ -944,15 +944,15 @@ let RIL = {
   },
 
   /**
-   * Request the phone's radio power to be switched on or off.
+   * Request the phone's radio to be enabled or disabled.
    *
-   * @param on
-   *        Boolean indicating the desired power state.
+   * @param enabled
+   *        Boolean indicating the desired state.
    */
-  setRadioPower: function setRadioPower(options) {
+  setRadioEnabled: function setRadioEnabled(options) {
     Buf.newParcel(REQUEST_RADIO_POWER, options);
     Buf.writeInt32(1);
-    Buf.writeInt32(options.on ? 1 : 0);
+    Buf.writeInt32(options.enabled ? 1 : 0);
     Buf.sendParcel();
   },
 
@@ -1413,9 +1413,7 @@ let RIL = {
       }
       this.cachedDialRequest.onerror = onerror;
       this.cachedDialRequest.callback = this.sendDialRequest.bind(this, options);
-
-      // Change radio setting value in settings DB to enable radio.
-      this.sendChromeMessage({rilMessageType: "setRadioEnabled", on: true});
+      this.setRadioEnabled({enabled: true});
       return;
     }
 
@@ -2954,51 +2952,36 @@ let RIL = {
   _processICCStatus: function _processICCStatus(iccStatus) {
     this.iccStatus = iccStatus;
     let newCardState;
-
-    if ((!iccStatus) || (iccStatus.cardState == CARD_STATE_ABSENT)) {
-      switch (this.radioState) {
-        case GECKO_RADIOSTATE_UNAVAILABLE:
-          newCardState = GECKO_CARDSTATE_UNKNOWN;
-          break;
-        case GECKO_RADIOSTATE_OFF:
-          newCardState = GECKO_CARDSTATE_NOT_READY;
-          break;
-        case GECKO_RADIOSTATE_READY:
-          if (DEBUG) {
-            debug("ICC absent");
-          }
-          newCardState = GECKO_CARDSTATE_ABSENT;
-          break;
-      }
-      if (newCardState == this.cardState) {
-        return;
-      }
-      this.iccInfo = {iccType: null};
-      ICCUtilsHelper.handleICCInfoChange();
-
-      this.cardState = newCardState;
-      this.sendChromeMessage({rilMessageType: "cardstatechange",
-                              cardState: this.cardState});
-      return;
-    }
-
     let index = this._isCdma ? iccStatus.cdmaSubscriptionAppIndex :
                                iccStatus.gsmUmtsSubscriptionAppIndex;
     let app = iccStatus.apps[index];
-    if (iccStatus.cardState == CARD_STATE_ERROR || !app) {
-      if (this.cardState == GECKO_CARDSTATE_UNKNOWN) {
+
+    // When |iccStatus.cardState| is not CARD_STATE_PRESENT or have incorrect
+    // app information, we can not get iccId. So treat ICC as undetected.
+    if (iccStatus.cardState !== CARD_STATE_PRESENT || !app) {
+      if (this.cardState !== GECKO_CARDSTATE_UNDETECTED) {
         this.operator = null;
-        return;
+        // We should send |cardstatechange| before |iccinfochange|, otherwise we
+        // may lost cardstatechange event when icc card becomes undetected.
+        this.cardState = GECKO_CARDSTATE_UNDETECTED;
+        this.sendChromeMessage({rilMessageType: "cardstatechange",
+                                cardState: this.cardState});
+
+        this.iccInfo = {iccType: null};
+        ICCUtilsHelper.handleICCInfoChange();
       }
-      this.operator = null;
-      this.cardState = GECKO_CARDSTATE_UNKNOWN;
-      this.sendChromeMessage({rilMessageType: "cardstatechange",
-                              cardState: this.cardState});
       return;
     }
+
     // fetchICCRecords will need to read aid, so read aid here.
     this.aid = app.aid;
     this.appType = app.app_type;
+    this.iccInfo.iccType = GECKO_CARD_TYPE[this.appType];
+    // Try to get iccId only when cardState left GECKO_CARDSTATE_UNDETECTED.
+    if (this.cardState === GECKO_CARDSTATE_UNDETECTED &&
+        iccStatus.cardState === CARD_STATE_PRESENT) {
+      ICCRecordHelper.readICCID();
+    }
 
     switch (app.app_state) {
       case CARD_APPSTATE_ILLEGAL:
@@ -3036,8 +3019,6 @@ let RIL = {
     // This was moved down from CARD_APPSTATE_READY
     this.requestNetworkInfo();
     if (newCardState == GECKO_CARDSTATE_READY) {
-      this.iccInfo.iccType = GECKO_CARD_TYPE[this.appType];
-
       // For type SIM, we need to check EF_phase first.
       // Other types of ICC we can send Terminal_Profile immediately.
       if (this.appType == CARD_APPTYPE_SIM) {
@@ -5201,18 +5182,25 @@ RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length, options) {
   this._processOperator(operatorData);
 };
 RIL[REQUEST_RADIO_POWER] = function REQUEST_RADIO_POWER(length, options) {
-  if (options.rilRequestError) {
-    if (this.cachedDialRequest && options.on) {
-      // Turning on radio fails. Notify the error of making an emergency call.
-      this.cachedDialRequest.onerror(GECKO_ERROR_RADIO_NOT_AVAILABLE);
-      this.cachedDialRequest = null;
+  if (options.rilMessageType == null) {
+    // The request was made by ril_worker itself.
+    if (options.rilRequestError) {
+      if (this.cachedDialRequest && options.enabled) {
+        // Turning on radio fails. Notify the error of making an emergency call.
+        this.cachedDialRequest.onerror(GECKO_ERROR_RADIO_NOT_AVAILABLE);
+        this.cachedDialRequest = null;
+      }
+      return;
     }
+
+    if (this._isInitialRadioState) {
+      this._isInitialRadioState = false;
+    }
+
     return;
   }
 
-  if (this._isInitialRadioState) {
-    this._isInitialRadioState = false;
-  }
+  this.sendChromeMessage(options);
 };
 RIL[REQUEST_DTMF] = null;
 RIL[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {
@@ -6037,7 +6025,7 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
   if (this._isInitialRadioState) {
     // Even radioState is RADIO_STATE_OFF, we still have to maually turn radio off,
     // otherwise REQUEST_GET_SIM_STATUS will still report CARD_STATE_PRESENT.
-    this.setRadioPower({on: false});
+    this.setRadioEnabled({enabled: false});
   }
 
   let newState;
@@ -11205,7 +11193,6 @@ let ICCRecordHelper = {
    * Fetch ICC records.
    */
   fetchICCRecords: function fetchICCRecords() {
-    this.readICCID();
     RIL.getIMSI();
     this.readAD();
     this.readSST();
@@ -13181,7 +13168,6 @@ let ICCContactHelper = {
 
 let RuimRecordHelper = {
   fetchRuimRecords: function fetchRuimRecords() {
-    ICCRecordHelper.readICCID();
     this.getIMSI_M();
     this.readCST();
     this.readCDMAHome();

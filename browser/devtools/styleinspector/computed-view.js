@@ -229,7 +229,7 @@ CssHtmlTree.processTemplate = function CssHtmlTree_processTemplate(aTemplate,
 };
 
 XPCOMUtils.defineLazyGetter(CssHtmlTree, "_strings", function() Services.strings
-        .createBundle("chrome://browser/locale/devtools/styleinspector.properties"));
+        .createBundle("chrome://global/locale/devtools/styleinspector.properties"));
 
 XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
   return Cc["@mozilla.org/widget/clipboardhelper;1"].

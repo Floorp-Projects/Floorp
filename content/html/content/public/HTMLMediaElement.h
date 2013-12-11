@@ -369,6 +369,10 @@ public:
     return mNetworkState;
   }
 
+  // Called by the media decoder object, on the main thread,
+  // when the connection between Rtsp server and client gets lost.
+  void ResetConnectionState() MOZ_FINAL MOZ_OVERRIDE;
+
   // XPCOM GetPreload() is OK
   void SetPreload(const nsAString& aValue, ErrorResult& aRv)
   {

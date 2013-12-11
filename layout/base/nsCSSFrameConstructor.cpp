@@ -103,8 +103,6 @@ NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewHTMLVideoFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-#include "nsSVGTextContainerFrame.h"
-
 nsIFrame*
 NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
@@ -122,15 +120,9 @@ NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGAFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-nsIFrame*
 NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
-NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-nsIFrame*
 NS_NewSVGTextFrame2(nsIPresShell* aPresShell, nsStyleContext* aContext);
-nsIFrame*
-NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGContainerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
@@ -151,8 +143,6 @@ extern nsIFrame*
 NS_NewSVGImageFrame(nsIPresShell *aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-nsIFrame*
-NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGFilterFrame(nsIPresShell *aPresShell, nsStyleContext* aContext);
 nsIFrame*
@@ -3153,20 +3143,11 @@ nsCSSFrameConstructor::FindTextData(nsIFrame* aParentFrame)
     nsIFrame *ancestorFrame =
       nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
     if (ancestorFrame) {
-      if (NS_SVGTextCSSFramesEnabled()) {
-        static const FrameConstructionData sSVGTextData =
-          FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT | FCDATA_IS_SVG_TEXT,
-                      NS_NewTextFrame);
-        if (ancestorFrame->IsSVGText()) {
-          return &sSVGTextData;
-        }
-      } else {
-        static const FrameConstructionData sSVGGlyphData =
-          SIMPLE_FCDATA(NS_NewSVGGlyphFrame);
-        nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
-        if (metrics) {
-          return &sSVGGlyphData;
-        }
+      static const FrameConstructionData sSVGTextData =
+        FCDATA_DECL(FCDATA_IS_LINE_PARTICIPANT | FCDATA_IS_SVG_TEXT,
+                    NS_NewTextFrame);
+      if (ancestorFrame->IsSVGText()) {
+        return &sSVGTextData;
       }
     }
     return nullptr;
@@ -4959,44 +4940,17 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
       return &sTSpanData;
     }
     return &sSuppressData;
-  } else if (NS_SVGTextCSSFramesEnabled()) {
-    if (aTag == nsGkAtoms::text) {
-      static const FrameConstructionData sTextData =
-        FCDATA_WITH_WRAPPING_BLOCK(FCDATA_DISALLOW_OUT_OF_FLOW |
-                                   FCDATA_ALLOW_BLOCK_STYLES,
-                                   NS_NewSVGTextFrame2,
-                                   nsCSSAnonBoxes::mozSVGText);
-      return &sTextData;
-    } else if (aTag == nsGkAtoms::tspan ||
-               aTag == nsGkAtoms::altGlyph ||
-               aTag == nsGkAtoms::textPath) {
-      return &sSuppressData;
-    }
-  } else {
-    nsIFrame *ancestorFrame =
-      nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
-    if (ancestorFrame) {
-      if (aTag == nsGkAtoms::tspan || aTag == nsGkAtoms::altGlyph) {
-        // tspan and altGlyph must be children of another text content element.
-        nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
-        if (!metrics) {
-          return &sSuppressData;
-        }
-      } else if (aTag == nsGkAtoms::textPath) {
-        // textPath must be a child of text.
-        nsIAtom* ancestorFrameType = ancestorFrame->GetType();
-        if (ancestorFrameType != nsGkAtoms::svgTextFrame) {
-          return &sSuppressData;
-        }
-      } else if (aTag != nsGkAtoms::a) {
-        // Every other element except 'a' must not be a child of a text content
-        // element.
-        nsSVGTextContainerFrame* metrics = do_QueryFrame(ancestorFrame);
-        if (metrics) {
-          return &sSuppressData;
-        }
-      }
-    }
+  } else if (aTag == nsGkAtoms::text) {
+    static const FrameConstructionData sTextData =
+      FCDATA_WITH_WRAPPING_BLOCK(FCDATA_DISALLOW_OUT_OF_FLOW |
+                                 FCDATA_ALLOW_BLOCK_STYLES,
+                                 NS_NewSVGTextFrame2,
+                                 nsCSSAnonBoxes::mozSVGText);
+    return &sTextData;
+  } else if (aTag == nsGkAtoms::tspan ||
+             aTag == nsGkAtoms::altGlyph ||
+             aTag == nsGkAtoms::textPath) {
+    return &sSuppressData;
   }
 
   static const FrameConstructionDataByTag sSVGData[] = {
@@ -5017,9 +4971,6 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
                                  NS_NewSVGForeignObjectFrame,
                                  nsCSSAnonBoxes::mozSVGForeignContent) },
     SIMPLE_SVG_CREATE(a, NS_NewSVGAFrame),
-    SIMPLE_SVG_CREATE(altGlyph, NS_NewSVGTSpanFrame),
-    SIMPLE_SVG_CREATE(text, NS_NewSVGTextFrame),
-    SIMPLE_SVG_CREATE(tspan, NS_NewSVGTSpanFrame),
     SIMPLE_SVG_CREATE(linearGradient, NS_NewSVGLinearGradientFrame),
     SIMPLE_SVG_CREATE(radialGradient, NS_NewSVGRadialGradientFrame),
     SIMPLE_SVG_CREATE(stop, NS_NewSVGStopFrame),
@@ -5027,7 +4978,6 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     SIMPLE_SVG_CREATE(view, NS_NewSVGViewFrame),
     SIMPLE_SVG_CREATE(image, NS_NewSVGImageFrame),
     SIMPLE_SVG_CREATE(clipPath, NS_NewSVGClipPathFrame),
-    SIMPLE_SVG_CREATE(textPath, NS_NewSVGTextPathFrame),
     SIMPLE_SVG_CREATE(filter, NS_NewSVGFilterFrame),
     SIMPLE_SVG_CREATE(pattern, NS_NewSVGPatternFrame),
     SIMPLE_SVG_CREATE(mask, NS_NewSVGMaskFrame),
@@ -8160,6 +8110,9 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     }
   } else if (nsGkAtoms::legendFrame == frameType) {
     newFrame = NS_NewLegendFrame(shell, styleContext);
+    newFrame->Init(content, aParentFrame, aFrame);
+  } else if (nsGkAtoms::flexContainerFrame == frameType) {
+    newFrame = NS_NewFlexContainerFrame(shell, styleContext);
     newFrame->Init(content, aParentFrame, aFrame);
   } else {
     NS_RUNTIMEABORT("unexpected frame type");

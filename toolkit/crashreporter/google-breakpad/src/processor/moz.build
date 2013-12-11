@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'breakpad_sps_common'
-
 SOURCES += [
     'basic_code_modules.cc',
     'basic_source_line_resolver.cc',
@@ -23,7 +21,4 @@ SOURCES += [
     'tokenize.cc',
 ]
 
-LIBRARY_NAME = 'breakpad_sps_common_s'
-
-# need static lib
-FORCE_STATIC_LIB = True
+FINAL_LIBRARY = 'xulapp_s'

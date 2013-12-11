@@ -226,7 +226,7 @@ jit::BaselineCompile(JSContext *cx, HandleScript script)
 
     IonContext ictx(cx, temp);
 
-    BaselineCompiler compiler(cx, script);
+    BaselineCompiler compiler(cx, *temp, script);
     if (!compiler.init())
         return Method_Error;
 
@@ -746,10 +746,16 @@ BaselineScript::toggleDebugTraps(JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(script->baselineScript() == this);
 
+    // Only scripts compiled for debug mode have toggled calls.
+    if (!debugMode())
+        return;
+
     SrcNoteLineScanner scanner(script->notes(), script->lineno);
 
     JSRuntime *rt = script->runtimeFromMainThread();
-    IonContext ictx(rt, script->compartment(), nullptr);
+    IonContext ictx(CompileRuntime::get(rt),
+                    CompileCompartment::get(script->compartment()),
+                    nullptr);
     AutoFlushCache afc("DebugTraps", rt->jitRuntime());
 
     for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++) {

@@ -12,7 +12,7 @@
 
 #ifndef nsError_h__
 #include "nsError.h"
-#endif 
+#endif
 
 #include "nsXPCOM.h"
 #include "mozilla/Assertions.h"
@@ -22,7 +22,35 @@
 #include "prprf.h"
 #endif
 
+/**
+ * Warn if the given condition is true. The condition is evaluated in both
+ * release and debug builds, and the result is an expression which can be
+ * used in subsequent expressions, such as:
+ *
+ * if (NS_WARN_IF(NS_FAILED(rv))
+ *   return rv;
+ *
+ * This explicit warning and return is preferred to the NS_ENSURE_* macros
+ * which hide the warning and the return control flow.
+ *
+ * @note This is C++-only
+ */
+#ifdef __cplusplus
 #ifdef DEBUG
+inline bool NS_warn_if_impl(bool condition, const char* expr, const char* file,
+                            int32_t line)
+{
+  if (MOZ_UNLIKELY(condition)) {
+    NS_DebugBreak(NS_DEBUG_WARNING, nullptr, expr, file, line);
+  }
+  return condition;
+}
+#define NS_WARN_IF(condition) \
+  NS_warn_if_impl(condition, #condition, __FILE__, __LINE__)
+#else
+#define NS_WARN_IF(condition) (bool)(condition)
+#endif
+#endif
 
 /**
  * Abort the execution of the program if the expression evaluates to
@@ -40,12 +68,16 @@
  * Note also that the non-debug version of this macro does <b>not</b>
  * evaluate the message argument.
  */
+#ifdef DEBUG
 #define NS_ABORT_IF_FALSE(_expr, _msg)                        \
   do {                                                        \
     if (!(_expr)) {                                           \
       NS_DebugBreak(NS_DEBUG_ABORT, _msg, #_expr, __FILE__, __LINE__); \
     }                                                         \
   } while(0)
+#else
+#define NS_ABORT_IF_FALSE(_expr, _msg) do { /* nothing */ } while(0)
+#endif
 
 /**
  * Warn if a given condition is false.
@@ -55,103 +87,105 @@
  * Note also that the non-debug version of this macro does <b>not</b>
  * evaluate the message argument.
  */
+#ifdef DEBUG
 #define NS_WARN_IF_FALSE(_expr,_msg)                          \
   do {                                                        \
     if (!(_expr)) {                                           \
       NS_DebugBreak(NS_DEBUG_WARNING, _msg, #_expr, __FILE__, __LINE__); \
     }                                                         \
   } while(0)
+#else
+#define NS_WARN_IF_FALSE(_expr, _msg)  do { /* nothing */ } while(0)
+#endif
 
-/**
- * Test a precondition for truth. If the expression is not true then
- * trigger a program failure.
- */
-#define NS_PRECONDITION(expr, str)                            \
-  do {                                                        \
-    if (!(expr)) {                                            \
-      NS_DebugBreak(NS_DEBUG_ASSERTION, str, #expr, __FILE__, __LINE__); \
-    }                                                         \
-  } while(0)
 
 /**
  * Test an assertion for truth. If the expression is not true then
  * trigger a program failure.
+ *
+ * Note that the non-debug version of this macro does <b>not</b>
+ * evaluate the message argument.
  */
+#ifdef DEBUG
 #define NS_ASSERTION(expr, str)                               \
   do {                                                        \
     if (!(expr)) {                                            \
       NS_DebugBreak(NS_DEBUG_ASSERTION, str, #expr, __FILE__, __LINE__); \
     }                                                         \
   } while(0)
+#else
+#define NS_ASSERTION(expr, str)        do { /* nothing */ } while(0)
+#endif
 
 /**
- * Test a post-condition for truth. If the expression is not true then
- * trigger a program failure.
+ * NS_PRECONDITION/POSTCONDITION are synonyms for NS_ASSERTION.
  */
-#define NS_POSTCONDITION(expr, str)                           \
-  do {                                                        \
-    if (!(expr)) {                                            \
-      NS_DebugBreak(NS_DEBUG_ASSERTION, str, #expr, __FILE__, __LINE__); \
-    }                                                         \
-  } while(0)
+#define NS_PRECONDITION(expr, str) NS_ASSERTION(expr, str)
+#define NS_POSTCONDITION(expr, str) NS_ASSERTION(expr, str)
 
 /**
  * This macros triggers a program failure if executed. It indicates that
  * an attempt was made to execute some unimplemented functionality.
  */
+#ifdef DEBUG
 #define NS_NOTYETIMPLEMENTED(str)                             \
   NS_DebugBreak(NS_DEBUG_ASSERTION, str, "NotYetImplemented", __FILE__, __LINE__)
+#else
+#define NS_NOTYETIMPLEMENTED(str)      do { /* nothing */ } while(0)
+#endif
 
 /**
  * This macros triggers a program failure if executed. It indicates that
- * an attempt was made to execute some unimplemented functionality.
+ * an attempt was made to execute a codepath which should not be reachable.
  */
+#ifdef DEBUG
 #define NS_NOTREACHED(str)                                    \
   NS_DebugBreak(NS_DEBUG_ASSERTION, str, "Not Reached", __FILE__, __LINE__)
+#else
+#define NS_NOTREACHED(str)             do { /* nothing */ } while(0)
+#endif
 
 /**
  * Log an error message.
  */
+#ifdef DEBUG
 #define NS_ERROR(str)                                         \
   NS_DebugBreak(NS_DEBUG_ASSERTION, str, "Error", __FILE__, __LINE__)
+#else
+#define NS_ERROR(str)                  do { /* nothing */ } while(0)
+#endif
 
 /**
  * Log a warning message.
  */
+#ifdef DEBUG
 #define NS_WARNING(str)                                       \
   NS_DebugBreak(NS_DEBUG_WARNING, str, nullptr, __FILE__, __LINE__)
+#else
+#define NS_WARNING(str)                do { /* nothing */ } while(0)
+#endif
 
 /**
- * Trigger an abort
+ * Trigger an debug-only abort.
+ *
+ * @see NS_RUNTIMEABORT for release-mode asserts.
  */
+#ifdef DEBUG
 #define NS_ABORT()                                            \
   NS_DebugBreak(NS_DEBUG_ABORT, nullptr, nullptr, __FILE__, __LINE__)
+#else
+#define NS_ABORT()                     do { /* nothing */ } while(0)
+#endif
 
 /**
- * Cause a break
+ * Trigger a debugger breakpoint, only in debug builds.
  */
+#ifdef DEBUG
 #define NS_BREAK()                                            \
   NS_DebugBreak(NS_DEBUG_BREAK, nullptr, nullptr, __FILE__, __LINE__)
-
-#else /* DEBUG */
-
-/**
- * The non-debug version of these macros do not evaluate the
- * expression or the message arguments to the macro.
- */
-#define NS_ABORT_IF_FALSE(_expr, _msg) do { /* nothing */ } while(0)
-#define NS_WARN_IF_FALSE(_expr, _msg)  do { /* nothing */ } while(0)
-#define NS_PRECONDITION(expr, str)     do { /* nothing */ } while(0)
-#define NS_ASSERTION(expr, str)        do { /* nothing */ } while(0)
-#define NS_POSTCONDITION(expr, str)    do { /* nothing */ } while(0)
-#define NS_NOTYETIMPLEMENTED(str)      do { /* nothing */ } while(0)
-#define NS_NOTREACHED(str)             do { /* nothing */ } while(0)
-#define NS_ERROR(str)                  do { /* nothing */ } while(0)
-#define NS_WARNING(str)                do { /* nothing */ } while(0)
-#define NS_ABORT()                     do { /* nothing */ } while(0)
+#else
 #define NS_BREAK()                     do { /* nothing */ } while(0)
-
-#endif /* ! DEBUG */
+#endif
 
 /******************************************************************************
 ** Macros for static assertions.  These are used by the sixgill tool.
@@ -230,7 +264,7 @@
 
 /******************************************************************************
 ** Macros for terminating execution when an unrecoverable condition is
-** reached.  These need to be compiled regardless of the DEBUG flag. 
+** reached.  These need to be compiled regardless of the DEBUG flag.
 ******************************************************************************/
 
 /**
@@ -242,10 +276,11 @@
   NS_DebugBreak(NS_DEBUG_ABORT, msg, nullptr, __FILE__, __LINE__)
 
 
-/* Macros for checking the trueness of an expression passed in within an 
- * interface implementation.  These need to be compiled regardless of the */
-/* DEBUG flag
-******************************************************************************/
+/* Macros for checking the trueness of an expression passed in within an
+ * interface implementation.  These need to be compiled regardless of the
+ * DEBUG flag. New code should use NS_WARN_IF(condition) instead!
+ * @status deprecated
+ */
 
 #define NS_ENSURE_TRUE(x, ret)                                \
   do {                                                        \
@@ -339,9 +374,6 @@
 
 #define NS_ENSURE_NO_AGGREGATION(outer)                       \
   NS_ENSURE_FALSE(outer, NS_ERROR_NO_AGGREGATION)
-
-#define NS_ENSURE_PROPER_AGGREGATION(outer, iid)              \
-  NS_ENSURE_FALSE(outer && !iid.Equals(NS_GET_IID(nsISupports)), NS_ERROR_INVALID_ARG)
 
 /*****************************************************************************/
 

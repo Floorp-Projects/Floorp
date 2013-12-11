@@ -3,16 +3,12 @@
 // Send these sites a custom user-agent. Bugs to remove each override after
 // evangelism are included.
 {
-  // bug 826330, uol.com.br
-  "uol.com.br": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 826335, globo.com
   "globo.com": "\\(Mobile#(Android; Mobile",
   // bug 826338, yahoo.com
   "yahoo.com": "\\(Mobile#(Android; Mobile",
   // bug 826342, mercadolivre.com.br
   "mercadolivre.com.br": "\\(Mobile#(Android; Mobile",
-  // bug 826343, ig.com.br
-  "ig.com.br": "\\(Mobile#(Android; Mobile",
   // bug 826344, abril.com.br
   "abril.com.br": "\\(Mobile#(Android; Mobile",
   // bug 826347, msn.com
@@ -61,8 +57,6 @@
   "webmotors.com.br": "\\(Mobile#(Android; Mobile",
   // bug 827661, mercadolibre.com.co
   "mercadolibre.com.co": "\\(Mobile#(Android; Mobile",
-  // bug 827664, elespectador.com
-  "elespectador.com": "\\(Mobile#(Android; Mobile",
   // bug 827668, scribd.com
   "scribd.com": "\\(Mobile#(Android; Mobile",
   // bug 827670, elpais.com.co
@@ -99,8 +93,6 @@
   "fotocasa.es": "\\(Mobile#(Android; Mobile",
   // bug 828406, orange.es
   "orange.es": "\\(Mobile#(Android; Mobile",
-  // bug 828414, paginasamarillas.es
-  "paginasamarillas.es": "\\(Mobile#(Android; Mobile",
   // bug 828416, loteriasyapuestas.es
   "loteriasyapuestas.es": "\\(Mobile#(Android; Mobile",
   // bug 828418, bbva.es
@@ -149,8 +141,6 @@
   "games.com": "\\(Mobile#(Android; Mobile",
   // bug 843156, orbitz.com
   "orbitz.com": "\\(Mobile#(Android; Mobile",
-  // bug 843158, starwoodhotels.com
-  "starwoodhotels.com": "\\(Mobile#(Android; Mobile",
   // bug 843160, ehow.com
   "ehow.com": "\\(Mobile#(Android; Mobile",
   // bug 843162, urbanspoon.com
@@ -169,8 +159,6 @@
   "slashgear.com": "\\(Mobile#(Android; Mobile",
   // bug 843186, chevrolet.com
   "chevrolet.com": "\\(Mobile#(Android; Mobile",
-  // bug 848854, deadline.com
-  "deadline.com": "\\(Mobile#(Android; Mobile",
   // bug 866577, 3g.qq.com
   "3g.qq.com": "\\(Mobile#(Android; Mobile",
   // bug 878222, arukereso.hu
@@ -219,8 +207,6 @@
   "naslovi.net": "\\(Mobile#(Android; Mobile",
   // bug 878284, softonic.com
   "softonic.com": "\\(Mobile#(Android; Mobile",
-  // bug 878286, yandex.ru
-  "yandex.ru": "\\(Mobile#(Android; Mobile",
   // bug 878630, ask.com
   "ask.com": "\\(Mobile#(Android; Mobile",
   // bug 878632, banorte.com

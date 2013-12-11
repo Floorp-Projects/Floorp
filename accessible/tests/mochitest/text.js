@@ -415,7 +415,7 @@ function testTextSetSelection(aID, aStartOffset, aEndOffset,
   var text = acc.getText(0, -1);
 
   acc.setSelectionBounds(aSelectionIndex, aStartOffset, aEndOffset);
- 
+
   is(acc.selectionCount, aSelectionsCount, 
      text + ": failed to set selection at index '" + 
      aSelectionIndex + "': selectionCount after");

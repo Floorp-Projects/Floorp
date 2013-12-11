@@ -2127,6 +2127,9 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
             // Advance this parser over tokens processed by the syntax parser.
             parser->tokenStream.tell(&position);
             tokenStream.seek(position, parser->tokenStream);
+
+            // Update the end position of the parse node.
+            pn->pn_pos.end = tokenStream.currentToken().pos.end;
         }
 
         if (!addFreeVariablesFromLazyFunction(fun, pc))
@@ -6302,7 +6305,6 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
     pn->setInParens(true);
     pn->pn_pos = kid->pn_pos;
     pn->pn_kid = kid;
-    pn->pn_hidden = true;
 
     /* Make a new node for the desugared generator function. */
     ParseNode *genfn = CodeNode::create(PNK_FUNCTION, &handler);

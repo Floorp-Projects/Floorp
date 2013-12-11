@@ -216,6 +216,7 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
 {
   switch (eventStructType) {
     case NS_MOUSE_EVENT:
+    case NS_POINTER_EVENT:
       // We want synthesized mouse moves to cause mouseover and mouseout
       // DOM events (nsEventStateManager::PreHandleEvent), but not mousemove
       // DOM events.

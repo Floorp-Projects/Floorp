@@ -27,6 +27,7 @@ static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 //
 static PRLogModuleInfo *gStreamPumpLog = nullptr;
 #endif
+#undef LOG
 #define LOG(args) PR_LOG(gStreamPumpLog, PR_LOG_DEBUG, args)
 
 //-----------------------------------------------------------------------------

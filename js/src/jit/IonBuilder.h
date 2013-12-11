@@ -24,6 +24,12 @@ namespace jit {
 class CodeGenerator;
 class CallInfo;
 class BaselineInspector;
+class BaselineFrameInspector;
+
+// Records information about a baseline frame for compilation that is stable
+// when later used off thread.
+BaselineFrameInspector *
+NewBaselineFrameInspector(TempAllocator *temp, BaselineFrame *frame);
 
 class IonBuilder : public MIRGenerator
 {
@@ -205,9 +211,9 @@ class IonBuilder : public MIRGenerator
     static int CmpSuccessors(const void *a, const void *b);
 
   public:
-    IonBuilder(JSContext *analysisContext, JSCompartment *comp, TempAllocator *temp, MIRGraph *graph,
+    IonBuilder(JSContext *analysisContext, CompileCompartment *comp, TempAllocator *temp, MIRGraph *graph,
                types::CompilerConstraintList *constraints,
-               BaselineInspector *inspector, CompileInfo *info, BaselineFrame *baselineFrame,
+               BaselineInspector *inspector, CompileInfo *info, BaselineFrameInspector *baselineFrame,
                size_t inliningDepth = 0, uint32_t loopDepth = 0);
 
     bool build();
@@ -333,6 +339,11 @@ class IonBuilder : public MIRGenerator
     // Add a guard which ensure that the set of type which goes through this
     // generated code correspond to the observed types for the bytecode.
     bool pushTypeBarrier(MDefinition *def, types::TemporaryTypeSet *observed, bool needBarrier);
+
+    // As pushTypeBarrier, but will compute the needBarrier boolean itself based
+    // on observed and the JSFunction that we're planning to call. The
+    // JSFunction must be a DOM method or getter.
+    bool pushDOMTypeBarrier(MInstruction *ins, types::TemporaryTypeSet *observed, JSFunction* func);
 
     // If definiteType is not known or def already has the right type, just
     // returns def.  Otherwise, returns an MInstruction that has that definite
@@ -734,13 +745,13 @@ class IonBuilder : public MIRGenerator
         return callerBuilder_ != nullptr;
     }
 
-    JSAtomState &names() { return compartment->runtimeFromAnyThread()->atomState; }
+    const JSAtomState &names() { return compartment->runtime()->names(); }
 
   private:
     bool init();
 
     JSContext *analysisContext;
-    BaselineFrame *baselineFrame_;
+    BaselineFrameInspector *baselineFrame_;
     AbortReason abortReason_;
     TypeRepresentationSetHash *reprSetHash_;
 
@@ -822,9 +833,10 @@ class CallInfo
     bool setter_;
 
   public:
-    CallInfo(bool constructing)
+    CallInfo(TempAllocator &alloc, bool constructing)
       : fun_(nullptr),
         thisArg_(nullptr),
+        args_(alloc),
         constructing_(constructing),
         setter_(false)
     { }

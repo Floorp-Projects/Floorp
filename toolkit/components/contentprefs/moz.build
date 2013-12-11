@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['tests']
 
-MODULE = 'contentprefs'
-
 EXTRA_COMPONENTS += [
     'nsContentPrefService.js',
     'nsContentPrefService.manifest',

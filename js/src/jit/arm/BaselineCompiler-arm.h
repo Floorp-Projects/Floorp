@@ -15,7 +15,7 @@ namespace jit {
 class BaselineCompilerARM : public BaselineCompilerShared
 {
   protected:
-    BaselineCompilerARM(JSContext *cx, HandleScript script);
+    BaselineCompilerARM(JSContext *cx, TempAllocator &alloc, HandleScript script);
 };
 
 typedef BaselineCompilerARM BaselineCompilerSpecific;

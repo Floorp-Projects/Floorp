@@ -114,7 +114,7 @@ WMFReader::InitializeDXVA()
   MediaDecoderOwner* owner = mDecoder->GetOwner();
   NS_ENSURE_TRUE(owner, false);
 
-  HTMLMediaElement* element = owner->GetMediaElement();
+  dom::HTMLMediaElement* element = owner->GetMediaElement();
   NS_ENSURE_TRUE(element, false);
 
   nsRefPtr<LayerManager> layerManager =
@@ -385,9 +385,12 @@ WMFReader::GetSupportedAudioCodecs(const GUID** aCodecs, uint32_t* aNumCodecs)
   MOZ_ASSERT(aNumCodecs);
 
   if (mIsMP3Enabled) {
+    GUID aacOrMp3 = MFMPEG4Format_Base;
+    aacOrMp3.Data1 = 0x6D703461;// FOURCC('m','p','4','a');
     static const GUID codecs[] = {
       MFAudioFormat_AAC,
-      MFAudioFormat_MP3
+      MFAudioFormat_MP3,
+      aacOrMp3
     };
     *aCodecs = codecs;
     *aNumCodecs = NS_ARRAY_LENGTH(codecs);

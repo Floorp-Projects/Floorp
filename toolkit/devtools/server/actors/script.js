@@ -2648,6 +2648,189 @@ SourceActor.prototype.requestTypes = {
 
 
 /**
+ * Determine if a given value is non-primitive.
+ *
+ * @param Any aValue
+ *        The value to test.
+ * @return Boolean
+ *         Whether the value is non-primitive.
+ */
+function isObject(aValue) {
+  const type = typeof aValue;
+  return type == "object" ? aValue !== null : type == "function";
+}
+
+/**
+ * Determines if a descriptor has a getter which doesn't call into JavaScript.
+ *
+ * @param Object aDesc
+ *        The descriptor to check for a safe getter.
+ * @return Boolean
+ *         Whether a safe getter was found.
+ */
+function hasSafeGetter(aDesc) {
+  let fn = aDesc.get;
+  return fn && fn.callable && fn.class == "Function" && fn.script === undefined;
+}
+
+/**
+ * Safely get the property value from a Debugger.Object for a given key. Walks
+ * the prototype chain until the property is found.
+ *
+ * @param Debugger.Object aObject
+ *        The Debugger.Object to get the value from.
+ * @param String aKey
+ *        The key to look for.
+ * @return Any
+ */
+function getProperty(aObj, aKey) {
+  try {
+    do {
+      const desc = aObj.getOwnPropertyDescriptor(aKey);
+      if (desc) {
+        if ("value" in desc) {
+          return desc.value
+        }
+        // Call the getter if it's safe.
+        return hasSafeGetter(desc) ? desc.get.call(aObj) : undefined;
+      }
+      aObj = aObj.proto;
+    } while (aObj);
+  } catch (e) {
+    // If anything goes wrong report the error and return undefined.
+    DevToolsUtils.reportException("getProperty", e);
+  }
+  return undefined;
+}
+
+/**
+ * Create a function that can safely stringify Debugger.Objects of a given
+ * builtin type.
+ *
+ * @param Function aCtor
+ *        The builtin class constructor.
+ * @return Function
+ *         The stringifier for the class.
+ */
+function createBuiltinStringifier(aCtor) {
+  return aObj => aCtor.prototype.toString.call(aObj.unsafeDereference());
+}
+
+/**
+ * Stringify a Debugger.Object-wrapped Error instance.
+ *
+ * @param Debugger.Object aObj
+ *        The object to stringify.
+ * @return String
+ *         The stringification of the object.
+ */
+function errorStringify(aObj) {
+  let name = getProperty(aObj, "name");
+  if (name === "" || name === undefined) {
+    name = aObj.class;
+  } else if (isObject(name)) {
+    name = stringify(name);
+  }
+
+  let message = getProperty(aObj, "message");
+  if (isObject(message)) {
+    message = stringify(message);
+  }
+
+  if (message === "" || message === undefined) {
+    return name;
+  }
+  return name + ": " + message;
+}
+
+/**
+ * Stringify a Debugger.Object based on its class.
+ *
+ * @param Debugger.Object aObj
+ *        The object to stringify.
+ * @return String
+ *         The stringification for the object.
+ */
+function stringify(aObj) {
+  if (Cu.isDeadWrapper(aObj)) {
+    const error = new Error("Dead object encountered.");
+    DevToolsUtils.reportException("stringify", error);
+    return "<dead object>";
+  }
+  const stringifier = stringifiers[aObj.class] || stringifiers.Object;
+  return stringifier(aObj);
+}
+
+// Used to prevent infinite recursion when an array is found inside itself.
+let seen = null;
+
+let stringifiers = {
+  Error: errorStringify,
+  EvalError: errorStringify,
+  RangeError: errorStringify,
+  ReferenceError: errorStringify,
+  SyntaxError: errorStringify,
+  TypeError: errorStringify,
+  URIError: errorStringify,
+  Boolean: createBuiltinStringifier(Boolean),
+  Function: createBuiltinStringifier(Function),
+  Number: createBuiltinStringifier(Number),
+  RegExp: createBuiltinStringifier(RegExp),
+  String: createBuiltinStringifier(String),
+  Object: obj => "[object " + obj.class + "]",
+  Array: obj => {
+    // If we're at the top level then we need to create the Set for tracking
+    // previously stringified arrays.
+    const topLevel = !seen;
+    if (topLevel) {
+      seen = new Set();
+    } else if (seen.has(obj)) {
+      return "";
+    }
+
+    seen.add(obj);
+
+    const len = getProperty(obj, "length");
+    let string = "";
+
+    // The following check is only required because the debuggee could possibly
+    // be a Proxy and return any value. For normal objects, array.length is
+    // always a non-negative integer.
+    if (typeof len == "number" && len > 0) {
+      for (let i = 0; i < len; i++) {
+        const desc = obj.getOwnPropertyDescriptor(i);
+        if (desc) {
+          const { value } = desc;
+          if (value != null) {
+            string += isObject(value) ? stringify(value) : value;
+          }
+        }
+
+        if (i < len - 1) {
+          string += ",";
+        }
+      }
+    }
+
+    if (topLevel) {
+      seen = null;
+    }
+
+    return string;
+  },
+  DOMException: obj => {
+    const message = getProperty(obj, "message") || "<no message>";
+    const result = (+getProperty(obj, "result")).toString(16);
+    const code = getProperty(obj, "code");
+    const name = getProperty(obj, "name") || "<unknown>";
+
+    return '[Exception... "' + message + '" ' +
+           'code: "' + code +'" ' +
+           'nsresult: "0x' + result + ' (' + name + ')"]';
+  }
+};
+
+/**
  * Creates an actor for the specified object.
  *
  * @param aObj Debugger.Object
@@ -2700,12 +2883,6 @@ ObjectActor.prototype = {
         // with "permission denied" errors for some functions.
         dumpn(e);
       }
-
-      // Add source location information.
-      if (this.obj.script) {
-        g.url = this.obj.script.url;
-        g.line = this.obj.script.startLine;
-      }
     }
 
     return g;
@@ -2740,6 +2917,48 @@ ObjectActor.prototype = {
     }
 
     this._forcedMagicProps = true;
+  },
+
+  /**
+   * Handle a protocol request to provide the definition site of this function
+   * object.
+   *
+   * @param aRequest object
+   *        The protocol request object.
+   */
+  onDefinitionSite: function OA_onDefinitionSite(aRequest) {
+    if (this.obj.class != "Function") {
+      return {
+        from: this.actorID,
+        error: "objectNotFunction",
+        message: this.actorID + " is not a function."
+      };
+    }
+
+    if (!this.obj.script) {
+      return {
+        from: this.actorID,
+        error: "noScript",
+        message: this.actorID + " has no Debugger.Script"
+      };
+    }
+
+    const generatedLocation = {
+      url: this.obj.script.url,
+      line: this.obj.script.startLine,
+      // TODO bug 901138: use Debugger.Script.prototype.startColumn.
+      column: 0
+    };
+
+    return this.threadActor.sources.getOriginalLocation(generatedLocation)
+      .then(({ url, line, column }) => {
+        return {
+          from: this.actorID,
+          url: url,
+          line: line,
+          column: column
+        };
+      });
   },
 
   /**
@@ -2883,9 +3102,7 @@ ObjectActor.prototype = {
         continue;
       }
 
-      let fn = desc.get;
-      if (fn && fn.callable && fn.class == "Function" &&
-          fn.script === undefined) {
+      if (hasSafeGetter(desc)) {
         getters.add(name);
       }
     }
@@ -2929,34 +3146,9 @@ ObjectActor.prototype = {
    *        The protocol request object.
    */
   onDisplayString: function (aRequest) {
-    let toString;
-    try {
-      // Attempt to locate the object's "toString" method.
-      let obj = this.obj;
-      do {
-        let desc = obj.getOwnPropertyDescriptor("toString");
-        if (desc) {
-          toString = desc.value;
-          break;
-        }
-        obj = obj.proto;
-      } while ((obj));
-    } catch (e) {
-      dumpn(e);
-    }
-
-    let result = null;
-    if (toString && toString.callable) {
-      // If a toString method was found then call it on the object.
-      let ret = toString.call(this.obj).return;
-      if (typeof ret == "string") {
-        // Only use the result if it was a returned string.
-        result = ret;
-      }
-    }
-
+    const string = stringify(this.obj);
     return { from: this.actorID,
-             displayString: this.threadActor.createValueGrip(result) };
+             displayString: this.threadActor.createValueGrip(string) };
   },
 
   /**
@@ -3074,6 +3266,7 @@ ObjectActor.prototype = {
 };
 
 ObjectActor.prototype.requestTypes = {
+  "definitionSite": ObjectActor.prototype.onDefinitionSite,
   "parameterNames": ObjectActor.prototype.onParameterNames,
   "prototypeAndProperties": ObjectActor.prototype.onPrototypeAndProperties,
   "prototype": ObjectActor.prototype.onPrototype,
@@ -3746,7 +3939,7 @@ function ThreadSources(aThreadActor, aUseSourceMaps, aAllowPredicate,
  * Must be a class property because it needs to persist across reloads, same as
  * the breakpoint store.
  */
-ThreadSources._blackBoxedSources = new Set();
+ThreadSources._blackBoxedSources = new Set(["self-hosted"]);
 ThreadSources._prettyPrintedSources = new Map();
 
 ThreadSources.prototype = {

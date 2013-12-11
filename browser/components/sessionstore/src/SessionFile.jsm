@@ -38,16 +38,10 @@ Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
   "resource://gre/modules/TelemetryStopwatch.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-  "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-  "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
   "@mozilla.org/base/telemetry;1", "nsITelemetry");
-XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
-  "resource://gre/modules/Deprecated.jsm");
 
 this.SessionFile = {
   /**
@@ -55,15 +49,6 @@ this.SessionFile = {
    */
   read: function () {
     return SessionFileInternal.read();
-  },
-  /**
-   * Read the contents of the session file, synchronously.
-   */
-  syncRead: function () {
-    Deprecated.warning(
-      "syncRead is deprecated and will be removed in a future version",
-      "https://bugzilla.mozilla.org/show_bug.cgi?id=532150")
-    return SessionFileInternal.syncRead();
   },
   /**
    * Write the contents of the session file, asynchronously.
@@ -160,60 +145,6 @@ let SessionFileInternal = {
    * |true| once we have decided to stop receiving write instructiosn
    */
   _isClosed: false,
-
-  /**
-   * Utility function to safely read a file synchronously.
-   * @param aPath
-   *        A path to read the file from.
-   * @returns string if successful, undefined otherwise.
-   */
-  readAuxSync: function (aPath) {
-    let text;
-    try {
-      let file = new FileUtils.File(aPath);
-      let chan = NetUtil.newChannel(file);
-      let stream = chan.open();
-      text = NetUtil.readInputStreamToString(stream, stream.available(),
-        {charset: "utf-8"});
-    } catch (e if e.result == Components.results.NS_ERROR_FILE_NOT_FOUND) {
-      // Ignore exceptions about non-existent files.
-    } catch (ex) {
-      // Any other error.
-      Cu.reportError(ex);
-    } finally {
-      return text;
-    }
-  },
-
-  /**
-   * Read the sessionstore file synchronously.
-   *
-   * This function is meant to serve as a fallback in case of race
-   * between a synchronous usage of the API and asynchronous
-   * initialization.
-   *
-   * In case if sessionstore.js file does not exist or is corrupted (something
-   * happened between backup and write), attempt to read the sessionstore.bak
-   * instead.
-   */
-  syncRead: function () {
-    // Start measuring the duration of the synchronous read.
-    TelemetryStopwatch.start("FX_SESSION_RESTORE_SYNC_READ_FILE_MS");
-    // First read the sessionstore.js.
-    let text = this.readAuxSync(this.path);
-    if (typeof text === "undefined") {
-      // If sessionstore.js does not exist or is corrupted, read sessionstore.bak.
-      text = this.readAuxSync(this.backupPath);
-    }
-    // Finish the telemetry probe and return an empty string.
-    TelemetryStopwatch.finish("FX_SESSION_RESTORE_SYNC_READ_FILE_MS");
-    text = text || "";
-
-    // The worker needs to know the initial state read from
-    // disk so that writeLoadStateOnceAfterStartup() works.
-    SessionWorker.post("setInitialState", [text]);
-    return text;
-  },
 
   read: function () {
     return SessionWorker.post("read").then(msg => {

@@ -188,7 +188,7 @@ IonBuilder::inlineMathFunction(CallInfo &callInfo, MMathFunction::Function funct
     if (!IsNumberType(callInfo.getArg(0)->type()))
         return InliningStatus_NotInlined;
 
-    MathCache *cache = compartment->runtimeFromAnyThread()->maybeGetMathCache();
+    const MathCache *cache = compartment->runtime()->maybeGetMathCache();
     if (!cache)
         return InliningStatus_NotInlined;
 
@@ -457,11 +457,8 @@ IonBuilder::inlineArrayConcat(CallInfo &callInfo)
     if (!baseThisType)
         return InliningStatus_NotInlined;
     types::TypeObjectKey *thisType = types::TypeObjectKey::get(baseThisType);
-    if (thisType->unknownProperties() ||
-        &thisType->proto().toObject()->global() != &script()->global())
-    {
+    if (thisType->unknownProperties())
         return InliningStatus_NotInlined;
-    }
 
     // Don't inline if 'this' is packed and the argument may not be packed
     // (the result array will reuse the 'this' type).
@@ -1266,7 +1263,7 @@ IonBuilder::inlineNewParallelArray(CallInfo &callInfo)
     if (targetObj && targetObj->is<JSFunction>())
         target = &targetObj->as<JSFunction>();
     if (target && target->isInterpreted() && target->nonLazyScript()->shouldCloneAtCallsite) {
-        if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment, target, script(), pc))
+        if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment->callsiteClones(), target, script(), pc))
             target = clone;
     }
     MDefinition *ctor = makeCallsiteClone(
@@ -1291,7 +1288,7 @@ IonBuilder::inlineParallelArray(CallInfo &callInfo)
         return InliningStatus_NotInlined;
 
     JS_ASSERT(target->nonLazyScript()->shouldCloneAtCallsite);
-    if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment, target, script(), pc))
+    if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment->callsiteClones(), target, script(), pc))
         target = clone;
 
     MConstant *ctor = MConstant::New(alloc(), ObjectValue(*target));

@@ -501,8 +501,10 @@ void                      (* initialize)                         (AtkObject     
    * Since ATK 1.12
    */
   AtkAttributeSet* 	  (*get_attributes)            (AtkObject                  *accessible);
+
+  const gchar*            (*get_object_locale)         (AtkObject                  *accessible);
+
   AtkFunction             pad1;
-  AtkFunction             pad2;
 };
 
 GType            atk_object_get_type   (void);

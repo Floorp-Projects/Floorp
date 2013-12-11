@@ -199,14 +199,19 @@ private:
 };
 
 template<class T>
-void ProxyReleaseMainThread(nsCOMPtr<T> &object)
+void ProxyRelease(nsCOMPtr<T> &object, nsIThread* thread)
 {
   T* release;
   object.forget(&release);
 
-  nsCOMPtr<nsIThread> mainThread;
-  NS_GetMainThread(getter_AddRefs(mainThread));
-  NS_ProxyRelease(mainThread, release);
+  NS_ProxyRelease(thread, release);
+}
+
+template<class T>
+void ProxyReleaseMainThread(nsCOMPtr<T> &object)
+{
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  ProxyRelease(object, mainThread);
 }
 
 } // net

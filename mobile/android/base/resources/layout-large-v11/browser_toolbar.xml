@@ -6,20 +6,20 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-    <org.mozilla.gecko.BrowserToolbarBackground android:id="@+id/url_bar_bg"
-                                                android:layout_width="fill_parent"
-                                                android:layout_height="fill_parent"
-                                                android:background="@drawable/url_bar_bg"/>
+    <org.mozilla.gecko.toolbar.BrowserToolbarBackground android:id="@+id/url_bar_bg"
+                                                        android:layout_width="fill_parent"
+                                                        android:layout_height="fill_parent"
+                                                        android:background="@drawable/url_bar_bg"/>
 
-    <org.mozilla.gecko.ShapedButton android:id="@+id/tabs"
-                                    style="@style/UrlBar.ImageButton"
-                                    android:layout_width="84dip"
-                                    android:layout_alignParentLeft="true"
-                                    gecko:curveTowards="left"
-                                    android:background="@drawable/shaped_button"
-                                    android:gravity="center_vertical"
-                                    android:paddingLeft="6dip"
-                                    android:paddingRight="38dip"/>
+    <org.mozilla.gecko.toolbar.ShapedButton android:id="@+id/tabs"
+                                            style="@style/UrlBar.ImageButton"
+                                            android:layout_width="84dip"
+                                            android:layout_alignParentLeft="true"
+                                            gecko:curveTowards="left"
+                                            android:background="@drawable/shaped_button"
+                                            android:gravity="center_vertical"
+                                            android:paddingLeft="6dip"
+                                            android:paddingRight="38dip"/>
 
     <!-- The TextSwitcher should be shifted 28dp on the right, to avoid
          the curve. On a 56dp space, centering 24dp image will leave
@@ -27,7 +27,7 @@
          2 layers. Hence to center this, an additional 4dp is added to the right.
          The margins will be 12dp on left, 48dp on right, instead of ideal 16dp
          and 44dp. -->
-    <org.mozilla.gecko.TabCounter android:id="@+id/tabs_counter"
+    <org.mozilla.gecko.toolbar.TabCounter android:id="@+id/tabs_counter"
                         style="@style/UrlBar.ImageButton.TabCount"
                         android:layout_width="24dip"
                         android:layout_height="24dip"
@@ -49,21 +49,21 @@
                android:focusable="false"
                android:background="@drawable/url_bar_entry"/>
 
-    <org.mozilla.gecko.ForwardButton style="@style/UrlBar.ImageButton.Forward"
-                                     android:id="@+id/forward"
-                                     android:layout_toRightOf="@+id/tabs"/>
+    <org.mozilla.gecko.toolbar.ForwardButton style="@style/UrlBar.ImageButton.Forward"
+                                             android:id="@+id/forward"
+                                             android:layout_toRightOf="@+id/tabs"/>
 
-    <org.mozilla.gecko.BackButton android:id="@+id/back"
-                                  style="@style/UrlBar.ImageButton"
-                                  android:layout_width="50dip"
-                                  android:layout_height="50dip"
-                                  android:layout_toRightOf="@id/tabs"
-                                  android:layout_marginLeft="-28dp"
-                                  android:layout_centerVertical="true"
-                                  android:padding="13dp"
-                                  android:src="@drawable/ic_menu_back"
-                                  android:contentDescription="@string/back"
-                                  android:background="@drawable/url_bar_nav_button"/>
+    <org.mozilla.gecko.toolbar.BackButton android:id="@+id/back"
+                                          style="@style/UrlBar.ImageButton"
+                                          android:layout_width="50dip"
+                                          android:layout_height="50dip"
+                                          android:layout_toRightOf="@id/tabs"
+                                          android:layout_marginLeft="-28dp"
+                                          android:layout_centerVertical="true"
+                                          android:padding="13dp"
+                                          android:src="@drawable/ic_menu_back"
+                                          android:contentDescription="@string/back"
+                                          android:background="@drawable/url_bar_nav_button"/>
 
     <LinearLayout android:id="@+id/url_edit_container"
                   style="@style/UrlBar.Button"
@@ -142,12 +142,12 @@
                                                 android:layout_gravity="center_vertical"
                                                 gecko:autoUpdateTheme="false"/>
 
-        <org.mozilla.gecko.PageActionLayout android:id="@+id/page_action_layout"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="match_parent"
-                                            android:layout_marginRight="@dimen/browser_toolbar_button_padding"
-                                            android:visibility="gone"
-                                            android:orientation="horizontal"/>
+        <org.mozilla.gecko.toolbar.PageActionLayout android:id="@+id/page_action_layout"
+                                                    android:layout_width="wrap_content"
+                                                    android:layout_height="match_parent"
+                                                    android:layout_marginRight="@dimen/browser_toolbar_button_padding"
+                                                    android:visibility="gone"
+                                                    android:orientation="horizontal"/>
 
         <ImageButton android:id="@+id/stop"
                      style="@style/UrlBar.ImageButton.Icon"

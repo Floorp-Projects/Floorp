@@ -4,23 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'storage'
-
 EXPORTS.mozilla.storage += [
     'Variant.h',
     'Variant_inl.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'FileSystemModule.cpp',
     'mozStorageArgValueArray.cpp',
     'mozStorageAsyncStatement.cpp',
     'mozStorageAsyncStatementExecution.cpp',
     'mozStorageAsyncStatementJSHelper.cpp',
     'mozStorageAsyncStatementParams.cpp',
-    'mozStorageBindingParams.cpp',
     'mozStorageBindingParamsArray.cpp',
-    'mozStorageConnection.cpp',
     'mozStorageError.cpp',
     'mozStoragePrivateHelpers.cpp',
     'mozStorageResultSet.cpp',
@@ -37,7 +33,10 @@ SOURCES += [
     'VacuumManager.cpp',
 ]
 
-LIBRARY_NAME = 'storage_s'
+# These files need to be built separately because they #include variantToSQLiteT_impl.h.
+SOURCES += [
+    'mozStorageBindingParams.cpp',
+    'mozStorageConnection.cpp',
+]
 
-LIBXUL_LIBRARY = True
-
+FINAL_LIBRARY = 'storagecomps'

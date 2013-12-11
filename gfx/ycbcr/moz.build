@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'ycbcr'
-
 EXPORTS += [
     'chromium_types.h',
     'ycbcr_to_rgb565.h',
@@ -13,7 +11,7 @@ EXPORTS += [
     'yuv_row.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'ycbcr_to_rgb565.cpp',
     'yuv_convert.cpp',
     'yuv_row_c.cpp',
@@ -69,9 +67,4 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['HAVE_ARM_NEON']:
         'yuv_convert_arm.cpp',
     ]
 
-LIBRARY_NAME = 'ycbcr'
-
-LIBXUL_LIBRARY = True
-
-EXPORT_LIBRARY = True
-
+FINAL_LIBRARY = 'xul'

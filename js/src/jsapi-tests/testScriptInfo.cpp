@@ -22,22 +22,15 @@ catch (e)          \n\
 }\n\
 //@ sourceMappingURL=http://example.com/path/to/source-map.json";
 
-
-static bool
-CharsMatch(const jschar *p, const char *q) {
-    while (*q) {
-        if (*p++ != *q++)
-            return false;
-    }
-    return true;
-}
-
 // Bug 670958 - fix JS_GetScriptLineExtent, among others
 BEGIN_TEST(testScriptInfo)
 {
     unsigned startLine = 1000;
 
-    JS::RootedScript script(cx, JS_CompileScript(cx, global, code, strlen(code), __FILE__, startLine));
+    JS::CompileOptions options(cx);
+    options.setFileAndLine(__FILE__, startLine);
+    JS::RootedScript script(cx, JS_CompileScript(cx, global, code, strlen(code),
+                                                 options));
 
     CHECK(script);
 
@@ -50,6 +43,15 @@ BEGIN_TEST(testScriptInfo)
     CHECK(sourceMap);
     CHECK(CharsMatch(sourceMap, "http://example.com/path/to/source-map.json"));
 
+    return true;
+}
+static bool
+CharsMatch(const jschar *p, const char *q)
+{
+    while (*q) {
+        if (*p++ != *q++)
+            return false;
+    }
     return true;
 }
 END_TEST(testScriptInfo)

@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['tests']
 
-MODULE = 'microformats'
-
 EXTRA_JS_MODULES += [
     'Microformats.js',
 ]

@@ -152,7 +152,7 @@ ANNOTATION_PROCESSOR_JAR_FILES := $(DEPTH)/build/annotationProcessors/annotation
 
 GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
 GeneratedJNIWrappers.cpp: $(ALL_JARS)
-	$(JAVA) -classpath $(JAVA_BOOTCLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
+	$(JAVA) -classpath gecko-mozglue.jar:$(JAVA_BOOTCLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
 
 gecko_package_dir = generated/org/mozilla/gecko
 # Like generated/org/mozilla/fennec_$USERID.

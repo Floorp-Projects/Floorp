@@ -605,6 +605,8 @@ function testListing(metadata, response)
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/LogController.js"}),
         SCRIPT({type: "text/javascript",
+                 src: "/tests/SimpleTest/MemoryStats.js"}),
+        SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/TestRunner.js"}),
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/MozillaLogger.js"}),

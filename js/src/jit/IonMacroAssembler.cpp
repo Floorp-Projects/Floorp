@@ -605,7 +605,11 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     addDouble(ScratchFloatReg, input);
 
     Label outOfRange;
-    branchTruncateDouble(input, output, &outOfRange);
+
+    // Truncate to int32 and ensure the result <= 255. This relies on the
+    // processor setting output to a value > 255 for doubles outside the int32
+    // range (for instance 0x80000000).
+    cvttsd2si(input, output);
     branch32(Assembler::Above, output, Imm32(255), &outOfRange);
     {
         // Check if we had a tie.
@@ -636,12 +640,10 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
 
     int thingSize = int(gc::Arena::thingSize(allocKind));
 
-    Zone *zone = GetIonContext()->compartment->zone();
-
 #ifdef JS_GC_ZEAL
     // Don't execute the inline path if gcZeal is active.
     branch32(Assembler::NotEqual,
-             AbsoluteAddress(&GetIonContext()->runtime->gcZeal_), Imm32(0),
+             AbsoluteAddress(GetIonContext()->runtime->addressOfGCZeal()), Imm32(0),
              fail);
 #endif
 
@@ -651,7 +653,7 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
         jump(fail);
 
 #ifdef JSGC_GENERATIONAL
-    Nursery &nursery = GetIonContext()->runtime->gcNursery;
+    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
     if (nursery.isEnabled() &&
         allocKind <= gc::FINALIZE_OBJECT_LAST &&
         initialHeap != gc::TenuredHeap)
@@ -668,17 +670,17 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
     }
 #endif // JSGC_GENERATIONAL
 
+    CompileZone *zone = GetIonContext()->compartment->zone();
+
     // Inline FreeSpan::allocate.
     // There is always exactly one FreeSpan per allocKind per JSCompartment.
     // If a FreeSpan is replaced, its members are updated in the freeLists table,
     // which the code below always re-reads.
-    gc::FreeSpan *list = const_cast<gc::FreeSpan *>
-                         (zone->allocator.arenas.getFreeList(allocKind));
-    loadPtr(AbsoluteAddress(&list->first), result);
-    branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(&list->last), result, fail);
+    loadPtr(AbsoluteAddress(zone->addressOfFreeListFirst(allocKind)), result);
+    branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(zone->addressOfFreeListLast(allocKind)), result, fail);
 
     addPtr(Imm32(thingSize), result);
-    storePtr(result, AbsoluteAddress(&list->first));
+    storePtr(result, AbsoluteAddress(zone->addressOfFreeListFirst(allocKind)));
     subPtr(Imm32(thingSize), result);
 }
 
@@ -687,7 +689,6 @@ MacroAssembler::newGCThing(const Register &result, JSObject *templateObject, Lab
 {
     gc::AllocKind allocKind = templateObject->tenuredGetAllocKind();
     JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
-    JS_ASSERT(!templateObject->hasDynamicElements());
 
     gc::InitialHeap initialHeap = templateObject->type()->initialHeapForJITAlloc();
     newGCThing(result, allocKind, fail, initialHeap);
@@ -760,7 +761,6 @@ MacroAssembler::newGCThingPar(const Register &result, const Register &slice,
 {
     gc::AllocKind allocKind = templateObject->tenuredGetAllocKind();
     JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
-    JS_ASSERT(!templateObject->hasDynamicElements());
 
     newGCThingPar(result, slice, tempReg1, tempReg2, allocKind, fail);
 }
@@ -785,6 +785,8 @@ void
 MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
 {
     // Fast initialization of an empty object returned by NewGCThing().
+
+    JS_ASSERT(!templateObject->hasDynamicElements());
 
     storePtr(ImmGCPtr(templateObject->lastProperty()), Address(obj, JSObject::offsetOfShape()));
     storePtr(ImmGCPtr(templateObject->type()), Address(obj, JSObject::offsetOfType()));
@@ -815,7 +817,8 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
 
         // Fixed slots of non-array objects are required to be initialized.
         // Use the values currently in the template object.
-        size_t nslots = Min(templateObject->numFixedSlots(), templateObject->slotSpan());
+        size_t nslots = Min(templateObject->numFixedSlotsForCompilation(),
+                            templateObject->lastProperty()->slotSpan(templateObject->getClass()));
         for (unsigned i = 0; i < nslots; i++) {
             storeValue(templateObject->getFixedSlot(i),
                        Address(obj, JSObject::getFixedSlotOffset(i)));
@@ -870,7 +873,7 @@ void
 MacroAssembler::checkInterruptFlagsPar(const Register &tempReg,
                                             Label *fail)
 {
-    movePtr(ImmPtr(&GetIonContext()->runtime->interrupt), tempReg);
+    movePtr(ImmPtr(GetIonContext()->runtime->addressOfInterrupt()), tempReg);
     load32(Address(tempReg, 0), tempReg);
     branchTest32(Assembler::NonZero, tempReg, tempReg, fail);
 }
@@ -1629,7 +1632,7 @@ MacroAssembler::convertValueToInt(JSContext *cx, const Value &v, Register output
             break;
           }
           case IntConversion_Truncate:
-            move32(Imm32(ToInt32(d)), output);
+            move32(Imm32(js::ToInt32(d)), output);
             break;
           case IntConversion_ClampToUint8:
             move32(Imm32(ClampDoubleToUint8(d)), output);

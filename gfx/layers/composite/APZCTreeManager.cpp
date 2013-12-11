@@ -121,6 +121,14 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
 
         apzc = container->GetAsyncPanZoomController();
 
+        // If the content represented by the container layer has changed (which may
+        // be possible because of DLBI heuristics) then we don't want to keep using
+        // the same old APZC for the new content. Null it out so we run through the
+        // code to find another one or create one.
+        if (apzc && !apzc->Matches(ScrollableLayerGuid(aLayersId, container->GetFrameMetrics()))) {
+          apzc = nullptr;
+        }
+
         // If the container doesn't have an APZC already, try to find one of our
         // pre-existing ones that matches. In particular, if we find an APZC whose
         // ScrollableLayerGuid is the same, then we know what happened is that the
@@ -159,7 +167,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
         APZC_LOG("Using APZC %p for layer %p with identifiers %lld %lld\n", apzc, aLayer, aLayersId, container->GetFrameMetrics().mScrollId);
 
         apzc->NotifyLayersUpdated(container->GetFrameMetrics(),
-                                        aIsFirstPaint && (aLayersId == aFirstPaintLayersId));
+                                  aIsFirstPaint && (aLayersId == aFirstPaintLayersId));
 
         ScreenRect visible(container->GetFrameMetrics().mCompositionBounds);
         apzc->SetLayerHitTestData(visible, aTransform, aLayer->GetTransform());
@@ -205,7 +213,9 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
   }
 
   uint64_t childLayersId = (aLayer->AsRefLayer() ? aLayer->AsRefLayer()->GetReferentId() : aLayersId);
-  AsyncPanZoomController* next = nullptr;
+  // If there's no APZC at this level, any APZCs for our child layers will
+  // have our siblings as siblings.
+  AsyncPanZoomController* next = apzc ? nullptr : aNextSibling;
   for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
     next = UpdatePanZoomControllerTree(aCompositor, child, childLayersId, aTransform, aParent, next,
                                        aIsFirstPaint, aFirstPaintLayersId, aApzcsToDestroy);

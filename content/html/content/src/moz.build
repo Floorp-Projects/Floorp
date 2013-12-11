@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'content'
-
 EXPORTS += [
     'HTMLPropertiesCollection.h',
     'nsGenericHTMLElement.h',
@@ -77,7 +75,7 @@ EXPORTS.mozilla.dom += [
     'ValidityState.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'HTMLAnchorElement.cpp',
     'HTMLAreaElement.cpp',
     'HTMLAudioElement.cpp',
@@ -158,14 +156,11 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-LIBRARY_NAME = 'gkconhtmlcon_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/canvas/src',

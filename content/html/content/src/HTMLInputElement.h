@@ -668,6 +668,8 @@ public:
 
   void MozSetFileNameArray(const Sequence< nsString >& aFileNames);
 
+  HTMLInputElement* GetOwnerNumberControl();
+
   bool MozIsTextField(bool aExcludePassword);
 
   nsIEditor* GetEditor();
@@ -1219,6 +1221,8 @@ protected:
   bool                     mProgressTimerIsActive : 1;
 
 private:
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    nsRuleData* aData);
 
   /**
    * Returns true if this input's type will fire a DOM "change" event when it

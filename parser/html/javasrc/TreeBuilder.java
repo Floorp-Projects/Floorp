@@ -175,8 +175,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     final static int RT_OR_RP = 53;
 
-    final static int COMMAND = 54;
-
     final static int PARAM_OR_SOURCE_OR_TRACK = 55;
 
     final static int MGLYPH_OR_MALIGNMARK = 56;
@@ -2025,7 +2023,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             case STYLE:
                             case SCRIPT:
                             case TITLE:
-                            case COMMAND:
                             case TEMPLATE:
                                 // Fall through to IN_HEAD
                                 break inbodyloop;
@@ -2481,7 +2478,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 }
                                 break starttagloop;
                             case BASE:
-                            case COMMAND:
                             case LINK_OR_BASEFONT_OR_BGSOUND:
                                 appendVoidElementToCurrentMayFoster(
                                         elementName,
@@ -3009,7 +3005,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             }
                             break starttagloop;
                         case NOFRAMES:
-                            startTagScriptInHead(elementName, attributes);
+                            startTagGenericRawText(elementName, attributes);
                             attributes = null; // CPP
                             break starttagloop;
                         default:
@@ -4017,8 +4013,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     continue;
                 case AFTER_AFTER_FRAMESET:
                     errStrayEndTag(name);
-                    mode = IN_FRAMESET;
-                    continue;
+                    break endtagloop;
                 case TEXT:
                     // XXX need to manage insertion point here
                     pop();
@@ -4824,7 +4819,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private void pushHeadPointerOntoStack() throws SAXException {
         assert headPointer != null;
-        assert !fragment;
         assert mode == AFTER_HEAD;
         fatal();
         silentPush(new StackNode<T>(ElementName.HEAD, headPointer
@@ -5650,16 +5644,19 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     charBufferLen = 0;
                     return;
                 }
-                int eltPos = findLastOrRoot(TreeBuilder.TABLE);
-                StackNode<T> node = stack[eltPos];
-                T elt = node.node;
-                if (eltPos == 0) {
-                    appendCharacters(elt, charBuffer, 0, charBufferLen);
+
+                int tablePos = findLastOrRoot(TreeBuilder.TABLE);
+                int templatePos = findLastOrRoot(TreeBuilder.TEMPLATE);
+
+                if (templatePos >= tablePos) {
+                    appendCharacters(stack[templatePos].node, charBuffer, 0, charBufferLen);
                     charBufferLen = 0;
                     return;
                 }
+
+                StackNode<T> tableElt = stack[tablePos];
                 insertFosterParentedCharacters(charBuffer, 0, charBufferLen,
-                        elt, stack[eltPos - 1].node);
+                        tableElt.node, stack[tablePos - 1].node);
                 charBufferLen = 0;
                 return;
             }

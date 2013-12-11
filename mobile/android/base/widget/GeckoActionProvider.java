@@ -53,10 +53,14 @@ public class GeckoActionProvider extends ActionProvider {
         MenuItemActionView view = new MenuItemActionView(mContext, null);
         view.setActionButtonClickListener(mCallbacks);
 
-        if (dataModel.getHistorySize() > 0) {
-            PackageManager packageManager = mContext.getPackageManager();
-            ResolveInfo defaultActivity = dataModel.getDefaultActivity();
-            view.setActionButton(defaultActivity == null ? null : defaultActivity.loadIcon(packageManager));
+        final PackageManager packageManager = mContext.getPackageManager();
+        int historySize = dataModel.getHistorySize();
+        if (historySize > 2) {
+            historySize = 2;
+        }
+
+        for (int i = 0; i < historySize; i++) {
+            view.addActionButton(dataModel.getActivity(i).loadIcon(packageManager));
         }
 
         return view;
@@ -132,8 +136,9 @@ public class GeckoActionProvider extends ActionProvider {
 
         @Override
         public void onClick(View view) {
+            Integer index = (Integer) view.getTag();
             ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
-            chooseActivity(dataModel.getActivityIndex(dataModel.getDefaultActivity()));
+            chooseActivity(index);
         }
     }
 }

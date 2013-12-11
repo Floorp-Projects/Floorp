@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'content'
-
 EXPORTS += [
     'nsDOMEvent.h',
     'nsDOMEventTargetHelper.h',
@@ -16,13 +14,14 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'PointerEvent.h',
     'Touch.h',
 ]
 
 if CONFIG['MOZ_WEBSPEECH']:
     EXPORTS.mozilla.dom += ['SpeechRecognitionError.h']
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'DOMWheelEvent.cpp',
     'EventTarget.cpp',
     'nsAsyncDOMEvent.cpp',
@@ -56,27 +55,29 @@ SOURCES += [
     'nsEventDispatcher.cpp',
     'nsEventListenerManager.cpp',
     'nsEventListenerService.cpp',
-    'nsEventStateManager.cpp',
     'nsIMEStateManager.cpp',
     'nsPaintRequest.cpp',
     'nsPrivateTextRange.cpp',
+    'PointerEvent.cpp',
     'TextComposition.cpp',
     'Touch.cpp',
 ]
 
+# nsEventStateManager.cpp should be built separately because of Mac OS X headers.
+SOURCES += [
+    'nsEventStateManager.cpp',
+]
+
 if CONFIG['MOZ_WEBSPEECH']:
-    SOURCES += ['SpeechRecognitionError.cpp']
+    UNIFIED_SOURCES += ['SpeechRecognitionError.cpp']
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-LIBRARY_NAME = 'gkconevents_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/html/content/src',

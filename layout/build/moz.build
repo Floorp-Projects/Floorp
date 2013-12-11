@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'layout'
-
 EXPORTS += [
     'nsContentDLF.h',
     'nsLayoutCID.h',
@@ -19,24 +17,19 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['MOZ_NFC']:
-    SHARED_LIBRARY_LIBS += [
-        '%s/dom/nfc/%sdom_nfc_s.%s' % (TOPOBJDIR, CONFIG['LIB_PREFIX'], CONFIG['LIB_SUFFIX'])
-    ]
-
-if CONFIG['MOZ_NFC']:
     LOCAL_INCLUDES += [
         '/dom/nfc'
     ]
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gklayout'
 
-EXPORT_LIBRARY = True
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    '/docshell/base',
+]
+FINAL_LIBRARY = 'xul'
