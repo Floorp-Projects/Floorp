@@ -28,9 +28,10 @@ from mozbuild.frontend.sandbox_symbols import (
 
 from mozbuild.test.common import MockConfig
 
+import mozpack.path as mozpath
 
-test_data_path = os.path.abspath(os.path.dirname(__file__))
-test_data_path = os.path.join(test_data_path, 'data')
+test_data_path = mozpath.abspath(mozpath.dirname(__file__))
+test_data_path = mozpath.join(test_data_path, 'data')
 
 
 class TestSandbox(unittest.TestCase):
@@ -38,7 +39,7 @@ class TestSandbox(unittest.TestCase):
         config = None
 
         if data_path is not None:
-            config = MockConfig(os.path.join(test_data_path, data_path))
+            config = MockConfig(mozpath.join(test_data_path, data_path))
         else:
             config = MockConfig()
 
@@ -50,11 +51,11 @@ class TestSandbox(unittest.TestCase):
 
         self.assertEqual(sandbox['TOPSRCDIR'], config.topsrcdir)
         self.assertEqual(sandbox['TOPOBJDIR'],
-            os.path.abspath(config.topobjdir))
+            mozpath.abspath(config.topobjdir))
         self.assertEqual(sandbox['RELATIVEDIR'], '')
         self.assertEqual(sandbox['SRCDIR'], config.topsrcdir)
         self.assertEqual(sandbox['OBJDIR'],
-            os.path.abspath(config.topobjdir).replace(os.sep, '/'))
+            mozpath.abspath(config.topobjdir).replace(os.sep, '/'))
 
     def test_symbol_presence(self):
         # Ensure no discrepancies between the master symbol table and what's in
@@ -79,7 +80,7 @@ class TestSandbox(unittest.TestCase):
         self.assertEqual(sandbox['SRCDIR'], '/'.join([config.topsrcdir,
             'foo/bar']))
         self.assertEqual(sandbox['OBJDIR'],
-            os.path.abspath('/'.join([config.topobjdir, 'foo/bar'])).replace(os.sep, '/'))
+            mozpath.abspath('/'.join([config.topobjdir, 'foo/bar'])).replace(os.sep, '/'))
 
     def test_config_access(self):
         sandbox = self.sandbox()
@@ -225,7 +226,7 @@ add_tier_dir('t1', 'bat', static=True)
 
         self.assertEqual(sandbox['DIRS'], ['foo', 'bar'])
         self.assertEqual(sandbox.main_path,
-            os.path.join(sandbox['TOPSRCDIR'], 'moz.build'))
+            mozpath.join(sandbox['TOPSRCDIR'], 'moz.build'))
         self.assertEqual(len(sandbox.all_paths), 2)
 
     def test_include_outside_topsrcdir(self):
@@ -234,7 +235,7 @@ add_tier_dir('t1', 'bat', static=True)
         with self.assertRaises(SandboxLoadError) as se:
             sandbox.exec_file('relative.build')
 
-        expected = os.path.join(test_data_path, 'moz.build')
+        expected = mozpath.join(test_data_path, 'moz.build')
         self.assertEqual(se.exception.illegal_path, expected)
 
     def test_include_error_stack(self):
@@ -252,7 +253,7 @@ add_tier_dir('t1', 'bat', static=True)
         self.assertEqual(args[1], 'set_unknown')
         self.assertEqual(args[2], 'ILLEGAL')
 
-        expected_stack = [os.path.join(sandbox.config.topsrcdir, p) for p in [
+        expected_stack = [mozpath.join(sandbox.config.topsrcdir, p) for p in [
             'moz.build', 'included-1.build', 'included-2.build']]
 
         self.assertEqual(e.file_stack, expected_stack)

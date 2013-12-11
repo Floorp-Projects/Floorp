@@ -44,24 +44,49 @@ h2 {
   padding: 10px;
 }
 
+.data-section:not(.has-data) {
+  color: gray;
+}
+
+
 .section-name {
   font-size: x-large;
   display: inline;
+}
+
+.has-data .section-name {
   cursor: pointer;
 }
 
-.data {
-  margin: 15px;
-}
 
 .toggle-caption {
   font-style: italic;
   cursor: pointer;
 }
 
+.data-section:not(.has-data) .toggle-caption {
+  display: none;
+}
+
+
 .empty-caption {
   font-style: italic;
 }
+
+.has-data .empty-caption {
+  display: none; /* invisible when has-data */
+}
+
+
+.data {
+  margin: 15px;
+  display: none;
+}
+
+.has-data.expanded .data {
+  display: block;
+}
+
 
 .stack-title {
   font-size: medium;
@@ -143,4 +168,23 @@ body[dir="rtl"] .copy-node {
 
 .histogram:hover .copy-node {
   visibility: visible;
+}
+
+
+.statebox {
+  display: none;
+}
+
+
+.filter-ui {
+  -moz-padding-start: 10em;
+  display: none;
+}
+
+.has-data.expanded .filter-ui {
+  display: inline;
+}
+
+.filter-blocked {
+  display: none;
 }

@@ -14,6 +14,7 @@
 #include "XPCJSMemoryReporter.h"
 #include "WrapperFactory.h"
 #include "dom_quickstubs.h"
+#include "mozJSComponentLoader.h"
 
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
@@ -2630,9 +2631,13 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
     if (!JS::CollectRuntimeStats(xpcrt->Runtime(), &rtStats, &orphanReporter))
         return NS_ERROR_FAILURE;
 
-    size_t xpconnect =
-        xpcrt->SizeOfIncludingThis(JSMallocSizeOf) +
-        XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(JSMallocSizeOf);
+    size_t xpconnect = xpcrt->SizeOfIncludingThis(JSMallocSizeOf);
+
+    XPCWrappedNativeScope::ScopeSizeInfo sizeInfo(JSMallocSizeOf);
+    XPCWrappedNativeScope::AddSizeOfAllScopesIncludingThis(&sizeInfo);
+
+    mozJSComponentLoader* loader = mozJSComponentLoader::Get();
+    size_t jsComponentLoaderSize = loader ? loader->SizeOfIncludingThis(JSMallocSizeOf) : 0;
 
     // This is the second step (see above).  First we report stuff in the
     // "explicit" tree, then we report other stuff.
@@ -2711,13 +2716,25 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
                  KIND_OTHER,
                  rtStats.gcHeapGCThings,
                  "Memory on the garbage-collected JavaScript heap that holds GC things such "
-                 "as objects, strings, scripts, etc.")
+                 "as objects, strings, scripts, etc.");
 
     // Report xpconnect.
 
-    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect"),
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/runtime"),
                  KIND_HEAP, xpconnect,
-                 "Memory used by XPConnect.");
+                 "Memory used by XPConnect runtime.");
+
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/scopes"),
+                 KIND_HEAP, sizeInfo.mScopeAndMapSize,
+                 "Memory used by XPConnect scopes.");
+
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/proto-iface-cache"),
+                 KIND_HEAP, sizeInfo.mProtoAndIfaceCacheSize,
+                 "Memory used for prototype and interface binding caches.");
+
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/js-component-loader"),
+                 KIND_HEAP, jsComponentLoaderSize,
+                 "Memory used by XPConnect's JS component loader.");
 
     return NS_OK;
 }

@@ -227,7 +227,7 @@ protected:
     static int32_t ContentAccessModifierMask();
 
     static void Init();
-    static int OnChange(const char* aPrefName, void*);
+    static void OnChange(const char* aPrefName, void*);
     static void Shutdown();
 
   private:
@@ -409,7 +409,7 @@ protected:
     WheelPrefs();
     ~WheelPrefs();
 
-    static int OnPrefChanged(const char* aPrefName, void* aClosure);
+    static void OnPrefChanged(const char* aPrefName, void* aClosure);
 
     enum Index
     {

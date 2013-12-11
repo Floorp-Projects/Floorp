@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsPrefBranch_h
+#define nsPrefBranch_h
+
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsIPrefBranch.h"
@@ -191,7 +194,7 @@ public:
 
   nsresult RemoveObserverFromMap(const char *aDomain, nsISupports *aObserver);
 
-  static nsresult NotifyObserver(const char *newpref, void *data);
+  static void NotifyObserver(const char *newpref, void *data);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
@@ -260,3 +263,5 @@ private:
   nsCOMPtr<nsIFile> mFile;
   nsCString mRelativeToKey;
 };
+
+#endif

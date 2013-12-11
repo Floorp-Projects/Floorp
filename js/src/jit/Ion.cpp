@@ -1280,7 +1280,7 @@ OptimizeMIR(MIRGenerator *mir)
         // repeated bailouts. Disable it if this script is known to bailout
         // frequently.
         JSScript *script = mir->info().script();
-        if (!script || !script->hadFrequentBailouts) {
+        if (!script || !script->hadFrequentBailouts()) {
             LICM licm(mir, graph);
             if (!licm.analyze())
                 return false;
@@ -1786,7 +1786,7 @@ CheckScript(JSContext *cx, JSScript *script, bool osr)
         return false;
     }
 
-    if (!script->compileAndGo) {
+    if (!script->compileAndGo()) {
         IonSpew(IonSpew_Abort, "not compile-and-go");
         return false;
     }

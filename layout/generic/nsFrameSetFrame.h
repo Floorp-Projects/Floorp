@@ -185,7 +185,7 @@ protected:
   
   void SetBorderResize(nsHTMLFramesetBorderFrame* aBorderFrame);
 
-  static int FrameResizePrefCallback(const char* aPref, void* aClosure);
+  static void FrameResizePrefCallback(const char* aPref, void* aClosure);
 
   nsFramesetDrag   mDrag;
   nsBorderColor    mEdgeColors;

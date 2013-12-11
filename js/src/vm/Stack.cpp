@@ -258,7 +258,7 @@ StackFrame::prologue(JSContext *cx)
     JS_ASSERT(cx->interpreterRegs().pc == script->code());
 
     if (isEvalFrame()) {
-        if (script->strict) {
+        if (script->strict()) {
             CallObject *callobj = CallObject::createForStrictEval(cx, this);
             if (!callobj)
                 return false;

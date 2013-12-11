@@ -646,7 +646,7 @@ WorkerThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void *toke
         if (script) {
             // The Debugger only needs to be told about the topmost script that was compiled.
             GlobalObject *compileAndGoGlobal = nullptr;
-            if (script->compileAndGo)
+            if (script->compileAndGo())
                 compileAndGoGlobal = &script->global();
             Debugger::onNewScript(maybecx, script, compileAndGoGlobal);
 

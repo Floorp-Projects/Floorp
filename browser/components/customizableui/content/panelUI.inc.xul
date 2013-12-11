@@ -5,7 +5,6 @@
 <panel id="PanelUI-popup"
        role="group"
        type="arrow"
-       level="top"
        hidden="true"
        noautofocus="true">
   <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">

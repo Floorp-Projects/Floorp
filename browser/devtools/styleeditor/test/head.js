@@ -46,45 +46,9 @@ function openStyleEditorInWindow(win, callback) {
     gPanelWindow = panel._panelWin;
 
     panel.UI._alwaysDisableAnimations = true;
-
-    /*
-    if (aSheet) {
-      panel.selectStyleSheet(aSheet, aLine, aCol);
-    } */
-
     callback(panel);
   });
 }
-
-/*
-function launchStyleEditorChrome(aCallback, aSheet, aLine, aCol)
-{
-  launchStyleEditorChromeFromWindow(window, aCallback, aSheet, aLine, aCol);
-}
-
-function launchStyleEditorChromeFromWindow(aWindow, aCallback, aSheet, aLine, aCol)
-{
-  let target = TargetFactory.forTab(aWindow.gBrowser.selectedTab);
-  gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
-    let panel = toolbox.getCurrentPanel();
-    gPanelWindow = panel._panelWin;
-    gPanelWindow.styleEditorChrome._alwaysDisableAnimations = true;
-    if (aSheet) {
-      panel.selectStyleSheet(aSheet, aLine, aCol);
-    }
-    aCallback(gPanelWindow.styleEditorChrome);
-  });
-}
-
-function addTabAndLaunchStyleEditorChromeWhenLoaded(aCallback, aSheet, aLine, aCol)
-{
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-    gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
-    launchStyleEditorChrome(aCallback, aSheet, aLine, aCol);
-  }, true);
-}
-*/
 
 function checkDiskCacheFor(host, done)
 {

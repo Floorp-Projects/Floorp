@@ -238,7 +238,7 @@ public:
     bool UseClearTypeForDownloadableFonts();
     bool UseClearTypeAlways();
 
-    static void GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion);
+    static void GetDLLVersion(char16ptr_t aDLLPath, nsAString& aVersion);
 
     // returns ClearType tuning information for each display
     static void GetCleartypeParams(nsTArray<ClearTypeParameterInfo>& aParams);

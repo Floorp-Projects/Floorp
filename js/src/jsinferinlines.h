@@ -707,7 +707,7 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoK
     /* :XXX: Limit script->length so we don't need to check the offset up front? */
     uint32_t offset = script->pcToOffset(pc);
 
-    if (!cx->typeInferenceEnabled() || !script->compileAndGo || offset >= AllocationSiteKey::OFFSET_LIMIT)
+    if (!cx->typeInferenceEnabled() || !script->compileAndGo() || offset >= AllocationSiteKey::OFFSET_LIMIT)
         return GetTypeNewObject(cx, kind);
 
     AllocationSiteKey key;

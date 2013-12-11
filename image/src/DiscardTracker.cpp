@@ -39,11 +39,10 @@ DiscardTracker::DiscardRunnable::Run()
   return NS_OK;
 }
 
-int
+void
 DiscardTimeoutChangedCallback(const char* aPref, void *aClosure)
 {
   DiscardTracker::ReloadTimeout();
-  return 0;
 }
 
 nsresult

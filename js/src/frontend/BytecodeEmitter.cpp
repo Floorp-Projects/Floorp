@@ -1178,7 +1178,7 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
             if (funbox->function()->isNamedLambda())
                 hops++;
         }
-        if (bce->script->directlyInsideEval)
+        if (bce->script->directlyInsideEval())
             return false;
         RootedObject outerScope(bce->sc->context, bce->script->enclosingStaticScope());
         for (StaticScopeIter<CanGC> ssi(bce->sc->context, outerScope); !ssi.done(); ssi++) {
@@ -1210,14 +1210,14 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
                 hops++;
             }
 
-            if (script->funHasExtensibleScope || script->directlyInsideEval)
+            if (script->funHasExtensibleScope() || script->directlyInsideEval())
                 return false;
         }
     }
 
     // Unbound names aren't recognizable global-property references if the
     // script isn't running against its global object.
-    if (!bce->script->compileAndGo || !bce->hasGlobalScope)
+    if (!bce->script->compileAndGo() || !bce->hasGlobalScope)
         return false;
 
     // Deoptimized names also aren't necessarily globals.
@@ -1342,7 +1342,7 @@ BindNameToSlotHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     if (dn->pn_cookie.isFree()) {
         if (HandleScript caller = bce->evalCaller) {
-            JS_ASSERT(bce->script->compileAndGo);
+            JS_ASSERT(bce->script->compileAndGo());
 
             /*
              * Don't generate upvars on the left side of a for loop. See
@@ -1735,7 +1735,7 @@ BytecodeEmitter::isInLoop()
 bool
 BytecodeEmitter::checkSingletonContext()
 {
-    if (!script->compileAndGo || sc->isFunctionBox() || isInLoop())
+    if (!script->compileAndGo() || sc->isFunctionBox() || isInLoop())
         return false;
     hasSingletons = true;
     return true;
@@ -1744,7 +1744,7 @@ BytecodeEmitter::checkSingletonContext()
 bool
 BytecodeEmitter::needsImplicitThis()
 {
-    if (!script->compileAndGo)
+    if (!script->compileAndGo())
         return true;
 
     if (sc->isFunctionBox()) {
@@ -1780,7 +1780,7 @@ BytecodeEmitter::tellDebuggerAboutCompiledScript(ExclusiveContext *cx)
     // nullptr parent), and so the hook should never be fired.
     if (emitterMode != LazyFunction && !parent) {
         GlobalObject *compileAndGoGlobal = nullptr;
-        if (script->compileAndGo)
+        if (script->compileAndGo())
             compileAndGoGlobal = &script->global();
         Debugger::onNewScript(cx->asJSContext(), script, compileAndGoGlobal);
     }
@@ -1852,7 +1852,7 @@ EmitNewInit(ExclusiveContext *cx, BytecodeEmitter *bce, JSProtoKey key)
 static bool
 IteratorResultShape(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned *shape)
 {
-    JS_ASSERT(bce->script->compileAndGo);
+    JS_ASSERT(bce->script->compileAndGo());
 
     RootedObject obj(cx);
     gc::AllocKind kind = GuessObjectGCKind(2);
@@ -1882,7 +1882,7 @@ IteratorResultShape(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned *shape)
 static bool
 EmitPrepareIteratorResult(ExclusiveContext *cx, BytecodeEmitter *bce)
 {
-    if (bce->script->compileAndGo) {
+    if (bce->script->compileAndGo()) {
         unsigned shape;
         if (!IteratorResultShape(cx, bce, &shape))
             return false;
@@ -2730,8 +2730,8 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
      * initializers created within it may be given more precise types.
      */
     if (runOnce) {
-        bce->script->treatAsRunOnce = true;
-        JS_ASSERT(!bce->script->hasRunOnce);
+        bce->script->setTreatAsRunOnce();
+        JS_ASSERT(!bce->script->hasRunOnce());
     }
 
     /* Initialize fun->script() so that the debugger has a valid fun->script(). */
@@ -4779,7 +4779,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (fun->isInterpreted()) {
         bool singleton =
             cx->typeInferenceEnabled() &&
-            bce->script->compileAndGo &&
+            bce->script->compileAndGo() &&
             fun->isInterpreted() &&
             (bce->checkSingletonContext() ||
              (!bce->isInLoop() && bce->isRunOnceLambda()));
@@ -4808,8 +4808,8 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             CompileOptions options(cx, bce->parser->options());
             options.setPrincipals(parent->principals())
                    .setOriginPrincipals(parent->originPrincipals())
-                   .setCompileAndGo(parent->compileAndGo)
-                   .setSelfHostingMode(parent->selfHosted)
+                   .setCompileAndGo(parent->compileAndGo())
+                   .setSelfHostingMode(parent->selfHosted())
                    .setNoScriptRval(false)
                    .setForEval(false)
                    .setVersion(parent->getVersion());
@@ -4837,7 +4837,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 return false;
 
             if (funbox->usesArguments && funbox->usesApply)
-                script->usesArgumentsAndApply = true;
+                script->setUsesArgumentsAndApply();
         }
     } else {
         JS_ASSERT(IsAsmJSModuleNative(fun->native()));
@@ -5303,9 +5303,9 @@ EmitStatement(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     bool wantval = false;
     bool useful = false;
     if (bce->sc->isFunctionBox()) {
-        JS_ASSERT(!bce->script->noScriptRval);
+        JS_ASSERT(!bce->script->noScriptRval());
     } else {
-        useful = wantval = !bce->script->noScriptRval;
+        useful = wantval = !bce->script->noScriptRval();
     }
 
     /* Don't eliminate expressions with side effects. */
@@ -5849,7 +5849,7 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * JSOP_NEWOBJECT with the final shape instead.
      */
     RootedObject obj(cx);
-    if (bce->script->compileAndGo) {
+    if (bce->script->compileAndGo()) {
         gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
         obj = NewBuiltinClassInstance(cx, &JSObject::class_, kind);
         if (!obj)

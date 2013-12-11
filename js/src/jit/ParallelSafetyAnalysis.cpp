@@ -872,7 +872,7 @@ GetPossibleCallees(JSContext *cx,
         if (!rootedScript)
             return false;
 
-        if (rootedScript->shouldCloneAtCallsite) {
+        if (rootedScript->shouldCloneAtCallsite()) {
             rootedFun = CloneFunctionAtCallsite(cx, rootedFun, script, pc);
             if (!rootedFun)
                 return false;

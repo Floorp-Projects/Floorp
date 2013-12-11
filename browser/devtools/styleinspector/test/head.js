@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const TEST_BASE_HTTP = "http://example.com/browser/browser/devtools/styleinspector/test/";
+const TEST_BASE_HTTPS = "https://example.com/browser/browser/devtools/styleinspector/test/";
+
 Services.prefs.setBoolPref("devtools.debugger.log", true);
 SimpleTest.registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.debugger.log");
@@ -185,6 +188,53 @@ function getComputedPropertyValue(aName)
       return value.textContent;
     }
   }
+}
+
+/**
+ * Polls a given function waiting for it to become true.
+ *
+ * @param object aOptions
+ *        Options object with the following properties:
+ *        - validatorFn
+ *        A validator function that returns a boolean. This is called every few
+ *        milliseconds to check if the result is true. When it is true, succesFn
+ *        is called and polling stops. If validatorFn never returns true, then
+ *        polling timeouts after several tries and a failure is recorded.
+ *        - successFn
+ *        A function called when the validator function returns true.
+ *        - failureFn
+ *        A function called if the validator function timeouts - fails to return
+ *        true in the given time.
+ *        - name
+ *        Name of test. This is used to generate the success and failure
+ *        messages.
+ *        - timeout
+ *        Timeout for validator function, in milliseconds. Default is 5000.
+ */
+function waitForSuccess(aOptions)
+{
+  let start = Date.now();
+  let timeout = aOptions.timeout || 5000;
+
+  function wait(validatorFn, successFn, failureFn)
+  {
+    if ((Date.now() - start) > timeout) {
+      // Log the failure.
+      ok(false, "Timed out while waiting for: " + aOptions.name);
+      failureFn(aOptions);
+      return;
+    }
+
+    if (validatorFn(aOptions)) {
+      ok(true, aOptions.name);
+      successFn();
+    }
+    else {
+      setTimeout(function() wait(validatorFn, successFn, failureFn), 100);
+    }
+  }
+
+  wait(aOptions.validatorFn, aOptions.successFn, aOptions.failureFn);
 }
 
 registerCleanupFunction(tearDown);

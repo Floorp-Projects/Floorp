@@ -908,6 +908,7 @@ private:
       mPendingBinding(aPendingBinding), mStyleContext(aStyleContext),
       mSuppressWhiteSpaceOptimizations(aSuppressWhiteSpaceOptimizations),
       mIsText(false), mIsGeneratedContent(false),
+      mIsAnonymousContentCreatorContent(false),
       mIsRootPopupgroup(false), mIsAllInline(false), mIsBlock(false),
       mHasInlineEnds(false), mIsPopup(false),
       mIsLineParticipant(false), mIsForSVGAElement(false)
@@ -975,6 +976,8 @@ private:
     // Whether this is a generated content container.
     // If it is, mContent is a strong pointer.
     bool mIsGeneratedContent;
+    // Whether this is an item for nsIAnonymousContentCreator content.
+    bool mIsAnonymousContentCreatorContent;
     // Whether this is an item for the root popupgroup.
     bool mIsRootPopupgroup;
     // Whether construction from this item will create only frames that are
@@ -1164,6 +1167,8 @@ private:
 #define ITEM_IS_WITHIN_SVG_TEXT 0x8
   /* The item allows items to be created for SVG <textPath> children. */
 #define ITEM_ALLOWS_TEXT_PATH_CHILD 0x10
+  /* The item is content created by an nsIAnonymousContentCreator frame */
+#define ITEM_IS_ANONYMOUSCONTENTCREATOR_CONTENT 0x20
   // The guts of AddFrameConstructionItems
   // aParentFrame might be null.  If it is, that means it was an
   // inline frame.
