@@ -11,6 +11,8 @@ import mozbuild.backend.configenvironment as ConfigStatus
 
 from mozbuild.util import ReadOnlyDict
 
+import mozpack.path as mozpath
+
 
 class ConfigEnvironment(ConfigStatus.ConfigEnvironment):
     def __init__(self, *args, **kwargs):
@@ -20,7 +22,7 @@ class ConfigEnvironment(ConfigStatus.ConfigEnvironment):
             if os.path.isabs(self.topsrcdir):
                 top_srcdir = self.topsrcdir.replace(os.sep, '/')
             else:
-                top_srcdir = os.path.relpath(self.topsrcdir, self.topobjdir).replace(os.sep, '/')
+                top_srcdir = mozpath.relpath(self.topsrcdir, self.topobjdir).replace(os.sep, '/')
 
             d = dict(self.substs)
             d['top_srcdir'] = top_srcdir
@@ -123,8 +125,8 @@ bar baz
 # directory location.
 class TestPaths(unittest.TestCase):
     def setUp(self):
-        self.dir = os.path.basename(os.path.abspath(os.curdir))
-        self.absolute = os.path.normpath('/absolute')
+        self.dir = mozpath.basename(mozpath.abspath(os.curdir))
+        self.absolute = mozpath.normpath('/absolute')
 
 class TestPathsLocalBuildDir(TestPaths):
     def get_env(self, topsrcdir):
@@ -141,7 +143,7 @@ class TestPathsLocalBuildDir(TestPaths):
         # topsrcdir = . ; topobjdir = .
         env = self.get_env('.')
         self.assertEqual(env.get_input('file'), 'file.in')
-        self.assertEqual(env.get_input('dir/file'), os.path.join('dir', 'file.in'))
+        self.assertEqual(env.get_input('dir/file'), mozpath.join('dir', 'file.in'))
         self.assertEqual(env.get_top_srcdir('file'), '.')
         self.assertEqual(env.get_top_srcdir('dir/file'), '..')
         self.assertEqual(env.get_file_srcdir('file'), '.')
@@ -150,8 +152,8 @@ class TestPathsLocalBuildDir(TestPaths):
     def test_paths_local_build_parent_src(self):
         # topsrcdir = .. ; topobjdir = .
         env = self.get_env('..')
-        self.assertEqual(env.get_input('file'), os.path.join('..', 'file.in'))
-        self.assertEqual(env.get_input('dir/file'), os.path.join('..', 'dir', 'file.in'))
+        self.assertEqual(env.get_input('file'), mozpath.join('..', 'file.in'))
+        self.assertEqual(env.get_input('dir/file'), mozpath.join('..', 'dir', 'file.in'))
         self.assertEqual(env.get_top_srcdir('file'), '..')
         self.assertEqual(env.get_top_srcdir('dir/file'), '../..')
         self.assertEqual(env.get_file_srcdir('file'), '..')
@@ -160,9 +162,9 @@ class TestPathsLocalBuildDir(TestPaths):
     def test_paths_local_build_absolute_src(self):
         # topsrcdir = /absolute ; topobjdir = /absolute
         env = self.get_env(self.absolute)
-        self.assertEqual(env.get_input('file'), os.path.join(self.absolute, 'file.in'))
-        self.assertEqual(env.get_input('dir/file'), os.path.join(self.absolute, 'dir', 'file.in'))
-        self.assertEqual(env.get_input('%s/file' % self.dir), os.path.join(self.absolute, self.dir, 'file.in'))
+        self.assertEqual(env.get_input('file'), mozpath.join(self.absolute, 'file.in'))
+        self.assertEqual(env.get_input('dir/file'), mozpath.join(self.absolute, 'dir', 'file.in'))
+        self.assertEqual(env.get_input('%s/file' % self.dir), mozpath.join(self.absolute, self.dir, 'file.in'))
         self.assertEqual(env.get_top_srcdir('file'), '/absolute')
         self.assertEqual(env.get_top_srcdir('dir/file'), '/absolute')
         self.assertEqual(env.get_top_srcdir('%s/file' % dir), '/absolute')
@@ -186,9 +188,9 @@ class TestPathsParentBuildDir(TestPaths):
     def test_paths_parent_build_parent_src(self):
         # topsrcdir = .. ; topobjdir = ..
         env = self.get_env('..')
-        self.assertEqual(env.get_input('../file'), os.path.join('..', 'file.in'))
-        self.assertEqual(env.get_input('file'), os.path.join('..', self.dir, 'file.in'))
-        self.assertEqual(env.get_input('dir/file'), os.path.join('..', self.dir, 'dir', 'file.in'))
+        self.assertEqual(env.get_input('../file'), mozpath.join('..', 'file.in'))
+        self.assertEqual(env.get_input('file'), mozpath.join('..', self.dir, 'file.in'))
+        self.assertEqual(env.get_input('dir/file'), mozpath.join('..', self.dir, 'dir', 'file.in'))
         self.assertEqual(env.get_top_srcdir('../file'), '.')
         self.assertEqual(env.get_top_srcdir('file'), '..')
         self.assertEqual(env.get_top_srcdir('dir/file'), '../..')
@@ -199,9 +201,9 @@ class TestPathsParentBuildDir(TestPaths):
     def test_paths_parent_build_ancestor_src(self):
         # topsrcdir = ../.. ; topobjdir = ..
         env = self.get_env('../..')
-        self.assertEqual(env.get_input('../file'), os.path.join('..', '..', 'file.in'))
-        self.assertEqual(env.get_input('file'), os.path.join('..', '..', self.dir, 'file.in'))
-        self.assertEqual(env.get_input('dir/file'), os.path.join('..', '..', self.dir, 'dir', 'file.in'))
+        self.assertEqual(env.get_input('../file'), mozpath.join('..', '..', 'file.in'))
+        self.assertEqual(env.get_input('file'), mozpath.join('..', '..', self.dir, 'file.in'))
+        self.assertEqual(env.get_input('dir/file'), mozpath.join('..', '..', self.dir, 'dir', 'file.in'))
         self.assertEqual(env.get_top_srcdir('../file'), '..')
         self.assertEqual(env.get_top_srcdir('file'), '../..')
         self.assertEqual(env.get_top_srcdir('dir/file'), '../../..')
@@ -212,9 +214,9 @@ class TestPathsParentBuildDir(TestPaths):
     def test_paths_parent_build_absolute_src(self):
         # topsrcdir = /absolute ; topobjdir = ..
         env = self.get_env(self.absolute)
-        self.assertEqual(env.get_input('../file'), os.path.join(self.absolute, 'file.in'))
-        self.assertEqual(env.get_input('file'), os.path.join(self.absolute, self.dir, 'file.in'))
-        self.assertEqual(env.get_input('dir/file'), os.path.join(self.absolute, self.dir, 'dir', 'file.in'))
+        self.assertEqual(env.get_input('../file'), mozpath.join(self.absolute, 'file.in'))
+        self.assertEqual(env.get_input('file'), mozpath.join(self.absolute, self.dir, 'file.in'))
+        self.assertEqual(env.get_input('dir/file'), mozpath.join(self.absolute, self.dir, 'dir', 'file.in'))
         self.assertEqual(env.get_top_srcdir('../file'), '/absolute')
         self.assertEqual(env.get_top_srcdir('file'), '/absolute')
         self.assertEqual(env.get_top_srcdir('dir/file'), '/absolute')
@@ -236,8 +238,8 @@ class TestPathsRelativeBuild(TestPaths):
     def test_paths_relative_build_relative_src(self):
         # topsrcdir = relative ; topobjdir = relative
         env = self.get_env('relative')
-        self.assertEqual(env.get_input('relative/file'), os.path.join('relative', 'file.in'))
-        self.assertEqual(env.get_input('relative/dir/file'), os.path.join('relative', 'dir', 'file.in'))
+        self.assertEqual(env.get_input('relative/file'), mozpath.join('relative', 'file.in'))
+        self.assertEqual(env.get_input('relative/dir/file'), mozpath.join('relative', 'dir', 'file.in'))
         self.assertEqual(env.get_top_srcdir('relative/file'), '.')
         self.assertEqual(env.get_top_srcdir('relative/dir/file'), '..')
         self.assertEqual(env.get_file_srcdir('relative/file'), '.')
@@ -247,7 +249,7 @@ class TestPathsRelativeBuild(TestPaths):
         # topsrcdir = . ; topobjdir = relative
         env = self.get_env('.')
         self.assertEqual(env.get_input('relative/file'), 'file.in')
-        self.assertEqual(env.get_input('relative/dir/file'), os.path.join('dir', 'file.in'))
+        self.assertEqual(env.get_input('relative/dir/file'), mozpath.join('dir', 'file.in'))
         self.assertEqual(env.get_top_srcdir('relative/file'), '..')
         self.assertEqual(env.get_top_srcdir('relative/dir/file'), '../..')
         self.assertEqual(env.get_file_srcdir('relative/file'), '..')
@@ -256,8 +258,8 @@ class TestPathsRelativeBuild(TestPaths):
     def test_paths_relative_build_parent_src(self):
         # topsrcdir = .. ; topobjdir = relative
         env = self.get_env('..')
-        self.assertEqual(env.get_input('relative/file'), os.path.join('..', 'file.in'))
-        self.assertEqual(env.get_input('relative/dir/file'), os.path.join('..', 'dir', 'file.in'))
+        self.assertEqual(env.get_input('relative/file'), mozpath.join('..', 'file.in'))
+        self.assertEqual(env.get_input('relative/dir/file'), mozpath.join('..', 'dir', 'file.in'))
         self.assertEqual(env.get_top_srcdir('relative/file'), '../..')
         self.assertEqual(env.get_top_srcdir('relative/dir/file'), '../../..')
         self.assertEqual(env.get_file_srcdir('relative/file'), '../..')
@@ -266,8 +268,8 @@ class TestPathsRelativeBuild(TestPaths):
     def test_paths_relative_build_absolute_src(self):
         # topsrcdir = /absolute ; topobjdir = relative
         env = self.get_env(self.absolute)
-        self.assertEqual(env.get_input('relative/file'), os.path.join(self.absolute, 'file.in'))
-        self.assertEqual(env.get_input('relative/dir/file'), os.path.join(self.absolute, 'dir', 'file.in'))
+        self.assertEqual(env.get_input('relative/file'), mozpath.join(self.absolute, 'file.in'))
+        self.assertEqual(env.get_input('relative/dir/file'), mozpath.join(self.absolute, 'dir', 'file.in'))
         self.assertEqual(env.get_top_srcdir('relative/file'), '/absolute')
         self.assertEqual(env.get_top_srcdir('relative/dir/file'), '/absolute')
         self.assertEqual(env.get_file_srcdir('relative/file'), '/absolute')
@@ -275,7 +277,7 @@ class TestPathsRelativeBuild(TestPaths):
 
 class TestPathsAbsoluteBuild(unittest.TestCase):
     def setUp(self):
-        self.absolute_build = os.path.normpath('/absolute/build')
+        self.absolute_build = mozpath.normpath('/absolute/build')
 
     def get_env(self, topsrcdir):
         env = ConfigEnvironment(topsrcdir = topsrcdir, topobjdir = self.absolute_build)
@@ -290,8 +292,8 @@ class TestPathsAbsoluteBuild(unittest.TestCase):
     def test_paths_absolute_build_same_src(self):
         # topsrcdir = /absolute/build ; topobjdir = /absolute/build
         env = self.get_env(self.absolute_build)
-        self.assertEqual(env.get_input('/absolute/build/file'), os.path.join(self.absolute_build, 'file.in'))
-        self.assertEqual(env.get_input('/absolute/build/dir/file'), os.path.join(self.absolute_build, 'dir', 'file.in'))
+        self.assertEqual(env.get_input('/absolute/build/file'), mozpath.join(self.absolute_build, 'file.in'))
+        self.assertEqual(env.get_input('/absolute/build/dir/file'), mozpath.join(self.absolute_build, 'dir', 'file.in'))
         self.assertEqual(env.get_top_srcdir('/absolute/build/file'), '/absolute/build')
         self.assertEqual(env.get_top_srcdir('/absolute/build/dir/file'), '/absolute/build')
         self.assertEqual(env.get_file_srcdir('/absolute/build/file'), '/absolute/build')
@@ -299,10 +301,10 @@ class TestPathsAbsoluteBuild(unittest.TestCase):
 
     def test_paths_absolute_build_ancestor_src(self):
         # topsrcdir = /absolute ; topobjdir = /absolute/build
-        absolute = os.path.dirname(self.absolute_build)
+        absolute = mozpath.dirname(self.absolute_build)
         env = self.get_env(absolute)
-        self.assertEqual(env.get_input('/absolute/build/file'), os.path.join(absolute, 'file.in'))
-        self.assertEqual(env.get_input('/absolute/build/dir/file'), os.path.join(absolute, 'dir', 'file.in'))
+        self.assertEqual(env.get_input('/absolute/build/file'), mozpath.join(absolute, 'file.in'))
+        self.assertEqual(env.get_input('/absolute/build/dir/file'), mozpath.join(absolute, 'dir', 'file.in'))
         self.assertEqual(env.get_top_srcdir('/absolute/build/file'), '/absolute')
         self.assertEqual(env.get_top_srcdir('/absolute/build/dir/file'), '/absolute')
         self.assertEqual(env.get_file_srcdir('/absolute/build/file'), '/absolute')
@@ -310,10 +312,10 @@ class TestPathsAbsoluteBuild(unittest.TestCase):
 
     def test_paths_absolute_build_different_src(self):
         # topsrcdir = /some/path ; topobjdir = /absolute/build
-        absolute = os.path.normpath('/some/path')
+        absolute = mozpath.normpath('/some/path')
         env = self.get_env(absolute)
-        self.assertEqual(env.get_input('/absolute/build/file'), os.path.join(absolute, 'file.in'))
-        self.assertEqual(env.get_input('/absolute/build/dir/file'), os.path.join(absolute, 'dir', 'file.in'))
+        self.assertEqual(env.get_input('/absolute/build/file'), mozpath.join(absolute, 'file.in'))
+        self.assertEqual(env.get_input('/absolute/build/dir/file'), mozpath.join(absolute, 'dir', 'file.in'))
         self.assertEqual(env.get_top_srcdir('/absolute/build/file'), '/some/path')
         self.assertEqual(env.get_top_srcdir('/absolute/build/dir/file'), '/some/path')
         self.assertEqual(env.get_file_srcdir('/absolute/build/file'), '/some/path')

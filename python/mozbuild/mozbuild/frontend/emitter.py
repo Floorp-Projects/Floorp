@@ -63,7 +63,7 @@ class TreeMetadataEmitter(LoggingMixin):
         self.config = config
 
         # TODO add mozinfo into config or somewhere else.
-        mozinfo_path = os.path.join(config.topobjdir, 'mozinfo.json')
+        mozinfo_path = mozpath.join(config.topobjdir, 'mozinfo.json')
         if os.path.exists(mozinfo_path):
             self.mozinfo = json.load(open(mozinfo_path, 'rt'))
         else:
@@ -174,7 +174,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         for symbol in ('SOURCES', 'HOST_SOURCES', 'UNIFIED_SOURCES'):
             for src in (sandbox[symbol] or []):
-                if not os.path.exists(os.path.join(sandbox['SRCDIR'], src)):
+                if not os.path.exists(mozpath.join(sandbox['SRCDIR'], src)):
                     raise SandboxValidationError('Reference to a file that '
                         'doesn\'t exist in %s (%s) in %s'
                         % (symbol, src, sandbox['RELATIVEDIR']))
@@ -247,7 +247,7 @@ class TreeMetadataEmitter(LoggingMixin):
                            if k in ('SOURCES', 'UNIFIED_SOURCES')))
         for variable, mapping in varmap.items():
             for f in sandbox[variable]:
-                ext = os.path.splitext(f)[1]
+                ext = mozpath.splitext(f)[1]
                 if ext not in mapping:
                     raise SandboxValidationError('%s has an unknown file type in %s' % (f, sandbox['RELATIVEDIR']))
                 l = passthru.variables.setdefault(mapping[ext], [])
@@ -369,8 +369,8 @@ class TreeMetadataEmitter(LoggingMixin):
             path = path[1:]
 
         sub = cls(sandbox)
-        sub.input_path = os.path.join(sandbox['SRCDIR'], '%s.in' % path)
-        sub.output_path = os.path.join(sandbox['OBJDIR'], path)
+        sub.input_path = mozpath.join(sandbox['SRCDIR'], '%s.in' % path)
+        sub.output_path = mozpath.join(sandbox['OBJDIR'], path)
         sub.relpath = path
 
         return sub
@@ -378,7 +378,7 @@ class TreeMetadataEmitter(LoggingMixin):
     def _process_test_manifest(self, sandbox, info, manifest_path):
         flavor, install_prefix, filter_inactive = info
 
-        manifest_path = os.path.normpath(manifest_path)
+        manifest_path = mozpath.normpath(manifest_path)
         path = mozpath.normpath(mozpath.join(sandbox['SRCDIR'], manifest_path))
         manifest_dir = mozpath.dirname(path)
         manifest_reldir = mozpath.dirname(mozpath.relpath(path,
@@ -441,7 +441,7 @@ class TreeMetadataEmitter(LoggingMixin):
                             obj.installs[full] = mozpath.join(out_dir, pattern)
 
             # We also copy the manifest into the output directory.
-            out_path = mozpath.join(out_dir, os.path.basename(manifest_path))
+            out_path = mozpath.join(out_dir, mozpath.basename(manifest_path))
             obj.installs[path] = out_path
 
             # Some manifests reference files that are auto generated as

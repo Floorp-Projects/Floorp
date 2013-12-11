@@ -100,6 +100,6 @@ class CommonBackend(BuildBackend):
             self._handle_idl_manager(self._idl_manager)
 
         # Write out a machine-readable file describing every test.
-        path = os.path.join(self.environment.topobjdir, 'all-tests.json')
+        path = mozpath.join(self.environment.topobjdir, 'all-tests.json')
         with self._write_file(path) as fh:
             json.dump(self._test_manager.tests_by_path, fh, sort_keys=True)
