@@ -149,11 +149,27 @@ public:
  * In order to send several different buffers to the compositor side, use
  * several TextureClients.
  */
-class TextureClient : public AtomicRefCounted<TextureClient>
+class TextureClient
 {
 public:
   TextureClient(TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
   virtual ~TextureClient();
+
+  void AddRef() {
+    MOZ_ASSERT(mRefCount >= 0);
+    ++mRefCount;
+  }
+
+  void Release() {
+    MOZ_ASSERT(mRefCount > 0);
+    if (0 == --mRefCount) {
+#ifdef DEBUG
+      mRefCount = detail::DEAD;
+#endif
+      Finalize();
+      delete this;
+    }
+  }
 
   virtual TextureClientSurface* AsTextureClientSurface() { return nullptr; }
   virtual TextureClientDrawTarget* AsTextureClientDrawTarget() { return nullptr; }
@@ -252,6 +268,20 @@ public:
   // If a texture client holds a reference to shmem, it should override this
   // method to forget about the shmem _without_ releasing it.
   virtual void OnActorDestroy() {}
+
+private:
+  Atomic<int> mRefCount;
+
+  /**
+   * Called once, just before the destructor.
+   *
+   * Here goes the shut-down code that uses virtual methods.
+   * Must only be called by Release().
+   */
+  void Finalize()
+  {
+    // XXX Bug 897452 - Coming soon
+  }
 
 protected:
   void AddFlags(TextureFlags  aFlags)
