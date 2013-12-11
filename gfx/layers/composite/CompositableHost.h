@@ -301,7 +301,6 @@ protected:
   Compositor* mCompositor;
   Layer* mLayer;
   RefPtr<CompositableBackendSpecificData> mBackendData;
-  RefPtr<TextureHost> mFirstTexture;
   bool mAttached;
   bool mKeepAttached;
 };

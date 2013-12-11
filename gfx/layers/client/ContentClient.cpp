@@ -148,9 +148,6 @@ ContentClientRemoteBuffer::EndPaint()
   // decided we didn't need one yet because the region to draw was empty.
   SetBufferProvider(nullptr);
   SetBufferProviderOnWhite(nullptr);
-  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
-    RemoveTextureClient(mOldTextures[i]);
-  }
   mOldTextures.Clear();
 
   if (mTextureClient) {
@@ -306,9 +303,6 @@ ContentClientRemoteBuffer::OnActorDestroy()
   }
   if (mTextureClientOnWhite) {
     mTextureClientOnWhite->OnActorDestroy();
-  }
-  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
-    mOldTextures[i]->OnActorDestroy();
   }
 }
 
@@ -507,9 +501,6 @@ DeprecatedContentClientRemoteBuffer::OnActorDestroy()
   if (mDeprecatedTextureClientOnWhite) {
     mDeprecatedTextureClientOnWhite->OnActorDestroy();
   }
-  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
-    mOldTextures[i]->OnActorDestroy();
-  }
 }
  
 void
@@ -675,9 +666,6 @@ ContentClientDoubleBuffered::OnActorDestroy()
   if (mTextureClientOnWhite) {
     mTextureClientOnWhite->OnActorDestroy();
   }
-  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
-    mOldTextures[i]->OnActorDestroy();
-  }
   if (mFrontClient) {
     mFrontClient->OnActorDestroy();
   }
@@ -794,9 +782,6 @@ DeprecatedContentClientDoubleBuffered::OnActorDestroy()
   }
   if (mDeprecatedTextureClientOnWhite) {
     mDeprecatedTextureClientOnWhite->OnActorDestroy();
-  }
-  for (size_t i = 0; i < mOldTextures.Length(); ++i) {
-    mOldTextures[i]->OnActorDestroy();
   }
   if (mFrontClient) {
     mFrontClient->OnActorDestroy();
