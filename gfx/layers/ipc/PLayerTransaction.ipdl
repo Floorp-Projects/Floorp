@@ -12,7 +12,6 @@ include protocol PCompositor;
 include protocol PGrallocBuffer;
 include protocol PLayer;
 include protocol PRenderFrame;
-include protocol PTexture;
 
 include "mozilla/GfxMessageUtils.h";
 
@@ -34,7 +33,6 @@ sync protocol PLayerTransaction {
   manages PLayer;
   manages PCompositable;
   manages PGrallocBuffer;
-  manages PTexture;
 
 parent:
   /**
@@ -68,7 +66,6 @@ parent:
     returns (MaybeMagicGrallocBufferHandle handle);
   async PLayer();
   async PCompositable(TextureInfo aTextureInfo);
-  async PTexture();
 
   // The isFirstPaint flag can be used to indicate that this is the first update
   // for a particular document.

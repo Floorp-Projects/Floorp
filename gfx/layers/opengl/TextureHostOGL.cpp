@@ -87,7 +87,8 @@ CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,
 
 
 TemporaryRef<TextureHost>
-CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
+CreateTextureHostOGL(uint64_t aID,
+                     const SurfaceDescriptor& aDesc,
                      ISurfaceAllocator* aDeallocator,
                      TextureFlags aFlags)
 {
@@ -95,13 +96,13 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorShmem:
     case SurfaceDescriptor::TSurfaceDescriptorMemory: {
-      result = CreateBackendIndependentTextureHost(aDesc,
+      result = CreateBackendIndependentTextureHost(aID, aDesc,
                                                    aDeallocator, aFlags);
       break;
     }
     case SurfaceDescriptor::TSharedTextureDescriptor: {
       const SharedTextureDescriptor& desc = aDesc.get_SharedTextureDescriptor();
-      result = new SharedTextureHostOGL(aFlags,
+      result = new SharedTextureHostOGL(aID, aFlags,
                                         desc.shareType(),
                                         desc.handle(),
                                         gfx::ToIntSize(desc.size()),
@@ -112,7 +113,7 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
       const SurfaceDescriptorMacIOSurface& desc =
         aDesc.get_SurfaceDescriptorMacIOSurface();
-      result = new MacIOSurfaceTextureHostOGL(aFlags, desc);
+      result = new MacIOSurfaceTextureHostOGL(aID, aFlags, desc);
       break;
     }
 #endif
@@ -120,7 +121,7 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
     case SurfaceDescriptor::TNewSurfaceDescriptorGralloc: {
       const NewSurfaceDescriptorGralloc& desc =
         aDesc.get_NewSurfaceDescriptorGralloc();
-      result = new GrallocTextureHostOGL(aFlags, desc);
+      result = new GrallocTextureHostOGL(aID, aFlags, desc);
       break;
     }
 #endif
@@ -375,12 +376,13 @@ SharedTextureSourceOGL::GetTextureTransform()
   return handleDetails.mTextureTransform;
 }
 
-SharedTextureHostOGL::SharedTextureHostOGL(TextureFlags aFlags,
+SharedTextureHostOGL::SharedTextureHostOGL(uint64_t aID,
+                                           TextureFlags aFlags,
                                            gl::SharedTextureShareType aShareType,
                                            gl::SharedTextureHandle aSharedHandle,
                                            gfx::IntSize aSize,
                                            bool inverted)
-  : TextureHost(aFlags)
+  : TextureHost(aID, aFlags)
   , mSize(aSize)
   , mCompositor(nullptr)
   , mSharedHandle(aSharedHandle)

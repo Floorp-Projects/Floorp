@@ -98,7 +98,6 @@ EXPORTS.gfxipc += [
 ]
 
 EXPORTS.mozilla.layers += [
-    'AtomicRefCountedWithFinalize.h',
     'basic/BasicCompositor.h',
     'basic/MacIOSurfaceTextureHostBasic.h',
     'basic/TextureHostBasic.h',
@@ -291,7 +290,6 @@ IPDL_SOURCES = [
     'ipc/PImageBridge.ipdl',
     'ipc/PLayer.ipdl',
     'ipc/PLayerTransaction.ipdl',
-    'ipc/PTexture.ipdl',
 ]
 
 MSVC_ENABLE_PGO = True

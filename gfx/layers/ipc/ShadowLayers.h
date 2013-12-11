@@ -149,8 +149,6 @@ public:
    */
   void Connect(CompositableClient* aCompositable);
 
-  virtual PTextureChild* CreateEmptyTextureChild() MOZ_OVERRIDE;
-
   virtual void CreatedSingleBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptor& aDescriptor,
                                    const TextureInfo& aTextureInfo,
@@ -279,8 +277,6 @@ public:
                              TextureIdentifier aTextureId,
                              SurfaceDescriptor* aDescriptor) MOZ_OVERRIDE;
 
-  virtual void RemoveTexture(TextureClient* aTexture) MOZ_OVERRIDE;
-
   /**
    * Same as above, but performs an asynchronous layer transaction
    */
@@ -308,6 +304,19 @@ public:
    */
   void UpdatePictureRect(CompositableClient* aCompositable,
                          const nsIntRect& aRect);
+
+  /**
+   * See CompositableForwarder::AddTexture
+   */
+  virtual bool AddTexture(CompositableClient* aCompositable,
+                          TextureClient* aClient) MOZ_OVERRIDE;
+
+  /**
+   * See CompositableForwarder::RemoveTexture
+   */
+  virtual void RemoveTexture(CompositableClient* aCompositable,
+                             uint64_t aTextureID,
+                             TextureFlags aFlags) MOZ_OVERRIDE;
 
   /**
    * See CompositableForwarder::UpdatedTexture
