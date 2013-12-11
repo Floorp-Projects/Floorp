@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_height="wrap_content"
+              android:layout_width="fill_parent"
+              android:orientation="vertical">
+
+  <org.mozilla.gecko.widget.BasicColorPicker android:id="@+id/colorpicker"
+                                             android:layout_height="0dip"
+                                             android:layout_weight="1"
+                                             android:drawSelectorOnTop="true"
+                                             android:choiceMode="singleChoice"
+                                             android:divider="@android:color/transparent"
+                                             android:dividerHeight="0dip"
+                                             android:listSelector="#22FFFFFF"
+                                             android:layout_width="fill_parent"/>
+
+</LinearLayout>
