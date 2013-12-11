@@ -76,8 +76,7 @@ class GrallocTextureHostOGL : public TextureHost
 {
   friend class GrallocBufferActor;
 public:
-  GrallocTextureHostOGL(uint64_t aID,
-                        TextureFlags aFlags,
+  GrallocTextureHostOGL(TextureFlags aFlags,
                         const NewSurfaceDescriptorGralloc& aDescriptor);
 
   virtual ~GrallocTextureHostOGL();

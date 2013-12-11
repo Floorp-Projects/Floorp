@@ -24,8 +24,7 @@ namespace mozilla {
 namespace layers {
 
 CompositableClient::CompositableClient(CompositableForwarder* aForwarder)
-: mNextTextureID(1)
-, mCompositableChild(nullptr)
+: mCompositableChild(nullptr)
 , mForwarder(aForwarder)
 {
   MOZ_COUNT_CTOR(CompositableClient);
@@ -249,7 +248,6 @@ CompositableClient::NextTextureID()
 bool
 CompositableClient::AddTextureClient(TextureClient* aClient)
 {
-  aClient->SetID(NextTextureID());
   return aClient->InitIPDLActor(mForwarder);
 }
 
