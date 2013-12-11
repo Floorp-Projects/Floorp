@@ -51,9 +51,6 @@ protected:
                                                 const uint16_t& aPort,
                                                 const nsCString& aFilter);
   virtual bool DeallocPUDPSocketChild(PUDPSocketChild*);
-  virtual PDNSRequestChild* AllocPDNSRequestChild(const nsCString& aHost,
-                                                  const uint32_t& aFlags);
-  virtual bool DeallocPDNSRequestChild(PDNSRequestChild*);
   virtual PRemoteOpenFileChild* AllocPRemoteOpenFileChild(const URIParams&,
                                                           const OptionalURIParams&);
   virtual bool DeallocPRemoteOpenFileChild(PRemoteOpenFileChild*);
