@@ -7,8 +7,7 @@
 #include "nsMemory.h"
 
 nsresult
-nsSegmentedBuffer::Init(uint32_t segmentSize, uint32_t maxSize,
-                        nsIMemory* allocator)
+nsSegmentedBuffer::Init(uint32_t segmentSize, uint32_t maxSize)
 {
     if (mSegmentArrayCount != 0)
         return NS_ERROR_FAILURE;        // initialized more than once

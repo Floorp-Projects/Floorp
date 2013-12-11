@@ -5,7 +5,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIMemory;
 interface nsIInputStream;
 interface nsIOutputStream;
 
@@ -15,7 +14,7 @@ interface nsIOutputStream;
  * can be created to read the data from the buffer non-destructively.
  */
 
-[scriptable, uuid(604ad9d0-753e-11d3-90ca-34278643278f)]
+[scriptable, uuid(44a200fe-6c2b-4b41-b4e3-63e8c14e7c0d)]
 interface nsIStorageStream : nsISupports
 {
     /**
@@ -28,11 +27,8 @@ interface nsIStorageStream : nsISupports
      * @param maxSize
      *        Maximum total size of this stream. length will always be less
      *        than or equal to this value. Passing UINT32_MAX is safe.
-     * @param segmentAllocator
-     *        Which allocator to use for the segments. May be null, in which
-     *        case a default allocator will be used.
      */
-    void init(in uint32_t segmentSize, in uint32_t maxSize, in nsIMemory segmentAllocator);
+    void init(in uint32_t segmentSize, in uint32_t maxSize);
 
     /**
      * Get a reference to the one and only output stream for this instance.
