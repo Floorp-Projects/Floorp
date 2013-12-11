@@ -283,20 +283,11 @@ ImageClientBuffered::UpdateImage(ImageContainer* aContainer,
 void
 ImageClientSingle::OnActorDestroy()
 {
-  if (mFrontBuffer) {
-    mFrontBuffer->OnActorDestroy();
-  }
 }
 
 void
 ImageClientBuffered::OnActorDestroy()
 {
-  if (mFrontBuffer) {
-    mFrontBuffer->OnActorDestroy();
-  }
-  if (mBackBuffer) {
-    mBackBuffer->OnActorDestroy();
-  }
 }
 
 bool
@@ -487,9 +478,6 @@ ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
 void
 DeprecatedImageClientSingle::OnActorDestroy()
 {
-  if (mDeprecatedTextureClient) {
-    mDeprecatedTextureClient->OnActorDestroy();
-  }
 }
 
 bool
