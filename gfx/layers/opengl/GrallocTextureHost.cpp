@@ -220,10 +220,9 @@ GrallocTextureSourceOGL::DeallocateDeviceData()
   }
 }
 
-GrallocTextureHostOGL::GrallocTextureHostOGL(uint64_t aID,
-                                             TextureFlags aFlags,
+GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
                                              const NewSurfaceDescriptorGralloc& aDescriptor)
-  : TextureHost(aID, aFlags)
+  : TextureHost(aFlags)
 {
   mGrallocActor =
     static_cast<GrallocBufferActor*>(aDescriptor.bufferParent());

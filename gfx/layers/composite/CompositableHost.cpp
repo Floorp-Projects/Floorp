@@ -36,14 +36,6 @@ CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
 CompositableHost::~CompositableHost()
 {
   MOZ_COUNT_DTOR(CompositableHost);
-
-  RefPtr<TextureHost> it = mFirstTexture;
-  while (it) {
-    if (!(it->GetFlags() & TEXTURE_DEALLOCATE_CLIENT)) {
-      it->DeallocateSharedData();
-    }
-    it = it->GetNextSibling();
-  }
 }
 
 void
@@ -54,54 +46,6 @@ CompositableHost::UseTextureHost(TextureHost* aTexture)
   }
   aTexture->SetCompositor(GetCompositor());
   aTexture->SetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
-}
-
-
-void
-CompositableHost::AddTextureHost(TextureHost* aTexture)
-{
-  MOZ_ASSERT(aTexture);
-  MOZ_ASSERT(GetTextureHost(aTexture->GetID()) == nullptr,
-             "A texture is already present with this ID");
-  RefPtr<TextureHost> second = mFirstTexture;
-  mFirstTexture = aTexture;
-  aTexture->SetNextSibling(second);
-  aTexture->SetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
-}
-
-void
-CompositableHost::RemoveTextureHost(TextureHost* aTexture)
-{
-  uint64_t textureID = aTexture->GetID();
-  if (mFirstTexture && mFirstTexture->GetID() == textureID) {
-    mFirstTexture = mFirstTexture->GetNextSibling();
-    aTexture->SetNextSibling(nullptr);
-  }
-  RefPtr<TextureHost> it = mFirstTexture;
-  while (it) {
-    if (it->GetNextSibling() &&
-        it->GetNextSibling()->GetID() == textureID) {
-      it->SetNextSibling(it->GetNextSibling()->GetNextSibling());
-      aTexture->SetNextSibling(nullptr);
-    }
-    it = it->GetNextSibling();
-  }
-  if (!mFirstTexture && mBackendData) {
-    mBackendData->ClearData();
-  }
-}
-
-TextureHost*
-CompositableHost::GetTextureHost(uint64_t aTextureID)
-{
-  RefPtr<TextureHost> it = mFirstTexture;
-  while (it) {
-    if (it->GetID() == aTextureID) {
-      return it;
-    }
-    it = it->GetNextSibling();
-  }
-  return nullptr;
 }
 
 void
@@ -118,11 +62,6 @@ void
 CompositableHost::SetCompositor(Compositor* aCompositor)
 {
   mCompositor = aCompositor;
-  RefPtr<TextureHost> it = mFirstTexture;
-  while (!!it) {
-    it->SetCompositor(aCompositor);
-    it = it->GetNextSibling();
-  }
 }
 
 bool
