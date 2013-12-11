@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <style>
+
+input {
+  font-size: 30pt;
+  background-color: lightblue;
+}
+
+    </style>
+    <script>
+
+document.addEventListener("DOMContentLoaded", function() {
+  document.body.style.backgroundImage = "none";
+}, false);
+
+function PostRebuildAllStyleDataEvent() {
+  // trigger http://mxr.mozilla.org/mozilla-central/source/layout/base/RestyleManager.cpp?rev=a8b06549f680#1490
+  var m = document.createElementNS("http://www.w3.org/1998/Math/MathML", "math");
+  document.head.appendChild(m);
+  document.head.removeChild(m);
+}
+
+function reframe() {
+  PostRebuildAllStyleDataEvent();
+  document.documentElement.className = "";
+}
+
+document.addEventListener("MozReftestInvalidate", function() {
+  // Calling reframe now would be too early to reproduce the bug that we're
+  // testing for. Note that in the event that we start faling this test this
+  // timeout may make the failure seem intermittent when in fact we would
+  // always fail if it was longer.
+  setTimeout(reframe, 500);
+}, false);
+
+    </script>
+  </head>
+  <body>
+    <input type="number">
+  </body>
+</html>
+

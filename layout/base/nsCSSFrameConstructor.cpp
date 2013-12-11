@@ -3752,6 +3752,10 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
                ((bits & FCDATA_IS_LINE_PARTICIPANT) != 0),
                "Incorrectly set FCDATA_IS_LINE_PARTICIPANT bits");
 
+  if (aItem.mIsAnonymousContentCreatorContent) {
+    primaryFrame->AddStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT);
+  }
+
   // Even if mCreatingExtraFrames is set, we may need to SetPrimaryFrame for
   // generated content that doesn't have one yet.  Note that we have to examine
   // the frame bit, because by this point mIsGeneratedContent has been cleared
@@ -3808,6 +3812,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
     if (newFrame) {
       NS_ASSERTION(content->GetPrimaryFrame(),
                    "Content must have a primary frame now");
+      newFrame->AddStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT);
       aChildItems.AddChild(newFrame);
     }
     else {
@@ -5357,6 +5362,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
 
   item->mIsText = isText;
   item->mIsGeneratedContent = isGeneratedContent;
+  item->mIsAnonymousContentCreatorContent =
+    aFlags & ITEM_IS_ANONYMOUSCONTENTCREATOR_CONTENT;
   if (isGeneratedContent) {
     NS_ADDREF(item->mContent);
   }
@@ -8172,6 +8179,12 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     newFrame->AddStateBits(NS_FRAME_GENERATED_CONTENT);
   }
 
+  // A continuation of nsIAnonymousContentCreator content is also
+  // nsIAnonymousContentCreator created content
+  if (aFrame->GetStateBits() & NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT) {
+    newFrame->AddStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT);
+  }
+
   // A continuation of an out-of-flow is also an out-of-flow
   if (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
     newFrame->AddStateBits(NS_FRAME_OUT_OF_FLOW);
@@ -8629,6 +8642,27 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
     nsIFrame* nonGeneratedAncestor = nsLayoutUtils::GetNonGeneratedAncestor(frame);
     if (nonGeneratedAncestor->GetContent() != aContent) {
       return RecreateFramesForContent(nonGeneratedAncestor->GetContent(), aAsyncInsert);
+    }
+
+    if (frame->GetStateBits() & NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT) {
+      // Recreate the frames for the entire nsIAnonymousContentCreator tree
+      // since |frame| or one of its descendants may need an nsStyleContext
+      // that associates it to a CSS pseudo-element, and only the
+      // nsIAnonymousContentCreator that created this content knows how to make
+      // that happen.
+      nsIAnonymousContentCreator* acc = nullptr;
+      nsIFrame* ancestor = frame->GetParent();
+      while (!(acc = do_QueryFrame(ancestor))) {
+        ancestor = ancestor->GetParent();
+      }
+      NS_ASSERTION(acc, "Where is the nsIAnonymousContentCreator? We may fail "
+                        "to recreate its content correctly");
+      // nsSVGUseFrame is special, and we know this is unnecessary for it.
+      if (ancestor->GetType() != nsGkAtoms::svgUseFrame) {
+        NS_ASSERTION(aContent->IsInNativeAnonymousSubtree(),
+                     "Why is NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT set?");
+        return RecreateFramesForContent(ancestor->GetContent(), aAsyncInsert);
+      }
     }
 
     nsIFrame* parent = frame->GetParent();
@@ -9207,7 +9241,8 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
       anonChildren = &aAnonymousItems[i].mChildren;
     }
 
-    uint32_t flags = ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK | aExtraFlags;
+    uint32_t flags = ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK |
+                     ITEM_IS_ANONYMOUSCONTENTCREATOR_CONTENT | aExtraFlags;
 
     AddFrameConstructionItemsInternal(aState, content, aFrame,
                                       content->Tag(), content->GetNameSpaceID(),
