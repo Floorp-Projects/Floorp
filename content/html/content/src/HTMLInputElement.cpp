@@ -3101,6 +3101,15 @@ HTMLInputElement::Focus(ErrorResult& aError)
 NS_IMETHODIMP
 HTMLInputElement::Select()
 {
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame) {
+      return numberControlFrame->HandleSelectCall();
+    }
+    return NS_OK;
+  }
+
   if (!IsSingleLineTextControl(false)) {
     return NS_OK;
   }
