@@ -167,19 +167,25 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
       mState = GESTURE_NONE;
     } else if (mState == GESTURE_WAITING_SINGLE_TAP) {
       CancelLongTapTimeoutTask();
-      HandleSingleTapUpEvent(event);
+      nsEventStatus tapupEvent = HandleSingleTapUpEvent(event);
 
-      // We were not waiting for anything but a single tap has happened that
-      // may turn into a double tap. Wait a while and if it doesn't turn into
-      // a double tap, send a single tap instead.
-      mState = GESTURE_WAITING_DOUBLE_TAP;
+      if (tapupEvent == nsEventStatus_eIgnore) {
+        // We were not waiting for anything but a single tap has happened that
+        // may turn into a double tap. Wait a while and if it doesn't turn into
+        // a double tap, send a single tap instead.
+        mState = GESTURE_WAITING_DOUBLE_TAP;
 
-      mDoubleTapTimeoutTask =
-        NewRunnableMethod(this, &GestureEventListener::TimeoutDoubleTap);
+        mDoubleTapTimeoutTask =
+          NewRunnableMethod(this, &GestureEventListener::TimeoutDoubleTap);
 
-      mAsyncPanZoomController->PostDelayedTask(
-        mDoubleTapTimeoutTask,
-        MAX_TAP_TIME);
+        mAsyncPanZoomController->PostDelayedTask(
+          mDoubleTapTimeoutTask,
+          MAX_TAP_TIME);
+
+      } else if (tapupEvent == nsEventStatus_eConsumeNoDefault) {
+        // We sent the tapup into content without waiting for a double tap
+        mState = GESTURE_NONE;
+      }
     }
 
     mLastTapEndTime = event.mTime;
