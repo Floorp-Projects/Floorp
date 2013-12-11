@@ -52,6 +52,7 @@ CompositableHost::UseTextureHost(TextureHost* aTexture)
   if (!aTexture) {
     return;
   }
+  aTexture->SetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
   aTexture->SetCompositor(GetCompositor());
 }
 
