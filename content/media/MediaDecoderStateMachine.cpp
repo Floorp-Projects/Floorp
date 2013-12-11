@@ -13,7 +13,7 @@
 #include <stdint.h>
 
 #include "MediaDecoderStateMachine.h"
-#include "AudioStream.h"
+#include "AudioSink.h"
 #include "nsTArray.h"
 #include "MediaDecoder.h"
 #include "MediaDecoderReader.h"
@@ -81,13 +81,6 @@ const int64_t AMPLE_AUDIO_USECS = 1000000;
 // as otherwise a long video decode could cause an audio underrun.
 const int64_t NO_VIDEO_AMPLE_AUDIO_DIVISOR = 8;
 
-// Maximum number of bytes we'll allocate and write at once to the audio
-// hardware when the audio stream contains missing frames and we're
-// writing silence in order to fill the gap. We limit our silence-writes
-// to 32KB in order to avoid allocating an impossibly large chunk of
-// memory if we encounter a large chunk of silence.
-const uint32_t SILENCE_BYTES_CHUNK = 32 * 1024;
-
 // If we have fewer than LOW_VIDEO_FRAMES decoded frames, and
 // we're not "prerolling video", we'll skip the video up to the next keyframe
 // which is at or after the current playback position.
@@ -138,9 +131,6 @@ static const uint32_t QUICK_BUFFERING_LOW_DATA_USECS = 1000000;
 static_assert(QUICK_BUFFERING_LOW_DATA_USECS <= AMPLE_AUDIO_USECS,
               "QUICK_BUFFERING_LOW_DATA_USECS is too large");
 
-// This value has been chosen empirically.
-static const uint32_t AUDIOSTREAM_MIN_WRITE_BEFORE_START_USECS = 200000;
-
 // The amount of instability we tollerate in calls to
 // MediaDecoderStateMachine::UpdateEstimatedDuration(); changes of duration
 // less than this are ignored, as they're assumed to be the result of
@@ -161,9 +151,9 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDecoder(aDecoder),
   mState(DECODER_STATE_DECODING_METADATA),
   mInRunningStateMachine(false),
+  mResetPlayStartTime(false),
   mSyncPointInMediaStream(-1),
   mSyncPointInDecodedStream(-1),
-  mResetPlayStartTime(false),
   mPlayDuration(0),
   mStartTime(-1),
   mEndTime(-1),
@@ -290,7 +280,7 @@ void MediaDecoderStateMachine::SendStreamAudio(AudioData* aAudio,
   aStream->mLastAudioPacketTime = aAudio->mTime;
   aStream->mLastAudioPacketEndTime = aAudio->GetEndTime();
 
-  // This logic has to mimic AudioLoop closely to make sure we write
+  // This logic has to mimic AudioSink closely to make sure we write
   // the exact same silences
   CheckedInt64 audioWrittenOffset = UsecsToFrames(mInfo.mAudio.mRate,
       aStream->mInitialTime + mStartTime) + aStream->mAudioFramesWritten;
@@ -360,11 +350,11 @@ void MediaDecoderStateMachine::SendStreamData()
   if (mState == DECODER_STATE_DECODING_METADATA)
     return;
 
-  // If there's still an audio thread alive, then we can't send any stream
-  // data yet since both SendStreamData and the audio thread want to be in
-  // charge of popping the audio queue. We're waiting for the audio thread
+  // If there's still an audio sink alive, then we can't send any stream
+  // data yet since both SendStreamData and the audio sink want to be in
+  // charge of popping the audio queue. We're waiting for the audio sink
   // to die before sending anything to our stream.
-  if (mAudioThread)
+  if (mAudioSink)
     return;
 
   int64_t minLastAudioPacketTime = INT64_MAX;
@@ -479,7 +469,7 @@ void MediaDecoderStateMachine::SendStreamData()
       // badly muxed resources.
       if (!a || a->GetEndTime() >= minLastAudioPacketTime)
         break;
-      mAudioEndTime = std::max(mAudioEndTime, a->GetEndTime());
+      OnAudioEndTimeUpdate(std::max(mAudioEndTime, a->GetEndTime()));
       delete mReader->AudioQueue().PopFront();
     }
 
@@ -683,7 +673,7 @@ MediaDecoderStateMachine::DecodeAudio()
 
   SendStreamData();
 
-  // Notify to ensure that the AudioLoop() is not waiting, in case it was
+  // Notify to ensure that the AudioSink is not waiting, in case it was
   // waiting for more audio to be decoded.
   mDecoder->GetReentrantMonitor().NotifyAll();
 
@@ -725,290 +715,6 @@ bool MediaDecoderStateMachine::IsPlaying()
   AssertCurrentThreadInMonitor();
 
   return !mPlayStartTime.IsNull();
-}
-
-// If we have already written enough frames to the AudioStream, start the
-// playback.
-static void
-StartAudioStreamPlaybackIfNeeded(AudioStream* aStream)
-{
-  // We want to have enough data in the buffer to start the stream.
-  if (static_cast<double>(aStream->GetWritten()) / aStream->GetRate() >=
-      static_cast<double>(AUDIOSTREAM_MIN_WRITE_BEFORE_START_USECS) / USECS_PER_S) {
-    aStream->Start();
-  }
-}
-
-static void WriteSilence(AudioStream* aStream, uint32_t aFrames)
-{
-  uint32_t numSamples = aFrames * aStream->GetChannels();
-  nsAutoTArray<AudioDataValue, 1000> buf;
-  buf.SetLength(numSamples);
-  memset(buf.Elements(), 0, numSamples * sizeof(AudioDataValue));
-  aStream->Write(buf.Elements(), aFrames);
-
-  StartAudioStreamPlaybackIfNeeded(aStream);
-}
-
-void MediaDecoderStateMachine::AudioLoop()
-{
-  NS_ASSERTION(OnAudioThread(), "Should be on audio thread.");
-  DECODER_LOG(PR_LOG_DEBUG, ("%p Begun audio thread/loop", mDecoder.get()));
-  int64_t audioDuration = 0;
-  int64_t audioStartTime = -1;
-  uint32_t channels, rate;
-  double volume = -1;
-  bool setVolume;
-  double playbackRate = -1;
-  bool setPlaybackRate;
-  bool preservesPitch;
-  bool setPreservesPitch;
-  AudioChannelType audioChannelType;
-
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mAudioCompleted = false;
-    audioStartTime = mAudioStartTime;
-    NS_ASSERTION(audioStartTime != -1, "Should have audio start time by now");
-    channels = mInfo.mAudio.mChannels;
-    rate = mInfo.mAudio.mRate;
-
-    audioChannelType = mDecoder->GetAudioChannelType();
-    volume = mVolume;
-    preservesPitch = mPreservesPitch;
-    playbackRate = mPlaybackRate;
-  }
-
-  {
-    // AudioStream initialization can block for extended periods in unusual
-    // circumstances, so we take care to drop the decoder monitor while
-    // initializing.
-    nsAutoPtr<AudioStream> audioStream(new AudioStream());
-    audioStream->Init(channels, rate, audioChannelType, AudioStream::HighLatency);
-    audioStream->SetVolume(volume);
-    if (audioStream->SetPreservesPitch(preservesPitch) != NS_OK) {
-      NS_WARNING("Setting the pitch preservation failed at AudioLoop start.");
-    }
-    if (playbackRate != 1.0) {
-      NS_ASSERTION(playbackRate != 0,
-                   "Don't set the playbackRate to 0 on an AudioStream.");
-      if (audioStream->SetPlaybackRate(playbackRate) != NS_OK) {
-        NS_WARNING("Setting the playback rate failed at AudioLoop start.");
-      }
-    }
-
-    {
-      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      mAudioStream = audioStream;
-    }
-  }
-
-  while (1) {
-    // Wait while we're not playing, and we're not shutting down, or we're
-    // playing and we've got no audio to play.
-    {
-      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      NS_ASSERTION(mState != DECODER_STATE_DECODING_METADATA,
-                   "Should have meta data before audio started playing.");
-      while (mState != DECODER_STATE_SHUTDOWN &&
-             !mStopAudioThread &&
-             (!IsPlaying() ||
-              mState == DECODER_STATE_BUFFERING ||
-              (mReader->AudioQueue().GetSize() == 0 &&
-               !mReader->AudioQueue().AtEndOfStream())))
-      {
-        if (!IsPlaying() && !mAudioStream->IsPaused()) {
-          mAudioStream->Pause();
-        }
-        mon.Wait();
-      }
-
-      // If we're shutting down, break out and exit the audio thread.
-      // Also break out if audio is being captured.
-      if (mState == DECODER_STATE_SHUTDOWN ||
-          mStopAudioThread ||
-          mReader->AudioQueue().AtEndOfStream())
-      {
-        break;
-      }
-
-      // We only want to go to the expense of changing the volume if
-      // the volume has changed.
-      setVolume = volume != mVolume;
-      volume = mVolume;
-
-      // Same for the playbackRate.
-      setPlaybackRate = playbackRate != mPlaybackRate;
-      playbackRate = mPlaybackRate;
-
-      // Same for the pitch preservation.
-      setPreservesPitch = preservesPitch != mPreservesPitch;
-      preservesPitch = mPreservesPitch;
-
-      if (IsPlaying() && mAudioStream->IsPaused()) {
-        mAudioStream->Resume();
-      }
-    }
-
-    if (setVolume) {
-      mAudioStream->SetVolume(volume);
-    }
-    if (setPlaybackRate) {
-      NS_ASSERTION(playbackRate != 0,
-                   "Don't set the playbackRate to 0 in the AudioStreams");
-      if (mAudioStream->SetPlaybackRate(playbackRate) != NS_OK) {
-        NS_WARNING("Setting the playback rate failed in AudioLoop.");
-      }
-    }
-    if (setPreservesPitch) {
-      if (mAudioStream->SetPreservesPitch(preservesPitch) != NS_OK) {
-        NS_WARNING("Setting the pitch preservation failed in AudioLoop.");
-      }
-    }
-    NS_ASSERTION(mReader->AudioQueue().GetSize() > 0,
-                 "Should have data to play");
-    // See if there's a gap in the audio. If there is, push silence into the
-    // audio hardware, so we can play across the gap.
-    const AudioData* s = mReader->AudioQueue().PeekFront();
-
-    // Calculate the number of frames that have been pushed onto the audio
-    // hardware.
-    CheckedInt64 playedFrames = UsecsToFrames(audioStartTime, rate) +
-                                              audioDuration;
-    // Calculate the timestamp of the next chunk of audio in numbers of
-    // samples.
-    CheckedInt64 sampleTime = UsecsToFrames(s->mTime, rate);
-    CheckedInt64 missingFrames = sampleTime - playedFrames;
-    if (!missingFrames.isValid() || !sampleTime.isValid()) {
-      NS_WARNING("Int overflow adding in AudioLoop()");
-      break;
-    }
-
-    int64_t framesWritten = 0;
-    if (missingFrames.value() > 0) {
-      // The next audio chunk begins some time after the end of the last chunk
-      // we pushed to the audio hardware. We must push silence into the audio
-      // hardware so that the next audio chunk begins playback at the correct
-      // time.
-      missingFrames = std::min<int64_t>(UINT32_MAX, missingFrames.value());
-      DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder playing %d frames of silence",
-                                 mDecoder.get(), int32_t(missingFrames.value())));
-      framesWritten = PlaySilence(static_cast<uint32_t>(missingFrames.value()),
-                                  channels, playedFrames.value());
-    } else {
-      framesWritten = PlayFromAudioQueue(sampleTime.value(), channels);
-    }
-    audioDuration += framesWritten;
-    {
-      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      CheckedInt64 playedUsecs = FramesToUsecs(audioDuration, rate) + audioStartTime;
-      if (!playedUsecs.isValid()) {
-        NS_WARNING("Int overflow calculating audio end time");
-        break;
-      }
-      mAudioEndTime = playedUsecs.value();
-    }
-  }
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    if (mReader->AudioQueue().AtEndOfStream() &&
-        mState != DECODER_STATE_SHUTDOWN &&
-        !mStopAudioThread)
-    {
-      // If the media was too short to trigger the start of the audio stream,
-      // start it now.
-      mAudioStream->Start();
-      // Last frame pushed to audio hardware, wait for the audio to finish,
-      // before the audio thread terminates.
-      bool seeking = false;
-      {
-        int64_t oldPosition = -1;
-        int64_t position = GetMediaTime();
-        while (oldPosition != position &&
-               mAudioEndTime - position > 0 &&
-               mState != DECODER_STATE_SEEKING &&
-               mState != DECODER_STATE_SHUTDOWN)
-        {
-          const int64_t DRAIN_BLOCK_USECS = 100000;
-          Wait(std::min(mAudioEndTime - position, DRAIN_BLOCK_USECS));
-          oldPosition = position;
-          position = GetMediaTime();
-        }
-        seeking = mState == DECODER_STATE_SEEKING;
-      }
-
-      if (!seeking && !mAudioStream->IsPaused()) {
-        {
-          ReentrantMonitorAutoExit exit(mDecoder->GetReentrantMonitor());
-          mAudioStream->Drain();
-        }
-      }
-    }
-  }
-  DECODER_LOG(PR_LOG_DEBUG, ("%p Reached audio stream end.", mDecoder.get()));
-  {
-    // Must hold lock while shutting down and anulling the audio stream to prevent
-    // state machine thread trying to use it while we're destroying it.
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mAudioStream->Shutdown();
-    mAudioStream = nullptr;
-    if (!mAudioCaptured) {
-      mAudioCompleted = true;
-      UpdateReadyState();
-      // Kick the decode thread; it may be sleeping waiting for this to finish.
-      mDecoder->GetReentrantMonitor().NotifyAll();
-    }
-  }
-
-  DECODER_LOG(PR_LOG_DEBUG, ("%p Audio stream finished playing, audio thread exit", mDecoder.get()));
-}
-
-uint32_t MediaDecoderStateMachine::PlaySilence(uint32_t aFrames,
-                                                   uint32_t aChannels,
-                                                   uint64_t aFrameOffset)
-
-{
-  NS_ASSERTION(OnAudioThread(), "Only call on audio thread.");
-  NS_ASSERTION(!mAudioStream->IsPaused(), "Don't play when paused");
-  uint32_t maxFrames = SILENCE_BYTES_CHUNK / aChannels / sizeof(AudioDataValue);
-  uint32_t frames = std::min(aFrames, maxFrames);
-  WriteSilence(mAudioStream, frames);
-  return frames;
-}
-
-uint32_t MediaDecoderStateMachine::PlayFromAudioQueue(uint64_t aFrameOffset,
-                                                      uint32_t aChannels)
-{
-  NS_ASSERTION(OnAudioThread(), "Only call on audio thread.");
-  NS_ASSERTION(!mAudioStream->IsPaused(), "Don't play when paused");
-  nsAutoPtr<AudioData> audio(mReader->AudioQueue().PopFront());
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    NS_WARN_IF_FALSE(IsPlaying(), "Should be playing");
-    // Awaken the decode loop if it's waiting for space to free up in the
-    // audio queue.
-    mDecoder->GetReentrantMonitor().NotifyAll();
-  }
-  int64_t offset = -1;
-  uint32_t frames = 0;
-  if (!PR_GetEnv("MOZ_QUIET")) {
-    DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder playing %d frames of data to stream for AudioData at %lld",
-                               mDecoder.get(), audio->mFrames, audio->mTime));
-  }
-  mAudioStream->Write(audio->mAudioData,
-                      audio->mFrames);
-
-  aChannels = mAudioStream->GetOutChannels();
-
-  StartAudioStreamPlaybackIfNeeded(mAudioStream);
-
-  offset = audio->mOffset;
-  frames = audio->mFrames;
-
-  if (offset != -1) {
-    mDecoder->UpdatePlaybackOffset(offset);
-  }
-  return frames;
 }
 
 nsresult MediaDecoderStateMachine::Init(MediaDecoderStateMachine* aCloneDonor)
@@ -1053,9 +759,9 @@ void MediaDecoderStateMachine::StopPlayback()
 
   if (IsPlaying()) {
     mPlayDuration = GetClock();
-    mPlayStartTime = TimeStamp();
+    SetPlayStartTime(TimeStamp());
   }
-  // Notify the audio thread, so that it notices that we've stopped playing,
+  // Notify the audio sink, so that it notices that we've stopped playing,
   // so it can pause audio playback.
   mDecoder->GetReentrantMonitor().NotifyAll();
   NS_ASSERTION(!IsPlaying(), "Should report not playing at end of StopPlayback()");
@@ -1094,7 +800,7 @@ void MediaDecoderStateMachine::StartPlayback()
   AssertCurrentThreadInMonitor();
 
   mDecoder->NotifyPlaybackStarted();
-  mPlayStartTime = TimeStamp::Now();
+  SetPlayStartTime(TimeStamp::Now());
 
   NS_ASSERTION(IsPlaying(), "Should report playing by end of StartPlayback()");
   if (NS_FAILED(StartAudioThread())) {
@@ -1166,6 +872,9 @@ void MediaDecoderStateMachine::SetVolume(double volume)
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   mVolume = volume;
+  if (mAudioSink) {
+    mAudioSink->SetVolume(mVolume);
+  }
 }
 
 void MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
@@ -1174,8 +883,8 @@ void MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   if (!mAudioCaptured && aCaptured && !mStopAudioThread) {
     // Make sure the state machine runs as soon as possible. That will
-    // stop the audio thread.
-    // If mStopAudioThread is true then we're already stopping the audio thread
+    // stop the audio sink.
+    // If mStopAudioThread is true then we're already stopping the audio sink
     // and since we set mAudioCaptured to true, nothing can start it again.
     ScheduleStateMachine();
   }
@@ -1303,6 +1012,9 @@ void MediaDecoderStateMachine::Shutdown()
   DECODER_LOG(PR_LOG_DEBUG, ("%p Changed state to SHUTDOWN", mDecoder.get()));
   ScheduleStateMachine();
   mState = DECODER_STATE_SHUTDOWN;
+  if (mAudioSink) {
+    mAudioSink->PrepareToShutdown();
+  }
   mDecoder->GetReentrantMonitor().NotifyAll();
 }
 
@@ -1463,14 +1175,15 @@ void MediaDecoderStateMachine::StopAudioThread()
 
   mStopAudioThread = true;
   mDecoder->GetReentrantMonitor().NotifyAll();
-  if (mAudioThread) {
+  if (mAudioSink) {
     DECODER_LOG(PR_LOG_DEBUG, ("%p Shutdown audio thread", mDecoder.get()));
+    mAudioSink->PrepareToShutdown();
     {
       ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-      mAudioThread->Shutdown();
+      mAudioSink->Shutdown();
     }
-    mAudioThread = nullptr;
-    // Now that the audio thread is dead, try sending data to our MediaStream(s).
+    mAudioSink = nullptr;
+    // Now that the audio sink is dead, try sending data to our MediaStream(s).
     // That may have been waiting for the audio thread to stop.
     SendStreamData();
   }
@@ -1692,20 +1405,20 @@ MediaDecoderStateMachine::StartAudioThread()
   }
 
   mStopAudioThread = false;
-  if (HasAudio() && !mAudioThread) {
-    nsresult rv = NS_NewNamedThread("Media Audio",
-                                    getter_AddRefs(mAudioThread),
-                                    nullptr,
-                                    MEDIA_THREAD_STACK_SIZE);
+  if (HasAudio() && !mAudioSink) {
+    mAudioCompleted = false;
+    mAudioSink = new AudioSink(this,
+                               mAudioStartTime, mInfo.mAudio, mDecoder->GetAudioChannelType());
+    nsresult rv = mAudioSink->Init();
     if (NS_FAILED(rv)) {
-      DECODER_LOG(PR_LOG_DEBUG, ("%p Changed state to SHUTDOWN because failed to create audio thread", mDecoder.get()));
+      DECODER_LOG(PR_LOG_DEBUG, ("%p Changed state to SHUTDOWN because failed to create audio sink", mDecoder.get()));
       mState = DECODER_STATE_SHUTDOWN;
       return rv;
     }
 
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::AudioLoop);
-    mAudioThread->Dispatch(event, NS_DISPATCH_NORMAL);
+    mAudioSink->SetVolume(mVolume);
+    mAudioSink->SetPlaybackRate(mPlaybackRate);
+    mAudioSink->SetPreservesPitch(mPreservesPitch);
   }
   return NS_OK;
 }
@@ -1955,7 +1668,7 @@ void MediaDecoderStateMachine::DecodeSeek()
   if (currentTimeChanged) {
     // The seek target is different than the current playback position,
     // we'll need to seek the playback position, so shutdown our decode
-    // and audio threads.
+    // thread and audio sink.
     StopAudioThread();
     ResetPlayback();
     nsresult res;
@@ -2115,11 +1828,11 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         StopPlayback();
       }
       StopAudioThread();
-      // If mAudioThread is non-null after StopAudioThread completes, we are
+      // If mAudioSink is non-null after StopAudioThread completes, we are
       // running in a nested event loop waiting for Shutdown() on
-      // mAudioThread to complete.  Return to the event loop and let it
+      // mAudioSink to complete.  Return to the event loop and let it
       // finish processing before continuing with shutdown.
-      if (mAudioThread) {
+      if (mAudioSink) {
         MOZ_ASSERT(mStopAudioThread);
         return NS_OK;
       }
@@ -2291,7 +2004,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       if (mDecoder->GetState() == MediaDecoder::PLAY_STATE_PLAYING &&
           !mDecoder->GetDecodedStream()) {
         int64_t videoTime = HasVideo() ? mVideoFrameEndTime : 0;
-        int64_t clockTime = std::max(mEndTime, std::max(videoTime, GetAudioClock()));
+        int64_t clockTime = std::max(mEndTime, videoTime);
         UpdatePlaybackPosition(clockTime);
 
         {
@@ -2339,16 +2052,16 @@ int64_t
 MediaDecoderStateMachine::GetAudioClock()
 {
   // We must hold the decoder monitor while using the audio stream off the
-  // audio thread to ensure that it doesn't get destroyed on the audio thread
+  // audio sink to ensure that it doesn't get destroyed on the audio sink 
   // while we're using it.
   AssertCurrentThreadInMonitor();
   if (!HasAudio() || mAudioCaptured)
     return -1;
-  if (!mAudioStream) {
-    // Audio thread hasn't played any data yet.
+  if (!mAudioSink) {
+    // Audio sink hasn't played any data yet.
     return mAudioStartTime;
   }
-  int64_t t = mAudioStream->GetPosition();
+  int64_t t = mAudioSink->GetPosition();
   return (t == -1) ? -1 : t + mAudioStartTime;
 }
 
@@ -2362,7 +2075,7 @@ int64_t MediaDecoderStateMachine::GetVideoStreamPosition()
 
   // The playbackRate has been just been changed, reset the playstartTime.
   if (mResetPlayStartTime) {
-    mPlayStartTime = TimeStamp::Now();
+    SetPlayStartTime(TimeStamp::Now());
     mResetPlayStartTime = false;
   }
 
@@ -2393,7 +2106,7 @@ int64_t MediaDecoderStateMachine::GetClock()
       // Resync against the audio clock, while we're trusting the
       // audio clock. This ensures no "drift", particularly on Linux.
       mPlayDuration = clock_time - mStartTime;
-      mPlayStartTime = TimeStamp::Now();
+      SetPlayStartTime(TimeStamp::Now());
     } else {
       // Audio is disabled on this system. Sync to the system clock.
       clock_time = GetVideoStreamPosition();
@@ -2449,7 +2162,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
       // Notify the decode thread that the video queue's buffers may have
       // free'd up space for more frames.
       mDecoder->GetReentrantMonitor().NotifyAll();
-      mDecoder->UpdatePlaybackOffset(frame->mOffset);
+      OnPlaybackOffsetUpdate(frame->mOffset);
       if (mReader->VideoQueue().GetSize() == 0)
         break;
       frame = mReader->VideoQueue().PeekFront();
@@ -2533,25 +2246,6 @@ void MediaDecoderStateMachine::AdvanceFrame()
   UpdateReadyState();
 
   ScheduleStateMachine(remainingTime);
-}
-
-void MediaDecoderStateMachine::Wait(int64_t aUsecs) {
-  NS_ASSERTION(OnAudioThread(), "Only call on the audio thread");
-  AssertCurrentThreadInMonitor();
-  TimeStamp end = TimeStamp::Now() + UsecsToDuration(std::max<int64_t>(USECS_PER_MS, aUsecs));
-  TimeStamp now;
-  while ((now = TimeStamp::Now()) < end &&
-         mState != DECODER_STATE_SHUTDOWN &&
-         mState != DECODER_STATE_SEEKING &&
-         !mStopAudioThread &&
-         IsPlaying())
-  {
-    int64_t ms = static_cast<int64_t>(NS_round((end - now).ToSeconds() * 1000));
-    if (ms == 0 || ms > UINT32_MAX) {
-      break;
-    }
-    mDecoder->GetReentrantMonitor().Wait(PR_MillisecondsToInterval(static_cast<uint32_t>(ms)));
-  }
 }
 
 VideoData* MediaDecoderStateMachine::FindStartTime()
@@ -2670,12 +2364,26 @@ nsresult MediaDecoderStateMachine::GetBuffered(dom::TimeRanges* aBuffered) {
   return res;
 }
 
+void MediaDecoderStateMachine::SetPlayStartTime(const TimeStamp& aTimeStamp)
+{
+  AssertCurrentThreadInMonitor();
+  mPlayStartTime = aTimeStamp;
+  if (!mAudioSink) {
+    return;
+  }
+  if (!mPlayStartTime.IsNull()) {
+    mAudioSink->StartPlayback();
+  } else {
+    mAudioSink->StopPlayback();
+  }
+}
+
 nsresult MediaDecoderStateMachine::CallRunStateMachine()
 {
   AssertCurrentThreadInMonitor();
   NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
 
-  // If audio is being captured, stop the audio thread if it's running
+  // If audio is being captured, stop the audio sink if it's running
   if (mAudioCaptured) {
     StopAudioThread();
   }
@@ -2766,7 +2474,7 @@ void MediaDecoderStateMachine::SetPlaybackRate(double aPlaybackRate)
 
   // We don't currently support more than two channels when changing playback
   // rate.
-  if (mAudioStream && mAudioStream->GetChannels() > 2) {
+  if (mInfo.mAudio.mChannels > 2) {
     return;
   }
 
@@ -2784,10 +2492,13 @@ void MediaDecoderStateMachine::SetPlaybackRate(double aPlaybackRate)
     }
     mPlayDuration = mBasePosition;
     mResetPlayStartTime = true;
-    mPlayStartTime = TimeStamp::Now();
+    SetPlayStartTime(TimeStamp::Now());
   }
 
   mPlaybackRate = aPlaybackRate;
+  if (mAudioSink) {
+    mAudioSink->SetPlaybackRate(mPlaybackRate);
+  }
 }
 
 void MediaDecoderStateMachine::SetPreservesPitch(bool aPreservesPitch)
@@ -2796,6 +2507,9 @@ void MediaDecoderStateMachine::SetPreservesPitch(bool aPreservesPitch)
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
   mPreservesPitch = aPreservesPitch;
+  if (mAudioSink) {
+    mAudioSink->SetPreservesPitch(mPreservesPitch);
+  }
 }
 
 void
@@ -2828,6 +2542,30 @@ void MediaDecoderStateMachine::QueueMetadata(int64_t aPublishTime,
   metadata->mHasVideo = aHasVideo;
   metadata->mTags = aTags;
   mMetadataManager.QueueMetadata(metadata);
+}
+
+void MediaDecoderStateMachine::OnAudioEndTimeUpdate(int64_t aAudioEndTime)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  MOZ_ASSERT(aAudioEndTime >= mAudioEndTime);
+  mAudioEndTime = aAudioEndTime;
+}
+
+void MediaDecoderStateMachine::OnPlaybackOffsetUpdate(int64_t aPlaybackOffset)
+{
+  mDecoder->UpdatePlaybackOffset(aPlaybackOffset);
+}
+
+void MediaDecoderStateMachine::OnAudioSinkComplete()
+{
+  AssertCurrentThreadInMonitor();
+  if (mAudioCaptured) {
+    return;
+  }
+  mAudioCompleted = true;
+  UpdateReadyState();
+  // Kick the decode thread; it may be sleeping waiting for this to finish.
+  mDecoder->GetReentrantMonitor().NotifyAll();
 }
 
 } // namespace mozilla

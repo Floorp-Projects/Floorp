@@ -116,6 +116,7 @@ UNIFIED_SOURCES += [
     'AudioNodeExternalInputStream.cpp',
     'AudioNodeStream.cpp',
     'AudioSegment.cpp',
+    'AudioSink.cpp',
     'AudioStream.cpp',
     'AudioStreamTrack.cpp',
     'BufferDecoder.cpp',

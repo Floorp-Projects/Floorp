@@ -527,6 +527,14 @@ AudioStream::SetVolume(double aVolume)
 }
 
 void
+AudioStream::Cancel()
+{
+  MonitorAutoLock mon(mMonitor);
+  mState = ERRORED;
+  mon.NotifyAll();
+}
+
+void
 AudioStream::Drain()
 {
   MonitorAutoLock mon(mMonitor);
