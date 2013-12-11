@@ -119,6 +119,22 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         Tabs.registerOnTabsChangedListener(this);
     }
 
+    public LayerView(Context context) {
+        super(context);
+
+        mGLController = GLController.getInstance(this);
+        mPaintState = PAINT_START;
+        mBackgroundColor = Color.WHITE;
+
+        mTouchInterceptors = new ArrayList<TouchEventInterceptor>();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            mOverscroll = new OverscrollEdgeEffect(this);
+        } else {
+            mOverscroll = null;
+        }
+        Tabs.registerOnTabsChangedListener(this);
+    }
+
     public void initializeView(EventDispatcher eventDispatcher) {
         mLayerClient = new GeckoLayerClient(getContext(), this, eventDispatcher);
         if (mOverscroll != null) {
