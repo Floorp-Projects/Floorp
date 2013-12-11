@@ -107,7 +107,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsIDOMEventListener.h"
 #include "nsISelectionController.h"
 
-#include "nsBidiUtils.h"
 #include "nsISHEntry.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
@@ -3105,118 +3104,6 @@ nsDocumentViewer::SetHintCharacterSet(const nsACString& aHintCharacterSet)
   mHintCharset = aHintCharacterSet;
   // now set the hint char set on all children of mContainer
   CallChildren(SetChildHintCharacterSet, (void*) &aHintCharacterSet);
-  return NS_OK;
-}
-
-static void
-SetChildBidiOptions(nsIMarkupDocumentViewer* aChild, void* aClosure)
-{
-  aChild->SetBidiOptions(NS_PTR_TO_INT32(aClosure));
-}
-
-NS_IMETHODIMP nsDocumentViewer::SetBidiTextDirection(uint8_t aTextDirection)
-{
-  uint32_t bidiOptions;
-
-  GetBidiOptions(&bidiOptions);
-  SET_BIDI_OPTION_DIRECTION(bidiOptions, aTextDirection);
-  SetBidiOptions(bidiOptions);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::GetBidiTextDirection(uint8_t* aTextDirection)
-{
-  uint32_t bidiOptions;
-
-  if (aTextDirection) {
-    GetBidiOptions(&bidiOptions);
-    *aTextDirection = GET_BIDI_OPTION_DIRECTION(bidiOptions);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::SetBidiTextType(uint8_t aTextType)
-{
-  uint32_t bidiOptions;
-
-  GetBidiOptions(&bidiOptions);
-  SET_BIDI_OPTION_TEXTTYPE(bidiOptions, aTextType);
-  SetBidiOptions(bidiOptions);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::GetBidiTextType(uint8_t* aTextType)
-{
-  uint32_t bidiOptions;
-
-  if (aTextType) {
-    GetBidiOptions(&bidiOptions);
-    *aTextType = GET_BIDI_OPTION_TEXTTYPE(bidiOptions);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::SetBidiNumeral(uint8_t aNumeral)
-{
-  uint32_t bidiOptions;
-
-  GetBidiOptions(&bidiOptions);
-  SET_BIDI_OPTION_NUMERAL(bidiOptions, aNumeral);
-  SetBidiOptions(bidiOptions);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::GetBidiNumeral(uint8_t* aNumeral)
-{
-  uint32_t bidiOptions;
-
-  if (aNumeral) {
-    GetBidiOptions(&bidiOptions);
-    *aNumeral = GET_BIDI_OPTION_NUMERAL(bidiOptions);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::SetBidiSupport(uint8_t aSupport)
-{
-  uint32_t bidiOptions;
-
-  GetBidiOptions(&bidiOptions);
-  SET_BIDI_OPTION_SUPPORT(bidiOptions, aSupport);
-  SetBidiOptions(bidiOptions);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::GetBidiSupport(uint8_t* aSupport)
-{
-  uint32_t bidiOptions;
-
-  if (aSupport) {
-    GetBidiOptions(&bidiOptions);
-    *aSupport = GET_BIDI_OPTION_SUPPORT(bidiOptions);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::SetBidiOptions(uint32_t aBidiOptions)
-{
-  if (mPresContext) {
-    mPresContext->SetBidi(aBidiOptions, true); // could cause reflow
-  }
-  // now set bidi on all children of mContainer
-  CallChildren(SetChildBidiOptions, NS_INT32_TO_PTR(aBidiOptions));
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::GetBidiOptions(uint32_t* aBidiOptions)
-{
-  if (aBidiOptions) {
-    if (mPresContext) {
-      *aBidiOptions = mPresContext->GetBidi();
-    }
-    else
-      *aBidiOptions = IBMBIDI_DEFAULT_BIDI_OPTIONS;
-  }
   return NS_OK;
 }
 

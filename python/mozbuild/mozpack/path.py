@@ -28,9 +28,12 @@ def relpath(path, start):
     return '' if rel == '.' else rel
 
 
+def abspath(path):
+    return normsep(os.path.abspath(path))
+
+
 def join(*paths):
-    paths = [normsep(p) for p in paths]
-    return posixpath.join(*paths)
+    return normsep(os.path.join(*paths))
 
 
 def normpath(path):

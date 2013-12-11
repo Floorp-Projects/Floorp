@@ -2343,6 +2343,26 @@ BaselineCompiler::emitFormalArgAccess(uint32_t arg, bool get)
     } else {
         masm.patchableCallPreBarrier(argAddr, MIRType_Value);
         storeValue(frame.peek(-1), argAddr, R0);
+
+#ifdef JSGC_GENERATIONAL
+        // Fully sync the stack if post-barrier is needed.
+        frame.syncStack(0);
+
+        // Reload the arguments object
+        Register reg = R2.scratchReg();
+        masm.loadPtr(Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfArgsObj()), reg);
+
+        Nursery &nursery = cx->runtime()->gcNursery;
+        Label skipBarrier;
+        Label isTenured;
+        masm.branchPtr(Assembler::Below, reg, ImmWord(nursery.start()), &isTenured);
+        masm.branchPtr(Assembler::Below, reg, ImmWord(nursery.heapEnd()), &skipBarrier);
+
+        masm.bind(&isTenured);
+        masm.call(&postBarrierSlot_);
+
+        masm.bind(&skipBarrier);
+#endif
     }
 
     masm.bind(&done);

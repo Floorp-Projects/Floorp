@@ -282,7 +282,7 @@ gfxDWriteFontFamily::LocalizedName(nsAString &aLocalizedName)
     }
     UINT32 idx = 0;
     BOOL exists;
-    hr = names->FindLocaleName(localeName.BeginReading(),
+    hr = names->FindLocaleName(localeName.get(),
                                &idx,
                                &exists);
     if (FAILED(hr)) {
