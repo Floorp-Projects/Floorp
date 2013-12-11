@@ -24,6 +24,7 @@ from ..frontend.data import (
     SandboxDerived,
 )
 from .configenvironment import ConfigEnvironment
+import mozpack.path as mozpath
 
 
 class BackendConsumeSummary(object):
@@ -128,7 +129,7 @@ class BuildBackend(LoggingMixin):
         self._backend_output_files = set()
 
         # Previously generated files.
-        self._backend_output_list_file = os.path.join(environment.topobjdir,
+        self._backend_output_list_file = mozpath.join(environment.topobjdir,
             'backend.%s' % self.__class__.__name__)
         self._backend_output_list = set()
         if os.path.exists(self._backend_output_list_file):
@@ -162,7 +163,7 @@ class BuildBackend(LoggingMixin):
         """
         environment = self._environments.get(obj.topobjdir, None)
         if not environment:
-            config_status = os.path.join(obj.topobjdir, 'config.status')
+            config_status = mozpath.join(obj.topobjdir, 'config.status')
 
             environment = ConfigEnvironment.from_config_status(config_status)
             self._environments[obj.topobjdir] = environment
@@ -204,12 +205,12 @@ class BuildBackend(LoggingMixin):
         delete_files = self._backend_output_list - self._backend_output_files
         for path in delete_files:
             try:
-                os.unlink(os.path.join(self.environment.topobjdir, path))
+                os.unlink(mozpath.join(self.environment.topobjdir, path))
                 self.summary.deleted_count += 1
             except OSError:
                 pass
         # Remove now empty directories
-        for dir in set(os.path.dirname(d) for d in delete_files):
+        for dir in set(mozpath.dirname(d) for d in delete_files):
             try:
                 os.removedirs(dir)
             except OSError:
@@ -263,7 +264,7 @@ class BuildBackend(LoggingMixin):
         else:
             assert fh is not None
 
-        dirname = os.path.dirname(fh.name)
+        dirname = mozpath.dirname(fh.name)
         try:
             os.makedirs(dirname)
         except OSError as error:
@@ -272,7 +273,7 @@ class BuildBackend(LoggingMixin):
 
         yield fh
 
-        self._backend_output_files.add(os.path.relpath(fh.name, self.environment.topobjdir))
+        self._backend_output_files.add(mozpath.relpath(fh.name, self.environment.topobjdir))
         existed, updated = fh.close()
         if not existed:
             self.summary.created_count += 1

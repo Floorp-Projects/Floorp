@@ -24,6 +24,7 @@ from mozbuild.util import (
     shell_quote,
     StrictOrderingOnAppendList,
 )
+import mozpack.path as mozpath
 from .sandbox_symbols import FinalTargetValue
 
 
@@ -169,7 +170,7 @@ class XPIDLFile(SandboxDerived):
         SandboxDerived.__init__(self, sandbox)
 
         self.source_path = source
-        self.basename = os.path.basename(source)
+        self.basename = mozpath.basename(source)
         self.module = module
 
 class Defines(SandboxDerived):
@@ -397,7 +398,7 @@ class TestManifest(SandboxDerived):
         SandboxDerived.__init__(self, sandbox)
 
         self.path = path
-        self.directory = os.path.dirname(path)
+        self.directory = mozpath.dirname(path)
         self.manifest = manifest
         self.flavor = flavor
         self.install_prefix = install_prefix
