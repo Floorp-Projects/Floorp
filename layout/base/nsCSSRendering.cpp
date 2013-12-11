@@ -4324,7 +4324,7 @@ nsImageRenderer::PrepareImage()
       if (!mPaintServerFrame) {
         mImageElementSurface =
           nsLayoutUtils::SurfaceFromElement(property->GetReferencedElement());
-        if (!mImageElementSurface.mSurface)
+        if (!mImageElementSurface.mSourceSurface)
           return false;
       }
       mIsReady = true;
@@ -4403,7 +4403,7 @@ nsImageRenderer::ComputeIntrinsicSize()
               ToAppUnits(appUnitsPerDevPixel));
         }
       } else {
-        NS_ASSERTION(mImageElementSurface.mSurface, "Surface should be ready.");
+        NS_ASSERTION(mImageElementSurface.mSourceSurface, "Surface should be ready.");
         gfxIntSize surfaceSize = mImageElementSurface.mSize;
         result.SetSize(
           nsSize(nsPresContext::CSSPixelsToAppUnits(surfaceSize.width),
@@ -4597,9 +4597,9 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
             mFlags & FLAG_SYNC_DECODE_IMAGES ?
               nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES : 0);
       } else {
-        NS_ASSERTION(mImageElementSurface.mSurface, "Surface should be ready.");
+        NS_ASSERTION(mImageElementSurface.mSourceSurface, "Surface should be ready.");
         nsRefPtr<gfxDrawable> surfaceDrawable =
-          new gfxSurfaceDrawable(mImageElementSurface.mSurface,
+          new gfxSurfaceDrawable(mImageElementSurface.mSourceSurface,
                                  mImageElementSurface.mSize);
         nsLayoutUtils::DrawPixelSnapped(
             &aRenderingContext, surfaceDrawable, graphicsFilter,
