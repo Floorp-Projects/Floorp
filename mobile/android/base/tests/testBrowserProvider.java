@@ -193,9 +193,11 @@ public class testBrowserProvider extends ContentProviderTest {
         mAsserter.is(c.getCount(), 0, "All history entries were deleted");
 
         mProvider.delete(mFaviconsUri, null, null);
+        c = mProvider.query(appendUriParam(mFaviconsUri, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
         mAsserter.is(c.getCount(), 0, "All favicons were deleted");
 
         mProvider.delete(mThumbnailsUri, null, null);
+        c = mProvider.query(appendUriParam(mThumbnailsUri, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
         mAsserter.is(c.getCount(), 0, "All thumbnails were deleted");
     }
 
