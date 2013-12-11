@@ -25,12 +25,17 @@ class APZController :
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
 
 public:
+  APZController() :
+    mWidgetListener(nullptr)
+  {
+  }
+
   // GeckoContentController interface
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics);
   virtual void HandleDoubleTap(const mozilla::CSSIntPoint& aPoint);
   virtual void HandleSingleTap(const mozilla::CSSIntPoint& aPoint);
   virtual void HandleLongTap(const mozilla::CSSIntPoint& aPoint);
-  virtual void SendAsyncScrollDOMEvent(FrameMetrics::ViewID aScrollId, const mozilla::CSSRect &aContentRect, const mozilla::CSSSize &aScrollableSize);
+  virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect, const mozilla::CSSSize &aScrollableSize);
   virtual void PostDelayedTask(Task* aTask, int aDelayMs);
   virtual void HandlePanBegin();
   virtual void HandlePanEnd();
@@ -54,6 +59,7 @@ public:
 
 private:
   nsIWidgetListener* mWidgetListener;
+  ScrollableLayerGuid mLastScrollLayerGuid;
   CSSIntPoint mLastScrollOffset;
 };
 

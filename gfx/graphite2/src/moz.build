@@ -4,13 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'graphite2'
-
-if CONFIG['OS_TARGET'] == 'WINNT':
-    FORCE_STATIC_LIB = True
-else:
-    LIBXUL_LIBRARY = True
-
 # This should contain all of the _PUBLIC_HEADERS from files.mk
 EXPORTS.graphite2 += [
     '../include/graphite2/Font.h',
@@ -20,16 +13,16 @@ EXPORTS.graphite2 += [
 ]
 
 if CONFIG['GNU_CC']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'direct_machine.cpp'
     ]
 else:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'call_machine.cpp'
     ]
 
 # This should contain all of the _SOURCES from files.mk, except *_machine.cpp
-SOURCES += [
+UNIFIED_SOURCES += [
     'Bidi.cpp',
     'CachedFace.cpp',
     'CmapCache.cpp',
@@ -62,9 +55,9 @@ SOURCES += [
     'UtfCodec.cpp',
 ]
 
-LIBRARY_NAME = 'mozgraphite2'
-
 MSVC_ENABLE_PGO = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     NO_VISIBILITY_FLAGS = True
+
+FINAL_LIBRARY = 'gkmedias'

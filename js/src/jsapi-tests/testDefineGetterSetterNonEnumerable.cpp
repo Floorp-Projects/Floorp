@@ -8,26 +8,26 @@
 #include "jsapi-tests/tests.h"
 
 static bool
-native(JSContext *cx, unsigned argc, jsval *vp)
+NativeGetterSetter(JSContext *cx, unsigned argc, jsval *vp)
 {
     return true;
 }
 
-static const char PROPERTY_NAME[] = "foo";
-
 BEGIN_TEST(testDefineGetterSetterNonEnumerable)
 {
+    static const char PROPERTY_NAME[] = "foo";
+
     JS::RootedValue vobj(cx);
     JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
     CHECK(obj);
     vobj = OBJECT_TO_JSVAL(obj);
 
-    JSFunction *funGet = JS_NewFunction(cx, native, 0, 0, nullptr, "get");
+    JSFunction *funGet = JS_NewFunction(cx, NativeGetterSetter, 0, 0, nullptr, "get");
     CHECK(funGet);
     JS::RootedObject funGetObj(cx, JS_GetFunctionObject(funGet));
     JS::RootedValue vget(cx, OBJECT_TO_JSVAL(funGetObj));
 
-    JSFunction *funSet = JS_NewFunction(cx, native, 1, 0, nullptr, "set");
+    JSFunction *funSet = JS_NewFunction(cx, NativeGetterSetter, 1, 0, nullptr, "set");
     CHECK(funSet);
     JS::RootedObject funSetObj(cx, JS_GetFunctionObject(funSet));
     JS::RootedValue vset(cx, OBJECT_TO_JSVAL(funSetObj));

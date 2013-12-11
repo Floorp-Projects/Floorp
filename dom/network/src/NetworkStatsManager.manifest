@@ -7,6 +7,6 @@ contract @mozilla.org/networkStats;1 {b6fc4b14-628d-4c99-bf4e-e4ed56916cbe}
 component {f540615b-d803-43ff-8200-2a9d145a5645} NetworkStatsManager.js
 contract @mozilla.org/networkstatsinterface;1 {f540615b-d803-43ff-8200-2a9d145a5645}
 
-component {5fbdcae6-a2cd-47b3-929f-83ac75bd4881} NetworkStatsManager.js
-contract @mozilla.org/networkStatsManager;1 {5fbdcae6-a2cd-47b3-929f-83ac75bd4881}
+component {5f033d31-c9a2-4e2d-83aa-6a807f1e0c11} NetworkStatsManager.js
+contract @mozilla.org/networkStatsManager;1 {5f033d31-c9a2-4e2d-83aa-6a807f1e0c11}
 category JavaScript-navigator-property mozNetworkStats @mozilla.org/networkStatsManager;1

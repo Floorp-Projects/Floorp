@@ -54,7 +54,7 @@
     macro(DataView,              35,     js_InitTypedArrayClasses) \
     macro(ParallelArray,         36,     js_InitParallelArrayClass) \
     macro(Intl,                  37,     js_InitIntlClass) \
-    macro(TypedObject,           38,     js_InitTypedObjectDummy) \
+    macro(TypedObject,           38,     js_InitTypedObjectClass) \
     macro(GeneratorFunction,     39,     js_InitIteratorClasses) \
 
 #endif /* jsprototypes_h */

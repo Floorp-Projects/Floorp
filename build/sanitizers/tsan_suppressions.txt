@@ -1,0 +1,21 @@
+# Bug 931149
+race:DoImageDataComplete
+
+# Bug 939786
+race:_pt_root
+
+# Bug 939788
+# Tracked by http://code.google.com/p/thread-sanitizer/issues/detail?id=40
+race:ELMCreationDetector
+
+# Bug 939790
+race:xpcom/components/nsComponentManager.h
+
+# Bug 939807
+race:ComputeUTCTime
+
+# Bug 939805
+race:g_variant_type_info_get
+
+# Bug 844759
+race:js::gc::ArenaLists::allocateFromArenaInline

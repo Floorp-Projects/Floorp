@@ -9,12 +9,6 @@
 #include "MediaStreamGraph.h"
 #include "AudioNodeStream.h"
 
-#ifdef PR_LOGGING
-#define LOG(type, msg) PR_LOG(gMediaStreamGraphLog, type, msg)
-#else
-#define LOG(type, msg)
-#endif
-
 // Forward declaration for mResamplerMap
 typedef struct SpeexResamplerState_ SpeexResamplerState;
 

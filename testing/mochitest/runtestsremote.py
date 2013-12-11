@@ -347,10 +347,6 @@ class MochiRemote(Mochitest):
             shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'worker-test@mozilla.org'))
             shutil.rmtree(os.path.join(options.profilePath, 'extensions', 'staged', 'workerbootstrap-test@mozilla.org'))
             os.remove(os.path.join(options.profilePath, 'userChrome.css'))
-            if os.path.exists(os.path.join(options.profilePath, 'tests.jar')):
-                os.remove(os.path.join(options.profilePath, 'tests.jar'))
-            if os.path.exists(os.path.join(options.profilePath, 'tests.manifest')):
-                os.remove(os.path.join(options.profilePath, 'tests.manifest'))
 
         try:
             self._dm.pushDir(options.profilePath, self.remoteProfile)
@@ -526,8 +522,8 @@ class MochiRemote(Mochitest):
         self._dm.pushFile(fHandle.name, os.path.join(deviceRoot, "robotium.config"))
         os.unlink(fHandle.name)
 
-    def buildBrowserEnv(self, options):
-        browserEnv = Mochitest.buildBrowserEnv(self, options)
+    def buildBrowserEnv(self, options, debugger=False):
+        browserEnv = Mochitest.buildBrowserEnv(self, options, debugger=debugger)
         self.buildRobotiumConfig(options, browserEnv)
         return browserEnv
 

@@ -118,6 +118,10 @@ function test()
 {
   waitForExplicitFinish();
 
+  // Reset the startup page pref since it may have been set by other tests
+  // and we will assume it is default.
+  Services.prefs.clearUserPref('browser.startup.page');
+
   if (gPrefService.prefHasUserValue(PREF_MSTONE)) {
     gOriginalMStone = gPrefService.getCharPref(PREF_MSTONE);
   }

@@ -89,7 +89,7 @@ function runTests()
         check(function() type(+Infinity) === 0);
         check(function() type(-Infinity) === 0);
         check(function() type(NaN) === 0);
-        check(function() type.toString() === strings[i]);
+        check(function() type.toSource() === strings[i]);
         check(function() type(null) == 0);
         check(function() type(undefined) == 0);
         check(function() type([]) == 0);
@@ -110,7 +110,7 @@ function runTests()
         check(function() type(+Infinity) === Infinity);
         check(function() type(-Infinity) === -Infinity);
         check(function() Number.isNaN(type(NaN)));
-        check(function() type.toString() === floatStrings[i]);
+        check(function() type.toSource() === floatStrings[i]);
         check(function() type(null) == 0);
         check(function() Number.isNaN(type(undefined)));
         check(function() type([]) == 0);

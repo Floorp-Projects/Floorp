@@ -33,7 +33,7 @@ public:
   nsresult CreateDocument(const char* aCommand,
                           nsIChannel* aChannel,
                           nsILoadGroup* aLoadGroup,
-                          nsISupports* aContainer,
+                          nsIDocShell* aContainer,
                           const nsCID& aDocumentCID,
                           nsIStreamListener** aDocListener,
                           nsIContentViewer** aContentViewer);
@@ -42,7 +42,7 @@ public:
                              nsIChannel* aChannel,
                              nsILoadGroup* aLoadGroup,
                              const char* aContentType,
-                             nsISupports* aContainer,
+                             nsIDocShell* aContainer,
                              nsISupports* aExtraInfo,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aContentViewer);

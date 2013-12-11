@@ -1,35 +1,15 @@
 # -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
 # vim: set filetype=python:
-# Copyright 2013 Mozilla Foundation and Mozilla contributors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['MOZ_B2G_BT']:
-    LIBXUL_LIBRARY = True
-    MODULE = 'dom'
-    LIBRARY_NAME = 'dombluetooth_s'
-    XPIDL_MODULE = 'dom_bluetooth'
-    XPIDL_SOURCES += [
-        'nsIDOMBluetoothDevice.idl',
-        'nsIDOMBluetoothDeviceEvent.idl',
-        'nsIDOMBluetoothStatusChangedEvent.idl',
-    ]
+    PARALLEL_DIRS += ['interfaces']
 
     SOURCES += [
-        'BluetoothA2dpManager.cpp',
         'BluetoothAdapter.cpp',
         'BluetoothDevice.cpp',
-        'BluetoothHfpManager.cpp',
         'BluetoothHidManager.cpp',
         'BluetoothManager.cpp',
         'BluetoothOppManager.cpp',
@@ -55,18 +35,37 @@ if CONFIG['MOZ_B2G_BT']:
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         if CONFIG['MOZ_B2G_BT_BLUEZ']:
             SOURCES += [
-               'gonk/BluetoothGonkService.cpp',
-               'linux/BluetoothDBusService.cpp',
+                'bluez/BluetoothA2dpManager.cpp',
+                'bluez/BluetoothHfpManager.cpp',
+                'bluez/gonk/BluetoothGonkService.cpp',
+                'bluez/linux/BluetoothDBusService.cpp',
             ]
-        if CONFIG['MOZ_B2G_BT_BLUEDROID']:
+            LOCAL_INCLUDES += [
+                'bluez',
+                'bluez/gonk',
+                'bluez/linux',
+            ]
+        elif CONFIG['MOZ_B2G_BT_BLUEDROID']:
             SOURCES += [
-                'BluetoothServiceBluedroid.cpp',
+                'bluedroid/BluetoothA2dpManager.cpp',
+                'bluedroid/BluetoothHfpManager.cpp',
+                'bluedroid/gonk/BluetoothServiceBluedroid.cpp',
             ]
-    else:
-        if CONFIG['MOZ_ENABLE_DBUS']:
-            SOURCES += [
-                 'linux/BluetoothDBusService.cpp',
+            LOCAL_INCLUDES += [
+                'bluedroid',
+                'bluedroid/gonk',
             ]
+    elif CONFIG['MOZ_ENABLE_DBUS']:
+        SOURCES += [
+            'bluez/BluetoothHfpManager.cpp',
+            'bluez/linux/BluetoothDBusService.cpp',
+        ]
+        LOCAL_INCLUDES += [
+            'bluez',
+            'bluez/linux',
+        ]
+
+    FINAL_LIBRARY = 'gklayout'
 
 EXPORTS.mozilla.dom.bluetooth.ipc += [
     'ipc/BluetoothMessageUtils.h',

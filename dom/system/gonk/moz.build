@@ -29,8 +29,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_system_gonk'
 
-MODULE = 'dom'
-
 EXPORTS += [
     'GonkGPSGeolocationProvider.h',
     'nsVolume.h',
@@ -102,11 +100,17 @@ if CONFIG['MOZ_NFC']:
     'nfc_worker.js',
     ]
 
+# include different BluetoothHfpManager.h under dom/bluetooth/
+if CONFIG['MOZ_B2G_BT_BLUEZ']:
+    LOCAL_INCLUDES += [
+        '/dom/bluetooth/bluez',
+    ]
+elif CONFIG['MOZ_B2G_BT_BLUEDROID']:
+    LOCAL_INCLUDES += [
+        '/dom/bluetooth/bluedroid',
+    ]
+
 FAIL_ON_WARNINGS = True
-
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'domsystemgonk_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
@@ -119,3 +123,4 @@ LOCAL_INCLUDES += [
     '/dom/wifi',
 ]
 
+FINAL_LIBRARY = 'gklayout'

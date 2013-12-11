@@ -359,6 +359,12 @@ let CustomizableUIInternal = {
 
     this.beginBatchUpdate();
 
+    // Restore nav-bar visibility since it may have been hidden
+    // through a migration path (bug 938980) or an add-on.
+    if (aArea == CustomizableUI.AREA_NAVBAR) {
+      aAreaNode.collapsed = false;
+    }
+
     let currentNode = container.firstChild;
     let placementsToRemove = new Set();
     for (let id of aPlacements) {
@@ -861,24 +867,27 @@ let CustomizableUIInternal = {
     if (node) {
       let parent = node.parentNode;
       while (parent && !(parent.customizationTarget ||
-                         parent.localName == "toolbarpaletteitem")) {
+                         parent == aWindow.gNavToolbox.palette)) {
         parent = parent.parentNode;
       }
 
-      if (parent && ((parent.customizationTarget == node.parentNode &&
-                      gBuildWindows.get(aWindow).has(parent.toolbox)) ||
-                     parent.localName == "toolbarpaletteitem")) {
-        // Normalize the removable attribute. For backwards compat, if
-        // the widget is not defined in a toolbox palette then absence
-        // of the "removable" attribute means it is not removable.
-        if (!node.hasAttribute("removable")) {
-          parent = parent.localName == "toolbarpaletteitem" ? parent.parentNode : parent;
-          // If we first see this in customization mode, it may be in the
-          // customization palette instead of the toolbox palette.
-          node.setAttribute("removable", !parent.customizationTarget);
+      if (parent) {
+        let nodeInArea = node.parentNode.localName == "toolbarpaletteitem" ?
+                         node.parentNode : node;
+        // Check if we're in a customization target, or in the palette:
+        if ((parent.customizationTarget == nodeInArea.parentNode &&
+             gBuildWindows.get(aWindow).has(parent.toolbox)) ||
+            aWindow.gNavToolbox.palette == nodeInArea.parentNode) {
+          // Normalize the removable attribute. For backwards compat, if
+          // the widget is not located in a toolbox palette then absence
+          // of the "removable" attribute means it is not removable.
+          if (!node.hasAttribute("removable")) {
+            // If we first see this in customization mode, it may be in the
+            // customization palette instead of the toolbox palette.
+            node.setAttribute("removable", !parent.customizationTarget);
+          }
+          return node;
         }
-
-        return node;
       }
     }
 
@@ -890,8 +899,8 @@ let CustomizableUIInternal = {
         let node = toolbox.palette.querySelector(idToSelector(aId));
         if (node) {
           // Normalize the removable attribute. For backwards compat, this
-          // is optional if the widget is defined in the toolbox palette,
-          // and defaults to *true*, unlike if it was defined elsewhere.
+          // is optional if the widget is located in the toolbox palette,
+          // and defaults to *true*, unlike if it was located elsewhere.
           if (!node.hasAttribute("removable")) {
             node.setAttribute("removable", true);
           }
@@ -1078,19 +1087,23 @@ let CustomizableUIInternal = {
   /*
    * If people put things in the panel which need more than single-click interaction,
    * we don't want to close it. Right now we check for text inputs and menu buttons.
-   * Anything else we should take care of?
+   * We also check for being outside of any toolbaritem/toolbarbutton, ie on a blank
+   * part of the menu.
    */
   _isOnInteractiveElement: function(aEvent) {
     let target = aEvent.originalTarget;
-    let panel = aEvent.currentTarget;
+    let panel = this._getPanelForNode(aEvent.currentTarget);
     let inInput = false;
     let inMenu = false;
-    while (!inInput && !inMenu && target != aEvent.currentTarget) {
-      inInput = target.localName == "input";
+    let inItem = false;
+    while (!inInput && !inMenu && !inItem && target != panel) {
+      let tagName = target.localName;
+      inInput = tagName == "input";
       inMenu = target.type == "menu";
+      inItem = tagName == "toolbaritem" || tagName == "toolbarbutton";
       target = target.parentNode;
     }
-    return inMenu || inInput;
+    return inMenu || inInput || !inItem;
   },
 
   hidePanelForNode: function(aNode) {
@@ -1496,6 +1509,16 @@ let CustomizableUIInternal = {
     }
 
     gPalette.set(widget.id, widget);
+
+    // Clear our caches:
+    gGroupWrapperCache.delete(widget.id);
+    for (let [win, ] of gBuildWindows) {
+      let cache = gSingleWrapperCache.get(win);
+      if (cache) {
+        cache.delete(widget.id);
+      }
+    }
+
     this.notifyListeners("onWidgetCreated", widget.id);
 
     if (widget.defaultArea) {
@@ -1954,6 +1977,9 @@ this.CustomizableUI = {
   get TYPE_MENU_PANEL() "menu-panel",
   get TYPE_TOOLBAR() "toolbar",
 
+  get WIDE_PANEL_CLASS() "panel-wide-item",
+  get PANEL_COLUMN_COUNT() 3,
+
   addListener: function(aListener) {
     CustomizableUIInternal.addListener(aListener);
   },
@@ -2067,6 +2093,12 @@ this.CustomizableUI = {
   },
   onWidgetDrag: function(aWidgetId, aArea) {
     CustomizableUIInternal.notifyListeners("onWidgetDrag", aWidgetId, aArea);
+  },
+  notifyStartCustomizing: function(aWindow) {
+    CustomizableUIInternal.notifyListeners("onCustomizeStart", aWindow);
+  },
+  notifyEndCustomizing: function(aWindow) {
+    CustomizableUIInternal.notifyListeners("onCustomizeEnd", aWindow);
   },
   isAreaOverflowable: function(aAreaId) {
     let area = gAreas.get(aAreaId);

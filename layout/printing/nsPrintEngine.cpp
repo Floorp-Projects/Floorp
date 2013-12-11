@@ -293,7 +293,7 @@ void nsPrintEngine::DestroyPrintingData()
 
 //--------------------------------------------------------
 nsresult nsPrintEngine::Initialize(nsIDocumentViewerPrint* aDocViewerPrint, 
-                                   nsIWeakReference*       aContainer,
+                                   nsIDocShell*            aContainer,
                                    nsIDocument*            aDocument,
                                    float                   aScreenDPI,
                                    FILE*                   aDebugFile)
@@ -303,7 +303,7 @@ nsresult nsPrintEngine::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
   NS_ENSURE_ARG_POINTER(aDocument);
 
   mDocViewerPrint = aDocViewerPrint;
-  mContainer      = aContainer;
+  mContainer      = do_GetWeakReference(aContainer);
   mDocument       = aDocument;
   mScreenDPI      = aScreenDPI;
 
@@ -1335,8 +1335,7 @@ nsPrintEngine::MapContentForPO(nsPrintObject*   aPO,
   nsIDocument* subDoc = doc->GetSubDocumentFor(aContent);
 
   if (subDoc) {
-    nsCOMPtr<nsISupports> container = subDoc->GetContainer();
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+    nsCOMPtr<nsIDocShell> docShell(subDoc->GetDocShell());
 
     if (docShell) {
       nsPrintObject * po = nullptr;

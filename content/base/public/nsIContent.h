@@ -34,8 +34,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID \
-{ 0x976f4cd1, 0xbdfc, 0x4a1e, \
-  { 0x82, 0x46, 0x1c, 0x13, 0x9c, 0xd3, 0x73, 0x7f } }
+{ 0x34117ca3, 0x45d0, 0x479e, \
+  { 0x91, 0x30, 0x54, 0x49, 0xa9, 0x5f, 0x25, 0x99 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -557,12 +557,8 @@ public:
    *         > 0 can be tabbed to in the order specified by this value
    * @return whether the content is focusable via mouse, kbd or script.
    */
-  virtual bool IsFocusable(int32_t *aTabIndex = nullptr, bool aWithMouse = false)
-  {
-    if (aTabIndex) 
-      *aTabIndex = -1; // Default, not tabbable
-    return false;
-  }
+  bool IsFocusable(int32_t* aTabIndex = nullptr, bool aWithMouse = false);
+  virtual bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse);
 
   /**
    * The method focuses (or activates) element that accesskey is bound to. It is

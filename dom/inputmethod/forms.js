@@ -762,11 +762,18 @@ function isPlainTextField(element) {
     return false;
   }
 
-  return element instanceof HTMLInputElement ||
-         element instanceof HTMLTextAreaElement;
+  return element instanceof HTMLTextAreaElement ||
+         (element instanceof HTMLInputElement &&
+          element.mozIsTextField(false));
 }
 
 function getJSON(element, focusCounter) {
+  // <input type=number> has a nested anonymous <input type=text> element that
+  // takes focus on behalf of the number control when someone tries to focus
+  // the number control. If |element| is such an anonymous text control then we
+  // need it's number control here in order to get the correct 'type' etc.:
+  element = element.ownerNumberControl || element;
+
   let type = element.type || "";
   let value = element.value || "";
   let max = element.max || "";

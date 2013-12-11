@@ -154,9 +154,7 @@ public:
 
   already_AddRefed<gfxDrawable> Drawable() const
   {
-    nsRefPtr<gfxASurface> surface =
-      gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);
-    nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(surface, mTargetSize);
+    nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(mTarget, mTargetSize);
     return drawable.forget();
   }
 

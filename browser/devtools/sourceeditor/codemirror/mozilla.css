@@ -18,21 +18,21 @@
 }
 
 .error {
-  background-image: url("chrome://browser/skin/devtools/orion-error.png");
+  background-image: url("chrome://browser/skin/devtools/editor-error.png");
   opacity: 0.75;
 }
 
 .breakpoint {
-  background-image: url("chrome://browser/skin/devtools/orion-breakpoint.png");
+  background-image: url("chrome://browser/skin/devtools/editor-breakpoint.png");
 }
 
 .debugLocation {
-  background-image: url("chrome://browser/skin/devtools/orion-debug-location.png");
+  background-image: url("chrome://browser/skin/devtools/editor-debug-location.png");
 }
 
 .breakpoint.debugLocation {
-  background-image: url("chrome://browser/skin/devtools/orion-debug-location.png"),
-    url("chrome://browser/skin/devtools/orion-breakpoint.png");
+  background-image: url("chrome://browser/skin/devtools/editor-debug-location.png"),
+    url("chrome://browser/skin/devtools/editor-breakpoint.png");
 }
 
 .error-line {
@@ -53,4 +53,18 @@ to the maximum of `min-width` specific to the `scrollbar[orient="vertical"]`
 selector in floating-scrollbar-light.css across all platforms. */
 .CodeMirror-vscrollbar {
   min-width: 10px;
+}
+
+/* This is to make CodeMirror's dialogs more DevTool-ey. */
+
+.CodeMirror-dialog {
+  font: message-box;
+  padding: 5px 4px;
+  color: hsl(210,30%,85%);
+  background-image: url("chrome://browser/skin/devtools/background-noise-toolbar.png"),
+    linear-gradient(#3e4750, #3e4750);
+}
+
+.CodeMirror-dialog input {
+  font: message-box;
 }

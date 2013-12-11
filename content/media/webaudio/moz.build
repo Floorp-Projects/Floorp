@@ -8,8 +8,6 @@ PARALLEL_DIRS += ['blink', 'test']
 
 TEST_TOOL_DIRS += ['compiledtest']
 
-MODULE = 'content'
-
 EXPORTS += [
     'AudioParamTimeline.h',
     'MediaBufferDecoder.h',
@@ -50,7 +48,7 @@ EXPORTS.mozilla.dom += [
     'WaveShaperNode.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AnalyserNode.cpp',
     'AudioBuffer.cpp',
     'AudioBufferSourceNode.cpp',
@@ -86,9 +84,6 @@ SOURCES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
-LIBRARY_NAME = 'gkconwebaudio_s'
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'

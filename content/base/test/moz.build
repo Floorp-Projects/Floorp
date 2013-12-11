@@ -10,8 +10,6 @@ TEST_TOOL_DIRS += [
     'websocket_hybi',
 ]
 
-MODULE = 'content'
-
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 # FIXME/bug 575918: out-of-process xpcshell is broken on OS X

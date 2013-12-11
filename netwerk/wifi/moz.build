@@ -14,8 +14,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'necko_wifi'
 
-MODULE = 'necko'
-
 UNIFIED_SOURCES += [
     'nsWifiAccessPoint.cpp',
 ]
@@ -52,7 +50,4 @@ if CONFIG['NECKO_WIFI_DBUS']:
         'nsWifiScannerDBus.cpp',
     ]
 
-LIBRARY_NAME = 'neckowifi_s'
-
-LIBXUL_LIBRARY = True
-
+FINAL_LIBRARY = 'necko'

@@ -336,6 +336,8 @@ static JS_ALWAYS_INLINE bool
 GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObject,
                           HandleValue rref, MutableHandleValue res)
 {
+    JS_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
+
     do {
         uint32_t index;
         if (IsDefinitelyIndex(rref, &index)) {
@@ -457,14 +459,14 @@ static JS_ALWAYS_INLINE JSString *
 TypeOfOperation(const Value &v, JSRuntime *rt)
 {
     JSType type = js::TypeOfValue(v);
-    return TypeName(type, rt);
+    return TypeName(type, rt->atomState);
 }
 
 static inline JSString *
 TypeOfObjectOperation(JSObject *obj, JSRuntime *rt)
 {
     JSType type = js::TypeOfObject(obj);
-    return TypeName(type, rt);
+    return TypeName(type, rt->atomState);
 }
 
 static JS_ALWAYS_INLINE bool

@@ -25,6 +25,8 @@
 static NS_DEFINE_CID(kStreamTransportServiceCID,
                      NS_STREAMTRANSPORTSERVICE_CID);
 
+static uint32_t const CHECK_MULTITHREADED = nsICacheStorage::CHECK_MULTITHREADED;
+
 namespace mozilla {
 namespace net {
 
@@ -361,8 +363,9 @@ NS_IMETHODIMP _OldCacheEntryWrapper::HasWriteAccess(bool aWriteAllowed_unused, b
 
 namespace { // anon
 
-void
+nsresult
 GetCacheSessionNameForStoragePolicy(
+        nsCSubstring const &scheme,
         nsCacheStoragePolicy storagePolicy,
         bool isPrivate,
         uint32_t appId,
@@ -371,27 +374,67 @@ GetCacheSessionNameForStoragePolicy(
 {
   MOZ_ASSERT(!isPrivate || storagePolicy == nsICache::STORE_IN_MEMORY);
 
-  switch (storagePolicy) {
+  // HTTP
+  if (scheme.Equals(NS_LITERAL_CSTRING("http")) ||
+      scheme.Equals(NS_LITERAL_CSTRING("https"))) {
+    switch (storagePolicy) {
     case nsICache::STORE_IN_MEMORY:
-      sessionName.AssignASCII(isPrivate ? "HTTP-memory-only-PB" : "HTTP-memory-only");
+      if (isPrivate)
+        sessionName.Assign(NS_LITERAL_CSTRING("HTTP-memory-only-PB"));
+      else
+        sessionName.Assign(NS_LITERAL_CSTRING("HTTP-memory-only"));
       break;
     case nsICache::STORE_OFFLINE:
-      sessionName.AssignLiteral("HTTP-offline");
+      // XXX This is actually never used, only added to prevent
+      // any compatibility damage.
+      sessionName.Assign(NS_LITERAL_CSTRING("HTTP-offline"));
       break;
     default:
-      sessionName.AssignLiteral("HTTP");
+      sessionName.Assign(NS_LITERAL_CSTRING("HTTP"));
       break;
+    }
   }
+  // WYCIWYG
+  else if (scheme.Equals(NS_LITERAL_CSTRING("wyciwyg"))) {
+    if (isPrivate)
+      sessionName.Assign(NS_LITERAL_CSTRING("wyciwyg-private"));
+    else
+      sessionName.Assign(NS_LITERAL_CSTRING("wyciwyg"));
+  }
+  // FTP
+  else if (scheme.Equals(NS_LITERAL_CSTRING("ftp"))) {
+    if (isPrivate)
+      sessionName.Assign(NS_LITERAL_CSTRING("FTP-private"));
+    else
+      sessionName.Assign(NS_LITERAL_CSTRING("FTP"));
+  }
+  // all remaining URL scheme
+  else {
+    // Since with the new API a consumer cannot specify its own session name
+    // and partitioning of the cache is handled stricly only by the cache
+    // back-end internally, we will use a separate session name to pretend
+    // functionality of the new API wrapping the Darin's cache for all other
+    // URL schemes.
+    // Deliberately omitting |anonymous| since other session types don't
+    // recognize it too.
+    sessionName.Assign(NS_LITERAL_CSTRING("other"));
+    if (isPrivate)
+      sessionName.Append(NS_LITERAL_CSTRING("-private"));
+  }
+
   if (appId != nsILoadContextInfo::NO_APP_ID || inBrowser) {
     sessionName.Append('~');
     sessionName.AppendInt(appId);
     sessionName.Append('~');
     sessionName.AppendInt(inBrowser);
   }
+
+  return NS_OK;
 }
 
 nsresult
-GetCacheSession(bool aWriteToDisk,
+GetCacheSession(nsCSubstring const &aScheme,
+                bool aWriteToDisk,
                 nsILoadContextInfo* aLoadInfo,
                 nsIApplicationCache* aAppCache,
                 nsICacheSession** _result)
@@ -411,12 +454,14 @@ GetCacheSession(bool aWriteToDisk,
     aAppCache->GetClientID(clientId);
   }
   else {
-    GetCacheSessionNameForStoragePolicy(
+    rv = GetCacheSessionNameForStoragePolicy(
+      aScheme,
       storagePolicy,
       aLoadInfo->IsPrivate(),
       aLoadInfo->AppId(),
       aLoadInfo->IsInBrowserElement(),
       clientId);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   LOG(("  GetCacheSession for client=%s, policy=%d", clientId.get(), storagePolicy));
@@ -455,19 +500,22 @@ GetCacheSession(bool aWriteToDisk,
 
 NS_IMPL_ISUPPORTS_INHERITED1(_OldCacheLoad, nsRunnable, nsICacheListener)
 
-_OldCacheLoad::_OldCacheLoad(nsCSubstring const& aCacheKey,
+_OldCacheLoad::_OldCacheLoad(nsCSubstring const& aScheme,
+                             nsCSubstring const& aCacheKey,
                              nsICacheEntryOpenCallback* aCallback,
                              nsIApplicationCache* aAppCache,
                              nsILoadContextInfo* aLoadInfo,
                              bool aWriteToDisk,
                              uint32_t aFlags)
-  : mCacheKey(aCacheKey)
+  : mScheme(aScheme)
+  , mCacheKey(aCacheKey)
   , mCallback(aCallback)
   , mLoadInfo(GetLoadContextInfo(aLoadInfo))
   , mFlags(aFlags)
   , mWriteToDisk(aWriteToDisk)
-  , mMainThreadOnly(true)
   , mNew(true)
+  , mOpening(true)
+  , mSync(false)
   , mStatus(NS_ERROR_UNEXPECTED)
   , mRunCount(0)
   , mAppCache(aAppCache)
@@ -484,18 +532,14 @@ _OldCacheLoad::~_OldCacheLoad()
 nsresult _OldCacheLoad::Start()
 {
   LOG(("_OldCacheLoad::Start [this=%p, key=%s]", this, mCacheKey.get()));
-  MOZ_ASSERT(NS_IsMainThread());
 
   mLoadStart = mozilla::TimeStamp::Now();
 
-  bool mainThreadOnly;
-  if (mCallback && (
-      NS_SUCCEEDED(mCallback->GetMainThreadOnly(&mainThreadOnly)) &&
-      !mainThreadOnly)) {
-    mMainThreadOnly = false;
-  }
-
   nsresult rv;
+
+  // Consumers that can invoke this code as first and off the main thread
+  // are responsible for initiating these two services on the main thread.
+  // Currently this is only nsWyciwygChannel.
 
   // XXX: Start the cache service; otherwise DispatchToCacheIOThread will
   // fail.
@@ -503,7 +547,7 @@ nsresult _OldCacheLoad::Start()
     do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
 
   // Ensure the stream transport service gets initialized on the main thread
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && NS_IsMainThread()) {
     nsCOMPtr<nsIStreamTransportService> sts =
       do_GetService(kStreamTransportServiceCID, &rv);
   }
@@ -513,7 +557,20 @@ nsresult _OldCacheLoad::Start()
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = mCacheThread->Dispatch(this, NS_DISPATCH_NORMAL);
+    bool onCacheTarget;
+    rv = mCacheThread->IsOnCurrentThread(&onCacheTarget);
+    if (NS_SUCCEEDED(rv) && onCacheTarget) {
+      mSync = true;
+    }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    if (mSync) {
+      rv = Run();
+    }
+    else {
+      rv = mCacheThread->Dispatch(this, NS_DISPATCH_NORMAL);
+    }
   }
 
   return rv;
@@ -526,9 +583,11 @@ _OldCacheLoad::Run()
 
   nsresult rv;
 
-  if (!NS_IsMainThread()) {
+  if (mOpening) {
+    mOpening = false;
     nsCOMPtr<nsICacheSession> session;
-    rv = GetCacheSession(mWriteToDisk, mLoadInfo, mAppCache, getter_AddRefs(session));
+    rv = GetCacheSession(mScheme, mWriteToDisk, mLoadInfo, mAppCache,
+                         getter_AddRefs(session));
     if (NS_SUCCEEDED(rv)) {
       // AsyncOpenCacheEntry isn't really async when its called on the
       // cache service thread.
@@ -544,8 +603,21 @@ _OldCacheLoad::Run()
       LOG(("  session->AsyncOpenCacheEntry with access=%d", cacheAccess));
 
       bool bypassBusy = mFlags & nsICacheStorage::OPEN_BYPASS_IF_BUSY;
-      rv = session->AsyncOpenCacheEntry(mCacheKey, cacheAccess, this, bypassBusy);
 
+      if (mSync && cacheAccess == nsICache::ACCESS_WRITE) {
+        nsCOMPtr<nsICacheEntryDescriptor> entry;
+        rv = session->OpenCacheEntry(mCacheKey, cacheAccess, bypassBusy,
+          getter_AddRefs(entry));
+
+        nsCacheAccessMode grantedAccess = 0;
+        if (NS_SUCCEEDED(rv)) {
+          entry->GetAccessGranted(&grantedAccess);
+        }
+
+        return OnCacheEntryAvailable(entry, grantedAccess, rv);
+      }
+
+      rv = session->AsyncOpenCacheEntry(mCacheKey, cacheAccess, this, bypassBusy);
       if (NS_SUCCEEDED(rv))
         return NS_OK;
     }
@@ -579,7 +651,7 @@ _OldCacheLoad::Run()
       }
     }
 
-    if (mMainThreadOnly)
+    if (!(mFlags & CHECK_MULTITHREADED))
       Check();
 
     // break cycles
@@ -620,8 +692,11 @@ _OldCacheLoad::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
   mStatus = status;
   mNew = access == nsICache::ACCESS_WRITE;
 
-  if (!mMainThreadOnly)
+  if (mFlags & CHECK_MULTITHREADED)
     Check();
+
+  if (mSync)
+    return Run();
 
   return NS_DispatchToMainThread(this);
 }
@@ -697,8 +772,8 @@ NS_IMETHODIMP _OldStorage::AsyncOpenURI(nsIURI *aURI,
 
   nsresult rv;
 
-  nsAutoCString cacheKey;
-  rv = AssembleCacheKey(aURI, aIdExtension, cacheKey);
+  nsAutoCString cacheKey, scheme;
+  rv = AssembleCacheKey(aURI, aIdExtension, cacheKey, scheme);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mAppCache && (mLookupAppCache || mOfflineStorage)) {
@@ -712,7 +787,7 @@ NS_IMETHODIMP _OldStorage::AsyncOpenURI(nsIURI *aURI,
   }
 
   nsRefPtr<_OldCacheLoad> cacheLoad =
-    new _OldCacheLoad(cacheKey, aCallback, mAppCache,
+    new _OldCacheLoad(scheme, cacheKey, aCallback, mAppCache,
                       mLoadInfo, mWriteToDisk, aFlags);
 
   rv = cacheLoad->Start();
@@ -728,12 +803,13 @@ NS_IMETHODIMP _OldStorage::AsyncDoomURI(nsIURI *aURI, const nsACString & aIdExte
 
   nsresult rv;
 
-  nsAutoCString cacheKey;
-  rv = AssembleCacheKey(aURI, aIdExtension, cacheKey);
+  nsAutoCString cacheKey, scheme;
+  rv = AssembleCacheKey(aURI, aIdExtension, cacheKey, scheme);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsICacheSession> session;
-  rv = GetCacheSession(mWriteToDisk, mLoadInfo, mAppCache, getter_AddRefs(session));
+  rv = GetCacheSession(scheme, mWriteToDisk, mLoadInfo, mAppCache,
+                       getter_AddRefs(session));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<DoomCallbackWrapper> cb = aCallback
@@ -776,12 +852,44 @@ NS_IMETHODIMP _OldStorage::AsyncEvictStorage(nsICacheEntryDoomCallback* aCallbac
     }
   }
   else {
-    nsCOMPtr<nsICacheSession> session;
-    rv = GetCacheSession(mWriteToDisk, mLoadInfo, mAppCache, getter_AddRefs(session));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (mAppCache) {
+      nsCOMPtr<nsICacheSession> session;
+      rv = GetCacheSession(EmptyCString(),
+                           mWriteToDisk, mLoadInfo, mAppCache,
+                           getter_AddRefs(session));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = session->EvictEntries();
-    NS_ENSURE_SUCCESS(rv, rv);
+      rv = session->EvictEntries();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+      // Oh, I'll be so happy when session names are gone...
+      nsCOMPtr<nsICacheSession> session;
+      rv = GetCacheSession(NS_LITERAL_CSTRING("http"),
+                           mWriteToDisk, mLoadInfo, mAppCache,
+                           getter_AddRefs(session));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = session->EvictEntries();
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = GetCacheSession(NS_LITERAL_CSTRING("wyciwyg"),
+                           mWriteToDisk, mLoadInfo, mAppCache,
+                           getter_AddRefs(session));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = session->EvictEntries();
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // This clears any data from scheme other then http, wyciwyg or ftp
+      rv = GetCacheSession(EmptyCString(),
+                           mWriteToDisk, mLoadInfo, mAppCache,
+                           getter_AddRefs(session));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = session->EvictEntries();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   if (aCallback) {
@@ -841,33 +949,49 @@ NS_IMETHODIMP _OldStorage::AsyncVisitStorage(nsICacheStorageVisitor* aVisitor,
 
 nsresult _OldStorage::AssembleCacheKey(nsIURI *aURI,
                                        nsACString const & aIdExtension,
-                                       nsACString & aCacheKey)
+                                       nsACString & aCacheKey,
+                                       nsACString & aScheme)
 {
   // Copied from nsHttpChannel::AssembleCacheKey
 
   aCacheKey.Truncate();
 
-  if (mLoadInfo->IsAnonymous()) {
-    aCacheKey.AssignLiteral("anon&");
-  }
-
-  if (!aIdExtension.IsEmpty()) {
-    aCacheKey.AppendPrintf("id=%s&", aIdExtension.BeginReading());
-  }
-
   nsresult rv;
 
-  nsCOMPtr<nsIURI> noRefURI;
-  rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
+  rv = aURI->GetScheme(aScheme);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString uriSpec;
-  rv = noRefURI->GetAsciiSpec(uriSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (aScheme.Equals(NS_LITERAL_CSTRING("http")) ||
+      aScheme.Equals(NS_LITERAL_CSTRING("https"))) {
+    if (mLoadInfo->IsAnonymous()) {
+      aCacheKey.AssignLiteral("anon&");
+    }
 
-  if (!aCacheKey.IsEmpty()) {
-    aCacheKey.AppendLiteral("uri=");
+    if (!aIdExtension.IsEmpty()) {
+      aCacheKey.AppendPrintf("id=%s&", aIdExtension.BeginReading());
+    }
+
+    nsCOMPtr<nsIURI> noRefURI;
+    rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = noRefURI->GetAsciiSpec(uriSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!aCacheKey.IsEmpty()) {
+      aCacheKey.AppendLiteral("uri=");
+    }
   }
+  else if (aScheme.Equals(NS_LITERAL_CSTRING("wyciwyg"))) {
+    rv = aURI->GetSpec(uriSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else {
+    rv = aURI->GetAsciiSpec(uriSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   aCacheKey.Append(uriSpec);
 
   return NS_OK;

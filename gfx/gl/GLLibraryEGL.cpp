@@ -18,7 +18,7 @@ namespace gl {
 GLLibraryEGL sEGLLibrary;
 
 // should match the order of EGLExtensions, and be null-terminated.
-static const char *sExtensionNames[] = {
+static const char *sEGLExtensionNames[] = {
     "EGL_KHR_image_base",
     "EGL_KHR_image_pixmap",
     "EGL_KHR_gl_texture_2D_image",
@@ -321,7 +321,7 @@ GLLibraryEGL::InitExtensions()
     const bool firstRun = false;
 #endif
 
-    GLContext::InitializeExtensionsBitSet(mAvailableExtensions, extensions, sExtensionNames, firstRun && debugMode);
+    GLContext::InitializeExtensionsBitSet(mAvailableExtensions, extensions, sEGLExtensionNames, firstRun && debugMode);
 
 #ifdef DEBUG
     firstRun = false;

@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'content'
-
 EXPORTS += [
     'mozAutoDocUpdate.h',
     'nsAtomListUtils.h',
@@ -69,7 +67,7 @@ EXPORTS.mozilla.dom += [
     'TreeWalker.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'Attr.cpp',
     'ChildIterator.cpp',
     'Comment.cpp',
@@ -96,12 +94,10 @@ SOURCES += [
     'nsContentList.cpp',
     'nsContentPolicy.cpp',
     'nsContentSink.cpp',
-    'nsContentUtils.cpp',
     'nsCopySupport.cpp',
     'nsCrossSiteListenerProxy.cpp',
     'nsCSPService.cpp',
     'nsDataDocumentContentPolicy.cpp',
-    'nsDocument.cpp',
     'nsDocumentEncoder.cpp',
     'nsDOMAttributeMap.cpp',
     'nsDOMBlobBuilder.cpp',
@@ -132,9 +128,7 @@ SOURCES += [
     'nsNameSpaceManager.cpp',
     'nsNoDataProtocolContentPolicy.cpp',
     'nsNodeInfo.cpp',
-    'nsNodeInfoManager.cpp',
     'nsNodeUtils.cpp',
-    'nsObjectLoadingContent.cpp',
     'nsPlainTextSerializer.cpp',
     'nsPropertyTable.cpp',
     'nsRange.cpp',
@@ -161,6 +155,18 @@ SOURCES += [
     'WebSocket.cpp',
 ]
 
+# These files cannot be built in unified mode because they use FORCE_PR_LOG
+SOURCES += [
+    'nsDocument.cpp',
+    'nsNodeInfoManager.cpp',
+]
+
+# These files cannot be built in unified mode because of OS X headers.
+SOURCES += [
+    'nsContentUtils.cpp',
+    'nsObjectLoadingContent.cpp',
+]
+
 EXTRA_COMPONENTS += [
     'contentAreaDropListener.js',
     'contentAreaDropListener.manifest',
@@ -179,14 +185,11 @@ EXTRA_JS_MODULES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-LIBRARY_NAME = 'gkconbase_s'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/caps/include',
     '/content/events/src',
@@ -198,6 +201,7 @@ LOCAL_INCLUDES += [
     '/content/xslt/src/xpath',
     '/content/xul/content/src',
     '/content/xul/document/src',
+    '/docshell/base',
     '/dom/base',
     '/dom/ipc',
     '/dom/workers',

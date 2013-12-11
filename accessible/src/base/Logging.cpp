@@ -99,22 +99,19 @@ LogDocShellState(nsIDocument* aDocumentNode)
   printf("docshell busy: ");
 
   nsAutoCString docShellBusy;
-  nsCOMPtr<nsISupports> container = aDocumentNode->GetContainer();
-  if (container) {
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-    uint32_t busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
-    docShell->GetBusyFlags(&busyFlags);
-    if (busyFlags == nsIDocShell::BUSY_FLAGS_NONE)
-      printf("'none'");
-    if (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY)
-      printf("'busy'");
-    if (busyFlags & nsIDocShell::BUSY_FLAGS_BEFORE_PAGE_LOAD)
-      printf(", 'before page load'");
-    if (busyFlags & nsIDocShell::BUSY_FLAGS_PAGE_LOADING)
-      printf(", 'page loading'");
-  } else {
+  nsCOMPtr<nsIDocShell> docShell = aDocumentNode->GetDocShell();
+  uint32_t busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
+  docShell->GetBusyFlags(&busyFlags);
+  if (busyFlags == nsIDocShell::BUSY_FLAGS_NONE)
+    printf("'none'");
+  if (busyFlags & nsIDocShell::BUSY_FLAGS_BUSY)
+    printf("'busy'");
+  if (busyFlags & nsIDocShell::BUSY_FLAGS_BEFORE_PAGE_LOAD)
+    printf(", 'before page load'");
+  if (busyFlags & nsIDocShell::BUSY_FLAGS_PAGE_LOADING)
+    printf(", 'page loading'");
+
     printf("[failed]");
-  }
 }
 
 static void
@@ -132,8 +129,7 @@ static void
 LogDocShellTree(nsIDocument* aDocumentNode)
 {
   if (aDocumentNode->IsActive()) {
-    nsCOMPtr<nsISupports> container = aDocumentNode->GetContainer();
-    nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
+    nsCOMPtr<nsIDocShellTreeItem> treeItem(aDocumentNode->GetDocShell());
     nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
     treeItem->GetParent(getter_AddRefs(parentTreeItem));
     nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;

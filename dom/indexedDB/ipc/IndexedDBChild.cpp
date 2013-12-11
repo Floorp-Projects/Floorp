@@ -344,7 +344,6 @@ IndexedDBDatabaseChild::EnsureDatabase(
 void
 IndexedDBDatabaseChild::ActorDestroy(ActorDestroyReason aWhy)
 {
-  MOZ_ASSERT(!mStrongDatabase);
   if (mDatabase) {
     mDatabase->SetActor(static_cast<IndexedDBDatabaseChild*>(NULL));
 #ifdef DEBUG

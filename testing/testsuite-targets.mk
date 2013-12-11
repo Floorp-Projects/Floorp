@@ -433,9 +433,6 @@ package-tests:
 	@rm -f "$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)"
 ifndef UNIVERSAL_BINARY
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-else
-	#building tests.jar (bug 543800) fails on unify, so we build tests.jar after unify is run
-	$(MAKE) -C $(DEPTH)/testing/mochitest stage-chromejar PKG_STAGE=$(DIST)/universal
 endif
 	find $(PKG_STAGE) -name "*.pyc" -exec rm {} \;
 	cd $(PKG_STAGE) && \
@@ -538,6 +535,7 @@ stage-jittest:
 	cp -RL $(topsrcdir)/js/src/jsapi.h $(PKG_STAGE)/jit-test
 	cp -RL $(topsrcdir)/js/src/jit-test $(PKG_STAGE)/jit-test/jit-test
 	cp -RL $(topsrcdir)/js/src/tests/ecma_6 $(PKG_STAGE)/jit-test/tests/ecma_6
+	cp -RL $(topsrcdir)/js/src/tests/js1_8_5 $(PKG_STAGE)/jit-test/tests/js1_8_5
 	cp -RL $(topsrcdir)/js/src/tests/lib $(PKG_STAGE)/jit-test/tests/lib
 
 stage-steeplechase:

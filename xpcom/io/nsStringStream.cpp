@@ -112,7 +112,8 @@ nsStringInputStream::GetData(nsACString &data)
     // The stream doesn't have any data when it is closed.  We could fake it
     // and return an empty string here, but it seems better to keep this return
     // value consistent with the behavior of the other 'getter' methods.
-    NS_ENSURE_TRUE(!Closed(), NS_BASE_STREAM_CLOSED);
+    if (NS_WARN_IF(Closed()))
+        return NS_BASE_STREAM_CLOSED;
 
     data.Assign(mData);
     return NS_OK;
@@ -140,7 +141,8 @@ nsStringInputStream::ToString(char **result)
 NS_IMETHODIMP
 nsStringInputStream::SetData(const char *data, int32_t dataLen)
 {
-    NS_ENSURE_ARG_POINTER(data);
+    if (NS_WARN_IF(!data))
+        return NS_ERROR_INVALID_ARG;
     mData.Assign(data, dataLen);
     mOffset = 0;
     return NS_OK;
@@ -149,7 +151,8 @@ nsStringInputStream::SetData(const char *data, int32_t dataLen)
 NS_IMETHODIMP
 nsStringInputStream::AdoptData(char *data, int32_t dataLen)
 {
-    NS_ENSURE_ARG_POINTER(data);
+    if (NS_WARN_IF(!data))
+        return NS_ERROR_INVALID_ARG;
     mData.Adopt(data, dataLen);
     mOffset = 0;
     return NS_OK;
@@ -158,7 +161,8 @@ nsStringInputStream::AdoptData(char *data, int32_t dataLen)
 NS_IMETHODIMP
 nsStringInputStream::ShareData(const char *data, int32_t dataLen)
 {
-    NS_ENSURE_ARG_POINTER(data);
+    if (NS_WARN_IF(!data))
+        return NS_ERROR_INVALID_ARG;
 
     if (dataLen < 0)
         dataLen = strlen(data);
@@ -262,8 +266,8 @@ nsStringInputStream::Seek(int32_t whence, int64_t offset)
         return NS_ERROR_INVALID_ARG;
     }
 
-    NS_ENSURE_ARG(newPos >= 0);
-    NS_ENSURE_ARG(newPos <= Length());
+    if (NS_WARN_IF(newPos < 0) || NS_WARN_IF(newPos > Length()))
+        return NS_ERROR_INVALID_ARG;
 
     mOffset = (uint32_t)newPos;
     return NS_OK;
@@ -386,7 +390,8 @@ nsStringInputStreamConstructor(nsISupports *outer, REFNSIID iid, void **result)
 {
     *result = nullptr;
 
-    NS_ENSURE_TRUE(!outer, NS_ERROR_NO_AGGREGATION);
+    if (NS_WARN_IF(outer))
+        return NS_ERROR_NO_AGGREGATION;
 
     nsStringInputStream *inst = new nsStringInputStream();
     if (!inst)

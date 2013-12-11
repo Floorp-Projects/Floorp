@@ -10,7 +10,7 @@
  * - and allows to restore everything into one window.
  */
 
-[scriptable, uuid(51f4b9f0-f3d2-11e2-bb62-2c24dd830245)]
+[scriptable, uuid(6c79d4c1-f071-4c5c-a7fb-676adb144584)]
 interface nsISessionStartup: nsISupports
 {
   /**
@@ -23,11 +23,17 @@ interface nsISessionStartup: nsISupports
   readonly attribute jsval state;
 
   /**
-   * Determines whether there is a pending session restore and makes sure that
-   * we're initialized before returning. If we're not yet this will read the
-   * session file synchronously.
+   * Determines whether there is a pending session restore. Should only be
+   * called after initialization has completed.
    */
   boolean doRestore();
+
+  /**
+   * Determines whether automatic session restoration is enabled for this
+   * launch of the browser. This does not include crash restoration, and will
+   * return false if restoration will only be caused by a crash.
+   */
+  boolean isAutomaticRestoreEnabled();
 
   /**
    * Returns whether we will restore a session that ends up replacing the

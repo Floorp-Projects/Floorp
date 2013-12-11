@@ -23,7 +23,7 @@ GetHRESULT(nsresult aResult)
     case NS_OK:
       return S_OK;
 
-    case NS_ERROR_INVALID_ARG: case NS_ERROR_INVALID_POINTER:
+    case NS_ERROR_INVALID_ARG:
       return E_INVALIDARG;
 
     case NS_ERROR_OUT_OF_MEMORY:

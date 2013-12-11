@@ -81,8 +81,6 @@ toolkit.jar:
   skin/classic/global/arrow/panelarrow-horizontal@2x.png             (arrow/panelarrow-horizontal@2x.png)
   skin/classic/global/arrow/panelarrow-vertical.png                  (arrow/panelarrow-vertical.png)
   skin/classic/global/arrow/panelarrow-vertical@2x.png               (arrow/panelarrow-vertical@2x.png)
-  skin/classic/global/arrow/panelarrow-light-vertical.png            (arrow/panelarrow-light-vertical.png)
-  skin/classic/global/arrow/panelarrow-light-vertical@2x.png         (arrow/panelarrow-light-vertical@2x.png)
   skin/classic/global/checkbox/cbox-check.gif                        (checkbox/cbox-check.gif)
   skin/classic/global/checkbox/cbox-check-dis.gif                    (checkbox/cbox-check-dis.gif)
   skin/classic/global/console/console-error-caret.gif                (console/console-error-caret.gif)

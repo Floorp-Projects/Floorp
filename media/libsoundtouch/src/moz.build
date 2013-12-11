@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'soundtouch'
-
 EXPORTS.soundtouch += [
     'FIFOSamplePipe.h',
     'SoundTouch.h',
@@ -33,7 +31,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
             'mmx_optimized.cpp',
         ]
 
-LIBRARY_NAME = 'soundtouch'
-
 MSVC_ENABLE_PGO = True
 NO_VISIBILITY_FLAGS = True
+
+FINAL_LIBRARY = 'gkmedias'

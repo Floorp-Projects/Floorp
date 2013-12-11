@@ -2537,8 +2537,7 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
 
     // Check to see if a new stub should be generated.
     if (stub->numOptimizedStubs() >= ICBinaryArith_Fallback::MAX_OPTIMIZED_STUBS) {
-        // TODO: Discard all stubs in this IC and replace with inert megamorphic stub.
-        // But for now we just bail.
+        stub->noteUnoptimizableOperands();
         return true;
     }
 
@@ -2585,8 +2584,10 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
     }
 
     // Handle only int32 or double.
-    if (!lhs.isNumber() || !rhs.isNumber())
+    if (!lhs.isNumber() || !rhs.isNumber()) {
+        stub->noteUnoptimizableOperands();
         return true;
+    }
 
     JS_ASSERT(ret.isNumber());
 
@@ -2653,6 +2654,7 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
         }
     }
 
+    stub->noteUnoptimizableOperands();
     return true;
 }
 #if defined(_MSC_VER)
@@ -3269,10 +3271,14 @@ EffectlesslyLookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName n
         *domProxyHasGeneration = (*shadowsResult == DoesntShadowUnique);
 
         checkObj = GetDOMProxyProto(obj);
-    }
-
-    if (!isDOMProxy && !obj->isNative())
+    } else if (obj->is<TypedArrayObject>() && obj->getProto()) {
+        // Typed array objects are non-native, but don't have any named
+        // properties. Just forward the lookup to the prototype, to allow
+        // inlining common getters like byteOffset.
+        checkObj = obj->getProto();
+    } else if (!obj->isNative()) {
         return true;
+    }
 
     if (checkObj->hasIdempotentProtoChain()) {
         if (!JSObject::lookupProperty(cx, checkObj, name, holder, shape))
@@ -3289,7 +3295,7 @@ static bool
 IsCacheableProtoChain(JSObject *obj, JSObject *holder, bool isDOMProxy=false)
 {
     JS_ASSERT_IF(isDOMProxy, IsCacheableDOMProxy(obj));
-    JS_ASSERT_IF(!isDOMProxy, obj->isNative());
+    JS_ASSERT_IF(!isDOMProxy, obj->isNative() || obj->is<TypedArrayObject>());
 
     // Don't handle objects which require a prototype guard. This should
     // be uncommon so handling it is likely not worth the complexity.
@@ -3875,7 +3881,7 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICGetEl
     }
 
     // Check for TypedArray[int] => Number accesses.
-    if (obj->is<TypedArrayObject>() && rhs.isInt32() && res.isNumber() &&
+    if (obj->is<TypedArrayObject>() && rhs.isNumber() && res.isNumber() &&
         !TypedArrayGetElemStubExists(stub, obj))
     {
         // Don't attach CALLELEM stubs for accesses on typed array expected to yield numbers.
@@ -3885,8 +3891,11 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICGetEl
 #endif
 
         Rooted<TypedArrayObject*> tarr(cx, &obj->as<TypedArrayObject>());
-        if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(tarr))
+        if (!cx->runtime()->jitSupportsFloatingPoint &&
+            (TypedArrayRequiresFloatingPoint(tarr) || rhs.isDouble()))
+        {
             return true;
+        }
 
         IonSpew(IonSpew_BaselineIC, "  Generating GetElem(TypedArray[Int32]) stub");
         ICGetElem_TypedArray::Compiler compiler(cx, tarr->lastProperty(), tarr->type());
@@ -4445,17 +4454,20 @@ ICGetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
         Label skipNoSuchMethod;
         regs = availableGeneralRegs(0);
         regs.takeUnchecked(obj);
-        regs.take(R1);
+        regs.takeUnchecked(key);
+        ValueOperand val = regs.takeValueOperand();
 
-        masm.pushValue(R1);
-        masm.loadValue(element, R1);
-        masm.branchTestUndefined(Assembler::NotEqual, R1, &skipNoSuchMethod);
+        masm.loadValue(element, val);
+        masm.branchTestUndefined(Assembler::NotEqual, val, &skipNoSuchMethod);
+        regs.add(val);
 
         // Call __noSuchMethod__ checker.  Object pointer is in objReg.
-        scratchReg = regs.takeAnyExcluding(BaselineTailCallReg);
-        enterStubFrame(masm, scratchReg);
+        enterStubFrame(masm, regs.getAnyExcluding(BaselineTailCallReg));
 
-        // propName (R1) already pushed above.
+        regs.take(val);
+
+        masm.tagValue(JSVAL_TYPE_INT32, key, val);
+        masm.pushValue(val);
         masm.push(obj);
         if (!callVM(LookupNoSuchMethodHandlerInfo, masm))
             return false;
@@ -4465,8 +4477,7 @@ ICGetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
         masm.jump(&afterNoSuchMethod);
         masm.bind(&skipNoSuchMethod);
 
-        masm.moveValue(R1, R0);
-        masm.addPtr(Imm32(sizeof(Value)), BaselineStackReg); // pop previously pushed propName (R1)
+        masm.moveValue(val, R0);
         masm.bind(&afterNoSuchMethod);
     } else {
         masm.loadValue(element, R0);
@@ -4494,7 +4505,6 @@ ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
 {
     Label failure;
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-    masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
     GeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
@@ -4503,6 +4513,24 @@ ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     Register obj = masm.extractObject(R0, ExtractTemp0);
     masm.loadPtr(Address(BaselineStubReg, ICGetElem_TypedArray::offsetOfShape()), scratchReg);
     masm.branchTestObjShape(Assembler::NotEqual, obj, scratchReg, &failure);
+
+    // Ensure the index is an integer.
+    if (cx->runtime()->jitSupportsFloatingPoint) {
+        Label isInt32;
+        masm.branchTestInt32(Assembler::Equal, R1, &isInt32);
+        {
+            // If the index is a double, try to convert it to int32. It's okay
+            // to convert -0 to 0: the shape check ensures the object is a typed
+            // array so the difference is not observable.
+            masm.branchTestDouble(Assembler::NotEqual, R1, &failure);
+            masm.unboxDouble(R1, FloatReg0);
+            masm.convertDoubleToInt32(FloatReg0, scratchReg, &failure, /* negZeroCheck = */false);
+            masm.tagValue(JSVAL_TYPE_INT32, scratchReg, R1);
+        }
+        masm.bind(&isInt32);
+    } else {
+        masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
+    }
 
     // Unbox key.
     Register key = masm.extractInt32(R1, ExtractTemp1);
@@ -4932,14 +4960,17 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
         return true;
     }
 
-    if (obj->is<TypedArrayObject>() && index.isInt32() && rhs.isNumber()) {
+    if (obj->is<TypedArrayObject>() && index.isNumber() && rhs.isNumber()) {
         Rooted<TypedArrayObject*> tarr(cx, &obj->as<TypedArrayObject>());
-        if (!cx->runtime()->jitSupportsFloatingPoint && TypedArrayRequiresFloatingPoint(tarr))
+        if (!cx->runtime()->jitSupportsFloatingPoint &&
+            (TypedArrayRequiresFloatingPoint(tarr) || index.isDouble()))
+        {
             return true;
+        }
 
         uint32_t len = tarr->length();
-        int32_t idx = index.toInt32();
-        bool expectOutOfBounds = (idx < 0) || (static_cast<uint32_t>(idx) >= len);
+        double idx = index.toNumber();
+        bool expectOutOfBounds = (idx < 0 || idx >= double(len));
 
         if (!TypedArraySetElemStubExists(stub, tarr, expectOutOfBounds)) {
             // Remove any existing TypedArraySetElemStub that doesn't handle out-of-bounds
@@ -5332,7 +5363,6 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
 {
     Label failure;
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-    masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
 
     GeneralRegisterSet regs(availableGeneralRegs(2));
     Register scratchReg = regs.takeAny();
@@ -5341,6 +5371,24 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     Register obj = masm.extractObject(R0, ExtractTemp0);
     masm.loadPtr(Address(BaselineStubReg, ICSetElem_TypedArray::offsetOfShape()), scratchReg);
     masm.branchTestObjShape(Assembler::NotEqual, obj, scratchReg, &failure);
+
+    // Ensure the index is an integer.
+    if (cx->runtime()->jitSupportsFloatingPoint) {
+        Label isInt32;
+        masm.branchTestInt32(Assembler::Equal, R1, &isInt32);
+        {
+            // If the index is a double, try to convert it to int32. It's okay
+            // to convert -0 to 0: the shape check ensures the object is a typed
+            // array so the difference is not observable.
+            masm.branchTestDouble(Assembler::NotEqual, R1, &failure);
+            masm.unboxDouble(R1, FloatReg0);
+            masm.convertDoubleToInt32(FloatReg0, scratchReg, &failure, /* negZeroCheck = */false);
+            masm.tagValue(JSVAL_TYPE_INT32, scratchReg, R1);
+        }
+        masm.bind(&isInt32);
+    } else {
+        masm.branchTestInt32(Assembler::NotEqual, R1, &failure);
+    }
 
     // Unbox key.
     Register key = masm.extractInt32(R1, ExtractTemp1);
@@ -5974,7 +6022,7 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         return false;
     }
 
-    if (!isDOMProxy && !obj->isNative())
+    if (!isDOMProxy && !obj->isNative() && !obj->is<TypedArrayObject>())
         return true;
 
     bool isCallProp = (JSOp(*pc) == JSOP_CALLPROP);
@@ -9214,7 +9262,7 @@ DoTypeOfFallback(JSContext *cx, BaselineFrame *frame, ICTypeOf_Fallback *stub, H
 {
     FallbackICSpew(cx, stub, "TypeOf");
     JSType type = js::TypeOfValue(val);
-    RootedString string(cx, TypeName(type, cx->runtime()));
+    RootedString string(cx, TypeName(type, cx->runtime()->atomState));
 
     res.setString(string);
 

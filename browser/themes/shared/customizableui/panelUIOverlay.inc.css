@@ -67,10 +67,10 @@
 
 toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item) > .toolbarbutton-text,
 #bookmarks-menu-button > toolbarbutton > .toolbarbutton-text,
-#PanelUI-contents > toolbarpaletteitem > toolbaritem > toolbarbutton > .toolbarbutton-text,
-#PanelUI-contents > toolbaritem > toolbarbutton > .toolbarbutton-text,
-#PanelUI-contents > toolbarpaletteitem > toolbarbutton > .toolbarbutton-text,
-#PanelUI-contents > toolbarbutton > .toolbarbutton-text {
+:-moz-any(#PanelUI-contents,#widget-overflow-list) > toolbarpaletteitem > toolbaritem > toolbarbutton > .toolbarbutton-text,
+:-moz-any(#PanelUI-contents,#widget-overflow-list) > toolbaritem > toolbarbutton > .toolbarbutton-text,
+:-moz-any(#PanelUI-contents,#widget-overflow-list) > toolbarpaletteitem > toolbarbutton > .toolbarbutton-text,
+:-moz-any(#PanelUI-contents,#widget-overflow-list) > toolbarbutton > .toolbarbutton-text {
   font-size: 10px;
 }
 
@@ -138,37 +138,6 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton,
   transition-timing-function: ease-in-out;
   min-width: 0;
   max-width: none;
-}
-
-#edit-controls:not([cui-areatype="toolbar"]) > toolbarbutton,
-#zoom-controls:not([cui-areatype="toolbar"]) > toolbarbutton {
-  -moz-box-orient: horizontal;
-  min-width: 7em;
-}
-
-#PanelUI-contents > #edit-controls > toolbarbutton,
-#PanelUI-contents > #wrapper-edit-controls > #edit-controls > toolbarbutton,
-#PanelUI-contents > #zoom-controls > toolbarbutton,
-#PanelUI-contents > #wrapper-zoom-controls > #zoom-controls > toolbarbutton {
-  max-width: none;
-  max-height: none;
-  height: auto;
-}
-
-#widget-overflow-list > #edit-controls > toolbarbutton,
-#widget-overflow-list > #zoom-controls > toolbarbutton {
-  -moz-box-orient: horizontal;
-  -moz-box-align: start;
-  max-height: none;
-  height: auto;
-  padding-left: .5em;
-  padding-right: .5em;
-}
-
-.panel-wide-item.overflowedItem,
-.panel-wide-item[cui-areatype="menu-panel"] {
-  -moz-box-align: stretch;
-  padding: .5em 0 .5em;
 }
 
 .panel-combined-button[disabled] > .toolbarbutton-icon {
@@ -315,50 +284,48 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 panelview toolbarbutton,
 #widget-overflow-list > toolbarbutton,
 .customizationmode-button,
+#edit-controls@inAnyPanel@ > toolbarbutton,
+#zoom-controls@inAnyPanel@ > toolbarbutton,
 #BMB_bookmarksPopup > menu,
 #BMB_bookmarksPopup > menuitem {
   -moz-appearance: none;
   padding: 2px 6px;
-  background-color: hsla(210,32%,93%,0);
-  background-clip: padding-box;
+  background-color: hsla(210,4%,10%,0);
   border-radius: 2px;
   border: 1px solid;
-  border-color: hsla(210,54%,20%,0) hsla(210,54%,20%,0) hsla(210,54%,20%,0);
-  box-shadow: 0 1px hsla(0,0%,100%,0) inset,
-              0 1px hsla(210,54%,20%,0),
-              0 0 2px hsla(210,54%,20%,0);
-  transition-property: background-color, border-color, box-shadow;
+  border-color: hsla(210,4%,10%,0);
+  transition-property: background-color, border-color;
   transition-duration: 150ms;
+}
+
+panelview .toolbarbutton-1,
+#widget-overflow-list > toolbarbutton {
+  margin-top: 6px;
 }
 
 panelview toolbarbutton@buttonStateHover@,
 #widget-overflow-list > toolbarbutton@buttonStateHover@,
-#edit-controls@inAnyPanel@ > toolbarbutton,
-#zoom-controls@inAnyPanel@ > toolbarbutton,
 .customizationmode-button,
+#edit-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@,
+#zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@,
+#edit-controls@inAnyPanel@@buttonStateHover@,
+#zoom-controls@inAnyPanel@@buttonStateHover@,
 #BMB_bookmarksPopup > menu@buttonStateHover@,
 #BMB_bookmarksPopup > menuitem@buttonStateHover@ {
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
-  border-color: hsla(210,54%,20%,.15) hsla(210,54%,20%,.2) hsla(210,54%,20%,.25);
-  box-shadow: 0 1px hsla(0,0%,100%,.3) inset,
-              0 1px hsla(210,54%,20%,.03),
-              0 0 2px hsla(210,54%,20%,.1);
+  background-color: hsla(210,4%,10%,.08);
+  border-color: hsla(210,4%,10%,.1);
 }
 
 panelview toolbarbutton@buttonStateActive@,
-.customizationmode-button:not([disabled]):hover:active,
+.customizationmode-button@buttonStateActive@,
 #widget-overflow-list > toolbarbutton@buttonStateActive@,
+#edit-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@,
+#zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@,
 #BMB_bookmarksPopup > menu@buttonStateActive@,
 #BMB_bookmarksPopup > menuitem@buttonStateActive@ {
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
-  background-color: hsla(210,54%,20%,.15);
-  border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
-  box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
-              0 0 1px hsla(210,54%,20%,.2) inset,
-              0 1px 0 hsla(210,54%,20%,0),
-              0 0 2px hsla(210,54%,20%,0);
-  text-shadow: none;
-  transition: none;
+  background-color: hsla(210,4%,10%,.15);
+  border-color: hsla(210,4%,10%,.15);
+  box-shadow: 0 1px 0 0 hsla(210,4%,10%,.05) inset;
 }
 
 #BMB_bookmarksPopup > menu,
@@ -411,11 +378,6 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button > .toolbarbutton-me
   display: none;
 }
 
-#edit-controls@inAnyPanel@ > toolbarbutton,
-#zoom-controls@inAnyPanel@ > toolbarbutton {
-  -moz-box-flex: 1;
-}
-
 #search-container[cui-areatype="menu-panel"] {
   width: @menuPanelWidth@;
 }
@@ -425,18 +387,37 @@ toolbarpaletteitem[place="palette"] > #search-container {
   width: 7em;
 }
 
+#edit-controls@inAnyPanel@,
+#zoom-controls@inAnyPanel@ {
+  background-color: hsla(210,4%,10%,0);
+  border-radius: 2px;
+  border: 1px solid;
+  border-color: hsla(210,4%,10%,0);
+  border-bottom-color: hsla(210,4%,10%,.1);
+  padding: 0;
+  margin-bottom: -1px;
+  transition-property: background-color, border-color;
+  transition-duration: 150ms;
+}
+
 #edit-controls@inAnyPanel@ > toolbarbutton,
 #zoom-controls@inAnyPanel@ > toolbarbutton {
-  -moz-appearance: none;
+  border: 0;
+  padding: .5em;
+  margin: 0;
+  -moz-box-flex: 1;
+  /* reduce the width with 2px for each button to compensate for two separators
+     of 3px. */
+  min-width: calc(7em - 2px);
+  max-width: calc(7em - 2px);
+  height: auto;
+  max-height: none;
+  -moz-box-orient: horizontal;
 }
 
 #edit-controls@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon,
 #zoom-controls@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon {
   opacity: .25;
-}
-
-#edit-controls.overflowedItem > toolbarbutton > .toolbarbutton-text {
-  display: none;
 }
 
 #zoom-controls[cui-areatype="toolbar"] > #zoom-reset-button > .toolbarbutton-text {
@@ -447,30 +428,33 @@ toolbarpaletteitem[place="palette"] > #search-container {
 %endif
 }
 
-#zoom-controls@inAnyPanel@ > #zoom-reset-button {
-  list-style-image: none;
-}
-
-#edit-controls@inAnyPanel@ > #paste-button,
-#zoom-controls@inAnyPanel@ > #zoom-in-button {
-  -moz-border-start-width: 1px;
-  -moz-border-start-style: solid;
-}
-
 #edit-controls@inAnyPanel@ > #cut-button:-moz-locale-dir(ltr),
 #edit-controls@inAnyPanel@ > #paste-button:-moz-locale-dir(rtl),
 #zoom-controls@inAnyPanel@ > #zoom-out-button:-moz-locale-dir(ltr),
 #zoom-controls@inAnyPanel@ > #zoom-in-button:-moz-locale-dir(rtl) {
-  border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 #edit-controls@inAnyPanel@ > #cut-button:-moz-locale-dir(rtl),
 #edit-controls@inAnyPanel@ > #paste-button:-moz-locale-dir(ltr),
 #zoom-controls@inAnyPanel@ > #zoom-out-button:-moz-locale-dir(rtl),
 #zoom-controls@inAnyPanel@ > #zoom-in-button:-moz-locale-dir(ltr) {
-  border-top-left-radius: 2px;
-  border-bottom-left-radius: 2px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+#edit-controls > separator,
+#zoom-controls > separator {
+  -moz-appearance: none;
+  width: 3px;
+  -moz-box-align: stretch;
+  background-image: linear-gradient(to bottom, hsla(0,0%,100%,0), hsla(0,0%,100%,.3) 40%, hsla(0,0%,100%,.3) 60%, hsla(0,0%,100%,0)),
+                    linear-gradient(to bottom, hsla(210,54%,20%,0), hsla(210,54%,20%,.15) 40%, hsla(210,54%,20%,.15) 60%, hsla(210,54%,20%,0)),
+                    linear-gradient(to bottom, hsla(0,0%,100%,0), hsla(0,0%,100%,.3) 40%, hsla(0,0%,100%,.3) 60%, hsla(0,0%,100%,0));
+  background-size: 1px, 1px, 1px;
+  background-position: 0 0, 1px 0, 2px 0;
+  background-repeat: no-repeat;
 }
 
 #widget-overflow > .panel-arrowcontainer > .panel-arrowcontent {

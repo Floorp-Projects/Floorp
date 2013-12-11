@@ -1833,21 +1833,21 @@ static const JSFunctionSpec legacy_generator_methods[] = {
 };
 
 static JSObject*
-NewObjectWithObjectPrototype(JSContext *cx, Handle<GlobalObject *> global)
+NewSingletonObjectWithObjectPrototype(JSContext *cx, Handle<GlobalObject *> global)
 {
     JSObject *proto = global->getOrCreateObjectPrototype(cx);
     if (!proto)
         return nullptr;
-    return NewObjectWithGivenProto(cx, &JSObject::class_, proto, global);
+    return NewObjectWithGivenProto(cx, &JSObject::class_, proto, global, SingletonObject);
 }
 
 static JSObject*
-NewObjectWithFunctionPrototype(JSContext *cx, Handle<GlobalObject *> global)
+NewSingletonObjectWithFunctionPrototype(JSContext *cx, Handle<GlobalObject *> global)
 {
     JSObject *proto = global->getOrCreateFunctionPrototype(cx);
     if (!proto)
         return nullptr;
-    return NewObjectWithGivenProto(cx, &JSObject::class_, proto, global);
+    return NewObjectWithGivenProto(cx, &JSObject::class_, proto, global, SingletonObject);
 }
 
 /* static */ bool
@@ -1900,20 +1900,20 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
     }
 
     if (global->getSlot(LEGACY_GENERATOR_OBJECT_PROTO).isUndefined()) {
-        proto = NewObjectWithObjectPrototype(cx, global);
+        proto = NewSingletonObjectWithObjectPrototype(cx, global);
         if (!proto || !DefinePropertiesAndBrand(cx, proto, nullptr, legacy_generator_methods))
             return false;
         global->setReservedSlot(LEGACY_GENERATOR_OBJECT_PROTO, ObjectValue(*proto));
     }
 
     if (global->getSlot(STAR_GENERATOR_OBJECT_PROTO).isUndefined()) {
-        RootedObject genObjectProto(cx, NewObjectWithObjectPrototype(cx, global));
+        RootedObject genObjectProto(cx, NewSingletonObjectWithObjectPrototype(cx, global));
         if (!genObjectProto)
             return false;
         if (!DefinePropertiesAndBrand(cx, genObjectProto, nullptr, star_generator_methods))
             return false;
 
-        RootedObject genFunctionProto(cx, NewObjectWithFunctionPrototype(cx, global));
+        RootedObject genFunctionProto(cx, NewSingletonObjectWithFunctionPrototype(cx, global));
         if (!genFunctionProto)
             return false;
         if (!LinkConstructorAndPrototype(cx, genFunctionProto, genObjectProto))

@@ -1275,7 +1275,7 @@ nsDisplayImage::GetDestRect()
 LayerState
 nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
-                              const FrameLayerBuilder::ContainerParameters& aParameters)
+                              const ContainerLayerParameters& aParameters)
 {
   bool animated = false;
   if (!nsLayoutUtils::AnimatedImageLayersEnabled() ||
@@ -1328,7 +1328,7 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
 already_AddRefed<Layer>
 nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
                            LayerManager* aManager,
-                           const ContainerParameters& aParameters)
+                           const ContainerLayerParameters& aParameters)
 {
   nsRefPtr<ImageContainer> container;
   nsresult rv = mImage->GetImageContainer(aManager, getter_AddRefs(container));

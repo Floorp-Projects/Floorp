@@ -17,12 +17,17 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ImageButton;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MenuItemActionView extends LinearLayout
                                 implements GeckoMenuItem.Layout {
     private static final String LOGTAG = "GeckoMenuItemActionView";
 
     private MenuItemDefault mMenuItem;
-    private ImageButton mActionButton;
+    private ImageButton mMenuButton;
+    private List<ImageButton> mActionButtons;
+    private View.OnClickListener mActionButtonListener;
 
     public MenuItemActionView(Context context) {
         this(context, null);
@@ -44,7 +49,8 @@ public class MenuItemActionView extends LinearLayout
 
         LayoutInflater.from(context).inflate(R.layout.menu_item_action_view, this);
         mMenuItem = (MenuItemDefault) findViewById(R.id.menu_item);
-        mActionButton = (ImageButton) findViewById(R.id.action_button);
+        mMenuButton = (ImageButton) findViewById(R.id.menu_item_button);
+        mActionButtons = new ArrayList<ImageButton>();
     }
 
     @Override
@@ -59,10 +65,12 @@ public class MenuItemActionView extends LinearLayout
 
     private void setIcon(Drawable icon) {
         mMenuItem.setIcon(icon);
+        mMenuButton.setImageDrawable(icon);
     }
 
     private void setIcon(int icon) {
         mMenuItem.setIcon(icon);
+        mMenuButton.setImageResource(icon);
     }
 
     private void setTitle(CharSequence title) {
@@ -73,27 +81,53 @@ public class MenuItemActionView extends LinearLayout
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         mMenuItem.setEnabled(enabled);
+        mMenuButton.setEnabled(enabled);
+        mMenuButton.setAlpha(enabled ? 255 : 99);
 
-        if (mActionButton != null) {
-            mActionButton.setEnabled(enabled);
-            mActionButton.setAlpha(enabled ? 255 : 99);
+        for (ImageButton button : mActionButtons) {
+             button.setEnabled(enabled);
+             button.setAlpha(enabled ? 255 : 99);
         }
     }
 
     public void setMenuItemClickListener(View.OnClickListener listener) {
         mMenuItem.setOnClickListener(listener);
+        mMenuButton.setOnClickListener(listener);
     }
 
     public void setActionButtonClickListener(View.OnClickListener listener) {
-        mActionButton.setOnClickListener(listener);
+        mActionButtonListener = listener;
+
+        for (ImageButton button : mActionButtons) {
+            button.setOnClickListener(listener);
+        }
     }
 
-    public void setActionButton(Drawable drawable) {
-        if (drawable != null) {
-            mActionButton.setImageDrawable(drawable);
-            mActionButton.setVisibility(View.VISIBLE);
+    public void addActionButton(Drawable drawable) {
+        // If this is the first icon, retain the text.
+        // If not, make the menu item an icon.
+        final int count = mActionButtons.size();
+        if (count == 0) {
+            mMenuItem.setVisibility(View.VISIBLE);
+            mMenuButton.setVisibility(View.GONE);
         } else {
-            mActionButton.setVisibility(View.GONE);
+            mMenuItem.setVisibility(View.GONE);
+            mMenuButton.setVisibility(View.VISIBLE);
+        }
+
+        if (drawable != null) {
+            ImageButton button = new ImageButton(getContext(), null, R.attr.menuItemShareActionButtonStyle);
+            button.setImageDrawable(drawable);
+            button.setOnClickListener(mActionButtonListener);
+            button.setTag(count);
+
+            final int height = (int) (getResources().getDimension(R.dimen.menu_item_row_height));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, height);
+            params.weight = 1.0f;
+            button.setLayoutParams(params);
+
+            mActionButtons.add(button);
+            addView(button);
         }
     }
 }

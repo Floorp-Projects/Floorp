@@ -14,10 +14,6 @@ const kPaletteId = "customization-palette";
 const kAboutURI = "about:customizing";
 const kDragDataTypePrefix = "text/toolbarwrapper-id/";
 const kPlaceholderClass = "panel-customization-placeholder";
-const kWidePanelItemClass = "panel-wide-item";
-// TODO(bug 885574): Merge this constant with the one in CustomizableWidgets.jsm,
-//                   maybe just use a pref for this.
-const kColumnsInMenuPanel = 3;
 const kSkipSourceNodePref = "browser.uiCustomization.skipSourceNodeCheck";
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -25,6 +21,8 @@ Cu.import("resource:///modules/CustomizableUI.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DragPositionManager",
+                                  "resource:///modules/DragPositionManager.jsm");
 
 let gModuleName = "[CustomizeMode]";
 #include logging.js
@@ -113,6 +111,7 @@ CustomizeMode.prototype = {
         this.document.documentElement._lightweightTheme.disable();
 
       this.dispatchToolboxEvent("beforecustomization");
+      CustomizableUI.notifyStartCustomizing(this.window);
 
       let window = this.window;
       let document = this.document;
@@ -218,6 +217,7 @@ CustomizeMode.prototype = {
 
       window.gNavToolbox.removeEventListener("toolbarvisibilitychange", this);
 
+      DragPositionManager.stop();
       window.PanelUI.mainView.removeEventListener("contextmenu", this, true);
       this.visiblePalette.removeEventListener("dragstart", this, true);
       this.visiblePalette.removeEventListener("dragover", this, true);
@@ -286,6 +286,7 @@ CustomizeMode.prototype = {
       this._changed = false;
       this._transitioning = false;
       this.dispatchToolboxEvent("aftercustomization");
+      CustomizableUI.notifyEndCustomizing(this.window);
     }.bind(this)).then(null, ERROR);
   },
 
@@ -512,6 +513,8 @@ CustomizeMode.prototype = {
     let toolbarItem = aWrapper.firstChild;
     if (!toolbarItem) {
       ERROR("no toolbarItem child for " + aWrapper.tagName + "#" + aWrapper.id);
+      aWrapper.remove();
+      return null;
     }
 
     if (aWrapper.hasAttribute("itemchecked")) {
@@ -775,11 +778,14 @@ CustomizeMode.prototype = {
     __dumpDragData(aEvent);
     let item = aEvent.target;
     while (item && item.localName != "toolbarpaletteitem") {
-      if (item.localName == "toolbar" ||
-          item.classList.contains(kPlaceholderClass)) {
+      if (item.localName == "toolbar") {
         return;
       }
       item = item.parentNode;
+    }
+
+    if (item.classList.contains(kPlaceholderClass)) {
+      return;
     }
 
     let dt = aEvent.dataTransfer;
@@ -797,21 +803,27 @@ CustomizeMode.prototype = {
 
     // Hack needed so that the dragimage will still show the
     // item as it appeared before it was hidden.
-    let win = aEvent.target.ownerDocument.defaultView;
-    win.setTimeout(function() {
+    this._initializeDragAfterMove = function() {
       // For automated tests, we sometimes start exiting customization mode
       // before this fires, which leaves us with placeholders inserted after
       // we've exited. So we need to check that we are indeed customizing.
       if (this._customizing && !this._transitioning) {
         item.hidden = true;
         this._showPanelCustomizationPlaceholders();
+        DragPositionManager.start(this.window);
       }
-    }.bind(this), 0);
+      this._initializeDragAfterMove = null;
+      this.window.clearTimeout(this._dragInitializeTimeout);
+    }.bind(this);
+    this._dragInitializeTimeout = this.window.setTimeout(this._initializeDragAfterMove, 0);
   },
 
   _onDragOver: function(aEvent) {
     if (this._isUnwantedDragDrop(aEvent)) {
       return;
+    }
+    if (this._initializeDragAfterMove) {
+      this._initializeDragAfterMove();
     }
 
     __dumpDragData(aEvent);
@@ -845,7 +857,8 @@ CustomizeMode.prototype = {
       return;
     }
 
-    let targetNode = this._getDragOverNode(aEvent, targetArea);
+    let targetIsToolbar = CustomizableUI.getAreaType(targetArea.id) == "toolbar";
+    let targetNode = this._getDragOverNode(aEvent, targetArea, targetIsToolbar, draggedItemId);
 
     // We need to determine the place that the widget is being dropped in
     // the target.
@@ -863,20 +876,15 @@ CustomizeMode.prototype = {
         dragValue = "after";
       } else {
         dragOverItem = targetParent.children[position];
-        // Check if the aDraggedItem is hovered past the first half of dragOverItem
-        let window = dragOverItem.ownerDocument.defaultView;
-        let direction = window.getComputedStyle(dragOverItem, null).direction;
-        let itemRect = dragOverItem.getBoundingClientRect();
-        let dropTargetCenter = itemRect.left + (itemRect.width / 2);
-        if (targetParent == window.PanelUI.contents) {
-          dragValue = "true";
-          if (direction == "ltr" && aEvent.clientX > dropTargetCenter) {
-            position++;
-          } else if (direction == "rtl" && aEvent.clientX < dropTargetCenter) {
-            position--;
-          }
+        if (!targetIsToolbar) {
+          dragValue = "before";
           dragOverItem = position == -1 ? targetParent.firstChild : targetParent.children[position];
         } else {
+          // Check if the aDraggedItem is hovered past the first half of dragOverItem
+          let window = dragOverItem.ownerDocument.defaultView;
+          let direction = window.getComputedStyle(dragOverItem, null).direction;
+          let itemRect = dragOverItem.getBoundingClientRect();
+          let dropTargetCenter = itemRect.left + (itemRect.width / 2);
           let existingDir = dragOverItem.getAttribute("dragover");
           if ((existingDir == "before") == (direction == "ltr")) {
             dropTargetCenter += (parseInt(dragOverItem.style.borderLeftWidth) || 0) / 2;
@@ -890,12 +898,12 @@ CustomizeMode.prototype = {
     }
 
     if (this._dragOverItem && dragOverItem != this._dragOverItem) {
-      this._setDragActive(this._dragOverItem, false);
+      this._cancelDragActive(this._dragOverItem, dragOverItem);
     }
 
     if (dragOverItem != this._dragOverItem || dragValue != dragOverItem.getAttribute("dragover")) {
       if (dragOverItem != targetArea.customizationTarget) {
-        this._setDragActive(dragOverItem, dragValue, draggedItemId);
+        this._setDragActive(dragOverItem, dragValue, draggedItemId, targetIsToolbar);
       }
       this._dragOverItem = dragOverItem;
     }
@@ -910,6 +918,8 @@ CustomizeMode.prototype = {
     }
 
     __dumpDragData(aEvent);
+    this._initializeDragAfterMove = null;
+    this.window.clearTimeout(this._dragInitializeTimeout);
 
     let targetArea = this._getCustomizableParent(aEvent.currentTarget);
     let document = aEvent.target.ownerDocument;
@@ -918,8 +928,8 @@ CustomizeMode.prototype = {
       aEvent.dataTransfer.mozGetDataAt(kDragDataTypePrefix + documentId, 0);
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
     let originArea = this._getCustomizableParent(draggedWrapper);
-    if (this._dragWidthMap) {
-      this._dragWidthMap.clear();
+    if (this._dragSizeMap) {
+      this._dragSizeMap.clear();
     }
     // Do nothing if the target area or origin area are not customizable.
     if (!targetArea || !originArea) {
@@ -943,7 +953,7 @@ CustomizeMode.prototype = {
       targetNode = targetNode.firstChild;
     }
 
-    this._setDragActive(this._dragOverItem, false);
+    this._cancelDragActive(this._dragOverItem, null, true);
     this._removePanelCustomizationPlaceholders();
 
     try {
@@ -1067,8 +1077,14 @@ CustomizeMode.prototype = {
 
     __dumpDragData(aEvent);
 
-    if (this._dragOverItem) {
-      this._setDragActive(this._dragOverItem, false);
+    // When leaving customization areas, cancel the drag on the last dragover item
+    // We've attached the listener to areas, so aEvent.currentTarget will be the area.
+    // We don't care about dragexit events fired on descendants of the area,
+    // so we check that the event's target is the same as the area to which the listener
+    // was attached.
+    if (this._dragOverItem && aEvent.target == aEvent.currentTarget) {
+      this._cancelDragActive(this._dragOverItem);
+      this._dragOverItem = null;
     }
   },
 
@@ -1076,6 +1092,8 @@ CustomizeMode.prototype = {
     if (this._isUnwantedDragDrop(aEvent)) {
       return;
     }
+    this._initializeDragAfterMove = null;
+    this.window.clearTimeout(this._dragInitializeTimeout);
 
     __dumpDragData(aEvent);
     let document = aEvent.target.ownerDocument;
@@ -1114,176 +1132,131 @@ CustomizeMode.prototype = {
            mozSourceNode.ownerDocument.defaultView != this.window;
   },
 
-  _setDragActive: function(aItem, aValue, aDraggedItemId) {
+  _setDragActive: function(aItem, aValue, aDraggedItemId, aInToolbar) {
     if (!aItem) {
       return;
     }
 
-    if (aValue) {
-      if (aItem.hasAttribute("dragover") != aValue) {
-        aItem.setAttribute("dragover", aValue);
+    if (aItem.hasAttribute("dragover") != aValue) {
+      aItem.setAttribute("dragover", aValue);
 
+      let window = aItem.ownerDocument.defaultView;
+      let draggedItem = window.document.getElementById(aDraggedItemId);
+      if (!aInToolbar) {
+        this._setPanelDragActive(aItem, draggedItem, aValue);
+      } else {
         // Calculate width of the item when it'd be dropped in this position
-        let window = aItem.ownerDocument.defaultView;
-        let draggedItem = window.document.getElementById(aDraggedItemId);
-        let width = this._getDragItemWidth(aItem, draggedItem);
-        if (width) {
-          let panelContents = window.PanelUI.contents;
-          if (aItem.parentNode == panelContents) {
-            this._setPanelDragActive(aItem, draggedItem, width);
-          } else {
-            let direction = window.getComputedStyle(aItem).direction;
-            let prop, otherProp;
-            // If we're inserting before in ltr, or after in rtl:
-            if ((aValue == "before") == (direction == "ltr")) {
-              prop = "borderLeftWidth";
-              otherProp = "border-right-width";
-            } else {
-              // otherwise:
-              prop = "borderRightWidth";
-              otherProp = "border-left-width";
-            }
-            aItem.style[prop] = width;
-            aItem.style.removeProperty(otherProp);
-          }
+        let width = this._getDragItemSize(aItem, draggedItem).width;
+        let direction = window.getComputedStyle(aItem).direction;
+        let prop, otherProp;
+        // If we're inserting before in ltr, or after in rtl:
+        if ((aValue == "before") == (direction == "ltr")) {
+          prop = "borderLeftWidth";
+          otherProp = "border-right-width";
+        } else {
+          // otherwise:
+          prop = "borderRightWidth";
+          otherProp = "border-left-width";
         }
+        aItem.style[prop] = width + 'px';
+        aItem.style.removeProperty(otherProp);
       }
-    } else {
+    }
+  },
+  _cancelDragActive: function(aItem, aNextItem, aNoTransition) {
+    let currentArea = this._getCustomizableParent(aItem);
+    if (!currentArea) {
+      return;
+    }
+    let isToolbar = CustomizableUI.getAreaType(currentArea.id) == "toolbar";
+    if (isToolbar) {
       aItem.removeAttribute("dragover");
       // Remove both property values in the case that the end padding
       // had been set.
       aItem.style.removeProperty("border-left-width");
       aItem.style.removeProperty("border-right-width");
-    }
-  },
-
-  _setPanelDragActive: function(aDragOverNode, aDraggedItem, aWidth) {
-    let document = aDragOverNode.ownerDocument;
-    let window = document.defaultView;
-    let panelContents = window.PanelUI.contents;
-    while (!aDragOverNode.id && aDragOverNode.parentNode != panelContents)
-        aDragOverNode = aDragOverNode.parentNode;
-    if (!aDragOverNode.id)
-      return;
-
-    if (!aDragOverNode.previousSibling ||
-        !aDragOverNode.previousSibling.classList.contains(kPlaceholderClass)) {
-      let isPlaceholderAtEnd = function(aPlaceholder) {
-        do {
-          aPlaceholder = aPlaceholder.nextSibling;
-          if (!aPlaceholder)
-            return true;
-          if (!aPlaceholder.classList.contains(kPlaceholderClass))
-            return false;
-        } while (aPlaceholder.nextSibling)
-        return true;
-      }
-
-      let resetAnimAttributes = function(aPlaceholder) {
-        if (!aPlaceholder)
+    } else  {
+      if (aNextItem) {
+        let nextArea = this._getCustomizableParent(aNextItem);
+        if (nextArea == currentArea) {
+          // No need to do anything if we're still dragging in this area:
           return;
-        aPlaceholder.removeAttribute("expand");
-        aPlaceholder.removeAttribute("contract");
-        aPlaceholder.removeAttribute("hidden");
-        aPlaceholder.style.removeProperty("width");
+        }
       }
-
-      let placeholders = Array.slice(panelContents.getElementsByClassName(kPlaceholderClass));
-
-      let toExpand = placeholders.shift();
-      let toContract = placeholders.shift();
-      if (toContract && isPlaceholderAtEnd(toContract))
-        toContract = null;
-      // Seek to find hidden placeholders first to use for the expand transition.
-      while (toExpand.getAttribute("hidden") != "true" && placeholders.length)
-        toExpand = placeholders.shift();
-
-      if (toExpand.transitioning || (toContract && toContract.transitioning))
-        return;
-
-      let wasHidden = (toContract && toContract.getAttribute("hidden") == "true") ||
-                      toExpand.getAttribute("hidden") == "true";
-      resetAnimAttributes(toContract);
-      resetAnimAttributes(toExpand);
-
-      aDragOverNode.parentNode.insertBefore(toExpand, aDragOverNode);
-      toExpand.style.width = "0px";
-      toExpand.setAttribute("expand", "true");
-      toExpand.transitioning = true;
-      if (toContract) {
-        toContract.style.width = aWidth;
-        toContract.setAttribute("contract", "true");
-        toContract.transitioning = true;
-      }
-
-      window.mozRequestAnimationFrame(() => {
-        if (toContract)
-          toContract.style.width = "0px";
-        toExpand.style.width = aWidth;
-      });
-      toExpand.addEventListener("transitionend", function expandTransitionEnd() {
-        toExpand.removeEventListener("transitionend", expandTransitionEnd, false);
-        toExpand.transitioning = false;
-      });
-      if (toContract) {
-        toContract.addEventListener("transitionend", function contractTransitionEnd() {
-          toContract.removeEventListener("transitionend", contractTransitionEnd, false);
-          panelContents.appendChild(toContract);
-          if (wasHidden)
-            toContract.setAttribute("hidden", "true");
-          toContract.transitioning = false;
-        });
-      }
+      // Otherwise, clear everything out:
+      let positionManager = DragPositionManager.getManagerForArea(currentArea);
+      positionManager.clearPlaceholders(currentArea, aNoTransition);
     }
   },
 
-  _getDragItemWidth: function(aDragOverNode, aDraggedItem) {
-    // Cache it good, cache it real good.
-    if (!this._dragWidthMap)
-      this._dragWidthMap = new WeakMap();
-    if (!this._dragWidthMap.has(aDraggedItem))
-      this._dragWidthMap.set(aDraggedItem, new WeakMap());
-    let itemMap = this._dragWidthMap.get(aDraggedItem);
+  _setPanelDragActive: function(aDragOverNode, aDraggedItem, aValue) {
     let targetArea = this._getCustomizableParent(aDragOverNode);
-    if (!targetArea)
-      return;
-    // Return the width for this target from cache, if it exists.
-    let width = itemMap.get(targetArea);
-    if (width)
-      return width;
+    let positionManager = DragPositionManager.getManagerForArea(targetArea);
+    let draggedSize = this._getDragItemSize(aDragOverNode, aDraggedItem);
+    let isWide = aDraggedItem.classList.contains(CustomizableUI.WIDE_PANEL_CLASS);
+    positionManager.insertPlaceholder(targetArea, aDragOverNode, isWide, draggedSize);
+  },
 
-    // Calculate width of the item when it'd be dropped in this position.
+  _getDragItemSize: function(aDragOverNode, aDraggedItem) {
+    // Cache it good, cache it real good.
+    if (!this._dragSizeMap)
+      this._dragSizeMap = new WeakMap();
+    if (!this._dragSizeMap.has(aDraggedItem))
+      this._dragSizeMap.set(aDraggedItem, new WeakMap());
+    let itemMap = this._dragSizeMap.get(aDraggedItem);
+    let targetArea = this._getCustomizableParent(aDragOverNode);
+    let currentArea = this._getCustomizableParent(aDraggedItem);
+    // Return the size for this target from cache, if it exists.
+    let size = itemMap.get(targetArea);
+    if (size)
+      return size;
+
+    // Calculate size of the item when it'd be dropped in this position.
     let currentParent = aDraggedItem.parentNode;
     let currentSibling = aDraggedItem.nextSibling;
-
-    // Move the widget temporarily next to the placeholder.
-    aDragOverNode.parentNode.insertBefore(aDraggedItem, aDragOverNode);
-    // Update the node's areaType.
-    let areaType = CustomizableUI.getAreaType(targetArea.id);
     const kAreaType = "cui-areatype";
-    let currentType = aDraggedItem.hasAttribute(kAreaType) &&
-                      aDraggedItem.getAttribute(kAreaType);
-    if (areaType)
-      aDraggedItem.setAttribute(kAreaType, areaType);
-    CustomizableUI.onWidgetDrag(aDraggedItem.id, targetArea.id);
-    // Fetch the new width.
-    width = Math.floor(aDraggedItem.getBoundingClientRect().width) + "px";
-    // Put the item back into its previous position.
-    if (currentSibling)
-      currentParent.insertBefore(aDraggedItem, currentSibling);
-    else
-      currentParent.appendChild(aDraggedItem);
-    // restore the areaType
-    if (areaType) {
-      if (currentType === false)
-        aDraggedItem.removeAttribute(kAreaType);
-      else
-        aDraggedItem.setAttribute(kAreaType, currentType);
+    let areaType, currentType;
+
+    if (targetArea != currentArea) {
+      // Move the widget temporarily next to the placeholder.
+      aDragOverNode.parentNode.insertBefore(aDraggedItem, aDragOverNode);
+      // Update the node's areaType.
+      areaType = CustomizableUI.getAreaType(targetArea.id);
+      currentType = aDraggedItem.hasAttribute(kAreaType) &&
+                    aDraggedItem.getAttribute(kAreaType);
+      if (areaType)
+        aDraggedItem.setAttribute(kAreaType, areaType);
+      this.wrapToolbarItem(aDraggedItem, areaType || "palette");
+      CustomizableUI.onWidgetDrag(aDraggedItem.id, targetArea.id);
+    } else {
+      aDraggedItem.parentNode.hidden = false;
     }
-    CustomizableUI.onWidgetDrag(aDraggedItem.id);
-    // Cache the found value of width for this target.
-    itemMap.set(targetArea, width);
-    return width;
+
+    // Fetch the new size.
+    let rect = aDraggedItem.parentNode.getBoundingClientRect();
+    size = {width: rect.width, height: rect.height};
+    // Cache the found value of size for this target.
+    itemMap.set(targetArea, size);
+
+    if (targetArea != currentArea) {
+      this.unwrapToolbarItem(aDraggedItem.parentNode);
+      // Put the item back into its previous position.
+      if (currentSibling)
+        currentParent.insertBefore(aDraggedItem, currentSibling);
+      else
+        currentParent.appendChild(aDraggedItem);
+      // restore the areaType
+      if (areaType) {
+        if (currentType === false)
+          aDraggedItem.removeAttribute(kAreaType);
+        else
+          aDraggedItem.setAttribute(kAreaType, currentType);
+      }
+      CustomizableUI.onWidgetDrag(aDraggedItem.id);
+    } else {
+      aDraggedItem.parentNode.hidden = true;
+    }
+    return size;
   },
 
   _getCustomizableParent: function(aElement) {
@@ -1298,7 +1271,7 @@ CustomizeMode.prototype = {
     return null;
   },
 
-  _getDragOverNode: function(aEvent, aAreaElement) {
+  _getDragOverNode: function(aEvent, aAreaElement, aInToolbar, aDraggedItemId) {
     let expectedParent = aAreaElement.customizationTarget || aAreaElement;
     // Our tests are stupid. Cope:
     if (!aEvent.clientX  && !aEvent.clientY) {
@@ -1314,9 +1287,16 @@ CustomizeMode.prototype = {
     dragX = Math.min(bounds.right, Math.max(dragX, bounds.left));
     dragY = Math.min(bounds.bottom, Math.max(dragY, bounds.top));
 
-    let targetNode = aAreaElement.ownerDocument.elementFromPoint(dragX, dragY);
-    while (targetNode && targetNode.parentNode != expectedParent) {
-      targetNode = targetNode.parentNode;
+    let targetNode;
+    if (aInToolbar) {
+      targetNode = aAreaElement.ownerDocument.elementFromPoint(dragX, dragY);
+      while (targetNode && targetNode.parentNode != expectedParent) {
+        targetNode = targetNode.parentNode;
+      }
+    } else {
+      let positionManager = DragPositionManager.getManagerForArea(aAreaElement);
+      // Find the closest node:
+      targetNode = positionManager.find(aAreaElement, dragX, dragY, aDraggedItemId);
     }
     return targetNode || aEvent.target;
   },
@@ -1326,7 +1306,7 @@ CustomizeMode.prototype = {
     let doc = aEvent.target.ownerDocument;
     doc.documentElement.setAttribute("customizing-movingItem", true);
     let item = this._getWrapper(aEvent.target);
-    if (item) {
+    if (item && !item.classList.contains(kPlaceholderClass)) {
       item.setAttribute("mousedown", "true");
     }
   },
@@ -1351,35 +1331,37 @@ CustomizeMode.prototype = {
   },
 
   _showPanelCustomizationPlaceholders: function() {
-    this._removePanelCustomizationPlaceholders();
     let doc = this.document;
     let contents = this.panelUIContents;
-    let visibleWideItems = contents.querySelectorAll("toolbarpaletteitem:not([hidden]) > ." + kWidePanelItemClass);
-    let visibleChildren = contents.querySelectorAll("toolbarpaletteitem:not([hidden])");
-    // TODO(bug 885578): Still doesn't handle a hole when there is a wide
-    //                   widget located at the bottom of the panel.
     let narrowItemsAfterWideItem = 0;
     let node = contents.lastChild;
-    while (node && !node.classList.contains(kWidePanelItemClass) &&
-           (!node.firstChild || !node.firstChild.classList.contains(kWidePanelItemClass))) {
-      if (!node.hidden) {
+    while (node && !node.classList.contains(CustomizableUI.WIDE_PANEL_CLASS) &&
+           (!node.firstChild || !node.firstChild.classList.contains(CustomizableUI.WIDE_PANEL_CLASS))) {
+      if (!node.hidden && !node.classList.contains(kPlaceholderClass)) {
         narrowItemsAfterWideItem++;
       }
       node = node.previousSibling;
     }
 
-    let orphanedItems = narrowItemsAfterWideItem % kColumnsInMenuPanel;
-    let placeholders = kColumnsInMenuPanel - orphanedItems;
+    let orphanedItems = narrowItemsAfterWideItem % CustomizableUI.PANEL_COLUMN_COUNT;
+    let placeholders = CustomizableUI.PANEL_COLUMN_COUNT - orphanedItems;
 
-    while (placeholders--) {
-      let placeholder = doc.createElement("toolbarpaletteitem");
-      placeholder.classList.add(kPlaceholderClass);
-      //XXXjaws The toolbarbutton child here is only necessary to get
-      //  the styling right here.
-      let placeholderChild = doc.createElement("toolbarbutton");
-      placeholderChild.classList.add(kPlaceholderClass + "-child");
-      placeholder.appendChild(placeholderChild);
-      contents.appendChild(placeholder);
+    let currentPlaceholderCount = contents.querySelectorAll("." + kPlaceholderClass).length;
+    if (placeholders > currentPlaceholderCount) {
+      while (placeholders-- > currentPlaceholderCount) {
+        let placeholder = doc.createElement("toolbarpaletteitem");
+        placeholder.classList.add(kPlaceholderClass);
+        //XXXjaws The toolbarbutton child here is only necessary to get
+        //  the styling right here.
+        let placeholderChild = doc.createElement("toolbarbutton");
+        placeholderChild.classList.add(kPlaceholderClass + "-child");
+        placeholder.appendChild(placeholderChild);
+        contents.appendChild(placeholder);
+      }
+    } else if (placeholders < currentPlaceholderCount) {
+      while (placeholders++ < currentPlaceholderCount) {
+        contents.querySelectorAll("." + kPlaceholderClass)[0].remove();
+      }
     }
   },
 
@@ -1409,6 +1391,9 @@ function getPlaceForItem(aElement) {
 }
 
 function __dumpDragData(aEvent, caller) {
+  if (!gDebug) {
+    return;
+  }
   let str = "Dumping drag data (CustomizeMode.jsm) {\n";
   str += "  type: " + aEvent["type"] + "\n";
   for (let el of ["target", "currentTarget", "relatedTarget"]) {

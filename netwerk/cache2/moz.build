@@ -15,14 +15,12 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'necko_cache2'
 
-MODULE = 'nkcache2'
-
 EXPORTS += [
     'CacheObserver.h',
     'CacheStorageService.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AppCacheStorage.cpp',
     'CacheEntriesEnumerator.cpp',
     'CacheEntry.cpp',
@@ -45,11 +43,8 @@ LOCAL_INCLUDES += [
     '../base/src',
 ]
 
-LIBRARY_NAME = 'nkcache2_s'
-
 FAIL_ON_WARNINGS = True
-
-LIBXUL_LIBRARY = True
 
 MSVC_ENABLE_PGO = True
 
+FINAL_LIBRARY = 'necko'

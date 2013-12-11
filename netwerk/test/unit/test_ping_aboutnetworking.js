@@ -34,17 +34,30 @@ function run_test() {
     if (connInfo.status == "NS_NET_STATUS_CONNECTED_TO") {
       do_test_pending();
       gDashboard.requestDNSInfo(function(data) {
-        do_check_neq(data.hostname.indexOf("localhost"), -1);
+        let found = false;
+        for (let i = 0; i < data.entries.length; i++) {
+          if (data.entries[i].hostname == "localhost") {
+            found = true;
+            break;
+          }
+        }
+        do_check_eq(found, true);
 
         do_test_finished();
       });
 
       do_test_pending();
       gDashboard.requestSockets(function(data) {
-        let index = data.host.indexOf("127.0.0.1");
+        let index = -1;
+        for (let i = 0; i < data.sockets.length; i++) {
+          if (data.sockets[i].host == "127.0.0.1") {
+            index = i;
+            break;
+          }
+        }
         do_check_neq(index, -1);
-        do_check_eq(data.port[index], serverSocket.port);
-        do_check_eq(data.tcp[index], 1);
+        do_check_eq(data.sockets[index].port, serverSocket.port);
+        do_check_eq(data.sockets[index].tcp, 1);
 
         serverSocket.close();
 

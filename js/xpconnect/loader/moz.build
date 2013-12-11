@@ -4,15 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'jsloader'
-
 SOURCES += [
     'mozJSComponentLoader.cpp',
     'mozJSLoaderUtils.cpp',
     'mozJSSubScriptLoader.cpp',
 ]
-
-LIBRARY_NAME = 'jsloader_s'
 
 EXTRA_JS_MODULES += [
     'ISO8601DateUtils.jsm',
@@ -21,7 +17,6 @@ EXTRA_JS_MODULES += [
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
 
+FINAL_LIBRARY = 'xpconnect_s'

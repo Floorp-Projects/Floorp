@@ -26,6 +26,9 @@
 #include "nsIDOMEventListener.h"
 #include "SurfaceCache.h"
 
+// undef the GetCurrentTime macro defined in WinBase.h from the MS Platform SDK
+#undef GetCurrentTime
+
 namespace mozilla {
 
 using namespace dom;
@@ -488,20 +491,35 @@ VectorImage::RequestRefresh(const mozilla::TimeStamp& aTime)
   // TODO: Implement for b666446.
   EvaluateAnimation();
 
-  if (mHasPendingInvalidation && mStatusTracker) {
-    // This method is called under the Tick() of an observing document's
-    // refresh driver. We send out the following notifications here rather than
-    // under WillRefresh() (which would be called by our own refresh driver) so
-    // that we only send these notifications if we actually have a document
-    // that is observing us.
-    // XXX(seth): We may need to duplicate this code so that non-animated images
-    // get handled correctly. See bug 922899.
+  if (mHasPendingInvalidation) {
+    SendInvalidationNotifications();
+    mHasPendingInvalidation = false;
+  }
+}
+
+void
+VectorImage::SendInvalidationNotifications()
+{
+  // Animated images don't send out invalidation notifications as soon as
+  // they're generated. Instead, InvalidateObserversOnNextRefreshDriverTick
+  // records that there are pending invalidations and then returns immediately.
+  // The notifications are actually sent from RequestRefresh(). We send these
+  // notifications there to ensure that there is actually a document observing
+  // us. Otherwise, the notifications are just wasted effort.
+  //
+  // Non-animated images call this method directly from
+  // InvalidateObserversOnNextRefreshDriverTick, because RequestRefresh is never
+  // called for them. Ordinarily this isn't needed, since we send out
+  // invalidation notifications in OnSVGDocumentLoaded, but in rare cases the
+  // SVG document may not be 100% ready to render at that time. In those cases
+  // we would miss the subsequent invalidations if we didn't send out the
+  // notifications directly in |InvalidateObservers...|.
+
+  if (mStatusTracker) {
     SurfaceCache::Discard(this);
     mStatusTracker->FrameChanged(&nsIntRect::GetMaxSizedIntRect());
     mStatusTracker->OnStopFrame();
   }
-
-  mHasPendingInvalidation = false;
 }
 
 //******************************************************************************
@@ -834,45 +852,16 @@ VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
     return Show(svgDrawable, aParams);
 
   // Try to create an offscreen surface.
-  mozilla::RefPtr<mozilla::gfx::DrawTarget> target;
-  nsRefPtr<gfxContext> ctx;
-  nsRefPtr<gfxASurface> surface;
-
-  if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-    target = gfxPlatform::GetPlatform()->
-      CreateOffscreenContentDrawTarget(aParams.imageRect.Size(), gfx::FORMAT_B8G8R8A8);
-
-    // XXX(seth): All of this ugliness (the backend check, |surface|, the
-    // GetThebesSurfaceForDrawTarget call) is needed because we can't use Moz2D
-    // for drawing in all cases yet. See bug 923341.
-    if (target) {
-      switch (target->GetType()) {
-        case mozilla::gfx::BACKEND_DIRECT2D:
-        case mozilla::gfx::BACKEND_DIRECT2D1_1:
-        case mozilla::gfx::BACKEND_SKIA:
-          // Can't cache on this backend.
-          return Show(svgDrawable, aParams);
-
-        default:
-          surface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(target);
-          ctx = new gfxContext(target);
-      }
-    }
-  } else {
-    target = gfxPlatform::GetPlatform()->
-      CreateOffscreenCanvasDrawTarget(aParams.imageRect.Size(), gfx::FORMAT_B8G8R8A8);
-    surface = target ? gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(target)
-                     : nullptr;
-    ctx = surface ? new gfxContext(surface) : nullptr;
-  }
+  mozilla::RefPtr<mozilla::gfx::DrawTarget> target =
+   gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(aParams.imageRect.Size(), gfx::FORMAT_B8G8R8A8);
 
   // If we couldn't create the draw target, it was probably because it would end
   // up way too big. Generally it also wouldn't fit in the cache, but the prefs
-  // could be set such that the cache isn't the limiting factor. If we couldn't
-  // create the surface, we are on a platform that does not support
-  // GetThebesSurfaceForDrawTarget. This will be fixed in bug 923341.
-  if (!target || !surface)
+  // could be set such that the cache isn't the limiting factor.
+  if (!target)
     return Show(svgDrawable, aParams);
+
+  nsRefPtr<gfxContext> ctx = new gfxContext(target);
 
   // Actually draw. (We use FILTER_NEAREST since we never scale here.)
   gfxUtils::DrawPixelSnapped(ctx, svgDrawable, gfxMatrix(),
@@ -891,7 +880,7 @@ VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
   // Draw. Note that if SurfaceCache::Insert failed for whatever reason,
   // then |target| is all that is keeping the pixel data alive, so we have
   // to draw before returning from this function.
-  nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(surface, aParams.imageRect.Size());
+  nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(target, aParams.imageRect.Size());
   Show(drawable, aParams);
 }
 
@@ -1156,7 +1145,11 @@ VectorImage::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
 void
 VectorImage::InvalidateObserversOnNextRefreshDriverTick()
 {
-  mHasPendingInvalidation = true;
+  if (mHaveAnimations) {
+    mHasPendingInvalidation = true;
+  } else {
+    SendInvalidationNotifications();
+  }
 }
 
 } // namespace image

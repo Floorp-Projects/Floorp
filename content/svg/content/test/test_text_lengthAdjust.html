@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=569722
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=569722">Mozilla Bug 569722</a>
 <p id="display"></p>
-<div id="content" style="display: none">
+<div id="content">
   <svg width="400" height="200">
     <text x="0" y="100" style="font: 16px sans-serif">aaa</text>
   </svg>
@@ -27,80 +27,76 @@ function close(x, y, message) {
 }
 
 function runTest() {
-  SpecialPowers.pushPrefEnv({'set': [['svg.text.css-frames.enabled', true]]}, function() {
-    document.getElementById("content").style.display = "block";
+  var text = document.querySelector("text");
 
-    var text = document.querySelector("text");
+  // get the original length
+  var length = text.getComputedTextLength();
 
-    // get the original length
-    var length = text.getComputedTextLength();
+  // get the original glyph positions
+  var startPositions = [],
+      endPositions = [],
+      extents = [];
+  for (var i = 0; i < 3; i++) {
+    startPositions.push(text.getStartPositionOfChar(i));
+    endPositions.push(text.getEndPositionOfChar(i));
+    extents.push(text.getExtentOfChar(i));
+  }
 
-    // get the original glyph positions
-    var startPositions = [],
-        endPositions = [],
-        extents = [];
+  // widths should all be the same
+  is(extents[0].width, extents[1].width);
+  is(extents[0].width, extents[2].width);
+
+  var checkCharNumAtPosition = function(x, y, i) {
+    var p = document.querySelector("svg").createSVGPoint();
+    p.x = x;
+    p.y = y;
+    is(text.getCharNumAtPosition(p), i, "getCharNumAtPosition(" + i + ")");
+  };
+
+  var checkPositions = function(start, end, width) {
     for (var i = 0; i < 3; i++) {
-      startPositions.push(text.getStartPositionOfChar(i));
-      endPositions.push(text.getEndPositionOfChar(i));
-      extents.push(text.getExtentOfChar(i));
+      // check their positions
+      close(text.getStartPositionOfChar(i).x, start[i], "start position of glyph " + i);
+      close(text.getEndPositionOfChar(i).x, end[i], "end position of glyph " + i);
+      close(text.getExtentOfChar(i).x, start[i], "left edge of extent of glyph " + i);
+      close(text.getExtentOfChar(i).width, width, "width of glyph " + i);
+      checkCharNumAtPosition((start[i] + end[i]) / 2, 100, i);
     }
+  }
 
-    // widths should all be the same
-    is(extents[0].width, extents[1].width);
-    is(extents[0].width, extents[2].width);
+  var w = extents[0].width;
 
-    var checkCharNumAtPosition = function(x, y, i) {
-      var p = document.querySelector("svg").createSVGPoint();
-      p.x = x;
-      p.y = y;
-      is(text.getCharNumAtPosition(p), i, "getCharNumAtPosition(" + i + ")");
-    };
-
-    var checkPositions = function(start, end, width) {
-      for (var i = 0; i < 3; i++) {
-        // check their positions
-        close(text.getStartPositionOfChar(i).x, start[i], "start position of glyph " + i);
-        close(text.getEndPositionOfChar(i).x, end[i], "end position of glyph " + i);
-        close(text.getExtentOfChar(i).x, start[i], "left edge of extent of glyph " + i);
-        close(text.getExtentOfChar(i).width, width, "width of glyph " + i);
-        checkCharNumAtPosition((start[i] + end[i]) / 2, 100, i);
-      }
-    }
-
-    var w = extents[0].width;
-
-    var doLengthAdjustSpacingTest = function() {
-      // getComputedTextLength should return the sum of the advances, and since
-      // we are just changing the positions of the glyphs, it should be the same
-      // as without a textLength="" attribute
-      close(text.getComputedTextLength(), length, "getComputedTextLength when lengthAdjust=\"spacing\"");
-
-      // expected start and end positions of the glyphs
-      var start = [0, 50 - w / 2, 100 - w];
-      var end = [w, 50 + w / 2, 100];
-      checkPositions(start, end, w);
-    };
-
-    // switch to adjust glyph positions, using the default value of lengthAdjust=""
-    text.setAttribute("textLength", "100");
-    doLengthAdjustSpacingTest();
-    // then with an explicit lengthAdjust="spacing"
-    text.setAttribute("lengthAdjust", "spacing");
-    doLengthAdjustSpacingTest();
-
-    // now test with lengthAdjust="spacingAndGlyphs"
-    text.setAttribute("lengthAdjust", "spacingAndGlyphs");
-
-    // now that each glyph is stretched, the total advance should be the textLength
-    close(text.getComputedTextLength(), 100, "getComputedTextLength when lengthAdjust=\"spacingAndGlyphs\"");
+  var doLengthAdjustSpacingTest = function() {
+    // getComputedTextLength should return the sum of the advances, and since
+    // we are just changing the positions of the glyphs, it should be the same
+    // as without a textLength="" attribute
+    close(text.getComputedTextLength(), length, "getComputedTextLength when lengthAdjust=\"spacing\"");
 
     // expected start and end positions of the glyphs
-    var start = [0, 33.3333, 66.6666];
-    var end = [33.3333, 66.6666, 100];
-    checkPositions(start, end, 33.3333);
+    var start = [0, 50 - w / 2, 100 - w];
+    var end = [w, 50 + w / 2, 100];
+    checkPositions(start, end, w);
+  };
 
-    SimpleTest.finish();
-  });
+  // switch to adjust glyph positions, using the default value of lengthAdjust=""
+  text.setAttribute("textLength", "100");
+  doLengthAdjustSpacingTest();
+  // then with an explicit lengthAdjust="spacing"
+  text.setAttribute("lengthAdjust", "spacing");
+  doLengthAdjustSpacingTest();
+
+  // now test with lengthAdjust="spacingAndGlyphs"
+  text.setAttribute("lengthAdjust", "spacingAndGlyphs");
+
+  // now that each glyph is stretched, the total advance should be the textLength
+  close(text.getComputedTextLength(), 100, "getComputedTextLength when lengthAdjust=\"spacingAndGlyphs\"");
+
+  // expected start and end positions of the glyphs
+  var start = [0, 33.3333, 66.6666];
+  var end = [33.3333, 66.6666, 100];
+  checkPositions(start, end, 33.3333);
+
+  SimpleTest.finish();
 }
 
 window.addEventListener("load", runTest, false);

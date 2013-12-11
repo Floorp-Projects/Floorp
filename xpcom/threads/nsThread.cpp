@@ -51,6 +51,9 @@ GetThreadLog()
   return sLog;
 }
 #endif
+#ifdef LOG
+#undef LOG
+#endif
 #define LOG(args) PR_LOG(GetThreadLog(), PR_LOG_DEBUG, args)
 
 NS_DECL_CI_INTERFACE_GETTER(nsThread)
@@ -149,9 +152,9 @@ NS_IMPL_CI_INTERFACE_GETTER4(nsThread, nsIThread, nsIThreadInternal,
 
 class nsThreadStartupEvent : public nsRunnable {
 public:
-  // Create a new thread startup object.
-  static nsThreadStartupEvent *Create() {
-    return new nsThreadStartupEvent();
+  nsThreadStartupEvent()
+    : mMon("nsThreadStartupEvent.mMon")
+    , mInitialized(false) {
   }
 
   // This method does not return until the thread startup object is in the
@@ -175,11 +178,6 @@ private:
     mInitialized = true;
     mon.Notify();
     return NS_OK;
-  }
-
-  nsThreadStartupEvent()
-    : mMon("nsThreadStartupEvent.mMon")
-    , mInitialized(false) {
   }
 
   ReentrantMonitor mMon;
@@ -307,8 +305,7 @@ nsresult
 nsThread::Init()
 {
   // spawn thread and wait until it is fully setup
-  nsRefPtr<nsThreadStartupEvent> startup = nsThreadStartupEvent::Create();
-  NS_ENSURE_TRUE(startup, NS_ERROR_OUT_OF_MEMORY);
+  nsRefPtr<nsThreadStartupEvent> startup = new nsThreadStartupEvent();
  
   NS_ADDREF_THIS();
  
@@ -374,7 +371,8 @@ nsThread::Dispatch(nsIRunnable *event, uint32_t flags)
 {
   LOG(("THRD(%p) Dispatch [%p %x]\n", this, event, flags));
 
-  NS_ENSURE_ARG_POINTER(event);
+  if (NS_WARN_IF(!event))
+    return NS_ERROR_INVALID_ARG;
 
   if (gXPCOMThreadsShutDown && MAIN_THREAD != mIsMainThread) {
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
@@ -382,7 +380,8 @@ nsThread::Dispatch(nsIRunnable *event, uint32_t flags)
 
   if (flags & DISPATCH_SYNC) {
     nsThread *thread = nsThreadManager::get()->GetCurrentThread();
-    NS_ENSURE_STATE(thread);
+    if (NS_WARN_IF(!thread))
+      return NS_ERROR_NOT_AVAILABLE;
 
     // XXX we should be able to do something better here... we should
     //     be able to monitor the slot occupied by this event and use
@@ -434,7 +433,8 @@ nsThread::Shutdown()
   if (!mThread)
     return NS_OK;
 
-  NS_ENSURE_STATE(mThread != PR_GetCurrentThread());
+  if (NS_WARN_IF(mThread == PR_GetCurrentThread()))
+    return NS_ERROR_UNEXPECTED;
 
   // Prevent multiple calls to this method
   {
@@ -487,7 +487,8 @@ nsThread::Shutdown()
 NS_IMETHODIMP
 nsThread::HasPendingEvents(bool *result)
 {
-  NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
+  if (NS_WARN_IF(PR_GetCurrentThread() != mThread))
+    return NS_ERROR_NOT_SAME_THREAD;
 
   *result = mEvents.GetEvent(false, nullptr);
   return NS_OK;
@@ -545,7 +546,8 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
 {
   LOG(("THRD(%p) ProcessNextEvent [%u %u]\n", this, mayWait, mRunningEvent));
 
-  NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
+  if (NS_WARN_IF(PR_GetCurrentThread() != mThread))
+    return NS_ERROR_NOT_SAME_THREAD;
 
   if (MAIN_THREAD == mIsMainThread && mayWait && !ShuttingDown())
     HangMonitor::Suspend();
@@ -641,7 +643,8 @@ nsThread::GetPriority(int32_t *priority)
 NS_IMETHODIMP
 nsThread::SetPriority(int32_t priority)
 {
-  NS_ENSURE_STATE(mThread);
+  if (NS_WARN_IF(!mThread))
+    return NS_ERROR_NOT_INITIALIZED;
 
   // NSPR defines the following four thread priorities:
   //   PR_PRIORITY_LOW
@@ -687,7 +690,8 @@ nsThread::GetObserver(nsIThreadObserver **obs)
 NS_IMETHODIMP
 nsThread::SetObserver(nsIThreadObserver *obs)
 {
-  NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
+  if (NS_WARN_IF(PR_GetCurrentThread() != mThread))
+    return NS_ERROR_NOT_SAME_THREAD;
 
   MutexAutoLock lock(mLock);
   mObserver = obs;
@@ -697,8 +701,8 @@ nsThread::SetObserver(nsIThreadObserver *obs)
 NS_IMETHODIMP
 nsThread::GetRecursionDepth(uint32_t *depth)
 {
-  NS_ENSURE_ARG_POINTER(depth);
-  NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
+  if (NS_WARN_IF(PR_GetCurrentThread() != mThread))
+    return NS_ERROR_NOT_SAME_THREAD;
 
   *depth = mRunningEvent;
   return NS_OK;
@@ -707,8 +711,10 @@ nsThread::GetRecursionDepth(uint32_t *depth)
 NS_IMETHODIMP
 nsThread::AddObserver(nsIThreadObserver *observer)
 {
-  NS_ENSURE_ARG_POINTER(observer);
-  NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
+  if (NS_WARN_IF(!observer))
+    return NS_ERROR_INVALID_ARG;
+  if (NS_WARN_IF(PR_GetCurrentThread() != mThread))
+    return NS_ERROR_NOT_SAME_THREAD;
 
   NS_WARN_IF_FALSE(!mEventObservers.Contains(observer),
                    "Adding an observer twice!");
@@ -724,7 +730,8 @@ nsThread::AddObserver(nsIThreadObserver *observer)
 NS_IMETHODIMP
 nsThread::RemoveObserver(nsIThreadObserver *observer)
 {
-  NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
+  if (NS_WARN_IF(PR_GetCurrentThread() != mThread))
+    return NS_ERROR_NOT_SAME_THREAD;
 
   if (observer && !mEventObservers.RemoveElement(observer)) {
     NS_WARNING("Removing an observer that was never added!");

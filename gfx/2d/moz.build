@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'gfx2d'
-
 EXPORTS.mozilla += [
     'GenericRefCounted.h',
 ]
@@ -38,7 +36,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'MacIOSurface.h',
         'QuartzSupport.h',
     ]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'DrawTargetCG.cpp',
         'PathCG.cpp',
         'ScaledFontMac.cpp',
@@ -64,12 +62,14 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'convolver.cpp',
         'DrawTargetSkia.cpp',
-        'image_operations.cpp',
         'PathSkia.cpp',
         'SourceSurfaceSkia.cpp',
+    ]
+    SOURCES += [
+        'image_operations.cpp', # Uses _USE_MATH_DEFINES
     ]
 
 # Are we targeting x86 or x64?  If so, build SSE2 files.
@@ -81,7 +81,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
             'ImageScalingSSE2.cpp',
         ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'Blur.cpp',
     'DrawEventRecorder.cpp',
     'DrawTargetCairo.cpp',
@@ -110,13 +110,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 FAIL_ON_WARNINGS = True
 
-LIBXUL_LIBRARY = True
-
 MSVC_ENABLE_PGO = True
-
-LIBRARY_NAME = 'gfx2d'
-
-EXPORT_LIBRARY = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+FINAL_LIBRARY = 'gkmedias'

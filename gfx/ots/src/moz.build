@@ -4,38 +4,37 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'ots'
-
-if CONFIG['OS_TARGET'] == 'WINNT':
-    FORCE_STATIC_LIB = True
-else:
-    LIBXUL_LIBRARY = True
-
 EXPORTS += [
     '../include/opentype-sanitiser.h',
     '../include/ots-memory-stream.h',
 ]
 
 SOURCES += [
+    # don't unify sources that use a (file-specific) DROP_THIS_TABLE macro
+    'gasp.cc',
+    'gdef.cc',
+    'gpos.cc',
+    'gsub.cc',
+    'hdmx.cc',
+    'kern.cc',
+    'ltsh.cc',
+    'vdmx.cc',
+    'vorg.cc',
+]
+
+UNIFIED_SOURCES += [
     'cff.cc',
     'cff_type2_charstring.cc',
     'cmap.cc',
     'cvt.cc',
     'fpgm.cc',
-    'gasp.cc',
-    'gdef.cc',
     'glyf.cc',
-    'gpos.cc',
     'graphite.cc',
-    'gsub.cc',
-    'hdmx.cc',
     'head.cc',
     'hhea.cc',
     'hmtx.cc',
-    'kern.cc',
     'layout.cc',
     'loca.cc',
-    'ltsh.cc',
     'maxp.cc',
     'metrics.cc',
     'name.cc',
@@ -44,15 +43,13 @@ SOURCES += [
     'post.cc',
     'prep.cc',
     'svg.cc',
-    'vdmx.cc',
     'vhea.cc',
     'vmtx.cc',
-    'vorg.cc',
 ]
-
-LIBRARY_NAME = 'mozots'
 
 MSVC_ENABLE_PGO = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     NO_VISIBILITY_FLAGS = True
+
+FINAL_LIBRARY = 'gkmedias'

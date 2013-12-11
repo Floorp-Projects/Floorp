@@ -200,7 +200,8 @@ struct CommonLayerAttributes {
   nullable PLayer maskLayer;
   // Animated colors will only honored for ColorLayers.
   Animation[] animations;
- };
+  nsIntRegion invalidRegion;
+};
 
 struct ThebesLayerAttributes {
   nsIntRegion validRegion;

@@ -810,7 +810,8 @@ nsSupportsDependentCString::nsSupportsDependentCString(const char* aStr)
 NS_IMETHODIMP
 nsSupportsDependentCString::GetType(uint16_t *aType)
 {
-    NS_ENSURE_ARG_POINTER(aType);
+    if (NS_WARN_IF(!aType))
+        return NS_ERROR_INVALID_ARG;
 
     *aType = TYPE_CSTRING;
     return NS_OK;
@@ -826,7 +827,8 @@ nsSupportsDependentCString::GetData(nsACString& aData)
 NS_IMETHODIMP
 nsSupportsDependentCString::ToString(char **_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
+    if (NS_WARN_IF(!_retval))
+        return NS_ERROR_INVALID_ARG;
 
     *_retval = ToNewCString(mData);
     if (!*_retval)

@@ -145,6 +145,9 @@ void
 LayerManagerComposite::BeginTransaction()
 {
   mInTransaction = true;
+  if (Compositor::GetBackend() == LAYERS_BASIC) {
+    mClonedLayerTreeProperties = LayerProperties::CloneFrom(GetRoot());
+  }
 }
 
 void
@@ -168,10 +171,11 @@ LayerManagerComposite::BeginTransactionWithDrawTarget(DrawTarget* aTarget)
 bool
 LayerManagerComposite::EndEmptyTransaction(EndTransactionFlags aFlags)
 {
-  mInTransaction = false;
-
-  if (!mRoot)
+  NS_ASSERTION(mInTransaction, "Didn't call BeginTransaction?");
+  if (!mRoot) {
+    mInTransaction = false;
     return false;
+  }
 
   EndTransaction(nullptr, nullptr);
   return true;
@@ -182,6 +186,7 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
                                       void* aCallbackData,
                                       EndTransactionFlags aFlags)
 {
+  NS_ASSERTION(mInTransaction, "Didn't call BeginTransaction?");
   mInTransaction = false;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
@@ -192,6 +197,15 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
   if (mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
     return;
+  }
+
+  if (mRoot && mClonedLayerTreeProperties) {
+    nsIntRegion invalid = mClonedLayerTreeProperties->ComputeDifferences(mRoot, nullptr);
+    mClonedLayerTreeProperties = nullptr;
+
+    mInvalidRegion.Or(mInvalidRegion, invalid);
+  } else {
+    mInvalidRegion.Or(mInvalidRegion, mRenderBounds);
   }
 
   if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
@@ -341,12 +355,15 @@ LayerManagerComposite::Render()
     clipRect = *mRoot->GetClipRect();
     WorldTransformRect(clipRect);
     Rect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
-    mCompositor->BeginFrame(&rect, mWorldMatrix, bounds, nullptr, &actualBounds);
+    mCompositor->BeginFrame(mInvalidRegion, &rect, mWorldMatrix, bounds, nullptr, &actualBounds);
   } else {
     gfx::Rect rect;
-    mCompositor->BeginFrame(nullptr, mWorldMatrix, bounds, &rect, &actualBounds);
+    mCompositor->BeginFrame(mInvalidRegion, nullptr, mWorldMatrix, bounds, &rect, &actualBounds);
     clipRect = nsIntRect(rect.x, rect.y, rect.width, rect.height);
   }
+
+  // Reset the invalid region now that we've begun compositing.
+  mInvalidRegion.SetEmpty();
 
   if (actualBounds.IsEmpty()) {
     mCompositor->GetWidget()->PostRender(this);

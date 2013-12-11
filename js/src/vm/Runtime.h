@@ -167,21 +167,6 @@ struct ConservativeGCData
     }
 };
 
-class SourceDataCache
-{
-    typedef HashMap<ScriptSource *,
-                    JSStableString *,
-                    DefaultHasher<ScriptSource *>,
-                    SystemAllocPolicy> Map;
-    Map *map_;
-
-  public:
-    SourceDataCache() : map_(nullptr) {}
-    JSStableString *lookup(ScriptSource *ss);
-    void put(ScriptSource *ss, JSStableString *);
-    void purge();
-};
-
 struct EvalCacheEntry
 {
     JSScript *script;
@@ -466,10 +451,15 @@ struct JSAtomState
 #undef PROPERTYNAME_FIELD
 };
 
-#define NAME_OFFSET(name)       offsetof(JSAtomState, name)
-#define OFFSET_TO_NAME(rt,off)  (*(js::FixedHeapPtr<js::PropertyName>*)((char*)&(rt)->atomState + (off)))
-
 namespace js {
+
+#define NAME_OFFSET(name)       offsetof(JSAtomState, name)
+
+inline HandlePropertyName
+AtomStateOffsetToName(const JSAtomState &atomState, size_t offset)
+{
+    return *(js::FixedHeapPtr<js::PropertyName>*)((char*)&atomState + offset);
+}
 
 /*
  * Encapsulates portions of the runtime/context that are tied to a
@@ -1015,7 +1005,16 @@ struct JSRuntime : public JS::shadow::Runtime,
     int64_t             gcNextFullGCTime;
     int64_t             gcLastGCTime;
     int64_t             gcJitReleaseTime;
-    JSGCMode            gcMode;
+  private:
+    JSGCMode            gcMode_;
+
+  public:
+    JSGCMode gcMode() const { return gcMode_; }
+    void setGCMode(JSGCMode mode) {
+        gcMode_ = mode;
+        gcMarker.setGCMode(mode);
+    }
+
     size_t              gcAllocationThreshold;
     bool                gcHighFrequencyGC;
     uint64_t            gcHighFrequencyTimeThreshold;
@@ -1681,6 +1680,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool useHelperThreadsForIonCompilation_;
     bool useHelperThreadsForParsing_;
 
+    // True iff this is a DOM Worker runtime.
+    bool isWorkerRuntime_;
+
   public:
 
     bool useHelperThreads() const {
@@ -1720,6 +1722,12 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
     bool useHelperThreadsForParsing() const {
         return useHelperThreadsForParsing_;
+    }
+    void setIsWorkerRuntime() {
+        isWorkerRuntime_ = true;
+    }
+    bool isWorkerRuntime() const {
+        return isWorkerRuntime_;
     }
 
 #ifdef DEBUG

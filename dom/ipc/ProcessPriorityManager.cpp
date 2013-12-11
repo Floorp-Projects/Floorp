@@ -1024,13 +1024,6 @@ ParticularProcessPriorityManager::SetPriorityNow(ProcessPriority aPriority,
     unused << mContentParent->SendMinimizeMemoryUsage();
   }
 
-  nsPrintfCString ProcessPriorityWithBackgroundLRU("%s:%d",
-    ProcessPriorityToString(mPriority, mCPUPriority),
-    aBackgroundLRU);
-
-  FireTestOnlyObserverNotification("process-priority-with-background-LRU-set",
-    ProcessPriorityWithBackgroundLRU.get());
-
   FireTestOnlyObserverNotification("process-priority-set",
     ProcessPriorityToString(mPriority, mCPUPriority));
 

@@ -93,7 +93,7 @@ try {
     let (crashReporter =
           Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
           .getService(Components.interfaces.nsICrashReporter)) {
-      crashReporter.minidumpPath = do_get_tempdir();
+      crashReporter.minidumpPath = do_get_minidumpdir();
     }
   }
 }
@@ -184,6 +184,15 @@ function _do_quit() {
 }
 
 function _format_exception_stack(stack) {
+  if (typeof stack == "object" && stack.caller) {
+    let frame = stack;
+    let strStack = "";
+    while (frame != null) {
+      strStack += frame + "\n";
+      frame = frame.caller;
+    }
+    stack = strStack;
+  }
   // frame is of the form "fname@file:line"
   let frame_regexp = new RegExp("(.*)@(.*):(\\d*)", "g");
   return stack.split("\n").reduce(function(stack_msg, frame) {
@@ -342,6 +351,24 @@ function _execute_test() {
   _load_files(_HEAD_FILES);
   // _TEST_FILE is dynamically defined by <runxpcshelltests.py>.
   _load_files(_TEST_FILE);
+
+  // Support a common assertion library, Assert.jsm.
+  let Assert = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
+  // Pass a custom report function for xpcshell-test style reporting.
+  let assertImpl = new Assert(function(err, message, stack) {
+    if (err) {
+      do_report_result(false, err.message, err.stack);
+    } else {
+      do_report_result(true, message, stack);
+    }
+  });
+  // Allow Assert.jsm methods to be tacked to the current scope.
+  this.export_assertions = function() {
+    for (let func in assertImpl) {
+      this[func] = assertImpl[func].bind(assertImpl);
+    }
+  };
+  this.Assert = assertImpl;
 
   try {
     do_test_pending("MAIN run_test");
@@ -1073,6 +1100,26 @@ function do_get_tempdir() {
 }
 
 /**
+ * Returns the directory for crashreporter minidumps.
+ *
+ * @return nsILocalFile of the minidump directory
+ */
+function do_get_minidumpdir() {
+  let env = Components.classes["@mozilla.org/process/environment;1"]
+                      .getService(Components.interfaces.nsIEnvironment);
+  // the python harness may set this in the environment for us
+  let path = env.get("XPCSHELL_MINIDUMP_DIR");
+  if (path) {
+    let file = Components.classes["@mozilla.org/file/local;1"]
+                         .createInstance(Components.interfaces.nsILocalFile);
+    file.initWithPath(path);
+    return file;
+  } else {
+    return do_get_tempdir();
+  }
+}
+
+/**
  * Registers a directory with the profile service,
  * and return the directory as an nsILocalFile.
  *
@@ -1210,6 +1257,48 @@ function run_test_in_child(testFile, optionalCallback)
               callback);
 }
 
+/**
+ * Execute a given function as soon as a particular cross-process message is received.
+ * Must be paired with do_send_remote_message or equivalent ProcessMessageManager calls.
+ */
+function do_await_remote_message(name, callback)
+{
+  var listener = {
+    receiveMessage: function(message) {
+      if (message.name == name) {
+        mm.removeMessageListener(name, listener);
+        callback();
+        do_test_finished();
+      }
+    }
+  };
+
+  var mm;
+  if (runningInParent) {
+    mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIMessageBroadcaster);
+  } else {
+    mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
+  }
+  do_test_pending();
+  mm.addMessageListener(name, listener);
+}
+
+/**
+ * Asynchronously send a message to all remote processes. Pairs with do_await_remote_message
+ * or equivalent ProcessMessageManager listeners.
+ */
+function do_send_remote_message(name) {
+  var mm;
+  var sender;
+  if (runningInParent) {
+    mm = Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIMessageBroadcaster);
+    sender = 'broadcastAsyncMessage';
+  } else {
+    mm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
+    sender = 'sendAsyncMessage';
+  }
+  mm[sender](name);
+}
 
 /**
  * Add a test function to the list of tests that are to be run asynchronously.

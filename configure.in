@@ -369,6 +369,17 @@ if test -n "$GNU_CC" -a -z "$CLANG_CC" ; then
 fi
 
 dnl ========================================================
+dnl Disable compiling sources in unified mode.
+dnl ========================================================
+
+MOZ_ARG_DISABLE_BOOL(unified-compilation,
+[  --disable-unified-compilation
+                          Disable unified compilation of some C/C++ sources],
+    MOZ_DISABLE_UNIFIED_COMPILATION=1,
+    MOZ_DISABLE_UNIFIED_COMPILATION=)
+AC_SUBST(MOZ_DISABLE_UNIFIED_COMPILATION)
+
+dnl ========================================================
 dnl Special win32 checks
 dnl ========================================================
 
@@ -808,7 +819,6 @@ dnl ========================================================
 dnl = Mac OS X SDK support
 dnl ========================================================
 MACOS_SDK_DIR=
-NEXT_ROOT=
 MOZ_ARG_WITH_STRING(macos-sdk,
 [  --with-macos-sdk=dir    Location of platform SDK to use (Mac OS X only)],
     MACOS_SDK_DIR=$withval)
@@ -830,10 +840,8 @@ if test -z "${MACOS_PRIVATE_FRAMEWORKS_DEFAULTED}"; then
 fi
 
 dnl MACOS_SDK_DIR will be set to the SDK location whenever one is in use.
-dnl NEXT_ROOT will be set and exported only if it's needed.
 AC_SUBST(MACOS_SDK_DIR)
 AC_SUBST(MACOS_PRIVATE_FRAMEWORKS_DIR)
-AC_SUBST(NEXT_ROOT)
 
 if test "$MACOS_SDK_DIR"; then
   dnl Sync this section with the ones in NSPR and NSS.
@@ -3105,6 +3113,9 @@ AC_CACHE_CHECK(
             #ifdef linux
             #define _BSD_SOURCE 1
             #endif
+            #include <sys/types.h>
+            #include <netinet/in.h>
+            #include <arpa/nameser.h>
             #include <resolv.h>
             ],
             [int foo = res_ninit(&_res);],
@@ -3939,6 +3950,7 @@ MOZ_OPUS=1
 MOZ_WEBM=1
 MOZ_DIRECTSHOW=
 MOZ_WMF=
+MOZ_FMP4=
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
 MOZ_SRTP=
@@ -5273,6 +5285,26 @@ if test -n "$MOZ_WMF"; then
 fi;
 
 dnl ========================================================
+dnl = Built-in fragmented MP4 support.
+dnl ========================================================
+if test -n "$MOZ_WMF"; then
+    dnl Enable fragmented MP4 parser on Windows by default.
+    dnl We will also need to enable it on other platforms as we implement
+    dnl platform decoder support there too.
+    MOZ_FMP4=1
+fi
+
+MOZ_ARG_DISABLE_BOOL(fmp4,
+[  --disable-fmp4  Disable support for in built Fragmented MP4 parsing],
+    MOZ_FMP4=,
+    MOZ_FMP4=1)
+
+if test -n "$MOZ_FMP4"; then
+    AC_DEFINE(MOZ_FMP4)
+fi;
+
+
+dnl ========================================================
 dnl = Enable media plugin support
 dnl ========================================================
 if test "$OS_TARGET" = Android -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
@@ -6129,7 +6161,6 @@ if test -n "$MOZ_TREE_FREETYPE"; then
    CAIRO_FT_CFLAGS='-I$(topsrcdir)/modules/freetype2/include'
    FT2_LIBS='$(call EXPAND_LIBNAME_PATH,freetype,$(DEPTH)/modules/freetype2/.libs)'
    CAIRO_FT_OSLIBS=''
-   CAIRO_FT_LIBS='$(call EXPAND_LIBNAME_PATH,freetype,$(DEPTH)/modules/freetype2/.libs)'
    AC_DEFINE(HAVE_FT_BITMAP_SIZE_Y_PPEM)
    AC_DEFINE(HAVE_FT_GLYPHSLOT_EMBOLDEN)
    AC_DEFINE(HAVE_FT_LOAD_SFNT_TABLE)
@@ -6775,9 +6806,11 @@ MOZ_ARG_ENABLE_BOOL(dmd,
     MOZ_DMD=1,
     MOZ_DMD= )
 
-if test "$NS_TRACE_MALLOC"; then        # trace-malloc disables DMD
-    MOZ_DMD=
+dnl The two options are conflicting. Fails the configure to alert the user.
+if test "$NS_TRACE_MALLOC" -a "$MOZ_DMD"; then
+    AC_MSG_ERROR([--enable-trace-malloc and --enable-dmd are conflicting options])
 fi
+
 if test "$MOZ_DMD"; then
     USE_ELF_DYNSTR_GC=
     AC_DEFINE(MOZ_DMD)
@@ -6839,6 +6872,11 @@ MOZ_ARG_ENABLE_BOOL(replace-malloc,
 [  --enable-replace-malloc   Enable ability to dynamically replace the malloc implementation],
     MOZ_REPLACE_MALLOC=1,
     MOZ_REPLACE_MALLOC= )
+
+dnl The two options are conflicting. Fails the configure to alert the user.
+if test "$NS_TRACE_MALLOC" -a "$MOZ_REPLACE_MALLOC"; then
+    AC_MSG_ERROR([--enable-trace-malloc and --enable-replace-malloc are conflicting options])
+fi
 
 if test -n "$MOZ_REPLACE_MALLOC" -a -z "$MOZ_MEMORY"; then
     dnl We don't want to enable jemalloc unconditionally because it may be a
@@ -7317,7 +7355,7 @@ AC_SUBST(MOZ_B2G_BT_BLUEDROID)
 dnl ========================================================
 dnl = Enable NFC Interface for B2G (Gonk usually)
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(b2g-nfc,
+MOZ_ARG_ENABLE_BOOL(nfc,
 [  --enable-nfc         Set compile flags necessary for compiling NFC API ],
     MOZ_NFC=1,
     MOZ_NFC= )
@@ -7954,7 +7992,6 @@ if test "$MOZ_TREE_CAIRO"; then
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="-I${MZFTCFGFT2}/include"
         CAIRO_FT_OSLIBS="-L${MZFTCFGFT2}/lib -lmozft -lmzfntcfg"
-        CAIRO_FT_LIBS=""
         ;;
     esac
     if test "$USE_FC_FREETYPE"; then
@@ -7987,7 +8024,6 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(QT_SURFACE_FEATURE)
     AC_SUBST(TEE_SURFACE_FEATURE)
 
-    MOZ_CAIRO_LIBS='$(call EXPAND_LIBNAME_PATH,mozcairo,$(DEPTH)/gfx/cairo/cairo/src)'" $CAIRO_FT_LIBS"
     MOZ_CAIRO_OSLIBS='${CAIRO_FT_OSLIBS}'
 
     if test "$MOZ_X11"; then
@@ -8015,35 +8051,9 @@ AC_SUBST(MOZ_CAIRO_OSLIBS)
 AC_SUBST(MOZ_TREE_PIXMAN)
 
 dnl ========================================================
-dnl qcms
-dnl ========================================================
-
-QCMS_LIBS='$(DEPTH)/gfx/qcms/$(LIB_PREFIX)mozqcms.$(LIB_SUFFIX)'
-AC_SUBST(QCMS_LIBS)
-
-dnl ========================================================
-dnl HarfBuzz
-dnl ========================================================
-MOZ_HARFBUZZ_LIBS='$(DEPTH)/gfx/harfbuzz/src/$(LIB_PREFIX)mozharfbuzz.$(LIB_SUFFIX)'
-AC_SUBST(MOZ_HARFBUZZ_LIBS)
-
-dnl ========================================================
-dnl SIL Graphite
-dnl ========================================================
-MOZ_GRAPHITE_LIBS='$(DEPTH)/gfx/graphite2/src/$(LIB_PREFIX)mozgraphite2.$(LIB_SUFFIX)'
-AC_SUBST(MOZ_GRAPHITE_LIBS)
-
-dnl ========================================================
-dnl OTS
-dnl ========================================================
-MOZ_OTS_LIBS='$(DEPTH)/gfx/ots/src/$(LIB_PREFIX)mozots.$(LIB_SUFFIX)'
-AC_SUBST(MOZ_OTS_LIBS)
-
-dnl ========================================================
 dnl Skia 
 dnl ========================================================
 if test "$MOZ_ENABLE_SKIA"; then
-  MOZ_SKIA_LIBS='$(DEPTH)/gfx/skia/$(LIB_PREFIX)skia.$(LIB_SUFFIX)'
   AC_DEFINE(MOZ_ENABLE_SKIA)
   AC_DEFINE(USE_SKIA)
   if test "${MOZ_WIDGET_TOOLKIT}" = "android" -o x"$MOZ_WIDGET_TOOLKIT" = x"gonk"; then
@@ -8058,11 +8068,8 @@ if test "$MOZ_ENABLE_SKIA"; then
     AC_DEFINE(USE_SKIA_GPU)
     AC_SUBST(MOZ_ENABLE_SKIA_GPU)
   fi
-else
-  MOZ_SKIA_LIBS=
 fi
 AC_SUBST(MOZ_ENABLE_SKIA)
-AC_SUBST(MOZ_SKIA_LIBS)
 
 dnl ========================================================
 dnl disable xul
@@ -8656,6 +8663,7 @@ AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_OPUS)
 AC_SUBST(MOZ_WEBM)
 AC_SUBST(MOZ_WMF)
+AC_SUBST(MOZ_FMP4)
 AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_MEDIA_PLUGINS)
 AC_SUBST(MOZ_APPLEMEDIA)
@@ -8733,13 +8741,6 @@ if test "$MOZ_X11"; then
 
 fi # MOZ_X11
 
-dnl Check for headers, etc. needed by WebGL.
-if test "$MOZ_GL_DEFAULT_PROVIDER" = "GLX"; then
-    MOZ_CHECK_HEADER(GL/glx.h)
-    if test "$ac_cv_header_GL_glx_h" != "yes"; then
-        AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa-devel (openSUSE))])
-    fi
-fi # MOZ_GL_DEFAULT_PROVIDER=GLX
 fi # COMPILE_ENVIRONMENT
 
 dnl Set various defines and substitutions

@@ -9,6 +9,7 @@
 
 #ifdef JS_ION
 
+#include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
 
 #include "jsscript.h"
@@ -252,12 +253,12 @@ class AsmJSModule
 
         ExportedFunction(PropertyName *name,
                          PropertyName *maybeFieldName,
-                         mozilla::MoveRef<ArgCoercionVector> argCoercions,
+                         ArgCoercionVector &&argCoercions,
                          ReturnType returnType)
         {
             name_ = name;
             maybeFieldName_ = maybeFieldName;
-            argCoercions_ = argCoercions;
+            argCoercions_ = mozilla::Move(argCoercions);
             pod.returnType_ = returnType;
             pod.codeOffset_ = UINT32_MAX;
             JS_ASSERT_IF(maybeFieldName_, name_->isTenured());
@@ -271,11 +272,11 @@ class AsmJSModule
 
       public:
         ExportedFunction() {}
-        ExportedFunction(mozilla::MoveRef<ExportedFunction> rhs) {
-            name_ = rhs->name_;
-            maybeFieldName_ = rhs->maybeFieldName_;
-            argCoercions_ = mozilla::OldMove(rhs->argCoercions_);
-            pod = rhs->pod;
+        ExportedFunction(ExportedFunction &&rhs) {
+            name_ = rhs.name_;
+            maybeFieldName_ = rhs.maybeFieldName_;
+            argCoercions_ = mozilla::Move(rhs.argCoercions_);
+            pod = rhs.pod;
         }
 
         void initCodeOffset(unsigned off) {
@@ -340,14 +341,14 @@ class AsmJSModule
         ProfiledBlocksFunction(JSAtom *name, unsigned start, unsigned endInline, unsigned end,
                                jit::BasicBlocksVector &blocksVector)
           : ProfiledFunction(name, start, end), endInlineCodeOffset(endInline),
-            blocks(mozilla::OldMove(blocksVector))
+            blocks(mozilla::Move(blocksVector))
         {
             JS_ASSERT(name->isTenured());
         }
 
-        ProfiledBlocksFunction(const ProfiledBlocksFunction &copy)
+        ProfiledBlocksFunction(ProfiledBlocksFunction &&copy)
           : ProfiledFunction(copy.name, copy.startCodeOffset, copy.endCodeOffset),
-            endInlineCodeOffset(copy.endInlineCodeOffset), blocks(mozilla::OldMove(copy.blocks))
+            endInlineCodeOffset(copy.endInlineCodeOffset), blocks(mozilla::Move(copy.blocks))
         { }
     };
 #endif
@@ -517,11 +518,11 @@ class AsmJSModule
     }
 
     bool addExportedFunction(PropertyName *name, PropertyName *maybeFieldName,
-                             mozilla::MoveRef<ArgCoercionVector> argCoercions,
+                             ArgCoercionVector &&argCoercions,
                              ReturnType returnType)
     {
-        ExportedFunction func(name, maybeFieldName, argCoercions, returnType);
-        return exports_.append(mozilla::OldMove(func));
+        ExportedFunction func(name, maybeFieldName, mozilla::Move(argCoercions), returnType);
+        return exports_.append(mozilla::Move(func));
     }
     unsigned numExportedFunctions() const {
         return exports_.length();
@@ -565,7 +566,7 @@ class AsmJSModule
     bool trackPerfProfiledBlocks(JSAtom *name, unsigned startCodeOffset, unsigned endInlineCodeOffset,
                                  unsigned endCodeOffset, jit::BasicBlocksVector &basicBlocks) {
         ProfiledBlocksFunction func(name, startCodeOffset, endInlineCodeOffset, endCodeOffset, basicBlocks);
-        return perfProfiledBlocksFunctions_.append(func);
+        return perfProfiledBlocksFunctions_.append(mozilla::Move(func));
     }
     unsigned numPerfBlocksFunctions() const {
         return perfProfiledBlocksFunctions_.length();
