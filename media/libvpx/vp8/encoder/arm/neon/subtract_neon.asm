@@ -12,7 +12,7 @@
     EXPORT |vp8_subtract_mby_neon|
     EXPORT |vp8_subtract_mbuv_neon|
 
-    INCLUDE asm_enc_offsets.asm
+    INCLUDE vp8_asm_enc_offsets.asm
 
     ARM
     REQUIRE8

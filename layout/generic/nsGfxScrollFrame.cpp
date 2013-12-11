@@ -2058,13 +2058,15 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange)
 
 static void
 AppendToTop(nsDisplayListBuilder* aBuilder, nsDisplayList* aDest,
-            nsDisplayList* aSource, nsIFrame* aSourceFrame, bool aOwnLayer)
+            nsDisplayList* aSource, nsIFrame* aSourceFrame, bool aOwnLayer,
+            uint32_t aFlags, mozilla::layers::FrameMetrics::ViewID aScrollTargetId)
 {
   if (aSource->IsEmpty())
     return;
   if (aOwnLayer) {
     aDest->AppendNewToTop(
-        new (aBuilder) nsDisplayOwnLayer(aBuilder, aSourceFrame, aSource));
+        new (aBuilder) nsDisplayOwnLayer(aBuilder, aSourceFrame, aSource,
+                                         aFlags, aScrollTargetId));
   } else {
     aDest->AppendToTop(aSource);
   }
@@ -2095,6 +2097,12 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
                                            bool&                   aCreateLayer,
                                            bool                    aPositioned)
 {
+  nsITheme* theme = mOuter->PresContext()->GetTheme();
+  if (theme &&
+      theme->ShouldHideScrollbars()) {
+    return;
+  }
+
   bool overlayScrollbars =
     LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0;
 
@@ -2106,6 +2114,10 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
 
     scrollParts.AppendElement(kid);
   }
+
+  mozilla::layers::FrameMetrics::ViewID scrollTargetId = aCreateLayer
+    ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
+    : mozilla::layers::FrameMetrics::NULL_SCROLL_ID;
 
   scrollParts.Sort(HoveredStateComparator());
 
@@ -2123,11 +2135,19 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     nsDisplayList* dest = appendToPositioned ?
       aLists.PositionedDescendants() : aLists.BorderBackground();
 
+    uint32_t flags = 0;
+    if (scrollParts[i] == mVScrollbarBox) {
+      flags |= nsDisplayOwnLayer::VERTICAL_SCROLLBAR;
+    }
+    if (scrollParts[i] == mHScrollbarBox) {
+      flags |= nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR;
+    }
+
     // DISPLAY_CHILD_FORCE_STACKING_CONTEXT put everything into
     // partList.PositionedDescendants().
     ::AppendToTop(aBuilder, dest,
                   partList.PositionedDescendants(), scrollParts[i],
-                  aCreateLayer);
+                  aCreateLayer, flags, scrollTargetId);
   }
 }
 
@@ -2349,12 +2369,17 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   // Since making new layers is expensive, only use nsDisplayScrollLayer
-  // if the area is scrollable and we're the content process.
+  // if the area is scrollable and we're the content process (unless we're on
+  // B2G, where we support async scrolling for scrollable elements in the
+  // parent process as well).
   // When a displayport is being used, force building of a layer so that
   // CompositorParent can always find the scrollable layer for the root content
   // document.
+  // If the element is marked 'scrollgrab', also force building of a layer
+  // so that APZ can implement scroll grabbing.
+  mShouldBuildScrollableLayer = usingDisplayport || nsContentUtils::HasScrollgrab(mOuter->GetContent());
   bool shouldBuildLayer = false;
-  if (usingDisplayport) {
+  if (mShouldBuildScrollableLayer) {
     shouldBuildLayer = true;
   } else {
     nsRect scrollRange = GetScrollRange();
@@ -2376,14 +2401,12 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument());
   }
 
-  mShouldBuildScrollableLayer = false;
   if (shouldBuildLayer) {
     // ScrollLayerWrapper must always be created because it initializes the
     // scroll layer count. The display lists depend on this.
     ScrollLayerWrapper wrapper(mOuter, mScrolledFrame);
 
-    if (usingDisplayport) {
-      mShouldBuildScrollableLayer = true;
+    if (mShouldBuildScrollableLayer) {
       DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
       // For root scrollframes in documents where the CSS viewport has been
@@ -2416,6 +2439,12 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   scrolledContent.MoveTo(aLists);
 
   // Now display overlay scrollbars and the resizer, if we have one.
+#ifdef MOZ_WIDGET_GONK
+  // TODO: only layerize the overlay scrollbars if this scrollframe can be
+  // panned asynchronously. For now just always layerize on B2G because.
+  // that's where we want the layerized scrollbars
+  createLayersForScrollbars = true;
+#endif
   AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, createLayersForScrollbars,
                       true);
 }

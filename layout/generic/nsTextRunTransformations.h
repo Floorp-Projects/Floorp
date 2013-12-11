@@ -133,4 +133,43 @@ private:
   }
 };
 
+/**
+ * Copy a given textrun, but merge certain characters into a single logical
+ * character. Glyphs for a character are added to the glyph list for the previous
+ * character and then the merged character is eliminated. Visually the results
+ * are identical.
+ *
+ * This is used for text-transform:uppercase when we encounter a SZLIG,
+ * whose uppercase form is "SS", or other ligature or precomposed form
+ * that expands to multiple codepoints during case transformation,
+ * and for Greek text when combining diacritics have been deleted.
+ *
+ * This function is unable to merge characters when they occur in different
+ * glyph runs. This only happens in tricky edge cases where a character was
+ * decomposed by case-mapping (e.g. there's no precomposed uppercase version
+ * of an accented lowercase letter), and then font-matching caused the
+ * diacritics to be assigned to a different font than the base character.
+ * In this situation, the diacritic(s) get discarded, which is less than
+ * ideal, but they probably weren't going to render very well anyway.
+ * Bug 543200 will improve this by making font-matching operate on entire
+ * clusters instead of individual codepoints.
+ *
+ * For simplicity, this produces a textrun containing all DetailedGlyphs,
+ * no simple glyphs. So don't call it unless you really have merging to do.
+ *
+ * @param aCharsToMerge when aCharsToMerge[i] is true, this character in aSrc
+ * is merged into the previous character
+ *
+ * @param aDeletedChars when aDeletedChars[i] is true, the character at this
+ * position in aDest was deleted (has no corresponding char in aSrc)
+ */
+void
+MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
+                         const bool* aCharsToMerge, const bool* aDeletedChars);
+
+gfxTextRunFactory::Parameters
+GetParametersForInner(nsTransformedTextRun* aTextRun, uint32_t* aFlags,
+                      gfxContext* aRefContext);
+
+
 #endif /*NSTEXTRUNTRANSFORMATIONS_H_*/

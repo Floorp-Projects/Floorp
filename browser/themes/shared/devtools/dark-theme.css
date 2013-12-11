@@ -47,12 +47,12 @@
   background: #26394D;
 }
 
-.theme-bg-darker,
-.cm-s-mozilla .CodeMirror-gutters {
+.theme-bg-darker {
   background-color: rgba(0,0,0,0.5);
 }
 
-.theme-bg-contrast { /* contrast bg color to attract attention on a container */
+.theme-bg-contrast,
+.variable-or-property[changed] { /* contrast bg color to attract attention on a container */
   background: #a18650;
 }
 
@@ -74,7 +74,9 @@
 .theme-comment,
 .cm-s-mozilla .cm-meta,
 .cm-s-mozilla .cm-hr,
-.cm-s-mozilla .cm-comment { /* grey */
+.cm-s-mozilla .cm-comment,
+.variable-or-property .token-undefined,
+.variable-or-property .token-null { /* grey */
   color: #5c6773;
 }
 
@@ -89,7 +91,9 @@
 }
 
 .theme-fg-color1,
-.cm-s-mozilla .cm-number { /* green */
+.cm-s-mozilla .cm-number,
+.variable-or-property .token-number,
+.variable-or-property[return] > .title > .name { /* green */
   color: #5c9966;
 }
 
@@ -98,14 +102,18 @@
 .cm-s-mozilla .cm-variable,
 .cm-s-mozilla .cm-def,
 .cm-s-mozilla .cm-property,
-.cm-s-mozilla .cm-qualifier { /* blue */
+.cm-s-mozilla .cm-qualifier,
+.variables-view-variable > .title > .name,
+.variable-or-property[scope] > .title > .name { /* blue */
   color: #3689b2;
 }
 
 .theme-fg-color3,
 .cm-s-mozilla .cm-builtin,
 .cm-s-mozilla .cm-tag,
-.cm-s-mozilla .cm-header { /* pink/lavender */
+.cm-s-mozilla .cm-header,
+.variables-view-property > .title > .name,
+.variable-or-property[safe-getter] > .title > .name { /* pink/lavender */
   color: #a673bf;
 }
 
@@ -121,23 +129,25 @@
 
 .theme-fg-color6,
 .cm-s-mozilla .cm-string,
-.cm-s-mozilla .cm-string-2 { /* Orange */
+.cm-s-mozilla .cm-string-2,
+.variable-or-property .token-string { /* Orange */
   color: #b26b47;
 }
 
 .theme-fg-color7,
 .cm-s-mozilla .cm-atom,
 .cm-s-mozilla .cm-quote,
-.cm-s-mozilla .cm-error { /* Red */
+.cm-s-mozilla .cm-error,
+.variable-or-property .token-boolean,
+.variable-or-property[exception] > .title > .name { /* Red */
   color: #bf5656;
 }
 
 .theme-toolbar,
 .devtools-toolbar { /* General toolbar styling */
   color: hsl(210,30%,85%);
-  background-image: url(background-noise-toolbar.png), linear-gradient(#3e4750, #3e4750);
+  background-color: #343c45;
   border-color: #060a0d;
-  box-shadow: 0 1px 0 hsla(204,45%,98%,.05) inset, -1px 0 0 hsla(204,45%,98%,.05) inset, 0 -1px 0 hsla(204,45%,98%,.05) inset;
 }
 
 .theme-fg-contrast { /* To be used for text on theme-bg-contrast */
@@ -148,6 +158,12 @@
 .computedview-colorswatch,
 .markupview-colorswatch {
   box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
+}
+
+.variables-view-scope:focus > .title,
+.variable-or-property:focus > .title {
+  background:  #3689b2; /* fg-color2 */
+  color: white;
 }
 
 /* CodeMirror specific styles.
@@ -189,6 +205,27 @@ div.cm-s-mozilla span.CodeMirror-matchingbracket { /* highlight brackets */
   color: white;
 }
 
+/* Highlight for a line that contains an error. */
+div.CodeMirror div.error-line {
+  background: rgba(255,0,0,0.2);
+}
+
+/* Highlight for a line that represents a stack frame's location. */
+div.CodeMirror div.debug-line {
+  background: rgba(0,128,255,0.1);
+  box-shadow:
+    0 1px 0 0 rgba(0,128,255,0.4),
+    0 -1px 0 0 rgba(0,128,255,0.4);
+}
+
+/* Generic highlighted text */
+div.CodeMirror span.marked-text {
+  background: rgba(255,255,0,0.2);
+  border: 1px dashed rgba(192,192,0,0.6);
+  -moz-margin-start: -1px;
+  -moz-margin-end: -1px;
+}
+
 /* Highlight for evaluating current statement. */
 div.CodeMirror span.eval-text {
   background-color: #556;
@@ -200,6 +237,7 @@ div.CodeMirror span.eval-text {
 
 .cm-s-mozilla .CodeMirror-gutters { /* vertical line next to line numbers */
   border-right-color: #343c45;
+  background-color: #181d20;
 }
 
 .cm-s-markup-view pre {
@@ -259,3 +297,5 @@ div.CodeMirror span.eval-text {
 .theme-tooltip-panel .devtools-tooltip-simple-text:last-child {
   border-bottom: 0;
 }
+
+%include toolbars.inc.css

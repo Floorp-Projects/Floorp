@@ -43,6 +43,11 @@ const JSFunctionSpec ParallelArrayObject::methods[] = {
     JS_FS_END
 };
 
+const JSPropertySpec ParallelArrayObject::properties[] = {
+    JS_SELF_HOSTED_GET("length", "ParallelArrayLength", JSPROP_PERMANENT),
+    JS_PS_END
+};
+
 const Class ParallelArrayObject::protoClass = {
     "ParallelArray",
     JSCLASS_HAS_CACHED_PROTO(JSProto_ParallelArray),
@@ -143,7 +148,7 @@ ParallelArrayObject::constructHelper(JSContext *cx, MutableHandleFunction ctor, 
         jsbytecode *pc;
         RootedScript script(cx, cx->currentScript(&pc));
         if (script) {
-            if (ctor->nonLazyScript()->shouldCloneAtCallsite) {
+            if (ctor->nonLazyScript()->shouldCloneAtCallsite()) {
                 ctor.set(CloneFunctionAtCallsite(cx, ctor, script, pc));
                 if (!ctor)
                     return false;
@@ -220,35 +225,10 @@ ParallelArrayObject::initClass(JSContext *cx, HandleObject obj)
                                                       cx->names().ParallelArray, 0));
     if (!ctor ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
-        !DefinePropertiesAndBrand(cx, proto, nullptr, methods) ||
+        !DefinePropertiesAndBrand(cx, proto, properties, methods) ||
         !DefineConstructorAndPrototype(cx, global, key, ctor, proto))
     {
         return nullptr;
-    }
-
-    // Define the length getter.
-    {
-        const char lengthStr[] = "ParallelArrayLength";
-        JSAtom *atom = Atomize(cx, lengthStr, strlen(lengthStr));
-        if (!atom)
-            return nullptr;
-        Rooted<PropertyName *> lengthProp(cx, atom->asPropertyName());
-        RootedValue lengthValue(cx);
-        if (!cx->global()->getIntrinsicValue(cx, lengthProp, &lengthValue))
-            return nullptr;
-        RootedObject lengthGetter(cx, &lengthValue.toObject());
-        if (!lengthGetter)
-            return nullptr;
-
-        RootedId lengthId(cx, AtomToId(cx->names().length));
-        unsigned flags = JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_GETTER;
-        RootedValue value(cx, UndefinedValue());
-        if (!DefineNativeProperty(cx, proto, lengthId, value,
-                                  JS_DATA_TO_FUNC_PTR(PropertyOp, lengthGetter.get()), nullptr,
-                                  flags, 0, 0))
-        {
-            return nullptr;
-        }
     }
 
     return proto;

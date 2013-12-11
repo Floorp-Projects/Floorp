@@ -27,18 +27,18 @@ function makeURI(aURL, aOriginCharset, aBaseURI) {
 function View(aSet) {
   this._set = aSet;
   this._set.controller = this;
+  this._window = aSet.ownerDocument.defaultView;
 
-  this.viewStateObserver = {
-    observe: (aSubject, aTopic, aData) => this._adjustDOMforViewState(aData)
-  };
-  Services.obs.addObserver(this.viewStateObserver, "metro_viewstate_changed", false);
+  this.onResize = () => this._adjustDOMforViewState();
+  this._window.addEventListener("resize", this.onResize);
+
   ColorUtils.init();
   this._adjustDOMforViewState();
 }
 
 View.prototype = {
   destruct: function () {
-    Services.obs.removeObserver(this.viewStateObserver, "metro_viewstate_changed");
+    this._window.removeEventListener("resize", this.onResize);
   },
 
   _adjustDOMforViewState: function _adjustDOMforViewState(aState) {

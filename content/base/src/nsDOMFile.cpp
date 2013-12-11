@@ -12,7 +12,6 @@
 #include "nsDOMClassInfoID.h"
 #include "nsError.h"
 #include "nsICharsetDetector.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIClassInfo.h"
 #include "nsIConverterInputStream.h"
 #include "nsIDocument.h"
@@ -643,15 +642,13 @@ nsDOMMemoryFile::DataOwner::sDataOwners;
 /* static */ bool
 nsDOMMemoryFile::DataOwner::sMemoryReporterRegistered;
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(DOMMemoryFileDataOwnerMallocSizeOf)
+MOZ_DEFINE_MALLOC_SIZE_OF(DOMMemoryFileDataOwnerMallocSizeOf)
 
 class nsDOMMemoryFileDataOwnerMemoryReporter MOZ_FINAL
-  : public MemoryMultiReporter
+  : public nsIMemoryReporter
 {
 public:
-  nsDOMMemoryFileDataOwnerMemoryReporter()
-    : MemoryMultiReporter("dom-memory-file-data-owner")
-  {}
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCallback,
                             nsISupports *aClosure)
@@ -726,6 +723,8 @@ public:
   }
 };
 
+NS_IMPL_ISUPPORTS1(nsDOMMemoryFileDataOwnerMemoryReporter, nsIMemoryReporter)
+
 /* static */ void
 nsDOMMemoryFile::DataOwner::EnsureMemoryReporterRegistered()
 {
@@ -734,9 +733,7 @@ nsDOMMemoryFile::DataOwner::EnsureMemoryReporterRegistered()
     return;
   }
 
-  nsRefPtr<nsDOMMemoryFileDataOwnerMemoryReporter> reporter = new
-    nsDOMMemoryFileDataOwnerMemoryReporter();
-  NS_RegisterMemoryReporter(reporter);
+  RegisterStrongMemoryReporter(new nsDOMMemoryFileDataOwnerMemoryReporter());
 
   sMemoryReporterRegistered = true;
 }

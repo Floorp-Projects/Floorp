@@ -44,7 +44,6 @@
 #include "mozilla/dom/MessagePortList.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Util.h"
 #include "nsAlgorithm.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
@@ -95,7 +94,7 @@ using mozilla::AutoSafeJSContext;
 USING_WORKERS_NAMESPACE
 using namespace mozilla::dom;
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsWorkerMallocSizeOf)
+MOZ_DEFINE_MALLOC_SIZE_OF(JsWorkerMallocSizeOf)
 
 namespace {
 
@@ -1212,8 +1211,7 @@ public:
         bool preventDefaultCalled;
         nsIScriptGlobalObject* sgo;
 
-        if (aWorkerPrivate ||
-            !(sgo = nsJSUtils::GetStaticScriptGlobal(target))) {
+        if (aWorkerPrivate) {
           WorkerGlobalScope* globalTarget = aWorkerPrivate->GlobalScope();
           MOZ_ASSERT(target == globalTarget->GetWrapperPreserveColor());
 
@@ -1234,7 +1232,7 @@ public:
 
           preventDefaultCalled = status == nsEventStatus_eConsumeNoDefault;
         }
-        else {
+        else if ((sgo = nsJSUtils::GetStaticScriptGlobal(target))) {
           // Icky, we have to fire an InternalScriptErrorEvent...
           InternalScriptErrorEvent event(true, NS_LOAD_ERROR);
           event.lineNr = aLineNumber;
@@ -1465,6 +1463,29 @@ public:
   }
 };
 
+class UpdatePreferenceRunnable : public WorkerControlRunnable
+{
+  WorkerPreference mPref;
+  bool mValue;
+
+public:
+  UpdatePreferenceRunnable(WorkerPrivate* aWorkerPrivate,
+                           WorkerPreference aPref,
+                           bool aValue)
+    : WorkerControlRunnable(aWorkerPrivate, WorkerThread, UnchangedBusyCount),
+      mPref(aPref),
+      mValue(aValue)
+  {
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    aWorkerPrivate->UpdatePreferenceInternal(aCx, mPref, mValue);
+    return true;
+  }
+};
+
 class UpdateJSWorkerMemoryParameterRunnable : public WorkerControlRunnable
 {
   uint32_t mValue;
@@ -1550,7 +1571,7 @@ public:
 
   void
   PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-                bool aDispatchResult)
+               bool aDispatchResult)
   {
     // Silence bad assertions, this can be dispatched from either the main
     // thread or the timer thread..
@@ -1560,6 +1581,41 @@ public:
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
     aWorkerPrivate->GarbageCollectInternal(aCx, mShrinking, mCollectChildren);
+    return true;
+  }
+};
+
+class CycleCollectRunnable : public WorkerControlRunnable
+{
+protected:
+  bool mCollectChildren;
+
+public:
+  CycleCollectRunnable(WorkerPrivate* aWorkerPrivate, bool aCollectChildren)
+  : WorkerControlRunnable(aWorkerPrivate, WorkerThread, UnchangedBusyCount),
+    mCollectChildren(aCollectChildren)
+  { }
+
+  bool
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    // Silence bad assertions, this can be dispatched from either the main
+    // thread or the timer thread..
+    return true;
+  }
+
+  void
+  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+               bool aDispatchResult)
+  {
+    // Silence bad assertions, this can be dispatched from either the main
+    // thread or the timer thread..
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    aWorkerPrivate->CycleCollectInternal(aCx, mCollectChildren);
     return true;
   }
 };
@@ -1950,8 +2006,10 @@ struct WorkerPrivate::TimeoutInfo
   bool mCanceled;
 };
 
-class WorkerPrivate::MemoryReporter MOZ_FINAL : public MemoryMultiReporter
+class WorkerPrivate::MemoryReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  NS_DECL_THREADSAFE_ISUPPORTS
+
   friend class WorkerPrivate;
 
   SharedMutex mMutex;
@@ -1961,8 +2019,7 @@ class WorkerPrivate::MemoryReporter MOZ_FINAL : public MemoryMultiReporter
 
 public:
   MemoryReporter(WorkerPrivate* aWorkerPrivate)
-  : MemoryMultiReporter("workers"),
-    mMutex(aWorkerPrivate->mMutex), mWorkerPrivate(aWorkerPrivate),
+  : mMutex(aWorkerPrivate->mMutex), mWorkerPrivate(aWorkerPrivate),
     mAlreadyMappedToAddon(false)
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -2063,6 +2120,8 @@ private:
     mRtPath.Insert(addonId, explicitLength);
   }
 };
+
+NS_IMPL_ISUPPORTS1(WorkerPrivate::MemoryReporter, nsIMemoryReporter)
 
 template <class Derived>
 WorkerPrivateParent<Derived>::WorkerPrivateParent(
@@ -2757,16 +2816,17 @@ WorkerPrivateParent<Derived>::GetInnerWindowId()
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdateJSContextOptions(JSContext* aCx,
-                                                     const JS::ContextOptions& aContentOptions,
-                                                     const JS::ContextOptions& aChromeOptions)
+WorkerPrivateParent<Derived>::UpdateJSContextOptions(
+                                      JSContext* aCx,
+                                      const JS::ContextOptions& aContentOptions,
+                                      const JS::ContextOptions& aChromeOptions)
 {
   AssertIsOnParentThread();
 
   {
     MutexAutoLock lock(mMutex);
-    mJSSettings.content.options = aContentOptions;
-    mJSSettings.chrome.options = aChromeOptions;
+    mJSSettings.content.contextOptions = aContentOptions;
+    mJSSettings.chrome.contextOptions = aChromeOptions;
   }
 
   nsRefPtr<UpdateJSContextOptionsRunnable> runnable =
@@ -2774,6 +2834,21 @@ WorkerPrivateParent<Derived>::UpdateJSContextOptions(JSContext* aCx,
                                        aChromeOptions);
   if (!runnable->Dispatch(aCx)) {
     NS_WARNING("Failed to update worker context options!");
+    JS_ClearPendingException(aCx);
+  }
+}
+
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::UpdatePreference(JSContext* aCx, WorkerPreference aPref, bool aValue)
+{
+  AssertIsOnParentThread();
+  MOZ_ASSERT(aPref >= 0 && aPref < WORKERPREF_COUNT);
+
+  nsRefPtr<UpdatePreferenceRunnable> runnable =
+    new UpdatePreferenceRunnable(ParentAsWorkerPrivate(), aPref, aValue);
+  if (!runnable->Dispatch(aCx)) {
+    NS_WARNING("Failed to update worker preferences!");
     JS_ClearPendingException(aCx);
   }
 }
@@ -2854,9 +2929,25 @@ WorkerPrivateParent<Derived>::GarbageCollect(JSContext* aCx, bool aShrinking)
   AssertIsOnParentThread();
 
   nsRefPtr<GarbageCollectRunnable> runnable =
-    new GarbageCollectRunnable(ParentAsWorkerPrivate(), aShrinking, true);
+    new GarbageCollectRunnable(ParentAsWorkerPrivate(), aShrinking,
+                               /* collectChildren = */ true);
   if (!runnable->Dispatch(aCx)) {
-    NS_WARNING("Failed to update worker heap size!");
+    NS_WARNING("Failed to GC worker!");
+    JS_ClearPendingException(aCx);
+  }
+}
+
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::CycleCollect(JSContext* aCx, bool aDummy)
+{
+  AssertIsOnParentThread();
+
+  nsRefPtr<CycleCollectRunnable> runnable =
+    new CycleCollectRunnable(ParentAsWorkerPrivate(),
+                             /* collectChildren = */ true);
+  if (!runnable->Dispatch(aCx)) {
+    NS_WARNING("Failed to CC worker!");
     JS_ClearPendingException(aCx);
   }
 }
@@ -3284,6 +3375,15 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
 {
   MOZ_ASSERT_IF(IsSharedWorker(), !aSharedWorkerName.IsVoid());
   MOZ_ASSERT_IF(!IsSharedWorker(), aSharedWorkerName.IsEmpty());
+
+  if (aParent) {
+    aParent->AssertIsOnWorkerThread();
+    aParent->GetAllPreferences(mPreferences);
+  }
+  else {
+    AssertIsOnMainThread();
+    RuntimeService::GetDefaultPreferences(mPreferences);
+  }
 }
 
 WorkerPrivate::~WorkerPrivate()
@@ -3976,7 +4076,7 @@ WorkerPrivate::EnableMemoryReporter()
   // successfully registered the reporter.
   mMemoryReporter = new MemoryReporter(this);
 
-  if (NS_FAILED(NS_RegisterMemoryReporter(mMemoryReporter))) {
+  if (NS_FAILED(RegisterWeakMemoryReporter(mMemoryReporter))) {
     NS_WARNING("Failed to register memory reporter!");
     // No need to lock here since a failed registration means our memory
     // reporter can't start running. Just clean up.
@@ -4031,7 +4131,7 @@ WorkerPrivate::DisableMemoryReporter()
   }
 
   // Finally unregister the memory reporter.
-  if (NS_FAILED(NS_UnregisterMemoryReporter(memoryReporter))) {
+  if (NS_FAILED(UnregisterWeakMemoryReporter(memoryReporter))) {
     NS_WARNING("Failed to unregister memory reporter!");
   }
 }
@@ -5084,6 +5184,19 @@ WorkerPrivate::UpdateJSContextOptionsInternal(JSContext* aCx,
 }
 
 void
+WorkerPrivate::UpdatePreferenceInternal(JSContext* aCx, WorkerPreference aPref, bool aValue)
+{
+  AssertIsOnWorkerThread();
+  MOZ_ASSERT(aPref >= 0 && aPref < WORKERPREF_COUNT);
+
+  mPreferences[aPref] = aValue;
+
+  for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
+    mChildWorkers[index]->UpdatePreference(aCx, aPref, aValue);
+  }
+}
+
+void
 WorkerPrivate::UpdateJSWorkerMemoryParameterInternal(JSContext* aCx,
                                                      JSGCParamKey aKey,
                                                      uint32_t aValue)
@@ -5154,6 +5267,20 @@ WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
   if (aCollectChildren) {
     for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
       mChildWorkers[index]->GarbageCollect(aCx, aShrinking);
+    }
+  }
+}
+
+void
+WorkerPrivate::CycleCollectInternal(JSContext* aCx, bool aCollectChildren)
+{
+  AssertIsOnWorkerThread();
+
+  nsCycleCollector_collect(nullptr);
+
+  if (aCollectChildren) {
+    for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
+      mChildWorkers[index]->CycleCollect(aCx, /* dummy = */ false);
     }
   }
 }
@@ -5260,23 +5387,16 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx, uint64_t aMessagePortSerial)
     return false;
   }
 
-  nsRefPtr<nsDOMMessageEvent> event;
-  {
-    // Bug 940779 - MessageEventInit contains unrooted JS objects, and
-    // ~nsRefPtr can GC, so make sure 'init' is no longer live before ~nsRefPtr
-    // runs (or the nsRefPtr is even created) to avoid a rooting hazard. Note
-    // that 'init' is live until its destructor runs, not just until its final
-    // use.
-    MessageEventInit init;
-    init.mBubbles = false;
-    init.mCancelable = false;
-    init.mSource = &jsPort.toObject();
+  RootedDictionary<MessageEventInit> init(aCx);
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mSource = &jsPort.toObject();
 
-    ErrorResult rv;
-    event = nsDOMMessageEvent::Constructor(globalObject, aCx,
-                                           NS_LITERAL_STRING("connect"),
-                                           init, rv);
-  }
+  ErrorResult rv;
+
+  nsRefPtr<nsDOMMessageEvent> event =
+    nsDOMMessageEvent::Constructor(globalObject, aCx,
+                                   NS_LITERAL_STRING("connect"), init, rv);
 
   event->SetTrusted(true);
 
@@ -5330,14 +5450,7 @@ WorkerPrivate::CreateGlobalScope(JSContext* aCx)
     globalScope = new DedicatedWorkerGlobalScope(this);
   }
 
-  JS::CompartmentOptions options;
-  if (IsChromeWorker()) {
-    options.setVersion(JSVERSION_LATEST);
-  }
-
-  JS::Rooted<JSObject*> global(aCx,
-                               globalScope->WrapGlobalObject(aCx, options,
-                                                             GetWorkerPrincipal()));
+  JS::Rooted<JSObject*> global(aCx, globalScope->WrapGlobalObject(aCx));
   NS_ENSURE_TRUE(global, nullptr);
 
   JSAutoCompartment ac(aCx, global);

@@ -213,7 +213,7 @@ NS_QUERYFRAME_HEAD(nsHTMLFramesetFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 // static
-int
+void
 nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
 {
   nsHTMLFramesetFrame *frame =
@@ -238,8 +238,6 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
                                   nsGkAtoms::frameborder,
                                   nsIDOMMutationEvent::MODIFICATION);
   }
-
-  return 0;
 }
 
 void

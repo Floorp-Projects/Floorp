@@ -54,16 +54,16 @@ addLoadEvent(function() {
   sp.onaudioprocess = function(e) {
     is(e.inputBuffer.numberOfChannels, 3, "Should be correctly down-mixed to three channels");
     for (var i = 0; i < 3; ++i) {
-      compareBuffers(e.inputBuffer.getChannelData(i), buffer.getChannelData(i));
+      compareChannels(e.inputBuffer.getChannelData(i), buffer.getChannelData(i));
     }
 
     // On the next iteration, we'll get a silence buffer
     sp.onaudioprocess = function(e) {
       var emptyBuffer = context.createBuffer(1, 2048, context.sampleRate);
       is(e.inputBuffer.numberOfChannels, 3, "Should be correctly up-mixed to three channels");
-      compareBuffers(e.inputBuffer.getChannelData(0), monoBuffer.getChannelData(0));
+      compareChannels(e.inputBuffer.getChannelData(0), monoBuffer.getChannelData(0));
       for (var i = 1; i < 3; ++i) {
-        compareBuffers(e.inputBuffer.getChannelData(i), emptyBuffer.getChannelData(0));
+        compareChannels(e.inputBuffer.getChannelData(i), emptyBuffer.getChannelData(0));
       }
 
       sp.onaudioprocess = null;

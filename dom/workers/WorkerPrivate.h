@@ -377,7 +377,6 @@ private:
                       ErrorResult& aRv);
 
 public:
-
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
@@ -477,6 +476,9 @@ public:
                          const JS::ContextOptions& aContentOptions);
 
   void
+  UpdatePreference(JSContext* aCx, WorkerPreference aPref, bool aValue);
+
+  void
   UpdateJSWorkerMemoryParameter(JSContext* aCx, JSGCParamKey key,
                                 uint32_t value);
 
@@ -490,6 +492,9 @@ public:
 
   void
   GarbageCollect(JSContext* aCx, bool aShrinking);
+
+  void
+  CycleCollect(JSContext* aCx, bool aDummy);
 
   bool
   RegisterSharedWorker(JSContext* aCx, SharedWorker* aSharedWorker);
@@ -594,6 +599,15 @@ public:
     return mLoadInfo.mPrincipal;
   }
 
+  // This method allows the principal to be retrieved off the main thread.
+  // Principals are main-thread objects so the caller must ensure that all
+  // access occurs on the main thread.
+  nsIPrincipal*
+  GetPrincipalDontAssertMainThread() const
+  {
+      return mLoadInfo.mPrincipal;
+  }
+
   void
   SetPrincipal(nsIPrincipal* aPrincipal);
 
@@ -679,6 +693,14 @@ public:
   {
     mozilla::MutexAutoLock lock(mMutex);
     aSettings = mJSSettings;
+  }
+
+  void
+  CopyJSCompartmentOptions(JS::CompartmentOptions& aOptions)
+  {
+    mozilla::MutexAutoLock lock(mMutex);
+    aOptions = IsChromeWorker() ? mJSSettings.chrome.compartmentOptions
+                                : mJSSettings.content.compartmentOptions;
   }
 
   // The ability to be a chrome worker is orthogonal to the type of
@@ -814,6 +836,8 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 #ifdef DEBUG
   nsCOMPtr<nsIThread> mThread;
 #endif
+
+  bool mPreferences[WORKERPREF_COUNT];
 
 protected:
   ~WorkerPrivate();
@@ -978,6 +1002,9 @@ public:
                                  const JS::ContextOptions& aChromeOptions);
 
   void
+  UpdatePreferenceInternal(JSContext* aCx, WorkerPreference aPref, bool aValue);
+
+  void
   UpdateJSWorkerMemoryParameterInternal(JSContext* aCx, JSGCParamKey key, uint32_t aValue);
 
   void
@@ -997,6 +1024,9 @@ public:
   void
   GarbageCollectInternal(JSContext* aCx, bool aShrinking,
                          bool aCollectChildren);
+
+  void
+  CycleCollectInternal(JSContext* aCx, bool aCollectChildren);
 
   JSContext*
   GetJSContext() const
@@ -1068,6 +1098,20 @@ public:
 
   bool
   RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
+
+  bool
+  DumpEnabled() const
+  {
+    AssertIsOnWorkerThread();
+    return mPreferences[WORKERPREF_DUMP];
+  }
+
+  bool
+  PromiseEnabled() const
+  {
+    AssertIsOnWorkerThread();
+    return mPreferences[WORKERPREF_PROMISE];
+  }
 
 private:
   WorkerPrivate(JSContext* aCx, WorkerPrivate* aParent,
@@ -1146,6 +1190,13 @@ private:
                               bool aToMessagePort,
                               uint64_t aMessagePortSerial,
                               ErrorResult& aRv);
+
+  void
+  GetAllPreferences(bool aPreferences[WORKERPREF_COUNT]) const
+  {
+    AssertIsOnWorkerThread();
+    memcpy(aPreferences, mPreferences, WORKERPREF_COUNT * sizeof(bool));
+  }
 };
 
 // This class is only used to trick the DOM bindings.  We never create

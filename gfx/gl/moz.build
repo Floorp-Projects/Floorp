@@ -26,20 +26,26 @@ if CONFIG['MOZ_GL_PROVIDER']:
     gl_provider = CONFIG['MOZ_GL_PROVIDER']
 
 EXPORTS += [
+    'DecomposeIntoNoRepeatTriangles.h',
     'ForceDiscreteGPUHelperCGL.h',
     'GfxTexturesReporter.h',
+    'GLBlitTextureImageHelper.h',
     'GLConsts.h',
     'GLContext.h',
     'GLContextProvider.h',
     'GLContextProviderImpl.h',
     'GLContextSymbols.h',
     'GLContextTypes.h',
+    'GLContextUtils.h',
     'GLDefs.h',
     'GLLibraryEGL.h',
     'GLLibraryLoader.h',
     'GLScreenBuffer.h',
+    'GLSharedHandleHelpers.h',
     'GLTextureImage.h',
     'GLTypes.h',
+    'GLUploadHelpers.h',
+    'ScopedGLHelpers.h',
     'SharedSurface.h',
     'SharedSurfaceEGL.h',
     'SharedSurfaceGL.h',
@@ -72,12 +78,13 @@ if CONFIG['MOZ_ENABLE_SKIA_GPU']:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     UNIFIED_SOURCES += ['SharedSurfaceGralloc.cpp']
     EXPORTS += ['SharedSurfaceGralloc.h']
+    LOCAL_INCLUDES += ['/widget/gonk']
 
 if gl_provider == 'CGL':
-    # This file includes Mac headers that are unfriendly to unified builds,
-    # and we have only one .mm file here anyway.
+    # These files include Mac headers that are unfriendly to unified builds
     SOURCES += [
-        "GLContextProvider%s.mm" % (gl_provider),
+        "GLContextProviderCGL.mm",
+        "TextureImageCGL.mm"
     ]
     EXPORTS += [
         'SharedSurfaceIO.h',
@@ -101,7 +108,10 @@ else:
     ]
 
 UNIFIED_SOURCES += [
+    'DecomposeIntoNoRepeatTriangles.cpp',
     'GfxTexturesReporter.cpp',
+    'GLBlitHelper.cpp',
+    'GLBlitTextureImageHelper.cpp',
     'GLContext.cpp',
     'GLContextFeatures.cpp',
     'GLContextTypes.cpp',
@@ -109,12 +119,16 @@ UNIFIED_SOURCES += [
     'GLLibraryEGL.cpp',
     'GLLibraryLoader.cpp',
     'GLScreenBuffer.cpp',
+    'GLSharedHandleHelpers.cpp',
     'GLTextureImage.cpp',
+    'GLUploadHelpers.cpp',
+    'ScopedGLHelpers.cpp',
     'SharedSurface.cpp',
     'SharedSurfaceEGL.cpp',
     'SharedSurfaceGL.cpp',
     'SurfaceFactory.cpp',
     'SurfaceStream.cpp',
+    'SurfaceTypes.cpp',
     'TextureGarbageBin.cpp',
     'TextureImageEGL.cpp',
     'VBOArena.cpp',
@@ -127,3 +141,9 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows' and CONFIG['MOZ_WEBGL']:
+    DEFINES['MOZ_D3DCOMPILER_DLL'] = CONFIG['MOZ_D3DCOMPILER_DLL']
+
+if CONFIG['MOZ_ANDROID_OMTC']:
+    DEFINES['MOZ_ANDROID_OMTC'] = True

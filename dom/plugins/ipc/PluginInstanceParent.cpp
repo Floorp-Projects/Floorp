@@ -26,6 +26,7 @@
 #include "gfxContext.h"
 #include "gfxColor.h"
 #include "gfxUtils.h"
+#include "mozilla/gfx/2D.h"
 #include "Layers.h"
 #include "SharedTextureImage.h"
 #include "GLContext.h"
@@ -41,10 +42,10 @@
 #include "mozilla/plugins/PluginSurfaceParent.h"
 
 // Plugin focus event for widget.
-extern const PRUnichar* kOOPPPluginFocusEventId;
+extern const wchar_t* kOOPPPluginFocusEventId;
 UINT gOOPPPluginFocusEvent =
     RegisterWindowMessage(kOOPPPluginFocusEventId);
-extern const PRUnichar* kFlashFullscreenClass;
+extern const wchar_t* kFlashFullscreenClass;
 #elif defined(MOZ_WIDGET_GTK)
 #include <gdk/gdk.h>
 #elif defined(XP_MACOSX)
@@ -814,13 +815,15 @@ PluginInstanceParent::BeginUpdateBackground(const nsIntRect& aRect,
         }
     }
 
-#ifdef DEBUG
     gfxIntSize sz = mBackground->GetSize();
+#ifdef DEBUG
     NS_ABORT_IF_FALSE(nsIntRect(0, 0, sz.width, sz.height).Contains(aRect),
                       "Update outside of background area");
 #endif
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(mBackground);
+    RefPtr<gfx::DrawTarget> dt = gfxPlatform::GetPlatform()->
+      CreateDrawTargetForSurface(mBackground, gfx::IntSize(sz.width, sz.height));
+    nsRefPtr<gfxContext> ctx = new gfxContext(dt);
     *aCtx = ctx.forget().get();
 
     return NS_OK;
@@ -1210,7 +1213,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
               // which fires WM_KILLFOCUS. Delayed delivery causes Flash to
               // misinterpret the event, dropping back out of fullscreen. Trap
               // this event and drop it.
-              PRUnichar szClass[26];
+              wchar_t szClass[26];
               HWND hwnd = GetForegroundWindow();
               if (hwnd && hwnd != mPluginHWND &&
                   GetClassNameW(hwnd, szClass,
@@ -1798,7 +1801,7 @@ PluginInstanceParent::RecvReleaseDXGISharedSurface(const DXGISharedSurfaceHandle
     which fires off a gui event letting the browser know.
 */
 
-static const PRUnichar kPluginInstanceParentProperty[] =
+static const wchar_t kPluginInstanceParentProperty[] =
                          L"PluginInstanceParentProperty";
 
 // static

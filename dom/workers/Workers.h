@@ -95,11 +95,12 @@ struct JSSettings
   // Settings that change based on chrome/content context.
   struct JSContentChromeSettings
   {
-    JS::ContextOptions options;
+    JS::ContextOptions contextOptions;
+    JS::CompartmentOptions compartmentOptions;
     int32_t maxScriptRuntime;
 
     JSContentChromeSettings()
-    : options(), maxScriptRuntime(0)
+    : contextOptions(), compartmentOptions(), maxScriptRuntime(0)
     { }
   };
 
@@ -160,6 +161,13 @@ struct JSSettings
 
     return false;
   }
+};
+
+enum WorkerPreference
+{
+  WORKERPREF_DUMP = 0, // browser.dom.window.dump.enabled
+  WORKERPREF_PROMISE,  // dom.promise.enabled
+  WORKERPREF_COUNT
 };
 
 // All of these are implemented in RuntimeService.cpp

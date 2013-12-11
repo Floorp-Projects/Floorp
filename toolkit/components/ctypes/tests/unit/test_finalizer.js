@@ -136,7 +136,7 @@ function run_test()
       released: released
     }
   );
-  const rect_t = new ctypes.StructType("RECT",
+  const rect_t = new ctypes.StructType("myRECT",
                                        [{ top   : ctypes.int32_t },
                                         { left  : ctypes.int32_t },
                                         { bottom: ctypes.int32_t },
@@ -185,7 +185,7 @@ function run_test()
   );
   samples.push(
     {
-      name: "size_t, release returns RECT",
+      name: "size_t, release returns myRECT",
       acquire: library.declare("test_finalizer_acq_size_t",
                            ctypes.default_abi,
                            ctypes.size_t,

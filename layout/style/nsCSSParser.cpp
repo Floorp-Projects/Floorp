@@ -472,8 +472,10 @@ protected:
   bool ParseCalcTerm(nsCSSValue& aValue, int32_t& aVariantMask);
   bool RequireWhitespace();
 
-  // For "flex" shorthand property, defined in CSS3 Flexbox
+  // For "flex" shorthand property, defined in CSS Flexbox spec
   bool ParseFlex();
+  // For "flex-flow" shorthand property, defined in CSS Flexbox spec
+  bool ParseFlexFlow();
 
   // for 'clip' and '-moz-image-region'
   bool ParseRect(nsCSSProperty aPropID);
@@ -2082,7 +2084,7 @@ CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
            (mToken.mIdent.LowerCaseEqualsLiteral("url-prefix") ||
             mToken.mIdent.LowerCaseEqualsLiteral("domain") ||
             mToken.mIdent.LowerCaseEqualsLiteral("regexp"))))) {
-      REPORT_UNEXPECTED_TOKEN(PEMozDocRuleBadFunc);
+      REPORT_UNEXPECTED_TOKEN(PEMozDocRuleBadFunc2);
       UngetToken();
       delete urls;
       return false;
@@ -2787,9 +2789,9 @@ CSSParserImpl::ParseSupportsConditionInParens(bool& aConditionMet)
   }
 
   if (!(ExpectSymbol(')', true))) {
-    REPORT_UNEXPECTED_TOKEN(PESupportsConditionExpectedCloseParen);
     SkipUntil(')');
-    return false;
+    aConditionMet = false;
+    return true;
   }
 
   return true;
@@ -3660,6 +3662,17 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
     nsCSSPseudoElements::GetPseudoType(pseudo);
   nsCSSPseudoClasses::Type pseudoClassType =
     nsCSSPseudoClasses::GetPseudoType(pseudo);
+  bool pseudoClassIsUserAction =
+    nsCSSPseudoClasses::IsUserActionPseudoClass(pseudoClassType);
+
+  if (!mUnsafeRulesEnabled &&
+      pseudoElementType < nsCSSPseudoElements::ePseudo_PseudoElementCount &&
+      nsCSSPseudoElements::PseudoElementIsChromeOnly(pseudoElementType)) {
+    // This pseudo-element is not exposed to content.
+    REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
+    UngetToken();
+    return eSelectorParsingStatus_Error;
+  }
 
   // We currently allow :-moz-placeholder and ::-moz-placeholder. We have to
   // be a bit stricter regarding the pseudo-element parsing rules.
@@ -3747,6 +3760,22 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
     }
   }
   else if (!parsingPseudoElement && isPseudoClass) {
+    if (aSelector.IsPseudoElement()) {
+      nsCSSPseudoElements::Type type = aSelector.PseudoType();
+      if (!nsCSSPseudoElements::PseudoElementSupportsUserActionState(type)) {
+        // We only allow user action pseudo-classes on certain pseudo-elements.
+        REPORT_UNEXPECTED_TOKEN(PEPseudoSelNoUserActionPC);
+        UngetToken();
+        return eSelectorParsingStatus_Error;
+      }
+      if (!pseudoClassIsUserAction) {
+        // CSS 4 Selectors says that pseudo-elements can only be followed by
+        // a user action pseudo-class.
+        REPORT_UNEXPECTED_TOKEN(PEPseudoClassNotUserAction);
+        UngetToken();
+        return eSelectorParsingStatus_Error;
+      }
+    }
     aDataMask |= SEL_MASK_PCLASS;
     if (eCSSToken_Function == mToken.mType) {
       nsSelectorParsingStatus parsingStatus;
@@ -3815,15 +3844,21 @@ CSSParserImpl::ParsePseudoSelector(int32_t&       aDataMask,
       }
 #endif
 
-      // the next *non*whitespace token must be '{' or ',' or EOF
+      // Pseudo-elements can only be followed by user action pseudo-classes
+      // or be the end of the selector.  So the next non-whitespace token must
+      // be ':', '{' or ',' or EOF.
       if (!GetToken(true)) { // premature eof is ok (here!)
         return eSelectorParsingStatus_Done;
+      }
+      if (parsingPseudoElement && mToken.IsSymbol(':')) {
+        UngetToken();
+        return eSelectorParsingStatus_Continue;
       }
       if ((mToken.IsSymbol('{') || mToken.IsSymbol(','))) {
         UngetToken();
         return eSelectorParsingStatus_Done;
       }
-      REPORT_UNEXPECTED_TOKEN(PEPseudoSelTrailing);
+      REPORT_UNEXPECTED_TOKEN(PEPseudoSelEndOrUserActionPC);
       UngetToken();
       return eSelectorParsingStatus_Error;
     }
@@ -4189,6 +4224,19 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
                                           getter_AddRefs(pseudoElement),
                                           getter_Transfers(pseudoElementArgs),
                                           &pseudoElementType);
+      if (pseudoElement &&
+          pseudoElementType != nsCSSPseudoElements::ePseudo_AnonBox) {
+        // Pseudo-elements other than anonymous boxes are represented with
+        // a special ':' combinator.
+
+        aList->mWeight += selector->CalcWeight();
+
+        selector = aList->AddSelector(':');
+
+        selector->mLowercaseTag.swap(pseudoElement);
+        selector->mClassList = pseudoElementArgs.forget();
+        selector->SetPseudoType(pseudoElementType);
+      }
     }
     else if (mToken.IsSymbol('[')) {    // [attribute
       parsingStatus = ParseAttributeSelector(dataMask, *selector);
@@ -4242,16 +4290,6 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
   }
 
   aList->mWeight += selector->CalcWeight();
-
-  // Pseudo-elements other than anonymous boxes are represented as
-  // direct children ('>' combinator) of the rest of the selector.
-  if (pseudoElement) {
-    selector = aList->AddSelector('>');
-
-    selector->mLowercaseTag.swap(pseudoElement);
-    selector->mClassList = pseudoElementArgs.forget();
-    selector->SetPseudoType(pseudoElementType);
-  }
 
   return true;
 }
@@ -5700,6 +5738,39 @@ CSSParserImpl::ParseFlex()
   return true;
 }
 
+// flex-flow: <flex-direction> || <flex-wrap>
+bool
+CSSParserImpl::ParseFlexFlow()
+{
+  static const nsCSSProperty kFlexFlowSubprops[] = {
+    eCSSProperty_flex_direction,
+    eCSSProperty_flex_wrap
+  };
+  const size_t numProps = NS_ARRAY_LENGTH(kFlexFlowSubprops);
+  nsCSSValue values[numProps];
+
+  int32_t found = ParseChoice(values, kFlexFlowSubprops, numProps);
+
+  // Bail if we didn't successfully parse anything, or if there's trailing junk.
+  if (found < 1 || !ExpectEndProperty()) {
+    return false;
+  }
+
+  // If either property didn't get an explicit value, use its initial value.
+  if ((found & 1) == 0) {
+    values[0].SetIntValue(NS_STYLE_FLEX_DIRECTION_ROW, eCSSUnit_Enumerated);
+  }
+  if ((found & 2) == 0) {
+    values[1].SetIntValue(NS_STYLE_FLEX_WRAP_NOWRAP, eCSSUnit_Enumerated);
+  }
+
+  // Store these values and declare success!
+  for (size_t i = 0; i < numProps; i++) {
+    AppendValue(kFlexFlowSubprops[i], values[i]);
+  }
+  return true;
+}
+
 // <color-stop> : <color> [ <percentage> | <length> ]?
 bool
 CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
@@ -6545,6 +6616,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseFilter();
   case eCSSProperty_flex:
     return ParseFlex();
+  case eCSSProperty_flex_flow:
+    return ParseFlexFlow();
   case eCSSProperty_font:
     return ParseFont();
   case eCSSProperty_image_region:

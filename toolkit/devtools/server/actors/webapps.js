@@ -72,7 +72,8 @@ PackageUploadActor.prototype = {
    * and also be locked.
    */
   done: function (aRequest) {
-    return this._file.close();
+    this._file.close();
+    return {};
   },
 
   /**
@@ -81,7 +82,6 @@ PackageUploadActor.prototype = {
    */
   remove: function (aRequest) {
     this._cleanupFile();
-
     return {};
   },
 

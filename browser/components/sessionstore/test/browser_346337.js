@@ -88,14 +88,12 @@ function test() {
   let rootDir = getRootDirectory(gTestPath);
   let testURL = rootDir + "browser_346337_sample.html";
   let tab = tabbrowser.addTab(testURL);
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    this.removeEventListener("load", arguments.callee, true);
+  whenBrowserLoaded(tab.linkedBrowser, function() {
     for (let xpath in fieldList)
       setFormValue(tab, xpath, fieldList[xpath]);
 
     let tab2 = tabbrowser.duplicateTab(tab);
-    tab2.linkedBrowser.addEventListener("load", function(aEvent) {
-      this.removeEventListener("load", arguments.callee, true);
+    whenTabRestored(tab2, function() {
       for (let xpath in fieldList)
         ok(compareFormValue(tab2, xpath, fieldList[xpath]),
            "The value for \"" + xpath + "\" was correctly restored");
@@ -105,8 +103,7 @@ function test() {
       tabbrowser.removeTab(tab);
 
       tab = undoCloseTab();
-      tab.linkedBrowser.addEventListener("load", function(aEvent) {
-        this.removeEventListener("load", arguments.callee, true);
+      whenTabRestored(tab, function() {
         for (let xpath in fieldList)
           if (fieldList[xpath])
             ok(!compareFormValue(tab, xpath, fieldList[xpath]),
@@ -120,7 +117,7 @@ function test() {
           tabbrowser.addTab();
         tabbrowser.removeTab(tab);
         finish();
-      }, true);
-    }, true);
-  }, true);
+      });
+    });
+  });
 }

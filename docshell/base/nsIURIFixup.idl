@@ -32,14 +32,11 @@ interface nsIURIFixup : nsISupports
     const unsigned long FIXUP_FLAGS_MAKE_ALTERNATE_URI = 2;
 
     /**
-     * Use UTF-8 to encode the URI instead of platform charset.
-     */
-    const unsigned long FIXUP_FLAG_USE_UTF8 = 4;
-
-    /**
      * Fix common scheme typos.
      */
     const unsigned long FIXUP_FLAG_FIX_SCHEME_TYPOS = 8;
+
+    /* Note that flag 4 is available. */
 
     /**
      * Converts an internal URI (e.g. a wyciwyg URI) into one which we can

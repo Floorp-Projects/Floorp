@@ -215,6 +215,9 @@ class MoveResolver
     void clearTempObjectPool() {
         movePool_.clear();
     }
+    void setAllocator(TempAllocator &alloc) {
+        movePool_.setAllocator(alloc);
+    }
 };
 
 } // namespace jit

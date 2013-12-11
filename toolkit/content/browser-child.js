@@ -9,6 +9,7 @@ let Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import("resource://gre/modules/RemoteAddonsChild.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 let SyncHandler = {
   init: function() {
@@ -74,6 +75,7 @@ let WebProgressListener = {
     let objects = this._setupObjects(aWebProgress);
 
     json.location = aLocationURI ? aLocationURI.spec : "";
+    json.flags = aFlags;
 
     if (json.isTopLevel) {
       json.canGoBack = docShell.canGoBack;
@@ -245,4 +247,67 @@ RemoteAddonsChild.init(this);
 
 addMessageListener("History:UseGlobalHistory", function (aMessage) {
   docShell.useGlobalHistory = aMessage.data.enabled;
+});
+
+let AutoCompletePopup = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup]),
+
+  init: function() {
+    // Hook up the form fill autocomplete controller.
+    let controller = Cc["@mozilla.org/satchel/form-fill-controller;1"]
+                       .getService(Ci.nsIFormFillController);
+
+    controller.attachToBrowser(docShell, this.QueryInterface(Ci.nsIAutoCompletePopup));
+
+    this._input = null;
+    this._popupOpen = false;
+
+    addMessageListener("FormAutoComplete:HandleEnter", message => {
+      this.selectedIndex = message.data.selectedIndex;
+
+      let controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
+                  getService(Components.interfaces.nsIAutoCompleteController);
+      controller.handleEnter(message.data.isPopupSelection);
+    });
+  },
+
+  get input () { return this._input; },
+  get overrideValue () { return null; },
+  set selectedIndex (index) { },
+  get selectedIndex () {
+    // selectedIndex getter must be synchronous because we need the
+    // correct value when the controller is in controller::HandleEnter.
+    // We can't easily just let the parent inform us the new value every
+    // time it changes because not every action that can change the
+    // selectedIndex is trivial to catch (e.g. moving the mouse over the
+    // list).
+    return sendSyncMessage("FormAutoComplete:GetSelectedIndex", {});
+  },
+  get popupOpen () {
+    return this._popupOpen;
+  },
+
+  openAutocompletePopup: function (input, element) {
+    this._input = input;
+    this._popupOpen = true;
+  },
+
+  closePopup: function () {
+    this._popupOpen = false;
+    sendAsyncMessage("FormAutoComplete:ClosePopup", {});
+  },
+
+  invalidate: function () {
+  },
+
+  selectBy: function(reverse, page) {
+    this._index = sendSyncMessage("FormAutoComplete:SelectBy", {
+      reverse: reverse,
+      page: page
+    });
+  }
+}
+
+addMessageListener("FormAutoComplete:InitPopup", function (aMessage) {
+  setTimeout(function() AutoCompletePopup.init(), 0);
 });

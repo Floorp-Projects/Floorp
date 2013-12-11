@@ -239,6 +239,7 @@ static KeyNameIndex GetKeyNameIndex(int aKeyCode)
     case AKEYCODE_Z:
     case AKEYCODE_COMMA:
     case AKEYCODE_PERIOD:
+    case AKEYCODE_SPACE:
     case AKEYCODE_GRAVE:
     case AKEYCODE_MINUS:
     case AKEYCODE_EQUALS:
@@ -250,7 +251,26 @@ static KeyNameIndex GetKeyNameIndex(int aKeyCode)
     case AKEYCODE_SLASH:
     case AKEYCODE_AT:
     case AKEYCODE_PLUS:
-        return KEY_NAME_INDEX_PrintableKey;
+    case AKEYCODE_NUMPAD_0:
+    case AKEYCODE_NUMPAD_1:
+    case AKEYCODE_NUMPAD_2:
+    case AKEYCODE_NUMPAD_3:
+    case AKEYCODE_NUMPAD_4:
+    case AKEYCODE_NUMPAD_5:
+    case AKEYCODE_NUMPAD_6:
+    case AKEYCODE_NUMPAD_7:
+    case AKEYCODE_NUMPAD_8:
+    case AKEYCODE_NUMPAD_9:
+    case AKEYCODE_NUMPAD_DIVIDE:
+    case AKEYCODE_NUMPAD_MULTIPLY:
+    case AKEYCODE_NUMPAD_SUBTRACT:
+    case AKEYCODE_NUMPAD_ADD:
+    case AKEYCODE_NUMPAD_DOT:
+    case AKEYCODE_NUMPAD_COMMA:
+    case AKEYCODE_NUMPAD_EQUALS:
+    case AKEYCODE_NUMPAD_LEFT_PAREN:
+    case AKEYCODE_NUMPAD_RIGHT_PAREN:
+        return KEY_NAME_INDEX_USE_STRING;
 
     default:
         return KEY_NAME_INDEX_Unidentified;

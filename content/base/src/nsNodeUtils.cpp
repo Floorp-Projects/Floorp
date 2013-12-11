@@ -32,6 +32,7 @@
 #include "nsDOMMutationObserver.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
+#include "mozilla/dom/ShadowRoot.h"
 
 using namespace mozilla::dom;
 using mozilla::AutoJSContext;
@@ -58,7 +59,12 @@ using mozilla::AutoJSContext;
         slots->mMutationObservers, nsIMutationObserver,           \
         func_, params_);                                          \
     }                                                             \
-    node = node->GetParentNode();                                 \
+    ShadowRoot* shadow = ShadowRoot::FromNode(node);              \
+    if (shadow) {                                                 \
+      node = shadow->GetHost();                                   \
+    } else {                                                      \
+      node = node->GetParentNode();                               \
+    }                                                             \
   } while (node);                                                 \
   if (needsEnterLeave) {                                          \
     nsDOMMutationObserver::LeaveMutationHandling();               \
@@ -247,7 +253,7 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     nsIDocument* ownerDoc = aNode->OwnerDoc();
     Element* elem = aNode->AsElement();
     ownerDoc->ClearBoxObjectFor(elem);
-    
+
     NS_ASSERTION(aNode->HasFlag(NODE_FORCE_XBL_BINDINGS) ||
                  !elem->GetXBLBinding(),
                  "Non-forced node has binding on destruction");
@@ -261,6 +267,8 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   }
 
   aNode->ReleaseWrapper(aNode);
+
+  FragmentOrElement::RemoveBlackMarkedNode(aNode);
 }
 
 struct MOZ_STACK_CLASS nsHandlerData

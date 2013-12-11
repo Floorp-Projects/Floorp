@@ -5,13 +5,5 @@
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(srcdir)/..
-
-nsWinCharset.$(OBJ_SUFFIX): wincharset.properties.h
-
 wincharset.properties.h: $(srcdir)/../props2arrays.py wincharset.properties
 	$(PYTHON) $^ $@
-
-GARBAGE += \
-	wincharset.properties.h \
-	$(NULL)

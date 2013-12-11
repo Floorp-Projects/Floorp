@@ -517,7 +517,7 @@ if (IS_WIN) {
   function lockDirectory(aDir) {
     var file = aDir.clone();
     file.append(kLockFileName);
-    file.create(file.NORMAL_FILE_TYPE, 4 * 64 + 4 * 8 + 4); // 0444
+    file.create(file.NORMAL_FILE_TYPE, 0o444);
     file.QueryInterface(AUS_Ci.nsILocalFileWin);
     file.fileAttributesWin |= file.WFA_READONLY;
     file.fileAttributesWin &= ~file.WFA_READWRITE;
@@ -577,7 +577,7 @@ function copyMinimumAppFiles(aSrcDir, aDestDir, aDestLeafName) {
   deplibsFile.append("dependentlibs.list");
   let istream = AUS_Cc["@mozilla.org/network/file-input-stream;1"].
                 createInstance(AUS_Ci.nsIFileInputStream);
-  istream.init(deplibsFile, 0x01, 4 * 64 + 4 * 8 + 4, 0); // 0444
+  istream.init(deplibsFile, 0x01, 0o444, 0);
   istream.QueryInterface(AUS_Ci.nsILineInputStream);
 
   let hasMore;
@@ -723,21 +723,6 @@ function shouldRunServiceTest(aFirstTest) {
   // the newer bin that we have.
   attemptServiceInstall();
 
-  const REG_PATH = "SOFTWARE\\Mozilla\\MaintenanceService\\" +
-                   "3932ecacee736d366d6436db0f55bce4";
-
-  let key = AUS_Cc["@mozilla.org/windows-registry-key;1"].
-            createInstance(AUS_Ci.nsIWindowsRegKey);
-  try {
-    key.open(AUS_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE, REG_PATH,
-             AUS_Ci.nsIWindowsRegKey.ACCESS_READ | key.WOW64_64);
-  }
-  catch (e) {
-    logTestInfo("this test can only run on the buildbot build system at this " +
-                "time.");
-    return false;
-  }
-
   let binDir = getGREDir();
   let updaterBin = binDir.clone();
   updaterBin.append(FILE_UPDATER_BIN);
@@ -750,6 +735,29 @@ function shouldRunServiceTest(aFirstTest) {
     updaterBinPath = '"' + updaterBinPath + '"';
   }
 
+  const REG_PATH = "SOFTWARE\\Mozilla\\MaintenanceService\\" +
+                   "3932ecacee736d366d6436db0f55bce4";
+
+  let key = AUS_Cc["@mozilla.org/windows-registry-key;1"].
+            createInstance(AUS_Ci.nsIWindowsRegKey);
+  try {
+    key.open(AUS_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE, REG_PATH,
+             AUS_Ci.nsIWindowsRegKey.ACCESS_READ | key.WOW64_64);
+  }
+  catch (e) {
+#ifndef DISABLE_UPDATER_AUTHENTICODE_CHECK
+    // The build system could sign the files and not have the test registry key
+    // in which case we should fail the test by throwing so it can be fixed.
+    if (isBinarySigned(updaterBinPath)) {
+      do_throw("binary is signed but the test registry key does not exists!");
+    }
+#endif
+
+    logTestInfo("this test can only run on the buildbot build system at this " +
+                "time.");
+    return false;
+  }
+
   // Check to make sure the service is installed
   let helperBin = getTestDirFile(FILE_HELPER_BIN);
   let args = ["wait-for-service-stop", "MozillaMaintenance", "10"];
@@ -759,8 +767,8 @@ function shouldRunServiceTest(aFirstTest) {
   logTestInfo("Checking if the service exists on this machine.");
   process.run(true, args, args.length);
   if (process.exitValue == 0xEE) {
-    logTestInfo("this test can only run when the service is installed.");
-    return false;
+    do_throw("test registry key exists but this test can only run on systems " +
+             "with the maintenance service installed.");
   } else {
     logTestInfo("Service exists, return value: " + process.exitValue);
   }
@@ -773,23 +781,34 @@ function shouldRunServiceTest(aFirstTest) {
              process.exitValue);
   }
 
-#ifdef DISABLE_UPDATER_AUTHENTICODE_CHECK
-  // We won't be performing signature checks.
+#ifndef DISABLE_UPDATER_AUTHENTICODE_CHECK
+  if (!isBinarySigned(updaterBinPath)) {
+    logTestInfo("this test can only run on builds with signed binaries.");
+    return false;
+  }
+#endif
   return true;
-#else
-  // Make sure the binaries are signed
-  args = ["check-signature", updaterBinPath];
-  process = AUS_Cc["@mozilla.org/process/util;1"].
-            createInstance(AUS_Ci.nsIProcess);
+}
+
+/**
+ * Helper function to check whether the a binary is signed.
+ *
+ * @param  aBinPath The path to the file to check if it is signed.
+ * @return true if the file is signed and false if it isn't.
+ */
+function isBinarySigned(aBinPath) {
+  let helperBin = getTestDirFile(FILE_HELPER_BIN);
+  let args = ["check-signature", aBinPath];
+  let process = AUS_Cc["@mozilla.org/process/util;1"].
+                createInstance(AUS_Ci.nsIProcess);
   process.init(helperBin);
   process.run(true, args, args.length);
-  if (process.exitValue == 0) {
-    return true;
+  if (process.exitValue != 0) {
+    logTestInfo("binary is not signed. " + FILE_HELPER_BIN + " returned " +
+                process.exitValue + " for file " + aBinPath);
+    return false;
   }
-  logTestInfo("this test can only run on builds with signed binaries. " +
-              FILE_HELPER_BIN + " returned " + process.exitValue)
-  return false;
-#endif
+  return true;
 }
 
 /**
@@ -817,7 +836,7 @@ function copyBinToApplyToDir(filename) {
  * This is useful for XP where we have permission to upgrade in case an
  * older service installer exists.  Also if the user manually installed into
  * a unprivileged location.
-*/
+ */
 function attemptServiceInstall() {
   var version = AUS_Cc["@mozilla.org/system-info;1"]
                 .getService(AUS_Ci.nsIPropertyBag2)

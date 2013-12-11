@@ -24,8 +24,6 @@ EXTRA_DSO_LDOPTS += \
   $(NULL)
 endif
 
-DEFINES += -DLIBRARY_FILENAME="$(SHARED_LIBRARY)"
-
 LIB_FILES = $(SHARED_LIBRARY)
 LIB_DEST = $(testxpcobjdir)/$(unittestlocation)
 INSTALL_TARGETS += LIB

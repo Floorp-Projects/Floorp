@@ -22,6 +22,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.DisplayMetrics;
 import android.view.inputmethod.InputMethodManager;
@@ -834,5 +835,52 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         StringWriter sw = new StringWriter();
         t.printStackTrace(new PrintWriter(sw));
         return sw.toString();
+    }
+
+    /**
+     * Condition class that waits for a view, and allows callers access it when done.
+     */
+    private class DescriptionCondition<T extends View> implements Condition {
+        public T mView;
+        private String mDescr;
+        private Class<T> mCls;
+
+        public DescriptionCondition(Class<T> cls, String descr) {
+            mDescr = descr;
+            mCls = cls;
+        }
+
+        @Override
+        public boolean isSatisfied() {
+            mView = findViewWithContentDescription(mCls, mDescr);
+            return (mView != null);
+        }
+    }
+
+    /**
+     * Wait for a view with the specified description .
+     */
+    public <T extends View> T waitForViewWithDescription(Class<T> cls, String description) {
+        DescriptionCondition<T> c = new DescriptionCondition<T>(cls, description);
+        waitForCondition(c, MAX_WAIT_ENABLED_TEXT_MS);
+        return c.mView;
+    }
+
+    /**
+     * Get an active view with the specified description .
+     */
+    public <T extends View> T findViewWithContentDescription(Class<T> cls, String description) {
+        for (T view : mSolo.getCurrentViews(cls)) {
+            final String descr = (String) view.getContentDescription();
+            if (TextUtils.isEmpty(descr)) {
+                continue;
+            }
+
+            if (TextUtils.equals(description, descr)) {
+                return view;
+            }
+        }
+
+        return null;
     }
 }

@@ -12,6 +12,7 @@
 #include "nsICachingChannel.h"
 #include "nsICacheEntry.h"
 #include "nsICacheEntryOpenCallback.h"
+#include "nsIDNSListener.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsIProtocolProxyCallback.h"
 #include "nsIHttpAuthenticableChannel.h"
@@ -19,6 +20,7 @@
 #include "nsITimedChannel.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIThreadRetargetableStreamListener.h"
+#include "nsWeakReference.h"
 #include "TimingStruct.h"
 #include "AutoClose.h"
 #include "mozilla/Telemetry.h"
@@ -51,6 +53,8 @@ class nsHttpChannel : public HttpBaseChannel
                     , public nsITimedChannel
                     , public nsIThreadRetargetableRequest
                     , public nsIThreadRetargetableStreamListener
+                    , public nsIDNSListener
+                    , public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
@@ -68,6 +72,7 @@ public:
     NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
     NS_DECL_NSITIMEDCHANNEL
     NS_DECL_NSITHREADRETARGETABLEREQUEST
+    NS_DECL_NSIDNSLISTENER
 
     // nsIHttpAuthenticableChannel. We can't use
     // NS_DECL_NSIHTTPAUTHENTICABLECHANNEL because it duplicates cancel() and

@@ -91,9 +91,6 @@ function testImageTooltip(index) {
   assertTooltipShownOn(target, () => {
     let images = markup.tooltip.panel.getElementsByTagName("image");
     is(images.length, 1, "Tooltip for [" + TEST_NODES[index] + "] contains an image");
-    if (isImg) {
-      compareImageData(node, images[0].src);
-    }
 
     markup.tooltip.hide();
 

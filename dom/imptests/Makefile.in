@@ -2,9 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include $(topsrcdir)/config/rules.mk
-
-_SUPPORT_FILES = \
+SUPPORT_FILES = \
   testharness.js \
   testharnessreport.js \
   testharness.css \
@@ -12,5 +10,5 @@ _SUPPORT_FILES = \
   WebIDLParser.js \
   $(NULL)
 
-libs:: $(_SUPPORT_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/resources
+SUPPORT_DEST = $(DEPTH)/_tests/testing/mochitest/resources
+INSTALL_TARGETS += SUPPORT

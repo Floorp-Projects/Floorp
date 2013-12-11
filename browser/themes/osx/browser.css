@@ -588,6 +588,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(36px, 612px, 54px, 594px);
   }
 
+  #email-link-button@toolbarButtonPressed@ {
+    -moz-image-region: rect(18px, 306px, 36px, 288px);
+  }
+
   /**
    * OSX has a unique set of icons when fullscreen is in the checked state.
    */
@@ -734,6 +738,14 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   }
 
   #social-share-button[cui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
+    -moz-image-region: rect(36px, 612px, 72px, 576px);
+  }
+
+  #email-link-button[cui-areatype="toolbar"] {
+    -moz-image-region: rect(0, 612px, 36px, 576px);
+  }
+
+  #email-link-button[cui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 612px, 72px, 576px);
   }
 
@@ -1007,6 +1019,16 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   #preferences-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #preferences-button {
     -moz-image-region: rect(0px, 1536px, 64px, 1472px);
+  }
+
+  #email-link-button[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > #email-link-button {
+    -moz-image-region: rect(0px, 896px, 64px, 832px);
+  }
+
+  /* This is temporary until we have an email-link icon (Bug 932235) */
+  #email-link-button > image {
+    transform: scale(-1, -1);
   }
 
   /* Footer and wide panel control icons */
@@ -1410,8 +1432,8 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   margin: 0;
 }
 
-#zoom-controls[cui-areatype="toolbar"] > #zoom-reset-button > .toolbarbutton-text {
-  padding-top: 2px;
+#zoom-controls[cui-areatype="toolbar"]:not(.overflowedItem) > #zoom-reset-button > .toolbarbutton-text {
+  padding-top: 8px;
   margin: 2px;
 }
 
@@ -1650,6 +1672,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   margin: 0 -4px;
   position: relative;
   height: 22px;
+}
+
+#search-container {
+  min-width: calc(54px + 11ch);
 }
 
 %include ../shared/identity-block.inc.css
@@ -2527,6 +2553,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   min-height: @tabHeight@;
 }
 
+#main-window:not(:-moz-any([privatebrowsingmode=temporary],[customizing])) #navigator-toolbox[inFullscreen]:not(:-moz-lwtheme)::before,
 #main-window:not(:-moz-any([privatebrowsingmode=temporary],[customizing],[tabsintitlebar])) #navigator-toolbox:not(:-moz-lwtheme)::before {
   /* We want the titlebar to be unified, but we still want to be able
    * to give #TabsToolbar a background. So we can't set -moz-appearance:
@@ -3567,11 +3594,16 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   #navigator-toolbox[inFullscreen]:not(:-moz-lwtheme)::before {
     height: calc(@tabHeight@ + 11px) !important;
   }
+  #main-window[inFullscreen][privatebrowsingmode=temporary],
   #main-window[inFullscreen]:-moz-lwtheme {
     /* This additional padding matches the change in height in the pseudo-element
-     * above. The rules combined force the top 22px of the background image to
-     * be hidden, so there image doesn't jump around with the loss of the titlebar */
+     * above. */
     padding-top: 11px;
+  }
+  #main-window[inFullscreen]:not([privatebrowsingmode=temporary]):-moz-lwtheme {
+    /* In combination with the previous rule, forces the top 22px of the
+     * background image to be hidden, so the image doesn't jump around with
+     * the loss of the titlebar. */
     background-position: right -11px;
   }
 }

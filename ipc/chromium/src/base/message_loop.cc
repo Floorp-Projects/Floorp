@@ -99,6 +99,8 @@ MessageLoop::MessageLoop(Type type)
 #ifdef OS_WIN
       os_modal_loop_(false),
 #endif  // OS_WIN
+      transient_hang_timeout_(0),
+      permanent_hang_timeout_(0),
       next_sequence_num_(0) {
   DCHECK(!current()) << "should only have one message loop per thread";
   lazy_tls_ptr.Pointer()->Set(this);
@@ -114,6 +116,10 @@ MessageLoop::MessageLoop(Type type)
     // to set run_depth_base_ to 2 or we'll never be able to process
     // Idle tasks.
     run_depth_base_ = 2;
+    return;
+  }
+  if (type_ == TYPE_MOZILLA_NONMAINTHREAD) {
+    pump_ = new mozilla::ipc::MessagePumpForNonMainThreads();
     return;
   }
 

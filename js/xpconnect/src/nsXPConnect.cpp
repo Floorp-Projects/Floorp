@@ -791,12 +791,9 @@ nsXPConnect::RescueOrphansInScope(JSContext *aJSContext, JSObject *aScopeArg)
     // might need to rescue.
     nsTArray<nsRefPtr<XPCWrappedNative> > wrappersToMove;
 
-    {   // scoped lock
-        XPCAutoLock lock(GetRuntime()->GetMapLock());
-        Native2WrappedNativeMap *map = scope->GetWrappedNativeMap();
-        wrappersToMove.SetCapacity(map->Count());
-        map->Enumerate(MoveableWrapperFinder, &wrappersToMove);
-    }
+    Native2WrappedNativeMap *map = scope->GetWrappedNativeMap();
+    wrappersToMove.SetCapacity(map->Count());
+    map->Enumerate(MoveableWrapperFinder, &wrappersToMove);
 
     // Now that we have the wrappers, reparent them to the new scope.
     for (uint32_t i = 0, stop = wrappersToMove.Length(); i < stop; ++i) {
@@ -875,10 +872,7 @@ nsXPConnect::SetFunctionThisTranslator(const nsIID & aIID,
 {
     XPCJSRuntime* rt = GetRuntime();
     IID2ThisTranslatorMap* map = rt->GetThisTranslatorMap();
-    {
-        XPCAutoLock lock(rt->GetMapLock()); // scoped lock
-        map->Add(aIID, aTranslator);
-    }
+    map->Add(aIID, aTranslator);
     return NS_OK;
 }
 
@@ -1126,7 +1120,8 @@ nsXPConnect::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
 
 NS_IMETHODIMP
 nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
-                                   uint32_t aRecursionDepth)
+                                   uint32_t aRecursionDepth,
+                                   bool aEventWasProcessed)
 {
     // Watch out for unpaired events during observer registration.
     if (MOZ_UNLIKELY(mEventDepth == 0))

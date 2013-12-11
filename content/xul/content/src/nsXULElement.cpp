@@ -293,7 +293,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
 }
 
 nsresult
-NS_NewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
+NS_NewXULElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
 {
     NS_PRECONDITION(aNodeInfo.get(), "need nodeinfo for non-proto Create");
 
@@ -1779,7 +1779,7 @@ nsXULElement::GetWindowWidget()
     nsIDocument* doc = GetCurrentDoc();
 
     // only top level chrome documents can set the titlebar color
-    if (doc->IsRootDisplayDocument()) {
+    if (doc && doc->IsRootDisplayDocument()) {
         nsCOMPtr<nsISupports> container = doc->GetContainer();
         nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
         if (baseWindow) {

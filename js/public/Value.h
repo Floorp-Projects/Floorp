@@ -954,10 +954,6 @@ class Value
         data = STRING_TO_JSVAL_IMPL(str);
     }
 
-    void setString(const JS::Anchor<JSString *> &str) {
-        setString(str.get());
-    }
-
     void setObject(JSObject &obj) {
         MOZ_ASSERT(!IsPoisonedPtr(&obj));
         data = OBJECT_TO_JSVAL_IMPL(&obj);
@@ -1592,7 +1588,6 @@ class MutableValueOperations : public ValueOperations<Outer>
     bool setNumber(uint32_t ui) { return value()->setNumber(ui); }
     bool setNumber(double d) { return value()->setNumber(d); }
     void setString(JSString *str) { this->value()->setString(str); }
-    void setString(const JS::Anchor<JSString *> &str) { this->value()->setString(str); }
     void setObject(JSObject &obj) { this->value()->setObject(obj); }
     void setObjectOrNull(JSObject *arg) { this->value()->setObjectOrNull(arg); }
 };
@@ -1623,7 +1618,6 @@ class HeapBase<JS::Value> : public ValueOperations<JS::Heap<JS::Value> >
     void setBoolean(bool b) { setBarriered(JS::BooleanValue(b)); }
     void setMagic(JSWhyMagic why) { setBarriered(JS::MagicValue(why)); }
     void setString(JSString *str) { setBarriered(JS::StringValue(str)); }
-    void setString(const JS::Anchor<JSString *> &str) { setBarriered(JS::StringValue(str.get())); }
     void setObject(JSObject &obj) { setBarriered(JS::ObjectValue(obj)); }
 
     bool setNumber(uint32_t ui) {
@@ -1746,7 +1740,7 @@ inline Anchor<Value>::~Anchor()
 }
 #endif
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
 namespace detail {
 
 struct ValueAlignmentTester { char c; JS::Value v; };
@@ -1758,7 +1752,7 @@ static_assert(sizeof(LayoutAlignmentTester) == 16,
               "jsval_layout must be 16-byte-aligned");
 
 } // namespace detail
-#endif /* DEBUG */
+#endif /* JS_DEBUG */
 
 } // namespace JS
 

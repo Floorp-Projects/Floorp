@@ -14,8 +14,10 @@
   after cancelation.
 */
 
-ok(applicationCache.mozItems.length == 0,
-   "applicationCache.mozItems should be available and empty before associating with a cache.");
+if (SpecialPowers.isMainProcess()) {
+  ok(applicationCache.mozItems.length == 0,
+     "applicationCache.mozItems should be available and empty before associating with a cache.");
+}
 
 function updateCanceled()
 {

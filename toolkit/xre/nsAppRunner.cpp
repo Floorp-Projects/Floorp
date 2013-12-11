@@ -21,11 +21,11 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Poison.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Util.h"
 
 #include "nsAppRunner.h"
 #include "mozilla/AppData.h"
@@ -99,6 +99,7 @@
 #include "nsIWinAppHelper.h"
 #include <windows.h>
 #include "cairo/cairo-features.h"
+#include "mozilla/WindowsVersion.h"
 #ifdef MOZ_METRO
 #include <roapi.h>
 #endif
@@ -126,6 +127,10 @@
 #include "nsXREDirProvider.h"
 #include "nsToolkitCompsCID.h"
 
+#if defined(XP_WIN) && defined(MOZ_METRO)
+#include "updatehelper.h"
+#endif
+
 #include "nsINIParser.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/StartupTimeline.h"
@@ -148,8 +153,8 @@
 #include <process.h>
 #include <shlobj.h>
 #include "nsThreadUtils.h"
-#include <comutil.h>
-#include <Wbemidl.h>
+#include <comdef.h>
+#include <wbemidl.h>
 #endif
 
 #ifdef XP_MACOSX
@@ -586,7 +591,7 @@ class nsXULAppInfo : public nsIXULAppInfo,
 
 {
 public:
-  nsXULAppInfo() {}
+  MOZ_CONSTEXPR nsXULAppInfo() {}
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXULAPPINFO
   NS_DECL_NSIXULRUNTIME
@@ -2184,12 +2189,12 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
         return rv;
       }
       
-      // As with -profile, assume that the given path will be used for both the
-      // main profile directory and the temp profile directory.
-      rv = aProfileSvc->CreateProfile(lf, lf, nsDependentCSubstring(arg, delim),
+      // As with -profile, assume that the given path will be used for the
+      // main profile directory.
+      rv = aProfileSvc->CreateProfile(lf, nsDependentCSubstring(arg, delim),
                                      getter_AddRefs(profile));
     } else {
-      rv = aProfileSvc->CreateProfile(nullptr, nullptr, nsDependentCString(arg),
+      rv = aProfileSvc->CreateProfile(nullptr, nsDependentCString(arg),
                                      getter_AddRefs(profile));
     }
     // Some pathological arguments can make it this far
@@ -2274,7 +2279,6 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
     // create a default profile
     nsCOMPtr<nsIToolkitProfile> profile;
     nsresult rv = aProfileSvc->CreateProfile(nullptr, // choose a default dir for us
-                                             nullptr, // choose a default dir for us
                                              NS_LITERAL_CSTRING("default"),
                                              getter_AddRefs(profile));
     if (NS_SUCCEEDED(rv)) {
@@ -2480,7 +2484,7 @@ WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
     PR_Write(fd, appDir.get(), appDir.Length());
   }
 
-  static const char kInvalidationHeader[] = "InvalidateCaches=1" NS_LINEBREAK;
+  static const char kInvalidationHeader[] = NS_LINEBREAK "InvalidateCaches=1";
   if (invalidateCache)
     PR_Write(fd, kInvalidationHeader, sizeof(kInvalidationHeader) - 1);
 
@@ -2867,10 +2871,8 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     // manual font file I/O on _all_ system fonts.  To avoid this, load the
     // dwrite library and create a factory as early as possible so that the
     // FntCache service is ready by the time it's needed.
-      
-    OSVERSIONINFO vinfo;
-    vinfo.dwOSVersionInfoSize = sizeof(vinfo);
-    if (GetVersionEx(&vinfo) && vinfo.dwMajorVersion >= 6) {
+
+    if (IsVistaOrLater()) {
       CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)&InitDwriteBG,
                    nullptr, 0, nullptr);
     }
@@ -4049,12 +4051,18 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   // Check for an application initiated restart.  This is one that
   // corresponds to nsIAppStartup.quit(eRestart)
-  if (rv == NS_SUCCESS_RESTART_APP) {
+  if (rv == NS_SUCCESS_RESTART_APP || rv == NS_SUCCESS_RESTART_METRO_APP) {
     appInitiatedRestart = true;
 
     // We have an application restart don't do any shutdown checks here
     // In particular we don't want to poison IO for checking late-writes.
     gShutdownChecks = SCM_NOTHING;
+
+    #if defined(MOZ_METRO) && defined(XP_WIN)
+    if (rv == NS_SUCCESS_RESTART_METRO_APP) {
+      LaunchDefaultMetroBrowser();
+    }
+    #endif
   }
 
   if (!mShuttingDown) {

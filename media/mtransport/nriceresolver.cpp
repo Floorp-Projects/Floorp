@@ -151,11 +151,16 @@ int NrIceResolver::resolve(nr_resolver_resource *resource,
   ASSERT_ON_THREAD(sts_thread_);
   nsCOMPtr<PendingResolution> pr;
 
-  if (resource->transport_protocol != IPPROTO_UDP) {
-    MOZ_MTLOG(ML_ERROR, "Only UDP is supported.");
+  if (resource->transport_protocol != IPPROTO_UDP &&
+      resource->transport_protocol != IPPROTO_TCP) {
+    MOZ_MTLOG(ML_ERROR, "Only UDP and TCP are is supported.");
     ABORT(R_NOT_FOUND);
   }
-  pr = new PendingResolution(sts_thread_, resource->port? resource->port : 3478,
+  pr = new PendingResolution(sts_thread_,
+                             resource->port? resource->port : 3478,
+                             resource->transport_protocol ?
+                             resource->transport_protocol :
+                             IPPROTO_UDP,
                              cb, cb_arg);
   if (NS_FAILED(dns_->AsyncResolve(nsAutoCString(resource->domain_name),
                                    nsIDNSService::RESOLVE_DISABLE_IPV6, pr,
@@ -188,7 +193,8 @@ nsresult NrIceResolver::PendingResolution::OnLookupComplete(
     if (NS_SUCCEEDED(status)) {
       net::NetAddr na;
       if (NS_SUCCEEDED(record->GetNextAddr(port_, &na))) {
-        MOZ_ALWAYS_TRUE (nr_netaddr_to_transport_addr(&na, &ta) == 0);
+        MOZ_ALWAYS_TRUE (nr_netaddr_to_transport_addr(&na, &ta,
+                                                      transport_) == 0);
         cb_addr = &ta;
       }
     }

@@ -91,9 +91,9 @@ JSCompartment::wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject e
     JS::RootedValue v(cx, vp);
     if (js::WrapperMap::Ptr p = crossCompartmentWrappers.lookup(v)) {
 #ifdef DEBUG
-        cacheResult = &p->value.get().toObject();
+        cacheResult = &p->value().get().toObject();
 #else
-        vp.set(p->value);
+        vp.set(p->value());
         return true;
 #endif
     }

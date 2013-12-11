@@ -22,6 +22,8 @@ interface nsIUDPSocketChild : nsISupports
 {
   readonly attribute unsigned short localPort;
   readonly attribute AUTF8String localAddress;
+  attribute AUTF8String filterName;
+
   // Tell the chrome process to bind the UDP socket to a given local host and port
   void bind(in nsIUDPSocketInternal socket, in AUTF8String host, in unsigned short port);
 

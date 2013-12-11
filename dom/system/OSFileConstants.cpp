@@ -809,17 +809,16 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
   }
 
   // Locate libxul
+  // Note that we don't actually provide the full path, only the name of the
+  // library, which is sufficient to link to the library using js-ctypes.
   {
-    nsAutoString xulPath(gPaths->libDir);
-
-    xulPath.Append(PR_GetDirectorySeparator());
-
 #if defined(XP_MACOSX)
     // Under MacOS X, for some reason, libxul is called simply "XUL"
-    xulPath.Append(NS_LITERAL_STRING("XUL"));
+    nsAutoString xulPath(NS_LITERAL_STRING("XUL"));
 #else
     // On other platforms, libxul is a library "xul" with regular
     // library prefix/suffix
+    nsAutoString xulPath;
     xulPath.Append(NS_LITERAL_STRING(DLL_PREFIX));
     xulPath.Append(NS_LITERAL_STRING("xul"));
     xulPath.Append(NS_LITERAL_STRING(DLL_SUFFIX));

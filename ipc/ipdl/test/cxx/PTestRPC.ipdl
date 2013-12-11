@@ -1,7 +1,7 @@
 namespace mozilla {
 namespace _ipdltest {
 
-rpc protocol PTestRPC
+intr protocol PTestRPC
 {
 parent:
     rpc Test1_Start() returns (uint32_t result);
@@ -10,6 +10,8 @@ parent:
     rpc Test2_OutOfOrder();
     sync Test3_Start() returns (uint32_t result);
     rpc Test3_InnerEvent() returns (uint32_t result);
+    intr Test4_Start() returns (uint32_t result);
+    rpc Test4_Inner() returns (uint32_t result);
 
 child:
     async Start();
@@ -18,6 +20,7 @@ child:
     urgent Test2_FirstUrgent();
     urgent Test2_SecondUrgent();
     urgent Test3_WakeUp() returns (uint32_t result);
+    urgent Test4_WakeUp() returns (uint32_t result);
 };
 
 } // namespace _ipdltest

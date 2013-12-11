@@ -20,35 +20,15 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "js-config.h"
+
 struct JSContext;
 class JSFunction;
 class JSObject;
 class JSScript;
 class JSString;
 
-// In release builds, jsid is defined to be an integral type. This
-// prevents many bugs from being caught at compile time. E.g.:
-//
-//  jsid id = ...
-//  if (id)             // error
-//    ...
-//
-//  size_t n = id;      // error
-//
-// To catch more errors, jsid is given a struct type in C++ debug builds.
-// Struct assignment and (in C++) operator== allow correct code to be mostly
-// oblivious to the change. This feature can be explicitly disabled in debug
-// builds by defining JS_NO_JSVAL_JSID_STRUCT_TYPES.
-//
-#if defined(DEBUG) && !defined(JS_NO_JSVAL_JSID_STRUCT_TYPES)
-# define JS_USE_JSID_STRUCT_TYPES
-#endif
-
-#ifdef JS_USE_JSID_STRUCT_TYPES
 struct jsid;
-#else
-typedef ptrdiff_t jsid;
-#endif
 
 typedef char16_t jschar;
 

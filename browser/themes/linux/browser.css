@@ -510,6 +510,11 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   transition: @forwardTransitionLength@ ease-out;
 }
 
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  transform: scaleX(-1);
+}
+
 /* tabview button */
 
 #tabview-button,
@@ -682,7 +687,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   -moz-margin-start: -4px;
 }
 
-#urlbar-search-splitter + #urlbar-container > #urlbar-wrapper > #urlbar,
 #urlbar-search-splitter + #search-container > #searchbar > .searchbar-textbox {
   -moz-margin-start: 0;
 }
@@ -699,6 +703,10 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   margin-bottom: 0;
   -moz-margin-start: 0;
   color: GrayText;
+}
+
+#search-container {
+  min-width: calc(54px + 11ch);
 }
 
 %include ../shared/identity-block.inc.css

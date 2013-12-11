@@ -28,7 +28,7 @@ void
 TiledLayerBufferComposite::Upload(const BasicTiledLayerBuffer* aMainMemoryTiledBuffer,
                                   const nsIntRegion& aNewValidRegion,
                                   const nsIntRegion& aInvalidateRegion,
-                                  const gfxSize& aResolution)
+                                  const CSSToScreenScale& aResolution)
 {
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   printf_stderr("Upload %i, %i, %i, %i\n", aInvalidateRegion.GetBounds().x, aInvalidateRegion.GetBounds().y, aInvalidateRegion.GetBounds().width, aInvalidateRegion.GetBounds().height);
@@ -184,6 +184,10 @@ TiledContentHost::RenderTile(const TiledTexture& aTile,
 
   RefPtr<TexturedEffect> effect =
     CreateTexturedEffect(aTile.mDeprecatedTextureHost, aFilter);
+  if (!effect) {
+    return;
+  }
+
   if (aTile.mDeprecatedTextureHost->Lock()) {
     aEffectChain.mPrimaryEffect = effect;
   } else {
@@ -228,10 +232,9 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
   // We assume that the current frame resolution is the one used in our primary
   // layer buffer. Compensate for a changing frame resolution.
   if (aLayerBuffer.GetFrameResolution() != mVideoMemoryTiledBuffer.GetFrameResolution()) {
-    const gfxSize& layerResolution = aLayerBuffer.GetFrameResolution();
-    const gfxSize& localResolution = mVideoMemoryTiledBuffer.GetFrameResolution();
-    layerScale.width = layerResolution.width / localResolution.width;
-    layerScale.height = layerResolution.height / localResolution.height;
+    const CSSToScreenScale& layerResolution = aLayerBuffer.GetFrameResolution();
+    const CSSToScreenScale& localResolution = mVideoMemoryTiledBuffer.GetFrameResolution();
+    layerScale.width = layerScale.height = layerResolution.scale / localResolution.scale;
     aVisibleRect.ScaleRoundOut(layerScale.width, layerScale.height);
   }
   aTransform.Scale(1/(resolution * layerScale.width),
@@ -327,16 +330,16 @@ TiledContentHost::Dump(FILE* aFile,
   TiledLayerBufferComposite::Iterator it = mVideoMemoryTiledBuffer.TilesBegin();
   TiledLayerBufferComposite::Iterator stop = mVideoMemoryTiledBuffer.TilesEnd();
   if (aDumpHtml) {
-    fprintf(aFile, "<ul>");
+    fprintf_stderr(aFile, "<ul>");
   }
   for (;it != stop; ++it) {
-    fprintf(aFile, "%s", aPrefix);
-    fprintf(aFile, aDumpHtml ? "<li> <a href=" : "Tile ");
+    fprintf_stderr(aFile, "%s", aPrefix);
+    fprintf_stderr(aFile, aDumpHtml ? "<li> <a href=" : "Tile ");
     DumpDeprecatedTextureHost(aFile, it->mDeprecatedTextureHost);
-    fprintf(aFile, aDumpHtml ? " >Tile</a></li>" : " ");
+    fprintf_stderr(aFile, aDumpHtml ? " >Tile</a></li>" : " ");
   }
     if (aDumpHtml) {
-    fprintf(aFile, "</ul>");
+    fprintf_stderr(aFile, "</ul>");
   }
 }
 #endif

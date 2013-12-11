@@ -49,7 +49,7 @@ FormatStackDump(JSContext *cx, char *buf, bool showArgs, bool showLocals, bool s
 
 }
 
-# ifdef DEBUG
+# ifdef JS_DEBUG
 JS_FRIEND_API(void) js_DumpValue(const JS::Value &val);
 JS_FRIEND_API(void) js_DumpId(jsid id);
 JS_FRIEND_API(void) js_DumpStackFrame(JSContext *cx, js::StackFrame *start = nullptr);

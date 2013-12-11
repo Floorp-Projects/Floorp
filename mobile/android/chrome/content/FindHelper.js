@@ -4,7 +4,7 @@
 "use strict";
 
 var FindHelper = {
-  _fastFind: null,
+  _finder: null,
   _targetTab: null,
   _initialViewport: null,
   _viewportChanged: false,
@@ -31,41 +31,41 @@ var FindHelper = {
   },
 
   doFind: function(aSearchString) {
-    if (!this._fastFind) {
+    if (!this._finder) {
       this._targetTab = BrowserApp.selectedTab;
-      this._fastFind = this._targetTab.browser.fastFind;
+      this._finder = this._targetTab.browser.finder;
+      this._finder.addResultListener(this);
       this._initialViewport = JSON.stringify(this._targetTab.getViewport());
       this._viewportChanged = false;
     }
 
-    let result = this._fastFind.find(aSearchString, false);
-    this.handleResult(result);
+    this._finder.fastFind(aSearchString, false);
   },
 
   findAgain: function(aString, aFindBackwards) {
     // This can happen if the user taps next/previous after re-opening the search bar
-    if (!this._fastFind) {
+    if (!this._finder) {
       this.doFind(aString);
       return;
     }
 
-    let result = this._fastFind.findAgain(aFindBackwards, false);
-    this.handleResult(result);
+    this._finder.findAgain(aFindBackwards, false, false);
   },
 
   findClosed: function() {
     // If there's no find in progress, there's nothing to clean up
-    if (!this._fastFind)
+    if (!this._finder)
       return;
 
-    this._fastFind.collapseSelection();
-    this._fastFind = null;
+    this._finder.removeSelection();
+    this._finder.removeResultListener(this);
+    this._finder = null;
     this._targetTab = null;
     this._initialViewport = null;
     this._viewportChanged = false;
   },
 
-  handleResult: function(aResult) {
+  onFindResult: function(aResult, aFindBackwards, aLinkURL) {
     if (aResult == Ci.nsITypeAheadFind.FIND_NOTFOUND) {
       if (this._viewportChanged) {
         if (this._targetTab != BrowserApp.selectedTab) {

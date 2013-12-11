@@ -1,0 +1,6 @@
+# DownloadsAPI.js
+component {c6587afa-0696-469f-9eff-9dac0dd727fe} DownloadsAPI.js
+contract @mozilla.org/downloads/manager;1 {c6587afa-0696-469f-9eff-9dac0dd727fe}
+
+component {96b81b99-aa96-439d-8c59-92eeed34705f} DownloadsAPI.js
+contract @mozilla.org/downloads/download;1 {96b81b99-aa96-439d-8c59-92eeed34705f}

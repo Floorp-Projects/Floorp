@@ -32,6 +32,7 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArray.h"                   // for nsAutoTArray
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include <vector>
 
 namespace mozilla {
 namespace layers {
@@ -77,6 +78,126 @@ GetOpaqueRect(Layer* aLayer)
     result.IntersectRect(result, *clipRect);
   }
   return result;
+}
+
+struct LayerVelocityUserData : public LayerUserData {
+public:
+  LayerVelocityUserData() {
+    MOZ_COUNT_CTOR(LayerVelocityUserData);
+  }
+  ~LayerVelocityUserData() {
+    MOZ_COUNT_DTOR(LayerVelocityUserData);
+  }
+
+  struct VelocityData {
+    VelocityData(TimeStamp frameTime, int scrollX, int scrollY)
+      : mFrameTime(frameTime)
+      , mPoint(scrollX, scrollY)
+    {}
+
+    TimeStamp mFrameTime;
+    gfx::Point mPoint;
+  };
+  std::vector<VelocityData> mData;
+};
+
+static void DrawVelGraph(const nsIntRect& aClipRect,
+                         LayerManagerComposite* aManager,
+                         Layer* aLayer) {
+  static char sLayerVelocityUserDataKey;
+  Compositor* compositor = aManager->GetCompositor();
+  gfx::Rect clipRect(aClipRect.x, aClipRect.y,
+                     aClipRect.width, aClipRect.height);
+
+  TimeStamp now = TimeStamp::Now();
+
+  void* key = reinterpret_cast<void*>(&sLayerVelocityUserDataKey);
+  if (!aLayer->HasUserData(key)) {
+    aLayer->SetUserData(key, new LayerVelocityUserData());
+  }
+
+  LayerVelocityUserData* velocityData =
+    static_cast<LayerVelocityUserData*>(aLayer->GetUserData(key));
+
+  if (velocityData->mData.size() >= 1 &&
+    now > velocityData->mData[velocityData->mData.size() - 1].mFrameTime +
+      TimeDuration::FromMilliseconds(200)) {
+    // clear stale data
+    velocityData->mData.clear();
+  }
+
+  nsIntPoint scrollOffset =
+    aLayer->GetEffectiveVisibleRegion().GetBounds().TopLeft();
+  velocityData->mData.push_back(
+    LayerVelocityUserData::VelocityData(now, scrollOffset.x, scrollOffset.y));
+
+
+  // XXX: Uncomment these lines to enable ScrollGraph logging. This is
+  //      useful for HVGA phones or to output the data to accurate
+  //      graphing software.
+  //printf_stderr("ScrollGraph (%p): %i, %i\n",
+  //  aLayer, scrollOffset.x, scrollOffset.y);
+
+  // Keep a circular buffer of 100.
+  size_t circularBufferSize = 100;
+  if (velocityData->mData.size() > circularBufferSize) {
+    velocityData->mData.erase(velocityData->mData.begin());
+  }
+
+  if (velocityData->mData.size() == 1) {
+    return;
+  }
+
+  // Clear and disable the graph when it's flat
+  for (size_t i = 1; i < velocityData->mData.size(); i++) {
+    if (velocityData->mData[i - 1].mPoint != velocityData->mData[i].mPoint) {
+      break;
+    }
+    if (i == velocityData->mData.size() - 1) {
+      velocityData->mData.clear();
+      return;
+    }
+  }
+
+  if (aLayer->GetEffectiveVisibleRegion().GetBounds().width < 300 ||
+      aLayer->GetEffectiveVisibleRegion().GetBounds().height < 300) {
+    // Don't want a graph for smaller layers
+    return;
+  }
+
+  aManager->SetDebugOverlayWantsNextFrame(true);
+
+  gfx::Matrix4x4 transform;
+  ToMatrix4x4(aLayer->GetEffectiveTransform(), transform);
+  nsIntRect bounds = aLayer->GetEffectiveVisibleRegion().GetBounds();
+  gfx::Rect graphBounds = gfx::Rect(bounds.x, bounds.y,
+                                    bounds.width, bounds.height);
+  gfx::Rect graphRect = gfx::Rect(bounds.x, bounds.y, 200, 100);
+
+  float opacity = 1.0;
+  EffectChain effects;
+  effects.mPrimaryEffect = new EffectSolidColor(gfx::Color(0.2,0,0,1));
+  compositor->DrawQuad(graphRect,
+                       clipRect,
+                       effects,
+                       opacity,
+                       transform);
+
+  std::vector<gfx::Point> graph;
+  int yScaleFactor = 3;
+  for (int32_t i = (int32_t)velocityData->mData.size() - 2; i >= 0; i--) {
+    const gfx::Point& p1 = velocityData->mData[i+1].mPoint;
+    const gfx::Point& p2 = velocityData->mData[i].mPoint;
+    int vel = sqrt((p1.x - p2.x) * (p1.x - p2.x) +
+                   (p1.y - p2.y) * (p1.y - p2.y));
+    graph.push_back(
+      gfx::Point(bounds.x + graphRect.width / circularBufferSize * i,
+                 graphBounds.y + graphRect.height - vel/yScaleFactor));
+  }
+
+  compositor->DrawLines(graph, clipRect, gfx::Color(0,1,0,1),
+                        opacity, transform);
+
 }
 
 template<class ContainerT> void
@@ -199,6 +320,10 @@ ContainerRender(ContainerT* aContainer,
       layerToRender->SetLayerComposited(false);
     } else {
       layerToRender->RenderLayer(clipRect);
+    }
+
+    if (gfxPlatform::GetPrefLayersScrollGraph()) {
+      DrawVelGraph(clipRect, aManager, layerToRender->GetLayer());
     }
     // invariant: our GL context should be current here, I don't think we can
     // assert it though

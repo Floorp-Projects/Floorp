@@ -8,6 +8,8 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.mozglue.JNITarget;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -307,8 +309,9 @@ public class Tabs implements GeckoEventListener {
         int tabId = tab.getId();
         removeTab(tabId);
 
-        if (nextTab == null)
-            nextTab = loadUrl("about:home", LOADURL_NEW_TAB);
+        if (nextTab == null) {
+            nextTab = loadUrl(AboutPages.HOME, LOADURL_NEW_TAB);
+        }
 
         selectTab(nextTab.getId());
 
@@ -373,6 +376,7 @@ public class Tabs implements GeckoEventListener {
         private static final Tabs INSTANCE = new Tabs();
     }
 
+    @RobocopTarget
     public static Tabs getInstance() {
        return Tabs.TabsInstanceHolder.INSTANCE;
     }
@@ -381,6 +385,7 @@ public class Tabs implements GeckoEventListener {
 
     @Override
     public void handleMessage(String event, JSONObject message) {
+        Log.d(LOGTAG, "handleMessage: " + event);
         try {
             if (event.equals("Session:RestoreEnd")) {
                 notifyListeners(null, TabEvents.RESTORED);
@@ -406,10 +411,13 @@ public class Tabs implements GeckoEventListener {
                                           message.getInt("parentId"),
                                           message.getString("title"),
                                           message.getBoolean("isPrivate"));
+
+                    // If we added the tab as a stub, we should have already
+                    // selected it, so ignore this flag for stubbed tabs.
+                    if (message.getBoolean("selected"))
+                        selectTab(id);
                 }
 
-                if (message.getBoolean("selected"))
-                    selectTab(id);
                 if (message.getBoolean("delayLoad"))
                     tab.setState(Tab.STATE_DELAYED);
                 if (message.getBoolean("desktopMode"))
@@ -442,7 +450,7 @@ public class Tabs implements GeckoEventListener {
                     if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
                         boolean showProgress = message.getBoolean("showProgress");
                         tab.handleDocumentStart(showProgress, message.getString("uri"));
-                        notifyListeners(tab, Tabs.TabEvents.START, showProgress);
+                        notifyListeners(tab, Tabs.TabEvents.START);
                     } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
                         tab.handleDocumentStop(message.getBoolean("success"));
                         notifyListeners(tab, Tabs.TabEvents.STOP);
@@ -561,6 +569,11 @@ public class Tabs implements GeckoEventListener {
 
     // Throws if not initialized.
     public void notifyListeners(final Tab tab, final TabEvents msg, final Object data) {
+        if (tab == null &&
+            msg != TabEvents.RESTORED) {
+            throw new IllegalArgumentException("onTabChanged:" + msg + " must specify a tab.");
+        }
+
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
@@ -634,7 +647,7 @@ public class Tabs implements GeckoEventListener {
     public int getTabIdForUrl(String url, boolean isPrivate) {
         for (Tab tab : mOrder) {
             String tabUrl = tab.getURL();
-            if (ReaderModeUtils.isAboutReader(tabUrl)) {
+            if (AboutPages.isAboutReader(tabUrl)) {
                 tabUrl = ReaderModeUtils.getUrlFromAboutReader(tabUrl);
             }
             if (TextUtils.equals(tabUrl, url) && isPrivate == tab.isPrivate()) {
@@ -659,8 +672,9 @@ public class Tabs implements GeckoEventListener {
      *
      * @param url URL of page to load, or search term used if searchEngine is given
      */
-    public void loadUrl(String url) {
-        loadUrl(url, LOADURL_NONE);
+    @RobocopTarget
+    public Tab loadUrl(String url) {
+        return loadUrl(url, LOADURL_NONE);
     }
 
     /**
@@ -730,11 +744,32 @@ public class Tabs implements GeckoEventListener {
 
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Load", args.toString()));
 
-        if ((added != null) && !delayLoad && !background) {
+        if (added == null) {
+            return null;
+        }
+
+        if (!delayLoad && !background) {
             selectTab(added.getId());
         }
 
+        // TODO: surely we could just fetch *any* cached icon?
+        if (AboutPages.isDefaultIconPage(url)) {
+            Log.d(LOGTAG, "Setting about: tab favicon inline.");
+            added.updateFavicon(getAboutPageFavicon(url));
+        }
+
         return added;
+    }
+
+    /**
+     * These favicons are only used for the URL bar, so
+     * we fetch with that size.
+     *
+     * This method completes on the calling thread.
+     */
+    private Bitmap getAboutPageFavicon(final String url) {
+        int faviconSize = Math.round(mAppContext.getResources().getDimension(R.dimen.browser_toolbar_favicon_size));
+        return Favicons.getCachedFaviconForSize(url, faviconSize);
     }
 
     /**
@@ -769,9 +804,8 @@ public class Tabs implements GeckoEventListener {
 
     /**
      * Gets the next tab ID.
-     *
-     * This method is invoked via JNI.
      */
+    @JNITarget
     public static int getNextTabId() {
         return sTabId.getAndIncrement();
     }

@@ -6,11 +6,11 @@
 
 #include "IndexedDBChild.h"
 
-#include "nsIAtom.h"
 #include "nsIInputStream.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 
 #include "AsyncConnectionHelper.h"
@@ -24,6 +24,7 @@
 USING_INDEXEDDB_NAMESPACE
 
 using namespace mozilla::dom;
+using mozilla::dom::quota::Client;
 using mozilla::dom::quota::QuotaManager;
 
 namespace {
@@ -50,14 +51,14 @@ public:
   virtual nsresult
   OnSuccess() MOZ_OVERRIDE
   {
-    static_cast<IDBOpenDBRequest*>(mRequest.get())->SetTransaction(NULL);
+    static_cast<IDBOpenDBRequest*>(mRequest.get())->SetTransaction(nullptr);
     return AsyncConnectionHelper::OnSuccess();
   }
 
   virtual void
   OnError() MOZ_OVERRIDE
   {
-    static_cast<IDBOpenDBRequest*>(mRequest.get())->SetTransaction(NULL);
+    static_cast<IDBOpenDBRequest*>(mRequest.get())->SetTransaction(nullptr);
     AsyncConnectionHelper::OnError();
   }
 
@@ -103,7 +104,7 @@ class IPCDeleteDatabaseHelper : public AsyncConnectionHelper
 {
 public:
   IPCDeleteDatabaseHelper(IDBRequest* aRequest)
-  : AsyncConnectionHelper(static_cast<IDBDatabase*>(NULL), aRequest)
+  : AsyncConnectionHelper(static_cast<IDBDatabase*>(nullptr), aRequest)
   { }
 
   virtual nsresult UnpackResponseFromParentProcess(
@@ -202,9 +203,9 @@ void
 IndexedDBChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   if (mFactory) {
-    mFactory->SetActor(static_cast<IndexedDBChild*>(NULL));
+    mFactory->SetActor(static_cast<IndexedDBChild*>(nullptr));
 #ifdef DEBUG
-    mFactory = NULL;
+    mFactory = nullptr;
 #endif
   }
 }
@@ -247,7 +248,7 @@ IndexedDBChild::DeallocPIndexedDBDeleteDatabaseRequestChild(
 
 IndexedDBDatabaseChild::IndexedDBDatabaseChild(const nsString& aName,
                                                uint64_t aVersion)
-: mDatabase(NULL), mName(aName), mVersion(aVersion)
+: mDatabase(nullptr), mName(aName), mVersion(aVersion)
 {
   MOZ_COUNT_CTOR(IndexedDBDatabaseChild);
 }
@@ -284,15 +285,15 @@ IndexedDBDatabaseChild::EnsureDatabase(
                            const DatabaseInfoGuts& aDBInfo,
                            const InfallibleTArray<ObjectStoreInfoGuts>& aOSInfo)
 {
-  nsCOMPtr<nsIAtom> databaseId;
+  nsCString databaseId;
   if (mDatabase) {
     databaseId = mDatabase->Id();
   }
   else {
-    databaseId = QuotaManager::GetStorageId(aDBInfo.persistenceType,
-                                            aDBInfo.origin, aDBInfo.name);
+    QuotaManager::GetStorageId(aDBInfo.persistenceType, aDBInfo.origin,
+                               Client::IDB, aDBInfo.name, databaseId);
   }
-  NS_ENSURE_TRUE(databaseId, false);
+  MOZ_ASSERT(!databaseId.IsEmpty());
 
   nsRefPtr<DatabaseInfo> dbInfo;
   if (DatabaseInfo::Get(databaseId, getter_AddRefs(dbInfo))) {
@@ -326,7 +327,7 @@ IndexedDBDatabaseChild::EnsureDatabase(
   if (!mDatabase) {
     nsRefPtr<IDBDatabase> database =
       IDBDatabase::Create(aRequest, aRequest->Factory(), dbInfo.forget(),
-                          aDBInfo.origin, NULL, NULL);
+                          aDBInfo.origin, nullptr, nullptr);
     if (!database) {
       NS_WARNING("Failed to create database!");
       return false;
@@ -345,9 +346,9 @@ void
 IndexedDBDatabaseChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   if (mDatabase) {
-    mDatabase->SetActor(static_cast<IndexedDBDatabaseChild*>(NULL));
+    mDatabase->SetActor(static_cast<IndexedDBDatabaseChild*>(nullptr));
 #ifdef DEBUG
-    mDatabase = NULL;
+    mDatabase = nullptr;
 #endif
   }
 }
@@ -416,7 +417,7 @@ IndexedDBDatabaseChild::RecvError(const nsresult& aRv)
     request->Reset();
   }
   else {
-    openHelper = new IPCOpenDatabaseHelper(NULL, request);
+    openHelper = new IPCOpenDatabaseHelper(nullptr, request);
   }
 
   openHelper->SetError(aRv);
@@ -558,7 +559,7 @@ IndexedDBDatabaseChild::DeallocPIndexedDBTransactionChild(
  ******************************************************************************/
 
 IndexedDBTransactionChild::IndexedDBTransactionChild()
-: mTransaction(NULL)
+: mTransaction(nullptr)
 {
   MOZ_COUNT_CTOR(IndexedDBTransactionChild);
 }
@@ -625,9 +626,9 @@ IndexedDBTransactionChild::ActorDestroy(ActorDestroyReason aWhy)
   }
 
   if (mTransaction) {
-    mTransaction->SetActor(static_cast<IndexedDBTransactionChild*>(NULL));
+    mTransaction->SetActor(static_cast<IndexedDBTransactionChild*>(nullptr));
 #ifdef DEBUG
-    mTransaction = NULL;
+    mTransaction = nullptr;
 #endif
   }
 }
@@ -718,9 +719,9 @@ void
 IndexedDBObjectStoreChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   if (mObjectStore) {
-    mObjectStore->SetActor(static_cast<IndexedDBObjectStoreChild*>(NULL));
+    mObjectStore->SetActor(static_cast<IndexedDBObjectStoreChild*>(nullptr));
 #ifdef DEBUG
-    mObjectStore = NULL;
+    mObjectStore = nullptr;
 #endif
   }
 }
@@ -861,9 +862,9 @@ void
 IndexedDBIndexChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   if (mIndex) {
-    mIndex->SetActor(static_cast<IndexedDBIndexChild*>(NULL));
+    mIndex->SetActor(static_cast<IndexedDBIndexChild*>(nullptr));
 #ifdef DEBUG
-    mIndex = NULL;
+    mIndex = nullptr;
 #endif
   }
 }
@@ -953,7 +954,7 @@ IndexedDBIndexChild::DeallocPIndexedDBCursorChild(PIndexedDBCursorChild* aActor)
  ******************************************************************************/
 
 IndexedDBCursorChild::IndexedDBCursorChild()
-: mCursor(NULL)
+: mCursor(nullptr)
 {
   MOZ_COUNT_CTOR(IndexedDBCursorChild);
 }
@@ -991,9 +992,9 @@ void
 IndexedDBCursorChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   if (mCursor) {
-    mCursor->SetActor(static_cast<IndexedDBCursorChild*>(NULL));
+    mCursor->SetActor(static_cast<IndexedDBCursorChild*>(nullptr));
 #ifdef DEBUG
-    mCursor = NULL;
+    mCursor = nullptr;
 #endif
   }
 }
@@ -1232,13 +1233,13 @@ IndexedDBCursorRequestChild::Recv__delete__(const ResponseValue& aResponse)
 IndexedDBDeleteDatabaseRequestChild::IndexedDBDeleteDatabaseRequestChild(
                                                  IDBFactory* aFactory,
                                                  IDBOpenDBRequest* aOpenRequest,
-                                                 nsIAtom* aDatabaseId)
+                                                 const nsACString& aDatabaseId)
 : mFactory(aFactory), mOpenRequest(aOpenRequest), mDatabaseId(aDatabaseId)
 {
   MOZ_COUNT_CTOR(IndexedDBDeleteDatabaseRequestChild);
   MOZ_ASSERT(aFactory);
   MOZ_ASSERT(aOpenRequest);
-  MOZ_ASSERT(aDatabaseId);
+  MOZ_ASSERT(!aDatabaseId.IsEmpty());
 }
 
 IndexedDBDeleteDatabaseRequestChild::~IndexedDBDeleteDatabaseRequestChild()

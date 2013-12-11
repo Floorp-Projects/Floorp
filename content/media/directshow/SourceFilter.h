@@ -43,7 +43,7 @@ public:
   SourceFilter(const GUID& aMajorType, const GUID& aSubType);
   ~SourceFilter();
 
-  nsresult Init(MediaResource *aResource);
+  nsresult Init(MediaResource *aResource, int64_t aMP3Offset);
 
   // BaseFilter overrides.
   // Only one output - the byte stream.

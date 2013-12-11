@@ -18,6 +18,7 @@
 #include "MediaResource.h"
 #include "nsError.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPtr.h"
 #include "nsIMemoryReporter.h"
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
@@ -53,15 +54,21 @@ PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(type, msg)
 #endif
 
-class MediaMemoryTracker
+class MediaMemoryTracker : public nsIMemoryReporter
 {
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
+
   MediaMemoryTracker();
-  ~MediaMemoryTracker();
-  static MediaMemoryTracker* sUniqueInstance;
+  virtual ~MediaMemoryTracker();
+  void InitMemoryReporter();
+
+  static StaticRefPtr<MediaMemoryTracker> sUniqueInstance;
 
   static MediaMemoryTracker* UniqueInstance() {
     if (!sUniqueInstance) {
       sUniqueInstance = new MediaMemoryTracker();
+      sUniqueInstance->InitMemoryReporter();
     }
     return sUniqueInstance;
   }
@@ -72,8 +79,6 @@ class MediaMemoryTracker
   }
 
   DecodersArray mDecoders;
-
-  nsCOMPtr<nsIMemoryReporter> mReporter;
 
 public:
   static void AddMediaDecoder(MediaDecoder* aDecoder)
@@ -86,24 +91,14 @@ public:
     DecodersArray& decoders = Decoders();
     decoders.RemoveElement(aDecoder);
     if (decoders.IsEmpty()) {
-      delete sUniqueInstance;
       sUniqueInstance = nullptr;
-    }
-  }
-
-  static void GetAmounts(int64_t* aVideo, int64_t* aAudio)
-  {
-    *aVideo = 0;
-    *aAudio = 0;
-    DecodersArray& decoders = Decoders();
-    for (size_t i = 0; i < decoders.Length(); ++i) {
-      *aVideo += decoders[i]->VideoQueueMemoryInUse();
-      *aAudio += decoders[i]->AudioQueueMemoryInUse();
     }
   }
 };
 
-MediaMemoryTracker* MediaMemoryTracker::sUniqueInstance = nullptr;
+StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
+
+NS_IMPL_ISUPPORTS1(MediaMemoryTracker, nsIMemoryReporter)
 
 NS_IMPL_ISUPPORTS1(MediaDecoder, nsIObserver)
 
@@ -202,14 +197,18 @@ MediaDecoder::DecodedStreamData::DecodedStreamData(MediaDecoder* aDecoder,
     mHaveSentFinishAudio(false),
     mHaveSentFinishVideo(false),
     mStream(aStream),
-    mHaveBlockedForPlayState(false)
+    mHaveBlockedForPlayState(false),
+    mHaveBlockedForStateMachineNotPlaying(false)
 {
   mStream->AddMainThreadListener(this);
+  mListener = new DecodedStreamGraphListener(mStream);
+  mStream->AddListener(mListener);
 }
 
 MediaDecoder::DecodedStreamData::~DecodedStreamData()
 {
   mStream->RemoveMainThreadListener(this);
+  mListener->Forget();
   mStream->Destroy();
 }
 
@@ -217,6 +216,27 @@ void
 MediaDecoder::DecodedStreamData::NotifyMainThreadStateChanged()
 {
   mDecoder->NotifyDecodedStreamMainThreadStateChanged();
+  if (mStream->IsFinished()) {
+    mListener->SetFinishedOnMainThread(true);
+  }
+}
+
+MediaDecoder::DecodedStreamGraphListener::DecodedStreamGraphListener(MediaStream* aStream)
+  : mMutex("MediaDecoder::DecodedStreamData::mMutex"),
+    mStream(aStream),
+    mLastOutputTime(aStream->GetCurrentTime()),
+    mStreamFinishedOnMainThread(false)
+{
+}
+
+void
+MediaDecoder::DecodedStreamGraphListener::NotifyOutput(MediaStreamGraph* aGraph,
+                                                       GraphTime aCurrentTime)
+{
+  MutexAutoLock lock(mMutex);
+  if (mStream) {
+    mLastOutputTime = mStream->GraphTimeToStreamTime(aCurrentTime);
+  }
 }
 
 void MediaDecoder::DestroyDecodedStream()
@@ -247,6 +267,32 @@ void MediaDecoder::DestroyDecodedStream()
   mDecodedStream = nullptr;
 }
 
+void MediaDecoder::UpdateStreamBlockingForStateMachinePlaying()
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  if (!mDecodedStream) {
+    return;
+  }
+  if (mDecoderStateMachine) {
+    mDecoderStateMachine->SetSyncPointForMediaStream();
+  }
+  bool blockForStateMachineNotPlaying =
+    mDecoderStateMachine && !mDecoderStateMachine->IsPlaying() &&
+    mDecoderStateMachine->GetState() != MediaDecoderStateMachine::DECODER_STATE_COMPLETED;
+  if (blockForStateMachineNotPlaying != mDecodedStream->mHaveBlockedForStateMachineNotPlaying) {
+    mDecodedStream->mHaveBlockedForStateMachineNotPlaying = blockForStateMachineNotPlaying;
+    int32_t delta = blockForStateMachineNotPlaying ? 1 : -1;
+    if (NS_IsMainThread()) {
+      mDecodedStream->mStream->ChangeExplicitBlockerCount(delta);
+    } else {
+      nsCOMPtr<nsIRunnable> runnable =
+          NS_NewRunnableMethodWithArg<int32_t>(mDecodedStream->mStream.get(),
+              &MediaStream::ChangeExplicitBlockerCount, delta);
+      NS_DispatchToMainThread(runnable);
+    }
+  }
+}
+
 void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -272,6 +318,7 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs)
     }
     ConnectDecodedStreamToOutputStream(&os);
   }
+  UpdateStreamBlockingForStateMachinePlaying();
 
   mDecodedStream->mHaveBlockedForPlayState = mPlayState != PLAY_STATE_PLAYING;
   if (mDecodedStream->mHaveBlockedForPlayState) {
@@ -1772,38 +1819,34 @@ MediaDecoder::IsAppleMP3Enabled()
 }
 #endif
 
-class MediaReporter MOZ_FINAL : public MemoryMultiReporter
+NS_IMETHODIMP
+MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                   nsISupports* aData)
 {
-public:
-  MediaReporter()
-    : MemoryMultiReporter("media")
-  {}
-
-  NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
-                            nsISupports* aClosure)
-  {
-    int64_t video, audio;
-    MediaMemoryTracker::GetAmounts(&video, &audio);
-
-  #define REPORT(_path, _amount, _desc)                                       \
-    do {                                                                      \
-        nsresult rv;                                                          \
-        rv = aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path),         \
-                           nsIMemoryReporter::KIND_HEAP,                      \
-                           nsIMemoryReporter::UNITS_BYTES, _amount,           \
-                           NS_LITERAL_CSTRING(_desc), aClosure);              \
-        NS_ENSURE_SUCCESS(rv, rv);                                            \
-    } while (0)
-
-    REPORT("explicit/media/decoded-video", video,
-           "Memory used by decoded video frames.");
-
-    REPORT("explicit/media/decoded-audio", audio,
-           "Memory used by decoded audio chunks.");
-
-    return NS_OK;
+  int64_t video = 0, audio = 0;
+  DecodersArray& decoders = Decoders();
+  for (size_t i = 0; i < decoders.Length(); ++i) {
+    video += decoders[i]->VideoQueueMemoryInUse();
+    audio += decoders[i]->AudioQueueMemoryInUse();
   }
-};
+
+#define REPORT(_path, _amount, _desc)                                         \
+  do {                                                                        \
+      nsresult rv;                                                            \
+      rv = aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
+                                   KIND_HEAP, UNITS_BYTES, _amount,           \
+                                   NS_LITERAL_CSTRING(_desc), aData);         \
+      NS_ENSURE_SUCCESS(rv, rv);                                              \
+  } while (0)
+
+  REPORT("explicit/media/decoded-video", video,
+         "Memory used by decoded video frames.");
+
+  REPORT("explicit/media/decoded-audio", audio,
+         "Memory used by decoded audio chunks.");
+
+  return NS_OK;
+}
 
 MediaDecoderOwner*
 MediaDecoder::GetOwner()
@@ -1813,14 +1856,18 @@ MediaDecoder::GetOwner()
 }
 
 MediaMemoryTracker::MediaMemoryTracker()
-  : mReporter(new MediaReporter())
 {
-  NS_RegisterMemoryReporter(mReporter);
+}
+
+void
+MediaMemoryTracker::InitMemoryReporter()
+{
+  RegisterWeakMemoryReporter(this);
 }
 
 MediaMemoryTracker::~MediaMemoryTracker()
 {
-  NS_UnregisterMemoryReporter(mReporter);
+  UnregisterWeakMemoryReporter(this);
 }
 
 } // namespace mozilla

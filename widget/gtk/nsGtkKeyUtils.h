@@ -261,6 +261,18 @@ protected:
                             gint aGroup);
 
     /**
+     * GetUnmodifiedCharCodeFor() computes what character is inputted by the
+     * key event without Ctrl/Alt/Meta/Super/Hyper modifiers.
+     * If Level3 or Level5 Shift causes no character input, this also ignores
+     * them.
+     *
+     * @param aGdkKeyEvent      Native key event, must not be nullptr.
+     * @return                  charCode which is computed without modifiers
+     *                          which prevent text input.
+     */
+    uint32_t GetUnmodifiedCharCodeFor(const GdkEventKey* aGdkKeyEvent);
+
+    /**
      * GetKeyLevel() returns level of the aGdkKeyEvent in mGdkKeymap.
      *
      * @param aGdkKeyEvent      Native key event, must not be nullptr.

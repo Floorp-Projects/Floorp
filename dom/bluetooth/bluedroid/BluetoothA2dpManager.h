@@ -12,7 +12,6 @@
 #include "BluetoothProfileManagerBase.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
-
 class BluetoothA2dpManager : public BluetoothProfileManagerBase
 {
 public:
@@ -33,7 +32,7 @@ public:
   };
 
   static BluetoothA2dpManager* Get();
-  ~BluetoothA2dpManager();
+  virtual ~BluetoothA2dpManager();
   void ResetA2dp();
   void ResetAvrcp();
 
@@ -52,13 +51,15 @@ public:
   void UpdatePlayStatus(uint32_t aDuration,
                         uint32_t aPosition,
                         ControlPlayStatus aPlayStatus);
+  void UpdateRegisterNotification(int aEventId, int aParam);
   void GetAlbum(nsAString& aAlbum);
   uint32_t GetDuration();
   ControlPlayStatus GetPlayStatus();
   uint32_t GetPosition();
   uint32_t GetMediaNumber();
+  uint32_t GetTotalMediaNumber();
   void GetTitle(nsAString& aTitle);
-
+  void GetArtist(nsAString& aArtist);
 private:
   class SinkPropertyChangedHandler;
   BluetoothA2dpManager();
@@ -82,7 +83,27 @@ private:
   uint32_t mMediaNumber;
   uint32_t mTotalMediaCount;
   uint32_t mPosition;
+  /*
+   * mPlaybackInterval specifies the time interval (in seconds) at which
+   * the change in playback position will be notified. If the song is being
+   * forwarded / rewound, a notification will be received whenever the playback
+   * position will change by this value.
+   */
+  uint32_t mPlaybackInterval;
   ControlPlayStatus mPlayStatus;
+  /*
+   * Notification types: 1. INTERIM 2. CHANGED
+   * 1. The initial response to this Notify command shall be an INTERIM
+   * response with current status.
+   * 2. The following response shall be a CHANGED response with the updated
+   * status.
+   * mPlayStatusChangedNotifType, mTrackChangedNotifType,
+   * mPlayPosChangedNotifType represents current RegisterNotification
+   * notification type.
+   */
+  int mPlayStatusChangedNotifyType;
+  int mTrackChangedNotifyType;
+  int mPlayPosChangedNotifyType;
 };
 
 END_BLUETOOTH_NAMESPACE

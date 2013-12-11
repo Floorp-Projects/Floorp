@@ -44,6 +44,10 @@ namespace JSC { namespace Yarr {
 # define BASE_FRAME_SIZE 0
 #endif
 
+// Thanks, windows.h!
+#undef min
+#undef max
+
 class CharacterClassConstructor {
 public:
     CharacterClassConstructor(bool isCaseInsensitive = false)

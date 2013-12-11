@@ -51,6 +51,7 @@
 #undef UINT8
 #undef INT8
 #include <r_types.h>
+#include <errno.h>
 
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
@@ -78,7 +79,9 @@ typedef SOCKET NR_SOCKET;
 #define NR_SOCKET_CLOSE(sock)            closesocket(sock)
 #endif
 
+#ifndef EHOSTUNREACH
 #define EHOSTUNREACH    WSAEHOSTUNREACH
+#endif
 
 #define LOG_EMERG       0
 #define LOG_ALERT       1

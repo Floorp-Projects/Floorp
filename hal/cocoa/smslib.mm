@@ -294,6 +294,7 @@ static float onegs[3];			// X, Y and Z one-g calibration values
 #define APP_ID ((CFStringRef)@"com.suitable.SeisMacLib")
 
 // These #defines make the accelStartup code a LOT easier to read.
+#undef LOG
 #define LOG(message) \
 	if (logObject) { \
 		[logObject performSelector:logSelector withObject:message]; \

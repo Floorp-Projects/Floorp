@@ -92,7 +92,7 @@ public:
      */
     static already_AddRefed<ContentParent> PreallocateAppProcess();
 
-    static void RunNuwaProcess();
+    static already_AddRefed<ContentParent> RunNuwaProcess();
 
     /**
      * Get or create a content process for the given TabContext.  aFrameElement
@@ -209,8 +209,10 @@ public:
         return PContentParent::RecvPJavaScriptConstructor(aActor);
     }
 
-    virtual bool SendNuwaFork();
-
+    virtual bool RecvRecordingDeviceEvents(const nsString& aRecordingStatus,
+                                           const nsString& aPageURL,
+                                           const bool& aIsAudio,
+                                           const bool& aIsVideo) MOZ_OVERRIDE;
 protected:
     void OnChannelConnected(int32_t pid) MOZ_OVERRIDE;
     virtual void ActorDestroy(ActorDestroyReason why);
@@ -262,6 +264,11 @@ private:
 
     // The common initialization for the constructors.
     void InitializeMembers();
+
+    // The common initialization logic shared by all constuctors.
+    void InitInternal(ProcessPriority aPriority,
+                      bool aSetupOffMainThreadCompositing,
+                      bool aSendRegisteredChrome);
 
     virtual ~ContentParent();
 
@@ -370,6 +377,13 @@ private:
     virtual PFMRadioParent* AllocPFMRadioParent();
     virtual bool DeallocPFMRadioParent(PFMRadioParent* aActor);
 
+    virtual PAsmJSCacheEntryParent* AllocPAsmJSCacheEntryParent(
+                                 const asmjscache::OpenMode& aOpenMode,
+                                 const int64_t& aSizeToWrite,
+                                 const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
+    virtual bool DeallocPAsmJSCacheEntryParent(
+                                   PAsmJSCacheEntryParent* aActor) MOZ_OVERRIDE;
+
     virtual PSpeechSynthesisParent* AllocPSpeechSynthesisParent();
     virtual bool DeallocPSpeechSynthesisParent(PSpeechSynthesisParent* aActor);
     virtual bool RecvPSpeechSynthesisConstructor(PSpeechSynthesisParent* aActor);
@@ -475,6 +489,10 @@ private:
       const AudioChannelType& aType, const bool& aHidden);
 
     virtual bool RecvBroadcastVolume(const nsString& aVolumeName);
+
+    virtual bool RecvSpeakerManagerGetSpeakerStatus(bool* aValue);
+
+    virtual bool RecvSpeakerManagerForceSpeaker(const bool& aEnable);
 
     virtual bool RecvSystemMessageHandled() MOZ_OVERRIDE;
 

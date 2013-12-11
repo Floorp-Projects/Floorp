@@ -10,10 +10,12 @@ import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
+import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.mozglue.generatorannotations.OptionalGeneratedParameter;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.mozglue.GeckoLoader;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -126,6 +128,9 @@ public class GeckoAppShell
     static private final HashMap<String, String>
         mAlertCookies = new HashMap<String, String>();
 
+    // See also HardwareUtils.LOW_MEMORY_THRESHOLD_MB.
+    static private final int HIGH_MEMORY_DEVICE_THRESHOLD_MB = 768;
+
     /* Keep in sync with constants found here:
       http://mxr.mozilla.org/mozilla-central/source/uriloader/base/nsIWebProgressListener.idl
     */
@@ -199,6 +204,7 @@ public class GeckoAppShell
     }
     public static native Message getNextMessageFromQueue(MessageQueue queue);
     public static native void onSurfaceTextureFrameAvailable(Object surfaceTexture, int id);
+    public static native void dispatchMemoryPressure();
 
     public static void registerGlobalExceptionHandler() {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -224,8 +230,7 @@ public class GeckoAppShell
                     }
 
                     if (e instanceof OutOfMemoryError) {
-                        SharedPreferences prefs =
-                            getContext().getSharedPreferences(GeckoApp.PREFS_NAME, 0);
+                        SharedPreferences prefs = getSharedPreferences();
                         SharedPreferences.Editor editor = prefs.edit();
                         editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
                         editor.commit();
@@ -320,6 +325,7 @@ public class GeckoAppShell
         sLayerView = lv;
     }
 
+    @RobocopTarget
     public static LayerView getLayerView() {
         return sLayerView;
     }
@@ -387,7 +393,7 @@ public class GeckoAppShell
         } catch (NoSuchElementException e) {}
     }
 
-    /* This method is referenced by Robocop via reflection. */
+    @RobocopTarget
     public static void sendEventToGecko(GeckoEvent e) {
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             notifyGeckoOfEvent(e);
@@ -855,6 +861,7 @@ public class GeckoAppShell
         });
     }
 
+    @JNITarget
     static public int getPreferredIconSize() {
         if (android.os.Build.VERSION.SDK_INT >= 11) {
             ActivityManager am = (ActivityManager)getContext().getSystemService(Context.ACTIVITY_SERVICE);
@@ -1377,29 +1384,7 @@ public class GeckoAppShell
     }
 
     private static boolean isHighMemoryDevice() {
-        BufferedReader br = null;
-        FileReader fr = null;
-        try {
-            fr = new FileReader("/proc/meminfo");
-            if (fr == null)
-                return false;
-            br = new BufferedReader(fr);
-            String line = br.readLine();
-            while (line != null && !line.startsWith("MemTotal")) {
-                line = br.readLine();
-            }
-            String[] tokens = line.split("\\s+");
-            if (tokens.length >= 2 && Long.parseLong(tokens[1]) >= 786432 /* 768MB in kb*/) {
-                return true;
-            }
-        } catch (Exception ex) {
-        } finally {
-            try {
-                if (fr != null)
-                    fr.close();
-            } catch (IOException ioe) {}
-        }
-        return false;
+        return HardwareUtils.getMemSize() > HIGH_MEMORY_DEVICE_THRESHOLD_MB;
     }
 
     /**
@@ -1603,45 +1588,6 @@ public class GeckoAppShell
                 return LINK_TYPE_UNKNOWN;
         }
     }
-
-    @WrapElementForJNI
-    public static void setSelectedLocale(String localeCode) {
-        /* Bug 713464: This method is still called from Gecko side.
-           Earlier we had an option to run Firefox in a language other than system's language.
-           However, this is not supported as of now.
-           Gecko resets the locale to en-US by calling this function with an empty string.
-           This affects GeckoPreferences activity in multi-locale builds.
-
-        N.B., if this code ever becomes live again, you need to hook it up to locale
-        recording in BrowserHealthRecorder: we track the current app and OS locales
-        as part of the recorded environment.
-
-        See similar note in GeckoApp.java for the startup path.
-
-        //We're not using this, not need to save it (see bug 635342)
-        SharedPreferences settings =
-            getContext().getPreferences(Activity.MODE_PRIVATE);
-        settings.edit().putString(getContext().getPackageName() + ".locale",
-                                  localeCode).commit();
-        Locale locale;
-        int index;
-        if ((index = localeCode.indexOf('-')) != -1 ||
-            (index = localeCode.indexOf('_')) != -1) {
-            String langCode = localeCode.substring(0, index);
-            String countryCode = localeCode.substring(index + 1);
-            locale = new Locale(langCode, countryCode);
-        } else {
-            locale = new Locale(localeCode);
-        }
-        Locale.setDefault(locale);
-
-        Resources res = getContext().getBaseContext().getResources();
-        Configuration config = res.getConfiguration();
-        config.locale = locale;
-        res.updateConfiguration(config, res.getDisplayMetrics());
-        */
-    }
-
 
     @WrapElementForJNI(stubName = "GetSystemColoursWrapper")
     public static int[] getSystemColors() {
@@ -2163,6 +2109,13 @@ public class GeckoAppShell
         sContextGetter = cg;
     }
 
+    public static SharedPreferences getSharedPreferences() {
+        if (sContextGetter == null) {
+            throw new IllegalStateException("No ContextGetter; cannot fetch prefs.");
+        }
+        return sContextGetter.getSharedPreferences();
+    }
+
     public interface AppStateListener {
         public void onPause();
         public void onResume();
@@ -2338,9 +2291,8 @@ public class GeckoAppShell
      * with an event that is currently being processed has the properly-defined behaviour that
      * any added listeners will not be invoked on the event currently being processed, but
      * will be invoked on future events of that type.
-     *
-     * This method is referenced by Robocop via reflection.
      */
+    @RobocopTarget
     public static void registerEventListener(String event, GeckoEventListener listener) {
         sEventDispatcher.registerEventListener(event, listener);
     }
@@ -2355,9 +2307,8 @@ public class GeckoAppShell
      * with an event that is currently being processed has the properly-defined behaviour that
      * any removed listeners will still be invoked on the event currently being processed, but
      * will not be invoked on future events of that type.
-     *
-     * This method is referenced by Robocop via reflection.
      */
+    @RobocopTarget
     public static void unregisterEventListener(String event, GeckoEventListener listener) {
         sEventDispatcher.unregisterEventListener(event, listener);
     }
@@ -2474,6 +2425,7 @@ public class GeckoAppShell
 
     /* Called by JNI from AndroidBridge, and by reflection from tests/BaseTest.java.in */
     @WrapElementForJNI
+    @RobocopTarget
     public static boolean isTablet() {
         return HardwareUtils.isTablet();
     }

@@ -478,8 +478,8 @@ Break(const char *aMsg)
      */
     PROCESS_INFORMATION pi;
     STARTUPINFOW si;
-    PRUnichar executable[MAX_PATH];
-    PRUnichar* pName;
+    wchar_t executable[MAX_PATH];
+    wchar_t* pName;
 
     memset(&pi, 0, sizeof(pi));
 
@@ -488,13 +488,13 @@ Break(const char *aMsg)
     si.wShowWindow = SW_SHOW;
 
     // 2nd arg of CreateProcess is in/out
-    PRUnichar *msgCopy = (PRUnichar*) _alloca((strlen(aMsg) + 1)*sizeof(PRUnichar));
-    wcscpy(msgCopy  , (PRUnichar*)NS_ConvertUTF8toUTF16(aMsg).get());
+    wchar_t *msgCopy = (wchar_t*) _alloca((strlen(aMsg) + 1)*sizeof(wchar_t));
+    wcscpy(msgCopy, NS_ConvertUTF8toUTF16(aMsg).get());
 
-    if(GetModuleFileNameW(GetModuleHandleW(L"xpcom.dll"), (LPWCH)executable, MAX_PATH) &&
+    if(GetModuleFileNameW(GetModuleHandleW(L"xpcom.dll"), executable, MAX_PATH) &&
        nullptr != (pName = wcsrchr(executable, '\\')) &&
-       nullptr != wcscpy((WCHAR*)pName + 1, L"windbgdlg.exe") &&
-       CreateProcessW((LPCWSTR)executable, (LPWSTR)msgCopy, nullptr, nullptr,
+       nullptr != wcscpy(pName + 1, L"windbgdlg.exe") &&
+       CreateProcessW(executable, msgCopy, nullptr, nullptr,
                       false, DETACHED_PROCESS | NORMAL_PRIORITY_CLASS,
                       nullptr, nullptr, &si, &pi)) {
       WaitForSingleObject(pi.hProcess, INFINITE);
@@ -592,5 +592,12 @@ NS_ErrorAccordingToNSPR()
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+void
+NS_ABORT_OOM(size_t size)
+{
+#ifdef MOZ_CRASHREPORTER
+  CrashReporter::AnnotateOOMAllocationSize(size);
+#endif
+  MOZ_CRASH();
+}
 

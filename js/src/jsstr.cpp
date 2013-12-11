@@ -2645,7 +2645,8 @@ AppendSubstrings(JSContext *cx, Handle<JSStableString*> stableStr,
             return nullptr;
 
         /* Appending to the rope permanently roots the substring. */
-        rope.append(part);
+        if (!rope.append(part))
+            return nullptr;
     }
 
     return rope.result();
@@ -2859,7 +2860,7 @@ LambdaIsGetElem(JSContext *cx, JSObject &lambda, MutableHandleObject pobj)
     if (!script)
         return false;
 
-    jsbytecode *pc = script->code;
+    jsbytecode *pc = script->code();
 
     /*
      * JSOP_GETALIASEDVAR tells us exactly where to find the base object 'b'.
@@ -3132,6 +3133,31 @@ SplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit, const Ma
     return NewDenseCopiedArray(cx, splits.length(), splits.begin());
 }
 
+// Fast-path for splitting a string into a character array via split("").
+static ArrayObject *
+CharSplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit)
+{
+    size_t strLength = str->length();
+    if (strLength == 0)
+        return NewDenseEmptyArray(cx);
+
+    js::StaticStrings &staticStrings = cx->runtime()->staticStrings;
+    uint32_t resultlen = (limit < strLength ? limit : strLength);
+
+    AutoValueVector splits(cx);
+    if (!splits.reserve(resultlen))
+        return nullptr;
+
+    for (size_t i = 0; i < resultlen; ++i) {
+        JSString *sub = staticStrings.getUnitStringForElement(cx, str, i);
+        if (!sub)
+            return nullptr;
+        splits.infallibleAppend(StringValue(sub));
+    }
+
+    return NewDenseCopiedArray(cx, splits.length(), splits.begin());
+}
+
 namespace {
 
 /*
@@ -3274,8 +3300,12 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     /* Steps 11-15. */
     RootedObject aobj(cx);
     if (!re.initialized()) {
-        SplitStringMatcher matcher(cx, sepstr);
-        aobj = SplitHelper(cx, linearStr, limit, matcher, type);
+        if (sepstr->length() == 0) {
+            aobj = CharSplitHelper(cx, linearStr, limit);
+        } else {
+            SplitStringMatcher matcher(cx, sepstr);
+            aobj = SplitHelper(cx, linearStr, limit, matcher, type);
+        }
     } else {
         SplitRegExpMatcher matcher(*re, cx->global()->getRegExpStatics());
         aobj = SplitHelper(cx, linearStr, limit, matcher, type);
@@ -3302,8 +3332,14 @@ js::str_split_string(JSContext *cx, HandleTypeObject type, HandleString str, Han
 
     uint32_t limit = UINT32_MAX;
 
-    SplitStringMatcher matcher(cx, linearSep);
-    ArrayObject *aobj = SplitHelper(cx, linearStr, limit, matcher, type);
+    RootedObject aobj(cx);
+    if (linearSep->length() == 0) {
+        aobj = CharSplitHelper(cx, linearStr, limit);
+    } else {
+        SplitStringMatcher matcher(cx, linearSep);
+        aobj = SplitHelper(cx, linearStr, limit, matcher, type);
+    }
+
     if (!aobj)
         return nullptr;
 
@@ -3765,13 +3801,13 @@ static const JSFunctionSpec string_static_methods[] = {
     JS_FS_END
 };
 
-Shape *
-StringObject::assignInitialShape(JSContext *cx)
+/* static */ Shape *
+StringObject::assignInitialShape(ExclusiveContext *cx, Handle<StringObject*> obj)
 {
-    JS_ASSERT(nativeEmpty());
+    JS_ASSERT(obj->nativeEmpty());
 
-    return addDataProperty(cx, cx->names().length, LENGTH_SLOT,
-                           JSPROP_PERMANENT | JSPROP_READONLY);
+    return obj->addDataProperty(cx, cx->names().length, LENGTH_SLOT,
+                                JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
 JSObject *

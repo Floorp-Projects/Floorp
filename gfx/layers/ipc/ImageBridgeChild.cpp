@@ -199,7 +199,7 @@ ImageBridgeChild::UpdatePictureRect(CompositableClient* aCompositable,
 }
 
 // Singleton
-static ImageBridgeChild *sImageBridgeChildSingleton = nullptr;
+static StaticRefPtr<ImageBridgeChild> sImageBridgeChildSingleton;
 static StaticRefPtr<ImageBridgeParent> sImageBridgeParentSingleton;
 static Thread *sImageBridgeChildThread = nullptr;
 
@@ -225,7 +225,6 @@ static void DeleteImageBridgeSync(ReentrantMonitor *aBarrier, bool *aDone)
 
   NS_ABORT_IF_FALSE(InImageBridgeChildThread(),
                     "Should be in ImageBridgeChild thread.");
-  delete sImageBridgeChildSingleton;
   sImageBridgeChildSingleton = nullptr;
   sImageBridgeParentSingleton = nullptr;
   *aDone = true;
@@ -830,7 +829,7 @@ ImageBridgeChild::AllocShmem(size_t aSize,
 // NewRunnableFunction accepts a limited number of parameters so we need a
 // struct here
 struct AllocShmemParams {
-  ISurfaceAllocator* mAllocator;
+  RefPtr<ISurfaceAllocator> mAllocator;
   size_t mSize;
   ipc::SharedMemory::SharedMemoryType mType;
   ipc::Shmem* mShmem;

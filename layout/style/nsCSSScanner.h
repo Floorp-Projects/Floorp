@@ -194,6 +194,46 @@ class nsCSSScanner {
   // input to aBuffer.
   void StopRecording(nsString& aBuffer);
 
+  enum EOFCharacters {
+    eEOFCharacters_None =                    0x0000,
+
+    // to handle \<EOF> inside strings
+    eEOFCharacters_DropBackslash =           0x0001,
+
+    // to handle \<EOF> outside strings
+    eEOFCharacters_ReplacementChar =         0x0002,
+
+    // to close comments
+    eEOFCharacters_Asterisk =                0x0004,
+    eEOFCharacters_Slash =                   0x0008,
+
+    // to close double-quoted strings
+    eEOFCharacters_DoubleQuote =             0x0010,
+
+    // to close single-quoted strings
+    eEOFCharacters_SingleQuote =             0x0020,
+
+    // to close URLs
+    eEOFCharacters_CloseParen =              0x0040,
+  };
+
+  // Appends or drops any characters to/from the specified string
+  // the input stream to make the last token not rely on special EOF handling
+  // behavior.
+  static void AdjustTokenStreamForEOFCharacters(EOFCharacters aEOFCharacters,
+                                                nsAString& aString);
+
+  EOFCharacters GetEOFCharacters() const {
+#ifdef DEBUG
+    AssertEOFCharactersValid(mEOFCharacters);
+#endif
+    return mEOFCharacters;
+  }
+
+#ifdef DEBUG
+  static void AssertEOFCharactersValid(uint32_t c);
+#endif
+
 protected:
   int32_t Peek(uint32_t n = 0);
   void Advance(uint32_t n = 1);
@@ -212,6 +252,9 @@ protected:
   bool ScanString(nsCSSToken& aResult);
   bool ScanURange(nsCSSToken& aResult);
 
+  void SetEOFCharacters(uint32_t aEOFCharacters);
+  void AddEOFCharacters(uint32_t aEOFCharacters);
+
   const PRUnichar *mBuffer;
   uint32_t mOffset;
   uint32_t mCount;
@@ -224,6 +267,7 @@ protected:
   uint32_t mTokenOffset;
 
   uint32_t mRecordStartOffset;
+  EOFCharacters mEOFCharacters;
 
   mozilla::css::ErrorReporter *mReporter;
 

@@ -12,21 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VPATH           = \
-  $(srcdir) \
-  $(NULL)
-
 STL_FLAGS=
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DXPCOM_GLUE
-
-LOCAL_INCLUDES += \
+CXXFLAGS += \
 	-I$(ANDROID_SOURCE)/hardware/libhardware/include \
 	-I$(ANDROID_SOURCE)/hardware/libhardware_legacy/include \
 	-I$(ANDROID_SOURCE)/frameworks/native/include/gui \
 	-I$(ANDROID_SOURCE)/frameworks/native/opengl/include \
 	-I$(ANDROID_SOURCE)/system/core/libsuspend/include \
-	-I$(srcdir) \
 	$(NULL)

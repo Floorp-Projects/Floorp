@@ -108,6 +108,12 @@
                        BOUNDARY_LINE_START,
                        [ [ 0, 3, "foo\n", 0, 4 ], [ 4, 4, "", 4, 4 ] ]);
 
+      //////////////////////////////////////////////////////////////////////////
+      // list items
+
+      testTextAtOffset([ "li1" ], BOUNDARY_LINE_START,
+                       [ [ 0, 5, kDiscBulletChar + "Item", 0, 5 ] ]);
+
       SimpleTest.finish();
     }
 
@@ -166,5 +172,9 @@ two words
 
   <iframe id="ht_2" src="data:text/html,<div contentEditable='true'>foo<br/></div>"></iframe>
   <iframe id="ht_3" src="data:text/html,<div contentEditable='true'>foo<br/><br/></div>"></iframe>
+
+  <ul>
+    <li id="li1">Item</li>
+  </ul>
 </body>
 </html>

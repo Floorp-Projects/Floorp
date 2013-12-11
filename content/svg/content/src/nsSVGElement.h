@@ -69,7 +69,7 @@ class nsSVGElement : public nsSVGElementBase    // nsIContent
 {
 protected:
   nsSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-  friend nsresult NS_NewSVGElement(nsIContent **aResult,
+  friend nsresult NS_NewSVGElement(mozilla::dom::Element **aResult,
                                    already_AddRefed<nsINodeInfo> aNodeInfo);
   nsresult Init();
   virtual ~nsSVGElement(){}

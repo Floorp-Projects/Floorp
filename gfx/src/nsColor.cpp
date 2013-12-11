@@ -3,16 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"         // for ArrayLength
+#include "mozilla/mozalloc.h"           // for operator delete, etc
 
 #include "nsColor.h"
 #include <sys/types.h>                  // for int32_t
-#include "mozilla/Util.h"               // for ArrayLength
-#include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsColorNames.h"               // for nsColorNames
 #include "nsDebug.h"                    // for NS_ASSERTION, etc
 #include "nsStaticNameTable.h"
-#include "nsString.h"               // for nsAutoCString, nsString, etc
+#include "nsString.h"                   // for nsAutoCString, nsString, etc
 #include "nscore.h"                     // for nsAString, etc
 
 using namespace mozilla;

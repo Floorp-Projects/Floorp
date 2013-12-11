@@ -31,6 +31,21 @@
 
 #include "nsIConsoleService.h"
 
+#ifdef DEBUG
+#define ENSURE_MAIN_PROCESS(message, pref) do {                                \
+  if (GetContentChild()) {                                                     \
+    nsPrintfCString msg("ENSURE_MAIN_PROCESS failed. %s %s", message, pref);   \
+    NS_ERROR(msg.get());                                                       \
+    return NS_ERROR_NOT_AVAILABLE;                                             \
+  }                                                                            \
+} while (0);
+#else
+#define ENSURE_MAIN_PROCESS(message, pref)                                     \
+  if (GetContentChild()) {                                                     \
+    return NS_ERROR_NOT_AVAILABLE;                                             \
+  }
+#endif
+
 // 1 MB should be enough for everyone.
 static const uint32_t MAX_PREF_LENGTH = 1 * 1024 * 1024;
 // Actually, 4kb should be enough for everyone.
@@ -140,11 +155,7 @@ NS_IMETHODIMP nsPrefBranch::GetBoolPref(const char *aPrefName, bool *_retval)
 
 NS_IMETHODIMP nsPrefBranch::SetBoolPref(const char *aPrefName, bool aValue)
 {
-  if (GetContentChild()) {
-    NS_ERROR("cannot set pref from content process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
+  ENSURE_MAIN_PROCESS("Cannot SetBoolPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
   const char *pref = getPrefName(aPrefName);
   return PREF_SetBoolPref(pref, aValue, mIsDefault);
@@ -182,11 +193,7 @@ NS_IMETHODIMP nsPrefBranch::SetCharPref(const char *aPrefName, const char *aValu
 nsresult nsPrefBranch::SetCharPrefInternal(const char *aPrefName, const char *aValue)
 
 {
-  if (GetContentChild()) {
-    NS_ERROR("cannot set pref from content process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
+  ENSURE_MAIN_PROCESS("Cannot SetCharPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
   NS_ENSURE_ARG(aValue);
   const char *pref = getPrefName(aPrefName);
@@ -202,11 +209,7 @@ NS_IMETHODIMP nsPrefBranch::GetIntPref(const char *aPrefName, int32_t *_retval)
 
 NS_IMETHODIMP nsPrefBranch::SetIntPref(const char *aPrefName, int32_t aValue)
 {
-  if (GetContentChild()) {
-    NS_ERROR("cannot set pref from content process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
+  ENSURE_MAIN_PROCESS("Cannot SetIntPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
   const char *pref = getPrefName(aPrefName);
   return PREF_SetIntPref(pref, aValue, mIsDefault);
@@ -391,11 +394,7 @@ nsresult nsPrefBranch::CheckSanityOfStringLength(const char* aPrefName, const ui
 
 NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue)
 {
-  if (GetContentChild()) {
-    NS_ERROR("cannot set pref from content process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
+  ENSURE_MAIN_PROCESS("Cannot SetComplexValue from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
 
   nsresult   rv = NS_NOINTERFACE;
@@ -491,11 +490,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
 NS_IMETHODIMP nsPrefBranch::ClearUserPref(const char *aPrefName)
 {
-  if (GetContentChild()) {
-    NS_ERROR("cannot set pref from content process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
+  ENSURE_MAIN_PROCESS("Cannot ClearUserPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
   const char *pref = getPrefName(aPrefName);
   return PREF_ClearUserPref(pref);
@@ -512,11 +507,7 @@ NS_IMETHODIMP nsPrefBranch::PrefHasUserValue(const char *aPrefName, bool *_retva
 
 NS_IMETHODIMP nsPrefBranch::LockPref(const char *aPrefName)
 {
-  if (GetContentChild()) {
-    NS_ERROR("cannot lock pref from content process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
+  ENSURE_MAIN_PROCESS("Cannot LockPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
   const char *pref = getPrefName(aPrefName);
   return PREF_LockPref(pref, true);
@@ -524,11 +515,7 @@ NS_IMETHODIMP nsPrefBranch::LockPref(const char *aPrefName)
 
 NS_IMETHODIMP nsPrefBranch::PrefIsLocked(const char *aPrefName, bool *_retval)
 {
-  if (GetContentChild()) {
-    NS_ERROR("cannot check lock pref from content process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
+  ENSURE_MAIN_PROCESS("Cannot check PrefIsLocked from content process:", aPrefName);
   NS_ENSURE_ARG_POINTER(_retval);
   NS_ENSURE_ARG(aPrefName);
   const char *pref = getPrefName(aPrefName);
@@ -538,11 +525,7 @@ NS_IMETHODIMP nsPrefBranch::PrefIsLocked(const char *aPrefName, bool *_retval)
 
 NS_IMETHODIMP nsPrefBranch::UnlockPref(const char *aPrefName)
 {
-  if (GetContentChild()) {
-    NS_ERROR("cannot unlock pref from content process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
+  ENSURE_MAIN_PROCESS("Cannot UnlockPref from content process:", aPrefName);
   NS_ENSURE_ARG(aPrefName);
   const char *pref = getPrefName(aPrefName);
   return PREF_LockPref(pref, false);
@@ -556,11 +539,7 @@ NS_IMETHODIMP nsPrefBranch::ResetBranch(const char *aStartingAt)
 
 NS_IMETHODIMP nsPrefBranch::DeleteBranch(const char *aStartingAt)
 {
-  if (GetContentChild()) {
-    NS_ERROR("cannot set pref from content process");
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
+  ENSURE_MAIN_PROCESS("Cannot DeleteBranch from content process:", aStartingAt);
   NS_ENSURE_ARG(aStartingAt);
   const char *pref = getPrefName(aStartingAt);
   return PREF_DeleteBranch(pref);
@@ -702,7 +681,7 @@ NS_IMETHODIMP nsPrefBranch::Observe(nsISupports *aSubject, const char *aTopic, c
 }
 
 /* static */
-nsresult nsPrefBranch::NotifyObserver(const char *newpref, void *data)
+void nsPrefBranch::NotifyObserver(const char *newpref, void *data)
 {
   PrefCallback *pCallback = (PrefCallback *)data;
 
@@ -710,7 +689,7 @@ nsresult nsPrefBranch::NotifyObserver(const char *newpref, void *data)
   if (!observer) {
     // The observer has expired.  Let's remove this callback.
     pCallback->GetPrefBranch()->RemoveExpiredCallback(pCallback);
-    return NS_OK;
+    return;
   }
 
   // remove any root this string may contain so as to not confuse the observer
@@ -721,7 +700,6 @@ nsresult nsPrefBranch::NotifyObserver(const char *newpref, void *data)
   observer->Observe(static_cast<nsIPrefBranch *>(pCallback->GetPrefBranch()),
                     NS_PREFBRANCH_PREFCHANGE_TOPIC_ID,
                     NS_ConvertASCIItoUTF16(suffix).get());
-  return NS_OK;
 }
 
 PLDHashOperator
@@ -921,3 +899,5 @@ NS_IMETHODIMP nsRelativeFilePref::SetRelativeToKey(const nsACString& aRelativeTo
   mRelativeToKey.Assign(aRelativeToKey);
   return NS_OK;
 }
+
+#undef ENSURE_MAIN_PROCESS

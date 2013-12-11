@@ -14,33 +14,6 @@ namespace mozilla {
 namespace dom {
 
 inline void
-Element::AddToIdTable(nsIAtom* aId)
-{
-  NS_ASSERTION(HasID(), "Node doesn't have an ID?");
-  nsIDocument* doc = GetCurrentDoc();
-  if (doc && (!IsInAnonymousSubtree() || doc->IsXUL())) {
-    doc->AddToIdTable(this, aId);
-  }
-}
-
-inline void
-Element::RemoveFromIdTable()
-{
-  if (HasID()) {
-    nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
-      nsIAtom* id = DoGetID();
-      // id can be null during mutation events evilness. Also, XUL elements
-      // loose their proto attributes during cc-unlink, so this can happen
-      // during cc-unlink too.
-      if (id) {
-        doc->RemoveFromIdTable(this, DoGetID());
-      }
-    }
-  }
-}
-
-inline void
 Element::MozRequestPointerLock()
 {
   OwnerDoc()->RequestPointerLock(this);

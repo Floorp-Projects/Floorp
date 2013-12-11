@@ -31,12 +31,17 @@
 }
 
 .breakpoint.debugLocation {
-  background-image: url("chrome://browser/skin/devtools/editor-debug-location.png"),
+  background-image:
+    url("chrome://browser/skin/devtools/editor-debug-location.png"),
     url("chrome://browser/skin/devtools/editor-breakpoint.png");
 }
 
-.error-line {
-  background: rgba(255,0,0,0.2);
+.CodeMirror {
+  cursor: text;
+}
+
+.CodeMirror-gutters {
+  cursor: default;
 }
 
 /* This is to avoid the fake horizontal scrollbar div of codemirror to go 0

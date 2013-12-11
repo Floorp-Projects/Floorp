@@ -32,6 +32,10 @@ while (decoderList.hasMore()) {
         data = encodeUTF16BE(testContent);
     else if (decoder == "UTF-16" || decoder == "UTF-16LE")
         data = encodeUTF16LE(testContent);
+    else if (decoder == "replacement" || 
+             decoder == "ISO-2022-KR" || 
+             decoder == "ISO-2022-CN")
+        continue;
     else
         data = encodeURI(testContent);
     var dataURI = "data:text/html;charset=" + decoder + "," + data;

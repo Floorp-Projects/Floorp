@@ -28,8 +28,6 @@
       {0x89, 0x10, 0xf9, 0x3c, 0x55, 0xe6, 0x62, 0xec}}
 #define NS_AUDIOMANAGER_CONTRACTID "@mozilla.org/telephony/audiomanager;1"
 
-using namespace mozilla::dom;
-
 namespace mozilla {
 namespace hal {
 class SwitchEvent;
@@ -60,12 +58,17 @@ protected:
   int32_t mPhoneState;
   int mCurrentStreamVolumeTbl[AUDIO_STREAM_CNT];
 
-  android::status_t SetStreamVolumeIndex(int32_t aStream, int32_t aIndex);
-  android::status_t GetStreamVolumeIndex(int32_t aStream, int32_t *aIndex);
+  nsresult SetStreamVolumeIndex(int32_t aStream, int32_t aIndex);
+  nsresult GetStreamVolumeIndex(int32_t aStream, int32_t *aIndex);
 
 private:
   nsAutoPtr<mozilla::hal::SwitchObserver> mObserver;
   nsCOMPtr<AudioChannelAgent>             mPhoneAudioAgent;
+#ifdef MOZ_B2G_RIL
+  bool                                    mMuteCallToRIL;
+  // mIsMicMuted is only used for toggling mute call to RIL.
+  bool                                    mIsMicMuted;
+#endif
 
   void HandleBluetoothStatusChanged(nsISupports* aSubject,
                                     const char* aTopic,

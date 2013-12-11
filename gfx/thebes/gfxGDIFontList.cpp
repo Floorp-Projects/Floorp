@@ -30,6 +30,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/WindowsVersion.h"
 
 #include <usp10.h>
 
@@ -218,8 +219,7 @@ GDIFontEntry::IsSymbolFont()
 gfxFont *
 GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, bool aNeedsBold)
 {
-    bool isXP = (gfxWindowsPlatform::WindowsOSVersion() 
-                       < gfxWindowsPlatform::kWindowsVista);
+    bool isXP = !IsVistaOrLater();
 
     bool useClearType = isXP && !aFontStyle->systemFont &&
         (gfxWindowsPlatform::GetPlatform()->UseClearTypeAlways() ||
@@ -323,7 +323,7 @@ GDIFontEntry::TestCharacterMap(uint32_t aCh)
         HFONT hfont = font->GetHFONT();
         HFONT oldFont = (HFONT)SelectObject(dc, hfont);
 
-        PRUnichar str[1] = { (PRUnichar)aCh };
+        wchar_t str[1] = { aCh };
         WORD glyph[1];
 
         bool hasGlyph = false;
@@ -829,11 +829,10 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 
     // Uniscribe doesn't place CFF fonts loaded privately 
     // via AddFontMemResourceEx on XP/Vista
-    if (isCFF && gfxWindowsPlatform::WindowsOSVersion() 
-                 < gfxWindowsPlatform::kWindows7) {
+    if (isCFF && !IsWin7OrLater()) {
         fe->mForceGDI = true;
     }
- 
+
     return fe;
 }
 

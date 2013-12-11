@@ -78,14 +78,10 @@ SVGPointListSMILType::Add(nsSMILValue& aDest,
   NS_ABORT_IF_FALSE(dest.Element() || valueToAdd.Element(),
                     "Target element propagation failure");
 
-  if (!valueToAdd.Element()) {
-    NS_ABORT_IF_FALSE(valueToAdd.Length() == 0,
-                      "Not identity value - target element propagation failure");
+  if (valueToAdd.IsIdentity()) {
     return NS_OK;
   }
-  if (!dest.Element()) {
-    NS_ABORT_IF_FALSE(dest.Length() == 0,
-                      "Not identity value - target element propagation failure");
+  if (dest.IsIdentity()) {
     if (!dest.SetLength(valueToAdd.Length())) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

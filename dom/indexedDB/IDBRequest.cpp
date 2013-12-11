@@ -34,7 +34,7 @@
 namespace {
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
-uint64_t gNextSerialNumber = 1;
+uint64_t gNextRequestSerialNumber = 1;
 #endif
 
 } // anonymous namespace
@@ -47,7 +47,7 @@ IDBRequest::IDBRequest()
 : mResultVal(JSVAL_VOID),
   mActorParent(nullptr),
 #ifdef MOZ_ENABLE_PROFILER_SPS
-  mSerialNumber(gNextSerialNumber++),
+  mSerialNumber(gNextRequestSerialNumber++),
 #endif
   mErrorCode(NS_OK),
   mLineNo(0),
@@ -278,7 +278,7 @@ IDBRequest::CaptureCaller()
   const char* filename = nullptr;
   uint32_t lineNo = 0;
   if (!nsJSUtils::GetCallingLocation(cx, &filename, &lineNo)) {
-    MOZ_CRASH("Failed to get caller.");
+    NS_WARNING("Failed to get caller.");
     return;
   }
 

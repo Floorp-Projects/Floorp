@@ -63,6 +63,7 @@ HwcComposer2D::HwcComposer2D()
     , mHwc(nullptr)
     , mColorFill(false)
     , mRBSwapSupport(false)
+    , mPrevRetireFence(-1)
 {
 }
 
@@ -450,6 +451,7 @@ HwcComposer2D::TryHwComposition()
 
     if (!(fbsurface && fbsurface->lastHandle)) {
         LOGD("H/W Composition failed. FBSurface not initialized.");
+        mList->numHwLayers = 0;
         return false;
     }
 
@@ -458,6 +460,7 @@ HwcComposer2D::TryHwComposition()
     if (idx >= mMaxLayerCount) {
         if (!ReallocLayerList() || idx >= mMaxLayerCount) {
             LOGE("TryHwComposition failed! Could not add FB layer");
+            mList->numHwLayers = 0;
             return false;
         }
     }
@@ -492,7 +495,6 @@ HwcComposer2D::TryHwComposition()
 
     // No composition on FB layer, so closing releaseFenceFd
     close(mList->hwLayers[idx].releaseFenceFd);
-    mList->hwLayers[idx].releaseFenceFd = -1;
     mList->numHwLayers = 0;
     return true;
 }
@@ -523,6 +525,8 @@ HwcComposer2D::Render(EGLDisplay dpy, EGLSurface sur)
         mList->hwLayers[0].compositionType = HWC_BACKGROUND;
         mList->hwLayers[0].flags = HWC_SKIP_LAYER;
         mList->hwLayers[0].backgroundColor = {0};
+        mList->hwLayers[0].acquireFenceFd = -1;
+        mList->hwLayers[0].releaseFenceFd = -1;
         mList->hwLayers[0].displayFrame = {0, 0, mScreenRect.width, mScreenRect.height};
         Prepare(fbsurface->lastHandle, fbsurface->lastFenceFD);
     }
@@ -573,31 +577,38 @@ HwcComposer2D::Commit()
 
     int err = mHwc->set(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
 
+    // To avoid tearing, workaround for missing releaseFenceFd
+    // waits in Gecko layers, see Bug 925444.
     if (!mPrevReleaseFds.IsEmpty()) {
         // Wait for previous retire Fence to signal.
         // Denotes contents on display have been replaced.
         // For buffer-sync, framework should not over-write
         // prev buffers until we close prev releaseFenceFds
-        sp<Fence> fence = new Fence(mPrevReleaseFds[0]);
+        sp<Fence> fence = new Fence(mPrevRetireFence);
         if (fence->wait(1000) == -ETIME) {
-            LOGE("Wait timed-out for retireFenceFd %d", mPrevReleaseFds[0]);
+            LOGE("Wait timed-out for retireFenceFd %d", mPrevRetireFence);
         }
-
         for (int i = 0; i < mPrevReleaseFds.Length(); i++) {
             close(mPrevReleaseFds[i]);
         }
+        close(mPrevRetireFence);
         mPrevReleaseFds.Clear();
     }
 
-    mPrevReleaseFds.AppendElement(mList->retireFenceFd);
     for (uint32_t j=0; j < (mList->numHwLayers - 1); j++) {
-        if (mList->hwLayers[j].compositionType == HWC_OVERLAY) {
+        if (mList->hwLayers[j].releaseFenceFd >= 0) {
             mPrevReleaseFds.AppendElement(mList->hwLayers[j].releaseFenceFd);
-            mList->hwLayers[j].releaseFenceFd = -1;
         }
     }
 
-    mList->retireFenceFd = -1;
+    if (mList->retireFenceFd >= 0) {
+        if (!mPrevReleaseFds.IsEmpty()) {
+            mPrevRetireFence = mList->retireFenceFd;
+        } else { // GPU Composition
+            close(mList->retireFenceFd);
+        }
+    }
+
     return !err;
 }
 #else

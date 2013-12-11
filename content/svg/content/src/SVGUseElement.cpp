@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/dom/SVGUseElementBinding.h"
@@ -71,18 +71,8 @@ NS_INTERFACE_TABLE_TAIL_INHERITING(SVGUseElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-#ifdef _MSC_VER
-// Disable "warning C4355: 'this' : used in base member initializer list".
-// We can ignore that warning because we know that mSource's constructor 
-// doesn't dereference the pointer passed to it.
-#pragma warning(push)
-#pragma warning(disable:4355)
-#endif
 SVGUseElement::SVGUseElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : SVGUseElementBase(aNodeInfo), mSource(this)
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+  : SVGUseElementBase(aNodeInfo), mSource(MOZ_THIS_IN_INITIALIZER_LIST())
 {
 }
 

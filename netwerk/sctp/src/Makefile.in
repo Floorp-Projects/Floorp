@@ -3,85 +3,34 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-VPATH     = \
-  @srcdir@ \
-  @srcdir@/netinet \
-  @srcdir@/netinet6 \
-  $(NULL)
-
 NO_PROFILE_GUIDED_OPTIMIZE = 1 # Don't PGO
 
-LOCAL_INCLUDES = \
-  -I$(srcdir)/../../base/src \
-  -I$(topsrcdir)/content/base/src \
-  -I$(topsrcdir)/content/events/src \
-  -I$(topsrcdir)/xpcom/ds \
-  $(NULL)
-
-# Android NDK r5c, used on the builders at the time of this writing, doesn't
-# have the headers we need for IPv6
-ifeq ($(OS_TARGET),Android)
-  IPV6_DEFINE=
-else
-  IPV6_DEFINE=-DINET6=1
-endif
-
-DEFINES = \
-  -DSCTP_SIMPLE_ALLOCATOR=1 \
-  -DUSE_SCTP_SHA1=1 \
-  -DSCTP_PROCESS_LEVEL_LOCKS=1 \
-  -D__Userspace__=1 \
-  -DINET=1 \
-  $(IPV6_DEFINE) \
-  -DCALLBACK_API=1 \
-  -DSCTP_DEBUG=1 \
-  $(NULL)
-
-ifeq ($(OS_TARGET),WINNT)
-DEFINES += \
-  -D__Userspace_os_Windows=1 \
-  -D_LIB=1 \
-  $(NULL)
-else
 ifeq ($(OS_TARGET),Darwin)
 DEFINES += \
-  -D__Userspace_os_Darwin=1 \
-  -D__APPLE_USE_RFC_2292=1 \
   -U__APPLE__ \
   $(NULL)
 else
-ifeq (,$(filter-out Linux Android,$(OS_TARGET)))
-DEFINES += -D__Userspace_os_Linux=1
-# to make sure that in6_pktinfo gets defined on all distros
-DEFINES += -D_GNU_SOURCE
-else
 ifeq ($(OS_TARGET),FreeBSD)
 DEFINES += \
-  -D__Userspace_os_FreeBSD=1 \
   -U__FreeBSD__ \
   $(NULL)
 else
 ifeq ($(OS_TARGET),NetBSD)
 DEFINES += \
-  -D__Userspace_os_NetBSD=1 \
   -U__NetBSD__ \
   $(NULL)
 else
 ifeq ($(OS_TARGET),OpenBSD)
 DEFINES += \
-  -D__Userspace_os_OpenBSD=1 \
   -U__OpenBSD__ \
   $(NULL)
 else
 ifeq ($(OS_TARGET),DragonFly)
 DEFINES += \
-  -D__Userspace_os_DragonFly=1 \
   -U__DragonFly__ \
   $(NULL)
 else
 #error Unsupported platform!
-endif
-endif
 endif
 endif
 endif

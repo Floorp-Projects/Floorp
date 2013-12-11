@@ -287,7 +287,7 @@ private:
 #endif
     void CleanupFromTimeout(const bool aByHangUI);
     void SetChildTimeout(const int32_t aChildTimeout);
-    static int TimeoutChanged(const char* aPref, void* aModule);
+    static void TimeoutChanged(const char* aPref, void* aModule);
     void NotifyPluginCrashed();
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
@@ -314,6 +314,17 @@ private:
     PluginHangUIParent *mHangUIParent;
     bool mHangUIEnabled;
     bool mIsTimerReset;
+#ifdef MOZ_CRASHREPORTER
+    /**
+     * This mutex protects the crash reporter when the Plugin Hang UI event
+     * handler is executing off main thread. It is intended to protect both
+     * the mCrashReporter variable in addition to the CrashReporterParent object
+     * that mCrashReporter refers to.
+     */
+    mozilla::Mutex mCrashReporterMutex;
+    CrashReporterParent* mCrashReporter;
+#endif // MOZ_CRASHREPORTER
+
 
     void
     EvaluateHangUIState(const bool aReset);

@@ -41,7 +41,7 @@ public:
     inline nsXPCWrappedJS* Find(JSObject* Obj) {
         NS_PRECONDITION(Obj,"bad param");
         Map::Ptr p = mTable.lookup(Obj);
-        return p ? p->value : nullptr;
+        return p ? p->value() : nullptr;
     }
 
     inline nsXPCWrappedJS* Add(JSContext* cx, nsXPCWrappedJS* wrapper) {
@@ -49,7 +49,7 @@ public:
         JSObject* obj = wrapper->GetJSObjectPreserveColor();
         Map::AddPtr p = mTable.lookupForAdd(obj);
         if (p)
-            return p->value;
+            return p->value();
         if (!mTable.add(p, obj, wrapper))
             return nullptr;
         JS_StoreObjectPostBarrierCallback(cx, KeyMarkCallback, obj, this);
@@ -65,7 +65,7 @@ public:
 
     inline void Dump(int16_t depth) {
         for (Map::Range r = mTable.all(); !r.empty(); r.popFront())
-            r.front().value->DebugDump(depth);
+            r.front().value()->DebugDump(depth);
     }
 
     void FindDyingJSObjects(nsTArray<nsXPCWrappedJS*>* dying);
@@ -634,7 +634,7 @@ public:
     inline JSObject* Find(JSObject* key) {
         NS_PRECONDITION(key, "bad param");
         if (Map::Ptr p = mTable.lookup(key))
-            return p->value;
+            return p->value();
         return nullptr;
     }
 
@@ -643,7 +643,7 @@ public:
         NS_PRECONDITION(key,"bad param");
         Map::AddPtr p = mTable.lookupForAdd(key);
         if (p)
-            return p->value;
+            return p->value();
         if (!mTable.add(p, key, value))
             return nullptr;
         MOZ_ASSERT(xpc::GetCompartmentPrivate(key)->scope->mWaiverWrapperMap == this);
@@ -660,10 +660,10 @@ public:
 
     void Sweep() {
         for (Map::Enum e(mTable); !e.empty(); e.popFront()) {
-            JSObject *updated = e.front().key;
-            if (JS_IsAboutToBeFinalizedUnbarriered(&updated) || JS_IsAboutToBeFinalized(&e.front().value))
+            JSObject *updated = e.front().key();
+            if (JS_IsAboutToBeFinalizedUnbarriered(&updated) || JS_IsAboutToBeFinalized(&e.front().value()))
                 e.removeFront();
-            else if (updated != e.front().key)
+            else if (updated != e.front().key())
                 e.rekeyFront(updated);
         }
     }
@@ -675,12 +675,12 @@ public:
              * We reparent wrappers that have as their parent an inner window
              * whose outer has the new inner window as its current inner.
              */
-            JS::RootedObject parent(aCx, JS_GetParent(e.front().value));
+            JS::RootedObject parent(aCx, JS_GetParent(e.front().value()));
             JS::RootedObject outer(aCx, JS_ObjectToOuterObject(aCx, parent));
             if (outer) {
                 JSObject *inner = JS_ObjectToInnerObject(aCx, outer);
                 if (inner == aNewInner && inner != parent)
-                    JS_SetParent(aCx, e.front().value, aNewInner);
+                    JS_SetParent(aCx, e.front().value(), aNewInner);
             } else {
                 JS_ClearPendingException(aCx);
             }
@@ -695,11 +695,20 @@ private:
      * has been moved.
      */
     static void KeyMarkCallback(JSTracer *trc, void *k, void *d) {
-        JSObject *key = static_cast<JSObject*>(k);
+        /*
+         * To stop the barriers on the values of mTable firing while we are
+         * marking the store buffer, we cast the table to one that is
+         * binary-equivatlent but without the barriers, and update that.
+         */
+        typedef js::HashMap<JSObject *, JSObject *, js::PointerHasher<JSObject *, 3>,
+                            js::SystemAllocPolicy> UnbarrieredMap;
         JSObject2JSObjectMap *self = static_cast<JSObject2JSObjectMap *>(d);
+        UnbarrieredMap &table = reinterpret_cast<UnbarrieredMap &>(self->mTable);
+
+        JSObject *key = static_cast<JSObject*>(k);
         JSObject *prior = key;
         JS_CallObjectTracer(trc, &key, "XPCWrappedNativeScope::mWaiverWrapperMap key");
-        self->mTable.rekeyIfMoved(prior, key);
+        table.rekeyIfMoved(prior, key);
     }
 
     Map mTable;

@@ -321,8 +321,8 @@ private:
 };
 
 WindowsGamepadService::WindowsGamepadService()
-  : mThreadExitEvent(CreateEvent(nullptr, FALSE, FALSE, nullptr)),
-    mThreadRescanEvent(CreateEvent(nullptr, FALSE, FALSE, nullptr)),
+  : mThreadExitEvent(CreateEventW(nullptr, FALSE, FALSE, nullptr)),
+    mThreadRescanEvent(CreateEventW(nullptr, FALSE, FALSE, nullptr)),
     mThread(nullptr),
     dinput(nullptr) {
   mObserver = new Observer(*this);
@@ -416,7 +416,7 @@ WindowsGamepadService::EnumCallback(LPCDIDEVICEINSTANCE lpddi,
     dp.diph.dwHow = DIPH_DEVICE;
     dp.dwData = 64; // arbitrary
     // Create event so DInput can signal us when there's new data.
-    gamepad.event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    gamepad.event = CreateEventW(nullptr, FALSE, FALSE, nullptr);
     // Set data format, event notification, and acquire device
     if (gamepad.device->SetDataFormat(&c_dfDIJoystick) == DI_OK &&
         gamepad.device->SetProperty(DIPROP_BUFFERSIZE, &dp.diph) == DI_OK &&

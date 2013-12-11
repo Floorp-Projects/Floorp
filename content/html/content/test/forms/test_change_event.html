@@ -29,6 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 <input type="reset" id="input_reset" onchange="++NonTextInputChange[3];"></input>
 <input type="radio" id="input_radio" onchange="++NonTextInputChange[4];"></input>
 <input type="checkbox" id="input_checkbox" onchange="++NonTextInputChange[5];"></input>
+<input type="number" id="input_number" onchange="++numberChange;"></input>
 <input type="range" id="input_range" onchange="++rangeChange;"></input>
  
 </div>
@@ -36,6 +37,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 <script class="testbody" type="text/javascript">
 
   /** Test for Bug 722599 **/
+
+  const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
+
   var textareaChange = 0;
   var fileInputChange = 0;
 
@@ -45,6 +49,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
   var NonTextInputTypes = ["button", "submit", "image", "reset", "radio", "checkbox"];
   var NonTextInputChange = [0, 0, 0, 0, 0, 0];
 
+  var numberChange = 0;
   var rangeChange = 0;
 
   var blurTestCalled = false; //Sentinel to prevent infinite loop.
@@ -164,6 +169,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
       }
     }
 
+    // Special case type=number
+    var number = document.getElementById("input_number");
+    number.focus();
+    synthesizeKey("a", {});
+    number.blur();
+    is(numberChange, 0, "Change event shouldn't be dispatched on number input element for key changes that don't change its value");
+    number.value = "";
+    number.focus();
+    synthesizeKey("1", {});
+    synthesizeKey("2", {});
+    is(numberChange, 0, "Change event shouldn't be dispatched on number input element for keyboard input until it loses focus");
+    number.blur();
+    is(numberChange, 1, "Change event should be dispatched on number input element on blur");
+    is(number.value, 12, "Sanity check that number keys were actually handled");
+    if (isDesktop) { // up/down arrow keys not supported on android/b2g
+      number.value = "";
+      number.focus();
+      synthesizeKey("VK_UP", {});
+      synthesizeKey("VK_UP", {});
+      synthesizeKey("VK_DOWN", {});
+      is(numberChange, 4, "Change event should be dispatched on number input element for up/down arrow keys (a special case)");
+      is(number.value, 1, "Sanity check that number and arrow keys were actually handled");
+    }
+
     // Special case type=range
     var range = document.getElementById("input_range");
     range.focus();
@@ -172,7 +201,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     is(rangeChange, 0, "Change event shouldn't be dispatched on range input element for key changes that don't change its value");
     range.focus();
     synthesizeKey("VK_HOME", {});
-    is(rangeChange, 0, "Change event shouldn't be dispatched on range input element for key changes until it is looses focus");
+    is(rangeChange, 0, "Change event shouldn't be dispatched on range input element for key changes until it loses focus");
     range.blur();
     is(rangeChange, 1, "Change event should be dispatched on range input element on blur");
     range.focus();

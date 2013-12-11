@@ -138,9 +138,11 @@ public:
   virtual void NotifyHasCurrentData(MediaStreamGraph* aGraph) {}
 
   /**
-   * Notify that the stream output is advancing.
+   * Notify that the stream output is advancing. aCurrentTime is the graph's
+   * current time. MediaStream::GraphTimeToStreamTime can be used to get the
+   * stream time.
    */
-  virtual void NotifyOutput(MediaStreamGraph* aGraph) {}
+  virtual void NotifyOutput(MediaStreamGraph* aGraph, GraphTime aCurrentTime) {}
 
   /**
    * Notify that the stream finished.

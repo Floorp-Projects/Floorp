@@ -151,12 +151,14 @@ public:
                       mTransport(nullptr),
                       mEngineTransmitting(false),
                       mEngineReceiving(false),
-                      mLastTimestamp(0),
                       mChannel(-1),
                       mCurSendCodecConfig(nullptr),
                       mCaptureDelay(150),
                       mEchoOn(true),
                       mEchoCancel(webrtc::kEcAec)
+#ifdef MOZILLA_INTERNAL_API
+                      , mLastTimestamp(0)
+#endif // MOZILLA_INTERNAL_API
   {
   }
 
@@ -229,7 +231,6 @@ private:
     uint32_t mRTPTimeStamp; // RTP timestamps received
   };
   nsAutoTArray<Processing,8> mProcessing;
-  uint32_t mLastTimestamp;
 
   int mChannel;
   RecvCodecList    mRecvCodecList;
@@ -240,6 +241,10 @@ private:
 
   bool mEchoOn;
   webrtc::EcModes  mEchoCancel;
+
+#ifdef MOZILLA_INTERNAL_API
+  uint32_t mLastTimestamp;
+#endif // MOZILLA_INTERNAL_API
 };
 
 } // end namespace

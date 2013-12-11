@@ -164,14 +164,6 @@ Marker.prototype = {
   },
 
   position: function position(aX, aY) {
-    if (aX < 0) {
-      Util.dumpLn("Marker: aX is negative");
-      aX = 0;
-    }
-    if (aY < 0) {
-      Util.dumpLn("Marker: aY is negative");
-      aY = 0;
-    }
     this._xPos = aX;
     this._yPos = aY;
     this._setPosition();
@@ -254,7 +246,6 @@ var SelectionHelperUI = {
   _caretMark: null,
   _target: null,
   _showAfterUpdate: false,
-  _movement: { active: false, x:0, y: 0 },
   _activeSelectionRect: null,
   _selectionMarkIds: [],
   _targetIsEditable: false,
@@ -353,18 +344,18 @@ var SelectionHelperUI = {
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
       case "attach_edit_session_to_content":
-        let event = aSubject;
-        this.attachEditSession(Browser.selectedTab.browser,
-                               event.clientX, event.clientY);
+        // We receive this from text input bindings when this module
+        // isn't accessible.
+        this.chromeTextboxClick(aSubject);
         break;
 
-      case "apzc-handle-pan-begin":
+      case "apzc-transform-begin":
         if (this.isActive && this.layerMode == kContentLayer) {
           this._hideMonocles();
         }
         break;
 
-      case "apzc-handle-pan-end":
+      case "apzc-transform-end":
         // The selection range callback will check to see if the new
         // position is off the screen, in which case it shuts down and
         // clears the selection.
@@ -524,6 +515,40 @@ var SelectionHelperUI = {
   },
 
   /*
+   * Event handler on the navbar text input. Called from navbar bindings
+   * when focus is applied to the edit.
+   */
+  urlbarTextboxClick: function(aEdit) {
+    // workaround for bug 925457: taping browser chrome resets last tap
+    // co-ordinates to 'undefined' so that we know not to shift the browser
+    // when the keyboard is up in SelectionHandler's _calcNewContentPosition().
+    Browser.selectedTab.browser.messageManager.sendAsyncMessage("Browser:ResetLastPos", {
+      xPos: null,
+      yPos: null
+    });
+
+    if (InputSourceHelper.isPrecise || !aEdit.textLength) {
+      return;
+    }
+
+    // Enable selection when there's text in the control
+    let innerRect = aEdit.inputField.getBoundingClientRect();
+    this.attachEditSession(ChromeSelectionHandler,
+                           innerRect.left,
+                           innerRect.top);
+  },
+
+  /*
+   * Click handler for chrome pages loaded into the browser (about:config).
+   * Called from the text input bindings via the attach_edit_session_to_content
+   * observer.
+   */
+  chromeTextboxClick: function (aEvent) {
+    this.attachEditSession(Browser.selectedTab.browser,
+                           aEvent.clientX, aEvent.clientY);
+  },
+
+  /*
    * Handy debug routines that work independent of selection. They
    * make use of the selection overlay for drawing points.
    */
@@ -549,8 +574,8 @@ var SelectionHelperUI = {
   init: function () {
     let os = Services.obs;
     os.addObserver(this, "attach_edit_session_to_content", false);
-    os.addObserver(this, "apzc-handle-pan-begin", false);
-    os.addObserver(this, "apzc-handle-pan-end", false);
+    os.addObserver(this, "apzc-transform-begin", false);
+    os.addObserver(this, "apzc-transform-end", false);
   },
 
   _init: function _init(aMsgTarget) {
@@ -582,8 +607,6 @@ var SelectionHelperUI = {
     // bubble phase
     window.addEventListener("click", this, false);
     window.addEventListener("touchstart", this, false);
-    window.addEventListener("touchend", this, false);
-    window.addEventListener("touchmove", this, false);
 
     Elements.browsers.addEventListener("URLChanged", this, true);
     Elements.browsers.addEventListener("SizeChanged", this, true);
@@ -603,14 +626,13 @@ var SelectionHelperUI = {
     messageManager.removeMessageListener("Content:SelectionHandlerPong", this);
 
     window.removeEventListener("keypress", this, true);
-    window.removeEventListener("click", this, false);
-    window.removeEventListener("touchstart", this, false);
-    window.removeEventListener("touchend", this, false);
-    window.removeEventListener("touchmove", this, false);
     window.removeEventListener("MozPrecisePointer", this, true);
     window.removeEventListener("MozDeckOffsetChanging", this, true);
     window.removeEventListener("MozDeckOffsetChanged", this, true);
     window.removeEventListener("KeyboardChanged", this, true);
+
+    window.removeEventListener("click", this, false);
+    window.removeEventListener("touchstart", this, false);
 
     Elements.browsers.removeEventListener("URLChanged", this, true);
     Elements.browsers.removeEventListener("SizeChanged", this, true);
@@ -818,31 +840,39 @@ var SelectionHelperUI = {
 
   _showMonocles: function _showMonocles(aSelection) {
     if (!aSelection) {
-      this.caretMark.show();
+      if (this._checkMonocleVisibility(this.caretMark.xPos, this.caretMark.yPos)) {
+        this.caretMark.show();
+      }
     } else {
-      this.endMark.show();
-      this.startMark.show();
+      if (this._checkMonocleVisibility(this.endMark.xPos, this.endMark.yPos)) {
+        this.endMark.show();
+      }
+      if (this._checkMonocleVisibility(this.startMark.xPos, this.startMark.yPos)) {
+        this.startMark.show();
+      }
     }
+  },
+
+  _checkMonocleVisibility: function(aX, aY) {
+    let viewport = Browser.selectedBrowser.contentViewportBounds;
+    aX = this._msgTarget.ctobx(aX);
+    aY = this._msgTarget.ctoby(aY);
+    if (aX < viewport.x || aY < viewport.y ||
+        aX > (viewport.x + viewport.width) ||
+        aY > (viewport.y + viewport.height)) {
+      return false;
+    }
+    return true;
   },
 
   /*
    * Event handlers for document events
    */
 
-   urlbarClick: function() {
-    // Workaround for bug 925457: taping browser chrome resets last tap
-    // co-ordinates to 'undefined' so that we know not to shift the browser
-    // when the keyboard is up (in SelectionHandler._calcNewContentPosition())
-    Browser.selectedTab.browser.messageManager.sendAsyncMessage("Browser:ResetLastPos", {
-      xPos: null,
-      yPos: null
-    });
-   },
-
   /*
    * Handles taps that move the current caret around in text edits,
    * clear active selection and focus when neccessary, or change
-   * modes.
+   * modes. Only active afer SelectionHandlerUI is initialized.
    */
   _onClick: function(aEvent) {
     if (this.layerMode == kChromeLayer && this._targetIsEditable) {
@@ -926,16 +956,6 @@ var SelectionHelperUI = {
     this._shutdown();
   },
 
-  _checkMonocleVisibility: function(aX, aY) {
-    if (aX < 0 || aY < 0 ||
-        aX > ContentAreaObserver.viewableWidth ||
-        aY > ContentAreaObserver.viewableHeight) {
-      this.closeEditSession(true);
-      return false;
-    }
-    return true;
-  },
-
   /*
    * Message handlers
    */
@@ -950,33 +970,25 @@ var SelectionHelperUI = {
     if (json.updateStart) {
       let x = this._msgTarget.btocx(json.start.xPos, true);
       let y = this._msgTarget.btocx(json.start.yPos, true);
-      if (!this._checkMonocleVisibility(x, y)) {
-        return;
-      }
       this.startMark.position(x, y);
     }
+
     if (json.updateEnd) {
       let x = this._msgTarget.btocx(json.end.xPos, true);
       let y = this._msgTarget.btocx(json.end.yPos, true);
-      if (!this._checkMonocleVisibility(x, y)) {
-        return;
-      }
       this.endMark.position(x, y);
     }
 
     if (json.updateCaret) {
       let x = this._msgTarget.btocx(json.caret.xPos, true);
       let y = this._msgTarget.btocx(json.caret.yPos, true);
-      if (!this._checkMonocleVisibility(x, y)) {
-        return;
-      }
       // If selectionRangeFound is set SelectionHelper found a range we can
       // attach to. If not, there's no text in the control, and hence no caret
       // position information we can use.
       haveSelectionRect = json.selectionRangeFound;
       if (json.selectionRangeFound) {
         this.caretMark.position(x, y);
-        this.caretMark.show();
+        this._showMonocles(false);
       }
     }
 
@@ -992,7 +1004,7 @@ var SelectionHelperUI = {
     this._targetElementRect =
       this._msgTarget.rectBrowserToClient(json.element, true);
 
-    // Ifd this is the end of a selection move show the appropriate
+    // If this is the end of a selection move show the appropriate
     // monocle images. src=(start, update, end, caret)
     if (json.src == "start" || json.src == "end") {
       this._showMonocles(true);
@@ -1039,29 +1051,6 @@ var SelectionHelperUI = {
         // APZC doesn't scroll.
         if (this._checkForActiveDrag()) {
           aEvent.preventDefault();
-        }
-        let touch = aEvent.touches[0];
-        this._movement.x = touch.clientX;
-        this._movement.y = touch.clientY;
-        this._movement.active = true;
-        break;
-      }
-
-      case "touchend":
-        if (aEvent.touches.length == 0)
-          this._movement.active = false;
-        break;
-
-      case "touchmove": {
-        if (aEvent.touches.length != 1)
-          break;
-        let touch = aEvent.touches[0];
-        // Clear selection when the user pans the page
-        if (!this._checkForActiveDrag() && this._movement.active) {
-          if (Math.abs(touch.clientX - this._movement.x) > kDisableOnScrollDistance ||
-              Math.abs(touch.clientY - this._movement.y) > kDisableOnScrollDistance) {
-            this.closeEditSession(true);
-          }
         }
         break;
       }

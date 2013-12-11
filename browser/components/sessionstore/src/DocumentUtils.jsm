@@ -55,7 +55,8 @@ this.DocumentUtils = {
       }
 
       if (node instanceof Ci.nsIDOMHTMLInputElement ||
-          node instanceof Ci.nsIDOMHTMLTextAreaElement) {
+          node instanceof Ci.nsIDOMHTMLTextAreaElement ||
+          node instanceof Ci.nsIDOMXULTextBoxElement) {
         switch (node.type) {
           case "checkbox":
           case "radio":
@@ -202,10 +203,10 @@ this.DocumentUtils = {
       for (let i = 0; i < aNode.options.length; i++) {
         if (aNode.options[i].value == aValue.value) {
           aNode.selectedIndex = i;
+          eventType = "change";
           break;
         }
       }
-      eventType = "change";
     } else if (aValue && aValue.fileList && aValue.type == "file" &&
       aNode.type == "file") {
       aNode.mozSetFileNameArray(aValue.fileList, aValue.fileList.length);

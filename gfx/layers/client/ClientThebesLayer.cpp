@@ -49,11 +49,11 @@ ClientThebesLayer::PaintThebes()
     uint32_t flags = 0;
 #ifndef MOZ_WIDGET_ANDROID
     if (ClientManager()->CompositorMightResample()) {
-      flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
+      flags |= RotatedContentBuffer::PAINT_WILL_RESAMPLE;
     }
-    if (!(flags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE)) {
+    if (!(flags & RotatedContentBuffer::PAINT_WILL_RESAMPLE)) {
       if (MayResample()) {
-        flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
+        flags |= RotatedContentBuffer::PAINT_WILL_RESAMPLE;
       }
     }
 #endif
@@ -94,18 +94,30 @@ ClientThebesLayer::RenderLayer()
   }
   
   if (!mContentClient) {
-    mContentClient = ContentClient::CreateContentClient(ClientManager());
+    mContentClient = ContentClient::CreateContentClient(ClientManager()->AsShadowForwarder());
     if (!mContentClient) {
       return;
     }
     mContentClient->Connect();
-    ClientManager()->Attach(mContentClient, this);
+    ClientManager()->AsShadowForwarder()->Attach(mContentClient, this);
     MOZ_ASSERT(mContentClient->GetForwarder());
   }
 
   mContentClient->BeginPaint();
   PaintThebes();
   mContentClient->EndPaint();
+  // It is very important that this is called after EndPaint, because destroying
+  // textures is a three stage process:
+  // 1. We are done with the buffer and move it to ContentClient::mOldTextures,
+  // that happens in DestroyBuffers which is may be called indirectly from
+  // PaintThebes.
+  // 2. The content client calls RemoveTextureClient on the texture clients in
+  // mOldTextures and forgets them. They then become invalid. The compositable
+  // client keeps a record of IDs. This happens in EndPaint.
+  // 3. An IPC message is sent to destroy the corresponding texture host. That
+  // happens from OnTransaction.
+  // It is important that these steps happen in order.
+  mContentClient->OnTransaction();
 }
 
 void
@@ -153,8 +165,18 @@ ClientThebesLayer::PaintBuffer(gfxContext* aContext,
 already_AddRefed<ThebesLayer>
 ClientLayerManager::CreateThebesLayer()
 {
+  return CreateThebesLayerWithHint(NONE);
+}
+
+already_AddRefed<ThebesLayer>
+ClientLayerManager::CreateThebesLayerWithHint(ThebesLayerCreationHint aHint)
+{
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  if (Preferences::GetBool("layers.force-tiles") && GetCompositorBackendType() == LAYERS_OPENGL) {
+  if (
+#ifdef MOZ_B2G
+      aHint == SCROLLABLE &&
+#endif
+      Preferences::GetBool("layers.force-tiles") && AsShadowForwarder()->GetCompositorBackendType() == LAYERS_OPENGL) {
     nsRefPtr<ClientTiledThebesLayer> layer =
       new ClientTiledThebesLayer(this);
     CREATE_SHADOW(Thebes);

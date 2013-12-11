@@ -7,6 +7,7 @@
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/FromParser.h"
 
 using namespace mozilla;
@@ -43,7 +44,7 @@ NS_NewSVG##_classname##Element(nsIContent** aResult, \
 #undef SVG_FROM_PARSER_TAG
 
 nsresult
-NS_NewSVGElement(nsIContent** aResult,
+NS_NewSVGElement(Element** aResult,
                  already_AddRefed<nsINodeInfo> aNodeInfo);
 
 typedef nsresult
@@ -103,7 +104,7 @@ SVGElementFactory::Shutdown()
 }
 
 nsresult
-NS_NewSVGElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewSVGElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
                  FromParser aFromParser)
 {
   NS_ASSERTION(sTagAtomTable, "no lookup table, needs SVGElementFactory::Init");
@@ -123,7 +124,10 @@ NS_NewSVGElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
 
     contentCreatorCallback cb = sContentCreatorCallbacks[index];
 
-    return cb(aResult, aNodeInfo, aFromParser);
+    nsCOMPtr<nsIContent> content;
+    nsresult rv = cb(getter_AddRefs(content), aNodeInfo, aFromParser);
+    *aResult = content.forget().get()->AsElement();
+    return rv;
   }
 
   // if we don't know what to create, just create a standard svg element:

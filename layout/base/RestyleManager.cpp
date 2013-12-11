@@ -824,6 +824,11 @@ RestyleManager::RestyleElement(Element*        aElement,
   }
 }
 
+static inline dom::Element*
+ElementForStyleContext(nsIContent* aParentContent,
+                       nsIFrame* aFrame,
+                       nsCSSPseudoElements::Type aPseudoType);
+
 // Forwarded nsIDocumentObserver method, to handle restyling (and
 // passing the notification to the frame).
 nsresult
@@ -849,6 +854,8 @@ RestyleManager::ContentStateChanged(nsIContent* aContent,
   // need to force a reframe -- if it's needed, the HasStateDependentStyle
   // call will handle things.
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
+  nsCSSPseudoElements::Type pseudoType =
+    nsCSSPseudoElements::ePseudo_NotPseudoElement;
   if (primaryFrame) {
     // If it's generated content, ignore LOADING/etc state changes on it.
     if (!primaryFrame->IsGeneratedContentFrame() &&
@@ -872,12 +879,29 @@ RestyleManager::ContentStateChanged(nsIContent* aContent,
       }
     }
 
+    pseudoType = primaryFrame->StyleContext()->GetPseudoType();
+
     primaryFrame->ContentStatesChanged(aStateMask);
   }
 
 
-  nsRestyleHint rshint =
-    styleSet->HasStateDependentStyle(mPresContext, aElement, aStateMask);
+  nsRestyleHint rshint;
+
+  if (pseudoType >= nsCSSPseudoElements::ePseudo_PseudoElementCount) {
+    rshint = styleSet->HasStateDependentStyle(mPresContext, aElement,
+                                              aStateMask);
+  } else if (nsCSSPseudoElements::PseudoElementSupportsUserActionState(
+                                                                  pseudoType)) {
+    // If aElement is a pseudo-element, we want to check to see whether there
+    // are any state-dependent rules applying to that pseudo.
+    Element* ancestor = ElementForStyleContext(nullptr, primaryFrame,
+                                               pseudoType);
+    rshint = styleSet->HasStateDependentStyle(mPresContext, ancestor,
+                                              pseudoType, aElement,
+                                              aStateMask);
+  } else {
+    rshint = nsRestyleHint(0);
+  }
 
   if (aStateMask.HasState(NS_EVENT_STATE_HOVER) && rshint != 0) {
     ++mHoverGeneration;
@@ -1714,8 +1738,28 @@ ElementForStyleContext(nsIContent* aParentContent,
     return grandparentFrame->GetContent()->AsElement();
   }
 
-  nsIContent* content = aParentContent ? aParentContent : aFrame->GetContent();
-  return content->AsElement();
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberText ||
+      aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberWrapper ||
+      aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberSpinBox ||
+      aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberSpinUp ||
+      aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberSpinDown) {
+    // Get content for nearest nsNumberControlFrame:
+    nsIFrame* f = aFrame->GetParent();
+    MOZ_ASSERT(f);
+    while (f->GetType() != nsGkAtoms::numberControlFrame) {
+      f = f->GetParent();
+      MOZ_ASSERT(f);
+    }
+    return f->GetContent()->AsElement();
+  }
+
+  if (aParentContent) {
+    return aParentContent->AsElement();
+  }
+
+  MOZ_ASSERT(aFrame->GetContent()->GetParent(),
+             "should not have got here for the root element");
+  return aFrame->GetContent()->GetParent()->AsElement();
 }
 
 /**
@@ -2335,20 +2379,21 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
           // We're reframing anyway; just keep the same context
           newContext = oldContext;
         }
-      } else if (nsCSSPseudoElements::PseudoElementSupportsStyleAttribute(pseudoTag)) {
-        newContext = styleSet->ResolvePseudoElementStyle(element,
-                                                         pseudoType,
-                                                         parentContext,
-                                                         aSelf->GetContent()->AsElement());
       } else {
         // Don't expect XUL tree stuff here, since it needs a comparator and
         // all.
         NS_ASSERTION(pseudoType <
                        nsCSSPseudoElements::ePseudo_PseudoElementCount,
                      "Unexpected pseudo type");
+        Element* pseudoElement =
+          nsCSSPseudoElements::PseudoElementSupportsStyleAttribute(pseudoType) ||
+          nsCSSPseudoElements::PseudoElementSupportsUserActionState(pseudoType) ?
+            aSelf->GetContent()->AsElement() : nullptr;
+        MOZ_ASSERT(element != pseudoElement);
         newContext = styleSet->ResolvePseudoElementStyle(element,
                                                          pseudoType,
-                                                         parentContext);
+                                                         parentContext,
+                                                         pseudoElement);
       }
     }
     else {
@@ -2426,7 +2471,8 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
                    "Unexpected type");
       newExtraContext = styleSet->ResolvePseudoElementStyle(mContent->AsElement(),
                                                             extraPseudoType,
-                                                            newContext);
+                                                            newContext,
+                                                            nullptr);
     }
 
     MOZ_ASSERT(newExtraContext);
@@ -2531,7 +2577,7 @@ ElementRestyler::RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint)
       // not have a frame and would not otherwise be pushed as an ancestor.
       nsIContent* parent = undisplayed->mContent->GetParent();
       TreeMatchContext::AutoAncestorPusher insertionPointPusher(mTreeMatchContext);
-      if (parent && parent->IsActiveChildrenElement()) {
+      if (parent && nsContentUtils::IsContentInsertionPoint(parent)) {
         insertionPointPusher.PushAncestorAndStyleScope(parent);
       }
 
@@ -2702,7 +2748,7 @@ ElementRestyler::RestyleContentChildren(nsIFrame* aParent,
         // nsPageFrame that does not have a content.
         nsIContent* parent = child->GetContent() ? child->GetContent()->GetParent() : nullptr;
         TreeMatchContext::AutoAncestorPusher insertionPointPusher(mTreeMatchContext);
-        if (parent && parent->IsActiveChildrenElement()) {
+        if (parent && nsContentUtils::IsContentInsertionPoint(parent)) {
           insertionPointPusher.PushAncestorAndStyleScope(parent);
         }
 

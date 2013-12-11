@@ -160,6 +160,7 @@ private:
 namespace mozilla {
 namespace dom {
 
+class ShadowRoot;
 class UndoManager;
 
 class FragmentOrElement : public nsIContent
@@ -203,6 +204,9 @@ public:
   virtual nsXBLBinding *GetXBLBinding() const MOZ_OVERRIDE;
   virtual void SetXBLBinding(nsXBLBinding* aBinding,
                              nsBindingManager* aOldBindingManager = nullptr) MOZ_OVERRIDE;
+  virtual ShadowRoot *GetShadowRoot() const MOZ_OVERRIDE;
+  virtual ShadowRoot *GetContainingShadow() const MOZ_OVERRIDE;
+  virtual void SetShadowRoot(ShadowRoot* aBinding) MOZ_OVERRIDE;
   virtual nsIContent *GetXBLInsertionParent() const;
   virtual void SetXBLInsertionParent(nsIContent* aContent);
   virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
@@ -259,6 +263,7 @@ public:
   static bool CanSkip(nsINode* aNode, bool aRemovingAllowed);
   static bool CanSkipInCC(nsINode* aNode);
   static bool CanSkipThis(nsINode* aNode);
+  static void RemoveBlackMarkedNode(nsINode* aNode);
   static void MarkNodeChildren(nsINode* aNode);
   static void InitCCCallbacks();
   static void MarkUserData(void* aObject, nsIAtom* aKey, void* aChild,
@@ -355,6 +360,16 @@ public:
     nsRefPtr<nsDOMTokenList> mClassList;
 
     /**
+     * ShadowRoot bound to the element.
+     */
+    nsRefPtr<ShadowRoot> mShadowRoot;
+
+    /**
+     * The root ShadowRoot of this element if it is in a shadow tree.
+     */
+    nsRefPtr<ShadowRoot> mContainingShadow;
+
+    /**
      * XBL binding installed on the element.
      */
     nsRefPtr<nsXBLBinding> mXBLBinding;
@@ -366,6 +381,9 @@ public:
   };
 
 protected:
+  void GetMarkup(bool aIncludeSelf, nsAString& aMarkup);
+  void SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult& aError);
+
   // Override from nsINode
   virtual nsINode::nsSlots* CreateSlots() MOZ_OVERRIDE;
 

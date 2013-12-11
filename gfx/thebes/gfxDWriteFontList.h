@@ -47,6 +47,9 @@ public:
 
     virtual void LocalizedName(nsAString& aLocalizedName);
 
+    virtual void ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
+                               bool aNeedFullnamePostscriptNames);
+
     void SetForceGDIClassic(bool aForce) { mForceGDIClassic = aForce; }
 
     virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,

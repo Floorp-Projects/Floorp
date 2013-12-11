@@ -14,6 +14,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsContentUtils.h"
+#include "nsContentPermissionHelper.h"
 #include "nsCxPusher.h"
 #include "nsIDocument.h"
 #include "nsIObserverService.h"

@@ -2272,3 +2272,68 @@ gcli.addCommand({
     }
   });
 }(this));
+
+/* CmdSplitConsole ------------------------------------------------------- */
+
+(function(module) {
+  /**
+   * 'splitconsole' command (hidden)
+   */
+
+  gcli.addCommand({
+    name: 'splitconsole',
+    hidden: true,
+    buttonId: "command-button-splitconsole",
+    buttonClass: "command-button",
+    tooltipText: gcli.lookup("splitconsoleTooltip"),
+    state: {
+      isChecked: function(aTarget) {
+        let toolbox = gDevTools.getToolbox(aTarget);
+        return toolbox &&
+          toolbox.splitConsole;
+      },
+      onChange: function(aTarget, aChangeHandler) {
+        eventEmitter.on("changed", aChangeHandler);
+      },
+      offChange: function(aTarget, aChangeHandler) {
+        eventEmitter.off("changed", aChangeHandler);
+      },
+    },
+    exec: function(args, context) {
+      toggleSplitConsole(context);
+    }
+  });
+
+  function toggleSplitConsole(context) {
+    let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
+    let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
+    let toolbox = gDevTools.getToolbox(target);
+
+    if (!toolbox) {
+      gDevTools.showToolbox(target, "inspector").then((toolbox) => {
+        toolbox.toggleSplitConsole();
+      });
+    } else {
+      toolbox.toggleSplitConsole();
+    }
+  }
+
+  let eventEmitter = new EventEmitter();
+  function fireChange(tab) {
+    eventEmitter.emit("changed", tab);
+  }
+
+  gDevTools.on("toolbox-ready", (e, toolbox) => {
+    if (!toolbox.target) {
+      return;
+    }
+    let fireChangeForTab = fireChange.bind(this, toolbox.target.tab);
+    toolbox.on("split-console", fireChangeForTab);
+    toolbox.on("select", fireChangeForTab);
+    toolbox.once("destroyed", () => {
+      toolbox.off("split-console", fireChangeForTab);
+      toolbox.off("select", fireChangeForTab);
+    });
+  });
+
+}(this));

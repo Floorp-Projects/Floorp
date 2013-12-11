@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const PC_CONTRACT = "@mozilla.org/dom/peerconnection;1";
+const WEBRTC_GLOBAL_CONTRACT = "@mozilla.org/dom/webrtcglobalinformation1";
 const PC_OBS_CONTRACT = "@mozilla.org/dom/peerconnectionobserver;1";
 const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
@@ -17,7 +18,8 @@ const PC_MANAGER_CONTRACT = "@mozilla.org/dom/peerconnectionmanager;1";
 const PC_STATS_CONTRACT = "@mozilla.org/dom/rtcstatsreport;1";
 
 const PC_CID = Components.ID("{00e0e20d-1494-4776-8e0e-0f0acbea3c79}");
-const PC_OBS_CID = Components.ID("{1d44a18e-4545-4ff3-863d-6dbd6234a583}");
+const WEBRTC_GLOBAL_CID = Components.ID("{f6063d11-f467-49ad-9765-e7923050dc08}");
+const PC_OBS_CID = Components.ID("{d1748d4c-7f6a-4dc5-add6-d55b7678537e}");
 const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
 const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
 const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
@@ -63,6 +65,10 @@ GlobalPCList.prototype = {
     }
     this._list[winID] = this._list[winID].filter(
       function (e,i,a) { return e.get() !== null; });
+
+    if (this._list[winID].length === 0) {
+      delete this._list[winID];
+    }
   },
 
   hasActivePeerConnection: function(winID) {
@@ -111,8 +117,59 @@ GlobalPCList.prototype = {
       }
     }
   },
+
+  getStatsForEachPC: function(callback, errorCallback) {
+    for (let winId in this._list) {
+      if (this._list.hasOwnProperty(winId)) {
+        this.removeNullRefs(winId);
+        if (this._list[winId]) {
+          this._list[winId].forEach(function(pcref) {
+            pcref.get().getStatsInternal(null, callback, errorCallback);
+          });
+        }
+      }
+    }
+  },
+
+  getLoggingFromFirstPC: function(pattern, callback, errorCallback) {
+    for (let winId in this._list) {
+      this.removeNullRefs(winId);
+      if (this._list[winId]) {
+        // We expect removeNullRefs to not leave us with an empty array here
+        let pcref = this._list[winId][0];
+        pcref.get().getLogging(pattern, callback, errorCallback);
+        return;
+      }
+    }
+  },
 };
 let _globalPCList = new GlobalPCList();
+
+function WebrtcGlobalInformation() {
+}
+WebrtcGlobalInformation.prototype = {
+  classDescription: "WebrtcGlobalInformation",
+  classID: WEBRTC_GLOBAL_CID,
+  contractID: WEBRTC_GLOBAL_CONTRACT,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
+
+  getAllStats: function(successCallback, failureCallback) {
+    if (_globalPCList) {
+      _globalPCList.getStatsForEachPC(successCallback, failureCallback);
+    } else {
+      failureCallback("No global PeerConnection list");
+    }
+  },
+
+  getCandPairLogs: function(candPairId, callback, errorCallback) {
+    let pattern = 'CAND-PAIR(' + candPairId + ')';
+    if (_globalPCList) {
+      _globalPCList.getLoggingFromFirstPC(pattern, callback, errorCallback);
+    } else {
+      errorCallback("No global PeerConnection list");
+    }
+  },
+};
 
 function RTCIceCandidate() {
   this.candidate = this.sdpMid = this.sdpMLineIndex = null;
@@ -151,9 +208,10 @@ RTCSessionDescription.prototype = {
   }
 };
 
-function RTCStatsReport(win, report) {
+function RTCStatsReport(win, report, pcid) {
   this._win = win;
   this.report = report;
+  this.mozPcid = pcid;
 }
 RTCStatsReport.prototype = {
   classDescription: "RTCStatsReport",
@@ -204,6 +262,8 @@ function RTCPeerConnection() {
   this._onCreateAnswerFailure = null;
   this._onGetStatsSuccess = null;
   this._onGetStatsFailure = null;
+  this._onGetLoggingSuccess = null;
+  this._onGetLoggingFailure = null;
 
   this._pendingType = null;
   this._localType = null;
@@ -736,6 +796,21 @@ RTCPeerConnection.prototype = {
     this._getPC().getStats(selector, internal);
   },
 
+  getLogging: function(pattern, onSuccess, onError) {
+    this._queueOrRun({
+      func: this._getLogging,
+      args: [pattern, onSuccess, onError],
+      wait: true
+    });
+  },
+
+  _getLogging: function(pattern, onSuccess, onError) {
+    this._onGetLoggingSuccess = onSuccess;
+    this._onGetLoggingFailure = onError;
+
+    this._getPC().getLogging(pattern);
+  },
+
   createDataChannel: function(label, dict) {
     this._checkClosed();
     if (dict == undefined) {
@@ -829,7 +904,6 @@ RTCError.prototype = {
 // This is a separate object because we don't want to expose it to DOM.
 function PeerConnectionObserver() {
   this._dompc = null;
-  this._guard = new WeakReferent(this);
 }
 PeerConnectionObserver.prototype = {
   classDescription: "PeerConnectionObserver",
@@ -942,21 +1016,8 @@ PeerConnectionObserver.prototype = {
   },
 
 
-  // This method is primarily responsible for updating two attributes:
-  // iceGatheringState and iceConnectionState. These states are defined
-  // in the WebRTC specification as follows:
-  //
-  // iceGatheringState:
-  // ------------------
-  //   new        The object was just created, and no networking has occurred
-  //              yet.
-  //
-  //   gathering  The ICE engine is in the process of gathering candidates for
-  //              this RTCPeerConnection.
-  //
-  //   complete   The ICE engine has completed gathering. Events such as adding
-  //              a new interface or a new TURN server will cause the state to
-  //              go back to gathering.
+  // This method is primarily responsible for updating iceConnectionState.
+  // This state is defined in the WebRTC specification as follows:
   //
   // iceConnectionState:
   // -------------------
@@ -990,36 +1051,39 @@ PeerConnectionObserver.prototype = {
   //   closed        The ICE Agent has shut down and is no longer responding to
   //                 STUN requests.
 
-  handleIceStateChanges: function(iceState) {
+  handleIceConnectionStateChange: function(iceConnectionState) {
     var histogram = Services.telemetry.getHistogramById("WEBRTC_ICE_SUCCESS_RATE");
 
-    const STATE_MAP = {
-      IceGathering:
-        { gathering: "gathering" },
-      IceWaiting:
-        { connection: "new",  gathering: "complete" },
-      IceChecking:
-        { connection: "checking" },
-      IceConnected:
-        { connection: "connected", success: true },
-      IceFailed:
-        { connection: "failed", success: false }
-    };
-    // These are all the allowed inputs.
-
-    let transitions = STATE_MAP[iceState];
-
-    if ("connection" in transitions) {
-        this._dompc.changeIceConnectionState(transitions.connection);
+    if (iceConnectionState === 'failed') {
+      histogram.add(false);
     }
-    if ("gathering" in transitions) {
-      this._dompc.changeIceGatheringState(transitions.gathering);
+    if (this._dompc.iceConnectionState === 'checking' &&
+        (iceConnectionState === 'completed' ||
+         iceConnectionState === 'connected')) {
+          histogram.add(true);
     }
-    if ("success" in transitions) {
-      histogram.add(transitions.success);
-    }
+    this._dompc.changeIceConnectionState(iceConnectionState);
+  },
 
-    if (iceState == "IceWaiting") {
+  // This method is responsible for updating iceGatheringState. This
+  // state is defined in the WebRTC specification as follows:
+  //
+  // iceGatheringState:
+  // ------------------
+  //   new        The object was just created, and no networking has occurred
+  //              yet.
+  //
+  //   gathering  The ICE engine is in the process of gathering candidates for
+  //              this RTCPeerConnection.
+  //
+  //   complete   The ICE engine has completed gathering. Events such as adding
+  //              a new interface or a new TURN server will cause the state to
+  //              go back to gathering.
+  //
+  handleIceGatheringStateChange: function(gatheringState) {
+    this._dompc.changeIceGatheringState(gatheringState);
+
+    if (gatheringState === "complete") {
       if (!this._dompc._trickleIce) {
         // If we are not trickling, then the queue is in a pending state
         // waiting for ICE gathering and executeNext frees it
@@ -1041,8 +1105,12 @@ PeerConnectionObserver.prototype = {
                     this._dompc.signalingState);
         break;
 
-      case "IceState":
-        this.handleIceStateChanges(this._dompc._pc.iceState);
+      case "IceConnectionState":
+        this.handleIceConnectionStateChange(this._dompc._pc.iceConnectionState);
+        break;
+
+      case "IceGatheringState":
+        this.handleIceGatheringStateChange(this._dompc._pc.iceGatheringState);
         break;
 
       case "SdpState":
@@ -1087,12 +1155,23 @@ PeerConnectionObserver.prototype = {
     this.callCB(this._dompc._onGetStatsSuccess,
                 this._dompc._win.RTCStatsReport._create(this._dompc._win,
                                                         new RTCStatsReport(this._dompc._win,
-                                                                           report)));
+                                                                           report,
+                                                                           dict.pcid)));
     this._dompc._executeNext();
   },
 
   onGetStatsError: function(code, message) {
     this.callCB(this._dompc._onGetStatsFailure, new RTCError(code, message));
+    this._dompc._executeNext();
+  },
+
+  onGetLoggingSuccess: function(logs) {
+    this.callCB(this._dompc._onGetLoggingSuccess, logs);
+    this._dompc._executeNext();
+  },
+
+  onGetLoggingError: function(code, message) {
+    this.callCB(this._dompc._onGetLoggingFailure, new RTCError(code, message));
     this._dompc._executeNext();
   },
 
@@ -1127,23 +1206,14 @@ PeerConnectionObserver.prototype = {
   getSupportedConstraints: function(dict) {
     return dict;
   },
-
-  get weakReferent() {
-    return this._guard;
-  }
-};
-
-// A PeerConnectionObserver member that c++ can do weak references on
-
-function WeakReferent(parent) {
-  this._parent = parent; // prevents parent from going away without us
-}
-WeakReferent.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsISupportsWeakReference]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
-  [GlobalPCList, RTCIceCandidate, RTCSessionDescription, RTCPeerConnection,
-   RTCStatsReport, PeerConnectionObserver]
+  [GlobalPCList,
+   RTCIceCandidate,
+   RTCSessionDescription,
+   RTCPeerConnection,
+   RTCStatsReport,
+   PeerConnectionObserver,
+   WebrtcGlobalInformation]
 );

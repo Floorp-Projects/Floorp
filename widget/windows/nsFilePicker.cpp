@@ -10,13 +10,12 @@
 #include <shlwapi.h>
 #include <cderr.h>
 
+#include "mozilla/WindowsVersion.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 #include "nsWindow.h"
 #include "nsILoadContext.h"
 #include "nsIServiceManager.h"
-#include "nsIPlatformCharset.h"
-#include "nsICharsetConverterManager.h"
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
 #include "nsEnumeratorUtils.h"
@@ -26,12 +25,13 @@
 #include "WinUtils.h"
 #include "nsPIDOMWindow.h"
 
+using mozilla::IsVistaOrLater;
 using namespace mozilla::widget;
 
 PRUnichar *nsFilePicker::mLastUsedUnicodeDirectory;
 char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
 
-static const PRUnichar kDialogPtrProp[] = L"DialogPtrProperty";
+static const wchar_t kDialogPtrProp[] = L"DialogPtrProperty";
 static const DWORD kDialogTimerID = 9999;
 static const unsigned long kDialogTimerTimeout = 300;
 
@@ -70,7 +70,7 @@ class AutoRestoreWorkingPath
 public:
   AutoRestoreWorkingPath() {
     DWORD bufferLength = GetCurrentDirectoryW(0, nullptr);
-    mWorkingPath = new PRUnichar[bufferLength];
+    mWorkingPath = new wchar_t[bufferLength];
     if (GetCurrentDirectoryW(bufferLength, mWorkingPath) == 0) {
       mWorkingPath = nullptr;
     }
@@ -86,7 +86,7 @@ public:
     return mWorkingPath != nullptr;
   }
 private:
-  nsAutoArrayPtr<PRUnichar> mWorkingPath;
+  nsAutoArrayPtr<wchar_t> mWorkingPath;
 };
 
 // Manages NS_NATIVE_TMP_WINDOW child windows. NS_NATIVE_TMP_WINDOWs are
@@ -372,8 +372,8 @@ nsFilePicker::MultiFilePickerHook(HWND hwnd,
             // select  additional items, we will not continuously reallocate
             newBufLength += FILE_BUFFER_SIZE;
 
-            PRUnichar* filesBuffer = new PRUnichar[newBufLength];
-            ZeroMemory(filesBuffer, newBufLength * sizeof(PRUnichar));
+            wchar_t* filesBuffer = new wchar_t[newBufLength];
+            ZeroMemory(filesBuffer, newBufLength * sizeof(wchar_t));
 
             lpofn->lpOFN->lpstrFile = filesBuffer;
             lpofn->lpOFN->nMaxFile  = newBufLength;
@@ -483,7 +483,7 @@ nsFilePicker::ClosePickerIfNeeded(bool aIsXPDialog)
   else
     dlgWnd = mDlgWnd;
   if (IsWindow(dlgWnd) && IsWindowVisible(dlgWnd) && win->DestroyCalled()) {
-    PRUnichar className[64];
+    wchar_t className[64];
     // Make sure we have the right window
     if (GetClassNameW(dlgWnd, className, mozilla::ArrayLength(className)) &&
         !wcscmp(className, L"#32770") &&
@@ -523,7 +523,7 @@ nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
 {
   bool result = false;
 
-  nsAutoArrayPtr<PRUnichar> dirBuffer(new PRUnichar[FILE_BUFFER_SIZE]);
+  nsAutoArrayPtr<wchar_t> dirBuffer(new wchar_t[FILE_BUFFER_SIZE]);
   wcsncpy(dirBuffer, aInitialDir.get(), FILE_BUFFER_SIZE);
   dirBuffer[FILE_BUFFER_SIZE-1] = '\0';
 
@@ -532,7 +532,7 @@ nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
 
   BROWSEINFOW browserInfo = {0};
   browserInfo.pidlRoot       = nullptr;
-  browserInfo.pszDisplayName = (LPWSTR)dirBuffer;
+  browserInfo.pszDisplayName = dirBuffer;
   browserInfo.lpszTitle      = mTitle.get();
   browserInfo.ulFlags        = BIF_USENEWUI | BIF_RETURNONLYFSDIRS;
   browserInfo.hwndOwner      = adtw.get(); 
@@ -551,9 +551,9 @@ nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
 
   LPITEMIDLIST list = ::SHBrowseForFolderW(&browserInfo);
   if (list) {
-    result = ::SHGetPathFromIDListW(list, (LPWSTR)dirBuffer);
+    result = ::SHGetPathFromIDListW(list, dirBuffer);
     if (result)
-      mUnicodeFile.Assign(dirBuffer);
+      mUnicodeFile.Assign(static_cast<const wchar_t*>(dirBuffer));
     // free PIDL
     CoTaskMemFree(list);
   }
@@ -663,7 +663,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
   ofn.lStructSize = sizeof(ofn);
   nsString filterBuffer = mFilterList;
                                 
-  nsAutoArrayPtr<PRUnichar> fileBuffer(new PRUnichar[FILE_BUFFER_SIZE]);
+  nsAutoArrayPtr<wchar_t> fileBuffer(new wchar_t[FILE_BUFFER_SIZE]);
   wcsncpy(fileBuffer,  mDefaultFilePath.get(), FILE_BUFFER_SIZE);
   fileBuffer[FILE_BUFFER_SIZE-1] = '\0'; // null terminate in case copy truncated
 
@@ -689,7 +689,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
   // a hook procedure.  The hook procedure fixes a problem on XP dialogs for
   // file picker visibility.  Vista and up automatically ensures the file 
   // picker is always visible.
-  if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION) {
+  if (!IsVistaOrLater()) {
     ofn.lpfnHook = FilePickerHook;
     ofn.Flags |= OFN_ENABLEHOOK;
   }
@@ -748,7 +748,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
       // the file picker to use the old style dialogs because hooks are not
       // allowed in the new file picker UI.  We need to eventually move to
       // the new Common File Dialogs for Vista and up.
-      if (WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION) {
+      if (!IsVistaOrLater()) {
         ofn.lpfnHook = MultiFilePickerHook;
         fileBuffer.forget();
         result = FilePickerWrapper(&ofn, PICKER_TYPE_OPEN);
@@ -804,15 +804,15 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
   // separated, with an extra '\0' character after the last file name. This
   // format enables the Explorer-style dialog boxes to return long file names
   // that include spaces. 
-  PRUnichar *current = fileBuffer;
+  wchar_t *current = fileBuffer;
   
   nsAutoString dirName(current);
   // Sometimes dirName contains a trailing slash and sometimes it doesn't:
   if (current[dirName.Length() - 1] != '\\')
     dirName.Append((PRUnichar)'\\');
   
-  while (current && *current && *(current + NS_strlen(current) + 1)) {
-    current = current + NS_strlen(current) + 1;
+  while (current && *current && *(current + wcslen(current) + 1)) {
+    current = current + wcslen(current) + 1;
     
     nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     NS_ENSURE_TRUE(file, false);
@@ -1047,12 +1047,12 @@ nsFilePicker::ShowW(int16_t *aReturnVal)
   // properties.
   bool result = false, wasInitError = true;
   if (mMode == modeGetFolder) {
-    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION)
+    if (IsVistaOrLater())
       result = ShowFolderPicker(initialDir, wasInitError);
     if (!result && wasInitError)
       result = ShowXPFolderPicker(initialDir);
   } else {
-    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION)
+    if (IsVistaOrLater())
       result = ShowFilePicker(initialDir, wasInitError);
     if (!result && wasInitError)
       result = ShowXPFilePicker(initialDir);
@@ -1208,12 +1208,12 @@ nsFilePicker::InitNative(nsIWidget *aParent,
 }
 
 void 
-nsFilePicker::GetQualifiedPath(const PRUnichar *aInPath, nsString &aOutPath)
+nsFilePicker::GetQualifiedPath(const wchar_t *aInPath, nsString &aOutPath)
 {
   // Prefer a qualified path over a non qualified path.
   // Things like c:file.txt would be accepted in Win XP but would later
   // fail to open from the download manager.
-  PRUnichar qualifiedFileBuffer[MAX_PATH];
+  wchar_t qualifiedFileBuffer[MAX_PATH];
   if (PathSearchAndQualifyW(aInPath, qualifiedFileBuffer, MAX_PATH)) {
     aOutPath.Assign(qualifiedFileBuffer);
   } else {
@@ -1244,7 +1244,7 @@ nsFilePicker::AppendXPFilter(const nsAString& aTitle, const nsAString& aFilter)
 NS_IMETHODIMP
 nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
-  if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
+  if (IsVistaOrLater()) {
     mComFilterList.Append(aTitle, aFilter);
   } else {
     AppendXPFilter(aTitle, aFilter);

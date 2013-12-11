@@ -119,6 +119,10 @@
                 onget="return this._imageDocument"
                 readonly="true"/>
 
+      <property name="autoCompletePopup"
+                onget="return document.getElementById(this.getAttribute('autocompletepopup'))"
+                readonly="true"/>
+
       <constructor>
         <![CDATA[
           let jsm = "resource://gre/modules/RemoteWebNavigation.jsm";
@@ -147,6 +151,10 @@
 
           if (!this.hasAttribute("disableglobalhistory")) {
             this.messageManager.sendAsyncMessage("History:UseGlobalHistory", {enabled:true});
+          }
+
+          if (this.autoCompletePopup) {
+            this.messageManager.sendAsyncMessage("FormAutoComplete:InitPopup");
           }
         ]]>
       </constructor>

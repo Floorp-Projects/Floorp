@@ -9,13 +9,12 @@
 
 #ifdef JS_POSIX_NSPR
 
+#ifndef JS_THREADSAFE
+#error "This file must not be included in non-threadsafe mode"
+#endif
+
 #include <pthread.h>
 #include <stdint.h>
-
-#define PR_ATOMIC_INCREMENT(val) __sync_add_and_fetch(val, 1)
-#define PR_ATOMIC_DECREMENT(val) __sync_sub_and_fetch(val, 1)
-#define PR_ATOMIC_SET(val, newval) __sync_lock_test_and_set(val, newval)
-#define PR_ATOMIC_ADD(ptr, val) __sync_add_and_fetch(ptr, val)
 
 namespace nspr {
 class Thread;

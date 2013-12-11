@@ -130,7 +130,7 @@ class nsTSubstring_CharT
       char_iterator BeginWriting()
         {
           if (!EnsureMutable())
-            NS_RUNTIMEABORT("OOM");
+            NS_ABORT_OOM(mLength);
 
           return mData;
         }
@@ -143,7 +143,7 @@ class nsTSubstring_CharT
       char_iterator EndWriting()
         {
           if (!EnsureMutable())
-            NS_RUNTIMEABORT("OOM");
+            NS_ABORT_OOM(mLength);
 
           return mData + mLength;
         }
@@ -200,7 +200,11 @@ class nsTSubstring_CharT
          */
 
         // returns pointer to string data (not necessarily null-terminated)
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+      char16ptr_t Data() const
+#else
       const char_type *Data() const
+#endif
         {
           return mData;
         }
@@ -262,6 +266,17 @@ class nsTSubstring_CharT
 
       bool NS_FASTCALL Equals( const char_type* data ) const;
       bool NS_FASTCALL Equals( const char_type* data, const comparator_type& comp ) const;
+
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+      bool NS_FASTCALL Equals( char16ptr_t data ) const
+        {
+          return Equals(static_cast<const char16_t*>(data));
+        }
+      bool NS_FASTCALL Equals( char16ptr_t data, const comparator_type& comp ) const
+        {
+          return Equals(static_cast<const char16_t*>(data), comp);
+        }
+#endif
 
         /**
          * An efficient comparison with ASCII that can be used even
@@ -351,6 +366,28 @@ class nsTSubstring_CharT
       void NS_FASTCALL Assign( const substring_tuple_type& );
       bool NS_FASTCALL Assign( const substring_tuple_type&, const fallible_t& ) NS_WARN_UNUSED_RESULT;
 
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+      void Assign (char16ptr_t data)
+        {
+          Assign(static_cast<const char16_t*>(data));
+        }
+
+      bool Assign(char16ptr_t data, const fallible_t&) NS_WARN_UNUSED_RESULT
+        {
+          return Assign(static_cast<const char16_t*>(data), fallible_t());
+        }
+
+      void Assign (char16ptr_t data, size_type length)
+        {
+          Assign(static_cast<const char16_t*>(data), length);
+        }
+
+      bool Assign(char16ptr_t data, size_type length, const fallible_t&) NS_WARN_UNUSED_RESULT
+        {
+          return Assign(static_cast<const char16_t*>(data), length, fallible_t());
+        }
+#endif
+
       void NS_FASTCALL AssignASCII( const char* data, size_type length );
       bool NS_FASTCALL AssignASCII( const char* data, size_type length, const fallible_t& ) NS_WARN_UNUSED_RESULT;
 
@@ -383,6 +420,9 @@ class nsTSubstring_CharT
 
       self_type& operator=( char_type c )                                                       { Assign(c);        return *this; }
       self_type& operator=( const char_type* data )                                             { Assign(data);     return *this; }
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+      self_type& operator=( char16ptr_t data )                                                  { Assign(data);     return *this; }
+#endif
       self_type& operator=( const self_type& str )                                              { Assign(str);      return *this; }
       self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
 
@@ -402,6 +442,11 @@ class nsTSubstring_CharT
 
       void Append( char_type c )                                                                 { Replace(mLength, 0, c); }
       void Append( const char_type* data, size_type length = size_type(-1) )                     { Replace(mLength, 0, data, length); }
+
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+    void Append( char16ptr_t data, size_type length = size_type(-1) )                            { Append(static_cast<const char16_t*>(data), length); }
+#endif
+
       void Append( const self_type& str )                                                        { Replace(mLength, 0, str); }
       void Append( const substring_tuple_type& tuple )                                           { Replace(mLength, 0, tuple); }
 
@@ -466,11 +511,18 @@ class nsTSubstring_CharT
 
       self_type& operator+=( char_type c )                                                       { Append(c);        return *this; }
       self_type& operator+=( const char_type* data )                                             { Append(data);     return *this; }
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+      self_type& operator+=( char16ptr_t data )                                                  { Append(data);     return *this; }
+#endif
       self_type& operator+=( const self_type& str )                                              { Append(str);      return *this; }
       self_type& operator+=( const substring_tuple_type& tuple )                                 { Append(tuple);    return *this; }
 
       void Insert( char_type c, index_type pos )                                                 { Replace(pos, 0, c); }
       void Insert( const char_type* data, index_type pos, size_type length = size_type(-1) )     { Replace(pos, 0, data, length); }
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+      void Insert( char16ptr_t data, index_type pos, size_type length = size_type(-1) )
+        { Insert(static_cast<const char16_t*>(data), pos, length); }
+#endif
       void Insert( const self_type& str, index_type pos )                                        { Replace(pos, 0, str); }
       void Insert( const substring_tuple_type& tuple, index_type pos )                           { Replace(pos, 0, tuple); }
 
@@ -517,7 +569,7 @@ class nsTSubstring_CharT
           *data = mData;
           return mLength;
         }
-        
+
         /**
          * Get a pointer to the string's internal buffer, optionally resizing
          * the buffer first.  If size_type(-1) is passed for newLen, then the
@@ -531,7 +583,7 @@ class nsTSubstring_CharT
       size_type GetMutableData( char_type** data, size_type newLen = size_type(-1) )
         {
           if (!EnsureMutable(newLen))
-            NS_RUNTIMEABORT("OOM");
+            NS_ABORT_OOM(newLen == size_type(-1) ? mLength : newLen);
 
           *data = mData;
           return mLength;
@@ -548,6 +600,18 @@ class nsTSubstring_CharT
           *data = mData;
           return mLength;
         }
+
+#if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
+      size_type GetMutableData( wchar_t** data, size_type newLen = size_type(-1) )
+        {
+          return GetMutableData(reinterpret_cast<char16_t**>(data), newLen);
+        }
+
+      size_type GetMutableData( wchar_t** data, size_type newLen, const fallible_t& )
+        {
+    return GetMutableData(reinterpret_cast<char16_t**>(data), newLen, fallible_t());
+        }
+#endif
 
 
         /**

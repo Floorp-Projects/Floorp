@@ -1090,35 +1090,31 @@ nsSVGUtils::GetClipRectForFrame(nsIFrame *aFrame,
 void
 nsSVGUtils::CompositeSurfaceMatrix(gfxContext *aContext,
                                    gfxASurface *aSurface,
-                                   const gfxMatrix &aCTM, float aOpacity)
+                                   SourceSurface *aSourceSurface,
+                                   const gfxPoint &aSurfaceOffset,
+                                   const gfxMatrix &aCTM)
 {
   if (aCTM.IsSingular())
     return;
-  
-  if (aContext->IsCairo()) {
+
+  if (aSurface) {
     aContext->Save();
     aContext->Multiply(aCTM);
+    aContext->Translate(aSurfaceOffset);
     aContext->SetSource(aSurface);
-    aContext->Paint(aOpacity);
+    aContext->Paint();
     aContext->Restore();
   } else {
-    DrawTarget *dt = aContext->GetDrawTarget();
-    Matrix oldMat = dt->GetTransform();
-    RefPtr<SourceSurface> surf =
-      gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, aSurface);
-    dt->SetTransform(ToMatrix(aCTM) * oldMat);
+    DrawTarget *destDT = aContext->GetDrawTarget();
+    Matrix oldMat = destDT->GetTransform();
+    destDT->SetTransform(ToMatrix(aCTM) * oldMat);
 
-    gfxSize size = aSurface->GetSize();
-    NS_ASSERTION(size.width >= 0 && size.height >= 0, "Failure to get size for aSurface.");
+    IntSize size = aSourceSurface->GetSize();
+    Rect sourceRect(Point(0, 0), Size(size.width, size.height));
+    Rect drawRect = sourceRect + ToPoint(aSurfaceOffset);
+    destDT->DrawSurface(aSourceSurface, drawRect, sourceRect);
 
-    gfxPoint pt = aSurface->GetDeviceOffset();
-
-    dt->FillRect(Rect(-pt.x, -pt.y, size.width, size.height),
-                 SurfacePattern(surf, EXTEND_CLAMP,
-                                Matrix(1.0f, 0, 0, 1.0f, -pt.x, -pt.y)),
-                 DrawOptions(aOpacity));
-
-    dt->SetTransform(oldMat);
+    destDT->SetTransform(oldMat);
   }
 }
 
@@ -1245,9 +1241,7 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
   if (style->HasMarker()) {
     return false;
   }
-  if (style->mFill.mType == eStyleSVGPaintType_None ||
-      style->mFillOpacity <= 0 ||
-      !HasStroke(aFrame)) {
+  if (!style->HasFill() || !HasStroke(aFrame)) {
     return true;
   }
   return false;
@@ -1559,9 +1553,7 @@ bool
 nsSVGUtils::HasStroke(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
-  return style->mStroke.mType != eStyleSVGPaintType_None &&
-         style->mStrokeOpacity > 0 &&
-         GetStrokeWidth(aFrame, aContextPaint) > 0;
+  return style->HasStroke() && GetStrokeWidth(aFrame, aContextPaint) > 0;
 }
 
 float

@@ -41,6 +41,10 @@
   -  button that pretty prints the selected source. -->
 <!ENTITY debuggerUI.sources.prettyPrint "Prettify Source">
 
+<!-- LOCALIZATION NOTE (debuggerUI.sources.toggleBreakpoints): This is the tooltip for the
+  -  button that toggles all breakpoints for all sources. -->
+<!ENTITY debuggerUI.sources.toggleBreakpoints "Enable/disable all breakpoints">
+
 <!-- LOCALIZATION NOTE (debuggerUI.pauseExceptions): This is the label for the
   -  checkbox that toggles pausing on exceptions. -->
 <!ENTITY debuggerUI.pauseExceptions     "Pause on exceptions">
@@ -129,8 +133,10 @@
 <!ENTITY debuggerUI.seMenuCondBreak     "Add conditional breakpoint">
 <!ENTITY debuggerUI.seMenuCondBreak.key "B">
 
-<!-- LOCALIZATION NOTE (debuggerUI.instruments.*): This is the text that
-  -  appears in the debugger's instruments pane tabs. -->
+<!-- LOCALIZATION NOTE (debuggerUI.tabs.*): This is the text that
+  -  appears in the debugger's side pane tabs. -->
+<!ENTITY debuggerUI.tabs.sources        "Sources">
+<!ENTITY debuggerUI.tabs.callstack      "Call Stack">
 <!ENTITY debuggerUI.tabs.variables      "Variables">
 <!ENTITY debuggerUI.tabs.events         "Events">
 

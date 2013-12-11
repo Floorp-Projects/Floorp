@@ -3,10 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEFINES += -DOS_ARCH=$(OS_ARCH) \
-           -DMOZ_WIDGET_TOOLKIT=$(MOZ_WIDGET_TOOLKIT) \
-           $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 GARBAGE		+= $(addprefix $(DIST)/bin/defaults/pref/, \
@@ -29,15 +25,6 @@ else
 grepref_files += $(topsrcdir)/mobile/android/chrome/content/healthreport-prefs.js
 endif
 endif
-
-# Optimizer bug with GCC 3.2.2 on OS/2
-ifeq ($(OS_ARCH), OS2)
-nsPrefService.$(OBJ_SUFFIX): nsPrefService.cpp
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CXX)
-	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS:-O2=-O1) $(_VPATH_SRCS)
-endif
-
 
 greprefs.js: $(grepref_files)
 	$(call py_action,preprocessor,$(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $^ -o $@)

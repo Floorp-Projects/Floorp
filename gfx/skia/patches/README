@@ -12,3 +12,4 @@ See the relevant bugs in bugzilla for information on these patches:
 0011-Bug-839347-no-anon-namespace-around-SkNO_RETURN_HINT.patch
 0012-Bug-751418-Add-our-own-GrUserConfig-r-mattwoodrow.patch
 0013-Bug-751418-Fix-compile-error-on-gcc-in-Skia-GL-r-mat.patch
+0031-Bug-945588-Add-include-guard.patch

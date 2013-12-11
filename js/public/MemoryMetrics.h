@@ -211,55 +211,45 @@ struct CodeSizes
 
 // This class holds information about the memory taken up by identical copies of
 // a particular string.  Multiple JSStrings may have their sizes aggregated
-// together into one StringInfo object.
+// together into one StringInfo object.  Note that two strings with identical
+// chars will not be aggregated together if one is a short string and the other
+// is not.
 struct StringInfo
 {
     StringInfo()
-      : length(0), numCopies(0), shortGCHeap(0), normalGCHeap(0), normalMallocHeap(0)
+      : numCopies(0),
+        isShort(0),
+        gcHeap(0),
+        mallocHeap(0)
     {}
 
-    StringInfo(size_t len, size_t shorts, size_t normals, size_t chars)
-      : length(len),
-        numCopies(1),
-        shortGCHeap(shorts),
-        normalGCHeap(normals),
-        normalMallocHeap(chars)
+    StringInfo(bool isShort, size_t gcSize, size_t mallocSize)
+      : numCopies(1),
+        isShort(isShort),
+        gcHeap(gcSize),
+        mallocHeap(mallocSize)
     {}
 
-    void add(size_t shorts, size_t normals, size_t chars) {
-        shortGCHeap += shorts;
-        normalGCHeap += normals;
-        normalMallocHeap += chars;
+    void add(bool isShort, size_t gcSize, size_t mallocSize) {
         numCopies++;
+        MOZ_ASSERT(isShort == this->isShort);
+        gcHeap += gcSize;
+        mallocHeap += mallocSize;
     }
 
     void add(const StringInfo& info) {
-        MOZ_ASSERT(length == info.length);
-
-        shortGCHeap += info.shortGCHeap;
-        normalGCHeap += info.normalGCHeap;
-        normalMallocHeap += info.normalMallocHeap;
         numCopies += info.numCopies;
+        MOZ_ASSERT(info.isShort == isShort);
+        gcHeap += info.gcHeap;
+        mallocHeap += info.mallocHeap;
     }
 
-    size_t totalSizeOf() const {
-        return shortGCHeap + normalGCHeap + normalMallocHeap;
-    }
-
-    size_t totalGCHeapSizeOf() const {
-        return shortGCHeap + normalGCHeap;
-    }
-
-    // The string's length, excluding the null-terminator.
-    size_t length;
-
-    // How many copies of the string have we seen?
-    size_t numCopies;
+    uint32_t numCopies:31;  // How many copies of the string have we seen?
+    uint32_t isShort:1;     // Is it a short string?
 
     // These are all totals across all copies of the string we've seen.
-    size_t shortGCHeap;
-    size_t normalGCHeap;
-    size_t normalMallocHeap;
+    size_t gcHeap;
+    size_t mallocHeap;
 };
 
 // Holds data about a notable string (one which uses more than
@@ -286,6 +276,7 @@ struct NotableStringInfo : public StringInfo
     }
 
     char *buffer;
+    size_t length;
 
   private:
     NotableStringInfo(const NotableStringInfo& info) MOZ_DELETE;
@@ -321,35 +312,37 @@ struct RuntimeSizes
 
 struct ZoneStats : js::ZoneStatsPod
 {
-    ZoneStats() {
-        strings.init();
-    }
+    ZoneStats()
+      : strings(nullptr)
+    {}
 
     ZoneStats(ZoneStats &&other)
       : ZoneStatsPod(mozilla::Move(other)),
-        strings(mozilla::Move(other.strings)),
+        strings(other.strings),
         notableStrings(mozilla::Move(other.notableStrings))
-    {}
+    {
+        other.strings = nullptr;
+    }
 
-    // Add other's numbers to this object's numbers.  Both objects'
-    // notableStrings vectors must be empty at this point, because we can't
-    // merge them.  (A NotableStringInfo contains only a prefix of the string,
-    // so we can't tell whether two NotableStringInfo objects correspond to the
-    // same string.)
-    void add(const ZoneStats &other) {
+    bool initStrings(JSRuntime *rt);
+
+    // Add |other|'s numbers to this object's numbers.  The strings data isn't
+    // touched.
+    void addIgnoringStrings(const ZoneStats &other) {
         ZoneStatsPod::add(other);
+    }
 
-        MOZ_ASSERT(notableStrings.empty());
-        MOZ_ASSERT(other.notableStrings.empty());
-
-        for (StringsHashMap::Range r = other.strings.all(); !r.empty(); r.popFront()) {
-            StringsHashMap::AddPtr p = strings.lookupForAdd(r.front().key);
+    // Add |other|'s strings data to this object's strings data.  (We don't do
+    // anything with notableStrings.)
+    void addStrings(const ZoneStats &other) {
+        for (StringsHashMap::Range r = other.strings->all(); !r.empty(); r.popFront()) {
+            StringsHashMap::AddPtr p = strings->lookupForAdd(r.front().key());
             if (p) {
                 // We've seen this string before; add its size to our tally.
-                p->value.add(r.front().value);
+                p->value().add(r.front().value());
             } else {
                 // We haven't seen this string before; add it to the hashtable.
-                strings.add(p, r.front().key, r.front().value);
+                strings->add(p, r.front().key(), r.front().value());
             }
         }
     }
@@ -358,7 +351,7 @@ struct ZoneStats : js::ZoneStatsPod
         size_t n = ZoneStatsPod::sizeOfLiveGCThings();
         for (size_t i = 0; i < notableStrings.length(); i++) {
             const JS::NotableStringInfo& info = notableStrings[i];
-            n += info.totalGCHeapSizeOf();
+            n += info.gcHeap;
         }
         return n;
     }
@@ -368,7 +361,11 @@ struct ZoneStats : js::ZoneStatsPod
                         js::InefficientNonFlatteningStringHashPolicy,
                         js::SystemAllocPolicy> StringsHashMap;
 
-    StringsHashMap strings;
+    // |strings| is only used transiently.  During the zone traversal it is
+    // filled with info about every string in the zone.  It's then used to fill
+    // in |notableStrings| (which actually gets reported), and immediately
+    // discarded afterwards.
+    StringsHashMap *strings;
     js::Vector<NotableStringInfo, 0, js::SystemAllocPolicy> notableStrings;
 };
 
@@ -444,6 +441,9 @@ struct CompartmentStats
 #undef FOR_EACH_SIZE
 };
 
+typedef js::Vector<CompartmentStats, 0, js::SystemAllocPolicy> CompartmentStatsVector;
+typedef js::Vector<ZoneStats, 0, js::SystemAllocPolicy> ZoneStatsVector;
+
 struct RuntimeStats
 {
 #define FOR_EACH_SIZE(macro) \
@@ -492,8 +492,8 @@ struct RuntimeStats
     CompartmentStats cTotals;   // The sum of this runtime's compartments' measurements.
     ZoneStats zTotals;          // The sum of this runtime's zones' measurements.
 
-    js::Vector<CompartmentStats, 0, js::SystemAllocPolicy> compartmentStatsVector;
-    js::Vector<ZoneStats, 0, js::SystemAllocPolicy> zoneStatsVector;
+    CompartmentStatsVector compartmentStatsVector;
+    ZoneStatsVector zoneStatsVector;
 
     ZoneStats *currZoneStats;
 

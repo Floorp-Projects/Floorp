@@ -29,7 +29,7 @@
     movsxd      rax, dword ptr arg(2)
     lea         rcx, [rsi + rax*2]
 %else
-  %ifidn __OUTPUT_FORMAT__,x64
+  %if LIBVPX_YASM_WIN64
     %define     input       rcx
     %define     output      rdx
     %define     pitch       r8
@@ -53,7 +53,7 @@
     RESTORE_GOT
     pop         rbp
 %else
-  %ifidn __OUTPUT_FORMAT__,x64
+  %if LIBVPX_YASM_WIN64
     RESTORE_XMM
   %endif
 %endif
@@ -61,7 +61,7 @@
 %endmacro
 
 ;void vp8_short_fdct4x4_sse2(short *input, short *output, int pitch)
-global sym(vp8_short_fdct4x4_sse2)
+global sym(vp8_short_fdct4x4_sse2) PRIVATE
 sym(vp8_short_fdct4x4_sse2):
 
     STACK_FRAME_CREATE
@@ -166,7 +166,7 @@ sym(vp8_short_fdct4x4_sse2):
     STACK_FRAME_DESTROY
 
 ;void vp8_short_fdct8x4_sse2(short *input, short *output, int pitch)
-global sym(vp8_short_fdct8x4_sse2)
+global sym(vp8_short_fdct8x4_sse2) PRIVATE
 sym(vp8_short_fdct8x4_sse2):
 
     STACK_FRAME_CREATE

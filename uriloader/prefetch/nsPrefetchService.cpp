@@ -44,7 +44,11 @@ using namespace mozilla;
 //
 static PRLogModuleInfo *gPrefetchLog;
 #endif
+
+#undef LOG
 #define LOG(args) PR_LOG(gPrefetchLog, 4, args)
+
+#undef LOG_ENABLED
 #define LOG_ENABLED() PR_LOG_TEST(gPrefetchLog, 4)
 
 #define PREFETCH_PREF "network.prefetch-next"
@@ -469,7 +473,8 @@ nsPrefetchService::ProcessNextURI()
         //
         // if opening the channel fails, then just skip to the next uri
         //
-        rv = mCurrentNode->OpenChannel();
+        nsRefPtr<nsPrefetchNode> node = mCurrentNode;
+        rv = node->OpenChannel();
     }
     while (NS_FAILED(rv));
 }

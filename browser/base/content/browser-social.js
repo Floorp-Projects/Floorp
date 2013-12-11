@@ -49,8 +49,6 @@ SocialUI = {
     Services.obs.addObserver(this, "social:provider-set", false);
     Services.obs.addObserver(this, "social:providers-changed", false);
     Services.obs.addObserver(this, "social:provider-reload", false);
-    Services.obs.addObserver(this, "social:provider-installed", false);
-    Services.obs.addObserver(this, "social:provider-uninstalled", false);
     Services.obs.addObserver(this, "social:provider-enabled", false);
     Services.obs.addObserver(this, "social:provider-disabled", false);
 
@@ -58,10 +56,6 @@ SocialUI = {
     Services.prefs.addObserver("social.toast-notifications.enabled", this, false);
 
     gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler.bind(this), true, true);
-    window.addEventListener("aftercustomization", function() {
-      if (SocialUI.enabled)
-        SocialMarks.populateContextMenu(SocialMarks);
-    }, false);
 
     if (!Social.initialized) {
       Social.init();
@@ -81,8 +75,6 @@ SocialUI = {
     Services.obs.removeObserver(this, "social:provider-set");
     Services.obs.removeObserver(this, "social:providers-changed");
     Services.obs.removeObserver(this, "social:provider-reload");
-    Services.obs.removeObserver(this, "social:provider-installed");
-    Services.obs.removeObserver(this, "social:provider-uninstalled");
     Services.obs.removeObserver(this, "social:provider-enabled");
     Services.obs.removeObserver(this, "social:provider-disabled");
 
@@ -99,14 +91,6 @@ SocialUI = {
     // manually :(
     try {
       switch (topic) {
-        case "social:provider-installed":
-          SocialMarks.setPosition(data);
-          SocialStatus.setPosition(data);
-          break;
-        case "social:provider-uninstalled":
-          SocialMarks.removePosition(data);
-          SocialStatus.removePosition(data);
-          break;
         case "social:provider-enabled":
           SocialMarks.populateToolbarPalette();
           SocialStatus.populateToolbarPalette();
@@ -152,7 +136,7 @@ SocialUI = {
 
         // Provider-specific notifications
         case "social:ambient-notification-changed":
-          SocialStatus.updateNotification(data);
+          SocialStatus.updateButton(data);
           if (this._matchesCurrentProvider(data)) {
             SocialToolbar.updateButton();
             SocialMenu.populate();
@@ -162,9 +146,12 @@ SocialUI = {
           // make sure anything that happens here only affects the provider for
           // which the profile is changing, and that anything we call actually
           // needs to change based on profile data.
+          SocialStatus.updateButton(data);
           if (this._matchesCurrentProvider(data)) {
             SocialToolbar.updateProvider();
           }
+          // Refresh the provider menus, as the icons may have changed.
+          SocialToolbar.populateProviderMenus();
           break;
         case "social:frameworker-error":
           if (this.enabled && Social.provider.origin == data) {
@@ -850,17 +837,22 @@ SocialToolbar = {
   // Called when the Social.provider changes
   updateProvider: function () {
     let provider = Social.provider;
-    if (provider) {
+    // If the provider uses the new SocialStatus button, then they do
+    // not get to customize the old toolbar button.  Since the status
+    // button depends on multiple workers, if not enabled we will
+    // ignore this limitation.  That allows a provider to migrate to
+    // the new functionality once we enable multiple workers.
+    if (provider && (!provider.statusURL || !Social.allowMultipleWorkers)) {
       this.button.setAttribute("label", provider.name);
       this.button.setAttribute("tooltiptext", provider.name);
       this.button.style.listStyleImage = "url(" + provider.iconURL + ")";
-
-      this.updateProfile();
     } else {
       this.button.setAttribute("label", gNavigatorBundle.getString("service.toolbarbutton.label"));
       this.button.setAttribute("tooltiptext", gNavigatorBundle.getString("service.toolbarbutton.tooltiptext"));
       this.button.style.removeProperty("list-style-image");
     }
+    if (provider)
+      this.updateProfile();
     this.updateButton();
   },
 
@@ -1030,7 +1022,7 @@ SocialToolbar = {
       if (!toolbarButton) {
         toolbarButton = document.createElement("toolbarbutton");
         toolbarButton.setAttribute("type", "badged");
-        toolbarButton.classList.add("toolbarbutton-1");
+        toolbarButton.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
         toolbarButton.setAttribute("id", toolbarButtonId);
         toolbarButton.setAttribute("notificationFrameId", notificationFrameId);
         toolbarButton.addEventListener("mousedown", function (event) {
@@ -1275,6 +1267,10 @@ SocialSidebar = {
     sbrowser.stop();
     sbrowser.removeAttribute("origin");
     sbrowser.setAttribute("src", "about:blank");
+    // We need to explicitly create a new content viewer because the old one
+    // doesn't get destroyed until about:blank has loaded (which does not happen
+    // as long as the element is hidden).
+    sbrowser.docShell.createAboutBlankContentViewer(null);
     SocialFlyout.unload();
   },
 
@@ -1293,129 +1289,52 @@ SocialSidebar = {
 }
 
 // this helper class is used by removable/customizable buttons to handle
-// location persistence and insertion into palette and/or toolbars
+// widget creation/destruction
 
 // When a provider is installed we show all their UI so the user will see the
 // functionality of what they installed. The user can later customize the UI,
 // moving buttons around or off the toolbar.
 //
-// To make this happen, on install we add a button id to the navbar currentset.
-// On enabling the provider (happens just after install) we insert the button
-// into the toolbar as well. The button is then persisted on restart (assuming
-// it was not removed).
-//
-// When a provider is disabled, we do not remove the buttons from currentset.
-// That way, if the provider is re-enabled during the same session, the buttons
-// will reappear where they were before. When a provider is uninstalled, we make
-// sure that the id is removed from currentset.
-//
-// On startup, we insert the buttons of any enabled provider into either the
-// apropriate toolbar or the palette.
+// On startup, we create the button widgets of any enabled provider.
+// CustomizableUI handles placement and persistence of placement.
 function ToolbarHelper(type, createButtonFn) {
   this._createButton = createButtonFn;
   this._type = type;
 }
 
 ToolbarHelper.prototype = {
-  idFromOrgin: function(origin) {
-    return this._type + "-" + origin;
+  idFromOrigin: function(origin) {
+    // this id needs to pass the checks in CustomizableUI, so remove characters
+    // that wont pass.
+    return this._type + "-" + Services.io.newURI(origin, null, null).hostPort.replace(/[\.:]/g,'-');
   },
 
-  // find a button either in the document or the palette
-  _getExistingButton: function(id) {
-    let button = document.getElementById(id);
-    if (button)
-      return button;
-    let palette = document.getElementById("navigator-toolbox").palette;
-    let paletteItem = palette.firstChild;
-    while (paletteItem) {
-      if (paletteItem.id == id)
-        return paletteItem;
-      paletteItem = paletteItem.nextSibling;
-    }
-    return null;
-  },
-
-  setPersistentPosition: function(id) {
-    // called when a provider is installed.  add provider buttons to nav-bar
-    let toolbar = document.getElementById("nav-bar");
-    // first startups will not have a currentset attribute, always rely on
-    // currentSet since it will be derived from the defaultset in that case.
-    let currentset = toolbar.currentSet;
-    if (currentset == "__empty")
-      currentset = []
-    else
-      currentset = currentset.split(",");
-    if (currentset.indexOf(id) >= 0)
-      return;
-    // we do not set toolbar.currentSet since that will try to add the button,
-    // and we have not added it yet (happens on provider being enabled)
-    currentset.push(id);
-    toolbar.setAttribute("currentset", currentset.join(","));
-    document.persist(toolbar.id, "currentset");
-  },
-
+  // should be called on disable of a provider
   removeProviderButton: function(origin) {
-    // this will remove the button from the palette or the toolbar
-    let button = this._getExistingButton(this.idFromOrgin(origin));
-    if (button)
-      button.parentNode.removeChild(button);
+    CustomizableUI.destroyWidget(this.idFromOrigin(origin));
   },
 
-  removePersistence: function(id) {
-    let persisted = document.querySelectorAll("*[currentset]");
-    for (let pent of persisted) {
-      // the button will have been removed, but left in the currentset attribute
-      // in case the user re-enables (e.g. undo in addon manager). So we only
-      // check the attribute here.
-      let currentset = pent.getAttribute("currentset").split(",");
-
-      let pos = currentset.indexOf(id);
-      if (pos >= 0) {
-        currentset.splice(pos, 1);
-        pent.setAttribute("currentset", currentset.join(","));
-        document.persist(pent.id, "currentset");
-        return;
-      }
-    }
-  },
-
-  // if social is entirely disabled, we need to clear the palette, but leave
-  // the persisted id's in place
   clearPalette: function() {
     [this.removeProviderButton(p.origin) for (p of Social.providers)];
   },
 
-  // should be called on startup of each window, otherwise the addon manager
-  // listener will handle new activations, or enable/disabling of a provider
-  // XXX we currently call more regularly, will fix during refactoring
+  // should be called on enable of a provider
   populatePalette: function() {
     if (!Social.enabled) {
       this.clearPalette();
       return;
     }
-    let persisted = document.querySelectorAll("*[currentset]");
-    let persistedById = {};
-    for (let pent of persisted) {
-      let pset = pent.getAttribute("currentset").split(',');
-      for (let id of pset)
-        persistedById[id] = pent;
-    }
 
     // create any buttons that do not exist yet if they have been persisted
     // as a part of the UI (otherwise they belong in the palette).
     for (let provider of Social.providers) {
-      let id = this.idFromOrgin(provider.origin);
-      if (this._getExistingButton(id))
-        continue;
-      let button = this._createButton(provider);
-      if (button && persistedById.hasOwnProperty(id)) {
-        let parent = persistedById[id];
-        let pset = persistedById[id].getAttribute("currentset").split(',');
-        let pi = pset.indexOf(id) + 1;
-        let next = document.getElementById(pset[pi]);
-        parent.insertItem(id, next, null, false);
-      }
+      let id = this.idFromOrigin(provider.origin);
+      let widget = CustomizableUI.getWidget(id);
+      // The widget is only null if we've created then destroyed the widget.
+      // Once we've actually called createWidget the provider will be set to
+      // PROVIDER_API.
+      if (!widget || widget.provider != CustomizableUI.PROVIDER_API)
+        this._createButton(provider);
     }
   }
 }
@@ -1425,25 +1344,6 @@ SocialStatus = {
     if (!Social.allowMultipleWorkers)
       return;
     this._toolbarHelper.populatePalette();
-  },
-
-  setPosition: function(origin) {
-    if (!Social.allowMultipleWorkers)
-      return;
-    // this is called during install, before the provider is enabled so we have
-    // to use the manifest rather than the provider instance as we do elsewhere.
-    let manifest = Social.getManifestByOrigin(origin);
-    if (!manifest.statusURL)
-      return;
-    let tbh = this._toolbarHelper;
-    tbh.setPersistentPosition(tbh.idFromOrgin(origin));
-  },
-
-  removePosition: function(origin) {
-    if (!Social.allowMultipleWorkers)
-      return;
-    let tbh = this._toolbarHelper;
-    tbh.removePersistence(tbh.idFromOrgin(origin));
   },
 
   removeProvider: function(origin) {
@@ -1476,20 +1376,30 @@ SocialStatus = {
 
   _createButton: function(provider) {
     if (!provider.statusURL)
-      return null;
-    let palette = document.getElementById("navigator-toolbox").palette;
-    let button = document.createElement("toolbarbutton");
-    button.setAttribute("class", "toolbarbutton-1 social-status-button");
-    button.setAttribute("type", "badged");
-    button.setAttribute("removable", "true");
-    button.setAttribute("image", provider.iconURL);
-    button.setAttribute("label", provider.name);
-    button.setAttribute("tooltiptext", provider.name);
-    button.setAttribute("origin", provider.origin);
-    button.setAttribute("oncommand", "SocialStatus.showPopup(this);");
-    button.setAttribute("id", this._toolbarHelper.idFromOrgin(provider.origin));
-    palette.appendChild(button);
-    return button;
+      return;
+    let aId = this._toolbarHelper.idFromOrigin(provider.origin);
+    CustomizableUI.createWidget({
+      id: aId,
+      type: 'custom',
+      removable: true,
+      defaultArea: CustomizableUI.AREA_NAVBAR,
+      onBuild: function(document) {
+        let window = document.defaultView;
+
+        let node = document.createElement('toolbarbutton');
+
+        node.id = this.id;
+        node.setAttribute('class', 'toolbarbutton-1 chromeclass-toolbar-additional social-status-button');
+        node.setAttribute('type', "badged");
+        node.style.listStyleImage = "url(" + provider.iconURL + ")";
+        node.setAttribute("origin", provider.origin);
+
+        node.setAttribute("label", provider.name);
+        node.setAttribute("tooltiptext", provider.name);
+        node.setAttribute("oncommand", "SocialStatus.showPopup(this);");
+        return node;
+      }
+    });
   },
 
   // status panels are one-per button per-process, we swap the docshells between
@@ -1534,25 +1444,32 @@ SocialStatus = {
     aButton.setAttribute("notificationFrameId", notificationFrameId);
   },
 
-  updateNotification: function(origin) {
+  updateButton: function(origin) {
     if (!Social.allowMultipleWorkers)
       return;
     let provider = Social._getProviderFromOrigin(origin);
-    let button = document.getElementById(this._toolbarHelper.idFromOrgin(provider.origin));
+    let button = document.getElementById(this._toolbarHelper.idFromOrigin(provider.origin));
     if (button) {
       // we only grab the first notification, ignore all others
       let icons = provider.ambientNotificationIcons;
       let iconNames = Object.keys(icons);
       let notif = icons[iconNames[0]];
+
+      // The image and tooltip need to be updated for both
+      // ambient notification and profile changes.
+      let iconURL, tooltiptext;
+      if (notif) {
+        iconURL = notif.iconURL;
+        tooltiptext = notif.label;
+      }
+      button.setAttribute("image", iconURL || provider.iconURL);
+      button.setAttribute("tooltiptext", tooltiptext || provider.name);
+
       if (!notif) {
         button.setAttribute("badge", "");
         button.setAttribute("aria-label", "");
-        button.setAttribute("tooltiptext", "");
         return;
       }
-
-      button.style.listStyleImage = "url(" + notif.iconURL || provider.iconURL + ")";
-      button.setAttribute("tooltiptext", notif.label);
 
       let badge = notif.counter || "";
       button.setAttribute("badge", badge);
@@ -1673,7 +1590,7 @@ SocialMarks = {
     // menu's, this is ok.
     let tbh = this._toolbarHelper;
     return [p for (p of Social.providers) if (p.markURL &&
-                                              document.getElementById(tbh.idFromOrgin(p.origin)))];
+                                              document.getElementById(tbh.idFromOrigin(p.origin)))];
   },
 
   populateContextMenu: function() {
@@ -1732,21 +1649,6 @@ SocialMarks = {
     this.populateContextMenu();
   },
 
-  setPosition: function(origin) {
-    // this is called during install, before the provider is enabled so we have
-    // to use the manifest rather than the provider instance as we do elsewhere.
-    let manifest = Social.getManifestByOrigin(origin);
-    if (!manifest.markURL)
-      return;
-    let tbh = this._toolbarHelper;
-    tbh.setPersistentPosition(tbh.idFromOrgin(origin));
-  },
-
-  removePosition: function(origin) {
-    let tbh = this._toolbarHelper;
-    tbh.removePersistence(tbh.idFromOrgin(origin));
-  },
-
   removeProvider: function(origin) {
     this._toolbarHelper.removeProviderButton(origin);
   },
@@ -1759,21 +1661,32 @@ SocialMarks = {
 
   _createButton: function(provider) {
     if (!provider.markURL)
-      return null;
-    let palette = document.getElementById("navigator-toolbox").palette;
-    let button = document.createElement("toolbarbutton");
-    button.setAttribute("type", "socialmark");
-    button.setAttribute("class", "toolbarbutton-1 social-mark-button");
-    button.style.listStyleImage = "url(" + provider.iconURL + ")";
-    button.setAttribute("origin", provider.origin);
-    button.setAttribute("id", this._toolbarHelper.idFromOrgin(provider.origin));
-    palette.appendChild(button);
-    return button
+      return;
+    let aId = this._toolbarHelper.idFromOrigin(provider.origin);
+    CustomizableUI.createWidget({
+      id: aId,
+      type: 'custom',
+      removable: true,
+      defaultArea: CustomizableUI.AREA_NAVBAR,
+      onBuild: function(document) {
+        let window = document.defaultView;
+
+        let node = document.createElement('toolbarbutton');
+
+        node.id = this.id;
+        node.setAttribute('class', 'toolbarbutton-1 chromeclass-toolbar-additional social-mark-button');
+        node.setAttribute('type', "socialmark");
+        node.style.listStyleImage = "url(" + provider.iconURL + ")";
+        node.setAttribute("origin", provider.origin);
+
+        return node;
+      }
+    });
   },
 
   markLink: function(aOrigin, aUrl) {
     // find the button for this provider, and open it
-    let id = this._toolbarHelper.idFromOrgin(aOrigin);
+    let id = this._toolbarHelper.idFromOrigin(aOrigin);
     document.getElementById(id).markLink(aUrl);
   }
 };

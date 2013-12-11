@@ -7,7 +7,8 @@
 
 interface nsICmdLineService;
 
-[scriptable, uuid(9edef217-e664-4938-85a7-2fe84baa1755)]
+[scriptable, uuid(bc0cb41f-4924-4c69-a65b-e35225a8650f)]
+
 interface nsIAppStartup : nsISupports
 {
     /**
@@ -30,6 +31,11 @@ interface nsIAppStartup : nsISupports
      * @returnCode NS_SUCCESS_RESTART_APP
      *             This return code indicates that the application should be
      *             restarted because quit was called with the eRestart flag.
+
+     * @returnCode NS_SUCCESS_RESTART_METRO_APP
+     *             This return code indicates that the application should be
+     *             restarted in metro because quit was called with the
+     *             eRestartTouchEnviroment flag.
      */
     void run();
 
@@ -122,6 +128,13 @@ interface nsIAppStartup : nsISupports
     const uint32_t eRestartx86_64 = 0x40;
 
     /**
+     * Restart the application in a touch-optimized environment (such as Metro)
+     * after quitting. The application will be restarted with the same profile
+     * and an empty command line.
+     */
+    const uint32_t eRestartTouchEnvironment = 0x80;
+
+    /**
      * Exit the event loop, and shut down the app.
      *
      * @param aMode
@@ -159,6 +172,12 @@ interface nsIAppStartup : nsISupports
      * was restarted using quit(eRestart*).
      */
     readonly attribute boolean wasRestarted;
+
+    /**
+     * True if the application is being restarted in a touch-optimized
+     * environment (such as Metro).
+     */
+    readonly attribute boolean restartingTouchEnvironment;
 
     /** 
      * Returns an object with main, process, firstPaint, sessionRestored properties.

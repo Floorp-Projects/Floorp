@@ -25,13 +25,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsMimeTypeArray)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(nsMimeTypeArray,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_3(nsMimeTypeArray,
                                         mWindow,
-                                        mMimeTypes)
+                                        mMimeTypes,
+                                        mHiddenMimeTypes)
 
 nsMimeTypeArray::nsMimeTypeArray(nsPIDOMWindow* aWindow)
-  : mWindow(aWindow),
-    mPluginMimeTypeCount(0)
+  : mWindow(aWindow)
 {
   SetIsDOMBinding();
 }
@@ -50,7 +50,7 @@ void
 nsMimeTypeArray::Refresh()
 {
   mMimeTypes.Clear();
-  mPluginMimeTypeCount = 0;
+  mHiddenMimeTypes.Clear();
 }
 
 nsPIDOMWindow*
@@ -81,15 +81,27 @@ nsMimeTypeArray::IndexedGetter(uint32_t aIndex, bool &aFound)
 
   EnsurePluginMimeTypes();
 
-  MOZ_ASSERT(mMimeTypes.Length() >= mPluginMimeTypeCount);
-
-  if (aIndex >= mPluginMimeTypeCount) {
+  if (aIndex >= mMimeTypes.Length()) {
     return nullptr;
   }
 
   aFound = true;
 
   return mMimeTypes[aIndex];
+}
+
+static nsMimeType*
+FindMimeType(const nsTArray<nsRefPtr<nsMimeType> >& aMimeTypes,
+             const nsAString& aType)
+{
+  for (uint32_t i = 0; i < aMimeTypes.Length(); ++i) {
+    nsMimeType* mimeType = aMimeTypes[i];
+    if (aType.Equals(mimeType->Type())) {
+      return mimeType;
+    }
+  }
+
+  return nullptr;
 }
 
 nsMimeType*
@@ -99,12 +111,14 @@ nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound)
 
   EnsurePluginMimeTypes();
 
-  for (uint32_t i = 0; i < mMimeTypes.Length(); ++i) {
-    if (aName.Equals(mMimeTypes[i]->Type())) {
-      aFound = true;
+  nsMimeType* mimeType = FindMimeType(mMimeTypes, aName);
+  if (!mimeType) {
+    mimeType = FindMimeType(mHiddenMimeTypes, aName);
+  }
 
-      return mMimeTypes[i];
-    }
+  if (mimeType) {
+    aFound = true;
+    return mimeType;
   }
 
   // Now let's check with the MIME service.
@@ -148,8 +162,10 @@ nsMimeTypeArray::NamedGetter(const nsAString& aName, bool &aFound)
   // If we got here, we support this type!  Say so.
   aFound = true;
 
+  // We don't want navigator.mimeTypes enumeration to expose MIME types with
+  // application handlers, so add them to the list of hidden MIME types.
   nsMimeType *mt = new nsMimeType(mWindow, aName);
-  mMimeTypes.AppendElement(mt);
+  mHiddenMimeTypes.AppendElement(mt);
 
   return mt;
 }
@@ -159,9 +175,7 @@ nsMimeTypeArray::Length()
 {
   EnsurePluginMimeTypes();
 
-  MOZ_ASSERT(mMimeTypes.Length() >= mPluginMimeTypeCount);
-
-  return mPluginMimeTypeCount;
+  return mMimeTypes.Length();
 }
 
 void
@@ -177,7 +191,7 @@ nsMimeTypeArray::GetSupportedNames(nsTArray< nsString >& aRetval)
 void
 nsMimeTypeArray::EnsurePluginMimeTypes()
 {
-  if (!mMimeTypes.IsEmpty() || !mWindow) {
+  if (!mMimeTypes.IsEmpty() || !mHiddenMimeTypes.IsEmpty() || !mWindow) {
     return;
   }
 
@@ -195,9 +209,7 @@ nsMimeTypeArray::EnsurePluginMimeTypes()
     return;
   }
 
-  pluginArray->GetMimeTypes(mMimeTypes);
-
-  mPluginMimeTypeCount = mMimeTypes.Length();
+  pluginArray->GetMimeTypes(mMimeTypes, mHiddenMimeTypes);
 }
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsMimeType, AddRef)

@@ -55,7 +55,7 @@ FindKeyword(const jschar *s, size_t length)
 {
     JS_ASSERT(length != 0);
 
-    register size_t i;
+    size_t i;
     const KeywordInfo *kw;
     const char *chars;
 
@@ -287,7 +287,7 @@ TokenStream::TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &opt
 
     // The caller must ensure that a reference is held on the supplied principals
     // throughout compilation.
-    JS_ASSERT_IF(originPrincipals, originPrincipals->refcount);
+    JS_ASSERT_IF(originPrincipals, originPrincipals->refcount > 0);
 
     // Column numbers are computed as offsets from the current line's base, so the
     // initial line's base must be included in the buffer. linebase and userbuf

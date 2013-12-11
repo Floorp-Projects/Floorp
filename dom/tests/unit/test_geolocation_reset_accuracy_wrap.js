@@ -54,7 +54,7 @@ function run_test()
                                              providerContract, false, true);
 
   var prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  prefs.setBoolPref("geo.testing.ignore_ipc_principal", true);
+  prefs.setBoolPref("dom.testing.ignore_ipc_principal", true);
   prefs.setBoolPref("geo.wifi.scan", false);
 
   run_test_in_child("test_geolocation_reset_accuracy.js", check_results);

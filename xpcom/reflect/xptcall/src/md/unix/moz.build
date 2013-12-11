@@ -16,6 +16,8 @@ if CONFIG['OS_ARCH'] == 'Darwin':
         GENERATED_SOURCES += [
             'xptcstubs_asm_ppc_darwin.s',
         ]
+    if '86' in CONFIG['OS_TEST'] and CONFIG['OS_TEST'] != 'x86_64':
+        DEFINES['MOZ_NEED_LEADING_UNDERSCORE'] = True
 
 if CONFIG['OS_ARCH'] in ('NetBSD', 'OpenBSD', 'GNU'):
     if CONFIG['CPU_ARCH'] == 'x86':
@@ -51,24 +53,6 @@ if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['OS_TEST'] == 'x86_64':
         'xptcinvoke_amd64_openbsd.cpp',
         'xptcstubs_amd64_openbsd.cpp'
     ]
-
-if CONFIG['OS_TARGET'] == 'NTO':
-    if CONFIG['OS_TEST'] == 'x86':
-        SOURCES += [
-            'xptcinvoke_gcc_x86_unix.cpp',
-            'xptcstubs_gcc_x86_unix.cpp',
-        ]
-    elif CONFIG['CPU_ARCH'] == 'arm':
-        SOURCES += [
-            'xptcinvoke_nto_arm.cpp',
-            'xptcstubs_nto_arm.cpp',
-        ]
-    elif CONFIG['OS_TEST'] == 'sh':
-        SOURCES += [
-            'xptcinvoke_nto_shle.cpp',
-            'xptcstubs_asm_shle.s',
-            'xptcstubs_nto_shle.cpp'
-        ]
 
 if CONFIG['OS_ARCH'] == 'SunOS':
     if CONFIG['OS_TEST'] == 'x86_64':
@@ -281,6 +265,9 @@ if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['OS_TEST'] == 'sparc64':
     ]
 
 if CONFIG['OS_ARCH'] == 'SunOS' and CONFIG['OS_TEST'].find('86') == -1:
+    GENERATED_FILES = [
+        'xptcstubsdef_asm.solx86',
+    ]
     if CONFIG['HAVE_64BIT_OS']:
         SOURCES += [
             'xptcinvoke_sparcv9_solaris.cpp',

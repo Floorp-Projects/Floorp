@@ -28,9 +28,10 @@ function duplicate(delta, msg, cb) {
   var start = gBrowser.sessionHistory.index;
 
   duplicateTabIn(gBrowser.selectedTab, "tab", delta);
+  let tab = gBrowser.selectedTab;
 
-  gBrowser.selectedBrowser.addEventListener("pageshow", function () {
-    gBrowser.selectedBrowser.removeEventListener("pageshow", arguments.callee, false);
+  tab.addEventListener("SSTabRestored", function tabRestoredListener() {
+    tab.removeEventListener("SSTabRestored", tabRestoredListener, false);
     is(gBrowser.sessionHistory.index, start + delta, msg);
     executeSoon(cb);
   }, false);

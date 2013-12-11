@@ -146,10 +146,10 @@ pref("app.update.certs.1.commonName", "aus4.mozilla.org");
 pref("app.update.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
 pref("app.update.certs.2.commonName", "aus4.mozilla.org");
 #else
-pref("app.update.certs.1.issuerName", "OU=Equifax Secure Certificate Authority,O=Equifax,C=US");
+pref("app.update.certs.1.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
 pref("app.update.certs.1.commonName", "aus3.mozilla.org");
 
-pref("app.update.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
+pref("app.update.certs.2.issuerName", "CN=DigiCert Secure Server CA,O=DigiCert Inc,C=US");
 pref("app.update.certs.2.commonName", "aus3.mozilla.org");
 #endif
 #endif
@@ -574,11 +574,7 @@ pref("browser.gesture.twist.left", "cmd_gestureRotateLeft");
 pref("browser.gesture.twist.end", "cmd_gestureRotateEnd");
 pref("browser.gesture.tap", "cmd_fullZoomReset");
 
-#ifndef RELEASE_BUILD
-pref("browser.snapshots.limit", 5);
-#else
 pref("browser.snapshots.limit", 0);
-#endif
 
 // 0: Nothing happens
 // 1: Scrolling contents
@@ -1090,14 +1086,14 @@ pref("devtools.commands.dir", "");
 // Enable the app manager
 pref("devtools.appmanager.enabled", true);
 pref("devtools.appmanager.lastTab", "help");
-pref("devtools.appmanager.manifestEditor.enabled", false);
+pref("devtools.appmanager.manifestEditor.enabled", true);
 
 // Toolbox preferences
 pref("devtools.toolbox.footer.height", 250);
 pref("devtools.toolbox.sidebar.width", 500);
 pref("devtools.toolbox.host", "bottom");
 pref("devtools.toolbox.selectedTool", "webconsole");
-pref("devtools.toolbox.toolbarSpec", '["paintflashing toggle","tilt toggle","scratchpad","resize toggle"]');
+pref("devtools.toolbox.toolbarSpec", '["splitconsole", "paintflashing toggle","tilt toggle","scratchpad","resize toggle"]');
 pref("devtools.toolbox.sideEnabled", true);
 pref("devtools.toolbox.zoomValue", "1");
 
@@ -1159,7 +1155,7 @@ pref("devtools.scratchpad.recentFilesMax", 10);
 
 // Enable the Style Editor.
 pref("devtools.styleeditor.enabled", true);
-pref("devtools.styleeditor.transitions", true);
+pref("devtools.styleeditor.source-maps-enabled", false);
 
 // Enable the Shader Editor.
 pref("devtools.shadereditor.enabled", false);
@@ -1338,3 +1334,6 @@ pref("network.disable.ipc.security", true);
 
 // CustomizableUI debug logging.
 pref("browser.uiCustomization.debug", false);
+
+// The URL of the Firefox Accounts auth server backend
+pref("identity.fxaccounts.auth.uri", "https://api-accounts.dev.lcip.org/v1");

@@ -34,8 +34,8 @@ public:
 
   NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, bool aIsPrintPreview);
 
-  void GetDriverName(PRUnichar *&aDriverName) const   { aDriverName = mDriverName;     }
-  void GetDeviceName(PRUnichar *&aDeviceName) const   { aDeviceName = mDeviceName;     }
+  void GetDriverName(wchar_t *&aDriverName) const   { aDriverName = mDriverName;     }
+  void GetDeviceName(wchar_t *&aDeviceName) const   { aDeviceName = mDeviceName;     }
 
   // The GetDevMode will return a pointer to a DevMode
   // whether it is from the Global memory handle or just the DevMode
@@ -44,23 +44,23 @@ public:
   void GetDevMode(LPDEVMODEW &aDevMode);
 
   // helper functions
-  nsresult GetDataFromPrinter(const PRUnichar * aName, nsIPrintSettings* aPS = nullptr);
+  nsresult GetDataFromPrinter(char16ptr_t aName, nsIPrintSettings* aPS = nullptr);
 
   static nsresult SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, 
                                               LPDEVMODEW         aDevMode);
 
 protected:
 
-  void SetDeviceName(const PRUnichar* aDeviceName);
-  void SetDriverName(const PRUnichar* aDriverName);
+  void SetDeviceName(char16ptr_t aDeviceName);
+  void SetDriverName(char16ptr_t aDriverName);
   void SetDevMode(LPDEVMODEW aDevMode);
 
   void SetupPaperInfoFromSettings();
 
   virtual ~nsDeviceContextSpecWin();
 
-  PRUnichar*      mDriverName;
-  PRUnichar*      mDeviceName;
+  wchar_t*      mDriverName;
+  wchar_t*      mDeviceName;
   LPDEVMODEW mDevMode;
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;

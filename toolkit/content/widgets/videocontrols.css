@@ -92,7 +92,8 @@ html|span.statActivity[seeking] > html|span.statActivitySeeking {
 .controlBar[size="hidden"],
 .controlBar[size="small"] .durationBox,
 .controlBar[size="small"] .durationLabel,
-.controlBar[size="small"] .positionLabel {
+.controlBar[size="small"] .positionLabel,
+.controlBar[size="small"] .volumeStack {
   visibility: collapse;
 }
 

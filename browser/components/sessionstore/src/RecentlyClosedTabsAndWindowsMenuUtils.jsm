@@ -138,7 +138,7 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
     if (aEvent.button != 1)
       return;
 
-    aEvent.view.undoCloseTab(aEvent.originalTarget.value);
+    aEvent.view.undoCloseTab(aEvent.originalTarget.getAttribute("value"));
     aEvent.view.gBrowser.moveTabToEnd();
   },
 };

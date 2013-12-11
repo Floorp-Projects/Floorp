@@ -8,7 +8,7 @@ EXPORTS += [
     'SkANP.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'ANPCanvas.cpp',
     'ANPPaint.cpp',
     'ANPPath.cpp',
@@ -17,3 +17,5 @@ SOURCES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+DEFINES['SK_BUILD_FOR_ANDROID_NDK'] = True

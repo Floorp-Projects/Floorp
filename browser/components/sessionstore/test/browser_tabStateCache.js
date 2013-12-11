@@ -137,5 +137,3 @@ add_task(function browsing() {
   gBrowser.removeTab(tab2);
   gBrowser.removeTab(tab1);
 });
-
-

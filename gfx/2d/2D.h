@@ -53,6 +53,7 @@ class SourceSurface;
 class DataSourceSurface;
 class DrawTarget;
 class DrawEventRecorder;
+class FilterNode;
 
 struct NativeSurface {
   NativeSurfaceType mType;
@@ -356,7 +357,11 @@ public:
    */
   virtual void MarkDirty() {}
 
-  virtual TemporaryRef<DataSourceSurface> GetDataSurface() { RefPtr<DataSourceSurface> temp = this; return temp.forget(); }
+  /*
+   * Returns a DataSourceSurface with the same data as this one, but
+   * guaranteed to have surface->GetType() == SURFACE_DATA.
+   */
+  virtual TemporaryRef<DataSourceSurface> GetDataSurface();
 };
 
 /* This is an abstract object that accepts path segments. */
@@ -619,6 +624,19 @@ public:
                            const DrawOptions &aOptions = DrawOptions()) = 0;
 
   /*
+   * Draw the output of a FilterNode to the DrawTarget.
+   *
+   * aNode FilterNode to draw
+   * aSourceRect Source rectangle in FilterNode space to draw
+   * aDestPoint Destination point on the DrawTarget to draw the
+   *            SourceRectangle of the filter output to
+   */
+  virtual void DrawFilter(FilterNode *aNode,
+                          const Rect &aSourceRect,
+                          const Point &aDestPoint,
+                          const DrawOptions &aOptions = DrawOptions()) = 0;
+
+  /*
    * Blend a surface to the draw target with a shadow. The shadow is drawn as a
    * gaussian blur using a specified sigma. The shadow is clipped to the size
    * of the input surface, so the input surface should contain a transparent
@@ -862,6 +880,14 @@ public:
                         uint32_t aNumStops,
                         ExtendMode aExtendMode = EXTEND_CLAMP) const = 0;
 
+  /*
+   * Create a FilterNode object that can be used to apply a filter to various
+   * inputs.
+   *
+   * aType Type of filter node to be created.
+   */
+  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType) = 0;
+
   const Matrix &GetTransform() const { return mTransform; }
 
   /*
@@ -1015,7 +1041,7 @@ public:
     SetGlobalSkiaCacheLimits(int aCount, int aSizeInBytes);
 #endif
 
-  static void PurgeTextureCaches();
+  static void PurgeAllCaches();
 
 #if defined(USE_SKIA) && defined(MOZ_ENABLE_FREETYPE)
   static TemporaryRef<GlyphRenderingOptions>

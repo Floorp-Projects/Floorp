@@ -771,14 +771,14 @@ int vorbis_synthesis_blockin(vorbis_dsp_state *v,vorbis_block *vb){
       if(v->lW){
         if(v->W){
           /* large/large */
-          float *w=_vorbis_window_get(b->window[1]-hs);
+          const float *w=_vorbis_window_get(b->window[1]-hs);
           float *pcm=v->pcm[j]+prevCenter;
           float *p=vb->pcm[j];
           for(i=0;i<n1;i++)
             pcm[i]=pcm[i]*w[n1-i-1] + p[i]*w[i];
         }else{
           /* large/small */
-          float *w=_vorbis_window_get(b->window[0]-hs);
+          const float *w=_vorbis_window_get(b->window[0]-hs);
           float *pcm=v->pcm[j]+prevCenter+n1/2-n0/2;
           float *p=vb->pcm[j];
           for(i=0;i<n0;i++)
@@ -787,7 +787,7 @@ int vorbis_synthesis_blockin(vorbis_dsp_state *v,vorbis_block *vb){
       }else{
         if(v->W){
           /* small/large */
-          float *w=_vorbis_window_get(b->window[0]-hs);
+          const float *w=_vorbis_window_get(b->window[0]-hs);
           float *pcm=v->pcm[j]+prevCenter;
           float *p=vb->pcm[j]+n1/2-n0/2;
           for(i=0;i<n0;i++)
@@ -796,7 +796,7 @@ int vorbis_synthesis_blockin(vorbis_dsp_state *v,vorbis_block *vb){
             pcm[i]=p[i];
         }else{
           /* small/small */
-          float *w=_vorbis_window_get(b->window[0]-hs);
+          const float *w=_vorbis_window_get(b->window[0]-hs);
           float *pcm=v->pcm[j]+prevCenter;
           float *p=vb->pcm[j];
           for(i=0;i<n0;i++)
@@ -1035,7 +1035,7 @@ int vorbis_synthesis_lapout(vorbis_dsp_state *v,float ***pcm){
 
 }
 
-float *vorbis_window(vorbis_dsp_state *v,int W){
+const float *vorbis_window(vorbis_dsp_state *v,int W){
   vorbis_info *vi=v->vi;
   codec_setup_info *ci=vi->codec_setup;
   int hs=ci->halfrate_flag;

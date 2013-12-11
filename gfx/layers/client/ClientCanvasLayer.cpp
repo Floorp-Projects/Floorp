@@ -26,6 +26,7 @@
 #include "SharedSurfaceIO.h"
 #endif
 
+using namespace mozilla::gfx;
 using namespace mozilla::gl;
 
 namespace mozilla {
@@ -45,7 +46,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
                                           screen->PreserveBuffer());
     SurfaceFactory_GL* factory = nullptr;
     if (!mForceReadback) {
-      if (ClientManager()->GetCompositorBackendType() == mozilla::layers::LAYERS_OPENGL) {
+      if (ClientManager()->AsShadowForwarder()->GetCompositorBackendType() == mozilla::layers::LAYERS_OPENGL) {
         if (mGLContext->GetEGLContext()) {
           bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
 
@@ -55,7 +56,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
           } else {
             // [Basic/OGL Layers, OOPC] WebGL layer init. (Out Of Process Compositing)
 #ifdef MOZ_WIDGET_GONK
-            factory = new SurfaceFactory_Gralloc(mGLContext, screen->Caps(), ClientManager());
+            factory = new SurfaceFactory_Gralloc(mGLContext, screen->Caps(), ClientManager()->AsShadowForwarder());
 #else
             // we could do readback here maybe
             NS_NOTREACHED("isCrossProcess but not on native B2G!");
@@ -106,13 +107,13 @@ ClientCanvasLayer::RenderLayer()
       flags |= TEXTURE_DEALLOCATE_CLIENT;
     }
     mCanvasClient = CanvasClient::CreateCanvasClient(GetCanvasClientType(),
-                                                     ClientManager(), flags);
+                                                     ClientManager()->AsShadowForwarder(), flags);
     if (!mCanvasClient) {
       return;
     }
     if (HasShadow()) {
       mCanvasClient->Connect();
-      ClientManager()->Attach(mCanvasClient, this);
+      ClientManager()->AsShadowForwarder()->Attach(mCanvasClient, this);
     }
   }
   

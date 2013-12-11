@@ -24,6 +24,11 @@ class PropertyProvider;
 // This state bit is set on children of token MathML elements
 #define TEXT_IS_IN_TOKEN_MATHML          NS_FRAME_STATE_BIT(32)
 
+// This state bit is set on token MathML elements if the token represents an
+// <mi> tag whose inner HTML consists of a single non-whitespace character
+// to allow special rendering behaviour.
+#define TEXT_IS_IN_SINGLE_CHAR_MI        NS_FRAME_STATE_BIT(59)
+
 #define TEXT_HAS_FONT_INFLATION          NS_FRAME_STATE_BIT(61)
 
 typedef nsFrame nsTextFrameBase;
@@ -221,6 +226,9 @@ public:
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              uint32_t aFlags) MOZ_OVERRIDE;
   virtual nsRect ComputeTightBounds(gfxContext* aContext) const MOZ_OVERRIDE;
+  virtual nsresult GetPrefWidthTightBounds(nsRenderingContext* aContext,
+                                           nscoord* aX,
+                                           nscoord* aXMost) MOZ_OVERRIDE;
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
@@ -511,7 +519,7 @@ public:
     int32_t GetEnd() const { return mStart + mLength; }
   };
   TrimmedOffsets GetTrimmedOffsets(const nsTextFragment* aFrag,
-                                   bool aTrimAfter);
+                                   bool aTrimAfter, bool aPostReflow = true);
 
   // Similar to Reflow(), but for use from nsLineLayout
   void ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,

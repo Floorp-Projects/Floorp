@@ -178,12 +178,11 @@ public:
     void RemoveCmap(const gfxCharacterMap *aCharMap);
 
 protected:
-    class MemoryReporter MOZ_FINAL : public mozilla::MemoryMultiReporter
+    class MemoryReporter MOZ_FINAL : public nsIMemoryReporter
     {
     public:
-        MemoryReporter();
-        NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCb,
-                                  nsISupports *aClosure);
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIMEMORYREPORTER
     };
 
     gfxPlatformFontList(bool aNeedFullnamePostscriptNames = true);

@@ -9,7 +9,6 @@
 
 #include "BasicLayers.h"
 #include "gfx3DMatrix.h"
-#include "LayerManagerOGL.h"
 #ifdef MOZ_ENABLE_D3D9_LAYER
 # include "LayerManagerD3D9.h"
 #endif //MOZ_ENABLE_D3D9_LAYER
@@ -514,7 +513,8 @@ public:
                         aFrameMetrics));
   }
 
-  virtual void HandleDoubleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE
+  virtual void HandleDoubleTap(const CSSIntPoint& aPoint,
+                               int32_t aModifiers) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -522,16 +522,17 @@ public:
       mUILoop->PostTask(
         FROM_HERE,
         NewRunnableMethod(this, &RemoteContentController::HandleDoubleTap,
-                          aPoint));
+                          aPoint, aModifiers));
       return;
     }
     if (mRenderFrame) {
       TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
-      browser->HandleDoubleTap(aPoint);
+      browser->HandleDoubleTap(aPoint, aModifiers);
     }
   }
 
-  virtual void HandleSingleTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE
+  virtual void HandleSingleTap(const CSSIntPoint& aPoint,
+                               int32_t aModifiers) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -539,16 +540,17 @@ public:
       mUILoop->PostTask(
         FROM_HERE,
         NewRunnableMethod(this, &RemoteContentController::HandleSingleTap,
-                          aPoint));
+                          aPoint, aModifiers));
       return;
     }
     if (mRenderFrame) {
       TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
-      browser->HandleSingleTap(aPoint);
+      browser->HandleSingleTap(aPoint, aModifiers);
     }
   }
 
-  virtual void HandleLongTap(const CSSIntPoint& aPoint) MOZ_OVERRIDE
+  virtual void HandleLongTap(const CSSIntPoint& aPoint,
+                             int32_t aModifiers) MOZ_OVERRIDE
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -556,12 +558,12 @@ public:
       mUILoop->PostTask(
         FROM_HERE,
         NewRunnableMethod(this, &RemoteContentController::HandleLongTap,
-                          aPoint));
+                          aPoint, aModifiers));
       return;
     }
     if (mRenderFrame) {
       TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
-      browser->HandleLongTap(aPoint);
+      browser->HandleLongTap(aPoint, aModifiers);
     }
   }
 
@@ -613,6 +615,36 @@ public:
     return mHaveZoomConstraints;
   }
 
+  virtual void NotifyTransformBegin(const ScrollableLayerGuid& aGuid)
+  {
+    if (MessageLoop::current() != mUILoop) {
+      mUILoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &RemoteContentController::NotifyTransformBegin,
+                          aGuid));
+      return;
+    }
+    if (mRenderFrame) {
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
+      browser->NotifyTransformBegin(aGuid.mScrollId);
+    }
+  }
+
+  virtual void NotifyTransformEnd(const ScrollableLayerGuid& aGuid)
+  {
+    if (MessageLoop::current() != mUILoop) {
+      mUILoop->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(this, &RemoteContentController::NotifyTransformEnd,
+                          aGuid));
+      return;
+    }
+    if (mRenderFrame) {
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
+      browser->NotifyTransformEnd(aGuid.mScrollId);
+    }
+  }
+
 private:
   void DoRequestContentRepaint(const FrameMetrics& aFrameMetrics)
   {
@@ -645,7 +677,8 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
   nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
   // Perhaps the document containing this frame currently has no presentation?
   if (lm && lm->GetBackendType() == LAYERS_CLIENT) {
-    *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
+    *aTextureFactoryIdentifier =
+      static_cast<ClientLayerManager*>(lm.get())->GetTextureFactoryIdentifier();
   } else {
     *aTextureFactoryIdentifier = TextureFactoryIdentifier();
   }
@@ -913,13 +946,15 @@ RenderFrameParent::AllocPLayerTransactionParent()
     return nullptr;
   }
   nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
-  return new LayerTransactionParent(lm->AsLayerManagerComposite(), this, 0);
+  LayerTransactionParent* result = new LayerTransactionParent(lm->AsLayerManagerComposite(), this, 0);
+  result->AddIPDLReference();
+  return result;
 }
 
 bool
 RenderFrameParent::DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers)
 {
-  delete aLayers;
+  static_cast<LayerTransactionParent*>(aLayers)->ReleaseIPDLReference();
   return true;
 }
 

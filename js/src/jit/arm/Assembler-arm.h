@@ -7,9 +7,9 @@
 #ifndef jit_arm_Assembler_arm_h
 #define jit_arm_Assembler_arm_h
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Util.h"
 
 #include "assembler/assembler/AssemblerBufferWithConstantPool.h"
 #include "jit/arm/Architecture-arm.h"
@@ -68,12 +68,8 @@ static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 class ABIArgGenerator
 {
-#if defined(JS_CPU_ARM_HARDFP)
     unsigned intRegIndex_;
     unsigned floatRegIndex_;
-#else
-    unsigned argRegIndex_;
-#endif
     uint32_t stackOffset_;
     ABIArg current_;
 
@@ -1160,7 +1156,7 @@ class Assembler
         LessThanOrEqual = LE,
         Overflow = VS,
         Signed = MI,
-        Unsigned = PL,
+        NotSigned = PL,
         Zero = EQ,
         NonZero = NE,
         Always  = AL,
@@ -1282,7 +1278,7 @@ class Assembler
     // dest parameter, a this object is still needed.  dummy always happens
     // to be null, but we shouldn't be looking at it in any case.
     static Assembler *dummy;
-    Pool pools_[4];
+    mozilla::Array<Pool, 4> pools_;
     Pool *int32Pool;
     Pool *doublePool;
 
@@ -2251,7 +2247,7 @@ class DoubleEncoder {
         { }
     };
 
-    DoubleEntry table[256];
+    mozilla::Array<DoubleEntry, 256> table;
 
   public:
     DoubleEncoder()

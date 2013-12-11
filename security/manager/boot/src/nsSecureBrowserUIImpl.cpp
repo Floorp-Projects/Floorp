@@ -86,7 +86,7 @@ RequestMapInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
   return true;
 }
 
-static PLDHashTableOps gMapOps = {
+static const PLDHashTableOps gMapOps = {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,

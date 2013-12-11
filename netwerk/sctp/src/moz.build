@@ -48,3 +48,35 @@ LIBRARY_NAME = 'nksctp_s'
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'necko'
+
+LOCAL_INCLUDES += [
+    '../../base/src',
+    '/content/base/src',
+    '/content/events/src',
+    '/xpcom/ds',
+]
+
+for var in ('SCTP_SIMPLE_ALLOCATOR', 'USE_SCTP_SHA1',
+            'SCTP_PROCESS_LEVEL_LOCKS', '__Userspace__', 'INET',
+            'CALLBACK_API', 'SCTP_DEBUG'):
+    DEFINES[var] = 1
+
+# Android NDK r5c, used on the builders at the time of this writing, doesn't
+# have the headers we need for IPv6
+if CONFIG['OS_TARGET'] != 'Android':
+    DEFINES['INET6'] = 1
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFINES['__Userspace_os_Windows'] = 1
+    DEFINES['_LIB'] = 1
+elif CONFIG['OS_TARGET'] == 'Android':
+    DEFINES['__Userspace_os_Linux'] = 1
+else:
+    DEFINES['__Userspace_os_%s' % CONFIG['OS_TARGET']] = 1
+
+if CONFIG['OS_TARGET'] == 'Darwin':
+    DEFINES['__APPLE_USE_RFC_2292'] = 1
+
+if CONFIG['OS_TARGET'] in ('Linux', 'Android'):
+    # to make sure that in6_pktinfo gets defined on all distros
+    DEFINES['_GNU_SOURCE'] = True

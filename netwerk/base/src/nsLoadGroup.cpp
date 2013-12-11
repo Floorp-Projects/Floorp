@@ -1156,7 +1156,7 @@ nsLoadGroupConnectionInfo::SetSpdyPushCache(mozilla::net::SpdyPushCache *aSpdyPu
 
 nsresult nsLoadGroup::Init()
 {
-    static PLDHashTableOps hash_table_ops =
+    static const PLDHashTableOps hash_table_ops =
     {
         PL_DHashAllocTable,
         PL_DHashFreeTable,
@@ -1179,3 +1179,5 @@ nsresult nsLoadGroup::Init()
 
     return NS_OK;
 }
+
+#undef LOG

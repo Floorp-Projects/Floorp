@@ -30,9 +30,9 @@ void
 ObjectStore::trace(JSTracer *trc)
 {
     for (ObjectTable::Range r(table_.all()); !r.empty(); r.popFront()) {
-        DebugOnly<JSObject *> prior = r.front().value.get();
-        JS_CallHeapObjectTracer(trc, &r.front().value, "ipc-object");
-        MOZ_ASSERT(r.front().value == prior);
+        DebugOnly<JSObject *> prior = r.front().value().get();
+        JS_CallHeapObjectTracer(trc, &r.front().value(), "ipc-object");
+        MOZ_ASSERT(r.front().value() == prior);
     }
 }
 
@@ -42,7 +42,7 @@ ObjectStore::find(ObjectId id)
     ObjectTable::Ptr p = table_.lookup(id);
     if (!p)
         return nullptr;
-    return p->value;
+    return p->value();
 }
 
 bool
@@ -82,9 +82,9 @@ void
 ObjectIdCache::trace(JSTracer *trc)
 {
     for (ObjectIdTable::Range r(table_->all()); !r.empty(); r.popFront()) {
-        JSObject *obj = r.front().key;
+        JSObject *obj = r.front().key();
         JS_CallObjectTracer(trc, &obj, "ipc-id");
-        MOZ_ASSERT(obj == r.front().key);
+        MOZ_ASSERT(obj == r.front().key());
     }
 }
 
@@ -94,7 +94,7 @@ ObjectIdCache::find(JSObject *obj)
     ObjectIdTable::Ptr p = table_->lookup(obj);
     if (!p)
         return 0;
-    return p->value;
+    return p->value();
 }
 
 bool

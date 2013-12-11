@@ -490,16 +490,16 @@ class TransportConduitTest : public ::testing::Test
   {
     //get pointer to AudioSessionConduit
     int err=0;
-    mAudioSession = mozilla::AudioSessionConduit::Create(NULL);
+    mAudioSession = mozilla::AudioSessionConduit::Create(nullptr);
     if( !mAudioSession )
-      ASSERT_NE(mAudioSession, (void*)NULL);
+      ASSERT_NE(mAudioSession, (void*)nullptr);
 
-    mAudioSession2 = mozilla::AudioSessionConduit::Create(NULL);
+    mAudioSession2 = mozilla::AudioSessionConduit::Create(nullptr);
     if( !mAudioSession2 )
-      ASSERT_NE(mAudioSession2, (void*)NULL);
+      ASSERT_NE(mAudioSession2, (void*)nullptr);
 
     FakeMediaTransport* xport = new FakeMediaTransport();
-    ASSERT_NE(xport, (void*)NULL);
+    ASSERT_NE(xport, (void*)nullptr);
     xport->SetAudioSession(mAudioSession, mAudioSession2);
     mAudioTransport = xport;
 
@@ -548,20 +548,20 @@ class TransportConduitTest : public ::testing::Test
   {
     int err = 0;
     //get pointer to VideoSessionConduit
-    mVideoSession = mozilla::VideoSessionConduit::Create(NULL);
+    mVideoSession = mozilla::VideoSessionConduit::Create(nullptr);
     if( !mVideoSession )
-      ASSERT_NE(mVideoSession, (void*)NULL);
+      ASSERT_NE(mVideoSession, (void*)nullptr);
 
    // This session is for other one
-    mVideoSession2 = mozilla::VideoSessionConduit::Create(NULL);
+    mVideoSession2 = mozilla::VideoSessionConduit::Create(nullptr);
     if( !mVideoSession2 )
-      ASSERT_NE(mVideoSession2,(void*)NULL);
+      ASSERT_NE(mVideoSession2,(void*)nullptr);
 
     mVideoRenderer = new DummyVideoTarget();
-    ASSERT_NE(mVideoRenderer, (void*)NULL);
+    ASSERT_NE(mVideoRenderer, (void*)nullptr);
 
     FakeMediaTransport* xport = new FakeMediaTransport();
-    ASSERT_NE(xport, (void*)NULL);
+    ASSERT_NE(xport, (void*)nullptr);
     xport->SetVideoSession(mVideoSession,mVideoSession2);
     mVideoTransport = xport;
 
@@ -622,9 +622,9 @@ class TransportConduitTest : public ::testing::Test
     int err = 0;
     mozilla::RefPtr<mozilla::VideoSessionConduit> mVideoSession;
     //get pointer to VideoSessionConduit
-    mVideoSession = mozilla::VideoSessionConduit::Create(NULL);
+    mVideoSession = mozilla::VideoSessionConduit::Create(nullptr);
     if( !mVideoSession )
-      ASSERT_NE(mVideoSession, (void*)NULL);
+      ASSERT_NE(mVideoSession, (void*)nullptr);
 
     //Test Configure Recv Codec APIS
     cerr << "   *************************************************" << endl;
@@ -705,7 +705,7 @@ class TransportConduitTest : public ::testing::Test
     cerr << "    3. Null Codec Parameter  " << endl;
     cerr << "   *************************************************" << endl;
 
-    err = mVideoSession->ConfigureSendMediaCodec(NULL);
+    err = mVideoSession->ConfigureSendMediaCodec(nullptr);
     EXPECT_TRUE(err != mozilla::kMediaConduitNoError);
 
   }
@@ -726,9 +726,9 @@ class TransportConduitTest : public ::testing::Test
     int err = 0;
 
     // Get pointer to VideoSessionConduit.
-    mVideoSession = mozilla::VideoSessionConduit::Create(NULL);
+    mVideoSession = mozilla::VideoSessionConduit::Create(nullptr);
     if( !mVideoSession )
-      ASSERT_NE(mVideoSession, (void*)NULL);
+      ASSERT_NE(mVideoSession, (void*)nullptr);
 
     // Configure send codecs on the conduit.
     mozilla::VideoCodecConfig cinst1(120, "VP8", 0, max_fs, 0);
@@ -830,17 +830,23 @@ class TransportConduitTest : public ::testing::Test
     ASSERT_EQ(width, 80);
     ASSERT_EQ(height, 4);
 
+     // Extremely small width and height(see bug 919979).
+    cerr << "Test with extremely small width and height" << endl;
+    orig_width = 2;
+    orig_height = 2;
+    max_fs = 5;
+    GetVideoResolutionWithMaxFs(orig_width, orig_height, max_fs, &width, &height);
+    DumpMaxFs(orig_width, orig_height, max_fs, width, height);
+    ASSERT_EQ(width, 2);
+    ASSERT_EQ(height, 2);
+
     // Random values.
+    cerr << "Test with random values" << endl;
     for (int i = 0; i < 30; i++) {
+      cerr << ".";
       max_fs = rand() % 1000;
       orig_width = ((rand() % 2000) & ~1) + 2;
       orig_height = ((rand() % 2000) & ~1) + 2;
-      // Potential crash on small resolution, see bug 919979.
-      if (orig_width * orig_height <= 20) {
-        cerr << "Temporarily skip resolution " << orig_width << "x" <<
-             orig_height << endl;
-        continue;
-      }
 
       GetVideoResolutionWithMaxFs(orig_width, orig_height, max_fs,
                                   &width, &height);
@@ -854,6 +860,7 @@ class TransportConduitTest : public ::testing::Test
         ADD_FAILURE();
       }
     }
+    cerr << endl;
  }
 
 private:

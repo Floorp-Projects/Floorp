@@ -9,7 +9,7 @@ dir-tests    := $(DEPTH)/$(mobile-tests)
 ANDROID_APK_NAME := robocop-debug
 
 ANDROID_EXTRA_JARS += \
-  $(srcdir)/robotium-solo-4.3.jar \
+  $(srcdir)/robotium-solo-4.3.1.jar \
   $(NULL)
 
 ANDROID_ASSETS_DIR := $(TESTPATH)/assets
@@ -31,7 +31,10 @@ _JAVA_HARNESS := \
   $(NULL)
 
 java-harness := $(addprefix $(srcdir)/,$(_JAVA_HARNESS))
-java-tests   := $(wildcard $(TESTPATH)/*.java)
+java-tests   := \
+  $(wildcard $(TESTPATH)/*.java) \
+  $(wildcard $(TESTPATH)/components/*.java) \
+  $(wildcard $(TESTPATH)/helpers/*.java)
 
 # pre-process TestConstants.java.in
 PP_TARGETS         += testconstants
@@ -73,10 +76,6 @@ JAVAFILES += \
   $(java-tests) \
   $(robocop-deps) \
   $(testconstants-dep) \
-  $(NULL)
-
-DEFINES += \
-  -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

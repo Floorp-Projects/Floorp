@@ -71,6 +71,7 @@ extern "C" {
 #include "nr_crypto.h"
 #include "nr_socket.h"
 #include "nr_socket_local.h"
+#include "nr_socket_buffered_stun.h"
 #include "stun_client_ctx.h"
 #include "turn_client_ctx.h"
 }
@@ -93,28 +94,45 @@ class TurnClient : public ::testing::Test {
  public:
   TurnClient()
       : turn_server_(g_turn_server),
+        real_socket_(nullptr),
         net_socket_(nullptr),
+        buffered_socket_(nullptr),
+        net_fd_(nullptr),
         turn_ctx_(nullptr),
         allocated_(false),
-        received_(0) {}
+        received_(0),
+        protocol_(IPPROTO_UDP) {
+  }
 
   ~TurnClient() {
   }
 
+  void SetTcp() {
+    protocol_ = IPPROTO_TCP;
+  }
+
   void Init_s() {
     int r;
-
     nr_transport_addr addr;
-    r = nr_ip4_port_to_transport_addr(0, 0, IPPROTO_UDP, &addr);
+    r = nr_ip4_port_to_transport_addr(0, 0, protocol_, &addr);
     ASSERT_EQ(0, r);
 
-    r = nr_socket_local_create(&addr, &net_socket_);
+    r = nr_socket_local_create(&addr, &real_socket_);
     ASSERT_EQ(0, r);
+
+    if (protocol_ == IPPROTO_TCP) {
+      int r =
+          nr_socket_buffered_stun_create(real_socket_, 100000,
+                                         &buffered_socket_);
+      ASSERT_EQ(0, r);
+      net_socket_ = buffered_socket_;
+    } else {
+      net_socket_ = real_socket_;
+    }
 
     r = nr_ip4_str_port_to_transport_addr(turn_server_.c_str(), 3478,
-      IPPROTO_UDP, &addr);
+      protocol_, &addr);
     ASSERT_EQ(0, r);
-
 
     std::vector<unsigned char> password_vec(
         g_turn_password.begin(), g_turn_password.end());
@@ -130,15 +148,16 @@ class TurnClient : public ::testing::Test {
     ASSERT_EQ(0, r);
 
     NR_ASYNC_WAIT(net_fd_, NR_ASYNC_WAIT_READ, socket_readable_cb,
-                  (void *)this);
+        (void *)this);
   }
 
   void TearDown_s() {
     nr_turn_client_ctx_destroy(&turn_ctx_);
-    if (net_socket_) {
+    if (net_fd_) {
       NR_ASYNC_CANCEL(net_fd_, NR_ASYNC_WAIT_READ);
     }
-    nr_socket_destroy(&net_socket_);
+
+    nr_socket_destroy(&buffered_socket_);
   }
 
   void TearDown() {
@@ -149,6 +168,7 @@ class TurnClient : public ::testing::Test {
 
   void Allocate_s() {
     Init_s();
+    ASSERT_TRUE(turn_ctx_);
 
     int r = nr_turn_client_allocate(turn_ctx_,
                                     allocate_success_cb,
@@ -293,16 +313,23 @@ class TurnClient : public ::testing::Test {
 
  protected:
   std::string turn_server_;
+  nr_socket *real_socket_;
   nr_socket *net_socket_;
+  nr_socket *buffered_socket_;
   NR_SOCKET net_fd_;
   nr_turn_client_ctx *turn_ctx_;
   std::string relay_addr_;
   bool allocated_;
   int received_;
+  int protocol_;
 };
 
-
 TEST_F(TurnClient, Allocate) {
+  Allocate();
+}
+
+TEST_F(TurnClient, AllocateTcp) {
+  SetTcp();
   Allocate();
 }
 
@@ -312,6 +339,18 @@ TEST_F(TurnClient, AllocateAndHold) {
 }
 
 TEST_F(TurnClient, SendToSelf) {
+  Allocate();
+  SendTo(relay_addr_);
+  ASSERT_TRUE_WAIT(received() == 100, 1000);
+  PR_Sleep(10000); // Wait 10 seconds to make sure the
+                   // CreatePermission has time to complete/fail.
+  SendTo(relay_addr_);
+  ASSERT_TRUE_WAIT(received() == 200, 1000);
+}
+
+
+TEST_F(TurnClient, SendToSelfTcp) {
+  SetTcp();
   Allocate();
   SendTo(relay_addr_);
   ASSERT_TRUE_WAIT(received() == 100, 1000);

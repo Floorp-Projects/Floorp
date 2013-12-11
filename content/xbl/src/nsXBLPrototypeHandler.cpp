@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
@@ -328,7 +328,7 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
 
   // Execute it.
   nsCOMPtr<nsIJSEventListener> eventListener;
-  rv = NS_NewJSEventListener(nullptr, globalObject,
+  rv = NS_NewJSEventListener(globalObject,
                              scriptTarget, onEventAtom,
                              eventHandler,
                              getter_AddRefs(eventListener));
@@ -1009,5 +1009,5 @@ nsXBLPrototypeHandler::Write(nsIObjectOutputStream* aStream)
 
   rv = aStream->Write32(mLineNumber);
   NS_ENSURE_SUCCESS(rv, rv);
-  return aStream->WriteWStringZ(mHandlerText ? mHandlerText : EmptyString().get());
+  return aStream->WriteWStringZ(mHandlerText ? mHandlerText : MOZ_UTF16(""));
 }

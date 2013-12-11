@@ -193,18 +193,20 @@ class MacroAssembler : public MacroAssemblerSpecific
         embedsNurseryPointers_(false),
         sps_(nullptr)
     {
-        JSContext *cx = GetIonContext()->cx;
+        IonContext *icx = GetIonContext();
+        JSContext *cx = icx->cx;
         if (cx)
             constructRoot(cx);
 
-        if (!GetIonContext()->temp) {
+        if (!icx->temp) {
             JS_ASSERT(cx);
             alloc_.construct(cx);
         }
 
+        moveResolver_.setAllocator(*icx->temp);
 #ifdef JS_CPU_ARM
         initWithAllocator();
-        m_buffer.id = GetIonContext()->getNextAssemblerId();
+        m_buffer.id = icx->getNextAssemblerId();
 #endif
     }
 
@@ -218,6 +220,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         constructRoot(cx);
         ionContext_.construct(cx, (js::jit::TempAllocator *)nullptr);
         alloc_.construct(cx);
+        moveResolver_.setAllocator(*ionContext_.ref().temp);
 #ifdef JS_CPU_ARM
         initWithAllocator();
         m_buffer.id = GetIonContext()->getNextAssemblerId();
@@ -237,28 +240,14 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
-    MacroAssembler(JSContext *cx, IonScript *ion)
-      : enoughMemory_(true),
-        embedsNurseryPointers_(false),
-        sps_(nullptr)
-    {
-        constructRoot(cx);
-         ionContext_.construct(cx, (js::jit::TempAllocator *)nullptr);
-         alloc_.construct(cx);
-#ifdef JS_CPU_ARM
-         initWithAllocator();
-         m_buffer.id = GetIonContext()->getNextAssemblerId();
-#endif
-        setFramePushed(ion->frameSize());
-    }
-
     void setInstrumentation(IonInstrumentation *sps) {
         sps_ = sps;
     }
 
-    void resetForNewCodeGenerator() {
+    void resetForNewCodeGenerator(TempAllocator &alloc) {
         setFramePushed(0);
         moveResolver_.clearTempObjectPool();
+        moveResolver_.setAllocator(alloc);
     }
 
     void constructRoot(JSContext *cx) {
@@ -780,7 +769,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Inline allocation.
     void newGCThing(const Register &result, gc::AllocKind allocKind, Label *fail,
                     gc::InitialHeap initialHeap = gc::DefaultHeap);
-    void newGCThing(const Register &result, JSObject *templateObject, Label *fail);
+    void newGCThing(const Register &result, JSObject *templateObject, Label *fail,
+                    gc::InitialHeap initialHeap);
     void newGCString(const Register &result, Label *fail);
     void newGCShortString(const Register &result, Label *fail);
 
@@ -875,9 +865,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     // been made so that a safepoint can be made at that location.
 
     template <typename T>
+    void callWithABINoProfiling(const T &fun, Result result = GENERAL) {
+        MacroAssemblerSpecific::callWithABI(fun, result);
+    }
+
+    template <typename T>
     void callWithABI(const T &fun, Result result = GENERAL) {
         leaveSPSFrame();
-        MacroAssemblerSpecific::callWithABI(fun, result);
+        callWithABINoProfiling(fun, result);
         reenterSPSFrame();
     }
 
@@ -1099,6 +1094,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void finish();
 
+    void assumeUnreachable(const char *output);
     void printf(const char *output);
     void printf(const char *output, Register value);
 
@@ -1178,6 +1174,11 @@ class MacroAssembler : public MacroAssemblerSpecific
         IntConversion_ClampToUint8,
     };
 
+    enum IntConversionInputKind {
+        IntConversion_NumbersOnly,
+        IntConversion_Any
+    };
+
     //
     // Functions for converting values to int.
     //
@@ -1192,7 +1193,8 @@ class MacroAssembler : public MacroAssemblerSpecific
                            Label *handleStringEntry, Label *handleStringRejoin,
                            Label *truncateDoubleSlow,
                            Register stringReg, FloatRegister temp, Register output,
-                           Label *fail, IntConversionBehavior behavior);
+                           Label *fail, IntConversionBehavior behavior,
+                           IntConversionInputKind conversion = IntConversion_Any);
     void convertValueToInt(ValueOperand value, FloatRegister temp, Register output, Label *fail,
                            IntConversionBehavior behavior)
     {
@@ -1218,12 +1220,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     void convertValueToInt32(ValueOperand value, MDefinition *input,
                              FloatRegister temp, Register output, Label *fail,
-                             bool negativeZeroCheck)
+                             bool negativeZeroCheck, IntConversionInputKind conversion = IntConversion_Any)
     {
         convertValueToInt(value, input, nullptr, nullptr, nullptr, InvalidReg, temp, output, fail,
                           negativeZeroCheck
                           ? IntConversion_NegativeZeroCheck
-                          : IntConversion_Normal);
+                          : IntConversion_Normal,
+                          conversion);
     }
     bool convertValueToInt32(JSContext *cx, const Value &v, Register output, Label *fail,
                              bool negativeZeroCheck)

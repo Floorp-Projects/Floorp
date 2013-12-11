@@ -3,36 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-ifeq ($(OS_TARGET),WINNT)
-DEFINES         += -DUSE_WINMM -DUSE_WASAPI
-endif
-
-ifeq ($(OS_TARGET),Android)
-ifneq ($(MOZ_WIDGET_TOOLKIT),gonk)
-DEFINES         += -DUSE_AUDIOTRACK
-endif
-DEFINES         += -DUSE_OPENSL
-endif
-
-ifeq ($(OS_TARGET),Darwin)
-DEFINES         += -DUSE_AUDIOUNIT
-endif
-
-ifeq ($(OS_ARCH),OpenBSD)
-DEFINES         += -DUSE_SNDIO
-endif
-
-ifdef MOZ_ALSA
-DEFINES         += -DUSE_ALSA
-endif
-
-ifdef MOZ_PULSEAUDIO
-DEFINES         += -DUSE_PULSE
-ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-DEFINES         += -DDISABLE_LIBPULSE_DLOPEN
-endif
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS += \

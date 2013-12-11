@@ -5,6 +5,7 @@
 
 #include "base/basictypes.h"
 
+#include "AccessCheck.h"
 #include "ipc/IPCMessageUtils.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
@@ -32,6 +33,14 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+
+namespace mozilla {
+namespace dom {
+namespace workers {
+extern bool IsCurrentThreadRunningChromeWorker();
+} // namespace workers
+} // namespace dom
+} // namespace mozilla
 
 static char *sPopupAllowedEvents;
 
@@ -216,6 +225,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+bool
+nsDOMEvent::IsChrome(JSContext* aCx) const
+{
+  return mIsMainThreadEvent ?
+    xpc::AccessCheck::isChrome(js::GetContextCompartment(aCx)) :
+    mozilla::dom::workers::IsCurrentThreadRunningChromeWorker();
+}
 
 // nsIDOMEventInterface
 NS_METHOD nsDOMEvent::GetType(nsAString& aType)
@@ -436,25 +453,40 @@ nsDOMEvent::GetIsTrusted(bool *aIsTrusted)
 NS_IMETHODIMP
 nsDOMEvent::PreventDefault()
 {
-  if (mEvent->mFlags.mCancelable) {
-    mEvent->mFlags.mDefaultPrevented = true;
+  // This method is called only from C++ code which must handle default action
+  // of this event.  So, pass true always.
+  PreventDefaultInternal(true);
+  return NS_OK;
+}
 
-    // Need to set an extra flag for drag events.
-    if (mEvent->eventStructType == NS_DRAG_EVENT && IsTrusted()) {
-      nsCOMPtr<nsINode> node = do_QueryInterface(mEvent->currentTarget);
-      if (!node) {
-        nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mEvent->currentTarget);
-        if (win) {
-          node = win->GetExtantDoc();
-        }
-      }
-      if (node && !nsContentUtils::IsChromeDoc(node->OwnerDoc())) {
-        mEvent->mFlags.mDefaultPreventedByContent = true;
-      }
-    }
+void
+nsDOMEvent::PreventDefault(JSContext* aCx)
+{
+  MOZ_ASSERT(aCx, "JS context must be specified");
+
+  // Note that at handling default action, another event may be dispatched.
+  // Then, JS in content mey be call preventDefault()
+  // even in the event is in system event group.  Therefore, don't refer
+  // mInSystemGroup here.
+  PreventDefaultInternal(IsChrome(aCx));
+}
+
+void
+nsDOMEvent::PreventDefaultInternal(bool aCalledByDefaultHandler)
+{
+  if (!mEvent->mFlags.mCancelable) {
+    return;
   }
 
-  return NS_OK;
+  mEvent->mFlags.mDefaultPrevented = true;
+
+  // Note that even if preventDefault() has already been called by chrome,
+  // a call of preventDefault() by content needs to overwrite
+  // mDefaultPreventedByContent to true because in such case, defaultPrevented
+  // must be true when web apps check it after they call preventDefault().
+  if (!aCalledByDefaultHandler) {
+    mEvent->mFlags.mDefaultPreventedByContent = true;
+  }
 }
 
 void
@@ -1144,6 +1176,24 @@ const char* nsDOMEvent::GetEventName(uint32_t aEventType)
 }
 
 bool
+nsDOMEvent::DefaultPrevented(JSContext* aCx) const
+{
+  MOZ_ASSERT(aCx, "JS context must be specified");
+
+  NS_ENSURE_TRUE(mEvent, false);
+
+  // If preventDefault() has never been called, just return false.
+  if (!mEvent->mFlags.mDefaultPrevented) {
+    return false;
+  }
+
+  // If preventDefault() has been called by content, return true.  Otherwise,
+  // i.e., preventDefault() has been called by chrome, return true only when
+  // this is called by chrome.
+  return mEvent->mFlags.mDefaultPreventedByContent || IsChrome(aCx);
+}
+
+bool
 nsDOMEvent::GetPreventDefault() const
 {
   if (mOwner) {
@@ -1151,6 +1201,9 @@ nsDOMEvent::GetPreventDefault() const
       doc->WarnOnceAbout(nsIDocument::eGetPreventDefault);
     }
   }
+  // GetPreventDefault() is legacy and Gecko specific method.  Although,
+  // the result should be same as defaultPrevented, we don't need to break
+  // backward compatibility of legacy method.  Let's behave traditionally.
   return DefaultPrevented();
 }
 
@@ -1166,6 +1219,9 @@ NS_IMETHODIMP
 nsDOMEvent::GetDefaultPrevented(bool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
+  // This method must be called by only event handlers implemented by C++.
+  // Then, the handlers must handle default action.  So, this method don't need
+  // to check if preventDefault() has been called by content or chrome.
   *aReturn = DefaultPrevented();
   return NS_OK;
 }

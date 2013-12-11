@@ -7,7 +7,7 @@
  * Implementation of nsIFile for "unixy" systems.
  */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 
 #include <sys/types.h>

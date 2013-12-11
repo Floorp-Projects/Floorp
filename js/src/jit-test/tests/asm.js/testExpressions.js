@@ -331,3 +331,30 @@ for (let i = 0; i < 31; i++) {
 }
 assertEq(f(INT32_MIN), (INT32_MIN * 2)|0);
 assertEq(f(INT32_MAX), (INT32_MAX * 2)|0);
+
+// Signed integer division by a power of two - with a non-negative numerator!
+var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; i=(i&2147483647)|0; return ((i|0)/1)|0; } return f;"));
+for (let i = 0; i < 31; i++) {
+    assertEq(f(Math.pow(2,i)), Math.pow(2,i));
+    assertEq(f(Math.pow(2,i+1)-1), Math.pow(2,i+1)-1);
+}
+var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; i=(i&2147483647)|0; return ((i|0)/2)|0; } return f;"));
+for (let i = 0; i < 31; i++) {
+    assertEq(f(Math.pow(2,i)), (Math.pow(2,i)/2)|0);
+    assertEq(f(Math.pow(2,i+1)-1), ((Math.pow(2,i+1)-1)/2)|0);
+}
+var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; i=(i&2147483647)|0; return ((i|0)/4)|0; } return f;"));
+for (let i = 0; i < 31; i++) {
+    assertEq(f(Math.pow(2,i)), (Math.pow(2,i)/4)|0);
+    assertEq(f(Math.pow(2,i+1)-1), ((Math.pow(2,i+1)-1)/4)|0);
+}
+var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; i=(i&2147483647)|0; return ((i|0)/1073741824)|0; } return f;"));
+for (let i = 0; i < 31; i++) {
+    assertEq(f(Math.pow(2,i)), (Math.pow(2,i)/Math.pow(2,30))|0);
+    assertEq(f(Math.pow(2,i+1)-1), ((Math.pow(2,i+1)-1)/Math.pow(2,30))|0);
+}
+var f = asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; i=(i&2147483647)|0; return ((((i|0)/1)|0)+i)|0; } return f;"));
+for (let i = 0; i < 31; i++) {
+    assertEq(f(Math.pow(2,i)), (Math.pow(2,i) * 2)|0);
+    assertEq(f(Math.pow(2,i+1) - 1), ((Math.pow(2,i+1) - 1) * 2)|0);
+}

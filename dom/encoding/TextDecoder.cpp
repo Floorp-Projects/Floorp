@@ -5,8 +5,6 @@
 #include "mozilla/dom/TextDecoder.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "nsContentUtils.h"
-#include "nsICharsetConverterManager.h"
-#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -21,8 +19,9 @@ TextDecoder::Init(const nsAString& aEncoding, const bool aFatal,
   EncodingUtils::TrimSpaceCharacters(label);
 
   // Let encoding be the result of getting an encoding from label.
-  // If encoding is failure, throw a TypeError.
-  if (!EncodingUtils::FindEncodingForLabel(label, mEncoding)) {
+  // If encoding is failure or replacement, throw a TypeError.
+  if (!EncodingUtils::FindEncodingForLabel(label, mEncoding) ||
+      mEncoding.EqualsLiteral("replacement")) {
     aRv.ThrowTypeError(MSG_ENCODING_NOT_SUPPORTED, &label);
     return;
   }
@@ -33,18 +32,7 @@ TextDecoder::Init(const nsAString& aEncoding, const bool aFatal,
   mFatal = aFatal;
 
   // Create a decoder object for mEncoding.
-  nsCOMPtr<nsICharsetConverterManager> ccm =
-    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
-  if (!ccm) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  ccm->GetUnicodeDecoderRaw(mEncoding.get(), getter_AddRefs(mDecoder));
-  if (!mDecoder) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
+  mDecoder = EncodingUtils::DecoderForEncoding(mEncoding);
 
   if (mFatal) {
     mDecoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);

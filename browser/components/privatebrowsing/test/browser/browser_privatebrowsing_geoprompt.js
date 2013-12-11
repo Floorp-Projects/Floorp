@@ -14,6 +14,10 @@ function test() {
     executeSoon(function() {
       aWindow.gBrowser.selectedTab = aWindow.gBrowser.addTab();
       aWindow.gBrowser.selectedBrowser.addEventListener("load", function () {
+        if (aWindow.content.location != testPageURL) {
+          aWindow.content.location = testPageURL;
+          return;
+        }
         aWindow.gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
         function runTest() {
@@ -36,7 +40,6 @@ function test() {
         }
         runTest();
       }, true);
-      aWindow.content.location = testPageURL;
     });
   };
 

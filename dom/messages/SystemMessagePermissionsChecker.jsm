@@ -62,6 +62,9 @@ this.SystemMessagePermissionsTable = {
     "settings": ["read", "write"]
   },
   "media-button": { },
+  "networkstats-alarm": {
+    "networkstats-manage": []
+  },
   "notification": {
     "desktop-notification": []
   },
@@ -72,6 +75,9 @@ this.SystemMessagePermissionsTable = {
   	"push": []
   },
   "sms-delivery-success": {
+    "sms": []
+  },
+  "sms-read-success": {
     "sms": []
   },
   "sms-received": {
@@ -104,7 +110,6 @@ this.SystemMessagePermissionsTable = {
   "nfc-powerlevel-change": {
     "settings": ["read", "write"]
   },
-  "rtsp-open-video": {},
 };
 
 this.SystemMessagePermissionsChecker = {

@@ -676,7 +676,7 @@ inline OutOfLineCode *
 CodeGeneratorShared::oolCallVM(const VMFunction &fun, LInstruction *lir, const ArgSeq &args,
                                const StoreOutputTo &out)
 {
-    OutOfLineCode *ool = new OutOfLineCallVM<ArgSeq, StoreOutputTo>(lir, fun, args, out);
+    OutOfLineCode *ool = new(alloc()) OutOfLineCallVM<ArgSeq, StoreOutputTo>(lir, fun, args, out);
     if (!addOutOfLineCode(ool))
         return nullptr;
     return ool;

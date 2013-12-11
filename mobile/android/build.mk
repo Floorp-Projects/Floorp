@@ -24,12 +24,12 @@ else
 android_devices=$(filter device,$(shell $(ADB) devices))
 ifeq ($(android_devices),)
 install::
-	@echo "No devices are connected.  Connect a device or start an emulator."
+	@echo 'No devices are connected.  Connect a device or start an emulator.'
 	@exit 1
 else
 ifneq ($(android_devices),device)
 install::
-	@echo "Multiple devices are connected. Define ANDROID_SERIAL to specify the install target."
+	@echo 'Multiple devices are connected. Define ANDROID_SERIAL to specify the install target.'
 	$(ADB) devices
 	@exit 1
 endif
@@ -39,7 +39,7 @@ endif
 install::
 	$(ADB) install -r $(DIST)/$(PKG_PATH)$(PKG_BASENAME).apk
 else
-	@echo "Mobile can't be installed directly."
+	@echo 'Mobile can't be installed directly.'
 	@exit 1
 endif
 

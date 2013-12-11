@@ -15,6 +15,7 @@ const kAboutURI = "about:customizing";
 const kDragDataTypePrefix = "text/toolbarwrapper-id/";
 const kPlaceholderClass = "panel-customization-placeholder";
 const kSkipSourceNodePref = "browser.uiCustomization.skipSourceNodeCheck";
+const kMaxTransitionDurationMs = 2000;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/CustomizableUI.jsm");
@@ -63,6 +64,7 @@ CustomizeMode.prototype = {
   _dragOverItem: null,
   _customizing: false,
   _skipSourceNodeCheck: null,
+  _mainViewContext: null,
 
   get panelUIContents() {
     return this.document.getElementById("PanelUI-contents");
@@ -91,6 +93,9 @@ CustomizeMode.prototype = {
       return;
     }
 
+    let window = this.window;
+    let document = this.document;
+
     Task.spawn(function() {
       // We shouldn't start customize mode until after browser-delayed-startup has finished:
       if (!this.window.gBrowserInit.delayedStartupFinished) {
@@ -113,9 +118,6 @@ CustomizeMode.prototype = {
       this.dispatchToolboxEvent("beforecustomization");
       CustomizableUI.notifyStartCustomizing(this.window);
 
-      let window = this.window;
-      let document = this.document;
-
       // Add a keypress listener to the document so that we can quickly exit
       // customization mode when pressing ESC.
       document.addEventListener("keypress", this);
@@ -130,7 +132,12 @@ CustomizeMode.prototype = {
       // Move the mainView in the panel to the holder so that we can see it
       // while customizing.
       let panelHolder = document.getElementById("customization-panelHolder");
-      panelHolder.appendChild(window.PanelUI.mainView);
+      let mainView = window.PanelUI.mainView;
+      panelHolder.appendChild(mainView);
+
+      let customizeButton = document.getElementById("PanelUI-customize");
+      customizeButton.setAttribute("enterLabel", customizeButton.getAttribute("label"));
+      customizeButton.setAttribute("label", customizeButton.getAttribute("exitLabel"));
 
       this._transitioning = true;
 
@@ -150,13 +157,16 @@ CustomizeMode.prototype = {
       // endBatchUpdate.
       yield window.PanelUI.ensureReady(true);
 
+      this._mainViewContext = mainView.getAttribute("context");
+      if (this._mainViewContext) {
+        mainView.removeAttribute("context");
+      }
+
       this._showPanelCustomizationPlaceholders();
-      CustomizableUI.addListener(this);
 
       yield this._wrapToolbarItems();
       yield this.populatePalette();
 
-      window.PanelUI.mainView.addEventListener("contextmenu", this, true);
       this.visiblePalette.addEventListener("dragstart", this, true);
       this.visiblePalette.addEventListener("dragover", this, true);
       this.visiblePalette.addEventListener("dragexit", this, true);
@@ -177,11 +187,16 @@ CustomizeMode.prototype = {
       for (let toolbar of customizableToolbars)
         toolbar.setAttribute("customizing", true);
 
+      CustomizableUI.addListener(this);
       window.PanelUI.endBatchUpdate();
       this._customizing = true;
       this._transitioning = false;
       this.dispatchToolboxEvent("customizationready");
-    }.bind(this)).then(null, ERROR);
+    }.bind(this)).then(null, function(e) {
+      ERROR(e);
+      // We should ensure this has been called, and calling it again doesn't hurt:
+      window.PanelUI.endBatchUpdate();
+    });
   },
 
   exit: function() {
@@ -218,7 +233,6 @@ CustomizeMode.prototype = {
       window.gNavToolbox.removeEventListener("toolbarvisibilitychange", this);
 
       DragPositionManager.stop();
-      window.PanelUI.mainView.removeEventListener("contextmenu", this, true);
       this.visiblePalette.removeEventListener("dragstart", this, true);
       this.visiblePalette.removeEventListener("dragover", this, true);
       this.visiblePalette.removeEventListener("dragexit", this, true);
@@ -245,6 +259,10 @@ CustomizeMode.prototype = {
       window.PanelUI.setMainView(window.PanelUI.mainView);
       window.PanelUI.menuButton.disabled = false;
 
+      let customizeButton = document.getElementById("PanelUI-customize");
+      customizeButton.setAttribute("exitLabel", customizeButton.getAttribute("label"));
+      customizeButton.setAttribute("label", customizeButton.getAttribute("enterLabel"));
+
       // We have to use setAttribute/removeAttribute here instead of the
       // property because the XBL property will be set later, and right
       // now we'd be setting an expando, which breaks the XBL property.
@@ -255,6 +273,11 @@ CustomizeMode.prototype = {
       // or the TabSelect event handler will think that we are exiting
       // customization mode for a second time.
       this._customizing = false;
+
+      let mainView = window.PanelUI.mainView;
+      if (this._mainViewContext) {
+        mainView.setAttribute("context", this._mainViewContext);
+      }
 
       if (this.browser.selectedBrowser.currentURI.spec == kAboutURI) {
         let custBrowser = this.browser.selectedBrowser;
@@ -287,7 +310,11 @@ CustomizeMode.prototype = {
       this._transitioning = false;
       this.dispatchToolboxEvent("aftercustomization");
       CustomizableUI.notifyEndCustomizing(this.window);
-    }.bind(this)).then(null, ERROR);
+    }.bind(this)).then(null, function(e) {
+      ERROR(e);
+      // We should ensure this has been called, and calling it again doesn't hurt:
+      window.PanelUI.endBatchUpdate();
+    });
   },
 
   /**
@@ -312,9 +339,11 @@ CustomizeMode.prototype = {
     let deck = this.document.getElementById("tab-view-deck");
 
     let customizeTransitionEnd = function(aEvent) {
-      if (aEvent.originalTarget != deck || aEvent.propertyName != "padding-bottom") {
+      if (aEvent != "timedout" &&
+          (aEvent.originalTarget != deck || aEvent.propertyName != "padding-bottom")) {
         return;
       }
+      this.window.clearTimeout(catchAllTimeout);
       deck.removeEventListener("transitionend", customizeTransitionEnd);
 
       if (!aEntering) {
@@ -340,6 +369,9 @@ CustomizeMode.prototype = {
       this.document.documentElement.setAttribute("customize-exiting", true);
       this.document.documentElement.removeAttribute("customize-entered");
     }
+
+    let catchAll = () => customizeTransitionEnd("timedout");
+    let catchAllTimeout = this.window.setTimeout(catchAll, kMaxTransitionDurationMs);
     return deferred.promise;
   },
 
@@ -349,11 +381,36 @@ CustomizeMode.prototype = {
     let result = this.window.gNavToolbox.dispatchEvent(evt);
   },
 
+  _getCustomizableChildForNode: function(aNode) {
+    let area = this._getCustomizableParent(aNode);
+    area = area.customizationTarget || area;
+    while (aNode && aNode.parentNode != area) {
+      aNode = aNode.parentNode;
+    }
+    return aNode;
+  },
+
   addToToolbar: function(aNode) {
+    aNode = this._getCustomizableChildForNode(aNode);
+    if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
+      aNode = aNode.firstChild;
+    }
     CustomizableUI.addWidgetToArea(aNode.id, CustomizableUI.AREA_NAVBAR);
   },
 
-  removeFromPanel: function(aNode) {
+  addToPanel: function(aNode) {
+    aNode = this._getCustomizableChildForNode(aNode);
+    if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
+      aNode = aNode.firstChild;
+    }
+    CustomizableUI.addWidgetToArea(aNode.id, CustomizableUI.AREA_PANEL);
+  },
+
+  removeFromArea: function(aNode) {
+    aNode = this._getCustomizableChildForNode(aNode);
+    if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
+      aNode = aNode.firstChild;
+    }
     CustomizableUI.removeWidgetFromArea(aNode.id);
   },
 
@@ -489,6 +546,28 @@ CustomizeMode.prototype = {
       wrapper.setAttribute("flex", aNode.getAttribute("flex"));
     }
 
+
+    const kPanelItemContextMenu = "customizationPanelItemContextMenu";
+    const kPaletteItemContextMenu = "customizationPaletteItemContextMenu";
+    let contextMenuAttrName = aNode.getAttribute("context") ? "context" :
+                                aNode.getAttribute("contextmenu") ? "contextmenu" : "";
+    let currentContextMenu = aNode.getAttribute(contextMenuAttrName);
+    let contextMenuForPlace = aPlace == "panel" ?
+                                kPanelItemContextMenu :
+                                kPaletteItemContextMenu;
+    if (aPlace != "toolbar") {
+      wrapper.setAttribute("context", contextMenuForPlace);
+    }
+    // Only keep track of the menu if it is non-default.
+    if (currentContextMenu &&
+        currentContextMenu != contextMenuForPlace) {
+      aNode.setAttribute("wrapped-context", currentContextMenu);
+      aNode.setAttribute("wrapped-contextAttrName", contextMenuAttrName)
+      aNode.removeAttribute(contextMenuAttrName);
+    } else if (currentContextMenu == contextMenuForPlace) {
+      aNode.removeAttribute(contextMenuAttrName);
+    }
+
     wrapper.addEventListener("mousedown", this);
     wrapper.addEventListener("mouseup", this);
 
@@ -498,7 +577,13 @@ CustomizeMode.prototype = {
   deferredUnwrapToolbarItem: function(aWrapper) {
     let deferred = Promise.defer();
     dispatchFunction(function() {
-      deferred.resolve(this.unwrapToolbarItem(aWrapper));
+      let item = null;
+      try {
+        item = this.unwrapToolbarItem(aWrapper);
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+      deferred.resolve(item);
     }.bind(this));
     return deferred.promise;
   },
@@ -532,6 +617,14 @@ CustomizeMode.prototype = {
       }
     }
 
+    let wrappedContext = toolbarItem.getAttribute("wrapped-context");
+    if (wrappedContext) {
+      let contextAttrName = toolbarItem.getAttribute("wrapped-contextAttrName");
+      toolbarItem.setAttribute(contextAttrName, wrappedContext);
+      toolbarItem.removeAttribute("wrapped-contextAttrName");
+      toolbarItem.removeAttribute("wrapped-context");
+    }
+
     if (aWrapper.parentNode) {
       aWrapper.parentNode.replaceChild(toolbarItem, aWrapper);
     }
@@ -552,7 +645,7 @@ CustomizeMode.prototype = {
         target.addEventListener("dragend", this, true);
         for (let child of target.children) {
           if (this.isCustomizableItem(child)) {
-            yield this.deferredWrapToolbarItem(child, getPlaceForItem(child));
+            yield this.deferredWrapToolbarItem(child, CustomizableUI.getPlaceForItem(child));
           }
         }
         this.areas.push(target);
@@ -563,7 +656,7 @@ CustomizeMode.prototype = {
   _wrapItemsInArea: function(target) {
     for (let child of target.children) {
       if (this.isCustomizableItem(child)) {
-        this.wrapToolbarItem(child, getPlaceForItem(child));
+        this.wrapToolbarItem(child, CustomizableUI.getPlaceForItem(child));
       }
     }
   },
@@ -608,6 +701,9 @@ CustomizeMode.prototype = {
 
   reset: function() {
     this.resetting = true;
+    // Disable the reset button temporarily while resetting:
+    let btn = this.document.getElementById("customization-reset-button");
+    btn.disabled = true;
     return Task.spawn(function() {
       this._removePanelCustomizationPlaceholders();
       yield this.depopulatePalette();
@@ -670,7 +766,7 @@ CustomizeMode.prototype = {
     }
     // If the node is still attached to the container, wrap it again:
     if (aNodeToChange.parentNode) {
-      let place = getPlaceForItem(aNodeToChange);
+      let place = CustomizableUI.getPlaceForItem(aNodeToChange);
       this.wrapToolbarItem(aNodeToChange, place);
       if (aSecondaryNode) {
         this.wrapToolbarItem(aSecondaryNode, place);
@@ -734,10 +830,6 @@ CustomizeMode.prototype = {
     switch(aEvent.type) {
       case "toolbarvisibilitychange":
         this._onToolbarVisibilityChange(aEvent);
-        break;
-      case "contextmenu":
-        aEvent.preventDefault();
-        aEvent.stopPropagation();
         break;
       case "dragstart":
         this._onDragStart(aEvent);
@@ -1303,6 +1395,9 @@ CustomizeMode.prototype = {
 
   _onMouseDown: function(aEvent) {
     LOG("_onMouseDown");
+    if (aEvent.button != 0) {
+      return;
+    }
     let doc = aEvent.target.ownerDocument;
     doc.documentElement.setAttribute("customizing-movingItem", true);
     let item = this._getWrapper(aEvent.target);
@@ -1313,6 +1408,9 @@ CustomizeMode.prototype = {
 
   _onMouseUp: function(aEvent) {
     LOG("_onMouseUp");
+    if (aEvent.button != 0) {
+      return;
+    }
     let doc = aEvent.target.ownerDocument;
     doc.documentElement.removeAttribute("customizing-movingItem");
     let item = this._getWrapper(aEvent.target);
@@ -1373,22 +1471,6 @@ CustomizeMode.prototype = {
     }
   }
 };
-
-function getPlaceForItem(aElement) {
-  let place;
-  let node = aElement;
-  while (node && !place) {
-    if (node.localName == "toolbar")
-      place = "toolbar";
-    else if (node.id == CustomizableUI.AREA_PANEL)
-      place = "panel";
-    else if (node.id == kPaletteId)
-      place = "palette";
-
-    node = node.parentNode;
-  }
-  return place;
-}
 
 function __dumpDragData(aEvent, caller) {
   if (!gDebug) {

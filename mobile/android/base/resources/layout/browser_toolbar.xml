@@ -12,11 +12,6 @@
     <ImageButton android:id="@+id/forward"
                  style="@style/UrlBar.ImageButton.Unused"/>
 
-    <org.mozilla.gecko.toolbar.BrowserToolbarBackground android:id="@+id/url_bar_bg"
-                                                        android:layout_width="fill_parent"
-                                                        android:layout_height="fill_parent"
-                                                        android:background="@drawable/url_bar_bg"/>
-
     <ImageView android:id="@+id/url_bar_entry"
                style="@style/UrlBar.Button"
                android:layout_marginLeft="4dp"
@@ -42,6 +37,7 @@
                android:duplicateParentState="true"
                android:clickable="false"
                android:focusable="false"
+               android:visibility="invisible"
                android:src="@drawable/url_bar_right_edge"
                android:scaleType="fitXY"/>
 
@@ -90,42 +86,12 @@
                         android:layout_marginTop="12dip"
                         android:layout_alignRight="@id/tabs"/>
 
-    <LinearLayout android:id="@+id/url_edit_container"
+    <org.mozilla.gecko.toolbar.ToolbarEditLayout android:id="@+id/edit_layout"
                   style="@style/UrlBar.Button"
                   android:layout_marginLeft="4dp"
                   android:layout_marginRight="4dp"
                   android:paddingLeft="8dp"
-                  android:visibility="gone"
-                  android:orientation="horizontal">
-
-        <org.mozilla.gecko.CustomEditText
-              android:id="@+id/url_edit_text"
-              style="@style/UrlBar.Button"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:layout_weight="1.0"
-              android:hint="@string/url_bar_default_text"
-              android:textColor="@color/url_bar_title"
-              android:textColorHint="@color/url_bar_title_hint"
-              android:textColorHighlight="@color/url_bar_text_highlight"
-              android:textSelectHandle="@drawable/handle_middle"
-              android:textSelectHandleLeft="@drawable/handle_start"
-              android:textSelectHandleRight="@drawable/handle_end"
-              android:textCursorDrawable="@null"
-              android:inputType="textUri|textNoSuggestions"
-              android:imeOptions="actionGo|flagNoExtractUi|flagNoFullscreen"
-              android:selectAllOnFocus="true"
-              android:singleLine="true"
-              android:gravity="center_vertical|left"
-              gecko:autoUpdateTheme="false"/>
-
-        <ImageButton android:id="@+id/go"
-                     style="@style/UrlBar.ImageButton.Icon"
-                     android:src="@drawable/ic_url_bar_go"
-                     android:contentDescription="@string/go"
-                     android:visibility="gone"/>
-
-    </LinearLayout>
+                  android:visibility="gone"/>
 
     <LinearLayout android:id="@+id/url_display_container"
                   style="@style/UrlBar.Button"

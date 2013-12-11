@@ -1,3 +1,6 @@
 {
-  "name": "My packaged app"
+  "name": "My packaged app",
+  "developer": {
+    "name": "Foo Bar"
+  }
 }

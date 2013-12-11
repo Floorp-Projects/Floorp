@@ -12,7 +12,6 @@ Cu.import('resource://gre/modules/ActivitiesService.jsm');
 Cu.import('resource://gre/modules/PermissionPromptHelper.jsm');
 Cu.import('resource://gre/modules/ObjectWrapper.jsm');
 Cu.import('resource://gre/modules/NotificationDB.jsm');
-Cu.import('resource://gre/modules/accessibility/AccessFu.jsm');
 Cu.import('resource://gre/modules/Payment.jsm');
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import('resource://gre/modules/UserAgentOverrides.jsm');
@@ -25,6 +24,8 @@ Cu.import('resource://gre/modules/NetworkStatsService.jsm');
 // identity
 Cu.import('resource://gre/modules/SignInToWebsite.jsm');
 SignInToWebsiteController.init();
+
+Cu.import('resource://gre/modules/DownloadsAPI.jsm');
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',
                                    '@mozilla.org/process/environment;1',
@@ -308,7 +309,6 @@ var shell = {
 
     CustomEventManager.init();
     WebappsHelper.init();
-    AccessFu.attach(window);
     UserAgentOverrides.init();
     IndexedDBPromptHelper.init();
     CaptivePortalLoginHelper.init();
@@ -1263,11 +1263,10 @@ window.addEventListener('ContentStart', function update_onContentStart() {
 
 (function recordingStatusTracker() {
   // Recording status is tracked per process with following data structure:
-  // {<processId>: {count: <N>,
-  //                requestURL: <requestURL>,
-  //                isApp: <isApp>,
-  //                audioCount: <N>,
-  //                videoCount: <N>}}
+  // {<processId>: {<requestURL>: {isApp: <isApp>,
+  //                               count: <N>,
+  //                               audioCount: <N>,
+  //                               videoCount: <N>}}
   let gRecordingActiveProcesses = {};
 
   let recordingHandler = function(aSubject, aTopic, aData) {
@@ -1275,57 +1274,87 @@ window.addEventListener('ContentStart', function update_onContentStart() {
     let processId = (props.hasKey('childID')) ? props.get('childID')
                                               : 'main';
     if (processId && !gRecordingActiveProcesses.hasOwnProperty(processId)) {
-      gRecordingActiveProcesses[processId] = {count: 0,
-                                              requestURL: props.get('requestURL'),
-                                              isApp: props.get('isApp'),
-                                              audioCount: 0,
-                                              videoCount: 0 };
+      gRecordingActiveProcesses[processId] = {};
     }
 
-    let currentActive = gRecordingActiveProcesses[processId];
-    let wasActive = (currentActive['count'] > 0);
-    let wasAudioActive = (currentActive['audioCount'] > 0);
-    let wasVideoActive = (currentActive['videoCount'] > 0);
+    let commandHandler = function (requestURL, command) {
+      let currentProcess = gRecordingActiveProcesses[processId];
+      let currentActive = currentProcess[requestURL];
+      let wasActive = (currentActive['count'] > 0);
+      let wasAudioActive = (currentActive['audioCount'] > 0);
+      let wasVideoActive = (currentActive['videoCount'] > 0);
+
+      switch (command.type) {
+        case 'starting':
+          currentActive['count']++;
+          currentActive['audioCount'] += (command.isAudio) ? 1 : 0;
+          currentActive['videoCount'] += (command.isVideo) ? 1 : 0;
+          break;
+        case 'shutdown':
+          currentActive['count']--;
+          currentActive['audioCount'] -= (command.isAudio) ? 1 : 0;
+          currentActive['videoCount'] -= (command.isVideo) ? 1 : 0;
+          break;
+        case 'content-shutdown':
+          currentActive['count'] = 0;
+          currentActive['audioCount'] = 0;
+          currentActive['videoCount'] = 0;
+          break;
+      }
+
+      if (currentActive['count'] > 0) {
+        currentProcess[requestURL] = currentActive;
+      } else {
+        delete currentProcess[requestURL];
+      }
+
+      // We need to track changes if any active state is changed.
+      let isActive = (currentActive['count'] > 0);
+      let isAudioActive = (currentActive['audioCount'] > 0);
+      let isVideoActive = (currentActive['videoCount'] > 0);
+      if ((isActive != wasActive) ||
+          (isAudioActive != wasAudioActive) ||
+          (isVideoActive != wasVideoActive)) {
+        shell.sendChromeEvent({
+          type: 'recording-status',
+          active: isActive,
+          requestURL: requestURL,
+          isApp: currentActive['isApp'],
+          isAudio: isAudioActive,
+          isVideo: isVideoActive
+        });
+      }
+    };
 
     switch (aData) {
       case 'starting':
-        currentActive['count']++;
-        currentActive['audioCount'] += (props.get('isAudio')) ? 1 : 0;
-        currentActive['videoCount'] += (props.get('isVideo')) ? 1 : 0;
-        break;
       case 'shutdown':
-        currentActive['count']--;
-        currentActive['audioCount'] -= (props.get('isAudio')) ? 1 : 0;
-        currentActive['videoCount'] -= (props.get('isVideo')) ? 1 : 0;
+        // create page record if it is not existed yet.
+        let requestURL = props.get('requestURL');
+        if (requestURL &&
+            !gRecordingActiveProcesses[processId].hasOwnProperty(requestURL)) {
+          gRecordingActiveProcesses[processId][requestURL] = {isApp: props.get('isApp'),
+                                                              count: 0,
+                                                              audioCount: 0,
+                                                              videoCount: 0};
+        }
+        commandHandler(requestURL, { type: aData,
+                                     isAudio: props.get('isAudio'),
+                                     isVideo: props.get('isVideo')});
         break;
       case 'content-shutdown':
-        currentActive['count'] = 0;
-        currentActive['audioCount'] = 0;
-        currentActive['videoCount'] = 0;
+        // iterate through all the existing active processes
+        Object.keys(gRecordingActiveProcesses[processId]).forEach(function(requestURL) {
+          commandHandler(requestURL, { type: aData,
+                                       isAudio: true,
+                                       isVideo: true});
+        });
         break;
     }
 
-    if (currentActive['count'] > 0) {
-      gRecordingActiveProcesses[processId] = currentActive;
-    } else {
+    // clean up process record if no page record in it.
+    if (Object.keys(gRecordingActiveProcesses[processId]).length == 0) {
       delete gRecordingActiveProcesses[processId];
-    }
-
-    // We need to track changes if any active state is changed.
-    let isActive = (currentActive['count'] > 0);
-    let isAudioActive = (currentActive['audioCount'] > 0);
-    let isVideoActive = (currentActive['videoCount'] > 0);
-    if ((isActive != wasActive) ||
-        (isAudioActive != wasAudioActive) ||
-        (isVideoActive != wasVideoActive)) {
-      shell.sendChromeEvent({
-        type: 'recording-status',
-        active: isActive,
-        requestURL: currentActive['requestURL'],
-        isApp: currentActive['isApp'],
-        isAudio: isAudioActive,
-        isVideo: isVideoActive
-      });
     }
   };
   Services.obs.addObserver(recordingHandler, 'recording-device-events', false);
@@ -1464,3 +1493,21 @@ Services.obs.addObserver(function resetProfile(subject, topic, data) {
                      .getService(Ci.nsIAppStartup);
   appStartup.quit(Ci.nsIAppStartup.eForceQuit);
 }, 'b2g-reset-profile', false);
+
+/**
+  * CID of our implementation of nsIDownloadManagerUI.
+  */
+const kTransferCid = Components.ID("{1b4c85df-cbdd-4bb6-b04e-613caece083c}");
+
+/**
+  * Contract ID of the service implementing nsITransfer.
+  */
+const kTransferContractId = "@mozilla.org/transfer;1";
+
+// Override Toolkit's nsITransfer implementation with the one from the
+// JavaScript API for downloads.  This will eventually be removed when
+// nsIDownloadManager will not be available anymore (bug 851471).  The
+// old code in this module will be removed in bug 899110.
+Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
+                  .registerFactory(kTransferCid, "",
+                                   kTransferContractId, null);

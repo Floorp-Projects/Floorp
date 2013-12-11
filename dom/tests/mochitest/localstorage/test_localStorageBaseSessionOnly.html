@@ -9,14 +9,10 @@
 
 function startTest()
 {
-  var io = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
-    .getService(SpecialPowers.Ci.nsIIOService);
-  var uri = io.newURI(window.location, "", null);
-  var cp = SpecialPowers.Cc["@mozilla.org/cookie/permission;1"]
-    .getService(SpecialPowers.Ci.nsICookiePermission);
-  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
+  SpecialPowers.pushPermissions([{'type': 'cookie', 'allow': SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION, 'context': document}], test1);
+}
 
-
+function test1() {
   // Initially check the localStorage is empty
   is(localStorage.length, 0, "The storage is empty [1]");
   is(localStorage.key(0), null, "key() should return null for out-of-bounds access");
@@ -194,9 +190,6 @@ function startTest()
   localStorage.removeItem("nonexisting"); // Just check there is no exception
   localStorage.removeItem("key1"); // Just check there is no exception
   localStorage.removeItem("key2"); // Just check there is no exception
-
-
-  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
 
   localStorage.clear();
   SimpleTest.finish();

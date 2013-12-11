@@ -9,7 +9,7 @@
 
 #include "mozilla/layers/PGrallocBufferChild.h"
 #include "mozilla/layers/PGrallocBufferParent.h"
-#include "mozilla/layers/PLayerTransactionChild.h"
+#include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/CompositorTypes.h"
@@ -225,7 +225,7 @@ GrallocBufferActor::GrallocBufferActor()
     // the main thread.
     NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
-    NS_RegisterMemoryReporter(new GrallocReporter());
+    RegisterStrongMemoryReporter(new GrallocReporter());
     registered = true;
   }
 }
@@ -289,19 +289,6 @@ void GrallocBufferActor::RemoveDeprecatedTextureHost(DeprecatedTextureHost* aDep
   // that should be the only occurence, otherwise we'd leak this TextureHost...
   // assert that that's not happening.
   MOZ_ASSERT(!mDeprecatedTextureHosts.Contains(aDeprecatedTextureHost));
-}
-
-/*static*/ already_AddRefed<TextureImage>
-LayerManagerComposite::OpenDescriptorForDirectTexturing(GLContext* aGL,
-                                                        const SurfaceDescriptor& aDescriptor,
-                                                        GLenum aWrapMode)
-{
-  PROFILER_LABEL("LayerManagerComposite", "OpenDescriptorForDirectTexturing");
-  if (SurfaceDescriptor::TSurfaceDescriptorGralloc != aDescriptor.type()) {
-    return nullptr;
-  }
-  sp<GraphicBuffer> buffer = GrallocBufferActor::GetFrom(aDescriptor);
-  return aGL->CreateDirectTextureImage(buffer.get(), aWrapMode);
 }
 
 /*static*/ bool

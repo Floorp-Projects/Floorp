@@ -16,7 +16,7 @@
 ;    int  src_stride,
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride)
-global sym(vp8_sad16x16_wmt)
+global sym(vp8_sad16x16_wmt) PRIVATE
 sym(vp8_sad16x16_wmt):
     push        rbp
     mov         rbp, rsp
@@ -89,8 +89,8 @@ sym(vp8_sad16x16_wmt):
 ;    int  src_stride,
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride,
-;    int  max_err)
-global sym(vp8_sad8x16_wmt)
+;    int  max_sad)
+global sym(vp8_sad8x16_wmt) PRIVATE
 sym(vp8_sad8x16_wmt):
     push        rbp
     mov         rbp, rsp
@@ -115,7 +115,7 @@ sym(vp8_sad8x16_wmt):
 
         movq            rax,        mm7
         cmp             eax,        arg(4)
-        jg              .x8x16sad_wmt_early_exit
+        ja              .x8x16sad_wmt_early_exit
 
         movq            mm0,        QWORD PTR [rsi]
         movq            mm1,        QWORD PTR [rdi]
@@ -153,7 +153,7 @@ sym(vp8_sad8x16_wmt):
 ;    int  src_stride,
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride)
-global sym(vp8_sad8x8_wmt)
+global sym(vp8_sad8x8_wmt) PRIVATE
 sym(vp8_sad8x8_wmt):
     push        rbp
     mov         rbp, rsp
@@ -176,7 +176,7 @@ sym(vp8_sad8x8_wmt):
 
         movq            rax,        mm7
         cmp             eax,        arg(4)
-        jg              .x8x8sad_wmt_early_exit
+        ja              .x8x8sad_wmt_early_exit
 
         movq            mm0,        QWORD PTR [rsi]
         movq            mm1,        QWORD PTR [rdi]
@@ -206,7 +206,7 @@ sym(vp8_sad8x8_wmt):
 ;    int  src_stride,
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride)
-global sym(vp8_sad4x4_wmt)
+global sym(vp8_sad4x4_wmt) PRIVATE
 sym(vp8_sad4x4_wmt):
     push        rbp
     mov         rbp, rsp
@@ -261,7 +261,7 @@ sym(vp8_sad4x4_wmt):
 ;    int  src_stride,
 ;    unsigned char *ref_ptr,
 ;    int  ref_stride)
-global sym(vp8_sad16x8_wmt)
+global sym(vp8_sad16x8_wmt) PRIVATE
 sym(vp8_sad16x8_wmt):
     push        rbp
     mov         rbp, rsp
@@ -285,7 +285,7 @@ sym(vp8_sad16x8_wmt):
 
         movq            rax,        mm7
         cmp             eax,        arg(4)
-        jg              .x16x8sad_wmt_early_exit
+        ja              .x16x8sad_wmt_early_exit
 
         movq            mm0,        QWORD PTR [rsi]
         movq            mm2,        QWORD PTR [rsi+8]
@@ -335,7 +335,7 @@ sym(vp8_sad16x8_wmt):
 ;    unsigned char *dst_ptr,
 ;    int  dst_stride,
 ;    int height);
-global sym(vp8_copy32xn_sse2)
+global sym(vp8_copy32xn_sse2) PRIVATE
 sym(vp8_copy32xn_sse2):
     push        rbp
     mov         rbp, rsp

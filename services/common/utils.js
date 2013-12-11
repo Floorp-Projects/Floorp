@@ -204,6 +204,14 @@ this.CommonUtils = {
     return hex;
   },
 
+  hexToBytes: function hexToBytes(str) {
+    let bytes = [];
+    for (let i = 0; i < str.length - 1; i += 2) {
+      bytes.push(parseInt(str.substr(i, 2), 16));
+    }
+    return String.fromCharCode.apply(String, bytes);
+  },
+
   /**
    * Base32 encode (RFC 4648) a string
    */

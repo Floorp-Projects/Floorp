@@ -18,6 +18,8 @@
 #include "nsSVGNumber2.h"
 #include "nsSVGNumberPair.h"
 #include "nsTArray.h"
+#include "nsIFrame.h"
+#include "mozilla/gfx/2D.h"
 
 class gfxASurface;
 class gfxImageSurface;
@@ -49,6 +51,12 @@ class SVGFilterElement;
  */
 class nsSVGFilterInstance
 {
+  typedef mozilla::gfx::Point3D Point3D;
+  typedef mozilla::gfx::IntRect IntRect;
+  typedef mozilla::gfx::SourceSurface SourceSurface;
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
+
 public:
   /**
    * @param aTargetFrame The frame of the filtered element under consideration.
@@ -96,8 +104,7 @@ public:
     mFilterSpaceToDeviceSpaceTransform(aFilterSpaceToDeviceSpaceTransform),
     mFilterSpaceToFrameSpaceInCSSPxTransform(aFilterSpaceToFrameSpaceInCSSPxTransform),
     mFilterRegion(aFilterRegion),
-    mFilterSpaceSize(aFilterSpaceSize),
-    mSurfaceRect(nsIntPoint(0, 0), aFilterSpaceSize),
+    mFilterSpaceBounds(nsIntPoint(0, 0), aFilterSpaceSize),
     mTargetBounds(aTargetBounds),
     mPostFilterDirtyRect(aPostFilterDirtyRect),
     mPreFilterDirtyRect(aPreFilterDirtyRect),
@@ -121,28 +128,16 @@ public:
    * filter space, which is why this method returns an nsIntSize and not an
    * nsIntRect.)
    */
-  const nsIntSize& GetFilterSpaceSize() { return mFilterSpaceSize; }
-  uint32_t GetFilterResX() const { return mFilterSpaceSize.width; }
-  uint32_t GetFilterResY() const { return mFilterSpaceSize.height; }
+  uint32_t GetFilterResX() const { return mFilterSpaceBounds.width; }
+  uint32_t GetFilterResY() const { return mFilterSpaceBounds.height; }
 
   /**
-   * Returns the dimensions of the offscreen surface that is required for the
-   * output from the current filter operation, in filter space. This rect is
-   * clipped to, and therefore guaranteed to be fully contained by, the filter
-   * region.
-   */
-  const nsIntRect& GetSurfaceRect() const { return mSurfaceRect; }
-  int32_t GetSurfaceWidth() const { return mSurfaceRect.width; }
-  int32_t GetSurfaceHeight() const { return mSurfaceRect.height; }
-
-  /**
-   * Allocates a gfxASurface, renders the filtered element into the surface,
-   * and then returns the surface via the aOutput outparam. The area that
+   * Draws the filter output into aContext. The area that
    * needs to be painted must have been specified before calling this method
    * by passing it as the aPostFilterDirtyRect argument to the
    * nsSVGFilterInstance constructor.
    */
-  nsresult Render(gfxASurface** aOutput);
+  nsresult Render(gfxContext* aContext);
 
   /**
    * Sets the aPostFilterDirtyRect outparam to the post-filter bounds in filter
@@ -154,6 +149,15 @@ public:
   nsresult ComputePostFilterDirtyRect(nsIntRect* aPostFilterDirtyRect);
 
   /**
+   * Sets the aPostFilterExtents outparam to the post-filter bounds in filter
+   * space for the whole filter output. This is not necessarily equivalent to
+   * the area that would be dirtied in the result when the entire pre-filter
+   * area is dirtied, because some filter primitives can generate output
+   * without any input.
+   */
+  nsresult ComputePostFilterExtents(nsIntRect* aPostFilterExtents);
+
+  /**
    * Sets the aDirty outparam to the pre-filter bounds in filter space of the
    * area of mTargetFrame that is needed in order to paint the filtered output
    * for a given post-filter dirtied area. The post-filter area must have been
@@ -161,13 +165,6 @@ public:
    * argument to the nsSVGFilterInstance constructor.
    */
   nsresult ComputeSourceNeededRect(nsIntRect* aDirty);
-
-  /**
-   * Sets the aDirty outparam to the post-filter bounds in filter space of the
-   * area that would be dirtied by mTargetFrame if its entire pre-filter area
-   * is dirtied.
-   */
-  nsresult ComputeOutputBBox(nsIntRect* aBBox);
 
   float GetPrimitiveNumber(uint8_t aCtxType, const nsSVGNumber2 *aNumber) const
   {
@@ -180,11 +177,11 @@ public:
   }
 
   /**
-   * Converts a userSpaceOnUse/objectBoundingBoxUnits unitless point and length
+   * Converts a userSpaceOnUse/objectBoundingBoxUnits unitless point
    * into filter space, depending on the value of mPrimitiveUnits. (For
    * objectBoundingBoxUnits, the bounding box offset is applied to the point.)
    */
-  void ConvertLocation(float aValues[3]) const;
+  Point3D ConvertLocation(const Point3D& aPoint) const;
 
   /**
    * Returns the transform from the filtered element's user space to filter
@@ -217,158 +214,62 @@ public:
   }
 
 private:
-  typedef nsSVGFE::Image Image;
-  typedef nsSVGFE::ColorModel ColorModel;
+  struct SourceInfo {
+    // Specifies which parts of the source need to be rendered.
+    // Set by ComputeNeededBoxes().
+    nsIntRect mNeededBounds;
 
-  struct PrimitiveInfo {
-    /// Pointer to the filter primitive element.
-    nsSVGFE*  mFE;
+    // The surface that contains the input rendering.
+    // Set by BuildSourceImage / BuildSourcePaint.
+    mozilla::RefPtr<SourceSurface> mSourceSurface;
 
-    /**
-     * The filter space bounds of this filter primitive's output, were a full
-     * repaint of mTargetFrame to occur. Note that a filter primitive's output
-     * (and hence this rect) is always clipped to both the filter region and
-     * to the filter primitive subregion.
-     * XXX maybe rename this to mMaxBounds?
-     */
-    nsIntRect mResultBoundingBox;
-
-    /**
-     * The filter space bounds of this filter primitive's output, were we to
-     * repaint a given post-filter dirty area, and were we to minimize
-     * repainting for that dirty area. In other words this is the part of the
-     * primitive's output that is needed by other primitives or the final
-     * filtered output in order to repaint that area. This rect is guaranteed
-     * to be contained within mResultBoundingBox and, if we're only painting
-     * part of the filtered output, may be smaller. This rect is used when
-     * calling Render() or ComputeSourceNeededRect().
-     * XXX maybe rename this to just mNeededBounds?
-     */
-    nsIntRect mResultNeededBox;
-
-    /**
-     * The filter space bounds of this filter primitive's output, were only
-     * part of mTargetFrame's pre-filter output to be dirtied, and were we to
-     * minimize repainting for that dirty area. This is used when calculating
-     * the area that needs to be invalidated when only part of a filtered
-     * element is dirtied. This rect is guaranteed to be contained within
-     * mResultBoundingBox.
-     */
-    nsIntRect mResultChangeBox;
-
-    Image     mImage;
-
-    /**
-     * The number of times that this filter primitive's output is used as an
-     * input by other filter primitives in the filter graph.
-     * XXX seems like we could better use this to avoid creating images for
-     * primitives that are not used, or whose ouput in not used during the
-     * current operation.
-     */
-    int32_t   mImageUsers;
-  
-    // Can't use nsAutoTArray here, because these Info objects
-    // live in nsTArrays themselves and nsTArray moves the elements
-    // around in memory, which breaks nsAutoTArray.
-    nsTArray<PrimitiveInfo*> mInputs;
-
-    PrimitiveInfo() : mFE(nullptr), mImageUsers(0) {}
-  };
-
-  class ImageAnalysisEntry : public nsStringHashKey {
-  public:
-    ImageAnalysisEntry(KeyTypePointer aStr) : nsStringHashKey(aStr) { }
-    ImageAnalysisEntry(const ImageAnalysisEntry& toCopy) : nsStringHashKey(toCopy),
-      mInfo(toCopy.mInfo) { }
-
-    PrimitiveInfo* mInfo;
+    // The position and size of mSourceSurface in filter space.
+    // Set by BuildSourceImage / BuildSourcePaint.
+    IntRect mSurfaceRect;
   };
 
   /**
-   * Initializes the keyword nodes e.g. SourceGraphic (i.e. sets
-   * .mImage.mFilterPrimitiveSubregion and .mResultBoundingBox on
-   * mSourceColorAlpha and mSourceAlpha).
-   */
-  nsresult BuildSources();
-
-  /**
-   * Creates a gfxImageSurface for either the FillPaint or StrokePaint graph
+   * Creates a SourceSurface for either the FillPaint or StrokePaint graph
    * nodes
    */
-  nsresult BuildSourcePaint(PrimitiveInfo *aPrimitive);
+  nsresult BuildSourcePaint(SourceInfo *aPrimitive,
+                            gfxASurface* aTargetSurface,
+                            DrawTarget* aTargetDT);
 
   /**
-   * Creates a gfxImageSurface for either the FillPaint and StrokePaint graph
-   * nodes, fills its contents and assigns it to mFillPaint.mImage.mImage and
-   * mStrokePaint.mImage.mImage respectively.
+   * Creates a SourceSurface for either the FillPaint and StrokePaint graph
+   * nodes, fills its contents and assigns it to mFillPaint.mSourceSurface and
+   * mStrokePaint.mSourceSurface respectively.
    */
-  nsresult BuildSourcePaints();
+  nsresult BuildSourcePaints(gfxASurface* aTargetSurface,
+                             DrawTarget* aTargetDT);
 
   /**
-   * Creates the gfxImageSurfaces for the SourceGraphic and SourceAlpha graph
-   * nodes, paints their contents, and assigns them to
-   * mSourceColorAlpha.mImage.mImage and mSourceAlpha.mImage.mImage
-   * respectively.
+   * Creates the SourceSurface for the SourceGraphic graph node, paints its
+   * contents, and assigns it to mSourceGraphic.mSourceSurface.
    */
-  nsresult BuildSourceImages();
+  nsresult BuildSourceImage(gfxASurface* aTargetSurface,
+                            DrawTarget* aTargetDT);
 
   /**
-   * Build the graph of PrimitiveInfo nodes that describes the filter's filter
-   * primitives and their connections. This populates mPrimitives, and sets
-   * each PrimitiveInfo's mFE, mInputs, mImageUsers, mFilterPrimitiveSubregion,
-   * etc.
+   * Build the list of FilterPrimitiveDescriptions that describes the filter's
+   * filter primitives and their connections. This populates
+   * mPrimitiveDescriptions and mInputImages.
    */
   nsresult BuildPrimitives();
 
   /**
-   * Compute the filter space bounds of the output from each primitive, were we
-   * to do a full repaint of mTargetFrame. This sets mResultBoundingBox on the
-   * items in the filter graph, based on the mResultBoundingBox of each item's
-   * inputs, and clipped to the filter region and each primitive's filter
-   * primitive subregion.
-   */
-  void ComputeResultBoundingBoxes();
-
-  /**
    * Computes the filter space bounds of the areas that we actually *need* from
-   * each filter primitive's output, based on the value of mPostFilterDirtyRect.
-   * This sets mResultNeededBox on the items in the filter graph.
+   * the filter sources, based on the value of mPostFilterDirtyRect.
+   * This sets mNeededBounds on the corresponding SourceInfo structs.
    */
    void ComputeNeededBoxes();
 
   /**
-   * Computes the filter space bounds of the area of each filter primitive
-   * that will change, based on the value of mPreFilterDirtyRect.
-   * This sets mResultChangeBox on the items in the filter graph.
+   * Computes the filter primitive subregion for the given primitive.
    */
-  void ComputeResultChangeBoxes();
-
-  /**
-   * Computes and returns the union of all mResultNeededBox rects in the filter
-   * graph. This is useful for deciding the size of the offscreen surface that
-   * needs to be created for the filter operation.
-   */
-  nsIntRect ComputeUnionOfAllNeededBoxes();
-
-  /**
-   * Allocates and returns a surface of mSurfaceRect.Size(), and with a device
-   * offset of -mSurfaceRect.TopLeft(). The surface is cleared to transparent
-   * black.
-   */
-  already_AddRefed<gfxImageSurface> CreateImage();
-
-  /**
-   * Computes and sets mFilterPrimitiveSubregion for the given primitive.
-   */
-  void ComputeFilterPrimitiveSubregion(PrimitiveInfo* aInfo);
-
-  /**
-   * If the color model of the pixel data in the aPrimitive's image isn't
-   * already aColorModel, then this method converts its pixel data to that
-   * color model.
-   */
-  void EnsureColorModel(PrimitiveInfo* aPrimitive,
-                        ColorModel aColorModel);
+  IntRect ComputeFilterPrimitiveSubregion(nsSVGFE* aFilterElement,
+                                          const nsTArray<int32_t>& aInputIndices);
 
   /**
    * Scales a numeric filter primitive length in the X, Y or "XY" directions
@@ -377,15 +278,6 @@ private:
   float GetPrimitiveNumber(uint8_t aCtxType, float aValue) const;
 
   gfxRect UserSpaceToFilterSpace(const gfxRect& aUserSpace) const;
-
-  /**
-   * Clip the filter space rect aRect to the filter region.
-   */
-  void ClipToFilterSpace(nsIntRect* aRect) const
-  {
-    nsIntRect filterSpace(nsIntPoint(0, 0), mFilterSpaceSize);
-    aRect->IntersectRect(*aRect, filterSpace);
-  }
 
   /**
    * The frame for the element that is currently being filtered.
@@ -403,8 +295,7 @@ private:
   gfxMatrix               mFilterSpaceToDeviceSpaceTransform;
   gfxMatrix               mFilterSpaceToFrameSpaceInCSSPxTransform;
   gfxRect                 mFilterRegion;
-  nsIntSize               mFilterSpaceSize;
-  nsIntRect               mSurfaceRect;
+  nsIntRect               mFilterSpaceBounds;
 
   /**
    * Pre-filter paint bounds of the element that is being filtered, in filter
@@ -432,12 +323,12 @@ private:
    */
   uint16_t                mPrimitiveUnits;
 
-  PrimitiveInfo           mSourceColorAlpha;
-  PrimitiveInfo           mSourceAlpha;
-  PrimitiveInfo           mFillPaint;
-  PrimitiveInfo           mStrokePaint;
-  nsTArray<PrimitiveInfo> mPrimitives;
+  SourceInfo              mSourceGraphic;
+  SourceInfo              mFillPaint;
+  SourceInfo              mStrokePaint;
   nsIFrame*               mTransformRoot;
+  nsTArray<mozilla::RefPtr<SourceSurface>> mInputImages;
+  nsTArray<FilterPrimitiveDescription> mPrimitiveDescriptions;
 };
 
 #endif

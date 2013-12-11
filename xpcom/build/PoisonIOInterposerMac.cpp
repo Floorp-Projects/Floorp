@@ -7,6 +7,7 @@
 #include "PoisonIOInterposer.h"
 #include "mach_override.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IOInterposer.h"
@@ -14,7 +15,6 @@
 #include "mozilla/ProcessedStack.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Util.h"
 #include "nsPrintfCString.h"
 #include "nsStackWalk.h"
 #include "nsTraceRefcntImpl.h"
@@ -138,7 +138,7 @@ bool IsValidWrite(int fd, const void *wbuf, size_t count)
     }
   }
 
-  // For writev we pass NULL in wbuf. We should only get here from
+  // For writev we pass a nullptr wbuf. We should only get here from
   // dbm, and it uses write, so assert that we have wbuf.
   if (!wbuf) {
     return true;

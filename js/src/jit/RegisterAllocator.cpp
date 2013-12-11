@@ -162,8 +162,7 @@ AllocationIntegrityState::check(bool populateSafepoints)
                 checkIntegrity(block, *riter, vreg, **alloc, populateSafepoints);
 
                 while (!worklist.empty()) {
-                    IntegrityItem item = worklist.back();
-                    worklist.popBack();
+                    IntegrityItem item = worklist.popCopy();
                     checkIntegrity(item.block, *item.block->rbegin(), item.vreg, item.alloc, populateSafepoints);
                 }
             }
@@ -230,7 +229,7 @@ AllocationIntegrityState::checkIntegrity(LBlock *block, LInstruction *ins,
     // inputs as it is not guaranteed the register allocator filled in physical
     // allocations for the inputs and outputs of the phis.
     for (size_t i = 0; i < block->numPhis(); i++) {
-        InstructionInfo &info = blocks[block->mir()->id()].phis[i];
+        const InstructionInfo &info = blocks[block->mir()->id()].phis[i];
         LPhi *phi = block->getPhi(i);
         if (info.outputs[0].virtualRegister() == vreg) {
             for (size_t j = 0; j < phi->numOperands(); j++) {
@@ -372,7 +371,7 @@ AllocationIntegrityState::dump()
         fprintf(stderr, "\n");
 
         for (size_t i = 0; i < block->numPhis(); i++) {
-            InstructionInfo &info = blocks[blockIndex].phis[i];
+            const InstructionInfo &info = blocks[blockIndex].phis[i];
             LPhi *phi = block->getPhi(i);
             CodePosition output(phi->id(), CodePosition::OUTPUT);
 
@@ -388,7 +387,7 @@ AllocationIntegrityState::dump()
 
         for (LInstructionIterator iter = block->begin(); iter != block->end(); iter++) {
             LInstruction *ins = *iter;
-            InstructionInfo &info = instructions[ins->id()];
+            const InstructionInfo &info = instructions[ins->id()];
 
             CodePosition input(ins->id(), CodePosition::INPUT);
             CodePosition output(ins->id(), CodePosition::OUTPUT);
@@ -487,7 +486,7 @@ RegisterAllocator::getInputMoveGroup(uint32_t ins)
     if (data->inputMoves())
         return data->inputMoves();
 
-    LMoveGroup *moves = new LMoveGroup(alloc());
+    LMoveGroup *moves = LMoveGroup::New(alloc());
     data->setInputMoves(moves);
     data->block()->insertBefore(data->ins(), moves);
 
@@ -503,7 +502,7 @@ RegisterAllocator::getMoveGroupAfter(uint32_t ins)
     if (data->movesAfter())
         return data->movesAfter();
 
-    LMoveGroup *moves = new LMoveGroup(alloc());
+    LMoveGroup *moves = LMoveGroup::New(alloc());
     data->setMovesAfter(moves);
 
     if (data->ins()->isLabel())

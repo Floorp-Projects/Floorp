@@ -99,6 +99,7 @@ var encoderList = [
   "gbk",
   "HZ-GB-2312",
   "gb18030",
+  "replacement",
 ];
 
 var decoderList = [
@@ -183,6 +184,7 @@ var decoderList = [
   "gb18030",
   "ISO-2022-KR",
   "ISO-2022-CN",
+  "replacement",
 ];
 
 function verifyList(aEnumerator, aList)

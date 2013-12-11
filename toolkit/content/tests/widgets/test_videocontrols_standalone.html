@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Video controls test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const videoWidth = 320;
+const videoHeight = 240;
+
+function getMediaElement(aWindow) {
+  return aWindow.document.getElementsByTagName("video")[0];
+}
+
+var popup = window.open("seek_with_sound.ogg");
+popup.addEventListener("load", function onLoad() {
+  popup.removeEventListener("load", onLoad);
+  var video = getMediaElement(popup);
+  if (!video.paused)
+    runTestVideo(video);
+  else {
+    video.addEventListener("play", function onPlay() {
+      video.removeEventListener("play", onPlay);
+      runTestVideo(video);
+    });
+  }
+});
+
+function runTestVideo(aVideo) {
+  var condition = function() {
+    var boundingRect = aVideo.getBoundingClientRect();
+    return boundingRect.width == videoWidth &&
+           boundingRect.height == videoHeight;
+  };
+  waitForCondition(condition, function() {
+    var boundingRect = aVideo.getBoundingClientRect();
+    is(boundingRect.width, videoWidth, "Width of the video should match expectation");
+    is(boundingRect.height, videoHeight, "Height of video should match expectation");
+    popup.close();
+    runTestAudioPre();
+  }, "The media element should eventually be resized to match the intrinsic size of the video.");
+}
+
+function runTestAudioPre() {
+  popup = window.open("audio.ogg");
+  popup.addEventListener("load", function onLoad() {
+    popup.removeEventListener("load", onLoad);
+    var audio = getMediaElement(popup);
+    if (!audio.paused)
+      runTestAudio(audio);
+    else {
+      audio.addEventListener("play", function onPlay() {
+        audio.removeEventListener("play", onPlay);
+        runTestAudio(audio);
+      })
+    }
+  })
+}
+
+function runTestAudio(aAudio) {
+  info("User agent (help diagnose bug #943556): " + navigator.userAgent);
+  var isAndroid = navigator.userAgent.contains("Android");
+  var expectedHeight = isAndroid ? 123 : 28;
+  var condition = function () {
+    var boundingRect = aAudio.getBoundingClientRect();
+    return boundingRect.height == expectedHeight;
+  };
+  waitForCondition(condition, function () {
+    var boundingRect = aAudio.getBoundingClientRect();
+    is(boundingRect.height, expectedHeight,
+       "Height of audio element should be " + expectedHeight + ", which is equal to the controls bar.");
+    popup.close();
+    SimpleTest.finish();
+  }, "The media element should eventually be resized to match the height of the audio controls.");
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>

@@ -8,10 +8,10 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
+#include "vpx_config.h"
+#include "vp8_rtcd.h"
 #include <math.h>
 #include "vp8/common/filter.h"
-#include "vp8/common/subpixel.h"
 #include "bilinearfilter_arm.h"
 
 void vp8_filter_block2d_bil_armv6

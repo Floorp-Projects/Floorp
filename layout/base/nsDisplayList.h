@@ -1934,16 +1934,31 @@ public:
 
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE
   {
-    return new nsDisplayItemBoundsGeometry(this, aBuilder);
+    return new nsDisplaySolidColorGeometry(this, aBuilder, mColor);
   }
 
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) MOZ_OVERRIDE
   {
-    const nsDisplayItemBoundsGeometry* geometry = static_cast<const nsDisplayItemBoundsGeometry*>(aGeometry);
+    const nsDisplaySolidColorGeometry* geometry =
+      static_cast<const nsDisplaySolidColorGeometry*>(aGeometry);
+    if (mColor != geometry->mColor) {
+      bool dummy;
+      aInvalidRegion->Or(geometry->mBounds, GetBounds(aBuilder, &dummy));
+      return;
+    }
     ComputeInvalidationRegionDifference(aBuilder, geometry, aInvalidRegion);
   }
+
+#ifdef MOZ_DUMP_PAINTING
+  virtual void WriteDebugInfo(FILE *aOutput) MOZ_OVERRIDE
+  {
+    fprintf_stderr(aOutput, "(rgba %d,%d,%d,%d)",
+                   NS_GET_R(mColor), NS_GET_G(mColor),
+                   NS_GET_B(mColor), NS_GET_A(mColor));
+  }
+#endif
 
   NS_DISPLAY_DECL_NAME("SolidColor", TYPE_SOLID_COLOR)
 
@@ -2155,7 +2170,7 @@ public:
   NS_DISPLAY_DECL_NAME("BackgroundColor", TYPE_BACKGROUND_COLOR)
 #ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(FILE *aOutput) MOZ_OVERRIDE {
-    fprintf(aOutput, "(rgba %d,%d,%d,%d)", 
+    fprintf_stderr(aOutput, "(rgba %d,%d,%d,%d)", 
             NS_GET_R(mColor), NS_GET_G(mColor),
             NS_GET_B(mColor), NS_GET_A(mColor));
 
@@ -2489,7 +2504,7 @@ public:
   NS_DISPLAY_DECL_NAME("Opacity", TYPE_OPACITY)
 #ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(FILE *aOutput) MOZ_OVERRIDE {
-    fprintf(aOutput, "(opacity %f)", mFrame->StyleDisplay()->mOpacity);
+    fprintf_stderr(aOutput, "(opacity %f)", mFrame->StyleDisplay()->mOpacity);
   }
 #endif
 
@@ -2560,16 +2575,22 @@ public:
    * nsDisplayOwnLayer constructor flags
    */
   enum {
-    GENERATE_SUBDOC_INVALIDATIONS = 0x01
+    GENERATE_SUBDOC_INVALIDATIONS = 0x01,
+    VERTICAL_SCROLLBAR = 0x02,
+    HORIZONTAL_SCROLLBAR = 0x04
   };
 
   /**
    * @param aFlags GENERATE_SUBDOC_INVALIDATIONS :
    * Add UserData to the created ContainerLayer, so that invalidations
    * for this layer are send to our nsPresContext.
+   * @param aScrollTarget when VERTICAL_SCROLLBAR or HORIZONTAL_SCROLLBAR
+   * is set in the flags, this parameter should be the ViewID of the
+   * scrollable content this scrollbar is for.
    */
   nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                    nsDisplayList* aList, uint32_t aFlags = 0);
+                    nsDisplayList* aList, uint32_t aFlags = 0,
+                    ViewID aScrollTarget = mozilla::layers::FrameMetrics::NULL_SCROLL_ID);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOwnLayer();
 #endif
@@ -2591,6 +2612,7 @@ public:
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
 private:
   uint32_t mFlags;
+  ViewID mScrollTarget;
 };
 
 /**

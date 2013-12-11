@@ -14,13 +14,6 @@ nsresult NS_NewSVGFEBlendElement(nsIContent **aResult,
 namespace mozilla {
 namespace dom {
 
-static const unsigned short SVG_FEBLEND_MODE_UNKNOWN = 0;
-static const unsigned short SVG_FEBLEND_MODE_NORMAL = 1;
-static const unsigned short SVG_FEBLEND_MODE_MULTIPLY = 2;
-static const unsigned short SVG_FEBLEND_MODE_SCREEN = 3;
-static const unsigned short SVG_FEBLEND_MODE_DARKEN = 4;
-static const unsigned short SVG_FEBLEND_MODE_LIGHTEN = 5;
-
 typedef nsSVGFE SVGFEBlendElementBase;
 
 class SVGFEBlendElement : public SVGFEBlendElementBase
@@ -36,10 +29,10 @@ protected:
                              JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
 public:
-  virtual nsresult Filter(nsSVGFilterInstance* aInstance,
-                          const nsTArray<const Image*>& aSources,
-                          const Image* aTarget,
-                          const nsIntRect& aDataRect) MOZ_OVERRIDE;
+  virtual FilterPrimitiveDescription
+    GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
+                            const IntRect& aFilterSubregion,
+                            nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages) MOZ_OVERRIDE;
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
   virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }

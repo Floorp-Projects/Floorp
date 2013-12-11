@@ -42,7 +42,13 @@ public:
     // We normally don't use this break opportunity because the following text
     // will have a break opportunity at the start, but it's useful for line
     // layout to know about it in case the following content is not text
-    TEXT_HAS_TRAILING_BREAK  = 0x4000000
+    TEXT_HAS_TRAILING_BREAK  = 0x4000000,
+
+    // This is set if the textrun was created for a textframe whose
+    // TEXT_IS_IN_SINGLE_CHAR_MI flag is set.  This occurs if the textframe
+    // belongs to a MathML <mi> element whose embedded text consists of a
+    // single character.
+    TEXT_IS_SINGLE_CHAR_MI   = 0x8000000
 
     // The following are defined by gfxTextRunWordCache rather than here,
     // so that it also has access to the _INCOMING flag

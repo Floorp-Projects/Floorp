@@ -151,7 +151,7 @@ SVGPathData::GetSegmentLengths(nsTArray<double> *aLengths) const
 }
 
 bool
-SVGPathData::GetDistancesFromOriginToEndsOfVisibleSegments(nsTArray<double> *aOutput) const
+SVGPathData::GetDistancesFromOriginToEndsOfVisibleSegments(FallibleTArray<double> *aOutput) const
 {
   SVGPathTraversalState state;
 

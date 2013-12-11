@@ -76,8 +76,20 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     }
 
     template<typename KeyInput, typename ValueInput>
+    bool putNew(const KeyInput &k, const ValueInput &v) {
+        JS_ASSERT(v->compartment() == Base::compartment);
+        if (!incZoneCount(k->zone()))
+            return false;
+        bool ok = Base::putNew(k, v);
+        if (!ok)
+            decZoneCount(k->zone());
+        return ok;
+    }
+
+    template<typename KeyInput, typename ValueInput>
     bool relookupOrAdd(AddPtr &p, const KeyInput &k, const ValueInput &v) {
         JS_ASSERT(v->compartment() == Base::compartment);
+        JS_ASSERT(!p.found());
         if (!incZoneCount(k->zone()))
             return false;
         bool ok = Base::relookupOrAdd(p, k, v);
@@ -87,6 +99,7 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     }
 
     void remove(const Lookup &l) {
+        JS_ASSERT(Base::has(l));
         Base::remove(l);
         decZoneCount(l->zone());
     }
@@ -94,9 +107,9 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
   public:
     void markKeys(JSTracer *tracer) {
         for (Enum e(*static_cast<Base *>(this)); !e.empty(); e.popFront()) {
-            Key key = e.front().key;
+            Key key = e.front().key();
             gc::Mark(tracer, &key, "Debugger WeakMap key");
-            if (key != e.front().key)
+            if (key != e.front().key())
                 e.rekeyFront(key);
             key.unsafeSet(nullptr);
         }
@@ -104,7 +117,7 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
 
     bool hasKeyInZone(JS::Zone *zone) {
         CountMap::Ptr p = zoneCounts.lookup(zone);
-        JS_ASSERT_IF(p, p->value > 0);
+        JS_ASSERT_IF(p, p->value() > 0);
         return p;
     }
 
@@ -112,7 +125,7 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     /* Override sweep method to also update our edge cache. */
     void sweep() {
         for (Enum e(*static_cast<Base *>(this)); !e.empty(); e.popFront()) {
-            Key k(e.front().key);
+            Key k(e.front().key());
             if (gc::IsAboutToBeFinalized(&k)) {
                 e.removeFront();
                 decZoneCount(k->zone());
@@ -125,16 +138,16 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
         CountMap::Ptr p = zoneCounts.lookupWithDefault(zone, 0);
         if (!p)
             return false;
-        ++p->value;
+        ++p->value();
         return true;
     }
 
     void decZoneCount(JS::Zone *zone) {
         CountMap::Ptr p = zoneCounts.lookup(zone);
         JS_ASSERT(p);
-        JS_ASSERT(p->value > 0);
-        --p->value;
-        if (p->value == 0)
+        JS_ASSERT(p->value() > 0);
+        --p->value();
+        if (p->value() == 0)
             zoneCounts.remove(zone);
     }
 };
@@ -697,14 +710,14 @@ Debugger::onExceptionUnwind(JSContext *cx, MutableHandleValue vp)
 void
 Debugger::onNewScript(JSContext *cx, HandleScript script, GlobalObject *compileAndGoGlobal)
 {
-    JS_ASSERT_IF(script->compileAndGo, compileAndGoGlobal);
-    JS_ASSERT_IF(script->compileAndGo, compileAndGoGlobal == &script->uninlinedGlobal());
+    JS_ASSERT_IF(script->compileAndGo(), compileAndGoGlobal);
+    JS_ASSERT_IF(script->compileAndGo(), compileAndGoGlobal == &script->uninlinedGlobal());
     // We early return in slowPathOnNewScript for self-hosted scripts, so we can
     // ignore those in our assertion here.
     JS_ASSERT_IF(!script->compartment()->options().invisibleToDebugger() &&
-                 !script->selfHosted,
+                 !script->selfHosted(),
                  script->compartment()->firedOnNewGlobalObject);
-    JS_ASSERT_IF(!script->compileAndGo, !compileAndGoGlobal);
+    JS_ASSERT_IF(!script->compileAndGo(), !compileAndGoGlobal);
     if (!script->compartment()->getDebuggees().empty())
         slowPathOnNewScript(cx, script, compileAndGoGlobal);
 }

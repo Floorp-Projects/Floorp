@@ -20,10 +20,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=766694
 
 /** Test for Bug 766694 **/
 
-// This is a list of all interfaces that are exposed to every webpage.  Please only
-// add things to this list with great care.
+// This is a list of all interfaces that are exposed to every webpage.
+// Please only add things to this list with great care and proper review
+// from the associated module peers.
 
-// IMPORTANT: Do not change this list without review from a JavaScript Engine peer!
+// This file lists global interfaces we want exposed and verifies they
+// are what we intend. Each entry in the arrays below can either be a
+// simple string with the interface name, or an object with a 'name'
+// property giving the interface name as a string, and additional
+// properties which quality the exposure of that interface. For example:
+//
+// [
+//   "AGlobalInterface",
+//   {name: "ExperimentalThing", release: false},
+//   {name: "OptionalThing", pref: "some.thing.enabled"},
+//   {name: "FancyControl", xbl: true},
+// ];
+//
+// See createInterfaceMap() below for a complete list of properties.
+
+// IMPORTANT: Do not change this list without review from
+//            a JavaScript Engine peer!
 var ecmaGlobals =
   [
     "Array",
@@ -36,7 +53,10 @@ var ecmaGlobals =
     "Float32Array",
     "Float64Array",
     "Function",
-    "Infinity",
+    // NB: We haven't bothered to resolve constants like Infinity and NaN on
+    // Xrayed windows (which are seen from the XBL scope). We could support
+    // this if needed with some refactoring.
+    {name: "Infinity", xbl: false},
     "Int16Array",
     "Int32Array",
     "Int8Array",
@@ -46,7 +66,7 @@ var ecmaGlobals =
     "JSON",
     "Map",
     "Math",
-    "NaN",
+    {name: "NaN", xbl: false},
     "Number",
     "Object",
     {name: "ParallelArray", nightly: true},
@@ -67,10 +87,11 @@ var ecmaGlobals =
     "URIError",
     "WeakMap",
   ];
-// IMPORTANT: Do not change this list without review from a JavaScript Engine peer!
+// IMPORTANT: Do not change the list above without review from
+//            a JavaScript Engine peer!
 
-// IMPORTANT: Do not change this list without review from a DOM peer, except to
-//            remove items from it!
+// IMPORTANT: Do not change the list below without review from a DOM peer,
+//            except to remove items from it!
 //
 // This is a list of interfaces that were prefixed with 'moz' instead of 'Moz'.
 // We should never to that again, interfaces in the DOM start with an uppercase
@@ -83,10 +104,10 @@ var legacyMozPrefixedInterfaces =
     "mozRTCPeerConnection",
     "mozRTCSessionDescription",
   ];
-// IMPORTANT: Do not change this list without review from a DOM peer, except to
-//            remove items from it!
+// IMPORTANT: Do not change the list above without review from a DOM peer,
+//            except to remove items from it!
 
-// IMPORTANT: Do not change this list without review from a DOM peer!
+// IMPORTANT: Do not change the list below without review from a DOM peer!
 var interfaceNamesInGlobalScope =
   [
     "AnalyserNode",
@@ -113,6 +134,7 @@ var interfaceNamesInGlobalScope =
     {name: "BluetoothAdapter", b2g: true},
     {name: "BluetoothDevice", b2g: true},
     {name: "BluetoothDeviceEvent", b2g: true},
+    {name: "BluetoothDiscoveryStateChangedEvent", b2g: true},
     {name: "BluetoothManager", b2g: true},
     {name: "BluetoothStatusChangedEvent", b2g: true},
     {name: "BoxObject", xbl: true},
@@ -199,6 +221,9 @@ var interfaceNamesInGlobalScope =
     "DOMStringMap",
     "DOMTokenList",
     "DOMTransactionEvent",
+    {name: "DOMDownload", b2g: true, pref: "dom.mozDownloads.enabled"},
+    {name: "DOMDownloadManager", b2g: true, pref: "dom.mozDownloads.enabled"},
+    {name: "DownloadEvent", b2g: true, pref: "dom.mozDownloads.enabled"},
     "DragEvent",
     "DynamicsCompressorNode",
     "Element",
@@ -234,6 +259,7 @@ var interfaceNamesInGlobalScope =
     "HTMLButtonElement",
     "HTMLCanvasElement",
     "HTMLCollection",
+    "HTMLContentElement",
     "HTMLDataElement",
     "HTMLDataListElement",
     "HTMLDirectoryElement",
@@ -293,6 +319,7 @@ var interfaceNamesInGlobalScope =
     "HTMLTextAreaElement",
     "HTMLTimeElement",
     "HTMLTitleElement",
+    "HTMLTrackElement",
     "HTMLUListElement",
     "HTMLUnknownElement",
     "HTMLVideoElement",
@@ -327,7 +354,7 @@ var interfaceNamesInGlobalScope =
     "MediaStream",
     "MediaStreamAudioDestinationNode",
     "MediaStreamAudioSourceNode",
-    "MediaStreamEvent",
+    {name: "MediaStreamEvent", pref: "media.peerconnection.enabled"},
     "MediaStreamTrack",
     "MessageEvent",
     "MessagePort",
@@ -363,14 +390,15 @@ var interfaceNamesInGlobalScope =
     {name: "MozNFCTag", b2g: true},
     {name: "MozOtaStatusEvent", b2g: true, pref: "dom.mobileconnection.enabled"},
     "MozPowerManager",
-    "mozRTCIceCandidate",
-    "mozRTCPeerConnection",
-    "mozRTCSessionDescription",
+    {name: "mozRTCIceCandidate", pref: "media.peerconnection.enabled"},
+    {name: "mozRTCPeerConnection", pref: "media.peerconnection.enabled"},
+    {name: "mozRTCSessionDescription", pref: "media.peerconnection.enabled"},
     "MozSettingsEvent",
     "MozSmsEvent",
     "MozSmsFilter",
     "MozSmsMessage",
     "MozSmsSegmentInfo",
+    {name: "MozSpeakerManager", b2g: true},
     {name: "MozStkCommandEvent", b2g: true, pref: "dom.icc.enabled"},
     {name: "MozTimeManager", b2g: true},
     {name: "MozVoicemail", b2g: true, pref: "dom.voicemail.enabled"},
@@ -405,6 +433,7 @@ var interfaceNamesInGlobalScope =
     "PhoneNumberService",
     "Plugin",
     "PluginArray",
+    {name: "PointerEvent", pref: "dom.w3c_pointer_events.enabled"},
     "PopStateEvent",
     "PopupBlockedEvent",
     "ProcessingInstruction",
@@ -415,15 +444,17 @@ var interfaceNamesInGlobalScope =
     "RecordErrorEvent",
     "Rect",
     "RGBColor",
-    "RTCDataChannelEvent",
-    "RTCPeerConnectionIceEvent",
-    "RTCStatsReport",
+    {name: "RTCDataChannelEvent", pref: "media.peerconnection.enabled"},
+    {name: "RTCPeerConnectionIceEvent", pref: "media.peerconnection.enabled"},
+    {name: "RTCStatsReport", pref: "media.peerconnection.enabled"},
     "Screen",
     "ScriptProcessorNode",
     "ScrollAreaEvent",
     "Selection",
     "SettingsLock",
     "SettingsManager",
+    {name: "ShadowRoot", pref: "dom.webcomponents.enabled"},
+    {name: "SharedWorker", pref: "dom.workers.sharedWorkers.enabled"},
     "SimpleGestureEvent",
     {name: "SimpleTest", xbl: false},
     "SmartCardEvent",
@@ -565,6 +596,9 @@ var interfaceNamesInGlobalScope =
     "TextDecoder",
     "TextEncoder",
     "TextMetrics",
+    "TextTrack",
+    "TextTrackCueList",
+    "TextTrackList",
     "TimeEvent",
     "TimeRanges",
     "Touch",
@@ -585,6 +619,9 @@ var interfaceNamesInGlobalScope =
     {name: "USSDReceivedEvent", b2g: true, pref: "dom.mobileconnection.enabled"},
     "ValidityState",
     "VideoStreamTrack",
+    "VTTCue",
+    "VTTRegion",
+    "VTTRegionList",
     "WaveShaperNode",
     "WebGLActiveInfo",
     "WebGLBuffer",
@@ -625,8 +662,8 @@ var interfaceNamesInGlobalScope =
     {name: "XULPopupElement", xbl: true},
     {name: "XULTemplateBuilder", xbl: true},
     {name: "XULTreeBuilder", xbl: true},
-  ]
-// IMPORTANT: Do not change this list without review from a DOM peer!
+  ];
+// IMPORTANT: Do not change the list above without review from a DOM peer!
 
 function createInterfaceMap(isXBLScope) {
   var prefs = SpecialPowers.Services.prefs;
@@ -656,9 +693,7 @@ function createInterfaceMap(isXBLScope) {
     }
   }
 
-  // Standard ECMAScript global objects are not defined on the XBL scope, but
-  // everything else exists everywhere.
-  addInterfaces(ecmaGlobals, !isXBLScope);
+  addInterfaces(ecmaGlobals, true);
   addInterfaces(interfaceNamesInGlobalScope, true);
 
   return interfaceMap;

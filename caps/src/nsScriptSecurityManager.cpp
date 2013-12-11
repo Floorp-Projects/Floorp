@@ -6,7 +6,7 @@
 
 #include "nsScriptSecurityManager.h"
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "js/OldDebugAPI.h"
 #include "xpcprivate.h"
@@ -1846,6 +1846,12 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
 // XXX Special case for nsIXPCException ?
     ClassInfoData objClassInfo = ClassInfoData(aClassInfo, nullptr);
     if (objClassInfo.IsDOMClass())
+    {
+        return NS_OK;
+    }
+
+    // We give remote-XUL whitelisted domains a free pass here. See bug 932906.
+    if (!xpc::AllowXBLScope(js::GetContextCompartment(cx)))
     {
         return NS_OK;
     }

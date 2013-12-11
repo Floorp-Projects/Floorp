@@ -13,8 +13,7 @@ function test() {
   // create a new tab
   let tab = gBrowser.addTab(testURL);
   ss.setTabValue(tab, key, value);
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    this.removeEventListener("load", arguments.callee, true);
+  whenBrowserLoaded(tab.linkedBrowser, function() {
     // get the tab's state
     let state = ss.getTabState(tab);
     ok(state, "get the tab's state");
@@ -30,7 +29,7 @@ function test() {
 
     // clean up
     gBrowser.removeTab(tab);
-  }, true);
+  });
 
   //////////////////////////////////
   // setTabState and duplicateTab //
@@ -44,31 +43,30 @@ function test() {
   let tab2 = gBrowser.addTab();
   // set the tab's state
   ss.setTabState(tab2, JSON.stringify(state));
-  tab2.linkedBrowser.addEventListener("load", function(aEvent) {
-    this.removeEventListener("load", arguments.callee, true);
+  whenTabRestored(tab2, function() {
     // verify the correctness of the restored tab
-    ok(ss.getTabValue(tab2, key2) == value2 && this.currentURI.spec == testURL,
+    ok(ss.getTabValue(tab2, key2) == value2 && tab2.linkedBrowser.currentURI.spec == testURL,
        "the tab's state was correctly restored");
 
     // add text data
-    let textbox = this.contentDocument.getElementById("textbox");
+    let textbox = tab2.linkedBrowser.contentDocument.getElementById("textbox");
     textbox.value = value3;
 
     // duplicate the tab
     let duplicateTab = ss.duplicateTab(window, tab2);
     gBrowser.removeTab(tab2);
 
-    duplicateTab.linkedBrowser.addEventListener("load", function(aEvent) {
-      this.removeEventListener("load", arguments.callee, true);
+    whenTabRestored(duplicateTab, function() {
       // verify the correctness of the duplicated tab
-      ok(ss.getTabValue(duplicateTab, key2) == value2 && this.currentURI.spec == testURL,
+      ok(ss.getTabValue(duplicateTab, key2) == value2 &&
+         duplicateTab.linkedBrowser.currentURI.spec == testURL,
          "correctly duplicated the tab's state");
-      let textbox = this.contentDocument.getElementById("textbox");
+      let textbox = duplicateTab.linkedBrowser.contentDocument.getElementById("textbox");
       is(textbox.value, value3, "also duplicated text data");
 
       // clean up
       gBrowser.removeTab(duplicateTab);
       finish();
-    }, true);
-  }, true);
+    });
+  });
 }

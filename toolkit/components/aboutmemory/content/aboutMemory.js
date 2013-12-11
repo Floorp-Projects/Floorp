@@ -359,22 +359,23 @@ function onLoad()
 
 function doGC()
 {
-  Cu.forceGC();
   Services.obs.notifyObservers(null, "child-gc-request", null);
+  Cu.forceGC();
   updateMainAndFooter("Garbage collection completed", HIDE_FOOTER);
 }
 
 function doCC()
 {
+  Services.obs.notifyObservers(null, "child-cc-request", null);
   window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils)
         .cycleCollect();
-  Services.obs.notifyObservers(null, "child-cc-request", null);
   updateMainAndFooter("Cycle collection completed", HIDE_FOOTER);
 }
 
 function doMMU()
 {
+  Services.obs.notifyObservers(null, "child-mmu-request", null);
   gMgr.minimizeMemoryUsage(
     () => updateMainAndFooter("Memory minimization completed", HIDE_FOOTER));
 }
@@ -446,8 +447,19 @@ function updateAboutMemoryFromJSONObject(aObj)
         function(aHandleReport, aDisplayReports) {
       for (let i = 0; i < aObj.reports.length; i++) {
         let r = aObj.reports[i];
-        aHandleReport(r.process, r.path, r.kind, r.units, r.amount,
-                      r.description, r._presence);
+
+        // A hack: for a brief time (late in the FF26 and early in the FF27
+        // cycle) we were dumping memory report files that contained reports
+        // whose path began with "redundant/".  Such reports were ignored by
+        // about:memory.  These reports are no longer produced, but some older
+        // builds are still floating around and producing files that contain
+        // them, so we need to still handle them (i.e. ignore them).  This hack
+        // can be removed once FF26 and associated products (e.g. B2G 1.2) are
+        // no longer in common use.
+        if (!r.path.startsWith("redundant/")) {
+          aHandleReport(r.process, r.path, r.kind, r.units, r.amount,
+                        r.description, r._presence);
+        }
       }
       aDisplayReports();
     }

@@ -6,9 +6,9 @@
 
 #include "nsLayoutUtils.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIDOMHTMLDocument.h"
@@ -128,7 +128,7 @@ static ContentMap& GetContentMap() {
 // When the pref "layout.css.sticky.enabled" changes, this function is invoked
 // to let us update kPositionKTable, to selectively disable or restore the
 // entry for "sticky" in that table.
-static int
+static void
 StickyEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 {
   MOZ_ASSERT(strncmp(aPrefName, STICKY_ENABLED_PREF_NAME,
@@ -156,14 +156,12 @@ StickyEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
   // depending on whether the sticky pref is enabled vs. disabled.
   nsCSSProps::kPositionKTable[sIndexOfStickyInPositionTable] =
     isStickyEnabled ? eCSSKeyword_sticky : eCSSKeyword_UNKNOWN;
-
-  return 0;
 }
 
 // When the pref "layout.css.text-align-true-value.enabled" changes, this
 // function is called to let us update kTextAlignKTable & kTextAlignLastKTable,
 // to selectively disable or restore the entries for "true" in those tables.
-static int
+static void
 TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
 {
   NS_ASSERTION(strcmp(aPrefName, TEXT_ALIGN_TRUE_ENABLED_PREF_NAME) == 0,
@@ -195,8 +193,6 @@ TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
   MOZ_ASSERT(sIndexOfTrueInTextAlignLastTable >= 0);
   nsCSSProps::kTextAlignLastKTable[sIndexOfTrueInTextAlignLastTable] =
     isTextAlignTrueEnabled ? eCSSKeyword_true : eCSSKeyword_UNKNOWN;
-
-  return 0;
 }
 
 template <class AnimationsOrTransitions>
@@ -2086,7 +2082,7 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
 
 #ifdef MOZ_DUMP_PAINTING
   if (gDumpEventList) {
-    fprintf(stdout, "Event handling --- (%d,%d):\n", aRect.x, aRect.y);
+    fprintf_stderr(stderr, "Event handling --- (%d,%d):\n", aRect.x, aRect.y);
     nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
@@ -2277,16 +2273,16 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
       string.Append(".html");
       gfxUtils::sDumpPaintFile = fopen(string.BeginReading(), "w");
     } else {
-      gfxUtils::sDumpPaintFile = stdout;
+      gfxUtils::sDumpPaintFile = stderr;
     }
     if (gfxUtils::sDumpPaintingToFile) {
-      fprintf(gfxUtils::sDumpPaintFile, "<html><head><script>var array = {}; function ViewImage(index) { window.location = array[index]; }</script></head><body>");
+      fprintf_stderr(gfxUtils::sDumpPaintFile, "<html><head><script>var array = {}; function ViewImage(index) { window.location = array[index]; }</script></head><body>");
     }
-    fprintf(gfxUtils::sDumpPaintFile, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
+    fprintf_stderr(gfxUtils::sDumpPaintFile, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
             dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
     nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile, gfxUtils::sDumpPaintingToFile);
     if (gfxUtils::sDumpPaintingToFile) {
-      fprintf(gfxUtils::sDumpPaintFile, "<script>");
+      fprintf_stderr(gfxUtils::sDumpPaintFile, "<script>");
     }
   }
 #endif
@@ -2327,12 +2323,12 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPaintList || gfxUtils::sDumpPainting) {
     if (gfxUtils::sDumpPaintingToFile) {
-      fprintf(gfxUtils::sDumpPaintFile, "</script>");
+      fprintf_stderr(gfxUtils::sDumpPaintFile, "</script>");
     }
-    fprintf(gfxUtils::sDumpPaintFile, "Painting --- after optimization:\n");
+    fprintf_stderr(gfxUtils::sDumpPaintFile, "Painting --- after optimization:\n");
     nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile, gfxUtils::sDumpPaintingToFile);
 
-    fprintf(gfxUtils::sDumpPaintFile, "Painting --- retained layer tree:\n");
+    fprintf_stderr(gfxUtils::sDumpPaintFile, "Painting --- retained layer tree:\n");
     nsIWidget* widget = aFrame->GetNearestWidget();
     if (widget) {
       nsRefPtr<LayerManager> layerManager = widget->GetLayerManager();
@@ -2478,24 +2474,32 @@ nsLayoutUtils::GetAllInFlowBoxes(nsIFrame* aFrame, BoxCallback* aCallback)
 }
 
 struct BoxToRect : public nsLayoutUtils::BoxCallback {
-  typedef nsSize (*GetRectFromFrameFun)(nsIFrame*);
-
   nsIFrame* mRelativeTo;
   nsLayoutUtils::RectCallback* mCallback;
   uint32_t mFlags;
-  GetRectFromFrameFun mRectFromFrame;
 
   BoxToRect(nsIFrame* aRelativeTo, nsLayoutUtils::RectCallback* aCallback,
-            uint32_t aFlags, GetRectFromFrameFun aRectFromFrame)
-    : mRelativeTo(aRelativeTo), mCallback(aCallback), mFlags(aFlags),
-      mRectFromFrame(aRectFromFrame) {}
+            uint32_t aFlags)
+    : mRelativeTo(aRelativeTo), mCallback(aCallback), mFlags(aFlags) {}
 
   virtual void AddBox(nsIFrame* aFrame) {
     nsRect r;
     nsIFrame* outer = nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(aFrame, &r);
     if (!outer) {
       outer = aFrame;
-      r = nsRect(nsPoint(0, 0), mRectFromFrame(aFrame));
+      switch (mFlags & nsLayoutUtils::RECTS_WHICH_BOX_MASK) {
+        case nsLayoutUtils::RECTS_USE_CONTENT_BOX:
+          r = aFrame->GetContentRectRelativeToSelf();
+          break;
+        case nsLayoutUtils::RECTS_USE_PADDING_BOX:
+          r = aFrame->GetPaddingRectRelativeToSelf();
+          break;
+        case nsLayoutUtils::RECTS_USE_MARGIN_BOX:
+          r = aFrame->GetMarginRectRelativeToSelf();
+          break;
+        default: // Use the border box
+          r = aFrame->GetRectRelativeToSelf();
+      }
     }
     if (mFlags & nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS) {
       r = nsLayoutUtils::TransformFrameRectToAncestor(outer, r, mRelativeTo);
@@ -2506,17 +2510,11 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
   }
 };
 
-static nsSize
-GetFrameBorderSize(nsIFrame* aFrame)
-{
-  return aFrame->GetSize();
-}
-
 void
 nsLayoutUtils::GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
                                  RectCallback* aCallback, uint32_t aFlags)
 {
-  BoxToRect converter(aRelativeTo, aCallback, aFlags, &GetFrameBorderSize);
+  BoxToRect converter(aRelativeTo, aCallback, aFlags);
   GetAllInFlowBoxes(aFrame, &converter);
 }
 
@@ -2599,7 +2597,9 @@ nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
                                              float aInflation)
 {
   // pass the user font set object into the device context to pass along to CreateFontGroup
-  gfxUserFontSet* fs = aStyleContext->PresContext()->GetUserFontSet();
+  nsPresContext* pc = aStyleContext->PresContext();
+  gfxUserFontSet* fs = pc->GetUserFontSet();
+  gfxTextPerfMetrics* tp = pc->GetTextPerfMetrics();
 
   nsFont font = aStyleContext->StyleFont()->mFont;
   // We need to not run font.size through floats when it's large since
@@ -2608,9 +2608,9 @@ nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
   if (aInflation != 1.0f) {
     font.size = NSToCoordRound(font.size * aInflation);
   }
-  return aStyleContext->PresContext()->DeviceContext()->GetMetricsFor(
+  return pc->DeviceContext()->GetMetricsFor(
                   font, aStyleContext->StyleFont()->mLanguage,
-                  fs, *aFontMetrics);
+                  fs, tp, *aFontMetrics);
 }
 
 nsIFrame*
@@ -2947,9 +2947,9 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
   NS_PRECONDITION(aType == MIN_WIDTH || aType == PREF_WIDTH, "bad type");
 
 #ifdef DEBUG_INTRINSIC_WIDTH
-  nsFrame::IndentBy(stdout, gNoiseIndent);
-  static_cast<nsFrame*>(aFrame)->ListTag(stdout);
-  printf(" %s intrinsic width for container:\n",
+  nsFrame::IndentBy(stderr, gNoiseIndent);
+  static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+  printf_stderr(" %s intrinsic width for container:\n",
          aType == MIN_WIDTH ? "min" : "pref");
 #endif
 
@@ -3007,9 +3007,9 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
       result = aFrame->GetPrefWidth(aRenderingContext);
 #ifdef DEBUG_INTRINSIC_WIDTH
     --gNoiseIndent;
-    nsFrame::IndentBy(stdout, gNoiseIndent);
-    static_cast<nsFrame*>(aFrame)->ListTag(stdout);
-    printf(" %s intrinsic width from frame is %d.\n",
+    nsFrame::IndentBy(stderr, gNoiseIndent);
+    static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+    printf_stderr(" %s intrinsic width from frame is %d.\n",
            aType == MIN_WIDTH ? "min" : "pref", result);
 #endif
 
@@ -3196,9 +3196,9 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
   }
 
 #ifdef DEBUG_INTRINSIC_WIDTH
-  nsFrame::IndentBy(stdout, gNoiseIndent);
-  static_cast<nsFrame*>(aFrame)->ListTag(stdout);
-  printf(" %s intrinsic width for container is %d twips.\n",
+  nsFrame::IndentBy(stderr, gNoiseIndent);
+  static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+  printf_stderr(" %s intrinsic width for container is %d twips.\n",
          aType == MIN_WIDTH ? "min" : "pref", result);
 #endif
 

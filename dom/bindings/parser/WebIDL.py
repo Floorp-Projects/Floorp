@@ -315,7 +315,7 @@ class IDLUnresolvedIdentifier(IDLObject):
 
         assert len(name) > 0
 
-        if name[:2] == "__" and not allowDoubleUnderscore:
+        if name[:2] == "__" and name != "__content" and not allowDoubleUnderscore:
             raise WebIDLError("Identifiers beginning with __ are reserved",
                               [location])
         if name[0] == '_' and not allowDoubleUnderscore:
@@ -493,6 +493,11 @@ class IDLInterface(IDLObjectWithScope):
         self.interfacesImplementingSelf = set()
         self._hasChildInterfaces = False
         self._isOnGlobalProtoChain = False
+        # Tracking of the number of reserved slots we need for our
+        # members and those of ancestor interfaces.
+        self.totalMembersInSlots = 0
+        # Tracking of the number of own own members we have in slots
+        self._ownMembersInSlots = 0
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
 
@@ -555,6 +560,8 @@ class IDLInterface(IDLObjectWithScope):
             self.parent.finish(scope)
 
             self.parent._hasChildInterfaces = True
+
+            self.totalMembersInSlots = self.parent.totalMembersInSlots
 
             # Interfaces with [Global] must not have anything inherit from them
             if self.parent.getExtendedAttribute("Global"):
@@ -650,6 +657,17 @@ class IDLInterface(IDLObjectWithScope):
             if (member.isAttr() and member.isUnforgeable() and
                 not hasattr(member, "originatingInterface")):
                 member.originatingInterface = self
+
+        # Compute slot indices for our members before we pull in
+        # unforgeable members from our parent.
+        for member in self.members:
+            if (member.isAttr() and
+                (member.getExtendedAttribute("StoreInSlot") or
+                 member.getExtendedAttribute("Cached"))):
+                member.slotIndex = self.totalMembersInSlots
+                self.totalMembersInSlots += 1
+                if member.getExtendedAttribute("StoreInSlot"):
+                    self._ownMembersInSlots += 1
 
         if self.parent:
             # Make sure we don't shadow any of the [Unforgeable] attributes on
@@ -1071,6 +1089,9 @@ class IDLInterface(IDLObjectWithScope):
         if self.parent:
             deps.add(self.parent)
         return deps
+
+    def hasMembersInSlots(self):
+        return self._ownMembersInSlots != 0
 
 class IDLDictionary(IDLObjectWithScope):
     def __init__(self, location, parentScope, name, parent, members):
@@ -2011,7 +2032,7 @@ class IDLWrapperType(IDLType):
         elif self.isEnum():
             return True
         elif self.isDictionary():
-            return all(m.isSerializable() for m in self.inner.members)
+            return all(m.type.isSerializable() for m in self.inner.members)
         else:
             raise WebIDLError("IDLWrapperType wraps type %s that we don't know if "
                               "is serializable" % type(self.inner), [self.location])
@@ -2603,6 +2624,7 @@ class IDLAttribute(IDLInterfaceMember):
         self.stringifier = stringifier
         self.enforceRange = False
         self.clamp = False
+        self.slotIndex = None
 
         if static and identifier.name == "prototype":
             raise WebIDLError("The identifier of a static attribute must not be 'prototype'",
@@ -2630,9 +2652,9 @@ class IDLAttribute(IDLInterfaceMember):
         if self.type.isDictionary():
             raise WebIDLError("An attribute cannot be of a dictionary type",
                               [self.location])
-        if self.type.isSequence():
-            raise WebIDLError("An attribute cannot be of a sequence type",
-                              [self.location])
+        if self.type.isSequence() and not self.getExtendedAttribute("Cached"):
+            raise WebIDLError("A non-cached attribute cannot be of a sequence "
+                              "type", [self.location])
         if self.type.isUnion():
             for f in self.type.unroll().flatMemberTypes:
                 if f.isDictionary():
@@ -2656,6 +2678,14 @@ class IDLAttribute(IDLInterfaceMember):
                               "interface type as its type", [self.location])
 
     def validate(self):
+        if ((self.getExtendedAttribute("Cached") or
+             self.getExtendedAttribute("StoreInSlot")) and
+            not self.getExtendedAttribute("Constant") and
+            not self.getExtendedAttribute("Pure")):
+            raise WebIDLError("Cached attributes and attributes stored in "
+                              "slots must be constant or pure, since the "
+                              "getter won't always be called.",
+                              [self.location])
         pass
 
     def handleExtendedAttribute(self, attr):
@@ -2668,15 +2698,13 @@ class IDLAttribute(IDLInterfaceMember):
                               "[SetterThrows]",
                               [self.location])
         elif (((identifier == "Throws" or identifier == "GetterThrows") and
-               (self.getExtendedAttribute("Pure") or
-                self.getExtendedAttribute("SameObject") or
-                self.getExtendedAttribute("Constant"))) or
-              ((identifier == "Pure" or identifier == "SameObject" or
-                identifier == "Constant") and
+               self.getExtendedAttribute("StoreInSlot")) or
+              (identifier == "StoreInSlot" and
                (self.getExtendedAttribute("Throws") or
                 self.getExtendedAttribute("GetterThrows")))):
             raise WebIDLError("Throwing things can't be [Pure] or [Constant] "
-                              "or [SameObject]", [attr.location])
+                              "or [SameObject] or [StoreInSlot]",
+                              [attr.location])
         elif identifier == "LenientThis":
             if not attr.noArguments():
                 raise WebIDLError("[LenientThis] must take no arguments",
@@ -2684,6 +2712,14 @@ class IDLAttribute(IDLInterfaceMember):
             if self.isStatic():
                 raise WebIDLError("[LenientThis] is only allowed on non-static "
                                   "attributes", [attr.location, self.location])
+            if self.getExtendedAttribute("CrossOriginReadable"):
+                raise WebIDLError("[LenientThis] is not allowed in combination "
+                                  "with [CrossOriginReadable]",
+                                  [attr.location, self.location])
+            if self.getExtendedAttribute("CrossOriginWritable"):
+                raise WebIDLError("[LenientThis] is not allowed in combination "
+                                  "with [CrossOriginWritable]",
+                                  [attr.location, self.location])
             self.lenientThis = True
         elif identifier == "Unforgeable":
             if not self.readonly:
@@ -2736,6 +2772,29 @@ class IDLAttribute(IDLInterfaceMember):
                 raise WebIDLError("[Clamp] used on a readonly attribute",
                                   [attr.location, self.location])
             self.clamp = True
+        elif identifier == "StoreInSlot":
+            if self.getExtendedAttribute("Cached"):
+                raise WebIDLError("[StoreInSlot] and [Cached] must not be "
+                                  "specified on the same attribute",
+                                  [attr.location, self.location])
+        elif identifier == "Cached":
+            if self.getExtendedAttribute("StoreInSlot"):
+                raise WebIDLError("[Cached] and [StoreInSlot] must not be "
+                                  "specified on the same attribute",
+                                  [attr.location, self.location])
+        elif (identifier == "CrossOriginReadable" or
+              identifier == "CrossOriginWritable"):
+            if not attr.noArguments():
+                raise WebIDLError("[%s] must take no arguments" % identifier,
+                                  [attr.location])
+            if self.isStatic():
+                raise WebIDLError("[%s] is only allowed on non-static "
+                                  "attributes" % identifier,
+                                  [attr.location, self.location])
+            if self.getExtendedAttribute("LenientThis"):
+                raise WebIDLError("[LenientThis] is not allowed in combination "
+                                  "with [%s]" % identifier,
+                                  [attr.location, self.location])
         elif (identifier == "Pref" or
               identifier == "SetterThrows" or
               identifier == "Pure" or
@@ -3264,10 +3323,6 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         elif identifier == "Constant":
             raise WebIDLError("Methods must not be flagged as [Constant]",
                               [attr.location, self.location]);
-        elif identifier == "Pure":
-            raise WebIDLError("Methods must not be flagged as [Pure] and if "
-                              "that changes, don't forget to check for [Throws]",
-                              [attr.location, self.location]);
         elif identifier == "PutForwards":
             raise WebIDLError("Only attributes support [PutForwards]",
                               [attr.location, self.location])
@@ -3287,6 +3342,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "ChromeOnly" or
               identifier == "Pref" or
               identifier == "Func" or
+              identifier == "Pure" or
+              identifier == "CrossOriginCallable" or
               identifier == "WebGLHandlesContextLoss"):
             # Known attributes that we don't need to do anything with here
             pass

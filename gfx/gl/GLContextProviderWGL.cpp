@@ -315,7 +315,6 @@ public:
         if (!mDC || !mContext)
             return false;
 
-        MakeCurrent();
         SetupLookupFunction();
         if (!InitWithPrefix("gl", true))
             return false;

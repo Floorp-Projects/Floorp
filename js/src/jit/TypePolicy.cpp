@@ -141,7 +141,7 @@ ComparePolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
     if (compare->compareType() == MCompare::Compare_Boolean &&
         def->getOperand(0)->type() == MIRType_Boolean)
     {
-       compare->setCompareType(MCompare::Compare_Int32);
+       compare->setCompareType(MCompare::Compare_Int32MaybeCoerceBoth);
     }
 
     // Compare_Boolean specialization is done for "Anything === Bool"
@@ -242,9 +242,28 @@ ComparePolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
             replace = MToFloat32::New(alloc, in, convert);
             break;
           }
-          case MIRType_Int32:
-            replace = MToInt32::New(alloc, in);
+          case MIRType_Int32: {
+            MacroAssembler::IntConversionInputKind convert = MacroAssembler::IntConversion_NumbersOnly;
+            if (compare->compareType() == MCompare::Compare_Int32MaybeCoerceBoth ||
+                (compare->compareType() == MCompare::Compare_Int32MaybeCoerceLHS && i == 0) ||
+                (compare->compareType() == MCompare::Compare_Int32MaybeCoerceRHS && i == 1))
+            {
+                convert = MacroAssembler::IntConversion_Any;
+            }
+            if (convert == MacroAssembler::IntConversion_NumbersOnly) {
+                if (in->type() != MIRType_Int32 && in->type() != MIRType_Value)
+                    in = boxAt(alloc, def, in);
+            } else {
+                if (in->type() == MIRType_Undefined ||
+                    in->type() == MIRType_String ||
+                    in->type() == MIRType_Object)
+                {
+                    in = boxAt(alloc, def, in);
+                }
+            }
+            replace = MToInt32::New(alloc, in, convert);
             break;
+          }
           case MIRType_Object:
             replace = MUnbox::New(alloc, in, MIRType_Object, MUnbox::Infallible);
             break;
@@ -539,6 +558,23 @@ BoxPolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
 template bool BoxPolicy<0>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 template bool BoxPolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 template bool BoxPolicy<2>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
+
+template <unsigned Op, MIRType Type>
+bool
+BoxExceptPolicy<Op, Type>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    MDefinition *in = ins->getOperand(Op);
+    if (in->type() == Type)
+        return true;
+    return BoxPolicy<Op>::staticAdjustInputs(alloc, ins);
+}
+
+template bool BoxExceptPolicy<0, MIRType_String>::staticAdjustInputs(TempAllocator &alloc,
+                                                                     MInstruction *ins);
+template bool BoxExceptPolicy<1, MIRType_String>::staticAdjustInputs(TempAllocator &alloc,
+                                                                     MInstruction *ins);
+template bool BoxExceptPolicy<2, MIRType_String>::staticAdjustInputs(TempAllocator &alloc,
+                                                                     MInstruction *ins);
 
 bool
 ToDoublePolicy::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)

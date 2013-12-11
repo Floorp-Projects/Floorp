@@ -119,10 +119,6 @@ public:
   virtual const char* Name() const { return "Basic"; }
 
   virtual nsIWidget* GetWidget() const MOZ_OVERRIDE { return mWidget; }
-  virtual const nsIntSize& GetWidgetSize() MOZ_OVERRIDE
-  {
-    return mWidgetSize;
-  }
 
   gfx::DrawTarget *GetDrawTarget() { return mDrawTarget; }
 

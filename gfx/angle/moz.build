@@ -32,7 +32,6 @@ UNIFIED_SOURCES += ['src/compiler/preprocessor/' + src for src in [
     'Tokenizer.cpp',
 ]]
 
-
 # Target: 'translator_common'
 #   Requires: 'preprocessor'
 # src/compiler:
@@ -103,7 +102,6 @@ else:
         'src/compiler/ossource_posix.cpp',
     ]
 
-
 # Target: 'translator_glsl'
 #   Requires: 'translator_common'
 # src/compiler:
@@ -119,7 +117,17 @@ UNIFIED_SOURCES += ['src/compiler/' + src for src in [
 ]]
 MSVC_ENABLE_PGO = True
 
-if CONFIG['OS_TARGET'] == 'WINNT':
+LOCAL_INCLUDES += [
+    'include',
+    'include/KHR',
+    'src',
+]
+
+if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 
 FINAL_LIBRARY = 'gkmedias'
+
+DEFINES['ANGLE_DISABLE_TRACE'] = True
+DEFINES['ANGLE_COMPILE_OPTIMIZATION_LEVEL'] = 'D3DCOMPILE_OPTIMIZATION_LEVEL1'
+DEFINES['COMPILER_IMPLEMENTATION'] = True

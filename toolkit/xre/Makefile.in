@@ -10,29 +10,6 @@ include $(topsrcdir)/config/makefiles/makeutils.mk
 
 milestone_txt = $(topsrcdir)/config/milestone.txt
 
-ifeq ($(MOZ_GL_DEFAULT_PROVIDER),GLX)
-DEFINES += -DUSE_GLX_TEST
-endif
-
-DEFINES += \
-  -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"' \
-  -DMOZ_APP_VERSION='"$(MOZ_APP_VERSION)"' \
-  $(NULL)
-
-ifdef MOZ_UPDATER
-ifneq (android,$(MOZ_WIDGET_TOOLKIT))
-DEFINES += -DMOZ_UPDATER
-endif
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-DEFINES += -DWIN32_LEAN_AND_MEAN -DUNICODE -D_UNICODE
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-DEFINES += -DANDROID_PACKAGE_NAME='"$(ANDROID_PACKAGE_NAME)"'
-endif
-
 ifdef MOZ_ENABLE_XREMOTE
 LOCAL_INCLUDES += -I$(topsrcdir)/widget/xremoteclient
 endif
@@ -55,35 +32,14 @@ ifdef MOZ_WIDGET_GTK
 CXXFLAGS += $(MOZ_PANGO_CFLAGS)
 endif
 
-DEFINES += \
-  -DOS_TARGET=\"$(OS_TARGET)\" \
-  -DMOZ_WIDGET_TOOLKIT=\"$(MOZ_WIDGET_TOOLKIT)\"
-
-ifdef TARGET_XPCOM_ABI
-DEFINES += \
-  -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\" \
-  -DTARGET_OS_ABI=\"$(OS_TARGET)_$(TARGET_XPCOM_ABI)\" \
-  $(NULL)
-endif
-
 # Should version be optional or required ?
 TOOLKIT_EM_VERSION=$(shell $(PERL) $(topsrcdir)/config/milestone.pl --topsrcdir=$(topsrcdir))
 $(call warnIfEmpty,TOOLKIT_EM_VERSION)
 
 # Valid if null: {warn,error}IfEmpty
-DEFINES += -DTOOLKIT_EM_VERSION=\"$(TOOLKIT_EM_VERSION)\"
+DEFINES += -DTOOLKIT_EM_VERSION='"$(TOOLKIT_EM_VERSION)"'
 
-ifdef WRAP_SYSTEM_INCLUDES
-DEFINES += -DWRAP_SYSTEM_INCLUDES
-endif
-
-ifeq ($(OS_ARCH),Linux)
-ifneq (,$(findstring lib64,$(libdir)))
-DEFINES += -DHAVE_USR_LIB64_DIR
-endif
-endif
-
-MOZ_SOURCE_STAMP ?= $(firstword $(shell hg -R $(topsrcdir) parent --template="{node|short}\n" 2>/dev/null))
+MOZ_SOURCE_STAMP ?= $(firstword $(shell hg -R $(topsrcdir) parent --template='{node|short}\n' 2>/dev/null))
 ifdef MOZ_SOURCE_STAMP
 
   INIARGS = --sourcestamp=$(MOZ_SOURCE_STAMP)
@@ -100,15 +56,7 @@ endif # MOZ_SOURCE_STAMP
 GRE_BUILDID   := $(strip $(firstword $(shell cat $(DEPTH)/config/buildid 2>/dev/null)))
 $(call errorIfEmpty,GRE_MILESTONE GRE_BUILDID)
 
-DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
-
-ifdef MOZILLA_OFFICIAL
-DEFINES += -DMOZILLA_OFFICIAL
-endif
-
-DEFINES += -DAPP_VERSION=$(MOZ_APP_VERSION)
-
-DEFINES += -DAPP_ID="$(MOZ_APP_ID)"
+DEFINES += -DGRE_BUILDID=$(GRE_BUILDID)
 
 $(srcdir)/nsAppRunner.cpp: $(DEPTH)/config/buildid $(milestone_txt)
 

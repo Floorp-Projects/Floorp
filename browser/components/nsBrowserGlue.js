@@ -79,6 +79,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
                                   "resource:///modules/sessionstore/SessionStore.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
+                                  "resource:///modules/BrowserUITelemetry.jsm");
+
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
 
@@ -476,6 +479,7 @@ BrowserGlue.prototype = {
     webrtcUI.init();
     AboutHome.init();
     SessionStore.init();
+    BrowserUITelemetry.init();
 
     if (Services.prefs.getBoolPref("browser.tabs.remote"))
       ContentClick.init();
@@ -1285,7 +1289,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 17;
+    const UI_VERSION = 18;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1479,23 +1483,7 @@ BrowserGlue.prototype = {
       OS.File.remove(path);
     }
 
-    if (currentUIVersion < 15) {
-      // Migrate users from text or text&icons mode to icons mode.
-      let updateToolbars = function (aToolbarIds, aResourceName, aResourceValue) {
-        let resource = this._rdf.GetResource(aResourceName);
-        for (toolbarId of aToolbarIds) {
-          let toolbar = this._rdf.GetResource(BROWSER_DOCURL + toolbarId);
-          let oldValue = this._getPersist(toolbar, resource);
-          if (oldValue && oldValue != aResourceValue) {
-            this._setPersist(toolbar, resource, aResourceValue);
-          }
-        }
-      }.bind(this);
-
-      updateToolbars(["navigator-toolbox", "nav-bar", "PersonalToolbar", "addon-bar"], "mode", "icons");
-      // Exclude PersonalToolbar and addon-bar since they have lockiconsize="true".
-      updateToolbars(["navigator-toolbox", "nav-bar"], "iconsize", "large");
-    }
+    // Version 15 was obsoleted in favour of 18.
 
     if (currentUIVersion < 16) {
       let toolbarResource = this._rdf.GetResource(BROWSER_DOCURL + "nav-bar");
@@ -1529,6 +1517,21 @@ BrowserGlue.prototype = {
                                             "$1bookmarks-menu-button,window-controls$2")
           }
           this._setPersist(toolbarResource, currentsetResource, currentset);
+        }
+      }
+    }
+
+    if (currentUIVersion < 18) {
+      // Remove iconsize and mode from all the toolbars
+      let toolbars = ["navigator-toolbox", "nav-bar", "PersonalToolbar",
+                      "addon-bar", "TabsToolbar", "toolbar-menubar"];
+      for (let resourceName of ["mode", "iconsize"]) {
+        let resource = this._rdf.GetResource(resourceName);
+        for (let toolbarId of toolbars) {
+          let toolbar = this._rdf.GetResource(BROWSER_DOCURL + toolbarId);
+          if (this._getPersist(toolbar, resource)) {
+            this._setPersist(toolbar, resource);
+          }
         }
       }
     }
@@ -1592,7 +1595,7 @@ BrowserGlue.prototype = {
     // be set to the version it has been added in, we will compare its value
     // to users' smartBookmarksVersion and add new smart bookmarks without
     // recreating old deleted ones.
-    const SMART_BOOKMARKS_VERSION = 4;
+    const SMART_BOOKMARKS_VERSION = 6;
     const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
     const SMART_BOOKMARKS_PREF = "browser.places.smartBookmarksVersion";
 
@@ -1653,8 +1656,25 @@ BrowserGlue.prototype = {
             parent: PlacesUtils.bookmarksMenuFolderId,
             position: menuIndex++,
             newInVersion: 1
-          }
+          },
         };
+
+        if (Services.sysinfo.getProperty("hasWindowsTouchInterface")) {
+          smartBookmarks.Windows8Touch = {
+            title: bundle.GetStringFromName("windows8TouchTitle"),
+            uri: NetUtil.newURI("place:folder=" +
+                                PlacesUtils.annotations.getItemsWithAnnotation('metro/bookmarksRoot', {})[0] +
+                                "&queryType=" +
+                                Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
+                                "&sort=" +
+                                Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+                                "&maxResults=" + MAX_RESULTS +
+                                "&excludeQueries=1"),
+            parent: PlacesUtils.bookmarksMenuFolderId,
+            position: menuIndex++,
+            newInVersion: 6
+          };
+        }
 
         // Set current itemId, parent and position if Smart Bookmark exists,
         // we will use these informations to create the new version at the same

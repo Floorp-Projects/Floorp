@@ -13,6 +13,7 @@ function debug(s) {
 }
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
@@ -40,11 +41,27 @@ this.DataStoreServiceInternal = {
       return;
     }
 
+    let prefName = 'dom.testing.datastore_enabled_for_hosted_apps';
+    if ((Services.prefs.getPrefType(prefName) == Services.prefs.PREF_INVALID ||
+         !Services.prefs.getBoolPref(prefName)) &&
+        !aMessage.target.assertAppHasStatus(Ci.nsIPrincipal.APP_STATUS_CERTIFIED)) {
+      return;
+    }
+
     let msg = aMessage.data;
 
-    // This is a security issue and it will be fixed by Bug 916091
-    msg.stores = dataStoreService.getDataStoresInfo(msg.name, msg.appId);
-    aMessage.target.sendAsyncMessage("DataStore:Get:Return", msg);
+    if (!aMessage.principal ||
+        aMessage.principal.appId == Ci.nsIScriptSecurityManager.UNKNOWN_APP_ID) {
+      aMessage.target.sendAsyncMessage("DataStore:Get:Return:KO");
+      return;
+    }
+
+    msg.stores = dataStoreService.getDataStoresInfo(msg.name, aMessage.principal.appId);
+    if (msg.stores === null) {
+      aMessage.target.sendAsyncMessage("DataStore:Get:Return:KO");
+      return;
+    }
+    aMessage.target.sendAsyncMessage("DataStore:Get:Return:OK", msg);
   }
 }
 

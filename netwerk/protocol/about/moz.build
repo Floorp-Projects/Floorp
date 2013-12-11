@@ -14,7 +14,7 @@ EXPORTS += [
     'nsAboutProtocolUtils.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsAboutBlank.cpp',
     'nsAboutBloat.cpp',
     'nsAboutCache.cpp',
@@ -27,3 +27,7 @@ FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'necko'
+
+LOCAL_INCLUDES += [
+    '../../base/src',
+]

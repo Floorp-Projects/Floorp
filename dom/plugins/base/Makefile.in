@@ -7,6 +7,5 @@ include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += \
   $(MOZ_CAIRO_CFLAGS) \
-  $(MOZ_PIXMAN_CFLAGS) \
   $(TK_CFLAGS) \
   $(NULL)

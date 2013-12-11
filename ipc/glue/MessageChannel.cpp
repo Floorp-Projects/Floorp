@@ -11,6 +11,9 @@
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
 
+// Undo the damage done by mozzconf.h
+#undef compress
+
 using namespace mozilla;
 using namespace std;
 
@@ -468,9 +471,6 @@ MessageChannel::RPCCall(Message* aMsg, Message* aReply)
     CxxStackFrame f(*this, OUT_MESSAGE, &copy);
 
     MonitorAutoLock lock(*mMonitor);
-
-    // RPC calls must be the only thing on the stack.
-    IPC_ASSERT(!AwaitingInterruptReply(), "rpc calls cannot be issued within interrupts");
 
     AutoEnterRPCTransaction transact(this);
     aMsg->set_transaction_id(mCurrentRPCTransaction);

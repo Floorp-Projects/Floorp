@@ -364,7 +364,7 @@
  "layout/style/test/test_visited_lying.html": "",
  "layout/style/test/test_visited_pref.html": "TIMED_OUT",
  "layout/style/test/test_visited_reftests.html": "TIMED_OUT",
- "layout/xul/base/test/test_bug511075.html": "bug 798806",
+ "layout/xul/test/test_bug511075.html": "bug 798806",
  "parser/htmlparser/tests/mochitest/test_html5_tree_construction.html": "TIMED_OUT",
  "parser/htmlparser/tests/mochitest/test_html5_tree_construction_part2.html": "TIMED_OUT",
  "robocop": "TIMED_OUT",

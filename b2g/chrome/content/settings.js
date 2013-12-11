@@ -473,3 +473,11 @@ SettingsListener.observe("debug.paint-flashing.enabled", false, function(value) 
 SettingsListener.observe("layers.draw-borders", false, function(value) {
   Services.prefs.setBoolPref("layers.draw-borders", value);
 });
+
+// ================ Accessibility ============
+SettingsListener.observe("accessibility.screenreader", false, function(value) {
+  if (value && !("AccessFu" in this)) {
+    Cu.import('resource://gre/modules/accessibility/AccessFu.jsm');
+    AccessFu.attach(window);
+  }
+});

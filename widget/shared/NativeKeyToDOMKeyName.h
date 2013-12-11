@@ -412,6 +412,7 @@ KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
 
 // Menu
 KEY_MAP_WIN     (Menu, VK_APPS)
+KEY_MAP_COCOA   (Menu, kVK_PC_ContextMenu)
 KEY_MAP_GTK     (Menu, GDK_Menu)
 KEY_MAP_QT      (Menu, Qt::Key_Menu)
 KEY_MAP_ANDROID (Menu, AKEYCODE_MENU)
@@ -458,56 +459,6 @@ KEY_MAP_ANDROID (Exit, AKEYCODE_HOME)
 // Zoom
 KEY_MAP_WIN     (Zoom, VK_ZOOM)
 KEY_MAP_QT      (Zoom, Qt::Key_Zoom)
-
-// Separator
-KEY_MAP_WIN     (Separator, VK_SEPARATOR)
-KEY_MAP_WIN     (Separator, VK_ABNT_C2) // This is on Brazilian keyboard.
-KEY_MAP_COCOA   (Separator, kVK_JIS_KeypadComma)
-KEY_MAP_GTK     (Separator, GDK_KP_Separator)
-KEY_MAP_ANDROID (Separator, AKEYCODE_NUMPAD_COMMA)
-
-// Spacebar
-KEY_MAP_WIN     (Spacebar, VK_SPACE)
-KEY_MAP_COCOA   (Spacebar, kVK_Space)
-KEY_MAP_GTK     (Spacebar, GDK_space)
-KEY_MAP_GTK     (Spacebar, GDK_KP_Space)
-KEY_MAP_QT      (Spacebar, Qt::Key_Space)
-KEY_MAP_ANDROID (Spacebar, AKEYCODE_SPACE)
-
-// Add
-KEY_MAP_WIN     (Add, VK_ADD)
-KEY_MAP_COCOA   (Add, kVK_ANSI_KeypadPlus)
-KEY_MAP_GTK     (Add, GDK_KP_Add)
-KEY_MAP_ANDROID (Add, AKEYCODE_NUMPAD_ADD)
-
-// Subtract
-KEY_MAP_WIN     (Subtract, VK_SUBTRACT)
-KEY_MAP_COCOA   (Subtract, kVK_ANSI_KeypadMinus)
-KEY_MAP_GTK     (Subtract, GDK_KP_Subtract)
-KEY_MAP_ANDROID (Subtract, AKEYCODE_NUMPAD_SUBTRACT)
-
-// Multiply
-KEY_MAP_WIN     (Multiply, VK_MULTIPLY)
-KEY_MAP_COCOA   (Multiply, kVK_ANSI_KeypadMultiply)
-KEY_MAP_GTK     (Multiply, GDK_KP_Multiply)
-KEY_MAP_ANDROID (Multiply, AKEYCODE_NUMPAD_MULTIPLY)
-
-// Divide
-KEY_MAP_WIN     (Divide, VK_DIVIDE)
-KEY_MAP_COCOA   (Divide, kVK_ANSI_KeypadDivide)
-KEY_MAP_GTK     (Divide, GDK_KP_Divide)
-KEY_MAP_ANDROID (Divide, AKEYCODE_NUMPAD_DIVIDE)
-
-// Equals
-KEY_MAP_COCOA   (Equals, kVK_ANSI_KeypadEquals)
-KEY_MAP_GTK     (Equals, GDK_KP_Equal)
-KEY_MAP_ANDROID (Equals, AKEYCODE_NUMPAD_EQUALS)
-
-// Decimal
-KEY_MAP_WIN     (Decimal, VK_DECIMAL)
-KEY_MAP_COCOA   (Decimal, kVK_ANSI_KeypadDecimal)
-KEY_MAP_GTK     (Decimal, GDK_KP_Decimal)
-KEY_MAP_ANDROID (Decimal, AKEYCODE_NUMPAD_DOT)
 
 // BrightnessDown
 KEY_MAP_GTK     (BrightnessDown, GDK_MonBrightnessDown)

@@ -4,28 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 RESFILE		= widget.res
-DEFINES		+= -DMOZ_UNICODE 
-
-ifdef MOZ_ENABLE_D3D9_LAYER
-DEFINES		+= -DMOZ_ENABLE_D3D9_LAYER
-endif
-
-ifdef MOZ_ENABLE_D3D10_LAYER
-DEFINES		+= -DMOZ_ENABLE_D3D10_LAYER
-endif
-
-LOCAL_INCLUDES	= \
-		-I. \
-		-I$(srcdir)/../xpwidgets \
-		-I$(srcdir)/../shared \
-		-I$(srcdir) \
-		-I$(topsrcdir)/layout/generic \
-		-I$(topsrcdir)/layout/xul/base/src \
-		-I$(topsrcdir)/toolkit/xre \
-		-I$(topsrcdir)/xpcom/base \
-		-I$(topsrcdir)/content/events/src \
-		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS)

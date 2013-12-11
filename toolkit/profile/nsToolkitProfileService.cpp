@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -127,7 +127,6 @@ private:
     nsresult CreateTimesInternal(nsIFile *profileDir);
 
     nsresult CreateProfileInternal(nsIFile* aRootDir,
-                                   nsIFile* aLocalDir,
                                    const nsACString& aName,
                                    const nsACString* aProfileName,
                                    const nsACString* aAppName,
@@ -656,7 +655,7 @@ nsToolkitProfileService::CreateDefaultProfileForApp(const nsACString& aProfileNa
     NS_ENSURE_FALSE(exists, NS_ERROR_ALREADY_INITIALIZED);
 
     nsIFile* profileDefaultsDir = aProfileDefaultsDir;
-    rv = CreateProfileInternal(nullptr, nullptr,
+    rv = CreateProfileInternal(nullptr,
                                NS_LITERAL_CSTRING("default"),
                                &aProfileName, &aAppName, &aVendorName,
                                &profileDefaultsDir, true, aResult);
@@ -698,17 +697,15 @@ nsToolkitProfileService::CreateDefaultProfileForApp(const nsACString& aProfileNa
 
 NS_IMETHODIMP
 nsToolkitProfileService::CreateProfile(nsIFile* aRootDir,
-                                       nsIFile* aLocalDir,
                                        const nsACString& aName,
                                        nsIToolkitProfile** aResult)
 {
-    return CreateProfileInternal(aRootDir, aLocalDir, aName,
+    return CreateProfileInternal(aRootDir, aName,
                                  nullptr, nullptr, nullptr, nullptr, false, aResult);
 }
 
 nsresult
 nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
-                                               nsIFile* aLocalDir,
                                                const nsACString& aName,
                                                const nsACString* aProfileName,
                                                const nsACString* aAppName,
@@ -745,26 +742,22 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
         }
     }
 
-    nsCOMPtr<nsIFile> localDir (aLocalDir);
+    nsCOMPtr<nsIFile> localDir;
 
-    if (!localDir) {
-        if (aRootDir) {
-            localDir = aRootDir;
-        }
-        else {
-            rv = gDirServiceProvider->GetUserProfilesLocalDir(getter_AddRefs(localDir),
-                                                              aProfileName,
-                                                              aAppName,
-                                                              aVendorName);
-            NS_ENSURE_SUCCESS(rv, rv);
+    bool isRelative;
+    rv = mAppData->Contains(rootDir, true, &isRelative);
+    if (NS_SUCCEEDED(rv) && isRelative) {
+        nsAutoCString path;
+        rv = rootDir->GetRelativeDescriptor(mAppData, path);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-            // use same salting
-            if (NS_IsNativeUTF8()) {
-                localDir->AppendNative(dirName);
-            } else {
-                localDir->Append(NS_ConvertUTF8toUTF16(dirName));
-            }
-        }
+        rv = NS_NewNativeLocalFile(EmptyCString(), true,
+                                   getter_AddRefs(localDir));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = localDir->SetRelativeDescriptor(mTempData, path);
+    } else {
+        localDir = rootDir;
     }
 
     bool exists;

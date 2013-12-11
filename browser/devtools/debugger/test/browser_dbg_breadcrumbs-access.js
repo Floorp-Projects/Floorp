@@ -48,34 +48,40 @@ function test() {
   }
 
   function checkNavigationWhileFocused() {
-    let deferred = promise.defer();
+    return Task.spawn(function() {
+      yield promise.all([
+        waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES),
+        EventUtils.sendKey("UP", gDebugger)
+      ]);
+      checkState({ frame: 2, source: 1, line: 6 });
 
-    EventUtils.sendKey("UP", gDebugger);
-    checkState({ frame: 2, source: 1, line: 6 });
-
-    waitForSourceAndCaret(gPanel, "-01.js", 5).then(() => {
+      yield promise.all([
+        waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES),
+        waitForSourceAndCaret(gPanel, "-01.js", 5),
+        EventUtils.sendKey("UP", gDebugger)
+      ]);
       checkState({ frame: 1, source: 0, line: 5 });
 
-      EventUtils.sendKey("UP", gDebugger);
+      yield promise.all([
+        waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES),
+        EventUtils.sendKey("UP", gDebugger)
+      ]);
       checkState({ frame: 0, source: 0, line: 5 });
 
-      waitForSourceAndCaret(gPanel, "-02.js", 6).then(() => {
-        checkState({ frame: 3, source: 1, line: 6 });
+      yield promise.all([
+        waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES),
+        waitForSourceAndCaret(gPanel, "-02.js", 6),
+        EventUtils.sendKey("END", gDebugger)
+      ]);
+      checkState({ frame: 3, source: 1, line: 6 });
 
-        waitForSourceAndCaret(gPanel, "-01.js", 5).then(() => {
-          checkState({ frame: 0, source: 0, line: 5 });
-          deferred.resolve();
-        });
-
+      yield promise.all([
+        waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES),
+        waitForSourceAndCaret(gPanel, "-01.js", 5),
         EventUtils.sendKey("HOME", gDebugger)
-      });
-
-      EventUtils.sendKey("END", gDebugger)
+      ]);
+      checkState({ frame: 0, source: 0, line: 5 });
     });
-
-    EventUtils.sendKey("UP", gDebugger)
-
-    return deferred.promise;
   }
 
   function checkState({ frame, source, line }) {

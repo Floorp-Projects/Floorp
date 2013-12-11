@@ -195,8 +195,11 @@ nsSVGImageFrame::AttributeChanged(int32_t         aNameSpaceID,
       return NS_OK;
     }
     else if (aAttribute == nsGkAtoms::preserveAspectRatio) {
-      // Don't invalidate (the layers code does that).
-      SchedulePaint();
+      // We don't paint the content of the image using display lists, therefore
+      // we have to invalidate for this children-only transform changes since
+      // there is no layer tree to notice that the transform changed and
+      // recomposite.
+      InvalidateFrame();
       return NS_OK;
     }
   }
@@ -466,7 +469,7 @@ nsSVGImageFrame::ReflowSVG()
     return;
   }
 
-  nsRefPtr<gfxContext> tmpCtx = new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+  gfxContext tmpCtx(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
   // We'd like to just pass the identity matrix to GeneratePath, but if
   // this frame's user space size is _very_ large/small then the extents we
@@ -485,10 +488,10 @@ nsSVGImageFrame::ReflowSVG()
   if (applyScaling) {
     scaling.Scale(scaleFactors.width, scaleFactors.height);
   }
-  tmpCtx->Save();
-  GeneratePath(tmpCtx, scaling);
-  tmpCtx->Restore();
-  gfxRect extent = tmpCtx->GetUserPathExtent();
+  tmpCtx.Save();
+  GeneratePath(&tmpCtx, scaling);
+  tmpCtx.Restore();
+  gfxRect extent = tmpCtx.GetUserPathExtent();
   if (applyScaling) {
     extent.Scale(1 / scaleFactors.width, 1 / scaleFactors.height);
   }

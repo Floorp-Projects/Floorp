@@ -23,19 +23,24 @@ if CONFIG['NECKO_COOKIES']:
         'CookieServiceChild.h',
         'CookieServiceParent.h',
     ]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'CookieServiceChild.cpp',
         'CookieServiceParent.cpp',
         'nsCookie.cpp',
+    ]
+    # nsCookieService.cpp can't be unified because it forces NSPR logging.
+    SOURCES += [
         'nsCookieService.cpp',
     ]
+    LOCAL_INCLUDES += [
+        '/intl/uconv/src',
+    ]
 
-if CONFIG['NECKO_COOKIES']:
     XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
-# FIXME/bug 575918: out-of-process xpcshell is broken on OS X
-if CONFIG['NECKO_COOKIES'] and CONFIG['OS_ARCH'] != 'Darwin':
-    XPCSHELL_TESTS_MANIFESTS += ['test/unit_ipc/xpcshell.ini']
+    # FIXME/bug 575918: out-of-process xpcshell is broken on OS X
+    if CONFIG['OS_ARCH'] != 'Darwin':
+        XPCSHELL_TESTS_MANIFESTS += ['test/unit_ipc/xpcshell.ini']
 
 IPDL_SOURCES = [
     'PCookieService.ipdl',

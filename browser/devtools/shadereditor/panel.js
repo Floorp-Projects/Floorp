@@ -6,7 +6,7 @@
 "use strict";
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const promise = require("sdk/core/promise");
+const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const EventEmitter = require("devtools/shared/event-emitter");
 const { WebGLFront } = require("devtools/server/actors/webgl");
 

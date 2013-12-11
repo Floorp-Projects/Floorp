@@ -16,83 +16,13 @@ endif
 
 TOPLEVEL_BUILD := 1
 
-run_for_side_effects := $(shell echo "MAKE: $(MAKE)")
+run_for_side_effects := $(shell echo 'MAKE: $(MAKE)')
 STATIC_LIBRARY_NAME = js_static
 LIBS		= $(NSPR_LIBS)
 
 DIST_INSTALL = 1
 
-VPATH		+= \
-		$(srcdir) \
-		$(srcdir)/builtin \
-		$(srcdir)/devtools \
-		$(srcdir)/ds \
-		$(srcdir)/frontend \
-		$(srcdir)/gc \
-		$(srcdir)/vm \
-		$(NULL)
-
-######################################################
-# BEGIN include exported headers from the JS engine
-#
-#       Ultimately, after cleansing EXPORTS,
-#       these will be the ONLY headers exported by
-#       the js engine
-#
-VPATH		+= \
-		$(srcdir)/../public \
-		$(NULL)
-
-###############################################
-# BEGIN enable non-releasable features
-#
-ifdef NIGHTLY_BUILD
-DEFINES += -DENABLE_PARALLEL_JS
-endif
-
-ifdef NIGHTLY_BUILD
-DEFINES += -DENABLE_BINARYDATA
-endif
-
-# Ion
-ifdef ENABLE_ION
-VPATH +=	$(srcdir)/jit
-VPATH +=	$(srcdir)/jit/shared
-
-ifeq (86, $(findstring 86,$(TARGET_CPU)))
-ifeq (x86_64, $(TARGET_CPU))
-VPATH +=	$(srcdir)/jit/x64
-else
-VPATH +=	$(srcdir)/jit/x86
-endif
-endif
-ifeq (arm, $(findstring arm, $(TARGET_CPU)))
-VPATH +=	$(srcdir)/jit/arm
-endif
-endif #ENABLE_ION
-
-###############################################
-# BEGIN include sources for the Nitro assembler
-#
-
-VPATH += 	$(srcdir)/assembler \
-		$(srcdir)/assembler/wtf \
-		$(srcdir)/assembler/jit \
-		$(srcdir)/yarr \
-		$(NONE)
-
-ifneq (,$(ENABLE_ION)$(ENABLE_YARR_JIT))
-VPATH += 	$(srcdir)/assembler/assembler \
-		$(NONE)
-endif
-
-#
-# END include sources for the Nitro assembler
-#############################################
-
 ifdef JS_HAS_CTYPES
-VPATH += $(srcdir)/ctypes
-
 ifdef MOZ_NATIVE_FFI
 LOCAL_INCLUDES = $(MOZ_FFI_CFLAGS)
 else
@@ -114,12 +44,6 @@ endif
 endif
 
 endif # JS_HAS_CTYPES
-
-# PerfMeasurement is available regardless of low-level support for it;
-# it just doesn't necessarily do anything useful.  There is one
-# implementation source file per supported operating system, plus a stub
-# for unsupported OSes, plus the Javascript wrapper.
-VPATH += $(srcdir)/perf
 
 DASH_R		= -r
 
@@ -149,7 +73,7 @@ MOZILLA_DTRACE_SRC = $(srcdir)/devtools/javascript-trace.d
 endif
 
 backend.RecursiveMakeBackend:
-	@echo "Build configuration changed. Regenerating backend."
+	@echo 'Build configuration changed. Regenerating backend.'
 	$(PYTHON) config.status
 
 Makefile: backend.RecursiveMakeBackend
@@ -180,7 +104,7 @@ EXTRA_DSO_LDOPTS += -Wl,-version-script,symverscript
 
 symverscript: symverscript.in
 	$(call py_action,preprocessor, \
-		-DVERSION="$(subst -,_,$(LIBRARY_NAME))" $< -o $@)
+		-DVERSION='$(subst -,_,$(LIBRARY_NAME))' $< -o $@)
 
 EXTRA_DEPS += symverscript
 endif
@@ -194,6 +118,46 @@ INSTALL_TARGETS += jsconfig
 jsconfig_FILES = $(export_files)
 jsconfig_DEST = $(DIST)/include
 jsconfig_TARGET := export
+
+# Ensure that this happens before using $(MOZ_PSEUDO_DERECURSE)
+include $(topsrcdir)/config/config.mk
+
+# Ensure that this happens before including rules.mk
+ifdef ENABLE_INTL_API
+ifndef MOZ_NATIVE_ICU
+ifdef MOZ_SHARED_ICU
+ifeq ($(OS_ARCH),WINNT)
+  # Library names: On Windows, ICU uses modified library names for static
+  # and debug libraries.
+  ifdef MOZ_DEBUG
+    ICU_LIB_SUFFIX=d
+  endif
+  ifdef JS_SHARED_LIBRARY
+    ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),intl/icu/target/lib/$(libname)$(ICU_LIB_SUFFIX)$(MOZ_ICU_VERSION).dll)
+  else
+    ICU_LIB_RENAME = $(foreach libname,$(ICU_LIB_NAMES),\
+                       cp -p intl/icu/target/lib/s$(libname)$(ICU_LIB_SUFFIX).lib intl/icu/target/lib/$(libname).lib;)
+  endif
+else
+  ifeq ($(OS_ARCH),Darwin)
+    ifdef JS_SHARED_LIBRARY
+      ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),intl/icu/target/lib/$(DLL_PREFIX)$(libname).$(MOZ_ICU_VERSION)$(DLL_SUFFIX))
+    endif
+  else
+    ifdef JS_SHARED_LIBRARY
+      ICU_FILES := $(foreach libname,$(ICU_LIB_NAMES),intl/icu/target/lib/$(DLL_PREFIX)$(libname)$(DLL_SUFFIX).$(MOZ_ICU_VERSION))
+    endif
+  endif
+endif
+ifdef ICU_FILES
+  ICU_DEST := $(DIST)/bin
+  INSTALL_TARGETS += ICU
+  $(ICU_FILES): buildicu
+  ICU_TARGET := $(if $(MOZ_PSEUDO_DERECURSE),compile,export)
+endif
+endif
+endif
+endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -231,14 +195,21 @@ endif
 ifdef ENABLE_INTL_API
 ifndef MOZ_NATIVE_ICU
 
-ifeq ($(OS_ARCH),WINNT)
-  # Library names: On Windows, ICU uses modified library names for static
-  # and debug libraries.
-  ifdef MOZ_DEBUG
-    ICU_LIB_SUFFIX=d
-  endif
-  ICU_LIB_RENAME = $(foreach libname,$(ICU_LIB_NAMES),\
-                     cp -p intl/icu/lib/s$(libname)$(ICU_LIB_SUFFIX).lib intl/icu/lib/$(libname).lib;)
+ifdef _MSC_VER
+OS_LIBS += $(call EXPAND_LIBNAME,delayimp)
+ifdef MOZ_DEBUG
+EXTRA_DSO_LDOPTS += \
+  -DELAYLOAD:icudtd$(MOZ_ICU_VERSION).dll \
+  -DELAYLOAD:icuind$(MOZ_ICU_VERSION).dll \
+  -DELAYLOAD:icuucd$(MOZ_ICU_VERSION).dll \
+  $(NULL)
+else
+EXTRA_DSO_LDOPTS += \
+  -DELAYLOAD:icudt$(MOZ_ICU_VERSION).dll \
+  -DELAYLOAD:icuin$(MOZ_ICU_VERSION).dll \
+  -DELAYLOAD:icuuc$(MOZ_ICU_VERSION).dll \
+  $(NULL)
+endif
 endif
 
 ifdef .PYMAKE
@@ -254,11 +225,17 @@ endif
 # - Options for genrb: -k strict parsing; -R omit collation tailoring rules.
 buildicu:
 # ICU's build system is full of races, so force non-parallel build.
-	+$(ICU_MAKE) -j1 -C intl/icu STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
+ifdef CROSS_COMPILE
+	+$(ICU_MAKE) -j1 -C intl/icu/host STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R -C'
+endif
+	+$(ICU_MAKE) -j1 -C intl/icu/target STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
 	$(ICU_LIB_RENAME)
 
 distclean clean::
-	$(call SUBMAKE,$@,intl/icu)
+ifdef CROSS_COMPILE
+	$(call SUBMAKE,$@,intl/icu/host)
+endif
+	$(call SUBMAKE,$@,intl/icu/target)
 
 endif
 endif
@@ -321,7 +298,7 @@ check:: check-style check-jit-test
 # --no-extensions is set to skip that test. Remove as soon as possible.
 check-jstests:
 	RC=0; \
-	for f in `echo "$(JITFLAGS)" | tr ',' '\n'`; \
+	for f in `echo '$(JITFLAGS)' | tr ',' '\n'`; \
 		do \
 			$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/tests/jstests.py \
 				--tinderbox --no-progress \
@@ -361,17 +338,11 @@ DIST_GARBAGE = config.cache config.log config.status* \
 distclean::
 	$(RM) $(DIST_GARBAGE)
 
-DEFINES		+= -DEXPORT_JS_API
-
 INCLUDES	+= -I$(srcdir)
 
-ifdef JS_THREADSAFE
-DEFINES		+= -DJS_THREADSAFE
-endif
-
-ifdef JS_HAS_CTYPES
-DEFINES		+= -DJS_HAS_CTYPES
-DEFINES         += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
+ifneq (,$(filter WINNT,$(OS_ARCH)))
+# _CRT_RAND_S must be #defined before #including stdlib.h to get rand_s()
+DEFINES         += -D_CRT_RAND_S
 endif
 
 ifneq ($(findstring -L,$(NSPR_LIBS)),)
@@ -399,11 +370,7 @@ ifneq (,$(MOZ_ZLIB_LIBS)$(MOZ_GLUE_LDFLAGS))
 DEFINES += -DUSE_ZLIB
 endif
 
-ifdef MOZ_LINKER
-DEFINES += -DMOZ_LINKER
-endif
-
-ifdef MOZ_NATIVE_ICU
+ifdef MOZ_SHARED_ICU
 EXTRA_DSO_LDOPTS += $(MOZ_ICU_LIBS)
 else
 SHARED_LIBRARY_LIBS += $(MOZ_ICU_LIBS)
@@ -463,24 +430,7 @@ CXXFLAGS += -mcpu=v9
 endif # GNU_CC
 
 endif
-ifeq ($(OS_RELEASE),4.1)
-EXTRA_LIBS	+= -ldl -lnsl
-else
 EXTRA_LIBS	+= -lposix4 -ldl -lnsl -lsocket
-endif
-endif
-
-# An AIX Optimization bug causes PR_dtoa() & JS_dtoa to produce wrong result.
-# This suppresses optimization for this single compilation unit.
-ifeq ($(OS_ARCH),AIX)
-jsatom.o: jsatom.cpp Makefile.in
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CXX)
-	$(CXX) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
-jsdtoa.o: jsdtoa.cpp Makefile.in
-	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO_CXX)
-	$(CXX) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
 endif
 
 # Compute the linker flags that programs linking against SpiderMonkey should
@@ -512,20 +462,20 @@ endif
 # Set the various definitions that will be substituted for js-config
 # and for the pck-config .pc file.
 JS_CONFIG_SUBSTITUTIONS=\
-	-Dprefix="$(prefix)" \
-	-Dexec_prefix="$(exec_prefix)" \
-	-Dincludedir="$(includedir)" \
-	-Dlibdir="$(libdir)" \
-	-DMOZILLA_VERSION="$(MOZILLA_VERSION)" \
-	-DLIBRARY_NAME="$(LIBRARY_NAME)" \
-	-DJS_CONFIG_LIBS="$(JS_CONFIG_LIBS)" \
-	-DJS_CONFIG_MOZ_JS_LIBS="$(JS_CONFIG_MOZ_JS_LIBS)" \
-	-DMOZJS_MAJOR_VERSION="$(MOZJS_MAJOR_VERSION)" \
-	-DMOZJS_MINOR_VERSION="$(MOZJS_MINOR_VERSION)" \
-	-DMOZJS_PATCH_VERSION="$(MOZJS_PATCH_VERSION)" \
-	-DMOZJS_ALPHA="$(MOZJS_ALPHA)" \
-	-DNSPR_CFLAGS="$(NSPR_CFLAGS)" \
-	-DNSPR_PKGCONF_CHECK="$(NSPR_PKGCONF_CHECK)" \
+	-Dprefix='$(prefix)' \
+	-Dexec_prefix='$(exec_prefix)' \
+	-Dincludedir='$(includedir)' \
+	-Dlibdir='$(libdir)' \
+	-DMOZILLA_VERSION='$(MOZILLA_VERSION)' \
+	-DLIBRARY_NAME='$(LIBRARY_NAME)' \
+	-DJS_CONFIG_LIBS='$(JS_CONFIG_LIBS)' \
+	-DJS_CONFIG_MOZ_JS_LIBS='$(JS_CONFIG_MOZ_JS_LIBS)' \
+	-DMOZJS_MAJOR_VERSION='$(MOZJS_MAJOR_VERSION)' \
+	-DMOZJS_MINOR_VERSION='$(MOZJS_MINOR_VERSION)' \
+	-DMOZJS_PATCH_VERSION='$(MOZJS_PATCH_VERSION)' \
+	-DMOZJS_ALPHA='$(MOZJS_ALPHA)' \
+	-DNSPR_CFLAGS='$(NSPR_CFLAGS)' \
+	-DNSPR_PKGCONF_CHECK='$(NSPR_PKGCONF_CHECK)' \
 	$(NULL)
 
 $(JS_CONFIG_NAME): js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk $(topsrcdir)/config/rules.mk
@@ -606,10 +556,8 @@ ifdef MOZ_ETW
 ETWProvider.h ETWProvider.rc ETWProvider.mof: ETWProvider.man
 	$(MC) -um -mof $^
 
-Probes.$(OBJ_SUFFIX): ETWProvider.h
-
 ETWProvider.res: ETWProvider.rc
-	$(RC) -r -i "$(SDKDIR)Include" $^
+	$(RC) -r -i '$(SDKDIR)Include' $^
 
 export:: ETWProvider.res
 

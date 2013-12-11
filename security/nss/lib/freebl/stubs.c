@@ -32,7 +32,6 @@
 #include <prtime.h>
 #include <prcvar.h>
 #include <secasn1.h>
-#include <secoid.h>
 #include <secdig.h>
 #include <secport.h>
 #include <secitem.h>

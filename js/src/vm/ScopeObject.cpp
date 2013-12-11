@@ -35,14 +35,13 @@ typedef Rooted<ArgumentsObject *> RootedArgumentsObject;
 static JSObject *
 InnermostStaticScope(JSScript *script, jsbytecode *pc)
 {
-    JS_ASSERT(pc >= script->code && pc < script->code + script->length);
+    JS_ASSERT(script->containsPC(pc));
     JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
 
-    uint32_t blockIndex = GET_UINT32_INDEX(pc + 2 * sizeof(uint16_t));
-
-    if (blockIndex == UINT32_MAX)
-        return script->function();
-    return &script->getObject(blockIndex)->as<StaticBlockObject>();
+    StaticBlockObject *block = GetBlockChainAtPC(script, pc);
+    if (block)
+        return block;
+    return script->function();
 }
 
 Shape *
@@ -61,14 +60,46 @@ js::ScopeCoordinateToStaticScopeShape(JSScript *script, jsbytecode *pc)
     return ssi.scopeShape();
 }
 
-PropertyName *
-js::ScopeCoordinateName(JSScript *script, jsbytecode *pc)
+static const uint32_t SCOPE_COORDINATE_NAME_THRESHOLD = 20;
+
+void
+ScopeCoordinateNameCache::purge()
 {
-    Shape::Range<NoGC> r(ScopeCoordinateToStaticScopeShape(script, pc));
+    shape = nullptr;
+    if (map.initialized())
+        map.finish();
+}
+
+PropertyName *
+js::ScopeCoordinateName(ScopeCoordinateNameCache &cache, JSScript *script, jsbytecode *pc)
+{
+    Shape *shape = ScopeCoordinateToStaticScopeShape(script, pc);
+    if (shape != cache.shape && shape->slot() >= SCOPE_COORDINATE_NAME_THRESHOLD) {
+        cache.purge();
+        if (cache.map.init(shape->slot())) {
+            cache.shape = shape;
+            Shape::Range<NoGC> r(shape);
+            while (!r.empty()) {
+                if (!cache.map.putNew(r.front().slot(), r.front().propid())) {
+                    cache.purge();
+                    break;
+                }
+                r.popFront();
+            }
+        }
+    }
+
+    jsid id;
     ScopeCoordinate sc(pc);
-    while (r.front().slot() != sc.slot)
-        r.popFront();
-    jsid id = r.front().propid();
+    if (shape == cache.shape) {
+        ScopeCoordinateNameCache::Map::Ptr p = cache.map.lookup(sc.slot);
+        id = p->value();
+    } else {
+        Shape::Range<NoGC> r(shape);
+        while (r.front().slot() != sc.slot)
+            r.popFront();
+        id = r.front().propid();
+    }
 
     /* Beware nameless destructuring formal. */
     if (!JSID_IS_ATOM(id))
@@ -115,12 +146,12 @@ CallObject::create(JSContext *cx, HandleScript script, HandleShape shape, Handle
     JS_ASSERT(CanBeFinalizedInBackground(kind, &CallObject::class_));
     kind = gc::GetBackgroundAllocKind(kind);
 
-    gc::InitialHeap heap = script->treatAsRunOnce ? gc::TenuredHeap : gc::DefaultHeap;
+    gc::InitialHeap heap = script->treatAsRunOnce() ? gc::TenuredHeap : gc::DefaultHeap;
     JSObject *obj = JSObject::create(cx, kind, heap, shape, type, slots);
     if (!obj)
         return nullptr;
 
-    if (script->treatAsRunOnce) {
+    if (script->treatAsRunOnce()) {
         RootedObject nobj(cx, obj);
         if (!JSObject::setSingletonType(cx, nobj))
             return nullptr;
@@ -165,7 +196,7 @@ CallObject::createTemplateObject(JSContext *cx, HandleScript script, gc::Initial
 CallObject *
 CallObject::create(JSContext *cx, HandleScript script, HandleObject enclosing, HandleFunction callee)
 {
-    gc::InitialHeap heap = script->treatAsRunOnce ? gc::TenuredHeap : gc::DefaultHeap;
+    gc::InitialHeap heap = script->treatAsRunOnce() ? gc::TenuredHeap : gc::DefaultHeap;
     CallObject *callobj = CallObject::createTemplateObject(cx, script, heap);
     if (!callobj)
         return nullptr;
@@ -173,7 +204,7 @@ CallObject::create(JSContext *cx, HandleScript script, HandleObject enclosing, H
     callobj->as<ScopeObject>().setEnclosingScope(enclosing);
     callobj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
 
-    if (script->treatAsRunOnce) {
+    if (script->treatAsRunOnce()) {
         Rooted<CallObject*> ncallobj(cx, callobj);
         if (!JSObject::setSingletonType(cx, ncallobj))
             return nullptr;
@@ -230,7 +261,7 @@ CallObject::createForStrictEval(JSContext *cx, AbstractFramePtr frame)
 {
     JS_ASSERT(frame.isStrictEvalFrame());
     JS_ASSERT_IF(frame.isStackFrame(), cx->interpreterFrame() == frame.asStackFrame());
-    JS_ASSERT_IF(frame.isStackFrame(), cx->interpreterRegs().pc == frame.script()->code);
+    JS_ASSERT_IF(frame.isStackFrame(), cx->interpreterRegs().pc == frame.script()->code());
 
     RootedFunction callee(cx);
     RootedScript script(cx, frame.script());
@@ -525,7 +556,6 @@ const Class WithObject::class_ = {
         with_GetGeneric,
         with_GetProperty,
         with_GetElement,
-        nullptr,             /* getElementIfPresent */
         with_GetSpecial,
         with_SetGeneric,
         with_SetProperty,
@@ -536,7 +566,8 @@ const Class WithObject::class_ = {
         with_DeleteProperty,
         with_DeleteElement,
         with_DeleteSpecial,
-        nullptr, nullptr, /* watch/unwatch */
+        nullptr, nullptr,    /* watch/unwatch */
+        nullptr,             /* slice */
         with_Enumerate,
         with_ThisObject,
     }
@@ -579,7 +610,7 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Abst
      * any fixup since the initial value is 'undefined'.
      */
     unsigned nslots = block->slotCount();
-    unsigned base = frame.script()->nfixed + block->stackDepth();
+    unsigned base = frame.script()->nfixed() + block->stackDepth();
     for (unsigned i = 0; i < nslots; ++i) {
         if (block->isAliased(i))
             obj->as<ClonedBlockObject>().setVar(i, frame.unaliasedLocal(base + i));
@@ -594,7 +625,7 @@ void
 ClonedBlockObject::copyUnaliasedValues(AbstractFramePtr frame)
 {
     StaticBlockObject &block = staticBlock();
-    unsigned base = frame.script()->nfixed + block.stackDepth();
+    unsigned base = frame.script()->nfixed() + block.stackDepth();
     for (unsigned i = 0; i < slotCount(); ++i) {
         if (!block.isAliased(i))
             setVar(i, frame.unaliasedLocal(base + i), DONT_CHECK_ALIASING);
@@ -1496,6 +1527,31 @@ js_IsDebugScopeSlow(ProxyObject *proxy)
 
 /*****************************************************************************/
 
+/* static */ JS_ALWAYS_INLINE void
+DebugScopes::proxiedScopesPostWriteBarrier(JSRuntime *rt, ObjectWeakMap *map,
+                                           const EncapsulatedPtr<JSObject> &key)
+{
+#ifdef JSGC_GENERATIONAL
+    /*
+     * Strip the barriers from the type before inserting into the store buffer.
+     * This will automatically ensure that barriers do not fire during GC.
+     */
+    typedef WeakMap<JSObject *, JSObject *> UnbarrieredMap;
+    typedef gc::HashKeyRef<UnbarrieredMap, JSObject *> Ref;
+    if (key && IsInsideNursery(rt, key))
+        rt->gcStoreBuffer.putGeneric(Ref(reinterpret_cast<UnbarrieredMap *>(map), key.get()));
+#endif
+}
+
+/* static */ JS_ALWAYS_INLINE void
+DebugScopes::liveScopesPostWriteBarrier(JSRuntime *rt, LiveScopeMap *map, ScopeObject *key)
+{
+#ifdef JSGC_GENERATIONAL
+    if (key && IsInsideNursery(rt, key))
+        rt->gcStoreBuffer.putGeneric(gc::HashKeyRef<LiveScopeMap, ScopeObject *>(map, key));
+#endif
+}
+
 DebugScopes::DebugScopes(JSContext *cx)
  : proxiedScopes(cx),
    missingScopes(cx->runtime()),
@@ -1535,13 +1591,13 @@ DebugScopes::sweep(JSRuntime *rt)
      * creating an uncollectable cycle with suspended generator frames.
      */
     for (MissingScopeMap::Enum e(missingScopes); !e.empty(); e.popFront()) {
-        if (IsObjectAboutToBeFinalized(e.front().value.unsafeGet()))
+        if (IsObjectAboutToBeFinalized(e.front().value().unsafeGet()))
             e.removeFront();
     }
 
     for (LiveScopeMap::Enum e(liveScopes); !e.empty(); e.popFront()) {
-        ScopeObject *scope = e.front().key;
-        AbstractFramePtr frame = e.front().value;
+        ScopeObject *scope = e.front().key();
+        AbstractFramePtr frame = e.front().value();
 
         /*
          * Scopes can be finalized when a debugger-synthesized ScopeObject is
@@ -1604,7 +1660,7 @@ DebugScopes::hasDebugScope(JSContext *cx, ScopeObject &scope)
 
     if (ObjectWeakMap::Ptr p = scopes->proxiedScopes.lookup(&scope)) {
         JS_ASSERT(CanUseDebugScopeMaps(cx));
-        return &p->value->as<DebugScopeObject>();
+        return &p->value()->as<DebugScopeObject>();
     }
 
     return nullptr;
@@ -1629,7 +1685,7 @@ DebugScopes::addDebugScope(JSContext *cx, ScopeObject &scope, DebugScopeObject &
         return false;
     }
 
-    HashTableWriteBarrierPost(cx->runtime(), &scopes->proxiedScopes, &scope);
+    proxiedScopesPostWriteBarrier(cx->runtime(), &scopes->proxiedScopes, &scope);
     return true;
 }
 
@@ -1644,7 +1700,7 @@ DebugScopes::hasDebugScope(JSContext *cx, const ScopeIter &si)
 
     if (MissingScopeMap::Ptr p = scopes->missingScopes.lookup(si)) {
         JS_ASSERT(CanUseDebugScopeMaps(cx));
-        return p->value;
+        return p->value();
     }
     return nullptr;
 }
@@ -1673,7 +1729,7 @@ DebugScopes::addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject 
         js_ReportOutOfMemory(cx);
         return false;
     }
-    HashTableWriteBarrierPost(cx->runtime(), &scopes->liveScopes, &debugScope.scope());
+    liveScopesPostWriteBarrier(cx->runtime(), &scopes->liveScopes, &debugScope.scope());
 
     return true;
 }
@@ -1701,11 +1757,11 @@ DebugScopes::onPopCall(AbstractFramePtr frame, JSContext *cx)
         CallObject &callobj = frame.scopeChain()->as<CallObject>();
         scopes->liveScopes.remove(&callobj);
         if (ObjectWeakMap::Ptr p = scopes->proxiedScopes.lookup(&callobj))
-            debugScope = &p->value->as<DebugScopeObject>();
+            debugScope = &p->value()->as<DebugScopeObject>();
     } else {
         ScopeIter si(frame, cx);
         if (MissingScopeMap::Ptr p = scopes->missingScopes.lookup(si)) {
-            debugScope = p->value;
+            debugScope = p->value();
             scopes->liveScopes.remove(&debugScope->scope().as<CallObject>());
             scopes->missingScopes.remove(p);
         }
@@ -1774,7 +1830,7 @@ DebugScopes::onPopBlock(JSContext *cx, AbstractFramePtr frame)
     } else {
         ScopeIter si(frame, cx);
         if (MissingScopeMap::Ptr p = scopes->missingScopes.lookup(si)) {
-            ClonedBlockObject &clone = p->value->scope().as<ClonedBlockObject>();
+            ClonedBlockObject &clone = p->value()->scope().as<ClonedBlockObject>();
             clone.copyUnaliasedValues(frame);
             scopes->liveScopes.remove(&clone);
             scopes->missingScopes.remove(p);
@@ -1824,17 +1880,17 @@ DebugScopes::onGeneratorFrameChange(AbstractFramePtr from, AbstractFramePtr to, 
             JS_ASSERT(toIter.scope().compartment() == cx->compartment());
             LiveScopeMap::AddPtr livePtr = scopes->liveScopes.lookupForAdd(&toIter.scope());
             if (livePtr) {
-                livePtr->value = to;
+                livePtr->value() = to;
             } else {
                 scopes->liveScopes.add(livePtr, &toIter.scope(), to);  // OOM here?
-                HashTableWriteBarrierPost(cx->runtime(), &scopes->liveScopes, &toIter.scope());
+                liveScopesPostWriteBarrier(cx->runtime(), &scopes->liveScopes, &toIter.scope());
             }
         } else {
             ScopeIter si(toIter, from, cx);
             JS_ASSERT(si.frame().scopeChain()->compartment() == cx->compartment());
             if (MissingScopeMap::Ptr p = scopes->missingScopes.lookup(si)) {
-                DebugScopeObject &debugScope = *p->value;
-                scopes->liveScopes.lookup(&debugScope.scope())->value = to;
+                DebugScopeObject &debugScope = *p->value();
+                scopes->liveScopes.lookup(&debugScope.scope())->value() = to;
                 scopes->missingScopes.remove(p);
                 scopes->missingScopes.put(toIter, &debugScope);  // OOM here?
             }
@@ -1889,7 +1945,7 @@ DebugScopes::updateLiveScopes(JSContext *cx)
                     return false;
                 if (!scopes->liveScopes.put(&si.scope(), frame))
                     return false;
-                HashTableWriteBarrierPost(cx->runtime(), &scopes->liveScopes, &si.scope());
+                liveScopesPostWriteBarrier(cx->runtime(), &scopes->liveScopes, &si.scope());
             }
         }
 
@@ -1910,7 +1966,7 @@ DebugScopes::hasLiveFrame(ScopeObject &scope)
         return NullFramePtr();
 
     if (LiveScopeMap::Ptr p = scopes->liveScopes.lookup(&scope)) {
-        AbstractFramePtr frame = p->value;
+        AbstractFramePtr frame = p->value();
 
         /*
          * Since liveScopes is effectively a weak pointer, we need a read
@@ -2111,10 +2167,7 @@ RemoveReferencedNames(JSContext *cx, HandleScript script, PropertyNameSet &remai
     //   these names and putting eval in an inner script is bad news if you
     //   care about entraining variables unnecessarily.
 
-    for (jsbytecode *pc = script->code;
-         pc != script->code + script->length;
-         pc += GetBytecodeLength(pc))
-    {
+    for (jsbytecode *pc = script->code(); pc != script->codeEnd(); pc += GetBytecodeLength(pc)) {
         PropertyName *name;
 
         switch (JSOp(*pc)) {
@@ -2127,7 +2180,7 @@ RemoveReferencedNames(JSContext *cx, HandleScript script, PropertyNameSet &remai
           case JSOP_GETALIASEDVAR:
           case JSOP_CALLALIASEDVAR:
           case JSOP_SETALIASEDVAR:
-            name = ScopeCoordinateName(script, pc);
+            name = ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc);
             break;
 
           default:
@@ -2188,14 +2241,14 @@ AnalyzeEntrainedVariablesInScript(JSContext *cx, HandleScript script, HandleScri
             buf.printf(" ");
         }
 
-        buf.printf("(%s:%d) has variables entrained by ", script->filename(), script->lineno);
+        buf.printf("(%s:%d) has variables entrained by ", script->filename(), script->lineno());
 
         if (JSAtom *name = innerScript->function()->displayAtom()) {
             buf.putString(name);
             buf.printf(" ");
         }
 
-        buf.printf("(%s:%d) ::", innerScript->filename(), innerScript->lineno);
+        buf.printf("(%s:%d) ::", innerScript->filename(), innerScript->lineno());
 
         for (PropertyNameSet::Range r = remainingNames.all(); !r.empty(); r.popFront()) {
             buf.printf(" ");

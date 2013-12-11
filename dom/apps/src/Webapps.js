@@ -343,12 +343,12 @@ WebappsApplication.prototype = {
     this._downloadError = null;
 
     this.initDOMRequestHelper(aWindow, [
-      "Webapps:CheckForUpdate:Return:KO",
-      "Webapps:Connect:Return:OK",
-      "Webapps:Connect:Return:KO",
-      "Webapps:FireEvent",
-      "Webapps:GetConnections:Return:OK",
-      "Webapps:UpdateState"
+      { name: "Webapps:CheckForUpdate:Return:KO", weakRef: true },
+      { name: "Webapps:Connect:Return:OK", weakRef: true },
+      { name: "Webapps:Connect:Return:KO", weakRef: true },
+      { name: "Webapps:FireEvent", weakRef: true },
+      { name: "Webapps:GetConnections:Return:OK", weakRef: true },
+      { name: "Webapps:UpdateState", weakRef: true }
     ]);
 
     cpmm.sendAsyncMessage("Webapps:RegisterForMessages", {
@@ -649,14 +649,13 @@ WebappsApplication.prototype = {
   * mozIDOMApplicationMgmt object
   */
 function WebappsApplicationMgmt(aWindow) {
-  this.initDOMRequestHelper(aWindow, [
-    { name: "Webapps:GetAll:Return:OK", strongRef: true },
-    { name: "Webapps:GetAll:Return:KO", strongRef: true },
-    { name: "Webapps:Uninstall:Return:OK", strongRef: true },
-    { name: "Webapps:Uninstall:Broadcast:Return:OK", strongRef: true },
-    { name: "Webapps:Uninstall:Return:KO", strongRef: true },
-    { name: "Webapps:Install:Return:OK", strongRef: true },
-    { name: "Webapps:GetNotInstalled:Return:OK", strongRef: true }]);
+  this.initDOMRequestHelper(aWindow, ["Webapps:GetAll:Return:OK",
+                                      "Webapps:GetAll:Return:KO",
+                                      "Webapps:Uninstall:Return:OK",
+                                      "Webapps:Uninstall:Broadcast:Return:OK",
+                                      "Webapps:Uninstall:Return:KO",
+                                      "Webapps:Install:Return:OK",
+                                      "Webapps:GetNotInstalled:Return:OK"]);
 
   cpmm.sendAsyncMessage("Webapps:RegisterForMessages",
                         {

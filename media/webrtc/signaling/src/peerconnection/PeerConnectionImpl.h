@@ -5,6 +5,7 @@
 #ifndef _PEER_CONNECTION_IMPL_H_
 #define _PEER_CONNECTION_IMPL_H_
 
+#include <deque>
 #include <string>
 #include <vector>
 #include <map>
@@ -24,6 +25,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/PeerConnectionImplEnumsBinding.h"
+#include "StreamBuffer.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/TimeStamp.h"
@@ -221,9 +223,10 @@ public:
   virtual const std::string& GetHandle();
 
   // ICE events
-  void IceGatheringCompleted(NrIceCtx *aCtx);
-  void IceCompleted(NrIceCtx *aCtx);
-  void IceFailed(NrIceCtx *aCtx);
+  void IceConnectionStateChange(NrIceCtx* ctx,
+                                NrIceCtx::ConnectionState state);
+  void IceGatheringStateChange(NrIceCtx* ctx,
+                               NrIceCtx::GatheringState state);
   void IceStreamReady(NrIceMediaStream *aStream);
 
   static void ListenThread(void *aData);
@@ -289,12 +292,14 @@ public:
   NS_IMETHODIMP CreateAnswer(const MediaConstraintsExternal& aConstraints);
 
   NS_IMETHODIMP SetLocalDescription (int32_t aAction, const char* aSDP);
+
   void SetLocalDescription (int32_t aAction, const nsAString& aSDP, ErrorResult &rv)
   {
     rv = SetLocalDescription(aAction, NS_ConvertUTF16toUTF8(aSDP).get());
   }
 
   NS_IMETHODIMP SetRemoteDescription (int32_t aAction, const char* aSDP);
+
   void SetRemoteDescription (int32_t aAction, const nsAString& aSDP, ErrorResult &rv)
   {
     rv = SetRemoteDescription(aAction, NS_ConvertUTF16toUTF8(aSDP).get());
@@ -307,8 +312,15 @@ public:
     rv = GetStats(aSelector, internalStats);
   }
 
+  NS_IMETHODIMP_TO_ERRORRESULT(GetLogging, ErrorResult &rv,
+                               const nsAString& pattern)
+  {
+    rv = GetLogging(pattern);
+  }
+
   NS_IMETHODIMP AddIceCandidate(const char* aCandidate, const char* aMid,
                                 unsigned short aLevel);
+
   void AddIceCandidate(const nsAString& aCandidate, const nsAString& aMid,
                        unsigned short aLevel, ErrorResult &rv)
   {
@@ -317,6 +329,7 @@ public:
   }
 
   NS_IMETHODIMP CloseStreams();
+
   void CloseStreams(ErrorResult &rv)
   {
     rv = CloseStreams();
@@ -334,7 +347,17 @@ public:
     rv = RemoveStream(aMediaStream);
   }
 
+  NS_IMETHODIMP GetFingerprint(char** fingerprint);
+  void GetFingerprint(nsAString& fingerprint)
+  {
+    char *tmp;
+    GetFingerprint(&tmp);
+    fingerprint.AssignASCII(tmp);
+    delete[] tmp;
+  }
+
   NS_IMETHODIMP GetLocalDescription(char** aSDP);
+
   void GetLocalDescription(nsAString& aSDP)
   {
     char *tmp;
@@ -344,6 +367,7 @@ public:
   }
 
   NS_IMETHODIMP GetRemoteDescription(char** aSDP);
+
   void GetRemoteDescription(nsAString& aSDP)
   {
     char *tmp;
@@ -353,6 +377,7 @@ public:
   }
 
   NS_IMETHODIMP ReadyState(mozilla::dom::PCImplReadyState* aState);
+
   mozilla::dom::PCImplReadyState ReadyState()
   {
     mozilla::dom::PCImplReadyState state;
@@ -361,6 +386,7 @@ public:
   }
 
   NS_IMETHODIMP SignalingState(mozilla::dom::PCImplSignalingState* aState);
+
   mozilla::dom::PCImplSignalingState SignalingState()
   {
     mozilla::dom::PCImplSignalingState state;
@@ -369,6 +395,7 @@ public:
   }
 
   NS_IMETHODIMP SipccState(mozilla::dom::PCImplSipccState* aState);
+
   mozilla::dom::PCImplSipccState SipccState()
   {
     mozilla::dom::PCImplSipccState state;
@@ -376,15 +403,28 @@ public:
     return state;
   }
 
-  NS_IMETHODIMP IceState(mozilla::dom::PCImplIceState* aState);
-  mozilla::dom::PCImplIceState IceState()
+  NS_IMETHODIMP IceConnectionState(
+      mozilla::dom::PCImplIceConnectionState* aState);
+
+  mozilla::dom::PCImplIceConnectionState IceConnectionState()
   {
-    mozilla::dom::PCImplIceState state;
-    IceState(&state);
+    mozilla::dom::PCImplIceConnectionState state;
+    IceConnectionState(&state);
+    return state;
+  }
+
+  NS_IMETHODIMP IceGatheringState(
+      mozilla::dom::PCImplIceGatheringState* aState);
+
+  mozilla::dom::PCImplIceGatheringState IceGatheringState()
+  {
+    mozilla::dom::PCImplIceGatheringState state;
+    IceGatheringState(&state);
     return state;
   }
 
   NS_IMETHODIMP Close();
+
   void Close(ErrorResult &rv)
   {
     rv = Close();
@@ -482,18 +522,33 @@ private:
   void ShutdownMedia();
 
   // ICE callbacks run on the right thread.
-  nsresult IceStateChange_m(mozilla::dom::PCImplIceState aState);
+  nsresult IceConnectionStateChange_m(
+      mozilla::dom::PCImplIceConnectionState aState);
+  nsresult IceGatheringStateChange_m(
+      mozilla::dom::PCImplIceGatheringState aState);
 
 #ifdef MOZILLA_INTERNAL_API
   // Fills in an RTCStatsReportInternal. Must be run on STS.
-  void GetStats_s(uint32_t trackId,
+  void GetStats_s(mozilla::TrackID trackId,
                   bool internalStats,
                   DOMHighResTimeStamp now);
 
+  nsresult GetStatsImpl_s(mozilla::TrackID trackId,
+                          bool internalStats,
+                          DOMHighResTimeStamp now,
+                          mozilla::dom::RTCStatsReportInternal *report);
+
   // Sends an RTCStatsReport to JS. Must run on main thread.
-  void OnStatsReport_m(uint32_t trackId,
+  void OnStatsReport_m(mozilla::TrackID trackId,
                        nsresult result,
                        nsAutoPtr<mozilla::dom::RTCStatsReportInternal> report);
+
+  // Fetches logs matching pattern from RLogRingBuffer. Must be run on STS.
+  void GetLogging_s(const std::string& pattern);
+
+  // Sends logging to JS. Must run on main thread.
+  void OnGetLogging_m(const std::string& pattern,
+                      const std::deque<std::string>& logging);
 #endif
 
   // Timecard used to measure processing time. This should be the first class
@@ -507,23 +562,13 @@ private:
   mozilla::dom::PCImplSignalingState mSignalingState;
 
   // ICE State
-  mozilla::dom::PCImplIceState mIceState;
+  mozilla::dom::PCImplIceConnectionState mIceConnectionState;
+  mozilla::dom::PCImplIceGatheringState mIceGatheringState;
 
   nsCOMPtr<nsIThread> mThread;
-  // WeakConcretePtr to PeerConnectionObserver. TODO: Remove after bug 928535
-  //
-  // This is only safe to use on the main thread
   // TODO: Remove if we ever properly wire PeerConnection for cycle-collection.
-  class WeakConcretePtr
-  {
-  public:
-    WeakConcretePtr() : mObserver(nullptr) {}
-    void Set(PeerConnectionObserver *aObserver);
-    PeerConnectionObserver *MayGet();
-  private:
-    PeerConnectionObserver *mObserver;
-    nsWeakPtr mWeakPtr;
-  } mPCObserver;
+  nsWeakPtr mPCObserver;
+
   nsCOMPtr<nsPIDOMWindow> mWindow;
 
   // The SDP sent in from JS - here for debugging.

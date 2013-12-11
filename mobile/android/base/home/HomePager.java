@@ -8,6 +8,7 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
@@ -37,6 +38,7 @@ public class HomePager extends ViewPager {
     private Decor mDecor;
 
     // List of pages in order.
+    @RobocopTarget
     public enum Page {
         HISTORY,
         TOP_SITES,
@@ -127,6 +129,11 @@ public class HomePager extends ViewPager {
         }
 
         super.addView(child, index, params);
+    }
+
+    public void redisplay(FragmentManager fm) {
+        final TabsAdapter adapter = (TabsAdapter) getAdapter();
+        show(fm, adapter.getCurrentPage(), null);
     }
 
     /**
@@ -279,6 +286,12 @@ public class HomePager extends ViewPager {
             }
 
             return -1;
+        }
+
+        public Page getCurrentPage() {
+            int currentItem = getCurrentItem();
+            TabInfo info = mTabs.get(currentItem);
+            return info.page;
         }
 
         @Override

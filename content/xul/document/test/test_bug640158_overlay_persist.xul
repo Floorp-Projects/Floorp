@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=640158
+-->
+<window title="Mozilla Bug 640158" id="rootwin"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=640158"
+     target="_blank">Mozilla Bug 640158</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function onload() {
+    is($("foo").getAttribute("testattr"), "original", "Attribute should be in original state");
+    // Change and persist another value:
+    $("foo").setAttribute("testattr", "changed");
+    document.persist("foo", "testattr");
+    $("foo").setAttribute("testattr", "original");
+
+    // Hacky times: check that items which are overlaid do get persisted into correctly,
+    // by first creating an extra element and persisting the value before loading an
+    // overlay that changes that value - the persisted value should be reinstated.
+    let root = document.documentElement;
+    let bar = document.createElement("box");
+    bar.id = "bar";
+    bar.setAttribute("testattr", "changed"); // The overlay we load has 'original'
+    root.appendChild(bar);
+    document.persist("bar", "testattr");
+    document.loadOverlay(location.href.replace(/[^\\\/]*.xul/, "overlay_bug640158.xul"), function() {
+      is($("foo").getAttribute("testattr"), "original",
+         "Non-overlaid attribute should still be in original state");
+      is($("bar").getAttribute("testattr"), "changed",
+         "Overlaid attribute should have been changed.");
+      SimpleTest.finish();
+    });
+  }
+
+  ]]></script>
+
+  <box id="foo" testattr="original"/>
+
+</window>
+

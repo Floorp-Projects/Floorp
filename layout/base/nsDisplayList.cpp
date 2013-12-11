@@ -48,6 +48,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "ActiveLayerTracker.h"
+#include "nsContentUtils.h"
 
 #include <stdint.h>
 #include <algorithm>
@@ -618,6 +619,12 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
 
   if (scrollableFrame) {
     nsRect contentBounds = scrollableFrame->GetScrollRange();
+    if (scrollableFrame->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_HIDDEN) {
+      contentBounds.height = 0;
+    }
+    if (scrollableFrame->GetScrollbarStyles().mHorizontal == NS_STYLE_OVERFLOW_HIDDEN) {
+      contentBounds.width = 0;
+    }
     contentBounds.width += scrollableFrame->GetScrollPortRect().width;
     contentBounds.height += scrollableFrame->GetScrollPortRect().height;
     metrics.mScrollableRect = CSSRect::FromAppUnits(contentBounds);
@@ -712,6 +719,13 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   }
 
   metrics.mPresShellId = presShell->GetPresShellId();
+
+  // If the scroll frame's content is marked 'scrollgrab', record this
+  // in the FrameMetrics so APZ knows to provide the scroll grabbing
+  // behaviour.
+  if (aScrollFrame && nsContentUtils::HasScrollgrab(aScrollFrame->GetContent())) {
+    metrics.mHasScrollgrab = true;
+  }
 
   aRoot->SetFrameMetrics(metrics);
 }
@@ -2226,7 +2240,7 @@ nsDisplayThemedBackground::~nsDisplayThemedBackground()
 void
 nsDisplayThemedBackground::WriteDebugInfo(FILE *aOutput)
 {
-  fprintf(aOutput, "(themed, appearance:%d) ", mAppearance);
+  fprintf_stderr(aOutput, "(themed, appearance:%d) ", mAppearance);
 }
 #endif
 
@@ -2534,10 +2548,30 @@ nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
 nsRect
 nsDisplayBorder::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
-  nsRect borderBounds(ToReferenceFrame(), mFrame->GetSize());
-  borderBounds.Inflate(mFrame->StyleBorder()->GetImageOutset());
   *aSnap = true;
-  return borderBounds;
+  const nsStyleBorder *styleBorder = mFrame->StyleBorder();
+  nsRect borderBounds(ToReferenceFrame(), mFrame->GetSize());
+  if (styleBorder->IsBorderImageLoaded()) {
+    borderBounds.Inflate(mFrame->StyleBorder()->GetImageOutset());
+    return borderBounds;
+  } else {
+    nsMargin border = styleBorder->GetComputedBorder();
+    nsRect result;
+    if (border.top > 0) {
+      result = nsRect(borderBounds.X(), borderBounds.Y(), borderBounds.Width(), border.top);
+    }
+    if (border.right > 0) {
+      result.UnionRect(result, nsRect(borderBounds.XMost() - border.right, borderBounds.Y(), border.right, borderBounds.Height()));
+    }
+    if (border.bottom > 0) {
+      result.UnionRect(result, nsRect(borderBounds.X(), borderBounds.YMost() - border.bottom, borderBounds.Width(), border.bottom));
+    }
+    if (border.left > 0) {
+      result.UnionRect(result, nsRect(borderBounds.X(), borderBounds.Y(), border.left, borderBounds.Height()));
+    }
+
+    return result;
+  }
 }
 
 // Given a region, compute a conservative approximation to it as a list
@@ -2863,6 +2897,9 @@ RequiredLayerStateForChildrenInternal(nsDisplayListBuilder* aBuilder,
     if ((state == LAYER_ACTIVE || state == LAYER_ACTIVE_FORCE) &&
         state > result) {
       result = state;
+    }
+    if (state == LAYER_ACTIVE_EMPTY && state > result) {
+      result = LAYER_ACTIVE_FORCE;
     }
     if (state == LAYER_NONE) {
       nsDisplayList* list = i->GetSameCoordinateSystemChildren();
@@ -3222,9 +3259,10 @@ bool nsDisplayBlendContainer::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplay
 
 nsDisplayOwnLayer::nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayList* aList,
-                                     uint32_t aFlags)
+                                     uint32_t aFlags, ViewID aScrollTarget)
     : nsDisplayWrapList(aBuilder, aFrame, aList)
-    , mFlags(aFlags) {
+    , mFlags(aFlags)
+    , mScrollTarget(aScrollTarget) {
   MOZ_COUNT_CTOR(nsDisplayOwnLayer);
 }
 
@@ -3242,6 +3280,12 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
   nsRefPtr<ContainerLayer> layer = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nullptr);
+  if (mFlags & VERTICAL_SCROLLBAR) {
+    layer->SetScrollbarData(mScrollTarget, Layer::ScrollDirection::VERTICAL);
+  }
+  if (mFlags & HORIZONTAL_SCROLLBAR) {
+    layer->SetScrollbarData(mScrollTarget, Layer::ScrollDirection::HORIZONTAL);
+  }
 
   if (mFlags & GENERATE_SUBDOC_INVALIDATIONS) {
     mFrame->PresContext()->SetNotifySubDocInvalidationData(layer);
@@ -3529,10 +3573,33 @@ nsDisplayScrollLayer::TryMerge(nsDisplayListBuilder* aBuilder,
   return true;
 }
 
+void
+PropagateClip(nsDisplayListBuilder* aBuilder, const DisplayItemClip& aClip,
+              nsDisplayList* aList)
+{
+  for (nsDisplayItem* i = aList->GetBottom(); i != nullptr; i = i->GetAbove()) {
+    DisplayItemClip clip(i->GetClip());
+    clip.IntersectWith(aClip);
+    i->SetClip(aBuilder, clip);
+    nsDisplayList* list = i->GetSameCoordinateSystemChildren();
+    if (list) {
+      PropagateClip(aBuilder, aClip, list);
+    }
+  }
+}
+
 bool
 nsDisplayScrollLayer::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
 {
-  return GetScrollLayerCount() > 1;
+  if (GetScrollLayerCount() > 1) {
+    // Propagate our clip to our children. The clip for the scroll frame is
+    // on this item, but not our child items so that they can draw non-visible
+    // parts of the display port. But if we are flattening we failed and can't
+    // draw the extra content, so it needs to be clipped.
+    PropagateClip(aBuilder, GetClip(), &mList);
+    return true;
+  }
+  return false;
 }
 
 intptr_t
@@ -4189,10 +4256,11 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
     return nullptr;
   }
 
+  uint32_t flags = ShouldPrerenderTransformedContent(aBuilder, mFrame, false) ?
+    FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS : 0;
   nsRefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetChildren(),
-                           aContainerParameters, &newTransformMatrix,
-                           FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS);
+                           aContainerParameters, &newTransformMatrix, flags);
 
   if (!container) {
     return nullptr;
@@ -4705,32 +4773,32 @@ nsDisplaySVGEffects::PrintEffects(FILE* aOutput)
   bool isOK = true;
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
   bool first = true;
-  fprintf(aOutput, " effects=(");
+  fprintf_stderr(aOutput, " effects=(");
   if (mFrame->StyleDisplay()->mOpacity != 1.0f) {
     first = false;
-    fprintf(aOutput, "opacity(%f)", mFrame->StyleDisplay()->mOpacity);
+    fprintf_stderr(aOutput, "opacity(%f)", mFrame->StyleDisplay()->mOpacity);
   }
   if (clipPathFrame) {
     if (!first) {
-      fprintf(aOutput, ", ");
+      fprintf_stderr(aOutput, ", ");
     }
-    fprintf(aOutput, "clip(%s)", clipPathFrame->IsTrivial() ? "trivial" : "non-trivial");
+    fprintf_stderr(aOutput, "clip(%s)", clipPathFrame->IsTrivial() ? "trivial" : "non-trivial");
     first = false;
   }
   if (effectProperties.GetFilterFrame(&isOK)) {
     if (!first) {
-      fprintf(aOutput, ", ");
+      fprintf_stderr(aOutput, ", ");
     }
-    fprintf(aOutput, "filter");
+    fprintf_stderr(aOutput, "filter");
     first = false;
   }
   if (effectProperties.GetMaskFrame(&isOK)) {
     if (!first) {
-      fprintf(aOutput, ", ");
+      fprintf_stderr(aOutput, ", ");
     }
-    fprintf(aOutput, "mask");
+    fprintf_stderr(aOutput, "mask");
   }
-  fprintf(aOutput, ")");
+  fprintf_stderr(aOutput, ")");
 }
 #endif
 

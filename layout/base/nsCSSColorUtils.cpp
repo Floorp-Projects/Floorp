@@ -16,7 +16,6 @@
 #define GREEN_LUMINOSITY      587
 #define BLUE_LUMINOSITY       114
 #define INTENSITY_FACTOR      25
-#define LIGHT_FACTOR          0
 #define LUMINOSITY_FACTOR     75
 
 #define MAX_COLOR             255
@@ -31,8 +30,6 @@
 
 #define LIGHT_GRAY NS_RGB(192, 192, 192)
 #define DARK_GRAY  NS_RGB(96, 96, 96)
-#define WHITE      NS_RGB(255, 255, 255)
-#define BLACK      NS_RGB(0, 0, 0)
 
 #define MAX_BRIGHTNESS  254
 #define MAX_DARKNESS     0
@@ -238,3 +235,25 @@ void NS_HSV2RGB(nscolor &aColor, uint16_t aHue, uint16_t aSat, uint16_t aValue,
   }
   aColor = NS_RGBA(r, g, b, aAlpha);
 }
+
+#undef RED_LUMINOSITY
+#undef GREEN_LUMINOSITY
+#undef BLUE_LUMINOSITY
+#undef INTENSITY_FACTOR
+#undef LUMINOSITY_FACTOR
+
+#undef MAX_COLOR
+#undef COLOR_DARK_THRESHOLD
+#undef COLOR_LIGHT_THRESHOLD
+
+#undef COLOR_LITE_BS_FACTOR
+#undef COLOR_LITE_TS_FACTOR
+
+#undef COLOR_DARK_BS_FACTOR
+#undef COLOR_DARK_TS_FACTOR
+
+#undef LIGHT_GRAY
+#undef DARK_GRAY
+
+#undef MAX_BRIGHTNESS
+#undef MAX_DARKNESS

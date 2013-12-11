@@ -34,6 +34,7 @@ const EVENTS = {
   FETCHED_SCOPES: "Debugger:FetchedScopes",
   FETCHED_VARIABLES: "Debugger:FetchedVariables",
   FETCHED_PROPERTIES: "Debugger:FetchedProperties",
+  FETCHED_BUBBLE_PROPERTIES: "Debugger:FetchedBubbleProperties",
   FETCHED_WATCH_EXPRESSIONS: "Debugger:FetchedWatchExpressions",
 
   // When a breakpoint has been added or removed on the debugger server.
@@ -75,6 +76,14 @@ const EVENTS = {
   LAYOUT_CHANGED: "Debugger:LayoutChanged"
 };
 
+// Descriptions for what a stack frame represents after the debugger pauses.
+const FRAME_TYPE = {
+  NORMAL: 0,
+  CONDITIONAL_BREAKPOINT_EVAL: 1,
+  WATCH_EXPRESSIONS_EVAL: 2,
+  PUBLIC_CLIENT_EVAL: 3
+};
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
@@ -86,9 +95,10 @@ Cu.import("resource:///modules/devtools/VariablesViewController.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
 const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
-const Editor = require("devtools/sourceeditor/editor");
 const promise = require("sdk/core/promise");
+const Editor = require("devtools/sourceeditor/editor");
 const DebuggerEditor = require("devtools/sourceeditor/debugger.js");
+const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Parser",
   "resource:///modules/devtools/Parser.jsm");
@@ -521,8 +531,7 @@ function StackFrames() {
 StackFrames.prototype = {
   get activeThread() DebuggerController.activeThread,
   currentFrameDepth: -1,
-  _isWatchExpressionsEvaluation: false,
-  _isConditionalBreakpointEvaluation: false,
+  _currentFrameDescription: FRAME_TYPE.NORMAL,
   _syncedWatchExpressions: null,
   _currentWatchExpressions: null,
   _currentBreakpointLocation: null,
@@ -558,6 +567,7 @@ StackFrames.prototype = {
     this.activeThread.removeListener("framescleared", this._onFramesCleared);
     this.activeThread.removeListener("blackboxchange", this._onBlackBoxChange);
     this.activeThread.removeListener("prettyprintchange", this._onPrettyPrintChange);
+    clearNamedTimeout("frames-cleared");
   },
 
   /**
@@ -611,10 +621,8 @@ StackFrames.prototype = {
    * Handler for the thread client's resumed notification.
    */
   _onResumed: function() {
-    DebuggerView.editor.clearDebugLocation();
-
     // Prepare the watch expression evaluation string for the next pause.
-    if (!this._isWatchExpressionsEvaluation) {
+    if (this._currentFrameDescription != FRAME_TYPE.WATCH_EXPRESSIONS_EVAL) {
       this._currentWatchExpressions = this._syncedWatchExpressions;
     }
   },
@@ -640,16 +648,13 @@ StackFrames.prototype = {
       // Make sure a breakpoint actually exists at the specified url and line.
       let breakpointPromise = DebuggerController.Breakpoints._getAdded(breakLocation);
       if (breakpointPromise) {
-        breakpointPromise.then(aBreakpointClient => {
-          if ("conditionalExpression" in aBreakpointClient) {
-            // Evaluating the current breakpoint's conditional expression will
-            // cause the stack frames to be cleared and active thread to pause,
-            // sending a 'clientEvaluated' packed and adding the frames again.
-            this.evaluate(aBreakpointClient.conditionalExpression, 0);
-            this._isConditionalBreakpointEvaluation = true;
-            waitForNextPause = true;
-          }
-        });
+        breakpointPromise.then(({ conditionalExpression: e }) => { if (e) {
+          // Evaluating the current breakpoint's conditional expression will
+          // cause the stack frames to be cleared and active thread to pause,
+          // sending a 'clientEvaluated' packed and adding the frames again.
+          this.evaluate(e, { depth: 0, meta: FRAME_TYPE.CONDITIONAL_BREAKPOINT_EVAL });
+          waitForNextPause = true;
+        }});
       }
     }
     // We'll get our evaluation of the current breakpoint's conditional
@@ -657,8 +662,8 @@ StackFrames.prototype = {
     if (waitForNextPause) {
       return;
     }
-    if (this._isConditionalBreakpointEvaluation) {
-      this._isConditionalBreakpointEvaluation = false;
+    if (this._currentFrameDescription == FRAME_TYPE.CONDITIONAL_BREAKPOINT_EVAL) {
+      this._currentFrameDescription = FRAME_TYPE.NORMAL;
       // If the breakpoint's conditional expression evaluation is falsy,
       // automatically resume execution.
       if (VariablesView.isFalsy({ value: this._currentEvaluation.return })) {
@@ -673,8 +678,7 @@ StackFrames.prototype = {
     if (watchExpressions) {
       // Evaluation causes the stack frames to be cleared and active thread to
       // pause, sending a 'clientEvaluated' packet and adding the frames again.
-      this.evaluate(watchExpressions, 0);
-      this._isWatchExpressionsEvaluation = true;
+      this.evaluate(watchExpressions, { depth: 0, meta: FRAME_TYPE.WATCH_EXPRESSIONS_EVAL });
       waitForNextPause = true;
     }
     // We'll get our evaluation of the current watch expressions the next time
@@ -682,8 +686,8 @@ StackFrames.prototype = {
     if (waitForNextPause) {
       return;
     }
-    if (this._isWatchExpressionsEvaluation) {
-      this._isWatchExpressionsEvaluation = false;
+    if (this._currentFrameDescription == FRAME_TYPE.WATCH_EXPRESSIONS_EVAL) {
+      this._currentFrameDescription = FRAME_TYPE.NORMAL;
       // If an error was thrown during the evaluation of the watch expressions,
       // then at least one expression evaluation could not be performed. So
       // remove the most recent watch expression and try again.
@@ -697,6 +701,11 @@ StackFrames.prototype = {
     // Make sure the debugger view panes are visible, then refill the frames.
     DebuggerView.showInstrumentsPane();
     this._refillFrames();
+
+    // No additional processing is necessary for this stack frame.
+    if (this._currentFrameDescription != FRAME_TYPE.NORMAL) {
+      this._currentFrameDescription = FRAME_TYPE.NORMAL;
+    }
   },
 
   /**
@@ -714,29 +723,34 @@ StackFrames.prototype = {
       let title = StackFrameUtils.getFrameTitle(frame);
       DebuggerView.StackFrames.addFrame(title, location, line, depth, isBlackBoxed);
     }
-    if (this.currentFrameDepth == -1) {
-      DebuggerView.StackFrames.selectedDepth = 0;
-    }
-    if (this.activeThread.moreFrames) {
-      DebuggerView.StackFrames.dirty = true;
-    }
+
+    DebuggerView.StackFrames.selectedDepth = Math.max(this.currentFrameDepth, 0);
+    DebuggerView.StackFrames.dirty = this.activeThread.moreFrames;
   },
 
   /**
    * Handler for the thread client's framescleared notification.
    */
   _onFramesCleared: function() {
-    this.currentFrameDepth = -1;
-    this._currentWatchExpressions = null;
-    this._currentBreakpointLocation = null;
-    this._currentEvaluation = null;
-    this._currentException = null;
-    this._currentReturnedValue = null;
+    switch (this._currentFrameDescription) {
+      case FRAME_TYPE.NORMAL:
+        this._currentEvaluation = null;
+        this._currentException = null;
+        this._currentReturnedValue = null;
+        break;
+      case FRAME_TYPE.CONDITIONAL_BREAKPOINT_EVAL:
+        this._currentBreakpointLocation = null;
+        break;
+      case FRAME_TYPE.WATCH_EXPRESSIONS_EVAL:
+        this._currentWatchExpressions = null;
+        break;
+    }
+
     // After each frame step (in, over, out), framescleared is fired, which
     // forces the UI to be emptied and rebuilt on framesadded. Most of the times
     // this is not necessary, and will result in a brief redraw flicker.
     // To avoid it, invalidate the UI only after a short time if necessary.
-    window.setTimeout(this._afterFramesCleared, FRAME_STEP_CLEAR_DELAY);
+    setNamedTimeout("frames-cleared", FRAME_STEP_CLEAR_DELAY, this._afterFramesCleared);
   },
 
   /**
@@ -744,6 +758,8 @@ StackFrames.prototype = {
    */
   _onBlackBoxChange: function() {
     if (this.activeThread.state == "paused") {
+      // Hack to avoid selecting the topmost frame after blackboxing a source.
+      this.currentFrameDepth = NaN;
       this._refillFrames();
     }
   },
@@ -765,6 +781,7 @@ StackFrames.prototype = {
     if (this.activeThread.cachedFrames.length) {
       return;
     }
+    DebuggerView.editor.clearDebugLocation();
     DebuggerView.StackFrames.empty();
     DebuggerView.Sources.unhighlightBreakpoint();
     DebuggerView.WatchExpressions.toggleContents(true);
@@ -779,10 +796,8 @@ StackFrames.prototype = {
    *
    * @param number aDepth
    *        The depth of the frame in the stack.
-   * @param boolean aDontSwitchSources
-   *        Flag on whether or not we want to switch the selected source.
    */
-  selectFrame: function(aDepth, aDontSwitchSources) {
+  selectFrame: function(aDepth) {
     // Make sure the frame at the specified depth exists first.
     let frame = this.activeThread.cachedFrames[this.currentFrameDepth = aDepth];
     if (!frame) {
@@ -795,15 +810,22 @@ StackFrames.prototype = {
       return;
     }
 
-    // Move the editor's caret to the proper url and line.
-    DebuggerView.setEditorLocation(where.url, where.line);
-    // Highlight the breakpoint at the specified url and line if it exists.
-    DebuggerView.Sources.highlightBreakpoint(where, { noEditorUpdate: true });
+    // Don't change the editor's location if the execution was paused by a
+    // public client evaluation. This is useful for adding overlays on
+    // top of the editor, like a variable inspection popup.
+    if (this._currentFrameDescription != FRAME_TYPE.PUBLIC_CLIENT_EVAL) {
+      // Move the editor's caret to the proper url and line.
+      DebuggerView.setEditorLocation(where.url, where.line);
+      // Highlight the breakpoint at the specified url and line if it exists.
+      DebuggerView.Sources.highlightBreakpoint(where, { noEditorUpdate: true });
+    }
+
     // Don't display the watch expressions textbox inputs in the pane.
     DebuggerView.WatchExpressions.toggleContents(false);
-    // Start recording any added variables or properties in any scope.
+
+    // Start recording any added variables or properties in any scope and
+    // clear existing scopes to create each one dynamically.
     DebuggerView.Variables.createHierarchy();
-    // Clear existing scopes and create each one dynamically.
     DebuggerView.Variables.empty();
 
     // If watch expressions evaluation results are available, create a scope
@@ -870,14 +892,42 @@ StackFrames.prototype = {
    *
    * @param string aExpression
    *        The expression to evaluate.
-   * @param number aFrame [optional]
-   *        The frame depth used for evaluation.
+   * @param object aOptions [optional]
+   *        Additional options for this client evaluation:
+   *          - depth: the frame depth used for evaluation, 0 being the topmost.
+   *          - meta: some meta-description for what this evaluation represents.
+   * @return object
+   *         A promise that is resolved when the evaluation finishes,
+   *         or rejected if there was no stack frame available or some
+   *         other error occurred.
    */
-  evaluate: function(aExpression, aFrame = this.currentFrameDepth) {
-    let frame = this.activeThread.cachedFrames[aFrame];
-    if (frame) {
-      this.activeThread.eval(frame.actor, aExpression);
+  evaluate: function(aExpression, aOptions = {}) {
+    let depth = "depth" in aOptions ? aOptions.depth : this.currentFrameDepth;
+    let frame = this.activeThread.cachedFrames[depth];
+    if (frame == null) {
+      return promise.reject(new Error("No stack frame available."));
     }
+
+    let deferred = promise.defer();
+
+    this.activeThread.addOneTimeListener("paused", (aEvent, aPacket) => {
+      let { type, frameFinished } = aPacket.why;
+      if (type == "clientEvaluated") {
+        if (!("terminated" in frameFinished)) {
+          deferred.resolve(frameFinished);
+        } else {
+          deferred.reject(new Error("The execution was abruptly terminated."));
+        }
+      } else {
+        deferred.reject(new Error("Active thread paused unexpectedly."));
+      }
+    });
+
+    let meta = "meta" in aOptions ? aOptions.meta : FRAME_TYPE.PUBLIC_CLIENT_EVAL;
+    this._currentFrameDescription = meta;
+    this.activeThread.eval(frame.actor, aExpression);
+
+    return deferred.promise;
   },
 
   /**
@@ -990,6 +1040,7 @@ StackFrames.prototype = {
       this._syncedWatchExpressions =
         this._currentWatchExpressions = null;
     }
+
     this.currentFrameDepth = -1;
     this._onFrames();
   }
@@ -1177,7 +1228,7 @@ SourceScripts.prototype = {
    *          A promize that resolves to [aSource, isBlackBoxed] or rejects to
    *          [aSource, error].
    */
-  blackBox: function(aSource, aBlackBoxFlag) {
+  setBlackBoxing: function(aSource, aBlackBoxFlag) {
     const sourceClient = this.activeThread.source(aSource);
     const deferred = promise.defer();
 
@@ -1231,11 +1282,9 @@ SourceScripts.prototype = {
         // Revert the rejected promise from the cache, so that the original
         // source's text may be shown when the source is selected.
         this._cache.set(aSource.url, textPromise);
-
         deferred.reject([aSource, message || error]);
         return;
       }
-
       deferred.resolve([aSource, text]);
     };
 
@@ -1404,10 +1453,10 @@ EventListeners.prototype = {
         return;
       }
 
-      promise.all(aResponse.listeners.map(listener => {
+      let outstandingListenersDefinitionSite = aResponse.listeners.map(aListener => {
         const deferred = promise.defer();
 
-        gThreadClient.pauseGrip(listener.function).getDefinitionSite(aResponse => {
+        gThreadClient.pauseGrip(aListener.function).getDefinitionSite(aResponse => {
           if (aResponse.error) {
             const msg = "Error getting function definition site: " + aResponse.message;
             DevToolsUtils.reportException("scheduleEventListenersFetch", msg);
@@ -1415,13 +1464,15 @@ EventListeners.prototype = {
             return;
           }
 
-          listener.function.url = aResponse.url;
-          deferred.resolve(listener);
+          aListener.function.url = aResponse.url;
+          deferred.resolve(aListener);
         });
 
         return deferred.promise;
-      })).then(listeners => {
-        this._onEventListeners(listeners);
+      });
+
+      promise.all(outstandingListenersDefinitionSite).then(aListeners => {
+        this._onEventListeners(aListeners);
 
         // Notify that event listeners were fetched and shown in the view,
         // and callback to resume the active thread if necessary.

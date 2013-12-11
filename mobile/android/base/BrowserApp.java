@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
@@ -14,6 +15,7 @@ import org.mozilla.gecko.favicons.LoadFaviconTask;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
+import org.mozilla.gecko.gfx.LayerMarginsAnimator;
 import org.mozilla.gecko.health.BrowserHealthRecorder;
 import org.mozilla.gecko.health.BrowserHealthReporter;
 import org.mozilla.gecko.home.BrowserSearch;
@@ -71,8 +73,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.animation.Interpolator;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+import android.widget.ViewFlipper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -88,12 +92,11 @@ abstract public class BrowserApp extends GeckoApp
                                             BrowserSearch.OnSearchListener,
                                             BrowserSearch.OnEditSuggestionListener,
                                             HomePager.OnNewTabsListener,
-                                            OnUrlOpenListener {
+                                            OnUrlOpenListener,
+                                            ActionModeCompat.Presenter {
     private static final String LOGTAG = "GeckoBrowserApp";
 
     private static final String PREF_CHROME_DYNAMICTOOLBAR = "browser.chrome.dynamictoolbar";
-
-    private static final String ABOUT_HOME = "about:home";
 
     private static final int TABS_ANIMATION_DURATION = 450;
 
@@ -111,14 +114,17 @@ abstract public class BrowserApp extends GeckoApp
     private BrowserSearch mBrowserSearch;
     private View mBrowserSearchContainer;
 
+    public ViewFlipper mViewFlipper;
+    public ActionModeCompatView mActionBar;
     private BrowserToolbar mBrowserToolbar;
     private HomePager mHomePager;
     private View mHomePagerContainer;
     protected Telemetry.Timer mAboutHomeStartupTimer = null;
+    private ActionModeCompat mActionMode;
 
     private static final int GECKO_TOOLS_MENU = -1;
     private static final int ADDON_MENU_OFFSET = 1000;
-    private class MenuItemInfo {
+    private static class MenuItemInfo {
         public int id;
         public String label;
         public String icon;
@@ -127,6 +133,7 @@ abstract public class BrowserApp extends GeckoApp
         public boolean enabled = true;
         public boolean visible = true;
         public int parent;
+        public boolean added = false;    // So we can re-add after a locale change.
     }
 
     // The types of guest mdoe dialogs we show
@@ -191,6 +198,16 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        if (tab == null) {
+            // Only RESTORED is allowed a null tab: it's the only event that
+            // isn't tied to a specific tab.
+            if (msg != Tabs.TabEvents.RESTORED) {
+                throw new IllegalArgumentException("onTabChanged:" + msg + " must specify a tab.");
+            }
+            return;
+        }
+
+        Log.d(LOGTAG, "BrowserApp.onTabChanged: " + tab.getId() + ": " + msg);
         switch(msg) {
             case LOCATION_CHANGE:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
@@ -265,7 +282,7 @@ abstract public class BrowserApp extends GeckoApp
             switch (keyCode) {
                 case KeyEvent.KEYCODE_BUTTON_Y:
                     // Toggle/focus the address bar on gamepad-y button.
-                    if (mBrowserToolbar.isVisible()) {
+                    if (mViewFlipper.getVisibility() == View.VISIBLE) {
                         if (isDynamicToolbarEnabled() && !isHomePagerVisible()) {
                             if (mLayerView != null) {
                                 mLayerView.getLayerMarginsAnimator().hideMargins(false);
@@ -412,7 +429,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        mAboutHomeStartupTimer = new Telemetry.Timer("FENNEC_STARTUP_TIME_ABOUTHOME");
+        mAboutHomeStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_ABOUTHOME");
 
         final Intent intent = getIntent();
 
@@ -424,6 +441,9 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         super.onCreate(savedInstanceState);
+
+        mViewFlipper = (ViewFlipper) findViewById(R.id.browser_actionbar);
+        mActionBar = (ActionModeCompatView) findViewById(R.id.actionbar);
 
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
         if (Intent.ACTION_VIEW.equals(intent.getAction())) {
@@ -602,6 +622,11 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
+        if (mActionMode != null) {
+            endActionModeCompat();
+            return;
+        }
+
         super.onBackPressed();
     }
 
@@ -660,7 +685,7 @@ abstract public class BrowserApp extends GeckoApp
                 mLayerView.getLayerClient().setOnMetricsChangedListener(this);
             }
             setToolbarMargin(0);
-            mHomePagerContainer.setPadding(0, mBrowserToolbar.getHeight(), 0, 0);
+            mHomePagerContainer.setPadding(0, mViewFlipper.getHeight(), 0, 0);
         } else {
             // Immediately show the toolbar when disabling the dynamic
             // toolbar.
@@ -668,8 +693,8 @@ abstract public class BrowserApp extends GeckoApp
                 mLayerView.getLayerClient().setOnMetricsChangedListener(null);
             }
             mHomePagerContainer.setPadding(0, 0, 0, 0);
-            if (mBrowserToolbar != null) {
-                mBrowserToolbar.scrollTo(0, 0);
+            if (mViewFlipper != null) {
+                ViewHelper.setTranslationY(mViewFlipper, 0);
             }
         }
 
@@ -680,8 +705,8 @@ abstract public class BrowserApp extends GeckoApp
         return mDynamicToolbarEnabled && !mAccessibilityEnabled;
     }
 
-    private boolean isAboutHome(Tab tab) {
-        return TextUtils.equals(ABOUT_HOME, tab.getURL());
+    private static boolean isAboutHome(final Tab tab) {
+        return AboutPages.isAboutHome(tab.getURL());
     }
 
     @Override
@@ -853,9 +878,6 @@ abstract public class BrowserApp extends GeckoApp
     protected void initializeChrome() {
         super.initializeChrome();
 
-        mBrowserToolbar.updateBackButton(false);
-        mBrowserToolbar.updateForwardButton(false);
-
         mDoorHangerPopup.setAnchor(mBrowserToolbar.getDoorHangerAnchor());
 
         // Listen to margin changes to position the toolbar correctly
@@ -871,15 +893,18 @@ abstract public class BrowserApp extends GeckoApp
 
     private void shareCurrentUrl() {
         Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab == null)
-          return;
+        if (tab == null) {
+            return;
+        }
 
         String url = tab.getURL();
-        if (url == null)
+        if (url == null) {
             return;
+        }
 
-        if (ReaderModeUtils.isAboutReader(url))
+        if (AboutPages.isAboutReader(url)) {
             url = ReaderModeUtils.getUrlFromAboutReader(url);
+        }
 
         GeckoAppShell.openUriExternal(url, "text/plain", "", "",
                                       Intent.ACTION_SEND, tab.getDisplayTitle());
@@ -902,7 +927,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onMetricsChanged(ImmutableViewportMetrics aMetrics) {
-        if (isHomePagerVisible() || mBrowserToolbar == null) {
+        if (isHomePagerVisible() || mViewFlipper == null) {
             return;
         }
 
@@ -911,7 +936,7 @@ abstract public class BrowserApp extends GeckoApp
         if (aMetrics.getPageHeight() <= aMetrics.getHeight()) {
             if (mDynamicToolbarCanScroll) {
                 mDynamicToolbarCanScroll = false;
-                if (!mBrowserToolbar.isVisible()) {
+                if (mViewFlipper.getVisibility() != View.VISIBLE) {
                     ThreadUtils.postToUiThread(new Runnable() {
                         public void run() {
                             mLayerView.getLayerMarginsAnimator().showMargins(false);
@@ -923,11 +948,12 @@ abstract public class BrowserApp extends GeckoApp
             mDynamicToolbarCanScroll = true;
         }
 
-        final View toolbarLayout = mBrowserToolbar;
+        final View toolbarLayout = mViewFlipper;
         final int marginTop = Math.round(aMetrics.marginTop);
         ThreadUtils.postToUiThread(new Runnable() {
             public void run() {
-                toolbarLayout.scrollTo(0, toolbarLayout.getHeight() - marginTop);
+                ViewHelper.setTranslationY(toolbarLayout, marginTop - toolbarLayout.getHeight());
+
                 if (mDoorHangerPopup.isShowing()) {
                     mDoorHangerPopup.updatePopup();
                 }
@@ -958,8 +984,8 @@ abstract public class BrowserApp extends GeckoApp
 
     public void refreshToolbarHeight() {
         int height = 0;
-        if (mBrowserToolbar != null) {
-            height = mBrowserToolbar.getHeight();
+        if (mViewFlipper != null) {
+            height = mViewFlipper.getHeight();
         }
 
         if (!isDynamicToolbarEnabled() || isHomePagerVisible()) {
@@ -992,9 +1018,9 @@ abstract public class BrowserApp extends GeckoApp
             @Override
             public void run() {
                 if (aShow) {
-                    mBrowserToolbar.show();
+                    mViewFlipper.setVisibility(View.VISIBLE);
                 } else {
-                    mBrowserToolbar.hide();
+                    mViewFlipper.setVisibility(View.GONE);
                     if (hasTabsSideBar()) {
                         hideTabs();
                     }
@@ -1010,8 +1036,8 @@ abstract public class BrowserApp extends GeckoApp
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                mBrowserToolbar.show();
-                mBrowserToolbar.requestFocusFromTouch();
+                mViewFlipper.setVisibility(View.VISIBLE);
+                mViewFlipper.requestFocusFromTouch();
             }
         });
     }
@@ -1211,12 +1237,12 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void addTab() {
-        Tabs.getInstance().loadUrl("about:home", Tabs.LOADURL_NEW_TAB);
+        super.loadHomePage(Tabs.LOADURL_NEW_TAB);
     }
 
     @Override
     public void addPrivateTab() {
-        Tabs.getInstance().loadUrl("about:privatebrowsing", Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
+        Tabs.getInstance().loadUrl(AboutPages.PRIVATEBROWSING, Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
     }
 
     @Override
@@ -1383,7 +1409,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void openReadingList() {
-        Tabs.getInstance().loadUrl(ABOUT_HOME, Tabs.LOADURL_READING_LIST);
+        super.loadHomePage(Tabs.LOADURL_READING_LIST);
     }
 
     /* Favicon stuff. */
@@ -1410,10 +1436,13 @@ abstract public class BrowserApp extends GeckoApp
     private void maybeCancelFaviconLoad(Tab tab) {
         int faviconLoadId = tab.getFaviconLoadId();
 
-        // Cancel pending favicon load task
-        Favicons.cancelFaviconLoad(faviconLoadId);
+        if (Favicons.NOT_LOADING == faviconLoadId) {
+            return;
+        }
 
-        // Reset favicon load state
+        // Cancel load task and reset favicon load state if it wasn't already
+        // in NOT_LOADING state.
+        Favicons.cancelFaviconLoad(faviconLoadId);
         tab.setFaviconLoadId(Favicons.NOT_LOADING);
     }
 
@@ -1608,6 +1637,20 @@ abstract public class BrowserApp extends GeckoApp
         showHomePagerWithAnimator(page, null);
     }
 
+    @Override
+    public void onLocaleReady(final String locale) {
+        super.onLocaleReady(locale);
+        if (mHomePager != null) {
+            // Blow it away and rebuild it with the right strings.
+            mHomePager.redisplay(getSupportFragmentManager());
+        }
+
+        if (mMenu != null) {
+            mMenu.clear();
+            onCreateOptionsMenu(mMenu);
+        }
+    }
+
     private void showHomePagerWithAnimator(HomePager.Page page, PropertyAnimator animator) {
         if (isHomePagerVisible()) {
             return;
@@ -1676,7 +1719,7 @@ abstract public class BrowserApp extends GeckoApp
      * if a new page is not being loaded.
      */
     private void hideHomePager(final String url) {
-        if (!isHomePagerVisible() || TextUtils.equals(url, ABOUT_HOME)) {
+        if (!isHomePagerVisible() || AboutPages.isAboutHome(url)) {
             return;
         }
 
@@ -1780,7 +1823,7 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
-    private Menu findParentMenu(Menu menu, MenuItem item) {
+    private static Menu findParentMenu(Menu menu, MenuItem item) {
         final int itemId = item.getItemId();
 
         final int count = (menu != null) ? menu.size() : 0;
@@ -1800,54 +1843,58 @@ abstract public class BrowserApp extends GeckoApp
         return null;
     }
 
-    private void addAddonMenuItem(final MenuItemInfo info) {
-        if (mMenu == null) {
-            if (mAddonMenuItemsCache == null)
-                mAddonMenuItemsCache = new Vector<MenuItemInfo>();
-
-            mAddonMenuItemsCache.add(info);
-            return;
-        }
-
-        Menu menu;
+    /**
+     * Add the provided item to the provided menu, which should be
+     * the root (mMenu).
+     */
+    private void addAddonMenuItemToMenu(final Menu menu, final MenuItemInfo info) {
+        info.added = true;
+        
+        final Menu destination;
         if (info.parent == 0) {
-            menu = mMenu;
+            destination = menu;
         } else if (info.parent == GECKO_TOOLS_MENU) {
-            MenuItem tools = mMenu.findItem(R.id.tools);
-            menu = tools != null ? tools.getSubMenu() : mMenu;
+            MenuItem tools = menu.findItem(R.id.tools);
+            destination = tools != null ? tools.getSubMenu() : menu;
         } else {
-            MenuItem parent = mMenu.findItem(info.parent);
-            if (parent == null)
+            MenuItem parent = menu.findItem(info.parent);
+            if (parent == null) {
                 return;
+            }
 
-            Menu parentMenu = findParentMenu(mMenu, parent);
+            Menu parentMenu = findParentMenu(menu, parent);
 
             if (!parent.hasSubMenu()) {
                 parentMenu.removeItem(parent.getItemId());
-                menu = parentMenu.addSubMenu(Menu.NONE, parent.getItemId(), Menu.NONE, parent.getTitle());
-                if (parent.getIcon() != null)
-                    ((SubMenu) menu).getItem().setIcon(parent.getIcon());
+                destination = parentMenu.addSubMenu(Menu.NONE, parent.getItemId(), Menu.NONE, parent.getTitle());
+                if (parent.getIcon() != null) {
+                    ((SubMenu) destination).getItem().setIcon(parent.getIcon());
+                }
             } else {
-                menu = parent.getSubMenu();
+                destination = parent.getSubMenu();
             }
         }
 
-        MenuItem item = menu.add(Menu.NONE, info.id, Menu.NONE, info.label);
+        MenuItem item = destination.add(Menu.NONE, info.id, Menu.NONE, info.label);
+
         item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                Log.i(LOGTAG, "menu item clicked");
+                Log.i(LOGTAG, "Menu item clicked");
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Menu:Clicked", Integer.toString(info.id - ADDON_MENU_OFFSET)));
                 return true;
             }
         });
 
-        if (info.icon != null) {
+        if (info.icon == null) {
+            item.setIcon(R.drawable.ic_menu_addons_filler);
+        } else {
             final int id = info.id;
             BitmapUtils.getDrawable(this, info.icon, new BitmapUtils.BitmapLoader() {
                 @Override
                 public void onBitmapFound(Drawable d) {
-                    MenuItem item = mMenu.findItem(id);
+                    // TODO: why do we re-find the item?
+                    MenuItem item = destination.findItem(id);
                     if (item == null) {
                         return;
                     }
@@ -1858,14 +1905,30 @@ abstract public class BrowserApp extends GeckoApp
                     item.setIcon(d);
                 }
             });
-        } else {
-            item.setIcon(R.drawable.ic_menu_addons_filler);
         }
 
         item.setCheckable(info.checkable);
         item.setChecked(info.checked);
         item.setEnabled(info.enabled);
         item.setVisible(info.visible);
+    }
+
+    private void addAddonMenuItem(final MenuItemInfo info) {
+        if (mAddonMenuItemsCache == null) {
+            mAddonMenuItemsCache = new Vector<MenuItemInfo>();
+        }
+
+        // Mark it as added if the menu was ready.
+        info.added = (mMenu != null);
+
+        // Always cache so we can rebuild after a locale switch.
+        mAddonMenuItemsCache.add(info);
+
+        if (mMenu == null) {
+            return;
+        }
+
+        addAddonMenuItemToMenu(mMenu, info);
     }
 
     private void removeAddonMenuItem(int id) {
@@ -1897,13 +1960,15 @@ abstract public class BrowserApp extends GeckoApp
                     item.checked = options.optBoolean("checked", item.checked);
                     item.enabled = options.optBoolean("enabled", item.enabled);
                     item.visible = options.optBoolean("visible", item.visible);
+                    item.added = (mMenu != null);
                     break;
                 }
             }
         }
 
-        if (mMenu == null)
+        if (mMenu == null) {
             return;
+        }
 
         MenuItem menuItem = mMenu.findItem(id);
         if (menuItem != null) {
@@ -1917,22 +1982,23 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        // Sets mMenu = menu.
         super.onCreateOptionsMenu(menu);
 
         // Inform the menu about the action-items bar. 
-        if (menu instanceof GeckoMenu && HardwareUtils.isTablet())
+        if (menu instanceof GeckoMenu &&
+            HardwareUtils.isTablet()) {
             ((GeckoMenu) menu).setActionItemBarPresenter(mBrowserToolbar);
+        }
 
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.browser_app_menu, mMenu);
 
-        // Add add-on menu items if any.
+        // Add add-on menu items, if any exist.
         if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
             for (MenuItemInfo item : mAddonMenuItemsCache) {
-                 addAddonMenuItem(item);
+                addAddonMenuItemToMenu(mMenu, item);
             }
-
-            mAddonMenuItemsCache.clear();
         }
 
         // Action providers are available only ICS+.
@@ -1974,13 +2040,13 @@ abstract public class BrowserApp extends GeckoApp
             @Override
             public void run() {
                 if (fullscreen) {
-                    mBrowserToolbar.hide();
+                    mViewFlipper.setVisibility(View.GONE);
                     if (isDynamicToolbarEnabled()) {
                         mLayerView.getLayerMarginsAnimator().hideMargins(true);
                         mLayerView.getLayerMarginsAnimator().setMaxMargins(0, 0, 0, 0);
                     }
                 } else {
-                    mBrowserToolbar.show();
+                    mViewFlipper.setVisibility(View.VISIBLE);
                     if (isDynamicToolbarEnabled()) {
                         mLayerView.getLayerMarginsAnimator().showMargins(true);
                         mLayerView.getLayerMarginsAnimator().setMaxMargins(0, mToolbarHeight, 0, 0);
@@ -2022,7 +2088,7 @@ abstract public class BrowserApp extends GeckoApp
             return true;
         }
 
-        bookmark.setEnabled(!tab.getURL().startsWith("about:reader"));
+        bookmark.setEnabled(!AboutPages.isAboutReader(tab.getURL()));
         bookmark.setCheckable(true);
         bookmark.setChecked(tab.isBookmark());
         bookmark.setIcon(tab.isBookmark() ? R.drawable.ic_menu_bookmark_remove : R.drawable.ic_menu_bookmark_add);
@@ -2032,10 +2098,11 @@ abstract public class BrowserApp extends GeckoApp
         desktopMode.setIcon(tab.getDesktopMode() ? R.drawable.ic_menu_desktop_mode_on : R.drawable.ic_menu_desktop_mode_off);
 
         String url = tab.getURL();
-        if (ReaderModeUtils.isAboutReader(url)) {
+        if (AboutPages.isAboutReader(url)) {
             String urlFromReader = ReaderModeUtils.getUrlFromAboutReader(url);
-            if (urlFromReader != null)
+            if (urlFromReader != null) {
                 url = urlFromReader;
+            }
         }
 
         // Disable share menuitem for about:, chrome:, file:, and resource: URIs
@@ -2091,11 +2158,11 @@ abstract public class BrowserApp extends GeckoApp
             }
         }
 
-        // Disable save as PDF for about:home and xul pages
-        saveAsPDF.setEnabled(!(tab.getURL().equals("about:home") ||
+        // Disable save as PDF for about:home and xul pages.
+        saveAsPDF.setEnabled(!(isAboutHome(tab) ||
                                tab.getContentType().equals("application/vnd.mozilla.xul+xml")));
 
-        // Disable find in page for about:home, since it won't work on Java content
+        // Disable find in page for about:home, since it won't work on Java content.
         findInPage.setEnabled(!isAboutHome(tab));
 
         charEncoding.setVisible(GeckoPreferences.getCharEncodingState());
@@ -2174,17 +2241,17 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         if (itemId == R.id.addons) {
-            Tabs.getInstance().loadUrlInTab("about:addons");
-            return true;
-        }
-
-        if (itemId == R.id.downloads) {
-            Tabs.getInstance().loadUrlInTab("about:downloads");
+            Tabs.getInstance().loadUrlInTab(AboutPages.ADDONS);
             return true;
         }
 
         if (itemId == R.id.apps) {
-            Tabs.getInstance().loadUrlInTab("about:apps");
+            Tabs.getInstance().loadUrlInTab(AboutPages.APPS);
+            return true;
+        }
+
+        if (itemId == R.id.downloads) {
+            Tabs.getInstance().loadUrlInTab(AboutPages.DOWNLOADS);
             return true;
         }
 
@@ -2454,11 +2521,53 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         if (AppConstants.MOZ_UPDATER) {
-            Tabs.getInstance().loadUrlInTab("about:");
+            Tabs.getInstance().loadUrlInTab(AboutPages.UPDATER);
             return true;
         }
 
         Log.w(LOGTAG, "No candidate updater found; ignoring launch request.");
         return false;
+    }
+
+    /* Implementing ActionModeCompat.Presenter */
+    @Override
+    public void startActionModeCompat(final ActionModeCompat.Callback callback) {
+        // If actionMode is null, we're not currently showing one. Flip to the action mode view
+        if (mActionMode == null) {
+            mViewFlipper.showNext();
+            LayerMarginsAnimator margins = mLayerView.getLayerMarginsAnimator();
+
+            // If the toolbar is dynamic and not currently showing, just slide it in
+            if (isDynamicToolbarEnabled() && !margins.areMarginsShown()) {
+                margins.setMaxMargins(0, mViewFlipper.getHeight(), 0, 0);
+                margins.showMargins(false);
+            } else {
+                // Otherwise, we animate the actionbar itself
+                mActionBar.animateIn();
+            }
+
+            margins.setMarginsPinned(true);
+        } else {
+            // Otherwise, we're already showing an action mode. Just finish it and show the new one
+            mActionMode.finish();
+        }
+
+        mActionMode = new ActionModeCompat(BrowserApp.this, callback, mActionBar);
+        if (callback.onCreateActionMode(mActionMode, mActionMode.getMenu())) {
+            mActionMode.invalidate();
+        }
+    }
+
+    /* Implementing ActionModeCompat.Presenter */
+    @Override
+    public void endActionModeCompat() {
+        if (mActionMode == null) {
+            return;
+        }
+
+        mActionMode.finish();
+        mActionMode = null;
+        mLayerView.getLayerMarginsAnimator().setMarginsPinned(false);
+        mViewFlipper.showPrevious();
     }
 }

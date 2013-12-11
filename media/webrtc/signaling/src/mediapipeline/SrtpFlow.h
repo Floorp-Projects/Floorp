@@ -52,7 +52,7 @@ class SrtpFlow {
 
 
  private:
-  SrtpFlow() : session_(NULL) {}
+  SrtpFlow() : session_(nullptr) {}
 
   nsresult CheckInputs(bool protect, void *in, int in_len,
                        int max_len, int *out_len);

@@ -82,6 +82,9 @@
         <item name="topSitesGridViewStyle">@style/Widget.TopSitesGridView</item>
         <item name="topSitesThumbnailViewStyle">@style/Widget.TopSitesThumbnailView</item>
         <item name="homeListViewStyle">@style/Widget.HomeListView</item>
+        <item name="menuItemDefaultStyle">@style/Widget.MenuItemDefault</item>
+        <item name="menuItemActionBarStyle">@style/Widget.MenuItemActionBar</item>
+        <item name="menuItemActionModeStyle">@style/GeckoActionBar.Button</item>
     </style>
 
     <style name="Gecko.Preferences" parent="GeckoPreferencesBase"/>

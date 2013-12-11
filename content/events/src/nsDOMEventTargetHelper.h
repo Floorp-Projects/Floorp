@@ -17,9 +17,14 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/EventTarget.h"
 
+class JSCompartment;
+namespace mozilla {
+class ErrorResult;
+}
+
 #define NS_DOMEVENTTARGETHELPER_IID \
-{ 0xda0e6d40, 0xc17b, 0x4937, \
-  { 0x8e, 0xa2, 0x99, 0xca, 0x1c, 0x81, 0xea, 0xbe } }
+{ 0xa28385c6, 0x9451, 0x4d7e, \
+  { 0xa3, 0xdd, 0xf4, 0xb6, 0x87, 0x2f, 0xa4, 0x76 } }
 
 class nsDOMEventTargetHelper : public mozilla::dom::EventTarget
 {
@@ -125,6 +130,15 @@ public:
   virtual void DisconnectFromOwner();                   
   nsIGlobalObject* GetParentObject() const { return mParentObject; }
   bool HasOrHasHadOwner() { return mHasOrHasHadOwnerWindow; }
+
+  virtual void EventListenerAdded(nsIAtom* aType) MOZ_OVERRIDE;
+  virtual void EventListenerRemoved(nsIAtom* aType) MOZ_OVERRIDE;
+  virtual void EventListenerWasAdded(const nsAString& aType,
+                                     mozilla::ErrorResult& aRv,
+                                     JSCompartment* aCompartment = nullptr) {}
+  virtual void EventListenerWasRemoved(const nsAString& aType,
+                                       mozilla::ErrorResult& aRv,
+                                       JSCompartment* aCompartment = nullptr) {}
 protected:
   nsresult WantsUntrusted(bool* aRetVal);
 

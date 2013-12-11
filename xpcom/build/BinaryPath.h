@@ -22,7 +22,7 @@ public:
 #ifdef XP_WIN
   static nsresult Get(const char *argv0, char aResult[MAXPATHLEN])
   {
-    PRUnichar wide_path[MAXPATHLEN];
+    wchar_t wide_path[MAXPATHLEN];
     nsresult rv = GetW(argv0, wide_path);
     if (NS_FAILED(rv))
       return rv;
@@ -32,7 +32,7 @@ public:
   }
 
 private:
-  static nsresult GetW(const char *argv0, PRUnichar aResult[MAXPATHLEN])
+  static nsresult GetW(const char *argv0, wchar_t aResult[MAXPATHLEN])
   {
     if (::GetModuleFileNameW(0, aResult, MAXPATHLEN))
       return NS_OK;
@@ -138,7 +138,7 @@ public:
   {
     nsCOMPtr<nsIFile> lf;
 #ifdef XP_WIN
-    PRUnichar exePath[MAXPATHLEN];
+    wchar_t exePath[MAXPATHLEN];
     nsresult rv = GetW(argv0, exePath);
 #else
     char exePath[MAXPATHLEN];

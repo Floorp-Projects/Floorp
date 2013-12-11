@@ -186,6 +186,7 @@
           if (!this._statusPanel) {
             this._statusPanel = document.createElementNS(this.namespaceURI, "statuspanel");
             this._statusPanel.setAttribute("inactive", "true");
+            this._statusPanel.setAttribute("layer", "true");
             this._appendStatusPanel();
           }
           return this._statusPanel;
@@ -705,9 +706,15 @@
               let topLevel = aWebProgress.isTopLevel;
 
               if (topLevel) {
-                // The document loaded correctly, clear the value if we should
+                // If userTypedClear > 0, the document loaded correctly and we should be
+                // clearing the user typed value. We also need to clear the typed value
+                // if the document failed to load, to make sure the urlbar reflects the
+                // failed URI (particularly for SSL errors). However, don't clear the value
+                // if the error page's URI is about:blank, because that causes complete
+                // loss of urlbar contents for invalid URI errors (see bug 867957).
                 if (this.mBrowser.userTypedClear > 0 ||
-                    (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE))
+                    ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
+                     aLocation.spec != "about:blank"))
                   this.mBrowser.userTypedValue = null;
 
                 // Clear out the missing plugins list since it's related to the
@@ -1243,7 +1250,6 @@
           <![CDATA[
             var aFromExternal;
             var aRelatedToCurrent;
-            var aIsUTF8;
             var aDisableMCB;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
@@ -1256,7 +1262,6 @@
               aAllowThirdPartyFixup = params.allowThirdPartyFixup;
               aFromExternal         = params.fromExternal;
               aRelatedToCurrent     = params.relatedToCurrent;
-              aIsUTF8               = params.isUTF8;
               aDisableMCB           = params.disableMCB;
             }
 
@@ -1271,7 +1276,6 @@
                                   allowThirdPartyFixup: aAllowThirdPartyFixup,
                                   fromExternal: aFromExternal,
                                   relatedToCurrent: aRelatedToCurrent,
-                                  isUTF8: aIsUTF8,
                                   disableMCB: aDisableMCB});
             if (!bgLoad)
               this.selectedTab = tab;
@@ -1420,7 +1424,6 @@
             var aFromExternal;
             var aRelatedToCurrent;
             var aSkipAnimation;
-            var aIsUTF8;
             var aDisableMCB;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
@@ -1434,7 +1437,6 @@
               aFromExternal         = params.fromExternal;
               aRelatedToCurrent     = params.relatedToCurrent;
               aSkipAnimation        = params.skipAnimation;
-              aIsUTF8               = params.isUTF8;
               aDisableMCB           = params.disableMCB;
             }
 
@@ -1445,11 +1447,6 @@
             var t = document.createElementNS(NS_XUL, "tab");
 
             var uriIsAboutBlank = !aURI || aURI == "about:blank";
-
-            if (!aURI || isBlankPageURL(aURI))
-              t.setAttribute("label", this.mStringBundle.getString("tabs.emptyTabTitle"));
-            else
-              t.setAttribute("label", aURI);
 
             t.setAttribute("crop", "end");
             t.setAttribute("onerror", "this.removeAttribute('image');");
@@ -1557,6 +1554,14 @@
             // initialized by this point.
             this.mPanelContainer.appendChild(notificationbox);
 
+            // We've waited until the tab is in the DOM to set the label. This
+            // allows the TabLabelModified event to be properly dispatched.
+            if (!aURI || isBlankPageURL(aURI)) {
+              t.label = this.mStringBundle.getString("tabs.emptyTabTitle");
+            } else {
+              t.label = aURI;
+            }
+
             this.tabContainer.updateVisibility();
 
             // wire up a progress listener for the new browser object.
@@ -1600,8 +1605,6 @@
                 flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
               if (aFromExternal)
                 flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
-              if (aIsUTF8)
-                flags |= Ci.nsIWebNavigation.LOAD_FLAGS_URI_IS_UTF8;
               if (aDisableMCB)
                 flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT;
               try {
@@ -3344,8 +3347,7 @@
           this._closeWindowWithLastTab = Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab");
 
           var tab = this.firstChild;
-          tab.setAttribute("label",
-                           this.tabbrowser.mStringBundle.getString("tabs.emptyTabTitle"));
+          tab.label = this.tabbrowser.mStringBundle.getString("tabs.emptyTabTitle");
           tab.setAttribute("crop", "end");
           tab.setAttribute("onerror", "this.removeAttribute('image');");
           this.adjustTabstrip();
@@ -4087,41 +4089,30 @@
             return;
           }
 
-          let paints = {};
           let intervals = window.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIDOMWindowUtils)
-                                .stopFrameTimeRecording(aTab._recordingHandle, paints);
+                                .stopFrameTimeRecording(aTab._recordingHandle);
           delete aTab._recordingHandle;
-          paints = paints.value; // The result array itself.
           let frameCount = intervals.length;
 
           if (this._tabAnimationLoggingEnabled) {
-            let msg = "Tab " + (aTab.closing ? "close" : "open") + " (Frame-interval / paint-processing):\n";
+            let msg = "Tab " + (aTab.closing ? "close" : "open") + " (Frame-interval):\n";
             for (let i = 0; i < frameCount; i++) {
-              msg += Math.round(intervals[i]) + " / " + Math.round(paints[i]) + "\n";
+              msg += Math.round(intervals[i]) + "\n";
             }
             Services.console.logStringMessage(msg);
           }
 
           // For telemetry, the first frame interval is not useful since it may represent an interval
           // to a relatively old frame (prior to recording start). So we'll ignore it for the average.
-          // But if we recorded only 1 frame (very rare), then the first paint duration is a good
-          // representative of the first frame interval for our cause (indicates very bad animation).
-          // First paint duration is always useful for us.
-          if (frameCount > 0) {
+          if (frameCount > 1) {
             let averageInterval = 0;
-            let averagePaint = paints[0];
             for (let i = 1; i < frameCount; i++) {
               averageInterval += intervals[i];
-              averagePaint    += paints[i];
             };
-            averagePaint /= frameCount;
-            averageInterval = (frameCount == 1)
-                              ? averagePaint
-                              : averageInterval / (frameCount - 1);
+            averageInterval = averageInterval / (frameCount - 1);
 
             Services.telemetry.getHistogramById("FX_TAB_ANIM_ANY_FRAME_INTERVAL_MS").add(averageInterval);
-            Services.telemetry.getHistogramById("FX_TAB_ANIM_ANY_FRAME_PAINT_MS").add(averagePaint);
 
             if (aTab._recordingTabOpenPlain) {
               delete aTab._recordingTabOpenPlain;
@@ -4129,7 +4120,6 @@
               // easier to overview the data without slicing by it. Hence the additional histograms with _PREVIEW.
               let preview = this._browserNewtabpageEnabled ? "_PREVIEW" : "";
               Services.telemetry.getHistogramById("FX_TAB_ANIM_OPEN" + preview + "_FRAME_INTERVAL_MS").add(averageInterval);
-              Services.telemetry.getHistogramById("FX_TAB_ANIM_OPEN" + preview + "_FRAME_PAINT_MS").add(averagePaint);
             }
           }
         ]]>
@@ -4663,7 +4653,8 @@
                      validate="never"
                      role="presentation"/>
           <xul:label flex="1"
-                     xbl:inherits="value=label,crop,accesskey,fadein,pinned,selected"
+                     anonid="tab-label"
+                     xbl:inherits="value=visibleLabel,crop,accesskey,fadein,pinned,selected"
                      class="tab-text tab-label"
                      role="presentation"/>
           <xul:toolbarbutton anonid="close-button"
@@ -4674,6 +4665,32 @@
     </content>
 
     <implementation>
+      <property name="label">
+        <getter>
+          return this.getAttribute("label");
+        </getter>
+        <setter>
+          this.setAttribute("label", val);
+          let event = new CustomEvent("TabLabelModified", {
+            bubbles: true,
+            cancelable: true
+          });
+          this.dispatchEvent(event);
+
+          // Let listeners prevent synchronizing the actual label to the
+          // visible label (allowing them to override the visible label).
+          if (!event.defaultPrevented)
+            this.visibleLabel = val;
+        </setter>
+      </property>
+      <property name="visibleLabel">
+        <getter>
+          return this.getAttribute("visibleLabel");
+        </getter>
+        <setter>
+          this.setAttribute("visibleLabel", val);
+        </setter>
+      </property>
       <property name="pinned" readonly="true">
         <getter>
           return this.getAttribute("pinned") == "true";

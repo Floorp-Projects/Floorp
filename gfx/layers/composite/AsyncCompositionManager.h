@@ -123,6 +123,11 @@ private:
   // controller wants another animation frame.
   bool ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame, Layer* aLayer,
                                         bool* aWantNextFrame);
+  /**
+   * Update the shadow trasnform for aLayer assuming that is a scrollbar,
+   * so that it stays in sync with the content that is being scrolled by APZ.
+   */
+  void ApplyAsyncTransformToScrollbar(ContainerLayer* aLayer);
 
   void SetFirstPaintViewport(const LayerIntPoint& aOffset,
                              const CSSToLayerScale& aZoom,

@@ -36,21 +36,21 @@
     </header>
 
     <section id="slow-sql-section" class="data-section">
+      <input type="checkbox" class="statebox"/>
       <h1 class="section-name">&aboutTelemetry.slowSqlSection;</h1>
-      <span class="toggle-caption">&aboutTelemetry.toggleOn;</span>
-      <span class="toggle-caption hidden">&aboutTelemetry.toggleOff;</span>
-      <span class="empty-caption hidden">&aboutTelemetry.emptySection;</span>
-      <div id="slow-sql-tables" class="data hidden">
+      <span class="toggle-caption">&aboutTelemetry.toggle;</span>
+      <span class="empty-caption">&aboutTelemetry.emptySection;</span>
+      <div id="slow-sql-tables" class="data">
         <p id="sql-warning" class="hidden">&aboutTelemetry.fullSqlWarning;</p>
       </div>
     </section>
 
     <section id="chrome-hangs-section" class="data-section">
+      <input type="checkbox" class="statebox"/>
       <h1 class="section-name">&aboutTelemetry.chromeHangsSection;</h1>
-      <span class="toggle-caption">&aboutTelemetry.toggleOn;</span>
-      <span class="toggle-caption hidden">&aboutTelemetry.toggleOff;</span>
-      <span class="empty-caption hidden">&aboutTelemetry.emptySection;</span>
-      <div id="chrome-hangs" class="data hidden">
+      <span class="toggle-caption">&aboutTelemetry.toggle;</span>
+      <span class="empty-caption">&aboutTelemetry.emptySection;</span>
+      <div id="chrome-hangs" class="data">
         <a id="chrome-hangs-fetch-symbols" href="javascript:">&aboutTelemetry.fetchSymbols;</a>
         <a id="chrome-hangs-hide-symbols" class="hidden" href="javascript:">&aboutTelemetry.hideSymbols;</a>
         <br/>
@@ -61,29 +61,32 @@
     </section>
 
     <section id="histograms-section" class="data-section">
+      <input type="checkbox" class="statebox"/>
       <h1 class="section-name">&aboutTelemetry.histogramsSection;</h1>
-      <span class="toggle-caption">&aboutTelemetry.toggleOn;</span>
-      <span class="toggle-caption hidden">&aboutTelemetry.toggleOff;</span>
-      <span class="empty-caption hidden">&aboutTelemetry.emptySection;</span>
-      <div id="histograms" class="data hidden">
+      <span class="toggle-caption">&aboutTelemetry.toggle;</span>
+      <span class="empty-caption">&aboutTelemetry.emptySection;</span>
+      <span class="filter-ui">
+        &aboutTelemetry.filterText; <input type="text" class="filter" id="histograms-filter" target_id="histograms"/>
+      </span>
+      <div id="histograms" class="data">
       </div>
     </section>
 
     <section id="simple-measurements-section" class="data-section">
+      <input type="checkbox" class="statebox"/>
       <h1 class="section-name">&aboutTelemetry.simpleMeasurementsSection;</h1>
-      <span class="toggle-caption">&aboutTelemetry.toggleOn;</span>
-      <span class="toggle-caption hidden">&aboutTelemetry.toggleOff;</span>
-      <span class="empty-caption hidden">&aboutTelemetry.emptySection;</span>
-      <div id="simple-measurements" class="data hidden">
+      <span class="toggle-caption">&aboutTelemetry.toggle;</span>
+      <span class="empty-caption">&aboutTelemetry.emptySection;</span>
+      <div id="simple-measurements" class="data">
       </div>
     </section>
 
     <section id="late-writes-section" class="data-section">
+      <input type="checkbox" class="statebox"/>
       <h1 class="section-name">&aboutTelemetry.lateWritesSection;</h1>
-      <span class="toggle-caption">&aboutTelemetry.toggleOn;</span>
-      <span class="toggle-caption hidden">&aboutTelemetry.toggleOff;</span>
-      <span class="empty-caption hidden">&aboutTelemetry.emptySection;</span>
-      <div id="late-writes" class="data hidden">
+      <span class="toggle-caption">&aboutTelemetry.toggle;</span>
+      <span class="empty-caption">&aboutTelemetry.emptySection;</span>
+      <div id="late-writes" class="data">
         <a id="late-writes-fetch-symbols" href="javascript:">&aboutTelemetry.fetchSymbols;</a>
         <a id="late-writes-hide-symbols" class="hidden" href="javascript:">&aboutTelemetry.hideSymbols;</a>
         <br/>
@@ -94,29 +97,29 @@
     </section>
 
     <section id="system-info-section" class="data-section">
+      <input type="checkbox" class="statebox"/>
       <h1 class="section-name">&aboutTelemetry.systemInfoSection;</h1>
-      <span class="toggle-caption">&aboutTelemetry.toggleOn;</span>
-      <span class="toggle-caption hidden">&aboutTelemetry.toggleOff;</span>
-      <span class="empty-caption hidden">&aboutTelemetry.emptySection;</span>
-      <div id="system-info" class="data hidden">
+      <span class="toggle-caption">&aboutTelemetry.toggle;</span>
+      <span class="empty-caption">&aboutTelemetry.emptySection;</span>
+      <div id="system-info" class="data">
       </div>
     </section>
 
     <section id="addon-details-section" class="data-section">
+      <input type="checkbox" class="statebox"/>
       <h1 class="section-name">&aboutTelemetry.addonDetailsSection;</h1>
-      <span class="toggle-caption">&aboutTelemetry.toggleOn;</span>
-      <span class="toggle-caption hidden">&aboutTelemetry.toggleOff;</span>
-      <span class="empty-caption hidden">&aboutTelemetry.emptySection;</span>
-      <div id="addon-details" class="data hidden">
+      <span class="toggle-caption">&aboutTelemetry.toggle;</span>
+      <span class="empty-caption">&aboutTelemetry.emptySection;</span>
+      <div id="addon-details" class="data">
       </div>
     </section>
 
     <section id="addon-histograms-section" class="data-section">
+      <input type="checkbox" class="statebox"/>
       <h1 class="section-name">&aboutTelemetry.addonHistogramsSection;</h1>
-      <span class="toggle-caption">&aboutTelemetry.toggleOn;</span>
-      <span class="toggle-caption hidden">&aboutTelemetry.toggleOff;</span>
-      <span class="empty-caption hidden">&aboutTelemetry.emptySection;</span>
-      <div id="addon-histograms" class="data hidden">
+      <span class="toggle-caption">&aboutTelemetry.toggle;</span>
+      <span class="empty-caption">&aboutTelemetry.emptySection;</span>
+      <div id="addon-histograms" class="data">
       </div>
     </section>
 

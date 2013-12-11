@@ -33,7 +33,7 @@ SPSProfiler::~SPSProfiler()
 {
     if (strings.initialized()) {
         for (ProfileStringMap::Enum e(strings); !e.empty(); e.popFront())
-            js_free(const_cast<char *>(e.front().value));
+            js_free(const_cast<char *>(e.front().value()));
     }
 }
 
@@ -80,7 +80,7 @@ SPSProfiler::profileString(JSContext *cx, JSScript *script, JSFunction *maybeFun
     JS_ASSERT(strings.initialized());
     ProfileStringMap::AddPtr s = strings.lookupForAdd(script);
     if (s)
-        return s->value;
+        return s->value();
     const char *str = allocProfileString(cx, script, maybeFun);
     if (str == nullptr)
         return nullptr;
@@ -104,7 +104,7 @@ SPSProfiler::onScriptFinalized(JSScript *script)
     if (!strings.initialized())
         return;
     if (ProfileStringMap::Ptr entry = strings.lookup(script)) {
-        const char *tofree = entry->value;
+        const char *tofree = entry->value();
         strings.remove(entry);
         js_free(const_cast<char *>(tofree));
     }
@@ -119,7 +119,7 @@ SPSProfiler::enter(JSContext *cx, JSScript *script, JSFunction *maybeFun)
 
     JS_ASSERT_IF(*size_ > 0 && *size_ - 1 < max_ && stack_[*size_ - 1].js(),
                  stack_[*size_ - 1].pc() != nullptr);
-    push(str, nullptr, script, script->code);
+    push(str, nullptr, script, script->code());
     return true;
 }
 
@@ -228,7 +228,7 @@ SPSProfiler::allocProfileString(JSContext *cx, JSScript *script, JSFunction *may
     }
     if (!buf.append(":"))
         return nullptr;
-    if (!NumberValueToStringBuffer(cx, NumberValue(script->lineno), buf))
+    if (!NumberValueToStringBuffer(cx, NumberValue(script->lineno()), buf))
         return nullptr;
     if (hasAtom && !buf.append(")"))
         return nullptr;
@@ -269,17 +269,15 @@ SPSEntryMarker::~SPSEntryMarker()
 }
 
 JS_FRIEND_API(jsbytecode*)
-ProfileEntry::pc() volatile
+ProfileEntry::pc() const volatile
 {
-    JS_ASSERT_IF(idx != NullPCIndex, idx >= 0 && uint32_t(idx) < script()->length);
-    return idx == NullPCIndex ? nullptr : script()->code + idx;
+    return idx == NullPCIndex ? nullptr : script()->offsetToPC(idx);
 }
 
 JS_FRIEND_API(void)
 ProfileEntry::setPC(jsbytecode *pc) volatile
 {
-    JS_ASSERT_IF(pc != nullptr, script()->code <= pc && pc < script()->code + script()->length);
-    idx = pc == nullptr ? NullPCIndex : pc - script()->code;
+    idx = pc == nullptr ? NullPCIndex : script()->pcToOffset(pc);
 }
 
 JS_FRIEND_API(void)
