@@ -368,8 +368,8 @@ MemoryTextureClient::MemoryTextureClient(CompositableClient* aCompositable,
 MemoryTextureClient::~MemoryTextureClient()
 {
   MOZ_COUNT_DTOR(MemoryTextureClient);
-  if (ShouldDeallocateInDestructor() && mBuffer) {
-    // if the buffer has never been shared we must deallocate it or ir would
+  if (mBuffer && ShouldDeallocateInDestructor()) {
+    // if the buffer has never been shared we must deallocate it or it would
     // leak.
     GfxMemoryImageReporter::WillFree(mBuffer);
     delete mBuffer;
