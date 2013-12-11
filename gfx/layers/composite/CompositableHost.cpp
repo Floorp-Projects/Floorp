@@ -47,6 +47,16 @@ CompositableHost::~CompositableHost()
 }
 
 void
+CompositableHost::UseTextureHost(TextureHost* aTexture)
+{
+  if (!aTexture) {
+    return;
+  }
+  aTexture->SetCompositor(GetCompositor());
+}
+
+
+void
 CompositableHost::AddTextureHost(TextureHost* aTexture)
 {
   MOZ_ASSERT(aTexture);
