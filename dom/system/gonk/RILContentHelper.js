@@ -71,6 +71,8 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:NetworkSelectionModeChanged",
   "RIL:SelectNetwork",
   "RIL:SelectNetworkAuto",
+  "RIL:SetPreferredNetworkType",
+  "RIL:GetPreferredNetworkType",
   "RIL:EmergencyCbModeChanged",
   "RIL:VoicemailNotification",
   "RIL:VoicemailInfoChanged",
@@ -761,6 +763,43 @@ RILContentHelper.prototype = {
 
     this._selectingNetworks[clientId] = "automatic";
     cpmm.sendAsyncMessage("RIL:SelectNetworkAuto", {
+      clientId: clientId,
+      data: {
+        requestId: requestId
+      }
+    });
+    return request;
+  },
+
+  setPreferredNetworkType: function setPreferredNetworkType(clientId, window, type) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:SetPreferredNetworkType", {
+      clientId: clientId,
+      data: {
+        requestId: requestId,
+        type: type
+      }
+    });
+    return request;
+  },
+
+  getPreferredNetworkType: function getPreferredNetworkType(clientId, window) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:GetPreferredNetworkType", {
       clientId: clientId,
       data: {
         requestId: requestId
@@ -1662,6 +1701,12 @@ RILContentHelper.prototype = {
       case "RIL:SelectNetworkAuto":
         this.handleSelectNetwork(clientId, data,
                                  RIL.GECKO_NETWORK_SELECTION_AUTOMATIC);
+        break;
+      case "RIL:SetPreferredNetworkType":
+        this.handleSimpleRequest(data.requestId, data.errorMsg, null);
+        break;
+      case "RIL:GetPreferredNetworkType":
+        this.handleSimpleRequest(data.requestId, data.errorMsg, data.type);
         break;
       case "RIL:VoicemailNotification":
         this.handleVoicemailNotification(clientId, data);

@@ -6,7 +6,14 @@
 
 /* UI Tour */
 
-html|div#UITourHighlight {
+#UITourHighlightContainer {
+  -moz-appearance: none;
+  background-color: transparent;
+  /* This is a buffer to compensate for the movement in the "wobble" effect */
+  padding: 4px;
+}
+
+#UITourHighlight {
   background-image: radial-gradient(50% 100%, rgba(0,149,220,0.4) 50%, rgba(0,149,220,0.6) 100%);
   border-radius: 40px;
   border: 1px solid white;

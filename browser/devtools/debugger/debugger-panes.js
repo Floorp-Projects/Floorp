@@ -12,14 +12,16 @@ function SourcesView() {
   dumpn("SourcesView was instantiated");
 
   this.togglePrettyPrint = this.togglePrettyPrint.bind(this);
+  this.toggleBlackBoxing = this.toggleBlackBoxing.bind(this);
+  this.toggleBreakpoints = this.toggleBreakpoints.bind(this);
+
   this._onEditorLoad = this._onEditorLoad.bind(this);
   this._onEditorUnload = this._onEditorUnload.bind(this);
   this._onEditorCursorActivity = this._onEditorCursorActivity.bind(this);
   this._onSourceSelect = this._onSourceSelect.bind(this);
   this._onSourceClick = this._onSourceClick.bind(this);
-  this._onBreakpointRemoved = this._onBreakpointRemoved.bind(this);
-  this.toggleBlackBoxing = this.toggleBlackBoxing.bind(this);
   this._onStopBlackBoxing = this._onStopBlackBoxing.bind(this);
+  this._onBreakpointRemoved = this._onBreakpointRemoved.bind(this);
   this._onBreakpointClick = this._onBreakpointClick.bind(this);
   this._onBreakpointCheckboxClick = this._onBreakpointCheckboxClick.bind(this);
   this._onConditionalPopupShowing = this._onConditionalPopupShowing.bind(this);
@@ -27,6 +29,7 @@ function SourcesView() {
   this._onConditionalPopupHiding = this._onConditionalPopupHiding.bind(this);
   this._onConditionalTextboxInput = this._onConditionalTextboxInput.bind(this);
   this._onConditionalTextboxKeyPress = this._onConditionalTextboxKeyPress.bind(this);
+
   this.updateToolbarButtonsState = this.updateToolbarButtonsState.bind(this);
 }
 
@@ -52,6 +55,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._blackBoxButton = document.getElementById("black-box");
     this._stopBlackBoxButton = document.getElementById("black-boxed-message-button");
     this._prettyPrintButton = document.getElementById("pretty-print");
+    this._toggleBreakpointsButton = document.getElementById("toggle-breakpoints");
 
     if (Prefs.prettyPrintEnabled) {
       this._prettyPrintButton.removeAttribute("hidden");
@@ -221,6 +225,16 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Returns all breakpoints for all sources.
+   *
+   * @return array
+   *         The breakpoints for all sources if any, an empty array otherwise.
+   */
+  getAllBreakpoints: function(aStore = []) {
+    return this.getOtherBreakpoints(undefined, aStore);
+  },
+
+  /**
    * Returns all breakpoints which are not at the specified source url and line.
    *
    * @param object aLocation [optional]
@@ -273,6 +287,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let disableSelfId = prefix + "disableSelf-" + identifier + "-menuitem";
     document.getElementById(enableSelfId).setAttribute("hidden", "true");
     document.getElementById(disableSelfId).removeAttribute("hidden");
+
+    // Update the breakpoint toggle button checked state.
+    this._toggleBreakpointsButton.removeAttribute("checked");
 
     // Update the checkbox state if necessary.
     if (!aOptions.silent) {
@@ -375,6 +392,29 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Update the checked/unchecked and enabled/disabled states of the buttons in
+   * the sources toolbar based on the currently selected source's state.
+   */
+  updateToolbarButtonsState: function() {
+    const { source } = this.selectedItem.attachment;
+    const sourceClient = gThreadClient.source(source);
+
+    if (sourceClient.isBlackBoxed) {
+      this._prettyPrintButton.setAttribute("disabled", true);
+      this._blackBoxButton.setAttribute("checked", true);
+    } else {
+      this._prettyPrintButton.removeAttribute("disabled");
+      this._blackBoxButton.removeAttribute("checked");
+    }
+
+    if (sourceClient.isPrettyPrinted) {
+      this._prettyPrintButton.setAttribute("checked", true);
+    } else {
+      this._prettyPrintButton.removeAttribute("checked");
+    }
+  },
+
+  /**
    * Toggle the pretty printing of the selected source.
    */
   togglePrettyPrint: function() {
@@ -395,17 +435,63 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 
     DebuggerView.showProgressBar();
     const { source } = this.selectedItem.attachment;
+    const sourceClient = gThreadClient.source(source);
+    const shouldPrettyPrint = !sourceClient.isPrettyPrinted;
 
-    if (gThreadClient.source(source).isPrettyPrinted) {
-      this._prettyPrintButton.removeAttribute("checked");
-    } else {
+    if (shouldPrettyPrint) {
       this._prettyPrintButton.setAttribute("checked", true);
+    } else {
+      this._prettyPrintButton.removeAttribute("checked");
     }
 
     DebuggerController.SourceScripts.togglePrettyPrint(source)
       .then(resetEditor, printError)
       .then(DebuggerView.showEditor)
       .then(this.updateToolbarButtonsState);
+  },
+
+  /**
+   * Toggle the black boxed state of the selected source.
+   */
+  toggleBlackBoxing: function() {
+    const { source } = this.selectedItem.attachment;
+    const sourceClient = gThreadClient.source(source);
+    const shouldBlackBox = !sourceClient.isBlackBoxed;
+
+    // Be optimistic that the (un-)black boxing will succeed, so enable/disable
+    // the pretty print button and check/uncheck the black box button
+    // immediately. Then, once we actually get the results from the server, make
+    // sure that it is in the correct state again by calling
+    // `updateToolbarButtonsState`.
+
+    if (shouldBlackBox) {
+      this._prettyPrintButton.setAttribute("disabled", true);
+      this._blackBoxButton.setAttribute("checked", true);
+    } else {
+      this._prettyPrintButton.removeAttribute("disabled");
+      this._blackBoxButton.removeAttribute("checked");
+    }
+
+    DebuggerController.SourceScripts.setBlackBoxing(source, shouldBlackBox)
+      .then(this.updateToolbarButtonsState,
+            this.updateToolbarButtonsState);
+  },
+
+  /**
+   * Toggles all breakpoints enabled/disabled.
+   */
+  toggleBreakpoints: function() {
+    let breakpoints = this.getAllBreakpoints();
+    let hasBreakpoints = breakpoints.length > 0;
+    let hasEnabledBreakpoints = breakpoints.some(e => !e.attachment.disabled);
+
+    if (hasBreakpoints && hasEnabledBreakpoints) {
+      this._toggleBreakpointsButton.setAttribute("checked", true);
+      this._onDisableAll();
+    } else {
+      this._toggleBreakpointsButton.removeAttribute("checked");
+      this._onEnableAll();
+    }
   },
 
   /**
@@ -695,29 +781,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Update the checked/unchecked and enabled/disabled states of the buttons in
-   * the sources toolbar based on the currently selected source's state.
-   */
-  updateToolbarButtonsState: function() {
-    const { source } = this.selectedItem.attachment;
-    const sourceClient = gThreadClient.source(source);
-
-    if (sourceClient.isBlackBoxed) {
-      this._prettyPrintButton.setAttribute("disabled", true);
-      this._blackBoxButton.setAttribute("checked", true);
-    } else {
-      this._prettyPrintButton.removeAttribute("disabled");
-      this._blackBoxButton.removeAttribute("checked");
-    }
-
-    if (sourceClient.isPrettyPrinted) {
-      this._prettyPrintButton.setAttribute("checked", true);
-    } else {
-      this._prettyPrintButton.removeAttribute("checked");
-    }
-  },
-
-  /**
    * The click listener for the sources container.
    */
   _onSourceClick: function() {
@@ -726,38 +789,12 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Toggle the black boxed state of the selected source.
-   */
-  toggleBlackBoxing: function() {
-    const { source } = this.selectedItem.attachment;
-    const sourceClient = gThreadClient.source(source);
-    const shouldBlackBox = !sourceClient.isBlackBoxed;
-
-    // Be optimistic that the (un-)black boxing will succeed, so enable/disable
-    // the pretty print button and check/uncheck the black box button
-    // immediately. Then, once we actually get the results from the server, make
-    // sure that it is in the correct state again by calling
-    // `updateToolbarButtonsState`.
-
-    if (shouldBlackBox) {
-      this._prettyPrintButton.setAttribute("disabled", true);
-      this._blackBoxButton.setAttribute("checked", true);
-    } else {
-      this._prettyPrintButton.removeAttribute("disabled");
-      this._blackBoxButton.removeAttribute("checked");
-    }
-
-    DebuggerController.SourceScripts.blackBox(source, shouldBlackBox)
-      .then(this.updateToolbarButtonsState,
-            this.updateToolbarButtonsState);
-  },
-
-  /**
    * The click listener for the "stop black boxing" button.
    */
   _onStopBlackBoxing: function() {
-    let sourceForm = this.selectedItem.attachment.source;
-    DebuggerController.SourceScripts.blackBox(sourceForm, false)
+    const { source } = this.selectedItem.attachment;
+
+    DebuggerController.SourceScripts.setBlackBoxing(source, false)
       .then(this.updateToolbarButtonsState,
             this.updateToolbarButtonsState);
   },

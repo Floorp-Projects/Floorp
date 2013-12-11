@@ -13,7 +13,8 @@ function test() {
     gUI = panel.UI;
     gUI.on("editor-added", function(event, editor) {
       count++;
-      if (count == 2) {
+      if (count == 4) {
+        info("all editors added");
         runTests();
       }
     })
@@ -35,6 +36,8 @@ function getStylesheetNameLinkFor(aEditor) {
 }
 
 function onEditor0Attach(aEditor) {
+  info("first editor selected");
+
   waitForFocus(function () {
     // left mouse click should focus editor 1
     EventUtils.synthesizeMouseAtCenter(
@@ -45,6 +48,8 @@ function onEditor0Attach(aEditor) {
 }
 
 function onEditor1Attach(aEditor) {
+  info("second editor selected");
+
   ok(aEditor.sourceEditor.hasFocus(),
      "left mouse click has given editor 1 focus");
 

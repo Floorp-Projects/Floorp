@@ -58,7 +58,7 @@ function testEditorAdded(aEvent, aEditor)
     }
   });
 
-  aEditor.styleSheet.on("property-change", function(event, property) {
+  aEditor.styleSheet.on("property-change", function(property) {
     if (property == "ruleCount") {
       let ruleCount = aEditor.summary.querySelector(".stylesheet-rule-count").textContent;
       is(parseInt(ruleCount), 1,

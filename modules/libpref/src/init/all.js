@@ -100,7 +100,7 @@ pref("dom.workers.enabled", true);
 pref("dom.workers.maxPerDomain", 20);
 
 // Whether or not Shared Web Workers are enabled.
-pref("dom.workers.sharedWorkers.enabled", false);
+pref("dom.workers.sharedWorkers.enabled", true);
 
 // Whether nonzero values can be returned from performance.timing.*
 pref("dom.enable_performance", true);

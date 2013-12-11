@@ -20,6 +20,7 @@
         <html:canvas anonid="progressRing" xbl:inherits="progress" class="circularprogressindicator-progressRing" width="40" height="40"></html:canvas>
       </xul:stack>
     </content>
+
     <implementation>
       <field name="_progressCanvas">
           document.getAnonymousElementByAttribute(this, "anonid", "progressRing");
@@ -29,7 +30,6 @@
       <constructor>
         <![CDATA[
           this._progressCircleCtx = this._progressCanvas.getContext('2d');
-          this._img = new Image();
         ]]>
       </constructor>
       <method name="updateProgress">
@@ -44,31 +44,35 @@
             let startAngle = 1.5 * Math.PI;
             let endAngle = startAngle + (2 * Math.PI * (percentComplete / 100));
 
-            let ctx = this._progressCircleCtx;
-            ctx.clearRect(0, 0,
-              this._progressCanvas.width, this._progressCanvas.height);
-
-            // Save the state, so we can undo the clipping
-            ctx.save();
-
-            ctx.beginPath();
-            let center = this._progressCanvas.width / 2;
-            ctx.arc(center, center, center, startAngle, endAngle, false);
-            ctx.lineTo(center, center);
-            ctx.closePath();
-            ctx.clip();
-
-            // Draw circle image.
-            if (this._img && this._img.src) {
-              ctx.drawImage(this._img, 0, 0);
-            } else {
-              this._img.onload = function() {
-                ctx.drawImage(this._img, 0, 0);
-              }.bind(this);
+            if (!this._img) {
+              this._img = new Image();
+              this._img.onload = () => {
+                this.updateProgress(this.getAttribute("progress"))
+              }
               this._img.src = PROGRESS_RING_IMG;
             }
+            else if (this._img.complete) {
+              let ctx = this._progressCircleCtx;
+              ctx.clearRect(0, 0,
+                this._progressCanvas.width, this._progressCanvas.height);
 
-            ctx.restore();
+              // Save the state, so we can undo the clipping
+              ctx.save();
+
+              ctx.beginPath();
+              let center = this._progressCanvas.width / 2;
+              ctx.arc(center, center, center, startAngle, endAngle, false);
+              ctx.lineTo(center, center);
+              ctx.closePath();
+              ctx.clip();
+
+              // Draw circle image.
+              ctx.drawImage(this._img, 0, 0);
+
+              ctx.restore();
+            } else {
+              //  Image is still loading
+            }
             return [startAngle, endAngle];
           ]]>
         </body>
@@ -76,6 +80,10 @@
       <method name="reset">
         <body>
           <![CDATA[
+            if(this._img && !this._img.complete) {
+              // cancel any pending updateProgress
+              this._img.onload = () => {};
+            }
             this._progressCircleCtx.clearRect(0, 0,
               this._progressCanvas.width, this._progressCanvas.height);
             this.removeAttribute("progress");

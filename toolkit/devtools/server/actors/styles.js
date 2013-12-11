@@ -5,11 +5,13 @@
 "use strict";
 
 const {Cc, Ci} = require("chrome");
+const promise = require("sdk/core/promise");
 const protocol = require("devtools/server/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const events = require("sdk/event/core");
 const object = require("sdk/util/object");
 const { Class } = require("sdk/core/heritage");
+const { StyleSheetActor } = require("devtools/server/actors/styleeditor");
 
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
@@ -104,7 +106,7 @@ var PageStyleActor = protocol.ActorClass({
     if (this.refMap.has(sheet)) {
       return this.refMap.get(sheet);
     }
-    let actor = StyleSheetActor(this, sheet);
+    let actor = new StyleSheetActor(sheet, this, this.walker.rootWin);
     this.manage(actor);
     this.refMap.set(sheet, actor);
 
@@ -253,7 +255,7 @@ var PageStyleActor = protocol.ActorClass({
     },
     response: RetVal(types.addDictType("matchedselectorresponse", {
       rules: "array:domstylerule",
-      sheets: "array:domsheet",
+      sheets: "array:stylesheet",
       matched: "array:matchedselector"
     }))
   }),
@@ -339,7 +341,7 @@ var PageStyleActor = protocol.ActorClass({
     response: RetVal(types.addDictType("appliedStylesReturn", {
       entries: "array:appliedstyle",
       rules: "array:domstylerule",
-      sheets: "array:domsheet"
+      sheets: "array:stylesheet"
     }))
   }),
 
@@ -546,73 +548,6 @@ var PageStyleFront = protocol.FrontClass(PageStyleActor, {
   })
 });
 
-/**
- * Actor representing an nsIDOMCSSStyleSheet.
- */
-var StyleSheetActor = protocol.ActorClass({
-  typeName: "domsheet",
-
-  initialize: function(pageStyle, sheet) {
-    protocol.Front.prototype.initialize.call(this);
-    this.pageStyle = pageStyle;
-    this.rawSheet = sheet;
-  },
-
-  get conn() this.pageStyle.conn,
-
-  form: function(detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-
-    let href;
-    if (this.rawSheet.ownerNode) {
-      if (this.rawSheet.ownerNode instanceof Ci.nsIDOMHTMLDocument)
-        href = this.rawSheet.ownerNode.location.href;
-      if (this.rawSheet.ownerNode.ownerDocument)
-        href = this.rawSheet.ownerNode.ownerDocument.location.href;
-    }
-
-    return {
-      actor: this.actorID,
-
-      // href stores the uri of the sheet
-      href: this.rawSheet.href,
-
-      // nodeHref stores the URI of the document that
-      // included the sheet.
-      nodeHref: href,
-
-      system: !CssLogic.isContentStylesheet(this.rawSheet),
-      disabled: this.rawSheet.disabled ? true : undefined
-    }
-  }
-});
-
-/**
- * Front for the StyleSheetActor.
- */
-var StyleSheetFront = protocol.FrontClass(StyleSheetActor, {
-  initialize: function(conn, form, ctx, detail) {
-    protocol.Front.prototype.initialize.call(this, conn, form, ctx, detail);
-  },
-
-  form: function(form, detail) {
-    if (detail === "actorid") {
-      this.actorID = form;
-      return;
-    }
-    this.actorID = form.actorID;
-    this._form = form;
-  },
-
-  get href() this._form.href,
-  get nodeHref() this._form.nodeHref,
-  get disabled() !!this._form.disabled,
-  get isSystem() this._form.system
-});
-
-
 // Predeclare the domstylerule actor type
 types.addActorType("domstylerule");
 
@@ -636,6 +571,7 @@ var StyleRuleActor = protocol.ActorClass({
       this.rawRule = item;
       if (this.rawRule instanceof Ci.nsIDOMCSSStyleRule && this.rawRule.parentStyleSheet) {
         this.line = DOMUtils.getRuleLine(this.rawRule);
+        this.column = DOMUtils.getRuleColumn(this.rawRule);
       }
     } else {
       // Fake a rule
@@ -665,6 +601,7 @@ var StyleRuleActor = protocol.ActorClass({
       actor: this.actorID,
       type: this.type,
       line: this.line || undefined,
+      column: this.column
     };
 
     if (this.rawRule.parentRule) {
@@ -788,6 +725,7 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
 
   get type() this._form.type,
   get line() this._form.line || -1,
+  get column() this._form.column || -1,
   get cssText() {
     return this._form.cssText;
   },
@@ -826,6 +764,40 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
     }
     let sheet = this.parentStyleSheet;
     return sheet.href || sheet.nodeHref;
+  },
+
+  get location()
+  {
+    return {
+      href: this.href,
+      line: this.line,
+      column: this.column
+    };
+  },
+
+  getOriginalLocation: function()
+  {
+    if (this._originalLocation) {
+      return promise.resolve(this._originalLocation);
+    }
+
+    let parentSheet = this.parentStyleSheet;
+    if (!parentSheet) {
+      return promise.resolve(this.location);
+    }
+    return parentSheet.getOriginalLocation(this.line, this.column)
+      .then(({ source, line, column }) => {
+        let location = {
+          href: source,
+          line: line,
+          column: column
+        }
+        if (!source) {
+          location.href = this.href;
+        }
+        this._originalLocation = location;
+        return location;
+      })
   },
 
   // Only used for testing, please keep it that way.
