@@ -14,6 +14,7 @@
 #include "mozilla/net/WyciwygChannelChild.h"
 #include "mozilla/net/FTPChannelChild.h"
 #include "mozilla/net/WebSocketChannelChild.h"
+#include "mozilla/net/DNSRequestChild.h"
 #include "mozilla/net/RemoteOpenFileChild.h"
 #include "mozilla/dom/network/TCPSocketChild.h"
 #include "mozilla/dom/network/TCPServerSocketChild.h"
@@ -226,6 +227,24 @@ NeckoChild::DeallocPUDPSocketChild(PUDPSocketChild* child)
 {
 
   UDPSocketChild* p = static_cast<UDPSocketChild*>(child);
+  p->ReleaseIPDLReference();
+  return true;
+}
+
+PDNSRequestChild*
+NeckoChild::AllocPDNSRequestChild(const nsCString& aHost,
+                                  const uint32_t& aFlags)
+{
+  // We don't allocate here: instead we always use IPDL constructor that takes
+  // an existing object
+  NS_NOTREACHED("AllocPDNSRequestChild should not be called on child");
+  return nullptr;
+}
+
+bool
+NeckoChild::DeallocPDNSRequestChild(PDNSRequestChild* aChild)
+{
+  DNSRequestChild *p = static_cast<DNSRequestChild*>(aChild);
   p->ReleaseIPDLReference();
   return true;
 }
