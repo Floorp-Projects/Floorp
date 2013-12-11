@@ -179,11 +179,8 @@ public:
   // Returns the maximum number of channels supported by the audio hardware.
   static int MaxNumberOfChannels();
 
-  // Queries the sample rate the hardware/mixer runs at, and stores it.
-  // Can be called on any thread. When this returns, it is safe to call
-  // PreferredSampleRate without locking.
-  static void InitPreferredSampleRate();
-  // Get the aformentioned sample rate. Does not lock.
+  // Returns the samplerate the systems prefer, because it is the
+  // samplerate the hardware/mixer supports.
   static int PreferredSampleRate();
 
   AudioStream();
@@ -380,7 +377,7 @@ private:
   static StaticMutex sMutex;
   static cubeb* sCubebContext;
 
-  // Prefered sample rate, in Hz (characteristic of the
+  // Prefered samplerate, in Hz (characteristic of the
   // hardware/mixer/platform/API used).
   static uint32_t sPreferredSampleRate;
 

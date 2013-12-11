@@ -150,10 +150,6 @@ public:
    */
   void ShutdownThreads();
 
-  /**
-   * Called before the thread runs.
-   */
-  void Init();
   // The following methods run on the graph thread (or possibly the main thread if
   // mLifecycleState > LIFECYCLE_RUNNING)
   /**
