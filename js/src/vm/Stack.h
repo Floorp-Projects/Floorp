@@ -475,11 +475,11 @@ class StackFrame
     }
 
     inline bool isStrictEvalFrame() const {
-        return isEvalFrame() && script()->strict;
+        return isEvalFrame() && script()->strict();
     }
 
     bool isNonStrictEvalFrame() const {
-        return isEvalFrame() && !script()->strict;
+        return isEvalFrame() && !script()->strict();
     }
 
     bool isDirectEvalFrame() const {
@@ -1616,7 +1616,7 @@ class NonBuiltinScriptFrameIter : public ScriptFrameIter
 
     void settle() {
         if (!includeSelfhostedFrames())
-            while (!done() && script()->selfHosted)
+            while (!done() && script()->selfHosted())
                 ScriptFrameIter::operator++();
     }
 

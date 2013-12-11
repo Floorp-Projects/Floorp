@@ -710,14 +710,14 @@ Debugger::onExceptionUnwind(JSContext *cx, MutableHandleValue vp)
 void
 Debugger::onNewScript(JSContext *cx, HandleScript script, GlobalObject *compileAndGoGlobal)
 {
-    JS_ASSERT_IF(script->compileAndGo, compileAndGoGlobal);
-    JS_ASSERT_IF(script->compileAndGo, compileAndGoGlobal == &script->uninlinedGlobal());
+    JS_ASSERT_IF(script->compileAndGo(), compileAndGoGlobal);
+    JS_ASSERT_IF(script->compileAndGo(), compileAndGoGlobal == &script->uninlinedGlobal());
     // We early return in slowPathOnNewScript for self-hosted scripts, so we can
     // ignore those in our assertion here.
     JS_ASSERT_IF(!script->compartment()->options().invisibleToDebugger() &&
-                 !script->selfHosted,
+                 !script->selfHosted(),
                  script->compartment()->firedOnNewGlobalObject);
-    JS_ASSERT_IF(!script->compileAndGo, !compileAndGoGlobal);
+    JS_ASSERT_IF(!script->compileAndGo(), !compileAndGoGlobal);
     if (!script->compartment()->getDebuggees().empty())
         slowPathOnNewScript(cx, script, compileAndGoGlobal);
 }

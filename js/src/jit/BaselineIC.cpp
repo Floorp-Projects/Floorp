@@ -4952,7 +4952,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub,
         if (!InitArrayElemOperation(cx, pc, obj, index.toInt32(), rhs))
             return false;
     } else {
-        if (!SetObjectElement(cx, obj, index, rhs, script->strict, script, pc))
+        if (!SetObjectElement(cx, obj, index, rhs, script->strict(), script, pc))
             return false;
     }
 
@@ -7236,7 +7236,7 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub,
             return false;
     } else if (op == JSOP_SETALIASEDVAR) {
         obj->as<ScopeObject>().setAliasedVar(cx, pc, name, rhs);
-    } else if (script->strict) {
+    } else if (script->strict()) {
         if (!js::SetProperty<true>(cx, obj, id, rhs))
             return false;
     } else {
@@ -7911,7 +7911,7 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
         if (!calleeScript->hasBaselineScript() && !calleeScript->hasIonScript())
             return true;
 
-        if (calleeScript->shouldCloneAtCallsite)
+        if (calleeScript->shouldCloneAtCallsite())
             return true;
 
         // Check if this stub chain has already generalized scripted calls.
@@ -8016,7 +8016,7 @@ MaybeCloneFunctionAtCallsite(JSContext *cx, MutableHandleValue callee, HandleScr
     if (!IsFunctionObject(callee, fun.address()))
         return true;
 
-    if (!fun->hasScript() || !fun->nonLazyScript()->shouldCloneAtCallsite)
+    if (!fun->hasScript() || !fun->nonLazyScript()->shouldCloneAtCallsite())
         return true;
 
     if (!cx->typeInferenceEnabled())

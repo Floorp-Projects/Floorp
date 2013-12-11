@@ -5373,7 +5373,7 @@ js::StopPCCountProfiling(JSContext *cx)
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         for (CellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
-            if (script->hasScriptCounts && script->types) {
+            if (script->hasScriptCounts() && script->types) {
                 ScriptAndCounts sac;
                 sac.script = script;
                 sac.scriptCounts.set(script->releaseScriptCounts());

@@ -968,9 +968,9 @@ types::FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode execu
 
         // If necessary, add constraints to trigger invalidation on the script
         // after any future changes to the stack type sets.
-        if (entry.script->hasFreezeConstraints)
+        if (entry.script->hasFreezeConstraints())
             continue;
-        entry.script->hasFreezeConstraints = true;
+        entry.script->setHasFreezeConstraints();
 
         size_t count = TypeScript::NumTypeSets(entry.script);
 
@@ -1932,7 +1932,7 @@ types::UseNewTypeForInitializer(JSScript *script, jsbytecode *pc, JSProtoKey key
      * arrays, but not normal arrays.
      */
 
-    if (script->function() && !script->treatAsRunOnce)
+    if (script->function() && !script->treatAsRunOnce())
         return GenericObject;
 
     if (key != JSProto_Object && !(key >= JSProto_Int8Array && key <= JSProto_Uint8ClampedArray))
@@ -3402,7 +3402,7 @@ types::UseNewTypeForClone(JSFunction *fun)
     if (!fun->isInterpreted())
         return false;
 
-    if (fun->hasScript() && fun->nonLazyScript()->shouldCloneAtCallsite)
+    if (fun->hasScript() && fun->nonLazyScript()->shouldCloneAtCallsite())
         return true;
 
     if (fun->isArrow())
@@ -3437,7 +3437,7 @@ types::UseNewTypeForClone(JSFunction *fun)
 
     uint32_t begin, end;
     if (fun->hasScript()) {
-        if (!fun->nonLazyScript()->usesArgumentsAndApply)
+        if (!fun->nonLazyScript()->usesArgumentsAndApply())
             return false;
         begin = fun->nonLazyScript()->sourceStart();
         end = fun->nonLazyScript()->sourceEnd();
@@ -4215,7 +4215,7 @@ TypeScript::Sweep(FreeOp *fop, JSScript *script)
      * Freeze constraints on stack type sets need to be regenerated the next
      * time the script is analyzed.
      */
-    script->hasFreezeConstraints = false;
+    script->clearHasFreezeConstraints();
 }
 
 void

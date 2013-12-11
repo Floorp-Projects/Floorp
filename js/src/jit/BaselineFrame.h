@@ -328,10 +328,10 @@ class BaselineFrame
         return flags_ & EVAL;
     }
     bool isStrictEvalFrame() const {
-        return isEvalFrame() && script()->strict;
+        return isEvalFrame() && script()->strict();
     }
     bool isNonStrictEvalFrame() const {
-        return isEvalFrame() && !script()->strict;
+        return isEvalFrame() && !script()->strict();
     }
     bool isDirectEvalFrame() const {
         return isEvalFrame() && script()->staticLevel() > 0;
