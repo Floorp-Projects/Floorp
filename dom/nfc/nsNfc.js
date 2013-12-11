@@ -138,8 +138,12 @@ MozNFCPeer.prototype = {
  */
 function mozNfc() {
   debug("In mozNfc Constructor");
-  this._nfcContentHelper = Cc["@mozilla.org/nfc/content-helper;1"]
-                             .getService(Ci.nsINfcContentHelper);
+  try {
+    this._nfcContentHelper = Cc["@mozilla.org/nfc/content-helper;1"]
+                               .getService(Ci.nsINfcContentHelper);
+  } catch(e) {
+    debug("No NFC support.")
+  }
 }
 mozNfc.prototype = {
   _nfcContentHelper: null,
