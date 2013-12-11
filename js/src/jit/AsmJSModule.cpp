@@ -10,7 +10,6 @@
 # include <sys/mman.h>
 #endif
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
 #include "jslibmath.h"
@@ -32,7 +31,6 @@
 using namespace js;
 using namespace jit;
 using namespace frontend;
-using mozilla::DebugOnly;
 using mozilla::PodEqual;
 
 void

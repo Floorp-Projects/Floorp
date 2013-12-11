@@ -27,6 +27,9 @@ namespace mozilla {
  *
  * DebugOnly instances can only be coerced to T in debug builds.  In release
  * builds they don't have a value, so type coercion is not well defined.
+ *
+ * Note that DebugOnly instances still take up one byte of space, plus padding,
+ * when used as members of structs.
  */
 template<typename T>
 class DebugOnly
