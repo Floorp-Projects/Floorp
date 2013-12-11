@@ -261,16 +261,14 @@ private:
 class TextureHost : public RefCounted<TextureHost>
 {
 public:
-  TextureHost(uint64_t aID,
-              TextureFlags aFlags);
+  TextureHost(TextureFlags aFlags);
 
   virtual ~TextureHost();
 
   /**
    * Factory method.
    */
-  static TemporaryRef<TextureHost> Create(uint64_t aID,
-                                          const SurfaceDescriptor& aDesc,
+  static TemporaryRef<TextureHost> Create(const SurfaceDescriptor& aDesc,
                                           ISurfaceAllocator* aDeallocator,
                                           TextureFlags aFlags);
 
@@ -340,27 +338,7 @@ public:
    */
   virtual void ForgetSharedData() {}
 
-  /**
-   * An ID to differentiate TextureHosts of a given CompositableHost.
-   *
-   * A TextureHost and its corresponding TextureClient always have the same ID.
-   * TextureHosts of a given CompositableHost always have different IDs.
-   * TextureHosts of different CompositableHosts, may have the same ID.
-   * Zero is always an invalid ID.
-   */
-  uint64_t GetID() const { return mID; }
-
   virtual gfx::IntSize GetSize() const = 0;
-
-  /**
-   * TextureHosts are kept as a linked list in their compositable
-   * XXX - This is just a poor man's PTexture. The purpose of this list is
-   * to keep TextureHost alive which should be independent from compositables.
-   * It will be removed when we add the PTetxure protocol (which will more
-   * gracefully handle the lifetime of textures). See bug 897452
-   */
-  TextureHost* GetNextSibling() const { return mNextTexture; }
-  void SetNextSibling(TextureHost* aNext) { mNextTexture = aNext; }
 
   /**
    * Debug facility.
@@ -422,8 +400,6 @@ public:
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
 
 protected:
-  uint64_t mID;
-  RefPtr<TextureHost> mNextTexture;
   TextureFlags mFlags;
   RefPtr<CompositableBackendSpecificData> mCompositableBackendData;
 };
@@ -444,8 +420,7 @@ protected:
 class BufferTextureHost : public TextureHost
 {
 public:
-  BufferTextureHost(uint64_t aID,
-                    gfx::SurfaceFormat aFormat,
+  BufferTextureHost(gfx::SurfaceFormat aFormat,
                     TextureFlags aFlags);
 
   ~BufferTextureHost();
@@ -500,8 +475,7 @@ protected:
 class ShmemTextureHost : public BufferTextureHost
 {
 public:
-  ShmemTextureHost(uint64_t aID,
-                   const mozilla::ipc::Shmem& aShmem,
+  ShmemTextureHost(const mozilla::ipc::Shmem& aShmem,
                    gfx::SurfaceFormat aFormat,
                    ISurfaceAllocator* aDeallocator,
                    TextureFlags aFlags);
@@ -532,8 +506,7 @@ protected:
 class MemoryTextureHost : public BufferTextureHost
 {
 public:
-  MemoryTextureHost(uint64_t aID,
-                    uint8_t* aBuffer,
+  MemoryTextureHost(uint8_t* aBuffer,
                     gfx::SurfaceFormat aFormat,
                     TextureFlags aFlags);
 
@@ -848,8 +821,7 @@ private:
  * Not all SurfaceDescriptor types are supported
  */
 TemporaryRef<TextureHost>
-CreateBackendIndependentTextureHost(uint64_t aID,
-                                    const SurfaceDescriptor& aDesc,
+CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
                                     ISurfaceAllocator* aDeallocator,
                                     TextureFlags aFlags);
 
