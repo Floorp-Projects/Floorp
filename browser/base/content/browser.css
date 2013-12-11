@@ -952,13 +952,13 @@ toolbarpaletteitem[place="palette"][hidden] {
 
 @keyframes uitour-zoom {
   from {
-    transform: scale(0.9);
+    transform: scale(0.8);
   }
   50% {
-    transform: scale(1.1);
+    transform: scale(1.0);
   }
   to {
-    transform: scale(0.9);
+    transform: scale(0.8);
   }
 }
 
@@ -974,10 +974,9 @@ toolbarpaletteitem[place="palette"][hidden] {
   }
 }
 
+#UITourHighlightContainer,
 html|div#UITourHighlight {
-  display: none;
-  position: absolute;
-  z-index: 10000000000;
+  pointer-events: none;
 }
 
 html|div#UITourHighlight[active] {
@@ -985,7 +984,6 @@ html|div#UITourHighlight[active] {
   animation-fill-mode: forwards;
   animation-iteration-count: infinite;
   animation-timing-function: linear;
-  display: block;
 }
 
 html|div#UITourHighlight[active="wobble"] {
