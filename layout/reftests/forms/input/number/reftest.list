@@ -17,6 +17,9 @@ fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63
 # dynamic value changes:
 == show-value.html show-value-ref.html
 
+# disabled
+== number-disabled.html number-disabled-ref.html
+
 # focus
 needs-focus == focus-handling.html focus-handling-ref.html
 

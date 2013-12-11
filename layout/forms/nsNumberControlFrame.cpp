@@ -154,11 +154,24 @@ nsNumberControlFrame::
                            xoffset, yoffset, 0);
 }
 
+void
+nsNumberControlFrame::SyncDisabledState()
+{
+  nsEventStates eventStates = mContent->AsElement()->State();
+  if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
+    mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, EmptyString(),
+                        true);
+  } else {
+    mTextField->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
+  }
+}
+
 NS_IMETHODIMP
 nsNumberControlFrame::AttributeChanged(int32_t  aNameSpaceID,
                                        nsIAtom* aAttribute,
                                        int32_t  aModType)
 {
+  // nsGkAtoms::disabled is handled by SyncDisabledState
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::placeholder ||
         aAttribute == nsGkAtoms::readonly ||
@@ -177,6 +190,14 @@ nsNumberControlFrame::AttributeChanged(int32_t  aNameSpaceID,
 
   return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
                                             aModType);
+}
+
+void
+nsNumberControlFrame::ContentStatesChanged(nsEventStates aStates)
+{
+  if (aStates.HasState(NS_EVENT_STATE_DISABLED)) {
+    nsContentUtils::AddScriptRunner(new SyncDisabledStateEvent(this));
+  }
 }
 
 nsresult
@@ -320,6 +341,9 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
                             nsGkAtoms::div,
                             nsCSSPseudoElements::ePseudo_mozNumberSpinDown,
                             spinBoxCI.mStyleContext);
+
+  SyncDisabledState();
+
   return rv;
 }
 
