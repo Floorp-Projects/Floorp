@@ -18,7 +18,6 @@
 
 #ifdef DEBUG_DUMP_SURFACES
 #include "gfxImageSurface.h"
-#include "gfx2DGlue.h"
 namespace mozilla {
 namespace gfx {
 static void
@@ -28,7 +27,8 @@ DumpAsPNG(SourceSurface* aSurface)
   IntSize size = dataSource->GetSize();
   nsRefPtr<gfxImageSurface> imageSurface =
     new gfxImageSurface(dataSource->GetData(), gfxIntSize(size.width, size.height),
-                        dataSource->Stride(), SurfaceFormatToImageFormat(aSurface->GetFormat()));
+                        dataSource->Stride(),
+                        aSurface->GetFormat() == FORMAT_A8 ? gfxImageFormatA8 : gfxImageFormatARGB32);
   imageSurface->PrintAsDataURL();
 }
 } // namespace gfx
@@ -559,7 +559,7 @@ FilterNodeSoftware::Draw(DrawTarget* aDrawTarget,
                          const DrawOptions &aOptions)
 {
 #ifdef DEBUG_DUMP_SURFACES
-  printf("<pre>\nRendering...\n");
+  printf("<style>section{margin:10px;}</style><pre>\nRendering filter %s...\n", GetName());
 #endif
 
   Rect renderRect = aSourceRect;
@@ -568,9 +568,13 @@ FilterNodeSoftware::Draw(DrawTarget* aDrawTarget,
                         int32_t(renderRect.width), int32_t(renderRect.height));
   IntRect outputRect = renderIntRect.Intersect(GetOutputRectInRect(renderIntRect));
 
-  // Render.
-  RefPtr<DataSourceSurface> result = GetOutput(outputRect);
+  RefPtr<DataSourceSurface> result;
+  if (!outputRect.IsEmpty()) {
+    result = GetOutput(outputRect);
+  }
+
   if (!result) {
+    // Null results are allowed and treated as transparent. Don't draw anything.
 #ifdef DEBUG_DUMP_SURFACES
     printf("output returned null\n");
     printf("</pre>\n");
@@ -578,35 +582,23 @@ FilterNodeSoftware::Draw(DrawTarget* aDrawTarget,
     return;
   }
 
-  // Add transparency around outputRect in renderIntRect.
-  result = GetDataSurfaceInRect(result, outputRect, renderIntRect, EDGE_MODE_NONE);
-  if (!result) {
 #ifdef DEBUG_DUMP_SURFACES
-    printf("GetDataSurfaceInRect for output returned null\n");
-    printf("</pre>\n");
-#endif
-    return;
-  }
-
-#ifdef DEBUG_DUMP_SURFACES
-  printf("output:\n");
+  printf("output from %s:\n", GetName());
   printf("<img src='"); DumpAsPNG(result); printf("'>\n");
   printf("</pre>\n");
 #endif
 
-  // Draw.
-  aDrawTarget->DrawSurface(result, Rect(aDestPoint, aSourceRect.Size()),
-                           aSourceRect - renderIntRect.TopLeft(),
+  Point sourceToDestOffset = aDestPoint - aSourceRect.TopLeft();
+  Rect renderedSourceRect = Rect(outputRect).Intersect(aSourceRect);
+  Rect renderedDestRect = renderedSourceRect + sourceToDestOffset;
+  aDrawTarget->DrawSurface(result, renderedDestRect,
+                           renderedSourceRect - Point(outputRect.TopLeft()),
                            DrawSurfaceOptions(), aOptions);
 }
 
 TemporaryRef<DataSourceSurface>
 FilterNodeSoftware::GetOutput(const IntRect &aRect)
 {
-  if (aRect.IsEmpty()) {
-    return nullptr;
-  }
-
   MOZ_ASSERT(GetOutputRectInRect(aRect).Contains(aRect));
   if (!mCachedRect.Contains(aRect)) {
     RequestRect(aRect);
@@ -664,7 +656,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
                                               const IntRect *aTransparencyPaddedSourceRect)
 {
 #ifdef DEBUG_DUMP_SURFACES
-  printf("<h1>GetInputDataSourceSurface with aRect: %d, %d, %d, %d</h1>\n",
+  printf("<section><h1>GetInputDataSourceSurface with aRect: %d, %d, %d, %d</h1>\n",
          aRect.x, aRect.y, aRect.width, aRect.height);
 #endif
   int32_t inputIndex = InputIndex(aInputEnumIndex);
@@ -673,36 +665,48 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
     return nullptr;
   }
 
+  if (aRect.IsEmpty()) {
+    return nullptr;
+  }
+
   RefPtr<SourceSurface> surface;
   IntRect surfaceRect;
+
   if (mInputSurfaces[inputIndex]) {
+    // Input from input surface
     surface = mInputSurfaces[inputIndex];
 #ifdef DEBUG_DUMP_SURFACES
     printf("input from input surface:\n");
-    printf("<img src='"); DumpAsPNG(surface); printf("'>\n");
 #endif
     surfaceRect = IntRect(IntPoint(0, 0), surface->GetSize());
   } else {
+    // Input from input filter
+#ifdef DEBUG_DUMP_SURFACES
+    printf("getting input from input filter %s...\n", mInputFilters[inputIndex]->GetName());
+#endif
     RefPtr<FilterNodeSoftware> filter = mInputFilters[inputIndex];
     MOZ_ASSERT(filter, "missing input");
     IntRect inputFilterOutput = filter->GetOutputRectInRect(aRect);
     if (!inputFilterOutput.IsEmpty()) {
       surface = filter->GetOutput(inputFilterOutput);
     }
+#ifdef DEBUG_DUMP_SURFACES
+    printf("input from input filter %s:\n", mInputFilters[inputIndex]->GetName());
+#endif
     surfaceRect = inputFilterOutput;
     MOZ_ASSERT(!surface || surfaceRect.Size() == surface->GetSize());
   }
 
   if (surface && surface->GetFormat() == FORMAT_UNKNOWN) {
 #ifdef DEBUG_DUMP_SURFACES
-    printf("wrong input format\n\n");
+    printf("wrong input format</section>\n\n");
 #endif
     return nullptr;
   }
 
   if (!surfaceRect.IsEmpty() && !surface) {
 #ifdef DEBUG_DUMP_SURFACES
-    printf(" -- no input --\n\n");
+    printf(" -- no input --</section>\n\n");
 #endif
     return nullptr;
   }
@@ -718,7 +722,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
 
   if (!result) {
 #ifdef DEBUG_DUMP_SURFACES
-    printf(" -- no input --\n\n");
+    printf(" -- no input --</section>\n\n");
 #endif
     return nullptr;
   }
@@ -736,8 +740,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
   }
 
 #ifdef DEBUG_DUMP_SURFACES
-  printf("input:\n");
-  printf("<img src='"); DumpAsPNG(result); printf("'>\n");
+  printf("<img src='"); DumpAsPNG(result); printf("'></section>");
 #endif
 
   MOZ_ASSERT(!result || result->GetSize() == aRect.Size(), "wrong surface size");
@@ -887,11 +890,23 @@ FilterNodeBlendSoftware::Render(const IntRect& aRect)
     GetInputDataSourceSurface(IN_BLEND_IN, aRect, NEED_COLOR_CHANNELS);
   RefPtr<DataSourceSurface> input2 =
     GetInputDataSourceSurface(IN_BLEND_IN2, aRect, NEED_COLOR_CHANNELS);
-  if (!input1 || !input2) {
+
+  // Null inputs need to be treated as transparent.
+
+  // First case: both are transparent.
+  if (!input1 && !input2) {
+    // Then the result is transparent, too.
     return nullptr;
   }
 
-  return FilterProcessing::ApplyBlending(input1, input2, mBlendMode);
+  // Second case: both are non-transparent.
+  if (input1 && input2) {
+    // Apply normal filtering.
+    return FilterProcessing::ApplyBlending(input1, input2, mBlendMode);
+  }
+
+  // Third case: one of them is transparent. Return the non-transparent one.
+  return input1 ? input1 : input2;
 }
 
 void
@@ -940,6 +955,10 @@ FilterNodeTransformSoftware::SetAttribute(uint32_t aIndex, const Matrix &aMatrix
 IntRect
 FilterNodeTransformSoftware::SourceRectForOutputRect(const IntRect &aRect)
 {
+  if (aRect.IsEmpty()) {
+    return IntRect();
+  }
+
   Matrix inverted(mMatrix);
   if (!inverted.Invert()) {
     return IntRect();
@@ -993,6 +1012,10 @@ IntRect
 FilterNodeTransformSoftware::GetOutputRectInRect(const IntRect& aRect)
 {
   IntRect srcRect = SourceRectForOutputRect(aRect);
+  if (srcRect.IsEmpty()) {
+    return IntRect();
+  }
+
   Rect outRect = mMatrix.TransformBounds(Rect(srcRect));
   outRect.RoundOut();
   return RoundedToInt(outRect).Intersect(aRect);
@@ -1322,6 +1345,9 @@ FilterNodeFloodSoftware::GetOutput(const IntRect& aRect)
 IntRect
 FilterNodeFloodSoftware::GetOutputRectInRect(const IntRect& aRect)
 {
+  if (mColor.a == 0.0f) {
+    return IntRect();
+  }
   return aRect;
 }
 
@@ -2244,6 +2270,10 @@ FilterNodeConvolveMatrixSoftware::RequestFromInputsForRect(const IntRect &aRect)
 IntRect
 FilterNodeConvolveMatrixSoftware::InflatedSourceRect(const IntRect &aDestRect)
 {
+  if (aDestRect.IsEmpty()) {
+    return IntRect();
+  }
+
   IntMargin margin;
   margin.left = ceil(mTarget.x * mKernelUnitLength.width);
   margin.top = ceil(mTarget.y * mKernelUnitLength.height);
@@ -2258,6 +2288,10 @@ FilterNodeConvolveMatrixSoftware::InflatedSourceRect(const IntRect &aDestRect)
 IntRect
 FilterNodeConvolveMatrixSoftware::InflatedDestRect(const IntRect &aSourceRect)
 {
+  if (aSourceRect.IsEmpty()) {
+    return IntRect();
+  }
+
   IntMargin margin;
   margin.left = ceil((mKernelSize.width - mTarget.x - 1) * mKernelUnitLength.width);
   margin.top = ceil((mKernelSize.height - mTarget.y - 1) * mKernelUnitLength.height);
@@ -2513,11 +2547,25 @@ FilterNodeArithmeticCombineSoftware::Render(const IntRect& aRect)
     GetInputDataSourceSurface(IN_ARITHMETIC_COMBINE_IN, aRect, NEED_COLOR_CHANNELS);
   RefPtr<DataSourceSurface> input2 =
     GetInputDataSourceSurface(IN_ARITHMETIC_COMBINE_IN2, aRect, NEED_COLOR_CHANNELS);
-  if (!input1 || !input2) {
+  if (!input1 && !input2) {
     return nullptr;
   }
 
-  return FilterProcessing::ApplyArithmeticCombine(input1, input2, mK1, mK2, mK3, mK4);
+  // If one input is null, treat it as transparent by adjusting the factors.
+  Float k1 = mK1, k2 = mK2, k3 = mK3, k4 = mK4;
+  if (!input1) {
+    k1 = 0.0f;
+    k2 = 0.0f;
+    input1 = input2;
+  }
+
+  if (!input2) {
+    k1 = 0.0f;
+    k3 = 0.0f;
+    input2 = input1;
+  }
+
+  return FilterProcessing::ApplyArithmeticCombine(input1, input2, k1, k2, k3, k4);
 }
 
 void
@@ -2530,8 +2578,22 @@ FilterNodeArithmeticCombineSoftware::RequestFromInputsForRect(const IntRect &aRe
 IntRect
 FilterNodeArithmeticCombineSoftware::GetOutputRectInRect(const IntRect& aRect)
 {
-  return GetInputRectInRect(IN_ARITHMETIC_COMBINE_IN, aRect).Union(
-    GetInputRectInRect(IN_ARITHMETIC_COMBINE_IN2, aRect)).Intersect(aRect);
+  if (mK4 > 0.0f) {
+    return aRect;
+  }
+  IntRect rectFrom1 = GetInputRectInRect(IN_ARITHMETIC_COMBINE_IN, aRect).Intersect(aRect);
+  IntRect rectFrom2 = GetInputRectInRect(IN_ARITHMETIC_COMBINE_IN2, aRect).Intersect(aRect);
+  IntRect result;
+  if (mK1 > 0.0f) {
+    result = rectFrom1.Intersect(rectFrom2);
+  }
+  if (mK2 > 0.0f) {
+    result = result.Union(rectFrom1);
+  }
+  if (mK3 > 0.0f) {
+    result = result.Union(rectFrom2);
+  }
+  return result;
 }
 
 FilterNodeCompositeSoftware::FilterNodeCompositeSoftware()
@@ -2559,17 +2621,41 @@ FilterNodeCompositeSoftware::Render(const IntRect& aRect)
     GetInputDataSourceSurface(IN_COMPOSITE_IN_START, aRect, NEED_COLOR_CHANNELS);
   RefPtr<DataSourceSurface> dest =
     Factory::CreateDataSourceSurface(aRect.Size(), FORMAT_B8G8R8A8);
-  if (!start || !dest) {
+  if (!dest) {
     return nullptr;
   }
-  CopyRect(start, dest, aRect - aRect.TopLeft(), IntPoint());
+
+  if (start) {
+    CopyRect(start, dest, aRect - aRect.TopLeft(), IntPoint());
+  } else {
+    ClearDataSourceSurface(dest);
+  }
+
   for (size_t inputIndex = 1; inputIndex < NumberOfSetInputs(); inputIndex++) {
     RefPtr<DataSourceSurface> input =
       GetInputDataSourceSurface(IN_COMPOSITE_IN_START + inputIndex, aRect, NEED_COLOR_CHANNELS);
-    if (!input) {
-      return nullptr;
+    if (input) {
+      FilterProcessing::ApplyComposition(input, dest, mOperator);
+    } else {
+      // We need to treat input as transparent. Depending on the composite
+      // operator, different things happen to dest.
+      switch (mOperator) {
+        case COMPOSITE_OPERATOR_OVER:
+        case COMPOSITE_OPERATOR_ATOP:
+        case COMPOSITE_OPERATOR_XOR:
+          // dest is unchanged.
+          break;
+        case COMPOSITE_OPERATOR_OUT:
+          // dest is now transparent, but it can become non-transparent again
+          // when compositing additional inputs.
+          ClearDataSourceSurface(dest);
+          break;
+        case COMPOSITE_OPERATOR_IN:
+          // Transparency always wins. We're completely transparent now and
+          // no additional input can get rid of that transparency.
+          return nullptr;
+      }
     }
-    FilterProcessing::ApplyComposition(input, dest, mOperator);
   }
   return dest;
 }
@@ -2587,7 +2673,12 @@ FilterNodeCompositeSoftware::GetOutputRectInRect(const IntRect& aRect)
 {
   IntRect rect;
   for (size_t inputIndex = 0; inputIndex < NumberOfSetInputs(); inputIndex++) {
-    rect = rect.Union(GetInputRectInRect(IN_COMPOSITE_IN_START + inputIndex, aRect));
+    IntRect inputRect = GetInputRectInRect(IN_COMPOSITE_IN_START + inputIndex, aRect);
+    if (mOperator == COMPOSITE_OPERATOR_IN && inputIndex > 0) {
+      rect = rect.Intersect(inputRect);
+    } else {
+      rect = rect.Union(inputRect);
+    }
   }
   return rect;
 }
@@ -2752,13 +2843,7 @@ FilterNodeCropSoftware::SetAttribute(uint32_t aIndex,
 TemporaryRef<DataSourceSurface>
 FilterNodeCropSoftware::Render(const IntRect& aRect)
 {
-  IntRect sourceRect = aRect.Intersect(mCropRect);
-  RefPtr<DataSourceSurface> input =
-    GetInputDataSourceSurface(IN_CROP_IN, sourceRect);
-  if (!input) {
-    return nullptr;
-  }
-  return GetDataSurfaceInRect(input, sourceRect, aRect, EDGE_MODE_NONE);
+  return GetInputDataSourceSurface(IN_CROP_IN, aRect.Intersect(mCropRect));
 }
 
 void
@@ -3122,13 +3207,17 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
     GetInputDataSourceSurface(IN_LIGHTING_IN, srcRect, CAN_HANDLE_A8,
                               EDGE_MODE_DUPLICATE);
 
+  if (!input) {
+    return nullptr;
+  }
+
   if (input->GetFormat() != FORMAT_A8) {
     input = FilterProcessing::ExtractAlpha(input);
   }
 
   RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(size, FORMAT_B8G8R8A8);
-  if (!input || !target) {
+  if (!target) {
     return nullptr;
   }
 

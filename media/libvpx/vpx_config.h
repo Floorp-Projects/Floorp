@@ -40,17 +40,7 @@
 
 /* Control error-concealment support using our own #define rather than
    hard-coding it. */
-#if defined(MOZ_VP8_ERROR_CONCEALMENT)
+#if defined(MOZ_VPX_ERROR_CONCEALMENT)
 #undef CONFIG_ERROR_CONCEALMENT
 #define CONFIG_ERROR_CONCEALMENT 1
-#endif
-
-/* Control encoder support using our own #define rather than hard-coding it. */
-#if defined(MOZ_VP8_ENCODER)
-#undef CONFIG_VP8_ENCODER
-#undef CONFIG_ENCODERS
-#undef CONFIG_MULTI_RES_ENCODING
-#define CONFIG_VP8_ENCODER 1
-#define CONFIG_ENCODERS 1
-#define CONFIG_MULTI_RES_ENCODING 1
 #endif
