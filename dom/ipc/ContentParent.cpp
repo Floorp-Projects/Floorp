@@ -246,8 +246,8 @@ ContentParentsMemoryReporter::CollectReports(nsIMemoryReporterCallback* cb,
 
         nsresult rv = cb->Callback(/* process */ EmptyCString(),
                                    path,
-                                   nsIMemoryReporter::KIND_OTHER,
-                                   nsIMemoryReporter::UNITS_COUNT,
+                                   KIND_OTHER,
+                                   UNITS_COUNT,
                                    numQueuedMessages,
                                    desc,
                                    aClosure);
