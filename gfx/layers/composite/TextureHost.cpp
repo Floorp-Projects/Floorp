@@ -18,11 +18,61 @@
 #include "nsAString.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsPrintfCString.h"            // for nsPrintfCString
+#include "mozilla/layers/PTextureParent.h"
 
 struct nsIntPoint;
 
 namespace mozilla {
 namespace layers {
+
+/**
+ * TextureParent is the host-side IPDL glue between TextureClient and TextureHost.
+ * It is an IPDL actor just like LayerParent, CompositableParent, etc.
+ */
+class TextureParent : public PTextureParent
+{
+public:
+  TextureParent(ISurfaceAllocator* aAllocator);
+
+  ~TextureParent();
+
+  bool RecvInit(const SurfaceDescriptor& aSharedData,
+                const TextureFlags& aFlags) MOZ_OVERRIDE;
+
+  TextureHost* GetTextureHost() { return mTextureHost; }
+
+  ISurfaceAllocator* mAllocator;
+  RefPtr<TextureHost> mTextureHost;
+};
+
+// static
+PTextureParent*
+TextureHost::CreateIPDLActor(ISurfaceAllocator* aAllocator)
+{
+  return new TextureParent(aAllocator);
+}
+
+// static
+bool
+TextureHost::DestroyIPDLActor(PTextureParent* actor)
+{
+  delete actor;
+  return true;
+}
+
+// static
+bool
+TextureHost::SendDeleteIPDLActor(PTextureParent* actor)
+{
+  return PTextureParent::Send__delete__(actor);
+}
+
+// static
+TextureHost*
+TextureHost::AsTextureHost(PTextureParent* actor)
+{
+  return actor? static_cast<TextureParent*>(actor)->mTextureHost : nullptr;
+}
 
 // implemented in TextureOGL.cpp
 TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,
@@ -574,6 +624,29 @@ MemoryTextureHost::DeallocateSharedData()
 uint8_t* MemoryTextureHost::GetBuffer()
 {
   return mBuffer;
+}
+
+TextureParent::TextureParent(ISurfaceAllocator* aAllocator)
+: mAllocator(aAllocator)
+{
+  MOZ_COUNT_CTOR(TextureParent);
+}
+
+TextureParent::~TextureParent()
+{
+  MOZ_COUNT_DTOR(TextureParent);
+  mTextureHost = nullptr;
+}
+
+bool
+TextureParent::RecvInit(const SurfaceDescriptor& aSharedData,
+                        const TextureFlags& aFlags)
+{
+  mTextureHost = TextureHost::Create(0, // XXX legacy texture id, see subsequent patch
+                                     aSharedData,
+                                     mAllocator,
+                                     aFlags);
+  return !!mTextureHost;
 }
 
 } // namespace

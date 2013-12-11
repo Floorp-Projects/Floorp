@@ -46,8 +46,9 @@ class TextureSourceOGL;
 class TextureSourceD3D9;
 class TextureSourceD3D11;
 class TextureSourceBasic;
-class TextureParent;
 class DataTextureSource;
+class PTextureParent;
+class TextureParent;
 
 /**
  * A view on a TextureHost where the texture is internally represented as tiles
@@ -370,6 +371,27 @@ public:
   void AddFlag(TextureFlags aFlag) { mFlags |= aFlag; }
 
   TextureFlags GetFlags() { return mFlags; }
+
+  /**
+   * Allocate and deallocate a TextureParent actor.
+   *
+   * TextureParent< is an implementation detail of TextureHost that is not
+   * exposed to the rest of the code base. CreateIPDLActor and DestroyIPDLActor
+   * are for use with the managing IPDL protocols only (so that they can
+   * implement AllocPTextureParent and DeallocPTextureParent).
+   */
+  static PTextureParent* CreateIPDLActor(ISurfaceAllocator* aAllocator);
+  static bool DestroyIPDLActor(PTextureParent* actor);
+
+  /**
+   * Destroy the TextureChild/Parent pair.
+   */
+  static bool SendDeleteIPDLActor(PTextureParent* actor);
+
+  /**
+   * Get the TextureHost corresponding to the actor passed in parameter.
+   */
+  static TextureHost* AsTextureHost(PTextureParent* actor);
 
   /**
    * Specific to B2G's Composer2D
