@@ -329,10 +329,10 @@ class RecursiveMakeBackend(CommonBackend):
         if not isinstance(obj, SandboxDerived):
             return
 
-        if obj.srcdir not in self._backend_files:
-            self._backend_files[obj.srcdir] = \
+        if obj.objdir not in self._backend_files:
+            self._backend_files[obj.objdir] = \
                 BackendMakeFile(obj.srcdir, obj.objdir, self.get_environment(obj))
-        backend_file = self._backend_files[obj.srcdir]
+        backend_file = self._backend_files[obj.objdir]
 
         if isinstance(obj, DirectoryTraversal):
             self._process_directory_traversal(obj, backend_file)
@@ -680,10 +680,11 @@ class RecursiveMakeBackend(CommonBackend):
     def consume_finished(self):
         CommonBackend.consume_finished(self)
 
-        for srcdir in sorted(self._backend_files.keys()):
-            with self._write_file(fh=self._backend_files[srcdir]) as bf:
+        for objdir, backend_file in sorted(self._backend_files.items()):
+            srcdir = backend_file.srcdir
+            with self._write_file(fh=backend_file) as bf:
                 makefile_in = os.path.join(srcdir, 'Makefile.in')
-                makefile = os.path.join(bf.objdir, 'Makefile')
+                makefile = os.path.join(objdir, 'Makefile')
 
                 # If Makefile.in exists, use it as a template. Otherwise,
                 # create a stub.
