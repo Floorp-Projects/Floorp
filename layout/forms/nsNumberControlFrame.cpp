@@ -22,6 +22,10 @@
 #include "nsStyleSet.h"
 #include "nsIDOMMutationEvent.h"
 
+#ifdef ACCESSIBILITY
+#include "mozilla/a11y/AccTypes.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -201,6 +205,12 @@ nsNumberControlFrame::MakeAnonymousElement(Element** aResult,
 
   if (!aElements.AppendElement(ContentInfo(resultElement, newStyleContext))) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberSpinDown ||
+      aPseudoType == nsCSSPseudoElements::ePseudo_mozNumberSpinUp) {
+    resultElement->SetAttr(kNameSpaceID_None, nsGkAtoms::role,
+                           NS_LITERAL_STRING("button"), false);
   }
 
   resultElement.forget(aResult);
@@ -536,3 +546,11 @@ nsNumberControlFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
 
   return nsContainerFrame::GetPseudoElement(aType);
 }
+
+#ifdef ACCESSIBILITY
+a11y::AccType
+nsNumberControlFrame::AccessibleType()
+{
+  return a11y::eHTMLSpinnerType;
+}
+#endif
