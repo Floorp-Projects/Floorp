@@ -32,4 +32,4 @@ FilterProcessingSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
 endif
 endif
 
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
