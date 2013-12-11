@@ -299,6 +299,8 @@ protected:
   TextureFlags mFlags;
   bool mShared;
   bool mValid;
+
+  friend class TextureChild;
 };
 
 /**
