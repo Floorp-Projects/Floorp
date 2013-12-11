@@ -16,7 +16,12 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'necko_dns'
 
 EXPORTS.mozilla.net += [
+    'ChildDNSService.h',
     'DNS.h',
+    'DNSListenerProxy.h',
+    'DNSRequestChild.h',
+    'DNSRequestParent.h',
+    'PDNSParams.h',
 ]
 
 SOURCES += [
@@ -25,7 +30,11 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'ChildDNSService.cpp',
     'DNS.cpp',
+    'DNSListenerProxy.cpp',
+    'DNSRequestChild.cpp',
+    'DNSRequestParent.cpp',
     'nameprep.c',
     'nsDNSService2.cpp',
     'nsIDNService.cpp',
@@ -33,9 +42,16 @@ UNIFIED_SOURCES += [
     'race.c',
 ]
 
+IPDL_SOURCES = [
+    'PDNSRequest.ipdl',
+    'PDNSRequestParams.ipdlh',
+]
+
 FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'necko'
 
