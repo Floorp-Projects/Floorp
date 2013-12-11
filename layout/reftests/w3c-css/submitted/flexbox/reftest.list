@@ -106,9 +106,13 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-1.xhtml  flexbox-align-s
 == flexbox-overflow-horiz-1.html flexbox-overflow-horiz-1-ref.html
 == flexbox-overflow-horiz-2.html flexbox-overflow-horiz-2-ref.html
 == flexbox-overflow-horiz-3.html flexbox-overflow-horiz-3-ref.html
+== flexbox-overflow-horiz-4.html flexbox-overflow-horiz-4-ref.html
+== flexbox-overflow-horiz-5.html flexbox-overflow-horiz-5-ref.html
 == flexbox-overflow-vert-1.html flexbox-overflow-vert-1-ref.html
 == flexbox-overflow-vert-2.html flexbox-overflow-vert-2-ref.html
 == flexbox-overflow-vert-3.html flexbox-overflow-vert-3-ref.html
+== flexbox-overflow-vert-4.html flexbox-overflow-vert-4-ref.html
+== flexbox-overflow-vert-5.html flexbox-overflow-vert-5-ref.html
 
 # Tests for the order in which we paint flex items
 == flexbox-paint-ordering-1.xhtml flexbox-paint-ordering-1-ref.xhtml
