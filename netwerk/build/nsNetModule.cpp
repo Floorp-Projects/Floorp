@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -57,8 +58,9 @@ NS_HIDDEN_(ContentSnifferCache*) gDataSniffers = nullptr;
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIOService, nsIOService::GetInstance)
 
 #include "nsDNSService2.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDNSService, Init)
-  
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIDNSService,
+  nsDNSService::GetXPCOMSingleton)
+
 #include "nsProtocolProxyService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsProtocolProxyService, Init)
 
@@ -825,7 +827,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_SERVERSOCKET_CID, false, nullptr, nsServerSocketConstructor },
     { &kNS_UDPSOCKET_CID, false, nullptr, nsUDPSocketConstructor },
     { &kNS_SOCKETPROVIDERSERVICE_CID, false, nullptr, nsSocketProviderService::Create },
-    { &kNS_DNSSERVICE_CID, false, nullptr, nsDNSServiceConstructor },
+    { &kNS_DNSSERVICE_CID, false, nullptr, nsIDNSServiceConstructor },
     { &kNS_IDNSERVICE_CID, false, nullptr, nsIDNServiceConstructor },
     { &kNS_EFFECTIVETLDSERVICE_CID, false, nullptr, nsEffectiveTLDServiceConstructor },
     { &kNS_SIMPLEURI_CID, false, nullptr, nsSimpleURIConstructor },
