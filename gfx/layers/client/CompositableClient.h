@@ -142,11 +142,6 @@ public:
    */
   virtual void OnDetach() {}
 
-  /**
-   * Our IPDL actor is being destroyed, get rid of any shmem resources now.
-   */
-  virtual void OnActorDestroy() = 0;
-
 protected:
   CompositableChild* mCompositableChild;
   CompositableForwarder* mForwarder;

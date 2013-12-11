@@ -107,11 +107,6 @@ CanvasClient2D::CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFla
 }
 
 void
-CanvasClient2D::OnActorDestroy()
-{
-}
-
-void
 DeprecatedCanvasClient2D::Updated()
 {
   mForwarder->UpdateTexture(this, 1, mDeprecatedTextureClient->LockSurfaceDescriptor());
@@ -160,11 +155,6 @@ DeprecatedCanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   gfxASurface* surface = mDeprecatedTextureClient->LockSurface();
   aLayer->UpdateSurface(surface);
   mDeprecatedTextureClient->Unlock();
-}
-
-void
-DeprecatedCanvasClient2D::OnActorDestroy()
-{
 }
 
 void
@@ -233,11 +223,6 @@ DeprecatedCanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLaye
   }
 
   aLayer->Painted();
-}
-
-void
-DeprecatedCanvasClientSurfaceStream::OnActorDestroy()
-{
 }
 
 }
