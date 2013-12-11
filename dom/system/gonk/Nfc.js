@@ -25,9 +25,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 let NFC = {};
 Cu.import("resource://gre/modules/nfc_consts.js", NFC);
 
-Cu.import("resource://gre/modules/systemlibs.js");
-const NFC_ENABLED = libcutils.property_get("ro.moz.nfc.enabled", "false") === "true";
-
 // set to true in nfc_consts.js to see debug messages
 let DEBUG = NFC.DEBUG_NFC;
 
@@ -630,6 +627,4 @@ Nfc.prototype = {
   }
 };
 
-if (NFC_ENABLED) {
-  this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Nfc]);
-}
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Nfc]);
