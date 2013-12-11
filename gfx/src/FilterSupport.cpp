@@ -1261,18 +1261,42 @@ PostFilterExtentsForPrimitive(const FilterPrimitiveDescription& aDescription,
     {
       uint32_t op = atts.GetUint(eCompositeOperator);
       if (op == SVG_FECOMPOSITE_OPERATOR_ARITHMETIC) {
+        // The arithmetic composite primitive can draw outside the bounding
+        // box of its source images.
         const nsTArray<float>& coefficients = atts.GetFloats(eCompositeCoefficients);
         MOZ_ASSERT(coefficients.Length() == 4);
-        if (coefficients[3] > 0.0f) {
-          // The arithmetic composite primitive can draw outside the bounding
-          // box of its source images.
-          return ThebesIntRect(aDescription.PrimitiveSubregion());
+
+        // The calculation is:
+        // r = c[0] * in[0] * in[1] + c[1] * in[0] + c[2] * in[1] + c[3]
+        nsIntRegion region;
+        if (coefficients[0] > 0.0f) {
+          region = aInputExtents[0].Intersect(aInputExtents[1]);
         }
+        if (coefficients[1] > 0.0f) {
+          region.Or(region, aInputExtents[0]);
+        }
+        if (coefficients[2] > 0.0f) {
+          region.Or(region, aInputExtents[1]);
+        }
+        if (coefficients[3] > 0.0f) {
+          region = ThebesIntRect(aDescription.PrimitiveSubregion());
+        }
+        return region;
+      }
+      if (op == SVG_FECOMPOSITE_OPERATOR_IN) {
+        return aInputExtents[0].Intersect(aInputExtents[1]);
       }
       return ResultChangeRegionForPrimitive(aDescription, aInputExtents);
     }
 
     case FilterPrimitiveDescription::eFlood:
+    {
+      if (atts.GetColor(eFloodColor).a == 0.0f) {
+        return nsIntRect();
+      }
+      return ThebesIntRect(aDescription.PrimitiveSubregion());
+    }
+
     case FilterPrimitiveDescription::eTurbulence:
     case FilterPrimitiveDescription::eImage:
     {

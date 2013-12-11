@@ -731,6 +731,7 @@ var gPluginHandler = {
       let principal = contentWindow.document.nodePrincipal;
       Services.perms.addFromPrincipal(principal, aPluginInfo.permissionString,
                                       permission, expireType, expireTime);
+      aPluginInfo.pluginPermissionType = expireType;
     }
 
     // Manually activate the plugins that would have been automatically

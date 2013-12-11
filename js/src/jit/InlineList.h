@@ -217,13 +217,8 @@ class InlineList : protected InlineListNode<T>
 {
     typedef InlineListNode<T> Node;
 
-    // Silence MSVC warning C4355
-    InlineList<T> *thisFromConstructor() {
-        return this;
-    }
-
   public:
-    InlineList() : InlineListNode<T>(thisFromConstructor(), thisFromConstructor())
+    InlineList() : InlineListNode<T>(MOZ_THIS_IN_INITIALIZER_LIST(), MOZ_THIS_IN_INITIALIZER_LIST())
     { }
 
   public:
