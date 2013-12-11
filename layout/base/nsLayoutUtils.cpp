@@ -230,8 +230,8 @@ nsLayoutUtils::HasAnimationsForCompositor(nsIContent* aContent,
 }
 
 template <class AnimationsOrTransitions>
-AnimationsOrTransitions*
-mozilla::HasAnimationOrTransition(nsIContent* aContent,
+static AnimationsOrTransitions*
+HasAnimationOrTransition(nsIContent* aContent,
                          nsIAtom* aAnimationProperty,
                          nsCSSProperty aProperty)
 {
@@ -246,17 +246,6 @@ mozilla::HasAnimationOrTransition(nsIContent* aContent,
 
   return nullptr;
 }
-
-template ElementAnimations*
-mozilla::HasAnimationOrTransition<ElementAnimations>(nsIContent* aContent,
-                         nsIAtom* aAnimationProperty,
-                         nsCSSProperty aProperty);
-
-template ElementTransitions*
-mozilla::HasAnimationOrTransition<ElementTransitions>(nsIContent* aContent,
-                         nsIAtom* aAnimationProperty,
-                         nsCSSProperty aProperty);
-
 
 bool
 nsLayoutUtils::HasAnimations(nsIContent* aContent,
