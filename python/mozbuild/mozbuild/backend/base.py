@@ -78,6 +78,9 @@ class BackendConsumeSummary(object):
         # backend_execution_time.
         self.other_time = 0.0
 
+        # Mapping of changed file paths to diffs of the changes.
+        self.file_diffs = {}
+
     @property
     def reader_summary(self):
         return 'Finished reading {:d} moz.build files in {:.2f}s'.format(
@@ -276,7 +279,7 @@ class BuildBackend(LoggingMixin):
 
         if path is not None:
             assert fh is None
-            fh = FileAvoidWrite(path)
+            fh = FileAvoidWrite(path, capture_diff=True)
         else:
             assert fh is not None
 
@@ -295,6 +298,8 @@ class BuildBackend(LoggingMixin):
             self.summary.created_count += 1
         elif updated:
             self.summary.updated_count += 1
+            if fh.diff:
+                self.summary.file_diffs[fh.name] = fh.diff
         else:
             self.summary.unchanged_count += 1
 

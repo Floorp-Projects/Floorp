@@ -526,13 +526,20 @@ class Build(MachCommandBase):
 
     @Command('build-backend', category='build',
         description='Generate a backend used to build the tree.')
-    def build_backend(self):
+    @CommandArgument('-d', '--diff', action='store_true',
+        help='Show a diff of changes.')
+    def build_backend(self, diff=False):
         # When we support multiple build backends (Tup, Visual Studio, etc),
         # this command will be expanded to support choosing what to generate.
         python = self.virtualenv_manager.python_path
         config_status = os.path.join(self.topobjdir, 'config.status')
-        return self._run_command_in_objdir(args=[python, config_status],
-            pass_thru=True, ensure_exit_code=False)
+
+        args = [python, config_status]
+        if diff:
+            args.append('--diff')
+
+        return self._run_command_in_objdir(args=args, pass_thru=True,
+            ensure_exit_code=False)
 
 
 @CommandProvider
