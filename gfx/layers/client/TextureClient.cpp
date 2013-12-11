@@ -39,11 +39,71 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
+/**
+ * TextureChild is the content-side incarnation of the PTexture IPDL actor.
+ *
+ * TextureChild is used to synchronize a texture client and its corresponding
+ * TextureHost if needed (a TextureClient that is not shared with the compositor
+ * does not have a TextureChild)
+ *
+ * During the deallocation phase, a TextureChild may hold its recently destroyed
+ * TextureClient's data until the compositor side confirmed that it is safe to
+ * deallocte or recycle the it.
+ */
 class TextureChild : public PTextureChild
 {
 public:
+  TextureChild()
+  : mForwarder(nullptr)
+  , mTextureData(nullptr)
+  {
+    MOZ_COUNT_CTOR(TextureChild);
+  }
+
+  ~TextureChild()
+  {
+    MOZ_COUNT_DTOR(TextureChild);
+  }
+
+  bool Recv__delete__() MOZ_OVERRIDE;
+
+  /**
+   * Only used during the deallocation phase iff we need synchronization between
+   * the client and host side for deallocation (that is, when the data is going
+   * to be deallocated or recycled on the client side).
+   */
+  void SetTextureData(TextureClientData* aData)
+  {
+    mTextureData = aData;
+  }
+
+  void DeleteTextureData();
+
+  CompositableForwarder* GetForwarder() { return mForwarder; }
+
+  ISurfaceAllocator* GetAllocator() { return mForwarder; }
+
+  CompositableForwarder* mForwarder;
+  TextureClientData* mTextureData;
 
 };
+
+void
+TextureChild::DeleteTextureData()
+{
+  if (mTextureData) {
+    mTextureData->DeallocateSharedData(GetAllocator());
+    delete mTextureData;
+    mTextureData = nullptr;
+  }
+}
+
+bool
+TextureChild::Recv__delete__()
+{
+  DeleteTextureData();
+  return true;
+}
 
 // static
 PTextureChild*
@@ -70,6 +130,7 @@ TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
   }
 
   mActor = static_cast<TextureChild*>(aForwarder->CreateEmptyTextureChild());
+  mActor->mForwarder = aForwarder;
   mShared = true;
   return mActor->SendInit(desc, GetFlags());
 }
@@ -122,6 +183,7 @@ public:
   virtual void DeallocateSharedData(ISurfaceAllocator*)
   {
     delete[] mBuffer;
+    mBuffer = nullptr;
   }
 
 private:
@@ -162,7 +224,33 @@ TextureClient::TextureClient(TextureFlags aFlags)
 {}
 
 TextureClient::~TextureClient()
-{}
+{
+  // All the destruction code that may lead to virtual method calls must
+  // be in Finalize() which is called just before the destructor.
+}
+
+void TextureClient::ForceRemove()
+{
+  if (mValid && mActor) {
+    if (GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
+      mActor->SetTextureData(DropTextureData());
+      mActor->SendRemoveTextureSync();
+      mActor->DeleteTextureData();
+    } else {
+      mActor->SendRemoveTexture();
+    }
+  }
+  MarkInvalid();
+}
+
+void
+TextureClient::Finalize()
+{
+  if (mActor) {
+    // this will call ForceRemove in the right thread, using a sync proxy if needed
+    mActor->GetForwarder()->RemoveTexture(this);
+  }
+}
 
 bool
 TextureClient::ShouldDeallocateInDestructor() const

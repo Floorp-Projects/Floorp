@@ -55,8 +55,6 @@ public:
 
   virtual void UseTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
 
-  virtual void RemoveTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
-
   virtual TextureHost* GetAsTextureHost() MOZ_OVERRIDE;
 
   virtual void SetPictureRect(const nsIntRect& aPictureRect) MOZ_OVERRIDE
@@ -66,13 +64,6 @@ public:
   }
 
   virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
-
-  virtual void OnActorDestroy() MOZ_OVERRIDE
-  {
-    if (mFrontBuffer) {
-      mFrontBuffer->OnActorDestroy();
-    }
-  }
 
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
 
