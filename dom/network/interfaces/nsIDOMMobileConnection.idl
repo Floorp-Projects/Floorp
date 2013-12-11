@@ -11,7 +11,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(4c8331f9-45f3-479d-ac3f-acb60fcc0583)]
+[scriptable, builtinclass, uuid(f55510a9-8dfc-44f5-90ab-355d1e721808)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -128,6 +128,40 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * 'IllegalSIMorME', or 'GenericFailure'
    */
   nsIDOMDOMRequest selectNetworkAutomatically();
+
+  /**
+   * Set preferred network type
+   *
+   * @param type
+   *        DOMString indicates the desired preferred network type.
+   *        Possible values: 'wcdma/gsm', 'gsm', 'wcdma', 'wcdma/gsm-auto',
+                             'cdma/evdo', 'cdma', 'evdo', or
+                             'wcdma/gsm/cdma/evdo'.
+   *
+   * If successful, the request's onsuccess will be called.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'InvalidParameter', 'ModeNotSupported' or 'GenericFailure'
+   *
+   * TODO: param "type" should be a WebIDL enum when this interface is converted
+   *       to WebIDL
+   */
+  nsIDOMDOMRequest setPreferredNetworkType(in DOMString type);
+
+  /**
+   * Query current preferred network type
+   *
+   * If successful, the request's onsuccess will be called. And the request's
+   * result will be a string indicating the current preferred network type.
+   * The value will be either 'wcdma/gsm', 'gsm', 'wcdma', 'wcdma/gsm-auto',
+   * 'cdma/evdo', 'cdma', 'evdo', or 'wcdma/gsm/cdma/evdo'.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * or 'GenericFailure'
+   */
+  nsIDOMDOMRequest getPreferredNetworkType();
 
   /**
    * Set roaming preference
