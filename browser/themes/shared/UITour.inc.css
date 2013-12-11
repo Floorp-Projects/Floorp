@@ -13,7 +13,7 @@
   padding: 4px;
 }
 
-html|div#UITourHighlight {
+#UITourHighlight {
   background-image: radial-gradient(50% 100%, rgba(0,149,220,0.4) 50%, rgba(0,149,220,0.6) 100%);
   border-radius: 40px;
   border: 1px solid white;

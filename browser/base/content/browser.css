@@ -975,26 +975,26 @@ toolbarpaletteitem[place="palette"][hidden] {
 }
 
 #UITourHighlightContainer,
-html|div#UITourHighlight {
+#UITourHighlight {
   pointer-events: none;
 }
 
-html|div#UITourHighlight[active] {
+#UITourHighlight[active] {
   animation-delay: 2s;
   animation-fill-mode: forwards;
   animation-iteration-count: infinite;
   animation-timing-function: linear;
 }
 
-html|div#UITourHighlight[active="wobble"] {
+#UITourHighlight[active="wobble"] {
   animation-name: uitour-wobble;
   animation-duration: 1s;
 }
-html|div#UITourHighlight[active="zoom"] {
+#UITourHighlight[active="zoom"] {
   animation-name: uitour-zoom;
   animation-duration: 1s;
 }
-html|div#UITourHighlight[active="color"] {
+#UITourHighlight[active="color"] {
   animation-name: uitour-color;
   animation-duration: 2s;
 }
