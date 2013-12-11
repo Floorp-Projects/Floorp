@@ -556,6 +556,36 @@ class TestRecursiveMakeBackend(BackendTester):
                 str.startswith('DIST_SUBDIR')]
             self.assertEqual(found, expected_rules)
 
+    def test_config(self):
+        """Test that CONFIGURE_SUBST_FILES and CONFIGURE_DEFINE_FILES are
+        properly handled."""
+        env = self._consume('test_config', RecursiveMakeBackend)
+
+        self.assertEqual(
+            open(os.path.join(env.topobjdir, 'file'), 'r').readlines(), [
+                '#ifdef foo\n',
+                'bar baz\n',
+                '@bar@\n',
+            ])
+
+        self.assertEqual(
+            open(os.path.join(env.topobjdir, 'file.h'), 'r').readlines(), [
+                '/* Comment */\n',
+                '#define foo\n',
+                '#define foo baz qux\n',
+                '#define foo baz qux\n',
+                '#define bar\n',
+                '#define bar 42\n',
+                '/* #undef bar */\n',
+                '\n',
+                '# define baz 1\n',
+                '\n',
+                '#ifdef foo\n',
+                '#   define   foo baz qux\n',
+                '#  define foo    baz qux\n',
+                '  #     define   foo   baz qux   \n',
+                '#endif\n',
+            ])
 
 if __name__ == '__main__':
     main()

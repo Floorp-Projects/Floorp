@@ -17,6 +17,8 @@ from contextlib import contextmanager
 
 from mach.mixin.logging import LoggingMixin
 
+import mozpack.path as mozpath
+from ..preprocessor import Preprocessor
 from ..pythonutil import iter_modules_in_path
 from ..util import FileAvoidWrite
 from ..frontend.data import (
@@ -281,3 +283,23 @@ class BuildBackend(LoggingMixin):
             self.summary.updated_count += 1
         else:
             self.summary.unchanged_count += 1
+
+    @contextmanager
+    def _get_preprocessor(self, obj):
+        '''Returns a preprocessor with a few predefined values depending on
+        the given BaseConfigSubstitution(-like) object, and all the substs
+        in the current environment.'''
+        pp = Preprocessor()
+        srcdir = mozpath.dirname(obj.input_path)
+        pp.context.update(self.environment.substs)
+        pp.context.update(
+            top_srcdir=self.environment.topsrcdir,
+            srcdir=srcdir,
+            relativesrcdir=mozpath.relpath(srcdir, self.environment.topsrcdir) or '.',
+            DEPTH=mozpath.relpath(self.environment.topobjdir, mozpath.dirname(obj.output_path)) or '.',
+        )
+        pp.do_filter('attemptSubstitution')
+        pp.setMarker(None)
+        with self._write_file(obj.output_path) as fh:
+            pp.out = fh
+            yield pp
