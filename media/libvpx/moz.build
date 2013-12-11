@@ -15,26 +15,16 @@ if CONFIG['VPX_NEED_OBJ_INT_EXTRACT']:
 
     HOST_PROGRAM = 'host_obj_int_extract'
 
-SOURCES += files['COMMON']
+SOURCES += files['SOURCES']
 
-if CONFIG['MOZ_VP8_ERROR_CONCEALMENT']:
+if CONFIG['MOZ_VPX_ERROR_CONCEALMENT']:
     SOURCES += files['ERROR_CONCEALMENT']
-
-if CONFIG['MOZ_VP8_ENCODER']:
-    SOURCES += files['ENCODER']
-
-#postproc is only enabled on x86 with asm
-if CONFIG['VPX_X86_ASM']:
-    SOURCES += files['VP8_POSTPROC']
 
 if CONFIG['VPX_X86_ASM'] and CONFIG['OS_TARGET'] == 'WINNT':
     SOURCES += [
+        'vp8/encoder/vp8_asm_enc_offsets.c',
         'vpx_scale/vpx_scale_asm_offsets.c',
     ]
-    if CONFIG['MOZ_VP8_ENCODER']:
-        SOURCES += [
-            'vp8/encoder/vp8_asm_enc_offsets.c',
-        ]
 
 if CONFIG['VPX_X86_ASM']:
     SOURCES += files['X86_ASM']
@@ -47,16 +37,12 @@ if CONFIG['VPX_X86_ASM']:
     if CONFIG['OS_TARGET'] == 'Darwin':
         SOURCES += files['AVX2']
 
-if CONFIG['VPX_X86_ASM'] and CONFIG['MOZ_VP8_ENCODER']:
-    SOURCES += files['X86_ASM_ENCODER']
-    if '64' in CONFIG['OS_TEST']:
-        SOURCES += files['X86-64_ASM_ENCODER']
+    #postproc is only enabled on x86 with asm
+    SOURCES += files['VP8_POSTPROC']
 
 arm_asm_files = []
 if CONFIG['VPX_ARM_ASM']:
     arm_asm_files += files['ARM_ASM']
-    if CONFIG['MOZ_VP8_ENCODER']:
-        arm_asm_files += files['ARM_ASM_ENCODER']
 
     if CONFIG['VPX_AS_CONVERSION']:
         GENERATED_SOURCES += [ "%s.%s" % (f, CONFIG['VPX_ASM_SUFFIX'])
@@ -70,8 +56,7 @@ if CONFIG['VPX_ARM_ASM']:
 
 # boolhuff_armv5te.asm defines the same functions as boolhuff.c instead of
 # using RTCD, so we have to make sure we only add one of the two.
-if CONFIG['MOZ_VP8_ENCODER'] \
-    and 'vp8/encoder/arm/armv5te/boolhuff_armv5te.asm' not in arm_asm_files:
+if 'vp8/encoder/arm/armv5te/boolhuff_armv5te.asm' not in arm_asm_files:
     SOURCES += [
         'vp8/encoder/boolhuff.c',
     ]

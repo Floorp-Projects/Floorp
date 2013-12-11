@@ -782,8 +782,9 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TISInputSourceWrapper::InitKeyEvent, aNativeKeyEvent=%p, "
-     "aKeyEvent.message=%s, aInsertString=%p",
-     this, aNativeKeyEvent, GetGeckoKeyEventType(aKeyEvent), aInsertString));
+     "aKeyEvent.message=%s, aInsertString=%p, IsOpenedIMEMode()=%s",
+     this, aNativeKeyEvent, GetGeckoKeyEventType(aKeyEvent), aInsertString,
+     TrueOrFalse(IsOpenedIMEMode())));
 
   NS_ENSURE_TRUE(aNativeKeyEvent, );
 
@@ -968,28 +969,64 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
        this, aKeyEvent.keyCode));
   }
 
-  // Compute the key for non-printable keys and some special printable keys.
-  aKeyEvent.mKeyNameIndex = ComputeGeckoKeyNameIndex(nativeKeyCode);
-  if (isPrintableKey &&
-      aKeyEvent.mKeyNameIndex == KEY_NAME_INDEX_Unidentified) {
-    // If the key name isn't in the list and the key is a printable key but
-    // inserting no characters without control key nor command key, then,
-    // check if the key is dead key.
-    if (insertString.IsEmpty() &&
-        !aKeyEvent.IsControl() && !aKeyEvent.IsMeta()) {
-      UInt32 state =
-        nsCocoaUtils::ConvertToCarbonModifier([aNativeKeyEvent modifierFlags]);
-      uint32_t ch = TranslateToChar(nativeKeyCode, state, kbType);
-      if (ch) {
-        aKeyEvent.mKeyNameIndex =
-          WidgetUtils::GetDeadKeyNameIndex(static_cast<PRUnichar>(ch));
+  if (isPrintableKey) {
+    aKeyEvent.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
+    // If insertText calls this method, let's use the string.
+    if (aInsertString && !aInsertString->IsEmpty() &&
+        !IsControlChar((*aInsertString)[0])) {
+      aKeyEvent.mKeyValue = *aInsertString;
+    }
+    // If meta key is pressed, the printable key layout may be switched from
+    // non-ASCII capable layout to ASCII capable, or from Dvorak to QWERTY.
+    // KeyboardEvent.key value should be the switched layout's character.
+    else if (aKeyEvent.IsMeta()) {
+      nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
+                                         aKeyEvent.mKeyValue);
+    }
+    // If control key is pressed, some keys may produce printable character via
+    // [aNativeKeyEvent characters].  Otherwise, translate input character of
+    // the key without control key.
+    else if (aKeyEvent.IsControl()) {
+      nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
+                                         aKeyEvent.mKeyValue);
+      if (aKeyEvent.mKeyValue.IsEmpty() ||
+          IsControlChar(aKeyEvent.mKeyValue[0])) {
+        NSUInteger cocoaState =
+          [aNativeKeyEvent modifierFlags] & ~NSControlKeyMask;
+        UInt32 carbonState = nsCocoaUtils::ConvertToCarbonModifier(cocoaState);
+        aKeyEvent.mKeyValue =
+          TranslateToChar(nativeKeyCode, carbonState, kbType);
       }
     }
-    // If the printable key isn't a dead key, we should set printable key name
-    // for now.
-    if (aKeyEvent.mKeyNameIndex == KEY_NAME_INDEX_Unidentified) {
-      aKeyEvent.mKeyNameIndex = KEY_NAME_INDEX_PrintableKey;
+    // Otherwise, KeyboardEvent.key expose
+    // [aNativeKeyEvent characters] value.  However, if IME is open and the
+    // keyboard layout isn't ASCII capable, exposing the non-ASCII character
+    // doesn't match with other platform's behavior.  For the compatibility
+    // with other platform's Gecko, we need to set a translated character.
+    else if (IsOpenedIMEMode()) {
+      UInt32 state =
+        nsCocoaUtils::ConvertToCarbonModifier([aNativeKeyEvent modifierFlags]);
+      aKeyEvent.mKeyValue = TranslateToChar(nativeKeyCode, state, kbType);
+    } else {
+      nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
+                                         aKeyEvent.mKeyValue);
     }
+
+    // Last resort.  If .key value becomes empty string, we should use
+    // charactersIgnoringModifiers, if it's available.
+    if (aKeyEvent.mKeyValue.IsEmpty() ||
+        IsControlChar(aKeyEvent.mKeyValue[0])) {
+      nsCocoaUtils::GetStringForNSString(
+        [aNativeKeyEvent charactersIgnoringModifiers], aKeyEvent.mKeyValue);
+      // But don't expose it if it's a control character.
+      if (!aKeyEvent.mKeyValue.IsEmpty() &&
+          IsControlChar(aKeyEvent.mKeyValue[0])) {
+        aKeyEvent.mKeyValue.Truncate();
+      }
+    }
+  } else {
+    // Compute the key for non-printable keys and some special printable keys.
+    aKeyEvent.mKeyNameIndex = ComputeGeckoKeyNameIndex(nativeKeyCode);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK
