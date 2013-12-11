@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=874919
+-->
+<head>
+  <title>Test for Bug 874919</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=874919">Mozilla Bug 874919</a>
+<p id="display"></p>
+<div id="content" style="width: 150px">
+    <svg id="outer_SVG" style="display: inline; width: 100%">
+        <circle cx="120" cy="120" r="120" fill="blue"></circle>
+        <svg id="inner_SVG">
+            <circle id="circle" cx="120" cy="120" r="120" fill="red"></circle>
+        </svg>
+    </svg>
+</div>
+<pre id="test">
+
+<script type="text/javascript">
+
+    var shouldUseComputed = ["inner_SVG"]
+    var shouldUseUsed = ["outer_SVG"]
+  
+    shouldUseUsed.forEach(function(elemId) {
+
+        var style = window.getComputedStyle(document.getElementById(elemId));
+        
+        ok(style.width.match(/^\d+px$/), 
+            "Inline Outer SVG element's getComputedStyle.width should be used value. ");
+            
+        ok(style.height.match(/^\d+px$/), 
+            "Inline Outer SVG element's getComputedStyle.height should be used value.");
+    });
+    
+    shouldUseComputed.forEach(function(elemId) {
+        var style = window.getComputedStyle(document.getElementById(elemId));
+        
+        // Computed value should match either the percentage used, or "auto" in the case of the inner SVG element.
+        ok(style.width.match(/^\d+%$|^auto$/), 
+            "Inline inner SVG element's getComputedStyle.width should be computed value. " + style.width);
+            
+        ok(style.height.match(/^\d+%$|^auto$/), 
+            "Inline inner SVG element's getComputedStyle.height should be computed value. " + style.height);
+    });
+
+</script>
+</pre>
+</body>
+</html>
