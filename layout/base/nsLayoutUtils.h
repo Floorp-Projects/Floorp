@@ -70,6 +70,12 @@ class HTMLVideoElement;
 namespace layers {
 class Layer;
 }
+
+template <class AnimationsOrTransitions>
+extern AnimationsOrTransitions* HasAnimationOrTransition(nsIContent* aContent,
+                                                         nsIAtom* aAnimationProperty,
+                                                         nsCSSProperty aProperty);
+
 } // namespace mozilla
 
 /**
