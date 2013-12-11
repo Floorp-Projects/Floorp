@@ -135,8 +135,8 @@ class BuildBackend(LoggingMixin):
             'backend.%s' % self.__class__.__name__)
         self._backend_output_list = set()
         if os.path.exists(self._backend_output_list_file):
-            self._backend_output_list.update(open(self._backend_output_list_file) \
-                                               .read().split('\n'))
+            l = open(self._backend_output_list_file).read().split('\n')
+            self._backend_output_list.update(mozpath.normsep(p) for p in l)
 
         # Pull in all loaded Python as dependencies so any Python changes that
         # could influence our output result in a rescan.
