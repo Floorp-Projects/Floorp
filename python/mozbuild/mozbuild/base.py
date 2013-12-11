@@ -19,7 +19,6 @@ from mach.mixin.process import ProcessExecutionMixin
 from mozfile.mozfile import rmtree
 
 from .backend.configenvironment import ConfigEnvironment
-from .config import BuildConfig
 from .mozconfig import (
     MozconfigFindException,
     MozconfigLoadException,
@@ -78,7 +77,6 @@ class MozbuildObject(ProcessExecutionMixin):
         """
         self.topsrcdir = topsrcdir
         self.settings = settings
-        self.config = BuildConfig(settings)
 
         self.populate_logger()
         self.log_manager = log_manager
