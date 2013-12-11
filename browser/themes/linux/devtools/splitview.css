@@ -68,12 +68,10 @@
 
 /* Toolbars */
 
-.devtools-toolbar {
-  height: 26px;
+.splitview-main > .devtools-toolbar {
   background-origin: border-box;
   background-clip: border-box;
   border-bottom: 1px solid hsla(210,8%,5%,.65);
-  padding: 3px;
 }
 
 .splitview-main > toolbar:-moz-locale-dir(ltr) {
@@ -84,7 +82,7 @@
   border-left: 1px solid hsla(210,8%,5%,.5);
 }
 
-.devtools-toolbarbutton {
+.splitview-main > .devtools-toolbarbutton {
   font-size: 11px;
   padding: 0 8px;
   width: auto;
