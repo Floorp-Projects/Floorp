@@ -43,9 +43,9 @@ public:
 
   virtual bool RecvRemoveTextureSync() MOZ_OVERRIDE;
 
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
-
   TextureHost* GetTextureHost() { return mTextureHost; }
+
+  void ActorDestroy(ActorDestroyReason why);
 
   ISurfaceAllocator* mAllocator;
   RefPtr<TextureHost> mTextureHost;
@@ -212,11 +212,21 @@ TextureHost::SetCompositableBackendSpecificData(CompositableBackendSpecificData*
 
 
 TextureHost::TextureHost(TextureFlags aFlags)
-    : mFlags(aFlags)
+    : mRefCount(0)
+    , mFlags(aFlags)
 {}
 
 TextureHost::~TextureHost()
 {
+}
+
+void TextureHost::Finalize()
+{
+  if (GetFlags() & TEXTURE_DEALLOCATE_DEFERRED) {
+    MOZ_ASSERT(!(GetFlags() & TEXTURE_DEALLOCATE_CLIENT));
+    DeallocateSharedData();
+    DeallocateDeviceData();
+  }
 }
 
 void
@@ -300,7 +310,7 @@ DeprecatedTextureHost::SwapTextures(const SurfaceDescriptor& aImage,
 }
 
 void
-DeprecatedTextureHost::OnActorDestroy()
+DeprecatedTextureHost::OnShutdown()
 {
   if (ISurfaceAllocator::IsShmem(mBuffer)) {
     *mBuffer = SurfaceDescriptor();
@@ -593,7 +603,7 @@ ShmemTextureHost::ForgetSharedData()
 }
 
 void
-ShmemTextureHost::OnActorDestroy()
+ShmemTextureHost::OnShutdown()
 {
   delete mShmem;
   mShmem = nullptr;
@@ -690,14 +700,15 @@ TextureParent::ActorDestroy(ActorDestroyReason why)
     NS_WARNING("PTexture deleted after ancestor");
     // fall-through to deletion path
   case Deletion:
-    if (!(mTextureHost->GetFlags() & TEXTURE_DEALLOCATE_CLIENT)) {
+    if (!(mTextureHost->GetFlags() & TEXTURE_DEALLOCATE_CLIENT) &&
+        !(mTextureHost->GetFlags() & TEXTURE_DEALLOCATE_DEFERRED)) {
       mTextureHost->DeallocateSharedData();
     }
     break;
 
   case NormalShutdown:
   case AbnormalShutdown:
-    mTextureHost->OnActorDestroy();
+    mTextureHost->OnShutdown();
     break;
 
   case FailedConstructor:

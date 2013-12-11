@@ -117,8 +117,6 @@ public:
 
   virtual void UseTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
 
-  virtual void RemoveTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
-
   virtual void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
 
   virtual void OnActorDestroy() MOZ_OVERRIDE;

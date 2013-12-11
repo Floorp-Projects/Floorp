@@ -233,18 +233,6 @@ CompositableClient::CreateTextureClientForDrawing(SurfaceFormat aFormat,
   return result;
 }
 
-uint64_t
-CompositableClient::NextTextureID()
-{
-  ++mNextTextureID;
-  // 0 is always an invalid ID
-  if (mNextTextureID == 0) {
-    ++mNextTextureID;
-  }
-
-  return mNextTextureID;
-}
-
 bool
 CompositableClient::AddTextureClient(TextureClient* aClient)
 {
