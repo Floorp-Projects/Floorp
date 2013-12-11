@@ -10,6 +10,15 @@ let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "/helpers.js", this);
 Services.scriptloader.loadSubScript(testDir + "/mockCommands.js", this);
 
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      executeSoon(aCallback);
+    }
+  }, "browser-delayed-startup-finished", false);
+}
+
 /**
  * Force GC on shutdown, because it seems that GCLI can outrun the garbage
  * collector in some situations, which causes test failures in later tests
