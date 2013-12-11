@@ -98,7 +98,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidService",
 
 const DB_SCHEMA_VERSION = 4;
 const DAY_IN_MS  = 86400000; // 1 day in milliseconds
-const MAX_SEARCH_TOKENS = 30;
+const MAX_SEARCH_TOKENS = 10;
 const NOOP = function noop() {};
 
 let supportsDeletedTable =
