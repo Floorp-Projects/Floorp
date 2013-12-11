@@ -22,8 +22,7 @@ public:
     }
 
 
-    nsresult Init(uint32_t segmentSize, uint32_t maxSize,
-                  nsIMemory* allocator = nullptr);
+    nsresult Init(uint32_t segmentSize, uint32_t maxSize);
 
     char* AppendNewSegment();   // pushes at end
 
