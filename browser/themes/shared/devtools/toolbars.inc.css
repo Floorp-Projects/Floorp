@@ -39,6 +39,10 @@
   outline-offset: -4px;
 }
 
+.devtools-toolbarbutton > .toolbarbutton-icon {
+  margin: 0;
+}
+
 .devtools-toolbarbutton:not([label]) {
   min-width: 32px;
 }
@@ -130,7 +134,11 @@
   margin: 0 3px;
   min-height: 22px;
   border: 1px solid hsla(210,8%,5%,.6);
+%ifdef XP_MACOSX
   border-radius: 20px;
+%else
+  border-radius: 2px;
+%endif
   background-color: transparent;
   background-image: linear-gradient(hsla(210,16%,76%,.15), hsla(210,16%,76%,.35));
   padding: 3px;
@@ -322,6 +330,7 @@
 #toolbox-controls > toolbarbutton,
 #toolbox-dock-buttons > toolbarbutton {
   -moz-appearance: none;
+  border: none;
   margin: 0 4px;
   min-width: 16px;
   width: 16px;
@@ -372,6 +381,7 @@
 
 .command-button {
   -moz-appearance: none;
+  border: none;
   padding: 0 8px;
   margin: 0;
   width: 16px;
