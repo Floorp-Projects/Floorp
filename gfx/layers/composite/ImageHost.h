@@ -127,12 +127,7 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
-  virtual void OnActorDestroy() MOZ_OVERRIDE
-  {
-    if (mDeprecatedTextureHost) {
-      mDeprecatedTextureHost->OnActorDestroy();
-    }
-  }
+  virtual void OnActorDestroy() MOZ_OVERRIDE {}
 
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
 
