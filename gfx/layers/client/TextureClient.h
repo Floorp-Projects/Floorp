@@ -24,6 +24,7 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for TextureImage::AddRef, etc
+#include "mozilla/layers/AtomicRefCountedWithFinalize.h"
 
 class gfxReusableSurfaceWrapper;
 class gfxASurface;
@@ -151,26 +152,11 @@ public:
  * several TextureClients.
  */
 class TextureClient
+  : public AtomicRefCountedWithFinalize<TextureClient>
 {
 public:
   TextureClient(TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
   virtual ~TextureClient();
-
-  void AddRef() {
-    MOZ_ASSERT(mRefCount >= 0);
-    ++mRefCount;
-  }
-
-  void Release() {
-    MOZ_ASSERT(mRefCount > 0);
-    if (0 == --mRefCount) {
-#ifdef DEBUG
-      mRefCount = detail::DEAD;
-#endif
-      Finalize();
-      delete this;
-    }
-  }
 
   virtual TextureClientSurface* AsTextureClientSurface() { return nullptr; }
   virtual TextureClientDrawTarget* AsTextureClientDrawTarget() { return nullptr; }
@@ -274,8 +260,6 @@ public:
   void ForceRemove();
 
 private:
-  Atomic<int> mRefCount;
-
   /**
    * Called once, just before the destructor.
    *
@@ -283,6 +267,8 @@ private:
    * Must only be called by Release().
    */
   void Finalize();
+
+  friend class AtomicRefCountedWithFinalize<TextureClient>;
 
 protected:
   void AddFlags(TextureFlags  aFlags)
