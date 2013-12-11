@@ -36,23 +36,6 @@ CompositableClient::~CompositableClient()
 {
   MOZ_COUNT_DTOR(CompositableClient);
   Destroy();
-
-  FlushTexturesToRemoveCallbacks();
-  MOZ_ASSERT(mTexturesToRemove.Length() == 0, "would leak textures pending for deletion");
-}
-
-void
-CompositableClient::FlushTexturesToRemoveCallbacks()
-{
-  std::map<uint64_t,TextureClientData*>::iterator it
-    = mTexturesToRemoveCallbacks.begin();
-  std::map<uint64_t,TextureClientData*>::iterator stop
-    = mTexturesToRemoveCallbacks.end();
-  for (; it != stop; ++it) {
-    it->second->DeallocateSharedData(GetForwarder());
-    delete it->second;
-  }
-  mTexturesToRemoveCallbacks.clear();
 }
 
 LayersBackend
@@ -267,45 +250,20 @@ bool
 CompositableClient::AddTextureClient(TextureClient* aClient)
 {
   aClient->SetID(NextTextureID());
-  return mForwarder->AddTexture(this, aClient);
+  return aClient->InitIPDLActor(mForwarder);
 }
 
 void
 CompositableClient::RemoveTextureClient(TextureClient* aClient)
 {
   MOZ_ASSERT(aClient);
-  mTexturesToRemove.AppendElement(TextureIDAndFlags(aClient->GetID(),
-                                                    aClient->GetFlags()));
-  if (aClient->GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
-    TextureClientData* data = aClient->DropTextureData();
-    if (data) {
-      mTexturesToRemoveCallbacks[aClient->GetID()] = data;
-    }
-  }
-  aClient->ClearID();
+  mForwarder->RemoveTexture(aClient);
   aClient->MarkInvalid();
-}
-
-void
-CompositableClient::OnReplyTextureRemoved(uint64_t aTextureID)
-{
-  std::map<uint64_t,TextureClientData*>::iterator it
-    = mTexturesToRemoveCallbacks.find(aTextureID);
-  if (it != mTexturesToRemoveCallbacks.end()) {
-    it->second->DeallocateSharedData(GetForwarder());
-    delete it->second;
-    mTexturesToRemoveCallbacks.erase(it);
-  }
 }
 
 void
 CompositableClient::OnTransaction()
 {
-  for (unsigned i = 0; i < mTexturesToRemove.Length(); ++i) {
-    const TextureIDAndFlags& texture = mTexturesToRemove[i];
-    mForwarder->RemoveTexture(this, texture.mID, texture.mFlags);
-  }
-  mTexturesToRemove.Clear();
 }
 
 
