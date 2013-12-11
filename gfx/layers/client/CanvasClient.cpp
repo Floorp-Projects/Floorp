@@ -109,9 +109,6 @@ CanvasClient2D::CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFla
 void
 CanvasClient2D::OnActorDestroy()
 {
-  if (mBuffer) {
-    mBuffer->OnActorDestroy();
-  }
 }
 
 void
@@ -168,9 +165,6 @@ DeprecatedCanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 void
 DeprecatedCanvasClient2D::OnActorDestroy()
 {
-  if (mDeprecatedTextureClient) {
-    mDeprecatedTextureClient->OnActorDestroy();
-  }
 }
 
 void
@@ -244,9 +238,6 @@ DeprecatedCanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLaye
 void
 DeprecatedCanvasClientSurfaceStream::OnActorDestroy()
 {
-  if (mDeprecatedTextureClient) {
-    mDeprecatedTextureClient->OnActorDestroy();
-  }
 }
 
 }
