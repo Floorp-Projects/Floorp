@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <script>
+
+document.addEventListener("MozReftestInvalidate", function() {
+  document.getElementById("i").select();
+  document.documentElement.className = "";
+}, false);
+
+    </script>
+  </head>
+  <body>
+    <input id="i" type="text" value="123">
+    <!-- div to cover spin box area -->
+    <div style="display:block; position:absolute; background-color:black; width:200px; height:100px; top:0px; left:100px;">
+  </body>
+</html>
