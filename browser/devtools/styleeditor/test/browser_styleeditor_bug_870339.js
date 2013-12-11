@@ -19,25 +19,25 @@ function test()
 
   waitForExplicitFinish();
   addTabAndOpenStyleEditor(function (aPanel) {
-    let debuggee = aPanel._debuggee;
+    let UI = aPanel.UI;
 
     // Spam the _onNewDocument callback multiple times before the
     // StyleEditorActor has a chance to respond to the first one.
     const SPAM_COUNT = 2;
     for (let i=0; i<SPAM_COUNT; ++i) {
-      debuggee._onNewDocument();
+      UI._onNewDocument();
     }
 
     // Wait for the StyleEditorActor to respond to each "newDocument"
     // message.
     let loadCount = 0;
-    debuggee.on("document-load", function () {
+    UI.on("stylesheets-reset", function () {
       ++loadCount;
       if (loadCount == SPAM_COUNT) {
         // No matter how large SPAM_COUNT is, the number of style
         // sheets should never be more than the number of style sheets
         // in the document.
-        is(debuggee.styleSheets.length, 1, "correct style sheet count");
+        is(UI.editors.length, 1, "correct style sheet count");
         finish();
       }
     });

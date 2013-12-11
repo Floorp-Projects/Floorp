@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 var testnum = 0;
 var fac;
 var prefs;
@@ -234,4 +236,46 @@ add_test(function test13() {
   do_check_eq(results.getValueAt(0), "sync1");
   do_check_eq(results.getValueAt(1), "sync1a");
   run_next_test();
+});
+
+add_test(function test_token_limit_DB() {
+    function test_token_limit_previousResult(previousResult) {
+        do_log_info("Check that the number of tokens used in a search is not capped to " +
+                    "MAX_SEARCH_TOKENS when using a previousResult");
+        // This provide more accuracy since performance is less of an issue.
+        // Search for a string where the first 10 tokens match the previous value but the 11th does not
+        // when re-using a previous result.
+        fac.autoCompleteSearchAsync("field_token_cap",
+                                    "a b c d e f g h i j .",
+                                    null, previousResult, {
+                                        onSearchCompletion : function(aResults) {
+                                            do_check_eq(aResults.matchCount, 0,
+                                                        "All search tokens should be used with " +
+                                                        "previous results");
+                                            run_next_test();
+                                        }
+                                    });
+    }
+
+    do_log_info("Check that the number of tokens used in a search is capped to MAX_SEARCH_TOKENS " +
+                "for performance when querying the DB");
+    let changes = [ ];
+    changes.push({ op : "add", fieldname: "field_token_cap",
+                   // value with 15 unique tokens
+                   value: "a b c d e f g h i j k l m n o",
+                   timesUsed: 1, firstUsed: 0, lastUsed: 0 });
+    updateFormHistory(changes, () => {
+        // Search for a string where the first 10 tokens match the value above but the 11th does not
+        // (which would prevent the result from being returned if the 11th term was used).
+        fac.autoCompleteSearchAsync("field_token_cap",
+                                    "a b c d e f g h i j .",
+                                    null, null, {
+                                        onSearchCompletion : function(aResults) {
+                                            do_check_eq(aResults.matchCount, 1,
+                                                        "Only the first MAX_SEARCH_TOKENS tokens " +
+                                                        "should be used for DB queries");
+                                            test_token_limit_previousResult(aResults);
+                                        }
+        });
+    });
 });

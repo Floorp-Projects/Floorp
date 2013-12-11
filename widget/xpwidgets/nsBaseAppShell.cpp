@@ -399,7 +399,8 @@ nsBaseAppShell::ScheduleSyncSection(nsIRunnable* aRunnable, bool aStable)
 // Called from the main thread
 NS_IMETHODIMP
 nsBaseAppShell::AfterProcessNextEvent(nsIThreadInternal *thr,
-                                      uint32_t recursionDepth)
+                                      uint32_t recursionDepth,
+                                      bool eventWasProcessed)
 {
   // We've just finished running an event, so we're in a stable state. 
   RunSyncSections(true, recursionDepth);

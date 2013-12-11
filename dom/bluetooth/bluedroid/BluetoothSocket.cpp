@@ -87,6 +87,7 @@ class mozilla::dom::bluetooth::DroidSocketImpl
 public:
   DroidSocketImpl(BluetoothSocket* aConsumer, int aFd)
     : mConsumer(aConsumer)
+    , mReadMsgForClientFd(false)
     , mIOLoop(nullptr)
     , mFd(aFd)
     , mShuttingDownOnIOThread(false)
@@ -172,6 +173,11 @@ public:
    * mImpl as container.
    */
   RefPtr<BluetoothSocket> mConsumer;
+
+  /**
+   * If true, read message header to get client fd.
+   */
+  bool mReadMsgForClientFd;
 
 private:
   /**
@@ -446,7 +452,7 @@ DroidSocketImpl::OnFileCanReadWithoutBlocking(int aFd)
     nsAutoPtr<UnixSocketRawData> incoming(new UnixSocketRawData(MAX_READ_SIZE));
 
     ssize_t ret;
-    if (!mConsumer->IsWaitingForClientFd()) {
+    if (!mReadMsgForClientFd) {
       ret = read(aFd, incoming->mData, incoming->mSize);
     } else {
       ret = ReadMsg(aFd, incoming->mData, incoming->mSize);
@@ -644,15 +650,10 @@ BluetoothSocket::SendDroidSocketData(UnixSocketRawData* aData)
 }
 
 bool
-BluetoothSocket::IsWaitingForClientFd()
-{
-  return (mIsServer &&
-          mReceivedSocketInfoLength == FIRST_SOCKET_INFO_MSG_LENGTH);
-}
-
-bool
 BluetoothSocket::ReceiveSocketInfo(nsAutoPtr<UnixSocketRawData>& aMessage)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   /**
    * 2 socket info messages (20 bytes) to receive at the beginning:
    * - 1st message: [channel:4]
@@ -668,8 +669,10 @@ BluetoothSocket::ReceiveSocketInfo(nsAutoPtr<UnixSocketRawData>& aMessage)
   if (mReceivedSocketInfoLength == FIRST_SOCKET_INFO_MSG_LENGTH) {
     // 1st message: [channel:4]
     int32_t channel = ReadInt32(aMessage->mData, &offset);
-
     BT_LOGR("channel %d", channel);
+
+    // If this is server socket, read header of next message for client fd
+    mImpl->mReadMsgForClientFd = mIsServer;
   } else if (mReceivedSocketInfoLength == TOTAL_SOCKET_INFO_LENGTH) {
     // 2nd message: [size:2][bd address:6][channel:4][connection status:4]
     int16_t size = ReadInt16(aMessage->mData, &offset);
@@ -686,6 +689,7 @@ BluetoothSocket::ReceiveSocketInfo(nsAutoPtr<UnixSocketRawData>& aMessage)
     }
 
     if (mIsServer) {
+      mImpl->mReadMsgForClientFd = false;
       // Connect client fd on IO thread
       XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                        new SocketConnectClientFdTask(mImpl));

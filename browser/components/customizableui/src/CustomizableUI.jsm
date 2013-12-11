@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+  "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
   const kUrl = "chrome://browser/locale/customizableui/customizableWidgets.properties";
   return Services.strings.createBundle(kUrl);
@@ -3106,6 +3108,26 @@ OverflowableToolbar.prototype = {
         this._enable();
         break;
     }
+  },
+
+  show: function() {
+    let deferred = Promise.defer();
+    if (this._panel.state == "open") {
+      deferred.resolve();
+      return deferred.promise;
+    }
+    let doc = this._panel.ownerDocument;
+    this._panel.hidden = false;
+    let anchor = doc.getAnonymousElementByAttribute(this._chevron, "class", "toolbarbutton-icon");
+    this._panel.openPopup(anchor || this._chevron, "bottomcenter topright");
+    this._chevron.open = true;
+
+    this._panel.addEventListener("popupshown", function onPopupShown() {
+      this.removeEventListener("popupshown", onPopupShown);
+      deferred.resolve();
+    });
+
+    return deferred.promise;
   },
 
   _onClickChevron: function(aEvent) {
